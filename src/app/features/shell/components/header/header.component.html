@@ -1,0 +1,45 @@
+<header class="shell-header" role="banner">
+
+  <!-- Left: hamburger + logo -->
+  <div class="header-start">
+    <button
+      class="nav-toggle-btn"
+      type="button"
+      (click)="toggleNav()"
+      aria-label="Toggle navigation sidebar"
+      title="Toggle sidebar"
+    >
+      <span class="hamburger-icon" aria-hidden="true">☰</span>
+    </button>
+    <span class="brand-wordmark">Durion POS</span>
+  </div>
+
+  <!-- Right: theme toggle + user info -->
+  <div class="header-end">
+    <button
+      class="icon-btn"
+      type="button"
+      (click)="themeService.toggle()"
+      [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+      [title]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+    >
+      {{ themeService.isDark() ? '☀️' : '🌙' }}
+    </button>
+
+    <div class="user-chip" aria-label="Logged-in user">
+      <span class="user-avatar" aria-hidden="true">{{ username.charAt(0).toUpperCase() }}</span>
+      <span class="user-name">{{ username }}</span>
+    </div>
+
+    <button
+      class="icon-btn logout-btn"
+      type="button"
+      (click)="logout()"
+      aria-label="Sign out"
+      title="Sign out"
+    >
+      ⏻
+    </button>
+  </div>
+
+</header>

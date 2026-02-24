@@ -1,59 +1,97 @@
-# DurionPositivityFrontend
+# Durion POS – Positivity Platform Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.5.
+Angular 21 single-page application for the Durion POS system.
 
-## Development server
-
-To start a local development server, run:
+## Quick Start
 
 ```bash
-ng serve
+npm install
+npm start          # dev server → http://localhost:4200
+npm run build      # production build → dist/
+npm test           # unit tests (Vitest)
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Architecture
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```
+src/
+  app/
+    core/                          # Singleton services, interceptors, guards
+      guards/    auth.guard.ts
+      interceptors/ auth.interceptor.ts
+      models/    auth.models.ts
+      services/  auth.service.ts | api-base.service.ts | theme.service.ts
+    features/
+      auth/                        # Public auth feature (lazy-loaded)
+        login.component.ts/html/css
+      shell/                       # Protected app shell (lazy-loaded)
+        shell.component.ts/html/css
+        components/
+          header/                  # Top bar: logo, theme toggle, user/logout
+          footer/                  # Bottom bar
+          nav/                     # Collapsible left sidebar
+          chat-panel/              # Chat UI (message list + input)
+          content-panel/           # Router outlet for domain pages
+        services/
+          chat-state.service.ts    # In-memory chat message store (signals)
+          chat-api.service.ts      # Placeholder for LLM/chat backend
+        dashboard/
+          dashboard.component.ts   # Default /app landing page placeholder
+  environments/
+    environment.ts          # DEV  – apiBaseUrl: http://localhost:8080/api
+    environment.prod.ts     # PROD – apiBaseUrl: /api
+  styles.css                # Global CSS theme variables
+docs/
+  theme-tokens.md           # Full token inventory (raw, semantic, runtime)
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### Key Design Decisions
 
-```bash
-ng generate --help
-```
+| Decision | Choice | Reason |
+|---|---|---|
+| Component style | Standalone components | Angular 21 best practice; no NgModules |
+| State | Angular Signals | Reactive, no Subscription boilerplate |
+| Theming | CSS custom properties + `data-theme` on `<html>` | Zero-JS theme switch; SSR-friendly |
+| HTTP | Functional `HttpInterceptorFn` | Tree-shakeable; works with `provideHttpClient` |
+| Auth | JWT in localStorage | Simple; refresh token stub ready for backend |
+| Routing | Lazy-loaded `loadComponent` / `loadChildren` | Each domain loads on demand |
 
-## Building
+## Routing
 
-To build the project run:
+| Path | Auth? | Component |
+|---|---|---|
+| `/login` | Public | `LoginComponent` |
+| `/app` | Protected | `ShellComponent` → `DashboardComponent` |
+| `/app/:domain` | Protected | Future domain modules (register in `app.routes.ts`) |
+| `/` | – | Redirects → `/app` (guard sends to `/login` if unauthenticated) |
 
-```bash
-ng build
-```
+## Adding a Domain Module
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+1. Create `src/app/features/<domain>/` with its own `<domain>.routes.ts`.
+2. Register in `app.routes.ts` as a child of the `/app` shell:
+   ```ts
+   { path: 'orders', loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDERS_ROUTES) }
+   ```
+3. Add a nav entry in `NavComponent.navItems`.
 
-## Running unit tests
+## Theming
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+- All colors use CSS variables from `src/styles.css`.
+- Toggle: header button or `ThemeService.toggle()` from any component.
+- Preference persists in `localStorage` (`durion-theme`).
+- Extended tokens documented in `docs/theme-tokens.md`.
 
-```bash
-ng test
-```
+## Backend Integration
 
-## Running end-to-end tests
+- Set `apiBaseUrl` in `src/environments/environment.ts` (dev) or `environment.prod.ts` (prod).
+- `ApiBaseService` is the HTTP wrapper – inject it in feature services instead of `HttpClient` directly.
+- `authInterceptor` attaches `Authorization: Bearer <token>` automatically.
+- Refresh token flow is stubbed in `AuthService.refreshTokens()` — wire to `POST /auth/refresh` when backend exposes it.
+- Chat backend: implement `ChatApiService.sendMessage()` to connect to the LLM endpoint.
 
-For end-to-end (e2e) testing, run:
+## Environment Variables
 
-```bash
-ng e2e
-```
+| Variable | Default (dev) | Description |
+|---|---|---|
+| `apiBaseUrl` | `http://localhost:8080/api` | Backend REST API base URL |
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

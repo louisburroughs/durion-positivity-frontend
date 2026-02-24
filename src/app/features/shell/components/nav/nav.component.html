@@ -1,0 +1,22 @@
+<nav
+  class="shell-nav"
+  [class.collapsed]="collapsed()"
+  role="navigation"
+  aria-label="Main navigation"
+>
+  @for (item of navItems; track item.route) {
+    <a
+      class="nav-item"
+      [routerLink]="item.route"
+      routerLinkActive="nav-item--active"
+      [routerLinkActiveOptions]="{ exact: item.route === '/app' }"
+      [attr.aria-label]="item.label"
+      [title]="item.label"
+    >
+      <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
+      @if (!collapsed()) {
+        <span class="nav-label">{{ item.label }}</span>
+      }
+    </a>
+  }
+</nav>

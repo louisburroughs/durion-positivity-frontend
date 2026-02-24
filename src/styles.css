@@ -1,1 +1,226 @@
-/* You can add global styles to this file, and also import other style files */
+/* =============================================================================
+   Durion POS – Global Styles & Theme Token System
+   See docs/theme-tokens.md for token inventory and extension guidance.
+   ============================================================================= */
+
+/* ── Durion Brand Palette (raw tokens) ───────────────────────────────────── */
+:root {
+  /* Blueprint Blues */
+  --durion-blue-800: #1c2e48;
+  --durion-blue-700: #2b4c78;
+  --durion-blue-600: #355d92;
+  --durion-blue-500: #4d76b2;
+  --durion-blue-400: #668fc2;
+  --durion-blue-300: #7fa4d1;
+  --durion-blue-200: #aac4e4;
+  --durion-blue-100: #d3e3f6;
+  --durion-blue-50:  #f4f8fe;
+
+  /* Graphite */
+  --durion-graphite-800: #333842;
+  --durion-graphite-700: #444a55;
+  --durion-graphite-600: #5a616e;
+  --durion-graphite-500: #727986;
+  --durion-graphite-200: #d7d9dd;
+  --durion-graphite-100: #e7e8eb;
+
+  /* Electric Teal */
+  --durion-teal-600: #158f83;
+  --durion-teal-500: #1fa497;
+  --durion-teal-400: #2bbbad;
+  --durion-teal-300: #55d7cc;
+  --durion-teal-200: #a4e9e1;
+  --durion-teal-100: #d7f3f0;
+
+  /* Neutrals */
+  --durion-grey-900: #121213;
+  --durion-grey-800: #1f2022;
+  --durion-grey-700: #3a3a3e;
+  --durion-grey-500: #707078;
+  --durion-grey-100: #f2f2f4;
+
+  /* Functional */
+  --functional-error-red: #c84c47;
+  --functional-warning:   #e6a540;
+  --functional-info-blue: #355d92;
+  --functional-success:   #5bbe72;
+
+  /* Brand Semantic */
+  --brand-primary:      var(--durion-blue-700);
+  --brand-primary-soft: var(--durion-blue-50);
+  --brand-secondary:    var(--durion-graphite-700);
+  --brand-accent:       var(--durion-teal-400);
+  --brand-background:   var(--durion-grey-100);
+  --brand-surface:      #ffffff;
+
+  /* Typography */
+  --font-primary: 'Michelin Unit Titling', 'Noto Sans', sans-serif;
+  --font-body:    'Noto Sans', sans-serif;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* Border radius */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg: 16px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+}
+
+/* ── LIGHT THEME (default) ───────────────────────────────────────────────── */
+:root,
+[data-theme='light'] {
+  --themeBackground:       var(--durion-grey-100);
+  --navBackground:         var(--durion-blue-800);
+  --menuBackground:        var(--durion-blue-700);
+  --subMenuBackground:     var(--durion-blue-600);
+  --cardBackground:        var(--brand-surface);
+  --currentTextColor:      var(--durion-grey-900);
+  --contrastTextColor:     #ffffff;
+  --primaryA400:           var(--durion-blue-500);
+  --primaryA300:           var(--durion-blue-400);
+  --primaryA100:           var(--durion-blue-100);
+  --primary50:             var(--durion-blue-50);
+  --accentA400:            var(--durion-teal-400);
+  --accentA700:            var(--durion-teal-600);
+  --accentA100:            var(--durion-teal-100);
+  --trackColor:            var(--durion-graphite-200);
+  --handleColor:           var(--durion-graphite-500);
+  /* Extended local tokens – see docs/theme-tokens.md */
+  --border-color:          var(--durion-graphite-200);
+  --input-background:      #ffffff;
+  --input-border:          var(--durion-graphite-200);
+  --input-focus-border:    var(--durion-blue-500);
+  --shadow-card:           0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-nav:            2px 0 8px rgba(0, 0, 0, 0.12);
+  --chat-bubble-user-bg:   var(--durion-blue-100);
+  --chat-bubble-system-bg: var(--durion-graphite-100);
+}
+
+/* ── DARK THEME ──────────────────────────────────────────────────────────── */
+[data-theme='dark'] {
+  --themeBackground:       var(--durion-grey-800);
+  --navBackground:         var(--durion-grey-900);
+  --menuBackground:        #16181c;
+  --subMenuBackground:     var(--durion-graphite-800);
+  --cardBackground:        var(--durion-grey-700);
+  --currentTextColor:      #e8e9eb;
+  --contrastTextColor:     #ffffff;
+  --primaryA400:           var(--durion-blue-400);
+  --primaryA300:           var(--durion-blue-300);
+  --primaryA100:           var(--durion-blue-700);
+  --primary50:             var(--durion-blue-800);
+  --accentA400:            var(--durion-teal-300);
+  --accentA700:            var(--durion-teal-400);
+  --accentA100:            var(--durion-teal-600);
+  --trackColor:            var(--durion-grey-700);
+  --handleColor:           var(--durion-graphite-500);
+  --border-color:          var(--durion-graphite-700);
+  --input-background:      var(--durion-graphite-800);
+  --input-border:          var(--durion-graphite-600);
+  --input-focus-border:    var(--durion-blue-400);
+  --shadow-card:           0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-nav:            2px 0 8px rgba(0, 0, 0, 0.5);
+  --chat-bubble-user-bg:   var(--durion-blue-700);
+  --chat-bubble-system-bg: var(--durion-graphite-700);
+}
+
+/* ── Box-sizing & Reset ──────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Shell manages its own scroll areas */
+  background-color: var(--themeBackground);
+  color: var(--currentTextColor);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base);
+}
+
+/* ── Scrollbar Theming ───────────────────────────────────────────────────── */
+::-webkit-scrollbar         { width: 6px; height: 6px; }
+::-webkit-scrollbar-track   { background: var(--trackColor); }
+::-webkit-scrollbar-thumb   { background: var(--handleColor); border-radius: 3px; }
+
+/* ── Elevation Utilities ─────────────────────────────────────────────────── */
+.mic-elevation-1 { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
+.mic-elevation-2 { box-shadow: var(--shadow-card); }
+.mic-elevation-3 { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16); }
+.mic-elevation-4 { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
+
+/* ── Alert Variants ──────────────────────────────────────────────────────── */
+.alert {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  border-left: 4px solid transparent;
+}
+.alert-info     { background: var(--primary50); border-color: var(--functional-info-blue); color: var(--functional-info-blue); }
+.alert-success  { background: #edfaef; border-color: var(--functional-success); color: #2e7d3a; }
+.alert-warning  { background: #fef8ec; border-color: var(--functional-warning); color: #8a5e0a; }
+.alert-error    { background: #fbeaea; border-color: var(--functional-error-red); color: var(--functional-error-red); }
+.alert-critical { background: var(--functional-error-red); border-color: #8b2020; color: #fff; }
+.alert-soft     { background: var(--cardBackground); border-color: var(--border-color); color: var(--currentTextColor); }
+
+/* ── Status Chips ────────────────────────────────────────────────────────── */
+.mic-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.mic-status.primary { background: var(--primaryA100); color: var(--brand-primary); }
+.mic-status.valid   { background: #edfaef; color: #2e7d3a; }
+.mic-status.warn    { background: #fef8ec; color: #8a5e0a; }
+.mic-status.error   { background: #fbeaea; color: var(--functional-error-red); }
+
+/* ── Form elements (global defaults) ────────────────────────────────────── */
+input,
+textarea,
+select {
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  transition: border-color var(--transition-fast);
+  outline: none;
+  width: 100%;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--input-focus-border) 20%, transparent);
+}
+
+/* ── Button Base ─────────────────────────────────────────────────────────── */
+button {
+  cursor: pointer;
+  font-family: var(--font-body);
+}

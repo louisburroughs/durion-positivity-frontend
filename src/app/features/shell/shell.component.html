@@ -1,0 +1,44 @@
+<div class="shell-root">
+
+  <!-- Top bar -->
+  <app-shell-header (navToggle)="toggleNav()" />
+
+  <!-- Body: sidebar + main column -->
+  <div class="shell-body">
+
+    <!-- Left navigation -->
+    <app-shell-nav [collapsed]="navCollapsed()" />
+
+    <!-- Mobile overlay when nav is open -->
+    @if (!navCollapsed()) {
+      <div
+        class="nav-overlay"
+        role="button"
+        tabindex="-1"
+        (click)="toggleNav()"
+        (keydown.escape)="toggleNav()"
+        aria-label="Close navigation"
+      ></div>
+    }
+
+    <!-- Main column -->
+    <main class="shell-main" role="main">
+
+      <!-- Top frame: Chat panel (fixed-height, resize from bottom edge) -->
+      <div class="frame-chat">
+        <app-chat-panel />
+      </div>
+
+      <!-- Bottom frame: Content / routed page -->
+      <div class="frame-content">
+        <app-content-panel />
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Footer -->
+  <app-shell-footer />
+
+</div>

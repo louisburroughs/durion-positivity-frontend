@@ -1,0 +1,114 @@
+:host {
+  display: block;
+}
+
+.shell-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 var(--space-4);
+  background: var(--navBackground);
+  color: var(--contrastTextColor);
+  box-shadow: var(--shadow-nav);
+  position: relative;
+  z-index: 100;
+}
+
+/* ── Left ────────────────────────────────────────────────────────────── */
+.header-start {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.nav-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--contrastTextColor);
+  font-size: 1.25rem;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  line-height: 1;
+  transition: background var(--transition-fast);
+}
+
+.nav-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-toggle-btn:focus-visible {
+  outline: 2px solid var(--accentA400);
+  outline-offset: 2px;
+}
+
+.brand-wordmark {
+  font-family: var(--font-primary);
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.03em;
+  color: var(--contrastTextColor);
+}
+
+/* ── Right ───────────────────────────────────────────────────────────── */
+.header-end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--contrastTextColor);
+  font-size: 1rem;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+  line-height: 1;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.icon-btn:focus-visible {
+  outline: 2px solid var(--accentA400);
+  outline-offset: 2px;
+}
+
+.logout-btn {
+  font-size: 1.1rem;
+}
+
+/* ── User chip ───────────────────────────────────────────────────────── */
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accentA400);
+  color: var(--durion-grey-900);
+  font-size: 0.875rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* ── Mobile: hide username text ──────────────────────────────────────── */
+@media (max-width: 640px) {
+  .user-name { display: none; }
+}

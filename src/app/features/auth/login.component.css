@@ -1,0 +1,171 @@
+/* Login Page – styles driven entirely by theme tokens */
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--themeBackground);
+  padding: var(--space-4);
+}
+
+/* ── Card ──────────────────────────────────────────────────────────────── */
+.login-card {
+  background: var(--cardBackground);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: var(--space-8);
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ── Brand header ──────────────────────────────────────────────────────── */
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.brand-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  background: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-icon {
+  color: var(--contrastTextColor);
+  font-size: 2rem;
+  font-family: var(--font-primary);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.brand-name {
+  font-family: var(--font-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--currentTextColor);
+  margin: 0;
+}
+
+.brand-tagline {
+  font-size: 0.875rem;
+  color: var(--handleColor);
+  margin: 0;
+}
+
+/* ── Form ──────────────────────────────────────────────────────────────── */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--currentTextColor);
+}
+
+input.field-invalid {
+  border-color: var(--functional-error-red);
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: var(--functional-error-red);
+}
+
+/* ── Primary button ────────────────────────────────────────────────────── */
+.btn-primary {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--brand-primary);
+  color: var(--contrastTextColor);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  transition:
+    background var(--transition-fast),
+    opacity var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px; /* accessible tap target */
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primaryA400);
+}
+
+.btn-primary:focus-visible {
+  outline: 3px solid var(--accentA400);
+  outline-offset: 2px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Spinner ───────────────────────────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+.login-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.theme-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--handleColor);
+  font-size: 0.8rem;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.theme-toggle-btn:hover {
+  color: var(--currentTextColor);
+}
+
+.theme-toggle-btn:focus-visible {
+  outline: 2px solid var(--accentA400);
+  outline-offset: 2px;
+}
