@@ -1,0 +1,17 @@
+{
+  "GREETING": "Bonjour",
+  "SYSTEM": {
+    "ACCESS_DENIED": {
+      "TITLE": "Accès refusé",
+      "MESSAGE": "Vous n'avez pas l'autorisation d'afficher cet écran.",
+      "BACK": "Retour",
+      "HOME": "Aller à l'accueil de l'application"
+    },
+    "NOT_FOUND": {
+      "TITLE": "404",
+      "MESSAGE": "La page demandée n'existe pas.",
+      "BACK": "Retour",
+      "HOME": "Aller à l'accueil de l'application"
+    }
+  }
+}

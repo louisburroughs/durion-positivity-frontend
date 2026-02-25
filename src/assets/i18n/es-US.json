@@ -1,0 +1,17 @@
+{
+  "GREETING": "Hola",
+  "SYSTEM": {
+    "ACCESS_DENIED": {
+      "TITLE": "Acceso denegado",
+      "MESSAGE": "No tienes permiso para ver esta pantalla.",
+      "BACK": "Volver",
+      "HOME": "Ir al inicio de la aplicación"
+    },
+    "NOT_FOUND": {
+      "TITLE": "404",
+      "MESSAGE": "La página solicitada no existe.",
+      "BACK": "Volver",
+      "HOME": "Ir al inicio de la aplicación"
+    }
+  }
+}

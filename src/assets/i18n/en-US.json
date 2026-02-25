@@ -1,0 +1,17 @@
+{
+  "GREETING": "Hello",
+  "SYSTEM": {
+    "ACCESS_DENIED": {
+      "TITLE": "Access denied",
+      "MESSAGE": "You do not have permission to view this screen.",
+      "BACK": "Go back",
+      "HOME": "Go to app home"
+    },
+    "NOT_FOUND": {
+      "TITLE": "404",
+      "MESSAGE": "The page you requested does not exist.",
+      "BACK": "Go back",
+      "HOME": "Go to app home"
+    }
+  }
+}

@@ -61,9 +61,25 @@ docs/
 | Path | Auth? | Component |
 |---|---|---|
 | `/login` | Public | `LoginComponent` |
+| `/chat` | Public | `ChatPanelComponent` |
 | `/app` | Protected | `ShellComponent` → `DashboardComponent` |
 | `/app/:domain` | Protected | Future domain modules (register in `app.routes.ts`) |
 | `/` | – | Redirects → `/app` (guard sends to `/login` if unauthenticated) |
+
+### Role-based route access
+
+- `/app` remains authenticated via `authGuard`.
+- Child routes under `/app` can optionally enforce roles via route metadata:
+
+  ```ts
+  {
+    path: 'orders',
+    data: { roles: ['ROLE_MANAGER', 'ROLE_ADMIN'] },
+    loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDERS_ROUTES)
+  }
+  ```
+
+- `rolesChildGuard` reads `data.roles` and checks `AuthService.hasAnyRole(...)`.
 
 ## Adding a Domain Module
 

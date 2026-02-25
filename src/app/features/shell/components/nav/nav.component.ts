@@ -14,7 +14,7 @@ export interface NavItem {
  * Collapsible left-sidebar navigation.
  * The `collapsed` input is driven by ShellComponent so the parent owns state.
  *
- * TODO: Populate navItems dynamically from a permission-aware NavService
+ * Future enhancement: populate navItems dynamically from a permission-aware NavService
  *       once additional domain feature modules are registered.
  */
 @Component({
@@ -29,8 +29,9 @@ export class NavComponent {
 
   readonly navItems: NavItem[] = [
     { label: 'Dashboard', route: '/app/dashboard', icon: '⊞' },
-    { label: 'Chat',      route: '/app',            icon: '💬' },
-    // TODO: Add domain nav items as feature modules are introduced.
+    { label: 'Chat',      route: '/chat',           icon: '💬' },
+    { label: 'Admin',     route: '/app/admin',      icon: '🛡️' },
+    // Future enhancement: add domain nav items as feature modules are introduced.
     //   { label: 'Orders',    route: '/app/orders',    icon: '🧾' },
     //   { label: 'Inventory', route: '/app/inventory', icon: '📦' },
     //   { label: 'Reports',   route: '/app/reports',   icon: '📊' },
