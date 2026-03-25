@@ -1,6 +1,6 @@
 /* =============================================================================
    Durion POS – Global Styles & Theme Token System
-   See docs/theme-tokens.md for token inventory and extension guidance.
+   See design/source/theme-tokens.md for token inventory and extension guidance.
    ============================================================================= */
 
 /* ── Durion Brand Palette (raw tokens) ───────────────────────────────────── */
@@ -94,7 +94,7 @@
   --accentA100:            var(--durion-teal-100);
   --trackColor:            var(--durion-graphite-200);
   --handleColor:           var(--durion-graphite-500);
-  /* Extended local tokens – see docs/theme-tokens.md */
+  /* Extended local tokens – see design/source/theme-tokens.md */
   --border-color:          var(--durion-graphite-200);
   --input-background:      #ffffff;
   --input-border:          var(--durion-graphite-200);

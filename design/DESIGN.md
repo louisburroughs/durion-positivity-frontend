@@ -1,5 +1,10 @@
 # Design System Strategy: The Architectural Ledger
 
+Implementation token source of truth:
+- `design/source/theme-tokens.md`
+- `design/source/durion-style-guide.md`
+- `design/source/durion-theme.css`
+
 ## 1. Overview & Creative North Star: "The Architectural Ledger"
 
 This design system moves beyond "Standard Banking" into the realm of **The Architectural Ledger**. The North Star for this system is the intersection of blueprint precision and editorial authority. We reject the "boxed-in" look of traditional fintech. Instead, we embrace a layout that feels like a premium financial broadsheet—utilizing intentional asymmetry, vast white space, and a sophisticated layering of Blueprint Blues.

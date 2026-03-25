@@ -42,7 +42,10 @@ src/
     environment.prod.ts     # PROD – apiBaseUrl: /api
   styles.css                # Global CSS theme variables
 docs/
-  theme-tokens.md           # Full token inventory (raw, semantic, runtime)
+  theme-tokens.md           # Pointer to the canonical theme token inventory
+design/
+  source/
+    theme-tokens.md         # Canonical token inventory (raw, semantic, runtime)
 ```
 
 ### Key Design Decisions
@@ -95,7 +98,7 @@ docs/
 - All colors use CSS variables from `src/styles.css`.
 - Toggle: header button or `ThemeService.toggle()` from any component.
 - Preference persists in `localStorage` (`durion-theme`).
-- Extended tokens documented in `docs/theme-tokens.md`.
+- Extended tokens documented in `design/source/theme-tokens.md`.
 
 ## Backend Integration
 
@@ -110,4 +113,3 @@ docs/
 | Variable | Default (dev) | Description |
 |---|---|---|
 | `apiBaseUrl` | `http://localhost:8080/api` | Backend REST API base URL |
-
