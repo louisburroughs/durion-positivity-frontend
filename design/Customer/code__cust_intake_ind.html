@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;family=Noto+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-tint": "#2b4c78",
+                        "on-primary-fixed": "#001c3b",
+                        "tertiary-container": "#634600",
+                        "surface-container-high": "#e7e8eb",
+                        "on-tertiary": "#ffffff",
+                        "surface-bright": "#f9f9fd",
+                        "surface-container-highest": "#e2e2e6",
+                        "on-tertiary-container": "#deb569",
+                        "on-secondary-fixed-variant": "#005049",
+                        "surface-container": "#edeef1",
+                        "secondary": "#006a62",
+                        "secondary-fixed": "#76f7e8",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#ebc073",
+                        "surface": "#f9f9fd",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#463100",
+                        "inverse-surface": "#2e3133",
+                        "on-tertiary-fixed-variant": "#5d4200",
+                        "on-surface": "#191c1e",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#264873",
+                        "surface-dim": "#d9dadd",
+                        "primary-fixed": "#d5e3ff",
+                        "primary-container": "#2b4c78",
+                        "on-tertiary-fixed": "#271900",
+                        "outline": "#737780",
+                        "on-secondary-container": "#006f66",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#a8c8fb",
+                        "secondary-fixed-dim": "#56dacc",
+                        "surface-variant": "#e2e2e6",
+                        "on-secondary-fixed": "#00201d",
+                        "surface-container-low": "#f3f3f7",
+                        "on-surface-variant": "#43474f",
+                        "tertiary-fixed": "#ffdea6",
+                        "primary": "#2b4c78",
+                        "background": "#f9f9fd",
+                        "primary-fixed-dim": "#a8c8fb",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#d5e3ff",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "on-background": "#191c1e",
+                        "inverse-on-surface": "#f0f0f4",
+                        "secondary-container": "#006a62",
+                        "outline-variant": "#c3c6d0"
+                    },
+                    fontFamily: {
+                        "headline": ["Public Sans", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                        "label": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            box-shadow: none !important;
+        }
+        .form-input-container {
+            border: 1px solid #c3c6d0;
+            background-color: #ffffff;
+            transition: border-color 0.2s ease;
+        }
+        .form-input-container:focus-within {
+            border-color: #2b4c78;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface selection:bg-secondary/10">
+<!-- TopNavBar (Shared Component) -->
+<nav class="sticky top-0 z-50 bg-white border-b border-slate-100 flex justify-between items-center w-full px-8 py-4 max-w-none font-headline tracking-tight text-on-surface">
+<div class="text-xl font-bold text-[#2b4c78] uppercase tracking-wider">
+        Mechanical Services Ledger
+    </div>
+<div class="hidden md:flex gap-8 items-center">
+<a class="text-slate-600 font-medium hover:text-[#2b4c78] transition-colors" href="#">Dashboard</a>
+<a class="text-slate-600 font-medium hover:text-[#2b4c78] transition-colors" href="#">Fleet</a>
+<a class="text-slate-600 font-medium hover:text-[#2b4c78] transition-colors" href="#">Billing</a>
+<a class="text-slate-600 font-medium hover:text-[#2b4c78] transition-colors" href="#">Settings</a>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-600 cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-slate-600 cursor-pointer">account_circle</span>
+</div>
+</nav>
+<div class="flex min-h-screen">
+<!-- SideNavBar (Shared Component) -->
+<aside class="hidden lg:flex flex-col h-screen w-64 bg-slate-50 p-4 gap-2 border-r border-slate-200">
+<div class="mb-8 px-2">
+<div class="font-black text-[#2b4c78] text-lg font-headline">Service Portal</div>
+<div class="text-[10px] text-on-surface-variant uppercase tracking-[0.15em] font-bold">Mechanical Operations</div>
+</div>
+<nav class="flex flex-col gap-1 font-headline text-sm">
+<a class="flex items-center gap-3 p-3 text-slate-600 hover:bg-slate-200 transition-all rounded-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="font-medium">Overview</span>
+</a>
+<a class="flex items-center gap-3 p-3 bg-[#2b4c78] text-white rounded-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">person</span>
+<span class="font-medium">Individual Intake</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-slate-600 hover:bg-slate-200 transition-all rounded-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">local_shipping</span>
+<span class="font-medium">Commercial Fleet</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-slate-600 hover:bg-slate-200 transition-all rounded-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">history_edu</span>
+<span class="font-medium">Service Records</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-slate-600 hover:bg-slate-200 transition-all rounded-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">account_balance</span>
+<span class="font-medium">Billing Ledger</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-y-auto px-6 py-12 md:px-12 lg:px-24 bg-[#f3f3f7]">
+<div class="max-w-4xl mx-auto">
+<!-- Header Section -->
+<header class="mb-12 border-l-4 border-primary pl-6">
+<span class="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant mb-2 block font-headline">Enrollment Phase: Individual</span>
+<h1 class="font-headline text-4xl md:text-5xl font-black text-primary tracking-tight mb-4 uppercase">Customer Intake Form</h1>
+<p class="text-on-surface-variant max-w-2xl leading-relaxed text-sm">
+                    Complete the formal application for maintenance services. This data secures your mechanical history and ensures precision in all future service engagements within the Ledger system.
+                </p>
+</header>
+<form class="space-y-12">
+<!-- Section 1: Personal Identity -->
+<section class="space-y-6">
+<div class="flex items-center gap-4 mb-2">
+<h2 class="font-headline text-xs font-black uppercase tracking-[0.2em] text-primary shrink-0">01. Personal Identity</h2>
+<div class="h-px flex-1 bg-outline-variant opacity-30"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="group">
+<label class="block text-[10px] font-black text-primary uppercase tracking-wider mb-2 ml-1 font-headline">Legal Full Name</label>
+<div class="form-input-container p-3 rounded-sm">
+<input class="w-full bg-transparent border-none p-0 text-on-surface placeholder:text-outline/40 font-body text-sm" placeholder="Johnathan Q. Public" type="text"/>
+</div>
+</div>
+<div class="group">
+<label class="block text-[10px] font-black text-primary uppercase tracking-wider mb-2 ml-1 font-headline">Contact Email Address</label>
+<div class="form-input-container p-3 rounded-sm">
+<input class="w-full bg-transparent border-none p-0 text-on-surface placeholder:text-outline/40 font-body text-sm" placeholder="client@domain.com" type="email"/>
+</div>
+</div>
+<div class="group">
+<label class="block text-[10px] font-black text-primary uppercase tracking-wider mb-2 ml-1 font-headline">Primary Phone Number</label>
+<div class="form-input-container p-3 rounded-sm">
+<input class="w-full bg-transparent border-none p-0 text-on-surface placeholder:text-outline/40 font-body text-sm" placeholder="+1 (555) 000-0000" type="tel"/>
+</div>
+</div>
+<div class="group">
+<label class="block text-[10px] font-black text-primary uppercase tracking-wider mb-2 ml-1 font-headline">Residential Street Address</label>
+<div class="form-input-container p-3 rounded-sm">
+<input class="w-full bg-transparent border-none p-0 text-on-surface placeholder:text-outline/40 font-body text-sm" placeholder="123 Blueprint Ave, Industrial District" type="text"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Vehicle Registry -->
+<section class="space-y-6">
+<div class="flex items-center gap-4 mb-2">
+<h2 class="font-headline text-xs font-black uppercase tracking-[0.2em] text-primary shrink-0">02. Vehicle Registry</h2>
+<div class="h-px flex-1 bg-outline-variant opacity-30"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="group">
+<label class="block text-[10px] font-black text-primary uppercase tracking-wider mb-2 ml-1 font-headline">Vehicle Make</label>
+<div class="form-input-container p-3 rounded-sm">
+<input class="w-full bg-transparent border-none p-0 text-on-surface placeholder:text-outline/40 font-body text-sm" placeholder="e.g. Ford, Tesla" type="text"/>
+</div>
+</div>
+<div class="group">
+<label class="block text-[10px] font-black text-primary uppercase tracking-wider mb-2 ml-1 font-headline">Vehicle Model</label>
+<div class="form-input-container p-3 rounded-sm">
+<input class="w-full bg-transparent border-none p-0 text-on-surface placeholder:text-outline/40 font-body text-sm" placeholder="e.g. F-150, Model 3" type="text"/>
+</div>
+</div>
+<div class="group">
+<label class="block text-[10px] font-black text-primary uppercase tracking-wider mb-2 ml-1 font-headline">Model Year</label>
+<div class="form-input-container p-3 rounded-sm">
+<input class="w-full bg-transparent border-none p-0 text-on-surface placeholder:text-outline/40 font-body text-sm" placeholder="2024" type="number"/>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="group">
+<label class="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-wider mb-2 ml-1 font-headline">
+                                VIN (Vehicle Identification Number)
+                                <span class="material-symbols-outlined text-[14px] cursor-help text-outline" title="The 17-character unique code for your vehicle">info</span>
+</label>
+<div class="form-input-container p-3 rounded-sm">
+<input class="w-full bg-transparent border-none p-0 text-on-surface placeholder:text-outline/40 font-body text-sm uppercase tracking-widest" placeholder="17-Digit Alpha-Numeric Code" type="text"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="group">
+<label class="block text-[10px] font-black text-primary uppercase tracking-wider mb-2 ml-1 font-headline">License Plate</label>
+<div class="form-input-container p-3 rounded-sm">
+<input class="w-full bg-transparent border-none p-0 text-on-surface placeholder:text-outline/40 font-body text-sm uppercase" placeholder="ABC-1234" type="text"/>
+</div>
+</div>
+<div class="group">
+<label class="block text-[10px] font-black text-primary uppercase tracking-wider mb-2 ml-1 font-headline">Initial Odometer</label>
+<div class="form-input-container p-3 rounded-sm">
+<input class="w-full bg-transparent border-none p-0 text-on-surface placeholder:text-outline/40 font-body text-sm" placeholder="000,000" type="text"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Service History -->
+<section class="space-y-6">
+<div class="flex items-center gap-4 mb-2">
+<h2 class="font-headline text-xs font-black uppercase tracking-[0.2em] text-primary shrink-0">03. Service History</h2>
+<div class="h-px flex-1 bg-outline-variant opacity-30"></div>
+</div>
+<div class="space-y-6">
+<div class="group">
+<label class="block text-[10px] font-black text-primary uppercase tracking-wider mb-2 ml-1 font-headline">Previous Maintenance Facilities</label>
+<div class="form-input-container p-3 rounded-sm">
+<textarea class="w-full bg-transparent border-none p-0 text-on-surface placeholder:text-outline/40 font-body text-sm resize-none" placeholder="List recent dealerships or independent shops..." rows="3"></textarea>
+</div>
+</div>
+<div class="group">
+<label class="block text-[10px] font-black text-primary uppercase tracking-wider mb-2 ml-1 font-headline">Current Mechanical Issues / Concerns</label>
+<div class="form-input-container p-3 rounded-sm">
+<textarea class="w-full bg-transparent border-none p-0 text-on-surface placeholder:text-outline/40 font-body text-sm resize-none" placeholder="Describe any vibrations, noises, or performance irregularities..." rows="3"></textarea>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 4: Consent & Signature -->
+<section class="space-y-8">
+<div class="flex items-center gap-4 mb-2">
+<h2 class="font-headline text-xs font-black uppercase tracking-[0.2em] text-primary shrink-0">04. Consent &amp; Signature</h2>
+<div class="h-px flex-1 bg-outline-variant opacity-30"></div>
+</div>
+<div class="bg-white border border-outline-variant p-8 rounded-sm shadow-sm space-y-4">
+<div class="flex items-start gap-4">
+<input class="mt-1 rounded-sm text-secondary focus:ring-secondary border-outline-variant h-4 w-4" id="consent" type="checkbox"/>
+<label class="text-xs text-on-surface-variant leading-relaxed font-body" for="consent">
+                                I hereby authorize Mechanical Services Ledger to maintain digital records of my vehicle's diagnostic history and contact me regarding critical safety alerts and service intervals. I certify that all information provided is accurate to the best of my mechanical knowledge.
+                            </label>
+</div>
+<div class="pt-6 border-t border-slate-100">
+<label class="block text-[10px] font-black text-primary mb-4 uppercase tracking-[0.2em] font-headline">Electronic Endorsement</label>
+<div class="bg-slate-50 border border-dashed border-outline-variant h-32 w-full flex items-center justify-center relative rounded-sm group overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
+<span class="text-outline/40 font-headline italic text-sm select-none">Draw signature or type full name for verification</span>
+<div class="absolute bottom-3 right-3 flex gap-2">
+<button class="bg-white border border-outline-variant hover:bg-slate-100 text-[10px] px-3 py-1.5 transition-all uppercase font-black text-primary tracking-widest" type="button">Clear</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Primary Action -->
+<div class="pt-8 flex flex-col items-center gap-6">
+<button class="w-full md:w-64 px-8 py-5 bg-[#006a62] text-white font-headline font-black uppercase tracking-[0.3em] text-xs rounded-sm hover:bg-[#005049] transition-all shadow-md active:transform active:scale-[0.98]" type="submit">
+                        Finalize Enrollment
+                    </button>
+<div class="flex items-center gap-3 py-2 px-4 border border-outline-variant/30 rounded-full bg-white/50">
+<span class="material-symbols-outlined text-[16px] text-secondary">verified_user</span>
+<p class="text-[10px] text-on-surface-variant font-black uppercase tracking-widest font-headline">
+                            Secured Enterprise-Grade Protocol
+                        </p>
+</div>
+</div>
+</form>
+<footer class="mt-24 pb-12 border-t border-slate-200 pt-12">
+<div class="flex justify-center items-center gap-12">
+<div class="flex flex-col items-center">
+<span class="text-xl font-black text-primary font-headline">01</span>
+<span class="text-[9px] uppercase font-black text-primary tracking-[0.2em] font-headline">Intake</span>
+</div>
+<div class="w-16 h-px bg-outline-variant opacity-20"></div>
+<div class="flex flex-col items-center opacity-30">
+<span class="text-xl font-black text-on-surface-variant font-headline">02</span>
+<span class="text-[9px] uppercase font-black text-on-surface-variant tracking-[0.2em] font-headline">Review</span>
+</div>
+<div class="w-16 h-px bg-outline-variant opacity-20"></div>
+<div class="flex flex-col items-center opacity-30">
+<span class="text-xl font-black text-on-surface-variant font-headline">03</span>
+<span class="text-[9px] uppercase font-black text-on-surface-variant tracking-[0.2em] font-headline">Certified</span>
+</div>
+</div>
+<div class="mt-12 text-center">
+<p class="text-[10px] text-outline uppercase font-bold tracking-[0.1em] font-headline">© 2024 Mechanical Services Ledger. All Rights Reserved.</p>
+</div>
+</footer>
+</div>
+</main>
+</div>
+</body></html>

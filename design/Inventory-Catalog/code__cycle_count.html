@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cycle Count | Mechanical Inventory</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;800;900&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary-fixed": "#d5e3ff",
+              "inverse-primary": "#a8c8fb",
+              "on-error-container": "#93000a",
+              "error-container": "#ffdad6",
+              "secondary-container": "#73f4e5",
+              "inverse-on-surface": "#f0f0f4",
+              "surface-container-high": "#e7e8eb",
+              "on-secondary-fixed-variant": "#005049",
+              "on-surface-variant": "#43474f",
+              "on-background": "#191c1e",
+              "on-error": "#ffffff",
+              "on-primary-container": "#9dbdf0",
+              "outline": "#737780",
+              "on-tertiary-fixed-variant": "#5d4200",
+              "surface-container-lowest": "#ffffff",
+              "surface": "#f9f9fd",
+              "primary-fixed-dim": "#a8c8fb",
+              "surface-container": "#edeef1",
+              "secondary-fixed-dim": "#56dacc",
+              "on-primary-fixed-variant": "#264873",
+              "background": "#f9f9fd",
+              "tertiary": "#463100",
+              "surface-container-highest": "#e2e2e6",
+              "primary": "#0f3560",
+              "tertiary-container": "#634600",
+              "tertiary-fixed-dim": "#ebc073",
+              "on-primary": "#ffffff",
+              "error": "#ba1a1a",
+              "inverse-surface": "#2e3133",
+              "surface-bright": "#f9f9fd",
+              "on-primary-fixed": "#001c3b",
+              "secondary-fixed": "#76f7e8",
+              "tertiary-fixed": "#ffdea6",
+              "on-tertiary-container": "#deb569",
+              "on-tertiary": "#ffffff",
+              "surface-variant": "#e2e2e6",
+              "surface-container-low": "#f3f3f7",
+              "on-tertiary-fixed": "#271900",
+              "secondary": "#006a62",
+              "on-secondary-container": "#006f66",
+              "outline-variant": "#c3c6d0",
+              "on-secondary-fixed": "#00201d",
+              "surface-tint": "#405f8d",
+              "surface-dim": "#d9dadd",
+              "primary-container": "#2b4c78",
+              "on-surface": "#191c1e",
+              "on-secondary": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Public Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body { font-family: 'Inter', sans-serif; }
+      h1, h2, h3 { font-family: 'Public Sans', sans-serif; }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+      }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex min-h-screen">
+<!-- SideNavBar (Execution from JSON) -->
+<aside class="hidden md:flex flex-col h-screen p-4 gap-2 bg-slate-50 border-r-0 w-64 sticky top-0">
+<div class="mb-8 px-2">
+<h1 class="text-lg font-black text-[#2b4c78] tracking-tighter">Inventory Ops</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Precision Ledger v2.4</p>
+</div>
+<nav class="flex-1 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-100 hover:translate-x-1 transition-all duration-200 rounded-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="text-sm font-medium">Catalog</span>
+</a>
+<!-- Active Tab: Cycle Count -->
+<a class="flex items-center gap-3 px-3 py-2.5 bg-white text-[#2b4c78] shadow-sm rounded-sm font-bold scale-[1.02]" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">fact_check</span>
+<span class="text-sm">Cycle Count</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-100 hover:translate-x-1 transition-all duration-200 rounded-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+<span class="text-sm font-medium">Procurement</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-100 hover:translate-x-1 transition-all duration-200 rounded-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">local_shipping</span>
+<span class="text-sm font-medium">Suppliers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-100 hover:translate-x-1 transition-all duration-200 rounded-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">assessment</span>
+<span class="text-sm font-medium">Reports</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-1 pt-4 border-t border-slate-200">
+<button class="w-full bg-secondary text-on-secondary py-2.5 rounded-sm font-bold text-sm mb-4 hover:opacity-90 transition-opacity">
+                New Audit
+            </button>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+<span class="text-sm">Help Center</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span class="text-sm">Logout</span>
+</a>
+</div>
+</aside>
+<main class="flex-1 flex flex-col min-w-0">
+<!-- TopNavBar (Execution from JSON) -->
+<header class="flex justify-between items-center w-full px-6 py-3 max-w-full bg-white shadow-sm sticky top-0 z-10">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tighter text-[#2b4c78] uppercase">Mechanical Inventory</span>
+<nav class="hidden lg:flex gap-6 text-sm">
+<a class="text-slate-500 hover:text-slate-700 transition-colors" href="#">Dashboard</a>
+<a class="text-slate-500 hover:text-slate-700 transition-colors" href="#">Analytics</a>
+<a class="text-slate-500 hover:text-slate-700 transition-colors" href="#">Settings</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="bg-surface-container-high border-none rounded-sm text-sm py-1.5 pl-9 pr-4 w-64 focus:ring-2 focus:ring-secondary/20" placeholder="Search logs..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-slate-500 hover:bg-slate-50 p-2 rounded-full transition-colors">notifications</button>
+<button class="material-symbols-outlined text-slate-500 hover:bg-slate-50 p-2 rounded-full transition-colors">account_circle</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<div class="p-8 max-w-7xl mx-auto w-full space-y-8">
+<!-- Audit Session Header -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
+<div class="lg:col-span-8 space-y-2">
+<span class="text-[10px] font-bold tracking-[0.2em] text-on-surface-variant uppercase">Operational Session</span>
+<h2 class="text-3xl font-black text-primary tracking-tight">Active Audit: Q4 Mechanical Spares</h2>
+<div class="flex items-center gap-6 mt-4">
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full object-cover grayscale" data-alt="professional industrial auditor headshot in a bright office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOnIcTL6Gp1id4gLYl3VZ0bh_Xtc7b9nVSD0GgptxzVxtj0KrdYaMuHX9S159pSBwftbgCsQH4pqeHq8yhQXl6PcZhZ8Pw25WjUnYr855ZYlcEN6nB4cEjVMeN9KV3fy946xBAlht6CXvihzn5jtZl1u2eOsOX0cI1Sw_l3fk9AA1UN_kxcIoUV4IKIMvAMc1nMb2-BcwHYq4-uqXBfRxSqCFG6_i-SPNGw33u-ud0ZKHFatb8aLSgL7hwFYjYiYuJZGk4eI3A0A"/>
+<div>
+<p class="text-[10px] text-on-surface-variant leading-none uppercase font-semibold">Auditor</p>
+<p class="text-sm font-bold text-primary">Marcus Thorne</p>
+</div>
+</div>
+<div class="h-8 w-px bg-outline-variant/30"></div>
+<div>
+<p class="text-[10px] text-on-surface-variant leading-none uppercase font-semibold">Session Date</p>
+<p class="text-sm font-bold text-primary">Oct 24, 2023</p>
+</div>
+</div>
+</div>
+<div class="lg:col-span-4 space-y-3">
+<div class="flex justify-between items-end">
+<span class="text-[10px] font-bold uppercase text-on-surface-variant">Audit Progress</span>
+<span class="text-2xl font-black text-secondary">68%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest overflow-hidden rounded-full">
+<div class="h-full bg-secondary w-[68%]"></div>
+</div>
+</div>
+</section>
+<!-- Scanning / Input Zone -->
+<section class="bg-primary p-8 rounded-sm shadow-xl flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+<div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBJbI4cItNyxnlQQ3s6B2HbXx01-FV4vMVDm4y2Dy_h3maaVxV_YhgsPpJx1gSy8r272j7hvv5vJfoXva6BxlvdDiDyRLHGtOAqweomxrTPqIH1qYp58c3eA4S6-J4dBmoEkClzKus_-5S54QHiYLVhZ8oNcUl7gzJcduTv7Yo0Qzz1ZsIDz3T0rA8ij7lN6K5WVvL7ZJEmexVeo0KwbpKSU0JegCGVadYFWMH7bbA_8oqJ00MWuPKgA-X_IsSb-p5OIiDWp-SnCw');"></div>
+<div class="z-10 flex-1 space-y-2">
+<h3 class="text-white font-bold text-lg">Entry Terminal</h3>
+<p class="text-primary-fixed/70 text-sm">Scan barcode or enter Part ID manually to log item count.</p>
+</div>
+<div class="z-10 w-full md:w-[400px] relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary-fixed">barcode_scanner</span>
+<input class="w-full bg-white/10 border-0 border-b-2 border-primary-fixed/30 text-white placeholder:text-primary-fixed/40 py-4 pl-12 pr-4 text-xl font-mono tracking-widest focus:ring-0 focus:border-secondary transition-all" placeholder="PART-ID-XXXXX" type="text"/>
+</div>
+</section>
+<!-- Audit Table -->
+<section class="bg-surface-container-lowest rounded-sm overflow-hidden border border-outline-variant/10 shadow-sm">
+<div class="px-6 py-4 bg-surface-container-low border-b border-outline-variant/20 flex justify-between items-center">
+<h3 class="text-xs font-black uppercase tracking-widest text-on-surface-variant">Current Session Batch</h3>
+<span class="text-[10px] bg-white px-2 py-1 border border-outline-variant/30 rounded-sm font-mono">12 Items Pending</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full border-collapse">
+<thead>
+<tr class="text-left bg-surface-container-lowest border-b border-outline-variant/20">
+<th class="px-6 py-4 text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Part ID</th>
+<th class="px-6 py-4 text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Description</th>
+<th class="px-6 py-4 text-[10px] font-bold uppercase text-on-surface-variant tracking-wider text-center">Expected</th>
+<th class="px-6 py-4 text-[10px] font-bold uppercase text-on-surface-variant tracking-wider text-center">Actual</th>
+<th class="px-6 py-4 text-[10px] font-bold uppercase text-on-surface-variant tracking-wider text-center">Discrepancy</th>
+<th class="px-6 py-4 text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Reasoning</th>
+</tr>
+</thead>
+<tbody class="text-sm font-body">
+<!-- Row 1: Success/Match -->
+<tr class="border-b border-outline-variant/10 hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-4 font-mono font-bold text-primary">BRG-992-K</td>
+<td class="px-6 py-4 text-on-surface-variant">Sealed Ball Bearing, 45mm</td>
+<td class="px-6 py-4 text-center font-bold">140</td>
+<td class="px-6 py-4 text-center">
+<input class="w-16 text-center border-0 bg-surface-container-highest/50 rounded-sm py-1 font-bold focus:ring-2 focus:ring-secondary/40" type="number" value="140"/>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 text-secondary font-bold">
+<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                        0
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<input class="w-full text-xs bg-transparent border-0 border-b border-transparent focus:border-outline-variant focus:ring-0 italic placeholder:text-outline/40" placeholder="Add notes..." type="text"/>
+</td>
+</tr>
+<!-- Row 2: Discrepancy (Low) -->
+<tr class="border-b border-outline-variant/10 bg-error-container/5 hover:bg-error-container/10 transition-colors">
+<td class="px-6 py-4 font-mono font-bold text-primary">VLV-012-P</td>
+<td class="px-6 py-4 text-on-surface-variant">Pressure Release Valve</td>
+<td class="px-6 py-4 text-center font-bold">12</td>
+<td class="px-6 py-4 text-center">
+<input class="w-16 text-center border-0 bg-surface-container-highest/50 rounded-sm py-1 font-bold focus:ring-2 focus:ring-error/40" type="number" value="10"/>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 text-error font-bold">
+<span class="material-symbols-outlined text-xs">arrow_downward</span>
+                                        -2
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<select class="w-full text-xs bg-transparent border-0 border-b border-error/20 focus:ring-0 py-1 font-medium">
+<option>Damaged in transit</option>
+<option selected="">Misplaced/Missing</option>
+<option>Inaccurate system log</option>
+</select>
+</td>
+</tr>
+<!-- Row 3: Discrepancy (High) -->
+<tr class="border-b border-outline-variant/10 hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-4 font-mono font-bold text-primary">SCW-M8-SS</td>
+<td class="px-6 py-4 text-on-surface-variant">M8 Stainless Hex Bolt</td>
+<td class="px-6 py-4 text-center font-bold">2,400</td>
+<td class="px-6 py-4 text-center">
+<input class="w-16 text-center border-0 bg-surface-container-highest/50 rounded-sm py-1 font-bold focus:ring-2 focus:ring-secondary/40" type="number" value="2412"/>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 text-secondary font-bold">
+<span class="material-symbols-outlined text-xs">arrow_upward</span>
+                                        +12
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<input class="w-full text-xs bg-transparent border-0 border-b border-transparent focus:border-outline-variant focus:ring-0 placeholder:text-outline/40" type="text" value="Extra box found in Bin B-12"/>
+</td>
+</tr>
+<!-- Row 4: Pending -->
+<tr class="border-b border-outline-variant/10 hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-4 font-mono font-bold text-primary">PMP-HYD-50</td>
+<td class="px-6 py-4 text-on-surface-variant">Hydraulic Centrifugal Pump</td>
+<td class="px-6 py-4 text-center font-bold">4</td>
+<td class="px-6 py-4 text-center">
+<input class="w-16 text-center border-0 bg-surface-container-highest/80 rounded-sm py-1 font-bold focus:ring-2 focus:ring-primary/40" placeholder="--" type="number"/>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="text-outline/40">--</span>
+</td>
+<td class="px-6 py-4">
+<input class="w-full text-xs bg-transparent border-0 border-b border-transparent focus:border-outline-variant focus:ring-0 italic placeholder:text-outline/40" placeholder="Add notes..." type="text"/>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Bottom Sticky Action Bar -->
+<footer class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/90 backdrop-blur-md p-6 border-t border-outline-variant/20 rounded-lg shadow-xl shadow-primary/5 sticky bottom-4 z-20">
+<div class="flex items-center gap-4">
+<div class="flex flex-col">
+<span class="text-[10px] font-bold uppercase text-on-surface-variant">Total Adjustments</span>
+<p class="text-sm font-bold text-primary">Value Impact: <span class="text-error">-$1,240.50</span></p>
+</div>
+</div>
+<div class="flex items-center gap-3 w-full sm:w-auto">
+<button class="flex-1 sm:flex-none px-6 py-3 text-sm font-bold text-primary border border-primary/20 rounded-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">pause</span>
+                        Pause Audit
+                    </button>
+<button class="flex-1 sm:flex-none px-6 py-3 text-sm font-bold text-primary bg-primary-container text-white rounded-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">save</span>
+                        Save Progress
+                    </button>
+<button class="flex-[2] sm:flex-none px-8 py-3 text-sm font-black text-white bg-secondary rounded-sm hover:opacity-90 transition-opacity shadow-lg shadow-secondary/20 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">assignment_turned_in</span>
+                        Finalize &amp; Post Adjustments
+                    </button>
+</div>
+</footer>
+</div>
+</main>
+<!-- Contextual FAB (Only for Active Audit) -->
+<button class="fixed right-8 bottom-32 md:bottom-8 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all z-30">
+<span class="material-symbols-outlined text-2xl">qr_code_scanner</span>
+</button>
+</body></html>

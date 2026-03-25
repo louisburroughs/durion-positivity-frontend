@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Acme Mechanical Services - Executive Dashboard</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-container": "#ffa77e",
+              "primary-fixed-dim": "#abc7ff",
+              "on-secondary-fixed": "#002020",
+              "tertiary-fixed": "#ffdbcc",
+              "outline-variant": "#c2c6d3",
+              "surface-tint": "#255dad",
+              "on-primary": "#ffffff",
+              "secondary-fixed-dim": "#76d6d5",
+              "on-tertiary": "#ffffff",
+              "on-tertiary-fixed": "#351000",
+              "secondary": "#006a6a",
+              "on-secondary-fixed-variant": "#004f4f",
+              "on-secondary": "#ffffff",
+              "inverse-surface": "#2d3133",
+              "surface-bright": "#f7fafc",
+              "on-surface": "#181c1e",
+              "on-background": "#181c1e",
+              "primary-fixed": "#d7e2ff",
+              "on-primary-fixed-variant": "#00458f",
+              "on-error-container": "#93000a",
+              "surface": "#f7fafc",
+              "surface-container-low": "#f1f4f6",
+              "on-primary-container": "#9bbdff",
+              "on-error": "#ffffff",
+              "outline": "#737783",
+              "on-secondary-container": "#006e6e",
+              "inverse-on-surface": "#eef1f3",
+              "secondary-fixed": "#93f2f2",
+              "primary": "#00346f",
+              "surface-container": "#ebeef0",
+              "surface-container-highest": "#e0e3e5",
+              "surface-variant": "#e0e3e5",
+              "surface-dim": "#d7dadc",
+              "error": "#ba1a1a",
+              "secondary-container": "#90efef",
+              "tertiary": "#5f2200",
+              "error-container": "#ffdad6",
+              "on-primary-fixed": "#001b3f",
+              "on-tertiary-fixed-variant": "#7b2f00",
+              "tertiary-container": "#833301",
+              "primary-container": "#004a99",
+              "surface-container-lowest": "#ffffff",
+              "surface-container-high": "#e5e9eb",
+              "inverse-primary": "#abc7ff",
+              "tertiary-fixed-dim": "#ffb694",
+              "background": "#f7fafc",
+              "on-surface-variant": "#424751"
+            },
+            fontFamily: {
+              "headline": ["Public Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Public Sans', sans-serif; }
+        .glass-nav { background: rgba(247, 250, 252, 0.7); backdrop-filter: blur(12px); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- SideNavBar (Shared Component) -->
+<aside class="h-screen w-64 fixed left-0 top-0 z-40 bg-slate-100 flex flex-col py-4 border-r border-slate-200/50 font-['Public_Sans'] text-sm tracking-wide">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3 mb-1">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">factory</span>
+</div>
+<div>
+<h2 class="text-lg font-black text-blue-900 leading-none">Acme Mechanical</h2>
+<p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Professional Services</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 bg-white text-blue-700 font-bold border-l-4 border-blue-700 transition-transform duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 hover:translate-x-1 transition-transform duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span>Accounting</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 hover:translate-x-1 transition-transform duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="factory">factory</span>
+<span>Shop Floor</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 hover:translate-x-1 transition-transform duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span>Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 hover:translate-x-1 transition-transform duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span>HR</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 hover:translate-x-1 transition-transform duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="badge">badge</span>
+<span>Customers</span>
+</a>
+</nav>
+<div class="px-3 pt-4 mt-4 border-t border-slate-200/50 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-blue-900 transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="help">help</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-error transition-colors" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="logout">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!-- TopAppBar (Shared Component) -->
+<header class="sticky top-0 z-50 glass-nav flex justify-between items-center px-6 h-16 w-full font-['Public_Sans'] antialiased">
+<div class="flex items-center gap-4">
+<h1 class="text-xl font-bold tracking-tight text-blue-900">Positivity</h1>
+<div class="h-6 w-[1px] bg-slate-200/50 mx-2"></div>
+<span class="text-sm font-medium text-slate-500">Executive Dashboard</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center bg-surface-container rounded-lg px-3 py-1.5 gap-2">
+<span class="material-symbols-outlined text-outline text-sm" data-icon="search">search</span>
+<input class="bg-transparent border-none text-xs focus:ring-0 w-48 text-on-surface" placeholder="Search accounts or orders..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative p-2 text-slate-600 hover:bg-slate-100/50 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 text-slate-600 hover:bg-slate-100/50 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-slate-200/50">
+<div class="text-right">
+<p class="text-xs font-bold text-blue-900 leading-none">Acme Mechanical Services</p>
+<p class="text-[10px] text-slate-500 mt-1">Admin Account</p>
+</div>
+<img alt="User Profile" class="w-8 h-8 rounded-full object-cover" data-alt="professional headshot of a middle-aged male executive in a blue suit with a clean background and soft office lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4NS0OPD5FIKTEVNnaf-mneyz5EHMFtvHTiiHg6_NhjcCrkaqcdb_RtMfiK4hGB3GHJx8W0bPEh7QZumsIOpEwtTqg_4j3h9wBYiGrCkc_dvl6qn88G2VqNCVShS1BIR_ePbmqIFdCVWCjr0TB7z8hvz_tCsDgKGMSf4_u3HfjAep4b2ZSdfOaJ4DFztGlsVbS1sXTEupzF4F-I_hOVIZ5L54h4Rl7-vgXHFaQdHxWRNNF0mpN7lhTlQFY2DvzFV7hGihPJDd1Pg"/>
+</div>
+</div>
+</div>
+</header>
+<div class="p-8 max-w-7xl w-full mx-auto space-y-8">
+<!-- Header Section -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="text-4xl font-black text-on-surface tracking-tight mb-2">Portfolio Overview</h2>
+<p class="text-on-surface-variant font-medium">Fiscal Year 2024 • Q3 Performance Summary</p>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 bg-surface-container-lowest border border-outline-variant/30 text-primary font-semibold rounded-lg flex items-center gap-2 hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="download">download</span> Export PDF
+                    </button>
+<button class="px-6 py-2 bg-gradient-to-br from-primary to-primary-container text-white font-bold rounded-lg shadow-lg shadow-primary/10 hover:opacity-90 transition-all active:scale-95">
+                        New Order
+                    </button>
+</div>
+</section>
+<!-- Financial Snapshots (Bento Grid) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<!-- AR/AP Balance -->
+<div class="md:col-span-2 bg-surface-container-lowest p-6 rounded-xl border-l-4 border-primary relative overflow-hidden">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Financial Liquidity</h3>
+<p class="text-2xl font-black text-on-surface">Net Cash Position</p>
+</div>
+<span class="material-symbols-outlined text-primary-fixed-dim text-4xl opacity-50" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div>
+<p class="text-xs text-on-surface-variant mb-1">Accounts Receivable</p>
+<p class="text-2xl font-bold text-primary">$1,248,500</p>
+<div class="mt-2 h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-3/4"></div>
+</div>
+</div>
+<div>
+<p class="text-xs text-on-surface-variant mb-1">Accounts Payable</p>
+<p class="text-2xl font-bold text-tertiary-container">$412,200</p>
+<div class="mt-2 h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-container w-1/4"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Shop Utilization -->
+<div class="bg-surface-container-low p-6 rounded-xl relative flex flex-col justify-between">
+<div>
+<h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Operations</h3>
+<p class="text-lg font-bold text-on-surface mb-4">Shop Utilization</p>
+</div>
+<div class="flex items-center justify-center py-4">
+<div class="relative w-28 h-28 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-highest" cx="56" cy="56" fill="transparent" r="48" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-secondary" cx="56" cy="56" fill="transparent" r="48" stroke="currentColor" stroke-dasharray="301.59" stroke-dashoffset="45" stroke-width="8"></circle>
+</svg>
+<span class="absolute text-2xl font-black text-secondary">85%</span>
+</div>
+</div>
+<p class="text-xs text-on-surface-variant text-center mt-2 font-medium">12/14 Bays Active Today</p>
+</div>
+<!-- Net Cash Flow -->
+<div class="bg-secondary-container p-6 rounded-xl flex flex-col justify-between">
+<div>
+<h3 class="text-xs font-black uppercase tracking-widest text-on-secondary-fixed-variant mb-1">Performance</h3>
+<p class="text-lg font-bold text-on-secondary-fixed mb-1">Monthly Cash Flow</p>
+</div>
+<div>
+<p class="text-3xl font-black text-secondary leading-tight">+$182.4k</p>
+<div class="flex items-center gap-1 text-secondary mt-1">
+<span class="material-symbols-outlined text-sm" data-icon="trending_up">trending_up</span>
+<span class="text-xs font-bold">12.4% vs last month</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Priority & Alerts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Priority Work Orders -->
+<div class="lg:col-span-2 space-y-4">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-xl font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="assignment_late">assignment_late</span>
+                            Priority Work Orders
+                        </h3>
+<button class="text-sm font-bold text-primary hover:underline">View All Schedule</button>
+</div>
+<div class="space-y-3">
+<!-- Order Item -->
+<div class="bg-surface-container-lowest p-4 rounded-xl flex items-center gap-4 transition-all hover:bg-white hover:shadow-xl hover:shadow-primary/5">
+<div class="w-2 h-12 bg-primary rounded-full"></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-bold text-on-surface">Data Center HVAC Installation</h4>
+<span class="text-xs font-black px-2 py-0.5 bg-primary-fixed text-on-primary-fixed-variant rounded">CRITICAL</span>
+</div>
+<div class="flex items-center gap-4 mt-1 text-xs text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span> Ashburn, VA</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm" data-icon="calendar_today">calendar_today</span> Due: Oct 12</span>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-on-surface">$245,000</p>
+<p class="text-[10px] text-slate-400">Project Value</p>
+</div>
+</div>
+<!-- Order Item -->
+<div class="bg-surface-container-lowest p-4 rounded-xl flex items-center gap-4 transition-all hover:bg-white hover:shadow-xl hover:shadow-primary/5">
+<div class="w-2 h-12 bg-secondary rounded-full"></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-bold text-on-surface">Hospital Main Boiler Maintenance</h4>
+<span class="text-xs font-black px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded">ACTIVE</span>
+</div>
+<div class="flex items-center gap-4 mt-1 text-xs text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span> Baltimore, MD</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm" data-icon="calendar_today">calendar_today</span> Due: Oct 15</span>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-on-surface">$82,500</p>
+<p class="text-[10px] text-slate-400">Project Value</p>
+</div>
+</div>
+<!-- Order Item -->
+<div class="bg-surface-container-lowest p-4 rounded-xl flex items-center gap-4 transition-all hover:bg-white hover:shadow-xl hover:shadow-primary/5">
+<div class="w-2 h-12 bg-outline-variant rounded-full"></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-bold text-on-surface">Commercial Chill-Water Retrofit</h4>
+<span class="text-xs font-black px-2 py-0.5 bg-surface-container-highest text-on-surface-variant rounded">PLANNING</span>
+</div>
+<div class="flex items-center gap-4 mt-1 text-xs text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span> Richmond, VA</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm" data-icon="calendar_today">calendar_today</span> Due: Oct 28</span>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-on-surface">$128,000</p>
+<p class="text-[10px] text-slate-400">Project Value</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Compliance & Forecasting Side Column -->
+<div class="space-y-6">
+<!-- Compliance Alerts -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-error/10">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-error" data-icon="verified_user">verified_user</span>
+<h3 class="font-bold text-on-surface">Compliance Alerts</h3>
+</div>
+<div class="space-y-4">
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-full bg-error/10 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-error text-sm" data-icon="warning">warning</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface">ASME B31.3 Renewal Due</p>
+<p class="text-[10px] text-on-surface-variant">Expires in 12 days • Shop Floor A</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="check_circle">check_circle</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface">ISO 9001 Audit Passed</p>
+<p class="text-[10px] text-on-surface-variant">Completed on Oct 02 • No findings</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Revenue Forecast -->
+<div class="bg-primary text-on-primary p-6 rounded-xl relative overflow-hidden">
+<div class="relative z-10">
+<h3 class="text-xs font-black uppercase tracking-widest opacity-70 mb-1">Forecast</h3>
+<p class="text-lg font-bold mb-4">Q4 Projected Revenue</p>
+<p class="text-3xl font-black mb-1">$4.2M</p>
+<p class="text-xs opacity-80 mb-6">Based on current pipeline &amp; seasonal trends</p>
+<div class="flex items-end gap-1.5 h-16">
+<div class="flex-1 bg-on-primary/20 h-8 rounded-sm"></div>
+<div class="flex-1 bg-on-primary/20 h-10 rounded-sm"></div>
+<div class="flex-1 bg-on-primary/20 h-12 rounded-sm"></div>
+<div class="flex-1 bg-on-primary/40 h-14 rounded-sm"></div>
+<div class="flex-1 bg-secondary h-16 rounded-sm"></div>
+<div class="flex-1 bg-secondary/60 h-16 rounded-sm border-2 border-dashed border-on-primary/30"></div>
+</div>
+</div>
+<!-- Abstract Blueprint Pattern -->
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-[120px]" data-icon="architecture">architecture</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Shop Floor Insights (Data Blueprint Card) -->
+<section class="bg-surface-container-lowest rounded-xl overflow-hidden">
+<div class="bg-primary-fixed px-6 py-4 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="precision_manufacturing">precision_manufacturing</span>
+<h3 class="font-bold text-on-primary-fixed">Real-time Shop Intelligence</h3>
+</div>
+<span class="text-[10px] font-black uppercase tracking-widest text-on-primary-fixed-variant">Updated: Just Now</span>
+</div>
+<div class="p-6 grid grid-cols-2 md:grid-cols-4 gap-8">
+<div class="border-l-2 border-primary pl-4">
+<p class="text-xs text-on-surface-variant mb-1">Safety Incident Rate</p>
+<p class="text-2xl font-black text-on-surface">0.00</p>
+<p class="text-[10px] font-bold text-secondary uppercase tracking-tight">328 Days Incident Free</p>
+</div>
+<div class="border-l-2 border-primary pl-4">
+<p class="text-xs text-on-surface-variant mb-1">Active Welders</p>
+<p class="text-2xl font-black text-on-surface">24/30</p>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tight">80% Labor Capacity</p>
+</div>
+<div class="border-l-2 border-primary pl-4">
+<p class="text-xs text-on-surface-variant mb-1">Inventory Turn</p>
+<p class="text-2xl font-black text-on-surface">14.2x</p>
+<p class="text-[10px] font-bold text-secondary uppercase tracking-tight">Optimal Efficiency</p>
+</div>
+<div class="border-l-2 border-primary pl-4">
+<p class="text-xs text-on-surface-variant mb-1">Equipment Uptime</p>
+<p class="text-2xl font-black text-on-surface">99.2%</p>
+<p class="text-[10px] font-bold text-secondary uppercase tracking-tight">+2.1% Yearly Avg</p>
+</div>
+</div>
+</section>
+</div>
+<footer class="mt-auto py-6 px-8 flex justify-between items-center bg-surface-container-low border-t border-slate-200/50">
+<p class="text-xs text-slate-500">© 2024 Acme Mechanical Services • Standardized Executive Dashboard v3.1</p>
+<div class="flex gap-4">
+<a class="text-xs font-bold text-primary hover:underline" href="#">Privacy Policy</a>
+<a class="text-xs font-bold text-primary hover:underline" href="#">Support Center</a>
+</div>
+</footer>
+</main>
+<!-- Contextual FAB (Only for main screens) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-xl shadow-2xl flex items-center justify-center hover:scale-105 transition-all group z-50">
+<span class="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform" data-icon="add">add</span>
+</button>
+</body></html>

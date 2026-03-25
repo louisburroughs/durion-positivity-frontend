@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Individual Customer &amp; Vehicle Management | Architectural Ledger MS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800;900&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-high": "#e7e8eb",
+                        "on-primary-fixed-variant": "#264873",
+                        "on-primary-container": "#9dbdf0",
+                        "on-secondary-container": "#006f66",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#73f4e5",
+                        "inverse-surface": "#2e3133",
+                        "on-tertiary-fixed": "#271900",
+                        "surface": "#f9f9fd",
+                        "primary-fixed-dim": "#a8c8fb",
+                        "surface-bright": "#f9f9fd",
+                        "on-surface": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#56dacc",
+                        "on-secondary-fixed-variant": "#005049",
+                        "surface-variant": "#e2e2e6",
+                        "on-secondary-fixed": "#00201d",
+                        "on-primary-fixed": "#001c3b",
+                        "tertiary-fixed": "#ffdea6",
+                        "on-background": "#191c1e",
+                        "inverse-on-surface": "#f0f0f4",
+                        "surface-dim": "#d9dadd",
+                        "primary": "#0f3560",
+                        "on-tertiary-fixed-variant": "#5d4200",
+                        "tertiary-container": "#634600",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c3c6d0",
+                        "surface-tint": "#405f8d",
+                        "on-surface-variant": "#43474f",
+                        "inverse-primary": "#a8c8fb",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-container": "#deb569",
+                        "background": "#f9f9fd",
+                        "outline": "#737780",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#ebc073",
+                        "tertiary": "#463100",
+                        "secondary": "#006a62",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f3f3f7",
+                        "surface-container": "#edeef1",
+                        "primary-fixed": "#d5e3ff",
+                        "secondary-fixed": "#76f7e8",
+                        "surface-container-highest": "#e2e2e6",
+                        "primary-container": "#2b4c78"
+                    },
+                    fontFamily: {
+                        "headline": ["Public Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Public Sans', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-secondary-container">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-50 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none h-16 px-8 flex justify-between items-center max-w-full mx-auto">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-50">Architectural Ledger MS</span>
+<div class="hidden md:flex gap-6 items-center">
+<a class="font-public-sans tracking-tight text-sm font-semibold uppercase text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100 cursor-pointer active:opacity-70 transition-all" href="#">Commercial Accounts</a>
+<a class="font-public-sans tracking-tight text-sm font-semibold uppercase text-teal-600 dark:text-teal-400 border-b-2 border-teal-600 dark:border-teal-400 pb-1 cursor-pointer active:opacity-70 transition-all" href="#">Individual Customers</a>
+<a class="font-public-sans tracking-tight text-sm font-semibold uppercase text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100 cursor-pointer active:opacity-70 transition-all" href="#">Shop Floor</a>
+<a class="font-public-sans tracking-tight text-sm font-semibold uppercase text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100 cursor-pointer active:opacity-70 transition-all" href="#">Inventory</a>
+<a class="font-public-sans tracking-tight text-sm font-semibold uppercase text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100 cursor-pointer active:opacity-70 transition-all" href="#">Accounting</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden lg:block">
+<input class="bg-surface-container-high border-none text-sm px-4 py-2 w-64 rounded-sm focus:ring-2 focus:ring-secondary transition-all" placeholder="Search accounts..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-slate-100 p-2 rounded-full transition-colors">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-slate-100 p-2 rounded-full transition-colors">settings</button>
+<img alt="User profile" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="Close up portrait of a professional male administrator in a corporate setting with soft natural office lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDn2Hd9D_njemfD-2kTlJcW97gSsy8BYw7dbjSJ50JT6Ec6nU8NW0AbMOuWk7QoApUyYbtAXEa9hC9ST-82oZjnG7Z3Al2657p_YWIh-19Q6WlQazaKl4m3LAswrWs6B-xlcB_ZWwrhaUOTAqOlLzWY3j-SD3vLdMAJ6QCNc3gc0IB85dmYQvsRNqYj87URDwQwyD9Vd9P32kK7vVSZDexMfTg5ysKHF7ySbaid_i-soZnH54ylhI4TI6Ef9FKnmECXkKmIdkvzmQ"/>
+</div>
+<div class="bg-slate-200/50 dark:bg-slate-800/50 h-[1px] w-full absolute bottom-0 left-0"></div>
+</nav>
+<div class="flex pt-16 h-screen overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="hidden md:flex flex-col py-6 px-4 gap-2 h-screen w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 shrink-0">
+<div class="mb-6 px-2">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Navigation</p>
+<h3 class="text-lg font-black text-blue-900 dark:text-blue-100">Ledger Admin</h3>
+<p class="text-[10px] font-medium text-slate-500 uppercase tracking-tighter">Mechanical Services Div.</p>
+</div>
+<nav class="flex flex-col gap-1">
+<button class="flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 hover:translate-x-1 transition-all duration-300 rounded-sm">
+<span class="material-symbols-outlined text-[20px]">business</span>
+<span class="font-inter text-xs font-medium">Commercial Accounts</span>
+</button>
+<button class="flex items-center gap-3 px-3 py-2.5 bg-blue-900 dark:bg-blue-800 text-white dark:text-blue-50 rounded-sm font-bold shadow-sm transition-all duration-300">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">person_pin_circle</span>
+<span class="font-inter text-xs font-medium">Individual Customers</span>
+</button>
+<button class="flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 hover:translate-x-1 transition-all duration-300 rounded-sm">
+<span class="material-symbols-outlined text-[20px]">build</span>
+<span class="font-inter text-xs font-medium">Shop Floor</span>
+</button>
+<button class="flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 hover:translate-x-1 transition-all duration-300 rounded-sm">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="font-inter text-xs font-medium">Inventory</span>
+</button>
+<button class="flex items-center gap-3 px-3 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 hover:translate-x-1 transition-all duration-300 rounded-sm">
+<span class="material-symbols-outlined text-[20px]">account_balance</span>
+<span class="font-inter text-xs font-medium">Accounting</span>
+</button>
+</nav>
+<div class="mt-8 px-2">
+<button class="w-full bg-secondary text-white py-3 font-bold text-xs uppercase tracking-widest rounded-sm hover:brightness-110 active:scale-[0.98] transition-all">
+                    New Service Order
+                </button>
+</div>
+<div class="mt-auto flex flex-col gap-1 border-t border-slate-200 dark:border-slate-800 pt-4">
+<button class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 hover:translate-x-1 transition-all duration-300">
+<span class="material-symbols-outlined text-[20px]">help</span>
+<span class="font-inter text-xs font-medium">Support</span>
+</button>
+<button class="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 hover:translate-x-1 transition-all duration-300">
+<span class="material-symbols-outlined text-[20px]">history</span>
+<span class="font-inter text-xs font-medium">Archive</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-y-auto bg-surface p-8">
+<!-- Header Section -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+<div class="max-w-2xl">
+<span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-[0.2em] block mb-2">Customer Dossier</span>
+<h1 class="text-4xl md:text-5xl font-black text-primary tracking-tighter leading-none mb-4">Jonathan V. Sterling</h1>
+<div class="flex flex-wrap gap-4 text-sm font-medium text-on-surface-variant">
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-blue-800 text-[18px]">verified_user</span> Platinum Tier Account</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-blue-800 text-[18px]">calendar_month</span> Client since 2018</span>
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-blue-800 text-[18px]">location_on</span> Seattle, WA</span>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-container-lowest text-primary border border-outline-variant px-5 py-2.5 font-bold text-xs uppercase tracking-widest rounded-sm hover:bg-surface-container transition-all">Edit Profile</button>
+<button class="bg-primary text-white px-5 py-2.5 font-bold text-xs uppercase tracking-widest rounded-sm shadow-lg shadow-primary/20 hover:brightness-125 transition-all">Statement of Account</button>
+</div>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Profile & Summary Card -->
+<section class="lg:col-span-4 flex flex-col gap-8">
+<div class="bg-surface-container-lowest p-8 rounded-sm shadow-[0_4px_24px_-4px_rgba(0,0,0,0.04)] border-l-4 border-primary">
+<h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-6">Contact Information</h3>
+<div class="space-y-6">
+<div class="group">
+<label class="block text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Primary Email</label>
+<p class="text-primary font-semibold font-body">j.sterling@architectural-corp.com</p>
+</div>
+<div class="group">
+<label class="block text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Mobile Secure Line</label>
+<p class="text-primary font-semibold font-body">+1 (206) 555-0192</p>
+</div>
+<div class="group">
+<label class="block text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Service Address</label>
+<p class="text-primary font-semibold font-body">882 High-Point Estates Dr.<br/>Mercer Island, WA 98040</p>
+</div>
+</div>
+</div>
+<div class="bg-primary-container text-white p-8 rounded-sm overflow-hidden relative group">
+<div class="relative z-10">
+<h3 class="text-xs font-bold text-on-primary-container uppercase tracking-widest mb-6">Financial Overview</h3>
+<div class="mb-8">
+<p class="text-[10px] text-on-primary-container font-bold uppercase mb-1">Total Lifetime Spend</p>
+<p class="text-4xl font-black tracking-tighter">$42,890.15</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-[10px] text-on-primary-container font-bold uppercase">Open Orders</p>
+<p class="text-lg font-bold">02</p>
+</div>
+<div>
+<p class="text-[10px] text-on-primary-container font-bold uppercase">Loyalty Credit</p>
+<p class="text-lg font-bold">$1,250.00</p>
+</div>
+</div>
+</div>
+<!-- Background Architectural Motif -->
+<div class="absolute -right-12 -bottom-12 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-700">
+<span class="material-symbols-outlined text-[240px]">architecture</span>
+</div>
+</div>
+</section>
+<!-- Vehicle Inventory & History -->
+<section class="lg:col-span-8 flex flex-col gap-8">
+<div class="bg-surface-container-lowest rounded-sm shadow-[0_4px_24px_-4px_rgba(0,0,0,0.04)] overflow-hidden">
+<div class="p-8 pb-4 flex items-center justify-between">
+<h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Active Vehicle Registry</h3>
+<button class="text-secondary font-bold text-[11px] uppercase tracking-widest flex items-center gap-1 hover:gap-2 transition-all">
+                                Add Vehicle <span class="material-symbols-outlined text-[16px]">add_circle</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-y border-outline-variant/10">
+<th class="px-8 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter">Vehicle Details</th>
+<th class="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter">VIN Reference</th>
+<th class="px-6 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter">Service Status</th>
+<th class="px-8 py-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter text-right">Last Service</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-8 py-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-high rounded-sm flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">directions_car</span>
+</div>
+<div>
+<p class="text-sm font-bold text-primary">2023 Porsche Taycan</p>
+<p class="text-[11px] text-slate-500 font-medium">Turbo S · Frozen Blue Metallic</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6 font-mono text-[11px] text-slate-600">WP1AB2Y16PSA*****</td>
+<td class="px-6 py-6">
+<span class="px-2 py-1 bg-secondary-container/30 text-secondary text-[10px] font-bold uppercase rounded-full">Nominal</span>
+</td>
+<td class="px-8 py-6 text-right">
+<p class="text-sm font-semibold text-primary">Oct 14, 2023</p>
+<p class="text-[10px] text-slate-400 font-bold uppercase">12,402 Miles</p>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-8 py-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-high rounded-sm flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">electric_car</span>
+</div>
+<div>
+<p class="text-sm font-bold text-primary">2024 Rivian R1S</p>
+<p class="text-[11px] text-slate-500 font-medium">Adventure Package · Forest Green</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6 font-mono text-[11px] text-slate-600">7FCAR2A67RNE*****</td>
+<td class="px-6 py-6">
+<span class="px-2 py-1 bg-tertiary-container/30 text-tertiary text-[10px] font-bold uppercase rounded-full">Service Due</span>
+</td>
+<td class="px-8 py-6 text-right">
+<p class="text-sm font-semibold text-primary">Dec 02, 2023</p>
+<p class="text-[10px] text-slate-400 font-bold uppercase">4,150 Miles</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Service History Ledger -->
+<div class="bg-surface-container-lowest rounded-sm shadow-[0_4px_24px_-4px_rgba(0,0,0,0.04)] overflow-hidden">
+<div class="p-8 border-b border-outline-variant/10 flex justify-between items-center">
+<div>
+<h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Service History Ledger</h3>
+<p class="text-[11px] text-slate-400 font-medium">Historical transaction records and technical intervention logs.</p>
+</div>
+<div class="flex gap-2">
+<button class="material-symbols-outlined text-slate-400 hover:text-primary transition-colors">filter_list</button>
+<button class="material-symbols-outlined text-slate-400 hover:text-primary transition-colors">download</button>
+</div>
+</div>
+<div class="divide-y divide-outline-variant/10">
+<!-- Ledger Item 1 -->
+<div class="p-8 hover:bg-slate-50 transition-colors group">
+<div class="flex flex-col md:flex-row gap-6 md:items-center">
+<div class="flex-none">
+<p class="text-2xl font-black text-primary leading-none">14</p>
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Oct 2023</p>
+</div>
+<div class="flex-grow">
+<p class="text-sm font-bold text-primary group-hover:text-secondary transition-colors mb-1 uppercase tracking-tight">Full Electrical Diagnostic &amp; Software Update</p>
+<p class="text-xs text-slate-500">Service rendered for Porsche Taycan (WP1AB...). Intervention by Lead Tech Markowski.</p>
+</div>
+<div class="text-right flex-none">
+<p class="text-lg font-black text-primary">$1,450.00</p>
+<p class="text-[10px] font-bold text-secondary uppercase tracking-widest">Completed</p>
+</div>
+</div>
+</div>
+<!-- Ledger Item 2 -->
+<div class="p-8 hover:bg-slate-50 transition-colors group">
+<div class="flex flex-col md:flex-row gap-6 md:items-center">
+<div class="flex-none">
+<p class="text-2xl font-black text-primary leading-none">22</p>
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Aug 2023</p>
+</div>
+<div class="flex-grow">
+<p class="text-sm font-bold text-primary group-hover:text-secondary transition-colors mb-1 uppercase tracking-tight">Climate Control System Calibration</p>
+<p class="text-xs text-slate-500">Standard maintenance protocol and sensor replacement. Rivian R1S fleet sync.</p>
+</div>
+<div class="text-right flex-none">
+<p class="text-lg font-black text-primary">$892.40</p>
+<p class="text-[10px] font-bold text-secondary uppercase tracking-widest">Completed</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Contextual Footer Metadata -->
+<footer class="mt-16 pt-8 border-t border-outline-variant/20 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+<p>Architectural Ledger MS v4.2.0-SECURE</p>
+<div class="flex gap-8">
+<span>Last Synced: 2 Mins Ago</span>
+<span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> System Online</span>
+</div>
+</footer>
+</main>
+</div>
+<!-- Contextual FAB for Customer Pages -->
+<div class="fixed bottom-8 right-8">
+<button class="bg-secondary text-white w-14 h-14 rounded-full shadow-2xl shadow-secondary/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+</button>
+</div>
+</body></html>

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Commercial Customers &amp; Fleet Management | Architectural Ledger MS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;600;700;900&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-high": "#e7e8eb",
+                        "on-primary-fixed-variant": "#264873",
+                        "on-primary-container": "#9dbdf0",
+                        "on-secondary-container": "#006f66",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#73f4e5",
+                        "inverse-surface": "#2e3133",
+                        "on-tertiary-fixed": "#271900",
+                        "surface": "#f9f9fd",
+                        "primary-fixed-dim": "#a8c8fb",
+                        "surface-bright": "#f9f9fd",
+                        "on-surface": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#56dacc",
+                        "on-secondary-fixed-variant": "#005049",
+                        "surface-variant": "#e2e2e6",
+                        "on-secondary-fixed": "#00201d",
+                        "on-primary-fixed": "#001c3b",
+                        "tertiary-fixed": "#ffdea6",
+                        "on-background": "#191c1e",
+                        "inverse-on-surface": "#f0f0f4",
+                        "surface-dim": "#d9dadd",
+                        "primary": "#0f3560",
+                        "on-tertiary-fixed-variant": "#5d4200",
+                        "tertiary-container": "#634600",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c3c6d0",
+                        "surface-tint": "#405f8d",
+                        "on-surface-variant": "#43474f",
+                        "inverse-primary": "#a8c8fb",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-container": "#deb569",
+                        "background": "#f9f9fd",
+                        "outline": "#737780",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#ebc073",
+                        "tertiary": "#463100",
+                        "secondary": "#006a62",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f3f3f7",
+                        "surface-container": "#edeef1",
+                        "primary-fixed": "#d5e3ff",
+                        "secondary-fixed": "#76f7e8",
+                        "surface-container-highest": "#e2e2e6",
+                        "primary-container": "#2b4c78"
+                    },
+                    fontFamily: {
+                        "headline": ["Public Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Public Sans', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-secondary-container">
+<!-- TopNavBar Implementation -->
+<header class="fixed top-0 w-full z-50 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center h-16 px-8 max-w-full mx-auto">
+<div class="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-50">
+                Architectural Ledger MS
+            </div>
+<nav class="hidden md:flex gap-8 items-center h-full">
+<a class="font-public-sans tracking-tight text-sm font-semibold uppercase cursor-pointer active:opacity-70 transition-opacity text-teal-600 dark:text-teal-400 border-b-2 border-teal-600 dark:border-teal-400 pb-1">Commercial Accounts</a>
+<a class="font-public-sans tracking-tight text-sm font-semibold uppercase cursor-pointer active:opacity-70 transition-opacity text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100">Individual Customers</a>
+<a class="font-public-sans tracking-tight text-sm font-semibold uppercase cursor-pointer active:opacity-70 transition-opacity text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100">Shop Floor</a>
+<a class="font-public-sans tracking-tight text-sm font-semibold uppercase cursor-pointer active:opacity-70 transition-opacity text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100">Inventory</a>
+<a class="font-public-sans tracking-tight text-sm font-semibold uppercase cursor-pointer active:opacity-70 transition-opacity text-slate-600 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-100">Accounting</a>
+</nav>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer p-2 rounded-full hover:bg-slate-100">notifications</span>
+</div>
+<div class="relative group">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer p-2 rounded-full hover:bg-slate-100">settings</span>
+</div>
+<img alt="User profile" class="w-8 h-8 rounded-full border border-outline-variant cursor-pointer" data-alt="professional headshot of a system administrator in a clean modern office setting with soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAu8cq3syJaRKBn8hTa5cdx-eaV5GLzuRCLTkFmmZUwMBLPbx4l8xscdcER5nuDo2IFvtzupM-3JsMHOvPRiL95a-leKsPtnW_y5Jf2qujn6R0NIkBJYHYUHCVLVYRs0Elty5c1o5MPUEFAv11-4oIHI94IUmnLjBEC8ga5-FLfQbE2KZpCy_Tz9u7L5NUg-gtPzz22g8aXMETQVdCI7cVNKrgWtgnFD0AV422n9RGMZf5cGbqcFqaxJrIcbWjyQMOuvs9Lwy0PGg"/>
+</div>
+</div>
+<div class="bg-slate-200/50 dark:bg-slate-800/50 h-[1px] w-full absolute bottom-0"></div>
+</header>
+<div class="flex pt-16 min-h-screen">
+<!-- SideNavBar Implementation -->
+<aside class="h-screen w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 flex flex-col py-6 px-4 gap-2 sticky top-16">
+<div class="text-lg font-black text-blue-900 dark:text-blue-100 mb-6">Ledger Admin</div>
+<div class="space-y-1 mb-8">
+<div class="flex items-center gap-3 p-3 bg-blue-900 dark:bg-blue-800 text-white dark:text-blue-50 rounded-sm font-bold shadow-sm cursor-pointer">
+<span class="material-symbols-outlined text-lg">business</span>
+<span class="font-inter text-xs font-medium">Commercial Accounts</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 hover:translate-x-1 transition-all duration-150 cursor-pointer">
+<span class="material-symbols-outlined text-lg">person_pin_circle</span>
+<span class="font-inter text-xs font-medium">Individual Customers</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 hover:translate-x-1 transition-all duration-150 cursor-pointer">
+<span class="material-symbols-outlined text-lg">build</span>
+<span class="font-inter text-xs font-medium">Shop Floor</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 hover:translate-x-1 transition-all duration-150 cursor-pointer">
+<span class="material-symbols-outlined text-lg">inventory_2</span>
+<span class="font-inter text-xs font-medium">Inventory</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 hover:translate-x-1 transition-all duration-150 cursor-pointer">
+<span class="material-symbols-outlined text-lg">account_balance</span>
+<span class="font-inter text-xs font-medium">Accounting</span>
+</div>
+</div>
+<button class="bg-secondary text-on-secondary py-3 rounded-sm font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all mb-auto">
+                New Service Order
+            </button>
+<div class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 space-y-1">
+<div class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 cursor-pointer">
+<span class="material-symbols-outlined text-lg">help</span>
+<span class="font-inter text-xs font-medium">Support</span>
+</div>
+<div class="flex items-center gap-3 p-3 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 cursor-pointer">
+<span class="material-symbols-outlined text-lg">history</span>
+<span class="font-inter text-xs font-medium">Archive</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 p-8 overflow-y-auto max-w-7xl mx-auto">
+<!-- Header Section -->
+<section class="mb-12">
+<span class="font-inter text-xs font-semibold uppercase tracking-[0.2em] text-on-surface-variant mb-2 block">Enterprise Management</span>
+<h1 class="text-4xl font-black text-primary mb-4 tracking-tighter">Commercial Customers &amp; Fleet</h1>
+<p class="text-on-surface-variant max-w-2xl font-light">Centralized ledger for multi-vehicle contracts, industrial servicing cycles, and specialized fleet credit facilities.</p>
+</section>
+<!-- Fleet Overview Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+<div class="md:col-span-2 bg-gradient-to-br from-primary to-primary-container p-8 rounded-sm text-white relative overflow-hidden group shadow-lg">
+<div class="relative z-10">
+<h3 class="font-headline text-lg font-bold mb-1 opacity-80">Aggregate Fleet Status</h3>
+<div class="text-5xl font-black tracking-tighter mb-6">1,284 <span class="text-xl font-normal opacity-60 italic">units</span></div>
+<div class="flex gap-4">
+<div class="flex flex-col">
+<span class="text-[10px] uppercase font-bold tracking-widest opacity-60">In-Service</span>
+<span class="text-xl font-bold text-secondary-fixed">842</span>
+</div>
+<div class="w-[1px] bg-white/20"></div>
+<div class="flex flex-col">
+<span class="text-[10px] uppercase font-bold tracking-widest opacity-60">Maintenance</span>
+<span class="text-xl font-bold text-tertiary-fixed">312</span>
+</div>
+<div class="w-[1px] bg-white/20"></div>
+<div class="flex flex-col">
+<span class="text-[10px] uppercase font-bold tracking-widest opacity-60">Idle/Reserve</span>
+<span class="text-xl font-bold opacity-80">130</span>
+</div>
+</div>
+</div>
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-[120px] opacity-10 rotate-12 transition-transform group-hover:rotate-0 duration-700">conveyor_belt</span>
+</div>
+<div class="bg-surface-container-low p-8 rounded-sm border-l-4 border-secondary flex flex-col justify-between">
+<div>
+<h3 class="font-headline text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1">Open Work Orders</h3>
+<div class="text-4xl font-black text-primary tracking-tighter">42</div>
+</div>
+<div class="text-[10px] text-on-surface-variant leading-tight">
+<span class="text-secondary font-bold">+12%</span> vs last month
+                    </div>
+</div>
+<div class="bg-surface-container-low p-8 rounded-sm border-l-4 border-primary flex flex-col justify-between">
+<div>
+<h3 class="font-headline text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1">Total Receivables</h3>
+<div class="text-3xl font-black text-primary tracking-tighter">$4.2M</div>
+</div>
+<div class="text-[10px] text-on-surface-variant leading-tight">
+<span class="text-error font-bold">$120k</span> past due 30+
+                    </div>
+</div>
+</div>
+<!-- Main Data Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+<!-- Fleet List (2/3 width) -->
+<div class="lg:col-span-2 space-y-6">
+<div class="flex justify-between items-end mb-4">
+<h2 class="text-2xl font-bold tracking-tight text-primary">Active Fleet Accounts</h2>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-on-surface-variant p-2 cursor-pointer hover:bg-surface-container-high rounded-sm">filter_list</span>
+<span class="material-symbols-outlined text-on-surface-variant p-2 cursor-pointer hover:bg-surface-container-high rounded-sm">search</span>
+</div>
+</div>
+<div class="space-y-4">
+<!-- Table-like row -->
+<div class="group bg-surface-container-lowest p-6 flex items-center justify-between border-b border-outline-variant/10 hover:bg-surface-container-low transition-colors duration-200">
+<div class="flex gap-6 items-center">
+<div class="w-12 h-12 bg-primary-fixed rounded-sm flex items-center justify-center text-primary font-bold">GT</div>
+<div>
+<div class="font-bold text-lg text-primary tracking-tight">Global Transport Logistics</div>
+<div class="text-xs text-on-surface-variant">Contract ID: #CC-9021-X</div>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-12">
+<div class="text-right">
+<div class="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Vehicles</div>
+<div class="text-base font-semibold">412</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Active WO</div>
+<div class="text-base font-semibold text-secondary">08</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Credit Limit</div>
+<div class="text-base font-semibold">$1.5M</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</div>
+<div class="group bg-surface-container-lowest p-6 flex items-center justify-between border-b border-outline-variant/10 hover:bg-surface-container-low transition-colors duration-200">
+<div class="flex gap-6 items-center">
+<div class="w-12 h-12 bg-secondary-container rounded-sm flex items-center justify-center text-secondary font-bold">PM</div>
+<div>
+<div class="font-bold text-lg text-primary tracking-tight">Precision Manufacturing Co.</div>
+<div class="text-xs text-on-surface-variant">Contract ID: #CC-8842-A</div>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-12">
+<div class="text-right">
+<div class="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Vehicles</div>
+<div class="text-base font-semibold">84</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Active WO</div>
+<div class="text-base font-semibold text-secondary">03</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Credit Limit</div>
+<div class="text-base font-semibold">$450k</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</div>
+<div class="group bg-surface-container-lowest p-6 flex items-center justify-between border-b border-outline-variant/10 hover:bg-surface-container-low transition-colors duration-200">
+<div class="flex gap-6 items-center">
+<div class="w-12 h-12 bg-surface-container-highest rounded-sm flex items-center justify-center text-primary font-bold">UE</div>
+<div>
+<div class="font-bold text-lg text-primary tracking-tight">Urban Excavation Inc.</div>
+<div class="text-xs text-on-surface-variant">Contract ID: #CC-7651-L</div>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-12">
+<div class="text-right">
+<div class="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Vehicles</div>
+<div class="text-base font-semibold">156</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Active WO</div>
+<div class="text-base font-semibold text-error">14</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Credit Limit</div>
+<div class="text-base font-semibold">$800k</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Banking-Style Ledger (1/3 width) -->
+<div class="space-y-6">
+<div class="bg-primary p-8 rounded-sm text-white shadow-xl">
+<h3 class="text-xs font-bold uppercase tracking-[0.2em] opacity-60 mb-8">Selected Account Ledger</h3>
+<div class="mb-8">
+<div class="text-sm opacity-60 mb-1">Current Balance Due</div>
+<div class="text-4xl font-black tracking-tighter">$24,892.40</div>
+</div>
+<div class="flex justify-between text-xs font-mono opacity-80 pt-4 border-t border-white/10">
+<span>LAST PYMT: 2023-11-14</span>
+<span class="text-secondary-fixed">PAID IN FULL</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-sm">
+<h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-6 flex justify-between items-center">
+                            Recent Transaction History
+                            <span class="material-symbols-outlined text-base">download</span>
+</h4>
+<div class="space-y-6">
+<div class="flex justify-between items-start">
+<div>
+<div class="text-sm font-bold text-primary">Service Invoice #9022</div>
+<div class="text-[10px] text-on-surface-variant">Fleet Maintenance - Unit B-12</div>
+</div>
+<div class="text-right">
+<div class="text-sm font-bold text-error">-$1,240.00</div>
+<div class="text-[10px] text-on-surface-variant">Nov 18, 2023</div>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<div class="text-sm font-bold text-primary">ACH Deposit - Wire 102</div>
+<div class="text-[10px] text-on-surface-variant">Quarterly Settlement</div>
+</div>
+<div class="text-right">
+<div class="text-sm font-bold text-secondary">+$15,000.00</div>
+<div class="text-[10px] text-on-surface-variant">Nov 14, 2023</div>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<div class="text-sm font-bold text-primary">Emergency Roadside #004</div>
+<div class="text-[10px] text-on-surface-variant">Hydraulic Failure Recovery</div>
+</div>
+<div class="text-right">
+<div class="text-sm font-bold text-error">-$2,850.50</div>
+<div class="text-[10px] text-on-surface-variant">Nov 12, 2023</div>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<div class="text-sm font-bold text-primary">Fleet Bulk Fuel Refill</div>
+<div class="text-[10px] text-on-surface-variant">Main Yard Reservoir</div>
+</div>
+<div class="text-right">
+<div class="text-sm font-bold text-error">-$8,400.00</div>
+<div class="text-[10px] text-on-surface-variant">Nov 08, 2023</div>
+</div>
+</div>
+</div>
+<button class="w-full mt-8 py-3 text-xs font-bold text-primary hover:bg-surface-container-high transition-colors uppercase tracking-[0.1em] border border-outline-variant/30">
+                            View Full Statement
+                        </button>
+</div>
+<!-- Side Action Card -->
+<div class="relative h-40 rounded-sm overflow-hidden group cursor-pointer">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="high contrast architectural photography of a fleet of trucks lined up perfectly in a modern industrial logistics hub with long shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCABMYNl2NRLSw4xxhmfRROZ1JXqArqcwyksPs8WlGkTevTbG1QGRyUIdZ-l8-MlBnbS84EQJJ03DqOPc7CcKBX4uiQp3kFD7nKTAPNEOhuJTciX7_DJQNs47aYJJHSAnNOAUuwerLnY5sWZOCFQjsN_fUERdFmZZFKFNFmgA4fy8BLgSYUwebB3UGnrLouoaInArpBStkkFTNEIFyoq2rIIXodLBoM5uKdthKTYYgYrXRkKjB19P6hg12Waln7hPBlDtliSlkOmQ"/>
+<div class="absolute inset-0 bg-primary/60 backdrop-blur-[2px] p-6 flex flex-col justify-end">
+<h4 class="text-white font-bold text-lg leading-tight">Generate Fleet Performance Report</h4>
+<div class="flex items-center gap-2 text-white/70 text-xs mt-2">
+<span>Advanced Analytics</span>
+<span class="material-symbols-outlined text-sm">trending_up</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Floating Action Button - Only for Main Dashboard Context -->
+<div class="fixed bottom-8 right-8">
+<button class="flex items-center gap-3 bg-secondary text-on-secondary px-6 py-4 rounded-sm shadow-2xl hover:scale-105 active:scale-95 transition-all group">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+<span class="font-bold text-xs uppercase tracking-widest">Enroll New Fleet</span>
+</button>
+</div>
+</body></html>

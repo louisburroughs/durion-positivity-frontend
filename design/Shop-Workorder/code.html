@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bay 4 - Heavy Duty | Durion Blueprints</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;900&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-dim": "#d9dadd",
+              "on-primary-fixed": "#001c3b",
+              "surface": "#f9f9fd",
+              "surface-container-high": "#e7e8eb",
+              "primary-fixed-dim": "#a8c8fb",
+              "outline": "#737780",
+              "error-container": "#ffdad6",
+              "surface-variant": "#e2e2e6",
+              "on-background": "#191c1e",
+              "outline-variant": "#c3c6d0",
+              "inverse-primary": "#a8c8fb",
+              "tertiary-container": "#634600",
+              "on-secondary": "#ffffff",
+              "surface-container-low": "#f3f3f7",
+              "secondary-fixed": "#76f7e8",
+              "on-primary-container": "#9dbdf0",
+              "secondary-container": "#73f4e5",
+              "on-tertiary": "#ffffff",
+              "error": "#ba1a1a",
+              "surface-bright": "#f9f9fd",
+              "on-tertiary-fixed": "#271900",
+              "surface-container-highest": "#e2e2e6",
+              "tertiary-fixed": "#ffdea6",
+              "on-tertiary-fixed-variant": "#5d4200",
+              "on-surface": "#191c1e",
+              "on-primary-fixed-variant": "#264873",
+              "inverse-surface": "#2e3133",
+              "on-secondary-fixed": "#00201d",
+              "on-primary": "#ffffff",
+              "background": "#f9f9fd",
+              "primary": "#0f3560",
+              "on-surface-variant": "#43474f",
+              "secondary": "#006a62",
+              "primary-fixed": "#d5e3ff",
+              "on-error": "#ffffff",
+              "inverse-on-surface": "#f0f0f4",
+              "tertiary": "#463100",
+              "on-secondary-container": "#006f66",
+              "on-error-container": "#93000a",
+              "on-tertiary-container": "#deb569",
+              "tertiary-fixed-dim": "#ebc073",
+              "surface-container-lowest": "#ffffff",
+              "surface-tint": "#405f8d",
+              "on-secondary-fixed-variant": "#005049",
+              "surface-container": "#edeef1",
+              "secondary-fixed-dim": "#56dacc",
+              "primary-container": "#2b4c78"
+            },
+            fontFamily: {
+              "headline": ["Public Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Public Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex min-h-screen">
+<!-- SideNavBar (Shared Component) -->
+<aside class="h-screen w-64 fixed left-0 top-0 z-40 bg-slate-50 dark:bg-slate-950 flex flex-col py-6">
+<div class="px-6 mb-10">
+<div class="text-lg font-black text-blue-900 dark:text-white mb-1">Durion Mech</div>
+<div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Shop Management</div>
+</div>
+<nav class="flex-1">
+<div class="text-slate-600 dark:text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer">
+<span class="material-symbols-outlined">garage</span>
+<span class="text-sm font-medium">Shop Floor</span>
+</div>
+<div class="bg-blue-100/50 dark:bg-blue-900/30 text-blue-900 dark:text-teal-300 font-bold border-r-4 border-teal-500 px-4 py-3 flex items-center gap-3 translate-x-1 transition-transform cursor-pointer">
+<span class="material-symbols-outlined">local_shipping</span>
+<span class="text-sm font-medium">Vehicle Status</span>
+</div>
+<div class="text-slate-600 dark:text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer">
+<span class="material-symbols-outlined">engineering</span>
+<span class="text-sm font-medium">Assignments</span>
+</div>
+<div class="text-slate-600 dark:text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-sm font-medium">Inventory</span>
+</div>
+<div class="text-slate-600 dark:text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-sm font-medium">Reports</span>
+</div>
+</nav>
+<div class="px-4 mt-auto space-y-2">
+<button class="w-full bg-secondary text-on-secondary py-3 rounded-sm font-bold text-xs uppercase tracking-widest hover:opacity-90 transition-opacity">
+                New Service Order
+            </button>
+<div class="pt-6 border-t border-slate-200 dark:border-slate-800">
+<div class="text-slate-600 dark:text-slate-400 px-4 py-2 flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined">help</span>
+<span>Support</span>
+</div>
+<div class="text-slate-600 dark:text-slate-400 px-4 py-2 flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined">history</span>
+<span>Archive</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="ml-64 flex-1 flex flex-col">
+<!-- TopAppBar (Shared Component) -->
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 sticky top-0 z-50 flex justify-between items-center w-full px-6 py-3">
+<div class="flex items-center gap-4">
+<h1 class="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-100">Durion Blueprints</h1>
+<div class="h-6 w-[1px] bg-slate-200"></div>
+<div class="flex gap-6">
+<span class="text-xs font-semibold uppercase tracking-wider text-slate-500 cursor-pointer">Dashboard</span>
+<span class="text-blue-700 dark:text-teal-400 border-b-2 border-teal-500 pb-1 text-xs font-semibold uppercase tracking-wider cursor-pointer">Bays</span>
+<span class="text-xs font-semibold uppercase tracking-wider text-slate-500 cursor-pointer">Mobile Units</span>
+<span class="text-xs font-semibold uppercase tracking-wider text-slate-500 cursor-pointer">Workstations</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined text-on-surface-variant">search</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-slate-50 p-2 rounded-full">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-slate-50 p-2 rounded-full">settings</span>
+<div class="h-8 w-8 bg-primary-container rounded-full flex items-center justify-center text-[10px] font-bold text-white overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="professional portrait of a shop manager in a clean uniform against a neutral studio background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2xz_2HSSIoVyMwbsP_FBBFAXj7dNKv2YwJXnQoKvaEbwPTdIToGpDSeb1bPY8RpZvpuvH5cgfjFxA-XthLsk8XRhHawSHLhC2bXH_yPc7qBaW6VqIY5aDHaL7TXAyNrVYlJJ4FcNU-0Pm9ShnETXiprz-mDITVfqP6rHrm4OkBTxZm8ct9Lk0KhbheBTxgjIwYJ_OflY7suF2x6_sWgiBQNcjzIEusa21iDBDiLnarWkZcY1aq62_t55JmBBZwHOnvblPII7CuQ"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-8 max-w-7xl mx-auto w-full space-y-8">
+<!-- Hero Header Section -->
+<div class="flex justify-between items-end">
+<div>
+<nav class="flex gap-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+<span>Floor A</span>
+<span>/</span>
+<span class="text-primary">Bay 4</span>
+</nav>
+<h2 class="text-4xl font-black text-primary tracking-tight">Bay 4 - Heavy Duty</h2>
+</div>
+<div class="flex gap-3">
+<button class="px-6 py-2 bg-surface-container-high text-primary font-bold text-xs uppercase tracking-widest rounded-sm border border-outline-variant/20 hover:bg-surface-variant transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">swap_horiz</span>
+                        Shift Change
+                    </button>
+<button class="px-6 py-2 bg-secondary text-on-secondary font-bold text-xs uppercase tracking-widest rounded-sm shadow-sm hover:opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">edit_note</span>
+                        Log Activity
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Vehicle Detail Card (Large) -->
+<div class="col-span-8 bg-surface-container-lowest p-8 rounded-sm shadow-sm border-l-4 border-primary space-y-6">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Current Vehicle</span>
+<h3 class="text-2xl font-bold text-on-surface">Freightliner Cascadia 2024</h3>
+<p class="text-sm text-on-surface-variant">VIN: 1FUJBBDR7GLXXXXXX | Unit: #HD-402</p>
+</div>
+<div class="px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase tracking-widest rounded-full">
+                            In Progress
+                        </div>
+</div>
+<div class="aspect-video w-full bg-surface-container-high rounded-sm overflow-hidden relative group">
+<img class="w-full h-full object-cover" data-alt="a large modern heavy-duty freight truck parked inside a high-tech industrial maintenance bay with bright overhead lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4IbVfxTaZ5ju28OWCBTWkTJBxc4-uhvhsGygWdr8rVR9DRztUfFETP6Fh2C978ZxkJuMIIGwGirlYr8Kb2G32b_TfskBn4nr0tcjanZ-4c6TDSqzm9CrpmFfMwZkZoWBJ0HSURrzB2E8Fld9r0VAAoIp7w3nTBcD4MbmpgtdcKjk8ms66vrJcaTlBY9zmoZIyAS21R9YGvu0MgFVogsdVEvUwdgRVijdjS-jTgfoJigO8r4pXxixuChbjReNwIrFOFuQI23ygVQ"/>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<button class="bg-white/90 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">zoom_in</span> View Inspection Photos
+                            </button>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-8 pt-4 border-t border-outline-variant/10">
+<div>
+<span class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Status</span>
+<p class="text-sm font-semibold text-on-surface">System Calibration</p>
+</div>
+<div>
+<span class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Arrival</span>
+<p class="text-sm font-semibold text-on-surface">Oct 24, 07:15 AM</p>
+</div>
+<div>
+<span class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Estimated Completion</span>
+<p class="text-sm font-semibold text-secondary">Today, 04:30 PM</p>
+</div>
+</div>
+</div>
+<!-- Assignment Card (Vertical) -->
+<div class="col-span-4 bg-surface-container-low p-6 rounded-sm flex flex-col gap-6">
+<h3 class="text-sm font-bold uppercase tracking-widest text-on-surface border-b border-outline-variant/20 pb-4">Technician Assignments</h3>
+<div class="space-y-4">
+<div class="flex items-center gap-4 p-3 bg-surface-container-lowest rounded-sm border-l-2 border-primary">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-slate-200">
+<img class="w-full h-full object-cover" data-alt="professional male mechanic with a confident expression wearing navy blue workshop attire" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvjEeANlXLLhrkPEAQYht98PHxsq59AfE3Y_ywkjmtjCdWixvJMpqV0dNLDPCe9ZPTfdY5PKsPTTd7PpseFidQ_CZG1NKQKICEOHWnbY5w8JXLZgDTxVp11al2-iGgr_DPOk1ea_RJEuxQKfAtkHRNfBVporGcDrnT9X8mGE0ABSfKepQlCJMl47f5FzyLFuR3kcWm1urqHrF9oxB862gwONQBRFke7adoC4Rjlk7W6qdgAQ-A39dwe8pwS5quVkpGMoKrlSWZtg"/>
+</div>
+<div>
+<p class="text-xs font-bold uppercase text-primary tracking-tighter">Primary Lead</p>
+<p class="text-sm font-bold text-on-surface">Marcus Sterling</p>
+<p class="text-[10px] text-on-surface-variant">L3 Master Certified</p>
+</div>
+</div>
+<div class="flex items-center gap-4 p-3 bg-surface-container-lowest rounded-sm border-l-2 border-slate-300">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-slate-200">
+<img class="w-full h-full object-cover" data-alt="professional female technician in workshop safety gear looking professional and focused" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByFpBQXz9p0G_BZZRoqVx3lsC-zrEe4p3qGDypX5yD41lWrqsmiK2_xi53-wr7d3yZQ66aXeblmcjJRk_350wGPG1No1725fhICWRBmd0DQYjFIpMKURrgPklHbSVyIECT72wqSaxIDW5MeQ9fJk6Ew3cjISAGRYYVeMtc7fTd9I-dYPtpViunYhGAd4mlOr2IIMfd5w3PovHu3n5dStp6wGZD5UT1fSAUfqy0Rld6gerNmuLXsqsIHs_hm1IelS-bTEM0tEyjzQ"/>
+</div>
+<div>
+<p class="text-xs font-bold uppercase text-on-surface-variant tracking-tighter">Secondary</p>
+<p class="text-sm font-bold text-on-surface">Elena Rodriguez</p>
+<p class="text-[10px] text-on-surface-variant">Hydraulics Specialist</p>
+</div>
+</div>
+</div>
+<div class="mt-auto pt-6 border-t border-outline-variant/20">
+<div class="flex justify-between items-center mb-2">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Efficiency Rate</span>
+<span class="text-xs font-bold text-secondary">94%</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[94%]"></div>
+</div>
+</div>
+</div>
+<!-- Live Timeline (Bottom Left) -->
+<div class="col-span-5 bg-surface-container-lowest p-8 rounded-sm shadow-sm space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="text-sm font-bold uppercase tracking-widest text-on-surface">Activity Ledger</h3>
+<span class="flex items-center gap-1 text-[10px] font-bold text-secondary">
+<span class="w-2 h-2 bg-secondary rounded-full animate-pulse"></span> LIVE UPDATES
+                        </span>
+</div>
+<div class="relative space-y-8 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-surface-container-high">
+<div class="relative pl-8">
+<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-secondary-container border-4 border-surface-container-lowest flex items-center justify-center">
+<span class="w-2 h-2 bg-secondary rounded-full"></span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface">System Calibration Initiated</p>
+<p class="text-[10px] text-on-surface-variant mb-2">11:42 AM • M. Sterling</p>
+<div class="p-2 bg-surface-container-low rounded-sm text-[10px] text-on-surface-variant italic">
+                                    "Starting ECM re-flash for fuel optimization profile."
+                                </div>
+</div>
+</div>
+<div class="relative pl-8">
+<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-surface-container-high border-4 border-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-on-surface-variant">package_2</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface">Replacement Parts Delivered</p>
+<p class="text-[10px] text-on-surface-variant">10:15 AM • Inventory Hub</p>
+</div>
+</div>
+<div class="relative pl-8">
+<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-surface-container-high border-4 border-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-on-surface-variant">check_circle</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface">Preliminary Diagnostics Complete</p>
+<p class="text-[10px] text-on-surface-variant">08:30 AM • E. Rodriguez</p>
+</div>
+</div>
+<div class="relative pl-8">
+<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-surface-container-high border-4 border-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-on-surface-variant">login</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface">Vehicle Checked-In to Bay 4</p>
+<p class="text-[10px] text-on-surface-variant">07:22 AM • System</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Checklist Card (Bottom Right) -->
+<div class="col-span-7 bg-surface-container-lowest p-8 rounded-sm shadow-sm space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="text-sm font-bold uppercase tracking-widest text-on-surface">Service Checklist</h3>
+<div class="flex items-center gap-4">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">Progress: 4/7 Items</span>
+</div>
+</div>
+<div class="grid grid-cols-1 gap-1">
+<!-- Completed Item -->
+<div class="flex items-center justify-between p-4 bg-surface-container-low/50 group">
+<div class="flex items-center gap-4">
+<div class="w-5 h-5 border-2 border-secondary bg-secondary flex items-center justify-center rounded-sm">
+<span class="material-symbols-outlined text-white text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="text-sm font-medium text-on-surface line-through opacity-50">Visual safety inspection (Full Walkaround)</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant bg-surface-container-high px-2 py-1">COMPLETED</span>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low/50 group">
+<div class="flex items-center gap-4">
+<div class="w-5 h-5 border-2 border-secondary bg-secondary flex items-center justify-center rounded-sm">
+<span class="material-symbols-outlined text-white text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="text-sm font-medium text-on-surface line-through opacity-50">Fluid level verification and pressure test</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant bg-surface-container-high px-2 py-1">COMPLETED</span>
+</div>
+<!-- Active Item -->
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest border border-secondary shadow-[0_0_15px_rgba(0,106,98,0.05)] relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="flex items-center gap-4">
+<div class="w-5 h-5 border-2 border-secondary flex items-center justify-center rounded-sm"></div>
+<span class="text-sm font-bold text-on-surface">ECM Software Update (V2.41)</span>
+</div>
+<span class="text-[10px] font-bold text-secondary flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">hourglass_empty</span> IN PROGRESS
+                            </span>
+</div>
+<!-- Pending Items -->
+<div class="flex items-center justify-between p-4 bg-white/40 hover:bg-white transition-colors cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-5 h-5 border-2 border-outline-variant flex items-center justify-center rounded-sm"></div>
+<span class="text-sm font-medium text-on-surface-variant">Brake system calibration and thickness check</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-white/40 hover:bg-white transition-colors cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-5 h-5 border-2 border-outline-variant flex items-center justify-center rounded-sm"></div>
+<span class="text-sm font-medium text-on-surface-variant">Transmission sensor alignment</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-white/40 hover:bg-white transition-colors cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-5 h-5 border-2 border-outline-variant flex items-center justify-center rounded-sm"></div>
+<span class="text-sm font-medium text-on-surface-variant">Final QA Road Test Authorization</span>
+</div>
+</div>
+</div>
+<button class="w-full py-3 border-2 border-dashed border-outline-variant/30 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:border-primary/30 hover:text-primary transition-all">
+                        + Add Custom Service Note
+                    </button>
+</div>
+</div>
+</div>
+<!-- Footer Metric Bar (Precision Signature) -->
+<footer class="mt-auto bg-primary text-white p-4 flex justify-between items-center px-8 border-t border-white/10">
+<div class="flex gap-12">
+<div>
+<span class="block text-[8px] font-bold uppercase tracking-[0.2em] opacity-60">Bay Utilization</span>
+<span class="text-sm font-bold">88.4%</span>
+</div>
+<div>
+<span class="block text-[8px] font-bold uppercase tracking-[0.2em] opacity-60">Avg Repair Time</span>
+<span class="text-sm font-bold">4.2 Hours</span>
+</div>
+<div>
+<span class="block text-[8px] font-bold uppercase tracking-[0.2em] opacity-60">Safety Incidents (30d)</span>
+<span class="text-sm font-bold">0</span>
+</div>
+</div>
+<div class="text-[10px] font-mono opacity-50">
+                SYSTEM_ID: DURION-BLUE-B4-2024
+            </div>
+</footer>
+</main>
+</body></html>

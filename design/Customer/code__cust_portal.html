@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Durion Customer Portal | Professional Mechanical Services</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;800;900&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary": "#006a62",
+              "on-secondary-fixed-variant": "#005049",
+              "on-tertiary-fixed-variant": "#5d4200",
+              "surface-container": "#edeef1",
+              "error-container": "#ffdad6",
+              "surface-container-lowest": "#ffffff",
+              "surface-container-high": "#e7e8eb",
+              "on-primary-container": "#9dbdf0",
+              "surface-tint": "#405f8d",
+              "on-primary": "#ffffff",
+              "on-primary-fixed-variant": "#264873",
+              "on-surface": "#191c1e",
+              "outline-variant": "#c3c6d0",
+              "on-tertiary": "#ffffff",
+              "inverse-surface": "#2e3133",
+              "secondary-fixed-dim": "#56dacc",
+              "primary": "#0f3560",
+              "on-error": "#ffffff",
+              "on-secondary-fixed": "#00201d",
+              "surface-container-highest": "#e2e2e6",
+              "outline": "#737780",
+              "secondary-fixed": "#76f7e8",
+              "on-secondary-container": "#006f66",
+              "on-background": "#191c1e",
+              "secondary-container": "#73f4e5",
+              "surface-variant": "#e2e2e6",
+              "tertiary-fixed-dim": "#ebc073",
+              "primary-fixed-dim": "#a8c8fb",
+              "on-error-container": "#93000a",
+              "surface-bright": "#f9f9fd",
+              "tertiary-container": "#634600",
+              "error": "#ba1a1a",
+              "tertiary-fixed": "#ffdea6",
+              "on-tertiary-fixed": "#271900",
+              "background": "#f9f9fd",
+              "on-tertiary-container": "#deb569",
+              "primary-fixed": "#d5e3ff",
+              "on-primary-fixed": "#001c3b",
+              "primary-container": "#2b4c78",
+              "inverse-primary": "#a8c8fb",
+              "tertiary": "#463100",
+              "surface-container-low": "#f3f3f7",
+              "surface": "#f9f9fd",
+              "surface-dim": "#d9dadd",
+              "on-secondary": "#ffffff",
+              "inverse-on-surface": "#f0f0f4",
+              "on-surface-variant": "#43474f"
+            },
+            fontFamily: {
+              "headline": ["Public Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #f9f9fd; }
+        h1, h2, h3, .brand-font { font-family: 'Public Sans', sans-serif; }
+        .glass-nav { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- SideNavBar (Desktop Shell) -->
+<aside class="bg-slate-50 dark:bg-slate-950 h-screen w-64 fixed left-0 top-0 hidden md:flex flex-col border-r border-slate-200 dark:border-slate-800 z-50">
+<div class="flex flex-col h-full p-4">
+<!-- Brand Section -->
+<div class="mb-10 px-4">
+<span class="text-xl font-black tracking-widest uppercase text-slate-900 dark:text-slate-50">Durion</span>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant mt-1">Mechanical Services</p>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 space-y-1">
+<a class="bg-white dark:bg-slate-900 text-cyan-700 dark:text-cyan-400 shadow-sm rounded-sm px-4 py-3 mb-1 flex items-center gap-3 transition-all active:translate-x-1 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-sans text-sm font-medium">Dashboard</span>
+</a>
+<a class="text-slate-500 dark:text-slate-400 px-4 py-3 mb-1 flex items-center gap-3 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all active:translate-x-1 duration-150" href="#">
+<span class="material-symbols-outlined">directions_car</span>
+<span class="font-sans text-sm font-medium">My Vehicles</span>
+</a>
+<a class="text-slate-500 dark:text-slate-400 px-4 py-3 mb-1 flex items-center gap-3 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all active:translate-x-1 duration-150" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-sans text-sm font-medium">Service History</span>
+</a>
+<a class="text-slate-500 dark:text-slate-400 px-4 py-3 mb-1 flex items-center gap-3 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all active:translate-x-1 duration-150" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-sans text-sm font-medium">Billing</span>
+</a>
+</nav>
+<!-- CTA Section -->
+<button class="mt-4 w-full bg-secondary text-on-secondary py-3 px-4 rounded-sm font-bold text-sm tracking-tight active:scale-95 duration-200">
+                Schedule Service
+            </button>
+<!-- Footer Tabs -->
+<div class="mt-auto pt-4 border-t border-slate-200/30">
+<a class="text-slate-500 dark:text-slate-400 px-4 py-3 mb-1 flex items-center gap-3 hover:bg-slate-200/50 transition-all" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-sans text-sm font-medium">Support</span>
+</a>
+<a class="text-slate-500 dark:text-slate-400 px-4 py-3 mb-1 flex items-center gap-3 hover:bg-slate-200/50 transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-sans text-sm font-medium">Sign Out</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm docked full-width top-0 sticky z-40 md:ml-64">
+<div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-bold tracking-tighter text-slate-900 dark:text-slate-50 md:hidden">Durion</span>
+<div class="hidden lg:flex items-center gap-6">
+<a class="text-cyan-700 dark:text-cyan-400 border-b-2 border-cyan-700 dark:border-cyan-400 pb-1 font-semibold font-sans tracking-tight" href="#">Dashboard</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors font-sans tracking-tight" href="#">My Vehicles</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors font-sans tracking-tight" href="#">Service History</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors font-sans tracking-tight" href="#">Billing</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="bg-surface-container-high border-none rounded-sm pl-10 pr-4 py-1.5 text-sm w-64 focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Search invoices, parts..." type="text"/>
+</div>
+<button class="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-all">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<img alt="User profile avatar" class="w-8 h-8 rounded-full border border-slate-200 object-cover ml-2" data-alt="professional headshot of a middle-aged man with short hair wearing a navy polo shirt, soft office lighting, clean background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkVhUKk0P1MhU5zEer3RxGI6w9chSXuyGUQWWyt3SHJlPZhRxS3xYvxeI6JvS33pTr95D-rUza9iQcqtPO_j8Gvu3NumtJZntN4pjxzWevBEtFkjDncmUE4K9QFWt9MYFcO9PkQhIsRuu8FF2anHT8rLd2RCs79azPbIAdS96dATYuE72hE_TC6OiTgPUNMPuE1-Vwg-p21GsHULFY8En4xtBvaKy2hw8bI35IATJwctLc-VopQxO78atCg2XCH5I5GhshkPJfrQ"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 p-6 lg:p-10 space-y-10 max-w-7xl mx-auto">
+<!-- Welcome Section -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<span class="label-md text-on-surface-variant uppercase tracking-widest text-[10px] font-bold mb-2 block">Customer Portal</span>
+<h1 class="text-4xl font-black tracking-tight text-primary">Welcome back, Jonathan.</h1>
+<p class="text-on-surface-variant mt-2 max-w-xl">Your fleet is our priority. Here is the real-time status of your vehicles and financial ledger for the current period.</p>
+</div>
+<div class="flex items-center gap-3 text-sm font-medium text-secondary bg-secondary-container/20 px-4 py-2 rounded-sm border border-secondary/10">
+<span class="material-symbols-outlined text-base">verified_user</span>
+                System Secure &amp; Encrypted
+            </div>
+</section>
+<!-- Active Service Status (High Precision Progress) -->
+<section class="bg-surface-container-lowest border border-outline-variant/15 p-1 rounded-sm shadow-sm overflow-hidden">
+<div class="bg-primary p-6 md:p-8 flex flex-col md:flex-row gap-8 items-center text-white">
+<div class="relative w-24 h-24 flex-shrink-0">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-primary-container" cx="48" cy="48" fill="transparent" r="44" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-secondary" cx="48" cy="48" fill="transparent" r="44" stroke="currentColor" stroke-dasharray="276" stroke-dashoffset="69" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center font-bold text-xl">75%</div>
+</div>
+<div class="flex-1 space-y-2">
+<div class="flex items-center gap-2">
+<span class="bg-secondary/20 text-secondary-fixed text-[10px] font-black px-2 py-0.5 rounded-full uppercase">In Bay 04</span>
+<span class="text-primary-fixed-dim text-xs font-mono">Job ID: #DRN-9821</span>
+</div>
+<h2 class="text-2xl font-bold tracking-tight">2022 Ford F-150 Lariat</h2>
+<p class="text-primary-fixed-dim text-sm">Status: <span class="text-white font-semibold">Engine Refurbishment &amp; Transmission Flush</span></p>
+<div class="flex gap-4 mt-4 pt-4 border-t border-white/10">
+<div class="text-xs">
+<p class="text-primary-fixed-dim uppercase tracking-widest text-[10px]">Estimated Delivery</p>
+<p class="font-bold">Oct 24, 16:00 PM</p>
+</div>
+<div class="text-xs">
+<p class="text-primary-fixed-dim uppercase tracking-widest text-[10px]">Assigned Mechanic</p>
+<p class="font-bold">M. Reynolds</p>
+</div>
+</div>
+</div>
+<button class="bg-white text-primary px-6 py-3 rounded-sm font-bold text-sm tracking-tight hover:bg-surface-container-high transition-colors">
+                    View Live Cam
+                </button>
+</div>
+</section>
+<!-- Financial Summary Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Balance Card -->
+<div class="bg-surface-container-low p-6 flex flex-col justify-between h-40 group hover:bg-surface-container-lowest transition-all">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Outstanding Balance</span>
+<h3 class="text-3xl font-black text-primary mt-1">$1,240.50</h3>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-xs text-error font-medium">Due in 4 days</span>
+<span class="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+</div>
+<!-- Pending Card -->
+<div class="bg-surface-container-low p-6 flex flex-col justify-between h-40 group hover:bg-surface-container-lowest transition-all">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Pending Estimates</span>
+<h3 class="text-3xl font-black text-primary mt-1">2 <span class="text-sm font-medium text-on-surface-variant">Unapproved</span></h3>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-xs text-secondary font-medium underline cursor-pointer">Review Proposals</span>
+<span class="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+</div>
+<!-- Total Value Card -->
+<div class="bg-surface-container-low p-6 flex flex-col justify-between h-40 group hover:bg-surface-container-lowest transition-all">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Total Lifetime Service</span>
+<h3 class="text-3xl font-black text-primary mt-1">$42,890</h3>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-xs text-on-surface-variant font-medium">Since 2018</span>
+<span class="material-symbols-outlined text-secondary opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+</div>
+</section>
+<!-- Digital Garage -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-2xl font-bold tracking-tight text-primary">Digital Garage</h2>
+<button class="text-sm font-bold text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-lg">add_circle</span> Add Vehicle
+                </button>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- Vehicle Card 1 -->
+<div class="bg-surface-container-lowest flex flex-col md:flex-row overflow-hidden shadow-sm group">
+<div class="md:w-1/3 h-48 md:h-auto overflow-hidden">
+<img alt="Ford F-150" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="front profile of a sleek charcoal grey modern pickup truck parked on clean asphalt in front of a modern workshop" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmd_cosP68R30D1t1ST7WpAdZTMnQ29hyzdwukk-dobtRJ9NeSD8swshBjXOOwms-3x9PNl4mPAzYLCMmxAgnHUNA7Dthhg-K1FeY4AwvxQM3aXFZ9KdgOYQYfLaxyxy6lBD9MGS7cjPyU11UktqpyB_31aCnzy9u3dkwtcwploYS1LJnmgV8nXzzUuVD1jOJ1o10vUIjb80xxTtWyJdX_fs7s92s8QkkPVWklt16jmK0doIgHaq9Ws-kCaVZG1A1A8m1hGxDFug"/>
+</div>
+<div class="p-6 flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Active Task</span>
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+</div>
+<h3 class="text-xl font-bold mt-1 text-primary">2022 Ford F-150</h3>
+<p class="text-xs text-on-surface-variant font-medium">VIN: 1FTFW1ED6NFB0XXXX</p>
+</div>
+<div class="mt-6 flex gap-2">
+<button class="flex-1 bg-primary text-white py-2 rounded-sm text-xs font-bold active:scale-95 transition-all">View Records</button>
+<button class="flex-1 border border-primary text-primary py-2 rounded-sm text-xs font-bold active:scale-95 transition-all">Timeline</button>
+</div>
+</div>
+</div>
+<!-- Vehicle Card 2 -->
+<div class="bg-surface-container-lowest flex flex-col md:flex-row overflow-hidden shadow-sm group">
+<div class="md:w-1/3 h-48 md:h-auto overflow-hidden">
+<img alt="Tesla Model S" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="luxury electric car in white showroom setting with studio lighting, sleek design lines and minimalist background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8lQfS0H9OaCNdccEBQcYhaYmKZIW-8Tgf5lUQfnVbBRd2FzfAxnbFHNBG9gvQbrfuMwD350CgeD4BYynRCsdxIjYS8T5YjMw7wBXTEKpEiVKhZiH7C87nTXDv2RCTm8Ry-2r5uLaKMLm9LHugli_SVSKg2KsYHT8vqQ82iWm4a60OQ0XgdNnCR8_DLnKGD-qjA-QWkQygIDsS4i2f31hHL23dDxQxs3O3ISGD1MB3zRfVT6W301kBcp1uDERJegDCmgRIrkRGUQ"/>
+</div>
+<div class="p-6 flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Maintenance Ready</span>
+<span class="material-symbols-outlined text-sm text-outline">check_circle</span>
+</div>
+<h3 class="text-xl font-bold mt-1 text-primary">2021 Tesla Model S Plaid</h3>
+<p class="text-xs text-on-surface-variant font-medium">VIN: 5YJSA1E46LF01XXXX</p>
+</div>
+<div class="mt-6 flex gap-2">
+<button class="flex-1 bg-secondary text-white py-2 rounded-sm text-xs font-bold active:scale-95 transition-all">Schedule Service</button>
+<button class="flex-1 border border-primary text-primary py-2 rounded-sm text-xs font-bold active:scale-95 transition-all">View Records</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Recent Transactions -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-2xl font-bold tracking-tight text-primary">Recent Transactions</h2>
+<a class="text-sm font-semibold text-secondary hover:underline" href="#">Download Statement</a>
+</div>
+<div class="bg-surface-container-lowest overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-[10px] font-black text-on-surface-variant uppercase tracking-widest">
+<th class="px-6 py-4">Transaction ID</th>
+<th class="px-6 py-4">Vehicle</th>
+<th class="px-6 py-4">Date</th>
+<th class="px-6 py-4">Service Type</th>
+<th class="px-6 py-4">Amount</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4">Action</th>
+</tr>
+</thead>
+<tbody class="text-sm divide-y divide-outline-variant/10">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 font-mono text-xs">#INV-2023-009</td>
+<td class="px-6 py-4 font-semibold">Tesla Model S</td>
+<td class="px-6 py-4 text-on-surface-variant">Oct 12, 2023</td>
+<td class="px-6 py-4">Brake Fluid Flush</td>
+<td class="px-6 py-4 font-bold text-primary">$450.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-secondary/10 text-secondary uppercase">Paid</span>
+</td>
+<td class="px-6 py-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">download</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 font-mono text-xs">#INV-2023-008</td>
+<td class="px-6 py-4 font-semibold">Ford F-150</td>
+<td class="px-6 py-4 text-on-surface-variant">Sep 28, 2023</td>
+<td class="px-6 py-4">Tire Rotation &amp; Balance</td>
+<td class="px-6 py-4 font-bold text-primary">$120.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-secondary/10 text-secondary uppercase">Paid</span>
+</td>
+<td class="px-6 py-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">download</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4 font-mono text-xs">#INV-2023-007</td>
+<td class="px-6 py-4 font-semibold">Ford F-150</td>
+<td class="px-6 py-4 text-on-surface-variant">Aug 15, 2023</td>
+<td class="px-6 py-4">Oil Change + Multi-Point</td>
+<td class="px-6 py-4 font-bold text-primary">$89.50</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-secondary/10 text-secondary uppercase">Paid</span>
+</td>
+<td class="px-6 py-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">download</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Extra Bottom Space for Padding -->
+<div class="h-20"></div>
+</main>
+<!-- BottomNavBar (Mobile Shell) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-16 pb-safe px-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl md:hidden border-t border-slate-200 dark:border-slate-800 shadow-lg dark:shadow-none">
+<a class="flex flex-col items-center justify-center text-cyan-600 dark:text-cyan-400 font-bold tap-highlight-transparent active:bg-slate-100" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+<span class="text-[10px] font-medium uppercase tracking-widest mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 tap-highlight-transparent active:bg-slate-100" href="#">
+<span class="material-symbols-outlined">minor_crash</span>
+<span class="text-[10px] font-medium uppercase tracking-widest mt-1">Vehicles</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 tap-highlight-transparent active:bg-slate-100" href="#">
+<span class="material-symbols-outlined">restore</span>
+<span class="text-[10px] font-medium uppercase tracking-widest mt-1">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 tap-highlight-transparent active:bg-slate-100" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-[10px] font-medium uppercase tracking-widest mt-1">Billing</span>
+</a>
+</nav>
+</body></html>
