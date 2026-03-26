@@ -1,79 +1,79 @@
 <article class="crm-page party-contacts" aria-labelledby="page-heading">
-	<button class="btn-ghost back-btn" type="button" (click)="backToParty()">← Back to Party</button>
+  <button class="btn-ghost back-btn" type="button" (click)="backToParty()">← Back to Party</button>
 
-	<h1 id="page-heading">Contacts &amp; Roles</h1>
+  <h1 id="page-heading">Contacts &amp; Roles</h1>
 
-	@if (partyForbidden()) {
-		<div role="alert" class="error-state">
-			<p>You don't have permission to view this account header.</p>
-		</div>
-	}
+  @if (partyForbidden()) {
+    <div role="alert" class="error-state">
+      <p>You don't have permission to view this account header.</p>
+    </div>
+  }
 
-	<section class="toolbar" aria-label="Contact filters and actions">
-		<div class="toolbar-filters">
-			<label class="field-label" for="statusFilter">Status</label>
-			<select
-				id="statusFilter"
-				class="field-input"
-				[value]="filterStatus()"
-				(change)="onStatusFilterChange($event)"
-			>
-				<option value="ACTIVE">Active</option>
-				<option value="INACTIVE">Inactive</option>
-				<option value="ALL">All</option>
-			</select>
+  <section class="toolbar" aria-label="Contact filters and actions">
+    <div class="toolbar-filters">
+      <label class="field-label" for="statusFilter">Status</label>
+      <select
+        id="statusFilter"
+        class="field-input"
+        [value]="filterStatus()"
+        (change)="onStatusFilterChange($event)"
+      >
+        <option value="ACTIVE">Active</option>
+        <option value="INACTIVE">Inactive</option>
+        <option value="ALL">All</option>
+      </select>
 
-			<label class="field-label" for="roleFilter">Role</label>
-			<select
-				id="roleFilter"
-				class="field-input"
-				[value]="filterRole()"
-				(change)="onRoleFilterChange($event)"
-			>
-				<option value="ALL">All</option>
-				<option value="BILLING">BILLING</option>
-				<option value="APPROVER">APPROVER</option>
-				<option value="PRIMARY_CONTACT">PRIMARY_CONTACT</option>
-				<option value="DRIVER">DRIVER</option>
-				<option value="TECHNICAL">TECHNICAL</option>
-			</select>
+      <label class="field-label" for="roleFilter">Role</label>
+      <select
+        id="roleFilter"
+        class="field-input"
+        [value]="filterRole()"
+        (change)="onRoleFilterChange($event)"
+      >
+        <option value="ALL">All</option>
+        <option value="BILLING">BILLING</option>
+        <option value="APPROVER">APPROVER</option>
+        <option value="PRIMARY_CONTACT">PRIMARY_CONTACT</option>
+        <option value="DRIVER">DRIVER</option>
+        <option value="TECHNICAL">TECHNICAL</option>
+      </select>
 
-			<label class="sr-only" for="contactSearch">Search contacts</label>
-			<input
-				id="contactSearch"
-				class="field-input"
-				type="text"
-				placeholder="Search contacts..."
-				[value]="filterSearch()"
-				(input)="onSearchInput($event)"
-			/>
-		</div>
+      <label class="sr-only" for="contactSearch">Search contacts</label>
+      <input
+        id="contactSearch"
+        class="field-input"
+        type="text"
+        placeholder="Search contacts..."
+        [value]="filterSearch()"
+        (input)="onSearchInput($event)"
+      />
+    </div>
 
-		<button class="btn-primary" type="button" (click)="openModal()">Add Contact</button>
-	</section>
+    <button class="btn-primary" type="button" (click)="openModal()">Add Contact</button>
+  </section>
 
-	@if (pageState() === 'loading') {
-		<div class="loading-state" role="status" aria-label="Loading contacts..." aria-busy="true">
-			<div class="skeleton-row"></div>
-			<div class="skeleton-row"></div>
-			<div class="skeleton-row"></div>
-		</div>
-	}
+  @if (pageState() === 'loading') {
+    <div class="loading-state" role="status" aria-label="Loading contacts..." aria-busy="true">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+  }
 
-	@if (pageState() === 'error') {
-		<div role="alert" class="error-state">
-			<p>Unable to load contacts and roles.</p>
-			<button class="btn-primary" type="button" (click)="loadRelationships()">Retry</button>
-		</div>
-	}
+  @if (pageState() === 'error') {
+    <div role="alert" class="error-state">
+      <p>Unable to load contacts and roles.</p>
+      <button class="btn-primary" type="button" (click)="loadRelationships()">Retry</button>
+    </div>
+  }
 
-	@if (pageState() === 'access-denied') {
-		<div role="alert" class="error-state">
-			<p>You don't have permission to view contacts for this account.</p>
-		</div>
-	}
+  @if (pageState() === 'access-denied') {
+    <div role="alert" class="error-state">
+      <p>You don't have permission to view contacts for this account.</p>
+    </div>
+  }
 
-	@if (pageState() === 'ready') {
+  @if (pageState() === 'ready') {
 		@if (paginatedRelationships().length === 0) {
 			<section class="empty-state" aria-live="polite">
 				<h2>No contacts found</h2>
