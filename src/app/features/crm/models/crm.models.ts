@@ -92,7 +92,7 @@ export type RelationshipRole =
   | 'PRIMARY_CONTACT'
   | 'DRIVER'
   | 'TECHNICAL'
-  | string;
+  | (string & {});
 
 export interface CreatePartyRelationshipRequest {
   personId: string;
@@ -113,9 +113,28 @@ export interface CreatePartyRelationshipResponse {
   previousPrimaryDemoted?: boolean;
 }
 
+export interface Relationship {
+  relationshipId: string;
+  personId: string;
+  personName: string;
+  email?: string;
+  phone?: string;
+  role: RelationshipRole;
+  effectiveFrom: string;
+  effectiveThru?: string;
+  isPrimaryBilling?: boolean;
+  status: 'ACTIVE' | 'INACTIVE';
+}
+
 // ── Contacts ─────────────────────────────────────────────────────────────────
 
-export type ContactRole = 'PRIMARY' | 'BILLING' | 'TECHNICAL' | 'APPROVER' | 'DRIVER' | string;
+export type ContactRole =
+  | 'PRIMARY'
+  | 'BILLING'
+  | 'TECHNICAL'
+  | 'APPROVER'
+  | 'DRIVER'
+  | (string & {});
 
 export interface Contact {
   contactId: string;
@@ -167,6 +186,47 @@ export interface PartyDetail {
   defaultBillingTermsId?: string;
   contacts?: Contact[];
   vehicles?: VehicleRef[];
+  mergedIntoPartyId?: string;
   createdAt?: string;
   createdBy?: string;
+}
+
+export interface CrmSnapshot {
+  snapshotId?: string;
+  version?: string;
+  timestamp?: string;
+  source?: string;
+  account: PartyDetail;
+  contacts?: Contact[];
+  vehicles?: VehicleRef[];
+  preferences?: CommunicationPreferences;
+  [key: string]: unknown;
+}
+
+export interface BillingRule {
+  ruleId: string;
+  name: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  priority?: number;
+  effectiveStart: string;
+  effectiveEnd?: string;
+  billingMethod?: string;
+  billingSchedule?: string;
+  conditions?: string;
+  earningsProcessing?: string;
+  notes?: string;
+  lastUpdated?: string;
+}
+
+export interface CreateBillingRuleRequest {
+  name: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  priority?: number;
+  effectiveStart: string;
+  effectiveEnd?: string;
+  billingMethod?: string;
+  billingSchedule?: string;
+  conditions?: string;
+  earningsProcessing?: string;
+  notes?: string;
 }

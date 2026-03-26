@@ -3,6 +3,7 @@ import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
+  BillingRule,
   BillingTermsRef,
   CreateCommercialAccountRequest,
   CreateCommercialAccountResponse,
@@ -17,6 +18,7 @@ import {
   MergePartiesRequest,
   MergePartiesResponse,
   PartyDetail,
+  Relationship,
   UpdateContactRolesRequest,
   VehicleRef,
 } from '../models/crm.models';
@@ -118,7 +120,12 @@ export class CrmService {
   // ── Contacts ─────────────────────────────────────────────────────────────────
 
   /** operationId: getContactsWithRoles_1 */
-  getContactsWithRoles(partyId: string): Observable<Contact[]> {
+  getContactsWithRoles(partyId: string): Observable<Relationship[]> {
+    return this.api.get<Relationship[]>(`/v1/crm/accounts/parties/${partyId}/contacts`);
+  }
+
+  /** Backward-compatible projection used by legacy contacts UI. */
+  getContactSummaries(partyId: string): Observable<Contact[]> {
     return this.api.get<Contact[]>(`/v1/crm/accounts/parties/${partyId}/contacts`);
   }
 
@@ -132,6 +139,20 @@ export class CrmService {
       `/v1/crm/accounts/parties/${partyId}/contacts/${contactId}/roles`,
       request,
     );
+  }
+
+  designatePrimaryBillingContact(
+    partyId: string,
+    relationshipId: string,
+  ): Observable<Relationship> {
+    return this.api.put<Relationship>(
+      `/v1/crm/accounts/parties/${partyId}/relationships/${relationshipId}/primary-billing`,
+      {},
+    );
+  }
+
+  deactivateRelationship(partyId: string, relationshipId: string): Observable<void> {
+    return this.api.delete<void>(`/v1/crm/accounts/parties/${partyId}/relationships/${relationshipId}`);
   }
 
   // ── Communication preferences ─────────────────────────────────────────────
@@ -172,5 +193,13 @@ export class CrmService {
   /** operationId: fetchByParty */
   fetchPartySnapshot(partyId: string): Observable<PartyDetail> {
     return this.api.get<PartyDetail>(`/v1/crm/snapshot/party/${partyId}`);
+  }
+
+  fetchVehicleSnapshot(vehicleId: string): Observable<PartyDetail> {
+    return this.api.get<PartyDetail>(`/v1/crm/snapshot/vehicle/${vehicleId}`);
+  }
+
+  getBillingRules(partyId: string): Observable<BillingRule[]> {
+    return this.api.get<BillingRule[]>(`/v1/crm/accounts/parties/${partyId}/billing-rules`);
   }
 }

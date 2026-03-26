@@ -82,7 +82,7 @@ export class PartyDetailComponent implements OnInit {
   // ── Contacts ──────────────────────────────────────────────────────────
   loadContacts(): void {
     this.contactsState.set('loading');
-    this.crm.getContactsWithRoles(this.partyId).subscribe({
+    this.crm.getContactSummaries(this.partyId).subscribe({
       next: c => { this.contacts.set(c); this.contactsState.set('ready'); },
       error: err => {
         this.contactsState.set(err?.status === 403 ? 'access-denied' : 'error');
@@ -111,9 +111,10 @@ export class PartyDetailComponent implements OnInit {
     if (!contact || this.rolesModalState() === 'saving') return;
 
     const raw = this.rolesForm.getRawValue();
-    const roles = Object.entries(raw)
-      .filter(([, checked]) => checked)
-      .map(([role]) => role as ContactRole);
+    const roles: ContactRole[] = [];
+    if (raw.BILLING) roles.push('BILLING');
+    if (raw.APPROVER) roles.push('APPROVER');
+    if (raw.DRIVER) roles.push('DRIVER');
 
     this.rolesModalState.set('saving');
     this.rolesError.set(null);
@@ -193,6 +194,14 @@ export class PartyDetailComponent implements OnInit {
   }
 
   back(): void { this.router.navigate(['/app/crm']); }
+
+  navigateToContacts(): void {
+    this.router.navigate(['/app/crm/party', this.partyId, 'contacts']);
+  }
+
+  navigateToBillingRules(): void {
+    this.router.navigate(['/app/crm/party', this.partyId, 'billing-rules']);
+  }
 
   roleLabel(role: ContactRole): string {
     const labels: Record<string, string> = { BILLING: 'Billing', APPROVER: 'Approver', DRIVER: 'Driver' };
