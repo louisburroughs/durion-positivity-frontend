@@ -190,10 +190,12 @@ export class CrmService {
     return this.api.get<PartyDetail>(`/v1/crm/snapshot/party/${partyId}`);
   }
 
+  /** operationId: fetchByVehicle */
   fetchVehicleSnapshot(vehicleId: string): Observable<PartyDetail> {
     return this.api.get<PartyDetail>(`/v1/crm/snapshot/vehicle/${vehicleId}`);
   }
 
+  /** operationId: getBillingRules */
   getBillingRules(partyId: string): Observable<BillingRule[]> {
     return this.api.get<BillingRule[]>(`/v1/crm/accounts/parties/${partyId}/billing-rules`);
   }
