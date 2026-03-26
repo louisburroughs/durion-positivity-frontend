@@ -1,0 +1,251 @@
+<article class="crm-page party-detail" aria-labelledby="party-heading">
+
+  <!-- ── Back nav ──────────────────────────────────────────────────────── -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <button class="btn btn--ghost btn--sm" type="button" (click)="back()">← Accounts</button>
+  </nav>
+
+  <!-- ── Party header ─────────────────────────────────────────────────── -->
+  @if (partyState() === 'loading') {
+    <div class="skeleton-header" aria-busy="true" aria-label="Loading party details"></div>
+  }
+  @if (partyState() === 'access-denied') {
+    <div class="state-panel state-panel--denied" role="alert">
+      <span class="state-icon" aria-hidden="true">🔒</span>
+      <p>You do not have permission to view this party.</p>
+    </div>
+  }
+  @if (partyState() === 'error') {
+    <div class="state-panel state-panel--error" role="alert">
+      <p>Could not load party details.</p>
+      <button class="btn btn--secondary" type="button" (click)="loadParty()">Retry</button>
+    </div>
+  }
+  @if (partyState() === 'ready' && party()) {
+    <header class="party-header">
+      <h1 id="party-heading">{{ party()!.legalName }}</h1>
+      @if (party()!.dba) {
+        <p class="party-dba">DBA: {{ party()!.dba }}</p>
+      }
+      <dl class="party-meta">
+        <dt>Party ID</dt>
+        <dd><code>{{ party()!.partyId }}</code></dd>
+        @if (party()!.taxId) {
+          <dt>Tax ID</dt>
+          <dd>{{ party()!.taxId }}</dd>
+        }
+      </dl>
+    </header>
+  }
+
+  <!-- ── Contacts section ─────────────────────────────────────────────── -->
+  <section class="detail-section" aria-labelledby="contacts-heading">
+    <h2 id="contacts-heading" class="section-heading">Contacts</h2>
+
+    @if (contactsState() === 'loading') {
+      <p class="loading-hint" aria-busy="true">Loading contacts…</p>
+    }
+    @if (contactsState() === 'access-denied') {
+      <p class="hint-text hint-text--warn">Not authorized to view contacts.</p>
+    }
+    @if (contactsState() === 'error') {
+      <div class="inline-error" role="alert">
+        Could not load contacts.
+        <button class="btn btn--ghost btn--sm" type="button" (click)="loadContacts()">Retry</button>
+      </div>
+    }
+    @if (contactsState() === 'ready') {
+      @if (!contacts().length) {
+        <p class="hint-text">No contacts on file for this account.</p>
+      } @else {
+        <table class="contacts-table" aria-label="Account contacts">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Roles</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (contact of contacts(); track contact.contactId) {
+              <tr>
+                <td class="contact-name">{{ contact.name }}</td>
+                <td class="contact-roles">
+                  @if (!contact.roles.length) {
+                    <span class="hint-text">No roles assigned</span>
+                  } @else {
+                    @for (role of contact.roles; track role) {
+                      <span class="role-badge">{{ roleLabel(role) }}</span>
+                    }
+                  }
+                </td>
+                <td>
+                  <button
+                    class="btn btn--ghost btn--sm"
+                    type="button"
+                    (click)="openRolesModal(contact)"
+                    [attr.aria-label]="'Edit roles for ' + contact.name"
+                  >
+                    Edit Roles
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+  </section>
+
+  <!-- ── Communication Preferences section ────────────────────────────── -->
+  <section class="detail-section" aria-labelledby="prefs-heading">
+    <div class="section-heading-row">
+      <h2 id="prefs-heading" class="section-heading">Communication Preferences</h2>
+      @if (prefsState() === 'ready' && !isPrefsEditing && !isPrefsSaving) {
+        <button class="btn btn--secondary btn--sm" type="button" (click)="startEditPrefs()">Edit</button>
+      }
+    </div>
+
+    @if (prefsState() === 'loading') {
+      <p class="loading-hint" aria-busy="true">Loading preferences…</p>
+    }
+    @if (prefsState() === 'access-denied') {
+      <p class="hint-text hint-text--warn">Not authorized to view communication preferences.</p>
+    }
+    @if (prefsState() === 'error') {
+      <div class="inline-error" role="alert">
+        Could not load preferences.
+        <button class="btn btn--ghost btn--sm" type="button" (click)="loadPrefs()">Retry</button>
+      </div>
+    }
+
+    @if (prefsState() === 'ready') {
+      <!-- View mode -->
+      @if (!isPrefsEditing && !isPrefsSaving) {
+        @if (!prefs()) {
+          <p class="hint-text">No communication preferences set yet.</p>
+        } @else {
+          <dl class="prefs-summary">
+            <dt>Email Marketing</dt>
+            <dd>{{ prefs()!.emailEnabled ? 'Opted in' : 'Opted out' }}</dd>
+            <dt>SMS Notifications</dt>
+            <dd>{{ prefs()!.smsEnabled ? 'Opted in' : 'Opted out' }}</dd>
+            @if (prefs()!.preferredChannel) {
+              <dt>Preferred Channel</dt>
+              <dd>{{ prefs()!.preferredChannel }}</dd>
+            }
+          </dl>
+        }
+      }
+
+      <!-- Edit mode -->
+      @if (isPrefsEditing || isPrefsSaving) {
+        <form [formGroup]="prefsForm" class="prefs-form" aria-label="Edit communication preferences" novalidate>
+          @if (prefsError()) {
+            <div class="inline-error" role="alert">{{ prefsError() }}</div>
+          }
+
+          <div class="field field--inline">
+            <label class="field__label" for="emailEnabled">Email Marketing</label>
+            <label class="toggle-label">
+              <input id="emailEnabled" type="checkbox" formControlName="emailEnabled" class="toggle-input" />
+              <span class="toggle-track" aria-hidden="true"></span>
+              <span class="toggle-text">{{ prefsForm.controls.emailEnabled.value ? 'Opted in' : 'Opted out' }}</span>
+            </label>
+          </div>
+
+          <div class="field field--inline">
+            <label class="field__label" for="smsEnabled">SMS Notifications</label>
+            <label class="toggle-label">
+              <input id="smsEnabled" type="checkbox" formControlName="smsEnabled" class="toggle-input" />
+              <span class="toggle-track" aria-hidden="true"></span>
+              <span class="toggle-text">{{ prefsForm.controls.smsEnabled.value ? 'Opted in' : 'Opted out' }}</span>
+            </label>
+          </div>
+
+          <div class="field">
+            <label for="preferredChannel" class="field__label">Preferred Channel</label>
+            <select id="preferredChannel" formControlName="preferredChannel" class="field__input field__input--select">
+              <option value="">Not set</option>
+              <option value="EMAIL">Email</option>
+              <option value="SMS">SMS</option>
+              <option value="PHONE">Phone</option>
+            </select>
+          </div>
+
+          <div class="form-actions">
+            <button
+              class="btn btn--primary"
+              type="button"
+              [disabled]="isPrefsSaving"
+              [attr.aria-busy]="isPrefsSaving"
+              (click)="savePrefs()"
+            >
+              @if (isPrefsSaving) { Saving… } @else { Save Preferences }
+            </button>
+            <button class="btn btn--ghost" type="button" [disabled]="isPrefsSaving" (click)="cancelEditPrefs()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      }
+    }
+  </section>
+
+  <!-- ── Edit Roles Modal ──────────────────────────────────────────────── -->
+  @if (isRolesModalOpen) {
+    <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="roles-modal-heading">
+      <div class="modal">
+        <header class="modal__header">
+          <h3 id="roles-modal-heading">Edit Roles — {{ activeContact()?.name }}</h3>
+          <button
+            class="btn btn--icon modal__close"
+            type="button"
+            [disabled]="isRolesModalSaving"
+            (click)="closeRolesModal()"
+            aria-label="Close edit roles modal"
+          >✕</button>
+        </header>
+
+        <div class="modal__body">
+          @if (rolesError()) {
+            <div class="inline-error" role="alert">{{ rolesError() }}</div>
+          }
+
+          <form [formGroup]="rolesForm" aria-label="Role assignment" novalidate>
+            <fieldset class="roles-fieldset">
+              <legend class="form-section__legend">Assign Roles</legend>
+              @for (role of AVAILABLE_ROLES; track role) {
+                <label class="role-row">
+                  <input
+                    type="checkbox"
+                    [formControlName]="role"
+                    class="role-checkbox"
+                    [attr.aria-label]="roleLabel(role) + ' role'"
+                  />
+                  <span class="role-row__label">{{ roleLabel(role) }}</span>
+                </label>
+              }
+            </fieldset>
+          </form>
+        </div>
+
+        <footer class="modal__footer">
+          <button
+            class="btn btn--primary"
+            type="button"
+            [disabled]="isRolesModalSaving"
+            [attr.aria-busy]="isRolesModalSaving"
+            (click)="saveRoles()"
+          >
+            @if (isRolesModalSaving) { Saving… } @else { Save Roles }
+          </button>
+          <button class="btn btn--ghost" type="button" [disabled]="isRolesModalSaving" (click)="closeRolesModal()">
+            Cancel
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+</article>

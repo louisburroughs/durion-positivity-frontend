@@ -69,9 +69,59 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/admin.component').then(m => m.AdminComponent),
       },
-      // Future enhancement: register lazy-loaded domain feature routes here, e.g.:
-      // { path: 'orders', data: { roles: ['ROLE_MANAGER', 'ROLE_ADMIN'] }, loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDERS_ROUTES) },
-      // { path: 'inventory', loadChildren: () => import('./features/inventory/inventory.routes').then(m => m.INVENTORY_ROUTES) },
+      // CRM domain – Wave A (CAP-089, CAP-090, CAP-091, CAP-092)
+      {
+        path: 'crm',
+        loadChildren: () =>
+          import('./features/crm/crm.routes').then(m => m.CRM_ROUTES),
+      },
+      // Domain stub routes (scaffold – full implementation in future waves)
+      {
+        path: 'workexec',
+        loadChildren: () =>
+          import('./features/workexec/workexec.routes').then(m => m.WORKEXEC_ROUTES),
+      },
+      {
+        path: 'accounting',
+        loadChildren: () =>
+          import('./features/accounting/accounting.routes').then(m => m.ACCOUNTING_ROUTES),
+      },
+      {
+        path: 'billing',
+        loadChildren: () =>
+          import('./features/billing/billing.routes').then(m => m.BILLING_ROUTES),
+      },
+      {
+        path: 'people',
+        loadChildren: () =>
+          import('./features/people/people.routes').then(m => m.PEOPLE_ROUTES),
+      },
+      {
+        path: 'location',
+        loadChildren: () =>
+          import('./features/location/location.routes').then(m => m.LOCATION_ROUTES),
+      },
+      {
+        path: 'inventory',
+        loadChildren: () =>
+          import('./features/inventory/inventory.routes').then(m => m.INVENTORY_ROUTES),
+      },
+      {
+        path: 'product',
+        loadChildren: () =>
+          import('./features/product/product.routes').then(m => m.PRODUCT_ROUTES),
+      },
+      {
+        path: 'order',
+        loadChildren: () =>
+          import('./features/order/order.routes').then(m => m.ORDER_ROUTES),
+      },
+      {
+        path: 'security',
+        data: { roles: ['ROLE_ADMIN'] },
+        loadChildren: () =>
+          import('./features/security/security.routes').then(m => m.SECURITY_ROUTES),
+      },
     ],
   },
   {

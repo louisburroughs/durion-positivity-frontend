@@ -2,6 +2,16 @@
 
 Angular 21 single-page application for the Durion POS system.
 
+## Prerequisites
+
+Node.js is managed via [mise](https://mise.jdx.dev/). Ensure mise is installed
+and activated in your shell before running any commands.
+
+```bash
+mise install          # installs the Node version pinned in mise.toml / package.json
+node --version        # verify correct version is active
+```
+
 ## Quick Start
 
 ```bash
@@ -88,9 +98,11 @@ design/
 
 1. Create `src/app/features/<domain>/` with its own `<domain>.routes.ts`.
 2. Register in `app.routes.ts` as a child of the `/app` shell:
+
    ```ts
    { path: 'orders', loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDERS_ROUTES) }
    ```
+
 3. Add a nav entry in `NavComponent.navItems`.
 
 ## Theming
