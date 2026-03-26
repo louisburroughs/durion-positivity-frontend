@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -16,9 +17,10 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error' | 'access-deni
   styleUrl: './customer-list.component.css',
 })
 export class CustomerListComponent implements OnInit {
-  private readonly crm    = inject(CrmService);
-  private readonly router = inject(Router);
-  private readonly fb     = inject(FormBuilder);
+  private readonly crm       = inject(CrmService);
+  private readonly router    = inject(Router);
+  private readonly fb        = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly state   = signal<PageState>('idle');
   readonly parties = signal<PartyDetail[]>([]);
@@ -30,6 +32,7 @@ export class CustomerListComponent implements OnInit {
     this.searchForm.controls.query.valueChanges.pipe(
       debounceTime(350),
       distinctUntilChanged(),
+      takeUntilDestroyed(this.destroyRef),
     ).subscribe(q => this.search(q));
   }
 
