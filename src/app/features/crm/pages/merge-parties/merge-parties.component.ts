@@ -30,7 +30,7 @@ export class MergePartiesComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly step = signal<'search' | 'confirm' | 'success'>('search');
-  readonly searchState = signal<'idle' | 'loading' | 'ready' | 'empty' | 'error'>('idle');
+  readonly searchState = signal<'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'access-denied'>('idle');
   readonly searchResults = signal<PartyDetail[]>([]);
   readonly selectedParties = signal<PartyDetail[]>([]);
   readonly survivorPartyId = signal<string | null>(null);
@@ -75,10 +75,17 @@ export class MergePartiesComponent {
           const rows = response.parties ?? [];
           this.searchResults.set(rows);
           this.searchState.set(rows.length > 0 ? 'ready' : 'empty');
+          this.searchError.set(null);
         },
-        error: () => {
+        error: err => {
           this.searchResults.set([]);
+          if (err?.status === 403) {
+            this.searchState.set('access-denied');
+            this.searchError.set("You don't have permission to search parties.");
+            return;
+          }
           this.searchState.set('error');
+          this.searchError.set(null);
         },
       });
   }

@@ -22,7 +22,7 @@
         <input id="searchPhone" class="field-input" type="text" formControlName="phone" />
 
         @if (searchError()) {
-          <p class="field-error" role="alert">Provide at least one search criterion.</p>
+          <p class="field-error" role="alert">{{ searchError() }}</p>
         }
 
         <div class="actions-row">
@@ -41,6 +41,10 @@
 
       @if (searchState() === 'error') {
         <div class="error-state" role="alert">Search failed. Please try again.</div>
+      }
+
+      @if (searchState() === 'access-denied') {
+        <div class="error-state" role="alert">You don't have permission to search parties.</div>
       }
 
       @if (searchState() === 'ready' && searchResults().length > 0) {

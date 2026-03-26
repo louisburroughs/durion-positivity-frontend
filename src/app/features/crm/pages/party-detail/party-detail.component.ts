@@ -1,13 +1,14 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CrmService } from '../../services/crm.service';
 import {
   PartyDetail,
-  Contact,
   ContactRole,
   CommunicationPreferences,
+  Relationship,
 } from '../../models/crm.models';
 
 type SectionState = 'loading' | 'ready' | 'error' | 'access-denied';
@@ -26,6 +27,7 @@ export class PartyDetailComponent implements OnInit {
   private readonly route  = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb     = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   // ── Party ───────────────────────────────────────────────────────────────
   readonly partyState  = signal<SectionState>('loading');
@@ -33,9 +35,9 @@ export class PartyDetailComponent implements OnInit {
 
   // ── Contacts ─────────────────────────────────────────────────────────
   readonly contactsState    = signal<SectionState>('loading');
-  readonly contacts         = signal<Contact[]>([]);
+  readonly contacts         = signal<Relationship[]>([]);
   readonly rolesModalState  = signal<ModalState>('closed');
-  readonly activeContact    = signal<Contact | null>(null);
+  readonly activeContact    = signal<Relationship | null>(null);
   readonly rolesError       = signal<string | null>(null);
 
   readonly AVAILABLE_ROLES: ContactRole[] = ['BILLING', 'APPROVER', 'DRIVER'];
@@ -71,7 +73,7 @@ export class PartyDetailComponent implements OnInit {
   // ── Load party ─────────────────────────────────────────────────────────
   loadParty(): void {
     this.partyState.set('loading');
-    this.crm.getParty(this.partyId).subscribe({
+    this.crm.getParty(this.partyId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: p => { this.party.set(p); this.partyState.set('ready'); },
       error: err => {
         this.partyState.set(err?.status === 403 ? 'access-denied' : 'error');
@@ -82,7 +84,7 @@ export class PartyDetailComponent implements OnInit {
   // ── Contacts ──────────────────────────────────────────────────────────
   loadContacts(): void {
     this.contactsState.set('loading');
-    this.crm.getContactSummaries(this.partyId).subscribe({
+    this.crm.getContactsWithRoles(this.partyId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: c => { this.contacts.set(c); this.contactsState.set('ready'); },
       error: err => {
         this.contactsState.set(err?.status === 403 ? 'access-denied' : 'error');
@@ -90,12 +92,12 @@ export class PartyDetailComponent implements OnInit {
     });
   }
 
-  openRolesModal(contact: Contact): void {
+  openRolesModal(contact: Relationship): void {
     this.activeContact.set(contact);
     this.rolesError.set(null);
-    const hasBilling  = contact.roles.includes('BILLING');
-    const hasApprover = contact.roles.includes('APPROVER');
-    const hasDriver   = contact.roles.includes('DRIVER');
+    const hasBilling = contact.role === 'BILLING';
+    const hasApprover = contact.role === 'APPROVER';
+    const hasDriver = contact.role === 'DRIVER';
     this.rolesForm.setValue({ BILLING: hasBilling, APPROVER: hasApprover, DRIVER: hasDriver });
     this.rolesModalState.set('open');
   }
@@ -119,11 +121,9 @@ export class PartyDetailComponent implements OnInit {
     this.rolesModalState.set('saving');
     this.rolesError.set(null);
 
-    this.crm.updateContactRoles(this.partyId, contact.contactId, { roles }).subscribe({
-      next: updated => {
-        this.contacts.update(list =>
-          list.map(c => c.contactId === updated.contactId ? updated : c),
-        );
+    this.crm.updateContactRoles(this.partyId, contact.personId, { roles }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.loadContacts();
         this.closeRolesModal();
       },
       error: err => {
@@ -139,7 +139,7 @@ export class PartyDetailComponent implements OnInit {
   // ── Communication Prefs ─────────────────────────────────────────────
   loadPrefs(): void {
     this.prefsState.set('loading');
-    this.crm.getCommunicationPreferences(this.partyId).subscribe({
+    this.crm.getCommunicationPreferences(this.partyId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: p => { this.prefs.set(p); this.prefsState.set('ready'); },
       error: err => {
         if (err?.status === 404) {
@@ -178,7 +178,7 @@ export class PartyDetailComponent implements OnInit {
       emailEnabled:     raw.emailEnabled,
       smsEnabled:       raw.smsEnabled,
       preferredChannel: raw.preferredChannel || undefined,
-    }).subscribe({
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: updated => {
         this.prefs.set(updated);
         this.prefsEdit.set('view');
@@ -204,7 +204,14 @@ export class PartyDetailComponent implements OnInit {
   }
 
   roleLabel(role: ContactRole): string {
-    const labels: Record<string, string> = { BILLING: 'Billing', APPROVER: 'Approver', DRIVER: 'Driver' };
+    const labels: Record<string, string> = {
+      PRIMARY: 'Primary',
+      PRIMARY_CONTACT: 'Primary Contact',
+      BILLING: 'Billing',
+      APPROVER: 'Approver',
+      DRIVER: 'Driver',
+      TECHNICAL: 'Technical',
+    };
     return labels[role] ?? role;
   }
 

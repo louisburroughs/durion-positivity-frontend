@@ -28,8 +28,9 @@ export class PartyContactsComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly pageState = signal<'loading' | 'ready' | 'error'>('loading');
+  readonly pageState = signal<'loading' | 'ready' | 'error' | 'access-denied'>('loading');
   readonly party = signal<PartyDetail | null>(null);
+  readonly partyForbidden = signal(false);
   readonly relationships = signal<Relationship[]>([]);
   readonly filterStatus = signal<'ACTIVE' | 'INACTIVE' | 'ALL'>('ACTIVE');
   readonly filterRole = signal<RelationshipRole | 'ALL'>('ALL');
@@ -101,13 +102,16 @@ export class PartyContactsComponent implements OnInit {
   }
 
   loadParty(): void {
+    this.partyForbidden.set(false);
     this.crm
       .getParty(this.partyId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: party => this.party.set(party),
         error: err => {
-          if (err?.status !== 403) {
+          if (err?.status === 403) {
+            this.partyForbidden.set(true);
+          } else {
             this.party.set(null);
           }
         },
@@ -124,8 +128,20 @@ export class PartyContactsComponent implements OnInit {
           this.relationships.set(rows);
           this.pageState.set('ready');
         },
-        error: () => this.pageState.set('error'),
+        error: err => this.pageState.set(err?.status === 403 ? 'access-denied' : 'error'),
       });
+  }
+
+  onStatusFilterChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value as 'ACTIVE' | 'INACTIVE' | 'ALL';
+    this.filterStatus.set(value);
+    this.onFilterChange();
+  }
+
+  onRoleFilterChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value as RelationshipRole | 'ALL';
+    this.filterRole.set(value);
+    this.onFilterChange();
   }
 
   onSearchInput(event: Event): void {

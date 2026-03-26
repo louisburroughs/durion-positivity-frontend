@@ -20,6 +20,12 @@
     </div>
   }
 
+  @if (pageState() === 'access-denied') {
+    <div class="error-state" role="alert">
+      <p>You don't have permission to view billing rules for this account.</p>
+    </div>
+  }
+
   @if (pageState() === 'ready') {
     @if (rules().length === 0) {
       <section class="empty-state">

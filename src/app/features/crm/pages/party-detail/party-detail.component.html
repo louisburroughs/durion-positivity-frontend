@@ -73,24 +73,18 @@
             </tr>
           </thead>
           <tbody>
-            @for (contact of contacts(); track contact.contactId) {
+            @for (contact of contacts(); track contact.relationshipId) {
               <tr>
-                <td class="contact-name">{{ contact.name }}</td>
+                <td class="contact-name">{{ contact.personName || contact.personId }}</td>
                 <td class="contact-roles">
-                  @if (!contact.roles.length) {
-                    <span class="hint-text">No roles assigned</span>
-                  } @else {
-                    @for (role of contact.roles; track role) {
-                      <span class="role-badge">{{ roleLabel(role) }}</span>
-                    }
-                  }
+                  <span class="role-badge">{{ roleLabel(contact.role) }}</span>
                 </td>
                 <td>
                   <button
                     class="btn btn--ghost btn--sm"
                     type="button"
                     (click)="openRolesModal(contact)"
-                    [attr.aria-label]="'Edit roles for ' + contact.name"
+                    [attr.aria-label]="'Edit roles for ' + (contact.personName || contact.personId)"
                   >
                     Edit Roles
                   </button>
@@ -203,7 +197,7 @@
     <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="roles-modal-heading">
       <div class="modal">
         <header class="modal__header">
-          <h3 id="roles-modal-heading">Edit Roles — {{ activeContact()?.name }}</h3>
+          <h3 id="roles-modal-heading">Edit Roles — {{ activeContact()?.personName || activeContact()?.personId }}</h3>
           <button
             class="btn btn--icon modal__close"
             type="button"

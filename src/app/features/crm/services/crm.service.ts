@@ -124,11 +124,6 @@ export class CrmService {
     return this.api.get<Relationship[]>(`/v1/crm/accounts/parties/${partyId}/contacts`);
   }
 
-  /** Backward-compatible projection used by legacy contacts UI. */
-  getContactSummaries(partyId: string): Observable<Contact[]> {
-    return this.api.get<Contact[]>(`/v1/crm/accounts/parties/${partyId}/contacts`);
-  }
-
   /** operationId: updateContactRoles_1 */
   updateContactRoles(
     partyId: string,

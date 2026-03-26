@@ -3,6 +3,12 @@
 
 	<h1 id="page-heading">Contacts &amp; Roles</h1>
 
+	@if (partyForbidden()) {
+		<div role="alert" class="error-state">
+			<p>You don't have permission to view this account header.</p>
+		</div>
+	}
+
 	<section class="toolbar" aria-label="Contact filters and actions">
 		<div class="toolbar-filters">
 			<label class="field-label" for="statusFilter">Status</label>
@@ -10,7 +16,7 @@
 				id="statusFilter"
 				class="field-input"
 				[value]="filterStatus()"
-				(change)="filterStatus.set($any($event.target).value); onFilterChange()"
+				(change)="onStatusFilterChange($event)"
 			>
 				<option value="ACTIVE">Active</option>
 				<option value="INACTIVE">Inactive</option>
@@ -22,7 +28,7 @@
 				id="roleFilter"
 				class="field-input"
 				[value]="filterRole()"
-				(change)="filterRole.set($any($event.target).value); onFilterChange()"
+				(change)="onRoleFilterChange($event)"
 			>
 				<option value="ALL">All</option>
 				<option value="BILLING">BILLING</option>
@@ -58,6 +64,12 @@
 		<div role="alert" class="error-state">
 			<p>Unable to load contacts and roles.</p>
 			<button class="btn-primary" type="button" (click)="loadRelationships()">Retry</button>
+		</div>
+	}
+
+	@if (pageState() === 'access-denied') {
+		<div role="alert" class="error-state">
+			<p>You don't have permission to view contacts for this account.</p>
 		</div>
 	}
 

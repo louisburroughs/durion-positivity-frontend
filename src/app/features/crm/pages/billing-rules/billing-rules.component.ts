@@ -29,7 +29,7 @@ export class BillingRulesComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly pageState = signal<'loading' | 'ready' | 'error'>('loading');
+  readonly pageState = signal<'loading' | 'ready' | 'error' | 'access-denied'>('loading');
   readonly rules = signal<BillingRule[]>([]);
   readonly panelState = signal<'closed' | 'add' | 'edit'>('closed');
   readonly editingRule = signal<BillingRule | null>(null);
@@ -68,7 +68,7 @@ export class BillingRulesComponent implements OnInit {
           this.rules.set(rules);
           this.pageState.set('ready');
         },
-        error: () => this.pageState.set('error'),
+        error: err => this.pageState.set(err?.status === 403 ? 'access-denied' : 'error'),
       });
   }
 
