@@ -31,7 +31,10 @@
           </div>
           @for (item of crItems(); track $index) {
             <div class="cr-item-row">
-              <select class="field__input" [value]="item.type" (change)="updateItem($index, { type: $any($event.target).value })">
+              <select
+                class="field__input"
+                [value]="item.type"
+                (change)="updateItem($index, $any($event.target).value === 'SERVICE' ? { type: 'SERVICE', partId: null } : { type: 'PART', serviceId: null })">
                 <option value="SERVICE">Service</option>
                 <option value="PART">Part</option>
               </select>
