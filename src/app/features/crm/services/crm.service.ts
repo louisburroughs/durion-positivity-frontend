@@ -41,6 +41,10 @@ import {
  *   upsertCommunicationPreferences_1 → PUT /v1/crm/accounts/parties/{partyId}/communicationPreferences
  *   createVehicleForParty    → POST /v1/crm/accounts/parties/{partyId}/vehicles
  *   fetchByParty             → GET  /v1/crm/snapshot/party/{partyId}
+ *   fetchByVehicle           → GET  /v1/crm/snapshot/vehicle/{vehicleId}
+ *   getBillingRules          → GET  /v1/crm/accounts/parties/{partyId}/billing-rules
+ *   designatePrimaryBillingContact → PUT /v1/crm/accounts/parties/{partyId}/relationships/{relationshipId}/primary-billing
+ *   deactivateRelationship   → DELETE /v1/crm/accounts/parties/{partyId}/relationships/{relationshipId}
  */
 @Injectable({ providedIn: 'root' })
 export class CrmService {
@@ -136,6 +140,7 @@ export class CrmService {
     );
   }
 
+  /** operationId: designatePrimaryBillingContact */
   designatePrimaryBillingContact(
     partyId: string,
     relationshipId: string,
@@ -146,6 +151,7 @@ export class CrmService {
     );
   }
 
+  /** operationId: deactivateRelationship */
   deactivateRelationship(partyId: string, relationshipId: string): Observable<void> {
     return this.api.delete<void>(`/v1/crm/accounts/parties/${partyId}/relationships/${relationshipId}`);
   }
