@@ -21,5 +21,6 @@
 .btn--primary { background: var(--durion-teal-400); color: #fff; }
 .btn--primary:hover { background: var(--durion-teal-500); }
 .btn--secondary { background: var(--primary50, var(--brand-primary-soft)); color: var(--brand-primary); }
+.btn--ghost { background: transparent; color: var(--durion-primary); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 560px) { .page-header { flex-direction: column; align-items: flex-start; } .header-actions { width: 100%; } .btn { flex: 1; } }

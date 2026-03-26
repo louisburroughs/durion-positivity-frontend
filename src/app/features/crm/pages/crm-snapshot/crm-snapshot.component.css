@@ -1,0 +1,144 @@
+:host {
+  display: block;
+}
+
+.crm-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  color: var(--durion-on-surface-variant);
+}
+
+h1,
+h2 {
+  color: var(--durion-on-surface);
+}
+
+.page-subtitle {
+  margin-top: calc(var(--space-2) * -1);
+}
+
+.step-panel,
+.snapshot-section,
+.loading-state,
+.error-state {
+  background: var(--durion-surface-container-lowest);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.snapshot-form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.field-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.field-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--durion-surface-container-low);
+  border: none;
+  border-bottom: 2px solid var(--durion-primary);
+  border-radius: 0;
+  padding: var(--space-2) var(--space-3);
+  color: var(--durion-on-surface-variant);
+  font: inherit;
+  outline: none;
+}
+
+.field-error {
+  margin: 0;
+  color: var(--durion-error);
+}
+
+.actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.btn-primary,
+.btn-ghost {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--durion-primary);
+  color: var(--durion-on-primary);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--durion-primary);
+}
+
+.btn-primary:disabled,
+.btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-state {
+  background: var(--durion-error-container);
+  color: var(--durion-error);
+}
+
+.correlation {
+  font-size: 0.84rem;
+}
+
+.meta-strip {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.meta-strip p {
+  margin: 0;
+}
+
+.snapshot-section {
+  border-left: 2px solid var(--durion-primary);
+}
+
+.card-grid {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.list-panel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.list-panel li {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--durion-surface-container-low);
+}
+
+.empty-state {
+  margin: 0;
+  background: var(--durion-surface-container-low);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}

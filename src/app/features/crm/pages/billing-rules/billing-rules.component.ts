@@ -19,7 +19,8 @@ import {
   selector: 'app-billing-rules',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  template: '<section class="billing-rules-page"></section>',
+  templateUrl: './billing-rules.component.html',
+  styleUrl: './billing-rules.component.css',
 })
 export class BillingRulesComponent implements OnInit {
   private readonly crm = inject(CrmService);

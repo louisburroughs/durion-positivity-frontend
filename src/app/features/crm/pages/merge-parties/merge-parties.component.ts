@@ -20,7 +20,8 @@ import {
   selector: 'app-merge-parties',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  template: '<section class="merge-parties-page"></section>',
+  templateUrl: './merge-parties.component.html',
+  styleUrl: './merge-parties.component.css',
 })
 export class MergePartiesComponent {
   private readonly crm = inject(CrmService);

@@ -24,6 +24,9 @@
   @if (partyState() === 'ready' && party()) {
     <header class="party-header">
       <h1 id="party-heading">{{ party()!.legalName }}</h1>
+      <div class="party-header-actions">
+        <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToBillingRules()">Billing Rules →</button>
+      </div>
       @if (party()!.dba) {
         <p class="party-dba">DBA: {{ party()!.dba }}</p>
       }
@@ -40,7 +43,10 @@
 
   <!-- ── Contacts section ─────────────────────────────────────────────── -->
   <section class="detail-section" aria-labelledby="contacts-heading">
-    <h2 id="contacts-heading" class="section-heading">Contacts</h2>
+    <div class="section-heading-row">
+      <h2 id="contacts-heading" class="section-heading">Contacts</h2>
+      <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToContacts()">Manage Contacts &amp; Roles →</button>
+    </div>
 
     @if (contactsState() === 'loading') {
       <p class="loading-hint" aria-busy="true">Loading contacts…</p>

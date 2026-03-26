@@ -20,7 +20,8 @@ const UUID_PATTERN =
   selector: 'app-crm-snapshot',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  template: '<section class="crm-snapshot-page"></section>',
+  templateUrl: './crm-snapshot.component.html',
+  styleUrl: './crm-snapshot.component.css',
 })
 export class CrmSnapshotComponent {
   private readonly crm = inject(CrmService);
