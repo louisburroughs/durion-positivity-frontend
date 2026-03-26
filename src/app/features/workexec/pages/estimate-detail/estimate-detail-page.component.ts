@@ -154,6 +154,11 @@ export class EstimateDetailPageComponent implements OnInit {
       this.approvedItems.set(approved);
       this.declinedItems.set(declined);
       this.showPartialScope.set(declined.length > 0);
+    } else {
+      // Ensure no stale partial-approval UI state when estimate is not approved
+      this.approvedItems.set([]);
+      this.declinedItems.set([]);
+      this.showPartialScope.set(false);
     }
   }
 
