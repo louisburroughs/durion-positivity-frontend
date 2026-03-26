@@ -1,9 +1,8 @@
 /**
- * WorkexecService unit tests — RED phase
+ * WorkexecService unit tests
  *
- * These tests verify the primary contract bindings for CAP-002 and CAP-003.
- * They are intentionally minimal (service wiring only) to establish RED
- * before component-level specs are added per story.
+ * These tests verify the primary contract bindings for CAP-002 and CAP-003,
+ * including Idempotency-Key header forwarding for mutating operations.
  *
  * Stories covered:
  *   239 — createEstimate, getEstimateById
@@ -213,5 +212,46 @@ describe('WorkexecService', () => {
     });
     expect(result.status).toBe('EXPIRED');
     expect(result.expiresAt).toBeTruthy();
+  });
+
+  // ── Idempotency-Key header forwarding ─────────────────────────────────────
+
+  it('createEstimate — forwards Idempotency-Key header when provided', () => {
+    const req = { customerId: 'c', vehicleId: 'v', crmPartyId: 'p', crmVehicleId: 'cv', crmContactIds: [] };
+    service.createEstimate(req, 'test-idem-key').subscribe();
+    const r = http.expectOne(`${BASE}/v1/workorders/estimates`);
+    expect(r.request.headers.get('Idempotency-Key')).toBe('test-idem-key');
+    r.flush({ id: 'est-1', status: 'DRAFT', customerId: 'c', vehicleId: 'v' });
+  });
+
+  it('createEstimate — does not set Idempotency-Key header when omitted', () => {
+    const req = { customerId: 'c', vehicleId: 'v', crmPartyId: 'p', crmVehicleId: 'cv', crmContactIds: [] };
+    service.createEstimate(req).subscribe();
+    const r = http.expectOne(`${BASE}/v1/workorders/estimates`);
+    expect(r.request.headers.has('Idempotency-Key')).toBeFalsy();
+    r.flush({ id: 'est-1', status: 'DRAFT', customerId: 'c', vehicleId: 'v' });
+  });
+
+  it('submitForApproval — forwards Idempotency-Key header when provided', () => {
+    service.submitForApproval('est-1', 'submit-idem-key').subscribe();
+    const r = http.expectOne(`${BASE}/v1/workorders/estimates/est-1/submit-for-approval`);
+    expect(r.request.headers.get('Idempotency-Key')).toBe('submit-idem-key');
+    r.flush({ id: 'est-1', status: 'PENDING_APPROVAL', customerId: 'c', vehicleId: 'v' });
+  });
+
+  it('approveEstimate — forwards Idempotency-Key header when provided', () => {
+    const request = { customerId: 'cust-1', notes: 'Approved in person' };
+    service.approveEstimate('est-1', request, 'approve-idem-key').subscribe();
+    const r = http.expectOne(`${BASE}/v1/workorders/estimates/est-1/approval`);
+    expect(r.request.headers.get('Idempotency-Key')).toBe('approve-idem-key');
+    r.flush({ id: 'est-1', status: 'APPROVED', customerId: 'c', vehicleId: 'v' });
+  });
+
+  it('addEstimateItem — forwards Idempotency-Key header when provided', () => {
+    const item = { itemType: 'PART' as const, quantity: 1, unitPrice: 10 };
+    service.addEstimateItem('est-1', item, 'add-item-idem-key').subscribe();
+    const r = http.expectOne(`${BASE}/v1/workorders/estimates/est-1/items`);
+    expect(r.request.headers.get('Idempotency-Key')).toBe('add-item-idem-key');
+    r.flush({ id: 'item-1', estimateId: 'est-1', itemType: 'PART', quantity: 1, unitPrice: 10 });
   });
 });

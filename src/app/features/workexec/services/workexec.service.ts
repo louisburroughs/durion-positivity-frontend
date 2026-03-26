@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
@@ -32,11 +31,16 @@ import {
  *   approveEstimate         → POST   /v1/workorders/estimates/{estimateId}/approval
  *
  * Idempotency-Key header is forwarded for mutating operations per
- * DECISION-INVENTORY-012.
+ * DECISION-INVENTORY-012 via ApiBaseService options.
  */
 @Injectable({ providedIn: 'root' })
 export class WorkexecService {
   constructor(private readonly api: ApiBaseService) {}
+
+  /** Builds an options object carrying the Idempotency-Key header when a key is provided. */
+  private idempotencyOptions(key?: string) {
+    return key ? { headers: { 'Idempotency-Key': key } } : undefined;
+  }
 
   // ── CAP-002: Estimate CRUD ────────────────────────────────────────────────
 
@@ -49,7 +53,7 @@ export class WorkexecService {
     request: CreateEstimateRequest,
     idempotencyKey?: string,
   ): Observable<EstimateResponse> {
-    return this.api.post<EstimateResponse>('/v1/workorders/estimates', request);
+    return this.api.post<EstimateResponse>('/v1/workorders/estimates', request, this.idempotencyOptions(idempotencyKey));
   }
 
   /**
@@ -76,6 +80,7 @@ export class WorkexecService {
     return this.api.post<EstimateItemResponse>(
       `/v1/workorders/estimates/${estimateId}/items`,
       request,
+      this.idempotencyOptions(idempotencyKey),
     );
   }
 
@@ -88,10 +93,12 @@ export class WorkexecService {
     estimateId: string,
     itemId: string,
     request: UpdateEstimateItemRequest,
+    idempotencyKey?: string,
   ): Observable<EstimateItemResponse> {
     return this.api.patch<EstimateItemResponse>(
       `/v1/workorders/estimates/${estimateId}/items/${itemId}`,
       request,
+      this.idempotencyOptions(idempotencyKey),
     );
   }
 
@@ -99,9 +106,10 @@ export class WorkexecService {
    * operationId: deleteEstimateItem
    * DELETE /v1/workorders/estimates/{estimateId}/items/{itemId}
    */
-  deleteEstimateItem(estimateId: string, itemId: string): Observable<void> {
+  deleteEstimateItem(estimateId: string, itemId: string, idempotencyKey?: string): Observable<void> {
     return this.api.delete<void>(
       `/v1/workorders/estimates/${estimateId}/items/${itemId}`,
+      this.idempotencyOptions(idempotencyKey),
     );
   }
 
@@ -114,10 +122,12 @@ export class WorkexecService {
    */
   calculateEstimateTotals(
     estimateId: string,
+    idempotencyKey?: string,
   ): Observable<CalculateEstimateTotalsResponse> {
     return this.api.post<CalculateEstimateTotalsResponse>(
       `/v1/workorders/estimates/${estimateId}/calculate-totals`,
       {},
+      this.idempotencyOptions(idempotencyKey),
     );
   }
 
@@ -131,10 +141,12 @@ export class WorkexecService {
   patchEstimateStatus(
     estimateId: string,
     patch: Record<string, unknown>,
+    idempotencyKey?: string,
   ): Observable<EstimateResponse> {
     return this.api.patch<EstimateResponse>(
       `/v1/workorders/estimates/${estimateId}`,
       patch,
+      this.idempotencyOptions(idempotencyKey),
     );
   }
 
@@ -143,10 +155,11 @@ export class WorkexecService {
    * POST /v1/workorders/estimates/{estimateId}/reopen
    * Story 235
    */
-  reopenEstimate(estimateId: string): Observable<EstimateResponse> {
+  reopenEstimate(estimateId: string, idempotencyKey?: string): Observable<EstimateResponse> {
     return this.api.post<EstimateResponse>(
       `/v1/workorders/estimates/${estimateId}/reopen`,
       {},
+      this.idempotencyOptions(idempotencyKey),
     );
   }
 
@@ -160,10 +173,12 @@ export class WorkexecService {
   createEstimateSnapshot(
     estimateId: string,
     notes?: string,
+    idempotencyKey?: string,
   ): Observable<EstimateSnapshotResponse> {
     return this.api.post<EstimateSnapshotResponse>(
       `/v1/workorders/estimates/${estimateId}/snapshots`,
       { notes },
+      this.idempotencyOptions(idempotencyKey),
     );
   }
 
@@ -196,6 +211,7 @@ export class WorkexecService {
     return this.api.post<EstimateResponse>(
       `/v1/workorders/estimates/${estimateId}/submit-for-approval`,
       {},
+      this.idempotencyOptions(idempotencyKey),
     );
   }
 
@@ -219,6 +235,7 @@ export class WorkexecService {
     return this.api.post<EstimateResponse>(
       `/v1/workorders/estimates/${estimateId}/approval`,
       request,
+      this.idempotencyOptions(idempotencyKey),
     );
   }
 }

@@ -15,7 +15,8 @@ import { EstimateResponse, PageState } from '../../models/workexec.models';
  *
  * Submits a DRAFT estimate for customer approval.
  * Displays resulting status + approvalRequestId.
- * Idempotency-Key on submit.
+ * Generates a per-submit Idempotency-Key via crypto.randomUUID() to prevent
+ * duplicate submissions on retry.
  */
 @Component({
   selector: 'app-approval-submit-page',
@@ -75,7 +76,8 @@ export class ApprovalSubmitPageComponent implements OnInit {
     this.errorMessage.set(null);
     this.fieldErrors.set([]);
 
-    this.workexec.submitForApproval(this.estimateId)
+    const idempotencyKey = crypto.randomUUID();
+    this.workexec.submitForApproval(this.estimateId, idempotencyKey)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: est => {

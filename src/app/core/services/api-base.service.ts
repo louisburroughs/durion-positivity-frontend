@@ -1,7 +1,16 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+
+/**
+ * Options accepted by mutating ApiBaseService methods (POST, PUT, PATCH, DELETE).
+ * Extend this interface when additional per-request options are needed.
+ */
+export interface ApiRequestOptions {
+  /** Arbitrary request headers to merge into the outgoing request. */
+  headers?: Record<string, string>;
+}
 
 /**
  * ApiBaseService
@@ -23,20 +32,24 @@ export class ApiBaseService {
     return this.http.get<T>(this.url(path), { params });
   }
 
-  post<T>(path: string, body: unknown): Observable<T> {
-    return this.http.post<T>(this.url(path), body);
+  post<T>(path: string, body: unknown, options?: ApiRequestOptions): Observable<T> {
+    return this.http.post<T>(this.url(path), body, { headers: this.toHeaders(options?.headers) });
   }
 
-  put<T>(path: string, body: unknown): Observable<T> {
-    return this.http.put<T>(this.url(path), body);
+  put<T>(path: string, body: unknown, options?: ApiRequestOptions): Observable<T> {
+    return this.http.put<T>(this.url(path), body, { headers: this.toHeaders(options?.headers) });
   }
 
-  patch<T>(path: string, body: unknown): Observable<T> {
-    return this.http.patch<T>(this.url(path), body);
+  patch<T>(path: string, body: unknown, options?: ApiRequestOptions): Observable<T> {
+    return this.http.patch<T>(this.url(path), body, { headers: this.toHeaders(options?.headers) });
   }
 
-  delete<T>(path: string): Observable<T> {
-    return this.http.delete<T>(this.url(path));
+  delete<T>(path: string, options?: ApiRequestOptions): Observable<T> {
+    return this.http.delete<T>(this.url(path), { headers: this.toHeaders(options?.headers) });
+  }
+
+  private toHeaders(record?: Record<string, string>): HttpHeaders | undefined {
+    return record ? new HttpHeaders(record) : undefined;
   }
 
   private url(path: string): string {
