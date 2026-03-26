@@ -8,7 +8,7 @@ Node.js is managed via [mise](https://mise.jdx.dev/). Ensure mise is installed
 and activated in your shell before running any commands.
 
 ```bash
-mise install          # installs the Node version pinned in .mise.toml / package.json
+mise install          # installs the Node version pinned in mise.toml / package.json
 node --version        # verify correct version is active
 ```
 
