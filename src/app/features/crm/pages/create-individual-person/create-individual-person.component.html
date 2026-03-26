@@ -1,0 +1,144 @@
+<article class="crm-page crm-create-person" aria-labelledby="page-heading">
+
+  <!-- ── Access Denied ─────────────────────────────────────────────────── -->
+  @if (isAccessDenied) {
+    <section class="state-panel state-panel--denied" aria-live="assertive">
+      <span class="state-icon" aria-hidden="true">🔒</span>
+      <h2 id="denied-heading">Access Denied</h2>
+      <p>You do not have permission to create individual person records.</p>
+    </section>
+  }
+
+  <!-- ── Main form ────────────────────────────────────────────────────── -->
+  @if (!isAccessDenied && !isSuccess) {
+    <header class="page-header">
+      <h1 id="page-heading">Create Individual Person</h1>
+      <p class="page-subtitle">Register a new individual in the CRM.</p>
+    </header>
+
+    @if (isError && serverError()) {
+      <div class="alert alert--error" role="alert" aria-live="assertive">
+        <span class="state-icon" aria-hidden="true">✕</span>
+        {{ serverError() }}
+      </div>
+    }
+
+    <form
+      [formGroup]="form"
+      class="crm-form"
+      aria-label="Create individual person form"
+      (ngSubmit)="submit()"
+      novalidate
+    >
+      <fieldset class="form-section" [disabled]="isSubmitting">
+        <legend class="form-section__legend">Person Details</legend>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="firstName" class="field__label">
+              First Name <span class="required-mark" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="firstName"
+              type="text"
+              formControlName="firstName"
+              class="field__input"
+              placeholder="First name"
+              autocomplete="given-name"
+              [attr.aria-invalid]="firstNameCtrl.invalid && firstNameCtrl.touched ? 'true' : null"
+              aria-describedby="firstName-err"
+            />
+            @if (firstNameCtrl.invalid && firstNameCtrl.touched) {
+              <span id="firstName-err" class="field__error" role="alert">First name is required.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label for="lastName" class="field__label">
+              Last Name <span class="required-mark" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              formControlName="lastName"
+              class="field__input"
+              placeholder="Last name"
+              autocomplete="family-name"
+              [attr.aria-invalid]="lastNameCtrl.invalid && lastNameCtrl.touched ? 'true' : null"
+              aria-describedby="lastName-err"
+            />
+            @if (lastNameCtrl.invalid && lastNameCtrl.touched) {
+              <span id="lastName-err" class="field__error" role="alert">Last name is required.</span>
+            }
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="email" class="field__label">Email Address</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="field__input"
+            placeholder="Optional email"
+            autocomplete="email"
+          />
+        </div>
+
+        <div class="field">
+          <label for="phone" class="field__label">Phone Number</label>
+          <input
+            id="phone"
+            type="tel"
+            formControlName="phone"
+            class="field__input"
+            placeholder="Optional phone number"
+            autocomplete="tel"
+          />
+        </div>
+      </fieldset>
+
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn btn--primary"
+          [disabled]="isSubmitting || form.invalid"
+          [attr.aria-busy]="isSubmitting"
+        >
+          @if (isSubmitting) { Creating… } @else { Create Person }
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- ── Success ───────────────────────────────────────────────────────── -->
+  @if (isSuccess) {
+    <section class="state-panel state-panel--success" aria-live="polite" aria-labelledby="success-heading">
+      <span class="state-icon state-icon--success" aria-hidden="true">✓</span>
+      <h2 id="success-heading">Person Record Created</h2>
+
+      <div class="success-id-block" aria-label="New person ID">
+        <span class="success-id-label">Person ID</span>
+        <code class="success-id-value">{{ createdPersonId() }}</code>
+        <button
+          class="btn btn--icon"
+          type="button"
+          (click)="copyPersonId()"
+          [attr.aria-label]="copied() ? 'Copied' : 'Copy person ID'"
+        >
+          {{ copied() ? '✓ Copied' : 'Copy' }}
+        </button>
+      </div>
+
+      <div class="form-actions form-actions--success">
+        <button class="btn btn--primary" type="button" (click)="viewPerson()">
+          View Person Record
+        </button>
+        <button class="btn btn--secondary" type="button" (click)="createAnother()">
+          Create Another
+        </button>
+      </div>
+    </section>
+  }
+
+</article>

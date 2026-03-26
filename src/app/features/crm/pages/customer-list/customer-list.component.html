@@ -1,0 +1,74 @@
+<section class="crm-page crm-list" aria-labelledby="crm-list-heading">
+
+  <header class="page-header">
+    <h1 id="crm-list-heading">Accounts &amp; Parties</h1>
+    <div class="header-actions">
+      <button class="btn btn--primary" type="button" (click)="createCommercial()">
+        + Commercial Account
+      </button>
+      <button class="btn btn--secondary" type="button" (click)="createIndividual()">
+        + Individual Person
+      </button>
+    </div>
+  </header>
+
+  <!-- Search -->
+  <form [formGroup]="searchForm" class="search-form" aria-label="Search parties" role="search">
+    <label for="party-search" class="sr-only">Search accounts and parties</label>
+    <input
+      id="party-search"
+      type="search"
+      formControlName="query"
+      class="search-input"
+      placeholder="Search by name, DBA, or tax ID…"
+      aria-label="Search accounts and parties"
+      aria-controls="search-results"
+    />
+  </form>
+
+  <!-- Results -->
+  <div id="search-results" aria-live="polite" aria-atomic="true">
+
+    @if (state() === 'loading') {
+      <p class="hint-text" aria-busy="true">Searching…</p>
+    }
+
+    @if (state() === 'empty') {
+      <p class="hint-text">No accounts found matching your search.</p>
+    }
+
+    @if (state() === 'access-denied') {
+      <p class="hint-text hint-text--warn">You do not have permission to search accounts.</p>
+    }
+
+    @if (state() === 'error') {
+      <p class="hint-text hint-text--error">{{ error() }}</p>
+    }
+
+    @if (state() === 'idle') {
+      <p class="hint-text">Enter a name or tax ID to search.</p>
+    }
+
+    @if (state() === 'ready' && parties().length) {
+      <ul class="party-list" aria-label="Search results">
+        @for (party of parties(); track party.partyId) {
+          <li class="party-card">
+            <button
+              class="party-card__inner"
+              type="button"
+              (click)="openParty(party.partyId)"
+              [attr.aria-label]="'Open party record for ' + party.legalName"
+            >
+              <span class="party-card__name">{{ party.legalName }}</span>
+              @if (party.dba) {
+                <span class="party-card__dba">DBA: {{ party.dba }}</span>
+              }
+              <span class="party-card__id">{{ party.partyId }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+</section>

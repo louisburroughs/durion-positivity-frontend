@@ -69,9 +69,59 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/admin.component').then(m => m.AdminComponent),
       },
-      // Future enhancement: register lazy-loaded domain feature routes here, e.g.:
-      // { path: 'orders', data: { roles: ['ROLE_MANAGER', 'ROLE_ADMIN'] }, loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDERS_ROUTES) },
-      // { path: 'inventory', loadChildren: () => import('./features/inventory/inventory.routes').then(m => m.INVENTORY_ROUTES) },
+      // CRM domain – Wave A (CAP-089, CAP-090, CAP-091, CAP-092)
+      {
+        path: 'crm',
+        loadChildren: () =>
+          import('./features/crm/crm.routes').then(m => m.CRM_ROUTES),
+      },
+      // Domain stub routes (scaffold – full implementation in future waves)
+      {
+        path: 'workexec',
+        loadComponent: () =>
+          import('./features/workexec/workexec.component').then(m => m.WorkexecComponent),
+      },
+      {
+        path: 'accounting',
+        loadComponent: () =>
+          import('./features/accounting/accounting.component').then(m => m.AccountingComponent),
+      },
+      {
+        path: 'billing',
+        loadComponent: () =>
+          import('./features/billing/billing.component').then(m => m.BillingComponent),
+      },
+      {
+        path: 'people',
+        loadComponent: () =>
+          import('./features/people/people.component').then(m => m.PeopleComponent),
+      },
+      {
+        path: 'location',
+        loadComponent: () =>
+          import('./features/location/location.component').then(m => m.LocationComponent),
+      },
+      {
+        path: 'inventory',
+        loadComponent: () =>
+          import('./features/inventory/inventory.component').then(m => m.InventoryComponent),
+      },
+      {
+        path: 'product',
+        loadComponent: () =>
+          import('./features/product/product.component').then(m => m.ProductComponent),
+      },
+      {
+        path: 'order',
+        loadComponent: () =>
+          import('./features/order/order.component').then(m => m.OrderComponent),
+      },
+      {
+        path: 'security',
+        data: { roles: ['ROLE_ADMIN'] },
+        loadComponent: () =>
+          import('./features/security/security.component').then(m => m.SecurityComponent),
+      },
     ],
   },
   {

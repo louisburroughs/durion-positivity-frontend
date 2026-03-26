@@ -1,0 +1,384 @@
+/*
+ * Create Commercial Account — component styles
+ * Design authority: design/Customer/DESIGN.md + design/source/theme-tokens.md
+ * Design rules applied:
+ *   - NO 1px solid borders for sectioning; separation via tonal backgrounds
+ *   - Electric Teal (#2bbbad) for primary CTA only
+ *   - Underline-weighted inputs (2px bottom stroke on focus, no box border)
+ *   - Cards separated by 24px spacing / alternating background tints
+ *   - Public Sans / Noto Sans typography stack
+ */
+
+/* ── Page layout ─────────────────────────────────────────────────────────── */
+.crm-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 640px;
+  padding: var(--space-6) var(--space-4);
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.page-header h1 {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--currentTextColor);
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--handleColor);
+}
+
+/* ── Form ─────────────────────────────────────────────────────────────────── */
+.crm-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.form-section {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form-section__legend {
+  font-family: var(--font-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--handleColor);
+  padding: 0;
+  margin-bottom: var(--space-2);
+}
+
+/* ── Fields ─────────────────────────────────────────────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.field__label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--currentTextColor);
+}
+
+.required-mark {
+  color: var(--functional-error-red);
+  margin-left: 2px;
+}
+
+/* Underline-style input: no box border, 2px bottom accent on focus */
+.field__input {
+  background: var(--surfaceContainerHighest, var(--primary50));
+  border: none;
+  border-bottom: 2px solid var(--durion-graphite-200);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  padding: var(--space-3) var(--space-3);
+  font-size: 0.95rem;
+  font-family: var(--font-body);
+  color: var(--currentTextColor);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.field__input:focus {
+  border-bottom-color: var(--durion-teal-400);
+  background: var(--surfaceContainerHigh, var(--cardBackground, #fff));
+}
+
+.field__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.field__input[aria-invalid='true'] {
+  border-bottom-color: var(--functional-error-red);
+}
+
+.field__input--textarea {
+  resize: vertical;
+  min-height: 80px;
+  border-radius: var(--radius-sm);
+}
+
+.field__input--select {
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%23727986' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  background-size: 16px;
+  padding-right: calc(var(--space-3) * 2 + 16px);
+}
+
+.field__error {
+  font-size: 0.8rem;
+  color: var(--functional-error-red);
+}
+
+/* ── Form actions ─────────────────────────────────────────────────────────── */
+.form-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.form-actions--success {
+  justify-content: center;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Primary: Electric Teal for CTA only */
+.btn--primary {
+  background: linear-gradient(135deg, var(--durion-blue-700), var(--durion-blue-600));
+  color: #fff;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--durion-blue-800), var(--durion-blue-700));
+}
+
+/* Teal variant for the create CTA specifically */
+.crm-create-account .btn--primary {
+  background: var(--durion-teal-400);
+  color: #fff;
+}
+
+.crm-create-account .btn--primary:hover:not(:disabled) {
+  background: var(--durion-teal-500);
+}
+
+.btn--secondary {
+  background: var(--primary50, var(--brand-primary-soft));
+  color: var(--brand-primary);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--handleColor);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--primary50, rgba(0,0,0,0.04));
+}
+
+.btn--icon {
+  background: transparent;
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.8rem;
+  color: var(--durion-teal-500);
+  border-radius: var(--radius-sm);
+}
+
+.btn--icon:hover { background: var(--durion-teal-100); }
+
+/* ── State panels ─────────────────────────────────────────────────────────── */
+.state-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8);
+  text-align: center;
+  background: var(--cardBackground, #fff);
+  border-radius: var(--radius-lg);
+}
+
+.state-panel h2 {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+  color: var(--currentTextColor);
+}
+
+.state-panel p {
+  margin: 0;
+  color: var(--handleColor);
+}
+
+.state-panel--loading { color: var(--handleColor); }
+.state-panel--error   { background: rgba(200,76,71,.06); }
+.state-panel--denied  { background: rgba(200,76,71,.06); }
+.state-panel--success { background: rgba(91,190,114,.06); }
+
+.state-hint { font-size: 0.85rem; }
+
+.state-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.state-icon--success { color: var(--functional-success); }
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--durion-graphite-100);
+  border-top-color: var(--durion-teal-400);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Duplicate panel ──────────────────────────────────────────────────────── */
+.duplicate-panel {
+  background: rgba(230,165,64,.07);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.duplicate-panel__heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-primary);
+  font-size: 1.1rem;
+  color: var(--currentTextColor);
+  margin: 0;
+}
+
+.duplicate-panel__intro {
+  margin: 0;
+  color: var(--handleColor);
+  font-size: 0.9rem;
+}
+
+.duplicate-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.duplicate-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--themeBackground, #f8f9fb);
+  border-radius: var(--radius-md);
+}
+
+.duplicate-item__name {
+  font-weight: 600;
+  color: var(--currentTextColor);
+  font-size: 0.95rem;
+}
+
+.duplicate-item__meta,
+.duplicate-item__reasons {
+  font-size: 0.8rem;
+  color: var(--handleColor);
+}
+
+/* ── Override form ─────────────────────────────────────────────────────────── */
+.override-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-2);
+}
+
+/* ── Success ID block ──────────────────────────────────────────────────────── */
+.success-id-block {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--themeBackground, #f2f2f4);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  flex-wrap: wrap;
+}
+
+.success-id-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--handleColor);
+}
+
+.success-id-value {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9rem;
+  color: var(--brand-primary);
+  flex: 1;
+  word-break: break-all;
+}
+
+/* ── Alert ─────────────────────────────────────────────────────────────────── */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+}
+
+.alert--error {
+  background: rgba(200,76,71,.08);
+  color: var(--functional-error-red);
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .crm-page {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

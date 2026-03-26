@@ -1,0 +1,235 @@
+<article class="crm-page crm-create-account" aria-labelledby="page-heading">
+
+  <!-- ── Access Denied ─────────────────────────────────────────────────── -->
+  @if (isAccessDenied) {
+    <section class="state-panel state-panel--denied" aria-live="assertive">
+      <span class="state-icon" aria-hidden="true">🔒</span>
+      <h2 id="denied-heading">Access Denied</h2>
+      <p>You do not have permission to create commercial accounts.</p>
+      <p class="state-hint">Contact your administrator to request access.</p>
+    </section>
+  }
+
+  <!-- ── Main form area ─────────────────────────────────────────────────── -->
+  @if (!isAccessDenied && !isSuccess) {
+    <header class="page-header">
+      <h1 id="page-heading">Create Commercial Account</h1>
+      <p class="page-subtitle">Register a new commercial party in the CRM.</p>
+    </header>
+
+    <!-- Loading billing terms -->
+    @if (isLoadingTerms) {
+      <div class="state-panel state-panel--loading" aria-live="polite" aria-busy="true">
+        <span class="spinner" aria-hidden="true"></span>
+        <p>Loading billing terms…</p>
+      </div>
+    }
+
+    <!-- Terms load error -->
+    @if (isTermsError) {
+      <div class="state-panel state-panel--error" role="alert">
+        <span class="state-icon" aria-hidden="true">⚠</span>
+        <p>Could not load billing terms. Please try again.</p>
+        <button class="btn btn--secondary" type="button" (click)="retryTermsLoad()">
+          Retry
+        </button>
+      </div>
+    }
+
+    <!-- Duplicate-check panel -->
+    @if (isDuplicates) {
+      <section class="duplicate-panel" aria-labelledby="dup-heading" aria-live="assertive">
+        <h2 id="dup-heading" class="duplicate-panel__heading">
+          <span class="state-icon" aria-hidden="true">⚠</span>
+          Possible Duplicate Accounts Found
+        </h2>
+        <p class="duplicate-panel__intro">
+          The following existing accounts may match the name you entered.
+          Review them before proceeding.
+        </p>
+        <ul class="duplicate-list" aria-label="Duplicate candidates">
+          @for (dup of duplicates(); track dup.partyId) {
+            <li class="duplicate-item">
+              <span class="duplicate-item__name">{{ dup.legalName }}</span>
+              @if (dup.dba) {
+                <span class="duplicate-item__meta">DBA: {{ dup.dba }}</span>
+              }
+              @if (dup.taxId) {
+                <span class="duplicate-item__meta">Tax ID: {{ dup.taxId }}</span>
+              }
+              @if (dup.matchReasons?.length) {
+                <span class="duplicate-item__reasons">
+                  Matched on: {{ dup.matchReasons?.join(', ') }}
+                </span>
+              }
+            </li>
+          }
+        </ul>
+
+        <form [formGroup]="overrideForm" class="override-form" aria-label="Override duplicate">
+          <div class="field">
+            <label for="justification" class="field__label">
+              Justification for creating a new account <span class="required-mark" aria-hidden="true">*</span>
+            </label>
+            <textarea
+              id="justification"
+              formControlName="justification"
+              class="field__input field__input--textarea"
+              rows="3"
+              placeholder="Explain why this is a distinct account…"
+              [attr.aria-invalid]="justificationCtrl.invalid && justificationCtrl.touched ? 'true' : null"
+            ></textarea>
+            @if (justificationCtrl.invalid && justificationCtrl.touched) {
+              <span class="field__error" role="alert">Justification is required.</span>
+            }
+          </div>
+
+          <div class="form-actions">
+            <button
+              class="btn btn--primary"
+              type="button"
+              [disabled]="overrideForm.invalid || isSubmitting"
+              (click)="proceedWithOverride()"
+              aria-label="Proceed and create account despite duplicates"
+            >
+              @if (isSubmitting) { Creating… } @else { Create Anyway }
+            </button>
+            <button class="btn btn--ghost" type="button" (click)="cancelOverride()">
+              Go Back
+            </button>
+          </div>
+        </form>
+      </section>
+    }
+
+    <!-- Server error banner -->
+    @if (isError && serverError()) {
+      <div class="alert alert--error" role="alert" aria-live="assertive">
+        <span class="state-icon" aria-hidden="true">✕</span>
+        {{ serverError() }}
+      </div>
+    }
+
+    <!-- Main create form -->
+    @if (!isDuplicates && (isIdle || isChecking || isSubmitting || isError)) {
+      <form
+        [formGroup]="form"
+        class="crm-form"
+        aria-label="Create commercial account form"
+        (ngSubmit)="submit()"
+        novalidate
+      >
+        <fieldset class="form-section" [disabled]="isBusy">
+          <legend class="form-section__legend">Account Details</legend>
+
+          <div class="field">
+            <label for="legalName" class="field__label">
+              Legal Name <span class="required-mark" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="legalName"
+              type="text"
+              formControlName="legalName"
+              class="field__input"
+              placeholder="Registered legal entity name"
+              autocomplete="organization"
+              [attr.aria-invalid]="legalNameCtrl.invalid && legalNameCtrl.touched ? 'true' : null"
+              aria-describedby="legalName-err"
+            />
+            @if (legalNameCtrl.invalid && legalNameCtrl.touched) {
+              <span id="legalName-err" class="field__error" role="alert">Legal name is required.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label for="dba" class="field__label">DBA (Doing Business As)</label>
+            <input
+              id="dba"
+              type="text"
+              formControlName="dba"
+              class="field__input"
+              placeholder="Optional trade name"
+            />
+          </div>
+
+          <div class="field">
+            <label for="taxId" class="field__label">Tax ID / EIN</label>
+            <input
+              id="taxId"
+              type="text"
+              formControlName="taxId"
+              class="field__input"
+              placeholder="e.g. 12-3456789"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="field">
+            <label for="billingTerms" class="field__label">
+              Default Billing Terms <span class="required-mark" aria-hidden="true">*</span>
+            </label>
+            <select
+              id="billingTerms"
+              formControlName="defaultBillingTermsId"
+              class="field__input field__input--select"
+              [attr.aria-invalid]="billingTermsCtrl.invalid && billingTermsCtrl.touched ? 'true' : null"
+              aria-describedby="billingTerms-err"
+            >
+              <option value="" disabled>Select billing terms…</option>
+              @for (term of billingTerms(); track term.id) {
+                <option [value]="term.id">{{ term.name }}</option>
+              }
+            </select>
+            @if (billingTermsCtrl.invalid && billingTermsCtrl.touched) {
+              <span id="billingTerms-err" class="field__error" role="alert">Billing terms are required.</span>
+            }
+          </div>
+        </fieldset>
+
+        <div class="form-actions">
+          <button
+            type="submit"
+            class="btn btn--primary"
+            [disabled]="isBusy || form.invalid"
+            [attr.aria-busy]="isBusy"
+          >
+            @if (isChecking)   { Checking for duplicates… }
+            @else if (isSubmitting) { Creating account… }
+            @else { Create Account }
+          </button>
+        </div>
+      </form>
+    }
+  }
+
+  <!-- ── Success State ──────────────────────────────────────────────────── -->
+  @if (isSuccess) {
+    <section class="state-panel state-panel--success" aria-live="polite" aria-labelledby="success-heading">
+      <span class="state-icon state-icon--success" aria-hidden="true">✓</span>
+      <h2 id="success-heading">Commercial Account Created</h2>
+
+      <div class="success-id-block" aria-label="New party ID">
+        <span class="success-id-label">Party ID</span>
+        <code class="success-id-value">{{ createdPartyId() }}</code>
+        <button
+          class="btn btn--icon"
+          type="button"
+          (click)="copyPartyId()"
+          [attr.aria-label]="copied() ? 'Copied' : 'Copy party ID to clipboard'"
+        >
+          {{ copied() ? '✓ Copied' : 'Copy' }}
+        </button>
+      </div>
+
+      <div class="form-actions form-actions--success">
+        <button class="btn btn--primary" type="button" (click)="viewParty()">
+          View Party Record
+        </button>
+        <button class="btn btn--secondary" type="button" (click)="createAnother()">
+          Create Another
+        </button>
+      </div>
+    </section>
+  }
+
+</article>
