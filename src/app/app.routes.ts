@@ -78,49 +78,49 @@ export const routes: Routes = [
       // Domain stub routes (scaffold – full implementation in future waves)
       {
         path: 'workexec',
-        loadComponent: () =>
-          import('./features/workexec/workexec.component').then(m => m.WorkexecComponent),
+        loadChildren: () =>
+          import('./features/workexec/workexec.routes').then(m => m.WORKEXEC_ROUTES),
       },
       {
         path: 'accounting',
-        loadComponent: () =>
-          import('./features/accounting/accounting.component').then(m => m.AccountingComponent),
+        loadChildren: () =>
+          import('./features/accounting/accounting.routes').then(m => m.ACCOUNTING_ROUTES),
       },
       {
         path: 'billing',
-        loadComponent: () =>
-          import('./features/billing/billing.component').then(m => m.BillingComponent),
+        loadChildren: () =>
+          import('./features/billing/billing.routes').then(m => m.BILLING_ROUTES),
       },
       {
         path: 'people',
-        loadComponent: () =>
-          import('./features/people/people.component').then(m => m.PeopleComponent),
+        loadChildren: () =>
+          import('./features/people/people.routes').then(m => m.PEOPLE_ROUTES),
       },
       {
         path: 'location',
-        loadComponent: () =>
-          import('./features/location/location.component').then(m => m.LocationComponent),
+        loadChildren: () =>
+          import('./features/location/location.routes').then(m => m.LOCATION_ROUTES),
       },
       {
         path: 'inventory',
-        loadComponent: () =>
-          import('./features/inventory/inventory.component').then(m => m.InventoryComponent),
+        loadChildren: () =>
+          import('./features/inventory/inventory.routes').then(m => m.INVENTORY_ROUTES),
       },
       {
         path: 'product',
-        loadComponent: () =>
-          import('./features/product/product.component').then(m => m.ProductComponent),
+        loadChildren: () =>
+          import('./features/product/product.routes').then(m => m.PRODUCT_ROUTES),
       },
       {
         path: 'order',
-        loadComponent: () =>
-          import('./features/order/order.component').then(m => m.OrderComponent),
+        loadChildren: () =>
+          import('./features/order/order.routes').then(m => m.ORDER_ROUTES),
       },
       {
         path: 'security',
         data: { roles: ['ROLE_ADMIN'] },
-        loadComponent: () =>
-          import('./features/security/security.component').then(m => m.SecurityComponent),
+        loadChildren: () =>
+          import('./features/security/security.routes').then(m => m.SECURITY_ROUTES),
       },
     ],
   },
