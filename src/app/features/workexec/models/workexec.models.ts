@@ -46,11 +46,11 @@ export interface CreateEstimateRequest {
   /** Required: Vehicle ID (opaque string) */
   vehicleId: string;
   /** Optional: CRM party ID (UUIDv7 string) */
-  crmPartyId: string;
+  crmPartyId?: string;
   /** Optional: CRM vehicle ID (UUIDv7 string) */
-  crmVehicleId: string;
+  crmVehicleId?: string;
   /** Optional: CRM contact IDs (may be empty array) */
-  crmContactIds: string[];
+  crmContactIds?: string[];
   /** Optional: Location ID — defaults from session when omitted */
   locationId?: string;
   /** Optional: Currency code — defaults when omitted */
