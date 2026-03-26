@@ -99,6 +99,13 @@ export class PartyContactsComponent implements OnInit {
   ngOnInit(): void {
     this.loadParty();
     this.loadRelationships();
+    this.addContactForm.controls.role.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(role => {
+        if (role !== 'BILLING') {
+          this.addContactForm.controls.primaryBillingContact.setValue(false);
+        }
+      });
   }
 
   loadParty(): void {
@@ -197,7 +204,7 @@ export class PartyContactsComponent implements OnInit {
         personId: value.personId,
         roles: [value.role],
         effectiveStartDate: value.effectiveFrom,
-        primaryBillingContact: value.primaryBillingContact,
+        primaryBillingContact: value.role === 'BILLING' && value.primaryBillingContact,
       })
       .pipe(
         switchMap(() => this.crm.getContactsWithRoles(this.partyId)),
