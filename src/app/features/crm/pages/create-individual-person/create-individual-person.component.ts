@@ -62,9 +62,17 @@ export class CreateIndividualPersonComponent {
   copyPersonId(): void {
     const id = this.createdPersonId();
     if (!id) return;
+
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+      this.serverError.set('Clipboard is not available. Please copy the ID manually.');
+      return;
+    }
+
     navigator.clipboard.writeText(id).then(() => {
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 2000);
+    }).catch(() => {
+      this.serverError.set('Unable to copy ID to clipboard. Please copy it manually.');
     });
   }
 
