@@ -89,17 +89,31 @@ export class ApprovalDigitalPageComponent implements OnInit, AfterViewInit {
   // ── Signature canvas event handlers ──────────────────────────────────────
 
   onPointerDown(event: PointerEvent): void {
-    if (!this.ctx) return;
+    if (!this.ctx || !this.canvasRef?.nativeElement) return;
+    const canvas = this.canvasRef.nativeElement;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
+
     this.drawing = true;
     this.ctx.beginPath();
-    this.ctx.moveTo(event.offsetX, event.offsetY);
+    this.ctx.moveTo(x, y);
     this.signatureEmpty.set(false);
     (event.target as HTMLElement).setPointerCapture(event.pointerId);
   }
 
   onPointerMove(event: PointerEvent): void {
-    if (!this.drawing || !this.ctx) return;
-    this.ctx.lineTo(event.offsetX, event.offsetY);
+    if (!this.drawing || !this.ctx || !this.canvasRef?.nativeElement) return;
+    const canvas = this.canvasRef.nativeElement;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
+
+    this.ctx.lineTo(x, y);
     this.ctx.stroke();
   }
 
