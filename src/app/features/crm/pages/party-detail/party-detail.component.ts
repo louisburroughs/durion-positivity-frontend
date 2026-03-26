@@ -13,7 +13,6 @@ import {
 
 type SectionState = 'loading' | 'ready' | 'error' | 'access-denied';
 type EditState    = 'view' | 'editing' | 'saving';
-type ModalState   = 'closed' | 'open' | 'saving';
 
 @Component({
   selector: 'app-party-detail',
@@ -34,19 +33,8 @@ export class PartyDetailComponent implements OnInit {
   readonly party       = signal<PartyDetail | null>(null);
 
   // ── Contacts ─────────────────────────────────────────────────────────
-  readonly contactsState    = signal<SectionState>('loading');
-  readonly contacts         = signal<Relationship[]>([]);
-  readonly rolesModalState  = signal<ModalState>('closed');
-  readonly activeContact    = signal<Relationship | null>(null);
-  readonly rolesError       = signal<string | null>(null);
-
-  readonly AVAILABLE_ROLES: ContactRole[] = ['BILLING', 'APPROVER', 'DRIVER'];
-
-  readonly rolesForm = this.fb.nonNullable.group({
-    BILLING:  [false],
-    APPROVER: [false],
-    DRIVER:   [false],
-  });
+  readonly contactsState = signal<SectionState>('loading');
+  readonly contacts      = signal<Relationship[]>([]);
 
   // ── Communication Preferences ────────────────────────────────────────
   readonly prefsState  = signal<SectionState>('loading');
@@ -92,49 +80,6 @@ export class PartyDetailComponent implements OnInit {
     });
   }
 
-  openRolesModal(contact: Relationship): void {
-    this.activeContact.set(contact);
-    this.rolesError.set(null);
-    const hasBilling = contact.role === 'BILLING';
-    const hasApprover = contact.role === 'APPROVER';
-    const hasDriver = contact.role === 'DRIVER';
-    this.rolesForm.setValue({ BILLING: hasBilling, APPROVER: hasApprover, DRIVER: hasDriver });
-    this.rolesModalState.set('open');
-  }
-
-  closeRolesModal(): void {
-    this.rolesModalState.set('closed');
-    this.activeContact.set(null);
-    this.rolesError.set(null);
-  }
-
-  saveRoles(): void {
-    const contact = this.activeContact();
-    if (!contact || this.rolesModalState() === 'saving') return;
-
-    const raw = this.rolesForm.getRawValue();
-    const roles: ContactRole[] = [];
-    if (raw.BILLING) roles.push('BILLING');
-    if (raw.APPROVER) roles.push('APPROVER');
-    if (raw.DRIVER) roles.push('DRIVER');
-
-    this.rolesModalState.set('saving');
-    this.rolesError.set(null);
-
-    this.crm.updateContactRoles(this.partyId, contact.personId, { roles }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.loadContacts();
-        this.closeRolesModal();
-      },
-      error: err => {
-        this.rolesError.set(
-          err?.status === 403 ? 'Not authorized to update contact roles.' :
-          err?.error?.message ?? `Could not save roles (${err?.status ?? 'error'}).`,
-        );
-        this.rolesModalState.set('open');
-      },
-    });
-  }
 
   // ── Communication Prefs ─────────────────────────────────────────────
   loadPrefs(): void {
@@ -215,8 +160,6 @@ export class PartyDetailComponent implements OnInit {
     return labels[role] ?? role;
   }
 
-  get isRolesModalOpen()   { return this.rolesModalState() !== 'closed'; }
-  get isRolesModalSaving() { return this.rolesModalState() === 'saving'; }
-  get isPrefsEditing()     { return this.prefsEdit() === 'editing'; }
-  get isPrefsSaving()      { return this.prefsEdit() === 'saving'; }
+  get isPrefsEditing() { return this.prefsEdit() === 'editing'; }
+  get isPrefsSaving()  { return this.prefsEdit() === 'saving'; }
 }
