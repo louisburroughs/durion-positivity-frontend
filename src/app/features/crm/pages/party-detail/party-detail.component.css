@@ -221,7 +221,15 @@
   cursor: pointer;
 }
 
-.toggle-input { display: none; }
+.toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
 
 .toggle-track {
   width: 36px;
