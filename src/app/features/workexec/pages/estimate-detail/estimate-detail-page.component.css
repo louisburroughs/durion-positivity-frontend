@@ -1,0 +1,37 @@
+/* EstimateDetailPage — Story 236 (workexec estimate workspace) */
+.estimate-detail { padding: var(--space-6, 1.5rem) var(--space-4, 1rem); max-width: 1140px; margin: 0 auto; }
+.estimate-workspace { display: grid; grid-template-columns: 1fr 280px; gap: var(--space-6, 1.5rem); align-items: start; }
+.workspace-main { display: flex; flex-direction: column; gap: var(--space-5, 1.25rem); }
+.workspace-sidebar { background: var(--themeBackground); padding: var(--space-5, 1.25rem); border-radius: 0.25rem; display: flex; flex-direction: column; gap: var(--space-3, 0.75rem); position: sticky; top: var(--space-4, 1rem); }
+.page-header { display: flex; flex-direction: column; gap: var(--space-1, 0.25rem); }
+.page-overline { margin: 0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand-accent, var(--accentA700)); }
+.page-header h1 { margin: 0; font-family: var(--font-primary, 'Public Sans', sans-serif); font-size: 1.5rem; font-weight: 700; color: var(--currentTextColor); }
+.page-meta { margin: 0; font-size: 0.875rem; color: var(--handleColor); display: flex; align-items: center; gap: var(--space-3, 0.75rem); flex-wrap: wrap; }
+.audit-meta { font-size: 0.75rem; color: var(--handleColor); }
+.status-chip { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--brand-primary-soft, var(--primaryA100)); color: var(--brand-primary, var(--primaryA400)); }
+.status-chip--approved { background: color-mix(in srgb, var(--functional-success) 15%, transparent); color: var(--functional-success); }
+.status-chip--expired { background: color-mix(in srgb, var(--functional-error-red) 15%, transparent); color: var(--functional-error-red); }
+.section-overline { margin: 0 0 var(--space-3, 0.75rem); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--handleColor); }
+.item-group { background: var(--cardBackground, #fff); padding: var(--space-4, 1rem); border-radius: 0.25rem; }
+.line-item { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2, 0.5rem) 0; gap: var(--space-4, 1rem); }
+.line-item + .line-item { margin-top: var(--space-1, 0.25rem); }
+.line-item__desc { flex: 1; font-size: 0.9rem; color: var(--currentTextColor); }
+.line-item__meta { display: flex; gap: var(--space-3, 0.75rem); font-size: 0.875rem; color: var(--handleColor); }
+.line-item__total { font-weight: 600; color: var(--currentTextColor); }
+.item-actions { display: flex; gap: var(--space-3, 0.75rem); flex-wrap: wrap; }
+.totals-list { display: flex; flex-direction: column; gap: var(--space-2, 0.5rem); }
+.totals-row { display: flex; justify-content: space-between; font-size: 0.875rem; color: var(--currentTextColor); }
+.totals-row--total { font-weight: 700; font-size: 1rem; padding-top: var(--space-2, 0.5rem); }
+.expiry-note { margin: 0; font-size: 0.75rem; color: var(--handleColor); }
+.hint-text { font-size: 0.875rem; color: var(--handleColor); margin: 0; }
+.alert { padding: var(--space-3, 0.75rem) var(--space-4, 1rem); border-radius: 0.125rem; font-size: 0.875rem; }
+.alert--error { background: color-mix(in srgb, var(--functional-error-red, #c84c47) 10%, transparent); color: var(--functional-error-red, #c84c47); }
+.alert--warn { background: color-mix(in srgb, var(--functional-warning, #e6a540) 12%, transparent); color: var(--functional-warning, #e6a540); }
+.btn { padding: var(--space-3, 0.75rem) var(--space-5, 1.25rem); font-size: 0.9375rem; font-weight: 600; border: none; border-radius: 0.125rem; cursor: pointer; transition: opacity 0.15s; text-decoration: none; display: inline-flex; align-items: center; }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+.btn--accent { background: var(--brand-accent, var(--accentA700)); color: #fff; }
+.btn--full { width: 100%; justify-content: center; }
+.btn--ghost { background: transparent; color: var(--brand-primary, #00346f); padding: 0; font-size: 0.875rem; }
+.btn-link { background: none; border: none; cursor: pointer; color: var(--brand-primary); font-size: inherit; padding: 0; text-decoration: underline; }
+@media (max-width: 1023px) { .estimate-workspace { grid-template-columns: 1fr; } .workspace-sidebar { position: static; } }
+@media (max-width: 767px) { .estimate-detail { padding: var(--space-4, 1rem); } }

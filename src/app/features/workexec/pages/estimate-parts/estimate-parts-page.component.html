@@ -1,0 +1,126 @@
+<section class="workexec-page estimate-parts" aria-labelledby="estimate-parts-heading">
+
+  <header class="page-header">
+    <p class="page-overline">Estimate</p>
+    @if (estimate()) {
+      <h1 id="estimate-parts-heading">Parts — {{ estimate()!.estimateNumber ?? estimateId }}</h1>
+      <p class="page-meta">Status: <span class="status-chip status-chip--{{ estimate()!.status | lowercase }}">{{ estimate()!.status }}</span></p>
+    } @else {
+      <h1 id="estimate-parts-heading">Parts</h1>
+    }
+  </header>
+
+  @if (state() === 'loading') {
+    <p class="hint-text" aria-busy="true">Loading estimate…</p>
+  }
+
+  @if (state() === 'error') {
+    <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  @if (state() === 'ready') {
+
+    <!-- Line Items Table -->
+    <div class="line-items-section" aria-label="Parts line items">
+      <p class="section-overline">Current Parts</p>
+
+      @if (items().length === 0) {
+        <p class="hint-text">No parts added yet.</p>
+      }
+
+      @for (item of items(); track item.id) {
+        @if (item.itemType === 'PART') {
+          <div class="line-item">
+            <div class="line-item__desc">
+              <span class="line-item__type-badge">PART</span>
+              <span>{{ item.description }}</span>
+            </div>
+            <div class="line-item__meta">
+              <span>Qty: {{ item.quantity }}</span>
+              <span>@ {{ item.unitPrice | currency }}</span>
+              <span class="line-item__total">{{ item.lineTotal | currency }}</span>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Totals -->
+    @if (estimate()?.subtotal != null) {
+      <div class="totals-panel" aria-label="Estimate totals">
+        <div class="totals-row"><span>Subtotal</span><span>{{ estimate()!.subtotal | currency }}</span></div>
+        <div class="totals-row"><span>Tax</span><span>{{ estimate()!.taxAmount | currency }}</span></div>
+        <div class="totals-row totals-row--total"><span>Total</span><span>{{ estimate()!.total | currency }}</span></div>
+      </div>
+    }
+
+    <!-- Add Part Form -->
+    <div class="add-item-panel" aria-label="Add part">
+      <p class="section-overline">Add Part</p>
+
+      <form [formGroup]="addForm" (ngSubmit)="addItem()" novalidate aria-label="Add part form" class="add-form">
+
+        <div class="field-row">
+          <div class="field-group field-group--grow">
+            <label for="partDescription" class="field-label">Description <span class="required" aria-hidden="true">*</span></label>
+            <input id="partDescription" type="text" formControlName="description" class="field-input"
+              [class.field-input--error]="addForm.controls.description.invalid && addForm.controls.description.touched"
+              placeholder="Part description" aria-required="true" />
+            @if (addForm.controls.description.invalid && addForm.controls.description.touched) {
+              <p class="field-error" role="alert">Description is required.</p>
+            }
+          </div>
+
+          <div class="field-group field-group--narrow">
+            <label for="partQty" class="field-label">Qty <span class="required" aria-hidden="true">*</span></label>
+            <input id="partQty" type="number" formControlName="quantity" class="field-input"
+              [class.field-input--error]="addForm.controls.quantity.invalid && addForm.controls.quantity.touched"
+              min="0.0001" step="1" aria-required="true" />
+            @if (addForm.controls.quantity.invalid && addForm.controls.quantity.touched) {
+              <p class="field-error" role="alert">Valid quantity required.</p>
+            }
+          </div>
+
+          <div class="field-group field-group--narrow">
+            <label for="partPrice" class="field-label">Unit Price <span class="required" aria-hidden="true">*</span></label>
+            <input id="partPrice" type="number" formControlName="unitPrice" class="field-input"
+              [class.field-input--error]="addForm.controls.unitPrice.invalid && addForm.controls.unitPrice.touched"
+              min="0" step="0.01" aria-required="true" />
+            @if (addForm.controls.unitPrice.invalid && addForm.controls.unitPrice.touched) {
+              <p class="field-error" role="alert">Valid price required.</p>
+            }
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group field-group--grow">
+            <label for="partTaxCode" class="field-label">Tax Code <span class="field-optional">(optional)</span></label>
+            <input id="partTaxCode" type="text" formControlName="taxCode" class="field-input" placeholder="e.g. TX-GENERAL" />
+          </div>
+          <div class="field-group field-group--grow">
+            <label for="partProductId" class="field-label">Catalog Product ID <span class="field-optional">(optional)</span></label>
+            <input id="partProductId" type="text" formControlName="productId" class="field-input" placeholder="Product catalog reference" />
+          </div>
+        </div>
+
+        @if (saveState() === 'error' && errorMessage()) {
+          <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
+        }
+
+        @if (fieldError('unitPrice')) {
+          <p class="field-error" role="alert">{{ fieldError('unitPrice') }}</p>
+        }
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--accent" [disabled]="saveState() === 'saving'" [attr.aria-busy]="saveState() === 'saving'">
+            @if (saveState() === 'saving') { Adding… } @else { Add Part }
+          </button>
+          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId]">Back to Estimate</a>
+        </div>
+
+      </form>
+    </div>
+
+  }
+
+</section>

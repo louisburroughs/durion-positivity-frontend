@@ -1,0 +1,76 @@
+<section class="workexec-page approval-detail" aria-labelledby="approval-detail-heading">
+
+  <header class="page-header">
+    <p class="page-overline">Approval / Detail</p>
+    <h1 id="approval-detail-heading">Approval Detail</h1>
+    @if (estimate()) { <p class="page-meta">{{ estimate()!.estimateNumber ?? estimateId }}</p> }
+  </header>
+
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading approval…</p> }
+  @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+
+  <!-- Expiration banner — all actions disabled -->
+  @if (pageState() === 'expired') {
+    <div class="expiration-banner" role="alert" aria-live="polite">
+      <div class="expiration-icon" aria-hidden="true">⚠</div>
+      <div class="expiration-content">
+        <p class="expiration-heading">Approval Expired</p>
+        <p class="expiration-message">{{ errorMessage() }}</p>
+        @if (estimate()!.expiresAt) {
+          <p class="expiration-meta">Expired: {{ estimate()!.expiresAt | date:'medium' }}</p>
+        }
+        <div class="expiration-actions">
+          <button class="btn btn--primary" (click)="navigateToRevise()">Create Revision</button>
+          <button class="btn btn--ghost" (click)="navigateToResubmit()">Resubmit (if reopened)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Read-only audit display -->
+    <div class="audit-card">
+      <p class="section-overline">Audit Metadata</p>
+      @if (estimate()!.submittedAt) {
+        <div class="audit-row"><span class="audit-label">Submitted by</span><span>{{ estimate()!.submittedBy }} at {{ estimate()!.submittedAt | date:'medium' }}</span></div>
+      }
+      @if (estimate()!.expiresAt) {
+        <div class="audit-row"><span class="audit-label">Expired at</span><span>{{ estimate()!.expiresAt | date:'medium' }}</span></div>
+      }
+      <div class="audit-row"><span class="audit-label">Status</span><span class="status-chip status-chip--expired">{{ estimate()!.status }}</span></div>
+    </div>
+  }
+
+  <!-- Ready state — active approval -->
+  @if (pageState() === 'ready' && estimate()) {
+    <div class="approval-card">
+      <div class="approval-meta">
+        <p class="section-overline">Approval Status</p>
+        <div class="meta-row">
+          <span class="audit-label">Status</span>
+          <span class="status-chip">{{ estimate()!.status }}</span>
+        </div>
+        @if (estimate()!.expiresAt) {
+          <div class="meta-row">
+            <span class="audit-label">Expires</span>
+            <span>{{ estimate()!.expiresAt | date:'mediumDate' }}</span>
+          </div>
+        }
+        @if (estimate()!.submittedAt) {
+          <div class="meta-row">
+            <span class="audit-label">Submitted by</span>
+            <span>{{ estimate()!.submittedBy }} on {{ estimate()!.submittedAt | date:'medium' }}</span>
+          </div>
+        }
+        @if (estimate()!.approvedAt) {
+          <div class="meta-row">
+            <span class="audit-label">Approved by</span>
+            <span>{{ estimate()!.signerName ?? estimate()!.approvedBy }} on {{ estimate()!.approvedAt | date:'medium' }}</span>
+          </div>
+        }
+      </div>
+      <div class="form-actions">
+        <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId]">Back to Estimate</a>
+      </div>
+    </div>
+  }
+
+</section>

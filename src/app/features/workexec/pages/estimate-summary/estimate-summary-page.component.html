@@ -1,0 +1,92 @@
+<section class="workexec-page estimate-summary" aria-labelledby="estimate-summary-heading">
+
+  <header class="page-header">
+    <p class="page-overline">Estimate / Customer Summary</p>
+    <h1 id="estimate-summary-heading">Estimate Summary</h1>
+    <p class="page-subtitle">Read-only snapshot — this reflects a point-in-time capture of the estimate.</p>
+  </header>
+
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Generating summary…</p> }
+  @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+
+  @if (pageState() === 'ready' && summary()) {
+    <div class="summary-card">
+
+      <!-- Header -->
+      <div class="summary-header">
+        <div>
+          <p class="label-sm">Estimate Number</p>
+          <p class="value-lg">{{ summary()!.estimateNumber ?? estimateId }}</p>
+        </div>
+        <div>
+          <p class="label-sm">Status</p>
+          <span class="status-chip status-chip--{{ summary()!.status | lowercase }}">{{ summary()!.status }}</span>
+        </div>
+        @if (summary()!.expiresAt) {
+          <div>
+            <p class="label-sm">Expires</p>
+            <p class="value-md {{ isExpired() ? 'text-error' : '' }}">{{ summary()!.expiresAt | date:'mediumDate' }}</p>
+            @if (isExpired()) { <p class="field-error">This estimate has expired.</p> }
+          </div>
+        }
+      </div>
+
+      <!-- Parts -->
+      @if (summary()!.partItems && summary()!.partItems!.length > 0) {
+        <div class="summary-section">
+          <p class="section-overline">Parts</p>
+          @for (item of summary()!.partItems!; track item.id) {
+            <div class="summary-line">
+              <span>{{ item.description }}</span>
+              <div class="line-meta">
+                <span>{{ item.quantity }} × {{ item.unitPrice | currency }}</span>
+                <span class="line-total">{{ item.lineTotal | currency }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Labor -->
+      @if (summary()!.laborItems && summary()!.laborItems!.length > 0) {
+        <div class="summary-section">
+          <p class="section-overline">Labor</p>
+          @for (item of summary()!.laborItems!; track item.id) {
+            <div class="summary-line">
+              <span>{{ item.description }}</span>
+              <div class="line-meta">
+                <span>{{ item.quantity }} unit(s) × {{ item.unitPrice | currency }}</span>
+                <span class="line-total">{{ item.lineTotal | currency }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Totals -->
+      <div class="summary-totals" aria-label="Estimate totals">
+        @if (summary()!.subtotal != null) {
+          <div class="totals-row"><span>Subtotal</span><span>{{ summary()!.subtotal | currency }}</span></div>
+        }
+        @if (summary()!.taxAmount != null) {
+          <div class="totals-row"><span>Tax</span><span>{{ summary()!.taxAmount | currency }}</span></div>
+        }
+        @if (summary()!.total != null) {
+          <div class="totals-row totals-row--grand"><span>Total</span><span>{{ summary()!.total | currency }}</span></div>
+        }
+      </div>
+
+    </div>
+
+    <!-- CTA -->
+    @if (canSubmit()) {
+      <div class="summary-actions">
+        <button class="btn btn--accent" (click)="proceedToApproval()">Proceed to Approval</button>
+        <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId]">Back to Estimate</a>
+      </div>
+    } @else {
+      <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId]">Back to Estimate</a>
+    }
+  }
+
+</section>

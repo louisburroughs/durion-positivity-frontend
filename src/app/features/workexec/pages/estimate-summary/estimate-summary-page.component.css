@@ -1,0 +1,33 @@
+/* EstimateSummaryPage — Story 234 */
+.estimate-summary { display: flex; flex-direction: column; gap: var(--space-6, 1.5rem); padding: var(--space-6, 1.5rem) var(--space-4, 1rem); max-width: 720px; margin: 0 auto; }
+.page-header { display: flex; flex-direction: column; gap: var(--space-1, 0.25rem); }
+.page-overline { margin: 0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand-accent, var(--accentA700)); }
+.page-header h1 { margin: 0; font-family: var(--font-primary, 'Public Sans', sans-serif); font-size: 1.5rem; font-weight: 700; color: var(--currentTextColor); }
+.page-subtitle { margin: 0; font-size: 0.875rem; color: var(--handleColor); }
+.summary-card { background: var(--cardBackground, #fff); padding: var(--space-6, 1.5rem); border-radius: 0.25rem; display: flex; flex-direction: column; gap: var(--space-5, 1.25rem); }
+.summary-header { display: flex; gap: var(--space-8, 2rem); flex-wrap: wrap; }
+.label-sm { margin: 0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--handleColor); }
+.value-lg { margin: 0.25rem 0 0; font-size: 1.25rem; font-weight: 700; color: var(--currentTextColor); }
+.value-md { margin: 0.25rem 0 0; font-size: 0.9375rem; color: var(--currentTextColor); }
+.text-error { color: var(--functional-error-red, #c84c47); }
+.status-chip { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--brand-primary-soft, var(--primaryA100)); color: var(--brand-primary); margin-top: 0.25rem; }
+.status-chip--approved { background: color-mix(in srgb, var(--functional-success) 15%, transparent); color: var(--functional-success); }
+.status-chip--expired { background: color-mix(in srgb, var(--functional-error-red) 15%, transparent); color: var(--functional-error-red); }
+.section-overline { margin: 0 0 var(--space-3, 0.75rem); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--handleColor); }
+.summary-section { display: flex; flex-direction: column; gap: 0; }
+.summary-line { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2, 0.5rem) 0; font-size: 0.9rem; color: var(--currentTextColor); gap: var(--space-4, 1rem); }
+.summary-line + .summary-line { margin-top: var(--space-1, 0.25rem); }
+.line-meta { display: flex; gap: var(--space-3, 0.75rem); font-size: 0.875rem; color: var(--handleColor); }
+.line-total { font-weight: 600; color: var(--currentTextColor); }
+.summary-totals { display: flex; flex-direction: column; gap: var(--space-2, 0.5rem); background: var(--themeBackground); padding: var(--space-4, 1rem); border-radius: 0.25rem; }
+.totals-row { display: flex; justify-content: space-between; font-size: 0.875rem; color: var(--currentTextColor); }
+.totals-row--grand { font-weight: 700; font-size: 1rem; padding-top: var(--space-2, 0.5rem); }
+.summary-actions { display: flex; gap: var(--space-3, 0.75rem); flex-wrap: wrap; }
+.field-error { margin: 0; font-size: 0.75rem; color: var(--functional-error-red, #c84c47); }
+.alert { padding: var(--space-3, 0.75rem) var(--space-4, 1rem); border-radius: 0.125rem; font-size: 0.875rem; }
+.alert--error { background: color-mix(in srgb, var(--functional-error-red, #c84c47) 10%, transparent); color: var(--functional-error-red, #c84c47); }
+.hint-text { font-size: 0.875rem; color: var(--handleColor); margin: 0; }
+.btn { padding: var(--space-3, 0.75rem) var(--space-5, 1.25rem); font-size: 0.9375rem; font-weight: 600; border: none; border-radius: 0.125rem; cursor: pointer; transition: opacity 0.15s; text-decoration: none; display: inline-flex; align-items: center; }
+.btn--accent { background: var(--brand-accent, var(--accentA700)); color: #fff; }
+.btn--ghost { background: transparent; color: var(--brand-primary, #00346f); padding-left: 0; padding-right: 0; }
+@media (max-width: 767px) { .estimate-summary { padding: var(--space-4, 1rem); max-width: 100%; } .summary-header { flex-direction: column; gap: var(--space-3, 0.75rem); } }

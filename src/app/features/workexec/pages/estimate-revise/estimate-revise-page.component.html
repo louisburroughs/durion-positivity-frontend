@@ -1,0 +1,59 @@
+<section class="workexec-page estimate-revise" aria-labelledby="estimate-revise-heading">
+
+  <header class="page-header">
+    <p class="page-overline">Estimate / Revise</p>
+    <h1 id="estimate-revise-heading">Revise Estimate</h1>
+  </header>
+
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading estimate…</p> }
+  @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+
+  @if (pageState() === 'ready' && estimate()) {
+    <div class="revise-card">
+      <div class="revise-context">
+        <p class="label-overline">Current Estimate</p>
+        <p class="estimate-id">{{ estimate()!.estimateNumber ?? estimateId }}</p>
+        <p class="estimate-meta">
+          Status: <span class="status-chip">{{ estimate()!.status }}</span>
+        </p>
+
+        @if (estimate()!.status === 'PENDING_APPROVAL') {
+          <div class="alert alert--warn" role="alert">
+            This estimate is pending customer approval. Creating a revision will <strong>invalidate</strong> the existing approval request.
+          </div>
+        }
+
+        <p class="revise-description">
+          Revising will create a new Draft version of this estimate. The current version becomes read-only and a new editable version is created.
+        </p>
+      </div>
+
+      @if (reviseState() === 'idle') {
+        <div class="form-actions">
+          <button class="btn btn--accent" (click)="confirmRevise()">Revise Estimate</button>
+          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId]">Cancel</a>
+        </div>
+      }
+
+      @if (reviseState() === 'confirming') {
+        <div class="confirm-panel" role="dialog" aria-labelledby="confirm-heading" aria-modal="true">
+          <p id="confirm-heading" class="confirm-heading">Confirm Revision</p>
+          <p>Are you sure you want to create a new revision? @if (estimate()!.status === 'PENDING_APPROVAL') { The current approval request will be invalidated. }</p>
+          <div class="form-actions">
+            <button class="btn btn--accent" (click)="executeRevise()">Yes, Revise</button>
+            <button class="btn btn--ghost" (click)="cancelRevise()">Cancel</button>
+          </div>
+        </div>
+      }
+
+      @if (reviseState() === 'saving') {
+        <p class="hint-text" aria-busy="true">Creating revision…</p>
+      }
+
+      @if (reviseState() === 'error' && errorMessage()) {
+        <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
+      }
+    </div>
+  }
+
+</section>
