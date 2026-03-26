@@ -1,0 +1,215 @@
+<section class="workexec-page workorder-detail" aria-labelledby="wo-heading">
+
+  @if (pageState() === 'loading') {
+    <p class="hint-text" aria-busy="true">Loading work order…</p>
+  }
+
+  @if (pageState() === 'error') {
+    <div class="alert alert--error" role="alert">
+      {{ errorMessage() }}
+      <button class="btn-link" (click)="refresh()">Retry</button>
+    </div>
+  }
+
+  @if (pageState() === 'ready' && workorder()) {
+
+    <!-- Blueprint-blue gradient header per design authority -->
+    <header class="wo-header" aria-labelledby="wo-heading">
+      <div class="wo-header__inner">
+        <div class="wo-header__identity">
+          <p class="wo-header__overline">Work Order</p>
+          <h1 id="wo-heading" class="wo-header__id">{{ workorderId() }}</h1>
+          <span
+            class="status-chip status-chip--{{ workorder()!.status?.toLowerCase() }}"
+            aria-label="Status: {{ workorder()!.status }}"
+          >{{ workorder()!.status }}</span>
+        </div>
+
+        <div class="wo-header__meta">
+          @if (technicianName()) {
+            <p class="wo-header__meta-item">
+              <span class="wo-header__meta-label">Technician</span>
+              <span class="wo-header__meta-value">{{ technicianName() }}</span>
+            </p>
+          } @else {
+            <p class="wo-header__meta-item">
+              <span class="wo-header__meta-label">Technician</span>
+              <span class="wo-header__meta-value wo-header__meta-value--empty">Unassigned</span>
+            </p>
+          }
+          @if (workorder()!.startedAt) {
+            <p class="wo-header__meta-item">
+              <span class="wo-header__meta-label">Started</span>
+              <span class="wo-header__meta-value">{{ workorder()!.startedAt | date:'medium' }}</span>
+            </p>
+          }
+        </div>
+
+        <!-- Primary CTAs — Electric Teal only for positive primary action -->
+        <div class="wo-header__actions">
+          @if (canStartWork()) {
+            <button class="btn btn--accent" (click)="openStartWorkModal()">Start Work</button>
+          }
+          @if (isInProgress()) {
+            <button class="btn btn--ghost" (click)="navigateToLabor()">Record Labor</button>
+            <button class="btn btn--ghost" (click)="navigateToParts()">Manage Parts</button>
+            <button class="btn btn--ghost" (click)="navigateToChangeRequests()">Change Requests</button>
+          }
+          <button class="btn btn--ghost" (click)="navigateToAssign()">
+            {{ technicianName() ? 'Reassign' : 'Assign Technician' }}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tab bar — 2px secondary bottom indicator only, no box shadow -->
+    <nav class="wo-tabs" aria-label="Work order sections">
+      <button
+        class="wo-tab"
+        [class.wo-tab--active]="activeTab() === 'items'"
+        (click)="selectTab('items')"
+        aria-selected="{{ activeTab() === 'items' }}"
+      >Scope</button>
+      <button
+        class="wo-tab"
+        [class.wo-tab--active]="activeTab() === 'labor'"
+        (click)="navigateToLabor()"
+      >Labor</button>
+      <button
+        class="wo-tab"
+        [class.wo-tab--active]="activeTab() === 'parts'"
+        (click)="navigateToParts()"
+      >Parts</button>
+      <button
+        class="wo-tab"
+        [class.wo-tab--active]="activeTab() === 'change-requests'"
+        (click)="navigateToChangeRequests()"
+      >Change Requests</button>
+      <button
+        class="wo-tab"
+        [class.wo-tab--active]="activeTab() === 'audit'"
+        (click)="selectTab('audit')"
+      >Audit Trail</button>
+    </nav>
+
+    <!-- Scope/Items tab — Story 229 -->
+    @if (activeTab() === 'items') {
+      <div class="wo-section" aria-label="Work order scope">
+        @if (items().length === 0) {
+          <p class="hint-text">No items were promoted from the estimate.</p>
+        } @else {
+          <div class="ledger">
+            <div class="ledger__header">
+              <span>Description</span>
+              <span>Qty</span>
+              <span>Unit Price</span>
+              <span>Line Total</span>
+            </div>
+            @for (item of items(); track item.id; let even = $even) {
+              <div class="ledger__row" [class.ledger__row--alt]="even" [attr.aria-label]="item.description">
+                <span class="ledger__cell ledger__cell--desc">
+                  <span class="ledger__type-badge ledger__type-badge--{{ item.itemType?.toLowerCase() }}">{{ item.itemType }}</span>
+                  {{ item.description }}
+                </span>
+                <span class="ledger__cell">{{ item.quantity }}</span>
+                <span class="ledger__cell">{{ item.unitPrice | currency }}</span>
+                <span class="ledger__cell ledger__cell--total">{{ item.lineTotal | currency }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Audit trail tab — Story 226 -->
+    @if (activeTab() === 'audit') {
+      <div class="wo-section" aria-label="Promotion and transition audit trail">
+        @if (workorder()!.estimateId) {
+          <div class="audit-origin">
+            <p class="section-overline">Promoted From</p>
+            <p>
+              Estimate
+              <a [routerLink]="['/app/workexec/estimates', workorder()!.estimateId]" class="audit-link">
+                {{ workorder()!.estimateId }}
+              </a>
+            </p>
+          </div>
+        }
+
+        <div class="audit-transitions">
+          <button
+            class="audit-toggle btn-link"
+            (click)="auditExpanded.set(!auditExpanded())"
+            [attr.aria-expanded]="auditExpanded()"
+          >
+            {{ auditExpanded() ? 'Hide' : 'Show' }} Transition History ({{ transitions().length }})
+          </button>
+
+          @if (auditExpanded()) {
+            @if (transitions().length === 0) {
+              <p class="hint-text">No transitions recorded yet.</p>
+            } @else {
+              <div class="ledger ledger--audit">
+                <div class="ledger__header">
+                  <span>From</span>
+                  <span>To</span>
+                  <span>Actor</span>
+                  <span>When</span>
+                  <span>Reason</span>
+                </div>
+                @for (t of transitions(); track t.id; let even = $even) {
+                  <div class="ledger__row" [class.ledger__row--alt]="even">
+                    <span class="ledger__cell">
+                      <span class="status-chip status-chip--{{ t.fromStatus?.toLowerCase() }}">{{ t.fromStatus }}</span>
+                    </span>
+                    <span class="ledger__cell">
+                      <span class="status-chip status-chip--{{ t.toStatus?.toLowerCase() }}">{{ t.toStatus }}</span>
+                    </span>
+                    <span class="ledger__cell">{{ t.actorUserId }}</span>
+                    <span class="ledger__cell">{{ t.transitionedAt | date:'short' }}</span>
+                    <span class="ledger__cell">{{ t.reason ?? t.message ?? '—' }}</span>
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+
+  }
+
+</section>
+
+<!-- Start Work confirmation modal — glassmorphism per design authority -->
+@if (showStartWorkModal()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="start-work-modal-title">
+    <div class="modal-glass">
+      <h2 id="start-work-modal-title" class="modal-glass__title">Start Work on {{ workorderId() }}?</h2>
+      <p class="modal-glass__body">
+        This will move the work order to <strong>IN PROGRESS</strong> and allow labor and parts recording.
+        This action cannot be undone from this screen.
+      </p>
+
+      @if (startWorkError()) {
+        <div class="alert alert--error" role="alert">{{ startWorkError() }}</div>
+      }
+
+      <div class="modal-glass__actions">
+        <button
+          class="btn btn--ghost"
+          (click)="cancelStartWork()"
+          [disabled]="startWorkLoading()"
+        >Cancel</button>
+        <button
+          class="btn btn--accent"
+          (click)="confirmStartWork()"
+          [disabled]="startWorkLoading()"
+          [attr.aria-busy]="startWorkLoading()"
+        >
+          {{ startWorkLoading() ? 'Starting…' : 'Confirm — Start Work' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

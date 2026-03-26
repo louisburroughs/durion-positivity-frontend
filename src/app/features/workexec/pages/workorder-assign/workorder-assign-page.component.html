@@ -1,0 +1,65 @@
+<section class="workexec-page workorder-assign" aria-labelledby="assign-heading">
+
+  <button class="btn btn--ghost back-btn" (click)="cancel()">← Back to Work Order</button>
+
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading…</p> }
+  @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+
+  @if (pageState() === 'ready') {
+    <header class="page-header">
+      <p class="page-overline">Work Order {{ workorderId() }}</p>
+      <h1 id="assign-heading">{{ formMode() === 'reassign' ? 'Reassign Technician' : 'Assign Technician' }}</h1>
+    </header>
+
+    @if (currentAssignment()) {
+      <div class="current-assignment" aria-label="Current technician assignment">
+        <p class="section-overline">Current Assignment</p>
+        <p><strong>{{ currentAssignment()!.technicianName ?? currentAssignment()!.technicianId }}</strong></p>
+        <p class="hint-text">Assigned {{ currentAssignment()!.assignedAt | date:'medium' }}</p>
+      </div>
+    }
+
+    <div class="assign-form">
+      <div class="field">
+        <label for="technicianId" class="field__label">Technician ID <span aria-hidden="true">*</span></label>
+        <input
+          id="technicianId"
+          class="field__input"
+          type="text"
+          [value]="technicianId()"
+          (input)="technicianId.set($any($event.target).value)"
+          placeholder="Enter technician UUID"
+          aria-required="true"
+        />
+      </div>
+      <div class="field">
+        <label for="assignNotes" class="field__label">Notes</label>
+        <textarea
+          id="assignNotes"
+          class="field__input field__input--textarea"
+          [value]="notes()"
+          (input)="notes.set($any($event.target).value)"
+          rows="3"
+          placeholder="Optional notes"
+        ></textarea>
+      </div>
+
+      @if (saveError()) {
+        <div class="alert alert--error" role="alert">{{ saveError() }}</div>
+      }
+
+      <div class="form-actions">
+        <button class="btn btn--ghost" (click)="cancel()" [disabled]="saveState() === 'loading'">Cancel</button>
+        <button
+          class="btn btn--accent"
+          (click)="save()"
+          [disabled]="saveState() === 'loading'"
+          [attr.aria-busy]="saveState() === 'loading'"
+        >
+          {{ saveState() === 'loading' ? 'Saving…' : (formMode() === 'reassign' ? 'Reassign' : 'Assign') }}
+        </button>
+      </div>
+    </div>
+  }
+
+</section>

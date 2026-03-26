@@ -1,0 +1,133 @@
+<section class="workexec-page workorder-labor" aria-labelledby="labor-heading">
+
+  <button class="btn btn--ghost back-btn" (click)="back()">← Work Order</button>
+
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading labor…</p> }
+  @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+
+  @if (pageState() === 'ready') {
+    <header class="page-header">
+      <p class="page-overline">Work Order {{ workorderId() }}</p>
+      <h1 id="labor-heading">Labor</h1>
+    </header>
+
+    <!-- Session control -->
+    <div class="session-panel">
+      <p class="section-overline">Labor Session</p>
+
+      @if (sessionState() === 'active' && activeSession()) {
+        <div class="session-active" role="status" aria-live="polite">
+          <span class="session-badge">● Session Active</span>
+          <p class="hint-text">Started: {{ activeSession()!.startTime | date:'medium' }}</p>
+          <button
+            class="btn btn--warn"
+            (click)="stopSession()"
+            [attr.aria-busy]="sessionState() === 'stopping'"
+          >
+            {{ sessionState() === 'stopping' ? 'Stopping…' : 'Stop Session' }}
+          </button>
+        </div>
+      } @else {
+        <div class="session-start">
+          @if (serviceItems().length > 0) {
+            <select
+              class="field__input"
+              [value]="selectedServiceId()"
+              (change)="selectedServiceId.set($any($event.target).value)"
+              aria-label="Select service line"
+            >
+              <option value="">— Select service line —</option>
+              @for (item of serviceItems(); track item.id) {
+                <option [value]="item.id">{{ item.description }}</option>
+              }
+            </select>
+          }
+          <button
+            class="btn btn--accent"
+            (click)="startSession()"
+            [disabled]="sessionState() === 'starting'"
+            [attr.aria-busy]="sessionState() === 'starting'"
+          >
+            {{ sessionState() === 'starting' ? 'Starting…' : 'Start Session' }}
+          </button>
+        </div>
+        @if (sessionError()) {
+          <div class="alert alert--error" role="alert">{{ sessionError() }}</div>
+        }
+      }
+    </div>
+
+    <!-- Manual entry toggle -->
+    <div class="manual-entry-header">
+      <p class="section-overline">Manual Entry</p>
+      <button class="btn btn--ghost btn--sm" (click)="showManualForm.set(!showManualForm())">
+        {{ showManualForm() ? 'Close' : '+ Add Manual Entry' }}
+      </button>
+    </div>
+
+    @if (showManualForm()) {
+      <div class="manual-form">
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label">Service Line</label>
+            <select class="field__input" [value]="manualServiceId()" (change)="manualServiceId.set($any($event.target).value)">
+              <option value="">— Optional —</option>
+              @for (item of serviceItems(); track item.id) {
+                <option [value]="item.id">{{ item.description }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label class="field__label">Labor Code</label>
+            <input class="field__input" type="text" [value]="manualLaborCode()" (input)="manualLaborCode.set($any($event.target).value)" placeholder="e.g. OIL-CHG" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field__label">Description</label>
+          <input class="field__input" type="text" [value]="manualDescription()" (input)="manualDescription.set($any($event.target).value)" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label">Hours</label>
+            <input class="field__input" type="number" min="0.1" step="0.25" [value]="manualHours()" (input)="manualHours.set(+$any($event.target).value)" />
+          </div>
+          <div class="field field--inline">
+            <label class="field__label">Flat Rate</label>
+            <input type="checkbox" [checked]="manualFlatRate()" (change)="manualFlatRate.set($any($event.target).checked)" />
+          </div>
+        </div>
+        @if (manualError()) { <div class="alert alert--error" role="alert">{{ manualError() }}</div> }
+        <div class="form-actions">
+          <button class="btn btn--ghost" (click)="showManualForm.set(false)">Cancel</button>
+          <button class="btn btn--accent" (click)="submitManualEntry()" [attr.aria-busy]="manualState() === 'loading'" [disabled]="manualState() === 'loading'">
+            {{ manualState() === 'loading' ? 'Saving…' : 'Save Entry' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Labor history ledger -->
+    <div class="labor-history">
+      <p class="section-overline">History ({{ laborHistory().length }})</p>
+      @if (laborHistory().length === 0) {
+        <p class="hint-text">No labor recorded yet.</p>
+      } @else {
+        <div class="ledger">
+          <div class="ledger__header">
+            <span>Code</span><span>Description</span><span>Hours</span><span>Type</span><span>Recorded</span>
+          </div>
+          @for (entry of laborHistory(); track entry.id; let even = $even) {
+            <div class="ledger__row" [class.ledger__row--alt]="even">
+              <span class="ledger__cell">{{ entry.laborCode ?? '—' }}</span>
+              <span class="ledger__cell">{{ entry.description ?? '—' }}</span>
+              <span class="ledger__cell">{{ entry.hoursWorked ?? '—' }}</span>
+              <span class="ledger__cell">{{ entry.flatRate ? 'Flat' : 'Time' }}</span>
+              <span class="ledger__cell">{{ (entry.endTime ?? entry.startTime) | date:'short' }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+</section>

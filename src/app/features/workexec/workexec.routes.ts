@@ -3,8 +3,10 @@ import { WorkexecComponent } from './workexec.component';
 
 /**
  * Workexec feature routes
- * Capabilities: CAP-002 (Estimates), CAP-003 (Customer Approval Workflow)
- * Wave B — stories 239, 238, 237, 236, 235, 234, 233, 271, 270, 269, 268
+ * Capabilities: CAP-002 (Estimates), CAP-003 (Customer Approval Workflow),
+ *               CAP-004 (Workorder Promotion), CAP-005 (Workorder Execution)
+ * Wave B — stories 239, 238, 237, 236, 235, 234, 233, 271, 270, 269, 268,
+ *           231, 230, 229, 228, 227, 226 (CAP-004), 225, 224, 223, 222, 221, 220, 219 (CAP-005)
  */
 export const WORKEXEC_ROUTES: Routes = [
   {
@@ -115,6 +117,55 @@ export const WORKEXEC_ROUTES: Routes = [
       },
 
       { path: '**', redirectTo: 'estimates/new' },
+
+      // ── CAP-004: Workorder Promotion + Hub ────────────────────────────────
+
+      /** Stories 230, 229, 226, 224, 219: Workorder hub (detail, scope, audit, start, roles) */
+      {
+        path: 'workorders/:workorderId',
+        loadComponent: () =>
+          import('./pages/workorder-detail/workorder-detail-page.component').then(
+            m => m.WorkorderDetailPageComponent,
+          ),
+      },
+
+      // ── CAP-005: Workorder Execution sub-pages ───────────────────────────
+
+      /** Story 225: Assign/Reassign Technician */
+      {
+        path: 'workorders/:workorderId/assign',
+        loadComponent: () =>
+          import('./pages/workorder-assign/workorder-assign-page.component').then(
+            m => m.WorkorderAssignPageComponent,
+          ),
+      },
+
+      /** Story 223: Record Labor (sessions + manual entries) */
+      {
+        path: 'workorders/:workorderId/labor',
+        loadComponent: () =>
+          import('./pages/workorder-labor/workorder-labor-page.component').then(
+            m => m.WorkorderLaborPageComponent,
+          ),
+      },
+
+      /** Stories 222 + 221: Issue/Consume/Return Parts + Substitutions */
+      {
+        path: 'workorders/:workorderId/parts',
+        loadComponent: () =>
+          import('./pages/workorder-parts/workorder-parts-page.component').then(
+            m => m.WorkorderPartsPageComponent,
+          ),
+      },
+
+      /** Story 220: Change Requests (create, approve, decline) */
+      {
+        path: 'workorders/:workorderId/change-requests',
+        loadComponent: () =>
+          import('./pages/workorder-change-requests/workorder-change-requests-page.component').then(
+            m => m.WorkorderChangeRequestsPageComponent,
+          ),
+      },
     ],
   },
 ];

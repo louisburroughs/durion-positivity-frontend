@@ -1,0 +1,159 @@
+<section class="workexec-page workorder-parts" aria-labelledby="parts-heading">
+
+  <button class="btn btn--ghost back-btn" (click)="back()">← Work Order</button>
+
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading parts…</p> }
+  @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+
+  @if (pageState() === 'ready') {
+    <header class="page-header">
+      <p class="page-overline">Work Order {{ workorderId() }}</p>
+      <h1 id="parts-heading">Parts</h1>
+    </header>
+
+    <!-- Scope parts list with actions -->
+    <div class="parts-scope">
+      <div class="section-row">
+        <p class="section-overline">Scope Parts</p>
+        <div class="action-btns">
+          <button class="btn btn--ghost btn--sm" (click)="openAction('issue')">Issue Parts</button>
+          <button class="btn btn--ghost btn--sm" (click)="openAction('consume')">Consume</button>
+          <button class="btn btn--ghost btn--sm" (click)="openAction('return')">Return</button>
+        </div>
+      </div>
+
+      @if (partItems().length === 0) {
+        <p class="hint-text">No parts in this work order scope.</p>
+      } @else {
+        <div class="ledger">
+          <div class="ledger__header">
+            <span>Part / Description</span><span>Qty</span><span>Unit Price</span><span>Actions</span>
+          </div>
+          @for (item of partItems(); track item.id; let even = $even) {
+            <div class="ledger__row" [class.ledger__row--alt]="even">
+              <span class="ledger__cell">{{ item.description }}</span>
+              <span class="ledger__cell">{{ item.quantity }}</span>
+              <span class="ledger__cell">{{ item.unitPrice | currency }}</span>
+              <span class="ledger__cell ledger__cell--actions">
+                <button class="btn-link" (click)="openAction('issue', item.id)">Issue</button>
+                <button class="btn-link" (click)="openSubstPanel(item.id)">Substitute</button>
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Part action inline form -->
+    @if (activeAction()) {
+      <div class="action-form" role="dialog" aria-label="Part action form">
+        <p class="section-overline">{{ activeAction() | titlecase }} Parts</p>
+        <div class="field">
+          <label class="field__label">Part ID <span aria-hidden="true">*</span></label>
+          <input class="field__input" type="text" [value]="actionPartId()" (input)="actionPartId.set($any($event.target).value)" placeholder="Part UUID" />
+        </div>
+        <div class="field">
+          <label class="field__label">Quantity</label>
+          <input class="field__input" type="number" min="1" [value]="actionQuantity()" (input)="actionQuantity.set(+$any($event.target).value)" />
+        </div>
+        @if (activeAction() === 'issue' || activeAction() === 'return') {
+          <div class="field">
+            <label class="field__label">Notes</label>
+            <input class="field__input" type="text" [value]="actionNotes()" (input)="actionNotes.set($any($event.target).value)" placeholder="Optional" />
+          </div>
+        }
+        @if (actionError()) { <div class="alert alert--error" role="alert">{{ actionError() }}</div> }
+        <div class="form-actions">
+          <button class="btn btn--ghost" (click)="closeAction()">Cancel</button>
+          <button class="btn btn--accent" (click)="submitAction()" [attr.aria-busy]="actionState() === 'loading'" [disabled]="actionState() === 'loading'">
+            {{ actionState() === 'loading' ? 'Saving…' : 'Confirm' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Usage history ledger -->
+    <div class="usage-history">
+      <p class="section-overline">Usage History ({{ usageHistory().length }})</p>
+      @if (usageHistory().length === 0) {
+        <p class="hint-text">No usage recorded yet.</p>
+      } @else {
+        <div class="ledger">
+          <div class="ledger__header">
+            <span>Part ID</span><span>Issued</span><span>Consumed</span><span>Returned</span><span>When</span>
+          </div>
+          @for (entry of usageHistory(); track entry.id; let even = $even) {
+            <div class="ledger__row" [class.ledger__row--alt]="even">
+              <span class="ledger__cell usage-part-id">{{ entry.partId }}</span>
+              <span class="ledger__cell">{{ entry.quantityIssued }}</span>
+              <span class="ledger__cell">{{ entry.quantityConsumed }}</span>
+              <span class="ledger__cell">{{ entry.quantityReturned }}</span>
+              <span class="ledger__cell">{{ (entry.consumedAt ?? entry.issuedAt) | date:'short' }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+</section>
+
+<!-- Story 221: Substitution slide-out panel -->
+@if (showSubstPanel()) {
+  <div class="subst-backdrop" role="dialog" aria-modal="true" aria-labelledby="subst-panel-title">
+    <div class="subst-panel">
+      <div class="subst-panel__header">
+        <h2 id="subst-panel-title" class="subst-panel__title">Find Substitute for Part</h2>
+        <button class="btn-icon" (click)="closeSubstPanel()" aria-label="Close substitution panel">✕</button>
+      </div>
+      <p class="hint-text subst-part-id">Part: {{ substSourcePartId() }}</p>
+
+      @if (substLoadState() === 'loading') { <p class="hint-text" aria-busy="true">Loading suggestions…</p> }
+      @if (substLoadState() === 'error') { <div class="alert alert--error">Failed to load suggestions.</div> }
+
+      @if (substSuggestions().length === 0 && substLoadState() === 'idle') {
+        <p class="hint-text">No substitutes found for this part.</p>
+      }
+
+      @if (substSuggestions().length > 0) {
+        <div class="subst-list">
+          @for (sub of substSuggestions(); track sub.id) {
+            <label class="subst-option" [class.subst-option--selected]="substSelectedId() === sub.substitutePartId">
+              <input
+                type="radio"
+                name="substChoice"
+                [value]="sub.substitutePartId"
+                [checked]="substSelectedId() === sub.substitutePartId"
+                (change)="substSelectedId.set(sub.substitutePartId ?? '')"
+              />
+              <span class="subst-option__id">{{ sub.substitutePartId }}</span>
+              <span class="subst-type-badge subst-type-badge--{{ sub.substituteType?.toLowerCase() }}">{{ sub.substituteType }}</span>
+              <span class="subst-priority">Priority {{ sub.priority }}</span>
+            </label>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field__label">Reason (required)</label>
+          <input class="field__input" type="text" [value]="substReason()" (input)="substReason.set($any($event.target).value)" placeholder="Why substituting?" />
+        </div>
+      }
+
+      @if (substError()) { <div class="alert alert--error" role="alert">{{ substError() }}</div> }
+
+      <div class="subst-panel__actions">
+        <button class="btn btn--ghost" (click)="closeSubstPanel()">Cancel</button>
+        @if (substSuggestions().length > 0) {
+          <button
+            class="btn btn--accent"
+            (click)="confirmSubstitution()"
+            [disabled]="substSaveState() === 'loading' || !substSelectedId()"
+            [attr.aria-busy]="substSaveState() === 'loading'"
+          >
+            {{ substSaveState() === 'loading' ? 'Substituting…' : 'Confirm Substitution' }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

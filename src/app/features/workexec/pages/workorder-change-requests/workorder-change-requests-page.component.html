@@ -1,0 +1,104 @@
+<section class="workexec-page workorder-change-requests" aria-labelledby="cr-heading">
+
+  <button class="btn btn--ghost back-btn" (click)="back()">← Work Order</button>
+
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading change requests…</p> }
+  @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+
+  @if (pageState() === 'ready') {
+    <header class="page-header">
+      <p class="page-overline">Work Order {{ workorderId() }}</p>
+      <h1 id="cr-heading">Change Requests</h1>
+    </header>
+
+    <div class="cr-header-row">
+      <p class="section-overline">Requests ({{ changeRequests().length }})</p>
+      <button class="btn btn--accent btn--sm" (click)="openCreateForm()">+ New Request</button>
+    </div>
+
+    <!-- Create form -->
+    @if (showCreateForm()) {
+      <div class="cr-form" role="form" aria-label="Create change request">
+        <div class="field">
+          <label class="field__label">Description <span aria-hidden="true">*</span></label>
+          <textarea class="field__input field__input--textarea" rows="3" [value]="crDescription()" (input)="crDescription.set($any($event.target).value)" placeholder="Describe the additional work needed…"></textarea>
+        </div>
+
+        <div class="cr-items-section">
+          <div class="section-row">
+            <p class="section-overline">Requested Items</p>
+            <button class="btn btn--ghost btn--sm" (click)="addItem()">+ Add Item</button>
+          </div>
+          @for (item of crItems(); track $index) {
+            <div class="cr-item-row">
+              <select class="field__input" [value]="item.type" (change)="updateItem($index, { type: $any($event.target).value })">
+                <option value="SERVICE">Service</option>
+                <option value="PART">Part</option>
+              </select>
+              <input class="field__input" type="text" [value]="item.serviceId ?? item.partId ?? ''" (input)="updateItem($index, item.type === 'SERVICE' ? { serviceId: $any($event.target).value } : { partId: $any($event.target).value })" placeholder="ID" />
+              <input class="field__input cr-qty" type="number" min="1" [value]="item.quantity" (input)="updateItem($index, { quantity: +$any($event.target).value })" />
+              <label class="cr-emergency">
+                <input type="checkbox" [checked]="item.isEmergency" (change)="updateItem($index, { isEmergency: $any($event.target).checked })" />
+                Emergency
+              </label>
+              <button class="btn-icon" (click)="removeItem($index)" aria-label="Remove item">✕</button>
+            </div>
+          }
+        </div>
+
+        @if (createError()) { <div class="alert alert--error" role="alert">{{ createError() }}</div> }
+        <div class="form-actions">
+          <button class="btn btn--ghost" (click)="showCreateForm.set(false)">Cancel</button>
+          <button class="btn btn--accent" (click)="submitCreate()" [attr.aria-busy]="createState() === 'loading'" [disabled]="createState() === 'loading'">
+            {{ createState() === 'loading' ? 'Submitting…' : 'Submit Request' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (resolveError()) {
+      <div class="alert alert--error" role="alert">{{ resolveError() }}</div>
+    }
+
+    <!-- Change request list -->
+    @if (changeRequests().length === 0) {
+      <p class="hint-text">No change requests for this work order.</p>
+    } @else {
+      @for (cr of changeRequests(); track cr.id; let even = $even) {
+        <div class="cr-card" [class.cr-card--alt]="even">
+          <div class="cr-card__header">
+            <span class="cr-id">{{ cr.id }}</span>
+            <span class="status-chip status-chip--{{ crStatusClass(cr.status) }}">{{ cr.status }}</span>
+            <span class="cr-date hint-text">{{ cr.createdAt | date:'shortDate' }}</span>
+          </div>
+          <p class="cr-card__description">{{ cr.description }}</p>
+          @if (cr.requestedItems && cr.requestedItems.length > 0) {
+            <p class="hint-text">{{ cr.requestedItems.length }} item(s) requested</p>
+          }
+          <!-- Approve/decline only for AWAITING_ADVISOR_REVIEW -->
+          @if (cr.status === 'AWAITING_ADVISOR_REVIEW') {
+            <div class="cr-card__actions">
+              <div class="field">
+                <label class="field__label">Notes</label>
+                <input class="field__input cr-notes" type="text" [value]="resolveNotes()" (input)="resolveNotes.set($any($event.target).value)" placeholder="Optional" />
+              </div>
+              <div class="action-btns">
+                <button
+                  class="btn btn--approve"
+                  (click)="approve(cr.id)"
+                  [disabled]="resolveState() === 'loading' && resolveId() === cr.id"
+                >Approve</button>
+                <button
+                  class="btn btn--decline"
+                  (click)="decline(cr.id)"
+                  [disabled]="resolveState() === 'loading' && resolveId() === cr.id"
+                >Decline</button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  }
+
+</section>
