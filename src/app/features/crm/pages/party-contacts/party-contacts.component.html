@@ -1,0 +1,231 @@
+<article class="crm-page party-contacts" aria-labelledby="page-heading">
+  <button class="btn-ghost back-btn" type="button" (click)="backToParty()">← Back to Party</button>
+
+  <h1 id="page-heading">Contacts &amp; Roles</h1>
+
+  @if (partyForbidden()) {
+    <div role="alert" class="error-state">
+      <p>You don't have permission to view this account header.</p>
+    </div>
+  }
+
+  <section class="toolbar" aria-label="Contact filters and actions">
+    <div class="toolbar-filters">
+      <label class="field-label" for="statusFilter">Status</label>
+      <select
+        id="statusFilter"
+        class="field-input"
+        [value]="filterStatus()"
+        (change)="onStatusFilterChange($event)"
+      >
+        <option value="ACTIVE">Active</option>
+        <option value="INACTIVE">Inactive</option>
+        <option value="ALL">All</option>
+      </select>
+
+      <label class="field-label" for="roleFilter">Role</label>
+      <select
+        id="roleFilter"
+        class="field-input"
+        [value]="filterRole()"
+        (change)="onRoleFilterChange($event)"
+      >
+        <option value="ALL">All</option>
+        <option value="BILLING">BILLING</option>
+        <option value="APPROVER">APPROVER</option>
+        <option value="PRIMARY_CONTACT">PRIMARY_CONTACT</option>
+        <option value="DRIVER">DRIVER</option>
+        <option value="TECHNICAL">TECHNICAL</option>
+      </select>
+
+      <label class="sr-only" for="contactSearch">Search contacts</label>
+      <input
+        id="contactSearch"
+        class="field-input"
+        type="text"
+        placeholder="Search contacts..."
+        [value]="filterSearch()"
+        (input)="onSearchInput($event)"
+      />
+    </div>
+
+    <button class="btn-primary" type="button" (click)="openModal()">Add Contact</button>
+  </section>
+
+  @if (pageState() === 'loading') {
+    <div class="loading-state" role="status" aria-label="Loading contacts..." aria-busy="true">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+  }
+
+  @if (pageState() === 'error') {
+    <div role="alert" class="error-state">
+      <p>Unable to load contacts and roles.</p>
+      <button class="btn-primary" type="button" (click)="loadRelationships()">Retry</button>
+    </div>
+  }
+
+  @if (pageState() === 'access-denied') {
+    <div role="alert" class="error-state">
+      <p>You don't have permission to view contacts for this account.</p>
+    </div>
+  }
+
+  @if (pageState() === 'ready') {
+		@if (paginatedRelationships().length === 0) {
+			<section class="empty-state" aria-live="polite">
+				<h2>No contacts found</h2>
+				<p>Try changing filters or add a new contact relationship.</p>
+				<button class="btn-primary" type="button" (click)="openModal()">Add Contact</button>
+			</section>
+		}
+
+		@if (paginatedRelationships().length > 0) {
+			<div class="table-wrap">
+				<table aria-label="Contacts and roles" class="data-blueprint-table">
+					<thead>
+						<tr>
+							<th scope="col">Person</th>
+							<th scope="col">Role</th>
+							<th scope="col">Effective From</th>
+							<th scope="col">Effective Thru</th>
+							<th scope="col">Primary Billing</th>
+							<th scope="col">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						@for (r of paginatedRelationships(); track r.relationshipId) {
+							<tr [class.inactive-row]="r.status === 'INACTIVE'">
+								<td>
+									<div class="person-main">{{ r.personName }}</div>
+									@if (r.email || r.phone) {
+										<div class="person-subline">{{ r.email || 'No email' }} @if (r.phone) { · {{ r.phone }} }</div>
+									}
+								</td>
+								<td>
+									<span class="role-badge role-badge--{{ r.role | lowercase }}">{{ r.role }}</span>
+								</td>
+								<td>{{ r.effectiveFrom }}</td>
+								<td>{{ r.effectiveThru || 'Active' }}</td>
+								<td>
+									@if (r.isPrimaryBilling && r.role === 'BILLING') {
+										<span class="primary-star" aria-hidden="true">★</span>
+										<span class="sr-only">Primary billing contact</span>
+									} @else {
+										<span class="muted">No</span>
+									}
+								</td>
+								<td>
+									@if (r.status === 'ACTIVE') {
+										<div class="row-actions">
+											<button
+												type="button"
+												class="btn-ghost"
+												[disabled]="r.role.toUpperCase() !== 'BILLING' || r.isPrimaryBilling || pendingRowId() === r.relationshipId"
+												(click)="setPrimaryBilling(r)"
+											>
+												Set Primary
+											</button>
+											<button
+												type="button"
+												class="btn-ghost btn-danger"
+												[disabled]="pendingRowId() === r.relationshipId"
+												(click)="deactivate(r)"
+											>
+												Deactivate
+											</button>
+										</div>
+									} @else {
+										<span class="muted">Inactive</span>
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+
+			<footer class="pagination" aria-label="Contacts pagination">
+				<span>
+					Showing {{ pageIndex() * pageSize + 1 }}-
+					{{ ((pageIndex() + 1) * pageSize) > totalCount() ? totalCount() : ((pageIndex() + 1) * pageSize) }}
+					of {{ totalCount() }}
+				</span>
+				<div class="pagination-actions">
+					<button class="btn-ghost" type="button" [disabled]="pageIndex() === 0" (click)="prevPage()">Prev</button>
+					<button
+						class="btn-ghost"
+						type="button"
+						[disabled]="(pageIndex() + 1) * pageSize >= totalCount()"
+						(click)="nextPage()"
+					>
+						Next
+					</button>
+				</div>
+			</footer>
+		}
+	}
+
+	@if (modalState() !== 'closed') {
+		<div class="modal-backdrop" (click)="closeModal()">
+			<section
+				class="modal"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="modal-heading"
+				(click)="$event.stopPropagation()"
+			>
+				<h2 id="modal-heading">Add Contact</h2>
+
+				@if (modalError()) {
+					<div class="error-state" role="alert">{{ modalError() }}</div>
+				}
+
+				<form [formGroup]="addContactForm" class="modal-form" novalidate>
+					<label class="field-label" for="personId">Person ID</label>
+					<input id="personId" class="field-input" type="text" formControlName="personId" placeholder="UUID" />
+					@if (addContactForm.controls.personId.touched && addContactForm.controls.personId.errors?.['pattern']) {
+						<p class="field-error" role="alert">Person ID must be a valid UUID.</p>
+					}
+
+					<label class="field-label" for="role">Role</label>
+					<select id="role" class="field-input" formControlName="role">
+						<option value="BILLING">BILLING</option>
+						<option value="APPROVER">APPROVER</option>
+						<option value="PRIMARY_CONTACT">PRIMARY_CONTACT</option>
+						<option value="DRIVER">DRIVER</option>
+						<option value="TECHNICAL">TECHNICAL</option>
+					</select>
+
+					<label class="field-label" for="effectiveFrom">Effective From</label>
+					<input id="effectiveFrom" class="field-input" type="date" formControlName="effectiveFrom" />
+
+					<label class="checkbox-row" for="primaryBillingContact">
+						<input
+							id="primaryBillingContact"
+							type="checkbox"
+							formControlName="primaryBillingContact"
+							[disabled]="addContactForm.controls.role.value !== 'BILLING'"
+						/>
+						<span>Primary billing contact</span>
+					</label>
+
+					<div class="modal-actions">
+						<button class="btn-primary" type="button" [disabled]="addContactForm.invalid || modalState() === 'saving'" (click)="saveContact()">
+							Save
+						</button>
+						<button class="btn-ghost" type="button" [disabled]="modalState() === 'saving'" (click)="closeModal()">Cancel</button>
+					</div>
+				</form>
+			</section>
+		</div>
+	}
+
+	@if (toast()) {
+		<div class="toast toast--{{ toast()!.type }}" [attr.role]="toast()!.type === 'success' ? 'status' : 'alert'">
+			{{ toast()!.message }}
+		</div>
+	}
+</article>

@@ -1,0 +1,196 @@
+:host {
+  display: block;
+}
+
+.crm-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  color: var(--durion-on-surface-variant);
+}
+
+h1,
+h2,
+th {
+  color: var(--durion-on-surface);
+}
+
+.head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--durion-surface-container-lowest);
+}
+
+.error-state {
+  background: var(--durion-error-container);
+  color: var(--durion-error);
+}
+
+.skeleton-row {
+  height: 1.1rem;
+  margin-bottom: var(--space-3);
+  background: linear-gradient(
+    90deg,
+    var(--durion-surface) 25%,
+    var(--durion-surface-container-low) 50%,
+    var(--durion-surface) 75%
+  );
+  background-size: 220% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+}
+
+.data-blueprint-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-blueprint-table th,
+.data-blueprint-table td {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  vertical-align: top;
+}
+
+.data-blueprint-table thead tr {
+  background: var(--durion-surface-container);
+}
+
+.data-blueprint-table tbody tr:nth-child(odd) {
+  background: var(--durion-surface);
+}
+
+.data-blueprint-table tbody tr:nth-child(even) {
+  background: var(--durion-surface-container-low);
+}
+
+.status-badge {
+  display: inline-flex;
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-2);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.status-badge--active {
+  background: var(--durion-surface-container);
+  color: var(--durion-on-surface);
+}
+
+.status-badge--inactive {
+  background: var(--durion-surface-container-low);
+  color: var(--durion-on-surface-variant);
+}
+
+.row-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.delete-confirm {
+  margin-top: var(--space-2);
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.36);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 50;
+}
+
+.slide-over {
+  width: min(560px, 96vw);
+  height: 100vh;
+  overflow: auto;
+  padding: var(--space-5);
+  background: var(--durion-surface-container-highest, var(--durion-surface-container));
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.panel-form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.field-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.field-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--durion-surface-container-low);
+  border: none;
+  border-bottom: 2px solid var(--durion-primary);
+  border-radius: 0;
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  color: var(--durion-on-surface-variant);
+  outline: none;
+}
+
+.actions-row {
+  margin-top: var(--space-2);
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-ghost {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--durion-primary);
+  color: var(--durion-on-primary);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--durion-primary);
+}
+
+.btn-danger {
+  color: var(--durion-error);
+}
+
+.btn-primary:disabled,
+.btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

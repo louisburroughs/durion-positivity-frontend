@@ -24,6 +24,9 @@
   @if (partyState() === 'ready' && party()) {
     <header class="party-header">
       <h1 id="party-heading">{{ party()!.legalName }}</h1>
+      <div class="party-header-actions">
+        <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToBillingRules()">Billing Rules →</button>
+      </div>
       @if (party()!.dba) {
         <p class="party-dba">DBA: {{ party()!.dba }}</p>
       }
@@ -40,7 +43,10 @@
 
   <!-- ── Contacts section ─────────────────────────────────────────────── -->
   <section class="detail-section" aria-labelledby="contacts-heading">
-    <h2 id="contacts-heading" class="section-heading">Contacts</h2>
+    <div class="section-heading-row">
+      <h2 id="contacts-heading" class="section-heading">Contacts</h2>
+      <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToContacts()">Manage Contacts &amp; Roles →</button>
+    </div>
 
     @if (contactsState() === 'loading') {
       <p class="loading-hint" aria-busy="true">Loading contacts…</p>
@@ -63,31 +69,14 @@
             <tr>
               <th scope="col">Name</th>
               <th scope="col">Roles</th>
-              <th scope="col"><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
-            @for (contact of contacts(); track contact.contactId) {
+            @for (contact of contacts(); track contact.relationshipId) {
               <tr>
-                <td class="contact-name">{{ contact.name }}</td>
+                <td class="contact-name">{{ contact.personName || contact.personId }}</td>
                 <td class="contact-roles">
-                  @if (!contact.roles.length) {
-                    <span class="hint-text">No roles assigned</span>
-                  } @else {
-                    @for (role of contact.roles; track role) {
-                      <span class="role-badge">{{ roleLabel(role) }}</span>
-                    }
-                  }
-                </td>
-                <td>
-                  <button
-                    class="btn btn--ghost btn--sm"
-                    type="button"
-                    (click)="openRolesModal(contact)"
-                    [attr.aria-label]="'Edit roles for ' + contact.name"
-                  >
-                    Edit Roles
-                  </button>
+                  <span class="role-badge">{{ roleLabel(contact.role) }}</span>
                 </td>
               </tr>
             }
@@ -191,61 +180,5 @@
       }
     }
   </section>
-
-  <!-- ── Edit Roles Modal ──────────────────────────────────────────────── -->
-  @if (isRolesModalOpen) {
-    <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="roles-modal-heading">
-      <div class="modal">
-        <header class="modal__header">
-          <h3 id="roles-modal-heading">Edit Roles — {{ activeContact()?.name }}</h3>
-          <button
-            class="btn btn--icon modal__close"
-            type="button"
-            [disabled]="isRolesModalSaving"
-            (click)="closeRolesModal()"
-            aria-label="Close edit roles modal"
-          >✕</button>
-        </header>
-
-        <div class="modal__body">
-          @if (rolesError()) {
-            <div class="inline-error" role="alert">{{ rolesError() }}</div>
-          }
-
-          <form [formGroup]="rolesForm" aria-label="Role assignment" novalidate>
-            <fieldset class="roles-fieldset">
-              <legend class="form-section__legend">Assign Roles</legend>
-              @for (role of AVAILABLE_ROLES; track role) {
-                <label class="role-row">
-                  <input
-                    type="checkbox"
-                    [formControlName]="role"
-                    class="role-checkbox"
-                    [attr.aria-label]="roleLabel(role) + ' role'"
-                  />
-                  <span class="role-row__label">{{ roleLabel(role) }}</span>
-                </label>
-              }
-            </fieldset>
-          </form>
-        </div>
-
-        <footer class="modal__footer">
-          <button
-            class="btn btn--primary"
-            type="button"
-            [disabled]="isRolesModalSaving"
-            [attr.aria-busy]="isRolesModalSaving"
-            (click)="saveRoles()"
-          >
-            @if (isRolesModalSaving) { Saving… } @else { Save Roles }
-          </button>
-          <button class="btn btn--ghost" type="button" [disabled]="isRolesModalSaving" (click)="closeRolesModal()">
-            Cancel
-          </button>
-        </footer>
-      </div>
-    </div>
-  }
 
 </article>

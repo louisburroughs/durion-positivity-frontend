@@ -1,0 +1,143 @@
+<article class="crm-page billing-rules" aria-labelledby="rules-heading">
+  <button class="btn-ghost" type="button" (click)="backToParty()">← Back to Party</button>
+
+  <header class="head-row">
+    <h1 id="rules-heading">Billing Rules</h1>
+    <button class="btn-primary" type="button" (click)="openAdd()">Add Billing Rule</button>
+  </header>
+
+  @if (pageState() === 'loading') {
+    <div class="loading-state" role="status" aria-label="Loading billing rules" aria-busy="true">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+  }
+
+  @if (pageState() === 'error') {
+    <div class="error-state" role="alert">
+      <p>Unable to load billing rules.</p>
+      <button class="btn-primary" type="button" (click)="loadRules()">Retry</button>
+    </div>
+  }
+
+  @if (pageState() === 'access-denied') {
+    <div class="error-state" role="alert">
+      <p>You don't have permission to view billing rules for this account.</p>
+    </div>
+  }
+
+  @if (pageState() === 'ready') {
+    @if (rules().length === 0) {
+      <section class="empty-state">
+        <h2>No billing rules configured.</h2>
+        <button class="btn-primary" type="button" (click)="openAdd()">Add Billing Rule</button>
+      </section>
+    }
+
+    @if (rules().length > 0) {
+      <div class="table-wrap">
+        <table class="data-blueprint-table" aria-label="Billing rules">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Status</th>
+              <th scope="col">Priority</th>
+              <th scope="col">Effective Start</th>
+              <th scope="col">Effective End</th>
+              <th scope="col">Last Updated</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rule of rules(); track rule.ruleId) {
+              <tr>
+                <td>{{ rule.name }}</td>
+                <td>
+                  <span class="status-badge status-badge--{{ rule.status === 'ACTIVE' ? 'active' : 'inactive' }}">
+                    {{ rule.status }}
+                  </span>
+                </td>
+                <td>{{ rule.priority ?? '—' }}</td>
+                <td>{{ rule.effectiveStart }}</td>
+                <td>{{ rule.effectiveEnd || '—' }}</td>
+                <td>{{ rule.lastUpdated || '—' }}</td>
+                <td>
+                  <div class="row-actions">
+                    <button class="btn-ghost" type="button" (click)="openEdit(rule)">Edit</button>
+                    <button class="btn-ghost btn-danger" type="button" (click)="confirmDelete(rule.ruleId)">Delete</button>
+                  </div>
+                  @if (deleteConfirmRuleId() === rule.ruleId) {
+                    <div class="delete-confirm">
+                      <span>Confirm delete?</span>
+                      <button class="btn-ghost btn-danger" type="button" (click)="deleteRule(rule.ruleId)">Yes</button>
+                      <button class="btn-ghost" type="button" (click)="cancelDelete()">No</button>
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  @if (panelState() !== 'closed') {
+    <div class="panel-backdrop" (click)="closePanel()">
+      <section class="slide-over" (click)="$event.stopPropagation()">
+        <h2>{{ panelState() === 'add' ? 'Add Billing Rule' : 'Edit Billing Rule' }}</h2>
+
+        @if (panelError()) {
+          <div class="error-state" role="alert">{{ panelError() }}</div>
+        }
+
+        <form [formGroup]="ruleForm" class="panel-form" novalidate>
+          <label class="field-label" for="name">Name</label>
+          <input id="name" class="field-input" type="text" formControlName="name" />
+
+          <label class="field-label" for="status">Status</label>
+          <select id="status" class="field-input" formControlName="status">
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="INACTIVE">INACTIVE</option>
+          </select>
+
+          <label class="field-label" for="priority">Priority</label>
+          <input id="priority" class="field-input" type="number" formControlName="priority" />
+
+          <label class="field-label" for="effectiveStart">Effective Start</label>
+          <input id="effectiveStart" class="field-input" type="date" formControlName="effectiveStart" />
+
+          <label class="field-label" for="effectiveEnd">Effective End</label>
+          <input id="effectiveEnd" class="field-input" type="date" formControlName="effectiveEnd" />
+
+          <label class="field-label" for="billingMethod">Billing Method</label>
+          <input id="billingMethod" class="field-input" type="text" formControlName="billingMethod" />
+
+          <label class="field-label" for="billingSchedule">Billing Schedule</label>
+          <input id="billingSchedule" class="field-input" type="text" formControlName="billingSchedule" />
+
+          <label class="field-label" for="conditions">Conditions</label>
+          <textarea id="conditions" class="field-input" formControlName="conditions" rows="3"></textarea>
+
+          <label class="field-label" for="earningsProcessing">Earnings Processing</label>
+          <textarea id="earningsProcessing" class="field-input" formControlName="earningsProcessing" rows="3"></textarea>
+
+          <label class="field-label" for="notes">Notes</label>
+          <textarea id="notes" class="field-input" formControlName="notes" rows="3"></textarea>
+
+          <div class="actions-row">
+            <button
+              class="btn-primary"
+              type="button"
+              [disabled]="ruleForm.invalid || panelPending()"
+              (click)="saveRule()"
+            >
+              Save
+            </button>
+            <button class="btn-ghost" type="button" [disabled]="panelPending()" (click)="closePanel()">Cancel</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  }
+</article>

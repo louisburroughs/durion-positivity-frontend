@@ -1,25 +1,26 @@
 /* Customer List */
 .crm-page { display: flex; flex-direction: column; gap: var(--space-6); max-width: 860px; padding: var(--space-6) var(--space-4); margin: 0 auto; }
 .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); }
-.page-header h1 { margin: 0; font-family: var(--font-primary); font-size: 1.5rem; font-weight: 700; color: var(--currentTextColor); }
+.page-header h1 { margin: 0; font-family: var(--font-primary); font-size: 1.5rem; font-weight: 700; color: var(--durion-on-surface); }
 .header-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
 .search-form { position: relative; }
-.search-input { width: 100%; box-sizing: border-box; background: var(--cardBackground, #fff); border: none; border-bottom: 2px solid var(--durion-graphite-200); border-radius: var(--radius-sm) var(--radius-sm) 0 0; padding: var(--space-3) var(--space-4); font-size: 0.95rem; font-family: var(--font-body); color: var(--currentTextColor); outline: none; transition: border-color var(--transition-fast); }
-.search-input:focus { border-bottom-color: var(--durion-teal-400); }
-.hint-text { margin: 0; font-size: 0.87rem; color: var(--handleColor); }
-.hint-text--warn { color: var(--functional-warning); }
-.hint-text--error { color: var(--functional-error-red); }
+.search-input { width: 100%; box-sizing: border-box; background: var(--durion-surface-container-lowest); border: none; border-bottom: 2px solid var(--durion-outline); border-radius: var(--radius-sm) var(--radius-sm) 0 0; padding: var(--space-3) var(--space-4); font-size: 0.95rem; font-family: var(--font-body); color: var(--durion-on-surface); outline: none; transition: border-color var(--transition-fast); }
+.search-input:focus { border-bottom-color: var(--durion-primary); }
+.hint-text { margin: 0; font-size: 0.87rem; color: var(--durion-on-surface-variant); }
+.hint-text--warn { color: var(--durion-error); }
+.hint-text--error { color: var(--durion-error); }
 .party-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-3); }
-.party-card { background: var(--cardBackground, #fff); border-radius: var(--radius-md); overflow: hidden; }
+.party-card { background: var(--durion-surface-container-lowest); border-radius: var(--radius-md); overflow: hidden; }
 .party-card__inner { display: flex; flex-direction: column; gap: 2px; padding: var(--space-4); width: 100%; text-align: left; background: transparent; border: none; cursor: pointer; transition: background var(--transition-fast); }
-.party-card__inner:hover { background: var(--themeBackground, #f8f9fb); }
-.party-card__name { font-weight: 600; font-size: 0.95rem; color: var(--currentTextColor); }
-.party-card__dba { font-size: 0.82rem; color: var(--handleColor); }
-.party-card__id { font-size: 0.78rem; color: var(--durion-graphite-500); font-family: 'Fira Code', monospace; }
+.party-card__inner:hover { background: var(--durion-surface-container-low); }
+.party-card__name { font-weight: 600; font-size: 0.95rem; color: var(--durion-on-surface); }
+.party-card__dba { font-size: 0.82rem; color: var(--durion-on-surface-variant); }
+.party-card__id { font-size: 0.78rem; color: var(--durion-on-surface-variant); font-family: 'Fira Code', monospace; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); border-radius: var(--radius-md); font-size: 0.875rem; font-weight: 600; font-family: var(--font-body); cursor: pointer; border: none; transition: opacity var(--transition-fast), transform var(--transition-fast); }
 .btn:active:not(:disabled) { transform: scale(0.97); }
-.btn--primary { background: var(--durion-teal-400); color: #fff; }
-.btn--primary:hover { background: var(--durion-teal-500); }
-.btn--secondary { background: var(--primary50, var(--brand-primary-soft)); color: var(--brand-primary); }
+.btn--primary { background: var(--durion-primary); color: var(--durion-on-primary); }
+.btn--primary:hover { opacity: 0.9; }
+.btn--secondary { background: var(--durion-surface-container); color: var(--durion-on-surface); }
+.btn--ghost { background: transparent; color: var(--durion-primary); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 560px) { .page-header { flex-direction: column; align-items: flex-start; } .header-actions { width: 100%; } .btn { flex: 1; } }

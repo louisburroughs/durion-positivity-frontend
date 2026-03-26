@@ -66,4 +66,8 @@ export class CustomerListComponent implements OnInit {
   createIndividual(): void {
     this.router.navigate(['/app/crm/create-individual-person']);
   }
+
+  navigateToMerge(): void {
+    this.router.navigate(['/app/crm/merge-parties']);
+  }
 }

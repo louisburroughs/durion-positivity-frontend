@@ -41,6 +41,34 @@ export const CRM_ROUTES: Routes = [
             m => m.CreateVehicleComponent,
           ),
       },
+      {
+        path: 'party/:partyId/contacts',
+        loadComponent: () =>
+          import('./pages/party-contacts/party-contacts.component').then(
+            m => m.PartyContactsComponent,
+          ),
+      },
+      {
+        path: 'merge-parties',
+        loadComponent: () =>
+          import('./pages/merge-parties/merge-parties.component').then(
+            m => m.MergePartiesComponent,
+          ),
+      },
+      {
+        path: 'snapshot',
+        loadComponent: () =>
+          import('./pages/crm-snapshot/crm-snapshot.component').then(
+            m => m.CrmSnapshotComponent,
+          ),
+      },
+      {
+        path: 'party/:partyId/billing-rules',
+        loadComponent: () =>
+          import('./pages/billing-rules/billing-rules.component').then(
+            m => m.BillingRulesComponent,
+          ),
+      },
       { path: '**', redirectTo: '' },
     ],
   },

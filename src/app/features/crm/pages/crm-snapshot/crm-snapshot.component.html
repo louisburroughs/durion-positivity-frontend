@@ -1,0 +1,125 @@
+<article class="crm-page crm-snapshot" aria-labelledby="snapshot-heading">
+  <h1 id="snapshot-heading">CRM Snapshot Viewer</h1>
+  <p class="page-subtitle">Enter a Party ID or Vehicle ID to load a snapshot.</p>
+
+  <section class="step-panel">
+    <form [formGroup]="snapshotForm" class="snapshot-form" novalidate>
+      <label class="field-label" for="partyId">Party ID</label>
+      <input id="partyId" class="field-input" type="text" formControlName="partyId" placeholder="UUID" />
+      @if (snapshotForm.controls.partyId.touched && snapshotForm.controls.partyId.errors?.['pattern']) {
+        <p class="field-error" role="alert">Must be a valid UUID</p>
+      }
+
+      <label class="field-label" for="vehicleId">Vehicle ID</label>
+      <input id="vehicleId" class="field-input" type="text" formControlName="vehicleId" placeholder="UUID" />
+      @if (snapshotForm.controls.vehicleId.touched && snapshotForm.controls.vehicleId.errors?.['pattern']) {
+        <p class="field-error" role="alert">Must be a valid UUID</p>
+      }
+
+      @if (errorType() === 'validation') {
+        <p class="field-error" role="alert">{{ errorMessage() || 'Enter a Party ID or Vehicle ID.' }}</p>
+      }
+
+      <div class="actions-row">
+        <button class="btn-primary" type="button" [disabled]="!canLoad()" (click)="loadSnapshot()">Load Snapshot</button>
+        <button class="btn-ghost" type="button" [disabled]="!canRefresh()" (click)="refresh()">Refresh</button>
+        <button class="btn-ghost" type="button" (click)="clear()">Clear</button>
+      </div>
+    </form>
+  </section>
+
+  @if (viewState() === 'loading') {
+    <div class="loading-state" aria-busy="true" role="status">Loading CRM snapshot...</div>
+  }
+
+  @if (viewState() === 'error') {
+    <section class="error-state" role="alert">
+      @if (errorType() === 'forbidden') {
+        <p>You do not have permission to view this CRM snapshot. (403)</p>
+      }
+      @if (errorType() === 'not-found') {
+        <p>No snapshot found for the provided identifier. (404)</p>
+      }
+      @if (errorType() === 'generic') {
+        <p>{{ errorMessage() || 'Unable to load snapshot.' }}</p>
+        @if (correlationId()) {
+          <p class="correlation">Correlation ID: {{ correlationId() }}</p>
+        }
+      }
+    </section>
+  }
+
+  @if (snapshot() && viewState() === 'ready') {
+    @if (snapshot()?.snapshotId || snapshot()?.timestamp) {
+      <section class="meta-strip snapshot-section">
+        @if (snapshot()?.snapshotId) {
+          <p><strong>Snapshot ID:</strong> {{ snapshot()?.snapshotId }}</p>
+        }
+        @if (snapshot()?.version) {
+          <p><strong>Version:</strong> {{ snapshot()?.version }}</p>
+        }
+        @if (snapshot()?.timestamp) {
+          <p><strong>Timestamp:</strong> {{ snapshot()?.timestamp }}</p>
+        }
+      </section>
+    }
+
+    @if (snapshot()?.account) {
+      <section class="snapshot-section">
+        <h2>Account</h2>
+        <div class="card-grid">
+          <p><strong>Legal Name:</strong> {{ snapshot()?.account?.legalName || '—' }}</p>
+          <p><strong>DBA:</strong> {{ snapshot()?.account?.dba || '—' }}</p>
+          <p><strong>Tax ID:</strong> {{ snapshot()?.account?.taxId || '—' }}</p>
+          <p><strong>Default Billing Terms:</strong> {{ snapshot()?.account?.defaultBillingTermsId || '—' }}</p>
+        </div>
+      </section>
+    }
+
+    <section class="snapshot-section">
+      <h2>Contacts</h2>
+      @if (snapshot()?.contacts?.length) {
+        <ul class="list-panel">
+          @for (contact of snapshot()!.contacts!; track contact.contactId) {
+            <li>
+              <strong>{{ contact.name }}</strong>
+              <span>{{ contact.email || 'No email' }}</span>
+              <span>{{ contact.phone || 'No phone' }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="empty-state">No contacts</p>
+      }
+    </section>
+
+    <section class="snapshot-section">
+      <h2>Vehicles</h2>
+      @if (snapshot()?.vehicles?.length) {
+        <ul class="list-panel">
+          @for (vehicle of snapshot()!.vehicles!; track vehicle.vehicleId) {
+            <li>
+              <strong>{{ vehicle.vin }}</strong>
+              <span>{{ vehicle.year || '—' }} {{ vehicle.make || '' }} {{ vehicle.model || '' }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="empty-state">No vehicles</p>
+      }
+    </section>
+
+    <section class="snapshot-section">
+      <h2>Preferences</h2>
+      @if (snapshot()?.preferences) {
+        <div class="card-grid">
+          <p><strong>Email Enabled:</strong> {{ snapshot()?.preferences?.emailEnabled ? 'Yes' : 'No' }}</p>
+          <p><strong>SMS Enabled:</strong> {{ snapshot()?.preferences?.smsEnabled ? 'Yes' : 'No' }}</p>
+          <p><strong>Preferred Channel:</strong> {{ snapshot()?.preferences?.preferredChannel || 'Not set' }}</p>
+        </div>
+      } @else {
+        <p class="empty-state">No preferences</p>
+      }
+    </section>
+  }
+</article>

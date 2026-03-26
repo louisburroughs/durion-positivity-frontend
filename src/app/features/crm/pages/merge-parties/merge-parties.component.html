@@ -1,0 +1,168 @@
+<article class="crm-page merge-parties" aria-label="Merge Duplicate Parties">
+  <button class="btn-ghost back-btn" type="button" (click)="back()">← Back to CRM</button>
+
+  <header class="page-head">
+    <h1>Merge Duplicate Parties</h1>
+    <p class="page-subtitle">Find two records and merge them into a single survivor party.</p>
+  </header>
+
+  @if (step() === 'search') {
+    <section class="step-panel" aria-labelledby="search-step-heading">
+      <h2 id="search-step-heading">Step 1: Search</h2>
+      <p>Select exactly two parties to merge.</p>
+
+      <form [formGroup]="searchForm" class="search-form" novalidate>
+        <label class="field-label" for="searchName">Name</label>
+        <input id="searchName" class="field-input" type="text" formControlName="name" />
+
+        <label class="field-label" for="searchEmail">Email</label>
+        <input id="searchEmail" class="field-input" type="email" formControlName="email" />
+
+        <label class="field-label" for="searchPhone">Phone</label>
+        <input id="searchPhone" class="field-input" type="text" formControlName="phone" />
+
+        @if (searchError()) {
+          <p class="field-error" role="alert">{{ searchError() }}</p>
+        }
+
+        <div class="actions-row">
+          <button type="button" class="btn-primary" (click)="search()">Search</button>
+          <button type="button" class="btn-ghost" (click)="startNewMerge()">Clear</button>
+        </div>
+      </form>
+
+      @if (searchState() === 'loading') {
+        <div class="loading-state" role="status" aria-label="Searching for parties" aria-busy="true">Searching parties...</div>
+      }
+
+      @if (searchState() === 'empty') {
+        <div class="empty-state">No results found. Try different search criteria.</div>
+      }
+
+      @if (searchState() === 'error') {
+        <div class="error-state" role="alert">Search failed. Please try again.</div>
+      }
+
+      @if (searchState() === 'access-denied') {
+        <div class="error-state" role="alert">You don't have permission to search parties.</div>
+      }
+
+      @if (searchState() === 'ready' && searchResults().length > 0) {
+        <div class="table-wrap">
+          <table class="data-blueprint-table" aria-label="Merge search results">
+            <thead>
+              <tr>
+                <th scope="col">Select</th>
+                <th scope="col">Display Name</th>
+                <th scope="col">Party ID</th>
+                <th scope="col">Party Type</th>
+                <th scope="col">Email</th>
+                <th scope="col">Phone</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (party of searchResults(); track party.partyId) {
+                <tr>
+                  <td>
+                    <label class="sr-only" [for]="'select-' + party.partyId">Select {{ party.legalName }}</label>
+                    <input
+                      [id]="'select-' + party.partyId"
+                      type="checkbox"
+                      (change)="toggleSelect(party)"
+                      [checked]="isSelected(party.partyId)"
+                      [disabled]="!!party.mergedIntoPartyId"
+                    />
+                  </td>
+                  <td>
+                    {{ party.legalName }}
+                    @if (party.mergedIntoPartyId) {
+                      <span class="badge-muted">Merged</span>
+                    }
+                  </td>
+                  <td>{{ party.partyId }}</td>
+                  <td>{{ party.taxId ? 'COMMERCIAL' : 'INDIVIDUAL' }}</td>
+                  <td>{{ party.contacts?.[0]?.email || '—' }}</td>
+                  <td>{{ party.contacts?.[0]?.phone || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      @if (selectedParties().length > 0) {
+        <footer class="selection-bar" aria-live="polite">
+          <span>{{ selectedParties().length }} of 2 selected</span>
+          <button type="button" class="btn-primary" [disabled]="!canContinue()" (click)="continueToConfirm()">
+            Continue to Merge
+          </button>
+        </footer>
+      }
+    </section>
+  }
+
+  @if (step() === 'confirm') {
+    <section class="step-panel" aria-labelledby="confirm-step-heading">
+      <h2 id="confirm-step-heading">Confirm Merge</h2>
+
+      <div class="party-cards" role="radiogroup" aria-label="Choose survivor party">
+        @for (party of selectedParties(); track party.partyId) {
+          <article class="party-card">
+            <h3>{{ party.legalName }}</h3>
+            <p><strong>Party ID:</strong> {{ party.partyId }}</p>
+            <p><strong>Type:</strong> {{ party.taxId ? 'COMMERCIAL' : 'INDIVIDUAL' }}</p>
+            <p><strong>Email:</strong> {{ party.contacts?.[0]?.email || '—' }}</p>
+            <p><strong>Phone:</strong> {{ party.contacts?.[0]?.phone || '—' }}</p>
+            <label class="survivor-choice">
+              <input
+                type="radio"
+                name="survivor"
+                [checked]="survivorPartyId() === party.partyId"
+                (change)="setSurvivor(party.partyId)"
+              />
+              <span>Keep as survivor</span>
+            </label>
+          </article>
+        }
+      </div>
+
+      <form [formGroup]="confirmForm" class="confirm-form" novalidate>
+        <label class="field-label" for="justification">Reason for merge *</label>
+        <textarea id="justification" class="field-input" formControlName="justification" rows="4"></textarea>
+
+        <label class="ack-row" for="acknowledged">
+          <input id="acknowledged" type="checkbox" formControlName="acknowledged" />
+          <span>I understand this merge is irreversible.</span>
+        </label>
+      </form>
+
+      @if (confirmError()) {
+        <div class="error-state" role="alert">{{ confirmError() }}</div>
+      }
+
+      <div class="actions-row">
+        <button type="button" class="btn-ghost" (click)="backToSearch()">Back</button>
+        <button
+          type="button"
+          class="btn-primary"
+          [disabled]="!canMerge() || confirmPending()"
+          (click)="submitMerge()"
+        >
+          Merge Parties
+        </button>
+      </div>
+    </section>
+  }
+
+  @if (step() === 'success') {
+    <section class="step-panel success-panel" aria-live="polite">
+      <h2>Parties merged successfully.</h2>
+      <p><strong>Survivor Party ID:</strong> {{ mergeResult()?.survivorPartyId }}</p>
+      <p><strong>Source Party ID:</strong> {{ mergeResult()?.losingPartyId }}</p>
+      <div class="actions-row">
+        <button type="button" class="btn-primary" (click)="viewSurvivor()">View Survivor Party</button>
+        <button type="button" class="btn-ghost" (click)="startNewMerge()">Start New Merge</button>
+      </div>
+    </section>
+  }
+</article>
