@@ -41,6 +41,21 @@ export interface CreateCommercialAccountResponse {
   createdBy?: string;
 }
 
+export interface MergePartiesRequest {
+  survivorPartyId: string;
+  losingPartyId: string;
+  justification?: string;
+}
+
+export interface MergePartiesResponse {
+  mergeAuditId?: string;
+  survivorPartyId: string;
+  losingPartyId: string;
+  mergedPartyAlias?: string;
+  status?: string;
+  completedAt?: string;
+}
+
 export interface DuplicateCandidate {
   partyId: string;
   legalName: string;
@@ -69,6 +84,33 @@ export interface CreatePersonResponse {
   lastName: string;
   createdAt?: string;
   createdBy?: string;
+}
+
+export type RelationshipRole =
+  | 'APPROVER'
+  | 'BILLING'
+  | 'PRIMARY_CONTACT'
+  | 'DRIVER'
+  | 'TECHNICAL'
+  | string;
+
+export interface CreatePartyRelationshipRequest {
+  personId: string;
+  roles: RelationshipRole[];
+  effectiveStartDate: string;
+  effectiveEndDate?: string;
+  primaryBillingContact?: boolean;
+}
+
+export interface CreatePartyRelationshipResponse {
+  relationshipId?: string;
+  partyId?: string;
+  personId?: string;
+  roles?: RelationshipRole[];
+  effectiveStartDate?: string;
+  effectiveEndDate?: string;
+  createdAt?: string;
+  previousPrimaryDemoted?: boolean;
 }
 
 // ── Contacts ─────────────────────────────────────────────────────────────────

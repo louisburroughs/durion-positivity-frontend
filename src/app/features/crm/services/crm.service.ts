@@ -6,12 +6,16 @@ import {
   BillingTermsRef,
   CreateCommercialAccountRequest,
   CreateCommercialAccountResponse,
+  CreatePartyRelationshipRequest,
+  CreatePartyRelationshipResponse,
   CreatePersonRequest,
   CreatePersonResponse,
   CreateVehicleRequest,
   CommunicationPreferences,
   Contact,
   DuplicateCheckResponse,
+  MergePartiesRequest,
+  MergePartiesResponse,
   PartyDetail,
   UpdateContactRolesRequest,
   VehicleRef,
@@ -22,11 +26,13 @@ import {
  *
  * operationId mapping:
  *   createCommercialAccount  → POST /v1/crm/accounts/parties
+ *   mergeParties             → POST /v1/crm/accounts/parties/{partyId}/merge
  *   getParty                 → GET  /v1/crm/accounts/parties/{partyId}
  *   searchParties            → GET  /v1/crm/accounts/parties/search
  *   createPerson             → POST /v1/crm/persons
  *   getPerson                → GET  /v1/crm/persons/{personId}
  *   searchPersons            → GET  /v1/crm/persons
+ *   createRelationship       → POST /v1/crm/commercial-accounts/{partyId}/relationships
  *   getContactsWithRoles_1   → GET  /v1/crm/accounts/parties/{partyId}/contacts
  *   updateContactRoles_1     → PUT  /v1/crm/accounts/parties/{partyId}/contacts/{contactId}/roles
  *   getCommunicationPreferences_1  → GET  /v1/crm/accounts/parties/{partyId}/communicationPreferences
@@ -54,6 +60,11 @@ export class CrmService {
       '/v1/crm/accounts/parties',
       request,
     );
+  }
+
+  /** operationId: mergeParties */
+  mergeParties(partyId: string, request: MergePartiesRequest): Observable<MergePartiesResponse> {
+    return this.api.post<MergePartiesResponse>(`/v1/crm/accounts/parties/${partyId}/merge`, request);
   }
 
   /** Duplicate check before create — uses searchParties with legalName. */
@@ -89,6 +100,19 @@ export class CrmService {
   searchPersons(query: string): Observable<{ persons: CreatePersonResponse[] }> {
     const params = new HttpParams().set('q', query);
     return this.api.get<{ persons: CreatePersonResponse[] }>('/v1/crm/persons', params);
+  }
+
+  // ── Party relationships ──────────────────────────────────────────────────────
+
+  /** operationId: createRelationship */
+  createRelationship(
+    partyId: string,
+    request: CreatePartyRelationshipRequest,
+  ): Observable<CreatePartyRelationshipResponse> {
+    return this.api.post<CreatePartyRelationshipResponse>(
+      `/v1/crm/commercial-accounts/${partyId}/relationships`,
+      request,
+    );
   }
 
   // ── Contacts ─────────────────────────────────────────────────────────────────
