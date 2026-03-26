@@ -1,0 +1,56 @@
+<section class="workexec-page approval-in-person" aria-labelledby="approval-inperson-heading">
+  <header class="page-header">
+    <p class="page-overline">Approval / In-Person</p>
+    <h1 id="approval-inperson-heading">Capture In-Person Approval</h1>
+    @if (estimate()) { <p class="page-meta">{{ estimate()!.estimateNumber ?? estimateId }} · Total: {{ estimate()!.total | currency }}</p> }
+  </header>
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading…</p> }
+  @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+  @if (pageState() === 'access-denied') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+  @if (pageState() === 'expired') {
+    <div class="alert alert--error" role="alert">
+      <strong>Approval Expired</strong><br>{{ errorMessage() }}
+      <div style="margin-top: 0.75rem;"><a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'revise']">Create Revision</a></div>
+    </div>
+  }
+  @if (pageState() === 'ready' && estimate()) {
+    <div class="approval-card">
+      <p class="approval-description">Customer is present in-person. Confirm their approval below.</p>
+      <form [formGroup]="approvalForm" novalidate aria-label="In-person approval" class="approval-form">
+        <div class="field-group">
+          <label for="inPersonCustomerId" class="field-label">Customer ID <span class="required" aria-hidden="true">*</span></label>
+          <input id="inPersonCustomerId" type="text" formControlName="customerId" class="field-input"
+            [class.field-input--error]="approvalForm.controls.customerId.invalid && approvalForm.controls.customerId.touched"
+            placeholder="Customer identifier" aria-required="true" />
+          @if (approvalForm.controls.customerId.invalid && approvalForm.controls.customerId.touched) {
+            <p class="field-error" role="alert">Customer ID is required.</p>
+          }
+        </div>
+        <div class="field-group">
+          <label for="inPersonNotes" class="field-label">Approval Notes <span class="field-optional">(optional)</span></label>
+          <input id="inPersonNotes" type="text" formControlName="notes" class="field-input" placeholder="e.g. Customer confirmed in person" />
+        </div>
+        <div class="field-group">
+          <label for="inPersonPO" class="field-label">Purchase Order Number <span class="field-optional">(if required)</span></label>
+          <input id="inPersonPO" type="text" formControlName="purchaseOrderNumber" class="field-input" />
+        </div>
+        @if (submitState() === 'error' && errorMessage()) { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+        @if (submitState() !== 'success') {
+          <div class="form-actions">
+            <button type="button" class="btn btn--accent" (click)="submitApproval()" [disabled]="submitState() === 'saving'" [attr.aria-busy]="submitState() === 'saving'">
+              @if (submitState() === 'saving') { Recording… } @else { Confirm In-Person Approval }
+            </button>
+            <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'submit']">Back</a>
+          </div>
+        }
+      </form>
+      @if (submitState() === 'success') {
+        <div class="success-panel" role="status">
+          <p class="success-heading">Approval Recorded</p>
+          <p class="estimate-meta">Status: <span class="status-chip">{{ estimate()!.status }}</span></p>
+          @if (estimate()!.approvedAt) { <p class="audit-meta">Approved at {{ estimate()!.approvedAt | date:'medium' }}</p> }
+        </div>
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,107 @@
+<section class="workexec-page estimate-create" aria-labelledby="estimate-create-heading">
+
+  <header class="page-header">
+    <p class="page-overline">Work Execution / Estimates</p>
+    <h1 id="estimate-create-heading">New Estimate</h1>
+    <p class="page-subtitle">Select a customer and vehicle to create a Draft estimate.</p>
+  </header>
+
+  @if (state() === 'access-denied') {
+    <div class="alert alert--error" role="alert">
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate aria-label="Create estimate form" class="estimate-form">
+
+    <!-- Customer ID -->
+    <div class="field-group">
+      <label for="customerId" class="field-label">Customer ID <span class="required" aria-hidden="true">*</span></label>
+      <input
+        id="customerId"
+        type="text"
+        formControlName="customerId"
+        class="field-input"
+        [class.field-input--error]="form.controls.customerId.invalid && form.controls.customerId.touched"
+        placeholder="e.g. 550e8400-e29b-41d4-a716-…"
+        aria-required="true"
+        [attr.aria-describedby]="form.controls.customerId.invalid && form.controls.customerId.touched ? 'customerId-err' : null"
+      />
+      @if (form.controls.customerId.invalid && form.controls.customerId.touched) {
+        <p id="customerId-err" class="field-error" role="alert">Customer ID is required.</p>
+      }
+      @if (fieldError('customerId')) {
+        <p class="field-error" role="alert">{{ fieldError('customerId') }}</p>
+      }
+    </div>
+
+    <!-- Vehicle ID -->
+    <div class="field-group">
+      <label for="vehicleId" class="field-label">Vehicle ID <span class="required" aria-hidden="true">*</span></label>
+      <input
+        id="vehicleId"
+        type="text"
+        formControlName="vehicleId"
+        class="field-input"
+        [class.field-input--error]="form.controls.vehicleId.invalid && form.controls.vehicleId.touched"
+        placeholder="e.g. 550e8400-e29b-41d4-a716-…"
+        aria-required="true"
+        [attr.aria-describedby]="form.controls.vehicleId.invalid && form.controls.vehicleId.touched ? 'vehicleId-err' : null"
+      />
+      @if (form.controls.vehicleId.invalid && form.controls.vehicleId.touched) {
+        <p id="vehicleId-err" class="field-error" role="alert">Vehicle ID is required.</p>
+      }
+      @if (fieldError('vehicleId')) {
+        <p class="field-error" role="alert">{{ fieldError('vehicleId') }}</p>
+      }
+    </div>
+
+    <!-- CRM Party ID (optional context) -->
+    <div class="field-group">
+      <label for="crmPartyId" class="field-label">CRM Party ID <span class="field-optional">(optional)</span></label>
+      <input
+        id="crmPartyId"
+        type="text"
+        formControlName="crmPartyId"
+        class="field-input"
+        placeholder="CRM party reference"
+      />
+    </div>
+
+    <!-- CRM Vehicle ID (optional context) -->
+    <div class="field-group">
+      <label for="crmVehicleId" class="field-label">CRM Vehicle ID <span class="field-optional">(optional)</span></label>
+      <input
+        id="crmVehicleId"
+        type="text"
+        formControlName="crmVehicleId"
+        class="field-input"
+        placeholder="CRM vehicle reference"
+      />
+    </div>
+
+    <!-- Global error -->
+    @if (state() === 'error' && errorMessage()) {
+      <div class="alert alert--error" role="alert">
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button
+        type="submit"
+        class="btn btn--primary"
+        [disabled]="state() === 'saving'"
+        [attr.aria-busy]="state() === 'saving'"
+      >
+        @if (state() === 'saving') { Creating… } @else { Create Estimate }
+      </button>
+      <button type="button" class="btn btn--ghost" (click)="cancel()" [disabled]="state() === 'saving'">
+        Cancel
+      </button>
+    </div>
+
+  </form>
+
+</section>

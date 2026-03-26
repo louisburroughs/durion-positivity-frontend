@@ -1,0 +1,111 @@
+<section class="workexec-page approval-digital" aria-labelledby="approval-digital-heading">
+
+  <header class="page-header">
+    <p class="page-overline">Approval / Digital Signature</p>
+    <h1 id="approval-digital-heading">Capture Digital Approval</h1>
+    @if (estimate()) {
+      <p class="page-meta">{{ estimate()!.estimateNumber ?? estimateId }} · Total: {{ estimate()!.total | currency }}</p>
+    }
+  </header>
+
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading…</p> }
+  @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+  @if (pageState() === 'expired') {
+    <div class="alert alert--error" role="alert">
+      <strong>Approval Expired</strong><br>{{ errorMessage() }}
+      <div style="margin-top: 0.75rem;">
+        <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'revise']">Create Revision</a>
+      </div>
+    </div>
+  }
+
+  @if ((pageState() === 'ready' || pageState() === 'loading') && estimate() && pageState() !== 'expired') {
+
+    <div class="approval-card">
+
+      <!-- Signer info form -->
+      <form [formGroup]="signerForm" novalidate aria-label="Signer information" class="signer-form">
+        <div class="field-row">
+          <div class="field-group field-group--grow">
+            <label for="customerId" class="field-label">Customer ID <span class="required" aria-hidden="true">*</span></label>
+            <input id="customerId" type="text" formControlName="customerId" class="field-input"
+              [class.field-input--error]="signerForm.controls.customerId.invalid && signerForm.controls.customerId.touched"
+              placeholder="Customer identifier" aria-required="true" />
+            @if (signerForm.controls.customerId.invalid && signerForm.controls.customerId.touched) {
+              <p class="field-error" role="alert">Customer ID is required.</p>
+            }
+          </div>
+          <div class="field-group field-group--grow">
+            <label for="signerName" class="field-label">Signer Name <span class="required" aria-hidden="true">*</span></label>
+            <input id="signerName" type="text" formControlName="signerName" class="field-input"
+              [class.field-input--error]="signerForm.controls.signerName.invalid && signerForm.controls.signerName.touched"
+              placeholder="Customer's full name" aria-required="true" />
+            @if (signerForm.controls.signerName.invalid && signerForm.controls.signerName.touched) {
+              <p class="field-error" role="alert">Signer name is required.</p>
+            }
+          </div>
+        </div>
+        <div class="field-group">
+          <label for="approvalNotes" class="field-label">Notes <span class="field-optional">(optional)</span></label>
+          <input id="approvalNotes" type="text" formControlName="notes" class="field-input" placeholder="Approval notes" />
+        </div>
+        <div class="field-group">
+          <label for="poNumber" class="field-label">Purchase Order Number <span class="field-optional">(commercial accounts)</span></label>
+          <input id="poNumber" type="text" formControlName="purchaseOrderNumber" class="field-input" placeholder="PO number if required" />
+        </div>
+      </form>
+
+      <!-- Signature canvas -->
+      <div class="signature-section" aria-label="Signature capture area">
+        <p class="section-overline">Customer Signature</p>
+        <p class="hint-text">Customer signs below using a finger or stylus.</p>
+
+        <div class="canvas-wrapper" role="img" aria-label="Signature drawing area">
+          <canvas
+            #signatureCanvas
+            width="560"
+            height="200"
+            class="signature-canvas"
+            aria-label="Signature capture canvas"
+            (pointerdown)="onPointerDown($event)"
+            (pointermove)="onPointerMove($event)"
+            (pointerup)="onPointerUp()"
+            (pointerleave)="onPointerUp()"
+          ></canvas>
+        </div>
+
+        <button type="button" class="btn-link" (click)="clearSignature()" [disabled]="signatureEmpty()">
+          Clear Signature
+        </button>
+      </div>
+
+      @if (submitState() === 'error' && errorMessage()) {
+        <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
+      }
+
+      @if (submitState() !== 'success') {
+        <div class="form-actions">
+          <button class="btn btn--accent" (click)="submitApproval()"
+            [disabled]="submitState() === 'saving' || signatureEmpty()"
+            [attr.aria-busy]="submitState() === 'saving'">
+            @if (submitState() === 'saving') { Submitting… } @else { Confirm Digital Approval }
+          </button>
+          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'submit']">Back</a>
+        </div>
+      }
+
+      @if (submitState() === 'success') {
+        <div class="success-panel" role="status">
+          <p class="success-heading">Approval Captured</p>
+          <p class="estimate-meta">Status: <span class="status-chip">{{ estimate()!.status }}</span></p>
+          @if (estimate()!.approvedAt) {
+            <p class="audit-meta">Approved by {{ estimate()!.signerName }} at {{ estimate()!.approvedAt | date:'medium' }}</p>
+          }
+        </div>
+      }
+
+    </div>
+
+  }
+
+</section>

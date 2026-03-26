@@ -1,0 +1,92 @@
+<section class="workexec-page approval-submit" aria-labelledby="approval-submit-heading">
+
+  <header class="page-header">
+    <p class="page-overline">Approval</p>
+    <h1 id="approval-submit-heading">Submit for Customer Approval</h1>
+  </header>
+
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading estimate…</p> }
+  @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+  @if (pageState() === 'access-denied') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
+
+  @if (pageState() === 'ready' && estimate()) {
+
+    <div class="approval-card">
+
+      <div class="estimate-context">
+        <p class="label-sm">Estimate</p>
+        <p class="estimate-ref">{{ estimate()!.estimateNumber ?? estimateId }}</p>
+        <p class="estimate-meta">
+          Status: <span class="status-chip">{{ estimate()!.status }}</span>
+          <span class="audit-meta">Created by {{ estimate()!.createdByUserId }}</span>
+        </p>
+        @if (estimate()!.total != null) {
+          <p class="estimate-total">Total: <strong>{{ estimate()!.total | currency }}</strong></p>
+        }
+      </div>
+
+      <div class="submit-description">
+        <p>Submitting this estimate will:</p>
+        <ul class="submit-checklist">
+          <li>Validate estimate completeness (customer, vehicle, line items, calculated totals)</li>
+          <li>Create an immutable snapshot</li>
+          <li>Transition the estimate to <strong>Pending Approval</strong> status</li>
+        </ul>
+        <p class="hint-text">This action cannot be undone without creating a new revision.</p>
+      </div>
+
+      <!-- Field-level errors from backend -->
+      @if (fieldErrors().length > 0) {
+        <div class="field-errors-list" role="alert" aria-label="Validation errors">
+          <p class="label-sm">Please resolve the following before submitting:</p>
+          @for (fe of fieldErrors(); track fe.field) {
+            <p class="field-error">{{ fe.field }}: {{ fe.message }}</p>
+          }
+        </div>
+      }
+
+      @if (submitState() === 'idle') {
+        <div class="form-actions">
+          <button class="btn btn--accent" (click)="confirmSubmit()">Submit for Approval</button>
+          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId]">Back to Estimate</a>
+        </div>
+      }
+
+      @if (submitState() === 'confirming') {
+        <div class="confirm-panel" role="dialog" aria-labelledby="confirm-submit-heading" aria-modal="true">
+          <p id="confirm-submit-heading" class="confirm-heading">Confirm Submission</p>
+          <p>This will move the estimate to Pending Approval and lock the current version. Are you sure?</p>
+          <div class="form-actions">
+            <button class="btn btn--accent" (click)="executeSubmit()">Yes, Submit</button>
+            <button class="btn btn--ghost" (click)="cancelSubmit()">Cancel</button>
+          </div>
+        </div>
+      }
+
+      @if (submitState() === 'saving') {
+        <p class="hint-text" aria-busy="true">Submitting…</p>
+      }
+
+      @if (submitState() === 'error' && errorMessage()) {
+        <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
+      }
+
+      @if (submitState() === 'success') {
+        <div class="success-panel" role="status">
+          <p class="success-heading">Submitted Successfully</p>
+          <p class="estimate-meta">Status: <span class="status-chip status-chip--pending">{{ estimate()!.status }}</span></p>
+          @if (estimate()!.submittedAt) {
+            <p class="audit-meta">Submitted by {{ estimate()!.submittedBy }} at {{ estimate()!.submittedAt | date:'medium' }}</p>
+          }
+          <div class="form-actions">
+            <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'digital']">Capture Digital Approval</a>
+            <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'in-person']">In-Person Approval</a>
+          </div>
+        </div>
+      }
+
+    </div>
+
+  }
+
+</section>
