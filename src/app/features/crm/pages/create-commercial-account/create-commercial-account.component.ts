@@ -123,9 +123,21 @@ export class CreateCommercialAccountComponent implements OnInit {
   copyPartyId(): void {
     const id = this.createdPartyId();
     if (!id) return;
+
+    // Guard for environments/browsers without clipboard support
+    if (typeof navigator === 'undefined' || !navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+      this.serverError.set('Copying to clipboard is not supported in this environment. Please copy the ID manually.');
+      return;
+    }
+
     navigator.clipboard.writeText(id).then(() => {
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 2000);
+    }).catch(err => {
+      // Handle clipboard failures (permissions, insecure context, etc.)
+      this.serverError.set('Unable to copy the party ID to the clipboard. Please copy it manually.');
+      // Optional: log for debugging without affecting UI flow
+      console.error('Failed to write party ID to clipboard:', err);
     });
   }
 
