@@ -1,0 +1,73 @@
+.accounting-page {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+.page-header h1 {
+  color: var(--brand-primary);
+  margin: 0;
+}
+
+.section-overline {
+  color: var(--brand-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 var(--space-2);
+}
+
+.state-panel {
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
+}
+
+.state-panel--error {
+  background: color-mix(in srgb, var(--functional-error-red) 8%, transparent);
+}
+
+.state-panel--forbidden {
+  background: color-mix(in srgb, var(--functional-warning) 10%, transparent);
+}
+
+.state-panel--empty {
+  background: color-mix(in srgb, var(--brand-primary) 3%, transparent);
+}
+
+.detail-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.detail-list {
+  display: grid;
+  grid-template-columns: 14rem 1fr;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+}
+
+.detail-list dt {
+  color: var(--brand-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  align-self: center;
+}
+
+.detail-list dd {
+  margin: 0;
+  align-self: center;
+}
+
+.amount-field {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  background: color-mix(in srgb, var(--functional-info-blue) 12%, transparent);
+  color: var(--functional-info-blue);
+  font-size: 0.75rem;
+}

@@ -1,0 +1,106 @@
+.accounting-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+.page-header h1 {
+  color: var(--brand-primary);
+  margin: 0;
+}
+
+.section-overline {
+  color: var(--brand-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 var(--space-2);
+}
+
+.page-subtitle {
+  color: var(--handleColor);
+  margin: var(--space-2) 0 0;
+}
+
+.filter-panel {
+  display: grid;
+  gap: var(--space-2);
+  background: color-mix(in srgb, var(--brand-primary) 4%, transparent);
+  padding: var(--space-4);
+}
+
+.filter-panel input {
+  border: none;
+  border-bottom: 2px solid var(--durion-graphite-200);
+  border-radius: 0;
+  background: transparent;
+  padding-left: 0;
+}
+
+.filter-panel input:focus {
+  border-bottom-color: var(--brand-accent);
+  box-shadow: none;
+}
+
+.table-scroll-container {
+  overflow-x: auto;
+}
+
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 44rem;
+}
+
+.ledger-table th,
+.ledger-table td {
+  padding: var(--space-3) var(--space-2);
+  text-align: left;
+}
+
+.ledger-table th {
+  border-bottom: 2px solid var(--surface-variant, var(--durion-graphite-200));
+}
+
+.ledger-table td {
+  border-bottom: 1px solid var(--surface-variant, var(--durion-graphite-200));
+}
+
+.ledger-table tbody tr {
+  cursor: pointer;
+}
+
+.ledger-table tbody tr:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: -2px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  background: color-mix(in srgb, var(--functional-info-blue) 12%, transparent);
+  color: var(--functional-info-blue);
+  font-size: 0.75rem;
+}
+
+.state-panel {
+  padding: var(--space-6);
+  background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
+}
+
+.state-panel--error {
+  background: color-mix(in srgb, var(--functional-error-red) 8%, transparent);
+}
+
+.state-panel--forbidden {
+  background: color-mix(in srgb, var(--functional-warning) 10%, transparent);
+}
+
+.link-button {
+  border: none;
+  background: transparent;
+  color: var(--brand-accent);
+  padding: 0;
+  text-decoration: underline;
+}

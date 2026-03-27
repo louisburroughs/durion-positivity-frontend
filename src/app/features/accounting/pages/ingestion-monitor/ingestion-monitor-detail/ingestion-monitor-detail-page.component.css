@@ -1,0 +1,117 @@
+.accounting-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+.section-overline {
+  color: var(--brand-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 var(--space-2);
+}
+
+.page-header h1 {
+  margin: 0;
+  color: var(--brand-primary);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-4);
+  background: color-mix(in srgb, var(--brand-primary) 4%, transparent);
+  padding: var(--space-4);
+}
+
+.detail-grid label {
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
+.detail-grid input {
+  border: none;
+  border-bottom: 2px solid var(--durion-graphite-200);
+  border-radius: 0;
+  background: transparent;
+  padding-left: 0;
+}
+
+.detail-grid input:focus,
+textarea:focus {
+  box-shadow: none;
+  border-bottom-color: var(--brand-accent);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  background: color-mix(in srgb, var(--functional-info-blue) 12%, transparent);
+  color: var(--functional-info-blue);
+}
+
+.detail-section {
+  display: grid;
+  gap: var(--space-2);
+  background: color-mix(in srgb, var(--brand-primary) 3%, transparent);
+  padding: var(--space-4);
+}
+
+textarea {
+  border: none;
+  border-bottom: 2px solid var(--durion-graphite-200);
+  border-radius: 0;
+  background: transparent;
+  min-height: 6rem;
+}
+
+.field-error {
+  border-bottom-color: var(--functional-error-red);
+}
+
+button {
+  width: fit-content;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: var(--brand-accent);
+  color: #fff;
+}
+
+.table-scroll-container {
+  overflow-x: auto;
+}
+
+.ledger-table {
+  width: 100%;
+  min-width: 40rem;
+  border-collapse: collapse;
+}
+
+.ledger-table th,
+.ledger-table td {
+  text-align: left;
+  padding: var(--space-2);
+}
+
+.ledger-table th {
+  border-bottom: 2px solid var(--surface-variant, var(--durion-graphite-200));
+}
+
+.ledger-table td {
+  border-bottom: 1px solid var(--surface-variant, var(--durion-graphite-200));
+}
+
+.state-panel {
+  padding: var(--space-6);
+  background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
+}
+
+.state-panel--error {
+  background: color-mix(in srgb, var(--functional-error-red) 8%, transparent);
+}
+
+.state-panel--forbidden {
+  background: color-mix(in srgb, var(--functional-warning) 10%, transparent);
+}

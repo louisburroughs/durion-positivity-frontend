@@ -1,0 +1,43 @@
+<main class="accounting-page" aria-labelledby="credit-memo-detail-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.OVERLINE' | translate }}</p>
+    <h1 id="credit-memo-detail-heading">{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.TITLE' | translate }}</h1>
+  </header>
+
+  @if (pageState() === 'loading') {
+    <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-state">{{ 'ACCOUNTING.COMMON.LOADING' | translate }}</section>
+  }
+  @if (pageState() === 'error') {
+    <section class="state-panel state-panel--error" role="alert" data-testid="error-state">{{ 'ACCOUNTING.COMMON.ERROR_LOADING' | translate }}</section>
+  }
+  @if (pageState() === 'forbidden') {
+    <section class="state-panel state-panel--forbidden" role="alert" data-testid="forbidden-state">{{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</section>
+  }
+  @if (pageState() === 'not-found') {
+    <section class="state-panel state-panel--empty" data-testid="empty-state">{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.EMPTY' | translate }}</section>
+  }
+  @if (pageState() === 'ready' && memo(); as value) {
+    <section class="detail-grid" aria-live="polite" data-testid="memo-detail">
+      <dl class="detail-list">
+        <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_ID' | translate }}</dt>
+        <dd>{{ value.creditMemoId }}</dd>
+        <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_INVOICE' | translate }}</dt>
+        <dd>{{ value.originalInvoiceId }}</dd>
+        <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_CUSTOMER' | translate }}</dt>
+        <dd>{{ value.customerId }}</dd>
+        <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_CREDIT_AMOUNT' | translate }}</dt>
+        <dd class="amount-field">{{ value.creditAmount }}</dd>
+        <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_TOTAL_AMOUNT' | translate }}</dt>
+        <dd class="amount-field">{{ value.totalAmount }}</dd>
+        <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_STATUS' | translate }}</dt>
+        <dd><span class="status-badge">{{ value.status }}</span></dd>
+        <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_REASON' | translate }}</dt>
+        <dd>{{ value.reasonCode }}</dd>
+        <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_NOTE' | translate }}</dt>
+        <dd>{{ value.justificationNote }}</dd>
+        <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_CREATED' | translate }}</dt>
+        <dd>{{ value.creationTimestamp }}</dd>
+      </dl>
+    </section>
+  }
+</main>

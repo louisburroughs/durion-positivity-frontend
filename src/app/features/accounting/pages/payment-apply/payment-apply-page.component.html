@@ -1,0 +1,39 @@
+<main class="accounting-page" aria-labelledby="payment-apply-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.PAYMENT_APPLY.OVERLINE' | translate }}</p>
+    <h1 id="payment-apply-heading">{{ 'ACCOUNTING.PAYMENT_APPLY.TITLE' | translate }}</h1>
+  </header>
+
+  @if (state() === 'forbidden') {
+    <section class="state-panel state-panel--forbidden" role="alert">{{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</section>
+  }
+
+  @if (state() !== 'forbidden') {
+    <form class="apply-form" [formGroup]="form" (ngSubmit)="submit()">
+      <label for="payment-id">{{ 'ACCOUNTING.PAYMENT_APPLY.FIELD_PAYMENT_ID' | translate }}</label>
+      <input id="payment-id" formControlName="paymentId" />
+
+      <label for="applications-json">{{ 'ACCOUNTING.PAYMENT_APPLY.FIELD_APPLICATIONS' | translate }}</label>
+      <textarea id="applications-json" formControlName="applicationsJson"></textarea>
+
+      @if (state() === 'error') {
+        <p class="error-text" role="alert">{{ 'ACCOUNTING.PAYMENT_APPLY.ERROR' | translate }}</p>
+      }
+
+      <button type="submit" [disabled]="form.invalid || state() === 'submitting'">{{ 'ACCOUNTING.PAYMENT_APPLY.SUBMIT' | translate }}</button>
+    </form>
+
+    @if (result()) {
+      <section class="state-panel state-panel--success" data-testid="apply-result" [attr.aria-label]="'ACCOUNTING.PAYMENT_APPLY.RESULT_TITLE' | translate">
+        <h2>{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_TITLE' | translate }}</h2>
+        <p>{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_PAYMENT_ID' | translate }}: {{ result()?.paymentId }}</p>
+        <p class="amount-field">{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_TOTAL' | translate }}: {{ result()?.totalAmount | currency:'USD' }}</p>
+        <p class="amount-field">{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_APPLIED' | translate }}: {{ result()?.appliedAmount | currency:'USD' }}</p>
+      </section>
+    }
+
+    @if (state() === 'idle' && !result()) {
+      <section class="state-panel state-panel--empty">{{ 'ACCOUNTING.PAYMENT_APPLY.EMPTY' | translate }}</section>
+    }
+  }
+</main>

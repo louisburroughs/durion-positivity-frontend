@@ -13,5 +13,202 @@
       "BACK": "Go back",
       "HOME": "Go to app home"
     }
+  },
+  "ACCOUNTING": {
+    "COMMON": {
+      "ACCESS_DENIED": "Access denied",
+      "LOADING": "Loading...",
+      "ERROR_LOADING": "Unable to load data.",
+      "EMPTY": "No data available.",
+      "RETRY": "Retry",
+      "YES": "Yes",
+      "NO": "No"
+    },
+    "INGESTION_MONITOR_LIST": {
+      "OVERLINE": "Ingestion Monitor",
+      "TITLE": "Ingestion Events",
+      "SUBTITLE": "Monitor ingestion envelope processing status",
+      "FILTERS_LABEL": "Ingestion filters",
+      "FILTER_EVENT_TYPE": "Event type",
+      "ERROR": "Failed to load ingestion events.",
+      "EMPTY": "No ingestion events match the selected filters.",
+      "TABLE_ARIA": "Ingestion events table",
+      "TABLE_CAPTION": "Ingestion events",
+      "STATUS_ARIA": "Ingestion status",
+      "COL_EVENT_ID": "Event ID",
+      "COL_EVENT_TYPE": "Event type",
+      "COL_STATUS": "Status",
+      "COL_RECEIVED_AT": "Received at",
+      "STATUS": {
+        "RECEIVED": "Received",
+        "PROCESSING": "Processing",
+        "PROCESSED": "Processed",
+        "FAILED": "Failed",
+        "SUSPENDED": "Suspended",
+        "REJECTED": "Rejected",
+        "QUARANTINED": "Quarantined"
+      }
+    },
+    "INGESTION_MONITOR_DETAIL": {
+      "OVERLINE": "Ingestion Monitor",
+      "TITLE": "Ingestion Event Detail",
+      "ERROR": "Failed to load event detail.",
+      "FIELD_EVENT_ID": "Event ID",
+      "FIELD_EVENT_TYPE": "Event type",
+      "FIELD_STATUS": "Status",
+      "FIELD_RECEIVED_AT": "Received at",
+      "PAYLOAD": "Payload",
+      "PAYLOAD_RESTRICTED": "Payload is restricted for your permissions.",
+      "RETRY_TITLE": "Retry Processing",
+      "RETRY_JUSTIFICATION": "Retry justification",
+      "HISTORY_TITLE": "Reprocessing History",
+      "HISTORY_EMPTY": "No reprocessing attempts recorded.",
+      "HISTORY_TABLE_ARIA": "Reprocessing history table",
+      "HISTORY_TABLE_CAPTION": "Reprocessing attempts",
+      "HISTORY_COL_ATTEMPT": "Attempt ID",
+      "HISTORY_COL_AT": "Attempted at",
+      "HISTORY_COL_BY": "Triggered by",
+      "HISTORY_COL_OUTCOME": "Outcome",
+      "STATUS": {
+        "RECEIVED": "Received",
+        "PROCESSING": "Processing",
+        "PROCESSED": "Processed",
+        "FAILED": "Failed",
+        "SUSPENDED": "Suspended",
+        "REJECTED": "Rejected",
+        "QUARANTINED": "Quarantined"
+      },
+      "OUTCOME": {
+        "SUCCESS": "Success",
+        "FAILURE": "Failure"
+      }
+    },
+    "EVENT_ENVELOPE_CONTRACT": {
+      "OVERLINE": "Contract",
+      "TITLE": "Event Envelope Contract",
+      "TABS_ARIA": "Event contract tabs",
+      "TAB_FIELDS": "Fields",
+      "TAB_TRACEABILITY": "Traceability IDs",
+      "TAB_EXAMPLES": "Examples",
+      "EMPTY_FIELDS": "No contract fields are available.",
+      "EMPTY_TRACEABILITY": "No traceability IDs are available.",
+      "EMPTY_EXAMPLES": "No examples are available.",
+      "FIELDS_TABLE_ARIA": "Contract fields table",
+      "FIELDS_TABLE_CAPTION": "Envelope field definitions",
+      "TRACE_TABLE_ARIA": "Traceability IDs table",
+      "TRACE_TABLE_CAPTION": "Traceability identifier definitions",
+      "COL_NAME": "Name",
+      "COL_TYPE": "Type",
+      "COL_REQUIRED": "Required"
+    },
+    "INGESTION_SUBMIT": {
+      "OVERLINE": "Operations Tool",
+      "TITLE": "Submit Ingestion Event",
+      "INTERNAL_TOOL_NOTICE": "This is an internal accounting operations tool.",
+      "FIELD_EVENT_ID": "Event ID",
+      "FIELD_EVENT_TYPE": "Event type",
+      "FIELD_ORGANIZATION_ID": "Organization ID",
+      "FIELD_SOURCE_SYSTEM": "Source system",
+      "FIELD_PAYLOAD": "Payload JSON",
+      "SUBMIT": "Submit event",
+      "ERROR": "Submission failed. Verify data and try again.",
+      "EMPTY": "Populate the form and submit an event.",
+      "RESULT_TITLE": "Submission Result",
+      "RESULT_EVENT_ID": "Submitted event ID"
+    },
+    "POSTING_RULES_LIST": {
+      "OVERLINE": "Posting Rules",
+      "TITLE": "Posting Rule Sets",
+      "NEW_RULE_SET": "New rule set",
+      "EMPTY": "No posting rule sets found.",
+      "TABLE_ARIA": "Posting rule sets table",
+      "TABLE_CAPTION": "Posting rule sets",
+      "COL_NAME": "Name",
+      "COL_EVENT_TYPE": "Event type",
+      "COL_VERSION": "Version",
+      "COL_STATUS": "Status",
+      "STATUS": {
+        "DRAFT": "Draft",
+        "PUBLISHED": "Published",
+        "ARCHIVED": "Archived"
+      }
+    },
+    "POSTING_RULES_DETAIL": {
+      "OVERLINE": "Posting Rules",
+      "TITLE": "Posting Rule Set Detail",
+      "EMPTY": "No posting rule detail to display."
+    },
+    "PAYMENT_APPLY": {
+      "OVERLINE": "Accounts Receivable",
+      "TITLE": "Apply Payment",
+      "FIELD_PAYMENT_ID": "Payment ID",
+      "FIELD_APPLICATIONS": "Applications JSON",
+      "SUBMIT": "Apply payment",
+      "ERROR": "Unable to apply payment.",
+      "EMPTY": "Provide allocation data to apply payment.",
+      "RESULT_TITLE": "Application Result",
+      "RESULT_PAYMENT_ID": "Payment ID",
+      "RESULT_TOTAL": "Payment total",
+      "RESULT_APPLIED": "Applied total"
+    },
+    "CREDIT_MEMO_CREATE": {
+      "OVERLINE": "Accounts Receivable",
+      "TITLE": "Create Credit Memo",
+      "FIELD_ORIGINAL_INVOICE_ID": "Original invoice ID",
+      "FIELD_CUSTOMER_ID": "Customer ID",
+      "FIELD_CREDIT_AMOUNT": "Credit amount",
+      "FIELD_OUTSTANDING_BALANCE": "Outstanding balance",
+      "FIELD_REASON_CODE": "Reason code",
+      "FIELD_JUSTIFICATION_NOTE": "Justification",
+      "SUBMIT": "Create credit memo",
+      "ERROR": "Unable to create credit memo.",
+      "EMPTY": "Enter required fields to create a credit memo.",
+      "RESULT_TITLE": "Credit Memo Created",
+      "RESULT_CREDIT_MEMO_ID": "Credit memo ID",
+      "RESULT_TOTAL": "Total amount"
+    },
+    "CREDIT_MEMO_LIST": {
+      "OVERLINE": "Accounts Receivable",
+      "TITLE": "Credit Memo List",
+      "EMPTY": "No credit memos available."
+    },
+    "CREDIT_MEMO_DETAIL": {
+      "OVERLINE": "Accounts Receivable",
+      "TITLE": "Credit Memo Detail",
+      "EMPTY": "No credit memo detail available."
+    },
+    "VENDOR_PAYMENT_NEW": {
+      "OVERLINE": "Accounts Payable",
+      "TITLE": "New Vendor Payment",
+      "BILLS_TITLE": "Open Bills",
+      "LOAD_BILLS": "Load bills",
+      "EMPTY_BILLS": "No bills loaded for this vendor.",
+      "BILLS_TABLE_ARIA": "Vendor bills table",
+      "BILLS_TABLE_CAPTION": "Open vendor bills",
+      "COL_BILL_NUMBER": "Bill number",
+      "COL_DUE_DATE": "Due date",
+      "COL_OPEN_AMOUNT": "Open amount",
+      "FIELD_VENDOR_ID": "Vendor ID",
+      "FIELD_GROSS_AMOUNT": "Gross amount",
+      "FIELD_CURRENCY": "Currency",
+      "FIELD_PAYMENT_METHOD": "Payment method",
+      "FIELD_PAYMENT_REF": "Payment reference",
+      "FIELD_ALLOCATIONS": "Allocations JSON",
+      "SUBMIT": "Submit payment",
+      "ERROR": "Unable to submit vendor payment.",
+      "RESULT_TITLE": "Vendor Payment Result",
+      "RESULT_PAYMENT_ID": "Payment ID",
+      "RESULT_STATUS": "Status"
+    },
+    "VENDOR_PAYMENT_LIST": {
+      "OVERLINE": "Accounts Payable",
+      "TITLE": "Vendor Payment List",
+      "EMPTY": "No vendor payments available."
+    },
+    "VENDOR_PAYMENT_DETAIL": {
+      "OVERLINE": "Accounts Payable",
+      "TITLE": "Vendor Payment Detail",
+      "EMPTY": "No vendor payment detail available."
+    }
   }
 }

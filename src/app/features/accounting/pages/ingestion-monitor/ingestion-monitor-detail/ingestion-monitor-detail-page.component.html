@@ -1,0 +1,96 @@
+<main class="accounting-page" aria-labelledby="ingestion-detail-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.OVERLINE' | translate }}</p>
+    <h1 id="ingestion-detail-heading">{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.TITLE' | translate }}</h1>
+  </header>
+
+  @if (pageState() === 'loading') {
+    <section class="state-panel" aria-live="polite" aria-busy="true">{{ 'ACCOUNTING.COMMON.LOADING' | translate }}</section>
+  }
+
+  @if (pageState() === 'error') {
+    <section class="state-panel state-panel--error" role="alert">
+      {{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.ERROR' | translate }}
+    </section>
+  }
+
+  @if (pageState() === 'forbidden') {
+    <section class="state-panel state-panel--forbidden" role="alert">{{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</section>
+  }
+
+  @if (pageState() === 'not-found') {
+    <section class="state-panel">{{ 'ACCOUNTING.COMMON.EMPTY' | translate }}</section>
+  }
+
+  @if (pageState() === 'ready' && event(); as value) {
+    <section class="detail-grid" data-testid="event-detail">
+      <div>
+        <label for="event-id">{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.FIELD_EVENT_ID' | translate }}</label>
+        <input id="event-id" [value]="value.eventId" readonly />
+      </div>
+      <div>
+        <label for="event-type">{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.FIELD_EVENT_TYPE' | translate }}</label>
+        <input id="event-type" [value]="value.eventType" readonly />
+      </div>
+      <div>
+        <label for="event-status">{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.FIELD_STATUS' | translate }}</label>
+        <output id="event-status" class="status-badge">{{ ('ACCOUNTING.INGESTION_MONITOR_DETAIL.STATUS.' + value.processingStatus) | translate }}</output>
+      </div>
+      <div>
+        <label for="event-received">{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.FIELD_RECEIVED_AT' | translate }}</label>
+        <input id="event-received" [value]="(value.receivedAt | date:'short') ?? ''" readonly />
+      </div>
+    </section>
+
+    @if (canViewPayload()) {
+      <section class="detail-section" data-testid="payload-section" [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_DETAIL.PAYLOAD' | translate">
+        <h2>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.PAYLOAD' | translate }}</h2>
+        <pre>{{ value.payload | json }}</pre>
+      </section>
+    }
+
+    @if (canRetry()) {
+      <section class="detail-section">
+        <h2>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.RETRY_TITLE' | translate }}</h2>
+        <label for="retry-justification">{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.RETRY_JUSTIFICATION' | translate }}</label>
+        <textarea
+          id="retry-justification"
+          [formControl]="retryJustification"
+          [class.field-error]="retryJustification.invalid && retryJustification.touched"
+        ></textarea>
+        <button type="button" data-testid="retry-button" [disabled]="retryJustification.invalid || retryState() === 'submitting' || retryState() === 'polling'" (click)="submitRetry()">
+          {{ 'ACCOUNTING.COMMON.RETRY' | translate }}
+        </button>
+      </section>
+    }
+
+    <section class="detail-section table-scroll-container">
+      <h2>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.HISTORY_TITLE' | translate }}</h2>
+      @if (history().length === 0) {
+        <p>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.HISTORY_EMPTY' | translate }}</p>
+      } @else {
+        <table class="ledger-table" [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_DETAIL.HISTORY_TABLE_ARIA' | translate">
+          <caption>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.HISTORY_TABLE_CAPTION' | translate }}</caption>
+          <thead>
+            <tr>
+              <th>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.HISTORY_COL_ATTEMPT' | translate }}</th>
+              <th>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.HISTORY_COL_AT' | translate }}</th>
+              <th>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.HISTORY_COL_BY' | translate }}</th>
+              <th>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.HISTORY_COL_OUTCOME' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of history(); track item.attemptId) {
+              <tr>
+                <td>{{ item.attemptId }}</td>
+                <td>{{ item.attemptedAt | date:'short' }}</td>
+                <td>{{ item.triggeredByUserId }}</td>
+                <td>{{ ('ACCOUNTING.INGESTION_MONITOR_DETAIL.OUTCOME.' + item.outcome) | translate }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+</main>

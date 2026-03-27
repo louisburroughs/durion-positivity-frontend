@@ -1,0 +1,60 @@
+<main class="accounting-page" aria-labelledby="vendor-payment-list-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.VENDOR_PAYMENT_LIST.OVERLINE' | translate }}</p>
+    <h1 id="vendor-payment-list-heading">{{ 'ACCOUNTING.VENDOR_PAYMENT_LIST.TITLE' | translate }}</h1>
+    <button type="button" class="btn-primary" (click)="newPayment()" data-testid="new-payment-button">
+      {{ 'ACCOUNTING.VENDOR_PAYMENT_LIST.NEW_PAYMENT' | translate }}
+    </button>
+  </header>
+
+  @if (pageState() === 'loading') {
+    <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-state">{{ 'ACCOUNTING.COMMON.LOADING' | translate }}</section>
+  }
+  @if (pageState() === 'error') {
+    <section class="state-panel state-panel--error" role="alert" data-testid="error-state">
+      {{ 'ACCOUNTING.COMMON.ERROR_LOADING' | translate }}
+      <button type="button" class="link-button" (click)="load()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+    </section>
+  }
+  @if (pageState() === 'forbidden') {
+    <section class="state-panel state-panel--forbidden" role="alert" data-testid="forbidden-state">{{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</section>
+  }
+  @if (pageState() === 'not-found') {
+    <section class="state-panel state-panel--empty" data-testid="empty-state">{{ 'ACCOUNTING.VENDOR_PAYMENT_LIST.EMPTY' | translate }}</section>
+  }
+  @if (pageState() === 'ready') {
+    <div class="table-scroll-container">
+      <table class="ledger-table" [attr.aria-label]="'ACCOUNTING.VENDOR_PAYMENT_LIST.TABLE_ARIA' | translate">
+        <caption>{{ 'ACCOUNTING.VENDOR_PAYMENT_LIST.TABLE_CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th>{{ 'ACCOUNTING.VENDOR_PAYMENT_LIST.COL_VENDOR' | translate }}</th>
+            <th>{{ 'ACCOUNTING.VENDOR_PAYMENT_LIST.COL_BILL_NUMBER' | translate }}</th>
+            <th>{{ 'ACCOUNTING.VENDOR_PAYMENT_LIST.COL_BILL_DATE' | translate }}</th>
+            <th class="col-amount">{{ 'ACCOUNTING.VENDOR_PAYMENT_LIST.COL_AMOUNT' | translate }}</th>
+            <th>{{ 'ACCOUNTING.VENDOR_PAYMENT_LIST.COL_DUE_DATE' | translate }}</th>
+            <th>{{ 'ACCOUNTING.VENDOR_PAYMENT_LIST.COL_STATUS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (bill of bills(); track bill.vendorBillId) {
+            <tr
+              class="table-row--clickable"
+              data-testid="bill-row"
+              tabindex="0"
+              (click)="openPayment(bill)"
+              (keydown.enter)="openPayment(bill)"
+            >
+              <td>{{ bill.vendorName }}</td>
+              <td>{{ bill.billNumber }}</td>
+              <td>{{ bill.billDate }}</td>
+              <td class="col-amount">{{ bill.totalAmount }}</td>
+              <td>{{ bill.dueDate }}</td>
+              <td><span class="status-badge">{{ bill.status }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</main>

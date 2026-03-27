@@ -1,0 +1,49 @@
+<main class="accounting-page" aria-labelledby="ingestion-submit-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.INGESTION_SUBMIT.OVERLINE' | translate }}</p>
+    <h1 id="ingestion-submit-heading">{{ 'ACCOUNTING.INGESTION_SUBMIT.TITLE' | translate }}</h1>
+    <p class="notice">{{ 'ACCOUNTING.INGESTION_SUBMIT.INTERNAL_TOOL_NOTICE' | translate }}</p>
+  </header>
+
+  @if (state() === 'forbidden') {
+    <section class="state-panel state-panel--forbidden" role="alert" data-testid="forbidden-state">{{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</section>
+  }
+
+  @if (state() !== 'forbidden') {
+    <form class="submit-form" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="field-grid">
+        <label for="event-id">{{ 'ACCOUNTING.INGESTION_SUBMIT.FIELD_EVENT_ID' | translate }}</label>
+        <input id="event-id" formControlName="eventId" />
+
+        <label for="event-type">{{ 'ACCOUNTING.INGESTION_SUBMIT.FIELD_EVENT_TYPE' | translate }}</label>
+        <input id="event-type" formControlName="eventType" />
+
+        <label for="organization-id">{{ 'ACCOUNTING.INGESTION_SUBMIT.FIELD_ORGANIZATION_ID' | translate }}</label>
+        <input id="organization-id" formControlName="organizationId" />
+
+        <label for="source-system">{{ 'ACCOUNTING.INGESTION_SUBMIT.FIELD_SOURCE_SYSTEM' | translate }}</label>
+        <input id="source-system" formControlName="sourceSystem" />
+      </div>
+
+      <label for="payload">{{ 'ACCOUNTING.INGESTION_SUBMIT.FIELD_PAYLOAD' | translate }}</label>
+      <textarea id="payload" formControlName="payload"></textarea>
+
+      @if (state() === 'error') {
+        <p class="error-text" role="alert">{{ 'ACCOUNTING.INGESTION_SUBMIT.ERROR' | translate }}</p>
+      }
+
+      <button type="submit" data-testid="submit-button" [disabled]="form.invalid || state() === 'submitting'">{{ 'ACCOUNTING.INGESTION_SUBMIT.SUBMIT' | translate }}</button>
+    </form>
+
+    @if (state() === 'success' && outcome()) {
+      <section class="state-panel state-panel--success" [attr.aria-label]="'ACCOUNTING.INGESTION_SUBMIT.RESULT_TITLE' | translate">
+        <h2>{{ 'ACCOUNTING.INGESTION_SUBMIT.RESULT_TITLE' | translate }}</h2>
+        <p>{{ 'ACCOUNTING.INGESTION_SUBMIT.RESULT_EVENT_ID' | translate }}: {{ outcome()?.eventId }}</p>
+      </section>
+    }
+
+    @if (state() === 'idle') {
+      <section class="state-panel state-panel--empty">{{ 'ACCOUNTING.INGESTION_SUBMIT.EMPTY' | translate }}</section>
+    }
+  }
+</main>

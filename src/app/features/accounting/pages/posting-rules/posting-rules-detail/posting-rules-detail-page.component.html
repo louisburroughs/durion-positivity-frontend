@@ -1,0 +1,73 @@
+<main class="accounting-page" aria-labelledby="posting-rules-detail-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.POSTING_RULES_DETAIL.OVERLINE' | translate }}</p>
+    <h1 id="posting-rules-detail-heading">{{ 'ACCOUNTING.POSTING_RULES_DETAIL.TITLE' | translate }}</h1>
+  </header>
+
+  @if (pageState() === 'loading') {
+    <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-state">
+      {{ 'ACCOUNTING.COMMON.LOADING' | translate }}
+    </section>
+  }
+  @if (pageState() === 'error') {
+    <section class="state-panel state-panel--error" role="alert" data-testid="error-state">
+      {{ 'ACCOUNTING.COMMON.ERROR_LOADING' | translate }}
+      <button type="button" class="link-button" (click)="load()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+    </section>
+  }
+  @if (pageState() === 'forbidden') {
+    <section class="state-panel state-panel--forbidden" role="alert" data-testid="forbidden-state">
+      {{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}
+    </section>
+  }
+  @if (pageState() === 'not-found') {
+    <section class="state-panel state-panel--empty" data-testid="empty-state">
+      {{ 'ACCOUNTING.POSTING_RULES_DETAIL.EMPTY' | translate }}
+    </section>
+  }
+  @if (pageState() === 'ready' && ruleSet(); as value) {
+    <section class="detail-grid" data-testid="rule-set-detail">
+      <dl class="detail-list">
+        <dt>{{ 'ACCOUNTING.POSTING_RULES_DETAIL.FIELD_ID' | translate }}</dt>
+        <dd>{{ value.postingRuleSetId }}</dd>
+        <dt>{{ 'ACCOUNTING.POSTING_RULES_DETAIL.FIELD_NAME' | translate }}</dt>
+        <dd>{{ value.name }}</dd>
+        <dt>{{ 'ACCOUNTING.POSTING_RULES_DETAIL.FIELD_EVENT_TYPE' | translate }}</dt>
+        <dd>{{ value.eventType }}</dd>
+        <dt>{{ 'ACCOUNTING.POSTING_RULES_DETAIL.FIELD_DESCRIPTION' | translate }}</dt>
+        <dd>{{ value.description }}</dd>
+        <dt>{{ 'ACCOUNTING.POSTING_RULES_DETAIL.FIELD_CREATED' | translate }}</dt>
+        <dd>{{ value.createdAt }}</dd>
+        <dt>{{ 'ACCOUNTING.POSTING_RULES_DETAIL.FIELD_MODIFIED' | translate }}</dt>
+        <dd>{{ value.modifiedAt }}</dd>
+      </dl>
+      @if (value.versions && value.versions.length > 0) {
+        <section class="versions-section">
+          <h2>{{ 'ACCOUNTING.POSTING_RULES_DETAIL.VERSIONS_HEADING' | translate }}</h2>
+          <div class="table-scroll-container">
+            <table class="ledger-table">
+              <thead>
+                <tr>
+                  <th>{{ 'ACCOUNTING.POSTING_RULES_DETAIL.COL_VERSION' | translate }}</th>
+                  <th>{{ 'ACCOUNTING.POSTING_RULES_DETAIL.COL_STATE' | translate }}</th>
+                  <th>{{ 'ACCOUNTING.POSTING_RULES_DETAIL.COL_PUBLISHED_AT' | translate }}</th>
+                  <th>{{ 'ACCOUNTING.POSTING_RULES_DETAIL.COL_PUBLISHED_BY' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (version of value.versions; track version.versionId) {
+                  <tr>
+                    <td>{{ version.versionNumber }}</td>
+                    <td><span class="status-badge">{{ version.state }}</span></td>
+                    <td>{{ version.publishedAt }}</td>
+                    <td>{{ version.publishedBy }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+    </section>
+  }
+</main>

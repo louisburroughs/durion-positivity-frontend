@@ -1,0 +1,41 @@
+<main class="accounting-page" aria-labelledby="vendor-payment-detail-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.OVERLINE' | translate }}</p>
+    <h1 id="vendor-payment-detail-heading">{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.TITLE' | translate }}</h1>
+  </header>
+
+  @if (pageState() === 'loading') {
+    <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-state">{{ 'ACCOUNTING.COMMON.LOADING' | translate }}</section>
+  }
+  @if (pageState() === 'error') {
+    <section class="state-panel state-panel--error" role="alert" data-testid="error-state">{{ 'ACCOUNTING.COMMON.ERROR_LOADING' | translate }}</section>
+  }
+  @if (pageState() === 'forbidden') {
+    <section class="state-panel state-panel--forbidden" role="alert" data-testid="forbidden-state">{{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</section>
+  }
+  @if (pageState() === 'not-found') {
+    <section class="state-panel state-panel--empty" data-testid="empty-state">{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.EMPTY' | translate }}</section>
+  }
+  @if (pageState() === 'ready' && payment(); as value) {
+    <section class="detail-grid" aria-live="polite" data-testid="payment-detail">
+      <dl class="detail-list">
+        <dt>{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_PAYMENT_ID' | translate }}</dt>
+        <dd>{{ value.paymentId }}</dd>
+        <dt>{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_PAYMENT_REF' | translate }}</dt>
+        <dd>{{ value.paymentRef }}</dd>
+        <dt>{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_VENDOR' | translate }}</dt>
+        <dd>{{ value.vendorName }}</dd>
+        <dt>{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_GROSS_AMOUNT' | translate }}</dt>
+        <dd class="amount-field">{{ value.grossAmount }}</dd>
+        <dt>{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_NET_AMOUNT' | translate }}</dt>
+        <dd class="amount-field">{{ value.netAmount }}</dd>
+        <dt>{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_STATUS' | translate }}</dt>
+        <dd><span class="status-badge">{{ value.status }}</span></dd>
+        <dt>{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_GATEWAY_TXN' | translate }}</dt>
+        <dd>{{ value.gatewayTransactionId }}</dd>
+        <dt>{{ 'ACCOUNTING.VENDOR_PAYMENT_DETAIL.FIELD_CREATED' | translate }}</dt>
+        <dd>{{ value.createdAt }}</dd>
+      </dl>
+    </section>
+  }
+</main>

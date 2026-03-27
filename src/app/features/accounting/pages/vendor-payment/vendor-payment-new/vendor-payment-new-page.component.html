@@ -1,0 +1,77 @@
+<main class="accounting-page" aria-labelledby="vendor-payment-new-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.OVERLINE' | translate }}</p>
+    <h1 id="vendor-payment-new-heading">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.TITLE' | translate }}</h1>
+  </header>
+
+  @if (state() === 'forbidden') {
+    <section class="state-panel state-panel--forbidden" role="alert">{{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</section>
+  }
+
+  @if (state() !== 'forbidden') {
+    <section class="detail-section">
+      <h2>{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.BILLS_TITLE' | translate }}</h2>
+      <button type="button" (click)="loadBills()" [disabled]="form.controls.vendorId.invalid">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.LOAD_BILLS' | translate }}</button>
+
+      @if (bills().length === 0) {
+        <p>{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.EMPTY_BILLS' | translate }}</p>
+      } @else {
+        <div class="table-scroll-container">
+          <table class="ledger-table" [attr.aria-label]="'ACCOUNTING.VENDOR_PAYMENT_NEW.BILLS_TABLE_ARIA' | translate">
+            <caption>{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.BILLS_TABLE_CAPTION' | translate }}</caption>
+            <thead>
+              <tr>
+                <th>{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.COL_BILL_NUMBER' | translate }}</th>
+                <th>{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.COL_DUE_DATE' | translate }}</th>
+                <th class="col-amount">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.COL_OPEN_AMOUNT' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (bill of bills(); track bill.vendorBillId) {
+                <tr>
+                  <td>{{ bill.billNumber }}</td>
+                  <td>{{ bill.dueDate | date:'short' }}</td>
+                  <td class="col-amount">{{ bill.openAmount | currency:'USD' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <form class="new-payment-form" [formGroup]="form" (ngSubmit)="submit()">
+      <label for="vendor-id">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_VENDOR_ID' | translate }}</label>
+      <input id="vendor-id" formControlName="vendorId" />
+
+      <label for="gross-amount">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_GROSS_AMOUNT' | translate }}</label>
+      <input id="gross-amount" type="number" class="col-amount" formControlName="grossAmount" />
+
+      <label for="currency">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_CURRENCY' | translate }}</label>
+      <input id="currency" formControlName="currency" />
+
+      <label for="payment-method">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_PAYMENT_METHOD' | translate }}</label>
+      <input id="payment-method" formControlName="paymentMethod" />
+
+      <label for="payment-ref">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_PAYMENT_REF' | translate }}</label>
+      <input id="payment-ref" formControlName="paymentRef" />
+
+      <label for="allocations-json">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_ALLOCATIONS' | translate }}</label>
+      <textarea id="allocations-json" formControlName="allocationsJson"></textarea>
+
+      @if (state() === 'error' || state() === 'conflict') {
+        <p class="error-text" role="alert">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.ERROR' | translate }}</p>
+      }
+
+      <button type="submit" [disabled]="form.invalid || state() === 'submitting'">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.SUBMIT' | translate }}</button>
+    </form>
+
+    @if (result()) {
+      <section class="state-panel state-panel--success" [attr.aria-label]="'ACCOUNTING.VENDOR_PAYMENT_NEW.RESULT_TITLE' | translate">
+        <h2>{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.RESULT_TITLE' | translate }}</h2>
+        <p>{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.RESULT_PAYMENT_ID' | translate }}: {{ result()?.paymentId }}</p>
+        <p>{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.RESULT_STATUS' | translate }}: {{ result()?.status }}</p>
+      </section>
+    }
+  }
+</main>

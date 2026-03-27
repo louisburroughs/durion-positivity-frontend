@@ -1,0 +1,74 @@
+.accounting-page {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+.page-header h1 {
+  color: var(--brand-primary);
+  margin: 0;
+}
+
+.section-overline {
+  color: var(--brand-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 var(--space-2);
+}
+
+.create-form {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--brand-primary) 4%, transparent);
+}
+
+input,
+textarea {
+  border: none;
+  border-bottom: 2px solid var(--durion-graphite-200);
+  border-radius: 0;
+  background: transparent;
+  padding-left: 0;
+}
+
+textarea {
+  min-height: 8rem;
+}
+
+input:focus,
+textarea:focus {
+  box-shadow: none;
+  border-bottom-color: var(--brand-accent);
+}
+
+.amount-field {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  width: fit-content;
+  border: none;
+  background: var(--brand-accent);
+  color: #fff;
+  padding: var(--space-2) var(--space-4);
+}
+
+.error-text {
+  color: var(--functional-error-red);
+}
+
+.state-panel {
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
+}
+
+.state-panel--forbidden {
+  background: color-mix(in srgb, var(--functional-warning) 10%, transparent);
+}
+
+.state-panel--success {
+  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
+}

@@ -1,0 +1,108 @@
+.accounting-page {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+.table-row--clickable {
+  cursor: pointer;
+}
+
+.table-row--clickable:hover,
+.table-row--clickable:focus {
+  background-color: color-mix(in srgb, var(--brand-primary) 6%, transparent);
+  outline: none;
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.page-header h1 {
+  color: var(--brand-primary);
+  margin: 0;
+  flex: 1 1 16rem;
+}
+
+.section-overline {
+  width: 100%;
+  color: var(--brand-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.btn-primary {
+  border: none;
+  background: var(--brand-accent);
+  color: #fff;
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+}
+
+.link-button {
+  border: none;
+  background: transparent;
+  color: var(--brand-accent);
+  text-decoration: underline;
+  padding: 0;
+  cursor: pointer;
+}
+
+.state-panel {
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
+}
+
+.state-panel--error {
+  background: color-mix(in srgb, var(--functional-error-red) 8%, transparent);
+}
+
+.state-panel--forbidden {
+  background: color-mix(in srgb, var(--functional-warning) 10%, transparent);
+}
+
+.state-panel--empty {
+  background: color-mix(in srgb, var(--brand-primary) 3%, transparent);
+}
+
+.table-scroll-container {
+  overflow-x: auto;
+}
+
+.ledger-table {
+  width: 100%;
+  min-width: 40rem;
+  border-collapse: collapse;
+}
+
+.ledger-table th,
+.ledger-table td {
+  text-align: left;
+  padding: var(--space-2);
+}
+
+.ledger-table th {
+  border-bottom: 2px solid var(--surface-variant, var(--durion-graphite-200));
+}
+
+.ledger-table td {
+  border-bottom: 1px solid var(--surface-variant, var(--durion-graphite-200));
+}
+
+.ledger-table .col-amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  background: color-mix(in srgb, var(--functional-info-blue) 12%, transparent);
+  color: var(--functional-info-blue);
+  font-size: 0.75rem;
+}

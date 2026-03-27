@@ -1,0 +1,27 @@
+<section class="operational-cost" aria-labelledby="operational-cost-heading">
+  <header>
+    <p class="section-overline">{{ 'WORKEXEC.OPERATIONAL_COST.OVERLINE' | translate }}</p>
+    <h3 id="operational-cost-heading">{{ 'WORKEXEC.OPERATIONAL_COST.TITLE' | translate }}</h3>
+  </header>
+
+  @if (!workorderId) {
+    <div class="state-panel">{{ 'WORKEXEC.OPERATIONAL_COST.EMPTY' | translate }}</div>
+  }
+
+  @if (workorderId) {
+    <dl>
+      <div>
+        <dt>{{ 'WORKEXEC.OPERATIONAL_COST.DEBIT_TOTAL' | translate }}</dt>
+        <dd class="amount">{{ debitTotal() | currency:'USD' }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'WORKEXEC.OPERATIONAL_COST.CREDIT_TOTAL' | translate }}</dt>
+        <dd class="amount">{{ creditTotal() | currency:'USD' }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'WORKEXEC.OPERATIONAL_COST.NET' | translate }}</dt>
+        <dd class="amount">{{ netTotal() | currency:'USD' }}</dd>
+      </div>
+    </dl>
+  }
+</section>
