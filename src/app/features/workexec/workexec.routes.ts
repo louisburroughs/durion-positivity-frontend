@@ -116,8 +116,6 @@ export const WORKEXEC_ROUTES: Routes = [
           ),
       },
 
-      { path: '**', redirectTo: 'estimates/new' },
-
       // ── CAP-004: Workorder Promotion + Hub ────────────────────────────────
 
       /** Stories 230, 229, 226, 224, 219: Workorder hub (detail, scope, audit, start, roles) */
@@ -166,6 +164,8 @@ export const WORKEXEC_ROUTES: Routes = [
             m => m.WorkorderChangeRequestsPageComponent,
           ),
       },
+
+      { path: '**', redirectTo: 'estimates/new' },
     ],
   },
 ];
