@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
 import {
   InvoiceDetail,
   InvoiceArtifact,
@@ -69,7 +70,8 @@ export class InvoiceDetailPageComponent implements OnInit {
     const status = inv.status?.toUpperCase();
     return (status === 'DRAFT' || status === 'FINALIZED') &&
       this.issueState() === 'idle' &&
-      !this.issueSuccess();
+      !this.issueSuccess() &&
+      (inv.issuancePolicy?.issuableNow !== false);
   });
 
   ngOnInit(): void {
@@ -136,6 +138,7 @@ export class InvoiceDetailPageComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.elevationToken.set(res.elevationToken);
+          this.elevationPassword.set('');
           this.showElevationModal.set(false);
           this.issueState.set('idle');
           this.performIssue();
@@ -153,6 +156,7 @@ export class InvoiceDetailPageComponent implements OnInit {
 
   dismissElevationModal(): void {
     this.showElevationModal.set(false);
+    this.elevationPassword.set('');
     this.issueState.set('idle');
   }
 
@@ -189,7 +193,7 @@ export class InvoiceDetailPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          const url = res.downloadUrl ?? `/billing/artifacts/${artifactRefId}/download?token=${res.downloadToken}`;
+          const url = res.downloadUrl ?? `${environment.apiBaseUrl}/billing/artifacts/${artifactRefId}/download?token=${res.downloadToken}`;
           const a = document.createElement('a');
           a.href = url;
           a.download = filename;
@@ -197,7 +201,7 @@ export class InvoiceDetailPageComponent implements OnInit {
           a.rel = 'noopener noreferrer';
           a.click();
         },
-        error: () => {},
+        error: () => { },
       });
   }
 

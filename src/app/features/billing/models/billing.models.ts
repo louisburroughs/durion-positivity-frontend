@@ -6,7 +6,7 @@
 
 // ── Invoice status ────────────────────────────────────────────────────────────
 
-export type InvoiceStatus = 'DRAFT' | 'PENDING_REVIEW' | 'ISSUED' | 'VOID' | 'CANCELLED';
+export type InvoiceStatus = 'DRAFT' | 'PENDING_REVIEW' | 'ISSUED' | 'FINALIZED' | 'VOID' | 'CANCELLED';
 
 // ── Invoice line items ────────────────────────────────────────────────────────
 

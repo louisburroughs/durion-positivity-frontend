@@ -257,11 +257,12 @@ export class WorkorderDetailPageComponent implements OnInit {
             this.completeError.set('Completion blocked. Please resolve all issues below.');
           } else {
             this.completeModalState.set('success');
-            setTimeout(() => {
+            const handle = setTimeout(() => {
               this.showCompleteModal.set(false);
               this.completeModalState.set('idle');
               this.loadWorkorder(id);
             }, 1200);
+            this.destroyRef.onDestroy(() => clearTimeout(handle));
           }
         },
         error: (err) => {
@@ -316,11 +317,12 @@ export class WorkorderDetailPageComponent implements OnInit {
       .subscribe({
         next: () => {
           this.reopenModalState.set('success');
-          setTimeout(() => {
+          const handle = setTimeout(() => {
             this.showReopenModal.set(false);
             this.reopenModalState.set('idle');
             this.loadWorkorder(id);
           }, 1200);
+          this.destroyRef.onDestroy(() => clearTimeout(handle));
         },
         error: (err) => {
           this.reopenModalState.set('error');
@@ -358,7 +360,7 @@ export class WorkorderDetailPageComponent implements OnInit {
           this.invoiceLoading.set(false);
           const status = err?.status ?? 0;
           const existingId = err?.error?.invoiceId;
-          if ((status === 409 || status === 200) && existingId) {
+          if (status === 409 && existingId) {
             this.router.navigate(['/app/billing/invoices', existingId]);
           } else {
             this.invoiceError.set(

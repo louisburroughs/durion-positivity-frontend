@@ -1,204 +1,179 @@
 <section class="workexec-page workorder-detail" aria-labelledby="wo-heading">
 
   @if (pageState() === 'loading') {
-    <p class="hint-text" aria-busy="true">Loading work order…</p>
+  <p class="hint-text" aria-busy="true">Loading work order…</p>
   }
 
   @if (pageState() === 'error') {
-    <div class="alert alert--error" role="alert">
-      {{ errorMessage() }}
-      <button class="btn-link" (click)="refresh()">Retry</button>
-    </div>
+  <div class="alert alert--error" role="alert">
+    {{ errorMessage() }}
+    <button class="btn-link" (click)="refresh()">Retry</button>
+  </div>
   }
 
   @if (pageState() === 'ready' && workorder()) {
 
-    <!-- Blueprint-blue gradient header per design authority -->
-    <header class="wo-header" aria-labelledby="wo-heading">
-      <div class="wo-header__inner">
-        <div class="wo-header__identity">
-          <p class="wo-header__overline">Work Order</p>
-          <h1 id="wo-heading" class="wo-header__id">{{ workorderId() }}</h1>
-          <span
-            class="status-chip status-chip--{{ workorder()!.status?.toLowerCase() }}"
-            aria-label="Status: {{ workorder()!.status }}"
-          >{{ workorder()!.status }}</span>
-        </div>
-
-        <div class="wo-header__meta">
-          @if (technicianName()) {
-            <p class="wo-header__meta-item">
-              <span class="wo-header__meta-label">Technician</span>
-              <span class="wo-header__meta-value">{{ technicianName() }}</span>
-            </p>
-          } @else {
-            <p class="wo-header__meta-item">
-              <span class="wo-header__meta-label">Technician</span>
-              <span class="wo-header__meta-value wo-header__meta-value--empty">Unassigned</span>
-            </p>
-          }
-          @if (workorder()!.startedAt) {
-            <p class="wo-header__meta-item">
-              <span class="wo-header__meta-label">Started</span>
-              <span class="wo-header__meta-value">{{ workorder()!.startedAt | date:'medium' }}</span>
-            </p>
-          }
-        </div>
-
-        <!-- Primary CTAs — Electric Teal only for positive primary action -->
-        <div class="wo-header__actions">
-          @if (canStartWork()) {
-            <button class="btn btn--accent" (click)="openStartWorkModal()">Start Work</button>
-          }
-          @if (isInProgress()) {
-            <button class="btn btn--ghost" (click)="navigateToLabor()">Record Labor</button>
-            <button class="btn btn--ghost" (click)="navigateToParts()">Manage Parts</button>
-            <button class="btn btn--ghost" (click)="navigateToChangeRequests()">Change Requests</button>
-            <button class="btn btn--ghost" (click)="navigateToFinalize()">Finalize for Billing</button>
-          }
-          @if (canComplete()) {
-            <button class="btn btn--accent" (click)="openCompleteModal()">Complete Work Order</button>
-          }
-          @if (canReopen()) {
-            <button class="btn btn--ghost" (click)="openReopenModal()">Reopen</button>
-          }
-          @if (canCreateInvoice()) {
-            <button
-              class="btn btn--accent"
-              (click)="generateInvoice()"
-              [disabled]="invoiceLoading()"
-              [attr.aria-busy]="invoiceLoading()"
-            >{{ invoiceLoading() ? 'Creating Invoice…' : 'Create Invoice' }}</button>
-          }
-          @if (invoiceError()) {
-            <span class="inline-error" role="alert">{{ invoiceError() }}</span>
-          }
-          <button class="btn btn--ghost" (click)="navigateToAssign()">
-            {{ technicianName() ? 'Reassign' : 'Assign Technician' }}
-          </button>
-        </div>
+  <!-- Blueprint-blue gradient header per design authority -->
+  <header class="wo-header" aria-labelledby="wo-heading">
+    <div class="wo-header__inner">
+      <div class="wo-header__identity">
+        <p class="wo-header__overline">Work Order</p>
+        <h1 id="wo-heading" class="wo-header__id">{{ workorderId() }}</h1>
+        <span class="status-chip status-chip--{{ workorder()!.status?.toLowerCase() }}"
+          aria-label="Status: {{ workorder()!.status }}">{{ workorder()!.status }}</span>
       </div>
-    </header>
 
-    <!-- Tab bar — 2px secondary bottom indicator only, no box shadow -->
-    <nav class="wo-tabs" aria-label="Work order sections">
-      <button
-        class="wo-tab"
-        [class.wo-tab--active]="activeTab() === 'items'"
-        (click)="selectTab('items')"
-        aria-selected="{{ activeTab() === 'items' }}"
-      >Scope</button>
-      <button
-        class="wo-tab"
-        [class.wo-tab--active]="activeTab() === 'labor'"
-        (click)="navigateToLabor()"
-      >Labor</button>
-      <button
-        class="wo-tab"
-        [class.wo-tab--active]="activeTab() === 'parts'"
-        (click)="navigateToParts()"
-      >Parts</button>
-      <button
-        class="wo-tab"
-        [class.wo-tab--active]="activeTab() === 'change-requests'"
-        (click)="navigateToChangeRequests()"
-      >
-        Change Requests
-        @if (pendingCrCount() > 0) {
-          <span class="tab-badge tab-badge--warning" aria-label="{{ pendingCrCount() }} pending">{{ pendingCrCount() }}</span>
-        }
-      </button>
-      <button
-        class="wo-tab"
-        [class.wo-tab--active]="activeTab() === 'audit'"
-        (click)="selectTab('audit')"
-      >Audit Trail</button>
-    </nav>
-
-    <!-- Scope/Items tab — Story 229 -->
-    @if (activeTab() === 'items') {
-      <div class="wo-section" aria-label="Work order scope">
-        @if (items().length === 0) {
-          <p class="hint-text">No items were promoted from the estimate.</p>
+      <div class="wo-header__meta">
+        @if (technicianName()) {
+        <p class="wo-header__meta-item">
+          <span class="wo-header__meta-label">Technician</span>
+          <span class="wo-header__meta-value">{{ technicianName() }}</span>
+        </p>
         } @else {
-          <div class="ledger">
-            <div class="ledger__header">
-              <span>Description</span>
-              <span>Qty</span>
-              <span>Unit Price</span>
-              <span>Line Total</span>
-            </div>
-            @for (item of items(); track item.id; let even = $even) {
-              <div class="ledger__row" [class.ledger__row--alt]="even" [attr.aria-label]="item.description">
-                <span class="ledger__cell ledger__cell--desc">
-                  <span class="ledger__type-badge ledger__type-badge--{{ item.itemType?.toLowerCase() }}">{{ item.itemType }}</span>
-                  {{ item.description }}
-                </span>
-                <span class="ledger__cell">{{ item.quantity }}</span>
-                <span class="ledger__cell">{{ item.unitPrice | currency }}</span>
-                <span class="ledger__cell ledger__cell--total">{{ item.lineTotal | currency }}</span>
-              </div>
-            }
-          </div>
+        <p class="wo-header__meta-item">
+          <span class="wo-header__meta-label">Technician</span>
+          <span class="wo-header__meta-value wo-header__meta-value--empty">Unassigned</span>
+        </p>
+        }
+        @if (workorder()!.startedAt) {
+        <p class="wo-header__meta-item">
+          <span class="wo-header__meta-label">Started</span>
+          <span class="wo-header__meta-value">{{ workorder()!.startedAt | date:'medium' }}</span>
+        </p>
         }
       </div>
+
+      <!-- Primary CTAs — Electric Teal only for positive primary action -->
+      <div class="wo-header__actions">
+        @if (canStartWork()) {
+        <button class="btn btn--accent" (click)="openStartWorkModal()">Start Work</button>
+        }
+        @if (isInProgress()) {
+        <button class="btn btn--ghost" (click)="navigateToLabor()">Record Labor</button>
+        <button class="btn btn--ghost" (click)="navigateToParts()">Manage Parts</button>
+        <button class="btn btn--ghost" (click)="navigateToChangeRequests()">Change Requests</button>
+        <button class="btn btn--ghost" (click)="navigateToFinalize()">Finalize for Billing</button>
+        }
+        @if (canComplete()) {
+        <button class="btn btn--accent" (click)="openCompleteModal()">Complete Work Order</button>
+        }
+        @if (canReopen()) {
+        <button class="btn btn--ghost" (click)="openReopenModal()">Reopen</button>
+        }
+        @if (canCreateInvoice()) {
+        <button class="btn btn--accent" (click)="generateInvoice()" [disabled]="invoiceLoading()"
+          [attr.aria-busy]="invoiceLoading()">{{ invoiceLoading() ? 'Creating Invoice…' : 'Create Invoice' }}</button>
+        }
+        @if (invoiceError()) {
+        <span class="inline-error" role="alert">{{ invoiceError() }}</span>
+        }
+        <button class="btn btn--ghost" (click)="navigateToAssign()">
+          {{ technicianName() ? 'Reassign' : 'Assign Technician' }}
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tab bar — 2px secondary bottom indicator only, no box shadow -->
+  <nav class="wo-tabs" aria-label="Work order sections">
+    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'items'" (click)="selectTab('items')"
+      aria-selected="{{ activeTab() === 'items' }}">Scope</button>
+    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'labor'" (click)="navigateToLabor()">Labor</button>
+    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'parts'" (click)="navigateToParts()">Parts</button>
+    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'change-requests'"
+      (click)="navigateToChangeRequests()">
+      Change Requests
+      @if (pendingCrCount() > 0) {
+      <span class="tab-badge tab-badge--warning" aria-label="{{ pendingCrCount() }} pending">{{ pendingCrCount()
+        }}</span>
+      }
+    </button>
+    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'audit'" (click)="selectTab('audit')">Audit
+      Trail</button>
+  </nav>
+
+  <!-- Scope/Items tab — Story 229 -->
+  @if (activeTab() === 'items') {
+  <div class="wo-section" aria-label="Work order scope">
+    @if (items().length === 0) {
+    <p class="hint-text">No items were promoted from the estimate.</p>
+    } @else {
+    <div class="ledger">
+      <div class="ledger__header">
+        <span>Description</span>
+        <span>Qty</span>
+        <span>Unit Price</span>
+        <span>Line Total</span>
+      </div>
+      @for (item of items(); track item.id; let even = $even) {
+      <div class="ledger__row" [class.ledger__row--alt]="even" [attr.aria-label]="item.description">
+        <span class="ledger__cell ledger__cell--desc">
+          <span class="ledger__type-badge ledger__type-badge--{{ item.itemType?.toLowerCase() }}">{{ item.itemType
+            }}</span>
+          {{ item.description }}
+        </span>
+        <span class="ledger__cell">{{ item.quantity }}</span>
+        <span class="ledger__cell">{{ item.unitPrice | currency }}</span>
+        <span class="ledger__cell ledger__cell--total">{{ item.lineTotal | currency }}</span>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+
+  <!-- Audit trail tab — Story 226 -->
+  @if (activeTab() === 'audit') {
+  <div class="wo-section" aria-label="Promotion and transition audit trail">
+    @if (workorder()!.estimateId) {
+    <div class="audit-origin">
+      <p class="section-overline">Promoted From</p>
+      <p>
+        Estimate
+        <a [routerLink]="['/app/workexec/estimates', workorder()!.estimateId]" class="audit-link">
+          {{ workorder()!.estimateId }}
+        </a>
+      </p>
+    </div>
     }
 
-    <!-- Audit trail tab — Story 226 -->
-    @if (activeTab() === 'audit') {
-      <div class="wo-section" aria-label="Promotion and transition audit trail">
-        @if (workorder()!.estimateId) {
-          <div class="audit-origin">
-            <p class="section-overline">Promoted From</p>
-            <p>
-              Estimate
-              <a [routerLink]="['/app/workexec/estimates', workorder()!.estimateId]" class="audit-link">
-                {{ workorder()!.estimateId }}
-              </a>
-            </p>
-          </div>
-        }
+    <div class="audit-transitions">
+      <button class="audit-toggle btn-link" (click)="auditExpanded.set(!auditExpanded())"
+        [attr.aria-expanded]="auditExpanded()">
+        {{ auditExpanded() ? 'Hide' : 'Show' }} Transition History ({{ transitions().length }})
+      </button>
 
-        <div class="audit-transitions">
-          <button
-            class="audit-toggle btn-link"
-            (click)="auditExpanded.set(!auditExpanded())"
-            [attr.aria-expanded]="auditExpanded()"
-          >
-            {{ auditExpanded() ? 'Hide' : 'Show' }} Transition History ({{ transitions().length }})
-          </button>
-
-          @if (auditExpanded()) {
-            @if (transitions().length === 0) {
-              <p class="hint-text">No transitions recorded yet.</p>
-            } @else {
-              <div class="ledger ledger--audit">
-                <div class="ledger__header">
-                  <span>From</span>
-                  <span>To</span>
-                  <span>Actor</span>
-                  <span>When</span>
-                  <span>Reason</span>
-                </div>
-                @for (t of transitions(); track t.id; let even = $even) {
-                  <div class="ledger__row" [class.ledger__row--alt]="even">
-                    <span class="ledger__cell">
-                      <span class="status-chip status-chip--{{ t.fromStatus?.toLowerCase() }}">{{ t.fromStatus }}</span>
-                    </span>
-                    <span class="ledger__cell">
-                      <span class="status-chip status-chip--{{ t.toStatus?.toLowerCase() }}">{{ t.toStatus }}</span>
-                    </span>
-                    <span class="ledger__cell">{{ t.actorUserId }}</span>
-                    <span class="ledger__cell">{{ t.transitionedAt | date:'short' }}</span>
-                    <span class="ledger__cell">{{ t.reason ?? t.message ?? '—' }}</span>
-                  </div>
-                }
-              </div>
-            }
-          }
+      @if (auditExpanded()) {
+      @if (transitions().length === 0) {
+      <p class="hint-text">No transitions recorded yet.</p>
+      } @else {
+      <div class="ledger ledger--audit">
+        <div class="ledger__header">
+          <span>From</span>
+          <span>To</span>
+          <span>Actor</span>
+          <span>When</span>
+          <span>Reason</span>
         </div>
+        @for (t of transitions(); track t.id; let even = $even) {
+        <div class="ledger__row" [class.ledger__row--alt]="even">
+          <span class="ledger__cell">
+            <span class="status-chip status-chip--{{ t.fromStatus?.toLowerCase() }}">{{ t.fromStatus }}</span>
+          </span>
+          <span class="ledger__cell">
+            <span class="status-chip status-chip--{{ t.toStatus?.toLowerCase() }}">{{ t.toStatus }}</span>
+          </span>
+          <span class="ledger__cell">{{ t.actorUserId }}</span>
+          <span class="ledger__cell">{{ t.transitionedAt | date:'short' }}</span>
+          <span class="ledger__cell">{{ t.reason ?? t.message ?? '—' }}</span>
+        </div>
+        }
       </div>
-    }
+      }
+      }
+    </div>
+  </div>
+  }
 
   }
 
@@ -206,178 +181,150 @@
 
 <!-- Completion Checklist Panel (Story 218) — shown when canComplete -->
 @if (pageState() === 'ready' && canComplete()) {
-  <aside class="checklist-panel" aria-label="Completion readiness checklist">
-    <h3 class="checklist-panel__title">Completion Checklist</h3>
-    @if (checklistLoading()) {
-      <p class="hint-text" aria-busy="true">Checking prerequisites…</p>
+<aside class="checklist-panel" aria-label="Completion readiness checklist">
+  <h3 class="checklist-panel__title">Completion Checklist</h3>
+  @if (checklistLoading()) {
+  <p class="hint-text" aria-busy="true">Checking prerequisites…</p>
+  } @else {
+  <ul class="checklist-list">
+    @if (pendingCrCount() > 0) {
+    <li class="checklist-item checklist-item--blocking">
+      <span class="checklist-item__icon" aria-hidden="true">✗</span>
+      <span class="checklist-item__label">
+        {{ pendingCrCount() }} change request(s) pending advisor review — resolve before completing.
+      </span>
+      <button class="btn-link" (click)="navigateToChangeRequests()">View Change Requests</button>
+    </li>
     } @else {
-      @if (pendingCrCount() > 0) {
-        <div class="checklist-item checklist-item--blocking" role="listitem">
-          <span class="checklist-item__icon" aria-hidden="true">✗</span>
-          <span class="checklist-item__label">
-            {{ pendingCrCount() }} change request(s) pending advisor review — resolve before completing.
-          </span>
-          <button class="btn-link" (click)="navigateToChangeRequests()">View Change Requests</button>
-        </div>
-      } @else {
-        <div class="checklist-item checklist-item--ok" role="listitem">
-          <span class="checklist-item__icon" aria-hidden="true">✓</span>
-          <span class="checklist-item__label">No pending change requests.</span>
-        </div>
-      }
-      @if (failedChecks().length > 0) {
-        @for (check of failedChecks(); track check.checkId) {
-          <div class="checklist-item checklist-item--{{ check.severity === 'BLOCKING' ? 'blocking' : 'warning' }}" role="listitem">
-            <span class="checklist-item__icon" aria-hidden="true">{{ check.severity === 'BLOCKING' ? '✗' : '!' }}</span>
-            <span class="checklist-item__label">{{ check.description }}</span>
-          </div>
-        }
-      }
+    <li class="checklist-item checklist-item--ok">
+      <span class="checklist-item__icon" aria-hidden="true">✓</span>
+      <span class="checklist-item__label">No pending change requests.</span>
+    </li>
     }
-  </aside>
+    @if (failedChecks().length > 0) {
+    @for (check of failedChecks(); track check.checkId) {
+    <li class="checklist-item checklist-item--{{ check.severity === 'BLOCKING' ? 'blocking' : 'warning' }}">
+      <span class="checklist-item__icon" aria-hidden="true">{{ check.severity === 'BLOCKING' ? '✗' : '!' }}</span>
+      <span class="checklist-item__label">{{ check.description }}</span>
+    </li>
+    }
+    }
+  </ul>
+  }
+</aside>
 }
 
 <!-- Start Work confirmation modal — glassmorphism per design authority -->
 @if (showStartWorkModal()) {
-  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="start-work-modal-title">
-    <div class="modal-glass">
-      <h2 id="start-work-modal-title" class="modal-glass__title">Start Work on {{ workorderId() }}?</h2>
-      <p class="modal-glass__body">
-        This will move the work order to <strong>IN PROGRESS</strong> and allow labor and parts recording.
-        This action cannot be undone from this screen.
-      </p>
+<div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="start-work-modal-title">
+  <div class="modal-glass">
+    <h2 id="start-work-modal-title" class="modal-glass__title">Start Work on {{ workorderId() }}?</h2>
+    <p class="modal-glass__body">
+      This will move the work order to <strong>IN PROGRESS</strong> and allow labor and parts recording.
+      This action cannot be undone from this screen.
+    </p>
 
-      @if (startWorkError()) {
-        <div class="alert alert--error" role="alert">{{ startWorkError() }}</div>
-      }
+    @if (startWorkError()) {
+    <div class="alert alert--error" role="alert">{{ startWorkError() }}</div>
+    }
 
-      <div class="modal-glass__actions">
-        <button
-          class="btn btn--ghost"
-          (click)="cancelStartWork()"
-          [disabled]="startWorkLoading()"
-        >Cancel</button>
-        <button
-          class="btn btn--accent"
-          (click)="confirmStartWork()"
-          [disabled]="startWorkLoading()"
-          [attr.aria-busy]="startWorkLoading()"
-        >
-          {{ startWorkLoading() ? 'Starting…' : 'Confirm — Start Work' }}
-        </button>
-      </div>
+    <div class="modal-glass__actions">
+      <button class="btn btn--ghost" (click)="cancelStartWork()" [disabled]="startWorkLoading()">Cancel</button>
+      <button class="btn btn--accent" (click)="confirmStartWork()" [disabled]="startWorkLoading()"
+        [attr.aria-busy]="startWorkLoading()">
+        {{ startWorkLoading() ? 'Starting…' : 'Confirm — Start Work' }}
+      </button>
     </div>
   </div>
+</div>
 }
 
 <!-- Complete Work Order modal (Story 215) — glassmorphism -->
 @if (showCompleteModal()) {
-  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="complete-modal-title">
-    <div class="modal-glass">
-      <h2 id="complete-modal-title" class="modal-glass__title">Complete Work Order</h2>
+<div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="complete-modal-title">
+  <div class="modal-glass">
+    <h2 id="complete-modal-title" class="modal-glass__title">Complete Work Order</h2>
 
-      @if (completeModalState() === 'success') {
-        <div class="alert alert--success" role="status">Work order completed successfully.</div>
-      } @else {
-        <p class="modal-glass__body">
-          Mark this work order as <strong>COMPLETED</strong>. Ensure all labor and parts have been recorded.
-        </p>
+    @if (completeModalState() === 'success') {
+    <div class="alert alert--success" role="status">Work order completed successfully.</div>
+    } @else {
+    <p class="modal-glass__body">
+      Mark this work order as <strong>COMPLETED</strong>. Ensure all labor and parts have been recorded.
+    </p>
 
-        <div class="form-field">
-          <label for="completion-notes" class="form-label">Completion Notes <span class="hint-text">(optional)</span></label>
-          <textarea
-            id="completion-notes"
-            class="form-textarea"
-            rows="3"
-            [value]="completionNotes()"
-            (input)="completionNotes.set($any($event.target).value)"
-            placeholder="Describe any final notes or observations…"
-          ></textarea>
-        </div>
-
-        @if (completeError()) {
-          <div class="alert alert--error" role="alert">{{ completeError() }}</div>
-        }
-
-        @if (failedChecks().length > 0) {
-          <ul class="failed-checks" aria-label="Completion blockers">
-            @for (check of failedChecks(); track check.checkId) {
-              <li class="failed-check failed-check--{{ check.severity.toLowerCase() }}">
-                <span class="failed-check__icon" aria-hidden="true">{{ check.severity === 'BLOCKING' ? '✗' : '!' }}</span>
-                {{ check.description }}
-              </li>
-            }
-          </ul>
-        }
-
-        <div class="modal-glass__actions">
-          <button
-            class="btn btn--ghost"
-            (click)="cancelComplete()"
-            [disabled]="completeModalState() === 'loading'"
-          >Cancel</button>
-          <button
-            class="btn btn--accent"
-            (click)="confirmComplete()"
-            [disabled]="completeModalState() === 'loading' || pendingCrCount() > 0"
-            [attr.aria-busy]="completeModalState() === 'loading'"
-          >
-            {{ completeModalState() === 'loading' ? 'Completing…' : 'Confirm — Complete Work Order' }}
-          </button>
-        </div>
-      }
+    <div class="form-field">
+      <label for="completion-notes" class="form-label">Completion Notes <span
+          class="hint-text">(optional)</span></label>
+      <textarea id="completion-notes" class="form-textarea" rows="3" [value]="completionNotes()"
+        (input)="completionNotes.set($any($event.target).value)"
+        placeholder="Describe any final notes or observations…"></textarea>
     </div>
+
+    @if (completeError()) {
+    <div class="alert alert--error" role="alert">{{ completeError() }}</div>
+    }
+
+    @if (failedChecks().length > 0) {
+    <ul class="failed-checks" aria-label="Completion blockers">
+      @for (check of failedChecks(); track check.checkId) {
+      <li class="failed-check failed-check--{{ check.severity.toLowerCase() }}">
+        <span class="failed-check__icon" aria-hidden="true">{{ check.severity === 'BLOCKING' ? '✗' : '!' }}</span>
+        {{ check.description }}
+      </li>
+      }
+    </ul>
+    }
+
+    <div class="modal-glass__actions">
+      <button class="btn btn--ghost" (click)="cancelComplete()"
+        [disabled]="completeModalState() === 'loading'">Cancel</button>
+      <button class="btn btn--accent" (click)="confirmComplete()"
+        [disabled]="completeModalState() === 'loading' || pendingCrCount() > 0"
+        [attr.aria-busy]="completeModalState() === 'loading'">
+        {{ completeModalState() === 'loading' ? 'Completing…' : 'Confirm — Complete Work Order' }}
+      </button>
+    </div>
+    }
   </div>
+</div>
 }
 
 <!-- Reopen Work Order modal (Story 214) — glassmorphism -->
 @if (showReopenModal()) {
-  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="reopen-modal-title">
-    <div class="modal-glass">
-      <h2 id="reopen-modal-title" class="modal-glass__title">Reopen Work Order</h2>
+<div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="reopen-modal-title">
+  <div class="modal-glass">
+    <h2 id="reopen-modal-title" class="modal-glass__title">Reopen Work Order</h2>
 
-      @if (reopenModalState() === 'success') {
-        <div class="alert alert--success" role="status">Work order reopened successfully.</div>
-      } @else {
-        <p class="modal-glass__body">
-          This will move the work order back to <strong>IN PROGRESS</strong>.
-          A reason is required.
-        </p>
+    @if (reopenModalState() === 'success') {
+    <div class="alert alert--success" role="status">Work order reopened successfully.</div>
+    } @else {
+    <p class="modal-glass__body">
+      This will move the work order back to <strong>IN PROGRESS</strong>.
+      A reason is required.
+    </p>
 
-        <div class="form-field">
-          <label for="reopen-reason" class="form-label">Reopen Reason <span class="required-mark" aria-hidden="true">*</span></label>
-          <textarea
-            id="reopen-reason"
-            class="form-textarea"
-            rows="3"
-            [value]="reopenReason()"
-            (input)="reopenReason.set($any($event.target).value)"
-            placeholder="Explain why this work order is being reopened…"
-            required
-            aria-required="true"
-          ></textarea>
-        </div>
-
-        @if (reopenError()) {
-          <div class="alert alert--error" role="alert">{{ reopenError() }}</div>
-        }
-
-        <div class="modal-glass__actions">
-          <button
-            class="btn btn--ghost"
-            (click)="cancelReopen()"
-            [disabled]="reopenModalState() === 'loading'"
-          >Cancel</button>
-          <button
-            class="btn btn--accent"
-            (click)="confirmReopen()"
-            [disabled]="reopenModalState() === 'loading' || !reopenReason().trim()"
-            [attr.aria-busy]="reopenModalState() === 'loading'"
-          >
-            {{ reopenModalState() === 'loading' ? 'Reopening…' : 'Confirm — Reopen Work Order' }}
-          </button>
-        </div>
-      }
+    <div class="form-field">
+      <label for="reopen-reason" class="form-label">Reopen Reason <span class="required-mark"
+          aria-hidden="true">*</span></label>
+      <textarea id="reopen-reason" class="form-textarea" rows="3" [value]="reopenReason()"
+        (input)="reopenReason.set($any($event.target).value)"
+        placeholder="Explain why this work order is being reopened…" required aria-required="true"></textarea>
     </div>
+
+    @if (reopenError()) {
+    <div class="alert alert--error" role="alert">{{ reopenError() }}</div>
+    }
+
+    <div class="modal-glass__actions">
+      <button class="btn btn--ghost" (click)="cancelReopen()"
+        [disabled]="reopenModalState() === 'loading'">Cancel</button>
+      <button class="btn btn--accent" (click)="confirmReopen()"
+        [disabled]="reopenModalState() === 'loading' || !reopenReason().trim()"
+        [attr.aria-busy]="reopenModalState() === 'loading'">
+        {{ reopenModalState() === 'loading' ? 'Reopening…' : 'Confirm — Reopen Work Order' }}
+      </button>
+    </div>
+    }
   </div>
+</div>
 }
