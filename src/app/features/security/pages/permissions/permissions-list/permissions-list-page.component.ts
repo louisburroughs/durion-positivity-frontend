@@ -46,6 +46,8 @@ export class PermissionsListPageComponent implements OnInit {
         },
         error: (err) => {
           this.loading.set(false);
+          this.permissions.set([]);
+          this.totalPages.set(0);
           this.error.set(err?.error?.message ?? 'Failed to load permissions.');
         },
       });
