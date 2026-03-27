@@ -197,10 +197,12 @@ export class WorkorderPartsPageComponent implements OnInit {
   confirmSubstitution(): void {
     const substituteId = this.substSelectedId().trim();
     if (!substituteId) { this.substError.set('Select a substitute part.'); return; }
+    const reason = this.substReason().trim();
+    if (!reason) { this.substError.set('Reason is required.'); return; }
     const request: SubstitutePartRequest = {
       originalPartId: this.substSourcePartId(),
       substitutePartId: substituteId,
-      reason: this.substReason() || undefined,
+      reason,
     };
     this.substSaveState.set('loading');
     this.substError.set(null);

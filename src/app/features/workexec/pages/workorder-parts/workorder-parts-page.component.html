@@ -134,7 +134,7 @@
         </div>
 
         <div class="field">
-          <label class="field__label">Reason (required)</label>
+          <label class="field__label">Reason <span aria-hidden="true">*</span></label>
           <input class="field__input" type="text" [value]="substReason()" (input)="substReason.set($any($event.target).value)" placeholder="Why substituting?" />
         </div>
       }
@@ -147,7 +147,7 @@
           <button
             class="btn btn--accent"
             (click)="confirmSubstitution()"
-            [disabled]="substSaveState() === 'loading' || !substSelectedId()"
+            [disabled]="substSaveState() === 'loading' || !substSelectedId() || !substReason().trim()"
             [attr.aria-busy]="substSaveState() === 'loading'"
           >
             {{ substSaveState() === 'loading' ? 'Substituting…' : 'Confirm Substitution' }}
