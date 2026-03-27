@@ -5,46 +5,49 @@
   </header>
 
   @if (state() === 'forbidden') {
-    <section class="state-panel state-panel--forbidden" role="alert">{{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</section>
+  <section class="state-panel state-panel--forbidden" role="alert">{{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}
+  </section>
   }
 
   @if (state() !== 'forbidden') {
-    <form class="create-form" [formGroup]="form" (ngSubmit)="submit()">
-      <label for="original-invoice">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_ORIGINAL_INVOICE_ID' | translate }}</label>
-      <input id="original-invoice" formControlName="originalInvoiceId" />
+  <form class="create-form" [formGroup]="form" (ngSubmit)="submit()">
+    <label for="original-invoice">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_ORIGINAL_INVOICE_ID' | translate }}</label>
+    <input id="original-invoice" formControlName="originalInvoiceId" />
 
-      <label for="customer-id">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_CUSTOMER_ID' | translate }}</label>
-      <input id="customer-id" formControlName="customerId" />
+    <label for="customer-id">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_CUSTOMER_ID' | translate }}</label>
+    <input id="customer-id" formControlName="customerId" />
 
-      <label for="credit-amount">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_CREDIT_AMOUNT' | translate }}</label>
-      <input id="credit-amount" type="number" class="amount-input" formControlName="creditAmount" />
+    <label for="credit-amount">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_CREDIT_AMOUNT' | translate }}</label>
+    <input id="credit-amount" type="number" class="amount-input" formControlName="creditAmount" />
 
-      <label for="outstanding-balance">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_OUTSTANDING_BALANCE' | translate }}</label>
-      <input id="outstanding-balance" type="number" class="amount-input" formControlName="outstandingBalance" />
+    <label for="outstanding-balance">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_OUTSTANDING_BALANCE' | translate }}</label>
+    <input id="outstanding-balance" type="number" class="amount-input" formControlName="outstandingBalance" />
 
-      <label for="reason-code">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_REASON_CODE' | translate }}</label>
-      <input id="reason-code" formControlName="reasonCode" />
+    <label for="reason-code">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_REASON_CODE' | translate }}</label>
+    <input id="reason-code" formControlName="reasonCode" />
 
-      <label for="justification-note">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_JUSTIFICATION_NOTE' | translate }}</label>
-      <textarea id="justification-note" formControlName="justificationNote"></textarea>
+    <label for="justification-note">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_JUSTIFICATION_NOTE' | translate }}</label>
+    <textarea id="justification-note" formControlName="justificationNote"></textarea>
 
-      @if (state() === 'error') {
-        <p class="error-text" role="alert">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.ERROR' | translate }}</p>
-      }
-
-      <button type="submit" [disabled]="form.invalid || state() === 'submitting'">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.SUBMIT' | translate }}</button>
-    </form>
-
-    @if (result()) {
-      <section class="state-panel state-panel--success">
-        <h2>{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.RESULT_TITLE' | translate }}</h2>
-        <p>{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.RESULT_CREDIT_MEMO_ID' | translate }}: {{ result()?.creditMemoId }}</p>
-        <p class="amount-field">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.RESULT_TOTAL' | translate }}: {{ result()?.totalAmount | currency:'USD' }}</p>
-      </section>
+    @if (state() === 'error') {
+    <p class="error-text" role="alert">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.ERROR' | translate }}</p>
     }
 
-    @if (state() === 'idle' && !result()) {
-      <section class="state-panel state-panel--empty">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.EMPTY' | translate }}</section>
-    }
+    <button type="submit" [disabled]="form.invalid || state() === 'submitting'">{{
+      'ACCOUNTING.CREDIT_MEMO_CREATE.SUBMIT' | translate }}</button>
+  </form>
+
+  @if (result()) {
+  <section class="state-panel state-panel--success">
+    <h2>{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.RESULT_TITLE' | translate }}</h2>
+    <p>{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.RESULT_CREDIT_MEMO_ID' | translate }}: {{ result()?.creditMemoId }}</p>
+    <p class="amount-field">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.RESULT_TOTAL' | translate }}: {{ result()?.totalAmount |
+      currency:'USD' }}</p>
+  </section>
+  }
+
+  @if (state() === 'idle' && !result()) {
+  <section class="state-panel state-panel--empty">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.EMPTY' | translate }}</section>
+  }
   }
 </main>

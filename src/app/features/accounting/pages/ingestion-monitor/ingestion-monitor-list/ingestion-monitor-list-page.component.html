@@ -5,71 +5,74 @@
     <p class="page-subtitle">{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.SUBTITLE' | translate }}</p>
   </header>
 
-  <section class="filter-panel" role="search" [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_LIST.FILTERS_LABEL' | translate">
+  <section class="filter-panel" role="search"
+    [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_LIST.FILTERS_LABEL' | translate">
     <label for="event-type-filter">{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.FILTER_EVENT_TYPE' | translate }}</label>
     <input id="event-type-filter" data-testid="event-type-filter" [value]="filters().eventType ?? ''" readonly />
   </section>
 
   @if (pageState() === 'loading') {
-    <section class="state-panel" data-testid="loading-state" aria-live="polite" aria-busy="true">
-      <p>{{ 'ACCOUNTING.COMMON.LOADING' | translate }}</p>
-    </section>
+  <section class="state-panel" data-testid="loading-state" aria-live="polite" aria-busy="true">
+    <p>{{ 'ACCOUNTING.COMMON.LOADING' | translate }}</p>
+  </section>
   }
 
   @if (pageState() === 'error') {
-    <section class="state-panel state-panel--error" data-testid="error-state" role="alert">
-      <p>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.ERROR' | translate }}</p>
-      <button type="button" class="link-button" (click)="load()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
-    </section>
+  <section class="state-panel state-panel--error" data-testid="error-state" role="alert">
+    <p>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.ERROR' | translate }}</p>
+    <button type="button" class="link-button" (click)="load()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+  </section>
   }
 
   @if (pageState() === 'forbidden') {
-    <section class="state-panel state-panel--forbidden" role="alert">
-      <p>{{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</p>
-    </section>
+  <section class="state-panel state-panel--forbidden" role="alert">
+    <p>{{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</p>
+  </section>
   }
 
   @if (pageState() === 'not-found') {
-    <section class="state-panel">
-      <p>{{ 'ACCOUNTING.COMMON.EMPTY' | translate }}</p>
-    </section>
+  <section class="state-panel">
+    <p>{{ 'ACCOUNTING.COMMON.EMPTY' | translate }}</p>
+  </section>
   }
 
   @if (pageState() === 'ready') {
-    @if (events().length === 0) {
-      <section class="state-panel state-panel--empty">
-        <p>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.EMPTY' | translate }}</p>
-      </section>
-    }
+  @if (events().length === 0) {
+  <section class="state-panel state-panel--empty">
+    <p>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.EMPTY' | translate }}</p>
+  </section>
+  }
 
-    @if (events().length > 0) {
-      <div class="table-scroll-container">
-        <table class="ledger-table" [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_LIST.TABLE_ARIA' | translate">
-          <caption>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.TABLE_CAPTION' | translate }}</caption>
-          <thead>
-            <tr>
-              <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_EVENT_ID' | translate }}</th>
-              <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_EVENT_TYPE' | translate }}</th>
-              <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_STATUS' | translate }}</th>
-              <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_RECEIVED_AT' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of events(); track row.eventId) {
-              <tr tabindex="0" data-testid="event-row" (click)="goToDetail(row)" (keydown.enter)="goToDetail(row)" (keydown.space)="goToDetail(row)">
-                <td>{{ row.eventId }}</td>
-                <td>{{ row.eventType }}</td>
-                <td>
-                  <output class="status-badge" [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_LIST.STATUS_ARIA' | translate">
-                    {{ ('ACCOUNTING.INGESTION_MONITOR_LIST.STATUS.' + row.processingStatus) | translate }}
-                  </output>
-                </td>
-                <td>{{ row.receivedAt | date:'short' }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
+  @if (events().length > 0) {
+  <div class="table-scroll-container">
+    <table class="ledger-table" [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_LIST.TABLE_ARIA' | translate">
+      <caption>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.TABLE_CAPTION' | translate }}</caption>
+      <thead>
+        <tr>
+          <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_EVENT_ID' | translate }}</th>
+          <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_EVENT_TYPE' | translate }}</th>
+          <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_STATUS' | translate }}</th>
+          <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_RECEIVED_AT' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of events(); track row.eventId) {
+        <tr tabindex="0" data-testid="event-row" (click)="goToDetail(row)" (keydown.enter)="goToDetail(row)"
+          (keydown.space)="goToDetail(row)">
+          <td>{{ row.eventId }}</td>
+          <td>{{ row.eventType }}</td>
+          <td>
+            <output class="status-badge"
+              [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_LIST.STATUS_ARIA' | translate">
+              {{ ('ACCOUNTING.INGESTION_MONITOR_LIST.STATUS.' + row.processingStatus) | translate }}
+            </output>
+          </td>
+          <td>{{ row.receivedAt | date:'short' }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
   }
 </main>
