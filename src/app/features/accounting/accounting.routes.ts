@@ -28,12 +28,9 @@ export const ACCOUNTING_ROUTES: Routes = [
           ),
       },
       {
-        // TODO CAP-050 follow-up: redirect to events with processingStatus=FAILED,QUARANTINED filter
         path: 'events/failed',
-        loadComponent: () =>
-          import('./pages/ingestion-monitor/ingestion-monitor-list/ingestion-monitor-list-page.component').then(
-            m => m.IngestionMonitorListPageComponent,
-          ),
+        redirectTo: 'events?processingStatus=FAILED,QUARANTINED',
+        pathMatch: 'full',
       },
       {
         path: 'events/:eventId',
