@@ -326,7 +326,7 @@ export class WorkexecService {
    */
   getWorkorderDetail(workorderId: string, authorities?: string): Observable<WorkorderDetailResponse> {
     const opts = authorities ? { headers: { 'X-Authorities': authorities } } : undefined;
-    return this.api.get<WorkorderDetailResponse>(`/v1/workorders/${workorderId}/detail`, undefined);
+    return this.api.get<WorkorderDetailResponse>(`/v1/workorders/${workorderId}/detail`, undefined, opts);
   }
 
   /**

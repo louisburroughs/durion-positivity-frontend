@@ -254,4 +254,20 @@ describe('WorkexecService', () => {
     expect(r.request.headers.get('Idempotency-Key')).toBe('add-item-idem-key');
     r.flush({ id: 'item-1', estimateId: 'est-1', itemType: 'PART', quantity: 1, unitPrice: 10 });
   });
+
+  it('getWorkorderDetail — forwards X-Authorities header when authorities provided', () => {
+    service.getWorkorderDetail('wo-1', 'ROLE_MANAGER').subscribe();
+    const r = http.expectOne(`${BASE}/v1/workorders/wo-1/detail`);
+    expect(r.request.method).toBe('GET');
+    expect(r.request.headers.get('X-Authorities')).toBe('ROLE_MANAGER');
+    r.flush({ id: 'wo-1' });
+  });
+
+  it('getWorkorderDetail — does not set X-Authorities header when authorities omitted', () => {
+    service.getWorkorderDetail('wo-1').subscribe();
+    const r = http.expectOne(`${BASE}/v1/workorders/wo-1/detail`);
+    expect(r.request.method).toBe('GET');
+    expect(r.request.headers.has('X-Authorities')).toBeFalsy();
+    r.flush({ id: 'wo-1' });
+  });
 });

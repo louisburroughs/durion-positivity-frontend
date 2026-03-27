@@ -28,8 +28,8 @@ export class ApiBaseService {
 
   constructor(private readonly http: HttpClient) {}
 
-  get<T>(path: string, params?: HttpParams): Observable<T> {
-    return this.http.get<T>(this.url(path), { params });
+  get<T>(path: string, params?: HttpParams, options?: ApiRequestOptions): Observable<T> {
+    return this.http.get<T>(this.url(path), { params, headers: this.toHeaders(options?.headers) });
   }
 
   post<T>(path: string, body: unknown, options?: ApiRequestOptions): Observable<T> {
