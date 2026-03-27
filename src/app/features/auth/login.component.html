@@ -10,6 +10,12 @@
       <p class="brand-tagline">Positivity Platform</p>
     </div>
 
+    @if (sessionExpired()) {
+      <div class="alert alert-info" role="status" aria-live="polite">
+        Your session has expired. Please sign in again.
+      </div>
+    }
+
     <!-- Error Alert -->
     @if (error()) {
       <div class="alert alert-error" role="alert" aria-live="polite">

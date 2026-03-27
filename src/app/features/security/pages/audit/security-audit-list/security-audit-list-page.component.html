@@ -1,0 +1,13 @@
+<section class="security-audit-list-page" aria-labelledby="security-audit-title">
+  @if (state() === 'coming-soon') {
+    <article class="coming-soon-panel mic-elevation-2" aria-live="polite">
+      <div class="panel-accent" aria-hidden="true"></div>
+      <p class="panel-icon" aria-hidden="true">🛡️</p>
+      <h1 id="security-audit-title">Security Audit Log</h1>
+      <p class="panel-description">
+        Audit log data is not yet available in this version. This view will be enabled in a future
+        release.
+      </p>
+    </article>
+  }
+</section>

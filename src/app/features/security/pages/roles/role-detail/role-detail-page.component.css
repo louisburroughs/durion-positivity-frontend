@@ -1,0 +1,297 @@
+.role-detail-page {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  background: var(--themeBackground);
+}
+
+.back-link {
+  width: fit-content;
+  color: var(--brand-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.back-link:focus-visible,
+.btn-primary:focus-visible,
+.btn-text:focus-visible,
+.checkbox-row input:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.state-panel {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--primary50) 65%, transparent);
+}
+
+.role-summary,
+.permissions-panel {
+  position: relative;
+  background: var(--cardBackground);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.panel-accent {
+  position: absolute;
+  left: 0;
+  top: var(--space-6);
+  bottom: var(--space-6);
+  width: 2px;
+  background: var(--brand-accent);
+}
+
+.summary-header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.summary-header h1 {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.5rem;
+  color: var(--bodyColor, var(--currentTextColor));
+}
+
+.summary-description {
+  margin: 0;
+  color: var(--handleColor);
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.meta-grid div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.meta-grid dt {
+  color: var(--brand-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.meta-grid dd {
+  margin: 0;
+  color: var(--bodyColor, var(--currentTextColor));
+}
+
+.permissions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.permissions-header h2 {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+}
+
+.permissions-header p {
+  margin: var(--space-2) 0 0;
+  color: var(--handleColor);
+}
+
+.btn-primary {
+  background: var(--brand-primary);
+  color: var(--contrastTextColor);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  min-height: 2.75rem;
+  font-weight: 600;
+}
+
+.btn-text {
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--brand-primary);
+  padding: var(--space-2) var(--space-3);
+  min-height: 2.5rem;
+  font-weight: 600;
+}
+
+.text-error {
+  color: var(--functional-error-red);
+}
+
+.empty-state {
+  display: grid;
+  gap: var(--space-2);
+  text-align: center;
+  padding: var(--space-8);
+}
+
+.empty-state h3 {
+  margin: 0;
+  font-family: var(--font-primary);
+  color: var(--bodyColor, var(--currentTextColor));
+}
+
+.empty-state p {
+  margin: 0;
+  color: var(--handleColor);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.permissions-table {
+  width: 100%;
+  min-width: 44rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.permissions-table th,
+.permissions-table td {
+  padding: var(--space-3) var(--space-2);
+  text-align: left;
+}
+
+.permissions-table th {
+  color: var(--brand-secondary);
+  font-size: 0.875rem;
+}
+
+.permissions-table tbody tr:nth-child(even) {
+  background: var(--primary50);
+}
+
+.permissions-table tbody tr:hover {
+  background: color-mix(in srgb, var(--trackColor) 18%, transparent);
+}
+
+.action-col {
+  width: 18rem;
+}
+
+.confirm-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.confirm-inline span {
+  color: var(--handleColor);
+  font-size: 0.875rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  z-index: 30;
+}
+
+.modal-surface {
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  width: min(38rem, 100%);
+  max-height: 90vh;
+  margin: 0;
+  padding: 0;
+}
+
+.modal-header {
+  padding: var(--space-6);
+  background: var(--primary50);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-family: var(--font-primary);
+}
+
+.modal-header p {
+  margin: 0;
+  color: var(--handleColor);
+}
+
+.checkbox-list {
+  padding: var(--space-4) var(--space-6);
+  max-height: 56vh;
+  overflow: auto;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.checkbox-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.checkbox-row:nth-child(even) {
+  background: var(--primary50);
+}
+
+.checkbox-row input {
+  margin-top: 0.25rem;
+}
+
+.perm-content {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.perm-content small {
+  color: var(--handleColor);
+}
+
+.modal-actions {
+  padding: 0 var(--space-6) var(--space-6);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+@media (max-width: 64rem) {
+  .role-detail-page {
+    padding: var(--space-4);
+  }
+
+  .role-summary,
+  .permissions-panel {
+    padding: var(--space-4);
+  }
+
+  .panel-accent {
+    top: var(--space-4);
+    bottom: var(--space-4);
+  }
+
+  .meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-col {
+    width: 14rem;
+  }
+}

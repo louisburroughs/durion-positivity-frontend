@@ -1,5 +1,6 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Location } from '@angular/common';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
@@ -11,14 +12,13 @@ import { AuthService } from '../services/auth.service';
  *
  * On 401, attempts a single token refresh then retries the original request.
  * If refresh fails, AuthService.logout() handles redirect to /login.
- *
- * TODO: Add queue to prevent multiple concurrent refresh calls (use a Subject/BehaviorSubject flag).
  */
 export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
   next: HttpHandlerFn,
 ) => {
   const authService = inject(AuthService);
+  const location = inject(Location);
   const token = authService.accessToken();
 
   const authReq = token
@@ -40,7 +40,10 @@ export const authInterceptor: HttpInterceptorFn = (
             });
             return next(retryReq);
           }),
-          catchError(refreshErr => throwError(() => refreshErr)),
+          catchError(refreshErr => {
+            authService.logoutWithRedirect(location.path());
+            return throwError(() => refreshErr);
+          }),
         );
       }
       return throwError(() => err);

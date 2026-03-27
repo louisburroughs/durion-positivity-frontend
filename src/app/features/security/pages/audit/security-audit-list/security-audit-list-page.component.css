@@ -1,0 +1,60 @@
+.security-audit-list-page {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: var(--themeBackground);
+}
+
+.coming-soon-panel {
+  position: relative;
+  width: min(44rem, 100%);
+  background: var(--cardBackground);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  text-align: center;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.panel-accent {
+  position: absolute;
+  left: 0;
+  top: var(--space-6);
+  bottom: var(--space-6);
+  width: 2px;
+  background: var(--brand-accent);
+}
+
+.panel-icon {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.coming-soon-panel h1 {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.5rem;
+  color: var(--bodyColor, var(--currentTextColor));
+}
+
+.panel-description {
+  margin: 0 auto;
+  max-width: 36rem;
+  color: var(--handleColor);
+}
+
+@media (max-width: 64rem) {
+  .security-audit-list-page {
+    padding: var(--space-4);
+  }
+
+  .coming-soon-panel {
+    padding: var(--space-6);
+  }
+
+  .panel-accent {
+    top: var(--space-4);
+    bottom: var(--space-4);
+  }
+}

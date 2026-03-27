@@ -1,0 +1,163 @@
+<section class="role-detail-page" aria-labelledby="role-detail-title">
+  <a class="back-link" routerLink="/app/security">Roles /</a>
+
+  @if (loading()) {
+    <div class="state-panel" aria-live="polite">Loading role details...</div>
+  }
+
+  @if (error()) {
+    <div class="alert alert-error" role="alert" aria-live="polite">{{ error() }}</div>
+  }
+
+  @if (role(); as currentRole) {
+    <section class="role-summary mic-elevation-2">
+      <div class="panel-accent" aria-hidden="true"></div>
+      <header class="summary-header">
+        <h1 id="role-detail-title">Roles / {{ currentRole.name }}</h1>
+        <p class="summary-description">{{ currentRole.description || 'No description provided.' }}</p>
+      </header>
+
+      <dl class="meta-grid">
+        <div>
+          <dt>Created</dt>
+          <dd>{{ currentRole.createdAt || 'Unavailable' }}</dd>
+        </div>
+        <div>
+          <dt>Updated</dt>
+          <dd>{{ currentRole.updatedAt || 'Unavailable' }}</dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>
+            @if (currentRole.status === 'INACTIVE') {
+              <span class="mic-status warn">Inactive</span>
+            } @else {
+              <span class="mic-status valid">Active</span>
+            }
+          </dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="permissions-panel mic-elevation-2" aria-label="Role permissions">
+      <div class="panel-accent" aria-hidden="true"></div>
+
+      <header class="permissions-header">
+        <div>
+          <h2>Permissions</h2>
+          <p>Assigned permission definitions for this role.</p>
+        </div>
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="openGrantModal()"
+        >
+          Edit Permissions
+        </button>
+      </header>
+
+      @if (permissions().length === 0) {
+        <div class="empty-state" aria-live="polite">
+          <h3>No permissions assigned</h3>
+          <p>Use Edit Permissions to grant access keys to this role.</p>
+        </div>
+      }
+
+      @if (permissions().length > 0) {
+        <div class="table-scroll">
+          <table class="permissions-table" aria-label="Role permission assignments">
+            <thead>
+              <tr>
+                <th scope="col">Permission Key</th>
+                <th scope="col">Description</th>
+                <th scope="col" class="action-col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (permission of permissions(); track permission.permissionKey) {
+                <tr>
+                  <td>{{ permission.permissionKey }}</td>
+                  <td>{{ permission.description || 'No description available.' }}</td>
+                  <td class="action-col">
+                    @if (confirmRevokeKey() === permission.permissionKey) {
+                      <div class="confirm-inline" aria-live="polite">
+                        <span>Confirm revoke?</span>
+                        <button
+                          type="button"
+                          class="btn-text text-error"
+                          (click)="executeRevoke()"
+                          [attr.aria-label]="'Confirm revoke for ' + permission.permissionKey"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-text"
+                          (click)="cancelRevoke()"
+                          aria-label="Cancel revoke"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn-text text-error"
+                        (click)="confirmRevoke(permission.permissionKey)"
+                        [attr.aria-label]="'Revoke assignment for ' + permission.permissionKey"
+                      >
+                        Revoke
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+
+  @if (showGrantModal()) {
+    <section class="modal-backdrop">
+      <dialog class="modal-surface mic-elevation-4" open aria-label="Grant permissions dialog">
+        <header class="modal-header">
+          <h2>Grant Permissions</h2>
+          <p>Select permission keys to grant to this role.</p>
+        </header>
+
+        <div class="checkbox-list" aria-label="Permissions selection list">
+          @for (perm of allPermissions(); track perm.permissionKey) {
+            <label class="checkbox-row" [for]="'perm-' + perm.permissionKey">
+              <input
+                [id]="'perm-' + perm.permissionKey"
+                type="checkbox"
+                [checked]="selectedPermKeys().includes(perm.permissionKey)"
+                (change)="togglePermission(perm.permissionKey)"
+              />
+              <span class="perm-content">
+                <strong>{{ perm.permissionKey }}</strong>
+                <small>{{ perm.description || 'No description available.' }}</small>
+              </span>
+            </label>
+          }
+        </div>
+
+        <footer class="modal-actions">
+          <button type="button" class="btn-text" (click)="showGrantModal.set(false)" aria-label="Cancel grant permissions">
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            (click)="submitGrantPermissions()"
+            aria-label="Submit permission updates"
+          >
+            Submit
+          </button>
+        </footer>
+      </dialog>
+    </section>
+  }
+</section>

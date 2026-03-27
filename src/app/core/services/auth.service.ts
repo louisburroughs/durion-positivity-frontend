@@ -1,7 +1,8 @@
 import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of, tap, catchError, throwError } from 'rxjs';
+import { Observable, of, tap, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { JwtClaims, LoginRequest, LoginResponse } from '../models/auth.models';
@@ -92,6 +93,16 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  logoutWithRedirect(returnUrl: string): void {
+    this.clearTokens();
+    this.router.navigate(['/login'], {
+      queryParams: {
+        returnUrl,
+        sessionExpired: 'true',
+      },
+    });
+  }
+
   hasRole(role: string): boolean {
     return this._roles().includes(role);
   }
@@ -120,6 +131,26 @@ export class AuthService {
         catchError(err => {
           this.logout();
           return throwError(() => err);
+        }),
+      );
+  }
+
+  validateSessionOnResume(): Observable<boolean> {
+    const token = this._accessToken();
+    if (!token) {
+      this.logout();
+      return of(false);
+    }
+
+    return this.http
+      .get<void>(`${environment.apiBaseUrl}/auth/validate`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .pipe(
+        map(() => true),
+        catchError(() => {
+          this.logout();
+          return of(false);
         }),
       );
   }
