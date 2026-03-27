@@ -14,16 +14,16 @@ const MOCK_ACCESS_TOKEN =
   '.eyJzdWIiOiJkZW1vIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJleHAiOjk5OTk5OTk5OTksImlhdCI6MTcwMDAwMDAwMH0' +
   '.mock-signature-not-verified';
 const MOCK_RESPONSE: LoginResponse = {
-  accessToken:  MOCK_ACCESS_TOKEN,
+  accessToken: MOCK_ACCESS_TOKEN,
   refreshToken: 'mock-refresh-token',
-  tokenType:    'Bearer',
+  tokenType: 'Bearer',
 };
 
-const ACCESS_TOKEN_KEY  = 'durion-access-token';
+const ACCESS_TOKEN_KEY = 'durion-access-token';
 const REFRESH_TOKEN_KEY = 'durion-refresh-token';
-const ROLES_KEY         = 'durion-user-roles';
-const ROLES_EXP_KEY     = 'durion-user-roles-exp';
-const EXPIRY_SKEW_MS    = 30_000;
+const ROLES_KEY = 'durion-user-roles';
+const ROLES_EXP_KEY = 'durion-user-roles-exp';
+const EXPIRY_SKEW_MS = 30_000;
 
 /**
  * AuthService
@@ -41,16 +41,16 @@ const EXPIRY_SKEW_MS    = 30_000;
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly platformId = inject(PLATFORM_ID);
-  private readonly router     = inject(Router);
-  private readonly http       = inject(HttpClient);
+  private readonly router = inject(Router);
+  private readonly http = inject(HttpClient);
 
-  private readonly _accessToken  = signal<string | null>(this.loadFromStorage(ACCESS_TOKEN_KEY));
+  private readonly _accessToken = signal<string | null>(this.loadFromStorage(ACCESS_TOKEN_KEY));
   private readonly _refreshToken = signal<string | null>(this.loadFromStorage(REFRESH_TOKEN_KEY));
-  private readonly _roles        = signal<string[]>(this.loadRolesFromSession());
+  private readonly _roles = signal<string[]>(this.loadRolesFromSession());
   private expiryTimerId: ReturnType<typeof setTimeout> | null = null;
 
   /** Reactive derived state. Components / guards can use these. */
-  readonly accessToken    = this._accessToken.asReadonly();
+  readonly accessToken = this._accessToken.asReadonly();
   readonly isAuthenticated = computed(() => {
     const token = this._accessToken();
     if (!token) return false;

@@ -13,14 +13,14 @@ import { ThemeService } from '../../core/services/theme.service';
   styleUrl: './login.component.css',
 })
 export class LoginComponent implements OnInit {
-  private readonly fb          = inject(FormBuilder);
+  private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
-  private readonly router      = inject(Router);
-  private readonly route       = inject(ActivatedRoute);
-  readonly themeService        = inject(ThemeService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  readonly themeService = inject(ThemeService);
 
   readonly loading = signal(false);
-  readonly error   = signal<string | null>(null);
+  readonly error = signal<string | null>(null);
   readonly sessionExpired = signal(false);
 
   readonly form = this.fb.nonNullable.group({

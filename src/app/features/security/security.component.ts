@@ -8,4 +8,4 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   templateUrl: './security.component.html',
   styleUrl: './security.component.css',
 })
-export class SecurityComponent {}
+export class SecurityComponent { }

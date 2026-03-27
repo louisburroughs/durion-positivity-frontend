@@ -15,14 +15,9 @@
     <div class="toolbar">
       <label class="search-label" for="roles-search">Search roles</label>
       <div class="search-row">
-        <input
-          id="roles-search"
-          type="search"
-          [value]="searchTerm()"
-          (input)="searchTerm.set($any($event.target).value)"
-          placeholder="Search by role name"
-          aria-label="Search roles"
-        />
+        <input id="roles-search" type="search" [value]="searchTerm()"
+          (input)="searchTerm.set($any($event.target).value)" placeholder="Search by role name"
+          aria-label="Search roles" />
         <button type="button" class="btn-text" (click)="search()" aria-label="Apply role search">
           Search
         </button>
@@ -30,121 +25,94 @@
     </div>
 
     @if (loading()) {
-      <div class="state-panel" aria-live="polite">Loading roles...</div>
+    <div class="state-panel" aria-live="polite">Loading roles...</div>
     }
 
     @if (error()) {
-      <div class="alert alert-error" role="alert" aria-live="polite">{{ error() }}</div>
+    <div class="alert alert-error" role="alert" aria-live="polite">{{ error() }}</div>
     }
 
     @if (roles().length === 0 && !loading()) {
-      <div class="empty-state" aria-live="polite">
-        <h2>No roles found</h2>
-        <p>Try adjusting your search or create a new role.</p>
-      </div>
+    <div class="empty-state" aria-live="polite">
+      <h2>No roles found</h2>
+      <p>Try adjusting your search or create a new role.</p>
+    </div>
     }
 
     @if (roles().length > 0 && !loading()) {
-      <div class="table-scroll" aria-live="polite">
-        <table class="roles-table" aria-label="Roles table">
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Description</th>
-              <th scope="col" class="actions-col">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (role of roles(); track role.name) {
-              <tr>
-                <td>
-                  <div class="role-name">{{ role.name }}</div>
-                </td>
-                <td>{{ role.description || 'No description provided.' }}</td>
-                <td class="actions-col">
-                  <button
-                    type="button"
-                    class="btn-text"
-                    (click)="navigateToDetail(role)"
-                    [attr.aria-label]="'View details for role ' + role.name"
-                  >
-                    View Detail
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+    <div class="table-scroll" aria-live="polite">
+      <table class="roles-table" aria-label="Roles table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Description</th>
+            <th scope="col" class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (role of roles(); track role.name) {
+          <tr>
+            <td>
+              <div class="role-name">{{ role.name }}</div>
+            </td>
+            <td>{{ role.description || 'No description provided.' }}</td>
+            <td class="actions-col">
+              <button type="button" class="btn-text" (click)="navigateToDetail(role)"
+                [attr.aria-label]="'View details for role ' + role.name">
+                View Detail
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
     }
 
     <footer class="pager" aria-label="Roles pagination">
-      <button
-        type="button"
-        class="btn-text"
-        (click)="prevPage()"
-        [disabled]="page() <= 0"
-        aria-label="Previous roles page"
-      >
+      <button type="button" class="btn-text" (click)="prevPage()" [disabled]="page() <= 0"
+        aria-label="Previous roles page">
         Previous
       </button>
       <span class="page-indicator">Page {{ page() + 1 }} of {{ totalPages() || 1 }}</span>
-      <button
-        type="button"
-        class="btn-text"
-        (click)="nextPage()"
-        [disabled]="totalPages() === 0 || page() + 1 >= totalPages()"
-        aria-label="Next roles page"
-      >
+      <button type="button" class="btn-text" (click)="nextPage()"
+        [disabled]="totalPages() === 0 || page() + 1 >= totalPages()" aria-label="Next roles page">
         Next
       </button>
     </footer>
   </section>
 
   @if (showCreateModal()) {
-    <section class="modal-backdrop">
-      <dialog class="modal-surface mic-elevation-4" open aria-label="Create role">
-        <header class="modal-header">
-          <h2>Create Role</h2>
-          <p>Add a new role definition for security access management.</p>
-        </header>
+  <section class="modal-backdrop">
+    <dialog class="modal-surface mic-elevation-4" open aria-label="Create role">
+      <header class="modal-header">
+        <h2>Create Role</h2>
+        <p>Add a new role definition for security access management.</p>
+      </header>
 
-        @if (createError()) {
-          <div class="alert alert-error" role="alert" aria-live="polite">{{ createError() }}</div>
-        }
+      @if (createError()) {
+      <div class="alert alert-error" role="alert" aria-live="polite">{{ createError() }}</div>
+      }
 
-        <div class="modal-fields">
-          <label class="field-label" for="create-role-name">Name</label>
-          <input
-            id="create-role-name"
-            class="underline-input"
-            type="text"
-            [value]="newRoleName()"
-            (input)="newRoleName.set($any($event.target).value)"
-            aria-label="Role name"
-            required
-          />
+      <div class="modal-fields">
+        <label class="field-label" for="create-role-name">Name</label>
+        <input id="create-role-name" class="underline-input" type="text" [value]="newRoleName()"
+          (input)="newRoleName.set($any($event.target).value)" aria-label="Role name" required />
 
-          <label class="field-label" for="create-role-description">Description</label>
-          <textarea
-            id="create-role-description"
-            class="underline-input"
-            [value]="newRoleDescription()"
-            (input)="newRoleDescription.set($any($event.target).value)"
-            aria-label="Role description"
-            rows="4"
-          ></textarea>
-        </div>
+        <label class="field-label" for="create-role-description">Description</label>
+        <textarea id="create-role-description" class="underline-input" [value]="newRoleDescription()"
+          (input)="newRoleDescription.set($any($event.target).value)" aria-label="Role description" rows="4"></textarea>
+      </div>
 
-        <footer class="modal-actions">
-          <button type="button" class="btn-text" (click)="closeCreateModal()" aria-label="Cancel create role">
-            Cancel
-          </button>
-          <button type="button" class="btn-primary" (click)="submitCreate()" aria-label="Submit create role">
-            Submit
-          </button>
-        </footer>
-      </dialog>
-    </section>
+      <footer class="modal-actions">
+        <button type="button" class="btn-text" (click)="closeCreateModal()" aria-label="Cancel create role">
+          Cancel
+        </button>
+        <button type="button" class="btn-primary" (click)="submitCreate()" aria-label="Submit create role">
+          Submit
+        </button>
+      </footer>
+    </dialog>
+  </section>
   }
 </section>

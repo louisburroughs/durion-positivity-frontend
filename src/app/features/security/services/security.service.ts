@@ -15,7 +15,7 @@ import {
 export class SecurityService {
   private static readonly BASE = '/v1';
 
-  constructor(private readonly api: ApiBaseService) {}
+  constructor(private readonly api: ApiBaseService) { }
 
   getAllRoles(page = 0, size = 20): Observable<PagedResponse<SecurityRole>> {
     const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
