@@ -7,6 +7,8 @@ import {
   AssignTechnicianRequest,
   CalculateEstimateTotalsResponse,
   ChangeRequestResponse,
+  CompleteWorkorderRequest,
+  CompleteWorkorderResponse,
   ConsumePartsRequest,
   CreateChangeRequestRequest,
   CreateEstimateRequest,
@@ -15,9 +17,13 @@ import {
   EstimateResponse,
   EstimateSnapshotResponse,
   EstimateSummaryResponse,
+  FinalizeWorkorderRequest,
+  FinalizeWorkorderResponse,
   IssuePartsRequest,
   OperationalContextResponse,
   PartUsageResponse,
+  ReopenWorkorderRequest,
+  ReopenWorkorderResponse,
   ReturnPartsRequest,
   StartLaborRequest,
   StopLaborRequest,
@@ -28,6 +34,7 @@ import {
   WorkorderDetailResponse,
   WorkorderLaborEntryResponse,
   WorkorderResponse,
+  WorkorderSnapshotHistoryEntry,
   WorkorderStartResponse,
   WorkorderTransition,
 } from '../models/workexec.models';
@@ -613,6 +620,77 @@ export class WorkexecService {
     return this.api.post<ChangeRequestResponse>(
       `/v1/workorders/changeRequests/${changeId}/decline`,
       { reason },
+      this.idempotencyOptions(idempotencyKey),
+    );
+  }
+
+  // ── CAP-006: Complete / Reopen / Finalize (Stories 215, 214, 216) ──────────
+
+  /**
+   * operationId: completeWorkorder
+   * POST /v1/workorders/{workorderId}/complete
+   */
+  completeWorkorder(
+    workorderId: string,
+    body: CompleteWorkorderRequest,
+    idempotencyKey?: string,
+  ): Observable<CompleteWorkorderResponse> {
+    return this.api.post<CompleteWorkorderResponse>(
+      `/v1/workorders/${workorderId}/complete`,
+      body,
+      this.idempotencyOptions(idempotencyKey),
+    );
+  }
+
+  /**
+   * operationId: reopenWorkorder
+   * POST /v1/workorders/{workorderId}/reopen
+   */
+  reopenWorkorder(
+    workorderId: string,
+    body: ReopenWorkorderRequest,
+    idempotencyKey?: string,
+  ): Observable<ReopenWorkorderResponse> {
+    return this.api.post<ReopenWorkorderResponse>(
+      `/v1/workorders/${workorderId}/reopen`,
+      body,
+      this.idempotencyOptions(idempotencyKey),
+    );
+  }
+
+  /**
+   * POST /v1/workorders/{workorderId}/finalize
+   * Creates billable scope snapshot (Story 216).
+   */
+  finalizeWorkorder(
+    workorderId: string,
+    body: FinalizeWorkorderRequest,
+    idempotencyKey?: string,
+  ): Observable<FinalizeWorkorderResponse> {
+    return this.api.post<FinalizeWorkorderResponse>(
+      `/v1/workorders/${workorderId}/finalize`,
+      body,
+      this.idempotencyOptions(idempotencyKey),
+    );
+  }
+
+  /**
+   * operationId: getSnapshotHistory
+   * GET /v1/workorders/{workorderId}/snapshots
+   */
+  getSnapshotHistory(workorderId: string): Observable<WorkorderSnapshotHistoryEntry[]> {
+    return this.api.get<WorkorderSnapshotHistoryEntry[]>(`/v1/workorders/${workorderId}/snapshots`);
+  }
+
+  /**
+   * operationId: generateInvoice
+   * POST /v1/workorders/{workorderId}/generate-invoice
+   * CAP-007 Story 213 — triggers invoice draft creation; use billing service for detail.
+   */
+  generateInvoice(workorderId: string, idempotencyKey?: string): Observable<{ invoiceId: string; status?: string }> {
+    return this.api.post<{ invoiceId: string; status?: string }>(
+      `/v1/workorders/${workorderId}/generate-invoice`,
+      {},
       this.idempotencyOptions(idempotencyKey),
     );
   }

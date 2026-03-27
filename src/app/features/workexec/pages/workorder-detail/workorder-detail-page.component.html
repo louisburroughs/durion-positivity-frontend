@@ -54,6 +54,24 @@
             <button class="btn btn--ghost" (click)="navigateToLabor()">Record Labor</button>
             <button class="btn btn--ghost" (click)="navigateToParts()">Manage Parts</button>
             <button class="btn btn--ghost" (click)="navigateToChangeRequests()">Change Requests</button>
+            <button class="btn btn--ghost" (click)="navigateToFinalize()">Finalize for Billing</button>
+          }
+          @if (canComplete()) {
+            <button class="btn btn--accent" (click)="openCompleteModal()">Complete Work Order</button>
+          }
+          @if (canReopen()) {
+            <button class="btn btn--ghost" (click)="openReopenModal()">Reopen</button>
+          }
+          @if (canCreateInvoice()) {
+            <button
+              class="btn btn--accent"
+              (click)="generateInvoice()"
+              [disabled]="invoiceLoading()"
+              [attr.aria-busy]="invoiceLoading()"
+            >{{ invoiceLoading() ? 'Creating Invoice…' : 'Create Invoice' }}</button>
+          }
+          @if (invoiceError()) {
+            <span class="inline-error" role="alert">{{ invoiceError() }}</span>
           }
           <button class="btn btn--ghost" (click)="navigateToAssign()">
             {{ technicianName() ? 'Reassign' : 'Assign Technician' }}
@@ -84,7 +102,12 @@
         class="wo-tab"
         [class.wo-tab--active]="activeTab() === 'change-requests'"
         (click)="navigateToChangeRequests()"
-      >Change Requests</button>
+      >
+        Change Requests
+        @if (pendingCrCount() > 0) {
+          <span class="tab-badge tab-badge--warning" aria-label="{{ pendingCrCount() }} pending">{{ pendingCrCount() }}</span>
+        }
+      </button>
       <button
         class="wo-tab"
         [class.wo-tab--active]="activeTab() === 'audit'"
@@ -181,6 +204,39 @@
 
 </section>
 
+<!-- Completion Checklist Panel (Story 218) — shown when canComplete -->
+@if (pageState() === 'ready' && canComplete()) {
+  <aside class="checklist-panel" aria-label="Completion readiness checklist">
+    <h3 class="checklist-panel__title">Completion Checklist</h3>
+    @if (checklistLoading()) {
+      <p class="hint-text" aria-busy="true">Checking prerequisites…</p>
+    } @else {
+      @if (pendingCrCount() > 0) {
+        <div class="checklist-item checklist-item--blocking" role="listitem">
+          <span class="checklist-item__icon" aria-hidden="true">✗</span>
+          <span class="checklist-item__label">
+            {{ pendingCrCount() }} change request(s) pending advisor review — resolve before completing.
+          </span>
+          <button class="btn-link" (click)="navigateToChangeRequests()">View Change Requests</button>
+        </div>
+      } @else {
+        <div class="checklist-item checklist-item--ok" role="listitem">
+          <span class="checklist-item__icon" aria-hidden="true">✓</span>
+          <span class="checklist-item__label">No pending change requests.</span>
+        </div>
+      }
+      @if (failedChecks().length > 0) {
+        @for (check of failedChecks(); track check.checkId) {
+          <div class="checklist-item checklist-item--{{ check.severity === 'BLOCKING' ? 'blocking' : 'warning' }}" role="listitem">
+            <span class="checklist-item__icon" aria-hidden="true">{{ check.severity === 'BLOCKING' ? '✗' : '!' }}</span>
+            <span class="checklist-item__label">{{ check.description }}</span>
+          </div>
+        }
+      }
+    }
+  </aside>
+}
+
 <!-- Start Work confirmation modal — glassmorphism per design authority -->
 @if (showStartWorkModal()) {
   <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="start-work-modal-title">
@@ -210,6 +266,118 @@
           {{ startWorkLoading() ? 'Starting…' : 'Confirm — Start Work' }}
         </button>
       </div>
+    </div>
+  </div>
+}
+
+<!-- Complete Work Order modal (Story 215) — glassmorphism -->
+@if (showCompleteModal()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="complete-modal-title">
+    <div class="modal-glass">
+      <h2 id="complete-modal-title" class="modal-glass__title">Complete Work Order</h2>
+
+      @if (completeModalState() === 'success') {
+        <div class="alert alert--success" role="status">Work order completed successfully.</div>
+      } @else {
+        <p class="modal-glass__body">
+          Mark this work order as <strong>COMPLETED</strong>. Ensure all labor and parts have been recorded.
+        </p>
+
+        <div class="form-field">
+          <label for="completion-notes" class="form-label">Completion Notes <span class="hint-text">(optional)</span></label>
+          <textarea
+            id="completion-notes"
+            class="form-textarea"
+            rows="3"
+            [value]="completionNotes()"
+            (input)="completionNotes.set($any($event.target).value)"
+            placeholder="Describe any final notes or observations…"
+          ></textarea>
+        </div>
+
+        @if (completeError()) {
+          <div class="alert alert--error" role="alert">{{ completeError() }}</div>
+        }
+
+        @if (failedChecks().length > 0) {
+          <ul class="failed-checks" aria-label="Completion blockers">
+            @for (check of failedChecks(); track check.checkId) {
+              <li class="failed-check failed-check--{{ check.severity.toLowerCase() }}">
+                <span class="failed-check__icon" aria-hidden="true">{{ check.severity === 'BLOCKING' ? '✗' : '!' }}</span>
+                {{ check.description }}
+              </li>
+            }
+          </ul>
+        }
+
+        <div class="modal-glass__actions">
+          <button
+            class="btn btn--ghost"
+            (click)="cancelComplete()"
+            [disabled]="completeModalState() === 'loading'"
+          >Cancel</button>
+          <button
+            class="btn btn--accent"
+            (click)="confirmComplete()"
+            [disabled]="completeModalState() === 'loading' || pendingCrCount() > 0"
+            [attr.aria-busy]="completeModalState() === 'loading'"
+          >
+            {{ completeModalState() === 'loading' ? 'Completing…' : 'Confirm — Complete Work Order' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- Reopen Work Order modal (Story 214) — glassmorphism -->
+@if (showReopenModal()) {
+  <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="reopen-modal-title">
+    <div class="modal-glass">
+      <h2 id="reopen-modal-title" class="modal-glass__title">Reopen Work Order</h2>
+
+      @if (reopenModalState() === 'success') {
+        <div class="alert alert--success" role="status">Work order reopened successfully.</div>
+      } @else {
+        <p class="modal-glass__body">
+          This will move the work order back to <strong>IN PROGRESS</strong>.
+          A reason is required.
+        </p>
+
+        <div class="form-field">
+          <label for="reopen-reason" class="form-label">Reopen Reason <span class="required-mark" aria-hidden="true">*</span></label>
+          <textarea
+            id="reopen-reason"
+            class="form-textarea"
+            rows="3"
+            [value]="reopenReason()"
+            (input)="reopenReason.set($any($event.target).value)"
+            placeholder="Explain why this work order is being reopened…"
+            required
+            aria-required="true"
+          ></textarea>
+        </div>
+
+        @if (reopenError()) {
+          <div class="alert alert--error" role="alert">{{ reopenError() }}</div>
+        }
+
+        <div class="modal-glass__actions">
+          <button
+            class="btn btn--ghost"
+            (click)="cancelReopen()"
+            [disabled]="reopenModalState() === 'loading'"
+          >Cancel</button>
+          <button
+            class="btn btn--accent"
+            (click)="confirmReopen()"
+            [disabled]="reopenModalState() === 'loading' || !reopenReason().trim()"
+            [attr.aria-busy]="reopenModalState() === 'loading'"
+          >
+            {{ reopenModalState() === 'loading' ? 'Reopening…' : 'Confirm — Reopen Work Order' }}
+          </button>
+        </div>
+      }
     </div>
   </div>
 }

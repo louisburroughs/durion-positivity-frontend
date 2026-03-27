@@ -463,3 +463,96 @@ export type PageState = 'idle' | 'loading' | 'ready' | 'saving' | 'success' | 'e
 
 /** Totals panel state machine (Story 236) */
 export type TotalsState = 'idle' | 'recalculating' | 'updated' | 'blocked-config' | 'error';
+
+// ── CAP-006: Completion + Reopen (Stories 218, 215, 214) ─────────────────────
+
+/**
+ * operationId: completeWorkorder
+ * POST /v1/workorders/{workorderId}/complete
+ */
+export interface CompleteWorkorderRequest {
+  completionNotes?: string;
+}
+
+export interface CompletionFailedCheck {
+  checkId: string;
+  description: string;
+  severity: 'BLOCKING' | 'WARNING';
+}
+
+export interface CompleteWorkorderResponse {
+  workorderId: string;
+  status: WorkorderStatus;
+  completedAt?: string;
+  completedBy?: string;
+  completionNotes?: string;
+  failedChecks?: CompletionFailedCheck[];
+}
+
+/**
+ * operationId: reopenWorkorder
+ * POST /v1/workorders/{workorderId}/reopen
+ */
+export interface ReopenWorkorderRequest {
+  reopenReason: string;
+}
+
+export interface ReopenWorkorderResponse {
+  workorderId: string;
+  status: WorkorderStatus;
+  reopenedAt?: string;
+  reopenedBy?: string;
+  reopenReason?: string;
+}
+
+// ── CAP-006: Finalize Billable Scope Snapshot (Story 216) ────────────────────
+
+/**
+ * POST /v1/workorders/{workorderId}/finalize
+ */
+export interface FinalizeWorkorderRequest {
+  snapshotType?: string;
+  poNumber?: string;
+}
+
+export interface BillableScopeSnapshotItem {
+  id: string;
+  description?: string;
+  quantity?: number;
+  unitPrice?: number;
+  lineTotal?: number;
+  itemType?: 'PART' | 'LABOR';
+}
+
+export interface BillableScopeSnapshot {
+  snapshotId: string;
+  workorderId: string;
+  snapshotVersion: number;
+  snapshotStatus: string;
+  partsTotal?: number;
+  laborTotal?: number;
+  taxTotal?: number;
+  grandTotal?: number;
+  poNumber?: string;
+  finalizedAt?: string;
+  finalizedBy?: string;
+  items?: BillableScopeSnapshotItem[];
+}
+
+export interface FinalizeWorkorderResponse extends BillableScopeSnapshot {
+  message?: string;
+}
+
+/**
+ * operationId: getSnapshotHistory
+ * GET /v1/workorders/{workorderId}/snapshots
+ */
+export interface WorkorderSnapshotHistoryEntry {
+  id: string;
+  workorderId?: string;
+  status?: string;
+  snapshotData?: string;
+  capturedAt?: string;
+  capturedById?: string;
+  notes?: string;
+}

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -14,10 +14,12 @@ import { WorkexecService } from '../../services/workexec.service';
 type PageState = 'loading' | 'ready' | 'error';
 
 /**
- * WorkorderChangeRequestsPageComponent — Story 220 (CAP-005)
+ * WorkorderChangeRequestsPageComponent — Story 220 (CAP-005) + Story 217 (CAP-006)
  * Route: /app/workexec/workorders/:workorderId/change-requests
  * operationIds: createChangeRequest, approveChangeRequest, declineChangeRequest,
  *               getChangeRequestsByWorkorder, getChangeRequestById
+ *
+ * Story 217 adds: blockers computed list, blocker banner, resolved-count summary.
  */
 @Component({
   selector: 'app-workorder-change-requests-page',
@@ -162,6 +164,15 @@ export class WorkorderChangeRequestsPageComponent implements OnInit {
         },
       });
   }
+
+  /** Story 217 — approval-gated blockers */
+  readonly blockers = computed(() =>
+    this.changeRequests().filter(cr => cr.status === 'AWAITING_ADVISOR_REVIEW'),
+  );
+
+  readonly resolvedCount = computed(() =>
+    this.changeRequests().filter(cr => cr.status === 'APPROVED' || cr.status === 'DECLINED').length,
+  );
 
   back(): void {
     this.router.navigate(['/app/workexec/workorders', this.workorderId()]);

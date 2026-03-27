@@ -43,3 +43,25 @@
 .btn--decline {background:#ffebee;color:#c62828;border:1px solid rgba(198,40,40,0.3);}
 .btn--approve:disabled,.btn--decline:disabled {opacity:0.5;cursor:not-allowed;}
 .btn-icon {background:none;border:none;cursor:pointer;font-size:0.9rem;padding:var(--space-1);}
+
+/* ── Story 217: Blocker banner ──────────────────────────────────────────── */
+
+.blocker-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 1rem 1.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm, 4px);
+  background: var(--color-warning-surface, #fef3c7);
+  border: 1px solid var(--color-warning, #d97706);
+  color: var(--color-warning-on, #92400e);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.blocker-banner__icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}

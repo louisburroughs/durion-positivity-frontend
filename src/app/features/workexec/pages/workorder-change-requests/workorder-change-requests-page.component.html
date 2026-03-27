@@ -11,6 +11,23 @@
       <h1 id="cr-heading">Change Requests</h1>
     </header>
 
+    <!-- Story 217: Blocker banner -->
+    @if (blockers().length > 0) {
+      <div class="blocker-banner" role="alert" aria-label="Approval blockers">
+        <span class="blocker-banner__icon" aria-hidden="true">⚠</span>
+        <span>
+          <strong>{{ blockers().length }} {{ blockers().length === 1 ? 'change request requires' : 'change requests require' }} your approval</strong>
+          before this work order can be completed. Resolve all items below.
+        </span>
+      </div>
+    }
+
+    @if (resolvedCount() > 0 && blockers().length === 0) {
+      <div class="alert alert--success" role="status">
+        All change requests resolved. Work order is clear to complete.
+      </div>
+    }
+
     <div class="cr-header-row">
       <p class="section-overline">Requests ({{ changeRequests().length }})</p>
       <button class="btn btn--accent btn--sm" (click)="openCreateForm()">+ New Request</button>
@@ -34,7 +51,7 @@
               <select
                 class="field__input"
                 [value]="item.type"
-                (change)="updateItem($index, $any($event.target).value === 'SERVICE' ? { type: 'SERVICE', partId: null } : { type: 'PART', serviceId: null })">
+                (change)="updateItem($index, $any($event.target).value === 'SERVICE' ? { type: 'SERVICE', partId: undefined } : { type: 'PART', serviceId: undefined })">
                 <option value="SERVICE">Service</option>
                 <option value="PART">Part</option>
               </select>
