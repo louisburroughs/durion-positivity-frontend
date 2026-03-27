@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { VendorBill, VendorPaymentResult } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
@@ -31,8 +32,9 @@ type VendorPaymentState =
   templateUrl: './vendor-payment-new-page.component.html',
   styleUrl: './vendor-payment-new-page.component.css',
 })
-export class VendorPaymentNewPageComponent {
+export class VendorPaymentNewPageComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
   private readonly accountingService = inject(AccountingService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -50,6 +52,13 @@ export class VendorPaymentNewPageComponent {
     memo: [''],
     allocationsJson: ['[]'],
   });
+
+  ngOnInit(): void {
+    const vendorId = this.route.snapshot.queryParamMap.get('vendorId');
+    if (vendorId) {
+      this.form.controls.vendorId.setValue(vendorId);
+    }
+  }
 
   loadBills(): void {
     const vendorId = this.form.controls.vendorId.value;
@@ -85,10 +94,16 @@ export class VendorPaymentNewPageComponent {
       return;
     }
 
-    const allocations = JSON.parse(value.allocationsJson || '[]') as Array<{
-      vendorBillId: string;
-      amount: number;
-    }>;
+    let allocations: Array<{ vendorBillId: string; amount: number }>;
+    try {
+      allocations = JSON.parse(value.allocationsJson || '[]') as Array<{
+        vendorBillId: string;
+        amount: number;
+      }>;
+    } catch {
+      this.state.set('error');
+      return;
+    }
 
     this.state.set('submitting');
     this.accountingService

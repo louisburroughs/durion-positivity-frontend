@@ -101,12 +101,4 @@ describe('PostingRulesListPageComponent', () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it('newRuleSet() navigates to posting-rules/new', () => {
-    accountingServiceStub.listPostingRuleSets.mockReturnValueOnce(new Subject());
-    fixture.detectChanges();
-    const router = TestBed.inject(Router);
-    const spy = vi.spyOn(router, 'navigate');
-    component.newRuleSet();
-    expect(spy).toHaveBeenCalledWith(['/app/accounting/posting-rules/new']);
-  });
 });

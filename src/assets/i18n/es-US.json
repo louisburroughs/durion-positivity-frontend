@@ -16,12 +16,12 @@
   },
   "ACCOUNTING": {
     "COMMON": {
-      "ACCESS_DENIED": "Access denied",
-      "LOADING": "Loading...",
-      "ERROR_LOADING": "Unable to load data.",
-      "EMPTY": "No data available.",
-      "RETRY": "Retry",
-      "YES": "Yes",
+      "ACCESS_DENIED": "Acceso denegado",
+      "LOADING": "Cargando...",
+      "ERROR_LOADING": "No se pueden cargar los datos.",
+      "EMPTY": "No hay datos disponibles.",
+      "RETRY": "Reintentar",
+      "YES": "Sí",
       "NO": "No"
     },
     "INGESTION_MONITOR_LIST": {
@@ -136,7 +136,18 @@
     "POSTING_RULES_DETAIL": {
       "OVERLINE": "Posting Rules",
       "TITLE": "Posting Rule Set Detail",
-      "EMPTY": "No posting rule detail to display."
+      "EMPTY": "No hay detalles de reglas de contabilización.",
+      "FIELD_ID": "ID del conjunto de reglas",
+      "FIELD_NAME": "Nombre",
+      "FIELD_EVENT_TYPE": "Tipo de evento",
+      "FIELD_DESCRIPTION": "Descripción",
+      "FIELD_CREATED": "Creado el",
+      "FIELD_MODIFIED": "Última modificación",
+      "VERSIONS_HEADING": "Versiones",
+      "COL_VERSION": "Versión",
+      "COL_STATE": "Estado",
+      "COL_PUBLISHED_AT": "Publicado el",
+      "COL_PUBLISHED_BY": "Publicado por"
     },
     "PAYMENT_APPLY": {
       "OVERLINE": "Accounts Receivable",
@@ -168,14 +179,32 @@
       "RESULT_TOTAL": "Total amount"
     },
     "CREDIT_MEMO_LIST": {
-      "OVERLINE": "Accounts Receivable",
-      "TITLE": "Credit Memo List",
-      "EMPTY": "No credit memos available."
+      "OVERLINE": "Cuentas por Cobrar",
+      "TITLE": "Lista de Notas de Crédito",
+      "EMPTY": "No hay notas de crédito disponibles.",
+      "NEW_MEMO": "Nueva nota de crédito",
+      "TABLE_ARIA": "Tabla de notas de crédito",
+      "TABLE_CAPTION": "Notas de crédito",
+      "COL_ID": "ID de nota",
+      "COL_INVOICE": "Factura",
+      "COL_CUSTOMER": "Cliente",
+      "COL_AMOUNT": "Importe",
+      "COL_STATUS": "Estado",
+      "COL_CREATED": "Creado el"
     },
     "CREDIT_MEMO_DETAIL": {
-      "OVERLINE": "Accounts Receivable",
-      "TITLE": "Credit Memo Detail",
-      "EMPTY": "No credit memo detail available."
+      "OVERLINE": "Cuentas por Cobrar",
+      "TITLE": "Detalle de Nota de Crédito",
+      "EMPTY": "No hay detalles de nota de crédito.",
+      "FIELD_ID": "ID de Nota de Crédito",
+      "FIELD_INVOICE": "Factura Original",
+      "FIELD_CUSTOMER": "Cliente",
+      "FIELD_CREDIT_AMOUNT": "Importe de Crédito",
+      "FIELD_TOTAL_AMOUNT": "Importe Total",
+      "FIELD_STATUS": "Estado",
+      "FIELD_REASON": "Código de Razón",
+      "FIELD_NOTE": "Nota de Justificación",
+      "FIELD_CREATED": "Creado el"
     },
     "VENDOR_PAYMENT_NEW": {
       "OVERLINE": "Accounts Payable",
@@ -201,14 +230,41 @@
       "RESULT_STATUS": "Status"
     },
     "VENDOR_PAYMENT_LIST": {
-      "OVERLINE": "Accounts Payable",
-      "TITLE": "Vendor Payment List",
-      "EMPTY": "No vendor payments available."
+      "OVERLINE": "Cuentas por Pagar",
+      "TITLE": "Lista de Pagos a Proveedores",
+      "EMPTY": "No hay pagos a proveedores disponibles.",
+      "NEW_PAYMENT": "Nuevo pago",
+      "TABLE_ARIA": "Tabla de facturas de proveedor",
+      "TABLE_CAPTION": "Facturas de proveedor",
+      "COL_VENDOR": "Proveedor",
+      "COL_BILL_NUMBER": "Número de factura",
+      "COL_BILL_DATE": "Fecha de factura",
+      "COL_AMOUNT": "Importe",
+      "COL_DUE_DATE": "Fecha de vencimiento",
+      "COL_STATUS": "Estado"
     },
     "VENDOR_PAYMENT_DETAIL": {
-      "OVERLINE": "Accounts Payable",
-      "TITLE": "Vendor Payment Detail",
-      "EMPTY": "No vendor payment detail available."
+      "OVERLINE": "Cuentas por Pagar",
+      "TITLE": "Detalle de Pago a Proveedor",
+      "EMPTY": "No hay detalles de pago a proveedor.",
+      "FIELD_PAYMENT_ID": "ID de Pago",
+      "FIELD_PAYMENT_REF": "Referencia de Pago",
+      "FIELD_VENDOR": "Proveedor",
+      "FIELD_GROSS_AMOUNT": "Importe Bruto",
+      "FIELD_NET_AMOUNT": "Importe Neto",
+      "FIELD_STATUS": "Estado",
+      "FIELD_GATEWAY_TXN": "ID de Transacción de Pasarela",
+      "FIELD_CREATED": "Creado el"
+    }
+  },
+  "WORKEXEC": {
+    "OPERATIONAL_COST": {
+      "OVERLINE": "Costos de Orden de Trabajo",
+      "TITLE": "Resumen de Costos Operacionales",
+      "EMPTY": "No se proporcionó el ID de la orden de trabajo.",
+      "DEBIT_TOTAL": "Total de Débitos",
+      "CREDIT_TOTAL": "Total de Créditos",
+      "NET": "Total Neto"
     }
   }
 }

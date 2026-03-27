@@ -129,4 +129,24 @@ describe('IngestionMonitorDetailPageComponent', () => {
     });
     expect(fixture.componentInstance.canRetry()).toBe(false);
   });
+
+  describe('pollRetryOutcome()', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('should set retryState to error when polling completes without terminal status', () => {
+      accountingServiceStub.getEvent.mockReturnValue(
+        of({ processingStatus: 'RECEIVED' }),
+      );
+      fixture.componentInstance.retryState.set('polling');
+      (fixture.componentInstance as any).pollRetryOutcome();
+      vi.advanceTimersByTime(3000);
+      expect(fixture.componentInstance.retryState()).toBe('error');
+    });
+  });
 });

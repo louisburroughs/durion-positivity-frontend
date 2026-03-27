@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { AccountingService } from '../../../services/accounting.service';
@@ -15,11 +16,19 @@ describe('VendorPaymentNewPageComponent', () => {
     ),
   };
 
+  const queryParamGetSpy = vi.fn().mockReturnValue(null);
+  const activatedRouteStub = {
+    snapshot: {
+      queryParamMap: { get: queryParamGetSpy },
+    },
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [VendorPaymentNewPageComponent, TranslateModule.forRoot()],
       providers: [
         { provide: AccountingService, useValue: accountingServiceStub },
+        { provide: ActivatedRoute, useValue: activatedRouteStub },
       ],
     }).compileComponents();
 
@@ -141,5 +150,34 @@ describe('VendorPaymentNewPageComponent', () => {
     component.submit();
     fixture.detectChanges();
     expect(component.state()).toBe('conflict');
+  });
+
+  describe('submit()', () => {
+    it('should set error state when allocationsJson is invalid JSON', () => {
+      component.form.patchValue({
+        vendorId: 'vendor-1',
+        grossAmount: 100,
+        currency: 'USD',
+        paymentMethod: 'ACH',
+        paymentRef: 'ref-001',
+        allocationsJson: '{invalid}',
+      });
+      component.submit();
+      expect(component.state()).toBe('error');
+    });
+  });
+
+  describe('ngOnInit()', () => {
+    it('should prefill vendorId from query param', () => {
+      queryParamGetSpy.mockReturnValueOnce('v-123');
+      component.ngOnInit();
+      expect(component.form.controls.vendorId.value).toBe('v-123');
+    });
+
+    it('should not prefill vendorId when query param absent', () => {
+      component.form.controls.vendorId.setValue('');
+      component.ngOnInit();
+      expect(component.form.controls.vendorId.value).toBe('');
+    });
   });
 });

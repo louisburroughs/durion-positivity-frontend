@@ -78,4 +78,15 @@ describe('PaymentApplyPageComponent', () => {
     const btn = fixture.nativeElement.querySelector('button[type="submit"]');
     expect(btn.disabled).toBe(true);
   });
+
+  describe('submit()', () => {
+    it('should set error state when applicationsJson is invalid JSON', () => {
+      component.form.patchValue({
+        paymentId: 'p-1',
+        applicationsJson: 'not-json',
+      });
+      component.submit();
+      expect(component.state()).toBe('error');
+    });
+  });
 });

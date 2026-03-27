@@ -98,13 +98,14 @@ describe('VendorPaymentListPageComponent', () => {
     expect(spy).toHaveBeenCalledWith(['/app/accounting/vendor-payments/new']);
   });
 
-  it('openPayment(bill) navigates to vendor-payments/new with vendorBillId query param', () => {
+  it('openPayment(bill) navigates to vendor-payments/new with vendorId query param', () => {
     accountingServiceStub.listBills.mockReturnValueOnce(new Subject());
     fixture.detectChanges();
     const router = TestBed.inject(Router);
     const spy = vi.spyOn(router, 'navigate');
     component.openPayment({
       vendorBillId: 'bill-99',
+      vendorId: 'vendor-1',
       vendorName: 'Vendor A',
       billNumber: 'B-001',
       billDate: '2024-01-01',
@@ -113,7 +114,7 @@ describe('VendorPaymentListPageComponent', () => {
       status: 'APPROVED',
     });
     expect(spy).toHaveBeenCalledWith(['/app/accounting/vendor-payments/new'], {
-      queryParams: { vendorBillId: 'bill-99' },
+      queryParams: { vendorId: 'vendor-1' },
     });
   });
 

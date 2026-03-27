@@ -47,7 +47,13 @@ export class PaymentApplyPageComponent {
     if (!paymentId) {
       return;
     }
-    const applications = JSON.parse(value.applicationsJson ?? '[]') as Array<{ invoiceId: string; amount: number }>;
+    let applications: Array<{ invoiceId: string; amount: number }>;
+    try {
+      applications = JSON.parse(value.applicationsJson ?? '[]') as Array<{ invoiceId: string; amount: number }>;
+    } catch {
+      this.state.set('error');
+      return;
+    }
 
     this.state.set('submitting');
     this.accountingService

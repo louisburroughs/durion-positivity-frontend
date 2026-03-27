@@ -97,6 +97,11 @@ export class IngestionMonitorDetailPageComponent implements OnInit {
           }
         },
         error: () => this.retryState.set('error'),
+        complete: () => {
+          if (this.retryState() === 'polling') {
+            this.retryState.set('error');
+          }
+        },
       });
   }
 

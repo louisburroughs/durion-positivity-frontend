@@ -136,7 +136,18 @@
     "POSTING_RULES_DETAIL": {
       "OVERLINE": "Posting Rules",
       "TITLE": "Posting Rule Set Detail",
-      "EMPTY": "No posting rule detail to display."
+      "EMPTY": "No posting rule detail to display.",
+      "FIELD_ID": "Rule Set ID",
+      "FIELD_NAME": "Name",
+      "FIELD_EVENT_TYPE": "Event type",
+      "FIELD_DESCRIPTION": "Description",
+      "FIELD_CREATED": "Created at",
+      "FIELD_MODIFIED": "Last modified",
+      "VERSIONS_HEADING": "Versions",
+      "COL_VERSION": "Version",
+      "COL_STATE": "State",
+      "COL_PUBLISHED_AT": "Published at",
+      "COL_PUBLISHED_BY": "Published by"
     },
     "PAYMENT_APPLY": {
       "OVERLINE": "Accounts Receivable",
@@ -170,12 +181,30 @@
     "CREDIT_MEMO_LIST": {
       "OVERLINE": "Accounts Receivable",
       "TITLE": "Credit Memo List",
-      "EMPTY": "No credit memos available."
+      "EMPTY": "No credit memos available.",
+      "NEW_MEMO": "New credit memo",
+      "TABLE_ARIA": "Credit memos table",
+      "TABLE_CAPTION": "Credit memos",
+      "COL_ID": "Memo ID",
+      "COL_INVOICE": "Invoice",
+      "COL_CUSTOMER": "Customer",
+      "COL_AMOUNT": "Amount",
+      "COL_STATUS": "Status",
+      "COL_CREATED": "Created at"
     },
     "CREDIT_MEMO_DETAIL": {
       "OVERLINE": "Accounts Receivable",
       "TITLE": "Credit Memo Detail",
-      "EMPTY": "No credit memo detail available."
+      "EMPTY": "No credit memo detail available.",
+      "FIELD_ID": "Credit Memo ID",
+      "FIELD_INVOICE": "Original Invoice",
+      "FIELD_CUSTOMER": "Customer",
+      "FIELD_CREDIT_AMOUNT": "Credit Amount",
+      "FIELD_TOTAL_AMOUNT": "Total Amount",
+      "FIELD_STATUS": "Status",
+      "FIELD_REASON": "Reason Code",
+      "FIELD_NOTE": "Justification Note",
+      "FIELD_CREATED": "Created at"
     },
     "VENDOR_PAYMENT_NEW": {
       "OVERLINE": "Accounts Payable",
@@ -203,12 +232,39 @@
     "VENDOR_PAYMENT_LIST": {
       "OVERLINE": "Accounts Payable",
       "TITLE": "Vendor Payment List",
-      "EMPTY": "No vendor payments available."
+      "EMPTY": "No vendor payments available.",
+      "NEW_PAYMENT": "New payment",
+      "TABLE_ARIA": "Vendor bills table",
+      "TABLE_CAPTION": "Vendor bills",
+      "COL_VENDOR": "Vendor",
+      "COL_BILL_NUMBER": "Bill number",
+      "COL_BILL_DATE": "Bill date",
+      "COL_AMOUNT": "Amount",
+      "COL_DUE_DATE": "Due date",
+      "COL_STATUS": "Status"
     },
     "VENDOR_PAYMENT_DETAIL": {
       "OVERLINE": "Accounts Payable",
       "TITLE": "Vendor Payment Detail",
-      "EMPTY": "No vendor payment detail available."
+      "EMPTY": "No vendor payment detail available.",
+      "FIELD_PAYMENT_ID": "Payment ID",
+      "FIELD_PAYMENT_REF": "Payment Reference",
+      "FIELD_VENDOR": "Vendor",
+      "FIELD_GROSS_AMOUNT": "Gross Amount",
+      "FIELD_NET_AMOUNT": "Net Amount",
+      "FIELD_STATUS": "Status",
+      "FIELD_GATEWAY_TXN": "Gateway Transaction ID",
+      "FIELD_CREATED": "Created at"
+    }
+  },
+  "WORKEXEC": {
+    "OPERATIONAL_COST": {
+      "OVERLINE": "Workorder Costs",
+      "TITLE": "Operational Cost Summary",
+      "EMPTY": "No workorder ID provided.",
+      "DEBIT_TOTAL": "Total Debits",
+      "CREDIT_TOTAL": "Total Credits",
+      "NET": "Net Total"
     }
   }
 }

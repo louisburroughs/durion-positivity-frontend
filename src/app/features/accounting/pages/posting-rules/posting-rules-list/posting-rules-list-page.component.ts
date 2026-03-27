@@ -44,8 +44,4 @@ export class PostingRulesListPageComponent implements OnInit {
     }
     this.router.navigate(['/app/accounting/posting-rules', item.postingRuleSetId]);
   }
-
-  newRuleSet(): void {
-    this.router.navigate(['/app/accounting/posting-rules/new']);
-  }
 }

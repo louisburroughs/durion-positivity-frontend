@@ -49,7 +49,7 @@ export class VendorPaymentListPageComponent implements OnInit {
 
   openPayment(bill: VendorBill): void {
     this.router.navigate(['/app/accounting/vendor-payments/new'], {
-      queryParams: { vendorBillId: bill.vendorBillId },
+      queryParams: { vendorId: bill.vendorId },
     });
   }
 }

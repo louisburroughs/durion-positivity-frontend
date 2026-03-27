@@ -18,16 +18,19 @@ export class OperationalCostComponent {
   @Input({ required: true }) workorderId = '';
   @Input() debitTotalInput: number | null = null;
   @Input() creditTotalInput: number | null = null;
-  @Input() netTotalInput: number | null = null;
 
   readonly debitTotal = signal(0);
   readonly creditTotal = signal(0);
   readonly netTotal = computed(() => this.debitTotal() - this.creditTotal());
 
   ngOnInit(): void {
-    if (this.debitTotalInput !== null && this.creditTotalInput !== null) {
+    if (this.debitTotalInput !== null) {
       this.debitTotal.set(this.debitTotalInput);
+    }
+    if (this.creditTotalInput !== null) {
       this.creditTotal.set(this.creditTotalInput);
+    }
+    if (this.debitTotalInput !== null || this.creditTotalInput !== null) {
       return;
     }
 
