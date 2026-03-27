@@ -100,6 +100,47 @@ describe('RolesListPageComponent', () => {
       expect(component.roles()).toEqual([]);
       expect(component.totalPages()).toBe(0);
     });
+
+    // T7: non-empty searchTerm with matching results → totalPages overridden to 1
+    it('T7: when searchTerm matches results, totalPages() is 1 regardless of server totalPages', () => {
+      fixture.detectChanges();
+
+      securityServiceStub.getAllRoles.mockReturnValueOnce(
+        of({
+          results: [{ name: 'admin-role' }],
+          totalCount: 1,
+          pageNumber: 0,
+          pageSize: 20,
+          totalPages: 5,
+        }),
+      );
+      component.searchTerm.set('admin');
+      component.loadRoles();
+
+      expect(component.totalPages()).toBe(1);
+      expect(component.roles().length).toBe(1);
+      expect(component.roles()[0].name).toBe('admin-role');
+    });
+
+    // T8: non-empty searchTerm with no matches → totalPages is 0 and roles() is empty
+    it('T8: when searchTerm has no matches, totalPages() is 0 and roles() is empty', () => {
+      fixture.detectChanges();
+
+      securityServiceStub.getAllRoles.mockReturnValueOnce(
+        of({
+          results: [{ name: 'admin-role' }],
+          totalCount: 1,
+          pageNumber: 0,
+          pageSize: 20,
+          totalPages: 5,
+        }),
+      );
+      component.searchTerm.set('zzz-no-match');
+      component.loadRoles();
+
+      expect(component.totalPages()).toBe(0);
+      expect(component.roles()).toEqual([]);
+    });
   });
 
   describe('modal state', () => {

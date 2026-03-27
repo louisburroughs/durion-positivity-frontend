@@ -136,9 +136,12 @@ export class AuthService {
   }
 
   validateSessionOnResume(): Observable<boolean> {
+    if (environment.mockAuth) {
+      return of(true);
+    }
+
     const token = this._accessToken();
     if (!token) {
-      this.logout();
       return of(false);
     }
 
@@ -149,7 +152,7 @@ export class AuthService {
       .pipe(
         map(() => true),
         catchError(() => {
-          this.logout();
+          this.logoutWithRedirect(this.router.url);
           return of(false);
         }),
       );

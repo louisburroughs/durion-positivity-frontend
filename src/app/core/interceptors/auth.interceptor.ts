@@ -11,7 +11,7 @@ import { AuthService } from '../services/auth.service';
  * that targets the configured API base URL.
  *
  * On 401, attempts a single token refresh then retries the original request.
- * If refresh fails, AuthService.logout() handles redirect to /login.
+ * If refresh fails, AuthService.logoutWithRedirect(currentPath) handles the redirect.
  */
 export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,

@@ -41,12 +41,13 @@ export class RolesListPageComponent implements OnInit {
         next: (resp) => {
           const term = this.searchTerm().trim().toLowerCase();
           const results = resp.results ?? [];
-          this.roles.set(
-            term.length > 0
-              ? results.filter(role => role.name.toLowerCase().includes(term))
-              : results,
-          );
-          this.totalPages.set(resp.totalPages ?? 0);
+          const hasSearch = term.length > 0;
+          const filtered = hasSearch
+            ? results.filter(role => role.name.toLowerCase().includes(term))
+            : results;
+          this.roles.set(filtered);
+          const searchPages = filtered.length > 0 ? 1 : 0;
+          this.totalPages.set(hasSearch ? searchPages : (resp.totalPages ?? 0));
           this.loading.set(false);
         },
         error: (err) => {

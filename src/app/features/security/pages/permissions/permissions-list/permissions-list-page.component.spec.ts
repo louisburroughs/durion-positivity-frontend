@@ -147,6 +147,27 @@ describe('PermissionsListPageComponent', () => {
       component.search();
       expect(component.page()).toBe(0);
     });
+
+    // T9: non-empty searchTerm with matching permission → totalPages overridden to 1
+    it('T9: when searchTerm matches, totalPages() is 1 (not server totalPages) and permissions() has the match', () => {
+      fixture.detectChanges();
+
+      securityServiceStub.getAllPermissions.mockReturnValueOnce(
+        of({
+          results: [{ permissionKey: 'order:read' }],
+          totalCount: 1,
+          pageNumber: 0,
+          pageSize: 100,
+          totalPages: 3,
+        }),
+      );
+      component.searchTerm.set('read');
+      component.loadPermissions();
+
+      expect(component.totalPages()).toBe(1);
+      expect(component.permissions().length).toBe(1);
+      expect(component.permissions()[0].permissionKey).toBe('order:read');
+    });
   });
 
   describe('pagination', () => {

@@ -35,13 +35,15 @@ export class PermissionsListPageComponent implements OnInit {
         next: (resp) => {
           const term = this.searchTerm().trim().toLowerCase();
           const results = resp.results ?? [];
+          const hasSearch = term.length > 0;
 
           this.permissions.set(
-            term.length > 0
+            hasSearch
               ? results.filter(permission => permission.permissionKey.toLowerCase().includes(term))
               : results,
           );
-          this.totalPages.set(resp.totalPages ?? 0);
+          const searchPages = this.permissions().length > 0 ? 1 : 0;
+          this.totalPages.set(hasSearch ? searchPages : (resp.totalPages ?? 0));
           this.loading.set(false);
         },
         error: (err) => {
