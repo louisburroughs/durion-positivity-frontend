@@ -1,0 +1,111 @@
+<section class="workexec-page workorder-finalize" aria-labelledby="finalize-heading">
+
+  <header class="wo-header" aria-labelledby="finalize-heading">
+    <div class="wo-header__inner">
+      <div class="wo-header__identity">
+        <p class="wo-header__overline">Work Order</p>
+        <h1 id="finalize-heading" class="wo-header__id">{{ workorderId() }}</h1>
+        <span class="status-chip status-chip--pending">Finalize for Billing</span>
+      </div>
+      <div class="wo-header__actions">
+        <button class="btn btn--ghost" (click)="goBack()">← Back to Work Order</button>
+      </div>
+    </div>
+  </header>
+
+  @if (pageState() === 'loading') {
+    <p class="hint-text" aria-busy="true">Loading snapshot history…</p>
+  }
+
+  @if (pageState() === 'error') {
+    <div class="alert alert--error" role="alert">
+      {{ errorMessage() }}
+      <button class="btn-link" (click)="refresh()">Retry</button>
+    </div>
+  }
+
+  @if (pageState() === 'ready') {
+
+    <!-- Finalize action card -->
+    @if (!hasActiveSnapshot()) {
+      <div class="finalize-card" aria-labelledby="finalize-action-title">
+        <h2 id="finalize-action-title" class="finalize-card__title">Finalize Billable Scope</h2>
+        <p class="finalize-card__desc">
+          Create an immutable snapshot of the work order's billable scope. This snapshot captures
+          all authorized parts, labor, and totals for invoice generation.
+        </p>
+
+        <div class="form-field">
+          <label for="po-number" class="form-label">PO Number <span class="hint-text">(if required by location)</span></label>
+          <input
+            id="po-number"
+            type="text"
+            class="form-input"
+            [value]="poNumber()"
+            (input)="poNumber.set($any($event.target).value)"
+            placeholder="e.g. PO-2026-001"
+          />
+        </div>
+
+        @if (finalizeError()) {
+          <div class="alert alert--error" role="alert">{{ finalizeError() }}</div>
+        }
+
+        @if (finalizeState() === 'success' && finalizeResult()) {
+          <div class="alert alert--success" role="status">
+            Billable scope snapshot created — Version {{ finalizeResult()!.snapshotVersion }}.
+            Grand Total: {{ finalizeResult()!.grandTotal | currency }}.
+          </div>
+        }
+
+        <div class="finalize-card__actions">
+          <button
+            class="btn btn--accent"
+            (click)="finalizeForBilling()"
+            [disabled]="!canFinalize()"
+            [attr.aria-busy]="finalizeState() === 'loading'"
+          >
+            {{ finalizeState() === 'loading' ? 'Finalizing…' : 'Finalize for Billing' }}
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div class="alert alert--info" role="status">
+        An active billable snapshot already exists for this work order.
+        Invoice generation is available from the work order detail.
+      </div>
+    }
+
+    <!-- Snapshot history -->
+    <div class="wo-section" aria-label="Billable scope snapshot history">
+      <h2 class="section-heading">Snapshot History</h2>
+
+      @if (snapshots().length === 0) {
+        <p class="hint-text">No billable scope snapshots recorded yet.</p>
+      } @else {
+        <div class="ledger">
+          <div class="ledger__header">
+            <span>ID</span>
+            <span>Status</span>
+            <span>Captured</span>
+            <span>By</span>
+            <span>Notes</span>
+          </div>
+          @for (snap of snapshots(); track snap.id; let even = $even) {
+            <div class="ledger__row" [class.ledger__row--alt]="even">
+              <span class="ledger__cell ledger__cell--mono">{{ snap.id | slice:0:8 }}…</span>
+              <span class="ledger__cell">
+                <span class="status-chip status-chip--{{ snap.status?.toLowerCase() }}">{{ snap.status }}</span>
+              </span>
+              <span class="ledger__cell">{{ snap.capturedAt | date:'medium' }}</span>
+              <span class="ledger__cell">{{ snap.capturedById ?? '—' }}</span>
+              <span class="ledger__cell">{{ snap.notes ?? '—' }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+  }
+
+</section>

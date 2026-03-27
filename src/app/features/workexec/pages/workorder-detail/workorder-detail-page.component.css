@@ -77,3 +77,139 @@
 .btn--accent:disabled {opacity:0.5;cursor:not-allowed;}
 .btn--ghost {background:transparent;border:1px solid rgba(var(--outline-variant-rgb,130,130,130),0.35);color:var(--currentTextColor,#1f2328);}
 .btn--full {width:100%;}
+
+/* ── Tab badge (Story 218 — Story 217) ──────────────────────────────────── */
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0 0.3rem;
+  margin-left: 0.4rem;
+  line-height: 1;
+}
+
+.tab-badge--warning {
+  background: var(--color-warning, #f59e0b);
+  color: var(--color-on-warning, #1f2328);
+}
+
+/* ── Inline error beside CTA ────────────────────────────────────────────── */
+
+.inline-error {
+  font-size: 0.8rem;
+  color: var(--color-error, #dc2626);
+  margin-left: 0.5rem;
+}
+
+/* ── Completion checklist panel (Story 218) ─────────────────────────────── */
+
+.checklist-panel {
+  margin: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-surface-container-low, #f8fafc);
+  border: 1px solid var(--color-outline-variant, #d0d7de);
+}
+
+.checklist-panel__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-on-surface, #1f2328);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--color-outline-variant, #d0d7de);
+}
+
+.checklist-item:last-child {
+  border-bottom: none;
+}
+
+.checklist-item__icon {
+  flex-shrink: 0;
+  font-weight: 700;
+  width: 1.25rem;
+  text-align: center;
+}
+
+.checklist-item--ok .checklist-item__icon { color: var(--color-success, #16a34a); }
+.checklist-item--blocking .checklist-item__icon { color: var(--color-error, #dc2626); }
+.checklist-item--warning .checklist-item__icon { color: var(--color-warning, #f59e0b); }
+
+.checklist-item__label { flex: 1; }
+
+/* ── Form fields (modals) ───────────────────────────────────────────────── */
+
+.form-field { margin-bottom: 1rem; }
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  color: var(--color-on-surface, #1f2328);
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-outline-variant, #d0d7de);
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  background: var(--color-surface, #ffffff);
+  color: var(--color-on-surface, #1f2328);
+}
+
+.form-textarea:focus {
+  outline: 2px solid var(--brand-accent, #14c8b4);
+  outline-offset: 1px;
+  border-color: var(--brand-accent, #14c8b4);
+}
+
+.required-mark { color: var(--color-error, #dc2626); }
+
+/* ── Failed checks list ─────────────────────────────────────────────────── */
+
+.failed-checks {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 1rem;
+}
+
+.failed-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  font-size: 0.875rem;
+}
+
+.failed-check__icon { flex-shrink: 0; font-weight: 700; }
+.failed-check--blocking .failed-check__icon { color: var(--color-error, #dc2626); }
+.failed-check--warning .failed-check__icon { color: var(--color-warning, #f59e0b); }
+
+/* ── Success alert ──────────────────────────────────────────────────────── */
+
+.alert--success {
+  background: var(--color-success-surface, #dcfce7);
+  color: var(--color-success, #16a34a);
+  border: 1px solid var(--color-success, #16a34a);
+  border-radius: var(--radius-sm, 4px);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+}
