@@ -1,0 +1,87 @@
+.accounting-page {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+.section-overline {
+  color: var(--brand-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 var(--space-2);
+}
+
+.page-header h1 {
+  color: var(--brand-primary);
+  margin: 0;
+}
+
+.notice {
+  background: color-mix(in srgb, var(--functional-warning) 8%, transparent);
+  padding: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.submit-form {
+  display: grid;
+  gap: var(--space-3);
+  background: color-mix(in srgb, var(--brand-primary) 4%, transparent);
+  padding: var(--space-4);
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+}
+
+input,
+textarea {
+  border: none;
+  border-bottom: 2px solid var(--durion-graphite-200);
+  border-radius: 0;
+  background: transparent;
+  padding-left: 0;
+}
+
+textarea {
+  min-height: 10rem;
+  font-family: monospace;
+}
+
+input:focus,
+textarea:focus {
+  box-shadow: none;
+  border-bottom-color: var(--brand-accent);
+}
+
+input.ng-invalid.ng-touched,
+textarea.ng-invalid.ng-touched {
+  border-bottom-color: var(--functional-error-red);
+}
+
+button {
+  width: fit-content;
+  border: none;
+  background: var(--brand-accent);
+  color: #fff;
+  padding: var(--space-2) var(--space-4);
+}
+
+.error-text {
+  color: var(--functional-error-red);
+}
+
+.state-panel {
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
+}
+
+.state-panel--forbidden {
+  background: color-mix(in srgb, var(--functional-warning) 10%, transparent);
+}
+
+.state-panel--success {
+  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
+}

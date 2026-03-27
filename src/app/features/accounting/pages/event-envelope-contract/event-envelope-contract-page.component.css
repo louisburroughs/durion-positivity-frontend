@@ -1,0 +1,73 @@
+.accounting-page {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+.section-overline {
+  color: var(--brand-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 var(--space-2);
+}
+
+.page-header h1 {
+  margin: 0;
+  color: var(--brand-primary);
+}
+
+.tab-bar {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.tab-bar button {
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--currentTextColor);
+  padding: var(--space-2) 0;
+}
+
+.tab-bar button.active {
+  border-bottom-color: var(--brand-accent);
+  color: var(--brand-primary);
+}
+
+.table-scroll-container {
+  overflow-x: auto;
+}
+
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 34rem;
+}
+
+.ledger-table th,
+.ledger-table td {
+  text-align: left;
+  padding: var(--space-2);
+}
+
+.ledger-table th {
+  border-bottom: 2px solid var(--surface-variant, var(--durion-graphite-200));
+}
+
+.ledger-table td {
+  border-bottom: 1px solid var(--surface-variant, var(--durion-graphite-200));
+}
+
+.state-panel {
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--brand-primary) 5%, transparent);
+}
+
+.state-panel--error {
+  background: color-mix(in srgb, var(--functional-error-red) 8%, transparent);
+}
+
+.state-panel--forbidden {
+  background: color-mix(in srgb, var(--functional-warning) 10%, transparent);
+}

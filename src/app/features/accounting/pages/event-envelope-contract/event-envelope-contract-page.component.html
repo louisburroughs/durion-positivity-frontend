@@ -1,0 +1,91 @@
+<main class="accounting-page" aria-labelledby="event-envelope-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.OVERLINE' | translate }}</p>
+    <h1 id="event-envelope-heading">{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TITLE' | translate }}</h1>
+  </header>
+
+  @if (pageState() === 'loading') {
+  <section class="state-panel" aria-live="polite" aria-busy="true">{{ 'ACCOUNTING.COMMON.LOADING' | translate }}
+  </section>
+  }
+  @if (pageState() === 'error') {
+  <section class="state-panel state-panel--error" role="alert">{{ 'ACCOUNTING.COMMON.ERROR_LOADING' | translate }}
+  </section>
+  }
+  @if (pageState() === 'forbidden') {
+  <section class="state-panel state-panel--forbidden" data-testid="forbidden-state" role="alert">{{
+    'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</section>
+  }
+
+  @if (pageState() === 'ready' && contract(); as value) {
+  <div class="tab-bar" role="tablist" [attr.aria-label]="'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TABS_ARIA' | translate">
+    <button type="button" role="tab" [class.active]="activeTab() === 'fields'" (click)="activeTab.set('fields')">{{
+      'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TAB_FIELDS' | translate }}</button>
+    <button type="button" role="tab" [class.active]="activeTab() === 'traceability'"
+      (click)="activeTab.set('traceability')">{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TAB_TRACEABILITY' | translate
+      }}</button>
+    <button type="button" role="tab" [class.active]="activeTab() === 'examples'" (click)="activeTab.set('examples')">{{
+      'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TAB_EXAMPLES' | translate }}</button>
+  </div>
+
+  @if (activeTab() === 'fields') {
+  <section class="table-scroll-container" data-testid="fields-tab" role="tabpanel">
+    @if (value.fields.length === 0) {
+    <div class="state-panel">{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.EMPTY_FIELDS' | translate }}</div>
+    } @else {
+    <table class="ledger-table" [attr.aria-label]="'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.FIELDS_TABLE_ARIA' | translate">
+      <caption>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.FIELDS_TABLE_CAPTION' | translate }}</caption>
+      <thead>
+        <tr>
+          <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_NAME' | translate }}</th>
+          <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_TYPE' | translate }}</th>
+          <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_REQUIRED' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (field of value.fields; track field.name) {
+        <tr>
+          <td>{{ field.name }}</td>
+          <td>{{ field.type }}</td>
+          <td>{{ field.required ? ('ACCOUNTING.COMMON.YES' | translate) : ('ACCOUNTING.COMMON.NO' | translate) }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    }
+  </section>
+  }
+
+  @if (activeTab() === 'traceability') {
+  <section class="table-scroll-container" role="tabpanel">
+    @if (value.traceabilityIds.length === 0) {
+    <div class="state-panel">{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.EMPTY_TRACEABILITY' | translate }}</div>
+    } @else {
+    <table class="ledger-table" [attr.aria-label]="'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TRACE_TABLE_ARIA' | translate">
+      <caption>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.TRACE_TABLE_CAPTION' | translate }}</caption>
+      <thead>
+        <tr>
+          <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_NAME' | translate }}</th>
+          <th>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.COL_TYPE' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of value.traceabilityIds; track item.name) {
+        <tr>
+          <td>{{ item.name }}</td>
+          <td>{{ item.type }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    }
+  </section>
+  }
+
+  @if (activeTab() === 'examples') {
+  <section role="tabpanel" class="state-panel">
+    <p>{{ 'ACCOUNTING.EVENT_ENVELOPE_CONTRACT.EMPTY_EXAMPLES' | translate }}</p>
+  </section>
+  }
+  }
+</main>

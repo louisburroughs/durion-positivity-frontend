@@ -1,0 +1,58 @@
+<main class="accounting-page" aria-labelledby="credit-memo-list-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.CREDIT_MEMO_LIST.OVERLINE' | translate }}</p>
+    <h1 id="credit-memo-list-heading">{{ 'ACCOUNTING.CREDIT_MEMO_LIST.TITLE' | translate }}</h1>
+    <button type="button" class="btn-primary" (click)="newMemo()" data-testid="new-memo-button">
+      {{ 'ACCOUNTING.CREDIT_MEMO_LIST.NEW_MEMO' | translate }}
+    </button>
+  </header>
+
+  @if (pageState() === 'loading') {
+  <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-state">{{
+    'ACCOUNTING.COMMON.LOADING' | translate }}</section>
+  }
+  @if (pageState() === 'error') {
+  <section class="state-panel state-panel--error" role="alert" data-testid="error-state">
+    {{ 'ACCOUNTING.COMMON.ERROR_LOADING' | translate }}
+    <button type="button" class="link-button" (click)="load()">{{ 'ACCOUNTING.COMMON.RETRY' | translate }}</button>
+  </section>
+  }
+  @if (pageState() === 'forbidden') {
+  <section class="state-panel state-panel--forbidden" role="alert" data-testid="forbidden-state">{{
+    'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</section>
+  }
+  @if (pageState() === 'not-found') {
+  <section class="state-panel state-panel--empty" data-testid="empty-state">{{ 'ACCOUNTING.CREDIT_MEMO_LIST.EMPTY' |
+    translate }}</section>
+  }
+  @if (pageState() === 'ready') {
+  <div class="table-scroll-container">
+    <table class="ledger-table" [attr.aria-label]="'ACCOUNTING.CREDIT_MEMO_LIST.TABLE_ARIA' | translate">
+      <caption>{{ 'ACCOUNTING.CREDIT_MEMO_LIST.TABLE_CAPTION' | translate }}</caption>
+      <thead>
+        <tr>
+          <th>{{ 'ACCOUNTING.CREDIT_MEMO_LIST.COL_ID' | translate }}</th>
+          <th>{{ 'ACCOUNTING.CREDIT_MEMO_LIST.COL_INVOICE' | translate }}</th>
+          <th>{{ 'ACCOUNTING.CREDIT_MEMO_LIST.COL_CUSTOMER' | translate }}</th>
+          <th class="col-amount">{{ 'ACCOUNTING.CREDIT_MEMO_LIST.COL_AMOUNT' | translate }}</th>
+          <th>{{ 'ACCOUNTING.CREDIT_MEMO_LIST.COL_STATUS' | translate }}</th>
+          <th>{{ 'ACCOUNTING.CREDIT_MEMO_LIST.COL_CREATED' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (memo of memos(); track memo.creditMemoId) {
+        <tr class="clickable-row" tabindex="0" (click)="openDetail(memo)" (keydown.enter)="openDetail(memo)"
+          (keydown.space)="$event.preventDefault(); openDetail(memo)" data-testid="memo-row">
+          <td>{{ memo.creditMemoId }}</td>
+          <td>{{ memo.originalInvoiceId }}</td>
+          <td>{{ memo.customerId }}</td>
+          <td class="col-amount">{{ memo.totalAmount }}</td>
+          <td><span class="status-badge">{{ memo.status }}</span></td>
+          <td>{{ memo.creationTimestamp }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</main>

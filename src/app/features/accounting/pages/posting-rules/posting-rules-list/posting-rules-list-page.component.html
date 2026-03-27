@@ -1,0 +1,53 @@
+<main class="accounting-page" aria-labelledby="posting-rules-list-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.POSTING_RULES_LIST.OVERLINE' | translate }}</p>
+    <h1 id="posting-rules-list-heading">{{ 'ACCOUNTING.POSTING_RULES_LIST.TITLE' | translate }}</h1>
+  </header>
+
+  @if (pageState() === 'loading') {
+  <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-state">{{
+    'ACCOUNTING.COMMON.LOADING' | translate }}</section>
+  }
+
+  @if (pageState() === 'error') {
+  <section class="state-panel state-panel--error" role="alert" data-testid="error-state">{{
+    'ACCOUNTING.COMMON.ERROR_LOADING' | translate }}</section>
+  }
+
+  @if (pageState() === 'forbidden') {
+  <section class="state-panel state-panel--forbidden" role="alert" data-testid="forbidden-state">{{
+    'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}</section>
+  }
+
+  @if (pageState() === 'ready') {
+  @if (ruleSets().length === 0) {
+  <section class="state-panel">{{ 'ACCOUNTING.POSTING_RULES_LIST.EMPTY' | translate }}</section>
+  } @else {
+  <div class="table-scroll-container">
+    <table class="ledger-table" [attr.aria-label]="'ACCOUNTING.POSTING_RULES_LIST.TABLE_ARIA' | translate">
+      <caption>{{ 'ACCOUNTING.POSTING_RULES_LIST.TABLE_CAPTION' | translate }}</caption>
+      <thead>
+        <tr>
+          <th>{{ 'ACCOUNTING.POSTING_RULES_LIST.COL_NAME' | translate }}</th>
+          <th>{{ 'ACCOUNTING.POSTING_RULES_LIST.COL_EVENT_TYPE' | translate }}</th>
+          <th>{{ 'ACCOUNTING.POSTING_RULES_LIST.COL_VERSION' | translate }}</th>
+          <th>{{ 'ACCOUNTING.POSTING_RULES_LIST.COL_STATUS' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of ruleSets(); track item.postingRuleSetId) {
+        <tr tabindex="0" (click)="openDetail(item)" (keydown.enter)="openDetail(item)"
+          (keydown.space)="openDetail(item)">
+          <td>{{ item.name }}</td>
+          <td>{{ item.eventType }}</td>
+          <td>{{ item.latestVersionNumber }}</td>
+          <td><output class="status-badge">{{ ('ACCOUNTING.POSTING_RULES_LIST.STATUS.' + item.latestState) | translate
+              }}</output></td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+  }
+</main>
