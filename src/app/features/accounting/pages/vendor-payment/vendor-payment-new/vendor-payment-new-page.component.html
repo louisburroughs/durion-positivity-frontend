@@ -53,7 +53,13 @@
     <input id="currency" formControlName="currency" />
 
     <label for="payment-method">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_PAYMENT_METHOD' | translate }}</label>
-    <input id="payment-method" formControlName="paymentMethod" />
+    <select id="payment-method" formControlName="paymentMethod">
+      <option value="ACH">ACH</option>
+      <option value="CHECK">Check</option>
+      <option value="WIRE">Wire</option>
+      <option value="CREDIT_CARD">Credit Card</option>
+      <option value="OTHER">Other</option>
+    </select>
 
     <label for="payment-ref">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_PAYMENT_REF' | translate }}</label>
     <input id="payment-ref" formControlName="paymentRef" />

@@ -238,6 +238,7 @@ export interface VendorBill {
   totalAmount?: number;
   openAmount?: number;
   status?:
+  | 'OPEN'
   | 'PENDING_RECEIPT_MATCH'
   | 'MATCH_EXCEPTION'
   | 'PENDING_REVIEW'
@@ -281,7 +282,8 @@ export interface VendorPaymentResult {
   | 'GATEWAY_SUCCEEDED'
   | 'GL_POST_PENDING'
   | 'GL_POSTED'
-  | 'GL_POST_FAILED';
+  | 'GL_POST_FAILED'
+  | 'SETTLED';
   gatewayTransactionId?: string;
   gatewayTimestamp?: string;
   glJournalEntryId?: string;

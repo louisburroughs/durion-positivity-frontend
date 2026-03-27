@@ -133,4 +133,33 @@ describe('VendorPaymentListPageComponent', () => {
     component.load();
     expect(component.pageState()).toBe('loading');
   });
+
+  it('should call openPayment on Space keydown on a bill row', () => {
+    accountingServiceStub.listBills.mockReturnValueOnce(
+      of({
+        items: [
+          {
+            vendorBillId: 'bill-kb',
+            vendorId: 'vendor-1',
+            vendorName: 'Vendor B',
+            billNumber: 'B-002',
+            billDate: '2024-01-01',
+            totalAmount: 100,
+            dueDate: '2024-02-01',
+            status: 'OPEN' as const,
+          },
+        ],
+        totalCount: 1,
+      }),
+    );
+    fixture.detectChanges();
+
+    const spy = vi.spyOn(component, 'openPayment');
+    const row = fixture.nativeElement.querySelector('[data-testid="bill-row"]');
+    row.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+
+    expect(spy).toHaveBeenCalledOnce();
+    expect(spy.mock.calls[0][0].vendorBillId).toBe('bill-kb');
+  });
 });

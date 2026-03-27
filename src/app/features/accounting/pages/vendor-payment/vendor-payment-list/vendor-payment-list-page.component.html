@@ -42,7 +42,7 @@
       <tbody>
         @for (bill of bills(); track bill.vendorBillId) {
         <tr class="table-row--clickable" data-testid="bill-row" tabindex="0" (click)="openPayment(bill)"
-          (keydown.enter)="openPayment(bill)">
+          (keydown.enter)="openPayment(bill)" (keydown.space)="$event.preventDefault(); openPayment(bill)">
           <td>{{ bill.vendorName }}</td>
           <td>{{ bill.billNumber }}</td>
           <td>{{ bill.billDate }}</td>

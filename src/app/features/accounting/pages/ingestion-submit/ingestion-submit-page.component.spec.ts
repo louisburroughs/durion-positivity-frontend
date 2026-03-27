@@ -102,6 +102,11 @@ describe('IngestionSubmitPageComponent', () => {
     component.submit();
     expect(accountingServiceStub.submitEvent).not.toHaveBeenCalled();
   });
+
+  it('should not set forbidden state when permission is present', () => {
+    // fixture.detectChanges() was called in beforeEach, triggering ngOnInit
+    expect(component.state()).not.toBe('forbidden');
+  });
 });
 
 describe('IngestionSubmitPageComponent — no permission', () => {
@@ -138,5 +143,12 @@ describe('IngestionSubmitPageComponent — no permission', () => {
     expect(forbidden).toBeTruthy();
     const form = f.nativeElement.querySelector('form');
     expect(form).toBeFalsy();
+  });
+
+  it('should set forbidden state when permission is missing (checked in ngOnInit)', () => {
+    const f = TestBed.createComponent(IngestionSubmitPageComponent);
+    const c = f.componentInstance;
+    f.detectChanges();
+    expect(c.state()).toBe('forbidden');
   });
 });

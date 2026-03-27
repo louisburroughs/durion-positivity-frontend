@@ -73,10 +73,14 @@ export class AccountingService {
     return this.api
       .get<PagedResponse<AccountingEventDetail>>(`${AccountingService.BASE}/events`, params)
       .pipe(
-        map(resp => ({
-          ...resp,
-          items: (resp.items ?? resp.content ?? []).map(item => this.toListItem(item)),
-        })),
+        map(resp => {
+          const mapped = (resp.items ?? resp.content ?? []).map(item => this.toListItem(item));
+          return {
+            ...resp,
+            items: mapped,
+            content: mapped,
+          };
+        }),
       );
   }
 

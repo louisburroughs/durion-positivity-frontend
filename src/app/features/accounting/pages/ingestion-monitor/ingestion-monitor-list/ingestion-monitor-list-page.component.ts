@@ -41,8 +41,21 @@ export class IngestionMonitorListPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(map => {
-      this.page.set(Number(map.get('page') ?? 0));
-      this.size.set(Number(map.get('size') ?? 20));
+      const rawPage = map.get('page');
+      const rawSize = map.get('size');
+      let page = rawPage === null ? 0 : Number.parseInt(rawPage, 10);
+      if (Number.isNaN(page) || page < 0) {
+        page = 0;
+      }
+      let size = rawSize === null ? 20 : Number.parseInt(rawSize, 10);
+      if (Number.isNaN(size) || size < 1) {
+        size = 20;
+      }
+      if (size > 100) {
+        size = 100;
+      }
+      this.page.set(page);
+      this.size.set(size);
 
       this.filters.set({
         eventType: map.get('eventType') ?? undefined,

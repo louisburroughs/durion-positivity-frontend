@@ -107,4 +107,34 @@ describe('IngestionMonitorListPageComponent', () => {
     component.goToDetail({ eventId: 'e-99', eventType: 'InvoiceIssued', processingStatus: 'PROCESSED' as any });
     expect(spy).toHaveBeenCalledWith(['/app/accounting/events', 'e-99']);
   });
+
+  describe('query param sanitization', () => {
+    afterEach(() => {
+      queryParamMap$.next(convertToParamMap({ eventType: 'InvoiceIssued' }));
+    });
+
+    it('should default page to 0 for NaN input', () => {
+      queryParamMap$.next(convertToParamMap({ page: 'abc' }));
+      fixture.detectChanges();
+      expect(component.page()).toBe(0);
+    });
+
+    it('should default size to 20 for NaN input', () => {
+      queryParamMap$.next(convertToParamMap({ size: 'xyz' }));
+      fixture.detectChanges();
+      expect(component.size()).toBe(20);
+    });
+
+    it('should cap size to 100', () => {
+      queryParamMap$.next(convertToParamMap({ size: '999' }));
+      fixture.detectChanges();
+      expect(component.size()).toBe(100);
+    });
+
+    it('should clamp negative page to 0', () => {
+      queryParamMap$.next(convertToParamMap({ page: '-5' }));
+      fixture.detectChanges();
+      expect(component.page()).toBe(0);
+    });
+  });
 });
