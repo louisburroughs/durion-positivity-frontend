@@ -85,6 +85,21 @@ describe('RolesListPageComponent', () => {
 
       expect(component.loading()).toBe(false);
     });
+
+    it('clears stale roles and totalPages when service errors after previous load', () => {
+      fixture.detectChanges();
+
+      component.roles.set([{ name: 'OLD_ROLE' } as any]);
+      component.totalPages.set(3);
+
+      securityServiceStub.getAllRoles.mockReturnValueOnce(
+        throwError(() => ({ error: { message: 'Reload failed' } })),
+      );
+      component.loadRoles();
+
+      expect(component.roles()).toEqual([]);
+      expect(component.totalPages()).toBe(0);
+    });
   });
 
   describe('modal state', () => {

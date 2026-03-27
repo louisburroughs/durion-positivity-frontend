@@ -113,6 +113,23 @@ describe('RoleDetailPageComponent', () => {
 
       expect(component.permissions()).toEqual([]);
     });
+
+    it('clears stale role, permissions, and confirmRevokeKey when service errors after previous load', () => {
+      fixture.detectChanges();
+
+      component.role.set({ name: 'STALE_ROLE' } as any);
+      component.permissions.set([{ permissionKey: 'STALE_PERM' } as any]);
+      component.confirmRevokeKey.set('SOME_KEY');
+
+      securityServiceStub.getRoleByName.mockReturnValueOnce(
+        throwError(() => ({ error: { message: 'Role not found' } })),
+      );
+      component.loadRole();
+
+      expect(component.role()).toBeNull();
+      expect(component.permissions()).toEqual([]);
+      expect(component.confirmRevokeKey()).toBeNull();
+    });
   });
 
   describe('openGrantModal()', () => {

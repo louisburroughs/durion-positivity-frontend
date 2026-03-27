@@ -51,6 +51,9 @@ export class RoleDetailPageComponent implements OnInit {
         },
         error: (err) => {
           this.loading.set(false);
+          this.role.set(null);
+          this.permissions.set([]);
+          this.confirmRevokeKey.set(null);
           this.error.set(err?.error?.message ?? 'Failed to load role details.');
         },
       });

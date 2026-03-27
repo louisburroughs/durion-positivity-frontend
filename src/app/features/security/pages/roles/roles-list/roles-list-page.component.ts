@@ -1,6 +1,6 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { SecurityRole } from '../../../models/security.models';
 import { SecurityService } from '../../../services/security.service';
 
@@ -13,7 +13,6 @@ import { SecurityService } from '../../../services/security.service';
 export class RolesListPageComponent implements OnInit {
   private readonly securityService = inject(SecurityService);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly roles = signal<SecurityRole[]>([]);
@@ -52,6 +51,8 @@ export class RolesListPageComponent implements OnInit {
         },
         error: (err) => {
           this.loading.set(false);
+          this.roles.set([]);
+          this.totalPages.set(0);
           this.error.set(err?.error?.message ?? 'Failed to load roles.');
         },
       });
