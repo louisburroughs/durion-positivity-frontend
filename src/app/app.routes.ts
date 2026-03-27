@@ -122,6 +122,12 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/security/security.routes').then(m => m.SECURITY_ROUTES),
       },
+      // Shop Management — Wave F (CAP-136–142, CAP-249)
+      {
+        path: 'shopmgmt',
+        loadChildren: () =>
+          import('./features/shopmgmt/shopmgmt.routes').then(m => m.SHOPMGMT_ROUTES),
+      },
     ],
   },
   {
