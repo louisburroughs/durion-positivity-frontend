@@ -149,8 +149,8 @@ export class EstimateDetailPageComponent implements OnInit {
   private buildApprovalScope(est: EstimateResponse): void {
     const allItems = est.items ?? [];
     if (est.status === 'APPROVED') {
-      const approved = allItems.filter(i => (i as any).lineItemApprovalStatus !== 'DECLINED');
-      const declined = allItems.filter(i => (i as any).lineItemApprovalStatus === 'DECLINED');
+      const approved = allItems.filter(i => i.lineItemApprovalStatus === 'APPROVED');
+      const declined = allItems.filter(i => i.lineItemApprovalStatus === 'DECLINED');
       this.approvedItems.set(approved);
       this.declinedItems.set(declined);
       this.showPartialScope.set(declined.length > 0);

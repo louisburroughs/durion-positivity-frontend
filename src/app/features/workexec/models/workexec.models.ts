@@ -125,6 +125,7 @@ export interface EstimateItemResponse {
   taxCode?: string;
   productId?: string;
   serviceId?: string;
+  lineItemApprovalStatus?: 'APPROVED' | 'DECLINED' | string;
   createdAt?: string;
   updatedAt?: string;
 }
