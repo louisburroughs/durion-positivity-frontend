@@ -125,6 +125,7 @@ export interface EstimateItemResponse {
   taxCode?: string;
   productId?: string;
   serviceId?: string;
+  lineItemApprovalStatus?: 'APPROVED' | 'DECLINED' | string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -198,6 +199,262 @@ export interface ApproveEstimateRequest {
   lineItemApprovals?: LineItemApprovalDto[];
   /** Commercial accounts with PO enforcement (CAP-092) */
   purchaseOrderNumber?: string;
+}
+
+// ── CAP-004: Workorder types (Stories 231, 230, 229, 228, 227, 226) ──────────
+
+export type WorkorderStatus =
+  | 'DRAFT'
+  | 'PLANNED'
+  | 'PENDING_ASSIGNMENT'
+  | 'ASSIGNED'
+  | 'IN_PROGRESS'
+  | 'ON_HOLD'
+  | 'PENDING_REVIEW'
+  | 'COMPLETED'
+  | 'INVOICED'
+  | 'CANCELLED'
+  | 'ARCHIVED';
+
+export type ChangeRequestStatus =
+  | 'AWAITING_ADVISOR_REVIEW'
+  | 'APPROVED'
+  | 'DECLINED'
+  | 'CANCELLED';
+
+/** operationId: promoteEstimateToWorkorder — response (201 or 409 with existingWorkorderId) */
+export interface WorkorderResponse {
+  id: string;
+  estimateId?: string;
+  customerId?: string;
+  shopId?: string;
+  vehicleId?: string;
+  status?: WorkorderStatus;
+  primaryTechnicianId?: string;
+  primaryTechnicianName?: string;
+  startedAt?: string;
+  completedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  version?: number;
+  /** Present on 409 — id of the existing work order */
+  existingWorkorderId?: string;
+}
+
+/** operationId: getWorkorderDetail — rich composite response */
+export interface WorkorderDetailResponse {
+  id: string;
+  estimateId?: string;
+  status?: WorkorderStatus;
+  customerId?: string;
+  vehicleId?: string;
+  shopId?: string;
+  primaryTechnicianId?: string;
+  primaryTechnicianName?: string;
+  isStarted?: boolean;
+  startedAt?: string;
+  isInProgress?: boolean;
+  inProgressReason?: string;
+  completedAt?: string;
+  createdAt?: string;
+  version?: number;
+  items?: WorkorderItemResponse[];
+  technician?: TechnicianAssignmentResponse;
+  operationalContext?: OperationalContextResponse;
+}
+
+/** Workorder line items promoted from estimate */
+export interface WorkorderItemResponse {
+  id: string;
+  workorderId: string;
+  sourceEstimateItemId?: string;
+  itemType?: 'PART' | 'LABOR';
+  description?: string;
+  quantity?: number;
+  unitPrice?: number;
+  lineTotal?: number;
+  status?: string;
+}
+
+/** operationId: getTransitionHistory */
+export interface WorkorderTransition {
+  id?: string;
+  workorderId?: string;
+  fromStatus?: WorkorderStatus;
+  toStatus?: WorkorderStatus;
+  reason?: string;
+  actorUserId?: string;
+  message?: string;
+  transitionedAt?: string;
+}
+
+/** operationId: getOperationalContext */
+export interface OperationalContextResponse {
+  workorderId?: string;
+  version?: string;
+  shopId?: string;
+  technicianId?: string;
+  authorities?: string[];
+  startedAt?: string;
+}
+
+// ── CAP-004/005: Technician assignment (Stories 225, 231) ────────────────────
+
+export interface TechnicianAssignmentResponse {
+  workorderId?: string;
+  technicianId?: string;
+  technicianName?: string;
+  assignedAt?: string;
+  assignedBy?: string;
+  unassignedAt?: string;
+  reason?: string;
+}
+
+export interface AssignTechnicianRequest {
+  /** Required */
+  technicianId: string;
+  assignedByUserId?: string;
+  notes?: string;
+}
+
+// ── CAP-005: Workorder start/status (Story 224) ───────────────────────────────
+
+export interface WorkorderStartResponse {
+  workorderId?: string;
+  operationalContextVersion?: string;
+  workStartedAt?: string;
+  previousStatus?: WorkorderStatus;
+  currentStatus?: WorkorderStatus;
+  transitionedAt?: string;
+  message?: string;
+}
+
+// ── CAP-005: Labor (Story 223) ────────────────────────────────────────────────
+
+export interface StartLaborRequest {
+  technicianId?: string;
+  /** Service line item ID on the workorder */
+  workorderServiceId?: string;
+  startTime?: string;
+}
+
+export interface StopLaborRequest {
+  stopTime?: string;
+  notes?: string;
+}
+
+export interface CreateLaborPerformedRequest {
+  workorderId: string;
+  workorderServiceId?: string;
+  technicianId?: string;
+  startTime?: string;
+  endTime?: string;
+  hoursWorked?: number;
+  laborCode?: string;
+  description?: string;
+  flatRate?: boolean;
+}
+
+export interface WorkorderLaborEntryResponse {
+  id?: string;
+  workorderId?: string;
+  workorderServiceId?: string;
+  technicianId?: string;
+  startTime?: string;
+  endTime?: string;
+  hoursWorked?: number;
+  laborCode?: string;
+  description?: string;
+  flatRate?: boolean;
+  createdAt?: string;
+}
+
+// ── CAP-005: Parts (Stories 222, 221) ────────────────────────────────────────
+
+export interface IssuePartsRequest {
+  partId: string;
+  quantity: number;
+  workorderServiceId?: string;
+  notes?: string;
+}
+
+export interface ConsumePartsRequest {
+  partId: string;
+  quantity: number;
+  workorderServiceId?: string;
+}
+
+export interface ReturnPartsRequest {
+  partId: string;
+  quantity: number;
+  reason?: string;
+}
+
+export interface SubstitutePartRequest {
+  originalPartId: string;
+  substitutePartId: string;
+  reason?: string;
+}
+
+export interface PartUsageResponse {
+  id?: string;
+  workorderId?: string;
+  partId?: string;
+  quantityIssued?: number;
+  quantityConsumed?: number;
+  quantityReturned?: number;
+  workorderServiceId?: string;
+  issuedAt?: string;
+  consumedAt?: string;
+}
+
+export interface SubstituteLinkResponse {
+  id?: string;
+  productId?: string;
+  substitutePartId?: string;
+  substituteType?: 'EQUIVALENT' | 'APPROVED_ALTERNATIVE' | 'UPGRADE' | 'DOWNGRADE';
+  priority?: number;
+  active?: boolean;
+}
+
+// ── CAP-005: Change Requests (Story 220) ─────────────────────────────────────
+
+export interface ChangeRequestItemRequest {
+  type: 'SERVICE' | 'PART';
+  serviceId?: string;
+  partId?: string;
+  quantity?: number;
+  isEmergency?: boolean;
+  emergencyReason?: string;
+}
+
+export interface CreateChangeRequestRequest {
+  description: string;
+  requestedItems: ChangeRequestItemRequest[];
+}
+
+export interface ChangeRequestResponse {
+  id: string;
+  workorderId?: string;
+  description?: string;
+  status?: ChangeRequestStatus;
+  createdAt?: string;
+  createdBy?: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+  requestedItems?: ChangeRequestItemResponse[];
+}
+
+export interface ChangeRequestItemResponse {
+  id?: string;
+  changeRequestId?: string;
+  type?: 'SERVICE' | 'PART';
+  serviceId?: string;
+  partId?: string;
+  quantity?: number;
+  isEmergency?: boolean;
+  emergencyReason?: string;
+  status?: string;
 }
 
 // ── UI state types ────────────────────────────────────────────────────────────

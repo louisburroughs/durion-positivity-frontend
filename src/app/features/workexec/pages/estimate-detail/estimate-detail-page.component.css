@@ -35,3 +35,14 @@
 .btn-link { background: none; border: none; cursor: pointer; color: var(--brand-primary); font-size: inherit; padding: 0; text-decoration: underline; }
 @media (max-width: 1023px) { .estimate-workspace { grid-template-columns: 1fr; } .workspace-sidebar { position: static; } }
 @media (max-width: 767px) { .estimate-detail { padding: var(--space-4, 1rem); } }
+/* CAP-004: Promotion CTA styles (Stories 231, 228, 227) */
+.btn--promote { background: linear-gradient(135deg,#006a62,#00897b); color: #fff; margin-top: var(--space-3, 0.75rem); border: none; }
+.btn--promote:disabled { opacity: 0.5; cursor: not-allowed; }
+.partial-scope-note { background: color-mix(in srgb, var(--functional-warning,#e6a540) 10%, transparent); border-radius: 0.125rem; padding: var(--space-3, 0.75rem); margin-top: var(--space-3, 0.75rem); font-size: 0.8125rem; }
+.partial-scope-note__title { font-weight: 700; margin: 0 0 var(--space-1); color: var(--functional-warning, #b46e00); }
+.partial-scope-note__body { margin: 0 0 var(--space-1); color: var(--currentTextColor); }
+.partial-scope-note__detail summary { cursor: pointer; color: var(--brand-primary); font-size: 0.8rem; }
+.partial-scope-note__item { margin: var(--space-1) 0 0 var(--space-3); font-size: 0.8rem; color: var(--handleColor); }
+.promote-conflict { margin-top: var(--space-3, 0.75rem); display: flex; flex-direction: column; gap: var(--space-1); }
+.promote-error { margin-top: var(--space-3, 0.75rem); }
+.promote-hint { margin-top: var(--space-3, 0.75rem); }

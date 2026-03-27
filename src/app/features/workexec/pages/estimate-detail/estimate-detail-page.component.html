@@ -102,6 +102,66 @@
         >
           Submit for Approval
         </button>
+
+        <!-- CAP-004: Promote to Work Order (Stories 231, 228, 227) -->
+        @if (estimate()!.status === 'APPROVED') {
+
+          <!-- Story 227: Partial scope warning before promotion -->
+          @if (showPartialScope()) {
+            <div class="partial-scope-note" role="note" aria-label="Partial approval scope">
+              <p class="partial-scope-note__title">Partial Approval</p>
+              <p class="partial-scope-note__body">
+                {{ approvedItems().length }} item(s) approved for promotion.
+                {{ declinedItems().length }} item(s) were declined and will not be included in the work order.
+              </p>
+              <details class="partial-scope-note__detail">
+                <summary>Show excluded items</summary>
+                @for (item of declinedItems(); track item.id) {
+                  <p class="partial-scope-note__item">— {{ item.description }} ({{ item.itemType }})</p>
+                }
+              </details>
+            </div>
+          }
+
+          <!-- Story 228: 409 conflict state — existing workorder -->
+          @if (promoteState() === 'conflict') {
+            <div class="alert alert--warn promote-conflict" role="alert">
+              A work order already exists for this estimate.
+              @if (conflictWorkorderId()) {
+                <button class="btn-link" (click)="navigateToConflictWorkorder()">
+                  View existing work order →
+                </button>
+              }
+              <button class="btn-link" (click)="resetPromoteState()">Dismiss</button>
+            </div>
+          }
+
+          <!-- Story 228: 5xx / network error — safe-retry guidance -->
+          @if (promoteState() === 'error') {
+            <div class="alert alert--error promote-error" role="alert">
+              {{ promoteError() }}
+              <button class="btn-link" (click)="resetPromoteState()">Try again</button>
+            </div>
+          }
+
+          <!-- Story 231: Promote CTA — disabled during loading and after conflict/success -->
+          @if (promoteState() !== 'conflict' && promoteState() !== 'success') {
+            <button
+              class="btn btn--promote btn--full"
+              (click)="promoteToWorkorder()"
+              [disabled]="promoteState() === 'loading' || promoteState() === 'error'"
+              [attr.aria-busy]="promoteState() === 'loading'"
+              [attr.aria-disabled]="promoteState() !== 'idle'"
+            >
+              {{ promoteState() === 'loading' ? 'Creating Work Order…' : 'Promote to Work Order' }}
+            </button>
+          }
+
+        } @else if (estimate()!.status !== 'DRAFT') {
+          <p class="hint-text promote-hint">
+            Promotion requires customer approval. Current status: {{ estimate()!.status }}.
+          </p>
+        }
       </aside>
 
     </div>
