@@ -1,0 +1,73 @@
+<section class="permissions-list-page" aria-labelledby="permissions-page-title">
+  <header class="page-header">
+    <div class="heading-group">
+      <p class="section-label">Security</p>
+      <h1 id="permissions-page-title">Permissions</h1>
+    </div>
+    <span class="readonly-label" aria-label="Read-only permissions">Read-only</span>
+  </header>
+
+  <section class="list-panel mic-elevation-2" aria-label="Permissions listing">
+    <div class="panel-accent" aria-hidden="true"></div>
+
+    <div class="toolbar">
+      <label class="search-label" for="permissions-search">Search permissions</label>
+      <div class="search-row">
+        <input id="permissions-search" type="search" [value]="searchTerm()"
+          (input)="searchTerm.set($any($event.target).value)" placeholder="Search by permission key"
+          aria-label="Search permission key" />
+        <button type="button" class="btn-text" (click)="search()" aria-label="Apply permission search">
+          Search
+        </button>
+      </div>
+    </div>
+
+    @if (loading()) {
+    <div class="state-panel" aria-live="polite">Loading permissions...</div>
+    }
+
+    @if (error()) {
+    <div class="alert alert-error" role="alert" aria-live="polite">{{ error() }}</div>
+    }
+
+    @if (permissions().length === 0 && !loading()) {
+    <div class="empty-state" aria-live="polite">
+      <h2>No permissions found</h2>
+      <p>Try adjusting your search criteria.</p>
+    </div>
+    }
+
+    @if (permissions().length > 0 && !loading()) {
+    <div class="table-scroll">
+      <table class="permissions-table" aria-label="Permissions table">
+        <thead>
+          <tr>
+            <th scope="col">Permission Key</th>
+            <th scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (permission of permissions(); track permission.permissionKey) {
+          <tr>
+            <td>{{ permission.permissionKey }}</td>
+            <td>{{ permission.description || 'No description available.' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    <footer class="pager" aria-label="Permissions pagination">
+      <button type="button" class="btn-text" (click)="prevPage()" [disabled]="page() <= 0"
+        aria-label="Previous permissions page">
+        Previous
+      </button>
+      <span class="page-indicator">Page {{ page() + 1 }} of {{ totalPages() || 1 }}</span>
+      <button type="button" class="btn-text" (click)="nextPage()"
+        [disabled]="totalPages() === 0 || page() + 1 >= totalPages()" aria-label="Next permissions page">
+        Next
+      </button>
+    </footer>
+  </section>
+</section>

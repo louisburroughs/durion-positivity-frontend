@@ -1,0 +1,44 @@
+.security-shell {
+  display: grid;
+  gap: var(--space-4);
+  min-height: 100%;
+  background: var(--themeBackground);
+}
+
+.security-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-6) 0;
+  overflow-x: auto;
+}
+
+.security-tab {
+  text-decoration: none;
+  color: var(--brand-secondary);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 2px solid transparent;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.security-tab.active-tab {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+}
+
+.security-tab:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.security-content {
+  min-height: 0;
+}
+
+@media (max-width: 64rem) {
+  .security-tabs {
+    padding: var(--space-3) var(--space-4) 0;
+  }
+}

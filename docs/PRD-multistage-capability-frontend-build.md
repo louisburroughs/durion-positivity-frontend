@@ -18,6 +18,9 @@ Define the execution plan for building the Durion Positivity Angular frontend by
 This PRD extends and operationalizes:
 - `/home/louis-burroughs/IdeaProjects/durion/docs/capabilities/PRD-agent-capability-frontend-execution.md`
 
+Canonical tracking artifact for this program:
+- `/home/louis-burroughs/IdeaProjects/durion/docs/capabilities/CAPABILITY_STATUS_BOARD.md`
+
 ## 2. Core Principles
 
 ### Capability-Driven Execution
@@ -91,6 +94,8 @@ As of `2026-03-25`, the capability crawl found:
 - 6 stories with missing wireframe references
 
 This means the delivery plan must support both implementation and metadata normalization in parallel.
+Current and ongoing status/count tracking must be updated in:
+- `/home/louis-burroughs/IdeaProjects/durion/docs/capabilities/CAPABILITY_STATUS_BOARD.md`
 
 ## 4. Domain Rollout Map
 
@@ -170,7 +175,7 @@ Establish the execution framework before domain feature delivery begins:
 - confirm root token strategy in `src/styles.css`
 - register a standard domain folder template for all feature areas
 - define capability run artifact locations and naming
-- define a capability status board with `queued`, `normalizing`, `ready`, `in-build`, `in-review`, `blocked`, `done`
+- use `/home/louis-burroughs/IdeaProjects/durion/docs/capabilities/CAPABILITY_STATUS_BOARD.md` as the canonical capability status board with `queued`, `normalizing`, `ready`, `in-build`, `in-review`, `blocked`, `done`
 
 ### Stage 1 — Capability Normalization Crawl
 
@@ -193,6 +198,7 @@ Outputs:
 - refreshed capability inventory
 - prioritized normalization backlog
 - first executable build wave
+- synchronized updates to `/home/louis-burroughs/IdeaProjects/durion/docs/capabilities/CAPABILITY_STATUS_BOARD.md`
 
 ### Stage 2 — Frontend Foundation Build
 

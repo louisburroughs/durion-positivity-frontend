@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -12,20 +12,28 @@ import { ThemeService } from '../../core/services/theme.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
-export class LoginComponent {
-  private readonly fb          = inject(FormBuilder);
+export class LoginComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
-  private readonly router      = inject(Router);
-  private readonly route       = inject(ActivatedRoute);
-  readonly themeService        = inject(ThemeService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  readonly themeService = inject(ThemeService);
 
   readonly loading = signal(false);
-  readonly error   = signal<string | null>(null);
+  readonly error = signal<string | null>(null);
+  readonly sessionExpired = signal(false);
 
   readonly form = this.fb.nonNullable.group({
     username: ['', [Validators.required, Validators.minLength(2)]],
     password: ['', [Validators.required, Validators.minLength(4)]],
   });
+
+  ngOnInit(): void {
+    const sessionExpired = this.route.snapshot.queryParamMap.get('sessionExpired');
+    if (sessionExpired === 'true') {
+      this.sessionExpired.set(true);
+    }
+  }
 
   submit(): void {
     if (this.form.invalid || this.loading()) return;
@@ -39,7 +47,8 @@ export class LoginComponent {
       next: () => {
         this.loading.set(false);
         const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/app';
-        this.router.navigateByUrl(returnUrl);
+        const safeReturnUrl = returnUrl.startsWith('/') ? returnUrl : '/app';
+        this.router.navigateByUrl(safeReturnUrl);
       },
       error: err => {
         this.loading.set(false);

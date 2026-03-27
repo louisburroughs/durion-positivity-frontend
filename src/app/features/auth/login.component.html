@@ -10,11 +10,17 @@
       <p class="brand-tagline">Positivity Platform</p>
     </div>
 
+    @if (sessionExpired()) {
+    <div class="alert alert-info" role="status" aria-live="polite">
+      Your session has expired. Please sign in again.
+    </div>
+    }
+
     <!-- Error Alert -->
     @if (error()) {
-      <div class="alert alert-error" role="alert" aria-live="polite">
-        {{ error() }}
-      </div>
+    <div class="alert alert-error" role="alert" aria-live="polite">
+      {{ error() }}
+    </div>
     }
 
     <!-- Login Form -->
@@ -22,66 +28,43 @@
 
       <div class="field-group">
         <label for="username" class="field-label">Username</label>
-        <input
-          id="username"
-          type="text"
-          formControlName="username"
-          autocomplete="username"
-          placeholder="Enter your username"
-          [attr.aria-invalid]="usernameCtrl.invalid && usernameCtrl.touched"
-          aria-describedby="username-error"
-          [class.field-invalid]="usernameCtrl.invalid && usernameCtrl.touched"
-        />
+        <input id="username" type="text" formControlName="username" autocomplete="username"
+          placeholder="Enter your username" [attr.aria-invalid]="usernameCtrl.invalid && usernameCtrl.touched"
+          aria-describedby="username-error" [class.field-invalid]="usernameCtrl.invalid && usernameCtrl.touched" />
         @if (usernameCtrl.invalid && usernameCtrl.touched) {
-          <span id="username-error" class="field-error" role="alert">
-            Username is required (min. 2 characters).
-          </span>
+        <span id="username-error" class="field-error" role="alert">
+          Username is required (min. 2 characters).
+        </span>
         }
       </div>
 
       <div class="field-group">
         <label for="password" class="field-label">Password</label>
-        <input
-          id="password"
-          type="password"
-          formControlName="password"
-          autocomplete="current-password"
-          placeholder="Enter your password"
-          [attr.aria-invalid]="passwordCtrl.invalid && passwordCtrl.touched"
-          aria-describedby="password-error"
-          [class.field-invalid]="passwordCtrl.invalid && passwordCtrl.touched"
-        />
+        <input id="password" type="password" formControlName="password" autocomplete="current-password"
+          placeholder="Enter your password" [attr.aria-invalid]="passwordCtrl.invalid && passwordCtrl.touched"
+          aria-describedby="password-error" [class.field-invalid]="passwordCtrl.invalid && passwordCtrl.touched" />
         @if (passwordCtrl.invalid && passwordCtrl.touched) {
-          <span id="password-error" class="field-error" role="alert">
-            Password is required (min. 4 characters).
-          </span>
+        <span id="password-error" class="field-error" role="alert">
+          Password is required (min. 4 characters).
+        </span>
         }
       </div>
 
-      <button
-        type="submit"
-        class="btn-primary"
-        [disabled]="loading()"
-        [class.btn-loading]="loading()"
-      >
+      <button type="submit" class="btn-primary" [disabled]="loading()" [class.btn-loading]="loading()">
         @if (loading()) {
-          <span class="spinner" aria-hidden="true"></span>
-          Signing in…
+        <span class="spinner" aria-hidden="true"></span>
+        Signing in…
         } @else {
-          Sign In
+        Sign In
         }
       </button>
     </form>
 
     <!-- Theme toggle (subtle, bottom of card) -->
     <div class="login-footer">
-      <button
-        type="button"
-        class="theme-toggle-btn"
-        (click)="themeService.toggle()"
+      <button type="button" class="theme-toggle-btn" (click)="themeService.toggle()"
         [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-        [title]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-      >
+        [title]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
         {{ themeService.isDark() ? '☀️ Light mode' : '🌙 Dark mode' }}
       </button>
     </div>
