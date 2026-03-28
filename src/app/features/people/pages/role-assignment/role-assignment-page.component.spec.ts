@@ -4,20 +4,8 @@ import { By } from '@angular/platform-browser';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
-// RED: This import will fail at compile time because the file does not exist yet.
-// Expected error: Cannot find module './role-assignment-page.component'
 import { RoleAssignmentPageComponent } from './role-assignment-page.component';
 import { PeopleService } from '../../services/people.service';
-
-// ── Story #153: RBAC Role & Scope Assignment — Component ─────────────────────
-//
-// RED failure sources:
-//   1. Module './role-assignment-page.component' does not exist → compile error
-//   2. All signal properties (scopeType, locationId, selectedRoleCode,
-//      effectiveStartAt, includeHistory) don't exist on the component instance
-//   3. Methods submitAssignment(), revokeAssignment(), loadAssignments() are absent
-//   4. Expected DOM selectors (.assignment-list, .assignment-item, .location-picker,
-//      [data-testid="submit-assignment-btn"]) will not be present
 
 const STUB_ASSIGNMENTS = [
   {
@@ -99,8 +87,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     expect(stubPeopleService.getRoles).toHaveBeenCalledWith('person-uuid-1');
   });
 
-  // helper: strongly-typed cast suppressed so tests fail at runtime, not compile time
-  const c = (cmp: RoleAssignmentPageComponent) => cmp as any;
+  const c = (cmp: RoleAssignmentPageComponent) => cmp;
 
   // ── T3: Assignment list rendering ─────────────────────────────────────────
 

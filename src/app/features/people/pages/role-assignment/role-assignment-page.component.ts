@@ -1,4 +1,5 @@
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CreateAssignmentRequest, Role, RoleAssignment } from '../../models/people-rbac.models';
@@ -12,6 +13,8 @@ import { PeopleService } from '../../services/people.service';
   styleUrl: './role-assignment-page.component.css',
 })
 export class RoleAssignmentPageComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+
   personUuid = signal('');
   assignments = signal<RoleAssignment[]>([]);
   roles = signal<Role[]>([]);
@@ -37,7 +40,9 @@ export class RoleAssignmentPageComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.route.params.subscribe(params => {
+    this.route.params.pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(params => {
       this.personUuid.set(params['personUuid'] ?? '');
       if (this.personUuid()) {
         this.loadAssignments();

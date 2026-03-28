@@ -114,8 +114,8 @@ export class PeopleService {
     return this.api.get<Role[]>(`/v1/people/${personUuid}/access/roles`);
   }
 
-  getAssignments(personId: string, includeHistory?: boolean): Observable<RoleAssignment[]> {
-    let params = new HttpParams().set('personId', personId);
+  getAssignments(personUuid: string, includeHistory?: boolean): Observable<RoleAssignment[]> {
+    let params = new HttpParams().set('personId', personUuid);
     if (includeHistory !== undefined) {
       params = params.set('includeHistory', String(includeHistory));
     }

@@ -35,8 +35,7 @@
         <li>
           <button class="event-row" data-testid="event-row" type="button"
             [class.event-row--selected]="selectedEvent()?.eventId === event.eventId"
-            (click)="selectEvent(event.eventId)" (keydown.enter)="selectEvent(event.eventId)"
-            (keydown.space)="selectEvent(event.eventId)">
+            (click)="selectEvent(event.eventId)">
             <span class="event-row__id" title="{{ event.eventId }}">{{ event.eventId }}</span>
             <span class="event-row__type">{{ event.eventType }}</span>
             <span class="event-status-badge" [class.status-processed]="event.processingStatus === 'PROCESSED'"

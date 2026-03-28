@@ -1,7 +1,7 @@
 <section class="workexec-page workorder-detail" aria-labelledby="wo-heading">
 
   @if (pageState() === 'loading') {
-  <p class="hint-text" aria-busy="true">Loading workorder…</p>
+  <p class="hint-text" aria-busy="true">Loading work order…</p>
   }
 
   @if (pageState() === 'error') {
@@ -17,7 +17,7 @@
   <header class="wo-header" aria-labelledby="wo-heading">
     <div class="wo-header__inner">
       <div class="wo-header__identity">
-        <p class="wo-header__overline">Workorder</p>
+        <p class="wo-header__overline">Work Order</p>
         <h1 id="wo-heading" class="wo-header__id">{{ workorderId() }}</h1>
         <span class="status-chip status-chip--{{ workorder()!.status?.toLowerCase() }}"
           aria-label="Status: {{ workorder()!.status }}">{{ workorder()!.status }}</span>
@@ -55,7 +55,7 @@
         <button class="btn btn--ghost" (click)="navigateToFinalize()">Finalize for Billing</button>
         }
         @if (canComplete()) {
-        <button class="btn btn--accent" (click)="openCompleteModal()">Complete Workorder</button>
+        <button class="btn btn--accent" (click)="openCompleteModal()">Complete Work Order</button>
         }
         @if (canReopen()) {
         <button class="btn btn--ghost" (click)="openReopenModal()">Reopen</button>
@@ -75,7 +75,7 @@
   </header>
 
   <!-- Tab bar — 2px secondary bottom indicator only, no box shadow -->
-  <nav class="wo-tabs" aria-label="Workorder sections">
+  <nav class="wo-tabs" aria-label="Work Order sections">
     <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'items'" (click)="selectTab('items')"
       aria-selected="{{ activeTab() === 'items' }}">Scope</button>
     <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'labor'" (click)="navigateToLabor()">Labor</button>
@@ -94,7 +94,7 @@
 
   <!-- Scope/Items tab — Story 229 -->
   @if (activeTab() === 'items') {
-  <div class="wo-section" aria-label="Workorder scope">
+  <div class="wo-section" aria-label="Work Order scope">
     @if (items().length === 0) {
     <p class="hint-text">No items were promoted from the estimate.</p>
     } @else {
@@ -250,7 +250,7 @@
   <div class="modal-glass">
     <h2 id="start-work-modal-title" class="modal-glass__title">Start Work on {{ workorderId() }}?</h2>
     <p class="modal-glass__body">
-      This will move the workorder to <strong>IN PROGRESS</strong> and allow labor and parts recording.
+      This will move the work order to <strong>IN PROGRESS</strong> and allow labor and parts recording.
       This action cannot be undone from this screen.
     </p>
 
@@ -273,13 +273,13 @@
 @if (showCompleteModal()) {
 <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="complete-modal-title">
   <div class="modal-glass">
-    <h2 id="complete-modal-title" class="modal-glass__title">Complete Workorder</h2>
+    <h2 id="complete-modal-title" class="modal-glass__title">Complete Work Order</h2>
 
     @if (completeModalState() === 'success') {
-    <div class="alert alert--success" role="status">Workorder completed successfully.</div>
+    <div class="alert alert--success" role="status">Work order completed successfully.</div>
     } @else {
     <p class="modal-glass__body">
-      Mark this workorder as <strong>COMPLETED</strong>. Ensure all labor and parts have been recorded.
+      Mark this work order as <strong>COMPLETED</strong>. Ensure all labor and parts have been recorded.
     </p>
 
     <div class="form-field">
@@ -311,7 +311,7 @@
       <button class="btn btn--accent" (click)="confirmComplete()"
         [disabled]="completeModalState() === 'loading' || pendingCrCount() > 0"
         [attr.aria-busy]="completeModalState() === 'loading'">
-        {{ completeModalState() === 'loading' ? 'Completing…' : 'Confirm — Complete Workorder' }}
+        {{ completeModalState() === 'loading' ? 'Completing…' : 'Confirm — Complete Work Order' }}
       </button>
     </div>
     }
@@ -323,13 +323,13 @@
 @if (showReopenModal()) {
 <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="reopen-modal-title">
   <div class="modal-glass">
-    <h2 id="reopen-modal-title" class="modal-glass__title">Reopen Workorder</h2>
+    <h2 id="reopen-modal-title" class="modal-glass__title">Reopen Work Order</h2>
 
     @if (reopenModalState() === 'success') {
-    <div class="alert alert--success" role="status">Workorder reopened successfully.</div>
+    <div class="alert alert--success" role="status">Work order reopened successfully.</div>
     } @else {
     <p class="modal-glass__body">
-      This will move the workorder back to <strong>IN PROGRESS</strong>.
+      This will move the work order back to <strong>IN PROGRESS</strong>.
       A reason is required.
     </p>
 
@@ -338,7 +338,7 @@
           aria-hidden="true">*</span></label>
       <textarea id="reopen-reason" class="form-textarea" rows="3" [value]="reopenReason()"
         (input)="reopenReason.set($any($event.target).value)"
-        placeholder="Explain why this workorder is being reopened…" required aria-required="true"></textarea>
+        placeholder="Explain why this work order is being reopened…" required aria-required="true"></textarea>
     </div>
 
     @if (reopenError()) {
@@ -351,7 +351,7 @@
       <button class="btn btn--accent" (click)="confirmReopen()"
         [disabled]="reopenModalState() === 'loading' || !reopenReason().trim()"
         [attr.aria-busy]="reopenModalState() === 'loading'">
-        {{ reopenModalState() === 'loading' ? 'Reopening…' : 'Confirm — Reopen Workorder' }}
+        {{ reopenModalState() === 'loading' ? 'Reopening…' : 'Confirm — Reopen Work Order' }}
       </button>
     </div>
     }

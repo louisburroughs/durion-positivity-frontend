@@ -4,15 +4,6 @@ import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { PeopleService } from './people.service';
 
-// ── Story #153: RBAC Role & Scope Assignment ─────────────────────────────────
-//
-// RED: These tests target service methods that do NOT yet exist on PeopleService.
-// Expected compile-time errors:
-//   TS2339: Property 'getRoles' does not exist on type 'PeopleService'
-//   TS2339: Property 'getAssignments' does not exist on type 'PeopleService'
-//   TS2339: Property 'createAssignment' does not exist on type 'PeopleService'
-//   TS2339: Property 'revokeAssignment' does not exist on type 'PeopleService'
-
 describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
   let service: PeopleService;
 
@@ -46,7 +37,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
     it('calls GET /v1/people/{personUuid}/access/roles', () => {
       apiStub.get.mockReturnValueOnce(of([{ code: 'ROLE_ADMIN' }]));
 
-      (service as any).getRoles('person-uuid-1').subscribe();
+      service.getRoles('person-uuid-1').subscribe();
 
       expect(apiStub.get).toHaveBeenCalledWith('/v1/people/person-uuid-1/access/roles');
     });
@@ -56,7 +47,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
       apiStub.get.mockReturnValueOnce(of(roles));
 
       let result: unknown;
-      (service as any).getRoles('person-uuid-2').subscribe((r: unknown) => (result = r));
+      service.getRoles('person-uuid-2').subscribe((r: unknown) => (result = r));
 
       expect(result).toEqual(roles);
     });
@@ -64,7 +55,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
     it('interpolates personUuid into the path correctly', () => {
       apiStub.get.mockReturnValueOnce(of([]));
 
-      (service as any).getRoles('abc-def-123').subscribe();
+      service.getRoles('abc-def-123').subscribe();
 
       const [path] = apiStub.get.mock.calls[0];
       expect(path).toBe('/v1/people/abc-def-123/access/roles');
@@ -77,7 +68,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
     it('calls GET /v1/people/staffing/assignments with personId param', () => {
       apiStub.get.mockReturnValueOnce(of([]));
 
-      (service as any).getAssignments('person-id-1').subscribe();
+      service.getAssignments('person-id-1').subscribe();
 
       const [path, params] = apiStub.get.mock.calls[0];
       expect(path).toBe('/v1/people/staffing/assignments');
@@ -87,7 +78,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
     it('does NOT include includeHistory param when argument is omitted', () => {
       apiStub.get.mockReturnValueOnce(of([]));
 
-      (service as any).getAssignments('person-id-1').subscribe();
+      service.getAssignments('person-id-1').subscribe();
 
       const [, params] = apiStub.get.mock.calls[0];
       expect(params.get('includeHistory')).toBeNull();
@@ -96,7 +87,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
     it('sets includeHistory=true in params when passed as true', () => {
       apiStub.get.mockReturnValueOnce(of([]));
 
-      (service as any).getAssignments('person-id-1', true).subscribe();
+      service.getAssignments('person-id-1', true).subscribe();
 
       const [, params] = apiStub.get.mock.calls[0];
       expect(params.get('includeHistory')).toBe('true');
@@ -105,7 +96,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
     it('sets includeHistory=false in params when passed as false', () => {
       apiStub.get.mockReturnValueOnce(of([]));
 
-      (service as any).getAssignments('person-id-1', false).subscribe();
+      service.getAssignments('person-id-1', false).subscribe();
 
       const [, params] = apiStub.get.mock.calls[0];
       expect(params.get('includeHistory')).toBe('false');
@@ -116,7 +107,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
       apiStub.get.mockReturnValueOnce(of(assignments));
 
       let result: unknown;
-      (service as any).getAssignments('person-id-42').subscribe((r: unknown) => (result = r));
+      service.getAssignments('person-id-42').subscribe((r: unknown) => (result = r));
 
       expect(result).toEqual(assignments);
     });
@@ -128,14 +119,14 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
     const globalBody = {
       personId: 'person-id-1',
       roleCode: 'ROLE_ADMIN',
-      scopeType: 'GLOBAL',
+      scopeType: 'GLOBAL' as const,
       effectiveStartAt: '2026-01-01T00:00:00Z',
     };
 
     it('calls POST /v1/people/staffing/assignments with body', () => {
       apiStub.post.mockReturnValueOnce(of({ assignmentId: 'asn-1' }));
 
-      (service as any).createAssignment(globalBody).subscribe();
+      service.createAssignment(globalBody).subscribe();
 
       expect(apiStub.post).toHaveBeenCalledWith(
         '/v1/people/staffing/assignments',
@@ -148,13 +139,13 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
       const locationBody = {
         personId: 'person-id-2',
         roleCode: 'ROLE_MANAGER',
-        scopeType: 'LOCATION',
+        scopeType: 'LOCATION' as const,
         locationId: 'loc-1',
         effectiveStartAt: '2026-01-01T00:00:00Z',
       };
       apiStub.post.mockReturnValueOnce(of({ assignmentId: 'asn-2' }));
 
-      (service as any).createAssignment(locationBody, 'idem-key-abc').subscribe();
+      service.createAssignment(locationBody, 'idem-key-abc').subscribe();
 
       expect(apiStub.post).toHaveBeenCalledWith(
         '/v1/people/staffing/assignments',
@@ -166,7 +157,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
     it('passes undefined options when idempotencyKey is omitted', () => {
       apiStub.post.mockReturnValueOnce(of({}));
 
-      (service as any).createAssignment(globalBody).subscribe();
+      service.createAssignment(globalBody).subscribe();
 
       const [, , opts] = apiStub.post.mock.calls[0];
       expect(opts).toBeUndefined();
@@ -177,7 +168,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
       apiStub.post.mockReturnValueOnce(of(created));
 
       let result: unknown;
-      (service as any).createAssignment(globalBody).subscribe((r: unknown) => (result = r));
+      service.createAssignment(globalBody).subscribe((r: unknown) => (result = r));
 
       expect(result).toEqual(created);
     });
@@ -189,7 +180,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
     it('calls DELETE /v1/people/{personUuid}/access/assignments/{roleCode}', () => {
       apiStub.delete.mockReturnValueOnce(of(undefined));
 
-      (service as any).revokeAssignment('person-uuid-3', 'ROLE_ADMIN').subscribe();
+      service.revokeAssignment('person-uuid-3', 'ROLE_ADMIN').subscribe();
 
       expect(apiStub.delete).toHaveBeenCalledWith(
         '/v1/people/person-uuid-3/access/assignments/ROLE_ADMIN',
@@ -199,7 +190,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
     it('interpolates both personUuid and roleCode into the path', () => {
       apiStub.delete.mockReturnValueOnce(of(undefined));
 
-      (service as any).revokeAssignment('person-uuid-7', 'ROLE_MANAGER').subscribe();
+      service.revokeAssignment('person-uuid-7', 'ROLE_MANAGER').subscribe();
 
       const [path] = apiStub.delete.mock.calls[0];
       expect(path).toBe('/v1/people/person-uuid-7/access/assignments/ROLE_MANAGER');
@@ -209,7 +200,7 @@ describe('PeopleService — RBAC Role & Scope Assignment [Story #153]', () => {
       apiStub.delete.mockReturnValueOnce(of(null));
 
       let completed = false;
-      (service as any).revokeAssignment('person-uuid-9', 'ROLE_VIEW').subscribe({
+      service.revokeAssignment('person-uuid-9', 'ROLE_VIEW').subscribe({
         complete: () => (completed = true),
       });
 

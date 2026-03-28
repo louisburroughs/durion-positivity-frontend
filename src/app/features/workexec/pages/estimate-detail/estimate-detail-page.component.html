@@ -141,7 +141,7 @@
         <p class="partial-scope-note__title">Partial Approval</p>
         <p class="partial-scope-note__body">
           {{ approvedItems().length }} item(s) approved for promotion.
-          {{ declinedItems().length }} item(s) were declined and will not be included in the workorder.
+          {{ declinedItems().length }} item(s) were declined and will not be included in the work order.
         </p>
         <details class="partial-scope-note__detail">
           <summary>Show excluded items</summary>
@@ -155,10 +155,10 @@
       <!-- Story 228: 409 conflict state — existing workorder -->
       @if (promoteState() === 'conflict') {
       <div class="alert alert--warn promote-conflict" role="alert">
-        A workorder already exists for this estimate.
+        A work order already exists for this estimate.
         @if (conflictWorkorderId()) {
         <button class="btn-link" (click)="navigateToConflictWorkorder()">
-          View existing workorder →
+          View existing work order →
         </button>
         }
         <button class="btn-link" (click)="resetPromoteState()">Dismiss</button>
@@ -178,7 +178,7 @@
       <button class="btn btn--promote btn--full" (click)="promoteToWorkorder()"
         [disabled]="promoteState() === 'loading' || promoteState() === 'error'"
         [attr.aria-busy]="promoteState() === 'loading'" [attr.aria-disabled]="promoteState() !== 'idle'">
-        {{ promoteState() === 'loading' ? 'Creating Workorder…' : 'Promote to Workorder' }}
+        {{ promoteState() === 'loading' ? 'Creating Work Order…' : 'Promote to Work Order' }}
       </button>
       }
 
