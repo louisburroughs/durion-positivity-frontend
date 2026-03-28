@@ -97,7 +97,12 @@ export class TimeApprovalPageComponent implements OnInit {
   }
 
   createAdjustment(entryId: string, body: Record<string, unknown>): void {
-    this.peopleService.createAdjustment({ ...body, timeEntryId: entryId }).subscribe();
+    this.peopleService.createAdjustment({ ...body, timeEntryId: entryId }).subscribe({
+      next: () => { },
+      error: () => {
+        this.approveError.set('Failed to create adjustment.');
+      },
+    });
   }
 
   getEntryId(entry: unknown): string {

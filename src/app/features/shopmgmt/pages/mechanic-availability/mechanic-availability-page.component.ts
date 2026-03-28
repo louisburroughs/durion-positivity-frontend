@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { AppointmentService } from '../../services/appointment.service';
 import { PeopleService } from '../../../people/services/people.service';
 
 @Component({
@@ -12,7 +11,6 @@ import { PeopleService } from '../../../people/services/people.service';
   styleUrl: './mechanic-availability-page.component.css',
 })
 export class MechanicAvailabilityPageComponent implements OnInit {
-  private readonly appointmentService = inject(AppointmentService);
   private readonly peopleService = inject(PeopleService);
 
   readonly loading = signal(false);

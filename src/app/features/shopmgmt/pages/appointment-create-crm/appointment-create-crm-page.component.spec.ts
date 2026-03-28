@@ -13,7 +13,7 @@
  *   6.  removeServiceRequest(i) removes the row at that index
  *   7.  calls createAppointment with correct payload on valid submit
  *   8.  createAppointment called with an Idempotency-Key (clientRequestId present)
- *   9.  navigates to /app/shopmgmt/appointments/:id on success
+ *   9.  navigates to /app/shopmgmt/appointments/:id/edit on success
  *   10. shows .error-banner on API error
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -171,7 +171,7 @@ describe('AppointmentCreateCrmPageComponent [CAP-137]', () => {
   });
 
   // 9. navigates on success
-  it('navigates to /app/shopmgmt/appointments/:id on success', async () => {
+  it('navigates to /app/shopmgmt/appointments/:id/edit on success', async () => {
     await setup();
     component.createForm.setValue({
       crmCustomerId: 'crm-c1',
@@ -183,7 +183,7 @@ describe('AppointmentCreateCrmPageComponent [CAP-137]', () => {
       serviceRequests: [],
     });
     component.submit();
-    expect(router.navigate).toHaveBeenCalledWith(['/app/shopmgmt/appointments', 'appt-new-1']);
+    expect(router.navigate).toHaveBeenCalledWith(['/app/shopmgmt/appointments', 'appt-new-1', 'edit']);
   });
 
   // 10. shows .error-banner on API error

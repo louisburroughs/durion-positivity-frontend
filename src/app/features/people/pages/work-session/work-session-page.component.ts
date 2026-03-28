@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { PeopleService } from '../../services/people.service';
 
 @Component({
@@ -9,10 +10,13 @@ import { PeopleService } from '../../services/people.service';
   templateUrl: './work-session-page.component.html',
   styleUrl: './work-session-page.component.css',
 })
-export class WorkSessionPageComponent {
+export class WorkSessionPageComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
   private readonly peopleService = inject(PeopleService);
 
   readonly currentSession = signal<object | null>(null);
+  readonly workorderId = signal('');
+  readonly locationId = signal('');
   readonly loading = signal(false);
   readonly onBreak = signal(false);
   readonly startSuccess = signal(false);
@@ -21,12 +25,26 @@ export class WorkSessionPageComponent {
   readonly breakStopped = signal(false);
   readonly error = signal<string | null>(null);
 
+  ngOnInit(): void {
+    this.route.params.subscribe(params => {
+      this.workorderId.set(params['workorderId'] ?? '');
+      this.locationId.set(params['locationId'] ?? '');
+    });
+  }
+
   startSession(): void {
+    const workorderId = this.workorderId();
+    const locationId = this.locationId();
+    if (!workorderId || !locationId) {
+      this.error.set('Workorder ID and Location ID are required to start a session.');
+      return;
+    }
+
     this.loading.set(true);
     this.error.set(null);
     this.startSuccess.set(false);
 
-    this.peopleService.startWorkSession({ workorderId: 'workorder-1', locationId: 'location-1' }).subscribe({
+    this.peopleService.startWorkSession({ workorderId, locationId }).subscribe({
       next: (session) => {
         this.currentSession.set(session as object);
         this.startSuccess.set(true);
@@ -83,6 +101,6 @@ export class WorkSessionPageComponent {
 
   getSessionId(): string {
     const current = this.currentSession() as Record<string, unknown> | null;
-    return String(current?.['sessionId'] ?? 'session-1');
+    return String(current?.['sessionId'] ?? '');
   }
 }

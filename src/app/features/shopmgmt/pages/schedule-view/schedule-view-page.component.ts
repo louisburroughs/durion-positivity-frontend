@@ -1,4 +1,5 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, signal, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -20,6 +21,7 @@ export interface ScheduleResource {
   styleUrl: './schedule-view-page.component.css',
 })
 export class ScheduleViewPageComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly appointmentService = inject(AppointmentService);
 
@@ -38,7 +40,7 @@ export class ScheduleViewPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       if (params['locationId']) this.filterForm.patchValue({ locationId: params['locationId'] });
       if (params['date']) this.filterForm.patchValue({ selectedDate: params['date'] });
       if (params['resourceType']) this.filterForm.patchValue({ resourceType: params['resourceType'] });
@@ -47,11 +49,11 @@ export class ScheduleViewPageComponent implements OnInit {
   }
 
   loadBoard(): void {
-    const { locationId, selectedDate } = this.filterForm.value;
+    const { locationId, selectedDate, resourceType, resourceId } = this.filterForm.value;
     if (!locationId || !selectedDate) return;
     this.loading.set(true);
     this.availabilityError.set(false);
-    this.appointmentService.viewSchedule(locationId, selectedDate).subscribe({
+    this.appointmentService.viewSchedule(locationId, selectedDate, resourceType ?? undefined, resourceId ?? undefined).subscribe({
       next: (data: unknown) => {
         this.scheduleData.set((data as ScheduleResource[]) ?? []);
         this.loading.set(false);

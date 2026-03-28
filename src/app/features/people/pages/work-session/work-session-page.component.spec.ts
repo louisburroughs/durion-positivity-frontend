@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
+import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { WorkSessionPageComponent } from './work-session-page.component';
 import { PeopleService } from '../../services/people.service';
@@ -13,11 +13,13 @@ const stubPeopleService = {
   stopBreak: vi.fn(),
 };
 
+const DEFAULT_ROUTE_PARAMS: Record<string, string> = { workorderId: 'wo-1', locationId: 'loc-1' };
+
 describe('WorkSessionPageComponent [CAP-139]', () => {
   let fixture: ComponentFixture<WorkSessionPageComponent>;
   let component: WorkSessionPageComponent;
 
-  const setup = async () => {
+  const setup = async (routeParams: Record<string, string> = DEFAULT_ROUTE_PARAMS) => {
     vi.clearAllMocks();
     stubPeopleService.startWorkSession.mockReturnValue(of({ sessionId: 's-1' }));
     stubPeopleService.stopWorkSession.mockReturnValue(of({ status: 'ok' }));
@@ -29,6 +31,7 @@ describe('WorkSessionPageComponent [CAP-139]', () => {
       providers: [
         provideRouter([]),
         { provide: PeopleService, useValue: stubPeopleService },
+        { provide: ActivatedRoute, useValue: { params: of(routeParams) } },
       ],
     }).compileComponents();
 
@@ -54,11 +57,11 @@ describe('WorkSessionPageComponent [CAP-139]', () => {
   });
 
   it('calls startWorkSession on start', async () => {
-    await setup();
+    await setup({ workorderId: 'wo-1', locationId: 'loc-1' });
     component.startSession();
     expect(stubPeopleService.startWorkSession).toHaveBeenCalledWith({
-      workorderId: 'workorder-1',
-      locationId: 'location-1',
+      workorderId: 'wo-1',
+      locationId: 'loc-1',
     });
   });
 
@@ -80,5 +83,35 @@ describe('WorkSessionPageComponent [CAP-139]', () => {
     fixture.detectChanges();
     const indicator = fixture.debugElement.query(By.css('.break-indicator'));
     expect(indicator).toBeTruthy();
+  });
+
+  // T10 — new tests
+  it('getSessionId() returns empty string when no session is active', async () => {
+    await setup();
+    expect(component.getSessionId()).toBe('');
+  });
+
+  it('stop/break buttons are disabled when no session active', async () => {
+    await setup();
+    const stopBtn = fixture.debugElement.query(By.css('.stop-btn'));
+    const startBreakBtn = fixture.debugElement.query(By.css('.start-break-btn'));
+    const stopBreakBtn = fixture.debugElement.query(By.css('.stop-break-btn'));
+    expect((stopBtn.nativeElement as HTMLButtonElement).disabled).toBe(true);
+    expect((startBreakBtn.nativeElement as HTMLButtonElement).disabled).toBe(true);
+    expect((stopBreakBtn.nativeElement as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('startSession() shows error when workorderId missing', async () => {
+    await setup({ locationId: 'loc-1' });
+    component.startSession();
+    expect(component.error()).toBeTruthy();
+    expect(stubPeopleService.startWorkSession).not.toHaveBeenCalled();
+  });
+
+  it('startSession() shows error when locationId missing', async () => {
+    await setup({ workorderId: 'wo-1' });
+    component.startSession();
+    expect(component.error()).toBeTruthy();
+    expect(stubPeopleService.startWorkSession).not.toHaveBeenCalled();
   });
 });

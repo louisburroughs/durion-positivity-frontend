@@ -20,7 +20,7 @@
  *   13. shows .availability-warning on error
  *   14. shows .empty-board when schedule data is empty and no error
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -132,7 +132,7 @@ describe('ScheduleViewPageComponent [CAP-137]', () => {
   it('calls viewSchedule with locationId and date on loadBoard()', async () => {
     await setup({ locationId: 'loc-1', date: '2026-05-01' });
     component.loadBoard();
-    expect(appointmentServiceStub.viewSchedule).toHaveBeenCalledWith('loc-1', '2026-05-01');
+    expect(appointmentServiceStub.viewSchedule).toHaveBeenCalledWith('loc-1', '2026-05-01', '', '');
   });
 
   // 7. renders .board-region when data returned
@@ -239,5 +239,12 @@ describe('ScheduleViewPageComponent [CAP-137]', () => {
     fixture.detectChanges();
 
     expect(fixture.debugElement.query(By.css('.empty-board'))).not.toBeNull();
+  });
+
+  // T12 — viewSchedule with resourceType and resourceId
+  it('calls viewSchedule with resourceType and resourceId when present in query params', async () => {
+    await setup({ locationId: 'loc-1', date: '2026-05-01', resourceType: 'BAY', resourceId: 'bay-5' });
+    component.loadBoard();
+    expect(appointmentServiceStub.viewSchedule).toHaveBeenCalledWith('loc-1', '2026-05-01', 'BAY', 'bay-5');
   });
 });

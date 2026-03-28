@@ -4,9 +4,10 @@
   </header>
 
   <form class="start-form" [formGroup]="startForm" (ngSubmit)="startTravel()">
-    <input type="text" formControlName="mobileWorkAssignmentId" placeholder="Assignment ID" />
-    <input type="text" formControlName="workorderId" placeholder="Workorder ID" />
-    <textarea formControlName="notes" placeholder="Notes"></textarea>
+    <input type="text" formControlName="mobileWorkAssignmentId" placeholder="Assignment ID"
+      aria-label="Assignment ID" />
+    <input type="text" formControlName="workorderId" placeholder="Workorder ID" aria-label="Workorder ID" />
+    <textarea formControlName="notes" placeholder="Notes" aria-label="Notes"></textarea>
     <button type="submit">Start travel</button>
   </form>
 

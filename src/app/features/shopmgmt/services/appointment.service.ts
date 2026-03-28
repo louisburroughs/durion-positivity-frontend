@@ -50,8 +50,10 @@ export class AppointmentService {
     return this.api.get<unknown>(`/v1/shop-manager/${locationId}/services/${serviceId}/details`);
   }
 
-  viewSchedule(locationId: string, date: string): Observable<unknown> {
-    const params = new HttpParams().set('locationId', locationId).set('date', date);
+  viewSchedule(locationId: string, date: string, resourceType?: string, resourceId?: string): Observable<unknown> {
+    let params = new HttpParams().set('locationId', locationId).set('date', date);
+    if (resourceType) params = params.set('resourceType', resourceType);
+    if (resourceId) params = params.set('resourceId', resourceId);
     return this.api.get<unknown>('/v1/schedules/view', params);
   }
 }

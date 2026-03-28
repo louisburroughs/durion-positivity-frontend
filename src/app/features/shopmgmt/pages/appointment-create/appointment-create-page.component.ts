@@ -120,6 +120,9 @@ export class AppointmentCreatePageComponent implements OnInit {
   }
 
   private generateUuid(): string {
-    return crypto.randomUUID();
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return `req-${Date.now()}`;
   }
 }

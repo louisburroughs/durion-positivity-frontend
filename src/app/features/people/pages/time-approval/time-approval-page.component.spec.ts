@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { TimeApprovalPageComponent } from './time-approval-page.component';
 import { PeopleService } from '../../services/people.service';
 
@@ -97,5 +97,13 @@ describe('TimeApprovalPageComponent [CAP-139]', () => {
 
     const banner = fixture.debugElement.query(By.css('.success-banner'));
     expect(banner).toBeTruthy();
+  });
+
+  // T11 — createAdjustment error path
+  it('createAdjustment() sets approveError on failure', async () => {
+    await setup();
+    stubPeopleService.createAdjustment.mockReturnValue(throwError(() => new Error('fail')));
+    component.createAdjustment('te-1', { hours: 8 });
+    expect(component.approveError()).toBe('Failed to create adjustment.');
   });
 });

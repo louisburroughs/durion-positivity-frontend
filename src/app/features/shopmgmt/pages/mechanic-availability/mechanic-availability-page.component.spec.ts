@@ -4,10 +4,7 @@ import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { MechanicAvailabilityPageComponent } from './mechanic-availability-page.component';
-import { AppointmentService } from '../../services/appointment.service';
 import { PeopleService } from '../../../people/services/people.service';
-
-const stubAppointmentService = {};
 
 const stubPeopleService = {
   getCurrentUserPrimaryLocation: vi.fn(),
@@ -26,7 +23,6 @@ describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
       imports: [MechanicAvailabilityPageComponent],
       providers: [
         provideRouter([]),
-        { provide: AppointmentService, useValue: stubAppointmentService },
         { provide: PeopleService, useValue: stubPeopleService },
       ],
     }).compileComponents();
@@ -70,7 +66,6 @@ describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
       imports: [MechanicAvailabilityPageComponent],
       providers: [
         provideRouter([]),
-        { provide: AppointmentService, useValue: stubAppointmentService },
         { provide: PeopleService, useValue: stubPeopleService },
       ],
     }).compileComponents();

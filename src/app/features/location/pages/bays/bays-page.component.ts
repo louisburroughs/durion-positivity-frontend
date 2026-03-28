@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { LocationService } from '../../services/location.service';
@@ -12,6 +13,7 @@ import { LocationService } from '../../services/location.service';
   styleUrl: './bays-page.component.css',
 })
 export class BaysPageComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly locationService = inject(LocationService);
 
@@ -26,7 +28,7 @@ export class BaysPageComponent implements OnInit {
   readonly showEditModal = signal(false);
 
   ngOnInit(): void {
-    this.route.params.subscribe(params => {
+    this.route.params.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       const locationId = String(params['locationId'] ?? '');
       this.locationId.set(locationId);
       if (locationId) {
