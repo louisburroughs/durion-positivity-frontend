@@ -19,7 +19,7 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class CrmIntegrationService {
-  constructor(private readonly api: ApiBaseService) {}
+  constructor(private readonly api: ApiBaseService) { }
 
   /** operationId: listEvents */
   listEvents(params?: {

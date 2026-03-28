@@ -21,7 +21,7 @@ export class IntegrationEventsPageComponent implements OnInit {
   errorState = signal<'none' | '403' | 'error'>('none');
   detailErrorState = signal<string | null>(null);
 
-  constructor(private readonly crmIntegrationService: CrmIntegrationService) {}
+  constructor(private readonly crmIntegrationService: CrmIntegrationService) { }
 
   ngOnInit(): void {
     this.loading.set(true);
