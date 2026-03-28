@@ -23,6 +23,10 @@ Canonical tracking artifact for this program:
 
 ## 2. Core Principles
 
+### Terminology Convention
+
+Use `workorder` for technical identifiers and contracts (for example `workorderId`, API paths, DTO fields, route params, and internal symbols). Use `work order` for user-facing copy (labels, helper text, toasts, and documentation prose intended for operators).
+
 ### Capability-Driven Execution
 
 Each frontend story must be implemented by following the capability workflow inputs in this order:
