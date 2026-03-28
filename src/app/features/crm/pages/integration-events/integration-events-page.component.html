@@ -52,7 +52,7 @@
       }
     </section>
 
-    @if (selectedEvent()) {
+    @if (selectedEvent() || detailErrorState()) {
     <aside class="event-detail" aria-live="polite" aria-atomic="false" aria-label="Event detail">
       @if (detailErrorState()) {
       <div class="alert alert--error" role="alert">{{ detailErrorState() }}</div>

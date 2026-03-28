@@ -169,6 +169,21 @@ describe('IntegrationEventsPageComponent', () => {
     expect(fixture.componentInstance.detailErrorState()).not.toBeNull();
   });
 
+  // R3-F1: aside visible when detailErrorState is set but selectedEvent is null
+  it('renders .event-detail aside when selectedEvent is null but detailErrorState is set (R3-F1)', () => {
+    fixture.detectChanges();
+    const errorMessage = 'Unable to load event details. Please try again.';
+    fixture.componentInstance.detailErrorState.set(errorMessage);
+    fixture.detectChanges();
+
+    const detail = fixture.nativeElement.querySelector('.event-detail');
+    expect(detail).not.toBeNull();
+
+    const alert = fixture.nativeElement.querySelector('.alert--error');
+    expect(alert).not.toBeNull();
+    expect(alert.textContent).toContain(errorMessage);
+  });
+
   it('populates processingLog signal on successful getEventProcessingLog()', () => {
     const logText = 'Processed at 2026-01-01\nSuccess.';
     fixture.detectChanges();
