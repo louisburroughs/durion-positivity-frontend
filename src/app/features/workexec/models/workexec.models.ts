@@ -248,6 +248,9 @@ export interface WorkorderDetailResponse {
   status?: WorkorderStatus;
   customerId?: string;
   vehicleId?: string;
+  crmPartyId?: string;
+  crmVehicleId?: string;
+  crmContactIds?: string[];
   shopId?: string;
   primaryTechnicianId?: string;
   primaryTechnicianName?: string;

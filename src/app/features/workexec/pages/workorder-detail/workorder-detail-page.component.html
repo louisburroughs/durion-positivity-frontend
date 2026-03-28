@@ -75,7 +75,7 @@
   </header>
 
   <!-- Tab bar — 2px secondary bottom indicator only, no box shadow -->
-  <nav class="wo-tabs" aria-label="Work order sections">
+  <nav class="wo-tabs" aria-label="Work Order sections">
     <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'items'" (click)="selectTab('items')"
       aria-selected="{{ activeTab() === 'items' }}">Scope</button>
     <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'labor'" (click)="navigateToLabor()">Labor</button>
@@ -94,7 +94,7 @@
 
   <!-- Scope/Items tab — Story 229 -->
   @if (activeTab() === 'items') {
-  <div class="wo-section" aria-label="Work order scope">
+  <div class="wo-section" aria-label="Work Order scope">
     @if (items().length === 0) {
     <p class="hint-text">No items were promoted from the estimate.</p>
     } @else {
@@ -136,6 +136,36 @@
       </p>
     </div>
     }
+
+    <div class="crm-ref-block" aria-label="CRM references">
+      <p class="section-overline">CRM References</p>
+      <div class="crm-ref-grid">
+        <span class="crm-ref-label">Party</span>
+        @if (workorder()!.crmPartyId) {
+        <span class="crm-ref-value" [title]="workorder()!.crmPartyId!">{{ workorder()!.crmPartyId }}</span>
+        } @else {
+        <span class="crm-ref-value crm-ref-value--empty">Not set</span>
+        }
+
+        <span class="crm-ref-label">Vehicle</span>
+        @if (workorder()!.crmVehicleId) {
+        <span class="crm-ref-value" [title]="workorder()!.crmVehicleId!">{{ workorder()!.crmVehicleId }}</span>
+        } @else {
+        <span class="crm-ref-value crm-ref-value--empty">Not set</span>
+        }
+
+        <span class="crm-ref-label">Contacts</span>
+        @if ((workorder()!.crmContactIds?.length ?? 0) > 0) {
+        <span class="crm-ref-contacts">
+          @for (id of workorder()!.crmContactIds!; track id) {
+          <span class="crm-ref-badge" [title]="id">{{ id }}</span>
+          }
+        </span>
+        } @else {
+        <span class="crm-ref-value crm-ref-value--empty">Not set</span>
+        }
+      </div>
+    </div>
 
     <div class="audit-transitions">
       <button class="audit-toggle btn-link" (click)="auditExpanded.set(!auditExpanded())"
@@ -289,7 +319,7 @@
 </div>
 }
 
-<!-- Reopen Work Order modal (Story 214) — glassmorphism -->
+<!-- Reopen work order modal (Story 214) — glassmorphism -->
 @if (showReopenModal()) {
 <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="reopen-modal-title">
   <div class="modal-glass">

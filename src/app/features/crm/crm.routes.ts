@@ -63,6 +63,13 @@ export const CRM_ROUTES: Routes = [
           ),
       },
       {
+        path: 'integration/events',
+        loadComponent: () =>
+          import('./pages/integration-events/integration-events-page.component').then(
+            m => m.IntegrationEventsPageComponent,
+          ),
+      },
+      {
         path: 'party/:partyId/billing-rules',
         loadComponent: () =>
           import('./pages/billing-rules/billing-rules.component').then(
