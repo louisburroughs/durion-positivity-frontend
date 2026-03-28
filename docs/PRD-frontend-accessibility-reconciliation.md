@@ -16,12 +16,14 @@ Success means accessibility is part of delivery quality gates, not one-off remed
 ## 2. Scope
 
 In scope:
+
 - Shell navigation and layout primitives (`header`, `nav`, `content`, `footer`)
 - Feature pages currently implemented and in active wave execution
 - Core interaction patterns: forms, tables, dialogs, alerts, loading/error states
 - Accessibility testing and quality gates in CI-ready form
 
 Out of scope:
+
 - Full legacy parity audit of screens that are not yet active in execution waves
 - Design-system visual refresh unrelated to accessibility
 
@@ -42,33 +44,39 @@ Out of scope:
 ## 5. Functional Requirements
 
 ### FR-1: Semantic and ARIA Baseline
+
 - Use native interactive elements first.
 - Eliminate non-semantic clickable containers where present.
 - Ensure each interactive control has an accessible name.
 
 ### FR-2: Keyboard and Focus
+
 - Every route-level screen is fully usable with keyboard only.
 - Ensure visible focus indicator on all focusable controls.
 - No keyboard traps.
 - Dialog/modal patterns must trap focus and restore focus on close.
 
 ### FR-3: Forms and Errors
+
 - All form inputs have label association.
 - Invalid/required states are exposed to assistive tech.
 - Error summaries/messages are announced and linked to controls.
 - No error communication by color alone.
 
 ### FR-4: Structure and Navigation
+
 - Consistent heading hierarchy per page.
 - Shell includes skip-to-content behavior.
 - Landmark usage remains correct (`banner`, `main`, `navigation`, `contentinfo`).
 
 ### FR-5: Visual and Motion
+
 - Contrast ratios meet AA requirements.
 - Motion respects `prefers-reduced-motion`.
 - Icon-only actions include accessible labels.
 
 ### FR-6: Accessibility Quality Gates
+
 - Add automated axe-based checks for critical routes.
 - Add keyboard smoke test checklist for each changed feature page.
 - Add manual screen-reader smoke verification checklist.
@@ -82,18 +90,22 @@ Out of scope:
 ## 7. Implementation Plan
 
 ### Phase A: Baseline Audit and Backlog
+
 - Build a route-by-route accessibility checklist for active pages.
 - Prioritize shell and shared patterns before individual page fixes.
 
 ### Phase B: Shell and Shared Pattern Hardening
+
 - Update shell/header/nav patterns for keyboard and landmark reliability.
 - Introduce reusable helpers for focus and assistive announcements.
 
 ### Phase C: Feature Reconciliation
+
 - Reconcile high-traffic features first (`workexec`, `crm`, `accounting`, `shopmgmt`, `location`).
 - Reconcile forms/tables/alerts with standardized pattern usage.
 
 ### Phase D: Quality Gate Integration
+
 - Add automated accessibility checks to CI.
 - Document exception process and severity model.
 
@@ -130,5 +142,5 @@ Out of scope:
 ## 12. References
 
 - `/home/louis-burroughs/IdeaProjects/durion/docs/adr/0029-frontend-accessibility-baseline-policy.adr.md`
-- WCAG 2.2: https://www.w3.org/TR/WCAG22/
-- WAI-ARIA APG: https://www.w3.org/WAI/ARIA/apg/
+- WCAG 2.2: <https://www.w3.org/TR/WCAG22/>
+- WAI-ARIA APG: <https://www.w3.org/WAI/ARIA/apg/>
