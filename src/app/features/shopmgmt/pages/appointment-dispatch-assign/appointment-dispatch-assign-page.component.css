@@ -1,0 +1,88 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.page-header h2 {
+  margin: 0;
+  font-family: var(--font-primary);
+  color: var(--currentTextColor);
+}
+
+.appointment-header,
+.assignment-history,
+.create-form,
+.conflict-panel {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.assignment-item {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.form-group input,
+.form-group select {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  padding: var(--space-2) var(--space-3);
+}
+
+.conflict-item {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.hard-conflict {
+  border-left: 4px solid var(--functional-error-red);
+}
+
+.soft-conflict {
+  border-left: 4px solid var(--functional-warning);
+}
+
+.success-banner,
+.error-banner {
+  margin-bottom: var(--space-3);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.success-banner {
+  border: 1px solid var(--functional-success);
+  color: var(--functional-success);
+  background: color-mix(in srgb, var(--functional-success) 12%, var(--cardBackground));
+}
+
+.error-banner {
+  border: 1px solid var(--functional-error-red);
+  color: var(--functional-error-red);
+  background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
+}
+
+.btn-primary {
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--brand-primary);
+  color: var(--themeBackground);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+}

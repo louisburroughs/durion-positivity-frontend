@@ -1,0 +1,43 @@
+.page-header {
+  margin-bottom: var(--space-4);
+}
+
+.session-panel {
+  display: grid;
+  gap: var(--space-2);
+  background: var(--cardBackground);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+}
+
+.session-active,
+.session-inactive,
+.break-indicator,
+.time-display {
+  color: var(--currentTextColor);
+}
+
+.break-active {
+  color: var(--functional-warning);
+}
+
+.start-btn,
+.stop-btn,
+.start-break-btn,
+.stop-break-btn {
+  justify-self: start;
+}
+
+.success-banner {
+  margin-top: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--functional-success) 20%, var(--brand-surface));
+}
+
+.error-banner {
+  margin-top: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--functional-error-red) 20%, var(--brand-surface));
+}

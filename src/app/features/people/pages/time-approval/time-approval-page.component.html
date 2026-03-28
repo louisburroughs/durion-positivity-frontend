@@ -1,0 +1,40 @@
+<section>
+  <header class="page-header">
+    <h1>Time Approval</h1>
+  </header>
+
+  <div class="bulk-actions">
+    <button class="approve-btn" type="button" (click)="approveSelected()">Approve</button>
+    <button class="reject-btn" type="button" (click)="openRejectModal()">Reject</button>
+  </div>
+
+  <p class="success-banner" *ngIf="approveSuccess() || rejectSuccess()">Action completed.</p>
+  <p class="error-banner" *ngIf="approveError() || rejectError()">{{ approveError() || rejectError() }}</p>
+
+  <div class="entry-list" *ngIf="!loading() && timeEntries().length > 0">
+    <div class="entry-row" *ngFor="let entry of timeEntries()">
+      <input
+        class="entry-checkbox"
+        type="checkbox"
+        [checked]="selectedEntries().includes(getEntryId(entry))"
+        (change)="toggleEntry(getEntryId(entry))"
+      />
+      <div class="entry-details">{{ getEntryId(entry) }}</div>
+    </div>
+  </div>
+
+  <p class="empty-state" *ngIf="!loading() && !approveError() && timeEntries().length === 0">No entries found.</p>
+
+  <div class="reject-modal-overlay" *ngIf="showRejectModal()">
+    <label>
+      Reason
+      <textarea
+        class="reject-reason-field"
+        [value]="rejectReason()"
+        (input)="rejectReason.set(($any($event.target)).value)"
+      ></textarea>
+    </label>
+    <button type="button" (click)="submitReject()">Submit reject</button>
+    <button type="button" (click)="closeRejectModal()">Close</button>
+  </div>
+</section>

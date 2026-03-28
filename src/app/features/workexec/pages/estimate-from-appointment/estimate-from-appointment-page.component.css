@@ -1,0 +1,38 @@
+.page-header {
+  margin-bottom: var(--space-4);
+}
+
+.estimate-form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  border: 1px solid var(--input-border);
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.submit-btn {
+  justify-self: start;
+}
+
+.success-banner {
+  margin-top: var(--space-2);
+  background: var(--functional-success);
+  color: var(--brand-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.error-banner {
+  margin-top: var(--space-2);
+  background: var(--functional-error-red);
+  color: var(--brand-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}

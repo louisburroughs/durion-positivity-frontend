@@ -2,48 +2,37 @@
   margin-bottom: var(--space-4);
 }
 
-.filter-form {
-  display: flex;
+.start-form {
+  display: grid;
   gap: var(--space-2);
-  align-items: end;
   margin-bottom: var(--space-3);
 }
 
-.filter-form input {
+.start-form input,
+.start-form textarea {
   border: 1px solid var(--input-border);
-  border-radius: var(--radius-sm);
   background: var(--input-background);
   color: var(--currentTextColor);
+  border-radius: var(--radius-sm);
   padding: var(--space-2);
 }
 
-.audit-list {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.audit-entry {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
+.active-segment,
+.travel-inactive {
   background: var(--cardBackground);
   border-radius: var(--radius-sm);
-  padding: var(--space-2);
-}
-
-.audit-detail {
-  margin-top: var(--space-3);
-  background: var(--brand-surface);
-  border-radius: var(--radius-sm);
   padding: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
-.empty-state {
-  margin-top: var(--space-3);
+.success-banner {
+  background: var(--functional-success);
+  color: var(--brand-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
 }
 
 .error-banner {
-  margin-bottom: var(--space-2);
   background: var(--functional-error-red);
   color: var(--brand-surface);
   border-radius: var(--radius-sm);

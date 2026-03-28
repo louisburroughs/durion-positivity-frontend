@@ -1,0 +1,101 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.page-header h2 {
+  margin: 0;
+  font-family: var(--font-primary);
+  color: var(--currentTextColor);
+}
+
+.bays-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+
+.bay-card {
+  background: var(--cardBackground);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  cursor: pointer;
+}
+
+.empty-state {
+  border: 1px dashed var(--input-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  background: var(--brand-surface);
+}
+
+.create-modal-overlay,
+.edit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.create-modal,
+.edit-modal {
+  width: min(440px, 100%);
+  background: var(--cardBackground);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.form-group input {
+  border: 1px solid var(--input-border);
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.error-banner {
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--functional-error-red);
+  background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
+  color: var(--functional-error-red);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.btn-primary,
+.btn-secondary {
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--brand-primary);
+  color: var(--themeBackground);
+}
+
+.btn-secondary {
+  background: var(--brand-secondary);
+  color: var(--themeBackground);
+}

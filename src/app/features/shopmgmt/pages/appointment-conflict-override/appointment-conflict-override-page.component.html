@@ -1,0 +1,59 @@
+<section class="page-header">
+  <h2>Appointment Conflict Override</h2>
+</section>
+
+<div *ngIf="rescheduleSuccess()" class="success-banner">Appointment re-scheduled successfully.</div>
+<div *ngIf="overrideSuccess()" class="success-banner">Override completed successfully.</div>
+<div *ngIf="rescheduleError()" class="error-banner">{{ rescheduleError() }}</div>
+<div *ngIf="overrideError()" class="error-banner">{{ overrideError() }}</div>
+
+<section *ngIf="appointment() as appt" class="appointment-summary">
+  <h3>Appointment {{ appt.appointmentId }}</h3>
+  <p>Status: {{ appt.status }}</p>
+  <p>Facility: {{ appt.facilityId }}</p>
+</section>
+
+<form [formGroup]="rescheduleForm" class="reschedule-form" (ngSubmit)="submitReschedule()">
+  <div class="form-group">
+    <label for="scheduled-start">Start Date Time</label>
+    <input id="scheduled-start" type="datetime-local" formControlName="scheduledStartDateTime" />
+  </div>
+
+  <div class="form-group">
+    <label for="scheduled-end">End Date Time</label>
+    <input id="scheduled-end" type="datetime-local" formControlName="scheduledEndDateTime" />
+  </div>
+
+  <div class="form-group">
+    <label for="reason">Reason</label>
+    <input id="reason" type="text" formControlName="reason" />
+  </div>
+
+  <button type="submit" class="btn-primary submit-reschedule-btn" [disabled]="rescheduleLoading()">Reschedule</button>
+</form>
+
+<section *ngIf="showConflictPanel() && hasConflicts()" class="conflict-panel">
+  <h3>Conflicts</h3>
+
+  <article
+    *ngFor="let conflict of conflicts()"
+    class="conflict-item"
+    [ngClass]="conflict.type === 'HARD' ? 'hard-conflict' : 'soft-conflict'"
+  >
+    <strong>{{ conflict.type }}</strong>
+    <p>{{ conflict.message }}</p>
+  </article>
+
+  <button type="button" class="btn-danger enable-override-btn" (click)="enableOverrideMode()">Enable Override</button>
+</section>
+
+<section *ngIf="overrideMode()" class="override-panel">
+  <form [formGroup]="overrideForm" (ngSubmit)="submitOverride()">
+    <div class="form-group override-reason-field">
+      <label for="override-reason">Override Reason</label>
+      <textarea id="override-reason" formControlName="overrideReason" rows="4"></textarea>
+    </div>
+
+    <button type="submit" class="btn-secondary submit-override-btn" [disabled]="overrideLoading()">Submit Override</button>
+  </form>
+</section>

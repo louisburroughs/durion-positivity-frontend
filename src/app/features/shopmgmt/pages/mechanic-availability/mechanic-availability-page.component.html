@@ -1,0 +1,30 @@
+<section>
+  <header class="page-header">
+    <h1>Mechanic Availability</h1>
+  </header>
+
+  <form class="filter-form" [formGroup]="filterForm" (ngSubmit)="loadAvailability()">
+    <label>
+      Location
+      <input type="text" formControlName="locationId" />
+    </label>
+    <label>
+      Date
+      <input type="date" formControlName="date" />
+    </label>
+    <button type="submit">Load</button>
+  </form>
+
+  <p class="error-banner" *ngIf="error()">{{ error() }}</p>
+
+  <div class="availability-grid" *ngIf="!loading() && availabilityData().length > 0">
+    <div class="mechanic-row" *ngFor="let row of availabilityData()">
+      <span class="mechanic-name">{{ getMechanicName(row) }}</span>
+      <span class="availability-cell" [ngClass]="isAvailable(row) ? 'available-slot' : 'unavailable-slot'">
+        {{ isAvailable(row) ? 'Available' : 'Unavailable' }}
+      </span>
+    </div>
+  </div>
+
+  <p class="empty-state" *ngIf="!loading() && !error() && availabilityData().length === 0">No availability data found.</p>
+</section>

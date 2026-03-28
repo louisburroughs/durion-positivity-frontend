@@ -1,0 +1,26 @@
+<section>
+  <header class="page-header">
+    <h1>Work Session</h1>
+  </header>
+
+  <div class="session-panel">
+    <div class="session-active" *ngIf="currentSession(); else inactive">Session active</div>
+    <ng-template #inactive>
+      <div class="session-inactive">No active session</div>
+    </ng-template>
+
+    <div class="break-indicator" *ngIf="onBreak()">
+      <span class="break-active">On break</span>
+    </div>
+
+    <div class="time-display">Session controls</div>
+
+    <button class="start-btn" type="button" (click)="startSession()">Start session</button>
+    <button class="stop-btn" type="button" (click)="stopSession(getSessionId())">Stop session</button>
+    <button class="start-break-btn" type="button" (click)="startBreak(getSessionId())">Start break</button>
+    <button class="stop-break-btn" type="button" (click)="stopBreak(getSessionId())">Stop break</button>
+  </div>
+
+  <p class="success-banner" *ngIf="startSuccess() || stopSuccess() || breakStarted() || breakStopped()">Action succeeded.</p>
+  <p class="error-banner" *ngIf="error()">{{ error() }}</p>
+</section>

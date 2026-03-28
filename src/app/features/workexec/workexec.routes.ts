@@ -17,6 +17,30 @@ export const WORKEXEC_ROUTES: Routes = [
     children: [
       // ── CAP-002: Estimate Management ──────────────────────────────────────
 
+      {
+        path: 'travel-time',
+        loadComponent: () =>
+          import('./pages/travel-time/travel-time-page.component').then(
+            m => m.TravelTimePageComponent,
+          ),
+      },
+
+      {
+        path: 'workorders/from-appointment',
+        loadComponent: () =>
+          import('./pages/estimate-from-appointment/estimate-from-appointment-page.component').then(
+            m => m.EstimateFromAppointmentPageComponent,
+          ),
+      },
+
+      {
+        path: 'workorders/:id/operational-context',
+        loadComponent: () =>
+          import('./pages/operational-context/operational-context-page.component').then(
+            m => m.OperationalContextPageComponent,
+          ),
+      },
+
       /** Story 239: Create Draft Estimate */
       {
         path: 'estimates/new',

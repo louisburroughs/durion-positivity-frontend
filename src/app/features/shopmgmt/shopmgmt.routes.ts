@@ -55,6 +55,34 @@ export const SHOPMGMT_ROUTES: Routes = [
             m => m.AppointmentEditPageComponent,
           ),
       },
+      {
+        path: 'appointments/:id/override-conflict',
+        loadComponent: () =>
+          import('./pages/appointment-conflict-override/appointment-conflict-override-page.component').then(
+            m => m.AppointmentConflictOverridePageComponent,
+          ),
+      },
+      {
+        path: 'appointments/:id/dispatch-assign',
+        loadComponent: () =>
+          import('./pages/appointment-dispatch-assign/appointment-dispatch-assign-page.component').then(
+            m => m.AppointmentDispatchAssignPageComponent,
+          ),
+      },
+      {
+        path: 'mechanics/availability',
+        loadComponent: () =>
+          import('./pages/mechanic-availability/mechanic-availability-page.component').then(
+            m => m.MechanicAvailabilityPageComponent,
+          ),
+      },
+      {
+        path: 'mechanics/roster',
+        loadComponent: () =>
+          import('./pages/mechanic-roster/mechanic-roster-page.component').then(
+            m => m.MechanicRosterPageComponent,
+          ),
+      },
     ],
   },
 ];

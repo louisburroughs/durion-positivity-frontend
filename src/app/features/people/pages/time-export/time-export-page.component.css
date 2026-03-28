@@ -3,49 +3,45 @@
 }
 
 .filter-form {
-  display: flex;
+  display: grid;
   gap: var(--space-2);
-  align-items: end;
   margin-bottom: var(--space-3);
 }
 
 .filter-form input {
   border: 1px solid var(--input-border);
-  border-radius: var(--radius-sm);
   background: var(--input-background);
+  border-radius: var(--radius-sm);
   color: var(--currentTextColor);
   padding: var(--space-2);
 }
 
-.audit-list {
+.export-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.export-table,
+.discrepancy-list {
   display: grid;
   gap: var(--space-2);
 }
 
-.audit-entry {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
+.export-row,
+.discrepancy-item {
   background: var(--cardBackground);
   border-radius: var(--radius-sm);
   padding: var(--space-2);
 }
 
-.audit-detail {
-  margin-top: var(--space-3);
-  background: var(--brand-surface);
+.error-banner {
+  margin-bottom: var(--space-2);
+  padding: var(--space-2);
   border-radius: var(--radius-sm);
-  padding: var(--space-3);
+  background: var(--functional-error-red);
+  color: var(--brand-surface);
 }
 
 .empty-state {
-  margin-top: var(--space-3);
-}
-
-.error-banner {
-  margin-bottom: var(--space-2);
-  background: var(--functional-error-red);
-  color: var(--brand-surface);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2);
+  color: var(--currentTextColor);
 }

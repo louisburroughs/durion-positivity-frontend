@@ -54,4 +54,16 @@ export class AppointmentService {
     const params = new HttpParams().set('locationId', locationId).set('date', date);
     return this.api.get<unknown>('/v1/schedules/view', params);
   }
+
+  getPeopleAvailability(params?: Record<string, string>): Observable<unknown[]> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => { httpParams = httpParams.set(k, v); });
+    }
+    return this.api.get<unknown[]>('/v1/people/availability', httpParams);
+  }
+
+  getCurrentUserPrimaryLocation(): Observable<unknown> {
+    return this.api.get<unknown>('/v1/people/me/primary-location');
+  }
 }

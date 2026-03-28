@@ -1,0 +1,62 @@
+.page-header {
+  margin-bottom: var(--space-4);
+}
+
+.context-panel {
+  display: grid;
+  gap: var(--space-2);
+  background: var(--cardBackground);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.context-item {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.context-key {
+  font-weight: 600;
+}
+
+.context-value {
+  color: var(--currentTextColor);
+}
+
+.override-panel {
+  margin-top: var(--space-3);
+  background: var(--brand-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.override-form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.form-group input {
+  width: 100%;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  padding: var(--space-2);
+}
+
+.success-banner {
+  margin-top: var(--space-2);
+  background: var(--functional-success);
+  color: var(--brand-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.error-banner {
+  margin-top: var(--space-2);
+  background: var(--functional-error-red);
+  color: var(--brand-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
