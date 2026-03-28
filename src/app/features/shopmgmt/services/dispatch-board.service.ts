@@ -6,7 +6,7 @@ import { DashboardResponse } from '../models/dispatch-board.models';
 
 @Injectable({ providedIn: 'root' })
 export class DispatchBoardService {
-  constructor(private readonly api: ApiBaseService) {}
+  constructor(private readonly api: ApiBaseService) { }
 
   getDashboard(locationId: string, date: string): Observable<DashboardResponse> {
     const normalizedDate = this.toIsoDate(date);

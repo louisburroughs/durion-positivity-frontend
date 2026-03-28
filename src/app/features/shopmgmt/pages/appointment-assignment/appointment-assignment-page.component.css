@@ -1,0 +1,79 @@
+:host {
+  display: block;
+  padding: var(--space-6);
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.page-header h2 {
+  font-family: var(--font-primary);
+  font-size: 1.625rem;
+  margin: 0;
+}
+
+.loading-state {
+  color: var(--brand-secondary);
+  padding: var(--space-4);
+}
+
+.sse-error-banner {
+  background: color-mix(in srgb, var(--functional-warning) 12%, transparent);
+  color: var(--functional-warning);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
+  font-size: 0.875rem;
+}
+
+.update-notification {
+  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
+  color: var(--functional-success);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
+  font-size: 0.875rem;
+}
+
+.assignment-section {
+  background: var(--cardBackground);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.assignment-type-label {
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-secondary);
+}
+
+.bay-details,
+.mobile-unit-details {
+  font-size: 0.875rem;
+}
+
+.mechanic-display {
+  font-size: 0.875rem;
+}
+
+.assignment-notes {
+  font-size: 0.875rem;
+  color: var(--brand-secondary);
+  white-space: pre-wrap;
+  max-width: 600px;
+}
+
+.empty-state {
+  color: var(--brand-secondary);
+  padding: var(--space-6);
+  text-align: center;
+}

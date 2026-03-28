@@ -12,25 +12,14 @@
     <div class="filter-bar">
       <div class="field-group">
         <label class="field-label" for="dispatch-location">Location</label>
-        <input
-          id="dispatch-location"
-          name="locationId"
-          type="text"
-          [ngModel]="selectedLocationId()"
-          (ngModelChange)="selectedLocationId.set($event ?? '')"
-          aria-label="Location"
-        />
+        <input id="dispatch-location" name="locationId" type="text" [ngModel]="selectedLocationId()"
+          (ngModelChange)="selectedLocationId.set($event ?? '')" aria-label="Location" />
       </div>
 
       <div class="field-group">
         <label class="field-label" for="dispatch-date">Date</label>
-        <input
-          id="dispatch-date"
-          type="date"
-          [ngModel]="selectedDate()"
-          (ngModelChange)="selectedDate.set($event ?? todayIso())"
-          aria-label="Date"
-        />
+        <input id="dispatch-date" type="date" [ngModel]="selectedDate()"
+          (ngModelChange)="selectedDate.set($event ?? todayIso())" aria-label="Date" />
       </div>
 
       <button type="button" class="btn-primary" (click)="refresh()" aria-label="Refresh dispatch board">
@@ -76,10 +65,7 @@
         </div>
         <div class="workorder-status">
           <span class="row-label">Status</span>
-          <span
-            class="status-chip"
-            [class.exception-badge]="workorder.status.toLowerCase().includes('exception')"
-          >
+          <span class="status-chip" [class.exception-badge]="workorder.status.toLowerCase().includes('exception')">
             {{ workorder.status }}
           </span>
         </div>

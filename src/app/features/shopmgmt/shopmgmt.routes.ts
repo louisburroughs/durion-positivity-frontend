@@ -13,6 +13,27 @@ export const SHOPMGMT_ROUTES: Routes = [
             m => m.DispatchBoardPageComponent,
           ),
       },
+      {
+        path: 'appointments/new',
+        loadComponent: () =>
+          import('./pages/appointment-create/appointment-create-page.component').then(
+            m => m.AppointmentCreatePageComponent,
+          ),
+      },
+      {
+        path: 'appointments/:id/assignments',
+        loadComponent: () =>
+          import('./pages/appointment-assignment/appointment-assignment-page.component').then(
+            m => m.AppointmentAssignmentPageComponent,
+          ),
+      },
+      {
+        path: 'appointments/:id/reschedule',
+        loadComponent: () =>
+          import('./pages/appointment-reschedule/appointment-reschedule-page.component').then(
+            m => m.AppointmentReschedulePageComponent,
+          ),
+      },
     ],
   },
 ];

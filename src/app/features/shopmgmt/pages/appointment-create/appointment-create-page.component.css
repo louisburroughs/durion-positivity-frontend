@@ -1,0 +1,153 @@
+:host {
+  display: block;
+  padding: var(--space-6);
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.page-header h2 {
+  font-family: var(--font-primary);
+  font-size: 1.625rem;
+  margin: 0;
+}
+
+.source-summary,
+.facility-info {
+  background: var(--cardBackground);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  display: flex;
+  gap: var(--space-3);
+  font-size: 0.875rem;
+}
+
+.source-type-badge {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.8125rem;
+  color: var(--brand-secondary);
+}
+
+.error-banner {
+  background: color-mix(in srgb, var(--functional-error-red) 10%, var(--cardBackground));
+  color: var(--functional-error-red);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+}
+
+.back-to-source,
+.correlation-id {
+  font-size: 0.8125rem;
+}
+
+.eligibility-error {
+  background: color-mix(in srgb, var(--functional-warning) 10%, var(--cardBackground));
+  color: var(--functional-warning);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+form {
+  background: var(--cardBackground);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 640px;
+}
+
+.form-group {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  color: var(--brand-secondary);
+}
+
+.form-group input,
+.form-group textarea {
+  background: var(--input-background);
+  border: none;
+  border-bottom: 2px solid var(--input-border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  padding: var(--space-2) var(--space-3);
+  color: var(--currentTextColor);
+  font-family: var(--font-primary);
+  font-size: 0.875rem;
+}
+
+.conflict-panel {
+  background: color-mix(in srgb, var(--functional-error-red) 8%, var(--cardBackground));
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hard-conflict {
+  color: var(--functional-error-red);
+  font-size: 0.875rem;
+}
+
+.soft-conflict {
+  color: var(--functional-warning);
+  font-size: 0.875rem;
+}
+
+.severity-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-right: var(--space-1);
+}
+
+.override-section {
+  padding: var(--space-3);
+  background: color-mix(in srgb, var(--brand-accent) 8%, var(--cardBackground));
+  border-radius: var(--radius-md);
+}
+
+.action-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+}
+
+.action-row button[type="submit"] {
+  background: var(--brand-accent);
+  color: var(--brand-surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-6);
+  cursor: pointer;
+  font-family: var(--font-primary);
+  font-size: 0.875rem;
+}
+
+.action-row button[type="submit"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

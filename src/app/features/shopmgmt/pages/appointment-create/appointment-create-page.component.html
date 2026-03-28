@@ -1,0 +1,79 @@
+<div class="page-header">
+  <h2>Create Appointment</h2>
+</div>
+
+<div class="source-summary">
+  <span class="source-type-badge">{{ sourceType() }}</span>
+  <span class="source-id">{{ sourceId() }}</span>
+</div>
+
+<div class="facility-info">
+  <span>{{ facilityId() }}</span>
+  <span>{{ facilityTimeZoneId() }}</span>
+</div>
+
+<div *ngIf="errorMessage()" class="error-banner">
+  {{ errorMessage() }}
+  <span *ngIf="correlationId()" class="correlation-id">{{ correlationId() }}</span>
+  <a *ngIf="showBackToSource()" class="back-to-source" href="#">Back to Source</a>
+</div>
+
+<div *ngIf="showEligibilityError()" class="eligibility-error">
+  This source is not eligible for a new appointment.
+  <a class="back-to-source" href="#">Back to Source</a>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="form-group">
+    <label for="scheduledStartDateTime">Scheduled Start</label>
+    <input
+      id="scheduledStartDateTime"
+      name="scheduledStartDateTime"
+      type="datetime-local"
+      formControlName="scheduledStartDateTime"
+    />
+  </div>
+
+  <div class="form-group">
+    <label for="scheduledEndDateTime">Scheduled End</label>
+    <input
+      id="scheduledEndDateTime"
+      name="scheduledEndDateTime"
+      type="datetime-local"
+      formControlName="scheduledEndDateTime"
+    />
+  </div>
+
+  <ng-container *ngIf="conflicts().length > 0">
+    <div class="conflict-panel">
+      <div *ngFor="let c of conflicts()">
+        <div *ngIf="c.type === 'HARD'" class="hard-conflict">
+          <span class="severity-badge">HARD</span> {{ c.message }}
+        </div>
+        <div *ngIf="c.type === 'SOFT'" class="soft-conflict">
+          <span class="severity-badge">SOFT</span> {{ c.message }}
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <div *ngIf="hasSoftOnly()" class="override-section">
+    <label>
+      <input type="checkbox" (change)="overrideEnabled.set($any($event.target).checked)" />
+      Override soft conflicts
+    </label>
+    <div *ngIf="overrideEnabled()" class="override-reason form-group">
+      <label for="overrideReason">Override Reason</label>
+      <textarea
+        id="overrideReason"
+        name="overrideReason"
+        formControlName="overrideReason"
+        rows="2"
+      ></textarea>
+    </div>
+  </div>
+
+  <div class="action-row">
+    <button type="submit" [disabled]="isSubmitDisabled">Create Appointment</button>
+  </div>
+</form>

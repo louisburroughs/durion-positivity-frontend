@@ -5,7 +5,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 export interface NavItem {
   label: string;
   route: string;
-  icon:  string; // Unicode symbol or icon font class
+  icon: string; // Unicode symbol or icon font class
 }
 
 /**
@@ -28,10 +28,10 @@ export class NavComponent {
   readonly collapsed = input(false);
 
   readonly navItems: NavItem[] = [
-    { label: 'Dashboard',     route: '/app/dashboard',             icon: '⊞' },
-    { label: 'Chat',          route: '/chat',                      icon: '💬' },
+    { label: 'Dashboard', route: '/app/dashboard', icon: '⊞' },
+    { label: 'Chat', route: '/chat', icon: '💬' },
     { label: 'Dispatch Board', route: '/app/shopmgmt/dispatch-board', icon: '🟦' },
-    { label: 'Admin',         route: '/app/admin',                 icon: '🛡️' },
+    { label: 'Admin', route: '/app/admin', icon: '🛡️' },
     // Future enhancement: add domain nav items as feature modules are introduced.
     //   { label: 'Orders',    route: '/app/orders',    icon: '🧾' },
     //   { label: 'Inventory', route: '/app/inventory', icon: '📦' },

@@ -8,10 +8,10 @@ const zoneApi = (globalThis as unknown as { Zone?: Record<string, unknown> }).Zo
 if (zoneApi) {
   const proxyZoneSpecCtor = zoneApi['ProxyZoneSpec'] as
     | (new () => {
-        getDelegate?: () => unknown;
-        setDelegate?: (delegate: unknown) => void;
-        resetDelegate?: () => void;
-      })
+      getDelegate?: () => unknown;
+      setDelegate?: (delegate: unknown) => void;
+      resetDelegate?: () => void;
+    })
     | undefined;
 
   if (proxyZoneSpecCtor && typeof zoneApi.current === 'object' && zoneApi.current !== null) {
