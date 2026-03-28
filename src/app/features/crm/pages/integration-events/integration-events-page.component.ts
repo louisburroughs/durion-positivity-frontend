@@ -73,6 +73,7 @@ export class IntegrationEventsPageComponent implements OnInit {
     this.detailErrorState.set(null);
     this.processingLog.set(null);
     this.reprocessingHistory.set([]);
+    this.selectedEvent.set(null);
     this.selectedEventId$.next(eventId);
   }
 }

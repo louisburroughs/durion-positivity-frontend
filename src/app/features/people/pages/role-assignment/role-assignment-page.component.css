@@ -77,15 +77,6 @@
   color: var(--status-error-text, inherit);
 }
 
-.revoke-btn {
-  margin-inline-start: auto;
-}
-
-.revoke-confirm {
-  background: var(--status-error-bg);
-  color: var(--functional-error, currentColor);
-}
-
 .loading-state {
   color: var(--text-muted, inherit);
 }

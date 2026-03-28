@@ -237,7 +237,7 @@ export interface WorkorderResponse {
   createdAt?: string;
   updatedAt?: string;
   version?: number;
-  /** Present on 409 — id of the existing workorder */
+  /** Present on 409 — id of the existing work order */
   existingWorkorderId?: string;
 }
 

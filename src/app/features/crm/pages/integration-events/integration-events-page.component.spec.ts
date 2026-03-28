@@ -124,6 +124,26 @@ describe('IntegrationEventsPageComponent', () => {
 
   // ── selectEvent() signal paths ───────────────────────────────────────────────
 
+  it('clears selectedEvent to null immediately when selectEvent() is called before forkJoin resolves', () => {
+    fixture.detectChanges();
+
+    // Populate selectedEvent via a first fully-resolved call
+    crmIntegrationServiceStub.getEvent.mockReturnValueOnce(of(sampleEvent));
+    crmIntegrationServiceStub.getEventProcessingLog.mockReturnValueOnce(of('log'));
+    crmIntegrationServiceStub.getReprocessingHistory.mockReturnValueOnce(of([]));
+    fixture.componentInstance.selectEvent('ev-001');
+    expect(fixture.componentInstance.selectedEvent()).toEqual(sampleEvent);
+
+    // Second call: hold forkJoin open with Subjects so it never resolves
+    crmIntegrationServiceStub.getEvent.mockReturnValueOnce(new Subject());
+    crmIntegrationServiceStub.getEventProcessingLog.mockReturnValueOnce(new Subject());
+    crmIntegrationServiceStub.getReprocessingHistory.mockReturnValueOnce(new Subject());
+    fixture.componentInstance.selectEvent('ev-002');
+
+    // selectedEvent must be null immediately — R2-F4: cleared synchronously before forkJoin resolves
+    expect(fixture.componentInstance.selectedEvent()).toBeNull();
+  });
+
   it('sets detailErrorState when getEvent() fails', () => {
     fixture.detectChanges();
     crmIntegrationServiceStub.getEvent.mockReturnValueOnce(throwError(() => new Error('not found')));

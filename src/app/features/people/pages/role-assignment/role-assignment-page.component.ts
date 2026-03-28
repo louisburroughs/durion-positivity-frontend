@@ -1,6 +1,5 @@
 import { Component, computed, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CreateAssignmentRequest, Role, RoleAssignment } from '../../models/people-rbac.models';
 import { PeopleService } from '../../services/people.service';
@@ -8,7 +7,7 @@ import { PeopleService } from '../../services/people.service';
 @Component({
   selector: 'app-role-assignment-page',
   standalone: true,
-  imports: [FormsModule],
+  imports: [],
   templateUrl: './role-assignment-page.component.html',
   styleUrl: './role-assignment-page.component.css',
 })
