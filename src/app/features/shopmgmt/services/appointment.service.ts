@@ -42,6 +42,14 @@ export class AppointmentService {
     return this.api.post<AppointmentDetail>(`/v1/appointments/${appointmentId}/conflict-override`, body);
   }
 
+  cancelAppointment(appointmentId: string, body: { cancellationReason: string; notes?: string }): Observable<AppointmentDetail> {
+    return this.api.deleteWithBody<AppointmentDetail>(`/v1/appointments/${appointmentId}/cancel`, body);
+  }
+
+  getShopServiceDetails(locationId: string, serviceId: string): Observable<unknown> {
+    return this.api.get<unknown>(`/v1/shop-manager/${locationId}/services/${serviceId}/details`);
+  }
+
   viewSchedule(locationId: string, date: string): Observable<unknown> {
     const params = new HttpParams().set('locationId', locationId).set('date', date);
     return this.api.get<unknown>('/v1/schedules/view', params);

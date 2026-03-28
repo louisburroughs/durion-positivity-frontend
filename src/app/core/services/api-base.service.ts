@@ -48,6 +48,10 @@ export class ApiBaseService {
     return this.http.delete<T>(this.url(path), { headers: this.toHeaders(options?.headers) });
   }
 
+  deleteWithBody<T>(path: string, body: unknown, options?: ApiRequestOptions): Observable<T> {
+    return this.http.delete<T>(this.url(path), { body, headers: this.toHeaders(options?.headers) });
+  }
+
   private toHeaders(record?: Record<string, string>): HttpHeaders | undefined {
     return record ? new HttpHeaders(record) : undefined;
   }

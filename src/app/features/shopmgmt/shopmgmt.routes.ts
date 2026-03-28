@@ -14,6 +14,20 @@ export const SHOPMGMT_ROUTES: Routes = [
           ),
       },
       {
+        path: 'schedule',
+        loadComponent: () =>
+          import('./pages/schedule-view/schedule-view-page.component').then(
+            m => m.ScheduleViewPageComponent,
+          ),
+      },
+      {
+        path: 'appointments/new/crm',
+        loadComponent: () =>
+          import('./pages/appointment-create-crm/appointment-create-crm-page.component').then(
+            m => m.AppointmentCreateCrmPageComponent,
+          ),
+      },
+      {
         path: 'appointments/new',
         loadComponent: () =>
           import('./pages/appointment-create/appointment-create-page.component').then(
@@ -32,6 +46,13 @@ export const SHOPMGMT_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/appointment-reschedule/appointment-reschedule-page.component').then(
             m => m.AppointmentReschedulePageComponent,
+          ),
+      },
+      {
+        path: 'appointments/:id/edit',
+        loadComponent: () =>
+          import('./pages/appointment-edit/appointment-edit-page.component').then(
+            m => m.AppointmentEditPageComponent,
           ),
       },
     ],

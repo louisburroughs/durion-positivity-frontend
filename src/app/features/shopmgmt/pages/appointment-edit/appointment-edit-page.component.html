@@ -1,0 +1,135 @@
+<div class="page-header">
+  <h2>Appointment</h2>
+  <span *ngIf="appointment()" class="appt-id">{{ appointment()!.appointmentId }}</span>
+</div>
+
+<ng-container *ngIf="loading()">
+  <div class="loading-state">Loading appointment&hellip;</div>
+</ng-container>
+
+<ng-container *ngIf="!loading()">
+  <div *ngIf="rescheduleSuccess()" class="success-banner">Appointment rescheduled successfully.</div>
+  <div *ngIf="cancelSuccess()" class="success-banner">Appointment cancelled.</div>
+
+  <div *ngIf="appointment()" class="appointment-summary">
+    <div class="summary-row">
+      <span class="label">Status</span>
+      <span class="value status-badge">{{ appointment()!.status }}</span>
+    </div>
+    <div class="summary-row" *ngIf="appointment()!.scheduledStart">
+      <span class="label">Scheduled Start</span>
+      <span class="value">{{ appointment()!.scheduledStart }}</span>
+    </div>
+    <div class="summary-row" *ngIf="appointment()!.scheduledEnd">
+      <span class="label">Scheduled End</span>
+      <span class="value">{{ appointment()!.scheduledEnd }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Facility</span>
+      <span class="value">{{ appointment()!.facilityId }}</span>
+    </div>
+  </div>
+
+  <div class="actions-row">
+    <ng-container *ngIf="canModify; else disabledActions">
+      <button class="btn-primary" (click)="openReschedule()">Reschedule</button>
+      <button class="btn-danger" (click)="openCancel()">Cancel Appointment</button>
+    </ng-container>
+    <ng-template #disabledActions>
+      <button class="btn-primary" disabled>Reschedule</button>
+      <button class="btn-danger" disabled>Cancel Appointment</button>
+      <span class="actions-helper-text">
+        This appointment is {{ appointment()?.status }} and cannot be modified.
+      </span>
+    </ng-template>
+  </div>
+
+  <div class="audit-section">
+    <h3>Audit History</h3>
+    <div *ngIf="auditUnavailable()" class="audit-unavailable">
+      Audit history not available.
+    </div>
+    <div *ngIf="!auditUnavailable()">
+      <div *ngIf="auditEntries().length === 0" class="audit-empty">No audit entries found.</div>
+      <div *ngFor="let entry of auditEntries()" class="audit-entry">
+        <span class="audit-timestamp">{{ entry.timestamp }}</span>
+        <span class="audit-actor">{{ entry.actor }}</span>
+        <span class="audit-action">{{ entry.action }}</span>
+        <span class="audit-details">{{ entry.details }}</span>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<div *ngIf="showRescheduleModal()" class="modal-overlay">
+  <div class="modal reschedule-modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>Reschedule Appointment</h3>
+      <button class="modal-close" (click)="closeReschedule()" aria-label="Close">&#x2715;</button>
+    </div>
+    <form [formGroup]="rescheduleForm" (ngSubmit)="submitReschedule()" novalidate>
+      <div class="form-group">
+        <label for="rsStart">New Start Date &amp; Time</label>
+        <input id="rsStart" name="scheduledStartDateTime" type="datetime-local" formControlName="scheduledStartDateTime" />
+      </div>
+      <div class="form-group">
+        <label for="rsEnd">New End Date &amp; Time</label>
+        <input id="rsEnd" name="scheduledEndDateTime" type="datetime-local" formControlName="scheduledEndDateTime" />
+      </div>
+      <div class="form-group">
+        <label for="rsReason">Reason</label>
+        <input id="rsReason" name="reason" type="text" formControlName="reason" />
+      </div>
+
+      <div *ngIf="rescheduleError()" class="error-banner">{{ rescheduleError() }}</div>
+
+      <div *ngIf="rescheduleConflicts().length > 0" class="conflict-panel">
+        <div *ngFor="let c of rescheduleConflicts()">
+          <div *ngIf="c.type === 'HARD'" class="hard-conflict">{{ c.message }}</div>
+          <div *ngIf="c.type === 'SOFT'" class="soft-conflict">{{ c.message }}</div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closeReschedule()">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="rescheduleForm.invalid || rescheduleLoading()">
+          Save
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div *ngIf="showCancelModal()" class="modal-overlay">
+  <div class="modal cancel-modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>Cancel Appointment</h3>
+      <button class="modal-close" (click)="closeCancel()" aria-label="Close">&#x2715;</button>
+    </div>
+    <form [formGroup]="cancelForm" (ngSubmit)="submitCancel()" novalidate>
+      <div class="form-group">
+        <label for="cancelReason">Cancellation Reason</label>
+        <select id="cancelReason" name="cancellationReason" formControlName="cancellationReason">
+          <option value="CUSTOMER_REQUEST">Customer Request</option>
+          <option value="TECHNICIAN_UNAVAILABLE">Technician Unavailable</option>
+          <option value="WEATHER">Weather</option>
+          <option value="VEHICLE_NOT_READY">Vehicle Not Ready</option>
+          <option value="OTHER">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="cancelNotes">Notes (optional)</label>
+        <textarea id="cancelNotes" name="notes" formControlName="notes" rows="3"></textarea>
+      </div>
+
+      <div *ngIf="cancelError()" class="error-banner">{{ cancelError() }}</div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closeCancel()">Back</button>
+        <button type="submit" class="btn-danger" [disabled]="cancelForm.invalid || cancelLoading()">
+          Confirm Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
