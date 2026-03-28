@@ -22,5 +22,6 @@
   <button class="submit-all-btn" type="button" (click)="submitAll(mobileWorkAssignmentId())">Submit all</button>
 
   <p class="success-banner" *ngIf="submitSuccess()">Travel submitted.</p>
-  <p class="error-banner" *ngIf="startError() || stopError() || submitError()">{{ startError() || stopError() || submitError() }}</p>
+  <p class="error-banner" *ngIf="startError() || stopError() || submitError()">{{ startError() || stopError() ||
+    submitError() }}</p>
 </section>

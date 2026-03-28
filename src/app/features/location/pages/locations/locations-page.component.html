@@ -35,12 +35,8 @@
 
     <div class="form-group">
       <label for="location-name">Name</label>
-      <input
-        id="location-name"
-        type="text"
-        [value]="createName()"
-        (input)="createName.set($any($event.target).value)"
-      />
+      <input id="location-name" type="text" [value]="createName()"
+        (input)="createName.set($any($event.target).value)" />
     </div>
 
     <div class="form-group">

@@ -14,7 +14,8 @@
       <label>Notes <textarea formControlName="notes"></textarea></label>
     </div>
 
-    <button class="submit-btn" type="submit" [disabled]="estimateForm.controls.appointmentId.value.trim().length === 0 || loading()">Create estimate</button>
+    <button class="submit-btn" type="submit"
+      [disabled]="estimateForm.controls.appointmentId.value.trim().length === 0 || loading()">Create estimate</button>
   </form>
 
   <p class="success-banner" *ngIf="createSuccess()">Estimate created.</p>

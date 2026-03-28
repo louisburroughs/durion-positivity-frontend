@@ -18,22 +18,14 @@
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="form-group">
       <label for="scheduledStartDateTime">New Start Date &amp; Time</label>
-      <input
-        id="scheduledStartDateTime"
-        name="scheduledStartDateTime"
-        type="datetime-local"
-        formControlName="scheduledStartDateTime"
-      />
+      <input id="scheduledStartDateTime" name="scheduledStartDateTime" type="datetime-local"
+        formControlName="scheduledStartDateTime" />
     </div>
 
     <div class="form-group">
       <label for="scheduledEndDateTime">New End Date &amp; Time</label>
-      <input
-        id="scheduledEndDateTime"
-        name="scheduledEndDateTime"
-        type="datetime-local"
-        formControlName="scheduledEndDateTime"
-      />
+      <input id="scheduledEndDateTime" name="scheduledEndDateTime" type="datetime-local"
+        formControlName="scheduledEndDateTime" />
     </div>
 
     <div class="form-group">
@@ -49,12 +41,7 @@
 
     <div class="form-group">
       <label for="notes">Notes</label>
-      <textarea
-        id="notes"
-        name="notes"
-        formControlName="notes"
-        rows="3"
-      ></textarea>
+      <textarea id="notes" name="notes" formControlName="notes" rows="3"></textarea>
     </div>
 
     <ng-container *ngIf="fieldErrors().length > 0">
@@ -80,22 +67,12 @@
 
     <div *ngIf="showOverrideReason()" class="override-reason-field form-group">
       <label for="overrideReason">Override Reason</label>
-      <textarea
-        id="overrideReason"
-        name="overrideReason"
-        formControlName="overrideReason"
-        rows="2"
-      ></textarea>
+      <textarea id="overrideReason" name="overrideReason" formControlName="overrideReason" rows="2"></textarea>
     </div>
 
     <div *ngIf="showApprovalReason()" class="approval-reason-field form-group">
       <label for="approvalReason">Approval Reason</label>
-      <textarea
-        id="approvalReason"
-        name="approvalReason"
-        formControlName="approvalReason"
-        rows="2"
-      ></textarea>
+      <textarea id="approvalReason" name="approvalReason" formControlName="approvalReason" rows="2"></textarea>
     </div>
 
     <div class="action-row">

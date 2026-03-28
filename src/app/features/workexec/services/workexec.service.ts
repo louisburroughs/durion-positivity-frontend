@@ -91,7 +91,7 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class WorkexecService {
-  constructor(private readonly api: ApiBaseService) {}
+  constructor(private readonly api: ApiBaseService) { }
 
   /** Builds an options object carrying the Idempotency-Key header when a key is provided. */
   private idempotencyOptions(key?: string) {

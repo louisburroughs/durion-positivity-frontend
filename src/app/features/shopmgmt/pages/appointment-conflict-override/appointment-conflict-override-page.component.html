@@ -35,11 +35,8 @@
 <section *ngIf="showConflictPanel() && hasConflicts()" class="conflict-panel">
   <h3>Conflicts</h3>
 
-  <article
-    *ngFor="let conflict of conflicts()"
-    class="conflict-item"
-    [ngClass]="conflict.type === 'HARD' ? 'hard-conflict' : 'soft-conflict'"
-  >
+  <article *ngFor="let conflict of conflicts()" class="conflict-item"
+    [ngClass]="conflict.type === 'HARD' ? 'hard-conflict' : 'soft-conflict'">
     <strong>{{ conflict.type }}</strong>
     <p>{{ conflict.message }}</p>
   </article>
@@ -54,6 +51,7 @@
       <textarea id="override-reason" formControlName="overrideReason" rows="4"></textarea>
     </div>
 
-    <button type="submit" class="btn-secondary submit-override-btn" [disabled]="overrideLoading()">Submit Override</button>
+    <button type="submit" class="btn-secondary submit-override-btn" [disabled]="overrideLoading()">Submit
+      Override</button>
   </form>
 </section>

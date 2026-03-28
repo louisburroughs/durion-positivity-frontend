@@ -26,7 +26,7 @@ export interface ApiRequestOptions {
 export class ApiBaseService {
   private readonly base = environment.apiBaseUrl;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) { }
 
   get<T>(path: string, params?: HttpParams, options?: ApiRequestOptions): Observable<T> {
     return this.http.get<T>(this.url(path), { params, headers: this.toHeaders(options?.headers) });

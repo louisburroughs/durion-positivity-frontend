@@ -9,12 +9,14 @@
 
     <div class="form-group">
       <label for="crmCustomerId">CRM Customer ID</label>
-      <input id="crmCustomerId" name="crmCustomerId" type="text" formControlName="crmCustomerId" placeholder="Enter CRM customer ID" />
+      <input id="crmCustomerId" name="crmCustomerId" type="text" formControlName="crmCustomerId"
+        placeholder="Enter CRM customer ID" />
     </div>
 
     <div class="form-group">
       <label for="crmVehicleId">CRM Vehicle ID</label>
-      <input id="crmVehicleId" name="crmVehicleId" type="text" formControlName="crmVehicleId" placeholder="Enter CRM vehicle ID" />
+      <input id="crmVehicleId" name="crmVehicleId" type="text" formControlName="crmVehicleId"
+        placeholder="Enter CRM vehicle ID" />
     </div>
   </fieldset>
 
@@ -28,7 +30,8 @@
 
     <div class="form-group">
       <label for="resourceId">Resource (optional)</label>
-      <input id="resourceId" name="resourceId" type="text" formControlName="resourceId" placeholder="Bay or mobile unit ID" />
+      <input id="resourceId" name="resourceId" type="text" formControlName="resourceId"
+        placeholder="Bay or mobile unit ID" />
     </div>
 
     <div class="form-group">
@@ -46,17 +49,9 @@
     <legend class="section-legend">Service Requests</legend>
 
     <div formArrayName="serviceRequests">
-      <div
-        *ngFor="let ctrl of serviceRequestsArray.controls; let i = index"
-        class="service-request-row"
-      >
-        <input
-          [formControlName]="i"
-          type="text"
-          class="service-request-input"
-          placeholder="Service code or description"
-          [name]="'serviceRequest-' + i"
-        />
+      <div *ngFor="let ctrl of serviceRequestsArray.controls; let i = index" class="service-request-row">
+        <input [formControlName]="i" type="text" class="service-request-input" placeholder="Service code or description"
+          [name]="'serviceRequest-' + i" />
         <button type="button" class="btn-remove" (click)="removeServiceRequest(i)" aria-label="Remove">&#x2715;</button>
       </div>
     </div>

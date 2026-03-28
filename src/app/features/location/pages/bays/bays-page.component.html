@@ -11,12 +11,7 @@
 
 <ng-template #baysContent>
   <section *ngIf="bays().length > 0; else emptyState" class="bays-grid">
-    <button
-      *ngFor="let bay of bays()"
-      type="button"
-      class="bay-card"
-      (click)="selectBay(bay)"
-    >
+    <button *ngFor="let bay of bays()" type="button" class="bay-card" (click)="selectBay(bay)">
       <h3>{{ getBayName(bay) }}</h3>
     </button>
   </section>
@@ -34,12 +29,8 @@
 
     <div class="form-group">
       <label for="create-bay-name">Bay Name</label>
-      <input
-        id="create-bay-name"
-        type="text"
-        [value]="createBayName()"
-        (input)="createBayName.set($any($event.target).value)"
-      />
+      <input id="create-bay-name" type="text" [value]="createBayName()"
+        (input)="createBayName.set($any($event.target).value)" />
     </div>
 
     <div class="modal-actions">
@@ -55,12 +46,8 @@
 
     <div class="form-group">
       <label for="edit-bay-name">Bay Name</label>
-      <input
-        id="edit-bay-name"
-        type="text"
-        [value]="editBayName()"
-        (input)="editBayName.set($any($event.target).value)"
-      />
+      <input id="edit-bay-name" type="text" [value]="editBayName()"
+        (input)="editBayName.set($any($event.target).value)" />
     </div>
 
     <div class="modal-actions">

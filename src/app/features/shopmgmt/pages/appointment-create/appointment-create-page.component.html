@@ -26,22 +26,14 @@
 <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
   <div class="form-group">
     <label for="scheduledStartDateTime">Scheduled Start</label>
-    <input
-      id="scheduledStartDateTime"
-      name="scheduledStartDateTime"
-      type="datetime-local"
-      formControlName="scheduledStartDateTime"
-    />
+    <input id="scheduledStartDateTime" name="scheduledStartDateTime" type="datetime-local"
+      formControlName="scheduledStartDateTime" />
   </div>
 
   <div class="form-group">
     <label for="scheduledEndDateTime">Scheduled End</label>
-    <input
-      id="scheduledEndDateTime"
-      name="scheduledEndDateTime"
-      type="datetime-local"
-      formControlName="scheduledEndDateTime"
-    />
+    <input id="scheduledEndDateTime" name="scheduledEndDateTime" type="datetime-local"
+      formControlName="scheduledEndDateTime" />
   </div>
 
   <ng-container *ngIf="conflicts().length > 0">
@@ -64,12 +56,7 @@
     </label>
     <div *ngIf="overrideEnabled()" class="override-reason form-group">
       <label for="overrideReason">Override Reason</label>
-      <textarea
-        id="overrideReason"
-        name="overrideReason"
-        formControlName="overrideReason"
-        rows="2"
-      ></textarea>
+      <textarea id="overrideReason" name="overrideReason" formControlName="overrideReason" rows="2"></textarea>
     </div>
   </div>
 

@@ -21,6 +21,7 @@
     <button class="stop-break-btn" type="button" (click)="stopBreak(getSessionId())">Stop break</button>
   </div>
 
-  <p class="success-banner" *ngIf="startSuccess() || stopSuccess() || breakStarted() || breakStopped()">Action succeeded.</p>
+  <p class="success-banner" *ngIf="startSuccess() || stopSuccess() || breakStarted() || breakStopped()">Action
+    succeeded.</p>
   <p class="error-banner" *ngIf="error()">{{ error() }}</p>
 </section>

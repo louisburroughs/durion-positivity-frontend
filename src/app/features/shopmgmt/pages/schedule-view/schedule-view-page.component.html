@@ -14,7 +14,8 @@
     </div>
     <div class="filter-group">
       <label for="svResourceType">Resource Type</label>
-      <input id="svResourceType" name="resourceType" type="text" formControlName="resourceType" placeholder="e.g. BAY" />
+      <input id="svResourceType" name="resourceType" type="text" formControlName="resourceType"
+        placeholder="e.g. BAY" />
     </div>
     <div class="filter-group">
       <label for="svResourceId">Resource ID</label>
@@ -44,11 +45,7 @@
         <span class="resource-name">{{ resource.resourceName ?? resource.resourceId }}</span>
       </div>
       <div class="lane-items">
-        <div
-          *ngFor="let appt of resource.appointments"
-          class="work-item-card"
-          (click)="selectItem(appt)"
-        >
+        <div *ngFor="let appt of resource.appointments" class="work-item-card" (click)="selectItem(appt)">
           <span class="item-id">{{ appt.appointmentId }}</span>
           <span class="item-time">{{ appt.scheduledStart }}</span>
           <span class="item-status">{{ appt.status }}</span>

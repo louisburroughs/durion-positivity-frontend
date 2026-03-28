@@ -70,7 +70,8 @@
     <form [formGroup]="rescheduleForm" (ngSubmit)="submitReschedule()" novalidate>
       <div class="form-group">
         <label for="rsStart">New Start Date &amp; Time</label>
-        <input id="rsStart" name="scheduledStartDateTime" type="datetime-local" formControlName="scheduledStartDateTime" />
+        <input id="rsStart" name="scheduledStartDateTime" type="datetime-local"
+          formControlName="scheduledStartDateTime" />
       </div>
       <div class="form-group">
         <label for="rsEnd">New End Date &amp; Time</label>

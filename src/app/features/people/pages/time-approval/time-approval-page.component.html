@@ -13,12 +13,8 @@
 
   <div class="entry-list" *ngIf="!loading() && timeEntries().length > 0">
     <div class="entry-row" *ngFor="let entry of timeEntries()">
-      <input
-        class="entry-checkbox"
-        type="checkbox"
-        [checked]="selectedEntries().includes(getEntryId(entry))"
-        (change)="toggleEntry(getEntryId(entry))"
-      />
+      <input class="entry-checkbox" type="checkbox" [checked]="selectedEntries().includes(getEntryId(entry))"
+        (change)="toggleEntry(getEntryId(entry))" />
       <div class="entry-details">{{ getEntryId(entry) }}</div>
     </div>
   </div>
@@ -28,11 +24,8 @@
   <div class="reject-modal-overlay" *ngIf="showRejectModal()">
     <label>
       Reason
-      <textarea
-        class="reject-reason-field"
-        [value]="rejectReason()"
-        (input)="rejectReason.set(($any($event.target)).value)"
-      ></textarea>
+      <textarea class="reject-reason-field" [value]="rejectReason()"
+        (input)="rejectReason.set(($any($event.target)).value)"></textarea>
     </label>
     <button type="button" (click)="submitReject()">Submit reject</button>
     <button type="button" (click)="closeRejectModal()">Close</button>

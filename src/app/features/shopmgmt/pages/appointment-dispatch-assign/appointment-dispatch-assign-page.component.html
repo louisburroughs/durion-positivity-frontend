@@ -38,17 +38,15 @@
     </select>
   </div>
 
-  <button type="submit" class="btn-primary submit-assignment-btn" [disabled]="submitLoading()">Create Assignment</button>
+  <button type="submit" class="btn-primary submit-assignment-btn" [disabled]="submitLoading()">Create
+    Assignment</button>
 </form>
 
 <section *ngIf="conflicts().length > 0" class="conflict-panel">
   <h3>Conflicts</h3>
 
-  <article
-    *ngFor="let conflict of conflicts()"
-    class="conflict-item"
-    [ngClass]="conflict.type === 'HARD' ? 'hard-conflict' : 'soft-conflict'"
-  >
+  <article *ngFor="let conflict of conflicts()" class="conflict-item"
+    [ngClass]="conflict.type === 'HARD' ? 'hard-conflict' : 'soft-conflict'">
     <strong>{{ conflict.type }}</strong>
     <p>{{ conflict.message }}</p>
   </article>

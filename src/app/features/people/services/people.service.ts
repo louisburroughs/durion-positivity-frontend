@@ -5,7 +5,7 @@ import { ApiBaseService } from '../../../core/services/api-base.service';
 
 @Injectable({ providedIn: 'root' })
 export class PeopleService {
-  constructor(private readonly api: ApiBaseService) {}
+  constructor(private readonly api: ApiBaseService) { }
 
   private idempotencyOptions(key?: string) {
     return key ? { headers: { 'Idempotency-Key': key } } : undefined;

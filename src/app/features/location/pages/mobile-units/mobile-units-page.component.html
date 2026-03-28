@@ -30,12 +30,8 @@
 
     <div class="form-group">
       <label for="mobile-unit-name">Name</label>
-      <input
-        id="mobile-unit-name"
-        type="text"
-        [value]="createName()"
-        (input)="createName.set($any($event.target).value)"
-      />
+      <input id="mobile-unit-name" type="text" [value]="createName()"
+        (input)="createName.set($any($event.target).value)" />
     </div>
 
     <div class="modal-actions">
@@ -51,12 +47,8 @@
 
     <div class="form-group">
       <label for="coverage-region">Region</label>
-      <input
-        id="coverage-region"
-        type="text"
-        [value]="coverageRegion()"
-        (input)="coverageRegion.set($any($event.target).value)"
-      />
+      <input id="coverage-region" type="text" [value]="coverageRegion()"
+        (input)="coverageRegion.set($any($event.target).value)" />
     </div>
 
     <div class="modal-actions">
