@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { CreateAssignmentRequest, Role, RoleAssignment } from '../models/people-rbac.models';
 
 @Injectable({ providedIn: 'root' })
 export class PeopleService {
@@ -105,5 +106,27 @@ export class PeopleService {
 
   stopBreak(sessionId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
     return this.api.post<unknown>(`/v1/people/workSessions/${sessionId}/breaks/stop`, body, this.idempotencyOptions(idempotencyKey));
+  }
+
+  // ── RBAC / Role Assignments ──────────────────────────────────────────────
+
+  getRoles(personUuid: string): Observable<Role[]> {
+    return this.api.get<Role[]>(`/v1/people/${personUuid}/access/roles`);
+  }
+
+  getAssignments(personId: string, includeHistory?: boolean): Observable<RoleAssignment[]> {
+    let params = new HttpParams().set('personId', personId);
+    if (includeHistory !== undefined) {
+      params = params.set('includeHistory', String(includeHistory));
+    }
+    return this.api.get<RoleAssignment[]>('/v1/people/staffing/assignments', params);
+  }
+
+  createAssignment(body: CreateAssignmentRequest, idempotencyKey?: string): Observable<RoleAssignment> {
+    return this.api.post<RoleAssignment>('/v1/people/staffing/assignments', body, this.idempotencyOptions(idempotencyKey));
+  }
+
+  revokeAssignment(personUuid: string, roleCode: string): Observable<void> {
+    return this.api.delete<void>(`/v1/people/${personUuid}/access/assignments/${roleCode}`);
   }
 }

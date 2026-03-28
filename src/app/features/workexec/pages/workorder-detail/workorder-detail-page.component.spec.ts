@@ -172,4 +172,39 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
       expect(list).not.toBeNull();
     });
   });
+
+  describe('CRM References [Story 157]', () => {
+    it('displays crm-ref-block with populated CRM IDs when workorder has crmPartyId and crmVehicleId in audit tab', async () => {
+      fixture.detectChanges();
+      drainInit(http, {
+        ...STUB_WORKORDER,
+        crmPartyId: 'crm-party-123',
+        crmVehicleId: 'crm-vehicle-456',
+        crmContactIds: ['crm-contact-789'],
+      });
+      component.activeTab.set('audit');
+      fixture.detectChanges();
+
+      const crmRefBlock = fixture.nativeElement.querySelector('.crm-ref-block');
+      expect(crmRefBlock).toBeTruthy();
+      expect(crmRefBlock?.textContent ?? '').toContain('crm-party-123');
+      expect(crmRefBlock?.textContent ?? '').toContain('crm-vehicle-456');
+    });
+
+    it('shows "Not set" when workorder has no crmPartyId in audit tab', async () => {
+      fixture.detectChanges();
+      drainInit(http, {
+        ...STUB_WORKORDER,
+        crmPartyId: undefined,
+        crmVehicleId: undefined,
+        crmContactIds: undefined,
+      });
+      component.activeTab.set('audit');
+      fixture.detectChanges();
+
+      const crmRefBlock = fixture.nativeElement.querySelector('.crm-ref-block');
+      expect(crmRefBlock).toBeTruthy();
+      expect(crmRefBlock?.textContent ?? '').toContain('Not set');
+    });
+  });
 });

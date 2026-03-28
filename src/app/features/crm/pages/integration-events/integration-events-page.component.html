@@ -1,0 +1,117 @@
+<div class="integration-events-page">
+  <header class="page-header">
+    <h1>Integration Events</h1>
+  </header>
+
+  @if (loading()) {
+    <div
+      data-testid="loading-state"
+      class="state-loading"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <span class="sr-only">Loading events...</span>
+      <div class="spinner" aria-hidden="true"></div>
+    </div>
+  }
+
+  @if (errorState() === '403') {
+    <div class="crm-not-authorized" role="alert">
+      <p>You do not have permission to view integration events.</p>
+    </div>
+  }
+
+  @if (errorState() === 'error') {
+    <div data-testid="error-state" role="alert" class="state-error">
+      <p>An error occurred while loading events. Please try again.</p>
+    </div>
+  }
+
+  @if (errorState() === 'none' && !loading()) {
+    <div class="events-layout">
+      <section class="events-section" aria-label="Event list">
+        @if (events().length === 0) {
+          <div data-testid="empty-state" class="state-empty">
+            <p>No events found.</p>
+          </div>
+        } @else {
+          <ul class="event-list">
+            @for (event of events(); track event.eventId) {
+              <li>
+                <button
+                  class="event-row"
+                  data-testid="event-row"
+                  type="button"
+                  [class.event-row--selected]="selectedEvent()?.eventId === event.eventId"
+                  (click)="selectEvent(event.eventId)"
+                  (keydown.enter)="selectEvent(event.eventId)"
+                  (keydown.space)="selectEvent(event.eventId)"
+                >
+                  <span class="event-row__id" title="{{ event.eventId }}">{{ event.eventId }}</span>
+                  <span class="event-row__type">{{ event.eventType }}</span>
+                  <span
+                    class="event-status-badge"
+                    [class.status-processed]="event.processingStatus === 'PROCESSED'"
+                    [class.status-pending]="event.processingStatus === 'PENDING'"
+                    [class.status-failed]="event.processingStatus === 'FAILED'"
+                    [class.status-suspended]="event.processingStatus === 'SUSPENDED'"
+                  >
+                    <span class="sr-only">Status: </span>{{ event.processingStatus }}
+                  </span>
+                  <span class="event-row__time">{{ event.receivedAt }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      @if (selectedEvent()) {
+        <aside class="event-detail" aria-live="polite" aria-atomic="false" aria-label="Event detail">
+          @if (detailErrorState()) {
+            <div class="alert alert--error" role="alert">{{ detailErrorState() }}</div>
+          }
+          <h2 class="detail-heading">Event Detail</h2>
+          <dl class="detail-grid">
+            <dt>Event ID</dt>
+            <dd class="mono-value">{{ selectedEvent()!.eventId }}</dd>
+            <dt>Type</dt>
+            <dd>{{ selectedEvent()!.eventType }}</dd>
+            <dt>Status</dt>
+            <dd>{{ selectedEvent()!.processingStatus }}</dd>
+            <dt>Received</dt>
+            <dd>{{ selectedEvent()!.receivedAt }}</dd>
+          </dl>
+
+          <section class="processing-log-section">
+            <h3 class="section-subheading">Processing Log</h3>
+            <div class="processing-log-container" aria-live="polite">
+              @if (processingLog()) {
+                <pre class="processing-log-text">{{ processingLog() }}</pre>
+              } @else {
+                <p class="state-empty-inline">No log entries available.</p>
+              }
+            </div>
+          </section>
+
+          @if (reprocessingHistory().length > 0) {
+            <section class="reprocessing-history-section">
+              <h3 class="section-subheading">Reprocessing History</h3>
+              <ul class="reprocessing-list">
+                @for (attempt of reprocessingHistory(); track attempt.attemptId) {
+                  <li class="reprocessing-item">
+                    <span class="mono-value">{{ attempt.attemptedAt }}</span>
+                    <span class="reprocessing-outcome">{{ attempt.outcome }}</span>
+                    @if (attempt.errorMessage) {
+                      <span class="reprocessing-error">{{ attempt.errorMessage }}</span>
+                    }
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+        </aside>
+      }
+    </div>
+  }
+</div>

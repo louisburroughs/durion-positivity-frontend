@@ -5,166 +5,191 @@
 
   @if (pageState() === 'ready' && estimate()) {
 
-    <div class="estimate-workspace">
+  <div class="estimate-workspace">
 
-      <!-- Left: ledger content -->
-      <div class="workspace-main">
-        <header class="page-header">
-          <p class="page-overline">Estimate</p>
-          <h1 id="estimate-detail-heading">{{ estimate()!.estimateNumber ?? estimateId }}</h1>
-          <p class="page-meta">
-            Status: <span class="status-chip status-chip--{{ estimate()!.status | lowercase }}">{{ estimate()!.status }}</span>
-            <span class="audit-meta">Created by {{ estimate()!.createdByUserId }} · {{ estimate()!.createdAt | date:'medium' }}</span>
-          </p>
-        </header>
+    <!-- Left: ledger content -->
+    <div class="workspace-main">
+      <header class="page-header">
+        <p class="page-overline">Estimate</p>
+        <h1 id="estimate-detail-heading">{{ estimate()!.estimateNumber ?? estimateId }}</h1>
+        <p class="page-meta">
+          Status: <span class="status-chip status-chip--{{ estimate()!.status | lowercase }}">{{ estimate()!.status
+            }}</span>
+          <span class="audit-meta">Created by {{ estimate()!.createdByUserId }} · {{ estimate()!.createdAt |
+            date:'medium' }}</span>
+        </p>
+      </header>
 
-        <!-- Parts -->
-        @if (partItems().length > 0) {
-          <div class="item-group">
-            <p class="section-overline">Parts</p>
-            @for (item of partItems(); track item.id) {
-              <div class="line-item">
-                <span class="line-item__desc">{{ item.description }}</span>
-                <div class="line-item__meta">
-                  <span>{{ item.quantity }} × {{ item.unitPrice | currency }}</span>
-                  <span class="line-item__total">{{ item.lineTotal | currency }}</span>
-                </div>
-              </div>
+      <div class="crm-ref-block" aria-label="CRM references">
+        <p class="section-overline">CRM References</p>
+        <div class="crm-ref-grid">
+          <span class="crm-ref-label">Party</span>
+          @if (estimate()!.crmPartyId) {
+          <span class="crm-ref-value" [title]="estimate()!.crmPartyId!">{{ estimate()!.crmPartyId }}</span>
+          } @else {
+          <span class="crm-ref-value crm-ref-value--empty">Not set</span>
+          }
+
+          <span class="crm-ref-label">Vehicle</span>
+          @if (estimate()!.crmVehicleId) {
+          <span class="crm-ref-value" [title]="estimate()!.crmVehicleId!">{{ estimate()!.crmVehicleId }}</span>
+          } @else {
+          <span class="crm-ref-value crm-ref-value--empty">Not set</span>
+          }
+
+          <span class="crm-ref-label">Contacts</span>
+          @if ((estimate()!.crmContactIds?.length ?? 0) > 0) {
+          <span class="crm-ref-contacts">
+            @for (id of estimate()!.crmContactIds!; track id) {
+            <span class="crm-ref-badge" [title]="id">{{ id }}</span>
             }
-          </div>
-        }
-
-        <!-- Labor -->
-        @if (laborItems().length > 0) {
-          <div class="item-group">
-            <p class="section-overline">Labor</p>
-            @for (item of laborItems(); track item.id) {
-              <div class="line-item">
-                <span class="line-item__desc">{{ item.description }}</span>
-                <div class="line-item__meta">
-                  <span>{{ item.quantity }} unit(s) × {{ item.unitPrice | currency }}</span>
-                  <span class="line-item__total">{{ item.lineTotal | currency }}</span>
-                </div>
-              </div>
-            }
-          </div>
-        }
-
-        <!-- Quick nav actions -->
-        <div class="item-actions">
-          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'parts']">+ Add Parts</a>
-          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'labor']">+ Add Labor</a>
-          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'revise']">Revise</a>
-          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'summary']">Customer Summary</a>
+          </span>
+          } @else {
+          <span class="crm-ref-value crm-ref-value--empty">Not set</span>
+          }
         </div>
       </div>
 
-      <!-- Right: totals panel -->
-      <aside class="workspace-sidebar" aria-label="Estimate totals">
-        <p class="section-overline">Totals</p>
-
-        @if (totalsState() === 'recalculating') {
-          <p class="hint-text" aria-busy="true">Recalculating…</p>
-        }
-
-        @if (totalsState() === 'blocked-config') {
-          <div class="alert alert--error" role="alert">
-            Tax configuration missing for this location. Approval is blocked until resolved.
+      <!-- Parts -->
+      @if (partItems().length > 0) {
+      <div class="item-group">
+        <p class="section-overline">Parts</p>
+        @for (item of partItems(); track item.id) {
+        <div class="line-item">
+          <span class="line-item__desc">{{ item.description }}</span>
+          <div class="line-item__meta">
+            <span>{{ item.quantity }} × {{ item.unitPrice | currency }}</span>
+            <span class="line-item__total">{{ item.lineTotal | currency }}</span>
           </div>
+        </div>
         }
+      </div>
+      }
 
-        @if (totalsState() === 'error') {
-          <div class="alert alert--warn" role="alert">
-            Totals calculation failed.
-            <button class="btn-link" (click)="recalculate()">Retry</button>
+      <!-- Labor -->
+      @if (laborItems().length > 0) {
+      <div class="item-group">
+        <p class="section-overline">Labor</p>
+        @for (item of laborItems(); track item.id) {
+        <div class="line-item">
+          <span class="line-item__desc">{{ item.description }}</span>
+          <div class="line-item__meta">
+            <span>{{ item.quantity }} unit(s) × {{ item.unitPrice | currency }}</span>
+            <span class="line-item__total">{{ item.lineTotal | currency }}</span>
           </div>
+        </div>
         }
+      </div>
+      }
 
-        @if (estimate()!.subtotal != null) {
-          <div class="totals-list">
-            <div class="totals-row"><span>Subtotal</span><span>{{ estimate()!.subtotal | currency }}</span></div>
-            <div class="totals-row"><span>Tax</span><span>{{ estimate()!.taxAmount | currency }}</span></div>
-            <div class="totals-row totals-row--total"><span>Total</span><span>{{ estimate()!.total | currency }}</span></div>
-          </div>
-        }
-
-        @if (estimate()!.expiresAt) {
-          <p class="expiry-note">Expires: {{ estimate()!.expiresAt | date:'shortDate' }}</p>
-        }
-
-        <!-- Submit for Approval CTA -->
-        <button
-          class="btn btn--accent btn--full"
-          (click)="navigateToSubmit()"
-          [disabled]="!canSubmitForApproval()"
-          [attr.aria-disabled]="!canSubmitForApproval()"
-          [attr.title]="taxBlocked() ? 'Tax configuration required before submission' : null"
-        >
-          Submit for Approval
-        </button>
-
-        <!-- CAP-004: Promote to Work Order (Stories 231, 228, 227) -->
-        @if (estimate()!.status === 'APPROVED') {
-
-          <!-- Story 227: Partial scope warning before promotion -->
-          @if (showPartialScope()) {
-            <div class="partial-scope-note" role="note" aria-label="Partial approval scope">
-              <p class="partial-scope-note__title">Partial Approval</p>
-              <p class="partial-scope-note__body">
-                {{ approvedItems().length }} item(s) approved for promotion.
-                {{ declinedItems().length }} item(s) were declined and will not be included in the work order.
-              </p>
-              <details class="partial-scope-note__detail">
-                <summary>Show excluded items</summary>
-                @for (item of declinedItems(); track item.id) {
-                  <p class="partial-scope-note__item">— {{ item.description }} ({{ item.itemType }})</p>
-                }
-              </details>
-            </div>
-          }
-
-          <!-- Story 228: 409 conflict state — existing workorder -->
-          @if (promoteState() === 'conflict') {
-            <div class="alert alert--warn promote-conflict" role="alert">
-              A work order already exists for this estimate.
-              @if (conflictWorkorderId()) {
-                <button class="btn-link" (click)="navigateToConflictWorkorder()">
-                  View existing work order →
-                </button>
-              }
-              <button class="btn-link" (click)="resetPromoteState()">Dismiss</button>
-            </div>
-          }
-
-          <!-- Story 228: 5xx / network error — safe-retry guidance -->
-          @if (promoteState() === 'error') {
-            <div class="alert alert--error promote-error" role="alert">
-              {{ promoteError() }}
-              <button class="btn-link" (click)="resetPromoteState()">Try again</button>
-            </div>
-          }
-
-          <!-- Story 231: Promote CTA — disabled during loading and after conflict/success -->
-          @if (promoteState() !== 'conflict' && promoteState() !== 'success') {
-            <button
-              class="btn btn--promote btn--full"
-              (click)="promoteToWorkorder()"
-              [disabled]="promoteState() === 'loading' || promoteState() === 'error'"
-              [attr.aria-busy]="promoteState() === 'loading'"
-              [attr.aria-disabled]="promoteState() !== 'idle'"
-            >
-              {{ promoteState() === 'loading' ? 'Creating Work Order…' : 'Promote to Work Order' }}
-            </button>
-          }
-
-        } @else if (estimate()!.status !== 'DRAFT') {
-          <p class="hint-text promote-hint">
-            Promotion requires customer approval. Current status: {{ estimate()!.status }}.
-          </p>
-        }
-      </aside>
-
+      <!-- Quick nav actions -->
+      <div class="item-actions">
+        <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'parts']">+ Add Parts</a>
+        <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'labor']">+ Add Labor</a>
+        <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'revise']">Revise</a>
+        <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'summary']">Customer Summary</a>
+      </div>
     </div>
+
+    <!-- Right: totals panel -->
+    <aside class="workspace-sidebar" aria-label="Estimate totals">
+      <p class="section-overline">Totals</p>
+
+      @if (totalsState() === 'recalculating') {
+      <p class="hint-text" aria-busy="true">Recalculating…</p>
+      }
+
+      @if (totalsState() === 'blocked-config') {
+      <div class="alert alert--error" role="alert">
+        Tax configuration missing for this location. Approval is blocked until resolved.
+      </div>
+      }
+
+      @if (totalsState() === 'error') {
+      <div class="alert alert--warn" role="alert">
+        Totals calculation failed.
+        <button class="btn-link" (click)="recalculate()">Retry</button>
+      </div>
+      }
+
+      @if (estimate()!.subtotal != null) {
+      <div class="totals-list">
+        <div class="totals-row"><span>Subtotal</span><span>{{ estimate()!.subtotal | currency }}</span></div>
+        <div class="totals-row"><span>Tax</span><span>{{ estimate()!.taxAmount | currency }}</span></div>
+        <div class="totals-row totals-row--total"><span>Total</span><span>{{ estimate()!.total | currency }}</span>
+        </div>
+      </div>
+      }
+
+      @if (estimate()!.expiresAt) {
+      <p class="expiry-note">Expires: {{ estimate()!.expiresAt | date:'shortDate' }}</p>
+      }
+
+      <!-- Submit for Approval CTA -->
+      <button class="btn btn--accent btn--full" (click)="navigateToSubmit()" [disabled]="!canSubmitForApproval()"
+        [attr.aria-disabled]="!canSubmitForApproval()"
+        [attr.title]="taxBlocked() ? 'Tax configuration required before submission' : null">
+        Submit for Approval
+      </button>
+
+      <!-- CAP-004: Promote to Workorder (Stories 231, 228, 227) -->
+      @if (estimate()!.status === 'APPROVED') {
+
+      <!-- Story 227: Partial scope warning before promotion -->
+      @if (showPartialScope()) {
+      <div class="partial-scope-note" role="note" aria-label="Partial approval scope">
+        <p class="partial-scope-note__title">Partial Approval</p>
+        <p class="partial-scope-note__body">
+          {{ approvedItems().length }} item(s) approved for promotion.
+          {{ declinedItems().length }} item(s) were declined and will not be included in the workorder.
+        </p>
+        <details class="partial-scope-note__detail">
+          <summary>Show excluded items</summary>
+          @for (item of declinedItems(); track item.id) {
+          <p class="partial-scope-note__item">— {{ item.description }} ({{ item.itemType }})</p>
+          }
+        </details>
+      </div>
+      }
+
+      <!-- Story 228: 409 conflict state — existing workorder -->
+      @if (promoteState() === 'conflict') {
+      <div class="alert alert--warn promote-conflict" role="alert">
+        A workorder already exists for this estimate.
+        @if (conflictWorkorderId()) {
+        <button class="btn-link" (click)="navigateToConflictWorkorder()">
+          View existing workorder →
+        </button>
+        }
+        <button class="btn-link" (click)="resetPromoteState()">Dismiss</button>
+      </div>
+      }
+
+      <!-- Story 228: 5xx / network error — safe-retry guidance -->
+      @if (promoteState() === 'error') {
+      <div class="alert alert--error promote-error" role="alert">
+        {{ promoteError() }}
+        <button class="btn-link" (click)="resetPromoteState()">Try again</button>
+      </div>
+      }
+
+      <!-- Story 231: Promote CTA — disabled during loading and after conflict/success -->
+      @if (promoteState() !== 'conflict' && promoteState() !== 'success') {
+      <button class="btn btn--promote btn--full" (click)="promoteToWorkorder()"
+        [disabled]="promoteState() === 'loading' || promoteState() === 'error'"
+        [attr.aria-busy]="promoteState() === 'loading'" [attr.aria-disabled]="promoteState() !== 'idle'">
+        {{ promoteState() === 'loading' ? 'Creating Workorder…' : 'Promote to Workorder' }}
+      </button>
+      }
+
+      } @else if (estimate()!.status !== 'DRAFT') {
+      <p class="hint-text promote-hint">
+        Promotion requires customer approval. Current status: {{ estimate()!.status }}.
+      </p>
+      }
+    </aside>
+
+  </div>
 
   }
 

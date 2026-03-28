@@ -7,6 +7,12 @@ export const PEOPLE_ROUTES: Routes = [
     component: PeopleComponent,
     children: [
       {
+        path: 'rbac/:personUuid',
+        loadComponent: () =>
+          import('./pages/role-assignment/role-assignment-page.component')
+            .then(m => m.RoleAssignmentPageComponent),
+      },
+      {
         path: 'timekeeping/approval',
         loadComponent: () => import('./pages/time-approval/time-approval-page.component').then(m => m.TimeApprovalPageComponent),
       },

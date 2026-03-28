@@ -237,7 +237,7 @@ export interface WorkorderResponse {
   createdAt?: string;
   updatedAt?: string;
   version?: number;
-  /** Present on 409 — id of the existing work order */
+  /** Present on 409 — id of the existing workorder */
   existingWorkorderId?: string;
 }
 
@@ -248,6 +248,9 @@ export interface WorkorderDetailResponse {
   status?: WorkorderStatus;
   customerId?: string;
   vehicleId?: string;
+  crmPartyId?: string;
+  crmVehicleId?: string;
+  crmContactIds?: string[];
   shopId?: string;
   primaryTechnicianId?: string;
   primaryTechnicianName?: string;

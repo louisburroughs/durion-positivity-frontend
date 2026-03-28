@@ -1,0 +1,99 @@
+<section class="role-assignment-layout" aria-label="Role assignment">
+  <aside class="assignments-pane" aria-labelledby="assignments-heading">
+    <h2 id="assignments-heading">Assigned roles</h2>
+
+    @if (errorMessage()) {
+    <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
+    }
+
+    <div class="history-toggle">
+      <input id="include-history" type="checkbox" [checked]="includeHistory()"
+        (change)="includeHistory.set(!includeHistory()); loadAssignments()" />
+      <label for="include-history">Include history</label>
+    </div>
+
+    <ul class="assignment-list" aria-labelledby="assignments-heading">
+      @for (assignment of assignments(); track assignment.assignmentId) {
+      <li class="assignment-item">
+        <span class="id-cell">{{ assignment.personId }}</span>
+        <span class="role-code">{{ assignment.roleCode }}</span>
+        <span class="status-badge" [class.status-active]="assignment.status === 'ACTIVE'"
+          [class.status-revoked]="assignment.status === 'REVOKED'">
+          <span class="sr-only">Status: </span>{{ assignment.status }}
+        </span>
+        @if (confirmingAssignmentId() !== assignment.assignmentId) {
+        <button type="button" class="btn btn--danger-outline" (click)="startRevoke(assignment.assignmentId)">
+          Revoke
+        </button>
+        } @else {
+        <button type="button" class="btn btn--danger" (click)="revokeAssignment(assignment.roleCode, assignment.assignmentId)">
+          Confirm Revoke
+        </button>
+        <button type="button" class="btn btn--ghost" (click)="confirmingAssignmentId.set(null)">
+          Cancel
+        </button>
+        }
+      </li>
+      }
+    </ul>
+
+    @if (loading()) {
+    <output class="loading-state" aria-live="polite">Loading assignments...</output>
+    }
+  </aside>
+
+  <section class="assign-form-pane" tabindex="-1" #formPane aria-labelledby="assignment-form-heading">
+    <h2 id="assignment-form-heading">Assign role and scope</h2>
+
+    <form class="assignment-form" (submit)="$event.preventDefault()">
+      <fieldset>
+        <legend>Role assignment details</legend>
+
+        <div class="field-row">
+          <label for="role-select">Role</label>
+          <select id="role-select" name="roleCode" [value]="selectedRoleCode()"
+            (change)="selectedRoleCode.set($any($event.target).value)">
+            <option value="" disabled>Select a role</option>
+            @for (role of roles(); track role.code) {
+            <option [value]="role.code">{{ role.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field-row">
+          <label for="scope-type">Scope type</label>
+          <select id="scope-type" name="scopeType" [value]="scopeType()"
+            (change)="scopeType.set($any($event.target).value); locationId.set('')">
+            <option value="GLOBAL">GLOBAL</option>
+            <option value="LOCATION">LOCATION</option>
+          </select>
+        </div>
+
+        @if (scopeType() === 'LOCATION') {
+        <div class="field-row location-picker">
+          <label for="location-id">Location ID</label>
+          <input id="location-id" name="locationId" type="text" [value]="locationId()"
+            (input)="locationId.set($any($event.target).value)" autocomplete="off" />
+        </div>
+        }
+
+        <div class="field-row">
+          <label for="effective-start">Effective start</label>
+          <input id="effective-start" name="effectiveStartAt" type="datetime-local" [value]="effectiveStartAt()"
+            (input)="effectiveStartAt.set($any($event.target).value)" />
+        </div>
+
+        <div class="field-row">
+          <label for="effective-end">Effective end (optional)</label>
+          <input id="effective-end" name="effectiveEndAt" type="datetime-local" [value]="effectiveEndAt()"
+            (input)="effectiveEndAt.set($any($event.target).value)" />
+        </div>
+
+        <button type="button" data-testid="submit-assignment-btn" [disabled]="!canSubmit()"
+          (click)="submitAssignment()">
+          Assign Role
+        </button>
+      </fieldset>
+    </form>
+  </section>
+</section>
