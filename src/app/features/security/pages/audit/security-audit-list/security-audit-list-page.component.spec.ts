@@ -4,9 +4,9 @@ import { By } from '@angular/platform-browser';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { SecurityAuditListPageComponent } from './security-audit-list-page.component';
-import { AppointmentService } from '../../../../../features/shopmgmt/services/appointment.service';
+import { SecurityService } from '../../../services/security.service';
 
-const stubAppointmentService = {
+const stubSecurityService = {
   searchAudit: vi.fn(),
 };
 
@@ -16,13 +16,13 @@ describe('SecurityAuditListPageComponent [CAP-141]', () => {
 
   const setup = async () => {
     vi.clearAllMocks();
-    stubAppointmentService.searchAudit.mockReturnValue(of([{ id: 'audit-1' }]));
+    stubSecurityService.searchAudit.mockReturnValue(of([{ id: 'audit-1' }]));
 
     await TestBed.configureTestingModule({
       imports: [SecurityAuditListPageComponent],
       providers: [
         provideRouter([]),
-        { provide: AppointmentService, useValue: stubAppointmentService },
+        { provide: SecurityService, useValue: stubSecurityService },
         { provide: ActivatedRoute, useValue: { queryParams: of({ appointmentId: 'appt-1' }) } },
       ],
     }).compileComponents();
@@ -44,7 +44,7 @@ describe('SecurityAuditListPageComponent [CAP-141]', () => {
 
   it('calls searchAudit with appointmentId from query params', async () => {
     await setup();
-    expect(stubAppointmentService.searchAudit).toHaveBeenCalledWith('appt-1');
+    expect(stubSecurityService.searchAudit).toHaveBeenCalledWith('appt-1');
   });
 
   it('renders .audit-list', async () => {
@@ -78,13 +78,13 @@ describe('SecurityAuditListPageComponent [CAP-141]', () => {
 
   it('shows .error-banner on load error', async () => {
     vi.clearAllMocks();
-    stubAppointmentService.searchAudit.mockReturnValue(throwError(() => new Error('boom')));
+    stubSecurityService.searchAudit.mockReturnValue(throwError(() => new Error('boom')));
 
     await TestBed.configureTestingModule({
       imports: [SecurityAuditListPageComponent],
       providers: [
         provideRouter([]),
-        { provide: AppointmentService, useValue: stubAppointmentService },
+        { provide: SecurityService, useValue: stubSecurityService },
         { provide: ActivatedRoute, useValue: { queryParams: of({ appointmentId: 'appt-1' }) } },
       ],
     }).compileComponents();

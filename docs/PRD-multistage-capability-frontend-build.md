@@ -119,7 +119,7 @@ Primary capability inputs:
 - Angular domain: `crm`
 - Design pack: `design/Customer/`
 - Primary capability group: `CAP-089`, `CAP-090`, `CAP-091`, `CAP-092`, `CAP-094`, `CAP-252`
-- Deferred/normalization candidates: `CAP-093`
+- Deferred/normalization candidates: none currently
 
 ### Work Execution Domain
 
@@ -153,17 +153,9 @@ Primary capability inputs:
 
 ### Unmapped or Metadata-Incomplete Capability Queue
 
-These capabilities must be triaged before implementation assignment:
-
-- `CAP-093`
-- `CAP-138`
-- `CAP-140`
-- `CAP-141`
-- `CAP-169`
-- `CAP-171`
-- `CAP-172`
-- `CAP-248`
-- `CAP-253`
+No frontend capabilities are currently unmapped or metadata-incomplete.
+Tracking reference: `/home/louis-burroughs/IdeaProjects/durion/docs/capabilities/CAPABILITY_STATUS_BOARD.md`
+Note: `CAP-278` is backend-only for the current frontend program scope.
 
 ## 5. Multi-Stage Execution Plan
 

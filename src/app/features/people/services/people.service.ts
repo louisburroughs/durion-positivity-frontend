@@ -63,6 +63,14 @@ export class PeopleService {
     return this.api.get<unknown[]>(`/v1/people/timeEntries/${timeEntryId}/adjustments`);
   }
 
+  listPendingTimeEntries(params?: Record<string, string>): Observable<unknown[]> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => { httpParams = httpParams.set(k, v); });
+    }
+    return this.api.get<unknown[]>('/v1/people/timeEntries', httpParams);
+  }
+
   // ── Reports ──────────────────────────────────────────────────────────────
 
   getApprovedTimeForExport(params?: Record<string, string>): Observable<unknown[]> {

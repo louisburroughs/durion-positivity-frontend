@@ -75,7 +75,7 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/crm/crm.routes').then(m => m.CRM_ROUTES),
       },
-      // Domain stub routes (scaffold – full implementation in future waves)
+      // Domain routes — completed across Waves A–F
       {
         path: 'workexec',
         loadChildren: () =>

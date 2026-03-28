@@ -29,7 +29,7 @@ export class TimeApprovalPageComponent implements OnInit {
 
   loadEntries(): void {
     this.loading.set(true);
-    this.peopleService.getAllPeople().subscribe({
+    this.peopleService.listPendingTimeEntries().subscribe({
       next: (entries) => {
         this.timeEntries.set(Array.isArray(entries) ? entries : []);
         this.loading.set(false);

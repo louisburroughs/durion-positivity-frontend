@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { AppointmentService } from '../../services/appointment.service';
+import { PeopleService } from '../../../people/services/people.service';
 
 @Component({
   selector: 'app-mechanic-availability-page',
@@ -12,6 +13,7 @@ import { AppointmentService } from '../../services/appointment.service';
 })
 export class MechanicAvailabilityPageComponent implements OnInit {
   private readonly appointmentService = inject(AppointmentService);
+  private readonly peopleService = inject(PeopleService);
 
   readonly loading = signal(false);
   readonly availabilityData = signal<unknown[]>([]);
@@ -29,7 +31,7 @@ export class MechanicAvailabilityPageComponent implements OnInit {
   }
 
   loadCurrentLocation(): void {
-    this.appointmentService.getCurrentUserPrimaryLocation().subscribe({
+    this.peopleService.getCurrentUserPrimaryLocation().subscribe({
       next: (location) => {
         const data = location as Record<string, unknown>;
         const id = String(data['locationId'] ?? data['id'] ?? '');
@@ -53,7 +55,7 @@ export class MechanicAvailabilityPageComponent implements OnInit {
     this.locationId.set(locationId);
     this.selectedDate.set(date);
 
-    this.appointmentService.getPeopleAvailability({ locationId, date }).subscribe({
+    this.peopleService.getPeopleAvailability({ locationId, date }).subscribe({
       next: (availability) => {
         this.availabilityData.set(Array.isArray(availability) ? availability : []);
         this.loading.set(false);

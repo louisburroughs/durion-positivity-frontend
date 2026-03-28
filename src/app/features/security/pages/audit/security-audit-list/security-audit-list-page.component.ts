@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AppointmentService } from '../../../../../features/shopmgmt/services/appointment.service';
+import { SecurityService } from '../../../services/security.service';
 
 @Component({
   selector: 'app-security-audit-list-page',
@@ -11,7 +11,7 @@ import { AppointmentService } from '../../../../../features/shopmgmt/services/ap
   styleUrl: './security-audit-list-page.component.css',
 })
 export class SecurityAuditListPageComponent implements OnInit {
-  private readonly appointmentService = inject(AppointmentService);
+  private readonly securityService = inject(SecurityService);
   private readonly route = inject(ActivatedRoute);
 
   readonly loading = signal(false);
@@ -34,7 +34,7 @@ export class SecurityAuditListPageComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.appointmentService.searchAudit(id).subscribe({
+    this.securityService.searchAudit(id).subscribe({
       next: (entries) => {
         this.auditEntries.set(Array.isArray(entries) ? entries : []);
         this.loading.set(false);

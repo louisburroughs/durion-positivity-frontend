@@ -32,8 +32,7 @@ export class LocationService {
   // ── Bays ─────────────────────────────────────────────────────────────────
 
   listBays(locationId: string): Observable<unknown[]> {
-    const params = new HttpParams().set('locationId', locationId);
-    return this.api.get<unknown[]>(`/v1/locations/${locationId}/bays`, params);
+    return this.api.get<unknown[]>(`/v1/locations/${locationId}/bays`);
   }
 
   createBay(locationId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
@@ -50,12 +49,12 @@ export class LocationService {
 
   // ── Mobile Units ─────────────────────────────────────────────────────────
 
-  listMobileUnits(params?: Record<string, string>): Observable<unknown> {
+  listMobileUnits(params?: Record<string, string>): Observable<unknown[]> {
     let httpParams = new HttpParams();
     if (params) {
       Object.entries(params).forEach(([k, v]) => { httpParams = httpParams.set(k, v); });
     }
-    return this.api.get<unknown>('/v1/mobile-units', httpParams);
+    return this.api.get<unknown[]>('/v1/mobile-units', httpParams);
   }
 
   createMobileUnit(body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {

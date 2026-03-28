@@ -8,6 +8,7 @@ import { PeopleService } from '../../services/people.service';
 
 const stubPeopleService = {
   getAllPeople: vi.fn(),
+  listPendingTimeEntries: vi.fn(),
   approveTimeEntries: vi.fn(),
   rejectTimeEntries: vi.fn(),
   createAdjustment: vi.fn(),
@@ -19,7 +20,7 @@ describe('TimeApprovalPageComponent [CAP-139]', () => {
 
   const setup = async () => {
     vi.clearAllMocks();
-    stubPeopleService.getAllPeople.mockReturnValue(of([{ id: 't1' }]));
+    stubPeopleService.listPendingTimeEntries.mockReturnValue(of([{ timeEntryId: 'te-1', status: 'PENDING', employeeId: 'emp-1', hours: 8 }]));
     stubPeopleService.approveTimeEntries.mockReturnValue(of({ status: 'ok' }));
     stubPeopleService.rejectTimeEntries.mockReturnValue(of({ status: 'ok' }));
     stubPeopleService.createAdjustment.mockReturnValue(of({ status: 'ok' }));
@@ -47,9 +48,9 @@ describe('TimeApprovalPageComponent [CAP-139]', () => {
     expect(fixture.nativeElement).toBeTruthy();
   });
 
-  it('calls getAllPeople on init (loading time entries placeholder)', async () => {
+  it('calls listPendingTimeEntries on init', async () => {
     await setup();
-    expect(stubPeopleService.getAllPeople).toHaveBeenCalledTimes(1);
+    expect(stubPeopleService.listPendingTimeEntries).toHaveBeenCalledTimes(1);
   });
 
   it('renders .entry-list', async () => {
