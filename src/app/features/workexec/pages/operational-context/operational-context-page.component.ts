@@ -47,9 +47,9 @@ export class OperationalContextPageComponent implements OnInit {
     }
 
     this.loading.set(true);
-    this.workexecService.getWorkorder(id).subscribe({
-      next: (workorder) => {
-        this.context.set(workorder as unknown as Record<string, unknown>);
+    this.workexecService.getOperationalContext(id).subscribe({
+      next: (context) => {
+        this.context.set(context as unknown as Record<string, unknown>);
         this.loading.set(false);
       },
       error: () => {

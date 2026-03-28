@@ -41,7 +41,7 @@ export class EstimateFromAppointmentPageComponent {
         this.estimateResult.set(result as unknown as Record<string, unknown>);
         this.createSuccess.set(true);
         this.loading.set(false);
-        void this.router.navigate(['/workexec/workorders']);
+        void this.router.navigate(['/app/workexec/workorders']);
       },
       error: () => {
         this.createError.set('Failed to create estimate from appointment.');

@@ -73,7 +73,7 @@ describe('EstimateFromAppointmentPageComponent [CAP-140]', () => {
 
     component.submit();
 
-    expect(stubRouter.navigate).toHaveBeenCalledWith(['/workexec/workorders']);
+    expect(stubRouter.navigate).toHaveBeenCalledWith(['/app/workexec/workorders']);
   });
 
   it('shows .error-banner on failure', async () => {

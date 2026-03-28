@@ -77,7 +77,7 @@ export class AppointmentCreateCrmPageComponent implements OnInit {
     this.appointmentService.createAppointment(body, idempotencyKey).subscribe({
       next: result => {
         this.loading.set(false);
-        this.router.navigate(['/app/shopmgmt/appointments', result.appointmentId]);
+        this.router.navigate(['/app/shopmgmt/appointments', result.appointmentId, 'edit']);
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);

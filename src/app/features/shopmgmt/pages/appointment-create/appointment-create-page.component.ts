@@ -82,7 +82,7 @@ export class AppointmentCreatePageComponent implements OnInit {
     this.appointmentService.createAppointment(body, this.clientRequestId()).subscribe({
       next: (result) => {
         this.submitLoading.set(false);
-        this.router.navigate(['/app/shopmgmt/appointments', result.appointmentId]);
+        this.router.navigate(['/app/shopmgmt/appointments', result.appointmentId, 'edit']);
       },
       error: (err: HttpErrorResponse) => {
         this.submitLoading.set(false);

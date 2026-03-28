@@ -7,7 +7,7 @@ import { OperationalContextPageComponent } from './operational-context-page.comp
 import { WorkexecService } from '../../services/workexec.service';
 
 const stubWorkexecService = {
-  getWorkorder: vi.fn(),
+  getOperationalContext: vi.fn(),
   overrideOperationalContext: vi.fn(),
 };
 
@@ -17,7 +17,7 @@ describe('OperationalContextPageComponent [CAP-140]', () => {
 
   const setup = async () => {
     vi.clearAllMocks();
-    stubWorkexecService.getWorkorder.mockReturnValue(of({ workorderId: 'wo-1', status: 'OPEN' }));
+    stubWorkexecService.getOperationalContext.mockReturnValue(of({ workorderId: 'wo-1', status: 'OPEN' }));
     stubWorkexecService.overrideOperationalContext.mockReturnValue(of({ workorderId: 'wo-1', status: 'OVERRIDDEN' }));
 
     await TestBed.configureTestingModule({
@@ -44,9 +44,9 @@ describe('OperationalContextPageComponent [CAP-140]', () => {
     expect(fixture.nativeElement).toBeTruthy();
   });
 
-  it('loads workorder data on init with route param', async () => {
+  it('loads operational context on init with route param', async () => {
     await setup();
-    expect(stubWorkexecService.getWorkorder).toHaveBeenCalledWith('wo-1');
+    expect(stubWorkexecService.getOperationalContext).toHaveBeenCalledWith('wo-1');
   });
 
   it('renders .context-panel', async () => {

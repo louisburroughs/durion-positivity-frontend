@@ -77,6 +77,7 @@ export class TravelTimePageComponent {
 
   getSegmentId(): string {
     const segment = this.activeSegment();
-    return String(segment?.['travelSegmentId'] ?? segment?.['id'] ?? 'segment-1');
+    const id = segment?.['travelSegmentId'] ?? segment?.['id'];
+    return typeof id === 'string' ? id : '';
   }
 }
