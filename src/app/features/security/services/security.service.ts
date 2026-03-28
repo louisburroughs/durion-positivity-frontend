@@ -46,6 +46,14 @@ export class SecurityService {
     return this.api.delete<void>(`${SecurityService.BASE}/roles/assignments/${encodeURIComponent(assignmentId)}`);
   }
 
+  createUser(body: Record<string, unknown>): Observable<unknown> {
+    return this.api.post<unknown>(`${SecurityService.BASE}/security/users`, body);
+  }
+
+  getUserById(userId: string): Observable<unknown> {
+    return this.api.get<unknown>(`${SecurityService.BASE}/security/users/${encodeURIComponent(userId)}`);
+  }
+
   getUserRoleAssignments(userId: string): Observable<RoleAssignment[]> {
     return this.api.get<RoleAssignment[]>(
       `${SecurityService.BASE}/roles/assignments/user/${encodeURIComponent(userId)}`,

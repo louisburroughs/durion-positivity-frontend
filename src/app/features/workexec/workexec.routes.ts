@@ -144,6 +144,14 @@ export const WORKEXEC_ROUTES: Routes = [
 
       // ── CAP-004: Workorder Promotion + Hub ────────────────────────────────
 
+      {
+        path: 'timer',
+        loadComponent: () =>
+          import('./pages/timer-widget/timer-widget-page.component').then(
+            m => m.TimerWidgetPageComponent,
+          ),
+      },
+
       /** Stories 230, 229, 226, 224, 219: Workorder hub (detail, scope, audit, start, roles) */
       {
         path: 'workorders/:workorderId',

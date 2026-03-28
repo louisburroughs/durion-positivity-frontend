@@ -775,4 +775,27 @@ export class WorkexecService {
       this.idempotencyOptions(idempotencyKey),
     );
   }
+
+  getActiveTimerEntries(): Observable<unknown> {
+    return this.api.get<unknown>('/v1/workexec/time-entries/timer/active');
+  }
+
+  startTimer(
+    body: { workOrderId: string; workOrderItemId?: string; laborCode?: string },
+    idempotencyKey: string,
+  ): Observable<unknown> {
+    return this.api.post<unknown>(
+      '/v1/workexec/time-entries/timer/start',
+      body,
+      this.idempotencyOptions(idempotencyKey),
+    );
+  }
+
+  stopTimers(idempotencyKey: string): Observable<unknown> {
+    return this.api.post<unknown>(
+      '/v1/workexec/time-entries/timer/stop',
+      {},
+      this.idempotencyOptions(idempotencyKey),
+    );
+  }
 }

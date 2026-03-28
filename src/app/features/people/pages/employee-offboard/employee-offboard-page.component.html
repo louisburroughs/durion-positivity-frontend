@@ -1,0 +1,89 @@
+<main class="people-page employee-offboard-layout" aria-labelledby="offboard-heading">
+  <header class="page-header">
+    <p class="page-overline">People Management</p>
+    <h1 id="offboard-heading">Employee Offboarding</h1>
+  </header>
+
+  @if (loading()) {
+  <section class="state-panel" data-testid="loading-indicator" aria-live="polite" aria-busy="true">
+    Loading employee offboarding details...
+  </section>
+  }
+
+  @if (offboardSuccess()) {
+  <section class="state-panel state-panel--success" data-testid="offboard-success-state" aria-live="polite">
+    Employee has been successfully offboarded. Redirecting...
+  </section>
+  }
+
+  @if (!loading() && !offboardSuccess()) {
+  @if (error()) {
+  <section class="state-panel state-panel--error" role="alert">
+    {{ error() }}
+  </section>
+  }
+
+  @if (employee()) {
+  <section class="employee-context" data-testid="employee-context" aria-label="Employee context">
+    <h2>Employee context</h2>
+    <dl>
+      <dt>Name</dt>
+      <dd>{{ employee()?.firstName }} {{ employee()?.lastName }}</dd>
+      <dt>Status</dt>
+      <dd>
+        <span class="status-badge" [class.status-badge--active]="employee()?.employmentStatus === 'ACTIVE'"
+          [class.status-badge--neutral]="employee()?.employmentStatus === 'INACTIVE' || employee()?.employmentStatus === 'ON_LEAVE'"
+          [class.status-badge--warning]="employee()?.employmentStatus === 'TERMINATED'">
+          {{ employee()?.employmentStatus }}
+        </span>
+      </dd>
+    </dl>
+  </section>
+  }
+
+  <div class="alert alert--warning" data-testid="consequences-warning" role="alert">
+    Offboarding immediately deactivates access and impacts downstream payroll, scheduling, and security workflows.
+    Confirm the date before proceeding.
+  </div>
+
+  <div class="field-row" [class.field-error--visible]="offboardDateControl.invalid && offboardDateControl.touched">
+    <label for="offboard-date">Offboard Date</label>
+    <input id="offboard-date" type="date" [formControl]="offboardDateControl" data-testid="offboard-date-input" />
+    @if (offboardDateControl.invalid && offboardDateControl.touched) {
+    <span class="field-error" role="alert">Offboard date is required.</span>
+    }
+  </div>
+
+  <button type="button" class="btn btn--danger" data-testid="offboard-trigger-btn"
+    [disabled]="submitting() || offboardDateControl.invalid" (click)="openConfirmDialog()">
+    Confirm Offboarding
+  </button>
+
+  @if (showConfirmDialog()) {
+  <div role="alertdialog" aria-modal="true" aria-labelledby="offboard-dialog-title"
+    aria-describedby="offboard-dialog-desc" class="modal-backdrop" data-testid="offboard-confirm-dialog"
+    (keydown.escape)="cancelConfirmDialog()">
+    <div class="modal-panel modal-panel--destructive">
+      <h2 id="offboard-dialog-title">Confirm Employee Offboarding</h2>
+      <p id="offboard-dialog-desc" data-testid="offboard-dialog-desc">
+        This action is destructive and cannot be undone from this screen.
+      </p>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn--ghost" data-testid="offboard-cancel-btn" [disabled]="submitting()"
+          (click)="cancelConfirmDialog()" autofocus>
+          Cancel
+        </button>
+        <button type="button" class="btn btn--danger" data-testid="offboard-confirm-btn" [disabled]="submitting()"
+          (click)="confirmOffboard()">
+          @if (submitting()) {
+          Offboarding...
+          } @else {
+          Confirm
+          }
+        </button>
+      </footer>
+    </div>
+  </div>
+  }
+  }
+</main>

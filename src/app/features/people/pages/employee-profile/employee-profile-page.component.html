@@ -1,0 +1,176 @@
+<main class="people-page employee-profile-layout" aria-labelledby="employee-profile-heading">
+  <header class="page-header">
+    <p class="page-overline">People Management</p>
+    <h1 id="employee-profile-heading">Employee Profile</h1>
+  </header>
+
+  @if (loading()) {
+  <section class="state-panel" data-testid="loading-indicator" aria-live="polite" aria-busy="true">
+    Loading employee profile...
+  </section>
+  }
+
+  @if (error()) {
+  <section class="state-panel state-panel--error" role="alert">
+    {{ error() }}
+  </section>
+  }
+
+  @if (!loading()) {
+  @if (conflictError()) {
+  <section class="alert alert--error" role="alert" data-testid="conflict-error">
+    {{ conflictError() }}
+  </section>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate class="profile-form">
+    <fieldset class="form-section">
+      <legend>Personal details</legend>
+
+      <div class="field-row"
+        [class.field-error--visible]="form.get('firstName')?.invalid && form.get('firstName')?.touched">
+        <label for="employee-firstName">First Name</label>
+        <input id="employee-firstName" type="text" formControlName="firstName" data-testid="first-name-input"
+          autocomplete="given-name" />
+        @if (fieldErrors()['firstName']) {
+        <span class="field-error" role="alert" data-testid="field-error-first-name">
+          {{ fieldErrors()['firstName'] }}
+        </span>
+        }
+        @if (form.get('firstName')?.touched && form.get('firstName')?.invalid) {
+        <span class="field-error" role="alert" data-testid="validation-first-name">
+          First name is required.
+        </span>
+        }
+      </div>
+
+      <div class="field-row"
+        [class.field-error--visible]="form.get('lastName')?.invalid && form.get('lastName')?.touched">
+        <label for="employee-lastName">Last Name</label>
+        <input id="employee-lastName" type="text" formControlName="lastName" data-testid="last-name-input"
+          autocomplete="family-name" />
+        @if (fieldErrors()['lastName']) {
+        <span class="field-error" role="alert" data-testid="field-error-last-name">
+          {{ fieldErrors()['lastName'] }}
+        </span>
+        }
+        @if (form.get('lastName')?.touched && form.get('lastName')?.invalid) {
+        <span class="field-error" role="alert" data-testid="validation-last-name">
+          Last name is required.
+        </span>
+        }
+      </div>
+
+      <div class="field-row" [class.field-error--visible]="form.get('email')?.invalid && form.get('email')?.touched">
+        <label for="employee-email">Email</label>
+        <input id="employee-email" type="email" formControlName="email" data-testid="email-input"
+          autocomplete="email" />
+        @if (fieldErrors()['email']) {
+        <span class="field-error" role="alert" data-testid="field-error-email">{{ fieldErrors()['email'] }}</span>
+        }
+      </div>
+
+      <div class="field-row" [class.field-error--visible]="form.get('phone')?.invalid && form.get('phone')?.touched">
+        <label for="employee-phone">Phone</label>
+        <input id="employee-phone" type="tel" formControlName="phone" data-testid="phone-input" autocomplete="tel" />
+        @if (fieldErrors()['phone']) {
+        <span class="field-error" role="alert" data-testid="field-error-phone">{{ fieldErrors()['phone'] }}</span>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset class="form-section">
+      <legend>Employment details</legend>
+
+      <div class="field-row"
+        [class.field-error--visible]="form.get('department')?.invalid && form.get('department')?.touched">
+        <label for="employee-department">Department</label>
+        <input id="employee-department" type="text" formControlName="department" data-testid="department-input"
+          autocomplete="organization" />
+        @if (fieldErrors()['department']) {
+        <span class="field-error" role="alert" data-testid="field-error-department">{{ fieldErrors()['department']
+          }}</span>
+        }
+      </div>
+
+      <div class="field-row" [class.field-error--visible]="form.get('title')?.invalid && form.get('title')?.touched">
+        <label for="employee-title">Title</label>
+        <input id="employee-title" type="text" formControlName="title" data-testid="title-input"
+          autocomplete="organization-title" />
+        @if (fieldErrors()['title']) {
+        <span class="field-error" role="alert" data-testid="field-error-title">{{ fieldErrors()['title'] }}</span>
+        }
+      </div>
+
+      <div class="field-row"
+        [class.field-error--visible]="form.get('hireDate')?.invalid && form.get('hireDate')?.touched">
+        <label for="employee-hireDate">Hire Date</label>
+        <input id="employee-hireDate" type="date" formControlName="hireDate" data-testid="hire-date-input" />
+        @if (fieldErrors()['hireDate']) {
+        <span class="field-error" role="alert" data-testid="field-error-hire-date">
+          {{ fieldErrors()['hireDate'] }}
+        </span>
+        }
+        @if (form.get('hireDate')?.touched && form.get('hireDate')?.invalid) {
+        <span class="field-error" role="alert" data-testid="validation-hire-date">
+          Hire date is required.
+        </span>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset class="form-section">
+      <legend>Status</legend>
+
+      <div class="field-row"
+        [class.field-error--visible]="form.get('employmentStatus')?.invalid && form.get('employmentStatus')?.touched">
+        <label for="employee-employmentStatus">Employment Status</label>
+        <select id="employee-employmentStatus" formControlName="employmentStatus"
+          data-testid="employment-status-select">
+          <option value="" disabled>Select status</option>
+          @for (status of employmentStatusValues; track status) {
+          <option [value]="status">{{ status }}</option>
+          }
+        </select>
+        @if (fieldErrors()['employmentStatus']) {
+        <span class="field-error" role="alert" data-testid="field-error-employment-status">
+          {{ fieldErrors()['employmentStatus'] }}
+        </span>
+        }
+        @if (form.get('employmentStatus')?.touched && form.get('employmentStatus')?.invalid) {
+        <span class="field-error" role="alert" data-testid="validation-employment-status">
+          Employment status is required.
+        </span>
+        }
+        <span class="status-badge" [class.status-badge--active]="form.controls.employmentStatus.value === 'ACTIVE'"
+          [class.status-badge--neutral]="form.controls.employmentStatus.value === 'INACTIVE' || form.controls.employmentStatus.value === 'ON_LEAVE'"
+          [class.status-badge--warning]="form.controls.employmentStatus.value === 'TERMINATED'">
+          {{ form.controls.employmentStatus.value }}
+        </span>
+      </div>
+    </fieldset>
+
+    <footer class="form-footer">
+      <button type="submit" class="btn btn--primary" data-testid="save-button" [disabled]="saving()">
+        @if (saving()) {
+        Saving...
+        } @else {
+        Save Employee
+        }
+      </button>
+    </footer>
+  </form>
+
+  @if (isEditMode && employee()) {
+  <section class="audit-meta" data-testid="audit-meta" aria-label="Audit metadata">
+    <h2>Audit details</h2>
+    <dl>
+      <dt>Created</dt>
+      <dd data-testid="audit-created-at">{{ employee()?.createdAt || 'Unavailable' }}</dd>
+      <dt>Last updated</dt>
+      <dd data-testid="audit-updated-at">{{ employee()?.updatedAt || 'Unavailable' }}</dd>
+    </dl>
+  </section>
+  }
+  }
+</main>

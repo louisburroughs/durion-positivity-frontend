@@ -1,0 +1,132 @@
+<main>
+  <header class="page-header">
+    <h1>Attendance vs Job Time Discrepancy Report</h1>
+  </header>
+
+  <section>
+    <h2>Filters</h2>
+    <form class="form-grid" [formGroup]="filterForm" (ngSubmit)="runReport()">
+      <div class="field">
+        <label for="start-date">Start Date</label>
+        <input id="start-date" type="date" formControlName="startDate" required data-testid="start-date-input"
+          aria-describedby="start-date-error" />
+        @if (filterForm.controls.startDate.touched && filterForm.controls.startDate.invalid) {
+        <span id="start-date-error" role="alert">Start date is required.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="end-date">End Date</label>
+        <input id="end-date" type="date" formControlName="endDate" required data-testid="end-date-input"
+          aria-describedby="end-date-error" />
+        @if (filterForm.controls.endDate.touched && filterForm.controls.endDate.invalid) {
+        <span id="end-date-error" role="alert">End date is required.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="timezone">Timezone</label>
+        <input id="timezone" type="text" formControlName="timezone" required data-testid="timezone-input"
+          aria-describedby="timezone-help" />
+        <span id="timezone-help">IANA timezone string (for example, UTC).</span>
+      </div>
+
+      <div class="field">
+        <label for="location-id">Location ID</label>
+        <input id="location-id" type="text" formControlName="locationId" data-testid="location-id-input" />
+      </div>
+
+      <div class="field">
+        <label for="technician-ids">Technician IDs</label>
+        <input id="technician-ids" type="text" formControlName="technicianIds" placeholder="Comma-separated IDs"
+          data-testid="technician-ids-input" />
+      </div>
+
+      <div class="checkbox-item">
+        <input id="flagged-only" type="checkbox" formControlName="flaggedOnly" (change)="toggleFlaggedOnly()"
+          data-testid="flagged-only-checkbox" />
+        <label for="flagged-only">Flagged only</label>
+      </div>
+
+      <div class="actions-row">
+        <button type="submit" [disabled]="loading()" data-testid="run-report-btn">Run Report</button>
+      </div>
+    </form>
+  </section>
+
+  <section>
+    <h2>Results</h2>
+
+    @if (loading()) {
+    <p data-testid="loading-indicator" aria-live="polite">Loading report...</p>
+    }
+
+    @if (error()) {
+    <p data-testid="error-state" role="alert">{{ error() }}</p>
+    }
+
+    @if (!loading() && rows().length === 0) {
+    <p data-testid="empty-state">No discrepancy rows found for the selected filters.</p>
+    }
+
+    @if (!loading() && rows().length > 0) {
+    <div class="table-wrap">
+      <table data-testid="results-table" class="results-table">
+        <thead>
+          <tr>
+            <th scope="col">
+              <button type="button" (click)="sortBy('technicianName')">
+                Technician {{ sortIndicator('technicianName') }}
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" (click)="sortBy('locationId')">
+                Location {{ sortIndicator('locationId') }}
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" (click)="sortBy('reportDate')">
+                Report Date {{ sortIndicator('reportDate') }}
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" (click)="sortBy('totalAttendanceHours')">
+                Attendance Hours {{ sortIndicator('totalAttendanceHours') }}
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" (click)="sortBy('totalJobHours')">
+                Job Hours {{ sortIndicator('totalJobHours') }}
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" (click)="sortBy('discrepancyHours')">
+                Discrepancy {{ sortIndicator('discrepancyHours') }}
+              </button>
+            </th>
+            <th scope="col">Flagged</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track $index) {
+          <tr [class.row-flagged]="$any(row).isFlagged" data-testid="result-row">
+            <td>{{ $any(row).technicianName ?? '-' }}</td>
+            <td>{{ $any(row).locationId ?? '-' }}</td>
+            <td>{{ $any(row).reportDate ?? '-' }}</td>
+            <td>{{ $any(row).totalAttendanceHours ?? '-' }}</td>
+            <td>{{ $any(row).totalJobHours ?? '-' }}</td>
+            <td>
+              <div>{{ $any(row).discrepancyHours ?? '-' }}</div>
+              @if ($any(row).thresholdApplied != null) {
+              <small>Threshold applied: {{ $any(row).thresholdApplied }}</small>
+              }
+            </td>
+            <td>{{ $any(row).isFlagged ? 'Yes' : 'No' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+</main>

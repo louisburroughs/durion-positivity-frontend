@@ -1,0 +1,125 @@
+<main class="location-page location-edit-layout" aria-labelledby="location-edit-heading"
+  style="background: var(--cardBackground); border-radius: var(--radius-md); border-top: 2px solid var(--primary);">
+  <header class="page-header">
+    <p class="page-overline">Location Management</p>
+    <h1 id="location-edit-heading">
+      @if (isEditMode) {
+      Edit Location
+      } @else {
+      Create Location
+      }
+    </h1>
+  </header>
+
+  @if (isEditMode && loading()) {
+  <section class="state-panel" data-testid="loading-indicator" aria-live="polite" aria-busy="true">
+    Loading location details...
+  </section>
+  }
+
+  @if (error()) {
+  <section class="state-panel state-panel--error" role="alert" data-testid="error-state">
+    {{ error() }}
+  </section>
+  }
+
+  @if (saveSuccess()) {
+  <section class="state-panel state-panel--success" data-testid="save-success" aria-live="polite">
+    Location saved successfully.
+  </section>
+  }
+
+  @if (conflictError()) {
+  <section class="alert alert--error" role="alert" data-testid="conflict-error">
+    {{ conflictError() }}
+  </section>
+  }
+
+  @if (!loading()) {
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <fieldset class="form-section">
+      <legend>Location Details</legend>
+
+      <div class="field-row" [class.field-error--visible]="form.get('name')?.invalid && form.get('name')?.touched">
+        <label for="location-name-input">Name</label>
+        <input id="location-name-input" type="text" formControlName="name" data-testid="location-name-input"
+          aria-describedby="validation-name field-error-name" />
+        @if (fieldErrors()['name']) {
+        <span id="field-error-name" class="field-error" role="alert" data-testid="field-error-name">{{
+          fieldErrors()['name'] }}</span>
+        }
+        @if (form.get('name')?.touched && form.get('name')?.invalid) {
+        <span id="validation-name" class="field-error" aria-live="polite" data-testid="validation-name">Name is
+          required.</span>
+        }
+      </div>
+
+      <div class="field-row" [class.field-error--visible]="form.get('code')?.invalid && form.get('code')?.touched">
+        <label for="location-code-input">Code</label>
+        <input id="location-code-input" type="text" formControlName="code" data-testid="location-code-input"
+          aria-describedby="validation-code" />
+        @if (form.get('code')?.touched && form.get('code')?.invalid) {
+        <span id="validation-code" class="field-error" aria-live="polite" data-testid="validation-code">Code is
+          required.</span>
+        }
+      </div>
+
+      <div class="field-row"
+        [class.field-error--visible]="form.get('timezone')?.invalid && form.get('timezone')?.touched">
+        <label for="location-timezone-input">Timezone</label>
+        <input id="location-timezone-input" type="text" formControlName="timezone" data-testid="location-timezone-input"
+          aria-describedby="validation-timezone field-error-timezone" autocomplete="off" />
+        @if (fieldErrors()['timezone']) {
+        <span id="field-error-timezone" class="field-error" role="alert" data-testid="field-error-timezone">{{
+          fieldErrors()['timezone'] }}</span>
+        }
+        @if (form.get('timezone')?.touched && form.get('timezone')?.invalid) {
+        <span id="validation-timezone" class="field-error" aria-live="polite" data-testid="validation-timezone">Timezone
+          is required.</span>
+        }
+      </div>
+
+      <div class="field-row" [class.field-error--visible]="form.get('type')?.invalid && form.get('type')?.touched">
+        <label for="location-type-select">Type</label>
+        <select id="location-type-select" formControlName="type" data-testid="location-type-select">
+          <option value="STORE">Store</option>
+          <option value="WAREHOUSE">Warehouse</option>
+          <option value="OFFICE">Office</option>
+          <option value="SERVICE_CENTER">Service Center</option>
+        </select>
+      </div>
+    </fieldset>
+
+    <fieldset class="form-section">
+      <legend>Hierarchy &amp; Status</legend>
+
+      <div class="field-row">
+        <label for="parent-location-input">Parent Location ID</label>
+        <input id="parent-location-input" type="text" formControlName="parentLocationId"
+          data-testid="parent-location-input" />
+      </div>
+
+      @if (isEditMode) {
+      <div class="field-row">
+        <label for="location-status-select">Status</label>
+        <select id="location-status-select" formControlName="status" data-testid="location-status-select">
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+          <option value="SUSPENDED">Suspended</option>
+        </select>
+      </div>
+      }
+    </fieldset>
+
+    <footer class="form-footer">
+      <button type="submit" class="btn btn--primary" data-testid="save-button" [disabled]="saving()">
+        @if (saving()) {
+        Saving...
+        } @else {
+        Save Location
+        }
+      </button>
+    </footer>
+  </form>
+  }
+</main>

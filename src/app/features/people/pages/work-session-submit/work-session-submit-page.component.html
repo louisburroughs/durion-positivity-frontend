@@ -1,0 +1,95 @@
+<main>
+  <header class="page-header">
+    <h1>Submit Job Time</h1>
+  </header>
+
+  <section class="card" data-testid="session-info">
+    <p>Session ID: <code data-testid="session-id-display">{{ sessionId() }}</code></p>
+  </section>
+
+  @if (submitState() !== 'SUBMITTED') {
+  <section class="card">
+    <h2>Submission Details</h2>
+    <form class="form-grid" [formGroup]="submitForm" (ngSubmit)="submitJobTime()">
+      <div class="field">
+        <label for="billable-minutes">Billable Minutes</label>
+        <input id="billable-minutes" type="number" formControlName="billableMinutes"
+          aria-describedby="field-error-billable-minutes" />
+        <span id="field-error-billable-minutes" aria-live="polite" role="alert">
+          @if (submitForm.controls.billableMinutes.touched && submitForm.controls.billableMinutes.invalid) {
+          Billable minutes must be at least 1.
+          }
+        </span>
+      </div>
+
+      <div class="field">
+        <label for="break-minutes">Break Minutes</label>
+        <input id="break-minutes" type="number" formControlName="breakMinutes"
+          aria-describedby="field-error-break-minutes" />
+        <span id="field-error-break-minutes" aria-live="polite" role="alert">
+          @if (submitForm.controls.breakMinutes.touched && submitForm.controls.breakMinutes.invalid) {
+          Break minutes must be 0 or greater.
+          }
+        </span>
+      </div>
+
+      <div class="field">
+        <label for="submitted-at">Submitted At</label>
+        <input id="submitted-at" type="datetime-local" formControlName="submittedAt"
+          aria-describedby="field-error-submitted-at" />
+        <span id="field-error-submitted-at" aria-live="polite" role="alert">
+          @if (submitForm.controls.submittedAt.touched && submitForm.controls.submittedAt.invalid) {
+          Submitted time is required.
+          }
+        </span>
+      </div>
+
+      <div class="button-row">
+        <button type="submit" [disabled]="!canSubmit()" data-testid="submit-btn">Submit Job Time</button>
+        @if (submitState() === 'FAILED') {
+        <button type="button" (click)="retrySubmit()" data-testid="retry-btn">Retry</button>
+        }
+      </div>
+    </form>
+  </section>
+  }
+
+  @if (isSubmitting()) {
+  <p aria-live="polite" data-testid="submitting-indicator">Submitting…</p>
+  }
+
+  @if (submitState() !== 'NOT_SUBMITTED') {
+  <output aria-live="polite" class="card" data-testid="result-panel">
+    @if (submitState() === 'SUBMITTED') {
+    <p class="success-msg">Job time submitted successfully.</p>
+    @if (correlationId()) {
+    <p>Correlation ID: <code data-testid="correlation-id">{{ correlationId() }}</code></p>
+    }
+    }
+    @if (submitState() === 'FAILED') {
+    <div role="alert" aria-live="polite" data-testid="error-panel">
+      <p>Submission failed.</p>
+      @if (errorCode()) {
+      <p>Code: <code data-testid="error-code">{{ errorCode() }}</code></p>
+      }
+      @if (errorMessage()) {
+      <p data-testid="error-message">{{ errorMessage() }}</p>
+      }
+      @if (!errorMessage() && submitError()) {
+      <p data-testid="error-message-fallback">{{ submitError() }}</p>
+      }
+      @if (correlationId()) {
+      <p>Reference: <code data-testid="error-correlation-id">{{ correlationId() }}</code></p>
+      }
+      @if (lastIdempotencyKey()) {
+      <p>Idempotency Key: <code data-testid="idempotency-key">{{ lastIdempotencyKey() }}</code></p>
+      }
+    </div>
+    }
+  </output>
+  }
+
+  @if (submitError()) {
+  <p role="alert" aria-live="polite" data-testid="submit-error">{{ submitError() }}</p>
+  }
+</main>
