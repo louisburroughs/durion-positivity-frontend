@@ -1,0 +1,62 @@
+.page-header {
+  margin-bottom: var(--space-4);
+}
+
+.filter-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.filter-form input {
+  width: 100%;
+  background: var(--input-background);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  color: var(--currentTextColor);
+}
+
+.availability-grid {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.mechanic-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--cardBackground);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.mechanic-name {
+  font-family: var(--font-primary);
+  color: var(--currentTextColor);
+}
+
+.availability-cell {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.available-slot {
+  background: color-mix(in srgb, var(--functional-success) 20%, var(--brand-surface));
+}
+
+.unavailable-slot {
+  background: color-mix(in srgb, var(--functional-error-red) 18%, var(--brand-surface));
+}
+
+.empty-state {
+  color: var(--currentTextColor);
+}
+
+.error-banner {
+  background: color-mix(in srgb, var(--functional-error-red) 16%, var(--brand-surface));
+  color: var(--currentTextColor);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}

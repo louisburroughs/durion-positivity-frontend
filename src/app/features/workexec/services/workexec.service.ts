@@ -91,7 +91,7 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class WorkexecService {
-  constructor(private readonly api: ApiBaseService) {}
+  constructor(private readonly api: ApiBaseService) { }
 
   /** Builds an options object carrying the Idempotency-Key header when a key is provided. */
   private idempotencyOptions(key?: string) {
@@ -321,6 +321,10 @@ export class WorkexecService {
    */
   getWorkorderById(workorderId: string): Observable<WorkorderResponse> {
     return this.api.get<WorkorderResponse>(`/v1/workorders/${workorderId}`);
+  }
+
+  getWorkorder(workorderId: string): Observable<WorkorderResponse> {
+    return this.getWorkorderById(workorderId);
   }
 
   /**
@@ -691,6 +695,83 @@ export class WorkexecService {
     return this.api.post<{ invoiceId: string; status?: string }>(
       `/v1/workorders/${workorderId}/generate-invoice`,
       {},
+      this.idempotencyOptions(idempotencyKey),
+    );
+  }
+
+  // ── CAP-140: Operational Context override ───────────────────────────────
+
+  /**
+   * operationId: overrideOperationalContext
+   * POST /v1/workorders/{workorderId}/operationalContext/override
+   */
+  overrideOperationalContext(
+    workorderId: string,
+    body: Record<string, unknown>,
+    idempotencyKey?: string,
+  ): Observable<OperationalContextResponse> {
+    return this.api.post<OperationalContextResponse>(
+      `/v1/workorders/${workorderId}/operationalContext/override`,
+      body,
+      this.idempotencyOptions(idempotencyKey),
+    );
+  }
+
+  // ── CAP-140: Estimate from Appointment ─────────────────────────────────
+
+  /**
+   * operationId: createEstimateFromAppointment
+   * POST /v1/workorders/estimates/from-appointment
+   */
+  createEstimateFromAppointment(
+    body: Record<string, unknown>,
+    idempotencyKey?: string,
+  ): Observable<EstimateResponse> {
+    return this.api.post<EstimateResponse>(
+      '/v1/workorders/estimates/from-appointment',
+      body,
+      this.idempotencyOptions(idempotencyKey),
+    );
+  }
+
+  // ── CAP-139: Travel Segments ────────────────────────────────────────────
+
+  /**
+   * operationId: startTravelSegment
+   * POST /v1/workorders/travelSegments/start
+   */
+  startTravelSegment(body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
+    return this.api.post<unknown>(
+      '/v1/workorders/travelSegments/start',
+      body,
+      this.idempotencyOptions(idempotencyKey),
+    );
+  }
+
+  /**
+   * operationId: stopTravelSegment
+   * POST /v1/workorders/travelSegments/{travelSegmentId}/stop
+   */
+  stopTravelSegment(travelSegmentId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
+    return this.api.post<unknown>(
+      `/v1/workorders/travelSegments/${travelSegmentId}/stop`,
+      body,
+      this.idempotencyOptions(idempotencyKey),
+    );
+  }
+
+  /**
+   * operationId: submitTravelSegments
+   * POST /v1/workorders/travelSegments/submit/{mobileWorkAssignmentId}
+   */
+  submitTravelSegments(
+    mobileWorkAssignmentId: string,
+    body: Record<string, unknown>,
+    idempotencyKey?: string,
+  ): Observable<unknown> {
+    return this.api.post<unknown>(
+      `/v1/workorders/travelSegments/submit/${mobileWorkAssignmentId}`,
+      body,
       this.idempotencyOptions(idempotencyKey),
     );
   }

@@ -1,0 +1,40 @@
+.page-header {
+  margin-bottom: var(--space-4);
+}
+
+.start-form {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.start-form input,
+.start-form textarea {
+  border: 1px solid var(--input-border);
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.active-segment,
+.travel-inactive {
+  background: var(--cardBackground);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.success-banner {
+  background: var(--functional-success);
+  color: var(--brand-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.error-banner {
+  background: var(--functional-error-red);
+  color: var(--brand-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}

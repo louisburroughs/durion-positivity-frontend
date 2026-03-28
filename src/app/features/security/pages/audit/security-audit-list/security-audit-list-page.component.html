@@ -1,13 +1,26 @@
-<section class="security-audit-list-page" aria-labelledby="security-audit-title">
-  @if (state() === 'coming-soon') {
-  <article class="coming-soon-panel mic-elevation-2" aria-live="polite">
-    <div class="panel-accent" aria-hidden="true"></div>
-    <p class="panel-icon" aria-hidden="true">🛡️</p>
-    <h1 id="security-audit-title">Security Audit Log</h1>
-    <p class="panel-description">
-      Audit log data is not yet available in this version. This view will be enabled in a future
-      release.
-    </p>
-  </article>
-  }
+<section>
+  <header class="page-header">
+    <h1>Security Audit Log</h1>
+  </header>
+
+  <form class="filter-form" (ngSubmit)="loadAudit(appointmentId())">
+    <label>
+      Appointment ID
+      <input type="text" [value]="appointmentId()" (input)="appointmentId.set(($any($event.target)).value)" />
+    </label>
+    <button type="submit">Load</button>
+  </form>
+
+  <p class="error-banner" *ngIf="error()">{{ error() }}</p>
+
+  <div class="audit-list" *ngIf="!loading() && auditEntries().length > 0">
+    <div class="audit-entry" *ngFor="let entry of auditEntries()">
+      <button type="button" (click)="viewEntry(entry)">View entry</button>
+      <span>{{ entry | json }}</span>
+    </div>
+  </div>
+
+  <div class="audit-detail" *ngIf="selectedEntry()">{{ selectedEntry() | json }}</div>
+
+  <p class="empty-state" *ngIf="!loading() && !error() && auditEntries().length === 0">No audit entries found.</p>
 </section>

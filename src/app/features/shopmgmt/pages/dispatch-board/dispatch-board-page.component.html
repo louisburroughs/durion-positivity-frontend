@@ -1,0 +1,75 @@
+<section class="dispatch-board-page" aria-labelledby="dispatch-board-title">
+  <header class="page-header">
+    <div class="heading-group">
+      <p class="section-label">Dispatch</p>
+      <h1 id="dispatch-board-title">Daily Dispatch Board</h1>
+    </div>
+  </header>
+
+  <section class="board-panel mic-elevation-2" aria-label="Dispatch board controls and workorders">
+    <div class="panel-accent" aria-hidden="true"></div>
+
+    <div class="filter-bar">
+      <div class="field-group">
+        <label class="field-label" for="dispatch-location">Location</label>
+        <input id="dispatch-location" name="locationId" type="text" [ngModel]="selectedLocationId()"
+          (ngModelChange)="selectedLocationId.set($event ?? '')" aria-label="Location" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="dispatch-date">Date</label>
+        <input id="dispatch-date" type="date" [ngModel]="selectedDate()"
+          (ngModelChange)="selectedDate.set($event ?? todayIso())" aria-label="Date" />
+      </div>
+
+      <button type="button" class="btn-primary" (click)="refresh()" aria-label="Refresh dispatch board">
+        Refresh
+      </button>
+    </div>
+
+    <div class="last-updated" *ngIf="lastRefreshed()" aria-live="polite">
+      Last updated: {{ lastRefreshed() | date: 'short' }}
+    </div>
+
+    <div class="banners-row" *ngIf="dataQualityWarning() || isStale()">
+      <output class="data-quality-warning alert alert-warning" *ngIf="dataQualityWarning()" aria-live="polite">
+        Data quality warning.
+      </output>
+
+      <output class="stale-data-banner alert alert-warning" *ngIf="isStale()" aria-live="polite">
+        Showing stale cached data.
+      </output>
+    </div>
+
+    <div class="loading-state" *ngIf="loading()" aria-live="polite">
+      Loading dispatch board...
+    </div>
+
+    <div class="state-panel" *ngIf="error() as errorMessage" role="alert" aria-live="polite">
+      <p>{{ errorMessage }}</p>
+      <button type="button" class="btn-text" (click)="refresh()" aria-label="Retry dispatch board load">
+        Retry
+      </button>
+    </div>
+
+    <div class="empty-state" *ngIf="!loading() && !error() && workorders().length === 0" aria-live="polite">
+      <h2>No workorders found</h2>
+      <p>There are no workorders for this location and date.</p>
+    </div>
+
+    <div class="workorders" *ngIf="!loading() && workorders().length > 0" aria-live="polite">
+      <article class="workorder-row" *ngFor="let workorder of workorders()" aria-label="Workorder summary">
+        <div class="workorder-id">
+          <span class="row-label">Workorder</span>
+          <span>{{ workorder.workorderId }}</span>
+        </div>
+        <div class="workorder-status">
+          <span class="row-label">Status</span>
+          <span class="status-chip" [class.exception-badge]="workorder.status.toLowerCase().includes('exception')">
+            {{ workorder.status }}
+          </span>
+        </div>
+      </article>
+    </div>
+  </section>
+</section>

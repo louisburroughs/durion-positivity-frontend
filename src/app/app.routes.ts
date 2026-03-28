@@ -75,7 +75,7 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/crm/crm.routes').then(m => m.CRM_ROUTES),
       },
-      // Domain stub routes (scaffold – full implementation in future waves)
+      // Domain routes — completed across Waves A–F
       {
         path: 'workexec',
         loadChildren: () =>
@@ -121,6 +121,12 @@ export const routes: Routes = [
         data: { roles: ['ROLE_ADMIN'] },
         loadChildren: () =>
           import('./features/security/security.routes').then(m => m.SECURITY_ROUTES),
+      },
+      // Shop Management — Wave F (CAP-136–142, CAP-249)
+      {
+        path: 'shopmgmt',
+        loadChildren: () =>
+          import('./features/shopmgmt/shopmgmt.routes').then(m => m.SHOPMGMT_ROUTES),
       },
     ],
   },

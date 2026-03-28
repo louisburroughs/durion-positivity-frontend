@@ -1,0 +1,78 @@
+<div class="page-header">
+  <h2>Schedule View</h2>
+</div>
+
+<div class="filter-bar">
+  <form [formGroup]="filterForm" (ngSubmit)="loadBoard()" novalidate>
+    <div class="filter-group">
+      <label for="svLocation">Location</label>
+      <input id="svLocation" name="locationId" type="text" formControlName="locationId" placeholder="Location ID" />
+    </div>
+    <div class="filter-group">
+      <label for="svDate">Date</label>
+      <input id="svDate" name="selectedDate" type="date" formControlName="selectedDate" />
+    </div>
+    <div class="filter-group">
+      <label for="svResourceType">Resource Type</label>
+      <input id="svResourceType" name="resourceType" type="text" formControlName="resourceType"
+        placeholder="e.g. BAY" />
+    </div>
+    <div class="filter-group">
+      <label for="svResourceId">Resource ID</label>
+      <input id="svResourceId" name="resourceId" type="text" formControlName="resourceId" placeholder="Optional" />
+    </div>
+    <button type="submit" class="load-board-btn" [disabled]="filterForm.invalid || loading()">
+      Load Schedule
+    </button>
+  </form>
+</div>
+
+<div *ngIf="availabilityError()" class="availability-warning">
+  Could not load schedule. Verify the location ID and date and try again.
+</div>
+
+<div *ngIf="loading()" class="loading-state">Loading schedule&hellip;</div>
+
+<ng-container *ngIf="!loading()">
+  <div *ngIf="scheduleData().length === 0 && !availabilityError()" class="empty-board">
+    No schedule data. Enter a location and date then click Load Schedule.
+  </div>
+
+  <div *ngIf="scheduleData().length > 0" class="board-region">
+    <div *ngFor="let resource of scheduleData()" class="resource-lane">
+      <div class="lane-header">
+        <span class="resource-type">{{ resource.resourceType }}</span>
+        <span class="resource-name">{{ resource.resourceName ?? resource.resourceId }}</span>
+      </div>
+      <div class="lane-items">
+        <div *ngFor="let appt of resource.appointments" class="work-item-card" (click)="selectItem(appt)">
+          <span class="item-id">{{ appt.appointmentId }}</span>
+          <span class="item-time">{{ appt.scheduledStart }}</span>
+          <span class="item-status">{{ appt.status }}</span>
+          <span *ngIf="appt.rescheduleCount && appt.rescheduleCount > 0" class="conflict-badge">
+            Rescheduled ×{{ appt.rescheduleCount }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<div *ngIf="selectedItem()" class="details-panel">
+  <div class="details-header">
+    <h3>Appointment {{ selectedItem()!.appointmentId }}</h3>
+    <button class="details-close" (click)="closeDetails()" aria-label="Close details">&#x2715;</button>
+  </div>
+  <div class="details-row">
+    <span class="label">Status</span>
+    <span class="value">{{ selectedItem()!.status }}</span>
+  </div>
+  <div class="details-row">
+    <span class="label">Start</span>
+    <span class="value">{{ selectedItem()!.scheduledStart }}</span>
+  </div>
+  <div class="details-row">
+    <span class="label">End</span>
+    <span class="value">{{ selectedItem()!.scheduledEnd }}</span>
+  </div>
+</div>

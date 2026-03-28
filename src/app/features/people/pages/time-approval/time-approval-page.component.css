@@ -1,0 +1,61 @@
+.page-header {
+  margin-bottom: var(--space-4);
+}
+
+.bulk-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.entry-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.entry-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  background: var(--cardBackground);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+}
+
+.entry-checkbox {
+  width: 1rem;
+  height: 1rem;
+}
+
+.entry-details {
+  color: var(--currentTextColor);
+}
+
+.reject-modal-overlay {
+  margin-top: var(--space-4);
+  background: var(--brand-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.reject-reason-field {
+  width: 100%;
+  min-height: 6rem;
+  margin-top: var(--space-2);
+}
+
+.success-banner {
+  background: color-mix(in srgb, var(--functional-success) 20%, var(--brand-surface));
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.error-banner {
+  background: color-mix(in srgb, var(--functional-error-red) 20%, var(--brand-surface));
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.empty-state {
+  color: var(--currentTextColor);
+}

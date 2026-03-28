@@ -26,7 +26,7 @@ export interface ApiRequestOptions {
 export class ApiBaseService {
   private readonly base = environment.apiBaseUrl;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) { }
 
   get<T>(path: string, params?: HttpParams, options?: ApiRequestOptions): Observable<T> {
     return this.http.get<T>(this.url(path), { params, headers: this.toHeaders(options?.headers) });
@@ -46,6 +46,10 @@ export class ApiBaseService {
 
   delete<T>(path: string, options?: ApiRequestOptions): Observable<T> {
     return this.http.delete<T>(this.url(path), { headers: this.toHeaders(options?.headers) });
+  }
+
+  deleteWithBody<T>(path: string, body: unknown, options?: ApiRequestOptions): Observable<T> {
+    return this.http.delete<T>(this.url(path), { body, headers: this.toHeaders(options?.headers) });
   }
 
   private toHeaders(record?: Record<string, string>): HttpHeaders | undefined {

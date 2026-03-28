@@ -1,0 +1,30 @@
+<section>
+  <header class="page-header">
+    <h1>Travel Time</h1>
+  </header>
+
+  <form class="start-form" [formGroup]="startForm" (ngSubmit)="startTravel()">
+    <input type="text" formControlName="mobileWorkAssignmentId" placeholder="Assignment ID"
+      aria-label="Assignment ID" />
+    <input type="text" formControlName="workorderId" placeholder="Workorder ID" aria-label="Workorder ID" />
+    <textarea formControlName="notes" placeholder="Notes" aria-label="Notes"></textarea>
+    <button type="submit">Start travel</button>
+  </form>
+
+  <div class="active-segment" *ngIf="activeSegment(); else inactiveState">
+    Active travel segment
+    <button class="stop-btn" type="button" (click)="stopTravel(getSegmentId())"
+      [disabled]="!getSegmentId()">Stop</button>
+  </div>
+
+  <ng-template #inactiveState>
+    <div class="travel-inactive">No active travel segment.</div>
+  </ng-template>
+
+  <button class="submit-all-btn" type="button" (click)="submitAll(mobileWorkAssignmentId())"
+    [disabled]="!mobileWorkAssignmentId()">Submit all</button>
+
+  <p class="success-banner" *ngIf="submitSuccess()">Travel submitted.</p>
+  <p class="error-banner" *ngIf="startError() || stopError() || submitError()">{{ startError() || stopError() ||
+    submitError() }}</p>
+</section>

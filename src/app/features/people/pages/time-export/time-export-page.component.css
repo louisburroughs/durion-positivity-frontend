@@ -1,0 +1,47 @@
+.page-header {
+  margin-bottom: var(--space-4);
+}
+
+.filter-form {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.filter-form input {
+  border: 1px solid var(--input-border);
+  background: var(--input-background);
+  border-radius: var(--radius-sm);
+  color: var(--currentTextColor);
+  padding: var(--space-2);
+}
+
+.export-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.export-table,
+.discrepancy-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.export-row,
+.discrepancy-item {
+  background: var(--cardBackground);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.error-banner {
+  margin-bottom: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--functional-error-red);
+  color: var(--brand-surface);
+}
+
+.empty-state {
+  color: var(--currentTextColor);
+}

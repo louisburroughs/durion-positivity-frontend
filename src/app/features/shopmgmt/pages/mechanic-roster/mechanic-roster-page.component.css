@@ -1,0 +1,54 @@
+.page-header {
+  margin-bottom: var(--space-4);
+}
+
+.roster-controls {
+  margin-bottom: var(--space-3);
+}
+
+.roster-table {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.roster-row {
+  background: var(--cardBackground);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+
+.create-modal-overlay {
+  margin-top: var(--space-4);
+  background: var(--brand-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.form-group {
+  margin-bottom: var(--space-3);
+}
+
+.form-group input {
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--input-border);
+  background: var(--input-background);
+  border-radius: var(--radius-sm);
+  color: var(--currentTextColor);
+}
+
+.success-banner {
+  background: color-mix(in srgb, var(--functional-success) 20%, var(--brand-surface));
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.error-banner {
+  background: color-mix(in srgb, var(--functional-error-red) 20%, var(--brand-surface));
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+
+.empty-state {
+  color: var(--currentTextColor);
+}

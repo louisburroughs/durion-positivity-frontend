@@ -1,0 +1,70 @@
+<div class="page-header">
+  <h2>Book Appointment from CRM</h2>
+</div>
+
+<form class="create-form" [formGroup]="createForm" (ngSubmit)="submit()" novalidate>
+
+  <fieldset class="form-section">
+    <legend class="section-legend">Customer &amp; Vehicle</legend>
+
+    <div class="form-group">
+      <label for="crmCustomerId">CRM Customer ID</label>
+      <input id="crmCustomerId" name="crmCustomerId" type="text" formControlName="crmCustomerId"
+        placeholder="Enter CRM customer ID" />
+    </div>
+
+    <div class="form-group">
+      <label for="crmVehicleId">CRM Vehicle ID</label>
+      <input id="crmVehicleId" name="crmVehicleId" type="text" formControlName="crmVehicleId"
+        placeholder="Enter CRM vehicle ID" />
+    </div>
+  </fieldset>
+
+  <fieldset class="form-section">
+    <legend class="section-legend">Scheduling</legend>
+
+    <div class="form-group">
+      <label for="locationId">Location</label>
+      <input id="locationId" name="locationId" type="text" formControlName="locationId" placeholder="Location ID" />
+    </div>
+
+    <div class="form-group">
+      <label for="resourceId">Resource (optional)</label>
+      <input id="resourceId" name="resourceId" type="text" formControlName="resourceId"
+        placeholder="Bay or mobile unit ID" />
+    </div>
+
+    <div class="form-group">
+      <label for="startAt">Start Date &amp; Time</label>
+      <input id="startAt" name="startAt" type="datetime-local" formControlName="startAt" />
+    </div>
+
+    <div class="form-group">
+      <label for="endAt">End Date &amp; Time</label>
+      <input id="endAt" name="endAt" type="datetime-local" formControlName="endAt" />
+    </div>
+  </fieldset>
+
+  <fieldset class="form-section">
+    <legend class="section-legend">Service Requests</legend>
+
+    <div formArrayName="serviceRequests">
+      <div *ngFor="let ctrl of serviceRequestsArray.controls; let i = index" class="service-request-row">
+        <input [formControlName]="i" type="text" class="service-request-input" placeholder="Service code or description"
+          [name]="'serviceRequest-' + i" />
+        <button type="button" class="btn-remove" (click)="removeServiceRequest(i)" aria-label="Remove">&#x2715;</button>
+      </div>
+    </div>
+
+    <button type="button" class="btn-add-service" (click)="addServiceRequest()">+ Add Service</button>
+  </fieldset>
+
+  <div *ngIf="error()" class="error-banner">{{ error() }}</div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn-primary" [disabled]="createForm.invalid || loading()">
+      Book Appointment
+    </button>
+  </div>
+
+</form>

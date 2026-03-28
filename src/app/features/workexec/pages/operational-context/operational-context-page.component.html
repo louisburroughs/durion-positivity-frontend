@@ -1,0 +1,37 @@
+<section>
+  <header class="page-header">
+    <h1>Operational Context</h1>
+  </header>
+
+  <div class="context-panel" *ngIf="context(); else emptyState">
+    <div class="context-item" *ngFor="let item of contextEntries()">
+      <span class="context-key">{{ item.key }}</span>
+      <span class="context-value">{{ item.value }}</span>
+    </div>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="context-panel">No context loaded.</div>
+  </ng-template>
+
+  <button type="button" (click)="openOverrideForm()">Override context</button>
+
+  <div class="override-panel" *ngIf="showOverrideForm()">
+    <form class="override-form" [formGroup]="overrideForm" (ngSubmit)="submitOverride()">
+      <div class="form-group">
+        <label>Context key <input type="text" formControlName="contextKey" /></label>
+      </div>
+      <div class="form-group">
+        <label>Context value <input type="text" formControlName="contextValue" /></label>
+      </div>
+      <div class="form-group">
+        <label>Reason <input type="text" formControlName="overrideReason" /></label>
+      </div>
+      <button type="submit">Submit override</button>
+      <button type="button" (click)="closeOverrideForm()">Close</button>
+    </form>
+  </div>
+
+  <p class="success-banner" *ngIf="overrideSuccess()">Override saved.</p>
+  <p class="error-banner" *ngIf="overrideError()">{{ overrideError() }}</p>
+</section>

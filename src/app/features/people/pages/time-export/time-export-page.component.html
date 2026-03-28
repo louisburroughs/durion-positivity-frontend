@@ -1,0 +1,27 @@
+<section>
+  <header class="page-header">
+    <h1>Time Export</h1>
+  </header>
+
+  <form class="filter-form" [formGroup]="filterForm" (ngSubmit)="loadExport()">
+    <input type="date" formControlName="startDate" />
+    <input type="date" formControlName="endDate" />
+    <input type="text" formControlName="locationId" placeholder="Location ID" />
+    <div class="export-actions">
+      <button class="download-btn" type="submit">Load export</button>
+      <button type="button" (click)="loadDiscrepancies()">Load discrepancies</button>
+    </div>
+  </form>
+
+  <p class="error-banner" *ngIf="error()">{{ error() }}</p>
+
+  <div class="export-table" *ngIf="!loading() && exportData().length > 0">
+    <div class="export-row" *ngFor="let row of exportData()">{{ row | json }}</div>
+  </div>
+
+  <div class="discrepancy-list" *ngIf="discrepancyData().length > 0">
+    <div class="discrepancy-item" *ngFor="let item of discrepancyData()">{{ item | json }}</div>
+  </div>
+
+  <p class="empty-state" *ngIf="!loading() && !error() && exportData().length === 0">No export data found.</p>
+</section>

@@ -1,0 +1,82 @@
+<div class="page-header">
+  <h2>Reschedule Appointment</h2>
+</div>
+
+<ng-container *ngIf="loading()">
+  <div class="loading-state">Loading appointment&hellip;</div>
+</ng-container>
+
+<ng-container *ngIf="!loading()">
+  <div *ngIf="successMessage()" class="success-banner">
+    {{ successMessage() }}
+  </div>
+
+  <div *ngIf="versionMismatch()" class="version-mismatch-prompt">
+    This appointment was updated by another user. Please reload to get the latest version before rescheduling.
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="form-group">
+      <label for="scheduledStartDateTime">New Start Date &amp; Time</label>
+      <input id="scheduledStartDateTime" name="scheduledStartDateTime" type="datetime-local"
+        formControlName="scheduledStartDateTime" />
+    </div>
+
+    <div class="form-group">
+      <label for="scheduledEndDateTime">New End Date &amp; Time</label>
+      <input id="scheduledEndDateTime" name="scheduledEndDateTime" type="datetime-local"
+        formControlName="scheduledEndDateTime" />
+    </div>
+
+    <div class="form-group">
+      <label for="reason">Reschedule Reason</label>
+      <select id="reason" name="reason" formControlName="reason">
+        <option value="">Select a reason&hellip;</option>
+        <option value="CUSTOMER_REQUEST">Customer Request</option>
+        <option value="FACILITY_UNAVAILABLE">Facility Unavailable</option>
+        <option value="TECHNICIAN_UNAVAILABLE">Technician Unavailable</option>
+        <option value="OTHER">Other</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes" formControlName="notes" rows="3"></textarea>
+    </div>
+
+    <ng-container *ngIf="fieldErrors().length > 0">
+      <div *ngFor="let fe of fieldErrors()" class="field-error">
+        {{ fe.message }}
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="conflicts().length > 0">
+      <div class="conflict-panel">
+        <div *ngFor="let c of conflicts()">
+          <div *ngIf="c.type === 'HARD'" class="hard-conflict">{{ c.message }}</div>
+          <div *ngIf="c.type === 'SOFT'" class="soft-conflict">{{ c.message }}</div>
+        </div>
+
+        <div *ngIf="suggestedAlternatives().length > 0" class="suggested-slots">
+          <div *ngFor="let slot of suggestedAlternatives()" class="suggested-slot">
+            {{ slot.scheduledStartDateTime }} &ndash; {{ slot.scheduledEndDateTime }}
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <div *ngIf="showOverrideReason()" class="override-reason-field form-group">
+      <label for="overrideReason">Override Reason</label>
+      <textarea id="overrideReason" name="overrideReason" formControlName="overrideReason" rows="2"></textarea>
+    </div>
+
+    <div *ngIf="showApprovalReason()" class="approval-reason-field form-group">
+      <label for="approvalReason">Approval Reason</label>
+      <textarea id="approvalReason" name="approvalReason" formControlName="approvalReason" rows="2"></textarea>
+    </div>
+
+    <div class="action-row">
+      <button type="submit" [disabled]="isSubmitDisabled">Reschedule</button>
+    </div>
+  </form>
+</ng-container>

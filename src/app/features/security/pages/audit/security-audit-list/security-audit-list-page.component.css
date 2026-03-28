@@ -1,60 +1,51 @@
-.security-audit-list-page {
-  min-height: 100%;
-  display: grid;
-  place-items: center;
-  padding: var(--space-6);
-  background: var(--themeBackground);
+.page-header {
+  margin-bottom: var(--space-4);
 }
 
-.coming-soon-panel {
-  position: relative;
-  width: min(44rem, 100%);
+.filter-form {
+  display: flex;
+  gap: var(--space-2);
+  align-items: end;
+  margin-bottom: var(--space-3);
+}
+
+.filter-form input {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  padding: var(--space-2);
+}
+
+.audit-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.audit-entry {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
   background: var(--cardBackground);
-  border-radius: var(--radius-lg);
-  padding: var(--space-8);
-  text-align: center;
-  display: grid;
-  gap: var(--space-3);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
 }
 
-.panel-accent {
-  position: absolute;
-  left: 0;
-  top: var(--space-6);
-  bottom: var(--space-6);
-  width: 2px;
-  background: var(--brand-accent);
+.audit-detail {
+  margin-top: var(--space-3);
+  background: var(--brand-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
 }
 
-.panel-icon {
-  margin: 0;
-  font-size: 2rem;
+.empty-state {
+  margin-top: var(--space-3);
 }
 
-.coming-soon-panel h1 {
-  margin: 0;
-  font-family: var(--font-primary);
-  font-size: 1.5rem;
-  color: var(--bodyColor, var(--currentTextColor));
-}
-
-.panel-description {
-  margin: 0 auto;
-  max-width: 36rem;
-  color: var(--handleColor);
-}
-
-@media (max-width: 64rem) {
-  .security-audit-list-page {
-    padding: var(--space-4);
-  }
-
-  .coming-soon-panel {
-    padding: var(--space-6);
-  }
-
-  .panel-accent {
-    top: var(--space-4);
-    bottom: var(--space-4);
-  }
+.error-banner {
+  margin-bottom: var(--space-2);
+  background: var(--functional-error-red);
+  color: var(--brand-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
 }

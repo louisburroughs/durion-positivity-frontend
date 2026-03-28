@@ -1,0 +1,124 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.page-header h2 {
+  font-family: var(--font-primary);
+  font-size: 1.625rem;
+  margin: 0;
+}
+
+.loading-state {
+  color: var(--brand-secondary);
+  padding: var(--space-4);
+}
+
+.success-banner {
+  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
+  color: var(--functional-success);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.version-mismatch-prompt {
+  background: color-mix(in srgb, var(--functional-warning) 12%, transparent);
+  color: var(--functional-warning);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+form {
+  background: var(--cardBackground);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 640px;
+}
+
+.form-group {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  color: var(--brand-secondary);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: var(--input-background);
+  border: none;
+  border-bottom: 2px solid var(--input-border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  padding: var(--space-2) var(--space-3);
+  color: var(--currentTextColor);
+  font-family: var(--font-primary);
+  font-size: 0.875rem;
+}
+
+.conflict-panel {
+  background: color-mix(in srgb, var(--functional-error-red) 8%, var(--cardBackground));
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hard-conflict {
+  color: var(--functional-error-red);
+  font-size: 0.875rem;
+}
+
+.soft-conflict {
+  color: var(--functional-warning);
+  font-size: 0.875rem;
+}
+
+.suggested-slots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+}
+
+.suggested-slot {
+  font-size: 0.875rem;
+  color: var(--brand-secondary);
+}
+
+.field-error {
+  color: var(--functional-error-red);
+  font-size: 0.8125rem;
+}
+
+.action-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+}
+
+.action-row button[type="submit"] {
+  background: var(--brand-accent);
+  color: var(--brand-surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-6);
+  cursor: pointer;
+  font-family: var(--font-primary);
+  font-size: 0.875rem;
+}
+
+.action-row button[type="submit"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

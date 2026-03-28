@@ -1,0 +1,56 @@
+<section class="page-header">
+  <h2>Locations</h2>
+  <button type="button" class="btn-primary open-create-btn" (click)="openCreateModal()">Create Location</button>
+</section>
+
+<div *ngIf="error()" class="error-banner">{{ error() }}</div>
+<div *ngIf="createSuccess()" class="success-banner">Location created successfully.</div>
+
+<section *ngIf="loading(); else locationsContent" class="locations-list">
+  <p>Loading...</p>
+</section>
+
+<ng-template #locationsContent>
+  <section *ngIf="locations().length > 0; else emptyState" class="locations-list">
+    <article *ngFor="let location of locations()" class="location-card">
+      <h3>{{ getLocationName(location) }}</h3>
+      <p>{{ getLocationType(location) }}</p>
+    </article>
+  </section>
+</ng-template>
+
+<ng-template #emptyState>
+  <section class="empty-state">
+    <p>No locations found.</p>
+  </section>
+</ng-template>
+
+<div *ngIf="showCreateModal()" class="modal-overlay">
+  <section class="create-modal">
+    <header class="modal-header">
+      <h3>Create Location</h3>
+    </header>
+
+    <div *ngIf="createError()" class="error-banner">{{ createError() }}</div>
+
+    <div class="form-group">
+      <label for="location-name">Name</label>
+      <input id="location-name" type="text" [value]="createName()"
+        (input)="createName.set($any($event.target).value)" />
+    </div>
+
+    <div class="form-group">
+      <label for="location-type">Type</label>
+      <select id="location-type" [value]="createType()" (change)="createType.set($any($event.target).value)">
+        <option value="STORE">Store</option>
+        <option value="WAREHOUSE">Warehouse</option>
+        <option value="MOBILE">Mobile</option>
+      </select>
+    </div>
+
+    <footer class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeCreateModal()">Cancel</button>
+      <button type="button" class="btn-primary submit-create-btn" (click)="submitCreate()">Create</button>
+    </footer>
+  </section>
+</div>

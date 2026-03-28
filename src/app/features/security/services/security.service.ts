@@ -51,4 +51,9 @@ export class SecurityService {
       `${SecurityService.BASE}/roles/assignments/user/${encodeURIComponent(userId)}`,
     );
   }
+
+  searchAudit(appointmentId: string): Observable<unknown[]> {
+    const params = new HttpParams().set('appointmentId', appointmentId);
+    return this.api.get<unknown[]>('/v1/shop/audit', params);
+  }
 }

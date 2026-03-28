@@ -8,6 +8,7 @@ import { VendorPaymentListPageComponent } from './vendor-payment-list-page.compo
 describe('VendorPaymentListPageComponent', () => {
   let fixture: ComponentFixture<VendorPaymentListPageComponent>;
   let component: VendorPaymentListPageComponent;
+  let navigateSpy: ReturnType<typeof vi.spyOn>;
 
   const accountingServiceStub = {
     listBills: vi.fn().mockReturnValue(of({ items: [], totalCount: 0 })),
@@ -24,6 +25,8 @@ describe('VendorPaymentListPageComponent', () => {
 
     fixture = TestBed.createComponent(VendorPaymentListPageComponent);
     component = fixture.componentInstance;
+    const router = TestBed.inject(Router);
+    navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
   });
 
   it('renders loading state initially', () => {
@@ -92,17 +95,13 @@ describe('VendorPaymentListPageComponent', () => {
   it('newPayment() navigates to vendor-payments/new', () => {
     accountingServiceStub.listBills.mockReturnValueOnce(new Subject());
     fixture.detectChanges();
-    const router = TestBed.inject(Router);
-    const spy = vi.spyOn(router, 'navigate');
     component.newPayment();
-    expect(spy).toHaveBeenCalledWith(['/app/accounting/vendor-payments/new']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/app/accounting/vendor-payments/new']);
   });
 
   it('openPayment(bill) navigates to vendor-payments/new with vendorId query param', () => {
     accountingServiceStub.listBills.mockReturnValueOnce(new Subject());
     fixture.detectChanges();
-    const router = TestBed.inject(Router);
-    const spy = vi.spyOn(router, 'navigate');
     component.openPayment({
       vendorBillId: 'bill-99',
       vendorId: 'vendor-1',
@@ -113,7 +112,7 @@ describe('VendorPaymentListPageComponent', () => {
       dueDate: '2024-02-01',
       status: 'APPROVED',
     });
-    expect(spy).toHaveBeenCalledWith(['/app/accounting/vendor-payments/new'], {
+    expect(navigateSpy).toHaveBeenCalledWith(['/app/accounting/vendor-payments/new'], {
       queryParams: { vendorId: 'vendor-1' },
     });
   });
