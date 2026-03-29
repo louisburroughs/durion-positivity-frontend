@@ -1,0 +1,94 @@
+<main class="page" aria-labelledby="product-list-title">
+  <header class="page-header">
+    <div>
+      <h1 id="product-list-title" class="page-title">{{ 'PRODUCT.LIST.TITLE' | translate }}</h1>
+    </div>
+    <button class="btn-primary" type="button" (click)="createProduct()">
+      {{ 'PRODUCT.LIST.ACTION.NEW_PRODUCT' | translate }}
+    </button>
+  </header>
+
+  <section class="card" aria-label="{{ 'PRODUCT.LIST.SEARCH.ARIA' | translate }}">
+    <div class="search-row">
+      <label class="field-label" for="product-query">{{ 'PRODUCT.LIST.SEARCH.LABEL' | translate }}</label>
+      <div class="search-controls">
+        <input id="product-query" type="search" class="input-underline" [value]="query()"
+          [attr.placeholder]="'PRODUCT.LIST.SEARCH.PLACEHOLDER' | translate"
+          (input)="onQueryChange($any($event).target.value)" />
+        <button class="btn-secondary" type="button" (click)="search()">
+          {{ 'COMMON.SEARCH' | translate }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true" aria-live="polite">
+    <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+    @for (_row of [1, 2, 3, 4, 5, 6, 7, 8]; track $index) {
+    <div class="skeleton-row"></div>
+    }
+  </section>
+  }
+
+  @if (state() === 'idle') {
+  <section class="card state-card">
+    <p>{{ 'PRODUCT.LIST.STATE.IDLE' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="card state-card">
+    <p>{{ 'PRODUCT.LIST.STATE.EMPTY' | translate }}</p>
+    <button class="btn-primary" type="button" (click)="createProduct()">
+      {{ 'PRODUCT.LIST.ACTION.NEW_PRODUCT' | translate }}
+    </button>
+  </section>
+  }
+
+  @if (state() === 'ready') {
+  <section class="card table-card">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'PRODUCT.LIST.TABLE.SKU' | translate }}</th>
+            <th>{{ 'PRODUCT.LIST.TABLE.NAME' | translate }}</th>
+            <th>{{ 'PRODUCT.LIST.TABLE.CATEGORY' | translate }}</th>
+            <th>{{ 'PRODUCT.LIST.TABLE.STATUS' | translate }}</th>
+            <th>{{ 'PRODUCT.LIST.TABLE.MSRP' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of products(); track p.id) {
+          <tr class="table-row-action" tabindex="0" (click)="selectProduct(p.id)" (keydown.enter)="selectProduct(p.id)">
+            <td>{{ p.sku }}</td>
+            <td>{{ p.name }}</td>
+            <td>{{ p.category }}</td>
+            <td>
+              <span class="badge" [class.badge--success]="p.lifecycleState === 'ACTIVE'"
+                [class.badge--neutral]="p.lifecycleState === 'INACTIVE'"
+                [class.badge--error]="p.lifecycleState === 'DISCONTINUED'"
+                [class.badge--warning]="p.lifecycleState !== 'ACTIVE' && p.lifecycleState !== 'INACTIVE' && p.lifecycleState !== 'DISCONTINUED'">
+                {{ 'STATUS.' + p.lifecycleState | translate }}
+              </span>
+            </td>
+            <td>{{ p.msrp ?? 0 | currency:'USD':'symbol':'1.2-2' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="error-banner" role="alert">
+    <span class="error-icon" aria-hidden="true">!</span>
+    <span>{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</span>
+    <button class="btn-secondary" type="button" (click)="search()">
+      {{ 'COMMON.RETRY' | translate }}
+    </button>
+  </section>
+  }
+</main>

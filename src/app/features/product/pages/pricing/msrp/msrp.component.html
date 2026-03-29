@@ -1,0 +1,106 @@
+<main class="page" aria-labelledby="msrp-title">
+  <header class="page-header">
+    <h1 id="msrp-title" class="page-title">{{ 'PRODUCT.PRICING.MSRP.TITLE' | translate }}</h1>
+  </header>
+
+  <section class="card panel">
+    <div class="search-grid">
+      <label for="msrp-sku">{{ 'PRODUCT.PRICING.MSRP.SEARCH_LABEL' | translate }}</label>
+      <div class="search-controls">
+        <input id="msrp-sku" type="search" class="input-underline" [value]="productSku()"
+          [attr.placeholder]="'PRODUCT.PRICING.MSRP.SEARCH_PLACEHOLDER' | translate"
+          (input)="onSkuChange($event.target.value)" />
+        <button class="btn-secondary" type="button" (click)="search()">{{ 'COMMON.SEARCH' | translate }}</button>
+      </div>
+    </div>
+  </section>
+
+  @if (state() === 'idle') {
+  <section class="card panel state-card">
+    <p>{{ 'PRODUCT.PRICING.MSRP.STATE.IDLE' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true">
+    @for (_row of [1, 2, 3, 4, 5, 6]; track $index) {
+    <div class="skeleton-row"></div>
+    }
+  </section>
+  }
+
+  @if (activeMsrp() && state() === 'ready') {
+  <section class="card panel highlight-card">
+    <h2>{{ 'PRODUCT.PRICING.MSRP.ACTIVE.TITLE' | translate }}</h2>
+    <p>
+      <strong>{{ activeMsrp()?.productSku }}</strong>
+      <span class="dot" aria-hidden="true">•</span>
+      <span>{{ activeMsrp()?.amount ?? 0 | currency:(activeMsrp()?.currency ?? 'USD'):'symbol':'1.2-2' }}</span>
+    </p>
+    <p>{{ activeMsrp()?.effectiveAt | date:'mediumDate' }}</p>
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="card panel state-card">
+    <p>{{ 'PRODUCT.PRICING.MSRP.STATE.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'ready') {
+  <section class="card panel">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'PRODUCT.PRICING.MSRP.TABLE.SKU' | translate }}</th>
+            <th>{{ 'PRODUCT.PRICING.MSRP.TABLE.AMOUNT' | translate }}</th>
+            <th>{{ 'PRODUCT.PRICING.MSRP.TABLE.CURRENCY' | translate }}</th>
+            <th>{{ 'PRODUCT.PRICING.MSRP.TABLE.EFFECTIVE' | translate }}</th>
+            <th>{{ 'PRODUCT.PRICING.MSRP.TABLE.EXPIRY' | translate }}</th>
+            <th>{{ 'PRODUCT.PRICING.MSRP.TABLE.ACTIVE' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of msrpList(); track entry.id) {
+          <tr>
+            <td>{{ entry.productSku }}</td>
+            <td>{{ entry.amount | currency:entry.currency:'symbol':'1.2-2' }}</td>
+            <td>{{ entry.currency }}</td>
+            <td>{{ entry.effectiveAt | date:'mediumDate' }}</td>
+            <td>{{ entry.endAt ? (entry.endAt | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+            <td>
+              <span class="badge" [class.badge--success]="activeMsrp()?.id === entry.id"
+                [class.badge--neutral]="activeMsrp()?.id !== entry.id">
+                {{ activeMsrp()?.id === entry.id ? ('STATUS.ACTIVE' | translate) : ('STATUS.INACTIVE' | translate) }}
+              </span>
+            </td>
+          </tr>
+          }
+          <tr>
+            <td><input #newSku class="input-underline" type="text" [value]="productSku()" /></td>
+            <td><input #newAmount class="input-underline" type="number" step="0.01" min="0" /></td>
+            <td><input #newCurrency class="input-underline" type="text" value="USD" /></td>
+            <td><input #newEffectiveAt class="input-underline" type="date" /></td>
+            <td><input #newEndAt class="input-underline" type="date" /></td>
+            <td>
+              <button class="btn-primary" type="button"
+                (click)="createMsrp({ productSku: newSku.value, amount: +newAmount.value, currency: newCurrency.value, effectiveAt: newEffectiveAt.value, endAt: newEndAt.value || null })">
+                {{ 'COMMON.ADD' | translate }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="error-banner" role="alert">
+    <span class="error-icon" aria-hidden="true">!</span>
+    <span>{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</span>
+    <button class="btn-secondary" type="button" (click)="search()">{{ 'COMMON.RETRY' | translate }}</button>
+  </section>
+  }
+</main>

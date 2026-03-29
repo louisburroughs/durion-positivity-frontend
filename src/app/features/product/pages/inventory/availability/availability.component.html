@@ -1,0 +1,101 @@
+<main class="page" aria-labelledby="availability-title">
+  <header class="page-header">
+    <h1 id="availability-title" class="page-title">{{ 'PRODUCT.INVENTORY.AVAILABILITY.TITLE' | translate }}</h1>
+  </header>
+
+  <section class="card panel">
+    <div class="search-grid">
+      <label>
+        {{ 'PRODUCT.INVENTORY.AVAILABILITY.SKU' | translate }}
+        <input class="input-underline" type="text" [value]="sku()"
+          [attr.placeholder]="'PRODUCT.INVENTORY.AVAILABILITY.SKU_PLACEHOLDER' | translate"
+          (input)="sku.set($event.target.value)" />
+      </label>
+      <label>
+        {{ 'PRODUCT.INVENTORY.AVAILABILITY.LOCATION' | translate }}
+        <input class="input-underline" type="text" [value]="locationId() ?? ''"
+          [attr.placeholder]="'PRODUCT.INVENTORY.AVAILABILITY.LOCATION_PLACEHOLDER' | translate"
+          (input)="locationId.set($event.target.value || null)" />
+      </label>
+      <button class="btn-primary" type="button" (click)="search()">{{ 'COMMON.SEARCH' | translate }}</button>
+    </div>
+  </section>
+
+  @if (state() === 'idle') {
+  <section class="card panel state-card">
+    <p>{{ 'PRODUCT.INVENTORY.AVAILABILITY.STATE.IDLE' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'loading') {
+  <section class="card panel" aria-busy="true">
+    <div class="stats-grid">
+      @for (_card of [1, 2, 3]; track $index) {
+      <article class="stat-card">
+        <div class="skeleton-row"></div>
+        <div class="skeleton-row"></div>
+      </article>
+      }
+    </div>
+    @for (_row of [1, 2, 3, 4, 5]; track $index) {
+    <div class="skeleton-row"></div>
+    }
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="card panel state-card">
+    <p>{{ 'PRODUCT.INVENTORY.AVAILABILITY.STATE.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'ready' && availability()) {
+  <section class="stats-grid">
+    <article class="card stat-card">
+      <h2>{{ 'PRODUCT.INVENTORY.AVAILABILITY.SUMMARY.ON_HAND' | translate }}</h2>
+      <p>{{ availability()?.totalOnHand }}</p>
+    </article>
+    <article class="card stat-card">
+      <h2>{{ 'PRODUCT.INVENTORY.AVAILABILITY.SUMMARY.RESERVED' | translate }}</h2>
+      <p>{{ availability()?.totalReserved }}</p>
+    </article>
+    <article class="card stat-card">
+      <h2>{{ 'PRODUCT.INVENTORY.AVAILABILITY.SUMMARY.ATP' | translate }}</h2>
+      <p>{{ availability()?.totalAtp }}</p>
+    </article>
+  </section>
+
+  <section class="card panel">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'PRODUCT.INVENTORY.AVAILABILITY.TABLE.LOCATION' | translate }}</th>
+            <th>{{ 'PRODUCT.INVENTORY.AVAILABILITY.TABLE.ON_HAND' | translate }}</th>
+            <th>{{ 'PRODUCT.INVENTORY.AVAILABILITY.TABLE.RESERVED' | translate }}</th>
+            <th>{{ 'PRODUCT.INVENTORY.AVAILABILITY.TABLE.ATP' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of locationBreakdown(); track entry.locationId) {
+          <tr>
+            <td>{{ entry.locationName }}</td>
+            <td>{{ entry.onHand }}</td>
+            <td>{{ entry.reserved }}</td>
+            <td>{{ entry.atp }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="error-banner" role="alert">
+    <span class="error-icon" aria-hidden="true">!</span>
+    <span>{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</span>
+    <button class="btn-secondary" type="button" (click)="search()">{{ 'COMMON.RETRY' | translate }}</button>
+  </section>
+  }
+</main>
