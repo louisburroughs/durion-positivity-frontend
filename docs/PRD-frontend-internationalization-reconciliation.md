@@ -145,12 +145,12 @@ Quality gate workflow commands:
 
 ## 12. References
 
-- `/home/louis-burroughs/IdeaProjects/durion/docs/adr/0030-frontend-internationalization-localization-policy.adr.md`
-- `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/src/app/app.config.ts`
-- `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/src/app/app.ts`
-- `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/src/assets/i18n/en-US.json`
-- `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/src/assets/i18n/es-US.json`
-- `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/src/assets/i18n/fr-CA.json`
-- `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/src/assets/i18n/qps-ploc.json`
-- `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/scripts/i18n/check-missing-keys.mjs`
-- `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/scripts/i18n/generate-pseudo-locale.mjs`
+- `../durion/docs/adr/0030-frontend-internationalization-localization-policy.adr.md`
+- `src/app/app.config.ts`
+- `src/app/app.ts`
+- `src/assets/i18n/en-US.json`
+- `src/assets/i18n/es-US.json`
+- `src/assets/i18n/fr-CA.json`
+- `src/assets/i18n/qps-ploc.json`
+- `scripts/i18n/check-missing-keys.mjs`
+- `scripts/i18n/generate-pseudo-locale.mjs`

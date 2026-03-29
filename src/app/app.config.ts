@@ -1,4 +1,5 @@
-import { provideAppInitializer, ApplicationConfig, provideBrowserGlobalErrorListeners, importProvidersFrom, inject } from '@angular/core';
+import { provideAppInitializer, ApplicationConfig, provideBrowserGlobalErrorListeners, importProvidersFrom, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { HttpClient, provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -9,6 +10,7 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 import { routes } from './app.routes';
 import { AuthService } from './core/services/auth.service';
+import { LocaleService } from './core/services/locale.service';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 // AoT requires an exported function for factories
@@ -33,6 +35,12 @@ export const appConfig: ApplicationConfig = {
         deps: [HttpClient]
       },
       defaultLanguage: 'en-US'
-    }))
+    })),
+    provideAppInitializer(() => {
+      if (!isPlatformBrowser(inject(PLATFORM_ID))) {
+        return;
+      }
+      return inject(LocaleService).initialize();
+    }),
   ],
 };

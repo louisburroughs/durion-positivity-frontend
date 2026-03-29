@@ -22,7 +22,7 @@ function expandToken(text) {
   const transformed = [...text]
     .map((ch) => charMap[ch] ?? ch)
     .join('')
-    .replace(/[aeiouAEIOU]/g, (v) => `${v}${v}`);
+    .replace(/[aeiouAEIOUàëïøüÀËÏØÜ]/g, (v) => `${v}${v}`);
   return `[!! ${transformed} !!]`;
 }
 
