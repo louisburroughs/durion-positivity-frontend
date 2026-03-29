@@ -1,0 +1,310 @@
+<main class="page" aria-labelledby="product-detail-title">
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true">
+    @for (_row of [1, 2, 3, 4, 5, 6, 7, 8, 9]; track $index) {
+    <div class="skeleton-row"></div>
+    }
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="error-banner" role="alert">
+    <span class="error-icon" aria-hidden="true">!</span>
+    <span>{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</span>
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="card panel state-card">
+    <p>{{ 'PRODUCT.CATALOG.DETAIL.STATE.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'ready' && product()) {
+  <nav class="breadcrumb" aria-label="{{ 'COMMON.BREADCRUMB' | translate }}">
+    <span>{{ 'PRODUCT.CATALOG.LIST.BREADCRUMB.PRODUCTS' | translate }}</span>
+    <span aria-hidden="true">&gt;</span>
+    <span>{{ product()?.sku }}</span>
+  </nav>
+
+  <header class="page-header card">
+    <div>
+      <h1 id="product-detail-title" class="page-title">{{ product()?.name }}</h1>
+      <p class="meta-line">
+        <strong>{{ 'PRODUCT.CATALOG.DETAIL.SKU' | translate }}:</strong> {{ product()?.sku }}
+        <span class="dot" aria-hidden="true">•</span>
+        <strong>{{ 'PRODUCT.CATALOG.DETAIL.CATEGORY' | translate }}:</strong> {{ product()?.category }}
+      </p>
+    </div>
+  </header>
+
+  <section class="card tabs" aria-label="{{ 'PRODUCT.CATALOG.DETAIL.TABS.ARIA' | translate }}">
+    <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'lifecycle'"
+      (click)="activeTab.set('lifecycle')">
+      {{ 'PRODUCT.CATALOG.DETAIL.TABS.LIFECYCLE' | translate }}
+    </button>
+    <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'uom'"
+      (click)="activeTab.set('uom')">
+      {{ 'PRODUCT.CATALOG.DETAIL.TABS.UOM' | translate }}
+    </button>
+    <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'costs'"
+      (click)="activeTab.set('costs')">
+      {{ 'PRODUCT.CATALOG.DETAIL.TABS.COST_TIERS' | translate }}
+    </button>
+    <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'standard-cost'"
+      (click)="activeTab.set('standard-cost')">
+      {{ 'PRODUCT.CATALOG.DETAIL.TABS.STANDARD_COST' | translate }}
+    </button>
+  </section>
+
+  @if (activeTab() === 'lifecycle') {
+  <section class="card panel">
+    <h2>{{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.TITLE' | translate }}</h2>
+
+    <div class="state-grid">
+      <p>
+        <strong>{{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.CURRENT_STATE' | translate }}:</strong>
+        <span class="badge" [class.badge--success]="lifecycle()?.currentState === 'ACTIVE'"
+          [class.badge--neutral]="lifecycle()?.currentState === 'INACTIVE'"
+          [class.badge--error]="lifecycle()?.currentState === 'DISCONTINUED'">
+          {{ lifecycle() ? ('STATUS.' + lifecycle()!.currentState | translate) : ('COMMON.NOT_AVAILABLE' | translate) }}
+        </span>
+      </p>
+      <p>
+        <strong>{{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.EFFECTIVE_AT' | translate }}:</strong>
+        {{ lifecycle()?.effectiveAt | date:'medium' }}
+      </p>
+      <p>
+        <strong>{{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.LAST_CHANGED_BY' | translate }}:</strong>
+        {{ lifecycle()?.lastChangedBy }}
+      </p>
+      <p>
+        <strong>{{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.LAST_CHANGED_AT' | translate }}:</strong>
+        {{ lifecycle()?.lastChangedAt | date:'medium' }}
+      </p>
+    </div>
+
+    <form class="inline-form"
+      (submit)="setLifecycleState({ targetState: $any(targetState.value), effectiveAt: effectiveAt.value, overrideReason: reason.value || undefined }); $event.preventDefault()">
+      <h3>{{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.CHANGE_STATE' | translate }}</h3>
+      <div class="form-grid">
+        <label>
+          {{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.TARGET_STATE' | translate }}
+          <select #targetState class="input-underline" required>
+            <option value="ACTIVE">{{ 'STATUS.ACTIVE' | translate }}</option>
+            <option value="INACTIVE">{{ 'STATUS.INACTIVE' | translate }}</option>
+            <option value="DISCONTINUED">{{ 'STATUS.DISCONTINUED' | translate }}</option>
+          </select>
+        </label>
+        <label>
+          {{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.EFFECTIVE_DATE' | translate }}
+          <input #effectiveAt class="input-underline" type="date" required />
+        </label>
+      </div>
+      <label [class.visually-hidden]="targetState.value !== 'DISCONTINUED'">
+        {{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.REASON' | translate }}
+        <textarea #reason class="input-underline" rows="3" [required]="targetState.value === 'DISCONTINUED'"></textarea>
+      </label>
+      <button class="btn-primary" type="submit">{{ 'COMMON.SAVE' | translate }}</button>
+    </form>
+
+    <section class="sub-panel">
+      <h3>{{ 'PRODUCT.CATALOG.DETAIL.REPLACEMENTS.TITLE' | translate }}</h3>
+      @if (replacements().length === 0) {
+      <p>{{ 'PRODUCT.CATALOG.DETAIL.REPLACEMENTS.EMPTY' | translate }}</p>
+      }
+      @if (replacements().length > 0) {
+      <ul class="simple-list">
+        @for (replacement of replacements(); track replacement.id) {
+        <li>
+          <span>{{ replacement.replacementProductId }}</span>
+          <span class="priority-pill">{{ 'PRODUCT.CATALOG.DETAIL.REPLACEMENTS.PRIORITY' | translate }} {{
+            replacement.priority }}</span>
+        </li>
+        }
+      </ul>
+      }
+
+      <form class="inline-form"
+        (submit)="addReplacement({ replacementProductId: replacementSku.value, priority: +replacementPriority.value, notes: replacementNotes.value, effectiveAt: replacementEffectiveAt.value }); $event.preventDefault()">
+        <div class="form-grid">
+          <label>
+            {{ 'PRODUCT.CATALOG.DETAIL.REPLACEMENTS.PRODUCT' | translate }}
+            <input #replacementSku class="input-underline" type="text" required />
+          </label>
+          <label>
+            {{ 'PRODUCT.CATALOG.DETAIL.REPLACEMENTS.PRIORITY_LABEL' | translate }}
+            <input #replacementPriority class="input-underline" type="number" min="1" value="1" required />
+          </label>
+          <label>
+            {{ 'PRODUCT.CATALOG.DETAIL.REPLACEMENTS.EFFECTIVE_AT' | translate }}
+            <input #replacementEffectiveAt class="input-underline" type="datetime-local" required />
+          </label>
+        </div>
+        <label>
+          {{ 'PRODUCT.CATALOG.DETAIL.REPLACEMENTS.NOTES' | translate }}
+          <textarea #replacementNotes class="input-underline" rows="2"></textarea>
+        </label>
+        <button class="btn-secondary" type="submit">{{ 'COMMON.ADD' | translate }}</button>
+      </form>
+    </section>
+  </section>
+  }
+
+  @if (activeTab() === 'uom') {
+  <section class="card panel">
+    <h2>{{ 'PRODUCT.CATALOG.DETAIL.UOM.TITLE' | translate }}</h2>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'PRODUCT.CATALOG.DETAIL.UOM.FROM' | translate }}</th>
+            <th>{{ 'PRODUCT.CATALOG.DETAIL.UOM.TO' | translate }}</th>
+            <th>{{ 'PRODUCT.CATALOG.DETAIL.UOM.FACTOR' | translate }}</th>
+            <th>{{ 'PRODUCT.CATALOG.DETAIL.UOM.ACTIVE' | translate }}</th>
+            <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (conv of uomConversions(); track conv.id) {
+          <tr>
+            <td>{{ conv.fromUom }}</td>
+            <td>{{ conv.toUom }}</td>
+            <td>{{ conv.conversionFactor }}</td>
+            <td>
+              <span class="badge" [class.badge--success]="conv.active" [class.badge--neutral]="!conv.active">
+                {{ conv.active ? ('STATUS.ACTIVE' | translate) : ('STATUS.INACTIVE' | translate) }}
+              </span>
+            </td>
+            <td>
+              @if (conv.active) {
+              <button class="btn-secondary" type="button" (click)="deactivateUomConversion(conv.id)">
+                {{ 'COMMON.DEACTIVATE' | translate }}
+              </button>
+              }
+            </td>
+          </tr>
+          }
+          <tr>
+            <td><input #fromUom class="input-underline" type="text" /></td>
+            <td><input #toUom class="input-underline" type="text" /></td>
+            <td><input #factor class="input-underline" type="number" step="0.0001" min="0" /></td>
+            <td>
+              <span class="badge badge--warning">{{ 'COMMON.NEW' | translate }}</span>
+            </td>
+            <td>
+              <button class="btn-primary" type="button"
+                (click)="createUomConversion({ fromUom: fromUom.value, toUom: toUom.value, conversionFactor: +factor.value, active: true })">
+                {{ 'COMMON.ADD' | translate }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+
+  @if (activeTab() === 'costs') {
+  <section class="card panel">
+    <h2>{{ 'PRODUCT.CATALOG.DETAIL.COST_TIERS.TITLE' | translate }}</h2>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'PRODUCT.CATALOG.DETAIL.COST_TIERS.SUPPLIER' | translate }}</th>
+            <th>{{ 'PRODUCT.CATALOG.DETAIL.COST_TIERS.UNIT_COST' | translate }}</th>
+            <th>{{ 'PRODUCT.CATALOG.DETAIL.COST_TIERS.MIN_QTY' | translate }}</th>
+            <th>{{ 'PRODUCT.CATALOG.DETAIL.COST_TIERS.MAX_QTY' | translate }}</th>
+            <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (tier of costStructure()?.tiers ?? []; track tier.id) {
+          <tr>
+            <td>{{ costStructure()?.supplierName }}</td>
+            <td>{{ tier.unitCost | currency:tier.currency:'symbol':'1.2-2' }}</td>
+            <td>{{ tier.minQty }}</td>
+            <td>{{ tier.maxQty }}</td>
+            <td>
+              <button class="btn-secondary" type="button" disabled>
+                {{ 'COMMON.DELETE' | translate }}
+              </button>
+            </td>
+          </tr>
+          }
+          <tr>
+            <td><input #tierSupplier class="input-underline" type="text" /></td>
+            <td><input #tierUnitCost class="input-underline" type="number" step="0.01" min="0" /></td>
+            <td><input #tierMinQty class="input-underline" type="number" min="0" /></td>
+            <td><input #tierMaxQty class="input-underline" type="number" min="0" /></td>
+            <td>
+              <button class="btn-primary" type="button" disabled>
+                {{ 'COMMON.ADD' | translate }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+
+  @if (activeTab() === 'standard-cost') {
+  <section class="card panel">
+    <h2>{{ 'PRODUCT.CATALOG.DETAIL.STANDARD_COST.TITLE' | translate }}</h2>
+
+    <div class="stats-grid">
+      <article class="stat-card">
+        <h3>{{ 'PRODUCT.CATALOG.DETAIL.STANDARD_COST.CURRENT' | translate }}</h3>
+        <p>{{ itemCost()?.standardCost ?? 0 | currency:(itemCost()?.currency ?? 'USD'):'symbol':'1.2-2' }}</p>
+      </article>
+      <article class="stat-card">
+        <h3>{{ 'PRODUCT.CATALOG.DETAIL.STANDARD_COST.LAST' | translate }}</h3>
+        <p>{{ itemCost()?.lastCost ?? 0 | currency:(itemCost()?.currency ?? 'USD'):'symbol':'1.2-2' }}</p>
+      </article>
+      <article class="stat-card">
+        <h3>{{ 'PRODUCT.CATALOG.DETAIL.STANDARD_COST.AVERAGE' | translate }}</h3>
+        <p>{{ itemCost()?.averageCost ?? 0 | currency:(itemCost()?.currency ?? 'USD'):'symbol':'1.2-2' }}</p>
+      </article>
+    </div>
+
+    <form class="inline-form"
+      (submit)="updateStandardCost({ standardCost: +newStandardCost.value, reasonCode: reasonCode.value, currency: itemCost()?.currency ?? 'USD' }); $event.preventDefault()">
+      <div class="form-grid">
+        <label>
+          {{ 'PRODUCT.CATALOG.DETAIL.STANDARD_COST.NEW_COST' | translate }}
+          <input #newStandardCost class="input-underline" type="number" step="0.01" min="0" required />
+        </label>
+        <label>
+          {{ 'PRODUCT.CATALOG.DETAIL.STANDARD_COST.REASON_CODE' | translate }}
+          <input #reasonCode class="input-underline" type="text" required />
+        </label>
+      </div>
+      <button class="btn-primary" type="submit">{{ 'COMMON.UPDATE' | translate }}</button>
+    </form>
+
+    <section class="sub-panel">
+      <h3>{{ 'PRODUCT.CATALOG.DETAIL.STANDARD_COST.AUDIT_HISTORY' | translate }}</h3>
+      @if (auditHistory().length === 0) {
+      <p>{{ 'PRODUCT.CATALOG.DETAIL.STANDARD_COST.AUDIT_EMPTY' | translate }}</p>
+      }
+      @if (auditHistory().length > 0) {
+      <ol class="timeline">
+        @for (entry of auditHistory(); track entry.id) {
+        <li>
+          <p>
+            <strong>{{ entry.field }}</strong>
+            {{ 'PRODUCT.CATALOG.DETAIL.STANDARD_COST.AUDIT_CHANGED' | translate }}
+            {{ entry.oldValue }} → {{ entry.newValue }}
+          </p>
+          <p class="timeline-meta">{{ entry.changedBy }} · {{ entry.changedAt | date:'medium' }}</p>
+        </li>
+        }
+      </ol>
+      }
+    </section>
+  </section>
+  }
+  }
+</main>

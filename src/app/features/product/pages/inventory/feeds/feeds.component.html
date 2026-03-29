@@ -1,0 +1,113 @@
+<main class="page" aria-labelledby="feeds-title">
+  <header class="page-header">
+    <h1 id="feeds-title" class="page-title">{{ 'PRODUCT.INVENTORY.FEEDS.TITLE' | translate }}</h1>
+  </header>
+
+  <section class="card tabs" aria-label="{{ 'PRODUCT.INVENTORY.FEEDS.TABS.ARIA' | translate }}">
+    <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'MFR'"
+      (click)="activeTab.set('MFR'); sku().trim() && search()">
+      {{ 'PRODUCT.INVENTORY.FEEDS.TABS.MANUFACTURER' | translate }}
+    </button>
+    <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'DISTRIBUTOR'"
+      (click)="activeTab.set('DISTRIBUTOR'); sku().trim() && search()">
+      {{ 'PRODUCT.INVENTORY.FEEDS.TABS.DISTRIBUTOR' | translate }}
+    </button>
+  </section>
+
+  <section class="card panel">
+    <div class="search-grid">
+      <label>
+        {{ 'PRODUCT.INVENTORY.FEEDS.SKU' | translate }}
+        <input class="input-underline" type="search" [value]="sku()"
+          [attr.placeholder]="'PRODUCT.INVENTORY.FEEDS.SKU_PLACEHOLDER' | translate"
+          (input)="sku.set($event.target.value)" />
+      </label>
+      <button class="btn-primary" type="button" (click)="search()">{{ 'COMMON.SEARCH' | translate }}</button>
+    </div>
+  </section>
+
+  @if (state() === 'idle' || state() === 'empty') {
+  <section class="card panel state-card">
+    <p>{{ 'PRODUCT.INVENTORY.FEEDS.STATE.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'loading') {
+  <section class="card panel" aria-busy="true">
+    @for (_row of [1, 2, 3, 4, 5, 6, 7]; track $index) {
+    <div class="skeleton-row"></div>
+    }
+  </section>
+  }
+
+  @if (state() === 'ready') {
+  <section class="card panel">
+    <h2>{{ 'PRODUCT.INVENTORY.FEEDS.AVAILABILITY.TITLE' | translate }}</h2>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'PRODUCT.INVENTORY.FEEDS.AVAILABILITY.SOURCE' | translate }}</th>
+            <th>{{ 'PRODUCT.INVENTORY.FEEDS.AVAILABILITY.ON_HAND' | translate }}</th>
+            <th>{{ 'PRODUCT.INVENTORY.FEEDS.AVAILABILITY.RESERVED' | translate }}</th>
+            <th>{{ 'PRODUCT.INVENTORY.FEEDS.AVAILABILITY.ATP' | translate }}</th>
+            <th>{{ 'PRODUCT.INVENTORY.FEEDS.AVAILABILITY.AS_OF' | translate }}</th>
+            <th>{{ 'PRODUCT.INVENTORY.FEEDS.AVAILABILITY.STATUS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of availability(); track entry.locationId + '-' + entry.asOf) {
+          <tr>
+            <td>{{ entry.locationId }}</td>
+            <td>{{ entry.onHand }}</td>
+            <td>{{ entry.reserved }}</td>
+            <td>{{ entry.atp }}</td>
+            <td>{{ entry.asOf | date:'medium' }}</td>
+            <td>
+              <span class="badge" [class.badge--success]="entry.atp > 10"
+                [class.badge--warning]="entry.atp > 0 && entry.atp <= 10" [class.badge--error]="entry.atp <= 0">
+                {{ entry.atp > 10 ? ('PRODUCT.INVENTORY.FEEDS.STATUS.IN_STOCK' | translate) : entry.atp > 0 ?
+                ('PRODUCT.INVENTORY.FEEDS.STATUS.LOW_STOCK' | translate) :
+                ('PRODUCT.INVENTORY.FEEDS.STATUS.OUT_OF_STOCK' | translate) }}
+              </span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card panel">
+    <h2>{{ 'PRODUCT.INVENTORY.FEEDS.LEAD_TIME.TITLE' | translate }}</h2>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'PRODUCT.INVENTORY.FEEDS.LEAD_TIME.SOURCE' | translate }}</th>
+            <th>{{ 'PRODUCT.INVENTORY.FEEDS.LEAD_TIME.MIN_DAYS' | translate }}</th>
+            <th>{{ 'PRODUCT.INVENTORY.FEEDS.LEAD_TIME.MAX_DAYS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of leadTime(); track entry.sourceName + '-' + entry.minDays + '-' + entry.maxDays) {
+          <tr>
+            <td>{{ entry.sourceName }}</td>
+            <td>{{ entry.minDays }}</td>
+            <td>{{ entry.maxDays }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="error-banner" role="alert">
+    <span class="error-icon" aria-hidden="true">!</span>
+    <span>{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</span>
+    <button class="btn-secondary" type="button" (click)="search()">{{ 'COMMON.RETRY' | translate }}</button>
+  </section>
+  }
+</main>
