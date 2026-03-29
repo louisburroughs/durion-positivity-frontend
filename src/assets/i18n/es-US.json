@@ -713,6 +713,309 @@
       "FIELD_CREATED": "Creado el"
     }
   },
+  "PRODUCT": {
+    "LIST": {
+      "TITLE": "Productos",
+      "SEARCH": {
+        "LABEL": "Buscar productos",
+        "ARIA": "Buscar productos",
+        "PLACEHOLDER": "Buscar por nombre o SKU…"
+      },
+      "TABLE": {
+        "SKU": "SKU",
+        "NAME": "Nombre",
+        "CATEGORY": "Categoría",
+        "STATUS": "Estado",
+        "MSRP": "PVP"
+      },
+      "ACTION": {
+        "NEW_PRODUCT": "Nuevo producto"
+      },
+      "STATE": {
+        "IDLE": "Ingresa un término para buscar productos.",
+        "EMPTY": "No se encontraron productos."
+      },
+      "ERROR": {
+        "LOAD": "Error al cargar los productos."
+      }
+    },
+    "CATALOG": {
+      "LIST": {
+        "BREADCRUMB": {
+          "PRODUCTS": "Productos"
+        }
+      },
+      "DETAIL": {
+        "SKU": "SKU",
+        "CATEGORY": "Categoría",
+        "TABS": {
+          "ARIA": "Pestañas de detalle del producto",
+          "LIFECYCLE": "Ciclo de vida",
+          "UOM": "Unidades de medida",
+          "COST_TIERS": "Niveles de costo",
+          "STANDARD_COST": "Costo estándar"
+        },
+        "STATE": {
+          "EMPTY": "No hay detalles disponibles del producto."
+        },
+        "LIFECYCLE": {
+          "TITLE": "Ciclo de vida",
+          "CURRENT_STATE": "Estado actual",
+          "LAST_CHANGED_AT": "Último cambio",
+          "LAST_CHANGED_BY": "Cambiado por",
+          "TARGET_STATE": "Estado destino",
+          "EFFECTIVE_AT": "Fecha efectiva",
+          "EFFECTIVE_DATE": "Fecha efectiva",
+          "REASON": "Motivo",
+          "CHANGE_STATE": "Cambiar estado"
+        },
+        "REPLACEMENTS": {
+          "TITLE": "Reemplazos",
+          "EMPTY": "No hay productos de reemplazo.",
+          "PRODUCT": "Producto de reemplazo",
+          "PRIORITY": "Prioridad",
+          "PRIORITY_LABEL": "Prioridad",
+          "EFFECTIVE_AT": "Fecha efectiva",
+          "NOTES": "Notas"
+        },
+        "UOM": {
+          "TITLE": "Unidades de medida",
+          "FROM": "De",
+          "TO": "A",
+          "FACTOR": "Factor",
+          "ACTIVE": "Activo"
+        },
+        "COST_TIERS": {
+          "TITLE": "Niveles de costo",
+          "SUPPLIER": "Proveedor",
+          "MIN_QTY": "Cant. mín.",
+          "MAX_QTY": "Cant. máx.",
+          "UNIT_COST": "Costo unitario"
+        },
+        "STANDARD_COST": {
+          "TITLE": "Costo estándar",
+          "CURRENT": "Costo actual",
+          "AVERAGE": "Costo promedio",
+          "LAST": "Último costo",
+          "NEW_COST": "Nuevo costo",
+          "REASON_CODE": "Código de razón",
+          "AUDIT_HISTORY": "Historial de auditoría",
+          "AUDIT_EMPTY": "Sin historial de auditoría.",
+          "AUDIT_CHANGED": "Cambiado"
+        }
+      },
+      "ERROR": {
+        "LOAD": "Error al cargar los detalles del producto.",
+        "MISSING_PRODUCT_ID": "No se proporcionó el ID del producto."
+      },
+      "LIFECYCLE": {
+        "ERROR": {
+          "UPDATE": "Error al actualizar el estado del ciclo de vida."
+        }
+      },
+      "REPLACEMENTS": {
+        "ERROR": {
+          "ADD": "Error al agregar el producto de reemplazo."
+        }
+      },
+      "UOM": {
+        "ERROR": {
+          "CREATE": "Error al crear la conversión de unidad de medida.",
+          "UPDATE": "Error al actualizar la conversión de unidad de medida.",
+          "DEACTIVATE": "Error al desactivar la conversión de unidad de medida."
+        }
+      },
+      "STANDARD_COST": {
+        "ERROR": {
+          "UPDATE": "Error al actualizar el costo estándar."
+        }
+      }
+    },
+    "INVENTORY": {
+      "FEEDS": {
+        "TITLE": "Feeds de inventario",
+        "SKU": "SKU",
+        "SKU_PLACEHOLDER": "Ingresa un SKU…",
+        "TABS": {
+          "ARIA": "Pestañas de feed de inventario",
+          "MANUFACTURER": "Fabricante",
+          "DISTRIBUTOR": "Distribuidor"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Disponibilidad",
+          "SOURCE": "Fuente",
+          "ON_HAND": "En stock",
+          "RESERVED": "Reservado",
+          "ATP": "DPV",
+          "AS_OF": "Al",
+          "STATUS": "Estado"
+        },
+        "LEAD_TIME": {
+          "TITLE": "Tiempo de entrega",
+          "SOURCE": "Fuente",
+          "MIN_DAYS": "Días mín.",
+          "MAX_DAYS": "Días máx."
+        },
+        "STATUS": {
+          "IN_STOCK": "En stock",
+          "LOW_STOCK": "Stock bajo",
+          "OUT_OF_STOCK": "Sin stock"
+        },
+        "STATE": {
+          "EMPTY": "No se encontraron datos de feed de inventario."
+        },
+        "ERROR": {
+          "LOAD": "Error al cargar los feeds de inventario."
+        }
+      },
+      "AVAILABILITY": {
+        "TITLE": "Disponibilidad de inventario",
+        "SKU": "SKU",
+        "SKU_PLACEHOLDER": "Ingresa un SKU…",
+        "LOCATION": "Ubicación",
+        "LOCATION_PLACEHOLDER": "Filtrar por ubicación…",
+        "SUMMARY": {
+          "ON_HAND": "En stock",
+          "RESERVED": "Reservado",
+          "ATP": "Disponible para comprometer"
+        },
+        "TABLE": {
+          "LOCATION": "Ubicación",
+          "ON_HAND": "En stock",
+          "RESERVED": "Reservado",
+          "ATP": "DPV"
+        },
+        "STATE": {
+          "IDLE": "Ingresa un SKU para verificar la disponibilidad.",
+          "EMPTY": "No se encontraron datos de disponibilidad para este SKU."
+        },
+        "ERROR": {
+          "LOAD": "Error al cargar la disponibilidad de inventario."
+        }
+      }
+    },
+    "LOCATION": {
+      "ROSTER": {
+        "TITLE": "Lista de ubicaciones",
+        "FILTER": {
+          "STATUS": "Estado"
+        },
+        "TABLE": {
+          "ID": "ID",
+          "NAME": "Nombre",
+          "STATUS": "Estado",
+          "VALIDATION_STATUS": "Validación",
+          "LAST_VALIDATED": "Última validación"
+        },
+        "ACTION": {
+          "VALIDATE": "Validar"
+        },
+        "STATE": {
+          "EMPTY": "No se encontraron ubicaciones."
+        },
+        "ERROR": {
+          "LOAD": "Error al cargar la lista de ubicaciones.",
+          "VALIDATE": "Error al validar la ubicación."
+        }
+      }
+    },
+    "PRICING": {
+      "MSRP": {
+        "TITLE": "PVP",
+        "SEARCH_LABEL": "SKU",
+        "SEARCH_PLACEHOLDER": "Ingresa un SKU…",
+        "TABLE": {
+          "SKU": "SKU",
+          "AMOUNT": "Monto",
+          "CURRENCY": "Moneda",
+          "EFFECTIVE": "Vigencia",
+          "EXPIRY": "Vencimiento",
+          "ACTIVE": "Activo"
+        },
+        "ACTIVE": {
+          "TITLE": "PVP activo"
+        },
+        "STATE": {
+          "IDLE": "Ingresa un SKU para consultar el PVP.",
+          "EMPTY": "No se encontraron registros de PVP."
+        },
+        "ERROR": {
+          "LOAD": "Error al cargar los registros de PVP.",
+          "CREATE": "Error al crear el registro de PVP.",
+          "UPDATE": "Error al actualizar el registro de PVP."
+        }
+      },
+      "PRICE_BOOKS": {
+        "TITLE": "Libros de precios",
+        "SELECTOR_TITLE": "Seleccionar un libro de precios",
+        "NEW_NAME": "Nombre del libro de precios",
+        "NEW_CTA": "Crear libro de precios",
+        "RULES": {
+          "TITLE": "Reglas",
+          "NAME": "Nombre",
+          "CONDITION": "Condición",
+          "DIMENSION": "Dimensión",
+          "VALUE": "Valor",
+          "ADJUSTMENT": "Ajuste",
+          "TYPE": "Tipo",
+          "PERCENT": "Porcentaje",
+          "FIXED": "Fijo",
+          "PRIORITY": "Prioridad",
+          "STATUS": "Estado"
+        },
+        "STATE": {
+          "IDLE": "Selecciona un libro de precios para ver sus reglas.",
+          "EMPTY": "No hay reglas para este libro de precios."
+        },
+        "ERROR": {
+          "LOAD": "Error al cargar los libros de precios.",
+          "CREATE": "Error al crear el libro de precios.",
+          "UPDATE": "Error al actualizar el libro de precios.",
+          "CREATE_RULE": "Error al crear la regla.",
+          "UPDATE_RULE": "Error al actualizar la regla.",
+          "DEACTIVATE_RULE": "Error al desactivar la regla."
+        }
+      },
+      "LOCATION_OVERRIDES": {
+        "TITLE": "Sobrecargos de precio por ubicación",
+        "PENDING": {
+          "TITLE": "Sobrecargos pendientes",
+          "LOCATION": "Ubicación",
+          "SKU": "SKU",
+          "PRICE": "Precio de sobreescritura",
+          "REQUESTED_AT": "Solicitado",
+          "STATUS": "Estado"
+        },
+        "REQUEST": {
+          "TITLE": "Solicitar sobreescritura",
+          "LOCATION": "Ubicación",
+          "SKU": "SKU",
+          "PRICE": "Precio de sobreescritura",
+          "CURRENCY": "Moneda",
+          "REASON": "Motivo",
+          "SUBMIT": "Enviar solicitud"
+        },
+        "GUARDRAIL": {
+          "TITLE": "Política de límites",
+          "LOCATION": "Ubicación",
+          "MIN": "Precio mín. %",
+          "MAX": "Precio máx. %",
+          "APPROVAL": "Umbral de aprobación %"
+        },
+        "EFFECTIVE_PRICE": {
+          "TITLE": "Precios vigentes"
+        },
+        "ERROR": {
+          "LOAD": "Error al cargar los sobrecargos de precio por ubicación.",
+          "CREATE": "Error al enviar la solicitud de sobreescritura.",
+          "APPROVE": "Error al aprobar la sobreescritura.",
+          "REJECT": "Error al rechazar la sobreescritura.",
+          "GUARDRAIL": "Error al actualizar la política de límites.",
+          "EFFECTIVE_PRICE": "Error al cargar los precios vigentes."
+        }
+      }
+    }
+  },
   "WORKEXEC": {
     "OPERATIONAL_COST": {
       "OVERLINE": "Costos de Orden de Trabajo",

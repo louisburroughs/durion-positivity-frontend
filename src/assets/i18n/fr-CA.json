@@ -713,6 +713,309 @@
       "FIELD_CREATED": "Créé le"
     }
   },
+  "PRODUCT": {
+    "LIST": {
+      "TITLE": "Produits",
+      "SEARCH": {
+        "LABEL": "Rechercher des produits",
+        "ARIA": "Rechercher des produits",
+        "PLACEHOLDER": "Rechercher par nom ou SKU…"
+      },
+      "TABLE": {
+        "SKU": "SKU",
+        "NAME": "Nom",
+        "CATEGORY": "Catégorie",
+        "STATUS": "Statut",
+        "MSRP": "PDSF"
+      },
+      "ACTION": {
+        "NEW_PRODUCT": "Nouveau produit"
+      },
+      "STATE": {
+        "IDLE": "Saisissez un terme pour rechercher des produits.",
+        "EMPTY": "Aucun produit trouvé."
+      },
+      "ERROR": {
+        "LOAD": "Échec du chargement des produits."
+      }
+    },
+    "CATALOG": {
+      "LIST": {
+        "BREADCRUMB": {
+          "PRODUCTS": "Produits"
+        }
+      },
+      "DETAIL": {
+        "SKU": "SKU",
+        "CATEGORY": "Catégorie",
+        "TABS": {
+          "ARIA": "Onglets de détail du produit",
+          "LIFECYCLE": "Cycle de vie",
+          "UOM": "Unités de mesure",
+          "COST_TIERS": "Niveaux de coût",
+          "STANDARD_COST": "Coût standard"
+        },
+        "STATE": {
+          "EMPTY": "Aucun détail disponible pour ce produit."
+        },
+        "LIFECYCLE": {
+          "TITLE": "Cycle de vie",
+          "CURRENT_STATE": "État actuel",
+          "LAST_CHANGED_AT": "Dernière modification",
+          "LAST_CHANGED_BY": "Modifié par",
+          "TARGET_STATE": "État cible",
+          "EFFECTIVE_AT": "Date d'entrée en vigueur",
+          "EFFECTIVE_DATE": "Date d'entrée en vigueur",
+          "REASON": "Motif",
+          "CHANGE_STATE": "Changer l'état"
+        },
+        "REPLACEMENTS": {
+          "TITLE": "Remplacements",
+          "EMPTY": "Aucun produit de remplacement.",
+          "PRODUCT": "Produit de remplacement",
+          "PRIORITY": "Priorité",
+          "PRIORITY_LABEL": "Priorité",
+          "EFFECTIVE_AT": "Date d'entrée en vigueur",
+          "NOTES": "Notes"
+        },
+        "UOM": {
+          "TITLE": "Unités de mesure",
+          "FROM": "De",
+          "TO": "À",
+          "FACTOR": "Facteur",
+          "ACTIVE": "Actif"
+        },
+        "COST_TIERS": {
+          "TITLE": "Niveaux de coût",
+          "SUPPLIER": "Fournisseur",
+          "MIN_QTY": "Qté min.",
+          "MAX_QTY": "Qté max.",
+          "UNIT_COST": "Coût unitaire"
+        },
+        "STANDARD_COST": {
+          "TITLE": "Coût standard",
+          "CURRENT": "Coût actuel",
+          "AVERAGE": "Coût moyen",
+          "LAST": "Dernier coût",
+          "NEW_COST": "Nouveau coût",
+          "REASON_CODE": "Code de motif",
+          "AUDIT_HISTORY": "Historique d'audit",
+          "AUDIT_EMPTY": "Aucun historique d'audit.",
+          "AUDIT_CHANGED": "Modifié"
+        }
+      },
+      "ERROR": {
+        "LOAD": "Échec du chargement des détails du produit.",
+        "MISSING_PRODUCT_ID": "Aucun identifiant de produit fourni."
+      },
+      "LIFECYCLE": {
+        "ERROR": {
+          "UPDATE": "Échec de la mise à jour de l'état du cycle de vie."
+        }
+      },
+      "REPLACEMENTS": {
+        "ERROR": {
+          "ADD": "Échec de l'ajout du produit de remplacement."
+        }
+      },
+      "UOM": {
+        "ERROR": {
+          "CREATE": "Échec de la création de la conversion d'unité de mesure.",
+          "UPDATE": "Échec de la mise à jour de la conversion d'unité de mesure.",
+          "DEACTIVATE": "Échec de la désactivation de la conversion d'unité de mesure."
+        }
+      },
+      "STANDARD_COST": {
+        "ERROR": {
+          "UPDATE": "Échec de la mise à jour du coût standard."
+        }
+      }
+    },
+    "INVENTORY": {
+      "FEEDS": {
+        "TITLE": "Flux d'inventaire",
+        "SKU": "SKU",
+        "SKU_PLACEHOLDER": "Saisir un SKU…",
+        "TABS": {
+          "ARIA": "Onglets du flux d'inventaire",
+          "MANUFACTURER": "Fabricant",
+          "DISTRIBUTOR": "Distributeur"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Disponibilité",
+          "SOURCE": "Source",
+          "ON_HAND": "En stock",
+          "RESERVED": "Réservé",
+          "ATP": "DAP",
+          "AS_OF": "Au",
+          "STATUS": "Statut"
+        },
+        "LEAD_TIME": {
+          "TITLE": "Délai de livraison",
+          "SOURCE": "Source",
+          "MIN_DAYS": "Jours min.",
+          "MAX_DAYS": "Jours max."
+        },
+        "STATUS": {
+          "IN_STOCK": "En stock",
+          "LOW_STOCK": "Stock faible",
+          "OUT_OF_STOCK": "Rupture de stock"
+        },
+        "STATE": {
+          "EMPTY": "Aucune donnée de flux d'inventaire trouvée."
+        },
+        "ERROR": {
+          "LOAD": "Échec du chargement des flux d'inventaire."
+        }
+      },
+      "AVAILABILITY": {
+        "TITLE": "Disponibilité de l'inventaire",
+        "SKU": "SKU",
+        "SKU_PLACEHOLDER": "Saisir un SKU…",
+        "LOCATION": "Emplacement",
+        "LOCATION_PLACEHOLDER": "Filtrer par emplacement…",
+        "SUMMARY": {
+          "ON_HAND": "En stock",
+          "RESERVED": "Réservé",
+          "ATP": "Disponible à promettre"
+        },
+        "TABLE": {
+          "LOCATION": "Emplacement",
+          "ON_HAND": "En stock",
+          "RESERVED": "Réservé",
+          "ATP": "DAP"
+        },
+        "STATE": {
+          "IDLE": "Saisir un SKU pour vérifier la disponibilité.",
+          "EMPTY": "Aucune donnée de disponibilité trouvée pour ce SKU."
+        },
+        "ERROR": {
+          "LOAD": "Échec du chargement de la disponibilité de l'inventaire."
+        }
+      }
+    },
+    "LOCATION": {
+      "ROSTER": {
+        "TITLE": "Liste des emplacements",
+        "FILTER": {
+          "STATUS": "Statut"
+        },
+        "TABLE": {
+          "ID": "ID",
+          "NAME": "Nom",
+          "STATUS": "Statut",
+          "VALIDATION_STATUS": "Validation",
+          "LAST_VALIDATED": "Dernière validation"
+        },
+        "ACTION": {
+          "VALIDATE": "Valider"
+        },
+        "STATE": {
+          "EMPTY": "Aucun emplacement trouvé."
+        },
+        "ERROR": {
+          "LOAD": "Échec du chargement de la liste des emplacements.",
+          "VALIDATE": "Échec de la validation de l'emplacement."
+        }
+      }
+    },
+    "PRICING": {
+      "MSRP": {
+        "TITLE": "PDSF",
+        "SEARCH_LABEL": "SKU",
+        "SEARCH_PLACEHOLDER": "Saisir un SKU…",
+        "TABLE": {
+          "SKU": "SKU",
+          "AMOUNT": "Montant",
+          "CURRENCY": "Devise",
+          "EFFECTIVE": "En vigueur",
+          "EXPIRY": "Expiration",
+          "ACTIVE": "Actif"
+        },
+        "ACTIVE": {
+          "TITLE": "PDSF actif"
+        },
+        "STATE": {
+          "IDLE": "Saisir un SKU pour consulter le PDSF.",
+          "EMPTY": "Aucun enregistrement PDSF trouvé."
+        },
+        "ERROR": {
+          "LOAD": "Échec du chargement des enregistrements PDSF.",
+          "CREATE": "Échec de la création de l'enregistrement PDSF.",
+          "UPDATE": "Échec de la mise à jour de l'enregistrement PDSF."
+        }
+      },
+      "PRICE_BOOKS": {
+        "TITLE": "Grilles tarifaires",
+        "SELECTOR_TITLE": "Sélectionner une grille tarifaire",
+        "NEW_NAME": "Nom de la grille tarifaire",
+        "NEW_CTA": "Créer une grille tarifaire",
+        "RULES": {
+          "TITLE": "Règles",
+          "NAME": "Nom",
+          "CONDITION": "Condition",
+          "DIMENSION": "Dimension",
+          "VALUE": "Valeur",
+          "ADJUSTMENT": "Ajustement",
+          "TYPE": "Type",
+          "PERCENT": "Pourcentage",
+          "FIXED": "Fixe",
+          "PRIORITY": "Priorité",
+          "STATUS": "Statut"
+        },
+        "STATE": {
+          "IDLE": "Sélectionnez une grille tarifaire pour voir ses règles.",
+          "EMPTY": "Aucune règle pour cette grille tarifaire."
+        },
+        "ERROR": {
+          "LOAD": "Échec du chargement des grilles tarifaires.",
+          "CREATE": "Échec de la création de la grille tarifaire.",
+          "UPDATE": "Échec de la mise à jour de la grille tarifaire.",
+          "CREATE_RULE": "Échec de la création de la règle.",
+          "UPDATE_RULE": "Échec de la mise à jour de la règle.",
+          "DEACTIVATE_RULE": "Échec de la désactivation de la règle."
+        }
+      },
+      "LOCATION_OVERRIDES": {
+        "TITLE": "Dérogations de prix par emplacement",
+        "PENDING": {
+          "TITLE": "Dérogations en attente",
+          "LOCATION": "Emplacement",
+          "SKU": "SKU",
+          "PRICE": "Prix de dérogation",
+          "REQUESTED_AT": "Demandé",
+          "STATUS": "Statut"
+        },
+        "REQUEST": {
+          "TITLE": "Demander une dérogation",
+          "LOCATION": "Emplacement",
+          "SKU": "SKU",
+          "PRICE": "Prix de dérogation",
+          "CURRENCY": "Devise",
+          "REASON": "Motif",
+          "SUBMIT": "Soumettre la demande"
+        },
+        "GUARDRAIL": {
+          "TITLE": "Politique de limites",
+          "LOCATION": "Emplacement",
+          "MIN": "Prix min. %",
+          "MAX": "Prix max. %",
+          "APPROVAL": "Seuil d'approbation %"
+        },
+        "EFFECTIVE_PRICE": {
+          "TITLE": "Prix en vigueur"
+        },
+        "ERROR": {
+          "LOAD": "Échec du chargement des dérogations de prix par emplacement.",
+          "CREATE": "Échec de la soumission de la demande de dérogation.",
+          "APPROVE": "Échec de l'approbation de la dérogation.",
+          "REJECT": "Échec du rejet de la dérogation.",
+          "GUARDRAIL": "Échec de la mise à jour de la politique de limites.",
+          "EFFECTIVE_PRICE": "Échec du chargement des prix en vigueur."
+        }
+      }
+    }
+  },
   "WORKEXEC": {
     "OPERATIONAL_COST": {
       "OVERLINE": "Coûts de l'ordre de travail",
