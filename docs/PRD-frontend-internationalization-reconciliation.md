@@ -99,6 +99,11 @@ Target files:
 ### Phase D: Formatting and Quality Gates
 - Reconcile locale-sensitive formatting behavior.
 - Add missing-key and pseudo-locale checks to test workflow.
+- Implemented quality gate commands:
+  - `npm run i18n:check:missing`
+  - `npm run i18n:pseudo:generate`
+  - `npm run i18n:pseudo:check`
+  - `npm run i18n:check`
 
 ## 8. Deliverables
 
@@ -107,6 +112,12 @@ Target files:
 - Updated i18n resources for active routes
 - Missing-key and pseudo-localization check workflow
 - Contributor checklist for ADR-0030 compliance
+
+Quality gate workflow commands:
+- `npm run i18n:check:missing` validates `es-US` and `fr-CA` against `en-US` keyspace.
+- `npm run i18n:pseudo:generate` regenerates pseudo-locale file `src/assets/i18n/qps-ploc.json`.
+- `npm run i18n:pseudo:check` fails if pseudo-locale file is stale.
+- `npm run i18n:check` runs missing-key check plus pseudo-locale freshness check.
 
 ## 9. Acceptance Criteria
 
@@ -140,3 +151,6 @@ Target files:
 - `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/src/assets/i18n/en-US.json`
 - `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/src/assets/i18n/es-US.json`
 - `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/src/assets/i18n/fr-CA.json`
+- `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/src/assets/i18n/qps-ploc.json`
+- `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/scripts/i18n/check-missing-keys.mjs`
+- `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/scripts/i18n/generate-pseudo-locale.mjs`
