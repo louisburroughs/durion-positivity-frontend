@@ -1,33 +1,186 @@
-<section>
+<main>
   <header class="page-header">
-    <h1>{{ 'PEOPLE.TIME_APPROVAL.TITLE' | translate }}</h1>
+    <h1>Time Approval</h1>
   </header>
 
-  <div class="bulk-actions">
-    <button class="approve-btn" type="button" (click)="approveSelected()">{{ 'PEOPLE.TIME_APPROVAL.APPROVE' | translate }}</button>
-    <button class="reject-btn" type="button" (click)="openRejectModal()">{{ 'PEOPLE.TIME_APPROVAL.REJECT' | translate }}</button>
-  </div>
+  <section class="panel">
+    <h2>Select Employee and Pay Period</h2>
 
-  <p class="success-banner" *ngIf="approveSuccess() || rejectSuccess()">{{ 'PEOPLE.TIME_APPROVAL.ACTION_COMPLETED' | translate }}</p>
-  <p class="error-banner" *ngIf="approveError() || rejectError()">{{ (approveError() || rejectError())! | translate }}</p>
+    <form class="form-grid" [formGroup]="selectionForm" aria-label="Time approval selection form">
+      <div class="field">
+        <label for="person-select">Employee</label>
+        <select id="person-select" formControlName="personId" data-testid="person-select"
+          aria-describedby="person-help">
+          <option value="">Select employee</option>
+          @for (person of people(); track $index) {
+          <option [value]="$any(person).personId">{{ $any(person).displayName }} ({{ $any(person).employeeNumber }})
+          </option>
+          }
+        </select>
+        <span id="person-help" class="help-text">Select the employee to review.</span>
+      </div>
 
-  <div class="entry-list" *ngIf="!loading() && timeEntries().length > 0">
-    <div class="entry-row" *ngFor="let entry of timeEntries()">
-      <input class="entry-checkbox" type="checkbox" [checked]="selectedEntries().includes(getEntryId(entry))"
-        (change)="toggleEntry(getEntryId(entry))" />
-      <div class="entry-details">{{ getEntryId(entry) }}</div>
+      <div class="field">
+        <label for="period-select">Pay Period</label>
+        <select id="period-select" formControlName="timePeriodId" data-testid="period-select"
+          aria-describedby="period-help">
+          <option value="">Select pay period</option>
+          @for (period of periods(); track $index) {
+          <option [value]="$any(period).id">
+            {{ $any(period).status }} - {{ $any(period).periodStartAt }} to {{ $any(period).periodEndAt }}
+          </option>
+          }
+        </select>
+        <span id="period-help" class="help-text">Choose an eligible period for decision.</span>
+      </div>
+    </form>
+
+    @if (peopleLoading()) {
+    <p aria-live="polite">Loading employees...</p>
+    }
+
+    @if (peopleError()) {
+    <p class="error-text" role="alert">{{ peopleError() }}</p>
+    }
+
+    @if (periodsLoading()) {
+    <p aria-live="polite">Loading periods...</p>
+    }
+
+    @if (periodsError()) {
+    <p class="error-text" role="alert">{{ periodsError() }}</p>
+    }
+
+    @if (periodStatusMessage()) {
+    <p class="status-message" data-testid="period-status-msg" aria-live="polite">{{ periodStatusMessage() }}</p>
+    }
+  </section>
+
+  @if (selectionForm.controls.personId.value && selectionForm.controls.timePeriodId.value) {
+  <section class="panel">
+    <div class="section-header-row">
+      <h2>Time Entries</h2>
+      <button type="button" (click)="refreshDetail()">Refresh Detail</button>
     </div>
-  </div>
 
-  <p class="empty-state" *ngIf="!loading() && !approveError() && timeEntries().length === 0">{{ 'PEOPLE.TIME_APPROVAL.EMPTY' | translate }}</p>
+    @if (detailLoading()) {
+    <p data-testid="detail-loading" aria-live="polite">Loading detail...</p>
+    }
 
-  <div class="reject-modal-overlay" *ngIf="showRejectModal()">
-    <label>
-      {{ 'PEOPLE.TIME_APPROVAL.REASON' | translate }}
-      <textarea class="reject-reason-field" [value]="rejectReason()"
-        (input)="rejectReason.set(($any($event.target)).value)"></textarea>
-    </label>
-    <button type="button" (click)="submitReject()">{{ 'PEOPLE.TIME_APPROVAL.SUBMIT_REJECT' | translate }}</button>
-    <button type="button" (click)="closeRejectModal()">{{ 'PEOPLE.TIME_APPROVAL.CLOSE' | translate }}</button>
+    @if (detailError()) {
+    <p class="error-text" role="alert">{{ detailError() }}</p>
+    }
+
+    @if (!detailLoading() && entries().length === 0) {
+    <p data-testid="entries-empty">No timekeeping entries found for this selection.</p>
+    }
+
+    @if (!detailLoading() && entries().length > 0) {
+    <div class="table-wrap">
+      <table data-testid="entries-table">
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Status</th>
+            <th scope="col">Clock In</th>
+            <th scope="col">Clock Out</th>
+            <th scope="col">Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of entries(); track $index) {
+          <tr data-testid="entry-row">
+            <td>{{ $any(entry).timeEntryId ?? $any(entry).id ?? '-' }}</td>
+            <td>{{ $any(entry).status ?? '-' }}</td>
+            <td>{{ $any(entry).clockInAt ?? '-' }}</td>
+            <td>{{ $any(entry).clockOutAt ?? '-' }}</td>
+            <td>{{ $any(entry).locationId ?? '-' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    <div class="actions-row">
+      <button type="button" (click)="approvePeriod()" [disabled]="!canDecide() || actionInFlight()"
+        data-testid="approve-btn">
+        Approve Period
+      </button>
+      <button type="button" (click)="openRejectDialog()" [disabled]="!canDecide() || actionInFlight()"
+        data-testid="reject-btn">
+        Reject Period
+      </button>
+    </div>
+
+    @if (actionSuccess()) {
+    <p class="success-text" data-testid="action-success" aria-live="polite">{{ actionSuccess() }}</p>
+    }
+
+    @if (actionError()) {
+    <p class="error-text" data-testid="action-error" role="alert">{{ actionError() }}</p>
+    }
+  </section>
+
+  <section class="panel">
+    <h2>Approval History</h2>
+
+    @if (historyLoading()) {
+    <p aria-live="polite">Loading history...</p>
+    }
+
+    @if (!historyLoading() && approvalHistory().length === 0) {
+    <p data-testid="history-empty">No approval history found.</p>
+    }
+
+    @if (!historyLoading() && approvalHistory().length > 0) {
+    <div class="table-wrap">
+      <table data-testid="history-table">
+        <thead>
+          <tr>
+            <th scope="col">Outcome</th>
+            <th scope="col">Approved At</th>
+            <th scope="col">Approved By User ID</th>
+            <th scope="col">Entry Count</th>
+            <th scope="col">Comments</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (history of approvalHistory(); track $index) {
+          <tr data-testid="history-row">
+            <td>{{ $any(history).outcome ?? $any(history).status ?? '-' }}</td>
+            <td>{{ $any(history).approvedAt ?? '-' }}</td>
+            <td>{{ $any(history).approvedByUserId ?? '-' }}</td>
+            <td>{{ $any(history).entryCount ?? '-' }}</td>
+            <td>{{ $any(history).comments ?? '-' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+  }
+
+  @if (showRejectDialog()) {
+  <div class="modal-overlay" (keydown.escape)="closeRejectDialog()">
+    <section class="modal-panel" role="alertdialog" aria-modal="true" aria-labelledby="reject-dialog-title"
+      data-testid="reject-dialog">
+      <h2 id="reject-dialog-title">Reject Period</h2>
+      <div class="field" [formGroup]="rejectForm">
+        <label for="reject-comments">Comments</label>
+        <textarea id="reject-comments" formControlName="comments" data-testid="reject-comments-input"
+          rows="4"></textarea>
+      </div>
+      <div class="actions-row">
+        <button type="button" (click)="closeRejectDialog()" data-testid="cancel-reject-btn" autofocus>
+          Cancel
+        </button>
+        <button type="button" (click)="submitReject()" data-testid="submit-reject-btn" [disabled]="actionInFlight()">
+          Submit Reject
+        </button>
+      </div>
+    </section>
   </div>
-</section>
+  }
+</main>

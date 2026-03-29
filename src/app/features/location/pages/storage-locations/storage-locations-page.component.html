@@ -1,0 +1,172 @@
+<main>
+  <header class="page-header">
+    <h1>Storage Locations</h1>
+    <button type="button" (click)="openCreateForm()" data-testid="open-create-btn">Add Storage Location</button>
+  </header>
+
+  @if (loading()) {
+  <p aria-live="polite" data-testid="loading">Loading...</p>
+  }
+  @if (storageLocationsError()) {
+  <p role="alert" aria-live="polite" data-testid="storage-locations-error">{{ storageLocationsError() }}</p>
+  }
+  @if (storageTypesError()) {
+  <p role="alert" aria-live="polite" data-testid="storage-types-error">{{ storageTypesError() }}</p>
+  }
+  @if (createSuccess()) {
+  <output aria-live="polite" data-testid="create-success">Storage location created.</output>
+  }
+
+  @if (!loading()) {
+  <section data-testid="storage-locations-section">
+    <table data-testid="storage-locations-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Code</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (loc of storageLocations(); track $index) {
+        <tr [attr.data-testid]="'storage-location-row-' + $index">
+          <td>{{ $any(loc).name }}</td>
+          <td>{{ $any(loc).code }}</td>
+          <td>{{ $any(loc).storageType }}</td>
+          <td>{{ $any(loc).status }}</td>
+          <td>
+            @if ($any(loc).status === 'ACTIVE') {
+            <button type="button" (click)="openDeactivateDialog(loc)" [attr.data-testid]="'deactivate-btn-' + $index">
+              Deactivate
+            </button>
+            }
+          </td>
+        </tr>
+        }
+        @empty {
+        <tr>
+          <td colspan="5" data-testid="empty-state">No storage locations found.</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+  }
+
+  @if (showCreateForm()) {
+  <section data-testid="create-form-section">
+    <h2>New Storage Location</h2>
+    <form class="form-grid" [formGroup]="createForm" (ngSubmit)="createStorageLocation()">
+      <div class="field">
+        <label for="create-code">Code (required)</label>
+        <input id="create-code" type="text" formControlName="code" aria-describedby="field-error-code"
+          data-testid="create-code-input" />
+        <span id="field-error-code" role="alert" aria-live="polite" data-testid="field-error-code">
+          @if (createForm.controls.code.touched && createForm.controls.code.invalid) {
+          Code is required.
+          }
+        </span>
+      </div>
+
+      <div class="field">
+        <label for="create-name">Name (required)</label>
+        <input id="create-name" type="text" formControlName="name" aria-describedby="field-error-name"
+          data-testid="create-name-input" />
+        <span id="field-error-name" role="alert" aria-live="polite" data-testid="field-error-name">
+          @if (createForm.controls.name.touched && createForm.controls.name.invalid) {
+          Name is required.
+          }
+        </span>
+      </div>
+
+      <div class="field">
+        <label for="create-storage-type">Storage Type (required)</label>
+        <select id="create-storage-type" formControlName="storageType" aria-describedby="field-error-storage-type"
+          data-testid="create-storage-type-select">
+          <option value="">Select a storage type</option>
+          @for (type of storageTypes(); track $index) {
+          <option [value]="$any(type).storageType ?? $any(type).code ?? $any(type).name">
+            {{ $any(type).name ?? $any(type).storageType ?? $any(type).code }}
+          </option>
+          }
+        </select>
+        <span id="field-error-storage-type" role="alert" aria-live="polite" data-testid="field-error-storage-type">
+          @if (createForm.controls.storageType.touched && createForm.controls.storageType.invalid) {
+          Storage type is required.
+          }
+        </span>
+      </div>
+
+      <div class="field">
+        <label for="create-parent-storage-location-id">Parent Storage Location ID (optional)</label>
+        <input id="create-parent-storage-location-id" type="text" formControlName="parentStorageLocationId"
+          aria-describedby="field-error-parent-storage-location-id"
+          data-testid="create-parent-storage-location-input" />
+        <span id="field-error-parent-storage-location-id" role="alert" aria-live="polite"
+          data-testid="field-error-parent-storage-location-id"></span>
+      </div>
+
+      <div class="field">
+        <label for="create-barcode">Barcode (optional)</label>
+        <input id="create-barcode" type="text" formControlName="barcode" aria-describedby="field-error-barcode"
+          data-testid="create-barcode-input" />
+        <span id="field-error-barcode" role="alert" aria-live="polite" data-testid="field-error-barcode"></span>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" (click)="cancelCreate()" [disabled]="creating()" data-testid="cancel-create-btn">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="creating()" data-testid="submit-create-btn">
+          {{ creating() ? 'Creating...' : 'Create Storage Location' }}
+        </button>
+      </div>
+    </form>
+
+    @if (createError()) {
+    <p role="alert" aria-live="polite" data-testid="create-error">{{ createError() }}</p>
+    }
+  </section>
+  }
+
+  @if (showDeactivateDialog()) {
+  <dialog class="modal-backdrop" open (keydown.escape)="cancelDeactivate()" aria-modal="true"
+    aria-labelledby="deactivate-dialog-title" data-testid="deactivate-dialog">
+    <div class="modal-panel">
+      <h2 id="deactivate-dialog-title">Deactivate Storage Location</h2>
+      <p>Deactivate: <strong>{{ $any(deactivateTarget())?.['name'] }}</strong></p>
+
+      @if (requiresDestination()) {
+      <div class="field">
+        <label for="destination-input">Destination Storage Location ID (required)</label>
+        <input id="destination-input" type="text" [value]="deactivateDestinationId()"
+          (input)="deactivateDestinationId.set($any($event.target).value)" aria-describedby="destination-error"
+          data-testid="destination-input" />
+        <span id="destination-error" role="alert" aria-live="polite" data-testid="field-error-destination">
+          @if (requiresDestination() && !deactivateDestinationId()) {
+          Destination required for non-empty storage locations.
+          }
+        </span>
+      </div>
+      }
+
+      @if (deactivateError()) {
+      <p role="alert" aria-live="polite" data-testid="deactivate-error">{{ deactivateError() }}</p>
+      }
+
+      <div class="dialog-actions">
+        <button type="button" autofocus (click)="cancelDeactivate()" [disabled]="deactivating()"
+          data-testid="cancel-deactivate-btn">
+          Cancel
+        </button>
+        <button type="button" [disabled]="deactivating()" (click)="confirmDeactivate()"
+          data-testid="confirm-deactivate-btn">
+          {{ deactivating() ? 'Deactivating...' : 'Confirm Deactivate' }}
+        </button>
+      </div>
+    </div>
+  </dialog>
+  }
+</main>

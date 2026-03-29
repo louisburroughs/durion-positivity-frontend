@@ -1,0 +1,77 @@
+<main class="security-page user-provision-layout" aria-labelledby="provision-heading">
+  <header class="page-header">
+    <p class="page-overline">Security Administration</p>
+    <h1 id="provision-heading">Provision User</h1>
+  </header>
+
+  @if (personId()) {
+  <div class="alert alert--info" role="note" data-testid="linked-person-banner">
+    Provisioning account for person: {{ personId() }}
+  </div>
+  <input type="hidden" data-testid="person-id-hidden" [value]="personId()" />
+  }
+
+  @if (loading()) {
+  <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-indicator">
+    Loading roles...
+  </section>
+  }
+
+  @if (error()) {
+  <section class="state-panel state-panel--error" role="alert">
+    {{ error() }}
+  </section>
+  }
+
+  @if (provisionedUserId()) {
+  <section class="state-panel state-panel--success" data-testid="provision-success-state" aria-live="polite">
+    User provisioned. User ID: {{ provisionedUserId() }}
+  </section>
+  }
+
+  @if (!provisionedUserId()) {
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="provision-form">
+    <fieldset class="form-section">
+      <legend>Account Details</legend>
+
+      <div class="field-row"
+        [class.field-error--visible]="form.get('username')?.invalid && form.get('username')?.touched">
+        <label for="provision-username">Username</label>
+        <input id="provision-username" type="email" formControlName="username" data-testid="username-input"
+          autocomplete="username" />
+        @if (fieldErrors()['username'] || (form.get('username')?.touched && form.get('username')?.invalid)) {
+        <span class="field-error" role="alert" data-testid="field-error-username">
+          {{ fieldErrors()['username'] || 'A valid username email is required.' }}
+        </span>
+        }
+      </div>
+
+      <div class="field-row"
+        [class.field-error--visible]="form.get('roleName')?.invalid && form.get('roleName')?.touched">
+        <label for="provision-role">Role</label>
+        <select id="provision-role" formControlName="roleName" data-testid="role-select">
+          <option value="" disabled>Select role</option>
+          @for (role of roles(); track role.name) {
+          <option [value]="role.name">{{ role.name }}</option>
+          }
+        </select>
+        @if (fieldErrors()['roleName'] || (form.get('roleName')?.touched && form.get('roleName')?.invalid)) {
+        <span class="field-error" role="alert" data-testid="field-error-role">
+          {{ fieldErrors()['roleName'] || 'Role is required.' }}
+        </span>
+        }
+      </div>
+    </fieldset>
+
+    <footer class="form-footer">
+      <button type="submit" class="btn btn--primary" data-testid="provision-submit-btn" [disabled]="submitting()">
+        @if (submitting()) {
+        Provisioning...
+        } @else {
+        Provision User
+        }
+      </button>
+    </footer>
+  </form>
+  }
+</main>

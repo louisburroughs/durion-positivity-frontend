@@ -1,34 +1,110 @@
-<section>
+<main>
   <header class="page-header">
-    <h1>{{ 'PEOPLE.WORK_SESSION.TITLE' | translate }}</h1>
+    <h1>Work Session</h1>
   </header>
 
-  <div class="session-panel">
-    <div class="session-active" *ngIf="currentSession(); else inactive">{{ 'PEOPLE.WORK_SESSION.ACTIVE' | translate }}</div>
-    <ng-template #inactive>
-      <div class="session-inactive">{{ 'PEOPLE.WORK_SESSION.INACTIVE' | translate }}</div>
-    </ng-template>
+  <section class="panel">
+    <h2>Clock Status</h2>
+    <p class="status-chip" data-testid="clock-status">{{ isClocked ? 'Clocked In' : 'Clocked Out' }}</p>
 
-    <div class="break-indicator" *ngIf="onBreak()">
-      <span class="break-active">{{ 'PEOPLE.WORK_SESSION.ON_BREAK' | translate }}</span>
+    @if (sessionTimestamps()?.clockedInAt) {
+    <p data-testid="clock-in-time">Clock In: {{ sessionTimestamps()?.clockedInAt }}</p>
+    }
+
+    @if (sessionTimestamps()?.clockedOutAt) {
+    <p data-testid="clock-out-time">Clock Out: {{ sessionTimestamps()?.clockedOutAt }}</p>
+    }
+
+    <p class="note-text" data-testid="timezone-note">All times in UTC</p>
+
+    <div class="actions-row">
+      <button type="button" (click)="startSession()" [disabled]="isClocked || loading()" data-testid="clock-in-btn">
+        Clock In
+      </button>
+      <button type="button" (click)="stopSession()" [disabled]="!isClocked || loading()" data-testid="clock-out-btn">
+        Clock Out
+      </button>
     </div>
+  </section>
 
-    <div class="time-display">{{ 'PEOPLE.WORK_SESSION.CONTROLS' | translate }}</div>
+  @if (isClocked) {
+  <section class="panel">
+    <h2>Break Management</h2>
+    <p data-testid="break-status">{{ onBreak() ? 'On Break' : 'Not on break' }}</p>
 
-    <button class="start-btn" type="button" (click)="startSession()">{{ 'PEOPLE.WORK_SESSION.START_SESSION' | translate }}</button>
-    <button class="stop-btn" type="button" (click)="stopSession(getSessionId())" [disabled]="!getSessionId()">
-      {{ 'PEOPLE.WORK_SESSION.STOP_SESSION' | translate }}
-    </button>
-    <button class="start-break-btn" type="button" (click)="startBreak(getSessionId())" [disabled]="!getSessionId()">
-      {{ 'PEOPLE.WORK_SESSION.START_BREAK' | translate }}
-    </button>
-    <button class="stop-break-btn" type="button" (click)="stopBreak(getSessionId())" [disabled]="!getSessionId()">
-      {{ 'PEOPLE.WORK_SESSION.STOP_BREAK' | translate }}
-    </button>
-  </div>
+    <form class="form-grid" [formGroup]="breakForm" aria-label="Break controls form">
+      <div class="field">
+        <label for="break-type">Break Type</label>
+        <select id="break-type" formControlName="breakType" required data-testid="break-type-select">
+          @for (breakType of breakTypes; track breakType) {
+          <option [value]="breakType">{{ breakType }}</option>
+          }
+        </select>
+      </div>
 
-  <p class="success-banner" *ngIf="startSuccess() || stopSuccess() || breakStarted() || breakStopped()">
-    {{ 'PEOPLE.WORK_SESSION.ACTION_SUCCEEDED' | translate }}
-  </p>
-  <p class="error-banner" *ngIf="error()">{{ error()! | translate }}</p>
-</section>
+      <div class="field">
+        <label for="break-notes">
+          Notes
+          @if (notesRequired) {
+          <span class="required-mark" aria-hidden="true">*</span>
+          }
+        </label>
+        <textarea id="break-notes" rows="3" formControlName="notes" [attr.aria-required]="notesRequired"
+          data-testid="break-notes-input"></textarea>
+      </div>
+
+      <div class="actions-row">
+        <button type="button" (click)="startBreak()" [disabled]="onBreak() || loading()" data-testid="start-break-btn">
+          Start Break
+        </button>
+        <button type="button" (click)="stopBreak()" [disabled]="!onBreak() || loading()" data-testid="stop-break-btn">
+          End Break
+        </button>
+      </div>
+    </form>
+  </section>
+  }
+
+  @if (breaksLoading() || breaks().length > 0) {
+  <section class="panel">
+    <h2>Today's Breaks</h2>
+
+    @if (breaksLoading()) {
+    <p aria-live="polite">Loading breaks...</p>
+    }
+
+    @if (!breaksLoading() && breaks().length > 0) {
+    <div class="table-wrap">
+      <table data-testid="breaks-table">
+        <thead>
+          <tr>
+            <th scope="col">Break Type</th>
+            <th scope="col">Started At</th>
+            <th scope="col">Ended At</th>
+            <th scope="col">Auto Ended</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (breakRow of breaks(); track $index) {
+          <tr data-testid="break-item">
+            <td>{{ $any(breakRow).breakType ?? '-' }}</td>
+            <td>{{ $any(breakRow).startedAt ?? '-' }}</td>
+            <td>{{ $any(breakRow).endedAt ?? '-' }}</td>
+            <td>{{ $any(breakRow).autoEnded ? 'Yes' : 'No' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+  }
+
+  @if (actionSuccess()) {
+  <p class="success-text" data-testid="action-success" aria-live="polite">{{ actionSuccess() }}</p>
+  }
+
+  @if (error()) {
+  <p class="error-text" data-testid="error-state" role="alert">{{ error() }}</p>
+  }
+</main>

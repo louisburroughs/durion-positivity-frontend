@@ -2,6 +2,7 @@ import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { environment } from '../../../environments/environment';
 import {
   AccountingEventDetail,
   AccountingEventListItem,
@@ -199,6 +200,69 @@ export class AccountingService {
 
   getPaymentByRef(paymentRef: string): Observable<VendorPaymentDetail> {
     return this.api.get<VendorPaymentDetail>(`${AccountingService.BASE}/ap/payments/by-ref/${paymentRef}`);
+  }
+
+  // Timekeeping Export
+
+  requestExport(
+    body: {
+      startDate: string;
+      endDate: string;
+      locationIds: string[];
+      format: 'CSV' | 'JSON';
+    },
+    idempotencyKey?: string,
+  ): Observable<{ exportId: string; status: string }> {
+    return this.api.post<{ exportId: string; status: string }>(
+      `${AccountingService.BASE}/export/request`,
+      body,
+      idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined,
+    );
+  }
+
+  getExportStatus(exportId: string): Observable<{
+    exportId: string;
+    status: string;
+    recordsExportedCount?: number;
+    recordsSkippedCount?: number;
+    requestedAt?: string;
+    completedAt?: string;
+    errorCode?: string;
+    message?: string;
+  }> {
+    const params = new HttpParams().set('exportId', exportId);
+    return this.api.get<{
+      exportId: string;
+      status: string;
+      recordsExportedCount?: number;
+      recordsSkippedCount?: number;
+      requestedAt?: string;
+      completedAt?: string;
+      errorCode?: string;
+      message?: string;
+    }>(`${AccountingService.BASE}/export/status`, params);
+  }
+
+  getExportHistory(params?: { pageIndex?: number; pageSize?: number }): Observable<unknown[]> {
+    let httpParams = new HttpParams();
+    if (params?.pageIndex !== undefined) {
+      httpParams = httpParams.set('pageIndex', String(params.pageIndex));
+    }
+    if (params?.pageSize !== undefined) {
+      httpParams = httpParams.set('pageSize', String(params.pageSize));
+    }
+    return this.api.get<unknown[]>(`${AccountingService.BASE}/export/history`, httpParams);
+  }
+
+  downloadExport(exportId: string): void {
+    // Trigger browser download via anchor element (appended to DOM for cross-browser reliability)
+    const url = `${environment.apiBaseUrl}${AccountingService.BASE}/export/download?exportId=${encodeURIComponent(exportId)}`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `time-export-${exportId}.csv`;
+    document.body.append(a);
+    a.click();
+    a.remove();
   }
 
   private toListItem(item: AccountingEventDetail): AccountingEventListItem {

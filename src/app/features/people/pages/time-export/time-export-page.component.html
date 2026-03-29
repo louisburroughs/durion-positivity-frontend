@@ -1,29 +1,172 @@
-<section>
+<main>
   <header class="page-header">
-    <h1>{{ 'PEOPLE.TIME_EXPORT.TITLE' | translate }}</h1>
+    <h1>Export Approved Time</h1>
   </header>
 
-  <form class="filter-form" [formGroup]="filterForm" (ngSubmit)="loadExport()">
-    <input type="date" formControlName="startDate" />
-    <input type="date" formControlName="endDate" />
-    <input type="text" formControlName="locationId" [placeholder]="'PEOPLE.TIME_EXPORT.LOCATION_ID' | translate" />
-    <div class="export-actions">
-      <button class="download-btn" type="submit">{{ 'PEOPLE.TIME_EXPORT.LOAD_EXPORT' | translate }}</button>
-      <button type="button" (click)="loadDiscrepancies()">{{ 'PEOPLE.TIME_EXPORT.LOAD_DISCREPANCIES' | translate }}</button>
+  <section class="panel">
+    <h2>Request Export</h2>
+
+    <form class="form-grid" [formGroup]="form" (ngSubmit)="requestExport()">
+      <div class="field">
+        <label for="start-date">Start Date</label>
+        <input id="start-date" type="date" formControlName="startDate" data-testid="start-date-input"
+          aria-describedby="start-date-error" />
+        @if (form.controls.startDate.touched && form.controls.startDate.invalid) {
+        <span id="start-date-error" class="error-text" role="alert">Start date is required.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="end-date">End Date</label>
+        <input id="end-date" type="date" formControlName="endDate" data-testid="end-date-input"
+          aria-describedby="end-date-error" />
+        @if (form.controls.endDate.touched && form.controls.endDate.invalid) {
+        <span id="end-date-error" class="error-text" role="alert">End date is required.</span>
+        }
+      </div>
+
+      <fieldset class="field">
+        <legend>Format</legend>
+        <select id="format" formControlName="format" data-testid="format-select">
+          <option value="CSV">CSV</option>
+          <option value="JSON">JSON</option>
+        </select>
+      </fieldset>
+
+      <fieldset class="field">
+        <legend>Locations</legend>
+        @if (locationsLoading()) {
+        <p aria-live="polite">Loading locations...</p>
+        }
+
+        @if (locationsError()) {
+        <p class="error-text" role="alert">{{ locationsError() }}</p>
+        }
+
+        @if (!locationsLoading() && !locationsError()) {
+        <div class="checkbox-list" aria-describedby="locations-error">
+          @for (location of locations(); track $index; let idx = $index) {
+          <div class="checkbox-item">
+            <input id="location-{{ idx }}" type="checkbox" [value]="$any(location).locationId ?? $any(location).id"
+              [checked]="form.controls.locationIds.value.includes((($any(location).locationId ?? $any(location).id) + ''))"
+              (change)="onLocationToggle((($any(location).locationId ?? $any(location).id) + ''))"
+              data-testid="location-checkbox" />
+            <label for="location-{{ idx }}">
+              {{ $any(location).name ?? $any(location).displayName ?? ($any(location).locationId ?? $any(location).id)
+              }}
+            </label>
+          </div>
+          }
+        </div>
+        }
+
+        @if (form.controls.locationIds.touched && form.controls.locationIds.invalid) {
+        <span id="locations-error" class="error-text" aria-live="polite">Select at least one location.</span>
+        }
+      </fieldset>
+
+      <p class="note-text">Dates interpreted in selected location timezone(s).</p>
+
+      <div class="actions-row">
+        <button type="submit" [disabled]="isFormBusy" data-testid="request-export-btn">Request Export</button>
+      </div>
+    </form>
+  </section>
+
+  @if (exportId(); as exportIdentifier) {
+  <section class="panel" data-testid="status-panel">
+    <h2>Current Export Status</h2>
+    <dl class="status-grid">
+      <div>
+        <dt>Export ID</dt>
+        <dd data-testid="export-id-display">{{ exportIdentifier }}</dd>
+      </div>
+      <div>
+        <dt>Status</dt>
+        <dd class="status-badge" data-testid="export-status">{{ exportStatus() ?? exportState() }}</dd>
+      </div>
+      <div>
+        <dt>Records Exported</dt>
+        <dd data-testid="records-exported">{{ recordsExportedCount() ?? '-' }}</dd>
+      </div>
+      <div>
+        <dt>Records Skipped</dt>
+        <dd data-testid="records-skipped">{{ recordsSkippedCount() ?? '-' }}</dd>
+      </div>
+      <div>
+        <dt>Requested At</dt>
+        <dd data-testid="requested-at">{{ requestedAt() ?? '-' }}</dd>
+      </div>
+      <div>
+        <dt>Completed At</dt>
+        <dd data-testid="completed-at">{{ completedAt() ?? '-' }}</dd>
+      </div>
+    </dl>
+
+    <div class="actions-row">
+      <button type="button" (click)="refreshStatus()" [disabled]="!canRefresh" data-testid="refresh-status-btn">
+        Refresh Status
+      </button>
+      <button type="button" (click)="downloadExport()" [disabled]="!canDownload" data-testid="download-btn">
+        Download
+      </button>
     </div>
-  </form>
+  </section>
+  }
 
-  <p class="error-banner" *ngIf="error()">{{ error()! | translate }}</p>
+  @if (exportError()) {
+  <section class="panel">
+    <p class="error-text" data-testid="export-error" role="alert">{{ exportError() }}</p>
+  </section>
+  }
 
-  <div class="export-table" *ngIf="!loading() && exportData().length > 0">
-    <div class="export-row" *ngFor="let row of exportData()">{{ row | json }}</div>
-  </div>
+  <section class="panel">
+    <div class="section-header-row">
+      <h2>Export History</h2>
+      <button type="button" (click)="loadHistory()">Refresh History</button>
+    </div>
 
-  <div class="discrepancy-list" *ngIf="discrepancyData().length > 0">
-    <div class="discrepancy-item" *ngFor="let item of discrepancyData()">{{ item | json }}</div>
-  </div>
+    @if (historyLoading()) {
+    <p aria-live="polite">Loading history...</p>
+    }
 
-  <p class="empty-state" *ngIf="!loading() && !error() && exportData().length === 0">
-    {{ 'PEOPLE.TIME_EXPORT.EMPTY' | translate }}
-  </p>
-</section>
+    @if (historyError()) {
+    <p class="error-text" role="alert">{{ historyError() }}</p>
+    }
+
+    @if (!historyLoading() && !historyError() && historyItems().length === 0) {
+    <p data-testid="history-empty">No export history available.</p>
+    }
+
+    @if (!historyLoading() && historyItems().length > 0) {
+    <div class="table-wrap">
+      <table data-testid="history-table">
+        <thead>
+          <tr>
+            <th scope="col">Export ID</th>
+            <th scope="col">Status</th>
+            <th scope="col">Start Date</th>
+            <th scope="col">End Date</th>
+            <th scope="col">Format</th>
+            <th scope="col">Exported Count</th>
+            <th scope="col">Requested At</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of historyItems(); track $index) {
+          <tr data-testid="history-row">
+            <td>{{ $any(item).exportId ?? $any(item).id ?? '-' }}</td>
+            <td>{{ $any(item).status ?? '-' }}</td>
+            <td>{{ $any(item).startDate ?? '-' }}</td>
+            <td>{{ $any(item).endDate ?? '-' }}</td>
+            <td>{{ $any(item).format ?? '-' }}</td>
+            <td>{{ $any(item).recordsExportedCount ?? $any(item).exportedCount ?? '-' }}</td>
+            <td>{{ $any(item).requestedAt ?? '-' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+</main>
