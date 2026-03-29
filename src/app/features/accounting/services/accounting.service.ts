@@ -253,13 +253,12 @@ export class AccountingService {
     return this.api.get<unknown[]>(`${AccountingService.BASE}/export/history`, httpParams);
   }
 
-  downloadExport(exportId: string, format?: string): void {
-    const ext = format?.toLowerCase() === 'json' ? 'json' : 'csv';
+  downloadExport(exportId: string): void {
     // Trigger browser download via anchor element (appended to DOM for cross-browser reliability)
     const url = `/api${AccountingService.BASE}/export/download?exportId=${encodeURIComponent(exportId)}`;
     const a = document.createElement('a');
     a.href = url;
-    a.download = `time-export-${exportId}.${ext}`;
+    a.download = `time-export-${exportId}.csv`;
     document.body.append(a);
     a.click();
     a.remove();
