@@ -16,6 +16,7 @@ This PRD includes implementation of a user-facing language toggle in the app hea
 ## 2. Scope
 
 In scope:
+
 - Translation key and fallback reconciliation for active domains
 - Locale-safe formatting of dates, numbers, and currency
 - Language selection UX in shell header
@@ -23,6 +24,7 @@ In scope:
 - Missing-key and pseudo-localization quality checks
 
 Out of scope:
+
 - Full translation of all future/stub feature domains
 - Server-side user profile persistence for locale preference (future phase)
 
@@ -43,17 +45,20 @@ Out of scope:
 ## 5. Functional Requirements
 
 ### FR-1: Header Language Toggle (Required)
+
 - Add a language toggle control in the shell header.
 - Control must be keyboard-accessible and screen-reader accessible.
 - Supported locales for initial release: `en-US`, `es-US`, `fr-CA`.
 - Selecting a language applies it immediately across routed content.
 
 Target files:
+
 - `src/app/features/shell/components/header/header.component.ts`
 - `src/app/features/shell/components/header/header.component.html`
 - `src/app/features/shell/components/header/header.component.css`
 
 ### FR-2: Locale Preference Persistence
+
 - Persist selected locale on the client (localStorage/session-safe strategy).
 - On app bootstrap, apply persisted locale before falling back to browser/default locale.
 - Fallback order:
@@ -62,15 +67,18 @@ Target files:
   3. default locale `en-US`
 
 ### FR-3: Translation Key Hygiene
+
 - Remove hard-coded user-facing strings from active features.
 - Enforce feature-key namespacing conventions.
 - Ensure no raw translation keys render in UI.
 
 ### FR-4: Locale-Safe Formatting
+
 - Dates/times/numbers/currency displayed with locale-aware formatting.
 - Replace manual formatting with Intl/Angular locale-aware formatting where needed.
 
 ### FR-5: Missing-Key and Pseudo-Localization Checks
+
 - Add checks to detect missing keys for release locales.
 - Add pseudo-localization pass for layout resilience and truncation detection.
 
@@ -83,20 +91,24 @@ Target files:
 ## 7. Implementation Plan
 
 ### Phase A: Locale Service and Bootstrap Reconciliation
+
 - Introduce/standardize locale orchestration service in `src/app/core/services/`.
 - Centralize locale resolution and persistence logic.
 - Update app bootstrap locale selection to use service-driven fallback order.
 
 ### Phase B: Header Toggle Delivery
+
 - Add language selector UI in header (button + menu or select).
 - Wire selection to locale service and translation provider.
 - Add accessibility semantics and keyboard handling.
 
 ### Phase C: Active Feature String Reconciliation
+
 - Reconcile active-domain strings to translation keys.
 - Fill gaps in `en-US`, `es-US`, and `fr-CA` resources.
 
 ### Phase D: Formatting and Quality Gates
+
 - Reconcile locale-sensitive formatting behavior.
 - Add missing-key and pseudo-locale checks to test workflow.
 
