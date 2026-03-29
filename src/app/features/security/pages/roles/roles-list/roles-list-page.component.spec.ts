@@ -3,6 +3,7 @@ import { provideRouter, Router } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { SecurityService } from '../../../services/security.service';
 import { RolesListPageComponent } from './roles-list-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 describe('RolesListPageComponent', () => {
   let fixture: ComponentFixture<RolesListPageComponent>;
@@ -15,7 +16,7 @@ describe('RolesListPageComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RolesListPageComponent],
+      imports: [RolesListPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: SecurityService, useValue: securityServiceStub },

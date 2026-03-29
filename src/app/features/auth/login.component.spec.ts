@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { LoginComponent } from './login.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 describe('LoginComponent', () => {
   let fixture: ComponentFixture<LoginComponent>;
@@ -20,7 +21,7 @@ describe('LoginComponent', () => {
 
   function setup(queryParams: Record<string, string> = {}) {
     TestBed.configureTestingModule({
-      imports: [LoginComponent],
+      imports: [LoginComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: authServiceStub },
@@ -67,7 +68,7 @@ describe('LoginComponent', () => {
       fixture.detectChanges();
       const banner = fixture.nativeElement.querySelector('.alert.alert-info');
       expect(banner).toBeTruthy();
-      expect(banner.textContent).toContain('session has expired');
+      expect(banner.textContent).toContain('AUTH.LOGIN.SESSION_EXPIRED');
     });
 
     it('is absent when sessionExpired() is false', () => {
@@ -96,7 +97,7 @@ describe('LoginComponent', () => {
       component.submit();
       subject.error({ status: 401 });
 
-      expect(component.error()).toBe('Invalid username or password. Please try again.');
+      expect(component.error()).toBe('AUTH.LOGIN.ERROR.INVALID_CREDENTIALS');
       expect(component.loading()).toBe(false);
     });
 
@@ -109,7 +110,7 @@ describe('LoginComponent', () => {
       component.submit();
       subject.error({ status: 0 });
 
-      expect(component.error()).toContain('Cannot reach the server');
+      expect(component.error()).toBe('AUTH.LOGIN.ERROR.NETWORK');
       expect(component.loading()).toBe(false);
     });
 

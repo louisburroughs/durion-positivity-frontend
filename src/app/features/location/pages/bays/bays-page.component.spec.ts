@@ -4,6 +4,7 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { BaysPageComponent } from './bays-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { LocationService } from '../../services/location.service';
 
 const stubService = {
@@ -23,7 +24,7 @@ describe('BaysPageComponent [CAP-136]', () => {
     stubService.patchBay.mockReturnValue(of({ bayId: 'bay-1' }));
 
     await TestBed.configureTestingModule({
-      imports: [BaysPageComponent],
+      imports: [BaysPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: stubService },

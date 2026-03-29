@@ -32,6 +32,7 @@ import { Subject, of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentAssignmentPageComponent } from './appointment-assignment-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AppointmentService } from '../../services/appointment.service';
 
 // ---------------------------------------------------------------------------
@@ -93,7 +94,7 @@ describe('AppointmentAssignmentPageComponent [CAP-249]', () => {
     appointmentServiceStub.listAssignments.mockReturnValue(of([STUB_ASSIGNMENT_BAY]));
 
     await TestBed.configureTestingModule({
-      imports: [AppointmentAssignmentPageComponent],
+      imports: [AppointmentAssignmentPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: appointmentServiceStub },

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Subject, of, throwError } from 'rxjs';
 import { SecurityService } from '../../../services/security.service';
 import { PermissionsListPageComponent } from './permissions-list-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 describe('PermissionsListPageComponent', () => {
   let fixture: ComponentFixture<PermissionsListPageComponent>;
@@ -15,7 +16,7 @@ describe('PermissionsListPageComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PermissionsListPageComponent],
+      imports: [PermissionsListPageComponent, TranslateModule.forRoot()],
       providers: [
         { provide: SecurityService, useValue: securityServiceStub },
       ],
@@ -91,7 +92,7 @@ describe('PermissionsListPageComponent', () => {
       );
       fixture.detectChanges();
 
-      expect(component.error()).toBe('Failed to load permissions.');
+      expect(component.error()).toBe('SECURITY.PERMISSIONS_LIST.ERROR.LOAD');
       expect(component.loading()).toBe(false);
     });
   });

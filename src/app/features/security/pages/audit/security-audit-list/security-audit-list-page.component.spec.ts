@@ -4,6 +4,7 @@ import { By } from '@angular/platform-browser';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { SecurityAuditListPageComponent } from './security-audit-list-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { SecurityService } from '../../../services/security.service';
 
 const stubSecurityService = {
@@ -19,7 +20,7 @@ describe('SecurityAuditListPageComponent [CAP-141]', () => {
     stubSecurityService.searchAudit.mockReturnValue(of([{ id: 'audit-1' }]));
 
     await TestBed.configureTestingModule({
-      imports: [SecurityAuditListPageComponent],
+      imports: [SecurityAuditListPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: SecurityService, useValue: stubSecurityService },
@@ -81,7 +82,7 @@ describe('SecurityAuditListPageComponent [CAP-141]', () => {
     stubSecurityService.searchAudit.mockReturnValue(throwError(() => new Error('boom')));
 
     await TestBed.configureTestingModule({
-      imports: [SecurityAuditListPageComponent],
+      imports: [SecurityAuditListPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: SecurityService, useValue: stubSecurityService },

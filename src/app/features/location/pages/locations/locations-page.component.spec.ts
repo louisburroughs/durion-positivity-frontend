@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { LocationsPageComponent } from './locations-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { LocationService } from '../../services/location.service';
 
 const stubService = {
@@ -21,7 +22,7 @@ describe('LocationsPageComponent [CAP-136]', () => {
     stubService.createLocation.mockReturnValue(of({ locationId: 'loc-2' }));
 
     await TestBed.configureTestingModule({
-      imports: [LocationsPageComponent],
+      imports: [LocationsPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: stubService },

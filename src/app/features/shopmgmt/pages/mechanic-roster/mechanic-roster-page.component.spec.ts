@@ -4,6 +4,7 @@ import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { MechanicRosterPageComponent } from './mechanic-roster-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { PeopleService } from '../../../people/services/people.service';
 
 const stubPeopleService = {
@@ -21,7 +22,7 @@ describe('MechanicRosterPageComponent [CAP-138]', () => {
     stubPeopleService.createEmployee.mockReturnValue(of({ personId: 'p2' }));
 
     await TestBed.configureTestingModule({
-      imports: [MechanicRosterPageComponent],
+      imports: [MechanicRosterPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: PeopleService, useValue: stubPeopleService },

@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { SecurityService } from '../../../services/security.service';
 import { RoleDetailPageComponent } from './role-detail-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 describe('RoleDetailPageComponent', () => {
   let fixture: ComponentFixture<RoleDetailPageComponent>;
@@ -42,7 +43,7 @@ describe('RoleDetailPageComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RoleDetailPageComponent],
+      imports: [RoleDetailPageComponent, TranslateModule.forRoot()],
       providers: [
         { provide: SecurityService, useValue: securityServiceStub },
         { provide: ActivatedRoute, useValue: activatedRouteStub },

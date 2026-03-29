@@ -4,6 +4,7 @@ import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { MechanicAvailabilityPageComponent } from './mechanic-availability-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { PeopleService } from '../../../people/services/people.service';
 
 const stubPeopleService = {
@@ -20,7 +21,7 @@ describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
     stubPeopleService.getPeopleAvailability.mockReturnValue(of([{ mechanicName: 'Alex', available: true }]));
 
     await TestBed.configureTestingModule({
-      imports: [MechanicAvailabilityPageComponent],
+      imports: [MechanicAvailabilityPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: PeopleService, useValue: stubPeopleService },
@@ -63,7 +64,7 @@ describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
     stubPeopleService.getPeopleAvailability.mockReturnValue(throwError(() => new Error('boom')));
 
     await TestBed.configureTestingModule({
-      imports: [MechanicAvailabilityPageComponent],
+      imports: [MechanicAvailabilityPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: PeopleService, useValue: stubPeopleService },

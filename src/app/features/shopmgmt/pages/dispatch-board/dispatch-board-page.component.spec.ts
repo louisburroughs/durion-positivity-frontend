@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { DispatchBoardPageComponent } from './dispatch-board-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
 
 // ---------------------------------------------------------------------------
@@ -60,7 +61,7 @@ describe('DispatchBoardPageComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DispatchBoardPageComponent],
+      imports: [DispatchBoardPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: DispatchBoardService, useValue: dispatchBoardServiceStub },
@@ -82,7 +83,7 @@ describe('DispatchBoardPageComponent', () => {
     it('renders "Daily Dispatch Board" as the page title', () => {
       fixture.detectChanges();
       const heading: HTMLHeadingElement | null = fixture.nativeElement.querySelector('h1');
-      expect(heading?.textContent).toContain('Daily Dispatch Board');
+      expect(heading?.textContent).toContain('SHOPMGMT.DISPATCH_BOARD.TITLE');
     });
   });
 
@@ -232,7 +233,7 @@ describe('DispatchBoardPageComponent', () => {
 
       const el: HTMLElement | null = fixture.nativeElement.querySelector('.last-updated');
       expect(el).toBeTruthy();
-      expect(el?.textContent).toContain('Last updated');
+      expect(el?.textContent).toContain('SHOPMGMT.DISPATCH_BOARD.LAST_UPDATED');
     });
 
     it('does not show .last-updated before the first successful load completes', () => {

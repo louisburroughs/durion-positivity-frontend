@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { MobileUnitsPageComponent } from './mobile-units-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { LocationService } from '../../services/location.service';
 
 const stubService = {
@@ -23,7 +24,7 @@ describe('MobileUnitsPageComponent [CAP-136]', () => {
     stubService.replaceCoverageRules.mockReturnValue(of({ success: true }));
 
     await TestBed.configureTestingModule({
-      imports: [MobileUnitsPageComponent],
+      imports: [MobileUnitsPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: stubService },

@@ -77,7 +77,7 @@ describe('UserProvisionPageComponent', () => {
     const select = fixture.nativeElement.querySelector('[data-testid="role-select"]');
     expect(select).toBeTruthy();
     const optionTexts: string[] = Array.from(select.querySelectorAll('option')).map(
-      (o) => o.textContent!.trim(),
+      (o: unknown) => (o as HTMLOptionElement).textContent!.trim(),
     );
     expect(optionTexts).toContain('MANAGER');
     expect(optionTexts).toContain('CASHIER');

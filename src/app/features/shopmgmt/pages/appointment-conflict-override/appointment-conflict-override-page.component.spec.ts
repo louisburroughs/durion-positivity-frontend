@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentConflictOverridePageComponent } from './appointment-conflict-override-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AppointmentService } from '../../services/appointment.service';
 
 const stubService = {
@@ -28,7 +29,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     stubService.executeOverride.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
 
     await TestBed.configureTestingModule({
-      imports: [AppointmentConflictOverridePageComponent],
+      imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: stubService },
@@ -102,7 +103,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     stubService.executeOverride.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
 
     await TestBed.configureTestingModule({
-      imports: [AppointmentConflictOverridePageComponent],
+      imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: stubService },

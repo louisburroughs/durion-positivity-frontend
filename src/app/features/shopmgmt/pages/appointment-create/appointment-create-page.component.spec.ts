@@ -38,6 +38,7 @@ import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentCreatePageComponent } from './appointment-create-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AppointmentService } from '../../services/appointment.service';
 
 // ---------------------------------------------------------------------------
@@ -104,7 +105,7 @@ describe('AppointmentCreatePageComponent [CAP-249]', () => {
     appointmentServiceStub.createAppointment.mockReturnValue(of(STUB_CREATED_APPOINTMENT));
 
     await TestBed.configureTestingModule({
-      imports: [AppointmentCreatePageComponent],
+      imports: [AppointmentCreatePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([{ path: '**', redirectTo: '' }]),
         { provide: AppointmentService, useValue: appointmentServiceStub },

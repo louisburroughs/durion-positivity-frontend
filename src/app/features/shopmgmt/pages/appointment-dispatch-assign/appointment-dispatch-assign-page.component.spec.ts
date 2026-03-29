@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentDispatchAssignPageComponent } from './appointment-dispatch-assign-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AppointmentService } from '../../services/appointment.service';
 
 const stubService = {
@@ -34,7 +35,7 @@ describe('AppointmentDispatchAssignPageComponent [CAP-138]', () => {
     }));
 
     await TestBed.configureTestingModule({
-      imports: [AppointmentDispatchAssignPageComponent],
+      imports: [AppointmentDispatchAssignPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: stubService },
@@ -126,7 +127,7 @@ describe('AppointmentDispatchAssignPageComponent [CAP-138]', () => {
     );
 
     await TestBed.configureTestingModule({
-      imports: [AppointmentDispatchAssignPageComponent],
+      imports: [AppointmentDispatchAssignPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: stubService },

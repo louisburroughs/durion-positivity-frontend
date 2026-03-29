@@ -26,6 +26,7 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { ScheduleViewPageComponent } from './schedule-view-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AppointmentService } from '../../services/appointment.service';
 
 // ---------------------------------------------------------------------------
@@ -76,7 +77,7 @@ describe('ScheduleViewPageComponent [CAP-137]', () => {
     appointmentServiceStub.viewSchedule.mockReturnValue(of(STUB_SCHEDULE));
 
     await TestBed.configureTestingModule({
-      imports: [ScheduleViewPageComponent],
+      imports: [ScheduleViewPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: appointmentServiceStub },
@@ -201,7 +202,7 @@ describe('ScheduleViewPageComponent [CAP-137]', () => {
     appointmentServiceStub.viewSchedule.mockReturnValue(throwError(() => new Error('error')));
 
     await TestBed.configureTestingModule({
-      imports: [ScheduleViewPageComponent],
+      imports: [ScheduleViewPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: appointmentServiceStub },
@@ -224,7 +225,7 @@ describe('ScheduleViewPageComponent [CAP-137]', () => {
     appointmentServiceStub.viewSchedule.mockReturnValue(of([]));
 
     await TestBed.configureTestingModule({
-      imports: [ScheduleViewPageComponent],
+      imports: [ScheduleViewPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: appointmentServiceStub },

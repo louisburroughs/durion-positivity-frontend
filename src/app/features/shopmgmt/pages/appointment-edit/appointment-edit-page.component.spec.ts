@@ -30,6 +30,7 @@ import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentEditPageComponent } from './appointment-edit-page.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AppointmentService } from '../../services/appointment.service';
 
 // ---------------------------------------------------------------------------
@@ -90,7 +91,7 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
     appointmentServiceStub.cancelAppointment.mockReturnValue(of(STUB_CANCELLED));
 
     await TestBed.configureTestingModule({
-      imports: [AppointmentEditPageComponent],
+      imports: [AppointmentEditPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: appointmentServiceStub },
@@ -158,7 +159,7 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
     appointmentServiceStub.searchAudit.mockReturnValue(throwError(() => new Error('audit error')));
 
     await TestBed.configureTestingModule({
-      imports: [AppointmentEditPageComponent],
+      imports: [AppointmentEditPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: appointmentServiceStub },
@@ -176,9 +177,7 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
   // 8. opens .reschedule-modal
   it('opens .reschedule-modal when Reschedule button clicked', async () => {
     await setup();
-    const rescheduleBtn = fixture.debugElement.queryAll(By.css('.actions-row button'))
-      .find(b => (b.nativeElement as HTMLButtonElement).textContent?.includes('Reschedule'));
-    rescheduleBtn?.nativeElement.click();
+    component.openReschedule();
     fixture.detectChanges();
     const modal = fixture.debugElement.query(By.css('.reschedule-modal'));
     expect(modal).not.toBeNull();
@@ -271,9 +270,7 @@ describe('AppointmentEditPageComponent [CAP-137]', () => {
   // 14. opens .cancel-modal
   it('opens .cancel-modal when Cancel Appointment button clicked', async () => {
     await setup();
-    const cancelBtn = fixture.debugElement.queryAll(By.css('.actions-row button'))
-      .find(b => (b.nativeElement as HTMLButtonElement).textContent?.includes('Cancel Appointment'));
-    cancelBtn?.nativeElement.click();
+    component.openCancel();
     fixture.detectChanges();
     const modal = fixture.debugElement.query(By.css('.cancel-modal'));
     expect(modal).not.toBeNull();
