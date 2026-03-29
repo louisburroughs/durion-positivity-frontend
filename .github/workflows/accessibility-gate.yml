@@ -1,0 +1,53 @@
+name: Accessibility Gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  accessibility-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run accessibility smoke scan (blocking on critical)
+        id: a11y_scan
+        env:
+          A11Y_FAIL_ON_IMPACT: critical
+        run: npm run a11y:smoke
+
+      - name: Upload accessibility smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-smoke-report
+          path: artifacts/a11y/smoke-report.json
+          if-no-files-found: warn
+
+      - name: Gate summary
+        if: always()
+        run: |
+          if [ -f artifacts/a11y/smoke-report.json ]; then
+            node -e "const fs=require('fs');const r=JSON.parse(fs.readFileSync('artifacts/a11y/smoke-report.json','utf8'));const s=r.summary||{};console.log('A11y summary:', JSON.stringify({routesScanned:s.routesScanned, uniqueHtmlResponses:s.uniqueHtmlResponses, totalViolations:s.totalViolations, failingViolations:s.failingViolations, warnings:s.warnings||[]}, null, 2));"
+          else
+            echo "No accessibility smoke report found."
+          fi
+
+          if [ "${{ steps.a11y_scan.outcome }}" = "success" ]; then
+            echo "Accessibility gate passed at configured threshold."
+          else
+            echo "Accessibility gate failed. Critical accessibility findings block this workflow."
+          fi

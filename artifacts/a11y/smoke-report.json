@@ -1,4 +1,87 @@
 {
-  "generatedAt": "2026-03-29T12:37:37.204Z",
-  "error": "Timed out waiting for app server at http://127.0.0.1:4200 after 120000ms."
+  "summary": {
+    "generatedAt": "2026-03-29T12:50:06.596Z",
+    "baseUrl": "http://127.0.0.1:4200",
+    "routesScanned": 8,
+    "uniqueHtmlResponses": 7,
+    "failOnImpact": "critical",
+    "totalViolations": 0,
+    "failingViolations": 0,
+    "warnings": []
+  },
+  "routeReports": [
+    {
+      "url": "http://127.0.0.1:4200/app",
+      "htmlHash": "14eca3c40429e1996186ed4f0b6912eb537c511ab640d6a9c689c202579705fb",
+      "pageTitle": "Durion POS – Positivity Platform",
+      "violations": [],
+      "passes": 5,
+      "incomplete": 0,
+      "inapplicable": 57
+    },
+    {
+      "url": "http://127.0.0.1:4200/app/crm",
+      "htmlHash": "14eca3c40429e1996186ed4f0b6912eb537c511ab640d6a9c689c202579705fb",
+      "pageTitle": "Durion POS – Positivity Platform",
+      "violations": [],
+      "passes": 5,
+      "incomplete": 0,
+      "inapplicable": 57
+    },
+    {
+      "url": "http://127.0.0.1:4200/app/workexec/estimates/new",
+      "htmlHash": "ff0a95a809a8f3258dba08aff16a0c3abf0fb71a68074a66d273e7d0bc4bccaa",
+      "pageTitle": "Durion POS – Positivity Platform",
+      "violations": [],
+      "passes": 5,
+      "incomplete": 0,
+      "inapplicable": 57
+    },
+    {
+      "url": "http://127.0.0.1:4200/app/workexec/workorders/WO-123",
+      "htmlHash": "35f34320a1f1a8d3c38bea520afa6d98d265fe8800da055c754316d26408f573",
+      "pageTitle": "Durion POS – Positivity Platform",
+      "violations": [],
+      "passes": 5,
+      "incomplete": 0,
+      "inapplicable": 57
+    },
+    {
+      "url": "http://127.0.0.1:4200/app/accounting/events",
+      "htmlHash": "5c9146dec221a0ea9d82782be87d255d6b6b799e01f6863ce947132f3f01bf56",
+      "pageTitle": "Durion POS – Positivity Platform",
+      "violations": [],
+      "passes": 5,
+      "incomplete": 0,
+      "inapplicable": 57
+    },
+    {
+      "url": "http://127.0.0.1:4200/app/accounting/vendor-payments",
+      "htmlHash": "82eb1daccd7f8d006a9893063930317cbde7e6572388440fdf9266ca04bab20f",
+      "pageTitle": "Durion POS – Positivity Platform",
+      "violations": [],
+      "passes": 5,
+      "incomplete": 0,
+      "inapplicable": 57
+    },
+    {
+      "url": "http://127.0.0.1:4200/app/people/employees/EMP-123",
+      "htmlHash": "3d7fbbe4a635eeabecc92d35915e3bbc94587cab61f8c526dadf275727498667",
+      "pageTitle": "Durion POS – Positivity Platform",
+      "violations": [],
+      "passes": 5,
+      "incomplete": 0,
+      "inapplicable": 57
+    },
+    {
+      "url": "http://127.0.0.1:4200/app/location/locations",
+      "htmlHash": "8a91a2bd5ac5f6ebb7c6e54abc4703c42c4e838a28a110dd8fd81ae26037b9bb",
+      "pageTitle": "Durion POS – Positivity Platform",
+      "violations": [],
+      "passes": 5,
+      "incomplete": 0,
+      "inapplicable": 57
+    }
+  ],
+  "failingViolations": []
 }

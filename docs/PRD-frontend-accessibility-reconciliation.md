@@ -155,6 +155,7 @@ Automated gate (planned):
 
 - Add a lightweight route smoke script that runs axe scans against critical routes.
 - Fail on critical violations and publish artifact output for triage.
+- TODO: replace static HTML/jsdom scan with browser-rendered route scan (Playwright + axe) so client-side routing and hydrated UI states are validated per route.
 
 Manual gate (required per changed feature page):
 
@@ -210,8 +211,8 @@ Severity model:
 1. Create accessibility reconciliation tracker with one issue per critical route.
 2. Implement shell-level skip-to-content behavior and focus target standardization.
 3. Define initial automated gate command and wire it into CI as non-blocking dry-run.
-4. Add PR template checklist items for keyboard and screen-reader smoke verification.
-5. Convert CI gate to blocking for critical findings after first stabilization pass.
+4. Add PR template checklist items for keyboard and screen-reader smoke verification. (Completed: `.github/pull_request_template.md`)
+5. Convert CI gate to blocking for critical findings after first stabilization pass. (Completed: `.github/workflows/accessibility-gate.yml`)
 
 ## 16. References
 

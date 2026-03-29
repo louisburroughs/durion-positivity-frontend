@@ -2,6 +2,7 @@
 
 import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import process from 'node:process';
 import { JSDOM } from 'jsdom';
@@ -70,6 +71,7 @@ async function scanRoute(url) {
   }
 
   const html = await response.text();
+  const htmlHash = createHash('sha256').update(html).digest('hex');
   const dom = new JSDOM(html, {
     url,
     runScripts: 'outside-only',
@@ -86,6 +88,8 @@ async function scanRoute(url) {
 
   return {
     url,
+    htmlHash,
+    pageTitle: dom.window.document.title,
     violations: results.violations.map(v => ({
       id: v.id,
       impact: v.impact,
@@ -155,13 +159,24 @@ async function main() {
     );
 
     const failingViolations = allViolations.filter(v => shouldFail(v.impact));
+    const uniqueHtmlHashes = new Set(routeReports.map(report => report.htmlHash));
+    const warnings = [];
+
+    if (uniqueHtmlHashes.size <= 1 && ROUTES.length > 1) {
+      warnings.push(
+        'All scanned routes returned identical HTML content. This usually means route-level UI was not fully rendered during scan.',
+      );
+    }
+
     const summary = {
       generatedAt: new Date().toISOString(),
       baseUrl: BASE_URL,
       routesScanned: ROUTES.length,
+      uniqueHtmlResponses: uniqueHtmlHashes.size,
       failOnImpact: FAIL_ON_IMPACT,
       totalViolations: allViolations.length,
       failingViolations: failingViolations.length,
+      warnings,
     };
 
     await mkdir(reportDir, { recursive: true });
@@ -180,6 +195,9 @@ async function main() {
     );
 
     process.stdout.write(`Accessibility smoke report written to ${reportPath}\n`);
+    for (const warning of warnings) {
+      process.stderr.write(`a11y smoke warning: ${warning}\n`);
+    }
 
     if (failingViolations.length > 0) {
       process.stderr.write(
