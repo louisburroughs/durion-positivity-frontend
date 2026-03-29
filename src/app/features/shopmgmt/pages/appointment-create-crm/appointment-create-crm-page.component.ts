@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AppointmentService } from '../../services/appointment.service';
 import type { CreateAppointmentPayload } from '../../models/appointment.models';
 
 @Component({
   selector: 'app-appointment-create-crm-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './appointment-create-crm-page.component.html',
   styleUrl: './appointment-create-crm-page.component.css',
 })
@@ -82,7 +83,7 @@ export class AppointmentCreateCrmPageComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
         const errBody = err.error as { message?: string };
-        this.error.set(errBody?.message ?? 'Failed to create appointment.');
+        this.error.set(errBody?.message ?? 'SHOPMGMT.APPOINTMENT_CREATE_CRM.ERROR.CREATE');
       },
     });
   }

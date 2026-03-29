@@ -3,6 +3,7 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, interval, switchMap, catchError } from 'rxjs';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
 import {
   DashboardResponse,
@@ -12,7 +13,7 @@ import {
 @Component({
   selector: 'app-dispatch-board-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './dispatch-board-page.component.html',
   styleUrl: './dispatch-board-page.component.css',
 })
@@ -121,6 +122,6 @@ export class DispatchBoardPageComponent implements OnInit {
       }
     }
 
-    return 'Failed to load dispatch board.';
+    return 'SHOPMGMT.DISPATCH_BOARD.ERROR_LOAD';
   }
 }

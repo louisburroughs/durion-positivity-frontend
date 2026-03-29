@@ -1,70 +1,75 @@
 <section class="dispatch-board-page" aria-labelledby="dispatch-board-title">
   <header class="page-header">
     <div class="heading-group">
-      <p class="section-label">Dispatch</p>
-      <h1 id="dispatch-board-title">Daily Dispatch Board</h1>
+      <p class="section-label">{{ 'SHOPMGMT.DISPATCH_BOARD.SECTION_LABEL' | translate }}</p>
+      <h1 id="dispatch-board-title">{{ 'SHOPMGMT.DISPATCH_BOARD.TITLE' | translate }}</h1>
     </div>
   </header>
 
-  <section class="board-panel mic-elevation-2" aria-label="Dispatch board controls and workorders">
+  <section class="board-panel mic-elevation-2" [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.PANEL_ARIA' | translate">
     <div class="panel-accent" aria-hidden="true"></div>
 
     <div class="filter-bar">
       <div class="field-group">
-        <label class="field-label" for="dispatch-location">Location</label>
+        <label class="field-label" for="dispatch-location">{{ 'SHOPMGMT.DISPATCH_BOARD.LOCATION' | translate }}</label>
         <input id="dispatch-location" name="locationId" type="text" [ngModel]="selectedLocationId()"
-          (ngModelChange)="selectedLocationId.set($event ?? '')" aria-label="Location" />
+          (ngModelChange)="selectedLocationId.set($event ?? '')"
+          [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.LOCATION_ARIA' | translate" />
       </div>
 
       <div class="field-group">
-        <label class="field-label" for="dispatch-date">Date</label>
+        <label class="field-label" for="dispatch-date">{{ 'SHOPMGMT.DISPATCH_BOARD.DATE' | translate }}</label>
         <input id="dispatch-date" type="date" [ngModel]="selectedDate()"
-          (ngModelChange)="selectedDate.set($event ?? todayIso())" aria-label="Date" />
+          (ngModelChange)="selectedDate.set($event ?? todayIso())"
+          [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.DATE_ARIA' | translate" />
       </div>
 
-      <button type="button" class="btn-primary" (click)="refresh()" aria-label="Refresh dispatch board">
-        Refresh
+      <button type="button" class="btn-primary" (click)="refresh()"
+        [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.REFRESH_ARIA' | translate">
+        {{ 'SHOPMGMT.DISPATCH_BOARD.REFRESH' | translate }}
       </button>
     </div>
 
     <div class="last-updated" *ngIf="lastRefreshed()" aria-live="polite">
-      Last updated: {{ lastRefreshed() | date: 'short' }}
+      {{ 'SHOPMGMT.DISPATCH_BOARD.LAST_UPDATED' | translate }}: {{ lastRefreshed() | date: 'short' }}
     </div>
 
     <div class="banners-row" *ngIf="dataQualityWarning() || isStale()">
       <output class="data-quality-warning alert alert-warning" *ngIf="dataQualityWarning()" aria-live="polite">
-        Data quality warning.
+        {{ 'SHOPMGMT.DISPATCH_BOARD.DATA_QUALITY_WARNING' | translate }}
       </output>
 
       <output class="stale-data-banner alert alert-warning" *ngIf="isStale()" aria-live="polite">
-        Showing stale cached data.
+        {{ 'SHOPMGMT.DISPATCH_BOARD.STALE_DATA' | translate }}
       </output>
     </div>
 
     <div class="loading-state" *ngIf="loading()" aria-live="polite">
-      Loading dispatch board...
+      {{ 'SHOPMGMT.DISPATCH_BOARD.LOADING' | translate }}
     </div>
 
     <div class="state-panel" *ngIf="error() as errorMessage" role="alert" aria-live="polite">
-      <p>{{ errorMessage }}</p>
-      <button type="button" class="btn-text" (click)="refresh()" aria-label="Retry dispatch board load">
-        Retry
+      <p>{{ errorMessage | translate }}</p>
+      <button type="button" class="btn-text" (click)="refresh()"
+        [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.RETRY_ARIA' | translate">
+        {{ 'SHOPMGMT.DISPATCH_BOARD.RETRY' | translate }}
       </button>
     </div>
 
     <div class="empty-state" *ngIf="!loading() && !error() && workorders().length === 0" aria-live="polite">
-      <h2>No workorders found</h2>
-      <p>There are no workorders for this location and date.</p>
+      <h2>{{ 'SHOPMGMT.DISPATCH_BOARD.EMPTY_TITLE' | translate }}</h2>
+      <p>{{ 'SHOPMGMT.DISPATCH_BOARD.EMPTY_DESC' | translate }}</p>
     </div>
 
     <div class="workorders" *ngIf="!loading() && workorders().length > 0" aria-live="polite">
-      <article class="workorder-row" *ngFor="let workorder of workorders()" aria-label="Workorder summary">
+      <article class="workorder-row" *ngFor="let workorder of workorders()"
+        [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.WORKORDER_ARIA' | translate">
         <div class="workorder-id">
-          <span class="row-label">Workorder</span>
+          <span class="row-label">{{ 'SHOPMGMT.DISPATCH_BOARD.WORKORDER' | translate }}</span>
           <span>{{ workorder.workorderId }}</span>
         </div>
         <div class="workorder-status">
-          <span class="row-label">Status</span>
+          <span class="row-label">{{ 'SHOPMGMT.DISPATCH_BOARD.STATUS' | translate }}</span>
           <span class="status-chip" [class.exception-badge]="workorder.status.toLowerCase().includes('exception')">
             {{ workorder.status }}
           </span>

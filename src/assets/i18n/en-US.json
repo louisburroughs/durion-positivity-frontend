@@ -358,6 +358,116 @@
         "LOAD_PEOPLE": "Failed to load people.",
         "CREATE_EMPLOYEE": "Failed to create employee."
       }
+    },
+    "DISPATCH_BOARD": {
+      "SECTION_LABEL": "Dispatch",
+      "TITLE": "Daily Dispatch Board",
+      "PANEL_ARIA": "Dispatch board controls and workorders",
+      "LOCATION": "Location",
+      "LOCATION_ARIA": "Location",
+      "DATE": "Date",
+      "DATE_ARIA": "Date",
+      "REFRESH": "Refresh",
+      "REFRESH_ARIA": "Refresh dispatch board",
+      "LAST_UPDATED": "Last updated",
+      "DATA_QUALITY_WARNING": "Data quality warning.",
+      "STALE_DATA": "Showing stale cached data.",
+      "LOADING": "Loading dispatch board...",
+      "RETRY": "Retry",
+      "RETRY_ARIA": "Retry dispatch board load",
+      "EMPTY_TITLE": "No workorders found",
+      "EMPTY_DESC": "There are no workorders for this location and date.",
+      "WORKORDER_ARIA": "Workorder summary",
+      "WORKORDER": "Workorder",
+      "STATUS": "Status",
+      "ERROR_LOAD": "Failed to load dispatch board."
+    },
+    "APPOINTMENT_CREATE": {
+      "TITLE": "Create Appointment",
+      "BACK_TO_SOURCE": "Back to Source",
+      "ELIGIBILITY_ERROR": "This source is not eligible for a new appointment.",
+      "SCHEDULED_START": "Scheduled Start",
+      "SCHEDULED_END": "Scheduled End",
+      "HARD": "HARD",
+      "SOFT": "SOFT",
+      "OVERRIDE_SOFT": "Override soft conflicts",
+      "OVERRIDE_REASON": "Override Reason",
+      "CREATE": "Create Appointment",
+      "ERROR": {
+        "GENERIC": "An error occurred. Please try again.",
+        "PERMISSION": "You do not have permission to perform this action.",
+        "UNABLE": "Unable to create appointment."
+      }
+    },
+    "APPOINTMENT_CREATE_CRM": {
+      "TITLE": "Book Appointment from CRM",
+      "SECTION_CUSTOMER_VEHICLE": "Customer & Vehicle",
+      "CRM_CUSTOMER_ID": "CRM Customer ID",
+      "CRM_CUSTOMER_PLACEHOLDER": "Enter CRM customer ID",
+      "CRM_VEHICLE_ID": "CRM Vehicle ID",
+      "CRM_VEHICLE_PLACEHOLDER": "Enter CRM vehicle ID",
+      "SECTION_SCHEDULING": "Scheduling",
+      "LOCATION": "Location",
+      "LOCATION_PLACEHOLDER": "Location ID",
+      "RESOURCE_OPTIONAL": "Resource (optional)",
+      "RESOURCE_PLACEHOLDER": "Bay or mobile unit ID",
+      "START": "Start Date & Time",
+      "END": "End Date & Time",
+      "SECTION_SERVICE_REQUESTS": "Service Requests",
+      "SERVICE_REQUEST_PLACEHOLDER": "Service code or description",
+      "REMOVE_SERVICE_ARIA": "Remove",
+      "ADD_SERVICE": "+ Add Service",
+      "BOOK": "Book Appointment",
+      "ERROR": {
+        "CREATE": "Failed to create appointment."
+      }
+    },
+    "APPOINTMENT_DISPATCH_ASSIGN": {
+      "TITLE": "Appointment Dispatch Assignment",
+      "SUCCESS": "Assignment created successfully.",
+      "APPOINTMENT": "Appointment {{id}}",
+      "STATUS": "Status",
+      "FACILITY": "Facility",
+      "ASSIGNMENT_HISTORY": "Assignment History",
+      "ROLE": "Role",
+      "MECHANIC": "Mechanic",
+      "RESOURCE_ID": "Resource Id",
+      "MECHANIC_ID": "Mechanic Id",
+      "CREATE": "Create Assignment",
+      "CONFLICTS": "Conflicts",
+      "ROLES": {
+        "LEAD": "LEAD",
+        "ASSIST": "ASSIST"
+      },
+      "ERROR": {
+        "LOAD": "Failed to load dispatch assignment data.",
+        "CONFLICTS": "Assignment conflicts were detected.",
+        "CREATE": "Failed to create assignment."
+      }
+    },
+    "APPOINTMENT_CONFLICT_OVERRIDE": {
+      "TITLE": "Appointment Conflict Override",
+      "APPOINTMENT": "Appointment {{id}}",
+      "STATUS": "Status",
+      "FACILITY": "Facility",
+      "START": "Start Date Time",
+      "END": "End Date Time",
+      "REASON": "Reason",
+      "RESCHEDULE": "Reschedule",
+      "CONFLICTS": "Conflicts",
+      "ENABLE_OVERRIDE": "Enable Override",
+      "OVERRIDE_REASON": "Override Reason",
+      "SUBMIT_OVERRIDE": "Submit Override",
+      "SUCCESS": {
+        "RESCHEDULE": "Appointment re-scheduled successfully.",
+        "OVERRIDE": "Override completed successfully."
+      },
+      "ERROR": {
+        "LOAD": "Failed to load appointment.",
+        "CONFLICTS": "Conflicts were found for the selected slot.",
+        "RESCHEDULE": "Failed to reschedule appointment.",
+        "OVERRIDE": "Failed to execute override."
+      }
     }
   },
   "ACCOUNTING": {

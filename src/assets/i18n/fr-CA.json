@@ -358,6 +358,116 @@
         "LOAD_PEOPLE": "Impossible de charger les personnes.",
         "CREATE_EMPLOYEE": "Impossible de créer l'employé."
       }
+    },
+    "DISPATCH_BOARD": {
+      "SECTION_LABEL": "Répartition",
+      "TITLE": "Tableau de répartition quotidien",
+      "PANEL_ARIA": "Contrôles du tableau de répartition et ordres de travail",
+      "LOCATION": "Emplacement",
+      "LOCATION_ARIA": "Emplacement",
+      "DATE": "Date",
+      "DATE_ARIA": "Date",
+      "REFRESH": "Actualiser",
+      "REFRESH_ARIA": "Actualiser le tableau de répartition",
+      "LAST_UPDATED": "Dernière mise à jour",
+      "DATA_QUALITY_WARNING": "Avertissement de qualité des données.",
+      "STALE_DATA": "Affichage de données en cache périmées.",
+      "LOADING": "Chargement du tableau de répartition...",
+      "RETRY": "Réessayer",
+      "RETRY_ARIA": "Réessayer le chargement du tableau de répartition",
+      "EMPTY_TITLE": "Aucun ordre de travail trouvé",
+      "EMPTY_DESC": "Il n'y a aucun ordre de travail pour cet emplacement et cette date.",
+      "WORKORDER_ARIA": "Résumé d'ordre de travail",
+      "WORKORDER": "Ordre de travail",
+      "STATUS": "Statut",
+      "ERROR_LOAD": "Impossible de charger le tableau de répartition."
+    },
+    "APPOINTMENT_CREATE": {
+      "TITLE": "Créer un rendez-vous",
+      "BACK_TO_SOURCE": "Retour à la source",
+      "ELIGIBILITY_ERROR": "Cette source n'est pas admissible pour un nouveau rendez-vous.",
+      "SCHEDULED_START": "Début planifié",
+      "SCHEDULED_END": "Fin planifiée",
+      "HARD": "DUR",
+      "SOFT": "SOUPLE",
+      "OVERRIDE_SOFT": "Outrepasser les conflits souples",
+      "OVERRIDE_REASON": "Raison de l'outrepassement",
+      "CREATE": "Créer un rendez-vous",
+      "ERROR": {
+        "GENERIC": "Une erreur s'est produite. Veuillez réessayer.",
+        "PERMISSION": "Vous n'avez pas la permission d'effectuer cette action.",
+        "UNABLE": "Impossible de créer le rendez-vous."
+      }
+    },
+    "APPOINTMENT_CREATE_CRM": {
+      "TITLE": "Réserver un rendez-vous depuis le CRM",
+      "SECTION_CUSTOMER_VEHICLE": "Client et véhicule",
+      "CRM_CUSTOMER_ID": "ID client CRM",
+      "CRM_CUSTOMER_PLACEHOLDER": "Entrez l'ID client CRM",
+      "CRM_VEHICLE_ID": "ID véhicule CRM",
+      "CRM_VEHICLE_PLACEHOLDER": "Entrez l'ID véhicule CRM",
+      "SECTION_SCHEDULING": "Planification",
+      "LOCATION": "Emplacement",
+      "LOCATION_PLACEHOLDER": "ID d'emplacement",
+      "RESOURCE_OPTIONAL": "Ressource (optionnelle)",
+      "RESOURCE_PLACEHOLDER": "ID de baie ou d'unité mobile",
+      "START": "Date et heure de début",
+      "END": "Date et heure de fin",
+      "SECTION_SERVICE_REQUESTS": "Demandes de service",
+      "SERVICE_REQUEST_PLACEHOLDER": "Code de service ou description",
+      "REMOVE_SERVICE_ARIA": "Supprimer",
+      "ADD_SERVICE": "+ Ajouter un service",
+      "BOOK": "Réserver le rendez-vous",
+      "ERROR": {
+        "CREATE": "Impossible de créer le rendez-vous."
+      }
+    },
+    "APPOINTMENT_DISPATCH_ASSIGN": {
+      "TITLE": "Affectation de répartition du rendez-vous",
+      "SUCCESS": "Affectation créée avec succès.",
+      "APPOINTMENT": "Rendez-vous {{id}}",
+      "STATUS": "Statut",
+      "FACILITY": "Installation",
+      "ASSIGNMENT_HISTORY": "Historique des affectations",
+      "ROLE": "Rôle",
+      "MECHANIC": "Mécanicien",
+      "RESOURCE_ID": "ID de ressource",
+      "MECHANIC_ID": "ID de mécanicien",
+      "CREATE": "Créer l'affectation",
+      "CONFLICTS": "Conflits",
+      "ROLES": {
+        "LEAD": "CHEF",
+        "ASSIST": "ASSISTANT"
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger les données d'affectation de répartition.",
+        "CONFLICTS": "Des conflits d'affectation ont été détectés.",
+        "CREATE": "Impossible de créer l'affectation."
+      }
+    },
+    "APPOINTMENT_CONFLICT_OVERRIDE": {
+      "TITLE": "Outrepassement des conflits de rendez-vous",
+      "APPOINTMENT": "Rendez-vous {{id}}",
+      "STATUS": "Statut",
+      "FACILITY": "Installation",
+      "START": "Date et heure de début",
+      "END": "Date et heure de fin",
+      "REASON": "Raison",
+      "RESCHEDULE": "Replanifier",
+      "CONFLICTS": "Conflits",
+      "ENABLE_OVERRIDE": "Activer l'outrepassement",
+      "OVERRIDE_REASON": "Raison de l'outrepassement",
+      "SUBMIT_OVERRIDE": "Soumettre l'outrepassement",
+      "SUCCESS": {
+        "RESCHEDULE": "Rendez-vous replanifié avec succès.",
+        "OVERRIDE": "Outrepassement terminé avec succès."
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger le rendez-vous.",
+        "CONFLICTS": "Des conflits ont été trouvés pour le créneau sélectionné.",
+        "RESCHEDULE": "Impossible de replanifier le rendez-vous.",
+        "OVERRIDE": "Impossible d'exécuter l'outrepassement."
+      }
     }
   },
   "ACCOUNTING": {

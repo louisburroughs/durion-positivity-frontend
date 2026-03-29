@@ -358,6 +358,116 @@
         "LOAD_PEOPLE": "No se pudieron cargar las personas.",
         "CREATE_EMPLOYEE": "No se pudo crear el empleado."
       }
+    },
+    "DISPATCH_BOARD": {
+      "SECTION_LABEL": "Despacho",
+      "TITLE": "Tablero diario de despacho",
+      "PANEL_ARIA": "Controles del tablero de despacho y órdenes de trabajo",
+      "LOCATION": "Ubicación",
+      "LOCATION_ARIA": "Ubicación",
+      "DATE": "Fecha",
+      "DATE_ARIA": "Fecha",
+      "REFRESH": "Actualizar",
+      "REFRESH_ARIA": "Actualizar tablero de despacho",
+      "LAST_UPDATED": "Última actualización",
+      "DATA_QUALITY_WARNING": "Advertencia de calidad de datos.",
+      "STALE_DATA": "Mostrando datos en caché desactualizados.",
+      "LOADING": "Cargando tablero de despacho...",
+      "RETRY": "Reintentar",
+      "RETRY_ARIA": "Reintentar carga del tablero de despacho",
+      "EMPTY_TITLE": "No se encontraron órdenes de trabajo",
+      "EMPTY_DESC": "No hay órdenes de trabajo para esta ubicación y fecha.",
+      "WORKORDER_ARIA": "Resumen de orden de trabajo",
+      "WORKORDER": "Orden de trabajo",
+      "STATUS": "Estado",
+      "ERROR_LOAD": "No se pudo cargar el tablero de despacho."
+    },
+    "APPOINTMENT_CREATE": {
+      "TITLE": "Crear cita",
+      "BACK_TO_SOURCE": "Volver al origen",
+      "ELIGIBILITY_ERROR": "Esta fuente no es elegible para una nueva cita.",
+      "SCHEDULED_START": "Inicio programado",
+      "SCHEDULED_END": "Fin programado",
+      "HARD": "DURO",
+      "SOFT": "SUAVE",
+      "OVERRIDE_SOFT": "Sobrescribir conflictos suaves",
+      "OVERRIDE_REASON": "Motivo de sobrescritura",
+      "CREATE": "Crear cita",
+      "ERROR": {
+        "GENERIC": "Ocurrió un error. Inténtalo de nuevo.",
+        "PERMISSION": "No tienes permiso para realizar esta acción.",
+        "UNABLE": "No se pudo crear la cita."
+      }
+    },
+    "APPOINTMENT_CREATE_CRM": {
+      "TITLE": "Reservar cita desde CRM",
+      "SECTION_CUSTOMER_VEHICLE": "Cliente y vehículo",
+      "CRM_CUSTOMER_ID": "ID de cliente CRM",
+      "CRM_CUSTOMER_PLACEHOLDER": "Ingresa el ID de cliente CRM",
+      "CRM_VEHICLE_ID": "ID de vehículo CRM",
+      "CRM_VEHICLE_PLACEHOLDER": "Ingresa el ID de vehículo CRM",
+      "SECTION_SCHEDULING": "Programación",
+      "LOCATION": "Ubicación",
+      "LOCATION_PLACEHOLDER": "ID de ubicación",
+      "RESOURCE_OPTIONAL": "Recurso (opcional)",
+      "RESOURCE_PLACEHOLDER": "ID de bahía o unidad móvil",
+      "START": "Fecha y hora de inicio",
+      "END": "Fecha y hora de fin",
+      "SECTION_SERVICE_REQUESTS": "Solicitudes de servicio",
+      "SERVICE_REQUEST_PLACEHOLDER": "Código o descripción del servicio",
+      "REMOVE_SERVICE_ARIA": "Eliminar",
+      "ADD_SERVICE": "+ Agregar servicio",
+      "BOOK": "Reservar cita",
+      "ERROR": {
+        "CREATE": "No se pudo crear la cita."
+      }
+    },
+    "APPOINTMENT_DISPATCH_ASSIGN": {
+      "TITLE": "Asignación de despacho de cita",
+      "SUCCESS": "Asignación creada correctamente.",
+      "APPOINTMENT": "Cita {{id}}",
+      "STATUS": "Estado",
+      "FACILITY": "Instalación",
+      "ASSIGNMENT_HISTORY": "Historial de asignaciones",
+      "ROLE": "Rol",
+      "MECHANIC": "Mecánico",
+      "RESOURCE_ID": "ID de recurso",
+      "MECHANIC_ID": "ID de mecánico",
+      "CREATE": "Crear asignación",
+      "CONFLICTS": "Conflictos",
+      "ROLES": {
+        "LEAD": "LÍDER",
+        "ASSIST": "ASISTENTE"
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los datos de asignación de despacho.",
+        "CONFLICTS": "Se detectaron conflictos de asignación.",
+        "CREATE": "No se pudo crear la asignación."
+      }
+    },
+    "APPOINTMENT_CONFLICT_OVERRIDE": {
+      "TITLE": "Sobrescritura de conflictos de cita",
+      "APPOINTMENT": "Cita {{id}}",
+      "STATUS": "Estado",
+      "FACILITY": "Instalación",
+      "START": "Fecha y hora de inicio",
+      "END": "Fecha y hora de fin",
+      "REASON": "Motivo",
+      "RESCHEDULE": "Reprogramar",
+      "CONFLICTS": "Conflictos",
+      "ENABLE_OVERRIDE": "Habilitar sobrescritura",
+      "OVERRIDE_REASON": "Motivo de sobrescritura",
+      "SUBMIT_OVERRIDE": "Enviar sobrescritura",
+      "SUCCESS": {
+        "RESCHEDULE": "Cita reprogramada correctamente.",
+        "OVERRIDE": "Sobrescritura completada correctamente."
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la cita.",
+        "CONFLICTS": "Se encontraron conflictos para la franja seleccionada.",
+        "RESCHEDULE": "No se pudo reprogramar la cita.",
+        "OVERRIDE": "No se pudo ejecutar la sobrescritura."
+      }
     }
   },
   "ACCOUNTING": {

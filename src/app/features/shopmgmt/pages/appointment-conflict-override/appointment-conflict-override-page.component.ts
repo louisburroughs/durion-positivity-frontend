@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { AppointmentService } from '../../services/appointment.service';
 import type { AppointmentDetail, Conflict, RescheduleRequest } from '../../models/appointment.models';
@@ -9,7 +10,7 @@ import type { AppointmentDetail, Conflict, RescheduleRequest } from '../../model
 @Component({
   selector: 'app-appointment-conflict-override-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './appointment-conflict-override-page.component.html',
   styleUrl: './appointment-conflict-override-page.component.css',
 })
@@ -58,7 +59,7 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
           this.loading.set(false);
         },
         error: () => {
-          this.rescheduleError.set('Failed to load appointment.');
+          this.rescheduleError.set('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.LOAD');
           this.loading.set(false);
         },
       });
@@ -94,9 +95,9 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
           const conflictList = (error.error as { conflicts?: Conflict[] } | null)?.conflicts ?? [];
           this.conflicts.set(conflictList);
           this.showConflictPanel.set(conflictList.length > 0);
-          this.rescheduleError.set('Conflicts were found for the selected slot.');
+          this.rescheduleError.set('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.CONFLICTS');
         } else {
-          this.rescheduleError.set('Failed to reschedule appointment.');
+          this.rescheduleError.set('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.RESCHEDULE');
         }
         this.rescheduleLoading.set(false);
       },
@@ -131,7 +132,7 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
         },
         error: () => {
           this.overrideLoading.set(false);
-          this.overrideError.set('Failed to execute override.');
+          this.overrideError.set('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.OVERRIDE');
         },
       });
   }

@@ -1,69 +1,73 @@
 <div class="page-header">
-  <h2>Book Appointment from CRM</h2>
+  <h2>{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.TITLE' | translate }}</h2>
 </div>
 
 <form class="create-form" [formGroup]="createForm" (ngSubmit)="submit()" novalidate>
 
   <fieldset class="form-section">
-    <legend class="section-legend">Customer &amp; Vehicle</legend>
+    <legend class="section-legend">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.SECTION_CUSTOMER_VEHICLE' | translate }}</legend>
 
     <div class="form-group">
-      <label for="crmCustomerId">CRM Customer ID</label>
+      <label for="crmCustomerId">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.CRM_CUSTOMER_ID' | translate }}</label>
       <input id="crmCustomerId" name="crmCustomerId" type="text" formControlName="crmCustomerId"
-        placeholder="Enter CRM customer ID" />
+        [attr.placeholder]="'SHOPMGMT.APPOINTMENT_CREATE_CRM.CRM_CUSTOMER_PLACEHOLDER' | translate" />
     </div>
 
     <div class="form-group">
-      <label for="crmVehicleId">CRM Vehicle ID</label>
+      <label for="crmVehicleId">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.CRM_VEHICLE_ID' | translate }}</label>
       <input id="crmVehicleId" name="crmVehicleId" type="text" formControlName="crmVehicleId"
-        placeholder="Enter CRM vehicle ID" />
+        [attr.placeholder]="'SHOPMGMT.APPOINTMENT_CREATE_CRM.CRM_VEHICLE_PLACEHOLDER' | translate" />
     </div>
   </fieldset>
 
   <fieldset class="form-section">
-    <legend class="section-legend">Scheduling</legend>
+    <legend class="section-legend">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.SECTION_SCHEDULING' | translate }}</legend>
 
     <div class="form-group">
-      <label for="locationId">Location</label>
-      <input id="locationId" name="locationId" type="text" formControlName="locationId" placeholder="Location ID" />
+      <label for="locationId">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.LOCATION' | translate }}</label>
+      <input id="locationId" name="locationId" type="text" formControlName="locationId"
+        [attr.placeholder]="'SHOPMGMT.APPOINTMENT_CREATE_CRM.LOCATION_PLACEHOLDER' | translate" />
     </div>
 
     <div class="form-group">
-      <label for="resourceId">Resource (optional)</label>
+      <label for="resourceId">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.RESOURCE_OPTIONAL' | translate }}</label>
       <input id="resourceId" name="resourceId" type="text" formControlName="resourceId"
-        placeholder="Bay or mobile unit ID" />
+        [attr.placeholder]="'SHOPMGMT.APPOINTMENT_CREATE_CRM.RESOURCE_PLACEHOLDER' | translate" />
     </div>
 
     <div class="form-group">
-      <label for="startAt">Start Date &amp; Time</label>
+      <label for="startAt">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.START' | translate }}</label>
       <input id="startAt" name="startAt" type="datetime-local" formControlName="startAt" />
     </div>
 
     <div class="form-group">
-      <label for="endAt">End Date &amp; Time</label>
+      <label for="endAt">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.END' | translate }}</label>
       <input id="endAt" name="endAt" type="datetime-local" formControlName="endAt" />
     </div>
   </fieldset>
 
   <fieldset class="form-section">
-    <legend class="section-legend">Service Requests</legend>
+    <legend class="section-legend">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.SECTION_SERVICE_REQUESTS' | translate }}</legend>
 
     <div formArrayName="serviceRequests">
       <div *ngFor="let ctrl of serviceRequestsArray.controls; let i = index" class="service-request-row">
-        <input [formControlName]="i" type="text" class="service-request-input" placeholder="Service code or description"
+        <input [formControlName]="i" type="text" class="service-request-input"
+          [attr.placeholder]="'SHOPMGMT.APPOINTMENT_CREATE_CRM.SERVICE_REQUEST_PLACEHOLDER' | translate"
           [name]="'serviceRequest-' + i" />
-        <button type="button" class="btn-remove" (click)="removeServiceRequest(i)" aria-label="Remove">&#x2715;</button>
+        <button type="button" class="btn-remove" (click)="removeServiceRequest(i)"
+          [attr.aria-label]="'SHOPMGMT.APPOINTMENT_CREATE_CRM.REMOVE_SERVICE_ARIA' | translate">&#x2715;</button>
       </div>
     </div>
 
-    <button type="button" class="btn-add-service" (click)="addServiceRequest()">+ Add Service</button>
+    <button type="button" class="btn-add-service"
+      (click)="addServiceRequest()">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.ADD_SERVICE' | translate }}</button>
   </fieldset>
 
-  <div *ngIf="error()" class="error-banner">{{ error() }}</div>
+  <div *ngIf="error()" class="error-banner">{{ error()! | translate }}</div>
 
   <div class="form-actions">
     <button type="submit" class="btn-primary" [disabled]="createForm.invalid || loading()">
-      Book Appointment
+      {{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.BOOK' | translate }}
     </button>
   </div>
 
