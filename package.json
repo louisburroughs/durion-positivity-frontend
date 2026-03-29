@@ -7,6 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "a11y:smoke": "node scripts/a11y/smoke-routes.mjs",
+    "a11y:smoke:strict": "A11Y_FAIL_ON_IMPACT=serious node scripts/a11y/smoke-routes.mjs",
     "i18n:check:missing": "node scripts/i18n/check-missing-keys.mjs",
     "i18n:pseudo:generate": "node scripts/i18n/generate-pseudo-locale.mjs",
     "i18n:pseudo:check": "node scripts/i18n/generate-pseudo-locale.mjs --check",
@@ -51,6 +53,7 @@
     "@types/express": "^5.0.1",
     "@types/node": "^20.17.19",
     "@types/uuid": "^10.0.0",
+    "axe-core": "^4.11.1",
     "jsdom": "^27.1.0",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"

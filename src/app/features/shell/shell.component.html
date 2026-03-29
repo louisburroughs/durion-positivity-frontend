@@ -1,4 +1,5 @@
 <div class="shell-root">
+  <a class="skip-link" href="#main-content" (click)="skipToMainContent($event)">Skip to main content</a>
 
   <!-- Top bar -->
   <app-shell-header (navToggle)="toggleNav()" />
@@ -22,7 +23,7 @@
     }
 
     <!-- Main column -->
-    <main class="shell-main" role="main">
+    <main id="main-content" #mainContent class="shell-main" role="main" tabindex="-1">
 
       <!-- Top frame: Chat panel (fixed-height, resize from bottom edge) -->
       <div class="frame-chat">

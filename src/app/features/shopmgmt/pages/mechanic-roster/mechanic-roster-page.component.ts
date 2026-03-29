@@ -3,6 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { PeopleService } from '../../../people/services/people.service';
+import { CreateEmployeeRequest } from '../../../people/models/employee.models';
 
 @Component({
   selector: 'app-mechanic-roster-page',
@@ -70,7 +71,7 @@ export class MechanicRosterPageComponent implements OnInit {
     this.createError.set(null);
     this.createSuccess.set(false);
 
-    this.peopleService.createEmployee(this.createForm.getRawValue()).subscribe({
+    this.peopleService.createEmployee(this.createForm.getRawValue() as unknown as CreateEmployeeRequest).subscribe({
       next: () => {
         this.createLoading.set(false);
         this.createSuccess.set(true);

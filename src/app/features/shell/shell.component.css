@@ -3,6 +3,27 @@
   height: 100%;
 }
 
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: var(--space-3);
+  transform: translateY(-150%);
+  z-index: 1000;
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--primaryA400);
+  border-radius: var(--radius-sm);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  transform: translateY(var(--space-2));
+  outline: 2px solid var(--accentA700);
+  outline-offset: 2px;
+}
+
 /* ── Root layout: header | body | footer ─────────────────────────────── */
 .shell-root {
   display: flex;
@@ -41,6 +62,11 @@
   flex-direction: column;
   overflow: hidden;
   background: var(--themeBackground);
+}
+
+.shell-main:focus-visible {
+  outline: 3px solid var(--accentA700);
+  outline-offset: -3px;
 }
 
 /* ── Chat frame (~40% of available body height) ──────────────────────── */

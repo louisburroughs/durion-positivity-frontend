@@ -1,4 +1,4 @@
-import { Component, signal, HostListener } from '@angular/core';
+import { Component, signal, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent }       from './components/header/header.component';
 import { FooterComponent }       from './components/footer/footer.component';
@@ -23,6 +23,7 @@ import { ContentPanelComponent } from './components/content-panel/content-panel.
 export class ShellComponent {
   /** Controls sidebar collapsed state; collapses automatically on narrow viewports. */
   readonly navCollapsed = signal(false);
+  @ViewChild('mainContent') private mainContent?: ElementRef<HTMLElement>;
 
   /** On resize: auto-collapse nav when viewport goes below 768 px. */
   @HostListener('window:resize')
@@ -34,5 +35,10 @@ export class ShellComponent {
 
   toggleNav(): void {
     this.navCollapsed.update(v => !v);
+  }
+
+  skipToMainContent(event: Event): void {
+    event.preventDefault();
+    this.mainContent?.nativeElement.focus();
   }
 }

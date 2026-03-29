@@ -2,7 +2,7 @@ import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import {
   AccountingEventDetail,
   AccountingEventListItem,
