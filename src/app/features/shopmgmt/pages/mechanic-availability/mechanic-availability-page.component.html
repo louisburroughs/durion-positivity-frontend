@@ -1,31 +1,31 @@
 <section>
   <header class="page-header">
-    <h1>Mechanic Availability</h1>
+    <h1>{{ 'SHOPMGMT.MECHANIC_AVAILABILITY.TITLE' | translate }}</h1>
   </header>
 
   <form class="filter-form" [formGroup]="filterForm" (ngSubmit)="loadAvailability()">
     <label>
-      Location
+      {{ 'SHOPMGMT.MECHANIC_AVAILABILITY.LOCATION' | translate }}
       <input type="text" formControlName="locationId" />
     </label>
     <label>
-      Date
+      {{ 'SHOPMGMT.MECHANIC_AVAILABILITY.DATE' | translate }}
       <input type="date" formControlName="date" />
     </label>
-    <button type="submit">Load</button>
+    <button type="submit">{{ 'SHOPMGMT.MECHANIC_AVAILABILITY.LOAD' | translate }}</button>
   </form>
 
-  <p class="error-banner" *ngIf="error()">{{ error() }}</p>
+  <p class="error-banner" *ngIf="error()">{{ error()! | translate }}</p>
 
   <div class="availability-grid" *ngIf="!loading() && availabilityData().length > 0">
     <div class="mechanic-row" *ngFor="let row of availabilityData()">
       <span class="mechanic-name">{{ getMechanicName(row) }}</span>
       <span class="availability-cell" [ngClass]="isAvailable(row) ? 'available-slot' : 'unavailable-slot'">
-        {{ isAvailable(row) ? 'Available' : 'Unavailable' }}
+        {{ isAvailable(row) ? ('SHOPMGMT.MECHANIC_AVAILABILITY.AVAILABLE' | translate) : ('SHOPMGMT.MECHANIC_AVAILABILITY.UNAVAILABLE' | translate) }}
       </span>
     </div>
   </div>
 
-  <p class="empty-state" *ngIf="!loading() && !error() && availabilityData().length === 0">No availability data found.
+  <p class="empty-state" *ngIf="!loading() && !error() && availabilityData().length === 0">{{ 'SHOPMGMT.MECHANIC_AVAILABILITY.EMPTY' | translate }}
   </p>
 </section>

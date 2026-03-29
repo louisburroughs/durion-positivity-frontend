@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { LocationService } from '../../services/location.service';
 
 @Component({
   selector: 'app-mobile-units-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './mobile-units-page.component.html',
   styleUrl: './mobile-units-page.component.css',
 })
@@ -40,7 +41,7 @@ export class MobileUnitsPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Failed to load mobile units.');
+        this.error.set('LOCATION.MOBILE_UNITS.ERROR.LOAD');
         this.loading.set(false);
       },
     });
@@ -58,7 +59,7 @@ export class MobileUnitsPageComponent implements OnInit {
   submitCreate(): void {
     const name = this.createName().trim();
     if (!name) {
-      this.error.set('Name is required.');
+      this.error.set('LOCATION.MOBILE_UNITS.ERROR.NAME_REQUIRED');
       return;
     }
 
@@ -67,7 +68,7 @@ export class MobileUnitsPageComponent implements OnInit {
         this.closeCreate();
         this.loadMobileUnits();
       },
-      error: () => this.error.set('Failed to create mobile unit.'),
+      error: () => this.error.set('LOCATION.MOBILE_UNITS.ERROR.CREATE'),
     });
   }
 
@@ -88,7 +89,7 @@ export class MobileUnitsPageComponent implements OnInit {
     const coverage = this.coverageRegion().trim();
 
     if (!unitId) {
-      this.error.set('A mobile unit must be selected.');
+      this.error.set('LOCATION.MOBILE_UNITS.ERROR.SELECT_UNIT');
       return;
     }
 
@@ -98,7 +99,7 @@ export class MobileUnitsPageComponent implements OnInit {
         this.closeCoverage();
         this.loadMobileUnits();
       },
-      error: () => this.error.set('Failed to update coverage rules.'),
+      error: () => this.error.set('LOCATION.MOBILE_UNITS.ERROR.UPDATE_COVERAGE'),
     });
   }
 

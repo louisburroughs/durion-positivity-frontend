@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { SecurityService } from '../../../services/security.service';
 
 @Component({
   selector: 'app-security-audit-list-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './security-audit-list-page.component.html',
   styleUrl: './security-audit-list-page.component.css',
 })
@@ -40,7 +41,7 @@ export class SecurityAuditListPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Failed to load audit entries.');
+        this.error.set('SECURITY.AUDIT_LIST.ERROR.LOAD');
         this.auditEntries.set([]);
         this.loading.set(false);
       },

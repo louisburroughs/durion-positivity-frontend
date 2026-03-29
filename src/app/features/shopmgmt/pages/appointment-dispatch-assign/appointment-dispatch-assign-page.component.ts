@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AppointmentService } from '../../services/appointment.service';
@@ -10,7 +11,7 @@ import type { AppointmentDetail, AssignmentDetail, Conflict } from '../../models
 @Component({
   selector: 'app-appointment-dispatch-assign-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './appointment-dispatch-assign-page.component.html',
   styleUrl: './appointment-dispatch-assign-page.component.css',
 })
@@ -53,7 +54,7 @@ export class AppointmentDispatchAssignPageComponent implements OnInit {
           this.loading.set(false);
         },
         error: () => {
-          this.submitError.set('Failed to load dispatch assignment data.');
+          this.submitError.set('SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.ERROR.LOAD');
           this.loading.set(false);
         },
       });
@@ -87,9 +88,9 @@ export class AppointmentDispatchAssignPageComponent implements OnInit {
         if (error.status === 409) {
           const conflictList = (error.error as { conflicts?: Conflict[] } | null)?.conflicts ?? [];
           this.conflicts.set(conflictList);
-          this.submitError.set('Assignment conflicts were detected.');
+          this.submitError.set('SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.ERROR.CONFLICTS');
         } else {
-          this.submitError.set('Failed to create assignment.');
+          this.submitError.set('SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.ERROR.CREATE');
         }
         this.submitLoading.set(false);
       },

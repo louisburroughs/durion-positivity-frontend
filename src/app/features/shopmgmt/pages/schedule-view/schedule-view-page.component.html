@@ -1,41 +1,41 @@
 <div class="page-header">
-  <h2>Schedule View</h2>
+  <h2>{{ 'SHOPMGMT.SCHEDULE_VIEW.TITLE' | translate }}</h2>
 </div>
 
 <div class="filter-bar">
   <form [formGroup]="filterForm" (ngSubmit)="loadBoard()" novalidate>
     <div class="filter-group">
-      <label for="svLocation">Location</label>
-      <input id="svLocation" name="locationId" type="text" formControlName="locationId" placeholder="Location ID" />
+      <label for="svLocation">{{ 'SHOPMGMT.SCHEDULE_VIEW.LOCATION' | translate }}</label>
+      <input id="svLocation" name="locationId" type="text" formControlName="locationId" [placeholder]="'SHOPMGMT.SCHEDULE_VIEW.LOCATION_ID' | translate" />
     </div>
     <div class="filter-group">
-      <label for="svDate">Date</label>
+      <label for="svDate">{{ 'SHOPMGMT.SCHEDULE_VIEW.DATE' | translate }}</label>
       <input id="svDate" name="selectedDate" type="date" formControlName="selectedDate" />
     </div>
     <div class="filter-group">
-      <label for="svResourceType">Resource Type</label>
+      <label for="svResourceType">{{ 'SHOPMGMT.SCHEDULE_VIEW.RESOURCE_TYPE' | translate }}</label>
       <input id="svResourceType" name="resourceType" type="text" formControlName="resourceType"
-        placeholder="e.g. BAY" />
+        [placeholder]="'SHOPMGMT.SCHEDULE_VIEW.RESOURCE_TYPE_EXAMPLE' | translate" />
     </div>
     <div class="filter-group">
-      <label for="svResourceId">Resource ID</label>
-      <input id="svResourceId" name="resourceId" type="text" formControlName="resourceId" placeholder="Optional" />
+      <label for="svResourceId">{{ 'SHOPMGMT.SCHEDULE_VIEW.RESOURCE_ID' | translate }}</label>
+      <input id="svResourceId" name="resourceId" type="text" formControlName="resourceId" [placeholder]="'SHOPMGMT.SCHEDULE_VIEW.OPTIONAL' | translate" />
     </div>
     <button type="submit" class="load-board-btn" [disabled]="filterForm.invalid || loading()">
-      Load Schedule
+      {{ 'SHOPMGMT.SCHEDULE_VIEW.LOAD_SCHEDULE' | translate }}
     </button>
   </form>
 </div>
 
 <div *ngIf="availabilityError()" class="availability-warning">
-  Could not load schedule. Verify the location ID and date and try again.
+  {{ 'SHOPMGMT.SCHEDULE_VIEW.ERROR_LOAD' | translate }}
 </div>
 
-<div *ngIf="loading()" class="loading-state">Loading schedule&hellip;</div>
+<div *ngIf="loading()" class="loading-state">{{ 'SHOPMGMT.SCHEDULE_VIEW.LOADING' | translate }}</div>
 
 <ng-container *ngIf="!loading()">
   <div *ngIf="scheduleData().length === 0 && !availabilityError()" class="empty-board">
-    No schedule data. Enter a location and date then click Load Schedule.
+    {{ 'SHOPMGMT.SCHEDULE_VIEW.EMPTY' | translate }}
   </div>
 
   <div *ngIf="scheduleData().length > 0" class="board-region">
@@ -50,7 +50,7 @@
           <span class="item-time">{{ appt.scheduledStart }}</span>
           <span class="item-status">{{ appt.status }}</span>
           <span *ngIf="appt.rescheduleCount && appt.rescheduleCount > 0" class="conflict-badge">
-            Rescheduled ×{{ appt.rescheduleCount }}
+            {{ 'SHOPMGMT.SCHEDULE_VIEW.RESCHEDULED_X' | translate: { count: appt.rescheduleCount } }}
           </span>
         </div>
       </div>
@@ -60,19 +60,19 @@
 
 <div *ngIf="selectedItem()" class="details-panel">
   <div class="details-header">
-    <h3>Appointment {{ selectedItem()!.appointmentId }}</h3>
-    <button class="details-close" (click)="closeDetails()" aria-label="Close details">&#x2715;</button>
+    <h3>{{ 'SHOPMGMT.SCHEDULE_VIEW.APPOINTMENT' | translate: { id: selectedItem()!.appointmentId } }}</h3>
+    <button class="details-close" (click)="closeDetails()" [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.CLOSE_DETAILS' | translate">&#x2715;</button>
   </div>
   <div class="details-row">
-    <span class="label">Status</span>
+    <span class="label">{{ 'SHOPMGMT.SCHEDULE_VIEW.STATUS' | translate }}</span>
     <span class="value">{{ selectedItem()!.status }}</span>
   </div>
   <div class="details-row">
-    <span class="label">Start</span>
+    <span class="label">{{ 'SHOPMGMT.SCHEDULE_VIEW.START' | translate }}</span>
     <span class="value">{{ selectedItem()!.scheduledStart }}</span>
   </div>
   <div class="details-row">
-    <span class="label">End</span>
+    <span class="label">{{ 'SHOPMGMT.SCHEDULE_VIEW.END' | translate }}</span>
     <span class="value">{{ selectedItem()!.scheduledEnd }}</span>
   </div>
 </div>

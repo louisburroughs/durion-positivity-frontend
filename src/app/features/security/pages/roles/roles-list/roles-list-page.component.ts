@@ -1,12 +1,14 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { SecurityRole } from '../../../models/security.models';
 import { SecurityService } from '../../../services/security.service';
 
 @Component({
   selector: 'app-roles-list-page',
   standalone: true,
+  imports: [TranslatePipe],
   templateUrl: './roles-list-page.component.html',
   styleUrl: './roles-list-page.component.css',
 })
@@ -54,7 +56,7 @@ export class RolesListPageComponent implements OnInit {
           this.loading.set(false);
           this.roles.set([]);
           this.totalPages.set(0);
-          this.error.set(err?.error?.message ?? 'Failed to load roles.');
+          this.error.set(err?.error?.message ?? 'SECURITY.ROLES_LIST.ERROR.LOAD');
         },
       });
   }
@@ -98,7 +100,7 @@ export class RolesListPageComponent implements OnInit {
     const description = this.newRoleDescription().trim();
 
     if (!name) {
-      this.createError.set('Role name is required.');
+      this.createError.set('SECURITY.ROLES_LIST.ERROR.NAME_REQUIRED');
       return;
     }
 
@@ -115,7 +117,7 @@ export class RolesListPageComponent implements OnInit {
           this.loadRoles();
         },
         error: (err) => {
-          this.createError.set(err?.error?.message ?? 'Unable to create role.');
+          this.createError.set(err?.error?.message ?? 'SECURITY.ROLES_LIST.ERROR.CREATE');
         },
       });
   }

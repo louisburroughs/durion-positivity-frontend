@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AppointmentService } from '../../services/appointment.service';
@@ -8,7 +9,7 @@ import type { AppointmentDetail, AssignmentDetail } from '../../models/appointme
 @Component({
   selector: 'app-appointment-assignment-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './appointment-assignment-page.component.html',
   styleUrl: './appointment-assignment-page.component.css',
 })
@@ -37,7 +38,7 @@ export class AppointmentAssignmentPageComponent implements OnInit {
           this.loading.set(false);
         },
         error: () => {
-          this.error.set('Failed to load assignment data');
+          this.error.set('SHOPMGMT.APPOINTMENT_ASSIGNMENT.ERROR.LOAD');
           this.loading.set(false);
         },
       });

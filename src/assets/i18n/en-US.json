@@ -14,6 +14,462 @@
       "HOME": "Go to app home"
     }
   },
+  "SHELL": {
+    "HEADER": {
+      "NAV_TOGGLE_ARIA": "Toggle navigation sidebar",
+      "NAV_TOGGLE_TITLE": "Toggle sidebar",
+      "THEME_TO_LIGHT": "Switch to light mode",
+      "THEME_TO_DARK": "Switch to dark mode",
+      "USER_CHIP_ARIA": "Logged-in user",
+      "SIGN_OUT": "Sign out",
+      "LOCALE": {
+        "LABEL": "Language",
+        "ARIA": "Select application language",
+        "OPTION": {
+          "EN_US": "English (US)",
+          "ES_US": "Español (EE. UU.)",
+          "FR_CA": "Français (Canada)"
+        }
+      }
+    }
+  },
+  "AUTH": {
+    "LOGIN": {
+      "BRAND_LOGO_ARIA": "Durion POS logo",
+      "BRAND_TAGLINE": "Positivity Platform",
+      "SESSION_EXPIRED": "Your session has expired. Please sign in again.",
+      "USERNAME": "Username",
+      "USERNAME_PLACEHOLDER": "Enter your username",
+      "USERNAME_ERROR": "Username is required (min. 2 characters).",
+      "PASSWORD": "Password",
+      "PASSWORD_PLACEHOLDER": "Enter your password",
+      "PASSWORD_ERROR": "Password is required (min. 4 characters).",
+      "SIGNING_IN": "Signing in...",
+      "SIGN_IN": "Sign In",
+      "THEME_TO_LIGHT": "Switch to light mode",
+      "THEME_TO_DARK": "Switch to dark mode",
+      "LIGHT_MODE": "Light mode",
+      "DARK_MODE": "Dark mode",
+      "ERROR": {
+        "INVALID_CREDENTIALS": "Invalid username or password. Please try again.",
+        "NETWORK": "Cannot reach the server. Check your network or try again later.",
+        "GENERIC": "Login failed. Please try again."
+      }
+    }
+  },
+  "PEOPLE": {
+    "WORK_SESSION": {
+      "TITLE": "Work Session",
+      "ACTIVE": "Session active",
+      "INACTIVE": "No active session",
+      "ON_BREAK": "On break",
+      "CONTROLS": "Session controls",
+      "START_SESSION": "Start session",
+      "STOP_SESSION": "Stop session",
+      "START_BREAK": "Start break",
+      "STOP_BREAK": "Stop break",
+      "ACTION_SUCCEEDED": "Action succeeded.",
+      "ERROR": {
+        "REQUIRED_IDS": "Workorder ID and Location ID are required to start a session.",
+        "START": "Failed to start session.",
+        "STOP": "Failed to stop session.",
+        "START_BREAK": "Failed to start break.",
+        "STOP_BREAK": "Failed to stop break."
+      }
+    },
+    "TIME_EXPORT": {
+      "TITLE": "Time Export",
+      "LOCATION_ID": "Location ID",
+      "LOAD_EXPORT": "Load export",
+      "LOAD_DISCREPANCIES": "Load discrepancies",
+      "EMPTY": "No export data found.",
+      "ERROR": {
+        "LOAD_EXPORT": "Failed to load export data.",
+        "LOAD_DISCREPANCIES": "Failed to load discrepancies."
+      }
+    },
+    "TIME_APPROVAL": {
+      "TITLE": "Time Approval",
+      "APPROVE": "Approve",
+      "REJECT": "Reject",
+      "ACTION_COMPLETED": "Action completed.",
+      "EMPTY": "No entries found.",
+      "REASON": "Reason",
+      "SUBMIT_REJECT": "Submit reject",
+      "CLOSE": "Close",
+      "ERROR": {
+        "LOAD": "Failed to load time entries.",
+        "APPROVE": "Failed to approve entries.",
+        "REJECT": "Failed to reject entries.",
+        "ADJUSTMENT": "Failed to create adjustment."
+      }
+    }
+  },
+  "SECURITY": {
+    "NAV": {
+      "WORKSPACE_ARIA": "Security workspace",
+      "TABS_ARIA": "Security navigation tabs",
+      "ROLES": "Roles",
+      "PERMISSIONS": "Permissions",
+      "AUDIT_LOG": "Audit Log",
+      "ROLES_TAB": "Roles tab",
+      "PERMISSIONS_TAB": "Permissions tab",
+      "AUDIT_TAB": "Audit log tab"
+    },
+    "ROLES_LIST": {
+      "SECTION": "Security",
+      "TITLE": "Roles",
+      "CREATE_ROLE": "Create Role",
+      "CREATE_HELP": "Add a new role definition for security access management.",
+      "SEARCH_LABEL": "Search roles",
+      "SEARCH_PLACEHOLDER": "Search by role name",
+      "SEARCH": "Search",
+      "APPLY_SEARCH": "Apply role search",
+      "LOADING": "Loading roles...",
+      "EMPTY_TITLE": "No roles found",
+      "EMPTY_MESSAGE": "Try adjusting your search or create a new role.",
+      "NO_DESCRIPTION": "No description provided.",
+      "VIEW_DETAIL": "View Detail",
+      "VIEW_DETAIL_ARIA": "View details for role {{name}}",
+      "PREVIOUS": "Previous",
+      "NEXT": "Next",
+      "PAGE_INDICATOR": "Page {{page}} of {{total}}",
+      "CANCEL": "Cancel",
+      "SUBMIT": "Submit",
+      "COLUMNS": {
+        "NAME": "Name",
+        "DESCRIPTION": "Description",
+        "ACTIONS": "Actions"
+      },
+      "ARIAS": {
+        "LIST_PANEL": "Roles list controls and results",
+        "TABLE": "Roles table",
+        "PAGINATION": "Roles pagination",
+        "ROLE_NAME": "Role name",
+        "ROLE_DESCRIPTION": "Role description"
+      },
+      "ERROR": {
+        "LOAD": "Failed to load roles.",
+        "NAME_REQUIRED": "Role name is required.",
+        "CREATE": "Unable to create role."
+      }
+    },
+    "PERMISSIONS_LIST": {
+      "SECTION": "Security",
+      "TITLE": "Permissions",
+      "READ_ONLY": "Read-only",
+      "SEARCH_LABEL": "Search permissions",
+      "SEARCH_PLACEHOLDER": "Search by permission key",
+      "SEARCH": "Search",
+      "APPLY_SEARCH": "Apply permission search",
+      "LOADING": "Loading permissions...",
+      "EMPTY_TITLE": "No permissions found",
+      "EMPTY_MESSAGE": "Try adjusting your search criteria.",
+      "NO_DESCRIPTION": "No description available.",
+      "PREVIOUS": "Previous",
+      "NEXT": "Next",
+      "PAGE_INDICATOR": "Page {{page}} of {{total}}",
+      "COLUMNS": {
+        "PERMISSION_KEY": "Permission Key",
+        "DESCRIPTION": "Description"
+      },
+      "ARIAS": {
+        "LISTING": "Permissions listing",
+        "TABLE": "Permissions table",
+        "PAGINATION": "Permissions pagination"
+      },
+      "ERROR": {
+        "LOAD": "Failed to load permissions."
+      }
+    },
+    "ROLE_DETAIL": {
+      "BACK_TO_ROLES": "Roles /",
+      "TITLE": "Roles / {{name}}",
+      "LOADING": "Loading role details...",
+      "NO_DESCRIPTION": "No description provided.",
+      "NO_DESCRIPTION_AVAILABLE": "No description available.",
+      "CREATED": "Created",
+      "UPDATED": "Updated",
+      "UNAVAILABLE": "Unavailable",
+      "STATUS": "Status",
+      "STATUS_ACTIVE": "Active",
+      "STATUS_INACTIVE": "Inactive",
+      "PERMISSIONS": "Permissions",
+      "PERMISSIONS_HELP": "Assigned permission definitions for this role.",
+      "EDIT_PERMISSIONS": "Edit Permissions",
+      "EMPTY_TITLE": "No permissions assigned",
+      "EMPTY_MESSAGE": "Use Edit Permissions to grant access keys to this role.",
+      "CONFIRM_REVOKE": "Confirm revoke?",
+      "CONFIRM": "Confirm",
+      "CANCEL": "Cancel",
+      "REVOKE": "Revoke",
+      "GRANT_PERMISSIONS": "Grant Permissions",
+      "GRANT_HELP": "Select permission keys to grant to this role.",
+      "SUBMIT": "Submit",
+      "CONFIRM_REVOKE_ARIA": "Confirm revoke for {{key}}",
+      "REVOKE_ASSIGNMENT_ARIA": "Revoke assignment for {{key}}",
+      "CANCEL_REVOKE": "Cancel revoke",
+      "CANCEL_GRANT": "Cancel grant permissions",
+      "SUBMIT_UPDATES": "Submit permission updates",
+      "COLUMNS": {
+        "PERMISSION_KEY": "Permission Key",
+        "DESCRIPTION": "Description",
+        "ACTIONS": "Actions"
+      },
+      "ARIAS": {
+        "ROLE_PERMISSIONS": "Role permissions",
+        "ASSIGNMENTS_TABLE": "Role permission assignments",
+        "GRANT_DIALOG": "Grant permissions dialog",
+        "SELECTION_LIST": "Permissions selection list"
+      },
+      "ERROR": {
+        "MISSING_ROLE_NAME": "Role name was not provided.",
+        "LOAD_ROLE": "Failed to load role details.",
+        "LOAD_PERMISSIONS": "Failed to load permissions.",
+        "UPDATE_PERMISSIONS": "Failed to update role permissions.",
+        "REVOKE": "Failed to revoke permission."
+      }
+    },
+    "AUDIT_LIST": {
+      "TITLE": "Security Audit Log",
+      "APPOINTMENT_ID": "Appointment ID",
+      "LOAD": "Load",
+      "VIEW_ENTRY": "View entry",
+      "EMPTY": "No audit entries found.",
+      "ERROR": {
+        "LOAD": "Failed to load audit entries."
+      }
+    }
+  },
+  "LOCATION": {
+    "LOCATIONS": {
+      "TITLE": "Locations",
+      "CREATE_LOCATION": "Create Location",
+      "CREATE_SUCCESS": "Location created successfully.",
+      "LOADING": "Loading...",
+      "EMPTY": "No locations found.",
+      "NAME": "Name",
+      "TYPE": "Type",
+      "TYPE_STORE": "Store",
+      "TYPE_WAREHOUSE": "Warehouse",
+      "TYPE_MOBILE": "Mobile",
+      "CANCEL": "Cancel",
+      "CREATE": "Create",
+      "ERROR": {
+        "LOAD": "Failed to load locations.",
+        "NAME_TYPE_REQUIRED": "Name and type are required.",
+        "CREATE": "Failed to create location."
+      }
+    },
+    "BAYS": {
+      "TITLE": "Bays",
+      "CREATE_BAY": "Create Bay",
+      "EDIT_BAY": "Edit Bay",
+      "BAY_NAME": "Bay Name",
+      "LOADING": "Loading...",
+      "EMPTY": "No bays found for this location.",
+      "CANCEL": "Cancel",
+      "CREATE": "Create",
+      "SAVE": "Save",
+      "ERROR": {
+        "LOAD": "Failed to load bays.",
+        "NAME_REQUIRED": "Bay name is required.",
+        "BAY_AND_NAME_REQUIRED": "Bay and name are required.",
+        "CREATE": "Failed to create bay.",
+        "UPDATE": "Failed to update bay."
+      }
+    },
+    "MOBILE_UNITS": {
+      "TITLE": "Mobile Units",
+      "CREATE_MOBILE_UNIT": "Create Mobile Unit",
+      "COVERAGE_RULES": "Coverage Rules",
+      "NAME": "Name",
+      "REGION": "Region",
+      "LOADING": "Loading...",
+      "EMPTY": "No mobile units found.",
+      "CANCEL": "Cancel",
+      "CREATE": "Create",
+      "SAVE": "Save",
+      "ERROR": {
+        "LOAD": "Failed to load mobile units.",
+        "NAME_REQUIRED": "Name is required.",
+        "SELECT_UNIT": "A mobile unit must be selected.",
+        "CREATE": "Failed to create mobile unit.",
+        "UPDATE_COVERAGE": "Failed to update coverage rules."
+      }
+    }
+  },
+  "SHOPMGMT": {
+    "SCHEDULE_VIEW": {
+      "TITLE": "Schedule View",
+      "LOCATION": "Location",
+      "LOCATION_ID": "Location ID",
+      "DATE": "Date",
+      "RESOURCE_TYPE": "Resource Type",
+      "RESOURCE_TYPE_EXAMPLE": "e.g. BAY",
+      "RESOURCE_ID": "Resource ID",
+      "OPTIONAL": "Optional",
+      "LOAD_SCHEDULE": "Load Schedule",
+      "ERROR_LOAD": "Could not load schedule. Verify the location ID and date and try again.",
+      "LOADING": "Loading schedule...",
+      "EMPTY": "No schedule data. Enter a location and date then click Load Schedule.",
+      "RESCHEDULED_X": "Rescheduled x{{count}}",
+      "APPOINTMENT": "Appointment {{id}}",
+      "CLOSE_DETAILS": "Close details",
+      "STATUS": "Status",
+      "START": "Start",
+      "END": "End"
+    },
+    "APPOINTMENT_ASSIGNMENT": {
+      "TITLE": "Appointment Assignment",
+      "LOADING": "Loading assignment...",
+      "LIVE_UPDATES_UNAVAILABLE": "Live updates unavailable",
+      "UPDATED": "Assignment updated",
+      "EMPTY": "No assignment found for this appointment.",
+      "ERROR": {
+        "LOAD": "Failed to load assignment data"
+      }
+    },
+    "MECHANIC_AVAILABILITY": {
+      "TITLE": "Mechanic Availability",
+      "LOCATION": "Location",
+      "DATE": "Date",
+      "LOAD": "Load",
+      "AVAILABLE": "Available",
+      "UNAVAILABLE": "Unavailable",
+      "EMPTY": "No availability data found.",
+      "ERROR": {
+        "LOAD_LOCATION": "Failed to load location.",
+        "LOAD_AVAILABILITY": "Failed to load availability."
+      }
+    },
+    "MECHANIC_ROSTER": {
+      "TITLE": "Mechanic Roster",
+      "CREATE_EMPLOYEE": "Create employee",
+      "EMPLOYEE_CREATED": "Employee created.",
+      "EMPTY": "No people found.",
+      "FIRST_NAME": "First name",
+      "LAST_NAME": "Last name",
+      "EMAIL": "Email",
+      "ROLE": "Role",
+      "SAVE": "Save",
+      "CLOSE": "Close",
+      "ERROR": {
+        "LOAD_PEOPLE": "Failed to load people.",
+        "CREATE_EMPLOYEE": "Failed to create employee."
+      }
+    },
+    "DISPATCH_BOARD": {
+      "SECTION_LABEL": "Dispatch",
+      "TITLE": "Daily Dispatch Board",
+      "PANEL_ARIA": "Dispatch board controls and workorders",
+      "LOCATION": "Location",
+      "LOCATION_ARIA": "Location",
+      "DATE": "Date",
+      "DATE_ARIA": "Date",
+      "REFRESH": "Refresh",
+      "REFRESH_ARIA": "Refresh dispatch board",
+      "LAST_UPDATED": "Last updated",
+      "DATA_QUALITY_WARNING": "Data quality warning.",
+      "STALE_DATA": "Showing stale cached data.",
+      "LOADING": "Loading dispatch board...",
+      "RETRY": "Retry",
+      "RETRY_ARIA": "Retry dispatch board load",
+      "EMPTY_TITLE": "No workorders found",
+      "EMPTY_DESC": "There are no workorders for this location and date.",
+      "WORKORDER_ARIA": "Workorder summary",
+      "WORKORDER": "Workorder",
+      "STATUS": "Status",
+      "ERROR_LOAD": "Failed to load dispatch board."
+    },
+    "APPOINTMENT_CREATE": {
+      "TITLE": "Create Appointment",
+      "BACK_TO_SOURCE": "Back to Source",
+      "ELIGIBILITY_ERROR": "This source is not eligible for a new appointment.",
+      "SCHEDULED_START": "Scheduled Start",
+      "SCHEDULED_END": "Scheduled End",
+      "HARD": "HARD",
+      "SOFT": "SOFT",
+      "OVERRIDE_SOFT": "Override soft conflicts",
+      "OVERRIDE_REASON": "Override Reason",
+      "CREATE": "Create Appointment",
+      "ERROR": {
+        "GENERIC": "An error occurred. Please try again.",
+        "PERMISSION": "You do not have permission to perform this action.",
+        "UNABLE": "Unable to create appointment."
+      }
+    },
+    "APPOINTMENT_CREATE_CRM": {
+      "TITLE": "Book Appointment from CRM",
+      "SECTION_CUSTOMER_VEHICLE": "Customer & Vehicle",
+      "CRM_CUSTOMER_ID": "CRM Customer ID",
+      "CRM_CUSTOMER_PLACEHOLDER": "Enter CRM customer ID",
+      "CRM_VEHICLE_ID": "CRM Vehicle ID",
+      "CRM_VEHICLE_PLACEHOLDER": "Enter CRM vehicle ID",
+      "SECTION_SCHEDULING": "Scheduling",
+      "LOCATION": "Location",
+      "LOCATION_PLACEHOLDER": "Location ID",
+      "RESOURCE_OPTIONAL": "Resource (optional)",
+      "RESOURCE_PLACEHOLDER": "Bay or mobile unit ID",
+      "START": "Start Date & Time",
+      "END": "End Date & Time",
+      "SECTION_SERVICE_REQUESTS": "Service Requests",
+      "SERVICE_REQUEST_PLACEHOLDER": "Service code or description",
+      "REMOVE_SERVICE_ARIA": "Remove",
+      "ADD_SERVICE": "+ Add Service",
+      "BOOK": "Book Appointment",
+      "ERROR": {
+        "CREATE": "Failed to create appointment."
+      }
+    },
+    "APPOINTMENT_DISPATCH_ASSIGN": {
+      "TITLE": "Appointment Dispatch Assignment",
+      "SUCCESS": "Assignment created successfully.",
+      "APPOINTMENT": "Appointment {{id}}",
+      "STATUS": "Status",
+      "FACILITY": "Facility",
+      "ASSIGNMENT_HISTORY": "Assignment History",
+      "ROLE": "Role",
+      "MECHANIC": "Mechanic",
+      "RESOURCE_ID": "Resource Id",
+      "MECHANIC_ID": "Mechanic Id",
+      "CREATE": "Create Assignment",
+      "CONFLICTS": "Conflicts",
+      "ROLES": {
+        "LEAD": "LEAD",
+        "ASSIST": "ASSIST"
+      },
+      "ERROR": {
+        "LOAD": "Failed to load dispatch assignment data.",
+        "CONFLICTS": "Assignment conflicts were detected.",
+        "CREATE": "Failed to create assignment."
+      }
+    },
+    "APPOINTMENT_CONFLICT_OVERRIDE": {
+      "TITLE": "Appointment Conflict Override",
+      "APPOINTMENT": "Appointment {{id}}",
+      "STATUS": "Status",
+      "FACILITY": "Facility",
+      "START": "Start Date Time",
+      "END": "End Date Time",
+      "REASON": "Reason",
+      "RESCHEDULE": "Reschedule",
+      "CONFLICTS": "Conflicts",
+      "ENABLE_OVERRIDE": "Enable Override",
+      "OVERRIDE_REASON": "Override Reason",
+      "SUBMIT_OVERRIDE": "Submit Override",
+      "SUCCESS": {
+        "RESCHEDULE": "Appointment re-scheduled successfully.",
+        "OVERRIDE": "Override completed successfully."
+      },
+      "ERROR": {
+        "LOAD": "Failed to load appointment.",
+        "CONFLICTS": "Conflicts were found for the selected slot.",
+        "RESCHEDULE": "Failed to reschedule appointment.",
+        "OVERRIDE": "Failed to execute override."
+      }
+    }
+  },
   "ACCOUNTING": {
     "COMMON": {
       "ACCESS_DENIED": "Access denied",

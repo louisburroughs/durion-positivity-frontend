@@ -3,23 +3,23 @@
 
     <!-- Logo / Brand -->
     <div class="login-brand">
-      <div class="brand-logo" aria-label="Durion POS logo">
+      <div class="brand-logo" [attr.aria-label]="'AUTH.LOGIN.BRAND_LOGO_ARIA' | translate">
         <span class="brand-icon">D</span>
       </div>
       <h1 class="brand-name">Durion POS</h1>
-      <p class="brand-tagline">Positivity Platform</p>
+      <p class="brand-tagline">{{ 'AUTH.LOGIN.BRAND_TAGLINE' | translate }}</p>
     </div>
 
     @if (sessionExpired()) {
     <div class="alert alert-info" role="status" aria-live="polite">
-      Your session has expired. Please sign in again.
+      {{ 'AUTH.LOGIN.SESSION_EXPIRED' | translate }}
     </div>
     }
 
     <!-- Error Alert -->
     @if (error()) {
     <div class="alert alert-error" role="alert" aria-live="polite">
-      {{ error() }}
+      {{ error()! | translate }}
     </div>
     }
 
@@ -27,25 +27,25 @@
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
 
       <div class="field-group">
-        <label for="username" class="field-label">Username</label>
+        <label for="username" class="field-label">{{ 'AUTH.LOGIN.USERNAME' | translate }}</label>
         <input id="username" type="text" formControlName="username" autocomplete="username"
-          placeholder="Enter your username" [attr.aria-invalid]="usernameCtrl.invalid && usernameCtrl.touched"
+          [placeholder]="'AUTH.LOGIN.USERNAME_PLACEHOLDER' | translate" [attr.aria-invalid]="usernameCtrl.invalid && usernameCtrl.touched"
           aria-describedby="username-error" [class.field-invalid]="usernameCtrl.invalid && usernameCtrl.touched" />
         @if (usernameCtrl.invalid && usernameCtrl.touched) {
         <span id="username-error" class="field-error" role="alert">
-          Username is required (min. 2 characters).
+          {{ 'AUTH.LOGIN.USERNAME_ERROR' | translate }}
         </span>
         }
       </div>
 
       <div class="field-group">
-        <label for="password" class="field-label">Password</label>
+        <label for="password" class="field-label">{{ 'AUTH.LOGIN.PASSWORD' | translate }}</label>
         <input id="password" type="password" formControlName="password" autocomplete="current-password"
-          placeholder="Enter your password" [attr.aria-invalid]="passwordCtrl.invalid && passwordCtrl.touched"
+          [placeholder]="'AUTH.LOGIN.PASSWORD_PLACEHOLDER' | translate" [attr.aria-invalid]="passwordCtrl.invalid && passwordCtrl.touched"
           aria-describedby="password-error" [class.field-invalid]="passwordCtrl.invalid && passwordCtrl.touched" />
         @if (passwordCtrl.invalid && passwordCtrl.touched) {
         <span id="password-error" class="field-error" role="alert">
-          Password is required (min. 4 characters).
+          {{ 'AUTH.LOGIN.PASSWORD_ERROR' | translate }}
         </span>
         }
       </div>
@@ -53,9 +53,9 @@
       <button type="submit" class="btn-primary" [disabled]="loading()" [class.btn-loading]="loading()">
         @if (loading()) {
         <span class="spinner" aria-hidden="true"></span>
-        Signing in…
+        {{ 'AUTH.LOGIN.SIGNING_IN' | translate }}
         } @else {
-        Sign In
+        {{ 'AUTH.LOGIN.SIGN_IN' | translate }}
         }
       </button>
     </form>
@@ -63,9 +63,9 @@
     <!-- Theme toggle (subtle, bottom of card) -->
     <div class="login-footer">
       <button type="button" class="theme-toggle-btn" (click)="themeService.toggle()"
-        [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-        [title]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
-        {{ themeService.isDark() ? '☀️ Light mode' : '🌙 Dark mode' }}
+        [attr.aria-label]="themeService.isDark() ? ('AUTH.LOGIN.THEME_TO_LIGHT' | translate) : ('AUTH.LOGIN.THEME_TO_DARK' | translate)"
+        [title]="themeService.isDark() ? ('AUTH.LOGIN.THEME_TO_LIGHT' | translate) : ('AUTH.LOGIN.THEME_TO_DARK' | translate)">
+        {{ themeService.isDark() ? ('AUTH.LOGIN.LIGHT_MODE' | translate) : ('AUTH.LOGIN.DARK_MODE' | translate) }}
       </button>
     </div>
 

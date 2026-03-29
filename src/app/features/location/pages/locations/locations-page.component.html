@@ -1,13 +1,13 @@
 <section class="page-header">
-  <h2>Locations</h2>
-  <button type="button" class="btn-primary open-create-btn" (click)="openCreateModal()">Create Location</button>
+  <h2>{{ 'LOCATION.LOCATIONS.TITLE' | translate }}</h2>
+  <button type="button" class="btn-primary open-create-btn" (click)="openCreateModal()">{{ 'LOCATION.LOCATIONS.CREATE_LOCATION' | translate }}</button>
 </section>
 
-<div *ngIf="error()" class="error-banner">{{ error() }}</div>
-<div *ngIf="createSuccess()" class="success-banner">Location created successfully.</div>
+<div *ngIf="error()" class="error-banner">{{ error()! | translate }}</div>
+<div *ngIf="createSuccess()" class="success-banner">{{ 'LOCATION.LOCATIONS.CREATE_SUCCESS' | translate }}</div>
 
 <section *ngIf="loading(); else locationsContent" class="locations-list">
-  <p>Loading...</p>
+  <p>{{ 'LOCATION.LOCATIONS.LOADING' | translate }}</p>
 </section>
 
 <ng-template #locationsContent>
@@ -21,36 +21,36 @@
 
 <ng-template #emptyState>
   <section class="empty-state">
-    <p>No locations found.</p>
+    <p>{{ 'LOCATION.LOCATIONS.EMPTY' | translate }}</p>
   </section>
 </ng-template>
 
 <div *ngIf="showCreateModal()" class="modal-overlay">
   <section class="create-modal">
     <header class="modal-header">
-      <h3>Create Location</h3>
+      <h3>{{ 'LOCATION.LOCATIONS.CREATE_LOCATION' | translate }}</h3>
     </header>
 
-    <div *ngIf="createError()" class="error-banner">{{ createError() }}</div>
+    <div *ngIf="createError()" class="error-banner">{{ createError()! | translate }}</div>
 
     <div class="form-group">
-      <label for="location-name">Name</label>
+      <label for="location-name">{{ 'LOCATION.LOCATIONS.NAME' | translate }}</label>
       <input id="location-name" type="text" [value]="createName()"
         (input)="createName.set($any($event.target).value)" />
     </div>
 
     <div class="form-group">
-      <label for="location-type">Type</label>
+      <label for="location-type">{{ 'LOCATION.LOCATIONS.TYPE' | translate }}</label>
       <select id="location-type" [value]="createType()" (change)="createType.set($any($event.target).value)">
-        <option value="STORE">Store</option>
-        <option value="WAREHOUSE">Warehouse</option>
-        <option value="MOBILE">Mobile</option>
+        <option value="STORE">{{ 'LOCATION.LOCATIONS.TYPE_STORE' | translate }}</option>
+        <option value="WAREHOUSE">{{ 'LOCATION.LOCATIONS.TYPE_WAREHOUSE' | translate }}</option>
+        <option value="MOBILE">{{ 'LOCATION.LOCATIONS.TYPE_MOBILE' | translate }}</option>
       </select>
     </div>
 
     <footer class="modal-actions">
-      <button type="button" class="btn-secondary" (click)="closeCreateModal()">Cancel</button>
-      <button type="button" class="btn-primary submit-create-btn" (click)="submitCreate()">Create</button>
+      <button type="button" class="btn-secondary" (click)="closeCreateModal()">{{ 'LOCATION.LOCATIONS.CANCEL' | translate }}</button>
+      <button type="button" class="btn-primary submit-create-btn" (click)="submitCreate()">{{ 'LOCATION.LOCATIONS.CREATE' | translate }}</button>
     </footer>
   </section>
 </div>

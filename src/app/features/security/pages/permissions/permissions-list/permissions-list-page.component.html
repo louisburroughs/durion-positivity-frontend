@@ -1,56 +1,56 @@
 <section class="permissions-list-page" aria-labelledby="permissions-page-title">
   <header class="page-header">
     <div class="heading-group">
-      <p class="section-label">Security</p>
-      <h1 id="permissions-page-title">Permissions</h1>
+      <p class="section-label">{{ 'SECURITY.PERMISSIONS_LIST.SECTION' | translate }}</p>
+      <h1 id="permissions-page-title">{{ 'SECURITY.PERMISSIONS_LIST.TITLE' | translate }}</h1>
     </div>
-    <span class="readonly-label" aria-label="Read-only permissions">Read-only</span>
+    <span class="readonly-label" [attr.aria-label]="'SECURITY.PERMISSIONS_LIST.READ_ONLY' | translate">{{ 'SECURITY.PERMISSIONS_LIST.READ_ONLY' | translate }}</span>
   </header>
 
-  <section class="list-panel mic-elevation-2" aria-label="Permissions listing">
+  <section class="list-panel mic-elevation-2" [attr.aria-label]="'SECURITY.PERMISSIONS_LIST.ARIAS.LISTING' | translate">
     <div class="panel-accent" aria-hidden="true"></div>
 
     <div class="toolbar">
-      <label class="search-label" for="permissions-search">Search permissions</label>
+      <label class="search-label" for="permissions-search">{{ 'SECURITY.PERMISSIONS_LIST.SEARCH_LABEL' | translate }}</label>
       <div class="search-row">
         <input id="permissions-search" type="search" [value]="searchTerm()"
-          (input)="searchTerm.set($any($event.target).value)" placeholder="Search by permission key"
-          aria-label="Search permission key" />
-        <button type="button" class="btn-text" (click)="search()" aria-label="Apply permission search">
-          Search
+          (input)="searchTerm.set($any($event.target).value)" [placeholder]="'SECURITY.PERMISSIONS_LIST.SEARCH_PLACEHOLDER' | translate"
+          [attr.aria-label]="'SECURITY.PERMISSIONS_LIST.SEARCH_LABEL' | translate" />
+        <button type="button" class="btn-text" (click)="search()" [attr.aria-label]="'SECURITY.PERMISSIONS_LIST.APPLY_SEARCH' | translate">
+          {{ 'SECURITY.PERMISSIONS_LIST.SEARCH' | translate }}
         </button>
       </div>
     </div>
 
     @if (loading()) {
-    <div class="state-panel" aria-live="polite">Loading permissions...</div>
+    <div class="state-panel" aria-live="polite">{{ 'SECURITY.PERMISSIONS_LIST.LOADING' | translate }}</div>
     }
 
     @if (error()) {
-    <div class="alert alert-error" role="alert" aria-live="polite">{{ error() }}</div>
+    <div class="alert alert-error" role="alert" aria-live="polite">{{ error()! | translate }}</div>
     }
 
     @if (permissions().length === 0 && !loading()) {
     <div class="empty-state" aria-live="polite">
-      <h2>No permissions found</h2>
-      <p>Try adjusting your search criteria.</p>
+      <h2>{{ 'SECURITY.PERMISSIONS_LIST.EMPTY_TITLE' | translate }}</h2>
+      <p>{{ 'SECURITY.PERMISSIONS_LIST.EMPTY_MESSAGE' | translate }}</p>
     </div>
     }
 
     @if (permissions().length > 0 && !loading()) {
     <div class="table-scroll">
-      <table class="permissions-table" aria-label="Permissions table">
+      <table class="permissions-table" [attr.aria-label]="'SECURITY.PERMISSIONS_LIST.ARIAS.TABLE' | translate">
         <thead>
           <tr>
-            <th scope="col">Permission Key</th>
-            <th scope="col">Description</th>
+            <th scope="col">{{ 'SECURITY.PERMISSIONS_LIST.COLUMNS.PERMISSION_KEY' | translate }}</th>
+            <th scope="col">{{ 'SECURITY.PERMISSIONS_LIST.COLUMNS.DESCRIPTION' | translate }}</th>
           </tr>
         </thead>
         <tbody>
           @for (permission of permissions(); track permission.permissionKey) {
           <tr>
             <td>{{ permission.permissionKey }}</td>
-            <td>{{ permission.description || 'No description available.' }}</td>
+            <td>{{ permission.description || ('SECURITY.PERMISSIONS_LIST.NO_DESCRIPTION' | translate) }}</td>
           </tr>
           }
         </tbody>
@@ -58,15 +58,15 @@
     </div>
     }
 
-    <footer class="pager" aria-label="Permissions pagination">
+    <footer class="pager" [attr.aria-label]="'SECURITY.PERMISSIONS_LIST.ARIAS.PAGINATION' | translate">
       <button type="button" class="btn-text" (click)="prevPage()" [disabled]="page() <= 0"
-        aria-label="Previous permissions page">
-        Previous
+        [attr.aria-label]="'SECURITY.PERMISSIONS_LIST.PREVIOUS' | translate">
+        {{ 'SECURITY.PERMISSIONS_LIST.PREVIOUS' | translate }}
       </button>
-      <span class="page-indicator">Page {{ page() + 1 }} of {{ totalPages() || 1 }}</span>
+      <span class="page-indicator">{{ 'SECURITY.PERMISSIONS_LIST.PAGE_INDICATOR' | translate: { page: page() + 1, total: totalPages() || 1 } }}</span>
       <button type="button" class="btn-text" (click)="nextPage()"
-        [disabled]="totalPages() === 0 || page() + 1 >= totalPages()" aria-label="Next permissions page">
-        Next
+        [disabled]="totalPages() === 0 || page() + 1 >= totalPages()" [attr.aria-label]="'SECURITY.PERMISSIONS_LIST.NEXT' | translate">
+        {{ 'SECURITY.PERMISSIONS_LIST.NEXT' | translate }}
       </button>
     </footer>
   </section>

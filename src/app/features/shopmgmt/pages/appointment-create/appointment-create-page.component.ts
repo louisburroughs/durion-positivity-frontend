@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AppointmentService } from '../../services/appointment.service';
 import type { Conflict } from '../../models/appointment.models';
 
 @Component({
   selector: 'app-appointment-create-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './appointment-create-page.component.html',
   styleUrl: './appointment-create-page.component.css',
 })
@@ -109,14 +110,14 @@ export class AppointmentCreatePageComponent implements OnInit {
         this.showBackToSource.set(true);
       }
     } else {
-      this.errorMessage.set('An error occurred. Please try again.');
+      this.errorMessage.set('SHOPMGMT.APPOINTMENT_CREATE.ERROR.GENERIC');
     }
   }
 
   private genericErrorMessage(status: number): string {
-    if (status === 403) return 'You do not have permission to perform this action.';
-    if (status === 404) return 'Unable to create appointment.';
-    return 'An error occurred.';
+    if (status === 403) return 'SHOPMGMT.APPOINTMENT_CREATE.ERROR.PERMISSION';
+    if (status === 404) return 'SHOPMGMT.APPOINTMENT_CREATE.ERROR.UNABLE';
+    return 'SHOPMGMT.APPOINTMENT_CREATE.ERROR.GENERIC';
   }
 
   private generateUuid(): string {

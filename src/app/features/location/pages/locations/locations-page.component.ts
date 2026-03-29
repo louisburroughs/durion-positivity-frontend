@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { LocationService } from '../../services/location.service';
 
 @Component({
   selector: 'app-locations-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './locations-page.component.html',
   styleUrl: './locations-page.component.css',
 })
@@ -35,7 +36,7 @@ export class LocationsPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Failed to load locations.');
+        this.error.set('LOCATION.LOCATIONS.ERROR.LOAD');
         this.loading.set(false);
       },
     });
@@ -56,7 +57,7 @@ export class LocationsPageComponent implements OnInit {
     const name = this.createName().trim();
     const type = this.createType().trim();
     if (!name || !type) {
-      this.createError.set('Name and type are required.');
+      this.createError.set('LOCATION.LOCATIONS.ERROR.NAME_TYPE_REQUIRED');
       return;
     }
 
@@ -70,7 +71,7 @@ export class LocationsPageComponent implements OnInit {
         this.loadLocations();
       },
       error: () => {
-        this.createError.set('Failed to create location.');
+        this.createError.set('LOCATION.LOCATIONS.ERROR.CREATE');
       },
     });
   }

@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { PeopleService } from '../../../people/services/people.service';
 
 @Component({
   selector: 'app-mechanic-roster-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './mechanic-roster-page.component.html',
   styleUrl: './mechanic-roster-page.component.css',
 })
@@ -42,7 +43,7 @@ export class MechanicRosterPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Failed to load people.');
+        this.error.set('SHOPMGMT.MECHANIC_ROSTER.ERROR.LOAD_PEOPLE');
         this.people.set([]);
         this.loading.set(false);
       },
@@ -78,7 +79,7 @@ export class MechanicRosterPageComponent implements OnInit {
       },
       error: () => {
         this.createLoading.set(false);
-        this.createError.set('Failed to create employee.');
+        this.createError.set('SHOPMGMT.MECHANIC_ROSTER.ERROR.CREATE_EMPLOYEE');
       },
     });
   }

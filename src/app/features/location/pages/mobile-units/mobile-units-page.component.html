@@ -1,59 +1,59 @@
 <section class="page-header">
-  <h2>Mobile Units</h2>
-  <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">Create Mobile Unit</button>
+  <h2>{{ 'LOCATION.MOBILE_UNITS.TITLE' | translate }}</h2>
+  <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">{{ 'LOCATION.MOBILE_UNITS.CREATE_MOBILE_UNIT' | translate }}</button>
 </section>
 
-<div *ngIf="error()" class="error-banner">{{ error() }}</div>
+<div *ngIf="error()" class="error-banner">{{ error()! | translate }}</div>
 
 <section *ngIf="loading(); else unitsContent" class="units-list">
-  <p>Loading...</p>
+  <p>{{ 'LOCATION.MOBILE_UNITS.LOADING' | translate }}</p>
 </section>
 
 <ng-template #unitsContent>
   <section *ngIf="mobileUnits().length > 0; else emptyState" class="units-list">
     <article *ngFor="let unit of mobileUnits()" class="unit-card">
       <h3>{{ getUnitName(unit) }}</h3>
-      <button type="button" class="btn-secondary" (click)="openCoverage(unit)">Coverage Rules</button>
+      <button type="button" class="btn-secondary" (click)="openCoverage(unit)">{{ 'LOCATION.MOBILE_UNITS.COVERAGE_RULES' | translate }}</button>
     </article>
   </section>
 </ng-template>
 
 <ng-template #emptyState>
   <section class="empty-state">
-    <p>No mobile units found.</p>
+    <p>{{ 'LOCATION.MOBILE_UNITS.EMPTY' | translate }}</p>
   </section>
 </ng-template>
 
 <div *ngIf="showCreateModal()" class="create-modal-overlay">
   <section class="create-modal">
-    <h3>Create Mobile Unit</h3>
+    <h3>{{ 'LOCATION.MOBILE_UNITS.CREATE_MOBILE_UNIT' | translate }}</h3>
 
     <div class="form-group">
-      <label for="mobile-unit-name">Name</label>
+      <label for="mobile-unit-name">{{ 'LOCATION.MOBILE_UNITS.NAME' | translate }}</label>
       <input id="mobile-unit-name" type="text" [value]="createName()"
         (input)="createName.set($any($event.target).value)" />
     </div>
 
     <div class="modal-actions">
-      <button type="button" class="btn-secondary" (click)="closeCreate()">Cancel</button>
-      <button type="button" class="btn-primary submit-create-btn" (click)="submitCreate()">Create</button>
+      <button type="button" class="btn-secondary" (click)="closeCreate()">{{ 'LOCATION.MOBILE_UNITS.CANCEL' | translate }}</button>
+      <button type="button" class="btn-primary submit-create-btn" (click)="submitCreate()">{{ 'LOCATION.MOBILE_UNITS.CREATE' | translate }}</button>
     </div>
   </section>
 </div>
 
 <div *ngIf="showCoverageModal()" class="coverage-modal-overlay">
   <section class="coverage-modal">
-    <h3>Coverage Rules</h3>
+    <h3>{{ 'LOCATION.MOBILE_UNITS.COVERAGE_RULES' | translate }}</h3>
 
     <div class="form-group">
-      <label for="coverage-region">Region</label>
+      <label for="coverage-region">{{ 'LOCATION.MOBILE_UNITS.REGION' | translate }}</label>
       <input id="coverage-region" type="text" [value]="coverageRegion()"
         (input)="coverageRegion.set($any($event.target).value)" />
     </div>
 
     <div class="modal-actions">
-      <button type="button" class="btn-secondary" (click)="closeCoverage()">Cancel</button>
-      <button type="button" class="btn-primary" (click)="submitCoverageRules()">Save</button>
+      <button type="button" class="btn-secondary" (click)="closeCoverage()">{{ 'LOCATION.MOBILE_UNITS.CANCEL' | translate }}</button>
+      <button type="button" class="btn-primary" (click)="submitCoverageRules()">{{ 'LOCATION.MOBILE_UNITS.SAVE' | translate }}</button>
     </div>
   </section>
 </div>

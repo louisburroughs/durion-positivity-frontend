@@ -1,52 +1,52 @@
 <section class="roles-list-page" aria-labelledby="roles-page-title">
   <header class="page-header">
     <div class="heading-group">
-      <p class="section-label">Security</p>
-      <h1 id="roles-page-title">Roles</h1>
+      <p class="section-label">{{ 'SECURITY.ROLES_LIST.SECTION' | translate }}</p>
+      <h1 id="roles-page-title">{{ 'SECURITY.ROLES_LIST.TITLE' | translate }}</h1>
     </div>
-    <button type="button" class="btn-primary" (click)="openCreateModal()" aria-label="Create role">
-      Create Role
+    <button type="button" class="btn-primary" (click)="openCreateModal()" [attr.aria-label]="'SECURITY.ROLES_LIST.CREATE_ROLE' | translate">
+      {{ 'SECURITY.ROLES_LIST.CREATE_ROLE' | translate }}
     </button>
   </header>
 
-  <section class="list-panel mic-elevation-2" aria-label="Roles list controls and results">
+  <section class="list-panel mic-elevation-2" [attr.aria-label]="'SECURITY.ROLES_LIST.ARIAS.LIST_PANEL' | translate">
     <div class="panel-accent" aria-hidden="true"></div>
 
     <div class="toolbar">
-      <label class="search-label" for="roles-search">Search roles</label>
+      <label class="search-label" for="roles-search">{{ 'SECURITY.ROLES_LIST.SEARCH_LABEL' | translate }}</label>
       <div class="search-row">
         <input id="roles-search" type="search" [value]="searchTerm()"
-          (input)="searchTerm.set($any($event.target).value)" placeholder="Search by role name"
-          aria-label="Search roles" />
-        <button type="button" class="btn-text" (click)="search()" aria-label="Apply role search">
-          Search
+          (input)="searchTerm.set($any($event.target).value)" [placeholder]="'SECURITY.ROLES_LIST.SEARCH_PLACEHOLDER' | translate"
+          [attr.aria-label]="'SECURITY.ROLES_LIST.SEARCH_LABEL' | translate" />
+        <button type="button" class="btn-text" (click)="search()" [attr.aria-label]="'SECURITY.ROLES_LIST.APPLY_SEARCH' | translate">
+          {{ 'SECURITY.ROLES_LIST.SEARCH' | translate }}
         </button>
       </div>
     </div>
 
     @if (loading()) {
-    <div class="state-panel" aria-live="polite">Loading roles...</div>
+    <div class="state-panel" aria-live="polite">{{ 'SECURITY.ROLES_LIST.LOADING' | translate }}</div>
     }
 
     @if (error()) {
-    <div class="alert alert-error" role="alert" aria-live="polite">{{ error() }}</div>
+    <div class="alert alert-error" role="alert" aria-live="polite">{{ error()! | translate }}</div>
     }
 
     @if (roles().length === 0 && !loading()) {
     <div class="empty-state" aria-live="polite">
-      <h2>No roles found</h2>
-      <p>Try adjusting your search or create a new role.</p>
+      <h2>{{ 'SECURITY.ROLES_LIST.EMPTY_TITLE' | translate }}</h2>
+      <p>{{ 'SECURITY.ROLES_LIST.EMPTY_MESSAGE' | translate }}</p>
     </div>
     }
 
     @if (roles().length > 0 && !loading()) {
     <div class="table-scroll" aria-live="polite">
-      <table class="roles-table" aria-label="Roles table">
+      <table class="roles-table" [attr.aria-label]="'SECURITY.ROLES_LIST.ARIAS.TABLE' | translate">
         <thead>
           <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Description</th>
-            <th scope="col" class="actions-col">Actions</th>
+            <th scope="col">{{ 'SECURITY.ROLES_LIST.COLUMNS.NAME' | translate }}</th>
+            <th scope="col">{{ 'SECURITY.ROLES_LIST.COLUMNS.DESCRIPTION' | translate }}</th>
+            <th scope="col" class="actions-col">{{ 'SECURITY.ROLES_LIST.COLUMNS.ACTIONS' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -55,11 +55,11 @@
             <td>
               <div class="role-name">{{ role.name }}</div>
             </td>
-            <td>{{ role.description || 'No description provided.' }}</td>
+            <td>{{ role.description || ('SECURITY.ROLES_LIST.NO_DESCRIPTION' | translate) }}</td>
             <td class="actions-col">
               <button type="button" class="btn-text" (click)="navigateToDetail(role)"
-                [attr.aria-label]="'View details for role ' + role.name">
-                View Detail
+                [attr.aria-label]="'SECURITY.ROLES_LIST.VIEW_DETAIL_ARIA' | translate: { name: role.name }">
+                {{ 'SECURITY.ROLES_LIST.VIEW_DETAIL' | translate }}
               </button>
             </td>
           </tr>
@@ -69,47 +69,47 @@
     </div>
     }
 
-    <footer class="pager" aria-label="Roles pagination">
+    <footer class="pager" [attr.aria-label]="'SECURITY.ROLES_LIST.ARIAS.PAGINATION' | translate">
       <button type="button" class="btn-text" (click)="prevPage()" [disabled]="page() <= 0"
-        aria-label="Previous roles page">
-        Previous
+        [attr.aria-label]="'SECURITY.ROLES_LIST.PREVIOUS' | translate">
+        {{ 'SECURITY.ROLES_LIST.PREVIOUS' | translate }}
       </button>
-      <span class="page-indicator">Page {{ page() + 1 }} of {{ totalPages() || 1 }}</span>
+      <span class="page-indicator">{{ 'SECURITY.ROLES_LIST.PAGE_INDICATOR' | translate: { page: page() + 1, total: totalPages() || 1 } }}</span>
       <button type="button" class="btn-text" (click)="nextPage()"
-        [disabled]="totalPages() === 0 || page() + 1 >= totalPages()" aria-label="Next roles page">
-        Next
+        [disabled]="totalPages() === 0 || page() + 1 >= totalPages()" [attr.aria-label]="'SECURITY.ROLES_LIST.NEXT' | translate">
+        {{ 'SECURITY.ROLES_LIST.NEXT' | translate }}
       </button>
     </footer>
   </section>
 
   @if (showCreateModal()) {
   <section class="modal-backdrop">
-    <dialog class="modal-surface mic-elevation-4" open aria-label="Create role">
+    <dialog class="modal-surface mic-elevation-4" open [attr.aria-label]="'SECURITY.ROLES_LIST.CREATE_ROLE' | translate">
       <header class="modal-header">
-        <h2>Create Role</h2>
-        <p>Add a new role definition for security access management.</p>
+        <h2>{{ 'SECURITY.ROLES_LIST.CREATE_ROLE' | translate }}</h2>
+        <p>{{ 'SECURITY.ROLES_LIST.CREATE_HELP' | translate }}</p>
       </header>
 
       @if (createError()) {
-      <div class="alert alert-error" role="alert" aria-live="polite">{{ createError() }}</div>
+      <div class="alert alert-error" role="alert" aria-live="polite">{{ createError()! | translate }}</div>
       }
 
       <div class="modal-fields">
-        <label class="field-label" for="create-role-name">Name</label>
+        <label class="field-label" for="create-role-name">{{ 'SECURITY.ROLES_LIST.COLUMNS.NAME' | translate }}</label>
         <input id="create-role-name" class="underline-input" type="text" [value]="newRoleName()"
-          (input)="newRoleName.set($any($event.target).value)" aria-label="Role name" required />
+          (input)="newRoleName.set($any($event.target).value)" [attr.aria-label]="'SECURITY.ROLES_LIST.ARIAS.ROLE_NAME' | translate" required />
 
-        <label class="field-label" for="create-role-description">Description</label>
+        <label class="field-label" for="create-role-description">{{ 'SECURITY.ROLES_LIST.COLUMNS.DESCRIPTION' | translate }}</label>
         <textarea id="create-role-description" class="underline-input" [value]="newRoleDescription()"
-          (input)="newRoleDescription.set($any($event.target).value)" aria-label="Role description" rows="4"></textarea>
+          (input)="newRoleDescription.set($any($event.target).value)" [attr.aria-label]="'SECURITY.ROLES_LIST.ARIAS.ROLE_DESCRIPTION' | translate" rows="4"></textarea>
       </div>
 
       <footer class="modal-actions">
-        <button type="button" class="btn-text" (click)="closeCreateModal()" aria-label="Cancel create role">
-          Cancel
+        <button type="button" class="btn-text" (click)="closeCreateModal()" [attr.aria-label]="'SECURITY.ROLES_LIST.CANCEL' | translate">
+          {{ 'SECURITY.ROLES_LIST.CANCEL' | translate }}
         </button>
-        <button type="button" class="btn-primary" (click)="submitCreate()" aria-label="Submit create role">
-          Submit
+        <button type="button" class="btn-primary" (click)="submitCreate()" [attr.aria-label]="'SECURITY.ROLES_LIST.SUBMIT' | translate">
+          {{ 'SECURITY.ROLES_LIST.SUBMIT' | translate }}
         </button>
       </footer>
     </dialog>

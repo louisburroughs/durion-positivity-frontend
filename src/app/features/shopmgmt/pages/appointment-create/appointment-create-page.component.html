@@ -1,5 +1,5 @@
 <div class="page-header">
-  <h2>Create Appointment</h2>
+  <h2>{{ 'SHOPMGMT.APPOINTMENT_CREATE.TITLE' | translate }}</h2>
 </div>
 
 <div class="source-summary">
@@ -13,25 +13,25 @@
 </div>
 
 <div *ngIf="errorMessage()" class="error-banner">
-  {{ errorMessage() }}
+  {{ errorMessage()! | translate }}
   <span *ngIf="correlationId()" class="correlation-id">{{ correlationId() }}</span>
-  <a *ngIf="showBackToSource()" class="back-to-source" href="#">Back to Source</a>
+  <a *ngIf="showBackToSource()" class="back-to-source" href="#">{{ 'SHOPMGMT.APPOINTMENT_CREATE.BACK_TO_SOURCE' | translate }}</a>
 </div>
 
 <div *ngIf="showEligibilityError()" class="eligibility-error">
-  This source is not eligible for a new appointment.
-  <a class="back-to-source" href="#">Back to Source</a>
+  {{ 'SHOPMGMT.APPOINTMENT_CREATE.ELIGIBILITY_ERROR' | translate }}
+  <a class="back-to-source" href="#">{{ 'SHOPMGMT.APPOINTMENT_CREATE.BACK_TO_SOURCE' | translate }}</a>
 </div>
 
 <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
   <div class="form-group">
-    <label for="scheduledStartDateTime">Scheduled Start</label>
+    <label for="scheduledStartDateTime">{{ 'SHOPMGMT.APPOINTMENT_CREATE.SCHEDULED_START' | translate }}</label>
     <input id="scheduledStartDateTime" name="scheduledStartDateTime" type="datetime-local"
       formControlName="scheduledStartDateTime" />
   </div>
 
   <div class="form-group">
-    <label for="scheduledEndDateTime">Scheduled End</label>
+    <label for="scheduledEndDateTime">{{ 'SHOPMGMT.APPOINTMENT_CREATE.SCHEDULED_END' | translate }}</label>
     <input id="scheduledEndDateTime" name="scheduledEndDateTime" type="datetime-local"
       formControlName="scheduledEndDateTime" />
   </div>
@@ -40,10 +40,10 @@
     <div class="conflict-panel">
       <div *ngFor="let c of conflicts()">
         <div *ngIf="c.type === 'HARD'" class="hard-conflict">
-          <span class="severity-badge">HARD</span> {{ c.message }}
+          <span class="severity-badge">{{ 'SHOPMGMT.APPOINTMENT_CREATE.HARD' | translate }}</span> {{ c.message }}
         </div>
         <div *ngIf="c.type === 'SOFT'" class="soft-conflict">
-          <span class="severity-badge">SOFT</span> {{ c.message }}
+          <span class="severity-badge">{{ 'SHOPMGMT.APPOINTMENT_CREATE.SOFT' | translate }}</span> {{ c.message }}
         </div>
       </div>
     </div>
@@ -52,15 +52,15 @@
   <div *ngIf="hasSoftOnly()" class="override-section">
     <label>
       <input type="checkbox" (change)="overrideEnabled.set($any($event.target).checked)" />
-      Override soft conflicts
+      {{ 'SHOPMGMT.APPOINTMENT_CREATE.OVERRIDE_SOFT' | translate }}
     </label>
     <div *ngIf="overrideEnabled()" class="override-reason form-group">
-      <label for="overrideReason">Override Reason</label>
+      <label for="overrideReason">{{ 'SHOPMGMT.APPOINTMENT_CREATE.OVERRIDE_REASON' | translate }}</label>
       <textarea id="overrideReason" name="overrideReason" formControlName="overrideReason" rows="2"></textarea>
     </div>
   </div>
 
   <div class="action-row">
-    <button type="submit" [disabled]="isSubmitDisabled">Create Appointment</button>
+    <button type="submit" [disabled]="isSubmitDisabled">{{ 'SHOPMGMT.APPOINTMENT_CREATE.CREATE' | translate }}</button>
   </div>
 </form>

@@ -2,13 +2,14 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
@@ -54,11 +55,11 @@ export class LoginComponent implements OnInit {
         this.loading.set(false);
         const status = err?.status;
         if (status === 401 || status === 403) {
-          this.error.set('Invalid username or password. Please try again.');
+          this.error.set('AUTH.LOGIN.ERROR.INVALID_CREDENTIALS');
         } else if (status === 0) {
-          this.error.set('Cannot reach the server. Check your network or try again later.');
+          this.error.set('AUTH.LOGIN.ERROR.NETWORK');
         } else {
-          this.error.set(`Login failed (${status ?? 'unknown error'}). Please try again.`);
+          this.error.set('AUTH.LOGIN.ERROR.GENERIC');
         }
       },
     });

@@ -1,49 +1,49 @@
 <section class="page-header">
-  <h2>Appointment Dispatch Assignment</h2>
+  <h2>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.TITLE' | translate }}</h2>
 </section>
 
-<div *ngIf="submitSuccess()" class="success-banner">Assignment created successfully.</div>
-<div *ngIf="submitError()" class="error-banner">{{ submitError() }}</div>
+<div *ngIf="submitSuccess()" class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.SUCCESS' | translate }}</div>
+<div *ngIf="submitError()" class="error-banner">{{ submitError()! | translate }}</div>
 
 <section *ngIf="appointment() as appt" class="appointment-header">
-  <h3>Appointment {{ appt.appointmentId }}</h3>
-  <p>Status: {{ appt.status }}</p>
-  <p>Facility: {{ appt.facilityId }}</p>
+  <h3>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.APPOINTMENT' | translate: { id: appt.appointmentId } }}</h3>
+  <p>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.STATUS' | translate }}: {{ appt.status }}</p>
+  <p>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.FACILITY' | translate }}: {{ appt.facilityId }}</p>
 </section>
 
 <section class="assignment-history">
-  <h3>Assignment History</h3>
+  <h3>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.ASSIGNMENT_HISTORY' | translate }}</h3>
   <article *ngFor="let assignment of assignments()" class="assignment-item">
-    <p>Role: {{ getAssignmentRole(assignment) }}</p>
-    <p>Mechanic: {{ assignment.mechanic?.displayName ?? assignment.mechanic?.mechanicId }}</p>
+    <p>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.ROLE' | translate }}: {{ getAssignmentRole(assignment) }}</p>
+    <p>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.MECHANIC' | translate }}: {{ assignment.mechanic?.displayName ?? assignment.mechanic?.mechanicId }}</p>
   </article>
 </section>
 
 <form [formGroup]="assignForm" class="create-form" (ngSubmit)="submitAssignment()">
   <div class="form-group">
-    <label for="resource-id">Resource Id</label>
+    <label for="resource-id">{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.RESOURCE_ID' | translate }}</label>
     <input id="resource-id" type="text" formControlName="resourceId" />
   </div>
 
   <div class="form-group">
-    <label for="mechanic-id">Mechanic Id</label>
+    <label for="mechanic-id">{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.MECHANIC_ID' | translate }}</label>
     <input id="mechanic-id" type="text" formControlName="mechanicId" />
   </div>
 
   <div class="form-group">
-    <label for="role">Role</label>
+    <label for="role">{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.ROLE' | translate }}</label>
     <select id="role" formControlName="role">
-      <option value="LEAD">LEAD</option>
-      <option value="ASSIST">ASSIST</option>
+      <option value="LEAD">{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.ROLES.LEAD' | translate }}</option>
+      <option value="ASSIST">{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.ROLES.ASSIST' | translate }}</option>
     </select>
   </div>
 
-  <button type="submit" class="btn-primary submit-assignment-btn" [disabled]="submitLoading()">Create
-    Assignment</button>
+  <button type="submit" class="btn-primary submit-assignment-btn"
+    [disabled]="submitLoading()">{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.CREATE' | translate }}</button>
 </form>
 
 <section *ngIf="conflicts().length > 0" class="conflict-panel">
-  <h3>Conflicts</h3>
+  <h3>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.CONFLICTS' | translate }}</h3>
 
   <article *ngFor="let conflict of conflicts()" class="conflict-item"
     [ngClass]="conflict.type === 'HARD' ? 'hard-conflict' : 'soft-conflict'">

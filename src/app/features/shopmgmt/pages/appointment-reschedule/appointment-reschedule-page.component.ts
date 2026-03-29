@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AppointmentService } from '../../services/appointment.service';
@@ -9,7 +10,7 @@ import type { AppointmentDetail, Conflict, TimeSlot } from '../../models/appoint
 @Component({
   selector: 'app-appointment-reschedule-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './appointment-reschedule-page.component.html',
   styleUrl: './appointment-reschedule-page.component.css',
 })
@@ -54,7 +55,7 @@ export class AppointmentReschedulePageComponent implements OnInit {
         },
         error: () => {
           this.loading.set(false);
-          this.fieldErrors.set([{ field: '', message: 'Failed to load appointment details.' }]);
+          this.fieldErrors.set([{ field: '', message: 'SHOPMGMT.APPOINTMENT_RESCHEDULE.ERROR.LOAD_DETAILS' }]);
         },
       });
     });
@@ -84,7 +85,7 @@ export class AppointmentReschedulePageComponent implements OnInit {
     this.appointmentService.rescheduleAppointment(this.appointmentId(), body).subscribe({
       next: () => {
         this.submitLoading.set(false);
-        this.successMessage.set('Appointment rescheduled successfully');
+        this.successMessage.set('SHOPMGMT.APPOINTMENT_RESCHEDULE.SUCCESS');
       },
       error: (err: HttpErrorResponse) => {
         this.submitLoading.set(false);
