@@ -6,8 +6,8 @@
       class="nav-toggle-btn"
       type="button"
       (click)="toggleNav()"
-      aria-label="Toggle navigation sidebar"
-      title="Toggle sidebar"
+      [attr.aria-label]="'SHELL.HEADER.NAV_TOGGLE_ARIA' | translate"
+      [title]="'SHELL.HEADER.NAV_TOGGLE_TITLE' | translate"
     >
       <span class="hamburger-icon" aria-hidden="true">☰</span>
     </button>
@@ -16,17 +16,30 @@
 
   <!-- Right: theme toggle + user info -->
   <div class="header-end">
+    <label class="sr-only" for="locale-select">{{ 'SHELL.HEADER.LOCALE.LABEL' | translate }}</label>
+    <select
+      id="locale-select"
+      class="locale-select"
+      [value]="localeService.currentLocale()"
+      (change)="setLocale($any($event.target).value)"
+      [attr.aria-label]="'SHELL.HEADER.LOCALE.ARIA' | translate"
+    >
+      @for (locale of localeOptions; track locale.code) {
+        <option [value]="locale.code">{{ locale.labelKey | translate }}</option>
+      }
+    </select>
+
     <button
       class="icon-btn"
       type="button"
       (click)="themeService.toggle()"
-      [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-      [title]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+      [attr.aria-label]="themeService.isDark() ? ('SHELL.HEADER.THEME_TO_LIGHT' | translate) : ('SHELL.HEADER.THEME_TO_DARK' | translate)"
+      [title]="themeService.isDark() ? ('SHELL.HEADER.THEME_TO_LIGHT' | translate) : ('SHELL.HEADER.THEME_TO_DARK' | translate)"
     >
       {{ themeService.isDark() ? '☀️' : '🌙' }}
     </button>
 
-    <div class="user-chip" aria-label="Logged-in user">
+    <div class="user-chip" [attr.aria-label]="'SHELL.HEADER.USER_CHIP_ARIA' | translate">
       <span class="user-avatar" aria-hidden="true">{{ username.charAt(0).toUpperCase() }}</span>
       <span class="user-name">{{ username }}</span>
     </div>
@@ -35,8 +48,8 @@
       class="icon-btn logout-btn"
       type="button"
       (click)="logout()"
-      aria-label="Sign out"
-      title="Sign out"
+      [attr.aria-label]="'SHELL.HEADER.SIGN_OUT' | translate"
+      [title]="'SHELL.HEADER.SIGN_OUT' | translate"
     >
       ⏻
     </button>

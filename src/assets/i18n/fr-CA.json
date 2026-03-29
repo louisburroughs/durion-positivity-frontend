@@ -14,6 +14,25 @@
       "HOME": "Aller à l'accueil de l'application"
     }
   },
+  "SHELL": {
+    "HEADER": {
+      "NAV_TOGGLE_ARIA": "Basculer la barre latérale de navigation",
+      "NAV_TOGGLE_TITLE": "Basculer la barre latérale",
+      "THEME_TO_LIGHT": "Passer en mode clair",
+      "THEME_TO_DARK": "Passer en mode sombre",
+      "USER_CHIP_ARIA": "Utilisateur connecté",
+      "SIGN_OUT": "Se déconnecter",
+      "LOCALE": {
+        "LABEL": "Langue",
+        "ARIA": "Sélectionner la langue de l'application",
+        "OPTION": {
+          "EN_US": "Anglais (États-Unis)",
+          "ES_US": "Espagnol (États-Unis)",
+          "FR_CA": "Français (Canada)"
+        }
+      }
+    }
+  },
   "ACCOUNTING": {
     "COMMON": {
       "ACCESS_DENIED": "Accès refusé",

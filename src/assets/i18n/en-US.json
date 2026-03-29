@@ -14,6 +14,25 @@
       "HOME": "Go to app home"
     }
   },
+  "SHELL": {
+    "HEADER": {
+      "NAV_TOGGLE_ARIA": "Toggle navigation sidebar",
+      "NAV_TOGGLE_TITLE": "Toggle sidebar",
+      "THEME_TO_LIGHT": "Switch to light mode",
+      "THEME_TO_DARK": "Switch to dark mode",
+      "USER_CHIP_ARIA": "Logged-in user",
+      "SIGN_OUT": "Sign out",
+      "LOCALE": {
+        "LABEL": "Language",
+        "ARIA": "Select application language",
+        "OPTION": {
+          "EN_US": "English (US)",
+          "ES_US": "Español (EE. UU.)",
+          "FR_CA": "Français (Canada)"
+        }
+      }
+    }
+  },
   "ACCOUNTING": {
     "COMMON": {
       "ACCESS_DENIED": "Access denied",
