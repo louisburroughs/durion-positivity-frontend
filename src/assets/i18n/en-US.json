@@ -713,6 +713,309 @@
       "FIELD_CREATED": "Created at"
     }
   },
+  "PRODUCT": {
+    "LIST": {
+      "TITLE": "Products",
+      "SEARCH": {
+        "LABEL": "Search products",
+        "ARIA": "Search products",
+        "PLACEHOLDER": "Search by name or SKU…"
+      },
+      "TABLE": {
+        "SKU": "SKU",
+        "NAME": "Name",
+        "CATEGORY": "Category",
+        "STATUS": "Status",
+        "MSRP": "MSRP"
+      },
+      "ACTION": {
+        "NEW_PRODUCT": "New product"
+      },
+      "STATE": {
+        "IDLE": "Enter a search term to find products.",
+        "EMPTY": "No products found."
+      },
+      "ERROR": {
+        "LOAD": "Failed to load products."
+      }
+    },
+    "CATALOG": {
+      "LIST": {
+        "BREADCRUMB": {
+          "PRODUCTS": "Products"
+        }
+      },
+      "DETAIL": {
+        "SKU": "SKU",
+        "CATEGORY": "Category",
+        "TABS": {
+          "ARIA": "Product detail tabs",
+          "LIFECYCLE": "Lifecycle",
+          "UOM": "Units of Measure",
+          "COST_TIERS": "Cost Tiers",
+          "STANDARD_COST": "Standard Cost"
+        },
+        "STATE": {
+          "EMPTY": "No product detail available."
+        },
+        "LIFECYCLE": {
+          "TITLE": "Lifecycle",
+          "CURRENT_STATE": "Current state",
+          "LAST_CHANGED_AT": "Last changed",
+          "LAST_CHANGED_BY": "Changed by",
+          "TARGET_STATE": "Target state",
+          "EFFECTIVE_AT": "Effective date",
+          "EFFECTIVE_DATE": "Effective date",
+          "REASON": "Reason",
+          "CHANGE_STATE": "Change state"
+        },
+        "REPLACEMENTS": {
+          "TITLE": "Replacements",
+          "EMPTY": "No replacement products.",
+          "PRODUCT": "Replacement product",
+          "PRIORITY": "Priority",
+          "PRIORITY_LABEL": "Priority",
+          "EFFECTIVE_AT": "Effective date",
+          "NOTES": "Notes"
+        },
+        "UOM": {
+          "TITLE": "Units of Measure",
+          "FROM": "From",
+          "TO": "To",
+          "FACTOR": "Factor",
+          "ACTIVE": "Active"
+        },
+        "COST_TIERS": {
+          "TITLE": "Cost Tiers",
+          "SUPPLIER": "Supplier",
+          "MIN_QTY": "Min qty",
+          "MAX_QTY": "Max qty",
+          "UNIT_COST": "Unit cost"
+        },
+        "STANDARD_COST": {
+          "TITLE": "Standard Cost",
+          "CURRENT": "Current cost",
+          "AVERAGE": "Average cost",
+          "LAST": "Last cost",
+          "NEW_COST": "New cost",
+          "REASON_CODE": "Reason code",
+          "AUDIT_HISTORY": "Audit history",
+          "AUDIT_EMPTY": "No audit history.",
+          "AUDIT_CHANGED": "Changed"
+        }
+      },
+      "ERROR": {
+        "LOAD": "Failed to load product details.",
+        "MISSING_PRODUCT_ID": "No product ID provided."
+      },
+      "LIFECYCLE": {
+        "ERROR": {
+          "UPDATE": "Failed to update lifecycle state."
+        }
+      },
+      "REPLACEMENTS": {
+        "ERROR": {
+          "ADD": "Failed to add replacement product."
+        }
+      },
+      "UOM": {
+        "ERROR": {
+          "CREATE": "Failed to create unit of measure conversion.",
+          "UPDATE": "Failed to update unit of measure conversion.",
+          "DEACTIVATE": "Failed to deactivate unit of measure conversion."
+        }
+      },
+      "STANDARD_COST": {
+        "ERROR": {
+          "UPDATE": "Failed to update standard cost."
+        }
+      }
+    },
+    "INVENTORY": {
+      "FEEDS": {
+        "TITLE": "Inventory Feeds",
+        "SKU": "SKU",
+        "SKU_PLACEHOLDER": "Enter a SKU…",
+        "TABS": {
+          "ARIA": "Inventory feed tabs",
+          "MANUFACTURER": "Manufacturer",
+          "DISTRIBUTOR": "Distributor"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Availability",
+          "SOURCE": "Source",
+          "ON_HAND": "On hand",
+          "RESERVED": "Reserved",
+          "ATP": "ATP",
+          "AS_OF": "As of",
+          "STATUS": "Status"
+        },
+        "LEAD_TIME": {
+          "TITLE": "Lead Time",
+          "SOURCE": "Source",
+          "MIN_DAYS": "Min days",
+          "MAX_DAYS": "Max days"
+        },
+        "STATUS": {
+          "IN_STOCK": "In stock",
+          "LOW_STOCK": "Low stock",
+          "OUT_OF_STOCK": "Out of stock"
+        },
+        "STATE": {
+          "EMPTY": "No inventory feed data found."
+        },
+        "ERROR": {
+          "LOAD": "Failed to load inventory feeds."
+        }
+      },
+      "AVAILABILITY": {
+        "TITLE": "Inventory Availability",
+        "SKU": "SKU",
+        "SKU_PLACEHOLDER": "Enter a SKU…",
+        "LOCATION": "Location",
+        "LOCATION_PLACEHOLDER": "Filter by location…",
+        "SUMMARY": {
+          "ON_HAND": "On hand",
+          "RESERVED": "Reserved",
+          "ATP": "Available to promise"
+        },
+        "TABLE": {
+          "LOCATION": "Location",
+          "ON_HAND": "On hand",
+          "RESERVED": "Reserved",
+          "ATP": "ATP"
+        },
+        "STATE": {
+          "IDLE": "Enter a SKU to check availability.",
+          "EMPTY": "No availability data found for this SKU."
+        },
+        "ERROR": {
+          "LOAD": "Failed to load inventory availability."
+        }
+      }
+    },
+    "LOCATION": {
+      "ROSTER": {
+        "TITLE": "Location Roster",
+        "FILTER": {
+          "STATUS": "Status"
+        },
+        "TABLE": {
+          "ID": "ID",
+          "NAME": "Name",
+          "STATUS": "Status",
+          "VALIDATION_STATUS": "Validation",
+          "LAST_VALIDATED": "Last validated"
+        },
+        "ACTION": {
+          "VALIDATE": "Validate"
+        },
+        "STATE": {
+          "EMPTY": "No locations found."
+        },
+        "ERROR": {
+          "LOAD": "Failed to load location roster.",
+          "VALIDATE": "Failed to validate location."
+        }
+      }
+    },
+    "PRICING": {
+      "MSRP": {
+        "TITLE": "MSRP",
+        "SEARCH_LABEL": "SKU",
+        "SEARCH_PLACEHOLDER": "Enter a SKU…",
+        "TABLE": {
+          "SKU": "SKU",
+          "AMOUNT": "Amount",
+          "CURRENCY": "Currency",
+          "EFFECTIVE": "Effective",
+          "EXPIRY": "Expiry",
+          "ACTIVE": "Active"
+        },
+        "ACTIVE": {
+          "TITLE": "Active MSRP"
+        },
+        "STATE": {
+          "IDLE": "Enter a SKU to look up MSRP.",
+          "EMPTY": "No MSRP records found."
+        },
+        "ERROR": {
+          "LOAD": "Failed to load MSRP records.",
+          "CREATE": "Failed to create MSRP record.",
+          "UPDATE": "Failed to update MSRP record."
+        }
+      },
+      "PRICE_BOOKS": {
+        "TITLE": "Price Books",
+        "SELECTOR_TITLE": "Select a price book",
+        "NEW_NAME": "Price book name",
+        "NEW_CTA": "Create price book",
+        "RULES": {
+          "TITLE": "Rules",
+          "NAME": "Name",
+          "CONDITION": "Condition",
+          "DIMENSION": "Dimension",
+          "VALUE": "Value",
+          "ADJUSTMENT": "Adjustment",
+          "TYPE": "Type",
+          "PERCENT": "Percent",
+          "FIXED": "Fixed",
+          "PRIORITY": "Priority",
+          "STATUS": "Status"
+        },
+        "STATE": {
+          "IDLE": "Select a price book to view its rules.",
+          "EMPTY": "No rules for this price book."
+        },
+        "ERROR": {
+          "LOAD": "Failed to load price books.",
+          "CREATE": "Failed to create price book.",
+          "UPDATE": "Failed to update price book.",
+          "CREATE_RULE": "Failed to create rule.",
+          "UPDATE_RULE": "Failed to update rule.",
+          "DEACTIVATE_RULE": "Failed to deactivate rule."
+        }
+      },
+      "LOCATION_OVERRIDES": {
+        "TITLE": "Location Price Overrides",
+        "PENDING": {
+          "TITLE": "Pending overrides",
+          "LOCATION": "Location",
+          "SKU": "SKU",
+          "PRICE": "Override price",
+          "REQUESTED_AT": "Requested",
+          "STATUS": "Status"
+        },
+        "REQUEST": {
+          "TITLE": "Request override",
+          "LOCATION": "Location",
+          "SKU": "SKU",
+          "PRICE": "Override price",
+          "CURRENCY": "Currency",
+          "REASON": "Reason",
+          "SUBMIT": "Submit request"
+        },
+        "GUARDRAIL": {
+          "TITLE": "Guardrail policy",
+          "LOCATION": "Location",
+          "MIN": "Min price %",
+          "MAX": "Max price %",
+          "APPROVAL": "Approval threshold %"
+        },
+        "EFFECTIVE_PRICE": {
+          "TITLE": "Effective prices"
+        },
+        "ERROR": {
+          "LOAD": "Failed to load location price overrides.",
+          "CREATE": "Failed to submit price override request.",
+          "APPROVE": "Failed to approve price override.",
+          "REJECT": "Failed to reject price override.",
+          "GUARDRAIL": "Failed to update guardrail policy.",
+          "EFFECTIVE_PRICE": "Failed to load effective prices."
+        }
+      }
+    }
+  },
   "WORKEXEC": {
     "OPERATIONAL_COST": {
       "OVERLINE": "Workorder Costs",

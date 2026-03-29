@@ -1,0 +1,165 @@
+<main class="page" aria-labelledby="location-overrides-title">
+  <header class="page-header">
+    <h1 id="location-overrides-title" class="page-title">{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.TITLE' | translate }}
+    </h1>
+  </header>
+
+  <section class="card panel">
+    <h2>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.REQUEST.TITLE' | translate }}</h2>
+    <form class="form-grid"
+      (submit)="createOverride({ locationId: reqLocationId.value, productSku: reqSku.value, overridePrice: +reqPrice.value, currency: reqCurrency.value || 'USD', reason: reqReason.value, status: 'PENDING_APPROVAL' }); $event.preventDefault()">
+      <label>
+        {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.REQUEST.LOCATION' | translate }}
+        <input #reqLocationId class="input-underline" type="text" required />
+      </label>
+      <label>
+        {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.REQUEST.SKU' | translate }}
+        <input #reqSku class="input-underline" type="text" required />
+      </label>
+      <label>
+        {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.REQUEST.PRICE' | translate }}
+        <input #reqPrice class="input-underline" type="number" step="0.01" min="0" required />
+      </label>
+      <label>
+        {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.REQUEST.CURRENCY' | translate }}
+        <input #reqCurrency class="input-underline" type="text" value="USD" />
+      </label>
+      <label class="full-row">
+        {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.REQUEST.REASON' | translate }}
+        <textarea #reqReason class="input-underline" rows="3" minlength="10" required></textarea>
+      </label>
+      <button class="btn-primary" type="submit" [disabled]="reqReason.value.length < 10">
+        {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.REQUEST.SUBMIT' | translate }}
+      </button>
+    </form>
+  </section>
+
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true">
+    @for (_row of [1, 2, 3, 4, 5, 6]; track $index) {
+    <div class="skeleton-row"></div>
+    }
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="card panel state-card">
+    <p>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.STATE.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'ready' || overrides().length > 0) {
+  <section class="card panel">
+    <h2>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.PENDING.TITLE' | translate }}</h2>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.PENDING.LOCATION' | translate }}</th>
+            <th>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.PENDING.SKU' | translate }}</th>
+            <th>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.PENDING.PRICE' | translate }}</th>
+            <th>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.PENDING.STATUS' | translate }}</th>
+            <th>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.PENDING.REQUESTED_AT' | translate }}</th>
+            <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of overrides(); track entry.id) {
+          <tr>
+            <td>{{ entry.locationId }}</td>
+            <td>{{ entry.productSku }}</td>
+            <td>{{ entry.overridePrice | currency:entry.currency:'symbol':'1.2-2' }}</td>
+            <td>
+              <span class="badge" [class.badge--success]="entry.status === 'ACTIVE'"
+                [class.badge--warning]="entry.status === 'PENDING_APPROVAL'"
+                [class.badge--error]="entry.status === 'REJECTED'">
+                {{ 'STATUS.' + entry.status | translate }}
+              </span>
+            </td>
+            <td>{{ entry.requestedAt | date:'medium' }}</td>
+            <td>
+              @if (entry.status === 'PENDING_APPROVAL' && canApproveOverrides()) {
+              <div class="inline-actions">
+                <button class="btn-primary" type="button" (click)="approveOverride(entry.id)">
+                  {{ 'COMMON.APPROVE' | translate }}
+                </button>
+                <input #rejectReason class="input-underline" type="text"
+                  [attr.placeholder]="'COMMON.REASON' | translate" />
+                <button class="btn-secondary" type="button" (click)="rejectOverride(entry.id, rejectReason.value)">
+                  {{ 'COMMON.REJECT' | translate }}
+                </button>
+              </div>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+
+  @if (canManageGuardrails()) {
+  <section class="card panel">
+    <h2>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.GUARDRAIL.TITLE' | translate }}</h2>
+
+    @if (guardrail()) {
+    <div class="guardrail-summary">
+      <p>
+        <strong>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.GUARDRAIL.MIN' | translate }}:</strong>
+        {{ guardrail()?.minPricePercent | percent:'1.0-2' }}
+      </p>
+      <p>
+        <strong>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.GUARDRAIL.MAX' | translate }}:</strong>
+        {{ guardrail()?.maxPricePercent | percent:'1.0-2' }}
+      </p>
+      <p>
+        <strong>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.GUARDRAIL.APPROVAL' | translate }}:</strong>
+        {{ guardrail()?.requiresApprovalAbovePercent | percent:'1.0-2' }}
+      </p>
+    </div>
+    }
+
+    <form class="form-grid"
+      (submit)="updateGuardrail({ locationId: guardrailLocation.value, minPricePercent: +guardrailMin.value, maxPricePercent: +guardrailMax.value, requiresApprovalAbovePercent: +guardrailApproval.value }); $event.preventDefault()">
+      <label>
+        {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.GUARDRAIL.LOCATION' | translate }}
+        <input #guardrailLocation class="input-underline" type="text" [value]="guardrail()?.locationId ?? ''" />
+      </label>
+      <label>
+        {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.GUARDRAIL.MIN' | translate }}
+        <input #guardrailMin class="input-underline" type="number" step="0.01"
+          [value]="guardrail()?.minPricePercent ?? 0" />
+      </label>
+      <label>
+        {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.GUARDRAIL.MAX' | translate }}
+        <input #guardrailMax class="input-underline" type="number" step="0.01"
+          [value]="guardrail()?.maxPricePercent ?? 0" />
+      </label>
+      <label>
+        {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.GUARDRAIL.APPROVAL' | translate }}
+        <input #guardrailApproval class="input-underline" type="number" step="0.01"
+          [value]="guardrail()?.requiresApprovalAbovePercent ?? 0" />
+      </label>
+      <button class="btn-secondary" type="submit">{{ 'COMMON.UPDATE' | translate }}</button>
+    </form>
+  </section>
+  }
+
+  @if (effectivePrice()) {
+  <section class="card panel">
+    <h2>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.EFFECTIVE_PRICE.TITLE' | translate }}</h2>
+    <p>
+      {{ effectivePrice()?.locationId }} · {{ effectivePrice()?.productSku }} ·
+      {{ effectivePrice()?.finalPrice ?? 0 | currency:(effectivePrice()?.currency ?? 'USD'):'symbol':'1.2-2' }}
+    </p>
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="error-banner" role="alert">
+    <span class="error-icon" aria-hidden="true">!</span>
+    <span>{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</span>
+  </section>
+  }
+</main>

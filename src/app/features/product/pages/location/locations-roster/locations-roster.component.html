@@ -1,0 +1,85 @@
+<main class="page" aria-labelledby="locations-roster-title">
+  <header class="page-header">
+    <h1 id="locations-roster-title" class="page-title">{{ 'PRODUCT.LOCATION.ROSTER.TITLE' | translate }}</h1>
+  </header>
+
+  <section class="card panel filter-bar">
+    <label>
+      {{ 'PRODUCT.LOCATION.ROSTER.FILTER.STATUS' | translate }}
+      <select class="input-underline" [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+        <option value="ACTIVE">{{ 'STATUS.ACTIVE' | translate }}</option>
+        <option value="INACTIVE">{{ 'STATUS.INACTIVE' | translate }}</option>
+        <option value="ALL">{{ 'COMMON.ALL' | translate }}</option>
+      </select>
+    </label>
+    <button class="btn-primary" type="button" (click)="refresh()">{{ 'COMMON.REFRESH' | translate }}</button>
+  </section>
+
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true">
+    @for (_row of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track $index) {
+    <div class="skeleton-row"></div>
+    }
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="card panel state-card">
+    <p>{{ 'PRODUCT.LOCATION.ROSTER.STATE.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'ready') {
+  <section class="card panel">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'PRODUCT.LOCATION.ROSTER.TABLE.ID' | translate }}</th>
+            <th>{{ 'PRODUCT.LOCATION.ROSTER.TABLE.NAME' | translate }}</th>
+            <th>{{ 'PRODUCT.LOCATION.ROSTER.TABLE.STATUS' | translate }}</th>
+            <th>{{ 'PRODUCT.LOCATION.ROSTER.TABLE.LAST_VALIDATED' | translate }}</th>
+            <th>{{ 'PRODUCT.LOCATION.ROSTER.TABLE.VALIDATION_STATUS' | translate }}</th>
+            <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of roster(); track entry.id) {
+          <tr>
+            <td>{{ entry.id }}</td>
+            <td>{{ entry.name }}</td>
+            <td>
+              <span class="badge" [class.badge--success]="entry.status === 'ACTIVE'"
+                [class.badge--neutral]="entry.status === 'INACTIVE'">
+                {{ 'STATUS.' + entry.status | translate }}
+              </span>
+            </td>
+            <td>{{ entry.lastValidatedAt | date:'medium' }}</td>
+            <td>
+              <span class="badge" [class.badge--success]="entry.validationStatus === 'VALID'"
+                [class.badge--error]="entry.validationStatus === 'INVALID'"
+                [class.badge--warning]="entry.validationStatus === 'PENDING' || entry.validationStatus === 'STALE'">
+                {{ 'STATUS.' + entry.validationStatus | translate }}
+              </span>
+            </td>
+            <td>
+              <button class="btn-secondary" type="button" (click)="validate(entry.id)">
+                {{ 'PRODUCT.LOCATION.ROSTER.ACTION.VALIDATE' | translate }}
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="error-banner" role="alert">
+    <span class="error-icon" aria-hidden="true">!</span>
+    <span>{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</span>
+    <button class="btn-secondary" type="button" (click)="refresh()">{{ 'COMMON.RETRY' | translate }}</button>
+  </section>
+  }
+</main>
