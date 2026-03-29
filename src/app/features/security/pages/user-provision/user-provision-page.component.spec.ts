@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute. provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { NEVER, of, throwError } from 'rxjs';
 import { SecurityRole } from '../../models/security.models';
 import { SecurityService } from '../../services/security.service';
@@ -77,7 +77,7 @@ describe('UserProvisionPageComponent', () => {
     const select = fixture.nativeElement.querySelector('[data-testid="role-select"]');
     expect(select).toBeTruthy();
     const optionTexts: string[] = Array.from(select.querySelectorAll('option')).map(
-      (o) => (o as HTMLOptionElement).textContent!.trim(),
+      (o) => o.textContent!.trim(),
     );
     expect(optionTexts).toContain('MANAGER');
     expect(optionTexts).toContain('CASHIER');
@@ -97,7 +97,7 @@ describe('UserProvisionPageComponent', () => {
   it('T6: shows field-error-username when username is touched and invalid', () => {
     fixture.detectChanges();
 
-    component.form.get('username')!.markAsTouched();
+    component.form.get('username')?.markAsTouched();
     fixture.detectChanges();
 
     const errorEl = fixture.nativeElement.querySelector('[data-testid="field-error-username"]');

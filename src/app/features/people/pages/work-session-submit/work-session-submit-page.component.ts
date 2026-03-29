@@ -60,7 +60,10 @@ export class WorkSessionSubmitPageComponent {
         this.sessionId.set(params['sessionId'] ?? '');
       });
 
-    this.submitForm.controls.submittedAt.setValue(new Date().toISOString().slice(0, 16));
+    const _d = new Date();
+    const _pad = (n: number): string => String(n).padStart(2, '0');
+    const _localStr = `${_d.getFullYear()}-${_pad(_d.getMonth() + 1)}-${_pad(_d.getDate())}T${_pad(_d.getHours())}:${_pad(_d.getMinutes())}`;
+    this.submitForm.controls.submittedAt.setValue(_localStr);
   }
 
   submitJobTime(): void {

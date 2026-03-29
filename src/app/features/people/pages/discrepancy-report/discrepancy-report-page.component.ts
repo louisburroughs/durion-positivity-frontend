@@ -86,8 +86,8 @@ export class DiscrepancyReportPageComponent {
           this.loading.set(false);
         },
         error: (err) => {
-          // Preserve prior rows on error
-          this.rows.set(this.priorRows());
+          // Preserve prior rows on error, re-applying the active filter
+          this.rows.set(this.applyFilters(this.priorRows(), flaggedOnly));
           this.error.set(err?.error?.message ?? 'Failed to load discrepancy report.');
           this.loading.set(false);
         },

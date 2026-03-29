@@ -110,19 +110,19 @@ export class PeopleService {
   }
 
   startBreak(sessionId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
-    return this.api.post<unknown>(`/v1/people/workSessions/${sessionId}/breaks/start`, body, this.idempotencyOptions(idempotencyKey));
+    return this.api.post<unknown>(`/v1/people/workSessions/${encodeURIComponent(sessionId)}/breaks/start`, body, this.idempotencyOptions(idempotencyKey));
   }
 
   stopBreak(sessionId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
-    return this.api.post<unknown>(`/v1/people/workSessions/${sessionId}/breaks/stop`, body, this.idempotencyOptions(idempotencyKey));
+    return this.api.post<unknown>(`/v1/people/workSessions/${encodeURIComponent(sessionId)}/breaks/stop`, body, this.idempotencyOptions(idempotencyKey));
   }
 
   submitWorkSession(sessionId: string, body: unknown, idempotencyKey?: string): Observable<unknown> {
-    return this.api.post<unknown>(`/v1/people/workSessions/${sessionId}/submit`, body, this.idempotencyOptions(idempotencyKey));
+    return this.api.post<unknown>(`/v1/people/workSessions/${encodeURIComponent(sessionId)}/submit`, body, this.idempotencyOptions(idempotencyKey));
   }
 
   getWorkSessionBreaks(sessionId: string): Observable<unknown[]> {
-    return this.api.get<unknown[]>(`/v1/people/workSessions/${sessionId}/breaks`);
+    return this.api.get<unknown[]>(`/v1/people/workSessions/${encodeURIComponent(sessionId)}/breaks`);
   }
 
   // Timekeeping Approval - period-atomic
@@ -219,14 +219,14 @@ export class PeopleService {
 
   getPersonLocationAssignments(personId: string, includeHistory = false): Observable<unknown[]> {
     const params = new HttpParams().set('includeHistory', String(includeHistory));
-    return this.api.get<unknown[]>(`/v1/people/persons/${personId}/location-assignments`, params);
+    return this.api.get<unknown[]>(`/v1/people/persons/${encodeURIComponent(personId)}/location-assignments`, params);
   }
 
   createPersonLocationAssignment(personId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
-    return this.api.post<unknown>(`/v1/people/persons/${personId}/location-assignments`, body, this.idempotencyOptions(idempotencyKey));
+    return this.api.post<unknown>(`/v1/people/persons/${encodeURIComponent(personId)}/location-assignments`, body, this.idempotencyOptions(idempotencyKey));
   }
 
   endPersonLocationAssignment(assignmentId: string, body: Record<string, unknown> = {}): Observable<unknown> {
-    return this.api.post<unknown>(`/v1/people/location-assignments/${assignmentId}/end`, body);
+    return this.api.post<unknown>(`/v1/people/location-assignments/${encodeURIComponent(assignmentId)}/end`, body);
   }
 }
