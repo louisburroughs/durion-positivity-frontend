@@ -64,6 +64,9 @@ describe('TimerWidgetPageComponent', () => {
   });
 
   it('start timer sets timerState to ACTIVE on success', () => {
+    workexecService.getActiveTimerEntries.mockReturnValue(
+      of({ active: [{ timeEntryId: 'TE-1', workOrderId: 'WO-1', startTime: '2026-01-01T09:00:00Z' }] }),
+    );
     component.startTimer();
     fixture.detectChanges();
 
@@ -71,6 +74,9 @@ describe('TimerWidgetPageComponent', () => {
   });
 
   it('shows active indicator after starting timer', () => {
+    workexecService.getActiveTimerEntries.mockReturnValue(
+      of({ active: [{ timeEntryId: 'TE-1', workOrderId: 'WO-1', startTime: '2026-01-01T09:00:00Z' }] }),
+    );
     component.startTimer();
     fixture.detectChanges();
 

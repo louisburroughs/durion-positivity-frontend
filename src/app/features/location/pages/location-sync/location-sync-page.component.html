@@ -1,85 +1,85 @@
 <main>
-	<header class="page-header">
-		<h1>Location Sync</h1>
-		<button type="button" [disabled]="!canTriggerSync()" (click)="triggerSync()" data-testid="trigger-sync-btn">
-			{{ triggering() ? 'Syncing...' : 'Sync Now' }}
-		</button>
-	</header>
+  <header class="page-header">
+    <h1>Location Sync</h1>
+    <button type="button" [disabled]="!canTriggerSync()" (click)="triggerSync()" data-testid="trigger-sync-btn">
+      {{ triggering() ? 'Syncing...' : 'Sync Now' }}
+    </button>
+  </header>
 
-	@if (triggerSuccess()) {
-		<output aria-live="polite" data-testid="trigger-success">Sync triggered successfully.</output>
-		@if (lastSyncRunId()) {
-			<p>Sync Run ID: <code data-testid="sync-run-id">{{ lastSyncRunId() }}</code></p>
-		}
-	}
-	@if (triggerError()) {
-		<p role="alert" aria-live="polite" data-testid="trigger-error">{{ triggerError() }}</p>
-	}
+  @if (triggerSuccess()) {
+  <output aria-live="polite" data-testid="trigger-success">Sync triggered successfully.</output>
+  @if (lastSyncRunId()) {
+  <p>Sync Run ID: <code data-testid="sync-run-id">{{ lastSyncRunId() }}</code></p>
+  }
+  }
+  @if (triggerError()) {
+  <p role="alert" aria-live="polite" data-testid="trigger-error">{{ triggerError() }}</p>
+  }
 
-	<section data-testid="inventory-locations-section">
-		<h2>Synced Locations</h2>
-		@if (loading()) {
-			<p aria-live="polite" data-testid="locations-loading">Loading locations...</p>
-		}
-		@if (loadError()) {
-			<p role="alert" aria-live="polite" data-testid="load-error">{{ loadError() }}</p>
-		}
-		<table data-testid="inventory-locations-table">
-			<thead>
-				<tr>
-					<th>ID</th>
-					<th>Name</th>
-					<th>Status</th>
-					<th>Timezone</th>
-				</tr>
-			</thead>
-			<tbody>
-				@for (loc of inventoryLocations(); track $any(loc).locationId) {
-					<tr [attr.data-testid]="'inventory-location-row-' + $index">
-						<td>{{ $any(loc).locationId }}</td>
-						<td>{{ $any(loc).name }}</td>
-						<td>{{ $any(loc).status }}</td>
-						<td>{{ $any(loc).timezone }}</td>
-					</tr>
-				}
-				@empty {
-					<tr>
-						<td colspan="4" data-testid="locations-empty">No synced locations.</td>
-					</tr>
-				}
-			</tbody>
-		</table>
-	</section>
+  <section data-testid="inventory-locations-section">
+    <h2>Synced Locations</h2>
+    @if (loading()) {
+    <p aria-live="polite" data-testid="locations-loading">Loading locations...</p>
+    }
+    @if (loadError()) {
+    <p role="alert" aria-live="polite" data-testid="load-error">{{ loadError() }}</p>
+    }
+    <table data-testid="inventory-locations-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Timezone</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (loc of inventoryLocations(); track $any(loc).locationId) {
+        <tr [attr.data-testid]="'inventory-location-row-' + $index">
+          <td>{{ $any(loc).locationId }}</td>
+          <td>{{ $any(loc).name }}</td>
+          <td>{{ $any(loc).status }}</td>
+          <td>{{ $any(loc).timezone }}</td>
+        </tr>
+        }
+        @empty {
+        <tr>
+          <td colspan="4" data-testid="locations-empty">No synced locations.</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
 
-	<section data-testid="sync-logs-section">
-		<h2>Sync Logs</h2>
-		@if (syncLogsLoading()) {
-			<p aria-live="polite" data-testid="sync-logs-loading">Loading sync logs...</p>
-		}
-		<table data-testid="sync-logs-table">
-			<thead>
-				<tr>
-					<th>Run ID</th>
-					<th>Outcome</th>
-					<th>Created At</th>
-					<th>Correlation ID</th>
-				</tr>
-			</thead>
-			<tbody>
-				@for (log of syncLogs(); track ($any(log).syncRunId ?? $any(log).syncLogId)) {
-					<tr [attr.data-testid]="'sync-log-row-' + $index">
-						<td>{{ $any(log).syncRunId ?? $any(log).syncLogId }}</td>
-						<td>{{ $any(log).outcome }}</td>
-						<td>{{ $any(log).createdAt }}</td>
-						<td>{{ $any(log).correlationId }}</td>
-					</tr>
-				}
-				@empty {
-					<tr>
-						<td colspan="4" data-testid="sync-logs-empty">No sync logs available.</td>
-					</tr>
-				}
-			</tbody>
-		</table>
-	</section>
+  <section data-testid="sync-logs-section">
+    <h2>Sync Logs</h2>
+    @if (syncLogsLoading()) {
+    <p aria-live="polite" data-testid="sync-logs-loading">Loading sync logs...</p>
+    }
+    <table data-testid="sync-logs-table">
+      <thead>
+        <tr>
+          <th>Run ID</th>
+          <th>Outcome</th>
+          <th>Created At</th>
+          <th>Correlation ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (log of syncLogs(); track ($any(log).syncRunId ?? $any(log).syncLogId)) {
+        <tr [attr.data-testid]="'sync-log-row-' + $index">
+          <td>{{ $any(log).syncRunId ?? $any(log).syncLogId }}</td>
+          <td>{{ $any(log).outcome }}</td>
+          <td>{{ $any(log).createdAt }}</td>
+          <td>{{ $any(log).correlationId }}</td>
+        </tr>
+        }
+        @empty {
+        <tr>
+          <td colspan="4" data-testid="sync-logs-empty">No sync logs available.</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
 </main>

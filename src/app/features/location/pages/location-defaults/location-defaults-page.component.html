@@ -1,101 +1,97 @@
 <main>
-	<header class="page-header">
-		<h1>Site Default Locations</h1>
-		<p>Location ID: <code data-testid="location-id">{{ locationId() }}</code></p>
-	</header>
+  <header class="page-header">
+    <h1>Site Default Locations</h1>
+    <p>Location ID: <code data-testid="location-id">{{ locationId() }}</code></p>
+  </header>
 
-	@if (loading()) {
-		<p aria-live="polite" data-testid="loading-indicator">Loading...</p>
-	}
+  @if (loading()) {
+  <p aria-live="polite" data-testid="loading-indicator">Loading...</p>
+  }
 
-	@if (loadError()) {
-		<p role="alert" aria-live="polite" data-testid="load-error">{{ loadError() }}</p>
-		<button type="button" (click)="reload()" data-testid="reload-btn">Reload</button>
-	}
+  @if (loadError()) {
+  <p role="alert" aria-live="polite" data-testid="load-error">{{ loadError() }}</p>
+  <button type="button" (click)="reload()" data-testid="reload-btn">Reload</button>
+  }
 
-	@if (!loading() && !loadError()) {
-		<section data-testid="defaults-display">
-			<h2>Current Defaults</h2>
-			<dl>
-				<dt>Staging</dt>
-				<dd data-testid="current-staging">
-					{{ siteDefaults()?.['defaultStagingLocationId'] ?? 'Not configured' }}
-				</dd>
-				<dt>Quarantine</dt>
-				<dd data-testid="current-quarantine">
-					{{ siteDefaults()?.['defaultQuarantineLocationId'] ?? 'Not configured' }}
-				</dd>
-				@if (version() !== null) {
-					<dt>Version</dt>
-					<dd data-testid="version">{{ version() }}</dd>
-				}
-			</dl>
-		</section>
+  @if (!loading() && !loadError()) {
+  <section data-testid="defaults-display">
+    <h2>Current Defaults</h2>
+    <dl>
+      <dt>Staging</dt>
+      <dd data-testid="current-staging">
+        {{ siteDefaults()?.['defaultStagingLocationId'] ?? 'Not configured' }}
+      </dd>
+      <dt>Quarantine</dt>
+      <dd data-testid="current-quarantine">
+        {{ siteDefaults()?.['defaultQuarantineLocationId'] ?? 'Not configured' }}
+      </dd>
+      @if (version() !== null) {
+      <dt>Version</dt>
+      <dd data-testid="version">{{ version() }}</dd>
+      }
+    </dl>
+  </section>
 
-		<section>
-			<h2>Update Defaults</h2>
-			@if (storageLocationsLoading()) {
-				<p aria-live="polite" data-testid="storage-locations-loading">Loading storage locations...</p>
-			}
+  <section>
+    <h2>Update Defaults</h2>
+    @if (storageLocationsLoading()) {
+    <p aria-live="polite" data-testid="storage-locations-loading">Loading storage locations...</p>
+    }
 
-			<form class="form-grid" [formGroup]="defaultsForm" (ngSubmit)="saveDefaults()">
-				<div class="field">
-					<label for="default-staging-location-id">Default Staging Location</label>
-					<select
-						id="default-staging-location-id"
-						formControlName="defaultStagingLocationId"
-						aria-describedby="field-error-staging"
-						data-testid="default-staging-select">
-						<option value="">Select a storage location</option>
-						@for (loc of storageLocations(); track $any(loc).storageLocationId) {
-							<option [value]="$any(loc).storageLocationId">{{ $any(loc).name }}</option>
-						}
-					</select>
-					<span id="field-error-staging" role="alert" aria-live="polite" data-testid="field-error-staging">
-						@if (defaultsForm.controls.defaultStagingLocationId.touched && defaultsForm.controls.defaultStagingLocationId.invalid) {
-							Staging location is required.
-						}
-					</span>
-				</div>
+    <form class="form-grid" [formGroup]="defaultsForm" (ngSubmit)="saveDefaults()">
+      <div class="field">
+        <label for="default-staging-location-id">Default Staging Location</label>
+        <select id="default-staging-location-id" formControlName="defaultStagingLocationId"
+          aria-describedby="field-error-staging" data-testid="default-staging-select">
+          <option value="">Select a storage location</option>
+          @for (loc of storageLocations(); track $any(loc).storageLocationId) {
+          <option [value]="$any(loc).storageLocationId">{{ $any(loc).name }}</option>
+          }
+        </select>
+        <span id="field-error-staging" role="alert" aria-live="polite" data-testid="field-error-staging">
+          @if (defaultsForm.controls.defaultStagingLocationId.touched &&
+          defaultsForm.controls.defaultStagingLocationId.invalid) {
+          Staging location is required.
+          }
+        </span>
+      </div>
 
-				<div class="field">
-					<label for="default-quarantine-location-id">Default Quarantine Location</label>
-					<select
-						id="default-quarantine-location-id"
-						formControlName="defaultQuarantineLocationId"
-						aria-describedby="field-error-quarantine"
-						data-testid="default-quarantine-select">
-						<option value="">Select a storage location</option>
-						@for (loc of storageLocations(); track $any(loc).storageLocationId) {
-							<option [value]="$any(loc).storageLocationId">{{ $any(loc).name }}</option>
-						}
-					</select>
-					<span id="field-error-quarantine" role="alert" aria-live="polite" data-testid="field-error-quarantine">
-						@if (defaultsForm.controls.defaultQuarantineLocationId.touched && defaultsForm.controls.defaultQuarantineLocationId.invalid) {
-							Quarantine location is required.
-						}
-					</span>
-				</div>
+      <div class="field">
+        <label for="default-quarantine-location-id">Default Quarantine Location</label>
+        <select id="default-quarantine-location-id" formControlName="defaultQuarantineLocationId"
+          aria-describedby="field-error-quarantine" data-testid="default-quarantine-select">
+          <option value="">Select a storage location</option>
+          @for (loc of storageLocations(); track $any(loc).storageLocationId) {
+          <option [value]="$any(loc).storageLocationId">{{ $any(loc).name }}</option>
+          }
+        </select>
+        <span id="field-error-quarantine" role="alert" aria-live="polite" data-testid="field-error-quarantine">
+          @if (defaultsForm.controls.defaultQuarantineLocationId.touched &&
+          defaultsForm.controls.defaultQuarantineLocationId.invalid) {
+          Quarantine location is required.
+          }
+        </span>
+      </div>
 
-				<button type="submit" [disabled]="!canSave()" data-testid="save-btn">
-					{{ saving() ? 'Saving...' : 'Save Defaults' }}
-				</button>
-			</form>
-		</section>
+      <button type="submit" [disabled]="!canSave()" data-testid="save-btn">
+        {{ saving() ? 'Saving...' : 'Save Defaults' }}
+      </button>
+    </form>
+  </section>
 
-		@if (isSameLocation()) {
-			<p role="alert" aria-live="polite" data-testid="same-location-error">
-				Staging and quarantine locations must be different.
-			</p>
-		}
-		@if (saveError()) {
-			<p role="alert" aria-live="polite" data-testid="save-error">{{ saveError() }}</p>
-			@if (showReloadPrompt()) {
-				<button type="button" (click)="reload()" data-testid="save-error-reload-btn">Reload</button>
-			}
-		}
-		@if (saveSuccess()) {
-			<output aria-live="polite" data-testid="save-success">Default locations saved.</output>
-		}
-	}
+  @if (isSameLocation()) {
+  <p role="alert" aria-live="polite" data-testid="same-location-error">
+    Staging and quarantine locations must be different.
+  </p>
+  }
+  @if (saveError()) {
+  <p role="alert" aria-live="polite" data-testid="save-error">{{ saveError() }}</p>
+  @if (showReloadPrompt()) {
+  <button type="button" (click)="reload()" data-testid="save-error-reload-btn">Reload</button>
+  }
+  }
+  @if (saveSuccess()) {
+  <output aria-live="polite" data-testid="save-success">Default locations saved.</output>
+  }
+  }
 </main>

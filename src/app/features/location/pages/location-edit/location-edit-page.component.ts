@@ -97,7 +97,8 @@ export class LocationEditPageComponent implements OnInit {
         this.error.set('Failed to save location.');
         return;
       }
-      this.locationService.updateLocation(locationId, body)
+      const { code: _code, ...updateBody } = this.form.getRawValue();
+      this.locationService.updateLocation(locationId, updateBody)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (loc) => {

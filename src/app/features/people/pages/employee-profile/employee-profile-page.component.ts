@@ -126,9 +126,9 @@ export class EmployeeProfilePageComponent implements OnInit {
     this.peopleService.createEmployee(body as Record<string, unknown>)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (employee) => {
           this.saving.set(false);
-          this.router.navigate(['/app/people/employees']);
+          this.router.navigate(['/app/people/employees', employee.employeeId]);
         },
         error: (err) => {
           this.handleSaveError(err);

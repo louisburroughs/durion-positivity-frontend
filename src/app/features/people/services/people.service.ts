@@ -26,7 +26,7 @@ export class PeopleService {
   // ── Employees ────────────────────────────────────────────────────────────
 
   getEmployee(employeeId: string): Observable<Employee> {
-    return this.api.get<Employee>(`/v1/people/employees/${employeeId}`);
+    return this.api.get<Employee>(`/v1/people/employees/${encodeURIComponent(employeeId)}`);
   }
 
   createEmployee(body: Record<string, unknown>, idempotencyKey?: string): Observable<Employee> {
@@ -34,11 +34,11 @@ export class PeopleService {
   }
 
   updateEmployee(employeeId: string, body: UpdateEmployeeRequest): Observable<Employee> {
-    return this.api.put<Employee>(`/v1/people/employees/${employeeId}`, body);
+    return this.api.put<Employee>(`/v1/people/employees/${encodeURIComponent(employeeId)}`, body);
   }
 
   disableEmployee(employeeId: string, body: DisableEmployeeRequest): Observable<Employee> {
-    return this.api.patch<Employee>(`/v1/people/employees/${employeeId}/disable`, body);
+    return this.api.patch<Employee>(`/v1/people/employees/${encodeURIComponent(employeeId)}/disable`, body);
   }
 
   // ── Availability ─────────────────────────────────────────────────────────

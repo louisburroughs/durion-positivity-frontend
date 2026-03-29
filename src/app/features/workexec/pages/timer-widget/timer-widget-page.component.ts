@@ -129,12 +129,11 @@ export class TimerWidgetPageComponent implements OnInit {
       .startTimer(body, requestKey)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (response) => {
-          const timers = this.normalizeActive(response);
-          this.activeTimers.set(timers);
+        next: () => {
           this.timerState.set('ACTIVE');
           this.actionSuccess.set('Timer started.');
           this.startKey.set(null);
+          this.loadActiveTimers();
         },
         error: (err: unknown) => {
           this.timerState.set('ERROR');

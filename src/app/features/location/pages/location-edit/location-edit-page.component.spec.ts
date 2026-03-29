@@ -64,7 +64,7 @@ async function setupEdit(): Promise<ComponentFixture<LocationEditPageComponent>>
 
 // ── Suite ─────────────────────────────────────────────────────────────────
 
-describe('LocationEditPageComponent [CAP-119 #151]', () => {
+describe('LocationEditPageComponent [CAP-214 #103]', () => {
   afterEach(() => {
     vi.clearAllMocks();
     TestBed.resetTestingModule();

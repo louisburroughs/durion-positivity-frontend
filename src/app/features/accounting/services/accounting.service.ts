@@ -230,7 +230,16 @@ export class AccountingService {
     message?: string;
   }> {
     const params = new HttpParams().set('exportId', exportId);
-    return this.api.get(`${AccountingService.BASE}/export/status`, params);
+    return this.api.get<{
+      exportId: string;
+      status: string;
+      recordsExportedCount?: number;
+      recordsSkippedCount?: number;
+      requestedAt?: string;
+      completedAt?: string;
+      errorCode?: string;
+      message?: string;
+    }>(`${AccountingService.BASE}/export/status`, params);
   }
 
   getExportHistory(params?: { pageIndex?: number; pageSize?: number }): Observable<unknown[]> {
@@ -244,15 +253,16 @@ export class AccountingService {
     return this.api.get<unknown[]>(`${AccountingService.BASE}/export/history`, httpParams);
   }
 
-  downloadExport(exportId: string): void {
+  downloadExport(exportId: string, format?: string): void {
+    const ext = format?.toLowerCase() === 'json' ? 'json' : 'csv';
     // Trigger browser download via anchor element (appended to DOM for cross-browser reliability)
     const url = `/api${AccountingService.BASE}/export/download?exportId=${encodeURIComponent(exportId)}`;
     const a = document.createElement('a');
     a.href = url;
-    a.download = `time-export-${exportId}.csv`;
-    document.body.appendChild(a);
+    a.download = `time-export-${exportId}.${ext}`;
+    document.body.append(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
   }
 
   private toListItem(item: AccountingEventDetail): AccountingEventListItem {

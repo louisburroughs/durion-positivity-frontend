@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { timer } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { InventoryService } from '../../services/inventory.service';
 
@@ -93,7 +94,7 @@ export class LocationSyncPageComponent {
           this.lastSyncRunId.set(typeof syncRunId === 'string' ? syncRunId : null);
           this.triggerSuccess.set(true);
           this.triggering.set(false);
-          setTimeout(() => this.loadSyncLogs(), 1000);
+          timer(1000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.loadSyncLogs());
         },
         error: (err: unknown) => {
           this.triggerError.set(this.errorMessage(err, 'Failed to trigger location sync.'));
