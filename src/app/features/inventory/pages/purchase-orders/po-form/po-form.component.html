@@ -1,0 +1,174 @@
+<main class="page" aria-labelledby="po-form-title">
+  <div class="back-row">
+    <button class="btn-secondary" type="button" (click)="goBack()">
+      <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+      {{ 'COMMON.BACK' | translate }}
+    </button>
+  </div>
+
+  <header class="page-header">
+    <h1 id="po-form-title" class="page-title">
+      @if (editingPoId()) {
+        {{ 'INVENTORY.PURCHASE_ORDERS.FORM.TITLE.EDIT' | translate }}
+      } @else {
+        {{ 'INVENTORY.PURCHASE_ORDERS.FORM.TITLE.NEW' | translate }}
+      }
+    </h1>
+  </header>
+
+  @if (state() === 'loading') {
+    <section class="card" aria-busy="true" aria-live="polite">
+      <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </section>
+  }
+
+  @if (state() === 'error') {
+    <section class="card state-card" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <p>{{ errorKey() | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'ready') {
+    <!-- PO header fields -->
+    <section class="card">
+      <h2>{{ 'INVENTORY.PURCHASE_ORDERS.FORM.HEADER.TITLE' | translate }}</h2>
+      <div class="form-grid">
+        @if (!editingPoId()) {
+          <div class="field-group">
+            <label class="field-label" for="po-supplier">
+              {{ 'INVENTORY.PURCHASE_ORDERS.FORM.FIELD.SUPPLIER' | translate }}
+            </label>
+            <input
+              id="po-supplier"
+              type="text"
+              class="input-underline"
+              [value]="supplierId()"
+              (input)="supplierId.set($any($event.target).value)"
+              [attr.placeholder]="'INVENTORY.PURCHASE_ORDERS.FORM.FIELD.SUPPLIER_PLACEHOLDER' | translate" />
+          </div>
+        }
+        <div class="field-group">
+          <label class="field-label" for="po-delivery-date">
+            {{ 'INVENTORY.PURCHASE_ORDERS.FORM.FIELD.DELIVERY_DATE' | translate }}
+          </label>
+          <input
+            id="po-delivery-date"
+            type="date"
+            class="input-underline"
+            [value]="scheduledDeliveryDate()"
+            (input)="scheduledDeliveryDate.set($any($event.target).value)" />
+        </div>
+        <div class="field-group field-group--full">
+          <label class="field-label" for="po-notes">
+            {{ 'INVENTORY.PURCHASE_ORDERS.FORM.FIELD.NOTES' | translate }}
+          </label>
+          <textarea
+            id="po-notes"
+            class="input-underline textarea-field"
+            rows="3"
+            [value]="notes()"
+            (input)="notes.set($any($event.target).value)"
+            [attr.placeholder]="'INVENTORY.PURCHASE_ORDERS.FORM.FIELD.NOTES_PLACEHOLDER' | translate">
+          </textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- Order lines -->
+    <section class="card">
+      <div class="lines-header">
+        <h2>{{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.TITLE' | translate }}</h2>
+        <button class="btn-secondary" type="button" (click)="addLine()">
+          <span class="material-symbols-outlined" aria-hidden="true">add</span>
+          {{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.ACTION.ADD' | translate }}
+        </button>
+      </div>
+      @if (lines().length > 0) {
+        <div class="table-wrap">
+          <table class="data-table lines-table" role="table"
+                 aria-label="{{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.TABLE.ARIA' | translate }}">
+            <thead>
+              <tr role="row">
+                <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.TABLE.HEADER.SKU' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.TABLE.HEADER.QTY' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.TABLE.HEADER.UNIT_PRICE' | translate }}</th>
+                <th scope="col" role="columnheader">
+                  <span class="sr-only">{{ 'COMMON.ACTIONS' | translate }}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of lines(); track $index) {
+                <tr role="row">
+                  <td>
+                    <label class="sr-only" for="line-sku-{{ $index }}">
+                      {{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.LINE_SKU_LABEL' | translate }} {{ $index + 1 }}
+                    </label>
+                    <input
+                      id="line-sku-{{ $index }}"
+                      type="text"
+                      class="input-underline line-input"
+                      [value]="line.productSku"
+                      (input)="updateLine($index, 'productSku', $any($event.target).value)"
+                      [attr.placeholder]="'INVENTORY.PURCHASE_ORDERS.FORM.LINES.SKU_PLACEHOLDER' | translate" />
+                  </td>
+                  <td>
+                    <label class="sr-only" for="line-qty-{{ $index }}">
+                      {{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.LINE_QTY_LABEL' | translate }} {{ $index + 1 }}
+                    </label>
+                    <input
+                      id="line-qty-{{ $index }}"
+                      type="number"
+                      class="input-underline line-input line-input--narrow"
+                      [value]="line.orderedQty"
+                      min="1"
+                      (input)="updateLine($index, 'orderedQty', +$any($event.target).value)" />
+                  </td>
+                  <td>
+                    <label class="sr-only" for="line-price-{{ $index }}">
+                      {{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.LINE_PRICE_LABEL' | translate }} {{ $index + 1 }}
+                    </label>
+                    <input
+                      id="line-price-{{ $index }}"
+                      type="number"
+                      class="input-underline line-input line-input--narrow"
+                      [value]="line.unitPrice"
+                      min="0"
+                      step="0.01"
+                      (input)="updateLine($index, 'unitPrice', +$any($event.target).value)" />
+                  </td>
+                  <td>
+                    <button class="btn-destructive" type="button" (click)="removeLine($index)"
+                            [attr.aria-label]="('INVENTORY.PURCHASE_ORDERS.FORM.LINES.ACTION.REMOVE_ARIA' | translate) + ' ' + ($index + 1)">
+                      <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="no-lines-hint">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.EMPTY_HINT' | translate }}</p>
+      }
+    </section>
+
+    <!-- Form actions -->
+    <div class="action-bar">
+      <button class="btn-primary" type="button"
+              (click)="submit()"
+              [disabled]="submitting()"
+              [attr.aria-busy]="submitting()">
+        {{ 'INVENTORY.PURCHASE_ORDERS.FORM.ACTION.SUBMIT' | translate }}
+      </button>
+      <button class="btn-secondary" type="button" (click)="goBack()">
+        {{ 'COMMON.CANCEL' | translate }}
+      </button>
+    </div>
+  }
+</main>
+

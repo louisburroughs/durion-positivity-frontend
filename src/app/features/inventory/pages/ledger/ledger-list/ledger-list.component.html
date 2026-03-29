@@ -1,0 +1,160 @@
+<main class="page" aria-labelledby="ledger-list-title">
+  <header class="page-header">
+    <h1 id="ledger-list-title" class="page-title">{{ 'INVENTORY.LEDGER.LIST.TITLE' | translate }}</h1>
+  </header>
+
+  <!-- Filter card -->
+  <section class="card" aria-label="{{ 'INVENTORY.LEDGER.LIST.FILTER.ARIA' | translate }}">
+    <div class="filter-row">
+      <div class="field-group">
+        <label class="field-label" for="ledger-sku">{{ 'INVENTORY.LEDGER.LIST.FILTER.SKU' | translate }}</label>
+        <input id="ledger-sku" #skuRef type="search" class="input-underline"
+               [attr.placeholder]="'INVENTORY.LEDGER.LIST.FILTER.SKU_PLACEHOLDER' | translate" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="ledger-location">{{ 'INVENTORY.LEDGER.LIST.FILTER.LOCATION' | translate }}</label>
+        <input id="ledger-location" #locationRef type="text" class="input-underline"
+               [attr.placeholder]="'INVENTORY.LEDGER.LIST.FILTER.LOCATION_PLACEHOLDER' | translate" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="ledger-date-from">{{ 'INVENTORY.LEDGER.LIST.FILTER.DATE_FROM' | translate }}</label>
+        <input id="ledger-date-from" #dateFromRef type="date" class="input-underline" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="ledger-date-to">{{ 'INVENTORY.LEDGER.LIST.FILTER.DATE_TO' | translate }}</label>
+        <input id="ledger-date-to" #dateToRef type="date" class="input-underline" />
+      </div>
+      <button class="btn-primary" type="button"
+              (click)="applyFilter({
+                productSku: skuRef.value || undefined,
+                locationId: locationRef.value || undefined,
+                dateFrom: dateFromRef.value || undefined,
+                dateTo: dateToRef.value || undefined
+              })">
+        {{ 'COMMON.SEARCH' | translate }}
+      </button>
+    </div>
+  </section>
+
+  @if (state() === 'loading') {
+    <section class="card" aria-busy="true" aria-live="polite">
+      <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </section>
+  }
+
+  @if (state() === 'idle') {
+    <section class="card state-card" aria-live="polite">
+      <p>{{ 'INVENTORY.LEDGER.LIST.STATE.IDLE' | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'empty') {
+    <section class="card state-card" aria-live="polite">
+      <p>{{ 'INVENTORY.LEDGER.LIST.STATE.EMPTY' | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'error') {
+    <section class="card state-card" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <p>{{ errorKey() | translate }}</p>
+      <button class="btn-secondary" type="button" (click)="applyFilter(activeFilter())">{{ 'COMMON.RETRY' | translate }}</button>
+    </section>
+  }
+
+  @if (state() === 'ready') {
+    <section class="card table-card">
+      <div class="table-wrap">
+        <table class="data-table" role="table"
+               aria-label="{{ 'INVENTORY.LEDGER.LIST.TABLE.ARIA' | translate }}">
+          <caption class="sr-only">{{ 'INVENTORY.LEDGER.LIST.TABLE.CAPTION' | translate }}</caption>
+          <thead>
+            <tr role="row">
+              <th scope="col" role="columnheader">{{ 'INVENTORY.LEDGER.LIST.TABLE.HEADER.TIMESTAMP' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.LEDGER.LIST.TABLE.HEADER.MOVEMENT_TYPE' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.LEDGER.LIST.TABLE.HEADER.SKU' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.LEDGER.LIST.TABLE.HEADER.QTY_CHANGE' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.LEDGER.LIST.TABLE.HEADER.UOM' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.LEDGER.LIST.TABLE.HEADER.FROM_LOCATION' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.LEDGER.LIST.TABLE.HEADER.TO_LOCATION' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of entries(); track entry.ledgerEntryId) {
+              <tr role="row" class="table-row-action" tabindex="0"
+                  (click)="selectEntry(entry.ledgerEntryId)"
+                  (keydown.enter)="selectEntry(entry.ledgerEntryId)"
+                  [attr.aria-label]="('INVENTORY.LEDGER.LIST.ROW.ARIA' | translate) + ': ' + entry.productSku">
+                <td>{{ entry.timestamp }}</td>
+                <td class="badge-cell">
+                  @switch (entry.movementType) {
+                    @case ('RECEIPT') {
+                      <span class="badge badge--success">
+                        <span class="material-symbols-outlined" aria-hidden="true">arrow_downward</span>
+                        {{ 'INVENTORY.LEDGER.MOVEMENT_TYPE.RECEIPT' | translate }}
+                      </span>
+                    }
+                    @case ('ISSUE') {
+                      <span class="badge badge--info">
+                        <span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span>
+                        {{ 'INVENTORY.LEDGER.MOVEMENT_TYPE.ISSUE' | translate }}
+                      </span>
+                    }
+                    @case ('CONSUME') {
+                      <span class="badge badge--info">
+                        <span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span>
+                        {{ 'INVENTORY.LEDGER.MOVEMENT_TYPE.CONSUME' | translate }}
+                      </span>
+                    }
+                    @case ('RETURN') {
+                      <span class="badge badge--neutral">
+                        <span class="material-symbols-outlined" aria-hidden="true">undo</span>
+                        {{ 'INVENTORY.LEDGER.MOVEMENT_TYPE.RETURN' | translate }}
+                      </span>
+                    }
+                    @case ('ADJUSTMENT_INCREASE') {
+                      <span class="badge badge--success">
+                        <span class="material-symbols-outlined" aria-hidden="true">add</span>
+                        {{ 'INVENTORY.LEDGER.MOVEMENT_TYPE.ADJUSTMENT_INCREASE' | translate }}
+                      </span>
+                    }
+                    @case ('ADJUSTMENT_DECREASE') {
+                      <span class="badge badge--warning">
+                        <span class="material-symbols-outlined" aria-hidden="true">remove</span>
+                        {{ 'INVENTORY.LEDGER.MOVEMENT_TYPE.ADJUSTMENT_DECREASE' | translate }}
+                      </span>
+                    }
+                    @default {
+                      <span class="badge badge--neutral">
+                        <span class="material-symbols-outlined" aria-hidden="true">swap_horiz</span>
+                        {{ entry.movementType }}
+                      </span>
+                    }
+                  }
+                </td>
+                <td>{{ entry.productSku }}</td>
+                <td>{{ entry.quantityChange }}</td>
+                <td>{{ entry.uom }}</td>
+                <td>{{ entry.fromLocationId ?? '—' }}</td>
+                <td>{{ entry.toLocationId ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+    @if (nextPageToken()) {
+      <div class="load-more-row">
+        <button class="btn-secondary" type="button" (click)="loadMore()">
+          {{ 'COMMON.LOAD_MORE' | translate }}
+        </button>
+      </div>
+    }
+  }
+</main>
+

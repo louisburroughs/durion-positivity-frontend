@@ -1,0 +1,243 @@
+<main class="page" aria-labelledby="adjustments-title">
+  <header class="page-header">
+    <h1 id="adjustments-title" class="page-title">{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.TITLE' | translate }}</h1>
+  </header>
+
+  @if (state() === 'loading') {
+    <section class="card" aria-busy="true" aria-live="polite">
+      <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </section>
+  }
+
+  @if (state() === 'error') {
+    <section class="card state-card" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <p>{{ errorKey() | translate }}</p>
+      <button class="btn-secondary" type="button" (click)="load()">{{ 'COMMON.RETRY' | translate }}</button>
+    </section>
+  }
+
+  @if (state() === 'empty') {
+    <section class="card state-card" aria-live="polite">
+      <span class="material-symbols-outlined" aria-hidden="true">task_alt</span>
+      <p>{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.STATE.EMPTY' | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'ready') {
+    @if (!selectedAdjustment()) {
+      <!-- List view -->
+      <section class="card table-card">
+        <div class="table-wrap">
+          <table class="data-table" role="table"
+                 aria-label="{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.TABLE.ARIA' | translate }}">
+            <caption class="sr-only">{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.TABLE.CAPTION' | translate }}</caption>
+            <thead>
+              <tr role="row">
+                <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.TABLE.HEADER.ADJ_ID' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.TABLE.HEADER.SKU' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.TABLE.HEADER.LOCATION' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.TABLE.HEADER.VARIANCE_QTY' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.TABLE.HEADER.VARIANCE_VALUE' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.TABLE.HEADER.REQUIRED_TIER' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.TABLE.HEADER.STATUS' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.TABLE.HEADER.ACTIONS' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (adj of adjustments(); track adj.adjustmentId) {
+                <tr role="row">
+                  <td>{{ adj.adjustmentId }}</td>
+                  <td>{{ adj.productSku }}</td>
+                  <td>{{ adj.locationId }}{{ adj.storageLocationId ? ' / ' + adj.storageLocationId : '' }}</td>
+                  <td [class.variance-positive]="adj.varianceQuantity > 0"
+                      [class.variance-negative]="adj.varianceQuantity < 0">
+                    {{ adj.varianceQuantity }}
+                  </td>
+                  <td>{{ adj.varianceValue ?? '—' }}</td>
+                  <td class="badge-cell">
+                    @if (adj.requiredApprovalTier === 1) {
+                      <span class="badge badge--info">
+                        <span class="material-symbols-outlined" aria-hidden="true">verified_user</span>
+                        {{ 'INVENTORY.COUNTS.ADJUSTMENT.TIER.ONE' | translate }}
+                      </span>
+                    } @else {
+                      <span class="badge badge--warning">
+                        <span class="material-symbols-outlined" aria-hidden="true">security</span>
+                        {{ 'INVENTORY.COUNTS.ADJUSTMENT.TIER.TWO' | translate }}
+                      </span>
+                    }
+                  </td>
+                  <td class="badge-cell">
+                    @switch (adj.status) {
+                      @case ('PENDING_APPROVAL') {
+                        <span class="badge badge--warning">
+                          <span class="material-symbols-outlined" aria-hidden="true">pending</span>
+                          {{ 'STATUS.PENDING_APPROVAL' | translate }}
+                        </span>
+                      }
+                      @case ('APPROVED') {
+                        <span class="badge badge--success">
+                          <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                          {{ 'STATUS.APPROVED' | translate }}
+                        </span>
+                      }
+                      @case ('REJECTED') {
+                        <span class="badge badge--error">
+                          <span class="material-symbols-outlined" aria-hidden="true">cancel</span>
+                          {{ 'STATUS.REJECTED' | translate }}
+                        </span>
+                      }
+                      @default {
+                        <span class="badge badge--neutral">
+                          <span class="material-symbols-outlined" aria-hidden="true">help_outline</span>
+                          {{ adj.status }}
+                        </span>
+                      }
+                    }
+                  </td>
+                  <td>
+                    <button class="btn-secondary" type="button" (click)="selectAdjustment(adj)">
+                      {{ 'INVENTORY.COUNTS.ADJUSTMENT.ACTION.REVIEW' | translate }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+      @if (nextPageToken()) {
+        <div class="load-more-row">
+          <button class="btn-secondary" type="button" (click)="loadMore()">
+            {{ 'COMMON.LOAD_MORE' | translate }}
+          </button>
+        </div>
+      }
+    } @else {
+      <!-- Detail view -->
+      <div class="back-row">
+        <button class="btn-secondary" type="button" (click)="selectedAdjustment.set(null)">
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+          {{ 'COMMON.BACK' | translate }}
+        </button>
+      </div>
+
+      <section class="card">
+        <h2>{{ 'INVENTORY.COUNTS.ADJUSTMENT.DETAIL.TITLE' | translate }}</h2>
+        <dl class="detail-grid">
+          <dt>{{ 'INVENTORY.COUNTS.ADJUSTMENT.DETAIL.FIELD.ADJ_ID' | translate }}</dt>
+          <dd>{{ selectedAdjustment()!.adjustmentId }}</dd>
+
+          <dt>{{ 'INVENTORY.COUNTS.ADJUSTMENT.DETAIL.FIELD.SKU' | translate }}</dt>
+          <dd>{{ selectedAdjustment()!.productSku }}</dd>
+
+          <dt>{{ 'INVENTORY.COUNTS.ADJUSTMENT.DETAIL.FIELD.LOCATION' | translate }}</dt>
+          <dd>{{ selectedAdjustment()!.locationId }}</dd>
+
+          <dt>{{ 'INVENTORY.COUNTS.ADJUSTMENT.DETAIL.FIELD.STORAGE_LOCATION' | translate }}</dt>
+          <dd>{{ selectedAdjustment()!.storageLocationId ?? '—' }}</dd>
+
+          <dt>{{ 'INVENTORY.COUNTS.ADJUSTMENT.DETAIL.FIELD.COUNTED_QTY' | translate }}</dt>
+          <dd>{{ selectedAdjustment()!.countedQuantity }}</dd>
+
+          <dt>{{ 'INVENTORY.COUNTS.ADJUSTMENT.DETAIL.FIELD.EXPECTED_QTY' | translate }}</dt>
+          <dd>{{ selectedAdjustment()!.expectedQuantity }}</dd>
+
+          <dt>{{ 'INVENTORY.COUNTS.ADJUSTMENT.DETAIL.FIELD.VARIANCE_QTY' | translate }}</dt>
+          <dd [class.variance-positive]="selectedAdjustment()!.varianceQuantity > 0"
+              [class.variance-negative]="selectedAdjustment()!.varianceQuantity < 0">
+            {{ selectedAdjustment()!.varianceQuantity }}
+          </dd>
+
+          <dt>{{ 'INVENTORY.COUNTS.ADJUSTMENT.DETAIL.FIELD.VARIANCE_VALUE' | translate }}</dt>
+          <dd>{{ selectedAdjustment()!.varianceValue ?? '—' }}</dd>
+
+          <dt>{{ 'INVENTORY.COUNTS.ADJUSTMENT.DETAIL.FIELD.STATUS' | translate }}</dt>
+          <dd>
+            @switch (selectedAdjustment()!.status) {
+              @case ('PENDING_APPROVAL') {
+                <span class="badge badge--warning">
+                  <span class="material-symbols-outlined" aria-hidden="true">approval</span>
+                  {{ 'STATUS.PENDING_APPROVAL' | translate }}
+                </span>
+              }
+              @case ('APPROVED') {
+                <span class="badge badge--success">
+                  <span class="material-symbols-outlined" aria-hidden="true">verified</span>
+                  {{ 'STATUS.APPROVED' | translate }}
+                </span>
+              }
+              @case ('REJECTED') {
+                <span class="badge badge--error">
+                  <span class="material-symbols-outlined" aria-hidden="true">cancel</span>
+                  {{ 'STATUS.REJECTED' | translate }}
+                </span>
+              }
+              @default {
+                <span class="badge badge--neutral">
+                  <span class="material-symbols-outlined" aria-hidden="true">circle</span>
+                  {{ selectedAdjustment()!.status | translate }}
+                </span>
+              }
+            }
+          </dd>
+
+          <dt>{{ 'INVENTORY.COUNTS.ADJUSTMENT.DETAIL.FIELD.REQUIRED_TIER' | translate }}</dt>
+          <dd>{{ selectedAdjustment()!.requiredApprovalTier }}</dd>
+
+          @if (selectedAdjustment()!.rejectionReason) {
+            <dt>{{ 'INVENTORY.COUNTS.ADJUSTMENT.DETAIL.FIELD.REJECTION_REASON' | translate }}</dt>
+            <dd>{{ selectedAdjustment()!.rejectionReason }}</dd>
+          }
+        </dl>
+      </section>
+
+      @if (selectedAdjustment()!.status === 'PENDING_APPROVAL') {
+        <section class="card approval-actions">
+          <h2>{{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVAL.ACTIONS.TITLE' | translate }}</h2>
+
+          <!-- Approve -->
+          <div class="action-bar">
+            <button class="btn-primary" type="button"
+                    (click)="approve(selectedAdjustment()!.adjustmentId)"
+                    [disabled]="submitting()"
+                    [attr.aria-busy]="submitting()">
+              <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+              {{ 'INVENTORY.COUNTS.ADJUSTMENT.ACTION.APPROVE' | translate }}
+            </button>
+          </div>
+
+          <!-- Reject with reason -->
+          <div class="reject-section">
+            <div class="field-group">
+              <label class="field-label" for="rejection-reason">
+                {{ 'INVENTORY.COUNTS.ADJUSTMENT.APPROVAL.REJECTION_REASON' | translate }}
+              </label>
+              <textarea
+                id="rejection-reason"
+                class="input-underline textarea-field"
+                rows="3"
+                [value]="rejectionReason()"
+                (input)="updateRejectionReason($any($event.target).value)"
+                [attr.placeholder]="'INVENTORY.COUNTS.ADJUSTMENT.APPROVAL.REJECTION_REASON_PLACEHOLDER' | translate">
+              </textarea>
+            </div>
+            <button class="btn-destructive" type="button"
+                    (click)="reject(selectedAdjustment()!.adjustmentId)"
+                    [disabled]="submitting() || !rejectionReason().trim()"
+                    [attr.aria-busy]="submitting()">
+              <span class="material-symbols-outlined" aria-hidden="true">cancel</span>
+              {{ 'INVENTORY.COUNTS.ADJUSTMENT.ACTION.REJECT' | translate }}
+            </button>
+          </div>
+        </section>
+      }
+    }
+  }
+</main>
+

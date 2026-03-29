@@ -15,6 +15,12 @@ export const SECURITY_ROUTES: Routes = [
       { path: 'permissions', component: PermissionsListPageComponent },
       { path: 'audit', component: SecurityAuditListPageComponent },
       {
+        path: 'audit-logs',
+        loadComponent: () =>
+          import('./pages/audit-logs/audit-logs.component')
+            .then(m => m.AuditLogsComponent),
+      },
+      {
         path: 'users/provision',
         loadComponent: () =>
           import('./pages/user-provision/user-provision-page.component')

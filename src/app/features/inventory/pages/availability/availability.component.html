@@ -1,0 +1,93 @@
+<main class="page" aria-labelledby="availability-title">
+  <header class="page-header">
+    <h1 id="availability-title" class="page-title">{{ 'INVENTORY.AVAILABILITY.TITLE' | translate }}</h1>
+  </header>
+
+  <!-- Filter card -->
+  <section class="card filter-card" aria-label="{{ 'INVENTORY.AVAILABILITY.FILTER.ARIA' | translate }}">
+    <div class="filter-row">
+      <div class="field-group">
+        <label class="field-label" for="avail-sku">{{ 'INVENTORY.AVAILABILITY.FILTER.SKU' | translate }}</label>
+        <input id="avail-sku" type="search" class="input-underline"
+               [value]="skuInput()" (input)="onSkuChange($any($event.target).value)"
+               [attr.placeholder]="'INVENTORY.AVAILABILITY.FILTER.SKU_PLACEHOLDER' | translate" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="avail-location">{{ 'INVENTORY.AVAILABILITY.FILTER.LOCATION' | translate }}</label>
+        <input id="avail-location" type="text" class="input-underline"
+               [value]="locationIdInput()" (input)="onLocationChange($any($event.target).value)"
+               [attr.placeholder]="'INVENTORY.AVAILABILITY.FILTER.LOCATION_PLACEHOLDER' | translate" />
+      </div>
+      <button class="btn-primary" type="button" (click)="search()">
+        {{ 'COMMON.SEARCH' | translate }}
+      </button>
+    </div>
+  </section>
+
+  @if (state() === 'loading') {
+    <section class="card" aria-busy="true" aria-live="polite">
+      <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </section>
+  }
+
+  @if (state() === 'idle') {
+    <section class="card state-card" aria-live="polite">
+      <p>{{ 'INVENTORY.AVAILABILITY.STATE.IDLE' | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'empty') {
+    <section class="card state-card" aria-live="polite">
+      <p>{{ 'INVENTORY.AVAILABILITY.STATE.EMPTY' | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'error') {
+    <section class="card state-card" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <p>{{ errorKey() | translate }}</p>
+      <button class="btn-secondary" type="button" (click)="search()">{{ 'COMMON.RETRY' | translate }}</button>
+    </section>
+  }
+
+  @if (state() === 'ready') {
+    <section class="card table-card">
+      <div class="table-wrap">
+        <table class="data-table" role="table"
+               aria-label="{{ 'INVENTORY.AVAILABILITY.TABLE.ARIA' | translate }}">
+          <caption class="sr-only">{{ 'INVENTORY.AVAILABILITY.TABLE.CAPTION' | translate }}</caption>
+          <thead>
+            <tr role="row">
+              <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.SKU' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.LOCATION' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.STORAGE_LOCATION' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.ON_HAND' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.ALLOCATED' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.ATP' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.UOM' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of results(); track row.productSku + (row.storageLocationId ?? '')) {
+              <tr role="row">
+                <td>{{ row.productSku }}</td>
+                <td>{{ row.locationId }}</td>
+                <td>{{ row.storageLocationId ?? '—' }}</td>
+                <td>{{ row.onHandQuantity }}</td>
+                <td>{{ row.allocatedQuantity }}</td>
+                <td>{{ row.availableToPromiseQuantity }}</td>
+                <td>{{ row.unitOfMeasure }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</main>
+

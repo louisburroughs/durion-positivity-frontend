@@ -1,0 +1,208 @@
+<main class="page" aria-labelledby="count-execute-title">
+  <div class="back-row">
+    <button class="btn-secondary" type="button" (click)="goBack()">
+      <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+      {{ 'COMMON.BACK' | translate }}
+    </button>
+  </div>
+
+  @if (state() === 'loading') {
+    <section class="card" aria-busy="true" aria-live="polite">
+      <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </section>
+  }
+
+  @if (state() === 'error') {
+    <section class="card state-card" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <p>{{ errorKey() | translate }}</p>
+      <button class="btn-secondary" type="button" (click)="goBack()">{{ 'COMMON.BACK' | translate }}</button>
+    </section>
+  }
+
+  @if (state() === 'empty') {
+    <section class="card state-card">
+      <p>{{ 'INVENTORY.COUNTS.EXECUTE.STATE.EMPTY' | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'ready' && task()) {
+    <!-- Task context -->
+    <section class="card">
+      <h1 id="count-execute-title">{{ 'INVENTORY.COUNTS.EXECUTE.TITLE' | translate }}</h1>
+      <dl class="detail-grid">
+        <dt>{{ 'INVENTORY.COUNTS.EXECUTE.FIELD.LOCATION' | translate }}</dt>
+        <dd>{{ task()!.locationId }}</dd>
+
+        <dt>{{ 'INVENTORY.COUNTS.EXECUTE.FIELD.STORAGE_LOCATION' | translate }}</dt>
+        <dd>{{ task()!.storageLocationId ?? '—' }}</dd>
+
+        <dt>{{ 'INVENTORY.COUNTS.EXECUTE.FIELD.SKU' | translate }}</dt>
+        <dd>{{ task()!.productSku }}</dd>
+
+        <dt>{{ 'INVENTORY.COUNTS.EXECUTE.FIELD.UOM' | translate }}</dt>
+        <dd>{{ task()!.uom }}</dd>
+
+        <dt>{{ 'INVENTORY.COUNTS.EXECUTE.FIELD.STATUS' | translate }}</dt>
+        <dd>
+          @switch (task()!.status) {
+            @case ('SCHEDULED') {
+              <span class="badge badge--info">
+                <span class="material-symbols-outlined" aria-hidden="true">event</span>
+                {{ 'STATUS.SCHEDULED' | translate }}
+              </span>
+            }
+            @case ('IN_PROGRESS') {
+              <span class="badge badge--warning">
+                <span class="material-symbols-outlined" aria-hidden="true">autorenew</span>
+                {{ 'STATUS.IN_PROGRESS' | translate }}
+              </span>
+            }
+            @case ('COMPLETED') {
+              <span class="badge badge--success">
+                <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                {{ 'STATUS.COMPLETED' | translate }}
+              </span>
+            }
+            @default {
+              <span class="badge badge--neutral">
+                <span class="material-symbols-outlined" aria-hidden="true">assignment</span>
+                {{ task()!.status | translate }}
+              </span>
+            }
+          }
+        </dd>
+      </dl>
+    </section>
+
+    @if (!submitResult()) {
+      <!-- Count form -->
+      <section class="card">
+        <h2>{{ 'INVENTORY.COUNTS.EXECUTE.FORM.TITLE' | translate }}</h2>
+        <div class="field-group">
+          <label class="field-label" for="counted-qty">
+            {{ 'INVENTORY.COUNTS.EXECUTE.COUNTED_QTY' | translate }}
+          </label>
+          <input
+            id="counted-qty"
+            type="number"
+            class="input-underline"
+            [value]="countedQuantity() ?? ''"
+            min="0"
+            (input)="updateCount(+$any($event.target).value)" />
+          <p class="field-hint">{{ 'INVENTORY.COUNTS.EXECUTE.COUNTED_QTY_HINT' | translate }}</p>
+        </div>
+        <div class="action-bar">
+          <button class="btn-primary" type="button"
+                  (click)="submitCount()"
+                  [disabled]="submitting() || countedQuantity() === null"
+                  [attr.aria-busy]="submitting()">
+            {{ 'INVENTORY.COUNTS.EXECUTE.ACTION.SUBMIT' | translate }}
+          </button>
+        </div>
+      </section>
+    } @else {
+      <!-- Variance / result card -->
+      <section class="card">
+        <h2>{{ 'INVENTORY.COUNTS.EXECUTE.RESULT.TITLE' | translate }}</h2>
+        <dl class="detail-grid">
+          <dt>{{ 'INVENTORY.COUNTS.EXECUTE.RESULT.FIELD.STATUS' | translate }}</dt>
+          <dd>
+            @switch (submitResult()!.status) {
+              @case ('ACCEPTED') {
+                <span class="badge badge--success">
+                  <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                  {{ 'INVENTORY.COUNTS.EXECUTE.RESULT.STATUS.ACCEPTED' | translate }}
+                </span>
+              }
+              @case ('PENDING_APPROVAL') {
+                <span class="badge badge--warning">
+                  <span class="material-symbols-outlined" aria-hidden="true">approval</span>
+                  {{ 'INVENTORY.COUNTS.EXECUTE.RESULT.STATUS.PENDING_APPROVAL' | translate }}
+                </span>
+              }
+              @default {
+                <span class="badge badge--neutral">
+                  <span class="material-symbols-outlined" aria-hidden="true">info</span>
+                  {{ submitResult()!.status | translate }}
+                </span>
+              }
+            }
+          </dd>
+        </dl>
+
+        <h3>{{ 'INVENTORY.COUNTS.EXECUTE.RESULT.COUNT_HISTORY' | translate }}</h3>
+        <table class="data-table" role="table"
+               aria-label="{{ 'INVENTORY.COUNTS.EXECUTE.RESULT.COUNT_HISTORY' | translate }}">
+          <thead>
+            <tr role="row">
+              <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.EXECUTE.RESULT.HEADER.SEQ' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.EXECUTE.RESULT.HEADER.COUNTED_QTY' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.EXECUTE.RESULT.HEADER.VARIANCE' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.EXECUTE.RESULT.HEADER.COUNTED_BY' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.COUNTS.EXECUTE.RESULT.HEADER.TIMESTAMP' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of submitResult()!.entries; track entry.sequence) {
+              <tr role="row">
+                <td>{{ entry.sequence }}</td>
+                <td>{{ entry.countedQuantity }}</td>
+                <td [class.variance-positive]="(entry.varianceQuantity ?? 0) > 0"
+                    [class.variance-negative]="(entry.varianceQuantity ?? 0) < 0">
+                  {{ entry.varianceQuantity ?? '—' }}
+                </td>
+                <td>{{ entry.countedBy }}</td>
+                <td>{{ entry.timestamp }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        @if (submitResult()!.adjustment) {
+          <div class="adjustment-ref">
+            <span class="material-symbols-outlined" aria-hidden="true">pending_actions</span>
+            {{ 'INVENTORY.COUNTS.EXECUTE.RESULT.ADJUSTMENT_CREATED' | translate }}:
+            <strong>{{ submitResult()!.adjustment!.adjustmentId }}</strong>
+            @switch (submitResult()!.adjustment!.status) {
+              @case ('PENDING_APPROVAL') {
+                <span class="badge badge--warning">
+                  <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+                  {{ 'STATUS.PENDING_APPROVAL' | translate }}
+                </span>
+              }
+              @case ('APPROVED') {
+                <span class="badge badge--success">
+                  <span class="material-symbols-outlined" aria-hidden="true">verified</span>
+                  {{ 'STATUS.APPROVED' | translate }}
+                </span>
+              }
+              @case ('REJECTED') {
+                <span class="badge badge--error">
+                  <span class="material-symbols-outlined" aria-hidden="true">cancel</span>
+                  {{ 'STATUS.REJECTED' | translate }}
+                </span>
+              }
+              @default {
+                <span class="badge badge--neutral">
+                  <span class="material-symbols-outlined" aria-hidden="true">info</span>
+                  {{ submitResult()!.adjustment!.status | translate }}
+                </span>
+              }
+            }
+          </div>
+        }
+
+        <div class="action-bar">
+          <button class="btn-secondary" type="button" (click)="goBack()">
+            {{ 'COMMON.BACK' | translate }}
+          </button>
+        </div>
+      </section>
+    }
+  }
+</main>
+

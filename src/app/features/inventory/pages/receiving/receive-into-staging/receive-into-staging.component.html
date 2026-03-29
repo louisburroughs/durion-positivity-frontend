@@ -1,0 +1,200 @@
+<main class="page" aria-labelledby="receiving-title">
+  <header class="page-header">
+    <h1 id="receiving-title" class="page-title">{{ 'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.TITLE' | translate }}</h1>
+  </header>
+
+  @if (state() === 'loading') {
+    <section class="card" aria-busy="true" aria-live="polite">
+      <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </section>
+  }
+
+  @if (state() === 'idle') {
+    <section class="card state-card" aria-live="polite">
+      <p>{{ 'INVENTORY.RECEIVING.STATE.IDLE' | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'error') {
+    <section class="card state-card" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <p>{{ errorKey() | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'ready' && document()) {
+    @if (!receiptResult()) {
+      <!-- Document summary -->
+      <section class="card">
+        <h2>{{ 'INVENTORY.RECEIVING.DOCUMENT.TITLE' | translate }}</h2>
+        <dl class="detail-grid">
+          <dt>{{ 'INVENTORY.RECEIVING.DOCUMENT.FIELD.DOCUMENT_ID' | translate }}</dt>
+          <dd>{{ document()!.documentId }}</dd>
+
+          <dt>{{ 'INVENTORY.RECEIVING.DOCUMENT.FIELD.DOCUMENT_TYPE' | translate }}</dt>
+          <dd>{{ document()!.documentType }}</dd>
+
+          <dt>{{ 'INVENTORY.RECEIVING.DOCUMENT.FIELD.STATUS' | translate }}</dt>
+          <dd>
+            @switch (document()!.status) {
+              @case ('OPEN') {
+                <span class="badge badge--info">
+                  <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+                  {{ 'STATUS.OPEN' | translate }}
+                </span>
+              }
+              @case ('PARTIALLY_RECEIVED') {
+                <span class="badge badge--warning">
+                  <span class="material-symbols-outlined" aria-hidden="true">hourglass_bottom</span>
+                  {{ 'STATUS.PARTIALLY_RECEIVED' | translate }}
+                </span>
+              }
+              @case ('FULLY_RECEIVED') {
+                <span class="badge badge--success">
+                  <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                  {{ 'STATUS.FULLY_RECEIVED' | translate }}
+                </span>
+              }
+              @case ('CLOSED') {
+                <span class="badge badge--neutral">
+                  <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+                  {{ 'STATUS.CLOSED' | translate }}
+                </span>
+              }
+              @default {
+                <span class="badge badge--neutral">
+                  <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+                  {{ document()!.status | translate }}
+                </span>
+              }
+            }
+          </dd>
+
+          <dt>{{ 'INVENTORY.RECEIVING.DOCUMENT.FIELD.LOCATION' | translate }}</dt>
+          <dd>{{ document()!.locationName ?? document()!.locationId }}</dd>
+
+          <dt>{{ 'INVENTORY.RECEIVING.DOCUMENT.FIELD.STAGING_LOCATION' | translate }}</dt>
+          <dd>{{ document()!.stagingStorageLocationName }}</dd>
+
+          @if (document()!.stagingStorageLocationBarcode) {
+            <dt>{{ 'INVENTORY.RECEIVING.DOCUMENT.FIELD.STAGING_BARCODE' | translate }}</dt>
+            <dd>{{ document()!.stagingStorageLocationBarcode }}</dd>
+          }
+        </dl>
+      </section>
+
+      <!-- Receiving lines -->
+      <section class="card">
+        <h2>{{ 'INVENTORY.RECEIVING.LINES.TITLE' | translate }}</h2>
+        <div class="table-wrap">
+          <table class="data-table" role="table"
+                 aria-label="{{ 'INVENTORY.RECEIVING.LINES.TABLE.ARIA' | translate }}">
+            <thead>
+              <tr role="row">
+                <th scope="col" role="columnheader">{{ 'INVENTORY.RECEIVING.LINES.TABLE.HEADER.SKU' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.RECEIVING.LINES.TABLE.HEADER.PRODUCT_NAME' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.RECEIVING.LINES.TABLE.HEADER.EXPECTED_QTY' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.RECEIVING.LINES.TABLE.HEADER.UOM' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.RECEIVING.LINES.TABLE.HEADER.ACTUAL_QTY' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.RECEIVING.LINES.TABLE.HEADER.STATE' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of document()!.lines; track line.receivingLineId) {
+                <tr role="row">
+                  <td>{{ line.productSku }}</td>
+                  <td>{{ line.productName ?? '—' }}</td>
+                  <td>{{ line.expectedQty }}</td>
+                  <td>{{ line.expectedUomId }}</td>
+                  <td>
+                    @if (line.isReceivable) {
+                      <label class="sr-only" for="line-qty-{{ line.receivingLineId }}">
+                        {{ 'INVENTORY.RECEIVING.LINE.ACTUAL_QTY_LABEL' | translate }} {{ line.productSku }}
+                      </label>
+                      <input
+                        id="line-qty-{{ line.receivingLineId }}"
+                        type="number"
+                        class="input-underline qty-input"
+                        [value]="lineQuantities()[line.receivingLineId] ?? line.expectedQty"
+                        min="0"
+                        (input)="updateLineQty(line.receivingLineId, +$any($event.target).value)" />
+                    } @else {
+                      <span class="badge badge--neutral">
+                        <span class="material-symbols-outlined" aria-hidden="true">block</span>
+                        {{ 'STATUS.NOT_RECEIVABLE' | translate }}
+                      </span>
+                    }
+                  </td>
+                  <td>
+                    @switch (line.state) {
+                      @case ('PENDING') {
+                        <span class="badge badge--neutral">
+                          <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+                          {{ 'STATUS.PENDING' | translate }}
+                        </span>
+                      }
+                      @case ('RECEIVED') {
+                        <span class="badge badge--success">
+                          <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                          {{ 'STATUS.RECEIVED' | translate }}
+                        </span>
+                      }
+                      @case ('OVER_RECEIVED') {
+                        <span class="badge badge--warning">
+                          <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+                          {{ 'STATUS.OVER_RECEIVED' | translate }}
+                        </span>
+                      }
+                      @default {
+                        <span class="badge badge--neutral">
+                          <span class="material-symbols-outlined" aria-hidden="true">circle</span>
+                          {{ line.state | translate }}
+                        </span>
+                      }
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="action-bar">
+          <button class="btn-primary" type="button"
+                  (click)="confirmReceipt()"
+                  [disabled]="submitting()"
+                  [attr.aria-busy]="submitting()">
+            {{ 'INVENTORY.RECEIVING.ACTION.CONFIRM' | translate }}
+          </button>
+        </div>
+      </section>
+    } @else {
+      <!-- Receipt result -->
+      <section class="card state-card">
+        <span class="material-symbols-outlined result-icon" aria-hidden="true">check_circle</span>
+        <h2>{{ 'INVENTORY.RECEIVING.RESULT.TITLE' | translate }}</h2>
+        <dl class="detail-grid">
+          <dt>{{ 'INVENTORY.RECEIVING.RESULT.FIELD.CORRELATION_ID' | translate }}</dt>
+          <dd>{{ receiptResult()!.receiptCorrelationId }}</dd>
+
+          <dt>{{ 'INVENTORY.RECEIVING.RESULT.FIELD.RECEIVED_BY' | translate }}</dt>
+          <dd>{{ receiptResult()!.receivedByUserId }}</dd>
+
+          @if (receiptResult()!.ledgerEntryCount) {
+            <dt>{{ 'INVENTORY.RECEIVING.RESULT.FIELD.LEDGER_ENTRIES' | translate }}</dt>
+            <dd>{{ receiptResult()!.ledgerEntryCount }}</dd>
+          }
+        </dl>
+        <div class="action-bar">
+          <button class="btn-primary" type="button" (click)="receiveAnother()">
+            {{ 'INVENTORY.RECEIVING.ACTION.RECEIVE_ANOTHER' | translate }}
+          </button>
+        </div>
+      </section>
+    }
+  }
+</main>
+

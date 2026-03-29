@@ -1,0 +1,48 @@
+:host {
+  display: block;
+}
+
+.back-row {
+  margin-bottom: 1rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+  margin-bottom: 1rem;
+}
+
+.detail-grid dt {
+  font-weight: 600;
+  color: var(--brand-secondary, var(--currentTextColor));
+  font-size: 0.85rem;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.detail-grid dd {
+  margin: 0;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 24rem;
+  margin-bottom: 1rem;
+}
+
+.field-label {
+  color: var(--currentTextColor);
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.action-bar {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}

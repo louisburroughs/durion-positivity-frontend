@@ -1,0 +1,215 @@
+<main class="page" aria-labelledby="audit-logs-title">
+  <header class="page-header">
+    <h1 id="audit-logs-title" class="page-title">{{ 'SECURITY.AUDIT_LOGS.TITLE' | translate }}</h1>
+    @if (state() === 'ready') {
+      <button class="btn-secondary" type="button" (click)="requestExport()">
+        <span class="material-symbols-outlined" aria-hidden="true">download</span>
+        {{ 'SECURITY.AUDIT_LOGS.ACTION.EXPORT_CSV' | translate }}
+      </button>
+    }
+  </header>
+
+  <!-- Filter card -->
+  <section class="card" aria-label="{{ 'SECURITY.AUDIT_LOGS.FILTER.ARIA' | translate }}">
+    <div class="filter-row">
+      <div class="field-group">
+        <label class="field-label" for="audit-from">
+          {{ 'SECURITY.AUDIT_LOGS.FILTER.FROM_DATE' | translate }}
+        </label>
+        <input
+          id="audit-from"
+          #fromDateRef
+          type="datetime-local"
+          class="input-underline"
+          (change)="updateFilter({ fromDate: fromDateRef.value })" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="audit-to">
+          {{ 'SECURITY.AUDIT_LOGS.FILTER.TO_DATE' | translate }}
+        </label>
+        <input
+          id="audit-to"
+          #toDateRef
+          type="datetime-local"
+          class="input-underline"
+          (change)="updateFilter({ toDate: toDateRef.value })" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="audit-actor">
+          {{ 'SECURITY.AUDIT_LOGS.FILTER.ACTOR_ID' | translate }}
+        </label>
+        <input
+          id="audit-actor"
+          type="text"
+          class="input-underline"
+          [attr.placeholder]="'SECURITY.AUDIT_LOGS.FILTER.ACTOR_ID_PLACEHOLDER' | translate"
+          (input)="updateFilter({ actorId: $any($event.target).value || undefined })" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="audit-workorder">
+          {{ 'SECURITY.AUDIT_LOGS.FILTER.WORKORDER_ID' | translate }}
+        </label>
+        <input
+          id="audit-workorder"
+          type="text"
+          class="input-underline"
+          [attr.placeholder]="'SECURITY.AUDIT_LOGS.FILTER.WORKORDER_ID_PLACEHOLDER' | translate"
+          (input)="updateFilter({ workorderId: $any($event.target).value || undefined })" />
+      </div>
+      <button class="btn-primary" type="button" (click)="search()">
+        {{ 'COMMON.SEARCH' | translate }}
+      </button>
+    </div>
+  </section>
+
+  <!-- Export job status -->
+  @if (exportJob()) {
+    <section class="card export-status" aria-live="polite">
+      <span class="material-symbols-outlined" aria-hidden="true">download</span>
+      <span>{{ 'SECURITY.AUDIT_LOGS.EXPORT.STATUS_PREFIX' | translate }}:</span>
+      @switch (exportJob()!.status) {
+        @case ('COMPLETE') {
+          <span class="badge badge--success">
+            <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+            {{ 'STATUS.COMPLETE' | translate }}
+          </span>
+          @if (exportJob()!.downloadUrl) {
+            <a [href]="exportJob()!.downloadUrl!" class="btn-secondary" download>
+              <span class="material-symbols-outlined" aria-hidden="true">save_alt</span>
+              {{ 'SECURITY.AUDIT_LOGS.EXPORT.DOWNLOAD' | translate }}
+            </a>
+          }
+        }
+        @case ('PENDING') {
+          <span class="badge badge--warning">
+            <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+            {{ 'STATUS.PENDING' | translate }}
+          </span>
+        }
+        @default {
+          <span class="badge badge--info">
+            <span class="material-symbols-outlined" aria-hidden="true">autorenew</span>
+            {{ exportJob()!.status }}
+          </span>
+        }
+      }
+    </section>
+  }
+
+  @if (state() === 'loading') {
+    <section class="card" aria-busy="true" aria-live="polite">
+      <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </section>
+  }
+
+  @if (state() === 'idle') {
+    <section class="card state-card" aria-live="polite">
+      <p>{{ 'SECURITY.AUDIT_LOGS.STATE.IDLE' | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'empty') {
+    <section class="card state-card" aria-live="polite">
+      <p>{{ 'SECURITY.AUDIT_LOGS.STATE.EMPTY' | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'error') {
+    <section class="card state-card" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <p>{{ errorKey() | translate }}</p>
+      <button class="btn-secondary" type="button" (click)="search()">{{ 'COMMON.RETRY' | translate }}</button>
+    </section>
+  }
+
+  @if (state() === 'ready') {
+    <div class="ready-layout">
+      <!-- Events table -->
+      <section class="card table-card">
+        <div class="table-wrap">
+          <table class="data-table" role="table"
+                 aria-label="{{ 'SECURITY.AUDIT_LOGS.TABLE.ARIA' | translate }}">
+            <caption class="sr-only">{{ 'SECURITY.AUDIT_LOGS.TABLE.CAPTION' | translate }}</caption>
+            <thead>
+              <tr role="row">
+                <th scope="col" role="columnheader">{{ 'SECURITY.AUDIT_LOGS.TABLE.HEADER.EVENT_ID' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'SECURITY.AUDIT_LOGS.TABLE.HEADER.EVENT_TYPE' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'SECURITY.AUDIT_LOGS.TABLE.HEADER.AGGREGATE_ID' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'SECURITY.AUDIT_LOGS.TABLE.HEADER.ACTOR' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'SECURITY.AUDIT_LOGS.TABLE.HEADER.TIMESTAMP' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (evt of events(); track evt.eventId) {
+                <tr role="row" class="table-row-action" tabindex="0"
+                    (click)="selectEvent(evt)"
+                    (keydown.enter)="selectEvent(evt)"
+                    [class.row-selected]="selectedEvent()?.eventId === evt.eventId"
+                    [attr.aria-label]="('SECURITY.AUDIT_LOGS.TABLE.ROW.ARIA' | translate) + ': ' + evt.eventType + ' ' + evt.eventId"
+                    [attr.aria-pressed]="selectedEvent()?.eventId === evt.eventId">
+                  <td>{{ evt.eventId }}</td>
+                  <td class="badge-cell">
+                    <span class="badge badge--info">
+                      <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
+                      {{ evt.eventType }}
+                    </span>
+                  </td>
+                  <td>{{ evt.aggregateId }}</td>
+                  <td>{{ evt.actorId }}</td>
+                  <td>{{ evt.timestamp }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (nextPageToken()) {
+          <div class="load-more-row">
+            <button class="btn-secondary" type="button" (click)="loadMore()">
+              {{ 'COMMON.LOAD_MORE' | translate }}
+            </button>
+          </div>
+        }
+      </section>
+
+      <!-- Event detail panel -->
+      @if (selectedEvent()) {
+        <section class="card event-detail-panel" aria-label="{{ 'SECURITY.AUDIT_LOGS.DETAIL.PANEL.ARIA' | translate }}">
+          <div class="detail-panel-header">
+            <h2>{{ 'SECURITY.AUDIT_LOGS.DETAIL.TITLE' | translate }}</h2>
+            <button class="btn-secondary" type="button" (click)="selectedEvent.set(null)"
+                    [attr.aria-label]="'COMMON.CLOSE' | translate">
+              <span class="material-symbols-outlined" aria-hidden="true">close</span>
+            </button>
+          </div>
+          <dl class="detail-grid">
+            <dt>{{ 'SECURITY.AUDIT_LOGS.DETAIL.FIELD.EVENT_ID' | translate }}</dt>
+            <dd>{{ selectedEvent()!.eventId }}</dd>
+
+            <dt>{{ 'SECURITY.AUDIT_LOGS.DETAIL.FIELD.EVENT_TYPE' | translate }}</dt>
+            <dd>{{ selectedEvent()!.eventType }}</dd>
+
+            <dt>{{ 'SECURITY.AUDIT_LOGS.DETAIL.FIELD.AGGREGATE_ID' | translate }}</dt>
+            <dd>{{ selectedEvent()!.aggregateId }}</dd>
+
+            <dt>{{ 'SECURITY.AUDIT_LOGS.DETAIL.FIELD.ACTOR' | translate }}</dt>
+            <dd>{{ selectedEvent()!.actorId }}</dd>
+
+            <dt>{{ 'SECURITY.AUDIT_LOGS.DETAIL.FIELD.TIMESTAMP' | translate }}</dt>
+            <dd>{{ selectedEvent()!.timestamp }}</dd>
+
+            @if (selectedEvent()!.location) {
+              <dt>{{ 'SECURITY.AUDIT_LOGS.DETAIL.FIELD.LOCATION' | translate }}</dt>
+              <dd>{{ selectedEvent()!.location }}</dd>
+            }
+          </dl>
+        </section>
+      }
+    </div>
+  }
+</main>
+

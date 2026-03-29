@@ -1,0 +1,74 @@
+:host {
+  display: block;
+}
+
+.back-row {
+  margin-bottom: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.field-group--full {
+  grid-column: 1 / -1;
+}
+
+.field-label {
+  color: var(--currentTextColor);
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.textarea-field {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.lines-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.lines-header h2 {
+  margin: 0;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.line-input {
+  width: 100%;
+  min-width: 8rem;
+}
+
+.line-input--narrow {
+  width: 6rem;
+  min-width: 5rem;
+}
+
+.no-lines-hint {
+  color: var(--brand-secondary, var(--currentTextColor));
+  opacity: 0.7;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+
+.action-bar {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}

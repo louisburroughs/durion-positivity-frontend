@@ -1,0 +1,24 @@
+:host {
+  display: block;
+}
+
+.table-card {
+  overflow-x: auto;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.badge-cell {
+  white-space: nowrap;
+}
+
+.table-row-action {
+  cursor: pointer;
+}
+
+.table-row-action:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: -2px;
+}

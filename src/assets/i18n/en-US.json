@@ -239,6 +239,61 @@
       "ERROR": {
         "LOAD": "Failed to load audit entries."
       }
+    },
+    "AUDIT_LOGS": {
+      "TITLE": "Audit Logs",
+      "FILTER": {
+        "FROM_DATE": "From date",
+        "TO_DATE": "To date",
+        "ARIA": "Audit log search filters",
+        "ACTOR_ID": "Actor ID",
+        "ACTOR_ID_PLACEHOLDER": "User or system actor",
+        "WORKORDER_ID": "Work Order ID",
+        "WORKORDER_ID_PLACEHOLDER": "Filter by work order"
+      },
+      "EMPTY": "No audit events found.",
+      "EXPORT": "Export",
+      "LOAD_MORE": "Load more",
+      "ERROR": {
+        "LOAD": "Failed to load audit events.",
+        "LOAD_MORE": "Failed to load more audit events.",
+        "EXPORT": "Failed to request audit export."
+      },
+      "ACTION": {
+        "EXPORT_CSV": "Export CSV"
+      },
+      "STATE": {
+        "IDLE": "Apply filters and search to view audit events.",
+        "EMPTY": "No audit events found for the selected filters."
+      },
+      "TABLE": {
+        "ARIA": "Audit event log",
+        "CAPTION": "Audit events matching current filters",
+        "HEADER": {
+          "EVENT_ID": "Event ID",
+          "EVENT_TYPE": "Event Type",
+          "AGGREGATE_ID": "Aggregate ID",
+          "ACTOR": "Actor",
+          "TIMESTAMP": "Timestamp"
+        },
+        "ROW": {
+          "ARIA": "Audit event"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Event Detail",
+        "PANEL": {
+          "ARIA": "Audit event details"
+        },
+        "FIELD": {
+          "EVENT_ID": "Event ID",
+          "EVENT_TYPE": "Event Type",
+          "AGGREGATE_ID": "Aggregate ID",
+          "ACTOR": "Actor",
+          "TIMESTAMP": "Timestamp",
+          "LOCATION": "Location"
+        }
+      }
     }
   },
   "LOCATION": {
@@ -1025,5 +1080,490 @@
       "CREDIT_TOTAL": "Total Credits",
       "NET": "Net Total"
     }
+  },
+  "INVENTORY": {
+    "AVAILABILITY": {
+      "TITLE": "Inventory Availability",
+      "FILTER": {
+        "SKU_LABEL": "Product SKU",
+        "LOCATION_LABEL": "Location",
+        "ARIA": "Availability search filters",
+        "SKU": "SKU",
+        "SKU_PLACEHOLDER": "e.g. SKU-001",
+        "LOCATION": "Location",
+        "LOCATION_PLACEHOLDER": "Location ID"
+      },
+      "STATE": {
+        "LOADING": "Loading availability...",
+        "EMPTY": "No availability data found.",
+        "IDLE": "Enter a SKU to search for inventory availability."
+      },
+      "ERROR": {
+        "LOAD": "Failed to load availability."
+      },
+      "TABLE": {
+        "ARIA": "Inventory availability results",
+        "CAPTION": "Availability by SKU and location",
+        "HEADER": {
+          "SKU": "SKU",
+          "LOCATION": "Location",
+          "STORAGE_LOCATION": "Storage Location",
+          "ON_HAND": "On Hand",
+          "ALLOCATED": "Allocated",
+          "ATP": "Available to Promise",
+          "UOM": "UOM"
+        }
+      }
+    },
+    "LEDGER": {
+      "LIST": {
+        "TITLE": "Inventory Ledger",
+        "EMPTY": "No ledger entries found.",
+        "ERROR": {
+          "LOAD": "Failed to load ledger entries."
+        },
+        "FILTER": {
+          "ARIA": "Ledger search filters",
+          "SKU": "SKU",
+          "SKU_PLACEHOLDER": "e.g. SKU-001",
+          "LOCATION": "Location",
+          "LOCATION_PLACEHOLDER": "Location ID",
+          "DATE_FROM": "From date",
+          "DATE_TO": "To date"
+        },
+        "STATE": {
+          "IDLE": "Apply filters to search the inventory ledger."
+        },
+        "TABLE": {
+          "ARIA": "Inventory ledger entries",
+          "CAPTION": "Ledger movement history",
+          "HEADER": {
+            "TIMESTAMP": "Timestamp",
+            "MOVEMENT_TYPE": "Type",
+            "SKU": "SKU",
+            "QTY_CHANGE": "Qty Change",
+            "UOM": "UOM",
+            "FROM_LOCATION": "From",
+            "TO_LOCATION": "To"
+          }
+        },
+        "ROW": {
+          "ARIA": "Ledger entry"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Ledger Entry Detail",
+        "ERROR": {
+          "LOAD": "Failed to load ledger entry."
+        },
+        "STATE": {
+          "EMPTY": "Ledger entry not found."
+        },
+        "FIELD": {
+          "ENTRY_ID": "Entry ID",
+          "TIMESTAMP": "Timestamp",
+          "MOVEMENT_TYPE": "Movement Type",
+          "SKU": "SKU",
+          "QTY_CHANGE": "Quantity Change",
+          "UOM": "Unit of Measure",
+          "FROM_LOCATION": "From Location",
+          "FROM_STORAGE_LOCATION": "From Storage Location",
+          "TO_LOCATION": "To Location",
+          "TO_STORAGE_LOCATION": "To Storage Location",
+          "ACTOR": "Actor",
+          "SOURCE_TRANSACTION": "Source Transaction",
+          "REASON_CODE": "Reason Code",
+          "WORKORDER_ID": "Work Order ID",
+          "WORKORDER_LINE_ID": "Work Order Line ID"
+        }
+      },
+      "MOVEMENT_TYPE": {
+        "RECEIPT": "Receipt",
+        "ISSUE": "Issue",
+        "CONSUME": "Consume",
+        "RETURN": "Return",
+        "ADJUSTMENT_INCREASE": "Adj. Increase",
+        "ADJUSTMENT_DECREASE": "Adj. Decrease"
+      }
+    },
+    "RECEIVING": {
+      "TITLE": "Receive into Staging",
+      "ERROR": {
+        "LOAD": "Failed to load receiving document.",
+        "CONFIRM": "Failed to confirm receipt."
+      },
+      "RECEIVE_INTO_STAGING": {
+        "TITLE": "Receive into Staging"
+      },
+      "STATE": {
+        "IDLE": "Enter a document ID to begin receiving."
+      },
+      "DOCUMENT": {
+        "TITLE": "Source Document",
+        "FIELD": {
+          "DOCUMENT_ID": "Document ID",
+          "DOCUMENT_TYPE": "Type",
+          "STATUS": "Status",
+          "LOCATION": "Receiving Location",
+          "STAGING_LOCATION": "Staging Location",
+          "STAGING_BARCODE": "Staging Barcode"
+        }
+      },
+      "LINES": {
+        "TITLE": "Lines",
+        "TABLE": {
+          "ARIA": "Receiving lines",
+          "HEADER": {
+            "SKU": "SKU",
+            "PRODUCT_NAME": "Product",
+            "EXPECTED_QTY": "Expected",
+            "ACTUAL_QTY": "Actual Received",
+            "UOM": "UOM",
+            "STATE": "Status"
+          }
+        }
+      },
+      "LINE": {
+        "ACTUAL_QTY_LABEL": "Actual quantity for"
+      },
+      "ACTION": {
+        "CONFIRM": "Confirm Receipt",
+        "RECEIVE_ANOTHER": "Receive Another"
+      },
+      "RESULT": {
+        "TITLE": "Receipt Confirmed",
+        "FIELD": {
+          "RECEIVED_BY": "Received By",
+          "CORRELATION_ID": "Correlation ID",
+          "LEDGER_ENTRIES": "Ledger Entries Created"
+        }
+      }
+    },
+    "PUTAWAY": {
+      "LIST": {
+        "TITLE": "Putaway Tasks",
+        "EMPTY": "No putaway tasks found.",
+        "ERROR": {
+          "LOAD": "Failed to load putaway tasks."
+        }
+      },
+      "EXECUTE": {
+        "TITLE": "Execute Putaway",
+        "ERROR": {
+          "COMPLETE": "Failed to complete putaway task."
+        },
+        "STATE": {
+          "EMPTY": "Task not found."
+        },
+        "FORM": {
+          "TITLE": "Task Details"
+        },
+        "FIELD": {
+          "SKU": "SKU",
+          "QUANTITY": "Quantity",
+          "STAGING_LOCATION": "Staging Location"
+        },
+        "TARGET_LOCATION": "Target Storage Location",
+        "TARGET_LOCATION_PLACEHOLDER": "Scan or enter barcode",
+        "ACTION": {
+          "COMPLETE": "Complete Putaway"
+        }
+      },
+      "TASKS": {
+        "TITLE": "Putaway Tasks",
+        "STATE": {
+          "EMPTY": "No putaway tasks found."
+        },
+        "TABLE": {
+          "ARIA": "Putaway task list",
+          "CAPTION": "Tasks awaiting putaway",
+          "HEADER": {
+            "TASK_ID": "Task ID",
+            "SKU": "SKU",
+            "STAGING_LOCATION": "Staging",
+            "TARGET_LOCATION": "Target Location",
+            "QTY_UOM": "Qty / UOM",
+            "STATUS": "Status"
+          }
+        },
+        "ROW": {
+          "ARIA": "Putaway task"
+        }
+      }
+    },
+    "REPLENISHMENT": {
+      "LIST": {
+        "TITLE": "Replenishment Tasks",
+        "EMPTY": "No replenishment tasks found.",
+        "ERROR": {
+          "LOAD": "Failed to load replenishment tasks."
+        }
+      },
+      "TASKS": {
+        "TITLE": "Replenishment Tasks",
+        "STATE": {
+          "EMPTY": "No replenishment tasks found."
+        },
+        "TABLE": {
+          "ARIA": "Replenishment task list",
+          "CAPTION": "Tasks awaiting replenishment",
+          "HEADER": {
+            "TASK_ID": "Task ID",
+            "SKU": "SKU",
+            "FROM_LOCATION": "From",
+            "TO_LOCATION": "To",
+            "REQUESTED_QTY_UOM": "Requested Qty / UOM",
+            "STATUS": "Status"
+          }
+        }
+      }
+    },
+    "COUNTS": {
+      "EXECUTE": {
+        "TITLE": "Execute Cycle Count",
+        "ERROR": {
+          "LOAD": "Failed to load cycle count task.",
+          "SUBMIT": "Failed to submit cycle count."
+        },
+        "STATE": {
+          "EMPTY": "Count task not found."
+        },
+        "FIELD": {
+          "SKU": "SKU",
+          "UOM": "UOM",
+          "LOCATION": "Location",
+          "STORAGE_LOCATION": "Storage Location",
+          "STATUS": "Status"
+        },
+        "FORM": {
+          "TITLE": "Enter Count"
+        },
+        "COUNTED_QTY": "Counted Quantity",
+        "COUNTED_QTY_HINT": "Enter the quantity you physically counted. Expected quantity is hidden until submission.",
+        "ACTION": {
+          "SUBMIT": "Submit Count"
+        },
+        "RESULT": {
+          "TITLE": "Count Submitted",
+          "FIELD": {
+            "STATUS": "Status"
+          },
+          "STATUS": {
+            "ACCEPTED": "Accepted",
+            "PENDING_APPROVAL": "Pending Approval"
+          },
+          "COUNT_HISTORY": "Count History",
+          "HEADER": {
+            "SEQ": "#",
+            "COUNTED_QTY": "Counted Qty",
+            "VARIANCE": "Variance",
+            "COUNTED_BY": "Counted By",
+            "TIMESTAMP": "Timestamp"
+          },
+          "ADJUSTMENT_CREATED": "Adjustment created:"
+        }
+      },
+      "APPROVALS": {
+        "TITLE": "Adjustment Approvals",
+        "EMPTY": "No pending adjustments found.",
+        "ERROR": {
+          "LOAD": "Failed to load adjustments.",
+          "APPROVE": "Failed to approve adjustment.",
+          "REJECT": "Failed to reject adjustment."
+        }
+      },
+      "ADJUSTMENT": {
+        "APPROVALS": {
+          "TITLE": "Adjustment Approvals",
+          "STATE": {
+            "EMPTY": "No adjustments pending approval."
+          },
+          "TABLE": {
+            "ARIA": "Adjustments pending approval",
+            "CAPTION": "Inventory adjustments awaiting review",
+            "HEADER": {
+              "ADJ_ID": "Adj. ID",
+              "SKU": "SKU",
+              "LOCATION": "Location",
+              "VARIANCE_QTY": "Variance Qty",
+              "VARIANCE_VALUE": "Variance Value",
+              "REQUIRED_TIER": "Required Tier",
+              "STATUS": "Status",
+              "ACTIONS": "Actions"
+            }
+          }
+        },
+        "DETAIL": {
+          "TITLE": "Adjustment Detail",
+          "FIELD": {
+            "ADJ_ID": "Adjustment ID",
+            "SKU": "SKU",
+            "LOCATION": "Location",
+            "STORAGE_LOCATION": "Storage Location",
+            "EXPECTED_QTY": "Expected Qty",
+            "COUNTED_QTY": "Counted Qty",
+            "VARIANCE_QTY": "Variance Qty",
+            "VARIANCE_VALUE": "Variance Value",
+            "REQUIRED_TIER": "Required Tier",
+            "STATUS": "Status",
+            "REJECTION_REASON": "Rejection Reason"
+          }
+        },
+        "TIER": {
+          "ONE": "Tier 1",
+          "TWO": "Tier 2"
+        },
+        "ACTION": {
+          "REVIEW": "Review",
+          "APPROVE": "Approve",
+          "REJECT": "Reject"
+        },
+        "APPROVAL": {
+          "ACTIONS": {
+            "TITLE": "Actions"
+          },
+          "REJECTION_REASON": "Rejection Reason",
+          "REJECTION_REASON_PLACEHOLDER": "Explain reason for rejection…"
+        }
+      }
+    },
+    "PURCHASE_ORDERS": {
+      "LIST": {
+        "TITLE": "Purchase Orders",
+        "EMPTY": "No purchase orders found.",
+        "ERROR": {
+          "LOAD": "Failed to load purchase orders."
+        },
+        "STATE": {
+          "EMPTY": "No purchase orders found."
+        },
+        "TABLE": {
+          "ARIA": "Purchase order list",
+          "CAPTION": "Purchase orders",
+          "HEADER": {
+            "PO_NUMBER": "PO Number",
+            "SUPPLIER": "Supplier",
+            "STATUS": "Status",
+            "LINE_COUNT": "Lines",
+            "OPEN_BALANCE": "Open Balance",
+            "SCHEDULED_DELIVERY": "Expected Delivery"
+          }
+        },
+        "ROW": {
+          "ARIA": "Purchase order"
+        },
+        "ACTION": {
+          "NEW": "New Purchase Order"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Purchase Order Detail",
+        "ERROR": {
+          "LOAD": "Failed to load purchase order.",
+          "CANCEL": "Failed to cancel purchase order."
+        },
+        "STATE": {
+          "EMPTY": "Purchase order not found."
+        },
+        "FIELD": {
+          "SUPPLIER": "Supplier",
+          "STATUS": "Status",
+          "SCHEDULED_DELIVERY": "Expected Delivery",
+          "OPEN_BALANCE": "Open Balance",
+          "NOTES": "Notes"
+        },
+        "LINES": {
+          "TITLE": "Order Lines",
+          "TABLE": {
+            "ARIA": "Purchase order lines",
+            "HEADER": {
+              "SKU": "SKU",
+              "PRODUCT_NAME": "Product",
+              "ORDERED_QTY": "Ordered",
+              "RECEIVED_QTY": "Received",
+              "UNIT_PRICE": "Unit Price",
+              "LINE_TOTAL": "Line Total",
+              "STATUS": "Status"
+            }
+          },
+          "RECEIVED_PROGRESS": "receipt progress"
+        }
+      },
+      "FORM": {
+        "ERROR": {
+          "LOAD": "Failed to load purchase order for editing.",
+          "CREATE": "Failed to create purchase order.",
+          "REVISE": "Failed to revise purchase order."
+        },
+        "TITLE": {
+          "NEW": "New Purchase Order",
+          "EDIT": "Edit Purchase Order"
+        },
+        "HEADER": {
+          "TITLE": "Order Details"
+        },
+        "FIELD": {
+          "SUPPLIER": "Supplier",
+          "SUPPLIER_PLACEHOLDER": "Enter supplier name",
+          "DELIVERY_DATE": "Expected Delivery Date",
+          "NOTES": "Notes",
+          "NOTES_PLACEHOLDER": "Optional notes…"
+        },
+        "LINES": {
+          "TITLE": "Order Lines",
+          "TABLE": {
+            "ARIA": "Order lines",
+            "HEADER": {
+              "SKU": "SKU",
+              "QTY": "Qty",
+              "UNIT_PRICE": "Unit Price"
+            }
+          },
+          "LINE_SKU_LABEL": "SKU for line",
+          "LINE_QTY_LABEL": "Quantity for line",
+          "LINE_PRICE_LABEL": "Unit price for line",
+          "SKU_PLACEHOLDER": "e.g. SKU-001",
+          "ACTION": {
+            "ADD": "Add Line",
+            "REMOVE_ARIA": "Remove line"
+          },
+          "EMPTY_HINT": "Add at least one line to place this order."
+        },
+        "ACTION": {
+          "SUBMIT": "Submit Order"
+        }
+      }
+    }
+  },
+  "COMMON": {
+    "SEARCH": "Search",
+    "LOADING": "Loading…",
+    "RETRY": "Retry",
+    "BACK": "Back",
+    "LOAD_MORE": "Load more",
+    "ACTIONS": "Actions",
+    "EDIT": "Edit",
+    "CANCEL": "Cancel",
+    "REFRESH": "Refresh",
+    "CLOSE": "Close"
+  },
+  "STATUS": {
+    "OPEN": "Open",
+    "CLOSED": "Closed",
+    "PENDING": "Pending",
+    "PENDING_APPROVAL": "Pending Approval",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "IN_PROGRESS": "In Progress",
+    "COMPLETED": "Completed",
+    "COMPLETE": "Complete",
+    "SCHEDULED": "Scheduled",
+    "DRAFT": "Draft",
+    "CANCELLED": "Cancelled",
+    "FULLY_RECEIVED": "Fully Received",
+    "RECEIVED": "Received",
+    "OVER_RECEIVED": "Over-received",
+    "NOT_RECEIVABLE": "Not receivable",
+    "REQUIRES_LOCATION_SELECTION": "Awaiting Location"
   }
 }

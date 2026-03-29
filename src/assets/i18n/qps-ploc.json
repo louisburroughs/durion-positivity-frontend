@@ -239,6 +239,61 @@
       "ERROR": {
         "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ààüüđïïŧ ëëñŧŕïïëëš. !!]"
       }
+    },
+    "AUDIT_LOGS": {
+      "TITLE": "[!! AAüüđïïŧ Ŀøøĝš !!]",
+      "FILTER": {
+        "FROM_DATE": "[!! Ƒŕøøḿ đààŧëë !!]",
+        "TO_DATE": "[!! Ŧøø đààŧëë !!]",
+        "ARIA": "[Áúdít lóg séárch fíltérs]",
+        "ACTOR_ID": "[Áctór ÍD]",
+        "ACTOR_ID_PLACEHOLDER": "[Úsér ór systém áctór]",
+        "WORKORDER_ID": "[Wórk Órdér ÍD]",
+        "WORKORDER_ID_PLACEHOLDER": "[Fíltér by wórk órdér]"
+      },
+      "EMPTY": "[!! Ňøø ààüüđïïŧ ëëṽëëñŧš ƒøøüüñđ. !!]",
+      "EXPORT": "[!! Éхṕøøŕŧ !!]",
+      "LOAD_MORE": "[!! Ŀøøààđ ḿøøŕëë !!]",
+      "ERROR": {
+        "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ààüüđïïŧ ëëṽëëñŧš. !!]",
+        "LOAD_MORE": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ḿøøŕëë ààüüđïïŧ ëëṽëëñŧš. !!]",
+        "EXPORT": "[!! Ƒààïïľëëđ ŧøø ŕëëqüüëëšŧ ààüüđïïŧ ëëхṕøøŕŧ. !!]"
+      },
+      "ACTION": {
+        "EXPORT_CSV": "[Éxpórt CSV]"
+      },
+      "STATE": {
+        "IDLE": "[Ápply fíltérs ánd séárch tó víéw áúdít événts.]",
+        "EMPTY": "[Nó áúdít événts fóúnd fór thé séléctéd fíltérs.]"
+      },
+      "TABLE": {
+        "ARIA": "[Áúdít évént lóg]",
+        "CAPTION": "[Áúdít événts mátchíng cúrrént fíltérs]",
+        "HEADER": {
+          "EVENT_ID": "[Évént ÍD]",
+          "EVENT_TYPE": "[Évént Typé]",
+          "AGGREGATE_ID": "[Ággrégáté ÍD]",
+          "ACTOR": "[Áctór]",
+          "TIMESTAMP": "[Tíméstámp]"
+        },
+        "ROW": {
+          "ARIA": "[Áúdít évént]"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "[Évént Détáíl]",
+        "PANEL": {
+          "ARIA": "[Áúdít évént détáíls]"
+        },
+        "FIELD": {
+          "EVENT_ID": "[Évént ÍD]",
+          "EVENT_TYPE": "[Évént Typé]",
+          "AGGREGATE_ID": "[Ággrégáté ÍD]",
+          "ACTOR": "[Áctór]",
+          "TIMESTAMP": "[Tíméstámp]",
+          "LOCATION": "[Lócátíón]"
+        }
+      }
     }
   },
   "LOCATION": {
@@ -1025,5 +1080,490 @@
       "CREDIT_TOTAL": "[!! Ŧøøŧààľ Çŕëëđïïŧš !!]",
       "NET": "[!! Ňëëŧ Ŧøøŧààľ !!]"
     }
+  },
+  "INVENTORY": {
+    "AVAILABILITY": {
+      "TITLE": "[!! ÏÏñṽëëñŧøøŕÿ AAṽààïïľààƀïïľïïŧÿ !!]",
+      "FILTER": {
+        "SKU_LABEL": "[!! Ƥŕøøđüüçŧ ŠŠĶÜü !!]",
+        "LOCATION_LABEL": "[!! Ŀøøçààŧïïøøñ !!]",
+        "ARIA": "[Áváílábílíty séárch fíltérs]",
+        "SKU": "[SKÚ]",
+        "SKU_PLACEHOLDER": "[é.g. SKÚ-001]",
+        "LOCATION": "[Lócátíón]",
+        "LOCATION_PLACEHOLDER": "[Lócátíón ÍD]"
+      },
+      "STATE": {
+        "LOADING": "[!! Ŀøøààđïïñĝ ààṽààïïľààƀïïľïïŧÿ... !!]",
+        "EMPTY": "[!! Ňøø ààṽààïïľààƀïïľïïŧÿ đààŧàà ƒøøüüñđ. !!]",
+        "IDLE": "[Éntér á SKÚ tó séárch fór ínvéntóry áváílábílíty.]"
+      },
+      "ERROR": {
+        "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ààṽààïïľààƀïïľïïŧÿ. !!]"
+      },
+      "TABLE": {
+        "ARIA": "[Ínvéntóry áváílábílíty résúlts]",
+        "CAPTION": "[Áváílábílíty by SKÚ ánd lócátíón]",
+        "HEADER": {
+          "SKU": "[SKÚ]",
+          "LOCATION": "[Lócátíón]",
+          "STORAGE_LOCATION": "[Stórágé Lócátíón]",
+          "ON_HAND": "[Ón Hánd]",
+          "ALLOCATED": "[Állócátéd]",
+          "ATP": "[Áváíláblé tó Prómísé]",
+          "UOM": "[ÚÓM]"
+        }
+      }
+    },
+    "LEDGER": {
+      "LIST": {
+        "TITLE": "[!! ÏÏñṽëëñŧøøŕÿ Ŀëëđĝëëŕ !!]",
+        "EMPTY": "[!! Ňøø ľëëđĝëëŕ ëëñŧŕïïëëš ƒøøüüñđ. !!]",
+        "ERROR": {
+          "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ľëëđĝëëŕ ëëñŧŕïïëëš. !!]"
+        },
+        "FILTER": {
+          "ARIA": "[Lédgér séárch fíltérs]",
+          "SKU": "[SKÚ]",
+          "SKU_PLACEHOLDER": "[é.g. SKÚ-001]",
+          "LOCATION": "[Lócátíón]",
+          "LOCATION_PLACEHOLDER": "[Lócátíón ÍD]",
+          "DATE_FROM": "[Fróm dáté]",
+          "DATE_TO": "[Tó dáté]"
+        },
+        "STATE": {
+          "IDLE": "[Ápply fíltérs tó séárch thé ínvéntóry lédgér.]"
+        },
+        "TABLE": {
+          "ARIA": "[Ínvéntóry lédgér éntríés]",
+          "CAPTION": "[Lédgér móvémént hístóry]",
+          "HEADER": {
+            "TIMESTAMP": "[Tíméstámp]",
+            "MOVEMENT_TYPE": "[Typé]",
+            "SKU": "[SKÚ]",
+            "QTY_CHANGE": "[Qty Chángé]",
+            "UOM": "[ÚÓM]",
+            "FROM_LOCATION": "[Fróm]",
+            "TO_LOCATION": "[Tó]"
+          }
+        },
+        "ROW": {
+          "ARIA": "[Lédgér éntry]"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "[!! Ŀëëđĝëëŕ Éñŧŕÿ Đëëŧààïïľ !!]",
+        "ERROR": {
+          "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ľëëđĝëëŕ ëëñŧŕÿ. !!]"
+        },
+        "STATE": {
+          "EMPTY": "[Lédgér éntry nót fóúnd.]"
+        },
+        "FIELD": {
+          "ENTRY_ID": "[Éntry ÍD]",
+          "TIMESTAMP": "[Tíméstámp]",
+          "MOVEMENT_TYPE": "[Móvémént Typé]",
+          "SKU": "[SKÚ]",
+          "QTY_CHANGE": "[Qúántíty Chángé]",
+          "UOM": "[Únít óf Méásúré]",
+          "FROM_LOCATION": "[Fróm Lócátíón]",
+          "FROM_STORAGE_LOCATION": "[Fróm Stórágé Lócátíón]",
+          "TO_LOCATION": "[Tó Lócátíón]",
+          "TO_STORAGE_LOCATION": "[Tó Stórágé Lócátíón]",
+          "ACTOR": "[Áctór]",
+          "SOURCE_TRANSACTION": "[Sóúrcé Tránsáctíón]",
+          "REASON_CODE": "[Réásón Códé]",
+          "WORKORDER_ID": "[Wórk Órdér ÍD]",
+          "WORKORDER_LINE_ID": "[Wórk Órdér Líné ÍD]"
+        }
+      },
+      "MOVEMENT_TYPE": {
+        "RECEIPT": "[Récéípt]",
+        "ISSUE": "[Íssúé]",
+        "CONSUME": "[Cónsúmé]",
+        "RETURN": "[Rétúrn]",
+        "ADJUSTMENT_INCREASE": "[Ádj. Íncréásé]",
+        "ADJUSTMENT_DECREASE": "[Ádj. Décréásé]"
+      }
+    },
+    "RECEIVING": {
+      "TITLE": "[!! Ŕëëçëëïïṽëë ïïñŧøø ŠŠŧààĝïïñĝ !!]",
+      "ERROR": {
+        "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ŕëëçëëïïṽïïñĝ đøøçüüḿëëñŧ. !!]",
+        "CONFIRM": "[!! Ƒààïïľëëđ ŧøø çøøñƒïïŕḿ ŕëëçëëïïṕŧ. !!]"
+      },
+      "RECEIVE_INTO_STAGING": {
+        "TITLE": "[Récéívé íntó Stágíng]"
+      },
+      "STATE": {
+        "IDLE": "[Éntér á dócúmént ÍD tó bégín récéívíng.]"
+      },
+      "DOCUMENT": {
+        "TITLE": "[Sóúrcé Dócúmént]",
+        "FIELD": {
+          "DOCUMENT_ID": "[Dócúmént ÍD]",
+          "DOCUMENT_TYPE": "[Typé]",
+          "STATUS": "[Státús]",
+          "LOCATION": "[Récéívíng Lócátíón]",
+          "STAGING_LOCATION": "[Stágíng Lócátíón]",
+          "STAGING_BARCODE": "[Stágíng Bárcódé]"
+        }
+      },
+      "LINES": {
+        "TITLE": "[Línés]",
+        "TABLE": {
+          "ARIA": "[Récéívíng línés]",
+          "HEADER": {
+            "SKU": "[SKÚ]",
+            "PRODUCT_NAME": "[Pródúct]",
+            "EXPECTED_QTY": "[Éxpéctéd]",
+            "ACTUAL_QTY": "[Áctúál Récéívéd]",
+            "UOM": "[ÚÓM]",
+            "STATE": "[Státús]"
+          }
+        }
+      },
+      "LINE": {
+        "ACTUAL_QTY_LABEL": "[Áctúál qúántíty fór]"
+      },
+      "ACTION": {
+        "CONFIRM": "[Cónfírm Récéípt]",
+        "RECEIVE_ANOTHER": "[Récéívé Ánóthér]"
+      },
+      "RESULT": {
+        "TITLE": "[Récéípt Cónfírméd]",
+        "FIELD": {
+          "RECEIVED_BY": "[Récéívéd By]",
+          "CORRELATION_ID": "[Córrélátíón ÍD]",
+          "LEDGER_ENTRIES": "[Lédgér Éntríés Créátéd]"
+        }
+      }
+    },
+    "PUTAWAY": {
+      "LIST": {
+        "TITLE": "[!! Ƥüüŧààŵààÿ Ŧààšķš !!]",
+        "EMPTY": "[!! Ňøø ṕüüŧààŵààÿ ŧààšķš ƒøøüüñđ. !!]",
+        "ERROR": {
+          "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ṕüüŧààŵààÿ ŧààšķš. !!]"
+        }
+      },
+      "EXECUTE": {
+        "TITLE": "[!! Éхëëçüüŧëë Ƥüüŧààŵààÿ !!]",
+        "ERROR": {
+          "COMPLETE": "[!! Ƒààïïľëëđ ŧøø çøøḿṕľëëŧëë ṕüüŧààŵààÿ ŧààšķ. !!]"
+        },
+        "STATE": {
+          "EMPTY": "[Tásk nót fóúnd.]"
+        },
+        "FORM": {
+          "TITLE": "[Tásk Détáíls]"
+        },
+        "FIELD": {
+          "SKU": "[SKÚ]",
+          "QUANTITY": "[Qúántíty]",
+          "STAGING_LOCATION": "[Stágíng Lócátíón]"
+        },
+        "TARGET_LOCATION": "[Tárgét Stórágé Lócátíón]",
+        "TARGET_LOCATION_PLACEHOLDER": "[Scán ór éntér bárcódé]",
+        "ACTION": {
+          "COMPLETE": "[Cómplété Pútáwáy]"
+        }
+      },
+      "TASKS": {
+        "TITLE": "[Pútáwáy Tásks]",
+        "STATE": {
+          "EMPTY": "[Nó pútáwáy tásks fóúnd.]"
+        },
+        "TABLE": {
+          "ARIA": "[Pútáwáy tásk líst]",
+          "CAPTION": "[Tásks áwáítíng pútáwáy]",
+          "HEADER": {
+            "TASK_ID": "[Tásk ÍD]",
+            "SKU": "[SKÚ]",
+            "STAGING_LOCATION": "[Stágíng]",
+            "TARGET_LOCATION": "[Tárgét Lócátíón]",
+            "QTY_UOM": "[Qty / ÚÓM]",
+            "STATUS": "[Státús]"
+          }
+        },
+        "ROW": {
+          "ARIA": "[Pútáwáy tásk]"
+        }
+      }
+    },
+    "REPLENISHMENT": {
+      "LIST": {
+        "TITLE": "[!! Ŕëëṕľëëñïïšħḿëëñŧ Ŧààšķš !!]",
+        "EMPTY": "[!! Ňøø ŕëëṕľëëñïïšħḿëëñŧ ŧààšķš ƒøøüüñđ. !!]",
+        "ERROR": {
+          "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ŕëëṕľëëñïïšħḿëëñŧ ŧààšķš. !!]"
+        }
+      },
+      "TASKS": {
+        "TITLE": "[Répléníshmént Tásks]",
+        "STATE": {
+          "EMPTY": "[Nó répléníshmént tásks fóúnd.]"
+        },
+        "TABLE": {
+          "ARIA": "[Répléníshmént tásk líst]",
+          "CAPTION": "[Tásks áwáítíng répléníshmént]",
+          "HEADER": {
+            "TASK_ID": "[Tásk ÍD]",
+            "SKU": "[SKÚ]",
+            "FROM_LOCATION": "[Fróm]",
+            "TO_LOCATION": "[Tó]",
+            "REQUESTED_QTY_UOM": "[Réqúéstéd Qty / ÚÓM]",
+            "STATUS": "[Státús]"
+          }
+        }
+      }
+    },
+    "COUNTS": {
+      "EXECUTE": {
+        "TITLE": "[!! Éхëëçüüŧëë Çÿçľëë Çøøüüñŧ !!]",
+        "ERROR": {
+          "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ çÿçľëë çøøüüñŧ ŧààšķ. !!]",
+          "SUBMIT": "[!! Ƒààïïľëëđ ŧøø šüüƀḿïïŧ çÿçľëë çøøüüñŧ. !!]"
+        },
+        "STATE": {
+          "EMPTY": "[Cóúnt tásk nót fóúnd.]"
+        },
+        "FIELD": {
+          "SKU": "[SKÚ]",
+          "UOM": "[ÚÓM]",
+          "LOCATION": "[Lócátíón]",
+          "STORAGE_LOCATION": "[Stórágé Lócátíón]",
+          "STATUS": "[Státús]"
+        },
+        "FORM": {
+          "TITLE": "[Éntér Cóúnt]"
+        },
+        "COUNTED_QTY": "[Cóúntéd Qúántíty]",
+        "COUNTED_QTY_HINT": "[Éntér thé qúántíty yóú physícálly cóúntéd. Éxpéctéd qúántíty ís híddén úntíl súbmíssíón.]",
+        "ACTION": {
+          "SUBMIT": "[Súbmít Cóúnt]"
+        },
+        "RESULT": {
+          "TITLE": "[Cóúnt Súbmíttéd]",
+          "FIELD": {
+            "STATUS": "[Státús]"
+          },
+          "STATUS": {
+            "ACCEPTED": "[Áccéptéd]",
+            "PENDING_APPROVAL": "[Péndíng Áppróvál]"
+          },
+          "COUNT_HISTORY": "[Cóúnt Hístóry]",
+          "HEADER": {
+            "SEQ": "[#]",
+            "COUNTED_QTY": "[Cóúntéd Qty]",
+            "VARIANCE": "[Váríáncé]",
+            "COUNTED_BY": "[Cóúntéd By]",
+            "TIMESTAMP": "[Tíméstámp]"
+          },
+          "ADJUSTMENT_CREATED": "[Ádjústmént créátéd:]"
+        }
+      },
+      "APPROVALS": {
+        "TITLE": "[!! AAđjüüšŧḿëëñŧ AAṕṕŕøøṽààľš !!]",
+        "EMPTY": "[!! Ňøø ṕëëñđïïñĝ ààđjüüšŧḿëëñŧš ƒøøüüñđ. !!]",
+        "ERROR": {
+          "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ààđjüüšŧḿëëñŧš. !!]",
+          "APPROVE": "[!! Ƒààïïľëëđ ŧøø ààṕṕŕøøṽëë ààđjüüšŧḿëëñŧ. !!]",
+          "REJECT": "[!! Ƒààïïľëëđ ŧøø ŕëëjëëçŧ ààđjüüšŧḿëëñŧ. !!]"
+        }
+      },
+      "ADJUSTMENT": {
+        "APPROVALS": {
+          "TITLE": "[Ádjústmént Áppróváls]",
+          "STATE": {
+            "EMPTY": "[Nó ádjústménts péndíng áppróvál.]"
+          },
+          "TABLE": {
+            "ARIA": "[Ádjústménts péndíng áppróvál]",
+            "CAPTION": "[Ínvéntóry ádjústménts áwáítíng révíéw]",
+            "HEADER": {
+              "ADJ_ID": "[Ádj. ÍD]",
+              "SKU": "[SKÚ]",
+              "LOCATION": "[Lócátíón]",
+              "VARIANCE_QTY": "[Váríáncé Qty]",
+              "VARIANCE_VALUE": "[Váríáncé Válúé]",
+              "REQUIRED_TIER": "[Réqúíréd Tíér]",
+              "STATUS": "[Státús]",
+              "ACTIONS": "[Áctíóns]"
+            }
+          }
+        },
+        "DETAIL": {
+          "TITLE": "[Ádjústmént Détáíl]",
+          "FIELD": {
+            "ADJ_ID": "[Ádjústmént ÍD]",
+            "SKU": "[SKÚ]",
+            "LOCATION": "[Lócátíón]",
+            "STORAGE_LOCATION": "[Stórágé Lócátíón]",
+            "EXPECTED_QTY": "[Éxpéctéd Qty]",
+            "COUNTED_QTY": "[Cóúntéd Qty]",
+            "VARIANCE_QTY": "[Váríáncé Qty]",
+            "VARIANCE_VALUE": "[Váríáncé Válúé]",
+            "REQUIRED_TIER": "[Réqúíréd Tíér]",
+            "STATUS": "[Státús]",
+            "REJECTION_REASON": "[Réjéctíón Réásón]"
+          }
+        },
+        "TIER": {
+          "ONE": "[Tíér 1]",
+          "TWO": "[Tíér 2]"
+        },
+        "ACTION": {
+          "REVIEW": "[Révíéw]",
+          "APPROVE": "[Áppróvé]",
+          "REJECT": "[Réjéct]"
+        },
+        "APPROVAL": {
+          "ACTIONS": {
+            "TITLE": "[Áctíóns]"
+          },
+          "REJECTION_REASON": "[Réjéctíón Réásón]",
+          "REJECTION_REASON_PLACEHOLDER": "[Éxpláín réásón fór réjéctíón…]"
+        }
+      }
+    },
+    "PURCHASE_ORDERS": {
+      "LIST": {
+        "TITLE": "[!! Ƥüüŕçħààšëë ØØŕđëëŕš !!]",
+        "EMPTY": "[!! Ňøø ṕüüŕçħààšëë øøŕđëëŕš ƒøøüüñđ. !!]",
+        "ERROR": {
+          "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ṕüüŕçħààšëë øøŕđëëŕš. !!]"
+        },
+        "STATE": {
+          "EMPTY": "[Nó púrchásé órdérs fóúnd.]"
+        },
+        "TABLE": {
+          "ARIA": "[Púrchásé órdér líst]",
+          "CAPTION": "[Púrchásé órdérs]",
+          "HEADER": {
+            "PO_NUMBER": "[PÓ Númbér]",
+            "SUPPLIER": "[Súpplíér]",
+            "STATUS": "[Státús]",
+            "LINE_COUNT": "[Línés]",
+            "OPEN_BALANCE": "[Ópén Báláncé]",
+            "SCHEDULED_DELIVERY": "[Éxpéctéd Délívéry]"
+          }
+        },
+        "ROW": {
+          "ARIA": "[Púrchásé órdér]"
+        },
+        "ACTION": {
+          "NEW": "[Néw Púrchásé Órdér]"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "[!! Ƥüüŕçħààšëë ØØŕđëëŕ Đëëŧààïïľ !!]",
+        "ERROR": {
+          "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ṕüüŕçħààšëë øøŕđëëŕ. !!]",
+          "CANCEL": "[!! Ƒààïïľëëđ ŧøø çààñçëëľ ṕüüŕçħààšëë øøŕđëëŕ. !!]"
+        },
+        "STATE": {
+          "EMPTY": "[Púrchásé órdér nót fóúnd.]"
+        },
+        "FIELD": {
+          "SUPPLIER": "[Súpplíér]",
+          "STATUS": "[Státús]",
+          "SCHEDULED_DELIVERY": "[Éxpéctéd Délívéry]",
+          "OPEN_BALANCE": "[Ópén Báláncé]",
+          "NOTES": "[Nótés]"
+        },
+        "LINES": {
+          "TITLE": "[Órdér Línés]",
+          "TABLE": {
+            "ARIA": "[Púrchásé órdér línés]",
+            "HEADER": {
+              "SKU": "[SKÚ]",
+              "PRODUCT_NAME": "[Pródúct]",
+              "ORDERED_QTY": "[Órdéréd]",
+              "RECEIVED_QTY": "[Récéívéd]",
+              "UNIT_PRICE": "[Únít Prícé]",
+              "LINE_TOTAL": "[Líné Tótál]",
+              "STATUS": "[Státús]"
+            }
+          },
+          "RECEIVED_PROGRESS": "[récéípt prógréss]"
+        }
+      },
+      "FORM": {
+        "ERROR": {
+          "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ṕüüŕçħààšëë øøŕđëëŕ ƒøøŕ ëëđïïŧïïñĝ. !!]",
+          "CREATE": "[!! Ƒààïïľëëđ ŧøø çŕëëààŧëë ṕüüŕçħààšëë øøŕđëëŕ. !!]",
+          "REVISE": "[!! Ƒààïïľëëđ ŧøø ŕëëṽïïšëë ṕüüŕçħààšëë øøŕđëëŕ. !!]"
+        },
+        "TITLE": {
+          "NEW": "[Néw Púrchásé Órdér]",
+          "EDIT": "[Édít Púrchásé Órdér]"
+        },
+        "HEADER": {
+          "TITLE": "[Órdér Détáíls]"
+        },
+        "FIELD": {
+          "SUPPLIER": "[Súpplíér]",
+          "SUPPLIER_PLACEHOLDER": "[Éntér súpplíér námé]",
+          "DELIVERY_DATE": "[Éxpéctéd Délívéry Dáté]",
+          "NOTES": "[Nótés]",
+          "NOTES_PLACEHOLDER": "[Óptíónál nótés…]"
+        },
+        "LINES": {
+          "TITLE": "[Órdér Línés]",
+          "TABLE": {
+            "ARIA": "[Órdér línés]",
+            "HEADER": {
+              "SKU": "[SKÚ]",
+              "QTY": "[Qty]",
+              "UNIT_PRICE": "[Únít Prícé]"
+            }
+          },
+          "LINE_SKU_LABEL": "[SKÚ fór líné]",
+          "LINE_QTY_LABEL": "[Qúántíty fór líné]",
+          "LINE_PRICE_LABEL": "[Únít prícé fór líné]",
+          "SKU_PLACEHOLDER": "[é.g. SKÚ-001]",
+          "ACTION": {
+            "ADD": "[Ádd Líné]",
+            "REMOVE_ARIA": "[Rémóvé líné]"
+          },
+          "EMPTY_HINT": "[Ádd át léást óné líné tó plácé thís órdér.]"
+        },
+        "ACTION": {
+          "SUBMIT": "[Súbmít Órdér]"
+        }
+      }
+    }
+  },
+  "COMMON": {
+    "SEARCH": "[Séárch]",
+    "LOADING": "[Lóádíng…]",
+    "RETRY": "[Rétry]",
+    "BACK": "[Báck]",
+    "LOAD_MORE": "[Lóád móré]",
+    "ACTIONS": "[Áctíóns]",
+    "EDIT": "[Édít]",
+    "CANCEL": "[Cáncél]",
+    "REFRESH": "[Réfrésh]",
+    "CLOSE": "[Clósé]"
+  },
+  "STATUS": {
+    "OPEN": "[Ópén]",
+    "CLOSED": "[Clóséd]",
+    "PENDING": "[Péndíng]",
+    "PENDING_APPROVAL": "[Péndíng Áppróvál]",
+    "APPROVED": "[Áppróvéd]",
+    "REJECTED": "[Réjéctéd]",
+    "IN_PROGRESS": "[Ín Prógréss]",
+    "COMPLETED": "[Cómplétéd]",
+    "COMPLETE": "[Cómplété]",
+    "SCHEDULED": "[Schédúléd]",
+    "DRAFT": "[Dráft]",
+    "CANCELLED": "[Cáncélléd]",
+    "FULLY_RECEIVED": "[Fúlly Récéívéd]",
+    "RECEIVED": "[Récéívéd]",
+    "OVER_RECEIVED": "[Óvér-récéívéd]",
+    "NOT_RECEIVABLE": "[Nót récéíváblé]",
+    "REQUIRES_LOCATION_SELECTION": "[Áwáítíng Lócátíón]"
   }
 }

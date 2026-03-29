@@ -1,0 +1,95 @@
+<main class="page" aria-labelledby="replenishment-tasks-title">
+  <header class="page-header">
+    <h1 id="replenishment-tasks-title" class="page-title">{{ 'INVENTORY.REPLENISHMENT.TASKS.TITLE' | translate }}</h1>
+    <button class="btn-secondary" type="button" (click)="load()">
+      <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+      {{ 'COMMON.REFRESH' | translate }}
+    </button>
+  </header>
+
+  @if (state() === 'loading') {
+    <section class="card" aria-busy="true" aria-live="polite">
+      <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </section>
+  }
+
+  @if (state() === 'empty') {
+    <section class="card state-card" aria-live="polite">
+      <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+      <p>{{ 'INVENTORY.REPLENISHMENT.TASKS.STATE.EMPTY' | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'error') {
+    <section class="card state-card" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <p>{{ errorKey() | translate }}</p>
+      <button class="btn-secondary" type="button" (click)="load()">{{ 'COMMON.RETRY' | translate }}</button>
+    </section>
+  }
+
+  @if (state() === 'ready') {
+    <section class="card table-card">
+      <div class="table-wrap">
+        <table class="data-table" role="table"
+               aria-label="{{ 'INVENTORY.REPLENISHMENT.TASKS.TABLE.ARIA' | translate }}">
+          <caption class="sr-only">{{ 'INVENTORY.REPLENISHMENT.TASKS.TABLE.CAPTION' | translate }}</caption>
+          <thead>
+            <tr role="row">
+              <th scope="col" role="columnheader">{{ 'INVENTORY.REPLENISHMENT.TASKS.TABLE.HEADER.TASK_ID' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.REPLENISHMENT.TASKS.TABLE.HEADER.SKU' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.REPLENISHMENT.TASKS.TABLE.HEADER.FROM_LOCATION' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.REPLENISHMENT.TASKS.TABLE.HEADER.TO_LOCATION' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.REPLENISHMENT.TASKS.TABLE.HEADER.REQUESTED_QTY_UOM' | translate }}</th>
+              <th scope="col" role="columnheader">{{ 'INVENTORY.REPLENISHMENT.TASKS.TABLE.HEADER.STATUS' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (task of tasks(); track task.replenishmentTaskId) {
+              <tr role="row">
+                <td>{{ task.replenishmentTaskId }}</td>
+                <td>{{ task.productSku }}</td>
+                <td>{{ task.fromStorageLocationId }}</td>
+                <td>{{ task.toStorageLocationId }}</td>
+                <td>{{ task.requestedQty }} {{ task.uom }}</td>
+                <td class="badge-cell">
+                  @switch (task.status) {
+                    @case ('PENDING') {
+                      <span class="badge badge--warning">
+                        <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+                        {{ 'STATUS.PENDING' | translate }}
+                      </span>
+                    }
+                    @case ('IN_PROGRESS') {
+                      <span class="badge badge--info">
+                        <span class="material-symbols-outlined" aria-hidden="true">autorenew</span>
+                        {{ 'STATUS.IN_PROGRESS' | translate }}
+                      </span>
+                    }
+                    @case ('COMPLETED') {
+                      <span class="badge badge--success">
+                        <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                        {{ 'STATUS.COMPLETED' | translate }}
+                      </span>
+                    }
+                    @default {
+                      <span class="badge badge--neutral">
+                        <span class="material-symbols-outlined" aria-hidden="true">help_outline</span>
+                        {{ task.status }}
+                      </span>
+                    }
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</main>
+

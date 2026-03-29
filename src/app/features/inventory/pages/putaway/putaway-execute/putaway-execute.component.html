@@ -1,0 +1,77 @@
+<main class="page" aria-labelledby="putaway-execute-title">
+  <div class="back-row">
+    <button class="btn-secondary" type="button" (click)="goBack()">
+      <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+      {{ 'COMMON.BACK' | translate }}
+    </button>
+  </div>
+
+  @if (state() === 'loading') {
+    <section class="card" aria-busy="true" aria-live="polite">
+      <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </section>
+  }
+
+  @if (state() === 'error') {
+    <section class="card state-card" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <p>{{ errorKey() | translate }}</p>
+      <button class="btn-secondary" type="button" (click)="goBack()">{{ 'COMMON.BACK' | translate }}</button>
+    </section>
+  }
+
+  @if (state() === 'empty') {
+    <section class="card state-card">
+      <p>{{ 'INVENTORY.PUTAWAY.EXECUTE.STATE.EMPTY' | translate }}</p>
+    </section>
+  }
+
+  @if (state() === 'ready' && task()) {
+    <!-- Task context -->
+    <section class="card">
+      <h1 id="putaway-execute-title">{{ 'INVENTORY.PUTAWAY.EXECUTE.TITLE' | translate }}</h1>
+      <dl class="detail-grid">
+        <dt>{{ 'INVENTORY.PUTAWAY.EXECUTE.FIELD.SKU' | translate }}</dt>
+        <dd>{{ task()!.productSku }}</dd>
+
+        <dt>{{ 'INVENTORY.PUTAWAY.EXECUTE.FIELD.QUANTITY' | translate }}</dt>
+        <dd>{{ task()!.quantity }} {{ task()!.uom }}</dd>
+
+        <dt>{{ 'INVENTORY.PUTAWAY.EXECUTE.FIELD.STAGING_LOCATION' | translate }}</dt>
+        <dd>{{ task()!.stagingStorageLocationId }}</dd>
+      </dl>
+    </section>
+
+    <!-- Execute form -->
+    <section class="card">
+      <h2>{{ 'INVENTORY.PUTAWAY.EXECUTE.FORM.TITLE' | translate }}</h2>
+      <div class="field-group">
+        <label class="field-label" for="target-location">
+          {{ 'INVENTORY.PUTAWAY.EXECUTE.TARGET_LOCATION' | translate }}
+        </label>
+        <input
+          id="target-location"
+          type="text"
+          class="input-underline"
+          [value]="targetStorageLocationId()"
+          (input)="updateTargetLocation($any($event.target).value)"
+          [attr.placeholder]="'INVENTORY.PUTAWAY.EXECUTE.TARGET_LOCATION_PLACEHOLDER' | translate" />
+      </div>
+      <div class="action-bar">
+        <button class="btn-primary" type="button"
+                (click)="completePutaway()"
+                [disabled]="submitting() || !targetStorageLocationId().trim()"
+                [attr.aria-busy]="submitting()">
+          {{ 'INVENTORY.PUTAWAY.EXECUTE.ACTION.COMPLETE' | translate }}
+        </button>
+        <button class="btn-secondary" type="button" (click)="goBack()">
+          {{ 'COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </section>
+  }
+</main>
+

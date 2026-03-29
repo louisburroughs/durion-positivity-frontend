@@ -239,6 +239,61 @@
       "ERROR": {
         "LOAD": "No se pudieron cargar las entradas de auditoría."
       }
+    },
+    "AUDIT_LOGS": {
+      "TITLE": "Registros de auditoría",
+      "FILTER": {
+        "FROM_DATE": "Desde",
+        "TO_DATE": "Hasta",
+        "ARIA": "Filtros de búsqueda de auditoría",
+        "ACTOR_ID": "ID del actor",
+        "ACTOR_ID_PLACEHOLDER": "Usuario o sistema",
+        "WORKORDER_ID": "ID de orden de trabajo",
+        "WORKORDER_ID_PLACEHOLDER": "Filtrar por orden de trabajo"
+      },
+      "EMPTY": "No se encontraron eventos de auditoría.",
+      "EXPORT": "Exportar",
+      "LOAD_MORE": "Cargar más",
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los eventos de auditoría.",
+        "LOAD_MORE": "No se pudieron cargar más eventos de auditoría.",
+        "EXPORT": "No se pudo solicitar la exportación de auditoría."
+      },
+      "ACTION": {
+        "EXPORT_CSV": "Exportar CSV"
+      },
+      "STATE": {
+        "IDLE": "Aplique filtros para ver eventos de auditoría.",
+        "EMPTY": "No se encontraron eventos de auditoría."
+      },
+      "TABLE": {
+        "ARIA": "Registro de auditoría",
+        "CAPTION": "Eventos de auditoría según filtros actuales",
+        "HEADER": {
+          "EVENT_ID": "ID de evento",
+          "EVENT_TYPE": "Tipo de evento",
+          "AGGREGATE_ID": "ID agregado",
+          "ACTOR": "Actor",
+          "TIMESTAMP": "Fecha/Hora"
+        },
+        "ROW": {
+          "ARIA": "Evento de auditoría"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Detalle del evento",
+        "PANEL": {
+          "ARIA": "Detalles del evento de auditoría"
+        },
+        "FIELD": {
+          "EVENT_ID": "ID de evento",
+          "EVENT_TYPE": "Tipo de evento",
+          "AGGREGATE_ID": "ID agregado",
+          "ACTOR": "Actor",
+          "TIMESTAMP": "Fecha/Hora",
+          "LOCATION": "Ubicación"
+        }
+      }
     }
   },
   "LOCATION": {
@@ -1025,5 +1080,491 @@
       "CREDIT_TOTAL": "Total de Créditos",
       "NET": "Total Neto"
     }
+  },
+  "INVENTORY": {
+    "AVAILABILITY": {
+      "TITLE": "Disponibilidad de inventario",
+      "FILTER": {
+        "SKU_LABEL": "SKU del producto",
+        "LOCATION_LABEL": "Ubicación",
+        "ARIA": "Filtros de búsqueda de disponibilidad",
+        "SKU": "UGS",
+        "SKU_PLACEHOLDER": "p. ej. UGS-001",
+        "LOCATION": "Ubicación",
+        "LOCATION_PLACEHOLDER": "ID de ubicación"
+      },
+      "STATE": {
+        "LOADING": "Cargando disponibilidad...",
+        "EMPTY": "No se encontraron datos de disponibilidad.",
+        "IDLE": "Ingrese una UGS para buscar disponibilidad de inventario."
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la disponibilidad."
+      },
+      "TABLE": {
+        "ARIA": "Resultados de disponibilidad de inventario",
+        "CAPTION": "Disponibilidad por SKU y ubicación",
+        "HEADER": {
+          "SKU": "UGS",
+          "LOCATION": "Ubicación",
+          "STORAGE_LOCATION": "Almacenamiento",
+          "ON_HAND": "En mano",
+          "ALLOCATED": "Asignado",
+          "ATP": "Disponible para prometer",
+          "UOM": "UOM"
+        }
+      }
+    },
+    "LEDGER": {
+      "LIST": {
+        "TITLE": "Libro mayor de inventario",
+        "EMPTY": "No se encontraron entradas del libro mayor.",
+        "ERROR": {
+          "LOAD": "No se pudieron cargar las entradas del libro mayor."
+        },
+        "FILTER": {
+          "ARIA": "Filtros de búsqueda del libro mayor",
+          "SKU": "UGS",
+          "SKU_PLACEHOLDER": "p. ej. UGS-001",
+          "LOCATION": "Ubicación",
+          "LOCATION_PLACEHOLDER": "ID de ubicación",
+          "DATE_FROM": "Desde",
+          "DATE_TO": "Hasta"
+        },
+        "STATE": {
+          "IDLE": "Aplique filtros para buscar en el libro mayor."
+        },
+        "TABLE": {
+          "ARIA": "Entradas del libro mayor de inventario",
+          "CAPTION": "Historial de movimientos",
+          "HEADER": {
+            "TIMESTAMP": "Fecha/Hora",
+            "MOVEMENT_TYPE": "Tipo",
+            "SKU": "UGS",
+            "QTY_CHANGE": "Cambio de Cant.",
+            "UOM": "UOM",
+            "FROM_LOCATION": "Desde",
+            "TO_LOCATION": "Hasta"
+          }
+        },
+        "ROW": {
+          "ARIA": "Entrada del libro mayor"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Detalle de entrada del libro mayor",
+        "ERROR": {
+          "LOAD": "No se pudo cargar la entrada del libro mayor."
+        },
+        "STATE": {
+          "EMPTY": "Entrada no encontrada."
+        },
+        "FIELD": {
+          "ENTRY_ID": "ID de entrada",
+          "TIMESTAMP": "Fecha/Hora",
+          "MOVEMENT_TYPE": "Tipo de movimiento",
+          "SKU": "UGS",
+          "QTY_CHANGE": "Cambio de cantidad",
+          "UOM": "Unidad de medida",
+          "FROM_LOCATION": "Desde ubicación",
+          "FROM_STORAGE_LOCATION": "Desde almacenamiento",
+          "TO_LOCATION": "Hasta ubicación",
+          "TO_STORAGE_LOCATION": "Hasta almacenamiento",
+          "ACTOR": "Actor",
+          "SOURCE_TRANSACTION": "Transacción origen",
+          "REASON_CODE": "Código de razón",
+          "WORKORDER_ID": "ID de orden de trabajo",
+          "WORKORDER_LINE_ID": "ID de línea de orden"
+        }
+      },
+      "MOVEMENT_TYPE": {
+        "RECEIPT": "Recepción",
+        "ISSUE": "Emisión",
+        "CONSUME": "Consumo",
+        "RETURN": "Devolución",
+        "ADJUSTMENT_INCREASE": "Ajuste (+)",
+        "ADJUSTMENT_DECREASE": "Ajuste (−)"
+      }
+    },
+    "RECEIVING": {
+      "TITLE": "Recepción en área de preparación",
+      "ERROR": {
+        "LOAD": "No se pudo cargar el documento de recepción.",
+        "CONFIRM": "No se pudo confirmar la recepción."
+      },
+      "RECEIVE_INTO_STAGING": {
+        "TITLE": "Recibir en área de preparación"
+      },
+      "STATE": {
+        "IDLE": "Ingrese un ID de documento para comenzar."
+      },
+      "DOCUMENT": {
+        "TITLE": "Documento fuente",
+        "FIELD": {
+          "DOCUMENT_ID": "ID de documento",
+          "DOCUMENT_TYPE": "Tipo",
+          "STATUS": "Estado",
+          "LOCATION": "Ubicación de recepción",
+          "STAGING_LOCATION": "Área de preparación",
+          "STAGING_BARCODE": "Código de barras"
+        }
+      },
+      "LINES": {
+        "TITLE": "Líneas",
+        "TABLE": {
+          "ARIA": "Líneas de recepción",
+          "HEADER": {
+            "SKU": "UGS",
+            "PRODUCT_NAME": "Producto",
+            "EXPECTED_QTY": "Esperado",
+            "ACTUAL_QTY": "Recibido",
+            "UOM": "UOM",
+            "STATE": "Estado"
+          }
+        }
+      },
+      "LINE": {
+        "ACTUAL_QTY_LABEL": "Cantidad real para"
+      },
+      "ACTION": {
+        "CONFIRM": "Confirmar Recepción",
+        "RECEIVE_ANOTHER": "Recibir otro"
+      },
+      "RESULT": {
+        "TITLE": "Recepción confirmada",
+        "FIELD": {
+          "RECEIVED_BY": "Recibido por",
+          "CORRELATION_ID": "ID de correlación",
+          "LEDGER_ENTRIES": "Entradas de libro mayor creadas"
+        }
+      }
+    },
+    "PUTAWAY": {
+      "LIST": {
+        "TITLE": "Tareas de almacenamiento",
+        "EMPTY": "No se encontraron tareas de almacenamiento.",
+        "ERROR": {
+          "LOAD": "No se pudieron cargar las tareas de almacenamiento."
+        }
+      },
+      "EXECUTE": {
+        "TITLE": "Ejecutar almacenamiento",
+        "ERROR": {
+          "COMPLETE": "No se pudo completar la tarea de almacenamiento."
+        },
+        "STATE": {
+          "EMPTY": "Tarea no encontrada."
+        },
+        "FORM": {
+          "TITLE": "Detalles de la tarea"
+        },
+        "FIELD": {
+          "SKU": "UGS",
+          "QUANTITY": "Cantidad",
+          "STAGING_LOCATION": "Área de preparación"
+        },
+        "TARGET_LOCATION": "Ubicación de almacenamiento destino",
+        "TARGET_LOCATION_PLACEHOLDER": "Escanear o ingresar código",
+        "ACTION": {
+          "COMPLETE": "Completar almacenamiento"
+        }
+      },
+      "TASKS": {
+        "TITLE": "Tareas de almacenamiento",
+        "STATE": {
+          "EMPTY": "No hay tareas de almacenamiento."
+        },
+        "TABLE": {
+          "ARIA": "Lista de tareas de almacenamiento",
+          "CAPTION": "Tareas pendientes de almacenamiento",
+          "HEADER": {
+            "TASK_ID": "ID de tarea",
+            "SKU": "UGS",
+            "STAGING_LOCATION": "Preparación",
+            "TARGET_LOCATION": "Destino",
+            "QTY_UOM": "Cant. / UOM",
+            "STATUS": "Estado"
+          }
+        },
+        "ROW": {
+          "ARIA": "Tarea de almacenamiento"
+        }
+      }
+    },
+    "REPLENISHMENT": {
+      "LIST": {
+        "TITLE": "Tareas de reabastecimiento",
+        "EMPTY": "No se encontraron tareas de reabastecimiento.",
+        "ERROR": {
+          "LOAD": "No se pudieron cargar las tareas de reabastecimiento."
+        }
+      },
+      "TASKS": {
+        "TITLE": "Tareas de reabastecimiento",
+        "STATE": {
+          "EMPTY": "No hay tareas de reabastecimiento."
+        },
+        "TABLE": {
+          "ARIA": "Lista de tareas de reabastecimiento",
+          "CAPTION": "Tareas pendientes de reabastecimiento",
+          "HEADER": {
+            "TASK_ID": "ID de tarea",
+            "SKU": "UGS",
+            "FROM_LOCATION": "Desde",
+            "TO_LOCATION": "Hasta",
+            "REQUESTED_QTY_UOM": "Cant. / UOM",
+            "STATUS": "Estado"
+          }
+        }
+      }
+    },
+    "COUNTS": {
+      "EXECUTE": {
+        "TITLE": "Ejecutar conteo de ciclo",
+        "ERROR": {
+          "LOAD": "No se pudo cargar la tarea de conteo de ciclo.",
+          "SUBMIT": "No se pudo enviar el conteo de ciclo."
+        },
+        "STATE": {
+          "EMPTY": "Tarea de conteo no encontrada."
+        },
+        "FIELD": {
+          "SKU": "UGS",
+          "UOM": "UOM",
+          "LOCATION": "Ubicación",
+          "STORAGE_LOCATION": "Almacenamiento",
+          "STATUS": "Estado"
+        },
+        "FORM": {
+          "TITLE": "Ingresar conteo"
+        },
+        "COUNTED_QTY": "Cantidad contada",
+        "COUNTED_QTY_HINT": "Ingrese la cantidad contada físicamente. La cantidad esperada se oculta hasta la presentación.",
+        "ACTION": {
+          "SUBMIT": "Enviar conteo"
+        },
+        "RESULT": {
+          "TITLE": "Conteo enviado",
+          "FIELD": {
+            "STATUS": "Estado"
+          },
+          "STATUS": {
+            "ACCEPTED": "Aceptado",
+            "PENDING_APPROVAL": "Pendiente de aprobación"
+          },
+          "COUNT_HISTORY": "Historial de conteos",
+          "HEADER": {
+            "SEQ": "#",
+            "COUNTED_QTY": "Cant. contada",
+            "VARIANCE": "Variancia",
+            "COUNTED_BY": "Contado por",
+            "TIMESTAMP": "Fecha/Hora"
+          },
+          "ADJUSTMENT_CREATED": "Ajuste creado:"
+        }
+      },
+      "APPROVALS": {
+        "TITLE": "Aprobaciones de ajuste",
+        "EMPTY": "No se encontraron ajustes pendientes.",
+        "ERROR": {
+          "LOAD": "No se pudieron cargar los ajustes.",
+          "APPROVE": "No se pudo aprobar el ajuste.",
+          "REJECT": "No se pudo rechazar el ajuste."
+        }
+      },
+      "ADJUSTMENT": {
+        "APPROVALS": {
+          "TITLE": "Aprobaciones de ajustes",
+          "STATE": {
+            "EMPTY": "No hay ajustes pendientes de aprobación."
+          },
+          "TABLE": {
+            "ARIA": "Ajustes pendientes de aprobación",
+            "CAPTION": "Ajustes de inventario pendientes de revisión",
+            "HEADER": {
+              "ADJ_ID": "ID de ajuste",
+              "SKU": "UGS",
+              "LOCATION": "Ubicación",
+              "VARIANCE_QTY": "Variancia Cant.",
+              "VARIANCE_VALUE": "Variancia Valor",
+              "REQUIRED_TIER": "Nivel requerido",
+              "STATUS": "Estado",
+              "ACTIONS": "Acciones"
+            }
+          }
+        },
+        "DETAIL": {
+          "TITLE": "Detalle del ajuste",
+          "FIELD": {
+            "ADJ_ID": "ID de ajuste",
+            "SKU": "UGS",
+            "LOCATION": "Ubicación",
+            "STORAGE_LOCATION": "Almacenamiento",
+            "EXPECTED_QTY": "Cant. esperada",
+            "COUNTED_QTY": "Cant. contada",
+            "VARIANCE_QTY": "Variancia cant.",
+            "VARIANCE_VALUE": "Variancia valor",
+            "REQUIRED_TIER": "Nivel requerido",
+            "STATUS": "Estado",
+            "REJECTION_REASON": "Motivo de rechazo"
+          }
+        },
+        "TIER": {
+          "ONE": "Nivel 1",
+          "TWO": "Nivel 2"
+        },
+        "ACTION": {
+          "REVIEW": "Revisar",
+          "APPROVE": "Aprobar",
+          "REJECT": "Rechazar"
+        },
+        "APPROVAL": {
+          "ACTIONS": {
+            "TITLE": "Acciones"
+          },
+          "REJECTION_REASON": "Motivo de rechazo",
+          "REJECTION_REASON_PLACEHOLDER": "Explique el motivo del rechazo…"
+        }
+      }
+    },
+    "PURCHASE_ORDERS": {
+      "LIST": {
+        "TITLE": "Órdenes de compra",
+        "EMPTY": "No se encontraron órdenes de compra.",
+        "ERROR": {
+          "LOAD": "No se pudieron cargar las órdenes de compra."
+        },
+        "STATE": {
+          "EMPTY": "No se encontraron órdenes de compra."
+        },
+        "TABLE": {
+          "ARIA": "Lista de órdenes de compra",
+          "CAPTION": "Órdenes de compra",
+          "HEADER": {
+            "PO_NUMBER": "N.º de OC",
+            "SUPPLIER": "Proveedor",
+            "STATUS": "Estado",
+            "LINE_COUNT": "Líneas",
+            "OPEN_BALANCE": "Saldo abierto",
+            "SCHEDULED_DELIVERY": "Entrega esperada"
+          }
+        },
+        "ROW": {
+          "ARIA": "Orden de compra"
+        },
+        "ACTION": {
+          "NEW": "Nueva orden de compra"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Detalle de orden de compra",
+        "ERROR": {
+          "LOAD": "No se pudo cargar la orden de compra.",
+          "CANCEL": "No se pudo cancelar la orden de compra."
+        },
+        "STATE": {
+          "EMPTY": "Orden de compra no encontrada."
+        },
+        "FIELD": {
+          "SUPPLIER": "Proveedor",
+          "STATUS": "Estado",
+          "SCHEDULED_DELIVERY": "Entrega esperada",
+          "OPEN_BALANCE": "Saldo abierto",
+          "NOTES": "Notas"
+        },
+        "LINES": {
+          "TITLE": "Líneas del pedido",
+          "TABLE": {
+            "ARIA": "Líneas de la orden de compra",
+            "HEADER": {
+              "SKU": "UGS",
+              "PRODUCT_NAME": "Producto",
+              "ORDERED_QTY": "Pedido",
+              "RECEIVED_QTY": "Recibido",
+              "UNIT_PRICE": "Precio unitario",
+              "LINE_TOTAL": "Total de línea",
+              "STATUS": "Estado"
+            }
+          },
+          "RECEIVED_PROGRESS": "progreso de recepción"
+        }
+      },
+      "FORM": {
+        "ERROR": {
+          "LOAD": "No se pudo cargar la orden de compra para editar.",
+          "CREATE": "No se pudo crear la orden de compra.",
+          "REVISE": "No se pudo revisar la orden de compra."
+        },
+        "TITLE": {
+          "NEW": "Nueva orden de compra",
+          "EDIT": "Editar orden de compra"
+        },
+        "HEADER": {
+          "TITLE": "Detalles del pedido"
+        },
+        "FIELD": {
+          "SUPPLIER": "Proveedor",
+          "SUPPLIER_PLACEHOLDER": "Ingrese el nombre del proveedor",
+          "DELIVERY_DATE": "Fecha de entrega esperada",
+          "NOTES": "Notas",
+          "NOTES_PLACEHOLDER": "Notas opcionales…"
+        },
+        "LINES": {
+          "TITLE": "Líneas del pedido",
+          "TABLE": {
+            "ARIA": "Líneas del pedido",
+            "HEADER": {
+              "SKU": "UGS",
+              "QTY": "Cant.",
+              "UNIT_PRICE": "Precio unitario"
+            }
+          },
+          "LINE_SKU_LABEL": "UGS para línea",
+          "LINE_QTY_LABEL": "Cantidad para línea",
+          "LINE_PRICE_LABEL": "Precio unitario para línea",
+          "SKU_PLACEHOLDER": "p. ej. UGS-001",
+          "ACTION": {
+            "ADD": "Agregar línea",
+            "REMOVE_ARIA": "Eliminar línea"
+          },
+          "EMPTY_HINT": "Agregue al menos una línea para realizar este pedido."
+        },
+        "ACTION": {
+          "SUBMIT": "Enviar pedido"
+        }
+      }
+    }
+  },
+  "COMMON": {
+    "SEARCH": "Buscar",
+    "LOADING": "Cargando…",
+    "RETRY": "Reintentar",
+    "BACK": "Atrás",
+    "LOAD_MORE": "Cargar más",
+    "ACTIONS": "Acciones",
+    "EDIT": "Editar",
+    "CANCEL": "Cancelar",
+    "REFRESH": "Actualizar",
+    "CLOSE": "Cerrar"
+  },
+  "STATUS": {
+    "OPEN": "Abierto",
+    "CLOSED": "Cerrado",
+    "PENDING": "Pendiente",
+    "PENDING_APPROVAL": "Pendiente de aprobación",
+    "APPROVED": "Aprobado",
+    "REJECTED": "Rechazado",
+    "IN_PROGRESS": "En progreso",
+    "COMPLETED": "Completado",
+    "COMPLETE": "Completo",
+    "SCHEDULED": "Programado",
+    "DRAFT": "Borrador",
+    "CANCELLED": "Cancelado",
+    "PARTIALLY_RECEIVED": "Parcialmente recibido",
+    "FULLY_RECEIVED": "Totalmente recibido",
+    "RECEIVED": "Recibido",
+    "OVER_RECEIVED": "Exceso de recepción",
+    "NOT_RECEIVABLE": "No recibible",
+    "REQUIRES_LOCATION_SELECTION": "Esperando ubicación"
   }
 }
