@@ -132,7 +132,7 @@ export class ProductCatalogService {
   }
 
   createCostStructure(itemId: string, structure: Partial<CostStructure>): Observable<CostStructure> {
-    return this.api.post<CostStructure>('/catalog/v1/supplier-costs', structure);
+    return this.api.post<CostStructure>('/catalog/v1/supplier-costs', { ...structure, itemId });
   }
 
   updateCostStructure(

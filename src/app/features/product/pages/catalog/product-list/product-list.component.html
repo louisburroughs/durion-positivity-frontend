@@ -61,8 +61,7 @@
         </thead>
         <tbody>
           @for (p of products(); track p.id) {
-          <tr class="table-row-action" tabindex="0" (click)="selectProduct(p.id)" (keydown.enter)="selectProduct(p.id)"
-            (keyup.enter)="selectProduct(p.id)">
+          <tr class="table-row-action" tabindex="0" (click)="selectProduct(p.id)" (keydown.enter)="selectProduct(p.id)">
             <td>{{ p.sku }}</td>
             <td>{{ p.name }}</td>
             <td>{{ p.category }}</td>

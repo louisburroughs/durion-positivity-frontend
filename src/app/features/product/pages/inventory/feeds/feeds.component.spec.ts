@@ -3,7 +3,7 @@ import { of } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { FeedsComponent } from './feeds.component';
 import { ProductInventoryService } from '../../../services/product-inventory.service';
-import type { FeedSourceType } from '../../../models/availability.models';
+import type { FeedSourceType, SkuAvailability } from '../../../models/availability.models';
 
 describe('FeedsComponent', () => {
   let fixture: ComponentFixture<FeedsComponent>;
@@ -14,8 +14,16 @@ describe('FeedsComponent', () => {
     queryLeadTime: vi.fn().mockReturnValue(of([])),
   };
 
-  const sampleAvailability = [
-    { sku: 'SKU-001', sourceType: 'MFR' as FeedSourceType, quantityOnHand: 10, leadTimedays: 3 },
+  const sampleAvailability: SkuAvailability[] = [
+    {
+      sku: 'SKU-001',
+      sourceType: 'MFR' as FeedSourceType,
+      onHand: 10,
+      reserved: 0,
+      atp: 10,
+      asOf: new Date().toISOString(),
+      locationId: 'LOC-1',
+    },
   ];
 
   beforeEach(async () => {

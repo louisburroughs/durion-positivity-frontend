@@ -44,7 +44,7 @@ export class ProductListComponent {
   }
 
   createProduct(): void {
-    this.router.navigate(['/app/product/catalog/new']);
+    this.router.navigate(['/app/product/catalog'], { queryParams: { mode: 'new' } });
   }
 
   selectProduct(id: string): void {

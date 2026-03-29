@@ -62,7 +62,10 @@ export class LocationOverridesComponent {
             current.map(entry => (entry.id === updated.id ? updated : entry)),
           );
         },
-        error: () => this.errorKey.set('PRODUCT.PRICING.LOCATION_OVERRIDES.ERROR.APPROVE'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.PRICING.LOCATION_OVERRIDES.ERROR.APPROVE');
+        },
       });
   }
 
@@ -76,7 +79,10 @@ export class LocationOverridesComponent {
             current.map(entry => (entry.id === updated.id ? updated : entry)),
           );
         },
-        error: () => this.errorKey.set('PRODUCT.PRICING.LOCATION_OVERRIDES.ERROR.REJECT'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.PRICING.LOCATION_OVERRIDES.ERROR.REJECT');
+        },
       });
   }
 
@@ -88,7 +94,10 @@ export class LocationOverridesComponent {
         next: updated => {
           this.guardrail.set(updated);
         },
-        error: () => this.errorKey.set('PRODUCT.PRICING.LOCATION_OVERRIDES.ERROR.GUARDRAIL'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.PRICING.LOCATION_OVERRIDES.ERROR.GUARDRAIL');
+        },
       });
   }
 

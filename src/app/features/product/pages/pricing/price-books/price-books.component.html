@@ -3,11 +3,17 @@
     <h1 id="price-books-title" class="page-title">{{ 'PRODUCT.PRICING.PRICE_BOOKS.TITLE' | translate }}</h1>
     <form class="new-book-form"
       (submit)="createPriceBook({ name: newBookName.value, effectiveAt: newBookEffectiveAt.value, endAt: newBookEndAt.value || null, scope: { locationId: null, customerTierId: null, currencyUomId: newBookCurrency.value || 'USD' } }); $event.preventDefault()">
-      <input #newBookName class="input-underline" type="text"
+      <label class="sr-only" for="new-book-name">{{ 'PRODUCT.PRICING.PRICE_BOOKS.NEW_NAME' | translate }}</label>
+      <input id="new-book-name" #newBookName class="input-underline" type="text"
         [attr.placeholder]="'PRODUCT.PRICING.PRICE_BOOKS.NEW_NAME' | translate" required />
-      <input #newBookEffectiveAt class="input-underline" type="datetime-local" required />
-      <input #newBookEndAt class="input-underline" type="datetime-local" />
-      <input #newBookCurrency class="input-underline" type="text" value="USD" />
+      <label class="sr-only" for="new-book-effective-at">{{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.EFFECTIVE_AT' | translate
+        }}</label>
+      <input id="new-book-effective-at" #newBookEffectiveAt class="input-underline" type="datetime-local" required />
+      <label class="sr-only" for="new-book-end-at">{{ 'COMMON.END' | translate }}</label>
+      <input id="new-book-end-at" #newBookEndAt class="input-underline" type="datetime-local" />
+      <label class="sr-only" for="new-book-currency">{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.REQUEST.CURRENCY' |
+        translate }}</label>
+      <input id="new-book-currency" #newBookCurrency class="input-underline" type="text" value="USD" />
       <button class="btn-primary" type="submit">{{ 'PRODUCT.PRICING.PRICE_BOOKS.NEW_CTA' | translate }}</button>
     </form>
   </header>
@@ -82,25 +88,42 @@
           </tr>
           }
           <tr>
-            <td><input #ruleName class="input-underline" type="text" /></td>
             <td>
-              <input #ruleDimension class="input-underline" type="text"
+              <label class="sr-only" for="rule-name">{{ 'PRODUCT.PRICING.PRICE_BOOKS.RULES.NAME' | translate }}</label>
+              <input id="rule-name" #ruleName class="input-underline" type="text" />
+            </td>
+            <td>
+              <label class="sr-only" for="rule-dimension">{{ 'PRODUCT.PRICING.PRICE_BOOKS.RULES.DIMENSION' | translate
+                }}</label>
+              <input id="rule-dimension" #ruleDimension class="input-underline" type="text"
                 [attr.placeholder]="'PRODUCT.PRICING.PRICE_BOOKS.RULES.DIMENSION' | translate" />
-              <input #ruleValue class="input-underline" type="text"
+              <label class="sr-only" for="rule-value">{{ 'PRODUCT.PRICING.PRICE_BOOKS.RULES.VALUE' | translate
+                }}</label>
+              <input id="rule-value" #ruleValue class="input-underline" type="text"
                 [attr.placeholder]="'PRODUCT.PRICING.PRICE_BOOKS.RULES.VALUE' | translate" />
             </td>
             <td>
-              <select #ruleType class="input-underline">
+              <label class="sr-only" for="rule-type">{{ 'PRODUCT.PRICING.PRICE_BOOKS.RULES.TYPE' | translate }}</label>
+              <select id="rule-type" #ruleType class="input-underline">
                 <option value="PERCENT">{{ 'PRODUCT.PRICING.PRICE_BOOKS.RULES.PERCENT' | translate }}</option>
                 <option value="FIXED">{{ 'PRODUCT.PRICING.PRICE_BOOKS.RULES.FIXED' | translate }}</option>
               </select>
-              <input #ruleAdjustment class="input-underline" type="number" step="0.01" />
+              <label class="sr-only" for="rule-adjustment">{{ 'PRODUCT.PRICING.PRICE_BOOKS.RULES.ADJUSTMENT' | translate
+                }}</label>
+              <input id="rule-adjustment" #ruleAdjustment class="input-underline" type="number" step="0.01" />
             </td>
-            <td><input #rulePriority class="input-underline" type="number" min="1" value="1" /></td>
+            <td>
+              <label class="sr-only" for="rule-priority">{{ 'PRODUCT.PRICING.PRICE_BOOKS.RULES.PRIORITY' | translate
+                }}</label>
+              <input id="rule-priority" #rulePriority class="input-underline" type="number" min="1" value="1" />
+              <label class="sr-only" for="rule-effective-at">{{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.EFFECTIVE_AT' |
+                translate }}</label>
+              <input id="rule-effective-at" #ruleEffectiveAt class="input-underline" type="date" />
+            </td>
             <td><span class="badge badge--warning">{{ 'COMMON.NEW' | translate }}</span></td>
             <td>
               <button class="btn-primary" type="button"
-                (click)="createRule({ name: ruleName.value, conditionDimension: ruleDimension.value, conditionValue: ruleValue.value, adjustmentType: $any(ruleType.value), adjustment: +ruleAdjustment.value, priority: +rulePriority.value, effectiveAt: '', endAt: null, active: true })">
+                (click)="createRule({ name: ruleName.value, conditionDimension: ruleDimension.value, conditionValue: ruleValue.value, adjustmentType: $any(ruleType.value), adjustment: +ruleAdjustment.value, priority: +rulePriority.value, effectiveAt: ruleEffectiveAt.value, endAt: null, active: true })">
                 {{ 'COMMON.ADD' | translate }}
               </button>
             </td>

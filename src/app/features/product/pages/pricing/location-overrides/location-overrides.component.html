@@ -7,7 +7,7 @@
   <section class="card panel">
     <h2>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.REQUEST.TITLE' | translate }}</h2>
     <form class="form-grid"
-      (submit)="createOverride({ locationId: reqLocationId.value, productSku: reqSku.value, overridePrice: +reqPrice.value, currency: reqCurrency.value || 'USD', reason: reqReason.value, status: 'PENDING_APPROVAL', requestedAt: reqRequestedAt.value || '' }); $event.preventDefault()">
+      (submit)="createOverride({ locationId: reqLocationId.value, productSku: reqSku.value, overridePrice: +reqPrice.value, currency: reqCurrency.value || 'USD', reason: reqReason.value, status: 'PENDING_APPROVAL' }); $event.preventDefault()">
       <label>
         {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.REQUEST.LOCATION' | translate }}
         <input #reqLocationId class="input-underline" type="text" required />
@@ -28,7 +28,6 @@
         {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.REQUEST.REASON' | translate }}
         <textarea #reqReason class="input-underline" rows="3" minlength="10" required></textarea>
       </label>
-      <input #reqRequestedAt type="hidden" value="" />
       <button class="btn-primary" type="submit" [disabled]="reqReason.value.length < 10">
         {{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.REQUEST.SUBMIT' | translate }}
       </button>

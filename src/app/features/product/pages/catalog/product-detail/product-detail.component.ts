@@ -70,7 +70,10 @@ export class ProductDetailComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: lifecycle => this.lifecycle.set(lifecycle),
-        error: () => this.errorKey.set('PRODUCT.CATALOG.LIFECYCLE.ERROR.UPDATE'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.CATALOG.LIFECYCLE.ERROR.UPDATE');
+        },
       });
   }
 
@@ -87,7 +90,10 @@ export class ProductDetailComponent {
         next: created => {
           this.replacements.update(current => [...current, created]);
         },
-        error: () => this.errorKey.set('PRODUCT.CATALOG.REPLACEMENTS.ERROR.ADD'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.CATALOG.REPLACEMENTS.ERROR.ADD');
+        },
       });
   }
 
@@ -104,7 +110,10 @@ export class ProductDetailComponent {
         next: created => {
           this.uomConversions.update(current => [...current, created]);
         },
-        error: () => this.errorKey.set('PRODUCT.CATALOG.UOM.ERROR.CREATE'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.CATALOG.UOM.ERROR.CREATE');
+        },
       });
   }
 
@@ -123,7 +132,10 @@ export class ProductDetailComponent {
             current.map(entry => (entry.id === updated.id ? updated : entry)),
           );
         },
-        error: () => this.errorKey.set('PRODUCT.CATALOG.UOM.ERROR.UPDATE'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.CATALOG.UOM.ERROR.UPDATE');
+        },
       });
   }
 
@@ -149,7 +161,10 @@ export class ProductDetailComponent {
             ),
           );
         },
-        error: () => this.errorKey.set('PRODUCT.CATALOG.UOM.ERROR.DEACTIVATE'),
+          error: () => {
+            this.state.set('error');
+            this.errorKey.set('PRODUCT.CATALOG.UOM.ERROR.DEACTIVATE');
+          },
       });
   }
 
@@ -166,7 +181,10 @@ export class ProductDetailComponent {
         next: itemCost => {
           this.itemCost.set(itemCost);
         },
-        error: () => this.errorKey.set('PRODUCT.CATALOG.STANDARD_COST.ERROR.UPDATE'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.CATALOG.STANDARD_COST.ERROR.UPDATE');
+        },
       });
   }
 

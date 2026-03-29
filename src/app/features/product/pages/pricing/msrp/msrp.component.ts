@@ -51,7 +51,10 @@ export class MsrpComponent {
           this.msrpList.update(current => [...current, created]);
           this.state.set('ready');
         },
-        error: () => this.errorKey.set('PRODUCT.PRICING.MSRP.ERROR.CREATE'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.PRICING.MSRP.ERROR.CREATE');
+        },
       });
   }
 
@@ -68,7 +71,10 @@ export class MsrpComponent {
             this.activeMsrp.set({ ...updated, active: true });
           }
         },
-        error: () => this.errorKey.set('PRODUCT.PRICING.MSRP.ERROR.UPDATE'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.PRICING.MSRP.ERROR.UPDATE');
+        },
       });
   }
 

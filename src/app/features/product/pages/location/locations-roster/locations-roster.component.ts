@@ -41,7 +41,10 @@ export class LocationsRosterComponent implements OnInit {
         next: result => {
           this.applyValidationResult(result);
         },
-        error: () => this.errorKey.set('PRODUCT.LOCATION.ROSTER.ERROR.VALIDATE'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.LOCATION.ROSTER.ERROR.VALIDATE');
+        },
       });
   }
 

@@ -123,7 +123,7 @@ describe('ProductCatalogService', () => {
 
     service.listCostStructures('item-1').subscribe();
 
-    const [path, params] = apiStub.get.mock.calls[apiStub.get.mock.calls.length - 1];
+    const [path, params] = apiStub.get.mock.calls.at(-1)!;
     expect(path).toBe('/catalog/v1/supplier-costs');
     expect((params as HttpParams)?.get('itemId')).toBe('item-1');
   });

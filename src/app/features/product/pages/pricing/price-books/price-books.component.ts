@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { PriceBook, PriceRule } from '../../../models/pricing.models';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
 
@@ -26,7 +26,7 @@ export class PriceBooksComponent {
   readonly rules = signal<PriceRule[]>([]);
 
   constructor() {
-    effect(() => {
+    effect((onCleanup) => {
       const selectedPriceBookId = this.selectedPriceBookId();
       if (!selectedPriceBookId) {
         this.rules.set([]);
@@ -39,22 +39,13 @@ export class PriceBooksComponent {
       this.state.set('loading');
       this.errorKey.set(null);
 
-      forkJoin({
+      const sub: Subscription = forkJoin({
         priceBook: this.productCatalog.getPriceBook(selectedPriceBookId),
         rules: this.productCatalog.listRules(selectedPriceBookId),
       })
-        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: result => {
-            this.priceBooks.update(current => {
-              const index = current.findIndex(entry => entry.id === result.priceBook.id);
-              if (index === -1) {
-                return [...current, result.priceBook];
-              }
-              const copy = [...current];
-              copy[index] = result.priceBook;
-              return copy;
-            });
+            this.upsertPriceBook(result.priceBook);
             this.rules.set(result.rules);
             this.state.set(result.rules.length > 0 || this.priceBooks().length > 0 ? 'ready' : 'empty');
           },
@@ -63,6 +54,8 @@ export class PriceBooksComponent {
             this.errorKey.set('PRODUCT.PRICING.PRICE_BOOKS.ERROR.LOAD');
           },
         });
+
+      onCleanup(() => sub.unsubscribe());
     }, { allowSignalWrites: true });
   }
 
@@ -97,7 +90,10 @@ export class PriceBooksComponent {
             current.map(entry => (entry.id === updated.id ? updated : entry)),
           );
         },
-        error: () => this.errorKey.set('PRODUCT.PRICING.PRICE_BOOKS.ERROR.UPDATE'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.PRICING.PRICE_BOOKS.ERROR.UPDATE');
+        },
       });
   }
 
@@ -115,7 +111,10 @@ export class PriceBooksComponent {
           this.rules.update(current => [...current, created]);
           this.state.set('ready');
         },
-        error: () => this.errorKey.set('PRODUCT.PRICING.PRICE_BOOKS.ERROR.CREATE_RULE'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.PRICING.PRICE_BOOKS.ERROR.CREATE_RULE');
+        },
       });
   }
 
@@ -132,7 +131,10 @@ export class PriceBooksComponent {
         next: updated => {
           this.rules.update(current => current.map(rule => (rule.id === updated.id ? updated : rule)));
         },
-        error: () => this.errorKey.set('PRODUCT.PRICING.PRICE_BOOKS.ERROR.UPDATE_RULE'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.PRICING.PRICE_BOOKS.ERROR.UPDATE_RULE');
+        },
       });
   }
 
@@ -150,7 +152,22 @@ export class PriceBooksComponent {
           this.rules.update(current => current.filter(rule => rule.id !== ruleId));
           this.state.set(this.rules().length > 0 ? 'ready' : 'empty');
         },
-        error: () => this.errorKey.set('PRODUCT.PRICING.PRICE_BOOKS.ERROR.DEACTIVATE_RULE'),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('PRODUCT.PRICING.PRICE_BOOKS.ERROR.DEACTIVATE_RULE');
+        },
       });
+  }
+
+  private upsertPriceBook(priceBook: PriceBook): void {
+    this.priceBooks.update(current => {
+      const index = current.findIndex(entry => entry.id === priceBook.id);
+      if (index === -1) {
+        return [...current, priceBook];
+      }
+      const copy = [...current];
+      copy[index] = priceBook;
+      return copy;
+    });
   }
 }

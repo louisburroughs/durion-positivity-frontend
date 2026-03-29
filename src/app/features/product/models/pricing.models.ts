@@ -51,7 +51,7 @@ export interface LocationPriceOverride {
   currency: string;
   status: LocationPriceOverrideStatus;
   reason: string;
-  requestedAt: string;
+  requestedAt?: string;
   approvedAt: string | null;
 }
 

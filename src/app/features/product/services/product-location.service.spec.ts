@@ -101,4 +101,17 @@ describe('ProductLocationService', () => {
       expect(observed).toEqual(result);
     });
   });
+
+  // ── getAllLocations() ─────────────────────────────────────────────────────────
+
+  describe('getAllLocations()', () => {
+    it('calls GET /location/v1/locations', () => {
+      apiStub.get.mockReturnValueOnce(of([]));
+
+      service.getAllLocations().subscribe();
+
+      const [path] = apiStub.get.mock.calls[0];
+      expect(path).toBe('/location/v1/locations');
+    });
+  });
 });

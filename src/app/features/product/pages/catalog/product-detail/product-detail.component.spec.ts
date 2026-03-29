@@ -81,8 +81,8 @@ describe('ProductDetailComponent', () => {
     expect(component.lifecycle()).toEqual(mockLifecycle);
   });
 
-  it('sets state to "error" when productId param is missing', async () => {
-    await TestBed.resetTestingModule();
+  it('sets state to "error" when productId param is missing', () => {
+    TestBed.resetTestingModule();
 
     await TestBed.configureTestingModule({
       imports: [ProductDetailComponent, TranslateModule.forRoot()],
@@ -123,6 +123,7 @@ describe('ProductDetailComponent', () => {
     const transition = { targetState: 'DISCONTINUED' as const, effectiveAt: '2026-03-01T00:00:00Z' };
     component.setLifecycleState(transition);
 
+    expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('PRODUCT.CATALOG.LIFECYCLE.ERROR.UPDATE');
   });
 

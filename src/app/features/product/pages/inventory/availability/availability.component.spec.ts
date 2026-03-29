@@ -9,7 +9,7 @@ describe('AvailabilityComponent', () => {
   let component: AvailabilityComponent;
 
   const mockInventory = {
-    queryInventoryAvailability: vi.fn().mockReturnValue(of({ quantityOnHand: 5, locationBreakdown: [] })),
+    queryInventoryAvailability: vi.fn().mockReturnValue(of({ sku: 'SKU-001', totalOnHand: 5, totalReserved: 0, totalAtp: 5, locationBreakdown: [] })),
     queryAvailabilityBySku: vi.fn().mockReturnValue(of([])),
     queryLeadTime: vi.fn().mockReturnValue(of([])),
     getLocationInventory: vi.fn().mockReturnValue(of({})),
@@ -66,7 +66,7 @@ describe('AvailabilityComponent', () => {
   // ── search() with valid sku ───────────────────────────────────────────────────
 
   it('search() calls queryInventoryAvailability with trimmed sku', () => {
-    mockInventory.queryInventoryAvailability.mockReturnValueOnce(of({ quantityOnHand: 0, locationBreakdown: [] }));
+    mockInventory.queryInventoryAvailability.mockReturnValueOnce(of({ sku: 'SKU-001', totalOnHand: 0, totalReserved: 0, totalAtp: 0, locationBreakdown: [] }));
 
     component.sku.set('SKU-001');
     component.search();
@@ -76,7 +76,7 @@ describe('AvailabilityComponent', () => {
 
   it('search() transitions to "empty" when no location breakdown entries', () => {
     mockInventory.queryInventoryAvailability.mockReturnValueOnce(
-      of({ quantityOnHand: 5, locationBreakdown: [] }),
+      of({ sku: 'SKU-001', totalOnHand: 5, totalReserved: 0, totalAtp: 5, locationBreakdown: [] }),
     );
 
     component.sku.set('SKU-001');
@@ -87,7 +87,7 @@ describe('AvailabilityComponent', () => {
 
   it('search() transitions to "ready" when location breakdown is present', () => {
     mockInventory.queryInventoryAvailability.mockReturnValueOnce(
-      of({ quantityOnHand: 5, locationBreakdown: [{ locationId: 'loc-01', quantity: 5 }] }),
+      of({ sku: 'SKU-001', totalOnHand: 5, totalReserved: 0, totalAtp: 5, locationBreakdown: [{ locationId: 'loc-01', locationName: 'Loc 1', onHand: 5, reserved: 0, atp: 5 }] }),
     );
 
     component.sku.set('SKU-001');
@@ -97,9 +97,9 @@ describe('AvailabilityComponent', () => {
   });
 
   it('search() populates locationBreakdown signal on success', () => {
-    const breakdown = [{ locationId: 'loc-01', quantity: 5 }, { locationId: 'loc-02', quantity: 3 }];
+    const breakdown = [{ locationId: 'loc-01', locationName: 'Loc 1', onHand: 5, reserved: 0, atp: 5 }, { locationId: 'loc-02', locationName: 'Loc 2', onHand: 3, reserved: 0, atp: 3 }];
     mockInventory.queryInventoryAvailability.mockReturnValueOnce(
-      of({ quantityOnHand: 8, locationBreakdown: breakdown }),
+      of({ sku: 'SKU-001', totalOnHand: 8, totalReserved: 0, totalAtp: 8, locationBreakdown: breakdown }),
     );
 
     component.sku.set('SKU-001');

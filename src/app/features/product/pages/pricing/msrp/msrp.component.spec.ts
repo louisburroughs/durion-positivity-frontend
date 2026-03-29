@@ -3,12 +3,20 @@ import { of } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { MsrpComponent } from './msrp.component';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
+import type { Msrp } from '../../../models/pricing.models';
 
 describe('MsrpComponent', () => {
   let fixture: ComponentFixture<MsrpComponent>;
   let component: MsrpComponent;
 
-  const sampleMsrp = { id: 'msrp-1', productSku: 'SKU-001', price: 19.99, effectiveAt: '2026-01-01', active: true };
+  const sampleMsrp: Msrp = {
+    id: 'msrp-1',
+    productSku: 'SKU-001',
+    amount: 49.99,
+    currency: 'USD',
+    effectiveAt: '2026-01-01T00:00:00Z',
+    endAt: null,
+  };
 
   const mockCatalog = {
     listMsrp: vi.fn().mockReturnValue(of([])),
