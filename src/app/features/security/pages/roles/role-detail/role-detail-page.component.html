@@ -1,95 +1,95 @@
 <section class="role-detail-page" aria-labelledby="role-detail-title">
-  <a class="back-link" routerLink="/app/security">Roles /</a>
+  <a class="back-link" routerLink="/app/security">{{ 'SECURITY.ROLE_DETAIL.BACK_TO_ROLES' | translate }}</a>
 
   @if (loading()) {
-  <div class="state-panel" aria-live="polite">Loading role details...</div>
+  <div class="state-panel" aria-live="polite">{{ 'SECURITY.ROLE_DETAIL.LOADING' | translate }}</div>
   }
 
   @if (error()) {
-  <div class="alert alert-error" role="alert" aria-live="polite">{{ error() }}</div>
+  <div class="alert alert-error" role="alert" aria-live="polite">{{ error()! | translate }}</div>
   }
 
   @if (role(); as currentRole) {
   <section class="role-summary mic-elevation-2">
     <div class="panel-accent" aria-hidden="true"></div>
     <header class="summary-header">
-      <h1 id="role-detail-title">Roles / {{ currentRole.name }}</h1>
-      <p class="summary-description">{{ currentRole.description || 'No description provided.' }}</p>
+      <h1 id="role-detail-title">{{ 'SECURITY.ROLE_DETAIL.TITLE' | translate: { name: currentRole.name } }}</h1>
+      <p class="summary-description">{{ currentRole.description || ('SECURITY.ROLE_DETAIL.NO_DESCRIPTION' | translate) }}</p>
     </header>
 
     <dl class="meta-grid">
       <div>
-        <dt>Created</dt>
-        <dd>{{ currentRole.createdAt || 'Unavailable' }}</dd>
+        <dt>{{ 'SECURITY.ROLE_DETAIL.CREATED' | translate }}</dt>
+        <dd>{{ currentRole.createdAt || ('SECURITY.ROLE_DETAIL.UNAVAILABLE' | translate) }}</dd>
       </div>
       <div>
-        <dt>Updated</dt>
-        <dd>{{ currentRole.updatedAt || 'Unavailable' }}</dd>
+        <dt>{{ 'SECURITY.ROLE_DETAIL.UPDATED' | translate }}</dt>
+        <dd>{{ currentRole.updatedAt || ('SECURITY.ROLE_DETAIL.UNAVAILABLE' | translate) }}</dd>
       </div>
       <div>
-        <dt>Status</dt>
+        <dt>{{ 'SECURITY.ROLE_DETAIL.STATUS' | translate }}</dt>
         <dd>
           @if (currentRole.status === 'INACTIVE') {
-          <span class="mic-status warn">Inactive</span>
+          <span class="mic-status warn">{{ 'SECURITY.ROLE_DETAIL.STATUS_INACTIVE' | translate }}</span>
           } @else {
-          <span class="mic-status valid">Active</span>
+          <span class="mic-status valid">{{ 'SECURITY.ROLE_DETAIL.STATUS_ACTIVE' | translate }}</span>
           }
         </dd>
       </div>
     </dl>
   </section>
 
-  <section class="permissions-panel mic-elevation-2" aria-label="Role permissions">
+  <section class="permissions-panel mic-elevation-2" [attr.aria-label]="'SECURITY.ROLE_DETAIL.ARIAS.ROLE_PERMISSIONS' | translate">
     <div class="panel-accent" aria-hidden="true"></div>
 
     <header class="permissions-header">
       <div>
-        <h2>Permissions</h2>
-        <p>Assigned permission definitions for this role.</p>
+        <h2>{{ 'SECURITY.ROLE_DETAIL.PERMISSIONS' | translate }}</h2>
+        <p>{{ 'SECURITY.ROLE_DETAIL.PERMISSIONS_HELP' | translate }}</p>
       </div>
       <button type="button" class="btn-primary" (click)="openGrantModal()">
-        Edit Permissions
+        {{ 'SECURITY.ROLE_DETAIL.EDIT_PERMISSIONS' | translate }}
       </button>
     </header>
 
     @if (permissions().length === 0) {
     <div class="empty-state" aria-live="polite">
-      <h3>No permissions assigned</h3>
-      <p>Use Edit Permissions to grant access keys to this role.</p>
+      <h3>{{ 'SECURITY.ROLE_DETAIL.EMPTY_TITLE' | translate }}</h3>
+      <p>{{ 'SECURITY.ROLE_DETAIL.EMPTY_MESSAGE' | translate }}</p>
     </div>
     }
 
     @if (permissions().length > 0) {
     <div class="table-scroll">
-      <table class="permissions-table" aria-label="Role permission assignments">
+      <table class="permissions-table" [attr.aria-label]="'SECURITY.ROLE_DETAIL.ARIAS.ASSIGNMENTS_TABLE' | translate">
         <thead>
           <tr>
-            <th scope="col">Permission Key</th>
-            <th scope="col">Description</th>
-            <th scope="col" class="action-col">Actions</th>
+            <th scope="col">{{ 'SECURITY.ROLE_DETAIL.COLUMNS.PERMISSION_KEY' | translate }}</th>
+            <th scope="col">{{ 'SECURITY.ROLE_DETAIL.COLUMNS.DESCRIPTION' | translate }}</th>
+            <th scope="col" class="action-col">{{ 'SECURITY.ROLE_DETAIL.COLUMNS.ACTIONS' | translate }}</th>
           </tr>
         </thead>
         <tbody>
           @for (permission of permissions(); track permission.permissionKey) {
           <tr>
             <td>{{ permission.permissionKey }}</td>
-            <td>{{ permission.description || 'No description available.' }}</td>
+            <td>{{ permission.description || ('SECURITY.ROLE_DETAIL.NO_DESCRIPTION_AVAILABLE' | translate) }}</td>
             <td class="action-col">
               @if (confirmRevokeKey() === permission.permissionKey) {
               <div class="confirm-inline" aria-live="polite">
-                <span>Confirm revoke?</span>
+                <span>{{ 'SECURITY.ROLE_DETAIL.CONFIRM_REVOKE' | translate }}</span>
                 <button type="button" class="btn-text text-error" (click)="executeRevoke()"
-                  [attr.aria-label]="'Confirm revoke for ' + permission.permissionKey">
-                  Confirm
+                  [attr.aria-label]="'SECURITY.ROLE_DETAIL.CONFIRM_REVOKE_ARIA' | translate: { key: permission.permissionKey }">
+                  {{ 'SECURITY.ROLE_DETAIL.CONFIRM' | translate }}
                 </button>
-                <button type="button" class="btn-text" (click)="cancelRevoke()" aria-label="Cancel revoke">
-                  Cancel
+                <button type="button" class="btn-text" (click)="cancelRevoke()" [attr.aria-label]="'SECURITY.ROLE_DETAIL.CANCEL_REVOKE' | translate">
+                  {{ 'SECURITY.ROLE_DETAIL.CANCEL' | translate }}
                 </button>
               </div>
               } @else {
               <button type="button" class="btn-text text-error" (click)="confirmRevoke(permission.permissionKey)"
-                [attr.aria-label]="'Revoke assignment for ' + permission.permissionKey">
-                Revoke
+                [attr.aria-label]="'SECURITY.ROLE_DETAIL.REVOKE_ASSIGNMENT_ARIA' | translate: { key: permission.permissionKey }">
+                {{ 'SECURITY.ROLE_DETAIL.REVOKE' | translate }}
               </button>
               }
             </td>
@@ -104,13 +104,13 @@
 
   @if (showGrantModal()) {
   <section class="modal-backdrop">
-    <dialog class="modal-surface mic-elevation-4" open aria-label="Grant permissions dialog">
+    <dialog class="modal-surface mic-elevation-4" open [attr.aria-label]="'SECURITY.ROLE_DETAIL.ARIAS.GRANT_DIALOG' | translate">
       <header class="modal-header">
-        <h2>Grant Permissions</h2>
-        <p>Select permission keys to grant to this role.</p>
+        <h2>{{ 'SECURITY.ROLE_DETAIL.GRANT_PERMISSIONS' | translate }}</h2>
+        <p>{{ 'SECURITY.ROLE_DETAIL.GRANT_HELP' | translate }}</p>
       </header>
 
-      <div class="checkbox-list" aria-label="Permissions selection list">
+      <div class="checkbox-list" [attr.aria-label]="'SECURITY.ROLE_DETAIL.ARIAS.SELECTION_LIST' | translate">
         @for (perm of allPermissions(); track perm.permissionKey) {
         <label class="checkbox-row" [for]="'perm-' + perm.permissionKey">
           <input [id]="'perm-' + perm.permissionKey" type="checkbox"
@@ -118,7 +118,7 @@
             (change)="togglePermission(perm.permissionKey)" />
           <span class="perm-content">
             <strong>{{ perm.permissionKey }}</strong>
-            <small>{{ perm.description || 'No description available.' }}</small>
+            <small>{{ perm.description || ('SECURITY.ROLE_DETAIL.NO_DESCRIPTION_AVAILABLE' | translate) }}</small>
           </span>
         </label>
         }
@@ -126,12 +126,12 @@
 
       <footer class="modal-actions">
         <button type="button" class="btn-text" (click)="showGrantModal.set(false)"
-          aria-label="Cancel grant permissions">
-          Cancel
+          [attr.aria-label]="'SECURITY.ROLE_DETAIL.CANCEL_GRANT' | translate">
+          {{ 'SECURITY.ROLE_DETAIL.CANCEL' | translate }}
         </button>
         <button type="button" class="btn-primary" (click)="submitGrantPermissions()"
-          aria-label="Submit permission updates">
-          Submit
+          [attr.aria-label]="'SECURITY.ROLE_DETAIL.SUBMIT_UPDATES' | translate">
+          {{ 'SECURITY.ROLE_DETAIL.SUBMIT' | translate }}
         </button>
       </footer>
     </dialog>

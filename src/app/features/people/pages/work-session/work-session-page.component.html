@@ -1,30 +1,34 @@
 <section>
   <header class="page-header">
-    <h1>Work Session</h1>
+    <h1>{{ 'PEOPLE.WORK_SESSION.TITLE' | translate }}</h1>
   </header>
 
   <div class="session-panel">
-    <div class="session-active" *ngIf="currentSession(); else inactive">Session active</div>
+    <div class="session-active" *ngIf="currentSession(); else inactive">{{ 'PEOPLE.WORK_SESSION.ACTIVE' | translate }}</div>
     <ng-template #inactive>
-      <div class="session-inactive">No active session</div>
+      <div class="session-inactive">{{ 'PEOPLE.WORK_SESSION.INACTIVE' | translate }}</div>
     </ng-template>
 
     <div class="break-indicator" *ngIf="onBreak()">
-      <span class="break-active">On break</span>
+      <span class="break-active">{{ 'PEOPLE.WORK_SESSION.ON_BREAK' | translate }}</span>
     </div>
 
-    <div class="time-display">Session controls</div>
+    <div class="time-display">{{ 'PEOPLE.WORK_SESSION.CONTROLS' | translate }}</div>
 
-    <button class="start-btn" type="button" (click)="startSession()">Start session</button>
-    <button class="stop-btn" type="button" (click)="stopSession(getSessionId())" [disabled]="!getSessionId()">Stop
-      session</button>
-    <button class="start-break-btn" type="button" (click)="startBreak(getSessionId())"
-      [disabled]="!getSessionId()">Start break</button>
-    <button class="stop-break-btn" type="button" (click)="stopBreak(getSessionId())" [disabled]="!getSessionId()">Stop
-      break</button>
+    <button class="start-btn" type="button" (click)="startSession()">{{ 'PEOPLE.WORK_SESSION.START_SESSION' | translate }}</button>
+    <button class="stop-btn" type="button" (click)="stopSession(getSessionId())" [disabled]="!getSessionId()">
+      {{ 'PEOPLE.WORK_SESSION.STOP_SESSION' | translate }}
+    </button>
+    <button class="start-break-btn" type="button" (click)="startBreak(getSessionId())" [disabled]="!getSessionId()">
+      {{ 'PEOPLE.WORK_SESSION.START_BREAK' | translate }}
+    </button>
+    <button class="stop-break-btn" type="button" (click)="stopBreak(getSessionId())" [disabled]="!getSessionId()">
+      {{ 'PEOPLE.WORK_SESSION.STOP_BREAK' | translate }}
+    </button>
   </div>
 
-  <p class="success-banner" *ngIf="startSuccess() || stopSuccess() || breakStarted() || breakStopped()">Action
-    succeeded.</p>
-  <p class="error-banner" *ngIf="error()">{{ error() }}</p>
+  <p class="success-banner" *ngIf="startSuccess() || stopSuccess() || breakStarted() || breakStopped()">
+    {{ 'PEOPLE.WORK_SESSION.ACTION_SUCCEEDED' | translate }}
+  </p>
+  <p class="error-banner" *ngIf="error()">{{ error()! | translate }}</p>
 </section>

@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { PeopleService } from '../../services/people.service';
 
 @Component({
   selector: 'app-time-export-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './time-export-page.component.html',
   styleUrl: './time-export-page.component.css',
 })
@@ -43,7 +44,7 @@ export class TimeExportPageComponent implements OnInit {
       },
       error: () => {
         this.exportData.set([]);
-        this.error.set('Failed to load export data.');
+        this.error.set('PEOPLE.TIME_EXPORT.ERROR.LOAD_EXPORT');
         this.loading.set(false);
       },
     });
@@ -59,7 +60,7 @@ export class TimeExportPageComponent implements OnInit {
         this.loadingDiscrepancies.set(false);
       },
       error: () => {
-        this.error.set('Failed to load discrepancies.');
+        this.error.set('PEOPLE.TIME_EXPORT.ERROR.LOAD_DISCREPANCIES');
         this.discrepancyData.set([]);
         this.loadingDiscrepancies.set(false);
       },

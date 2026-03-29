@@ -1,14 +1,14 @@
-<section class="security-shell" aria-label="Security workspace">
-  <nav class="security-tabs" aria-label="Security navigation tabs">
+<section class="security-shell" [attr.aria-label]="'SECURITY.NAV.WORKSPACE_ARIA' | translate">
+  <nav class="security-tabs" [attr.aria-label]="'SECURITY.NAV.TABS_ARIA' | translate">
     <a class="security-tab" routerLink="./" routerLinkActive="active-tab" [routerLinkActiveOptions]="{ exact: true }"
-      aria-label="Roles tab">
-      Roles
+      [attr.aria-label]="'SECURITY.NAV.ROLES_TAB' | translate">
+      {{ 'SECURITY.NAV.ROLES' | translate }}
     </a>
-    <a class="security-tab" routerLink="./permissions" routerLinkActive="active-tab" aria-label="Permissions tab">
-      Permissions
+    <a class="security-tab" routerLink="./permissions" routerLinkActive="active-tab" [attr.aria-label]="'SECURITY.NAV.PERMISSIONS_TAB' | translate">
+      {{ 'SECURITY.NAV.PERMISSIONS' | translate }}
     </a>
-    <a class="security-tab" routerLink="./audit" routerLinkActive="active-tab" aria-label="Audit log tab">
-      Audit Log
+    <a class="security-tab" routerLink="./audit" routerLinkActive="active-tab" [attr.aria-label]="'SECURITY.NAV.AUDIT_TAB' | translate">
+      {{ 'SECURITY.NAV.AUDIT_LOG' | translate }}
     </a>
   </nav>
 

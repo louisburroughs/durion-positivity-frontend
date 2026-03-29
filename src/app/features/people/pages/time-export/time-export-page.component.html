@@ -1,19 +1,19 @@
 <section>
   <header class="page-header">
-    <h1>Time Export</h1>
+    <h1>{{ 'PEOPLE.TIME_EXPORT.TITLE' | translate }}</h1>
   </header>
 
   <form class="filter-form" [formGroup]="filterForm" (ngSubmit)="loadExport()">
     <input type="date" formControlName="startDate" />
     <input type="date" formControlName="endDate" />
-    <input type="text" formControlName="locationId" placeholder="Location ID" />
+    <input type="text" formControlName="locationId" [placeholder]="'PEOPLE.TIME_EXPORT.LOCATION_ID' | translate" />
     <div class="export-actions">
-      <button class="download-btn" type="submit">Load export</button>
-      <button type="button" (click)="loadDiscrepancies()">Load discrepancies</button>
+      <button class="download-btn" type="submit">{{ 'PEOPLE.TIME_EXPORT.LOAD_EXPORT' | translate }}</button>
+      <button type="button" (click)="loadDiscrepancies()">{{ 'PEOPLE.TIME_EXPORT.LOAD_DISCREPANCIES' | translate }}</button>
     </div>
   </form>
 
-  <p class="error-banner" *ngIf="error()">{{ error() }}</p>
+  <p class="error-banner" *ngIf="error()">{{ error()! | translate }}</p>
 
   <div class="export-table" *ngIf="!loading() && exportData().length > 0">
     <div class="export-row" *ngFor="let row of exportData()">{{ row | json }}</div>
@@ -23,5 +23,7 @@
     <div class="discrepancy-item" *ngFor="let item of discrepancyData()">{{ item | json }}</div>
   </div>
 
-  <p class="empty-state" *ngIf="!loading() && !error() && exportData().length === 0">No export data found.</p>
+  <p class="empty-state" *ngIf="!loading() && !error() && exportData().length === 0">
+    {{ 'PEOPLE.TIME_EXPORT.EMPTY' | translate }}
+  </p>
 </section>

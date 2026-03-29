@@ -1,5 +1,6 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SecurityPermission, SecurityRole } from '../../../models/security.models';
 import { SecurityService } from '../../../services/security.service';
@@ -7,7 +8,7 @@ import { SecurityService } from '../../../services/security.service';
 @Component({
   selector: 'app-role-detail-page',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './role-detail-page.component.html',
   styleUrl: './role-detail-page.component.css',
 })
@@ -33,7 +34,7 @@ export class RoleDetailPageComponent implements OnInit {
   loadRole(): void {
     const roleName = this.route.snapshot.paramMap.get('name');
     if (!roleName) {
-      this.error.set('Role name was not provided.');
+      this.error.set('SECURITY.ROLE_DETAIL.ERROR.MISSING_ROLE_NAME');
       return;
     }
 
@@ -54,7 +55,7 @@ export class RoleDetailPageComponent implements OnInit {
           this.role.set(null);
           this.permissions.set([]);
           this.confirmRevokeKey.set(null);
-          this.error.set(err?.error?.message ?? 'Failed to load role details.');
+          this.error.set(err?.error?.message ?? 'SECURITY.ROLE_DETAIL.ERROR.LOAD_ROLE');
         },
       });
   }
@@ -68,7 +69,7 @@ export class RoleDetailPageComponent implements OnInit {
           this.allPermissions.set(resp.results ?? []);
         },
         error: (err) => {
-          this.error.set(err?.error?.message ?? 'Failed to load permissions.');
+          this.error.set(err?.error?.message ?? 'SECURITY.ROLE_DETAIL.ERROR.LOAD_PERMISSIONS');
         },
       });
   }
@@ -108,7 +109,7 @@ export class RoleDetailPageComponent implements OnInit {
         },
         error: (err) => {
           this.loading.set(false);
-          this.error.set(err?.error?.message ?? 'Failed to update role permissions.');
+          this.error.set(err?.error?.message ?? 'SECURITY.ROLE_DETAIL.ERROR.UPDATE_PERMISSIONS');
         },
       });
   }
@@ -144,7 +145,7 @@ export class RoleDetailPageComponent implements OnInit {
         },
         error: (err) => {
           this.loading.set(false);
-          this.error.set(err?.error?.message ?? 'Failed to revoke permission.');
+          this.error.set(err?.error?.message ?? 'SECURITY.ROLE_DETAIL.ERROR.REVOKE');
         },
       });
   }

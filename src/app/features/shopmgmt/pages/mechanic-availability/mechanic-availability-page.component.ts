@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { PeopleService } from '../../../people/services/people.service';
 
 @Component({
   selector: 'app-mechanic-availability-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './mechanic-availability-page.component.html',
   styleUrl: './mechanic-availability-page.component.css',
 })
@@ -38,7 +39,7 @@ export class MechanicAvailabilityPageComponent implements OnInit {
         this.loadAvailability();
       },
       error: () => {
-        this.error.set('Failed to load location.');
+        this.error.set('SHOPMGMT.MECHANIC_AVAILABILITY.ERROR.LOAD_LOCATION');
         this.loadAvailability();
       },
     });
@@ -59,7 +60,7 @@ export class MechanicAvailabilityPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Failed to load availability.');
+        this.error.set('SHOPMGMT.MECHANIC_AVAILABILITY.ERROR.LOAD_AVAILABILITY');
         this.availabilityData.set([]);
         this.loading.set(false);
       },

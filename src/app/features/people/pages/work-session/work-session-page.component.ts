@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { PeopleService } from '../../services/people.service';
 
 @Component({
   selector: 'app-work-session-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './work-session-page.component.html',
   styleUrl: './work-session-page.component.css',
 })
@@ -36,7 +37,7 @@ export class WorkSessionPageComponent implements OnInit {
     const workorderId = this.workorderId();
     const locationId = this.locationId();
     if (!workorderId || !locationId) {
-      this.error.set('Workorder ID and Location ID are required to start a session.');
+      this.error.set('PEOPLE.WORK_SESSION.ERROR.REQUIRED_IDS');
       return;
     }
 
@@ -51,7 +52,7 @@ export class WorkSessionPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Failed to start session.');
+        this.error.set('PEOPLE.WORK_SESSION.ERROR.START');
         this.loading.set(false);
       },
     });
@@ -69,7 +70,7 @@ export class WorkSessionPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Failed to stop session.');
+        this.error.set('PEOPLE.WORK_SESSION.ERROR.STOP');
         this.loading.set(false);
       },
     });
@@ -82,7 +83,7 @@ export class WorkSessionPageComponent implements OnInit {
         this.breakStarted.set(true);
       },
       error: () => {
-        this.error.set('Failed to start break.');
+        this.error.set('PEOPLE.WORK_SESSION.ERROR.START_BREAK');
       },
     });
   }
@@ -94,7 +95,7 @@ export class WorkSessionPageComponent implements OnInit {
         this.breakStopped.set(true);
       },
       error: () => {
-        this.error.set('Failed to stop break.');
+        this.error.set('PEOPLE.WORK_SESSION.ERROR.STOP_BREAK');
       },
     });
   }

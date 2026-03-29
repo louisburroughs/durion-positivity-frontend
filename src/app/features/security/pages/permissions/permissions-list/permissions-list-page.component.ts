@@ -1,11 +1,13 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslatePipe } from '@ngx-translate/core';
 import { SecurityPermission } from '../../../models/security.models';
 import { SecurityService } from '../../../services/security.service';
 
 @Component({
   selector: 'app-permissions-list-page',
   standalone: true,
+  imports: [TranslatePipe],
   templateUrl: './permissions-list-page.component.html',
   styleUrl: './permissions-list-page.component.css',
 })
@@ -50,7 +52,7 @@ export class PermissionsListPageComponent implements OnInit {
           this.loading.set(false);
           this.permissions.set([]);
           this.totalPages.set(0);
-          this.error.set(err?.error?.message ?? 'Failed to load permissions.');
+          this.error.set(err?.error?.message ?? 'SECURITY.PERMISSIONS_LIST.ERROR.LOAD');
         },
       });
   }

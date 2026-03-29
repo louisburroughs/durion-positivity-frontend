@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AppointmentService } from '../../services/appointment.service';
@@ -17,7 +18,7 @@ export interface AuditEntry {
 @Component({
   selector: 'app-appointment-edit-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './appointment-edit-page.component.html',
   styleUrl: './appointment-edit-page.component.css',
 })
@@ -134,7 +135,7 @@ export class AppointmentEditPageComponent implements OnInit {
         if (err.status === 409 && body?.conflicts) {
           this.rescheduleConflicts.set(body.conflicts);
         } else {
-          this.rescheduleError.set(body?.message ?? 'Reschedule failed.');
+          this.rescheduleError.set(body?.message ?? 'SHOPMGMT.APPOINTMENT_EDIT.ERROR.RESCHEDULE_FAILED');
         }
       },
     });
@@ -162,7 +163,7 @@ export class AppointmentEditPageComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.cancelLoading.set(false);
         const body = err.error as { message?: string };
-        this.cancelError.set(body?.message ?? 'Cancellation failed.');
+        this.cancelError.set(body?.message ?? 'SHOPMGMT.APPOINTMENT_EDIT.ERROR.CANCELLATION_FAILED');
       },
     });
   }

@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { PeopleService } from '../../services/people.service';
 
 @Component({
   selector: 'app-time-approval-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './time-approval-page.component.html',
   styleUrl: './time-approval-page.component.css',
 })
@@ -36,7 +37,7 @@ export class TimeApprovalPageComponent implements OnInit {
       },
       error: () => {
         this.timeEntries.set([]);
-        this.approveError.set('Failed to load time entries.');
+        this.approveError.set('PEOPLE.TIME_APPROVAL.ERROR.LOAD');
         this.loading.set(false);
       },
     });
@@ -59,7 +60,7 @@ export class TimeApprovalPageComponent implements OnInit {
         this.approveSuccess.set(true);
       },
       error: () => {
-        this.approveError.set('Failed to approve entries.');
+        this.approveError.set('PEOPLE.TIME_APPROVAL.ERROR.APPROVE');
       },
     });
   }
@@ -91,7 +92,7 @@ export class TimeApprovalPageComponent implements OnInit {
       },
       error: () => {
         this.rejectLoading.set(false);
-        this.rejectError.set('Failed to reject entries.');
+        this.rejectError.set('PEOPLE.TIME_APPROVAL.ERROR.REJECT');
       },
     });
   }
@@ -100,7 +101,7 @@ export class TimeApprovalPageComponent implements OnInit {
     this.peopleService.createAdjustment({ ...body, timeEntryId: entryId }).subscribe({
       next: () => { },
       error: () => {
-        this.approveError.set('Failed to create adjustment.');
+        this.approveError.set('PEOPLE.TIME_APPROVAL.ERROR.ADJUSTMENT');
       },
     });
   }

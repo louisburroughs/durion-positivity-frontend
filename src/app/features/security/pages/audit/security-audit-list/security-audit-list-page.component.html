@@ -1,26 +1,26 @@
 <section>
   <header class="page-header">
-    <h1>Security Audit Log</h1>
+    <h1>{{ 'SECURITY.AUDIT_LIST.TITLE' | translate }}</h1>
   </header>
 
   <form class="filter-form" (ngSubmit)="loadAudit(appointmentId())">
     <label>
-      Appointment ID
+      {{ 'SECURITY.AUDIT_LIST.APPOINTMENT_ID' | translate }}
       <input type="text" [value]="appointmentId()" (input)="appointmentId.set(($any($event.target)).value)" />
     </label>
-    <button type="submit">Load</button>
+    <button type="submit">{{ 'SECURITY.AUDIT_LIST.LOAD' | translate }}</button>
   </form>
 
-  <p class="error-banner" *ngIf="error()">{{ error() }}</p>
+  <p class="error-banner" *ngIf="error()">{{ error()! | translate }}</p>
 
   <div class="audit-list" *ngIf="!loading() && auditEntries().length > 0">
     <div class="audit-entry" *ngFor="let entry of auditEntries()">
-      <button type="button" (click)="viewEntry(entry)">View entry</button>
+      <button type="button" (click)="viewEntry(entry)">{{ 'SECURITY.AUDIT_LIST.VIEW_ENTRY' | translate }}</button>
       <span>{{ entry | json }}</span>
     </div>
   </div>
 
   <div class="audit-detail" *ngIf="selectedEntry()">{{ selectedEntry() | json }}</div>
 
-  <p class="empty-state" *ngIf="!loading() && !error() && auditEntries().length === 0">No audit entries found.</p>
+  <p class="empty-state" *ngIf="!loading() && !error() && auditEntries().length === 0">{{ 'SECURITY.AUDIT_LIST.EMPTY' | translate }}</p>
 </section>

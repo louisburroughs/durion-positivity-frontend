@@ -2,6 +2,7 @@ import { Component, DestroyRef, OnInit, signal, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { AppointmentService } from '../../services/appointment.service';
 import type { AppointmentDetail } from '../../models/appointment.models';
@@ -16,7 +17,7 @@ export interface ScheduleResource {
 @Component({
   selector: 'app-schedule-view-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './schedule-view-page.component.html',
   styleUrl: './schedule-view-page.component.css',
 })

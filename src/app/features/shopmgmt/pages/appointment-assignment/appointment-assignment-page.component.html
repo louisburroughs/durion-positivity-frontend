@@ -1,15 +1,15 @@
 <div class="page-header">
-  <h2>Appointment Assignment</h2>
+  <h2>{{ 'SHOPMGMT.APPOINTMENT_ASSIGNMENT.TITLE' | translate }}</h2>
 </div>
 
 <ng-container *ngIf="loading()">
-  <div class="loading-state">Loading assignment&hellip;</div>
+  <div class="loading-state">{{ 'SHOPMGMT.APPOINTMENT_ASSIGNMENT.LOADING' | translate }}</div>
 </ng-container>
 
 <ng-container *ngIf="!loading()">
-  <div *ngIf="error()" class="error-banner">{{ error() }}</div>
-  <div *ngIf="sseError()" class="sse-error-banner">Live updates unavailable</div>
-  <div *ngIf="showUpdateNotification()" class="update-notification">Assignment updated</div>
+  <div *ngIf="error()" class="error-banner">{{ error()! | translate }}</div>
+  <div *ngIf="sseError()" class="sse-error-banner">{{ 'SHOPMGMT.APPOINTMENT_ASSIGNMENT.LIVE_UPDATES_UNAVAILABLE' | translate }}</div>
+  <div *ngIf="showUpdateNotification()" class="update-notification">{{ 'SHOPMGMT.APPOINTMENT_ASSIGNMENT.UPDATED' | translate }}</div>
 
   <ng-container *ngIf="assignment(); else emptyTpl">
     <div class="assignment-section">
@@ -39,6 +39,6 @@
   </ng-container>
 
   <ng-template #emptyTpl>
-    <div class="empty-state empty-assignment">No assignment found for this appointment.</div>
+    <div class="empty-state empty-assignment">{{ 'SHOPMGMT.APPOINTMENT_ASSIGNMENT.EMPTY' | translate }}</div>
   </ng-template>
 </ng-container>

@@ -2,13 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { LocationService } from '../../services/location.service';
 
 @Component({
   selector: 'app-bays-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './bays-page.component.html',
   styleUrl: './bays-page.component.css',
 })
@@ -47,7 +48,7 @@ export class BaysPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Failed to load bays.');
+        this.error.set('LOCATION.BAYS.ERROR.LOAD');
         this.loading.set(false);
       },
     });
@@ -66,7 +67,7 @@ export class BaysPageComponent implements OnInit {
     const locationId = this.locationId();
     const name = this.createBayName().trim();
     if (!locationId || !name) {
-      this.error.set('Bay name is required.');
+      this.error.set('LOCATION.BAYS.ERROR.NAME_REQUIRED');
       return;
     }
 
@@ -75,7 +76,7 @@ export class BaysPageComponent implements OnInit {
         this.closeCreate();
         this.loadBays(locationId);
       },
-      error: () => this.error.set('Failed to create bay.'),
+      error: () => this.error.set('LOCATION.BAYS.ERROR.CREATE'),
     });
   }
 
@@ -98,7 +99,7 @@ export class BaysPageComponent implements OnInit {
     const name = this.editBayName().trim();
 
     if (!locationId || !bayId || !name) {
-      this.error.set('Bay and name are required.');
+      this.error.set('LOCATION.BAYS.ERROR.BAY_AND_NAME_REQUIRED');
       return;
     }
 
@@ -107,7 +108,7 @@ export class BaysPageComponent implements OnInit {
         this.closeEdit();
         this.loadBays(locationId);
       },
-      error: () => this.error.set('Failed to update bay.'),
+      error: () => this.error.set('LOCATION.BAYS.ERROR.UPDATE'),
     });
   }
 

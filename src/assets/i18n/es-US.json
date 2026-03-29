@@ -33,6 +33,333 @@
       }
     }
   },
+  "AUTH": {
+    "LOGIN": {
+      "BRAND_LOGO_ARIA": "Logotipo de Durion POS",
+      "BRAND_TAGLINE": "Plataforma Positivity",
+      "SESSION_EXPIRED": "Tu sesión ha expirado. Inicia sesión nuevamente.",
+      "USERNAME": "Nombre de usuario",
+      "USERNAME_PLACEHOLDER": "Ingresa tu nombre de usuario",
+      "USERNAME_ERROR": "El nombre de usuario es obligatorio (mín. 2 caracteres).",
+      "PASSWORD": "Contraseña",
+      "PASSWORD_PLACEHOLDER": "Ingresa tu contraseña",
+      "PASSWORD_ERROR": "La contraseña es obligatoria (mín. 4 caracteres).",
+      "SIGNING_IN": "Iniciando sesión...",
+      "SIGN_IN": "Iniciar sesión",
+      "THEME_TO_LIGHT": "Cambiar al modo claro",
+      "THEME_TO_DARK": "Cambiar al modo oscuro",
+      "LIGHT_MODE": "Modo claro",
+      "DARK_MODE": "Modo oscuro",
+      "ERROR": {
+        "INVALID_CREDENTIALS": "Nombre de usuario o contraseña inválidos. Inténtalo de nuevo.",
+        "NETWORK": "No se puede conectar al servidor. Verifica tu red o inténtalo más tarde.",
+        "GENERIC": "No se pudo iniciar sesión. Inténtalo de nuevo."
+      }
+    }
+  },
+  "PEOPLE": {
+    "WORK_SESSION": {
+      "TITLE": "Sesión de trabajo",
+      "ACTIVE": "Sesión activa",
+      "INACTIVE": "No hay sesión activa",
+      "ON_BREAK": "En descanso",
+      "CONTROLS": "Controles de sesión",
+      "START_SESSION": "Iniciar sesión",
+      "STOP_SESSION": "Detener sesión",
+      "START_BREAK": "Iniciar descanso",
+      "STOP_BREAK": "Detener descanso",
+      "ACTION_SUCCEEDED": "Acción completada correctamente.",
+      "ERROR": {
+        "REQUIRED_IDS": "Se requieren ID de workorder e ID de ubicación para iniciar una sesión.",
+        "START": "No se pudo iniciar la sesión.",
+        "STOP": "No se pudo detener la sesión.",
+        "START_BREAK": "No se pudo iniciar el descanso.",
+        "STOP_BREAK": "No se pudo detener el descanso."
+      }
+    },
+    "TIME_EXPORT": {
+      "TITLE": "Exportación de tiempo",
+      "LOCATION_ID": "ID de ubicación",
+      "LOAD_EXPORT": "Cargar exportación",
+      "LOAD_DISCREPANCIES": "Cargar discrepancias",
+      "EMPTY": "No se encontraron datos de exportación.",
+      "ERROR": {
+        "LOAD_EXPORT": "No se pudieron cargar los datos de exportación.",
+        "LOAD_DISCREPANCIES": "No se pudieron cargar las discrepancias."
+      }
+    },
+    "TIME_APPROVAL": {
+      "TITLE": "Aprobación de tiempo",
+      "APPROVE": "Aprobar",
+      "REJECT": "Rechazar",
+      "ACTION_COMPLETED": "Acción completada.",
+      "EMPTY": "No se encontraron registros.",
+      "REASON": "Motivo",
+      "SUBMIT_REJECT": "Enviar rechazo",
+      "CLOSE": "Cerrar",
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las entradas de tiempo.",
+        "APPROVE": "No se pudieron aprobar las entradas.",
+        "REJECT": "No se pudieron rechazar las entradas.",
+        "ADJUSTMENT": "No se pudo crear el ajuste."
+      }
+    }
+  },
+  "SECURITY": {
+    "NAV": {
+      "WORKSPACE_ARIA": "Espacio de trabajo de seguridad",
+      "TABS_ARIA": "Pestañas de navegación de seguridad",
+      "ROLES": "Roles",
+      "PERMISSIONS": "Permisos",
+      "AUDIT_LOG": "Registro de auditoría",
+      "ROLES_TAB": "Pestaña de roles",
+      "PERMISSIONS_TAB": "Pestaña de permisos",
+      "AUDIT_TAB": "Pestaña de auditoría"
+    },
+    "ROLES_LIST": {
+      "SECTION": "Seguridad",
+      "TITLE": "Roles",
+      "CREATE_ROLE": "Crear rol",
+      "CREATE_HELP": "Agrega una nueva definición de rol para la gestión de acceso de seguridad.",
+      "SEARCH_LABEL": "Buscar roles",
+      "SEARCH_PLACEHOLDER": "Buscar por nombre de rol",
+      "SEARCH": "Buscar",
+      "APPLY_SEARCH": "Aplicar búsqueda de roles",
+      "LOADING": "Cargando roles...",
+      "EMPTY_TITLE": "No se encontraron roles",
+      "EMPTY_MESSAGE": "Intenta ajustar la búsqueda o crear un nuevo rol.",
+      "NO_DESCRIPTION": "No se proporcionó descripción.",
+      "VIEW_DETAIL": "Ver detalle",
+      "VIEW_DETAIL_ARIA": "Ver detalles del rol {{name}}",
+      "PREVIOUS": "Anterior",
+      "NEXT": "Siguiente",
+      "PAGE_INDICATOR": "Página {{page}} de {{total}}",
+      "CANCEL": "Cancelar",
+      "SUBMIT": "Enviar",
+      "COLUMNS": {
+        "NAME": "Nombre",
+        "DESCRIPTION": "Descripción",
+        "ACTIONS": "Acciones"
+      },
+      "ARIAS": {
+        "LIST_PANEL": "Controles y resultados de la lista de roles",
+        "TABLE": "Tabla de roles",
+        "PAGINATION": "Paginación de roles",
+        "ROLE_NAME": "Nombre del rol",
+        "ROLE_DESCRIPTION": "Descripción del rol"
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los roles.",
+        "NAME_REQUIRED": "El nombre del rol es obligatorio.",
+        "CREATE": "No se pudo crear el rol."
+      }
+    },
+    "PERMISSIONS_LIST": {
+      "SECTION": "Seguridad",
+      "TITLE": "Permisos",
+      "READ_ONLY": "Solo lectura",
+      "SEARCH_LABEL": "Buscar permisos",
+      "SEARCH_PLACEHOLDER": "Buscar por clave de permiso",
+      "SEARCH": "Buscar",
+      "APPLY_SEARCH": "Aplicar búsqueda de permisos",
+      "LOADING": "Cargando permisos...",
+      "EMPTY_TITLE": "No se encontraron permisos",
+      "EMPTY_MESSAGE": "Intenta ajustar los criterios de búsqueda.",
+      "NO_DESCRIPTION": "No hay descripción disponible.",
+      "PREVIOUS": "Anterior",
+      "NEXT": "Siguiente",
+      "PAGE_INDICATOR": "Página {{page}} de {{total}}",
+      "COLUMNS": {
+        "PERMISSION_KEY": "Clave de permiso",
+        "DESCRIPTION": "Descripción"
+      },
+      "ARIAS": {
+        "LISTING": "Listado de permisos",
+        "TABLE": "Tabla de permisos",
+        "PAGINATION": "Paginación de permisos"
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los permisos."
+      }
+    },
+    "ROLE_DETAIL": {
+      "BACK_TO_ROLES": "Roles /",
+      "TITLE": "Roles / {{name}}",
+      "LOADING": "Cargando detalles del rol...",
+      "NO_DESCRIPTION": "No se proporcionó descripción.",
+      "NO_DESCRIPTION_AVAILABLE": "No hay descripción disponible.",
+      "CREATED": "Creado",
+      "UPDATED": "Actualizado",
+      "UNAVAILABLE": "No disponible",
+      "STATUS": "Estado",
+      "STATUS_ACTIVE": "Activo",
+      "STATUS_INACTIVE": "Inactivo",
+      "PERMISSIONS": "Permisos",
+      "PERMISSIONS_HELP": "Definiciones de permisos asignadas para este rol.",
+      "EDIT_PERMISSIONS": "Editar permisos",
+      "EMPTY_TITLE": "No hay permisos asignados",
+      "EMPTY_MESSAGE": "Usa Editar permisos para otorgar claves de acceso a este rol.",
+      "CONFIRM_REVOKE": "¿Confirmar revocación?",
+      "CONFIRM": "Confirmar",
+      "CANCEL": "Cancelar",
+      "REVOKE": "Revocar",
+      "GRANT_PERMISSIONS": "Otorgar permisos",
+      "GRANT_HELP": "Selecciona las claves de permiso para otorgar a este rol.",
+      "SUBMIT": "Enviar",
+      "CONFIRM_REVOKE_ARIA": "Confirmar revocación para {{key}}",
+      "REVOKE_ASSIGNMENT_ARIA": "Revocar asignación para {{key}}",
+      "CANCEL_REVOKE": "Cancelar revocación",
+      "CANCEL_GRANT": "Cancelar otorgamiento de permisos",
+      "SUBMIT_UPDATES": "Enviar actualización de permisos",
+      "COLUMNS": {
+        "PERMISSION_KEY": "Clave de permiso",
+        "DESCRIPTION": "Descripción",
+        "ACTIONS": "Acciones"
+      },
+      "ARIAS": {
+        "ROLE_PERMISSIONS": "Permisos del rol",
+        "ASSIGNMENTS_TABLE": "Asignaciones de permisos del rol",
+        "GRANT_DIALOG": "Diálogo para otorgar permisos",
+        "SELECTION_LIST": "Lista de selección de permisos"
+      },
+      "ERROR": {
+        "MISSING_ROLE_NAME": "No se proporcionó el nombre del rol.",
+        "LOAD_ROLE": "No se pudieron cargar los detalles del rol.",
+        "LOAD_PERMISSIONS": "No se pudieron cargar los permisos.",
+        "UPDATE_PERMISSIONS": "No se pudieron actualizar los permisos del rol.",
+        "REVOKE": "No se pudo revocar el permiso."
+      }
+    },
+    "AUDIT_LIST": {
+      "TITLE": "Registro de auditoría de seguridad",
+      "APPOINTMENT_ID": "ID de cita",
+      "LOAD": "Cargar",
+      "VIEW_ENTRY": "Ver entrada",
+      "EMPTY": "No se encontraron entradas de auditoría.",
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las entradas de auditoría."
+      }
+    }
+  },
+  "LOCATION": {
+    "LOCATIONS": {
+      "TITLE": "Ubicaciones",
+      "CREATE_LOCATION": "Crear ubicación",
+      "CREATE_SUCCESS": "Ubicación creada correctamente.",
+      "LOADING": "Cargando...",
+      "EMPTY": "No se encontraron ubicaciones.",
+      "NAME": "Nombre",
+      "TYPE": "Tipo",
+      "TYPE_STORE": "Tienda",
+      "TYPE_WAREHOUSE": "Almacén",
+      "TYPE_MOBILE": "Móvil",
+      "CANCEL": "Cancelar",
+      "CREATE": "Crear",
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las ubicaciones.",
+        "NAME_TYPE_REQUIRED": "Nombre y tipo son obligatorios.",
+        "CREATE": "No se pudo crear la ubicación."
+      }
+    },
+    "BAYS": {
+      "TITLE": "Bahías",
+      "CREATE_BAY": "Crear bahía",
+      "EDIT_BAY": "Editar bahía",
+      "BAY_NAME": "Nombre de la bahía",
+      "LOADING": "Cargando...",
+      "EMPTY": "No se encontraron bahías para esta ubicación.",
+      "CANCEL": "Cancelar",
+      "CREATE": "Crear",
+      "SAVE": "Guardar",
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las bahías.",
+        "NAME_REQUIRED": "El nombre de la bahía es obligatorio.",
+        "BAY_AND_NAME_REQUIRED": "La bahía y el nombre son obligatorios.",
+        "CREATE": "No se pudo crear la bahía.",
+        "UPDATE": "No se pudo actualizar la bahía."
+      }
+    },
+    "MOBILE_UNITS": {
+      "TITLE": "Unidades móviles",
+      "CREATE_MOBILE_UNIT": "Crear unidad móvil",
+      "COVERAGE_RULES": "Reglas de cobertura",
+      "NAME": "Nombre",
+      "REGION": "Región",
+      "LOADING": "Cargando...",
+      "EMPTY": "No se encontraron unidades móviles.",
+      "CANCEL": "Cancelar",
+      "CREATE": "Crear",
+      "SAVE": "Guardar",
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las unidades móviles.",
+        "NAME_REQUIRED": "El nombre es obligatorio.",
+        "SELECT_UNIT": "Se debe seleccionar una unidad móvil.",
+        "CREATE": "No se pudo crear la unidad móvil.",
+        "UPDATE_COVERAGE": "No se pudieron actualizar las reglas de cobertura."
+      }
+    }
+  },
+  "SHOPMGMT": {
+    "SCHEDULE_VIEW": {
+      "TITLE": "Vista de programación",
+      "LOCATION": "Ubicación",
+      "LOCATION_ID": "ID de ubicación",
+      "DATE": "Fecha",
+      "RESOURCE_TYPE": "Tipo de recurso",
+      "RESOURCE_TYPE_EXAMPLE": "ej. BAHÍA",
+      "RESOURCE_ID": "ID de recurso",
+      "OPTIONAL": "Opcional",
+      "LOAD_SCHEDULE": "Cargar programación",
+      "ERROR_LOAD": "No se pudo cargar la programación. Verifica el ID de ubicación y la fecha e inténtalo de nuevo.",
+      "LOADING": "Cargando programación...",
+      "EMPTY": "No hay datos de programación. Ingresa una ubicación y una fecha, luego haz clic en Cargar programación.",
+      "RESCHEDULED_X": "Reprogramado x{{count}}",
+      "APPOINTMENT": "Cita {{id}}",
+      "CLOSE_DETAILS": "Cerrar detalles",
+      "STATUS": "Estado",
+      "START": "Inicio",
+      "END": "Fin"
+    },
+    "APPOINTMENT_ASSIGNMENT": {
+      "TITLE": "Asignación de cita",
+      "LOADING": "Cargando asignación...",
+      "LIVE_UPDATES_UNAVAILABLE": "Actualizaciones en vivo no disponibles",
+      "UPDATED": "Asignación actualizada",
+      "EMPTY": "No se encontró una asignación para esta cita.",
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los datos de asignación"
+      }
+    },
+    "MECHANIC_AVAILABILITY": {
+      "TITLE": "Disponibilidad de mecánicos",
+      "LOCATION": "Ubicación",
+      "DATE": "Fecha",
+      "LOAD": "Cargar",
+      "AVAILABLE": "Disponible",
+      "UNAVAILABLE": "No disponible",
+      "EMPTY": "No se encontraron datos de disponibilidad.",
+      "ERROR": {
+        "LOAD_LOCATION": "No se pudo cargar la ubicación.",
+        "LOAD_AVAILABILITY": "No se pudo cargar la disponibilidad."
+      }
+    },
+    "MECHANIC_ROSTER": {
+      "TITLE": "Lista de mecánicos",
+      "CREATE_EMPLOYEE": "Crear empleado",
+      "EMPLOYEE_CREATED": "Empleado creado.",
+      "EMPTY": "No se encontraron personas.",
+      "FIRST_NAME": "Nombre",
+      "LAST_NAME": "Apellido",
+      "EMAIL": "Correo electrónico",
+      "ROLE": "Rol",
+      "SAVE": "Guardar",
+      "CLOSE": "Cerrar",
+      "ERROR": {
+        "LOAD_PEOPLE": "No se pudieron cargar las personas.",
+        "CREATE_EMPLOYEE": "No se pudo crear el empleado."
+      }
+    }
+  },
   "ACCOUNTING": {
     "COMMON": {
       "ACCESS_DENIED": "Acceso denegado",

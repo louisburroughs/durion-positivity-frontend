@@ -1,12 +1,12 @@
 <section class="page-header">
-  <h2>Bays</h2>
-  <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">Create Bay</button>
+  <h2>{{ 'LOCATION.BAYS.TITLE' | translate }}</h2>
+  <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">{{ 'LOCATION.BAYS.CREATE_BAY' | translate }}</button>
 </section>
 
-<div *ngIf="error()" class="error-banner">{{ error() }}</div>
+<div *ngIf="error()" class="error-banner">{{ error()! | translate }}</div>
 
 <section *ngIf="loading(); else baysContent" class="bays-grid">
-  <p>Loading...</p>
+  <p>{{ 'LOCATION.BAYS.LOADING' | translate }}</p>
 </section>
 
 <ng-template #baysContent>
@@ -19,40 +19,40 @@
 
 <ng-template #emptyState>
   <section class="empty-state">
-    <p>No bays found for this location.</p>
+    <p>{{ 'LOCATION.BAYS.EMPTY' | translate }}</p>
   </section>
 </ng-template>
 
 <div *ngIf="showCreateModal()" class="create-modal-overlay">
   <section class="create-modal">
-    <h3>Create Bay</h3>
+    <h3>{{ 'LOCATION.BAYS.CREATE_BAY' | translate }}</h3>
 
     <div class="form-group">
-      <label for="create-bay-name">Bay Name</label>
+      <label for="create-bay-name">{{ 'LOCATION.BAYS.BAY_NAME' | translate }}</label>
       <input id="create-bay-name" type="text" [value]="createBayName()"
         (input)="createBayName.set($any($event.target).value)" />
     </div>
 
     <div class="modal-actions">
-      <button type="button" class="btn-secondary" (click)="closeCreate()">Cancel</button>
-      <button type="button" class="btn-primary submit-create-btn" (click)="submitCreate()">Create</button>
+      <button type="button" class="btn-secondary" (click)="closeCreate()">{{ 'LOCATION.BAYS.CANCEL' | translate }}</button>
+      <button type="button" class="btn-primary submit-create-btn" (click)="submitCreate()">{{ 'LOCATION.BAYS.CREATE' | translate }}</button>
     </div>
   </section>
 </div>
 
 <div *ngIf="showEditModal()" class="edit-modal-overlay">
   <section class="edit-modal">
-    <h3>Edit Bay</h3>
+    <h3>{{ 'LOCATION.BAYS.EDIT_BAY' | translate }}</h3>
 
     <div class="form-group">
-      <label for="edit-bay-name">Bay Name</label>
+      <label for="edit-bay-name">{{ 'LOCATION.BAYS.BAY_NAME' | translate }}</label>
       <input id="edit-bay-name" type="text" [value]="editBayName()"
         (input)="editBayName.set($any($event.target).value)" />
     </div>
 
     <div class="modal-actions">
-      <button type="button" class="btn-secondary" (click)="closeEdit()">Cancel</button>
-      <button type="button" class="btn-primary" (click)="submitEdit()">Save</button>
+      <button type="button" class="btn-secondary" (click)="closeEdit()">{{ 'LOCATION.BAYS.CANCEL' | translate }}</button>
+      <button type="button" class="btn-primary" (click)="submitEdit()">{{ 'LOCATION.BAYS.SAVE' | translate }}</button>
     </div>
   </section>
 </div>
