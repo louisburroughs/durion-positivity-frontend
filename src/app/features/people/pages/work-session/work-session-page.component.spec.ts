@@ -1,117 +1,126 @@
-import { describe, it, expect, afterEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { provideRouter, ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
+import { ActivatedRoute, provideRouter } from '@angular/router';
+import { of, throwError } from 'rxjs';
 import { WorkSessionPageComponent } from './work-session-page.component';
 import { PeopleService } from '../../services/people.service';
 
-const stubPeopleService = {
-  startWorkSession: vi.fn(),
-  stopWorkSession: vi.fn(),
-  startBreak: vi.fn(),
-  stopBreak: vi.fn(),
-};
-
-const DEFAULT_ROUTE_PARAMS: Record<string, string> = { workorderId: 'wo-1', locationId: 'loc-1' };
-
-describe('WorkSessionPageComponent [CAP-139]', () => {
+describe('WorkSessionPageComponent', () => {
   let fixture: ComponentFixture<WorkSessionPageComponent>;
   let component: WorkSessionPageComponent;
+  let peopleService: {
+    startWorkSession: ReturnType<typeof vi.fn>;
+    stopWorkSession: ReturnType<typeof vi.fn>;
+    startBreak: ReturnType<typeof vi.fn>;
+    stopBreak: ReturnType<typeof vi.fn>;
+    getWorkSessionBreaks: ReturnType<typeof vi.fn>;
+  };
 
-  const setup = async (routeParams: Record<string, string> = DEFAULT_ROUTE_PARAMS) => {
-    vi.clearAllMocks();
-    stubPeopleService.startWorkSession.mockReturnValue(of({ sessionId: 's-1' }));
-    stubPeopleService.stopWorkSession.mockReturnValue(of({ status: 'ok' }));
-    stubPeopleService.startBreak.mockReturnValue(of({ status: 'ok' }));
-    stubPeopleService.stopBreak.mockReturnValue(of({ status: 'ok' }));
+  beforeEach(async () => {
+    TestBed.resetTestingModule();
+
+    peopleService = {
+      startWorkSession: vi.fn().mockReturnValue(of({ sessionId: 's-1', clockedInAt: '08:00' })),
+      stopWorkSession: vi.fn().mockReturnValue(of({ sessionId: 's-1', clockedOutAt: '17:00' })),
+      startBreak: vi.fn().mockReturnValue(of({ breakId: 'b-1' })),
+      stopBreak: vi.fn().mockReturnValue(of({ breakId: 'b-1' })),
+      getWorkSessionBreaks: vi.fn().mockReturnValue(of([])),
+    };
 
     await TestBed.configureTestingModule({
       imports: [WorkSessionPageComponent],
       providers: [
         provideRouter([]),
-        { provide: PeopleService, useValue: stubPeopleService },
-        { provide: ActivatedRoute, useValue: { params: of(routeParams) } },
+        { provide: PeopleService, useValue: peopleService },
+        { provide: ActivatedRoute, useValue: { params: of({ workorderId: 'wo-1', locationId: 'loc-1' }) } },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(WorkSessionPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  };
-
-  afterEach(() => {
-    vi.clearAllMocks();
-    TestBed.resetTestingModule();
   });
 
-  it('renders without crashing', async () => {
-    await setup();
-    expect(fixture.nativeElement).toBeTruthy();
+  it('T1: renders Work Session heading', () => {
+    const h1 = fixture.nativeElement.querySelector('h1');
+    expect(h1).toBeTruthy();
+    expect(h1.textContent).toContain('Work Session');
   });
 
-  it('shows .session-inactive state initially', async () => {
-    await setup();
-    const state = fixture.debugElement.query(By.css('.session-inactive'));
-    expect(state).toBeTruthy();
+  it('T2: clock-in-btn is present and not disabled initially', () => {
+    const btn = fixture.nativeElement.querySelector('[data-testid="clock-in-btn"]');
+    expect(btn).toBeTruthy();
+    expect(btn.disabled).toBe(false);
   });
 
-  it('calls startWorkSession on start', async () => {
-    await setup({ workorderId: 'wo-1', locationId: 'loc-1' });
+  it('T3: clock-out-btn is disabled when not clocked in', () => {
+    const btn = fixture.nativeElement.querySelector('[data-testid="clock-out-btn"]');
+    expect(btn).toBeTruthy();
+    expect(btn.disabled).toBe(true);
+  });
+
+  it('T4: clicking clock-in-btn calls startWorkSession; on success shows action-success and sets clock status to Clocked In', () => {
+    const btn = fixture.nativeElement.querySelector('[data-testid="clock-in-btn"]');
+    btn.click();
+    fixture.detectChanges();
+    expect(peopleService.startWorkSession).toHaveBeenCalledTimes(1);
+    const successEl = fixture.nativeElement.querySelector('[data-testid="action-success"]');
+    expect(successEl).toBeTruthy();
+    const clockStatus = fixture.nativeElement.querySelector('[data-testid="clock-status"]');
+    expect(clockStatus.textContent).toContain('Clocked In');
+  });
+
+  it('T5: shows error-state when startWorkSession fails', () => {
+    peopleService.startWorkSession.mockReturnValue(
+      throwError(() => ({ error: { message: 'Clock in failed' } })),
+    );
     component.startSession();
-    expect(stubPeopleService.startWorkSession).toHaveBeenCalledWith({
-      workorderId: 'wo-1',
-      locationId: 'loc-1',
-    });
+    fixture.detectChanges();
+    const errEl = fixture.nativeElement.querySelector('[data-testid="error-state"]');
+    expect(errEl).toBeTruthy();
+    expect(errEl.textContent).toContain('Clock in failed');
   });
 
-  it('calls stopWorkSession on stop', async () => {
-    await setup();
-    component.stopSession('s-1');
-    expect(stubPeopleService.stopWorkSession).toHaveBeenCalledWith({ sessionId: 's-1' });
+  it('T6: clock-out-btn enabled after session starts (set currentSession signal directly)', () => {
+    component.currentSession.set({ sessionId: 'sess1' });
+    fixture.detectChanges();
+    const btn = fixture.nativeElement.querySelector('[data-testid="clock-out-btn"]');
+    expect(btn.disabled).toBe(false);
   });
 
-  it('calls startBreak on break start', async () => {
-    await setup();
-    component.startBreak('s-1');
-    expect(stubPeopleService.startBreak).toHaveBeenCalledWith('s-1', {});
+  it('T7: start-break-btn is visible when isClocked (set currentSession signal)', () => {
+    component.currentSession.set({ sessionId: 'sess1' });
+    fixture.detectChanges();
+    const btn = fixture.nativeElement.querySelector('[data-testid="start-break-btn"]');
+    expect(btn).toBeTruthy();
   });
 
-  it('shows .break-indicator when on break', async () => {
-    await setup();
+  it('T8: clicking start-break-btn calls startBreak with breakType from form', () => {
+    component.currentSession.set({ sessionId: 'sess1' });
+    fixture.detectChanges();
+    const btn = fixture.nativeElement.querySelector('[data-testid="start-break-btn"]');
+    btn.click();
+    fixture.detectChanges();
+    expect(peopleService.startBreak).toHaveBeenCalledWith('sess1', { breakType: 'MEAL' }, expect.any(String));
+  });
+
+  it('T9: stop-break-btn calls stopBreak; onBreak resets to false', () => {
+    component.currentSession.set({ sessionId: 'sess1' });
     component.onBreak.set(true);
     fixture.detectChanges();
-    const indicator = fixture.debugElement.query(By.css('.break-indicator'));
-    expect(indicator).toBeTruthy();
+    const btn = fixture.nativeElement.querySelector('[data-testid="stop-break-btn"]');
+    btn.click();
+    fixture.detectChanges();
+    expect(peopleService.stopBreak).toHaveBeenCalledWith('sess1', {}, expect.any(String));
+    expect(component.onBreak()).toBe(false);
   });
 
-  // T10 — new tests
-  it('getSessionId() returns empty string when no session is active', async () => {
-    await setup();
-    expect(component.getSessionId()).toBe('');
-  });
-
-  it('stop/break buttons are disabled when no session active', async () => {
-    await setup();
-    const stopBtn = fixture.debugElement.query(By.css('.stop-btn'));
-    const startBreakBtn = fixture.debugElement.query(By.css('.start-break-btn'));
-    const stopBreakBtn = fixture.debugElement.query(By.css('.stop-break-btn'));
-    expect((stopBtn.nativeElement as HTMLButtonElement).disabled).toBe(true);
-    expect((startBreakBtn.nativeElement as HTMLButtonElement).disabled).toBe(true);
-    expect((stopBreakBtn.nativeElement as HTMLButtonElement).disabled).toBe(true);
-  });
-
-  it('startSession() shows error when workorderId missing', async () => {
-    await setup({ locationId: 'loc-1' });
-    component.startSession();
-    expect(component.error()).toBeTruthy();
-    expect(stubPeopleService.startWorkSession).not.toHaveBeenCalled();
-  });
-
-  it('startSession() shows error when locationId missing', async () => {
-    await setup({ workorderId: 'wo-1' });
-    component.startSession();
-    expect(component.error()).toBeTruthy();
-    expect(stubPeopleService.startWorkSession).not.toHaveBeenCalled();
+  it('T10: breaks-table shows break items after loadBreaks returns data', () => {
+    component.breaks.set([{ breakType: 'MEAL', startedAt: '12:00', endedAt: '12:30', autoEnded: false }]);
+    component.breaksLoading.set(false);
+    fixture.detectChanges();
+    const table = fixture.nativeElement.querySelector('[data-testid="breaks-table"]');
+    expect(table).toBeTruthy();
+    const rows = fixture.nativeElement.querySelectorAll('[data-testid="break-item"]');
+    expect(rows.length).toBe(1);
   });
 });

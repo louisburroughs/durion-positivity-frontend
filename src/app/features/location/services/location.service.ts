@@ -29,6 +29,35 @@ export class LocationService {
     return this.api.patch<unknown>(`/v1/locations/${locationId}`, patch);
   }
 
+  updateLocation(locationId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
+    return this.api.put<unknown>(`/v1/locations/${locationId}`, body, this.idempotencyOptions(idempotencyKey));
+  }
+
+  getLocationDefaults(locationId: string): Observable<unknown> {
+    return this.api.get<unknown>(`/v1/locations/${locationId}/defaults`);
+  }
+
+  listStorageLocations(
+    siteId: string,
+    params?: { status?: string; pageIndex?: number; pageSize?: number },
+  ): Observable<unknown> {
+    let httpParams = new HttpParams();
+    if (params?.status) {
+      httpParams = httpParams.set('status', params.status);
+    }
+    if (params?.pageIndex !== undefined) {
+      httpParams = httpParams.set('pageIndex', String(params.pageIndex));
+    }
+    if (params?.pageSize !== undefined) {
+      httpParams = httpParams.set('pageSize', String(params.pageSize));
+    }
+    return this.api.get<unknown>(`/v1/locations/${siteId}/storage-locations`, httpParams);
+  }
+
+  configureLocationDefaults(locationId: string, body: unknown, idempotencyKey?: string): Observable<unknown> {
+    return this.api.put<unknown>(`/v1/locations/${locationId}/defaults`, body, this.idempotencyOptions(idempotencyKey));
+  }
+
   // ── Bays ─────────────────────────────────────────────────────────────────
 
   listBays(locationId: string): Observable<unknown[]> {

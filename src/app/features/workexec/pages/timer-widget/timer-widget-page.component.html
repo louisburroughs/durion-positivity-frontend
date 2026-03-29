@@ -1,0 +1,109 @@
+<main>
+  <header class="page-header">
+    <h1>Job Timer</h1>
+  </header>
+
+  @if (loadError()) {
+  <p role="alert" aria-live="polite" data-testid="load-error">{{ loadError() }}</p>
+  }
+
+  <section class="card" data-testid="timer-status-panel">
+    @if (timerState() === 'ACTIVE') {
+    <p data-testid="timer-active-indicator">Timer running</p>
+    <ul class="list-reset" data-testid="active-timers-list">
+      @for (entry of activeTimers(); track $index) {
+      <li class="active-entry" data-testid="active-timer-entry">
+        <p>Work Order: <code>{{ $any(entry).workOrderId }}</code></p>
+        <p>Entry ID: <code>{{ $any(entry).timeEntryId }}</code></p>
+        <p>Start: {{ $any(entry).startTime }}</p>
+      </li>
+      }
+    </ul>
+    }
+    @if (timerState() === 'NONE') {
+    <p data-testid="timer-idle-indicator">No active timer.</p>
+    }
+    @if (timerState() === 'STARTING' || timerState() === 'STOPPING') {
+    <p aria-live="polite" data-testid="timer-in-progress">
+      {{ timerState() === 'STARTING' ? 'Starting timer…' : 'Stopping timer…' }}
+    </p>
+    }
+  </section>
+
+  @if (!hasActiveTimer()) {
+  <section class="card">
+    <h2>Start Timer</h2>
+    <form class="form-grid" [formGroup]="startForm" (ngSubmit)="startTimer()">
+      <div class="field">
+        <label for="start-work-order-id">Work Order ID</label>
+        <input id="start-work-order-id" type="text" formControlName="workOrderId"
+          aria-describedby="field-error-work-order-id" />
+        <span id="field-error-work-order-id" aria-live="polite" role="alert">
+          @if (startForm.controls.workOrderId.touched && startForm.controls.workOrderId.invalid) {
+          Work Order ID is required.
+          }
+        </span>
+      </div>
+
+      <div class="field">
+        <label for="start-work-order-item-id">Work Order Item ID</label>
+        <input id="start-work-order-item-id" type="text" formControlName="workOrderItemId"
+          aria-describedby="field-error-work-order-item-id" />
+        <span id="field-error-work-order-item-id" aria-live="polite" role="alert"></span>
+      </div>
+
+      <div class="field">
+        <label for="start-labor-code">Labor Code</label>
+        <input id="start-labor-code" type="text" formControlName="laborCode"
+          aria-describedby="field-error-labor-code" />
+        <span id="field-error-labor-code" aria-live="polite" role="alert"></span>
+      </div>
+
+      <button type="submit" [disabled]="!canStart()" data-testid="start-timer-btn">Start Timer</button>
+    </form>
+  </section>
+  }
+
+  @if (hasActiveTimer()) {
+  <section class="card" data-testid="stop-section">
+    <button type="button" [disabled]="!canStop()" (click)="stopTimers()" data-testid="stop-timer-btn">
+      Stop Timer
+    </button>
+  </section>
+  }
+
+  @if (actionSuccess()) {
+  <output aria-live="polite" data-testid="action-success">{{ actionSuccess() }}</output>
+  }
+  @if (actionError()) {
+  <p role="alert" aria-live="polite" data-testid="action-error">{{ actionError() }}</p>
+  }
+
+  @if (stoppedEntries().length > 0) {
+  <section class="card" data-testid="stopped-entries-section">
+    <h2>Last Stopped</h2>
+    <table data-testid="stopped-entries-table">
+      <thead>
+        <tr>
+          <th>Entry ID</th>
+          <th>Work Order</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Duration (sec)</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (entry of stoppedEntries(); track $index) {
+        <tr data-testid="stopped-entry-row">
+          <td>{{ $any(entry).timeEntryId }}</td>
+          <td>{{ $any(entry).workOrderId }}</td>
+          <td>{{ $any(entry).startTime }}</td>
+          <td>{{ $any(entry).endTime }}</td>
+          <td>{{ $any(entry).durationInSeconds }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+  }
+</main>

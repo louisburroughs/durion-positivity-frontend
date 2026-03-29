@@ -57,6 +57,7 @@
       @if (detailErrorState()) {
       <div class="alert alert--error" role="alert">{{ detailErrorState() }}</div>
       }
+      @if (selectedEvent()) {
       <h2 class="detail-heading">Event Detail</h2>
       <dl class="detail-grid">
         <dt>Event ID</dt>
@@ -68,6 +69,7 @@
         <dt>Received</dt>
         <dd>{{ selectedEvent()!.receivedAt }}</dd>
       </dl>
+      }
 
       <section class="processing-log-section">
         <h3 class="section-subheading">Processing Log</h3>

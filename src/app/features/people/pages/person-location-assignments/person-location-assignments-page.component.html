@@ -1,0 +1,159 @@
+<main class="people-page person-location-assignments-layout" aria-labelledby="person-location-assignments-heading">
+  <header class="page-header">
+    <p class="page-overline">People Management</p>
+    <h1 id="person-location-assignments-heading">Person Location Assignments</h1>
+  </header>
+
+  @if (loading()) {
+  <section class="state-panel" data-testid="loading-indicator" aria-live="polite" aria-busy="true">
+    Loading location assignments...
+  </section>
+  }
+
+  @if (error()) {
+  <section class="state-panel state-panel--error" role="alert" data-testid="error-state">
+    {{ error() }}
+  </section>
+  }
+
+  @if (!loading()) {
+  <section class="assignment-content">
+    <div class="form-footer">
+      <button type="button" class="btn btn--primary" data-testid="add-assignment-btn" (click)="openCreateDialog()">
+        Add Assignment
+      </button>
+    </div>
+
+    @if (assignments().length === 0) {
+    <section class="state-panel" data-testid="empty-state" aria-live="polite">
+      No location assignments are currently active for this person.
+    </section>
+    } @else {
+    <div class="assignment-list-wrap" data-testid="assignment-list">
+      <table class="assignment-table" aria-label="Person location assignments">
+        <thead>
+          <tr>
+            <th scope="col">Location</th>
+            <th scope="col">Primary</th>
+            <th scope="col">Start Date</th>
+            <th scope="col">End Date</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (assignment of assignments(); track $index) {
+          <tr data-testid="assignment-item">
+            <td>{{ getLocationName(assignment, availableLocations()) }}</td>
+            <td>{{ $any(assignment).primary ? 'Yes' : 'No' }}</td>
+            <td>{{ getEffectiveStart(assignment) }}</td>
+            <td>{{ getEffectiveEnd(assignment) }}</td>
+            <td>
+              <button type="button" class="btn btn--danger" data-testid="end-assignment-btn" [disabled]="submitting()"
+                (click)="openEndDialog(getAssignmentId(assignment))">
+                End
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+  }
+
+  @if (showCreateDialog()) {
+  <dialog class="modal-backdrop" aria-modal="true" aria-labelledby="create-assignment-title"
+    aria-describedby="create-assignment-description" data-testid="create-dialog" open
+    (keydown.escape)="closeCreateDialog()">
+    <div class="modal-panel">
+      <h2 id="create-assignment-title">Create Location Assignment</h2>
+      <p id="create-assignment-description">
+        Choose the location and effective dates for this assignment.
+      </p>
+
+      @if (conflictError()) {
+      <section class="alert alert--error" role="alert" data-testid="conflict-error">
+        {{ conflictError() }}
+      </section>
+      }
+
+      <form [formGroup]="createForm" (ngSubmit)="submitCreate()" novalidate>
+        <fieldset class="form-section">
+          <legend>Assignment Details</legend>
+
+          <div class="field-row">
+            <label for="location-select">Location</label>
+            <select id="location-select" formControlName="locationId" data-testid="location-select">
+              <option value="" disabled>Select location</option>
+              @for (location of availableLocations(); track $index) {
+              <option [value]="$any(location).locationId">{{ $any(location).name || $any(location).locationId }}
+              </option>
+              }
+            </select>
+          </div>
+
+          <div class="field-row">
+            <label for="effective-start-input">Effective Start</label>
+            <input id="effective-start-input" type="date" formControlName="effectiveStartAt"
+              data-testid="effective-start-input" />
+          </div>
+
+          <div class="field-row">
+            <label for="effective-end-input">Effective End (Optional)</label>
+            <input id="effective-end-input" type="date" formControlName="effectiveEndAt"
+              data-testid="effective-end-input" />
+          </div>
+
+          <div class="field-row">
+            <label for="primary-checkbox">
+              <input id="primary-checkbox" type="checkbox" formControlName="primary" data-testid="primary-checkbox" />
+              Primary Assignment
+            </label>
+          </div>
+        </fieldset>
+
+        <footer class="form-footer">
+          <button type="button" class="btn btn--ghost" data-testid="cancel-create-btn" [disabled]="submitting()"
+            (click)="closeCreateDialog()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn--primary" data-testid="submit-create-btn" [disabled]="submitting()">
+            @if (submitting()) {
+            Creating...
+            } @else {
+            Create Assignment
+            }
+          </button>
+        </footer>
+      </form>
+    </div>
+  </dialog>
+  }
+
+  @if (showEndDialog()) {
+  <div class="modal-backdrop" role="alertdialog" aria-modal="true" aria-labelledby="end-assignment-title"
+    aria-describedby="end-assignment-description" data-testid="end-confirm-dialog" (keydown.escape)="closeEndDialog()">
+    <div class="modal-panel modal-panel--destructive">
+      <h2 id="end-assignment-title">End Assignment</h2>
+      <p id="end-assignment-description">
+        This will end the selected assignment for this person.
+      </p>
+      <footer class="form-footer">
+        <button type="button" class="btn btn--ghost" data-testid="cancel-end-btn" [disabled]="submitting()"
+          (click)="closeEndDialog()" autofocus>
+          Cancel
+        </button>
+        <button type="button" class="btn btn--danger" data-testid="confirm-end-btn" [disabled]="submitting()"
+          (click)="confirmEnd()">
+          @if (submitting()) {
+          Ending...
+          } @else {
+          Confirm End
+          }
+        </button>
+      </footer>
+    </div>
+  </div>
+  }
+</main>

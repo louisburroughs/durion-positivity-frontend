@@ -1,0 +1,198 @@
+.people-page {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: var(--space-6);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.page-header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.page-overline {
+  margin: 0;
+  color: var(--handleColor);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-family: var(--font-primary);
+  color: var(--currentTextColor);
+}
+
+.profile-form,
+.audit-meta,
+.state-panel,
+.alert {
+  background: var(--cardBackground);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.profile-form {
+  padding: var(--space-6);
+  display: grid;
+  gap: var(--space-6);
+}
+
+.form-section {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+
+legend {
+  padding: 0;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-primary);
+  font-size: 0.875rem;
+  color: var(--handleColor);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.field-row {
+  display: grid;
+  gap: var(--space-2);
+}
+
+label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--currentTextColor);
+}
+
+.field-row.field-error--visible input,
+.field-row.field-error--visible select {
+  border-color: var(--functional-error-red);
+}
+
+.field-error {
+  color: var(--functional-error-red);
+  font-size: 0.8125rem;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn {
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  min-height: 2.75rem;
+  font-weight: 600;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn--primary {
+  background: var(--color-primary, var(--brand-primary));
+  color: var(--contrastTextColor);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-primary, var(--brand-primary)) 88%, var(--durion-teal-500));
+}
+
+.state-panel {
+  padding: var(--space-4);
+}
+
+.state-panel--error {
+  background: color-mix(in srgb, var(--functional-error-red) 10%, var(--cardBackground));
+  color: var(--functional-error-red);
+}
+
+.alert {
+  padding: var(--space-3) var(--space-4);
+}
+
+.alert--error {
+  background: color-mix(in srgb, var(--functional-error-red) 10%, var(--cardBackground));
+  color: var(--functional-error-red);
+}
+
+.status-badge {
+  display: inline-flex;
+  justify-self: start;
+  border-radius: 999px;
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.status-badge--active {
+  background: color-mix(in srgb, var(--functional-success) 25%, var(--cardBackground));
+  color: var(--functional-success);
+}
+
+.status-badge--neutral {
+  background: color-mix(in srgb, var(--durion-graphite-200) 45%, var(--cardBackground));
+  color: var(--durion-graphite-700);
+}
+
+.status-badge--warning {
+  background: color-mix(in srgb, var(--functional-warning) 25%, var(--cardBackground));
+  color: var(--functional-warning);
+}
+
+.audit-meta {
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.audit-meta h2 {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1rem;
+}
+
+.audit-meta dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-4);
+}
+
+.audit-meta dt {
+  color: var(--handleColor);
+  font-weight: 600;
+}
+
+.audit-meta dd {
+  margin: 0;
+  color: var(--currentTextColor);
+}
+
+@media (max-width: 48rem) {
+  .people-page {
+    padding: var(--space-4);
+  }
+
+  .profile-form {
+    padding: var(--space-4);
+    gap: var(--space-4);
+  }
+
+  .form-footer {
+    justify-content: stretch;
+  }
+
+  .form-footer .btn {
+    width: 100%;
+  }
+}
