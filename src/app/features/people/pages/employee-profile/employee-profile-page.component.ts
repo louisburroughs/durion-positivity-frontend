@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Employee, EmploymentStatus, UpdateEmployeeRequest } from '../../models/employee.models';
+import { CreateEmployeeRequest, Employee, EmploymentStatus, UpdateEmployeeRequest } from '../../models/employee.models';
 import { PeopleService } from '../../services/people.service';
 
 @Component({
@@ -123,7 +123,7 @@ export class EmployeeProfilePageComponent implements OnInit {
       return;
     }
 
-    this.peopleService.createEmployee(body as Record<string, unknown>)
+    this.peopleService.createEmployee(body as CreateEmployeeRequest)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (employee) => {

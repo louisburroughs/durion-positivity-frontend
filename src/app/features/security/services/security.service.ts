@@ -47,11 +47,11 @@ export class SecurityService {
   }
 
   createUser(body: Record<string, unknown>): Observable<unknown> {
-    return this.api.post<unknown>(`${SecurityService.BASE}/security/users`, body);
+    return this.api.post<unknown>(`${SecurityService.BASE}/users`, body);
   }
 
   getUserById(userId: string): Observable<unknown> {
-    return this.api.get<unknown>(`${SecurityService.BASE}/security/users/${encodeURIComponent(userId)}`);
+    return this.api.get<unknown>(`${SecurityService.BASE}/users/${encodeURIComponent(userId)}`);
   }
 
   getUserRoleAssignments(userId: string): Observable<RoleAssignment[]> {

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
-import { DisableEmployeeRequest, Employee, UpdateEmployeeRequest } from '../models/employee.models';
+import { CreateEmployeeRequest, DisableEmployeeRequest, Employee, UpdateEmployeeRequest } from '../models/employee.models';
 import { CreateAssignmentRequest, Role, RoleAssignment } from '../models/people-rbac.models';
 
 @Injectable({ providedIn: 'root' })
@@ -29,7 +29,7 @@ export class PeopleService {
     return this.api.get<Employee>(`/v1/people/employees/${encodeURIComponent(employeeId)}`);
   }
 
-  createEmployee(body: Record<string, unknown>, idempotencyKey?: string): Observable<Employee> {
+  createEmployee(body: CreateEmployeeRequest, idempotencyKey?: string): Observable<Employee> {
     return this.api.post<Employee>('/v1/people/employees', body, this.idempotencyOptions(idempotencyKey));
   }
 

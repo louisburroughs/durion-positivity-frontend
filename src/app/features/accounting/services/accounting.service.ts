@@ -2,6 +2,7 @@ import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { environment } from '../../../environments/environment';
 import {
   AccountingEventDetail,
   AccountingEventListItem,
@@ -255,7 +256,7 @@ export class AccountingService {
 
   downloadExport(exportId: string): void {
     // Trigger browser download via anchor element (appended to DOM for cross-browser reliability)
-    const url = `/api${AccountingService.BASE}/export/download?exportId=${encodeURIComponent(exportId)}`;
+    const url = `${environment.apiBaseUrl}${AccountingService.BASE}/export/download?exportId=${encodeURIComponent(exportId)}`;
     const a = document.createElement('a');
     a.href = url;
     a.download = `time-export-${exportId}.csv`;
