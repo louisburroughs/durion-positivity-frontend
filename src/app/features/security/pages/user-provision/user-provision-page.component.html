@@ -46,17 +46,18 @@
         }
       </div>
 
-      <div class="field-row" [class.field-error--visible]="form.get('roleId')?.invalid && form.get('roleId')?.touched">
+      <div class="field-row"
+        [class.field-error--visible]="form.get('roleName')?.invalid && form.get('roleName')?.touched">
         <label for="provision-role">Role</label>
-        <select id="provision-role" formControlName="roleId" data-testid="role-select">
+        <select id="provision-role" formControlName="roleName" data-testid="role-select">
           <option value="" disabled>Select role</option>
           @for (role of roles(); track role.name) {
           <option [value]="role.name">{{ role.name }}</option>
           }
         </select>
-        @if (fieldErrors()['roleId'] || (form.get('roleId')?.touched && form.get('roleId')?.invalid)) {
+        @if (fieldErrors()['roleName'] || (form.get('roleName')?.touched && form.get('roleName')?.invalid)) {
         <span class="field-error" role="alert" data-testid="field-error-role">
-          {{ fieldErrors()['roleId'] || 'Role is required.' }}
+          {{ fieldErrors()['roleName'] || 'Role is required.' }}
         </span>
         }
       </div>

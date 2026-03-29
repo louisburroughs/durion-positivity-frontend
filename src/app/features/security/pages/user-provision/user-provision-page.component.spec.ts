@@ -107,7 +107,7 @@ describe('UserProvisionPageComponent', () => {
   it('T7: calls createUser with correct body including personId on valid submit', () => {
     fixture.detectChanges();
 
-    component.form.setValue({ username: 'test@example.com', roleId: 'MANAGER' });
+    component.form.setValue({ username: 'test@example.com', roleName: 'MANAGER' });
     fixture.detectChanges();
 
     const btn: HTMLButtonElement = fixture.nativeElement.querySelector(
@@ -126,7 +126,7 @@ describe('UserProvisionPageComponent', () => {
     securityServiceStub.createUser.mockReturnValue(of({ userId: 'u-999' }));
     fixture.detectChanges();
 
-    component.form.setValue({ username: 'test@example.com', roleId: 'MANAGER' });
+    component.form.setValue({ username: 'test@example.com', roleName: 'MANAGER' });
     fixture.detectChanges();
 
     const btn: HTMLButtonElement = fixture.nativeElement.querySelector(
@@ -144,7 +144,7 @@ describe('UserProvisionPageComponent', () => {
     securityServiceStub.createUser.mockReturnValue(throwError(() => new Error('network error')));
     fixture.detectChanges();
 
-    component.form.setValue({ username: 'test@example.com', roleId: 'MANAGER' });
+    component.form.setValue({ username: 'test@example.com', roleName: 'MANAGER' });
     fixture.detectChanges();
 
     const btn: HTMLButtonElement = fixture.nativeElement.querySelector(
@@ -162,7 +162,7 @@ describe('UserProvisionPageComponent', () => {
     );
     fixture.detectChanges();
 
-    component.form.setValue({ username: 'test@example.com', roleId: 'MANAGER' });
+    component.form.setValue({ username: 'test@example.com', roleName: 'MANAGER' });
     fixture.detectChanges();
 
     const btn: HTMLButtonElement = fixture.nativeElement.querySelector(

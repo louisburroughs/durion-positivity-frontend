@@ -82,12 +82,12 @@ export class DiscrepancyReportPageComponent {
         next: (data) => {
           const items = Array.isArray(data) ? data : [];
           this.priorRows.set(items);
-          this.rows.set(this.applyFilters(items, flaggedOnly));
+          this.rows.set(this.sortRows(this.applyFilters(items, flaggedOnly)));
           this.loading.set(false);
         },
         error: (err) => {
           // Preserve prior rows on error, re-applying the active filter
-          this.rows.set(this.applyFilters(this.priorRows(), flaggedOnly));
+          this.rows.set(this.sortRows(this.applyFilters(this.priorRows(), flaggedOnly)));
           this.error.set(err?.error?.message ?? 'Failed to load discrepancy report.');
           this.loading.set(false);
         },
@@ -104,7 +104,7 @@ export class DiscrepancyReportPageComponent {
     this.filterForm.controls.flaggedOnly.setValue(!current);
     // Re-filter existing rows without new API call
     const flagged = !current;
-    this.rows.set(this.applyFilters(this.priorRows(), flagged));
+    this.rows.set(this.sortRows(this.applyFilters(this.priorRows(), flagged)));
   }
 
   sortBy(field: SortField): void {

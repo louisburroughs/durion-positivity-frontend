@@ -28,7 +28,7 @@ export class UserProvisionPageComponent implements OnInit {
 
   readonly form = new FormGroup({
     username: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
-    roleId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    roleName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
   ngOnInit(): void {
@@ -63,9 +63,9 @@ export class UserProvisionPageComponent implements OnInit {
     this.error.set(null);
     this.fieldErrors.set({});
 
-    const { username, roleId } = this.form.getRawValue();
+    const { username, roleName } = this.form.getRawValue();
     const personId = this.personId();
-    const body: Record<string, unknown> = { username, roleId };
+    const body: Record<string, unknown> = { username, roleId: roleName };
     if (personId) {
       body['personId'] = personId;
     }

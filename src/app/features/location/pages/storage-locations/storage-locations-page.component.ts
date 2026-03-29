@@ -28,7 +28,8 @@ export class StorageLocationsPageComponent {
   readonly storageLocations = signal<unknown[]>([]);
   readonly storageTypes = signal<unknown[]>([]);
   readonly loading = signal(false);
-  readonly loadError = signal<string | null>(null);
+  readonly storageLocationsError = signal<string | null>(null);
+  readonly storageTypesError = signal<string | null>(null);
   readonly showCreateForm = signal(false);
   readonly creating = signal(false);
   readonly createError = signal<string | null>(null);
@@ -72,7 +73,7 @@ export class StorageLocationsPageComponent {
     }
 
     this.loading.set(true);
-    this.loadError.set(null);
+    this.storageLocationsError.set(null);
 
     this.inventoryService.listStorageLocations(locationId, { pageSize: 50 })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -82,14 +83,14 @@ export class StorageLocationsPageComponent {
           this.loading.set(false);
         },
         error: (err: unknown) => {
-          this.loadError.set(this.errorMessage(err, 'Failed to load storage locations.'));
+          this.storageLocationsError.set(this.errorMessage(err, 'Failed to load storage locations.'));
           this.loading.set(false);
         },
       });
   }
 
   loadStorageTypes(): void {
-    this.loadError.set(null);
+    this.storageTypesError.set(null);
     this.inventoryService.listStorageTypes()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -97,7 +98,7 @@ export class StorageLocationsPageComponent {
           this.storageTypes.set(this.normalizeItems(response));
         },
         error: (err: unknown) => {
-          this.loadError.set(this.errorMessage(err, 'Failed to load storage types.'));
+          this.storageTypesError.set(this.errorMessage(err, 'Failed to load storage types.'));
         },
       });
   }

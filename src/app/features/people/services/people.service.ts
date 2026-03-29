@@ -176,7 +176,7 @@ export class PeopleService {
     idempotencyKey?: string,
   ): Observable<unknown> {
     return this.api.post<unknown>(
-      `/v1/people/timekeeping/time-periods/${timePeriodId}/people/${personId}/approve`,
+      `/v1/people/timekeeping/time-periods/${encodeURIComponent(timePeriodId)}/people/${encodeURIComponent(personId)}/approve`,
       body,
       this.idempotencyOptions(idempotencyKey),
     );
@@ -188,7 +188,7 @@ export class PeopleService {
     body: { requestId?: string; comments?: string; lastUpdatedStamp?: string },
   ): Observable<unknown> {
     return this.api.post<unknown>(
-      `/v1/people/timekeeping/time-periods/${timePeriodId}/people/${personId}/reject`,
+      `/v1/people/timekeeping/time-periods/${encodeURIComponent(timePeriodId)}/people/${encodeURIComponent(personId)}/reject`,
       body,
     );
   }

@@ -27,7 +27,8 @@ export class LocationSyncPageComponent {
   readonly syncLogs = signal<unknown[]>([]);
   readonly loading = signal(false);
   readonly syncLogsLoading = signal(false);
-  readonly loadError = signal<string | null>(null);
+  readonly inventoryLocationsError = signal<string | null>(null);
+  readonly syncLogsError = signal<string | null>(null);
   readonly triggerSuccess = signal(false);
   readonly triggerError = signal<string | null>(null);
   readonly triggering = signal(false);
@@ -42,7 +43,7 @@ export class LocationSyncPageComponent {
 
   loadInventoryLocations(): void {
     this.loading.set(true);
-    this.loadError.set(null);
+    this.inventoryLocationsError.set(null);
 
     this.inventoryService.listInventoryLocations({ pageSize: 50 })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -52,7 +53,7 @@ export class LocationSyncPageComponent {
           this.loading.set(false);
         },
         error: (err: unknown) => {
-          this.loadError.set(this.errorMessage(err, 'Failed to load inventory locations.'));
+          this.inventoryLocationsError.set(this.errorMessage(err, 'Failed to load inventory locations.'));
           this.loading.set(false);
         },
       });
@@ -60,7 +61,7 @@ export class LocationSyncPageComponent {
 
   loadSyncLogs(): void {
     this.syncLogsLoading.set(true);
-    this.loadError.set(null);
+    this.syncLogsError.set(null);
 
     this.inventoryService.listSyncLogs({ pageSize: 20 })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -70,7 +71,7 @@ export class LocationSyncPageComponent {
           this.syncLogsLoading.set(false);
         },
         error: (err: unknown) => {
-          this.loadError.set(this.errorMessage(err, 'Failed to load sync logs.'));
+          this.syncLogsError.set(this.errorMessage(err, 'Failed to load sync logs.'));
           this.syncLogsLoading.set(false);
         },
       });

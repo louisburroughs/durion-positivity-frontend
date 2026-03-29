@@ -21,8 +21,8 @@
     @if (loading()) {
     <p aria-live="polite" data-testid="locations-loading">Loading locations...</p>
     }
-    @if (loadError()) {
-    <p role="alert" aria-live="polite" data-testid="load-error">{{ loadError() }}</p>
+    @if (inventoryLocationsError()) {
+    <p role="alert" aria-live="polite" data-testid="inventory-locations-error">{{ inventoryLocationsError() }}</p>
     }
     <table data-testid="inventory-locations-table">
       <thead>
@@ -53,6 +53,9 @@
 
   <section data-testid="sync-logs-section">
     <h2>Sync Logs</h2>
+    @if (syncLogsError()) {
+    <p role="alert" aria-live="polite" data-testid="sync-logs-error">{{ syncLogsError() }}</p>
+    }
     @if (syncLogsLoading()) {
     <p aria-live="polite" data-testid="sync-logs-loading">Loading sync logs...</p>
     }

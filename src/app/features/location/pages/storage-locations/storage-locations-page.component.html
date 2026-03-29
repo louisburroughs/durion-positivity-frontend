@@ -7,8 +7,11 @@
   @if (loading()) {
   <p aria-live="polite" data-testid="loading">Loading...</p>
   }
-  @if (loadError()) {
-  <p role="alert" aria-live="polite" data-testid="load-error">{{ loadError() }}</p>
+  @if (storageLocationsError()) {
+  <p role="alert" aria-live="polite" data-testid="storage-locations-error">{{ storageLocationsError() }}</p>
+  }
+  @if (storageTypesError()) {
+  <p role="alert" aria-live="polite" data-testid="storage-types-error">{{ storageTypesError() }}</p>
   }
   @if (createSuccess()) {
   <output aria-live="polite" data-testid="create-success">Storage location created.</output>
