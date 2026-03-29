@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute. provideRouter } from '@angular/router';
 import { NEVER, of, throwError } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
 import { SecurityRole } from '../../models/security.models';
 import { SecurityService } from '../../services/security.service';
 import { UserProvisionPageComponent } from './user-provision-page.component';
