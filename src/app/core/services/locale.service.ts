@@ -20,6 +20,15 @@ export class LocaleService {
     this.translate.addLangs([...this.supportedLocales]);
     this.translate.setDefaultLang(this.defaultLocale);
 
+    if (!isPlatformBrowser(this.platformId)) {
+      // During SSR/build-time extraction, TranslateHttpLoader cannot load assets
+      // via relative URL. setDefaultLang() above already establishes 'en-US' as
+      // the fallback for TranslateService, so currentLocale is kept in sync with
+      // it here. translate.use() is intentionally skipped to avoid HTTP requests.
+      this.currentLocale.set(this.defaultLocale);
+      return;
+    }
+
     const initialLocale = this.resolveInitialLocale();
     await this.applyLocale(initialLocale);
   }
