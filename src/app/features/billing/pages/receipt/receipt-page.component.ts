@@ -71,8 +71,8 @@ export class ReceiptPageComponent implements OnInit {
       });
   }
 
-  setDeliveryMethod(method: string): void {
-    this.deliveryMethod.set(method as 'PRINT' | 'EMAIL' | 'NONE');
+  setDeliveryMethod(method: 'PRINT' | 'EMAIL' | 'NONE'): void {
+    this.deliveryMethod.set(method);
     if (method !== 'EMAIL') {
       this.emailAddress.set('');
     }
