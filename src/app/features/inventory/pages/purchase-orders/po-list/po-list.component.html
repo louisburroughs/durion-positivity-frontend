@@ -1,0 +1,136 @@
+<main class="page" aria-labelledby="po-list-title">
+  <header class="page-header">
+    <h1 id="po-list-title" class="page-title">{{ 'INVENTORY.PURCHASE_ORDERS.LIST.TITLE' | translate }}</h1>
+    <button class="btn-primary" type="button" (click)="createOrder()">
+      <span class="material-symbols-outlined" aria-hidden="true">add</span>
+      {{ 'INVENTORY.PURCHASE_ORDERS.LIST.ACTION.NEW' | translate }}
+    </button>
+  </header>
+
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true" aria-live="polite">
+    <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="card state-card" aria-live="polite">
+    <span class="material-symbols-outlined" aria-hidden="true">receipt_long</span>
+    <p>{{ 'INVENTORY.PURCHASE_ORDERS.LIST.STATE.EMPTY' | translate }}</p>
+    <button class="btn-primary" type="button" (click)="createOrder()">
+      {{ 'INVENTORY.PURCHASE_ORDERS.LIST.ACTION.NEW' | translate }}
+    </button>
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="card state-card" role="alert">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ errorKey() | translate }}</p>
+    <button class="btn-secondary" type="button" (click)="load()">{{ 'COMMON.RETRY' | translate }}</button>
+  </section>
+  }
+
+  @if (state() === 'ready') {
+  <section class="card table-card">
+    <div class="table-wrap">
+      <table class="data-table" role="table" aria-label="{{ 'INVENTORY.PURCHASE_ORDERS.LIST.TABLE.ARIA' | translate }}">
+        <caption class="sr-only">{{ 'INVENTORY.PURCHASE_ORDERS.LIST.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr role="row">
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.LIST.TABLE.HEADER.PO_NUMBER' | translate
+              }}</th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.LIST.TABLE.HEADER.SUPPLIER' | translate }}
+            </th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.LIST.TABLE.HEADER.STATUS' | translate }}
+            </th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.LIST.TABLE.HEADER.LINE_COUNT' | translate
+              }}</th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.LIST.TABLE.HEADER.OPEN_BALANCE' |
+              translate }}</th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.LIST.TABLE.HEADER.SCHEDULED_DELIVERY' |
+              translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (po of orders(); track po.poId) {
+          <tr role="row" class="table-row-action" tabindex="0" (click)="selectOrder(po.poId)"
+            (keydown.enter)="selectOrder(po.poId)"
+            [attr.aria-label]="('INVENTORY.PURCHASE_ORDERS.LIST.ROW.ARIA' | translate) + ': ' + po.poNumber">
+            <td>{{ po.poNumber }}</td>
+            <td>{{ po.supplierName ?? po.supplierId }}</td>
+            <td class="badge-cell">
+              @switch (po.status) {
+              @case ('DRAFT') {
+              <span class="badge badge--neutral">
+                <span class="material-symbols-outlined" aria-hidden="true">draft</span>
+                {{ 'STATUS.DRAFT' | translate }}
+              </span>
+              }
+              @case ('PENDING_APPROVAL') {
+              <span class="badge badge--warning">
+                <span class="material-symbols-outlined" aria-hidden="true">pending</span>
+                {{ 'STATUS.PENDING_APPROVAL' | translate }}
+              </span>
+              }
+              @case ('APPROVED') {
+              <span class="badge badge--info">
+                <span class="material-symbols-outlined" aria-hidden="true">verified</span>
+                {{ 'STATUS.APPROVED' | translate }}
+              </span>
+              }
+              @case ('PARTIALLY_RECEIVED') {
+              <span class="badge badge--info">
+                <span class="material-symbols-outlined" aria-hidden="true">inbox</span>
+                {{ 'STATUS.PARTIALLY_RECEIVED' | translate }}
+              </span>
+              }
+              @case ('FULLY_RECEIVED') {
+              <span class="badge badge--success">
+                <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+                {{ 'STATUS.FULLY_RECEIVED' | translate }}
+              </span>
+              }
+              @case ('CLOSED') {
+              <span class="badge badge--neutral">
+                <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+                {{ 'STATUS.CLOSED' | translate }}
+              </span>
+              }
+              @case ('CANCELLED') {
+              <span class="badge badge--neutral">
+                <span class="material-symbols-outlined" aria-hidden="true">cancel</span>
+                {{ 'STATUS.CANCELLED' | translate }}
+              </span>
+              }
+              @default {
+              <span class="badge badge--neutral">
+                <span class="material-symbols-outlined" aria-hidden="true">help_outline</span>
+                {{ po.status }}
+              </span>
+              }
+              }
+            </td>
+            <td>{{ po.lineCount }}</td>
+            <td>{{ po.openBalance }}</td>
+            <td>{{ po.scheduledDeliveryDate }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  @if (nextPageToken()) {
+  <div class="load-more-row">
+    <button class="btn-secondary" type="button" (click)="loadMore()">
+      {{ 'COMMON.LOAD_MORE' | translate }}
+    </button>
+  </div>
+  }
+  }
+</main>

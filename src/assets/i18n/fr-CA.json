@@ -239,6 +239,64 @@
       "ERROR": {
         "LOAD": "Impossible de charger les entrées d'audit."
       }
+    },
+    "AUDIT_LOGS": {
+      "TITLE": "Journaux d'audit",
+      "FILTER": {
+        "FROM_DATE": "Date de début",
+        "TO_DATE": "Date de fin",
+        "ARIA": "Filtres de recherche d'audit",
+        "ACTOR_ID": "ID de l'acteur",
+        "ACTOR_ID_PLACEHOLDER": "Utilisateur ou système",
+        "WORKORDER_ID": "ID d'ordre de travail",
+        "WORKORDER_ID_PLACEHOLDER": "Filtrer par ordre de travail"
+      },
+      "EMPTY": "Aucun événement d'audit trouvé.",
+      "EXPORT": {
+        "STATUS_PREFIX": "État de l'exportation",
+        "DOWNLOAD": "Télécharger"
+      },
+      "LOAD_MORE": "Charger plus",
+      "ERROR": {
+        "LOAD": "Impossible de charger les événements d'audit.",
+        "LOAD_MORE": "Impossible de charger d'autres événements d'audit.",
+        "EXPORT": "Impossible de demander l'exportation d'audit."
+      },
+      "ACTION": {
+        "EXPORT_CSV": "Exporter en CSV"
+      },
+      "STATE": {
+        "IDLE": "Appliquez des filtres pour voir les événements d'audit.",
+        "EMPTY": "Aucun événement d'audit trouvé."
+      },
+      "TABLE": {
+        "ARIA": "Journal d'audit",
+        "CAPTION": "Événements selon les filtres actuels",
+        "HEADER": {
+          "EVENT_ID": "ID d'événement",
+          "EVENT_TYPE": "Type d'événement",
+          "AGGREGATE_ID": "ID agrégé",
+          "ACTOR": "Acteur",
+          "TIMESTAMP": "Horodatage"
+        },
+        "ROW": {
+          "ARIA": "Événement d'audit"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Détail de l'événement",
+        "PANEL": {
+          "ARIA": "Détails de l'événement d'audit"
+        },
+        "FIELD": {
+          "EVENT_ID": "ID d'événement",
+          "EVENT_TYPE": "Type d'événement",
+          "AGGREGATE_ID": "ID agrégé",
+          "ACTOR": "Acteur",
+          "TIMESTAMP": "Horodatage",
+          "LOCATION": "Emplacement"
+        }
+      }
     }
   },
   "LOCATION": {
@@ -1025,5 +1083,493 @@
       "CREDIT_TOTAL": "Total des crédits",
       "NET": "Total net"
     }
+  },
+  "INVENTORY": {
+    "AVAILABILITY": {
+      "TITLE": "Disponibilité des stocks",
+      "FILTER": {
+        "SKU_LABEL": "Référence produit",
+        "LOCATION_LABEL": "Emplacement",
+        "ARIA": "Filtres de recherche de disponibilité",
+        "SKU": "UGS",
+        "SKU_PLACEHOLDER": "p. ex. UGS-001",
+        "LOCATION": "Emplacement",
+        "LOCATION_PLACEHOLDER": "ID d'emplacement"
+      },
+      "STATE": {
+        "LOADING": "Chargement de la disponibilité...",
+        "EMPTY": "Aucune donnée de disponibilité trouvée.",
+        "IDLE": "Entrez une UGS pour rechercher la disponibilité des stocks."
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger la disponibilité."
+      },
+      "TABLE": {
+        "ARIA": "Résultats de disponibilité des stocks",
+        "CAPTION": "Disponibilité par UGS et emplacement",
+        "HEADER": {
+          "SKU": "UGS",
+          "LOCATION": "Emplacement",
+          "STORAGE_LOCATION": "Zone de stockage",
+          "ON_HAND": "En main",
+          "ALLOCATED": "Alloué",
+          "ATP": "Disponible à la promesse",
+          "UOM": "UOM"
+        }
+      }
+    },
+    "LEDGER": {
+      "LIST": {
+        "TITLE": "Grand livre des stocks",
+        "EMPTY": "Aucune entrée de grand livre trouvée.",
+        "ERROR": {
+          "LOAD": "Impossible de charger les entrées du grand livre."
+        },
+        "FILTER": {
+          "ARIA": "Filtres de recherche du grand livre",
+          "SKU": "UGS",
+          "SKU_PLACEHOLDER": "p. ex. UGS-001",
+          "LOCATION": "Emplacement",
+          "LOCATION_PLACEHOLDER": "ID d'emplacement",
+          "DATE_FROM": "Date de début",
+          "DATE_TO": "Date de fin"
+        },
+        "STATE": {
+          "IDLE": "Appliquez des filtres pour chercher dans le grand livre."
+        },
+        "TABLE": {
+          "ARIA": "Entrées du grand livre d'inventaire",
+          "CAPTION": "Historique des mouvements",
+          "HEADER": {
+            "TIMESTAMP": "Horodatage",
+            "MOVEMENT_TYPE": "Type",
+            "SKU": "UGS",
+            "QTY_CHANGE": "Variation Qté",
+            "UOM": "UOM",
+            "FROM_LOCATION": "De",
+            "TO_LOCATION": "Vers"
+          }
+        },
+        "ROW": {
+          "ARIA": "Entrée du grand livre"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Détail de l'entrée du grand livre",
+        "ERROR": {
+          "LOAD": "Impossible de charger l'entrée du grand livre.",
+          "MISSING_ID": "L'identifiant de l'entrée du grand livre est manquant."
+        },
+        "STATE": {
+          "EMPTY": "Entrée introuvable."
+        },
+        "FIELD": {
+          "ENTRY_ID": "ID d'entrée",
+          "TIMESTAMP": "Horodatage",
+          "MOVEMENT_TYPE": "Type de mouvement",
+          "SKU": "UGS",
+          "QTY_CHANGE": "Variation de quantité",
+          "UOM": "Unité de mesure",
+          "FROM_LOCATION": "De l'emplacement",
+          "FROM_STORAGE_LOCATION": "De la zone de stockage",
+          "TO_LOCATION": "Vers l'emplacement",
+          "TO_STORAGE_LOCATION": "Vers la zone de stockage",
+          "ACTOR": "Acteur",
+          "SOURCE_TRANSACTION": "Transaction source",
+          "REASON_CODE": "Code de raison",
+          "WORKORDER_ID": "ID d'ordre de travail",
+          "WORKORDER_LINE_ID": "ID de ligne d'ordre"
+        }
+      },
+      "MOVEMENT_TYPE": {
+        "RECEIPT": "Réception",
+        "ISSUE": "Émission",
+        "CONSUME": "Consommation",
+        "RETURN": "Retour",
+        "ADJUSTMENT_INCREASE": "Ajust. (+)",
+        "ADJUSTMENT_DECREASE": "Ajust. (−)"
+      }
+    },
+    "RECEIVING": {
+      "TITLE": "Réception en zone de préparation",
+      "ERROR": {
+        "LOAD": "Impossible de charger le document de réception.",
+        "CONFIRM": "Impossible de confirmer la réception."
+      },
+      "RECEIVE_INTO_STAGING": {
+        "TITLE": "Réceptionner en zone de préparation"
+      },
+      "STATE": {
+        "IDLE": "Entrez un ID de document pour commencer."
+      },
+      "DOCUMENT": {
+        "TITLE": "Document source",
+        "FIELD": {
+          "DOCUMENT_ID": "ID de document",
+          "DOCUMENT_TYPE": "Type",
+          "STATUS": "Statut",
+          "LOCATION": "Emplacement de réception",
+          "STAGING_LOCATION": "Zone de préparation",
+          "STAGING_BARCODE": "Code-barres"
+        }
+      },
+      "LINES": {
+        "TITLE": "Lignes",
+        "TABLE": {
+          "ARIA": "Lignes de réception",
+          "HEADER": {
+            "SKU": "UGS",
+            "PRODUCT_NAME": "Produit",
+            "EXPECTED_QTY": "Attendu",
+            "ACTUAL_QTY": "Reçu",
+            "UOM": "UOM",
+            "STATE": "Statut"
+          }
+        }
+      },
+      "LINE": {
+        "ACTUAL_QTY_LABEL": "Quantité réelle pour"
+      },
+      "ACTION": {
+        "CONFIRM": "Confirmer la réception",
+        "RECEIVE_ANOTHER": "Réceptionner un autre"
+      },
+      "RESULT": {
+        "TITLE": "Réception confirmée",
+        "FIELD": {
+          "RECEIVED_BY": "Reçu par",
+          "CORRELATION_ID": "ID de corrélation",
+          "LEDGER_ENTRIES": "Entrées du grand livre créées"
+        }
+      }
+    },
+    "PUTAWAY": {
+      "LIST": {
+        "TITLE": "Tâches de rangement",
+        "EMPTY": "Aucune tâche de rangement trouvée.",
+        "ERROR": {
+          "LOAD": "Impossible de charger les tâches de rangement."
+        }
+      },
+      "EXECUTE": {
+        "TITLE": "Exécuter le rangement",
+        "ERROR": {
+          "LOAD": "Impossible de charger la tâche de rangement.",
+          "COMPLETE": "Impossible de terminer la tâche de rangement."
+        },
+        "STATE": {
+          "EMPTY": "Tâche introuvable."
+        },
+        "FORM": {
+          "TITLE": "Détails de la tâche"
+        },
+        "FIELD": {
+          "SKU": "UGS",
+          "QUANTITY": "Quantité",
+          "STAGING_LOCATION": "Zone de préparation"
+        },
+        "TARGET_LOCATION": "Zone de stockage cible",
+        "TARGET_LOCATION_PLACEHOLDER": "Scanner ou saisir le code-barres",
+        "ACTION": {
+          "COMPLETE": "Compléter le rangement"
+        }
+      },
+      "TASKS": {
+        "TITLE": "Tâches de rangement",
+        "STATE": {
+          "EMPTY": "Aucune tâche de rangement."
+        },
+        "TABLE": {
+          "ARIA": "Liste des tâches de rangement",
+          "CAPTION": "Tâches en attente de rangement",
+          "HEADER": {
+            "TASK_ID": "ID de tâche",
+            "SKU": "UGS",
+            "STAGING_LOCATION": "Préparation",
+            "TARGET_LOCATION": "Destination",
+            "QTY_UOM": "Qté / UOM",
+            "STATUS": "Statut"
+          }
+        },
+        "ROW": {
+          "ARIA": "Tâche de rangement"
+        }
+      }
+    },
+    "REPLENISHMENT": {
+      "LIST": {
+        "TITLE": "Tâches de réapprovisionnement",
+        "EMPTY": "Aucune tâche de réapprovisionnement trouvée.",
+        "ERROR": {
+          "LOAD": "Impossible de charger les tâches de réapprovisionnement."
+        }
+      },
+      "TASKS": {
+        "TITLE": "Tâches de réapprovisionnement",
+        "STATE": {
+          "EMPTY": "Aucune tâche de réapprovisionnement."
+        },
+        "TABLE": {
+          "ARIA": "Liste des tâches de réapprovisionnement",
+          "CAPTION": "Tâches en attente",
+          "HEADER": {
+            "TASK_ID": "ID de tâche",
+            "SKU": "UGS",
+            "FROM_LOCATION": "De",
+            "TO_LOCATION": "Vers",
+            "REQUESTED_QTY_UOM": "Qté / UOM",
+            "STATUS": "Statut"
+          }
+        }
+      }
+    },
+    "COUNTS": {
+      "EXECUTE": {
+        "TITLE": "Exécuter l'inventaire cyclique",
+        "ERROR": {
+          "LOAD": "Impossible de charger la tâche d'inventaire cyclique.",
+          "SUBMIT": "Impossible de soumettre l'inventaire cyclique."
+        },
+        "STATE": {
+          "EMPTY": "Tâche de comptage introuvable."
+        },
+        "FIELD": {
+          "SKU": "UGS",
+          "UOM": "UOM",
+          "LOCATION": "Emplacement",
+          "STORAGE_LOCATION": "Zone de stockage",
+          "STATUS": "Statut"
+        },
+        "FORM": {
+          "TITLE": "Saisir le comptage"
+        },
+        "COUNTED_QTY": "Quantité comptée",
+        "COUNTED_QTY_HINT": "Entrez la quantité comptée physiquement. La quantité attendue est masquée jusqu'à la soumission.",
+        "ACTION": {
+          "SUBMIT": "Soumettre le comptage"
+        },
+        "RESULT": {
+          "TITLE": "Comptage soumis",
+          "FIELD": {
+            "STATUS": "Statut"
+          },
+          "STATUS": {
+            "ACCEPTED": "Accepté",
+            "PENDING_APPROVAL": "En attente d'approbation"
+          },
+          "COUNT_HISTORY": "Historique des comptages",
+          "HEADER": {
+            "SEQ": "#",
+            "COUNTED_QTY": "Qté comptée",
+            "VARIANCE": "Écart",
+            "COUNTED_BY": "Compté par",
+            "TIMESTAMP": "Horodatage"
+          },
+          "ADJUSTMENT_CREATED": "Ajustement créé :"
+        }
+      },
+      "APPROVALS": {
+        "TITLE": "Approbations d'ajustement",
+        "EMPTY": "Aucun ajustement en attente trouvé.",
+        "ERROR": {
+          "LOAD": "Impossible de charger les ajustements.",
+          "APPROVE": "Impossible d'approuver l'ajustement.",
+          "REJECT": "Impossible de rejeter l'ajustement."
+        }
+      },
+      "ADJUSTMENT": {
+        "APPROVALS": {
+          "TITLE": "Approbations d'ajustements",
+          "STATE": {
+            "EMPTY": "Aucun ajustement en attente d'approbation."
+          },
+          "TABLE": {
+            "ARIA": "Ajustements en attente d'approbation",
+            "CAPTION": "Ajustements d'inventaire en attente de révision",
+            "HEADER": {
+              "ADJ_ID": "ID d'ajustement",
+              "SKU": "UGS",
+              "LOCATION": "Emplacement",
+              "VARIANCE_QTY": "Écart Qté",
+              "VARIANCE_VALUE": "Écart Valeur",
+              "REQUIRED_TIER": "Niveau requis",
+              "STATUS": "Statut",
+              "ACTIONS": "Actions"
+            }
+          }
+        },
+        "DETAIL": {
+          "TITLE": "Détail de l'ajustement",
+          "FIELD": {
+            "ADJ_ID": "ID d'ajustement",
+            "SKU": "UGS",
+            "LOCATION": "Emplacement",
+            "STORAGE_LOCATION": "Zone de stockage",
+            "EXPECTED_QTY": "Qté attendue",
+            "COUNTED_QTY": "Qté comptée",
+            "VARIANCE_QTY": "Écart qté",
+            "VARIANCE_VALUE": "Écart valeur",
+            "REQUIRED_TIER": "Niveau requis",
+            "STATUS": "Statut",
+            "REJECTION_REASON": "Motif de rejet"
+          }
+        },
+        "TIER": {
+          "ONE": "Niveau 1",
+          "TWO": "Niveau 2"
+        },
+        "ACTION": {
+          "REVIEW": "Réviser",
+          "APPROVE": "Approuver",
+          "REJECT": "Rejeter"
+        },
+        "APPROVAL": {
+          "ACTIONS": {
+            "TITLE": "Actions"
+          },
+          "REJECTION_REASON": "Motif de rejet",
+          "REJECTION_REASON_PLACEHOLDER": "Expliquez le motif du rejet…"
+        }
+      }
+    },
+    "PURCHASE_ORDERS": {
+      "LIST": {
+        "TITLE": "Bons de commande",
+        "EMPTY": "Aucun bon de commande trouvé.",
+        "ERROR": {
+          "LOAD": "Impossible de charger les bons de commande."
+        },
+        "STATE": {
+          "EMPTY": "Aucun bon de commande trouvé."
+        },
+        "TABLE": {
+          "ARIA": "Liste des bons de commande",
+          "CAPTION": "Bons de commande",
+          "HEADER": {
+            "PO_NUMBER": "N° de BC",
+            "SUPPLIER": "Fournisseur",
+            "STATUS": "Statut",
+            "LINE_COUNT": "Lignes",
+            "OPEN_BALANCE": "Solde ouvert",
+            "SCHEDULED_DELIVERY": "Livraison prévue"
+          }
+        },
+        "ROW": {
+          "ARIA": "Bon de commande"
+        },
+        "ACTION": {
+          "NEW": "Nouveau bon de commande"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Détail du bon de commande",
+        "ERROR": {
+          "LOAD": "Impossible de charger le bon de commande.",
+          "CANCEL": "Impossible d'annuler le bon de commande."
+        },
+        "STATE": {
+          "EMPTY": "Bon de commande introuvable."
+        },
+        "FIELD": {
+          "SUPPLIER": "Fournisseur",
+          "STATUS": "Statut",
+          "SCHEDULED_DELIVERY": "Livraison prévue",
+          "OPEN_BALANCE": "Solde ouvert",
+          "NOTES": "Notes"
+        },
+        "LINES": {
+          "TITLE": "Lignes de commande",
+          "TABLE": {
+            "ARIA": "Lignes du bon de commande",
+            "HEADER": {
+              "SKU": "UGS",
+              "PRODUCT_NAME": "Produit",
+              "ORDERED_QTY": "Commandé",
+              "RECEIVED_QTY": "Reçu",
+              "UNIT_PRICE": "Prix unitaire",
+              "LINE_TOTAL": "Total de la ligne",
+              "STATUS": "Statut"
+            }
+          },
+          "RECEIVED_PROGRESS": "Progression de la réception"
+        }
+      },
+      "FORM": {
+        "ERROR": {
+          "LOAD": "Impossible de charger le bon de commande pour modification.",
+          "CREATE": "Impossible de créer le bon de commande.",
+          "REVISE": "Impossible de réviser le bon de commande."
+        },
+        "TITLE": {
+          "NEW": "Nouveau bon de commande",
+          "EDIT": "Modifier le bon de commande"
+        },
+        "HEADER": {
+          "TITLE": "Détails de la commande"
+        },
+        "FIELD": {
+          "SUPPLIER": "Fournisseur",
+          "SUPPLIER_PLACEHOLDER": "Entrez le nom du fournisseur",
+          "DELIVERY_DATE": "Date de livraison prévue",
+          "NOTES": "Notes",
+          "NOTES_PLACEHOLDER": "Notes optionnelles…"
+        },
+        "LINES": {
+          "TITLE": "Lignes de commande",
+          "TABLE": {
+            "ARIA": "Lignes de commande",
+            "HEADER": {
+              "SKU": "UGS",
+              "QTY": "Qté",
+              "UNIT_PRICE": "Prix unitaire"
+            }
+          },
+          "LINE_SKU_LABEL": "UGS pour la ligne",
+          "LINE_QTY_LABEL": "Quantité pour la ligne",
+          "LINE_PRICE_LABEL": "Prix unitaire pour la ligne",
+          "SKU_PLACEHOLDER": "p. ex. UGS-001",
+          "ACTION": {
+            "ADD": "Ajouter une ligne",
+            "REMOVE_ARIA": "Supprimer la ligne"
+          },
+          "EMPTY_HINT": "Ajoutez au moins une ligne pour passer la commande."
+        },
+        "ACTION": {
+          "SUBMIT": "Soumettre la commande"
+        }
+      }
+    }
+  },
+  "COMMON": {
+    "SEARCH": "Rechercher",
+    "LOADING": "Chargement…",
+    "RETRY": "Réessayer",
+    "BACK": "Retour",
+    "LOAD_MORE": "Charger plus",
+    "ACTIONS": "Actions",
+    "EDIT": "Modifier",
+    "CANCEL": "Annuler",
+    "REFRESH": "Actualiser",
+    "CLOSE": "Fermer"
+  },
+  "STATUS": {
+    "OPEN": "Ouvert",
+    "CLOSED": "Fermé",
+    "PENDING": "En attente",
+    "PENDING_APPROVAL": "En attente d'approbation",
+    "APPROVED": "Approuvé",
+    "REJECTED": "Rejeté",
+    "IN_PROGRESS": "En cours",
+    "COMPLETED": "Terminé",
+    "COMPLETE": "Complet",
+    "SCHEDULED": "Planifié",
+    "DRAFT": "Brouillon",
+    "CANCELLED": "Annulé",
+    "PARTIALLY_RECEIVED": "Partiellement reçu",
+    "FULLY_RECEIVED": "Entièrement reçu",
+    "RECEIVED": "Reçu",
+    "OVER_RECEIVED": "Sur-réception",
+    "NOT_RECEIVABLE": "Non réceptionnable",
+    "REQUIRES_LOCATION_SELECTION": "En attente d'emplacement"
   }
 }

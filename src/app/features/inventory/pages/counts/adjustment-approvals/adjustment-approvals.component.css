@@ -1,0 +1,95 @@
+:host {
+  display: block;
+}
+
+.back-row {
+  margin-bottom: 1rem;
+}
+
+.table-card {
+  overflow-x: auto;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.badge-cell {
+  white-space: nowrap;
+}
+
+.load-more-row {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0 1rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+  margin-bottom: 1rem;
+}
+
+.detail-grid dt {
+  font-weight: 600;
+  color: var(--brand-secondary, var(--currentTextColor));
+  font-size: 0.85rem;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.detail-grid dd {
+  margin: 0;
+}
+
+.approval-actions {
+  margin-top: 0;
+}
+
+.action-bar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.reject-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 32rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.field-label {
+  color: var(--currentTextColor);
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.textarea-field {
+  resize: vertical;
+}
+
+.variance-positive {
+  color: var(--functional-success);
+  font-weight: 600;
+}
+
+.variance-negative {
+  color: var(--functional-error-red);
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

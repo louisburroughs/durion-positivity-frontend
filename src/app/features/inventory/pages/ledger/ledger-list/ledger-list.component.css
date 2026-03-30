@@ -1,0 +1,51 @@
+:host {
+  display: block;
+}
+
+.filter-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 10rem;
+}
+
+.field-label {
+  color: var(--currentTextColor);
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.table-card {
+  overflow-x: auto;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.badge-cell {
+  white-space: nowrap;
+}
+
+.load-more-row {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0 1rem;
+}
+
+@media (max-width: 768px) {
+  .filter-row {
+    flex-direction: column;
+  }
+
+  .field-group {
+    min-width: 100%;
+  }
+}

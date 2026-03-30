@@ -1,0 +1,129 @@
+<main class="page" aria-labelledby="ledger-detail-title">
+  <div class="back-row">
+    <button class="btn-secondary" type="button" (click)="goBack()">
+      <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+      {{ 'COMMON.BACK' | translate }}
+    </button>
+  </div>
+
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true" aria-live="polite">
+    <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="card state-card" role="alert">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ errorKey() | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="card state-card">
+    <p>{{ 'INVENTORY.LEDGER.DETAIL.STATE.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'ready' && entry()) {
+  <section class="card">
+    <h2 id="ledger-detail-title">{{ 'INVENTORY.LEDGER.DETAIL.TITLE' | translate }}</h2>
+    <dl class="detail-grid">
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.ENTRY_ID' | translate }}</dt>
+      <dd>{{ entry()!.ledgerEntryId }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.TIMESTAMP' | translate }}</dt>
+      <dd>{{ entry()!.timestamp }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.MOVEMENT_TYPE' | translate }}</dt>
+      <dd>
+        @switch (entry()!.movementType) {
+        @case ('RECEIPT') {
+        <span class="badge badge--success">
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_downward</span>
+          {{ 'INVENTORY.LEDGER.MOVEMENT_TYPE.RECEIPT' | translate }}
+        </span>
+        }
+        @case ('ISSUE') {
+        <span class="badge badge--info">
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span>
+          {{ 'INVENTORY.LEDGER.MOVEMENT_TYPE.ISSUE' | translate }}
+        </span>
+        }
+        @case ('CONSUME') {
+        <span class="badge badge--info">
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span>
+          {{ 'INVENTORY.LEDGER.MOVEMENT_TYPE.CONSUME' | translate }}
+        </span>
+        }
+        @case ('RETURN') {
+        <span class="badge badge--neutral">
+          <span class="material-symbols-outlined" aria-hidden="true">undo</span>
+          {{ 'INVENTORY.LEDGER.MOVEMENT_TYPE.RETURN' | translate }}
+        </span>
+        }
+        @case ('ADJUSTMENT_INCREASE') {
+        <span class="badge badge--success">
+          <span class="material-symbols-outlined" aria-hidden="true">add</span>
+          {{ 'INVENTORY.LEDGER.MOVEMENT_TYPE.ADJUSTMENT_INCREASE' | translate }}
+        </span>
+        }
+        @case ('ADJUSTMENT_DECREASE') {
+        <span class="badge badge--warning">
+          <span class="material-symbols-outlined" aria-hidden="true">remove</span>
+          {{ 'INVENTORY.LEDGER.MOVEMENT_TYPE.ADJUSTMENT_DECREASE' | translate }}
+        </span>
+        }
+        @default {
+        <span class="badge badge--neutral">
+          <span class="material-symbols-outlined" aria-hidden="true">swap_horiz</span>
+          {{ entry()!.movementType }}
+        </span>
+        }
+        }
+      </dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.SKU' | translate }}</dt>
+      <dd>{{ entry()!.productSku }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.QTY_CHANGE' | translate }}</dt>
+      <dd>{{ entry()!.quantityChange }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.UOM' | translate }}</dt>
+      <dd>{{ entry()!.uom }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.FROM_LOCATION' | translate }}</dt>
+      <dd>{{ entry()!.fromLocationId ?? '—' }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.FROM_STORAGE_LOCATION' | translate }}</dt>
+      <dd>{{ entry()!.fromStorageLocationId ?? '—' }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.TO_LOCATION' | translate }}</dt>
+      <dd>{{ entry()!.toLocationId ?? '—' }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.TO_STORAGE_LOCATION' | translate }}</dt>
+      <dd>{{ entry()!.toStorageLocationId ?? '—' }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.ACTOR' | translate }}</dt>
+      <dd>{{ entry()!.actorId ?? '—' }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.REASON_CODE' | translate }}</dt>
+      <dd>{{ entry()!.reasonCode ?? '—' }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.SOURCE_TRANSACTION' | translate }}</dt>
+      <dd>{{ entry()!.sourceTransactionId ?? '—' }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.WORKORDER_ID' | translate }}</dt>
+      <dd>{{ entry()!.workorderId ?? '—' }}</dd>
+
+      <dt>{{ 'INVENTORY.LEDGER.DETAIL.FIELD.WORKORDER_LINE_ID' | translate }}</dt>
+      <dd>{{ entry()!.workorderLineId ?? '—' }}</dd>
+    </dl>
+  </section>
+  }
+</main>

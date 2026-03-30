@@ -81,7 +81,7 @@ describe('ProductDetailComponent', () => {
     expect(component.lifecycle()).toEqual(mockLifecycle);
   });
 
-  it('sets state to "error" when productId param is missing', () => {
+  it('sets state to "error" when productId param is missing', async () => {
     TestBed.resetTestingModule();
 
     await TestBed.configureTestingModule({

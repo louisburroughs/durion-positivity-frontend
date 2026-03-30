@@ -1,0 +1,41 @@
+:host {
+  display: block;
+}
+
+.filter-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 12rem;
+}
+
+.field-label {
+  color: var(--currentTextColor);
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.table-card {
+  overflow-x: auto;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .filter-row {
+    flex-direction: column;
+  }
+
+  .field-group {
+    min-width: 100%;
+  }
+}

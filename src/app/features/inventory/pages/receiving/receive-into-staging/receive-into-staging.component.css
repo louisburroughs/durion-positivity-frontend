@@ -1,0 +1,52 @@
+:host {
+  display: block;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+  margin-bottom: 1rem;
+}
+
+.detail-grid dt {
+  font-weight: 600;
+  color: var(--brand-secondary, var(--currentTextColor));
+  font-size: 0.85rem;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.detail-grid dd {
+  margin: 0;
+  color: var(--currentTextColor);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.qty-input {
+  width: 6rem;
+}
+
+.action-bar {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.result-icon {
+  font-size: 3rem;
+  color: var(--functional-success);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
