@@ -81,7 +81,7 @@ describe('CrmService', () => {
   });
 
   describe('getBillingRules()', () => {
-    it('calls GET /v1/crm/parties/{partyId}/billing-rules', () => {
+    it('calls GET /v1/crm/accounts/parties/{partyId}/billing-rules', () => {
       const rules: BillingRules = {
         requirePo: true,
         paymentTerms: 'NET_30',
@@ -97,13 +97,13 @@ describe('CrmService', () => {
 
       expect(apiBaseServiceStub.get).toHaveBeenCalledOnce();
       const [path] = apiBaseServiceStub.get.mock.calls[0];
-      expect(path).toBe('/v1/crm/parties/party-321/billing-rules');
+      expect(path).toBe('/v1/crm/accounts/parties/party-321/billing-rules');
       expect(result).toEqual(rules);
     });
   });
 
   describe('upsertBillingRules()', () => {
-    it('calls PUT /v1/crm/parties/{partyId}/billing-rules and omits readonly fields', () => {
+    it('calls PUT /v1/crm/accounts/parties/{partyId}/billing-rules and omits readonly fields', () => {
       const requestRules: Partial<BillingRules> = {
         requirePo: false,
         paymentTerms: 'COD',
@@ -129,7 +129,7 @@ describe('CrmService', () => {
 
       expect(apiBaseServiceStub.put).toHaveBeenCalledOnce();
       const [path, payload] = apiBaseServiceStub.put.mock.calls[0];
-      expect(path).toBe('/v1/crm/parties/party-321/billing-rules');
+      expect(path).toBe('/v1/crm/accounts/parties/party-321/billing-rules');
       expect(payload).toEqual({
         requirePo: false,
         paymentTerms: 'COD',

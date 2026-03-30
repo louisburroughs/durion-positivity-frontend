@@ -149,11 +149,11 @@ export class CrmService {
   }
 
   getBillingRules(partyId: string): Observable<BillingRules> {
-    return this.api.get<BillingRules>(`/v1/crm/parties/${partyId}/billing-rules`);
+    return this.api.get<BillingRules>(`/v1/crm/accounts/parties/${partyId}/billing-rules`);
   }
 
   upsertBillingRules(partyId: string, rules: Partial<BillingRules>): Observable<BillingRules> {
     const { createdAt, updatedAt, ...payload } = rules;
-    return this.api.put<BillingRules>(`/v1/crm/parties/${partyId}/billing-rules`, payload);
+    return this.api.put<BillingRules>(`/v1/crm/accounts/parties/${partyId}/billing-rules`, payload);
   }
 }

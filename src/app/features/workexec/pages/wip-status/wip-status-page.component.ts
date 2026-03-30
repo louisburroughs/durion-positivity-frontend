@@ -25,8 +25,6 @@ export class WipStatusPageComponent {
   readonly wipItems = signal<WorkorderWipView[]>([]);
   readonly selectedWorkorderId = signal<string | null>(null);
 
-  private refreshSub?: Subscription;
-
   constructor() {
     effect(
       onCleanup => {
@@ -48,16 +46,13 @@ export class WipStatusPageComponent {
       },
       { allowSignalWrites: true },
     );
-
-    this.destroyRef.onDestroy(() => this.refreshSub?.unsubscribe());
   }
 
   refresh(): void {
-    this.refreshSub?.unsubscribe();
     this.state.set('loading');
     this.errorKey.set(null);
 
-    this.refreshSub = this.workexec
+    this.workexec
       .listActiveWorkorders()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
