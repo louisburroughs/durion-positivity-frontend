@@ -71,13 +71,13 @@
     }
 
     <div class="billing-rules__actions">
-      <button class="billing-rules__save" type="button" [disabled]="panelPending()" (click)="saveBillingRules({
+      <button class="billing-rules__save" type="button" [disabled]="isSaving()" (click)="saveBillingRules({
             requirePo: requirePoInput.checked,
             paymentTerms: paymentTermsInput.value,
             creditLimit: creditLimitInput.value === '' ? undefined : +creditLimitInput.value,
             notes: notesInput.value || undefined
           })">
-        @if (panelPending()) {
+        @if (isSaving()) {
         {{ 'CRM.BILLING_RULES.SAVING' | translate }}
         } @else {
         {{ 'CRM.BILLING_RULES.ACTION.SAVE' | translate }}

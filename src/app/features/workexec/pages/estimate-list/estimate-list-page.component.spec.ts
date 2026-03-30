@@ -84,4 +84,14 @@ describe('EstimateListPageComponent', () => {
     const errorKeyOrder = errorKeySetSpy.mock.invocationCallOrder.at(-1) ?? 0;
     expect(stateOrder).toBeLessThan(errorKeyOrder);
   });
+
+  it('stays in idle state when no customerId or vehicleId is provided', () => {
+    customerParamMap$.next(convertToParamMap({}));
+
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('idle');
+    expect(serviceMock.listEstimatesForCustomer).not.toHaveBeenCalled();
+    expect(serviceMock.listEstimatesForVehicle).not.toHaveBeenCalled();
+  });
 });

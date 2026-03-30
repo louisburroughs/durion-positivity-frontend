@@ -149,7 +149,7 @@ export class InvoicePaymentStatusPageComponent {
   ): void {
     this.invoiceStatus.set(status);
     this.events.set(items);
-    this.state.set(!status && items.length === 0 ? 'empty' : 'ready');
+    this.state.set(items.length === 0 ? 'empty' : 'ready');
   }
 
   private handleInvoicePaymentStatusError(): void {

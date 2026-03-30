@@ -119,6 +119,20 @@ describe('InvoicePaymentStatusPageComponent', () => {
     );
   });
 
+  it('renders empty state when invoice has no events', () => {
+    const emptyPagedEvents: PagedResponse<AccountingEventListItem> = {
+      items: [],
+      content: [],
+      totalCount: 0,
+    };
+    accountingServiceStub.listEvents.mockReturnValueOnce(of(emptyPagedEvents));
+
+    const emptyFixture = TestBed.createComponent(InvoicePaymentStatusPageComponent);
+    emptyFixture.detectChanges();
+
+    expect(emptyFixture.componentInstance.state()).toBe('empty');
+  });
+
   it('loads event detail by id', () => {
     component.loadEventDetail('evt-001');
 

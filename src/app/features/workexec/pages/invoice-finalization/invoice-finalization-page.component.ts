@@ -61,7 +61,7 @@ export class InvoiceFinalizationPageComponent {
         });
 
       onCleanup(() => sub.unsubscribe());
-    });
+    }, { allowSignalWrites: true });
   }
 
   requestFinalization(reason?: string): void {

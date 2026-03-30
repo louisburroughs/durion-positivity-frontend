@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { combineLatest, of, Subscription, switchMap } from 'rxjs';
+import { combineLatest, EMPTY, Subscription, switchMap } from 'rxjs';
 import { EstimateListItem } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 
@@ -34,6 +34,12 @@ export class EstimateListPageComponent {
             const customerId = paramMap.get('customerId') ?? queryParamMap.get('customerId');
             const vehicleId = paramMap.get('vehicleId') ?? queryParamMap.get('vehicleId');
 
+            if (!customerId && !vehicleId) {
+              this.state.set('idle');
+              this.errorKey.set(null);
+              return EMPTY;
+            }
+
             this.state.set('loading');
             this.errorKey.set(null);
 
@@ -45,7 +51,7 @@ export class EstimateListPageComponent {
               return this.workexec.listEstimatesForVehicle(vehicleId);
             }
 
-            return of<EstimateListItem[]>([]);
+            return EMPTY;
           }),
         )
         .subscribe({
@@ -60,7 +66,7 @@ export class EstimateListPageComponent {
         });
 
       onCleanup(() => sub.unsubscribe());
-    });
+    }, { allowSignalWrites: true });
   }
 
   openEstimateDetail(id: string): void {
