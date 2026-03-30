@@ -252,7 +252,10 @@
         "WORKORDER_ID_PLACEHOLDER": "[Fíltér by wórk órdér]"
       },
       "EMPTY": "[!! Ňøø ààüüđïïŧ ëëṽëëñŧš ƒøøüüñđ. !!]",
-      "EXPORT": "[!! Éхṕøøŕŧ !!]",
+      "EXPORT": {
+        "STATUS_PREFIX": "[Export status Xxxxxxxxxx]",
+        "DOWNLOAD": "[Download Xxxxxxxx]"
+      },
       "LOAD_MORE": "[!! Ŀøøààđ ḿøøŕëë !!]",
       "ERROR": {
         "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ààüüđïïŧ ëëṽëëñŧš. !!]",
@@ -1154,7 +1157,8 @@
       "DETAIL": {
         "TITLE": "[!! Ŀëëđĝëëŕ Éñŧŕÿ Đëëŧààïïľ !!]",
         "ERROR": {
-          "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ľëëđĝëëŕ ëëñŧŕÿ. !!]"
+          "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ľëëđĝëëŕ ëëñŧŕÿ. !!]",
+          "MISSING_ID": "[Ledger entry ID is missing Xxxxxxxxx]"
         },
         "STATE": {
           "EMPTY": "[Lédgér éntry nót fóúnd.]"
@@ -1250,6 +1254,7 @@
       "EXECUTE": {
         "TITLE": "[!! Éхëëçüüŧëë Ƥüüŧààŵààÿ !!]",
         "ERROR": {
+          "LOAD": "[Failed to load putaway task Xxxxxxxxxx]",
           "COMPLETE": "[!! Ƒààïïľëëđ ŧøø çøøḿṕľëëŧëë ṕüüŧààŵààÿ ŧààšķ. !!]"
         },
         "STATE": {
@@ -1486,7 +1491,7 @@
               "STATUS": "[Státús]"
             }
           },
-          "RECEIVED_PROGRESS": "[récéípt prógréss]"
+          "RECEIVED_PROGRESS": "[Receipt progress Xxxxxxxx]"
         }
       },
       "FORM": {
@@ -1560,6 +1565,7 @@
     "SCHEDULED": "[Schédúléd]",
     "DRAFT": "[Dráft]",
     "CANCELLED": "[Cáncélléd]",
+    "PARTIALLY_RECEIVED": "[Partially Received Xxxx]",
     "FULLY_RECEIVED": "[Fúlly Récéívéd]",
     "RECEIVED": "[Récéívéd]",
     "OVER_RECEIVED": "[Óvér-récéívéd]",

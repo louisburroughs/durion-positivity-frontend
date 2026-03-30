@@ -6,6 +6,14 @@ import { CountExecuteComponent } from './count-execute.component';
 import { InventoryCycleCountService } from '../../../services/inventory-cycle-count.service';
 import { CycleCountTask } from '../../../models/inventory.models';
 
+const task: CycleCountTask = {
+  cycleCountTaskId: 'cct-001',
+  locationId: 'loc-1',
+  productSku: 'SKU-001',
+  uom: 'EA',
+  status: 'PENDING',
+};
+
 const mockCycleCountService = {
   getCycleCountTask: vi.fn(),
   submitCount: vi.fn(),
@@ -29,13 +37,13 @@ describe('CountExecuteComponent', () => {
   });
 
   it('should create', () => {
-    mockCycleCountService.getCycleCountTask.mockReturnValue(of({ taskId: 'task-001', entries: [] }));
+    mockCycleCountService.getCycleCountTask.mockReturnValue(of(task));
     const fixture = TestBed.createComponent(CountExecuteComponent);
     expect(fixture.componentInstance).toBeTruthy();
   });
 
   it('should transition to ready after successful load', () => {
-    mockCycleCountService.getCycleCountTask.mockReturnValue(of({ taskId: 'task-001', entries: [{ sku: 'SKU-1', expectedQty: 5 }] }));
+    mockCycleCountService.getCycleCountTask.mockReturnValue(of(task));
     const fixture = TestBed.createComponent(CountExecuteComponent);
     expect(fixture.componentInstance.state()).toBe('ready');
   });
@@ -46,17 +54,10 @@ describe('CountExecuteComponent', () => {
     const component = fixture.componentInstance;
 
     expect(component.state()).toBe('error');
-    expect(component.errorKey()).toBeTruthy();
+    expect(component.errorKey()).toBe('INVENTORY.COUNTS.EXECUTE.ERROR.LOAD');
   });
 
   it('should set error state before errorKey on submit failure', () => {
-    const task: CycleCountTask = {
-      cycleCountTaskId: 'task-001',
-      locationId: 'loc-1',
-      productSku: 'SKU-001',
-      uom: 'EA',
-      status: 'PENDING',
-    };
     mockCycleCountService.getCycleCountTask.mockReturnValue(of(task));
     mockCycleCountService.submitCount.mockReturnValue(throwError(() => new Error('fail')));
     const fixture = TestBed.createComponent(CountExecuteComponent);
@@ -74,5 +75,6 @@ describe('CountExecuteComponent', () => {
     const keyIdx = calls.findIndex(c => c.startsWith('errorKey:'));
     expect(errIdx).toBeGreaterThanOrEqual(0);
     expect(keyIdx).toBeGreaterThan(errIdx);
+    expect(component.errorKey()).toBe('INVENTORY.COUNTS.EXECUTE.ERROR.SUBMIT');
   });
 });

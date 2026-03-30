@@ -42,7 +42,7 @@ export class PutawayTaskListComponent {
         },
         error: () => {
           this.state.set('error');
-          this.errorKey.set('INVENTORY.PUTAWAY.TASKS.ERROR.LOAD');
+          this.errorKey.set('INVENTORY.PUTAWAY.LIST.ERROR.LOAD');
         },
       });
   }

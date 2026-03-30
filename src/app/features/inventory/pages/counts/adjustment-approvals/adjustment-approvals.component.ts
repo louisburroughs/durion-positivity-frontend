@@ -49,7 +49,7 @@ export class AdjustmentApprovalsComponent {
         },
         error: () => {
           this.state.set('error');
-          this.errorKey.set('INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.ERROR.LOAD');
+          this.errorKey.set('INVENTORY.COUNTS.APPROVALS.ERROR.LOAD');
         },
       });
   }
@@ -71,7 +71,7 @@ export class AdjustmentApprovalsComponent {
         },
         error: () => {
           this.state.set('error');
-          this.errorKey.set('INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.ERROR.LOAD');
+          this.errorKey.set('INVENTORY.COUNTS.APPROVALS.ERROR.LOAD');
         },
       });
   }
@@ -100,7 +100,7 @@ export class AdjustmentApprovalsComponent {
         },
         error: () => {
           this.state.set('error');
-          this.errorKey.set('INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.ERROR.APPROVE');
+          this.errorKey.set('INVENTORY.COUNTS.APPROVALS.ERROR.APPROVE');
         },
       });
   }
@@ -124,7 +124,7 @@ export class AdjustmentApprovalsComponent {
         },
         error: () => {
           this.state.set('error');
-          this.errorKey.set('INVENTORY.COUNTS.ADJUSTMENT.APPROVALS.ERROR.REJECT');
+          this.errorKey.set('INVENTORY.COUNTS.APPROVALS.ERROR.REJECT');
         },
       });
   }

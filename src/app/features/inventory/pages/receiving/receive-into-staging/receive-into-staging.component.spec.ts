@@ -37,7 +37,7 @@ describe('ReceiveIntoStagingComponent', () => {
     const fixture = TestBed.createComponent(ReceiveIntoStagingComponent);
     const component = fixture.componentInstance;
 
-    component.loadDocument('PO', 'doc-1');
+    component.loadDocument('doc-1', 'PO');
 
     expect(component.state()).toBe('ready');
   });
@@ -52,7 +52,7 @@ describe('ReceiveIntoStagingComponent', () => {
     vi.spyOn(component.state, 'set').mockImplementation(v => { calls.push(`state:${v}`); origState(v); });
     vi.spyOn(component.errorKey, 'set').mockImplementation(v => { if (v !== null) { calls.push(`errorKey:${v}`); } origError(v); });
 
-    component.loadDocument('PO', 'doc-1');
+    component.loadDocument('doc-1', 'PO');
 
     const errIdx = calls.findIndex(c => c.startsWith('state:error'));
     const keyIdx = calls.findIndex(c => c.startsWith('errorKey:'));

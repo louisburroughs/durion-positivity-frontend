@@ -40,7 +40,7 @@ export class ReplenishmentTaskListComponent {
         },
         error: () => {
           this.state.set('error');
-          this.errorKey.set('INVENTORY.REPLENISHMENT.TASKS.ERROR.LOAD');
+          this.errorKey.set('INVENTORY.REPLENISHMENT.LIST.ERROR.LOAD');
         },
       });
   }

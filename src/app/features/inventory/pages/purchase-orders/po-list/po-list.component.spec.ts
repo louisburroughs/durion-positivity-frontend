@@ -45,6 +45,6 @@ describe('PoListComponent', () => {
     const component = fixture.componentInstance;
 
     expect(component.state()).toBe('error');
-    expect(component.errorKey()).toBeTruthy();
+    expect(component.errorKey()).toBe('INVENTORY.PURCHASE_ORDERS.LIST.ERROR.LOAD');
   });
 });

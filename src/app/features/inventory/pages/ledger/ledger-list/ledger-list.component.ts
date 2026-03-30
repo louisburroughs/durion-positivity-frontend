@@ -75,7 +75,7 @@ export class LedgerListComponent {
         },
         error: () => {
           this.state.set('error');
-          this.errorKey.set('INVENTORY.LEDGER.ERROR.LOAD');
+          this.errorKey.set('INVENTORY.LEDGER.LIST.ERROR.LOAD');
         },
       });
   }

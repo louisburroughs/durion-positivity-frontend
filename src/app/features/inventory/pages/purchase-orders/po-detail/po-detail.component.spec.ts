@@ -45,7 +45,7 @@ describe('PoDetailComponent', () => {
     const component = fixture.componentInstance;
 
     expect(component.state()).toBe('error');
-    expect(component.errorKey()).toBeTruthy();
+    expect(component.errorKey()).toBe('INVENTORY.PURCHASE_ORDERS.DETAIL.ERROR.LOAD');
   });
 
   it('should set error state before errorKey on cancel failure', () => {

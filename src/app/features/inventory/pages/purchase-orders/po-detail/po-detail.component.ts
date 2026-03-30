@@ -3,7 +3,6 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { finalize } from 'rxjs/operators';
 import { PurchaseOrderDetail } from '../../../models/inventory.models';
 import { InventoryPurchaseOrderService } from '../../../services/inventory-purchase-order.service';
 
@@ -33,7 +32,7 @@ export class PoDetailComponent {
         const poId = params.get('poId');
         if (!poId) {
           this.state.set('error');
-          this.errorKey.set('INVENTORY.PURCHASE_ORDERS.DETAIL.ERROR.MISSING_ID');
+          this.errorKey.set('INVENTORY.PURCHASE_ORDERS.DETAIL.ERROR.LOAD');
           return;
         }
         this.loadOrder(poId);
@@ -76,10 +75,7 @@ export class PoDetailComponent {
 
     this.poService
       .cancelPurchaseOrder(order.poId)
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => {}),
-      )
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.router.navigate(['/app/inventory/purchase-orders']);

@@ -44,7 +44,7 @@ export class LedgerDetailComponent {
         },
         error: () => {
           this.state.set('error');
-          this.errorKey.set('INVENTORY.LEDGER.ERROR.LOAD');
+          this.errorKey.set('INVENTORY.LEDGER.DETAIL.ERROR.LOAD');
         },
       });
   }

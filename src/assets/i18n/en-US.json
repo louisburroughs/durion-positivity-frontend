@@ -252,7 +252,10 @@
         "WORKORDER_ID_PLACEHOLDER": "Filter by work order"
       },
       "EMPTY": "No audit events found.",
-      "EXPORT": "Export",
+      "EXPORT": {
+        "STATUS_PREFIX": "Export status",
+        "DOWNLOAD": "Download"
+      },
       "LOAD_MORE": "Load more",
       "ERROR": {
         "LOAD": "Failed to load audit events.",
@@ -1154,7 +1157,8 @@
       "DETAIL": {
         "TITLE": "Ledger Entry Detail",
         "ERROR": {
-          "LOAD": "Failed to load ledger entry."
+          "LOAD": "Failed to load ledger entry.",
+          "MISSING_ID": "Ledger entry ID is missing."
         },
         "STATE": {
           "EMPTY": "Ledger entry not found."
@@ -1250,6 +1254,7 @@
       "EXECUTE": {
         "TITLE": "Execute Putaway",
         "ERROR": {
+          "LOAD": "Failed to load putaway task.",
           "COMPLETE": "Failed to complete putaway task."
         },
         "STATE": {
@@ -1486,7 +1491,7 @@
               "STATUS": "Status"
             }
           },
-          "RECEIVED_PROGRESS": "receipt progress"
+          "RECEIVED_PROGRESS": "Receipt progress"
         }
       },
       "FORM": {
@@ -1560,6 +1565,7 @@
     "SCHEDULED": "Scheduled",
     "DRAFT": "Draft",
     "CANCELLED": "Cancelled",
+    "PARTIALLY_RECEIVED": "Partially Received",
     "FULLY_RECEIVED": "Fully Received",
     "RECEIVED": "Received",
     "OVER_RECEIVED": "Over-received",

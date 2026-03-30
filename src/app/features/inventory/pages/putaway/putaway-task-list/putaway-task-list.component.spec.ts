@@ -4,6 +4,17 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { PutawayTaskListComponent } from './putaway-task-list.component';
 import { InventoryService } from '../../../services/inventory.service';
+import { PutawayTask } from '../../../models/inventory.models';
+
+const task: PutawayTask = {
+  putawayTaskId: 'pt-001',
+  locationId: 'loc-1',
+  stagingStorageLocationId: 'ssl-1',
+  productSku: 'SKU-001',
+  quantity: 5,
+  uom: 'EA',
+  status: 'PENDING',
+};
 
 const mockInventoryService = {
   getPutawayTasks: vi.fn(),
@@ -28,7 +39,7 @@ describe('PutawayTaskListComponent', () => {
   });
 
   it('should transition to ready after successful load', () => {
-    mockInventoryService.getPutawayTasks.mockReturnValue(of([{ taskId: 't1' }]));
+    mockInventoryService.getPutawayTasks.mockReturnValue(of([task]));
     const fixture = TestBed.createComponent(PutawayTaskListComponent);
     expect(fixture.componentInstance.state()).toBe('ready');
   });
@@ -45,6 +56,6 @@ describe('PutawayTaskListComponent', () => {
     const component = fixture.componentInstance;
 
     expect(component.state()).toBe('error');
-    expect(component.errorKey()).toBeTruthy();
+    expect(component.errorKey()).toBe('INVENTORY.PUTAWAY.LIST.ERROR.LOAD');
   });
 });

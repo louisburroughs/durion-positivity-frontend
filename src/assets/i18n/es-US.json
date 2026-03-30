@@ -252,7 +252,10 @@
         "WORKORDER_ID_PLACEHOLDER": "Filtrar por orden de trabajo"
       },
       "EMPTY": "No se encontraron eventos de auditoría.",
-      "EXPORT": "Exportar",
+      "EXPORT": {
+        "STATUS_PREFIX": "Estado de exportación",
+        "DOWNLOAD": "Descargar"
+      },
       "LOAD_MORE": "Cargar más",
       "ERROR": {
         "LOAD": "No se pudieron cargar los eventos de auditoría.",
@@ -1154,7 +1157,8 @@
       "DETAIL": {
         "TITLE": "Detalle de entrada del libro mayor",
         "ERROR": {
-          "LOAD": "No se pudo cargar la entrada del libro mayor."
+          "LOAD": "No se pudo cargar la entrada del libro mayor.",
+          "MISSING_ID": "Falta el ID de la entrada del libro mayor."
         },
         "STATE": {
           "EMPTY": "Entrada no encontrada."
@@ -1250,6 +1254,7 @@
       "EXECUTE": {
         "TITLE": "Ejecutar almacenamiento",
         "ERROR": {
+          "LOAD": "No se pudo cargar la tarea de ubicación.",
           "COMPLETE": "No se pudo completar la tarea de almacenamiento."
         },
         "STATE": {
@@ -1486,7 +1491,7 @@
               "STATUS": "Estado"
             }
           },
-          "RECEIVED_PROGRESS": "progreso de recepción"
+          "RECEIVED_PROGRESS": "Progreso de recepción"
         }
       },
       "FORM": {
