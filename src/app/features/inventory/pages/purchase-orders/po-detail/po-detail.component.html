@@ -7,177 +7,184 @@
   </div>
 
   @if (state() === 'loading') {
-    <section class="card" aria-busy="true" aria-live="polite">
-      <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
-      <div class="skeleton-row"></div>
-      <div class="skeleton-row"></div>
-      <div class="skeleton-row"></div>
-      <div class="skeleton-row"></div>
-    </section>
+  <section class="card" aria-busy="true" aria-live="polite">
+    <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+  </section>
   }
 
   @if (state() === 'error') {
-    <section class="card state-card" role="alert">
-      <span class="material-symbols-outlined" aria-hidden="true">error</span>
-      <p>{{ errorKey() | translate }}</p>
-      <button class="btn-secondary" type="button" (click)="goBack()">{{ 'COMMON.BACK' | translate }}</button>
-    </section>
+  <section class="card state-card" role="alert">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ errorKey() | translate }}</p>
+    <button class="btn-secondary" type="button" (click)="goBack()">{{ 'COMMON.BACK' | translate }}</button>
+  </section>
   }
 
   @if (state() === 'empty') {
-    <section class="card state-card">
-      <p>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.STATE.EMPTY' | translate }}</p>
-    </section>
+  <section class="card state-card">
+    <p>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.STATE.EMPTY' | translate }}</p>
+  </section>
   }
 
   @if (state() === 'ready' && order()) {
-    <!-- PO header card -->
-    <section class="card">
-      <div class="detail-header">
-        <div>
-          <h1 id="po-detail-title" class="page-title">{{ order()!.poNumber }}</h1>
-          <p class="meta-line">
-            <strong>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.FIELD.SUPPLIER' | translate }}:</strong>
-            {{ order()!.supplierName ?? order()!.supplierId }}
-          </p>
-        </div>
-        <button class="btn-secondary" type="button" (click)="goToEdit()">
-          <span class="material-symbols-outlined" aria-hidden="true">edit</span>
-          {{ 'COMMON.EDIT' | translate }}
-        </button>
+  <!-- PO header card -->
+  <section class="card">
+    <div class="detail-header">
+      <div>
+        <h1 id="po-detail-title" class="page-title">{{ order()!.poNumber }}</h1>
+        <p class="meta-line">
+          <strong>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.FIELD.SUPPLIER' | translate }}:</strong>
+          {{ order()!.supplierName ?? order()!.supplierId }}
+        </p>
       </div>
-      <dl class="detail-grid">
-        <dt>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.FIELD.STATUS' | translate }}</dt>
-        <dd>
-          @switch (order()!.status) {
-            @case ('DRAFT') {
-              <span class="badge badge--neutral">
-                <span class="material-symbols-outlined" aria-hidden="true">draft</span>
-                {{ 'STATUS.DRAFT' | translate }}
+      <button class="btn-secondary" type="button" (click)="goToEdit()">
+        <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+        {{ 'COMMON.EDIT' | translate }}
+      </button>
+    </div>
+    <dl class="detail-grid">
+      <dt>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.FIELD.STATUS' | translate }}</dt>
+      <dd>
+        @switch (order()!.status) {
+        @case ('DRAFT') {
+        <span class="badge badge--neutral">
+          <span class="material-symbols-outlined" aria-hidden="true">draft</span>
+          {{ 'STATUS.DRAFT' | translate }}
+        </span>
+        }
+        @case ('PENDING_APPROVAL') {
+        <span class="badge badge--warning">
+          <span class="material-symbols-outlined" aria-hidden="true">pending</span>
+          {{ 'STATUS.PENDING_APPROVAL' | translate }}
+        </span>
+        }
+        @case ('APPROVED') {
+        <span class="badge badge--info">
+          <span class="material-symbols-outlined" aria-hidden="true">verified</span>
+          {{ 'STATUS.APPROVED' | translate }}
+        </span>
+        }
+        @case ('PARTIALLY_RECEIVED') {
+        <span class="badge badge--info">
+          <span class="material-symbols-outlined" aria-hidden="true">inbox</span>
+          {{ 'STATUS.PARTIALLY_RECEIVED' | translate }}
+        </span>
+        }
+        @case ('FULLY_RECEIVED') {
+        <span class="badge badge--success">
+          <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+          {{ 'STATUS.FULLY_RECEIVED' | translate }}
+        </span>
+        }
+        @case ('CLOSED') {
+        <span class="badge badge--neutral">
+          <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+          {{ 'STATUS.CLOSED' | translate }}
+        </span>
+        }
+        @case ('CANCELLED') {
+        <span class="badge badge--neutral">
+          <span class="material-symbols-outlined" aria-hidden="true">cancel</span>
+          {{ 'STATUS.CANCELLED' | translate }}
+        </span>
+        }
+        @default {
+        <span class="badge badge--neutral">
+          <span class="material-symbols-outlined" aria-hidden="true">help_outline</span>
+          {{ order()!.status }}
+        </span>
+        }
+        }
+      </dd>
+
+      <dt>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.FIELD.SCHEDULED_DELIVERY' | translate }}</dt>
+      <dd>{{ order()!.scheduledDeliveryDate }}</dd>
+
+      <dt>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.FIELD.OPEN_BALANCE' | translate }}</dt>
+      <dd>{{ order()!.openBalance }}</dd>
+
+      @if (order()!.notes) {
+      <dt>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.FIELD.NOTES' | translate }}</dt>
+      <dd>{{ order()!.notes }}</dd>
+      }
+    </dl>
+  </section>
+
+  <!-- PO lines -->
+  <section class="card">
+    <h2>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TITLE' | translate }}</h2>
+    <div class="table-wrap">
+      <table class="data-table" role="table"
+        aria-label="{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.ARIA' | translate }}">
+        <thead>
+          <tr role="row">
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.SKU' | translate
+              }}</th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.PRODUCT_NAME' |
+              translate }}</th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.ORDERED_QTY' |
+              translate }}</th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.RECEIVED_QTY' |
+              translate }}</th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.UNIT_PRICE' |
+              translate }}</th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.LINE_TOTAL' |
+              translate }}</th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.STATUS' |
+              translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of order()!.lines; track line.poLineId) {
+          <tr role="row">
+            <td>{{ line.productSku }}</td>
+            <td>{{ line.productName ?? '—' }}</td>
+            <td>{{ line.orderedQty }}</td>
+            <td>
+              <span
+                [attr.aria-label]="('INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.RECEIVED_PROGRESS' | translate) + ': ' + line.receivedQty + ' / ' + line.orderedQty">
+                {{ line.receivedQty }} / {{ line.orderedQty }}
               </span>
-            }
-            @case ('PENDING_APPROVAL') {
-              <span class="badge badge--warning">
-                <span class="material-symbols-outlined" aria-hidden="true">pending</span>
-                {{ 'STATUS.PENDING_APPROVAL' | translate }}
-              </span>
-            }
-            @case ('APPROVED') {
+            </td>
+            <td>{{ line.unitPrice }}</td>
+            <td>{{ line.lineTotal ?? '—' }}</td>
+            <td class="badge-cell">
+              @switch (line.status) {
+              @case ('OPEN') {
               <span class="badge badge--info">
-                <span class="material-symbols-outlined" aria-hidden="true">verified</span>
-                {{ 'STATUS.APPROVED' | translate }}
+                <span class="material-symbols-outlined" aria-hidden="true">hourglass_empty</span>
+                {{ 'STATUS.OPEN' | translate }}
               </span>
-            }
-            @case ('PARTIALLY_RECEIVED') {
+              }
+              @case ('PARTIALLY_RECEIVED') {
               <span class="badge badge--info">
                 <span class="material-symbols-outlined" aria-hidden="true">inbox</span>
                 {{ 'STATUS.PARTIALLY_RECEIVED' | translate }}
               </span>
-            }
-            @case ('FULLY_RECEIVED') {
+              }
+              @case ('FULLY_RECEIVED') {
               <span class="badge badge--success">
                 <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
                 {{ 'STATUS.FULLY_RECEIVED' | translate }}
               </span>
-            }
-            @case ('CLOSED') {
-              <span class="badge badge--neutral">
-                <span class="material-symbols-outlined" aria-hidden="true">lock</span>
-                {{ 'STATUS.CLOSED' | translate }}
-              </span>
-            }
-            @case ('CANCELLED') {
-              <span class="badge badge--neutral">
-                <span class="material-symbols-outlined" aria-hidden="true">cancel</span>
-                {{ 'STATUS.CANCELLED' | translate }}
-              </span>
-            }
-            @default {
+              }
+              @default {
               <span class="badge badge--neutral">
                 <span class="material-symbols-outlined" aria-hidden="true">help_outline</span>
-                {{ order()!.status }}
+                {{ line.status }}
               </span>
-            }
+              }
+              }
+            </td>
+          </tr>
           }
-        </dd>
-
-        <dt>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.FIELD.SCHEDULED_DELIVERY' | translate }}</dt>
-        <dd>{{ order()!.scheduledDeliveryDate }}</dd>
-
-        <dt>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.FIELD.OPEN_BALANCE' | translate }}</dt>
-        <dd>{{ order()!.openBalance }}</dd>
-
-        @if (order()!.notes) {
-          <dt>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.FIELD.NOTES' | translate }}</dt>
-          <dd>{{ order()!.notes }}</dd>
-        }
-      </dl>
-    </section>
-
-    <!-- PO lines -->
-    <section class="card">
-      <h2>{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TITLE' | translate }}</h2>
-      <div class="table-wrap">
-        <table class="data-table" role="table"
-               aria-label="{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.ARIA' | translate }}">
-          <thead>
-            <tr role="row">
-              <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.SKU' | translate }}</th>
-              <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.PRODUCT_NAME' | translate }}</th>
-              <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.ORDERED_QTY' | translate }}</th>
-              <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.RECEIVED_QTY' | translate }}</th>
-              <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.UNIT_PRICE' | translate }}</th>
-              <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.LINE_TOTAL' | translate }}</th>
-              <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.TABLE.HEADER.STATUS' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (line of order()!.lines; track line.poLineId) {
-              <tr role="row">
-                <td>{{ line.productSku }}</td>
-                <td>{{ line.productName ?? '—' }}</td>
-                <td>{{ line.orderedQty }}</td>
-                <td>
-                  <span [attr.aria-label]="('INVENTORY.PURCHASE_ORDERS.DETAIL.LINES.RECEIVED_PROGRESS' | translate) + ': ' + line.receivedQty + ' / ' + line.orderedQty">
-                    {{ line.receivedQty }} / {{ line.orderedQty }}
-                  </span>
-                </td>
-                <td>{{ line.unitPrice }}</td>
-                <td>{{ line.lineTotal ?? '—' }}</td>
-                <td class="badge-cell">
-                  @switch (line.status) {
-                    @case ('OPEN') {
-                      <span class="badge badge--info">
-                        <span class="material-symbols-outlined" aria-hidden="true">hourglass_empty</span>
-                        {{ 'STATUS.OPEN' | translate }}
-                      </span>
-                    }
-                    @case ('PARTIALLY_RECEIVED') {
-                      <span class="badge badge--info">
-                        <span class="material-symbols-outlined" aria-hidden="true">inbox</span>
-                        {{ 'STATUS.PARTIALLY_RECEIVED' | translate }}
-                      </span>
-                    }
-                    @case ('FULLY_RECEIVED') {
-                      <span class="badge badge--success">
-                        <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
-                        {{ 'STATUS.FULLY_RECEIVED' | translate }}
-                      </span>
-                    }
-                    @default {
-                      <span class="badge badge--neutral">
-                        <span class="material-symbols-outlined" aria-hidden="true">help_outline</span>
-                        {{ line.status }}
-                      </span>
-                    }
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </section>
+        </tbody>
+      </table>
+    </div>
+  </section>
   }
 </main>
-
