@@ -82,6 +82,12 @@ export class PoFormComponent {
   }
 
   updateLine(idx: number, field: keyof CreatePurchaseOrderLine, val: string | number): void {
+    if (field === 'orderedQty' || field === 'unitPrice') {
+      const numVal = Number(val);
+      if (!Number.isFinite(numVal) || numVal < 0) {
+        return;
+      }
+    }
     this.lines.update(lines =>
       lines.map((line, i) => (i === idx ? { ...line, [field]: val } : line)),
     );

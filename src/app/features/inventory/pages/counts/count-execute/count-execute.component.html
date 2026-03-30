@@ -70,7 +70,7 @@
         @default {
         <span class="badge badge--neutral">
           <span class="material-symbols-outlined" aria-hidden="true">assignment</span>
-          {{ task()!.status | translate }}
+          {{ ('STATUS.' + task()!.status) | translate }}
         </span>
         }
         }
@@ -120,7 +120,7 @@
         @default {
         <span class="badge badge--neutral">
           <span class="material-symbols-outlined" aria-hidden="true">info</span>
-          {{ submitResult()!.status | translate }}
+          {{ ('STATUS.' + submitResult()!.status) | translate }}
         </span>
         }
         }
@@ -183,7 +183,7 @@
       @default {
       <span class="badge badge--neutral">
         <span class="material-symbols-outlined" aria-hidden="true">info</span>
-        {{ submitResult()!.adjustment!.status | translate }}
+        {{ ('STATUS.' + submitResult()!.adjustment!.status) | translate }}
       </span>
       }
       }

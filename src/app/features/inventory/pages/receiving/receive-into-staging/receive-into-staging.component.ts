@@ -68,7 +68,11 @@ export class ReceiveIntoStagingComponent {
   }
 
   updateLineQty(lineId: string, qty: number): void {
-    this.lineQuantities.update(current => ({ ...current, [lineId]: qty }));
+    if (!Number.isFinite(qty)) {
+      return;
+    }
+    const safeQty = Math.max(0, qty);
+    this.lineQuantities.update(current => ({ ...current, [lineId]: safeQty }));
   }
 
   confirmReceipt(): void {

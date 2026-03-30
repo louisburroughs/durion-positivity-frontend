@@ -70,4 +70,21 @@ describe('ReceiveIntoStagingComponent', () => {
     expect(errIdx).toBeGreaterThanOrEqual(0);
     expect(keyIdx).toBeGreaterThan(errIdx);
   });
+
+  describe('updateLineQty', () => {
+    it('should ignore NaN input and keep existing value', () => {
+      const fixture = TestBed.createComponent(ReceiveIntoStagingComponent);
+      const component = fixture.componentInstance;
+      component.lineQuantities.set({ 'line-1': 5 });
+      component.updateLineQty('line-1', Number.NaN);
+      expect(component.lineQuantities()['line-1']).toBe(5);
+    });
+
+    it('should clamp negative input to 0', () => {
+      const fixture = TestBed.createComponent(ReceiveIntoStagingComponent);
+      const component = fixture.componentInstance;
+      component.updateLineQty('line-1', -5);
+      expect(component.lineQuantities()['line-1']).toBe(0);
+    });
+  });
 });

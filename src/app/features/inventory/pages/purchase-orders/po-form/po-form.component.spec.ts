@@ -73,6 +73,24 @@ describe('PoFormComponent — create mode', () => {
     expect(errIdx).toBeGreaterThanOrEqual(0);
     expect(keyIdx).toBeGreaterThan(errIdx);
   });
+
+  it('updateLine — ignores NaN for orderedQty and keeps existing value', () => {
+    const fixture = TestBed.createComponent(PoFormComponent);
+    const component = fixture.componentInstance;
+    component.addLine();
+    expect(component.lines()[0].orderedQty).toBe(1);
+    component.updateLine(0, 'orderedQty', Number.NaN);
+    expect(component.lines()[0].orderedQty).toBe(1);
+  });
+
+  it('updateLine — ignores negative for unitPrice and keeps existing value', () => {
+    const fixture = TestBed.createComponent(PoFormComponent);
+    const component = fixture.componentInstance;
+    component.addLine();
+    expect(component.lines()[0].unitPrice).toBe(0);
+    component.updateLine(0, 'unitPrice', -50);
+    expect(component.lines()[0].unitPrice).toBe(0);
+  });
 });
 
 describe('PoFormComponent — edit mode', () => {
