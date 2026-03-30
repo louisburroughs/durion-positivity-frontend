@@ -105,6 +105,72 @@
       }
     }
   },
+  "CRM": {
+    "SNAPSHOT": {
+      "TITLE": "Customer Context",
+      "ARIA": {
+        "SECTION": "Customer context snapshot"
+      },
+      "FIELD": {
+        "CUSTOMER_NAME": "Customer",
+        "PARTY_TYPE": "Account Type",
+        "VEHICLES": "Vehicles",
+        "BILLING_SUMMARY": "Billing Rules",
+        "PARTY_ID": "Party ID",
+        "VEHICLE_ID": "Vehicle ID",
+        "UUID_PLACEHOLDER": "UUID"
+      },
+      "ACTION": {
+        "LOAD": "Load snapshot",
+        "REFRESH": "Refresh",
+        "CLEAR": "Clear"
+      },
+      "PARTY_TYPE": {
+        "COMMERCIAL": "Commercial",
+        "INDIVIDUAL": "Individual",
+        "FLEET": "Fleet",
+        "DEALER": "Dealer",
+        "UNKNOWN": "Unknown"
+      },
+      "IDLE": "Enter a Party ID or Vehicle ID to load customer context.",
+      "EMPTY": "No customer context loaded.",
+      "EMPTY_VEHICLES": "No vehicles available.",
+      "ERROR": {
+        "LOAD": "Unable to load customer context. Please try again.",
+        "UUID": "Must be a valid UUID.",
+        "VALIDATION": "Enter a Party ID or Vehicle ID.",
+        "FORBIDDEN": "You do not have access to this customer context."
+      }
+    },
+    "BILLING_RULES": {
+      "TITLE": "Billing Rules",
+      "ARIA": {
+        "SECTION": "Billing rules form",
+        "SUMMARY": "Billing rules summary"
+      },
+      "FIELD": {
+        "REQUIRE_PO": "Require Purchase Order",
+        "PAYMENT_TERMS": "Payment Terms",
+        "CREDIT_LIMIT": "Credit Limit",
+        "NOTES": "Notes",
+        "SUMMARY": "Current Billing Rules"
+      },
+      "ACTION": {
+        "SAVE": "Save billing rules",
+        "RETRY": "Retry",
+        "BACK": "Back to Party"
+      },
+      "IDLE": "Select a customer to view billing rules.",
+      "EMPTY": "No billing rules found.",
+      "RULE_DEFAULT_NAME": "Customer Billing Rules",
+      "SAVING": "Saving...",
+      "ERROR": {
+        "LOAD": "Unable to load billing rules.",
+        "SAVE": "Unable to save billing rules. Please try again.",
+        "FORBIDDEN": "You do not have permission to view billing rules for this account."
+      }
+    }
+  },
   "SECURITY": {
     "NAV": {
       "WORKSPACE_ARIA": "Security workspace",
@@ -538,6 +604,13 @@
       "YES": "Yes",
       "NO": "No"
     },
+    "EVENT_TYPE": {
+      "PAYMENT_RECEIVED": "Payment Received",
+      "INVOICE_ISSUED": "Invoice Issued",
+      "CREDIT_MEMO": "Credit Memo",
+      "ADJUSTMENT": "Adjustment",
+      "REVERSAL": "Reversal"
+    },
     "INGESTION_MONITOR_LIST": {
       "OVERLINE": "Ingestion Monitor",
       "TITLE": "Ingestion Events",
@@ -719,6 +792,53 @@
       "FIELD_REASON": "Reason Code",
       "FIELD_NOTE": "Justification Note",
       "FIELD_CREATED": "Created at"
+    },
+    "INVOICE_PAYMENT_STATUS": {
+      "OVERLINE": "Invoice",
+      "TITLE": "Payment & Posting Status",
+      "LOADING": "Loading payment and posting status...",
+      "ARIA": {
+        "SECTION": "Invoice payment and posting status",
+        "REFRESH": "Refresh payment and posting status",
+        "STATUS_BADGE": "Payment status: {{status}}"
+      },
+      "FIELD": {
+        "PAYMENT_STATUS": "Payment Status",
+        "BALANCE_DUE": "Balance Due",
+        "TOTAL_AMOUNT": "Invoice Total",
+        "PAID_AMOUNT": "Amount Paid",
+        "INGESTION_STATUS": "Ingestion Status",
+        "JOURNAL_ENTRY_ID": "Journal Entry ID",
+        "LEDGER_TRANSACTION_ID": "Ledger Transaction ID",
+        "ERROR_CODE": "Error Code",
+        "ERROR_MESSAGE": "Error Details"
+      },
+      "PAYMENT_STATUS": {
+        "PAID": "Paid",
+        "UNPAID": "Unpaid",
+        "PARTIALLY_PAID": "Partially Paid",
+        "UNKNOWN": "Status unavailable"
+      },
+      "ACTION": {
+        "REFRESH": "Refresh",
+        "VIEW_HISTORY": "View history"
+      },
+      "EMPTY_INGESTION": "No accounting ingestion records found for this invoice.",
+      "HISTORY": {
+        "TITLE": "Accounting Ingestion History",
+        "DETAIL_ARIA": "Accounting ingestion event detail",
+        "DETAIL_TITLE": "Event Detail",
+        "EMPTY": "No ingestion records found.",
+        "TABLE_CAPTION": "Accounting ingestion records for this invoice",
+        "COL_RECEIVED_AT": "Received At",
+        "COL_STATUS": "Status",
+        "COL_TYPE": "Event Type",
+        "COL_ERROR": "Error"
+      },
+      "ERROR": {
+        "LOAD": "Unable to load payment status. Please try again.",
+        "ACCESS_DENIED": "You do not have permission to view this page."
+      }
     },
     "VENDOR_PAYMENT_NEW": {
       "OVERLINE": "Accounts Payable",
@@ -1075,6 +1195,107 @@
     }
   },
   "WORKEXEC": {
+    "ESTIMATE_LIST": {
+      "TITLE": "Estimates",
+      "ARIA": {
+        "SECTION": "Estimates list"
+      },
+      "IDLE": "Select a customer or vehicle to view estimates.",
+      "EMPTY": "No estimates found.",
+      "ERROR": {
+        "LOAD": "Unable to load estimates. Please try again."
+      },
+      "CARD": {
+        "ARIA_LABEL": "Estimate for customer",
+        "LAST_UPDATED": "Last updated",
+        "TOTAL": "Total"
+      }
+    },
+    "ESTIMATE_STATUS": {
+      "DRAFT": "Draft",
+      "PENDING_REVIEW": "Pending Review",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "REVISED": "Revised",
+      "EXPIRED": "Expired",
+      "PENDING_APPROVAL": "Pending Approval",
+      "OPEN": "Open",
+      "PENDING_CUSTOMER": "Pending Customer",
+      "DECLINED": "Declined",
+      "SCHEDULED": "Scheduled",
+      "INVOICED": "Invoiced",
+      "CANCELLED": "Cancelled",
+      "ARCHIVED": "Archived"
+    },
+    "INVOICE_STATUS": {
+      "DRAFT": "Draft",
+      "PENDING": "Pending",
+      "ISSUED": "Issued",
+      "FINALIZED": "Finalized",
+      "VOID": "Void",
+      "CANCELLED": "Cancelled"
+    },
+    "ITEM_TYPE": {
+      "PART": "Part",
+      "LABOR": "Labor",
+      "FEE": "Fee"
+    },
+    "WIP": {
+      "TITLE": "Work In Progress",
+      "ARIA": {
+        "SECTION": "Work in progress board",
+        "TABLE": "Active workorders"
+      },
+      "EMPTY": "No active workorders.",
+      "ERROR": {
+        "LOAD": "Unable to load WIP status."
+      },
+      "COLUMN": {
+        "WORKORDER": "Work Order",
+        "STATUS": "Status",
+        "TECHNICIAN": "Technician",
+        "BAY": "Bay",
+        "VEHICLE": "Vehicle"
+      }
+    },
+    "WIP_STATUS": {
+      "WAITING": "Waiting",
+      "IN_PROGRESS": "In Progress",
+      "PARTS_PENDING": "Parts Pending",
+      "READY": "Ready",
+      "COMPLETED": "Completed"
+    },
+    "INVOICE_FINALIZATION": {
+      "TITLE": "Invoice Finalization",
+      "ARIA": {
+        "SECTION": "Invoice finalization form",
+        "ITEMS_TABLE": "Invoice line items"
+      },
+      "ERROR": {
+        "LOAD": "Unable to load invoice.",
+        "SUBMIT": "Unable to request finalization. Please try again."
+      },
+      "COLUMN": {
+        "DESCRIPTION": "Description",
+        "QTY": "Qty",
+        "UNIT_PRICE": "Unit Price",
+        "LINE_TOTAL": "Total",
+        "TYPE": "Type"
+      },
+      "SUMMARY": {
+        "SUBTOTAL": "Subtotal",
+        "TAX": "Tax",
+        "TOTAL": "Total"
+      },
+      "FORM": {
+        "REASON_LABEL": "Reason (optional)",
+        "REASON_PLACEHOLDER": "Enter reason for finalization"
+      },
+      "ACTION": {
+        "REQUEST_FINALIZATION": "Request Finalization",
+        "SUBMITTING": "Submitting..."
+      }
+    },
     "OPERATIONAL_COST": {
       "OVERLINE": "Workorder Costs",
       "TITLE": "Operational Cost Summary",
@@ -1540,6 +1761,176 @@
       }
     }
   },
+  "BILLING": {
+    "PAYMENT": {
+      "TITLE": "Payment",
+      "METHOD": {
+        "LABEL": "Payment Method",
+        "CARD": "Credit/Debit Card",
+        "CASH": "Cash",
+        "CHECK": "Check",
+        "CREDIT_ACCOUNT": "Credit Account"
+      },
+      "AMOUNT_LABEL": "Amount",
+      "ACTION": {
+        "CAPTURE": "Authorize & Capture",
+        "VOID": "Void Authorization",
+        "REFUND": "Process Refund",
+        "PRINT_RECEIPT": "Print Receipt"
+      },
+      "MODE": {
+        "LABEL": "Select payment action"
+      },
+      "SUBMITTING": "Processing...",
+      "IDLE": "Select a payment method to begin.",
+      "FIELD": {
+        "TRANSACTION_ID": "Transaction ID",
+        "AUTH_CODE": "Authorization Code",
+        "STATUS": "Status",
+        "AMOUNT": "Amount",
+        "CAPTURED_AT": "Captured At"
+      },
+      "VOID": {
+        "TITLE": "Void Authorization",
+        "REASON_LABEL": "Reason",
+        "AUTHORITY_LABEL": "Authority Code"
+      },
+      "REFUND": {
+        "TITLE": "Refund Payment",
+        "REASON_LABEL": "Reason",
+        "AUTHORITY_LABEL": "Authority Code",
+        "AMOUNT_LABEL": "Refund Amount (leave blank for full refund)"
+      },
+      "ERROR": {
+        "CAPTURE": "Unable to process payment. Please try again.",
+        "VOID": "Unable to void authorization. Please try again.",
+        "REFUND": "Unable to process refund. Please try again."
+      }
+    },
+    "RECEIPT": {
+      "TITLE": "Receipt",
+      "FIELD": {
+        "RECEIPT_NUMBER": "Receipt Number",
+        "INVOICE_REF": "Invoice Reference",
+        "GENERATED_AT": "Generated",
+        "EMAILED_TO": "Emailed To"
+      },
+      "ACTION": {
+        "GENERATE": "Generate Receipt",
+        "REPRINT": "Reprint",
+        "VIEW_PDF": "View PDF Receipt"
+      },
+      "DELIVERY": {
+        "LABEL": "Delivery Method",
+        "PRINT": "Print",
+        "EMAIL": "Email",
+        "NONE": "No Delivery"
+      },
+      "EMAIL_LABEL": "Email Address",
+      "IDLE": "No receipt generated yet.",
+      "ERROR": {
+        "LOAD": "Unable to load receipt.",
+        "GENERATE": "Unable to generate receipt. Please try again.",
+        "REPRINT": "Unable to reprint receipt. Please try again."
+      }
+    }
+  },
+  "ORDER": {
+    "CART": {
+      "TITLE": "Order Cart",
+      "ARIA": {
+        "ITEMS_TABLE": "Order line items",
+        "SUMMARY": "Order summary"
+      },
+      "IDLE": "Enter customer details to start a cart.",
+      "EMPTY": "No items in cart.",
+      "ERROR": {
+        "LOAD": "Unable to load order.",
+        "CREATE": "Unable to create cart.",
+        "ADD_ITEM": "Unable to add item.",
+        "REMOVE_ITEM": "Unable to remove item."
+      },
+      "FIELD": {
+        "CUSTOMER_ID": "Customer ID",
+        "VEHICLE_ID": "Vehicle ID (optional)",
+        "SKU": "SKU / Service Code",
+        "QTY": "Qty",
+        "UNIT_PRICE": "Unit Price",
+        "LINE_TOTAL": "Total",
+        "DESCRIPTION": "Description"
+      },
+      "ACTION": {
+        "START_CART": "Start Cart",
+        "ADD_ITEM": "Add Item",
+        "REMOVE_ITEM": "Remove",
+        "ADDING": "Adding..."
+      },
+      "SUMMARY": {
+        "SUBTOTAL": "Subtotal",
+        "TAX": "Tax",
+        "TOTAL": "Total"
+      },
+      "COLUMN": {
+        "DESCRIPTION": "Description",
+        "SKU": "SKU",
+        "QTY": "Qty",
+        "UNIT_PRICE": "Unit Price",
+        "TOTAL": "Total",
+        "ACTIONS": "Actions"
+      }
+    },
+    "OVERRIDE": {
+      "TITLE": "Price Override",
+      "ARIA": {
+        "SECTION": "Price override form"
+      },
+      "REQUIRES_APPROVAL": "Requires manager approval.",
+      "ERROR": {
+        "LOAD": "Unable to load price overrides.",
+        "APPLY": "Unable to apply price override."
+      },
+      "FIELD": {
+        "OVERRIDE_PRICE": "Override Price",
+        "REASON_CODE": "Reason Code",
+        "AUTHORITY_CODE": "Authority Code"
+      },
+      "REASON": {
+        "PRICE_MATCH": "Price Match",
+        "MANAGER_DISCOUNT": "Manager Discount",
+        "DEFECTIVE": "Defective Item",
+        "CUSTOMER_SERVICE": "Customer Service"
+      },
+      "ACTION": {
+        "APPLY": "Apply Override"
+      },
+      "HISTORY_TITLE": "Override History"
+    },
+    "CANCEL": {
+      "TITLE": "Cancel Order",
+      "ARIA": {
+        "SECTION": "Cancel order form"
+      },
+      "WARNING": "This action cannot be undone.",
+      "ERROR": {
+        "LOAD": "Unable to load order details.",
+        "SUBMIT": "Unable to cancel order. Please try again."
+      },
+      "FIELD": {
+        "STATUS": "Status",
+        "REASON": "Reason for Cancellation",
+        "AUTHORITY_CODE": "Authority Code"
+      },
+      "ACTION": {
+        "CANCEL_ORDER": "Cancel Order",
+        "SUBMITTING": "Cancelling..."
+      },
+      "RESULT": {
+        "SUCCESS": "Order has been cancelled.",
+        "PAYMENT_REVERSAL_REQUIRED": "Payment reversal is required.",
+        "PAYMENT_REVERSAL_ACTION": "Void/Refund Payment"
+      }
+    }
+  },
   "COMMON": {
     "SEARCH": "Search",
     "LOADING": "Loading…",
@@ -1550,12 +1941,23 @@
     "EDIT": "Edit",
     "CANCEL": "Cancel",
     "REFRESH": "Refresh",
-    "CLOSE": "Close"
+    "ACTION": {
+      "REFRESH": "Refresh"
+    },
+    "CLOSE": "Close",
+    "EMPTY_VALUE": "—"
   },
   "STATUS": {
+    "INITIATED": "Initiated",
+    "AUTHORIZED": "Authorized",
+    "CAPTURED": "Captured",
+    "VOIDED": "Voided",
+    "REFUNDED": "Refunded",
+    "FAILED": "Failed",
     "OPEN": "Open",
     "CLOSED": "Closed",
     "PENDING": "Pending",
+    "PENDING_PAYMENT": "Pending Payment",
     "PENDING_APPROVAL": "Pending Approval",
     "APPROVED": "Approved",
     "REJECTED": "Rejected",

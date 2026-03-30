@@ -1,0 +1,122 @@
+.price-override {
+  display: grid;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.price-override__header h1 {
+  font-family: var(--font-primary);
+  font-size: 1.5rem;
+}
+
+.price-override__history,
+.price-override__form-panel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  box-shadow: var(--shadow-card);
+}
+
+.price-override__history ul {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.price-override__history li {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.price-override__requires-approval {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--functional-warning) 24%, var(--cardBackground));
+  color: var(--currentTextColor);
+}
+
+.price-override__form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.price-override__field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.price-override__field label {
+  font-size: 0.875rem;
+}
+
+.price-override__input {
+  border: 0;
+  border-bottom: 1px solid var(--on-surface-variant);
+  border-radius: 0;
+  padding-inline: 0;
+  background: transparent;
+}
+
+.price-override__input:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: none;
+}
+
+.price-override__apply-btn {
+  justify-self: start;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  background: var(--primaryA400);
+  color: var(--contrastTextColor);
+  font-weight: 600;
+}
+
+.price-override__apply-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.price-override__error {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--functional-error-red) 14%, var(--cardBackground));
+  color: var(--functional-error-red);
+}
+
+.price-override__skeleton {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.price-override__skeleton-line {
+  height: 1.25rem;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--currentTextColor) 6%, transparent),
+      color-mix(in srgb, var(--currentTextColor) 14%, transparent),
+      color-mix(in srgb, var(--currentTextColor) 6%, transparent));
+  background-size: 200% 100%;
+  animation: price-override-loading 1.3s ease infinite;
+}
+
+@keyframes price-override-loading {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .price-override__history li {
+    grid-template-columns: 1fr;
+  }
+}

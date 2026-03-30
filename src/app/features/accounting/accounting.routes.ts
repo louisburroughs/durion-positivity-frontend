@@ -102,6 +102,13 @@ export const ACCOUNTING_ROUTES: Routes = [
             m => m.VendorPaymentDetailPageComponent,
           ),
       },
+      {
+        path: 'invoices/:invoiceId/payment-status',
+        loadComponent: () =>
+          import('./pages/invoice-payment-status/invoice-payment-status-page.component').then(
+            m => m.InvoicePaymentStatusPageComponent,
+          ),
+      },
       { path: '**', redirectTo: 'events' },
     ],
   },

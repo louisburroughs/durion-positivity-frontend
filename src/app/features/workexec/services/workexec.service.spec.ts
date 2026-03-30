@@ -25,6 +25,12 @@ import {
 import { WorkexecService } from './workexec.service';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { environment } from '../../../../environments/environment';
+import {
+  EstimateListItem,
+  FinalizeInvoiceResponse,
+  WorkorderInvoiceView,
+  WorkorderWipView,
+} from '../models/workexec.models';
 
 const BASE = environment.apiBaseUrl;
 
@@ -269,5 +275,155 @@ describe('WorkexecService', () => {
     expect(r.request.method).toBe('GET');
     expect(r.request.headers.has('X-Authorities')).toBeFalsy();
     r.flush({ id: 'wo-1' });
+  });
+
+  // ── CAP-248: Stories 259, 260, 261 ───────────────────────────────────────
+
+  describe('CAP-248 service methods', () => {
+    it('listEstimatesForCustomer — gets /v1/workorders/estimates with customerId query', () => {
+      const fixture: EstimateListItem[] = [
+        {
+          estimateId: 'est-259-1',
+          workorderId: 'wo-259-1',
+          customerId: 'cust-259-1',
+          vehicleId: 'veh-259-1',
+          status: 'OPEN',
+          totalAmount: 250.45,
+          currency: 'USD',
+          lastUpdatedAt: '2026-03-30T12:00:00Z',
+          createdAt: '2026-03-29T12:00:00Z',
+          notes: 'cap-248',
+        },
+      ];
+
+      service.listEstimatesForCustomer('cust-259-1').subscribe(result => {
+        expect(result).toEqual(fixture);
+      });
+
+      const req = http.expectOne(r =>
+        r.url === `${BASE}/v1/workorders/estimates` && r.params.get('customerId') === 'cust-259-1',
+      );
+      expect(req.request.method).toBe('GET');
+      expect(req.request.url).toContain('/v1/workorders/estimates');
+      req.flush(fixture);
+    });
+
+    it('listEstimatesForVehicle — gets /v1/workorders/estimates with vehicleId query', () => {
+      const fixture: EstimateListItem[] = [
+        {
+          estimateId: 'est-259-2',
+          customerId: 'cust-259-2',
+          vehicleId: 'veh-259-2',
+          status: 'APPROVED',
+          totalAmount: 399,
+          currency: 'USD',
+        },
+      ];
+
+      service.listEstimatesForVehicle('veh-259-2').subscribe(result => {
+        expect(result).toEqual(fixture);
+      });
+
+      const req = http.expectOne(r =>
+        r.url === `${BASE}/v1/workorders/estimates` && r.params.get('vehicleId') === 'veh-259-2',
+      );
+      expect(req.request.method).toBe('GET');
+      expect(req.request.url).toContain('/v1/workorders/estimates');
+      req.flush(fixture);
+    });
+
+    it('listActiveWorkorders — gets /v1/workorders/wip with wipStatus query', () => {
+      const fixture: WorkorderWipView[] = [
+        {
+          workorderId: 'wo-260-1',
+          workorderNumber: 'WO-260-1',
+          wipStatus: 'IN_PROGRESS',
+          assignedTechnicianName: 'Alex Tech',
+          bayLocation: 'Bay-1',
+          customerId: 'cust-260-1',
+          vehicleDescription: 'Sedan',
+          statusUpdatedAt: '2026-03-30T12:10:00Z',
+        },
+      ];
+
+      service.listActiveWorkorders({ wipStatus: ['IN_PROGRESS', 'READY'] }).subscribe(result => {
+        expect(result).toEqual(fixture);
+      });
+
+      const req = http.expectOne(r =>
+        r.url === `${BASE}/v1/workorders/wip` && r.params.get('wipStatus') === 'IN_PROGRESS,READY',
+      );
+      expect(req.request.method).toBe('GET');
+      expect(req.request.url).toContain('/v1/workorders/wip');
+      req.flush(fixture);
+    });
+
+    it('getWorkorderWipStatus — gets /v1/workorders/{workorderId}/wip-status', () => {
+      const fixture: WorkorderWipView = {
+        workorderId: 'wo-260-2',
+        workorderNumber: 'WO-260-2',
+        wipStatus: 'WAITING',
+      };
+
+      service.getWorkorderWipStatus('wo-260-2').subscribe(result => {
+        expect(result).toEqual(fixture);
+      });
+
+      const req = http.expectOne(`${BASE}/v1/workorders/wo-260-2/wip-status`);
+      expect(req.request.method).toBe('GET');
+      expect(req.request.url).toContain('/v1/workorders/wo-260-2/wip-status');
+      req.flush(fixture);
+    });
+
+    it('getWorkorderInvoiceView — gets /v1/workorders/{workorderId}/invoice-view', () => {
+      const fixture: WorkorderInvoiceView = {
+        workorderId: 'wo-261-1',
+        invoiceId: 'inv-261-1',
+        lineItems: [
+          {
+            lineItemId: 'line-1',
+            description: 'Labor',
+            quantity: 1,
+            unitPrice: 150,
+            lineTotal: 150,
+            itemType: 'LABOR',
+          },
+        ],
+        subtotal: 150,
+        taxAmount: 12,
+        total: 162,
+        currency: 'USD',
+        invoiceStatus: 'DRAFT',
+      };
+
+      service.getWorkorderInvoiceView('wo-261-1').subscribe(result => {
+        expect(result).toEqual(fixture);
+      });
+
+      const req = http.expectOne(`${BASE}/v1/workorders/wo-261-1/invoice-view`);
+      expect(req.request.method).toBe('GET');
+      expect(req.request.url).toContain('/v1/workorders/wo-261-1/invoice-view');
+      req.flush(fixture);
+    });
+
+    it('requestInvoiceFinalization — posts /v1/workorders/{workorderId}/invoice/finalize', () => {
+      const responseFixture: FinalizeInvoiceResponse = {
+        workorderId: 'wo-261-2',
+        invoiceId: 'inv-261-2',
+        status: 'FINALIZED',
+        finalizedAt: '2026-03-30T12:20:00Z',
+      };
+
+      service
+        .requestInvoiceFinalization('wo-261-2', { reason: 'Approved by manager' })
+        .subscribe(result => {
+          expect(result).toEqual(responseFixture);
+        });
+
+      const req = http.expectOne(`${BASE}/v1/workorders/wo-261-2/invoice/finalize`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.url).toContain('/v1/workorders/wo-261-2/invoice/finalize');
+      req.flush(responseFixture);
+    });
   });
 });

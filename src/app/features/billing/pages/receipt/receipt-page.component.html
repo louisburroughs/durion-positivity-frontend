@@ -1,0 +1,87 @@
+<section class="receipt" aria-labelledby="receipt-title">
+  <header>
+    <h1 id="receipt-title" class="receipt__title">{{ 'BILLING.RECEIPT.TITLE' | translate }}</h1>
+  </header>
+
+  @if (state() === 'loading') {
+  <div class="receipt__skeleton" aria-busy="true" aria-live="polite">
+    <div class="receipt__skeleton-line"></div>
+    <div class="receipt__skeleton-line receipt__skeleton-line--short"></div>
+    <div class="receipt__skeleton-block"></div>
+  </div>
+  }
+
+  @if (state() === 'error' && errorKey()) {
+  <div class="receipt__error" role="alert">{{ errorKey()! | translate }}</div>
+  }
+
+  @if (state() === 'idle' || state() === 'error') {
+  <p class="receipt__idle">{{ 'BILLING.RECEIPT.IDLE' | translate }}</p>
+
+  <form class="receipt__form" (submit)="$event.preventDefault()">
+    <div class="receipt__field">
+      <label class="receipt__label" for="receipt-delivery-method">{{ 'BILLING.RECEIPT.DELIVERY.LABEL' | translate
+        }}</label>
+      <select id="receipt-delivery-method" class="receipt__input" [value]="deliveryMethod()"
+        (change)="setDeliveryMethod($any($event.target).value)">
+        <option value="PRINT">{{ 'BILLING.RECEIPT.DELIVERY.PRINT' | translate }}</option>
+        <option value="EMAIL">{{ 'BILLING.RECEIPT.DELIVERY.EMAIL' | translate }}</option>
+        <option value="NONE">{{ 'BILLING.RECEIPT.DELIVERY.NONE' | translate }}</option>
+      </select>
+    </div>
+
+    @if (deliveryMethod() === 'EMAIL') {
+    <div class="receipt__field">
+      <label class="receipt__label" for="receipt-email-address">{{ 'BILLING.RECEIPT.EMAIL_LABEL' | translate }}</label>
+      <input id="receipt-email-address" class="receipt__input" type="email" [required]="deliveryMethod() === 'EMAIL'"
+        [value]="emailAddress()" (input)="emailAddress.set($any($event.target).value)" />
+    </div>
+    }
+
+    <button type="button" class="receipt__generate-btn" [disabled]="!canGenerate()" (click)="generateFromForm()">
+      {{ 'BILLING.RECEIPT.ACTION.GENERATE' | translate }}
+    </button>
+  </form>
+  }
+
+  @if (state() === 'submitting') {
+  <output class="receipt__submitting" aria-live="polite">
+    <span class="receipt__spinner" aria-hidden="true"></span>
+    <span>{{ 'BILLING.PAYMENT.SUBMITTING' | translate }}</span>
+  </output>
+  }
+
+  @if (state() === 'ready' && receipt()) {
+  <article class="receipt__detail">
+    <div class="receipt__field-row">
+      <span>{{ 'BILLING.RECEIPT.FIELD.RECEIPT_NUMBER' | translate }}</span>
+      <strong>{{ receipt()!.receiptNumber || receipt()!.receiptId }}</strong>
+    </div>
+    <div class="receipt__field-row">
+      <span>{{ 'BILLING.RECEIPT.FIELD.INVOICE_REF' | translate }}</span>
+      <strong>{{ receipt()!.invoiceId }}</strong>
+    </div>
+    <div class="receipt__field-row">
+      <span>{{ 'BILLING.RECEIPT.FIELD.GENERATED_AT' | translate }}</span>
+      <strong>{{ receipt()!.generatedAt | date:'medium' }}</strong>
+    </div>
+    @if (receipt()!.emailedTo) {
+    <div class="receipt__field-row">
+      <span>{{ 'BILLING.RECEIPT.FIELD.EMAILED_TO' | translate }}</span>
+      <strong>{{ receipt()!.emailedTo }}</strong>
+    </div>
+    }
+
+    <div class="receipt__actions">
+      <button type="button" class="receipt__reprint-btn" (click)="reprint()">
+        {{ 'BILLING.RECEIPT.ACTION.REPRINT' | translate }}
+      </button>
+      @if (receipt()!.pdfUrl) {
+      <a class="receipt__pdf-link" [href]="receipt()!.pdfUrl" target="_blank" rel="noopener noreferrer">
+        {{ 'BILLING.RECEIPT.ACTION.VIEW_PDF' | translate }}
+      </a>
+      }
+    </div>
+  </article>
+  }
+</section>

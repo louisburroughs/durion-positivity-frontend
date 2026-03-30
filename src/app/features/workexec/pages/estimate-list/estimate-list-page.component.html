@@ -1,0 +1,53 @@
+<section class="estimate-list" [attr.data-state]="state()"
+  [attr.aria-label]="'WORKEXEC.ESTIMATE_LIST.ARIA.SECTION' | translate" data-testid="estimate-list-page">
+  <header class="estimate-list__header">
+    <h1>{{ 'WORKEXEC.ESTIMATE_LIST.TITLE' | translate }}</h1>
+  </header>
+
+  @if (state() === 'idle') {
+  <p class="estimate-list__idle">{{ 'WORKEXEC.ESTIMATE_LIST.IDLE' | translate }}</p>
+  }
+
+  @if (state() === 'loading') {
+  <div class="estimate-list__skeleton" aria-hidden="true">
+    @for (skeleton of [1, 2, 3]; track skeleton) {
+    <div class="estimate-list__skeleton-row"></div>
+    }
+  </div>
+  }
+
+  @if (state() === 'ready') {
+  <ul class="estimate-list__grid" data-testid="estimate-list">
+    @for (item of estimates(); track item.estimateId) {
+    <li class="estimate-list__card" data-testid="estimate-row">
+      <button type="button" (click)="openEstimateDetail(item.estimateId)"
+        [attr.aria-label]="('WORKEXEC.ESTIMATE_LIST.CARD.ARIA_LABEL' | translate) + ' ' + (item.customerId || item.estimateId) + ', ' + ('WORKEXEC.ESTIMATE_STATUS.' + item.status | translate)">
+        <span class="estimate-list__primary">{{ item.customerId }}</span>
+
+        <span class="estimate-list__meta">
+          <span class="estimate-list__status-badge">{{ ('WORKEXEC.ESTIMATE_STATUS.' + item.status) | translate }}</span>
+          <span>{{ item.estimateId }}</span>
+        </span>
+
+        <span class="estimate-list__meta">
+          <span>{{ 'WORKEXEC.ESTIMATE_LIST.CARD.LAST_UPDATED' | translate }}: {{ (item.lastUpdatedAt ?? item.createdAt)
+            | date: 'medium' }}</span>
+          <span class="estimate-list__total">{{ 'WORKEXEC.ESTIMATE_LIST.CARD.TOTAL' | translate }}: {{ item.totalAmount
+            | currency:item.currency:'symbol':'1.2-2' }}</span>
+        </span>
+      </button>
+    </li>
+    }
+  </ul>
+  }
+
+  @if (state() === 'empty') {
+  <p class="estimate-list__empty">{{ 'WORKEXEC.ESTIMATE_LIST.EMPTY' | translate }}</p>
+  }
+
+  @if (state() === 'error') {
+  <div class="estimate-list__error" role="alert" data-testid="estimate-list-error">
+    {{ errorKey() | translate }}
+  </div>
+  }
+</section>

@@ -1,0 +1,121 @@
+.estimate-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--space-6, 1.5rem) var(--space-4, 1rem);
+  background: color-mix(in srgb, var(--cardBackground, #fff) 82%, var(--themeBackground) 18%);
+  border-radius: var(--radius-lg, 16px);
+}
+
+.estimate-list__header h1 {
+  margin: 0;
+  color: var(--currentTextColor);
+  font-family: var(--font-primary, var(--font-body));
+  font-size: 1.5rem;
+}
+
+.estimate-list__grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4, 1rem);
+  margin: 0;
+  padding: 0;
+}
+
+.estimate-list__card {
+  background: color-mix(in srgb, var(--primary50, #f4f8fe) 55%, var(--cardBackground, #fff) 45%);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-card);
+}
+
+.estimate-list__card button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--currentTextColor);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2, 0.5rem);
+  padding: var(--space-4, 1rem);
+  text-align: left;
+}
+
+.estimate-list__card button:focus-visible {
+  outline: 2px solid var(--input-focus-border, var(--primaryA400));
+  outline-offset: 2px;
+}
+
+.estimate-list__primary {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.estimate-list__meta {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: var(--space-3, 0.75rem);
+  color: var(--handleColor);
+  font-size: 0.875rem;
+}
+
+.estimate-list__status-badge {
+  display: inline-flex;
+  padding: var(--space-1, 0.25rem) var(--space-2, 0.5rem);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accentA100, #d7f3f0) 65%, transparent);
+  color: var(--accentA700, #158f83);
+  font-weight: 600;
+}
+
+.estimate-list__total {
+  margin-left: auto;
+  text-align: right;
+  color: var(--currentTextColor);
+  font-weight: 600;
+}
+
+.estimate-list__skeleton {
+  display: grid;
+  gap: var(--space-3, 0.75rem);
+}
+
+.estimate-list__skeleton-row {
+  height: 5rem;
+  border-radius: var(--radius-md, 8px);
+  background: linear-gradient(90deg, var(--primary50, #f4f8fe), var(--cardBackground, #fff), var(--primary50, #f4f8fe));
+  background-size: 200% 100%;
+  animation: estimate-list-skeleton 1.2s ease-in-out infinite;
+}
+
+.estimate-list__idle,
+.estimate-list__empty {
+  color: var(--handleColor);
+}
+
+.estimate-list__error {
+  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  border-radius: var(--radius-md, 8px);
+  color: var(--functional-error-red, #c84c47);
+  background: color-mix(in srgb, var(--functional-error-red, #c84c47) 11%, transparent);
+}
+
+@keyframes estimate-list-skeleton {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .estimate-list__grid {
+    grid-template-columns: 1fr;
+  }
+}

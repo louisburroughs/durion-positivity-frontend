@@ -59,6 +59,15 @@ export const WORKEXEC_ROUTES: Routes = [
           ),
       },
 
+      /** Story 259: Retrieve and display estimate list for customer/vehicle */
+      {
+        path: 'estimate-list',
+        loadComponent: () =>
+          import('./pages/estimate-list/estimate-list-page.component').then(
+            m => m.EstimateListPageComponent,
+          ),
+      },
+
       /** Story 238: Add Parts to Estimate */
       {
         path: 'estimates/:estimateId/parts',
@@ -158,6 +167,24 @@ export const WORKEXEC_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/workorder-detail/workorder-detail-page.component').then(
             m => m.WorkorderDetailPageComponent,
+          ),
+      },
+
+      /** Story 260: Display WIP status for active workorders */
+      {
+        path: 'wip-status',
+        loadComponent: () =>
+          import('./pages/wip-status/wip-status-page.component').then(
+            m => m.WipStatusPageComponent,
+          ),
+      },
+
+      /** Story 261: Invoice visibility and finalization request */
+      {
+        path: 'workorders/:workorderId/invoice-finalization',
+        loadComponent: () =>
+          import('./pages/invoice-finalization/invoice-finalization-page.component').then(
+            m => m.InvoiceFinalizationPageComponent,
           ),
       },
 

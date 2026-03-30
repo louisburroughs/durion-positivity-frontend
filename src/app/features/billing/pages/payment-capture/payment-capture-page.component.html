@@ -1,0 +1,89 @@
+<section class="payment-capture" aria-labelledby="payment-capture-title">
+  <header class="payment-capture__header">
+    <h1 id="payment-capture-title" class="payment-capture__title">{{ 'BILLING.PAYMENT.TITLE' | translate }}</h1>
+  </header>
+
+  @if (state() === 'loading') {
+  <div class="payment-capture__skeleton" aria-busy="true" aria-live="polite">
+    <div class="payment-capture__skeleton-line"></div>
+    <div class="payment-capture__skeleton-line payment-capture__skeleton-line--short"></div>
+    <div class="payment-capture__skeleton-block"></div>
+  </div>
+  }
+
+  @if (state() === 'submitting') {
+  <output class="payment-capture__submitting" aria-live="polite">
+    <span class="payment-capture__spinner" aria-hidden="true"></span>
+    <span>{{ 'BILLING.PAYMENT.SUBMITTING' | translate }}</span>
+  </output>
+  }
+
+  @if (state() === 'error' && errorKey()) {
+  <div class="payment-capture__error" role="alert">
+    {{ errorKey()! | translate }}
+  </div>
+  }
+
+  @if (state() === 'idle' || state() === 'error') {
+  <p class="payment-capture__hint">{{ 'BILLING.PAYMENT.IDLE' | translate }}</p>
+
+  <form class="payment-capture__form" (submit)="$event.preventDefault()">
+    <div class="payment-capture__field">
+      <label class="payment-capture__label" for="payment-method-select">
+        {{ 'BILLING.PAYMENT.METHOD.LABEL' | translate }}
+      </label>
+      <select id="payment-method-select" class="payment-capture__input" [value]="selectedMethod()"
+        (change)="setSelectedMethod($any($event.target).value)">
+        <option value="CARD">{{ 'BILLING.PAYMENT.METHOD.CARD' | translate }}</option>
+        <option value="CASH">{{ 'BILLING.PAYMENT.METHOD.CASH' | translate }}</option>
+        <option value="CHECK">{{ 'BILLING.PAYMENT.METHOD.CHECK' | translate }}</option>
+        <option value="CREDIT_ACCOUNT">{{ 'BILLING.PAYMENT.METHOD.CREDIT_ACCOUNT' | translate }}</option>
+      </select>
+    </div>
+
+    <div class="payment-capture__field">
+      <label class="payment-capture__label" for="payment-amount-input">
+        {{ 'BILLING.PAYMENT.AMOUNT_LABEL' | translate }}
+      </label>
+      <input id="payment-amount-input" class="payment-capture__input" type="number" min="0" step="0.01"
+        [value]="amount() ?? ''" (input)="setAmount($any($event.target).value)" />
+    </div>
+
+    <button type="button" class="payment-capture__submit" [disabled]="!canSubmitCapture()"
+      (click)="initiateAndCapture(selectedMethod(), amount() ?? 0)">
+      {{ 'BILLING.PAYMENT.ACTION.CAPTURE' | translate }}
+    </button>
+  </form>
+  }
+
+  @if (state() === 'ready' && transaction()) {
+  <section class="payment-capture__success">
+    <h2 class="payment-capture__success-title">{{ 'BILLING.PAYMENT.TITLE' | translate }}</h2>
+
+    <div class="payment-capture__success-field">
+      <span>{{ 'BILLING.PAYMENT.FIELD.TRANSACTION_ID' | translate }}</span>
+      <strong>{{ transaction()!.transactionId || transaction()!.paymentId }}</strong>
+    </div>
+    <div class="payment-capture__success-field">
+      <span>{{ 'BILLING.PAYMENT.FIELD.AUTH_CODE' | translate }}</span>
+      <strong>{{ transaction()!.authCode || '—' }}</strong>
+    </div>
+    <div class="payment-capture__success-field">
+      <span>{{ 'BILLING.PAYMENT.FIELD.STATUS' | translate }}</span>
+      <strong>{{ ('STATUS.' + transaction()!.status) | translate }}</strong>
+    </div>
+    <div class="payment-capture__success-field">
+      <span>{{ 'BILLING.PAYMENT.FIELD.AMOUNT' | translate }}</span>
+      <strong>{{ transaction()!.amount | currency: transaction()!.currency }}</strong>
+    </div>
+    <div class="payment-capture__success-field">
+      <span>{{ 'BILLING.PAYMENT.FIELD.CAPTURED_AT' | translate }}</span>
+      <strong>{{ (transaction()!.capturedAt || transaction()!.createdAt) | date:'medium' }}</strong>
+    </div>
+
+    <a class="payment-capture__receipt-link" [routerLink]="['/app/billing/invoices', invoiceId(), 'receipts']">
+      {{ 'BILLING.PAYMENT.ACTION.PRINT_RECEIPT' | translate }}
+    </a>
+  </section>
+  }
+</section>

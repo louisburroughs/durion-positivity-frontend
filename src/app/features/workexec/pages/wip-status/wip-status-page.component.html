@@ -1,0 +1,61 @@
+<section class="wip" [attr.data-state]="state()" [attr.aria-label]="'WORKEXEC.WIP.ARIA.SECTION' | translate"
+  data-testid="wip-status-page">
+  <header class="wip__header">
+    <h1>{{ 'WORKEXEC.WIP.TITLE' | translate }}</h1>
+    <button type="button" class="wip__refresh" (click)="refresh()">
+      {{ 'COMMON.ACTION.REFRESH' | translate }}
+    </button>
+  </header>
+
+  @if (state() === 'loading' || state() === 'idle') {
+  <div class="wip__skeleton" aria-hidden="true">
+    @for (skeleton of [1, 2, 3, 4]; track skeleton) {
+    <div class="wip__skeleton-row"></div>
+    }
+  </div>
+  }
+
+  @if (state() === 'ready') {
+  <table class="wip__table" [attr.aria-label]="'WORKEXEC.WIP.ARIA.TABLE' | translate" data-testid="wip-list">
+    <caption>{{ 'WORKEXEC.WIP.ARIA.TABLE' | translate }}</caption>
+    <thead>
+      <tr>
+        <th scope="col">{{ 'WORKEXEC.WIP.COLUMN.WORKORDER' | translate }}</th>
+        <th scope="col">{{ 'WORKEXEC.WIP.COLUMN.STATUS' | translate }}</th>
+        <th scope="col">{{ 'WORKEXEC.WIP.COLUMN.TECHNICIAN' | translate }}</th>
+        <th scope="col">{{ 'WORKEXEC.WIP.COLUMN.BAY' | translate }}</th>
+        <th scope="col">{{ 'WORKEXEC.WIP.COLUMN.VEHICLE' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of wipItems(); track item.workorderId) {
+      <tr [attr.aria-current]="selectedWorkorderId() === item.workorderId ? 'true' : null" data-testid="wip-row">
+        <td>
+          <button type="button" class="wip__workorder-link" (click)="openWorkorderDetail(item.workorderId)">
+            {{ item.workorderNumber }}
+          </button>
+        </td>
+        <td>
+          <span class="wip__badge" [ngClass]="'wip__badge--' + item.wipStatus.toLowerCase().replace(/_/g, '-')">
+            {{ ('WORKEXEC.WIP_STATUS.' + item.wipStatus) | translate }}
+          </span>
+        </td>
+        <td>{{ item.assignedTechnicianName || ('COMMON.EMPTY_VALUE' | translate) }}</td>
+        <td>{{ item.bayLocation || ('COMMON.EMPTY_VALUE' | translate) }}</td>
+        <td>{{ item.vehicleDescription || ('COMMON.EMPTY_VALUE' | translate) }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+  }
+
+  @if (state() === 'empty') {
+  <p class="wip__empty">{{ 'WORKEXEC.WIP.EMPTY' | translate }}</p>
+  }
+
+  @if (state() === 'error') {
+  <div class="wip__error" role="alert" data-testid="wip-status-error">
+    {{ errorKey() | translate }}
+  </div>
+  }
+</section>

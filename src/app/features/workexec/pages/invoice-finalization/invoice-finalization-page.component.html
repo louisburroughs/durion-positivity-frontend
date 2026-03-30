@@ -1,0 +1,76 @@
+<section class="invoice-fin" [attr.data-state]="state()"
+  [attr.aria-label]="'WORKEXEC.INVOICE_FINALIZATION.ARIA.SECTION' | translate" data-testid="invoice-finalization-page">
+  <header class="invoice-fin__header">
+    <h1>{{ 'WORKEXEC.INVOICE_FINALIZATION.TITLE' | translate }}</h1>
+  </header>
+
+  @if (state() === 'loading') {
+  <div class="invoice-fin__skeleton" aria-hidden="true">
+    @for (skeleton of [1, 2, 3]; track skeleton) {
+    <div class="invoice-fin__skeleton-row"></div>
+    }
+  </div>
+  }
+
+  @if (state() === 'ready') {
+  @if (invoiceView(); as view) {
+  <section class="invoice-fin__summary">
+    <p class="invoice-fin__meta">
+      <strong>{{ view.workorderId }}</strong>
+      <span>{{ ('WORKEXEC.INVOICE_STATUS.' + view.invoiceStatus) | translate }}</span>
+    </p>
+    <p class="invoice-fin__grand-total">{{ view.total | currency:view.currency:'symbol':'1.2-2' }}</p>
+  </section>
+
+  <table class="invoice-fin__items-table" data-testid="invoice-line-items">
+    <caption>{{ 'WORKEXEC.INVOICE_FINALIZATION.ARIA.ITEMS_TABLE' | translate }}</caption>
+    <thead>
+      <tr>
+        <th scope="col">{{ 'WORKEXEC.INVOICE_FINALIZATION.COLUMN.DESCRIPTION' | translate }}</th>
+        <th scope="col">{{ 'WORKEXEC.INVOICE_FINALIZATION.COLUMN.QTY' | translate }}</th>
+        <th scope="col">{{ 'WORKEXEC.INVOICE_FINALIZATION.COLUMN.UNIT_PRICE' | translate }}</th>
+        <th scope="col">{{ 'WORKEXEC.INVOICE_FINALIZATION.COLUMN.LINE_TOTAL' | translate }}</th>
+        <th scope="col">{{ 'WORKEXEC.INVOICE_FINALIZATION.COLUMN.TYPE' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of view.lineItems; track item.lineItemId) {
+      <tr data-testid="invoice-line-item">
+        <td>{{ item.description }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.unitPrice | currency:view.currency:'symbol':'1.2-2' }}</td>
+        <td>{{ item.lineTotal | currency:view.currency:'symbol':'1.2-2' }}</td>
+        <td>{{ ('WORKEXEC.ITEM_TYPE.' + item.itemType) | translate }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+
+  <section class="invoice-fin__totals">
+    <p><span>{{ 'WORKEXEC.INVOICE_FINALIZATION.SUMMARY.SUBTOTAL' | translate }}</span><span>{{ view.subtotal |
+        currency:view.currency:'symbol':'1.2-2' }}</span></p>
+    <p><span>{{ 'WORKEXEC.INVOICE_FINALIZATION.SUMMARY.TAX' | translate }}</span><span>{{ view.taxAmount |
+        currency:view.currency:'symbol':'1.2-2' }}</span></p>
+    <p class="invoice-fin__totals-total"><span>{{ 'WORKEXEC.INVOICE_FINALIZATION.SUMMARY.TOTAL' | translate
+        }}</span><span>{{ view.total | currency:view.currency:'symbol':'1.2-2' }}</span></p>
+  </section>
+
+  <section class="invoice-fin__form" [attr.aria-busy]="isSubmitting() ? 'true' : null">
+    <label for="invoice-finalization-reason">{{ 'WORKEXEC.INVOICE_FINALIZATION.FORM.REASON_LABEL' | translate }}</label>
+    <textarea id="invoice-finalization-reason" #reasonInput class="invoice-fin__reason-input"
+      [placeholder]="'WORKEXEC.INVOICE_FINALIZATION.FORM.REASON_PLACEHOLDER' | translate"></textarea>
+    <button type="button" class="invoice-fin__submit-btn"
+      (click)="requestFinalization(reasonInput.value.trim() || undefined)" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? ('WORKEXEC.INVOICE_FINALIZATION.ACTION.SUBMITTING' | translate) :
+      ('WORKEXEC.INVOICE_FINALIZATION.ACTION.REQUEST_FINALIZATION' | translate) }}
+    </button>
+  </section>
+  }
+  }
+
+  @if (state() === 'error') {
+  <div class="invoice-fin__error" role="alert" data-testid="invoice-finalization-error">
+    {{ errorKey() | translate }}
+  </div>
+  }
+</section>

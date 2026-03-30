@@ -1,0 +1,176 @@
+<section class="ips-section" [attr.aria-label]="'ACCOUNTING.INVOICE_PAYMENT_STATUS.ARIA.SECTION' | translate"
+  data-testid="invoice-payment-status-page">
+  <header class="ips-header">
+    <p class="ips-overline">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.OVERLINE' | translate }}</p>
+    <h1 class="ips-title">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.TITLE' | translate }}</h1>
+  </header>
+
+  @if (state() === 'loading') {
+  <div class="ips-loading" aria-live="polite" aria-busy="true">
+    <p class="body-md">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.LOADING' | translate }}</p>
+    <div class="ips-skeleton" aria-hidden="true"></div>
+    <div class="ips-skeleton" aria-hidden="true"></div>
+    <div class="ips-skeleton" aria-hidden="true"></div>
+  </div>
+  }
+
+  @if (state() === 'error') {
+  <section class="ips-banner ips-banner--error" role="alert">
+    <p>{{ (errorKey() ?? 'ACCOUNTING.INVOICE_PAYMENT_STATUS.ERROR.LOAD') | translate }}</p>
+    <button type="button" class="ips-button ips-button--primary" (click)="refresh()"
+      [attr.aria-label]="'ACCOUNTING.INVOICE_PAYMENT_STATUS.ARIA.REFRESH' | translate">
+      {{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.ACTION.REFRESH' | translate }}
+    </button>
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="ips-empty-state" aria-live="polite">
+    {{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.HISTORY.EMPTY' | translate }}
+  </section>
+  }
+
+  @if (state() === 'ready') {
+  <article class="ips-payment-card" aria-live="polite">
+    <div class="ips-payment-card__top">
+      <div class="ips-field-group">
+        <p class="body-md">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.PAYMENT_STATUS' | translate }}</p>
+        <span class="ips-status-badge" [ngClass]="{
+              'ips-status-badge--paid': paymentStatus() === 'PAID',
+              'ips-status-badge--unpaid': paymentStatus() === 'UNPAID',
+              'ips-status-badge--partially-paid': paymentStatus() === 'PARTIALLY_PAID'
+            }" [attr.aria-label]="
+              'ACCOUNTING.INVOICE_PAYMENT_STATUS.ARIA.STATUS_BADGE'
+                | translate : { status: ('ACCOUNTING.INVOICE_PAYMENT_STATUS.PAYMENT_STATUS.' + paymentStatus()) | translate }
+            ">
+          {{ ('ACCOUNTING.INVOICE_PAYMENT_STATUS.PAYMENT_STATUS.' + paymentStatus()) | translate }}
+        </span>
+      </div>
+
+      <div class="ips-field-group ips-field-group--amount">
+        <p class="body-md">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.BALANCE_DUE' | translate }}</p>
+        <p class="display-lg">
+          {{ invoiceStatus()?.balanceDue ?? 0 | currency:(invoiceStatus()?.currency ?? 'USD') }}
+        </p>
+      </div>
+    </div>
+
+    <div class="ips-payment-card__details">
+      <div class="ips-field-group">
+        <p class="body-md">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.TOTAL_AMOUNT' | translate }}</p>
+        <p>{{ invoiceStatus()?.totalAmount ?? 0 | currency:(invoiceStatus()?.currency ?? 'USD') }}</p>
+      </div>
+
+      <div class="ips-field-group">
+        <p class="body-md">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.PAID_AMOUNT' | translate }}</p>
+        <p>{{ invoiceStatus()?.paidAmount ?? 0 | currency:(invoiceStatus()?.currency ?? 'USD') }}</p>
+      </div>
+    </div>
+  </article>
+
+  @if (canViewEvents()) {
+  <section class="ips-ingestion-row" aria-live="polite">
+    <div class="ips-field-group">
+      <p class="body-md">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.INGESTION_STATUS' | translate }}</p>
+      <p>
+        {{
+        invoiceStatus()?.latestIngestionStatus
+        ? (('STATUS.' + invoiceStatus()?.latestIngestionStatus) | translate)
+        : ('ACCOUNTING.INVOICE_PAYMENT_STATUS.EMPTY_INGESTION' | translate)
+        }}
+      </p>
+    </div>
+
+    <div class="ips-posting-refs">
+      <p class="ips-posting-refs__primary">
+        {{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.JOURNAL_ENTRY_ID' | translate }}:
+        {{ invoiceStatus()?.journalEntryId || ('COMMON.EMPTY_VALUE' | translate) }}
+      </p>
+      <p class="ips-posting-refs__secondary">
+        {{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.LEDGER_TRANSACTION_ID' | translate }}:
+        {{ invoiceStatus()?.ledgerTransactionId || ('COMMON.EMPTY_VALUE' | translate) }}
+      </p>
+    </div>
+
+    @if (invoiceStatus()?.errorCode || invoiceStatus()?.errorMessage) {
+    <section class="ips-banner ips-banner--warning" aria-live="polite">
+      @if (invoiceStatus()?.errorCode) {
+      <p>
+        {{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.ERROR_CODE' | translate }}:
+        {{ invoiceStatus()?.errorCode }}
+      </p>
+      }
+      @if (invoiceStatus()?.errorMessage) {
+      <p>
+        {{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.ERROR_MESSAGE' | translate }}:
+        {{ invoiceStatus()?.errorMessage }}
+      </p>
+      }
+    </section>
+    }
+  </section>
+  } @else {
+  <p class="ips-empty-state">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.EMPTY_INGESTION' | translate }}</p>
+  }
+
+  <div class="ips-actions">
+    <button type="button" class="ips-button ips-button--primary" (click)="refresh()"
+      [attr.aria-label]="'ACCOUNTING.INVOICE_PAYMENT_STATUS.ARIA.REFRESH' | translate">
+      {{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.ACTION.REFRESH' | translate }}
+    </button>
+    <button type="button" class="ips-button ips-button--secondary" (click)="toggleHistory()"
+      [attr.aria-expanded]="showHistory()">
+      {{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.ACTION.VIEW_HISTORY' | translate }}
+    </button>
+  </div>
+
+  @if (showHistory()) {
+  <div class="ips-history-wrap">
+    @if (events().length > 0) {
+    <table class="ips-history-table">
+      <caption>{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.HISTORY.TABLE_CAPTION' | translate }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.HISTORY.COL_RECEIVED_AT' | translate }}</th>
+          <th scope="col">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.HISTORY.COL_STATUS' | translate }}</th>
+          <th scope="col">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.HISTORY.COL_TYPE' | translate }}</th>
+          <th scope="col">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.HISTORY.COL_ERROR' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (event of events(); track event.eventId) {
+        <tr class="ips-history-row" tabindex="0"
+          [attr.aria-current]="selectedEvent()?.eventId === event.eventId ? 'true' : null"
+          (click)="loadEventDetail(event.eventId)" (keydown.enter)="loadEventDetail(event.eventId)"
+          (keydown.space)="$event.preventDefault(); loadEventDetail(event.eventId)">
+          <td>{{ event.receivedAt || ('COMMON.EMPTY_VALUE' | translate) }}</td>
+          <td>{{ ('STATUS.' + event.processingStatus) | translate }}</td>
+          <td>{{ ('ACCOUNTING.EVENT_TYPE.' + event.eventType) | translate }}</td>
+          <td>{{ event.errorMessage || ('COMMON.EMPTY_VALUE' | translate) }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (selectedEvent()) {
+    <div class="ips-event-detail"
+      [attr.aria-label]="'ACCOUNTING.INVOICE_PAYMENT_STATUS.HISTORY.DETAIL_ARIA' | translate">
+      <h3 class="ips-event-detail__title">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.HISTORY.DETAIL_TITLE' | translate }}
+      </h3>
+      <dl class="ips-event-detail__fields">
+        <dt>{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.INGESTION_STATUS' | translate }}</dt>
+        <dd>{{ ('STATUS.' + selectedEvent()!.processingStatus) | translate }}</dd>
+        <dt>{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.ERROR_CODE' | translate }}</dt>
+        <dd>{{ selectedEvent()!.errorCode || ('COMMON.EMPTY_VALUE' | translate) }}</dd>
+        <dt>{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.FIELD.ERROR_MESSAGE' | translate }}</dt>
+        <dd>{{ selectedEvent()!.errorMessage || ('COMMON.EMPTY_VALUE' | translate) }}</dd>
+      </dl>
+    </div>
+    }
+    } @else {
+    <p class="ips-empty-state">{{ 'ACCOUNTING.INVOICE_PAYMENT_STATUS.HISTORY.EMPTY' | translate }}</p>
+    }
+  </div>
+  }
+  }
+</section>

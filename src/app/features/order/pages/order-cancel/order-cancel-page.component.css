@@ -1,0 +1,138 @@
+.order-cancel {
+  display: grid;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.order-cancel__header h1 {
+  font-family: var(--font-primary);
+  font-size: 1.5rem;
+}
+
+.order-cancel__summary,
+.order-cancel__form-panel,
+.order-cancel__result {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  box-shadow: var(--shadow-card);
+}
+
+.order-cancel__summary dl {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.order-cancel__summary dt {
+  font-size: 0.8125rem;
+  color: color-mix(in srgb, var(--currentTextColor) 72%, transparent);
+}
+
+.order-cancel__summary dd {
+  font-weight: 600;
+}
+
+.order-cancel__warning {
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: color-mix(in srgb, var(--functional-error-red) 16%, var(--cardBackground));
+  color: var(--functional-error-red);
+}
+
+.order-cancel__form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.order-cancel__field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.order-cancel__field label {
+  font-size: 0.875rem;
+}
+
+.order-cancel__input {
+  border: 0;
+  border-bottom: 1px solid var(--on-surface-variant);
+  border-radius: 0;
+  background: transparent;
+  padding-inline: 0;
+}
+
+.order-cancel__input:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: none;
+}
+
+.order-cancel__cancel-btn {
+  justify-self: start;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  background: var(--functional-error-red);
+  color: var(--contrastTextColor);
+  font-weight: 700;
+}
+
+.order-cancel__cancel-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.order-cancel__reversal-warning {
+  display: grid;
+  gap: var(--space-2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: color-mix(in srgb, var(--functional-warning) 16%, var(--cardBackground));
+}
+
+.order-cancel__reversal-action {
+  justify-self: start;
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-underline-offset: 0.125rem;
+}
+
+.order-cancel__reversal-action--pending {
+  color: color-mix(in srgb, var(--currentTextColor) 65%, transparent);
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+.order-cancel__error {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--functional-error-red) 14%, var(--cardBackground));
+  color: var(--functional-error-red);
+}
+
+.order-cancel__skeleton {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.order-cancel__skeleton-line {
+  height: 1.25rem;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--currentTextColor) 6%, transparent),
+      color-mix(in srgb, var(--currentTextColor) 14%, transparent),
+      color-mix(in srgb, var(--currentTextColor) 6%, transparent));
+  background-size: 200% 100%;
+  animation: order-cancel-loading 1.3s ease infinite;
+}
+
+@keyframes order-cancel-loading {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}

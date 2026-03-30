@@ -3,7 +3,7 @@ import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
-  BillingRule,
+  BillingRules,
   BillingTermsRef,
   CreateCommercialAccountRequest,
   CreateCommercialAccountResponse,
@@ -14,6 +14,7 @@ import {
   CreateVehicleRequest,
   CommunicationPreferences,
   Contact,
+  CrmSnapshot,
   DuplicateCheckResponse,
   MergePartiesRequest,
   MergePartiesResponse,
@@ -25,40 +26,15 @@ import {
 
 /**
  * CrmService — adapts CRM OpenAPI operations to Angular observables.
- *
- * operationId mapping:
- *   createCommercialAccount  → POST /v1/crm/accounts/parties
- *   mergeParties             → POST /v1/crm/accounts/parties/{partyId}/merge
- *   getParty                 → GET  /v1/crm/accounts/parties/{partyId}
- *   searchParties            → GET  /v1/crm/accounts/parties/search
- *   createPerson             → POST /v1/crm/persons
- *   getPerson                → GET  /v1/crm/persons/{personId}
- *   searchPersons            → GET  /v1/crm/persons
- *   createRelationship       → POST /v1/crm/commercial-accounts/{partyId}/relationships
- *   getContactsWithRoles_1   → GET  /v1/crm/accounts/parties/{partyId}/contacts
- *   updateContactRoles_1     → PUT  /v1/crm/accounts/parties/{partyId}/contacts/{contactId}/roles
- *   getCommunicationPreferences_1  → GET  /v1/crm/accounts/parties/{partyId}/communicationPreferences
- *   upsertCommunicationPreferences_1 → PUT /v1/crm/accounts/parties/{partyId}/communicationPreferences
- *   createVehicleForParty    → POST /v1/crm/accounts/parties/{partyId}/vehicles
- *   fetchByParty             → GET  /v1/crm/snapshot/party/{partyId}
- *   fetchByVehicle           → GET  /v1/crm/snapshot/vehicle/{vehicleId}
- *   getBillingRules          → GET  /v1/crm/accounts/parties/{partyId}/billing-rules
- *   designatePrimaryBillingContact → PUT /v1/crm/accounts/parties/{partyId}/relationships/{relationshipId}/primary-billing
- *   deactivateRelationship   → DELETE /v1/crm/accounts/parties/{partyId}/relationships/{relationshipId}
  */
 @Injectable({ providedIn: 'root' })
 export class CrmService {
-  constructor(private readonly api: ApiBaseService) {}
-
-  // ── Billing terms (reference data) ─────────────────────────────────────────
+  constructor(private readonly api: ApiBaseService) { }
 
   getBillingTerms(): Observable<BillingTermsRef[]> {
     return this.api.get<BillingTermsRef[]>('/v1/crm/billing-terms');
   }
 
-  // ── Commercial account ──────────────────────────────────────────────────────
-
-  /** operationId: createCommercialAccount */
   createCommercialAccount(
     request: CreateCommercialAccountRequest,
   ): Observable<CreateCommercialAccountResponse> {
@@ -68,49 +44,37 @@ export class CrmService {
     );
   }
 
-  /** operationId: mergeParties */
   mergeParties(partyId: string, request: MergePartiesRequest): Observable<MergePartiesResponse> {
     return this.api.post<MergePartiesResponse>(`/v1/crm/accounts/parties/${partyId}/merge`, request);
   }
 
-  /** Duplicate check before create — uses searchParties with legalName. */
   checkCommercialAccountDuplicates(legalName: string): Observable<DuplicateCheckResponse> {
     const params = new HttpParams().set('legalName', legalName).set('duplicateCheck', 'true');
     return this.api.get<DuplicateCheckResponse>('/v1/crm/accounts/parties/search', params);
   }
 
-  /** operationId: getParty */
   getParty(partyId: string): Observable<PartyDetail> {
     return this.api.get<PartyDetail>(`/v1/crm/accounts/parties/${partyId}`);
   }
 
-  /** operationId: searchParties */
   searchParties(query: string): Observable<{ parties: PartyDetail[] }> {
     const params = new HttpParams().set('q', query);
     return this.api.get<{ parties: PartyDetail[] }>('/v1/crm/accounts/parties/search', params);
   }
 
-  // ── Individual person ────────────────────────────────────────────────────────
-
-  /** operationId: createPerson */
   createPerson(request: CreatePersonRequest): Observable<CreatePersonResponse> {
     return this.api.post<CreatePersonResponse>('/v1/crm/persons', request);
   }
 
-  /** operationId: getPerson */
   getPerson(personId: string): Observable<CreatePersonResponse> {
     return this.api.get<CreatePersonResponse>(`/v1/crm/persons/${personId}`);
   }
 
-  /** operationId: searchPersons */
   searchPersons(query: string): Observable<{ persons: CreatePersonResponse[] }> {
     const params = new HttpParams().set('q', query);
     return this.api.get<{ persons: CreatePersonResponse[] }>('/v1/crm/persons', params);
   }
 
-  // ── Party relationships ──────────────────────────────────────────────────────
-
-  /** operationId: createRelationship */
   createRelationship(
     partyId: string,
     request: CreatePartyRelationshipRequest,
@@ -121,14 +85,10 @@ export class CrmService {
     );
   }
 
-  // ── Contacts ─────────────────────────────────────────────────────────────────
-
-  /** operationId: getContactsWithRoles_1 */
   getContactsWithRoles(partyId: string): Observable<Relationship[]> {
     return this.api.get<Relationship[]>(`/v1/crm/accounts/parties/${partyId}/contacts`);
   }
 
-  /** operationId: updateContactRoles_1 */
   updateContactRoles(
     partyId: string,
     contactId: string,
@@ -140,7 +100,6 @@ export class CrmService {
     );
   }
 
-  /** operationId: designatePrimaryBillingContact */
   designatePrimaryBillingContact(
     partyId: string,
     relationshipId: string,
@@ -151,21 +110,16 @@ export class CrmService {
     );
   }
 
-  /** operationId: deactivateRelationship */
   deactivateRelationship(partyId: string, relationshipId: string): Observable<void> {
     return this.api.delete<void>(`/v1/crm/accounts/parties/${partyId}/relationships/${relationshipId}`);
   }
 
-  // ── Communication preferences ─────────────────────────────────────────────
-
-  /** operationId: getCommunicationPreferences_1 */
   getCommunicationPreferences(partyId: string): Observable<CommunicationPreferences> {
     return this.api.get<CommunicationPreferences>(
       `/v1/crm/accounts/parties/${partyId}/communicationPreferences`,
     );
   }
 
-  /** operationId: upsertCommunicationPreferences_1 */
   upsertCommunicationPreferences(
     partyId: string,
     prefs: CommunicationPreferences,
@@ -176,9 +130,6 @@ export class CrmService {
     );
   }
 
-  // ── Vehicles ──────────────────────────────────────────────────────────────
-
-  /** operationId: createVehicleForParty */
   createVehicleForParty(
     partyId: string,
     request: CreateVehicleRequest,
@@ -189,20 +140,20 @@ export class CrmService {
     );
   }
 
-  // ── Snapshot ──────────────────────────────────────────────────────────────
-
-  /** operationId: fetchByParty */
-  fetchPartySnapshot(partyId: string): Observable<PartyDetail> {
-    return this.api.get<PartyDetail>(`/v1/crm/snapshot/party/${partyId}`);
+  fetchByParty(partyId: string): Observable<CrmSnapshot> {
+    return this.api.get<CrmSnapshot>(`/v1/crm/snapshot/party/${partyId}`);
   }
 
-  /** operationId: fetchByVehicle */
-  fetchVehicleSnapshot(vehicleId: string): Observable<PartyDetail> {
-    return this.api.get<PartyDetail>(`/v1/crm/snapshot/vehicle/${vehicleId}`);
+  fetchByVehicle(vehicleId: string): Observable<CrmSnapshot> {
+    return this.api.get<CrmSnapshot>(`/v1/crm/snapshot/vehicle/${vehicleId}`);
   }
 
-  /** operationId: getBillingRules */
-  getBillingRules(partyId: string): Observable<BillingRule[]> {
-    return this.api.get<BillingRule[]>(`/v1/crm/accounts/parties/${partyId}/billing-rules`);
+  getBillingRules(partyId: string): Observable<BillingRules> {
+    return this.api.get<BillingRules>(`/v1/crm/parties/${partyId}/billing-rules`);
+  }
+
+  upsertBillingRules(partyId: string, rules: Partial<BillingRules>): Observable<BillingRules> {
+    const { createdAt, updatedAt, ...payload } = rules;
+    return this.api.put<BillingRules>(`/v1/crm/parties/${partyId}/billing-rules`, payload);
   }
 }

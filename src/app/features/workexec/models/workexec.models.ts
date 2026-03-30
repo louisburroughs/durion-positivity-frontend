@@ -171,6 +171,78 @@ export interface EstimateSummaryResponse {
   currencyUomId?: string;
 }
 
+// ── CAP-248: Estimate List / WIP / Invoice Visibility (Stories 259, 260, 261) ─
+
+export interface EstimateListFilters {
+  customerId?: string;
+  vehicleId?: string;
+  status?: EstimateStatus[];
+}
+
+export interface EstimateListItem {
+  readonly estimateId: string;
+  readonly workorderId?: string;
+  readonly customerId: string;
+  readonly vehicleId?: string;
+  readonly status: EstimateStatus;
+  readonly totalAmount: number;
+  readonly currency: string;
+  readonly lastUpdatedAt?: string;
+  readonly createdAt?: string;
+  readonly notes?: string;
+}
+
+export type WipStatus = 'WAITING' | 'IN_PROGRESS' | 'PARTS_PENDING' | 'READY' | 'COMPLETED';
+
+export interface WorkorderWipView {
+  readonly workorderId: string;
+  readonly workorderNumber: string;
+  readonly wipStatus: WipStatus;
+  readonly assignedTechnicianName?: string;
+  readonly bayLocation?: string;
+  readonly customerId?: string;
+  readonly vehicleDescription?: string;
+  readonly statusUpdatedAt?: string;
+}
+
+export interface WipListFilters {
+  wipStatus?: WipStatus[];
+}
+
+export interface WorkorderInvoiceView {
+  readonly workorderId: string;
+  readonly invoiceId?: string;
+  readonly lineItems: InvoiceLineItem[];
+  readonly subtotal: number;
+  readonly taxAmount: number;
+  readonly total: number;
+  readonly currency: string;
+  readonly invoiceStatus: string;
+  readonly finalizedAt?: string;
+  readonly createdAt?: string;
+}
+
+export interface InvoiceLineItem {
+  readonly lineItemId: string;
+  readonly description: string;
+  readonly quantity: number;
+  readonly unitPrice: number;
+  readonly lineTotal: number;
+  readonly itemType: 'PART' | 'LABOR' | 'FEE';
+}
+
+export interface FinalizeInvoiceRequest {
+  reason?: string;
+  authorityCode?: string;
+}
+
+export interface FinalizeInvoiceResponse {
+  readonly workorderId: string;
+  readonly invoiceId: string;
+  readonly status: string;
+  readonly finalizedAt: string;
+}
+
 // ── CAP-003: Approval (Stories 233, 271, 270, 269, 268) ──────────────────────
 
 /** Per-line approval decision for partial approval (Story 269) */
