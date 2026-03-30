@@ -33,8 +33,8 @@ export class PaymentCapturePageComponent implements OnInit {
     this.invoiceId.set(this.route.snapshot.paramMap.get('invoiceId') ?? '');
   }
 
-  setSelectedMethod(method: string): void {
-    this.selectedMethod.set(method as PaymentMethod);
+  setSelectedMethod(method: PaymentMethod): void {
+    this.selectedMethod.set(method);
   }
 
   setAmount(value: string): void {
