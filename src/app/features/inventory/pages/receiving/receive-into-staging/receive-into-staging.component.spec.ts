@@ -4,10 +4,21 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { ReceiveIntoStagingComponent } from './receive-into-staging.component';
 import { InventoryReceivingService } from '../../../services/inventory-receiving.service';
+import { ReceivingDocumentResponse } from '../../../models/inventory.models';
 
 const mockReceivingService = {
   getReceivingDocument: vi.fn(),
   confirmReceipt: vi.fn(),
+};
+
+const receivingDocFixture: ReceivingDocumentResponse = {
+  documentId: 'doc-1',
+  documentType: 'PO',
+  status: 'OPEN',
+  locationId: 'loc-001',
+  stagingStorageLocationId: 'sl-001',
+  stagingStorageLocationName: 'Staging 1',
+  lines: [],
 };
 
 describe('ReceiveIntoStagingComponent', () => {
@@ -33,7 +44,7 @@ describe('ReceiveIntoStagingComponent', () => {
   });
 
   it('should transition to ready after successful document load', () => {
-    mockReceivingService.getReceivingDocument.mockReturnValue(of({ documentId: 'doc-1', lines: [] }));
+    mockReceivingService.getReceivingDocument.mockReturnValue(of(receivingDocFixture));
     const fixture = TestBed.createComponent(ReceiveIntoStagingComponent);
     const component = fixture.componentInstance;
 

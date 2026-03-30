@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { PutawayTask } from '../../../models/inventory.models';
-import { InventoryService } from '../../../services/inventory.service';
+import { InventoryDomainService } from '../../../services/inventory.service';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
@@ -16,7 +16,7 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
   styleUrl: './putaway-task-list.component.css',
 })
 export class PutawayTaskListComponent {
-  private readonly inventoryService = inject(InventoryService);
+  private readonly inventoryService = inject(InventoryDomainService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 

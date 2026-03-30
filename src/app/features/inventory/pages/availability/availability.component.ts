@@ -5,7 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { AvailabilityView } from '../../models/inventory.models';
-import { InventoryService } from '../../services/inventory.service';
+import { InventoryDomainService } from '../../services/inventory.service';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
@@ -17,7 +17,7 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
   styleUrl: './availability.component.css',
 })
 export class AvailabilityComponent {
-  private readonly inventoryService = inject(InventoryService);
+  private readonly inventoryService = inject(InventoryDomainService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 

@@ -6,7 +6,6 @@ import { InventoryPurchaseOrderService } from './inventory-purchase-order.servic
 import {
   CreatePurchaseOrderRequest,
   PurchaseOrderDetail,
-  PurchaseOrderFilter,
   PurchaseOrderPageResponse,
   RevisePurchaseOrderRequest,
 } from '../models/inventory.models';
@@ -92,7 +91,7 @@ describe('InventoryPurchaseOrderService', () => {
       status: 'APPROVED',
       supplierId: 'sup-01',
       lineCount: 1,
-      openBalance: 999.0,
+      openBalance: 999,
       scheduledDeliveryDate: '2026-04-15',
       lines: [
         {
@@ -149,7 +148,7 @@ describe('InventoryPurchaseOrderService', () => {
       status: 'DRAFT',
       supplierId: 'sup-01',
       lineCount: 1,
-      openBalance: 999.0,
+      openBalance: 999,
       scheduledDeliveryDate: '2026-04-15',
       lines: [{ poLineId: 'pol-01', productSku: 'SKU-001', orderedQty: 100, receivedQty: 0, unitPrice: 9.99, status: 'OPEN' }],
     };

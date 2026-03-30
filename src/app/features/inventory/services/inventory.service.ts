@@ -16,7 +16,7 @@ import {
 } from '../models/inventory.models';
 
 @Injectable({ providedIn: 'root' })
-export class InventoryService {
+export class InventoryDomainService {
   private readonly api = inject(ApiBaseService);
 
   queryAvailability(

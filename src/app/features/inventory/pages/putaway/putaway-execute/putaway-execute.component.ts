@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { finalize } from 'rxjs/operators';
 import { PutawayTask } from '../../../models/inventory.models';
-import { InventoryService } from '../../../services/inventory.service';
+import { InventoryDomainService } from '../../../services/inventory.service';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
@@ -17,7 +17,7 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
   styleUrl: './putaway-execute.component.css',
 })
 export class PutawayExecuteComponent {
-  private readonly inventoryService = inject(InventoryService);
+  private readonly inventoryService = inject(InventoryDomainService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);

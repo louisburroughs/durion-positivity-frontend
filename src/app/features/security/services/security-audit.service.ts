@@ -7,7 +7,7 @@ import {
   AuditEventFilter,
   AuditEventPageResponse,
   AuditExportJob,
-} from '../../inventory/models/inventory.models';
+} from '../models/security-audit.models';
 
 @Injectable({ providedIn: 'root' })
 export class SecurityAuditService {

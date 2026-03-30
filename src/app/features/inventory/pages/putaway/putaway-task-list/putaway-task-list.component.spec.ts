@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { PutawayTaskListComponent } from './putaway-task-list.component';
-import { InventoryService } from '../../../services/inventory.service';
+import { InventoryDomainService } from '../../../services/inventory.service';
 import { PutawayTask } from '../../../models/inventory.models';
 
 const task: PutawayTask = {
@@ -27,7 +27,7 @@ describe('PutawayTaskListComponent', () => {
       imports: [PutawayTaskListComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: InventoryService, useValue: mockInventoryService },
+        { provide: InventoryDomainService, useValue: mockInventoryService },
       ],
     }).compileComponents();
   });

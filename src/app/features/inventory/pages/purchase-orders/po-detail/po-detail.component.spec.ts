@@ -4,6 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { PoDetailComponent } from './po-detail.component';
 import { InventoryPurchaseOrderService } from '../../../services/inventory-purchase-order.service';
+import { PurchaseOrderDetail } from '../../../models/inventory.models';
 
 const mockPoService = {
   getPurchaseOrder: vi.fn(),
@@ -12,6 +13,17 @@ const mockPoService = {
 
 const mockRoute = {
   paramMap: of({ get: (key: string) => (key === 'poId' ? 'po-001' : null) }),
+};
+
+const poFixture: PurchaseOrderDetail = {
+  poId: 'po-001',
+  poNumber: 'PO-001',
+  status: 'DRAFT',
+  supplierId: 's-1',
+  lineCount: 0,
+  openBalance: 0,
+  scheduledDeliveryDate: '2025-01-01',
+  lines: [],
 };
 
 describe('PoDetailComponent', () => {
@@ -28,13 +40,13 @@ describe('PoDetailComponent', () => {
   });
 
   it('should create', () => {
-    mockPoService.getPurchaseOrder.mockReturnValue(of({ poId: 'po-001' }));
+    mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
     const fixture = TestBed.createComponent(PoDetailComponent);
     expect(fixture.componentInstance).toBeTruthy();
   });
 
   it('should be in ready state after successful load', () => {
-    mockPoService.getPurchaseOrder.mockReturnValue(of({ poId: 'po-001' }));
+    mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
     const fixture = TestBed.createComponent(PoDetailComponent);
     expect(fixture.componentInstance.state()).toBe('ready');
   });
@@ -49,7 +61,7 @@ describe('PoDetailComponent', () => {
   });
 
   it('should set error state before errorKey on cancel failure', () => {
-    mockPoService.getPurchaseOrder.mockReturnValue(of({ poId: 'po-001' }));
+    mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
     mockPoService.cancelPurchaseOrder.mockReturnValue(throwError(() => new Error('fail')));
     const fixture = TestBed.createComponent(PoDetailComponent);
     const component = fixture.componentInstance;

@@ -3,11 +3,24 @@ import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { LedgerListComponent } from './ledger-list.component';
-import { InventoryService } from '../../../services/inventory.service';
+import { InventoryDomainService } from '../../../services/inventory.service';
+import { InventoryLedgerEntry, LedgerPageResponse } from '../../../models/inventory.models';
 
 const mockInventoryService = {
   queryLedger: vi.fn(),
 };
+
+const ledgerEntryItem: InventoryLedgerEntry = {
+  ledgerEntryId: 'e1',
+  timestamp: '2026-01-01T00:00:00Z',
+  movementType: 'RECEIPT',
+  productSku: 'SKU-001',
+  quantityChange: 10,
+  uom: 'EA',
+};
+
+const ledgerPageWithItems: LedgerPageResponse = { items: [ledgerEntryItem], nextPageToken: null };
+const emptyLedgerPage: LedgerPageResponse = { items: [], nextPageToken: null };
 
 describe('LedgerListComponent', () => {
   beforeEach(async () => {
@@ -16,7 +29,7 @@ describe('LedgerListComponent', () => {
       imports: [LedgerListComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: InventoryService, useValue: mockInventoryService },
+        { provide: InventoryDomainService, useValue: mockInventoryService },
       ],
     }).compileComponents();
   });
@@ -33,7 +46,7 @@ describe('LedgerListComponent', () => {
   });
 
   it('should transition to ready after successful search', () => {
-    mockInventoryService.queryLedger.mockReturnValue(of({ items: [{ ledgerEntryId: 'e1' }], nextPageToken: null }));
+    mockInventoryService.queryLedger.mockReturnValue(of(ledgerPageWithItems));
     const fixture = TestBed.createComponent(LedgerListComponent);
     const component = fixture.componentInstance;
 
@@ -44,7 +57,7 @@ describe('LedgerListComponent', () => {
   });
 
   it('should set empty state when no entries returned', () => {
-    mockInventoryService.queryLedger.mockReturnValue(of({ items: [], nextPageToken: null }));
+    mockInventoryService.queryLedger.mockReturnValue(of(emptyLedgerPage));
     const fixture = TestBed.createComponent(LedgerListComponent);
     const component = fixture.componentInstance;
 

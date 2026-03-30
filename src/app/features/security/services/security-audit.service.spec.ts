@@ -8,7 +8,7 @@ import {
   AuditEventFilter,
   AuditEventPageResponse,
   AuditExportJob,
-} from '../../inventory/models/inventory.models';
+} from '../models/security-audit.models';
 
 describe('SecurityAuditService', () => {
   let service: SecurityAuditService;

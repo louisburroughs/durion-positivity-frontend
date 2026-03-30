@@ -3,7 +3,8 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { PutawayExecuteComponent } from './putaway-execute.component';
-import { InventoryService } from '../../../services/inventory.service';
+import { InventoryDomainService } from '../../../services/inventory.service';
+import { PutawayTask } from '../../../models/inventory.models';
 
 const mockInventoryService = {
   getPutawayTasks: vi.fn(),
@@ -14,15 +15,25 @@ const mockRoute = {
   snapshot: { paramMap: { get: (key: string) => (key === 'taskId' ? 'task-001' : null) } },
 };
 
+const task: PutawayTask = {
+  putawayTaskId: 'task-001',
+  locationId: 'loc-001',
+  stagingStorageLocationId: 'sl-001',
+  productSku: 'SKU-001',
+  quantity: 10,
+  uom: 'EA',
+  status: 'PENDING',
+};
+
 describe('PutawayExecuteComponent', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
-    mockInventoryService.getPutawayTasks.mockReturnValue(of([{ putawayTaskId: 'task-001' }]));
+    mockInventoryService.getPutawayTasks.mockReturnValue(of([task]));
     await TestBed.configureTestingModule({
       imports: [PutawayExecuteComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: InventoryService, useValue: mockInventoryService },
+        { provide: InventoryDomainService, useValue: mockInventoryService },
         { provide: ActivatedRoute, useValue: mockRoute },
       ],
     }).compileComponents();

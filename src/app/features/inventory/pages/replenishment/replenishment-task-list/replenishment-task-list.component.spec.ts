@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { ReplenishmentTaskListComponent } from './replenishment-task-list.component';
-import { InventoryService } from '../../../services/inventory.service';
+import { InventoryDomainService } from '../../../services/inventory.service';
 import { ReplenishmentTask } from '../../../models/inventory.models';
 
 const task: ReplenishmentTask = {
@@ -28,7 +28,7 @@ describe('ReplenishmentTaskListComponent', () => {
       imports: [ReplenishmentTaskListComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: InventoryService, useValue: mockInventoryService },
+        { provide: InventoryDomainService, useValue: mockInventoryService },
       ],
     }).compileComponents();
   });

@@ -7,7 +7,7 @@ import {
   AuditEventFilter,
   AuditEventPageResponse,
   AuditExportJob,
-} from '../../../inventory/models/inventory.models';
+} from '../../models/security-audit.models';
 import { SecurityAuditService } from '../../services/security-audit.service';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';

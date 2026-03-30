@@ -9,7 +9,7 @@ import {
   LedgerFilter,
   LedgerPageResponse,
 } from '../../../models/inventory.models';
-import { InventoryService } from '../../../services/inventory.service';
+import { InventoryDomainService } from '../../../services/inventory.service';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
@@ -21,7 +21,7 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
   styleUrl: './ledger-list.component.css',
 })
 export class LedgerListComponent {
-  private readonly inventoryService = inject(InventoryService);
+  private readonly inventoryService = inject(InventoryDomainService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);

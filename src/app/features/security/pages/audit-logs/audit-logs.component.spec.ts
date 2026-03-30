@@ -4,11 +4,23 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { AuditLogsComponent } from './audit-logs.component';
 import { SecurityAuditService } from '../../services/security-audit.service';
+import { AuditEventDetail, AuditEventPageResponse } from '../../models/security-audit.models';
 
 const mockAuditService = {
   searchAuditEvents: vi.fn(),
   requestAuditExport: vi.fn(),
 };
+
+const auditEventItem: AuditEventDetail = {
+  eventId: 'ev1',
+  eventType: 'STOCK_MOVED',
+  aggregateId: 'agg-001',
+  actorId: 'user-001',
+  timestamp: '2026-01-01T00:00:00Z',
+};
+
+const auditPageWithItems: AuditEventPageResponse = { items: [auditEventItem], nextPageToken: null };
+const emptyAuditPage: AuditEventPageResponse = { items: [], nextPageToken: null };
 
 describe('AuditLogsComponent', () => {
   beforeEach(async () => {
@@ -33,7 +45,7 @@ describe('AuditLogsComponent', () => {
   });
 
   it('should transition to ready after successful search', () => {
-    mockAuditService.searchAuditEvents.mockReturnValue(of({ items: [{ eventId: 'ev1' }], nextPageToken: null }));
+    mockAuditService.searchAuditEvents.mockReturnValue(of(auditPageWithItems));
     const fixture = TestBed.createComponent(AuditLogsComponent);
     const component = fixture.componentInstance;
 
@@ -44,7 +56,7 @@ describe('AuditLogsComponent', () => {
   });
 
   it('should transition to empty when no events returned', () => {
-    mockAuditService.searchAuditEvents.mockReturnValue(of({ items: [], nextPageToken: null }));
+    mockAuditService.searchAuditEvents.mockReturnValue(of(emptyAuditPage));
     const fixture = TestBed.createComponent(AuditLogsComponent);
     const component = fixture.componentInstance;
 

@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { InventoryLedgerEntry } from '../../../models/inventory.models';
-import { InventoryService } from '../../../services/inventory.service';
+import { InventoryDomainService } from '../../../services/inventory.service';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
@@ -16,7 +16,7 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
   styleUrl: './ledger-detail.component.css',
 })
 export class LedgerDetailComponent {
-  private readonly inventoryService = inject(InventoryService);
+  private readonly inventoryService = inject(InventoryDomainService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);

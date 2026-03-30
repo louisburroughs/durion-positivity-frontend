@@ -4,6 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { PoFormComponent } from './po-form.component';
 import { InventoryPurchaseOrderService } from '../../../services/inventory-purchase-order.service';
+import { PurchaseOrderDetail } from '../../../models/inventory.models';
 
 const mockPoService = {
   getPurchaseOrder: vi.fn(),
@@ -17,6 +18,17 @@ const mockRouteNew = {
 
 const mockRouteEdit = {
   snapshot: { paramMap: { get: (key: string) => (key === 'poId' ? 'po-001' : null) } },
+};
+
+const poEditFixture: PurchaseOrderDetail = {
+  poId: 'po-001',
+  poNumber: 'PO-001',
+  status: 'DRAFT',
+  supplierId: 's1',
+  lineCount: 0,
+  openBalance: 0,
+  scheduledDeliveryDate: '2025-01-01',
+  lines: [],
 };
 
 describe('PoFormComponent — create mode', () => {
@@ -77,7 +89,7 @@ describe('PoFormComponent — edit mode', () => {
   });
 
   it('should populate editingPoId from route', () => {
-    mockPoService.getPurchaseOrder.mockReturnValue(of({ poId: 'po-001', lines: [], supplierId: 's1', scheduledDeliveryDate: '2025-01-01' }));
+    mockPoService.getPurchaseOrder.mockReturnValue(of(poEditFixture));
     const fixture = TestBed.createComponent(PoFormComponent);
     expect(fixture.componentInstance.editingPoId()).toBe('po-001');
   });
@@ -88,6 +100,6 @@ describe('PoFormComponent — edit mode', () => {
     const component = fixture.componentInstance;
 
     expect(component.state()).toBe('error');
-    expect(component.errorKey()).toBeTruthy();
+    expect(component.errorKey()).toBe('INVENTORY.PURCHASE_ORDERS.FORM.ERROR.LOAD');
   });
 });

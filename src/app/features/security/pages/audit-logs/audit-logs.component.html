@@ -118,7 +118,7 @@
     <!-- Events table -->
     <section class="card table-card">
       <div class="table-wrap">
-        <table class="data-table" role="table" aria-label="{{ 'SECURITY.AUDIT_LOGS.TABLE.ARIA' | translate }}">
+        <table class="data-table" aria-label="{{ 'SECURITY.AUDIT_LOGS.TABLE.ARIA' | translate }}">
           <caption class="sr-only">{{ 'SECURITY.AUDIT_LOGS.TABLE.CAPTION' | translate }}</caption>
           <thead>
             <tr role="row">
@@ -134,7 +134,7 @@
             <tr role="row" class="table-row-action" tabindex="0" (click)="selectEvent(evt)"
               (keydown.enter)="selectEvent(evt)" [class.row-selected]="selectedEvent()?.eventId === evt.eventId"
               [attr.aria-label]="('SECURITY.AUDIT_LOGS.TABLE.ROW.ARIA' | translate) + ': ' + evt.eventType + ' ' + evt.eventId"
-              [attr.aria-pressed]="selectedEvent()?.eventId === evt.eventId">
+              [attr.aria-selected]="selectedEvent()?.eventId === evt.eventId">
               <td>{{ evt.eventId }}</td>
               <td class="badge-cell">
                 <span class="badge badge--info">

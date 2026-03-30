@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
-import { InventoryService } from './inventory.service';
+import { InventoryDomainService } from './inventory.service';
 import {
   AvailabilityView,
   InventoryLedgerEntry,
@@ -16,8 +16,8 @@ import {
   StorageLocation,
 } from '../models/inventory.models';
 
-describe('InventoryService', () => {
-  let service: InventoryService;
+describe('InventoryDomainService', () => {
+  let service: InventoryDomainService;
 
   const apiStub = {
     get: vi.fn(),
@@ -30,11 +30,11 @@ describe('InventoryService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        InventoryService,
+        InventoryDomainService,
         { provide: ApiBaseService, useValue: apiStub },
       ],
     });
-    service = TestBed.inject(InventoryService);
+    service = TestBed.inject(InventoryDomainService);
   });
 
   afterEach(() => {

@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { AvailabilityComponent } from './availability.component';
-import { InventoryService } from '../../services/inventory.service';
+import { InventoryDomainService } from '../../services/inventory.service';
 import { AvailabilityView } from '../../models/inventory.models';
 
 describe('AvailabilityComponent', () => {
@@ -23,7 +23,7 @@ describe('AvailabilityComponent', () => {
       imports: [AvailabilityComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: InventoryService, useValue: serviceStub },
+        { provide: InventoryDomainService, useValue: serviceStub },
       ],
     });
   });
