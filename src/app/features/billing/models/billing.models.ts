@@ -134,3 +134,92 @@ export interface ElevateResponse {
   elevationToken: string;
   expiresAt?: string;
 }
+
+// ── CAP-250: Payment flow ───────────────────────────────────────────────────
+
+export type PaymentMethod = 'CARD' | 'CASH' | 'CHECK' | 'CREDIT_ACCOUNT';
+export type PaymentStatus =
+  | 'INITIATED'
+  | 'AUTHORIZED'
+  | 'CAPTURED'
+  | 'VOIDED'
+  | 'REFUNDED'
+  | 'FAILED';
+
+export interface InitiatePaymentRequest {
+  paymentMethod: PaymentMethod;
+  amount: number;
+  currency: string;
+  paymentTokenRef?: string;
+  authorityCode?: string;
+  idempotencyKey?: string;
+}
+
+export interface PaymentTransactionRef {
+  readonly paymentId: string;
+  readonly invoiceId: string;
+  readonly transactionId?: string;
+  readonly authCode?: string;
+  readonly status: PaymentStatus;
+  readonly amount: number;
+  readonly currency: string;
+  /**
+   * @serverGenerated - set by server; do not include in request payloads.
+   */
+  readonly createdAt?: string;
+  /**
+   * @serverGenerated - set by server; do not include in request payloads.
+   */
+  readonly capturedAt?: string;
+}
+
+export interface CapturePaymentRequest {
+  authorityCode?: string;
+}
+
+export interface VoidPaymentRequest {
+  reason: string;
+  authorityCode: string;
+}
+
+export interface RefundPaymentRequest {
+  reason: string;
+  authorityCode: string;
+  amount?: number;
+}
+
+export interface PaymentActionResult {
+  readonly paymentId: string;
+  readonly invoiceId: string;
+  readonly status: PaymentStatus;
+  /**
+   * @serverGenerated - set by server; do not include in request payloads.
+   */
+  readonly actionAt: string;
+}
+
+// ── CAP-250: Receipt ────────────────────────────────────────────────────────
+
+export interface GenerateReceiptRequest {
+  deliveryMethod?: 'PRINT' | 'EMAIL' | 'NONE';
+  emailAddress?: string;
+}
+
+export interface ReceiptRef {
+  readonly receiptId: string;
+  readonly invoiceId: string;
+  readonly paymentId?: string;
+  readonly receiptNumber?: string;
+  /**
+   * @serverGenerated - set by server; do not include in request payloads.
+   */
+  readonly generatedAt?: string;
+  /**
+   * @serverGenerated - set by server; do not include in request payloads.
+   */
+  readonly emailedTo?: string;
+  /**
+   * @serverGenerated - set by server; do not include in request payloads.
+   */
+  readonly pdfUrl?: string;
+}

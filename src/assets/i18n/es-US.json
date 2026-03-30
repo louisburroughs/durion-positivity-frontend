@@ -105,6 +105,72 @@
       }
     }
   },
+  "CRM": {
+    "SNAPSHOT": {
+      "TITLE": "Contexto del cliente",
+      "ARIA": {
+        "SECTION": "Instantánea de contexto del cliente"
+      },
+      "FIELD": {
+        "CUSTOMER_NAME": "Cliente",
+        "PARTY_TYPE": "Tipo de cuenta",
+        "VEHICLES": "Vehículos",
+        "BILLING_SUMMARY": "Reglas de facturación",
+        "PARTY_ID": "ID de party",
+        "VEHICLE_ID": "ID de vehículo",
+        "UUID_PLACEHOLDER": "UUID"
+      },
+      "ACTION": {
+        "LOAD": "Cargar instantánea",
+        "REFRESH": "Actualizar",
+        "CLEAR": "Limpiar"
+      },
+      "PARTY_TYPE": {
+        "COMMERCIAL": "Comercial",
+        "INDIVIDUAL": "Individual",
+        "FLEET": "Flota",
+        "DEALER": "Concesionario",
+        "UNKNOWN": "Desconocido"
+      },
+      "IDLE": "Ingresa un ID de party o ID de vehículo para cargar el contexto del cliente.",
+      "EMPTY": "No hay contexto de cliente cargado.",
+      "EMPTY_VEHICLES": "No hay vehículos disponibles.",
+      "ERROR": {
+        "LOAD": "No se pudo cargar el contexto del cliente. Inténtalo de nuevo.",
+        "UUID": "Debe ser un UUID válido.",
+        "VALIDATION": "Ingresa un ID de party o ID de vehículo.",
+        "FORBIDDEN": "No tienes acceso a este contexto de cliente."
+      }
+    },
+    "BILLING_RULES": {
+      "TITLE": "Reglas de facturación",
+      "ARIA": {
+        "SECTION": "Formulario de reglas de facturación",
+        "SUMMARY": "Resumen de reglas de facturación"
+      },
+      "FIELD": {
+        "REQUIRE_PO": "Requerir orden de compra",
+        "PAYMENT_TERMS": "Términos de pago",
+        "CREDIT_LIMIT": "Límite de crédito",
+        "NOTES": "Notas",
+        "SUMMARY": "Reglas de facturación actuales"
+      },
+      "ACTION": {
+        "SAVE": "Guardar reglas de facturación",
+        "RETRY": "Reintentar",
+        "BACK": "Volver a Party"
+      },
+      "IDLE": "Seleccione un cliente para ver las reglas de facturación.",
+      "EMPTY": "No se encontraron reglas de facturación.",
+      "RULE_DEFAULT_NAME": "Reglas de facturación del cliente",
+      "SAVING": "Guardando...",
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las reglas de facturación.",
+        "SAVE": "No se pudieron guardar las reglas de facturación. Inténtalo de nuevo.",
+        "FORBIDDEN": "No tienes permiso para ver las reglas de facturación de esta cuenta."
+      }
+    }
+  },
   "SECURITY": {
     "NAV": {
       "WORKSPACE_ARIA": "Espacio de trabajo de seguridad",
@@ -538,6 +604,13 @@
       "YES": "Sí",
       "NO": "No"
     },
+    "EVENT_TYPE": {
+      "PAYMENT_RECEIVED": "Pago recibido",
+      "INVOICE_ISSUED": "Factura emitida",
+      "CREDIT_MEMO": "Nota de crédito",
+      "ADJUSTMENT": "Ajuste",
+      "REVERSAL": "Reversión"
+    },
     "INGESTION_MONITOR_LIST": {
       "OVERLINE": "Ingestion Monitor",
       "TITLE": "Ingestion Events",
@@ -719,6 +792,54 @@
       "FIELD_REASON": "Código de Razón",
       "FIELD_NOTE": "Nota de Justificación",
       "FIELD_CREATED": "Creado el"
+    },
+    "INVOICE_PAYMENT_STATUS": {
+      "OVERLINE": "Factura",
+      "TITLE": "Estado de pago y contabilización",
+      "LOADING": "Cargando estado de pago y contabilización...",
+      "ARIA": {
+        "SECTION": "Estado de pago y contabilización de la factura",
+        "REFRESH": "Actualizar estado de pago y contabilización",
+        "STATUS_BADGE": "Estado de pago: {{status}}"
+      },
+      "FIELD": {
+        "PAYMENT_STATUS": "Estado de pago",
+        "BALANCE_DUE": "Saldo pendiente",
+        "TOTAL_AMOUNT": "Total de la factura",
+        "PAID_AMOUNT": "Monto pagado",
+        "INGESTION_STATUS": "Estado de ingestión",
+        "JOURNAL_ENTRY_ID": "ID de asiento contable",
+        "LEDGER_TRANSACTION_ID": "ID de transacción del libro mayor",
+        "ERROR_CODE": "Código de error",
+        "ERROR_MESSAGE": "Detalles del error"
+      },
+      "PAYMENT_STATUS": {
+        "PAID": "Pagada",
+        "UNPAID": "No pagada",
+        "PARTIALLY_PAID": "Pagada parcialmente",
+        "UNKNOWN": "Estado no disponible"
+      },
+      "ACTION": {
+        "REFRESH": "Actualizar",
+        "VIEW_HISTORY": "Ver historial"
+      },
+      "EMPTY_INGESTION": "No se encontraron registros de ingestión contable para esta factura.",
+      "HISTORY": {
+        "TITLE": "Historial de ingestión contable",
+        "DETAIL_ARIA": "Detalle del evento de ingestión contable",
+        "DETAIL_TITLE": "Detalle del evento",
+        "EMPTY": "No se encontraron registros de ingestión.",
+        "TABLE_CAPTION": "Registros de ingestión contable para esta factura",
+        "COL_RECEIVED_AT": "Recibido el",
+        "COL_STATUS": "Estado",
+        "COL_TYPE": "Tipo de evento",
+        "COL_ERROR": "Error"
+      },
+      "ERROR": {
+        "LOAD": "No se puede cargar el estado de pago. Intenta de nuevo.",
+        "ACCESS_DENIED": "No tienes permiso para ver esta página.",
+        "MISSING_ID": "No se proporcionó ID de factura."
+      }
     },
     "VENDOR_PAYMENT_NEW": {
       "OVERLINE": "Accounts Payable",
@@ -1075,6 +1196,108 @@
     }
   },
   "WORKEXEC": {
+    "ESTIMATE_LIST": {
+      "TITLE": "Estimados",
+      "ARIA": {
+        "SECTION": "Lista de estimados"
+      },
+      "IDLE": "Seleccione un cliente o un vehiculo para ver estimados.",
+      "EMPTY": "No se encontraron estimados.",
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los estimados. Intente de nuevo."
+      },
+      "CARD": {
+        "ARIA_LABEL": "Estimado para cliente",
+        "LAST_UPDATED": "Ultima actualizacion",
+        "TOTAL": "Total"
+      }
+    },
+    "ESTIMATE_STATUS": {
+      "DRAFT": "Borrador",
+      "PENDING_REVIEW": "Pendiente de revision",
+      "APPROVED": "Aprobado",
+      "REJECTED": "Rechazado",
+      "REVISED": "Revisado",
+      "EXPIRED": "Vencido",
+      "PENDING_APPROVAL": "Pendiente de aprobacion",
+      "OPEN": "Abierto",
+      "PENDING_CUSTOMER": "Pendiente del cliente",
+      "DECLINED": "Declinado",
+      "SCHEDULED": "Programado",
+      "INVOICED": "Facturado",
+      "CANCELLED": "Cancelado",
+      "ARCHIVED": "Archivado"
+    },
+    "INVOICE_STATUS": {
+      "DRAFT": "Borrador",
+      "PENDING": "Pendiente",
+      "ISSUED": "Emitido",
+      "FINALIZED": "Finalizado",
+      "VOID": "Anulado",
+      "CANCELLED": "Cancelado"
+    },
+    "ITEM_TYPE": {
+      "PART": "Pieza",
+      "LABOR": "Mano de obra",
+      "FEE": "Cargo"
+    },
+    "WIP": {
+      "TITLE": "Trabajo En Progreso",
+      "ARIA": {
+        "SECTION": "Tablero de trabajo en progreso",
+        "TABLE": "Ordenes de trabajo activas"
+      },
+      "EMPTY": "No hay workorders activas.",
+      "ERROR": {
+        "LOAD": "No se pudo cargar el estado WIP."
+      },
+      "COLUMN": {
+        "WORKORDER": "Orden de trabajo",
+        "STATUS": "Estado",
+        "TECHNICIAN": "Tecnico",
+        "BAY": "Bahia",
+        "VEHICLE": "Vehiculo"
+      }
+    },
+    "WIP_STATUS": {
+      "WAITING": "En espera",
+      "IN_PROGRESS": "En progreso",
+      "PARTS_PENDING": "Partes pendientes",
+      "READY": "Listo",
+      "COMPLETED": "Completado"
+    },
+    "INVOICE_FINALIZATION": {
+      "TITLE": "Finalizacion de Factura",
+      "ARIA": {
+        "SECTION": "Formulario de finalizacion de factura",
+        "ITEMS_TABLE": "Lineas de factura"
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la factura.",
+        "MISSING_WORKORDER_ID": "No se proporcionó ID de workorder.",
+        "SUBMIT": "No se pudo solicitar la finalizacion. Intente de nuevo."
+      },
+      "COLUMN": {
+        "DESCRIPTION": "Descripcion",
+        "QTY": "Cant.",
+        "UNIT_PRICE": "Precio unitario",
+        "LINE_TOTAL": "Total",
+        "TYPE": "Tipo"
+      },
+      "SUMMARY": {
+        "SUBTOTAL": "Subtotal",
+        "TAX": "Impuesto",
+        "TOTAL": "Total"
+      },
+      "FORM": {
+        "REASON_LABEL": "Motivo (opcional)",
+        "REASON_PLACEHOLDER": "Ingrese el motivo de finalizacion"
+      },
+      "ACTION": {
+        "REQUEST_FINALIZATION": "Solicitar finalizacion",
+        "SUBMITTING": "Enviando..."
+      }
+    },
     "OPERATIONAL_COST": {
       "OVERLINE": "Costos de Orden de Trabajo",
       "TITLE": "Resumen de Costos Operacionales",
@@ -1540,6 +1763,178 @@
       }
     }
   },
+  "BILLING": {
+    "PAYMENT": {
+      "TITLE": "Pago",
+      "METHOD": {
+        "LABEL": "Metodo de pago",
+        "CARD": "Tarjeta de credito/debito",
+        "CASH": "Efectivo",
+        "CHECK": "Cheque",
+        "CREDIT_ACCOUNT": "Cuenta de credito"
+      },
+      "AMOUNT_LABEL": "Importe",
+      "ACTION": {
+        "CAPTURE": "Autorizar y capturar",
+        "VOID": "Anular autorizacion",
+        "REFUND": "Procesar reembolso",
+        "PRINT_RECEIPT": "Imprimir recibo"
+      },
+      "MODE": {
+        "LABEL": "Seleccionar acción de pago"
+      },
+      "SUBMITTING": "Procesando...",
+      "IDLE": "Seleccione un metodo de pago para comenzar.",
+      "FIELD": {
+        "TRANSACTION_ID": "Id de transaccion",
+        "AUTH_CODE": "Codigo de autorizacion",
+        "STATUS": "Estado",
+        "AMOUNT": "Importe",
+        "CAPTURED_AT": "Capturado el"
+      },
+      "VOID": {
+        "TITLE": "Anular autorizacion",
+        "REASON_LABEL": "Motivo",
+        "AUTHORITY_LABEL": "Codigo de autorizacion"
+      },
+      "REFUND": {
+        "TITLE": "Reembolsar pago",
+        "REASON_LABEL": "Motivo",
+        "AUTHORITY_LABEL": "Codigo de autorizacion",
+        "AMOUNT_LABEL": "Importe del reembolso (deje en blanco para reembolso completo)"
+      },
+      "ERROR": {
+        "CAPTURE": "No se pudo procesar el pago. Intentelo de nuevo.",
+        "VOID": "No se pudo anular la autorizacion. Intentelo de nuevo.",
+        "REFUND": "No se pudo procesar el reembolso. Intentelo de nuevo.",
+        "MISSING_IDS": "Referencia de pago o factura no válida."
+      }
+    },
+    "RECEIPT": {
+      "TITLE": "Recibo",
+      "FIELD": {
+        "RECEIPT_NUMBER": "Numero de recibo",
+        "INVOICE_REF": "Referencia de factura",
+        "GENERATED_AT": "Generado",
+        "EMAILED_TO": "Enviado por correo a"
+      },
+      "ACTION": {
+        "GENERATE": "Generar recibo",
+        "REPRINT": "Reimprimir",
+        "VIEW_PDF": "Ver recibo PDF"
+      },
+      "DELIVERY": {
+        "LABEL": "Metodo de entrega",
+        "PRINT": "Imprimir",
+        "EMAIL": "Correo electronico",
+        "NONE": "Sin entrega"
+      },
+      "EMAIL_LABEL": "Direccion de correo electronico",
+      "IDLE": "Aun no se ha generado ningun recibo.",
+      "ERROR": {
+        "LOAD": "No se pudo cargar el recibo.",
+        "GENERATE": "No se pudo generar el recibo. Intentelo de nuevo.",
+        "REPRINT": "No se pudo reimprimir el recibo. Intentelo de nuevo.",
+        "MISSING_INVOICE": "No se proporcionó ID de factura."
+      }
+    }
+  },
+  "ORDER": {
+    "CART": {
+      "TITLE": "Carrito de orden",
+      "ARIA": {
+        "ITEMS_TABLE": "Lineas de la orden",
+        "SUMMARY": "Resumen de la orden"
+      },
+      "IDLE": "Ingresa datos del cliente para iniciar un carrito.",
+      "EMPTY": "No hay articulos en el carrito.",
+      "ERROR": {
+        "LOAD": "No se pudo cargar la orden.",
+        "CREATE": "No se pudo crear el carrito.",
+        "ADD_ITEM": "No se pudo agregar el articulo.",
+        "REMOVE_ITEM": "No se pudo eliminar el articulo."
+      },
+      "FIELD": {
+        "CUSTOMER_ID": "ID del cliente",
+        "VEHICLE_ID": "ID del vehiculo (opcional)",
+        "SKU": "SKU / Codigo de servicio",
+        "QTY": "Cant.",
+        "UNIT_PRICE": "Precio unitario",
+        "LINE_TOTAL": "Total",
+        "DESCRIPTION": "Descripcion"
+      },
+      "ACTION": {
+        "START_CART": "Iniciar carrito",
+        "ADD_ITEM": "Agregar articulo",
+        "REMOVE_ITEM": "Eliminar",
+        "ADDING": "Agregando..."
+      },
+      "SUMMARY": {
+        "SUBTOTAL": "Subtotal",
+        "TAX": "Impuesto",
+        "TOTAL": "Total"
+      },
+      "COLUMN": {
+        "DESCRIPTION": "Descripcion",
+        "SKU": "SKU",
+        "QTY": "Cant.",
+        "UNIT_PRICE": "Precio unitario",
+        "TOTAL": "Total",
+        "ACTIONS": "Acciones"
+      }
+    },
+    "OVERRIDE": {
+      "TITLE": "Anulacion de precio",
+      "ARIA": {
+        "SECTION": "Formulario de anulacion de precio"
+      },
+      "REQUIRES_APPROVAL": "Requiere aprobacion del gerente.",
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las anulaciones de precio.",
+        "APPLY": "No se pudo aplicar la anulacion de precio."
+      },
+      "FIELD": {
+        "OVERRIDE_PRICE": "Precio anulado",
+        "REASON_CODE": "Codigo de motivo",
+        "AUTHORITY_CODE": "Codigo de autoridad"
+      },
+      "REASON": {
+        "PRICE_MATCH": "Igualar precio",
+        "MANAGER_DISCOUNT": "Descuento del gerente",
+        "DEFECTIVE": "Articulo defectuoso",
+        "CUSTOMER_SERVICE": "Servicio al cliente"
+      },
+      "ACTION": {
+        "APPLY": "Aplicar anulacion"
+      },
+      "HISTORY_TITLE": "Historial de anulaciones"
+    },
+    "CANCEL": {
+      "TITLE": "Cancelar orden",
+      "ARIA": {
+        "SECTION": "Formulario para cancelar orden"
+      },
+      "WARNING": "Esta accion no se puede deshacer.",
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los detalles de la orden.",
+        "SUBMIT": "No se pudo cancelar la orden. Intentelo de nuevo."
+      },
+      "FIELD": {
+        "STATUS": "Estado",
+        "REASON": "Motivo de cancelacion",
+        "AUTHORITY_CODE": "Codigo de autoridad"
+      },
+      "ACTION": {
+        "CANCEL_ORDER": "Cancelar orden",
+        "SUBMITTING": "Cancelando..."
+      },
+      "RESULT": {
+        "SUCCESS": "La orden ha sido cancelada.",
+        "PAYMENT_REVERSAL_REQUIRED": "Se requiere reverso del pago.",
+        "PAYMENT_REVERSAL_ACTION": "Anular/Reembolsar pago"
+      }
+    }
+  },
   "COMMON": {
     "SEARCH": "Buscar",
     "LOADING": "Cargando…",
@@ -1550,12 +1945,23 @@
     "EDIT": "Editar",
     "CANCEL": "Cancelar",
     "REFRESH": "Actualizar",
-    "CLOSE": "Cerrar"
+    "ACTION": {
+      "REFRESH": "Actualizar"
+    },
+    "CLOSE": "Cerrar",
+    "EMPTY_VALUE": "—"
   },
   "STATUS": {
+    "INITIATED": "Iniciado",
+    "AUTHORIZED": "Autorizado",
+    "CAPTURED": "Capturado",
+    "VOIDED": "Anulado",
+    "REFUNDED": "Reembolsado",
+    "FAILED": "Fallido",
     "OPEN": "Abierto",
     "CLOSED": "Cerrado",
     "PENDING": "Pendiente",
+    "PENDING_PAYMENT": "Pago Pendiente",
     "PENDING_APPROVAL": "Pendiente de aprobación",
     "APPROVED": "Aprobado",
     "REJECTED": "Rechazado",

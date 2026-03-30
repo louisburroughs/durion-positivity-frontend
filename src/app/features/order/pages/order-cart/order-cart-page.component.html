@@ -1,0 +1,122 @@
+<section class="order-cart" [attr.data-state]="state()" data-testid="order-cart-page">
+  <div class="order-cart__items">
+    <header class="order-cart__header">
+      <h1>{{ 'ORDER.CART.TITLE' | translate }}</h1>
+    </header>
+
+    @if (state() === 'error') {
+    <p class="order-cart__error" role="alert">
+      {{ (errorKey() ?? 'ORDER.CART.ERROR.LOAD') | translate }}
+    </p>
+    }
+
+    @if (state() === 'idle') {
+    <p class="order-cart__idle">
+      {{ 'ORDER.CART.IDLE' | translate }}
+    </p>
+    <form class="order-cart__create-form"
+      (ngSubmit)="createNewCart({ customerId: customerId.value.trim() || undefined, vehicleId: vehicleId.value.trim() || undefined })">
+      <div class="order-cart__field">
+        <label for="order-cart-customer-id">{{ 'ORDER.CART.FIELD.CUSTOMER_ID' | translate }}</label>
+        <input id="order-cart-customer-id" #customerId class="order-cart__input" type="text" autocomplete="off" />
+      </div>
+
+      <div class="order-cart__field">
+        <label for="order-cart-vehicle-id">{{ 'ORDER.CART.FIELD.VEHICLE_ID' | translate }}</label>
+        <input id="order-cart-vehicle-id" #vehicleId class="order-cart__input" type="text" autocomplete="off" />
+      </div>
+
+      <button class="order-cart__primary-btn" type="submit">
+        {{ 'ORDER.CART.ACTION.START_CART' | translate }}
+      </button>
+    </form>
+    }
+
+    @if (state() === 'loading') {
+    <div class="order-cart__skeleton" aria-hidden="true">
+      <div class="order-cart__skeleton-line"></div>
+      <div class="order-cart__skeleton-line"></div>
+      <div class="order-cart__skeleton-line"></div>
+      <div class="order-cart__skeleton-line"></div>
+    </div>
+    }
+
+    @if (state() === 'empty') {
+    <p class="order-cart__empty">{{ 'ORDER.CART.EMPTY' | translate }}</p>
+    }
+
+    @if (state() === 'ready' && order(); as currentOrder) {
+    <table class="order-cart__table">
+      <caption>{{ 'ORDER.CART.ARIA.ITEMS_TABLE' | translate }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ 'ORDER.CART.COLUMN.DESCRIPTION' | translate }}</th>
+          <th scope="col">{{ 'ORDER.CART.COLUMN.SKU' | translate }}</th>
+          <th scope="col">{{ 'ORDER.CART.COLUMN.QTY' | translate }}</th>
+          <th scope="col">{{ 'ORDER.CART.COLUMN.UNIT_PRICE' | translate }}</th>
+          <th scope="col">{{ 'ORDER.CART.COLUMN.TOTAL' | translate }}</th>
+          <th scope="col">{{ 'ORDER.CART.COLUMN.ACTIONS' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (line of currentOrder.lines; track line.lineId) {
+        <tr [attr.aria-current]="line.status === 'ACTIVE' ? 'true' : null">
+          <td>{{ line.description }}</td>
+          <td>{{ line.skuCode }}</td>
+          <td>{{ line.quantity }}</td>
+          <td>{{ line.unitPrice | currency:currentOrder.currency:'symbol':'1.2-2' }}</td>
+          <td>{{ line.lineTotal | currency:currentOrder.currency:'symbol':'1.2-2' }}</td>
+          <td>
+            <button class="order-cart__remove-btn" type="button" (click)="removeItem(line.lineId)">
+              {{ 'ORDER.CART.ACTION.REMOVE_ITEM' | translate }}
+            </button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    }
+  </div>
+
+  <aside class="order-cart__summary" [attr.aria-label]="'ORDER.CART.ARIA.SUMMARY' | translate">
+    <section class="order-cart__totals">
+      <h2>{{ 'ORDER.CART.ARIA.SUMMARY' | translate }}</h2>
+
+      @if (order(); as currentOrder) {
+      <dl>
+        <div class="order-cart__total-row">
+          <dt>{{ 'ORDER.CART.SUMMARY.SUBTOTAL' | translate }}</dt>
+          <dd>{{ currentOrder.subtotal | currency:currentOrder.currency:'symbol':'1.2-2' }}</dd>
+        </div>
+        <div class="order-cart__total-row">
+          <dt>{{ 'ORDER.CART.SUMMARY.TAX' | translate }}</dt>
+          <dd>{{ currentOrder.taxAmount | currency:currentOrder.currency:'symbol':'1.2-2' }}</dd>
+        </div>
+        <div class="order-cart__total-row order-cart__total-row--grand">
+          <dt>{{ 'ORDER.CART.SUMMARY.TOTAL' | translate }}</dt>
+          <dd>{{ currentOrder.total | currency:currentOrder.currency:'symbol':'1.2-2' }}</dd>
+        </div>
+      </dl>
+      }
+    </section>
+
+    <form class="order-cart__add-form"
+      (ngSubmit)="addItem(sku.value.trim(), +(qty.value || 1)); sku.value = ''; qty.value = '1'">
+      <div class="order-cart__field">
+        <label for="order-cart-sku">{{ 'ORDER.CART.FIELD.SKU' | translate }}</label>
+        <input id="order-cart-sku" #sku class="order-cart__input" type="text" autocomplete="off"
+          [disabled]="addingItem()" required />
+      </div>
+
+      <div class="order-cart__field">
+        <label for="order-cart-qty">{{ 'ORDER.CART.FIELD.QTY' | translate }}</label>
+        <input id="order-cart-qty" #qty class="order-cart__input" type="number" min="1" step="1" value="1"
+          [disabled]="addingItem()" required />
+      </div>
+
+      <button class="order-cart__add-btn" type="submit" [disabled]="addingItem()">
+        {{ (addingItem() ? 'ORDER.CART.ACTION.ADDING' : 'ORDER.CART.ACTION.ADD_ITEM') | translate }}
+      </button>
+    </form>
+  </aside>
+</section>

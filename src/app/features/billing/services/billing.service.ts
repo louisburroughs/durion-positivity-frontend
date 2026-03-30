@@ -3,13 +3,21 @@ import { Observable } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   ArtifactDownloadToken,
+  CapturePaymentRequest,
   CreateInvoiceDraftRequest,
   CreateInvoiceDraftResponse,
   ElevateRequest,
   ElevateResponse,
+  GenerateReceiptRequest,
+  InitiatePaymentRequest,
   InvoiceArtifact,
   InvoiceDetail,
   IssueInvoiceRequest,
+  PaymentActionResult,
+  PaymentTransactionRef,
+  ReceiptRef,
+  RefundPaymentRequest,
+  VoidPaymentRequest,
 } from '../models/billing.models';
 
 /**
@@ -18,7 +26,7 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class BillingService {
-  constructor(private readonly api: ApiBaseService) {}
+  constructor(private readonly api: ApiBaseService) { }
 
   // ── Invoice draft ─────────────────────────────────────────────────────────
 
@@ -96,5 +104,76 @@ export class BillingService {
    */
   elevate(body: ElevateRequest): Observable<ElevateResponse> {
     return this.api.post<ElevateResponse>('/billing/auth/elevate', body);
+  }
+
+  /** operationId: initiatePayment → POST /v1/billing/invoices/{invoiceId}/payments */
+  initiatePayment(
+    invoiceId: string,
+    request: InitiatePaymentRequest,
+  ): Observable<PaymentTransactionRef> {
+    return this.api.post<PaymentTransactionRef>(
+      `/v1/billing/invoices/${invoiceId}/payments`,
+      request,
+    );
+  }
+
+  /** operationId: capturePayment → POST /v1/billing/invoices/{invoiceId}/payments/{paymentId}/capture */
+  capturePayment(
+    invoiceId: string,
+    paymentId: string,
+    request?: CapturePaymentRequest,
+  ): Observable<PaymentTransactionRef> {
+    return this.api.post<PaymentTransactionRef>(
+      `/v1/billing/invoices/${invoiceId}/payments/${paymentId}/capture`,
+      request ?? {},
+    );
+  }
+
+  /** operationId: voidPayment → POST /v1/billing/invoices/{invoiceId}/payments/{paymentId}/void */
+  voidPayment(
+    invoiceId: string,
+    paymentId: string,
+    request: VoidPaymentRequest,
+  ): Observable<PaymentActionResult> {
+    return this.api.post<PaymentActionResult>(
+      `/v1/billing/invoices/${invoiceId}/payments/${paymentId}/void`,
+      request,
+    );
+  }
+
+  /** operationId: refundPayment → POST /v1/billing/invoices/{invoiceId}/payments/{paymentId}/refund */
+  refundPayment(
+    invoiceId: string,
+    paymentId: string,
+    request: RefundPaymentRequest,
+  ): Observable<PaymentActionResult> {
+    return this.api.post<PaymentActionResult>(
+      `/v1/billing/invoices/${invoiceId}/payments/${paymentId}/refund`,
+      request,
+    );
+  }
+
+  /** operationId: generateReceipt → POST /v1/billing/invoices/{invoiceId}/receipts */
+  generateReceipt(
+    invoiceId: string,
+    request?: GenerateReceiptRequest,
+  ): Observable<ReceiptRef> {
+    return this.api.post<ReceiptRef>(
+      `/v1/billing/invoices/${invoiceId}/receipts`,
+      request ?? {},
+    );
+  }
+
+  /** operationId: getReceipt → GET /v1/billing/invoices/{invoiceId}/receipts/{receiptId} */
+  getReceipt(invoiceId: string, receiptId: string): Observable<ReceiptRef> {
+    return this.api.get<ReceiptRef>(`/v1/billing/invoices/${invoiceId}/receipts/${receiptId}`);
+  }
+
+  /** operationId: reprintReceipt → POST /v1/billing/invoices/{invoiceId}/receipts/{receiptId}/reprint */
+  reprintReceipt(invoiceId: string, receiptId: string): Observable<ReceiptRef> {
+    return this.api.post<ReceiptRef>(
+      `/v1/billing/invoices/${invoiceId}/receipts/${receiptId}/reprint`,
+      {},
+    );
   }
 }

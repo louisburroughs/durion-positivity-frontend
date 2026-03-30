@@ -19,6 +19,34 @@ export const BILLING_ROUTES: Routes = [
             m => m.InvoiceDetailPageComponent,
           ),
       },
+      {
+        path: 'invoices/:invoiceId/payment-capture',
+        loadComponent: () =>
+          import('./pages/payment-capture/payment-capture-page.component').then(
+            m => m.PaymentCapturePageComponent,
+          ),
+      },
+      {
+        path: 'invoices/:invoiceId/payments/:paymentId/void-refund',
+        loadComponent: () =>
+          import('./pages/payment-void-refund/payment-void-refund-page.component').then(
+            m => m.PaymentVoidRefundPageComponent,
+          ),
+      },
+      {
+        path: 'invoices/:invoiceId/receipts',
+        loadComponent: () =>
+          import('./pages/receipt/receipt-page.component').then(
+            m => m.ReceiptPageComponent,
+          ),
+      },
+      {
+        path: 'invoices/:invoiceId/receipts/:receiptId',
+        loadComponent: () =>
+          import('./pages/receipt/receipt-page.component').then(
+            m => m.ReceiptPageComponent,
+          ),
+      },
     ],
   },
 ];

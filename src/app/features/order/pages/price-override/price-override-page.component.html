@@ -1,0 +1,76 @@
+<section class="price-override" [attr.data-state]="state()" data-testid="price-override-page">
+  <header class="price-override__header">
+    <h1>{{ 'ORDER.OVERRIDE.TITLE' | translate }}</h1>
+  </header>
+
+  @if (state() === 'error') {
+  <p class="price-override__error" role="alert">
+    {{ (errorKey() ?? 'ORDER.OVERRIDE.ERROR.LOAD') | translate }}
+  </p>
+  }
+
+  @if (state() === 'loading') {
+  <div class="price-override__skeleton" aria-hidden="true">
+    <div class="price-override__skeleton-line"></div>
+    <div class="price-override__skeleton-line"></div>
+    <div class="price-override__skeleton-line"></div>
+  </div>
+  }
+
+  @if (state() === 'ready' || state() === 'empty') {
+  <section class="price-override__history" [attr.aria-label]="'ORDER.OVERRIDE.HISTORY_TITLE' | translate">
+    <h2>{{ 'ORDER.OVERRIDE.HISTORY_TITLE' | translate }}</h2>
+
+    @if (overrides().length === 0) {
+    <p>{{ 'ORDER.CART.EMPTY' | translate }}</p>
+    } @else {
+    <ul>
+      @for (override of overrides(); track override.overrideId) {
+      <li>
+        <span>{{ override.overridePrice | number:'1.2-2' }}</span>
+        <span>{{ ('ORDER.OVERRIDE.REASON.' + override.reasonCode) | translate }}</span>
+        <span>{{ override.appliedAt | date:'medium' }}</span>
+      </li>
+      }
+    </ul>
+    }
+  </section>
+
+  <section class="price-override__form-panel" [attr.aria-label]="'ORDER.OVERRIDE.ARIA.SECTION' | translate">
+    <p class="price-override__requires-approval">{{ 'ORDER.OVERRIDE.REQUIRES_APPROVAL' | translate }}</p>
+
+    <form class="price-override__form" (ngSubmit)="
+          applyOverride({
+            overridePrice: +(overridePrice.value || 0),
+            reasonCode: reasonCode.value,
+            authorityCode: authorityCode.value.trim()
+          })
+        ">
+      <div class="price-override__field">
+        <label for="override-price">{{ 'ORDER.OVERRIDE.FIELD.OVERRIDE_PRICE' | translate }}</label>
+        <input id="override-price" #overridePrice class="price-override__input" type="number" min="0" step="0.01"
+          [disabled]="state() === 'loading'" required />
+      </div>
+
+      <div class="price-override__field">
+        <label for="reason-code">{{ 'ORDER.OVERRIDE.FIELD.REASON_CODE' | translate }}</label>
+        <select id="reason-code" #reasonCode class="price-override__input" [disabled]="state() === 'loading'" required>
+          @for (reason of reasonCodes; track reason) {
+          <option [value]="reason">{{ ('ORDER.OVERRIDE.REASON.' + reason) | translate }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="price-override__field">
+        <label for="authority-code">{{ 'ORDER.OVERRIDE.FIELD.AUTHORITY_CODE' | translate }}</label>
+        <input id="authority-code" #authorityCode class="price-override__input" type="text" autocomplete="off"
+          [disabled]="state() === 'loading'" required />
+      </div>
+
+      <button class="price-override__apply-btn" type="submit" [disabled]="state() === 'loading'">
+        {{ 'ORDER.OVERRIDE.ACTION.APPLY' | translate }}
+      </button>
+    </form>
+  </section>
+  }
+</section>

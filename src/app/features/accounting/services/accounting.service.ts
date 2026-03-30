@@ -10,9 +10,11 @@ import {
   CreditMemo,
   CreditMemoCreateRequest,
   CreditMemoListItem,
+  EventProcessingLogEntry,
   EventEnvelopeContract,
   IngestionListFilters,
   IngestionSubmitOutcome,
+  InvoicePaymentStatus,
   PagedResponse,
   PaymentApplication,
   PaymentApplicationRequest,
@@ -38,8 +40,8 @@ export class AccountingService {
 
   listEvents(
     filters: IngestionListFilters,
-    page: number,
-    size: number,
+    page = 0,
+    size = 20,
   ): Observable<PagedResponse<AccountingEventListItem>> {
     let params = new HttpParams().set('page', String(page)).set('size', String(size));
 
@@ -70,6 +72,9 @@ export class AccountingService {
     if (filters.domainKeyId) {
       params = params.set('domainKeyId', filters.domainKeyId);
     }
+    if (filters.invoiceId) {
+      params = params.set('invoiceId', filters.invoiceId);
+    }
 
     return this.api
       .get<PagedResponse<AccountingEventDetail>>(`${AccountingService.BASE}/events`, params)
@@ -87,6 +92,16 @@ export class AccountingService {
 
   getEvent(eventId: string): Observable<AccountingEventDetail> {
     return this.api.get<AccountingEventDetail>(`${AccountingService.BASE}/events/${eventId}`);
+  }
+
+  getEventProcessingLog(eventId: string): Observable<EventProcessingLogEntry[]> {
+    return this.api.get<EventProcessingLogEntry[]>(
+      `${AccountingService.BASE}/events/${eventId}/processing-log`,
+    );
+  }
+
+  getInvoiceStatus(invoiceId: string): Observable<InvoicePaymentStatus> {
+    return this.api.get<InvoicePaymentStatus>(`${AccountingService.BASE}/invoices/${invoiceId}/status`);
   }
 
   submitEvent(request: AccountingEventSubmitRequest): Observable<IngestionSubmitOutcome> {

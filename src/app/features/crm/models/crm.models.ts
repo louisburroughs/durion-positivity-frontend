@@ -37,8 +37,8 @@ export interface CreateCommercialAccountResponse {
   partyId: string;
   legalName: string;
   dba?: string;
-  createdAt?: string;
-  createdBy?: string;
+  readonly createdAt?: string;
+  readonly createdBy?: string;
 }
 
 export interface MergePartiesRequest {
@@ -53,7 +53,7 @@ export interface MergePartiesResponse {
   losingPartyId: string;
   mergedPartyAlias?: string;
   status?: string;
-  completedAt?: string;
+  readonly completedAt?: string;
 }
 
 export interface DuplicateCandidate {
@@ -82,8 +82,8 @@ export interface CreatePersonResponse {
   personId: string;
   firstName: string;
   lastName: string;
-  createdAt?: string;
-  createdBy?: string;
+  readonly createdAt?: string;
+  readonly createdBy?: string;
 }
 
 export type RelationshipRole =
@@ -109,7 +109,7 @@ export interface CreatePartyRelationshipResponse {
   roles?: RelationshipRole[];
   effectiveStartDate?: string;
   effectiveEndDate?: string;
-  createdAt?: string;
+  readonly createdAt?: string;
   previousPrimaryDemoted?: boolean;
 }
 
@@ -187,20 +187,33 @@ export interface PartyDetail {
   contacts?: Contact[];
   vehicles?: VehicleRef[];
   mergedIntoPartyId?: string;
-  createdAt?: string;
-  createdBy?: string;
+  readonly createdAt?: string;
+  readonly createdBy?: string;
 }
 
 export interface CrmSnapshot {
-  snapshotId?: string;
-  version?: string;
-  timestamp?: string;
-  source?: string;
-  account: PartyDetail;
-  contacts?: Contact[];
+  partyId: string;
+  partyName: string;
+  partyType: string;
   vehicles?: VehicleRef[];
+  billingRules?: BillingRules;
+  readonly snapshotId?: string;
+  readonly version?: string;
+  readonly timestamp?: string;
+  readonly source?: string;
+  account?: PartyDetail;
+  contacts?: Contact[];
   preferences?: CommunicationPreferences;
   [key: string]: unknown;
+}
+
+export interface BillingRules {
+  requirePo: boolean;
+  paymentTerms: string;
+  creditLimit?: number;
+  notes?: string;
+  readonly createdAt?: string;
+  readonly updatedAt?: string;
 }
 
 export interface BillingRule {
@@ -208,7 +221,7 @@ export interface BillingRule {
   name: string;
   status: 'ACTIVE' | 'INACTIVE';
   priority?: number;
-  effectiveStart: string;
+  effectiveStart?: string;
   effectiveEnd?: string;
   billingMethod?: string;
   billingSchedule?: string;

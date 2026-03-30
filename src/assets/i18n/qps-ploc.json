@@ -105,6 +105,72 @@
       }
     }
   },
+  "CRM": {
+    "SNAPSHOT": {
+      "TITLE": "[!! Çüüšŧøøḿëëŕ Çøøñŧëëẍŧ !!]",
+      "ARIA": {
+        "SECTION": "[!! Çüüšŧøøḿëëŕ çøøñŧëëẍŧ šñààṕšħøøŧ !!]"
+      },
+      "FIELD": {
+        "CUSTOMER_NAME": "[!! Çüüšŧøøḿëëŕ !!]",
+        "PARTY_TYPE": "[!! AAççøøüüñŧ Ŧÿṕëë !!]",
+        "VEHICLES": "[!! Ṽëëħïïçľëëš !!]",
+        "BILLING_SUMMARY": "[!! Ɓïïľľïïñğ Ŕüüľëëš !!]",
+        "PARTY_ID": "[!! Ṕààŕŧÿ ÏÏĐ !!]",
+        "VEHICLE_ID": "[!! Ṽëëħïïçľëë ÏÏĐ !!]",
+        "UUID_PLACEHOLDER": "[!! ÛÛÏÏĐ !!]"
+      },
+      "ACTION": {
+        "LOAD": "[!! Ŀøøààđ šñààṕšħøøŧ !!]",
+        "REFRESH": "[!! Ŕëëƒŕëëšħ !!]",
+        "CLEAR": "[!! Çľëëààŕ !!]"
+      },
+      "PARTY_TYPE": {
+        "COMMERCIAL": "[!!Cómmércíál!!]",
+        "INDIVIDUAL": "[!!Índívídüál!!]",
+        "FLEET": "[!!Fléét!!]",
+        "DEALER": "[!!Déálér!!]",
+        "UNKNOWN": "[!!Ünknówn!!]"
+      },
+      "IDLE": "[!! ËËñŧëëŕ àà ṕààŕŧÿ ÏÏĐ øøŕ ṽëëħïïçľëë ÏÏĐ ŧøø ľøøààđ çüüšŧøøḿëëŕ çøøñŧëëẍŧ. !!]",
+      "EMPTY": "[!! Ňøø çüüšŧøøḿëëŕ çøøñŧëëẍŧ ľøøààđëëđ. !!]",
+      "EMPTY_VEHICLES": "[!! Ňøø ṽëëħïïçľëëš ààṽààïïľààƀľëë. !!]",
+      "ERROR": {
+        "LOAD": "[!! ÛÛñààƀľëë ŧøø ľøøààđ çüüšŧøøḿëëŕ çøøñŧëëẍŧ. Ṕľëëààšëë ŧŕÿ ààğààïïñ. !!]",
+        "UUID": "[!! Ḿüüšŧ ƀëë àà ṽààľïïđ ÛÛÏÏĐ. !!]",
+        "VALIDATION": "[!! ËËñŧëëŕ àà ṕààŕŧÿ ÏÏĐ øøŕ ṽëëħïïçľëë ÏÏĐ. !!]",
+        "FORBIDDEN": "[!! Ÿøøüü đøø ñøøŧ ħààṽëë ààççëëšš ŧøø ŧħïïš çüüšŧøøḿëëŕ çøøñŧëëẍŧ. !!]"
+      }
+    },
+    "BILLING_RULES": {
+      "TITLE": "[!! Ɓïïľľïïñğ Ŕüüľëëš !!]",
+      "ARIA": {
+        "SECTION": "[!! Ɓïïľľïïñğ ŕüüľëëš ƒøøŕḿ !!]",
+        "SUMMARY": "[!! Ɓïïľľïïñğ ŕüüľëëš šüüḿḿààŕÿ !!]"
+      },
+      "FIELD": {
+        "REQUIRE_PO": "[!! Ŕëëqüüïïŕëë Ṕüüŕçħààšëë ØØŕđëëŕ !!]",
+        "PAYMENT_TERMS": "[!! Ṕààÿḿëëñŧ Ŧëëŕḿš !!]",
+        "CREDIT_LIMIT": "[!! Çŕëëđïïŧ Ŀïïḿïïŧ !!]",
+        "NOTES": "[!! Ňøøŧëëš !!]",
+        "SUMMARY": "[!! Çüüŕŕëëñŧ Ɓïïľľïïñğ Ŕüüľëëš !!]"
+      },
+      "ACTION": {
+        "SAVE": "[!! Šààṽëë ƀïïľľïïñğ ŕüüľëëš !!]",
+        "RETRY": "[!! Ŕëëŧŕÿ !!]",
+        "BACK": "[!! Ɓààçķ ŧøø Ṕààŕŧÿ !!]"
+      },
+      "IDLE": "[!!Séléct á cüstómér tó víéw bíllíng rülés.!!]",
+      "EMPTY": "[!!Nó bíllíng rülés fóünd.!!]",
+      "RULE_DEFAULT_NAME": "[!!Cüstómér Bíllíng Rülés!!]",
+      "SAVING": "[!! Šààṽïïñğ... !!]",
+      "ERROR": {
+        "LOAD": "[!! ÛÛñààƀľëë ŧøø ľøøààđ ƀïïľľïïñğ ŕüüľëëš. !!]",
+        "SAVE": "[!! ÛÛñààƀľëë ŧøø šààṽëë ƀïïľľïïñğ ŕüüľëëš. Ṕľëëààšëë ŧŕÿ ààğààïïñ. !!]",
+        "FORBIDDEN": "[!! Ÿøøüü đøø ñøøŧ ħààṽëë ṕëëŕḿïïššïïøøñ ŧøø ṽïïëëŵ ƀïïľľïïñğ ŕüüľëëš ƒøøŕ ŧħïïš ààççøøüüñŧ. !!]"
+      }
+    }
+  },
   "SECURITY": {
     "NAV": {
       "WORKSPACE_ARIA": "[!! Šëëçüüŕïïŧÿ ŵøøŕķšṕààçëë !!]",
@@ -538,6 +604,13 @@
       "YES": "[!! Ŷëëš !!]",
       "NO": "[!! Ňøø !!]"
     },
+    "EVENT_TYPE": {
+      "PAYMENT_RECEIVED": "[!! Ṕààÿḿëëñŧ Ŕëëçëëïïṽëëđ !!]",
+      "INVOICE_ISSUED": "[!! ÏÏñṽøøïïçëë ÏÏššüüëëđ !!]",
+      "CREDIT_MEMO": "[!! Çŕëëđïïŧ Ḿëëḿøø !!]",
+      "ADJUSTMENT": "[!! AAđĵüüšŧḿëëñŧ !!]",
+      "REVERSAL": "[!! Ŕëëṽëëŕšààľ !!]"
+    },
     "INGESTION_MONITOR_LIST": {
       "OVERLINE": "[!! ÏÏñğëëšŧïïøøñ Ḿøøñïïŧøøŕ !!]",
       "TITLE": "[!! ÏÏñğëëšŧïïøøñ ËËṽëëñŧš !!]",
@@ -719,6 +792,54 @@
       "FIELD_REASON": "[!! Ŕëëààšøøñ Çøøđëë !!]",
       "FIELD_NOTE": "[!! Ĵüüšŧïïƒïïçààŧïïøøñ Ňøøŧëë !!]",
       "FIELD_CREATED": "[!! Çŕëëààŧëëđ ààŧ !!]"
+    },
+    "INVOICE_PAYMENT_STATUS": {
+      "OVERLINE": "[!! Innvvoiccexxx !!]",
+      "TITLE": "[!! PPayymeenntt && PPoossttiingg SSttaattuusxxxx !!]",
+      "LOADING": "[!! LLooaaddiinngg ppaayymmeenntt aanndd ppoossttiingg ssttaattuusxxxx... !!]",
+      "ARIA": {
+        "SECTION": "[!! Innvvoicce ppaayymmeenntt aanndd ppoossttiingg ssttaattuusxxxx !!]",
+        "REFRESH": "[!! RReffrreesshh ppaayymmeenntt aanndd ppoossttiingg ssttaattuusxxxx !!]",
+        "STATUS_BADGE": "[!! PPayymeenntt ssttaattuus: {{status}}xxxx !!]"
+      },
+      "FIELD": {
+        "PAYMENT_STATUS": "[!! PPayymeenntt SSttaattuusxxxx !!]",
+        "BALANCE_DUE": "[!! BBaallaanncce DDuueexxxx !!]",
+        "TOTAL_AMOUNT": "[!! Innvvoicce TToottaallxxxx !!]",
+        "PAID_AMOUNT": "[!! AAmmoouunntt PPaaiiddxxxx !!]",
+        "INGESTION_STATUS": "[!! Innggeessttiioonn SSttaattuusxxxx !!]",
+        "JOURNAL_ENTRY_ID": "[!! JJoouurrnnaall EEnnttrryy IIDDxxxx !!]",
+        "LEDGER_TRANSACTION_ID": "[!! LLeeddggeerr TTrraannssaaccttiioonn IIDDxxxx !!]",
+        "ERROR_CODE": "[!! EErrrroorr CCooddeexxxx !!]",
+        "ERROR_MESSAGE": "[!! EErrrroorr DDeettaaiillssxxxx !!]"
+      },
+      "PAYMENT_STATUS": {
+        "PAID": "[!! PPaaiiddxxxx !!]",
+        "UNPAID": "[!! UUnnppaaiiddxxxx !!]",
+        "PARTIALLY_PAID": "[!! PPaarrttiiaallllyy PPaaiiddxxxx !!]",
+        "UNKNOWN": "[!! SSttaattuus uunnaavvaaiillaabblleexxxx !!]"
+      },
+      "ACTION": {
+        "REFRESH": "[!! RReeffrreesshhxxxx !!]",
+        "VIEW_HISTORY": "[!! VViieeww hhiissttoorryyxxxx !!]"
+      },
+      "EMPTY_INGESTION": "[!! NNoo aaccccoouunnttiinngg iinnggeessttiioonn rreeccoorrddss ffoouunndd ffoorr tthhiiss iinnvvooiiccexxxx. !!]",
+      "HISTORY": {
+        "TITLE": "[!! AAccccoouunnttiinngg Innggeessttiioonn HHiissttoorryyxxxx !!]",
+        "DETAIL_ARIA": "[!! AAccccoouunnttiinngg iinnggeessttiioonn eevveenntt ddeettaaiillxxxx !!]",
+        "DETAIL_TITLE": "[!! EEvveenntt DDeettaaiillxxxx !!]",
+        "EMPTY": "[!! NNoo iinnggeessttiioonn rreeccoorrddss ffoouunnddxxxx. !!]",
+        "TABLE_CAPTION": "[!! AAccccoouunnttiinngg iinnggeessttiioonn rreeccoorrddss ffoorr tthhiiss iinnvvooiiccexxxx !!]",
+        "COL_RECEIVED_AT": "[!! RReecceeiivveedd AAttxxxx !!]",
+        "COL_STATUS": "[!! SSttaattuusxxxx !!]",
+        "COL_TYPE": "[!! EEvveenntt TTyyppeexxxx !!]",
+        "COL_ERROR": "[!! EErrrroorrxxxx !!]"
+      },
+      "ERROR": {
+        "LOAD": "[!! UUnnaabbllee ttoo llooaadd ppaayymmeenntt ssttaattuus. PPlleeaassee ttrryy aaggaaiinnxxxx. !!]",
+        "ACCESS_DENIED": "[!! YYoouu ddoo nnoott hhaavvee ppeerrmmiissssiioonn ttoo vviieeww tthhiiss ppaaggeexxxx. !!]",
+        "MISSING_ID": "[!! No invoice ID provided. !!]"
+      }
     },
     "VENDOR_PAYMENT_NEW": {
       "OVERLINE": "[!! AAççøøüüñŧš Ṕààÿààƀľëë !!]",
@@ -1075,6 +1196,108 @@
     }
   },
   "WORKEXEC": {
+    "ESTIMATE_LIST": {
+      "TITLE": "[!! Estimates !!]",
+      "ARIA": {
+        "SECTION": "[!! Estimates list !!]"
+      },
+      "IDLE": "[!! Select a customer or vehicle to view estimates. !!]",
+      "EMPTY": "[!! No estimates found. !!]",
+      "ERROR": {
+        "LOAD": "[!! Unable to load estimates. Please try again. !!]"
+      },
+      "CARD": {
+        "ARIA_LABEL": "[!!Éstímáté fór cüstómér!!]",
+        "LAST_UPDATED": "[!! Last updated !!]",
+        "TOTAL": "[!! Total !!]"
+      }
+    },
+    "ESTIMATE_STATUS": {
+      "DRAFT": "[!! Draft !!]",
+      "PENDING_REVIEW": "[!! Pending Review !!]",
+      "APPROVED": "[!! Approved !!]",
+      "REJECTED": "[!! Rejected !!]",
+      "REVISED": "[!! Revised !!]",
+      "EXPIRED": "[!! Expired !!]",
+      "PENDING_APPROVAL": "[!! Pending Approval !!]",
+      "OPEN": "[!! Open !!]",
+      "PENDING_CUSTOMER": "[!! Pending Customer !!]",
+      "DECLINED": "[!! Declined !!]",
+      "SCHEDULED": "[!! Scheduled !!]",
+      "INVOICED": "[!! Invoiced !!]",
+      "CANCELLED": "[!! Cancelled !!]",
+      "ARCHIVED": "[!! Archived !!]"
+    },
+    "INVOICE_STATUS": {
+      "DRAFT": "[!! Draft !!]",
+      "PENDING": "[!! Pending !!]",
+      "ISSUED": "[!! Issued !!]",
+      "FINALIZED": "[!! Finalized !!]",
+      "VOID": "[!! Void !!]",
+      "CANCELLED": "[!! Cancelled !!]"
+    },
+    "ITEM_TYPE": {
+      "PART": "[!! Part !!]",
+      "LABOR": "[!! Labor !!]",
+      "FEE": "[!! Fee !!]"
+    },
+    "WIP": {
+      "TITLE": "[!! Work In Progress !!]",
+      "ARIA": {
+        "SECTION": "[!! Work in progress board !!]",
+        "TABLE": "[!! Active workorders !!]"
+      },
+      "EMPTY": "[!! No active workorders. !!]",
+      "ERROR": {
+        "LOAD": "[!! Unable to load WIP status. !!]"
+      },
+      "COLUMN": {
+        "WORKORDER": "[!! Work Order !!]",
+        "STATUS": "[!! Status !!]",
+        "TECHNICIAN": "[!! Technician !!]",
+        "BAY": "[!! Bay !!]",
+        "VEHICLE": "[!! Vehicle !!]"
+      }
+    },
+    "WIP_STATUS": {
+      "WAITING": "[!! Waiting !!]",
+      "IN_PROGRESS": "[!! In Progress !!]",
+      "PARTS_PENDING": "[!! Parts Pending !!]",
+      "READY": "[!! Ready !!]",
+      "COMPLETED": "[!! Completed !!]"
+    },
+    "INVOICE_FINALIZATION": {
+      "TITLE": "[!! Invoice Finalization !!]",
+      "ARIA": {
+        "SECTION": "[!! Invoice finalization form !!]",
+        "ITEMS_TABLE": "[!! Invoice line items !!]"
+      },
+      "ERROR": {
+        "LOAD": "[!! Unable to load invoice. !!]",
+        "MISSING_WORKORDER_ID": "[!! No workorder ID provided. !!]",
+        "SUBMIT": "[!! Unable to request finalization. Please try again. !!]"
+      },
+      "COLUMN": {
+        "DESCRIPTION": "[!! Description !!]",
+        "QTY": "[!! Qty !!]",
+        "UNIT_PRICE": "[!! Unit Price !!]",
+        "LINE_TOTAL": "[!! Total !!]",
+        "TYPE": "[!! Type !!]"
+      },
+      "SUMMARY": {
+        "SUBTOTAL": "[!! Subtotal !!]",
+        "TAX": "[!! Tax !!]",
+        "TOTAL": "[!! Total !!]"
+      },
+      "FORM": {
+        "REASON_LABEL": "[!! Reason (optional) !!]",
+        "REASON_PLACEHOLDER": "[!! Enter reason for finalization !!]"
+      },
+      "ACTION": {
+        "REQUEST_FINALIZATION": "[!! Request Finalization !!]",
+        "SUBMITTING": "[!! Submitting... !!]"
+      }
+    },
     "OPERATIONAL_COST": {
       "OVERLINE": "[!! Ŵøøŕķøøŕđëëŕ Çøøšŧš !!]",
       "TITLE": "[!! ØØṕëëŕààŧïïøøñààľ Çøøšŧ Šüüḿḿààŕÿ !!]",
@@ -1540,6 +1763,178 @@
       }
     }
   },
+  "BILLING": {
+    "PAYMENT": {
+      "TITLE": "[!! Payment !!]",
+      "METHOD": {
+        "LABEL": "[!! Payment Method !!]",
+        "CARD": "[!! Credit/Debit Card !!]",
+        "CASH": "[!! Cash !!]",
+        "CHECK": "[!! Check !!]",
+        "CREDIT_ACCOUNT": "[!! Credit Account !!]"
+      },
+      "AMOUNT_LABEL": "[!! Amount !!]",
+      "ACTION": {
+        "CAPTURE": "[!! Authorize & Capture !!]",
+        "VOID": "[!! Void Authorization !!]",
+        "REFUND": "[!! Process Refund !!]",
+        "PRINT_RECEIPT": "[!! Print Receipt !!]"
+      },
+      "MODE": {
+        "LABEL": "[!!Séléct páymént áctíón!!]"
+      },
+      "SUBMITTING": "[!! Processing... !!]",
+      "IDLE": "[!! Select a payment method to begin. !!]",
+      "FIELD": {
+        "TRANSACTION_ID": "[!! Transaction ID !!]",
+        "AUTH_CODE": "[!! Authorization Code !!]",
+        "STATUS": "[!! Status !!]",
+        "AMOUNT": "[!! Amount !!]",
+        "CAPTURED_AT": "[!! Captured At !!]"
+      },
+      "VOID": {
+        "TITLE": "[!! Void Authorization !!]",
+        "REASON_LABEL": "[!! Reason !!]",
+        "AUTHORITY_LABEL": "[!! Authority Code !!]"
+      },
+      "REFUND": {
+        "TITLE": "[!! Refund Payment !!]",
+        "REASON_LABEL": "[!! Reason !!]",
+        "AUTHORITY_LABEL": "[!! Authority Code !!]",
+        "AMOUNT_LABEL": "[!! Refund Amount (leave blank for full refund) !!]"
+      },
+      "ERROR": {
+        "CAPTURE": "[!! Unable to process payment. Please try again. !!]",
+        "VOID": "[!! Unable to void authorization. Please try again. !!]",
+        "REFUND": "[!! Unable to process refund. Please try again. !!]",
+        "MISSING_IDS": "[!! Invalid payment or invoice reference. !!]"
+      }
+    },
+    "RECEIPT": {
+      "TITLE": "[!! Receipt !!]",
+      "FIELD": {
+        "RECEIPT_NUMBER": "[!! Receipt Number !!]",
+        "INVOICE_REF": "[!! Invoice Reference !!]",
+        "GENERATED_AT": "[!! Generated !!]",
+        "EMAILED_TO": "[!! Emailed To !!]"
+      },
+      "ACTION": {
+        "GENERATE": "[!! Generate Receipt !!]",
+        "REPRINT": "[!! Reprint !!]",
+        "VIEW_PDF": "[!!Víéw PDF Récéípt!!]"
+      },
+      "DELIVERY": {
+        "LABEL": "[!! Delivery Method !!]",
+        "PRINT": "[!! Print !!]",
+        "EMAIL": "[!! Email !!]",
+        "NONE": "[!! No Delivery !!]"
+      },
+      "EMAIL_LABEL": "[!! Email Address !!]",
+      "IDLE": "[!! No receipt generated yet. !!]",
+      "ERROR": {
+        "LOAD": "[!! Unable to load receipt. !!]",
+        "GENERATE": "[!! Unable to generate receipt. Please try again. !!]",
+        "REPRINT": "[!! Unable to reprint receipt. Please try again. !!]",
+        "MISSING_INVOICE": "[!! No invoice ID provided. !!]"
+      }
+    }
+  },
+  "ORDER": {
+    "CART": {
+      "TITLE": "[!! Order Cart !!]",
+      "ARIA": {
+        "ITEMS_TABLE": "[!! Order line items !!]",
+        "SUMMARY": "[!! Order summary !!]"
+      },
+      "IDLE": "[!! Enter customer details to start a cart. !!]",
+      "EMPTY": "[!! No items in cart. !!]",
+      "ERROR": {
+        "LOAD": "[!! Unable to load order. !!]",
+        "CREATE": "[!! Unable to create cart. !!]",
+        "ADD_ITEM": "[!! Unable to add item. !!]",
+        "REMOVE_ITEM": "[!! Unable to remove item. !!]"
+      },
+      "FIELD": {
+        "CUSTOMER_ID": "[!! Customer ID !!]",
+        "VEHICLE_ID": "[!! Vehicle ID (optional) !!]",
+        "SKU": "[!! SKU / Service Code !!]",
+        "QTY": "[!! Qty !!]",
+        "UNIT_PRICE": "[!! Unit Price !!]",
+        "LINE_TOTAL": "[!! Total !!]",
+        "DESCRIPTION": "[!! Description !!]"
+      },
+      "ACTION": {
+        "START_CART": "[!! Start Cart !!]",
+        "ADD_ITEM": "[!! Add Item !!]",
+        "REMOVE_ITEM": "[!! Remove !!]",
+        "ADDING": "[!! Adding... !!]"
+      },
+      "SUMMARY": {
+        "SUBTOTAL": "[!! Subtotal !!]",
+        "TAX": "[!! Tax !!]",
+        "TOTAL": "[!! Total !!]"
+      },
+      "COLUMN": {
+        "DESCRIPTION": "[!! Description !!]",
+        "SKU": "[!! SKU !!]",
+        "QTY": "[!! Qty !!]",
+        "UNIT_PRICE": "[!! Unit Price !!]",
+        "TOTAL": "[!! Total !!]",
+        "ACTIONS": "[!! Actions !!]"
+      }
+    },
+    "OVERRIDE": {
+      "TITLE": "[!! Price Override !!]",
+      "ARIA": {
+        "SECTION": "[!! Price override form !!]"
+      },
+      "REQUIRES_APPROVAL": "[!! Requires manager approval. !!]",
+      "ERROR": {
+        "LOAD": "[!! Unable to load price overrides. !!]",
+        "APPLY": "[!! Unable to apply price override. !!]"
+      },
+      "FIELD": {
+        "OVERRIDE_PRICE": "[!! Override Price !!]",
+        "REASON_CODE": "[!! Reason Code !!]",
+        "AUTHORITY_CODE": "[!! Authority Code !!]"
+      },
+      "REASON": {
+        "PRICE_MATCH": "[!! Price Match !!]",
+        "MANAGER_DISCOUNT": "[!! Manager Discount !!]",
+        "DEFECTIVE": "[!! Defective Item !!]",
+        "CUSTOMER_SERVICE": "[!! Customer Service !!]"
+      },
+      "ACTION": {
+        "APPLY": "[!! Apply Override !!]"
+      },
+      "HISTORY_TITLE": "[!! Override History !!]"
+    },
+    "CANCEL": {
+      "TITLE": "[!! Cancel Order !!]",
+      "ARIA": {
+        "SECTION": "[!! Cancel order form !!]"
+      },
+      "WARNING": "[!! This action cannot be undone. !!]",
+      "ERROR": {
+        "LOAD": "[!! Unable to load order details. !!]",
+        "SUBMIT": "[!! Unable to cancel order. Please try again. !!]"
+      },
+      "FIELD": {
+        "STATUS": "[!! Status !!]",
+        "REASON": "[!! Reason for Cancellation !!]",
+        "AUTHORITY_CODE": "[!! Authority Code !!]"
+      },
+      "ACTION": {
+        "CANCEL_ORDER": "[!! Cancel Order !!]",
+        "SUBMITTING": "[!! Cancelling... !!]"
+      },
+      "RESULT": {
+        "SUCCESS": "[!! Order has been cancelled. !!]",
+        "PAYMENT_REVERSAL_REQUIRED": "[!! Payment reversal is required. !!]",
+        "PAYMENT_REVERSAL_ACTION": "[!! Void/Refund Payment !!]"
+      }
+    }
+  },
   "COMMON": {
     "SEARCH": "[Séárch]",
     "LOADING": "[Lóádíng…]",
@@ -1550,12 +1945,23 @@
     "EDIT": "[Édít]",
     "CANCEL": "[Cáncél]",
     "REFRESH": "[Réfrésh]",
-    "CLOSE": "[Clósé]"
+    "ACTION": {
+      "REFRESH": "[!! Refresh !!]"
+    },
+    "CLOSE": "[Clósé]",
+    "EMPTY_VALUE": "[!!—!!]"
   },
   "STATUS": {
+    "INITIATED": "[!! Initiated !!]",
+    "AUTHORIZED": "[!! Authorized !!]",
+    "CAPTURED": "[!! Captured !!]",
+    "VOIDED": "[!! Voided !!]",
+    "REFUNDED": "[!! Refunded !!]",
+    "FAILED": "[!! Failed !!]",
     "OPEN": "[Ópén]",
     "CLOSED": "[Clóséd]",
     "PENDING": "[Péndíng]",
+    "PENDING_PAYMENT": "[!! Pending Payment !!]",
     "PENDING_APPROVAL": "[Péndíng Áppróvál]",
     "APPROVED": "[Áppróvéd]",
     "REJECTED": "[Réjéctéd]",

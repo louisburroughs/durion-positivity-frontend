@@ -1,0 +1,153 @@
+.wip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-6, 1.5rem) var(--space-4, 1rem);
+  background: color-mix(in srgb, var(--cardBackground, #fff) 84%, var(--themeBackground) 16%);
+  border-radius: var(--radius-lg, 16px);
+}
+
+.wip__header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3, 0.75rem);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.wip__header h1 {
+  margin: 0;
+  font-family: var(--font-primary, var(--font-body));
+  font-size: 1.5rem;
+}
+
+.wip__refresh {
+  border: 0;
+  border-radius: var(--radius-md, 8px);
+  padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
+  background: color-mix(in srgb, var(--accentA100, #d7f3f0) 72%, var(--cardBackground, #fff) 28%);
+  color: var(--brand-primary, var(--primaryA400));
+  font-weight: 600;
+}
+
+.wip__table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: separate;
+  background: color-mix(in srgb, var(--primary50, #f4f8fe) 42%, var(--cardBackground, #fff) 58%);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+}
+
+.wip__table caption {
+  text-align: left;
+  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  color: var(--handleColor);
+}
+
+.wip__table th,
+.wip__table td {
+  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  text-align: left;
+}
+
+.wip__table thead th {
+  color: var(--handleColor);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.wip__table tbody tr {
+  background: color-mix(in srgb, var(--cardBackground, #fff) 92%, var(--themeBackground) 8%);
+}
+
+.wip__table tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--primary50, #f4f8fe) 52%, var(--cardBackground, #fff) 48%);
+}
+
+.wip__workorder-link {
+  border: 0;
+  background: transparent;
+  color: var(--brand-primary, var(--primaryA400));
+  font-weight: 600;
+  padding: 0;
+}
+
+.wip__badge {
+  display: inline-flex;
+  padding: var(--space-1, 0.25rem) var(--space-2, 0.5rem);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--trackColor) 50%, transparent);
+  color: var(--currentTextColor);
+}
+
+.wip__badge--waiting {
+  background: color-mix(in srgb, var(--functional-warning, #e6a540) 22%, transparent);
+  color: var(--functional-warning, #e6a540);
+}
+
+.wip__badge--in-progress {
+  background: color-mix(in srgb, var(--primaryA100, #d3e3f6) 72%, transparent);
+  color: var(--brand-primary, var(--primaryA400));
+}
+
+.wip__badge--parts-pending {
+  background: color-mix(in srgb, var(--functional-warning, #e6a540) 30%, transparent);
+  color: var(--functional-warning, #e6a540);
+}
+
+.wip__badge--ready {
+  background: color-mix(in srgb, var(--functional-success, #5bbe72) 32%, transparent);
+  color: color-mix(in srgb, var(--functional-success, #5bbe72) 70%, var(--brand-secondary));
+}
+
+.wip__badge--completed {
+  background: color-mix(in srgb, var(--trackColor, #d7d9dd) 80%, transparent);
+  color: var(--brand-secondary, var(--currentTextColor));
+}
+
+.wip__skeleton {
+  display: grid;
+  gap: var(--space-2, 0.5rem);
+}
+
+.wip__skeleton-row {
+  height: 2.75rem;
+  border-radius: var(--radius-md, 8px);
+  background: linear-gradient(90deg, var(--primary50, #f4f8fe), var(--cardBackground, #fff), var(--primary50, #f4f8fe));
+  background-size: 220% 100%;
+  animation: wip-skeleton 1.2s ease-in-out infinite;
+}
+
+.wip__empty {
+  color: var(--handleColor);
+}
+
+.wip__error {
+  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  border-radius: var(--radius-md, 8px);
+  color: var(--functional-error-red, #c84c47);
+  background: color-mix(in srgb, var(--functional-error-red, #c84c47) 11%, transparent);
+}
+
+@keyframes wip-skeleton {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .wip__table {
+    display: block;
+    overflow-x: auto;
+  }
+}

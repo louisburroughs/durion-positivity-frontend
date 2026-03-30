@@ -18,6 +18,31 @@ export interface IngestionListFilters {
   ingestionId?: string;
   domainKeyId?: string;
   organizationId?: string;
+  invoiceId?: string;
+}
+
+export interface InvoicePaymentStatus {
+  readonly invoiceId: string;
+  readonly paymentStatus: 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' | 'UNKNOWN';
+  readonly balanceDue: number;
+  readonly totalAmount?: number;
+  readonly paidAmount?: number;
+  readonly currency?: string;
+  readonly latestEventId?: string;
+  readonly latestIngestionStatus?: string;
+  readonly journalEntryId?: string;
+  readonly ledgerTransactionId?: string;
+  readonly errorCode?: string;
+  readonly errorMessage?: string;
+}
+
+export interface EventProcessingLogEntry {
+  logId?: string;
+  eventId?: string;
+  step?: string;
+  status?: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+  readonly timestamp?: string;
+  message?: string;
 }
 
 export enum IngestionProcessingStatus {

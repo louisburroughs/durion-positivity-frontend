@@ -59,7 +59,14 @@ export const CRM_ROUTES: Routes = [
         path: 'snapshot',
         loadComponent: () =>
           import('./pages/crm-snapshot/crm-snapshot.component').then(
-            m => m.CrmSnapshotComponent,
+            m => m.CrmSnapshotPageComponent,
+          ),
+      },
+      {
+        path: 'crm-snapshot/:partyId',
+        loadComponent: () =>
+          import('./pages/crm-snapshot/crm-snapshot.component').then(
+            m => m.CrmSnapshotPageComponent,
           ),
       },
       {
@@ -73,7 +80,7 @@ export const CRM_ROUTES: Routes = [
         path: 'party/:partyId/billing-rules',
         loadComponent: () =>
           import('./pages/billing-rules/billing-rules.component').then(
-            m => m.BillingRulesComponent,
+            m => m.BillingRulesPageComponent,
           ),
       },
       { path: '**', redirectTo: '' },

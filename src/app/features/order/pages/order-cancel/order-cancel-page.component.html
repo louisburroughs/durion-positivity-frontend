@@ -1,0 +1,89 @@
+<section class="order-cancel" [attr.data-state]="state()" data-testid="order-cancel-page">
+  <header class="order-cancel__header">
+    <h1>{{ 'ORDER.CANCEL.TITLE' | translate }}</h1>
+  </header>
+
+  @if (state() === 'error') {
+  <p class="order-cancel__error" role="alert">
+    {{ (errorKey() ?? 'ORDER.CANCEL.ERROR.LOAD') | translate }}
+  </p>
+  }
+
+  @if (state() === 'loading' && !order()) {
+  <div class="order-cancel__skeleton" aria-hidden="true">
+    <div class="order-cancel__skeleton-line"></div>
+    <div class="order-cancel__skeleton-line"></div>
+    <div class="order-cancel__skeleton-line"></div>
+  </div>
+  }
+
+  @if (state() === 'ready') {
+  @if (order(); as currentOrder) {
+  <section class="order-cancel__summary">
+    <h2>{{ 'ORDER.CANCEL.TITLE' | translate }}</h2>
+    <dl>
+      <div>
+        <dt>{{ 'ORDER.CANCEL.FIELD.STATUS' | translate }}</dt>
+        <dd>{{ ('STATUS.' + currentOrder.status) | translate }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ORDER.CART.SUMMARY.TOTAL' | translate }}</dt>
+        <dd>{{ currentOrder.total | currency:currentOrder.currency:'symbol':'1.2-2' }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="order-cancel__form-panel" [attr.aria-label]="'ORDER.CANCEL.ARIA.SECTION' | translate">
+    <p class="order-cancel__warning" role="alert">
+      {{ 'ORDER.CANCEL.WARNING' | translate }}
+    </p>
+
+    <form class="order-cancel__form"
+      (ngSubmit)="confirmCancel({ reason: cancelReason.value.trim(), authorityCode: authorityCode.value.trim() })">
+      <div class="order-cancel__field">
+        <label for="cancel-reason">{{ 'ORDER.CANCEL.FIELD.REASON' | translate }}</label>
+        <textarea id="cancel-reason" #cancelReason class="order-cancel__input" rows="3" [disabled]="submitting()"
+          required></textarea>
+      </div>
+
+      <div class="order-cancel__field">
+        <label for="cancel-authority">{{ 'ORDER.CANCEL.FIELD.AUTHORITY_CODE' | translate }}</label>
+        <input id="cancel-authority" #authorityCode class="order-cancel__input" type="text" autocomplete="off"
+          [disabled]="submitting()" required />
+      </div>
+
+      <button class="order-cancel__cancel-btn" type="submit" [disabled]="submitting()">
+        {{ (submitting() ? 'ORDER.CANCEL.ACTION.SUBMITTING' : 'ORDER.CANCEL.ACTION.CANCEL_ORDER') | translate }}
+      </button>
+    </form>
+  </section>
+  }
+  }
+
+  @if (cancelResult(); as result) {
+  <section class="order-cancel__result">
+    <p>{{ 'ORDER.CANCEL.RESULT.SUCCESS' | translate }}</p>
+
+    @if (result.paymentReversalRequired) {
+    <div class="order-cancel__reversal-warning" aria-live="polite">
+      <p>{{ 'ORDER.CANCEL.RESULT.PAYMENT_REVERSAL_REQUIRED' | translate }}</p>
+      @if (result.paymentReversalRef) {
+      <a class="order-cancel__reversal-action" [routerLink]="[
+          '/app/billing/invoices',
+          result.orderId,
+          'payments',
+          result.paymentReversalRef,
+          'void-refund'
+        ]">
+        {{ 'ORDER.CANCEL.RESULT.PAYMENT_REVERSAL_ACTION' | translate }}
+      </a>
+      } @else {
+      <span class="order-cancel__reversal-action order-cancel__reversal-action--pending" aria-disabled="true">
+        {{ 'ORDER.CANCEL.RESULT.PAYMENT_REVERSAL_ACTION' | translate }}
+      </span>
+      }
+    </div>
+    }
+  </section>
+  }
+</section>

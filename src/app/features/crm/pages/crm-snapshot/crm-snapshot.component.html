@@ -1,125 +1,107 @@
-<article class="crm-page crm-snapshot" aria-labelledby="snapshot-heading">
-  <h1 id="snapshot-heading">CRM Snapshot Viewer</h1>
-  <p class="page-subtitle">Enter a Party ID or Vehicle ID to load a snapshot.</p>
+<section class="crm-snapshot" aria-labelledby="crm-snapshot-title"
+  [attr.aria-label]="'CRM.SNAPSHOT.ARIA.SECTION' | translate">
+  <header class="crm-snapshot__header">
+    <h1 id="crm-snapshot-title">{{ 'CRM.SNAPSHOT.TITLE' | translate }}</h1>
+  </header>
 
-  <section class="step-panel">
-    <form [formGroup]="snapshotForm" class="snapshot-form" novalidate>
-      <label class="field-label" for="partyId">Party ID</label>
-      <input id="partyId" class="field-input" type="text" formControlName="partyId" placeholder="UUID" />
-      @if (snapshotForm.controls.partyId.touched && snapshotForm.controls.partyId.errors?.['pattern']) {
-        <p class="field-error" role="alert">Must be a valid UUID</p>
-      }
+  <form [formGroup]="snapshotForm" class="crm-snapshot__lookup" novalidate>
+    <label class="crm-snapshot__label" for="partyId">{{ 'CRM.SNAPSHOT.FIELD.PARTY_ID' | translate }}</label>
+    <input id="partyId" class="crm-snapshot__input" type="text" formControlName="partyId"
+      [placeholder]="'CRM.SNAPSHOT.FIELD.UUID_PLACEHOLDER' | translate" />
 
-      <label class="field-label" for="vehicleId">Vehicle ID</label>
-      <input id="vehicleId" class="field-input" type="text" formControlName="vehicleId" placeholder="UUID" />
-      @if (snapshotForm.controls.vehicleId.touched && snapshotForm.controls.vehicleId.errors?.['pattern']) {
-        <p class="field-error" role="alert">Must be a valid UUID</p>
-      }
+    <label class="crm-snapshot__label" for="vehicleId">{{ 'CRM.SNAPSHOT.FIELD.VEHICLE_ID' | translate }}</label>
+    <input id="vehicleId" class="crm-snapshot__input" type="text" formControlName="vehicleId"
+      [placeholder]="'CRM.SNAPSHOT.FIELD.UUID_PLACEHOLDER' | translate" />
 
-      @if (errorType() === 'validation') {
-        <p class="field-error" role="alert">{{ errorMessage() || 'Enter a Party ID or Vehicle ID.' }}</p>
-      }
+    @if (snapshotForm.controls.partyId.touched && snapshotForm.controls.partyId.errors?.['pattern']) {
+    <p class="crm-snapshot__error-banner" role="alert">{{ 'CRM.SNAPSHOT.ERROR.UUID' | translate }}</p>
+    }
 
-      <div class="actions-row">
-        <button class="btn-primary" type="button" [disabled]="!canLoad()" (click)="loadSnapshot()">Load Snapshot</button>
-        <button class="btn-ghost" type="button" [disabled]="!canRefresh()" (click)="refresh()">Refresh</button>
-        <button class="btn-ghost" type="button" (click)="clear()">Clear</button>
-      </div>
-    </form>
+    @if (snapshotForm.controls.vehicleId.touched && snapshotForm.controls.vehicleId.errors?.['pattern']) {
+    <p class="crm-snapshot__error-banner" role="alert">{{ 'CRM.SNAPSHOT.ERROR.UUID' | translate }}</p>
+    }
+
+    @if (errorType() === 'validation') {
+    <p class="crm-snapshot__error-banner" role="alert">{{ 'CRM.SNAPSHOT.ERROR.VALIDATION' | translate }}</p>
+    }
+
+    <div class="crm-snapshot__actions">
+      <button type="button" class="crm-snapshot__button crm-snapshot__button--primary" [disabled]="!canLoad()"
+        (click)="loadSnapshot()">
+        {{ 'CRM.SNAPSHOT.ACTION.LOAD' | translate }}
+      </button>
+      <button type="button" class="crm-snapshot__button" [disabled]="!canRefresh()" (click)="refresh()">
+        {{ 'CRM.SNAPSHOT.ACTION.REFRESH' | translate }}
+      </button>
+      <button type="button" class="crm-snapshot__button" (click)="clear()">
+        {{ 'CRM.SNAPSHOT.ACTION.CLEAR' | translate }}
+      </button>
+    </div>
+  </form>
+
+  @if (state() === 'idle') {
+  <p class="crm-snapshot__empty">{{ 'CRM.SNAPSHOT.IDLE' | translate }}</p>
+  }
+
+  @if (state() === 'loading') {
+  <output class="crm-snapshot__section" aria-busy="true" aria-live="polite">
+    <div class="crm-snapshot__skeleton"></div>
+    <div class="crm-snapshot__skeleton"></div>
+    <div class="crm-snapshot__skeleton"></div>
+  </output>
+  }
+
+  @if (state() === 'error') {
+  <section class="crm-snapshot__error-banner" role="alert">
+    @if (errorType() === 'forbidden') {
+    <p>{{ 'CRM.SNAPSHOT.ERROR.FORBIDDEN' | translate }}</p>
+    } @else if (errorType() === 'not-found') {
+    <p>{{ 'CRM.SNAPSHOT.EMPTY' | translate }}</p>
+    } @else {
+    <p>{{ 'CRM.SNAPSHOT.ERROR.LOAD' | translate }}</p>
+    }
   </section>
-
-  @if (viewState() === 'loading') {
-    <div class="loading-state" aria-busy="true" role="status">Loading CRM snapshot...</div>
   }
 
-  @if (viewState() === 'error') {
-    <section class="error-state" role="alert">
-      @if (errorType() === 'forbidden') {
-        <p>You do not have permission to view this CRM snapshot. (403)</p>
-      }
-      @if (errorType() === 'not-found') {
-        <p>No snapshot found for the provided identifier. (404)</p>
-      }
-      @if (errorType() === 'generic') {
-        <p>{{ errorMessage() || 'Unable to load snapshot.' }}</p>
-        @if (correlationId()) {
-          <p class="correlation">Correlation ID: {{ correlationId() }}</p>
-        }
-      }
-    </section>
+  @if (state() === 'empty') {
+  <p class="crm-snapshot__empty">{{ 'CRM.SNAPSHOT.EMPTY' | translate }}</p>
   }
 
-  @if (snapshot() && viewState() === 'ready') {
-    @if (snapshot()?.snapshotId || snapshot()?.timestamp) {
-      <section class="meta-strip snapshot-section">
-        @if (snapshot()?.snapshotId) {
-          <p><strong>Snapshot ID:</strong> {{ snapshot()?.snapshotId }}</p>
-        }
-        @if (snapshot()?.version) {
-          <p><strong>Version:</strong> {{ snapshot()?.version }}</p>
-        }
-        @if (snapshot()?.timestamp) {
-          <p><strong>Timestamp:</strong> {{ snapshot()?.timestamp }}</p>
-        }
-      </section>
+  @if (state() === 'ready' && snapshot()) {
+  <article class="crm-snapshot__section">
+    <p class="crm-snapshot__label-md">{{ 'CRM.SNAPSHOT.FIELD.CUSTOMER_NAME' | translate }}</p>
+    <h2 class="crm-snapshot__customer-name">{{ snapshot()?.partyName || '-' }}</h2>
+
+    @if (snapshot()?.partyType) {
+    <span class="crm-snapshot__party-badge">{{ partyTypeLabelKey() | translate }}</span>
     }
 
-    @if (snapshot()?.account) {
-      <section class="snapshot-section">
-        <h2>Account</h2>
-        <div class="card-grid">
-          <p><strong>Legal Name:</strong> {{ snapshot()?.account?.legalName || '—' }}</p>
-          <p><strong>DBA:</strong> {{ snapshot()?.account?.dba || '—' }}</p>
-          <p><strong>Tax ID:</strong> {{ snapshot()?.account?.taxId || '—' }}</p>
-          <p><strong>Default Billing Terms:</strong> {{ snapshot()?.account?.defaultBillingTermsId || '—' }}</p>
-        </div>
-      </section>
-    }
-
-    <section class="snapshot-section">
-      <h2>Contacts</h2>
-      @if (snapshot()?.contacts?.length) {
-        <ul class="list-panel">
-          @for (contact of snapshot()!.contacts!; track contact.contactId) {
-            <li>
-              <strong>{{ contact.name }}</strong>
-              <span>{{ contact.email || 'No email' }}</span>
-              <span>{{ contact.phone || 'No phone' }}</span>
-            </li>
-          }
-        </ul>
-      } @else {
-        <p class="empty-state">No contacts</p>
-      }
-    </section>
-
-    <section class="snapshot-section">
-      <h2>Vehicles</h2>
+    <section class="crm-snapshot__section" aria-labelledby="crm-vehicles-heading">
+      <h3 id="crm-vehicles-heading">{{ 'CRM.SNAPSHOT.FIELD.VEHICLES' | translate }}</h3>
       @if (snapshot()?.vehicles?.length) {
-        <ul class="list-panel">
-          @for (vehicle of snapshot()!.vehicles!; track vehicle.vehicleId) {
-            <li>
-              <strong>{{ vehicle.vin }}</strong>
-              <span>{{ vehicle.year || '—' }} {{ vehicle.make || '' }} {{ vehicle.model || '' }}</span>
-            </li>
-          }
-        </ul>
+      <ul class="crm-snapshot__vehicle-list">
+        @for (vehicle of snapshot()!.vehicles!; track vehicle.vehicleId) {
+        <li>
+          {{ vehicle.year || '-' }} {{ vehicle.make || '-' }} {{ vehicle.model || '-' }}
+        </li>
+        }
+      </ul>
       } @else {
-        <p class="empty-state">No vehicles</p>
+      <p class="crm-snapshot__empty">{{ 'CRM.SNAPSHOT.EMPTY_VEHICLES' | translate }}</p>
       }
     </section>
 
-    <section class="snapshot-section">
-      <h2>Preferences</h2>
-      @if (snapshot()?.preferences) {
-        <div class="card-grid">
-          <p><strong>Email Enabled:</strong> {{ snapshot()?.preferences?.emailEnabled ? 'Yes' : 'No' }}</p>
-          <p><strong>SMS Enabled:</strong> {{ snapshot()?.preferences?.smsEnabled ? 'Yes' : 'No' }}</p>
-          <p><strong>Preferred Channel:</strong> {{ snapshot()?.preferences?.preferredChannel || 'Not set' }}</p>
-        </div>
-      } @else {
-        <p class="empty-state">No preferences</p>
-      }
+    <section class="crm-snapshot__section crm-snapshot__billing-summary" aria-labelledby="crm-billing-summary-heading">
+      <h3 id="crm-billing-summary-heading">{{ 'CRM.SNAPSHOT.FIELD.BILLING_SUMMARY' | translate }}</h3>
+      <p>
+        <strong>{{ 'CRM.BILLING_RULES.FIELD.REQUIRE_PO' | translate }}:</strong>
+        {{ (billingRules()?.requirePo ? 'COMMON.YES' : 'COMMON.NO') | translate }}
+      </p>
+      <p>
+        <strong>{{ 'CRM.BILLING_RULES.FIELD.PAYMENT_TERMS' | translate }}:</strong>
+        {{ billingRules()?.paymentTerms || '-' }}
+      </p>
     </section>
+  </article>
   }
-</article>
+</section>

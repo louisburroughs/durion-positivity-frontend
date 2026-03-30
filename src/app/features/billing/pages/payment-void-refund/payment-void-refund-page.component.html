@@ -1,0 +1,83 @@
+<section class="pvm" aria-labelledby="pvm-title">
+  <header>
+    <h1 id="pvm-title" class="pvm__title">{{ 'BILLING.PAYMENT.TITLE' | translate }}</h1>
+  </header>
+
+  <div role="group" [attr.aria-label]="'BILLING.PAYMENT.MODE.LABEL' | translate" class="pvm__mode-tabs">
+    <button type="button" class="pvm__mode-btn" [attr.aria-pressed]="mode() === 'void'" (click)="setMode('void')">
+      {{ 'BILLING.PAYMENT.VOID.TITLE' | translate }}
+    </button>
+    <button type="button" class="pvm__mode-btn" [attr.aria-pressed]="mode() === 'refund'" (click)="setMode('refund')">
+      {{ 'BILLING.PAYMENT.REFUND.TITLE' | translate }}
+    </button>
+  </div>
+
+  @if (state() === 'submitting') {
+  <output class="pvm__submitting" aria-live="polite">
+    <span class="pvm__spinner" aria-hidden="true"></span>
+    <span>{{ 'BILLING.PAYMENT.SUBMITTING' | translate }}</span>
+  </output>
+  }
+
+  @if (state() === 'error' && errorKey()) {
+  <div class="pvm__error" role="alert">{{ errorKey()! | translate }}</div>
+  }
+
+  @if (mode() === 'void') {
+  <form class="pvm__form" (submit)="$event.preventDefault()">
+    <div class="pvm__field">
+      <label class="pvm__label" for="void-reason-input">{{ 'BILLING.PAYMENT.VOID.REASON_LABEL' | translate }}</label>
+      <input id="void-reason-input" class="pvm__input" type="text" [value]="voidReason()"
+        (input)="voidReason.set($any($event.target).value)" />
+    </div>
+
+    <div class="pvm__field">
+      <label class="pvm__label" for="void-authority-input">{{ 'BILLING.PAYMENT.VOID.AUTHORITY_LABEL' | translate
+        }}</label>
+      <input id="void-authority-input" class="pvm__input" type="text" [value]="voidAuthorityCode()"
+        (input)="voidAuthorityCode.set($any($event.target).value)" />
+    </div>
+
+    <button type="button" class="pvm__void-btn" [disabled]="!canSubmitVoid()"
+      (click)="executeVoid(voidReason(), voidAuthorityCode())">
+      {{ 'BILLING.PAYMENT.ACTION.VOID' | translate }}
+    </button>
+  </form>
+  }
+
+  @if (mode() === 'refund') {
+  <form class="pvm__form" (submit)="$event.preventDefault()">
+    <div class="pvm__field">
+      <label class="pvm__label" for="refund-reason-input">{{ 'BILLING.PAYMENT.REFUND.REASON_LABEL' | translate
+        }}</label>
+      <input id="refund-reason-input" class="pvm__input" type="text" [value]="refundReason()"
+        (input)="refundReason.set($any($event.target).value)" />
+    </div>
+
+    <div class="pvm__field">
+      <label class="pvm__label" for="refund-authority-input">{{ 'BILLING.PAYMENT.REFUND.AUTHORITY_LABEL' | translate
+        }}</label>
+      <input id="refund-authority-input" class="pvm__input" type="text" [value]="refundAuthorityCode()"
+        (input)="refundAuthorityCode.set($any($event.target).value)" />
+    </div>
+
+    <div class="pvm__field">
+      <label class="pvm__label" for="refund-amount-input">{{ 'BILLING.PAYMENT.REFUND.AMOUNT_LABEL' | translate
+        }}</label>
+      <input id="refund-amount-input" class="pvm__input" type="number" min="0" step="0.01"
+        [value]="refundAmount() ?? ''" (input)="setRefundAmount($any($event.target).value)" />
+    </div>
+
+    <button type="button" class="pvm__refund-btn" [disabled]="!canSubmitRefund()"
+      (click)="executeRefund(refundReason(), refundAuthorityCode(), refundAmount() ?? undefined)">
+      {{ 'BILLING.PAYMENT.ACTION.REFUND' | translate }}
+    </button>
+  </form>
+  }
+
+  @if (state() === 'ready') {
+  <output class="pvm__ready" aria-live="polite">
+    {{ mode() === 'void' ? ('BILLING.PAYMENT.VOID.TITLE' | translate) : ('BILLING.PAYMENT.REFUND.TITLE' | translate) }}
+  </output>
+  }
+</section>

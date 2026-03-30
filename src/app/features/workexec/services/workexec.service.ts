@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
@@ -14,9 +15,12 @@ import {
   CreateEstimateRequest,
   CreateLaborPerformedRequest,
   EstimateItemResponse,
+  EstimateListItem,
   EstimateResponse,
   EstimateSnapshotResponse,
   EstimateSummaryResponse,
+  FinalizeInvoiceRequest,
+  FinalizeInvoiceResponse,
   FinalizeWorkorderRequest,
   FinalizeWorkorderResponse,
   IssuePartsRequest,
@@ -32,11 +36,14 @@ import {
   TechnicianAssignmentResponse,
   UpdateEstimateItemRequest,
   WorkorderDetailResponse,
+  WorkorderInvoiceView,
   WorkorderLaborEntryResponse,
   WorkorderResponse,
   WorkorderSnapshotHistoryEntry,
   WorkorderStartResponse,
   WorkorderTransition,
+  WorkorderWipView,
+  WipListFilters,
 } from '../models/workexec.models';
 
 /**
@@ -249,6 +256,24 @@ export class WorkexecService {
     );
   }
 
+  /**
+   * operationId: listEstimatesForCustomer
+   * GET /v1/workorders/estimates?customerId={customerId}
+   */
+  listEstimatesForCustomer(customerId: string): Observable<EstimateListItem[]> {
+    const params = new HttpParams().set('customerId', customerId);
+    return this.api.get<EstimateListItem[]>('/v1/workorders/estimates', params);
+  }
+
+  /**
+   * operationId: listEstimatesForVehicle
+   * GET /v1/workorders/estimates?vehicleId={vehicleId}
+   */
+  listEstimatesForVehicle(vehicleId: string): Observable<EstimateListItem[]> {
+    const params = new HttpParams().set('vehicleId', vehicleId);
+    return this.api.get<EstimateListItem[]>('/v1/workorders/estimates', params);
+  }
+
   // ── CAP-003: Approval Workflow ────────────────────────────────────────────
 
   /**
@@ -356,6 +381,47 @@ export class WorkexecService {
    */
   getOperationalContext(workorderId: string): Observable<OperationalContextResponse> {
     return this.api.get<OperationalContextResponse>(`/v1/workorders/${workorderId}/operationalContext`);
+  }
+
+  /**
+   * operationId: listActiveWorkorders
+   * GET /v1/workorders/wip?wipStatus={...}
+   */
+  listActiveWorkorders(filters?: WipListFilters): Observable<WorkorderWipView[]> {
+    const params = filters?.wipStatus?.length
+      ? new HttpParams().set('wipStatus', filters.wipStatus.join(','))
+      : undefined;
+    return this.api.get<WorkorderWipView[]>('/v1/workorders/wip', params);
+  }
+
+  /**
+   * operationId: getWorkorderWipStatus
+   * GET /v1/workorders/{workorderId}/wip-status
+   */
+  getWorkorderWipStatus(workorderId: string): Observable<WorkorderWipView> {
+    return this.api.get<WorkorderWipView>(`/v1/workorders/${workorderId}/wip-status`);
+  }
+
+  /**
+   * operationId: getWorkorderInvoiceView
+   * GET /v1/workorders/{workorderId}/invoice-view
+   */
+  getWorkorderInvoiceView(workorderId: string): Observable<WorkorderInvoiceView> {
+    return this.api.get<WorkorderInvoiceView>(`/v1/workorders/${workorderId}/invoice-view`);
+  }
+
+  /**
+   * operationId: requestInvoiceFinalization
+   * POST /v1/workorders/{workorderId}/invoice/finalize
+   */
+  requestInvoiceFinalization(
+    workorderId: string,
+    request?: FinalizeInvoiceRequest,
+  ): Observable<FinalizeInvoiceResponse> {
+    return this.api.post<FinalizeInvoiceResponse>(
+      `/v1/workorders/${workorderId}/invoice/finalize`,
+      request ?? {},
+    );
   }
 
   // ── CAP-005: Technician Assignment (Story 225) ────────────────────────────
