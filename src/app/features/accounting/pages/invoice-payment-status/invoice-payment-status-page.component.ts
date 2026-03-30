@@ -71,6 +71,8 @@ export class InvoicePaymentStatusPageComponent {
       onCleanup => {
         const id = this.invoiceId();
         if (!id) {
+          this.state.set('error');
+          this.errorKey.set('ACCOUNTING.INVOICE_PAYMENT_STATUS.ERROR.MISSING_ID');
           return;
         }
 

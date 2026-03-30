@@ -42,6 +42,11 @@ export class ReceiptPageComponent implements OnInit {
   }
 
   generateAndShow(delivery?: GenerateReceiptRequest): void {
+    if (!this.invoiceId()) {
+      this.state.set('error');
+      this.errorKey.set('BILLING.RECEIPT.ERROR.MISSING_INVOICE');
+      return;
+    }
     this.state.set('submitting');
     this.errorKey.set(null);
 
@@ -119,6 +124,11 @@ export class ReceiptPageComponent implements OnInit {
   }
 
   private loadReceipt(receiptId: string): void {
+    if (!this.invoiceId()) {
+      this.state.set('error');
+      this.errorKey.set('BILLING.RECEIPT.ERROR.MISSING_INVOICE');
+      return;
+    }
     this.state.set('loading');
     this.errorKey.set(null);
 

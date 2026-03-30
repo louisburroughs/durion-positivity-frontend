@@ -142,4 +142,33 @@ describe('InvoiceFinalizationPageComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/app/workexec/workorders', 'wo-1']);
     expect(component.isSubmitting()).toBe(false);
   });
+
+  describe('missing workorderId', () => {
+    beforeEach(async () => {
+      serviceMock.getWorkorderInvoiceView.mockReset();
+      serviceMock.requestInvoiceFinalization.mockReset();
+      TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        imports: [InvoiceFinalizationPageComponent, TranslateModule.forRoot()],
+        providers: [
+          provideRouter([]),
+          { provide: WorkexecService, useValue: serviceMock },
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              paramMap: new BehaviorSubject(convertToParamMap({})).asObservable(),
+            },
+          },
+        ],
+      }).compileComponents();
+    });
+
+    it('sets empty state and does not call service when workorderId is absent', () => {
+      const emptyFixture = TestBed.createComponent(InvoiceFinalizationPageComponent);
+      emptyFixture.detectChanges();
+
+      expect(emptyFixture.componentInstance.state()).toBe('empty');
+      expect(serviceMock.getWorkorderInvoiceView).not.toHaveBeenCalled();
+    });
+  });
 });

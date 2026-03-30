@@ -150,4 +150,39 @@ describe('InvoicePaymentStatusPageComponent', () => {
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('ACCOUNTING.INVOICE_PAYMENT_STATUS.ERROR.LOAD');
   });
+
+  describe('missing invoiceId', () => {
+    beforeEach(async () => {
+      accountingServiceStub.getInvoiceStatus.mockReset();
+      accountingServiceStub.listEvents.mockReset();
+      TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        imports: [InvoicePaymentStatusPageComponent, TranslateModule.forRoot()],
+        providers: [
+          provideRouter([]),
+          { provide: AccountingService, useValue: accountingServiceStub },
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              snapshot: {
+                paramMap: convertToParamMap({}),
+              },
+            },
+          },
+        ],
+      }).compileComponents();
+    });
+
+    it('sets error state with MISSING_ID key when invoiceId is absent from route', () => {
+      const missingFixture = TestBed.createComponent(InvoicePaymentStatusPageComponent);
+      missingFixture.detectChanges();
+
+      expect(missingFixture.componentInstance.state()).toBe('error');
+      expect(missingFixture.componentInstance.errorKey()).toBe(
+        'ACCOUNTING.INVOICE_PAYMENT_STATUS.ERROR.MISSING_ID',
+      );
+      expect(accountingServiceStub.getInvoiceStatus).not.toHaveBeenCalled();
+      expect(accountingServiceStub.listEvents).not.toHaveBeenCalled();
+    });
+  });
 });

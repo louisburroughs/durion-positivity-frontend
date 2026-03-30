@@ -837,7 +837,8 @@
       },
       "ERROR": {
         "LOAD": "[!! UUnnaabbllee ttoo llooaadd ppaayymmeenntt ssttaattuus. PPlleeaassee ttrryy aaggaaiinnxxxx. !!]",
-        "ACCESS_DENIED": "[!! YYoouu ddoo nnoott hhaavvee ppeerrmmiissssiioonn ttoo vviieeww tthhiiss ppaaggeexxxx. !!]"
+        "ACCESS_DENIED": "[!! YYoouu ddoo nnoott hhaavvee ppeerrmmiissssiioonn ttoo vviieeww tthhiiss ppaaggeexxxx. !!]",
+        "MISSING_ID": "[!! No invoice ID provided. !!]"
       }
     },
     "VENDOR_PAYMENT_NEW": {
@@ -1273,6 +1274,7 @@
       },
       "ERROR": {
         "LOAD": "[!! Unable to load invoice. !!]",
+        "MISSING_WORKORDER_ID": "[!! No workorder ID provided. !!]",
         "SUBMIT": "[!! Unable to request finalization. Please try again. !!]"
       },
       "COLUMN": {
@@ -1804,7 +1806,8 @@
       "ERROR": {
         "CAPTURE": "[!! Unable to process payment. Please try again. !!]",
         "VOID": "[!! Unable to void authorization. Please try again. !!]",
-        "REFUND": "[!! Unable to process refund. Please try again. !!]"
+        "REFUND": "[!! Unable to process refund. Please try again. !!]",
+        "MISSING_IDS": "[!! Invalid payment or invoice reference. !!]"
       }
     },
     "RECEIPT": {
@@ -1831,7 +1834,8 @@
       "ERROR": {
         "LOAD": "[!! Unable to load receipt. !!]",
         "GENERATE": "[!! Unable to generate receipt. Please try again. !!]",
-        "REPRINT": "[!! Unable to reprint receipt. Please try again. !!]"
+        "REPRINT": "[!! Unable to reprint receipt. Please try again. !!]",
+        "MISSING_INVOICE": "[!! No invoice ID provided. !!]"
       }
     }
   },

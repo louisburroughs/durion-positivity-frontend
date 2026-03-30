@@ -131,4 +131,60 @@ describe('ReceiptPageComponent', () => {
     const errorKeyOrder = errorKeySetSpy.mock.invocationCallOrder.at(-1) ?? 0;
     expect(stateOrder).toBeLessThan(errorKeyOrder);
   });
+
+  it('sets error state when generateAndShow called before invoiceId is available', () => {
+    fixture = TestBed.createComponent(ReceiptPageComponent);
+    component = fixture.componentInstance;
+    // Do not call detectChanges — invoiceId remains '' (initial signal value)
+
+    component.generateAndShow({ deliveryMethod: 'PRINT' });
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.MISSING_INVOICE');
+    expect(billingMock.generateReceipt).not.toHaveBeenCalled();
+  });
+
+  describe('loadReceipt with empty invoiceId', () => {
+    beforeEach(async () => {
+      billingMock.getReceipt.mockReset();
+      billingMock.generateReceipt.mockReset();
+      billingMock.reprintReceipt.mockReset();
+      TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        imports: [ReceiptPageComponent, TranslateModule.forRoot()],
+        providers: [
+          provideRouter([]),
+          { provide: BillingService, useValue: billingMock },
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              snapshot: {
+                paramMap: {
+                  get: (key: string) => {
+                    if (key === 'invoiceId') {
+                      return '';
+                    }
+                    if (key === 'receiptId') {
+                      return 'rcpt-001';
+                    }
+                    return null;
+                  },
+                },
+              },
+            },
+          },
+        ],
+      }).compileComponents();
+    });
+
+    it('sets error state when invoiceId is empty and receiptId triggers loadReceipt', () => {
+      fixture = TestBed.createComponent(ReceiptPageComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component.state()).toBe('error');
+      expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.MISSING_INVOICE');
+      expect(billingMock.getReceipt).not.toHaveBeenCalled();
+    });
+  });
 });

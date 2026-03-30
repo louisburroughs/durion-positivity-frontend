@@ -68,6 +68,12 @@
   }
   }
 
+  @if (state() === 'empty') {
+  <div class="invoice-fin__error" role="alert" data-testid="invoice-finalization-empty">
+    {{ 'WORKEXEC.INVOICE_FINALIZATION.ERROR.MISSING_WORKORDER_ID' | translate }}
+  </div>
+  }
+
   @if (state() === 'error') {
   <div class="invoice-fin__error" role="alert" data-testid="invoice-finalization-error">
     {{ errorKey() | translate }}

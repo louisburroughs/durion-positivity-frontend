@@ -42,6 +42,10 @@ export class PaymentVoidRefundPageComponent implements OnInit {
   }
 
   setRefundAmount(value: string): void {
+    if (value.trim() === '') {
+      this.refundAmount.set(null);
+      return;
+    }
     const parsed = Number(value);
     this.refundAmount.set(Number.isFinite(parsed) ? parsed : null);
   }
@@ -62,6 +66,11 @@ export class PaymentVoidRefundPageComponent implements OnInit {
   }
 
   executeVoid(reason: string, authorityCode: string): void {
+    if (!this.invoiceId() || !this.paymentId()) {
+      this.state.set('error');
+      this.errorKey.set('BILLING.PAYMENT.ERROR.MISSING_IDS');
+      return;
+    }
     this.mode.set('void');
     this.state.set('submitting');
     this.errorKey.set(null);
@@ -79,6 +88,11 @@ export class PaymentVoidRefundPageComponent implements OnInit {
   }
 
   executeRefund(reason: string, authorityCode: string, amount?: number): void {
+    if (!this.invoiceId() || !this.paymentId()) {
+      this.state.set('error');
+      this.errorKey.set('BILLING.PAYMENT.ERROR.MISSING_IDS');
+      return;
+    }
     this.mode.set('refund');
     this.state.set('submitting');
     this.errorKey.set(null);

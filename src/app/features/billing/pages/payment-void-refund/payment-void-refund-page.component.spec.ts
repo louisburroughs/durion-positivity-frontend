@@ -107,4 +107,48 @@ describe('PaymentVoidRefundPageComponent', () => {
 
     expect(component.state()).toBe('ready');
   });
+
+  it('setRefundAmount with empty string sets refundAmount to null', () => {
+    component.setRefundAmount('');
+    expect(component.refundAmount()).toBeNull();
+  });
+
+  it('setRefundAmount with non-empty value sets correct numeric amount', () => {
+    component.setRefundAmount('42.50');
+    expect(component.refundAmount()).toBe(42.5);
+  });
+
+  it('sets error state when executeVoid called with empty invoiceId', () => {
+    component.invoiceId.set('');
+
+    const stateSetSpy = vi.spyOn(component.state, 'set');
+    const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
+
+    component.executeVoid('CUSTOMER_REQUEST', 'AUTH-VOID');
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.MISSING_IDS');
+    expect(billingMock.voidPayment).not.toHaveBeenCalled();
+
+    const stateOrder = stateSetSpy.mock.invocationCallOrder.at(-2) ?? 0;
+    const errorKeyOrder = errorKeySetSpy.mock.invocationCallOrder.at(-1) ?? 0;
+    expect(stateOrder).toBeLessThan(errorKeyOrder);
+  });
+
+  it('sets error state when executeRefund called with empty paymentId', () => {
+    component.paymentId.set('');
+
+    const stateSetSpy = vi.spyOn(component.state, 'set');
+    const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
+
+    component.executeRefund('DAMAGE', 'AUTH-REFUND');
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.MISSING_IDS');
+    expect(billingMock.refundPayment).not.toHaveBeenCalled();
+
+    const stateOrder = stateSetSpy.mock.invocationCallOrder.at(-2) ?? 0;
+    const errorKeyOrder = errorKeySetSpy.mock.invocationCallOrder.at(-1) ?? 0;
+    expect(stateOrder).toBeLessThan(errorKeyOrder);
+  });
 });

@@ -837,7 +837,8 @@
       },
       "ERROR": {
         "LOAD": "Impossible de charger le statut du paiement. Veuillez réessayer.",
-        "ACCESS_DENIED": "Vous n'avez pas la permission de voir cette page."
+        "ACCESS_DENIED": "Vous n'avez pas la permission de voir cette page.",
+        "MISSING_ID": "Aucun ID de facture fourni."
       }
     },
     "VENDOR_PAYMENT_NEW": {
@@ -1273,6 +1274,7 @@
       },
       "ERROR": {
         "LOAD": "Impossible de charger la facture.",
+        "MISSING_WORKORDER_ID": "Aucun ID de workorder fourni.",
         "SUBMIT": "Impossible de demander la finalisation. Veuillez reessayer."
       },
       "COLUMN": {
@@ -1804,7 +1806,8 @@
       "ERROR": {
         "CAPTURE": "Impossible de traiter le paiement. Veuillez reessayer.",
         "VOID": "Impossible d'annuler l'autorisation. Veuillez reessayer.",
-        "REFUND": "Impossible de traiter le remboursement. Veuillez reessayer."
+        "REFUND": "Impossible de traiter le remboursement. Veuillez reessayer.",
+        "MISSING_IDS": "Référence de paiement ou de facture invalide."
       }
     },
     "RECEIPT": {
@@ -1831,7 +1834,8 @@
       "ERROR": {
         "LOAD": "Impossible de charger le recu.",
         "GENERATE": "Impossible de generer le recu. Veuillez reessayer.",
-        "REPRINT": "Impossible de reimprimer le recu. Veuillez reessayer."
+        "REPRINT": "Impossible de reimprimer le recu. Veuillez reessayer.",
+        "MISSING_INVOICE": "Aucun ID de facture fourni."
       }
     }
   },

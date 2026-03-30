@@ -837,7 +837,8 @@
       },
       "ERROR": {
         "LOAD": "No se puede cargar el estado de pago. Intenta de nuevo.",
-        "ACCESS_DENIED": "No tienes permiso para ver esta página."
+        "ACCESS_DENIED": "No tienes permiso para ver esta página.",
+        "MISSING_ID": "No se proporcionó ID de factura."
       }
     },
     "VENDOR_PAYMENT_NEW": {
@@ -1273,6 +1274,7 @@
       },
       "ERROR": {
         "LOAD": "No se pudo cargar la factura.",
+        "MISSING_WORKORDER_ID": "No se proporcionó ID de workorder.",
         "SUBMIT": "No se pudo solicitar la finalizacion. Intente de nuevo."
       },
       "COLUMN": {
@@ -1804,7 +1806,8 @@
       "ERROR": {
         "CAPTURE": "No se pudo procesar el pago. Intentelo de nuevo.",
         "VOID": "No se pudo anular la autorizacion. Intentelo de nuevo.",
-        "REFUND": "No se pudo procesar el reembolso. Intentelo de nuevo."
+        "REFUND": "No se pudo procesar el reembolso. Intentelo de nuevo.",
+        "MISSING_IDS": "Referencia de pago o factura no válida."
       }
     },
     "RECEIPT": {
@@ -1831,7 +1834,8 @@
       "ERROR": {
         "LOAD": "No se pudo cargar el recibo.",
         "GENERATE": "No se pudo generar el recibo. Intentelo de nuevo.",
-        "REPRINT": "No se pudo reimprimir el recibo. Intentelo de nuevo."
+        "REPRINT": "No se pudo reimprimir el recibo. Intentelo de nuevo.",
+        "MISSING_INVOICE": "No se proporcionó ID de factura."
       }
     }
   },
