@@ -16,9 +16,11 @@ Define the execution plan for building the Durion Positivity Angular frontend by
 - normalized into an execution-ready state for the next build wave.
 
 This PRD extends and operationalizes:
+
 - `/home/louis-burroughs/IdeaProjects/durion/docs/capabilities/PRD-agent-capability-frontend-execution.md`
 
 Canonical tracking artifact for this program:
+
 - `/home/louis-burroughs/IdeaProjects/durion/docs/capabilities/CAPABILITY_STATUS_BOARD.md`
 
 ## 2. Core Principles
@@ -30,6 +32,7 @@ Use `workorder` for technical identifiers and contracts (for example `workorderI
 ### Capability-Driven Execution
 
 Each frontend story must be implemented by following the capability workflow inputs in this order:
+
 1. `frontend_story_md`
 2. `wireframe`
 3. `contract_guide`
@@ -66,6 +69,7 @@ src/app/features/
 ```
 
 Each domain should own:
+
 - `<domain>.routes.ts`
 - a root `<domain>.component.ts`
 - domain pages/components
@@ -73,12 +77,14 @@ Each domain should own:
 - domain models/view-models
 
 Shared concerns remain in:
+
 - `src/app/core/`
 - `src/app/features/shell/`
 
 ### Design Hierarchy
 
 Design guidance precedence for implementation is:
+
 1. Primary: `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/design/DESIGN.md`
 2. Primary visual references: files under `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/design/`
 3. Secondary guidance: `/home/louis-burroughs/IdeaProjects/durion-positivity-frontend/design/source/`
@@ -99,6 +105,7 @@ As of `2026-03-25`, the capability crawl found:
 
 This means the delivery plan must support both implementation and metadata normalization in parallel.
 Current and ongoing status/count tracking must be updated in:
+
 - `/home/louis-burroughs/IdeaProjects/durion/docs/capabilities/CAPABILITY_STATUS_BOARD.md`
 
 ## 4. Domain Rollout Map
@@ -110,12 +117,14 @@ Current and ongoing status/count tracking must be updated in:
 - `security`: token handling, session state, auth integration
 
 Primary design inputs:
+
 - `design/DESIGN.md`
 - `design/ExecutiveDashboard.png`
 - `design/source/durion-style-guide.md`
 - `design/source/theme-tokens.md`
 
 Primary capability inputs:
+
 - `CAP-275`
 
 ### Customer and CRM Domain
@@ -191,6 +200,7 @@ For every `CAP-*` folder:
    - ambiguous or empty domain assignment
 
 Outputs:
+
 - refreshed capability inventory
 - prioritized normalization backlog
 - first executable build wave
@@ -215,17 +225,20 @@ This stage should complete before large-scale domain parallelization.
 Execute domain delivery in waves so that teams can build in parallel with limited overlap.
 
 Wave A:
+
 - `security`
 - `auth`
 - `shell`
 - `crm`
 
 Wave B:
+
 - `workexec`
 - `accounting`
 - `billing`
 
 Wave C:
+
 - `people`
 - `location`
 - `inventory`
@@ -233,6 +246,7 @@ Wave C:
 - `order`
 
 Each domain wave must:
+
 - pull executable capabilities for that domain
 - implement stories in domain-owned Angular components
 - register routes and navigation entries
@@ -272,6 +286,7 @@ A capability is closed only when:
 - validation results are recorded
 
 The overall PRD program is complete only when every frontend-relevant capability is either:
+
 - `done`, or
 - `blocked` with a clear external dependency or decision owner
 
@@ -373,6 +388,7 @@ At minimum, each affected build wave must run:
 - any route or integration checks added during implementation
 
 If a check fails, the run artifact must capture:
+
 - the failing command
 - the reason
 - whether the failure blocks release or can be deferred
