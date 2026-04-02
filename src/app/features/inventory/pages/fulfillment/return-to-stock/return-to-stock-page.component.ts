@@ -76,7 +76,7 @@ export class ReturnToStockPageComponent {
         });
 
       onCleanup(() => sub.unsubscribe());
-    });
+    }, { allowSignalWrites: true });
   }
 
   updateReturnQty(workorderLineId: string, quantity: number): void {

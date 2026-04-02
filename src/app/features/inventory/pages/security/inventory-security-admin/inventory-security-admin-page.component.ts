@@ -78,7 +78,7 @@ export class InventorySecurityAdminPageComponent {
       .subscribe({
         next: response => {
           const inventoryPermissions = (response.results ?? []).filter(permission =>
-            permission.permissionKey.toLowerCase().includes('inventory'),
+            permission.permissionKey.toLowerCase().startsWith('inventory.'),
           );
 
           if (inventoryPermissions.length > 0) {
