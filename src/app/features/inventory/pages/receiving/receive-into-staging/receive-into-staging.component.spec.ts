@@ -1,14 +1,16 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { ReceiveIntoStagingComponent } from './receive-into-staging.component';
 import { InventoryReceivingService } from '../../../services/inventory-receiving.service';
-import { ReceivingDocumentResponse } from '../../../models/inventory.models';
+import { AsnResponse, ReceivingDocumentResponse } from '../../../models/inventory.models';
 
 const mockReceivingService = {
   getReceivingDocument: vi.fn(),
   confirmReceipt: vi.fn(),
+  getAsn: vi.fn(),
+  createReceivingSessionFromAsn: vi.fn(),
 };
 
 const receivingDocFixture: ReceivingDocumentResponse = {
@@ -19,6 +21,32 @@ const receivingDocFixture: ReceivingDocumentResponse = {
   stagingStorageLocationId: 'sl-001',
   stagingStorageLocationName: 'Staging 1',
   lines: [],
+};
+
+const asnDocFixture: ReceivingDocumentResponse = {
+  documentId: 'ASN-001',
+  documentType: 'ASN',
+  status: 'OPEN',
+  locationId: 'loc-01',
+  stagingStorageLocationId: 'sl-staging',
+  stagingStorageLocationName: 'Staging Area',
+  lines: [
+    {
+      receivingLineId: 'rl-001',
+      productSku: 'SKU-001',
+      expectedQty: 10,
+      expectedUomId: 'EA',
+      state: 'PENDING',
+      isReceivable: true,
+    },
+  ],
+};
+
+const asnResponseFixture: AsnResponse = {
+  asnId: 'asn-001',
+  poId: 'po-001',
+  status: 'OPEN',
+  lines: [{ asnLineId: 'asnl-001', poLineId: 'pol-001', expectedQty: 10 }],
 };
 
 describe('ReceiveIntoStagingComponent', () => {
@@ -86,5 +114,97 @@ describe('ReceiveIntoStagingComponent', () => {
       component.updateLineQty('line-1', -5);
       expect(component.lineQuantities()['line-1']).toBe(0);
     });
+  });
+});
+
+describe('ReceiveIntoStagingComponent — ASN paths', () => {
+  const asnRoute = {
+    snapshot: {
+      queryParamMap: {
+        get: vi.fn().mockImplementation((key: string) => {
+          if (key === 'asnId') return 'asn-001';
+          if (key === 'locationId') return 'loc-01';
+          return null;
+        }),
+      },
+    },
+  };
+
+  const fallbackRoute = {
+    snapshot: {
+      queryParamMap: {
+        get: vi.fn().mockImplementation((key: string) => {
+          if (key === 'documentId') return 'doc-1';
+          if (key === 'documentType') return 'PO';
+          return null;
+        }),
+      },
+    },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('ASN path loads receiving session from ASN service and sets state ready', async () => {
+    mockReceivingService.getAsn.mockReturnValue(of(asnResponseFixture));
+    mockReceivingService.createReceivingSessionFromAsn.mockReturnValue(of(asnDocFixture));
+
+    await TestBed.configureTestingModule({
+      imports: [ReceiveIntoStagingComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: InventoryReceivingService, useValue: mockReceivingService },
+        { provide: ActivatedRoute, useValue: asnRoute },
+      ],
+    }).compileComponents();
+
+    const component = TestBed.createComponent(ReceiveIntoStagingComponent).componentInstance;
+
+    expect(component.asnMode()).toBe('asn-entry');
+    expect(component.state()).toBe('ready');
+    expect(component.document()).toEqual(asnDocFixture);
+    expect(mockReceivingService.getAsn).toHaveBeenCalledWith('asn-001');
+    expect(mockReceivingService.createReceivingSessionFromAsn).toHaveBeenCalledWith({
+      asnId: 'asn-001',
+      locationId: 'loc-01',
+    });
+  });
+
+  it('fallback path still works when asnMode is fallback', async () => {
+    mockReceivingService.getReceivingDocument.mockReturnValue(of(receivingDocFixture));
+
+    await TestBed.configureTestingModule({
+      imports: [ReceiveIntoStagingComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: InventoryReceivingService, useValue: mockReceivingService },
+        { provide: ActivatedRoute, useValue: fallbackRoute },
+      ],
+    }).compileComponents();
+
+    const component = TestBed.createComponent(ReceiveIntoStagingComponent).componentInstance;
+
+    expect(component.asnMode()).toBe('fallback');
+    expect(component.state()).toBe('ready');
+    expect(mockReceivingService.getReceivingDocument).toHaveBeenCalledWith('doc-1', 'PO');
+  });
+
+  it('ASN load error sets state error before errorKey (ADR-0031)', async () => {
+    mockReceivingService.getAsn.mockReturnValue(throwError(() => new Error('asn fetch failed')));
+
+    await TestBed.configureTestingModule({
+      imports: [ReceiveIntoStagingComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: InventoryReceivingService, useValue: mockReceivingService },
+        { provide: ActivatedRoute, useValue: asnRoute },
+      ],
+    }).compileComponents();
+
+    const component = TestBed.createComponent(ReceiveIntoStagingComponent).componentInstance;
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('INVENTORY.RECEIVING.ERROR.ASN_LOAD');
   });
 });

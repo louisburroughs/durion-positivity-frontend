@@ -1,0 +1,83 @@
+:host {
+  display: block;
+}
+
+.page {
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+  font-family: 'Inter', var(--font-body);
+}
+
+.page-title {
+  font-family: 'Public Sans', var(--font-body);
+  margin-bottom: 0.2rem;
+}
+
+.page-subtitle {
+  margin: 0;
+  color: color-mix(in srgb, var(--currentTextColor) 78%, transparent);
+}
+
+.table-card,
+.state-card {
+  background: var(--cardBackground);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
+}
+
+.filter-row {
+  margin-bottom: 1rem;
+}
+
+.filter-row input {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--themeBackground) 40%, var(--cardBackground));
+}
+
+code {
+  font-family: 'IBM Plex Mono', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--themeBackground) 48%, var(--cardBackground));
+  color: color-mix(in srgb, var(--currentTextColor) 92%, transparent);
+}
+
+.granted {
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+.not-granted {
+  color: color-mix(in srgb, var(--currentTextColor) 60%, transparent);
+}
+
+.empty-state {
+  margin: 0.5rem 0;
+  color: color-mix(in srgb, var(--currentTextColor) 78%, transparent);
+}
+
+.state-card {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 0.6rem;
+}
+
+.spinner {
+  animation: spin 1.1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,94 @@
+<main class="page" aria-labelledby="pick-list-title">
+  <header class="page-header">
+    <div>
+      <h1 id="pick-list-title" class="page-title">{{ 'INVENTORY.FULFILLMENT.PICK_LIST.TITLE' | translate }}</h1>
+      <button type="button" class="btn-link" [routerLink]="'/app/inventory/fulfillment'">{{ 'COMMON.BACK' | translate }}</button>
+    </div>
+    @if (pickList()) {
+      <span class="status-pill">{{ ('STATUS.' + pickList()!.status) | translate }}</span>
+    }
+  </header>
+
+  @switch (state()) {
+  @case ('loading') {
+  <section class="card state-card" aria-live="polite" aria-busy="true">
+    <span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
+    <p>{{ 'COMMON.LOADING' | translate }}</p>
+  </section>
+  }
+
+  @case ('error') {
+  <section class="card state-card" role="alert">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ errorKey() | translate }}</p>
+    <div class="action-row">
+      <button class="btn-secondary" type="button" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
+    </div>
+  </section>
+  }
+
+  @case ('empty') {
+  <section class="card state-card" aria-live="polite">
+    <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+    <p>{{ 'INVENTORY.FULFILLMENT.PICK_LIST.STATE.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  @case ('ready') {
+  @if (pickList()) {
+  <section class="card pick-summary-card">
+    <dl class="summary-grid">
+      <dt>{{ 'INVENTORY.FULFILLMENT.PICK_LIST.FIELD.WORKORDER_ID' | translate }}</dt>
+      <dd>{{ pickList()!.workorderId }}</dd>
+
+      <dt>{{ 'INVENTORY.FULFILLMENT.PICK_LIST.FIELD.PICK_LIST_ID' | translate }}</dt>
+      <dd>{{ pickList()!.pickListId }}</dd>
+
+      <dt>{{ 'INVENTORY.FULFILLMENT.PICK_LIST.FIELD.STATUS' | translate }}</dt>
+      <dd>{{ ('STATUS.' + pickList()!.status) | translate }}</dd>
+
+      <dt>{{ 'INVENTORY.FULFILLMENT.PICK_LIST.FIELD.CREATED_AT' | translate }}</dt>
+      <dd>{{ pickList()!.createdAt ? (pickList()!.createdAt | date: 'short') : ('COMMON.EMPTY_VALUE' | translate) }}
+      </dd>
+    </dl>
+    <button class="btn-secondary print-button" type="button" (click)="printPage()">
+      {{ 'INVENTORY.FULFILLMENT.PICK_LIST.ACTION.PRINT' | translate }}
+    </button>
+  </section>
+
+  <section class="card table-card">
+    <div class="table-wrap">
+      <table class="data-table" aria-label="{{ 'INVENTORY.FULFILLMENT.PICK_LIST.TABLE.ARIA' | translate }}">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.PICK_LIST.TABLE.HEADER.SKU' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.PICK_LIST.TABLE.HEADER.DESCRIPTION' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.PICK_LIST.TABLE.HEADER.LOCATION' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.PICK_LIST.TABLE.HEADER.REQUESTED_QTY' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.PICK_LIST.TABLE.HEADER.PICKED_QTY' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.PICK_LIST.TABLE.HEADER.UOM' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.PICK_LIST.TABLE.HEADER.STATUS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (task of pickList()!.tasks; track task.pickTaskId) {
+          <tr [class.needs-review-row]="task.status === 'NEEDS_REVIEW'">
+            <td>{{ task.productSku }}</td>
+            <td>{{ task.productDisplayName || ('COMMON.EMPTY_VALUE' | translate) }}</td>
+            <td>{{ task.storageLocationCode || task.storageLocationId || ('COMMON.EMPTY_VALUE' | translate) }}</td>
+            <td>{{ task.requestedQty }}</td>
+            <td>{{ task.pickedQty }}</td>
+            <td>{{ task.uom }}</td>
+            <td>
+              <span class="status-pill">{{ ('STATUS.' + task.status) | translate }}</span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+  }
+  }
+</main>

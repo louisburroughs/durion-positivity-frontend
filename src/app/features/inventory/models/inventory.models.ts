@@ -13,6 +13,12 @@ export interface StorageLocation {
   status: string;
 }
 
+export interface LocationZone {
+  zoneId: string;
+  zoneName: string;
+  locationId: string;
+}
+
 // Availability (CAP-215 #100)
 export interface AvailabilityView {
   productSku: string;
@@ -223,6 +229,24 @@ export interface ApprovalQueueFilter {
   pageToken?: string;
 }
 
+// Cycle Count Plans (CAP-219 #241)
+export interface CycleCountPlan {
+  planId: string;
+  locationId: string;
+  zoneIds: string[];
+  planName?: string;
+  scheduledDate: string;
+  status: string;
+  readonly createdAt?: string;
+}
+
+export interface CycleCountPlanRequest {
+  locationId: string;
+  zoneIds: string[];
+  scheduledDate: string;
+  planName?: string;
+}
+
 // Purchase Orders (CAP-315 #572)
 export interface PurchaseOrderDetail {
   poId: string;
@@ -280,5 +304,126 @@ export interface RevisePurchaseOrderRequest {
   scheduledDeliveryDate?: string;
   notes?: string;
   lines?: CreatePurchaseOrderLine[];
+}
+
+// ASN (CAP-315 #571)
+export interface AsnCreateRequest {
+  supplierId: string;
+  supplierShipmentRef: string;
+  poId: string;
+  lines: AsnCreateLine[];
+}
+
+export interface AsnCreateLine {
+  poLineId: string;
+  expectedQty: number;
+}
+
+export interface AsnResponse {
+  asnId: string;
+  poId: string;
+  status: string;
+  readonly createdAt?: string;
+  lines: AsnResponseLine[];
+}
+
+export interface AsnResponseLine {
+  asnLineId: string;
+  poLineId: string;
+  expectedQty: number;
+}
+
+export interface ReceivingSessionFromAsnRequest {
+  asnId: string;
+  locationId: string;
+}
+
+// Cross-dock receiving (CAP-216 #97)
+export interface WorkorderCrossDockRef {
+  workorderId: string;
+  workorderNumber: string;
+  status: string;
+}
+
+export interface CrossDockReceiveRequest {
+  sessionId: string;
+  receivingLineId: string;
+  workorderId: string;
+  workorderLineId: string;
+  quantity: number;
+  overrideReasonCode?: string;
+}
+
+export interface CrossDockReceiveResult {
+  issueReferenceId: string;
+  issueMode: string;
+  confirmedBy?: string;
+  readonly confirmedAt?: string;
+}
+
+// Return to Stock (CAP-218 #242)
+export interface ReturnableItem {
+  workorderLineId: string;
+  productSku: string;
+  description?: string;
+  maxReturnableQty: number;
+  uom: string;
+}
+
+export interface ReturnReasonCode {
+  code: string;
+  label: string;
+}
+
+export interface ReturnToStockRequest {
+  workorderId: string;
+  locationId: string;
+  storageLocationId?: string;
+  reasonCode: string;
+  lines: ReturnToStockLine[];
+}
+
+export interface ReturnToStockLine {
+  workorderLineId: string;
+  quantityToReturn: number;
+}
+
+export interface ReturnToStockResult {
+  returnId: string;
+  workorderId: string;
+  totalItemsReturned: number;
+  readonly createdAt?: string;
+  ledgerEntryIds?: string[];
+}
+
+// Shortage Resolution (CAP-220 #89)
+export interface ShortageOption {
+  optionId: string;
+  decisionType: string;
+  label: string;
+  leadTimeDays?: number;
+  partialOptionsWarning?: boolean;
+}
+
+export interface ShortageResolutionRequest {
+  workorderId: string;
+  allocationLineId: string;
+  optionId: string;
+  decisionType: string;
+  clientRequestId: string;
+}
+
+export interface ShortageResolutionResult {
+  allocationLineId: string;
+  resolvedDecisionType: string;
+  readonly resolvedAt?: string;
+}
+
+// Inventory Security (CAP-221 #87)
+export interface InventoryPermissionEntry {
+  permissionKey: string;
+  description: string;
+  category: string;
+  isCurrentUserGranted: boolean;
 }
 

@@ -1,0 +1,113 @@
+<main class="page" aria-labelledby="pick-execute-title">
+  <header class="page-header">
+    <h1 id="pick-execute-title" class="page-title">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.TITLE' | translate }}</h1>
+  </header>
+
+  @switch (state()) {
+  @case ('loading') {
+  <section class="card state-card" aria-live="polite" aria-busy="true">
+    <span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
+    <p>{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.STATE.LOADING' | translate }}</p>
+  </section>
+  }
+
+  @case ('complete') {
+  <section class="card state-card" aria-live="polite">
+    <span class="material-symbols-outlined" aria-hidden="true">task_alt</span>
+    <h2>{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.COMPLETE.TITLE' | translate }}</h2>
+    <p>{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.COMPLETE.DESCRIPTION' | translate }}</p>
+  </section>
+  }
+
+  @case ('error') {
+  <section class="card state-card" role="alert">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ (errorKey() || 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD') | translate }}</p>
+    <button class="btn-secondary" type="button" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
+  </section>
+  }
+
+  @default {
+  <section class="pick-layout" [attr.aria-busy]="state() === 'picking' ? true : null">
+    <section class="card lines-card">
+      <h2>{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.SECTION.PICK_LINES' | translate }}</h2>
+      <div class="table-wrap">
+        <table class="data-table" aria-label="{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.TABLE.ARIA' | translate }}">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.TABLE.HEADER.SKU' | translate }}</th>
+              <th scope="col">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.TABLE.HEADER.REQUESTED' | translate }}</th>
+              <th scope="col">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.TABLE.HEADER.CONFIRMED' | translate }}</th>
+              <th scope="col">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.TABLE.HEADER.STATUS' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of lines(); track line.pickLineId) {
+            <tr [class.row-picked]="line.confirmedQty >= line.requestedQty"
+              [class.row-partial]="line.confirmedQty > 0 && line.confirmedQty < line.requestedQty">
+              <td>{{ line.productSku }}</td>
+              <td>{{ line.requestedQty }}</td>
+              <td>{{ line.confirmedQty }}</td>
+              <td>{{ ('STATUS.' + line.status) | translate }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card scan-card">
+      <h2>{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.SECTION.SCAN' | translate }}</h2>
+      <div class="field-row">
+        <label for="scan-input">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.SCAN_INPUT' | translate }}</label>
+        <div class="scan-row">
+          <input id="scan-input" type="text" [value]="scanInput()" (input)="setScanInput($any($event.target).value)"
+            [attr.disabled]="state() === 'picking' ? true : null" />
+          <button class="btn-primary" type="button" (click)="resolveScan()"
+            [disabled]="state() === 'picking' || !scanInput().trim()">
+            {{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.RESOLVE_SCAN' | translate }}
+          </button>
+        </div>
+      </div>
+
+      @if (pendingLine()) {
+      <section class="pending-section" aria-live="polite">
+        <h3>{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.SECTION.CONFIRM' | translate }}</h3>
+        <dl class="pending-grid">
+          <dt>{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.SKU' | translate }}</dt>
+          <dd>{{ pendingLine()!.productSku }}</dd>
+          <dt>{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.REQUESTED' | translate }}</dt>
+          <dd>{{ pendingLine()!.requestedQty }}</dd>
+          <dt>{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.ALREADY_CONFIRMED' | translate }}</dt>
+          <dd>{{ pendingLine()!.confirmedQty }}</dd>
+        </dl>
+
+        <div class="field-row">
+          <label for="confirm-qty">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.FIELD.CONFIRM_QTY' | translate }}</label>
+          <input id="confirm-qty" type="number" min="1" [max]="pendingLine()!.requestedQty" [value]="confirmQty()"
+            (input)="setConfirmQty(+$any($event.target).value)" [attr.disabled]="state() === 'picking' ? true : null" />
+        </div>
+
+        <button class="btn-primary" type="button" (click)="confirmLine()"
+          [disabled]="state() === 'picking' || confirmQty() <= 0">
+          {{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.CONFIRM' | translate }}
+        </button>
+      </section>
+      } @else if (scanAttempted() && scanInput().trim().length > 0) {
+      <p class="scan-status" role="alert">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.STATE.SCAN_NO_MATCH' | translate }}</p>
+      } @else {
+      <p class="scan-status" aria-live="polite">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.STATE.AWAITING_SCAN' | translate
+        }}</p>
+      }
+
+      <div class="action-row">
+        <button class="btn-primary" type="button" (click)="complete()"
+          [disabled]="state() === 'picking' || pendingLine() !== null || lines().length === 0">
+          {{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.COMPLETE' | translate }}
+        </button>
+      </div>
+    </section>
+  </section>
+  }
+  }
+</main>

@@ -8,6 +8,8 @@ import {
   ApprovalQueueFilter,
   CountSubmitRequest,
   CountSubmitResponse,
+  CycleCountPlan,
+  CycleCountPlanRequest,
   CycleCountTask,
 } from '../models/inventory.models';
 
@@ -265,6 +267,95 @@ describe('InventoryCycleCountService', () => {
 
       const [, body] = apiStub.post.mock.calls[0];
       expect((body as { rejectionReason: string }).rejectionReason).toBe('Inaccurate count');
+    });
+  });
+
+  // ── getCycleCountPlans() ───────────────────────────────────────────────
+
+  describe('getCycleCountPlans()', () => {
+    const mockPlans: CycleCountPlan[] = [
+      {
+        planId: 'plan-001',
+        locationId: 'loc-01',
+        zoneIds: ['zone-1', 'zone-2'],
+        scheduledDate: '2026-05-01',
+        status: 'PENDING',
+      },
+    ];
+
+    it('calls GET /inventory/v1/cycle-count-plans', () => {
+      apiStub.get.mockReturnValueOnce(of(mockPlans));
+
+      service.getCycleCountPlans().subscribe();
+
+      expect(apiStub.get).toHaveBeenCalledOnce();
+      const [path] = apiStub.get.mock.calls[0];
+      expect(path).toBe('/inventory/v1/cycle-count-plans');
+    });
+
+    it('includes locationId param when provided', () => {
+      apiStub.get.mockReturnValueOnce(of(mockPlans));
+
+      service.getCycleCountPlans('loc-01').subscribe();
+
+      const [, params] = apiStub.get.mock.calls[0];
+      expect(params.get('locationId')).toBe('loc-01');
+    });
+
+    it('omits locationId param when not provided', () => {
+      apiStub.get.mockReturnValueOnce(of(mockPlans));
+
+      service.getCycleCountPlans().subscribe();
+
+      const [, params] = apiStub.get.mock.calls[0];
+      expect(params.has('locationId')).toBe(false);
+    });
+
+    it('returns the CycleCountPlan array emitted by the API', () => {
+      apiStub.get.mockReturnValueOnce(of(mockPlans));
+
+      let result: CycleCountPlan[] | undefined;
+      service.getCycleCountPlans().subscribe(r => (result = r));
+
+      expect(result).toEqual(mockPlans);
+    });
+  });
+
+  // ── createCycleCountPlan() ─────────────────────────────────────────────
+
+  describe('createCycleCountPlan()', () => {
+    const mockRequest: CycleCountPlanRequest = {
+      locationId: 'loc-01',
+      zoneIds: ['zone-1'],
+      scheduledDate: '2026-05-15',
+    };
+
+    const mockPlan: CycleCountPlan = {
+      planId: 'plan-002',
+      locationId: 'loc-01',
+      zoneIds: ['zone-1'],
+      scheduledDate: '2026-05-15',
+      status: 'PENDING',
+    };
+
+    it('calls POST /inventory/v1/cycle-count-plans with request body', () => {
+      apiStub.post.mockReturnValueOnce(of(mockPlan));
+
+      service.createCycleCountPlan(mockRequest).subscribe();
+
+      expect(apiStub.post).toHaveBeenCalledOnce();
+      const [path, body] = apiStub.post.mock.calls[0];
+      expect(path).toBe('/inventory/v1/cycle-count-plans');
+      expect(body).toEqual(mockRequest);
+    });
+
+    it('returns the created CycleCountPlan emitted by the API', () => {
+      apiStub.post.mockReturnValueOnce(of(mockPlan));
+
+      let result: CycleCountPlan | undefined;
+      service.createCycleCountPlan(mockRequest).subscribe(r => (result = r));
+
+      expect(result).toEqual(mockPlan);
     });
   });
 });

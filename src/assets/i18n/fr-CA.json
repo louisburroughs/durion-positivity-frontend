@@ -1417,10 +1417,65 @@
       "TITLE": "Réception en zone de préparation",
       "ERROR": {
         "LOAD": "Impossible de charger le document de réception.",
-        "CONFIRM": "Impossible de confirmer la réception."
+        "CONFIRM": "Impossible de confirmer la réception.",
+        "ASN_LOCATION_REQUIRED": "Un emplacement est requis pour charger la réception ASN.",
+        "ASN_SESSION": "Impossible de créer la session de réception à partir de l'ASN.",
+        "ASN_LOAD": "Impossible de charger les détails de l'ASN."
       },
       "RECEIVE_INTO_STAGING": {
-        "TITLE": "Réceptionner en zone de préparation"
+        "TITLE": "Réceptionner en zone de préparation",
+        "ASN": {
+          "TITLE": "Démarrer depuis ASN",
+          "FIELD": {
+            "ASN_ID": "ID ASN",
+            "ASN_ID_PLACEHOLDER": "Saisir l'ID ASN",
+            "SHIPMENT_REF": "Référence d'expédition du fournisseur",
+            "SHIPMENT_REF_PLACEHOLDER": "Saisir la référence d'expédition fournisseur"
+          },
+          "ACTION": {
+            "LOAD": "Charger depuis ASN"
+          },
+          "FALLBACK": {
+            "LABEL": "Réceptionner sans ASN"
+          }
+        }
+      },
+      "CROSS_DOCK": {
+        "TITLE": "Réception Cross-Dock",
+        "STEP": {
+          "SEARCH": "Étape 1 : Rechercher l'ordre de travail",
+          "LINE_PICK": "Étape 2 : Sélectionner les lignes et la quantité",
+          "REVIEW": "Étape 3 : Réviser"
+        },
+        "STATE": {
+          "NO_RESULTS": "Aucun ordre de travail trouvé."
+        },
+        "FIELD": {
+          "WORKORDER_SEARCH": "Recherche d'ordre de travail",
+          "WORKORDER_SEARCH_PLACEHOLDER": "Rechercher par numéro ou ID d'ordre",
+          "SHIPMENT_ID": "Expédition",
+          "SESSION_ID": "ID de session",
+          "RECEIVING_LINE_ID": "ID de ligne de réception",
+          "WORKORDER_ID": "ID d'ordre de travail",
+          "WORKORDER_LINE_ID": "ID de ligne d'ordre",
+          "QUANTITY": "Quantité",
+          "OVERRIDE_REASON": "Code de raison de dérogation"
+        },
+        "ACTION": {
+          "SEARCH": "Rechercher des ordres",
+          "REVIEW": "Réviser",
+          "CONFIRM": "Confirmer le Cross-Dock"
+        },
+        "SUCCESS": {
+          "TITLE": "Cross-Dock confirmé",
+          "REFERENCE": "Référence d'émission",
+          "MODE": "Mode d'émission"
+        },
+        "ERROR": {
+          "SEARCH": "Impossible de rechercher les ordres de travail.",
+          "VALIDATION": "Remplissez tous les champs requis avant la révision.",
+          "SUBMIT": "Impossible de soumettre la réception cross-dock."
+        }
       },
       "STATE": {
         "IDLE": "Entrez un ID de document pour commencer."
@@ -1653,6 +1708,53 @@
           "REJECTION_REASON": "Motif de rejet",
           "REJECTION_REASON_PLACEHOLDER": "Expliquez le motif du rejet…"
         }
+      },
+      "PLANS": {
+        "LIST": {
+          "TITLE": "Plans d'inventaire cyclique",
+          "SUBTITLE": "Planifiez et suivez les plans de comptage récurrents.",
+          "ACTION": {
+            "NEW": "Nouveau plan d'inventaire cyclique"
+          },
+          "EMPTY": {
+            "TITLE": "Aucun plan d'inventaire cyclique",
+            "MESSAGE": "Créez un nouveau plan pour commencer à planifier les comptages."
+          },
+          "TABLE": {
+            "ARIA": "Liste des plans d'inventaire cyclique",
+            "HEADER": {
+              "PLAN_NAME": "Nom du plan",
+              "LOCATION": "Emplacement",
+              "ZONES_COUNT": "Nombre de zones",
+              "SCHEDULED_DATE": "Date planifiée",
+              "STATUS": "Statut",
+              "CREATED_AT": "Créé le"
+            },
+            "DEFAULT_PLAN_NAME": "Plan sans titre"
+          }
+        },
+        "ERROR": {
+          "LOAD": "Impossible de charger les plans d'inventaire cyclique.",
+          "LOAD_LOCATIONS": "Impossible de charger les emplacements.",
+          "LOAD_ZONES": "Impossible de charger les zones pour l'emplacement sélectionné.",
+          "VALIDATION": "Remplissez les champs requis avant de créer le plan.",
+          "SUBMIT": "Impossible de créer le plan d'inventaire cyclique."
+        }
+      },
+      "PLAN_FORM": {
+        "TITLE": "Créer un plan d'inventaire cyclique",
+        "FIELD": {
+          "LOCATION": "Emplacement",
+          "LOCATION_PLACEHOLDER": "Sélectionner un emplacement",
+          "ZONES": "Zones",
+          "ZONES_EMPTY": "Aucune zone disponible pour cet emplacement.",
+          "SCHEDULED_DATE": "Date planifiée",
+          "PLAN_NAME": "Nom du plan",
+          "PLAN_NAME_PLACEHOLDER": "Nom de plan optionnel"
+        },
+        "ACTION": {
+          "SUBMIT": "Créer le plan"
+        }
       }
     },
     "PURCHASE_ORDERS": {
@@ -1760,6 +1862,226 @@
         "ACTION": {
           "SUBMIT": "Soumettre la commande"
         }
+      }
+    },
+    "FULFILLMENT": {
+      "PICK_LIST": {
+        "TITLE": "Liste de prélèvement",
+        "STATE": {
+          "EMPTY": "Aucune tâche de prélèvement disponible."
+        },
+        "FIELD": {
+          "WORKORDER_ID": "Ordre de travail",
+          "PICK_LIST_ID": "Liste de prélèvement",
+          "STATUS": "Statut",
+          "CREATED_AT": "Créé le"
+        },
+        "ACTION": {
+          "PRINT": "Imprimer"
+        },
+        "TABLE": {
+          "ARIA": "Tâches de la liste de prélèvement",
+          "HEADER": {
+            "SKU": "UGS",
+            "DESCRIPTION": "Description",
+            "LOCATION": "Emplacement",
+            "REQUESTED_QTY": "Qté demandée",
+            "PICKED_QTY": "Qté prélevée",
+            "UOM": "UOM",
+            "STATUS": "Statut"
+          }
+        },
+        "ERROR": {
+          "MISSING_ID": "L'ID d'ordre de travail est requis pour charger la liste de prélèvement.",
+          "LOAD": "Impossible de charger la liste de prélèvement."
+        }
+      },
+      "RETURN_TO_STOCK": {
+        "TITLE": "Retour au stock",
+        "FIELD": {
+          "LOCATION": "Emplacement",
+          "LOCATION_PLACEHOLDER": "Sélectionner l'emplacement de retour",
+          "STORAGE_LOCATION": "Zone de stockage",
+          "STORAGE_LOCATION_PLACEHOLDER": "Zone de destination optionnelle",
+          "REASON_CODE": "Code de raison",
+          "REASON_CODE_PLACEHOLDER": "Sélectionner une raison de retour",
+          "RETURN_QTY_SR": "Quantité de retour pour {{sku}}"
+        },
+        "TABLE": {
+          "ARIA": "Articles retournables",
+          "HEADER": {
+            "PRODUCT": "Produit",
+            "MAX_QTY": "Qté max",
+            "RETURN_QTY": "Qté de retour"
+          }
+        },
+        "ACTION": {
+          "SUBMIT": "Soumettre le retour"
+        },
+        "SUCCESS": {
+          "TITLE": "Retour soumis",
+          "RETURN_ID": "ID de retour"
+        },
+        "ERROR": {
+          "MISSING_ID": "L'ID d'ordre de travail est requis.",
+          "LOAD": "Impossible de charger les données de retour au stock.",
+          "STORAGE_LOCATIONS": "Impossible de charger les zones de stockage.",
+          "SUBMIT": "Impossible de soumettre le retour au stock."
+        }
+      },
+      "CONSUME_PICKED_ITEMS": {
+        "TITLE": "Consommer les Articles Prélevés",
+        "STATE": {
+          "LOADING": "Chargement des articles prélevés..."
+        },
+        "SUCCESS": {
+          "TITLE": "Consommation Soumise",
+          "ARIA": "Résumé des articles consommés",
+          "LINE": "{{sku}} : {{qty}} consommé(s)"
+        },
+        "TABLE": {
+          "ARIA": "Articles prélevés disponibles pour consommation",
+          "HEADER": {
+            "SKU": "SKU",
+            "DESCRIPTION": "Description",
+            "PICKED_QTY": "Qté prélevée",
+            "CONSUMED_QTY": "Consommée",
+            "REMAINING_QTY": "Restante",
+            "CONSUME_QTY": "Qté à consommer"
+          },
+          "VALUE": {
+            "LINE_ITEM": "Ligne"
+          }
+        },
+        "FIELD": {
+          "CONSUME_QTY_SR": "Quantité à consommer pour {{sku}}"
+        },
+        "ACTION": {
+          "CONTINUE": "Consommer encore",
+          "MAX": "Max",
+          "SUBMIT": "Soumettre la consommation"
+        },
+        "ERROR": {
+          "MISSING_ID": "L'ID d'ordre de travail est requis.",
+          "LOAD": "Impossible de charger les articles prélevés.",
+          "SUBMIT": "Impossible de soumettre les articles consommés."
+        }
+      },
+      "PICK_EXECUTE": {
+        "TITLE": "Exécution du Prélèvement Mécanicien",
+        "STATE": {
+          "LOADING": "Chargement des données d'exécution de prélèvement...",
+          "AWAITING_SCAN": "Scannez un article pour commencer la confirmation.",
+          "SCAN_NO_MATCH": "Aucune ligne de prélèvement ne correspond à ce scan."
+        },
+        "SECTION": {
+          "PICK_LINES": "Progression des Lignes de Prélèvement",
+          "SCAN": "Scan Actif",
+          "CONFIRM": "Confirmer la Quantité Prélevée"
+        },
+        "TABLE": {
+          "ARIA": "Progression de l'exécution du prélèvement",
+          "HEADER": {
+            "SKU": "SKU",
+            "REQUESTED": "Demandée",
+            "CONFIRMED": "Confirmée",
+            "STATUS": "Statut"
+          }
+        },
+        "FIELD": {
+          "SCAN_INPUT": "Scannez le code-barres ou entrez le numéro de pièce",
+          "SKU": "SKU",
+          "REQUESTED": "Demandée",
+          "ALREADY_CONFIRMED": "Déjà confirmée",
+          "CONFIRM_QTY": "Quantité à confirmer"
+        },
+        "ACTION": {
+          "RESOLVE_SCAN": "Résoudre le scan",
+          "CONFIRM": "Confirmer",
+          "COMPLETE": "Terminer le prélèvement"
+        },
+        "COMPLETE": {
+          "TITLE": "Prélèvement Terminé",
+          "DESCRIPTION": "Toutes les lignes de prélèvement ont été terminées."
+        },
+        "ERROR": {
+          "MISSING_ID": "L'ID d'ordre de travail est requis.",
+          "LOAD": "Impossible de charger les données d'exécution de prélèvement.",
+          "RESOLVE_SCAN": "Impossible de résoudre la valeur scannée.",
+          "CONFIRM": "Impossible de confirmer la quantité prélevée.",
+          "COMPLETE": "Impossible de terminer le prélèvement."
+        }
+      },
+      "SHORTAGE_RESOLUTION": {
+        "TITLE": "Résolution de Rupture",
+        "STATE": {
+          "LOADING": "Chargement des options de rupture..."
+        },
+        "WARNING": {
+          "PARTIAL_OPTIONS": "Certaines options peuvent offrir un traitement partiel."
+        },
+        "FIELD": {
+          "OPTIONS": "Options de Résolution"
+        },
+        "LEAD_TIME_DAYS": "Délai : {{days}} jour(s)",
+        "ACTION": {
+          "CONFIRM": "Confirmer la résolution"
+        },
+        "SUCCESS": {
+          "TITLE": "Rupture Résolue",
+          "DECISION": "Décision sélectionnée"
+        },
+        "ERROR": {
+          "MISSING_ID": "Les ID d'ordre de travail et de ligne d'allocation sont requis.",
+          "LOAD": "Impossible de charger les options de rupture.",
+          "SUBMIT": "Impossible de soumettre la résolution de rupture."
+        }
+      }
+    },
+    "SECURITY": {
+      "PERMISSIONS": {
+        "TITLE": "Autorisations de Sécurité Inventaire",
+        "SUBTITLE": "Consultez les clés d'autorisations d'inventaire et votre accès actuel.",
+        "FILTER_LABEL": "Filtrer les autorisations",
+        "FILTER_PLACEHOLDER": "Rechercher une clé d'autorisation",
+        "STATE": {
+          "LOADING": "Chargement des autorisations d'inventaire...",
+          "EMPTY": "Aucune autorisation ne correspond au filtre actuel."
+        },
+        "TABLE": {
+          "ARIA": "Autorisations d'inventaire",
+          "HEADER": {
+            "PERMISSION": "Autorisation",
+            "DESCRIPTION": "Description",
+            "CATEGORY": "Catégorie",
+            "GRANTED": "Accordée"
+          }
+        },
+        "VALUE": {
+          "GRANTED": "Accordée",
+          "NOT_GRANTED": "Non accordée"
+        },
+        "ERROR": {
+          "FORBIDDEN": "Vous n'avez pas accès aux autorisations d'inventaire.",
+          "LOAD": "Impossible de charger les autorisations d'inventaire."
+        }
+      },
+      "PERMISSION": {
+        "VIEW": {
+          "DESC": "Consulter les enregistrements d'inventaire"
+        },
+        "ADJUST": {
+          "DESC": "Ajuster les quantités d'inventaire"
+        },
+        "TRANSFER": {
+          "DESC": "Transférer l'inventaire entre emplacements"
+        },
+        "ADMIN": {
+          "DESC": "Gérer les autorisations de sécurité d'inventaire"
+        }
+      },
+      "CATEGORY": {
+        "INVENTORY": "Inventaire"
       }
     }
   },

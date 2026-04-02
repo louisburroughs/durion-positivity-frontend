@@ -71,10 +71,31 @@ export const INVENTORY_ROUTES: Routes = [
           ).then(m => m.AdjustmentApprovalsComponent),
       },
       {
+        path: 'counts/plans',
+        loadComponent: () =>
+          import('./pages/counts/cycle-count-plan-list/cycle-count-plan-list-page.component').then(
+            m => m.CycleCountPlanListPageComponent,
+          ),
+      },
+      {
+        path: 'counts/plans/new',
+        loadComponent: () =>
+          import('./pages/counts/cycle-count-plan-form/cycle-count-plan-form-page.component').then(
+            m => m.CycleCountPlanFormPageComponent,
+          ),
+      },
+      {
         path: 'purchase-orders',
         loadComponent: () =>
           import('./pages/purchase-orders/po-list/po-list.component').then(
             m => m.PoListComponent,
+          ),
+      },
+      {
+        path: 'receiving/cross-dock',
+        loadComponent: () =>
+          import('./pages/receiving/cross-dock-receive/cross-dock-receive-page.component').then(
+            m => m.CrossDockReceivePageComponent,
           ),
       },
       {
@@ -96,6 +117,48 @@ export const INVENTORY_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/purchase-orders/po-form/po-form.component').then(
             m => m.PoFormComponent,
+          ),
+      },
+      {
+        path: 'fulfillment/workorders/:workorderId/pick-list',
+        loadComponent: () =>
+          import('./pages/fulfillment/pick-list/pick-list-page.component').then(
+            m => m.PickListPageComponent,
+          ),
+      },
+      {
+        path: 'fulfillment/workorders/:workorderId/return-to-stock',
+        loadComponent: () =>
+          import('./pages/fulfillment/return-to-stock/return-to-stock-page.component').then(
+            m => m.ReturnToStockPageComponent,
+          ),
+      },
+      {
+        path: 'fulfillment/workorders/:workorderId/consume-items',
+        loadComponent: () =>
+          import('./pages/fulfillment/consume-picked-items/consume-picked-items-page.component').then(
+            m => m.ConsumePickedItemsPageComponent,
+          ),
+      },
+      {
+        path: 'fulfillment/workorders/:workorderId/pick-execute',
+        loadComponent: () =>
+          import('./pages/fulfillment/pick-execute/pick-execute-page.component').then(
+            m => m.PickExecutePageComponent,
+          ),
+      },
+      {
+        path: 'fulfillment/workorders/:workorderId/shortage-resolution',
+        loadComponent: () =>
+          import('./pages/fulfillment/shortage-resolution/shortage-resolution-page.component').then(
+            m => m.ShortageResolutionPageComponent,
+          ),
+      },
+      {
+        path: 'security/permissions',
+        loadComponent: () =>
+          import('./pages/security/inventory-security-admin/inventory-security-admin-page.component').then(
+            m => m.InventorySecurityAdminPageComponent,
           ),
       },
       { path: '**', redirectTo: 'availability' },

@@ -39,6 +39,8 @@ Always read applicable ADRs before coding. Frontend-specific ADRs:
 | [ADR-0033](../durion/docs/adr/0033-angular-effect-observable-cancellation-policy.adr.md) | Effect Observable Cancellation | Components using `effect()` |
 | [ADR-0034](../durion/docs/adr/0034-frontend-server-generated-field-omission-policy.adr.md) | Server-Generated Field Omission | Domain models + API payloads |
 | [ADR-0035](../durion/docs/adr/0035-frontend-service-method-minimum-test-coverage.adr.md) | Service Method Minimum Test Coverage | All `*service.ts` files |
+| [ADR-0037](../durion/docs/adr/0037-frontend-spa-navigation-policy.adr.md) | SPA Navigation Policy | All components with in-app links |
+| [ADR-0038](../durion/docs/adr/0038-frontend-date-only-string-handling-policy.adr.md) | Date-Only String Handling | Any component displaying/validating dates |
 
 ---
 
@@ -79,6 +81,19 @@ Before submitting or approving a frontend PR, verify **all** items below:
 
 - [ ] All user-facing strings use `| translate` pipe — no hard-coded copy in templates or components
 - [ ] New translation keys are added to all 4 locale files: `en-US.json`, `es-US.json`, `fr-CA.json`, `qps-ploc.json`
+
+### SPA Navigation (ADR-0037)
+
+- [ ] Every in-app navigation link uses `routerLink` (NOT bare `href`)
+- [ ] `RouterLink` is present in the component's `imports` array when `routerLink` is used in the template
+- [ ] Retry/reload/action controls are `<button type="button">`, not `<a>` elements
+- [ ] Bare `href` is only used for external URLs (`http://`, `https://`, `mailto:`, `tel:`, file downloads)
+
+### Date-Only String Handling (ADR-0038)
+
+- [ ] No `new Date(YYYY-MM-DD)` for local-date semantics — use `new Date(y, m-1, d)` after splitting on `-`
+- [ ] Angular `DatePipe` is NOT applied directly to raw `YYYY-MM-DD` strings — append `T00:00:00` or pre-convert in component
+- [ ] "Today" boundary tests construct today's date using local-time getters (`getFullYear()`/`getMonth()+1`/`getDate()`), NOT `toISOString().slice(0,10)`
 
 ---
 
@@ -199,3 +214,8 @@ src/app/features/<domain>/
 | Hard-coded UI string in template | `{{ 'KEY' \| translate }}` | ADR-0030 |
 | `new Date()` in template binding | Compute in component method | ADR-0034 |
 | `import { HttpClient }` in feature service | `inject(ApiBaseService)` | ADR-0010 |
+| `<a href="/app/...">` for in-app navigation | `<a routerLink="/app/...">` + `RouterLink` in imports | ADR-0037 |
+| `<a href="...">Retry</a>` for action/retry | `<button type="button" (click)="reload()">Retry</button>` | ADR-0037 |
+| `new Date(YYYY-MM-DD)` for local-date validation | `const [y,m,d]=s.split('-').map(Number); new Date(y,m-1,d)` | ADR-0038 |
+| `{{ item.date \| date: 'mediumDate' }}` on YYYY-MM-DD string | `{{ (item.date + 'T00:00:00') \| date: 'mediumDate' }}` | ADR-0038 |
+| `toISOString().slice(0,10)` for today in tests | `getFullYear()/getMonth()+1/getDate()` local getters | ADR-0038 |

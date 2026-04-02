@@ -4,9 +4,15 @@ import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { InventoryReceivingService } from './inventory-receiving.service';
 import {
+  AsnCreateRequest,
+  AsnResponse,
   ConfirmReceiptRequest,
+  CrossDockReceiveRequest,
+  CrossDockReceiveResult,
   ReceiptResult,
   ReceivingDocumentResponse,
+  ReceivingSessionFromAsnRequest,
+  WorkorderCrossDockRef,
 } from '../models/inventory.models';
 
 describe('InventoryReceivingService', () => {
@@ -145,6 +151,187 @@ describe('InventoryReceivingService', () => {
       const [path, body] = apiStub.post.mock.calls[0];
       expect(path).toBe('/inventory/v1/receiving/receipts');
       expect((body as ConfirmReceiptRequest).documentType).toBe('ASN');
+    });
+  });
+
+  // ── createAsn() ───────────────────────────────────────────────────────
+
+  describe('createAsn()', () => {
+    const mockRequest: AsnCreateRequest = {
+      supplierId: 'supplier-001',
+      supplierShipmentRef: 'SHIP-REF-001',
+      poId: 'po-001',
+      lines: [{ poLineId: 'pol-001', expectedQty: 50 }],
+    };
+
+    const mockResponse: AsnResponse = {
+      asnId: 'asn-001',
+      poId: 'po-001',
+      status: 'OPEN',
+      lines: [{ asnLineId: 'asnl-001', poLineId: 'pol-001', expectedQty: 50 }],
+    };
+
+    it('calls POST /inventory/v1/asns with request body', () => {
+      apiStub.post.mockReturnValueOnce(of(mockResponse));
+
+      service.createAsn(mockRequest).subscribe();
+
+      expect(apiStub.post).toHaveBeenCalledOnce();
+      const [path, body] = apiStub.post.mock.calls[0];
+      expect(path).toBe('/inventory/v1/asns');
+      expect(body).toEqual(mockRequest);
+    });
+
+    it('returns the AsnResponse emitted by the API', () => {
+      apiStub.post.mockReturnValueOnce(of(mockResponse));
+
+      let result: AsnResponse | undefined;
+      service.createAsn(mockRequest).subscribe(r => (result = r));
+
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  // ── getAsn() ──────────────────────────────────────────────────────────
+
+  describe('getAsn()', () => {
+    const mockResponse: AsnResponse = {
+      asnId: 'asn-001',
+      poId: 'po-001',
+      status: 'OPEN',
+      lines: [{ asnLineId: 'asnl-001', poLineId: 'pol-001', expectedQty: 50 }],
+    };
+
+    it('calls GET /inventory/v1/asns/{asnId}', () => {
+      apiStub.get.mockReturnValueOnce(of(mockResponse));
+
+      service.getAsn('asn-001').subscribe();
+
+      expect(apiStub.get).toHaveBeenCalledOnce();
+      const [path] = apiStub.get.mock.calls[0];
+      expect(path).toBe('/inventory/v1/asns/asn-001');
+    });
+
+    it('URL-encodes the asnId', () => {
+      apiStub.get.mockReturnValueOnce(of(mockResponse));
+
+      service.getAsn('asn/001').subscribe();
+
+      const [path] = apiStub.get.mock.calls[0];
+      expect(path).toBe('/inventory/v1/asns/asn%2F001');
+    });
+
+    it('returns the AsnResponse emitted by the API', () => {
+      apiStub.get.mockReturnValueOnce(of(mockResponse));
+
+      let result: AsnResponse | undefined;
+      service.getAsn('asn-001').subscribe(r => (result = r));
+
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  // ── createReceivingSessionFromAsn() ───────────────────────────────────
+
+  describe('createReceivingSessionFromAsn()', () => {
+    const mockRequest: ReceivingSessionFromAsnRequest = {
+      asnId: 'asn-001',
+      locationId: 'loc-01',
+    };
+
+    const mockDoc: ReceivingDocumentResponse = {
+      documentId: 'ASN-001',
+      documentType: 'ASN',
+      status: 'OPEN',
+      locationId: 'loc-01',
+      stagingStorageLocationId: 'sl-staging',
+      stagingStorageLocationName: 'Staging Area',
+      lines: [],
+    };
+
+    it('calls POST /inventory/v1/receiving/sessions/from-asn with request body', () => {
+      apiStub.post.mockReturnValueOnce(of(mockDoc));
+
+      service.createReceivingSessionFromAsn(mockRequest).subscribe();
+
+      expect(apiStub.post).toHaveBeenCalledOnce();
+      const [path, body] = apiStub.post.mock.calls[0];
+      expect(path).toBe('/inventory/v1/receiving/sessions/from-asn');
+      expect(body).toEqual(mockRequest);
+    });
+
+    it('returns the ReceivingDocumentResponse emitted by the API', () => {
+      apiStub.post.mockReturnValueOnce(of(mockDoc));
+
+      let result: ReceivingDocumentResponse | undefined;
+      service.createReceivingSessionFromAsn(mockRequest).subscribe(r => (result = r));
+
+      expect(result).toEqual(mockDoc);
+    });
+  });
+
+  // ── searchWorkordersForCrossDock() ────────────────────────────────────
+
+  describe('searchWorkordersForCrossDock()', () => {
+    const mockRefs: WorkorderCrossDockRef[] = [
+      { workorderId: 'wo-001', workorderNumber: 'WO-001', status: 'OPEN' },
+    ];
+
+    it('calls GET /inventory/v1/receiving/workorders with query param', () => {
+      apiStub.get.mockReturnValueOnce(of(mockRefs));
+
+      service.searchWorkordersForCrossDock('WO-001').subscribe();
+
+      expect(apiStub.get).toHaveBeenCalledOnce();
+      const [path, params] = apiStub.get.mock.calls[0];
+      expect(path).toBe('/inventory/v1/receiving/workorders');
+      expect((params as HttpParams).get('query')).toBe('WO-001');
+    });
+
+    it('returns the WorkorderCrossDockRef array emitted by the API', () => {
+      apiStub.get.mockReturnValueOnce(of(mockRefs));
+
+      let result: WorkorderCrossDockRef[] | undefined;
+      service.searchWorkordersForCrossDock('WO-001').subscribe(r => (result = r));
+
+      expect(result).toEqual(mockRefs);
+    });
+  });
+
+  // ── submitCrossDockReceipt() ──────────────────────────────────────────
+
+  describe('submitCrossDockReceipt()', () => {
+    const mockRequest: CrossDockReceiveRequest = {
+      sessionId: 'sess-001',
+      receivingLineId: 'rl-001',
+      workorderId: 'wo-001',
+      workorderLineId: 'wol-001',
+      quantity: 3,
+    };
+
+    const mockResult: CrossDockReceiveResult = {
+      issueReferenceId: 'issue-001',
+      issueMode: 'CROSS_DOCK',
+    };
+
+    it('calls POST /inventory/v1/receiving/cross-dock with request body', () => {
+      apiStub.post.mockReturnValueOnce(of(mockResult));
+
+      service.submitCrossDockReceipt(mockRequest).subscribe();
+
+      expect(apiStub.post).toHaveBeenCalledOnce();
+      const [path, body] = apiStub.post.mock.calls[0];
+      expect(path).toBe('/inventory/v1/receiving/cross-dock');
+      expect(body).toEqual(mockRequest);
+    });
+
+    it('returns the CrossDockReceiveResult emitted by the API', () => {
+      apiStub.post.mockReturnValueOnce(of(mockResult));
+
+      let result: CrossDockReceiveResult | undefined;
+      service.submitCrossDockReceipt(mockRequest).subscribe(r => (result = r));
+
+      expect(result).toEqual(mockResult);
     });
   });
 });

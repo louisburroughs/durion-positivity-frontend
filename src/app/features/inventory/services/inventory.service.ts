@@ -8,10 +8,18 @@ import {
   LedgerFilter,
   LedgerPageResponse,
   LocationRef,
+  LocationZone,
   PutawayCompleteRequest,
   PutawayResult,
   PutawayTask,
+  ReturnReasonCode,
+  ReturnToStockRequest,
+  ReturnToStockResult,
+  ReturnableItem,
   ReplenishmentTask,
+  ShortageOption,
+  ShortageResolutionRequest,
+  ShortageResolutionResult,
   StorageLocation,
 } from '../models/inventory.models';
 
@@ -41,6 +49,12 @@ export class InventoryDomainService {
   getStorageLocations(locationId: string): Observable<StorageLocation[]> {
     return this.api.get<StorageLocation[]>(
       `/inventory/v1/locations/${encodeURIComponent(locationId)}/storage-locations`,
+    );
+  }
+
+  getLocationZones(locationId: string): Observable<LocationZone[]> {
+    return this.api.get<LocationZone[]>(
+      `/inventory/v1/locations/${encodeURIComponent(locationId)}/zones`,
     );
   }
 
@@ -89,5 +103,39 @@ export class InventoryDomainService {
       params = params.set('locationId', locationId);
     }
     return this.api.get<ReplenishmentTask[]>('/inventory/v1/replenishment/tasks', params);
+  }
+
+  getReturnableItems(workorderId: string): Observable<ReturnableItem[]> {
+    return this.api.get<ReturnableItem[]>(
+      `/inventory/v1/workorders/${encodeURIComponent(workorderId)}/returnable-items`,
+    );
+  }
+
+  getReasonCodes(type: string): Observable<ReturnReasonCode[]> {
+    const params = new HttpParams().set('type', type);
+    return this.api.get<ReturnReasonCode[]>('/inventory/v1/reasons', params);
+  }
+
+  submitReturnToStock(request: ReturnToStockRequest): Observable<ReturnToStockResult> {
+    return this.api.post<ReturnToStockResult>(
+      '/inventory/v1/movements/return-to-stock',
+      request,
+    );
+  }
+
+  getShortageOptions(
+    workorderId: string,
+    allocationLineId: string,
+  ): Observable<ShortageOption[]> {
+    return this.api.get<ShortageOption[]>(
+      `/inventory/v1/workorders/${encodeURIComponent(workorderId)}/allocations/${encodeURIComponent(allocationLineId)}/shortage-options`,
+    );
+  }
+
+  resolveShortage(request: ShortageResolutionRequest): Observable<ShortageResolutionResult> {
+    return this.api.post<ShortageResolutionResult>(
+      `/inventory/v1/workorders/${encodeURIComponent(request.workorderId)}/allocations/${encodeURIComponent(request.allocationLineId)}/resolve-shortage`,
+      request,
+    );
   }
 }

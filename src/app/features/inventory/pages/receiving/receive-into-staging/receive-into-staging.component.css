@@ -2,6 +2,45 @@
   display: block;
 }
 
+.asn-entry-section {
+  background: var(--cardBackground);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
+}
+
+.asn-entry-section h2 {
+  font-family: 'Public Sans', var(--font-body);
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary-soft) 80%, var(--cardBackground));
+  border-radius: 12px;
+  padding: 0.55rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.asn-field-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.field-group {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.tertiary-action {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 0.8rem;
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--cardBackground));
+  color: var(--brand-primary);
+}
+
+.asn-error {
+  margin-top: 0.7rem;
+  color: var(--functional-error-red);
+}
+
 .detail-grid {
   display: grid;
   grid-template-columns: auto 1fr;
