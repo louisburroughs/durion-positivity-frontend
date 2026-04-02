@@ -1,73 +1,70 @@
 <main class="page" aria-labelledby="shortage-resolution-title">
-	<header class="page-header">
-		<h1 id="shortage-resolution-title" class="page-title">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.TITLE' | translate }}</h1>
-	</header>
+  <header class="page-header">
+    <h1 id="shortage-resolution-title" class="page-title">{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.TITLE' |
+      translate }}</h1>
+  </header>
 
-	@switch (state()) {
-		@case ('loading') {
-			<section class="card state-card" aria-live="polite" aria-busy="true">
-				<span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
-				<p>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.STATE.LOADING' | translate }}</p>
-			</section>
-		}
+  @switch (state()) {
+  @case ('loading') {
+  <section class="card state-card" aria-live="polite" aria-busy="true">
+    <span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
+    <p>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.STATE.LOADING' | translate }}</p>
+  </section>
+  }
 
-		@case ('resolved') {
-			<section class="card state-card" aria-live="polite">
-				<span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
-				<h2>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.SUCCESS.TITLE' | translate }}</h2>
-				<p>
-					{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.SUCCESS.DECISION' | translate }}:
-					{{ result()?.resolvedDecisionType || ('COMMON.EMPTY_VALUE' | translate) }}
-				</p>
-			</section>
-		}
+  @case ('resolved') {
+  <section class="card state-card" aria-live="polite">
+    <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+    <h2>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.SUCCESS.TITLE' | translate }}</h2>
+    <p>
+      {{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.SUCCESS.DECISION' | translate }}:
+      {{ result()?.resolvedDecisionType || ('COMMON.EMPTY_VALUE' | translate) }}
+    </p>
+  </section>
+  }
 
-		@case ('error') {
-			<section class="card state-card" role="alert">
-				<span class="material-symbols-outlined" aria-hidden="true">error</span>
-				<p>{{ (errorKey() || 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.ERROR.LOAD') | translate }}</p>
-				<button class="btn-secondary" type="button" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
-			</section>
-		}
+  @case ('error') {
+  <section class="card state-card" role="alert">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ (errorKey() || 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.ERROR.LOAD') | translate }}</p>
+    <button class="btn-secondary" type="button" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
+  </section>
+  }
 
-		@default {
-			<section class="card form-card" [attr.aria-busy]="state() === 'submitting' ? true : null">
-				@if (hasPartialWarning()) {
-					<p class="partial-warning" aria-live="polite">
-						{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.WARNING.PARTIAL_OPTIONS' | translate }}
-					</p>
-				}
+  @default {
+  <section class="card form-card" [attr.aria-busy]="state() === 'submitting' ? true : null">
+    @if (hasPartialWarning()) {
+    <p class="partial-warning" aria-live="polite">
+      {{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.WARNING.PARTIAL_OPTIONS' | translate }}
+    </p>
+    }
 
-				<fieldset class="option-set">
-					<legend>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.FIELD.OPTIONS' | translate }}</legend>
-					@for (option of options(); track option.optionId) {
-						<div class="option-card" [class.selected]="selectedOptionId() === option.optionId">
-							<input
-								type="radio"
-								[id]="'option-' + option.optionId"
-								name="shortage-option"
-								[value]="option.optionId"
-								[checked]="selectedOptionId() === option.optionId"
-								(change)="selectOption(option.optionId)"
-								[attr.disabled]="state() === 'submitting' ? true : null"
-							/>
-							<label [for]="'option-' + option.optionId">
-								<span class="option-label">{{ option.label }}</span>
-								@if (option.leadTimeDays) {
-									<small>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.LEAD_TIME_DAYS' | translate : { days: option.leadTimeDays } }}</small>
-								}
-							</label>
-						</div>
-					}
-				</fieldset>
+    <fieldset class="option-set">
+      <legend>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.FIELD.OPTIONS' | translate }}</legend>
+      @for (option of options(); track option.optionId) {
+      <div class="option-card" [class.selected]="selectedOptionId() === option.optionId">
+        <input type="radio" [id]="'option-' + option.optionId" name="shortage-option" [value]="option.optionId"
+          [checked]="selectedOptionId() === option.optionId" (change)="selectOption(option.optionId)"
+          [attr.disabled]="state() === 'submitting' ? true : null" />
+        <label [for]="'option-' + option.optionId">
+          <span class="option-label">{{ option.label }}</span>
+          @if (option.leadTimeDays) {
+          <small>{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.LEAD_TIME_DAYS' | translate : { days: option.leadTimeDays
+            } }}</small>
+          }
+        </label>
+      </div>
+      }
+    </fieldset>
 
-				<div class="action-row">
-					<button class="btn-primary" type="button" (click)="confirm()" [disabled]="!selectedOptionId() || state() === 'submitting'">
-						{{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.ACTION.CONFIRM' | translate }}
-					</button>
-					<a class="btn-secondary" href="/app/inventory/fulfillment">{{ 'COMMON.CANCEL' | translate }}</a>
-				</div>
-			</section>
-		}
-	}
+    <div class="action-row">
+      <button class="btn-primary" type="button" (click)="confirm()"
+        [disabled]="!selectedOptionId() || state() === 'submitting'">
+        {{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.ACTION.CONFIRM' | translate }}
+      </button>
+      <a class="btn-secondary" href="/app/inventory/fulfillment">{{ 'COMMON.CANCEL' | translate }}</a>
+    </div>
+  </section>
+  }
+  }
 </main>

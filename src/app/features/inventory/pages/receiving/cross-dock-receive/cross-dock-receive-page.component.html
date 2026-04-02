@@ -1,166 +1,160 @@
 <main class="page" aria-labelledby="cross-dock-title">
-	<header class="page-header">
-		<h1 id="cross-dock-title" class="page-title">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.TITLE' | translate }}</h1>
-	</header>
+  <header class="page-header">
+    <h1 id="cross-dock-title" class="page-title">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.TITLE' | translate }}</h1>
+  </header>
 
-	@if (state() === 'loading' || state() === 'submitting') {
-		<section class="card state-card" aria-live="polite" aria-busy="true">
-			<span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
-			<p>{{ 'COMMON.LOADING' | translate }}</p>
-		</section>
-	}
+  @if (state() === 'loading' || state() === 'submitting') {
+  <section class="card state-card" aria-live="polite" aria-busy="true">
+    <span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
+    <p>{{ 'COMMON.LOADING' | translate }}</p>
+  </section>
+  }
 
-	@if (state() === 'error' && errorKey()) {
-		<section class="card state-card" role="alert">
-			<span class="material-symbols-outlined" aria-hidden="true">error</span>
-			<p>{{ errorKey() | translate }}</p>
-		</section>
-	}
+  @if (state() === 'error' && errorKey()) {
+  <section class="card state-card" role="alert">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ errorKey() | translate }}</p>
+  </section>
+  }
 
-	@switch (state()) {
-		@case ('idle') {
-			<section class="card form-card">
-				<div class="field-row">
-					<label for="wo-search">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_SEARCH' | translate }}</label>
-					<input
-						id="wo-search"
-						type="search"
-						[value]="searchQuery()"
-						(input)="searchQuery.set($any($event.target).value)"
-						[attr.placeholder]="'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_SEARCH_PLACEHOLDER' | translate"
-					/>
-				</div>
-				<button class="btn-primary" type="button" (click)="searchWorkorders(searchQuery())">
-					{{ 'INVENTORY.RECEIVING.CROSS_DOCK.ACTION.SEARCH' | translate }}
-				</button>
-			</section>
-		}
+  @switch (state()) {
+  @case ('idle') {
+  <section class="card form-card">
+    <div class="field-row">
+      <label for="wo-search">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_SEARCH' | translate }}</label>
+      <input id="wo-search" type="search" [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)"
+        [attr.placeholder]="'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_SEARCH_PLACEHOLDER' | translate" />
+    </div>
+    <button class="btn-primary" type="button" (click)="searchWorkorders(searchQuery())">
+      {{ 'INVENTORY.RECEIVING.CROSS_DOCK.ACTION.SEARCH' | translate }}
+    </button>
+  </section>
+  }
 
-		@case ('ready') {
-			<section class="card form-card">
-				<fieldset>
-					<legend>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.STEP.SEARCH' | translate }}</legend>
-					<div class="field-row">
-						<label for="wo-search-ready">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_SEARCH' | translate }}</label>
-						<input
-							id="wo-search-ready"
-							type="search"
-							[value]="searchQuery()"
-							(input)="searchQuery.set($any($event.target).value)"
-							[attr.placeholder]="'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_SEARCH_PLACEHOLDER' | translate"
-						/>
-					</div>
-					<button class="btn-secondary" type="button" (click)="searchWorkorders(searchQuery())">
-						{{ 'INVENTORY.RECEIVING.CROSS_DOCK.ACTION.SEARCH' | translate }}
-					</button>
+  @case ('ready') {
+  <section class="card form-card">
+    <fieldset>
+      <legend>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.STEP.SEARCH' | translate }}</legend>
+      <div class="field-row">
+        <label for="wo-search-ready">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_SEARCH' | translate }}</label>
+        <input id="wo-search-ready" type="search" [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+          [attr.placeholder]="'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_SEARCH_PLACEHOLDER' | translate" />
+      </div>
+      <button class="btn-secondary" type="button" (click)="searchWorkorders(searchQuery())">
+        {{ 'INVENTORY.RECEIVING.CROSS_DOCK.ACTION.SEARCH' | translate }}
+      </button>
 
-					@if (workorders().length === 0) {
-						<p class="helper-text" aria-live="polite">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.STATE.NO_RESULTS' | translate }}</p>
-					}
+      @if (workorders().length === 0) {
+      <p class="helper-text" aria-live="polite">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.STATE.NO_RESULTS' | translate }}</p>
+      }
 
-					@if (workorders().length > 0) {
-						<ul class="workorder-list" aria-live="polite">
-							@for (workorder of workorders(); track workorder.workorderId) {
-								<li>
-									<button type="button" class="workorder-item" (click)="workorderId.set(workorder.workorderId)">
-										<span>{{ workorder.workorderNumber }}</span>
-										<span class="status-pill">{{ ('STATUS.' + workorder.status) | translate }}</span>
-									</button>
-								</li>
-							}
-						</ul>
-					}
-				</fieldset>
+      @if (workorders().length > 0) {
+      <ul class="workorder-list" aria-live="polite">
+        @for (workorder of workorders(); track workorder.workorderId) {
+        <li>
+          <button type="button" class="workorder-item" (click)="workorderId.set(workorder.workorderId)">
+            <span>{{ workorder.workorderNumber }}</span>
+            <span class="status-pill">{{ ('STATUS.' + workorder.status) | translate }}</span>
+          </button>
+        </li>
+        }
+      </ul>
+      }
+    </fieldset>
 
-				<fieldset>
-					<legend>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.STEP.LINE_PICK' | translate }}</legend>
+    <fieldset>
+      <legend>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.STEP.LINE_PICK' | translate }}</legend>
 
-					<div class="line-grid">
-						<div class="field-row">
-							<label for="sessionId">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.SESSION_ID' | translate }}</label>
-							<input id="sessionId" type="text" [value]="sessionId()" (input)="sessionId.set($any($event.target).value)" />
-						</div>
+      <div class="line-grid">
+        <div class="field-row">
+          <label for="sessionId">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.SESSION_ID' | translate }}</label>
+          <input id="sessionId" type="text" [value]="sessionId()" (input)="sessionId.set($any($event.target).value)" />
+        </div>
 
-						<div class="field-row">
-							<label for="receivingLineId">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.RECEIVING_LINE_ID' | translate }}</label>
-							<input id="receivingLineId" type="text" [value]="receivingLineId()"
-								(input)="receivingLineId.set($any($event.target).value)" />
-						</div>
+        <div class="field-row">
+          <label for="receivingLineId">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.RECEIVING_LINE_ID' | translate
+            }}</label>
+          <input id="receivingLineId" type="text" [value]="receivingLineId()"
+            (input)="receivingLineId.set($any($event.target).value)" />
+        </div>
 
-						<div class="field-row">
-							<label for="workorderId">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_ID' | translate }}</label>
-							<input id="workorderId" type="text" [value]="workorderId()"
-								(input)="workorderId.set($any($event.target).value)" />
-						</div>
+        <div class="field-row">
+          <label for="workorderId">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_ID' | translate }}</label>
+          <input id="workorderId" type="text" [value]="workorderId()"
+            (input)="workorderId.set($any($event.target).value)" />
+        </div>
 
-						<div class="field-row">
-							<label for="workorderLineId">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_LINE_ID' | translate }}</label>
-							<input id="workorderLineId" type="text" [value]="workorderLineId()"
-								(input)="workorderLineId.set($any($event.target).value)" />
-						</div>
+        <div class="field-row">
+          <label for="workorderLineId">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_LINE_ID' | translate
+            }}</label>
+          <input id="workorderLineId" type="text" [value]="workorderLineId()"
+            (input)="workorderLineId.set($any($event.target).value)" />
+        </div>
 
-						<div class="field-row">
-							<label for="quantity">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.QUANTITY' | translate }}</label>
-							<input id="quantity" type="number" min="0" [value]="quantity()"
-								(input)="quantity.set(+$any($event.target).value)" />
-						</div>
+        <div class="field-row">
+          <label for="quantity">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.QUANTITY' | translate }}</label>
+          <input id="quantity" type="number" min="0" [value]="quantity()"
+            (input)="quantity.set(+$any($event.target).value)" />
+        </div>
 
-						<div class="field-row">
-							<label for="overrideReasonCode">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.OVERRIDE_REASON' | translate }}</label>
-							<input id="overrideReasonCode" type="text" [value]="overrideReasonCode()"
-								(input)="overrideReasonCode.set($any($event.target).value)" />
-						</div>
-					</div>
-				</fieldset>
+        <div class="field-row">
+          <label for="overrideReasonCode">{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.OVERRIDE_REASON' | translate
+            }}</label>
+          <input id="overrideReasonCode" type="text" [value]="overrideReasonCode()"
+            (input)="overrideReasonCode.set($any($event.target).value)" />
+        </div>
+      </div>
+    </fieldset>
 
-				<div class="action-row">
-					<button class="btn-primary" type="button" (click)="beginReview()">
-						{{ 'INVENTORY.RECEIVING.CROSS_DOCK.ACTION.REVIEW' | translate }}
-					</button>
-				</div>
-			</section>
-		}
+    <div class="action-row">
+      <button class="btn-primary" type="button" (click)="beginReview()">
+        {{ 'INVENTORY.RECEIVING.CROSS_DOCK.ACTION.REVIEW' | translate }}
+      </button>
+    </div>
+  </section>
+  }
 
-		@case ('reviewing') {
-			<section class="card summary-card" aria-live="polite">
-				<h2>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.STEP.REVIEW' | translate }}</h2>
-				<dl class="summary-grid">
-					<dt>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.SHIPMENT_ID' | translate }}</dt>
-					<dd>{{ shipmentId() || ('COMMON.EMPTY_VALUE' | translate) }}</dd>
+  @case ('reviewing') {
+  <section class="card summary-card" aria-live="polite">
+    <h2>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.STEP.REVIEW' | translate }}</h2>
+    <dl class="summary-grid">
+      <dt>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.SHIPMENT_ID' | translate }}</dt>
+      <dd>{{ shipmentId() || ('COMMON.EMPTY_VALUE' | translate) }}</dd>
 
-					<dt>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_ID' | translate }}</dt>
-					<dd>{{ workorderId() }}</dd>
+      <dt>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_ID' | translate }}</dt>
+      <dd>{{ workorderId() }}</dd>
 
-					<dt>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_LINE_ID' | translate }}</dt>
-					<dd>{{ workorderLineId() }}</dd>
+      <dt>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.WORKORDER_LINE_ID' | translate }}</dt>
+      <dd>{{ workorderLineId() }}</dd>
 
-					<dt>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.QUANTITY' | translate }}</dt>
-					<dd>{{ quantity() }}</dd>
-				</dl>
-				<div class="action-row">
-					<button class="btn-primary" type="button" (click)="confirmCrossDockReceipt()">
-						{{ 'INVENTORY.RECEIVING.CROSS_DOCK.ACTION.CONFIRM' | translate }}
-					</button>
-					<button class="btn-secondary" type="button" (click)="state.set('ready')">
-						{{ 'COMMON.BACK' | translate }}
-					</button>
-				</div>
-			</section>
-		}
+      <dt>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.FIELD.QUANTITY' | translate }}</dt>
+      <dd>{{ quantity() }}</dd>
+    </dl>
+    <div class="action-row">
+      <button class="btn-primary" type="button" (click)="confirmCrossDockReceipt()">
+        {{ 'INVENTORY.RECEIVING.CROSS_DOCK.ACTION.CONFIRM' | translate }}
+      </button>
+      <button class="btn-secondary" type="button" (click)="state.set('ready')">
+        {{ 'COMMON.BACK' | translate }}
+      </button>
+    </div>
+  </section>
+  }
 
-		@case ('success') {
-			<section class="card state-card" aria-live="polite">
-				<span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
-				<h2>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.SUCCESS.TITLE' | translate }}</h2>
-				<p>
-					{{ 'INVENTORY.RECEIVING.CROSS_DOCK.SUCCESS.REFERENCE' | translate }}:
-					{{ result()?.issueReferenceId || ('COMMON.EMPTY_VALUE' | translate) }}
-				</p>
-				<p>
-					{{ 'INVENTORY.RECEIVING.CROSS_DOCK.SUCCESS.MODE' | translate }}:
-					{{ result()?.issueMode || ('COMMON.EMPTY_VALUE' | translate) }}
-				</p>
-			</section>
-		}
-	}
+  @case ('success') {
+  <section class="card state-card" aria-live="polite">
+    <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+    <h2>{{ 'INVENTORY.RECEIVING.CROSS_DOCK.SUCCESS.TITLE' | translate }}</h2>
+    <p>
+      {{ 'INVENTORY.RECEIVING.CROSS_DOCK.SUCCESS.REFERENCE' | translate }}:
+      {{ result()?.issueReferenceId || ('COMMON.EMPTY_VALUE' | translate) }}
+    </p>
+    <p>
+      {{ 'INVENTORY.RECEIVING.CROSS_DOCK.SUCCESS.MODE' | translate }}:
+      {{ result()?.issueMode || ('COMMON.EMPTY_VALUE' | translate) }}
+    </p>
+  </section>
+  }
+  }
 </main>

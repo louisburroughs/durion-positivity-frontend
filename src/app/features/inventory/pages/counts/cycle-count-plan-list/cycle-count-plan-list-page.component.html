@@ -1,75 +1,75 @@
 <main class="page" aria-labelledby="cycle-count-plans-title">
-	<header class="page-header plans-header">
-		<div>
-			<h1 id="cycle-count-plans-title" class="page-title">{{ 'INVENTORY.COUNTS.PLANS.LIST.TITLE' | translate }}</h1>
-			<p class="page-subtitle" aria-live="polite">{{ 'INVENTORY.COUNTS.PLANS.LIST.SUBTITLE' | translate }}</p>
-		</div>
-		<a class="btn-primary" routerLink="/app/inventory/counts/plans/new">
-			{{ 'INVENTORY.COUNTS.PLANS.LIST.ACTION.NEW' | translate }}
-		</a>
-	</header>
+  <header class="page-header plans-header">
+    <div>
+      <h1 id="cycle-count-plans-title" class="page-title">{{ 'INVENTORY.COUNTS.PLANS.LIST.TITLE' | translate }}</h1>
+      <p class="page-subtitle" aria-live="polite">{{ 'INVENTORY.COUNTS.PLANS.LIST.SUBTITLE' | translate }}</p>
+    </div>
+    <a class="btn-primary" routerLink="/app/inventory/counts/plans/new">
+      {{ 'INVENTORY.COUNTS.PLANS.LIST.ACTION.NEW' | translate }}
+    </a>
+  </header>
 
-	@if (state() === 'loading') {
-		<section class="card loading-card" aria-busy="true" aria-live="polite">
-			<p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
-			<div class="skeleton-row"></div>
-			<div class="skeleton-row"></div>
-			<div class="skeleton-row"></div>
-			<div class="skeleton-row"></div>
-		</section>
-	}
+  @if (state() === 'loading') {
+  <section class="card loading-card" aria-busy="true" aria-live="polite">
+    <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+  </section>
+  }
 
-	@if (state() === 'error') {
-		<section class="card state-card error-card" role="alert">
-			<span class="material-symbols-outlined" aria-hidden="true">error</span>
-			<p>{{ errorKey() | translate }}</p>
-			<button class="btn-secondary" type="button" (click)="loadPlans()">
-				{{ 'COMMON.RETRY' | translate }}
-			</button>
-		</section>
-	}
+  @if (state() === 'error') {
+  <section class="card state-card error-card" role="alert">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ errorKey() | translate }}</p>
+    <button class="btn-secondary" type="button" (click)="loadPlans()">
+      {{ 'COMMON.RETRY' | translate }}
+    </button>
+  </section>
+  }
 
-	@if (state() === 'empty') {
-		<section class="card state-card empty-card" aria-live="polite">
-			<span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
-			<h2>{{ 'INVENTORY.COUNTS.PLANS.LIST.EMPTY.TITLE' | translate }}</h2>
-			<p>{{ 'INVENTORY.COUNTS.PLANS.LIST.EMPTY.MESSAGE' | translate }}</p>
-			<a class="btn-primary" routerLink="/app/inventory/counts/plans/new">
-				{{ 'INVENTORY.COUNTS.PLANS.LIST.ACTION.NEW' | translate }}
-			</a>
-		</section>
-	}
+  @if (state() === 'empty') {
+  <section class="card state-card empty-card" aria-live="polite">
+    <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+    <h2>{{ 'INVENTORY.COUNTS.PLANS.LIST.EMPTY.TITLE' | translate }}</h2>
+    <p>{{ 'INVENTORY.COUNTS.PLANS.LIST.EMPTY.MESSAGE' | translate }}</p>
+    <a class="btn-primary" routerLink="/app/inventory/counts/plans/new">
+      {{ 'INVENTORY.COUNTS.PLANS.LIST.ACTION.NEW' | translate }}
+    </a>
+  </section>
+  }
 
-	@if (state() === 'ready') {
-		<section class="card table-card">
-			<div class="table-wrap">
-				<table class="data-table" aria-label="{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.ARIA' | translate }}">
-					<thead>
-						<tr>
-							<th scope="col">{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.HEADER.PLAN_NAME' | translate }}</th>
-							<th scope="col">{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.HEADER.LOCATION' | translate }}</th>
-							<th scope="col">{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.HEADER.ZONES_COUNT' | translate }}</th>
-							<th scope="col">{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.HEADER.SCHEDULED_DATE' | translate }}</th>
-							<th scope="col">{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.HEADER.STATUS' | translate }}</th>
-							<th scope="col">{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.HEADER.CREATED_AT' | translate }}</th>
-						</tr>
-					</thead>
-					<tbody>
-						@for (plan of plans(); track plan.planId) {
-							<tr>
-								<td>{{ plan.planName || ('INVENTORY.COUNTS.PLANS.LIST.TABLE.DEFAULT_PLAN_NAME' | translate) }}</td>
-								<td>{{ plan.locationId }}</td>
-								<td>{{ plan.zoneIds.length }}</td>
-								<td>{{ plan.scheduledDate | date: 'mediumDate' }}</td>
-								<td>
-									<span class="status-pill">{{ ('STATUS.' + plan.status) | translate }}</span>
-								</td>
-								<td>{{ plan.createdAt ? (plan.createdAt | date: 'short') : ('COMMON.EMPTY_VALUE' | translate) }}</td>
-							</tr>
-						}
-					</tbody>
-				</table>
-			</div>
-		</section>
-	}
+  @if (state() === 'ready') {
+  <section class="card table-card">
+    <div class="table-wrap">
+      <table class="data-table" aria-label="{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.ARIA' | translate }}">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.HEADER.PLAN_NAME' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.HEADER.LOCATION' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.HEADER.ZONES_COUNT' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.HEADER.SCHEDULED_DATE' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.HEADER.STATUS' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.COUNTS.PLANS.LIST.TABLE.HEADER.CREATED_AT' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (plan of plans(); track plan.planId) {
+          <tr>
+            <td>{{ plan.planName || ('INVENTORY.COUNTS.PLANS.LIST.TABLE.DEFAULT_PLAN_NAME' | translate) }}</td>
+            <td>{{ plan.locationId }}</td>
+            <td>{{ plan.zoneIds.length }}</td>
+            <td>{{ plan.scheduledDate | date: 'mediumDate' }}</td>
+            <td>
+              <span class="status-pill">{{ ('STATUS.' + plan.status) | translate }}</span>
+            </td>
+            <td>{{ plan.createdAt ? (plan.createdAt | date: 'short') : ('COMMON.EMPTY_VALUE' | translate) }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
 </main>

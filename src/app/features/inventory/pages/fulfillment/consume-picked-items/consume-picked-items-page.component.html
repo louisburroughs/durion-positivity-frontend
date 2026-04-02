@@ -1,101 +1,99 @@
 <main class="page" aria-labelledby="consume-picked-items-title">
-	<header class="page-header">
-		<h1 id="consume-picked-items-title" class="page-title">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TITLE' | translate }}</h1>
-	</header>
+  <header class="page-header">
+    <h1 id="consume-picked-items-title" class="page-title">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TITLE' |
+      translate }}</h1>
+  </header>
 
-	@switch (state()) {
-		@case ('loading') {
-			<section class="card state-card" aria-live="polite" aria-busy="true">
-				<span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
-				<p>{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.STATE.LOADING' | translate }}</p>
-			</section>
-		}
+  @switch (state()) {
+  @case ('loading') {
+  <section class="card state-card" aria-live="polite" aria-busy="true">
+    <span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
+    <p>{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.STATE.LOADING' | translate }}</p>
+  </section>
+  }
 
-		@case ('success') {
-			<section class="card state-card" aria-live="polite">
-				<span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
-				<h2>{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.SUCCESS.TITLE' | translate }}</h2>
-				<ul class="success-list" aria-label="{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.SUCCESS.ARIA' | translate }}">
-					@for (item of pickedItems(); track item.pickedItemId) {
-						@if (consumeQtys()[item.pickedItemId] > 0) {
-							<li>
-								{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.SUCCESS.LINE' | translate:{ sku: item.productSku, qty: consumeQtys()[item.pickedItemId] } }}
-							</li>
-						}
-					}
-				</ul>
-				<button class="btn-primary" type="button" (click)="reload()">
-					{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.ACTION.CONTINUE' | translate }}
-				</button>
-			</section>
-		}
+  @case ('success') {
+  <section class="card state-card" aria-live="polite">
+    <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+    <h2>{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.SUCCESS.TITLE' | translate }}</h2>
+    <ul class="success-list" aria-label="{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.SUCCESS.ARIA' | translate }}">
+      @for (item of pickedItems(); track item.pickedItemId) {
+      @if (consumeQtys()[item.pickedItemId] > 0) {
+      <li>
+        {{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.SUCCESS.LINE' | translate:{ sku: item.productSku, qty:
+        consumeQtys()[item.pickedItemId] } }}
+      </li>
+      }
+      }
+    </ul>
+    <button class="btn-primary" type="button" (click)="reload()">
+      {{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.ACTION.CONTINUE' | translate }}
+    </button>
+  </section>
+  }
 
-		@case ('error') {
-			<section class="card state-card" role="alert">
-				<span class="material-symbols-outlined" aria-hidden="true">error</span>
-				<p>{{ (errorKey() || 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.ERROR.LOAD') | translate }}</p>
-				<button class="btn-secondary" type="button" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
-			</section>
-		}
+  @case ('error') {
+  <section class="card state-card" role="alert">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ (errorKey() || 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.ERROR.LOAD') | translate }}</p>
+    <button class="btn-secondary" type="button" (click)="reload()">{{ 'COMMON.RETRY' | translate }}</button>
+  </section>
+  }
 
-		@default {
-			<section class="card form-card" [attr.aria-busy]="state() === 'submitting' ? true : null">
-				<div class="table-wrap">
-					<table class="data-table" aria-label="{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.ARIA' | translate }}">
-						<thead>
-							<tr>
-								<th scope="col">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.HEADER.SKU' | translate }}</th>
-								<th scope="col">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.HEADER.DESCRIPTION' | translate }}</th>
-								<th scope="col">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.HEADER.PICKED_QTY' | translate }}</th>
-								<th scope="col">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.HEADER.CONSUMED_QTY' | translate }}</th>
-								<th scope="col">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.HEADER.REMAINING_QTY' | translate }}</th>
-								<th scope="col">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.HEADER.CONSUME_QTY' | translate }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							@for (item of pickedItems(); track item.pickedItemId) {
-								<tr>
-									<td>{{ item.productSku }}</td>
-									<td>{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.VALUE.LINE_ITEM' | translate }}</td>
-									<td>{{ item.qtyPicked }}</td>
-									<td>{{ item.qtyConsumed }}</td>
-									<td>{{ item.qtyPicked - item.qtyConsumed }}</td>
-									<td>
-										<div class="qty-input-wrap">
-											<label class="sr-only" [for]="'consume-qty-' + item.pickedItemId">
-												{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.FIELD.CONSUME_QTY_SR' | translate:{ sku: item.productSku } }}
-											</label>
-											<input
-												[id]="'consume-qty-' + item.pickedItemId"
-												type="number"
-												min="0"
-												[max]="item.qtyPicked - item.qtyConsumed"
-												[value]="consumeQtys()[item.pickedItemId]"
-												(input)="setConsumeQty(item.pickedItemId, +$any($event.target).value)"
-												[attr.disabled]="state() === 'submitting' ? true : null"
-											/>
-											<button
-												class="btn-secondary max-btn"
-												type="button"
-												(click)="setConsumeQty(item.pickedItemId, item.qtyPicked - item.qtyConsumed)"
-												[attr.disabled]="state() === 'submitting' ? true : null"
-											>
-												{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.ACTION.MAX' | translate }}
-											</button>
-										</div>
-									</td>
-								</tr>
-							}
-						</tbody>
-					</table>
-				</div>
+  @default {
+  <section class="card form-card" [attr.aria-busy]="state() === 'submitting' ? true : null">
+    <div class="table-wrap">
+      <table class="data-table" aria-label="{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.ARIA' | translate }}">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.HEADER.SKU' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.HEADER.DESCRIPTION' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.HEADER.PICKED_QTY' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.HEADER.CONSUMED_QTY' | translate }}
+            </th>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.HEADER.REMAINING_QTY' | translate }}
+            </th>
+            <th scope="col">{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.HEADER.CONSUME_QTY' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of pickedItems(); track item.pickedItemId) {
+          <tr>
+            <td>{{ item.productSku }}</td>
+            <td>{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.TABLE.VALUE.LINE_ITEM' | translate }}</td>
+            <td>{{ item.qtyPicked }}</td>
+            <td>{{ item.qtyConsumed }}</td>
+            <td>{{ item.qtyPicked - item.qtyConsumed }}</td>
+            <td>
+              <div class="qty-input-wrap">
+                <label class="sr-only" [for]="'consume-qty-' + item.pickedItemId">
+                  {{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.FIELD.CONSUME_QTY_SR' | translate:{ sku:
+                  item.productSku } }}
+                </label>
+                <input [id]="'consume-qty-' + item.pickedItemId" type="number" min="0"
+                  [max]="item.qtyPicked - item.qtyConsumed" [value]="consumeQtys()[item.pickedItemId]"
+                  (input)="setConsumeQty(item.pickedItemId, +$any($event.target).value)"
+                  [attr.disabled]="state() === 'submitting' ? true : null" />
+                <button class="btn-secondary max-btn" type="button"
+                  (click)="setConsumeQty(item.pickedItemId, item.qtyPicked - item.qtyConsumed)"
+                  [attr.disabled]="state() === 'submitting' ? true : null">
+                  {{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.ACTION.MAX' | translate }}
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
 
-				<div class="action-bar">
-					<button class="btn-primary" type="button" (click)="submit()" [disabled]="!canSubmit() || state() === 'submitting'">
-						{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.ACTION.SUBMIT' | translate }}
-					</button>
-				</div>
-			</section>
-		}
-	}
+    <div class="action-bar">
+      <button class="btn-primary" type="button" (click)="submit()"
+        [disabled]="!canSubmit() || state() === 'submitting'">
+        {{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.ACTION.SUBMIT' | translate }}
+      </button>
+    </div>
+  </section>
+  }
+  }
 </main>

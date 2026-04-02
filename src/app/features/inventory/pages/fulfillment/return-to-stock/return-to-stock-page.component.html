@@ -1,123 +1,115 @@
 <main class="page" aria-labelledby="return-to-stock-title">
-	<header class="page-header">
-		<h1 id="return-to-stock-title" class="page-title">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.TITLE' | translate }}</h1>
-	</header>
+  <header class="page-header">
+    <h1 id="return-to-stock-title" class="page-title">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.TITLE' | translate }}
+    </h1>
+  </header>
 
-	@if (state() === 'loading') {
-		<section class="card state-card" aria-live="polite" aria-busy="true">
-			<span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
-			<p>{{ 'COMMON.LOADING' | translate }}</p>
-		</section>
-	}
+  @if (state() === 'loading') {
+  <section class="card state-card" aria-live="polite" aria-busy="true">
+    <span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
+    <p>{{ 'COMMON.LOADING' | translate }}</p>
+  </section>
+  }
 
-	@if (state() === 'success') {
-		<section class="card state-card" aria-live="polite">
-			<span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
-			<h2>{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.SUCCESS.TITLE' | translate }}</h2>
-			<p>
-				{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.SUCCESS.RETURN_ID' | translate }}:
-				{{ submitResult()?.returnId || ('COMMON.EMPTY_VALUE' | translate) }}
-			</p>
-		</section>
-	}
+  @if (state() === 'success') {
+  <section class="card state-card" aria-live="polite">
+    <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+    <h2>{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.SUCCESS.TITLE' | translate }}</h2>
+    <p>
+      {{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.SUCCESS.RETURN_ID' | translate }}:
+      {{ submitResult()?.returnId || ('COMMON.EMPTY_VALUE' | translate) }}
+    </p>
+  </section>
+  }
 
-	@if (state() === 'ready' || state() === 'submitting' || state() === 'error') {
-		<section class="card form-card" [attr.aria-busy]="state() === 'submitting' ? true : null">
-			<form (submit)="$event.preventDefault(); submit()" novalidate>
-				@if (state() === 'error' && errorKey()) {
-					<p role="alert" class="error-text">{{ errorKey() | translate }}</p>
-				}
+  @if (state() === 'ready' || state() === 'submitting' || state() === 'error') {
+  <section class="card form-card" [attr.aria-busy]="state() === 'submitting' ? true : null">
+    <form (submit)="$event.preventDefault(); submit()" novalidate>
+      @if (state() === 'error' && errorKey()) {
+      <p role="alert" class="error-text">{{ errorKey() | translate }}</p>
+      }
 
-				<div class="filters-grid">
-					<div class="field-row">
-						<label for="return-location">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.LOCATION' | translate }}</label>
-						<select
-							id="return-location"
-							[value]="selectedLocationId() || ''"
-							(change)="selectedLocationId.set($any($event.target).value || null)"
-							[attr.disabled]="state() === 'submitting' ? true : null"
-						>
-							<option value="">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.LOCATION_PLACEHOLDER' | translate }}</option>
-							@for (location of locations(); track location.locationId) {
-								<option [value]="location.locationId">{{ location.name }}</option>
-							}
-						</select>
-					</div>
+      <div class="filters-grid">
+        <div class="field-row">
+          <label for="return-location">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.LOCATION' | translate }}</label>
+          <select id="return-location" [value]="selectedLocationId() || ''"
+            (change)="selectedLocationId.set($any($event.target).value || null)"
+            [attr.disabled]="state() === 'submitting' ? true : null">
+            <option value="">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.LOCATION_PLACEHOLDER' | translate }}
+            </option>
+            @for (location of locations(); track location.locationId) {
+            <option [value]="location.locationId">{{ location.name }}</option>
+            }
+          </select>
+        </div>
 
-					@if (storageLocations().length > 0) {
-						<div class="field-row">
-							<label for="return-storage-location">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.STORAGE_LOCATION' | translate }}</label>
-							<select
-								id="return-storage-location"
-								[value]="selectedStorageLocationId() || ''"
-								(change)="selectedStorageLocationId.set($any($event.target).value || null)"
-								[attr.disabled]="state() === 'submitting' ? true : null"
-							>
-								<option value="">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.STORAGE_LOCATION_PLACEHOLDER' | translate }}</option>
-								@for (storage of storageLocations(); track storage.storageLocationId) {
-									<option [value]="storage.storageLocationId">{{ storage.name }}</option>
-								}
-							</select>
-						</div>
-					}
+        @if (storageLocations().length > 0) {
+        <div class="field-row">
+          <label for="return-storage-location">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.STORAGE_LOCATION' |
+            translate }}</label>
+          <select id="return-storage-location" [value]="selectedStorageLocationId() || ''"
+            (change)="selectedStorageLocationId.set($any($event.target).value || null)"
+            [attr.disabled]="state() === 'submitting' ? true : null">
+            <option value="">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.STORAGE_LOCATION_PLACEHOLDER' | translate
+              }}</option>
+            @for (storage of storageLocations(); track storage.storageLocationId) {
+            <option [value]="storage.storageLocationId">{{ storage.name }}</option>
+            }
+          </select>
+        </div>
+        }
 
-					<div class="field-row">
-						<label for="return-reason-code">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.REASON_CODE' | translate }}</label>
-						<select
-							id="return-reason-code"
-							[value]="selectedReasonCode() || ''"
-							(change)="selectedReasonCode.set($any($event.target).value || null)"
-							[attr.disabled]="state() === 'submitting' ? true : null"
-						>
-							<option value="">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.REASON_CODE_PLACEHOLDER' | translate }}</option>
-							@for (reasonCode of reasonCodes(); track reasonCode.code) {
-								<option [value]="reasonCode.code">{{ reasonCode.label || reasonCode.code }}</option>
-							}
-						</select>
-					</div>
-				</div>
+        <div class="field-row">
+          <label for="return-reason-code">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.REASON_CODE' | translate
+            }}</label>
+          <select id="return-reason-code" [value]="selectedReasonCode() || ''"
+            (change)="selectedReasonCode.set($any($event.target).value || null)"
+            [attr.disabled]="state() === 'submitting' ? true : null">
+            <option value="">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.REASON_CODE_PLACEHOLDER' | translate }}
+            </option>
+            @for (reasonCode of reasonCodes(); track reasonCode.code) {
+            <option [value]="reasonCode.code">{{ reasonCode.label || reasonCode.code }}</option>
+            }
+          </select>
+        </div>
+      </div>
 
-				<div class="table-wrap">
-					<table class="data-table" aria-label="{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.TABLE.ARIA' | translate }}">
-						<thead>
-							<tr>
-								<th scope="col">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.TABLE.HEADER.PRODUCT' | translate }}</th>
-								<th scope="col">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.TABLE.HEADER.MAX_QTY' | translate }}</th>
-								<th scope="col">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.TABLE.HEADER.RETURN_QTY' | translate }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							@for (item of items(); track item.workorderLineId) {
-								<tr>
-									<td>{{ item.productSku }}</td>
-									<td>{{ item.maxReturnableQty }}</td>
-									<td>
-										<label class="sr-only" for="return-qty-{{ item.workorderLineId }}">
-											{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.RETURN_QTY_SR' | translate:{ sku: item.productSku } }}
-										</label>
-										<input
-											id="return-qty-{{ item.workorderLineId }}"
-											type="number"
-											min="0"
-											[max]="item.maxReturnableQty"
-											[value]="returnQtys()[item.workorderLineId] ?? 0"
-											(input)="updateReturnQty(item.workorderLineId, +$any($event.target).value)"
-											[attr.disabled]="state() === 'submitting' ? true : null"
-										/>
-									</td>
-								</tr>
-							}
-						</tbody>
-					</table>
-				</div>
+      <div class="table-wrap">
+        <table class="data-table" aria-label="{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.TABLE.ARIA' | translate }}">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.TABLE.HEADER.PRODUCT' | translate }}</th>
+              <th scope="col">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.TABLE.HEADER.MAX_QTY' | translate }}</th>
+              <th scope="col">{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.TABLE.HEADER.RETURN_QTY' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of items(); track item.workorderLineId) {
+            <tr>
+              <td>{{ item.productSku }}</td>
+              <td>{{ item.maxReturnableQty }}</td>
+              <td>
+                <label class="sr-only" for="return-qty-{{ item.workorderLineId }}">
+                  {{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.RETURN_QTY_SR' | translate:{ sku: item.productSku } }}
+                </label>
+                <input id="return-qty-{{ item.workorderLineId }}" type="number" min="0" [max]="item.maxReturnableQty"
+                  [value]="returnQtys()[item.workorderLineId] ?? 0"
+                  (input)="updateReturnQty(item.workorderLineId, +$any($event.target).value)"
+                  [attr.disabled]="state() === 'submitting' ? true : null" />
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
 
-				<div class="action-bar">
-					<button class="btn-primary" type="submit" [disabled]="!canSubmit() || state() === 'submitting'">
-						{{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ACTION.SUBMIT' | translate }}
-					</button>
-					<a class="btn-secondary" href="/app/inventory/fulfillment">{{ 'COMMON.CANCEL' | translate }}</a>
-				</div>
-			</form>
-		</section>
-	}
+      <div class="action-bar">
+        <button class="btn-primary" type="submit" [disabled]="!canSubmit() || state() === 'submitting'">
+          {{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ACTION.SUBMIT' | translate }}
+        </button>
+        <a class="btn-secondary" href="/app/inventory/fulfillment">{{ 'COMMON.CANCEL' | translate }}</a>
+      </div>
+    </form>
+  </section>
+  }
 </main>

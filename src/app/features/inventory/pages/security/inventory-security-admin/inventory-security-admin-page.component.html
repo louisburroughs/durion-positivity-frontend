@@ -1,73 +1,69 @@
 <main class="page" aria-labelledby="inventory-permissions-title">
-	<header class="page-header">
-		<h1 id="inventory-permissions-title" class="page-title">{{ 'INVENTORY.SECURITY.PERMISSIONS.TITLE' | translate }}</h1>
-		<p class="page-subtitle">{{ 'INVENTORY.SECURITY.PERMISSIONS.SUBTITLE' | translate }}</p>
-	</header>
+  <header class="page-header">
+    <h1 id="inventory-permissions-title" class="page-title">{{ 'INVENTORY.SECURITY.PERMISSIONS.TITLE' | translate }}
+    </h1>
+    <p class="page-subtitle">{{ 'INVENTORY.SECURITY.PERMISSIONS.SUBTITLE' | translate }}</p>
+  </header>
 
-	@switch (state()) {
-		@case ('loading') {
-			<section class="card state-card" aria-live="polite" aria-busy="true">
-				<span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
-				<p>{{ 'INVENTORY.SECURITY.PERMISSIONS.STATE.LOADING' | translate }}</p>
-			</section>
-		}
+  @switch (state()) {
+  @case ('loading') {
+  <section class="card state-card" aria-live="polite" aria-busy="true">
+    <span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
+    <p>{{ 'INVENTORY.SECURITY.PERMISSIONS.STATE.LOADING' | translate }}</p>
+  </section>
+  }
 
-		@case ('error') {
-			<section class="card state-card" role="alert">
-				<span class="material-symbols-outlined" aria-hidden="true">error</span>
-				<p>{{ (errorKey() || 'INVENTORY.SECURITY.PERMISSIONS.ERROR.LOAD') | translate }}</p>
-			</section>
-		}
+  @case ('error') {
+  <section class="card state-card" role="alert">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ (errorKey() || 'INVENTORY.SECURITY.PERMISSIONS.ERROR.LOAD') | translate }}</p>
+  </section>
+  }
 
-		@case ('ready') {
-			<section class="card table-card">
-				<div class="filter-row">
-					<label for="permission-filter" class="sr-only">{{ 'INVENTORY.SECURITY.PERMISSIONS.FILTER_LABEL' | translate }}</label>
-					<input
-						id="permission-filter"
-						type="search"
-						placeholder="{{ 'INVENTORY.SECURITY.PERMISSIONS.FILTER_PLACEHOLDER' | translate }}"
-						(input)="setFilterQuery($any($event.target).value)"
-						[value]="filterQuery()"
-					/>
-				</div>
+  @case ('ready') {
+  <section class="card table-card">
+    <div class="filter-row">
+      <label for="permission-filter" class="sr-only">{{ 'INVENTORY.SECURITY.PERMISSIONS.FILTER_LABEL' | translate
+        }}</label>
+      <input id="permission-filter" type="search"
+        placeholder="{{ 'INVENTORY.SECURITY.PERMISSIONS.FILTER_PLACEHOLDER' | translate }}"
+        (input)="setFilterQuery($any($event.target).value)" [value]="filterQuery()" />
+    </div>
 
-				@if (filteredPermissions().length === 0) {
-					<p class="empty-state" aria-live="polite">{{ 'INVENTORY.SECURITY.PERMISSIONS.STATE.EMPTY' | translate }}</p>
-				} @else {
-					<div class="table-wrap">
-						<table class="data-table" [attr.aria-label]="'INVENTORY.SECURITY.PERMISSIONS.TABLE.ARIA' | translate">
-							<thead>
-								<tr>
-									<th scope="col">{{ 'INVENTORY.SECURITY.PERMISSIONS.TABLE.HEADER.PERMISSION' | translate }}</th>
-									<th scope="col">{{ 'INVENTORY.SECURITY.PERMISSIONS.TABLE.HEADER.DESCRIPTION' | translate }}</th>
-									<th scope="col">{{ 'INVENTORY.SECURITY.PERMISSIONS.TABLE.HEADER.CATEGORY' | translate }}</th>
-									<th scope="col">{{ 'INVENTORY.SECURITY.PERMISSIONS.TABLE.HEADER.GRANTED' | translate }}</th>
-								</tr>
-							</thead>
-							<tbody>
-								@for (perm of filteredPermissions(); track perm.permissionKey) {
-									<tr>
-										<td><code>{{ perm.permissionKey }}</code></td>
-										<td>{{ (perm.description || 'COMMON.EMPTY_VALUE') | translate }}</td>
-										<td>{{ ('INVENTORY.SECURITY.CATEGORY.' + (perm.category | uppercase)) | translate }}</td>
-										<td>
-											<span
-												[class.granted]="perm.isCurrentUserGranted"
-												[class.not-granted]="!perm.isCurrentUserGranted"
-												[attr.aria-label]="(perm.isCurrentUserGranted ? 'INVENTORY.SECURITY.PERMISSIONS.VALUE.GRANTED' : 'INVENTORY.SECURITY.PERMISSIONS.VALUE.NOT_GRANTED') | translate"
-											>
-												<span aria-hidden="true">{{ perm.isCurrentUserGranted ? '✓' : '—' }}</span>
-												<span class="sr-only">{{ (perm.isCurrentUserGranted ? 'INVENTORY.SECURITY.PERMISSIONS.VALUE.GRANTED' : 'INVENTORY.SECURITY.PERMISSIONS.VALUE.NOT_GRANTED') | translate }}</span>
-											</span>
-										</td>
-									</tr>
-								}
-							</tbody>
-						</table>
-					</div>
-				}
-			</section>
-		}
-	}
+    @if (filteredPermissions().length === 0) {
+    <p class="empty-state" aria-live="polite">{{ 'INVENTORY.SECURITY.PERMISSIONS.STATE.EMPTY' | translate }}</p>
+    } @else {
+    <div class="table-wrap">
+      <table class="data-table" [attr.aria-label]="'INVENTORY.SECURITY.PERMISSIONS.TABLE.ARIA' | translate">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'INVENTORY.SECURITY.PERMISSIONS.TABLE.HEADER.PERMISSION' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.SECURITY.PERMISSIONS.TABLE.HEADER.DESCRIPTION' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.SECURITY.PERMISSIONS.TABLE.HEADER.CATEGORY' | translate }}</th>
+            <th scope="col">{{ 'INVENTORY.SECURITY.PERMISSIONS.TABLE.HEADER.GRANTED' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (perm of filteredPermissions(); track perm.permissionKey) {
+          <tr>
+            <td><code>{{ perm.permissionKey }}</code></td>
+            <td>{{ (perm.description || 'COMMON.EMPTY_VALUE') | translate }}</td>
+            <td>{{ ('INVENTORY.SECURITY.CATEGORY.' + (perm.category | uppercase)) | translate }}</td>
+            <td>
+              <span [class.granted]="perm.isCurrentUserGranted" [class.not-granted]="!perm.isCurrentUserGranted"
+                [attr.aria-label]="(perm.isCurrentUserGranted ? 'INVENTORY.SECURITY.PERMISSIONS.VALUE.GRANTED' : 'INVENTORY.SECURITY.PERMISSIONS.VALUE.NOT_GRANTED') | translate">
+                <span aria-hidden="true">{{ perm.isCurrentUserGranted ? '✓' : '—' }}</span>
+                <span class="sr-only">{{ (perm.isCurrentUserGranted ? 'INVENTORY.SECURITY.PERMISSIONS.VALUE.GRANTED' :
+                  'INVENTORY.SECURITY.PERMISSIONS.VALUE.NOT_GRANTED') | translate }}</span>
+              </span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+  }
+  }
 </main>

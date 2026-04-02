@@ -34,14 +34,14 @@ function buildRoute(workorderId: string | null) {
 }
 
 async function setupPickList(workorderId: string | null = 'wo-001') {
-    await TestBed.configureTestingModule({
-      imports: [PickListPageComponent, TranslateModule.forRoot()],
-      providers: [
-        provideRouter([]),
-        { provide: WorkexecService, useValue: mockWorkexecService },
-        { provide: ActivatedRoute, useValue: buildRoute(workorderId) },
-      ],
-    }).compileComponents();
+  await TestBed.configureTestingModule({
+    imports: [PickListPageComponent, TranslateModule.forRoot()],
+    providers: [
+      provideRouter([]),
+      { provide: WorkexecService, useValue: mockWorkexecService },
+      { provide: ActivatedRoute, useValue: buildRoute(workorderId) },
+    ],
+  }).compileComponents();
   return TestBed.createComponent(PickListPageComponent).componentInstance;
 }
 

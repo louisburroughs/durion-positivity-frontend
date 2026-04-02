@@ -1,87 +1,87 @@
 :host {
-	display: block;
+  display: block;
 }
 
 .page {
-	background: var(--themeBackground);
-	color: var(--currentTextColor);
-	font-family: 'Inter', var(--font-body);
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+  font-family: 'Inter', var(--font-body);
 }
 
 .page-title {
-	font-family: 'Public Sans', var(--font-body);
+  font-family: 'Public Sans', var(--font-body);
 }
 
 .form-card,
 .state-card {
-	background: var(--cardBackground);
-	border-radius: 18px;
-	box-shadow: var(--shadow-card);
+  background: var(--cardBackground);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
 }
 
 .partial-warning {
-	margin: 0 0 0.8rem;
-	padding: 0.7rem 0.85rem;
-	border-radius: 12px;
-	background: color-mix(in srgb, var(--brand-primary) 14%, var(--cardBackground));
-	color: var(--currentTextColor);
+  margin: 0 0 0.8rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--brand-primary) 14%, var(--cardBackground));
+  color: var(--currentTextColor);
 }
 
 .option-set {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	display: grid;
-	gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 0.7rem;
 }
 
 .option-set legend {
-	font-weight: 600;
-	margin-bottom: 0.6rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
 }
 
 .option-card {
-	display: flex;
-	gap: 0.65rem;
-	align-items: flex-start;
-	padding: 0.8rem;
-	border-radius: 14px;
-	background: color-mix(in srgb, var(--themeBackground) 35%, var(--cardBackground));
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.8rem;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--themeBackground) 35%, var(--cardBackground));
 }
 
 .option-card.selected {
-	background: color-mix(in srgb, var(--brand-primary) 16%, var(--cardBackground));
+  background: color-mix(in srgb, var(--brand-primary) 16%, var(--cardBackground));
 }
 
 .option-card label {
-	display: grid;
-	gap: 0.2rem;
+  display: grid;
+  gap: 0.2rem;
 }
 
 .option-label {
-	font-weight: 600;
+  font-weight: 600;
 }
 
 .action-row {
-	display: flex;
-	gap: 0.75rem;
-	flex-wrap: wrap;
-	margin-top: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
 }
 
 .state-card {
-	display: grid;
-	place-items: center;
-	text-align: center;
-	gap: 0.6rem;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 0.6rem;
 }
 
 .spinner {
-	animation: spin 1.1s linear infinite;
+  animation: spin 1.1s linear infinite;
 }
 
 @keyframes spin {
-	to {
-		transform: rotate(360deg);
-	}
+  to {
+    transform: rotate(360deg);
+  }
 }
