@@ -15,19 +15,11 @@
           [attr.placeholder]="'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.FIELD.ASN_ID_PLACEHOLDER' | translate"
           [attr.disabled]="state() === 'loading' ? true : null" />
       </div>
-
-      <div class="field-group">
-        <label for="asn-shipment-ref-input">{{ 'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.FIELD.SHIPMENT_REF' |
-          translate }}</label>
-        <input id="asn-shipment-ref-input" #shipmentRefInput type="text"
-          [attr.placeholder]="'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.FIELD.SHIPMENT_REF_PLACEHOLDER' | translate"
-          [attr.disabled]="state() === 'loading' ? true : null" />
-      </div>
     </div>
 
     <div class="action-bar">
-      <button class="btn-primary" type="button" (click)="loadAsn(asnIdInput.value || shipmentRefInput.value)"
-        [disabled]="state() === 'loading' || !(asnIdInput.value || shipmentRefInput.value)">
+      <button class="btn-primary" type="button" (click)="loadAsn(asnIdInput.value)"
+        [disabled]="state() === 'loading' || !asnIdInput.value">
         {{ 'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.ACTION.LOAD' | translate }}
       </button>
       <button type="button" class="tertiary-action" (click)="switchToFallback()">

@@ -75,7 +75,6 @@ export class CrossDockReceivePageComponent {
 
   beginReview(): void {
     if (!this.hasValidSubmissionInputs()) {
-      this.state.set('error');
       this.errorKey.set('INVENTORY.RECEIVING.CROSS_DOCK.ERROR.VALIDATION');
       return;
     }

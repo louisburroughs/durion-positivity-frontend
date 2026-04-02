@@ -10,7 +10,7 @@
   </section>
   }
 
-  @if (state() === 'error' && errorKey()) {
+  @if (errorKey()) {
   <section class="card state-card" role="alert">
     <span class="material-symbols-outlined" aria-hidden="true">error</span>
     <p>{{ errorKey() | translate }}</p>

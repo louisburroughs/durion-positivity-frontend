@@ -50,8 +50,8 @@ export class ReceiveIntoStagingComponent {
       return;
     }
 
-    this.asnMode.set('fallback');
     if (documentId && documentType) {
+      this.asnMode.set('fallback');
       this.loadDocument(documentId, documentType);
     }
   }

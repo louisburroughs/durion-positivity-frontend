@@ -26,6 +26,7 @@ import { WorkexecService } from './workexec.service';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { environment } from '../../../../environments/environment';
 import {
+  ConsumePickedItemsRequest,
   ConsumptionResult,
   EstimateListItem,
   FinalizeInvoiceResponse,
@@ -484,7 +485,7 @@ describe('WorkexecService', () => {
     });
 
     it('consumePickedItems — POST /workexec/v1/workorders/{workorderId}/picked-items/consume', () => {
-      const consumeReq = { lines: [{ pickedItemId: 'pi-001', quantity: 3 }] };
+      const consumeReq: ConsumePickedItemsRequest = { lines: [{ pickedItemId: 'pi-001', quantity: 3 }] };
       const consumeResult: ConsumptionResult = {
         referenceId: 'ref-001',
         consumedLineCount: 1,

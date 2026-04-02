@@ -140,7 +140,7 @@ export class InventorySecurityAdminPageComponent {
   }
 
   private getPermissionDescriptionKey(permissionKey: string): string {
-    const suffix = permissionKey.split('.')[1]?.toUpperCase();
+    const suffix = permissionKey.split('.').at(-1)?.toUpperCase();
     if (!suffix) {
       return 'COMMON.EMPTY_VALUE';
     }
