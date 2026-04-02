@@ -11,7 +11,7 @@
     <div class="asn-field-grid">
       <div class="field-group">
         <label for="asn-id-input">{{ 'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.FIELD.ASN_ID' | translate }}</label>
-        <input id="asn-id-input" #asnIdInput type="text"
+        <input id="asn-id-input" #asnIdInput type="text" [value]="asnId() ?? ''"
           [attr.placeholder]="'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.FIELD.ASN_ID_PLACEHOLDER' | translate"
           [attr.disabled]="state() === 'loading' ? true : null" />
       </div>
@@ -148,7 +148,7 @@
                 {{ 'INVENTORY.RECEIVING.LINE.ACTUAL_QTY_LABEL' | translate }} {{ line.productSku }}
               </label>
               <input id="line-qty-{{ line.receivingLineId }}" type="number" class="input-underline qty-input"
-                [value]="lineQuantities()[line.receivingLineId] ?? line.expectedQty" min="0"
+                [value]="lineQuantities()[line.receivingLineId]" min="0"
                 (input)="updateLineQty(line.receivingLineId, +$any($event.target).value)" />
               } @else {
               <span class="badge badge--neutral">

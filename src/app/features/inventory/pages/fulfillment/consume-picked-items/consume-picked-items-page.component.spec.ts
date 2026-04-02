@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
@@ -44,6 +44,20 @@ async function setupConsumeItems(workorderId: string | null = 'wo-001') {
     ],
   }).compileComponents();
   return TestBed.createComponent(ConsumePickedItemsPageComponent).componentInstance;
+}
+
+async function setupConsumeItemsFixture(
+  workorderId: string | null = 'wo-001',
+): Promise<ComponentFixture<ConsumePickedItemsPageComponent>> {
+  await TestBed.configureTestingModule({
+    imports: [ConsumePickedItemsPageComponent, TranslateModule.forRoot()],
+    providers: [
+      provideRouter([]),
+      { provide: WorkexecService, useValue: mockWorkexecService },
+      { provide: ActivatedRoute, useValue: buildRoute(workorderId) },
+    ],
+  }).compileComponents();
+  return TestBed.createComponent(ConsumePickedItemsPageComponent);
 }
 
 describe('ConsumePickedItemsPageComponent', () => {
@@ -131,5 +145,16 @@ describe('ConsumePickedItemsPageComponent', () => {
     expect(component.errorKey()).toBe(
       'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.ERROR.LOAD',
     );
+  });
+
+  it('renders consume qty input default as 0 when no quantity is preset', async () => {
+    mockWorkexecService.getPickedItems.mockReturnValue(of(pickedItemsFixture));
+    const fixture = await setupConsumeItemsFixture();
+
+    fixture.detectChanges();
+
+    const input: HTMLInputElement | null = fixture.nativeElement.querySelector('#consume-qty-pi-001');
+    expect(input).not.toBeNull();
+    expect(input?.value).toBe('0');
   });
 });

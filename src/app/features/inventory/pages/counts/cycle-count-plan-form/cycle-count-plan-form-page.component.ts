@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { InventoryDomainService } from '../../../services/inventory.service';
 import { InventoryCycleCountService } from '../../../services/inventory-cycle-count.service';
 import { LocationRef, LocationZone } from '../../../models/inventory.models';
@@ -12,7 +12,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'error';
 @Component({
   selector: 'app-cycle-count-plan-form-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, RouterLink],
   templateUrl: './cycle-count-plan-form-page.component.html',
   styleUrl: './cycle-count-plan-form-page.component.css',
 })
@@ -94,6 +94,16 @@ export class CycleCountPlanFormPageComponent {
     this.zoneIds.set(zoneIds);
   }
 
+  onZoneToggle(zoneId: string, checked: boolean): void {
+    const current = this.zoneIds();
+    if (checked) {
+      this.zoneIds.set(current.includes(zoneId) ? current : [...current, zoneId]);
+      return;
+    }
+
+    this.zoneIds.set(current.filter(id => id !== zoneId));
+  }
+
   submitPlan(): void {
     if (!this.canSubmit()) {
       this.state.set('error');
@@ -128,12 +138,12 @@ export class CycleCountPlanFormPageComponent {
       return false;
     }
 
-    const selectedDate = new Date(dateInput);
-    if (Number.isNaN(selectedDate.getTime())) {
+    const parts = dateInput.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) {
       return false;
     }
 
-    selectedDate.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 

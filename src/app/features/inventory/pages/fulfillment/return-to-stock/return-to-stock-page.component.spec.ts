@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
@@ -9,6 +9,7 @@ import {
   ReturnReasonCode,
   ReturnToStockResult,
   ReturnableItem,
+  StorageLocation,
 } from '../../../models/inventory.models';
 
 const mockInventoryService = {
@@ -37,6 +38,15 @@ const locationsFixture: LocationRef[] = [
   { locationId: 'loc-01', name: 'Main Warehouse', status: 'ACTIVE' },
 ];
 
+const storageLocationsFixture: StorageLocation[] = [
+  {
+    storageLocationId: 'sloc-01',
+    locationId: 'loc-02',
+    name: 'Aisle A Bin 1',
+    status: 'ACTIVE',
+  },
+];
+
 const returnResultFixture: ReturnToStockResult = {
   returnId: 'ret-001',
   workorderId: 'wo-001',
@@ -63,6 +73,24 @@ async function setupReturnToStock(workorderId: string | null = 'wo-001') {
     ],
   }).compileComponents();
   return TestBed.createComponent(ReturnToStockPageComponent).componentInstance;
+}
+
+async function setupReturnToStockFixture(
+  workorderId: string | null = 'wo-001',
+): Promise<ComponentFixture<ReturnToStockPageComponent>> {
+  mockInventoryService.getReturnableItems.mockReturnValue(of(returnableItemsFixture));
+  mockInventoryService.getReasonCodes.mockReturnValue(of(reasonCodesFixture));
+  mockInventoryService.getLocations.mockReturnValue(of(locationsFixture));
+
+  await TestBed.configureTestingModule({
+    imports: [ReturnToStockPageComponent, TranslateModule.forRoot()],
+    providers: [
+      provideRouter([]),
+      { provide: InventoryDomainService, useValue: mockInventoryService },
+      { provide: ActivatedRoute, useValue: buildRoute(workorderId) },
+    ],
+  }).compileComponents();
+  return TestBed.createComponent(ReturnToStockPageComponent);
 }
 
 describe('ReturnToStockPageComponent', () => {
@@ -140,5 +168,30 @@ describe('ReturnToStockPageComponent', () => {
 
     expect(component.state()).toBe('success');
     expect(component.submitResult()).toEqual(returnResultFixture);
+  });
+
+  it('recovers from storage-location load error on subsequent successful location change', async () => {
+    mockInventoryService.getStorageLocations.mockImplementation((locationId: string) => (
+      locationId === 'loc-01'
+        ? throwError(() => new Error('storage failed'))
+        : of(storageLocationsFixture)
+    ));
+    const fixture = await setupReturnToStockFixture();
+    const component = fixture.componentInstance;
+
+    fixture.detectChanges();
+
+    component.selectedLocationId.set('loc-01');
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.STORAGE_LOCATIONS');
+
+    component.selectedLocationId.set('loc-02');
+    fixture.detectChanges();
+
+    expect(component.storageLocations()).toEqual(storageLocationsFixture);
+    expect(component.errorKey()).toBeNull();
+    expect(component.state()).toBe('ready');
   });
 });

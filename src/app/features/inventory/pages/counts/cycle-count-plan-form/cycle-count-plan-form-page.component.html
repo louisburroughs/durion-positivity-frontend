@@ -39,7 +39,7 @@
             @for (zone of zones(); track zone.zoneId) {
             <div class="zone-option">
               <input type="checkbox" id="zone-{{ zone.zoneId }}" [checked]="zoneIds().includes(zone.zoneId)"
-                (change)="onZoneSelectionChange($any($event.target).checked ? [...zoneIds(), zone.zoneId] : zoneIds().filter(id => id !== zone.zoneId))"
+                (change)="onZoneToggle(zone.zoneId, $any($event.target).checked)"
                 [attr.disabled]="state() === 'submitting' ? true : null" />
               <label for="zone-{{ zone.zoneId }}">{{ zone.zoneName }}</label>
             </div>
@@ -68,7 +68,7 @@
           <button class="btn-primary" type="submit" [disabled]="!canSubmit() || state() === 'submitting'">
             {{ 'INVENTORY.COUNTS.PLAN_FORM.ACTION.SUBMIT' | translate }}
           </button>
-          <a class="btn-secondary" href="/app/inventory/counts/plans">{{ 'COMMON.CANCEL' | translate }}</a>
+          <a class="btn-secondary" routerLink="/app/inventory/counts/plans">{{ 'COMMON.CANCEL' | translate }}</a>
         </div>
       </fieldset>
     </form>

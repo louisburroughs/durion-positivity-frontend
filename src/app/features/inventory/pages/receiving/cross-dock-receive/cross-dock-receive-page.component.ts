@@ -51,6 +51,7 @@ export class CrossDockReceivePageComponent {
 
     if (!normalizedQuery) {
       this.workorders.set([]);
+      this.errorKey.set(null);
       this.state.set('idle');
       return;
     }
@@ -124,5 +125,11 @@ export class CrossDockReceivePageComponent {
       && this.workorderLineId().trim().length > 0
       && Number.isFinite(this.quantity())
       && this.quantity() > 0;
+  }
+
+  resetSearch(): void {
+    this.errorKey.set(null);
+    this.workorders.set([]);
+    this.state.set('idle');
   }
 }

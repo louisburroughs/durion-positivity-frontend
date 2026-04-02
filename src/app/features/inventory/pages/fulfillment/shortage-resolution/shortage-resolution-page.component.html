@@ -62,7 +62,7 @@
         [disabled]="!selectedOptionId() || state() === 'submitting'">
         {{ 'INVENTORY.FULFILLMENT.SHORTAGE_RESOLUTION.ACTION.CONFIRM' | translate }}
       </button>
-      <a class="btn-secondary" href="/app/inventory/fulfillment">{{ 'COMMON.CANCEL' | translate }}</a>
+      <a class="btn-secondary" routerLink="/app/inventory/fulfillment">{{ 'COMMON.CANCEL' | translate }}</a>
     </div>
   </section>
   }

@@ -18,10 +18,10 @@
     <h2>{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.SUCCESS.TITLE' | translate }}</h2>
     <ul class="success-list" aria-label="{{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.SUCCESS.ARIA' | translate }}">
       @for (item of pickedItems(); track item.pickedItemId) {
-      @if (consumeQtys()[item.pickedItemId] > 0) {
+      @if ((consumeQtys()[item.pickedItemId] ?? 0) > 0) {
       <li>
         {{ 'INVENTORY.FULFILLMENT.CONSUME_PICKED_ITEMS.SUCCESS.LINE' | translate:{ sku: item.productSku, qty:
-        consumeQtys()[item.pickedItemId] } }}
+        consumeQtys()[item.pickedItemId] ?? 0 } }}
       </li>
       }
       }
@@ -71,7 +71,7 @@
                   item.productSku } }}
                 </label>
                 <input [id]="'consume-qty-' + item.pickedItemId" type="number" min="0"
-                  [max]="item.qtyPicked - item.qtyConsumed" [value]="consumeQtys()[item.pickedItemId]"
+                  [max]="item.qtyPicked - item.qtyConsumed" [value]="consumeQtys()[item.pickedItemId] ?? 0"
                   (input)="setConsumeQty(item.pickedItemId, +$any($event.target).value)"
                   [attr.disabled]="state() === 'submitting' ? true : null" />
                 <button class="btn-secondary max-btn" type="button"

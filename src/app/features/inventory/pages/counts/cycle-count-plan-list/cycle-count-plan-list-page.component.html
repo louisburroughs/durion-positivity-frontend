@@ -60,7 +60,7 @@
             <td>{{ plan.planName || ('INVENTORY.COUNTS.PLANS.LIST.TABLE.DEFAULT_PLAN_NAME' | translate) }}</td>
             <td>{{ plan.locationId }}</td>
             <td>{{ plan.zoneIds.length }}</td>
-            <td>{{ plan.scheduledDate | date: 'mediumDate' }}</td>
+            <td>{{ (plan.scheduledDate + 'T00:00:00') | date: 'mediumDate' }}</td>
             <td>
               <span class="status-pill">{{ ('STATUS.' + plan.status) | translate }}</span>
             </td>

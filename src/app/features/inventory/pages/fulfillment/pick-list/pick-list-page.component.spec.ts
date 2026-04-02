@@ -2,7 +2,7 @@ import { WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { PickListPageComponent } from './pick-list-page.component';
 import { WorkexecService } from '../../../../workexec/services/workexec.service';
 import { PickListView, PickTaskLine } from '../../../../workexec/models/workexec.models';
@@ -64,6 +64,20 @@ describe('PickListPageComponent', () => {
     const component = await setupPickList();
 
     expect(component.state()).toBe('empty');
+  });
+
+  it('reload() re-fetches pick list and sets state to ready', async () => {
+    mockWorkexecService.getWorkorderPickList
+      .mockReturnValueOnce(throwError(() => new Error('initial fail')))
+      .mockReturnValueOnce(of(pickListFixture));
+
+    const component = await setupPickList();
+    expect(component.state()).toBe('error');
+
+    component.reload();
+
+    expect(component.state()).toBe('ready');
+    expect(component.pickList()).toEqual(pickListFixture);
   });
 
   it('load error sets state.set("error") before errorKey.set() (ADR-0031)', async () => {

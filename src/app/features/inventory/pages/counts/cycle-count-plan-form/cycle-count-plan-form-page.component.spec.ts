@@ -62,6 +62,20 @@ describe('CycleCountPlanFormPageComponent', () => {
     expect(component.canSubmit()).toBe(false);
   });
 
+  it('canSubmit is true when scheduledDate is today', () => {
+    const fixture = TestBed.createComponent(CycleCountPlanFormPageComponent);
+    const component = fixture.componentInstance;
+
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    component.locationId.set('loc-01');
+    component.zoneIds.set(['zone-1']);
+    component.scheduledDate.set(todayStr);
+
+    expect(component.canSubmit()).toBe(true);
+  });
+
   it('canSubmit is false when scheduledDate is in the past', () => {
     const fixture = TestBed.createComponent(CycleCountPlanFormPageComponent);
     const component = fixture.componentInstance;

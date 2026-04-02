@@ -24,9 +24,9 @@ export class ConsumePickedItemsPageComponent {
   readonly errorKey = signal<string | null>(null);
   readonly items = signal<PickedItemLine[]>([]);
   readonly pickedItems = this.items;
-  readonly consumeQtys = signal<Record<string, number>>({});
+  readonly consumeQtys = signal<Partial<Record<string, number>>>({});
 
-  readonly canSubmit = computed(() => Object.values(this.consumeQtys()).some(qty => qty > 0));
+  readonly canSubmit = computed(() => Object.values(this.consumeQtys()).some(qty => (qty ?? 0) > 0));
 
   constructor() {
     this.loadPickedItems();

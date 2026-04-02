@@ -4,7 +4,10 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { CrossDockReceivePageComponent } from './cross-dock-receive-page.component';
 import { InventoryReceivingService } from '../../../services/inventory-receiving.service';
-import { CrossDockReceiveResult } from '../../../models/inventory.models';
+import {
+  CrossDockReceiveResult,
+  WorkorderCrossDockRef,
+} from '../../../models/inventory.models';
 
 const mockReceivingService = {
   searchWorkordersForCrossDock: vi.fn(),
@@ -19,6 +22,14 @@ const resultFixture: CrossDockReceiveResult = {
   issueReferenceId: 'issue-001',
   issueMode: 'CROSS_DOCK',
 };
+
+const workorderCrossDockRefsFixture: WorkorderCrossDockRef[] = [
+  {
+    workorderId: 'wo-001',
+    workorderNumber: 'WO-1001',
+    status: 'OPEN',
+  },
+];
 
 function buildReadyComponent() {
   const fixture = TestBed.createComponent(CrossDockReceivePageComponent);
@@ -79,5 +90,33 @@ describe('CrossDockReceivePageComponent', () => {
     expect(errIdx).toBeGreaterThanOrEqual(0);
     expect(keyIdx).toBeGreaterThan(errIdx);
     expect(component.errorKey()).toBe('INVENTORY.RECEIVING.CROSS_DOCK.ERROR.SUBMIT');
+  });
+
+  it('searchWorkorders with empty query clears stale errorKey and returns to idle', () => {
+    const component = TestBed.createComponent(CrossDockReceivePageComponent).componentInstance;
+
+    component.errorKey.set('INVENTORY.RECEIVING.CROSS_DOCK.ERROR.SEARCH');
+    component.workorders.set(workorderCrossDockRefsFixture);
+    component.state.set('error');
+
+    component.searchWorkorders('');
+
+    expect(component.errorKey()).toBeNull();
+    expect(component.workorders()).toEqual([]);
+    expect(component.state()).toBe('idle');
+  });
+
+  it('resetSearch clears error and workorders, then sets state to idle', () => {
+    const component = TestBed.createComponent(CrossDockReceivePageComponent).componentInstance;
+
+    component.errorKey.set('INVENTORY.RECEIVING.CROSS_DOCK.ERROR.SUBMIT');
+    component.workorders.set(workorderCrossDockRefsFixture);
+    component.state.set('error');
+
+    component.resetSearch();
+
+    expect(component.errorKey()).toBeNull();
+    expect(component.workorders()).toEqual([]);
+    expect(component.state()).toBe('idle');
   });
 });

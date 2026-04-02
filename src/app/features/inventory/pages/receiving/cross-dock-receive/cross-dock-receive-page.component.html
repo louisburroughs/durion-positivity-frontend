@@ -10,7 +10,7 @@
   </section>
   }
 
-  @if (errorKey()) {
+  @if (errorKey() && state() !== 'error') {
   <section class="card state-card" role="alert">
     <span class="material-symbols-outlined" aria-hidden="true">error</span>
     <p>{{ errorKey() | translate }}</p>
@@ -110,6 +110,18 @@
     <div class="action-row">
       <button class="btn-primary" type="button" (click)="beginReview()">
         {{ 'INVENTORY.RECEIVING.CROSS_DOCK.ACTION.REVIEW' | translate }}
+      </button>
+    </div>
+  </section>
+  }
+
+  @case ('error') {
+  <section class="card state-card" role="alert">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ errorKey() | translate }}</p>
+    <div class="action-row">
+      <button class="btn-secondary" type="button" (click)="resetSearch()">
+        {{ 'COMMON.RETRY' | translate }}
       </button>
     </div>
   </section>

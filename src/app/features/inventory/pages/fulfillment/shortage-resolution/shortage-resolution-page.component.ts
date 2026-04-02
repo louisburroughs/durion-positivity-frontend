@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ShortageOption, ShortageResolutionResult } from '../../../models/inventory.models';
 import { InventoryDomainService } from '../../../services/inventory.service';
@@ -11,7 +11,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'resolved' | 'err
 @Component({
   selector: 'app-shortage-resolution-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, RouterLink],
   templateUrl: './shortage-resolution-page.component.html',
   styleUrls: ['./shortage-resolution-page.component.css'],
 })

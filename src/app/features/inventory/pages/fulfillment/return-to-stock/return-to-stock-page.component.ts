@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import {
@@ -18,7 +18,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'success' | 'erro
 @Component({
   selector: 'app-return-to-stock-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, RouterLink],
   templateUrl: './return-to-stock-page.component.html',
   styleUrls: ['./return-to-stock-page.component.css'],
 })
@@ -60,7 +60,13 @@ export class ReturnToStockPageComponent {
       const sub = this.inventoryService
         .getStorageLocations(locationId)
         .subscribe({
-          next: locations => this.storageLocations.set(locations),
+          next: locations => {
+            this.storageLocations.set(locations);
+            if (this.state() === 'error') {
+              this.errorKey.set(null);
+              this.state.set('ready');
+            }
+          },
           error: () => {
             this.state.set('error');
             this.errorKey.set('INVENTORY.FULFILLMENT.RETURN_TO_STOCK.ERROR.STORAGE_LOCATIONS');
