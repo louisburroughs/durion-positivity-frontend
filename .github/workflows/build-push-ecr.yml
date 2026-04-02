@@ -1,0 +1,94 @@
+name: Build and Push to ECR
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "src/**"
+      - "public/**"
+      - "package*.json"
+      - "angular.json"
+      - "tsconfig*.json"
+      - "Dockerfile"
+      - ".github/workflows/build-push-ecr.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment tag prefix"
+        required: false
+        default: "alpha"
+
+concurrency:
+  group: ecr-push-frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write   # Required for OIDC authentication
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPO: durion/pos-frontend
+  IMAGE_TAG: sha-${{ github.sha != '' && github.sha || 'local' }}
+
+jobs:
+  build-push:
+    name: Build and Push Frontend Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image metadata
+        id: meta
+        run: |
+          REGISTRY="${{ steps.login-ecr.outputs.registry }}"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          IMAGE_TAG="sha-${SHORT_SHA}"
+          FULL_IMAGE="${REGISTRY}/${{ env.ECR_REPO }}:${IMAGE_TAG}"
+          LATEST_IMAGE="${REGISTRY}/${{ env.ECR_REPO }}:latest"
+          echo "registry=${REGISTRY}" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "full_image=${FULL_IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "latest_image=${LATEST_IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "Image: ${FULL_IMAGE}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.full_image }}
+            ${{ steps.meta.outputs.latest_image }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+      - name: Write image tag to job summary
+        run: |
+          echo "## Frontend Image Published" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Repository | \`${{ env.ECR_REPO }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Tag | \`${{ steps.meta.outputs.image_tag }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Full image | \`${{ steps.meta.outputs.full_image }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Commit | \`${GITHUB_SHA}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Use this tag as **FRONTEND_TAG** in \`docker-compose.prod.yml\` for deployment." >> "$GITHUB_STEP_SUMMARY"
