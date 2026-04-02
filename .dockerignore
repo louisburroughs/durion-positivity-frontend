@@ -1,0 +1,8 @@
+node_modules
+dist
+.git
+**/*.spec.ts
+coverage
+artifacts
+design
+.vscode

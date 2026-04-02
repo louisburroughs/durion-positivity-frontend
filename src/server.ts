@@ -5,6 +5,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { join } from 'node:path';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -13,16 +14,17 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * Proxy /api requests to the backend API gateway.
+ * API_GATEWAY_URL defaults to the Docker Compose service name for local development.
  */
+const API_GATEWAY_URL = process.env['API_GATEWAY_URL'] ?? 'http://pos-api-gateway:8080';
+app.use(
+  '/api',
+  createProxyMiddleware({
+    target: API_GATEWAY_URL,
+    changeOrigin: true,
+  }),
+);
 
 /**
  * Serve static files from /browser
