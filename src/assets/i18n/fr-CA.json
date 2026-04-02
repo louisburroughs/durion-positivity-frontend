@@ -2074,10 +2074,10 @@
           "DESC": "Ajuster les quantités d'inventaire"
         },
         "TRANSFER": {
-          "DESC": "Transferer l'inventaire entre emplacements"
+          "DESC": "Transférer l'inventaire entre emplacements"
         },
         "ADMIN": {
-          "DESC": "Gerer les autorisations de sécurité d'inventaire"
+          "DESC": "Gérer les autorisations de sécurité d'inventaire"
         }
       },
       "CATEGORY": {
