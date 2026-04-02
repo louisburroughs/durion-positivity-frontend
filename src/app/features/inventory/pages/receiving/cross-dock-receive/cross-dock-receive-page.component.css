@@ -1,0 +1,112 @@
+:host {
+  display: block;
+}
+
+.page {
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+  font-family: 'Inter', var(--font-body);
+}
+
+.page-title,
+legend,
+.summary-card h2 {
+  font-family: 'Public Sans', var(--font-body);
+}
+
+.form-card,
+.summary-card,
+.state-card {
+  background: var(--cardBackground);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
+}
+
+.field-row {
+  display: grid;
+  gap: 0.4rem;
+}
+
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.line-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.workorder-list {
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0.6rem 0 0;
+}
+
+.workorder-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  background: color-mix(in srgb, var(--themeBackground) 58%, var(--cardBackground));
+  color: var(--currentTextColor);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem 1rem;
+}
+
+.summary-grid dt {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--currentTextColor) 70%, transparent);
+}
+
+.summary-grid dd {
+  margin: 0;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  background: color-mix(in srgb, var(--brand-primary) 11%, var(--cardBackground));
+  color: var(--brand-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.state-card {
+  display: grid;
+  place-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.action-row {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.spinner {
+  animation: spin 1.1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

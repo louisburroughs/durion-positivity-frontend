@@ -4,7 +4,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs/operators';
+import { catchError, finalize, switchMap } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 import {
   ConfirmReceiptRequest,
   ReceiptResult,
@@ -29,6 +30,8 @@ export class ReceiveIntoStagingComponent {
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
+  readonly asnMode = signal<'asn-entry' | 'fallback'>('asn-entry');
+  readonly asnId = signal<string | null>(null);
   readonly document = signal<ReceivingDocumentResponse | null>(null);
   readonly submitting = signal(false);
   readonly lineQuantities = signal<Record<string, number>>({});
@@ -36,10 +39,75 @@ export class ReceiveIntoStagingComponent {
 
   constructor() {
     const params = this.route.snapshot.queryParamMap;
+    const asnId = params.get('asnId');
     const documentId = params.get('documentId');
     const documentType = params.get('documentType');
+
+    if (asnId) {
+      this.asnId.set(asnId);
+      this.asnMode.set('asn-entry');
+      this.loadAsn(asnId);
+      return;
+    }
+
+    this.asnMode.set('fallback');
     if (documentId && documentType) {
       this.loadDocument(documentId, documentType);
+    }
+  }
+
+  loadAsn(asnIdInput: string): void {
+    const locationId = this.route.snapshot.queryParamMap.get('locationId');
+    if (!locationId) {
+      this.state.set('error');
+      this.errorKey.set('INVENTORY.RECEIVING.ERROR.ASN_LOCATION_REQUIRED');
+      return;
+    }
+
+    this.state.set('loading');
+    this.errorKey.set(null);
+
+    this.receivingService
+      .getAsn(asnIdInput)
+      .pipe(
+        switchMap(asn =>
+          this.receivingService
+            .createReceivingSessionFromAsn({ asnId: asn.asnId, locationId })
+            .pipe(
+              catchError(error => {
+                this.state.set('error');
+                this.errorKey.set('INVENTORY.RECEIVING.ERROR.ASN_SESSION');
+                return throwError(() => error);
+              }),
+            ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: doc => {
+          this.document.set(doc);
+          const initial: Record<string, number> = {};
+          doc.lines.forEach(line => {
+            initial[line.receivingLineId] = line.expectedQty;
+          });
+          this.lineQuantities.set(initial);
+          this.state.set('ready');
+        },
+        error: () => {
+          if (this.errorKey() === 'INVENTORY.RECEIVING.ERROR.ASN_SESSION') {
+            return;
+          }
+          this.state.set('error');
+          this.errorKey.set('INVENTORY.RECEIVING.ERROR.ASN_LOAD');
+        },
+      });
+  }
+
+  switchToFallback(): void {
+    this.asnMode.set('fallback');
+    if (!this.document()) {
+      this.state.set('idle');
+      this.errorKey.set(null);
     }
   }
 

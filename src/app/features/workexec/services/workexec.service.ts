@@ -10,7 +10,9 @@ import {
   ChangeRequestResponse,
   CompleteWorkorderRequest,
   CompleteWorkorderResponse,
+  ConsumePickedItemsRequest,
   ConsumePartsRequest,
+  ConsumptionResult,
   CreateChangeRequestRequest,
   CreateEstimateRequest,
   CreateLaborPerformedRequest,
@@ -26,8 +28,13 @@ import {
   IssuePartsRequest,
   OperationalContextResponse,
   PartUsageResponse,
+  PickConfirmRequest,
+  PickExecuteLine,
+  PickListView,
+  PickedItemLine,
   ReopenWorkorderRequest,
   ReopenWorkorderResponse,
+  ScanResolveRequest,
   ReturnPartsRequest,
   StartLaborRequest,
   StopLaborRequest,
@@ -633,6 +640,51 @@ export class WorkexecService {
    */
   getUsageHistory(workorderId: string): Observable<PartUsageResponse[]> {
     return this.api.get<PartUsageResponse[]>(`/v1/workorders/${workorderId}/parts/usageHistory`);
+  }
+
+  getWorkorderPickList(workorderId: string): Observable<PickListView> {
+    return this.api.get<PickListView>(
+      `/workexec/v1/workorders/${encodeURIComponent(workorderId)}/pick-list`,
+    );
+  }
+
+  getPickedItems(workorderId: string): Observable<PickedItemLine[]> {
+    return this.api.get<PickedItemLine[]>(
+      `/workexec/v1/workorders/${encodeURIComponent(workorderId)}/picked-items`,
+    );
+  }
+
+  consumePickedItems(
+    workorderId: string,
+    request: ConsumePickedItemsRequest,
+  ): Observable<ConsumptionResult> {
+    return this.api.post<ConsumptionResult>(
+      `/workexec/v1/workorders/${encodeURIComponent(workorderId)}/picked-items/consume`,
+      request,
+    );
+  }
+
+  resolvePickScan(workorderId: string, req: ScanResolveRequest): Observable<PickExecuteLine[]> {
+    return this.api.post<PickExecuteLine[]>(
+      `/workexec/v1/workorders/${encodeURIComponent(workorderId)}/picks/resolve-scan`,
+      req,
+    );
+  }
+
+  confirmPickLine(workorderId: string, req: PickConfirmRequest): Observable<PickExecuteLine> {
+    return this.api.post<PickExecuteLine>(
+      `/workexec/v1/workorders/${encodeURIComponent(workorderId)}/picks/confirm`,
+      req,
+    );
+  }
+
+  completePickList(
+    workorderId: string,
+  ): Observable<{ status: string; readonly completedAt?: string }> {
+    return this.api.post<{ status: string; readonly completedAt?: string }>(
+      `/workexec/v1/workorders/${encodeURIComponent(workorderId)}/picks/complete`,
+      {},
+    );
   }
 
   // ── CAP-005: Change Requests (Story 220) ──────────────────────────────────

@@ -631,3 +631,69 @@ export interface WorkorderSnapshotHistoryEntry {
   capturedById?: string;
   notes?: string;
 }
+
+// Pick List (CAP-218 #92)
+export interface PickListView {
+  workorderId: string;
+  pickListId: string;
+  status: string;
+  readonly createdAt?: string;
+  tasks: PickTaskLine[];
+}
+
+export interface PickTaskLine {
+  pickTaskId: string;
+  productSku: string;
+  productDisplayName?: string;
+  requestedQty: number;
+  pickedQty: number;
+  uom: string;
+  storageLocationId?: string;
+  storageLocationCode?: string;
+  status: string;
+  sortOrder?: number;
+}
+
+// Consume Picked Items (CAP-218 #243)
+export interface PickedItemLine {
+  pickedItemId: string;
+  workorderLineId?: string;
+  productSku: string;
+  qtyPicked: number;
+  qtyConsumed: number;
+  status: string;
+}
+
+export interface ConsumePickedItemsRequest {
+  lines: ConsumePickedItemsLine[];
+}
+
+export interface ConsumePickedItemsLine {
+  pickedItemId: string;
+  quantity: number;
+}
+
+export interface ConsumptionResult {
+  referenceId: string;
+  readonly consumedAt?: string;
+  consumedLineCount: number;
+}
+
+// Mechanic Picking (CAP-218 #244)
+export interface PickExecuteLine {
+  pickLineId: string;
+  pickTaskId: string;
+  productSku: string;
+  requestedQty: number;
+  confirmedQty: number;
+  status: string;
+}
+
+export interface ScanResolveRequest {
+  scanValue: string;
+}
+
+export interface PickConfirmRequest {
+  pickLineId: string;
+  quantity: number;
+}

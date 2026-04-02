@@ -1,0 +1,93 @@
+<main class="page" aria-labelledby="cycle-count-plan-form-title">
+	<header class="page-header">
+		<h1 id="cycle-count-plan-form-title" class="page-title">{{ 'INVENTORY.COUNTS.PLAN_FORM.TITLE' | translate }}</h1>
+	</header>
+
+	@if (state() === 'error' && errorKey()) {
+		<section class="card state-card" role="alert">
+			<span class="material-symbols-outlined" aria-hidden="true">error</span>
+			<p>{{ errorKey() | translate }}</p>
+		</section>
+	}
+
+	@if (state() === 'loading' || state() === 'submitting') {
+		<section class="card loading-card" aria-live="polite" aria-busy="true">
+			<span class="material-symbols-outlined spinner" aria-hidden="true">progress_activity</span>
+			<p>{{ 'COMMON.LOADING' | translate }}</p>
+		</section>
+	}
+
+	<section class="card form-card">
+		<form (submit)="$event.preventDefault(); submitPlan()" novalidate>
+			<fieldset>
+				<legend class="sr-only">{{ 'INVENTORY.COUNTS.PLAN_FORM.TITLE' | translate }}</legend>
+
+				<div class="field-row">
+					<label for="locationId">{{ 'INVENTORY.COUNTS.PLAN_FORM.FIELD.LOCATION' | translate }}</label>
+					<select
+						id="locationId"
+						[value]="locationId()"
+						(change)="onLocationChange($any($event.target).value)"
+						[attr.disabled]="state() === 'loading' || state() === 'submitting' ? true : null"
+					>
+						<option value="">{{ 'INVENTORY.COUNTS.PLAN_FORM.FIELD.LOCATION_PLACEHOLDER' | translate }}</option>
+						@for (location of locations(); track location.locationId) {
+							<option [value]="location.locationId">{{ location.name }}</option>
+						}
+					</select>
+				</div>
+
+				<fieldset class="zones-fieldset">
+					<legend>{{ 'INVENTORY.COUNTS.PLAN_FORM.FIELD.ZONES' | translate }}</legend>
+					<div class="zones-grid" aria-live="polite">
+						@for (zone of zones(); track zone.zoneId) {
+							<div class="zone-option">
+								<input
+									type="checkbox"
+									id="zone-{{ zone.zoneId }}"
+									[checked]="zoneIds().includes(zone.zoneId)"
+									(change)="onZoneSelectionChange($any($event.target).checked ? [...zoneIds(), zone.zoneId] : zoneIds().filter(id => id !== zone.zoneId))"
+									[attr.disabled]="state() === 'submitting' ? true : null"
+								/>
+								<label for="zone-{{ zone.zoneId }}">{{ zone.zoneName }}</label>
+							</div>
+						}
+						@if (locationId() && zones().length === 0) {
+							<p class="hint-text" aria-live="polite">{{ 'INVENTORY.COUNTS.PLAN_FORM.FIELD.ZONES_EMPTY' | translate }}</p>
+						}
+					</div>
+				</fieldset>
+
+				<div class="field-row">
+					<label for="scheduledDate">{{ 'INVENTORY.COUNTS.PLAN_FORM.FIELD.SCHEDULED_DATE' | translate }}</label>
+					<input
+						id="scheduledDate"
+						type="date"
+						[value]="scheduledDate()"
+						(input)="scheduledDate.set($any($event.target).value)"
+						[attr.disabled]="state() === 'submitting' ? true : null"
+					/>
+				</div>
+
+				<div class="field-row">
+					<label for="planName">{{ 'INVENTORY.COUNTS.PLAN_FORM.FIELD.PLAN_NAME' | translate }}</label>
+					<input
+						id="planName"
+						type="text"
+						[value]="planName()"
+						(input)="planName.set($any($event.target).value)"
+						[attr.placeholder]="'INVENTORY.COUNTS.PLAN_FORM.FIELD.PLAN_NAME_PLACEHOLDER' | translate"
+						[attr.disabled]="state() === 'submitting' ? true : null"
+					/>
+				</div>
+
+				<div class="action-row">
+					<button class="btn-primary" type="submit" [disabled]="!canSubmit() || state() === 'submitting'">
+						{{ 'INVENTORY.COUNTS.PLAN_FORM.ACTION.SUBMIT' | translate }}
+					</button>
+					<a class="btn-secondary" href="/app/inventory/counts/plans">{{ 'COMMON.CANCEL' | translate }}</a>
+				</div>
+			</fieldset>
+		</form>
+	</section>
+</main>

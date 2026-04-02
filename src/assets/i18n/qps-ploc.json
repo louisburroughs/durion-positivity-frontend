@@ -1417,10 +1417,65 @@
       "TITLE": "[!! Ŕëëçëëïïṽëë ïïñŧøø ŠŠŧààĝïïñĝ !!]",
       "ERROR": {
         "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ŕëëçëëïïṽïïñĝ đøøçüüḿëëñŧ. !!]",
-        "CONFIRM": "[!! Ƒààïïľëëđ ŧøø çøøñƒïïŕḿ ŕëëçëëïïṕŧ. !!]"
+        "CONFIRM": "[!! Ƒààïïľëëđ ŧøø çøøñƒïïŕḿ ŕëëçëëïïṕŧ. !!]",
+        "ASN_LOCATION_REQUIRED": "[!! Location is required to load ASN receiving. !!]",
+        "ASN_SESSION": "[!! Failed to create receiving session from ASN. !!]",
+        "ASN_LOAD": "[!! Failed to load ASN details. !!]"
       },
       "RECEIVE_INTO_STAGING": {
-        "TITLE": "[Récéívé íntó Stágíng]"
+        "TITLE": "[Récéívé íntó Stágíng]",
+        "ASN": {
+          "TITLE": "[!! Start from ASN !!]",
+          "FIELD": {
+            "ASN_ID": "[!! ASN ID !!]",
+            "ASN_ID_PLACEHOLDER": "[!! Enter ASN ID !!]",
+            "SHIPMENT_REF": "[!! Supplier Shipment Reference !!]",
+            "SHIPMENT_REF_PLACEHOLDER": "[!! Enter supplier shipment reference !!]"
+          },
+          "ACTION": {
+            "LOAD": "[!! Load from ASN !!]"
+          },
+          "FALLBACK": {
+            "LABEL": "[!! Receive without ASN !!]"
+          }
+        }
+      },
+      "CROSS_DOCK": {
+        "TITLE": "[!! Cross-Dock Receive !!]",
+        "STEP": {
+          "SEARCH": "[!! Step 1: Find Workorder !!]",
+          "LINE_PICK": "[!! Step 2: Select Lines and Quantity !!]",
+          "REVIEW": "[!! Step 3: Review !!]"
+        },
+        "STATE": {
+          "NO_RESULTS": "[!! No workorders found. !!]"
+        },
+        "FIELD": {
+          "WORKORDER_SEARCH": "[!! Workorder Search !!]",
+          "WORKORDER_SEARCH_PLACEHOLDER": "[!! Search by workorder number or ID !!]",
+          "SHIPMENT_ID": "[!! Shipment !!]",
+          "SESSION_ID": "[!! Session ID !!]",
+          "RECEIVING_LINE_ID": "[!! Receiving Line ID !!]",
+          "WORKORDER_ID": "[!! Workorder ID !!]",
+          "WORKORDER_LINE_ID": "[!! Workorder Line ID !!]",
+          "QUANTITY": "[!! Quantity !!]",
+          "OVERRIDE_REASON": "[!! Override Reason Code !!]"
+        },
+        "ACTION": {
+          "SEARCH": "[!! Search Workorders !!]",
+          "REVIEW": "[!! Review !!]",
+          "CONFIRM": "[!! Confirm Cross-Dock !!]"
+        },
+        "SUCCESS": {
+          "TITLE": "[!! Cross-Dock Confirmed !!]",
+          "REFERENCE": "[!! Issue Reference !!]",
+          "MODE": "[!! Issue Mode !!]"
+        },
+        "ERROR": {
+          "SEARCH": "[!! Failed to search workorders. !!]",
+          "VALIDATION": "[!! Complete all required fields before review. !!]",
+          "SUBMIT": "[!! Failed to submit cross-dock receipt. !!]"
+        }
       },
       "STATE": {
         "IDLE": "[Éntér á dócúmént ÍD tó bégín récéívíng.]"
@@ -1653,6 +1708,53 @@
           "REJECTION_REASON": "[Réjéctíón Réásón]",
           "REJECTION_REASON_PLACEHOLDER": "[Éxpláín réásón fór réjéctíón…]"
         }
+      },
+      "PLANS": {
+        "LIST": {
+          "TITLE": "[!! Cycle Count Plans !!]",
+          "SUBTITLE": "[!! Schedule and monitor recurring count plans. !!]",
+          "ACTION": {
+            "NEW": "[!! New Cycle Count Plan !!]"
+          },
+          "EMPTY": {
+            "TITLE": "[!! No Cycle Count Plans !!]",
+            "MESSAGE": "[!! Create a new plan to begin scheduling cycle counts. !!]"
+          },
+          "TABLE": {
+            "ARIA": "[!! Cycle count plan list !!]",
+            "HEADER": {
+              "PLAN_NAME": "[!! Plan Name !!]",
+              "LOCATION": "[!! Location !!]",
+              "ZONES_COUNT": "[!! Zones Count !!]",
+              "SCHEDULED_DATE": "[!! Scheduled Date !!]",
+              "STATUS": "[!! Status !!]",
+              "CREATED_AT": "[!! Created At !!]"
+            },
+            "DEFAULT_PLAN_NAME": "[!! Untitled Plan !!]"
+          }
+        },
+        "ERROR": {
+          "LOAD": "[!! Failed to load cycle count plans. !!]",
+          "LOAD_LOCATIONS": "[!! Failed to load locations. !!]",
+          "LOAD_ZONES": "[!! Failed to load zones for selected location. !!]",
+          "VALIDATION": "[!! Complete required fields before creating the plan. !!]",
+          "SUBMIT": "[!! Failed to create cycle count plan. !!]"
+        }
+      },
+      "PLAN_FORM": {
+        "TITLE": "[!! Create Cycle Count Plan !!]",
+        "FIELD": {
+          "LOCATION": "[!! Location !!]",
+          "LOCATION_PLACEHOLDER": "[!! Select a location !!]",
+          "ZONES": "[!! Zones !!]",
+          "ZONES_EMPTY": "[!! No zones available for this location. !!]",
+          "SCHEDULED_DATE": "[!! Scheduled Date !!]",
+          "PLAN_NAME": "[!! Plan Name !!]",
+          "PLAN_NAME_PLACEHOLDER": "[!! Optional plan name !!]"
+        },
+        "ACTION": {
+          "SUBMIT": "[!! Create Plan !!]"
+        }
       }
     },
     "PURCHASE_ORDERS": {
@@ -1760,6 +1862,226 @@
         "ACTION": {
           "SUBMIT": "[Súbmít Órdér]"
         }
+      }
+    },
+    "FULFILLMENT": {
+      "PICK_LIST": {
+        "TITLE": "[!! Pick List !!]",
+        "STATE": {
+          "EMPTY": "[!! No pick tasks are available. !!]"
+        },
+        "FIELD": {
+          "WORKORDER_ID": "[!! Workorder !!]",
+          "PICK_LIST_ID": "[!! Pick List !!]",
+          "STATUS": "[!! Status !!]",
+          "CREATED_AT": "[!! Created At !!]"
+        },
+        "ACTION": {
+          "PRINT": "[!! Print !!]"
+        },
+        "TABLE": {
+          "ARIA": "[!! Pick list tasks !!]",
+          "HEADER": {
+            "SKU": "[!! SKU !!]",
+            "DESCRIPTION": "[!! Description !!]",
+            "LOCATION": "[!! Location !!]",
+            "REQUESTED_QTY": "[!! Requested Qty !!]",
+            "PICKED_QTY": "[!! Picked Qty !!]",
+            "UOM": "[!! UOM !!]",
+            "STATUS": "[!! Status !!]"
+          }
+        },
+        "ERROR": {
+          "MISSING_ID": "[!! Workorder ID is required to load the pick list. !!]",
+          "LOAD": "[!! Failed to load pick list. !!]"
+        }
+      },
+      "RETURN_TO_STOCK": {
+        "TITLE": "[!! Return to Stock !!]",
+        "FIELD": {
+          "LOCATION": "[!! Location !!]",
+          "LOCATION_PLACEHOLDER": "[!! Select return location !!]",
+          "STORAGE_LOCATION": "[!! Storage Location !!]",
+          "STORAGE_LOCATION_PLACEHOLDER": "[!! Optional destination storage location !!]",
+          "REASON_CODE": "[!! Reason Code !!]",
+          "REASON_CODE_PLACEHOLDER": "[!! Select return reason !!]",
+          "RETURN_QTY_SR": "[!! Return quantity for {{sku}} !!]"
+        },
+        "TABLE": {
+          "ARIA": "[!! Returnable items !!]",
+          "HEADER": {
+            "PRODUCT": "[!! Product !!]",
+            "MAX_QTY": "[!! Max Qty !!]",
+            "RETURN_QTY": "[!! Return Qty !!]"
+          }
+        },
+        "ACTION": {
+          "SUBMIT": "[!! Submit Return !!]"
+        },
+        "SUCCESS": {
+          "TITLE": "[!! Return Submitted !!]",
+          "RETURN_ID": "[!! Return ID !!]"
+        },
+        "ERROR": {
+          "MISSING_ID": "[!! Workorder ID is required. !!]",
+          "LOAD": "[!! Failed to load return-to-stock data. !!]",
+          "STORAGE_LOCATIONS": "[!! Failed to load storage locations. !!]",
+          "SUBMIT": "[!! Failed to submit return-to-stock. !!]"
+        }
+      },
+      "CONSUME_PICKED_ITEMS": {
+        "TITLE": "[!! Consume Picked Items !!]",
+        "STATE": {
+          "LOADING": "[!! Loading picked items... !!]"
+        },
+        "SUCCESS": {
+          "TITLE": "[!! Consumption Submitted !!]",
+          "ARIA": "[!! Consumed item summary !!]",
+          "LINE": "[!! {{sku}}: consumed {{qty}} !!]"
+        },
+        "TABLE": {
+          "ARIA": "[!! Picked items available for consumption !!]",
+          "HEADER": {
+            "SKU": "[!! SKU !!]",
+            "DESCRIPTION": "[!! Description !!]",
+            "PICKED_QTY": "[!! Picked Qty !!]",
+            "CONSUMED_QTY": "[!! Consumed !!]",
+            "REMAINING_QTY": "[!! Remaining !!]",
+            "CONSUME_QTY": "[!! Qty to Consume !!]"
+          },
+          "VALUE": {
+            "LINE_ITEM": "[!! Line Item !!]"
+          }
+        },
+        "FIELD": {
+          "CONSUME_QTY_SR": "[!! Quantity to consume for {{sku}} !!]"
+        },
+        "ACTION": {
+          "CONTINUE": "[!! Consume More !!]",
+          "MAX": "[!! Max !!]",
+          "SUBMIT": "[!! Submit Consumption !!]"
+        },
+        "ERROR": {
+          "MISSING_ID": "[!! Workorder ID is required. !!]",
+          "LOAD": "[!! Failed to load picked items. !!]",
+          "SUBMIT": "[!! Failed to submit consumed items. !!]"
+        }
+      },
+      "PICK_EXECUTE": {
+        "TITLE": "[!! Mechanic Pick Execution !!]",
+        "STATE": {
+          "LOADING": "[!! Loading pick execution data... !!]",
+          "AWAITING_SCAN": "[!! Scan an item to begin confirmation. !!]",
+          "SCAN_NO_MATCH": "[!! No pick line matched that scan. !!]"
+        },
+        "SECTION": {
+          "PICK_LINES": "[!! Pick Line Progress !!]",
+          "SCAN": "[!! Active Scan !!]",
+          "CONFIRM": "[!! Confirm Picked Quantity !!]"
+        },
+        "TABLE": {
+          "ARIA": "[!! Pick execution progress !!]",
+          "HEADER": {
+            "SKU": "[!! SKU !!]",
+            "REQUESTED": "[!! Requested !!]",
+            "CONFIRMED": "[!! Confirmed !!]",
+            "STATUS": "[!! Status !!]"
+          }
+        },
+        "FIELD": {
+          "SCAN_INPUT": "[!! Scan barcode or enter part number !!]",
+          "SKU": "[!! SKU !!]",
+          "REQUESTED": "[!! Requested !!]",
+          "ALREADY_CONFIRMED": "[!! Already Confirmed !!]",
+          "CONFIRM_QTY": "[!! Quantity to Confirm !!]"
+        },
+        "ACTION": {
+          "RESOLVE_SCAN": "[!! Resolve Scan !!]",
+          "CONFIRM": "[!! Confirm !!]",
+          "COMPLETE": "[!! Complete Picking !!]"
+        },
+        "COMPLETE": {
+          "TITLE": "[!! Picking Complete !!]",
+          "DESCRIPTION": "[!! All pick lines have been completed. !!]"
+        },
+        "ERROR": {
+          "MISSING_ID": "[!! Workorder ID is required. !!]",
+          "LOAD": "[!! Failed to load pick execution data. !!]",
+          "RESOLVE_SCAN": "[!! Failed to resolve scanned value. !!]",
+          "CONFIRM": "[!! Failed to confirm picked quantity. !!]",
+          "COMPLETE": "[!! Failed to complete picking. !!]"
+        }
+      },
+      "SHORTAGE_RESOLUTION": {
+        "TITLE": "[!! Shortage Resolution !!]",
+        "STATE": {
+          "LOADING": "[!! Loading shortage options... !!]"
+        },
+        "WARNING": {
+          "PARTIAL_OPTIONS": "[!! Some options may provide only partial fulfillment. !!]"
+        },
+        "FIELD": {
+          "OPTIONS": "[!! Resolution Options !!]"
+        },
+        "LEAD_TIME_DAYS": "[!! Lead time: {{days}} day(s) !!]",
+        "ACTION": {
+          "CONFIRM": "[!! Confirm Resolution !!]"
+        },
+        "SUCCESS": {
+          "TITLE": "[!! Shortage Resolved !!]",
+          "DECISION": "[!! Selected Decision !!]"
+        },
+        "ERROR": {
+          "MISSING_ID": "[!! Workorder and allocation line IDs are required. !!]",
+          "LOAD": "[!! Failed to load shortage options. !!]",
+          "SUBMIT": "[!! Failed to submit shortage resolution. !!]"
+        }
+      }
+    },
+    "SECURITY": {
+      "PERMISSIONS": {
+        "TITLE": "[!! Inventory Security Permissions !!]",
+        "SUBTITLE": "[!! Review inventory permission keys and your current access. !!]",
+        "FILTER_LABEL": "[!! Filter permissions !!]",
+        "FILTER_PLACEHOLDER": "[!! Search permission key !!]",
+        "STATE": {
+          "LOADING": "[!! Loading inventory permissions... !!]",
+          "EMPTY": "[!! No permissions match the current filter. !!]"
+        },
+        "TABLE": {
+          "ARIA": "[!! Inventory permissions !!]",
+          "HEADER": {
+            "PERMISSION": "[!! Permission !!]",
+            "DESCRIPTION": "[!! Description !!]",
+            "CATEGORY": "[!! Category !!]",
+            "GRANTED": "[!! Granted !!]"
+          }
+        },
+        "VALUE": {
+          "GRANTED": "[!! Granted !!]",
+          "NOT_GRANTED": "[!! Not granted !!]"
+        },
+        "ERROR": {
+          "FORBIDDEN": "[!! You do not have access to inventory permissions. !!]",
+          "LOAD": "[!! Failed to load inventory permissions. !!]"
+        }
+      },
+      "PERMISSION": {
+        "VIEW": {
+          "DESC": "[!! View inventory records !!]"
+        },
+        "ADJUST": {
+          "DESC": "[!! Adjust inventory quantities !!]"
+        },
+        "TRANSFER": {
+          "DESC": "[!! Transfer inventory between locations !!]"
+        },
+        "ADMIN": {
+          "DESC": "[!! Manage inventory security permissions !!]"
+        }
+      },
+      "CATEGORY": {
+        "INVENTORY": "[!! Inventory !!]"
       }
     }
   },

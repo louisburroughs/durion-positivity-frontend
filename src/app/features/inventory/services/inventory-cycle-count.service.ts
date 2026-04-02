@@ -8,6 +8,8 @@ import {
   ApprovalQueueFilter,
   CountSubmitRequest,
   CountSubmitResponse,
+  CycleCountPlan,
+  CycleCountPlanRequest,
   CycleCountTask,
 } from '../models/inventory.models';
 
@@ -58,5 +60,17 @@ export class InventoryCycleCountService {
       `/inventory/v1/adjustments/${encodeURIComponent(adjustmentId)}/reject`,
       { rejectionReason },
     );
+  }
+
+  getCycleCountPlans(locationId?: string): Observable<CycleCountPlan[]> {
+    let params = new HttpParams();
+    if (locationId) {
+      params = params.set('locationId', locationId);
+    }
+    return this.api.get<CycleCountPlan[]>('/inventory/v1/cycle-count-plans', params);
+  }
+
+  createCycleCountPlan(request: CycleCountPlanRequest): Observable<CycleCountPlan> {
+    return this.api.post<CycleCountPlan>('/inventory/v1/cycle-count-plans', request);
   }
 }

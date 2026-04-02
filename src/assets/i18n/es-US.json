@@ -1417,10 +1417,65 @@
       "TITLE": "Recepción en área de preparación",
       "ERROR": {
         "LOAD": "No se pudo cargar el documento de recepción.",
-        "CONFIRM": "No se pudo confirmar la recepción."
+        "CONFIRM": "No se pudo confirmar la recepción.",
+        "ASN_LOCATION_REQUIRED": "Se requiere ubicación para cargar recepción por ASN.",
+        "ASN_SESSION": "No se pudo crear la sesión de recepción desde ASN.",
+        "ASN_LOAD": "No se pudieron cargar los detalles del ASN."
       },
       "RECEIVE_INTO_STAGING": {
-        "TITLE": "Recibir en área de preparación"
+        "TITLE": "Recibir en área de preparación",
+        "ASN": {
+          "TITLE": "Iniciar desde ASN",
+          "FIELD": {
+            "ASN_ID": "ID ASN",
+            "ASN_ID_PLACEHOLDER": "Ingrese ID ASN",
+            "SHIPMENT_REF": "Referencia de envío del proveedor",
+            "SHIPMENT_REF_PLACEHOLDER": "Ingrese referencia de envío del proveedor"
+          },
+          "ACTION": {
+            "LOAD": "Cargar desde ASN"
+          },
+          "FALLBACK": {
+            "LABEL": "Recibir sin ASN"
+          }
+        }
+      },
+      "CROSS_DOCK": {
+        "TITLE": "Recepción Cross-Dock",
+        "STEP": {
+          "SEARCH": "Paso 1: Buscar orden de trabajo",
+          "LINE_PICK": "Paso 2: Seleccionar líneas y cantidad",
+          "REVIEW": "Paso 3: Revisar"
+        },
+        "STATE": {
+          "NO_RESULTS": "No se encontraron órdenes de trabajo."
+        },
+        "FIELD": {
+          "WORKORDER_SEARCH": "Búsqueda de orden de trabajo",
+          "WORKORDER_SEARCH_PLACEHOLDER": "Buscar por número o ID de orden",
+          "SHIPMENT_ID": "Envío",
+          "SESSION_ID": "ID de sesión",
+          "RECEIVING_LINE_ID": "ID de línea de recepción",
+          "WORKORDER_ID": "ID de orden de trabajo",
+          "WORKORDER_LINE_ID": "ID de línea de orden",
+          "QUANTITY": "Cantidad",
+          "OVERRIDE_REASON": "Código de motivo de anulación"
+        },
+        "ACTION": {
+          "SEARCH": "Buscar órdenes",
+          "REVIEW": "Revisar",
+          "CONFIRM": "Confirmar Cross-Dock"
+        },
+        "SUCCESS": {
+          "TITLE": "Cross-Dock confirmado",
+          "REFERENCE": "Referencia de emisión",
+          "MODE": "Modo de emisión"
+        },
+        "ERROR": {
+          "SEARCH": "No se pudieron buscar órdenes de trabajo.",
+          "VALIDATION": "Complete los campos requeridos antes de revisar.",
+          "SUBMIT": "No se pudo enviar la recepción cross-dock."
+        }
       },
       "STATE": {
         "IDLE": "Ingrese un ID de documento para comenzar."
@@ -1653,6 +1708,53 @@
           "REJECTION_REASON": "Motivo de rechazo",
           "REJECTION_REASON_PLACEHOLDER": "Explique el motivo del rechazo…"
         }
+      },
+      "PLANS": {
+        "LIST": {
+          "TITLE": "Planes de conteo cíclico",
+          "SUBTITLE": "Programe y supervise planes de conteo recurrentes.",
+          "ACTION": {
+            "NEW": "Nuevo plan de conteo cíclico"
+          },
+          "EMPTY": {
+            "TITLE": "No hay planes de conteo cíclico",
+            "MESSAGE": "Cree un nuevo plan para comenzar a programar conteos."
+          },
+          "TABLE": {
+            "ARIA": "Lista de planes de conteo cíclico",
+            "HEADER": {
+              "PLAN_NAME": "Nombre del plan",
+              "LOCATION": "Ubicación",
+              "ZONES_COUNT": "Cantidad de zonas",
+              "SCHEDULED_DATE": "Fecha programada",
+              "STATUS": "Estado",
+              "CREATED_AT": "Creado el"
+            },
+            "DEFAULT_PLAN_NAME": "Plan sin nombre"
+          }
+        },
+        "ERROR": {
+          "LOAD": "No se pudieron cargar los planes de conteo.",
+          "LOAD_LOCATIONS": "No se pudieron cargar las ubicaciones.",
+          "LOAD_ZONES": "No se pudieron cargar las zonas para la ubicación seleccionada.",
+          "VALIDATION": "Complete los campos requeridos antes de crear el plan.",
+          "SUBMIT": "No se pudo crear el plan de conteo cíclico."
+        }
+      },
+      "PLAN_FORM": {
+        "TITLE": "Crear plan de conteo cíclico",
+        "FIELD": {
+          "LOCATION": "Ubicación",
+          "LOCATION_PLACEHOLDER": "Seleccione una ubicación",
+          "ZONES": "Zonas",
+          "ZONES_EMPTY": "No hay zonas disponibles para esta ubicación.",
+          "SCHEDULED_DATE": "Fecha programada",
+          "PLAN_NAME": "Nombre del plan",
+          "PLAN_NAME_PLACEHOLDER": "Nombre opcional del plan"
+        },
+        "ACTION": {
+          "SUBMIT": "Crear plan"
+        }
       }
     },
     "PURCHASE_ORDERS": {
@@ -1760,6 +1862,226 @@
         "ACTION": {
           "SUBMIT": "Enviar pedido"
         }
+      }
+    },
+    "FULFILLMENT": {
+      "PICK_LIST": {
+        "TITLE": "Lista de surtido",
+        "STATE": {
+          "EMPTY": "No hay tareas de surtido disponibles."
+        },
+        "FIELD": {
+          "WORKORDER_ID": "Orden de trabajo",
+          "PICK_LIST_ID": "Lista de surtido",
+          "STATUS": "Estado",
+          "CREATED_AT": "Creado el"
+        },
+        "ACTION": {
+          "PRINT": "Imprimir"
+        },
+        "TABLE": {
+          "ARIA": "Tareas de la lista de surtido",
+          "HEADER": {
+            "SKU": "UGS",
+            "DESCRIPTION": "Descripción",
+            "LOCATION": "Ubicación",
+            "REQUESTED_QTY": "Cant. solicitada",
+            "PICKED_QTY": "Cant. surtida",
+            "UOM": "UOM",
+            "STATUS": "Estado"
+          }
+        },
+        "ERROR": {
+          "MISSING_ID": "Se requiere ID de orden de trabajo para cargar la lista de surtido.",
+          "LOAD": "No se pudo cargar la lista de surtido."
+        }
+      },
+      "RETURN_TO_STOCK": {
+        "TITLE": "Devolver a stock",
+        "FIELD": {
+          "LOCATION": "Ubicación",
+          "LOCATION_PLACEHOLDER": "Seleccione ubicación de devolución",
+          "STORAGE_LOCATION": "Ubicación de almacenamiento",
+          "STORAGE_LOCATION_PLACEHOLDER": "Ubicación de destino opcional",
+          "REASON_CODE": "Código de motivo",
+          "REASON_CODE_PLACEHOLDER": "Seleccione motivo de devolución",
+          "RETURN_QTY_SR": "Cantidad a devolver para {{sku}}"
+        },
+        "TABLE": {
+          "ARIA": "Artículos devolvibles",
+          "HEADER": {
+            "PRODUCT": "Producto",
+            "MAX_QTY": "Cant. máxima",
+            "RETURN_QTY": "Cant. a devolver"
+          }
+        },
+        "ACTION": {
+          "SUBMIT": "Enviar devolución"
+        },
+        "SUCCESS": {
+          "TITLE": "Devolución enviada",
+          "RETURN_ID": "ID de devolución"
+        },
+        "ERROR": {
+          "MISSING_ID": "Se requiere ID de orden de trabajo.",
+          "LOAD": "No se pudieron cargar los datos de devolución a stock.",
+          "STORAGE_LOCATIONS": "No se pudieron cargar las ubicaciones de almacenamiento.",
+          "SUBMIT": "No se pudo enviar la devolución a stock."
+        }
+      },
+      "CONSUME_PICKED_ITEMS": {
+        "TITLE": "Consumir Artículos Surtidos",
+        "STATE": {
+          "LOADING": "Cargando artículos surtidos..."
+        },
+        "SUCCESS": {
+          "TITLE": "Consumo Enviado",
+          "ARIA": "Resumen de artículos consumidos",
+          "LINE": "{{sku}}: consumido {{qty}}"
+        },
+        "TABLE": {
+          "ARIA": "Artículos surtidos disponibles para consumo",
+          "HEADER": {
+            "SKU": "SKU",
+            "DESCRIPTION": "Descripción",
+            "PICKED_QTY": "Cant. surtida",
+            "CONSUMED_QTY": "Consumido",
+            "REMAINING_QTY": "Restante",
+            "CONSUME_QTY": "Cant. a consumir"
+          },
+          "VALUE": {
+            "LINE_ITEM": "Línea"
+          }
+        },
+        "FIELD": {
+          "CONSUME_QTY_SR": "Cantidad a consumir para {{sku}}"
+        },
+        "ACTION": {
+          "CONTINUE": "Consumir más",
+          "MAX": "Máx",
+          "SUBMIT": "Enviar consumo"
+        },
+        "ERROR": {
+          "MISSING_ID": "Se requiere ID de orden de trabajo.",
+          "LOAD": "No se pudieron cargar los artículos surtidos.",
+          "SUBMIT": "No se pudieron enviar los artículos consumidos."
+        }
+      },
+      "PICK_EXECUTE": {
+        "TITLE": "Ejecución de Surtido del Mecánico",
+        "STATE": {
+          "LOADING": "Cargando datos de ejecución de surtido...",
+          "AWAITING_SCAN": "Escanee un artículo para comenzar la confirmación.",
+          "SCAN_NO_MATCH": "Ninguna línea coincide con ese escaneo."
+        },
+        "SECTION": {
+          "PICK_LINES": "Progreso de Líneas de Surtido",
+          "SCAN": "Escaneo Activo",
+          "CONFIRM": "Confirmar Cantidad Surtida"
+        },
+        "TABLE": {
+          "ARIA": "Progreso de ejecución de surtido",
+          "HEADER": {
+            "SKU": "SKU",
+            "REQUESTED": "Solicitado",
+            "CONFIRMED": "Confirmado",
+            "STATUS": "Estado"
+          }
+        },
+        "FIELD": {
+          "SCAN_INPUT": "Escanee el código de barras o ingrese número de parte",
+          "SKU": "SKU",
+          "REQUESTED": "Solicitado",
+          "ALREADY_CONFIRMED": "Ya confirmado",
+          "CONFIRM_QTY": "Cantidad a confirmar"
+        },
+        "ACTION": {
+          "RESOLVE_SCAN": "Resolver escaneo",
+          "CONFIRM": "Confirmar",
+          "COMPLETE": "Completar surtido"
+        },
+        "COMPLETE": {
+          "TITLE": "Surtido Completado",
+          "DESCRIPTION": "Todas las líneas de surtido se completaron."
+        },
+        "ERROR": {
+          "MISSING_ID": "Se requiere ID de orden de trabajo.",
+          "LOAD": "No se pudieron cargar los datos de ejecución de surtido.",
+          "RESOLVE_SCAN": "No se pudo resolver el valor escaneado.",
+          "CONFIRM": "No se pudo confirmar la cantidad surtida.",
+          "COMPLETE": "No se pudo completar el surtido."
+        }
+      },
+      "SHORTAGE_RESOLUTION": {
+        "TITLE": "Resolución de Faltante",
+        "STATE": {
+          "LOADING": "Cargando opciones de faltante..."
+        },
+        "WARNING": {
+          "PARTIAL_OPTIONS": "Algunas opciones pueden ofrecer solo cumplimiento parcial."
+        },
+        "FIELD": {
+          "OPTIONS": "Opciones de Resolución"
+        },
+        "LEAD_TIME_DAYS": "Tiempo de entrega: {{days}} día(s)",
+        "ACTION": {
+          "CONFIRM": "Confirmar resolución"
+        },
+        "SUCCESS": {
+          "TITLE": "Faltante Resuelto",
+          "DECISION": "Decisión seleccionada"
+        },
+        "ERROR": {
+          "MISSING_ID": "Se requieren los ID de orden de trabajo y línea de asignación.",
+          "LOAD": "No se pudieron cargar las opciones de faltante.",
+          "SUBMIT": "No se pudo enviar la resolución de faltante."
+        }
+      }
+    },
+    "SECURITY": {
+      "PERMISSIONS": {
+        "TITLE": "Permisos de Seguridad de Inventario",
+        "SUBTITLE": "Revise las claves de permisos de inventario y su acceso actual.",
+        "FILTER_LABEL": "Filtrar permisos",
+        "FILTER_PLACEHOLDER": "Buscar clave de permiso",
+        "STATE": {
+          "LOADING": "Cargando permisos de inventario...",
+          "EMPTY": "Ningún permiso coincide con el filtro actual."
+        },
+        "TABLE": {
+          "ARIA": "Permisos de inventario",
+          "HEADER": {
+            "PERMISSION": "Permiso",
+            "DESCRIPTION": "Descripción",
+            "CATEGORY": "Categoría",
+            "GRANTED": "Concedido"
+          }
+        },
+        "VALUE": {
+          "GRANTED": "Concedido",
+          "NOT_GRANTED": "No concedido"
+        },
+        "ERROR": {
+          "FORBIDDEN": "No tiene acceso a los permisos de inventario.",
+          "LOAD": "No se pudieron cargar los permisos de inventario."
+        }
+      },
+      "PERMISSION": {
+        "VIEW": {
+          "DESC": "Ver registros de inventario"
+        },
+        "ADJUST": {
+          "DESC": "Ajustar cantidades de inventario"
+        },
+        "TRANSFER": {
+          "DESC": "Transferir inventario entre ubicaciones"
+        },
+        "ADMIN": {
+          "DESC": "Administrar permisos de seguridad de inventario"
+        }
+      },
+      "CATEGORY": {
+        "INVENTORY": "Inventario"
       }
     }
   },

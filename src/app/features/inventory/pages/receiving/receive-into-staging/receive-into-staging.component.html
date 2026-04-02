@@ -3,6 +3,44 @@
     <h1 id="receiving-title" class="page-title">{{ 'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.TITLE' | translate }}</h1>
   </header>
 
+  @if (asnMode() === 'asn-entry') {
+  <section class="card asn-entry-section"
+    aria-label="{{ 'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.TITLE' | translate }}">
+    <h2>{{ 'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.TITLE' | translate }}</h2>
+
+    <div class="asn-field-grid">
+      <div class="field-group">
+        <label for="asn-id-input">{{ 'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.FIELD.ASN_ID' | translate }}</label>
+        <input id="asn-id-input" #asnIdInput type="text"
+          [attr.placeholder]="'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.FIELD.ASN_ID_PLACEHOLDER' | translate"
+          [attr.disabled]="state() === 'loading' ? true : null" />
+      </div>
+
+      <div class="field-group">
+        <label for="asn-shipment-ref-input">{{ 'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.FIELD.SHIPMENT_REF' |
+          translate }}</label>
+        <input id="asn-shipment-ref-input" #shipmentRefInput type="text"
+          [attr.placeholder]="'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.FIELD.SHIPMENT_REF_PLACEHOLDER' | translate"
+          [attr.disabled]="state() === 'loading' ? true : null" />
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn-primary" type="button" (click)="loadAsn(asnIdInput.value || shipmentRefInput.value)"
+        [disabled]="state() === 'loading' || !(asnIdInput.value || shipmentRefInput.value)">
+        {{ 'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.ACTION.LOAD' | translate }}
+      </button>
+      <button type="button" class="tertiary-action" (click)="switchToFallback()">
+        {{ 'INVENTORY.RECEIVING.RECEIVE_INTO_STAGING.ASN.FALLBACK.LABEL' | translate }}
+      </button>
+    </div>
+
+    @if (state() === 'error' && errorKey()) {
+    <p class="asn-error" role="alert">{{ errorKey() | translate }}</p>
+    }
+  </section>
+  }
+
   @if (state() === 'loading') {
   <section class="card" aria-busy="true" aria-live="polite">
     <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
@@ -68,7 +106,7 @@
         @default {
         <span class="badge badge--neutral">
           <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
-          {{ document()!.status | translate }}
+          {{ ('STATUS.' + document()!.status) | translate }}
         </span>
         }
         }

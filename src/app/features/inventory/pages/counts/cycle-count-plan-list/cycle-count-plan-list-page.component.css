@@ -1,0 +1,69 @@
+:host {
+  display: block;
+}
+
+.page {
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+  font-family: 'Inter', var(--font-body);
+}
+
+.plans-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.page-title {
+  font-family: 'Public Sans', var(--font-body);
+}
+
+.page-subtitle {
+  margin-top: 0.35rem;
+  color: color-mix(in srgb, var(--currentTextColor) 72%, transparent);
+}
+
+.table-card,
+.loading-card,
+.empty-card,
+.error-card {
+  background: var(--cardBackground);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--cardBackground));
+  color: var(--brand-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.state-card {
+  display: grid;
+  place-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 2rem 1.5rem;
+}
+
+.empty-card .material-symbols-outlined,
+.error-card .material-symbols-outlined {
+  font-size: 2rem;
+}
+
+@media (max-width: 900px) {
+  .plans-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
