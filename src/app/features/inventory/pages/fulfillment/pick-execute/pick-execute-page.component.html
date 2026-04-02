@@ -93,7 +93,7 @@
           {{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.ACTION.CONFIRM' | translate }}
         </button>
       </section>
-      } @else if (scanInput().trim().length > 0) {
+      } @else if (scanAttempted() && scanInput().trim().length > 0) {
       <p class="scan-status" role="alert">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.STATE.SCAN_NO_MATCH' | translate }}</p>
       } @else {
       <p class="scan-status" aria-live="polite">{{ 'INVENTORY.FULFILLMENT.PICK_EXECUTE.STATE.AWAITING_SCAN' | translate

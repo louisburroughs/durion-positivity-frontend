@@ -120,4 +120,36 @@ describe('PickExecutePageComponent', () => {
 
     expect(component.state()).toBe('complete');
   });
+
+  it('SCAN_NO_MATCH is not shown before resolveScan is called', async () => {
+    const component = await setupPickExecute();
+
+    component.setScanInput('barcode-123');
+
+    expect(component.scanAttempted()).toBe(false);
+  });
+
+  it('SCAN_NO_MATCH is shown after resolveScan returns no match', async () => {
+    mockWorkexecService.resolvePickScan.mockReturnValue(of([]));
+    const component = await setupPickExecute();
+
+    component.setScanInput('barcode-123');
+    component.resolveScan();
+
+    expect(component.scanAttempted()).toBe(true);
+    expect(component.pendingLine()).toBeNull();
+  });
+
+  it('setScanInput resets scanAttempted to false', async () => {
+    mockWorkexecService.resolvePickScan.mockReturnValue(of([]));
+    const component = await setupPickExecute();
+
+    component.setScanInput('barcode-123');
+    component.resolveScan();
+    expect(component.scanAttempted()).toBe(true);
+
+    component.setScanInput('new-scan');
+
+    expect(component.scanAttempted()).toBe(false);
+  });
 });

@@ -25,6 +25,7 @@ export class PickExecutePageComponent {
   readonly pickList = signal<PickListView | null>(null);
   readonly lines = signal<PickExecuteLine[]>([]);
   readonly scanInput = signal('');
+  readonly scanAttempted = signal(false);
   readonly pendingLine = signal<PickExecuteLine | null>(null);
   readonly confirmQty = signal(0);
 
@@ -34,6 +35,7 @@ export class PickExecutePageComponent {
 
   setScanInput(value: string): void {
     this.scanInput.set(value);
+    this.scanAttempted.set(false);
   }
 
   setConfirmQty(quantity: number): void {
@@ -47,6 +49,7 @@ export class PickExecutePageComponent {
   resolveScan(): void {
     const workorderId = this.route.snapshot.paramMap.get('workorderId');
     const scanValue = this.scanInput().trim();
+    this.scanAttempted.set(true);
     if (!workorderId || !scanValue) {
       return;
     }

@@ -36,13 +36,13 @@ export class ReturnToStockPageComponent {
   readonly selectedLocationId = signal<string | null>(null);
   readonly selectedStorageLocationId = signal<string | null>(null);
   readonly selectedReasonCode = signal<string | null>(null);
-  readonly returnQtys = signal<Record<string, number>>({});
+  readonly returnQtys = signal<Partial<Record<string, number>>>({});
   readonly submitResult = signal<ReturnToStockResult | null>(null);
 
   readonly canSubmit = computed(() => {
     const hasLocation = !!this.selectedLocationId();
     const hasReason = !!this.selectedReasonCode();
-    const hasLine = Object.values(this.returnQtys()).some(qty => qty > 0);
+    const hasLine = Object.values(this.returnQtys()).some(qty => (qty ?? 0) > 0);
     return hasLocation && hasReason && hasLine;
   });
 

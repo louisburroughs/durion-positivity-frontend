@@ -194,4 +194,16 @@ describe('ReturnToStockPageComponent', () => {
     expect(component.errorKey()).toBeNull();
     expect(component.state()).toBe('ready');
   });
+
+  it('returnQtys input renders 0 by default for unset items', async () => {
+    const fixture = await setupReturnToStockFixture();
+
+    fixture.detectChanges();
+
+    const inputEl = fixture.nativeElement.querySelector(
+      '#return-qty-line-001',
+    ) as HTMLInputElement;
+    expect(inputEl).not.toBeNull();
+    expect(inputEl.value).toBe('0');
+  });
 });

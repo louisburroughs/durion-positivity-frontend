@@ -1418,9 +1418,9 @@
       "ERROR": {
         "LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ŕëëçëëïïṽïïñĝ đøøçüüḿëëñŧ. !!]",
         "CONFIRM": "[!! Ƒààïïľëëđ ŧøø çøøñƒïïŕḿ ŕëëçëëïïṕŧ. !!]",
-        "ASN_LOCATION_REQUIRED": "[!! Location is required to load ASN receiving. !!]",
-        "ASN_SESSION": "[!! Failed to create receiving session from ASN. !!]",
-        "ASN_LOAD": "[!! Failed to load ASN details. !!]"
+        "ASN_LOCATION_REQUIRED": "[!! Ľøøçààŧïïøøñ ïïs ŕëëqüüïïŕëëđ ŧøø ľøøààđ ÁSÑ ŕëëçëëïïṽïïñĝ. !!]",
+        "ASN_SESSION": "[!! Ƒààïïľëëđ ŧøø çŕëëààŧëë ŕëëçëëïïṽïïñĝ sëëssïïøøñ ƒŕøøḿ ÁSÑ. !!]",
+        "ASN_LOAD": "[!! Ƒààïïľëëđ ŧøø ľøøààđ ÁSÑ đëëŧààïïľs. !!]"
       },
       "RECEIVE_INTO_STAGING": {
         "TITLE": "[Récéívé íntó Stágíng]",

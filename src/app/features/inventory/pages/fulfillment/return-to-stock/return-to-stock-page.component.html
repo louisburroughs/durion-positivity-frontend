@@ -93,7 +93,7 @@
                   {{ 'INVENTORY.FULFILLMENT.RETURN_TO_STOCK.FIELD.RETURN_QTY_SR' | translate:{ sku: item.productSku } }}
                 </label>
                 <input id="return-qty-{{ item.workorderLineId }}" type="number" min="0" [max]="item.maxReturnableQty"
-                  [value]="returnQtys()[item.workorderLineId]"
+                  [value]="returnQtys()[item.workorderLineId] ?? 0"
                   (input)="updateReturnQty(item.workorderLineId, +$any($event.target).value)"
                   [attr.disabled]="state() === 'submitting' ? true : null" />
               </td>
