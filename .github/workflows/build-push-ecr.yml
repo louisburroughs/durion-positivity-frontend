@@ -28,7 +28,7 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPO: durion/pos-frontend
+  ECR_REPO: durion/durion-positivity-frontend
   IMAGE_TAG: sha-${{ github.sha != '' && github.sha || 'local' }}
 
 jobs:
