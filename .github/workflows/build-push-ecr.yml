@@ -17,6 +17,11 @@ on:
         description: "Target environment tag prefix"
         required: false
         default: "alpha"
+      deploy_alpha:
+        description: "Deploy to alpha EC2 after pushing image"
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: ecr-push-frontend-${{ github.ref }}
@@ -92,3 +97,57 @@ jobs:
           echo "| Commit | \`${GITHUB_SHA}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "Use this tag as **FRONTEND_TAG** in \`docker-compose.prod.yml\` for deployment." >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-alpha:
+    name: Deploy Frontend to Alpha
+    needs: build-push
+    runs-on: ubuntu-latest
+    if: >
+      success() &&
+      (
+        (github.event_name == 'workflow_dispatch' && inputs.deploy_alpha) ||
+        vars.AUTO_DEPLOY_ALPHA == 'true'
+      )
+
+    steps:
+      - name: Deploy frontend service on alpha host
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.ALPHA_EC2_HOST }}
+          username: ${{ secrets.ALPHA_EC2_USER }}
+          key: ${{ secrets.ALPHA_EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+
+            ALPHA_ROOT="/opt/durion/alpha"
+            BACKEND_DIR="${ALPHA_ROOT}/backend"
+            ENV_FILE="${ALPHA_ROOT}/.env"
+            PROD_OVERRIDE="${ALPHA_ROOT}/docker-compose.prod.yml"
+            IMAGE_TAG="sha-${GITHUB_SHA::7}"
+
+            if grep -q '^FRONTEND_TAG=' "${ENV_FILE}"; then
+              sed -i "s/^FRONTEND_TAG=.*/FRONTEND_TAG=${IMAGE_TAG}/" "${ENV_FILE}"
+            else
+              printf '\nFRONTEND_TAG=%s\n' "${IMAGE_TAG}" >> "${ENV_FILE}"
+            fi
+
+            cd "${BACKEND_DIR}"
+
+            docker compose \
+              -f docker-compose.yml \
+              -f "${PROD_OVERRIDE}" \
+              --env-file "${ENV_FILE}" \
+              pull pos-frontend
+
+            docker compose \
+              -f docker-compose.yml \
+              -f "${PROD_OVERRIDE}" \
+              --env-file "${ENV_FILE}" \
+              up -d --force-recreate pos-frontend
+
+            docker compose \
+              -f docker-compose.yml \
+              -f "${PROD_OVERRIDE}" \
+              --env-file "${ENV_FILE}" \
+              ps pos-frontend
