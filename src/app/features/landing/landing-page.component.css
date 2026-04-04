@@ -1,0 +1,443 @@
+/* =============================================================================
+   Landing Page — Durion POS
+   Design: "The Architectural Ledger" — Blueprint Blues, tonal depth,
+   no-line layout, editorial feel. Tokens from styles.css.
+   ============================================================================= */
+
+/* ── Host: own scroll context (global html/body overflow is hidden) ──────── */
+:host {
+  display: block;
+  height: 100%;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.landing-page {
+  min-height: 100%;
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+  font-family: var(--font-body);
+}
+
+/* ── Screen-reader only utility ─────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.landing-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(43, 76, 120, 0.72);
+  /* brand-primary at ~70% */
+  backdrop-filter: blur(12px);
+  /* Glassmorphism */
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.landing-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.landing-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.landing-brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--durion-blue-500), var(--durion-blue-400));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.landing-brand-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.landing-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.landing-locale-select {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  color: #ffffff;
+  font-size: 0.875rem;
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.landing-locale-select:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+.landing-locale-select option {
+  background: var(--durion-blue-700);
+  color: #ffffff;
+}
+
+.landing-icon-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.landing-icon-btn:hover,
+.landing-icon-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+.landing-signin-btn {
+  background: linear-gradient(135deg, var(--durion-blue-500), var(--durion-blue-400));
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.landing-signin-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.landing-signin-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
+/* ── Hero ────────────────────────────────────────────────────────────────── */
+.landing-hero {
+  background: linear-gradient(135deg, var(--durion-blue-700) 0%, var(--durion-blue-800) 100%);
+  padding: 7rem var(--space-6) 6rem;
+}
+
+.landing-hero-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.hero-brand-mark {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--durion-blue-500), var(--durion-blue-400));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.hero-title {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: var(--durion-blue-200);
+  line-height: 1.7;
+  max-width: 620px;
+  margin: 0;
+}
+
+.hero-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, var(--durion-teal-500), var(--durion-teal-600));
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.875rem var(--space-8);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.hero-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  opacity: 0.95;
+}
+
+.hero-cta-btn:focus-visible {
+  outline: 3px solid var(--durion-teal-300);
+  outline-offset: 3px;
+}
+
+/* ── Section shared ──────────────────────────────────────────────────────── */
+.section-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+
+.section-title {
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 700;
+  color: var(--currentTextColor);
+  letter-spacing: -0.015em;
+  margin: 0 0 var(--space-3);
+}
+
+.section-subtitle {
+  font-size: 1.0625rem;
+  color: var(--durion-graphite-500);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Features intro ─────────────────────────────────────────────────────── */
+.features-intro {
+  padding: 5rem var(--space-4) 2.5rem;
+  background: var(--themeBackground);
+}
+
+/* ── Features grid ──────────────────────────────────────────────────────── */
+.features-grid-section {
+  padding: 0 var(--space-4) 5rem;
+  background: var(--themeBackground);
+}
+
+.features-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-6);
+}
+
+/* ── Feature card ────────────────────────────────────────────────────────── */
+.feature-card {
+  background: var(--cardBackground);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  position: relative;
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--mic-elevation-3, 0 4px 16px rgba(0, 0, 0, 0.14));
+}
+
+/* Left accent bar per DESIGN.md "Content Grouping" rule */
+.feature-accent {
+  position: absolute;
+  left: 0;
+  top: var(--space-4);
+  bottom: var(--space-4);
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--brand-primary);
+}
+
+.feature-number {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--brand-accent);
+  font-family: var(--font-body);
+}
+
+.feature-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--currentTextColor);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.feature-desc {
+  font-size: 0.9375rem;
+  color: var(--durion-graphite-500);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ── CTA section ─────────────────────────────────────────────────────────── */
+.cta-section {
+  background: linear-gradient(135deg, var(--durion-blue-700) 0%, var(--durion-blue-800) 100%);
+  padding: 5rem var(--space-6);
+}
+
+.cta-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.cta-title {
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.landing-footer {
+  background: var(--durion-blue-800);
+  padding: var(--space-8) var(--space-6);
+}
+
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.footer-tagline {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--durion-blue-300);
+  margin: 0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.footer-copyright {
+  font-size: 0.8125rem;
+  color: var(--durion-blue-400);
+  margin: 0;
+}
+
+/* ── Dark theme overrides ────────────────────────────────────────────────── */
+[data-theme='dark'] .feature-card {
+  background: var(--cardBackground);
+}
+
+[data-theme='dark'] .section-subtitle,
+[data-theme='dark'] .feature-desc {
+  color: var(--durion-graphite-200);
+}
+
+[data-theme='dark'] .landing-locale-select option {
+  background: var(--durion-graphite-800);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .landing-header-inner {
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .landing-brand-name {
+    display: none;
+  }
+
+  .landing-nav {
+    gap: var(--space-2);
+  }
+
+  .landing-hero {
+    padding: 4rem var(--space-4) 3.5rem;
+  }
+
+  .features-intro {
+    padding: 3rem var(--space-4) 2rem;
+  }
+
+  .features-grid-section {
+    padding: 0 var(--space-4) 3rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cta-section {
+    padding: 3rem var(--space-4);
+  }
+}
+
+@media (max-width: 900px) {
+  .features-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+}

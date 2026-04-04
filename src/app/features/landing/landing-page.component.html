@@ -1,0 +1,85 @@
+<div class="landing-page" [attr.data-theme]="themeService.isDark() ? 'dark' : 'light'">
+
+  <!-- ── Sticky header ─────────────────────────────────────────────────── -->
+  <header class="landing-header" role="banner">
+    <div class="landing-header-inner">
+      <span class="landing-brand" aria-label="Durion POS">
+        <span class="landing-brand-mark" aria-hidden="true">D</span>
+        <span class="landing-brand-name">Durion POS</span>
+      </span>
+
+      <nav class="landing-nav" aria-label="Landing page navigation">
+        <!-- Language selector -->
+        <label class="sr-only" for="landing-locale-select">{{ 'LANDING.NAV_LOCALE_ARIA' | translate }}</label>
+        <select id="landing-locale-select" class="landing-locale-select" [value]="localeService.currentLocale()"
+          (change)="setLocale($any($event.target).value)" [attr.aria-label]="'LANDING.NAV_LOCALE_ARIA' | translate">
+          @for (locale of localeOptions; track locale.code) {
+          <option [value]="locale.code">{{ locale.labelKey | translate }}</option>
+          }
+        </select>
+
+        <!-- Theme toggle -->
+        <button type="button" class="landing-icon-btn" (click)="themeService.toggle()"
+          [attr.aria-label]="themeService.isDark() ? ('LANDING.NAV_THEME_TO_LIGHT' | translate) : ('LANDING.NAV_THEME_TO_DARK' | translate)"
+          [title]="themeService.isDark() ? ('LANDING.NAV_THEME_TO_LIGHT' | translate) : ('LANDING.NAV_THEME_TO_DARK' | translate)">
+          <span aria-hidden="true">{{ themeService.isDark() ? '☀' : '◑' }}</span>
+        </button>
+
+        <!-- Sign in link -->
+        <a routerLink="/login" class="landing-signin-btn" [attr.aria-label]="'LANDING.NAV_SIGN_IN' | translate">{{
+          'LANDING.NAV_SIGN_IN' | translate }}</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Hero ─────────────────────────────────────────────────────────── -->
+  <section class="landing-hero" aria-labelledby="hero-title">
+    <div class="landing-hero-inner">
+      <div class="hero-brand-mark" aria-hidden="true">D</div>
+      <h1 id="hero-title" class="hero-title">{{ 'LANDING.HERO_TITLE' | translate }}</h1>
+      <p class="hero-subtitle">{{ 'LANDING.HERO_SUBTITLE' | translate }}</p>
+      <a routerLink="/login" class="hero-cta-btn">{{ 'LANDING.HERO_CTA' | translate }}</a>
+    </div>
+  </section>
+
+  <!-- ── Features intro ───────────────────────────────────────────────── -->
+  <section class="features-intro" aria-labelledby="features-title">
+    <div class="section-inner">
+      <h2 id="features-title" class="section-title">{{ 'LANDING.FEATURES_TITLE' | translate }}</h2>
+      <p class="section-subtitle">{{ 'LANDING.FEATURES_SUBTITLE' | translate }}</p>
+    </div>
+  </section>
+
+  <!-- ── Features grid ────────────────────────────────────────────────── -->
+  <section class="features-grid-section" aria-label="Platform features">
+    <div class="section-inner">
+      <ul class="features-grid">
+        @for (feature of features; track feature.titleKey; let i = $index) {
+        <li class="feature-card" [class]="feature.icon">
+          <div class="feature-accent" aria-hidden="true"></div>
+          <div class="feature-number" aria-hidden="true">{{ (i + 1).toString().padStart(2, '0') }}</div>
+          <h3 class="feature-title">{{ feature.titleKey | translate }}</h3>
+          <p class="feature-desc">{{ feature.descKey | translate }}</p>
+        </li>
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── CTA band ──────────────────────────────────────────────────────── -->
+  <section class="cta-section" aria-labelledby="cta-title">
+    <div class="cta-inner">
+      <h2 id="cta-title" class="cta-title">{{ 'LANDING.CTA_TITLE' | translate }}</h2>
+      <a routerLink="/login" class="hero-cta-btn">{{ 'LANDING.CTA_BUTTON' | translate }}</a>
+    </div>
+  </section>
+
+  <!-- ── Footer ───────────────────────────────────────────────────────── -->
+  <footer class="landing-footer" role="contentinfo">
+    <div class="footer-inner">
+      <p class="footer-tagline">{{ 'LANDING.FOOTER_TAGLINE' | translate }}</p>
+      <p class="footer-copyright">{{ 'LANDING.FOOTER_COPYRIGHT' | translate }}</p>
+    </div>
+  </footer>
+
+</div>

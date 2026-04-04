@@ -1,0 +1,12 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/server",
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "esModuleInterop": true
+  },
+  "include": ["src/main.server.ts", "src/server.ts"]
+}
