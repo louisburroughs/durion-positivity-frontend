@@ -6,7 +6,7 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { firstValueFrom, Observable, of } from 'rxjs';
 
 import { TranslateLoader, TranslateModule, TranslationObject } from '@ngx-translate/core';
-import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { TranslateHttpLoader, TRANSLATE_HTTP_LOADER_CONFIG } from '@ngx-translate/http-loader';
 
 import { routes } from './app.routes';
 import { AuthService } from './core/services/auth.service';
@@ -53,6 +53,8 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([authInterceptor]),
     ),
     provideClientHydration(withEventReplay()),
+    // Required by @ngx-translate/http-loader v17 when TranslateHttpLoader uses inject().
+    { provide: TRANSLATE_HTTP_LOADER_CONFIG, useValue: {} },
     importProvidersFrom(TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,
