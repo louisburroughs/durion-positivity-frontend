@@ -61,7 +61,7 @@ export const appConfig: ApplicationConfig = {
         useFactory: HttpLoaderFactory,
         deps: [HttpClient, PLATFORM_ID]
       },
-      defaultLanguage: 'en-US'
+      fallbackLang: 'en-US'
     })),
     provideAppInitializer(() => inject(LocaleService).initialize()),
   ],
