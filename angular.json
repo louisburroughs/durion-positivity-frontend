@@ -48,6 +48,7 @@
               "allowedHosts": [
                 "durionpos.org",
                 "www.durionpos.org",
+                "34.202.151.97",
                 "localhost",
                 "127.0.0.1"
               ]
