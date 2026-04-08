@@ -31,9 +31,9 @@ const EXPIRY_SKEW_MS = 30_000;
  * Handles JWT-based authentication against durion-positivity-backend.
  *
  * Endpoints (configured via environment.apiBaseUrl):
- *   POST /auth/login   → LoginResponse
- *   POST /auth/refresh → LoginResponse   (Future enhancement: finalize when backend is ready)
- *   POST /auth/logout  → 204             (Future enhancement: call backend to invalidate refresh token)
+ *   POST /security-service/v1/auth/login   → LoginResponse
+ *   POST /security-service/v1/auth/refresh → LoginResponse
+ *   POST /security-service/v1/auth/logout  → 204 (Future enhancement: call backend to invalidate refresh token)
  *
  * Token storage: localStorage (access + refresh).
  * Guards read `isAuthenticated()` signal; HttpInterceptor reads `accessToken()`.
@@ -48,6 +48,7 @@ export class AuthService {
   private readonly _refreshToken = signal<string | null>(this.loadFromStorage(REFRESH_TOKEN_KEY));
   private readonly _roles = signal<string[]>(this.loadRolesFromSession());
   private expiryTimerId: ReturnType<typeof setTimeout> | null = null;
+  private static readonly AUTH_BASE_PATH = '/security-service/v1/auth';
 
   /** Reactive derived state. Components / guards can use these. */
   readonly accessToken = this._accessToken.asReadonly();
@@ -80,7 +81,7 @@ export class AuthService {
       return of(MOCK_RESPONSE);
     }
     return this.http
-      .post<LoginResponse>(`${environment.apiBaseUrl}/auth/login`, credentials)
+      .post<LoginResponse>(`${environment.apiBaseUrl}${AuthService.AUTH_BASE_PATH}/login`, credentials)
       .pipe(
         tap(resp => this.storeTokens(resp.accessToken, resp.refreshToken)),
         catchError(err => throwError(() => err)),
@@ -88,7 +89,7 @@ export class AuthService {
   }
 
   logout(): void {
-    // Future enhancement: call POST /auth/logout with refresh token when backend endpoint is available.
+    // Future enhancement: call POST /security-service/v1/auth/logout with refresh token when backend endpoint is available.
     this.clearTokens();
     this.router.navigate(['/login']);
   }
@@ -115,7 +116,7 @@ export class AuthService {
   /**
    * refreshTokens
     * Future enhancement: complete full refresh flow lifecycle.
-   * The backend is expected to expose POST /auth/refresh accepting { refreshToken }.
+   * The backend exposes POST /security-service/v1/auth/refresh accepting { refreshToken }.
    * Call this automatically from AuthInterceptor when a 401 is received.
    */
   refreshTokens(): Observable<LoginResponse> {
@@ -125,7 +126,7 @@ export class AuthService {
       return throwError(() => new Error('No refresh token'));
     }
     return this.http
-      .post<LoginResponse>(`${environment.apiBaseUrl}/auth/refresh`, { refreshToken })
+      .post<LoginResponse>(`${environment.apiBaseUrl}${AuthService.AUTH_BASE_PATH}/refresh`, { refreshToken })
       .pipe(
         tap(resp => this.storeTokens(resp.accessToken, resp.refreshToken)),
         catchError(err => {
@@ -146,7 +147,7 @@ export class AuthService {
     }
 
     return this.http
-      .get<void>(`${environment.apiBaseUrl}/auth/validate`, {
+      .get<void>(`${environment.apiBaseUrl}${AuthService.AUTH_BASE_PATH}/validate`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .pipe(

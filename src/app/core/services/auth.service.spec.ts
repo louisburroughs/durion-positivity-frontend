@@ -57,8 +57,8 @@ describe('AuthService', () => {
       const loginReq = { username: 'demo', password: /* test credential */ 'testpass' };
       service.login(loginReq).subscribe();
 
-      // Since mockAuth is false, login makes an HTTP POST /auth/login
-      const pendingLogin = httpMock.match(req => req.url.includes('/auth/login'));
+      // Since mockAuth is false, login makes an HTTP POST /security-service/v1/auth/login
+      const pendingLogin = httpMock.match(req => req.url.includes('/security-service/v1/auth/login'));
       if (pendingLogin.length) {
         pendingLogin[0].flush({
           accessToken:
@@ -73,7 +73,7 @@ describe('AuthService', () => {
       let result: boolean | undefined;
       service.validateSessionOnResume().subscribe(v => (result = v));
 
-      const req = httpMock.expectOne(r => r.url.includes('/auth/validate'));
+      const req = httpMock.expectOne(r => r.url.includes('/security-service/v1/auth/validate'));
       req.flush(null, { status: 200, statusText: 'OK' });
 
       expect(result).toBe(true);
@@ -85,7 +85,7 @@ describe('AuthService', () => {
       const loginReq = { username: 'demo', password: /* test credential */ 'testpass' };
       service.login(loginReq).subscribe();
 
-      const pendingLogin = httpMock.match(req => req.url.includes('/auth/login'));
+      const pendingLogin = httpMock.match(req => req.url.includes('/security-service/v1/auth/login'));
       if (pendingLogin.length) {
         pendingLogin[0].flush({
           accessToken:
@@ -100,7 +100,7 @@ describe('AuthService', () => {
       let result: boolean | undefined;
       service.validateSessionOnResume().subscribe(v => (result = v));
 
-      const req = httpMock.expectOne(r => r.url.includes('/auth/validate'));
+      const req = httpMock.expectOne(r => r.url.includes('/security-service/v1/auth/validate'));
       req.flush(null, { status: 401, statusText: 'Unauthorized' });
 
       expect(logoutRedirectSpy).toHaveBeenCalled();
@@ -124,7 +124,7 @@ describe('AuthService', () => {
       const loginReq = { username: 'demo', password: /* test credential */ 'testpass' };
       service.login(loginReq).subscribe();
 
-      const pendingLogin = httpMock.match(req => req.url.includes('/auth/login'));
+      const pendingLogin = httpMock.match(req => req.url.includes('/security-service/v1/auth/login'));
       if (pendingLogin.length) {
         pendingLogin[0].flush({
           accessToken:
@@ -139,7 +139,7 @@ describe('AuthService', () => {
       let result: boolean | undefined;
       service.validateSessionOnResume().subscribe(v => (result = v));
 
-      const req = httpMock.expectOne(r => r.url.includes('/auth/validate'));
+      const req = httpMock.expectOne(r => r.url.includes('/security-service/v1/auth/validate'));
       req.flush(null, { status: 500, statusText: 'Internal Server Error' });
 
       expect(logoutRedirectSpy).toHaveBeenCalled();
@@ -152,7 +152,7 @@ describe('AuthService', () => {
       let result: boolean | undefined;
       service.validateSessionOnResume().subscribe(v => (result = v));
 
-      httpMock.expectNone(r => r.url.includes('/auth/validate'));
+      httpMock.expectNone(r => r.url.includes('/security-service/v1/auth/validate'));
       expect(result).toBe(true);
     });
 
@@ -174,7 +174,7 @@ describe('AuthService', () => {
       const navigateSpy = vi.spyOn(router, 'navigate');
       service.login({ username: 'demo', password: /* test credential */ 'testpass' }).subscribe();
 
-      const pendingLogin = httpMock.match(req => req.url.includes('/auth/login'));
+      const pendingLogin = httpMock.match(req => req.url.includes('/security-service/v1/auth/login'));
       if (pendingLogin.length) {
         pendingLogin[0].flush({
           accessToken:
@@ -189,7 +189,7 @@ describe('AuthService', () => {
       let result: boolean | undefined;
       service.validateSessionOnResume().subscribe(v => (result = v));
 
-      const req = httpMock.expectOne(r => r.url.includes('/auth/validate'));
+      const req = httpMock.expectOne(r => r.url.includes('/security-service/v1/auth/validate'));
       req.flush(null, { status: 401, statusText: 'Unauthorized' });
 
       expect(navigateSpy).toHaveBeenCalledWith(
