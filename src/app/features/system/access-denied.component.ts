@@ -12,7 +12,7 @@ import { TranslateModule } from '@ngx-translate/core';
       <h1>{{ 'SYSTEM.ACCESS_DENIED.TITLE' | translate }}</h1>
       <p>{{ 'SYSTEM.ACCESS_DENIED.MESSAGE' | translate }}</p>
       <button class="state-btn" type="button" (click)="goBack()">{{ 'SYSTEM.ACCESS_DENIED.BACK' | translate }}</button>
-      <a class="state-link" routerLink="/app">{{ 'SYSTEM.ACCESS_DENIED.HOME' | translate }}</a>
+      <a class="state-link" routerLink="/chat">{{ 'SYSTEM.ACCESS_DENIED.HOME' | translate }}</a>
     </section>
   `,
   styles: [
@@ -68,7 +68,7 @@ export class AccessDeniedComponent {
       this.location.back();
       return;
     }
-    void this.router.navigateByUrl('/app');
+    void this.router.navigateByUrl('/chat');
   }
 }
 

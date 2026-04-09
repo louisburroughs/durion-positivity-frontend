@@ -12,7 +12,7 @@ import { TranslateModule } from '@ngx-translate/core';
       <h1>{{ 'SYSTEM.NOT_FOUND.TITLE' | translate }}</h1>
       <p>{{ 'SYSTEM.NOT_FOUND.MESSAGE' | translate }}</p>
       <button class="state-btn" type="button" (click)="goBack()">{{ 'SYSTEM.NOT_FOUND.BACK' | translate }}</button>
-      <a class="state-link" routerLink="/app">{{ 'SYSTEM.NOT_FOUND.HOME' | translate }}</a>
+      <a class="state-link" routerLink="/chat">{{ 'SYSTEM.NOT_FOUND.HOME' | translate }}</a>
     </section>
   `,
   styles: [
@@ -68,6 +68,6 @@ export class NotFoundComponent {
       this.location.back();
       return;
     }
-    void this.router.navigateByUrl('/app');
+    void this.router.navigateByUrl('/chat');
   }
 }

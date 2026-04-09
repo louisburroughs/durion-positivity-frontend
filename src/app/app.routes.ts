@@ -9,15 +9,18 @@ import { rolesChildGuard } from './core/guards/roles.guard';
  *   /login    → LoginComponent
  *
  * Protected (authGuard):
- *   /app      → ShellComponent
- *     /app    → DashboardComponent (default child)
+ *   /chat     → ShellComponent
+ *     /chat   → DashboardComponent (default child)
+ *
+ * Compatibility alias:
+ *   /app      → Redirects to /chat
  *
  * Optional role constraints can be declared per child route:
  *   data: { roles: ['ROLE_ADMIN'] }
  *
  * Extensibility:
  *   Add new domain feature modules as additional lazy-loaded children of the
- *   /app shell route. Example:
+ *   /chat shell route. Example:
  *
  *     {
  *       path: 'orders',
@@ -44,10 +47,6 @@ export const routes: Routes = [
   },
   {
     path: 'chat',
-    redirectTo: 'app',
-  },
-  {
-    path: 'app',
     loadComponent: () =>
       import('./features/shell/shell.component').then(m => m.ShellComponent),
     canActivate: [authGuard],
@@ -66,13 +65,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/admin.component').then(m => m.AdminComponent),
       },
-      // CRM domain – Wave A (CAP-089, CAP-090, CAP-091, CAP-092)
       {
         path: 'crm',
         loadChildren: () =>
           import('./features/crm/crm.routes').then(m => m.CRM_ROUTES),
       },
-      // Domain routes — completed across Waves A–F
       {
         path: 'workexec',
         loadChildren: () =>
@@ -119,13 +116,16 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/security/security.routes').then(m => m.SECURITY_ROUTES),
       },
-      // Shop Management — Wave F (CAP-136–142, CAP-249)
       {
         path: 'shopmgmt',
         loadChildren: () =>
           import('./features/shopmgmt/shopmgmt.routes').then(m => m.SHOPMGMT_ROUTES),
       },
     ],
+  },
+  {
+    path: 'app',
+    redirectTo: 'chat',
   },
   {
     path: '',

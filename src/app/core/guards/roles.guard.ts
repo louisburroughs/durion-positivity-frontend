@@ -18,7 +18,7 @@ function attemptedUrl(route: ActivatedRouteSnapshot): string {
   const segments = route.pathFromRoot
     .flatMap(node => node.url.map(urlSegment => urlSegment.path))
     .filter(Boolean);
-  return segments.length ? `/${segments.join('/')}` : '/app';
+  return segments.length ? `/${segments.join('/')}` : '/chat';
 }
 
 function evaluateRoleAccess(route: ActivatedRouteSnapshot): boolean | UrlTree {
