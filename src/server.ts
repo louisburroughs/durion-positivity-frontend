@@ -50,6 +50,15 @@ app.use((req, res, next) => {
 });
 
 /**
+ * Fallback: serve the client-side rendered shell for any request that
+ * AngularNodeAppEngine did not handle (e.g. host-check rejection).
+ * All routes use RenderMode.Client, so this is functionally equivalent.
+ */
+app.use((req, res) => {
+  res.sendFile(join(browserDistFolder, 'index.csr.html'));
+});
+
+/**
  * Start the server if this module is the main entry point, or it is ran via PM2.
  * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
  */
