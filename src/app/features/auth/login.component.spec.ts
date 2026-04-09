@@ -127,5 +127,19 @@ describe('LoginComponent', () => {
 
       expect(spy).toHaveBeenCalledWith('/app/security');
     });
+
+    it('redirects to /chat on successful login when returnUrl is absent', () => {
+      setup({});
+      fixture.detectChanges();
+      const router = TestBed.inject(Router);
+      const spy = vi.spyOn(router, 'navigateByUrl');
+      const subject = new Subject<any>();
+      authServiceStub.login.mockReturnValueOnce(subject);
+      component.form.setValue({ username: 'admin', password: /* test credential */ 'pass1' });
+      component.submit();
+      subject.next({ accessToken: 'tok', refreshToken: 'rt', tokenType: 'Bearer' });
+
+      expect(spy).toHaveBeenCalledWith('/chat');
+    });
   });
 });

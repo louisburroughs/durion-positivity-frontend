@@ -47,8 +47,8 @@ export class LoginComponent implements OnInit {
     this.authService.login({ username, password }).subscribe({
       next: () => {
         this.loading.set(false);
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/app';
-        const safeReturnUrl = returnUrl.startsWith('/') ? returnUrl : '/app';
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/chat';
+        const safeReturnUrl = returnUrl.startsWith('/') ? returnUrl : '/chat';
         this.router.navigateByUrl(safeReturnUrl);
       },
       error: err => {
