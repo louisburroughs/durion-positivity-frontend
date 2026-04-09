@@ -42,7 +42,21 @@
   outline-offset: 2px;
 }
 
-.brand-wordmark {
+.shell-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--contrastTextColor);
+}
+
+.shell-brand-mark {
+  width: 1.6rem;
+  height: 1.6rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.shell-brand-name {
   font-family: var(--font-primary);
   font-weight: 700;
   font-size: 1.125rem;
@@ -140,6 +154,7 @@
 
 /* ── Mobile: hide username text ──────────────────────────────────────── */
 @media (max-width: 640px) {
+  .shell-brand-name { display: none; }
   .user-name { display: none; }
   .locale-select { max-width: 6.5rem; }
 }

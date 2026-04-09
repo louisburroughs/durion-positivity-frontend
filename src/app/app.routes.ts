@@ -44,10 +44,7 @@ export const routes: Routes = [
   },
   {
     path: 'chat',
-    loadComponent: () =>
-      import('./features/shell/components/chat-panel/chat-panel.component').then(
-        m => m.ChatPanelComponent,
-      ),
+    redirectTo: 'app',
   },
   {
     path: 'app',

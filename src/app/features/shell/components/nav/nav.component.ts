@@ -29,7 +29,7 @@ export class NavComponent {
 
   readonly navItems: NavItem[] = [
     { label: 'Dashboard', route: '/app/dashboard', icon: '⊞' },
-    { label: 'Chat', route: '/chat', icon: '💬' },
+    { label: 'Chat', route: '/app', icon: '💬' },
     { label: 'Dispatch Board', route: '/app/shopmgmt/dispatch-board', icon: '🟦' },
     { label: 'Admin', route: '/app/admin', icon: '🛡️' },
     // Future enhancement: add domain nav items as feature modules are introduced.

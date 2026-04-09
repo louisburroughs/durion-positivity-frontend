@@ -74,7 +74,7 @@ design/
 | Path | Auth? | Component |
 |---|---|---|
 | `/login` | Public | `LoginComponent` |
-| `/chat` | Public | `ChatPanelComponent` |
+| `/chat` | Public | Redirects to `/app` (shell with shared header + chat panel) |
 | `/app` | Protected | `ShellComponent` → `DashboardComponent` |
 | `/app/:domain` | Protected | Future domain modules (register in `app.routes.ts`) |
 | `/` | – | Redirects → `/app` (guard sends to `/login` if unauthenticated) |
