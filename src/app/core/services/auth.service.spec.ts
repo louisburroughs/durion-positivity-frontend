@@ -201,4 +201,45 @@ describe('AuthService', () => {
       expect(result).toBe(false);
     });
   });
+
+  describe('greenfield PERM token compatibility', () => {
+    it('keeps session authenticated when token omits roles/authorities claims', () => {
+      (environment as any).mockAuth = false;
+
+      service.login({ username: 'demo', password: 'testpass' }).subscribe();
+
+      const req = httpMock.expectOne(r => r.url.includes('/security-service/v1/auth/login'));
+      req.flush({
+        accessToken:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
+          '.eyJzdWIiOiJ1c3IiLCJleHAiOjk5OTk5OTk5OTksImlhdCI6MTcwMDAwMDAwMCwicGVybV9iaXRzIjoiQUFFPSIsInBlcm1fdmVyIjoxfQ' +
+          '.sig',
+        refreshToken: 'rt',
+        tokenType: 'Bearer',
+      });
+
+      expect(service.accessToken()).not.toBeNull();
+      expect(service.isAuthenticated()).toBe(true);
+      expect(service.currentUserRoles()).toEqual([]);
+    });
+
+    it('normalizes unprefixed roles claim to ROLE_* format', () => {
+      (environment as any).mockAuth = false;
+
+      service.login({ username: 'demo', password: 'testpass' }).subscribe();
+
+      const req = httpMock.expectOne(r => r.url.includes('/security-service/v1/auth/login'));
+      req.flush({
+        accessToken:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
+          '.eyJzdWIiOiJ1c3IiLCJyb2xlcyI6WyJBRE1JTiJdLCJleHAiOjk5OTk5OTk5OTksImlhdCI6MTcwMDAwMDAwMH0' +
+          '.sig',
+        refreshToken: 'rt',
+        tokenType: 'Bearer',
+      });
+
+      expect(service.currentUserRoles()).toEqual(['ROLE_ADMIN']);
+      expect(service.hasRole('ROLE_ADMIN')).toBe(true);
+    });
+  });
 });

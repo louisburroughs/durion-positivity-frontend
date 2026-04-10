@@ -243,15 +243,29 @@ export class AuthService {
     const tokenExpiryMs = claims?.exp ? claims.exp * 1000 : 0;
     const sessionExpiryMs = tokenExpiryMs - EXPIRY_SKEW_MS;
 
-    if (!claims || !Array.isArray(claims.roles) || sessionExpiryMs <= Date.now()) {
+    if (!claims || sessionExpiryMs <= Date.now()) {
       this.clearTokens();
       return;
     }
 
-    this._roles.set(claims.roles);
+    const roleCandidates = Array.isArray(claims.roles)
+      ? claims.roles
+      : Array.isArray(claims.authorities)
+        ? claims.authorities
+        : [];
+
+    const effectiveRoles = Array.from(
+      new Set(
+        roleCandidates
+          .filter((role): role is string => typeof role === 'string')
+          .map(role => (role.startsWith('ROLE_') ? role : `ROLE_${role}`)),
+      ),
+    );
+
+    this._roles.set(effectiveRoles);
 
     if (isPlatformBrowser(this.platformId)) {
-      sessionStorage.setItem(ROLES_KEY, JSON.stringify(claims.roles));
+      sessionStorage.setItem(ROLES_KEY, JSON.stringify(effectiveRoles));
       sessionStorage.setItem(ROLES_EXP_KEY, String(sessionExpiryMs));
     }
 

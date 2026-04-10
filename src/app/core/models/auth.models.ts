@@ -1,10 +1,12 @@
 /** Shape of the JWT claims expected from durion-positivity-backend. */
 export interface JwtClaims {
   sub: string;          // username / subject
-  roles: string[];      // e.g. ['ROLE_ADMIN', 'ROLE_CASHIER']
+  roles?: string[];     // optional in greenfield PERM mode
   authorities?: string[];
   exp: number;          // expiry epoch (seconds)
-  iat: number;
+  iat?: number;
+  perm_bits?: string;
+  perm_ver?: number;
 }
 
 export interface LoginRequest {
