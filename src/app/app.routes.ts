@@ -9,18 +9,18 @@ import { rolesChildGuard } from './core/guards/roles.guard';
  *   /login    → LoginComponent
  *
  * Protected (authGuard):
- *   /chat     → ShellComponent
- *     /chat   → DashboardComponent (default child)
+ *   /app      → ShellComponent
+ *     /app    → DashboardComponent (default child)
  *
  * Compatibility alias:
- *   /app      → Redirects to /chat
+ *   /chat     → Redirects to /app
  *
  * Optional role constraints can be declared per child route:
  *   data: { roles: ['ROLE_ADMIN'] }
  *
  * Extensibility:
  *   Add new domain feature modules as additional lazy-loaded children of the
- *   /chat shell route. Example:
+ *   /app shell route. Example:
  *
  *     {
  *       path: 'orders',
@@ -46,7 +46,7 @@ export const routes: Routes = [
       import('./features/system/not-found.component').then(m => m.NotFoundComponent),
   },
   {
-    path: 'chat',
+    path: 'app',
     loadComponent: () =>
       import('./features/shell/shell.component').then(m => m.ShellComponent),
     canActivate: [authGuard],
@@ -124,8 +124,8 @@ export const routes: Routes = [
     ],
   },
   {
-    path: 'app',
-    redirectTo: 'chat',
+    path: 'chat',
+    redirectTo: 'app',
   },
   {
     path: '',

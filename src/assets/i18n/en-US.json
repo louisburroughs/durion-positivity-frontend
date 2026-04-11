@@ -46,13 +46,29 @@
     }
   },
   "SHELL": {
+    "NAV": {
+      "ARIA_LABEL": "Main navigation",
+      "DASHBOARD": "Dashboard",
+      "DISPATCH": "Dispatch Board",
+      "WORKORDERS": "Work Orders",
+      "CRM": "Customers",
+      "ACCOUNTING": "Accounting",
+      "BILLING": "Billing",
+      "PEOPLE": "People",
+      "INVENTORY": "Inventory",
+      "LOCATION": "Locations",
+      "SECURITY": "Security",
+      "ADMIN": "Admin"
+    },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Toggle navigation sidebar",
+      "NAV_OVERLAY_CLOSE": "Close navigation",
       "NAV_TOGGLE_TITLE": "Toggle sidebar",
       "THEME_TO_LIGHT": "Switch to light mode",
       "THEME_TO_DARK": "Switch to dark mode",
       "USER_CHIP_ARIA": "Logged-in user",
       "SIGN_OUT": "Sign out",
+      "USERNAME_FALLBACK": "User",
       "LOCALE": {
         "LABEL": "Language",
         "ARIA": "Select application language",
@@ -62,6 +78,39 @@
           "FR_CA": "Français (Canada)"
         }
       }
+    },
+    "DASHBOARD": {
+      "WELCOME_HEADING": "Welcome to Durion POS",
+      "WELCOME_BODY": "Select an area from the navigation to get started.",
+      "CARD": {
+        "WORKORDERS": "Work Orders",
+        "CUSTOMERS": "Customers",
+        "ACCOUNTING": "Accounting",
+        "SHOPMGMT": "Shop Management",
+        "BILLING": "Billing",
+        "PEOPLE": "People"
+      }
+    },
+    "FOOTER": {
+      "COPYRIGHT": "© {{ year }} Durion POS. All rights reserved."
+    },
+    "CONTENT_PANEL": {
+      "ARIA_LABEL": "Main content area"
+    },
+    "SKIP_TO_CONTENT": "Skip to main content",
+    "CHAT": {
+      "PANEL_ARIA": "Chat panel",
+      "MESSAGES_ARIA": "Chat messages",
+      "EMPTY_HEADING": "Start a conversation",
+      "EMPTY_BODY": "Type a message below to begin.",
+      "SENDER_USER": "You",
+      "SENDER_SYSTEM": "System",
+      "TYPING_ARIA": "System is responding",
+      "INPUT_PLACEHOLDER": "Type a message… (Enter to send, Shift+Enter for newline)",
+      "INPUT_ARIA": "Chat message input",
+      "SEND_ARIA": "Send message",
+      "SEND_TITLE": "Send",
+      "ERROR_BACKEND": "Chat service is not available. Your message was received locally."
     }
   },
   "AUTH": {

@@ -46,13 +46,29 @@
     }
   },
   "SHELL": {
+    "NAV": {
+      "ARIA_LABEL": "Navigation principale",
+      "DASHBOARD": "Tableau de bord",
+      "DISPATCH": "Tableau d'expédition",
+      "WORKORDERS": "Bons de travail",
+      "CRM": "Clients",
+      "ACCOUNTING": "Comptabilité",
+      "BILLING": "Facturation",
+      "PEOPLE": "Personnes",
+      "INVENTORY": "Inventaire",
+      "LOCATION": "Emplacements",
+      "SECURITY": "Sécurité",
+      "ADMIN": "Administration"
+    },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Basculer la barre latérale de navigation",
+      "NAV_OVERLAY_CLOSE": "Fermer la navigation",
       "NAV_TOGGLE_TITLE": "Basculer la barre latérale",
       "THEME_TO_LIGHT": "Passer en mode clair",
       "THEME_TO_DARK": "Passer en mode sombre",
       "USER_CHIP_ARIA": "Utilisateur connecté",
       "SIGN_OUT": "Se déconnecter",
+      "USERNAME_FALLBACK": "Utilisateur",
       "LOCALE": {
         "LABEL": "Langue",
         "ARIA": "Sélectionner la langue de l'application",
@@ -62,6 +78,39 @@
           "FR_CA": "Français (Canada)"
         }
       }
+    },
+    "DASHBOARD": {
+      "WELCOME_HEADING": "Bienvenue sur Durion POS",
+      "WELCOME_BODY": "Sélectionnez une section dans la navigation pour commencer.",
+      "CARD": {
+        "WORKORDERS": "Bons de travail",
+        "CUSTOMERS": "Clients",
+        "ACCOUNTING": "Comptabilité",
+        "SHOPMGMT": "Gestion d'atelier",
+        "BILLING": "Facturation",
+        "PEOPLE": "Personnes"
+      }
+    },
+    "FOOTER": {
+      "COPYRIGHT": "© {{ year }} Durion POS. Tous droits réservés."
+    },
+    "CONTENT_PANEL": {
+      "ARIA_LABEL": "Zone de contenu principal"
+    },
+    "SKIP_TO_CONTENT": "Passer au contenu principal",
+    "CHAT": {
+      "PANEL_ARIA": "Panneau de discussion",
+      "MESSAGES_ARIA": "Messages de discussion",
+      "EMPTY_HEADING": "Démarrez une conversation",
+      "EMPTY_BODY": "Saisissez un message ci-dessous pour commencer.",
+      "SENDER_USER": "Vous",
+      "SENDER_SYSTEM": "Système",
+      "TYPING_ARIA": "Le système répond",
+      "INPUT_PLACEHOLDER": "Saisissez un message… (Entrée pour envoyer, Maj+Entrée pour nouvelle ligne)",
+      "INPUT_ARIA": "Champ de saisie du message",
+      "SEND_ARIA": "Envoyer le message",
+      "SEND_TITLE": "Envoyer",
+      "ERROR_BACKEND": "Le service de discussion n'est pas disponible. Votre message a été reçu localement."
     }
   },
   "AUTH": {

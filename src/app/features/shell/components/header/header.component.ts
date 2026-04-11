@@ -1,6 +1,5 @@
-import { Component, inject, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { TranslatePipe } from '@ngx-translate/core';
+import { Component, inject, input, output } from '@angular/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../../../core/services/theme.service';
 import { AuthService }  from '../../../../core/services/auth.service';
 import { LocaleService } from '../../../../core/services/locale.service';
@@ -8,7 +7,7 @@ import { LocaleService } from '../../../../core/services/locale.service';
 @Component({
   selector: 'app-shell-header',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
@@ -16,6 +15,7 @@ export class HeaderComponent {
   readonly themeService = inject(ThemeService);
   readonly authService  = inject(AuthService);
   readonly localeService = inject(LocaleService);
+  private readonly translateService = inject(TranslateService);
   readonly localeOptions = [
     { code: 'en-US', labelKey: 'SHELL.HEADER.LOCALE.OPTION.EN_US' },
     { code: 'es-US', labelKey: 'SHELL.HEADER.LOCALE.OPTION.ES_US' },
@@ -24,6 +24,7 @@ export class HeaderComponent {
 
   /** Emitted when the hamburger button is clicked (mobile nav toggle). */
   readonly navToggle = output<void>();
+  readonly navCollapsed = input(false);
 
   toggleNav(): void {
     this.navToggle.emit();
@@ -38,6 +39,7 @@ export class HeaderComponent {
   }
 
   get username(): string {
-    return this.authService.currentUserClaims()?.sub ?? 'User';
+    return this.authService.currentUserClaims()?.sub
+      ?? this.translateService.instant('SHELL.HEADER.USERNAME_FALLBACK');
   }
 }

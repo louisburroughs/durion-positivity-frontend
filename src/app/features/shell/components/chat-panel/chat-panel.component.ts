@@ -8,19 +8,21 @@ import {
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ChatStateService } from '../../services/chat-state.service';
 import { ChatApiService } from '../../services/chat-api.service';
 
 @Component({
   selector: 'app-chat-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe],
+  imports: [CommonModule, FormsModule, DatePipe, TranslatePipe],
   templateUrl: './chat-panel.component.html',
   styleUrl: './chat-panel.component.css',
 })
 export class ChatPanelComponent implements AfterViewChecked {
   private readonly chatState = inject(ChatStateService);
   private readonly chatApi   = inject(ChatApiService);
+  private readonly translateService = inject(TranslateService);
 
   @ViewChild('messageList') private readonly messageListEl!: ElementRef<HTMLElement>;
 
@@ -40,8 +42,7 @@ export class ChatPanelComponent implements AfterViewChecked {
     this.sending.set(true);
     this.scrollPending = true;
 
-    // TODO: Connect to ChatApiService.sendMessage() once backend is available.
-    // For now, immediately show a placeholder system reply.
+    // Show a localized fallback system reply when backend chat is unavailable.
     const sessionId = 'local-session';
     this.chatApi.sendMessage({ sessionId, message: text }).subscribe({
       next: resp => {
@@ -50,9 +51,7 @@ export class ChatPanelComponent implements AfterViewChecked {
         this.scrollPending = true;
       },
       error: () => {
-        this.chatState.addSystemMessage(
-          '⚠️ Chat backend is not yet connected. Your message was received locally.',
-        );
+        this.chatState.addSystemMessage(this.translateService.instant('SHELL.CHAT.ERROR_BACKEND'));
         this.sending.set(false);
         this.scrollPending = true;
       },

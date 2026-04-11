@@ -1,10 +1,12 @@
-<nav class="shell-nav" [class.collapsed]="collapsed()" role="navigation" aria-label="Main navigation">
-  @for (item of navItems; track item.route) {
+<nav [id]="navId()" class="shell-nav" [class.collapsed]="collapsed()" role="navigation"
+  [attr.aria-label]="'SHELL.NAV.ARIA_LABEL' | translate">
+  @for (item of navItems(); track item.route) {
   <a class="nav-item" [routerLink]="item.route" routerLinkActive="nav-item--active"
-    [routerLinkActiveOptions]="{ exact: item.route === '/chat' }" [attr.aria-label]="item.label" [title]="item.label">
+    [routerLinkActiveOptions]="{ exact: item.exact ?? false }" [attr.aria-label]="item.key | translate"
+    [title]="item.key | translate">
     <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
     @if (!collapsed()) {
-    <span class="nav-label">{{ item.label }}</span>
+    <span class="nav-label">{{ item.key | translate }}</span>
     }
   </a>
   }

@@ -46,13 +46,29 @@
     }
   },
   "SHELL": {
+    "NAV": {
+      "ARIA_LABEL": "Navegación principal",
+      "DASHBOARD": "Panel de control",
+      "DISPATCH": "Tablero de despacho",
+      "WORKORDERS": "Órdenes de trabajo",
+      "CRM": "Clientes",
+      "ACCOUNTING": "Contabilidad",
+      "BILLING": "Facturación",
+      "PEOPLE": "Personas",
+      "INVENTORY": "Inventario",
+      "LOCATION": "Sucursales",
+      "SECURITY": "Seguridad",
+      "ADMIN": "Administración"
+    },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Alternar barra lateral de navegación",
+      "NAV_OVERLAY_CLOSE": "Cerrar navegación",
       "NAV_TOGGLE_TITLE": "Alternar barra lateral",
       "THEME_TO_LIGHT": "Cambiar al modo claro",
       "THEME_TO_DARK": "Cambiar al modo oscuro",
       "USER_CHIP_ARIA": "Usuario conectado",
       "SIGN_OUT": "Cerrar sesión",
+      "USERNAME_FALLBACK": "Usuario",
       "LOCALE": {
         "LABEL": "Idioma",
         "ARIA": "Seleccionar idioma de la aplicación",
@@ -62,6 +78,39 @@
           "FR_CA": "Francés (Canadá)"
         }
       }
+    },
+    "DASHBOARD": {
+      "WELCOME_HEADING": "Bienvenido a Durion POS",
+      "WELCOME_BODY": "Selecciona un área de la navegación para comenzar.",
+      "CARD": {
+        "WORKORDERS": "Órdenes de trabajo",
+        "CUSTOMERS": "Clientes",
+        "ACCOUNTING": "Contabilidad",
+        "SHOPMGMT": "Gestión de taller",
+        "BILLING": "Facturación",
+        "PEOPLE": "Personas"
+      }
+    },
+    "FOOTER": {
+      "COPYRIGHT": "© {{ year }} Durion POS. Todos los derechos reservados."
+    },
+    "CONTENT_PANEL": {
+      "ARIA_LABEL": "Área de contenido principal"
+    },
+    "SKIP_TO_CONTENT": "Saltar al contenido principal",
+    "CHAT": {
+      "PANEL_ARIA": "Panel de chat",
+      "MESSAGES_ARIA": "Mensajes de chat",
+      "EMPTY_HEADING": "Inicia una conversación",
+      "EMPTY_BODY": "Escribe un mensaje a continuación para comenzar.",
+      "SENDER_USER": "Tú",
+      "SENDER_SYSTEM": "Sistema",
+      "TYPING_ARIA": "El sistema está respondiendo",
+      "INPUT_PLACEHOLDER": "Escribe un mensaje… (Intro para enviar, Mayús+Intro para nueva línea)",
+      "INPUT_ARIA": "Entrada de mensaje de chat",
+      "SEND_ARIA": "Enviar mensaje",
+      "SEND_TITLE": "Enviar",
+      "ERROR_BACKEND": "El servicio de chat no está disponible. Tu mensaje fue recibido localmente."
     }
   },
   "AUTH": {

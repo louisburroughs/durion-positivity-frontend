@@ -1,25 +1,20 @@
 <div class="shell-root">
-  <a class="skip-link" href="#main-content" (click)="skipToMainContent($event)">Skip to main content</a>
+  <a class="skip-link" href="#main-content" (click)="skipToMainContent($event)">{{ 'SHELL.SKIP_TO_CONTENT' | translate
+    }}</a>
 
   <!-- Top bar -->
-  <app-shell-header (navToggle)="toggleNav()" />
+  <app-shell-header (navToggle)="toggleNav()" [navCollapsed]="navCollapsed()" />
 
   <!-- Body: sidebar + main column -->
   <div class="shell-body">
 
     <!-- Left navigation -->
-    <app-shell-nav [collapsed]="navCollapsed()" />
+    <app-shell-nav [collapsed]="navCollapsed()" [navId]="NAV_ID" />
 
     <!-- Mobile overlay when nav is open -->
     @if (!navCollapsed()) {
-      <div
-        class="nav-overlay"
-        role="button"
-        tabindex="-1"
-        (click)="toggleNav()"
-        (keydown.escape)="toggleNav()"
-        aria-label="Close navigation"
-      ></div>
+    <button type="button" class="nav-overlay" tabindex="-1" (click)="toggleNav()" (keydown.escape)="toggleNav()"
+      [attr.aria-label]="'SHELL.HEADER.NAV_OVERLAY_CLOSE' | translate"></button>
     }
 
     <!-- Main column -->
