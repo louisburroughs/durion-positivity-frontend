@@ -22,7 +22,7 @@ export class NavigationRegistryService {
 
   readonly visibleNavItems = computed<NavItem[]>(() => {
     return NAV_REGISTRY.filter(
-      item => !item.roles || this.authService.hasAnyRole(item.roles as string[]),
+      item => !item.roles || this.authService.hasAnyRole(item.roles),
     );
   });
 }
