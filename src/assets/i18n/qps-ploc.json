@@ -92,7 +92,7 @@
       }
     },
     "FOOTER": {
-      "COPYRIGHT": "[!!! © {{ year }} Durion POS. All rights reserved. !!!]"
+      "COPYRIGHT": "[!! © {{ year }} Durion POS. ÀÀľľ ŕïïğħŧš ŕëëšëëŕṽëëđ. !!]"
     },
     "CONTENT_PANEL": {
       "ARIA_LABEL": "[!!! Main content area !!!]"
