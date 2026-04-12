@@ -117,6 +117,10 @@ design/
 - Set `apiBaseUrl` in `src/environments/environment.ts` (dev) or `environment.prod.ts` (prod).
 - `ApiBaseService` is the HTTP wrapper – inject it in feature services instead of `HttpClient` directly.
 - `authInterceptor` attaches `Authorization: Bearer <token>` automatically.
+- JWT claim contract (ADR-0040):
+  - frontend role gating uses `roles` claim.
+  - API authorization remains backend-authoritative via gateway-decoded `perm_bits`/`perm_ver`.
+  - frontend does not send `X-Authorities` headers.
 - Refresh token flow is stubbed in `AuthService.refreshTokens()` — wire to `POST /auth/refresh` when backend exposes it.
 - Chat backend: implement `ChatApiService.sendMessage()` to connect to the LLM endpoint.
 

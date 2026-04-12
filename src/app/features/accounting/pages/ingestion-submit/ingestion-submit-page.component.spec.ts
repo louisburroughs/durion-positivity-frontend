@@ -1,9 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
-import { AuthService } from '../../../../core/services/auth.service';
 import { AccountingService } from '../../services/accounting.service';
 import { IngestionSubmitPageComponent } from './ingestion-submit-page.component';
 
@@ -15,23 +13,12 @@ describe('IngestionSubmitPageComponent', () => {
     submitEvent: vi.fn().mockReturnValue(of({ eventId: 'ok-1' })),
   };
 
-  const authServiceStub = {
-    currentUserClaims: signal({
-      sub: 'tester',
-      roles: ['ROLE_ADMIN'],
-      authorities: ['accounting:events:submit'],
-      exp: 9999999999,
-      iat: 1,
-    }),
-  };
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [IngestionSubmitPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AccountingService, useValue: accountingServiceStub },
-        { provide: AuthService, useValue: authServiceStub },
       ],
     }).compileComponents();
 
@@ -97,58 +84,28 @@ describe('IngestionSubmitPageComponent', () => {
     expect(component.state()).toBe('error');
   });
 
+  it('submit() sets state to forbidden when service returns 403', () => {
+    accountingServiceStub.submitEvent.mockReturnValueOnce(
+      throwError(() => ({ status: 403 })),
+    );
+    component.form.patchValue({
+      eventId: '018f5ea6-4b83-7f92-9f4c-0fa8a0a8f001',
+      eventType: 'InvoiceIssued',
+      organizationId: 'org-1',
+      payload: '{"invoiceId":"1"}',
+    });
+
+    component.submit();
+    expect(component.state()).toBe('forbidden');
+  });
+
   it('submit() does not call service when form is invalid', () => {
     accountingServiceStub.submitEvent.mockClear();
     component.submit();
     expect(accountingServiceStub.submitEvent).not.toHaveBeenCalled();
   });
 
-  it('should not set forbidden state when permission is present', () => {
-    // fixture.detectChanges() was called in beforeEach, triggering ngOnInit
+  it('keeps page interactive before any backend authorization response', () => {
     expect(component.state()).not.toBe('forbidden');
-  });
-});
-
-describe('IngestionSubmitPageComponent — no permission', () => {
-  const accountingServiceStub = {
-    submitEvent: vi.fn(),
-  };
-
-  const noPermAuthStub = {
-    currentUserClaims: signal({
-      sub: 'tester',
-      roles: ['ROLE_USER'],
-      authorities: [] as string[],
-      exp: 9999999999,
-      iat: 1,
-    }),
-  };
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [IngestionSubmitPageComponent, TranslateModule.forRoot()],
-      providers: [
-        provideRouter([]),
-        { provide: AccountingService, useValue: accountingServiceStub },
-        { provide: AuthService, useValue: noPermAuthStub },
-      ],
-    }).compileComponents();
-  });
-
-  it('renders forbidden state when user lacks submit permission', () => {
-    const f = TestBed.createComponent(IngestionSubmitPageComponent);
-    f.detectChanges();
-
-    const forbidden = f.nativeElement.querySelector('[data-testid="forbidden-state"]');
-    expect(forbidden).toBeTruthy();
-    const form = f.nativeElement.querySelector('form');
-    expect(form).toBeFalsy();
-  });
-
-  it('should set forbidden state when permission is missing (checked in ngOnInit)', () => {
-    const f = TestBed.createComponent(IngestionSubmitPageComponent);
-    const c = f.componentInstance;
-    f.detectChanges();
-    expect(c.state()).toBe('forbidden');
   });
 });

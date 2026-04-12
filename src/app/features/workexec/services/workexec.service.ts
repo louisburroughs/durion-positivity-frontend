@@ -363,13 +363,9 @@ export class WorkexecService {
    * operationId: getWorkorderDetail
    * GET /v1/workorders/{workorderId}/detail
    * Stories 229, 226, 224
-   *
-   * Accepts X-Authorities header for role-gated field exposure.
-   * Contract normalization: empty in AGENT_WORKSET. Path verified from OpenAPI.
    */
-  getWorkorderDetail(workorderId: string, authorities?: string): Observable<WorkorderDetailResponse> {
-    const opts = authorities ? { headers: { 'X-Authorities': authorities } } : undefined;
-    return this.api.get<WorkorderDetailResponse>(`/v1/workorders/${workorderId}/detail`, undefined, opts);
+  getWorkorderDetail(workorderId: string): Observable<WorkorderDetailResponse> {
+    return this.api.get<WorkorderDetailResponse>(`/v1/workorders/${workorderId}/detail`);
   }
 
   /**

@@ -1,9 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of } from 'rxjs';
-import { AuthService } from '../../../../../core/services/auth.service';
 import { AccountingService } from '../../../services/accounting.service';
 import { IngestionMonitorDetailPageComponent } from './ingestion-monitor-detail-page.component';
 
@@ -22,33 +20,12 @@ describe('IngestionMonitorDetailPageComponent', () => {
     retryEvent: vi.fn().mockReturnValue(of({ jobId: 'job-1' })),
   };
 
-  const claimsSignal = signal({
-    sub: 'tester',
-    roles: ['ROLE_ADMIN'],
-    authorities: ['accounting:events:view-payload', 'accounting:events:retry'],
-    exp: 9999999999,
-    iat: 1,
-  });
-
-  const authServiceStub = {
-    currentUserClaims: claimsSignal,
-  };
-
   beforeEach(async () => {
-    claimsSignal.set({
-      sub: 'tester',
-      roles: ['ROLE_ADMIN'],
-      authorities: ['accounting:events:view-payload', 'accounting:events:retry'],
-      exp: 9999999999,
-      iat: 1,
-    });
-
     await TestBed.configureTestingModule({
       imports: [IngestionMonitorDetailPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AccountingService, useValue: accountingServiceStub },
-        { provide: AuthService, useValue: authServiceStub },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -70,32 +47,16 @@ describe('IngestionMonitorDetailPageComponent', () => {
     expect(detail).toBeTruthy();
   });
 
-  it('shows payload section if permission present', () => {
-    claimsSignal.set({
-      sub: 'tester',
-      roles: ['ROLE_ADMIN'],
-      authorities: ['accounting:events:view-payload'],
-      exp: 9999999999,
-      iat: 1,
-    });
+  it('shows payload section when page is ready', () => {
     fixture.detectChanges();
 
     const payload = fixture.nativeElement.querySelector('[data-testid="payload-section"]');
     expect(payload).toBeTruthy();
   });
 
-  it('hides payload section if permission absent', () => {
-    claimsSignal.set({
-      sub: 'tester',
-      roles: ['ROLE_ADMIN'],
-      authorities: [],
-      exp: 9999999999,
-      iat: 1,
-    });
-    fixture.detectChanges();
-
-    const payload = fixture.nativeElement.querySelector('[data-testid="payload-section"]');
-    expect(payload).toBeFalsy();
+  it('canViewPayload() returns false while page is not ready', () => {
+    fixture.componentInstance.pageState.set('loading');
+    expect(fixture.componentInstance.canViewPayload()).toBe(false);
   });
 
   it('retry button disabled when justification empty', () => {
@@ -119,14 +80,8 @@ describe('IngestionMonitorDetailPageComponent', () => {
     expect(fixture.componentInstance.retryState()).toBe('polling');
   });
 
-  it('canRetry() returns false when accounting:events:retry permission is absent', () => {
-    claimsSignal.set({
-      sub: 'tester',
-      roles: ['ROLE_USER'],
-      authorities: [],
-      exp: 9999999999,
-      iat: 1,
-    });
+  it('canRetry() returns false when page is not ready', () => {
+    fixture.componentInstance.pageState.set('error');
     expect(fixture.componentInstance.canRetry()).toBe(false);
   });
 

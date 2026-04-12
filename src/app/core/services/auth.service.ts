@@ -248,11 +248,7 @@ export class AuthService {
       return;
     }
 
-    const roleCandidates = Array.isArray(claims.roles)
-      ? claims.roles
-      : Array.isArray(claims.authorities)
-        ? claims.authorities
-        : [];
+    const roleCandidates = Array.isArray(claims.roles) ? claims.roles : [];
 
     const effectiveRoles = Array.from(
       new Set(

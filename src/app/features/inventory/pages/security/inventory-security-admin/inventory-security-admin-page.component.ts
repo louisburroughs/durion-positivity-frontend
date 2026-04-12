@@ -128,7 +128,6 @@ export class InventorySecurityAdminPageComponent {
     const claims = this.authService.currentUserClaims();
     const authorities = new Set<string>();
 
-    (claims?.authorities ?? []).forEach(authority => authorities.add(authority));
     (claims?.roles ?? []).forEach(role => authorities.add(role));
 
     return authorities;

@@ -14,7 +14,7 @@ const mockSecurityService = {
 };
 
 const mockAuthService = {
-  currentUserClaims: signal<{ authorities?: string[]; roles?: string[] } | null>(null),
+  currentUserClaims: signal<{ roles?: string[] } | null>(null),
 };
 
 const securityPermissionsFixture: SecurityPermission[] = [

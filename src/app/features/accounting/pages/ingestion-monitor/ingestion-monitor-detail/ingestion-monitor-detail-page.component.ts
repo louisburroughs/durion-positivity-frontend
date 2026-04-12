@@ -5,7 +5,6 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin, interval, switchMap, take } from 'rxjs';
-import { AuthService } from '../../../../../core/services/auth.service';
 import {
   AccountingEventDetail,
   ReprocessingAttemptHistory,
@@ -25,7 +24,6 @@ type RetryState = 'idle' | 'submitting' | 'polling' | 'success' | 'error';
 export class IngestionMonitorDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly accountingService = inject(AccountingService);
-  private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly pageState = signal<DetailState>('loading');
@@ -51,11 +49,11 @@ export class IngestionMonitorDetailPageComponent implements OnInit {
   }
 
   canRetry(): boolean {
-    return this.hasPermission('accounting:events:retry');
+    return this.pageState() === 'ready' && !!this.eventId();
   }
 
   canViewPayload(): boolean {
-    return this.hasPermission('accounting:events:view-payload');
+    return this.pageState() === 'ready';
   }
 
   submitRetry(): void {
@@ -137,11 +135,5 @@ export class IngestionMonitorDetailPageComponent implements OnInit {
           this.pageState.set('error');
         },
       });
-  }
-
-  private hasPermission(permission: string): boolean {
-    const claims = this.authService.currentUserClaims();
-    const authorities = claims?.authorities ?? [];
-    return authorities.includes(permission);
   }
 }

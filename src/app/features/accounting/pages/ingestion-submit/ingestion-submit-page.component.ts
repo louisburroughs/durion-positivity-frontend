@@ -10,7 +10,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import { AuthService } from '../../../../core/services/auth.service';
 import {
   AccountingEventSubmitRequest,
   IngestionSubmitOutcome,
@@ -47,7 +46,6 @@ type SubmitState = 'idle' | 'submitting' | 'success' | 'error' | 'forbidden';
 export class IngestionSubmitPageComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly accountingService = inject(AccountingService);
-  private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly state = signal<SubmitState>('idle');
@@ -62,9 +60,7 @@ export class IngestionSubmitPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    if (!this.hasPermission('accounting:events:submit')) {
-      this.state.set('forbidden');
-    }
+    // Permission visibility is backend-authoritative (403 response handling).
   }
 
   submit(): void {
@@ -107,11 +103,5 @@ export class IngestionSubmitPageComponent implements OnInit {
           this.state.set('error');
         },
       });
-  }
-
-  private hasPermission(permission: string): boolean {
-    const claims = this.authService.currentUserClaims();
-    const authorities = claims?.authorities ?? [];
-    return authorities.includes(permission);
   }
 }
