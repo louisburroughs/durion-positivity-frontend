@@ -48,6 +48,10 @@
     "zone.js": "^0.16.1"
   },
   "devDependencies": {
+    "@angular-eslint/eslint-plugin": "^21.3.1",
+    "@angular-eslint/eslint-plugin-template": "^21.3.1",
+    "@angular-eslint/schematics": "^21.3.1",
+    "@angular-eslint/template-parser": "^21.3.1",
     "@angular/build": "^21.1.5",
     "@angular/cli": "^21.1.5",
     "@angular/compiler-cli": "^21.1.0",
@@ -55,6 +59,7 @@
     "@types/node": "^20.17.19",
     "@types/uuid": "^10.0.0",
     "axe-core": "^4.11.1",
+    "eslint": "^10.2.0",
     "jsdom": "^27.1.0",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
