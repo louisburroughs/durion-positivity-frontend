@@ -1,5 +1,5 @@
 import { Component, signal, HostListener, ElementRef, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { HeaderComponent }       from './components/header/header.component';
 import { FooterComponent }       from './components/footer/footer.component';
 import { NavComponent }          from './components/nav/nav.component';
@@ -10,7 +10,7 @@ import { ContentPanelComponent } from './components/content-panel/content-panel.
   selector: 'app-shell',
   standalone: true,
   imports: [
-    CommonModule,
+    TranslatePipe,
     HeaderComponent,
     FooterComponent,
     NavComponent,
@@ -21,9 +21,11 @@ import { ContentPanelComponent } from './components/content-panel/content-panel.
   styleUrl: './shell.component.css',
 })
 export class ShellComponent {
+  readonly NAV_ID = 'shell-nav';
+
   /** Controls sidebar collapsed state; collapses automatically on narrow viewports. */
   readonly navCollapsed = signal(false);
-  @ViewChild('mainContent') private mainContent?: ElementRef<HTMLElement>;
+  @ViewChild('mainContent') private readonly mainContent?: ElementRef<HTMLElement>;
 
   /** On resize: auto-collapse nav when viewport goes below 768 px. */
   @HostListener('window:resize')

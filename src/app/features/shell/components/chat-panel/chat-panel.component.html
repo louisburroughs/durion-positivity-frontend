@@ -1,64 +1,46 @@
-<section class="chat-panel" aria-label="Chat panel">
+<section class="chat-panel" [attr.aria-label]="'SHELL.CHAT.PANEL_ARIA' | translate">
 
   <!-- Message list -->
-  <div class="message-list" #messageList role="log" aria-live="polite" aria-label="Chat messages">
+  <div class="message-list" #messageList role="log" aria-live="polite"
+    [attr.aria-label]="'SHELL.CHAT.MESSAGES_ARIA' | translate">
     @if (isEmpty()) {
-      <div class="empty-state">
-        <p class="empty-icon" aria-hidden="true">💬</p>
-        <p>Start a conversation. Type a message below.</p>
-      </div>
+    <div class="empty-state">
+      <p class="empty-icon" aria-hidden="true">💬</p>
+      <p>
+        <strong>{{ 'SHELL.CHAT.EMPTY_HEADING' | translate }}</strong>
+        {{ 'SHELL.CHAT.EMPTY_BODY' | translate }}
+      </p>
+    </div>
     } @else {
-      @for (msg of messages(); track msg.id) {
-        <div
-          class="message"
-          [class.message--user]="msg.sender === 'user'"
-          [class.message--system]="msg.sender === 'system'"
-          [attr.aria-label]="(msg.sender === 'user' ? 'You' : 'System') + ': ' + msg.content"
-        >
-          <div class="bubble">{{ msg.content }}</div>
-          <time
-            class="timestamp"
-            [dateTime]="msg.timestamp.toISOString()"
-            [title]="msg.timestamp | date:'medium'"
-          >
-            {{ msg.timestamp | date:'HH:mm' }}
-          </time>
-        </div>
-      }
+    @for (msg of messages(); track msg.id) {
+    <div class="message" [class.message--user]="msg.sender === 'user'" [class.message--system]="msg.sender === 'system'"
+      [attr.aria-label]="(msg.sender === 'user' ? ('SHELL.CHAT.SENDER_USER' | translate) : ('SHELL.CHAT.SENDER_SYSTEM' | translate)) + ': ' + msg.content">
+      <div class="bubble">{{ msg.content }}</div>
+      <time class="timestamp" [dateTime]="msg.timestamp.toISOString()" [title]="msg.timestamp | date:'medium'">
+        {{ msg.timestamp | date:'HH:mm' }}
+      </time>
+    </div>
+    }
 
-      @if (sending()) {
-        <div class="message message--system typing-indicator" aria-label="System is responding">
-          <div class="bubble">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-          </div>
-        </div>
-      }
+    @if (sending()) {
+    <div class="message message--system typing-indicator" [attr.aria-label]="'SHELL.CHAT.TYPING_ARIA' | translate">
+      <div class="bubble">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+    }
     }
   </div>
 
   <!-- Input row -->
   <div class="chat-input-row">
-    <textarea
-      class="chat-input"
-      rows="1"
-      placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
-      [value]="inputValue()"
-      (input)="inputValue.set($any($event.target).value)"
-      (keydown)="onKeyDown($event)"
-      [disabled]="sending()"
-      aria-label="Chat message input"
-      aria-multiline="true"
-    ></textarea>
-    <button
-      class="send-btn"
-      type="button"
-      (click)="sendMessage()"
-      [disabled]="!inputValue().trim() || sending()"
-      aria-label="Send message"
-      title="Send"
-    >
+    <textarea class="chat-input" rows="1" [placeholder]="'SHELL.CHAT.INPUT_PLACEHOLDER' | translate"
+      [value]="inputValue()" (input)="inputValue.set($any($event.target).value)" (keydown)="onKeyDown($event)"
+      [disabled]="sending()" [attr.aria-label]="'SHELL.CHAT.INPUT_ARIA' | translate"></textarea>
+    <button class="send-btn" type="button" (click)="sendMessage()" [disabled]="!inputValue().trim() || sending()"
+      [attr.aria-label]="'SHELL.CHAT.SEND_ARIA' | translate" [title]="'SHELL.CHAT.SEND_TITLE' | translate">
       ➤
     </button>
   </div>

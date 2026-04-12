@@ -74,9 +74,9 @@ design/
 | Path | Auth? | Component |
 |---|---|---|
 | `/login` | Public | `LoginComponent` |
-| `/chat` | Protected | `ShellComponent` (primary shell/chat route) |
-| `/chat/:domain` | Protected | Domain modules under shell |
-| `/app` | – | Redirects to `/chat` (legacy compatibility alias) |
+| `/app` | Protected | `ShellComponent` (primary shell route) |
+| `/app/:domain` | Protected | Domain modules under shell |
+| `/chat` | – | Redirects to `/app` (legacy compatibility alias) |
 | `/` | – | Landing page |
 
 ### Role-based route access
@@ -103,7 +103,7 @@ design/
    { path: 'orders', loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDERS_ROUTES) }
    ```
 
-3. Add a nav entry in `NavComponent.navItems`.
+3. Add a nav entry in `NavigationRegistryService` (`src/app/features/shell/services/navigation-registry.service.ts`).
 
 ## Theming
 

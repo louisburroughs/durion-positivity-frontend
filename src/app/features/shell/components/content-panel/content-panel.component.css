@@ -1,0 +1,13 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.content-panel {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--themeBackground);
+  padding: var(--space-4);
+}
