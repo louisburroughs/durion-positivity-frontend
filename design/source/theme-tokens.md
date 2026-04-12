@@ -37,6 +37,7 @@ Stable aliases that map palette tokens to semantic roles. Shared across light an
 These tokens flip when `data-theme` attribute changes on `<html>`. Consume these in all component styles.
 
 ### From Durion Style Guide
+
 | Token | Light | Dark |
 |---|---|---|
 | `--themeBackground` | grey-100 | grey-800 |
@@ -57,6 +58,7 @@ These tokens flip when `data-theme` attribute changes on `<html>`. Consume these
 | `--handleColor` | graphite-500 | graphite-500 |
 
 ### Extended Tokens (not in style guide – defined locally)
+
 | Token | Light | Dark | Rationale |
 |---|---|---|---|
 | `--border-color` | graphite-200 | graphite-700 | Consistent border across all components |
@@ -73,3 +75,4 @@ These tokens flip when `data-theme` attribute changes on `<html>`. Consume these
 - Always use Tier 3 tokens in component CSS. Fall back to Tier 2 for brand-level decisions.
 - Never hardcode hex values in component stylesheets.
 - When adding new runtime tokens, list them in this file under "Extended Tokens", providing both light and dark values.
+- **Contrast Compliance (ADR-0039):** Any token combination used for information-bearing text and its background MUST pass WCAG 2.2 AA contrast thresholds (4.5:1 for small text < 18pt/14pt bold, 3:1 for large text >= 18pt/14pt bold) across all states.

@@ -61,7 +61,7 @@ body {
   --durion-blue-300: #7fa4d1;
   --durion-blue-200: #aac4e4;
   --durion-blue-100: #d3e3f6;
-  --durion-blue-50:  #f4f8fe;
+  --durion-blue-50: #f4f8fe;
 
   /* Graphite */
   --durion-graphite-800: #333842;
@@ -87,44 +87,44 @@ body {
   --durion-grey-100: #f2f2f4;
 
   /* Functional */
-  --functional-error-red:  #c84c47;
-  --functional-warning:    #e6a540;
-  --functional-info-blue:  #355d92;
-  --functional-success:    #5bbe72;
+  --functional-error-red: #ba1a1a;
+  --functional-warning: #e6a540;
+  --functional-info-blue: #355d92;
+  --functional-success: #2e7d32;
 
   /* Status chips (generic names) */
   --status-success-bg: #ceeac6;
   --status-success-fg: #2e7d32;
-  --status-warn-bg:    #f3c9bc;
-  --status-warn-fg:    #b71c1c;
-  --status-error-bg:   rgba(200, 76, 71, 0.12);
-  --status-error-fg:   #c84c47;
+  --status-warn-bg: #f3c9bc;
+  --status-warn-fg: #b71c1c;
+  --status-error-bg: rgba(186, 26, 26, 0.12);
+  --status-error-fg: #ba1a1a;
 
   /* Text */
-  --text-normal:          rgba(0, 0, 0, 0.87);
-  --text-helper:          rgba(0, 0, 0, 0.6);
-  --text-disabled:        rgba(0, 0, 0, 0.38);
-  --text-error:           #c84c47;
-  --text-normal-light:    #ffffff;
-  --text-helper-light:    rgba(255, 255, 255, 0.7);
+  --text-normal: rgba(0, 0, 0, 0.87);
+  --text-helper: rgba(0, 0, 0, 0.6);
+  --text-disabled: rgba(0, 0, 0, 0.54);
+  --text-error: #ba1a1a;
+  --text-normal-light: #ffffff;
+  --text-helper-light: rgba(255, 255, 255, 0.7);
   --white-disabled-hover: rgba(255, 255, 255, 0.38);
 
   /* Brand semantic */
-  --brand-primary:      var(--durion-blue-700);
+  --brand-primary: var(--durion-blue-700);
   --brand-primary-soft: var(--durion-blue-50);
-  --brand-secondary:    var(--durion-graphite-700);
-  --brand-accent:       var(--durion-teal-400);
-  --brand-background:   var(--durion-grey-100);
-  --brand-surface:      #ffffff;
+  --brand-secondary: var(--durion-graphite-700);
+  --brand-accent: var(--durion-teal-400);
+  --brand-background: var(--durion-grey-100);
+  --brand-surface: #ffffff;
 
   /* Dark mode variants */
-  --dark-bg:       #101112;
-  --dark-surface:  #181a1c;
-  --dark-text:     #f1f1f3;
-  --dark-primary:  #a5c7f1;
+  --dark-bg: #101112;
+  --dark-surface: #181a1c;
+  --dark-text: #f1f1f3;
+  --dark-primary: #a5c7f1;
   --dark-primary-strong: #1c2e48;
   --dark-graphite: #8e939b;
-  --dark-teal:     #55d7cc;
+  --dark-teal: #55d7cc;
 }
 
 /* ========================================================================= */
@@ -133,51 +133,51 @@ body {
 
 /* Light theme */
 html[data-brand="durion"][data-theme="light"] {
-  --primaryA400:  var(--brand-primary);
-  --primaryA300:  var(--durion-blue-500);
-  --primaryA100:  var(--durion-blue-100);
-  --primary50:    var(--durion-blue-50);
+  --primaryA400: var(--brand-primary);
+  --primaryA300: var(--durion-blue-500);
+  --primaryA100: var(--durion-blue-100);
+  --primary50: var(--durion-blue-50);
 
-  --accentA400:   var(--brand-accent);
-  --accentA700:   var(--durion-teal-600);
-  --accentA100:   var(--durion-teal-100);
-  --warnA400:     var(--functional-warning);
+  --accentA400: var(--durion-teal-600);
+  --accentA700: #006a6a;
+  --accentA100: var(--durion-teal-100);
+  --warnA400: var(--functional-warning);
 
   --themeBackground: var(--brand-background);
-  --navBackground:   var(--primaryA400);
-  --menuBackground:  #ffffff;
-  --cardBackground:  #ffffff;
+  --navBackground: var(--primaryA400);
+  --menuBackground: #ffffff;
+  --cardBackground: #ffffff;
   --subMenuBackground: var(--durion-grey-100);
 
-  --currentTextColor:  var(--text-normal);
+  --currentTextColor: var(--text-normal);
   --contrastTextColor: var(--text-normal-light);
 
-  --trackColor:  var(--durion-graphite-200);
+  --trackColor: var(--durion-graphite-200);
   --handleColor: var(--primaryA400);
 }
 
 /* Dark theme */
 html[data-brand="durion"][data-theme="dark"] {
-  --primaryA400:  var(--dark-primary);
-  --primaryA300:  var(--dark-primary-strong);
-  --primaryA100:  #d3e3ff;
-  --primary50:    #202432;
+  --primaryA400: var(--dark-primary);
+  --primaryA300: var(--dark-primary-strong);
+  --primaryA100: #d3e3ff;
+  --primary50: #202432;
 
-  --accentA400:   var(--dark-teal);
-  --accentA700:   #2aa89c;
-  --accentA100:   #b7f1ea;
-  --warnA400:     var(--functional-warning);
+  --accentA400: var(--dark-teal);
+  --accentA700: #2aa89c;
+  --accentA100: #b7f1ea;
+  --warnA400: var(--functional-warning);
 
   --themeBackground: var(--dark-bg);
-  --navBackground:   var(--dark-primary-strong);
-  --menuBackground:  var(--dark-surface);
-  --cardBackground:  var(--dark-surface);
+  --navBackground: var(--dark-primary-strong);
+  --menuBackground: var(--dark-surface);
+  --cardBackground: var(--dark-surface);
   --subMenuBackground: #21242a;
 
-  --currentTextColor:  var(--dark-text);
+  --currentTextColor: var(--dark-text);
   --contrastTextColor: #000000;
 
-  --trackColor:  var(--dark-graphite);
+  --trackColor: var(--dark-graphite);
   --handleColor: var(--primaryA100);
 }
 
@@ -192,12 +192,25 @@ html[data-brand="durion"][data-theme] body {
 /* ========================================================================= */
 
 /* Elevation */
-.dur-elevation-1 { box-shadow: 0 4px 8px 0 rgba(102, 102, 102, 0.12); }
-.dur-elevation-2 { box-shadow: 0 8px 16px 0 rgba(102, 102, 102, 0.16); }
-.dur-elevation-3 { box-shadow: 0 16px 32px 0 rgba(102, 102, 102, 0.2); }
-.dur-elevation-4 { box-shadow: 0 32px 64px 0 rgba(102, 102, 102, 0.32); }
+.dur-elevation-1 {
+  box-shadow: 0 4px 8px 0 rgba(102, 102, 102, 0.12);
+}
 
-.font-noto-sans                   { font-family: 'Noto Sans', sans-serif; }
+.dur-elevation-2 {
+  box-shadow: 0 8px 16px 0 rgba(102, 102, 102, 0.16);
+}
+
+.dur-elevation-3 {
+  box-shadow: 0 16px 32px 0 rgba(102, 102, 102, 0.2);
+}
+
+.dur-elevation-4 {
+  box-shadow: 0 32px 64px 0 rgba(102, 102, 102, 0.32);
+}
+
+.font-noto-sans {
+  font-family: 'Noto Sans', sans-serif;
+}
 
 /* Alerts */
 .alert {
@@ -210,17 +223,21 @@ html[data-brand="durion"][data-theme] body {
 .alert.alert-info {
   background-color: var(--primaryA400);
 }
+
 .alert.alert-success {
   background-color: var(--functional-success);
 }
+
 .alert.alert-warning {
   background-color: var(--warnA400);
   color: var(--currentTextColor);
 }
+
 .alert.alert-error,
 .alert.alert-critical {
   background-color: var(--functional-error-red);
 }
+
 .alert.alert-soft {
   background-color: var(--accentA100);
   color: var(--accentA700);
@@ -245,6 +262,7 @@ a.accent p {
   color: var(--accentA400);
   border-color: var(--accentA700);
 }
+
 a.accent:hover,
 a.accent:focus {
   color: var(--accentA100);
@@ -256,6 +274,7 @@ a.white p {
   color: #ffffff;
   border-color: #ffffff;
 }
+
 a.white:hover,
 a.white:focus {
   color: var(--primaryA100);
@@ -273,6 +292,7 @@ a.white:focus {
   background-color: var(--menuBackground);
   color: var(--currentTextColor);
 }
+
 .dur-navbar.white .mat-mdc-tab-link:hover,
 .dur-navbar.white .mat-tab-link.mat-tab-label-active {
   border-color: var(--primaryA400) !important;
@@ -282,13 +302,16 @@ a.white:focus {
 .dur-sidebar .dur-sidebar-item a {
   color: var(--currentTextColor);
 }
+
 .dur-sidebar .dur-sidebar-item a:not(.primary):hover {
   background-color: var(--subMenuBackground);
 }
+
 .dur-sidebar .dur-sidebar-item a.primary {
   background-color: var(--primary50);
   color: var(--primaryA400);
 }
+
 .dur-sidebar .dur-sidebar-item a.primary:hover {
   background-color: var(--primaryA300);
   color: #ffffff;
@@ -299,6 +322,7 @@ a.white:focus {
   background-color: #ffffff;
   color: var(--primaryA400);
 }
+
 html[data-brand="durion"][data-theme="dark"] .dur-status .mat-mdc-chip {
   background-color: #53565a;
 }
@@ -306,14 +330,17 @@ html[data-brand="durion"][data-theme="dark"] .dur-status .mat-mdc-chip {
 .dur-status.primary .mat-mdc-chip {
   background-color: var(--primary50) !important;
 }
+
 .dur-status.valid .mat-mdc-chip {
   background-color: var(--status-success-bg) !important;
   color: var(--status-success-fg) !important;
 }
+
 .dur-status.warn .mat-mdc-chip {
   background-color: var(--status-warn-bg) !important;
   color: var(--status-warn-fg) !important;
 }
+
 .dur-status.error .mat-mdc-chip {
   background-color: var(--status-error-bg) !important;
   color: var(--status-error-fg) !important;
@@ -331,6 +358,7 @@ dur-main-content,
 .dur-scroll::-webkit-scrollbar-track {
   background: var(--trackColor) !important;
 }
+
 .os-scrollbar-handle,
 .dur-scroll::-webkit-scrollbar-thumb {
   background: var(--handleColor) !important;
@@ -341,10 +369,12 @@ dur-main-content,
 table.mat-mdc-table {
   border: 1px solid transparent;
 }
+
 table.mat-mdc-table:focus {
   outline: none;
   border-color: var(--primaryA400);
 }
+
 tr.clickable:not(.mat-mdc-header-row):hover td {
   background-color: var(--primary50) !important;
 }
@@ -353,9 +383,11 @@ tr.clickable:not(.mat-mdc-header-row):hover td {
 dur-timeline-entry-dot {
   background-color: var(--primaryA400);
 }
+
 dur-timeline-entry-dot.accent {
   background-color: var(--accentA400);
 }
+
 .timeline-entry-card {
   background-color: var(--cardBackground);
 }

@@ -3,11 +3,13 @@
 This guide is derived from `durion/theme/durion-theme.css` and the `durion/theme/fonts` + `durion/theme/images` asset folders.
 
 Excluded by request:
+
 - `durion/theme/tiotf-theme.css`
 
 ## 1. Brand Foundation
 
 Durion uses a cool industrial palette:
+
 - Blueprint Blues for primary brand actions and navigation
 - Graphite + neutral greys for structure and UI chrome
 - Electric Teal for accent and secondary emphasis
@@ -16,13 +18,16 @@ Durion uses a cool industrial palette:
 ## 2. Typography
 
 Primary font families:
+
 - `Noto Sans` (regular + italic, bold + bold italic)
 
 Icon fonts:
+
 - `Material Icons Two Tone`
 - `Material Symbols Round`
 
 Global behavior:
+
 - Universal fallback: `Noto Sans, sans-serif`
 - Body stack:  `Noto Sans`, sans-serif
 
@@ -95,10 +100,12 @@ Global behavior:
 ## 4. Theme Mapping
 
 Durion theme is applied via:
+
 - `html[data-brand="durion"][data-theme="light"]`
 - `html[data-brand="durion"][data-theme="dark"]`
 
 Mapped runtime tokens include:
+
 - Primary: `--primaryA400`, `--primaryA300`, `--primaryA100`, `--primary50`
 - Accent: `--accentA400`, `--accentA700`, `--accentA100`
 - Layout surfaces: `--themeBackground`, `--navBackground`, `--menuBackground`, `--cardBackground`, `--subMenuBackground`
@@ -110,27 +117,35 @@ Body adopts theme-level background and text color when `data-theme` is present.
 ## 5. Component Styling Patterns
 
 ### Elevation
+
 Utility classes:
+
 - `.dur-elevation-1` through `.dur-elevation-4`
 
 ### Alerts
+
 `.alert` variants:
+
 - `.alert-info`, `.alert-success`, `.alert-warning`, `.alert-error`, `.alert-critical`, `.alert-soft`
 
 ### Links
+
 - Default links use underline-style border (`border-bottom: 2px`) and theme colors
 - Variants: `.accent`, `.white`
 
 ### Navigation and Sidebar
+
 - `.dur-navbar` uses themed nav background
 - `.dur-navbar.white` swaps to light menu style
 - `.dur-sidebar` primary item state uses `primary` token mapping
 
 ### Status Chips
+
 - `.dur-status` base style plus variants: `.primary`, `.valid`, `.warn`, `.error`
 - Dark theme override present for chip background
 
 ### Content, Scrollbars, Tables, Timeline
+
 - Main content follows theme background/text tokens
 - Custom scrollbar track/thumb tokens
 - Table focus and row hover states mapped to primary tokens
@@ -139,6 +154,7 @@ Utility classes:
 ## 6. Asset Expectations
 
 Theme expects assets under relative paths:
+
 - Fonts under `../assets/fonts/...`
 - Icon fonts under `../assets/fonts/icons/...`
 
@@ -146,6 +162,7 @@ When integrating this theme, ensure those assets are available at the expected r
 
 ## 7. Implementation Notes
 
+- **Contrast Compliance (ADR-0039):** All information-bearing layout elements must meet WCAG 2.2 AA contrast thresholds: 4.5:1 for small text (<18pt, or <14pt bold) and 3:1 for large text (≥18pt, or >=14pt bold). This applies across all states (normal, hover, focus, disabled, validation).
 - Keep token usage semantic (prefer `--brand-*`, `--primary*`, `--accent*`) over hardcoded hex in component code.
 - For new components, support both light and dark mappings by consuming runtime variables (`--themeBackground`, `--currentTextColor`, etc.).
 - Reuse existing utility classes (`.dur-elevation-*`, status/link variants) before introducing new variants.
