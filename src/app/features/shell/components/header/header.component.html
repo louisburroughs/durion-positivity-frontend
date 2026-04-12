@@ -4,7 +4,7 @@
   <div class="header-start">
     <button class="nav-toggle-btn" type="button" (click)="toggleNav()"
       [attr.aria-label]="'SHELL.HEADER.NAV_TOGGLE_ARIA' | translate" [attr.aria-expanded]="!navCollapsed()"
-      [attr.aria-controls]="'shell-nav'" [title]="'SHELL.HEADER.NAV_TOGGLE_TITLE' | translate">
+      [attr.aria-controls]="navId()" [title]="'SHELL.HEADER.NAV_TOGGLE_TITLE' | translate">
       <span class="hamburger-icon" aria-hidden="true">☰</span>
     </button>
     <!-- Brand name intentionally not translated: "Durion POS" is a proper product name. -->

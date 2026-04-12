@@ -25,6 +25,7 @@ export class HeaderComponent {
   /** Emitted when the hamburger button is clicked (mobile nav toggle). */
   readonly navToggle = output<void>();
   readonly navCollapsed = input(false);
+  readonly navId = input('shell-nav');
 
   toggleNav(): void {
     this.navToggle.emit();
