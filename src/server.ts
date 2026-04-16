@@ -27,6 +27,24 @@ app.use(
 );
 
 /**
+ * Translation assets are not fingerprinted, so they must not be long-cached.
+ * Otherwise browsers can keep an older locale JSON after a deployment while
+ * the app code expects newer keys, resulting in raw translation keys in the UI.
+ */
+app.use(
+  '/assets/i18n',
+  express.static(join(browserDistFolder, 'assets/i18n'), {
+    etag: true,
+    lastModified: true,
+    maxAge: 0,
+    redirect: false,
+    setHeaders: (res) => {
+      res.setHeader('Cache-Control', 'no-cache');
+    },
+  }),
+);
+
+/**
  * Serve static files from /browser
  */
 app.use(
