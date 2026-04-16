@@ -164,11 +164,13 @@ jobs:
           EOF
           )
 
+          COMMAND_PARAMETERS=$(printf '%s\n' "${COMMAND_SCRIPT}" | python3 -c 'import json, sys; print(json.dumps({"commands": sys.stdin.read().splitlines()}))')
+
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${ALPHA_INSTANCE_ID}" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy frontend image ${IMAGE_TAG} from GitHub Actions" \
-            --parameters "commands=${COMMAND_SCRIPT}" \
+            --parameters "${COMMAND_PARAMETERS}" \
             --query "Command.CommandId" \
             --output text)
 
