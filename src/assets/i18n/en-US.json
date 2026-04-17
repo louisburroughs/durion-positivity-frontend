@@ -1624,7 +1624,7 @@
         },
         "CROSS_DOCK": {
           "TITLE": "Cross-Dock",
-          "DESCRIPTION": "Bypass staging and route goods directly to fulfilment."
+          "DESCRIPTION": "Bypass staging and route goods directly to fulfillment."
         },
         "PUTAWAY_TASKS": {
           "TITLE": "Putaway Tasks",
