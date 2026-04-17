@@ -216,7 +216,10 @@ export class PeopleLandingPageComponent {
       return;
     }
 
-    this.launchErrors.update(current => ({ ...current, [card.field]: null }));
+    this.launchErrors.update(current => {
+      const { [card.field]: _clearedError, ...remainingErrors } = current;
+      return remainingErrors;
+    });
     this.errorKey.set(null);
     this.state.set('loading');
     this.activeLaunchField.set(card.field);
