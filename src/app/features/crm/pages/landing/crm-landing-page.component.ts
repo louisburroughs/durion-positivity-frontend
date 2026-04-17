@@ -14,7 +14,6 @@ interface DirectCard {
   readonly kind: 'direct';
   readonly titleKey: string;
   readonly descriptionKey: string;
-  readonly routePattern: string;
   readonly route: string;
   readonly actionKey: string;
 }
@@ -46,7 +45,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'CRM.LANDING.CARD.CUSTOMER_LIST.TITLE',
         descriptionKey: 'CRM.LANDING.CARD.CUSTOMER_LIST.DESCRIPTION',
-        routePattern: '/app/crm/customers',
         route: '/app/crm/customers',
         actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
       },
@@ -54,7 +52,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'CRM.LANDING.CARD.CREATE_COMMERCIAL.TITLE',
         descriptionKey: 'CRM.LANDING.CARD.CREATE_COMMERCIAL.DESCRIPTION',
-        routePattern: '/app/crm/create-commercial-account',
         route: '/app/crm/create-commercial-account',
         actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
       },
@@ -62,7 +59,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'CRM.LANDING.CARD.CREATE_INDIVIDUAL.TITLE',
         descriptionKey: 'CRM.LANDING.CARD.CREATE_INDIVIDUAL.DESCRIPTION',
-        routePattern: '/app/crm/create-individual-person',
         route: '/app/crm/create-individual-person',
         actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
       },
@@ -70,7 +66,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'CRM.LANDING.CARD.MERGE_PARTIES.TITLE',
         descriptionKey: 'CRM.LANDING.CARD.MERGE_PARTIES.DESCRIPTION',
-        routePattern: '/app/crm/merge-parties',
         route: '/app/crm/merge-parties',
         actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
       },
@@ -134,7 +129,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'CRM.LANDING.CARD.CRM_SNAPSHOT.TITLE',
         descriptionKey: 'CRM.LANDING.CARD.CRM_SNAPSHOT.DESCRIPTION',
-        routePattern: '/app/crm/snapshot',
         route: '/app/crm/snapshot',
         actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
       },
@@ -153,7 +147,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'CRM.LANDING.CARD.INTEGRATION_EVENTS.TITLE',
         descriptionKey: 'CRM.LANDING.CARD.INTEGRATION_EVENTS.DESCRIPTION',
-        routePattern: '/app/crm/integration/events',
         route: '/app/crm/integration/events',
         actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
       },
@@ -185,6 +178,10 @@ export class CrmLandingPageComponent {
   readonly launchErrors = signal<Partial<Record<LaunchField, string>>>({});
 
   readonly sections = LANDING_SECTIONS;
+  /** Route for the primary hero CTA - Customer Directory card */
+  readonly heroCustomersRoute = LANDING_SECTIONS[0].cards[0].route as string;
+  /** Route for the secondary hero CTA - Create Commercial Account card */
+  readonly heroCreateCommercialRoute = LANDING_SECTIONS[0].cards[1].route as string;
 
   readonly directLinkCount = LANDING_SECTIONS.flatMap(s => s.cards).filter(
     c => c.kind === 'direct',
