@@ -339,6 +339,8 @@ export class InventoryLandingPageComponent {
       if (result === false) {
         this.state.set('error');
         this.errorKey.set('INVENTORY.LANDING.ERROR.NAVIGATE');
+      } else {
+        this.state.set('idle');
       }
     } catch {
       this.state.set('error');

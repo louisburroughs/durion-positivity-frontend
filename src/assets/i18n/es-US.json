@@ -1725,7 +1725,8 @@
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Por favor, ingrese un identificador.",
         "NAVIGATE": "La navegación falló. Por favor, verifique el ID e inténtelo de nuevo."
-      }
+      },
+      "ROUTE_LABEL": "Página"
     },
     "AVAILABILITY": {
       "TITLE": "Disponibilidad de inventario",

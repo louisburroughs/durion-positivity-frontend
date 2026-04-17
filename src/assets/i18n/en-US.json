@@ -1725,7 +1725,8 @@
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Please enter an identifier.",
         "NAVIGATE": "Navigation failed. Please check the ID and try again."
-      }
+      },
+      "ROUTE_LABEL": "Page"
     },
     "AVAILABILITY": {
       "TITLE": "Inventory Availability",

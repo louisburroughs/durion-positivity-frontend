@@ -1725,7 +1725,8 @@
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Veuillez saisir un identifiant.",
         "NAVIGATE": "La navigation a échoué. Veuillez vérifier l'identifiant et réessayer."
-      }
+      },
+      "ROUTE_LABEL": "Page"
     },
     "AVAILABILITY": {
       "TITLE": "Disponibilité des stocks",

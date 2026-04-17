@@ -6,7 +6,14 @@ export const INVENTORY_ROUTES: Routes = [
     path: '',
     component: InventoryComponent,
     children: [
-      { path: '', pathMatch: 'full', loadComponent: () => import('./pages/landing/inventory-landing-page.component').then(m => m.InventoryLandingPageComponent) },
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./pages/landing/inventory-landing-page.component').then(
+            m => m.InventoryLandingPageComponent,
+          ),
+      },
       {
         path: 'availability',
         loadComponent: () =>
