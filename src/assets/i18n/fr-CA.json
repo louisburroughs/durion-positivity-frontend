@@ -138,6 +138,105 @@
     }
   },
   "PEOPLE": {
+    "LANDING": {
+      "TITLE": "Espace de travail du personnel",
+      "SUBTITLE": "Lancez les flux de temps, d’employés et d’accès depuis une seule page d’accueil opérationnelle.",
+      "HERO": {
+        "OPEN_TIME_APPROVAL": "Ouvrir l’approbation du temps",
+        "CREATE_EMPLOYEE": "Créer un employé"
+      },
+      "STAT": {
+        "ARIA": "Résumé de l’espace de travail du personnel",
+        "PAGES": "Pages",
+        "DIRECT_LINKS": "Liens directs",
+        "GUIDED_LAUNCHES": "Lancements guidés"
+      },
+      "LOADING": "Ouverture de la page…",
+      "ROUTE_LABEL": "Route",
+      "SECTION": {
+        "TIMEKEEPING": {
+          "TITLE": "Gestion du temps",
+          "DESCRIPTION": "Passez en revue les heures, les sessions actives, les exports et les écarts."
+        },
+        "EMPLOYEES": {
+          "TITLE": "Cycle de vie des employés",
+          "DESCRIPTION": "Créez des profils, mettez à jour les dossiers existants et lancez le départ d’un employé."
+        },
+        "ACCESS": {
+          "TITLE": "Accès et affectations",
+          "DESCRIPTION": "Ouvrez les pages de rôles et d’affectations de lieu avec les identifiants requis."
+        }
+      },
+      "CARD": {
+        "TIME_APPROVAL": {
+          "TITLE": "Approbation du temps",
+          "DESCRIPTION": "Passez en revue les entrées soumises et traitez les décisions d’approbation."
+        },
+        "WORK_SESSION": {
+          "TITLE": "Session de travail",
+          "DESCRIPTION": "Démarrez, arrêtez et suivez les sessions actives pour le travail en cours."
+        },
+        "WORK_SESSION_SUBMIT": {
+          "TITLE": "Soumettre une session de travail",
+          "DESCRIPTION": "Ouvrez la page d’envoi d’une session précise lorsque vous avez déjà l’identifiant."
+        },
+        "TIME_EXPORT": {
+          "TITLE": "Exportation du temps",
+          "DESCRIPTION": "Préparez les exports et les données d’écart pour la paie et les systèmes en aval."
+        },
+        "DISCREPANCY": {
+          "TITLE": "Rapport d’écart",
+          "DESCRIPTION": "Analysez les écarts entre présence et temps de travail avant la paie."
+        },
+        "EMPLOYEE_NEW": {
+          "TITLE": "Créer un employé",
+          "DESCRIPTION": "Créez un nouveau profil d’employé avec les champs d’intégration standard."
+        },
+        "EMPLOYEE_PROFILE": {
+          "TITLE": "Profil de l’employé",
+          "DESCRIPTION": "Ouvrez un dossier existant lorsque vous connaissez l’ID de l’employé."
+        },
+        "EMPLOYEE_OFFBOARD": {
+          "TITLE": "Départ d’un employé",
+          "DESCRIPTION": "Lancez le flux de départ pour un dossier d’employé précis."
+        },
+        "RBAC": {
+          "TITLE": "Attribution des rôles",
+          "DESCRIPTION": "Gérez les rôles et l’accès par portée pour un UUID de personne précis."
+        },
+        "PERSON_LOCATIONS": {
+          "TITLE": "Affectations d’emplacement d’une personne",
+          "DESCRIPTION": "Passez en revue et mettez à jour les affectations d’emplacement pour un ID de personne précis."
+        }
+      },
+      "FIELD": {
+        "PERSON_UUID": "UUID de la personne",
+        "SESSION_ID": "ID de session",
+        "EMPLOYEE_ID": "ID de l’employé",
+        "OFFBOARD_EMPLOYEE_ID": "ID de l’employé",
+        "PERSON_ID": "ID de la personne"
+      },
+      "PLACEHOLDER": {
+        "PERSON_UUID": "Saisir l’UUID de la personne…",
+        "SESSION_ID": "Saisir l’ID de session…",
+        "EMPLOYEE_ID": "Saisir l’ID de l’employé…",
+        "OFFBOARD_EMPLOYEE_ID": "Saisir l’ID de l’employé…",
+        "PERSON_ID": "Saisir l’ID de la personne…"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Ouvrir la page",
+        "OPENING_PAGE": "Ouverture…",
+        "OPEN_WORK_SESSION_SUBMIT": "Ouvrir l’envoi",
+        "OPEN_EMPLOYEE_PROFILE": "Ouvrir le profil",
+        "OPEN_EMPLOYEE_OFFBOARD": "Ouvrir le départ",
+        "OPEN_RBAC": "Ouvrir l’attribution des rôles",
+        "OPEN_PERSON_LOCATIONS": "Ouvrir les affectations d’emplacement"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Saisissez l’identifiant requis avant d’ouvrir cette page.",
+        "NAVIGATE": "Impossible d’ouvrir la page du personnel sélectionnée. Réessayez."
+      }
+    },
     "WORK_SESSION": {
       "TITLE": "Session de travail",
       "ACTIVE": "Session active",

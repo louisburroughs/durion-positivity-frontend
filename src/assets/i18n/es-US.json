@@ -138,6 +138,105 @@
     }
   },
   "PEOPLE": {
+    "LANDING": {
+      "TITLE": "Espacio de trabajo de personal",
+      "SUBTITLE": "Abre flujos de control de tiempo, empleados y acceso desde una sola página de inicio operativa.",
+      "HERO": {
+        "OPEN_TIME_APPROVAL": "Abrir aprobación de tiempo",
+        "CREATE_EMPLOYEE": "Crear empleado"
+      },
+      "STAT": {
+        "ARIA": "Resumen del espacio de trabajo de personal",
+        "PAGES": "Páginas",
+        "DIRECT_LINKS": "Enlaces directos",
+        "GUIDED_LAUNCHES": "Accesos guiados"
+      },
+      "LOADING": "Abriendo página…",
+      "ROUTE_LABEL": "Ruta",
+      "SECTION": {
+        "TIMEKEEPING": {
+          "TITLE": "Control de tiempo",
+          "DESCRIPTION": "Revisa horas, sesiones activas, exportaciones e informes de discrepancias."
+        },
+        "EMPLOYEES": {
+          "TITLE": "Ciclo de vida del empleado",
+          "DESCRIPTION": "Crea perfiles, actualiza registros existentes y abre flujos de baja."
+        },
+        "ACCESS": {
+          "TITLE": "Acceso y asignaciones",
+          "DESCRIPTION": "Abre páginas de roles y asignaciones de ubicación con los identificadores necesarios."
+        }
+      },
+      "CARD": {
+        "TIME_APPROVAL": {
+          "TITLE": "Aprobación de tiempo",
+          "DESCRIPTION": "Revisa entradas de tiempo enviadas y resuelve decisiones de aprobación."
+        },
+        "WORK_SESSION": {
+          "TITLE": "Sesión de trabajo",
+          "DESCRIPTION": "Inicia, detén y supervisa sesiones activas para el trabajo actual."
+        },
+        "WORK_SESSION_SUBMIT": {
+          "TITLE": "Enviar sesión de trabajo",
+          "DESCRIPTION": "Abre la página de envío de una sesión específica cuando ya tienes el ID."
+        },
+        "TIME_EXPORT": {
+          "TITLE": "Exportación de tiempo",
+          "DESCRIPTION": "Prepara exportaciones y datos de discrepancia para nómina y sistemas externos."
+        },
+        "DISCREPANCY": {
+          "TITLE": "Informe de discrepancias",
+          "DESCRIPTION": "Investiga diferencias entre asistencia y tiempo de trabajo antes del cierre de nómina."
+        },
+        "EMPLOYEE_NEW": {
+          "TITLE": "Crear empleado",
+          "DESCRIPTION": "Crea un nuevo perfil de empleado con los campos estándar de incorporación."
+        },
+        "EMPLOYEE_PROFILE": {
+          "TITLE": "Perfil del empleado",
+          "DESCRIPTION": "Abre un registro existente cuando conoces el ID del empleado."
+        },
+        "EMPLOYEE_OFFBOARD": {
+          "TITLE": "Baja de empleado",
+          "DESCRIPTION": "Inicia el flujo de baja para un registro de empleado específico."
+        },
+        "RBAC": {
+          "TITLE": "Asignación de roles",
+          "DESCRIPTION": "Administra asignaciones de roles y acceso por ámbito para un UUID de persona específico."
+        },
+        "PERSON_LOCATIONS": {
+          "TITLE": "Asignaciones de ubicación por persona",
+          "DESCRIPTION": "Revisa y actualiza asignaciones de ubicación para un ID de persona específico."
+        }
+      },
+      "FIELD": {
+        "PERSON_UUID": "UUID de persona",
+        "SESSION_ID": "ID de sesión",
+        "EMPLOYEE_ID": "ID de empleado",
+        "OFFBOARD_EMPLOYEE_ID": "ID de empleado",
+        "PERSON_ID": "ID de persona"
+      },
+      "PLACEHOLDER": {
+        "PERSON_UUID": "Ingresa UUID de persona…",
+        "SESSION_ID": "Ingresa ID de sesión…",
+        "EMPLOYEE_ID": "Ingresa ID de empleado…",
+        "OFFBOARD_EMPLOYEE_ID": "Ingresa ID de empleado…",
+        "PERSON_ID": "Ingresa ID de persona…"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Abrir página",
+        "OPENING_PAGE": "Abriendo…",
+        "OPEN_WORK_SESSION_SUBMIT": "Abrir envío",
+        "OPEN_EMPLOYEE_PROFILE": "Abrir perfil",
+        "OPEN_EMPLOYEE_OFFBOARD": "Abrir baja",
+        "OPEN_RBAC": "Abrir asignación de roles",
+        "OPEN_PERSON_LOCATIONS": "Abrir asignaciones de ubicación"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Ingresa el identificador requerido antes de abrir esta página.",
+        "NAVIGATE": "No se pudo abrir la página de personal seleccionada. Inténtalo de nuevo."
+      }
+    },
     "WORK_SESSION": {
       "TITLE": "Sesión de trabajo",
       "ACTIVE": "Sesión activa",

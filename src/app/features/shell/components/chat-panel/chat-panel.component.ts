@@ -1,5 +1,6 @@
 import {
   Component,
+  DestroyRef,
   inject,
   signal,
   ViewChild,
@@ -9,6 +10,8 @@ import {
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChatStateService } from '../../services/chat-state.service';
 import { ChatApiService } from '../../services/chat-api.service';
 
@@ -20,8 +23,9 @@ import { ChatApiService } from '../../services/chat-api.service';
   styleUrl: './chat-panel.component.css',
 })
 export class ChatPanelComponent implements AfterViewChecked {
+  private readonly destroyRef = inject(DestroyRef);
   private readonly chatState = inject(ChatStateService);
-  private readonly chatApi   = inject(ChatApiService);
+  private readonly chatApi = inject(ChatApiService);
   private readonly translateService = inject(TranslateService);
 
   @ViewChild('messageList') private readonly messageListEl!: ElementRef<HTMLElement>;
@@ -42,20 +46,22 @@ export class ChatPanelComponent implements AfterViewChecked {
     this.sending.set(true);
     this.scrollPending = true;
 
-    // Show a localized fallback system reply when backend chat is unavailable.
-    const sessionId = 'local-session';
-    this.chatApi.sendMessage({ sessionId, message: text }).subscribe({
-      next: resp => {
-        this.chatState.addSystemMessage(resp.reply);
-        this.sending.set(false);
-        this.scrollPending = true;
-      },
-      error: () => {
-        this.chatState.addSystemMessage(this.translateService.instant('SHELL.CHAT.ERROR_BACKEND'));
-        this.sending.set(false);
-        this.scrollPending = true;
-      },
-    });
+    this.chatApi
+      .sendMessage({ message: text })
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.sending.set(false)),
+      )
+      .subscribe({
+        next: resp => {
+          this.chatState.addSystemMessage(resp.response);
+          this.scrollPending = true;
+        },
+        error: () => {
+          this.chatState.addSystemMessage(this.translateService.instant('SHELL.CHAT.ERROR_BACKEND'));
+          this.scrollPending = true;
+        },
+      });
   }
 
   onKeyDown(event: KeyboardEvent): void {

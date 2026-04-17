@@ -1,0 +1,105 @@
+<main class="people-landing" aria-labelledby="people-landing-title">
+  <section class="people-hero">
+    <div class="people-hero__content">
+      <p class="people-hero__eyebrow">{{ 'SHELL.NAV.PEOPLE' | translate }}</p>
+      <h1 id="people-landing-title" class="people-hero__title">
+        {{ 'PEOPLE.LANDING.TITLE' | translate }}
+      </h1>
+      <p class="people-hero__subtitle">
+        {{ 'PEOPLE.LANDING.SUBTITLE' | translate }}
+      </p>
+      <div class="people-hero__actions">
+        <a class="people-button people-button--primary" routerLink="/app/people/timekeeping/approval">
+          {{ 'PEOPLE.LANDING.HERO.OPEN_TIME_APPROVAL' | translate }}
+        </a>
+        <a class="people-button people-button--secondary" routerLink="/app/people/employees/new">
+          {{ 'PEOPLE.LANDING.HERO.CREATE_EMPLOYEE' | translate }}
+        </a>
+      </div>
+    </div>
+    <dl class="people-hero__stats" [attr.aria-label]="'PEOPLE.LANDING.STAT.ARIA' | translate">
+      <div class="people-stat">
+        <dt>{{ 'PEOPLE.LANDING.STAT.PAGES' | translate }}</dt>
+        <dd>{{ totalPageCount() }}</dd>
+      </div>
+      <div class="people-stat">
+        <dt>{{ 'PEOPLE.LANDING.STAT.DIRECT_LINKS' | translate }}</dt>
+        <dd>{{ directLinkCount() }}</dd>
+      </div>
+      <div class="people-stat">
+        <dt>{{ 'PEOPLE.LANDING.STAT.GUIDED_LAUNCHES' | translate }}</dt>
+        <dd>{{ guidedLinkCount() }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  @if (state() === 'error' && errorKey()) {
+  <section class="people-banner people-banner--error" role="alert" aria-live="polite">
+    <span>{{ errorKey()! | translate }}</span>
+  </section>
+  }
+
+  @if (state() === 'loading') {
+  <section class="people-banner" aria-live="polite">
+    <span>{{ 'PEOPLE.LANDING.LOADING' | translate }}</span>
+  </section>
+  }
+
+  @for (section of sections; track section.titleKey) {
+  <section class="people-section">
+    <div class="people-section__heading">
+      <h2 class="people-section__title">{{ section.titleKey | translate }}</h2>
+      <p class="people-section__description">{{ section.descriptionKey | translate }}</p>
+    </div>
+
+    <div class="people-grid">
+      @for (card of section.cards; track card.titleKey) {
+      <article class="people-card">
+        <div class="people-card__header">
+          <p class="people-card__route-label">{{ 'PEOPLE.LANDING.ROUTE_LABEL' | translate }}</p>
+          <p class="people-card__route" translate="no">{{ card.routePattern }}</p>
+        </div>
+
+        <div class="people-card__body">
+          <h3 class="people-card__title">{{ card.titleKey | translate }}</h3>
+          <p class="people-card__description">{{ card.descriptionKey | translate }}</p>
+        </div>
+
+        @if (isLaunchCard(card)) {
+        <div class="people-card__launch">
+          <label class="people-field__label" [for]="card.field">
+            {{ card.inputLabelKey | translate }}
+          </label>
+          <input class="people-field__input" [id]="card.field" [name]="card.field" type="text" autocomplete="off"
+            spellcheck="false" [value]="launchValue(card.field)"
+            [attr.aria-invalid]="launchError(card.field) ? 'true' : null"
+            [attr.aria-describedby]="launchError(card.field) ? card.field + '-error' : null"
+            [attr.placeholder]="card.inputPlaceholderKey | translate"
+            (input)="updateLaunchValue(card.field, $any($event.target).value)" />
+
+          @if (launchError(card.field)) {
+          <p class="people-field__error" [attr.id]="card.field + '-error'" role="alert" aria-live="polite">
+            {{ launchError(card.field)! | translate }}
+          </p>
+          }
+
+          <button class="people-button people-button--primary" type="button" [attr.data-testid]="card.field + '-launch'"
+            [disabled]="state() === 'loading' && activeLaunchField() === card.field" (click)="openLaunch(card)">
+            @if (state() === 'loading' && activeLaunchField() === card.field) {
+            {{ 'PEOPLE.LANDING.ACTION.OPENING_PAGE' | translate }}
+            } @else {
+            {{ card.actionKey | translate }}
+            }
+          </button>
+        </div>
+        } @else {
+        <a class="people-button people-button--primary" [routerLink]="card.route">
+          {{ card.actionKey | translate }}
+        </a>
+        }
+      </article>
+      }
+    </div>
+  </section>
+  }
+</main>

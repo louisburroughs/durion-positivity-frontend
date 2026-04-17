@@ -62,5 +62,11 @@ describe('NavigationRegistryService', () => {
 
       expect(service.visibleNavItems()).toHaveLength(9);
     });
+
+    it('points the location nav item at the concrete locations page', () => {
+      const item = service.visibleNavItems().find(i => i.key === 'SHELL.NAV.LOCATION');
+
+      expect(item?.route).toBe('/app/location/locations');
+    });
   });
 });

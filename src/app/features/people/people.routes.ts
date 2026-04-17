@@ -7,6 +7,13 @@ export const PEOPLE_ROUTES: Routes = [
     component: PeopleComponent,
     children: [
       {
+        path: '',
+        loadComponent: () =>
+          import('./pages/landing/people-landing-page.component').then(
+            m => m.PeopleLandingPageComponent,
+          ),
+      },
+      {
         path: 'rbac/:personUuid',
         loadComponent: () =>
           import('./pages/role-assignment/role-assignment-page.component')
@@ -60,6 +67,10 @@ export const PEOPLE_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/person-location-assignments/person-location-assignments-page.component')
             .then(m => m.PersonLocationAssignmentsPageComponent),
+      },
+      {
+        path: '**',
+        redirectTo: '',
       },
     ],
   },
