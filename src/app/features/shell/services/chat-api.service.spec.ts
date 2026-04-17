@@ -6,7 +6,7 @@ import { ChatApiService, ChatResponse } from './chat-api.service';
 describe('ChatApiService', () => {
   let service: ChatApiService;
 
-  const apiStub = {
+  const apiStub: vi.Mocked<Pick<ApiBaseService, 'post'>> = {
     post: vi.fn(),
   };
 
