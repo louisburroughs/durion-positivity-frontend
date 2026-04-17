@@ -1,5 +1,5 @@
 /* =============================================================================
-   Durion POS – Global Styles & Theme Token System
+   Durion ETSMS – Global Styles & Theme Token System
    See design/source/theme-tokens.md for token inventory and extension guidance.
    ============================================================================= */
 
@@ -93,7 +93,7 @@
   --accentA700: #006a6a;
   --accentA100: var(--durion-teal-100);
   --trackColor: var(--durion-graphite-200);
-  --handleColor: var(--durion-graphite-500);
+  --handleColor: var(--durion-graphite-600); /* graphite-500 (#727986) fails 4.5:1 on white; graphite-600 (#5a616e) = 6.2:1 */
   /* Extended local tokens – see design/source/theme-tokens.md */
   --border-color: var(--durion-graphite-200);
   --input-background: #ffffff;
@@ -122,7 +122,7 @@
   --accentA700: var(--durion-teal-400);
   --accentA100: var(--durion-teal-600);
   --trackColor: var(--durion-grey-700);
-  --handleColor: var(--durion-graphite-500);
+  --handleColor: var(--durion-graphite-200); /* graphite-500 (#727986) fails 4.5:1 on dark card (#3a3a3e); graphite-200 (#d7d9dd) = 7.9:1 */
   --border-color: var(--durion-graphite-700);
   --input-background: var(--durion-graphite-800);
   --input-border: var(--durion-graphite-600);

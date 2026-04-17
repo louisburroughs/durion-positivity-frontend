@@ -47,11 +47,11 @@
 .nav-item--active {
   background: rgba(255, 255, 255, 0.12);
   color: var(--contrastTextColor);
-  border-left-color: var(--accentA400);
+  border-left-color: var(--contrastTextColor); /* accentA400 (#158f83) on menuBg (#2b4c78) = 2.2:1, fails 3:1 non-text; white = 14:1 ✓ */
 }
 
 .nav-item:focus-visible {
-  outline: 2px solid var(--accentA400);
+  outline: 2px solid var(--contrastTextColor); /* accentA400 (#158f83) on menuBg (#2b4c78) = 2.2:1, fails 3:1; white = 14:1 ✓ */
   outline-offset: -2px;
 }
 
@@ -74,7 +74,7 @@
   padding: var(--space-3);
 }
 
-/* ── Mobile (hidden, controlled by parent overlay) ───────────────────── */
+/* ── Mobile (hidden, controlled by parent overlay) –––––––––––––––––––– */
 @media (max-width: 768px) {
   .shell-nav {
     position: fixed;
@@ -89,5 +89,11 @@
   .shell-nav.collapsed {
     transform: translateX(-100%);
     width: 220px; /* preserve width so slide-in looks right */
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-nav {
+    transition: none;
   }
 }

@@ -9,9 +9,7 @@ export const LOCATION_ROUTES: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        loadComponent: () =>
-          import('./pages/landing/location-landing-page.component')
-            .then(m => m.LocationLandingPageComponent),
+        redirectTo: 'locations',
       },
       {
         path: 'locations/new',
@@ -57,7 +55,7 @@ export const LOCATION_ROUTES: Routes = [
       },
       {
         path: '**',
-        redirectTo: '',
+        redirectTo: 'locations',
       },
     ],
   },

@@ -109,6 +109,12 @@
   30%            { transform: translateY(-5px); }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    animation: none;
+  }
+}
+
 /* ── Input row ───────────────────────────────────────────────────────── */
 .chat-input-row {
   display: flex;

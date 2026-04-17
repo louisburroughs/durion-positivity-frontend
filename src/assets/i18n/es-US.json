@@ -6,7 +6,7 @@
     "NAV_THEME_TO_DARK": "Cambiar al modo oscuro",
     "NAV_THEME_TO_LIGHT": "Cambiar al modo claro",
     "HERO_TITLE": "Administra tu negocio con confianza",
-    "HERO_SUBTITLE": "Durion POS reúne a tus clientes, órdenes de trabajo, facturación y equipo en un solo lugar — para que puedas enfocarte en hacer un gran trabajo.",
+    "HERO_SUBTITLE": "Positivity reúne a tus clientes, órdenes de trabajo, facturación y equipo en un solo lugar — para que puedas enfocarte en hacer un gran trabajo.",
     "HERO_CTA": "Iniciar sesión en tu cuenta",
     "FEATURES_TITLE": "Todo lo que necesitas, nada más",
     "FEATURES_SUBTITLE": "Diseñado para empresas de servicios que quieren trabajar de manera más inteligente.",
@@ -29,7 +29,7 @@
     "CTA_TITLE": "¿Listo para tomar el control de tu negocio?",
     "CTA_BUTTON": "Iniciar sesión ahora",
     "FOOTER_TAGLINE": "Plataforma Positivity",
-    "FOOTER_COPYRIGHT": "© 2026 Durion POS. Todos los derechos reservados."
+    "FOOTER_COPYRIGHT": "© 2026 Durion Support Services. Todos los derechos reservados."
   },
   "SYSTEM": {
     "ACCESS_DENIED": {
@@ -80,7 +80,7 @@
       }
     },
     "DASHBOARD": {
-      "WELCOME_HEADING": "Bienvenido a Durion POS",
+      "WELCOME_HEADING": "Bienvenido a Positivity",
       "WELCOME_BODY": "Selecciona un área de la navegación para comenzar.",
       "CARD": {
         "WORKORDERS": "Órdenes de trabajo",
@@ -92,7 +92,7 @@
       }
     },
     "FOOTER": {
-      "COPYRIGHT": "© {{ year }} Durion POS. Todos los derechos reservados."
+      "COPYRIGHT": "© {{ year }} Durion Support Services. Todos los derechos reservados."
     },
     "CONTENT_PANEL": {
       "ARIA_LABEL": "Área de contenido principal"
@@ -115,8 +115,8 @@
   },
   "AUTH": {
     "LOGIN": {
-      "BRAND_LOGO_ARIA": "Logotipo de Durion POS",
-      "BRAND_TAGLINE": "Plataforma Positivity",
+      "BRAND_LOGO_ARIA": "Logotipo de Durion",
+      "BRAND_TAGLINE": "Plataforma de Positivity",
       "SESSION_EXPIRED": "Tu sesión ha expirado. Inicia sesión nuevamente.",
       "USERNAME": "Nombre de usuario",
       "USERNAME_PLACEHOLDER": "Ingresa tu nombre de usuario",
@@ -1565,6 +1565,169 @@
     }
   },
   "INVENTORY": {
+    "LANDING": {
+      "TITLE": "Gestión de inventario",
+      "SUBTITLE": "Existencias, recepción, conteos cíclicos, órdenes de compra y cumplimiento en un solo lugar.",
+      "STAT": {
+        "ARIA": "Estadísticas del módulo de inventario",
+        "PAGES": "Total de páginas",
+        "DIRECT_LINKS": "Accesos directos",
+        "GUIDED_LAUNCHES": "Lanzamientos guiados"
+      },
+      "HERO": {
+        "OPEN_AVAILABILITY": "Ver disponibilidad",
+        "NEW_PURCHASE_ORDER": "Nueva orden de compra"
+      },
+      "LOADING": "Cargando…",
+      "SECTION": {
+        "STOCK": {
+          "TITLE": "Existencias y disponibilidad",
+          "DESCRIPTION": "Ver niveles actuales de existencias y entradas del libro mayor."
+        },
+        "RECEIVING": {
+          "TITLE": "Recepción y reabastecimiento",
+          "DESCRIPTION": "Recibir mercancías, gestionar almacenamiento provisional, colocación y reabastecimiento."
+        },
+        "COUNTS": {
+          "TITLE": "Conteos cíclicos",
+          "DESCRIPTION": "Ejecutar conteos cíclicos, revisar ajustes y gestionar planes de conteo."
+        },
+        "PURCHASE_ORDERS": {
+          "TITLE": "Órdenes de compra",
+          "DESCRIPTION": "Crear, ver y editar órdenes de compra."
+        },
+        "FULFILLMENT": {
+          "TITLE": "Cumplimiento",
+          "DESCRIPTION": "Gestionar listas de recolección, devoluciones, consumo y escasez de órdenes de trabajo."
+        },
+        "ADMIN": {
+          "TITLE": "Administración",
+          "DESCRIPTION": "Gestionar permisos y configuración del inventario."
+        }
+      },
+      "CARD": {
+        "AVAILABILITY": {
+          "TITLE": "Disponibilidad",
+          "DESCRIPTION": "Buscar y ver disponibilidad de existencias en tiempo real."
+        },
+        "LEDGER": {
+          "TITLE": "Libro mayor de inventario",
+          "DESCRIPTION": "Explorar todas las transacciones y movimientos de inventario."
+        },
+        "LEDGER_ENTRY": {
+          "TITLE": "Entrada del libro mayor",
+          "DESCRIPTION": "Abrir una entrada específica del libro mayor por ID."
+        },
+        "RECEIVE_INTO_STAGING": {
+          "TITLE": "Recibir en área de preparación",
+          "DESCRIPTION": "Recibir envíos entrantes en el área de preparación."
+        },
+        "CROSS_DOCK": {
+          "TITLE": "Cross-Dock",
+          "DESCRIPTION": "Omitir la preparación y dirigir mercancías directamente al cumplimiento."
+        },
+        "PUTAWAY_TASKS": {
+          "TITLE": "Tareas de colocación",
+          "DESCRIPTION": "Ver todas las tareas de colocación pendientes."
+        },
+        "PUTAWAY_TASK": {
+          "TITLE": "Tarea de colocación",
+          "DESCRIPTION": "Abrir y ejecutar una tarea de colocación específica por ID."
+        },
+        "REPLENISHMENT": {
+          "TITLE": "Reabastecimiento",
+          "DESCRIPTION": "Iniciar y monitorear órdenes de reabastecimiento para ubicaciones con poco stock."
+        },
+        "COUNT_EXECUTE": {
+          "TITLE": "Ejecutar conteo",
+          "DESCRIPTION": "Iniciar o continuar un conteo cíclico activo."
+        },
+        "COUNT_ADJUSTMENTS": {
+          "TITLE": "Ajustes de conteo",
+          "DESCRIPTION": "Revisar y aprobar ajustes de inventario de conteos cíclicos."
+        },
+        "COUNT_PLANS": {
+          "TITLE": "Planes de conteo",
+          "DESCRIPTION": "Gestionar planes de conteo cíclico programados."
+        },
+        "COUNT_PLAN_NEW": {
+          "TITLE": "Nuevo plan de conteo",
+          "DESCRIPTION": "Crear un nuevo plan de conteo cíclico."
+        },
+        "PO_LIST": {
+          "TITLE": "Órdenes de compra",
+          "DESCRIPTION": "Explorar todas las órdenes de compra."
+        },
+        "PO_NEW": {
+          "TITLE": "Nueva orden de compra",
+          "DESCRIPTION": "Crear una nueva orden de compra."
+        },
+        "PO_DETAIL": {
+          "TITLE": "Detalle de OC",
+          "DESCRIPTION": "Abrir una orden de compra específica por ID."
+        },
+        "PO_EDIT": {
+          "TITLE": "Editar orden de compra",
+          "DESCRIPTION": "Editar una orden de compra existente por ID."
+        },
+        "PICK_LIST": {
+          "TITLE": "Lista de recolección",
+          "DESCRIPTION": "Ver la lista de recolección de una orden de trabajo específica."
+        },
+        "PICK_EXECUTE": {
+          "TITLE": "Ejecutar recolección",
+          "DESCRIPTION": "Ejecutar la recolección para una orden de trabajo específica."
+        },
+        "RETURN_TO_STOCK": {
+          "TITLE": "Devolver al stock",
+          "DESCRIPTION": "Procesar una devolución al stock de una orden de trabajo."
+        },
+        "CONSUME_ITEMS": {
+          "TITLE": "Consumir artículos",
+          "DESCRIPTION": "Registrar el consumo de artículos de una orden de trabajo."
+        },
+        "SHORTAGE_RESOLUTION": {
+          "TITLE": "Resolución de escasez",
+          "DESCRIPTION": "Resolver la escasez de artículos de una orden de trabajo."
+        },
+        "SECURITY_PERMISSIONS": {
+          "TITLE": "Permisos",
+          "DESCRIPTION": "Gestionar acceso y configuración de permisos de inventario."
+        }
+      },
+      "FIELD": {
+        "LEDGER_ENTRY_ID": "ID de entrada del libro mayor",
+        "PUTAWAY_TASK_ID": "ID de tarea de colocación",
+        "PO_ID": "ID de orden de compra",
+        "PO_EDIT_ID": "ID de orden de compra",
+        "WORKORDER_ID": "ID de orden de trabajo"
+      },
+      "PLACEHOLDER": {
+        "LEDGER_ENTRY_ID": "ej. LE-001",
+        "PUTAWAY_TASK_ID": "ej. PT-001",
+        "PO_ID": "ej. OC-001",
+        "PO_EDIT_ID": "ej. OC-001",
+        "WORKORDER_ID": "ej. OT-001"
+      },
+      "ACTION": {
+        "OPEN_LEDGER_ENTRY": "Abrir entrada",
+        "OPEN_PUTAWAY_TASK": "Abrir tarea",
+        "OPEN_PO": "Abrir OC",
+        "OPEN_PO_EDIT": "Editar OC",
+        "OPEN_PICK_LIST": "Ver lista de recolección",
+        "EXECUTE_PICK": "Ejecutar recolección",
+        "OPEN_RETURN": "Abrir devolución",
+        "OPEN_CONSUME": "Abrir consumo",
+        "OPEN_SHORTAGE": "Abrir escasez",
+        "OPEN_PAGE": "Abrir",
+        "OPENING_PAGE": "Abriendo..."
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Por favor, ingrese un identificador.",
+        "NAVIGATE": "La navegación falló. Por favor, verifique el ID e inténtelo de nuevo."
+      },
+      "ROUTE_LABEL": "Página"
+    },
     "AVAILABILITY": {
       "TITLE": "Disponibilidad de inventario",
       "FILTER": {

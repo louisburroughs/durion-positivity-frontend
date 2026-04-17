@@ -6,7 +6,7 @@
     "NAV_THEME_TO_DARK": "Switch to dark mode",
     "NAV_THEME_TO_LIGHT": "Switch to light mode",
     "HERO_TITLE": "Run Your Shop With Confidence",
-    "HERO_SUBTITLE": "Durion POS brings your customers, work orders, billing, and team together in one place — so you can focus on doing great work.",
+    "HERO_SUBTITLE": "Positivity brings your customers, work orders, billing, and team together in one place — so you can focus on doing great work.",
     "HERO_CTA": "Sign In to Your Account",
     "FEATURES_TITLE": "Everything you need, nothing you don't",
     "FEATURES_SUBTITLE": "Built for service businesses that want to work smarter.",
@@ -29,7 +29,7 @@
     "CTA_TITLE": "Ready to take control of your shop?",
     "CTA_BUTTON": "Sign In Now",
     "FOOTER_TAGLINE": "Positivity Platform",
-    "FOOTER_COPYRIGHT": "© 2026 Durion POS. All rights reserved."
+    "FOOTER_COPYRIGHT": "© 2026 Durion Support Services. All rights reserved."
   },
   "SYSTEM": {
     "ACCESS_DENIED": {
@@ -80,7 +80,7 @@
       }
     },
     "DASHBOARD": {
-      "WELCOME_HEADING": "Welcome to Durion POS",
+      "WELCOME_HEADING": "Welcome to Positivity",
       "WELCOME_BODY": "Select an area from the navigation to get started.",
       "CARD": {
         "WORKORDERS": "Work Orders",
@@ -92,7 +92,7 @@
       }
     },
     "FOOTER": {
-      "COPYRIGHT": "© {{ year }} Durion POS. All rights reserved."
+      "COPYRIGHT": "© {{ year }} Durion Support Services. All rights reserved."
     },
     "CONTENT_PANEL": {
       "ARIA_LABEL": "Main content area"
@@ -115,7 +115,7 @@
   },
   "AUTH": {
     "LOGIN": {
-      "BRAND_LOGO_ARIA": "Durion POS logo",
+      "BRAND_LOGO_ARIA": "Durion logo",
       "BRAND_TAGLINE": "Positivity Platform",
       "SESSION_EXPIRED": "Your session has expired. Please sign in again.",
       "USERNAME": "Username",
@@ -1565,6 +1565,169 @@
     }
   },
   "INVENTORY": {
+    "LANDING": {
+      "TITLE": "Inventory Management",
+      "SUBTITLE": "Stock, receiving, cycle counts, purchase orders, and fulfillment in one place.",
+      "STAT": {
+        "ARIA": "Inventory module statistics",
+        "PAGES": "Total Pages",
+        "DIRECT_LINKS": "Quick Links",
+        "GUIDED_LAUNCHES": "Guided Launches"
+      },
+      "HERO": {
+        "OPEN_AVAILABILITY": "View Availability",
+        "NEW_PURCHASE_ORDER": "New Purchase Order"
+      },
+      "LOADING": "Loading…",
+      "SECTION": {
+        "STOCK": {
+          "TITLE": "Stock & Availability",
+          "DESCRIPTION": "View current stock levels and ledger entries."
+        },
+        "RECEIVING": {
+          "TITLE": "Receiving & Replenishment",
+          "DESCRIPTION": "Receive goods, manage staging, putaway, and replenishment."
+        },
+        "COUNTS": {
+          "TITLE": "Cycle Counts",
+          "DESCRIPTION": "Execute cycle counts, review adjustments, and manage count plans."
+        },
+        "PURCHASE_ORDERS": {
+          "TITLE": "Purchase Orders",
+          "DESCRIPTION": "Create, view, and edit purchase orders."
+        },
+        "FULFILLMENT": {
+          "TITLE": "Fulfillment",
+          "DESCRIPTION": "Manage workorder pick lists, returns, consumption, and shortages."
+        },
+        "ADMIN": {
+          "TITLE": "Administration",
+          "DESCRIPTION": "Manage permissions and configuration for inventory."
+        }
+      },
+      "CARD": {
+        "AVAILABILITY": {
+          "TITLE": "Availability",
+          "DESCRIPTION": "Search and view real-time stock availability across locations."
+        },
+        "LEDGER": {
+          "TITLE": "Inventory Ledger",
+          "DESCRIPTION": "Browse all inventory transactions and movements."
+        },
+        "LEDGER_ENTRY": {
+          "TITLE": "Ledger Entry",
+          "DESCRIPTION": "Open a specific ledger entry by ID."
+        },
+        "RECEIVE_INTO_STAGING": {
+          "TITLE": "Receive into Staging",
+          "DESCRIPTION": "Receive incoming shipments into the staging area."
+        },
+        "CROSS_DOCK": {
+          "TITLE": "Cross-Dock",
+          "DESCRIPTION": "Bypass staging and route goods directly to fulfillment."
+        },
+        "PUTAWAY_TASKS": {
+          "TITLE": "Putaway Tasks",
+          "DESCRIPTION": "View all open putaway tasks awaiting completion."
+        },
+        "PUTAWAY_TASK": {
+          "TITLE": "Putaway Task",
+          "DESCRIPTION": "Open and execute a specific putaway task by ID."
+        },
+        "REPLENISHMENT": {
+          "TITLE": "Replenishment",
+          "DESCRIPTION": "Trigger and monitor replenishment orders for low-stock locations."
+        },
+        "COUNT_EXECUTE": {
+          "TITLE": "Execute Count",
+          "DESCRIPTION": "Start or continue an active cycle count."
+        },
+        "COUNT_ADJUSTMENTS": {
+          "TITLE": "Count Adjustments",
+          "DESCRIPTION": "Review and approve inventory adjustments from cycle counts."
+        },
+        "COUNT_PLANS": {
+          "TITLE": "Count Plans",
+          "DESCRIPTION": "Manage scheduled cycle count plans."
+        },
+        "COUNT_PLAN_NEW": {
+          "TITLE": "New Count Plan",
+          "DESCRIPTION": "Create a new cycle count plan."
+        },
+        "PO_LIST": {
+          "TITLE": "Purchase Orders",
+          "DESCRIPTION": "Browse all purchase orders."
+        },
+        "PO_NEW": {
+          "TITLE": "New Purchase Order",
+          "DESCRIPTION": "Create a new purchase order."
+        },
+        "PO_DETAIL": {
+          "TITLE": "PO Detail",
+          "DESCRIPTION": "Open a specific purchase order by ID."
+        },
+        "PO_EDIT": {
+          "TITLE": "Edit Purchase Order",
+          "DESCRIPTION": "Edit an existing purchase order by ID."
+        },
+        "PICK_LIST": {
+          "TITLE": "Pick List",
+          "DESCRIPTION": "View the pick list for a specific workorder."
+        },
+        "PICK_EXECUTE": {
+          "TITLE": "Execute Pick",
+          "DESCRIPTION": "Execute picking for a specific workorder."
+        },
+        "RETURN_TO_STOCK": {
+          "TITLE": "Return to Stock",
+          "DESCRIPTION": "Process a workorder return to stock."
+        },
+        "CONSUME_ITEMS": {
+          "TITLE": "Consume Items",
+          "DESCRIPTION": "Record item consumption for a workorder."
+        },
+        "SHORTAGE_RESOLUTION": {
+          "TITLE": "Shortage Resolution",
+          "DESCRIPTION": "Resolve item shortages for a workorder."
+        },
+        "SECURITY_PERMISSIONS": {
+          "TITLE": "Permissions",
+          "DESCRIPTION": "Manage inventory access and permission settings."
+        }
+      },
+      "FIELD": {
+        "LEDGER_ENTRY_ID": "Ledger Entry ID",
+        "PUTAWAY_TASK_ID": "Putaway Task ID",
+        "PO_ID": "Purchase Order ID",
+        "PO_EDIT_ID": "Purchase Order ID",
+        "WORKORDER_ID": "Workorder ID"
+      },
+      "PLACEHOLDER": {
+        "LEDGER_ENTRY_ID": "e.g. LE-001",
+        "PUTAWAY_TASK_ID": "e.g. PT-001",
+        "PO_ID": "e.g. PO-001",
+        "PO_EDIT_ID": "e.g. PO-001",
+        "WORKORDER_ID": "e.g. WO-001"
+      },
+      "ACTION": {
+        "OPEN_LEDGER_ENTRY": "Open Entry",
+        "OPEN_PUTAWAY_TASK": "Open Task",
+        "OPEN_PO": "Open PO",
+        "OPEN_PO_EDIT": "Edit PO",
+        "OPEN_PICK_LIST": "View Pick List",
+        "EXECUTE_PICK": "Execute Pick",
+        "OPEN_RETURN": "Open Return",
+        "OPEN_CONSUME": "Open Consumption",
+        "OPEN_SHORTAGE": "Open Shortage",
+        "OPEN_PAGE": "Open",
+        "OPENING_PAGE": "Opening..."
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Please enter an identifier.",
+        "NAVIGATE": "Navigation failed. Please check the ID and try again."
+      },
+      "ROUTE_LABEL": "Page"
+    },
     "AVAILABILITY": {
       "TITLE": "Inventory Availability",
       "FILTER": {

@@ -20,7 +20,7 @@
 
 .skip-link:focus {
   transform: translateY(var(--space-2));
-  outline: 2px solid var(--accentA700);
+  outline: 2px solid var(--accentA400); /* accentA700 (#006a6a) = 2.1:1 on navBg; accentA400 (#158f83) = 3.5:1 ✓ */
   outline-offset: 2px;
 }
 
