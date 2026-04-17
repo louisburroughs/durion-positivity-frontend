@@ -58,7 +58,7 @@ export const LOCATION_ROUTES: Routes = [
       },
       {
         path: '**',
-        redirectTo: 'locations',
+        redirectTo: '',
       },
     ],
   },
