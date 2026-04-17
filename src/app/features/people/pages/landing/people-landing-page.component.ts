@@ -191,8 +191,11 @@ export class PeopleLandingPageComponent {
       return rest;
     });
     this.errorKey.set(null);
-    this.state.set('ready');
-    this.activeLaunchField.set(null);
+
+    if (this.state() !== 'loading') {
+      this.state.set('ready');
+      this.activeLaunchField.set(null);
+    }
   }
 
   launchValue(field: LaunchField): string {
@@ -213,7 +216,10 @@ export class PeopleLandingPageComponent {
       return;
     }
 
-    this.launchErrors.update(current => ({ ...current, [card.field]: null }));
+    this.launchErrors.update(current => {
+      const { [card.field]: _clearedError, ...remainingErrors } = current;
+      return remainingErrors;
+    });
     this.errorKey.set(null);
     this.state.set('loading');
     this.activeLaunchField.set(card.field);

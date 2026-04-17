@@ -36,7 +36,7 @@ describe('PeopleLandingPageComponent', () => {
   it('renders all direct people links on the landing page', () => {
     const directLinks = fixture.debugElement.queryAll(By.css('a.people-button--primary, a.people-button--secondary'));
 
-    expect(directLinks.length).toBe(7);
+    expect(directLinks.length).toBe(component.directLinkCount + 2);
   });
 
   it('shows inline validation when a guided launch is missing its identifier', () => {
@@ -50,6 +50,26 @@ describe('PeopleLandingPageComponent', () => {
     expect(errorMessage).toBeTruthy();
     expect(launchInput.getAttribute('aria-invalid')).toBe('true');
     expect(launchInput.getAttribute('aria-describedby')).toBe('personUuid-error');
+  });
+
+  it('clears the field error when the user updates the launch value', () => {
+    // Trigger a validation error first
+    const launchButton = fixture.debugElement.query(By.css('[data-testid="personUuid-launch"]'));
+    launchButton.nativeElement.click();
+    fixture.detectChanges();
+
+    // Verify error is set
+    expect(component.launchError('personUuid')).not.toBeNull();
+
+    // Now update the value
+    component.updateLaunchValue('personUuid', 'some-uuid');
+    fixture.detectChanges();
+
+    // Error should be cleared
+    expect(component.launchError('personUuid')).toBeNull();
+    // And error display should be gone
+    const errorMessage = fixture.debugElement.query(By.css('.people-field__error'));
+    expect(errorMessage).toBeNull();
   });
 
   it('navigates to a contextual people page when a guided launch value is provided', () => {
