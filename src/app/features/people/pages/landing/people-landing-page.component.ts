@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 
@@ -176,15 +176,9 @@ export class PeopleLandingPageComponent {
   });
   readonly launchErrors = signal<Partial<Record<LaunchField, string>>>({});
   readonly sections = LANDING_SECTIONS;
-  readonly directLinkCount = computed(() =>
-    LANDING_SECTIONS.flatMap(section => section.cards).filter(card => card.kind === 'direct').length,
-  );
-  readonly guidedLinkCount = computed(() =>
-    LANDING_SECTIONS.flatMap(section => section.cards).filter(card => card.kind === 'launch').length,
-  );
-  readonly totalPageCount = computed(() =>
-    LANDING_SECTIONS.flatMap(section => section.cards).length,
-  );
+  readonly directLinkCount = LANDING_SECTIONS.flatMap(section => section.cards).filter(card => card.kind === 'direct').length;
+  readonly guidedLinkCount = LANDING_SECTIONS.flatMap(section => section.cards).filter(card => card.kind === 'launch').length;
+  readonly totalPageCount = LANDING_SECTIONS.flatMap(section => section.cards).length;
 
   isLaunchCard(card: DirectCard | LaunchCard): card is LaunchCard {
     return card.kind === 'launch';
@@ -192,13 +186,13 @@ export class PeopleLandingPageComponent {
 
   updateLaunchValue(field: LaunchField, value: string): void {
     this.launchValues.update(current => ({ ...current, [field]: value }));
-    this.launchErrors.update(current => ({ ...current, [field]: null }));
+    this.launchErrors.update(current => {
+      const { [field]: _cleared, ...rest } = current;
+      return rest;
+    });
     this.errorKey.set(null);
-
-    if (this.state() !== 'loading') {
-      this.state.set('ready');
-      this.activeLaunchField.set(null);
-    }
+    this.state.set('ready');
+    this.activeLaunchField.set(null);
   }
 
   launchValue(field: LaunchField): string {
@@ -219,10 +213,7 @@ export class PeopleLandingPageComponent {
       return;
     }
 
-    this.launchErrors.update(current => {
-      const { [card.field]: _clearedError, ...remainingErrors } = current;
-      return remainingErrors;
-    });
+    this.launchErrors.update(current => ({ ...current, [card.field]: null }));
     this.errorKey.set(null);
     this.state.set('loading');
     this.activeLaunchField.set(card.field);
