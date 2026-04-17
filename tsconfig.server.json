@@ -3,10 +3,16 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/server",
+    "rootDir": "./src",
     "module": "es2022",
     "moduleResolution": "bundler",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "esModuleInterop": true
   },
-  "include": ["src/main.server.ts", "src/server.ts"]
+  "include": [
+    "src/main.server.ts",
+    "src/server.ts"
+  ]
 }

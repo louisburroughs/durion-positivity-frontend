@@ -18,7 +18,7 @@ on:
         required: false
         default: "alpha"
       deploy_alpha:
-        description: "Deploy to alpha EC2 after pushing image"
+        description: "Deploy to alpha EC2 after pushing image (defaults to enabled for alpha builds)"
         required: false
         default: false
         type: boolean
@@ -26,10 +26,6 @@ on:
 concurrency:
   group: ecr-push-frontend-${{ github.ref }}
   cancel-in-progress: true
-
-permissions:
-  id-token: write   # Required for OIDC authentication
-  contents: read
 
 env:
   AWS_REGION: us-east-1
@@ -40,6 +36,9 @@ jobs:
   build-push:
     name: Build and Push Frontend Image
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout
@@ -102,10 +101,13 @@ jobs:
     name: Deploy Frontend to Alpha
     needs: build-push
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     if: >
       success() &&
       (
-        (github.event_name == 'workflow_dispatch' && inputs.deploy_alpha) ||
+        (github.event_name == 'workflow_dispatch' && (inputs.deploy_alpha || inputs.environment == 'alpha')) ||
         vars.AUTO_DEPLOY_ALPHA == 'true'
       )
 
