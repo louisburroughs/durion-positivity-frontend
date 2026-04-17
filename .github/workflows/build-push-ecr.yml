@@ -137,6 +137,7 @@ jobs:
           ENV_FILE="\${ALPHA_ROOT}/.env"
           PROD_OVERRIDE="\${ALPHA_ROOT}/docker-compose.prod.yml"
           IMAGE_TAG="${IMAGE_TAG}"
+          ECR_REGISTRY="$(aws sts get-caller-identity --query Account --output text).dkr.ecr.us-east-1.amazonaws.com"
 
           if grep -q '^FRONTEND_TAG=' "\${ENV_FILE}"; then
             sed -i "s/^FRONTEND_TAG=.*/FRONTEND_TAG=\${IMAGE_TAG}/" "\${ENV_FILE}"
@@ -144,7 +145,16 @@ jobs:
             printf '\nFRONTEND_TAG=%s\n' "\${IMAGE_TAG}" >> "\${ENV_FILE}"
           fi
 
+          if grep -q '^ECR_REGISTRY=' "\${ENV_FILE}"; then
+            sed -i "s|^ECR_REGISTRY=.*|ECR_REGISTRY=\${ECR_REGISTRY}|" "\${ENV_FILE}"
+          else
+            printf 'ECR_REGISTRY=%s\n' "\${ECR_REGISTRY}" >> "\${ENV_FILE}"
+          fi
+
           cd "\${BACKEND_DIR}"
+
+          aws ecr get-login-password --region us-east-1 \
+            | docker login --username AWS --password-stdin "\${ECR_REGISTRY}"
 
           docker compose \
             -f docker-compose.yml \
