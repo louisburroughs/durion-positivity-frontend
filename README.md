@@ -44,7 +44,7 @@ src/
           content-panel/           # Router outlet for domain pages
         services/
           chat-state.service.ts    # In-memory chat message store (signals)
-          chat-api.service.ts      # Placeholder for LLM/chat backend
+          chat-api.service.ts      # MCP chat backend transport
         dashboard/
           dashboard.component.ts   # Default /app landing page placeholder
   environments/
@@ -122,7 +122,7 @@ design/
   - API authorization remains backend-authoritative via gateway-decoded `perm_bits`/`perm_ver`.
   - frontend does not send `X-Authorities` headers.
 - Refresh token flow is stubbed in `AuthService.refreshTokens()` — wire to `POST /auth/refresh` when backend exposes it.
-- Chat backend: implement `ChatApiService.sendMessage()` to connect to the LLM endpoint.
+- Shell chat uses `ChatApiService` to call the MCP chat endpoint via the API gateway at `/mcp-server/v1/mcp/chat`.
 
 ## Environment Variables
 

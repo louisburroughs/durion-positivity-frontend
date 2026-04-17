@@ -1,38 +1,29 @@
-import { Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
+import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { ApiBaseService } from '../../../core/services/api-base.service';
 
 export interface ChatRequest {
-  sessionId: string;
-  message:   string;
+  message: string;
 }
 
 export interface ChatResponse {
-  reply:     string;
-  sessionId: string;
+  response: string;
 }
 
 /**
  * ChatApiService
  * --------------
- * Placeholder service for LLM / chat-backend integration.
- *
- * TODO: Replace the stub implementation once the backend chat endpoint is available.
- * Expected endpoint:   POST /chat/message
- * Expected contract:   ChatRequest → ChatResponse
- *
- * This service is intentionally decoupled from ChatStateService so the transport
- * layer can evolve independently (e.g., switch to WebSocket without touching state).
+ * Thin transport wrapper for the MCP chat endpoint exposed through the API gateway.
+ * The shell chat UI stays decoupled from HTTP details and only depends on this
+ * service contract.
  */
 @Injectable({ providedIn: 'root' })
 export class ChatApiService {
-  /**
-   * sendMessage
-   * TODO: Implement HTTP call to backend chat endpoint.
-   * Example:
-   *   return this.api.post<ChatResponse>('/chat/message', request);
-   */
-  sendMessage(_request: ChatRequest): Observable<ChatResponse> {
-    // Stub – always returns an error so the caller can display a placeholder.
-    return throwError(() => new Error('ChatApiService.sendMessage: not yet implemented'));
+  private static readonly CHAT_PATH = '/mcp-server/v1/mcp/chat';
+
+  private readonly api = inject(ApiBaseService);
+
+  sendMessage(request: ChatRequest): Observable<ChatResponse> {
+    return this.api.post<ChatResponse>(ChatApiService.CHAT_PATH, request);
   }
 }

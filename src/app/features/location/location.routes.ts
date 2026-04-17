@@ -7,6 +7,11 @@ export const LOCATION_ROUTES: Routes = [
     component: LocationComponent,
     children: [
       {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'locations',
+      },
+      {
         path: 'locations/new',
         loadComponent: () =>
           import('./pages/location-edit/location-edit-page.component')
@@ -47,6 +52,10 @@ export const LOCATION_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/location-sync/location-sync-page.component')
             .then(m => m.LocationSyncPageComponent),
+      },
+      {
+        path: '**',
+        redirectTo: 'locations',
       },
     ],
   },

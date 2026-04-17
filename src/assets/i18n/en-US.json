@@ -138,6 +138,105 @@
     }
   },
   "PEOPLE": {
+    "LANDING": {
+      "TITLE": "People Workspace",
+      "SUBTITLE": "Launch timekeeping, employee, and access workflows from one landing page built for daily operations.",
+      "HERO": {
+        "OPEN_TIME_APPROVAL": "Open Time Approval",
+        "CREATE_EMPLOYEE": "Create Employee"
+      },
+      "STAT": {
+        "ARIA": "People workspace summary",
+        "PAGES": "Pages",
+        "DIRECT_LINKS": "Direct Links",
+        "GUIDED_LAUNCHES": "Guided Launches"
+      },
+      "LOADING": "Opening page…",
+      "ROUTE_LABEL": "Route",
+      "SECTION": {
+        "TIMEKEEPING": {
+          "TITLE": "Timekeeping",
+          "DESCRIPTION": "Review hours, active sessions, exports, and discrepancy reporting."
+        },
+        "EMPLOYEES": {
+          "TITLE": "Employee Lifecycle",
+          "DESCRIPTION": "Create profiles, update existing records, and launch offboarding workflows."
+        },
+        "ACCESS": {
+          "TITLE": "Access & Assignments",
+          "DESCRIPTION": "Open role access and location assignment pages with the IDs your workflow needs."
+        }
+      },
+      "CARD": {
+        "TIME_APPROVAL": {
+          "TITLE": "Time Approval",
+          "DESCRIPTION": "Review submitted time entries and resolve approval decisions."
+        },
+        "WORK_SESSION": {
+          "TITLE": "Work Session",
+          "DESCRIPTION": "Start, stop, and monitor active work sessions for the current job."
+        },
+        "WORK_SESSION_SUBMIT": {
+          "TITLE": "Work Session Submit",
+          "DESCRIPTION": "Open a specific session submission page when you already have the session ID."
+        },
+        "TIME_EXPORT": {
+          "TITLE": "Time Export",
+          "DESCRIPTION": "Prepare export files and discrepancy inputs for payroll and downstream systems."
+        },
+        "DISCREPANCY": {
+          "TITLE": "Discrepancy Report",
+          "DESCRIPTION": "Investigate attendance versus job-time mismatches before payroll close."
+        },
+        "EMPLOYEE_NEW": {
+          "TITLE": "Create Employee",
+          "DESCRIPTION": "Create a new employee profile with the standard onboarding fields."
+        },
+        "EMPLOYEE_PROFILE": {
+          "TITLE": "Employee Profile",
+          "DESCRIPTION": "Open an existing employee record when you know the employee ID."
+        },
+        "EMPLOYEE_OFFBOARD": {
+          "TITLE": "Employee Offboard",
+          "DESCRIPTION": "Launch the offboarding flow for a specific employee record."
+        },
+        "RBAC": {
+          "TITLE": "Role Assignment",
+          "DESCRIPTION": "Manage role assignments and scoped access for a specific person UUID."
+        },
+        "PERSON_LOCATIONS": {
+          "TITLE": "Person Location Assignments",
+          "DESCRIPTION": "Review and update location assignments for a specific person ID."
+        }
+      },
+      "FIELD": {
+        "PERSON_UUID": "Person UUID",
+        "SESSION_ID": "Session ID",
+        "EMPLOYEE_ID": "Employee ID",
+        "OFFBOARD_EMPLOYEE_ID": "Employee ID",
+        "PERSON_ID": "Person ID"
+      },
+      "PLACEHOLDER": {
+        "PERSON_UUID": "Enter person UUID…",
+        "SESSION_ID": "Enter session ID…",
+        "EMPLOYEE_ID": "Enter employee ID…",
+        "OFFBOARD_EMPLOYEE_ID": "Enter employee ID…",
+        "PERSON_ID": "Enter person ID…"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Open Page",
+        "OPENING_PAGE": "Opening…",
+        "OPEN_WORK_SESSION_SUBMIT": "Open Submit Page",
+        "OPEN_EMPLOYEE_PROFILE": "Open Employee Profile",
+        "OPEN_EMPLOYEE_OFFBOARD": "Open Offboard Page",
+        "OPEN_RBAC": "Open Role Assignment",
+        "OPEN_PERSON_LOCATIONS": "Open Location Assignments"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Enter the required identifier before opening this page.",
+        "NAVIGATE": "Could not open the selected people page. Try again."
+      }
+    },
     "WORK_SESSION": {
       "TITLE": "Work Session",
       "ACTIVE": "Session active",
