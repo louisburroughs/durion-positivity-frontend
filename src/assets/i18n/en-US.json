@@ -600,6 +600,84 @@
         "CREATE": "Failed to create mobile unit.",
         "UPDATE_COVERAGE": "Failed to update coverage rules."
       }
+    },
+    "LANDING": {
+      "TITLE": "Location Workspace",
+      "SUBTITLE": "Navigate locations, bays, mobile units, storage, and sync tools from one page built for facility operations.",
+      "HERO": {
+        "OPEN_LOCATIONS": "Open Locations",
+        "CREATE_LOCATION": "Create Location"
+      },
+      "STAT": {
+        "ARIA": "Location workspace summary",
+        "PAGES": "Pages",
+        "DIRECT_LINKS": "Direct Links",
+        "GUIDED_LAUNCHES": "Guided Launches"
+      },
+      "LOADING": "Opening page…",
+      "ROUTE_LABEL": "Route",
+      "SECTION": {
+        "LOCATIONS": {
+          "TITLE": "Locations",
+          "DESCRIPTION": "Create and manage store, warehouse, and mobile location records."
+        },
+        "RESOURCES": {
+          "TITLE": "Facility Resources",
+          "DESCRIPTION": "Access bays, mobile units, storage locations, and sync tools."
+        }
+      },
+      "CARD": {
+        "LOCATIONS": {
+          "TITLE": "Locations",
+          "DESCRIPTION": "Browse all location records and manage types across stores, warehouses, and mobile units."
+        },
+        "LOCATION_NEW": {
+          "TITLE": "Create Location",
+          "DESCRIPTION": "Add a new location record with name and type fields."
+        },
+        "LOCATION_EDIT": {
+          "TITLE": "Edit Location",
+          "DESCRIPTION": "Open an existing location record when you know the location ID."
+        },
+        "LOCATION_DEFAULTS": {
+          "TITLE": "Location Defaults",
+          "DESCRIPTION": "Configure default values for a specific location using its ID."
+        },
+        "BAYS": {
+          "TITLE": "Bays",
+          "DESCRIPTION": "View and manage bay records for facility layout and assignment."
+        },
+        "MOBILE_UNITS": {
+          "TITLE": "Mobile Units",
+          "DESCRIPTION": "Manage mobile unit records, names, and coverage rules."
+        },
+        "STORAGE_LOCATIONS": {
+          "TITLE": "Storage Locations",
+          "DESCRIPTION": "Browse and manage storage location inventory across the facility."
+        },
+        "LOCATION_SYNC": {
+          "TITLE": "Location Sync",
+          "DESCRIPTION": "Run and monitor synchronization jobs for location data."
+        }
+      },
+      "FIELD": {
+        "LOCATION_ID": "Location ID",
+        "DEFAULTS_LOCATION_ID": "Location ID"
+      },
+      "PLACEHOLDER": {
+        "LOCATION_ID": "Enter location ID…",
+        "DEFAULTS_LOCATION_ID": "Enter location ID…"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Open Page",
+        "OPENING_PAGE": "Opening…",
+        "OPEN_LOCATION": "Open Location",
+        "OPEN_LOCATION_DEFAULTS": "Open Defaults"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Enter the required identifier before opening this page.",
+        "NAVIGATE": "Could not open the selected location page. Try again."
+      }
     }
   },
   "SHOPMGMT": {

@@ -600,6 +600,84 @@
         "CREATE": "Impossible de créer l'unité mobile.",
         "UPDATE_COVERAGE": "Impossible de mettre à jour les règles de couverture."
       }
+    },
+    "LANDING": {
+      "TITLE": "Espace de travail des emplacements",
+      "SUBTITLE": "Naviguez parmi les emplacements, les baies, les unités mobiles, le stockage et les outils de synchronisation depuis une seule page.",
+      "HERO": {
+        "OPEN_LOCATIONS": "Ouvrir les emplacements",
+        "CREATE_LOCATION": "Créer un emplacement"
+      },
+      "STAT": {
+        "ARIA": "Résumé de l'espace de travail des emplacements",
+        "PAGES": "Pages",
+        "DIRECT_LINKS": "Liens directs",
+        "GUIDED_LAUNCHES": "Lancements guidés"
+      },
+      "LOADING": "Ouverture de la page…",
+      "ROUTE_LABEL": "Route",
+      "SECTION": {
+        "LOCATIONS": {
+          "TITLE": "Emplacements",
+          "DESCRIPTION": "Créez et gérez les enregistrements d'emplacements pour les magasins, entrepôts et unités mobiles."
+        },
+        "RESOURCES": {
+          "TITLE": "Ressources des installations",
+          "DESCRIPTION": "Accédez aux baies, unités mobiles, emplacements de stockage et outils de synchronisation."
+        }
+      },
+      "CARD": {
+        "LOCATIONS": {
+          "TITLE": "Emplacements",
+          "DESCRIPTION": "Parcourez tous les enregistrements d'emplacements et gérez les types dans les magasins, entrepôts et unités mobiles."
+        },
+        "LOCATION_NEW": {
+          "TITLE": "Créer un emplacement",
+          "DESCRIPTION": "Ajoutez un nouvel enregistrement d'emplacement avec les champs de nom et de type."
+        },
+        "LOCATION_EDIT": {
+          "TITLE": "Modifier l'emplacement",
+          "DESCRIPTION": "Ouvrez un enregistrement d'emplacement existant lorsque vous connaissez l'ID d'emplacement."
+        },
+        "LOCATION_DEFAULTS": {
+          "TITLE": "Valeurs par défaut de l'emplacement",
+          "DESCRIPTION": "Configurez les valeurs par défaut d'un emplacement spécifique à l'aide de son ID."
+        },
+        "BAYS": {
+          "TITLE": "Baies",
+          "DESCRIPTION": "Affichez et gérez les enregistrements de baies pour la disposition et l'attribution des installations."
+        },
+        "MOBILE_UNITS": {
+          "TITLE": "Unités mobiles",
+          "DESCRIPTION": "Gérez les enregistrements des unités mobiles, les noms et les règles de couverture."
+        },
+        "STORAGE_LOCATIONS": {
+          "TITLE": "Emplacements de stockage",
+          "DESCRIPTION": "Parcourez et gérez l'inventaire des emplacements de stockage dans toute l'installation."
+        },
+        "LOCATION_SYNC": {
+          "TITLE": "Synchronisation des emplacements",
+          "DESCRIPTION": "Exécutez et surveillez les tâches de synchronisation des données d'emplacement."
+        }
+      },
+      "FIELD": {
+        "LOCATION_ID": "ID d'emplacement",
+        "DEFAULTS_LOCATION_ID": "ID d'emplacement"
+      },
+      "PLACEHOLDER": {
+        "LOCATION_ID": "Entrez l'ID d'emplacement…",
+        "DEFAULTS_LOCATION_ID": "Entrez l'ID d'emplacement…"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Ouvrir la page",
+        "OPENING_PAGE": "Ouverture…",
+        "OPEN_LOCATION": "Ouvrir l'emplacement",
+        "OPEN_LOCATION_DEFAULTS": "Ouvrir les valeurs par défaut"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Entrez l'identifiant requis avant d'ouvrir cette page.",
+        "NAVIGATE": "Impossible d'ouvrir la page d'emplacement sélectionnée. Réessayez."
+      }
     }
   },
   "SHOPMGMT": {

@@ -600,6 +600,84 @@
         "CREATE": "No se pudo crear la unidad móvil.",
         "UPDATE_COVERAGE": "No se pudieron actualizar las reglas de cobertura."
       }
+    },
+    "LANDING": {
+      "TITLE": "Espacio de trabajo de ubicaciones",
+      "SUBTITLE": "Navega ubicaciones, bahías, unidades móviles, almacenamiento y herramientas de sincronización desde una sola página.",
+      "HERO": {
+        "OPEN_LOCATIONS": "Abrir ubicaciones",
+        "CREATE_LOCATION": "Crear ubicación"
+      },
+      "STAT": {
+        "ARIA": "Resumen del espacio de trabajo de ubicaciones",
+        "PAGES": "Páginas",
+        "DIRECT_LINKS": "Accesos directos",
+        "GUIDED_LAUNCHES": "Lanzamientos guiados"
+      },
+      "LOADING": "Abriendo página…",
+      "ROUTE_LABEL": "Ruta",
+      "SECTION": {
+        "LOCATIONS": {
+          "TITLE": "Ubicaciones",
+          "DESCRIPTION": "Crea y administra registros de ubicaciones de tiendas, almacenes y unidades móviles."
+        },
+        "RESOURCES": {
+          "TITLE": "Recursos de instalaciones",
+          "DESCRIPTION": "Accede a bahías, unidades móviles, ubicaciones de almacenamiento y herramientas de sincronización."
+        }
+      },
+      "CARD": {
+        "LOCATIONS": {
+          "TITLE": "Ubicaciones",
+          "DESCRIPTION": "Explora todos los registros de ubicaciones y administra tipos en tiendas, almacenes y unidades móviles."
+        },
+        "LOCATION_NEW": {
+          "TITLE": "Crear ubicación",
+          "DESCRIPTION": "Agrega un nuevo registro de ubicación con campos de nombre y tipo."
+        },
+        "LOCATION_EDIT": {
+          "TITLE": "Editar ubicación",
+          "DESCRIPTION": "Abre un registro de ubicación existente cuando conoces el ID de ubicación."
+        },
+        "LOCATION_DEFAULTS": {
+          "TITLE": "Valores predeterminados de ubicación",
+          "DESCRIPTION": "Configura los valores predeterminados de una ubicación específica usando su ID."
+        },
+        "BAYS": {
+          "TITLE": "Bahías",
+          "DESCRIPTION": "Ver y administrar registros de bahías para el diseño y asignación de instalaciones."
+        },
+        "MOBILE_UNITS": {
+          "TITLE": "Unidades móviles",
+          "DESCRIPTION": "Administra registros de unidades móviles, nombres y reglas de cobertura."
+        },
+        "STORAGE_LOCATIONS": {
+          "TITLE": "Ubicaciones de almacenamiento",
+          "DESCRIPTION": "Explora y administra el inventario de ubicaciones de almacenamiento en toda la instalación."
+        },
+        "LOCATION_SYNC": {
+          "TITLE": "Sincronización de ubicaciones",
+          "DESCRIPTION": "Ejecuta y monitorea trabajos de sincronización de datos de ubicación."
+        }
+      },
+      "FIELD": {
+        "LOCATION_ID": "ID de ubicación",
+        "DEFAULTS_LOCATION_ID": "ID de ubicación"
+      },
+      "PLACEHOLDER": {
+        "LOCATION_ID": "Ingresa el ID de ubicación…",
+        "DEFAULTS_LOCATION_ID": "Ingresa el ID de ubicación…"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Abrir página",
+        "OPENING_PAGE": "Abriendo…",
+        "OPEN_LOCATION": "Abrir ubicación",
+        "OPEN_LOCATION_DEFAULTS": "Abrir valores predeterminados"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Ingresa el identificador requerido antes de abrir esta página.",
+        "NAVIGATE": "No se pudo abrir la página de ubicación seleccionada. Inténtalo de nuevo."
+      }
     }
   },
   "SHOPMGMT": {
