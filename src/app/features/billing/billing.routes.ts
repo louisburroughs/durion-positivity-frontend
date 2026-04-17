@@ -11,6 +11,14 @@ export const BILLING_ROUTES: Routes = [
     path: '',
     component: BillingComponent,
     children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./pages/landing/billing-landing-page.component').then(
+            m => m.BillingLandingPageComponent,
+          ),
+      },
       /** Stories 209–213 (CAP-007): Invoice detail, totals, traceability, adjustments, issue */
       {
         path: 'invoices/:invoiceId',

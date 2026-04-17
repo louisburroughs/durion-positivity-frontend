@@ -2506,6 +2506,74 @@
     }
   },
   "BILLING": {
+    "LANDING": {
+      "TITLE": "[!! Ƀïïľľïïñğ !!]",
+      "SUBTITLE": "[!! Mäñäğë ïïñvöïïçëës, çäpþûürë päýmëñþs, ïïssûüë vöïïds äñd rëëfûüñds, äñd äççëss rëëçëïïþþs. !!]",
+      "LOADING": "[!! Lööädïïñğ... !!]",
+      "ROUTE_LABEL": "[!! Rööüüþë !!]",
+      "STAT": {
+        "ARIA": "[!! Ƀïïľľïïñğ pääğë ständïïstïïçs !!]",
+        "PAGES": "[!! Pääğëës !!]"
+      },
+      "SECTION": {
+        "INVOICES": {
+          "TITLE": "[!! Ïñvöïïçëës !!]",
+          "DESCRIPTION": "[!! Öpëëñ äñd rëëvïïëëw ïïñvöïïçëë dëëþäïïľs, ïïñçľüüdïïñğ ľïïñëë ïïþëëms, þöþäľs, äñd þrääçëëäbïïľïïþý. !!]"
+        },
+        "PAYMENTS": {
+          "TITLE": "[!! Päýmëëñþs !!]",
+          "DESCRIPTION": "[!! Cääpþüürë ñëëw päýmëëñþs ör vöïïd äñd rëëfüüñd ëëxïïstïïñğ öñëës öñ äñ ïïñvöïïçëë. !!]"
+        },
+        "RECEIPTS": {
+          "TITLE": "[!! Rëëçëëïïþþs !!]",
+          "DESCRIPTION": "[!! Vïïëëw äñd rëëprïïñþ päýmëëñþ rëëçëëïïþþs för ä ğïïvëëñ ïïñvöïïçëë. !!]"
+        }
+      },
+      "CARD": {
+        "INVOICE_DETAIL": {
+          "TITLE": "[!! Ïñvöïïçëë Dëëþäïïľ !!]",
+          "DESCRIPTION": "[!! Vïïëëw füüľľ ïïñvöïïçëë dëëþäïïľs ïïñçľüüdïïñğ ľïïñëë ïïþëëms, þöþäľs, ädjüüsþmëëñþs, äñd þrääçëëäbïïľïïþý. !!]"
+        },
+        "PAYMENT_CAPTURE": {
+          "TITLE": "[!! Cääpþüürë Päýmëëñþ !!]",
+          "DESCRIPTION": "[!! Rëëçörd äñd äüüþhörïïzëë ä päýmëëñþ äğäïïñsþ äñ ïïñvöïïçëë. !!]"
+        },
+        "PAYMENT_VOID_REFUND": {
+          "TITLE": "[!! Vöïïd / Rëëfüüñd Päýmëëñþ !!]",
+          "DESCRIPTION": "[!! Vöïïd äñ äüüþhörïïzääþïïöñ ör prööçëëss ä rëëfüüñd för ä spëëçïïfïïç päýmëëñþ öñ äñ ïïñvöïïçëë. !!]"
+        },
+        "RECEIPT_LIST": {
+          "TITLE": "[!! Ïñvöïïçëë Rëëçëëïïþþs !!]",
+          "DESCRIPTION": "[!! Lïïsþ äľľ rëëçëëïïþþs ğëëñëërääþëëd för päýmëëñþs öñ äñ ïïñvöïïçëë. !!]"
+        },
+        "RECEIPT_DETAIL": {
+          "TITLE": "[!! Rëëçëëïïþþ Dëëþäïïľ !!]",
+          "DESCRIPTION": "[!! Vïïëëw ör rëëprïïñþ ä spëëçïïfïïç päýmëëñþ rëëçëëïïþþ för äñ ïïñvöïïçëë. !!]"
+        }
+      },
+      "FIELD": {
+        "INVOICE_ID": "[!! Ïñvöïïçëë ÏD !!]",
+        "PAYMENT_ID": "[!! Päýmëëñþ ÏD !!]",
+        "RECEIPT_ID": "[!! Rëëçëëïïþþ ÏD !!]"
+      },
+      "PLACEHOLDER": {
+        "INVOICE_ID": "[!! e.g. INV-00123 !!]",
+        "PAYMENT_ID": "[!! e.g. PAY-00456 !!]",
+        "RECEIPT_ID": "[!! e.g. REC-00789 !!]"
+      },
+      "ACTION": {
+        "OPEN_INVOICE": "[!! Öpëëñ Ïñvöïïçëë !!]",
+        "OPEN_PAYMENT_CAPTURE": "[!! Öpëëñ Päýmëëñþ Cääpþüürëë !!]",
+        "OPEN_VOID_REFUND": "[!! Öpëëñ Vöïïd / Rëëfüüñd !!]",
+        "OPEN_RECEIPT_LIST": "[!! Vïïëëw Rëëçëëïïþþs !!]",
+        "OPEN_RECEIPT_DETAIL": "[!! Öpëëñ Rëëçëëïïþþ !!]",
+        "OPENING_PAGE": "[!! Öpëëñïïñğ... !!]"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "[!! Äñ ïïdëëñþïïfïïëër ïïs rëëqüüïïrëëd. !!]",
+        "NAVIGATE": "[!! Üñäbľëë þö ñävïïğääþëë þö þhääþ pääğëë. Pľëëäsëë çhëëçk þhëë ÏD äñd þrý äğäïïñ. !!]"
+      }
+    },
     "PAYMENT": {
       "TITLE": "[!! Payment !!]",
       "METHOD": {

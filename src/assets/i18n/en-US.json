@@ -2506,6 +2506,74 @@
     }
   },
   "BILLING": {
+    "LANDING": {
+      "TITLE": "Billing",
+      "SUBTITLE": "Manage invoices, capture payments, issue voids and refunds, and access receipts.",
+      "LOADING": "Loading...",
+      "ROUTE_LABEL": "Route",
+      "STAT": {
+        "ARIA": "Billing page statistics",
+        "PAGES": "Pages"
+      },
+      "SECTION": {
+        "INVOICES": {
+          "TITLE": "Invoices",
+          "DESCRIPTION": "Open and review invoice details, including line items, totals, and traceability."
+        },
+        "PAYMENTS": {
+          "TITLE": "Payments",
+          "DESCRIPTION": "Capture new payments or void and refund existing ones on an invoice."
+        },
+        "RECEIPTS": {
+          "TITLE": "Receipts",
+          "DESCRIPTION": "View and reprint payment receipts for a given invoice."
+        }
+      },
+      "CARD": {
+        "INVOICE_DETAIL": {
+          "TITLE": "Invoice Detail",
+          "DESCRIPTION": "View full invoice details including line items, totals, adjustments, and traceability."
+        },
+        "PAYMENT_CAPTURE": {
+          "TITLE": "Capture Payment",
+          "DESCRIPTION": "Record and authorize a payment against an invoice."
+        },
+        "PAYMENT_VOID_REFUND": {
+          "TITLE": "Void / Refund Payment",
+          "DESCRIPTION": "Void an authorization or process a refund for a specific payment on an invoice."
+        },
+        "RECEIPT_LIST": {
+          "TITLE": "Invoice Receipts",
+          "DESCRIPTION": "List all receipts generated for payments on an invoice."
+        },
+        "RECEIPT_DETAIL": {
+          "TITLE": "Receipt Detail",
+          "DESCRIPTION": "View or reprint a specific payment receipt for an invoice."
+        }
+      },
+      "FIELD": {
+        "INVOICE_ID": "Invoice ID",
+        "PAYMENT_ID": "Payment ID",
+        "RECEIPT_ID": "Receipt ID"
+      },
+      "PLACEHOLDER": {
+        "INVOICE_ID": "e.g. INV-00123",
+        "PAYMENT_ID": "e.g. PAY-00456",
+        "RECEIPT_ID": "e.g. REC-00789"
+      },
+      "ACTION": {
+        "OPEN_INVOICE": "Open Invoice",
+        "OPEN_PAYMENT_CAPTURE": "Open Payment Capture",
+        "OPEN_VOID_REFUND": "Open Void / Refund",
+        "OPEN_RECEIPT_LIST": "View Receipts",
+        "OPEN_RECEIPT_DETAIL": "Open Receipt",
+        "OPENING_PAGE": "Opening..."
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "An identifier is required.",
+        "NAVIGATE": "Unable to navigate to that page. Please check the ID and try again."
+      }
+    },
     "PAYMENT": {
       "TITLE": "Payment",
       "METHOD": {

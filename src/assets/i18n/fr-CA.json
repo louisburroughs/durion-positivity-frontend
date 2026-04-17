@@ -2506,6 +2506,74 @@
     }
   },
   "BILLING": {
+    "LANDING": {
+      "TITLE": "Facturation",
+      "SUBTITLE": "Gérez les factures, capturez les paiements, émettez des annulations et des remboursements, et accédez aux reçus.",
+      "LOADING": "Chargement...",
+      "ROUTE_LABEL": "Route",
+      "STAT": {
+        "ARIA": "Statistiques des pages de facturation",
+        "PAGES": "Pages"
+      },
+      "SECTION": {
+        "INVOICES": {
+          "TITLE": "Factures",
+          "DESCRIPTION": "Ouvrez et examinez les détails de la facture, y compris les lignes, les totaux et la traçabilité."
+        },
+        "PAYMENTS": {
+          "TITLE": "Paiements",
+          "DESCRIPTION": "Capturez de nouveaux paiements ou annulez et remboursez ceux existants sur une facture."
+        },
+        "RECEIPTS": {
+          "TITLE": "Reçus",
+          "DESCRIPTION": "Affichez et réimprimez les reçus de paiement pour une facture donnée."
+        }
+      },
+      "CARD": {
+        "INVOICE_DETAIL": {
+          "TITLE": "Détail de la facture",
+          "DESCRIPTION": "Consultez les détails complets de la facture, y compris les lignes, les totaux, les ajustements et la traçabilité."
+        },
+        "PAYMENT_CAPTURE": {
+          "TITLE": "Capturer le paiement",
+          "DESCRIPTION": "Enregistrez et autorisez un paiement sur une facture."
+        },
+        "PAYMENT_VOID_REFUND": {
+          "TITLE": "Annuler / Rembourser le paiement",
+          "DESCRIPTION": "Annulez une autorisation ou traitez un remboursement pour un paiement spécifique sur une facture."
+        },
+        "RECEIPT_LIST": {
+          "TITLE": "Reçus de facture",
+          "DESCRIPTION": "Listez tous les reçus générés pour les paiements d'une facture."
+        },
+        "RECEIPT_DETAIL": {
+          "TITLE": "Détail du reçu",
+          "DESCRIPTION": "Affichez ou réimprimez un reçu de paiement spécifique pour une facture."
+        }
+      },
+      "FIELD": {
+        "INVOICE_ID": "ID de facture",
+        "PAYMENT_ID": "ID de paiement",
+        "RECEIPT_ID": "ID de reçu"
+      },
+      "PLACEHOLDER": {
+        "INVOICE_ID": "p. ex. INV-00123",
+        "PAYMENT_ID": "p. ex. PAY-00456",
+        "RECEIPT_ID": "p. ex. REC-00789"
+      },
+      "ACTION": {
+        "OPEN_INVOICE": "Ouvrir la facture",
+        "OPEN_PAYMENT_CAPTURE": "Ouvrir la capture de paiement",
+        "OPEN_VOID_REFUND": "Ouvrir l'annulation / remboursement",
+        "OPEN_RECEIPT_LIST": "Voir les reçus",
+        "OPEN_RECEIPT_DETAIL": "Ouvrir le reçu",
+        "OPENING_PAGE": "Ouverture..."
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Un identifiant est requis.",
+        "NAVIGATE": "Impossible de naviguer vers cette page. Veuillez vérifier l'ID et réessayer."
+      }
+    },
     "PAYMENT": {
       "TITLE": "Paiement",
       "METHOD": {

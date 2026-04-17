@@ -2506,6 +2506,74 @@
     }
   },
   "BILLING": {
+    "LANDING": {
+      "TITLE": "Facturación",
+      "SUBTITLE": "Gestione facturas, capture pagos, emita anulaciones y reembolsos, y acceda a recibos.",
+      "LOADING": "Cargando...",
+      "ROUTE_LABEL": "Ruta",
+      "STAT": {
+        "ARIA": "Estadísticas de páginas de facturación",
+        "PAGES": "Páginas"
+      },
+      "SECTION": {
+        "INVOICES": {
+          "TITLE": "Facturas",
+          "DESCRIPTION": "Abra y revise los detalles de la factura, incluyendo líneas de pedido, totales y trazabilidad."
+        },
+        "PAYMENTS": {
+          "TITLE": "Pagos",
+          "DESCRIPTION": "Capture nuevos pagos o anule y reembolse los existentes en una factura."
+        },
+        "RECEIPTS": {
+          "TITLE": "Recibos",
+          "DESCRIPTION": "Vea y reimprima recibos de pago para una factura determinada."
+        }
+      },
+      "CARD": {
+        "INVOICE_DETAIL": {
+          "TITLE": "Detalle de factura",
+          "DESCRIPTION": "Vea los detalles completos de la factura, incluyendo líneas, totales, ajustes y trazabilidad."
+        },
+        "PAYMENT_CAPTURE": {
+          "TITLE": "Capturar pago",
+          "DESCRIPTION": "Registre y autorice un pago contra una factura."
+        },
+        "PAYMENT_VOID_REFUND": {
+          "TITLE": "Anular / Reembolsar pago",
+          "DESCRIPTION": "Anule una autorización o procese un reembolso de un pago específico en una factura."
+        },
+        "RECEIPT_LIST": {
+          "TITLE": "Recibos de factura",
+          "DESCRIPTION": "Liste todos los recibos generados por los pagos de una factura."
+        },
+        "RECEIPT_DETAIL": {
+          "TITLE": "Detalle de recibo",
+          "DESCRIPTION": "Vea o reimprima un recibo de pago específico de una factura."
+        }
+      },
+      "FIELD": {
+        "INVOICE_ID": "ID de factura",
+        "PAYMENT_ID": "ID de pago",
+        "RECEIPT_ID": "ID de recibo"
+      },
+      "PLACEHOLDER": {
+        "INVOICE_ID": "p. ej. INV-00123",
+        "PAYMENT_ID": "p. ej. PAY-00456",
+        "RECEIPT_ID": "p. ej. REC-00789"
+      },
+      "ACTION": {
+        "OPEN_INVOICE": "Abrir factura",
+        "OPEN_PAYMENT_CAPTURE": "Abrir captura de pago",
+        "OPEN_VOID_REFUND": "Abrir anulación / reembolso",
+        "OPEN_RECEIPT_LIST": "Ver recibos",
+        "OPEN_RECEIPT_DETAIL": "Abrir recibo",
+        "OPENING_PAGE": "Abriendo..."
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Se requiere un identificador.",
+        "NAVIGATE": "No se puede navegar a esa página. Por favor, verifique el ID e inténtelo de nuevo."
+      }
+    },
     "PAYMENT": {
       "TITLE": "Pago",
       "METHOD": {
