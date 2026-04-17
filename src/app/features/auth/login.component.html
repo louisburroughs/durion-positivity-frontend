@@ -11,9 +11,9 @@
     </div>
 
     @if (sessionExpired()) {
-    <div class="alert alert-info" role="status" aria-live="polite">
+    <output class="alert alert-info" aria-live="polite">
       {{ 'AUTH.LOGIN.SESSION_EXPIRED' | translate }}
-    </div>
+    </output>
     }
 
     <!-- Error Alert -->
