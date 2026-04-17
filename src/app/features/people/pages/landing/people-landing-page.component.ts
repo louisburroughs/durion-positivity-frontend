@@ -194,8 +194,11 @@ export class PeopleLandingPageComponent {
     this.launchValues.update(current => ({ ...current, [field]: value }));
     this.launchErrors.update(current => ({ ...current, [field]: null }));
     this.errorKey.set(null);
-    this.state.set('ready');
-    this.activeLaunchField.set(null);
+
+    if (this.state() !== 'loading') {
+      this.state.set('ready');
+      this.activeLaunchField.set(null);
+    }
   }
 
   launchValue(field: LaunchField): string {
