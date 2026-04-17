@@ -1,0 +1,142 @@
+<main class="inventory-landing" aria-labelledby="inventory-landing-title">
+  <!-- Hero -->
+  <section class="inventory-hero" aria-label="{{ 'INVENTORY.LANDING.TITLE' | translate }}">
+    <div class="inventory-hero__content">
+      <p class="inventory-hero__eyebrow">{{ 'SHELL.NAV.INVENTORY' | translate }}</p>
+      <h1 class="inventory-hero__title" id="inventory-landing-title">
+        {{ 'INVENTORY.LANDING.TITLE' | translate }}
+      </h1>
+      <p class="inventory-hero__subtitle">{{ 'INVENTORY.LANDING.SUBTITLE' | translate }}</p>
+      <div class="inventory-hero__actions">
+        <a
+          class="inventory-button inventory-button--primary"
+          [routerLink]="['/app', 'inventory', 'availability']"
+          aria-label="{{ 'INVENTORY.LANDING.HERO.OPEN_AVAILABILITY' | translate }}"
+        >
+          {{ 'INVENTORY.LANDING.HERO.OPEN_AVAILABILITY' | translate }}
+        </a>
+        <a
+          class="inventory-button inventory-button--secondary"
+          [routerLink]="['/app', 'inventory', 'purchase-orders', 'new']"
+          aria-label="{{ 'INVENTORY.LANDING.HERO.NEW_PURCHASE_ORDER' | translate }}"
+        >
+          {{ 'INVENTORY.LANDING.HERO.NEW_PURCHASE_ORDER' | translate }}
+        </a>
+      </div>
+    </div>
+    <dl class="inventory-hero__stats" aria-label="{{ 'INVENTORY.LANDING.STAT.ARIA' | translate }}">
+      <div class="inventory-stat">
+        <dt class="inventory-stat__label">{{ 'INVENTORY.LANDING.STAT.PAGES' | translate }}</dt>
+        <dd class="inventory-stat__value">{{ totalPageCount }}</dd>
+      </div>
+      <div class="inventory-stat">
+        <dt class="inventory-stat__label">{{ 'INVENTORY.LANDING.STAT.DIRECT_LINKS' | translate }}</dt>
+        <dd class="inventory-stat__value">{{ directLinkCount }}</dd>
+      </div>
+      <div class="inventory-stat">
+        <dt class="inventory-stat__label">{{ 'INVENTORY.LANDING.STAT.GUIDED_LAUNCHES' | translate }}</dt>
+        <dd class="inventory-stat__value">{{ guidedLinkCount }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <!-- Banners -->
+  @if (state() === 'error') {
+    <div class="inventory-banner inventory-banner--error" role="alert">
+      {{ errorKey() | translate }}
+    </div>
+  }
+  @if (state() === 'loading') {
+    <div class="inventory-banner inventory-banner--loading" aria-live="polite">
+      {{ 'INVENTORY.LANDING.LOADING' | translate }}
+    </div>
+  }
+
+  <!-- Sections -->
+  @for (section of sections; track section.titleKey) {
+    <section class="inventory-section" aria-labelledby="{{ section.titleKey + '-heading' }}">
+      <header class="inventory-section__header">
+        <h2 class="inventory-section__title" id="{{ section.titleKey + '-heading' }}">
+          {{ section.titleKey | translate }}
+        </h2>
+        <p class="inventory-section__description">{{ section.descriptionKey | translate }}</p>
+      </header>
+      <ul class="inventory-section__grid">
+        @for (card of section.cards; track card.titleKey) {
+          <li>
+            <article
+              class="inventory-card"
+              [class.inventory-card--launch]="isLaunchCard(card)"
+            >
+              <header class="inventory-card__header">
+                <div class="inventory-card__route-label">
+                  {{ 'INVENTORY.LANDING.ROUTE_LABEL' | translate }}
+                </div>
+                <code class="inventory-card__route-pill" translate="no">{{ card.routeLabel }}</code>
+              </header>
+              <h3 class="inventory-card__title">{{ card.titleKey | translate }}</h3>
+              <p class="inventory-card__description">{{ card.descriptionKey | translate }}</p>
+
+              @if (isLaunchCard(card)) {
+                <!-- Launch card -->
+                <div class="inventory-field">
+                  <label
+                    class="inventory-field__label"
+                    [for]="card.field + '-input'"
+                  >
+                    {{ card.fieldLabelKey | translate }}
+                  </label>
+                  <input
+                    class="inventory-field__input"
+                    [id]="card.field + '-input'"
+                    [name]="card.field"
+                    type="text"
+                    autocomplete="off"
+                    spellcheck="false"
+                    [placeholder]="card.placeholderKey | translate"
+                    [value]="launchValue(card.field)"
+                    (input)="updateLaunchValue(card.field, $any($event.target).value)"
+                    [attr.aria-invalid]="launchError(card.field) ? 'true' : null"
+                    [attr.aria-describedby]="launchError(card.field) ? (card.field + '-error') : null"
+                  />
+                  @if (launchError(card.field)) {
+                    <p
+                      class="inventory-field__error"
+                      [id]="card.field + '-error'"
+                      role="alert"
+                    >
+                      {{ launchError(card.field)! | translate }}
+                    </p>
+                  }
+                  <button
+                    class="inventory-card__launch-btn"
+                    type="button"
+                    [attr.data-testid]="card.field + '-launch'"
+                    [disabled]="activeLaunchField() === card.field"
+                    (click)="openLaunch(card)"
+                  >
+                    @if (activeLaunchField() === card.field) {
+                      {{ 'INVENTORY.LANDING.ACTION.OPENING_PAGE' | translate }}
+                    } @else {
+                      {{ card.actionKey | translate }}
+                    }
+                  </button>
+                </div>
+              } @else {
+                <!-- Direct card -->
+                <a
+                  class="inventory-card__link"
+                  [routerLink]="card.routerLink"
+                  [attr.aria-label]="card.titleKey | translate"
+                >
+                  {{ 'INVENTORY.LANDING.ACTION.OPEN_PAGE' | translate }}
+                  <span class="inventory-card__link-arrow" aria-hidden="true">&rarr;</span>
+                </a>
+              }
+            </article>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</main>

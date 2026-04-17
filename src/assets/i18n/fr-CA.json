@@ -6,7 +6,7 @@
     "NAV_THEME_TO_DARK": "Passer en mode sombre",
     "NAV_THEME_TO_LIGHT": "Passer en mode clair",
     "HERO_TITLE": "Gérez votre commerce en toute confiance",
-    "HERO_SUBTITLE": "Durion POS réunit vos clients, bons de travail, facturation et équipe en un seul endroit — pour que vous puissiez vous concentrer sur votre métier.",
+    "HERO_SUBTITLE": "Positivity réunit vos clients, bons de travail, facturation et équipe en un seul endroit — pour que vous puissiez vous concentrer sur votre métier.",
     "HERO_CTA": "Se connecter à votre compte",
     "FEATURES_TITLE": "Tout ce qu'il vous faut, rien de superflu",
     "FEATURES_SUBTITLE": "Conçu pour les entreprises de services qui souhaitent travailler plus efficacement.",
@@ -29,7 +29,7 @@
     "CTA_TITLE": "Prêt à prendre le contrôle de votre commerce?",
     "CTA_BUTTON": "Se connecter maintenant",
     "FOOTER_TAGLINE": "Plateforme Positivity",
-    "FOOTER_COPYRIGHT": "© 2026 Durion POS. Tous droits réservés."
+    "FOOTER_COPYRIGHT": "© 2026 Durion Support Services. Tous droits réservés."
   },
   "SYSTEM": {
     "ACCESS_DENIED": {
@@ -80,7 +80,7 @@
       }
     },
     "DASHBOARD": {
-      "WELCOME_HEADING": "Bienvenue sur Durion POS",
+      "WELCOME_HEADING": "Bienvenue sur Positivity",
       "WELCOME_BODY": "Sélectionnez une section dans la navigation pour commencer.",
       "CARD": {
         "WORKORDERS": "Bons de travail",
@@ -92,7 +92,7 @@
       }
     },
     "FOOTER": {
-      "COPYRIGHT": "© {{ year }} Durion POS. Tous droits réservés."
+      "COPYRIGHT": "© {{ year }} Durion Support Services. Tous droits réservés."
     },
     "CONTENT_PANEL": {
       "ARIA_LABEL": "Zone de contenu principal"
@@ -115,7 +115,7 @@
   },
   "AUTH": {
     "LOGIN": {
-      "BRAND_LOGO_ARIA": "Logo de Durion POS",
+      "BRAND_LOGO_ARIA": "Logo de Durion",
       "BRAND_TAGLINE": "Plateforme Positivity",
       "SESSION_EXPIRED": "Votre session a expiré. Veuillez vous reconnecter.",
       "USERNAME": "Nom d'utilisateur",
@@ -1565,6 +1565,168 @@
     }
   },
   "INVENTORY": {
+    "LANDING": {
+      "TITLE": "Gestion des stocks",
+      "SUBTITLE": "Stocks, réception, inventaires tournants, bons de commande et exécution au même endroit.",
+      "STAT": {
+        "ARIA": "Statistiques du module de gestion des stocks",
+        "PAGES": "Total des pages",
+        "DIRECT_LINKS": "Liens directs",
+        "GUIDED_LAUNCHES": "Lancements guidés"
+      },
+      "HERO": {
+        "OPEN_AVAILABILITY": "Voir la disponibilité",
+        "NEW_PURCHASE_ORDER": "Nouveau bon de commande"
+      },
+      "LOADING": "Chargement…",
+      "SECTION": {
+        "STOCK": {
+          "TITLE": "Stocks et disponibilité",
+          "DESCRIPTION": "Consulter les niveaux de stock actuels et les entrées du grand livre."
+        },
+        "RECEIVING": {
+          "TITLE": "Réception et réapprovisionnement",
+          "DESCRIPTION": "Recevoir des marchandises, gérer les zones de transit, le rangement et le réapprovisionnement."
+        },
+        "COUNTS": {
+          "TITLE": "Inventaires tournants",
+          "DESCRIPTION": "Effectuer des inventaires tournants, examiner les ajustements et gérer les plans de comptage."
+        },
+        "PURCHASE_ORDERS": {
+          "TITLE": "Bons de commande",
+          "DESCRIPTION": "Créer, consulter et modifier des bons de commande."
+        },
+        "FULFILLMENT": {
+          "TITLE": "Exécution",
+          "DESCRIPTION": "Gérer les listes de prélèvement, retours, consommation et ruptures des ordres de travail."
+        },
+        "ADMIN": {
+          "TITLE": "Administration",
+          "DESCRIPTION": "Gérer les permissions et la configuration des stocks."
+        }
+      },
+      "CARD": {
+        "AVAILABILITY": {
+          "TITLE": "Disponibilité",
+          "DESCRIPTION": "Rechercher et consulter la disponibilité des stocks en temps réel."
+        },
+        "LEDGER": {
+          "TITLE": "Grand livre des stocks",
+          "DESCRIPTION": "Parcourir toutes les transactions et mouvements de stocks."
+        },
+        "LEDGER_ENTRY": {
+          "TITLE": "Entrée du grand livre",
+          "DESCRIPTION": "Ouvrir une entrée spécifique du grand livre par identifiant."
+        },
+        "RECEIVE_INTO_STAGING": {
+          "TITLE": "Réception en zone de transit",
+          "DESCRIPTION": "Recevoir les expéditions entrantes en zone de transit."
+        },
+        "CROSS_DOCK": {
+          "TITLE": "Cross-Dock",
+          "DESCRIPTION": "Contourner la zone de transit et acheminer directement vers l'exécution."
+        },
+        "PUTAWAY_TASKS": {
+          "TITLE": "Tâches de rangement",
+          "DESCRIPTION": "Voir toutes les tâches de rangement en attente."
+        },
+        "PUTAWAY_TASK": {
+          "TITLE": "Tâche de rangement",
+          "DESCRIPTION": "Ouvrir et exécuter une tâche de rangement spécifique par identifiant."
+        },
+        "REPLENISHMENT": {
+          "TITLE": "Réapprovisionnement",
+          "DESCRIPTION": "Déclencher et surveiller les commandes de réapprovisionnement pour les emplacements en rupture."
+        },
+        "COUNT_EXECUTE": {
+          "TITLE": "Exécuter un inventaire",
+          "DESCRIPTION": "Démarrer ou poursuivre un inventaire tournant actif."
+        },
+        "COUNT_ADJUSTMENTS": {
+          "TITLE": "Ajustements d'inventaire",
+          "DESCRIPTION": "Examiner et approuver les ajustements de stocks issus des inventaires tournants."
+        },
+        "COUNT_PLANS": {
+          "TITLE": "Plans d'inventaire",
+          "DESCRIPTION": "Gérer les plans d'inventaires tournants programmés."
+        },
+        "COUNT_PLAN_NEW": {
+          "TITLE": "Nouveau plan d'inventaire",
+          "DESCRIPTION": "Créer un nouveau plan d'inventaire tournant."
+        },
+        "PO_LIST": {
+          "TITLE": "Bons de commande",
+          "DESCRIPTION": "Parcourir tous les bons de commande."
+        },
+        "PO_NEW": {
+          "TITLE": "Nouveau bon de commande",
+          "DESCRIPTION": "Créer un nouveau bon de commande."
+        },
+        "PO_DETAIL": {
+          "TITLE": "Détail du BC",
+          "DESCRIPTION": "Ouvrir un bon de commande spécifique par identifiant."
+        },
+        "PO_EDIT": {
+          "TITLE": "Modifier le bon de commande",
+          "DESCRIPTION": "Modifier un bon de commande existant par identifiant."
+        },
+        "PICK_LIST": {
+          "TITLE": "Liste de prélèvement",
+          "DESCRIPTION": "Voir la liste de prélèvement d'un ordre de travail spécifique."
+        },
+        "PICK_EXECUTE": {
+          "TITLE": "Exécuter le prélèvement",
+          "DESCRIPTION": "Exécuter le prélèvement pour un ordre de travail spécifique."
+        },
+        "RETURN_TO_STOCK": {
+          "TITLE": "Retour en stock",
+          "DESCRIPTION": "Traiter un retour en stock pour un ordre de travail."
+        },
+        "CONSUME_ITEMS": {
+          "TITLE": "Consommer des articles",
+          "DESCRIPTION": "Enregistrer la consommation d'articles pour un ordre de travail."
+        },
+        "SHORTAGE_RESOLUTION": {
+          "TITLE": "Résolution des ruptures",
+          "DESCRIPTION": "Résoudre les ruptures d'articles pour un ordre de travail."
+        },
+        "SECURITY_PERMISSIONS": {
+          "TITLE": "Permissions",
+          "DESCRIPTION": "Gérer les accès et la configuration des permissions des stocks."
+        }
+      },
+      "FIELD": {
+        "LEDGER_ENTRY_ID": "Identifiant d'entrée du grand livre",
+        "PUTAWAY_TASK_ID": "Identifiant de tâche de rangement",
+        "PO_ID": "Identifiant du bon de commande",
+        "PO_EDIT_ID": "Identifiant du bon de commande",
+        "WORKORDER_ID": "Identifiant de l'ordre de travail"
+      },
+      "PLACEHOLDER": {
+        "LEDGER_ENTRY_ID": "ex. LE-001",
+        "PUTAWAY_TASK_ID": "ex. PT-001",
+        "PO_ID": "ex. BC-001",
+        "PO_EDIT_ID": "ex. BC-001",
+        "WORKORDER_ID": "ex. OT-001"
+      },
+      "ACTION": {
+        "OPEN_LEDGER_ENTRY": "Ouvrir l'entrée",
+        "OPEN_PUTAWAY_TASK": "Ouvrir la tâche",
+        "OPEN_PO": "Ouvrir le BC",
+        "OPEN_PO_EDIT": "Modifier le BC",
+        "OPEN_PICK_LIST": "Voir la liste",
+        "EXECUTE_PICK": "Exécuter",
+        "OPEN_RETURN": "Ouvrir le retour",
+        "OPEN_CONSUME": "Ouvrir la consommation",
+        "OPEN_SHORTAGE": "Ouvrir la rupture",
+        "OPEN_PAGE": "Ouvrir",
+        "OPENING_PAGE": "Ouverture..."
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Veuillez saisir un identifiant.",
+        "NAVIGATE": "La navigation a échoué. Veuillez vérifier l'identifiant et réessayer."
+      }
+    },
     "AVAILABILITY": {
       "TITLE": "Disponibilité des stocks",
       "FILTER": {

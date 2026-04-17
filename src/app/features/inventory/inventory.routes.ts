@@ -6,7 +6,7 @@ export const INVENTORY_ROUTES: Routes = [
     path: '',
     component: InventoryComponent,
     children: [
-      { path: '', redirectTo: 'availability', pathMatch: 'full' },
+      { path: '', pathMatch: 'full', loadComponent: () => import('./pages/landing/inventory-landing-page.component').then(m => m.InventoryLandingPageComponent) },
       {
         path: 'availability',
         loadComponent: () =>
@@ -161,7 +161,7 @@ export const INVENTORY_ROUTES: Routes = [
             m => m.InventorySecurityAdminPageComponent,
           ),
       },
-      { path: '**', redirectTo: 'availability' },
+      { path: '**', redirectTo: '' },
     ],
   },
 ];

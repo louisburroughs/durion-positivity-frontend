@@ -6,7 +6,7 @@ import { ChatApiService, ChatResponse } from './chat-api.service';
 describe('ChatApiService', () => {
   let service: ChatApiService;
 
-  const apiStub: Pick<ApiBaseService, 'post'> = {
+  const apiStub = {
     post: vi.fn(),
   };
 
