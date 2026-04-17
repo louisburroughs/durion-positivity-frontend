@@ -1,0 +1,105 @@
+<main class="crm-landing" aria-labelledby="crm-landing-title">
+
+  <section class="crm-hero">
+    <div class="crm-hero__content">
+      <p class="crm-hero__eyebrow">{{ 'SHELL.NAV.CRM' | translate }}</p>
+      <h1 id="crm-landing-title" class="crm-hero__title">
+        {{ 'CRM.LANDING.TITLE' | translate }}
+      </h1>
+      <p class="crm-hero__subtitle">{{ 'CRM.LANDING.SUBTITLE' | translate }}</p>
+      <div class="crm-hero__actions">
+        <a class="crm-button crm-button--primary"
+           routerLink="/app/crm/customers">
+          {{ 'CRM.LANDING.HERO.OPEN_CUSTOMERS' | translate }}
+        </a>
+        <a class="crm-button crm-button--secondary"
+           routerLink="/app/crm/create-commercial-account">
+          {{ 'CRM.LANDING.HERO.CREATE_ACCOUNT' | translate }}
+        </a>
+      </div>
+    </div>
+    <dl class="crm-hero__stats" [attr.aria-label]="'CRM.LANDING.STAT.ARIA' | translate">
+      <div class="crm-stat">
+        <dt>{{ 'CRM.LANDING.STAT.PAGES' | translate }}</dt>
+        <dd>{{ totalPageCount }}</dd>
+      </div>
+      <div class="crm-stat">
+        <dt>{{ 'CRM.LANDING.STAT.DIRECT_LINKS' | translate }}</dt>
+        <dd>{{ directLinkCount }}</dd>
+      </div>
+      <div class="crm-stat">
+        <dt>{{ 'CRM.LANDING.STAT.GUIDED_LAUNCHES' | translate }}</dt>
+        <dd>{{ guidedLinkCount }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  @if (state() === 'error' && errorKey()) {
+  <section class="crm-banner crm-banner--error" role="alert">
+    <span>{{ errorKey()! | translate }}</span>
+  </section>
+  }
+
+  @if (state() === 'loading') {
+  <section class="crm-banner" aria-live="polite">
+    <span>{{ 'CRM.LANDING.LOADING' | translate }}</span>
+  </section>
+  }
+
+  @for (section of sections; track section.titleKey) {
+    <section class="crm-section">
+      <div class="crm-section__heading">
+        <h2 class="crm-section__title">{{ section.titleKey | translate }}</h2>
+        <p class="crm-section__description">{{ section.descriptionKey | translate }}</p>
+      </div>
+      <div class="crm-grid">
+        @for (card of section.cards; track card.titleKey) {
+        <article class="crm-card">
+          <div class="crm-card__header">
+            <p class="crm-card__route-label">{{ 'CRM.LANDING.ROUTE_LABEL' | translate }}</p>
+            <p class="crm-card__route-pill" translate="no">{{ card.routePattern }}</p>
+          </div>
+          <div class="crm-card__body">
+            <h3 class="crm-card__title">{{ card.titleKey | translate }}</h3>
+            <p class="crm-card__description">{{ card.descriptionKey | translate }}</p>
+          </div>
+          @if (isLaunchCard(card)) {
+          <div class="crm-card__launch">
+            <label class="crm-field__label" [for]="card.field">
+              {{ card.inputLabelKey | translate }}
+            </label>
+            <input class="crm-field__input" [id]="card.field" [name]="card.field" type="text"
+              autocomplete="off" spellcheck="false" [value]="launchValue(card.field)"
+              [attr.aria-invalid]="launchError(card.field) ? 'true' : null"
+              [attr.aria-describedby]="launchError(card.field) ? card.field + '-error' : null"
+              [attr.placeholder]="card.inputPlaceholderKey | translate"
+              (input)="updateLaunchValue(card.field, $any($event.target).value)" />
+            @if (launchError(card.field)) {
+            <p class="crm-field__error" [attr.id]="card.field + '-error'" role="alert">
+              {{ launchError(card.field)! | translate }}
+            </p>
+            }
+            <button class="crm-button crm-button--primary" type="button"
+              [attr.data-testid]="card.field + '-launch'"
+              [disabled]="state() === 'loading' && activeLaunchField() === card.field"
+              (click)="openLaunch(card)">
+              @if (state() === 'loading' && activeLaunchField() === card.field) {
+              {{ 'CRM.LANDING.ACTION.OPENING_PAGE' | translate }}
+              } @else {
+              {{ card.actionKey | translate }}
+              }
+            </button>
+          </div>
+          } @else {
+          <a class="crm-button crm-button--primary" [routerLink]="card.route"
+            [attr.aria-label]="(card.titleKey | translate) + ': ' + (card.actionKey | translate)">
+            {{ card.actionKey | translate }}
+          </a>
+          }
+        </article>
+        }
+      </div>
+    </section>
+  }
+
+</main>

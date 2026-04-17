@@ -285,6 +285,105 @@
     }
   },
   "CRM": {
+    "LANDING": {
+      "TITLE": "Customers",
+      "SUBTITLE": "Manage customer accounts, track party details, and access integration insights.",
+      "LOADING": "Loading...",
+      "ROUTE_LABEL": "Route",
+      "STAT": {
+        "ARIA": "Customer page statistics",
+        "PAGES": "Pages",
+        "DIRECT_LINKS": "Direct Links",
+        "GUIDED_LAUNCHES": "Guided Launches"
+      },
+      "HERO": {
+        "OPEN_CUSTOMERS": "Customer Directory",
+        "CREATE_ACCOUNT": "New Commercial Account"
+      },
+      "SECTION": {
+        "DIRECTORY": {
+          "TITLE": "Customer Directory",
+          "DESCRIPTION": "Browse the full customer list, create new commercial accounts or individuals, and merge duplicate records."
+        },
+        "PARTY": {
+          "TITLE": "Party Details",
+          "DESCRIPTION": "View party profiles, add vehicles, manage contacts, and configure billing rules for a specific customer."
+        },
+        "INSIGHTS": {
+          "TITLE": "Insights & Integration",
+          "DESCRIPTION": "Access the CRM snapshot for customer context at a glance, and review integration events for diagnostics."
+        }
+      },
+      "CARD": {
+        "CUSTOMER_LIST": {
+          "TITLE": "Customer Directory",
+          "DESCRIPTION": "Browse all customers, search by name or account type, and manage the full customer list."
+        },
+        "CREATE_COMMERCIAL": {
+          "TITLE": "New Commercial Account",
+          "DESCRIPTION": "Create a new commercial account for a business or fleet customer."
+        },
+        "CREATE_INDIVIDUAL": {
+          "TITLE": "New Individual Customer",
+          "DESCRIPTION": "Add a new individual person as a customer in the system."
+        },
+        "MERGE_PARTIES": {
+          "TITLE": "Merge Parties",
+          "DESCRIPTION": "Identify and merge duplicate customer records to maintain clean, accurate data."
+        },
+        "PARTY_DETAIL": {
+          "TITLE": "Party Detail",
+          "DESCRIPTION": "View the full profile of a customer party, including account info, vehicles, and history."
+        },
+        "ADD_VEHICLE": {
+          "TITLE": "Add Vehicle",
+          "DESCRIPTION": "Attach a new vehicle to an existing customer party record."
+        },
+        "PARTY_CONTACTS": {
+          "TITLE": "Party Contacts",
+          "DESCRIPTION": "Manage contact information, phone numbers, and addresses for a customer party."
+        },
+        "BILLING_RULES": {
+          "TITLE": "Billing Rules",
+          "DESCRIPTION": "Set and update billing rules such as payment terms, credit limits, and PO requirements for a party."
+        },
+        "CRM_SNAPSHOT": {
+          "TITLE": "CRM Snapshot",
+          "DESCRIPTION": "Load a real-time customer context snapshot for quick review without navigating to a full detail page."
+        },
+        "CRM_SNAPSHOT_PARTY": {
+          "TITLE": "CRM Snapshot by Party",
+          "DESCRIPTION": "Load the CRM context snapshot pre-populated with a specific party's data."
+        },
+        "INTEGRATION_EVENTS": {
+          "TITLE": "Integration Events",
+          "DESCRIPTION": "Review the log of integration events between the CRM and external systems."
+        }
+      },
+      "FIELD": {
+        "PARTY_DETAIL_ID": "Party ID",
+        "ADD_VEHICLE_PARTY_ID": "Party ID",
+        "CONTACTS_PARTY_ID": "Party ID",
+        "BILLING_RULES_PARTY_ID": "Party ID",
+        "SNAPSHOT_PARTY_ID": "Party ID"
+      },
+      "PLACEHOLDER": {
+        "PARTY_ID": "Enter party UUID"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Open Page",
+        "OPEN_PARTY": "Open Party",
+        "OPEN_VEHICLE_FORM": "Add Vehicle",
+        "OPEN_CONTACTS": "View Contacts",
+        "OPEN_BILLING_RULES": "View Billing Rules",
+        "OPEN_SNAPSHOT": "Load Snapshot",
+        "OPENING_PAGE": "Opening..."
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "A Party ID is required.",
+        "NAVIGATE": "Unable to navigate to the requested page."
+      }
+    },
     "SNAPSHOT": {
       "TITLE": "Customer Context",
       "ARIA": {
