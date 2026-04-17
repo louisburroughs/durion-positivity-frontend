@@ -91,6 +91,16 @@ describe('InventoryLandingPageComponent', () => {
     ]);
   });
 
+  it('resets state to idle after a successful navigation', async () => {
+    vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    component.updateLaunchValue('putawayTaskId', 'task-123');
+    await component.openLaunch(findLaunchCard('putawayTaskId'));
+
+    expect(component.state()).toBe('idle');
+    expect(component.activeLaunchField()).toBeNull();
+  });
+
   it('moves to error state when navigation resolves false', async () => {
     vi.spyOn(router, 'navigate').mockResolvedValue(false);
 
