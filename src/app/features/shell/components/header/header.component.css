@@ -158,3 +158,9 @@
   .user-name { display: none; }
   .locale-select { max-width: 6.5rem; }
 }
+@media (prefers-reduced-motion: reduce) {
+  .nav-toggle-btn,
+  .icon-btn {
+    transition: none;
+  }
+}

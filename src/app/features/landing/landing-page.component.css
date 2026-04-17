@@ -37,8 +37,8 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(43, 76, 120, 0.72);
-  /* brand-primary at ~70% */
+  background: rgba(43, 76, 120, 0.90);
+  /* brand-primary at ~90% — increased from 0.72 for WCAG AA contrast when header overlays light sections */
   backdrop-filter: blur(12px);
   /* Glassmorphism */
   -webkit-backdrop-filter: blur(12px);
@@ -66,7 +66,7 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--durion-blue-500), var(--durion-blue-400));
+  background: linear-gradient(135deg, var(--durion-blue-600), var(--durion-blue-500));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -90,8 +90,8 @@
 }
 
 .landing-locale-select {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: var(--radius-sm);
   color: #ffffff;
   font-size: 0.875rem;
@@ -101,7 +101,7 @@
 }
 
 .landing-locale-select:focus {
-  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline: 2px solid #ffffff;
   outline-offset: 2px;
 }
 
@@ -113,9 +113,9 @@
 .landing-icon-btn {
   width: 36px;
   height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.08);
+  background: transparent;
   color: #ffffff;
   font-size: 1rem;
   cursor: pointer;
@@ -130,12 +130,12 @@
 .landing-icon-btn:hover,
 .landing-icon-btn:focus-visible {
   background: rgba(255, 255, 255, 0.18);
-  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline: 2px solid #ffffff;
   outline-offset: 2px;
 }
 
 .landing-signin-btn {
-  background: linear-gradient(135deg, var(--durion-blue-500), var(--durion-blue-400));
+  background: linear-gradient(135deg, var(--durion-blue-600), var(--durion-blue-500));
   color: #ffffff;
   font-size: 0.875rem;
   font-weight: 600;
@@ -178,7 +178,7 @@
   width: 80px;
   height: 80px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--durion-blue-500), var(--durion-blue-400));
+  background: linear-gradient(135deg, var(--durion-blue-600), var(--durion-blue-500));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -208,8 +208,10 @@
 .hero-cta-btn {
   display: inline-flex;
   align-items: center;
-  background: linear-gradient(135deg, var(--durion-teal-500), var(--durion-teal-600));
-  color: #ffffff;
+  /* teal-400/500 gives 3.66:1 non-text contrast on blue-700 hero (WCAG 1.4.11 ≥3:1) */
+  /* dark text on teal-400: 7.86:1, on teal-500: 6.07:1 — both ≥4.5:1 (ADR-0039) */
+  background: linear-gradient(135deg, var(--durion-teal-400), var(--durion-teal-500));
+  color: var(--durion-grey-900);
   font-size: 1rem;
   font-weight: 600;
   padding: 0.875rem var(--space-8);
@@ -230,7 +232,8 @@
 }
 
 .hero-cta-btn:focus-visible {
-  outline: 3px solid var(--durion-teal-300);
+  /* white on blue-700 hero with 3px offset: 8.73:1 ✅ */
+  outline: 3px solid #ffffff;
   outline-offset: 3px;
 }
 
@@ -251,7 +254,7 @@
 
 .section-subtitle {
   font-size: 1.0625rem;
-  color: var(--durion-graphite-500);
+  color: var(--durion-graphite-600); /* #5a616e — 5.55:1 on grey-100 ✅ (was graphite-500: 3.91:1) */
   line-height: 1.6;
   margin: 0;
 }
@@ -326,7 +329,7 @@
 
 .feature-desc {
   font-size: 0.9375rem;
-  color: var(--durion-graphite-500);
+  color: var(--durion-graphite-600); /* #5a616e — 6.20:1 on white ✅ (was graphite-500: 4.38:1) */
   line-height: 1.65;
   margin: 0;
 }
@@ -383,7 +386,7 @@
 
 .footer-copyright {
   font-size: 0.8125rem;
-  color: var(--durion-blue-400);
+  color: var(--durion-blue-300); /* #7fa4d1 — 5.30:1 on blue-800 ✅ (was blue-400: 4.09:1) */
   margin: 0;
 }
 
@@ -439,5 +442,26 @@
 @media (max-width: 900px) {
   .features-grid {
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+}
+
+/* ── Reduced motion (ADR-0039 / prefers-reduced-motion) ─────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    scroll-behavior: auto;
+  }
+
+  .feature-card,
+  .hero-cta-btn,
+  .landing-signin-btn,
+  .landing-icon-btn,
+  .landing-locale-select {
+    transition: none;
+  }
+
+  .feature-card:hover,
+  .hero-cta-btn:hover,
+  .landing-signin-btn:hover {
+    transform: none;
   }
 }
