@@ -163,7 +163,8 @@ export class BillingLandingPageComponent {
 
   async openLaunch(card: LaunchCard): Promise<void> {
     const value = this.launchValues()[card.field].trim();
-    const value2 = card.field2 ? this.launchValues()[card.field2].trim() : undefined;
+    const secondaryField = card.field2;
+    const value2 = secondaryField ? this.launchValues()[secondaryField].trim() : undefined;
 
     let hasErrors = false;
     if (!value) {
@@ -173,10 +174,10 @@ export class BillingLandingPageComponent {
       }));
       hasErrors = true;
     }
-    if (card.field2 && !value2) {
+    if (secondaryField && !value2) {
       this.launchErrors.update(prev => ({
         ...prev,
-        [card.field2]: 'BILLING.LANDING.ERROR.REQUIRED_IDENTIFIER',
+        [secondaryField]: 'BILLING.LANDING.ERROR.REQUIRED_IDENTIFIER',
       }));
       hasErrors = true;
     }
