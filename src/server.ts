@@ -4,7 +4,7 @@ import {
   isMainModule,
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
-import express from 'express';
+import express, { type Request } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { join } from 'node:path';
 
@@ -18,15 +18,26 @@ const angularApp = new AngularNodeAppEngine();
  * API_GATEWAY_URL defaults to the Docker Compose service name for local development.
  */
 const API_GATEWAY_URL = process.env['API_GATEWAY_URL'] ?? 'http://pos-api-gateway:8080';
-for (const gatewayPath of ['/api', '/mcp-server']) {
-  app.use(
-    gatewayPath,
-    createProxyMiddleware({
-      target: API_GATEWAY_URL,
-      changeOrigin: true,
-    }),
-  );
-}
+
+app.use(
+  '/api',
+  createProxyMiddleware({
+    target: API_GATEWAY_URL,
+    changeOrigin: true,
+  }),
+);
+
+app.use(
+  '/mcp-server',
+  createProxyMiddleware({
+    target: API_GATEWAY_URL,
+    changeOrigin: true,
+    // Express strips the mount path from req.url, but the gateway route
+    // contract requires the /mcp-server prefix to remain intact.
+    pathRewrite: (path, req) =>
+      (req as Request).originalUrl ?? `/mcp-server${path}`,
+  }),
+);
 
 /**
  * Translation assets are not fingerprinted, so they must not be long-cached.
