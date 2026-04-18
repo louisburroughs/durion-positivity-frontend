@@ -14,7 +14,6 @@ type PageState = 'ready' | 'loading' | 'error';
 interface BaseCard {
   titleKey: string;
   descriptionKey: string;
-  routePattern: string;
   actionKey: string;
 }
 
@@ -46,7 +45,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'PEOPLE.LANDING.CARD.TIME_APPROVAL.TITLE',
         descriptionKey: 'PEOPLE.LANDING.CARD.TIME_APPROVAL.DESCRIPTION',
-        routePattern: '/app/people/timekeeping/approval',
         route: '/app/people/timekeeping/approval',
         actionKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
       },
@@ -54,7 +52,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'PEOPLE.LANDING.CARD.WORK_SESSION.TITLE',
         descriptionKey: 'PEOPLE.LANDING.CARD.WORK_SESSION.DESCRIPTION',
-        routePattern: '/app/people/timekeeping/work-session',
         route: '/app/people/timekeeping/work-session',
         actionKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
       },
@@ -62,7 +59,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'PEOPLE.LANDING.CARD.WORK_SESSION_SUBMIT.TITLE',
         descriptionKey: 'PEOPLE.LANDING.CARD.WORK_SESSION_SUBMIT.DESCRIPTION',
-        routePattern: '/app/people/timekeeping/work-session/:sessionId/submit',
         field: 'sessionId',
         inputLabelKey: 'PEOPLE.LANDING.FIELD.SESSION_ID',
         inputPlaceholderKey: 'PEOPLE.LANDING.PLACEHOLDER.SESSION_ID',
@@ -73,7 +69,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'PEOPLE.LANDING.CARD.TIME_EXPORT.TITLE',
         descriptionKey: 'PEOPLE.LANDING.CARD.TIME_EXPORT.DESCRIPTION',
-        routePattern: '/app/people/timekeeping/export',
         route: '/app/people/timekeeping/export',
         actionKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
       },
@@ -81,7 +76,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'PEOPLE.LANDING.CARD.DISCREPANCY.TITLE',
         descriptionKey: 'PEOPLE.LANDING.CARD.DISCREPANCY.DESCRIPTION',
-        routePattern: '/app/people/timekeeping/discrepancy',
         route: '/app/people/timekeeping/discrepancy',
         actionKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
       },
@@ -95,7 +89,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_NEW.TITLE',
         descriptionKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_NEW.DESCRIPTION',
-        routePattern: '/app/people/employees/new',
         route: '/app/people/employees/new',
         actionKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
       },
@@ -103,7 +96,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_PROFILE.TITLE',
         descriptionKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_PROFILE.DESCRIPTION',
-        routePattern: '/app/people/employees/:id',
         field: 'employeeProfileId',
         inputLabelKey: 'PEOPLE.LANDING.FIELD.EMPLOYEE_ID',
         inputPlaceholderKey: 'PEOPLE.LANDING.PLACEHOLDER.EMPLOYEE_ID',
@@ -114,7 +106,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_OFFBOARD.TITLE',
         descriptionKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_OFFBOARD.DESCRIPTION',
-        routePattern: '/app/people/employees/:id/offboard',
         field: 'employeeOffboardId',
         inputLabelKey: 'PEOPLE.LANDING.FIELD.OFFBOARD_EMPLOYEE_ID',
         inputPlaceholderKey: 'PEOPLE.LANDING.PLACEHOLDER.OFFBOARD_EMPLOYEE_ID',
@@ -131,7 +122,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'PEOPLE.LANDING.CARD.RBAC.TITLE',
         descriptionKey: 'PEOPLE.LANDING.CARD.RBAC.DESCRIPTION',
-        routePattern: '/app/people/rbac/:personUuid',
         field: 'personUuid',
         inputLabelKey: 'PEOPLE.LANDING.FIELD.PERSON_UUID',
         inputPlaceholderKey: 'PEOPLE.LANDING.PLACEHOLDER.PERSON_UUID',
@@ -142,7 +132,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'PEOPLE.LANDING.CARD.PERSON_LOCATIONS.TITLE',
         descriptionKey: 'PEOPLE.LANDING.CARD.PERSON_LOCATIONS.DESCRIPTION',
-        routePattern: '/app/people/person/:personId/locations',
         field: 'personLocationId',
         inputLabelKey: 'PEOPLE.LANDING.FIELD.PERSON_ID',
         inputPlaceholderKey: 'PEOPLE.LANDING.PLACEHOLDER.PERSON_ID',

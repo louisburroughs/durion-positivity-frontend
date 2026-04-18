@@ -17,7 +17,6 @@ interface LaunchCard {
   readonly kind: 'launch';
   readonly titleKey: string;
   readonly descriptionKey: string;
-  readonly routePattern: string;
   readonly field: LaunchField;
   readonly inputLabelKey: string;
   readonly inputPlaceholderKey: string;
@@ -43,7 +42,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'BILLING.LANDING.CARD.INVOICE_DETAIL.TITLE',
         descriptionKey: 'BILLING.LANDING.CARD.INVOICE_DETAIL.DESCRIPTION',
-        routePattern: 'invoices/:invoiceId',
         field: 'invoiceDetailId',
         inputLabelKey: 'BILLING.LANDING.FIELD.INVOICE_ID',
         inputPlaceholderKey: 'BILLING.LANDING.PLACEHOLDER.INVOICE_ID',
@@ -60,7 +58,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'BILLING.LANDING.CARD.PAYMENT_CAPTURE.TITLE',
         descriptionKey: 'BILLING.LANDING.CARD.PAYMENT_CAPTURE.DESCRIPTION',
-        routePattern: 'invoices/:invoiceId/payment-capture',
         field: 'paymentCaptureInvoiceId',
         inputLabelKey: 'BILLING.LANDING.FIELD.INVOICE_ID',
         inputPlaceholderKey: 'BILLING.LANDING.PLACEHOLDER.INVOICE_ID',
@@ -71,7 +68,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'BILLING.LANDING.CARD.PAYMENT_VOID_REFUND.TITLE',
         descriptionKey: 'BILLING.LANDING.CARD.PAYMENT_VOID_REFUND.DESCRIPTION',
-        routePattern: 'invoices/:invoiceId/payments/:paymentId/void-refund',
         field: 'voidRefundInvoiceId',
         inputLabelKey: 'BILLING.LANDING.FIELD.INVOICE_ID',
         inputPlaceholderKey: 'BILLING.LANDING.PLACEHOLDER.INVOICE_ID',
@@ -91,7 +87,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'BILLING.LANDING.CARD.RECEIPT_LIST.TITLE',
         descriptionKey: 'BILLING.LANDING.CARD.RECEIPT_LIST.DESCRIPTION',
-        routePattern: 'invoices/:invoiceId/receipts',
         field: 'receiptListInvoiceId',
         inputLabelKey: 'BILLING.LANDING.FIELD.INVOICE_ID',
         inputPlaceholderKey: 'BILLING.LANDING.PLACEHOLDER.INVOICE_ID',
@@ -102,7 +97,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'BILLING.LANDING.CARD.RECEIPT_DETAIL.TITLE',
         descriptionKey: 'BILLING.LANDING.CARD.RECEIPT_DETAIL.DESCRIPTION',
-        routePattern: 'invoices/:invoiceId/receipts/:receiptId',
         field: 'receiptDetailInvoiceId',
         inputLabelKey: 'BILLING.LANDING.FIELD.INVOICE_ID',
         inputPlaceholderKey: 'BILLING.LANDING.PLACEHOLDER.INVOICE_ID',

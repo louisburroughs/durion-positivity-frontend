@@ -34,10 +34,6 @@
       <div class="billing-grid">
         @for (card of section.cards; track card.titleKey) {
           <article class="billing-card">
-            <div class="billing-card__header">
-              <p class="billing-card__route-label">{{ 'BILLING.LANDING.ROUTE_LABEL' | translate }}</p>
-              <p class="billing-card__route-pill" translate="no">{{ card.routePattern }}</p>
-            </div>
             <div class="billing-card__body">
               <h3 class="billing-card__title">{{ card.titleKey | translate }}</h3>
               <p class="billing-card__description">{{ card.descriptionKey | translate }}</p>
