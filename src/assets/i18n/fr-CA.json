@@ -110,7 +110,12 @@
       "INPUT_ARIA": "Champ de saisie du message",
       "SEND_ARIA": "Envoyer le message",
       "SEND_TITLE": "Envoyer",
-      "ERROR_BACKEND": "Le service de discussion n'est pas disponible. Votre message a été reçu localement."
+      "ERROR_BACKEND": "Le service de discussion n'est pas disponible. Votre message a été reçu localement.",
+      "ERROR_TROUBLESHOOTING": "Dépannage : {{ details }} Vérifiez l’onglet Network du navigateur et les journaux de la passerelle pour /mcp-server/v1/mcp/chat.",
+      "ERROR_TROUBLESHOOTING_GENERIC": "Dépannage : Vérifiez l’onglet Network du navigateur et les journaux de la passerelle pour /mcp-server/v1/mcp/chat.",
+      "ERROR_DETAIL_STATUS": "HTTP {{ status }}.",
+      "ERROR_DETAIL_CODE": "Code du backend {{ code }}.",
+      "ERROR_DETAIL_CORRELATION_ID": "ID de corrélation {{ correlationId }}."
     }
   },
   "AUTH": {

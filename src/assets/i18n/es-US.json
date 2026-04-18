@@ -110,7 +110,12 @@
       "INPUT_ARIA": "Entrada de mensaje de chat",
       "SEND_ARIA": "Enviar mensaje",
       "SEND_TITLE": "Enviar",
-      "ERROR_BACKEND": "El servicio de chat no está disponible. Tu mensaje fue recibido localmente."
+      "ERROR_BACKEND": "El servicio de chat no está disponible. Tu mensaje fue recibido localmente.",
+      "ERROR_TROUBLESHOOTING": "Diagnóstico: {{ details }} Revisa la pestaña Network del navegador y los registros del gateway para /mcp-server/v1/mcp/chat.",
+      "ERROR_TROUBLESHOOTING_GENERIC": "Diagnóstico: Revisa la pestaña Network del navegador y los registros del gateway para /mcp-server/v1/mcp/chat.",
+      "ERROR_DETAIL_STATUS": "HTTP {{ status }}.",
+      "ERROR_DETAIL_CODE": "Código del backend {{ code }}.",
+      "ERROR_DETAIL_CORRELATION_ID": "ID de correlación {{ correlationId }}."
     }
   },
   "AUTH": {
