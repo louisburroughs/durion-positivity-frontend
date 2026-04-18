@@ -860,7 +860,8 @@
       "WORKORDER_ARIA": "Resumen de orden de trabajo",
       "WORKORDER": "Orden de trabajo",
       "STATUS": "Estado",
-      "ERROR_LOAD": "No se pudo cargar el tablero de despacho."
+      "ERROR_LOAD": "No se pudo cargar el tablero de despacho.",
+      "ERROR_LOCATION_REQUIRED": "Ingresa una ubicación para cargar el tablero de despacho."
     },
     "APPOINTMENT_CREATE": {
       "TITLE": "Crear cita",

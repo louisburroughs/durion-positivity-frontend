@@ -860,7 +860,8 @@
       "WORKORDER_ARIA": "Résumé d'ordre de travail",
       "WORKORDER": "Ordre de travail",
       "STATUS": "Statut",
-      "ERROR_LOAD": "Impossible de charger le tableau de répartition."
+      "ERROR_LOAD": "Impossible de charger le tableau de répartition.",
+      "ERROR_LOCATION_REQUIRED": "Entrez un emplacement pour charger le tableau de répartition."
     },
     "APPOINTMENT_CREATE": {
       "TITLE": "Créer un rendez-vous",

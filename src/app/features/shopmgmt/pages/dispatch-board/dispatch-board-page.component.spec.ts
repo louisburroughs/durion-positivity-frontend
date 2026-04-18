@@ -4,6 +4,7 @@ import { Subject, of, throwError } from 'rxjs';
 import { DispatchBoardPageComponent } from './dispatch-board-page.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
+import { PeopleService } from '../../../people/services/people.service';
 
 // ---------------------------------------------------------------------------
 // Inline model types — match the planned production shapes from the story spec
@@ -58,6 +59,9 @@ describe('DispatchBoardPageComponent', () => {
   const dispatchBoardServiceStub = {
     getDashboard: vi.fn().mockReturnValue(of(emptyDashboard)),
   };
+  const peopleServiceStub = {
+    getCurrentUserPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: 'LOC-1' })),
+  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -65,6 +69,7 @@ describe('DispatchBoardPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: DispatchBoardService, useValue: dispatchBoardServiceStub },
+        { provide: PeopleService, useValue: peopleServiceStub },
       ],
     }).compileComponents();
 
@@ -74,6 +79,28 @@ describe('DispatchBoardPageComponent', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe('initial location bootstrap', () => {
+    it('loads the current user primary location on init', () => {
+      fixture.detectChanges();
+
+      expect(peopleServiceStub.getCurrentUserPrimaryLocation).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls getDashboard with the primary location on init', () => {
+      fixture.detectChanges();
+
+      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenCalledWith('LOC-1', TODAY);
+    });
+
+    it('does not call getDashboard when no location can be resolved', () => {
+      peopleServiceStub.getCurrentUserPrimaryLocation.mockReturnValueOnce(of({}));
+      fixture.detectChanges();
+
+      expect(dispatchBoardServiceStub.getDashboard).not.toHaveBeenCalled();
+      expect(component.error()).toBe('SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED');
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -103,6 +130,14 @@ describe('DispatchBoardPageComponent', () => {
         fixture.nativeElement.querySelector('input[type="date"]');
       expect(dateInput).toBeTruthy();
       expect(component.selectedDate()).toBe(TODAY);
+    });
+
+    it('disables the refresh button when location is blank', () => {
+      peopleServiceStub.getCurrentUserPrimaryLocation.mockReturnValueOnce(of({}));
+      fixture.detectChanges();
+
+      const refreshButton: HTMLButtonElement | null = fixture.nativeElement.querySelector('button');
+      expect(refreshButton?.disabled).toBe(true);
     });
   });
 

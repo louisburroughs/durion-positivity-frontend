@@ -13,7 +13,7 @@
       <div class="field-group">
         <label class="field-label" for="dispatch-location">{{ 'SHOPMGMT.DISPATCH_BOARD.LOCATION' | translate }}</label>
         <input id="dispatch-location" name="locationId" type="text" [ngModel]="selectedLocationId()"
-          (ngModelChange)="selectedLocationId.set($event ?? '')"
+          (ngModelChange)="updateSelectedLocation($event ?? '')"
           [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.LOCATION_ARIA' | translate" />
       </div>
 
@@ -25,6 +25,7 @@
       </div>
 
       <button type="button" class="btn-primary" (click)="refresh()"
+        [disabled]="!canRefresh()"
         [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.REFRESH_ARIA' | translate">
         {{ 'SHOPMGMT.DISPATCH_BOARD.REFRESH' | translate }}
       </button>

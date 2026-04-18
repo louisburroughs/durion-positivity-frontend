@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, interval, switchMap, catchError } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
+import { PeopleService } from '../../../people/services/people.service';
 import {
   DashboardResponse,
   WorkorderSummary,
@@ -19,12 +20,14 @@ import {
 })
 export class DispatchBoardPageComponent implements OnInit {
   private readonly dispatchBoardService = inject(DispatchBoardService);
+  private readonly peopleService = inject(PeopleService);
   private readonly destroyRef = inject(DestroyRef);
   private pollingStarted = false;
 
   readonly todayIso = signal(new Date().toISOString().slice(0, 10));
   readonly selectedDate = signal(this.todayIso());
   readonly selectedLocationId = signal('');
+  readonly canRefresh = computed(() => this.selectedLocationId().trim().length > 0);
   readonly workorders = signal<WorkorderSummary[]>([]);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -36,14 +39,23 @@ export class DispatchBoardPageComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.refresh();
+    this.loadCurrentLocation();
   }
 
   refresh(): void {
+    const locationId = this.selectedLocationId().trim();
+    if (!locationId) {
+      this.error.set('SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED');
+      this.loading.set(false);
+      return;
+    }
+
+    this.selectedLocationId.set(locationId);
     this.loading.set(true);
+    this.error.set(null);
 
     this.dispatchBoardService
-      .getDashboard(this.selectedLocationId(), this.selectedDate())
+      .getDashboard(locationId, this.selectedDate())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: response => {
@@ -57,6 +69,13 @@ export class DispatchBoardPageComponent implements OnInit {
           this.loading.set(false);
         },
       });
+  }
+
+  updateSelectedLocation(value: string): void {
+    this.selectedLocationId.set(value ?? '');
+    if (this.error() === 'SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED' && value.trim().length > 0) {
+      this.error.set(null);
+    }
   }
 
   private startPolling(): void {
@@ -80,6 +99,29 @@ export class DispatchBoardPageComponent implements OnInit {
       .subscribe({
         next: response => {
           this.applySuccess(response);
+        },
+      });
+  }
+
+  private loadCurrentLocation(): void {
+    this.peopleService
+      .getCurrentUserPrimaryLocation()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: location => {
+          const payload = location as Record<string, unknown>;
+          const locationId = String(payload['locationId'] ?? payload['id'] ?? '').trim();
+
+          if (!locationId) {
+            this.error.set('SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED');
+            return;
+          }
+
+          this.selectedLocationId.set(locationId);
+          this.refresh();
+        },
+        error: () => {
+          this.error.set('SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED');
         },
       });
   }

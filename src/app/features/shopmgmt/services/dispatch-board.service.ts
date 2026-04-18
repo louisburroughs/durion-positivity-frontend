@@ -10,11 +10,9 @@ export class DispatchBoardService {
 
   getDashboard(locationId: string, date: string): Observable<DashboardResponse> {
     const normalizedDate = this.toIsoDate(date);
-    let params = new HttpParams().set('date', normalizedDate);
-
-    if (locationId.trim().length > 0) {
-      params = params.set('locationId', locationId.trim());
-    }
+    const params = new HttpParams()
+      .set('locationId', locationId.trim())
+      .set('date', normalizedDate);
 
     return this.api.get<DashboardResponse>('/v1/workexec/dashboard/today', params);
   }
