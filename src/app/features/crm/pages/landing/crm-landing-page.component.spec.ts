@@ -37,6 +37,11 @@ describe('CrmLandingPageComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('exposes hero CTA routes from the direct CRM directory cards', () => {
+    expect(component.heroCustomersRoute).toBe('/app/crm/customers');
+    expect(component.heroCreateCommercialRoute).toBe('/app/crm/create-commercial-account');
+  });
+
   // ---------------------------------------------------------------------------
   // isLaunchCard()
   // ---------------------------------------------------------------------------

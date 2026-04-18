@@ -36,40 +36,42 @@ interface LandingSection {
   readonly cards: readonly (DirectCard | LaunchCard)[];
 }
 
+const DIRECTORY_CARDS: readonly DirectCard[] = [
+  {
+    kind: 'direct',
+    titleKey: 'CRM.LANDING.CARD.CUSTOMER_LIST.TITLE',
+    descriptionKey: 'CRM.LANDING.CARD.CUSTOMER_LIST.DESCRIPTION',
+    route: '/app/crm/customers',
+    actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
+  },
+  {
+    kind: 'direct',
+    titleKey: 'CRM.LANDING.CARD.CREATE_COMMERCIAL.TITLE',
+    descriptionKey: 'CRM.LANDING.CARD.CREATE_COMMERCIAL.DESCRIPTION',
+    route: '/app/crm/create-commercial-account',
+    actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
+  },
+  {
+    kind: 'direct',
+    titleKey: 'CRM.LANDING.CARD.CREATE_INDIVIDUAL.TITLE',
+    descriptionKey: 'CRM.LANDING.CARD.CREATE_INDIVIDUAL.DESCRIPTION',
+    route: '/app/crm/create-individual-person',
+    actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
+  },
+  {
+    kind: 'direct',
+    titleKey: 'CRM.LANDING.CARD.MERGE_PARTIES.TITLE',
+    descriptionKey: 'CRM.LANDING.CARD.MERGE_PARTIES.DESCRIPTION',
+    route: '/app/crm/merge-parties',
+    actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
+  },
+] as const;
+
 const LANDING_SECTIONS: readonly LandingSection[] = [
   {
     titleKey: 'CRM.LANDING.SECTION.DIRECTORY.TITLE',
     descriptionKey: 'CRM.LANDING.SECTION.DIRECTORY.DESCRIPTION',
-    cards: [
-      {
-        kind: 'direct',
-        titleKey: 'CRM.LANDING.CARD.CUSTOMER_LIST.TITLE',
-        descriptionKey: 'CRM.LANDING.CARD.CUSTOMER_LIST.DESCRIPTION',
-        route: '/app/crm/customers',
-        actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
-      },
-      {
-        kind: 'direct',
-        titleKey: 'CRM.LANDING.CARD.CREATE_COMMERCIAL.TITLE',
-        descriptionKey: 'CRM.LANDING.CARD.CREATE_COMMERCIAL.DESCRIPTION',
-        route: '/app/crm/create-commercial-account',
-        actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
-      },
-      {
-        kind: 'direct',
-        titleKey: 'CRM.LANDING.CARD.CREATE_INDIVIDUAL.TITLE',
-        descriptionKey: 'CRM.LANDING.CARD.CREATE_INDIVIDUAL.DESCRIPTION',
-        route: '/app/crm/create-individual-person',
-        actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
-      },
-      {
-        kind: 'direct',
-        titleKey: 'CRM.LANDING.CARD.MERGE_PARTIES.TITLE',
-        descriptionKey: 'CRM.LANDING.CARD.MERGE_PARTIES.DESCRIPTION',
-        route: '/app/crm/merge-parties',
-        actionKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
-      },
-    ],
+    cards: DIRECTORY_CARDS,
   },
   {
     titleKey: 'CRM.LANDING.SECTION.PARTY.TITLE',
@@ -179,9 +181,9 @@ export class CrmLandingPageComponent {
 
   readonly sections = LANDING_SECTIONS;
   /** Route for the primary hero CTA - Customer Directory card */
-  readonly heroCustomersRoute = LANDING_SECTIONS[0].cards[0].route as string;
+  readonly heroCustomersRoute = DIRECTORY_CARDS[0].route;
   /** Route for the secondary hero CTA - Create Commercial Account card */
-  readonly heroCreateCommercialRoute = LANDING_SECTIONS[0].cards[1].route as string;
+  readonly heroCreateCommercialRoute = DIRECTORY_CARDS[1].route;
 
   readonly directLinkCount = LANDING_SECTIONS.flatMap(s => s.cards).filter(
     c => c.kind === 'direct',
