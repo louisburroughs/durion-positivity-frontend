@@ -62,8 +62,8 @@ export const routes: Routes = [
       {
         path: 'admin',
         data: { roles: ['ROLE_ADMIN'] },
-        loadComponent: () =>
-          import('./features/admin/admin.component').then(m => m.AdminComponent),
+        loadChildren: () =>
+          import('./features/admin/admin.routes').then(m => m.ADMIN_ROUTES),
       },
       {
         path: 'crm',

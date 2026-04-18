@@ -3275,5 +3275,77 @@
     "OVER_RECEIVED": "Sur-réception",
     "NOT_RECEIVABLE": "Non réceptionnable",
     "REQUIRES_LOCATION_SELECTION": "En attente d'emplacement"
+  },
+  "ADMIN": {
+    "LANDING": {
+      "TITLE": "Administration",
+      "SUBTITLE": "Gérez les rôles de sécurité, les permissions, l'approvisionnement des utilisateurs et les journaux d'audit de la plateforme.",
+      "LOADING": "Ouverture de la page…",
+      "HERO": {
+        "OPEN_ROLES": "Voir les rôles",
+        "OPEN_AUDIT": "Journaux d'audit"
+      },
+      "STAT": {
+        "ARIA": "Résumé de l'espace de travail Administration",
+        "PAGES": "Pages",
+        "DIRECT_LINKS": "Liens directs",
+        "GUIDED_LAUNCHES": "Accès guidés"
+      },
+      "SECTION": {
+        "ROLES": {
+          "TITLE": "Rôles et permissions",
+          "DESCRIPTION": "Parcourez les rôles, consultez les assignations de permissions et ouvrez des enregistrements de rôles."
+        },
+        "USERS": {
+          "TITLE": "Gestion des utilisateurs",
+          "DESCRIPTION": "Approvisionnez de nouveaux utilisateurs de la plateforme et assignez leurs rôles initiaux."
+        },
+        "AUDIT": {
+          "TITLE": "Audit et conformité",
+          "DESCRIPTION": "Consultez les entrées d'audit de sécurité et le journal complet des événements d'audit."
+        }
+      },
+      "CARD": {
+        "ROLES_LIST": {
+          "TITLE": "Rôles",
+          "DESCRIPTION": "Parcourez tous les rôles de sécurité définis et leur état actuel."
+        },
+        "PERMISSIONS_LIST": {
+          "TITLE": "Permissions",
+          "DESCRIPTION": "Consultez toutes les clés de permission disponibles et leurs descriptions."
+        },
+        "ROLE_DETAIL": {
+          "TITLE": "Détail du rôle",
+          "DESCRIPTION": "Ouvrez un enregistrement de rôle spécifique par nom pour consulter et mettre à jour ses permissions."
+        },
+        "USER_PROVISION": {
+          "TITLE": "Approvisionner un utilisateur",
+          "DESCRIPTION": "Créez un nouveau compte utilisateur sur la plateforme et assignez son rôle d'accès initial."
+        },
+        "SECURITY_AUDIT": {
+          "TITLE": "Audit de sécurité",
+          "DESCRIPTION": "Interrogez les entrées d'audit de sécurité filtrées par identifiant de rendez-vous."
+        },
+        "AUDIT_LOGS": {
+          "TITLE": "Journaux d'audit",
+          "DESCRIPTION": "Parcourez et exportez le journal complet des événements d'audit avec des filtres d'acteur et d'horodatage."
+        }
+      },
+      "FIELD": {
+        "ROLE_NAME": "Nom du rôle"
+      },
+      "PLACEHOLDER": {
+        "ROLE_NAME": "ex. ROLE_MANAGER"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Ouvrir la page",
+        "OPENING_PAGE": "Ouverture…",
+        "OPEN_ROLE": "Ouvrir le rôle"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Un nom de rôle est requis pour ouvrir cette page.",
+        "NAVIGATE": "Échec de la navigation. Vérifiez la valeur et réessayez."
+      }
+    }
   }
 }

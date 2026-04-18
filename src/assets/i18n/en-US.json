@@ -3275,5 +3275,77 @@
     "OVER_RECEIVED": "Over-received",
     "NOT_RECEIVABLE": "Not receivable",
     "REQUIRES_LOCATION_SELECTION": "Awaiting Location"
+  },
+  "ADMIN": {
+    "LANDING": {
+      "TITLE": "Administration",
+      "SUBTITLE": "Manage security roles, permissions, user provisioning, and audit logs for the platform.",
+      "LOADING": "Opening page…",
+      "HERO": {
+        "OPEN_ROLES": "View Roles",
+        "OPEN_AUDIT": "Audit Logs"
+      },
+      "STAT": {
+        "ARIA": "Administration workspace summary",
+        "PAGES": "Pages",
+        "DIRECT_LINKS": "Direct Links",
+        "GUIDED_LAUNCHES": "Guided Launches"
+      },
+      "SECTION": {
+        "ROLES": {
+          "TITLE": "Roles & Permissions",
+          "DESCRIPTION": "Browse roles, view permission assignments, and open individual role records."
+        },
+        "USERS": {
+          "TITLE": "User Management",
+          "DESCRIPTION": "Provision new platform users and assign their initial roles."
+        },
+        "AUDIT": {
+          "TITLE": "Audit & Compliance",
+          "DESCRIPTION": "Review security audit entries and the full platform audit event log."
+        }
+      },
+      "CARD": {
+        "ROLES_LIST": {
+          "TITLE": "Roles",
+          "DESCRIPTION": "Browse all defined security roles and their current status."
+        },
+        "PERMISSIONS_LIST": {
+          "TITLE": "Permissions",
+          "DESCRIPTION": "View all available permission keys and their descriptions."
+        },
+        "ROLE_DETAIL": {
+          "TITLE": "Role Detail",
+          "DESCRIPTION": "Open a specific role record by name to view and update its permission assignments."
+        },
+        "USER_PROVISION": {
+          "TITLE": "Provision User",
+          "DESCRIPTION": "Create a new platform user account and assign their initial access role."
+        },
+        "SECURITY_AUDIT": {
+          "TITLE": "Security Audit",
+          "DESCRIPTION": "Query security audit entries filtered by appointment ID."
+        },
+        "AUDIT_LOGS": {
+          "TITLE": "Audit Logs",
+          "DESCRIPTION": "Browse and export the full platform audit event log with actor and timestamp filters."
+        }
+      },
+      "FIELD": {
+        "ROLE_NAME": "Role Name"
+      },
+      "PLACEHOLDER": {
+        "ROLE_NAME": "e.g. ROLE_MANAGER"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Open Page",
+        "OPENING_PAGE": "Opening…",
+        "OPEN_ROLE": "Open Role"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "A role name is required to open this page.",
+        "NAVIGATE": "Navigation failed. Please check the value and try again."
+      }
+    }
   }
 }

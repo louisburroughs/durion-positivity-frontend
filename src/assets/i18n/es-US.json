@@ -3275,5 +3275,77 @@
     "OVER_RECEIVED": "Exceso de recepción",
     "NOT_RECEIVABLE": "No recibible",
     "REQUIRES_LOCATION_SELECTION": "Esperando ubicación"
+  },
+  "ADMIN": {
+    "LANDING": {
+      "TITLE": "Administración",
+      "SUBTITLE": "Gestione roles de seguridad, permisos, aprovisionamiento de usuarios y registros de auditoría de la plataforma.",
+      "LOADING": "Abriendo página…",
+      "HERO": {
+        "OPEN_ROLES": "Ver Roles",
+        "OPEN_AUDIT": "Registros de Auditoría"
+      },
+      "STAT": {
+        "ARIA": "Resumen del área de trabajo de administración",
+        "PAGES": "Páginas",
+        "DIRECT_LINKS": "Accesos directos",
+        "GUIDED_LAUNCHES": "Accesos guiados"
+      },
+      "SECTION": {
+        "ROLES": {
+          "TITLE": "Roles y Permisos",
+          "DESCRIPTION": "Explore roles, vea asignaciones de permisos y abra registros de roles individuales."
+        },
+        "USERS": {
+          "TITLE": "Gestión de Usuarios",
+          "DESCRIPTION": "Aprovisione nuevos usuarios de la plataforma y asigne sus roles iniciales."
+        },
+        "AUDIT": {
+          "TITLE": "Auditoría y Cumplimiento",
+          "DESCRIPTION": "Revise entradas de auditoría de seguridad y el registro completo de eventos de auditoría."
+        }
+      },
+      "CARD": {
+        "ROLES_LIST": {
+          "TITLE": "Roles",
+          "DESCRIPTION": "Explore todos los roles de seguridad definidos y su estado actual."
+        },
+        "PERMISSIONS_LIST": {
+          "TITLE": "Permisos",
+          "DESCRIPTION": "Vea todas las claves de permiso disponibles y sus descripciones."
+        },
+        "ROLE_DETAIL": {
+          "TITLE": "Detalle de Rol",
+          "DESCRIPTION": "Abra un registro de rol específico por nombre para ver y actualizar sus permisos."
+        },
+        "USER_PROVISION": {
+          "TITLE": "Aprovisionar Usuario",
+          "DESCRIPTION": "Cree una nueva cuenta de usuario en la plataforma y asigne su rol de acceso inicial."
+        },
+        "SECURITY_AUDIT": {
+          "TITLE": "Auditoría de Seguridad",
+          "DESCRIPTION": "Consulte entradas de auditoría de seguridad filtradas por ID de cita."
+        },
+        "AUDIT_LOGS": {
+          "TITLE": "Registros de Auditoría",
+          "DESCRIPTION": "Explore y exporte el registro completo de eventos de auditoría con filtros de actor y fecha."
+        }
+      },
+      "FIELD": {
+        "ROLE_NAME": "Nombre del Rol"
+      },
+      "PLACEHOLDER": {
+        "ROLE_NAME": "ej. ROLE_MANAGER"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Abrir Página",
+        "OPENING_PAGE": "Abriendo…",
+        "OPEN_ROLE": "Abrir Rol"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Se requiere un nombre de rol para abrir esta página.",
+        "NAVIGATE": "Error de navegación. Verifique el valor e intente de nuevo."
+      }
+    }
   }
 }
