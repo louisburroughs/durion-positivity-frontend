@@ -1,124 +1,122 @@
-<section class="workexec-hero" aria-labelledby="workexec-hero-heading">
-  <div class="workexec-hero-eyebrow" aria-hidden="true">
-    {{ 'SHELL.NAV.WORKORDERS' | translate }}
-  </div>
-  <h1 id="workexec-hero-heading" class="workexec-hero-title">
-    {{ 'WORKEXEC.LANDING.TITLE' | translate }}
-  </h1>
-  <p class="workexec-hero-subtitle">
-    {{ 'WORKEXEC.LANDING.SUBTITLE' | translate }}
-  </p>
-  <div class="workexec-hero-actions">
-    <a
-      class="workexec-btn-primary"
-      [routerLink]="heroEstimateNewRoute"
-    >
-      {{ 'WORKEXEC.LANDING.HERO_CTA_NEW' | translate }}
-    </a>
-    <a
-      class="workexec-btn-secondary"
-      [routerLink]="heroEstimateListRoute"
-    >
-      {{ 'WORKEXEC.LANDING.HERO_CTA_LIST' | translate }}
-    </a>
-  </div>
-  <div class="workexec-hero-stats" aria-label="{{ 'WORKEXEC.LANDING.STATS_ARIA' | translate }}">
-    <div class="workexec-hero-stat">
-      <span class="workexec-hero-stat-number">{{ totalPageCount }}</span>
-      <span class="workexec-hero-stat-label">{{ 'WORKEXEC.LANDING.STAT.TOTAL_PAGES' | translate }}</span>
+<main class="workexec-landing" aria-labelledby="workexec-landing-title">
+  <section class="workexec-hero">
+    <div class="workexec-hero__content">
+      <p class="workexec-hero__eyebrow">{{ 'SHELL.NAV.WORKORDERS' | translate }}</p>
+      <h1 id="workexec-landing-title" class="workexec-hero__title">
+        {{ 'WORKEXEC.LANDING.TITLE' | translate }}
+      </h1>
+      <p class="workexec-hero__subtitle">
+        {{ 'WORKEXEC.LANDING.SUBTITLE' | translate }}
+      </p>
+      <div class="workexec-hero__actions">
+        <a class="workexec-button workexec-button--primary" [routerLink]="heroEstimateNewRoute">
+          {{ 'WORKEXEC.LANDING.HERO_CTA_NEW' | translate }}
+        </a>
+        <a class="workexec-button workexec-button--secondary" [routerLink]="heroEstimateListRoute">
+          {{ 'WORKEXEC.LANDING.HERO_CTA_LIST' | translate }}
+        </a>
+      </div>
     </div>
-    <div class="workexec-hero-stat">
-      <span class="workexec-hero-stat-number">{{ directLinkCount }}</span>
-      <span class="workexec-hero-stat-label">{{ 'WORKEXEC.LANDING.STAT.DIRECT_PAGES' | translate }}</span>
-    </div>
-    <div class="workexec-hero-stat">
-      <span class="workexec-hero-stat-number">{{ guidedLinkCount }}</span>
-      <span class="workexec-hero-stat-label">{{ 'WORKEXEC.LANDING.STAT.GUIDED_LAUNCHES' | translate }}</span>
-    </div>
-  </div>
-</section>
 
-@if (state() === 'error') {
-  <div class="workexec-global-error" role="alert">
-    <span>{{ errorKey() | translate }}</span>
-  </div>
-}
-
-@for (section of sections; track section.titleKey) {
-  <section class="workexec-section" aria-labelledby="{{ section.titleKey }}-heading">
-    <div class="workexec-section-header">
-      <h2 id="{{ section.titleKey }}-heading" class="workexec-section-title">
-        {{ section.titleKey | translate }}
-      </h2>
-      <p class="workexec-section-description">{{ section.descriptionKey | translate }}</p>
-    </div>
-    <ul class="workexec-card-grid">
-      @for (card of section.cards; track card.titleKey) {
-        <li class="workexec-card">
-          @if (isLaunchCard(card)) {
-            <div class="workexec-card-header">
-              <div class="workexec-card-badge workexec-card-badge--guided" aria-hidden="true">
-                {{ 'WORKEXEC.LANDING.BADGE.GUIDED' | translate }}
-              </div>
-              <h3 class="workexec-card-title">{{ card.titleKey | translate }}</h3>
-            </div>
-            <p class="workexec-card-description">{{ card.descriptionKey | translate }}</p>
-            <div class="workexec-card-launch">
-              <label class="workexec-card-label" [for]="card.field + '-input'">
-                {{ card.inputLabelKey | translate }}
-              </label>
-              <input
-                [id]="card.field + '-input'"
-                class="workexec-card-input"
-                [class.workexec-card-input--error]="launchError(card.field)"
-                type="text"
-                [placeholder]="card.inputPlaceholderKey | translate"
-                [value]="launchValue(card.field)"
-                (input)="updateLaunchValue(card.field, $any($event.target).value)"
-                [attr.aria-describedby]="launchError(card.field) ? card.field + '-error' : null"
-                [attr.aria-invalid]="launchError(card.field) ? 'true' : null"
-              />
-              @if (launchError(card.field)) {
-                <span
-                  [id]="card.field + '-error'"
-                  class="workexec-card-input-error"
-                  role="alert"
-                >
-                  {{ launchError(card.field)! | translate }}
-                </span>
-              }
-              <button
-                class="workexec-card-launch-btn"
-                type="button"
-                [disabled]="state() === 'loading' && activeLaunchField() === card.field"
-                (click)="openLaunch(card)"
-                [attr.aria-label]="card.actionKey | translate"
-                [attr.aria-busy]="state() === 'loading' && activeLaunchField() === card.field"
-              >
-                @if (state() === 'loading' && activeLaunchField() === card.field) {
-                  <span class="workexec-card-spinner" aria-hidden="true"></span>
-                }
-                {{ card.actionKey | translate }}
-              </button>
-            </div>
-          } @else {
-            <div class="workexec-card-header">
-              <div class="workexec-card-badge workexec-card-badge--direct" aria-hidden="true">
-                {{ 'WORKEXEC.LANDING.BADGE.DIRECT' | translate }}
-              </div>
-              <h3 class="workexec-card-title">{{ card.titleKey | translate }}</h3>
-            </div>
-            <p class="workexec-card-description">{{ card.descriptionKey | translate }}</p>
-            <a
-              class="workexec-card-direct-link"
-              [routerLink]="card.route"
-              [attr.aria-label]="card.actionKey | translate"
-            >
-              {{ card.actionKey | translate }}
-            </a>
-          }
-        </li>
-      }
-    </ul>
+    <dl class="workexec-hero__stats" [attr.aria-label]="'WORKEXEC.LANDING.STATS_ARIA' | translate">
+      <div class="workexec-stat">
+        <dt>{{ 'WORKEXEC.LANDING.STAT.TOTAL_PAGES' | translate }}</dt>
+        <dd>{{ totalPageCount }}</dd>
+      </div>
+      <div class="workexec-stat">
+        <dt>{{ 'WORKEXEC.LANDING.STAT.DIRECT_PAGES' | translate }}</dt>
+        <dd>{{ directLinkCount }}</dd>
+      </div>
+      <div class="workexec-stat">
+        <dt>{{ 'WORKEXEC.LANDING.STAT.GUIDED_LAUNCHES' | translate }}</dt>
+        <dd>{{ guidedLinkCount }}</dd>
+      </div>
+    </dl>
   </section>
-}
+
+  @if (state() === 'error' && errorKey()) {
+    <section class="workexec-banner workexec-banner--error" role="alert">
+      <span>{{ errorKey()! | translate }}</span>
+    </section>
+  }
+
+  @for (section of sections; track section.titleKey) {
+    <section class="workexec-section" aria-labelledby="{{ section.titleKey }}-heading">
+      <div class="workexec-section__heading">
+        <h2 id="{{ section.titleKey }}-heading" class="workexec-section__title">
+          {{ section.titleKey | translate }}
+        </h2>
+        <p class="workexec-section__description">{{ section.descriptionKey | translate }}</p>
+      </div>
+
+      <div class="workexec-grid">
+        @for (card of section.cards; track card.titleKey) {
+          <article class="workexec-card">
+            <div class="workexec-card__body">
+              <div class="workexec-card__header">
+                @if (isLaunchCard(card)) {
+                  <span class="workexec-card__badge workexec-card__badge--guided" aria-hidden="true">
+                    {{ 'WORKEXEC.LANDING.BADGE.GUIDED' | translate }}
+                  </span>
+                } @else {
+                  <span class="workexec-card__badge workexec-card__badge--direct" aria-hidden="true">
+                    {{ 'WORKEXEC.LANDING.BADGE.DIRECT' | translate }}
+                  </span>
+                }
+                <h3 class="workexec-card__title">{{ card.titleKey | translate }}</h3>
+              </div>
+              <p class="workexec-card__description">{{ card.descriptionKey | translate }}</p>
+            </div>
+
+            @if (isLaunchCard(card)) {
+              <div class="workexec-card__launch">
+                <label class="workexec-field__label" [for]="card.field + '-input'">
+                  {{ card.inputLabelKey | translate }}
+                </label>
+                <input
+                  [id]="card.field + '-input'"
+                  class="workexec-field__input"
+                  [class.workexec-field__input--error]="launchError(card.field)"
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  [placeholder]="card.inputPlaceholderKey | translate"
+                  [value]="launchValue(card.field)"
+                  (input)="updateLaunchValue(card.field, $any($event.target).value)"
+                  [attr.aria-describedby]="launchError(card.field) ? card.field + '-error' : null"
+                  [attr.aria-invalid]="launchError(card.field) ? 'true' : null"
+                />
+                @if (launchError(card.field)) {
+                  <p [id]="card.field + '-error'" class="workexec-field__error" role="alert">
+                    {{ launchError(card.field)! | translate }}
+                  </p>
+                }
+                <button
+                  class="workexec-button workexec-button--primary"
+                  type="button"
+                  [disabled]="state() === 'loading' && activeLaunchField() === card.field"
+                  (click)="openLaunch(card)"
+                  [attr.aria-label]="card.actionKey | translate"
+                  [attr.aria-busy]="state() === 'loading' && activeLaunchField() === card.field"
+                >
+                  @if (state() === 'loading' && activeLaunchField() === card.field) {
+                    <span class="workexec-card__spinner" aria-hidden="true"></span>
+                  }
+                  {{ card.actionKey | translate }}
+                </button>
+              </div>
+            } @else {
+              <a
+                class="workexec-button workexec-button--primary"
+                [routerLink]="card.route"
+                [attr.aria-label]="(card.titleKey | translate) + ': ' + (card.actionKey | translate)"
+              >
+                {{ card.actionKey | translate }}
+              </a>
+            }
+          </article>
+        }
+      </div>
+    </section>
+  }
+</main>
