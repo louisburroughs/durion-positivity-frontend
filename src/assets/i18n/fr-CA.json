@@ -49,7 +49,7 @@
     "NAV": {
       "ARIA_LABEL": "Navigation principale",
       "DASHBOARD": "Tableau de bord",
-      "DISPATCH": "Tableau d'expédition",
+      "DISPATCH": "Gestion de l'atelier",
       "WORKORDERS": "Bons de travail",
       "CRM": "Clients",
       "ACCOUNTING": "Comptabilité",
@@ -948,6 +948,100 @@
         "CONFLICTS": "Des conflits ont été trouvés pour le créneau sélectionné.",
         "RESCHEDULE": "Impossible de replanifier le rendez-vous.",
         "OVERRIDE": "Impossible d'exécuter l'outrepassement."
+      }
+    },
+    "LANDING": {
+      "TITLE": "Gestion de l'atelier",
+      "SUBTITLE": "Gérez le tableau d'expédition, l'horaire, les rendez-vous et la disponibilité des mécaniciens depuis un seul endroit.",
+      "HERO_CTA_DISPATCH": "Tableau d'expédition",
+      "HERO_CTA_SCHEDULE": "Voir l'horaire",
+      "STAT": {
+        "TOTAL_PAGES": "Pages totales",
+        "DIRECT_PAGES": "Pages directes",
+        "GUIDED_LAUNCHES": "Accès guidés"
+      },
+      "STATS_ARIA": "Statistiques du module Gestion de l'atelier",
+      "BADGE": {
+        "DIRECT": "Direct",
+        "GUIDED": "Guidé"
+      },
+      "SECTION": {
+        "DISPATCH": {
+          "TITLE": "Expédition et horaire",
+          "DESCRIPTION": "Surveillez l'état des travaux en direct et consultez l'horaire quotidien pour toutes les baies et techniciens."
+        },
+        "APPOINTMENTS": {
+          "TITLE": "Rendez-vous",
+          "DESCRIPTION": "Créez et gérez les rendez-vous clients, les assignations, la replanification et la résolution de conflits."
+        },
+        "MECHANICS": {
+          "TITLE": "Mécaniciens",
+          "DESCRIPTION": "Suivez la disponibilité des mécaniciens et gérez la liste du personnel de l'atelier."
+        }
+      },
+      "CARD": {
+        "DISPATCH_BOARD": {
+          "TITLE": "Tableau d'expédition",
+          "DESCRIPTION": "Vue en direct de tous les travaux actifs, des assignations de techniciens et de l'état des baies."
+        },
+        "SCHEDULE": {
+          "TITLE": "Vue de l'horaire",
+          "DESCRIPTION": "Vue calendrier de tous les rendez-vous et ordres planifiés pour la journée ou la semaine."
+        },
+        "APPOINTMENT_NEW": {
+          "TITLE": "Nouveau rendez-vous",
+          "DESCRIPTION": "Créez un nouveau rendez-vous client et assignez-le à une baie et un technicien."
+        },
+        "APPOINTMENT_NEW_CRM": {
+          "TITLE": "Nouveau rendez-vous (CRM)",
+          "DESCRIPTION": "Créez un rendez-vous directement depuis un dossier client ou prospect du CRM."
+        },
+        "APPOINTMENT_ASSIGNMENT": {
+          "TITLE": "Assignations du rendez-vous",
+          "DESCRIPTION": "Consultez et gérez les assignations de techniciens pour un rendez-vous spécifique."
+        },
+        "APPOINTMENT_RESCHEDULE": {
+          "TITLE": "Replanifier le rendez-vous",
+          "DESCRIPTION": "Déplacez un rendez-vous existant à une nouvelle date, heure ou baie."
+        },
+        "APPOINTMENT_EDIT": {
+          "TITLE": "Modifier le rendez-vous",
+          "DESCRIPTION": "Mettez à jour les détails, notes ou demandes de service d'un rendez-vous existant."
+        },
+        "APPOINTMENT_OVERRIDE": {
+          "TITLE": "Outrepasser le conflit",
+          "DESCRIPTION": "Outrepassez manuellement un conflit d'horaire et confirmez le rendez-vous."
+        },
+        "APPOINTMENT_DISPATCH_ASSIGN": {
+          "TITLE": "Assignation d'expédition",
+          "DESCRIPTION": "Assignez un rendez-vous à un technicien directement depuis le tableau d'expédition."
+        },
+        "MECHANIC_AVAILABILITY": {
+          "TITLE": "Disponibilité des mécaniciens",
+          "DESCRIPTION": "Consultez et mettez à jour les plages de disponibilité et congés individuels des mécaniciens."
+        },
+        "MECHANIC_ROSTER": {
+          "TITLE": "Liste des mécaniciens",
+          "DESCRIPTION": "Parcourez la liste complète des mécaniciens et leurs assignations actuelles."
+        }
+      },
+      "FIELD": {
+        "APPOINTMENT_ID": "ID du rendez-vous"
+      },
+      "PLACEHOLDER": {
+        "APPOINTMENT_ID": "ex. APT-1234"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Ouvrir la page",
+        "OPEN_ASSIGNMENT": "Ouvrir les assignations",
+        "OPEN_RESCHEDULE": "Replanifier",
+        "OPEN_EDIT": "Modifier le rendez-vous",
+        "OPEN_OVERRIDE": "Outrepasser le conflit",
+        "OPEN_DISPATCH_ASSIGN": "Assignation d'expédition"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Un identifiant de rendez-vous est requis pour ouvrir cette page.",
+        "NAVIGATE": "Échec de la navigation. Vérifiez l'identifiant et réessayez."
       }
     }
   },

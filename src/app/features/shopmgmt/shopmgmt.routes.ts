@@ -6,6 +6,16 @@ export const SHOPMGMT_ROUTES: Routes = [
     path: '',
     component: ShopmgmtComponent,
     children: [
+      // ── Landing page ───────────────────────────────────────────────────────
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./pages/landing/shopmgmt-landing-page.component').then(
+            m => m.ShopmgmtLandingPageComponent,
+          ),
+      },
+
       {
         path: 'dispatch-board',
         loadComponent: () =>

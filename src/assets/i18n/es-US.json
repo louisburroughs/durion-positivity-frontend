@@ -49,7 +49,7 @@
     "NAV": {
       "ARIA_LABEL": "Navegación principal",
       "DASHBOARD": "Panel de control",
-      "DISPATCH": "Tablero de despacho",
+      "DISPATCH": "Gestión del Taller",
       "WORKORDERS": "Órdenes de trabajo",
       "CRM": "Clientes",
       "ACCOUNTING": "Contabilidad",
@@ -948,6 +948,100 @@
         "CONFLICTS": "Se encontraron conflictos para la franja seleccionada.",
         "RESCHEDULE": "No se pudo reprogramar la cita.",
         "OVERRIDE": "No se pudo ejecutar la sobrescritura."
+      }
+    },
+    "LANDING": {
+      "TITLE": "Gestión del Taller",
+      "SUBTITLE": "Gestione el tablero de despacho, el horario, las citas y la disponibilidad de mecánicos desde un solo lugar.",
+      "HERO_CTA_DISPATCH": "Tablero de Despacho",
+      "HERO_CTA_SCHEDULE": "Ver Horario",
+      "STAT": {
+        "TOTAL_PAGES": "Total de Páginas",
+        "DIRECT_PAGES": "Páginas Directas",
+        "GUIDED_LAUNCHES": "Accesos Guiados"
+      },
+      "STATS_ARIA": "Estadísticas del módulo Gestión del Taller",
+      "BADGE": {
+        "DIRECT": "Directo",
+        "GUIDED": "Guiado"
+      },
+      "SECTION": {
+        "DISPATCH": {
+          "TITLE": "Despacho y Horario",
+          "DESCRIPTION": "Monitoree el estado de los trabajos en vivo y vea el horario diario en todas las bahías y técnicos."
+        },
+        "APPOINTMENTS": {
+          "TITLE": "Citas",
+          "DESCRIPTION": "Cree y gestione citas de clientes, asignaciones, reprogramaciones y resolución de conflictos."
+        },
+        "MECHANICS": {
+          "TITLE": "Mecánicos",
+          "DESCRIPTION": "Realice seguimiento de la disponibilidad de los mecánicos y gestione la nómina del taller."
+        }
+      },
+      "CARD": {
+        "DISPATCH_BOARD": {
+          "TITLE": "Tablero de Despacho",
+          "DESCRIPTION": "Vista en vivo de todos los trabajos activos, asignaciones de técnicos y estado de bahías."
+        },
+        "SCHEDULE": {
+          "TITLE": "Vista de Horario",
+          "DESCRIPTION": "Vista de calendario con todas las citas y órdenes programadas para el día o la semana."
+        },
+        "APPOINTMENT_NEW": {
+          "TITLE": "Nueva Cita",
+          "DESCRIPTION": "Cree una nueva cita de cliente y asígnela a una bahía y técnico."
+        },
+        "APPOINTMENT_NEW_CRM": {
+          "TITLE": "Nueva Cita (CRM)",
+          "DESCRIPTION": "Cree una cita directamente desde un registro de cliente o prospecto del CRM."
+        },
+        "APPOINTMENT_ASSIGNMENT": {
+          "TITLE": "Asignaciones de Cita",
+          "DESCRIPTION": "Vea y gestione las asignaciones de técnicos para una cita específica."
+        },
+        "APPOINTMENT_RESCHEDULE": {
+          "TITLE": "Reprogramar Cita",
+          "DESCRIPTION": "Mueva una cita existente a una nueva fecha, hora o bahía."
+        },
+        "APPOINTMENT_EDIT": {
+          "TITLE": "Editar Cita",
+          "DESCRIPTION": "Actualice los detalles, notas o solicitudes de servicio de una cita existente."
+        },
+        "APPOINTMENT_OVERRIDE": {
+          "TITLE": "Ignorar Conflicto",
+          "DESCRIPTION": "Ignore manualmente un conflicto de horario y confirme la cita."
+        },
+        "APPOINTMENT_DISPATCH_ASSIGN": {
+          "TITLE": "Asignación de Despacho",
+          "DESCRIPTION": "Asigne una cita a un técnico directamente desde el tablero de despacho."
+        },
+        "MECHANIC_AVAILABILITY": {
+          "TITLE": "Disponibilidad de Mecánicos",
+          "DESCRIPTION": "Vea y actualice los horarios de disponibilidad individuales y tiempo libre de los mecánicos."
+        },
+        "MECHANIC_ROSTER": {
+          "TITLE": "Nómina de Mecánicos",
+          "DESCRIPTION": "Explore la nómina completa de mecánicos y sus asignaciones actuales."
+        }
+      },
+      "FIELD": {
+        "APPOINTMENT_ID": "ID de Cita"
+      },
+      "PLACEHOLDER": {
+        "APPOINTMENT_ID": "ej. APT-1234"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Abrir Página",
+        "OPEN_ASSIGNMENT": "Abrir Asignaciones",
+        "OPEN_RESCHEDULE": "Reprogramar",
+        "OPEN_EDIT": "Editar Cita",
+        "OPEN_OVERRIDE": "Ignorar Conflicto",
+        "OPEN_DISPATCH_ASSIGN": "Asignación de Despacho"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Se requiere un ID de cita para abrir esta página.",
+        "NAVIGATE": "Error de navegación. Verifique el ID e intente de nuevo."
       }
     }
   },

@@ -6,7 +6,7 @@ const NAV_REGISTRY: NavItem[] = [
   { key: 'SHELL.NAV.DASHBOARD', icon: 'D', route: '/app', exact: true, order: 1, group: 'main' },
   { key: 'SHELL.NAV.WORKORDERS', icon: 'W', route: '/app/workexec', order: 2, group: 'main' },
   { key: 'SHELL.NAV.CRM', icon: 'C', route: '/app/crm', order: 3, group: 'main' },
-  { key: 'SHELL.NAV.DISPATCH', icon: 'DS', route: '/app/shopmgmt/dispatch-board', order: 4, group: 'main' },
+  { key: 'SHELL.NAV.DISPATCH', icon: 'DS', route: '/app/shopmgmt', order: 4, group: 'main' },
   { key: 'SHELL.NAV.ACCOUNTING', icon: 'A', route: '/app/accounting', order: 5, group: 'main' },
   { key: 'SHELL.NAV.BILLING', icon: 'B', route: '/app/billing', order: 6, group: 'main' },
   { key: 'SHELL.NAV.PEOPLE', icon: 'P', route: '/app/people', order: 7, group: 'main' },

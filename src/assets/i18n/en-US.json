@@ -49,7 +49,7 @@
     "NAV": {
       "ARIA_LABEL": "Main navigation",
       "DASHBOARD": "Dashboard",
-      "DISPATCH": "Dispatch Board",
+      "DISPATCH": "Shop Management",
       "WORKORDERS": "Work Orders",
       "CRM": "Customers",
       "ACCOUNTING": "Accounting",
@@ -948,6 +948,100 @@
         "CONFLICTS": "Conflicts were found for the selected slot.",
         "RESCHEDULE": "Failed to reschedule appointment.",
         "OVERRIDE": "Failed to execute override."
+      }
+    },
+    "LANDING": {
+      "TITLE": "Shop Management",
+      "SUBTITLE": "Manage the dispatch board, schedule, appointments, and mechanic availability from one place.",
+      "HERO_CTA_DISPATCH": "Dispatch Board",
+      "HERO_CTA_SCHEDULE": "View Schedule",
+      "STAT": {
+        "TOTAL_PAGES": "Total Pages",
+        "DIRECT_PAGES": "Direct Pages",
+        "GUIDED_LAUNCHES": "Guided Launches"
+      },
+      "STATS_ARIA": "Shop Management module statistics",
+      "BADGE": {
+        "DIRECT": "Direct",
+        "GUIDED": "Guided"
+      },
+      "SECTION": {
+        "DISPATCH": {
+          "TITLE": "Dispatch & Schedule",
+          "DESCRIPTION": "Monitor live job status and view the daily schedule across all bays and technicians."
+        },
+        "APPOINTMENTS": {
+          "TITLE": "Appointments",
+          "DESCRIPTION": "Create and manage customer appointments, assignments, rescheduling, and conflict resolution."
+        },
+        "MECHANICS": {
+          "TITLE": "Mechanics",
+          "DESCRIPTION": "Track mechanic availability and manage the shop roster."
+        }
+      },
+      "CARD": {
+        "DISPATCH_BOARD": {
+          "TITLE": "Dispatch Board",
+          "DESCRIPTION": "Live view of all active jobs, technician assignments, and bay status across the shop."
+        },
+        "SCHEDULE": {
+          "TITLE": "Schedule View",
+          "DESCRIPTION": "Calendar view of all appointments and workorders scheduled for the day or week."
+        },
+        "APPOINTMENT_NEW": {
+          "TITLE": "New Appointment",
+          "DESCRIPTION": "Create a new customer appointment and assign it to a bay and technician."
+        },
+        "APPOINTMENT_NEW_CRM": {
+          "TITLE": "New Appointment (CRM)",
+          "DESCRIPTION": "Create an appointment directly from a CRM customer record or lead."
+        },
+        "APPOINTMENT_ASSIGNMENT": {
+          "TITLE": "Appointment Assignments",
+          "DESCRIPTION": "View and manage technician assignments for a specific appointment."
+        },
+        "APPOINTMENT_RESCHEDULE": {
+          "TITLE": "Reschedule Appointment",
+          "DESCRIPTION": "Move an existing appointment to a new date, time, or bay."
+        },
+        "APPOINTMENT_EDIT": {
+          "TITLE": "Edit Appointment",
+          "DESCRIPTION": "Update the details, notes, or service requests on an existing appointment."
+        },
+        "APPOINTMENT_OVERRIDE": {
+          "TITLE": "Override Conflict",
+          "DESCRIPTION": "Manually override a scheduling conflict and confirm the appointment."
+        },
+        "APPOINTMENT_DISPATCH_ASSIGN": {
+          "TITLE": "Dispatch Assign",
+          "DESCRIPTION": "Assign an appointment to a technician directly from the dispatch board."
+        },
+        "MECHANIC_AVAILABILITY": {
+          "TITLE": "Mechanic Availability",
+          "DESCRIPTION": "View and update individual mechanic availability windows and time-off."
+        },
+        "MECHANIC_ROSTER": {
+          "TITLE": "Mechanic Roster",
+          "DESCRIPTION": "Browse the full roster of mechanics and their current assignments."
+        }
+      },
+      "FIELD": {
+        "APPOINTMENT_ID": "Appointment ID"
+      },
+      "PLACEHOLDER": {
+        "APPOINTMENT_ID": "e.g. APT-1234"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Open Page",
+        "OPEN_ASSIGNMENT": "Open Assignments",
+        "OPEN_RESCHEDULE": "Reschedule",
+        "OPEN_EDIT": "Edit Appointment",
+        "OPEN_OVERRIDE": "Override Conflict",
+        "OPEN_DISPATCH_ASSIGN": "Dispatch Assign"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "An appointment ID is required to open this page.",
+        "NAVIGATE": "Navigation failed. Please check the ID and try again."
       }
     }
   },
