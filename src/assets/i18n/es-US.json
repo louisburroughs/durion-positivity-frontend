@@ -1246,6 +1246,128 @@
       "FIELD_STATUS": "Estado",
       "FIELD_GATEWAY_TXN": "ID de Transacción de Pasarela",
       "FIELD_CREATED": "Creado el"
+    },
+    "LANDING": {
+      "TITLE": "Contabilidad",
+      "SUBTITLE": "Monitorea eventos de ingesta, gestiona reglas de registro, aplica pagos y procesa notas de crédito.",
+      "LOADING": "Cargando...",
+      "STAT": {
+        "ARIA": "Estadísticas de páginas de contabilidad",
+        "PAGES": "Páginas",
+        "DIRECT_LINKS": "Accesos directos",
+        "GUIDED_LAUNCHES": "Accesos guiados"
+      },
+      "HERO": {
+        "OPEN_EVENTS": "Eventos de ingesta",
+        "OPEN_POSTING_RULES": "Reglas de registro"
+      },
+      "SECTION": {
+        "INGESTION": {
+          "TITLE": "Monitor de ingesta",
+          "DESCRIPTION": "Monitorea y gestiona la ingesta de eventos contables, revisa los sobres de eventos, envía nuevos eventos y consulta detalles de eventos individuales."
+        },
+        "POSTING_RULES": {
+          "TITLE": "Reglas de registro",
+          "DESCRIPTION": "Consulta y gestiona los conjuntos de reglas de registro contable que rigen el procesamiento de eventos."
+        },
+        "PAYMENTS": {
+          "TITLE": "Pagos",
+          "DESCRIPTION": "Aplica pagos a facturas, gestiona ejecuciones de pagos a proveedores y revisa el estado de pago de facturas."
+        },
+        "CREDIT_MEMOS": {
+          "TITLE": "Notas de crédito",
+          "DESCRIPTION": "Crea y gestiona notas de crédito para cuentas de clientes."
+        }
+      },
+      "CARD": {
+        "EVENTS": {
+          "TITLE": "Eventos de ingesta",
+          "DESCRIPTION": "Monitorea todos los sobres de eventos de ingesta contable y su estado de procesamiento."
+        },
+        "EVENTS_CONTRACT": {
+          "TITLE": "Contrato de sobre de evento",
+          "DESCRIPTION": "Revisa el contrato técnico y las definiciones de campos para los sobres de eventos contables."
+        },
+        "EVENTS_SUBMIT": {
+          "TITLE": "Enviar evento",
+          "DESCRIPTION": "Envía manualmente un nuevo sobre de evento contable para ingesta."
+        },
+        "EVENTS_FAILED": {
+          "TITLE": "Eventos fallidos",
+          "DESCRIPTION": "Consulta todos los eventos de ingesta fallidos y en cuarentena para triaje y reprocesamiento."
+        },
+        "EVENT_DETAIL": {
+          "TITLE": "Detalle de evento",
+          "DESCRIPTION": "Abre la vista detallada de un evento de ingesta específico por ID."
+        },
+        "POSTING_RULES_LIST": {
+          "TITLE": "Reglas de registro",
+          "DESCRIPTION": "Consulta todos los conjuntos de reglas de registro contable y su estado."
+        },
+        "POSTING_RULES_DETAIL": {
+          "TITLE": "Detalle del conjunto de reglas",
+          "DESCRIPTION": "Abre un conjunto de reglas de registro específico por su ID."
+        },
+        "PAYMENT_APPLY": {
+          "TITLE": "Aplicar pago",
+          "DESCRIPTION": "Aplica un pago a una o más facturas pendientes."
+        },
+        "VENDOR_PAYMENTS": {
+          "TITLE": "Pagos a proveedores",
+          "DESCRIPTION": "Consulta todas las ejecuciones de pagos a proveedores y su estado de desembolso."
+        },
+        "VENDOR_PAYMENTS_NEW": {
+          "TITLE": "Nuevo pago a proveedor",
+          "DESCRIPTION": "Inicia una nueva ejecución de pago a proveedor."
+        },
+        "VENDOR_PAYMENT_DETAIL": {
+          "TITLE": "Detalle de pago a proveedor",
+          "DESCRIPTION": "Abre la vista detallada de un pago a proveedor específico por ID."
+        },
+        "INVOICE_PAYMENT_STATUS": {
+          "TITLE": "Estado de pago de factura",
+          "DESCRIPTION": "Consulta el estado de pago de una factura específica."
+        },
+        "CREDIT_MEMOS_LIST": {
+          "TITLE": "Notas de crédito",
+          "DESCRIPTION": "Consulta todas las notas de crédito y su estado actual."
+        },
+        "CREDIT_MEMOS_NEW": {
+          "TITLE": "Nueva nota de crédito",
+          "DESCRIPTION": "Crea una nueva nota de crédito para una cuenta de cliente."
+        },
+        "CREDIT_MEMO_DETAIL": {
+          "TITLE": "Detalle de nota de crédito",
+          "DESCRIPTION": "Abre la vista detallada de una nota de crédito específica por ID."
+        }
+      },
+      "FIELD": {
+        "EVENT_ID": "ID de evento",
+        "RULE_SET_ID": "ID de conjunto de reglas",
+        "CREDIT_MEMO_ID": "ID de nota de crédito",
+        "VENDOR_PAYMENT_ID": "ID de pago a proveedor",
+        "INVOICE_ID": "ID de factura"
+      },
+      "PLACEHOLDER": {
+        "EVENT_ID": "Ingresa el UUID del evento",
+        "RULE_SET_ID": "Ingresa el ID del conjunto de reglas",
+        "CREDIT_MEMO_ID": "Ingresa el ID de la nota de crédito",
+        "VENDOR_PAYMENT_ID": "Ingresa el ID del pago a proveedor",
+        "INVOICE_ID": "Ingresa el ID de la factura"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Abrir página",
+        "OPEN_EVENT": "Abrir evento",
+        "OPEN_RULE_SET": "Abrir conjunto de reglas",
+        "OPEN_CREDIT_MEMO": "Abrir nota de crédito",
+        "OPEN_VENDOR_PAYMENT": "Abrir pago a proveedor",
+        "OPEN_INVOICE_STATUS": "Ver estado",
+        "OPENING_PAGE": "Abriendo..."
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Se requiere un ID.",
+        "NAVIGATE": "No se pudo navegar a la página solicitada."
+      }
     }
   },
   "PRODUCT": {

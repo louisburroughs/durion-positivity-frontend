@@ -1246,6 +1246,128 @@
       "FIELD_STATUS": "Statut",
       "FIELD_GATEWAY_TXN": "ID de transaction de passerelle",
       "FIELD_CREATED": "Créé le"
+    },
+    "LANDING": {
+      "TITLE": "Comptabilité",
+      "SUBTITLE": "Surveillez les événements d'ingestion, gérez les règles de comptabilisation, appliquez des paiements et traitez les avoirs.",
+      "LOADING": "Chargement...",
+      "STAT": {
+        "ARIA": "Statistiques des pages comptables",
+        "PAGES": "Pages",
+        "DIRECT_LINKS": "Accès directs",
+        "GUIDED_LAUNCHES": "Accès guidés"
+      },
+      "HERO": {
+        "OPEN_EVENTS": "Événements d'ingestion",
+        "OPEN_POSTING_RULES": "Règles de comptabilisation"
+      },
+      "SECTION": {
+        "INGESTION": {
+          "TITLE": "Moniteur d'ingestion",
+          "DESCRIPTION": "Surveillez et gérez l'ingestion des événements comptables, examinez les enveloppes d'événements, soumettez de nouveaux événements et consultez les détails des événements individuels."
+        },
+        "POSTING_RULES": {
+          "TITLE": "Règles de comptabilisation",
+          "DESCRIPTION": "Consultez et gérez les ensembles de règles de comptabilisation qui régissent le traitement des événements comptables."
+        },
+        "PAYMENTS": {
+          "TITLE": "Paiements",
+          "DESCRIPTION": "Appliquez des paiements aux factures, gérez les virements fournisseurs et examinez l'état de paiement des factures."
+        },
+        "CREDIT_MEMOS": {
+          "TITLE": "Avoirs",
+          "DESCRIPTION": "Créez et gérez des avoirs pour les comptes clients."
+        }
+      },
+      "CARD": {
+        "EVENTS": {
+          "TITLE": "Événements d'ingestion",
+          "DESCRIPTION": "Surveillez toutes les enveloppes d'événements d'ingestion comptable et leur état de traitement."
+        },
+        "EVENTS_CONTRACT": {
+          "TITLE": "Contrat d'enveloppe d'événement",
+          "DESCRIPTION": "Examinez le contrat technique et les définitions de champs pour les enveloppes d'événements comptables."
+        },
+        "EVENTS_SUBMIT": {
+          "TITLE": "Soumettre un événement",
+          "DESCRIPTION": "Soumettez manuellement une nouvelle enveloppe d'événement comptable pour ingestion."
+        },
+        "EVENTS_FAILED": {
+          "TITLE": "Événements échoués",
+          "DESCRIPTION": "Consultez tous les événements d'ingestion échoués et en quarantaine pour triage et retraitement."
+        },
+        "EVENT_DETAIL": {
+          "TITLE": "Détail de l'événement",
+          "DESCRIPTION": "Ouvrez la vue détaillée d'un événement d'ingestion spécifique par ID."
+        },
+        "POSTING_RULES_LIST": {
+          "TITLE": "Règles de comptabilisation",
+          "DESCRIPTION": "Consultez tous les ensembles de règles de comptabilisation et leur état."
+        },
+        "POSTING_RULES_DETAIL": {
+          "TITLE": "Détail de l'ensemble de règles",
+          "DESCRIPTION": "Ouvrez un ensemble de règles de comptabilisation spécifique par son ID."
+        },
+        "PAYMENT_APPLY": {
+          "TITLE": "Appliquer un paiement",
+          "DESCRIPTION": "Appliquez un paiement à une ou plusieurs factures en attente."
+        },
+        "VENDOR_PAYMENTS": {
+          "TITLE": "Paiements fournisseurs",
+          "DESCRIPTION": "Consultez tous les virements fournisseurs et leur état de décaissement."
+        },
+        "VENDOR_PAYMENTS_NEW": {
+          "TITLE": "Nouveau paiement fournisseur",
+          "DESCRIPTION": "Lancez un nouveau virement fournisseur."
+        },
+        "VENDOR_PAYMENT_DETAIL": {
+          "TITLE": "Détail du paiement fournisseur",
+          "DESCRIPTION": "Ouvrez la vue détaillée d'un paiement fournisseur spécifique par ID."
+        },
+        "INVOICE_PAYMENT_STATUS": {
+          "TITLE": "État de paiement de la facture",
+          "DESCRIPTION": "Consultez l'état de paiement d'une facture spécifique."
+        },
+        "CREDIT_MEMOS_LIST": {
+          "TITLE": "Avoirs",
+          "DESCRIPTION": "Consultez tous les avoirs et leur état actuel."
+        },
+        "CREDIT_MEMOS_NEW": {
+          "TITLE": "Nouvel avoir",
+          "DESCRIPTION": "Créez un nouvel avoir pour un compte client."
+        },
+        "CREDIT_MEMO_DETAIL": {
+          "TITLE": "Détail de l'avoir",
+          "DESCRIPTION": "Ouvrez la vue détaillée d'un avoir spécifique par ID."
+        }
+      },
+      "FIELD": {
+        "EVENT_ID": "ID d'événement",
+        "RULE_SET_ID": "ID de l'ensemble de règles",
+        "CREDIT_MEMO_ID": "ID de l'avoir",
+        "VENDOR_PAYMENT_ID": "ID du paiement fournisseur",
+        "INVOICE_ID": "ID de facture"
+      },
+      "PLACEHOLDER": {
+        "EVENT_ID": "Saisir l'UUID de l'événement",
+        "RULE_SET_ID": "Saisir l'ID de l'ensemble de règles",
+        "CREDIT_MEMO_ID": "Saisir l'ID de l'avoir",
+        "VENDOR_PAYMENT_ID": "Saisir l'ID du paiement fournisseur",
+        "INVOICE_ID": "Saisir l'ID de la facture"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Ouvrir la page",
+        "OPEN_EVENT": "Ouvrir l'événement",
+        "OPEN_RULE_SET": "Ouvrir l'ensemble de règles",
+        "OPEN_CREDIT_MEMO": "Ouvrir l'avoir",
+        "OPEN_VENDOR_PAYMENT": "Ouvrir le paiement fournisseur",
+        "OPEN_INVOICE_STATUS": "Voir le statut",
+        "OPENING_PAGE": "Ouverture..."
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Un ID est requis.",
+        "NAVIGATE": "Impossible d'accéder à la page demandée."
+      }
     }
   },
   "PRODUCT": {

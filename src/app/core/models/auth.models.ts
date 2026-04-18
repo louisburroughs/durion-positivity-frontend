@@ -19,3 +19,7 @@ export interface LoginResponse {
   refreshToken: string;
   tokenType: string; // 'Bearer'
 }
+
+export interface ValidateResponse {
+  valid: boolean;
+}

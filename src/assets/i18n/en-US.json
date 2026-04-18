@@ -1246,6 +1246,128 @@
       "FIELD_STATUS": "Status",
       "FIELD_GATEWAY_TXN": "Gateway Transaction ID",
       "FIELD_CREATED": "Created at"
+    },
+    "LANDING": {
+      "TITLE": "Accounting",
+      "SUBTITLE": "Monitor ingestion events, manage posting rules, apply payments, and process credit memos.",
+      "LOADING": "Loading...",
+      "STAT": {
+        "ARIA": "Accounting page statistics",
+        "PAGES": "Pages",
+        "DIRECT_LINKS": "Direct Links",
+        "GUIDED_LAUNCHES": "Guided Launches"
+      },
+      "HERO": {
+        "OPEN_EVENTS": "Ingestion Events",
+        "OPEN_POSTING_RULES": "Posting Rules"
+      },
+      "SECTION": {
+        "INGESTION": {
+          "TITLE": "Ingestion Monitor",
+          "DESCRIPTION": "Monitor and manage accounting event ingestion, review event envelopes, submit new events, and drill into individual event details."
+        },
+        "POSTING_RULES": {
+          "TITLE": "Posting Rules",
+          "DESCRIPTION": "View and manage journal posting rule sets that govern how accounting events are processed."
+        },
+        "PAYMENTS": {
+          "TITLE": "Payments",
+          "DESCRIPTION": "Apply payments to invoices, manage vendor payment runs, and review invoice payment status."
+        },
+        "CREDIT_MEMOS": {
+          "TITLE": "Credit Memos",
+          "DESCRIPTION": "Create and manage credit memos for customer accounts."
+        }
+      },
+      "CARD": {
+        "EVENTS": {
+          "TITLE": "Ingestion Events",
+          "DESCRIPTION": "Monitor all accounting ingestion event envelopes and their processing status."
+        },
+        "EVENTS_CONTRACT": {
+          "TITLE": "Event Envelope Contract",
+          "DESCRIPTION": "Review the technical contract and field definitions for accounting event envelopes."
+        },
+        "EVENTS_SUBMIT": {
+          "TITLE": "Submit Event",
+          "DESCRIPTION": "Manually submit a new accounting event envelope for ingestion."
+        },
+        "EVENTS_FAILED": {
+          "TITLE": "Failed Events",
+          "DESCRIPTION": "View all failed and quarantined ingestion events for triage and reprocessing."
+        },
+        "EVENT_DETAIL": {
+          "TITLE": "Event Detail",
+          "DESCRIPTION": "Open the detail view for a specific ingestion event by ID."
+        },
+        "POSTING_RULES_LIST": {
+          "TITLE": "Posting Rules",
+          "DESCRIPTION": "View all journal posting rule sets and their status."
+        },
+        "POSTING_RULES_DETAIL": {
+          "TITLE": "Rule Set Detail",
+          "DESCRIPTION": "Open a specific posting rule set by its rule set ID."
+        },
+        "PAYMENT_APPLY": {
+          "TITLE": "Apply Payment",
+          "DESCRIPTION": "Apply a payment to one or more outstanding invoices."
+        },
+        "VENDOR_PAYMENTS": {
+          "TITLE": "Vendor Payments",
+          "DESCRIPTION": "View all vendor payment runs and their disbursement status."
+        },
+        "VENDOR_PAYMENTS_NEW": {
+          "TITLE": "New Vendor Payment",
+          "DESCRIPTION": "Initiate a new vendor payment run."
+        },
+        "VENDOR_PAYMENT_DETAIL": {
+          "TITLE": "Vendor Payment Detail",
+          "DESCRIPTION": "Open the detail view for a specific vendor payment by ID."
+        },
+        "INVOICE_PAYMENT_STATUS": {
+          "TITLE": "Invoice Payment Status",
+          "DESCRIPTION": "Look up the payment status for a specific invoice."
+        },
+        "CREDIT_MEMOS_LIST": {
+          "TITLE": "Credit Memos",
+          "DESCRIPTION": "View all credit memos and their current status."
+        },
+        "CREDIT_MEMOS_NEW": {
+          "TITLE": "New Credit Memo",
+          "DESCRIPTION": "Create a new credit memo for a customer account."
+        },
+        "CREDIT_MEMO_DETAIL": {
+          "TITLE": "Credit Memo Detail",
+          "DESCRIPTION": "Open the detail view for a specific credit memo by ID."
+        }
+      },
+      "FIELD": {
+        "EVENT_ID": "Event ID",
+        "RULE_SET_ID": "Rule Set ID",
+        "CREDIT_MEMO_ID": "Credit Memo ID",
+        "VENDOR_PAYMENT_ID": "Vendor Payment ID",
+        "INVOICE_ID": "Invoice ID"
+      },
+      "PLACEHOLDER": {
+        "EVENT_ID": "Enter event UUID",
+        "RULE_SET_ID": "Enter rule set ID",
+        "CREDIT_MEMO_ID": "Enter credit memo ID",
+        "VENDOR_PAYMENT_ID": "Enter vendor payment ID",
+        "INVOICE_ID": "Enter invoice ID"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Open Page",
+        "OPEN_EVENT": "Open Event",
+        "OPEN_RULE_SET": "Open Rule Set",
+        "OPEN_CREDIT_MEMO": "Open Credit Memo",
+        "OPEN_VENDOR_PAYMENT": "Open Vendor Payment",
+        "OPEN_INVOICE_STATUS": "View Status",
+        "OPENING_PAGE": "Opening..."
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "An ID is required.",
+        "NAVIGATE": "Unable to navigate to the requested page."
+      }
     }
   },
   "PRODUCT": {

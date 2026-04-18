@@ -5,7 +5,7 @@ import { Observable, of, tap, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
-import { JwtClaims, LoginRequest, LoginResponse } from '../models/auth.models';
+import { JwtClaims, LoginRequest, LoginResponse, ValidateResponse } from '../models/auth.models';
 
 // Fake JWT used only when environment.mockAuth === true.
 // Payload decodes to: { sub: 'demo', roles: ['ROLE_ADMIN'], exp: 9999999999 }
@@ -147,11 +147,16 @@ export class AuthService {
     }
 
     return this.http
-      .get<void>(`${environment.apiBaseUrl}${AuthService.AUTH_BASE_PATH}/validate`, {
-        headers: { Authorization: `Bearer ${token}` },
+      .get<ValidateResponse>(`${environment.apiBaseUrl}${AuthService.AUTH_BASE_PATH}/validate`, {
+        params: { token },
       })
       .pipe(
-        map(() => true),
+        map(response => response.valid === true),
+        tap(isValid => {
+          if (!isValid) {
+            this.logoutWithRedirect(this.router.url);
+          }
+        }),
         catchError(() => {
           this.logoutWithRedirect(this.router.url);
           return of(false);

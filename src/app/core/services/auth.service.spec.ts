@@ -4,9 +4,22 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter, Router } from '@angular/router';
 
 import { AuthService } from './auth.service';
+import { LoginResponse, ValidateResponse } from '../models/auth.models';
 import { environment } from '../../../environments/environment';
 
 describe('AuthService', () => {
+  const VALID_ACCESS_TOKEN =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
+    '.eyJzdWIiOiJ1c3IiLCJyb2xlcyI6W10sImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNzAwMDAwMDAwfQ' +
+    '.sig';
+  const LOGIN_RESPONSE: LoginResponse = {
+    accessToken: VALID_ACCESS_TOKEN,
+    refreshToken: 'rt',
+    tokenType: 'Bearer',
+  };
+  const VALIDATE_SUCCESS_RESPONSE: ValidateResponse = { valid: true };
+  const VALIDATE_FAILURE_RESPONSE: ValidateResponse = { valid: false };
+
   let service: AuthService;
   let router: Router;
   let httpMock: HttpTestingController;
@@ -31,6 +44,14 @@ describe('AuthService', () => {
     (environment as any).mockAuth = true;
   });
 
+  function seedStoredSession(): void {
+    service.login({ username: 'demo', password: 'testpass' }).subscribe();
+
+    const loginRequest = httpMock.expectOne(r => r.url.includes('/security-service/v1/auth/login'));
+    expect(loginRequest.request.method).toBe('POST');
+    loginRequest.flush(LOGIN_RESPONSE);
+  }
+
   describe('logoutWithRedirect()', () => {
     it('calls router.navigate with /login, returnUrl, and sessionExpired=true', () => {
       const spy = vi.spyOn(router, 'navigate');
@@ -51,30 +72,18 @@ describe('AuthService', () => {
   });
 
   describe('validateSessionOnResume()', () => {
-    it('returns observable of true when validate endpoint succeeds', () => {
+    it('returns true when the validate endpoint reports a valid stored token', () => {
       (environment as any).mockAuth = false;
-      // Seed a token via login to ensure the service has an access token
-      const loginReq = { username: 'demo', password: /* test credential */ 'testpass' };
-      service.login(loginReq).subscribe();
-
-      // Since mockAuth is false, login makes an HTTP POST /security-service/v1/auth/login
-      const pendingLogin = httpMock.match(req => req.url.includes('/security-service/v1/auth/login'));
-      if (pendingLogin.length) {
-        pendingLogin[0].flush({
-          accessToken:
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
-            '.eyJzdWIiOiJ1c3IiLCJyb2xlcyI6W10sImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNzAwMDAwMDAwfQ' +
-            '.sig',
-          refreshToken: 'rt',
-          tokenType: 'Bearer',
-        });
-      }
+      seedStoredSession();
 
       let result: boolean | undefined;
       service.validateSessionOnResume().subscribe(v => (result = v));
 
       const req = httpMock.expectOne(r => r.url.includes('/security-service/v1/auth/validate'));
-      req.flush(null, { status: 200, statusText: 'OK' });
+      expect(req.request.method).toBe('GET');
+      expect(req.request.params.get('token')).toBe(VALID_ACCESS_TOKEN);
+      expect(req.request.headers.has('Authorization')).toBe(false);
+      req.flush(VALIDATE_SUCCESS_RESPONSE);
 
       expect(result).toBe(true);
     });
@@ -82,20 +91,7 @@ describe('AuthService', () => {
     it('calls logoutWithRedirect() and returns of(false) when validate endpoint errors', () => {
       (environment as any).mockAuth = false;
       const logoutRedirectSpy = vi.spyOn(service, 'logoutWithRedirect');
-      const loginReq = { username: 'demo', password: /* test credential */ 'testpass' };
-      service.login(loginReq).subscribe();
-
-      const pendingLogin = httpMock.match(req => req.url.includes('/security-service/v1/auth/login'));
-      if (pendingLogin.length) {
-        pendingLogin[0].flush({
-          accessToken:
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
-            '.eyJzdWIiOiJ1c3IiLCJyb2xlcyI6W10sImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNzAwMDAwMDAwfQ' +
-            '.sig',
-          refreshToken: 'rt',
-          tokenType: 'Bearer',
-        });
-      }
+      seedStoredSession();
 
       let result: boolean | undefined;
       service.validateSessionOnResume().subscribe(v => (result = v));
@@ -118,23 +114,25 @@ describe('AuthService', () => {
       expect(result).toBe(false);
     });
 
+    it('calls logoutWithRedirect() and returns false when validate endpoint reports valid=false', () => {
+      (environment as any).mockAuth = false;
+      const logoutRedirectSpy = vi.spyOn(service, 'logoutWithRedirect');
+      seedStoredSession();
+
+      let result: boolean | undefined;
+      service.validateSessionOnResume().subscribe(v => (result = v));
+
+      const req = httpMock.expectOne(r => r.url.includes('/security-service/v1/auth/validate'));
+      req.flush(VALIDATE_FAILURE_RESPONSE);
+
+      expect(logoutRedirectSpy).toHaveBeenCalled();
+      expect(result).toBe(false);
+    });
+
     it('calls logoutWithRedirect() and returns of(false) when validate endpoint returns 500', () => {
       (environment as any).mockAuth = false;
       const logoutRedirectSpy = vi.spyOn(service, 'logoutWithRedirect');
-      const loginReq = { username: 'demo', password: /* test credential */ 'testpass' };
-      service.login(loginReq).subscribe();
-
-      const pendingLogin = httpMock.match(req => req.url.includes('/security-service/v1/auth/login'));
-      if (pendingLogin.length) {
-        pendingLogin[0].flush({
-          accessToken:
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
-            '.eyJzdWIiOiJ1c3IiLCJyb2xlcyI6W10sImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNzAwMDAwMDAwfQ' +
-            '.sig',
-          refreshToken: 'rt',
-          tokenType: 'Bearer',
-        });
-      }
+      seedStoredSession();
 
       let result: boolean | undefined;
       service.validateSessionOnResume().subscribe(v => (result = v));
@@ -172,19 +170,7 @@ describe('AuthService', () => {
     it('T6: calls logoutWithRedirect with sessionExpired=true and returns of(false) on 401', () => {
       (environment as any).mockAuth = false;
       const navigateSpy = vi.spyOn(router, 'navigate');
-      service.login({ username: 'demo', password: /* test credential */ 'testpass' }).subscribe();
-
-      const pendingLogin = httpMock.match(req => req.url.includes('/security-service/v1/auth/login'));
-      if (pendingLogin.length) {
-        pendingLogin[0].flush({
-          accessToken:
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
-            '.eyJzdWIiOiJ1c3IiLCJyb2xlcyI6W10sImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNzAwMDAwMDAwfQ' +
-            '.sig',
-          refreshToken: 'rt',
-          tokenType: 'Bearer',
-        });
-      }
+      seedStoredSession();
 
       let result: boolean | undefined;
       service.validateSessionOnResume().subscribe(v => (result = v));

@@ -7,6 +7,14 @@ export const ACCOUNTING_ROUTES: Routes = [
     component: AccountingComponent,
     children: [
       {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./pages/landing/accounting-landing-page.component').then(
+            m => m.AccountingLandingPageComponent,
+          ),
+      },
+      {
         path: 'events',
         loadComponent: () =>
           import('./pages/ingestion-monitor/ingestion-monitor-list/ingestion-monitor-list-page.component').then(
@@ -109,7 +117,6 @@ export const ACCOUNTING_ROUTES: Routes = [
             m => m.InvoicePaymentStatusPageComponent,
           ),
       },
-      { path: '**', redirectTo: 'events' },
     ],
   },
 ];
