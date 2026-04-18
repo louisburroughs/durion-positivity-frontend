@@ -1784,6 +1784,173 @@
       "DEBIT_TOTAL": "Total de Débitos",
       "CREDIT_TOTAL": "Total de Créditos",
       "NET": "Total Neto"
+    },
+    "LANDING": {
+      "TITLE": "Órdenes de Trabajo y Presupuestos",
+      "SUBTITLE": "Gestione presupuestos, aprobaciones de clientes, ejecución de órdenes de trabajo y facturación final desde un solo lugar.",
+      "HERO_CTA_NEW": "Nuevo Presupuesto",
+      "HERO_CTA_LIST": "Ver Presupuestos",
+      "STAT": {
+        "TOTAL_PAGES": "Total de Páginas",
+        "DIRECT_PAGES": "Páginas Directas",
+        "GUIDED_LAUNCHES": "Accesos Guiados"
+      },
+      "STATS_ARIA": "Estadísticas del módulo Órdenes de Trabajo",
+      "BADGE": {
+        "DIRECT": "Directo",
+        "GUIDED": "Guiado"
+      },
+      "SECTION": {
+        "ESTIMATES": {
+          "TITLE": "Presupuestos",
+          "DESCRIPTION": "Cree, revise y perfeccione presupuestos incluyendo piezas, mano de obra y precios."
+        },
+        "APPROVAL": {
+          "TITLE": "Aprobación del Cliente",
+          "DESCRIPTION": "Envíe presupuestos para aprobación y capture la firma del cliente de forma digital o en persona."
+        },
+        "WORKORDERS": {
+          "TITLE": "Ejecución de Órdenes de Trabajo",
+          "DESCRIPTION": "Convierta presupuestos en órdenes de trabajo, asigne técnicos, realice seguimiento y finalice la facturación."
+        },
+        "TOOLS": {
+          "TITLE": "Herramientas del Taller",
+          "DESCRIPTION": "Utilidades para registro de tiempo de desplazamiento y temporizadores de trabajo en vivo."
+        }
+      },
+      "CARD": {
+        "ESTIMATE_LIST": {
+          "TITLE": "Lista de Presupuestos",
+          "DESCRIPTION": "Explore y busque todos los presupuestos de órdenes activas y completadas."
+        },
+        "ESTIMATE_NEW": {
+          "TITLE": "Crear Presupuesto",
+          "DESCRIPTION": "Inicie un nuevo presupuesto desde cero para el vehículo de un cliente."
+        },
+        "ESTIMATE_FROM_APPOINTMENT": {
+          "TITLE": "Presupuesto desde Cita",
+          "DESCRIPTION": "Convierta una cita programada directamente en un presupuesto borrador."
+        },
+        "ESTIMATE_DETAIL": {
+          "TITLE": "Detalle del Presupuesto",
+          "DESCRIPTION": "Abra el espacio de trabajo completo del presupuesto para un ID específico."
+        },
+        "ESTIMATE_PARTS": {
+          "TITLE": "Piezas del Presupuesto",
+          "DESCRIPTION": "Vea y edite las piezas de un presupuesto por ID."
+        },
+        "ESTIMATE_LABOR": {
+          "TITLE": "Mano de Obra del Presupuesto",
+          "DESCRIPTION": "Vea y edite las operaciones de mano de obra de un presupuesto por ID."
+        },
+        "ESTIMATE_REVISE": {
+          "TITLE": "Revisar Presupuesto",
+          "DESCRIPTION": "Revise un presupuesto enviado que ha sido devuelto para cambios."
+        },
+        "ESTIMATE_SUMMARY": {
+          "TITLE": "Resumen del Presupuesto",
+          "DESCRIPTION": "Vea el resumen de líneas y totales finales de un presupuesto."
+        },
+        "APPROVAL_SUBMIT": {
+          "TITLE": "Enviar para Aprobación",
+          "DESCRIPTION": "Envíe un presupuesto al cliente para su revisión y aprobación."
+        },
+        "APPROVAL_DIGITAL": {
+          "TITLE": "Aprobación Digital",
+          "DESCRIPTION": "Capture aprobación digital remota mediante enlace por SMS o correo electrónico."
+        },
+        "APPROVAL_IN_PERSON": {
+          "TITLE": "Aprobación en Persona",
+          "DESCRIPTION": "Registre la firma de aprobación del cliente en persona."
+        },
+        "APPROVAL_PARTIAL": {
+          "TITLE": "Aprobación Parcial",
+          "DESCRIPTION": "Registre una aprobación parcial donde el cliente aprueba líneas seleccionadas."
+        },
+        "APPROVAL_DETAIL": {
+          "TITLE": "Detalle de Aprobación",
+          "DESCRIPTION": "Vea el estado e historial de un registro de aprobación específico."
+        },
+        "WIP_STATUS": {
+          "TITLE": "Tablero WIP",
+          "DESCRIPTION": "Tablero en vivo de trabajos en progreso con todas las órdenes activas y su estado."
+        },
+        "WORKORDER_DETAIL": {
+          "TITLE": "Detalle de la Orden de Trabajo",
+          "DESCRIPTION": "Abra el centro de la orden de trabajo para un ID específico."
+        },
+        "WORKORDER_ASSIGN": {
+          "TITLE": "Asignar Técnicos",
+          "DESCRIPTION": "Asigne o reasigne técnicos a los trabajos de una orden."
+        },
+        "WORKORDER_LABOR": {
+          "TITLE": "Mano de Obra de la Orden",
+          "DESCRIPTION": "Gestione y realice seguimiento de las operaciones de mano de obra en una orden."
+        },
+        "WORKORDER_PARTS": {
+          "TITLE": "Piezas de la Orden",
+          "DESCRIPTION": "Gestione el consumo y adición de piezas en una orden de trabajo."
+        },
+        "WORKORDER_CHANGE_REQUESTS": {
+          "TITLE": "Solicitudes de Cambio",
+          "DESCRIPTION": "Revise y actúe sobre las solicitudes de cambio durante la ejecución."
+        },
+        "WORKORDER_FINALIZE": {
+          "TITLE": "Finalizar Orden de Trabajo",
+          "DESCRIPTION": "Bloquee el alcance facturable y prepare la orden para la generación de factura."
+        },
+        "INVOICE_FINALIZATION": {
+          "TITLE": "Finalización de Factura",
+          "DESCRIPTION": "Revise y finalice la factura asociada a una orden de trabajo completada."
+        },
+        "OPERATIONAL_CONTEXT": {
+          "TITLE": "Contexto Operacional",
+          "DESCRIPTION": "Vea el contexto operacional en tiempo real y diagnósticos de una orden."
+        },
+        "TRAVEL_TIME": {
+          "TITLE": "Registro de Tiempo de Viaje",
+          "DESCRIPTION": "Registre el tiempo de desplazamiento del técnico para facturación o reportes."
+        },
+        "TIMER": {
+          "TITLE": "Temporizador de Trabajo",
+          "DESCRIPTION": "Inicie, pause y detenga temporizadores en vivo para tareas activas de órdenes."
+        }
+      },
+      "FIELD": {
+        "ESTIMATE_ID": "ID del Presupuesto",
+        "APPROVAL_ID": "ID de Aprobación",
+        "WORKORDER_ID": "ID de Orden de Trabajo"
+      },
+      "PLACEHOLDER": {
+        "ESTIMATE_ID": "ej. EST-1234",
+        "APPROVAL_ID": "ej. APR-5678",
+        "WORKORDER_ID": "ej. WO-9012"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Abrir Página",
+        "OPEN_ESTIMATE": "Abrir Presupuesto",
+        "OPEN_ESTIMATE_PARTS": "Abrir Piezas",
+        "OPEN_ESTIMATE_LABOR": "Abrir Mano de Obra",
+        "OPEN_ESTIMATE_REVISE": "Abrir Revisión",
+        "OPEN_ESTIMATE_SUMMARY": "Abrir Resumen",
+        "OPEN_APPROVAL_SUBMIT": "Enviar Aprobación",
+        "OPEN_APPROVAL_DIGITAL": "Abrir Aprobación Digital",
+        "OPEN_APPROVAL_IN_PERSON": "Abrir Aprobación en Persona",
+        "OPEN_APPROVAL_PARTIAL": "Abrir Aprobación Parcial",
+        "OPEN_APPROVAL_DETAIL": "Abrir Detalle de Aprobación",
+        "OPEN_WORKORDER": "Abrir Orden",
+        "OPEN_WORKORDER_ASSIGN": "Abrir Asignación",
+        "OPEN_WORKORDER_LABOR": "Abrir Mano de Obra",
+        "OPEN_WORKORDER_PARTS": "Abrir Piezas",
+        "OPEN_WORKORDER_CHANGE_REQUESTS": "Abrir Solicitudes de Cambio",
+        "OPEN_WORKORDER_FINALIZE": "Finalizar Orden",
+        "OPEN_INVOICE_FINALIZATION": "Abrir Factura",
+        "OPEN_OPERATIONAL_CONTEXT": "Abrir Contexto"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Se requiere un identificador para abrir esta página.",
+        "NAVIGATE": "Error de navegación. Verifique el ID e intente de nuevo."
+      }
     }
   },
   "INVENTORY": {

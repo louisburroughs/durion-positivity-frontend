@@ -1784,6 +1784,173 @@
       "DEBIT_TOTAL": "Total Debits",
       "CREDIT_TOTAL": "Total Credits",
       "NET": "Net Total"
+    },
+    "LANDING": {
+      "TITLE": "Work Orders & Estimates",
+      "SUBTITLE": "Manage estimates, customer approvals, workorder execution, and final invoicing from one place.",
+      "HERO_CTA_NEW": "New Estimate",
+      "HERO_CTA_LIST": "View Estimates",
+      "STAT": {
+        "TOTAL_PAGES": "Total Pages",
+        "DIRECT_PAGES": "Direct Pages",
+        "GUIDED_LAUNCHES": "Guided Launches"
+      },
+      "STATS_ARIA": "Work Orders module statistics",
+      "BADGE": {
+        "DIRECT": "Direct",
+        "GUIDED": "Guided"
+      },
+      "SECTION": {
+        "ESTIMATES": {
+          "TITLE": "Estimates",
+          "DESCRIPTION": "Create, review, and refine estimates including parts, labor, and pricing."
+        },
+        "APPROVAL": {
+          "TITLE": "Customer Approval",
+          "DESCRIPTION": "Submit estimates for approval and capture customer sign-off digitally or in person."
+        },
+        "WORKORDERS": {
+          "TITLE": "Workorder Execution",
+          "DESCRIPTION": "Promote estimates to workorders, assign technicians, track progress, and finalize billing."
+        },
+        "TOOLS": {
+          "TITLE": "Shop Tools",
+          "DESCRIPTION": "Utilities for travel time capture and live job timers."
+        }
+      },
+      "CARD": {
+        "ESTIMATE_LIST": {
+          "TITLE": "Estimate List",
+          "DESCRIPTION": "Browse and search all estimates across active and completed workorders."
+        },
+        "ESTIMATE_NEW": {
+          "TITLE": "Create Estimate",
+          "DESCRIPTION": "Start a new estimate from scratch for a customer vehicle."
+        },
+        "ESTIMATE_FROM_APPOINTMENT": {
+          "TITLE": "Estimate from Appointment",
+          "DESCRIPTION": "Promote a scheduled appointment directly into a draft estimate."
+        },
+        "ESTIMATE_DETAIL": {
+          "TITLE": "Estimate Detail",
+          "DESCRIPTION": "Open the full estimate workspace for a specific estimate ID."
+        },
+        "ESTIMATE_PARTS": {
+          "TITLE": "Estimate Parts",
+          "DESCRIPTION": "View and edit parts on an estimate by estimate ID."
+        },
+        "ESTIMATE_LABOR": {
+          "TITLE": "Estimate Labor",
+          "DESCRIPTION": "View and edit labor operations on an estimate by estimate ID."
+        },
+        "ESTIMATE_REVISE": {
+          "TITLE": "Revise Estimate",
+          "DESCRIPTION": "Revise a submitted estimate that has been returned for changes."
+        },
+        "ESTIMATE_SUMMARY": {
+          "TITLE": "Estimate Summary",
+          "DESCRIPTION": "View the final line-item summary and totals for an estimate."
+        },
+        "APPROVAL_SUBMIT": {
+          "TITLE": "Submit for Approval",
+          "DESCRIPTION": "Submit an estimate to the customer for review and approval."
+        },
+        "APPROVAL_DIGITAL": {
+          "TITLE": "Digital Approval",
+          "DESCRIPTION": "Capture remote digital approval via SMS or email link."
+        },
+        "APPROVAL_IN_PERSON": {
+          "TITLE": "In-Person Approval",
+          "DESCRIPTION": "Record a customer's in-person signature approval."
+        },
+        "APPROVAL_PARTIAL": {
+          "TITLE": "Partial Approval",
+          "DESCRIPTION": "Record a partial approval where the customer approves selected line items."
+        },
+        "APPROVAL_DETAIL": {
+          "TITLE": "Approval Detail",
+          "DESCRIPTION": "View the status and history of a specific approval record."
+        },
+        "WIP_STATUS": {
+          "TITLE": "WIP Status Board",
+          "DESCRIPTION": "Live work-in-progress board showing all active workorders and their current status."
+        },
+        "WORKORDER_DETAIL": {
+          "TITLE": "Workorder Detail",
+          "DESCRIPTION": "Open the full workorder hub for a specific workorder ID."
+        },
+        "WORKORDER_ASSIGN": {
+          "TITLE": "Assign Technicians",
+          "DESCRIPTION": "Assign or reassign technicians to jobs on a workorder."
+        },
+        "WORKORDER_LABOR": {
+          "TITLE": "Workorder Labor",
+          "DESCRIPTION": "Manage and track labor operations on a workorder."
+        },
+        "WORKORDER_PARTS": {
+          "TITLE": "Workorder Parts",
+          "DESCRIPTION": "Manage parts consumption and additions on a workorder."
+        },
+        "WORKORDER_CHANGE_REQUESTS": {
+          "TITLE": "Change Requests",
+          "DESCRIPTION": "Review and act on change requests raised during workorder execution."
+        },
+        "WORKORDER_FINALIZE": {
+          "TITLE": "Finalize Workorder",
+          "DESCRIPTION": "Lock the billable scope and prepare a workorder for invoice generation."
+        },
+        "INVOICE_FINALIZATION": {
+          "TITLE": "Invoice Finalization",
+          "DESCRIPTION": "Review and finalize the invoice associated with a completed workorder."
+        },
+        "OPERATIONAL_CONTEXT": {
+          "TITLE": "Operational Context",
+          "DESCRIPTION": "View real-time operational context and diagnostics for a workorder."
+        },
+        "TRAVEL_TIME": {
+          "TITLE": "Travel Time Capture",
+          "DESCRIPTION": "Log technician travel time to a job site for billing or reporting."
+        },
+        "TIMER": {
+          "TITLE": "Job Timer",
+          "DESCRIPTION": "Start, pause, and stop live job timers for active workorder tasks."
+        }
+      },
+      "FIELD": {
+        "ESTIMATE_ID": "Estimate ID",
+        "APPROVAL_ID": "Approval ID",
+        "WORKORDER_ID": "Workorder ID"
+      },
+      "PLACEHOLDER": {
+        "ESTIMATE_ID": "e.g. EST-1234",
+        "APPROVAL_ID": "e.g. APR-5678",
+        "WORKORDER_ID": "e.g. WO-9012"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Open Page",
+        "OPEN_ESTIMATE": "Open Estimate",
+        "OPEN_ESTIMATE_PARTS": "Open Parts",
+        "OPEN_ESTIMATE_LABOR": "Open Labor",
+        "OPEN_ESTIMATE_REVISE": "Open Revision",
+        "OPEN_ESTIMATE_SUMMARY": "Open Summary",
+        "OPEN_APPROVAL_SUBMIT": "Submit Approval",
+        "OPEN_APPROVAL_DIGITAL": "Open Digital Approval",
+        "OPEN_APPROVAL_IN_PERSON": "Open In-Person Approval",
+        "OPEN_APPROVAL_PARTIAL": "Open Partial Approval",
+        "OPEN_APPROVAL_DETAIL": "Open Approval Detail",
+        "OPEN_WORKORDER": "Open Workorder",
+        "OPEN_WORKORDER_ASSIGN": "Open Assignment",
+        "OPEN_WORKORDER_LABOR": "Open Labor",
+        "OPEN_WORKORDER_PARTS": "Open Parts",
+        "OPEN_WORKORDER_CHANGE_REQUESTS": "Open Change Requests",
+        "OPEN_WORKORDER_FINALIZE": "Finalize Workorder",
+        "OPEN_INVOICE_FINALIZATION": "Open Invoice",
+        "OPEN_OPERATIONAL_CONTEXT": "Open Context"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "An identifier is required to open this page.",
+        "NAVIGATE": "Navigation failed. Please check the ID and try again."
+      }
     }
   },
   "INVENTORY": {

@@ -1784,6 +1784,173 @@
       "DEBIT_TOTAL": "Total des débits",
       "CREDIT_TOTAL": "Total des crédits",
       "NET": "Total net"
+    },
+    "LANDING": {
+      "TITLE": "Ordres de travail et devis",
+      "SUBTITLE": "Gérez les devis, les approbations clients, l'exécution des ordres de travail et la facturation finale depuis un seul endroit.",
+      "HERO_CTA_NEW": "Nouveau devis",
+      "HERO_CTA_LIST": "Voir les devis",
+      "STAT": {
+        "TOTAL_PAGES": "Pages totales",
+        "DIRECT_PAGES": "Pages directes",
+        "GUIDED_LAUNCHES": "Accès guidés"
+      },
+      "STATS_ARIA": "Statistiques du module Ordres de travail",
+      "BADGE": {
+        "DIRECT": "Direct",
+        "GUIDED": "Guidé"
+      },
+      "SECTION": {
+        "ESTIMATES": {
+          "TITLE": "Devis",
+          "DESCRIPTION": "Créez, révisez et affinez les devis, incluant les pièces, la main-d'œuvre et les prix."
+        },
+        "APPROVAL": {
+          "TITLE": "Approbation client",
+          "DESCRIPTION": "Soumettez les devis pour approbation et capturez la signature du client numériquement ou en personne."
+        },
+        "WORKORDERS": {
+          "TITLE": "Exécution des ordres de travail",
+          "DESCRIPTION": "Convertissez les devis en ordres de travail, assignez des techniciens, suivez la progression et finalisez la facturation."
+        },
+        "TOOLS": {
+          "TITLE": "Outils d'atelier",
+          "DESCRIPTION": "Utilitaires pour la saisie du temps de déplacement et les minuteries de travail en direct."
+        }
+      },
+      "CARD": {
+        "ESTIMATE_LIST": {
+          "TITLE": "Liste des devis",
+          "DESCRIPTION": "Parcourez et recherchez tous les devis des ordres actifs et terminés."
+        },
+        "ESTIMATE_NEW": {
+          "TITLE": "Créer un devis",
+          "DESCRIPTION": "Créez un nouveau devis de toutes pièces pour le véhicule d'un client."
+        },
+        "ESTIMATE_FROM_APPOINTMENT": {
+          "TITLE": "Devis depuis un rendez-vous",
+          "DESCRIPTION": "Convertissez un rendez-vous planifié directement en brouillon de devis."
+        },
+        "ESTIMATE_DETAIL": {
+          "TITLE": "Détail du devis",
+          "DESCRIPTION": "Ouvrez l'espace de travail complet du devis pour un identifiant spécifique."
+        },
+        "ESTIMATE_PARTS": {
+          "TITLE": "Pièces du devis",
+          "DESCRIPTION": "Consultez et modifiez les pièces d'un devis par identifiant."
+        },
+        "ESTIMATE_LABOR": {
+          "TITLE": "Main-d'œuvre du devis",
+          "DESCRIPTION": "Consultez et modifiez les opérations de main-d'œuvre d'un devis par identifiant."
+        },
+        "ESTIMATE_REVISE": {
+          "TITLE": "Réviser le devis",
+          "DESCRIPTION": "Révisez un devis soumis qui a été retourné pour modifications."
+        },
+        "ESTIMATE_SUMMARY": {
+          "TITLE": "Résumé du devis",
+          "DESCRIPTION": "Consultez le récapitulatif des lignes et les totaux finaux d'un devis."
+        },
+        "APPROVAL_SUBMIT": {
+          "TITLE": "Soumettre pour approbation",
+          "DESCRIPTION": "Soumettez un devis au client pour révision et approbation."
+        },
+        "APPROVAL_DIGITAL": {
+          "TITLE": "Approbation numérique",
+          "DESCRIPTION": "Capturez une approbation numérique à distance via un lien SMS ou courriel."
+        },
+        "APPROVAL_IN_PERSON": {
+          "TITLE": "Approbation en personne",
+          "DESCRIPTION": "Enregistrez la signature d'approbation du client en personne."
+        },
+        "APPROVAL_PARTIAL": {
+          "TITLE": "Approbation partielle",
+          "DESCRIPTION": "Enregistrez une approbation partielle où le client approuve des lignes sélectionnées."
+        },
+        "APPROVAL_DETAIL": {
+          "TITLE": "Détail de l'approbation",
+          "DESCRIPTION": "Consultez l'état et l'historique d'un enregistrement d'approbation spécifique."
+        },
+        "WIP_STATUS": {
+          "TITLE": "Tableau WIP",
+          "DESCRIPTION": "Tableau en direct des travaux en cours avec tous les ordres actifs et leur état."
+        },
+        "WORKORDER_DETAIL": {
+          "TITLE": "Détail de l'ordre de travail",
+          "DESCRIPTION": "Ouvrez le centre de l'ordre de travail pour un identifiant spécifique."
+        },
+        "WORKORDER_ASSIGN": {
+          "TITLE": "Assigner des techniciens",
+          "DESCRIPTION": "Assignez ou réassignez des techniciens aux travaux d'un ordre."
+        },
+        "WORKORDER_LABOR": {
+          "TITLE": "Main-d'œuvre de l'ordre",
+          "DESCRIPTION": "Gérez et suivez les opérations de main-d'œuvre sur un ordre de travail."
+        },
+        "WORKORDER_PARTS": {
+          "TITLE": "Pièces de l'ordre",
+          "DESCRIPTION": "Gérez la consommation et l'ajout de pièces sur un ordre de travail."
+        },
+        "WORKORDER_CHANGE_REQUESTS": {
+          "TITLE": "Demandes de modification",
+          "DESCRIPTION": "Révisez et traitez les demandes de modification pendant l'exécution."
+        },
+        "WORKORDER_FINALIZE": {
+          "TITLE": "Finaliser l'ordre de travail",
+          "DESCRIPTION": "Verrouillez la portée facturable et préparez l'ordre pour la génération de facture."
+        },
+        "INVOICE_FINALIZATION": {
+          "TITLE": "Finalisation de la facture",
+          "DESCRIPTION": "Révisez et finalisez la facture associée à un ordre de travail terminé."
+        },
+        "OPERATIONAL_CONTEXT": {
+          "TITLE": "Contexte opérationnel",
+          "DESCRIPTION": "Consultez le contexte opérationnel en temps réel et les diagnostics d'un ordre."
+        },
+        "TRAVEL_TIME": {
+          "TITLE": "Saisie du temps de déplacement",
+          "DESCRIPTION": "Enregistrez le temps de déplacement du technicien pour la facturation ou les rapports."
+        },
+        "TIMER": {
+          "TITLE": "Minuterie de travail",
+          "DESCRIPTION": "Démarrez, mettez en pause et arrêtez les minuteries en direct pour les tâches actives."
+        }
+      },
+      "FIELD": {
+        "ESTIMATE_ID": "ID du devis",
+        "APPROVAL_ID": "ID d'approbation",
+        "WORKORDER_ID": "ID de l'ordre de travail"
+      },
+      "PLACEHOLDER": {
+        "ESTIMATE_ID": "ex. EST-1234",
+        "APPROVAL_ID": "ex. APR-5678",
+        "WORKORDER_ID": "ex. WO-9012"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Ouvrir la page",
+        "OPEN_ESTIMATE": "Ouvrir le devis",
+        "OPEN_ESTIMATE_PARTS": "Ouvrir les pièces",
+        "OPEN_ESTIMATE_LABOR": "Ouvrir la main-d'œuvre",
+        "OPEN_ESTIMATE_REVISE": "Ouvrir la révision",
+        "OPEN_ESTIMATE_SUMMARY": "Ouvrir le résumé",
+        "OPEN_APPROVAL_SUBMIT": "Soumettre l'approbation",
+        "OPEN_APPROVAL_DIGITAL": "Ouvrir l'approbation numérique",
+        "OPEN_APPROVAL_IN_PERSON": "Ouvrir l'approbation en personne",
+        "OPEN_APPROVAL_PARTIAL": "Ouvrir l'approbation partielle",
+        "OPEN_APPROVAL_DETAIL": "Ouvrir le détail de l'approbation",
+        "OPEN_WORKORDER": "Ouvrir l'ordre",
+        "OPEN_WORKORDER_ASSIGN": "Ouvrir l'assignation",
+        "OPEN_WORKORDER_LABOR": "Ouvrir la main-d'œuvre",
+        "OPEN_WORKORDER_PARTS": "Ouvrir les pièces",
+        "OPEN_WORKORDER_CHANGE_REQUESTS": "Ouvrir les demandes de modification",
+        "OPEN_WORKORDER_FINALIZE": "Finaliser l'ordre",
+        "OPEN_INVOICE_FINALIZATION": "Ouvrir la facture",
+        "OPEN_OPERATIONAL_CONTEXT": "Ouvrir le contexte"
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Un identifiant est requis pour ouvrir cette page.",
+        "NAVIGATE": "Échec de la navigation. Vérifiez l'identifiant et réessayez."
+      }
     }
   },
   "INVENTORY": {

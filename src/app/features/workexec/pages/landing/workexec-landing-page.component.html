@@ -1,0 +1,124 @@
+<section class="workexec-hero" aria-labelledby="workexec-hero-heading">
+  <div class="workexec-hero-eyebrow" aria-hidden="true">
+    {{ 'SHELL.NAV.WORKORDERS' | translate }}
+  </div>
+  <h1 id="workexec-hero-heading" class="workexec-hero-title">
+    {{ 'WORKEXEC.LANDING.TITLE' | translate }}
+  </h1>
+  <p class="workexec-hero-subtitle">
+    {{ 'WORKEXEC.LANDING.SUBTITLE' | translate }}
+  </p>
+  <div class="workexec-hero-actions">
+    <a
+      class="workexec-btn-primary"
+      [routerLink]="heroEstimateNewRoute"
+    >
+      {{ 'WORKEXEC.LANDING.HERO_CTA_NEW' | translate }}
+    </a>
+    <a
+      class="workexec-btn-secondary"
+      [routerLink]="heroEstimateListRoute"
+    >
+      {{ 'WORKEXEC.LANDING.HERO_CTA_LIST' | translate }}
+    </a>
+  </div>
+  <div class="workexec-hero-stats" aria-label="{{ 'WORKEXEC.LANDING.STATS_ARIA' | translate }}">
+    <div class="workexec-hero-stat">
+      <span class="workexec-hero-stat-number">{{ totalPageCount }}</span>
+      <span class="workexec-hero-stat-label">{{ 'WORKEXEC.LANDING.STAT.TOTAL_PAGES' | translate }}</span>
+    </div>
+    <div class="workexec-hero-stat">
+      <span class="workexec-hero-stat-number">{{ directLinkCount }}</span>
+      <span class="workexec-hero-stat-label">{{ 'WORKEXEC.LANDING.STAT.DIRECT_PAGES' | translate }}</span>
+    </div>
+    <div class="workexec-hero-stat">
+      <span class="workexec-hero-stat-number">{{ guidedLinkCount }}</span>
+      <span class="workexec-hero-stat-label">{{ 'WORKEXEC.LANDING.STAT.GUIDED_LAUNCHES' | translate }}</span>
+    </div>
+  </div>
+</section>
+
+@if (state() === 'error') {
+  <div class="workexec-global-error" role="alert">
+    <span>{{ errorKey() | translate }}</span>
+  </div>
+}
+
+@for (section of sections; track section.titleKey) {
+  <section class="workexec-section" aria-labelledby="{{ section.titleKey }}-heading">
+    <div class="workexec-section-header">
+      <h2 id="{{ section.titleKey }}-heading" class="workexec-section-title">
+        {{ section.titleKey | translate }}
+      </h2>
+      <p class="workexec-section-description">{{ section.descriptionKey | translate }}</p>
+    </div>
+    <ul class="workexec-card-grid">
+      @for (card of section.cards; track card.titleKey) {
+        <li class="workexec-card">
+          @if (isLaunchCard(card)) {
+            <div class="workexec-card-header">
+              <div class="workexec-card-badge workexec-card-badge--guided" aria-hidden="true">
+                {{ 'WORKEXEC.LANDING.BADGE.GUIDED' | translate }}
+              </div>
+              <h3 class="workexec-card-title">{{ card.titleKey | translate }}</h3>
+            </div>
+            <p class="workexec-card-description">{{ card.descriptionKey | translate }}</p>
+            <div class="workexec-card-launch">
+              <label class="workexec-card-label" [for]="card.field + '-input'">
+                {{ card.inputLabelKey | translate }}
+              </label>
+              <input
+                [id]="card.field + '-input'"
+                class="workexec-card-input"
+                [class.workexec-card-input--error]="launchError(card.field)"
+                type="text"
+                [placeholder]="card.inputPlaceholderKey | translate"
+                [value]="launchValue(card.field)"
+                (input)="updateLaunchValue(card.field, $any($event.target).value)"
+                [attr.aria-describedby]="launchError(card.field) ? card.field + '-error' : null"
+                [attr.aria-invalid]="launchError(card.field) ? 'true' : null"
+              />
+              @if (launchError(card.field)) {
+                <span
+                  [id]="card.field + '-error'"
+                  class="workexec-card-input-error"
+                  role="alert"
+                >
+                  {{ launchError(card.field)! | translate }}
+                </span>
+              }
+              <button
+                class="workexec-card-launch-btn"
+                type="button"
+                [disabled]="state() === 'loading' && activeLaunchField() === card.field"
+                (click)="openLaunch(card)"
+                [attr.aria-label]="card.actionKey | translate"
+                [attr.aria-busy]="state() === 'loading' && activeLaunchField() === card.field"
+              >
+                @if (state() === 'loading' && activeLaunchField() === card.field) {
+                  <span class="workexec-card-spinner" aria-hidden="true"></span>
+                }
+                {{ card.actionKey | translate }}
+              </button>
+            </div>
+          } @else {
+            <div class="workexec-card-header">
+              <div class="workexec-card-badge workexec-card-badge--direct" aria-hidden="true">
+                {{ 'WORKEXEC.LANDING.BADGE.DIRECT' | translate }}
+              </div>
+              <h3 class="workexec-card-title">{{ card.titleKey | translate }}</h3>
+            </div>
+            <p class="workexec-card-description">{{ card.descriptionKey | translate }}</p>
+            <a
+              class="workexec-card-direct-link"
+              [routerLink]="card.route"
+              [attr.aria-label]="card.actionKey | translate"
+            >
+              {{ card.actionKey | translate }}
+            </a>
+          }
+        </li>
+      }
+    </ul>
+  </section>
+}

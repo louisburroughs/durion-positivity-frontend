@@ -15,6 +15,16 @@ export const WORKEXEC_ROUTES: Routes = [
     path: '',
     component: WorkexecComponent,
     children: [
+      // ── Landing page ──────────────────────────────────────────────────────
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./pages/landing/workexec-landing-page.component').then(
+            m => m.WorkexecLandingPageComponent,
+          ),
+      },
+
       // ── CAP-002: Estimate Management ──────────────────────────────────────
 
       {
@@ -235,7 +245,6 @@ export const WORKEXEC_ROUTES: Routes = [
           ),
       },
 
-      { path: '**', redirectTo: 'estimates/new' },
     ],
   },
 ];
