@@ -285,6 +285,105 @@
     }
   },
   "CRM": {
+    "LANDING": {
+      "TITLE": "Clients",
+      "SUBTITLE": "Gérez les comptes clients, suivez les détails des parties et accédez aux informations d'intégration.",
+      "LOADING": "Chargement...",
+      "ROUTE_LABEL": "Route",
+      "STAT": {
+        "ARIA": "Statistiques des pages clients",
+        "PAGES": "Pages",
+        "DIRECT_LINKS": "Accès directs",
+        "GUIDED_LAUNCHES": "Accès guidés"
+      },
+      "HERO": {
+        "OPEN_CUSTOMERS": "Répertoire des clients",
+        "CREATE_ACCOUNT": "Nouveau compte commercial"
+      },
+      "SECTION": {
+        "DIRECTORY": {
+          "TITLE": "Répertoire des clients",
+          "DESCRIPTION": "Parcourez la liste complète des clients, créez de nouveaux comptes commerciaux ou individuels et fusionnez les doublons."
+        },
+        "PARTY": {
+          "TITLE": "Détails de la partie",
+          "DESCRIPTION": "Consultez les profils des parties, ajoutez des véhicules, gérez les contacts et configurez les règles de facturation pour un client spécifique."
+        },
+        "INSIGHTS": {
+          "TITLE": "Informations et intégration",
+          "DESCRIPTION": "Accédez au snapshot CRM pour un aperçu du contexte client et consultez les événements d'intégration pour les diagnostics."
+        }
+      },
+      "CARD": {
+        "CUSTOMER_LIST": {
+          "TITLE": "Répertoire des clients",
+          "DESCRIPTION": "Parcourez tous les clients, recherchez par nom ou type de compte et gérez la liste complète."
+        },
+        "CREATE_COMMERCIAL": {
+          "TITLE": "Nouveau compte commercial",
+          "DESCRIPTION": "Créez un nouveau compte commercial pour une entreprise ou un client de flotte."
+        },
+        "CREATE_INDIVIDUAL": {
+          "TITLE": "Nouveau client individuel",
+          "DESCRIPTION": "Ajoutez une nouvelle personne individuelle en tant que client dans le système."
+        },
+        "MERGE_PARTIES": {
+          "TITLE": "Fusionner les parties",
+          "DESCRIPTION": "Identifiez et fusionnez les enregistrements clients en double pour maintenir des données propres et précises."
+        },
+        "PARTY_DETAIL": {
+          "TITLE": "Détail de la partie",
+          "DESCRIPTION": "Consultez le profil complet d'une partie cliente, incluant les informations de compte, les véhicules et l'historique."
+        },
+        "ADD_VEHICLE": {
+          "TITLE": "Ajouter un véhicule",
+          "DESCRIPTION": "Associez un nouveau véhicule à un enregistrement de partie cliente existant."
+        },
+        "PARTY_CONTACTS": {
+          "TITLE": "Contacts de la partie",
+          "DESCRIPTION": "Gérez les informations de contact, les numéros de téléphone et les adresses d'une partie cliente."
+        },
+        "BILLING_RULES": {
+          "TITLE": "Règles de facturation",
+          "DESCRIPTION": "Définissez et mettez à jour les règles de facturation telles que les conditions de paiement, les limites de crédit et les exigences de bon de commande pour une partie."
+        },
+        "CRM_SNAPSHOT": {
+          "TITLE": "Snapshot CRM",
+          "DESCRIPTION": "Chargez un snapshot en temps réel du contexte client pour une révision rapide sans naviguer vers une page de détails complète."
+        },
+        "CRM_SNAPSHOT_PARTY": {
+          "TITLE": "Snapshot CRM par partie",
+          "DESCRIPTION": "Chargez le snapshot de contexte CRM pré-rempli avec les données d'une partie spécifique."
+        },
+        "INTEGRATION_EVENTS": {
+          "TITLE": "Événements d'intégration",
+          "DESCRIPTION": "Consultez le journal des événements d'intégration entre le CRM et les systèmes externes."
+        }
+      },
+      "FIELD": {
+        "PARTY_DETAIL_ID": "ID de partie",
+        "ADD_VEHICLE_PARTY_ID": "ID de partie",
+        "CONTACTS_PARTY_ID": "ID de partie",
+        "BILLING_RULES_PARTY_ID": "ID de partie",
+        "SNAPSHOT_PARTY_ID": "ID de partie"
+      },
+      "PLACEHOLDER": {
+        "PARTY_ID": "Entrez l'UUID de la partie"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Ouvrir la page",
+        "OPEN_PARTY": "Ouvrir la partie",
+        "OPEN_VEHICLE_FORM": "Ajouter un véhicule",
+        "OPEN_CONTACTS": "Voir les contacts",
+        "OPEN_BILLING_RULES": "Voir les règles de facturation",
+        "OPEN_SNAPSHOT": "Charger le snapshot",
+        "OPENING_PAGE": "Ouverture..."
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Un ID de partie est requis.",
+        "NAVIGATE": "Impossible d'accéder à la page demandée."
+      }
+    },
     "SNAPSHOT": {
       "TITLE": "Contexte client",
       "ARIA": {

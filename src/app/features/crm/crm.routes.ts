@@ -8,6 +8,14 @@ export const CRM_ROUTES: Routes = [
     children: [
       {
         path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./pages/landing/crm-landing-page.component').then(
+            m => m.CrmLandingPageComponent,
+          ),
+      },
+      {
+        path: 'customers',
         loadComponent: () =>
           import('./pages/customer-list/customer-list.component').then(
             m => m.CustomerListComponent,

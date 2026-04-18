@@ -285,6 +285,105 @@
     }
   },
   "CRM": {
+    "LANDING": {
+      "TITLE": "Clientes",
+      "SUBTITLE": "Administra cuentas de clientes, rastrea detalles de parties y accede a información de integración.",
+      "LOADING": "Cargando...",
+      "ROUTE_LABEL": "Ruta",
+      "STAT": {
+        "ARIA": "Estadísticas de páginas de clientes",
+        "PAGES": "Páginas",
+        "DIRECT_LINKS": "Accesos directos",
+        "GUIDED_LAUNCHES": "Accesos guiados"
+      },
+      "HERO": {
+        "OPEN_CUSTOMERS": "Directorio de clientes",
+        "CREATE_ACCOUNT": "Nueva cuenta comercial"
+      },
+      "SECTION": {
+        "DIRECTORY": {
+          "TITLE": "Directorio de clientes",
+          "DESCRIPTION": "Explora la lista completa de clientes, crea nuevas cuentas comerciales o individuales, y combina registros duplicados."
+        },
+        "PARTY": {
+          "TITLE": "Detalles de party",
+          "DESCRIPTION": "Consulta perfiles de party, agrega vehículos, gestiona contactos y configura reglas de facturación para un cliente específico."
+        },
+        "INSIGHTS": {
+          "TITLE": "Información e integración",
+          "DESCRIPTION": "Accede al snapshot de CRM para obtener contexto del cliente de un vistazo y revisa eventos de integración para diagnósticos."
+        }
+      },
+      "CARD": {
+        "CUSTOMER_LIST": {
+          "TITLE": "Directorio de clientes",
+          "DESCRIPTION": "Explora todos los clientes, busca por nombre o tipo de cuenta y administra la lista completa."
+        },
+        "CREATE_COMMERCIAL": {
+          "TITLE": "Nueva cuenta comercial",
+          "DESCRIPTION": "Crea una nueva cuenta comercial para una empresa o cliente de flota."
+        },
+        "CREATE_INDIVIDUAL": {
+          "TITLE": "Nuevo cliente individual",
+          "DESCRIPTION": "Agrega una nueva persona individual como cliente en el sistema."
+        },
+        "MERGE_PARTIES": {
+          "TITLE": "Combinar parties",
+          "DESCRIPTION": "Identifica y combina registros de clientes duplicados para mantener datos limpios y precisos."
+        },
+        "PARTY_DETAIL": {
+          "TITLE": "Detalle de party",
+          "DESCRIPTION": "Consulta el perfil completo de una party cliente, incluida la información de cuenta, vehículos e historial."
+        },
+        "ADD_VEHICLE": {
+          "TITLE": "Agregar vehículo",
+          "DESCRIPTION": "Vincula un nuevo vehículo a un registro de party cliente existente."
+        },
+        "PARTY_CONTACTS": {
+          "TITLE": "Contactos de party",
+          "DESCRIPTION": "Gestiona información de contacto, números de teléfono y direcciones de una party cliente."
+        },
+        "BILLING_RULES": {
+          "TITLE": "Reglas de facturación",
+          "DESCRIPTION": "Establece y actualiza reglas de facturación como términos de pago, límites de crédito y requisitos de orden de compra para una party."
+        },
+        "CRM_SNAPSHOT": {
+          "TITLE": "Snapshot de CRM",
+          "DESCRIPTION": "Carga un snapshot en tiempo real del contexto del cliente para revisión rápida sin navegar a una página de detalle completa."
+        },
+        "CRM_SNAPSHOT_PARTY": {
+          "TITLE": "Snapshot de CRM por party",
+          "DESCRIPTION": "Carga el snapshot de contexto de CRM precargado con los datos de una party específica."
+        },
+        "INTEGRATION_EVENTS": {
+          "TITLE": "Eventos de integración",
+          "DESCRIPTION": "Revisa el registro de eventos de integración entre el CRM y los sistemas externos."
+        }
+      },
+      "FIELD": {
+        "PARTY_DETAIL_ID": "ID de party",
+        "ADD_VEHICLE_PARTY_ID": "ID de party",
+        "CONTACTS_PARTY_ID": "ID de party",
+        "BILLING_RULES_PARTY_ID": "ID de party",
+        "SNAPSHOT_PARTY_ID": "ID de party"
+      },
+      "PLACEHOLDER": {
+        "PARTY_ID": "Ingresa el UUID de la party"
+      },
+      "ACTION": {
+        "OPEN_PAGE": "Abrir página",
+        "OPEN_PARTY": "Abrir party",
+        "OPEN_VEHICLE_FORM": "Agregar vehículo",
+        "OPEN_CONTACTS": "Ver contactos",
+        "OPEN_BILLING_RULES": "Ver reglas de facturación",
+        "OPEN_SNAPSHOT": "Cargar snapshot",
+        "OPENING_PAGE": "Abriendo..."
+      },
+      "ERROR": {
+        "REQUIRED_IDENTIFIER": "Se requiere un ID de party.",
+        "NAVIGATE": "No se pudo navegar a la página solicitada."
+      }
+    },
     "SNAPSHOT": {
       "TITLE": "Contexto del cliente",
       "ARIA": {
