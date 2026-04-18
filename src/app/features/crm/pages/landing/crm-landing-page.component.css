@@ -23,8 +23,7 @@
   gap: var(--space-3);
 }
 
-.crm-hero__eyebrow,
-.crm-card__route-label {
+.crm-hero__eyebrow {
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.16em;
@@ -135,24 +134,10 @@
   border-color: color-mix(in srgb, var(--brand-primary) 38%, var(--input-border));
 }
 
-.crm-card__header,
 .crm-card__body,
 .crm-card__launch {
   display: grid;
   gap: var(--space-2);
-}
-
-.crm-card__route-pill {
-  margin: 0;
-  padding: 0.4rem 0.65rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-primary) 10%, var(--cardBackground));
-  color: color-mix(in srgb, var(--brand-primary) 80%, var(--currentTextColor));
-  font-size: 0.8125rem;
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .crm-field__label {

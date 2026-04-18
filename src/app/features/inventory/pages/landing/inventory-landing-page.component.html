@@ -68,12 +68,6 @@
               class="inventory-card"
               [class.inventory-card--launch]="isLaunchCard(card)"
             >
-              <header class="inventory-card__header">
-                <div class="inventory-card__route-label">
-                  {{ 'INVENTORY.LANDING.ROUTE_LABEL' | translate }}
-                </div>
-                <code class="inventory-card__route-pill" translate="no">{{ card.routeLabel }}</code>
-              </header>
               <h3 class="inventory-card__title">{{ card.titleKey | translate }}</h3>
               <p class="inventory-card__description">{{ card.descriptionKey | translate }}</p>
 

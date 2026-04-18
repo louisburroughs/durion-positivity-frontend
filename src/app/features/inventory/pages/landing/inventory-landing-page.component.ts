@@ -19,7 +19,6 @@ interface DirectCard {
   readonly kind: 'direct';
   readonly titleKey: string;
   readonly descriptionKey: string;
-  readonly routeLabel: string;
   readonly routerLink: string[];
 }
 
@@ -27,7 +26,6 @@ interface LaunchCard {
   readonly kind: 'launch';
   readonly titleKey: string;
   readonly descriptionKey: string;
-  readonly routeLabel: string;
   readonly field: LaunchField;
   readonly fieldLabelKey: string;
   readonly placeholderKey: string;
@@ -52,21 +50,18 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.AVAILABILITY.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.AVAILABILITY.DESCRIPTION',
-        routeLabel: 'availability',
         routerLink: ['/app', 'inventory', 'availability'],
       },
       {
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.LEDGER.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.LEDGER.DESCRIPTION',
-        routeLabel: 'ledger',
         routerLink: ['/app', 'inventory', 'ledger'],
       },
       {
         kind: 'launch',
         titleKey: 'INVENTORY.LANDING.CARD.LEDGER_ENTRY.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.LEDGER_ENTRY.DESCRIPTION',
-        routeLabel: 'ledger/:ledgerEntryId',
         field: 'ledgerEntryId',
         fieldLabelKey: 'INVENTORY.LANDING.FIELD.LEDGER_ENTRY_ID',
         placeholderKey: 'INVENTORY.LANDING.PLACEHOLDER.LEDGER_ENTRY_ID',
@@ -83,28 +78,24 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.RECEIVE_INTO_STAGING.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.RECEIVE_INTO_STAGING.DESCRIPTION',
-        routeLabel: 'receiving/receive-into-staging',
         routerLink: ['/app', 'inventory', 'receiving', 'receive-into-staging'],
       },
       {
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.CROSS_DOCK.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.CROSS_DOCK.DESCRIPTION',
-        routeLabel: 'receiving/cross-dock',
         routerLink: ['/app', 'inventory', 'receiving', 'cross-dock'],
       },
       {
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.PUTAWAY_TASKS.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.PUTAWAY_TASKS.DESCRIPTION',
-        routeLabel: 'putaway/tasks',
         routerLink: ['/app', 'inventory', 'putaway', 'tasks'],
       },
       {
         kind: 'launch',
         titleKey: 'INVENTORY.LANDING.CARD.PUTAWAY_TASK.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.PUTAWAY_TASK.DESCRIPTION',
-        routeLabel: 'putaway/tasks/:taskId',
         field: 'putawayTaskId',
         fieldLabelKey: 'INVENTORY.LANDING.FIELD.PUTAWAY_TASK_ID',
         placeholderKey: 'INVENTORY.LANDING.PLACEHOLDER.PUTAWAY_TASK_ID',
@@ -115,7 +106,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.REPLENISHMENT.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.REPLENISHMENT.DESCRIPTION',
-        routeLabel: 'replenishment/tasks',
         routerLink: ['/app', 'inventory', 'replenishment', 'tasks'],
       },
     ],
@@ -128,28 +118,24 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.COUNT_EXECUTE.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.COUNT_EXECUTE.DESCRIPTION',
-        routeLabel: 'counts/execute',
         routerLink: ['/app', 'inventory', 'counts', 'execute'],
       },
       {
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.COUNT_ADJUSTMENTS.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.COUNT_ADJUSTMENTS.DESCRIPTION',
-        routeLabel: 'counts/adjustments',
         routerLink: ['/app', 'inventory', 'counts', 'adjustments'],
       },
       {
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.COUNT_PLANS.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.COUNT_PLANS.DESCRIPTION',
-        routeLabel: 'counts/plans',
         routerLink: ['/app', 'inventory', 'counts', 'plans'],
       },
       {
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.COUNT_PLAN_NEW.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.COUNT_PLAN_NEW.DESCRIPTION',
-        routeLabel: 'counts/plans/new',
         routerLink: ['/app', 'inventory', 'counts', 'plans', 'new'],
       },
     ],
@@ -162,21 +148,18 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.PO_LIST.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.PO_LIST.DESCRIPTION',
-        routeLabel: 'purchase-orders',
         routerLink: ['/app', 'inventory', 'purchase-orders'],
       },
       {
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.PO_NEW.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.PO_NEW.DESCRIPTION',
-        routeLabel: 'purchase-orders/new',
         routerLink: ['/app', 'inventory', 'purchase-orders', 'new'],
       },
       {
         kind: 'launch',
         titleKey: 'INVENTORY.LANDING.CARD.PO_DETAIL.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.PO_DETAIL.DESCRIPTION',
-        routeLabel: 'purchase-orders/:poId',
         field: 'poId',
         fieldLabelKey: 'INVENTORY.LANDING.FIELD.PO_ID',
         placeholderKey: 'INVENTORY.LANDING.PLACEHOLDER.PO_ID',
@@ -187,7 +170,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'INVENTORY.LANDING.CARD.PO_EDIT.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.PO_EDIT.DESCRIPTION',
-        routeLabel: 'purchase-orders/:poId/edit',
         field: 'poEditId',
         fieldLabelKey: 'INVENTORY.LANDING.FIELD.PO_EDIT_ID',
         placeholderKey: 'INVENTORY.LANDING.PLACEHOLDER.PO_EDIT_ID',
@@ -204,7 +186,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'INVENTORY.LANDING.CARD.PICK_LIST.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.PICK_LIST.DESCRIPTION',
-        routeLabel: 'fulfillment/workorders/:workorderId/pick-list',
         field: 'workorderPickListId',
         fieldLabelKey: 'INVENTORY.LANDING.FIELD.WORKORDER_ID',
         placeholderKey: 'INVENTORY.LANDING.PLACEHOLDER.WORKORDER_ID',
@@ -215,7 +196,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'INVENTORY.LANDING.CARD.PICK_EXECUTE.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.PICK_EXECUTE.DESCRIPTION',
-        routeLabel: 'fulfillment/workorders/:workorderId/pick-execute',
         field: 'workorderPickExecuteId',
         fieldLabelKey: 'INVENTORY.LANDING.FIELD.WORKORDER_ID',
         placeholderKey: 'INVENTORY.LANDING.PLACEHOLDER.WORKORDER_ID',
@@ -226,7 +206,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'INVENTORY.LANDING.CARD.RETURN_TO_STOCK.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.RETURN_TO_STOCK.DESCRIPTION',
-        routeLabel: 'fulfillment/workorders/:workorderId/return-to-stock',
         field: 'workorderReturnId',
         fieldLabelKey: 'INVENTORY.LANDING.FIELD.WORKORDER_ID',
         placeholderKey: 'INVENTORY.LANDING.PLACEHOLDER.WORKORDER_ID',
@@ -237,7 +216,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'INVENTORY.LANDING.CARD.CONSUME_ITEMS.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.CONSUME_ITEMS.DESCRIPTION',
-        routeLabel: 'fulfillment/workorders/:workorderId/consume-items',
         field: 'workorderConsumeId',
         fieldLabelKey: 'INVENTORY.LANDING.FIELD.WORKORDER_ID',
         placeholderKey: 'INVENTORY.LANDING.PLACEHOLDER.WORKORDER_ID',
@@ -248,7 +226,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'INVENTORY.LANDING.CARD.SHORTAGE_RESOLUTION.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.SHORTAGE_RESOLUTION.DESCRIPTION',
-        routeLabel: 'fulfillment/workorders/:workorderId/shortage-resolution',
         field: 'workorderShortageId',
         fieldLabelKey: 'INVENTORY.LANDING.FIELD.WORKORDER_ID',
         placeholderKey: 'INVENTORY.LANDING.PLACEHOLDER.WORKORDER_ID',
@@ -265,7 +242,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.SECURITY_PERMISSIONS.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.SECURITY_PERMISSIONS.DESCRIPTION',
-        routeLabel: 'security/permissions',
         routerLink: ['/app', 'inventory', 'security', 'permissions'],
       },
     ],

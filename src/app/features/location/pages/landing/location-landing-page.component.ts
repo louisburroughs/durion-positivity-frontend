@@ -9,7 +9,6 @@ interface DirectCard {
   readonly kind: 'direct';
   readonly titleKey: string;
   readonly descriptionKey: string;
-  readonly routePattern: string;
   readonly route: string;
   readonly actionKey: string;
 }
@@ -18,7 +17,6 @@ interface LaunchCard {
   readonly kind: 'launch';
   readonly titleKey: string;
   readonly descriptionKey: string;
-  readonly routePattern: string;
   readonly field: LaunchField;
   readonly inputLabelKey: string;
   readonly inputPlaceholderKey: string;
@@ -41,7 +39,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'LOCATION.LANDING.CARD.LOCATIONS.TITLE',
         descriptionKey: 'LOCATION.LANDING.CARD.LOCATIONS.DESCRIPTION',
-        routePattern: '/app/location/locations',
         route: '/app/location/locations',
         actionKey: 'LOCATION.LANDING.ACTION.OPEN_PAGE',
       },
@@ -49,7 +46,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'LOCATION.LANDING.CARD.LOCATION_NEW.TITLE',
         descriptionKey: 'LOCATION.LANDING.CARD.LOCATION_NEW.DESCRIPTION',
-        routePattern: '/app/location/locations/new',
         route: '/app/location/locations/new',
         actionKey: 'LOCATION.LANDING.ACTION.OPEN_PAGE',
       },
@@ -57,7 +53,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'LOCATION.LANDING.CARD.LOCATION_EDIT.TITLE',
         descriptionKey: 'LOCATION.LANDING.CARD.LOCATION_EDIT.DESCRIPTION',
-        routePattern: '/app/location/locations/:id',
         field: 'locationId',
         inputLabelKey: 'LOCATION.LANDING.FIELD.LOCATION_ID',
         inputPlaceholderKey: 'LOCATION.LANDING.PLACEHOLDER.LOCATION_ID',
@@ -68,7 +63,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'LOCATION.LANDING.CARD.LOCATION_DEFAULTS.TITLE',
         descriptionKey: 'LOCATION.LANDING.CARD.LOCATION_DEFAULTS.DESCRIPTION',
-        routePattern: '/app/location/locations/:locationId/defaults',
         field: 'defaultsLocationId',
         inputLabelKey: 'LOCATION.LANDING.FIELD.DEFAULTS_LOCATION_ID',
         inputPlaceholderKey: 'LOCATION.LANDING.PLACEHOLDER.DEFAULTS_LOCATION_ID',
@@ -85,7 +79,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'LOCATION.LANDING.CARD.BAYS.TITLE',
         descriptionKey: 'LOCATION.LANDING.CARD.BAYS.DESCRIPTION',
-        routePattern: '/app/location/bays',
         route: '/app/location/bays',
         actionKey: 'LOCATION.LANDING.ACTION.OPEN_PAGE',
       },
@@ -93,7 +86,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'LOCATION.LANDING.CARD.MOBILE_UNITS.TITLE',
         descriptionKey: 'LOCATION.LANDING.CARD.MOBILE_UNITS.DESCRIPTION',
-        routePattern: '/app/location/mobile-units',
         route: '/app/location/mobile-units',
         actionKey: 'LOCATION.LANDING.ACTION.OPEN_PAGE',
       },
@@ -101,7 +93,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'LOCATION.LANDING.CARD.STORAGE_LOCATIONS.TITLE',
         descriptionKey: 'LOCATION.LANDING.CARD.STORAGE_LOCATIONS.DESCRIPTION',
-        routePattern: '/app/location/storage-locations',
         route: '/app/location/storage-locations',
         actionKey: 'LOCATION.LANDING.ACTION.OPEN_PAGE',
       },
@@ -109,7 +100,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'direct',
         titleKey: 'LOCATION.LANDING.CARD.LOCATION_SYNC.TITLE',
         descriptionKey: 'LOCATION.LANDING.CARD.LOCATION_SYNC.DESCRIPTION',
-        routePattern: '/app/location/location-sync',
         route: '/app/location/location-sync',
         actionKey: 'LOCATION.LANDING.ACTION.OPEN_PAGE',
       },

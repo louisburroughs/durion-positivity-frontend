@@ -211,34 +211,6 @@
   }
 }
 
-.inventory-card__header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-}
-
-.inventory-card__route-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: color-mix(in srgb, var(--currentTextColor) 50%, transparent);
-}
-
-.inventory-card__route-pill {
-  font-family: monospace;
-  font-size: 0.75rem;
-  background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
-  color: var(--brand-primary);
-  padding: 2px var(--space-2);
-  border-radius: 999px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
 .inventory-card__title {
   font-size: 1rem;
   font-weight: 700;

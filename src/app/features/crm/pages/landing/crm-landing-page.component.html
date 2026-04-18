@@ -55,10 +55,6 @@
       <div class="crm-grid">
         @for (card of section.cards; track card.titleKey) {
         <article class="crm-card">
-          <div class="crm-card__header">
-            <p class="crm-card__route-label">{{ 'CRM.LANDING.ROUTE_LABEL' | translate }}</p>
-            <p class="crm-card__route-pill" translate="no">{{ isLaunchCard(card) ? card.routePattern : card.route }}</p>
-          </div>
           <div class="crm-card__body">
             <h3 class="crm-card__title">{{ card.titleKey | translate }}</h3>
             <p class="crm-card__description">{{ card.descriptionKey | translate }}</p>

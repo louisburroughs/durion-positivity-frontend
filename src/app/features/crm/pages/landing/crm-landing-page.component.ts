@@ -22,7 +22,6 @@ interface LaunchCard {
   readonly kind: 'launch';
   readonly titleKey: string;
   readonly descriptionKey: string;
-  readonly routePattern: string;
   readonly field: LaunchField;
   readonly inputLabelKey: string;
   readonly inputPlaceholderKey: string;
@@ -81,7 +80,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'CRM.LANDING.CARD.PARTY_DETAIL.TITLE',
         descriptionKey: 'CRM.LANDING.CARD.PARTY_DETAIL.DESCRIPTION',
-        routePattern: '/app/crm/party/:partyId',
         field: 'partyDetailId',
         inputLabelKey: 'CRM.LANDING.FIELD.PARTY_DETAIL_ID',
         inputPlaceholderKey: 'CRM.LANDING.PLACEHOLDER.PARTY_ID',
@@ -92,7 +90,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'CRM.LANDING.CARD.ADD_VEHICLE.TITLE',
         descriptionKey: 'CRM.LANDING.CARD.ADD_VEHICLE.DESCRIPTION',
-        routePattern: '/app/crm/party/:partyId/add-vehicle',
         field: 'addVehiclePartyId',
         inputLabelKey: 'CRM.LANDING.FIELD.ADD_VEHICLE_PARTY_ID',
         inputPlaceholderKey: 'CRM.LANDING.PLACEHOLDER.PARTY_ID',
@@ -103,7 +100,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'CRM.LANDING.CARD.PARTY_CONTACTS.TITLE',
         descriptionKey: 'CRM.LANDING.CARD.PARTY_CONTACTS.DESCRIPTION',
-        routePattern: '/app/crm/party/:partyId/contacts',
         field: 'contactsPartyId',
         inputLabelKey: 'CRM.LANDING.FIELD.CONTACTS_PARTY_ID',
         inputPlaceholderKey: 'CRM.LANDING.PLACEHOLDER.PARTY_ID',
@@ -114,7 +110,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'CRM.LANDING.CARD.BILLING_RULES.TITLE',
         descriptionKey: 'CRM.LANDING.CARD.BILLING_RULES.DESCRIPTION',
-        routePattern: '/app/crm/party/:partyId/billing-rules',
         field: 'billingRulesPartyId',
         inputLabelKey: 'CRM.LANDING.FIELD.BILLING_RULES_PARTY_ID',
         inputPlaceholderKey: 'CRM.LANDING.PLACEHOLDER.PARTY_ID',
@@ -138,7 +133,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         kind: 'launch',
         titleKey: 'CRM.LANDING.CARD.CRM_SNAPSHOT_PARTY.TITLE',
         descriptionKey: 'CRM.LANDING.CARD.CRM_SNAPSHOT_PARTY.DESCRIPTION',
-        routePattern: '/app/crm/crm-snapshot/:partyId',
         field: 'snapshotPartyId',
         inputLabelKey: 'CRM.LANDING.FIELD.SNAPSHOT_PARTY_ID',
         inputPlaceholderKey: 'CRM.LANDING.PLACEHOLDER.PARTY_ID',
