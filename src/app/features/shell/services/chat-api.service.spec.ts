@@ -2,11 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { ChatApiService, ChatResponse } from './chat-api.service';
+import { environment } from '../../../../environments/environment';
 
 describe('ChatApiService', () => {
   let service: ChatApiService;
 
-  const apiStub: vi.Mocked<Pick<ApiBaseService, 'post'>> = {
+  const apiStub = {
     post: vi.fn(),
   };
 
@@ -32,7 +33,11 @@ describe('ChatApiService', () => {
     let result: ChatResponse | undefined;
     service.sendMessage({ message: 'Hello' }).subscribe(response => (result = response));
 
-    expect(apiStub.post).toHaveBeenCalledWith('/mcp-server/v1/mcp/chat', { message: 'Hello' });
+    expect(apiStub.post).toHaveBeenCalledWith(
+      '/mcp-server/v1/mcp/chat',
+      { message: 'Hello' },
+      { baseUrlOverride: environment.apiBaseUrl.replace(/\/api\/?$/, '') },
+    );
     expect(result).toEqual(backendResponse);
   });
 });

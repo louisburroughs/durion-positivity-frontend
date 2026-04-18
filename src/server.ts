@@ -14,17 +14,19 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
- * Proxy /api requests to the backend API gateway.
+ * Proxy gateway-backed application APIs to the backend API gateway.
  * API_GATEWAY_URL defaults to the Docker Compose service name for local development.
  */
 const API_GATEWAY_URL = process.env['API_GATEWAY_URL'] ?? 'http://pos-api-gateway:8080';
-app.use(
-  '/api',
-  createProxyMiddleware({
-    target: API_GATEWAY_URL,
-    changeOrigin: true,
-  }),
-);
+for (const gatewayPath of ['/api', '/mcp-server']) {
+  app.use(
+    gatewayPath,
+    createProxyMiddleware({
+      target: API_GATEWAY_URL,
+      changeOrigin: true,
+    }),
+  );
+}
 
 /**
  * Translation assets are not fingerprinted, so they must not be long-cached.

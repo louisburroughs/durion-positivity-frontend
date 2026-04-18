@@ -10,6 +10,8 @@ import { environment } from '../../../environments/environment';
 export interface ApiRequestOptions {
   /** Arbitrary request headers to merge into the outgoing request. */
   headers?: Record<string, string>;
+  /** Optional explicit base URL when a request should bypass the default /api prefix. */
+  baseUrlOverride?: string;
 }
 
 /**
@@ -29,34 +31,49 @@ export class ApiBaseService {
   constructor(private readonly http: HttpClient) { }
 
   get<T>(path: string, params?: HttpParams, options?: ApiRequestOptions): Observable<T> {
-    return this.http.get<T>(this.url(path), { params, headers: this.toHeaders(options?.headers) });
+    return this.http.get<T>(this.url(path, options?.baseUrlOverride), {
+      params,
+      headers: this.toHeaders(options?.headers),
+    });
   }
 
   post<T>(path: string, body: unknown, options?: ApiRequestOptions): Observable<T> {
-    return this.http.post<T>(this.url(path), body, { headers: this.toHeaders(options?.headers) });
+    return this.http.post<T>(this.url(path, options?.baseUrlOverride), body, {
+      headers: this.toHeaders(options?.headers),
+    });
   }
 
   put<T>(path: string, body: unknown, options?: ApiRequestOptions): Observable<T> {
-    return this.http.put<T>(this.url(path), body, { headers: this.toHeaders(options?.headers) });
+    return this.http.put<T>(this.url(path, options?.baseUrlOverride), body, {
+      headers: this.toHeaders(options?.headers),
+    });
   }
 
   patch<T>(path: string, body: unknown, options?: ApiRequestOptions): Observable<T> {
-    return this.http.patch<T>(this.url(path), body, { headers: this.toHeaders(options?.headers) });
+    return this.http.patch<T>(this.url(path, options?.baseUrlOverride), body, {
+      headers: this.toHeaders(options?.headers),
+    });
   }
 
   delete<T>(path: string, options?: ApiRequestOptions): Observable<T> {
-    return this.http.delete<T>(this.url(path), { headers: this.toHeaders(options?.headers) });
+    return this.http.delete<T>(this.url(path, options?.baseUrlOverride), {
+      headers: this.toHeaders(options?.headers),
+    });
   }
 
   deleteWithBody<T>(path: string, body: unknown, options?: ApiRequestOptions): Observable<T> {
-    return this.http.delete<T>(this.url(path), { body, headers: this.toHeaders(options?.headers) });
+    return this.http.delete<T>(this.url(path, options?.baseUrlOverride), {
+      body,
+      headers: this.toHeaders(options?.headers),
+    });
   }
 
   private toHeaders(record?: Record<string, string>): HttpHeaders | undefined {
     return record ? new HttpHeaders(record) : undefined;
   }
 
-  private url(path: string): string {
-    return `${this.base}${path.startsWith('/') ? path : '/' + path}`;
+  private url(path: string, baseUrlOverride?: string): string {
+    const baseUrl = baseUrlOverride ?? this.base;
+    return `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
   }
 }
