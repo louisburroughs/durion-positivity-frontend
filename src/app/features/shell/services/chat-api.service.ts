@@ -11,6 +11,17 @@ export interface ChatResponse {
   response: string;
 }
 
+export interface RagDocumentMetadata {
+  source: string;
+  type: string;
+  title: string;
+}
+
+export interface RagIngestRequest {
+  content: string;
+  metadata: RagDocumentMetadata;
+}
+
 /**
  * ChatApiService
  * --------------
@@ -21,6 +32,7 @@ export interface ChatResponse {
 @Injectable({ providedIn: 'root' })
 export class ChatApiService {
   private static readonly CHAT_PATH = '/mcp-server/v1/mcp/chat';
+  private static readonly RAG_DOCUMENTS_PATH = '/mcp-server/v1/mcp/documents';
   private static readonly GATEWAY_BASE_URL = environment.apiBaseUrl.replace(/\/api\/?$/, '');
 
   private readonly api = inject(ApiBaseService);
@@ -30,4 +42,15 @@ export class ChatApiService {
       baseUrlOverride: ChatApiService.GATEWAY_BASE_URL,
     });
   }
+
+  ingestDocument(request: RagIngestRequest): Observable<void> {
+    return this.api.post<void>(ChatApiService.RAG_DOCUMENTS_PATH, request, {
+      baseUrlOverride: ChatApiService.GATEWAY_BASE_URL,
+      headers: {
+        'X-User': 'rag-loader',
+        'X-Authorities': 'mcp:document:ingest',
+      },
+    });
+  }
 }
+

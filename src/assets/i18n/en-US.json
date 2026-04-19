@@ -116,6 +116,36 @@
       "ERROR_DETAIL_STATUS": "HTTP {{ status }}.",
       "ERROR_DETAIL_CODE": "Backend code {{ code }}.",
       "ERROR_DETAIL_CORRELATION_ID": "Correlation ID {{ correlationId }}."
+    },
+    "RAG": {
+      "BUTTON_ARIA": "Load document into knowledge base",
+      "BUTTON_TITLE": "Load document (Admin)",
+      "DIALOG_ARIA": "RAG document ingestion dialog",
+      "TITLE": "Load Document into Knowledge Base",
+      "CLOSE_ARIA": "Close dialog",
+      "SUCCESS": "Document successfully loaded into the knowledge base.",
+      "ADD_ANOTHER": "Load Another",
+      "DONE": "Done",
+      "SUBMIT": "Load Document",
+      "SUBMITTING": "Loading…",
+      "CANCEL": "Cancel",
+      "FIELD": {
+        "CONTENT": "Document content",
+        "TITLE": "Title",
+        "SOURCE": "Source",
+        "TYPE": "Type"
+      },
+      "PLACEHOLDER": {
+        "CONTENT": "Paste or type the full document text here…",
+        "TITLE": "e.g. Q1 Refund Policy",
+        "SOURCE": "e.g. manual",
+        "TYPE": "e.g. policy"
+      },
+      "ERROR": {
+        "CONTENT_REQUIRED": "Document content is required.",
+        "TITLE_REQUIRED": "Title is required.",
+        "SUBMIT": "Failed to load the document. Please try again."
+      }
     }
   },
   "AUTH": {

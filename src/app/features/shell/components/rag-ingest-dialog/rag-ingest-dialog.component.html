@@ -1,0 +1,137 @@
+<div class="rag-dialog-backdrop" aria-hidden="true"
+     (click)="onBackdropClick($event)"
+     (keydown)="onKeyDown($event)">
+</div>
+
+<dialog class="rag-dialog" open
+        aria-modal="true"
+        [attr.aria-label]="'SHELL.RAG.DIALOG_ARIA' | translate"
+        aria-labelledby="rag-dialog-title"
+        (keydown)="onKeyDown($event)">
+
+  <!-- Header -->
+  <header class="rag-dialog__header">
+    <h2 id="rag-dialog-title" class="rag-dialog__title">
+      {{ 'SHELL.RAG.TITLE' | translate }}
+    </h2>
+    <button class="rag-dialog__close" type="button"
+            (click)="close()"
+            [attr.aria-label]="'SHELL.RAG.CLOSE_ARIA' | translate">
+      ✕
+    </button>
+  </header>
+
+  <!-- Success state -->
+  @if (state() === 'success') {
+  <div class="rag-dialog__body">
+    <output class="rag-status rag-status--success">
+      <span class="rag-status__icon" aria-hidden="true">✓</span>
+      <p>{{ 'SHELL.RAG.SUCCESS' | translate }}</p>
+    </output>
+    <div class="rag-dialog__footer">
+      <button class="rag-btn rag-btn--secondary" type="button" (click)="reset()">
+        {{ 'SHELL.RAG.ADD_ANOTHER' | translate }}
+      </button>
+      <button class="rag-btn rag-btn--primary" type="button" (click)="close()">
+        {{ 'SHELL.RAG.DONE' | translate }}
+      </button>
+    </div>
+  </div>
+  } @else {
+  <!-- Form -->
+  <div class="rag-dialog__body">
+
+    @if (state() === 'error') {
+    <div class="rag-status rag-status--error" role="alert">
+      <span class="rag-status__icon" aria-hidden="true">!</span>
+      <p>{{ 'SHELL.RAG.ERROR.SUBMIT' | translate }}</p>
+    </div>
+    }
+
+    <!-- Content -->
+    <div class="rag-field">
+      <label class="rag-field__label" for="rag-content">
+        {{ 'SHELL.RAG.FIELD.CONTENT' | translate }}
+        <span class="rag-field__required" aria-hidden="true">*</span>
+      </label>
+      <textarea class="rag-field__textarea" id="rag-content" name="rag-content"
+                rows="6"
+                [placeholder]="'SHELL.RAG.PLACEHOLDER.CONTENT' | translate"
+                [value]="content()"
+                [attr.aria-invalid]="contentError() ? 'true' : null"
+                [attr.aria-describedby]="contentError() ? 'rag-content-error' : null"
+                [disabled]="state() === 'submitting'"
+                (input)="content.set($any($event.target).value)"></textarea>
+      @if (contentError()) {
+      <p class="rag-field__error" id="rag-content-error" role="alert">
+        {{ contentError()! | translate }}
+      </p>
+      }
+    </div>
+
+    <!-- Title -->
+    <div class="rag-field">
+      <label class="rag-field__label" for="rag-title">
+        {{ 'SHELL.RAG.FIELD.TITLE' | translate }}
+        <span class="rag-field__required" aria-hidden="true">*</span>
+      </label>
+      <input class="rag-field__input" id="rag-title" name="rag-title" type="text"
+             [placeholder]="'SHELL.RAG.PLACEHOLDER.TITLE' | translate"
+             [value]="metaTitle()"
+             [attr.aria-invalid]="titleError() ? 'true' : null"
+             [attr.aria-describedby]="titleError() ? 'rag-title-error' : null"
+             [disabled]="state() === 'submitting'"
+             (input)="metaTitle.set($any($event.target).value)" />
+      @if (titleError()) {
+      <p class="rag-field__error" id="rag-title-error" role="alert">
+        {{ titleError()! | translate }}
+      </p>
+      }
+    </div>
+
+    <!-- Source & Type row -->
+    <div class="rag-field-row">
+      <div class="rag-field">
+        <label class="rag-field__label" for="rag-source">
+          {{ 'SHELL.RAG.FIELD.SOURCE' | translate }}
+        </label>
+        <input class="rag-field__input" id="rag-source" name="rag-source" type="text"
+               [placeholder]="'SHELL.RAG.PLACEHOLDER.SOURCE' | translate"
+               [value]="metaSource()"
+               [disabled]="state() === 'submitting'"
+               (input)="metaSource.set($any($event.target).value)" />
+      </div>
+      <div class="rag-field">
+        <label class="rag-field__label" for="rag-type">
+          {{ 'SHELL.RAG.FIELD.TYPE' | translate }}
+        </label>
+        <input class="rag-field__input" id="rag-type" name="rag-type" type="text"
+               [placeholder]="'SHELL.RAG.PLACEHOLDER.TYPE' | translate"
+               [value]="metaType()"
+               [disabled]="state() === 'submitting'"
+               (input)="metaType.set($any($event.target).value)" />
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="rag-dialog__footer">
+    <button class="rag-btn rag-btn--secondary" type="button"
+            [disabled]="state() === 'submitting'"
+            (click)="close()">
+      {{ 'SHELL.RAG.CANCEL' | translate }}
+    </button>
+    <button class="rag-btn rag-btn--primary" type="button"
+            [disabled]="state() === 'submitting'"
+            (click)="submit()">
+      @if (state() === 'submitting') {
+        {{ 'SHELL.RAG.SUBMITTING' | translate }}
+      } @else {
+        {{ 'SHELL.RAG.SUBMIT' | translate }}
+      }
+    </button>
+  </footer>
+  }
+
+</dialog>

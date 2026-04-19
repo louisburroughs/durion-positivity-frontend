@@ -43,6 +43,18 @@
       [attr.aria-label]="'SHELL.CHAT.SEND_ARIA' | translate" [title]="'SHELL.CHAT.SEND_TITLE' | translate">
       ➤
     </button>
+    @if (isAdmin()) {
+    <button class="rag-ingest-btn" type="button"
+            (click)="showRagDialog.set(true)"
+            [attr.aria-label]="'SHELL.RAG.BUTTON_ARIA' | translate"
+            [title]="'SHELL.RAG.BUTTON_TITLE' | translate">
+      📄
+    </button>
+    }
   </div>
+
+  @if (showRagDialog()) {
+  <app-rag-ingest-dialog (closed)="showRagDialog.set(false)" />
+  }
 
 </section>

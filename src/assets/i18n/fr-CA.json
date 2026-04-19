@@ -116,6 +116,36 @@
       "ERROR_DETAIL_STATUS": "HTTP {{ status }}.",
       "ERROR_DETAIL_CODE": "Code du backend {{ code }}.",
       "ERROR_DETAIL_CORRELATION_ID": "ID de corrélation {{ correlationId }}."
+    },
+    "RAG": {
+      "BUTTON_ARIA": "Charger un document dans la base de connaissances",
+      "BUTTON_TITLE": "Charger un document (Admin)",
+      "DIALOG_ARIA": "Boîte de dialogue d'ingestion de documents RAG",
+      "TITLE": "Charger un document dans la base de connaissances",
+      "CLOSE_ARIA": "Fermer la boîte de dialogue",
+      "SUCCESS": "Document chargé avec succès dans la base de connaissances.",
+      "ADD_ANOTHER": "Charger un autre",
+      "DONE": "Terminé",
+      "SUBMIT": "Charger le document",
+      "SUBMITTING": "Chargement…",
+      "CANCEL": "Annuler",
+      "FIELD": {
+        "CONTENT": "Contenu du document",
+        "TITLE": "Titre",
+        "SOURCE": "Source",
+        "TYPE": "Type"
+      },
+      "PLACEHOLDER": {
+        "CONTENT": "Collez ou saisissez le texte complet du document ici…",
+        "TITLE": "ex. Politique de remboursement T1",
+        "SOURCE": "ex. manuel",
+        "TYPE": "ex. policy"
+      },
+      "ERROR": {
+        "CONTENT_REQUIRED": "Le contenu du document est obligatoire.",
+        "TITLE_REQUIRED": "Le titre est obligatoire.",
+        "SUBMIT": "Impossible de charger le document. Veuillez réessayer."
+      }
     }
   },
   "AUTH": {

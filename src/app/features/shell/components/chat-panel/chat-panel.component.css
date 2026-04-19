@@ -167,3 +167,30 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ── RAG ingest admin button ─────────────────────────────────────────── */
+.rag-ingest-btn {
+  height: 40px;
+  width: 40px;
+  border: 1px solid var(--border-color, #d0d5dd);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground, #fff);
+  color: var(--textPrimary, #1a1a2e);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.rag-ingest-btn:hover {
+  background: var(--hoverBackground, #f3f4f6);
+  border-color: var(--brand-primary, #5b21b6);
+}
+
+.rag-ingest-btn:focus-visible {
+  outline: 2px solid var(--accentA400);
+  outline-offset: 2px;
+}

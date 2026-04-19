@@ -1,5 +1,6 @@
 import {
   Component,
+  computed,
   DestroyRef,
   inject,
   signal,
@@ -15,11 +16,13 @@ import { finalize } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChatStateService } from '../../services/chat-state.service';
 import { ChatApiService } from '../../services/chat-api.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { RagIngestDialogComponent } from '../rag-ingest-dialog/rag-ingest-dialog.component';
 
 @Component({
   selector: 'app-chat-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, TranslatePipe],
+  imports: [CommonModule, FormsModule, DatePipe, TranslatePipe, RagIngestDialogComponent],
   templateUrl: './chat-panel.component.html',
   styleUrl: './chat-panel.component.css',
 })
@@ -30,6 +33,10 @@ export class ChatPanelComponent implements AfterViewChecked {
   private readonly chatState = inject(ChatStateService);
   private readonly chatApi = inject(ChatApiService);
   private readonly translateService = inject(TranslateService);
+  private readonly authService = inject(AuthService);
+
+  readonly isAdmin = computed(() => this.authService.hasAnyRole(['ROLE_ADMIN']));
+  readonly showRagDialog = signal(false);
 
   @ViewChild('messageList') private readonly messageListEl!: ElementRef<HTMLElement>;
 
@@ -146,7 +153,6 @@ export class ChatPanelComponent implements AfterViewChecked {
     if (error instanceof HttpErrorResponse) {
       console.error('Chat backend request failed', {
         status: error.status,
-        statusText: error.statusText,
         url: error.url,
         correlationId: error.headers.get(ChatPanelComponent.CORRELATION_ID_HEADER),
         backendCode: this.extractBackendCode(error.error),

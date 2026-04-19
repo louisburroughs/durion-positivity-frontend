@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ChatApiService, ChatResponse } from '../../services/chat-api.service';
 import { ChatStateService } from '../../services/chat-state.service';
 import { ChatPanelComponent } from './chat-panel.component';
@@ -18,6 +19,26 @@ const chatTranslations = {
       ERROR_DETAIL_CODE: 'Backend code {{ code }}.',
       ERROR_DETAIL_CORRELATION_ID: 'Correlation ID {{ correlationId }}.',
     },
+    RAG: {
+      BUTTON_ARIA: 'Load document into knowledge base',
+      BUTTON_TITLE: 'Load document (Admin)',
+      DIALOG_ARIA: 'RAG document ingestion dialog',
+      TITLE: 'Load Document into Knowledge Base',
+      CLOSE_ARIA: 'Close dialog',
+      SUCCESS: 'Document successfully loaded into the knowledge base.',
+      ADD_ANOTHER: 'Load Another',
+      DONE: 'Done',
+      SUBMIT: 'Load Document',
+      SUBMITTING: 'Loading…',
+      CANCEL: 'Cancel',
+      FIELD: { CONTENT: 'Document content', TITLE: 'Title', SOURCE: 'Source', TYPE: 'Type' },
+      PLACEHOLDER: { CONTENT: '…', TITLE: '…', SOURCE: '…', TYPE: '…' },
+      ERROR: {
+        CONTENT_REQUIRED: 'Document content is required.',
+        TITLE_REQUIRED: 'Title is required.',
+        SUBMIT: 'Failed to load the document. Please try again.',
+      },
+    },
   },
 };
 
@@ -26,14 +47,22 @@ describe('ChatPanelComponent', () => {
   let component: ChatPanelComponent;
   let chatState: ChatStateService;
 
-  const chatApiStub: Pick<ChatApiService, 'sendMessage'> = {
+  const chatApiStub: Pick<ChatApiService, 'sendMessage' | 'ingestDocument'> = {
     sendMessage: vi.fn(),
+    ingestDocument: vi.fn(),
+  };
+
+  const authServiceStub: Pick<AuthService, 'hasAnyRole'> = {
+    hasAnyRole: vi.fn().mockReturnValue(false),
   };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ChatPanelComponent, TranslateModule.forRoot()],
-      providers: [{ provide: ChatApiService, useValue: chatApiStub }],
+      providers: [
+        { provide: ChatApiService, useValue: chatApiStub },
+        { provide: AuthService, useValue: authServiceStub },
+      ],
     }).compileComponents();
 
     const translateService = TestBed.inject(TranslateService);
@@ -107,5 +136,46 @@ describe('ChatPanelComponent', () => {
       }),
     );
     expect(component.sending()).toBe(false);
+  });
+
+  describe('RAG ingest admin button', () => {
+    it('does not render the RAG ingest button for non-admin users', () => {
+      // authServiceStub defaults to hasAnyRole = false (set in outer beforeEach)
+      const button = fixture.nativeElement.querySelector('.rag-ingest-btn');
+      expect(button).toBeNull();
+    });
+
+    describe('when user is admin', () => {
+      let adminFixture: ComponentFixture<ChatPanelComponent>;
+      let adminComponent: ChatPanelComponent;
+
+      beforeEach(async () => {
+        // Set admin=true BEFORE creating the component so the computed initialises with true
+        vi.mocked(authServiceStub.hasAnyRole).mockReturnValue(true);
+
+        adminFixture = TestBed.createComponent(ChatPanelComponent);
+        adminComponent = adminFixture.componentInstance;
+        adminFixture.detectChanges();
+        await adminFixture.whenStable();
+        adminFixture.detectChanges();
+      });
+
+      it('renders the RAG ingest button for admin users', () => {
+        const button = adminFixture.nativeElement.querySelector('.rag-ingest-btn');
+        expect(button).not.toBeNull();
+      });
+
+      it('shows the RAG dialog when the admin button is clicked', () => {
+        expect(adminComponent.showRagDialog()).toBe(false);
+
+        const button: HTMLButtonElement = adminFixture.nativeElement.querySelector('.rag-ingest-btn');
+        button.click();
+        adminFixture.detectChanges();
+
+        expect(adminComponent.showRagDialog()).toBe(true);
+        const dialog = adminFixture.nativeElement.querySelector('app-rag-ingest-dialog');
+        expect(dialog).not.toBeNull();
+      });
+    });
   });
 });
