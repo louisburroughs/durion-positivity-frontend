@@ -99,6 +99,7 @@
   --input-background: #ffffff;
   --input-border: var(--durion-graphite-200);
   --input-focus-border: var(--durion-blue-500);
+  --input-placeholder-color: var(--handleColor);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
   --shadow-nav: 2px 0 8px rgba(0, 0, 0, 0.12);
   --chat-bubble-user-bg: var(--durion-blue-100);
@@ -127,6 +128,7 @@
   --input-background: var(--durion-graphite-800);
   --input-border: var(--durion-graphite-600);
   --input-focus-border: var(--durion-blue-400);
+  --input-placeholder-color: var(--handleColor);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-nav: 2px 0 8px rgba(0, 0, 0, 0.5);
   --chat-bubble-user-bg: var(--durion-blue-700);
@@ -286,6 +288,12 @@ textarea:focus,
 select:focus {
   border-color: var(--input-focus-border);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--input-focus-border) 20%, transparent);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder-color);
+  opacity: 1;
 }
 
 /* ── Button Base ─────────────────────────────────────────────────────────── */

@@ -55,7 +55,7 @@ These tokens flip when `data-theme` attribute changes on `<html>`. Consume these
 | `--accentA700` | teal-600 | teal-400 |
 | `--accentA100` | teal-100 | teal-600 |
 | `--trackColor` | graphite-200 | grey-700 |
-| `--handleColor` | graphite-500 | graphite-500 |
+| `--handleColor` | graphite-600 | graphite-200 |
 
 ### Extended Tokens (not in style guide – defined locally)
 
@@ -65,6 +65,7 @@ These tokens flip when `data-theme` attribute changes on `<html>`. Consume these
 | `--input-background` | white | graphite-800 | Form field fill |
 | `--input-border` | graphite-200 | graphite-600 | Form field outline |
 | `--input-focus-border` | blue-500 | blue-400 | Focus ring color |
+| `--input-placeholder-color` | handleColor | handleColor | AA-compliant placeholder text color for inputs and textareas |
 | `--shadow-card` | rgba(0,0,0,0.08) | rgba(0,0,0,0.4) | Card elevation |
 | `--shadow-nav` | rgba(0,0,0,0.12) | rgba(0,0,0,0.5) | Sidebar shadow |
 | `--chat-bubble-user-bg` | blue-100 | blue-700 | User message bubble |
