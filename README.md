@@ -1,132 +1,506 @@
-# Durion POS – Positivity Platform Frontend
+# Durion Positivity Frontend
 
-Angular 21 single-page application for the Durion POS system.
+An **Angular 21** single-page application (with SSR) for the Durion POS platform. Sixteen lazily-loaded domain modules cover everything from CRM and work-order execution to accounting and shop management. The app ships with dark-mode theming, multi-locale support, role-based access control, and an automated accessibility gate in CI.
 
-## Prerequisites
+---
 
-Node.js is managed via [mise](https://mise.jdx.dev/). Ensure mise is installed
-and activated in your shell before running any commands.
+## Table of Contents
 
-```bash
-mise install          # installs the Node version pinned in mise.toml / package.json
-node --version        # verify correct version is active
+- [Architecture Overview](#architecture-overview)
+- [Feature Modules](#feature-modules)
+- [Technology Stack](#technology-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Install & Run](#install--run)
+  - [Build](#build)
+- [Routing & Access Control](#routing--access-control)
+- [State Management](#state-management)
+- [API Integration](#api-integration)
+- [Theming & Styling](#theming--styling)
+- [Internationalisation](#internationalisation)
+- [Testing](#testing)
+- [Environment Configuration](#environment-configuration)
+- [Project Structure](#project-structure)
+- [CI/CD & Deployment](#cicd--deployment)
+- [Contributing](#contributing)
+- [Further Reading](#further-reading)
+
+---
+
+## Architecture Overview
+
+```
+Browser / SSR (Express :4000)
+        │
+        ▼
+  Angular Router
+  ├── /            → LandingPageComponent        (public)
+  ├── /login       → LoginComponent              (public)
+  └── /app         → ShellComponent              (authGuard)
+       ├── HeaderComponent  (theme toggle, locale picker, user menu)
+       ├── NavComponent     (sidebar, role-filtered links)
+       ├── ChatPanelComponent  (MCP chat, collapsible)
+       └── <router-outlet>  → domain page components
 ```
 
-## Quick Start
+**Key design decisions**
+
+- **Standalone components throughout** — no NgModules; every component declares its own `imports` array.
+- **Angular Signals for state** — no NgRx or Redux. Page state is expressed as `signal<'idle' | 'loading' | 'ready' | 'empty' | 'error'>`.
+- **Single HTTP wrapper** — all services call `ApiBaseService`; `HttpClient` is never injected directly.
+- **Auth interceptor** handles token attachment and silent refresh transparently.
+- **SSR enabled** — the production Docker image runs an Express server that pre-renders pages for improved first-paint and SEO.
+- **ADR-driven** — ten mandatory ADRs (documented in `AGENTS.md`) govern patterns for state machines, reactive loading, mutations, testing, error keys, i18n, and accessibility.
+
+---
+
+## Feature Modules
+
+All domain modules are lazy-loaded under the `/app` shell route.
+
+| Module | Route | Description | Role Gate |
+|---|---|---|---|
+| `dashboard` | `/app` | Default landing page | — |
+| `crm` | `/app/crm` | Customer accounts, contacts, vehicles | — |
+| `workexec` | `/app/workexec` | Work order execution & dispatch | — |
+| `accounting` | `/app/accounting` | GL posting, financial reporting | — |
+| `billing` | `/app/billing` | Invoice & payment management | — |
+| `inventory` | `/app/inventory` | Parts and supplies stock | — |
+| `product` | `/app/product` | Product catalog management | — |
+| `order` | `/app/order` | Sales order management | — |
+| `location` | `/app/location` | Multi-store location management | — |
+| `people` | `/app/people` | Employee profiles and assignments | — |
+| `shopmgmt` | `/app/shopmgmt` | Shop operations and scheduling | — |
+| `admin` | `/app/admin` | Platform administration | `ROLE_ADMIN` |
+| `security` | `/app/security` | Users, roles, and permissions | `ROLE_ADMIN` |
+| `system` | `/app/system` | 403 / 404 error pages | — |
+| `landing` | `/` | Public marketing page | — |
+| `auth` | `/login` | Login form | — |
+
+---
+
+## Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Angular 21.1.0 |
+| Language | TypeScript 5.9.2 (strict mode, ES2022 target) |
+| State | Angular Signals + RxJS 7.8 |
+| Styling | Plain CSS + CSS custom properties (no Tailwind or preprocessor) |
+| i18n | @ngx-translate/core 17 |
+| HTTP | Angular HttpClient + custom `ApiBaseService` |
+| SSR | @angular/ssr 21 + Express 5 |
+| Build | Angular CLI / `@angular/build` application builder |
+| Unit tests | Vitest 4 + jsdom 27 |
+| Accessibility | axe-core 4.11 |
+| Linting | ESLint 10 + @angular-eslint 21 |
+| Containerisation | Docker (multi-stage, node:22-alpine) |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+| Tool | Version | Notes |
+|---|---|---|
+| Node.js | 22 LTS | Use [mise](https://mise.jdx.dev/): `mise install` reads `.mise.toml` |
+| npm | 11.6.4 | Pinned via corepack |
+
+### Install & Run
 
 ```bash
+# Install dependencies
 npm install
-npm start          # dev server → http://localhost:4200
-npm run build      # production build → dist/
-npm test           # unit tests (Vitest)
+
+# Start the dev server (http://localhost:4200, hot reload)
+npm start
+
+# In dev mode the API is proxied to http://localhost:8080
+# mockAuth is enabled — a fake JWT is used so no backend is required
 ```
 
-## Architecture
+### Build
 
-```
-src/
-  app/
-    core/                          # Singleton services, interceptors, guards
-      guards/    auth.guard.ts
-      interceptors/ auth.interceptor.ts
-      models/    auth.models.ts
-      services/  auth.service.ts | api-base.service.ts | theme.service.ts
-    features/
-      auth/                        # Public auth feature (lazy-loaded)
-        login.component.ts/html/css
-      shell/                       # Protected app shell (lazy-loaded)
-        shell.component.ts/html/css
-        components/
-          header/                  # Top bar: logo, theme toggle, user/logout
-          footer/                  # Bottom bar
-          nav/                     # Collapsible left sidebar
-          chat-panel/              # Chat UI (message list + input)
-          content-panel/           # Router outlet for domain pages
-        services/
-          chat-state.service.ts    # In-memory chat message store (signals)
-          chat-api.service.ts      # MCP chat backend transport
-        dashboard/
-          dashboard.component.ts   # Default /app landing page placeholder
-  environments/
-    environment.ts          # DEV  – apiBaseUrl: http://localhost:8080/api
-    environment.prod.ts     # PROD – apiBaseUrl: /api
-  styles.css                # Global CSS theme variables
-docs/
-  theme-tokens.md           # Pointer to the canonical theme token inventory
-design/
-  source/
-    theme-tokens.md         # Canonical token inventory (raw, semantic, runtime)
+```bash
+# Production build (outputs to dist/)
+npm run build
+
+# Run the SSR production server locally
+npm run serve:ssr:durion-positivity-frontend   # http://localhost:4000
+
+# Watch build (development, incremental)
+npm run watch
 ```
 
-### Key Design Decisions
+---
 
-| Decision | Choice | Reason |
+## Routing & Access Control
+
+### Guard chain
+
+1. **`authGuard`** — applied to the entire `/app` tree. Unauthenticated users are redirected to `/login?returnUrl=...`.
+2. **`rolesChildGuard`** — applied per-child via `data: { roles: ['ROLE_ADMIN'] }`. Users without the required role land on `/forbidden`.
+
+### Route table
+
+```
+/                   → LandingPageComponent         (public)
+/login              → LoginComponent               (public)
+/app                → ShellComponent               (authGuard)
+  /app              → DashboardComponent           (default child)
+  /app/crm          → CrmModule (lazy)
+  /app/workexec     → WorkexecModule (lazy)
+  /app/accounting   → AccountingModule (lazy)
+  /app/billing      → BillingModule (lazy)
+  /app/inventory    → InventoryModule (lazy)
+  /app/product      → ProductModule (lazy)
+  /app/order        → OrderModule (lazy)
+  /app/location     → LocationModule (lazy)
+  /app/people       → PeopleModule (lazy)
+  /app/shopmgmt     → ShopmgmtModule (lazy)
+  /app/admin        → AdminModule (lazy, ROLE_ADMIN)
+  /app/security     → SecurityModule (lazy, ROLE_ADMIN)
+/forbidden          → AccessDeniedComponent        (public)
+/not-found          → NotFoundComponent            (public)
+**                  → redirect → /not-found
+```
+
+---
+
+## State Management
+
+Angular Signals are used throughout — no external state library.
+
+### Page state machine (mandatory pattern)
+
+Every routed page component follows the same state machine:
+
+```typescript
+readonly state    = signal<'idle' | 'loading' | 'empty' | 'ready' | 'error'>('idle');
+readonly errorKey = signal<string | null>(null);
+```
+
+Data is loaded inside a reactive `effect()`:
+
+```typescript
+effect((onCleanup) => {
+  this.state.set('loading');
+  const sub = this.myService.getItems().subscribe({
+    next: (items) => {
+      this.items.set(items);
+      this.state.set(items.length ? 'ready' : 'empty');
+    },
+    error: () => {
+      this.state.set('error');
+      this.errorKey.set('errors.items.load');
+    },
+  });
+  onCleanup(() => sub.unsubscribe());
+});
+```
+
+### Global services
+
+| Service | State held | Storage |
 |---|---|---|
-| Component style | Standalone components | Angular 21 best practice; no NgModules |
-| State | Angular Signals | Reactive, no Subscription boilerplate |
-| Theming | CSS custom properties + `data-theme` on `<html>` | Zero-JS theme switch; SSR-friendly |
-| HTTP | Functional `HttpInterceptorFn` | Tree-shakeable; works with `provideHttpClient` |
-| Auth | JWT in localStorage | Simple; refresh token stub ready for backend |
-| Routing | Lazy-loaded `loadComponent` / `loadChildren` | Each domain loads on demand |
+| `AuthService` | `accessToken`, `refreshToken`, `roles`, `isAuthenticated` (computed), `currentUserClaims` (computed) | localStorage / sessionStorage |
+| `ThemeService` | `theme` signal, `isDark` (computed) | localStorage (`durion-theme`) |
+| `LocaleService` | `currentLocale` signal | localStorage (`durion.locale`) |
+| `ChatStateService` | `messages` signal, `isEmpty` (computed) | In-memory |
 
-## Routing
+---
 
-| Path | Auth? | Component |
+## API Integration
+
+### `ApiBaseService`
+
+All HTTP calls go through `ApiBaseService`. Domain services must **never** inject `HttpClient` directly.
+
+```typescript
+private api = inject(ApiBaseService);
+
+// GET /items → {apiBaseUrl}/items
+this.api.get<Item[]>('/items');
+
+// POST /items
+this.api.post<Item>('/items', payload);
+
+// PUT / PATCH / DELETE / deleteWithBody also available
+```
+
+### Auth interceptor
+
+- Attaches `Authorization: Bearer <token>` to every outbound request.
+- On **401**: attempts one silent token refresh, then retries the original request.
+- On refresh failure: calls `AuthService.logoutWithRedirect(currentPath)` → `/login?returnUrl=...&sessionExpired=true`.
+
+### Login flow
+
+```
+POST /security-service/v1/auth/login
+{ username, password }
+  ↓
+{ accessToken, refreshToken, tokenType }
+  ↓
+Tokens stored in localStorage
+Roles extracted from JWT `roles` claim → sessionStorage
+isAuthenticated computed signal becomes true
+```
+
+### Backend API contract
+
+| Purpose | Method | Path |
 |---|---|---|
-| `/login` | Public | `LoginComponent` |
-| `/app` | Protected | `ShellComponent` (primary shell route) |
-| `/app/:domain` | Protected | Domain modules under shell |
-| `/chat` | – | Redirects to `/app` (legacy compatibility alias) |
-| `/` | – | Landing page |
+| Login | POST | `/security-service/v1/auth/login` |
+| Token refresh | POST | `/security-service/v1/auth/refresh` |
+| Validate token | GET | `/security-service/v1/auth/validate` |
+| MCP chat | POST | `/mcp-server/v1/mcp/chat` |
+| Domain APIs | varies | `/api/...` |
 
-### Role-based route access
+In development, the Angular dev server proxies `/api`, `/security-service`, and `/mcp-server` to `http://localhost:8080`.
 
-- `/app` remains authenticated via `authGuard`.
-- Child routes under `/app` can optionally enforce roles via route metadata:
+---
 
-  ```ts
-  {
-    path: 'orders',
-    data: { roles: ['ROLE_MANAGER', 'ROLE_ADMIN'] },
-    loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDERS_ROUTES)
-  }
-  ```
+## Theming & Styling
 
-- `rolesChildGuard` reads `data.roles` and checks `AuthService.hasAnyRole(...)`.
+Styling uses **plain CSS with CSS custom properties** — no Tailwind, no SCSS.
 
-## Adding a Domain Module
+### Three-tier token model (`src/styles.css`)
 
-1. Create `src/app/features/<domain>/` with its own `<domain>.routes.ts`.
-2. Register in `app.routes.ts` as a child of the `/app` shell:
+```
+Tier 1 — Raw palette (never reference directly in components)
+  --durion-blue-800, --durion-teal-400, ...
 
-   ```ts
-   { path: 'orders', loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDERS_ROUTES) }
-   ```
+Tier 2 — Brand semantic (stable aliases)
+  --brand-primary: var(--durion-blue-700)
+  --brand-accent:  var(--durion-teal-400)
 
-3. Add a nav entry in `NavigationRegistryService` (`src/app/features/shell/services/navigation-registry.service.ts`).
+Tier 3 — Theme-switchable (swap on data-theme attribute)
+  [data-theme='light']  { --themeBackground: var(--durion-grey-100); ... }
+  [data-theme='dark']   { --themeBackground: var(--durion-grey-900); ... }
+```
 
-## Theming
+Component CSS files should reference **Tier 2 or Tier 3 tokens only**.
 
-- All colors use CSS variables from `src/styles.css`.
-- Toggle: header button or `ThemeService.toggle()` from any component.
-- Preference persists in `localStorage` (`durion-theme`).
-- Extended tokens documented in `design/source/theme-tokens.md`.
+### Theme switching
 
-## Backend Integration
+`ThemeService` writes `light` or `dark` to `<html data-theme="...">` and persists the choice to localStorage. The header's toggle button calls `themeService.toggle()`.
 
-- Set `apiBaseUrl` in `src/environments/environment.ts` (dev) or `environment.prod.ts` (prod).
-- `ApiBaseService` is the HTTP wrapper – inject it in feature services instead of `HttpClient` directly.
-- `authInterceptor` attaches `Authorization: Bearer <token>` automatically.
-- Same-origin frontend serving proxies both `/api` and `/mcp-server` requests to the API gateway.
-- JWT claim contract (ADR-0040):
-  - frontend role gating uses `roles` claim.
-  - API authorization remains backend-authoritative via gateway-decoded `perm_bits`/`perm_ver`.
-  - frontend does not send `X-Authorities` headers.
-- Refresh token flow is stubbed in `AuthService.refreshTokens()` — wire to `POST /auth/refresh` when backend exposes it.
-- Shell chat uses `ChatApiService` to call the MCP chat endpoint via the API gateway at `/mcp-server/v1/mcp/chat`.
+### Typography & spacing
 
-## Environment Variables
+| Token | Value |
+|---|---|
+| `--font-primary` | Michelin Unit Titling |
+| `--font-body` | Noto Sans |
+| `--space-1` … `--space-8` | 0.25 rem … 2 rem |
+| `--radius-sm` / `--radius-md` / `--radius-lg` | 4 px / 8 px / 16 px |
+| `--transition-fast` / `--transition-base` | 150 ms / 250 ms |
 
-| Variable | Default (dev) | Description |
+Full token inventory: `design/source/theme-tokens.md`.
+
+---
+
+## Internationalisation
+
+Translation is handled by **@ngx-translate/core**. Translation keys live in JSON files under `src/assets/i18n/`.
+
+| Locale | File |
+|---|---|
+| English (US) | `en-US.json` |
+| Spanish (US) | `es-US.json` |
+| French (Canadian) | `fr-CA.json` |
+| Pseudo locale | `qps-ploc.json` (generated; used for layout testing) |
+
+**Use `TranslatePipe` in every template** — hardcoded user-facing strings are a lint error.
+
+```html
+{{ 'common.save' | translate }}
+```
+
+**i18n scripts**
+
+```bash
+# Check for missing keys across all locales
+npm run i18n:check:missing
+
+# Regenerate pseudo locale from en-US
+npm run i18n:pseudo:generate
+
+# Verify pseudo locale is up to date
+npm run i18n:pseudo:check
+
+# Run both checks at once
+npm run i18n:check
+```
+
+---
+
+## Testing
+
+### Unit tests — Vitest
+
+```bash
+# Watch mode (development)
+npm test
+
+# Single pass (CI)
+npx ng test --no-watch
+
+# Scope to one domain
+npx ng test --include="src/app/features/crm/**/*.spec.ts" --no-watch
+```
+
+**Conventions (ADR-0035):**
+- Every public service method needs at least one test.
+- Fixtures must be explicitly typed — no `any`.
+- Error paths must assert both `state()` and `errorKey()`.
+- Use `TestBed.configureTestingModule` with real component imports; mock services only at the provider level.
+
+### Accessibility tests — axe-core
+
+```bash
+# Audit all routed components (fails on critical violations)
+npm run a11y:smoke
+
+# Stricter threshold — also fail on serious violations
+npm run a11y:smoke:strict
+```
+
+The accessibility gate runs automatically on every PR and push to `main`. Reports are uploaded as CI artifacts.
+
+---
+
+## Environment Configuration
+
+Configuration is TypeScript-based (no `.env` files). Angular CLI swaps the file at build time via `fileReplacements`.
+
+| Key | Development | Production |
 |---|---|---|
-| `apiBaseUrl` | `http://localhost:8080/api` | Backend REST API base URL |
+| `apiBaseUrl` | `http://localhost:8080/api` | `/api` (same-origin) |
+| `mockAuth` | `true` | `false` |
+
+**Runtime storage keys**
+
+| Key | Storage | Content |
+|---|---|---|
+| `durion-access-token` | localStorage | JWT access token |
+| `durion-refresh-token` | localStorage | JWT refresh token |
+| `durion-theme` | localStorage | `light` or `dark` |
+| `durion.locale` | localStorage | e.g. `en-US` |
+| `durion-user-roles` | sessionStorage | Decoded roles array |
+| `durion-user-roles-exp` | sessionStorage | Roles cache expiry (epoch ms) |
+
+---
+
+## Project Structure
+
+```
+durion-positivity-frontend/
+├── src/
+│   ├── app/
+│   │   ├── core/
+│   │   │   ├── guards/              # authGuard, rolesChildGuard
+│   │   │   ├── interceptors/        # authInterceptor
+│   │   │   └── services/            # AuthService, ThemeService, LocaleService, ChatStateService
+│   │   ├── features/
+│   │   │   ├── auth/                # LoginComponent
+│   │   │   ├── dashboard/
+│   │   │   ├── crm/
+│   │   │   │   ├── models/          # TypeScript interfaces
+│   │   │   │   ├── services/        # HTTP layer (extends ApiBaseService)
+│   │   │   │   ├── pages/           # Routed page components
+│   │   │   │   └── components/      # Domain-scoped sub-components
+│   │   │   ├── workexec/
+│   │   │   ├── accounting/
+│   │   │   ├── billing/
+│   │   │   ├── inventory/
+│   │   │   ├── product/
+│   │   │   ├── order/
+│   │   │   ├── location/
+│   │   │   ├── people/
+│   │   │   ├── shopmgmt/
+│   │   │   ├── admin/
+│   │   │   ├── security/
+│   │   │   ├── system/              # 403 / 404 pages
+│   │   │   └── landing/             # Public marketing page
+│   │   ├── shared/
+│   │   │   ├── services/            # ApiBaseService
+│   │   │   └── components/          # Shell: Header, Nav, Footer, ChatPanel, ContentPanel
+│   │   ├── app.routes.ts
+│   │   ├── app.config.ts
+│   │   └── app.ts
+│   ├── environments/
+│   │   ├── environment.ts           # Dev config (mockAuth: true)
+│   │   └── environment.prod.ts      # Prod config
+│   ├── assets/
+│   │   └── i18n/                    # en-US.json, es-US.json, fr-CA.json, qps-ploc.json
+│   ├── styles.css                   # Global theme tokens (CSS custom properties)
+│   ├── main.ts                      # Browser entry point
+│   ├── main.server.ts               # SSR entry point
+│   └── server.ts                    # Express SSR server
+├── design/
+│   └── source/
+│       └── theme-tokens.md          # Full CSS token inventory
+├── scripts/
+│   ├── a11y/                        # axe-core smoke test runner
+│   └── i18n/                        # Key-check and pseudo-locale generators
+├── artifacts/                       # Generated test/a11y reports
+├── angular.json                     # Build, serve, test configuration
+├── tsconfig.json                    # TypeScript configuration (strict)
+├── package.json
+├── Dockerfile
+├── AGENTS.md                        # Mandatory ADRs and copilot guide
+└── README.md
+```
+
+---
+
+## CI/CD & Deployment
+
+### GitHub Actions workflows
+
+| Workflow | Trigger | Purpose |
+|---|---|---|
+| `accessibility-gate.yml` | PR · push to `main` | Run `a11y:smoke`, fail on critical violations, upload report artifact |
+| `build-push-ecr.yml` | Release · manual dispatch | Build Docker image, push to AWS ECR |
+
+### Docker
+
+The image is built in two stages:
+
+1. **Builder** (`node:22-alpine`) — installs deps (`npm ci`), runs `npm run build`.
+2. **Runtime** (`node:22-alpine`) — copies `dist/` and prod-only deps, runs the SSR server.
+
+```dockerfile
+USER node
+ENV PORT=4000 NODE_ENV=production
+EXPOSE 4000
+CMD ["node", "dist/durion-positivity-frontend/server/server.mjs"]
+```
+
+In production, a reverse proxy routes:
+- `/` → frontend SSR container (`:4000`)
+- `/api`, `/security-service`, `/mcp-server` → backend API gateway (`:8080`)
+
+---
+
+## Contributing
+
+1. **Node version** — run `mise install` to activate the correct Node.js version.
+2. **Lint before committing** — `npx ng lint`.
+3. **i18n check** — `npm run i18n:check` (missing keys fail CI).
+4. **Accessibility** — `npm run a11y:smoke` must pass before opening a PR.
+5. **Tests** — `npx ng test --no-watch`; every new public service method needs a test.
+6. **ADRs** — read `AGENTS.md` before adding state, making HTTP calls, or touching the theme system. Ten mandatory ADRs apply.
+7. **No hardcoded strings** — all user-facing text must go through `TranslatePipe` and be added to all locale files.
+
+---
+
+## Further Reading
+
+| Document | Location |
+|---|---|
+| Mandatory ADRs & copilot guide | `AGENTS.md` |
+| CSS token inventory | `design/source/theme-tokens.md` |
+| Existing README (v1) | `README.md` |

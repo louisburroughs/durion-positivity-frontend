@@ -1,0 +1,132 @@
+# Durion POS – Positivity Platform Frontend
+
+Angular 21 single-page application for the Durion POS system.
+
+## Prerequisites
+
+Node.js is managed via [mise](https://mise.jdx.dev/). Ensure mise is installed
+and activated in your shell before running any commands.
+
+```bash
+mise install          # installs the Node version pinned in mise.toml / package.json
+node --version        # verify correct version is active
+```
+
+## Quick Start
+
+```bash
+npm install
+npm start          # dev server → http://localhost:4200
+npm run build      # production build → dist/
+npm test           # unit tests (Vitest)
+```
+
+## Architecture
+
+```
+src/
+  app/
+    core/                          # Singleton services, interceptors, guards
+      guards/    auth.guard.ts
+      interceptors/ auth.interceptor.ts
+      models/    auth.models.ts
+      services/  auth.service.ts | api-base.service.ts | theme.service.ts
+    features/
+      auth/                        # Public auth feature (lazy-loaded)
+        login.component.ts/html/css
+      shell/                       # Protected app shell (lazy-loaded)
+        shell.component.ts/html/css
+        components/
+          header/                  # Top bar: logo, theme toggle, user/logout
+          footer/                  # Bottom bar
+          nav/                     # Collapsible left sidebar
+          chat-panel/              # Chat UI (message list + input)
+          content-panel/           # Router outlet for domain pages
+        services/
+          chat-state.service.ts    # In-memory chat message store (signals)
+          chat-api.service.ts      # MCP chat backend transport
+        dashboard/
+          dashboard.component.ts   # Default /app landing page placeholder
+  environments/
+    environment.ts          # DEV  – apiBaseUrl: http://localhost:8080/api
+    environment.prod.ts     # PROD – apiBaseUrl: /api
+  styles.css                # Global CSS theme variables
+docs/
+  theme-tokens.md           # Pointer to the canonical theme token inventory
+design/
+  source/
+    theme-tokens.md         # Canonical token inventory (raw, semantic, runtime)
+```
+
+### Key Design Decisions
+
+| Decision | Choice | Reason |
+|---|---|---|
+| Component style | Standalone components | Angular 21 best practice; no NgModules |
+| State | Angular Signals | Reactive, no Subscription boilerplate |
+| Theming | CSS custom properties + `data-theme` on `<html>` | Zero-JS theme switch; SSR-friendly |
+| HTTP | Functional `HttpInterceptorFn` | Tree-shakeable; works with `provideHttpClient` |
+| Auth | JWT in localStorage | Simple; refresh token stub ready for backend |
+| Routing | Lazy-loaded `loadComponent` / `loadChildren` | Each domain loads on demand |
+
+## Routing
+
+| Path | Auth? | Component |
+|---|---|---|
+| `/login` | Public | `LoginComponent` |
+| `/app` | Protected | `ShellComponent` (primary shell route) |
+| `/app/:domain` | Protected | Domain modules under shell |
+| `/chat` | – | Redirects to `/app` (legacy compatibility alias) |
+| `/` | – | Landing page |
+
+### Role-based route access
+
+- `/app` remains authenticated via `authGuard`.
+- Child routes under `/app` can optionally enforce roles via route metadata:
+
+  ```ts
+  {
+    path: 'orders',
+    data: { roles: ['ROLE_MANAGER', 'ROLE_ADMIN'] },
+    loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDERS_ROUTES)
+  }
+  ```
+
+- `rolesChildGuard` reads `data.roles` and checks `AuthService.hasAnyRole(...)`.
+
+## Adding a Domain Module
+
+1. Create `src/app/features/<domain>/` with its own `<domain>.routes.ts`.
+2. Register in `app.routes.ts` as a child of the `/app` shell:
+
+   ```ts
+   { path: 'orders', loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDERS_ROUTES) }
+   ```
+
+3. Add a nav entry in `NavigationRegistryService` (`src/app/features/shell/services/navigation-registry.service.ts`).
+
+## Theming
+
+- All colors use CSS variables from `src/styles.css`.
+- Toggle: header button or `ThemeService.toggle()` from any component.
+- Preference persists in `localStorage` (`durion-theme`).
+- Extended tokens documented in `design/source/theme-tokens.md`.
+
+## Backend Integration
+
+- Set `apiBaseUrl` in `src/environments/environment.ts` (dev) or `environment.prod.ts` (prod).
+- `ApiBaseService` is the HTTP wrapper – inject it in feature services instead of `HttpClient` directly.
+- `authInterceptor` attaches `Authorization: Bearer <token>` automatically.
+- Same-origin frontend serving proxies both `/api` and `/mcp-server` requests to the API gateway.
+- JWT claim contract (ADR-0040):
+  - frontend role gating uses `roles` claim.
+  - API authorization remains backend-authoritative via gateway-decoded `perm_bits`/`perm_ver`.
+  - frontend does not send `X-Authorities` headers.
+- Refresh token flow is stubbed in `AuthService.refreshTokens()` — wire to `POST /auth/refresh` when backend exposes it.
+- Shell chat uses `ChatApiService` to call the MCP chat endpoint via the API gateway at `/mcp-server/v1/mcp/chat`.
+
+## Environment Variables
+
+| Variable | Default (dev) | Description |
+|---|---|---|
+| `apiBaseUrl` | `http://localhost:8080/api` | Backend REST API base URL |
