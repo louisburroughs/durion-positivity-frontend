@@ -94,6 +94,19 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
       },
     ],
   },
+  {
+    titleKey: 'ADMIN.LANDING.SECTION.DATA_TOOLS.TITLE',
+    descriptionKey: 'ADMIN.LANDING.SECTION.DATA_TOOLS.DESCRIPTION',
+    cards: [
+      {
+        kind: 'direct',
+        titleKey: 'ADMIN.LANDING.CARD.IMPORT_JOBS.TITLE',
+        descriptionKey: 'ADMIN.LANDING.CARD.IMPORT_JOBS.DESCRIPTION',
+        route: '/app/bulk-import/jobs',
+        actionKey: 'ADMIN.LANDING.ACTION.OPEN_PAGE',
+      },
+    ],
+  },
 ];
 
 @Component({

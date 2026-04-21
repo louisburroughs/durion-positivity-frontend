@@ -200,6 +200,10 @@
         "ACCESS": {
           "TITLE": "Accès et affectations",
           "DESCRIPTION": "Ouvrez les pages de rôles et d’affectations de lieu avec les identifiants requis."
+        },
+        "DATA_IMPORT": {
+          "TITLE": "Importation de donnees",
+          "DESCRIPTION": "Importer en masse des donnees de personnel et RH."
         }
       },
       "CARD": {
@@ -242,6 +246,10 @@
         "PERSON_LOCATIONS": {
           "TITLE": "Affectations d’emplacement d’une personne",
           "DESCRIPTION": "Passez en revue et mettez à jour les affectations d’emplacement pour un ID de personne précis."
+        },
+        "IMPORT_PEOPLE": {
+          "TITLE": "Importer le personnel",
+          "DESCRIPTION": "Importer en masse les enregistrements de personnel et RH a partir d'un fichier CSV ou XLSX."
         }
       },
       "FIELD": {
@@ -265,7 +273,8 @@
         "OPEN_EMPLOYEE_PROFILE": "Ouvrir le profil",
         "OPEN_EMPLOYEE_OFFBOARD": "Ouvrir le départ",
         "OPEN_RBAC": "Ouvrir l’attribution des rôles",
-        "OPEN_PERSON_LOCATIONS": "Ouvrir les affectations d’emplacement"
+        "OPEN_PERSON_LOCATIONS": "Ouvrir les affectations d’emplacement",
+        "IMPORT_DATA": "Importer des donnees"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Saisissez l’identifiant requis avant d’ouvrir cette page.",
@@ -347,6 +356,10 @@
         "INSIGHTS": {
           "TITLE": "Informations et intégration",
           "DESCRIPTION": "Accédez au snapshot CRM pour un aperçu du contexte client et consultez les événements d'intégration pour les diagnostics."
+        },
+        "DATA_IMPORT": {
+          "TITLE": "Importation de donnees",
+          "DESCRIPTION": "Importer en masse des donnees CRM."
         }
       },
       "CARD": {
@@ -393,6 +406,18 @@
         "INTEGRATION_EVENTS": {
           "TITLE": "Événements d'intégration",
           "DESCRIPTION": "Consultez le journal des événements d'intégration entre le CRM et les systèmes externes."
+        },
+        "IMPORT_CUSTOMER": {
+          "TITLE": "Importer des clients",
+          "DESCRIPTION": "Importer en masse les enregistrements de clients a partir d'un fichier CSV ou XLSX."
+        },
+        "IMPORT_VEHICLE_INVENTORY": {
+          "TITLE": "Importer l'inventaire de vehicules",
+          "DESCRIPTION": "Importer en masse les enregistrements d'inventaire de vehicules a partir d'un fichier CSV ou XLSX."
+        },
+        "IMPORT_VEHICLE_FITMENT": {
+          "TITLE": "Importer l'ajustement de vehicules",
+          "DESCRIPTION": "Importer en masse les enregistrements d'ajustement de vehicules a partir d'un fichier CSV ou XLSX."
         }
       },
       "FIELD": {
@@ -412,7 +437,8 @@
         "OPEN_CONTACTS": "Voir les contacts",
         "OPEN_BILLING_RULES": "Voir les règles de facturation",
         "OPEN_SNAPSHOT": "Charger le snapshot",
-        "OPENING_PAGE": "Ouverture..."
+        "OPENING_PAGE": "Ouverture...",
+        "IMPORT_DATA": "Importer des donnees"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Un ID de partie est requis.",
@@ -758,6 +784,10 @@
         "RESOURCES": {
           "TITLE": "Ressources des installations",
           "DESCRIPTION": "Accédez aux baies, unités mobiles, emplacements de stockage et outils de synchronisation."
+        },
+        "DATA_IMPORT": {
+          "TITLE": "Importation de donnees",
+          "DESCRIPTION": "Importer en masse des donnees d'emplacement."
         }
       },
       "CARD": {
@@ -792,6 +822,10 @@
         "LOCATION_SYNC": {
           "TITLE": "Synchronisation des emplacements",
           "DESCRIPTION": "Exécutez et surveillez les tâches de synchronisation des données d'emplacement."
+        },
+        "IMPORT_LOCATION": {
+          "TITLE": "Importer des emplacements",
+          "DESCRIPTION": "Importer en masse les enregistrements d'emplacement a partir d'un fichier CSV ou XLSX."
         }
       },
       "FIELD": {
@@ -806,7 +840,8 @@
         "OPEN_PAGE": "Ouvrir la page",
         "OPENING_PAGE": "Ouverture…",
         "OPEN_LOCATION": "Ouvrir l'emplacement",
-        "OPEN_LOCATION_DEFAULTS": "Ouvrir les valeurs par défaut"
+        "OPEN_LOCATION_DEFAULTS": "Ouvrir les valeurs par défaut",
+        "IMPORT_DATA": "Importer des donnees"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Entrez l'identifiant requis avant d'ouvrir cette page.",
@@ -1801,6 +1836,67 @@
           "EFFECTIVE_PRICE": "Échec du chargement des prix en vigueur."
         }
       }
+    },
+    "LANDING": {
+      "EYEBROW": "Produit et catalogue",
+      "TITLE": "Gestion des produits",
+      "SUBTITLE": "Gerez votre catalogue de produits, la tarification, les flux d'inventaire et les importations massives.",
+      "ACTION": {
+        "OPEN_PAGE": "Ouvrir",
+        "IMPORT_DATA": "Importer des donnees"
+      },
+      "SECTION": {
+        "CATALOG": {
+          "TITLE": "Catalogue",
+          "DESCRIPTION": "Parcourir et gerer les enregistrements de produits."
+        },
+        "PRICING": {
+          "TITLE": "Tarification",
+          "DESCRIPTION": "Gerer les grilles de prix, le MSRP et les remplacements par emplacement."
+        },
+        "INVENTORY": {
+          "TITLE": "Inventaire",
+          "DESCRIPTION": "Suivre la disponibilite et gerer les flux d'inventaire."
+        },
+        "DATA_IMPORT": {
+          "TITLE": "Importation de donnees",
+          "DESCRIPTION": "Importer en masse les donnees de catalogue et de tarification des produits."
+        }
+      },
+      "CARD": {
+        "CATALOG_LIST": {
+          "TITLE": "Liste des produits",
+          "DESCRIPTION": "Afficher et gerer tous les produits du catalogue."
+        },
+        "PRICE_BOOKS": {
+          "TITLE": "Grilles de prix",
+          "DESCRIPTION": "Gerer les grilles de prix et les paliers tarifaires clients."
+        },
+        "MSRP": {
+          "TITLE": "MSRP",
+          "DESCRIPTION": "Definir et gerer les prix de detail suggeres par le fabricant."
+        },
+        "LOCATION_OVERRIDES": {
+          "TITLE": "Remplacements par emplacement",
+          "DESCRIPTION": "Gerer les remplacements de prix propres a chaque emplacement."
+        },
+        "AVAILABILITY": {
+          "TITLE": "Disponibilite",
+          "DESCRIPTION": "Suivre et gerer la disponibilite des produits."
+        },
+        "FEEDS": {
+          "TITLE": "Flux d'inventaire",
+          "DESCRIPTION": "Gerer les flux automatisees de donnees d'inventaire."
+        },
+        "IMPORT_CATALOG": {
+          "TITLE": "Importer le catalogue",
+          "DESCRIPTION": "Importer en masse les enregistrements du catalogue de produits depuis un fichier CSV ou XLSX."
+        },
+        "IMPORT_PRICE": {
+          "TITLE": "Importer la tarification",
+          "DESCRIPTION": "Importer en masse les donnees de tarification depuis un fichier CSV ou XLSX."
+        }
+      }
     }
   },
   "WORKEXEC": {
@@ -2121,6 +2217,10 @@
         "ADMIN": {
           "TITLE": "Administration",
           "DESCRIPTION": "Gérer les permissions et la configuration des stocks."
+        },
+        "DATA_IMPORT": {
+          "TITLE": "Importation de donnees",
+          "DESCRIPTION": "Importer en masse des donnees d'inventaire de stock."
         }
       },
       "CARD": {
@@ -2211,6 +2311,10 @@
         "SECURITY_PERMISSIONS": {
           "TITLE": "Permissions",
           "DESCRIPTION": "Gérer les accès et la configuration des permissions des stocks."
+        },
+        "IMPORT_STOCK": {
+          "TITLE": "Importer le stock",
+          "DESCRIPTION": "Importer en masse les enregistrements d'inventaire de stock a partir d'un fichier CSV ou XLSX."
         }
       },
       "FIELD": {
@@ -3333,6 +3437,10 @@
         "AUDIT": {
           "TITLE": "Audit et conformité",
           "DESCRIPTION": "Consultez les entrées d'audit de sécurité et le journal complet des événements d'audit."
+        },
+        "DATA_TOOLS": {
+          "TITLE": "Outils de donnees",
+          "DESCRIPTION": "Gerer les importations massives de donnees et les operations de donnees systeme."
         }
       },
       "CARD": {
@@ -3359,6 +3467,10 @@
         "AUDIT_LOGS": {
           "TITLE": "Journaux d'audit",
           "DESCRIPTION": "Parcourez et exportez le journal complet des événements d'audit avec des filtres d'acteur et d'horodatage."
+        },
+        "IMPORT_JOBS": {
+          "TITLE": "Travaux d'importation",
+          "DESCRIPTION": "Afficher et gerer tous les travaux d'importation massive de donnees de tous les domaines."
         }
       },
       "FIELD": {
@@ -3375,6 +3487,233 @@
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Un nom de rôle est requis pour ouvrir cette page.",
         "NAVIGATE": "Échec de la navigation. Vérifiez la valeur et réessayez."
+      }
+    }
+  },
+  "BULK_IMPORT": {
+    "DOMAIN": {
+      "CATALOG": "Catalogue de produits",
+      "INVENTORY": "Inventaire",
+      "LOCATION": "Emplacement",
+      "CUSTOMER": "Client",
+      "PEOPLE": "Personnel / RH",
+      "PRICE": "Tarification",
+      "VEHICLE_INVENTORY": "Inventaire de vehicules",
+      "VEHICLE_FITMENT": "Ajustement de vehicules"
+    },
+    "STATUS": {
+      "CREATED": "Cree",
+      "UPLOADING": "Televersement",
+      "DETECTING": "Detection",
+      "MAPPING_REVIEW": "Revision du mappage",
+      "DEDUP": "Deduplication",
+      "PROCESSING": "Traitement",
+      "COMPLETED": "Termine",
+      "FAILED": "Echoue",
+      "CANCELLED": "Annule"
+    },
+    "JOBS": {
+      "TITLE": "Travaux d'importation",
+      "SUBTITLE": "Suivez et gerez tous les travaux d'importation massive de donnees.",
+      "LOADING": "Chargement des travaux…",
+      "EMPTY": "Aucun travail d'importation trouve.",
+      "REFRESH": "Actualiser",
+      "ERROR": {
+        "LOAD": "Impossible de charger les travaux. Veuillez reessayer."
+      },
+      "FILTERS": {
+        "ARIA_LABEL": "Filtrer les travaux",
+        "DOMAIN": "Domaine",
+        "STATUS": "Statut",
+        "ALL_DOMAINS": "Tous les domaines",
+        "ALL_STATUSES": "Tous les statuts"
+      },
+      "TABLE": {
+        "CAPTION": "Liste des travaux d'importation",
+        "DOMAIN": "Domaine",
+        "FILE": "Fichier",
+        "STATUS": "Statut",
+        "ROWS": "Lignes",
+        "CREATED": "Cree",
+        "ACTIONS": "Actions",
+        "VIEW": "Voir",
+        "OPEN_JOB": "Ouvrir le travail"
+      }
+    },
+    "JOB_DETAIL": {
+      "TITLE": "Details du travail",
+      "LOADING": "Chargement des details du travail…",
+      "BACK": "Retour aux travaux",
+      "CANCEL": "Annuler le travail",
+      "RETRY": "Reessayer",
+      "DOWNLOAD_ERRORS": "Telecharger le rapport d'erreurs",
+      "ERROR": {
+        "LOAD": "Impossible de charger les details du travail.",
+        "LOAD_AUDIT": "Impossible de charger les enregistrements d'erreurs.",
+        "CANCEL": "Impossible d'annuler le travail.",
+        "RETRY": "Impossible de reessayer le travail."
+      },
+      "META": {
+        "ARIA_LABEL": "Metadonnees du travail",
+        "DOMAIN": "Domaine",
+        "FILE": "Fichier",
+        "STATUS": "Statut",
+        "TOTAL_ROWS": "Lignes totales",
+        "SUCCESS": "Reussies",
+        "FAILURES": "Lignes en echec"
+      },
+      "ERRORS": {
+        "ARIA_LABEL": "Enregistrements d'erreurs",
+        "TITLE": "Enregistrements d'erreurs"
+      }
+    },
+    "WIZARD": {
+      "LOADING": "Chargement…",
+      "BACK": "Retour",
+      "INVENTORY": {
+        "TITLE": "Importer l'inventaire de stock",
+        "SUBTITLE": "Televersez un fichier CSV ou XLSX pour importer en masse les enregistrements d'inventaire de stock."
+      },
+      "LOCATION": {
+        "TITLE": "Importer des emplacements",
+        "SUBTITLE": "Televersez un fichier CSV ou XLSX pour importer en masse des donnees d'emplacement."
+      },
+      "CATALOG": {
+        "TITLE": "Importer le catalogue de produits",
+        "SUBTITLE": "Televersez un fichier CSV ou XLSX pour importer en masse les enregistrements du catalogue de produits."
+      },
+      "PRICE": {
+        "TITLE": "Importer la tarification",
+        "SUBTITLE": "Televersez un fichier CSV ou XLSX pour importer en masse des donnees de tarification."
+      },
+      "CUSTOMER": {
+        "TITLE": "Importer des clients",
+        "SUBTITLE": "Televersez un fichier CSV ou XLSX pour importer en masse des enregistrements de clients."
+      },
+      "PEOPLE": {
+        "TITLE": "Importer Personnel / RH",
+        "SUBTITLE": "Televersez un fichier CSV ou XLSX pour importer en masse des enregistrements de personnel et RH."
+      },
+      "VEHICLE_INVENTORY": {
+        "TITLE": "Importer l'inventaire de vehicules",
+        "SUBTITLE": "Televersez un fichier CSV ou XLSX pour importer en masse des donnees d'inventaire de vehicules."
+      },
+      "VEHICLE_FITMENT": {
+        "TITLE": "Importer l'ajustement de vehicules",
+        "SUBTITLE": "Televersez un fichier CSV ou XLSX pour importer en masse des donnees d'ajustement de vehicules."
+      },
+      "ERROR": {
+        "LOAD": "Impossible de verifier l'etat du travail actif.",
+        "UPLOAD": "Echec du televersement du fichier. Veuillez reessayer.",
+        "CREATE_SESSION": "Impossible de demarrer la session d'importation.",
+        "LOAD_MAPPINGS": "Impossible de charger les mappages de colonnes.",
+        "APPROVE_MAPPINGS": "Impossible d'approuver les mappages de colonnes.",
+        "RETRY": "Impossible de reessayer le travail."
+      },
+      "CONFLICT": {
+        "TITLE": "Importation active en cours",
+        "MESSAGE": "Un travail d'importation actif existe pour un autre domaine. Veuillez attendre sa fin avant de commencer une nouvelle importation.",
+        "VIEW_JOB": "Voir le travail actif"
+      },
+      "STEP": {
+        "UPLOAD": {
+          "ARIA_LABEL": "Etape de televersement du fichier",
+          "TITLE": "Televerser le fichier"
+        },
+        "UPLOADING": {
+          "ARIA_LABEL": "Televersement du fichier",
+          "TITLE": "Televersement du fichier"
+        },
+        "MAPPING": {
+          "ARIA_LABEL": "Revision du mappage de colonnes",
+          "TITLE": "Reviser les mappages de colonnes"
+        },
+        "PROGRESS": {
+          "ARIA_LABEL": "Progression du traitement de l'importation",
+          "TITLE": "Traitement de l'importation",
+          "PROCESSED": "Lignes traitees",
+          "CANCEL": "Annuler"
+        },
+        "RESULTS": {
+          "ARIA_LABEL": "Resultats de l'importation"
+        }
+      }
+    },
+    "FILE_DROP": {
+      "ARIA_LABEL": "Zone de depot de fichiers",
+      "INSTRUCTION": "Glissez-deposez un fichier ici, ou cliquez pour parcourir",
+      "FORMATS": "Formats acceptes : .csv, .xlsx (max. 100 Mo)",
+      "BROWSE_LABEL": "Choisir un fichier",
+      "BROWSE_BTN": "Parcourir les fichiers",
+      "INPUT_ARIA": "Selectionner le fichier a importer",
+      "ERROR": {
+        "INVALID_FORMAT": "Format de fichier invalide. Veuillez televerser un fichier .csv ou .xlsx.",
+        "TOO_LARGE": "Le fichier est trop volumineux. La taille maximale autorisee est de 100 Mo."
+      }
+    },
+    "UPLOAD_PROGRESS": {
+      "ARIA_LABEL": "Progression du televersement",
+      "CANCEL": "Annuler le televersement"
+    },
+    "MAPPING": {
+      "TABLE": {
+        "ARIA_LABEL": "Tableau de mappage des colonnes",
+        "CAPTION": "Mappages des colonnes de votre fichier vers les champs systeme"
+      },
+      "COL": {
+        "SOURCE": "Votre colonne",
+        "TARGET": "Champ systeme",
+        "CONFIDENCE": "Confiance de correspondance"
+      },
+      "TARGET_LABEL_FOR": "Champ systeme pour la colonne : ",
+      "APPROVE_BTN": "Approuver les mappages",
+      "CONFIDENCE": {
+        "HIGH": "Elevee",
+        "MEDIUM": "Moyenne",
+        "LOW": "Faible"
+      }
+    },
+    "PROGRESS": {
+      "STEPPER": {
+        "ARIA_LABEL": "Etapes de progression de l'importation"
+      },
+      "STEP": {
+        "UPLOAD": "Televerser",
+        "DETECT": "Detecter",
+        "MAPPING": "Mappage",
+        "DEDUP": "Deduplication",
+        "PROCESS": "Traiter",
+        "DONE": "Termine"
+      }
+    },
+    "RESULTS": {
+      "ARIA_LABEL": "Resume des resultats d'importation",
+      "TITLE": "Importation terminee",
+      "TOTAL": "Lignes totales",
+      "SUCCESS": "Reussies",
+      "FAILURES": "Echouees",
+      "DOWNLOAD_ERRORS": "Telecharger le rapport d'erreurs",
+      "RETRY": "Reessayer les lignes en echec"
+    },
+    "ERROR_RECORDS": {
+      "ARIA_LABEL": "Enregistrements d'erreurs",
+      "EMPTY": "Aucun enregistrement d'erreurs a afficher.",
+      "SUBMIT": "Soumettre la correction",
+      "SUBMITTING": "Enregistrement…",
+      "TABLE": {
+        "CAPTION": "Enregistrements d'erreurs necessitant une revision"
+      },
+      "COL": {
+        "ROW": "Ligne",
+        "REASONS": "Raison(s)",
+        "STATUS": "Statut",
+        "CORRECTIONS": "Corrections",
+        "ACTIONS": "Actions"
+      },
+      "STATUS": {
+        "PENDING": "En attente",
+        "APPROVED": "Approuve",
+        "REJECTED": "Rejete"
       }
     }
   }

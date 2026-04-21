@@ -91,6 +91,27 @@ export const CRM_ROUTES: Routes = [
             m => m.BillingRulesPageComponent,
           ),
       },
+      {
+        path: 'bulk-import/customer',
+        loadComponent: () =>
+          import('./pages/bulk-import/customer-bulk-import-page.component').then(
+            m => m.CustomerBulkImportPageComponent,
+          ),
+      },
+      {
+        path: 'bulk-import/vehicle-inventory',
+        loadComponent: () =>
+          import('./pages/bulk-import/vehicle-inventory-bulk-import-page.component').then(
+            m => m.VehicleInventoryBulkImportPageComponent,
+          ),
+      },
+      {
+        path: 'bulk-import/vehicle-fitment',
+        loadComponent: () =>
+          import('./pages/bulk-import/vehicle-fitment-bulk-import-page.component').then(
+            m => m.VehicleFitmentBulkImportPageComponent,
+          ),
+      },
       { path: '**', redirectTo: '' },
     ],
   },

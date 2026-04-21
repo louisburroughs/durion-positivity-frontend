@@ -148,6 +148,33 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
       },
     ],
   },
+  {
+    titleKey: 'CRM.LANDING.SECTION.DATA_IMPORT.TITLE',
+    descriptionKey: 'CRM.LANDING.SECTION.DATA_IMPORT.DESCRIPTION',
+    cards: [
+      {
+        kind: 'direct',
+        titleKey: 'CRM.LANDING.CARD.IMPORT_CUSTOMER.TITLE',
+        descriptionKey: 'CRM.LANDING.CARD.IMPORT_CUSTOMER.DESCRIPTION',
+        route: '/app/crm/bulk-import/customer',
+        actionKey: 'CRM.LANDING.ACTION.IMPORT_DATA',
+      },
+      {
+        kind: 'direct',
+        titleKey: 'CRM.LANDING.CARD.IMPORT_VEHICLE_INVENTORY.TITLE',
+        descriptionKey: 'CRM.LANDING.CARD.IMPORT_VEHICLE_INVENTORY.DESCRIPTION',
+        route: '/app/crm/bulk-import/vehicle-inventory',
+        actionKey: 'CRM.LANDING.ACTION.IMPORT_DATA',
+      },
+      {
+        kind: 'direct',
+        titleKey: 'CRM.LANDING.CARD.IMPORT_VEHICLE_FITMENT.TITLE',
+        descriptionKey: 'CRM.LANDING.CARD.IMPORT_VEHICLE_FITMENT.DESCRIPTION',
+        route: '/app/crm/bulk-import/vehicle-fitment',
+        actionKey: 'CRM.LANDING.ACTION.IMPORT_DATA',
+      },
+    ],
+  },
 ] as const;
 
 @Component({

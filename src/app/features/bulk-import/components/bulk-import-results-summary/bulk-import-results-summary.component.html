@@ -1,0 +1,28 @@
+<section class="results-summary" [attr.aria-label]="'BULK_IMPORT.RESULTS.ARIA_LABEL' | translate">
+	<h2 class="results-summary__title">{{ 'BULK_IMPORT.RESULTS.TITLE' | translate }}</h2>
+	<dl class="results-summary__stats">
+		<div class="results-stat">
+			<dt>{{ 'BULK_IMPORT.RESULTS.TOTAL' | translate }}</dt>
+			<dd>{{ job.totalRows ?? 0 }}</dd>
+		</div>
+		<div class="results-stat">
+			<dt>{{ 'BULK_IMPORT.RESULTS.SUCCESS' | translate }}</dt>
+			<dd>{{ job.successCount ?? 0 }}</dd>
+		</div>
+		<div class="results-stat">
+			<dt>{{ 'BULK_IMPORT.RESULTS.FAILURES' | translate }}</dt>
+			<dd>{{ job.failureCount ?? 0 }}</dd>
+		</div>
+	</dl>
+
+	@if ((job.failureCount ?? 0) > 0) {
+	<div class="results-summary__actions">
+		<button class="results-btn results-btn--secondary" type="button" (click)="downloadReport.emit()">
+			{{ 'BULK_IMPORT.RESULTS.DOWNLOAD_ERRORS' | translate }}
+		</button>
+		<button class="results-btn results-btn--primary" type="button" (click)="retry.emit()">
+			{{ 'BULK_IMPORT.RESULTS.RETRY' | translate }}
+		</button>
+	</div>
+	}
+</section>

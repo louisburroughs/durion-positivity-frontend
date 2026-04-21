@@ -200,6 +200,10 @@
         "ACCESS": {
           "TITLE": "Access & Assignments",
           "DESCRIPTION": "Open role access and location assignment pages with the IDs your workflow needs."
+        },
+        "DATA_IMPORT": {
+          "TITLE": "Data Import",
+          "DESCRIPTION": "Bulk import people and HR data."
         }
       },
       "CARD": {
@@ -242,6 +246,10 @@
         "PERSON_LOCATIONS": {
           "TITLE": "Person Location Assignments",
           "DESCRIPTION": "Review and update location assignments for a specific person ID."
+        },
+        "IMPORT_PEOPLE": {
+          "TITLE": "Import People",
+          "DESCRIPTION": "Bulk import people and HR records from a CSV or XLSX file."
         }
       },
       "FIELD": {
@@ -265,7 +273,8 @@
         "OPEN_EMPLOYEE_PROFILE": "Open Employee Profile",
         "OPEN_EMPLOYEE_OFFBOARD": "Open Offboard Page",
         "OPEN_RBAC": "Open Role Assignment",
-        "OPEN_PERSON_LOCATIONS": "Open Location Assignments"
+        "OPEN_PERSON_LOCATIONS": "Open Location Assignments",
+        "IMPORT_DATA": "Import Data"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Enter the required identifier before opening this page.",
@@ -347,6 +356,10 @@
         "INSIGHTS": {
           "TITLE": "Insights & Integration",
           "DESCRIPTION": "Access the CRM snapshot for customer context at a glance, and review integration events for diagnostics."
+        },
+        "DATA_IMPORT": {
+          "TITLE": "Data Import",
+          "DESCRIPTION": "Bulk import CRM data."
         }
       },
       "CARD": {
@@ -393,6 +406,18 @@
         "INTEGRATION_EVENTS": {
           "TITLE": "Integration Events",
           "DESCRIPTION": "Review the log of integration events between the CRM and external systems."
+        },
+        "IMPORT_CUSTOMER": {
+          "TITLE": "Import Customers",
+          "DESCRIPTION": "Bulk import customer records from a CSV or XLSX file."
+        },
+        "IMPORT_VEHICLE_INVENTORY": {
+          "TITLE": "Import Vehicle Inventory",
+          "DESCRIPTION": "Bulk import vehicle inventory records from a CSV or XLSX file."
+        },
+        "IMPORT_VEHICLE_FITMENT": {
+          "TITLE": "Import Vehicle Fitment",
+          "DESCRIPTION": "Bulk import vehicle fitment records from a CSV or XLSX file."
         }
       },
       "FIELD": {
@@ -412,7 +437,8 @@
         "OPEN_CONTACTS": "View Contacts",
         "OPEN_BILLING_RULES": "View Billing Rules",
         "OPEN_SNAPSHOT": "Load Snapshot",
-        "OPENING_PAGE": "Opening..."
+        "OPENING_PAGE": "Opening...",
+        "IMPORT_DATA": "Import Data"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "A Party ID is required.",
@@ -758,6 +784,10 @@
         "RESOURCES": {
           "TITLE": "Facility Resources",
           "DESCRIPTION": "Access bays, mobile units, storage locations, and sync tools."
+        },
+        "DATA_IMPORT": {
+          "TITLE": "Data Import",
+          "DESCRIPTION": "Bulk import location data."
         }
       },
       "CARD": {
@@ -792,6 +822,10 @@
         "LOCATION_SYNC": {
           "TITLE": "Location Sync",
           "DESCRIPTION": "Run and monitor synchronization jobs for location data."
+        },
+        "IMPORT_LOCATION": {
+          "TITLE": "Import Locations",
+          "DESCRIPTION": "Bulk import location records from a CSV or XLSX file."
         }
       },
       "FIELD": {
@@ -806,7 +840,8 @@
         "OPEN_PAGE": "Open Page",
         "OPENING_PAGE": "Opening…",
         "OPEN_LOCATION": "Open Location",
-        "OPEN_LOCATION_DEFAULTS": "Open Defaults"
+        "OPEN_LOCATION_DEFAULTS": "Open Defaults",
+        "IMPORT_DATA": "Import Data"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Enter the required identifier before opening this page.",
@@ -1801,6 +1836,67 @@
           "EFFECTIVE_PRICE": "Failed to load effective prices."
         }
       }
+    },
+    "LANDING": {
+      "EYEBROW": "Product & Catalog",
+      "TITLE": "Product Management",
+      "SUBTITLE": "Manage your product catalog, pricing, inventory feeds, and bulk imports.",
+      "ACTION": {
+        "OPEN_PAGE": "Open",
+        "IMPORT_DATA": "Import Data"
+      },
+      "SECTION": {
+        "CATALOG": {
+          "TITLE": "Catalog",
+          "DESCRIPTION": "Browse and manage product records."
+        },
+        "PRICING": {
+          "TITLE": "Pricing",
+          "DESCRIPTION": "Manage price books, MSRP, and location overrides."
+        },
+        "INVENTORY": {
+          "TITLE": "Inventory",
+          "DESCRIPTION": "Track availability and manage inventory feeds."
+        },
+        "DATA_IMPORT": {
+          "TITLE": "Data Import",
+          "DESCRIPTION": "Bulk import product catalog and pricing data."
+        }
+      },
+      "CARD": {
+        "CATALOG_LIST": {
+          "TITLE": "Product List",
+          "DESCRIPTION": "View and manage all products in the catalog."
+        },
+        "PRICE_BOOKS": {
+          "TITLE": "Price Books",
+          "DESCRIPTION": "Manage price books and customer pricing tiers."
+        },
+        "MSRP": {
+          "TITLE": "MSRP",
+          "DESCRIPTION": "Set and manage manufacturer suggested retail prices."
+        },
+        "LOCATION_OVERRIDES": {
+          "TITLE": "Location Overrides",
+          "DESCRIPTION": "Manage location-specific pricing overrides."
+        },
+        "AVAILABILITY": {
+          "TITLE": "Availability",
+          "DESCRIPTION": "Track and manage product availability."
+        },
+        "FEEDS": {
+          "TITLE": "Inventory Feeds",
+          "DESCRIPTION": "Manage automated inventory data feeds."
+        },
+        "IMPORT_CATALOG": {
+          "TITLE": "Import Catalog",
+          "DESCRIPTION": "Bulk import product catalog records from a CSV or XLSX file."
+        },
+        "IMPORT_PRICE": {
+          "TITLE": "Import Pricing",
+          "DESCRIPTION": "Bulk import pricing data from a CSV or XLSX file."
+        }
+      }
     }
   },
   "WORKEXEC": {
@@ -2121,6 +2217,10 @@
         "ADMIN": {
           "TITLE": "Administration",
           "DESCRIPTION": "Manage permissions and configuration for inventory."
+        },
+        "DATA_IMPORT": {
+          "TITLE": "Data Import",
+          "DESCRIPTION": "Bulk import stock inventory data."
         }
       },
       "CARD": {
@@ -2211,6 +2311,10 @@
         "SECURITY_PERMISSIONS": {
           "TITLE": "Permissions",
           "DESCRIPTION": "Manage inventory access and permission settings."
+        },
+        "IMPORT_STOCK": {
+          "TITLE": "Import Stock",
+          "DESCRIPTION": "Bulk import stock inventory records from a CSV or XLSX file."
         }
       },
       "FIELD": {
@@ -3333,6 +3437,10 @@
         "AUDIT": {
           "TITLE": "Audit & Compliance",
           "DESCRIPTION": "Review security audit entries and the full platform audit event log."
+        },
+        "DATA_TOOLS": {
+          "TITLE": "Data Tools",
+          "DESCRIPTION": "Manage bulk data imports and system data operations."
         }
       },
       "CARD": {
@@ -3359,6 +3467,10 @@
         "AUDIT_LOGS": {
           "TITLE": "Audit Logs",
           "DESCRIPTION": "Browse and export the full platform audit event log with actor and timestamp filters."
+        },
+        "IMPORT_JOBS": {
+          "TITLE": "Import Jobs",
+          "DESCRIPTION": "View and manage all bulk data import jobs across all domains."
         }
       },
       "FIELD": {
@@ -3375,6 +3487,233 @@
       "ERROR": {
         "REQUIRED_IDENTIFIER": "A role name is required to open this page.",
         "NAVIGATE": "Navigation failed. Please check the value and try again."
+      }
+    }
+  },
+  "BULK_IMPORT": {
+    "DOMAIN": {
+      "CATALOG": "Product Catalog",
+      "INVENTORY": "Stock Inventory",
+      "LOCATION": "Location",
+      "CUSTOMER": "Customer",
+      "PEOPLE": "People / HR",
+      "PRICE": "Pricing",
+      "VEHICLE_INVENTORY": "Vehicle Inventory",
+      "VEHICLE_FITMENT": "Vehicle Fitment"
+    },
+    "STATUS": {
+      "CREATED": "Created",
+      "UPLOADING": "Uploading",
+      "DETECTING": "Detecting",
+      "MAPPING_REVIEW": "Mapping Review",
+      "DEDUP": "Dedup",
+      "PROCESSING": "Processing",
+      "COMPLETED": "Completed",
+      "FAILED": "Failed",
+      "CANCELLED": "Cancelled"
+    },
+    "JOBS": {
+      "TITLE": "Import Jobs",
+      "SUBTITLE": "Track and manage all bulk data import jobs.",
+      "LOADING": "Loading jobs…",
+      "EMPTY": "No import jobs found.",
+      "REFRESH": "Refresh",
+      "ERROR": {
+        "LOAD": "Unable to load jobs. Please try again."
+      },
+      "FILTERS": {
+        "ARIA_LABEL": "Filter jobs",
+        "DOMAIN": "Domain",
+        "STATUS": "Status",
+        "ALL_DOMAINS": "All domains",
+        "ALL_STATUSES": "All statuses"
+      },
+      "TABLE": {
+        "CAPTION": "Import jobs list",
+        "DOMAIN": "Domain",
+        "FILE": "File",
+        "STATUS": "Status",
+        "ROWS": "Rows",
+        "CREATED": "Created",
+        "ACTIONS": "Actions",
+        "VIEW": "View",
+        "OPEN_JOB": "Open job"
+      }
+    },
+    "JOB_DETAIL": {
+      "TITLE": "Job Details",
+      "LOADING": "Loading job details…",
+      "BACK": "Back to Jobs",
+      "CANCEL": "Cancel Job",
+      "RETRY": "Retry",
+      "DOWNLOAD_ERRORS": "Download Error Report",
+      "ERROR": {
+        "LOAD": "Unable to load job details.",
+        "LOAD_AUDIT": "Unable to load error records.",
+        "CANCEL": "Unable to cancel job.",
+        "RETRY": "Unable to retry job."
+      },
+      "META": {
+        "ARIA_LABEL": "Job metadata",
+        "DOMAIN": "Domain",
+        "FILE": "File",
+        "STATUS": "Status",
+        "TOTAL_ROWS": "Total Rows",
+        "SUCCESS": "Successful",
+        "FAILURES": "Failed Rows"
+      },
+      "ERRORS": {
+        "ARIA_LABEL": "Error records",
+        "TITLE": "Error Records"
+      }
+    },
+    "WIZARD": {
+      "LOADING": "Loading…",
+      "BACK": "Back",
+      "INVENTORY": {
+        "TITLE": "Import Stock Inventory",
+        "SUBTITLE": "Upload a CSV or XLSX file to bulk-import stock inventory records."
+      },
+      "LOCATION": {
+        "TITLE": "Import Locations",
+        "SUBTITLE": "Upload a CSV or XLSX file to bulk-import location data."
+      },
+      "CATALOG": {
+        "TITLE": "Import Product Catalog",
+        "SUBTITLE": "Upload a CSV or XLSX file to bulk-import product catalog records."
+      },
+      "PRICE": {
+        "TITLE": "Import Pricing",
+        "SUBTITLE": "Upload a CSV or XLSX file to bulk-import pricing data."
+      },
+      "CUSTOMER": {
+        "TITLE": "Import Customers",
+        "SUBTITLE": "Upload a CSV or XLSX file to bulk-import customer records."
+      },
+      "PEOPLE": {
+        "TITLE": "Import People / HR",
+        "SUBTITLE": "Upload a CSV or XLSX file to bulk-import people and HR records."
+      },
+      "VEHICLE_INVENTORY": {
+        "TITLE": "Import Vehicle Inventory",
+        "SUBTITLE": "Upload a CSV or XLSX file to bulk-import vehicle inventory data."
+      },
+      "VEHICLE_FITMENT": {
+        "TITLE": "Import Vehicle Fitment",
+        "SUBTITLE": "Upload a CSV or XLSX file to bulk-import vehicle fitment data."
+      },
+      "ERROR": {
+        "LOAD": "Unable to check active job status.",
+        "UPLOAD": "File upload failed. Please try again.",
+        "CREATE_SESSION": "Unable to start import session.",
+        "LOAD_MAPPINGS": "Unable to load column mappings.",
+        "APPROVE_MAPPINGS": "Unable to approve column mappings.",
+        "RETRY": "Unable to retry job."
+      },
+      "CONFLICT": {
+        "TITLE": "Active Import in Progress",
+        "MESSAGE": "There is an active import job for another domain. Please wait for it to complete before starting a new import.",
+        "VIEW_JOB": "View Active Job"
+      },
+      "STEP": {
+        "UPLOAD": {
+          "ARIA_LABEL": "Upload file step",
+          "TITLE": "Upload File"
+        },
+        "UPLOADING": {
+          "ARIA_LABEL": "File uploading",
+          "TITLE": "Uploading File"
+        },
+        "MAPPING": {
+          "ARIA_LABEL": "Column mapping review",
+          "TITLE": "Review Column Mappings"
+        },
+        "PROGRESS": {
+          "ARIA_LABEL": "Import processing progress",
+          "TITLE": "Processing Import",
+          "PROCESSED": "Rows processed",
+          "CANCEL": "Cancel"
+        },
+        "RESULTS": {
+          "ARIA_LABEL": "Import results"
+        }
+      }
+    },
+    "FILE_DROP": {
+      "ARIA_LABEL": "File drop zone",
+      "INSTRUCTION": "Drag and drop a file here, or click to browse",
+      "FORMATS": "Accepted formats: .csv, .xlsx (max 100 MB)",
+      "BROWSE_LABEL": "Choose file",
+      "BROWSE_BTN": "Browse Files",
+      "INPUT_ARIA": "Select file to import",
+      "ERROR": {
+        "INVALID_FORMAT": "Invalid file format. Please upload a .csv or .xlsx file.",
+        "TOO_LARGE": "File is too large. Maximum allowed size is 100 MB."
+      }
+    },
+    "UPLOAD_PROGRESS": {
+      "ARIA_LABEL": "Upload progress",
+      "CANCEL": "Cancel Upload"
+    },
+    "MAPPING": {
+      "TABLE": {
+        "ARIA_LABEL": "Column mapping table",
+        "CAPTION": "Column mappings from your file to system fields"
+      },
+      "COL": {
+        "SOURCE": "Your Column",
+        "TARGET": "System Field",
+        "CONFIDENCE": "Match Confidence"
+      },
+      "TARGET_LABEL_FOR": "System field for column: ",
+      "APPROVE_BTN": "Approve Mappings",
+      "CONFIDENCE": {
+        "HIGH": "High",
+        "MEDIUM": "Medium",
+        "LOW": "Low"
+      }
+    },
+    "PROGRESS": {
+      "STEPPER": {
+        "ARIA_LABEL": "Import progress steps"
+      },
+      "STEP": {
+        "UPLOAD": "Upload",
+        "DETECT": "Detect",
+        "MAPPING": "Mapping",
+        "DEDUP": "Dedup",
+        "PROCESS": "Process",
+        "DONE": "Done"
+      }
+    },
+    "RESULTS": {
+      "ARIA_LABEL": "Import results summary",
+      "TITLE": "Import Complete",
+      "TOTAL": "Total Rows",
+      "SUCCESS": "Successful",
+      "FAILURES": "Failed",
+      "DOWNLOAD_ERRORS": "Download Error Report",
+      "RETRY": "Retry Failed Rows"
+    },
+    "ERROR_RECORDS": {
+      "ARIA_LABEL": "Error records",
+      "EMPTY": "No error records to display.",
+      "SUBMIT": "Submit Correction",
+      "SUBMITTING": "Saving…",
+      "TABLE": {
+        "CAPTION": "Error records requiring review"
+      },
+      "COL": {
+        "ROW": "Row",
+        "REASONS": "Reason(s)",
+        "STATUS": "Status",
+        "CORRECTIONS": "Corrections",
+        "ACTIONS": "Actions"
+      },
+      "STATUS": {
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
       }
     }
   }

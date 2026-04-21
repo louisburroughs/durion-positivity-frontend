@@ -41,13 +41,13 @@ describe('AdminLandingPageComponent', () => {
   });
 
   it('exposes the correct page counts', () => {
-    expect(component.directLinkCount).toBe(5);
+    expect(component.directLinkCount).toBe(6);
     expect(component.guidedLinkCount).toBe(1);
-    expect(component.totalPageCount).toBe(6);
+    expect(component.totalPageCount).toBe(7);
   });
 
-  it('renders three sections', () => {
-    expect(component.sections.length).toBe(3);
+  it('renders four sections', () => {
+    expect(component.sections.length).toBe(4);
   });
 
   it('renders all direct link anchors', () => {
@@ -63,7 +63,7 @@ describe('AdminLandingPageComponent', () => {
     const launchCards = allCards.filter(c => component.isLaunchCard(c));
     const directCards = allCards.filter(c => !component.isLaunchCard(c));
     expect(launchCards.length).toBe(1);
-    expect(directCards.length).toBe(5);
+    expect(directCards.length).toBe(6);
   });
 
   it('updateLaunchValue updates the roleName signal', () => {

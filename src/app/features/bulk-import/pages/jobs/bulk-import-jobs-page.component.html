@@ -1,0 +1,81 @@
+<main class="jobs-page" aria-labelledby="jobs-page-title">
+	<header class="jobs-page__header">
+		<h1 id="jobs-page-title">{{ 'BULK_IMPORT.JOBS.TITLE' | translate }}</h1>
+		<p>{{ 'BULK_IMPORT.JOBS.SUBTITLE' | translate }}</p>
+	</header>
+
+	<section class="jobs-page__filters" [attr.aria-label]="'BULK_IMPORT.JOBS.FILTERS.ARIA_LABEL' | translate">
+		<div class="jobs-filter">
+			<label class="jobs-filter__label" for="domain-filter">{{ 'BULK_IMPORT.JOBS.FILTERS.DOMAIN' | translate }}</label>
+			<select id="domain-filter" class="jobs-filter__select" (change)="applyFilter($any($event.target).value, filterStatus())">
+				<option value="">{{ 'BULK_IMPORT.JOBS.FILTERS.ALL_DOMAINS' | translate }}</option>
+				@for (dt of domainTypes; track dt) {
+				<option [value]="dt">{{ ('BULK_IMPORT.DOMAIN.' + dt) | translate }}</option>
+				}
+			</select>
+		</div>
+		<div class="jobs-filter">
+			<label class="jobs-filter__label" for="status-filter">{{ 'BULK_IMPORT.JOBS.FILTERS.STATUS' | translate }}</label>
+			<select id="status-filter" class="jobs-filter__select" (change)="applyFilter(filterDomainType(), $any($event.target).value)">
+				<option value="">{{ 'BULK_IMPORT.JOBS.FILTERS.ALL_STATUSES' | translate }}</option>
+				@for (s of jobStatuses; track s) {
+				<option [value]="s">{{ ('BULK_IMPORT.STATUS.' + s) | translate }}</option>
+				}
+			</select>
+		</div>
+		<button class="jobs-btn jobs-btn--secondary" type="button" (click)="loadJobs()">
+			{{ 'BULK_IMPORT.JOBS.REFRESH' | translate }}
+		</button>
+	</section>
+
+	@if (state() === 'error') {
+	<div class="jobs-banner jobs-banner--error" role="alert">
+		{{ errorKey()! | translate }}
+	</div>
+	}
+
+	@if (state() === 'loading') {
+	<div class="jobs-banner" aria-live="polite">
+		{{ 'BULK_IMPORT.JOBS.LOADING' | translate }}
+	</div>
+	}
+
+	@if (state() === 'empty') {
+	<p class="jobs-page__empty">{{ 'BULK_IMPORT.JOBS.EMPTY' | translate }}</p>
+	}
+
+	@if (state() === 'ready') {
+	<div class="jobs-page__table-wrap">
+		<table class="jobs-table">
+			<caption class="sr-only">{{ 'BULK_IMPORT.JOBS.TABLE.CAPTION' | translate }}</caption>
+			<thead>
+				<tr>
+					<th scope="col">{{ 'BULK_IMPORT.JOBS.TABLE.DOMAIN' | translate }}</th>
+					<th scope="col">{{ 'BULK_IMPORT.JOBS.TABLE.FILE' | translate }}</th>
+					<th scope="col">{{ 'BULK_IMPORT.JOBS.TABLE.STATUS' | translate }}</th>
+					<th scope="col">{{ 'BULK_IMPORT.JOBS.TABLE.ROWS' | translate }}</th>
+					<th scope="col">{{ 'BULK_IMPORT.JOBS.TABLE.CREATED' | translate }}</th>
+					<th scope="col"><span class="sr-only">{{ 'BULK_IMPORT.JOBS.TABLE.ACTIONS' | translate }}</span></th>
+				</tr>
+			</thead>
+			<tbody>
+				@for (job of jobs(); track job.jobId) {
+				<tr class="jobs-table__row" (click)="openJob(job.jobId)" (keydown.enter)="openJob(job.jobId)" (keydown.space)="openJob(job.jobId); $event.preventDefault()"
+					tabindex="0" [attr.aria-label]="('BULK_IMPORT.JOBS.TABLE.OPEN_JOB' | translate) + ' ' + job.jobId">
+					<td>{{ ('BULK_IMPORT.DOMAIN.' + job.domainType) | translate }}</td>
+					<td>{{ job.fileName }}</td>
+					<td><span class="job-status" [class]="'job-status--' + job.status.toLowerCase()">{{ ('BULK_IMPORT.STATUS.' + job.status) | translate }}</span></td>
+					<td>{{ job.successCount ?? '-' }} / {{ job.totalRows ?? '-' }}</td>
+					<td>{{ job.createdAt }}</td>
+					<td>
+						<a class="jobs-link" [routerLink]="['/app', 'bulk-import', 'jobs', job.jobId]">
+							{{ 'BULK_IMPORT.JOBS.TABLE.VIEW' | translate }}
+						</a>
+					</td>
+				</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+	}
+</main>

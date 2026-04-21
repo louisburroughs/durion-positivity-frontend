@@ -105,6 +105,19 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
       },
     ],
   },
+  {
+    titleKey: 'LOCATION.LANDING.SECTION.DATA_IMPORT.TITLE',
+    descriptionKey: 'LOCATION.LANDING.SECTION.DATA_IMPORT.DESCRIPTION',
+    cards: [
+      {
+        kind: 'direct',
+        titleKey: 'LOCATION.LANDING.CARD.IMPORT_LOCATION.TITLE',
+        descriptionKey: 'LOCATION.LANDING.CARD.IMPORT_LOCATION.DESCRIPTION',
+        route: '/app/location/bulk-import/location',
+        actionKey: 'LOCATION.LANDING.ACTION.IMPORT_DATA',
+      },
+    ],
+  },
 ] as const;
 
 @Component({

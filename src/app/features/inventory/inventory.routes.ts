@@ -168,6 +168,13 @@ export const INVENTORY_ROUTES: Routes = [
             m => m.InventorySecurityAdminPageComponent,
           ),
       },
+      {
+        path: 'bulk-import/stock',
+        loadComponent: () =>
+          import('./pages/bulk-import/inventory-bulk-import-page.component').then(
+            m => m.InventoryBulkImportPageComponent,
+          ),
+      },
       { path: '**', redirectTo: '' },
     ],
   },

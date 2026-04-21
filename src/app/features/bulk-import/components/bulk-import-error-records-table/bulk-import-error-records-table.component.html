@@ -1,0 +1,62 @@
+<section class="error-records" [attr.aria-label]="'BULK_IMPORT.ERROR_RECORDS.ARIA_LABEL' | translate">
+	@if (records.length === 0) {
+	<p class="error-records__empty">{{ 'BULK_IMPORT.ERROR_RECORDS.EMPTY' | translate }}</p>
+	} @else {
+	<table class="error-records__table">
+		<caption class="sr-only">{{ 'BULK_IMPORT.ERROR_RECORDS.TABLE.CAPTION' | translate }}</caption>
+		<thead>
+			<tr>
+				<th scope="col">{{ 'BULK_IMPORT.ERROR_RECORDS.COL.ROW' | translate }}</th>
+				<th scope="col">{{ 'BULK_IMPORT.ERROR_RECORDS.COL.REASONS' | translate }}</th>
+				<th scope="col">{{ 'BULK_IMPORT.ERROR_RECORDS.COL.STATUS' | translate }}</th>
+				<th scope="col">{{ 'BULK_IMPORT.ERROR_RECORDS.COL.CORRECTIONS' | translate }}</th>
+				<th scope="col"><span class="sr-only">{{ 'BULK_IMPORT.ERROR_RECORDS.COL.ACTIONS' | translate }}</span></th>
+			</tr>
+		</thead>
+		<tbody>
+			@for (record of records; track record.recordId) {
+			<tr>
+				<td>{{ record.rowNumber }}</td>
+				<td>{{ record.reasonCodes.join(', ') }}</td>
+				<td>
+					<span class="error-records__status" [class]="'status--' + record.reviewStatus.toLowerCase()">
+						{{ ('BULK_IMPORT.ERROR_RECORDS.STATUS.' + record.reviewStatus) | translate }}
+					</span>
+				</td>
+				<td>
+					@for (field of getFieldKeys(record); track field) {
+					<div class="error-records__field">
+						<label class="error-records__field-label" [for]="record.recordId + '-' + field">
+							{{ field }}
+						</label>
+						<input
+							[id]="record.recordId + '-' + field"
+							class="error-records__field-input"
+							type="text"
+							[value]="getDraft(record.recordId, field)"
+							(input)="updateDraft(record.recordId, field, $any($event.target).value)"
+							[attr.placeholder]="record.originalValues[field] ?? ''"
+						/>
+					</div>
+					}
+				</td>
+				<td>
+					<button
+						class="error-records__submit-btn"
+						type="button"
+						[disabled]="!hasDraft(record.recordId) || pendingRecordIds.has(record.recordId)"
+						(click)="onSubmit(record)"
+					>
+						@if (pendingRecordIds.has(record.recordId)) {
+							{{ 'BULK_IMPORT.ERROR_RECORDS.SUBMITTING' | translate }}
+						} @else {
+							{{ 'BULK_IMPORT.ERROR_RECORDS.SUBMIT' | translate }}
+						}
+					</button>
+				</td>
+			</tr>
+			}
+		</tbody>
+	</table>
+	}
+</section>

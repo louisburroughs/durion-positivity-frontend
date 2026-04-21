@@ -246,6 +246,18 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
       },
     ],
   },
+  {
+    titleKey: 'INVENTORY.LANDING.SECTION.DATA_IMPORT.TITLE',
+    descriptionKey: 'INVENTORY.LANDING.SECTION.DATA_IMPORT.DESCRIPTION',
+    cards: [
+      {
+        kind: 'direct',
+        titleKey: 'INVENTORY.LANDING.CARD.IMPORT_STOCK.TITLE',
+        descriptionKey: 'INVENTORY.LANDING.CARD.IMPORT_STOCK.DESCRIPTION',
+        routerLink: ['/app', 'inventory', 'bulk-import', 'stock'],
+      },
+    ],
+  },
 ];
 
 @Component({

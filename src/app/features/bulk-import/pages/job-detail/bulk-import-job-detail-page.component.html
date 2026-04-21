@@ -1,0 +1,58 @@
+<main class="job-detail" aria-labelledby="job-detail-title">
+	<header class="job-detail__header">
+		<a class="job-detail__back" [routerLink]="['/app', 'bulk-import', 'jobs']">
+			&larr; {{ 'BULK_IMPORT.JOB_DETAIL.BACK' | translate }}
+		</a>
+		<h1 id="job-detail-title">{{ 'BULK_IMPORT.JOB_DETAIL.TITLE' | translate }}</h1>
+	</header>
+
+	@if (state() === 'error') {
+	<div class="job-detail__banner job-detail__banner--error" role="alert">
+		{{ errorKey()! | translate }}
+	</div>
+	}
+	@if (state() === 'loading') {
+	<div class="job-detail__banner" aria-live="polite">
+		{{ 'BULK_IMPORT.JOB_DETAIL.LOADING' | translate }}
+	</div>
+	}
+
+	@if (state() === 'ready' && job()) {
+	<section class="job-detail__meta" [attr.aria-label]="'BULK_IMPORT.JOB_DETAIL.META.ARIA_LABEL' | translate">
+		<dl class="job-detail__dl">
+			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.DOMAIN' | translate }}</dt><dd>{{ ('BULK_IMPORT.DOMAIN.' + job()!.domainType) | translate }}</dd></div>
+			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.FILE' | translate }}</dt><dd>{{ job()!.fileName }}</dd></div>
+			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.STATUS' | translate }}</dt><dd><span class="job-status" [class]="'job-status--' + job()!.status.toLowerCase()">{{ ('BULK_IMPORT.STATUS.' + job()!.status) | translate }}</span></dd></div>
+			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.TOTAL_ROWS' | translate }}</dt><dd>{{ job()!.totalRows ?? '-' }}</dd></div>
+			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.SUCCESS' | translate }}</dt><dd>{{ job()!.successCount ?? '-' }}</dd></div>
+			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.FAILURES' | translate }}</dt><dd>{{ job()!.failureCount ?? '-' }}</dd></div>
+		</dl>
+		<div class="job-detail__actions">
+			@if (job()!.status === 'PROCESSING' || job()!.status === 'UPLOADING' || job()!.status === 'DETECTING' || job()!.status === 'DEDUP') {
+			<button class="job-btn job-btn--danger" type="button" (click)="cancelJob()">
+				{{ 'BULK_IMPORT.JOB_DETAIL.CANCEL' | translate }}
+			</button>
+			}
+			@if (job()!.status === 'FAILED') {
+			<button class="job-btn job-btn--primary" type="button" (click)="retryJob()">
+				{{ 'BULK_IMPORT.JOB_DETAIL.RETRY' | translate }}
+			</button>
+			<button class="job-btn job-btn--secondary" type="button" (click)="downloadErrorReport()">
+				{{ 'BULK_IMPORT.JOB_DETAIL.DOWNLOAD_ERRORS' | translate }}
+			</button>
+			}
+		</div>
+	</section>
+
+	@if (auditRecords().length > 0) {
+	<section class="job-detail__errors" [attr.aria-label]="'BULK_IMPORT.JOB_DETAIL.ERRORS.ARIA_LABEL' | translate">
+		<h2 class="job-detail__section-title">{{ 'BULK_IMPORT.JOB_DETAIL.ERRORS.TITLE' | translate }}</h2>
+		<app-bulk-import-error-records-table
+			[records]="auditRecords()"
+			[pendingRecordIds]="correctionPending()"
+			(submitCorrection)="submitCorrection($event.record)"
+		/>
+	</section>
+	}
+	}
+</main>

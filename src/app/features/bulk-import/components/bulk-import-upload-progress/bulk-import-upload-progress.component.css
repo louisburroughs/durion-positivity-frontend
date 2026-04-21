@@ -1,0 +1,43 @@
+.upload-progress {
+	display: grid;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-lg);
+	background: var(--cardBackground);
+}
+
+.upload-progress__filename {
+	margin: 0;
+	font-weight: 600;
+}
+
+.upload-progress__bar-container {
+	width: 100%;
+	height: 0.75rem;
+}
+
+.upload-progress__bar {
+	height: 0.4rem;
+	border-radius: 999px;
+	background: var(--brand-primary);
+	transition: width 220ms ease;
+}
+
+.upload-progress__percent {
+	margin: 0;
+	font-size: 0.875rem;
+	color: color-mix(in srgb, var(--currentTextColor) 72%, transparent);
+}
+
+.upload-progress__cancel {
+	justify-self: start;
+	min-height: 2.5rem;
+	border-radius: 999px;
+	border: 1px solid color-mix(in srgb, var(--brand-primary) 34%, var(--input-border));
+	background: transparent;
+	color: var(--currentTextColor);
+	padding: var(--space-2) var(--space-4);
+	font-weight: 600;
+	cursor: pointer;
+}

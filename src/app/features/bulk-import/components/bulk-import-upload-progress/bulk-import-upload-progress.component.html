@@ -1,0 +1,9 @@
+<section class="upload-progress" [attr.aria-label]="'BULK_IMPORT.UPLOAD_PROGRESS.ARIA_LABEL' | translate">
+	<p class="upload-progress__filename">{{ fileName }}</p>
+	<progress class="upload-progress__bar-container" [value]="progress" max="100">{{ progress }}%</progress>
+	<div class="upload-progress__bar" [style.width.%]="progress"></div>
+	<p class="upload-progress__percent">{{ progress }}%</p>
+	<button class="upload-progress__cancel" type="button" (click)="cancelUpload.emit()">
+		{{ 'BULK_IMPORT.UPLOAD_PROGRESS.CANCEL' | translate }}
+	</button>
+</section>

@@ -1,0 +1,36 @@
+<section
+	class="file-drop"
+	[class.file-drop--drag-over]="isDragOver()"
+	(dragover)="onDragOver($event)"
+	(dragleave)="onDragLeave()"
+	(drop)="onDrop($event)"
+	[attr.aria-label]="'BULK_IMPORT.FILE_DROP.ARIA_LABEL' | translate"
+>
+	<div class="file-drop__inner">
+		<p class="file-drop__instruction">{{ 'BULK_IMPORT.FILE_DROP.INSTRUCTION' | translate }}</p>
+		<p class="file-drop__formats">{{ 'BULK_IMPORT.FILE_DROP.FORMATS' | translate }}</p>
+
+		<label class="sr-only" for="bulk-file-input">
+			{{ 'BULK_IMPORT.FILE_DROP.INPUT_ARIA' | translate }}
+		</label>
+		<label
+			for="bulk-file-input"
+			class="file-drop__browse-btn"
+			[attr.aria-label]="'BULK_IMPORT.FILE_DROP.BROWSE_BTN' | translate"
+		>
+			{{ 'BULK_IMPORT.FILE_DROP.BROWSE_BTN' | translate }}
+		</label>
+		<input
+			id="bulk-file-input"
+			class="file-drop__input sr-only"
+			type="file"
+			accept=".csv,.xlsx"
+			(change)="onFileInput($event)"
+			[attr.aria-label]="'BULK_IMPORT.FILE_DROP.INPUT_ARIA' | translate"
+		/>
+	</div>
+
+	@if (errorKey()) {
+	<p class="file-drop__error" role="alert">{{ errorKey()! | translate }}</p>
+	}
+</section>

@@ -69,6 +69,13 @@ export const PEOPLE_ROUTES: Routes = [
             .then(m => m.PersonLocationAssignmentsPageComponent),
       },
       {
+        path: 'bulk-import/people',
+        loadComponent: () =>
+          import('./pages/bulk-import/people-bulk-import-page.component').then(
+            m => m.PeopleBulkImportPageComponent,
+          ),
+      },
+      {
         path: '**',
         redirectTo: '',
       },

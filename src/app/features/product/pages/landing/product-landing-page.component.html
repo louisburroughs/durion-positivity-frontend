@@ -1,0 +1,66 @@
+<main class="product-landing" aria-labelledby="product-landing-title">
+	<section class="product-hero">
+		<div class="product-hero__content">
+			<p class="product-hero__eyebrow">{{ 'PRODUCT.LANDING.EYEBROW' | translate }}</p>
+			<h1 id="product-landing-title" class="product-hero__title">
+				{{ 'PRODUCT.LANDING.TITLE' | translate }}
+			</h1>
+			<p class="product-hero__subtitle">{{ 'PRODUCT.LANDING.SUBTITLE' | translate }}</p>
+			<div class="product-hero__actions">
+				<a class="product-button product-button--primary" [routerLink]="['/app', 'product', 'catalog']">
+					{{ 'PRODUCT.LANDING.HERO.OPEN_CATALOG' | translate }}
+				</a>
+				<a class="product-button product-button--secondary" [routerLink]="['/app', 'product', 'pricing', 'price-books']">
+					{{ 'PRODUCT.LANDING.HERO.OPEN_PRICE_BOOKS' | translate }}
+				</a>
+			</div>
+		</div>
+		<dl class="product-hero__stats" [attr.aria-label]="'PRODUCT.LANDING.STAT.ARIA' | translate">
+			<div class="product-stat">
+				<dt class="product-stat__label">{{ 'PRODUCT.LANDING.STAT.PAGES' | translate }}</dt>
+				<dd class="product-stat__value">{{ totalPageCount }}</dd>
+			</div>
+			<div class="product-stat">
+				<dt class="product-stat__label">{{ 'PRODUCT.LANDING.STAT.DIRECT_LINKS' | translate }}</dt>
+				<dd class="product-stat__value">{{ directLinkCount }}</dd>
+			</div>
+			<div class="product-stat">
+				<dt class="product-stat__label">{{ 'PRODUCT.LANDING.STAT.GUIDED_LAUNCHES' | translate }}</dt>
+				<dd class="product-stat__value">{{ guidedLinkCount }}</dd>
+			</div>
+		</dl>
+	</section>
+
+	@if (state() === 'error' && errorKey()) {
+	<section class="product-banner product-banner--error" role="alert">
+		<span>{{ errorKey()! | translate }}</span>
+	</section>
+	}
+
+	@if (state() === 'loading') {
+	<section class="product-banner product-banner--loading" aria-live="polite">
+		<span>{{ 'PRODUCT.LANDING.LOADING' | translate }}</span>
+	</section>
+	}
+
+	@for (section of sections; track section.titleKey) {
+	<section class="product-section">
+		<div class="product-section__heading">
+			<h2 class="product-section__title">{{ section.titleKey | translate }}</h2>
+			<p class="product-section__description">{{ section.descriptionKey | translate }}</p>
+		</div>
+		<div class="product-section__grid">
+			@for (card of section.cards; track card.titleKey) {
+			<article class="product-card">
+				<h3 class="product-card__title">{{ card.titleKey | translate }}</h3>
+				<p class="product-card__description">{{ card.descriptionKey | translate }}</p>
+				<a class="product-button product-button--primary" [routerLink]="card.route"
+					[attr.aria-label]="(card.titleKey | translate) + ': ' + (card.actionKey | translate)">
+					{{ card.actionKey | translate }}
+				</a>
+			</article>
+			}
+		</div>
+	</section>
+	}
+</main>

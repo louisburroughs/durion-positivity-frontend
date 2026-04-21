@@ -121,6 +121,11 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/shopmgmt/shopmgmt.routes').then(m => m.SHOPMGMT_ROUTES),
       },
+      {
+        path: 'bulk-import',
+        loadChildren: () =>
+          import('./features/bulk-import/bulk-import.routes').then(m => m.BULK_IMPORT_ROUTES),
+      },
     ],
   },
   {

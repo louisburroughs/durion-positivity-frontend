@@ -8,6 +8,14 @@ export const PRODUCT_ROUTES: Routes = [
     children: [
       {
         path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./pages/landing/product-landing-page.component').then(
+            m => m.ProductLandingPageComponent,
+          ),
+      },
+      {
+        path: 'catalog',
         loadComponent: () =>
           import('./pages/catalog/product-list/product-list.component').then(
             m => m.ProductListComponent,
@@ -60,6 +68,20 @@ export const PRODUCT_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/location/locations-roster/locations-roster.component').then(
             m => m.LocationsRosterComponent,
+          ),
+      },
+      {
+        path: 'bulk-import/catalog',
+        loadComponent: () =>
+          import('./pages/bulk-import/catalog-bulk-import-page.component').then(
+            m => m.CatalogBulkImportPageComponent,
+          ),
+      },
+      {
+        path: 'bulk-import/price',
+        loadComponent: () =>
+          import('./pages/bulk-import/price-bulk-import-page.component').then(
+            m => m.PriceBulkImportPageComponent,
           ),
       },
       { path: '**', redirectTo: '' },
