@@ -6,24 +6,41 @@ An **Angular 21** single-page application (with SSR) for the Durion POS platform
 
 ## Table of Contents
 
-- [Architecture Overview](#architecture-overview)
-- [Feature Modules](#feature-modules)
-- [Technology Stack](#technology-stack)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Install & Run](#install--run)
-  - [Build](#build)
-- [Routing & Access Control](#routing--access-control)
-- [State Management](#state-management)
-- [API Integration](#api-integration)
-- [Theming & Styling](#theming--styling)
-- [Internationalisation](#internationalisation)
-- [Testing](#testing)
-- [Environment Configuration](#environment-configuration)
-- [Project Structure](#project-structure)
-- [CI/CD & Deployment](#cicd--deployment)
-- [Contributing](#contributing)
-- [Further Reading](#further-reading)
+- [Durion Positivity Frontend](#durion-positivity-frontend)
+  - [Table of Contents](#table-of-contents)
+  - [Architecture Overview](#architecture-overview)
+  - [Feature Modules](#feature-modules)
+  - [Technology Stack](#technology-stack)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Install \& Run](#install--run)
+    - [Build](#build)
+  - [Routing \& Access Control](#routing--access-control)
+    - [Guard chain](#guard-chain)
+    - [Route table](#route-table)
+  - [State Management](#state-management)
+    - [Page state machine (mandatory pattern)](#page-state-machine-mandatory-pattern)
+    - [Global services](#global-services)
+  - [API Integration](#api-integration)
+    - [`ApiBaseService`](#apibaseservice)
+    - [Auth interceptor](#auth-interceptor)
+    - [Login flow](#login-flow)
+    - [Backend API contract](#backend-api-contract)
+  - [Theming \& Styling](#theming--styling)
+    - [Three-tier token model (`src/styles.css`)](#three-tier-token-model-srcstylescss)
+    - [Theme switching](#theme-switching)
+    - [Typography \& spacing](#typography--spacing)
+  - [Internationalisation](#internationalisation)
+  - [Testing](#testing)
+    - [Unit tests — Vitest](#unit-tests--vitest)
+    - [Accessibility tests — axe-core](#accessibility-tests--axe-core)
+  - [Environment Configuration](#environment-configuration)
+  - [Project Structure](#project-structure)
+  - [CI/CD \& Deployment](#cicd--deployment)
+    - [GitHub Actions workflows](#github-actions-workflows)
+    - [Docker](#docker)
+  - [Contributing](#contributing)
+  - [Further Reading](#further-reading)
 
 ---
 
@@ -58,43 +75,43 @@ Browser / SSR (Express :4000)
 
 All domain modules are lazy-loaded under the `/app` shell route.
 
-| Module | Route | Description | Role Gate |
-|---|---|---|---|
-| `dashboard` | `/app` | Default landing page | — |
-| `crm` | `/app/crm` | Customer accounts, contacts, vehicles | — |
-| `workexec` | `/app/workexec` | Work order execution & dispatch | — |
-| `accounting` | `/app/accounting` | GL posting, financial reporting | — |
-| `billing` | `/app/billing` | Invoice & payment management | — |
-| `inventory` | `/app/inventory` | Parts and supplies stock | — |
-| `product` | `/app/product` | Product catalog management | — |
-| `order` | `/app/order` | Sales order management | — |
-| `location` | `/app/location` | Multi-store location management | — |
-| `people` | `/app/people` | Employee profiles and assignments | — |
-| `shopmgmt` | `/app/shopmgmt` | Shop operations and scheduling | — |
-| `admin` | `/app/admin` | Platform administration | `ROLE_ADMIN` |
-| `security` | `/app/security` | Users, roles, and permissions | `ROLE_ADMIN` |
-| `system` | `/app/system` | 403 / 404 error pages | — |
-| `landing` | `/` | Public marketing page | — |
-| `auth` | `/login` | Login form | — |
+| Module       | Route             | Description                           | Role Gate    |
+| ------------ | ----------------- | ------------------------------------- | ------------ |
+| `dashboard`  | `/app`            | Default landing page                  | —            |
+| `crm`        | `/app/crm`        | Customer accounts, contacts, vehicles | —            |
+| `workexec`   | `/app/workexec`   | Work order execution & dispatch       | —            |
+| `accounting` | `/app/accounting` | GL posting, financial reporting       | —            |
+| `billing`    | `/app/billing`    | Invoice & payment management          | —            |
+| `inventory`  | `/app/inventory`  | Parts and supplies stock              | —            |
+| `product`    | `/app/product`    | Product catalog management            | —            |
+| `order`      | `/app/order`      | Sales order management                | —            |
+| `location`   | `/app/location`   | Multi-store location management       | —            |
+| `people`     | `/app/people`     | Employee profiles and assignments     | —            |
+| `shopmgmt`   | `/app/shopmgmt`   | Shop operations and scheduling        | —            |
+| `admin`      | `/app/admin`      | Platform administration               | `ROLE_ADMIN` |
+| `security`   | `/app/security`   | Users, roles, and permissions         | `ROLE_ADMIN` |
+| `system`     | `/app/system`     | 403 / 404 error pages                 | —            |
+| `landing`    | `/`               | Public marketing page                 | —            |
+| `auth`       | `/login`          | Login form                            | —            |
 
 ---
 
 ## Technology Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Angular 21.1.0 |
-| Language | TypeScript 5.9.2 (strict mode, ES2022 target) |
-| State | Angular Signals + RxJS 7.8 |
-| Styling | Plain CSS + CSS custom properties (no Tailwind or preprocessor) |
-| i18n | @ngx-translate/core 17 |
-| HTTP | Angular HttpClient + custom `ApiBaseService` |
-| SSR | @angular/ssr 21 + Express 5 |
-| Build | Angular CLI / `@angular/build` application builder |
-| Unit tests | Vitest 4 + jsdom 27 |
-| Accessibility | axe-core 4.11 |
-| Linting | ESLint 10 + @angular-eslint 21 |
-| Containerisation | Docker (multi-stage, node:22-alpine) |
+| Layer            | Technology                                                      |
+| ---------------- | --------------------------------------------------------------- |
+| Framework        | Angular 21.1.0                                                  |
+| Language         | TypeScript 5.9.2 (strict mode, ES2022 target)                   |
+| State            | Angular Signals + RxJS 7.8                                      |
+| Styling          | Plain CSS + CSS custom properties (no Tailwind or preprocessor) |
+| i18n             | @ngx-translate/core 17                                          |
+| HTTP             | Angular HttpClient + custom `ApiBaseService`                    |
+| SSR              | @angular/ssr 21 + Express 5                                     |
+| Build            | Angular CLI / `@angular/build` application builder              |
+| Unit tests       | Vitest 4 + jsdom 27                                             |
+| Accessibility    | axe-core 4.11                                                   |
+| Linting          | ESLint 10 + @angular-eslint 21                                  |
+| Containerisation | Docker (multi-stage, node:22-alpine)                            |
 
 ---
 
@@ -102,10 +119,10 @@ All domain modules are lazy-loaded under the `/app` shell route.
 
 ### Prerequisites
 
-| Tool | Version | Notes |
-|---|---|---|
-| Node.js | 22 LTS | Use [mise](https://mise.jdx.dev/): `mise install` reads `.mise.toml` |
-| npm | 11.6.4 | Pinned via corepack |
+| Tool    | Version | Notes                                                                |
+| ------- | ------- | -------------------------------------------------------------------- |
+| Node.js | 22 LTS  | Use [mise](https://mise.jdx.dev/): `mise install` reads `.mise.toml` |
+| npm     | 11.6.4  | Pinned via corepack                                                  |
 
 ### Install & Run
 
@@ -202,12 +219,12 @@ effect((onCleanup) => {
 
 ### Global services
 
-| Service | State held | Storage |
-|---|---|---|
-| `AuthService` | `accessToken`, `refreshToken`, `roles`, `isAuthenticated` (computed), `currentUserClaims` (computed) | localStorage / sessionStorage |
-| `ThemeService` | `theme` signal, `isDark` (computed) | localStorage (`durion-theme`) |
-| `LocaleService` | `currentLocale` signal | localStorage (`durion.locale`) |
-| `ChatStateService` | `messages` signal, `isEmpty` (computed) | In-memory |
+| Service            | State held                                                                                           | Storage                        |
+| ------------------ | ---------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `AuthService`      | `accessToken`, `refreshToken`, `roles`, `isAuthenticated` (computed), `currentUserClaims` (computed) | localStorage / sessionStorage  |
+| `ThemeService`     | `theme` signal, `isDark` (computed)                                                                  | localStorage (`durion-theme`)  |
+| `LocaleService`    | `currentLocale` signal                                                                               | localStorage (`durion.locale`) |
+| `ChatStateService` | `messages` signal, `isEmpty` (computed)                                                              | In-memory                      |
 
 ---
 
@@ -250,13 +267,13 @@ isAuthenticated computed signal becomes true
 
 ### Backend API contract
 
-| Purpose | Method | Path |
-|---|---|---|
-| Login | POST | `/security-service/v1/auth/login` |
-| Token refresh | POST | `/security-service/v1/auth/refresh` |
-| Validate token | GET | `/security-service/v1/auth/validate` |
-| MCP chat | POST | `/mcp-server/v1/mcp/chat` |
-| Domain APIs | varies | `/api/...` |
+| Purpose        | Method | Path                                 |
+| -------------- | ------ | ------------------------------------ |
+| Login          | POST   | `/security-service/v1/auth/login`    |
+| Token refresh  | POST   | `/security-service/v1/auth/refresh`  |
+| Validate token | GET    | `/security-service/v1/auth/validate` |
+| MCP chat       | POST   | `/mcp-server/v1/mcp/chat`            |
+| Domain APIs    | varies | `/api/...`                           |
 
 In development, the Angular dev server proxies `/api`, `/security-service`, and `/mcp-server` to `http://localhost:8080`.
 
@@ -289,13 +306,13 @@ Component CSS files should reference **Tier 2 or Tier 3 tokens only**.
 
 ### Typography & spacing
 
-| Token | Value |
-|---|---|
-| `--font-primary` | Michelin Unit Titling |
-| `--font-body` | Noto Sans |
-| `--space-1` … `--space-8` | 0.25 rem … 2 rem |
-| `--radius-sm` / `--radius-md` / `--radius-lg` | 4 px / 8 px / 16 px |
-| `--transition-fast` / `--transition-base` | 150 ms / 250 ms |
+| Token                                         | Value                 |
+| --------------------------------------------- | --------------------- |
+| `--font-primary`                              | Michelin Unit Titling |
+| `--font-body`                                 | Noto Sans             |
+| `--space-1` … `--space-8`                     | 0.25 rem … 2 rem      |
+| `--radius-sm` / `--radius-md` / `--radius-lg` | 4 px / 8 px / 16 px   |
+| `--transition-fast` / `--transition-base`     | 150 ms / 250 ms       |
 
 Full token inventory: `design/source/theme-tokens.md`.
 
@@ -305,12 +322,12 @@ Full token inventory: `design/source/theme-tokens.md`.
 
 Translation is handled by **@ngx-translate/core**. Translation keys live in JSON files under `src/assets/i18n/`.
 
-| Locale | File |
-|---|---|
-| English (US) | `en-US.json` |
-| Spanish (US) | `es-US.json` |
-| French (Canadian) | `fr-CA.json` |
-| Pseudo locale | `qps-ploc.json` (generated; used for layout testing) |
+| Locale            | File                                                 |
+| ----------------- | ---------------------------------------------------- |
+| English (US)      | `en-US.json`                                         |
+| Spanish (US)      | `es-US.json`                                         |
+| French (Canadian) | `fr-CA.json`                                         |
+| Pseudo locale     | `qps-ploc.json` (generated; used for layout testing) |
 
 **Use `TranslatePipe` in every template** — hardcoded user-facing strings are a lint error.
 
@@ -352,6 +369,7 @@ npx ng test --include="src/app/features/crm/**/*.spec.ts" --no-watch
 ```
 
 **Conventions (ADR-0035):**
+
 - Every public service method needs at least one test.
 - Fixtures must be explicitly typed — no `any`.
 - Error paths must assert both `state()` and `errorKey()`.
@@ -375,20 +393,20 @@ The accessibility gate runs automatically on every PR and push to `main`. Report
 
 Configuration is TypeScript-based (no `.env` files). Angular CLI swaps the file at build time via `fileReplacements`.
 
-| Key | Development | Production |
-|---|---|---|
+| Key          | Development                 | Production           |
+| ------------ | --------------------------- | -------------------- |
 | `apiBaseUrl` | `http://localhost:8080/api` | `/api` (same-origin) |
-| `mockAuth` | `true` | `false` |
+| `mockAuth`   | `true`                      | `false`              |
 
 **Runtime storage keys**
 
-| Key | Storage | Content |
-|---|---|---|
-| `durion-access-token` | localStorage | JWT access token |
-| `durion-refresh-token` | localStorage | JWT refresh token |
-| `durion-theme` | localStorage | `light` or `dark` |
-| `durion.locale` | localStorage | e.g. `en-US` |
-| `durion-user-roles` | sessionStorage | Decoded roles array |
+| Key                     | Storage        | Content                       |
+| ----------------------- | -------------- | ----------------------------- |
+| `durion-access-token`   | localStorage   | JWT access token              |
+| `durion-refresh-token`  | localStorage   | JWT refresh token             |
+| `durion-theme`          | localStorage   | `light` or `dark`             |
+| `durion.locale`         | localStorage   | e.g. `en-US`                  |
+| `durion-user-roles`     | sessionStorage | Decoded roles array           |
 | `durion-user-roles-exp` | sessionStorage | Roles cache expiry (epoch ms) |
 
 ---
@@ -460,10 +478,10 @@ durion-positivity-frontend/
 
 ### GitHub Actions workflows
 
-| Workflow | Trigger | Purpose |
-|---|---|---|
-| `accessibility-gate.yml` | PR · push to `main` | Run `a11y:smoke`, fail on critical violations, upload report artifact |
-| `build-push-ecr.yml` | Release · manual dispatch | Build Docker image, push to AWS ECR |
+| Workflow                 | Trigger                   | Purpose                                                               |
+| ------------------------ | ------------------------- | --------------------------------------------------------------------- |
+| `accessibility-gate.yml` | PR · push to `main`       | Run `a11y:smoke`, fail on critical violations, upload report artifact |
+| `build-push-ecr.yml`     | Release · manual dispatch | Build Docker image, push to AWS ECR                                   |
 
 ### Docker
 
@@ -480,6 +498,7 @@ CMD ["node", "dist/durion-positivity-frontend/server/server.mjs"]
 ```
 
 In production, a reverse proxy routes:
+
 - `/` → frontend SSR container (`:4000`)
 - `/api`, `/security-service`, `/mcp-server` → backend API gateway (`:8080`)
 
@@ -499,8 +518,8 @@ In production, a reverse proxy routes:
 
 ## Further Reading
 
-| Document | Location |
-|---|---|
-| Mandatory ADRs & copilot guide | `AGENTS.md` |
-| CSS token inventory | `design/source/theme-tokens.md` |
-| Existing README (v1) | `README.md` |
+| Document                       | Location                        |
+| ------------------------------ | ------------------------------- |
+| Mandatory ADRs & copilot guide | `AGENTS.md`                     |
+| CSS token inventory            | `design/source/theme-tokens.md` |
+| Existing README (v1)           | `README.md`                     |
