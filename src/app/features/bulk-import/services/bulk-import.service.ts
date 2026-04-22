@@ -211,10 +211,10 @@ export class BulkImportService {
     recordId: string,
     request: SubmitCorrectionRequest,
   ): Observable<BulkLoadRecordAudit> {
-    return this.api.put<BulkLoadRecordAudit>(
+    return this.api.put<ApiAuditRecord>(
       `/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/audit/${encodeURIComponent(recordId)}/correction`,
       request,
-    );
+    ).pipe(map(record => this.toAuditRecord(record)));
   }
 
   /** Returns the API URL for downloading the error report CSV. */

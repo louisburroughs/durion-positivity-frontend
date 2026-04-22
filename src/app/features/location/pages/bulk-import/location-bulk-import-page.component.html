@@ -29,10 +29,10 @@
 		<app-bulk-import-file-drop (fileSelected)="onFileSelected($event)" />
 	</section>
 	}
-	@if (state() === 'uploading' && selectedFile()) {
+	@if (state() === 'uploading') {
 	<section class="wizard-step" [attr.aria-label]="'BULK_IMPORT.WIZARD.STEP.UPLOADING.ARIA_LABEL' | translate">
 		<h2 class="wizard-step__title">{{ 'BULK_IMPORT.WIZARD.STEP.UPLOADING.TITLE' | translate }}</h2>
-		<app-bulk-import-upload-progress [progress]="uploadProgress()" [fileName]="selectedFile()!.name" (cancelUpload)="cancelUpload()" />
+		<app-bulk-import-upload-progress [progress]="uploadProgress()" [fileName]="selectedFile()?.name ?? job()?.fileName ?? ''" (cancelUpload)="cancelUpload()" />
 	</section>
 	}
 	@if (state() === 'mapping') {
