@@ -14,6 +14,27 @@ const mockJob: BulkLoadJob = {
   fileName: 'test.csv',
 };
 
+const filterableJobs: BulkLoadJob[] = [
+  {
+    jobId: 'job-101',
+    domainType: 'INVENTORY',
+    status: 'CREATED',
+    fileName: 'inventory-created.csv',
+  },
+  {
+    jobId: 'job-102',
+    domainType: 'CATALOG',
+    status: 'COMPLETED',
+    fileName: 'catalog-completed.csv',
+  },
+  {
+    jobId: 'job-103',
+    domainType: 'INVENTORY',
+    status: 'COMPLETED',
+    fileName: 'inventory-completed.csv',
+  },
+];
+
 describe('BulkImportJobsPageComponent', () => {
   let component: BulkImportJobsPageComponent;
   let fixture: ComponentFixture<BulkImportJobsPageComponent>;
@@ -106,6 +127,64 @@ describe('BulkImportJobsPageComponent', () => {
     component.applyFilter('', '');
     expect(component.filterDomainType()).toBe('');
     expect(component.filterStatus()).toBe('');
+  });
+
+  it('updates the rendered rows when filters change', () => {
+    mockService.listJobs.mockImplementation((filters?: { domainType?: string; status?: string }) => {
+      const items = filterableJobs.filter(job => {
+        if (filters?.domainType && job.domainType !== filters.domainType) {
+          return false;
+        }
+
+        if (filters?.status && job.status !== filters.status) {
+          return false;
+        }
+
+        return true;
+      });
+
+      return of({ items, nextPageToken: null } as JobListResponse);
+    });
+
+    component.loadJobs();
+    fixture.detectChanges();
+
+    const nativeElement = fixture.nativeElement as HTMLElement;
+
+    const getRenderedFileNames = (): string[] => {
+      const rows = Array.from(nativeElement.querySelectorAll('tbody tr')) as HTMLTableRowElement[];
+
+      return rows.map(row => row.children[1]?.textContent?.trim() ?? '');
+    };
+
+    expect(getRenderedFileNames()).toEqual([
+      'inventory-created.csv',
+      'catalog-completed.csv',
+      'inventory-completed.csv',
+    ]);
+
+    const domainFilter = nativeElement.querySelector('#domain-filter') as HTMLSelectElement | null;
+    domainFilter!.value = 'CATALOG';
+    domainFilter!.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(getRenderedFileNames()).toEqual(['catalog-completed.csv']);
+
+    const statusFilter = nativeElement.querySelector('#status-filter') as HTMLSelectElement | null;
+    statusFilter!.value = 'COMPLETED';
+    statusFilter!.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(getRenderedFileNames()).toEqual(['catalog-completed.csv']);
+
+    domainFilter!.value = '';
+    domainFilter!.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(getRenderedFileNames()).toEqual([
+      'catalog-completed.csv',
+      'inventory-completed.csv',
+    ]);
   });
 
   it('job list links are rendered using routerLink (navigation is declarative)', () => {

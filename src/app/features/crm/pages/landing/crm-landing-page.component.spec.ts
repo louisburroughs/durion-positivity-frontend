@@ -1,12 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { of } from 'rxjs';
 import { CrmLandingPageComponent } from './crm-landing-page.component';
+import { BulkImportService } from '../../../bulk-import/services/bulk-import.service';
 
 describe('CrmLandingPageComponent', () => {
   let fixture: ComponentFixture<CrmLandingPageComponent>;
   let component: CrmLandingPageComponent;
   let router: Router;
+  const bulkImportService = {
+    getActiveJobDomains: vi.fn(),
+  };
 
   /** Finds a launch card by field name, throwing if absent. */
   const findLaunchCard = (field: string) => {
@@ -22,15 +27,34 @@ describe('CrmLandingPageComponent', () => {
   };
 
   beforeEach(async () => {
+    bulkImportService.getActiveJobDomains.mockReturnValue(of(new Set()));
+
     await TestBed.configureTestingModule({
       imports: [CrmLandingPageComponent, TranslateModule.forRoot()],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        { provide: BulkImportService, useValue: bulkImportService },
+      ],
     }).compileComponents();
 
     router = TestBed.inject(Router);
     fixture = TestBed.createComponent(CrmLandingPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('fetches and renders active import indicators for CRM import cards', () => {
+    bulkImportService.getActiveJobDomains.mockReturnValue(of(new Set(['CUSTOMER', 'VEHICLE_FITMENT'])));
+    fixture = TestBed.createComponent(CrmLandingPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const activeIndicators = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.crm-card__active-import'),
+    );
+
+    expect(bulkImportService.getActiveJobDomains).toHaveBeenCalled();
+    expect(activeIndicators).toHaveLength(2);
   });
 
   it('should create', () => {

@@ -106,6 +106,29 @@ describe('BulkImportColumnMappingTableComponent', () => {
     });
   });
 
+  it('renders a constrained select with allowed target fields and the Do Not Import option', () => {
+    fixture.componentRef.setInput('mappings', [mockMapping, lowConfidenceMapping, mediumConfidenceMapping]);
+    fixture.detectChanges();
+
+    const select = fixture.nativeElement.querySelector('#target-map-001') as HTMLSelectElement | null;
+    const options = Array.from(select?.options ?? []).map(option => ({
+      value: option.value,
+      label: option.textContent?.trim() ?? '',
+    }));
+
+    expect(options.map(option => option.label)).toEqual([
+      'BULK_IMPORT.MAPPING.TARGET_OPTION.DO_NOT_IMPORT',
+      'description',
+      'productSku',
+      'quantity',
+    ]);
+    expect(options.slice(1).map(option => option.value)).toEqual([
+      'description',
+      'productSku',
+      'quantity',
+    ]);
+  });
+
   it('ignores override values outside constrained options', () => {
     component.overrideMapping('map-001', 'notAValidTargetField');
     expect(component.getOverrideOrDefault(mockMapping)).toBe('productSku');

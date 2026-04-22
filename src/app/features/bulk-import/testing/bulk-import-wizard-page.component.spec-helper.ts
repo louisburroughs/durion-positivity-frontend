@@ -11,6 +11,8 @@ type WizardComponentHarness = {
   state: () => string;
   errorKey: () => string | null;
   conflictJob: () => BulkLoadJob | null;
+  job: () => BulkLoadJob | null;
+  onFileSelected: (file: File) => void;
 };
 
 interface WizardPageSpecOptions<TComponent> {
@@ -56,6 +58,7 @@ export function describeBulkImportWizardPage<TComponent>(options: WizardPageSpec
       getActiveJobForDomain: vi.fn(),
       getJob: vi.fn(),
       createUploadSession: vi.fn(),
+      getTusUploadUrl: vi.fn(),
       uploadFile: vi.fn(),
       getColumnMappings: vi.fn(),
       approveColumnMappings: vi.fn(),
@@ -70,6 +73,8 @@ export function describeBulkImportWizardPage<TComponent>(options: WizardPageSpec
     beforeEach(async () => {
       vi.clearAllMocks();
       mockBulkImportService.getActiveJobForDomain.mockReturnValue(of(null));
+      mockBulkImportService.getTusUploadUrl.mockImplementation((jobId: string) => `/tus/${jobId}`);
+      mockBulkImportService.uploadFile.mockReturnValue(of(100));
 
       await TestBed.configureTestingModule({
         imports: [options.component, TranslateModule.forRoot()],
@@ -136,13 +141,78 @@ export function describeBulkImportWizardPage<TComponent>(options: WizardPageSpec
       expect(component.state()).toBe('upload');
     });
 
-    it('resumes to upload state when active job is in UPLOADING status', () => {
+    it('resumes to uploading state when active job is in UPLOADING status', () => {
       const activeJob = buildResumableJob(options.domainType, 'UPLOADING');
       mockBulkImportService.getActiveJobForDomain.mockReturnValue(of(activeJob));
 
       fixture.detectChanges();
 
-      expect(component.state()).toBe('upload');
+      expect(component.state()).toBe('uploading');
+    });
+
+    it('automatically recovers an UPLOADING job by polling without file reselection', async () => {
+      vi.useFakeTimers();
+      const uploadingJob = buildResumableJob(options.domainType, 'UPLOADING');
+      const processingJob: BulkLoadJob = {
+        ...uploadingJob,
+        status: 'PROCESSING',
+      };
+      mockBulkImportService.getActiveJobForDomain.mockReturnValue(of(uploadingJob));
+      mockBulkImportService.getJob.mockReturnValue(of(processingJob));
+
+      fixture.detectChanges();
+
+      expect(component.job()).toEqual(uploadingJob);
+      expect(component.state()).toBe('uploading');
+      expect(mockBulkImportService.createUploadSession).not.toHaveBeenCalled();
+      expect(mockBulkImportService.getTusUploadUrl).not.toHaveBeenCalled();
+      expect(mockBulkImportService.uploadFile).not.toHaveBeenCalled();
+      expect(mockBulkImportService.getJob).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(3100);
+      fixture.detectChanges();
+
+      expect(mockBulkImportService.getJob).toHaveBeenCalledWith(uploadingJob.jobId);
+      expect(component.job()).toEqual(processingJob);
+      expect(component.state()).toBe('progress');
+    });
+
+    it('reuses the existing upload session when a file is re-selected for a CREATED job', () => {
+      const activeJob = buildResumableJob(options.domainType, 'CREATED');
+      mockBulkImportService.getActiveJobForDomain.mockReturnValue(of(activeJob));
+
+      fixture.detectChanges();
+
+      const file = new File(['sku\n123'], 'resume-created.csv', { type: 'text/csv' });
+      component.onFileSelected(file);
+
+      expect(mockBulkImportService.createUploadSession).not.toHaveBeenCalled();
+      expect(mockBulkImportService.getTusUploadUrl).toHaveBeenCalledWith(activeJob.jobId);
+      expect(mockBulkImportService.uploadFile).toHaveBeenCalledWith(`/tus/${activeJob.jobId}`, file);
+      expect(component.job()).toMatchObject({
+        jobId: activeJob.jobId,
+        status: 'UPLOADING',
+        fileName: 'resume-created.csv',
+      });
+    });
+
+    it('reuses the existing upload session when a file is re-selected for an UPLOADING job', () => {
+      const activeJob = buildResumableJob(options.domainType, 'UPLOADING');
+      mockBulkImportService.getActiveJobForDomain.mockReturnValue(of(activeJob));
+
+      fixture.detectChanges();
+
+      const file = new File(['sku\n456'], 'resume-uploading.csv', { type: 'text/csv' });
+      component.onFileSelected(file);
+
+      expect(mockBulkImportService.createUploadSession).not.toHaveBeenCalled();
+      expect(mockBulkImportService.getTusUploadUrl).toHaveBeenCalledWith(activeJob.jobId);
+      expect(mockBulkImportService.uploadFile).toHaveBeenCalledWith(`/tus/${activeJob.jobId}`, file);
+      expect(component.job()).toMatchObject({
+        jobId: activeJob.jobId,
+        status: 'UPLOADING',
+        fileName: 'resume-uploading.csv',
+      });
     });
 
     it('transitions to error state when getActiveJobForDomain fails (ADR-0031)', () => {
