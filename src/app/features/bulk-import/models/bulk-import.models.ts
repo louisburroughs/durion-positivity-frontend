@@ -77,6 +77,7 @@ export interface CreateUploadSessionResponse {
 
 export interface ColumnMappingOverride {
   mappingId: string;
+  sourceColumn: string;
   targetField: string;
 }
 

@@ -26,7 +26,18 @@ export class BulkImportColumnMappingTableComponent {
 
   onApprove(): void {
     const overrideList: ColumnMappingOverride[] = Array.from(this.overrides.entries())
-      .map(([mappingId, targetField]) => ({ mappingId, targetField }));
+      .flatMap(([mappingId, targetField]) => {
+        const mapping = this.mappings.find(candidate => candidate.mappingId === mappingId);
+        if (!mapping) {
+          return [];
+        }
+
+        return [{
+          mappingId,
+          sourceColumn: mapping.sourceColumn,
+          targetField,
+        }];
+      });
     this.approve.emit(overrideList);
   }
 

@@ -67,7 +67,7 @@ describe('BulkImportColumnMappingTableComponent', () => {
     component.onApprove();
 
     expect(emitted.length).toBe(1);
-    expect(emitted[0]).toEqual([{ mappingId: 'map-001', targetField: 'sku' }]);
+    expect(emitted[0]).toEqual([{ mappingId: 'map-001', sourceColumn: 'SKU', targetField: 'sku' }]);
   });
 
   it('onApprove emits multiple overrides when multiple are set', () => {
@@ -80,8 +80,12 @@ describe('BulkImportColumnMappingTableComponent', () => {
     component.onApprove();
 
     expect(emitted[0]).toHaveLength(2);
-    expect(emitted[0]).toContainEqual({ mappingId: 'map-001', targetField: 'newSku' });
-    expect(emitted[0]).toContainEqual({ mappingId: 'map-002', targetField: 'longDescription' });
+    expect(emitted[0]).toContainEqual({ mappingId: 'map-001', sourceColumn: 'SKU', targetField: 'newSku' });
+    expect(emitted[0]).toContainEqual({
+      mappingId: 'map-002',
+      sourceColumn: 'DESC',
+      targetField: 'longDescription',
+    });
   });
 
   it('getOverrideOrDefault returns the override when one exists', () => {

@@ -1,41 +1,59 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ApiBaseService } from '../../../core/services/api-base.service';
-import { BulkImportService } from './bulk-import.service';
 import {
   ApproveColumnMappingsRequest,
   AuditRecordListResponse,
-  BulkLoadColumnMapping,
   BulkLoadJob,
   BulkLoadRecordAudit,
   CreateUploadSessionRequest,
   CreateUploadSessionResponse,
-  JobListResponse,
   SubmitCorrectionRequest,
 } from '../models/bulk-import.models';
 
+const tusState = vi.hoisted(() => ({
+  instances: [] as Array<{ file: File; options: Record<string, unknown> }>,
+  start: vi.fn(),
+  abort: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('tus-js-client', () => ({
+  Upload: function MockUpload(this: { start: typeof tusState.start; abort: typeof tusState.abort }, file: File, options: Record<string, unknown>) {
+    tusState.instances.push({ file, options });
+    this.start = tusState.start;
+    this.abort = tusState.abort;
+  },
+}));
+
 describe('BulkImportService', () => {
-  let service: BulkImportService;
+  let service: import('./bulk-import.service').BulkImportService;
+  let bulkImportServiceClass: typeof import('./bulk-import.service').BulkImportService;
+  let apiBaseServiceToken: typeof import('../../../core/services/api-base.service').ApiBaseService;
   const apiStub = { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() };
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    tusState.instances.length = 0;
+    tusState.start.mockReset();
+    tusState.abort.mockReset().mockResolvedValue(undefined);
+    vi.resetModules();
+
+    ({ BulkImportService: bulkImportServiceClass } = await import('./bulk-import.service'));
+    ({ ApiBaseService: apiBaseServiceToken } = await import('../../../core/services/api-base.service'));
+
     TestBed.configureTestingModule({
-      providers: [BulkImportService, { provide: ApiBaseService, useValue: apiStub }],
+      providers: [bulkImportServiceClass, { provide: apiBaseServiceToken, useValue: apiStub }],
     });
-    service = TestBed.inject(BulkImportService);
+    service = TestBed.inject(bulkImportServiceClass);
   });
 
-  afterEach(() => vi.clearAllMocks());
+  afterEach(() => {
+    tusState.instances.length = 0;
+    vi.clearAllMocks();
+  });
 
   const mockJob: BulkLoadJob = {
     jobId: 'job-001', domainType: 'INVENTORY', status: 'CREATED',
     fileName: 'test.csv',
-  };
-
-  const mockMapping: BulkLoadColumnMapping = {
-    mappingId: 'map-001', jobId: 'job-001', sourceColumn: 'SKU',
-    targetField: 'productSku', confidence: 0.95, overriddenByUser: false,
   };
 
   const mockAuditRecord: BulkLoadRecordAudit = {
@@ -45,116 +63,173 @@ describe('BulkImportService', () => {
   };
 
   describe('createUploadSession()', () => {
-    it('calls POST /bulk-loader/v1/jobs with request body', () => {
+    it('creates a backend bulk job and returns the tus creation endpoint', () => {
       const req: CreateUploadSessionRequest = {
         domainType: 'INVENTORY',
         fileName: 'test.csv',
         fileSize: 1024,
       };
-      const res: CreateUploadSessionResponse = {
+      apiStub.post.mockReturnValue(of({
+        id: 'job-001',
+        domainType: 'INVENTORY_STOCK_COUNT',
+        status: 'CREATED',
+        fileName: 'test.csv',
+      }));
+
+      let response: CreateUploadSessionResponse | undefined;
+      service.createUploadSession(req).subscribe(value => {
+        response = value;
+      });
+
+      expect(apiStub.post).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs', {
+        domainType: 'INVENTORY_STOCK_COUNT',
+        fileName: 'test.csv',
+      });
+      expect(response).toEqual({
         jobId: 'job-001',
-        uploadUrl: 'http://upload/url',
-      };
-      apiStub.post.mockReturnValue(of(res));
-
-      service.createUploadSession(req).subscribe();
-
-      expect(apiStub.post).toHaveBeenCalledWith('/bulk-loader/v1/jobs', req);
+        uploadUrl: 'http://localhost:8080/api/bulk-loader/v1/bulk-jobs/job-001/tus',
+      });
     });
   });
 
   describe('getJob()', () => {
-    it('calls GET /bulk-loader/v1/jobs/:id', () => {
-      apiStub.get.mockReturnValue(of(mockJob));
+    it('calls GET /bulk-loader/v1/bulk-jobs/:id and maps the backend job shape', () => {
+      apiStub.get.mockReturnValue(of({
+        id: 'job-001',
+        domainType: 'INVENTORY_STOCK_COUNT',
+        status: 'CREATED',
+        fileName: 'test.csv',
+      }));
 
       service.getJob('job-001').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/jobs/job-001');
+      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001');
     });
   });
 
   describe('getActiveJobForDomain()', () => {
-    it('calls GET /bulk-loader/v1/jobs/active with domainType param', () => {
-      apiStub.get.mockReturnValue(of(mockJob));
+    it('selects the matching active job from the backend jobs page', () => {
+      apiStub.get.mockReturnValue(of({
+        content: [{
+          id: 'job-001',
+          domainType: 'INVENTORY_STOCK_COUNT',
+          status: 'CREATED',
+          fileName: 'test.csv',
+        }],
+      }));
 
-      service.getActiveJobForDomain('INVENTORY').subscribe();
+      let response: BulkLoadJob | null | undefined;
+      service.getActiveJobForDomain('INVENTORY').subscribe(value => {
+        response = value;
+      });
 
-      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/jobs/active', expect.anything());
+      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs', expect.anything());
+      expect(response).toEqual(mockJob);
     });
   });
 
   describe('listJobs()', () => {
-    it('calls GET /bulk-loader/v1/jobs', () => {
-      const res: JobListResponse = { items: [mockJob], nextPageToken: null };
+    it('calls GET /bulk-loader/v1/bulk-jobs and maps the backend page shape', () => {
+      const res = {
+        content: [{
+          id: 'job-001',
+          domainType: 'INVENTORY_STOCK_COUNT',
+          status: 'CREATED',
+          fileName: 'test.csv',
+        }],
+      };
       apiStub.get.mockReturnValue(of(res));
 
       service.listJobs().subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/jobs', expect.anything());
+      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs', expect.anything());
     });
   });
 
   describe('getColumnMappings()', () => {
-    it('calls GET /bulk-loader/v1/jobs/:id/mappings', () => {
-      apiStub.get.mockReturnValue(of([mockMapping]));
+    it('calls GET /bulk-loader/v1/bulk-jobs/:id/mappings', () => {
+      apiStub.get.mockReturnValue(of([{
+        id: 'map-001',
+        jobId: 'job-001',
+        sourceColumn: 'SKU',
+        targetField: 'productSku',
+        confidence: 0.95,
+        overriddenByUser: false,
+      }]));
 
       service.getColumnMappings('job-001').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/jobs/job-001/mappings');
+      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001/mappings');
     });
   });
 
   describe('approveColumnMappings()', () => {
-    it('calls PUT /bulk-loader/v1/jobs/:id/mappings/approve', () => {
-      const req: ApproveColumnMappingsRequest = { overrides: [] };
+    it('calls PUT /bulk-loader/v1/bulk-jobs/:id/mappings with backend mapping payload', () => {
+      const req: ApproveColumnMappingsRequest = {
+        overrides: [{ mappingId: 'map-001', sourceColumn: 'SKU', targetField: 'sku' }],
+      };
       apiStub.put.mockReturnValue(of(undefined));
 
       service.approveColumnMappings('job-001', req).subscribe();
 
-      expect(apiStub.put).toHaveBeenCalledWith('/bulk-loader/v1/jobs/job-001/mappings/approve', req);
+      expect(apiStub.put).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001/mappings', {
+        mappings: [{ mappingId: 'map-001', sourceColumn: 'SKU', targetField: 'sku' }],
+      });
     });
   });
 
   describe('cancelJob()', () => {
-    it('calls POST /bulk-loader/v1/jobs/:id/cancel', () => {
+    it('calls POST /bulk-loader/v1/bulk-jobs/:id/cancel', () => {
       apiStub.post.mockReturnValue(of(undefined));
 
       service.cancelJob('job-001').subscribe();
 
-      expect(apiStub.post).toHaveBeenCalledWith('/bulk-loader/v1/jobs/job-001/cancel', {});
+      expect(apiStub.post).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001/cancel', {});
     });
   });
 
   describe('retryJob()', () => {
-    it('calls POST /bulk-loader/v1/jobs/:id/retry', () => {
+    it('calls POST /bulk-loader/v1/bulk-jobs/:id/retry', () => {
       apiStub.post.mockReturnValue(of(undefined));
 
       service.retryJob('job-001').subscribe();
 
-      expect(apiStub.post).toHaveBeenCalledWith('/bulk-loader/v1/jobs/job-001/retry', {});
+      expect(apiStub.post).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001/retry', {});
     });
   });
 
   describe('listAuditRecords()', () => {
-    it('calls GET /bulk-loader/v1/jobs/:id/audit', () => {
-      const res: AuditRecordListResponse = { items: [mockAuditRecord], nextPageToken: null };
+    it('calls GET /bulk-loader/v1/bulk-jobs/:id/audit and maps backend audit records', () => {
+      const res = [{
+        id: 'rec-001',
+        jobId: 'job-001',
+        entityType: 'INVENTORY',
+        rowNumber: 1,
+        reviewStatus: 'PENDING',
+        reasonCodes: 'INVALID_SKU',
+        originalValues: '{"sku":"BAD-SKU"}',
+      }];
       apiStub.get.mockReturnValue(of(res));
 
-      service.listAuditRecords('job-001').subscribe();
+      let response: AuditRecordListResponse | undefined;
+      service.listAuditRecords('job-001').subscribe(value => {
+        response = value;
+      });
 
-      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/jobs/job-001/audit', expect.anything());
+      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001/audit');
+      expect(response).toEqual({ items: [mockAuditRecord], nextPageToken: null });
     });
   });
 
   describe('submitCorrection()', () => {
-    it('calls PUT /bulk-loader/v1/jobs/:id/audit/:recordId/correction', () => {
+    it('calls PUT /bulk-loader/v1/bulk-jobs/:id/audit/:recordId/correction', () => {
       const req: SubmitCorrectionRequest = { correctedValues: { sku: 'FIXED-SKU' } };
       apiStub.put.mockReturnValue(of(mockAuditRecord));
 
       service.submitCorrection('job-001', 'rec-001', req).subscribe();
 
       expect(apiStub.put).toHaveBeenCalledWith(
-        '/bulk-loader/v1/jobs/job-001/audit/rec-001/correction',
+        '/bulk-loader/v1/bulk-jobs/job-001/audit/rec-001/correction',
         req,
       );
     });
@@ -162,30 +237,12 @@ describe('BulkImportService', () => {
 
   describe('getErrorReportUrl()', () => {
     it('returns the correct URL for a given jobId', () => {
-      expect(service.getErrorReportUrl('job-001')).toBe('/api/bulk-loader/v1/jobs/job-001/error-report');
+      expect(service.getErrorReportUrl('job-001')).toBe('/api/bulk-loader/v1/bulk-jobs/job-001/error-report');
     });
   });
 
   describe('uploadFile()', () => {
-    class MockXhrUpload {
-      onprogress: ((event: ProgressEvent<XMLHttpRequestEventTarget>) => void) | null = null;
-    }
-
-    class MockXhr {
-      readonly upload = new MockXhrUpload();
-      status = 0;
-      onload: (() => void) | null = null;
-      onerror: (() => void) | null = null;
-      open = vi.fn();
-      send = vi.fn();
-      abort = vi.fn();
-    }
-
-    it('posts file and emits progress through completion', () => {
-      const originalXhr = globalThis.XMLHttpRequest;
-      const mockXhr = new MockXhr();
-      vi.stubGlobal('XMLHttpRequest', vi.fn(function() { return mockXhr; }));
-
+    it('creates a tus upload and emits progress through completion', () => {
       const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
       const progress: number[] = [];
       let completed = false;
@@ -197,30 +254,27 @@ describe('BulkImportService', () => {
         },
       });
 
-      mockXhr.upload.onprogress?.({ loaded: 50, total: 100, lengthComputable: true } as ProgressEvent<XMLHttpRequestEventTarget>);
-      mockXhr.status = 201;
-      mockXhr.onload?.();
+      const instance = tusState.instances[0];
+      const onProgress = instance.options['onProgress'] as ((bytesSent: number, bytesTotal: number) => void);
+      const onSuccess = instance.options['onSuccess'] as (() => void);
 
-      expect(mockXhr.open).toHaveBeenCalledWith('POST', 'https://upload.example');
-      expect(mockXhr.send).toHaveBeenCalledWith(expect.any(FormData));
+      onProgress(50, 100);
+      onSuccess();
+
+      expect(instance.file).toBe(file);
+      expect(instance.options['endpoint']).toBe('https://upload.example');
+      expect(instance.options['metadata']).toEqual({ filename: 'test.csv' });
+      expect(tusState.start).toHaveBeenCalled();
       expect(progress).toEqual([50, 100]);
       expect(completed).toBe(true);
-
-      vi.stubGlobal('XMLHttpRequest', originalXhr);
     });
 
     it('aborts upload on unsubscribe', () => {
-      const originalXhr = globalThis.XMLHttpRequest;
-      const mockXhr = new MockXhr();
-      vi.stubGlobal('XMLHttpRequest', vi.fn(function() { return mockXhr; }));
-
       const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
       const sub = service.uploadFile('https://upload.example', file).subscribe();
       sub.unsubscribe();
 
-      expect(mockXhr.abort).toHaveBeenCalled();
-
-      vi.stubGlobal('XMLHttpRequest', originalXhr);
+      expect(tusState.abort).toHaveBeenCalledWith(true);
     });
   });
 });
