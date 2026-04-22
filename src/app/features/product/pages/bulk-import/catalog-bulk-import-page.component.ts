@@ -85,9 +85,14 @@ export class CatalogBulkImportPageComponent implements OnInit, OnDestroy {
   private resumeToStep(job: BulkLoadJob): void {
     switch (job.status) {
       case 'CREATED':
-      case 'UPLOADING':
         this.uploadProgress.set(0);
         this.state.set('upload');
+        break;
+      case 'UPLOADING':
+        this.uploadProgress.set(0);
+        this.selectedFile.set(null);
+        this.state.set('uploading');
+        this.startPolling();
         break;
       case 'DETECTING':
       case 'DEDUP':
@@ -184,9 +189,17 @@ export class CatalogBulkImportPageComponent implements OnInit, OnDestroy {
       .subscribe({
         next: updated => {
           this.job.set(updated);
-          if (updated.status === 'MAPPING_REVIEW') {
+          if (updated.status === 'UPLOADING') {
+            this.state.set('uploading');
+          } else if (updated.status === 'DETECTING' || updated.status === 'DEDUP' || updated.status === 'PROCESSING') {
+            this.state.set('progress');
+          } else if (updated.status === 'MAPPING_REVIEW') {
             this.stopPolling();
             this.loadMappings();
+          } else if (updated.status === 'CREATED') {
+            this.stopPolling();
+            this.uploadProgress.set(0);
+            this.state.set('upload');
           } else if (!ACTIVE_JOB_STATUSES.includes(updated.status)) {
             this.stopPolling();
             this.loadAuditRecords();
