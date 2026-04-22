@@ -23,10 +23,16 @@ export class BulkImportErrorRecordsTableComponent {
   private readonly correctionDraft = signal<Record<string, Record<string, unknown>>>({});  // signal is readonly by interface, field stays
 
   updateDraft(recordId: string, field: string, value: string): void {
-    this.correctionDraft.update(prev => ({
-      ...prev,
-      [recordId]: { ...(prev[recordId] ?? {}), [field]: value },
-    }));
+    this.correctionDraft.update(prev => {
+      const recordDraft = prev[recordId];
+
+      return {
+        ...prev,
+        [recordId]: recordDraft
+          ? { ...recordDraft, [field]: value }
+          : { [field]: value },
+      };
+    });
   }
 
   getDraft(recordId: string, field: string): string {
