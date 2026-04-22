@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -129,20 +130,59 @@ describe('BulkImportService', () => {
   });
 
   describe('listJobs()', () => {
+    const jobPageStub = {
+      content: [{
+        id: 'job-001',
+        domainType: 'INVENTORY_STOCK_COUNT',
+        status: 'CREATED',
+        fileName: 'test.csv',
+      }],
+    };
+
     it('calls GET /bulk-loader/v1/bulk-jobs and maps the backend page shape', () => {
-      const res = {
-        content: [{
-          id: 'job-001',
-          domainType: 'INVENTORY_STOCK_COUNT',
-          status: 'CREATED',
-          fileName: 'test.csv',
-        }],
-      };
-      apiStub.get.mockReturnValue(of(res));
+      apiStub.get.mockReturnValue(of(jobPageStub));
 
       service.listJobs().subscribe();
 
       expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs', expect.anything());
+    });
+
+    it('passes domainType as a query param when provided', () => {
+      apiStub.get.mockReturnValue(of(jobPageStub));
+
+      service.listJobs({ domainType: 'INVENTORY' }).subscribe();
+
+      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
+      expect(params.get('domainType')).toBe('INVENTORY');
+    });
+
+    it('passes status as a query param when provided', () => {
+      apiStub.get.mockReturnValue(of(jobPageStub));
+
+      service.listJobs({ status: 'PROCESSING' }).subscribe();
+
+      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
+      expect(params.get('status')).toBe('PROCESSING');
+    });
+
+    it('passes pageSize as a query param when provided', () => {
+      apiStub.get.mockReturnValue(of(jobPageStub));
+
+      service.listJobs({ pageSize: 10 }).subscribe();
+
+      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
+      expect(params.get('pageSize')).toBe('10');
+    });
+
+    it('passes multiple filters as query params simultaneously', () => {
+      apiStub.get.mockReturnValue(of(jobPageStub));
+
+      service.listJobs({ domainType: 'INVENTORY', status: 'PROCESSING', pageSize: 10 }).subscribe();
+
+      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
+      expect(params.get('domainType')).toBe('INVENTORY');
+      expect(params.get('status')).toBe('PROCESSING');
+      expect(params.get('pageSize')).toBe('10');
     });
   });
 
@@ -199,25 +239,54 @@ describe('BulkImportService', () => {
   });
 
   describe('listAuditRecords()', () => {
+    const auditResStub = [{
+      id: 'rec-001',
+      jobId: 'job-001',
+      entityType: 'INVENTORY',
+      rowNumber: 1,
+      reviewStatus: 'PENDING',
+      reasonCodes: 'INVALID_SKU',
+      originalValues: '{"sku":"BAD-SKU"}',
+    }];
+
     it('calls GET /bulk-loader/v1/bulk-jobs/:id/audit and maps backend audit records', () => {
-      const res = [{
-        id: 'rec-001',
-        jobId: 'job-001',
-        entityType: 'INVENTORY',
-        rowNumber: 1,
-        reviewStatus: 'PENDING',
-        reasonCodes: 'INVALID_SKU',
-        originalValues: '{"sku":"BAD-SKU"}',
-      }];
-      apiStub.get.mockReturnValue(of(res));
+      apiStub.get.mockReturnValue(of(auditResStub));
 
       let response: AuditRecordListResponse | undefined;
       service.listAuditRecords('job-001').subscribe(value => {
         response = value;
       });
 
-      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001/audit');
+      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001/audit', expect.anything());
       expect(response).toEqual({ items: [mockAuditRecord], nextPageToken: null });
+    });
+
+    it('passes reviewStatus as a query param when provided', () => {
+      apiStub.get.mockReturnValue(of(auditResStub));
+
+      service.listAuditRecords('job-001', { reviewStatus: 'PENDING' }).subscribe();
+
+      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
+      expect(params.get('reviewStatus')).toBe('PENDING');
+    });
+
+    it('passes pageSize as a query param when provided', () => {
+      apiStub.get.mockReturnValue(of(auditResStub));
+
+      service.listAuditRecords('job-001', { pageSize: 5 }).subscribe();
+
+      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
+      expect(params.get('pageSize')).toBe('5');
+    });
+
+    it('passes both reviewStatus and pageSize as query params when provided', () => {
+      apiStub.get.mockReturnValue(of(auditResStub));
+
+      service.listAuditRecords('job-001', { reviewStatus: 'PENDING', pageSize: 5 }).subscribe();
+
+      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
+      expect(params.get('reviewStatus')).toBe('PENDING');
+      expect(params.get('pageSize')).toBe('5');
     });
   });
 

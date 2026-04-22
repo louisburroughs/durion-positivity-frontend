@@ -19,7 +19,7 @@
 				<td>{{ record.rowNumber }}</td>
 				<td>{{ record.reasonCodes.join(', ') }}</td>
 				<td>
-					<span class="error-records__status" [class]="'status--' + record.reviewStatus.toLowerCase()">
+					<span class="error-records__status" [ngClass]="'status--' + record.reviewStatus.toLowerCase()">
 						{{ ('BULK_IMPORT.ERROR_RECORDS.STATUS.' + record.reviewStatus) | translate }}
 					</span>
 				</td>
@@ -35,7 +35,7 @@
 							type="text"
 							[value]="getDraft(record.recordId, field)"
 							(input)="updateDraft(record.recordId, field, $any($event.target).value)"
-							[attr.placeholder]="record.originalValues[field] ?? ''"
+							[attr.placeholder]="record.originalValues[field] != null ? ('' + record.originalValues[field]) : ''"
 						/>
 					</div>
 					}

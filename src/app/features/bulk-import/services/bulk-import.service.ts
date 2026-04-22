@@ -125,24 +125,14 @@ export class BulkImportService {
   listJobs(filters?: JobFilterParams): Observable<JobListResponse> {
     let params = new HttpParams();
     if (filters?.pageSize != null) { params = params.set('pageSize', filters.pageSize.toString()); }
+    if (filters?.domainType) { params = params.set('domainType', filters.domainType); }
+    if (filters?.status) { params = params.set('status', filters.status); }
     return this.api
       .get<ApiPage<ApiBulkLoadJob>>('/bulk-loader/v1/bulk-jobs', params)
-      .pipe(map(page => {
-        let items = page.content.map(job => this.toBulkLoadJob(job));
-
-        if (filters?.domainType) {
-          items = items.filter(job => job.domainType === filters.domainType);
-        }
-
-        if (filters?.status) {
-          items = items.filter(job => job.status === filters.status);
-        }
-
-        return {
-          items,
-          nextPageToken: null,
-        };
-      }));
+      .pipe(map(page => ({
+        items: page.content.map(job => this.toBulkLoadJob(job)),
+        nextPageToken: null,
+      })));
   }
 
   getColumnMappings(jobId: string): Observable<BulkLoadColumnMapping[]> {
@@ -186,24 +176,15 @@ export class BulkImportService {
   }
 
   listAuditRecords(jobId: string, filters?: AuditRecordFilterParams): Observable<AuditRecordListResponse> {
+    let params = new HttpParams();
+    if (filters?.reviewStatus) { params = params.set('reviewStatus', filters.reviewStatus); }
+    if (filters?.pageSize != null) { params = params.set('pageSize', filters.pageSize.toString()); }
     return this.api
-      .get<ApiAuditRecord[]>(`/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/audit`)
-      .pipe(map(records => {
-        let items = records.map(record => this.toAuditRecord(record));
-
-        if (filters?.reviewStatus) {
-          items = items.filter(record => record.reviewStatus === filters.reviewStatus);
-        }
-
-        if (filters?.pageSize != null) {
-          items = items.slice(0, filters.pageSize);
-        }
-
-        return {
-          items,
-          nextPageToken: null,
-        };
-      }));
+      .get<ApiAuditRecord[]>(`/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/audit`, params)
+      .pipe(map(records => ({
+        items: records.map(record => this.toAuditRecord(record)),
+        nextPageToken: null,
+      })));
   }
 
   submitCorrection(

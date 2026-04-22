@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -16,7 +17,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'error';
   templateUrl: './bulk-import-job-detail-page.component.html',
   styleUrl: './bulk-import-job-detail-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, TranslatePipe, BulkImportErrorRecordsTableComponent],
+  imports: [RouterLink, NgClass, TranslatePipe, BulkImportErrorRecordsTableComponent],
 })
 export class BulkImportJobDetailPageComponent {
   private readonly service = inject(BulkImportService);

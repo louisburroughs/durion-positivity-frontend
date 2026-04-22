@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BulkLoadRecordAudit, SubmitCorrectionRequest } from '../../models/bulk-import.models';
@@ -13,7 +14,7 @@ export interface CorrectionSubmitEvent {
   templateUrl: './bulk-import-error-records-table.component.html',
   styleUrl: './bulk-import-error-records-table.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, NgClass, TranslatePipe],
 })
 export class BulkImportErrorRecordsTableComponent {
   @Input() records: BulkLoadRecordAudit[] = [];

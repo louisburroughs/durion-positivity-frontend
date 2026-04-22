@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { JobStatus } from '../../models/bulk-import.models';
 
@@ -21,7 +22,7 @@ const WIZARD_STEPS: WizardStep[] = [
   templateUrl: './bulk-import-progress-stepper.component.html',
   styleUrl: './bulk-import-progress-stepper.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe],
+  imports: [NgClass, TranslatePipe],
 })
 export class BulkImportProgressStepperComponent {
   @Input() status: JobStatus = 'CREATED';

@@ -63,7 +63,7 @@
 				<tr class="jobs-table__row">
 					<td>{{ ('BULK_IMPORT.DOMAIN.' + job.domainType) | translate }}</td>
 					<td>{{ job.fileName }}</td>
-					<td><span class="job-status" [class]="'job-status--' + job.status.toLowerCase()">{{ ('BULK_IMPORT.STATUS.' + job.status) | translate }}</span></td>
+					<td><span class="job-status" [ngClass]="'job-status--' + job.status.toLowerCase()">{{ ('BULK_IMPORT.STATUS.' + job.status) | translate }}</span></td>
 					<td>{{ job.successCount ?? '-' }} / {{ job.totalRows ?? '-' }}</td>
 					<td>{{ job.createdAt | date:'medium' }}</td>
 					<td>

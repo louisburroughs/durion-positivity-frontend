@@ -22,7 +22,7 @@
 		<dl class="job-detail__dl">
 			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.DOMAIN' | translate }}</dt><dd>{{ ('BULK_IMPORT.DOMAIN.' + job()!.domainType) | translate }}</dd></div>
 			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.FILE' | translate }}</dt><dd>{{ job()!.fileName }}</dd></div>
-			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.STATUS' | translate }}</dt><dd><span class="job-status" [class]="'job-status--' + job()!.status.toLowerCase()">{{ ('BULK_IMPORT.STATUS.' + job()!.status) | translate }}</span></dd></div>
+			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.STATUS' | translate }}</dt><dd><span class="job-status" [ngClass]="'job-status--' + job()!.status.toLowerCase()">{{ ('BULK_IMPORT.STATUS.' + job()!.status) | translate }}</span></dd></div>
 			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.TOTAL_ROWS' | translate }}</dt><dd>{{ job()!.totalRows ?? '-' }}</dd></div>
 			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.SUCCESS' | translate }}</dt><dd>{{ job()!.successCount ?? '-' }}</dd></div>
 			<div><dt>{{ 'BULK_IMPORT.JOB_DETAIL.META.FAILURES' | translate }}</dt><dd>{{ job()!.failureCount ?? '-' }}</dd></div>

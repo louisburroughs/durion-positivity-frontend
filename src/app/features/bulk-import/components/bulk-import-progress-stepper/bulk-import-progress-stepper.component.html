@@ -1,6 +1,6 @@
 <ol class="stepper" [attr.aria-label]="'BULK_IMPORT.PROGRESS.STEPPER.ARIA_LABEL' | translate">
 	@for (step of steps; track step.labelKey) {
-	<li class="stepper__step" [class]="'stepper__step--' + getStepState(step)">
+	<li class="stepper__step" [ngClass]="'stepper__step--' + getStepState(step)">
 		<span class="stepper__label">{{ step.labelKey | translate }}</span>
 	</li>
 	}

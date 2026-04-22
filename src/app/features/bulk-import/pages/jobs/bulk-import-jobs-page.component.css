@@ -92,10 +92,6 @@
 	text-align: left;
 }
 
-.jobs-table__row {
-	cursor: pointer;
-}
-
 .jobs-table__row:hover,
 .jobs-table__row:focus-visible {
 	background: color-mix(in srgb, var(--brand-primary) 8%, var(--cardBackground));

@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -13,7 +13,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error';
   templateUrl: './bulk-import-jobs-page.component.html',
   styleUrl: './bulk-import-jobs-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, TranslatePipe, DatePipe],
+  imports: [RouterLink, NgClass, TranslatePipe, DatePipe],
 })
 export class BulkImportJobsPageComponent implements OnInit {
   private readonly service = inject(BulkImportService);
