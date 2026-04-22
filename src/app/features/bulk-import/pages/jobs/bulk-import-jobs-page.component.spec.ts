@@ -72,10 +72,10 @@ describe('BulkImportJobsPageComponent', () => {
   });
 
   it('sets state to error first, then errorKey on load failure (ADR-0031)', () => {
-    const states: string[] = [];
     mockService.listJobs.mockReturnValue(throwError(() => new Error('fail')));
     component.loadJobs();
     fixture.detectChanges();
+    // ADR-0031: state must be set to 'error' before errorKey is set
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('BULK_IMPORT.JOBS.ERROR.LOAD');
   });

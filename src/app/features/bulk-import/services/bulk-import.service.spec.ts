@@ -222,16 +222,30 @@ describe('BulkImportService', () => {
   });
 
   describe('submitCorrection()', () => {
-    it('calls PUT /bulk-loader/v1/bulk-jobs/:id/audit/:recordId/correction', () => {
+    it('calls PUT /bulk-loader/v1/bulk-jobs/:id/audit/:recordId/correction and maps ApiAuditRecord', () => {
       const req: SubmitCorrectionRequest = { correctedValues: { sku: 'FIXED-SKU' } };
-      apiStub.put.mockReturnValue(of(mockAuditRecord));
+      const rawApiAuditRecord = {
+        id: 'rec-001',
+        jobId: 'job-001',
+        entityType: 'PRODUCT',
+        rowNumber: 1,
+        reviewStatus: 'PENDING',
+        reasonCodes: 'INVALID_SKU,MISSING_FIELD',
+        originalValues: '{"sku":"OLD"}',
+      };
+      apiStub.put.mockReturnValue(of(rawApiAuditRecord));
 
-      service.submitCorrection('job-001', 'rec-001', req).subscribe();
+      let result: BulkLoadRecordAudit | undefined;
+      service.submitCorrection('job-001', 'rec-001', req).subscribe(value => {
+        result = value;
+      });
 
       expect(apiStub.put).toHaveBeenCalledWith(
         '/bulk-loader/v1/bulk-jobs/job-001/audit/rec-001/correction',
         req,
       );
+      expect(result?.reasonCodes).toEqual(['INVALID_SKU', 'MISSING_FIELD']);
+      expect(result?.originalValues).toEqual({ sku: 'OLD' });
     });
   });
 
