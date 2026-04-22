@@ -1,5 +1,6 @@
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BulkImportService } from '../../services/bulk-import.service';
@@ -12,11 +13,10 @@ type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error';
   templateUrl: './bulk-import-jobs-page.component.html',
   styleUrl: './bulk-import-jobs-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, DatePipe],
 })
 export class BulkImportJobsPageComponent implements OnInit {
   private readonly service = inject(BulkImportService);
-  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly state = signal<PageState>('idle');
@@ -55,10 +55,6 @@ export class BulkImportJobsPageComponent implements OnInit {
     this.filterDomainType.set(domainType as DomainType | '');
     this.filterStatus.set(status as JobStatus | '');
     this.loadJobs();
-  }
-
-  openJob(jobId: string): void {
-    this.router.navigate(['/app', 'bulk-import', 'jobs', jobId]);
   }
 
   readonly domainTypes: DomainType[] = [

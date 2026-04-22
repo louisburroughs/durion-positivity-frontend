@@ -50,7 +50,7 @@
 		<app-bulk-import-error-records-table
 			[records]="auditRecords()"
 			[pendingRecordIds]="correctionPending()"
-			(submitCorrection)="submitCorrection($event.record)"
+			(submitCorrection)="onSubmitCorrection($event)"
 		/>
 	</section>
 	}

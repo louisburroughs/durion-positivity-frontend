@@ -60,13 +60,12 @@
 			</thead>
 			<tbody>
 				@for (job of jobs(); track job.jobId) {
-				<tr class="jobs-table__row" (click)="openJob(job.jobId)" (keydown.enter)="openJob(job.jobId)" (keydown.space)="openJob(job.jobId); $event.preventDefault()"
-					tabindex="0" [attr.aria-label]="('BULK_IMPORT.JOBS.TABLE.OPEN_JOB' | translate) + ' ' + job.jobId">
+				<tr class="jobs-table__row">
 					<td>{{ ('BULK_IMPORT.DOMAIN.' + job.domainType) | translate }}</td>
 					<td>{{ job.fileName }}</td>
 					<td><span class="job-status" [class]="'job-status--' + job.status.toLowerCase()">{{ ('BULK_IMPORT.STATUS.' + job.status) | translate }}</span></td>
 					<td>{{ job.successCount ?? '-' }} / {{ job.totalRows ?? '-' }}</td>
-					<td>{{ job.createdAt }}</td>
+					<td>{{ job.createdAt | date:'medium' }}</td>
 					<td>
 						<a class="jobs-link" [routerLink]="['/app', 'bulk-import', 'jobs', job.jobId]">
 							{{ 'BULK_IMPORT.JOBS.TABLE.VIEW' | translate }}

@@ -1,11 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BulkImportJobDetailPageComponent } from './bulk-import-job-detail-page.component';
 import { BulkImportService } from '../../services/bulk-import.service';
 import { AuditRecordListResponse, BulkLoadJob, BulkLoadRecordAudit } from '../../models/bulk-import.models';
+import { CorrectionSubmitEvent } from '../../components/bulk-import-error-records-table/bulk-import-error-records-table.component';
 
 const mockJob: BulkLoadJob = {
   jobId: 'job-001',
@@ -47,11 +48,7 @@ describe('BulkImportJobDetailPageComponent', () => {
   };
 
   const mockRoute = {
-    snapshot: {
-      paramMap: {
-        get: (_key: string) => 'job-001',
-      },
-    },
+    paramMap: of(convertToParamMap({ jobId: 'job-001' })),
   };
 
   beforeEach(async () => {
@@ -80,7 +77,7 @@ describe('BulkImportJobDetailPageComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('loads job and audit records on init', () => {
+  it('loads job and audit records via reactive paramMap subscription', () => {
     expect(mockService.getJob).toHaveBeenCalledWith('job-001');
     expect(mockService.listAuditRecords).toHaveBeenCalledWith('job-001');
   });
@@ -138,12 +135,15 @@ describe('BulkImportJobDetailPageComponent', () => {
     expect(component.errorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.RETRY');
   });
 
-  it('submitCorrection calls service.submitCorrection with correct arguments', () => {
+  it('onSubmitCorrection calls service.submitCorrection with correct arguments', () => {
+    const event: CorrectionSubmitEvent = {
+      record: mockAuditRecord,
+      request: { correctedValues: { sku: 'GOOD-SKU' } },
+    };
     const updatedRecord: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
     mockService.submitCorrection.mockReturnValue(of(updatedRecord));
 
-    component.updateCorrectionValue('rec-001', 'sku', 'GOOD-SKU');
-    component.submitCorrection(mockAuditRecord);
+    component.onSubmitCorrection(event);
 
     expect(mockService.submitCorrection).toHaveBeenCalledWith(
       'job-001',
@@ -152,15 +152,31 @@ describe('BulkImportJobDetailPageComponent', () => {
     );
   });
 
-  it('submitCorrection does nothing when no draft corrections exist', () => {
-    component.submitCorrection(mockAuditRecord);
-    expect(mockService.submitCorrection).not.toHaveBeenCalled();
+  it('onSubmitCorrection removes recordId from correctionPending after success', () => {
+    const event: CorrectionSubmitEvent = {
+      record: mockAuditRecord,
+      request: { correctedValues: { sku: 'GOOD-SKU' } },
+    };
+    const updatedRecord: BulkLoadRecordAudit = { ...mockAuditRecord, reviewStatus: 'APPROVED' };
+    mockService.submitCorrection.mockReturnValue(of(updatedRecord));
+
+    component.onSubmitCorrection(event);
+
+    expect(component.isCorrectionPending('rec-001')).toBe(false);
   });
 
-  it('updateCorrectionValue accumulates values per record', () => {
-    component.updateCorrectionValue('rec-001', 'sku', 'NEW-SKU');
-    component.updateCorrectionValue('rec-001', 'qty', '5');
-    expect(component.isCorrectionPending('rec-001')).toBe(false);
+  it('onSubmitCorrection on error sets state to error first, then errorKey (ADR-0031)', () => {
+    const event: CorrectionSubmitEvent = {
+      record: mockAuditRecord,
+      request: { correctedValues: { sku: 'GOOD-SKU' } },
+    };
+    mockService.submitCorrection.mockReturnValue(throwError(() => new Error('fail')));
+
+    component.onSubmitCorrection(event);
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BULK_IMPORT.JOB_DETAIL.ERROR.CORRECTION');
   });
 
   it('getFieldKeys returns the keys from originalValues', () => {

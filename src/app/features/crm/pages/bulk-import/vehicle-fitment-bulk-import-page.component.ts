@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { interval, Subscription, switchMap } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BulkImportService } from '../../../bulk-import/services/bulk-import.service';
 import {
@@ -35,7 +36,7 @@ const DOMAIN_TYPE: DomainType = 'VEHICLE_FITMENT';
     BulkImportResultsSummaryComponent, BulkImportErrorRecordsTableComponent,
   ],
 })
-export class VehicleFitmentBulkImportPageComponent implements OnInit {
+export class VehicleFitmentBulkImportPageComponent implements OnInit, OnDestroy {
   private readonly service = inject(BulkImportService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -52,7 +53,7 @@ export class VehicleFitmentBulkImportPageComponent implements OnInit {
 
   readonly domainType = DOMAIN_TYPE;
   private uploadAbort: (() => void) | null = null;
-  private pollIntervalId: ReturnType<typeof setInterval> | null = null;
+  private pollSubscription: Subscription | null = null;
 
   ngOnInit(): void {
     this.checkActiveJob();
@@ -155,31 +156,35 @@ export class VehicleFitmentBulkImportPageComponent implements OnInit {
 
   private startPolling(): void {
     this.stopPolling();
-    this.pollIntervalId = setInterval(() => {
-      const jobId = this.job()?.jobId;
-      if (!jobId) { return; }
-      this.service.getJob(jobId)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: updated => {
-            this.job.set(updated);
-            if (updated.status === 'MAPPING_REVIEW') {
-              this.stopPolling();
-              this.loadMappings();
-            } else if (!ACTIVE_JOB_STATUSES.includes(updated.status)) {
-              this.stopPolling();
-              this.loadAuditRecords();
-            }
-          },
-        });
-    }, 3000);
+    const jobId = this.job()?.jobId;
+    if (!jobId) { return; }
+    this.pollSubscription = interval(3000)
+      .pipe(
+        switchMap(() => this.service.getJob(jobId)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: updated => {
+          this.job.set(updated);
+          if (updated.status === 'MAPPING_REVIEW') {
+            this.stopPolling();
+            this.loadMappings();
+          } else if (!ACTIVE_JOB_STATUSES.includes(updated.status)) {
+            this.stopPolling();
+            this.loadAuditRecords();
+          }
+        },
+        error: () => {
+          this.stopPolling();
+          this.state.set('error');
+          this.errorKey.set('BULK_IMPORT.WIZARD.ERROR.POLL');
+        },
+      });
   }
 
   private stopPolling(): void {
-    if (this.pollIntervalId !== null) {
-      clearInterval(this.pollIntervalId);
-      this.pollIntervalId = null;
-    }
+    this.pollSubscription?.unsubscribe();
+    this.pollSubscription = null;
   }
 
   private loadMappings(): void {

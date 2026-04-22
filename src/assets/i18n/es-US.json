@@ -1841,6 +1841,17 @@
       "EYEBROW": "Producto y catalogo",
       "TITLE": "Gestion de productos",
       "SUBTITLE": "Administre su catalogo de productos, precios, fuentes de inventario e importaciones masivas.",
+      "HERO": {
+        "OPEN_CATALOG": "Abrir catalogo",
+        "OPEN_PRICE_BOOKS": "Abrir listas de precios"
+      },
+      "STAT": {
+        "ARIA": "Estadisticas de gestion de productos",
+        "PAGES": "Paginas totales",
+        "DIRECT_LINKS": "Accesos directos",
+        "GUIDED_LAUNCHES": "Accesos guiados"
+      },
+      "LOADING": "Cargando datos de productos...",
       "ACTION": {
         "OPEN_PAGE": "Abrir",
         "IMPORT_DATA": "Importar datos"
@@ -3551,7 +3562,8 @@
         "LOAD": "No se pueden cargar los detalles del trabajo.",
         "LOAD_AUDIT": "No se pueden cargar los registros de errores.",
         "CANCEL": "No se puede cancelar el trabajo.",
-        "RETRY": "No se puede reintentar el trabajo."
+        "RETRY": "No se puede reintentar el trabajo.",
+        "CORRECTION": "No se pudo enviar la correccion. Intente nuevamente."
       },
       "META": {
         "ARIA_LABEL": "Metadatos del trabajo",
@@ -3608,7 +3620,8 @@
         "CREATE_SESSION": "No se puede iniciar la sesion de importacion.",
         "LOAD_MAPPINGS": "No se pueden cargar los mapeos de columnas.",
         "APPROVE_MAPPINGS": "No se pueden aprobar los mapeos de columnas.",
-        "RETRY": "No se puede reintentar el trabajo."
+        "RETRY": "No se puede reintentar el trabajo.",
+        "POLL": "No se pudo obtener el estado de importacion. Actualice la pagina."
       },
       "CONFLICT": {
         "TITLE": "Importacion activa en progreso",

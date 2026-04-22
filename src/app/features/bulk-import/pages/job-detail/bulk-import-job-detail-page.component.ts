@@ -1,13 +1,12 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BulkImportService } from '../../services/bulk-import.service';
-import { BulkImportErrorRecordsTableComponent } from '../../components/bulk-import-error-records-table/bulk-import-error-records-table.component';
+import { BulkImportErrorRecordsTableComponent, CorrectionSubmitEvent } from '../../components/bulk-import-error-records-table/bulk-import-error-records-table.component';
 import {
   BulkLoadJob,
   BulkLoadRecordAudit,
-  SubmitCorrectionRequest,
 } from '../../models/bulk-import.models';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error';
@@ -19,7 +18,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'error';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, TranslatePipe, BulkImportErrorRecordsTableComponent],
 })
-export class BulkImportJobDetailPageComponent implements OnInit {
+export class BulkImportJobDetailPageComponent {
   private readonly service = inject(BulkImportService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
@@ -29,13 +28,16 @@ export class BulkImportJobDetailPageComponent implements OnInit {
   readonly job = signal<BulkLoadJob | null>(null);
   readonly auditRecords = signal<BulkLoadRecordAudit[]>([]);
   readonly correctionPending = signal<Set<string>>(new Set());
-  readonly correctionValues = signal<Record<string, Record<string, unknown>>>({});
 
   private jobId = '';
 
-  ngOnInit(): void {
-    this.jobId = this.route.snapshot.paramMap.get('jobId') ?? '';
-    this.loadDetail();
+  constructor() {
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        this.jobId = params.get('jobId') ?? '';
+        this.loadDetail();
+      });
   }
 
   loadDetail(): void {
@@ -71,19 +73,10 @@ export class BulkImportJobDetailPageComponent implements OnInit {
       });
   }
 
-  updateCorrectionValue(recordId: string, field: string, value: unknown): void {
-    this.correctionValues.update(prev => ({
-      ...prev,
-      [recordId]: { ...prev[recordId], [field]: value },
-    }));
-  }
-
-  submitCorrection(record: BulkLoadRecordAudit): void {
-    const corrected = this.correctionValues()[record.recordId];
-    if (!corrected || Object.keys(corrected).length === 0) { return; }
+  onSubmitCorrection(event: CorrectionSubmitEvent): void {
+    const { record, request } = event;
     this.correctionPending.update(s => { const n = new Set(s); n.add(record.recordId); return n; });
-    const req: SubmitCorrectionRequest = { correctedValues: corrected };
-    this.service.submitCorrection(this.jobId, record.recordId, req)
+    this.service.submitCorrection(this.jobId, record.recordId, request)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: updated => {
@@ -93,6 +86,8 @@ export class BulkImportJobDetailPageComponent implements OnInit {
           this.correctionPending.update(s => { const n = new Set(s); n.delete(record.recordId); return n; });
         },
         error: () => {
+          this.state.set('error');
+          this.errorKey.set('BULK_IMPORT.JOB_DETAIL.ERROR.CORRECTION');
           this.correctionPending.update(s => { const n = new Set(s); n.delete(record.recordId); return n; });
         },
       });

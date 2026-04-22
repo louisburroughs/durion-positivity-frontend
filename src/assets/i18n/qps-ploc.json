@@ -1841,6 +1841,17 @@
       "EYEBROW": "[!! Product & Catalog !!]",
       "TITLE": "[!! Product Management !!]",
       "SUBTITLE": "[!! Manage your product catalog, pricing, inventory feeds, and bulk imports. !!]",
+      "HERO": {
+        "OPEN_CATALOG": "[!! Open Catalog !!]",
+        "OPEN_PRICE_BOOKS": "[!! Open Price Books !!]"
+      },
+      "STAT": {
+        "ARIA": "[!! Product management statistics !!]",
+        "PAGES": "[!! Total pages !!]",
+        "DIRECT_LINKS": "[!! Quick links !!]",
+        "GUIDED_LAUNCHES": "[!! Guided launches !!]"
+      },
+      "LOADING": "[!! Loading product data... !!]",
       "ACTION": {
         "OPEN_PAGE": "[!! Open !!]",
         "IMPORT_DATA": "[!! Import Data !!]"
@@ -3551,7 +3562,8 @@
         "LOAD": "[!! Unable to load job details. !!]",
         "LOAD_AUDIT": "[!! Unable to load error records. !!]",
         "CANCEL": "[!! Unable to cancel job. !!]",
-        "RETRY": "[!! Unable to retry job. !!]"
+        "RETRY": "[!! Unable to retry job. !!]",
+        "CORRECTION": "[!! Failed to submit correction. Please try again. !!]"
       },
       "META": {
         "ARIA_LABEL": "[!! Job metadata !!]",
@@ -3608,7 +3620,8 @@
         "CREATE_SESSION": "[!! Unable to start import session. !!]",
         "LOAD_MAPPINGS": "[!! Unable to load column mappings. !!]",
         "APPROVE_MAPPINGS": "[!! Unable to approve column mappings. !!]",
-        "RETRY": "[!! Unable to retry job. !!]"
+        "RETRY": "[!! Unable to retry job. !!]",
+        "POLL": "[!! Failed to get import status. Please refresh. !!]"
       },
       "CONFLICT": {
         "TITLE": "[!! Active Import in Progress !!]",

@@ -1841,6 +1841,17 @@
       "EYEBROW": "Produit et catalogue",
       "TITLE": "Gestion des produits",
       "SUBTITLE": "Gerez votre catalogue de produits, la tarification, les flux d'inventaire et les importations massives.",
+      "HERO": {
+        "OPEN_CATALOG": "Ouvrir le catalogue",
+        "OPEN_PRICE_BOOKS": "Ouvrir les grilles de prix"
+      },
+      "STAT": {
+        "ARIA": "Statistiques de gestion des produits",
+        "PAGES": "Pages totales",
+        "DIRECT_LINKS": "Liens rapides",
+        "GUIDED_LAUNCHES": "Lancements guides"
+      },
+      "LOADING": "Chargement des donnees produit...",
       "ACTION": {
         "OPEN_PAGE": "Ouvrir",
         "IMPORT_DATA": "Importer des donnees"
@@ -3551,7 +3562,8 @@
         "LOAD": "Impossible de charger les details du travail.",
         "LOAD_AUDIT": "Impossible de charger les enregistrements d'erreurs.",
         "CANCEL": "Impossible d'annuler le travail.",
-        "RETRY": "Impossible de reessayer le travail."
+        "RETRY": "Impossible de reessayer le travail.",
+        "CORRECTION": "Impossible de soumettre la correction. Veuillez reessayer."
       },
       "META": {
         "ARIA_LABEL": "Metadonnees du travail",
@@ -3608,7 +3620,8 @@
         "CREATE_SESSION": "Impossible de demarrer la session d'importation.",
         "LOAD_MAPPINGS": "Impossible de charger les mappages de colonnes.",
         "APPROVE_MAPPINGS": "Impossible d'approuver les mappages de colonnes.",
-        "RETRY": "Impossible de reessayer le travail."
+        "RETRY": "Impossible de reessayer le travail.",
+        "POLL": "Impossible d'obtenir le statut d'importation. Veuillez actualiser."
       },
       "CONFLICT": {
         "TITLE": "Importation active en cours",
