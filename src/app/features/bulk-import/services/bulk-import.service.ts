@@ -5,6 +5,7 @@ import { Upload } from 'tus-js-client';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { environment } from '../../../../environments/environment';
 import {
+  ACTIVE_JOB_STATUSES,
   ApproveColumnMappingsRequest,
   AuditRecordFilterParams,
   AuditRecordListResponse,
@@ -113,26 +114,36 @@ export class BulkImportService {
   getActiveJobForDomain(domainType: DomainType): Observable<BulkLoadJob | null> {
     return this.listJobs().pipe(
       map(result => {
-        const activeJobs = result.items.filter(job => job.status !== 'COMPLETED'
-          && job.status !== 'FAILED'
-          && job.status !== 'CANCELLED');
+        const activeJobs = result.items.filter(job => ACTIVE_JOB_STATUSES.includes(job.status));
 
         return activeJobs.find(job => job.domainType === domainType) ?? activeJobs[0] ?? null;
       }),
     );
   }
 
+  getActiveJobDomains(): Observable<Set<DomainType>> {
+    return this.listJobs().pipe(
+      map(result => new Set(
+        result.items
+          .filter(job => ACTIVE_JOB_STATUSES.includes(job.status))
+          .map(job => job.domainType),
+      )),
+    );
+  }
+
   listJobs(filters?: JobFilterParams): Observable<JobListResponse> {
     let params = new HttpParams();
     if (filters?.pageSize != null) { params = params.set('pageSize', filters.pageSize.toString()); }
-    if (filters?.domainType) { params = params.set('domainType', filters.domainType); }
-    if (filters?.status) { params = params.set('status', filters.status); }
     return this.api
       .get<ApiPage<ApiBulkLoadJob>>('/bulk-loader/v1/bulk-jobs', params)
       .pipe(map(page => ({
-        items: page.content.map(job => this.toBulkLoadJob(job)),
+        items: this.applyJobFilters(page.content.map(job => this.toBulkLoadJob(job)), filters),
         nextPageToken: null,
       })));
+  }
+
+  getTusUploadUrl(jobId: string): string {
+    return this.buildTusUploadEndpoint(jobId);
   }
 
   getColumnMappings(jobId: string): Observable<BulkLoadColumnMapping[]> {
@@ -230,11 +241,44 @@ export class BulkImportService {
         },
       });
 
-      upload.start();
+      let isDisposed = false;
+
+      void upload.findPreviousUploads()
+        .then(previousUploads => {
+          if (isDisposed) {
+            return;
+          }
+
+          if (previousUploads.length > 0) {
+            upload.resumeFromPreviousUpload(previousUploads[0]);
+          }
+
+          upload.start();
+        })
+        .catch(() => {
+          if (!isDisposed) {
+            upload.start();
+          }
+        });
 
       return () => {
+        isDisposed = true;
         void upload.abort(true);
       };
+    });
+  }
+
+  private applyJobFilters(items: BulkLoadJob[], filters?: JobFilterParams): BulkLoadJob[] {
+    return items.filter(job => {
+      if (filters?.domainType && job.domainType !== filters.domainType) {
+        return false;
+      }
+
+      if (filters?.status && job.status !== filters.status) {
+        return false;
+      }
+
+      return true;
     });
   }
 

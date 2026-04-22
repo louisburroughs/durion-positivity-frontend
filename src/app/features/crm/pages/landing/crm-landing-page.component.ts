@@ -1,6 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { DomainType } from '../../../bulk-import/models/bulk-import.models';
+import { BulkImportService } from '../../../bulk-import/services/bulk-import.service';
 
 type LaunchField =
   | 'partyDetailId'
@@ -16,6 +19,7 @@ interface DirectCard {
   readonly descriptionKey: string;
   readonly route: string;
   readonly actionKey: string;
+  readonly domainType?: DomainType;
 }
 
 interface LaunchCard {
@@ -158,6 +162,7 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         descriptionKey: 'CRM.LANDING.CARD.IMPORT_CUSTOMER.DESCRIPTION',
         route: '/app/crm/bulk-import/customer',
         actionKey: 'CRM.LANDING.ACTION.IMPORT_DATA',
+        domainType: 'CUSTOMER',
       },
       {
         kind: 'direct',
@@ -165,6 +170,7 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         descriptionKey: 'CRM.LANDING.CARD.IMPORT_VEHICLE_INVENTORY.DESCRIPTION',
         route: '/app/crm/bulk-import/vehicle-inventory',
         actionKey: 'CRM.LANDING.ACTION.IMPORT_DATA',
+        domainType: 'VEHICLE_INVENTORY',
       },
       {
         kind: 'direct',
@@ -172,6 +178,7 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         descriptionKey: 'CRM.LANDING.CARD.IMPORT_VEHICLE_FITMENT.DESCRIPTION',
         route: '/app/crm/bulk-import/vehicle-fitment',
         actionKey: 'CRM.LANDING.ACTION.IMPORT_DATA',
+        domainType: 'VEHICLE_FITMENT',
       },
     ],
   },
@@ -185,11 +192,14 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
   styleUrl: './crm-landing-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CrmLandingPageComponent {
+export class CrmLandingPageComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly bulkImportService = inject(BulkImportService, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly state = signal<PageState>('ready');
   readonly errorKey = signal<string | null>(null);
+  readonly activeImportDomains = signal<Set<DomainType>>(new Set());
   readonly activeLaunchField = signal<LaunchField | null>(null);
   readonly launchValues = signal<Record<LaunchField, string>>({
     partyDetailId: '',
@@ -214,8 +224,18 @@ export class CrmLandingPageComponent {
   ).length;
   readonly totalPageCount = this.directLinkCount + this.guidedLinkCount;
 
+  ngOnInit(): void {
+    this.loadActiveImportDomains();
+  }
+
   isLaunchCard(card: DirectCard | LaunchCard): card is LaunchCard {
     return card.kind === 'launch';
+  }
+
+  isActiveImport(card: DirectCard | LaunchCard): boolean {
+    return card.kind === 'direct'
+      && !!card.domainType
+      && this.activeImportDomains().has(card.domainType);
   }
 
   updateLaunchValue(field: LaunchField, value: string): void {
@@ -267,5 +287,17 @@ export class CrmLandingPageComponent {
     } finally {
       this.activeLaunchField.set(null);
     }
+  }
+
+  private loadActiveImportDomains(): void {
+    if (!this.bulkImportService) {
+      return;
+    }
+
+    this.bulkImportService.getActiveJobDomains()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: domains => this.activeImportDomains.set(domains),
+      });
   }
 }

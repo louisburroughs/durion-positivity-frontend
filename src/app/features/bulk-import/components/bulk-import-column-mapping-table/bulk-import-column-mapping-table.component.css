@@ -23,7 +23,7 @@
 	font-weight: 600;
 }
 
-.mapping-table__target-input {
+.mapping-table__target-select {
 	width: 100%;
 	border: 1px solid var(--input-border);
 	border-radius: var(--radius-sm);

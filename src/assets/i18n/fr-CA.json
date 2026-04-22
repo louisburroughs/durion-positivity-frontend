@@ -3679,12 +3679,18 @@
         "CONFIDENCE": "Confiance de correspondance"
       },
       "TARGET_LABEL_FOR": "Champ systeme pour la colonne : ",
+      "TARGET_OPTION": {
+        "DO_NOT_IMPORT": "Ne pas importer"
+      },
       "APPROVE_BTN": "Approuver les mappages",
       "CONFIDENCE": {
         "HIGH": "Elevee",
         "MEDIUM": "Moyenne",
         "LOW": "Faible"
       }
+    },
+    "LANDING": {
+      "ACTIVE_IMPORT": "Importation active"
     },
     "PROGRESS": {
       "STEPPER": {

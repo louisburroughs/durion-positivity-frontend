@@ -147,6 +147,17 @@
 	border-color: color-mix(in srgb, var(--brand-primary) 38%, var(--input-border));
 }
 
+.product-card__active-import {
+	display: inline-flex;
+	justify-self: start;
+	padding: 0.2rem 0.65rem;
+	border-radius: 999px;
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: #14532d;
+	background: color-mix(in srgb, #22c55e 20%, var(--cardBackground));
+}
+
 .product-button {
 	display: inline-flex;
 	align-items: center;

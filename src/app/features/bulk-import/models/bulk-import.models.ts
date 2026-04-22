@@ -50,6 +50,8 @@ export interface BulkLoadColumnMapping {
   overriddenByUser: boolean;
 }
 
+export const DO_NOT_IMPORT_TARGET_FIELD = 'DO_NOT_IMPORT';
+
 export interface BulkLoadRecordAudit {
   recordId: string;
   jobId: string;

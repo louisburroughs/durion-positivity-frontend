@@ -1,6 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { DomainType } from '../../../bulk-import/models/bulk-import.models';
+import { BulkImportService } from '../../../bulk-import/services/bulk-import.service';
 
 type LaunchField =
   | 'personUuid'
@@ -20,6 +23,7 @@ interface BaseCard {
 interface DirectCard extends BaseCard {
   kind: 'direct';
   route: string;
+  domainType?: DomainType;
 }
 
 interface LaunchCard extends BaseCard {
@@ -150,6 +154,7 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         descriptionKey: 'PEOPLE.LANDING.CARD.IMPORT_PEOPLE.DESCRIPTION',
         route: '/app/people/bulk-import/people',
         actionKey: 'PEOPLE.LANDING.ACTION.IMPORT_DATA',
+        domainType: 'PEOPLE',
       },
     ],
   },
@@ -163,11 +168,14 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
   styleUrl: './people-landing-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PeopleLandingPageComponent {
+export class PeopleLandingPageComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly bulkImportService = inject(BulkImportService, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly state = signal<PageState>('ready');
   readonly errorKey = signal<string | null>(null);
+  readonly activeImportDomains = signal<Set<DomainType>>(new Set());
   readonly activeLaunchField = signal<LaunchField | null>(null);
   readonly launchValues = signal<Record<LaunchField, string>>({
     personUuid: '',
@@ -182,8 +190,16 @@ export class PeopleLandingPageComponent {
   readonly guidedLinkCount = LANDING_SECTIONS.flatMap(section => section.cards).filter(card => card.kind === 'launch').length;
   readonly totalPageCount = LANDING_SECTIONS.flatMap(section => section.cards).length;
 
+  ngOnInit(): void {
+    this.loadActiveImportDomains();
+  }
+
   isLaunchCard(card: DirectCard | LaunchCard): card is LaunchCard {
     return card.kind === 'launch';
+  }
+
+  isActiveImport(card: DirectCard | LaunchCard): boolean {
+    return card.kind === 'direct' && !!card.domainType && this.activeImportDomains().has(card.domainType);
   }
 
   updateLaunchValue(field: LaunchField, value: string): void {
@@ -241,5 +257,17 @@ export class PeopleLandingPageComponent {
     } finally {
       this.activeLaunchField.set(null);
     }
+  }
+
+  private loadActiveImportDomains(): void {
+    if (!this.bulkImportService) {
+      return;
+    }
+
+    this.bulkImportService.getActiveJobDomains()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: domains => this.activeImportDomains.set(domains),
+      });
   }
 }

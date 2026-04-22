@@ -86,7 +86,8 @@ export class InventoryBulkImportPageComponent implements OnInit, OnDestroy {
     switch (job.status) {
       case 'CREATED':
       case 'UPLOADING':
-        this.state.set('uploading');
+        this.uploadProgress.set(0);
+        this.state.set('upload');
         break;
       case 'DETECTING':
       case 'DEDUP':
@@ -111,30 +112,47 @@ export class InventoryBulkImportPageComponent implements OnInit, OnDestroy {
   }
 
   private startUpload(file: File): void {
+    const resumableJob = this.job();
+    if (resumableJob && (resumableJob.status === 'CREATED' || resumableJob.status === 'UPLOADING')) {
+      this.job.update(current => current ? { ...current, status: 'UPLOADING', fileName: file.name } : current);
+      this.uploadToSession(this.service.getTusUploadUrl(resumableJob.jobId), file);
+      return;
+    }
+
     this.state.set('loading');
     this.service.createUploadSession({ domainType: DOMAIN_TYPE, fileName: file.name, fileSize: file.size })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: session => {
-          this.job.update(j => j ? { ...j, jobId: session.jobId } : { jobId: session.jobId, domainType: DOMAIN_TYPE, status: 'UPLOADING', fileName: file.name });
-          this.state.set('uploading');
-          const uploadSub = this.service.uploadFile(session.uploadUrl, file)
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: progress => this.uploadProgress.set(progress),
-              complete: () => this.pollForStatus(),
-              error: () => {
-                this.state.set('error');
-                this.errorKey.set('BULK_IMPORT.WIZARD.ERROR.UPLOAD');
-              },
-            });
-          this.uploadAbort = () => uploadSub.unsubscribe();
+          this.job.update(j => j
+            ? { ...j, jobId: session.jobId, status: 'UPLOADING', fileName: file.name }
+            : { jobId: session.jobId, domainType: DOMAIN_TYPE, status: 'UPLOADING', fileName: file.name });
+          this.uploadToSession(session.uploadUrl, file);
         },
         error: () => {
           this.state.set('error');
           this.errorKey.set('BULK_IMPORT.WIZARD.ERROR.CREATE_SESSION');
         },
       });
+  }
+
+  private uploadToSession(uploadUrl: string, file: File): void {
+    this.state.set('uploading');
+    this.uploadProgress.set(0);
+    this.selectedFile.set(file);
+
+    const uploadSub = this.service.uploadFile(uploadUrl, file)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: progress => this.uploadProgress.set(progress),
+        complete: () => this.pollForStatus(),
+        error: () => {
+          this.state.set('error');
+          this.errorKey.set('BULK_IMPORT.WIZARD.ERROR.UPLOAD');
+        },
+      });
+
+    this.uploadAbort = () => uploadSub.unsubscribe();
   }
 
   cancelUpload(): void {

@@ -3679,12 +3679,18 @@
         "CONFIDENCE": "Confianza de coincidencia"
       },
       "TARGET_LABEL_FOR": "Campo del sistema para la columna: ",
+      "TARGET_OPTION": {
+        "DO_NOT_IMPORT": "No importar"
+      },
       "APPROVE_BTN": "Aprobar mapeos",
       "CONFIDENCE": {
         "HIGH": "Alta",
         "MEDIUM": "Media",
         "LOW": "Baja"
       }
+    },
+    "LANDING": {
+      "ACTIVE_IMPORT": "Importacion activa"
     },
     "PROGRESS": {
       "STEPPER": {

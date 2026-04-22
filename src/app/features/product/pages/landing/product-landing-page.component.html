@@ -54,6 +54,9 @@
 			<article class="product-card">
 				<h3 class="product-card__title">{{ card.titleKey | translate }}</h3>
 				<p class="product-card__description">{{ card.descriptionKey | translate }}</p>
+				@if (isActiveImport(card.domainType)) {
+				<output class="product-card__active-import" aria-live="polite">{{ 'BULK_IMPORT.LANDING.ACTIVE_IMPORT' | translate }}</output>
+				}
 				<a class="product-button product-button--primary" [routerLink]="card.route"
 					[attr.aria-label]="(card.titleKey | translate) + ': ' + (card.actionKey | translate)">
 					{{ card.actionKey | translate }}

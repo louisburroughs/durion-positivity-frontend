@@ -3679,12 +3679,18 @@
         "CONFIDENCE": "Match Confidence"
       },
       "TARGET_LABEL_FOR": "System field for column: ",
+      "TARGET_OPTION": {
+        "DO_NOT_IMPORT": "Do Not Import"
+      },
       "APPROVE_BTN": "Approve Mappings",
       "CONFIDENCE": {
         "HIGH": "High",
         "MEDIUM": "Medium",
         "LOW": "Low"
       }
+    },
+    "LANDING": {
+      "ACTIVE_IMPORT": "Active Import"
     },
     "PROGRESS": {
       "STEPPER": {

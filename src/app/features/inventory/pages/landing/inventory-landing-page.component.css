@@ -158,6 +158,17 @@
   flex: 1;
 }
 
+.inventory-card__active-import {
+  display: inline-flex;
+  justify-self: start;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #14532d;
+  background: color-mix(in srgb, #22c55e 20%, var(--cardBackground));
+}
+
 .inventory-field {
   display: grid;
   gap: var(--space-2);

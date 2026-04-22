@@ -70,6 +70,9 @@
             >
               <h3 class="inventory-card__title">{{ card.titleKey | translate }}</h3>
               <p class="inventory-card__description">{{ card.descriptionKey | translate }}</p>
+              @if (isActiveImport(card)) {
+                <output class="inventory-card__active-import" aria-live="polite">{{ 'BULK_IMPORT.LANDING.ACTIVE_IMPORT' | translate }}</output>
+              }
 
               @if (isLaunchCard(card)) {
                 <!-- Launch card -->

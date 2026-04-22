@@ -28,6 +28,15 @@ function buildActiveJob(domainType: DomainType): BulkLoadJob {
   };
 }
 
+function buildResumableJob(domainType: DomainType, status: 'CREATED' | 'UPLOADING'): BulkLoadJob {
+  return {
+    jobId: 'job-001',
+    domainType,
+    status,
+    fileName: 'test.csv',
+  };
+}
+
 function buildConflictJob(domainType: DomainType): BulkLoadJob {
   const conflictDomainType = domainType === 'LOCATION' ? 'INVENTORY' : 'LOCATION';
   return {
@@ -116,6 +125,24 @@ export function describeBulkImportWizardPage<TComponent>(options: WizardPageSpec
       fixture.detectChanges();
 
       expect(component.state()).toBe('progress');
+    });
+
+    it('resumes to upload state when active job is in CREATED status', () => {
+      const activeJob = buildResumableJob(options.domainType, 'CREATED');
+      mockBulkImportService.getActiveJobForDomain.mockReturnValue(of(activeJob));
+
+      fixture.detectChanges();
+
+      expect(component.state()).toBe('upload');
+    });
+
+    it('resumes to upload state when active job is in UPLOADING status', () => {
+      const activeJob = buildResumableJob(options.domainType, 'UPLOADING');
+      mockBulkImportService.getActiveJobForDomain.mockReturnValue(of(activeJob));
+
+      fixture.detectChanges();
+
+      expect(component.state()).toBe('upload');
     });
 
     it('transitions to error state when getActiveJobForDomain fails (ADR-0031)', () => {

@@ -2,7 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule } from '@ngx-translate/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BulkImportColumnMappingTableComponent } from './bulk-import-column-mapping-table.component';
-import { BulkLoadColumnMapping, ColumnMappingOverride } from '../../models/bulk-import.models';
+import {
+  BulkLoadColumnMapping,
+  ColumnMappingOverride,
+  DO_NOT_IMPORT_TARGET_FIELD,
+} from '../../models/bulk-import.models';
 
 const mockMapping: BulkLoadColumnMapping = {
   mappingId: 'map-001',
@@ -63,11 +67,11 @@ describe('BulkImportColumnMappingTableComponent', () => {
     const emitted: ColumnMappingOverride[][] = [];
     component.approve.subscribe(v => emitted.push(v));
 
-    component.overrideMapping('map-001', 'sku');
+    component.overrideMapping('map-001', DO_NOT_IMPORT_TARGET_FIELD);
     component.onApprove();
 
     expect(emitted.length).toBe(1);
-    expect(emitted[0]).toEqual([{ mappingId: 'map-001', sourceColumn: 'SKU', targetField: 'sku' }]);
+    expect(emitted[0]).toEqual([{ mappingId: 'map-001', sourceColumn: 'SKU', targetField: DO_NOT_IMPORT_TARGET_FIELD }]);
   });
 
   it('onApprove emits multiple overrides when multiple are set', () => {
@@ -75,22 +79,41 @@ describe('BulkImportColumnMappingTableComponent', () => {
     const emitted: ColumnMappingOverride[][] = [];
     component.approve.subscribe(v => emitted.push(v));
 
-    component.overrideMapping('map-001', 'newSku');
-    component.overrideMapping('map-002', 'longDescription');
+    component.overrideMapping('map-001', 'description');
+    component.overrideMapping('map-002', 'productSku');
     component.onApprove();
 
     expect(emitted[0]).toHaveLength(2);
-    expect(emitted[0]).toContainEqual({ mappingId: 'map-001', sourceColumn: 'SKU', targetField: 'newSku' });
+    expect(emitted[0]).toContainEqual({ mappingId: 'map-001', sourceColumn: 'SKU', targetField: 'description' });
     expect(emitted[0]).toContainEqual({
       mappingId: 'map-002',
       sourceColumn: 'DESC',
-      targetField: 'longDescription',
+      targetField: 'productSku',
     });
   });
 
+  it('onApprove emits Do Not Import target field when selected', () => {
+    const emitted: ColumnMappingOverride[][] = [];
+    component.approve.subscribe(v => emitted.push(v));
+
+    component.overrideMapping('map-001', DO_NOT_IMPORT_TARGET_FIELD);
+    component.onApprove();
+
+    expect(emitted[0]).toContainEqual({
+      mappingId: 'map-001',
+      sourceColumn: 'SKU',
+      targetField: DO_NOT_IMPORT_TARGET_FIELD,
+    });
+  });
+
+  it('ignores override values outside constrained options', () => {
+    component.overrideMapping('map-001', 'notAValidTargetField');
+    expect(component.getOverrideOrDefault(mockMapping)).toBe('productSku');
+  });
+
   it('getOverrideOrDefault returns the override when one exists', () => {
-    component.overrideMapping('map-001', 'overriddenField');
-    expect(component.getOverrideOrDefault(mockMapping)).toBe('overriddenField');
+    component.overrideMapping('map-001', DO_NOT_IMPORT_TARGET_FIELD);
+    expect(component.getOverrideOrDefault(mockMapping)).toBe(DO_NOT_IMPORT_TARGET_FIELD);
   });
 
   it('getOverrideOrDefault returns mapping.targetField when no override set', () => {

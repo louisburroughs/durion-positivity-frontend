@@ -16,13 +16,22 @@ const tusState = vi.hoisted(() => ({
   instances: [] as Array<{ file: File; options: Record<string, unknown> }>,
   start: vi.fn(),
   abort: vi.fn().mockResolvedValue(undefined),
+  findPreviousUploads: vi.fn(() => Promise.resolve([] as Array<{ uploadUrl: string }>)),
+  resumeFromPreviousUpload: vi.fn(),
 }));
 
 vi.mock('tus-js-client', () => ({
-  Upload: function MockUpload(this: { start: typeof tusState.start; abort: typeof tusState.abort }, file: File, options: Record<string, unknown>) {
+  Upload: function MockUpload(this: {
+    start: typeof tusState.start;
+    abort: typeof tusState.abort;
+    findPreviousUploads: typeof tusState.findPreviousUploads;
+    resumeFromPreviousUpload: typeof tusState.resumeFromPreviousUpload;
+  }, file: File, options: Record<string, unknown>) {
     tusState.instances.push({ file, options });
     this.start = tusState.start;
     this.abort = tusState.abort;
+    this.findPreviousUploads = tusState.findPreviousUploads;
+    this.resumeFromPreviousUpload = tusState.resumeFromPreviousUpload;
   },
 }));
 
@@ -36,6 +45,8 @@ describe('BulkImportService', () => {
     tusState.instances.length = 0;
     tusState.start.mockReset();
     tusState.abort.mockReset().mockResolvedValue(undefined);
+    tusState.findPreviousUploads.mockReset().mockResolvedValue([] as Array<{ uploadUrl: string }>);
+    tusState.resumeFromPreviousUpload.mockReset();
     vi.resetModules();
 
     ({ BulkImportService: bulkImportServiceClass } = await import('./bulk-import.service'));
@@ -147,22 +158,35 @@ describe('BulkImportService', () => {
       expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs', expect.anything());
     });
 
-    it('passes domainType as a query param when provided', () => {
+    it('applies domainType filter on the frontend when backend ignores it', () => {
       apiStub.get.mockReturnValue(of(jobPageStub));
 
+      let response: import('../models/bulk-import.models').JobListResponse | undefined;
       service.listJobs({ domainType: 'INVENTORY' }).subscribe();
 
       const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('domainType')).toBe('INVENTORY');
+      expect(params.get('domainType')).toBeNull();
+
+      service.listJobs({ domainType: 'INVENTORY' }).subscribe(value => {
+        response = value;
+      });
+      expect(response?.items).toHaveLength(1);
+      expect(response?.items[0]?.domainType).toBe('INVENTORY');
     });
 
-    it('passes status as a query param when provided', () => {
+    it('applies status filter on the frontend when backend ignores it', () => {
       apiStub.get.mockReturnValue(of(jobPageStub));
 
+      let response: import('../models/bulk-import.models').JobListResponse | undefined;
       service.listJobs({ status: 'PROCESSING' }).subscribe();
 
       const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('status')).toBe('PROCESSING');
+      expect(params.get('status')).toBeNull();
+
+      service.listJobs({ status: 'PROCESSING' }).subscribe(value => {
+        response = value;
+      });
+      expect(response?.items).toHaveLength(0);
     });
 
     it('passes pageSize as a query param when provided', () => {
@@ -174,15 +198,50 @@ describe('BulkImportService', () => {
       expect(params.get('pageSize')).toBe('10');
     });
 
-    it('passes multiple filters as query params simultaneously', () => {
+    it('applies multiple frontend filters simultaneously', () => {
       apiStub.get.mockReturnValue(of(jobPageStub));
 
+      let response: import('../models/bulk-import.models').JobListResponse | undefined;
       service.listJobs({ domainType: 'INVENTORY', status: 'PROCESSING', pageSize: 10 }).subscribe();
 
       const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('domainType')).toBe('INVENTORY');
-      expect(params.get('status')).toBe('PROCESSING');
+      expect(params.get('domainType')).toBeNull();
+      expect(params.get('status')).toBeNull();
       expect(params.get('pageSize')).toBe('10');
+
+      service.listJobs({ domainType: 'INVENTORY', status: 'PROCESSING', pageSize: 10 }).subscribe(value => {
+        response = value;
+      });
+      expect(response?.items).toHaveLength(0);
+    });
+  });
+
+  describe('getActiveJobDomains()', () => {
+    it('returns only domains that currently have active jobs', () => {
+      apiStub.get.mockReturnValue(of({
+        content: [
+          {
+            id: 'job-001',
+            domainType: 'INVENTORY_STOCK_COUNT',
+            status: 'PROCESSING',
+            fileName: 'inventory.csv',
+          },
+          {
+            id: 'job-002',
+            domainType: 'CATALOG_PRODUCT',
+            status: 'COMPLETED',
+            fileName: 'catalog.csv',
+          },
+        ],
+      }));
+
+      let response: Set<import('../models/bulk-import.models').DomainType> | undefined;
+      service.getActiveJobDomains().subscribe(value => {
+        response = value;
+      });
+
+      expect(response?.has('INVENTORY')).toBe(true);
+      expect(response?.has('CATALOG')).toBe(false);
     });
   });
 
@@ -325,7 +384,7 @@ describe('BulkImportService', () => {
   });
 
   describe('uploadFile()', () => {
-    it('creates a tus upload and emits progress through completion', () => {
+    it('creates a tus upload and emits progress through completion', async () => {
       const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
       const progress: number[] = [];
       let completed = false;
@@ -341,6 +400,7 @@ describe('BulkImportService', () => {
       const onProgress = instance.options['onProgress'] as ((bytesSent: number, bytesTotal: number) => void);
       const onSuccess = instance.options['onSuccess'] as (() => void);
 
+      await Promise.resolve();
       onProgress(50, 100);
       onSuccess();
 
@@ -352,12 +412,29 @@ describe('BulkImportService', () => {
       expect(completed).toBe(true);
     });
 
+    it('resumes from a previous tus upload when one exists', async () => {
+      tusState.findPreviousUploads.mockResolvedValueOnce([{ uploadUrl: 'https://upload.example/files/abc' }]);
+      const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
+
+      service.uploadFile('https://upload.example', file).subscribe();
+      await Promise.resolve();
+
+      expect(tusState.resumeFromPreviousUpload).toHaveBeenCalledWith({ uploadUrl: 'https://upload.example/files/abc' });
+      expect(tusState.start).toHaveBeenCalled();
+    });
+
     it('aborts upload on unsubscribe', () => {
       const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
       const sub = service.uploadFile('https://upload.example', file).subscribe();
       sub.unsubscribe();
 
       expect(tusState.abort).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('getTusUploadUrl()', () => {
+    it('returns a resumable upload endpoint for an existing job', () => {
+      expect(service.getTusUploadUrl('job-123')).toBe('http://localhost:8080/api/bulk-loader/v1/bulk-jobs/job-123/tus');
     });
   });
 });

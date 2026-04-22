@@ -1,6 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
+import { DomainType } from '../../../bulk-import/models/bulk-import.models';
+import { BulkImportService } from '../../../bulk-import/services/bulk-import.service';
 
 type PageState = 'ready' | 'loading' | 'error';
 
@@ -10,6 +13,7 @@ interface DirectCard {
   readonly descriptionKey: string;
   readonly route: string;
   readonly actionKey: string;
+  readonly domainType?: DomainType;
 }
 
 interface LandingSection {
@@ -89,6 +93,7 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         descriptionKey: 'PRODUCT.LANDING.CARD.IMPORT_CATALOG.DESCRIPTION',
         route: '/app/product/bulk-import/catalog',
         actionKey: 'PRODUCT.LANDING.ACTION.IMPORT_DATA',
+        domainType: 'CATALOG',
       },
       {
         kind: 'direct',
@@ -96,6 +101,7 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         descriptionKey: 'PRODUCT.LANDING.CARD.IMPORT_PRICE.DESCRIPTION',
         route: '/app/product/bulk-import/price',
         actionKey: 'PRODUCT.LANDING.ACTION.IMPORT_DATA',
+        domainType: 'PRICE',
       },
     ],
   },
@@ -108,12 +114,36 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, TranslatePipe],
 })
-export class ProductLandingPageComponent {
+export class ProductLandingPageComponent implements OnInit {
+  private readonly bulkImportService = inject(BulkImportService, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
+
   readonly sections = LANDING_SECTIONS;
   readonly state = signal<PageState>('ready');
   readonly errorKey = signal<string | null>(null);
+  readonly activeImportDomains = signal<Set<DomainType>>(new Set());
 
   readonly directLinkCount = LANDING_SECTIONS.flatMap(s => s.cards).length;
   readonly guidedLinkCount = 0;
   readonly totalPageCount = this.directLinkCount;
+
+  ngOnInit(): void {
+    this.loadActiveImportDomains();
+  }
+
+  isActiveImport(domainType?: DomainType): boolean {
+    return !!domainType && this.activeImportDomains().has(domainType);
+  }
+
+  private loadActiveImportDomains(): void {
+    if (!this.bulkImportService) {
+      return;
+    }
+
+    this.bulkImportService.getActiveJobDomains()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: domains => this.activeImportDomains.set(domains),
+      });
+  }
 }

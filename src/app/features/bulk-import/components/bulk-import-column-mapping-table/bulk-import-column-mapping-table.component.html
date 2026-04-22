@@ -16,13 +16,22 @@
 					<label class="sr-only" [for]="'target-' + mapping.mappingId">
 						{{ ('BULK_IMPORT.MAPPING.TARGET_LABEL_FOR' | translate) + mapping.sourceColumn }}
 					</label>
-					<input
+					<select
 						[id]="'target-' + mapping.mappingId"
-						class="mapping-table__target-input"
-						type="text"
+						class="mapping-table__target-select"
 						[value]="getOverrideOrDefault(mapping)"
 						(change)="overrideMapping(mapping.mappingId, $any($event.target).value)"
-					/>
+					>
+						@for (targetOption of targetFieldOptions(); track targetOption) {
+						<option [value]="targetOption">
+							@if (targetOption === doNotImportValue) {
+								{{ 'BULK_IMPORT.MAPPING.TARGET_OPTION.DO_NOT_IMPORT' | translate }}
+							} @else {
+								{{ targetOption }}
+							}
+						</option>
+						}
+					</select>
 				</td>
 				<td>
 					<span
