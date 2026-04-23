@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
   BulkLoadColumnMapping,
@@ -9,10 +8,11 @@ import {
 
 @Component({
   selector: 'app-bulk-import-column-mapping-table',
+  standalone: true,
   templateUrl: './bulk-import-column-mapping-table.component.html',
   styleUrl: './bulk-import-column-mapping-table.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, TranslatePipe],
+  imports: [TranslatePipe],
 })
 export class BulkImportColumnMappingTableComponent {
   @Input() mappings: BulkLoadColumnMapping[] = [];

@@ -19,6 +19,7 @@ const WIZARD_STEPS: WizardStep[] = [
 
 @Component({
   selector: 'app-bulk-import-progress-stepper',
+  standalone: true,
   templateUrl: './bulk-import-progress-stepper.component.html',
   styleUrl: './bulk-import-progress-stepper.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -10,6 +10,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error';
 
 @Component({
   selector: 'app-bulk-import-jobs-page',
+  standalone: true,
   templateUrl: './bulk-import-jobs-page.component.html',
   styleUrl: './bulk-import-jobs-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

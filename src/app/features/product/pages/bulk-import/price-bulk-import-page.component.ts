@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval, Subscription, switchMap } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -38,7 +38,6 @@ const DOMAIN_TYPE: DomainType = 'PRICE';
 })
 export class PriceBulkImportPageComponent implements OnInit, OnDestroy {
   private readonly service = inject(BulkImportService);
-  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly state = signal<WizardState>('idle');

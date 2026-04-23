@@ -3,6 +3,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-bulk-import-file-drop',
+  standalone: true,
   templateUrl: './bulk-import-file-drop.component.html',
   styleUrl: './bulk-import-file-drop.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

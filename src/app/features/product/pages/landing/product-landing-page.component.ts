@@ -109,6 +109,7 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
 
 @Component({
   selector: 'app-product-landing-page',
+  standalone: true,
   templateUrl: './product-landing-page.component.html',
   styleUrl: './product-landing-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

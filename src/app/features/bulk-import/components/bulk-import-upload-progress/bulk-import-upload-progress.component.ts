@@ -3,6 +3,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-bulk-import-upload-progress',
+  standalone: true,
   templateUrl: './bulk-import-upload-progress.component.html',
   styleUrl: './bulk-import-upload-progress.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

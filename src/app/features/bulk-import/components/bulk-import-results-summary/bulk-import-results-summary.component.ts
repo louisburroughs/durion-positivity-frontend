@@ -4,6 +4,7 @@ import { BulkLoadJob } from '../../models/bulk-import.models';
 
 @Component({
   selector: 'app-bulk-import-results-summary',
+  standalone: true,
   templateUrl: './bulk-import-results-summary.component.html',
   styleUrl: './bulk-import-results-summary.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
