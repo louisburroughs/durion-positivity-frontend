@@ -1,6 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { DomainType } from '../../../bulk-import/models/bulk-import.models';
+import { BulkImportService } from '../../../bulk-import/services/bulk-import.service';
 
 type LaunchField =
   | 'ledgerEntryId'
@@ -20,6 +23,7 @@ interface DirectCard {
   readonly titleKey: string;
   readonly descriptionKey: string;
   readonly routerLink: string[];
+  readonly domainType?: DomainType;
 }
 
 interface LaunchCard {
@@ -246,6 +250,19 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
       },
     ],
   },
+  {
+    titleKey: 'INVENTORY.LANDING.SECTION.DATA_IMPORT.TITLE',
+    descriptionKey: 'INVENTORY.LANDING.SECTION.DATA_IMPORT.DESCRIPTION',
+    cards: [
+      {
+        kind: 'direct',
+        titleKey: 'INVENTORY.LANDING.CARD.IMPORT_STOCK.TITLE',
+        descriptionKey: 'INVENTORY.LANDING.CARD.IMPORT_STOCK.DESCRIPTION',
+        routerLink: ['/app', 'inventory', 'bulk-import', 'stock'],
+        domainType: 'INVENTORY',
+      },
+    ],
+  },
 ];
 
 @Component({
@@ -255,12 +272,15 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, TranslatePipe],
 })
-export class InventoryLandingPageComponent {
+export class InventoryLandingPageComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly bulkImportService = inject(BulkImportService, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly sections = LANDING_SECTIONS;
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
+  readonly activeImportDomains = signal<Set<DomainType>>(new Set());
   readonly activeLaunchField = signal<LaunchField | null>(null);
 
   private readonly launchValues = signal<Partial<Record<LaunchField, string>>>({});
@@ -276,8 +296,16 @@ export class InventoryLandingPageComponent {
 
   readonly totalPageCount = this.directLinkCount + this.guidedLinkCount;
 
+  ngOnInit(): void {
+    this.loadActiveImportDomains();
+  }
+
   isLaunchCard(card: LandingCard): card is LaunchCard {
     return card.kind === 'launch';
+  }
+
+  isActiveImport(card: LandingCard): boolean {
+    return card.kind === 'direct' && !!card.domainType && this.activeImportDomains().has(card.domainType);
   }
 
   launchValue(field: LaunchField): string {
@@ -324,5 +352,17 @@ export class InventoryLandingPageComponent {
     } finally {
       this.activeLaunchField.set(null);
     }
+  }
+
+  private loadActiveImportDomains(): void {
+    if (!this.bulkImportService) {
+      return;
+    }
+
+    this.bulkImportService.getActiveJobDomains()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: domains => this.activeImportDomains.set(domains),
+      });
   }
 }

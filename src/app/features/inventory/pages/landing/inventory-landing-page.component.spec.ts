@@ -2,12 +2,17 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { of } from 'rxjs';
 import { InventoryLandingPageComponent } from './inventory-landing-page.component';
+import { BulkImportService } from '../../../bulk-import/services/bulk-import.service';
 
 describe('InventoryLandingPageComponent', () => {
   let fixture: ComponentFixture<InventoryLandingPageComponent>;
   let component: InventoryLandingPageComponent;
   let router: Router;
+  const bulkImportService = {
+    getActiveJobDomains: vi.fn(),
+  };
 
   const findLaunchCard = (field: string) => {
     const card = component.sections.flatMap((section) => section.cards).find((candidate) => {
@@ -22,15 +27,32 @@ describe('InventoryLandingPageComponent', () => {
   };
 
   beforeEach(async () => {
+    bulkImportService.getActiveJobDomains.mockReturnValue(of(new Set()));
+
     await TestBed.configureTestingModule({
       imports: [InventoryLandingPageComponent, TranslateModule.forRoot()],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        { provide: BulkImportService, useValue: bulkImportService },
+      ],
     }).compileComponents();
 
     router = TestBed.inject(Router);
     fixture = TestBed.createComponent(InventoryLandingPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('fetches and renders the active import indicator for the inventory import card', () => {
+    bulkImportService.getActiveJobDomains.mockReturnValue(of(new Set(['INVENTORY'])));
+    fixture = TestBed.createComponent(InventoryLandingPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const activeIndicators = fixture.debugElement.queryAll(By.css('.inventory-card__active-import'));
+
+    expect(bulkImportService.getActiveJobDomains).toHaveBeenCalled();
+    expect(activeIndicators).toHaveLength(1);
   });
 
   it('renders all direct inventory links on the landing page', () => {

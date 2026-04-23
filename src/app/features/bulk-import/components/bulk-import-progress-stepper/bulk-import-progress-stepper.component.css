@@ -1,0 +1,38 @@
+.stepper {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+	gap: var(--space-2);
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.stepper__step {
+	min-height: 2.5rem;
+	display: grid;
+	place-items: center;
+	border-radius: 999px;
+	border: 1px solid var(--input-border);
+	background: color-mix(in srgb, var(--cardBackground) 90%, var(--brand-surface));
+}
+
+.stepper__step--complete {
+	border-color: color-mix(in srgb, var(--brand-primary) 55%, var(--input-border));
+	background: color-mix(in srgb, var(--brand-primary) 16%, var(--cardBackground));
+}
+
+.stepper__step--active {
+	border-color: var(--brand-primary);
+	background: color-mix(in srgb, var(--brand-primary) 26%, var(--cardBackground));
+}
+
+.stepper__step--pending {
+	opacity: 0.72;
+}
+
+.stepper__label {
+	padding: 0 var(--space-2);
+	text-align: center;
+	font-size: 0.8rem;
+	font-weight: 600;
+}

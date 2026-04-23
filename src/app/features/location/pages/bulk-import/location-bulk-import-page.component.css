@@ -1,0 +1,15 @@
+.wizard-page { display: grid; gap: var(--space-5); padding: var(--space-5); }
+.wizard-page__header { display: grid; gap: var(--space-3); }
+.wizard-page__back { color: var(--brand-primary); text-decoration: none; font-size: 0.875rem; width: fit-content; }
+.wizard-page__title { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
+.wizard-page__subtitle { margin: 0; color: var(--currentTextColor); opacity: 0.7; }
+.wizard-banner { padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--brand-surface); }
+.wizard-banner--error { background: color-mix(in srgb, var(--functional-error-red, #ef4444) 12%, var(--cardBackground)); border: 1px solid var(--functional-error-red, #ef4444); }
+.wizard-step { display: grid; gap: var(--space-4); padding: var(--space-5); background: var(--cardBackground); border: 1px solid var(--input-border); border-radius: var(--radius-lg); }
+.wizard-step__title { margin: 0; }
+.wizard-conflict { padding: var(--space-5); border-radius: var(--radius-lg); background: color-mix(in srgb, #f59e0b 12%, var(--cardBackground)); border: 1px solid #f59e0b; display: grid; gap: var(--space-3); }
+.wizard-conflict__title { margin: 0; }
+.wizard-conflict__message { margin: 0; }
+.wizard-btn { padding: var(--space-2) var(--space-4); border-radius: var(--radius-lg); border: none; cursor: pointer; font-weight: 500; width: fit-content; }
+.wizard-btn--primary { background: var(--brand-primary); color: #fff; text-decoration: none; }
+.wizard-btn--secondary { background: transparent; border: 1px solid var(--input-border); color: var(--currentTextColor); }

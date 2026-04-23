@@ -9,6 +9,7 @@ An **Angular 21** single-page application (with SSR) for the Durion POS platform
 - [Durion Positivity Frontend](#durion-positivity-frontend)
   - [Table of Contents](#table-of-contents)
   - [Architecture Overview](#architecture-overview)
+    - [Key design decisions](#key-design-decisions)
   - [Feature Modules](#feature-modules)
   - [Technology Stack](#technology-stack)
   - [Getting Started](#getting-started)
@@ -31,6 +32,7 @@ An **Angular 21** single-page application (with SSR) for the Durion POS platform
     - [Theme switching](#theme-switching)
     - [Typography \& spacing](#typography--spacing)
   - [Internationalisation](#internationalisation)
+    - [i18n scripts](#i18n-scripts)
   - [Testing](#testing)
     - [Unit tests — Vitest](#unit-tests--vitest)
     - [Accessibility tests — axe-core](#accessibility-tests--axe-core)
@@ -46,7 +48,7 @@ An **Angular 21** single-page application (with SSR) for the Durion POS platform
 
 ## Architecture Overview
 
-```
+```ascii
 Browser / SSR (Express :4000)
         │
         ▼
@@ -60,7 +62,7 @@ Browser / SSR (Express :4000)
        └── <router-outlet>  → domain page components
 ```
 
-**Key design decisions**
+### Key design decisions
 
 - **Standalone components throughout** — no NgModules; every component declares its own `imports` array.
 - **Angular Signals for state** — no NgRx or Redux. Page state is expressed as `signal<'idle' | 'loading' | 'ready' | 'empty' | 'error'>`.
@@ -254,7 +256,7 @@ this.api.post<Item>('/items', payload);
 
 ### Login flow
 
-```
+```http
 POST /security-service/v1/auth/login
 { username, password }
   ↓
@@ -285,7 +287,7 @@ Styling uses **plain CSS with CSS custom properties** — no Tailwind, no SCSS.
 
 ### Three-tier token model (`src/styles.css`)
 
-```
+```text
 Tier 1 — Raw palette (never reference directly in components)
   --durion-blue-800, --durion-teal-400, ...
 
@@ -335,7 +337,7 @@ Translation is handled by **@ngx-translate/core**. Translation keys live in JSON
 {{ 'common.save' | translate }}
 ```
 
-**i18n scripts**
+### i18n scripts
 
 ```bash
 # Check for missing keys across all locales
@@ -398,7 +400,7 @@ Configuration is TypeScript-based (no `.env` files). Angular CLI swaps the file 
 | `apiBaseUrl` | `http://localhost:8080/api` | `/api` (same-origin) |
 | `mockAuth`   | `true`                      | `false`              |
 
-**Runtime storage keys**
+### Runtime storage keys
 
 | Key                     | Storage        | Content                       |
 | ----------------------- | -------------- | ----------------------------- |

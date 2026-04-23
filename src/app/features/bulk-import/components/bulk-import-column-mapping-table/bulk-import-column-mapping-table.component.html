@@ -1,0 +1,55 @@
+<section class="mapping-table" [attr.aria-label]="'BULK_IMPORT.MAPPING.TABLE.ARIA_LABEL' | translate">
+	<table class="mapping-table__table">
+		<caption class="sr-only">{{ 'BULK_IMPORT.MAPPING.TABLE.CAPTION' | translate }}</caption>
+		<thead>
+			<tr>
+				<th scope="col">{{ 'BULK_IMPORT.MAPPING.COL.SOURCE' | translate }}</th>
+				<th scope="col">{{ 'BULK_IMPORT.MAPPING.COL.TARGET' | translate }}</th>
+				<th scope="col">{{ 'BULK_IMPORT.MAPPING.COL.CONFIDENCE' | translate }}</th>
+			</tr>
+		</thead>
+		<tbody>
+			@for (mapping of mappings; track mapping.mappingId) {
+			<tr>
+				<td class="mapping-table__source">{{ mapping.sourceColumn }}</td>
+				<td>
+					<label class="sr-only" [for]="'target-' + mapping.mappingId">
+						{{ ('BULK_IMPORT.MAPPING.TARGET_LABEL_FOR' | translate) + mapping.sourceColumn }}
+					</label>
+					<select
+						[id]="'target-' + mapping.mappingId"
+						class="mapping-table__target-select"
+						[value]="getOverrideOrDefault(mapping)"
+						(change)="overrideMapping(mapping.mappingId, $any($event.target).value)"
+					>
+						@for (targetOption of targetFieldOptions(); track targetOption) {
+						<option [value]="targetOption">
+							@if (targetOption === doNotImportValue) {
+								{{ 'BULK_IMPORT.MAPPING.TARGET_OPTION.DO_NOT_IMPORT' | translate }}
+							} @else {
+								{{ targetOption }}
+							}
+						</option>
+						}
+					</select>
+				</td>
+				<td>
+					<span
+						class="mapping-confidence"
+						[class.mapping-confidence--high]="mapping.confidence >= 0.8"
+						[class.mapping-confidence--medium]="mapping.confidence >= 0.5 && mapping.confidence < 0.8"
+						[class.mapping-confidence--low]="mapping.confidence < 0.5"
+					>
+						{{ confidenceLabel(mapping.confidence) | translate }}
+					</span>
+				</td>
+			</tr>
+			}
+		</tbody>
+	</table>
+	<div class="mapping-table__actions">
+		<button class="mapping-btn mapping-btn--primary" type="button" (click)="onApprove()">
+			{{ 'BULK_IMPORT.MAPPING.APPROVE_BTN' | translate }}
+		</button>
+	</div>
+</section>

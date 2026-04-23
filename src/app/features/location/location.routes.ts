@@ -57,6 +57,13 @@ export const LOCATION_ROUTES: Routes = [
             .then(m => m.LocationSyncPageComponent),
       },
       {
+        path: 'bulk-import/location',
+        loadComponent: () =>
+          import('./pages/bulk-import/location-bulk-import-page.component').then(
+            m => m.LocationBulkImportPageComponent,
+          ),
+      },
+      {
         path: '**',
         redirectTo: '',
       },

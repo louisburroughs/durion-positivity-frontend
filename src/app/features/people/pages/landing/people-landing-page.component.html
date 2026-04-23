@@ -58,6 +58,9 @@
         <div class="people-card__body">
           <h3 class="people-card__title">{{ card.titleKey | translate }}</h3>
           <p class="people-card__description">{{ card.descriptionKey | translate }}</p>
+          @if (isActiveImport(card)) {
+          <output class="people-card__active-import" aria-live="polite">{{ 'BULK_IMPORT.LANDING.ACTIVE_IMPORT' | translate }}</output>
+          }
         </div>
 
         @if (isLaunchCard(card)) {
