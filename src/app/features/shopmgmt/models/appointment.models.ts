@@ -52,6 +52,8 @@ export interface RescheduleRequest {
 export interface CreateAppointmentPayload {
   sourceType: 'ESTIMATE' | 'WORKORDER';
   sourceId: string;
+  crmCustomerId?: string;
+  crmVehicleId?: string;
   facilityId: string;
   scheduledStartDateTime: string;
   scheduledEndDateTime?: string;

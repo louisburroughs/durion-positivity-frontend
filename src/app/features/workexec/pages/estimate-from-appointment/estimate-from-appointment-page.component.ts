@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { WorkexecService } from '../../services/workexec.service';
+import { EstimateResponse } from '../../models/workexec.models';
 
 @Component({
   selector: 'app-estimate-from-appointment-page',
@@ -16,7 +17,7 @@ export class EstimateFromAppointmentPageComponent {
   private readonly router = inject(Router);
 
   readonly loading = signal(false);
-  readonly estimateResult = signal<Record<string, unknown> | null>(null);
+  readonly estimateResult = signal<EstimateResponse | null>(null);
   readonly createError = signal<string | null>(null);
   readonly createSuccess = signal(false);
 
@@ -38,7 +39,7 @@ export class EstimateFromAppointmentPageComponent {
 
     this.workexecService.createEstimateFromAppointment(this.estimateForm.getRawValue()).subscribe({
       next: (result) => {
-        this.estimateResult.set(result as unknown as Record<string, unknown>);
+        this.estimateResult.set(result);
         this.createSuccess.set(true);
         this.loading.set(false);
         void this.router.navigate(['/app/workexec/workorders']);

@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { BillingService } from '../../services/billing.service';
+import { BillingTransportService } from '../../services/billing-transport.service';
 
 @Component({
   selector: 'app-payment-void-refund-page',
@@ -13,7 +13,7 @@ import { BillingService } from '../../services/billing.service';
 })
 export class PaymentVoidRefundPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly billing = inject(BillingService);
+  private readonly billingService = inject(BillingTransportService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly invoiceId = signal<string>('');
@@ -75,8 +75,8 @@ export class PaymentVoidRefundPageComponent implements OnInit {
     this.state.set('submitting');
     this.errorKey.set(null);
 
-    this.billing
-      .voidPayment(this.invoiceId(), this.paymentId(), { reason, authorityCode })
+    this.billingService
+      .executeVoid(this.invoiceId(), this.paymentId(), reason, authorityCode)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.state.set('ready'),
@@ -97,12 +97,8 @@ export class PaymentVoidRefundPageComponent implements OnInit {
     this.state.set('submitting');
     this.errorKey.set(null);
 
-    this.billing
-      .refundPayment(this.invoiceId(), this.paymentId(), {
-        reason,
-        authorityCode,
-        amount,
-      })
+    this.billingService
+      .executeRefund(this.invoiceId(), this.paymentId(), reason, authorityCode, amount)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.state.set('ready'),

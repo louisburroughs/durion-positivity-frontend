@@ -4,12 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, interval, switchMap, catchError } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
-import { DispatchBoardService } from '../../services/dispatch-board.service';
-import { PeopleService } from '../../../people/services/people.service';
-import {
-  DashboardResponse,
-  WorkorderSummary,
-} from '../../models/dispatch-board.models';
+import { DailyDispatchBoardDashboardService, DashboardResponse, WorkorderSummary } from '@durion-sdk/workorder';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 
 @Component({
   selector: 'app-dispatch-board-page',
@@ -19,8 +15,8 @@ import {
   styleUrl: './dispatch-board-page.component.css',
 })
 export class DispatchBoardPageComponent implements OnInit {
-  private readonly dispatchBoardService = inject(DispatchBoardService);
-  private readonly peopleService = inject(PeopleService);
+  private readonly dispatchBoardService = inject(DailyDispatchBoardDashboardService);
+  private readonly api = inject(ApiBaseService);
   private readonly destroyRef = inject(DestroyRef);
   private pollingStarted = false;
 
@@ -104,8 +100,8 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   private loadCurrentLocation(): void {
-    this.peopleService
-      .getCurrentUserPrimaryLocation()
+    this.api
+      .get<Record<string, unknown>>('/v1/people/me/primary-location')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: location => {

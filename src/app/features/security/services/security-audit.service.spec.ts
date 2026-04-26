@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { AuditService } from '@durion-sdk/security';
 import { SecurityAuditService } from './security-audit.service';
 import {
   AuditEventDetail,
@@ -21,11 +22,14 @@ describe('SecurityAuditService', () => {
     delete: vi.fn(),
   };
 
+  const auditSdkStub = { getEvent: vi.fn() };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         SecurityAuditService,
         { provide: ApiBaseService, useValue: apiStub },
+        { provide: AuditService, useValue: auditSdkStub },
       ],
     });
     service = TestBed.inject(SecurityAuditService);
@@ -97,27 +101,24 @@ describe('SecurityAuditService', () => {
       timestamp: '2026-03-01T09:00:00Z',
     };
 
-    it('calls GET /v1/audit/events/{eventId}', () => {
-      apiStub.get.mockReturnValueOnce(of(mockEvent));
+    it('calls auditSdk.getEvent with the eventId', () => {
+      auditSdkStub.getEvent.mockReturnValueOnce(of(mockEvent));
 
       service.getAuditEvent('evt-001').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/v1/audit/events/evt-001');
+      expect(auditSdkStub.getEvent).toHaveBeenCalledWith('evt-001');
     });
 
-    it('URL-encodes the eventId', () => {
-      apiStub.get.mockReturnValueOnce(of(mockEvent));
+    it('passes eventId as-is to the SDK', () => {
+      auditSdkStub.getEvent.mockReturnValueOnce(of(mockEvent));
 
       service.getAuditEvent('evt/001').subscribe();
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/v1/audit/events/evt%2F001');
+      expect(auditSdkStub.getEvent).toHaveBeenCalledWith('evt/001');
     });
 
-    it('returns the AuditEventDetail emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockEvent));
+    it('returns the AuditEventDetail emitted by the SDK', () => {
+      auditSdkStub.getEvent.mockReturnValueOnce(of(mockEvent));
 
       let result: AuditEventDetail | undefined;
       service.getAuditEvent('evt-001').subscribe((r: AuditEventDetail) => (result = r));

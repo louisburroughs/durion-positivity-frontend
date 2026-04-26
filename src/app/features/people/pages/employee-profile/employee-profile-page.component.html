@@ -28,35 +28,34 @@
       <legend>Personal details</legend>
 
       <div class="field-row"
-        [class.field-error--visible]="form.get('firstName')?.invalid && form.get('firstName')?.touched">
-        <label for="employee-firstName">First Name</label>
-        <input id="employee-firstName" type="text" formControlName="firstName" data-testid="first-name-input"
-          autocomplete="given-name" />
-        @if (fieldErrors()['firstName']) {
-        <span class="field-error" role="alert" data-testid="field-error-first-name">
-          {{ fieldErrors()['firstName'] }}
+        [class.field-error--visible]="form.get('legalName')?.invalid && form.get('legalName')?.touched">
+        <label for="employee-legalName">Legal Name</label>
+        <input id="employee-legalName" type="text" formControlName="legalName" data-testid="legal-name-input"
+          autocomplete="name" />
+        @if (fieldErrors()['legalName']) {
+        <span class="field-error" role="alert" data-testid="field-error-legal-name">
+          {{ fieldErrors()['legalName'] }}
         </span>
         }
-        @if (form.get('firstName')?.touched && form.get('firstName')?.invalid) {
-        <span class="field-error" role="alert" data-testid="validation-first-name">
-          First name is required.
+        @if (form.get('legalName')?.touched && form.get('legalName')?.invalid) {
+        <span class="field-error" role="alert" data-testid="validation-legal-name">
+          Legal name is required.
         </span>
         }
       </div>
 
       <div class="field-row"
-        [class.field-error--visible]="form.get('lastName')?.invalid && form.get('lastName')?.touched">
-        <label for="employee-lastName">Last Name</label>
-        <input id="employee-lastName" type="text" formControlName="lastName" data-testid="last-name-input"
-          autocomplete="family-name" />
-        @if (fieldErrors()['lastName']) {
-        <span class="field-error" role="alert" data-testid="field-error-last-name">
-          {{ fieldErrors()['lastName'] }}
+        [class.field-error--visible]="form.get('employeeNumber')?.invalid && form.get('employeeNumber')?.touched">
+        <label for="employee-number">Employee Number</label>
+        <input id="employee-number" type="text" formControlName="employeeNumber" data-testid="employee-number-input" />
+        @if (fieldErrors()['employeeNumber']) {
+        <span class="field-error" role="alert" data-testid="field-error-employee-number">
+          {{ fieldErrors()['employeeNumber'] }}
         </span>
         }
-        @if (form.get('lastName')?.touched && form.get('lastName')?.invalid) {
-        <span class="field-error" role="alert" data-testid="validation-last-name">
-          Last name is required.
+        @if (form.get('employeeNumber')?.touched && form.get('employeeNumber')?.invalid) {
+        <span class="field-error" role="alert" data-testid="validation-employee-number">
+          Employee number is required.
         </span>
         }
       </div>
@@ -83,26 +82,6 @@
       <legend>Employment details</legend>
 
       <div class="field-row"
-        [class.field-error--visible]="form.get('department')?.invalid && form.get('department')?.touched">
-        <label for="employee-department">Department</label>
-        <input id="employee-department" type="text" formControlName="department" data-testid="department-input"
-          autocomplete="organization" />
-        @if (fieldErrors()['department']) {
-        <span class="field-error" role="alert" data-testid="field-error-department">{{ fieldErrors()['department']
-          }}</span>
-        }
-      </div>
-
-      <div class="field-row" [class.field-error--visible]="form.get('title')?.invalid && form.get('title')?.touched">
-        <label for="employee-title">Title</label>
-        <input id="employee-title" type="text" formControlName="title" data-testid="title-input"
-          autocomplete="organization-title" />
-        @if (fieldErrors()['title']) {
-        <span class="field-error" role="alert" data-testid="field-error-title">{{ fieldErrors()['title'] }}</span>
-        }
-      </div>
-
-      <div class="field-row"
         [class.field-error--visible]="form.get('hireDate')?.invalid && form.get('hireDate')?.touched">
         <label for="employee-hireDate">Hire Date</label>
         <input id="employee-hireDate" type="date" formControlName="hireDate" data-testid="hire-date-input" />
@@ -123,29 +102,29 @@
       <legend>Status</legend>
 
       <div class="field-row"
-        [class.field-error--visible]="form.get('employmentStatus')?.invalid && form.get('employmentStatus')?.touched">
-        <label for="employee-employmentStatus">Employment Status</label>
-        <select id="employee-employmentStatus" formControlName="employmentStatus"
+        [class.field-error--visible]="form.get('status')?.invalid && form.get('status')?.touched">
+        <label for="employee-status">Employment Status</label>
+        <select id="employee-status" formControlName="status"
           data-testid="employment-status-select">
           <option value="" disabled>Select status</option>
           @for (status of employmentStatusValues; track status) {
           <option [value]="status">{{ status }}</option>
           }
         </select>
-        @if (fieldErrors()['employmentStatus']) {
+        @if (fieldErrors()['status']) {
         <span class="field-error" role="alert" data-testid="field-error-employment-status">
-          {{ fieldErrors()['employmentStatus'] }}
+          {{ fieldErrors()['status'] }}
         </span>
         }
-        @if (form.get('employmentStatus')?.touched && form.get('employmentStatus')?.invalid) {
+        @if (form.get('status')?.touched && form.get('status')?.invalid) {
         <span class="field-error" role="alert" data-testid="validation-employment-status">
           Employment status is required.
         </span>
         }
-        <span class="status-badge" [class.status-badge--active]="form.controls.employmentStatus.value === 'ACTIVE'"
-          [class.status-badge--neutral]="form.controls.employmentStatus.value === 'INACTIVE' || form.controls.employmentStatus.value === 'ON_LEAVE'"
-          [class.status-badge--warning]="form.controls.employmentStatus.value === 'TERMINATED'">
-          {{ form.controls.employmentStatus.value }}
+        <span class="status-badge" [class.status-badge--active]="form.controls.status.value === 'ACTIVE'"
+          [class.status-badge--neutral]="form.controls.status.value === 'ON_LEAVE' || form.controls.status.value === 'SUSPENDED'"
+          [class.status-badge--warning]="form.controls.status.value === 'TERMINATED' || form.controls.status.value === 'DISABLED'">
+          {{ form.controls.status.value }}
         </span>
       </div>
     </fieldset>
@@ -166,9 +145,9 @@
     <h2>Audit details</h2>
     <dl>
       <dt>Created</dt>
-      <dd data-testid="audit-created-at">{{ employee()?.createdAt || 'Unavailable' }}</dd>
+      <dd data-testid="audit-created-at">{{ employee()?.statusEffectiveAt || 'Unavailable' }}</dd>
       <dt>Last updated</dt>
-      <dd data-testid="audit-updated-at">{{ employee()?.updatedAt || 'Unavailable' }}</dd>
+      <dd data-testid="audit-updated-at">Unavailable</dd>
     </dl>
   </section>
   }

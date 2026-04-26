@@ -81,9 +81,6 @@
       @if (correlationId()) {
       <p>Reference: <code data-testid="error-correlation-id">{{ correlationId() }}</code></p>
       }
-      @if (lastIdempotencyKey()) {
-      <p>Idempotency Key: <code data-testid="idempotency-key">{{ lastIdempotencyKey() }}</code></p>
-      }
     </div>
     }
   </output>

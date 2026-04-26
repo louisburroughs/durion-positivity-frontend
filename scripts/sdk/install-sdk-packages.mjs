@@ -1,0 +1,213 @@
+#!/usr/bin/env node
+
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
+
+const PACKAGE_NAMES = [
+  '@durion-sdk/accounting',
+  '@durion-sdk/bulk-loader',
+  '@durion-sdk/catalog',
+  '@durion-sdk/customer',
+  '@durion-sdk/inventory',
+  '@durion-sdk/invoice',
+  '@durion-sdk/location',
+  '@durion-sdk/order',
+  '@durion-sdk/people',
+  '@durion-sdk/security',
+  '@durion-sdk/shop-manager',
+  '@durion-sdk/workorder',
+];
+
+const projectRoot = process.cwd();
+const args = new Set(process.argv.slice(2));
+const failIfUnavailable = !args.has('--if-available');
+const packDir = path.resolve(
+  projectRoot,
+  process.env.DURION_SDK_TARBALL_DIR ?? '.sdk-tarballs',
+);
+const manifestPath = path.join(packDir, 'manifest.json');
+const sdkRootCandidates = [
+  process.env.DURION_SDK_ANGULAR_PATH,
+  path.join(projectRoot, '.sdk-src'),
+  path.join(projectRoot, '../durion-positivity-sdk-angular'),
+].filter(Boolean).map(candidate => path.resolve(projectRoot, candidate));
+
+function log(message) {
+  process.stdout.write(`[sdk-install] ${message}\n`);
+}
+
+function fail(message) {
+  process.stderr.write(`[sdk-install] ${message}\n`);
+  process.exit(1);
+}
+
+function run(command, commandArgs, options = {}) {
+  const result = spawnSync(command, commandArgs, {
+    stdio: options.captureOutput ? ['ignore', 'pipe', 'pipe'] : 'inherit',
+    cwd: options.cwd ?? projectRoot,
+    env: process.env,
+    encoding: 'utf8',
+  });
+
+  if (result.status !== 0) {
+    const details = options.captureOutput
+      ? `\nstdout:\n${result.stdout ?? ''}\nstderr:\n${result.stderr ?? ''}`
+      : '';
+    fail(`Command failed: ${command} ${commandArgs.join(' ')}${details}`);
+  }
+
+  return result.stdout ?? '';
+}
+
+function packageDirName(packageName) {
+  return `sdk-${packageName.replace('@durion-sdk/', '')}`;
+}
+
+function installedPackagePath(packageName) {
+  return path.join(projectRoot, 'node_modules', ...packageName.split('/'), 'package.json');
+}
+
+function allPackagesInstalled() {
+  return PACKAGE_NAMES.every(packageName => existsSync(installedPackagePath(packageName)));
+}
+
+function detectSdkRoot() {
+  return sdkRootCandidates.find(candidate =>
+    existsSync(path.join(candidate, 'package.json')) &&
+    existsSync(path.join(candidate, 'packages')),
+  );
+}
+
+function ensureSdkBuild(sdkRoot) {
+  const missingDist = PACKAGE_NAMES.some(packageName => {
+    const distPackageJson = path.join(
+      sdkRoot,
+      'packages',
+      packageDirName(packageName),
+      'dist',
+      'package.json',
+    );
+    return !existsSync(distPackageJson);
+  });
+
+  if (!missingDist) {
+    return;
+  }
+
+  log(`Built SDK artifacts not found under ${sdkRoot}; building SDK repo first.`);
+
+  if (!existsSync(path.join(sdkRoot, 'node_modules'))) {
+    run('npm', ['ci'], { cwd: sdkRoot });
+  }
+
+  run('npm', ['run', 'build'], { cwd: sdkRoot });
+}
+
+function readManifest() {
+  if (!existsSync(manifestPath)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(readFileSync(manifestPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function manifestIsUsable(manifest) {
+  if (!manifest || typeof manifest !== 'object' || typeof manifest.packages !== 'object') {
+    return false;
+  }
+
+  return PACKAGE_NAMES.every(packageName => {
+    const tarball = manifest.packages[packageName];
+    return typeof tarball === 'string' && existsSync(path.join(packDir, tarball));
+  });
+}
+
+function packSdkPackages(sdkRoot) {
+  ensureSdkBuild(sdkRoot);
+
+  rmSync(packDir, { recursive: true, force: true });
+  mkdirSync(packDir, { recursive: true });
+
+  const manifest = {
+    sdkRoot,
+    generatedAt: new Date().toISOString(),
+    packages: {},
+  };
+
+  for (const packageName of PACKAGE_NAMES) {
+    const distDir = path.join(
+      sdkRoot,
+      'packages',
+      packageDirName(packageName),
+      'dist',
+    );
+
+    const tarballName = run(
+      'npm',
+      ['pack', distDir, '--pack-destination', packDir],
+      { captureOutput: true },
+    ).trim().split('\n').pop();
+
+    if (!tarballName) {
+      fail(`Failed to pack ${packageName} from ${distDir}`);
+    }
+
+    manifest.packages[packageName] = tarballName;
+  }
+
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  return manifest;
+}
+
+function installFromManifest(manifest) {
+  const tarballs = PACKAGE_NAMES.map(packageName => path.join(packDir, manifest.packages[packageName]));
+
+  log(`Installing SDK packages from ${packDir}`);
+  run('npm', ['install', '--no-save', '--no-package-lock', ...tarballs]);
+}
+
+function main() {
+  if (allPackagesInstalled()) {
+    log('Required SDK packages already installed.');
+    return;
+  }
+
+  const sdkRoot = detectSdkRoot();
+  if (sdkRoot) {
+    const manifest = packSdkPackages(sdkRoot);
+    installFromManifest(manifest);
+    return;
+  }
+
+  const manifest = readManifest();
+  if (manifestIsUsable(manifest)) {
+    installFromManifest(manifest);
+    return;
+  }
+
+  if (!sdkRoot) {
+    const guidance = [
+      'Unable to find a usable SDK source checkout or packed tarballs.',
+      `Checked SDK repo candidates: ${sdkRootCandidates.join(', ') || '(none)'}`,
+      `Checked tarball manifest: ${manifestPath}`,
+      'Provide DURION_SDK_ANGULAR_PATH, populate .sdk-src, or run this build path with prepacked SDK tarballs.',
+    ].join('\n');
+
+    if (failIfUnavailable) {
+      fail(guidance);
+    }
+
+    log(`${guidance}\nSkipping because --if-available was provided.`);
+    return;
+  }
+
+  fail('Unexpected SDK installation state.');
+}
+
+main();

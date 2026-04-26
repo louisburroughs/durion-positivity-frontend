@@ -4,6 +4,7 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { EstimateLaborPageComponent } from './estimate-labor-page.component';
+import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
 
 const BASE = environment.apiBaseUrl;
@@ -22,6 +23,7 @@ describe('EstimateLaborPageComponent [Story 237]', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: mockRoute },
+        { provide: BASE_PATH, useValue: environment.apiBaseUrl },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(EstimateLaborPageComponent);

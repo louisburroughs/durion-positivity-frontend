@@ -3,12 +3,11 @@ import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { switchMap } from 'rxjs';
 import {
   PaymentMethod,
   PaymentTransactionRef,
 } from '../../models/billing.models';
-import { BillingService } from '../../services/billing.service';
+import { BillingTransportService } from '../../services/billing-transport.service';
 
 @Component({
   selector: 'app-payment-capture-page',
@@ -19,7 +18,7 @@ import { BillingService } from '../../services/billing.service';
 })
 export class PaymentCapturePageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly billing = inject(BillingService);
+  private readonly billingService = inject(BillingTransportService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly invoiceId = signal<string>('');
@@ -57,16 +56,9 @@ export class PaymentCapturePageComponent implements OnInit {
     this.state.set('submitting');
     this.errorKey.set(null);
 
-    this.billing
-      .initiatePayment(invoiceId, {
-        paymentMethod: method,
-        amount,
-        currency: 'USD',
-      })
-      .pipe(
-        switchMap(result => this.billing.capturePayment(invoiceId, result.paymentId)),
-        takeUntilDestroyed(this.destroyRef),
-      )
+    this.billingService
+      .initiateAndCapturePayment(invoiceId, method, amount)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: captured => {
           this.transaction.set(captured);

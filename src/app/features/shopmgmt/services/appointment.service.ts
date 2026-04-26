@@ -1,7 +1,23 @@
-import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiBaseService } from '../../../core/services/api-base.service';
+import {
+  AppointmentCreateRequestSourceTypeEnum,
+  AppointmentsAPIService,
+  AssignmentControllerService,
+  ConflictOverrideAPIService,
+  MechanicAssignmentItemRoleEnum,
+  ScheduleAPIService,
+  ShopAPIService,
+  ShopAuditControllerService,
+} from '@durion-sdk/shop-manager';
+import type {
+  AppointmentCreateRequest,
+  CancelAppointmentRequest,
+  ConflictOverrideRequest,
+  CreateAssignmentRequest,
+  RescheduleAppointmentRequest,
+  ShopAuditFilter,
+} from '@durion-sdk/shop-manager';
 import type {
   AppointmentDetail,
   AssignmentDetail,
@@ -11,49 +27,96 @@ import type {
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentService {
-  constructor(private readonly api: ApiBaseService) { }
+  private readonly appointments = inject(AppointmentsAPIService);
+  private readonly assignment = inject(AssignmentControllerService);
+  private readonly conflictOverride = inject(ConflictOverrideAPIService);
+  private readonly schedule = inject(ScheduleAPIService);
+  private readonly shop = inject(ShopAPIService);
+  private readonly shopAudit = inject(ShopAuditControllerService);
 
   getAppointment(appointmentId: string): Observable<AppointmentDetail> {
-    return this.api.get<AppointmentDetail>(`/v1/appointments/${appointmentId}`);
+    return this.appointments.getAppointment(appointmentId) as Observable<AppointmentDetail>;
   }
 
   listAssignments(appointmentId: string): Observable<AssignmentDetail[]> {
-    return this.api.get<AssignmentDetail[]>(`/v1/appointments/${appointmentId}/assignments`);
+    return this.assignment.listAssignments(appointmentId) as Observable<AssignmentDetail[]>;
   }
 
   createAssignment(appointmentId: string, body: Partial<AssignmentDetail>): Observable<AssignmentDetail> {
-    return this.api.post<AssignmentDetail>(`/v1/appointments/${appointmentId}/assignments`, body);
+    const role = body.assignmentType === 'ASSIST'
+      ? MechanicAssignmentItemRoleEnum.Assist
+      : MechanicAssignmentItemRoleEnum.Lead;
+    let resourceType: string | undefined;
+    if (body.mobileUnitId) {
+      resourceType = 'MOBILE_UNIT';
+    } else if (body.bayId) {
+      resourceType = 'BAY';
+    }
+
+    const sdkRequest: CreateAssignmentRequest = {
+      appointmentId,
+      resourceId: body.bayId ?? body.mobileUnitId,
+      resourceType,
+      mechanics: body.mechanic?.mechanicId
+        ? [{ mechanicPersonId: body.mechanic.mechanicId, role }]
+        : undefined,
+    };
+    return this.assignment.createAssignment(appointmentId, sdkRequest) as Observable<AssignmentDetail>;
   }
 
   rescheduleAppointment(appointmentId: string, body: RescheduleRequest): Observable<AppointmentDetail> {
-    return this.api.put<AppointmentDetail>(`/v1/appointments/${appointmentId}/reschedule`, body);
+    const sdkRequest: RescheduleAppointmentRequest = {
+      newStartAt: body.scheduledStartDateTime,
+      newEndAt: body.scheduledEndDateTime ?? body.scheduledStartDateTime,
+      reason: (body.reason as RescheduleAppointmentRequest['reason']) ?? 'OTHER',
+      rescheduleReasonNotes: body.notes,
+    };
+    return this.appointments.rescheduleAppointment(appointmentId, sdkRequest) as Observable<AppointmentDetail>;
   }
 
   searchAudit(appointmentId: string): Observable<unknown[]> {
-    const params = new HttpParams().set('appointmentId', appointmentId);
-    return this.api.get<unknown[]>('/v1/shop/audit', params);
+    const filter: ShopAuditFilter = { appointmentId };
+    return this.shopAudit.searchAudit(filter) as Observable<unknown[]>;
   }
 
   createAppointment(body: CreateAppointmentPayload, idempotencyKey: string): Observable<AppointmentDetail> {
-    return this.api.post<AppointmentDetail>('/v1/appointments', body, { headers: { 'Idempotency-Key': idempotencyKey } });
+    const sourceType = body.sourceType === 'WORKORDER'
+      ? AppointmentCreateRequestSourceTypeEnum.WorkOrder
+      : AppointmentCreateRequestSourceTypeEnum.Estimate;
+    const sdkRequest: AppointmentCreateRequest = {
+      crmCustomerId: body.crmCustomerId ?? '',
+      crmVehicleId: body.crmVehicleId ?? '',
+      locationId: body.facilityId,
+      startAt: body.scheduledStartDateTime,
+      endAt: body.scheduledEndDateTime ?? body.scheduledStartDateTime,
+      serviceRequestIds: [],
+      sourceType,
+      sourceId: body.sourceId,
+    };
+    return this.appointments.createAppointment(sdkRequest, idempotencyKey) as Observable<AppointmentDetail>;
   }
 
   executeOverride(appointmentId: string, body: { overrideReason: string }): Observable<AppointmentDetail> {
-    return this.api.post<AppointmentDetail>(`/v1/appointments/${appointmentId}/conflict-override`, body);
+    const sdkRequest: ConflictOverrideRequest = {
+      appointmentId,
+      overrideReason: body.overrideReason,
+    };
+    return this.conflictOverride.executeOverride(appointmentId, sdkRequest) as Observable<AppointmentDetail>;
   }
 
   cancelAppointment(appointmentId: string, body: { cancellationReason: string; notes?: string }): Observable<AppointmentDetail> {
-    return this.api.deleteWithBody<AppointmentDetail>(`/v1/appointments/${appointmentId}/cancel`, body);
+    const sdkRequest: CancelAppointmentRequest = {
+      cancellationReason: (body.cancellationReason as CancelAppointmentRequest['cancellationReason']) ?? 'OTHER',
+      notes: body.notes,
+    };
+    return this.appointments.cancelAppointment(appointmentId, sdkRequest) as Observable<AppointmentDetail>;
   }
 
   getShopServiceDetails(locationId: string, serviceId: string): Observable<unknown> {
-    return this.api.get<unknown>(`/v1/shop-manager/${locationId}/services/${serviceId}/details`);
+    return this.shop.getShopServiceDetails(locationId, serviceId) as Observable<unknown>;
   }
 
   viewSchedule(locationId: string, date: string, resourceType?: string, resourceId?: string): Observable<unknown> {
-    let params = new HttpParams().set('locationId', locationId).set('date', date);
-    if (resourceType) params = params.set('resourceType', resourceType);
-    if (resourceId) params = params.set('resourceId', resourceId);
-    return this.api.get<unknown>('/v1/schedules/view', params);
+    return this.schedule.viewSchedule(locationId, date, resourceType, resourceId) as Observable<unknown>;
   }
 }

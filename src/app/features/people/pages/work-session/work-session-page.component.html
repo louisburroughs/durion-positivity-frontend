@@ -1,40 +1,38 @@
 <main>
   <header class="page-header">
-    <h1>Work Session</h1>
+    <h1>{{ 'PEOPLE.WORK_SESSION.TITLE' | translate }}</h1>
   </header>
 
   <section class="panel">
-    <h2>Clock Status</h2>
-    <p class="status-chip" data-testid="clock-status">{{ isClocked ? 'Clocked In' : 'Clocked Out' }}</p>
+    <h2>{{ 'PEOPLE.WORK_SESSION.CONTROLS' | translate }}</h2>
+    <p class="status-chip" data-testid="clock-status">{{ (isClocked ? 'PEOPLE.WORK_SESSION.ACTIVE' : 'PEOPLE.WORK_SESSION.INACTIVE') | translate }}</p>
 
     @if (sessionTimestamps()?.clockedInAt) {
-    <p data-testid="clock-in-time">Clock In: {{ sessionTimestamps()?.clockedInAt }}</p>
+    <p data-testid="clock-in-time">{{ sessionTimestamps()?.clockedInAt }}</p>
     }
 
     @if (sessionTimestamps()?.clockedOutAt) {
-    <p data-testid="clock-out-time">Clock Out: {{ sessionTimestamps()?.clockedOutAt }}</p>
+    <p data-testid="clock-out-time">{{ sessionTimestamps()?.clockedOutAt }}</p>
     }
-
-    <p class="note-text" data-testid="timezone-note">All times in UTC</p>
 
     <div class="actions-row">
       <button type="button" (click)="startSession()" [disabled]="isClocked || loading()" data-testid="clock-in-btn">
-        Clock In
+        {{ 'PEOPLE.WORK_SESSION.START_SESSION' | translate }}
       </button>
       <button type="button" (click)="stopSession()" [disabled]="!isClocked || loading()" data-testid="clock-out-btn">
-        Clock Out
+        {{ 'PEOPLE.WORK_SESSION.STOP_SESSION' | translate }}
       </button>
     </div>
   </section>
 
   @if (isClocked) {
   <section class="panel">
-    <h2>Break Management</h2>
-    <p data-testid="break-status">{{ onBreak() ? 'On Break' : 'Not on break' }}</p>
+    <h2>{{ 'PEOPLE.WORK_SESSION.ON_BREAK' | translate }}</h2>
+    <p data-testid="break-status">{{ (onBreak() ? 'PEOPLE.WORK_SESSION.ON_BREAK' : 'PEOPLE.WORK_SESSION.INACTIVE') | translate }}</p>
 
-    <form class="form-grid" [formGroup]="breakForm" aria-label="Break controls form">
+    <form class="form-grid" [formGroup]="breakForm" [attr.aria-label]="'PEOPLE.WORK_SESSION.BREAK_FORM_ARIA' | translate">
       <div class="field">
-        <label for="break-type">Break Type</label>
+        <label for="break-type">{{ 'PEOPLE.WORK_SESSION.BREAK_TYPE' | translate }}</label>
         <select id="break-type" formControlName="breakType" required data-testid="break-type-select">
           @for (breakType of breakTypes; track breakType) {
           <option [value]="breakType">{{ breakType }}</option>
@@ -44,7 +42,7 @@
 
       <div class="field">
         <label for="break-notes">
-          Notes
+          {{ 'PEOPLE.WORK_SESSION.NOTES' | translate }}
           @if (notesRequired) {
           <span class="required-mark" aria-hidden="true">*</span>
           }
@@ -55,10 +53,10 @@
 
       <div class="actions-row">
         <button type="button" (click)="startBreak()" [disabled]="onBreak() || loading()" data-testid="start-break-btn">
-          Start Break
+          {{ 'PEOPLE.WORK_SESSION.START_BREAK' | translate }}
         </button>
         <button type="button" (click)="stopBreak()" [disabled]="!onBreak() || loading()" data-testid="stop-break-btn">
-          End Break
+          {{ 'PEOPLE.WORK_SESSION.STOP_BREAK' | translate }}
         </button>
       </div>
     </form>
@@ -67,10 +65,10 @@
 
   @if (breaksLoading() || breaks().length > 0) {
   <section class="panel">
-    <h2>Today's Breaks</h2>
+    <h2>{{ 'PEOPLE.WORK_SESSION.TODAYS_BREAKS' | translate }}</h2>
 
     @if (breaksLoading()) {
-    <p aria-live="polite">Loading breaks...</p>
+    <p aria-live="polite">{{ 'PEOPLE.WORK_SESSION.LOADING_BREAKS' | translate }}</p>
     }
 
     @if (!breaksLoading() && breaks().length > 0) {
@@ -78,19 +76,19 @@
       <table data-testid="breaks-table">
         <thead>
           <tr>
-            <th scope="col">Break Type</th>
-            <th scope="col">Started At</th>
-            <th scope="col">Ended At</th>
-            <th scope="col">Auto Ended</th>
+            <th scope="col">{{ 'PEOPLE.WORK_SESSION.BREAK_TYPE' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.WORK_SESSION.STARTED_AT' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.WORK_SESSION.ENDED_AT' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.WORK_SESSION.AUTO_ENDED' | translate }}</th>
           </tr>
         </thead>
         <tbody>
           @for (breakRow of breaks(); track $index) {
           <tr data-testid="break-item">
-            <td>{{ $any(breakRow).breakType ?? '-' }}</td>
-            <td>{{ $any(breakRow).startedAt ?? '-' }}</td>
-            <td>{{ $any(breakRow).endedAt ?? '-' }}</td>
-            <td>{{ $any(breakRow).autoEnded ? 'Yes' : 'No' }}</td>
+            <td>{{ breakRow.breakType ?? '-' }}</td>
+            <td>{{ breakRow.startedAt ?? '-' }}</td>
+            <td>{{ breakRow.endedAt ?? '-' }}</td>
+            <td>{{ (breakRow.autoEnded ? 'COMMON.YES' : 'COMMON.NO') | translate }}</td>
           </tr>
           }
         </tbody>
@@ -101,10 +99,10 @@
   }
 
   @if (actionSuccess()) {
-  <p class="success-text" data-testid="action-success" aria-live="polite">{{ actionSuccess() }}</p>
+  <p class="success-text" data-testid="action-success" aria-live="polite">{{ actionSuccess()! | translate }}</p>
   }
 
   @if (error()) {
-  <p class="error-text" data-testid="error-state" role="alert">{{ error() }}</p>
+  <p class="error-text" data-testid="error-state" role="alert">{{ error()! | translate }}</p>
   }
 </main>

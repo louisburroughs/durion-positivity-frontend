@@ -3,6 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { WorkexecService } from '../../services/workexec.service';
+import { OperationalContextResponse } from '../../models/workexec.models';
 
 @Component({
   selector: 'app-operational-context-page',
@@ -17,7 +18,7 @@ export class OperationalContextPageComponent implements OnInit {
 
   readonly loading = signal(false);
   readonly workorderId = signal('');
-  readonly context = signal<Record<string, unknown> | null>(null);
+  readonly context = signal<OperationalContextResponse | null>(null);
   readonly showOverrideForm = signal(false);
   readonly overrideLoading = signal(false);
   readonly overrideSuccess = signal(false);
@@ -49,7 +50,7 @@ export class OperationalContextPageComponent implements OnInit {
     this.loading.set(true);
     this.workexecService.getOperationalContext(id).subscribe({
       next: (context) => {
-        this.context.set(context as unknown as Record<string, unknown>);
+        this.context.set(context);
         this.loading.set(false);
       },
       error: () => {
@@ -79,7 +80,7 @@ export class OperationalContextPageComponent implements OnInit {
 
     this.workexecService.overrideOperationalContext(this.workorderId(), this.overrideForm.getRawValue()).subscribe({
       next: (response) => {
-        this.context.set(response as unknown as Record<string, unknown>);
+        this.context.set(response);
         this.overrideLoading.set(false);
         this.overrideSuccess.set(true);
         this.closeOverrideForm();
@@ -96,7 +97,7 @@ export class OperationalContextPageComponent implements OnInit {
     if (!value || typeof value !== 'object') {
       return [];
     }
-    return Object.entries(value).map(([key, rawValue]) => ({
+    return Object.entries(value as Record<string, unknown>).map(([key, rawValue]) => ({
       key,
       value: String(rawValue),
     }));

@@ -5,7 +5,7 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { RoleAssignmentPageComponent } from './role-assignment-page.component';
-import { PeopleService } from '../../services/people.service';
+import { PeopleAccessControlService } from '@durion-sdk/people';
 
 const STUB_ASSIGNMENTS = [
   {
@@ -53,7 +53,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
       imports: [RoleAssignmentPageComponent],
       providers: [
         provideRouter([]),
-        { provide: PeopleService, useValue: stubPeopleService },
+        { provide: PeopleAccessControlService, useValue: stubPeopleService },
         { provide: ActivatedRoute, useValue: { params: of({ personUuid }) } },
       ],
     }).compileComponents();
@@ -186,12 +186,11 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
     c(component).submitAssignment();
 
-    const [payload] = stubPeopleService.createAssignment.mock.calls[0];
+    const [uuid, payload] = stubPeopleService.createAssignment.mock.calls[0];
+    expect(uuid).toBe('person-uuid-1');
     expect(payload).toEqual({
-      personId: 'person-uuid-1',
       roleCode: 'ROLE_ADMIN',
-      scopeType: 'GLOBAL',
-      effectiveStartAt: '2026-06-01T00:00:00Z',
+      startDate: '2026-06-01T00:00:00Z',
     });
     expect(payload).not.toHaveProperty('locationId');
   });
@@ -206,13 +205,12 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     c(component).submitAssignment();
 
     expect(stubPeopleService.createAssignment).toHaveBeenCalledWith(
-      {
-        personId: 'person-uuid-1',
+      'person-uuid-1',
+      expect.objectContaining({
         roleCode: 'ROLE_MANAGER',
-        scopeType: 'LOCATION',
         locationId: 'loc-77',
-        effectiveStartAt: '2026-06-01T00:00:00Z',
-      },
+        startDate: '2026-06-01T00:00:00Z',
+      }),
     );
   });
 
@@ -225,8 +223,8 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
     c(component).submitAssignment();
 
-    const [payload] = stubPeopleService.createAssignment.mock.calls[0];
-    expect(payload.effectiveEndAt).toBe('2026-12-31T23:59:59Z');
+    const [, payload] = stubPeopleService.createAssignment.mock.calls[0];
+    expect(payload.endDate).toBe('2026-12-31T23:59:59Z');
   });
 
   it('omits effectiveEndAt from payload when it is empty', async () => {
@@ -288,7 +286,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
   it('revokeAssignment() resets confirmingAssignmentId to null on success', async () => {
     await setup();
     c(component).confirmingAssignmentId.set('asn-1');
-    c(component).revokeAssignment('ROLE_ADMIN', 'asn-1');
+    c(component).revokeAssignment('ROLE_ADMIN');
     expect(c(component).confirmingAssignmentId()).toBeNull();
   });
 
@@ -316,7 +314,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     await setup();
     stubPeopleService.revokeAssignment.mockReturnValue(throwError(() => new Error('revoke failed')));
     c(component).errorMessage.set(null);
-    c(component).revokeAssignment('ROLE_ADMIN', 'asn-1');
+    c(component).revokeAssignment('ROLE_ADMIN');
     expect(c(component).errorMessage()).not.toBeNull();
   });
 });

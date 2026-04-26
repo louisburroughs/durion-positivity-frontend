@@ -28,13 +28,13 @@
     <h2>Employee context</h2>
     <dl>
       <dt>Name</dt>
-      <dd>{{ employee()?.firstName }} {{ employee()?.lastName }}</dd>
+      <dd>{{ employee()?.legalName }}</dd>
       <dt>Status</dt>
       <dd>
-        <span class="status-badge" [class.status-badge--active]="employee()?.employmentStatus === 'ACTIVE'"
-          [class.status-badge--neutral]="employee()?.employmentStatus === 'INACTIVE' || employee()?.employmentStatus === 'ON_LEAVE'"
-          [class.status-badge--warning]="employee()?.employmentStatus === 'TERMINATED'">
-          {{ employee()?.employmentStatus }}
+        <span class="status-badge" [class.status-badge--active]="employee()?.status === 'ACTIVE'"
+          [class.status-badge--neutral]="employee()?.status === 'ON_LEAVE' || employee()?.status === 'SUSPENDED'"
+          [class.status-badge--warning]="employee()?.status === 'TERMINATED' || employee()?.status === 'DISABLED'">
+          {{ employee()?.status }}
         </span>
       </dd>
     </dl>

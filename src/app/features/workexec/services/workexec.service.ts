@@ -1,7 +1,26 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import {
+  ChangeRequestAPIService,
+  EstimateAPIService,
+  EstimatesFromAppointmentsService,
+  OperationalContextService,
+  SubstituteLinkControllerService,
+  TechnicianAssignmentAPIService,
+  TravelSegmentAPIService,
+  WIPDashboardService,
+  WorkOrderAPIService,
+  WorkexecTimeTrackingAPIService,
+  WorkorderDetailService,
+  WorkorderLaborAPIService,
+  WorkorderPartsUsageService,
+  WorkorderPartAdjustmentsService,
+  WorkorderPickFacadeService,
+  WorkorderPickedItemsService,
+} from '@durion-sdk/workorder';
 import {
   AddEstimateItemRequest,
   ApproveEstimateRequest,
@@ -17,10 +36,12 @@ import {
   CreateEstimateRequest,
   CreateLaborPerformedRequest,
   EstimateItemResponse,
+  EstimateItemType,
   EstimateListItem,
   EstimateResponse,
   EstimateSnapshotResponse,
   EstimateSummaryResponse,
+  EstimateStatus,
   FinalizeInvoiceRequest,
   FinalizeInvoiceResponse,
   FinalizeWorkorderRequest,
@@ -48,6 +69,7 @@ import {
   WorkorderResponse,
   WorkorderSnapshotHistoryEntry,
   WorkorderStartResponse,
+  WorkorderStatus,
   WorkorderTransition,
   WorkorderWipView,
   WipListFilters,
@@ -105,11 +127,301 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class WorkexecService {
-  constructor(private readonly api: ApiBaseService) { }
+  private readonly api = inject(ApiBaseService);
+  private readonly estimateApi = inject(EstimateAPIService);
+  private readonly estimatesFromAppointments = inject(EstimatesFromAppointmentsService);
+  private readonly changeRequest = inject(ChangeRequestAPIService);
+  private readonly operationalContext = inject(OperationalContextService);
+  private readonly technicianAssignment = inject(TechnicianAssignmentAPIService);
+  private readonly workOrderApi = inject(WorkOrderAPIService);
+  private readonly workorderDetail = inject(WorkorderDetailService);
+  private readonly workorderLabor = inject(WorkorderLaborAPIService);
+  private readonly workorderParts = inject(WorkorderPartsUsageService);
+  private readonly workorderPickFacade = inject(WorkorderPickFacadeService);
+  private readonly workorderPickedItems = inject(WorkorderPickedItemsService);
+  private readonly travelSegment = inject(TravelSegmentAPIService);
+  private readonly wipDashboard = inject(WIPDashboardService);
+  private readonly substituteLink = inject(SubstituteLinkControllerService);
+  private readonly workorderPartAdjustments = inject(WorkorderPartAdjustmentsService);
+  private readonly timeTracking = inject(WorkexecTimeTrackingAPIService);
 
   /** Builds an options object carrying the Idempotency-Key header when a key is provided. */
   private idempotencyOptions(key?: string) {
     return key ? { headers: { 'Idempotency-Key': key } } : undefined;
+  }
+
+  // ── Private SDK request adapters ─────────────────────────────────────────────
+
+  /**
+   * Adapts local CreateEstimateRequest (optional crm fields) to SDK (required crm fields).
+   */
+  private toSdkCreateEstimateRequest(r: CreateEstimateRequest): import('@durion-sdk/workorder').CreateEstimateRequest {
+    return {
+      customerId: r.customerId,
+      vehicleId: r.vehicleId,
+      crmPartyId: r.crmPartyId ?? '',
+      crmVehicleId: r.crmVehicleId ?? '',
+      crmContactIds: r.crmContactIds ?? [],
+      locationId: r.locationId,
+      currencyUomId: r.currencyUomId,
+      taxRegionId: r.taxRegionId,
+    };
+  }
+
+  /**
+   * Adapts local AddEstimateItemRequest (string union itemType) to SDK (enum itemType).
+   */
+  private toSdkAddEstimateItemRequest(r: AddEstimateItemRequest): import('@durion-sdk/workorder').AddEstimateItemRequest {
+    return {
+      itemType: r.itemType as import('@durion-sdk/workorder').AddEstimateItemRequestItemTypeEnum,
+      description: r.description,
+      quantity: r.quantity,
+      unitPrice: r.unitPrice,
+      taxCode: r.taxCode,
+      productId: r.productId,
+      serviceId: r.serviceId,
+    };
+  }
+
+  /**
+   * Adapts local AssignTechnicianRequest to SDK ReassignTechnicianRequest.
+   * The reassign SDK method uses newTechnicianId instead of technicianId.
+   */
+  private toSdkReassignTechnicianRequest(r: AssignTechnicianRequest): import('@durion-sdk/workorder').ReassignTechnicianRequest {
+    return {
+      newTechnicianId: r.technicianId,
+      reassignedByUserId: r.assignedByUserId,
+      notes: r.notes,
+    };
+  }
+
+  /**
+   * Adapts local StartLaborRequest (optional technicianId) to SDK (required technicianId).
+   */
+  private toSdkStartLaborRequest(r: StartLaborRequest): import('@durion-sdk/workorder').StartLaborRequest {
+    return {
+      technicianId: r.technicianId ?? '',
+      notes: undefined,
+    };
+  }
+
+  /**
+   * Adapts local IssuePartsRequest (partId) to SDK IssuePartRequest (workorderPartId).
+   */
+  private toSdkIssuePartRequest(r: IssuePartsRequest): import('@durion-sdk/workorder').IssuePartRequest {
+    return {
+      workorderPartId: r.partId,
+      quantity: r.quantity,
+      notes: r.notes,
+    };
+  }
+
+  /**
+   * Adapts local ConsumePartsRequest (partId) to SDK ConsumePartRequest (workorderPartId).
+   */
+  private toSdkConsumePartRequest(r: ConsumePartsRequest): import('@durion-sdk/workorder').ConsumePartRequest {
+    return {
+      workorderPartId: r.partId,
+      quantity: r.quantity,
+    };
+  }
+
+  /**
+   * Adapts local ReturnPartsRequest (partId, reason) to SDK ReturnPartRequest (workorderPartId, notes).
+   */
+  private toSdkReturnPartRequest(r: ReturnPartsRequest): import('@durion-sdk/workorder').ReturnPartRequest {
+    return {
+      workorderPartId: r.partId,
+      quantity: r.quantity,
+      notes: r.reason,
+    };
+  }
+
+  /**
+   * Adapts local ReturnPartsRequest to SDK ReturnPartQuantityRequest (requires reason).
+   */
+  private toSdkReturnPartQuantityRequest(r: ReturnPartsRequest): import('@durion-sdk/workorder').ReturnPartQuantityRequest {
+    return {
+      workorderPartId: r.partId,
+      quantity: r.quantity,
+      reason: r.reason ?? '',
+    };
+  }
+
+  /**
+   * Adapts local ConsumePartsRequest to SDK CorrectPartQuantityRequest.
+   * correctPartQuantity uses newQuantity and reason; partId maps to workorderPartId.
+   */
+  private toSdkCorrectPartQuantityRequest(r: ConsumePartsRequest): import('@durion-sdk/workorder').CorrectPartQuantityRequest {
+    return {
+      workorderPartId: r.partId,
+      newQuantity: r.quantity,
+      reason: '',
+    };
+  }
+
+  /**
+   * Adapts local ConsumePickedItemsRequest (lines with pickedItemId/quantity) to SDK
+   * ConsumePickedItemsRequest (items with pickTaskId/quantityToConsume).
+   */
+  private toSdkConsumePickedItemsRequest(r: ConsumePickedItemsRequest): import('@durion-sdk/workorder').ConsumePickedItemsRequest {
+    return {
+      items: r.lines.map(line => ({
+        pickTaskId: line.pickedItemId,
+        quantityToConsume: line.quantity,
+      })),
+    };
+  }
+
+  /**
+   * Adapts local CreateChangeRequestRequest to SDK CreateChangeRequestDTO.
+   */
+  private toSdkCreateChangeRequestDTO(r: CreateChangeRequestRequest): import('@durion-sdk/workorder').CreateChangeRequestDTO {
+    return {
+      description: r.description,
+      services: r.requestedItems
+        .filter(item => item.type === 'SERVICE')
+        .map(item => ({ serviceEntityId: item.serviceId, quantity: item.quantity })),
+      parts: r.requestedItems
+        .filter(item => item.type === 'PART')
+        .map(item => ({ productEntityId: item.partId, quantity: item.quantity })),
+    };
+  }
+
+  /**
+   * Adapts local CompleteWorkorderRequest to SDK CompleteWorkorderRequest.
+   * SDK field `completionNotes` matches local; no required mismatch.
+   */
+  private toSdkCompleteWorkorderRequest(r: CompleteWorkorderRequest): import('@durion-sdk/workorder').CompleteWorkorderRequest {
+    return {
+      completionNotes: r.completionNotes,
+    };
+  }
+
+  /**
+   * Adapts local ReopenWorkorderRequest to SDK ReopenWorkorderRequest.
+   * SDK has reopenReason as optional; local has it required.
+   */
+  private toSdkReopenWorkorderRequest(r: ReopenWorkorderRequest): import('@durion-sdk/workorder').ReopenWorkorderRequest {
+    return {
+      reopenReason: r.reopenReason,
+    };
+  }
+
+  /**
+   * Adapts startTimer body to SDK WorkexecTimerStartRequest.
+   * Local uses workOrderId (camelCase capital O) but SDK uses workorderId (lowercase o).
+   */
+  private toSdkTimerStartRequest(
+    body: { workOrderId: string; workOrderItemId?: string; laborCode?: string },
+  ): import('@durion-sdk/workorder').WorkexecTimerStartRequest {
+    return {
+      workorderId: body.workOrderId,
+      workorderItemId: body.workOrderItemId,
+      laborCode: body.laborCode,
+    };
+  }
+
+  // ── Private SDK response adapters ────────────────────────────────────────────
+
+  /**
+   * Adapts SDK EstimateItemResponse (all fields optional) to local EstimateItemResponse
+   * (id, estimateId, itemType, quantity, unitPrice required).
+   */
+  private toEstimateItemResponse(dto: import('@durion-sdk/workorder').EstimateItemResponse): EstimateItemResponse {
+    return {
+      id: dto.id ?? '',
+      estimateId: dto.estimateId ?? '',
+      itemType: (dto.itemType as string as EstimateItemType) ?? 'PART',
+      description: dto.description,
+      quantity: dto.quantity ?? 0,
+      unitPrice: dto.unitPrice ?? 0,
+      lineTotal: dto.lineTotal,
+      taxCode: dto.taxCode,
+      productId: dto.productId,
+      serviceId: dto.serviceId,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt,
+    };
+  }
+
+  /**
+   * Adapts SDK EstimateResponse (status?: string, id?: string) to local EstimateResponse
+   * (status: EstimateStatus required, id: string required).
+   */
+  private toEstimateResponse(dto: import('@durion-sdk/workorder').EstimateResponse): EstimateResponse {
+    return {
+      id: dto.id ?? '',
+      estimateNumber: dto.estimateNumber,
+      customerId: dto.customerId ?? '',
+      vehicleId: dto.vehicleId ?? '',
+      locationId: dto.locationId,
+      currencyUomId: dto.currencyUomId,
+      taxRegionId: dto.taxRegionId,
+      status: (dto.status as EstimateStatus) ?? 'DRAFT',
+      createdByUserId: dto.createdByUserId,
+      createdAt: dto.createdAt,
+      subtotal: dto.subtotal,
+      taxAmount: dto.taxAmount,
+      total: dto.total,
+      submittedAt: dto.submittedAt,
+      submittedBy: dto.submittedBy,
+      expiresAt: dto.expiresAt,
+      approvedAt: dto.approvedAt,
+      approvedBy: dto.approvedBy,
+      signatureData: dto.signatureData,
+      signatureMimeType: dto.signatureMimeType,
+      signerName: dto.signerName,
+      approvalNotes: dto.approvalNotes,
+      purchaseOrderNumber: dto.purchaseOrderNumber,
+      version: dto.version,
+      crmPartyId: dto.crmPartyId,
+      crmVehicleId: dto.crmVehicleId,
+      crmContactIds: dto.crmContactIds,
+    };
+  }
+
+  /**
+   * Adapts SDK WorkorderDetailResponse (workorderId, enum status) to local
+   * WorkorderDetailResponse (id, WorkorderStatus union).
+   */
+  private toWorkorderDetailResponse(dto: import('@durion-sdk/workorder').WorkorderDetailResponse): WorkorderDetailResponse {
+    return {
+      id: dto.workorderId,
+      status: (dto.status as string as WorkorderStatus) ?? undefined,
+      customerId: dto.customerId,
+      vehicleId: dto.vehicleId,
+      primaryTechnicianId: dto.assignedTechnicianId,
+      primaryTechnicianName: dto.assignedTechnicianName,
+      isStarted: dto.isStarted === 'true',
+      startedAt: dto.startedAt,
+      isInProgress: dto.isInProgress === 'true',
+      createdAt: dto.createdAt,
+    };
+  }
+
+  /**
+   * Adapts SDK CompleteWorkorderResponse to local CompleteWorkorderResponse.
+   * SDK has workorderId?/currentStatus? but local requires workorderId/status.
+   */
+  private toCompleteWorkorderResponse(dto: import('@durion-sdk/workorder').CompleteWorkorderResponse): CompleteWorkorderResponse {
+    return {
+      workorderId: dto.workorderId ?? '',
+      status: (dto.currentStatus as WorkorderStatus) ?? 'COMPLETED',
+      completedAt: dto.completedAt,
+    };
+  }
+
+  /**
+   * Adapts SDK ReopenWorkorderResponse to local ReopenWorkorderResponse.
+   * SDK has currentStatus? but local requires workorderId/status.
+   */
+  private toReopenWorkorderResponse(dto: import('@durion-sdk/workorder').ReopenWorkorderResponse): ReopenWorkorderResponse {
+    return {
+      workorderId: dto.workorderId ?? '',
+      status: (dto.currentStatus as WorkorderStatus) ?? 'IN_PROGRESS',
+      reopenedAt: dto.reopenedAt,
+    };
   }
 
   // ── CAP-002: Estimate CRUD ────────────────────────────────────────────────
@@ -123,7 +435,9 @@ export class WorkexecService {
     request: CreateEstimateRequest,
     idempotencyKey?: string,
   ): Observable<EstimateResponse> {
-    return this.api.post<EstimateResponse>('/v1/workorders/estimates', request, this.idempotencyOptions(idempotencyKey));
+    return this.estimateApi.createEstimate(this.toSdkCreateEstimateRequest(request), idempotencyKey).pipe(
+      map(dto => this.toEstimateResponse(dto as import('@durion-sdk/workorder').EstimateResponse)),
+    );
   }
 
   /**
@@ -132,7 +446,9 @@ export class WorkexecService {
    * Stories 239, 238, 237, 234, 235
    */
   getEstimateById(estimateId: string): Observable<EstimateResponse> {
-    return this.api.get<EstimateResponse>(`/v1/workorders/estimates/${estimateId}`);
+    return this.estimateApi.getEstimateById(estimateId).pipe(
+      map(dto => this.toEstimateResponse(dto)),
+    );
   }
 
   // ── CAP-002: Estimate Items (Stories 238, 237) ────────────────────────────
@@ -147,10 +463,8 @@ export class WorkexecService {
     request: AddEstimateItemRequest,
     idempotencyKey?: string,
   ): Observable<EstimateItemResponse> {
-    return this.api.post<EstimateItemResponse>(
-      `/v1/workorders/estimates/${estimateId}/items`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
+    return this.estimateApi.addEstimateItem(estimateId, this.toSdkAddEstimateItemRequest(request)).pipe(
+      map(dto => this.toEstimateItemResponse(dto)),
     );
   }
 
@@ -165,10 +479,8 @@ export class WorkexecService {
     request: UpdateEstimateItemRequest,
     idempotencyKey?: string,
   ): Observable<EstimateItemResponse> {
-    return this.api.patch<EstimateItemResponse>(
-      `/v1/workorders/estimates/${estimateId}/items/${itemId}`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
+    return this.estimateApi.updateEstimateItem(estimateId, itemId, request).pipe(
+      map(dto => this.toEstimateItemResponse(dto)),
     );
   }
 
@@ -177,10 +489,7 @@ export class WorkexecService {
    * DELETE /v1/workorders/estimates/{estimateId}/items/{itemId}
    */
   deleteEstimateItem(estimateId: string, itemId: string, idempotencyKey?: string): Observable<void> {
-    return this.api.delete<void>(
-      `/v1/workorders/estimates/${estimateId}/items/${itemId}`,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.estimateApi.deleteEstimateItem(estimateId, itemId);
   }
 
   // ── CAP-002: Totals (Story 236) ────────────────────────────────────────────
@@ -194,11 +503,7 @@ export class WorkexecService {
     estimateId: string,
     idempotencyKey?: string,
   ): Observable<CalculateEstimateTotalsResponse> {
-    return this.api.post<CalculateEstimateTotalsResponse>(
-      `/v1/workorders/estimates/${estimateId}/calculate-totals`,
-      {},
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.estimateApi.calculateEstimateTotals(estimateId) as Observable<CalculateEstimateTotalsResponse>;
   }
 
   // ── CAP-002: Revise (Story 235) ───────────────────────────────────────────
@@ -213,10 +518,8 @@ export class WorkexecService {
     patch: Record<string, unknown>,
     idempotencyKey?: string,
   ): Observable<EstimateResponse> {
-    return this.api.patch<EstimateResponse>(
-      `/v1/workorders/estimates/${estimateId}`,
-      patch,
-      this.idempotencyOptions(idempotencyKey),
+    return this.estimateApi.patchEstimateStatus(estimateId, patch).pipe(
+      map(dto => this.toEstimateResponse(dto as import('@durion-sdk/workorder').EstimateResponse)),
     );
   }
 
@@ -226,10 +529,8 @@ export class WorkexecService {
    * Story 235
    */
   reopenEstimate(estimateId: string, idempotencyKey?: string): Observable<EstimateResponse> {
-    return this.api.post<EstimateResponse>(
-      `/v1/workorders/estimates/${estimateId}/reopen`,
-      {},
-      this.idempotencyOptions(idempotencyKey),
+    return this.estimateApi.reopenEstimate(estimateId).pipe(
+      map(dto => this.toEstimateResponse(dto)),
     );
   }
 
@@ -245,11 +546,7 @@ export class WorkexecService {
     notes?: string,
     idempotencyKey?: string,
   ): Observable<EstimateSnapshotResponse> {
-    return this.api.post<EstimateSnapshotResponse>(
-      `/v1/workorders/estimates/${estimateId}/snapshots`,
-      { notes },
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.estimateApi.createEstimateSnapshot(estimateId, notes) as Observable<EstimateSnapshotResponse>;
   }
 
   /**
@@ -258,9 +555,7 @@ export class WorkexecService {
    * Story 234
    */
   getEstimateSummary(estimateId: string): Observable<EstimateSummaryResponse> {
-    return this.api.get<EstimateSummaryResponse>(
-      `/v1/workorders/estimates/${estimateId}/summary`,
-    );
+    return this.estimateApi.getEstimateSummary(estimateId) as Observable<EstimateSummaryResponse>;
   }
 
   /**
@@ -268,8 +563,7 @@ export class WorkexecService {
    * GET /v1/workorders/estimates?customerId={customerId}
    */
   listEstimatesForCustomer(customerId: string): Observable<EstimateListItem[]> {
-    const params = new HttpParams().set('customerId', customerId);
-    return this.api.get<EstimateListItem[]>('/v1/workorders/estimates', params);
+    return this.estimateApi.getEstimatesByCustomer(customerId) as Observable<EstimateListItem[]>;
   }
 
   /**
@@ -296,10 +590,8 @@ export class WorkexecService {
     estimateId: string,
     idempotencyKey?: string,
   ): Observable<EstimateResponse> {
-    return this.api.post<EstimateResponse>(
-      `/v1/workorders/estimates/${estimateId}/submit-for-approval`,
-      {},
-      this.idempotencyOptions(idempotencyKey),
+    return this.estimateApi.submitForApproval(estimateId).pipe(
+      map(dto => this.toEstimateResponse(dto)),
     );
   }
 
@@ -320,10 +612,8 @@ export class WorkexecService {
     request: ApproveEstimateRequest,
     idempotencyKey?: string,
   ): Observable<EstimateResponse> {
-    return this.api.post<EstimateResponse>(
-      `/v1/workorders/estimates/${estimateId}/approval`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
+    return this.estimateApi.approveEstimate(estimateId, request).pipe(
+      map(dto => this.toEstimateResponse(dto)),
     );
   }
 
@@ -339,11 +629,7 @@ export class WorkexecService {
    * Returns WorkorderResponse (201) or 409 Conflict with existingWorkorderId.
    */
   promoteEstimateToWorkorder(estimateId: string, idempotencyKey?: string): Observable<WorkorderResponse> {
-    return this.api.post<WorkorderResponse>(
-      `/v1/workorders/estimates/${estimateId}/promote`,
-      {},
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.estimateApi.promoteEstimateToWorkorder(estimateId) as Observable<WorkorderResponse>;
   }
 
   /**
@@ -352,7 +638,7 @@ export class WorkexecService {
    * Stories 230, 228
    */
   getWorkorderById(workorderId: string): Observable<WorkorderResponse> {
-    return this.api.get<WorkorderResponse>(`/v1/workorders/${workorderId}`);
+    return this.workOrderApi.getWorkorderById(workorderId) as Observable<WorkorderResponse>;
   }
 
   getWorkorder(workorderId: string): Observable<WorkorderResponse> {
@@ -365,7 +651,9 @@ export class WorkexecService {
    * Stories 229, 226, 224
    */
   getWorkorderDetail(workorderId: string): Observable<WorkorderDetailResponse> {
-    return this.api.get<WorkorderDetailResponse>(`/v1/workorders/${workorderId}/detail`);
+    return this.workorderDetail.getWorkorderDetail(workorderId).pipe(
+      map(dto => this.toWorkorderDetailResponse(dto)),
+    );
   }
 
   /**
@@ -374,7 +662,7 @@ export class WorkexecService {
    * Stories 226, 224
    */
   getTransitionHistory(workorderId: string): Observable<WorkorderTransition[]> {
-    return this.api.get<WorkorderTransition[]>(`/v1/workorders/${workorderId}/transitions`);
+    return this.workOrderApi.getTransitionHistory(workorderId) as Observable<WorkorderTransition[]>;
   }
 
   /**
@@ -383,7 +671,7 @@ export class WorkexecService {
    * Story 219 — role-based visibility flags
    */
   getOperationalContext(workorderId: string): Observable<OperationalContextResponse> {
-    return this.api.get<OperationalContextResponse>(`/v1/workorders/${workorderId}/operationalContext`);
+    return this.operationalContext.getOperationalContext(workorderId) as Observable<OperationalContextResponse>;
   }
 
   /**
@@ -391,9 +679,10 @@ export class WorkexecService {
    * GET /v1/workorders/wip?wipStatus={...}
    */
   listActiveWorkorders(filters?: WipListFilters): Observable<WorkorderWipView[]> {
-    const params = filters?.wipStatus?.length
-      ? new HttpParams().set('wipStatus', filters.wipStatus.join(','))
-      : undefined;
+    let params = new HttpParams();
+    if (filters?.wipStatus?.length) {
+      filters.wipStatus.forEach(s => { params = params.append('wipStatus', s); });
+    }
     return this.api.get<WorkorderWipView[]>('/v1/workorders/wip', params);
   }
 
@@ -438,11 +727,7 @@ export class WorkexecService {
     request: AssignTechnicianRequest,
     idempotencyKey?: string,
   ): Observable<TechnicianAssignmentResponse> {
-    return this.api.post<TechnicianAssignmentResponse>(
-      `/v1/workorders/${workorderId}/technician`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.technicianAssignment.assignTechnician(workorderId, request, idempotencyKey) as Observable<TechnicianAssignmentResponse>;
   }
 
   /**
@@ -454,11 +739,7 @@ export class WorkexecService {
     request: AssignTechnicianRequest,
     idempotencyKey?: string,
   ): Observable<TechnicianAssignmentResponse> {
-    return this.api.put<TechnicianAssignmentResponse>(
-      `/v1/workorders/${workorderId}/technician`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.technicianAssignment.reassignTechnician(workorderId, this.toSdkReassignTechnicianRequest(request), idempotencyKey) as Observable<TechnicianAssignmentResponse>;
   }
 
   /**
@@ -466,7 +747,7 @@ export class WorkexecService {
    * GET /v1/workorders/{workorderId}/technician
    */
   getTechnicianAssignment(workorderId: string): Observable<TechnicianAssignmentResponse> {
-    return this.api.get<TechnicianAssignmentResponse>(`/v1/workorders/${workorderId}/technician`);
+    return this.technicianAssignment.getTechnicianAssignment(workorderId) as Observable<TechnicianAssignmentResponse>;
   }
 
   // ── CAP-005: Start Work (Story 224) ──────────────────────────────────────
@@ -476,11 +757,7 @@ export class WorkexecService {
    * POST /v1/workorders/{workorderId}/start
    */
   startWork(workorderId: string, idempotencyKey?: string): Observable<WorkorderStartResponse> {
-    return this.api.post<WorkorderStartResponse>(
-      `/v1/workorders/${workorderId}/start`,
-      {},
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.operationalContext.startWork(workorderId) as Observable<WorkorderStartResponse>;
   }
 
   // ── CAP-005: Labor Sessions (Story 223) ──────────────────────────────────
@@ -495,11 +772,7 @@ export class WorkexecService {
     request: StartLaborRequest,
     idempotencyKey?: string,
   ): Observable<WorkorderLaborEntryResponse> {
-    return this.api.post<WorkorderLaborEntryResponse>(
-      `/v1/workorders/${workorderId}/services/${serviceId}/labor/start`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.workorderLabor.startLaborSession(workorderId, serviceId, this.toSdkStartLaborRequest(request), idempotencyKey) as Observable<WorkorderLaborEntryResponse>;
   }
 
   /**
@@ -512,11 +785,7 @@ export class WorkexecService {
     request: StopLaborRequest,
     idempotencyKey?: string,
   ): Observable<WorkorderLaborEntryResponse> {
-    return this.api.post<WorkorderLaborEntryResponse>(
-      `/v1/workorders/${workorderId}/labor/${entryId}/stop`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.workorderLabor.stopLaborSession(workorderId, entryId, idempotencyKey) as Observable<WorkorderLaborEntryResponse>;
   }
 
   /**
@@ -528,11 +797,14 @@ export class WorkexecService {
     request: CreateLaborPerformedRequest,
     idempotencyKey?: string,
   ): Observable<WorkorderLaborEntryResponse> {
-    return this.api.post<WorkorderLaborEntryResponse>(
-      `/v1/workexec/labor-performed`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    const sdkRequest: import('@durion-sdk/workorder').WorkexecLaborPerformedRequest = {
+      workorderId: request.workorderId,
+      technicianId: request.technicianId ?? '',
+      performedAt: request.startTime ?? new Date().toISOString(),
+      labor: { quantity: request.hoursWorked ?? 0, unit: 'HOURS' },
+      source: { system: 'WORKEXEC', sourceReferenceId: request.workorderServiceId ?? '' },
+    };
+    return this.timeTracking.createLaborPerformed(idempotencyKey ?? '', sdkRequest) as Observable<WorkorderLaborEntryResponse>;
   }
 
   /**
@@ -540,7 +812,7 @@ export class WorkexecService {
    * GET /v1/workorders/{workorderId}/labor
    */
   getLaborHistory(workorderId: string): Observable<WorkorderLaborEntryResponse[]> {
-    return this.api.get<WorkorderLaborEntryResponse[]>(`/v1/workorders/${workorderId}/labor`);
+    return this.workorderLabor.getLaborHistory(workorderId) as Observable<WorkorderLaborEntryResponse[]>;
   }
 
   // ── CAP-005: Parts (Stories 222, 221) ─────────────────────────────────────
@@ -550,11 +822,7 @@ export class WorkexecService {
    * POST /v1/workorders/{workorderId}/parts/issue
    */
   issueParts(workorderId: string, request: IssuePartsRequest, idempotencyKey?: string): Observable<PartUsageResponse> {
-    return this.api.post<PartUsageResponse>(
-      `/v1/workorders/${workorderId}/parts/issue`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.workorderParts.issueParts(workorderId, this.toSdkIssuePartRequest(request), idempotencyKey) as Observable<PartUsageResponse>;
   }
 
   /**
@@ -562,11 +830,7 @@ export class WorkexecService {
    * POST /v1/workorders/{workorderId}/parts/consume
    */
   consumeParts(workorderId: string, request: ConsumePartsRequest, idempotencyKey?: string): Observable<PartUsageResponse> {
-    return this.api.post<PartUsageResponse>(
-      `/v1/workorders/${workorderId}/parts/consume`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.workorderParts.consumeParts(workorderId, this.toSdkConsumePartRequest(request), idempotencyKey) as Observable<PartUsageResponse>;
   }
 
   /**
@@ -574,11 +838,7 @@ export class WorkexecService {
    * POST /v1/workorders/{workorderId}/parts/return
    */
   returnParts(workorderId: string, request: ReturnPartsRequest, idempotencyKey?: string): Observable<PartUsageResponse> {
-    return this.api.post<PartUsageResponse>(
-      `/v1/workorders/${workorderId}/parts/return`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.workorderParts.returnParts(workorderId, this.toSdkReturnPartRequest(request), idempotencyKey) as Observable<PartUsageResponse>;
   }
 
   /**
@@ -586,11 +846,7 @@ export class WorkexecService {
    * POST /v1/workorders/{workorderId}/parts/returnUnused
    */
   returnUnusedQuantity(workorderId: string, request: ReturnPartsRequest, idempotencyKey?: string): Observable<PartUsageResponse> {
-    return this.api.post<PartUsageResponse>(
-      `/v1/workorders/${workorderId}/parts/returnUnused`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.workorderPartAdjustments.returnUnusedQuantity(workorderId, this.toSdkReturnPartQuantityRequest(request), idempotencyKey) as Observable<PartUsageResponse>;
   }
 
   /**
@@ -612,10 +868,7 @@ export class WorkexecService {
    * Story 221
    */
   suggestSubstitutes(workorderId: string, partId: string): Observable<SubstituteLinkResponse[]> {
-    return this.api.post<SubstituteLinkResponse[]>(
-      `/v1/workorders/${workorderId}/suggestSubstitutes`,
-      { partId },
-    );
+    return this.substituteLink.suggestSubstitutes(workorderId) as Observable<SubstituteLinkResponse[]>;
   }
 
   /**
@@ -623,11 +876,7 @@ export class WorkexecService {
    * POST /v1/workorders/{workorderId}/parts/correct
    */
   correctPartQuantity(workorderId: string, request: ConsumePartsRequest, idempotencyKey?: string): Observable<PartUsageResponse> {
-    return this.api.post<PartUsageResponse>(
-      `/v1/workorders/${workorderId}/parts/correct`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.workorderPartAdjustments.correctPartQuantity(workorderId, this.toSdkCorrectPartQuantityRequest(request), idempotencyKey) as Observable<PartUsageResponse>;
   }
 
   /**
@@ -635,29 +884,22 @@ export class WorkexecService {
    * GET /v1/workorders/{workorderId}/parts/usageHistory
    */
   getUsageHistory(workorderId: string): Observable<PartUsageResponse[]> {
-    return this.api.get<PartUsageResponse[]>(`/v1/workorders/${workorderId}/parts/usageHistory`);
+    return this.workorderParts.getUsageHistory(workorderId) as Observable<PartUsageResponse[]>;
   }
 
   getWorkorderPickList(workorderId: string): Observable<PickListView> {
-    return this.api.get<PickListView>(
-      `/workexec/v1/workorders/${encodeURIComponent(workorderId)}/pick-list`,
-    );
+    return this.workorderPickFacade.getPickList(workorderId) as Observable<PickListView>;
   }
 
   getPickedItems(workorderId: string): Observable<PickedItemLine[]> {
-    return this.api.get<PickedItemLine[]>(
-      `/workexec/v1/workorders/${encodeURIComponent(workorderId)}/picked-items`,
-    );
+    return this.workorderPickedItems.getPickedItems(workorderId) as Observable<PickedItemLine[]>;
   }
 
   consumePickedItems(
     workorderId: string,
     request: ConsumePickedItemsRequest,
   ): Observable<ConsumptionResult> {
-    return this.api.post<ConsumptionResult>(
-      `/workexec/v1/workorders/${encodeURIComponent(workorderId)}/picked-items/consume`,
-      request,
-    );
+    return this.workorderPickedItems.consumePickedItems(workorderId, this.toSdkConsumePickedItemsRequest(request)) as Observable<ConsumptionResult>;
   }
 
   resolvePickScan(workorderId: string, req: ScanResolveRequest): Observable<PickExecuteLine[]> {
@@ -690,7 +932,7 @@ export class WorkexecService {
    * GET /v1/workorders/{workorderId}/changeRequests
    */
   getChangeRequestsByWorkorder(workorderId: string): Observable<ChangeRequestResponse[]> {
-    return this.api.get<ChangeRequestResponse[]>(`/v1/workorders/${workorderId}/changeRequests`);
+    return this.changeRequest.getChangeRequestsByWorkorder(workorderId) as Observable<ChangeRequestResponse[]>;
   }
 
   /**
@@ -702,11 +944,7 @@ export class WorkexecService {
     request: CreateChangeRequestRequest,
     idempotencyKey?: string,
   ): Observable<ChangeRequestResponse> {
-    return this.api.post<ChangeRequestResponse>(
-      `/v1/workorders/${workorderId}/changeRequests`,
-      request,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.changeRequest.createChangeRequest(workorderId, this.toSdkCreateChangeRequestDTO(request), idempotencyKey) as Observable<ChangeRequestResponse>;
   }
 
   /**
@@ -714,7 +952,7 @@ export class WorkexecService {
    * GET /v1/workorders/changeRequests/{changeId}
    */
   getChangeRequestById(changeId: string): Observable<ChangeRequestResponse> {
-    return this.api.get<ChangeRequestResponse>(`/v1/workorders/changeRequests/${changeId}`);
+    return this.changeRequest.getChangeRequestById(changeId) as Observable<ChangeRequestResponse>;
   }
 
   /**
@@ -723,11 +961,10 @@ export class WorkexecService {
    * Story 220 (manager flow)
    */
   approveChangeRequest(changeId: string, notes?: string, idempotencyKey?: string): Observable<ChangeRequestResponse> {
-    return this.api.post<ChangeRequestResponse>(
-      `/v1/workorders/changeRequests/${changeId}/approve`,
-      { notes },
-      this.idempotencyOptions(idempotencyKey),
-    );
+    const sdkRequest: import('@durion-sdk/workorder').ApproveChangeRequestDTO = {
+      approvalNote: notes ?? '',
+    };
+    return this.changeRequest.approveChangeRequest(changeId, sdkRequest) as Observable<ChangeRequestResponse>;
   }
 
   /**
@@ -735,11 +972,10 @@ export class WorkexecService {
    * POST /v1/workorders/changeRequests/{changeId}/decline
    */
   declineChangeRequest(changeId: string, reason?: string, idempotencyKey?: string): Observable<ChangeRequestResponse> {
-    return this.api.post<ChangeRequestResponse>(
-      `/v1/workorders/changeRequests/${changeId}/decline`,
-      { reason },
-      this.idempotencyOptions(idempotencyKey),
-    );
+    const sdkRequest: import('@durion-sdk/workorder').DeclineChangeRequestDTO = {
+      approvalNote: reason ?? '',
+    };
+    return this.changeRequest.declineChangeRequest(changeId, sdkRequest) as Observable<ChangeRequestResponse>;
   }
 
   // ── CAP-006: Complete / Reopen / Finalize (Stories 215, 214, 216) ──────────
@@ -753,10 +989,8 @@ export class WorkexecService {
     body: CompleteWorkorderRequest,
     idempotencyKey?: string,
   ): Observable<CompleteWorkorderResponse> {
-    return this.api.post<CompleteWorkorderResponse>(
-      `/v1/workorders/${workorderId}/complete`,
-      body,
-      this.idempotencyOptions(idempotencyKey),
+    return this.workOrderApi.completeWorkorder(workorderId, this.toSdkCompleteWorkorderRequest(body)).pipe(
+      map(dto => this.toCompleteWorkorderResponse(dto)),
     );
   }
 
@@ -769,10 +1003,8 @@ export class WorkexecService {
     body: ReopenWorkorderRequest,
     idempotencyKey?: string,
   ): Observable<ReopenWorkorderResponse> {
-    return this.api.post<ReopenWorkorderResponse>(
-      `/v1/workorders/${workorderId}/reopen`,
-      body,
-      this.idempotencyOptions(idempotencyKey),
+    return this.workOrderApi.reopenWorkorder(workorderId, this.toSdkReopenWorkorderRequest(body)).pipe(
+      map(dto => this.toReopenWorkorderResponse(dto)),
     );
   }
 
@@ -797,7 +1029,7 @@ export class WorkexecService {
    * GET /v1/workorders/{workorderId}/snapshots
    */
   getSnapshotHistory(workorderId: string): Observable<WorkorderSnapshotHistoryEntry[]> {
-    return this.api.get<WorkorderSnapshotHistoryEntry[]>(`/v1/workorders/${workorderId}/snapshots`);
+    return this.workOrderApi.getSnapshotHistory(workorderId) as Observable<WorkorderSnapshotHistoryEntry[]>;
   }
 
   /**
@@ -806,11 +1038,7 @@ export class WorkexecService {
    * CAP-007 Story 213 — triggers invoice draft creation; use billing service for detail.
    */
   generateInvoice(workorderId: string, idempotencyKey?: string): Observable<{ invoiceId: string; status?: string }> {
-    return this.api.post<{ invoiceId: string; status?: string }>(
-      `/v1/workorders/${workorderId}/generate-invoice`,
-      {},
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.workOrderApi.generateInvoice(workorderId, idempotencyKey) as Observable<{ invoiceId: string; status?: string }>;
   }
 
   // ── CAP-140: Operational Context override ───────────────────────────────
@@ -824,11 +1052,14 @@ export class WorkexecService {
     body: Record<string, unknown>,
     idempotencyKey?: string,
   ): Observable<OperationalContextResponse> {
-    return this.api.post<OperationalContextResponse>(
-      `/v1/workorders/${workorderId}/operationalContext/override`,
-      body,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    const sdkRequest: import('@durion-sdk/workorder').OperationalContextOverrideRequest = {
+      locationId: typeof body['locationId'] === 'string' ? body['locationId'] : '',
+      bayId: typeof body['bayId'] === 'string' ? body['bayId'] : undefined,
+      assignedMechanics: Array.isArray(body['assignedMechanics']) ? (body['assignedMechanics'] as string[]) : undefined,
+      assignedResources: Array.isArray(body['assignedResources']) ? (body['assignedResources'] as string[]) : undefined,
+      constraints: Array.isArray(body['constraints']) ? (body['constraints'] as string[]) : undefined,
+    };
+    return this.operationalContext.overrideOperationalContext(workorderId, sdkRequest) as Observable<OperationalContextResponse>;
   }
 
   // ── CAP-140: Estimate from Appointment ─────────────────────────────────
@@ -841,10 +1072,21 @@ export class WorkexecService {
     body: Record<string, unknown>,
     idempotencyKey?: string,
   ): Observable<EstimateResponse> {
-    return this.api.post<EstimateResponse>(
-      '/v1/workorders/estimates/from-appointment',
-      body,
-      this.idempotencyOptions(idempotencyKey),
+    const sdkRequest: import('@durion-sdk/workorder').CreateEstimateFromAppointmentRequest = {
+      idempotencyKey: idempotencyKey ?? (typeof body['idempotencyKey'] === 'string' ? body['idempotencyKey'] : ''),
+      appointmentId: typeof body['appointmentId'] === 'string' ? body['appointmentId'] : '',
+      customerId: typeof body['customerId'] === 'string' ? body['customerId'] : '',
+      vehicleId: typeof body['vehicleId'] === 'string' ? body['vehicleId'] : '',
+      locationId: typeof body['locationId'] === 'string' ? body['locationId'] : '',
+      requestedServices: Array.isArray(body['requestedServices']) ? (body['requestedServices'] as string[]) : undefined,
+    };
+    return this.estimatesFromAppointments.createEstimateFromAppointment(sdkRequest).pipe(
+      map(dto => ({
+        id: dto.estimateId ?? '',
+        customerId: '',
+        vehicleId: '',
+        status: (dto.status as EstimateStatus) ?? 'DRAFT',
+      } as EstimateResponse)),
     );
   }
 
@@ -855,11 +1097,15 @@ export class WorkexecService {
    * POST /v1/workorders/travelSegments/start
    */
   startTravelSegment(body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
-    return this.api.post<unknown>(
-      '/v1/workorders/travelSegments/start',
-      body,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    const sdkRequest: import('@durion-sdk/workorder').StartTravelSegmentRequest = {
+      mobileWorkAssignmentId: typeof body['mobileWorkAssignmentId'] === 'string' ? body['mobileWorkAssignmentId'] : '',
+      technicianId: typeof body['technicianId'] === 'string' ? body['technicianId'] : '',
+      segmentType: (typeof body['segmentType'] === 'string' ? body['segmentType'] : 'DEPART_SHOP') as import('@durion-sdk/workorder').StartTravelSegmentRequestSegmentTypeEnum,
+      fromLocationId: typeof body['fromLocationId'] === 'string' ? body['fromLocationId'] : undefined,
+      toLocationId: typeof body['toLocationId'] === 'string' ? body['toLocationId'] : undefined,
+      workOrderId: typeof body['workOrderId'] === 'string' ? body['workOrderId'] : undefined,
+    };
+    return this.travelSegment.startTravelSegment(sdkRequest);
   }
 
   /**
@@ -867,11 +1113,11 @@ export class WorkexecService {
    * POST /v1/workorders/travelSegments/{travelSegmentId}/stop
    */
   stopTravelSegment(travelSegmentId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
-    return this.api.post<unknown>(
-      `/v1/workorders/travelSegments/${travelSegmentId}/stop`,
-      body,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    const sdkRequest: import('@durion-sdk/workorder').StopTravelSegmentRequest = {
+      toLocationId: typeof body['toLocationId'] === 'string' ? body['toLocationId'] : undefined,
+      notes: typeof body['notes'] === 'string' ? body['notes'] : undefined,
+    };
+    return this.travelSegment.stopTravelSegment(travelSegmentId, sdkRequest);
   }
 
   /**
@@ -883,33 +1129,25 @@ export class WorkexecService {
     body: Record<string, unknown>,
     idempotencyKey?: string,
   ): Observable<unknown> {
-    return this.api.post<unknown>(
-      `/v1/workorders/travelSegments/submit/${mobileWorkAssignmentId}`,
-      body,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    const sdkRequest: import('@durion-sdk/workorder').SubmitTravelSegmentsRequest = {
+      workDate: typeof body['workDate'] === 'string' ? body['workDate'] : new Date().toISOString().slice(0, 10),
+      notes: typeof body['notes'] === 'string' ? body['notes'] : undefined,
+    };
+    return this.travelSegment.submitTravelSegments(mobileWorkAssignmentId, sdkRequest);
   }
 
   getActiveTimerEntries(): Observable<unknown> {
-    return this.api.get<unknown>('/v1/workexec/time-entries/timer/active');
+    return this.timeTracking.getActiveTimerEntries();
   }
 
   startTimer(
     body: { workOrderId: string; workOrderItemId?: string; laborCode?: string },
     idempotencyKey: string,
   ): Observable<unknown> {
-    return this.api.post<unknown>(
-      '/v1/workexec/time-entries/timer/start',
-      body,
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.timeTracking.startTimer(this.toSdkTimerStartRequest(body), idempotencyKey);
   }
 
   stopTimers(idempotencyKey: string): Observable<unknown> {
-    return this.api.post<unknown>(
-      '/v1/workexec/time-entries/timer/stop',
-      {},
-      this.idempotencyOptions(idempotencyKey),
-    );
+    return this.timeTracking.stopTimers();
   }
 }

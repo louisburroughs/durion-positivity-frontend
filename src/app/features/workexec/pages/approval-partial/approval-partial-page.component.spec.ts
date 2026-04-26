@@ -4,6 +4,7 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ApprovalPartialPageComponent } from './approval-partial-page.component';
+import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
 
 const BASE = environment.apiBaseUrl;
@@ -30,6 +31,7 @@ describe('ApprovalPartialPageComponent [Story 269]', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: mockRoute },
+        { provide: BASE_PATH, useValue: environment.apiBaseUrl },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(ApprovalPartialPageComponent);

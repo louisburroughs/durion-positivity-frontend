@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { InventoryAvailabilityService } from '@durion-sdk/inventory';
 import { ProductInventoryService } from './product-inventory.service';
 
 describe('ProductInventoryService', () => {
@@ -15,11 +16,14 @@ describe('ProductInventoryService', () => {
     delete: vi.fn(),
   };
 
+  const availSdkStub = { queryInventoryAvailability: vi.fn() };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         ProductInventoryService,
         { provide: ApiBaseService, useValue: apiStub },
+        { provide: InventoryAvailabilityService, useValue: availSdkStub },
       ],
     });
     service = TestBed.inject(ProductInventoryService);
@@ -32,32 +36,28 @@ describe('ProductInventoryService', () => {
   // ── queryInventoryAvailability() ─────────────────────────────────────────────
 
   describe('queryInventoryAvailability()', () => {
-    it('calls GET /inventory/v1/availability with sku param', () => {
-      apiStub.get.mockReturnValueOnce(of({ sku: 'SKU-001', totalOnHand: 5, totalReserved: 0, totalAtp: 5, locationBreakdown: [] }));
+    it('calls availSdk.queryInventoryAvailability with the sku', () => {
+      availSdkStub.queryInventoryAvailability.mockReturnValueOnce(of({ sku: 'SKU-001', totalOnHand: 5, totalReserved: 0, totalAtp: 5, locationBreakdown: [] }));
 
       service.queryInventoryAvailability('SKU-001').subscribe();
 
-      const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/availability');
-      expect((params as HttpParams).get('sku')).toBe('SKU-001');
+      expect(availSdkStub.queryInventoryAvailability).toHaveBeenCalledWith('SKU-001');
     });
 
-    it('includes locationId param when provided', () => {
-      apiStub.get.mockReturnValueOnce(of({ sku: 'SKU-002', totalOnHand: 2, totalReserved: 0, totalAtp: 2, locationBreakdown: [] }));
+    it('passes only the sku to the SDK even when locationId is provided', () => {
+      availSdkStub.queryInventoryAvailability.mockReturnValueOnce(of({ sku: 'SKU-002', totalOnHand: 2, totalReserved: 0, totalAtp: 2, locationBreakdown: [] }));
 
       service.queryInventoryAvailability('SKU-002', 'loc-01').subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0];
-      expect((params as HttpParams).get('locationId')).toBe('loc-01');
+      expect(availSdkStub.queryInventoryAvailability).toHaveBeenCalledWith('SKU-002');
     });
 
-    it('does NOT include locationId param when omitted', () => {
-      apiStub.get.mockReturnValueOnce(of({ sku: 'SKU-003', totalOnHand: 0, totalReserved: 0, totalAtp: 0, locationBreakdown: [] }));
+    it('does NOT pass locationId to the SDK when omitted', () => {
+      availSdkStub.queryInventoryAvailability.mockReturnValueOnce(of({ sku: 'SKU-003', totalOnHand: 0, totalReserved: 0, totalAtp: 0, locationBreakdown: [] }));
 
       service.queryInventoryAvailability('SKU-003').subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0];
-      expect((params as HttpParams).has('locationId')).toBe(false);
+      expect(availSdkStub.queryInventoryAvailability).toHaveBeenCalledWith('SKU-003');
     });
   });
 

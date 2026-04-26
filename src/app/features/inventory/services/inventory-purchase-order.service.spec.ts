@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
-import { ApiBaseService } from '../../../core/services/api-base.service';
+import { PurchaseOrdersService } from '@durion-sdk/inventory';
 import { InventoryPurchaseOrderService } from './inventory-purchase-order.service';
 import {
   CreatePurchaseOrderRequest,
@@ -13,19 +12,19 @@ import {
 describe('InventoryPurchaseOrderService', () => {
   let service: InventoryPurchaseOrderService;
 
-  const apiStub = {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    patch: vi.fn(),
-    delete: vi.fn(),
+  const poSdkStub = {
+    listPurchaseOrders: vi.fn(),
+    getPurchaseOrder: vi.fn(),
+    createPurchaseOrder: vi.fn(),
+    revisePurchaseOrder: vi.fn(),
+    cancelPurchaseOrder: vi.fn(),
   };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         InventoryPurchaseOrderService,
-        { provide: ApiBaseService, useValue: apiStub },
+        { provide: PurchaseOrdersService, useValue: poSdkStub },
       ],
     });
     service = TestBed.inject(InventoryPurchaseOrderService);
@@ -43,37 +42,32 @@ describe('InventoryPurchaseOrderService', () => {
       nextPageToken: null,
     };
 
-    it('calls GET /inventory/v1/purchase-orders with no params when filter is empty', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPage));
+    it('calls poSdk.listPurchaseOrders with empty filter when no filter provided', () => {
+      poSdkStub.listPurchaseOrders.mockReturnValueOnce(of(mockPage));
 
       service.queryPurchaseOrders().subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/purchase-orders');
+      expect(poSdkStub.listPurchaseOrders).toHaveBeenCalledWith({}, {});
     });
 
-    it('includes supplierId param when provided in filter', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPage));
+    it('passes supplierId in filter when provided', () => {
+      poSdkStub.listPurchaseOrders.mockReturnValueOnce(of(mockPage));
 
       service.queryPurchaseOrders({ supplierId: 'sup-01' }).subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0];
-      expect((params as HttpParams).get('supplierId')).toBe('sup-01');
+      expect(poSdkStub.listPurchaseOrders).toHaveBeenCalledWith({ supplierId: 'sup-01' }, {});
     });
 
-    it('includes dateFrom and dateTo params when provided', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPage));
+    it('passes dateFrom and dateTo when provided', () => {
+      poSdkStub.listPurchaseOrders.mockReturnValueOnce(of(mockPage));
 
       service.queryPurchaseOrders({ dateFrom: '2026-01-01', dateTo: '2026-03-31' }).subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0];
-      expect((params as HttpParams).get('dateFrom')).toBe('2026-01-01');
-      expect((params as HttpParams).get('dateTo')).toBe('2026-03-31');
+      expect(poSdkStub.listPurchaseOrders).toHaveBeenCalledWith({ dateFrom: '2026-01-01', dateTo: '2026-03-31' }, {});
     });
 
-    it('returns the PurchaseOrderPageResponse emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPage));
+    it('returns the PurchaseOrderPageResponse emitted by the SDK', () => {
+      poSdkStub.listPurchaseOrders.mockReturnValueOnce(of(mockPage));
 
       let result: PurchaseOrderPageResponse | undefined;
       service.queryPurchaseOrders().subscribe(r => (result = r));
@@ -105,27 +99,24 @@ describe('InventoryPurchaseOrderService', () => {
       ],
     };
 
-    it('calls GET /inventory/v1/purchase-orders/{poId}', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPO));
+    it('calls poSdk.getPurchaseOrder with the poId', () => {
+      poSdkStub.getPurchaseOrder.mockReturnValueOnce(of(mockPO));
 
       service.getPurchaseOrder('po-001').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/purchase-orders/po-001');
+      expect(poSdkStub.getPurchaseOrder).toHaveBeenCalledWith('po-001');
     });
 
-    it('URL-encodes the poId', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPO));
+    it('passes the poId as-is to the SDK', () => {
+      poSdkStub.getPurchaseOrder.mockReturnValueOnce(of(mockPO));
 
       service.getPurchaseOrder('po/001').subscribe();
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/purchase-orders/po%2F001');
+      expect(poSdkStub.getPurchaseOrder).toHaveBeenCalledWith('po/001');
     });
 
-    it('returns the PurchaseOrderDetail emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPO));
+    it('returns the PurchaseOrderDetail emitted by the SDK', () => {
+      poSdkStub.getPurchaseOrder.mockReturnValueOnce(of(mockPO));
 
       let result: PurchaseOrderDetail | undefined;
       service.getPurchaseOrder('po-001').subscribe(r => (result = r));
@@ -153,29 +144,26 @@ describe('InventoryPurchaseOrderService', () => {
       lines: [{ poLineId: 'pol-01', productSku: 'SKU-001', orderedQty: 100, receivedQty: 0, unitPrice: 9.99, status: 'OPEN' }],
     };
 
-    it('calls POST /inventory/v1/purchase-orders with the request body', () => {
-      apiStub.post.mockReturnValueOnce(of(mockPO));
+    it('calls poSdk.createPurchaseOrder with the request', () => {
+      poSdkStub.createPurchaseOrder.mockReturnValueOnce(of(mockPO));
 
       service.createPurchaseOrder(mockRequest).subscribe();
 
-      expect(apiStub.post).toHaveBeenCalledOnce();
-      const [path, body] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/purchase-orders');
-      expect(body).toEqual(mockRequest);
+      expect(poSdkStub.createPurchaseOrder).toHaveBeenCalledWith(mockRequest);
     });
 
-    it('does not include server-generated fields in the request body', () => {
-      apiStub.post.mockReturnValueOnce(of(mockPO));
+    it('does not include server-generated fields in the request', () => {
+      poSdkStub.createPurchaseOrder.mockReturnValueOnce(of(mockPO));
 
       service.createPurchaseOrder(mockRequest).subscribe();
 
-      const [, body] = apiStub.post.mock.calls[0];
+      const [body] = poSdkStub.createPurchaseOrder.mock.calls[0];
       expect((body as Record<string, unknown>)['poId']).toBeUndefined();
       expect((body as Record<string, unknown>)['createdAt']).toBeUndefined();
     });
 
-    it('returns the created PurchaseOrderDetail emitted by the API', () => {
-      apiStub.post.mockReturnValueOnce(of(mockPO));
+    it('returns the created PurchaseOrderDetail emitted by the SDK', () => {
+      poSdkStub.createPurchaseOrder.mockReturnValueOnce(of(mockPO));
 
       let result: PurchaseOrderDetail | undefined;
       service.createPurchaseOrder(mockRequest).subscribe(r => (result = r));
@@ -202,28 +190,24 @@ describe('InventoryPurchaseOrderService', () => {
       lines: [{ poLineId: 'pol-01', productSku: 'SKU-001', orderedQty: 150, receivedQty: 0, unitPrice: 9.99, status: 'OPEN' }],
     };
 
-    it('calls PUT /inventory/v1/purchase-orders/{poId} with the revision body', () => {
-      apiStub.put.mockReturnValueOnce(of(mockPO));
+    it('calls poSdk.revisePurchaseOrder with the poId and revision body', () => {
+      poSdkStub.revisePurchaseOrder.mockReturnValueOnce(of(mockPO));
 
       service.revisePurchaseOrder('po-001', mockRevision).subscribe();
 
-      expect(apiStub.put).toHaveBeenCalledOnce();
-      const [path, body] = apiStub.put.mock.calls[0];
-      expect(path).toBe('/inventory/v1/purchase-orders/po-001');
-      expect(body).toEqual(mockRevision);
+      expect(poSdkStub.revisePurchaseOrder).toHaveBeenCalledWith('po-001', mockRevision);
     });
 
-    it('URL-encodes the poId', () => {
-      apiStub.put.mockReturnValueOnce(of(mockPO));
+    it('passes the poId as-is to the SDK', () => {
+      poSdkStub.revisePurchaseOrder.mockReturnValueOnce(of(mockPO));
 
       service.revisePurchaseOrder('po/001', mockRevision).subscribe();
 
-      const [path] = apiStub.put.mock.calls[0];
-      expect(path).toBe('/inventory/v1/purchase-orders/po%2F001');
+      expect(poSdkStub.revisePurchaseOrder).toHaveBeenCalledWith('po/001', mockRevision);
     });
 
-    it('returns the updated PurchaseOrderDetail emitted by the API', () => {
-      apiStub.put.mockReturnValueOnce(of(mockPO));
+    it('returns the updated PurchaseOrderDetail emitted by the SDK', () => {
+      poSdkStub.revisePurchaseOrder.mockReturnValueOnce(of(mockPO));
 
       let result: PurchaseOrderDetail | undefined;
       service.revisePurchaseOrder('po-001', mockRevision).subscribe(r => (result = r));
@@ -235,27 +219,24 @@ describe('InventoryPurchaseOrderService', () => {
   // ── cancelPurchaseOrder() ─────────────────────────────────────────────
 
   describe('cancelPurchaseOrder()', () => {
-    it('calls DELETE /inventory/v1/purchase-orders/{poId}', () => {
-      apiStub.delete.mockReturnValueOnce(of(undefined));
+    it('calls poSdk.cancelPurchaseOrder with the poId', () => {
+      poSdkStub.cancelPurchaseOrder.mockReturnValueOnce(of(undefined));
 
       service.cancelPurchaseOrder('po-001').subscribe();
 
-      expect(apiStub.delete).toHaveBeenCalledOnce();
-      const [path] = apiStub.delete.mock.calls[0];
-      expect(path).toBe('/inventory/v1/purchase-orders/po-001');
+      expect(poSdkStub.cancelPurchaseOrder).toHaveBeenCalledWith('po-001');
     });
 
-    it('URL-encodes the poId', () => {
-      apiStub.delete.mockReturnValueOnce(of(undefined));
+    it('passes the poId as-is to the SDK', () => {
+      poSdkStub.cancelPurchaseOrder.mockReturnValueOnce(of(undefined));
 
       service.cancelPurchaseOrder('po/001').subscribe();
 
-      const [path] = apiStub.delete.mock.calls[0];
-      expect(path).toBe('/inventory/v1/purchase-orders/po%2F001');
+      expect(poSdkStub.cancelPurchaseOrder).toHaveBeenCalledWith('po/001');
     });
 
     it('emits void on successful cancellation', () => {
-      apiStub.delete.mockReturnValueOnce(of(undefined));
+      poSdkStub.cancelPurchaseOrder.mockReturnValueOnce(of(undefined));
 
       let completed = false;
       service.cancelPurchaseOrder('po-001').subscribe({ complete: () => (completed = true) });

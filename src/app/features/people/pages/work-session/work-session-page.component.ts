@@ -9,27 +9,43 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { v4 as uuidv4 } from 'uuid';
-import { PeopleService } from '../../services/people.service';
+import { TranslatePipe } from '@ngx-translate/core';
+import { WorkSessionDto } from '@durion-sdk/people';
+import { WorkSessionService } from '../../services/work-session.service';
 
 type BreakType = 'MEAL' | 'REST' | 'OTHER';
+
+interface WorkSessionState {
+  sessionId?: string;
+  id?: string;
+  startedAt?: string;
+  endedAt?: string;
+  clockedInAt?: string;
+  clockedOutAt?: string;
+}
+
+interface WorkSessionBreak {
+  breakType?: string;
+  startedAt?: string;
+  endedAt?: string;
+  autoEnded?: boolean;
+}
 
 @Component({
   selector: 'app-work-session-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './work-session-page.component.html',
   styleUrl: './work-session-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkSessionPageComponent {
   private readonly route = inject(ActivatedRoute);
-  private readonly peopleService = inject(PeopleService);
+  private readonly workSessionService = inject(WorkSessionService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly currentSession = signal<Record<string, unknown> | null>(null);
-  readonly workorderId = signal('');
-  readonly locationId = signal('');
+  readonly currentSession = signal<WorkSessionState | null>(null);
+  readonly personId = signal('');
 
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -40,10 +56,9 @@ export class WorkSessionPageComponent {
 
   // Break state
   readonly onBreak = signal(false);
-  readonly breaks = signal<unknown[]>([]);
+  readonly breaks = signal<WorkSessionBreak[]>([]);
   readonly breaksLoading = signal(false);
 
-  // Break form
   readonly breakForm = new FormGroup({
     breakType: new FormControl<BreakType>('MEAL', { nonNullable: true, validators: [Validators.required] }),
     notes: new FormControl('', { nonNullable: true }),
@@ -52,132 +67,167 @@ export class WorkSessionPageComponent {
   readonly breakTypes: BreakType[] = ['MEAL', 'REST', 'OTHER'];
 
   constructor() {
-    this.route.params
+    this.route.queryParams
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
-        this.workorderId.set(params['workorderId'] ?? '');
-        this.locationId.set(params['locationId'] ?? '');
+        this.personId.set(params['personId'] ?? '');
       });
   }
 
   private sessionId(): string | null {
-    const s = this.currentSession();
-    if (!s) return null;
-    return (s['sessionId'] as string) ?? (s['id'] as string) ?? null;
+    const session = this.currentSession();
+    if (!session) {
+      return null;
+    }
+    return session.sessionId ?? session.id ?? null;
   }
 
   startSession(): void {
-    const workorderId = this.workorderId();
-    const locationId = this.locationId();
-    if (!workorderId || !locationId) {
-      this.error.set('work order ID and Location ID are required to start a session.');
+    const personId = this.personId();
+
+    if (!personId) {
+      this.error.set('PEOPLE.WORK_SESSION.ERROR.REQUIRED_IDS');
       return;
     }
-    const idempotencyKey = uuidv4();
+
     this.loading.set(true);
     this.error.set(null);
     this.actionSuccess.set(null);
-    this.peopleService.startWorkSession({ workorderId, locationId }, idempotencyKey)
+
+    this.workSessionService
+      .startSession(personId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (session) => {
-          this.currentSession.set(session as Record<string, unknown>);
-          const s = session as Record<string, unknown>;
+          const mappedSession = this.toSessionStateFromSdk(session);
+          this.currentSession.set(mappedSession);
           this.sessionTimestamps.set({
-            clockedInAt: s['clockedInAt'] as string ?? s['startedAt'] as string,
+            clockedInAt: mappedSession.startedAt,
           });
-          this.actionSuccess.set('Clocked in successfully.');
+          this.actionSuccess.set('PEOPLE.WORK_SESSION.ACTION_SUCCEEDED');
           this.loading.set(false);
           this.loadBreaks();
         },
         error: (err) => {
-          this.error.set(err?.error?.message ?? 'Failed to clock in.');
+          this.error.set(err?.error?.message ?? 'PEOPLE.WORK_SESSION.ERROR.START');
           this.loading.set(false);
         },
       });
   }
 
-  stopSession(_sessionId?: string): void {
-    const sid = this.sessionId();
-    if (!sid) return;
-    const idempotencyKey = uuidv4();
+  stopSession(): void {
+    const personId = this.personId();
+    if (!personId) {
+      this.error.set('PEOPLE.WORK_SESSION.ERROR.REQUIRED_IDS');
+      return;
+    }
+
     this.loading.set(true);
     this.actionSuccess.set(null);
-    this.peopleService.stopWorkSession({ sessionId: sid }, idempotencyKey)
+
+    this.workSessionService
+      .stopSession(personId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (session) => {
-          const s = session as Record<string, unknown>;
+          const mappedSession = this.toSessionStateFromSdk(session);
           this.sessionTimestamps.set({
-            clockedInAt: (this.sessionTimestamps()?.clockedInAt),
-            clockedOutAt: s['clockedOutAt'] as string ?? s['endedAt'] as string,
+            clockedInAt: this.sessionTimestamps()?.clockedInAt,
+            clockedOutAt: mappedSession.endedAt,
           });
           this.currentSession.set(null);
           this.onBreak.set(false);
-          this.actionSuccess.set('Clocked out successfully.');
+          this.actionSuccess.set('PEOPLE.WORK_SESSION.ACTION_SUCCEEDED');
           this.loading.set(false);
         },
         error: (err) => {
-          this.error.set(err?.error?.message ?? 'Failed to clock out.');
+          this.error.set(err?.error?.message ?? 'PEOPLE.WORK_SESSION.ERROR.STOP');
           this.loading.set(false);
         },
       });
   }
 
-  startBreak(_sessionId?: string): void {
+  startBreak(): void {
     this.breakForm.markAllAsTouched();
-    if (this.breakForm.invalid) return;
-    const sid = this.sessionId();
-    if (!sid) {
-      this.error.set('No active session. Clock in first.');
+    if (this.breakForm.invalid) {
       return;
     }
-    const { breakType, notes } = this.breakForm.getRawValue();
-    const body: Record<string, unknown> = { breakType };
-    if (notes.trim()) body['notes'] = notes.trim();
-    const idempotencyKey = uuidv4();
-    this.peopleService.startBreak(sid, body, idempotencyKey)
+
+    const sid = this.sessionId();
+    if (!sid) {
+      this.error.set('PEOPLE.WORK_SESSION.ERROR.START_BREAK');
+      return;
+    }
+
+    const selectedBreakType = this.breakForm.controls.breakType.value;
+
+    this.workSessionService
+      .startBreak(sid)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (startedBreak) => {
           this.onBreak.set(true);
-          this.actionSuccess.set('Break started.');
+          this.breaks.update(current => [
+            ...current,
+            {
+              breakType: selectedBreakType,
+              startedAt: startedBreak.startedAt,
+              endedAt: startedBreak.endedAt,
+              autoEnded: false,
+            },
+          ]);
+          this.actionSuccess.set('PEOPLE.WORK_SESSION.ACTION_SUCCEEDED');
           this.breakForm.reset({ breakType: 'MEAL', notes: '' });
-          this.loadBreaks();
         },
-        error: (err) => { this.error.set(err?.error?.message ?? 'Failed to start break.'); },
+        error: (err) => { this.error.set(err?.error?.message ?? 'PEOPLE.WORK_SESSION.ERROR.START_BREAK'); },
       });
   }
 
-  stopBreak(_sessionId?: string): void {
+  stopBreak(): void {
     const sid = this.sessionId();
-    if (!sid) return;
-    const idempotencyKey = uuidv4();
-    this.peopleService.stopBreak(sid, {}, idempotencyKey)
+    if (!sid) {
+      return;
+    }
+
+    this.workSessionService
+      .stopBreak(sid)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (stoppedBreak) => {
           this.onBreak.set(false);
-          this.actionSuccess.set('Break ended.');
-          this.loadBreaks();
+          this.breaks.update(current => {
+            const updated = [...current];
+            let openBreakIndex = -1;
+            for (let idx = updated.length - 1; idx >= 0; idx -= 1) {
+              if (!updated[idx].endedAt) {
+                openBreakIndex = idx;
+                break;
+              }
+            }
+            if (openBreakIndex === -1) {
+              updated.push({
+                breakType: 'OTHER',
+                startedAt: stoppedBreak.startedAt,
+                endedAt: stoppedBreak.endedAt,
+                autoEnded: false,
+              });
+              return updated;
+            }
+
+            updated[openBreakIndex] = {
+              ...updated[openBreakIndex],
+              endedAt: stoppedBreak.endedAt,
+            };
+            return updated;
+          });
+          this.actionSuccess.set('PEOPLE.WORK_SESSION.ACTION_SUCCEEDED');
         },
-        error: (err) => { this.error.set(err?.error?.message ?? 'Failed to end break.'); },
+        error: (err) => { this.error.set(err?.error?.message ?? 'PEOPLE.WORK_SESSION.ERROR.STOP_BREAK'); },
       });
   }
 
   loadBreaks(): void {
-    const sid = this.sessionId();
-    if (!sid) return;
-    this.breaksLoading.set(true);
-    this.peopleService.getWorkSessionBreaks(sid)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (items) => {
-          this.breaks.set(Array.isArray(items) ? items : []);
-          this.breaksLoading.set(false);
-        },
-        error: () => { this.breaksLoading.set(false); },
-      });
+    this.breaksLoading.set(false);
   }
 
   get isClocked(): boolean {
@@ -191,4 +241,13 @@ export class WorkSessionPageComponent {
   get notesRequired(): boolean {
     return this.breakForm.controls.breakType.value === 'OTHER';
   }
+
+  private toSessionStateFromSdk(session: WorkSessionDto): WorkSessionState {
+    return {
+      sessionId: session.sessionId,
+      startedAt: session.startedAt,
+      endedAt: session.endedAt,
+    };
+  }
+
 }

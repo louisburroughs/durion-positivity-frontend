@@ -1,37 +1,38 @@
-<section class="role-assignment-layout" aria-label="Role assignment">
+<section class="role-assignment-layout" [attr.aria-label]="'PEOPLE.ROLE_ASSIGNMENT.ARIA.LAYOUT' | translate">
   <aside class="assignments-pane" aria-labelledby="assignments-heading">
-    <h2 id="assignments-heading">Assigned roles</h2>
+    <h2 id="assignments-heading">{{ 'PEOPLE.ROLE_ASSIGNMENT.ASSIGNED_ROLES' | translate }}</h2>
 
     @if (errorMessage()) {
-    <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
+    <div class="alert alert--error" role="alert">{{ errorMessage()! | translate }}</div>
     }
 
     <div class="history-toggle">
       <input id="include-history" type="checkbox" [checked]="includeHistory()"
         (change)="includeHistory.set(!includeHistory()); loadAssignments()" />
-      <label for="include-history">Include history</label>
+      <label for="include-history">{{ 'PEOPLE.ROLE_ASSIGNMENT.INCLUDE_HISTORY' | translate }}</label>
     </div>
 
     <ul class="assignment-list" aria-labelledby="assignments-heading">
-      @for (assignment of assignments(); track assignment.assignmentId) {
+      @for (assignment of assignments(); track getAssignmentKey(assignment)) {
       <li class="assignment-item">
-        <span class="id-cell">{{ assignment.personId }}</span>
+        <span class="id-cell">{{ assignment.userId }}</span>
         <span class="role-code">{{ assignment.roleCode }}</span>
-        <span class="status-badge" [class.status-active]="assignment.status === 'ACTIVE'"
-          [class.status-revoked]="assignment.status === 'REVOKED'">
-          <span class="sr-only">Status: </span>{{ assignment.status }}
+        <span class="scope-code">{{ assignment.locationId ?? ('PEOPLE.ROLE_ASSIGNMENT.SCOPE_GLOBAL' | translate) }}</span>
+        <span class="status-badge" [class.status-active]="assignment.active"
+          [class.status-revoked]="!assignment.active">
+          <span class="sr-only">{{ 'PEOPLE.ROLE_ASSIGNMENT.STATUS' | translate }}: </span>{{ (assignment.active ? 'STATUS.ACTIVE' : 'STATUS.INACTIVE') | translate }}
         </span>
-        @if (confirmingAssignmentId() !== assignment.assignmentId) {
-        <button type="button" class="btn btn--danger-outline" (click)="startRevoke(assignment.assignmentId)">
-          Revoke
+        @if (confirmingAssignmentId() !== getAssignmentKey(assignment)) {
+        <button type="button" class="btn btn--danger-outline" (click)="startRevoke(assignment)">
+          {{ 'PEOPLE.ROLE_ASSIGNMENT.REVOKE' | translate }}
         </button>
         } @else {
         <button type="button" class="btn btn--danger"
-          (click)="revokeAssignment(assignment.roleCode, assignment.assignmentId)">
-          Confirm Revoke
+          (click)="revokeAssignment(assignment)">
+          {{ 'PEOPLE.ROLE_ASSIGNMENT.CONFIRM_REVOKE' | translate }}
         </button>
         <button type="button" class="btn btn--ghost" (click)="confirmingAssignmentId.set(null)">
-          Cancel
+          {{ 'COMMON.CANCEL' | translate }}
         </button>
         }
       </li>
@@ -39,60 +40,60 @@
     </ul>
 
     @if (loading()) {
-    <output class="loading-state" aria-live="polite">Loading assignments...</output>
+    <output class="loading-state" aria-live="polite">{{ 'PEOPLE.ROLE_ASSIGNMENT.LOADING' | translate }}</output>
     }
   </aside>
 
   <section class="assign-form-pane" aria-labelledby="assignment-form-heading">
-    <h2 id="assignment-form-heading">Assign role and scope</h2>
+    <h2 id="assignment-form-heading">{{ 'PEOPLE.ROLE_ASSIGNMENT.TITLE' | translate }}</h2>
 
     <form class="assignment-form" (submit)="$event.preventDefault()">
       <fieldset>
-        <legend>Role assignment details</legend>
+        <legend>{{ 'PEOPLE.ROLE_ASSIGNMENT.DETAILS' | translate }}</legend>
 
         <div class="field-row">
-          <label for="role-select">Role</label>
+          <label for="role-select">{{ 'PEOPLE.ROLE_ASSIGNMENT.ROLE' | translate }}</label>
           <select id="role-select" name="roleCode" [value]="selectedRoleCode()"
             (change)="selectedRoleCode.set($any($event.target).value)">
-            <option value="" disabled>Select a role</option>
+            <option value="" disabled>{{ 'PEOPLE.ROLE_ASSIGNMENT.SELECT_ROLE' | translate }}</option>
             @for (role of roles(); track role.code) {
-            <option [value]="role.code">{{ role.label }}</option>
+            <option [value]="role.code">{{ role.name }}</option>
             }
           </select>
         </div>
 
         <div class="field-row">
-          <label for="scope-type">Scope type</label>
+          <label for="scope-type">{{ 'PEOPLE.ROLE_ASSIGNMENT.SCOPE_TYPE' | translate }}</label>
           <select id="scope-type" name="scopeType" [value]="scopeType()"
             (change)="scopeType.set($any($event.target).value); locationId.set('')">
-            <option value="GLOBAL">GLOBAL</option>
-            <option value="LOCATION">LOCATION</option>
+            <option value="GLOBAL">{{ 'PEOPLE.ROLE_ASSIGNMENT.SCOPE_GLOBAL' | translate }}</option>
+            <option value="LOCATION">{{ 'PEOPLE.ROLE_ASSIGNMENT.SCOPE_LOCATION' | translate }}</option>
           </select>
         </div>
 
         @if (scopeType() === 'LOCATION') {
         <div class="field-row location-picker">
-          <label for="location-id">Location ID</label>
+          <label for="location-id">{{ 'PEOPLE.ROLE_ASSIGNMENT.LOCATION_ID' | translate }}</label>
           <input id="location-id" name="locationId" type="text" [value]="locationId()"
             (input)="locationId.set($any($event.target).value)" autocomplete="off" />
         </div>
         }
 
         <div class="field-row">
-          <label for="effective-start">Effective start</label>
+          <label for="effective-start">{{ 'PEOPLE.ROLE_ASSIGNMENT.EFFECTIVE_START' | translate }}</label>
           <input id="effective-start" name="effectiveStartAt" type="datetime-local" [value]="effectiveStartAt()"
             (input)="effectiveStartAt.set($any($event.target).value)" />
         </div>
 
         <div class="field-row">
-          <label for="effective-end">Effective end (optional)</label>
+          <label for="effective-end">{{ 'PEOPLE.ROLE_ASSIGNMENT.EFFECTIVE_END' | translate }}</label>
           <input id="effective-end" name="effectiveEndAt" type="datetime-local" [value]="effectiveEndAt()"
             (input)="effectiveEndAt.set($any($event.target).value)" />
         </div>
 
         <button type="button" data-testid="submit-assignment-btn" [disabled]="!canSubmit()"
           (click)="submitAssignment()">
-          Assign Role
+          {{ 'PEOPLE.ROLE_ASSIGNMENT.SUBMIT' | translate }}
         </button>
       </fieldset>
     </form>

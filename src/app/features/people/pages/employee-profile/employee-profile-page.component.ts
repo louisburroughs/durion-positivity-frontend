@@ -2,8 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CreateEmployeeRequest, Employee, EmploymentStatus, UpdateEmployeeRequest } from '../../models/employee.models';
-import { PeopleService } from '../../services/people.service';
+import { EmployeeAPIService, EmployeeProfileDto, CreateEmployeeRequestStatusEnum, UpdateEmployeeRequestStatusEnum, EmployeeProfileDtoStatusEnum } from '@durion-sdk/people';
 
 @Component({
   selector: 'app-employee-profile-page',
@@ -14,35 +13,33 @@ import { PeopleService } from '../../services/people.service';
   styleUrl: './employee-profile-page.component.css',
 })
 export class EmployeeProfilePageComponent implements OnInit {
-  private readonly peopleService = inject(PeopleService);
+  private readonly employeeApiService = inject(EmployeeAPIService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly employmentStatusValues = Object.values(EmploymentStatus);
+  readonly employmentStatusValues = Object.values(CreateEmployeeRequestStatusEnum);
 
   private employeeId: string | null = null;
 
   readonly loading = signal(false);
   readonly saving = signal(false);
-  readonly employee = signal<Employee | null>(null);
+  readonly employee = signal<EmployeeProfileDto | null>(null);
   readonly error = signal<string | null>(null);
   readonly conflictError = signal<string | null>(null);
   readonly fieldErrors = signal<Record<string, string>>({});
   readonly saveSuccess = signal(false);
 
   readonly form = new FormGroup({
-    firstName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    lastName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    employmentStatus: new FormControl<EmploymentStatus | ''>('', {
+    legalName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    employeeNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    status: new FormControl<CreateEmployeeRequestStatusEnum | ''>('', {
       nonNullable: true,
       validators: [Validators.required],
     }),
     hireDate: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     email: new FormControl('', { nonNullable: true }),
     phone: new FormControl('', { nonNullable: true }),
-    department: new FormControl('', { nonNullable: true }),
-    title: new FormControl('', { nonNullable: true }),
   });
 
   get isEditMode(): boolean {
@@ -63,20 +60,18 @@ export class EmployeeProfilePageComponent implements OnInit {
 
     this.loading.set(true);
     this.error.set(null);
-    this.peopleService.getEmployee(this.employeeId)
+    this.employeeApiService.getEmployee(this.employeeId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (emp) => {
           this.employee.set(emp);
           this.form.patchValue({
-            firstName: emp.firstName,
-            lastName: emp.lastName,
-            employmentStatus: emp.employmentStatus,
-            hireDate: emp.hireDate,
-            email: emp.email ?? '',
-            phone: emp.phone ?? '',
-            department: emp.department ?? '',
-            title: emp.title ?? '',
+            legalName: emp.legalName ?? '',
+            employeeNumber: emp.employeeNumber ?? '',
+            status: this.toCreateStatus(emp.status),
+            hireDate: emp.hireDate ?? '',
+            email: emp.contactInfo?.primaryEmail ?? '',
+            phone: emp.contactInfo?.primaryPhone ?? '',
           });
           this.loading.set(false);
         },
@@ -98,7 +93,11 @@ export class EmployeeProfilePageComponent implements OnInit {
     this.fieldErrors.set({});
     this.saving.set(true);
 
-    const body = this.form.getRawValue();
+    const { legalName, employeeNumber, status, hireDate, email, phone } = this.form.getRawValue();
+    const contactInfo = (email || phone) ? {
+      primaryEmail: email || undefined,
+      primaryPhone: phone || undefined,
+    } : undefined;
 
     if (this.isEditMode) {
       const employeeId = this.employeeId;
@@ -108,7 +107,13 @@ export class EmployeeProfilePageComponent implements OnInit {
         return;
       }
 
-      this.peopleService.updateEmployee(employeeId, body as UpdateEmployeeRequest)
+      this.employeeApiService.updateEmployee(employeeId, {
+        legalName,
+        employeeNumber,
+        status: (status || 'ACTIVE') as UpdateEmployeeRequestStatusEnum,
+        hireDate,
+        contactInfo,
+      })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (emp) => {
@@ -123,17 +128,32 @@ export class EmployeeProfilePageComponent implements OnInit {
       return;
     }
 
-    this.peopleService.createEmployee(body as CreateEmployeeRequest)
+    this.employeeApiService.createEmployee({
+      legalName,
+      employeeNumber,
+      status: status as CreateEmployeeRequestStatusEnum,
+      hireDate,
+      contactInfo,
+    })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (employee) => {
           this.saving.set(false);
-          this.router.navigate(['/app/people/employees', employee.employeeId]);
+          this.router.navigate(['/app/people/employees', employee.id]);
         },
         error: (err) => {
           this.handleSaveError(err);
         },
       });
+  }
+
+  private toCreateStatus(status: EmployeeProfileDtoStatusEnum | undefined): CreateEmployeeRequestStatusEnum | '' {
+    if (!status) {
+      return '';
+    }
+    const statusStr = status as string;
+    const validValues = Object.values(CreateEmployeeRequestStatusEnum) as string[];
+    return validValues.includes(statusStr) ? (statusStr as CreateEmployeeRequestStatusEnum) : '';
   }
 
   private handleSaveError(err: {

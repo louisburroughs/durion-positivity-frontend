@@ -21,6 +21,8 @@ export class AppointmentCreatePageComponent implements OnInit {
 
   readonly sourceType = signal<string>('');
   readonly sourceId = signal<string>('');
+  readonly crmCustomerId = signal<string>('');
+  readonly crmVehicleId = signal<string>('');
   readonly facilityId = signal<string>('');
   readonly facilityTimeZoneId = signal<string>('');
 
@@ -51,6 +53,8 @@ export class AppointmentCreatePageComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.sourceType.set(params['sourceType'] ?? '');
       this.sourceId.set(params['sourceId'] ?? '');
+      this.crmCustomerId.set(params['crmCustomerId'] ?? params['customerId'] ?? '');
+      this.crmVehicleId.set(params['crmVehicleId'] ?? params['vehicleId'] ?? '');
       this.facilityId.set(params['facilityId'] ?? '');
       this.facilityTimeZoneId.set(params['facilityTimeZoneId'] ?? '');
     });
@@ -72,6 +76,8 @@ export class AppointmentCreatePageComponent implements OnInit {
     const body = {
       sourceType: this.sourceType() as 'ESTIMATE' | 'WORKORDER',
       sourceId: this.sourceId(),
+      crmCustomerId: this.crmCustomerId() || undefined,
+      crmVehicleId: this.crmVehicleId() || undefined,
       facilityId: this.facilityId(),
       scheduledStartDateTime: value.scheduledStartDateTime ?? '',
       scheduledEndDateTime: value.scheduledEndDateTime || undefined,

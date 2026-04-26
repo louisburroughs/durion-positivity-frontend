@@ -2,8 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Employee } from '../../models/employee.models';
-import { PeopleService } from '../../services/people.service';
+import { EmployeeAPIService, EmployeeProfileDto } from '@durion-sdk/people';
 
 @Component({
   selector: 'app-employee-offboard-page',
@@ -14,7 +13,7 @@ import { PeopleService } from '../../services/people.service';
   styleUrl: './employee-offboard-page.component.css',
 })
 export class EmployeeOffboardPageComponent implements OnInit {
-  private readonly peopleService = inject(PeopleService);
+  private readonly employeeApiService = inject(EmployeeAPIService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -22,7 +21,7 @@ export class EmployeeOffboardPageComponent implements OnInit {
   private employeeId = '';
 
   readonly loading = signal(false);
-  readonly employee = signal<Employee | null>(null);
+  readonly employee = signal<EmployeeProfileDto | null>(null);
   readonly error = signal<string | null>(null);
   readonly showConfirmDialog = signal(false);
   readonly submitting = signal(false);
@@ -42,7 +41,7 @@ export class EmployeeOffboardPageComponent implements OnInit {
 
   loadEmployee(): void {
     this.loading.set(true);
-    this.peopleService.getEmployee(this.employeeId)
+    this.employeeApiService.getEmployee(this.employeeId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (emp) => {
@@ -72,7 +71,7 @@ export class EmployeeOffboardPageComponent implements OnInit {
     }
 
     this.submitting.set(true);
-    this.peopleService.disableEmployee(this.employeeId, { offboardDate })
+    this.employeeApiService.disableEmployee(this.employeeId, { assignmentEndDate: offboardDate })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

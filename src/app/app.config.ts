@@ -8,10 +8,23 @@ import { firstValueFrom, Observable, of } from 'rxjs';
 import { TranslateLoader, TranslateModule, TranslationObject } from '@ngx-translate/core';
 import { TranslateHttpLoader, TRANSLATE_HTTP_LOADER_CONFIG } from '@ngx-translate/http-loader';
 
+import { Configuration as AccountingConfiguration } from '@durion-sdk/accounting';
+import { Configuration as CatalogConfiguration } from '@durion-sdk/catalog';
+import { Configuration as CustomerConfiguration } from '@durion-sdk/customer';
+import { Configuration as InventoryConfiguration } from '@durion-sdk/inventory';
+import { Configuration as InvoiceConfiguration } from '@durion-sdk/invoice';
+import { Configuration as LocationConfiguration } from '@durion-sdk/location';
+import { Configuration as OrderConfiguration } from '@durion-sdk/order';
+import { Configuration as PeopleConfiguration } from '@durion-sdk/people';
+import { Configuration as SecurityConfiguration } from '@durion-sdk/security';
+import { Configuration as ShopManagerConfiguration } from '@durion-sdk/shop-manager';
+import { Configuration as WorkorderConfiguration } from '@durion-sdk/workorder';
+
 import { routes } from './app.routes';
 import { AuthService } from './core/services/auth.service';
 import { LocaleService } from './core/services/locale.service';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { environment } from '../environments/environment';
 
 /**
  * No-op TranslateLoader used during SSR/build-time route extraction.
@@ -64,5 +77,16 @@ export const appConfig: ApplicationConfig = {
       fallbackLang: 'en-US'
     })),
     provideAppInitializer(() => inject(LocaleService).initialize()),
+    { provide: AccountingConfiguration, useFactory: () => new AccountingConfiguration({ basePath: environment.apiBaseUrl }) },
+    { provide: CatalogConfiguration, useFactory: () => new CatalogConfiguration({ basePath: environment.apiBaseUrl }) },
+    { provide: CustomerConfiguration, useFactory: () => new CustomerConfiguration({ basePath: environment.apiBaseUrl }) },
+    { provide: InventoryConfiguration, useFactory: () => new InventoryConfiguration({ basePath: environment.apiBaseUrl }) },
+    { provide: InvoiceConfiguration, useFactory: () => new InvoiceConfiguration({ basePath: environment.apiBaseUrl }) },
+    { provide: LocationConfiguration, useFactory: () => new LocationConfiguration({ basePath: environment.apiBaseUrl }) },
+    { provide: OrderConfiguration, useFactory: () => new OrderConfiguration({ basePath: environment.apiBaseUrl }) },
+    { provide: PeopleConfiguration, useFactory: () => new PeopleConfiguration({ basePath: environment.apiBaseUrl }) },
+    { provide: SecurityConfiguration, useFactory: () => new SecurityConfiguration({ basePath: environment.apiBaseUrl }) },
+    { provide: ShopManagerConfiguration, useFactory: () => new ShopManagerConfiguration({ basePath: environment.apiBaseUrl }) },
+    { provide: WorkorderConfiguration, useFactory: () => new WorkorderConfiguration({ basePath: environment.apiBaseUrl }) },
   ],
 };

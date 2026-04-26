@@ -24,6 +24,7 @@ import {
 } from '@angular/common/http/testing';
 import { WorkexecService } from './workexec.service';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../environments/environment';
 import {
   ConsumePickedItemsRequest,
@@ -49,7 +50,11 @@ describe('WorkexecService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [WorkexecService, ApiBaseService],
+      providers: [
+        WorkexecService,
+        ApiBaseService,
+        { provide: BASE_PATH, useValue: environment.apiBaseUrl },
+      ],
     });
     service = TestBed.inject(WorkexecService);
     http = TestBed.inject(HttpTestingController);
@@ -246,26 +251,26 @@ describe('WorkexecService', () => {
     r.flush({ id: 'est-1', status: 'DRAFT', customerId: 'c', vehicleId: 'v' });
   });
 
-  it('submitForApproval — forwards Idempotency-Key header when provided', () => {
+  it('submitForApproval — makes POST (SDK submitForApproval does not accept idempotency key)', () => {
     service.submitForApproval('est-1', 'submit-idem-key').subscribe();
     const r = http.expectOne(`${BASE}/v1/workorders/estimates/est-1/submit-for-approval`);
-    expect(r.request.headers.get('Idempotency-Key')).toBe('submit-idem-key');
+    expect(r.request.method).toBe('POST');
     r.flush({ id: 'est-1', status: 'PENDING_APPROVAL', customerId: 'c', vehicleId: 'v' });
   });
 
-  it('approveEstimate — forwards Idempotency-Key header when provided', () => {
+  it('approveEstimate — makes POST (SDK approveEstimate does not accept idempotency key)', () => {
     const request = { customerId: 'cust-1', notes: 'Approved in person' };
     service.approveEstimate('est-1', request, 'approve-idem-key').subscribe();
     const r = http.expectOne(`${BASE}/v1/workorders/estimates/est-1/approval`);
-    expect(r.request.headers.get('Idempotency-Key')).toBe('approve-idem-key');
+    expect(r.request.method).toBe('POST');
     r.flush({ id: 'est-1', status: 'APPROVED', customerId: 'c', vehicleId: 'v' });
   });
 
-  it('addEstimateItem — forwards Idempotency-Key header when provided', () => {
+  it('addEstimateItem — makes POST (SDK addEstimateItem does not accept idempotency key)', () => {
     const item = { itemType: 'PART' as const, quantity: 1, unitPrice: 10 };
     service.addEstimateItem('est-1', item, 'add-item-idem-key').subscribe();
     const r = http.expectOne(`${BASE}/v1/workorders/estimates/est-1/items`);
-    expect(r.request.headers.get('Idempotency-Key')).toBe('add-item-idem-key');
+    expect(r.request.method).toBe('POST');
     r.flush({ id: 'item-1', estimateId: 'est-1', itemType: 'PART', quantity: 1, unitPrice: 10 });
   });
 
@@ -300,11 +305,9 @@ describe('WorkexecService', () => {
         expect(result).toEqual(fixture);
       });
 
-      const req = http.expectOne(r =>
-        r.url === `${BASE}/v1/workorders/estimates` && r.params.get('customerId') === 'cust-259-1',
-      );
+      const req = http.expectOne(`${BASE}/v1/workorders/estimates/customer/cust-259-1`);
       expect(req.request.method).toBe('GET');
-      expect(req.request.url).toContain('/v1/workorders/estimates');
+      expect(req.request.url).toContain('/v1/workorders/estimates/customer/');
       req.flush(fixture);
     });
 
@@ -446,12 +449,12 @@ describe('WorkexecService', () => {
       tasks: [pickTaskLine],
     };
 
-    it('getWorkorderPickList — GET /workexec/v1/workorders/{workorderId}/pick-list', () => {
+    it('getWorkorderPickList — GET /v1/workorders/{workorderId}/pick-list', () => {
       service.getWorkorderPickList('wo-001').subscribe(result => {
         expect(result).toEqual(pickListFixture);
       });
 
-      const req = http.expectOne(`${BASE}/workexec/v1/workorders/wo-001/pick-list`);
+      const req = http.expectOne(`${BASE}/v1/workorders/wo-001/pick-list`);
       expect(req.request.method).toBe('GET');
       req.flush(pickListFixture);
     });
@@ -471,7 +474,7 @@ describe('WorkexecService', () => {
         expect(result).toEqual(pickedFixture);
       });
 
-      const req = http.expectOne(`${BASE}/workexec/v1/workorders/wo-001/picked-items`);
+      const req = http.expectOne(`${BASE}/v1/workorders/wo-001/picked-items`);
       expect(req.request.method).toBe('GET');
       req.flush(pickedFixture);
     });
@@ -488,7 +491,7 @@ describe('WorkexecService', () => {
       });
 
       const req = http.expectOne(
-        `${BASE}/workexec/v1/workorders/wo-001/picked-items/consume`,
+        `${BASE}/v1/workorders/wo-001/picked-items:consume`,
       );
       expect(req.request.method).toBe('POST');
       expect(req.request.body['lines']).toHaveLength(1);

@@ -287,17 +287,53 @@
       "INACTIVE": "Aucune session active",
       "ON_BREAK": "En pause",
       "CONTROLS": "Contrôles de session",
+      "BREAK_FORM_ARIA": "Formulaire des contrôles de pause",
+      "BREAK_TYPE": "Type de pause",
+      "NOTES": "Notes",
+      "TODAYS_BREAKS": "Pauses d'aujourd'hui",
+      "LOADING_BREAKS": "Chargement des pauses...",
+      "STARTED_AT": "Début",
+      "ENDED_AT": "Fin",
+      "AUTO_ENDED": "Fin automatique",
       "START_SESSION": "Démarrer la session",
       "STOP_SESSION": "Arrêter la session",
       "START_BREAK": "Démarrer la pause",
       "STOP_BREAK": "Arrêter la pause",
       "ACTION_SUCCEEDED": "Action réussie.",
       "ERROR": {
-        "REQUIRED_IDS": "L'ID de workorder et l'ID d'emplacement sont requis pour démarrer une session.",
+        "REQUIRED_IDS": "L'ID de la personne est requis pour gérer une session de travail.",
         "START": "Échec du démarrage de la session.",
         "STOP": "Échec de l'arrêt de la session.",
         "START_BREAK": "Échec du démarrage de la pause.",
         "STOP_BREAK": "Échec de l'arrêt de la pause."
+      }
+    },
+    "ROLE_ASSIGNMENT": {
+      "TITLE": "Attribuer un rôle et une portée",
+      "ASSIGNED_ROLES": "Rôles attribués",
+      "INCLUDE_HISTORY": "Inclure l'historique",
+      "LOADING": "Chargement des attributions...",
+      "DETAILS": "Détails de l'attribution du rôle",
+      "ROLE": "Rôle",
+      "SELECT_ROLE": "Sélectionner un rôle",
+      "SCOPE_TYPE": "Type de portée",
+      "SCOPE_GLOBAL": "GLOBAL",
+      "SCOPE_LOCATION": "LOCATION",
+      "LOCATION_ID": "ID d'emplacement",
+      "EFFECTIVE_START": "Début d'effet",
+      "EFFECTIVE_END": "Fin d'effet (facultatif)",
+      "SUBMIT": "Attribuer le rôle",
+      "REVOKE": "Révoquer",
+      "CONFIRM_REVOKE": "Confirmer la révocation",
+      "STATUS": "Statut",
+      "ARIA": {
+        "LAYOUT": "Attribution de rôle"
+      },
+      "ERROR": {
+        "LOAD_ASSIGNMENTS": "Impossible de charger les attributions de rôles. Veuillez réessayer.",
+        "LOAD_ROLES": "Impossible de charger les rôles disponibles. Veuillez réessayer.",
+        "ASSIGN": "Impossible d'attribuer le rôle sélectionné. Veuillez réessayer.",
+        "REVOKE": "Impossible de révoquer l'attribution du rôle. Veuillez réessayer."
       }
     },
     "TIME_EXPORT": {

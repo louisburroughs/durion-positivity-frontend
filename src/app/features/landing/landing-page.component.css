@@ -63,8 +63,6 @@
 }
 
 .landing-brand-mark {
-  width: 36px;
-  height: 36px;
   border-radius: var(--radius-sm);
   background: linear-gradient(135deg, var(--durion-blue-600), var(--durion-blue-500));
   display: flex;
@@ -175,8 +173,6 @@
 }
 
 .hero-brand-mark {
-  width: 80px;
-  height: 80px;
   border-radius: var(--radius-md);
   background: linear-gradient(135deg, var(--durion-blue-600), var(--durion-blue-500));
   display: flex;

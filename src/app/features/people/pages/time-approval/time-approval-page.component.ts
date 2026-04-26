@@ -9,8 +9,8 @@ import {
 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { v4 as uuidv4 } from 'uuid';
-import { PeopleService } from '../../services/people.service';
+import { HttpParams } from '@angular/common/http';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 
 type PeriodStatus = 'OPEN' | 'SUBMISSION_CLOSED' | 'PAYROLL_CLOSED';
 
@@ -23,7 +23,7 @@ type PeriodStatus = 'OPEN' | 'SUBMISSION_CLOSED' | 'PAYROLL_CLOSED';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimeApprovalPageComponent {
-  private readonly peopleService = inject(PeopleService);
+  private readonly api = inject(ApiBaseService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly people = signal<unknown[]>([]);
@@ -82,12 +82,11 @@ export class TimeApprovalPageComponent {
 
   loadPeople(): void {
     this.peopleLoading.set(true);
-    this.peopleService.listApprovalScopedPeople()
+    this.api.get<Record<string, unknown>>('/v1/people/timekeeping/approvals/people')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (resp: unknown) => {
-          const r = resp as Record<string, unknown>;
-          this.people.set(Array.isArray(r['items']) ? (r['items'] as unknown[]) : []);
+        next: (r) => {
+          this.people.set(Array.isArray(r['items']) ? r['items'] : []);
           this.peopleLoading.set(false);
         },
         error: () => {
@@ -99,12 +98,11 @@ export class TimeApprovalPageComponent {
 
   loadPeriods(): void {
     this.periodsLoading.set(true);
-    this.peopleService.listTimePeriods()
+    this.api.get<Record<string, unknown>>('/v1/people/timekeeping/time-periods')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (resp: unknown) => {
-          const r = resp as Record<string, unknown>;
-          this.periods.set(Array.isArray(r['items']) ? (r['items'] as unknown[]) : []);
+        next: (r) => {
+          this.periods.set(Array.isArray(r['items']) ? r['items'] : []);
           this.periodsLoading.set(false);
         },
         error: () => {
@@ -128,12 +126,12 @@ export class TimeApprovalPageComponent {
     this.actionSuccess.set(null);
     this.actionError.set(null);
 
-    this.peopleService.listTimekeepingEntries(personId, timePeriodId)
+    const params = new HttpParams().set('personId', personId).set('timePeriodId', timePeriodId);
+    this.api.get<Record<string, unknown>>('/v1/people/timekeeping/timekeeping-entries', params)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (resp: unknown) => {
-          const r = resp as Record<string, unknown>;
-          this.entries.set(Array.isArray(r['items']) ? (r['items'] as unknown[]) : []);
+        next: (r) => {
+          this.entries.set(Array.isArray(r['items']) ? r['items'] : []);
           this.detailLoading.set(false);
         },
         error: () => {
@@ -143,12 +141,12 @@ export class TimeApprovalPageComponent {
       });
 
     this.historyLoading.set(true);
-    this.peopleService.listTimePeriodApprovals(personId, timePeriodId)
+    const historyParams = new HttpParams().set('personId', personId).set('timePeriodId', timePeriodId);
+    this.api.get<Record<string, unknown>>('/v1/people/timekeeping/time-period-approvals', historyParams)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (resp: unknown) => {
-          const r = resp as Record<string, unknown>;
-          this.approvalHistory.set(Array.isArray(r['items']) ? (r['items'] as unknown[]) : []);
+        next: (r) => {
+          this.approvalHistory.set(Array.isArray(r['items']) ? r['items'] : []);
           this.historyLoading.set(false);
         },
         error: () => { this.historyLoading.set(false); },
@@ -158,11 +156,10 @@ export class TimeApprovalPageComponent {
   approvePeriod(): void {
     const { personId, timePeriodId } = this.selectionForm.getRawValue();
     if (!personId || !timePeriodId) return;
-    const idempotencyKey = uuidv4();
     this.actionInFlight.set(true);
     this.actionError.set(null);
     this.actionSuccess.set(null);
-    this.peopleService.approveTimePeriod(timePeriodId, personId, { requestId: idempotencyKey }, idempotencyKey)
+    this.api.post<void>('/v1/people/timekeeping/time-periods/' + timePeriodId + '/people/' + personId + '/approve', {})
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -196,7 +193,9 @@ export class TimeApprovalPageComponent {
     this.actionError.set(null);
     this.actionSuccess.set(null);
     const { comments } = this.rejectForm.getRawValue();
-    this.peopleService.rejectTimePeriod(timePeriodId, personId, { requestId: uuidv4(), ...(comments.trim() ? { comments: comments.trim() } : {}) })
+    const body: Record<string, string> = {};
+    if (comments.trim()) body['comments'] = comments.trim();
+    this.api.post<void>('/v1/people/timekeeping/time-periods/' + timePeriodId + '/people/' + personId + '/reject', body)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

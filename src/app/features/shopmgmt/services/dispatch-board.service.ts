@@ -1,20 +1,15 @@
-import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiBaseService } from '../../../core/services/api-base.service';
+import { DailyDispatchBoardDashboardService } from '@durion-sdk/workorder';
 import { DashboardResponse } from '../models/dispatch-board.models';
 
 @Injectable({ providedIn: 'root' })
 export class DispatchBoardService {
-  constructor(private readonly api: ApiBaseService) { }
+  private readonly dispatchDashboard = inject(DailyDispatchBoardDashboardService);
 
   getDashboard(locationId: string, date: string): Observable<DashboardResponse> {
     const normalizedDate = this.toIsoDate(date);
-    const params = new HttpParams()
-      .set('locationId', locationId.trim())
-      .set('date', normalizedDate);
-
-    return this.api.get<DashboardResponse>('/v1/workexec/dashboard/today', params);
+    return this.dispatchDashboard.getDashboard(locationId.trim(), normalizedDate) as Observable<DashboardResponse>;
   }
 
   private toIsoDate(value: string): string {

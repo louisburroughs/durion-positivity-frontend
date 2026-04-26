@@ -30,6 +30,7 @@ export class AvailabilityComponent {
 
   search(): void {
     const sku = this.sku().trim();
+    const locationId = this.locationId()?.trim() || undefined;
     if (!sku) {
       this.availability.set(null);
       this.locationBreakdown.set([]);
@@ -41,7 +42,7 @@ export class AvailabilityComponent {
     this.errorKey.set(null);
 
     this.inventory
-      .queryInventoryAvailability(sku, this.locationId() ?? undefined)
+      .queryInventoryAvailability(sku, locationId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: availability => {

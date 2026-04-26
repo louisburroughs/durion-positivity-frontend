@@ -287,17 +287,53 @@
       "INACTIVE": "No hay sesión activa",
       "ON_BREAK": "En descanso",
       "CONTROLS": "Controles de sesión",
+      "BREAK_FORM_ARIA": "Formulario de controles de descanso",
+      "BREAK_TYPE": "Tipo de descanso",
+      "NOTES": "Notas",
+      "TODAYS_BREAKS": "Descansos de hoy",
+      "LOADING_BREAKS": "Cargando descansos...",
+      "STARTED_AT": "Inicio",
+      "ENDED_AT": "Fin",
+      "AUTO_ENDED": "Finalizado automáticamente",
       "START_SESSION": "Iniciar sesión",
       "STOP_SESSION": "Detener sesión",
       "START_BREAK": "Iniciar descanso",
       "STOP_BREAK": "Detener descanso",
       "ACTION_SUCCEEDED": "Acción completada correctamente.",
       "ERROR": {
-        "REQUIRED_IDS": "Se requieren ID de workorder e ID de ubicación para iniciar una sesión.",
+        "REQUIRED_IDS": "Se requiere ID de persona para administrar una sesión de trabajo.",
         "START": "No se pudo iniciar la sesión.",
         "STOP": "No se pudo detener la sesión.",
         "START_BREAK": "No se pudo iniciar el descanso.",
         "STOP_BREAK": "No se pudo detener el descanso."
+      }
+    },
+    "ROLE_ASSIGNMENT": {
+      "TITLE": "Asignar rol y alcance",
+      "ASSIGNED_ROLES": "Roles asignados",
+      "INCLUDE_HISTORY": "Incluir historial",
+      "LOADING": "Cargando asignaciones...",
+      "DETAILS": "Detalles de asignación de rol",
+      "ROLE": "Rol",
+      "SELECT_ROLE": "Selecciona un rol",
+      "SCOPE_TYPE": "Tipo de alcance",
+      "SCOPE_GLOBAL": "GLOBAL",
+      "SCOPE_LOCATION": "LOCATION",
+      "LOCATION_ID": "ID de ubicación",
+      "EFFECTIVE_START": "Inicio efectivo",
+      "EFFECTIVE_END": "Fin efectivo (opcional)",
+      "SUBMIT": "Asignar rol",
+      "REVOKE": "Revocar",
+      "CONFIRM_REVOKE": "Confirmar revocación",
+      "STATUS": "Estado",
+      "ARIA": {
+        "LAYOUT": "Asignación de rol"
+      },
+      "ERROR": {
+        "LOAD_ASSIGNMENTS": "No se pudieron cargar las asignaciones de rol. Inténtalo de nuevo.",
+        "LOAD_ROLES": "No se pudieron cargar los roles disponibles. Inténtalo de nuevo.",
+        "ASSIGN": "No se pudo asignar el rol seleccionado. Inténtalo de nuevo.",
+        "REVOKE": "No se pudo revocar la asignación de rol. Inténtalo de nuevo."
       }
     },
     "TIME_EXPORT": {

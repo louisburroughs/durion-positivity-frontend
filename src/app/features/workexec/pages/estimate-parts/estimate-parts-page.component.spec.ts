@@ -4,6 +4,7 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { EstimatePartsPageComponent } from './estimate-parts-page.component';
+import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
 
 const BASE = environment.apiBaseUrl;
@@ -25,6 +26,7 @@ describe('EstimatePartsPageComponent [Story 238]', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: mockActivatedRoute },
+        { provide: BASE_PATH, useValue: environment.apiBaseUrl },
       ],
     }).compileComponents();
 

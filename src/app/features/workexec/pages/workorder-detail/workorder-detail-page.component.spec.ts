@@ -4,6 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
 import { WorkorderDetailPageComponent } from './workorder-detail-page.component';
+import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
 
 const BASE = environment.apiBaseUrl;
@@ -41,6 +42,7 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: mockRoute },
+        { provide: BASE_PATH, useValue: environment.apiBaseUrl },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(WorkorderDetailPageComponent);

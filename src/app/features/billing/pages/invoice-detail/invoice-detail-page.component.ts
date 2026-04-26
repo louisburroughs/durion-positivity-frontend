@@ -16,7 +16,7 @@ import {
   InvoiceArtifact,
   IssueInvoiceRequest,
 } from '../../models/billing.models';
-import { BillingService } from '../../services/billing.service';
+import { BillingTransportService } from '../../services/billing-transport.service';
 
 type PageState = 'loading' | 'ready' | 'error';
 type IssueState = 'idle' | 'elevating' | 'issuing' | 'success' | 'error';
@@ -41,7 +41,7 @@ type IssueState = 'idle' | 'elevating' | 'issuing' | 'success' | 'error';
 export class InvoiceDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly service = inject(BillingService);
+  private readonly billingService = inject(BillingTransportService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly invoiceId = signal<string>('');
@@ -82,8 +82,8 @@ export class InvoiceDetailPageComponent implements OnInit {
 
   private loadInvoice(id: string): void {
     this.pageState.set('loading');
-    this.service
-      .getInvoiceDetail(id)
+    this.billingService
+      .loadInvoiceDetail(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (inv) => {
@@ -103,8 +103,8 @@ export class InvoiceDetailPageComponent implements OnInit {
   }
 
   private loadArtifacts(id: string): void {
-    this.service
-      .getInvoiceArtifacts(id)
+    this.billingService
+      .loadInvoiceArtifacts(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (arts) => this.artifacts.set(arts ?? []),
@@ -132,8 +132,8 @@ export class InvoiceDetailPageComponent implements OnInit {
     }
     this.issueState.set('elevating');
     this.elevationError.set(null);
-    this.service
-      .elevate({ password: pw })
+    this.billingService
+      .elevate(pw)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
@@ -166,7 +166,7 @@ export class InvoiceDetailPageComponent implements OnInit {
     const body: IssueInvoiceRequest = {};
     const token = this.elevationToken();
     if (token) body.elevationToken = token;
-    this.service
+    this.billingService
       .issueInvoice(this.invoiceId(), body)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -188,8 +188,8 @@ export class InvoiceDetailPageComponent implements OnInit {
   }
 
   downloadArtifact(artifactRefId: string, filename: string): void {
-    this.service
-      .getArtifactDownloadToken(artifactRefId)
+    this.billingService
+      .createArtifactDownloadToken(artifactRefId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {

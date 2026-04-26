@@ -44,7 +44,7 @@
           @for (assignment of assignments(); track $index) {
           <tr data-testid="assignment-item">
             <td>{{ getLocationName(assignment, availableLocations()) }}</td>
-            <td>{{ $any(assignment).primary ? 'Yes' : 'No' }}</td>
+            <td>{{ assignment.isPrimary ? 'Yes' : 'No' }}</td>
             <td>{{ getEffectiveStart(assignment) }}</td>
             <td>{{ getEffectiveEnd(assignment) }}</td>
             <td>
@@ -91,6 +91,12 @@
               </option>
               }
             </select>
+          </div>
+
+          <div class="field-row">
+            <label for="role-input">Role</label>
+            <input id="role-input" type="text" formControlName="role" data-testid="role-input"
+              placeholder="e.g. TECHNICIAN" />
           </div>
 
           <div class="field-row">

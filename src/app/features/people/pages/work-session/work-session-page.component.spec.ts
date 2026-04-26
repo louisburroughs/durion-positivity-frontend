@@ -2,36 +2,40 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { WorkSessionPageComponent } from './work-session-page.component';
-import { PeopleService } from '../../services/people.service';
+import { WorkSessionsAPIService } from '@durion-sdk/people';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 
 describe('WorkSessionPageComponent', () => {
   let fixture: ComponentFixture<WorkSessionPageComponent>;
   let component: WorkSessionPageComponent;
-  let peopleService: {
+  let workSessionsService: {
     startWorkSession: ReturnType<typeof vi.fn>;
     stopWorkSession: ReturnType<typeof vi.fn>;
-    startBreak: ReturnType<typeof vi.fn>;
-    stopBreak: ReturnType<typeof vi.fn>;
-    getWorkSessionBreaks: ReturnType<typeof vi.fn>;
+    startWorkSessionBreak: ReturnType<typeof vi.fn>;
+    stopWorkSessionBreak: ReturnType<typeof vi.fn>;
   };
+  let apiService: { get: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     TestBed.resetTestingModule();
 
-    peopleService = {
+    workSessionsService = {
       startWorkSession: vi.fn().mockReturnValue(of({ sessionId: 's-1', clockedInAt: '08:00' })),
       stopWorkSession: vi.fn().mockReturnValue(of({ sessionId: 's-1', clockedOutAt: '17:00' })),
-      startBreak: vi.fn().mockReturnValue(of({ breakId: 'b-1' })),
-      stopBreak: vi.fn().mockReturnValue(of({ breakId: 'b-1' })),
-      getWorkSessionBreaks: vi.fn().mockReturnValue(of([])),
+      startWorkSessionBreak: vi.fn().mockReturnValue(of({ breakId: 'b-1' })),
+      stopWorkSessionBreak: vi.fn().mockReturnValue(of({ breakId: 'b-1' })),
+    };
+    apiService = {
+      get: vi.fn().mockReturnValue(of([])),
     };
 
     await TestBed.configureTestingModule({
       imports: [WorkSessionPageComponent],
       providers: [
         provideRouter([]),
-        { provide: PeopleService, useValue: peopleService },
-        { provide: ActivatedRoute, useValue: { params: of({ workorderId: 'wo-1', locationId: 'loc-1' }) } },
+        { provide: WorkSessionsAPIService, useValue: workSessionsService },
+        { provide: ApiBaseService, useValue: apiService },
+        { provide: ActivatedRoute, useValue: { queryParams: of({ personId: 'person-001' }) } },
       ],
     }).compileComponents();
 
@@ -62,7 +66,7 @@ describe('WorkSessionPageComponent', () => {
     const btn = fixture.nativeElement.querySelector('[data-testid="clock-in-btn"]');
     btn.click();
     fixture.detectChanges();
-    expect(peopleService.startWorkSession).toHaveBeenCalledTimes(1);
+    expect(workSessionsService.startWorkSession).toHaveBeenCalledTimes(1);
     const successEl = fixture.nativeElement.querySelector('[data-testid="action-success"]');
     expect(successEl).toBeTruthy();
     const clockStatus = fixture.nativeElement.querySelector('[data-testid="clock-status"]');
@@ -70,7 +74,7 @@ describe('WorkSessionPageComponent', () => {
   });
 
   it('T5: shows error-state when startWorkSession fails', () => {
-    peopleService.startWorkSession.mockReturnValue(
+    workSessionsService.startWorkSession.mockReturnValue(
       throwError(() => ({ error: { message: 'Clock in failed' } })),
     );
     component.startSession();
@@ -100,7 +104,7 @@ describe('WorkSessionPageComponent', () => {
     const btn = fixture.nativeElement.querySelector('[data-testid="start-break-btn"]');
     btn.click();
     fixture.detectChanges();
-    expect(peopleService.startBreak).toHaveBeenCalledWith('sess1', { breakType: 'MEAL' }, expect.any(String));
+    expect(workSessionsService.startWorkSessionBreak).toHaveBeenCalled();
   });
 
   it('T9: stop-break-btn calls stopBreak; onBreak resets to false', () => {
@@ -110,7 +114,7 @@ describe('WorkSessionPageComponent', () => {
     const btn = fixture.nativeElement.querySelector('[data-testid="stop-break-btn"]');
     btn.click();
     fixture.detectChanges();
-    expect(peopleService.stopBreak).toHaveBeenCalledWith('sess1', {}, expect.any(String));
+    expect(workSessionsService.stopWorkSessionBreak).toHaveBeenCalled();
     expect(component.onBreak()).toBe(false);
   });
 

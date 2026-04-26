@@ -2,6 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { Upload } from 'tus-js-client';
+import {
+  BulkLoadJobsAPIService,
+  ColumnMappingAPIService,
+} from '@durion-sdk/bulk-loader';
+import type { BulkLoadJobCreateRequest, BulkLoadJobResponse } from '@durion-sdk/bulk-loader';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { environment } from '../../../../environments/environment';
 import {
@@ -45,19 +50,6 @@ interface ApiBulkLoadJob {
   completedAt?: string;
 }
 
-interface ApiPage<T> {
-  content: T[];
-}
-
-interface ApiColumnMapping {
-  id: string;
-  jobId: string;
-  sourceColumn: string;
-  targetField: string;
-  confidence: number;
-  overriddenByUser: boolean;
-}
-
 interface ApiAuditRecord {
   id: string;
   jobId: string;
@@ -95,19 +87,21 @@ const API_TO_FRONTEND_DOMAIN_TYPE: Record<ApiDomainType, DomainType> = {
 @Injectable({ providedIn: 'root' })
 export class BulkImportService {
   private readonly api = inject(ApiBaseService);
+  private readonly bulkLoadJobsService = inject(BulkLoadJobsAPIService);
+  private readonly columnMappingService = inject(ColumnMappingAPIService);
 
   createUploadSession(request: CreateUploadSessionRequest): Observable<CreateUploadSessionResponse> {
-    return this.api
-      .post<ApiBulkLoadJob>('/bulk-loader/v1/bulk-jobs', this.toCreateJobRequest(request))
+    return this.bulkLoadJobsService
+      .createJob(this.toCreateJobRequest(request))
       .pipe(map(job => ({
-        jobId: job.id,
-        uploadUrl: this.buildTusUploadEndpoint(job.id),
+        jobId: job.id ?? '',
+        uploadUrl: this.buildTusUploadEndpoint(job.id ?? ''),
       })));
   }
 
   getJob(jobId: string): Observable<BulkLoadJob> {
-    return this.api
-      .get<ApiBulkLoadJob>(`/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}`)
+    return this.bulkLoadJobsService
+      .getJob(jobId)
       .pipe(map(job => this.toBulkLoadJob(job)));
   }
 
@@ -132,12 +126,10 @@ export class BulkImportService {
   }
 
   listJobs(filters?: JobFilterParams): Observable<JobListResponse> {
-    let params = new HttpParams();
-    if (filters?.pageSize != null) { params = params.set('pageSize', filters.pageSize.toString()); }
-    return this.api
-      .get<ApiPage<ApiBulkLoadJob>>('/bulk-loader/v1/bulk-jobs', params)
+    return this.bulkLoadJobsService
+      .listJobs({ size: filters?.pageSize ?? 20 })
       .pipe(map(page => ({
-        items: this.applyJobFilters(page.content.map(job => this.toBulkLoadJob(job)), filters),
+        items: this.applyJobFilters((page.content ?? []).map(job => this.toBulkLoadJob(job)), filters),
         nextPageToken: null,
       })));
   }
@@ -147,36 +139,30 @@ export class BulkImportService {
   }
 
   getColumnMappings(jobId: string): Observable<BulkLoadColumnMapping[]> {
-    return this.api
-      .get<ApiColumnMapping[]>(`/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/mappings`)
+    return this.columnMappingService
+      .getMappings(jobId)
       .pipe(map(mappings => mappings.map(mapping => ({
-        mappingId: mapping.id,
-        jobId: mapping.jobId,
-        sourceColumn: mapping.sourceColumn,
-        targetField: mapping.targetField,
-        confidence: mapping.confidence,
-        overriddenByUser: mapping.overriddenByUser,
+        mappingId: mapping.id ?? '',
+        jobId: mapping.jobId ?? '',
+        sourceColumn: mapping.sourceColumn ?? '',
+        targetField: mapping.targetField ?? '',
+        confidence: mapping.confidence ?? 0,
+        overriddenByUser: mapping.overriddenByUser ?? false,
       }))));
   }
 
   approveColumnMappings(jobId: string, request: ApproveColumnMappingsRequest): Observable<void> {
-    return this.api.put<void>(
-      `/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/mappings`,
-      {
-        mappings: request.overrides.map(override => ({
-          mappingId: override.mappingId,
-          sourceColumn: override.sourceColumn,
-          targetField: override.targetField,
-        })),
-      },
-    );
+    return this.columnMappingService.approveMappings(jobId, {
+      mappings: request.overrides.map(override => ({
+        mappingId: override.mappingId,
+        sourceColumn: override.sourceColumn,
+        targetField: override.targetField,
+      })),
+    }).pipe(map(() => undefined as void));
   }
 
   cancelJob(jobId: string): Observable<void> {
-    return this.api.post<void>(
-      `/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/cancel`,
-      {},
-    );
+    return this.bulkLoadJobsService.cancelJob(jobId).pipe(map(() => undefined as void));
   }
 
   retryJob(jobId: string): Observable<void> {
@@ -282,20 +268,20 @@ export class BulkImportService {
     });
   }
 
-  private toCreateJobRequest(request: CreateUploadSessionRequest): { domainType: ApiDomainType; fileName: string; locationId?: string } {
+  private toCreateJobRequest(request: CreateUploadSessionRequest): BulkLoadJobCreateRequest {
     return {
-      domainType: FRONTEND_TO_API_DOMAIN_TYPE[request.domainType],
+      domainType: FRONTEND_TO_API_DOMAIN_TYPE[request.domainType] as BulkLoadJobCreateRequest['domainType'],
       fileName: request.fileName,
       ...(request.locationId ? { locationId: request.locationId } : {}),
     };
   }
 
-  private toBulkLoadJob(job: ApiBulkLoadJob): BulkLoadJob {
+  private toBulkLoadJob(job: BulkLoadJobResponse): BulkLoadJob {
     return {
-      jobId: job.id,
-      domainType: API_TO_FRONTEND_DOMAIN_TYPE[job.domainType],
-      status: this.toJobStatus(job.status),
-      fileName: job.fileName,
+      jobId: job.id ?? '',
+      domainType: API_TO_FRONTEND_DOMAIN_TYPE[(job.domainType ?? '') as ApiDomainType],
+      status: this.toJobStatus(job.status ?? ''),
+      fileName: job.fileName ?? '',
       locationId: job.locationId ?? undefined,
       totalRows: job.totalRows ?? undefined,
       processedRows: job.processedRows ?? undefined,
