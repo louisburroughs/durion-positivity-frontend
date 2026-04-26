@@ -1,5 +1,5 @@
-import { TestBed } from '@angular/core/testing';
 import { HttpParams } from '@angular/common/http';
+import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -39,7 +39,11 @@ describe('BulkImportService', () => {
   let service: import('./bulk-import.service').BulkImportService;
   let bulkImportServiceClass: typeof import('./bulk-import.service').BulkImportService;
   let apiBaseServiceToken: typeof import('../../../core/services/api-base.service').ApiBaseService;
+  let bulkLoadJobsServiceClass: typeof import('@durion-sdk/bulk-loader').BulkLoadJobsAPIService;
+  let columnMappingServiceClass: typeof import('@durion-sdk/bulk-loader').ColumnMappingAPIService;
   const apiStub = { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() };
+  const bulkLoadJobsStub = { createJob: vi.fn(), getJob: vi.fn(), listJobs: vi.fn(), cancelJob: vi.fn() };
+  const columnMappingStub = { getMappings: vi.fn(), approveMappings: vi.fn() };
 
   beforeEach(async () => {
     tusState.instances.length = 0;
@@ -51,9 +55,16 @@ describe('BulkImportService', () => {
 
     ({ BulkImportService: bulkImportServiceClass } = await import('./bulk-import.service'));
     ({ ApiBaseService: apiBaseServiceToken } = await import('../../../core/services/api-base.service'));
+    ({ BulkLoadJobsAPIService: bulkLoadJobsServiceClass, ColumnMappingAPIService: columnMappingServiceClass } =
+      await import('@durion-sdk/bulk-loader'));
 
     TestBed.configureTestingModule({
-      providers: [bulkImportServiceClass, { provide: apiBaseServiceToken, useValue: apiStub }],
+      providers: [
+        bulkImportServiceClass,
+        { provide: apiBaseServiceToken, useValue: apiStub },
+        { provide: bulkLoadJobsServiceClass, useValue: bulkLoadJobsStub },
+        { provide: columnMappingServiceClass, useValue: columnMappingStub },
+      ],
     });
     service = TestBed.inject(bulkImportServiceClass);
   });
@@ -81,7 +92,7 @@ describe('BulkImportService', () => {
         fileName: 'test.csv',
         fileSize: 1024,
       };
-      apiStub.post.mockReturnValue(of({
+      bulkLoadJobsStub.createJob.mockReturnValue(of({
         id: 'job-001',
         domainType: 'INVENTORY_STOCK_COUNT',
         status: 'CREATED',
@@ -93,7 +104,7 @@ describe('BulkImportService', () => {
         response = value;
       });
 
-      expect(apiStub.post).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs', {
+      expect(bulkLoadJobsStub.createJob).toHaveBeenCalledWith({
         domainType: 'INVENTORY_STOCK_COUNT',
         fileName: 'test.csv',
       });
@@ -105,8 +116,8 @@ describe('BulkImportService', () => {
   });
 
   describe('getJob()', () => {
-    it('calls GET /bulk-loader/v1/bulk-jobs/:id and maps the backend job shape', () => {
-      apiStub.get.mockReturnValue(of({
+    it('calls bulkLoadJobsService.getJob with the jobId', () => {
+      bulkLoadJobsStub.getJob.mockReturnValue(of({
         id: 'job-001',
         domainType: 'INVENTORY_STOCK_COUNT',
         status: 'CREATED',
@@ -115,13 +126,13 @@ describe('BulkImportService', () => {
 
       service.getJob('job-001').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001');
+      expect(bulkLoadJobsStub.getJob).toHaveBeenCalledWith('job-001');
     });
   });
 
   describe('getActiveJobForDomain()', () => {
     it('selects the matching active job from the backend jobs page', () => {
-      apiStub.get.mockReturnValue(of({
+      bulkLoadJobsStub.listJobs.mockReturnValue(of({
         content: [{
           id: 'job-001',
           domainType: 'INVENTORY_STOCK_COUNT',
@@ -135,7 +146,7 @@ describe('BulkImportService', () => {
         response = value;
       });
 
-      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs', expect.anything());
+      expect(bulkLoadJobsStub.listJobs).toHaveBeenCalled();
       expect(response).toEqual(mockJob);
     });
   });
@@ -150,22 +161,22 @@ describe('BulkImportService', () => {
       }],
     };
 
-    it('calls GET /bulk-loader/v1/bulk-jobs and maps the backend page shape', () => {
-      apiStub.get.mockReturnValue(of(jobPageStub));
+    it('calls bulkLoadJobsService.listJobs and maps the backend page shape', () => {
+      bulkLoadJobsStub.listJobs.mockReturnValue(of(jobPageStub));
 
       service.listJobs().subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs', expect.anything());
+      expect(bulkLoadJobsStub.listJobs).toHaveBeenCalledWith({ size: 20 });
     });
 
     it('applies domainType filter on the frontend when backend ignores it', () => {
-      apiStub.get.mockReturnValue(of(jobPageStub));
+      bulkLoadJobsStub.listJobs.mockReturnValue(of(jobPageStub));
 
       let response: import('../models/bulk-import.models').JobListResponse | undefined;
       service.listJobs({ domainType: 'INVENTORY' }).subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('domainType')).toBeNull();
+      // SDK only receives size, domainType is not passed to backend
+      expect(bulkLoadJobsStub.listJobs).toHaveBeenCalledWith({ size: 20 });
 
       service.listJobs({ domainType: 'INVENTORY' }).subscribe(value => {
         response = value;
@@ -175,13 +186,13 @@ describe('BulkImportService', () => {
     });
 
     it('applies status filter on the frontend when backend ignores it', () => {
-      apiStub.get.mockReturnValue(of(jobPageStub));
+      bulkLoadJobsStub.listJobs.mockReturnValue(of(jobPageStub));
 
       let response: import('../models/bulk-import.models').JobListResponse | undefined;
       service.listJobs({ status: 'PROCESSING' }).subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('status')).toBeNull();
+      // SDK only receives size, status is not passed to backend
+      expect(bulkLoadJobsStub.listJobs).toHaveBeenCalledWith({ size: 20 });
 
       service.listJobs({ status: 'PROCESSING' }).subscribe(value => {
         response = value;
@@ -189,25 +200,22 @@ describe('BulkImportService', () => {
       expect(response?.items).toHaveLength(0);
     });
 
-    it('passes pageSize as a query param when provided', () => {
-      apiStub.get.mockReturnValue(of(jobPageStub));
+    it('passes pageSize as the size parameter to the SDK', () => {
+      bulkLoadJobsStub.listJobs.mockReturnValue(of(jobPageStub));
 
       service.listJobs({ pageSize: 10 }).subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('pageSize')).toBe('10');
+      expect(bulkLoadJobsStub.listJobs).toHaveBeenCalledWith({ size: 10 });
     });
 
     it('applies multiple frontend filters simultaneously', () => {
-      apiStub.get.mockReturnValue(of(jobPageStub));
+      bulkLoadJobsStub.listJobs.mockReturnValue(of(jobPageStub));
 
       let response: import('../models/bulk-import.models').JobListResponse | undefined;
       service.listJobs({ domainType: 'INVENTORY', status: 'PROCESSING', pageSize: 10 }).subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('domainType')).toBeNull();
-      expect(params.get('status')).toBeNull();
-      expect(params.get('pageSize')).toBe('10');
+      // SDK only receives size; domainType and status are not passed to backend
+      expect(bulkLoadJobsStub.listJobs).toHaveBeenCalledWith({ size: 10 });
 
       service.listJobs({ domainType: 'INVENTORY', status: 'PROCESSING', pageSize: 10 }).subscribe(value => {
         response = value;
@@ -218,7 +226,7 @@ describe('BulkImportService', () => {
 
   describe('getActiveJobDomains()', () => {
     it('returns only domains that currently have active jobs', () => {
-      apiStub.get.mockReturnValue(of({
+      bulkLoadJobsStub.listJobs.mockReturnValue(of({
         content: [
           {
             id: 'job-001',
@@ -246,8 +254,8 @@ describe('BulkImportService', () => {
   });
 
   describe('getColumnMappings()', () => {
-    it('calls GET /bulk-loader/v1/bulk-jobs/:id/mappings', () => {
-      apiStub.get.mockReturnValue(of([{
+    it('calls columnMappingService.getMappings with the jobId', () => {
+      columnMappingStub.getMappings.mockReturnValue(of([{
         id: 'map-001',
         jobId: 'job-001',
         sourceColumn: 'SKU',
@@ -258,32 +266,32 @@ describe('BulkImportService', () => {
 
       service.getColumnMappings('job-001').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001/mappings');
+      expect(columnMappingStub.getMappings).toHaveBeenCalledWith('job-001');
     });
   });
 
   describe('approveColumnMappings()', () => {
-    it('calls PUT /bulk-loader/v1/bulk-jobs/:id/mappings with backend mapping payload', () => {
+    it('calls columnMappingService.approveMappings with jobId and mapped payload', () => {
       const req: ApproveColumnMappingsRequest = {
         overrides: [{ mappingId: 'map-001', sourceColumn: 'SKU', targetField: 'sku' }],
       };
-      apiStub.put.mockReturnValue(of(undefined));
+      columnMappingStub.approveMappings.mockReturnValue(of(undefined));
 
       service.approveColumnMappings('job-001', req).subscribe();
 
-      expect(apiStub.put).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001/mappings', {
+      expect(columnMappingStub.approveMappings).toHaveBeenCalledWith('job-001', {
         mappings: [{ mappingId: 'map-001', sourceColumn: 'SKU', targetField: 'sku' }],
       });
     });
   });
 
   describe('cancelJob()', () => {
-    it('calls POST /bulk-loader/v1/bulk-jobs/:id/cancel', () => {
-      apiStub.post.mockReturnValue(of(undefined));
+    it('calls bulkLoadJobsService.cancelJob with the jobId', () => {
+      bulkLoadJobsStub.cancelJob.mockReturnValue(of(undefined));
 
       service.cancelJob('job-001').subscribe();
 
-      expect(apiStub.post).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001/cancel', {});
+      expect(bulkLoadJobsStub.cancelJob).toHaveBeenCalledWith('job-001');
     });
   });
 

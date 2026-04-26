@@ -2,40 +2,22 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { BehaviorSubject, of, throwError } from 'rxjs';
-import {
-  PosOrder,
-  PosOrderLine,
-} from '../../models/order.models';
-import { OrderService } from '../../services/order.service';
+import { SalesOrderLineResponse, SalesOrderResponse, SalesOrdersService } from '@durion-sdk/order';
+import { AuthService } from '../../../../core/services/auth.service';
 import { OrderCartPageComponent } from './order-cart-page.component';
 
-const orderLineFixture: PosOrderLine = {
-  lineId: 'line-1',
-  skuCode: 'SKU-1',
-  description: 'Brake Pad',
+const orderLineFixture: SalesOrderLineResponse = {
+  orderLineId: 'line-1',
+  itemSku: 'SKU-1',
+  itemDescription: 'Brake Pad',
   quantity: 2,
   unitPrice: 50,
-  lineTotal: 100,
-  currency: 'USD',
-  status: 'ACTIVE',
-  addedAt: '2026-03-30T12:01:00Z',
-  updatedAt: '2026-03-30T12:01:00Z',
 };
 
-const orderFixture: PosOrder = {
+const orderFixture: SalesOrderResponse = {
   orderId: 'ord-1',
-  customerId: 'cust-1',
-  vehicleId: 'veh-1',
-  workorderId: 'wo-1',
-  estimateId: 'est-1',
-  status: 'OPEN',
-  lines: [orderLineFixture],
   subtotal: 100,
-  taxAmount: 8,
-  total: 108,
-  currency: 'USD',
-  createdAt: '2026-03-30T12:00:00Z',
-  updatedAt: '2026-03-30T12:01:00Z',
+  lines: [orderLineFixture],
 };
 
 describe('OrderCartPageComponent', () => {
@@ -43,26 +25,31 @@ describe('OrderCartPageComponent', () => {
   let component: OrderCartPageComponent;
   let paramMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
-  const orderServiceMock = {
+  const salesOrdersServiceMock = {
     createCart: vi.fn(),
     getOrder: vi.fn(),
     addItem: vi.fn(),
     removeItem: vi.fn(),
   };
 
+  const authServiceMock = {
+    currentUserClaims: vi.fn().mockReturnValue({ sub: 'test-clerk' }),
+  };
+
   beforeEach(async () => {
     paramMap$ = new BehaviorSubject(convertToParamMap({ orderId: 'ord-1' }));
 
-    orderServiceMock.createCart.mockReset();
-    orderServiceMock.getOrder.mockReset();
-    orderServiceMock.addItem.mockReset();
-    orderServiceMock.removeItem.mockReset();
+    salesOrdersServiceMock.createCart.mockReset();
+    salesOrdersServiceMock.getOrder.mockReset();
+    salesOrdersServiceMock.addItem.mockReset();
+    salesOrdersServiceMock.removeItem.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [OrderCartPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: OrderService, useValue: orderServiceMock },
+        { provide: SalesOrdersService, useValue: salesOrdersServiceMock },
+        { provide: AuthService, useValue: authServiceMock },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -77,18 +64,18 @@ describe('OrderCartPageComponent', () => {
   });
 
   it('loads order when orderId route param is present', () => {
-    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
 
     fixture.detectChanges();
 
-    expect(orderServiceMock.getOrder).toHaveBeenCalledWith('ord-1');
+    expect(salesOrdersServiceMock.getOrder).toHaveBeenCalledWith('ord-1');
     expect(component.order()).toEqual(orderFixture);
     expect(component.state()).toBe('ready');
   });
 
   it('sets error state before errorKey when addItem fails', () => {
-    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
-    orderServiceMock.addItem.mockReturnValue(throwError(() => new Error('add failed')));
+    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    salesOrdersServiceMock.addItem.mockReturnValue(throwError(() => new Error('add failed')));
 
     fixture.detectChanges();
 
@@ -105,16 +92,16 @@ describe('OrderCartPageComponent', () => {
     expect(stateOrder).toBeLessThan(errorKeyOrder);
   });
 
-  it('shows error state when createCart fails', () => {
-    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
-    orderServiceMock.createCart.mockReturnValue(throwError(() => new Error('fail')));
+  it('shows error state when createNewCart fails', () => {
+    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    salesOrdersServiceMock.createCart.mockReturnValue(throwError(() => new Error('fail')));
 
     fixture.detectChanges();
 
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
 
-    component.createNewCart({ currency: 'USD' });
+    component.createNewCart();
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('ORDER.CART.ERROR.CREATE');
@@ -130,8 +117,8 @@ describe('OrderCartPageComponent', () => {
   });
 
   it('shows error state when removeItem fails', () => {
-    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
-    orderServiceMock.removeItem.mockReturnValue(throwError(() => new Error('fail')));
+    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    salesOrdersServiceMock.removeItem.mockReturnValue(throwError(() => new Error('fail')));
 
     fixture.detectChanges();
 
@@ -154,7 +141,7 @@ describe('OrderCartPageComponent', () => {
   });
 
   it('sets error state before errorKey when initial load fails', () => {
-    orderServiceMock.getOrder.mockReturnValue(throwError(() => new Error('load failed')));
+    salesOrdersServiceMock.getOrder.mockReturnValue(throwError(() => new Error('load failed')));
 
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');

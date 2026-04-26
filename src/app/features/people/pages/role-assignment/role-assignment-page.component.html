@@ -13,21 +13,21 @@
     </div>
 
     <ul class="assignment-list" aria-labelledby="assignments-heading">
-      @for (assignment of assignments(); track assignment.assignmentId) {
+      @for (assignment of assignments(); track assignment.roleCode) {
       <li class="assignment-item">
-        <span class="id-cell">{{ assignment.personId }}</span>
+        <span class="id-cell">{{ assignment.userId }}</span>
         <span class="role-code">{{ assignment.roleCode }}</span>
-        <span class="status-badge" [class.status-active]="assignment.status === 'ACTIVE'"
-          [class.status-revoked]="assignment.status === 'REVOKED'">
-          <span class="sr-only">Status: </span>{{ assignment.status }}
+        <span class="status-badge" [class.status-active]="assignment.active"
+          [class.status-revoked]="!assignment.active">
+          <span class="sr-only">Status: </span>{{ assignment.active ? 'ACTIVE' : 'INACTIVE' }}
         </span>
-        @if (confirmingAssignmentId() !== assignment.assignmentId) {
-        <button type="button" class="btn btn--danger-outline" (click)="startRevoke(assignment.assignmentId)">
+        @if (confirmingAssignmentId() !== assignment.roleCode) {
+        <button type="button" class="btn btn--danger-outline" (click)="startRevoke(assignment.roleCode!)">
           Revoke
         </button>
         } @else {
         <button type="button" class="btn btn--danger"
-          (click)="revokeAssignment(assignment.roleCode, assignment.assignmentId)">
+          (click)="revokeAssignment(assignment.roleCode!)">
           Confirm Revoke
         </button>
         <button type="button" class="btn btn--ghost" (click)="confirmingAssignmentId.set(null)">
@@ -56,7 +56,7 @@
             (change)="selectedRoleCode.set($any($event.target).value)">
             <option value="" disabled>Select a role</option>
             @for (role of roles(); track role.code) {
-            <option [value]="role.code">{{ role.label }}</option>
+            <option [value]="role.code">{{ role.name }}</option>
             }
           </select>
         </div>

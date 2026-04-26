@@ -1,25 +1,18 @@
 /**
  * AppointmentService unit tests — CAP-249
- *
- * RED: These tests will fail to compile until
- * src/app/features/shopmgmt/services/appointment.service.ts is created.
- *
- * API paths covered:
- *   getAppointment          → GET  /v1/appointments/{id}
- *   listAssignments         → GET  /v1/appointments/{id}/assignments
- *   createAssignment        → POST /v1/appointments/{id}/assignments
- *   rescheduleAppointment   → PUT  /v1/appointments/{id}/reschedule
- *   searchAudit             → GET  /v1/shop/audit  (appointmentId query param)
- *   createAppointment       → POST /v1/appointments  (Idempotency-Key header)
- *   executeOverride         → POST /v1/appointments/{id}/conflict-override
- *   viewSchedule            → GET  /v1/schedules/view  (locationId + date query params)
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { HttpParams } from '@angular/common/http';
 import { AppointmentService } from './appointment.service';
-import { ApiBaseService } from '../../../core/services/api-base.service';
+import {
+  AppointmentsAPIService,
+  AssignmentControllerService,
+  ConflictOverrideAPIService,
+  ScheduleAPIService,
+  ShopAPIService,
+  ShopAuditControllerService,
+} from '@durion-sdk/shop-manager';
 
 // ---------------------------------------------------------------------------
 // Inline stubs — mirror models that will live in ../models/appointment.models
@@ -52,14 +45,20 @@ const STUB_CREATE_PAYLOAD = {
 };
 
 // ---------------------------------------------------------------------------
-// Shared ApiBaseService mock
+// SDK stubs
 // ---------------------------------------------------------------------------
 
-const apiMock = {
-  get: vi.fn(),
-  post: vi.fn(),
-  put: vi.fn(),
+const appointmentsStub = {
+  getAppointment: vi.fn(),
+  rescheduleAppointment: vi.fn(),
+  createAppointment: vi.fn(),
+  cancelAppointment: vi.fn(),
 };
+const assignmentStub = { listAssignments: vi.fn(), createAssignment: vi.fn() };
+const conflictOverrideStub = { executeOverride: vi.fn() };
+const scheduleStub = { viewSchedule: vi.fn() };
+const shopStub = { getShopServiceDetails: vi.fn() };
+const shopAuditStub = { searchAudit: vi.fn() };
 
 // ---------------------------------------------------------------------------
 // Suite
@@ -70,14 +69,24 @@ describe('AppointmentService [CAP-249]', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    apiMock.get.mockReturnValue(of(STUB_APPOINTMENT));
-    apiMock.post.mockReturnValue(of({}));
-    apiMock.put.mockReturnValue(of({}));
+    appointmentsStub.getAppointment.mockReturnValue(of(STUB_APPOINTMENT));
+    appointmentsStub.createAppointment.mockReturnValue(of(STUB_APPOINTMENT));
+    appointmentsStub.rescheduleAppointment.mockReturnValue(of(STUB_APPOINTMENT));
+    assignmentStub.listAssignments.mockReturnValue(of([]));
+    assignmentStub.createAssignment.mockReturnValue(of({}));
+    conflictOverrideStub.executeOverride.mockReturnValue(of({}));
+    scheduleStub.viewSchedule.mockReturnValue(of({}));
+    shopAuditStub.searchAudit.mockReturnValue(of([]));
 
     TestBed.configureTestingModule({
       providers: [
         AppointmentService,
-        { provide: ApiBaseService, useValue: apiMock },
+        { provide: AppointmentsAPIService, useValue: appointmentsStub },
+        { provide: AssignmentControllerService, useValue: assignmentStub },
+        { provide: ConflictOverrideAPIService, useValue: conflictOverrideStub },
+        { provide: ScheduleAPIService, useValue: scheduleStub },
+        { provide: ShopAPIService, useValue: shopStub },
+        { provide: ShopAuditControllerService, useValue: shopAuditStub },
       ],
     });
 
@@ -91,14 +100,13 @@ describe('AppointmentService [CAP-249]', () => {
   // ── getAppointment ────────────────────────────────────────────────────────
 
   describe('getAppointment', () => {
-    it('calls GET /v1/appointments/{id} with the interpolated id', () => {
+    it('calls appointmentsSdk.getAppointment with the id', () => {
       service.getAppointment('appt-1').subscribe();
 
-      expect(apiMock.get).toHaveBeenCalledOnce();
-      expect(apiMock.get.mock.calls[0][0]).toBe('/v1/appointments/appt-1');
+      expect(appointmentsStub.getAppointment).toHaveBeenCalledWith('appt-1');
     });
 
-    it('returns an Observable that emits the API response', () => {
+    it('returns an Observable that emits the SDK response', () => {
       let emitted: unknown;
       service.getAppointment('appt-1').subscribe((v) => { emitted = v; });
 
@@ -109,16 +117,15 @@ describe('AppointmentService [CAP-249]', () => {
   // ── listAssignments ───────────────────────────────────────────────────────
 
   describe('listAssignments', () => {
-    it('calls GET /v1/appointments/{id}/assignments with the interpolated id', () => {
-      apiMock.get.mockReturnValue(of([STUB_ASSIGNMENT]));
+    it('calls assignmentSdk.listAssignments with the appointmentId', () => {
+      assignmentStub.listAssignments.mockReturnValue(of([STUB_ASSIGNMENT]));
       service.listAssignments('appt-1').subscribe();
 
-      expect(apiMock.get).toHaveBeenCalledOnce();
-      expect(apiMock.get.mock.calls[0][0]).toBe('/v1/appointments/appt-1/assignments');
+      expect(assignmentStub.listAssignments).toHaveBeenCalledWith('appt-1');
     });
 
-    it('returns an Observable wrapping the API response', () => {
-      apiMock.get.mockReturnValue(of([STUB_ASSIGNMENT]));
+    it('returns an Observable wrapping the SDK response', () => {
+      assignmentStub.listAssignments.mockReturnValue(of([STUB_ASSIGNMENT]));
       let emitted: unknown;
       service.listAssignments('appt-1').subscribe((v) => { emitted = v; });
 
@@ -129,126 +136,110 @@ describe('AppointmentService [CAP-249]', () => {
   // ── createAssignment ──────────────────────────────────────────────────────
 
   describe('createAssignment', () => {
-    it('calls POST /v1/appointments/{id}/assignments with the correct path', () => {
+    it('calls assignmentSdk.createAssignment with appointmentId and body', () => {
       const body = { assignmentType: 'BAY', bayId: 'bay-2' };
       service.createAssignment('appt-1', body).subscribe();
 
-      expect(apiMock.post).toHaveBeenCalledOnce();
-      expect(apiMock.post.mock.calls[0][0]).toBe('/v1/appointments/appt-1/assignments');
+      expect(assignmentStub.createAssignment).toHaveBeenCalledWith('appt-1', body);
     });
 
-    it('passes the request body as the second argument to post()', () => {
+    it('forwards the request body to createAssignment', () => {
       const body = { assignmentType: 'MOBILE_UNIT', mobileUnitId: 'mu-5' };
       service.createAssignment('appt-1', body).subscribe();
 
-      const [, calledBody] = apiMock.post.mock.calls[0];
-      expect(calledBody).toEqual(body);
+      expect(assignmentStub.createAssignment).toHaveBeenCalledWith('appt-1', body);
     });
   });
 
   // ── rescheduleAppointment ─────────────────────────────────────────────────
 
   describe('rescheduleAppointment', () => {
-    it('calls PUT /v1/appointments/{id}/reschedule with the interpolated id', () => {
+    it('calls appointmentsSdk.rescheduleAppointment with appointmentId and body', () => {
       service.rescheduleAppointment('appt-1', STUB_RESCHEDULE_REQUEST).subscribe();
 
-      expect(apiMock.put).toHaveBeenCalledOnce();
-      expect(apiMock.put.mock.calls[0][0]).toBe('/v1/appointments/appt-1/reschedule');
+      expect(appointmentsStub.rescheduleAppointment).toHaveBeenCalledWith('appt-1', STUB_RESCHEDULE_REQUEST);
     });
 
-    it('passes the reschedule body as the second argument to put()', () => {
+    it('forwards the reschedule body', () => {
       service.rescheduleAppointment('appt-1', STUB_RESCHEDULE_REQUEST).subscribe();
 
-      const [, calledBody] = apiMock.put.mock.calls[0];
-      expect(calledBody).toEqual(STUB_RESCHEDULE_REQUEST);
+      expect(appointmentsStub.rescheduleAppointment).toHaveBeenCalledWith('appt-1', STUB_RESCHEDULE_REQUEST);
     });
   });
 
   // ── searchAudit ───────────────────────────────────────────────────────────
 
   describe('searchAudit', () => {
-    it('calls GET /v1/shop/audit', () => {
-      apiMock.get.mockReturnValue(of([]));
+    it('calls shopAuditSdk.searchAudit with appointmentId in filter object', () => {
+      shopAuditStub.searchAudit.mockReturnValue(of([]));
       service.searchAudit('appt-1').subscribe();
 
-      expect(apiMock.get).toHaveBeenCalledOnce();
-      expect(apiMock.get.mock.calls[0][0]).toBe('/v1/shop/audit');
+      expect(shopAuditStub.searchAudit).toHaveBeenCalledWith({ appointmentId: 'appt-1' });
     });
 
-    it('passes appointmentId as a query param in an HttpParams object', () => {
-      apiMock.get.mockReturnValue(of([]));
+    it('forwards the appointmentId to the SDK filter', () => {
+      shopAuditStub.searchAudit.mockReturnValue(of([]));
       service.searchAudit('appt-1').subscribe();
 
-      const params: HttpParams = apiMock.get.mock.calls[0][1];
-      expect(params).toBeInstanceOf(HttpParams);
-      expect(params.get('appointmentId')).toBe('appt-1');
+      expect(shopAuditStub.searchAudit).toHaveBeenCalledWith(expect.objectContaining({ appointmentId: 'appt-1' }));
     });
   });
 
   // ── createAppointment ─────────────────────────────────────────────────────
 
   describe('createAppointment', () => {
-    it('calls POST /v1/appointments', () => {
+    it('calls appointmentsSdk.createAppointment with body and idempotencyKey', () => {
       service.createAppointment(STUB_CREATE_PAYLOAD, 'idem-key-abc').subscribe();
 
-      expect(apiMock.post).toHaveBeenCalledOnce();
-      expect(apiMock.post.mock.calls[0][0]).toBe('/v1/appointments');
+      expect(appointmentsStub.createAppointment).toHaveBeenCalledWith(STUB_CREATE_PAYLOAD, 'idem-key-abc');
     });
 
-    it('passes the request body as the second argument', () => {
+    it('forwards the request body to the SDK', () => {
       service.createAppointment(STUB_CREATE_PAYLOAD, 'idem-key-abc').subscribe();
 
-      const [, calledBody] = apiMock.post.mock.calls[0];
-      expect(calledBody).toEqual(STUB_CREATE_PAYLOAD);
+      expect(appointmentsStub.createAppointment).toHaveBeenCalledWith(STUB_CREATE_PAYLOAD, expect.anything());
     });
 
-    it('forwards the idempotencyKey as Idempotency-Key header', () => {
+    it('forwards the idempotencyKey as second argument to the SDK', () => {
       service.createAppointment(STUB_CREATE_PAYLOAD, 'idem-key-abc').subscribe();
 
-      const [, , options] = apiMock.post.mock.calls[0];
-      expect(options?.headers?.['Idempotency-Key']).toBe('idem-key-abc');
+      expect(appointmentsStub.createAppointment).toHaveBeenCalledWith(expect.anything(), 'idem-key-abc');
     });
   });
 
   // ── executeOverride ───────────────────────────────────────────────────────
 
   describe('executeOverride', () => {
-    it('calls POST /v1/appointments/{id}/conflict-override', () => {
+    it('calls conflictOverrideSdk.executeOverride with appointmentId and body', () => {
       const body = { overrideReason: 'Manager approved' };
       service.executeOverride('appt-1', body).subscribe();
 
-      expect(apiMock.post).toHaveBeenCalledOnce();
-      expect(apiMock.post.mock.calls[0][0]).toBe('/v1/appointments/appt-1/conflict-override');
+      expect(conflictOverrideStub.executeOverride).toHaveBeenCalledWith('appt-1', body);
     });
 
-    it('passes the override body as the second argument', () => {
+    it('forwards the override body to the SDK', () => {
       const body = { overrideReason: 'Emergency' };
       service.executeOverride('appt-1', body).subscribe();
 
-      const [, calledBody] = apiMock.post.mock.calls[0];
-      expect(calledBody).toEqual(body);
+      expect(conflictOverrideStub.executeOverride).toHaveBeenCalledWith('appt-1', body);
     });
   });
 
   // ── viewSchedule ──────────────────────────────────────────────────────────
 
   describe('viewSchedule', () => {
-    it('calls GET /v1/schedules/view', () => {
-      apiMock.get.mockReturnValue(of({}));
+    it('calls scheduleSdk.viewSchedule with locationId and date', () => {
+      scheduleStub.viewSchedule.mockReturnValue(of({}));
       service.viewSchedule('loc-1', '2026-04-01').subscribe();
 
-      expect(apiMock.get).toHaveBeenCalledOnce();
-      expect(apiMock.get.mock.calls[0][0]).toBe('/v1/schedules/view');
+      expect(scheduleStub.viewSchedule).toHaveBeenCalledWith('loc-1', '2026-04-01', undefined, undefined);
     });
 
-    it('passes locationId and date as HttpParams query params', () => {
-      apiMock.get.mockReturnValue(of({}));
+    it('forwards locationId and date to the SDK', () => {
+      scheduleStub.viewSchedule.mockReturnValue(of({}));
       service.viewSchedule('loc-1', '2026-04-01').subscribe();
 
-      const params: HttpParams = apiMock.get.mock.calls[0][1];
-      expect(params).toBeInstanceOf(HttpParams);
-      expect(params.get('locationId')).toBe('loc-1');
-      expect(params.get('date')).toBe('2026-04-01');
+      expect(scheduleStub.viewSchedule).toHaveBeenCalledWith('loc-1', '2026-04-01', expect.anything(), expect.anything());
     });
   });
 });

@@ -2,8 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
-import { PaymentActionResult } from '../../models/billing.models';
-import { BillingService } from '../../services/billing.service';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 import { PaymentVoidRefundPageComponent } from './payment-void-refund-page.component';
 
 const routeStub = {
@@ -26,20 +25,18 @@ describe('PaymentVoidRefundPageComponent', () => {
   let fixture: ComponentFixture<PaymentVoidRefundPageComponent>;
   let component: PaymentVoidRefundPageComponent;
 
-  const billingMock = {
-    voidPayment: vi.fn(),
-    refundPayment: vi.fn(),
+  const apiMock = {
+    post: vi.fn(),
   };
 
   beforeEach(async () => {
-    billingMock.voidPayment.mockReset();
-    billingMock.refundPayment.mockReset();
+    apiMock.post.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [PaymentVoidRefundPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: BillingService, useValue: billingMock },
+        { provide: ApiBaseService, useValue: apiMock },
         { provide: ActivatedRoute, useValue: routeStub },
       ],
     }).compileComponents();
@@ -50,13 +47,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   });
 
   it('executes void successfully and returns to ready state', () => {
-    const voidResultFixture: PaymentActionResult = {
-      paymentId: 'pay-001',
-      invoiceId: 'inv-001',
-      status: 'VOIDED',
-      actionAt: '2026-03-30T10:00:00Z',
-    };
-    billingMock.voidPayment.mockReturnValue(of(voidResultFixture));
+    apiMock.post.mockReturnValue(of({}));
 
     component.executeVoid('CUSTOMER_REQUEST', 'AUTH-VOID');
 
@@ -65,7 +56,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   });
 
   it('sets error state before errorKey when void fails', () => {
-    billingMock.voidPayment.mockReturnValue(throwError(() => new Error('void failed')));
+    apiMock.post.mockReturnValue(throwError(() => new Error('void failed')));
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
 
@@ -80,7 +71,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   });
 
   it('sets error state before errorKey when executeRefund() fails', () => {
-    billingMock.refundPayment.mockReturnValue(throwError(() => new Error('refund fail')));
+    apiMock.post.mockReturnValue(throwError(() => new Error('refund fail')));
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
 
@@ -95,13 +86,7 @@ describe('PaymentVoidRefundPageComponent', () => {
   });
 
   it('sets ready state on successful refund', () => {
-    const refundResultFixture: PaymentActionResult = {
-      paymentId: 'pay-001',
-      invoiceId: 'inv-001',
-      status: 'REFUNDED',
-      actionAt: '2026-03-30T10:00:00Z',
-    };
-    billingMock.refundPayment.mockReturnValue(of(refundResultFixture));
+    apiMock.post.mockReturnValue(of({}));
 
     component.executeRefund('reason', 'AUTH1');
 
@@ -128,7 +113,7 @@ describe('PaymentVoidRefundPageComponent', () => {
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.MISSING_IDS');
-    expect(billingMock.voidPayment).not.toHaveBeenCalled();
+    expect(apiMock.post).not.toHaveBeenCalled();
 
     const stateOrder = stateSetSpy.mock.invocationCallOrder.at(-2) ?? 0;
     const errorKeyOrder = errorKeySetSpy.mock.invocationCallOrder.at(-1) ?? 0;
@@ -145,7 +130,7 @@ describe('PaymentVoidRefundPageComponent', () => {
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.MISSING_IDS');
-    expect(billingMock.refundPayment).not.toHaveBeenCalled();
+    expect(apiMock.post).not.toHaveBeenCalled();
 
     const stateOrder = stateSetSpy.mock.invocationCallOrder.at(-2) ?? 0;
     const errorKeyOrder = errorKeySetSpy.mock.invocationCallOrder.at(-1) ?? 0;

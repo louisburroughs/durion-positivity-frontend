@@ -1,63 +1,39 @@
-import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiBaseService } from '../../../core/services/api-base.service';
+import { AccountingEventsService } from '@durion-sdk/accounting';
 import {
   AccountingEventListResponse,
   AccountingEventResponse,
   ReprocessingAttemptHistoryResponse,
 } from '../models/crm-integration.models';
 
-/**
- * CrmIntegrationService — inbound event processing logs & suspense admin.
- *
- * operationId mapping (pos-accounting OpenAPI):
- *   listEvents                → GET  /v1/accounting/events
- *   getEvent                  → GET  /v1/accounting/events/{eventId}
- *   getReprocessingHistory    → GET  /v1/accounting/events/{eventId}/reprocessing-history
- *   getEventProcessingLog     → GET  /v1/accounting/events/{eventId}/processing-log
- */
 @Injectable({ providedIn: 'root' })
 export class CrmIntegrationService {
-  constructor(private readonly api: ApiBaseService) { }
+  private readonly eventsApi = inject(AccountingEventsService);
 
-  /** operationId: listEvents */
   listEvents(params?: {
     organizationId?: string;
     status?: string;
     page?: number;
     size?: number;
   }): Observable<AccountingEventListResponse> {
-    let httpParams = new HttpParams();
-    if (params?.organizationId) {
-      httpParams = httpParams.set('organizationId', params.organizationId);
-    }
-    if (params?.status) {
-      httpParams = httpParams.set('status', params.status);
-    }
-    if (params?.page !== undefined) {
-      httpParams = httpParams.set('page', String(params.page));
-    }
-    if (params?.size !== undefined) {
-      httpParams = httpParams.set('size', String(params.size));
-    }
-    return this.api.get<AccountingEventListResponse>('/v1/accounting/events', httpParams);
+    return this.eventsApi.listEvents(
+      params?.organizationId ?? '',
+      params?.page,
+      params?.size,
+      params?.status,
+    ) as Observable<AccountingEventListResponse>;
   }
 
-  /** operationId: getEvent */
   getEvent(eventId: string): Observable<AccountingEventResponse> {
-    return this.api.get<AccountingEventResponse>(`/v1/accounting/events/${eventId}`);
+    return this.eventsApi.getEvent(eventId) as Observable<AccountingEventResponse>;
   }
 
-  /** operationId: getReprocessingHistory */
   getReprocessingHistory(eventId: string): Observable<ReprocessingAttemptHistoryResponse[]> {
-    return this.api.get<ReprocessingAttemptHistoryResponse[]>(
-      `/v1/accounting/events/${eventId}/reprocessing-history`,
-    );
+    return this.eventsApi.getReprocessingHistory(eventId) as Observable<ReprocessingAttemptHistoryResponse[]>;
   }
 
-  /** operationId: getEventProcessingLog */
   getEventProcessingLog(eventId: string): Observable<string> {
-    return this.api.get<string>(`/v1/accounting/events/${eventId}/processing-log`);
+    return this.eventsApi.getEventProcessingLog(eventId) as Observable<string>;
   }
 }

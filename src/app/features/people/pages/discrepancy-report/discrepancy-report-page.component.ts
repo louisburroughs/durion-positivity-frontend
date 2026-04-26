@@ -8,7 +8,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PeopleService } from '../../services/people.service';
+import { PeopleReportsAPIService } from '@durion-sdk/people';
 
 type SortField = 'technicianName' | 'locationId' | 'reportDate' | 'totalAttendanceHours' | 'totalJobHours' | 'discrepancyHours';
 type SortDir = 'asc' | 'desc';
@@ -22,7 +22,7 @@ type SortDir = 'asc' | 'desc';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DiscrepancyReportPageComponent {
-  private readonly peopleService = inject(PeopleService);
+  private readonly reportsApiService = inject(PeopleReportsAPIService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -61,22 +61,28 @@ export class DiscrepancyReportPageComponent {
     if (this.filterForm.invalid) return;
 
     const { startDate, endDate, timezone, locationId, technicianIds, flaggedOnly } = this.filterForm.getRawValue();
-    const params: Record<string, string> = { startDate, endDate, timezone };
-    if (locationId.trim()) params['locationId'] = locationId.trim();
-    if (technicianIds.trim()) params['technicianIds'] = technicianIds.trim();
-    if (flaggedOnly) params['flaggedOnly'] = 'true';
 
     // Update query params for bookmarkability
+    const qpUpdate: Record<string, string> = { startDate, endDate, timezone };
+    if (locationId.trim()) qpUpdate['locationId'] = locationId.trim();
+    if (technicianIds.trim()) qpUpdate['technicianIds'] = technicianIds.trim();
+    if (flaggedOnly) qpUpdate['flaggedOnly'] = 'true';
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: params,
+      queryParams: qpUpdate,
       replaceUrl: true,
     });
 
     this.loading.set(true);
     this.error.set(null);
 
-    this.peopleService.getAttendanceDiscrepancyReport(params)
+    const parsedTechnicianIds = technicianIds.trim() ? technicianIds.split(',').map(s => s.trim()) : undefined;
+    this.reportsApiService.getAttendanceDiscrepancyReport(
+      startDate, endDate, timezone,
+      locationId.trim() || undefined,
+      parsedTechnicianIds,
+      flaggedOnly || undefined,
+    )
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {

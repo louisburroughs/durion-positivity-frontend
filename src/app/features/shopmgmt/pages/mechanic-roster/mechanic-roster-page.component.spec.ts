@@ -5,11 +5,11 @@ import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { MechanicRosterPageComponent } from './mechanic-roster-page.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { PeopleService } from '../../../people/services/people.service';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 
-const stubPeopleService = {
-  getAllPeople: vi.fn(),
-  createEmployee: vi.fn(),
+const stubApiService = {
+  get: vi.fn().mockReturnValue(of([{ personId: 'p1', firstName: 'Alex' }])),
+  post: vi.fn().mockReturnValue(of({ personId: 'p2' })),
 };
 
 describe('MechanicRosterPageComponent [CAP-138]', () => {
@@ -18,14 +18,14 @@ describe('MechanicRosterPageComponent [CAP-138]', () => {
 
   const setup = async () => {
     vi.clearAllMocks();
-    stubPeopleService.getAllPeople.mockReturnValue(of([{ personId: 'p1', firstName: 'Alex' }]));
-    stubPeopleService.createEmployee.mockReturnValue(of({ personId: 'p2' }));
+    stubApiService.get.mockReturnValue(of([{ personId: 'p1', firstName: 'Alex' }]));
+    stubApiService.post.mockReturnValue(of({ personId: 'p2' }));
 
     await TestBed.configureTestingModule({
       imports: [MechanicRosterPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: PeopleService, useValue: stubPeopleService },
+        { provide: ApiBaseService, useValue: stubApiService },
       ],
     }).compileComponents();
 
@@ -46,7 +46,7 @@ describe('MechanicRosterPageComponent [CAP-138]', () => {
 
   it('calls getAllPeople on init', async () => {
     await setup();
-    expect(stubPeopleService.getAllPeople).toHaveBeenCalledTimes(1);
+    expect(stubApiService.get).toHaveBeenCalledTimes(1);
   });
 
   it('renders .roster-row for each person', async () => {
@@ -82,11 +82,14 @@ describe('MechanicRosterPageComponent [CAP-138]', () => {
     const submit = fixture.debugElement.query(By.css('.submit-create-btn'));
     submit.nativeElement.click();
 
-    expect(stubPeopleService.createEmployee).toHaveBeenCalledWith({
-      firstName: 'Robin',
-      lastName: 'Lane',
-      email: 'robin@example.com',
-      role: 'MECHANIC',
-    });
+    expect(stubApiService.post).toHaveBeenCalledWith(
+      expect.any(String),
+      {
+        firstName: 'Robin',
+        lastName: 'Lane',
+        email: 'robin@example.com',
+        role: 'MECHANIC',
+      },
+    );
   });
 });

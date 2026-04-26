@@ -2,6 +2,14 @@ import { TestBed } from '@angular/core/testing';
 import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import {
+  ProductsAPIService,
+  ItemCostAPIService,
+  PriceBookAPIService,
+  UOMConversionAPIService,
+  SupplierItemCostAPIService,
+  ProductMSRPAPIService,
+} from '@durion-sdk/catalog';
 import { ProductCatalogService } from './product-catalog.service';
 
 describe('ProductCatalogService', () => {
@@ -15,11 +23,38 @@ describe('ProductCatalogService', () => {
     delete: vi.fn(),
   };
 
+  const productsSdkStub = {
+    searchProducts: vi.fn(),
+    createProduct: vi.fn(),
+    getProductById: vi.fn(),
+    updateProduct: vi.fn(),
+    getProductLifecycle: vi.fn(),
+    setLifecycleState: vi.fn(),
+    getReplacements: vi.fn(),
+    addReplacementProduct: vi.fn(),
+    createLocationPriceOverride: vi.fn(),
+    getEffectiveLocationPrice: vi.fn(),
+    approveLocationPriceOverride: vi.fn(),
+    rejectLocationPriceOverride: vi.fn(),
+    upsertLocationGuardrailPolicy: vi.fn(),
+  };
+  const itemCostSdkStub = { getItemCosts: vi.fn(), updateStandardCost: vi.fn(), getAuditHistory: vi.fn() };
+  const priceBookSdkStub = { createPriceBook: vi.fn(), getPriceBook: vi.fn(), updatePriceBook: vi.fn(), listRules: vi.fn(), createRule: vi.fn(), updateRule: vi.fn(), deactivateRule: vi.fn() };
+  const uomSdkStub = { listUomConversions: vi.fn(), createUomConversion: vi.fn(), updateUomConversion: vi.fn(), deactivateUomConversion: vi.fn() };
+  const supplierCostSdkStub = { getCostStructure: vi.fn(), createCostStructure: vi.fn(), updateCostStructure: vi.fn(), deleteCostStructure: vi.fn() };
+  const msrpSdkStub = { listMsrp: vi.fn(), createMsrp: vi.fn(), updateMsrp: vi.fn(), getActiveMsrp: vi.fn() };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         ProductCatalogService,
         { provide: ApiBaseService, useValue: apiStub },
+        { provide: ProductsAPIService, useValue: productsSdkStub },
+        { provide: ItemCostAPIService, useValue: itemCostSdkStub },
+        { provide: PriceBookAPIService, useValue: priceBookSdkStub },
+        { provide: UOMConversionAPIService, useValue: uomSdkStub },
+        { provide: SupplierItemCostAPIService, useValue: supplierCostSdkStub },
+        { provide: ProductMSRPAPIService, useValue: msrpSdkStub },
       ],
     });
     service = TestBed.inject(ProductCatalogService);
@@ -32,19 +67,17 @@ describe('ProductCatalogService', () => {
   // ── searchProducts() ─────────────────────────────────────────────────────────
 
   describe('searchProducts()', () => {
-    it('calls GET /catalog/v1/products with q param', () => {
-      apiStub.get.mockReturnValueOnce(of([]));
+    it('calls productsSdk.searchProducts with the query string', () => {
+      productsSdkStub.searchProducts.mockReturnValueOnce(of([]));
 
       service.searchProducts('widget').subscribe();
 
-      const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/catalog/v1/products');
-      expect((params as HttpParams).get('q')).toBe('widget');
+      expect(productsSdkStub.searchProducts).toHaveBeenCalledWith('widget');
     });
 
     it('returns the products array as an Observable', () => {
       const products = [{ id: 'p1', sku: 'SKU-001', name: 'Widget', category: 'Parts', lifecycleState: 'ACTIVE', msrp: null }];
-      apiStub.get.mockReturnValueOnce(of(products));
+      productsSdkStub.searchProducts.mockReturnValueOnce(of(products));
 
       let result: unknown;
       service.searchProducts('widget').subscribe(r => (result = r));
@@ -56,65 +89,58 @@ describe('ProductCatalogService', () => {
   // ── createProduct() ──────────────────────────────────────────────────────────
 
   describe('createProduct()', () => {
-    it('calls POST /catalog/v1/products', () => {
+    it('calls productsSdk.createProduct with the product payload', () => {
       const payload = { name: 'New Product', sku: 'SKU-NEW', category: 'Parts' };
-      apiStub.post.mockReturnValueOnce(of({ id: 'p-new', ...payload }));
+      productsSdkStub.createProduct.mockReturnValueOnce(of({ id: 'p-new', ...payload }));
 
       service.createProduct(payload as any).subscribe();
 
-      const [path, body] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/catalog/v1/products');
-      expect(body).toEqual(payload);
+      expect(productsSdkStub.createProduct).toHaveBeenCalledWith(payload);
     });
   });
 
   // ── getProductLifecycle() ────────────────────────────────────────────────────
 
   describe('getProductLifecycle()', () => {
-    it('calls GET /catalog/v1/products/{id}/lifecycle', () => {
-      apiStub.get.mockReturnValueOnce(of({ productId: 'prod-123', currentState: 'ACTIVE' }));
+    it('calls productsSdk.getProductLifecycle with the productId', () => {
+      productsSdkStub.getProductLifecycle.mockReturnValueOnce(of({ productId: 'prod-123', currentState: 'ACTIVE' }));
 
       service.getProductLifecycle('prod-123').subscribe();
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/catalog/v1/products/prod-123/lifecycle');
+      expect(productsSdkStub.getProductLifecycle).toHaveBeenCalledWith('prod-123');
     });
 
-    it('URL-encodes the product ID', () => {
-      apiStub.get.mockReturnValueOnce(of({}));
+    it('passes the productId as-is to the SDK', () => {
+      productsSdkStub.getProductLifecycle.mockReturnValueOnce(of({}));
 
       service.getProductLifecycle('prod/with-slash').subscribe();
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/catalog/v1/products/prod%2Fwith-slash/lifecycle');
+      expect(productsSdkStub.getProductLifecycle).toHaveBeenCalledWith('prod/with-slash');
     });
   });
 
   // ── setLifecycleState() ──────────────────────────────────────────────────────
 
   describe('setLifecycleState()', () => {
-    it('calls PUT /catalog/v1/products/{id}/lifecycle', () => {
+    it('calls productsSdk.setLifecycleState with productId and transition', () => {
       const transition = { targetState: 'INACTIVE', effectiveAt: '2026-03-01T00:00:00Z' };
-      apiStub.put.mockReturnValueOnce(of({ productId: 'prod-123', currentState: 'INACTIVE' }));
+      productsSdkStub.setLifecycleState.mockReturnValueOnce(of({ productId: 'prod-123', currentState: 'INACTIVE' }));
 
       service.setLifecycleState('prod-123', transition as any).subscribe();
 
-      const [path, body] = apiStub.put.mock.calls[0];
-      expect(path).toBe('/catalog/v1/products/prod-123/lifecycle');
-      expect(body).toEqual(transition);
+      expect(productsSdkStub.setLifecycleState).toHaveBeenCalledWith('prod-123', transition);
     });
   });
 
   // ── getItemCosts() ───────────────────────────────────────────────────────────
 
   describe('getItemCosts()', () => {
-    it('calls GET /catalog/v1/items/{id}/costs', () => {
-      apiStub.get.mockReturnValueOnce(of({ standardCost: 10 }));
+    it('calls itemCostSdk.getItemCosts with the itemId', () => {
+      itemCostSdkStub.getItemCosts.mockReturnValueOnce(of({ standardCost: 10 }));
 
       service.getItemCosts('item-abc').subscribe();
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/catalog/v1/items/item-abc/costs');
+      expect(itemCostSdkStub.getItemCosts).toHaveBeenCalledWith('item-abc');
     });
   });
 
@@ -131,44 +157,38 @@ describe('ProductCatalogService', () => {
   // ── listMsrp() ───────────────────────────────────────────────────────────────
 
   describe('listMsrp()', () => {
-    it('calls GET /catalog/v1/msrp with productSku param', () => {
-      apiStub.get.mockReturnValueOnce(of([]));
+    it('calls msrpSdk.listMsrp with the productSku', () => {
+      msrpSdkStub.listMsrp.mockReturnValueOnce(of([]));
 
       service.listMsrp('SKU-001').subscribe();
 
-      const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/catalog/v1/msrp');
-      expect((params as HttpParams).get('productSku')).toBe('SKU-001');
+      expect(msrpSdkStub.listMsrp).toHaveBeenCalledWith('SKU-001');
     });
   });
 
   // ── createLocationPriceOverride() ────────────────────────────────────────────
 
   describe('createLocationPriceOverride()', () => {
-    it('calls POST /catalog/v1/location-price-overrides', () => {
+    it('calls productsSdk.createLocationPriceOverride with the override payload', () => {
       const override = { locationId: 'loc-1', productSku: 'SKU-001', overridePrice: 9.99 };
-      apiStub.post.mockReturnValueOnce(of({ id: 'ovr-1', ...override }));
+      productsSdkStub.createLocationPriceOverride.mockReturnValueOnce(of({ id: 'ovr-1', ...override }));
 
       service.createLocationPriceOverride(override as any).subscribe();
 
-      const [path, body] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/catalog/v1/location-price-overrides');
-      expect(body).toEqual(override);
+      expect(productsSdkStub.createLocationPriceOverride).toHaveBeenCalledWith(override);
     });
   });
 
   // ── upsertLocationGuardrailPolicy() ─────────────────────────────────────────
 
   describe('upsertLocationGuardrailPolicy()', () => {
-    it('calls PUT /catalog/v1/location-price-overrides/guardrails', () => {
+    it('calls productsSdk.upsertLocationGuardrailPolicy with the policy', () => {
       const policy = { locationId: 'loc-1', floorPct: 0.85, ceilPct: 1.15 };
-      apiStub.put.mockReturnValueOnce(of({ ...policy, id: 'guardrail-1' }));
+      productsSdkStub.upsertLocationGuardrailPolicy.mockReturnValueOnce(of({ ...policy, id: 'guardrail-1' }));
 
       service.upsertLocationGuardrailPolicy(policy as any).subscribe();
 
-      const [path, body] = apiStub.put.mock.calls[0];
-      expect(path).toBe('/catalog/v1/location-price-overrides/guardrails');
-      expect(body).toEqual(policy);
+      expect(productsSdkStub.upsertLocationGuardrailPolicy).toHaveBeenCalledWith(policy);
     });
   });
 });

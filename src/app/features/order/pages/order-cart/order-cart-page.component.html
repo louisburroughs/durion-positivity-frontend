@@ -15,7 +15,7 @@
       {{ 'ORDER.CART.IDLE' | translate }}
     </p>
     <form class="order-cart__create-form"
-      (ngSubmit)="createNewCart({ customerId: customerId.value.trim() || undefined, vehicleId: vehicleId.value.trim() || undefined })">
+      (ngSubmit)="createNewCart(customerId.value.trim() || undefined, vehicleId.value.trim() || undefined)">
       <div class="order-cart__field">
         <label for="order-cart-customer-id">{{ 'ORDER.CART.FIELD.CUSTOMER_ID' | translate }}</label>
         <input id="order-cart-customer-id" #customerId class="order-cart__input" type="text" autocomplete="off" />
@@ -59,15 +59,15 @@
         </tr>
       </thead>
       <tbody>
-        @for (line of currentOrder.lines; track line.lineId) {
-        <tr [attr.aria-current]="line.status === 'ACTIVE' ? 'true' : null">
-          <td>{{ line.description }}</td>
-          <td>{{ line.skuCode }}</td>
+        @for (line of currentOrder.lines; track line.orderLineId) {
+        <tr>
+          <td>{{ line.itemDescription }}</td>
+          <td>{{ line.itemSku }}</td>
           <td>{{ line.quantity }}</td>
-          <td>{{ line.unitPrice | currency:currentOrder.currency:'symbol':'1.2-2' }}</td>
-          <td>{{ line.lineTotal | currency:currentOrder.currency:'symbol':'1.2-2' }}</td>
+          <td>{{ line.unitPrice | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ (line.quantity ?? 0) * (line.unitPrice ?? 0) | currency:'USD':'symbol':'1.2-2' }}</td>
           <td>
-            <button class="order-cart__remove-btn" type="button" (click)="removeItem(line.lineId)">
+            <button class="order-cart__remove-btn" type="button" (click)="removeItem(line.orderLineId!)">
               {{ 'ORDER.CART.ACTION.REMOVE_ITEM' | translate }}
             </button>
           </td>
@@ -84,17 +84,9 @@
 
       @if (order(); as currentOrder) {
       <dl>
-        <div class="order-cart__total-row">
-          <dt>{{ 'ORDER.CART.SUMMARY.SUBTOTAL' | translate }}</dt>
-          <dd>{{ currentOrder.subtotal | currency:currentOrder.currency:'symbol':'1.2-2' }}</dd>
-        </div>
-        <div class="order-cart__total-row">
-          <dt>{{ 'ORDER.CART.SUMMARY.TAX' | translate }}</dt>
-          <dd>{{ currentOrder.taxAmount | currency:currentOrder.currency:'symbol':'1.2-2' }}</dd>
-        </div>
         <div class="order-cart__total-row order-cart__total-row--grand">
-          <dt>{{ 'ORDER.CART.SUMMARY.TOTAL' | translate }}</dt>
-          <dd>{{ currentOrder.total | currency:currentOrder.currency:'symbol':'1.2-2' }}</dd>
+          <dt>{{ 'ORDER.CART.SUMMARY.SUBTOTAL' | translate }}</dt>
+          <dd>{{ currentOrder.subtotal | currency:'USD':'symbol':'1.2-2' }}</dd>
         </div>
       </dl>
       }

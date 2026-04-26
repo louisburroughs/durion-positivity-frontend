@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { CycleCountAPIService, CycleCountAdjustmentsService, CycleCountPlansService } from '@durion-sdk/inventory';
 import { InventoryCycleCountService } from './inventory-cycle-count.service';
 import {
   AdjustmentDetail,
@@ -24,11 +25,18 @@ describe('InventoryCycleCountService', () => {
     delete: vi.fn(),
   };
 
+  const cycleCountSdkStub = { getTask: vi.fn(), submitCount: vi.fn() };
+  const adjustmentsSdkStub = { listAdjustments: vi.fn(), getAdjustment: vi.fn(), approveAdjustment: vi.fn(), rejectAdjustment: vi.fn() };
+  const plansSdkStub = { createPlan: vi.fn() };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         InventoryCycleCountService,
         { provide: ApiBaseService, useValue: apiStub },
+        { provide: CycleCountAPIService, useValue: cycleCountSdkStub },
+        { provide: CycleCountAdjustmentsService, useValue: adjustmentsSdkStub },
+        { provide: CycleCountPlansService, useValue: plansSdkStub },
       ],
     });
     service = TestBed.inject(InventoryCycleCountService);
@@ -49,27 +57,24 @@ describe('InventoryCycleCountService', () => {
       status: 'PENDING',
     };
 
-    it('calls GET /inventory/v1/cycle-counts/tasks/{taskId}', () => {
-      apiStub.get.mockReturnValueOnce(of(mockTask));
+    it('calls cycleCountSdk.getTask with the taskId', () => {
+      cycleCountSdkStub.getTask.mockReturnValueOnce(of(mockTask));
 
       service.getCycleCountTask('task-001').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/cycle-counts/tasks/task-001');
+      expect(cycleCountSdkStub.getTask).toHaveBeenCalledWith('task-001');
     });
 
-    it('URL-encodes the taskId', () => {
-      apiStub.get.mockReturnValueOnce(of(mockTask));
+    it('passes the taskId as-is to the SDK', () => {
+      cycleCountSdkStub.getTask.mockReturnValueOnce(of(mockTask));
 
       service.getCycleCountTask('task/001').subscribe();
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/cycle-counts/tasks/task%2F001');
+      expect(cycleCountSdkStub.getTask).toHaveBeenCalledWith('task/001');
     });
 
-    it('returns the CycleCountTask emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockTask));
+    it('returns the CycleCountTask emitted by the SDK', () => {
+      cycleCountSdkStub.getTask.mockReturnValueOnce(of(mockTask));
 
       let result: CycleCountTask | undefined;
       service.getCycleCountTask('task-001').subscribe(r => (result = r));
@@ -90,28 +95,24 @@ describe('InventoryCycleCountService', () => {
       entries: [{ sequence: 1, timestamp: '2026-03-01T09:00:00Z', countedQuantity: 95, countedBy: 'user-01' }],
     };
 
-    it('calls POST /inventory/v1/cycle-counts/tasks/{taskId}/entries with CountSubmitRequest body', () => {
-      apiStub.post.mockReturnValueOnce(of(mockResponse));
+    it('calls cycleCountSdk.submitCount with taskId merged into request', () => {
+      cycleCountSdkStub.submitCount.mockReturnValueOnce(of(mockResponse));
 
       service.submitCount('task-001', mockRequest).subscribe();
 
-      expect(apiStub.post).toHaveBeenCalledOnce();
-      const [path, body] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/cycle-counts/tasks/task-001/entries');
-      expect(body).toEqual(mockRequest);
+      expect(cycleCountSdkStub.submitCount).toHaveBeenCalledWith({ ...mockRequest, taskId: 'task-001' });
     });
 
-    it('URL-encodes the taskId', () => {
-      apiStub.post.mockReturnValueOnce(of(mockResponse));
+    it('passes the taskId as-is to the SDK', () => {
+      cycleCountSdkStub.submitCount.mockReturnValueOnce(of(mockResponse));
 
       service.submitCount('task/001', mockRequest).subscribe();
 
-      const [path] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/cycle-counts/tasks/task%2F001/entries');
+      expect(cycleCountSdkStub.submitCount).toHaveBeenCalledWith({ ...mockRequest, taskId: 'task/001' });
     });
 
-    it('returns the CountSubmitResponse emitted by the API', () => {
-      apiStub.post.mockReturnValueOnce(of(mockResponse));
+    it('returns the CountSubmitResponse emitted by the SDK', () => {
+      cycleCountSdkStub.submitCount.mockReturnValueOnce(of(mockResponse));
 
       let result: CountSubmitResponse | undefined;
       service.submitCount('task-001', mockRequest).subscribe(r => (result = r));
@@ -128,30 +129,25 @@ describe('InventoryCycleCountService', () => {
       nextPageToken: null,
     };
 
-    it('calls GET /inventory/v1/adjustments with filter params', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPage));
+    it('calls adjustmentsSdk.listAdjustments with the filter status', () => {
+      adjustmentsSdkStub.listAdjustments.mockReturnValueOnce(of(mockPage));
 
       const filter: ApprovalQueueFilter = { locationId: 'loc-01', status: 'PENDING' };
       service.queryAdjustments(filter).subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/adjustments');
-      expect(params.get('locationId')).toBe('loc-01');
+      expect(adjustmentsSdkStub.listAdjustments).toHaveBeenCalledWith('PENDING');
     });
 
-    it('omits filter params that are not provided', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPage));
+    it('passes undefined status when filter has no status', () => {
+      adjustmentsSdkStub.listAdjustments.mockReturnValueOnce(of(mockPage));
 
       service.queryAdjustments({}).subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0];
-      expect(params.has('locationId')).toBe(false);
-      expect(params.has('productSku')).toBe(false);
+      expect(adjustmentsSdkStub.listAdjustments).toHaveBeenCalledWith(undefined);
     });
 
-    it('returns the AdjustmentPageResponse emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPage));
+    it('returns the AdjustmentPageResponse emitted by the SDK', () => {
+      adjustmentsSdkStub.listAdjustments.mockReturnValueOnce(of(mockPage));
 
       let result: AdjustmentPageResponse | undefined;
       service.queryAdjustments({}).subscribe(r => (result = r));
@@ -174,27 +170,24 @@ describe('InventoryCycleCountService', () => {
       requiredApprovalTier: 1,
     };
 
-    it('calls GET /inventory/v1/adjustments/{adjustmentId}', () => {
-      apiStub.get.mockReturnValueOnce(of(mockAdjustment));
+    it('calls adjustmentsSdk.getAdjustment with the adjustmentId', () => {
+      adjustmentsSdkStub.getAdjustment.mockReturnValueOnce(of(mockAdjustment));
 
       service.getAdjustmentDetail('adj-001').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/adjustments/adj-001');
+      expect(adjustmentsSdkStub.getAdjustment).toHaveBeenCalledWith('adj-001');
     });
 
-    it('URL-encodes the adjustmentId', () => {
-      apiStub.get.mockReturnValueOnce(of(mockAdjustment));
+    it('passes the adjustmentId as-is to the SDK', () => {
+      adjustmentsSdkStub.getAdjustment.mockReturnValueOnce(of(mockAdjustment));
 
       service.getAdjustmentDetail('adj/001').subscribe();
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/adjustments/adj%2F001');
+      expect(adjustmentsSdkStub.getAdjustment).toHaveBeenCalledWith('adj/001');
     });
 
-    it('returns the AdjustmentDetail emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockAdjustment));
+    it('returns the AdjustmentDetail emitted by the SDK', () => {
+      adjustmentsSdkStub.getAdjustment.mockReturnValueOnce(of(mockAdjustment));
 
       let result: AdjustmentDetail | undefined;
       service.getAdjustmentDetail('adj-001').subscribe(r => (result = r));
@@ -217,55 +210,48 @@ describe('InventoryCycleCountService', () => {
       requiredApprovalTier: 1,
     };
 
-    it('calls POST /inventory/v1/adjustments/{adjustmentId}/approve with empty body', () => {
-      apiStub.post.mockReturnValueOnce(of(mockAdjustment));
+    it('calls adjustmentsSdk.approveAdjustment with the adjustmentId and empty body', () => {
+      adjustmentsSdkStub.approveAdjustment.mockReturnValueOnce(of(mockAdjustment));
 
       service.approveAdjustment('adj-001').subscribe();
 
-      expect(apiStub.post).toHaveBeenCalledOnce();
-      const [path] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/adjustments/adj-001/approve');
+      expect(adjustmentsSdkStub.approveAdjustment).toHaveBeenCalledWith('adj-001', {});
     });
 
-    it('URL-encodes the adjustmentId', () => {
-      apiStub.post.mockReturnValueOnce(of(mockAdjustment));
+    it('passes the adjustmentId as-is to the SDK', () => {
+      adjustmentsSdkStub.approveAdjustment.mockReturnValueOnce(of(mockAdjustment));
 
       service.approveAdjustment('adj/001').subscribe();
 
-      const [path] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/adjustments/adj%2F001/approve');
+      expect(adjustmentsSdkStub.approveAdjustment).toHaveBeenCalledWith('adj/001', {});
     });
   });
 
   // ── rejectAdjustment() ────────────────────────────────────────────────
 
   describe('rejectAdjustment()', () => {
-    it('calls POST /inventory/v1/adjustments/{adjustmentId}/reject with rejectionReason in body', () => {
-      apiStub.post.mockReturnValueOnce(of(undefined));
+    it('calls adjustmentsSdk.rejectAdjustment with the adjustmentId and rejection reason', () => {
+      adjustmentsSdkStub.rejectAdjustment.mockReturnValueOnce(of(undefined));
 
       service.rejectAdjustment('adj-001', 'Count error').subscribe();
 
-      expect(apiStub.post).toHaveBeenCalledOnce();
-      const [path, body] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/adjustments/adj-001/reject');
-      expect((body as { rejectionReason: string }).rejectionReason).toBe('Count error');
+      expect(adjustmentsSdkStub.rejectAdjustment).toHaveBeenCalledWith('adj-001', { rejectorUserId: '', rejectionReason: 'Count error' });
     });
 
-    it('URL-encodes the adjustmentId', () => {
-      apiStub.post.mockReturnValueOnce(of(undefined));
+    it('passes the adjustmentId as-is to the SDK', () => {
+      adjustmentsSdkStub.rejectAdjustment.mockReturnValueOnce(of(undefined));
 
       service.rejectAdjustment('adj/001', 'reason').subscribe();
 
-      const [path] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/adjustments/adj%2F001/reject');
+      expect(adjustmentsSdkStub.rejectAdjustment).toHaveBeenCalledWith('adj/001', { rejectorUserId: '', rejectionReason: 'reason' });
     });
 
-    it('sends the rejection reason as body content', () => {
-      apiStub.post.mockReturnValueOnce(of(undefined));
+    it('sends the rejection reason in the SDK payload', () => {
+      adjustmentsSdkStub.rejectAdjustment.mockReturnValueOnce(of(undefined));
 
       service.rejectAdjustment('adj-001', 'Inaccurate count').subscribe();
 
-      const [, body] = apiStub.post.mock.calls[0];
+      const [, body] = adjustmentsSdkStub.rejectAdjustment.mock.calls[0];
       expect((body as { rejectionReason: string }).rejectionReason).toBe('Inaccurate count');
     });
   });
@@ -338,19 +324,16 @@ describe('InventoryCycleCountService', () => {
       status: 'PENDING',
     };
 
-    it('calls POST /inventory/v1/cycle-count-plans with request body', () => {
-      apiStub.post.mockReturnValueOnce(of(mockPlan));
+    it('calls plansSdk.createPlan with the request', () => {
+      plansSdkStub.createPlan.mockReturnValueOnce(of(mockPlan));
 
       service.createCycleCountPlan(mockRequest).subscribe();
 
-      expect(apiStub.post).toHaveBeenCalledOnce();
-      const [path, body] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/cycle-count-plans');
-      expect(body).toEqual(mockRequest);
+      expect(plansSdkStub.createPlan).toHaveBeenCalledWith(mockRequest);
     });
 
-    it('returns the created CycleCountPlan emitted by the API', () => {
-      apiStub.post.mockReturnValueOnce(of(mockPlan));
+    it('returns the created CycleCountPlan emitted by the SDK', () => {
+      plansSdkStub.createPlan.mockReturnValueOnce(of(mockPlan));
 
       let result: CycleCountPlan | undefined;
       service.createCycleCountPlan(mockRequest).subscribe(r => (result = r));

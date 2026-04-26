@@ -32,36 +32,14 @@
     <h2>Break Management</h2>
     <p data-testid="break-status">{{ onBreak() ? 'On Break' : 'Not on break' }}</p>
 
-    <form class="form-grid" [formGroup]="breakForm" aria-label="Break controls form">
-      <div class="field">
-        <label for="break-type">Break Type</label>
-        <select id="break-type" formControlName="breakType" required data-testid="break-type-select">
-          @for (breakType of breakTypes; track breakType) {
-          <option [value]="breakType">{{ breakType }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="break-notes">
-          Notes
-          @if (notesRequired) {
-          <span class="required-mark" aria-hidden="true">*</span>
-          }
-        </label>
-        <textarea id="break-notes" rows="3" formControlName="notes" [attr.aria-required]="notesRequired"
-          data-testid="break-notes-input"></textarea>
-      </div>
-
-      <div class="actions-row">
-        <button type="button" (click)="startBreak()" [disabled]="onBreak() || loading()" data-testid="start-break-btn">
-          Start Break
-        </button>
-        <button type="button" (click)="stopBreak()" [disabled]="!onBreak() || loading()" data-testid="stop-break-btn">
-          End Break
-        </button>
-      </div>
-    </form>
+    <div class="actions-row">
+      <button type="button" (click)="startBreak()" [disabled]="onBreak() || loading()" data-testid="start-break-btn">
+        Start Break
+      </button>
+      <button type="button" (click)="stopBreak()" [disabled]="!onBreak() || loading()" data-testid="stop-break-btn">
+        End Break
+      </button>
+    </div>
   </section>
   }
 

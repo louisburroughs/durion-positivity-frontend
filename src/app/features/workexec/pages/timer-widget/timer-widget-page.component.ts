@@ -162,7 +162,7 @@ export class TimerWidgetPageComponent implements OnInit {
       .subscribe({
         next: (response) => {
           const payload = this.asRecord(response);
-          const stopped = Array.isArray(payload?.['stopped']) ? (payload['stopped'] as unknown[]) : [];
+          const stopped = Array.isArray(payload?.['stopped']) ? (payload['stopped'] as Array<unknown>) : [];
           this.stoppedEntries.set(stopped);
           this.activeTimers.set([]);
           this.timerState.set('NONE');
@@ -182,7 +182,7 @@ export class TimerWidgetPageComponent implements OnInit {
     }
     const payload = this.asRecord(response);
     if (Array.isArray(payload?.['active'])) {
-      return payload['active'] as unknown[];
+      return payload['active'] as Array<unknown>;
     }
     return [];
   }

@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { RoleManagementService, UserAPIService } from '@durion-sdk/security';
 import {
   CreateRoleRequest,
   PagedResponse,
@@ -22,11 +24,22 @@ describe('SecurityService', () => {
     delete: vi.fn(),
   };
 
+  const roleManagementStub = {
+    getAllRoles: vi.fn(),
+    getRoleByName: vi.fn(),
+    updateRolePermissions: vi.fn(),
+    revokeRoleAssignment: vi.fn(),
+    getUserRoleAssignments: vi.fn(),
+  };
+  const userApiStub = { getUserById: vi.fn() };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         SecurityService,
         { provide: ApiBaseService, useValue: apiStub },
+        { provide: RoleManagementService, useValue: roleManagementStub },
+        { provide: UserAPIService, useValue: userApiStub },
       ],
     });
     service = TestBed.inject(SecurityService);
@@ -37,7 +50,7 @@ describe('SecurityService', () => {
   });
 
   describe('getAllRoles()', () => {
-    it('calls GET /v1/roles with page and size params and returns paged response', () => {
+    it('calls roleManagementSdk.getAllRoles() and returns paged response', () => {
       const pagedResp: PagedResponse<SecurityRole> = {
         results: [{ name: 'ROLE_ADMIN' }],
         totalCount: 1,
@@ -45,26 +58,20 @@ describe('SecurityService', () => {
         pageSize: 20,
         totalPages: 1,
       };
-      apiStub.get.mockReturnValueOnce(of(pagedResp));
+      roleManagementStub.getAllRoles.mockReturnValueOnce(of(pagedResp));
 
       let result: PagedResponse<SecurityRole> | undefined;
       service.getAllRoles(0, 20).subscribe(r => (result = r));
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/v1/roles');
-      expect(params.get('page')).toBe('0');
-      expect(params.get('size')).toBe('20');
+      expect(roleManagementStub.getAllRoles).toHaveBeenCalledWith();
       expect(result).toEqual(pagedResp);
     });
 
-    it('forwards page and size when non-default values are provided', () => {
-      apiStub.get.mockReturnValueOnce(of({ results: [], totalCount: 0, pageNumber: 2, pageSize: 5, totalPages: 0 }));
+    it('calls roleManagementSdk.getAllRoles() regardless of page/size args', () => {
+      roleManagementStub.getAllRoles.mockReturnValueOnce(of({ results: [], totalCount: 0, pageNumber: 2, pageSize: 5, totalPages: 0 }));
       service.getAllRoles(2, 5).subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0];
-      expect(params.get('page')).toBe('2');
-      expect(params.get('size')).toBe('5');
+      expect(roleManagementStub.getAllRoles).toHaveBeenCalledWith();
     });
   });
 
@@ -83,23 +90,22 @@ describe('SecurityService', () => {
   });
 
   describe('getRoleByName()', () => {
-    it('calls GET /v1/roles/{name} with the encoded name', () => {
+    it('calls roleManagementSdk.getRoleByName with the role name', () => {
       const role: SecurityRole = { name: 'ROLE_ADMIN' };
-      apiStub.get.mockReturnValueOnce(of(role));
+      roleManagementStub.getRoleByName.mockReturnValueOnce(of(role));
 
       let result: SecurityRole | undefined;
       service.getRoleByName('ROLE_ADMIN').subscribe(r => (result = r));
 
-      expect(apiStub.get).toHaveBeenCalledWith('/v1/roles/ROLE_ADMIN');
+      expect(roleManagementStub.getRoleByName).toHaveBeenCalledWith('ROLE_ADMIN');
       expect(result).toEqual(role);
     });
 
-    it('encodes special characters in the role name', () => {
-      apiStub.get.mockReturnValueOnce(of({ name: 'ROLE TEST' }));
+    it('passes role name as-is to the SDK', () => {
+      roleManagementStub.getRoleByName.mockReturnValueOnce(of({ name: 'ROLE TEST' }));
       service.getRoleByName('ROLE TEST').subscribe();
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toContain('ROLE%20TEST');
+      expect(roleManagementStub.getRoleByName).toHaveBeenCalledWith('ROLE TEST');
     });
   });
 
@@ -126,58 +132,55 @@ describe('SecurityService', () => {
   });
 
   describe('updateRolePermissions()', () => {
-    it('calls PUT /v1/roles/permissions with the request body', () => {
+    it('calls roleManagementSdk.updateRolePermissions with the request body', () => {
       const req: UpdateRolePermissionsRequest = {
         roleName: 'ROLE_ADMIN',
         permissionKeys: ['PERM_READ', 'PERM_WRITE'],
       };
-      apiStub.put.mockReturnValueOnce(of(undefined));
+      roleManagementStub.updateRolePermissions.mockReturnValueOnce(of(undefined));
 
       service.updateRolePermissions(req).subscribe();
 
-      expect(apiStub.put).toHaveBeenCalledWith('/v1/roles/permissions', req);
+      expect(roleManagementStub.updateRolePermissions).toHaveBeenCalledWith(req);
     });
   });
 
   describe('revokeRoleAssignment()', () => {
-    it('calls DELETE /v1/roles/assignments/{id} with the encoded assignment id', () => {
-      apiStub.delete.mockReturnValueOnce(of(undefined));
+    it('calls roleManagementSdk.revokeRoleAssignment with the assignment id', () => {
+      roleManagementStub.revokeRoleAssignment.mockReturnValueOnce(of(undefined));
 
       service.revokeRoleAssignment('assign-001').subscribe();
 
-      expect(apiStub.delete).toHaveBeenCalledWith('/v1/roles/assignments/assign-001');
+      expect(roleManagementStub.revokeRoleAssignment).toHaveBeenCalledWith('assign-001');
     });
 
-    it('encodes special characters in assignment id', () => {
-      apiStub.delete.mockReturnValueOnce(of(undefined));
+    it('passes assignmentId as-is to the SDK', () => {
+      roleManagementStub.revokeRoleAssignment.mockReturnValueOnce(of(undefined));
       service.revokeRoleAssignment('assign/001').subscribe();
 
-      const [path] = apiStub.delete.mock.calls[0];
-      expect(path).toContain('assign%2F001');
+      expect(roleManagementStub.revokeRoleAssignment).toHaveBeenCalledWith('assign/001');
     });
   });
 
   describe('getUserRoleAssignments()', () => {
-    it('calls GET /v1/roles/assignments/user/{userId} and returns assignments', () => {
+    it('calls roleManagementSdk.getUserRoleAssignments with the userId', () => {
       const assignments: RoleAssignment[] = [
         { id: 'a1', userId: 'u1', roleName: 'ROLE_ADMIN', scopeType: 'GLOBAL' },
       ];
-      apiStub.get.mockReturnValueOnce(of(assignments));
+      roleManagementStub.getUserRoleAssignments.mockReturnValueOnce(of(assignments));
 
       let result: RoleAssignment[] | undefined;
       service.getUserRoleAssignments('u1').subscribe(r => (result = r));
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/v1/roles/assignments/user/u1');
+      expect(roleManagementStub.getUserRoleAssignments).toHaveBeenCalledWith('u1');
       expect(result).toEqual(assignments);
     });
 
-    it('encodes special characters in userId', () => {
-      apiStub.get.mockReturnValueOnce(of([]));
+    it('passes userId as-is to the SDK', () => {
+      roleManagementStub.getUserRoleAssignments.mockReturnValueOnce(of([]));
       service.getUserRoleAssignments('user@domain.com').subscribe();
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toContain('user%40domain.com');
+      expect(roleManagementStub.getUserRoleAssignments).toHaveBeenCalledWith('user@domain.com');
     });
   });
 });

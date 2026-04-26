@@ -1,7 +1,27 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import {
+  CRMAccountsService,
+  CRMCommunicationPreferencesService,
+  CRMContactsService,
+  CRMPartyRelationshipsService,
+  CRMPersonsService,
+  CRMSnapshotsService,
+  CRMVehiclesService,
+} from '@durion-sdk/customer';
+import type {
+  CreateCommercialAccountRequest as SdkCreateCommercialAccountRequest,
+  MergePartiesRequest as SdkMergePartiesRequest,
+  SearchPartiesRequest as SdkSearchPartiesRequest,
+  CreatePersonRequest as SdkCreatePersonRequest,
+  CreatePartyRelationshipRequest as SdkCreatePartyRelationshipRequest,
+  UpdateContactRolesRequest as SdkUpdateContactRolesRequest,
+  UpsertCommunicationPreferencesRequest as SdkUpsertCommunicationPreferencesRequest,
+  CreateVehicleForPartyRequest as SdkCreateVehicleForPartyRequest,
+} from '@durion-sdk/customer';
 import {
   BillingRules,
   BillingTermsRef,
@@ -24,12 +44,16 @@ import {
   VehicleRef,
 } from '../models/crm.models';
 
-/**
- * CrmService — adapts CRM OpenAPI operations to Angular observables.
- */
 @Injectable({ providedIn: 'root' })
 export class CrmService {
-  constructor(private readonly api: ApiBaseService) { }
+  private readonly api = inject(ApiBaseService);
+  private readonly accountsApi = inject(CRMAccountsService);
+  private readonly communicationPrefsApi = inject(CRMCommunicationPreferencesService);
+  private readonly contactsApi = inject(CRMContactsService);
+  private readonly relationshipsApi = inject(CRMPartyRelationshipsService);
+  private readonly personsApi = inject(CRMPersonsService);
+  private readonly snapshotsApi = inject(CRMSnapshotsService);
+  private readonly vehiclesApi = inject(CRMVehiclesService);
 
   getBillingTerms(): Observable<BillingTermsRef[]> {
     return this.api.get<BillingTermsRef[]>('/v1/crm/billing-terms');
@@ -38,14 +62,25 @@ export class CrmService {
   createCommercialAccount(
     request: CreateCommercialAccountRequest,
   ): Observable<CreateCommercialAccountResponse> {
-    return this.api.post<CreateCommercialAccountResponse>(
-      '/v1/crm/accounts/parties',
-      request,
-    );
+    const sdkRequest: SdkCreateCommercialAccountRequest = {
+      legalName: request.legalName,
+      taxId: request.taxId,
+      billingTermsId: request.defaultBillingTermsId,
+      externalIdentifiers: request.externalIdentifiers?.reduce<Record<string, string>>((acc, ei) => {
+        acc[ei.type] = ei.value;
+        return acc;
+      }, {}),
+    };
+    return this.accountsApi.createCommercialAccount(sdkRequest) as Observable<CreateCommercialAccountResponse>;
   }
 
   mergeParties(partyId: string, request: MergePartiesRequest): Observable<MergePartiesResponse> {
-    return this.api.post<MergePartiesResponse>(`/v1/crm/accounts/parties/${partyId}/merge`, request);
+    const sdkRequest: SdkMergePartiesRequest = {
+      survivorPartyId: request.survivorPartyId,
+      losingPartyId: request.losingPartyId,
+      justification: request.justification,
+    };
+    return this.accountsApi.mergeParties(partyId, sdkRequest) as Observable<MergePartiesResponse>;
   }
 
   checkCommercialAccountDuplicates(legalName: string): Observable<DuplicateCheckResponse> {
@@ -54,39 +89,53 @@ export class CrmService {
   }
 
   getParty(partyId: string): Observable<PartyDetail> {
-    return this.api.get<PartyDetail>(`/v1/crm/accounts/parties/${partyId}`);
+    return this.accountsApi.getParty(partyId) as Observable<PartyDetail>;
   }
 
   searchParties(query: string): Observable<{ parties: PartyDetail[] }> {
-    const params = new HttpParams().set('q', query);
-    return this.api.get<{ parties: PartyDetail[] }>('/v1/crm/accounts/parties/search', params);
+    const sdkRequest: SdkSearchPartiesRequest = { name: query };
+    return this.accountsApi.searchParties(sdkRequest).pipe(
+      map(response => ({ parties: (response.results ?? []) as PartyDetail[] })),
+    );
   }
 
   createPerson(request: CreatePersonRequest): Observable<CreatePersonResponse> {
-    return this.api.post<CreatePersonResponse>('/v1/crm/persons', request);
+    const sdkRequest: SdkCreatePersonRequest = {
+      firstName: request.firstName,
+      lastName: request.lastName,
+      preferredContactMethod: 'NONE' as SdkCreatePersonRequest['preferredContactMethod'],
+      emails: request.email ? [{ value: request.email }] : undefined,
+      phones: request.phone ? [{ value: request.phone }] : undefined,
+    };
+    return this.personsApi.createPerson(sdkRequest) as Observable<CreatePersonResponse>;
   }
 
   getPerson(personId: string): Observable<CreatePersonResponse> {
-    return this.api.get<CreatePersonResponse>(`/v1/crm/persons/${personId}`);
+    return this.personsApi.getPerson(personId) as Observable<CreatePersonResponse>;
   }
 
   searchPersons(query: string): Observable<{ persons: CreatePersonResponse[] }> {
-    const params = new HttpParams().set('q', query);
-    return this.api.get<{ persons: CreatePersonResponse[] }>('/v1/crm/persons', params);
+    return this.personsApi.searchPersons(query).pipe(
+      map(items => ({ persons: items as CreatePersonResponse[] })),
+    );
   }
 
   createRelationship(
     partyId: string,
     request: CreatePartyRelationshipRequest,
   ): Observable<CreatePartyRelationshipResponse> {
-    return this.api.post<CreatePartyRelationshipResponse>(
-      `/v1/crm/commercial-accounts/${partyId}/relationships`,
-      request,
-    );
+    const sdkRequest: SdkCreatePartyRelationshipRequest = {
+      personId: request.personId,
+      roles: new Set(request.roles) as SdkCreatePartyRelationshipRequest['roles'],
+      effectiveStartDate: request.effectiveStartDate,
+      effectiveEndDate: request.effectiveEndDate,
+      primaryBillingContact: request.primaryBillingContact,
+    };
+    return this.relationshipsApi.createRelationship(partyId, sdkRequest) as Observable<CreatePartyRelationshipResponse>;
   }
 
   getContactsWithRoles(partyId: string): Observable<Relationship[]> {
-    return this.api.get<Relationship[]>(`/v1/crm/accounts/parties/${partyId}/contacts`);
+    return this.contactsApi.getContactsWithRoles(partyId) as Observable<Relationship[]>;
   }
 
   updateContactRoles(
@@ -94,62 +143,60 @@ export class CrmService {
     contactId: string,
     request: UpdateContactRolesRequest,
   ): Observable<Contact> {
-    return this.api.put<Contact>(
-      `/v1/crm/accounts/parties/${partyId}/contacts/${contactId}/roles`,
-      request,
-    );
+    const sdkRequest: SdkUpdateContactRolesRequest = {
+      roles: request.roles.map(role => ({ roleCode: role as string })),
+    };
+    return this.contactsApi.updateContactRoles(partyId, contactId, sdkRequest) as Observable<Contact>;
   }
 
   designatePrimaryBillingContact(
     partyId: string,
     relationshipId: string,
   ): Observable<Relationship> {
-    return this.api.put<Relationship>(
-      `/v1/crm/accounts/parties/${partyId}/relationships/${relationshipId}/primary-billing`,
-      {},
-    );
+    return this.relationshipsApi.designatePrimaryBillingContact(partyId, relationshipId) as Observable<Relationship>;
   }
 
   deactivateRelationship(partyId: string, relationshipId: string): Observable<void> {
-    return this.api.delete<void>(`/v1/crm/accounts/parties/${partyId}/relationships/${relationshipId}`);
+    return this.relationshipsApi.deactivateRelationship(partyId, relationshipId) as Observable<void>;
   }
 
   getCommunicationPreferences(partyId: string): Observable<CommunicationPreferences> {
-    return this.api.get<CommunicationPreferences>(
-      `/v1/crm/accounts/parties/${partyId}/communicationPreferences`,
-    );
+    return this.communicationPrefsApi.getCommunicationPreferences(partyId) as Observable<CommunicationPreferences>;
   }
 
   upsertCommunicationPreferences(
     partyId: string,
     prefs: CommunicationPreferences,
   ): Observable<CommunicationPreferences> {
-    return this.api.put<CommunicationPreferences>(
-      `/v1/crm/accounts/parties/${partyId}/communicationPreferences`,
-      prefs,
-    );
+    const sdkRequest: SdkUpsertCommunicationPreferencesRequest = {
+      emailPreference: prefs.emailEnabled ? 'ENABLED' : 'DISABLED',
+      smsPreference: prefs.smsEnabled ? 'ENABLED' : 'DISABLED',
+      phonePreference: prefs.preferredChannel,
+    };
+    return this.communicationPrefsApi.upsertCommunicationPreferences(partyId, sdkRequest) as Observable<CommunicationPreferences>;
   }
 
   createVehicleForParty(
     partyId: string,
     request: CreateVehicleRequest,
   ): Observable<VehicleRef> {
-    return this.api.post<VehicleRef>(
-      `/v1/crm/accounts/parties/${partyId}/vehicles`,
-      request,
-    );
+    const sdkRequest: SdkCreateVehicleForPartyRequest = {
+      vinNumber: request.vin,
+      unitNumber: request.unitNumber,
+    };
+    return this.vehiclesApi.createVehicles(partyId, sdkRequest) as Observable<VehicleRef>;
   }
 
   fetchByParty(partyId: string): Observable<CrmSnapshot> {
-    return this.api.get<CrmSnapshot>(`/v1/crm/snapshot/party/${partyId}`);
+    return this.snapshotsApi.fetchByParty(partyId) as Observable<CrmSnapshot>;
   }
 
   fetchByVehicle(vehicleId: string): Observable<CrmSnapshot> {
-    return this.api.get<CrmSnapshot>(`/v1/crm/snapshot/vehicle/${vehicleId}`);
+    return this.snapshotsApi.fetchByVehicle(vehicleId) as Observable<CrmSnapshot>;
   }
 
   getBillingRules(partyId: string): Observable<BillingRules> {
-    return this.api.get<BillingRules>(`/v1/crm/accounts/parties/${partyId}/billing-rules`);
+    return this.snapshotsApi.getBillingRules(partyId) as Observable<BillingRules>;
   }
 
   upsertBillingRules(partyId: string, rules: Partial<BillingRules>): Observable<BillingRules> {

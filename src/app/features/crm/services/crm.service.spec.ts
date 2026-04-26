@@ -1,6 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import {
+  CRMAccountsService,
+  CRMCommunicationPreferencesService,
+  CRMContactsService,
+  CRMPartyRelationshipsService,
+  CRMPersonsService,
+  CRMSnapshotsService,
+  CRMVehiclesService,
+} from '@durion-sdk/customer';
 import { CrmService } from './crm.service';
 import type { BillingRules, CrmSnapshot } from '../models/crm.models';
 
@@ -15,11 +24,24 @@ describe('CrmService', () => {
     delete: vi.fn(),
   };
 
+  const snapshotsApiStub = {
+    fetchByParty: vi.fn(),
+    fetchByVehicle: vi.fn(),
+    getBillingRules: vi.fn(),
+  };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         CrmService,
         { provide: ApiBaseService, useValue: apiBaseServiceStub },
+        { provide: CRMAccountsService, useValue: {} },
+        { provide: CRMCommunicationPreferencesService, useValue: {} },
+        { provide: CRMContactsService, useValue: {} },
+        { provide: CRMPartyRelationshipsService, useValue: {} },
+        { provide: CRMPersonsService, useValue: {} },
+        { provide: CRMSnapshotsService, useValue: snapshotsApiStub },
+        { provide: CRMVehiclesService, useValue: {} },
       ],
     });
 
@@ -31,7 +53,7 @@ describe('CrmService', () => {
   });
 
   describe('fetchByParty()', () => {
-    it('calls GET /v1/crm/snapshot/party/{partyId}', () => {
+    it('calls snapshotsApi.fetchByParty with the given partyId', () => {
       const partySnapshot: CrmSnapshot = {
         partyId: 'party-123',
         partyName: 'Acme Fleet',
@@ -41,22 +63,20 @@ describe('CrmService', () => {
         timestamp: '2026-03-30T12:00:00Z',
         source: 'CRM',
       };
-      apiBaseServiceStub.get.mockReturnValueOnce(of(partySnapshot));
+      snapshotsApiStub.fetchByParty.mockReturnValueOnce(of(partySnapshot));
 
       let result: CrmSnapshot | undefined;
       service.fetchByParty('party-123').subscribe(value => {
         result = value;
       });
 
-      expect(apiBaseServiceStub.get).toHaveBeenCalledOnce();
-      const [path] = apiBaseServiceStub.get.mock.calls[0];
-      expect(path).toBe('/v1/crm/snapshot/party/party-123');
+      expect(snapshotsApiStub.fetchByParty).toHaveBeenCalledWith('party-123');
       expect(result).toEqual(partySnapshot);
     });
   });
 
   describe('fetchByVehicle()', () => {
-    it('calls GET /v1/crm/snapshot/vehicle/{vehicleId}', () => {
+    it('calls snapshotsApi.fetchByVehicle with the given vehicleId', () => {
       const vehicleSnapshot: CrmSnapshot = {
         partyId: 'party-veh-1',
         partyName: 'Vehicle Party',
@@ -66,38 +86,34 @@ describe('CrmService', () => {
         timestamp: '2026-03-30T12:05:00Z',
         source: 'CRM',
       };
-      apiBaseServiceStub.get.mockReturnValueOnce(of(vehicleSnapshot));
+      snapshotsApiStub.fetchByVehicle.mockReturnValueOnce(of(vehicleSnapshot));
 
       let result: CrmSnapshot | undefined;
       service.fetchByVehicle('vehicle-42').subscribe(value => {
         result = value;
       });
 
-      expect(apiBaseServiceStub.get).toHaveBeenCalledOnce();
-      const [path] = apiBaseServiceStub.get.mock.calls[0];
-      expect(path).toBe('/v1/crm/snapshot/vehicle/vehicle-42');
+      expect(snapshotsApiStub.fetchByVehicle).toHaveBeenCalledWith('vehicle-42');
       expect(result).toEqual(vehicleSnapshot);
     });
   });
 
   describe('getBillingRules()', () => {
-    it('calls GET /v1/crm/accounts/parties/{partyId}/billing-rules', () => {
+    it('calls snapshotsApi.getBillingRules with the given partyId', () => {
       const rules: BillingRules = {
         requirePo: true,
         paymentTerms: 'NET_30',
         creditLimit: 10000,
         notes: 'Commercial account',
       };
-      apiBaseServiceStub.get.mockReturnValueOnce(of(rules));
+      snapshotsApiStub.getBillingRules.mockReturnValueOnce(of(rules));
 
       let result: BillingRules | undefined;
       service.getBillingRules('party-321').subscribe(value => {
         result = value;
       });
 
-      expect(apiBaseServiceStub.get).toHaveBeenCalledOnce();
-      const [path] = apiBaseServiceStub.get.mock.calls[0];
-      expect(path).toBe('/v1/crm/accounts/parties/party-321/billing-rules');
+      expect(snapshotsApiStub.getBillingRules).toHaveBeenCalledWith('party-321');
       expect(result).toEqual(rules);
     });
   });

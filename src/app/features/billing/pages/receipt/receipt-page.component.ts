@@ -5,7 +5,7 @@ import { DatePipe } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { switchMap } from 'rxjs';
 import { GenerateReceiptRequest, ReceiptRef } from '../../models/billing.models';
-import { BillingService } from '../../services/billing.service';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 
 @Component({
   selector: 'app-receipt-page',
@@ -16,7 +16,7 @@ import { BillingService } from '../../services/billing.service';
 })
 export class ReceiptPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly billing = inject(BillingService);
+  private readonly api = inject(ApiBaseService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly invoiceId = signal<string>('');
@@ -50,12 +50,12 @@ export class ReceiptPageComponent implements OnInit {
     this.state.set('submitting');
     this.errorKey.set(null);
 
-    this.billing
-      .generateReceipt(this.invoiceId(), delivery)
+    this.api
+      .post<{ receiptId: string }>(`/v1/billing/invoices/${this.invoiceId()}/receipts`, delivery ?? {})
       .pipe(
         switchMap(result => {
           this.receiptId.set(result.receiptId);
-          return this.billing.getReceipt(this.invoiceId(), result.receiptId);
+          return this.api.get<ReceiptRef>(`/v1/billing/invoices/${this.invoiceId()}/receipts/${result.receiptId}`);
         }),
         takeUntilDestroyed(this.destroyRef),
       )
@@ -108,8 +108,8 @@ export class ReceiptPageComponent implements OnInit {
     this.state.set('submitting');
     this.errorKey.set(null);
 
-    this.billing
-      .reprintReceipt(this.invoiceId(), receiptId)
+    this.api
+      .post<ReceiptRef>(`/v1/billing/invoices/${this.invoiceId()}/receipts/${receiptId}/reprint`, {})
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: receipt => {
@@ -132,8 +132,8 @@ export class ReceiptPageComponent implements OnInit {
     this.state.set('loading');
     this.errorKey.set(null);
 
-    this.billing
-      .getReceipt(this.invoiceId(), receiptId)
+    this.api
+      .get<ReceiptRef>(`/v1/billing/invoices/${this.invoiceId()}/receipts/${receiptId}`)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: receipt => {

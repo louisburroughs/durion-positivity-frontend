@@ -2,6 +2,14 @@ import { HttpParams } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import {
+  AccountingEventsService,
+  APPaymentsService,
+  CreditMemosService,
+  InvoicePaymentsService,
+  PaymentApplicationsService,
+  PostingRulesService,
+} from '@durion-sdk/accounting';
 import { AccountingService } from './accounting.service';
 import {
   AccountingEventDetail,
@@ -24,19 +32,36 @@ describe('AccountingService', () => {
     delete: vi.fn(),
   };
 
+  const accountingEventsStub = {
+    getEvent: vi.fn(),
+    submitEvent: vi.fn(),
+    retryEventProcessing: vi.fn(),
+    reprocessSuspendedEvent: vi.fn(),
+    getReprocessingHistory: vi.fn(),
+  };
+
+  const invoicePaymentsStub = {
+    getInvoiceStatus: vi.fn(),
+  };
+
   beforeEach(() => {
+    vi.clearAllMocks();
     TestBed.configureTestingModule({
       providers: [
         AccountingService,
         { provide: ApiBaseService, useValue: apiBaseServiceStub },
+        { provide: AccountingEventsService, useValue: accountingEventsStub },
+        { provide: APPaymentsService, useValue: {} },
+        { provide: CreditMemosService, useValue: {} },
+        { provide: InvoicePaymentsService, useValue: invoicePaymentsStub },
+        { provide: PaymentApplicationsService, useValue: {} },
+        { provide: PostingRulesService, useValue: {} },
       ],
     });
     service = TestBed.inject(AccountingService);
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
+  afterEach(() => vi.clearAllMocks());
 
   describe('listEvents()', () => {
     it('should map both items and content to AccountingEventListItem[]', () => {
@@ -68,19 +93,19 @@ describe('AccountingService', () => {
   });
 
   describe('getEvent()', () => {
-    it('should call GET /v1/accounting/events/:eventId and return AccountingEventDetail', () => {
+    it('should call accountingEventsService.getEvent(eventId) and return AccountingEventDetail', () => {
       const fixture: AccountingEventDetail = {
         eventId: 'evt-001',
         eventType: 'InvoiceIssued',
         processingStatus: IngestionProcessingStatus.Processed,
         receivedAt: '2025-01-01T10:00:00Z',
       };
-      apiBaseServiceStub.get.mockReturnValueOnce(of(fixture));
+      accountingEventsStub.getEvent.mockReturnValueOnce(of(fixture));
 
       let result: AccountingEventDetail | undefined;
       service.getEvent('evt-001').subscribe(r => (result = r));
 
-      expect(apiBaseServiceStub.get.mock.calls[0][0]).toBe('/v1/accounting/events/evt-001');
+      expect(accountingEventsStub.getEvent).toHaveBeenCalledWith('evt-001');
       expect(result).toEqual(fixture);
     });
   });
@@ -123,7 +148,7 @@ describe('AccountingService', () => {
   });
 
   describe('getInvoiceStatus() [Story #70]', () => {
-    it('should call GET /v1/accounting/invoices/:invoiceId/status and return InvoicePaymentStatus', () => {
+    it('should call invoicePaymentsService.getInvoiceStatus(invoiceId) and return InvoicePaymentStatus', () => {
       const fixture: InvoicePaymentStatus = {
         invoiceId: 'inv-001',
         paymentStatus: 'PAID',
@@ -132,14 +157,12 @@ describe('AccountingService', () => {
         totalAmount: 150,
         paidAmount: 150,
       };
-      apiBaseServiceStub.get.mockReturnValueOnce(of(fixture));
+      invoicePaymentsStub.getInvoiceStatus.mockReturnValueOnce(of(fixture));
 
       let result: InvoicePaymentStatus | undefined;
       service.getInvoiceStatus('inv-001').subscribe((r: InvoicePaymentStatus) => (result = r));
 
-      expect(apiBaseServiceStub.get.mock.calls[0][0]).toBe(
-        '/v1/accounting/invoices/inv-001/status',
-      );
+      expect(invoicePaymentsStub.getInvoiceStatus).toHaveBeenCalledWith('inv-001');
       expect(result).toEqual(fixture);
     });
   });

@@ -7,29 +7,26 @@ import {
 } from '@angular/core';
 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { v4 as uuidv4 } from 'uuid';
-import { PeopleService } from '../../services/people.service';
-
-type BreakType = 'MEAL' | 'REST' | 'OTHER';
+import { WorkSessionDto, WorkSessionsAPIService } from '@durion-sdk/people';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 
 @Component({
   selector: 'app-work-session-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [],
   templateUrl: './work-session-page.component.html',
   styleUrl: './work-session-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkSessionPageComponent {
   private readonly route = inject(ActivatedRoute);
-  private readonly peopleService = inject(PeopleService);
+  private readonly workSessionsService = inject(WorkSessionsAPIService);
+  private readonly api = inject(ApiBaseService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly currentSession = signal<Record<string, unknown> | null>(null);
-  readonly workorderId = signal('');
-  readonly locationId = signal('');
+  readonly currentSession = signal<WorkSessionDto | null>(null);
+  readonly personId = signal('');
 
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -43,49 +40,33 @@ export class WorkSessionPageComponent {
   readonly breaks = signal<unknown[]>([]);
   readonly breaksLoading = signal(false);
 
-  // Break form
-  readonly breakForm = new FormGroup({
-    breakType: new FormControl<BreakType>('MEAL', { nonNullable: true, validators: [Validators.required] }),
-    notes: new FormControl('', { nonNullable: true }),
-  });
-
-  readonly breakTypes: BreakType[] = ['MEAL', 'REST', 'OTHER'];
-
   constructor() {
-    this.route.params
+    this.route.queryParams
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
-        this.workorderId.set(params['workorderId'] ?? '');
-        this.locationId.set(params['locationId'] ?? '');
+        this.personId.set(params['personId'] ?? '');
       });
   }
 
   private sessionId(): string | null {
-    const s = this.currentSession();
-    if (!s) return null;
-    return (s['sessionId'] as string) ?? (s['id'] as string) ?? null;
+    return this.currentSession()?.sessionId ?? null;
   }
 
   startSession(): void {
-    const workorderId = this.workorderId();
-    const locationId = this.locationId();
-    if (!workorderId || !locationId) {
-      this.error.set('work order ID and Location ID are required to start a session.');
+    const personId = this.personId();
+    if (!personId) {
+      this.error.set('Person ID is required to start a session.');
       return;
     }
-    const idempotencyKey = uuidv4();
     this.loading.set(true);
     this.error.set(null);
     this.actionSuccess.set(null);
-    this.peopleService.startWorkSession({ workorderId, locationId }, idempotencyKey)
+    this.workSessionsService.startWorkSession({ personId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (session) => {
-          this.currentSession.set(session as Record<string, unknown>);
-          const s = session as Record<string, unknown>;
-          this.sessionTimestamps.set({
-            clockedInAt: s['clockedInAt'] as string ?? s['startedAt'] as string,
-          });
+          this.currentSession.set(session);
+          this.sessionTimestamps.set({ clockedInAt: session.startedAt });
           this.actionSuccess.set('Clocked in successfully.');
           this.loading.set(false);
           this.loadBreaks();
@@ -97,20 +78,18 @@ export class WorkSessionPageComponent {
       });
   }
 
-  stopSession(_sessionId?: string): void {
-    const sid = this.sessionId();
-    if (!sid) return;
-    const idempotencyKey = uuidv4();
+  stopSession(): void {
+    const personId = this.personId();
+    if (!personId) return;
     this.loading.set(true);
     this.actionSuccess.set(null);
-    this.peopleService.stopWorkSession({ sessionId: sid }, idempotencyKey)
+    this.workSessionsService.stopWorkSession({ personId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (session) => {
-          const s = session as Record<string, unknown>;
           this.sessionTimestamps.set({
-            clockedInAt: (this.sessionTimestamps()?.clockedInAt),
-            clockedOutAt: s['clockedOutAt'] as string ?? s['endedAt'] as string,
+            clockedInAt: this.sessionTimestamps()?.clockedInAt,
+            clockedOutAt: session.endedAt,
           });
           this.currentSession.set(null);
           this.onBreak.set(false);
@@ -124,36 +103,28 @@ export class WorkSessionPageComponent {
       });
   }
 
-  startBreak(_sessionId?: string): void {
-    this.breakForm.markAllAsTouched();
-    if (this.breakForm.invalid) return;
+  startBreak(): void {
     const sid = this.sessionId();
     if (!sid) {
       this.error.set('No active session. Clock in first.');
       return;
     }
-    const { breakType, notes } = this.breakForm.getRawValue();
-    const body: Record<string, unknown> = { breakType };
-    if (notes.trim()) body['notes'] = notes.trim();
-    const idempotencyKey = uuidv4();
-    this.peopleService.startBreak(sid, body, idempotencyKey)
+    this.workSessionsService.startWorkSessionBreak(sid)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.onBreak.set(true);
           this.actionSuccess.set('Break started.');
-          this.breakForm.reset({ breakType: 'MEAL', notes: '' });
           this.loadBreaks();
         },
         error: (err) => { this.error.set(err?.error?.message ?? 'Failed to start break.'); },
       });
   }
 
-  stopBreak(_sessionId?: string): void {
+  stopBreak(): void {
     const sid = this.sessionId();
     if (!sid) return;
-    const idempotencyKey = uuidv4();
-    this.peopleService.stopBreak(sid, {}, idempotencyKey)
+    this.workSessionsService.stopWorkSessionBreak(sid)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -169,7 +140,7 @@ export class WorkSessionPageComponent {
     const sid = this.sessionId();
     if (!sid) return;
     this.breaksLoading.set(true);
-    this.peopleService.getWorkSessionBreaks(sid)
+    this.api.get<unknown[]>('/v1/people/workSessions/' + sid + '/breaks')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (items) => {
@@ -186,9 +157,5 @@ export class WorkSessionPageComponent {
 
   getSessionId(): string {
     return this.sessionId() ?? '';
-  }
-
-  get notesRequired(): boolean {
-    return this.breakForm.controls.breakType.value === 'OTHER';
   }
 }

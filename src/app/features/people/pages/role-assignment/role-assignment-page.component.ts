@@ -1,8 +1,7 @@
 import { Component, computed, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { CreateAssignmentRequest, Role, RoleAssignment } from '../../models/people-rbac.models';
-import { PeopleService } from '../../services/people.service';
+import { PeopleAccessControlService, PersonRoleAssignmentRequest, RoleDto, UserRoleDto } from '@durion-sdk/people';
 
 @Component({
   selector: 'app-role-assignment-page',
@@ -12,11 +11,12 @@ import { PeopleService } from '../../services/people.service';
   styleUrl: './role-assignment-page.component.css',
 })
 export class RoleAssignmentPageComponent implements OnInit {
+  private readonly accessControlService = inject(PeopleAccessControlService);
   private readonly destroyRef = inject(DestroyRef);
 
   personUuid = signal('');
-  assignments = signal<RoleAssignment[]>([]);
-  roles = signal<Role[]>([]);
+  assignments = signal<UserRoleDto[]>([]);
+  roles = signal<RoleDto[]>([]);
   loading = signal(false);
   scopeType = signal<'GLOBAL' | 'LOCATION'>('GLOBAL');
   locationId = signal('');
@@ -34,7 +34,6 @@ export class RoleAssignmentPageComponent implements OnInit {
   );
 
   constructor(
-    private readonly peopleService: PeopleService,
     private readonly route: ActivatedRoute,
   ) { }
 
@@ -53,7 +52,7 @@ export class RoleAssignmentPageComponent implements OnInit {
   loadAssignments(): void {
     this.errorMessage.set(null);
     this.loading.set(true);
-    this.peopleService.getAssignments(this.personUuid(), this.includeHistory()).subscribe({
+    this.accessControlService.getAssignments(this.personUuid(), this.includeHistory()).subscribe({
       next: data => {
         this.assignments.set(data);
         this.loading.set(false);
@@ -67,7 +66,7 @@ export class RoleAssignmentPageComponent implements OnInit {
 
   loadRoles(): void {
     this.errorMessage.set(null);
-    this.peopleService.getRoles(this.personUuid()).subscribe({
+    this.accessControlService.getRoles(this.personUuid()).subscribe({
       next: data => this.roles.set(data),
       error: () => {
         this.errorMessage.set('Unable to load available roles. Please try again.');
@@ -81,11 +80,9 @@ export class RoleAssignmentPageComponent implements OnInit {
       return;
     }
 
-    const body: CreateAssignmentRequest = {
-      personId: this.personUuid(),
+    const body: PersonRoleAssignmentRequest = {
       roleCode: this.selectedRoleCode(),
-      scopeType: this.scopeType(),
-      effectiveStartAt: this.effectiveStartAt(),
+      startDate: this.effectiveStartAt() || undefined,
     };
 
     if (this.scopeType() === 'LOCATION' && this.locationId()) {
@@ -93,10 +90,10 @@ export class RoleAssignmentPageComponent implements OnInit {
     }
 
     if (this.effectiveEndAt()) {
-      body.effectiveEndAt = this.effectiveEndAt();
+      body.endDate = this.effectiveEndAt();
     }
 
-    this.peopleService.createAssignment(body).subscribe({
+    this.accessControlService.createAssignment(this.personUuid(), body).subscribe({
       next: () => this.loadAssignments(),
       error: () => {
         this.errorMessage.set('Unable to assign the selected role. Please try again.');
@@ -108,18 +105,16 @@ export class RoleAssignmentPageComponent implements OnInit {
     this.confirmingAssignmentId.set(assignmentId);
   }
 
-  revokeAssignment(roleCode: string, assignmentId?: string): void {
+  revokeAssignment(roleCode: string): void {
     this.errorMessage.set(null);
-    this.peopleService.revokeAssignment(this.personUuid(), roleCode).subscribe({
+    this.accessControlService.revokeAssignment(this.personUuid(), roleCode).subscribe({
       next: () => {
         this.confirmingAssignmentId.set(null);
         this.loadAssignments();
       },
       error: () => {
         this.errorMessage.set('Unable to revoke the role assignment. Please try again.');
-        if (assignmentId && this.confirmingAssignmentId() === assignmentId) {
-          this.confirmingAssignmentId.set(null);
-        }
+        this.confirmingAssignmentId.set(null);
       },
     });
   }

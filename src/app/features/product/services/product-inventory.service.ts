@@ -1,7 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import {
+  InventoryAvailabilityService,
+  LocationAvailabilityDto,
+} from '@durion-sdk/inventory';
 import {
   FeedSourceType,
   InventoryAvailability,
@@ -12,14 +17,13 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class ProductInventoryService {
-  constructor(private readonly api: ApiBaseService) {}
+  private readonly api = inject(ApiBaseService);
+  private readonly availSdk = inject(InventoryAvailabilityService);
 
-  queryInventoryAvailability(sku: string, locationId?: string): Observable<InventoryAvailability> {
-    let params = new HttpParams().set('sku', sku);
-    if (locationId) {
-      params = params.set('locationId', locationId);
-    }
-    return this.api.get<InventoryAvailability>('/inventory/v1/availability', params);
+  queryInventoryAvailability(sku: string, _locationId?: string): Observable<InventoryAvailability> {
+    return this.availSdk.queryInventoryAvailability(sku).pipe(
+      map((items: Array<LocationAvailabilityDto>) => this.toInventoryAvailability(sku, items)),
+    );
   }
 
   queryAvailabilityBySku(sku: string, sourceType: FeedSourceType): Observable<SkuAvailability[]> {
@@ -38,5 +42,30 @@ export class ProductInventoryService {
       `/inventory/v1/locations/${encodeURIComponent(locationId)}/inventory`,
       params,
     );
+  }
+
+  // =========================================================================
+  // Private adapters
+  // =========================================================================
+
+  private toLocationInventory(dto: LocationAvailabilityDto): LocationInventory {
+    return {
+      locationId: dto.locationId ?? '',
+      locationName: dto.locationName ?? '',
+      onHand: dto.onHandQuantity ?? 0,
+      reserved: 0,
+      atp: dto.availableToPromiseQuantity ?? 0,
+    };
+  }
+
+  private toInventoryAvailability(sku: string, items: Array<LocationAvailabilityDto>): InventoryAvailability {
+    const breakdown = items.map(d => this.toLocationInventory(d));
+    return {
+      sku,
+      totalOnHand: breakdown.reduce((sum, l) => sum + l.onHand, 0),
+      totalReserved: breakdown.reduce((sum, l) => sum + l.reserved, 0),
+      totalAtp: breakdown.reduce((sum, l) => sum + l.atp, 0),
+      locationBreakdown: breakdown,
+    };
   }
 }

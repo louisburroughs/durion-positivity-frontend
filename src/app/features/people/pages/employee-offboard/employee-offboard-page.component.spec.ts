@@ -5,16 +5,14 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { NEVER, Observable, of, throwError } from 'rxjs';
 
 import { EmployeeOffboardPageComponent } from './employee-offboard-page.component';
-import { Employee, EmploymentStatus } from '../../models/employee.models';
-import { PeopleService } from '../../services/people.service';
+import { EmployeeAPIService } from '@durion-sdk/people';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────
 
-const mockEmployee: Employee = {
-  employeeId: 'emp-001',
-  firstName: 'Jane',
-  lastName: 'Doe',
-  employmentStatus: EmploymentStatus.ACTIVE,
+const mockEmployee = {
+  id: 'emp-001',
+  legalName: 'Jane Doe',
+  status: 'ACTIVE',
   hireDate: '2020-01-01',
 };
 
@@ -28,7 +26,7 @@ const stubPeopleService = {
 // ── Setup helper ──────────────────────────────────────────────────────────
 
 async function setup(opts: {
-  getEmployeeReturn?: Observable<Employee>;
+  getEmployeeReturn?: Observable<unknown>;
   disableEmployeeReturn?: Observable<unknown>;
 } = {}): Promise<{
   fixture: ComponentFixture<EmployeeOffboardPageComponent>;
@@ -47,7 +45,7 @@ async function setup(opts: {
     imports: [EmployeeOffboardPageComponent],
     providers: [
       provideRouter([]),
-      { provide: PeopleService, useValue: stubPeopleService },
+      { provide: EmployeeAPIService, useValue: stubPeopleService },
       {
         provide: ActivatedRoute,
         useValue: { snapshot: { paramMap: { get: () => 'emp-001' } } },
@@ -72,7 +70,7 @@ describe('EmployeeOffboardPageComponent', () => {
 
   it('T1: shows loading-indicator while getEmployee is pending', async () => {
     const { fixture } = await setup({
-      getEmployeeReturn: NEVER as Observable<Employee>,
+      getEmployeeReturn: NEVER as Observable<unknown>,
     });
 
     fixture.detectChanges();
@@ -90,15 +88,14 @@ describe('EmployeeOffboardPageComponent', () => {
 
     const el = fixture.debugElement.query(By.css('[data-testid="employee-context"]'));
     expect(el).toBeTruthy();
-    expect(el.nativeElement.textContent).toContain('Jane');
-    expect(el.nativeElement.textContent).toContain('Doe');
+    expect(el.nativeElement.textContent).toContain('Jane Doe');
   });
 
   // T3 ─────────────────────────────────────────────────────────────────────
 
   it('T3: shows error message when getEmployee fails', async () => {
     const { fixture } = await setup({
-      getEmployeeReturn: throwError(() => new Error('err')) as Observable<Employee>,
+      getEmployeeReturn: throwError(() => new Error('err')) as Observable<unknown>,
     });
 
     fixture.detectChanges();
@@ -184,7 +181,7 @@ describe('EmployeeOffboardPageComponent', () => {
     component.confirmOffboard();
 
     expect(stubPeopleService.disableEmployee).toHaveBeenCalledWith('emp-001', {
-      offboardDate: '2025-12-31',
+      assignmentEndDate: '2025-12-31',
     });
   });
 

@@ -2,8 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import { PeopleService } from '../../../people/services/people.service';
-import { CreateEmployeeRequest } from '../../../people/models/employee.models';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 
 @Component({
   selector: 'app-mechanic-roster-page',
@@ -13,7 +12,7 @@ import { CreateEmployeeRequest } from '../../../people/models/employee.models';
   styleUrl: './mechanic-roster-page.component.css',
 })
 export class MechanicRosterPageComponent implements OnInit {
-  private readonly peopleService = inject(PeopleService);
+  private readonly api = inject(ApiBaseService);
 
   readonly loading = signal(false);
   readonly people = signal<unknown[]>([]);
@@ -38,7 +37,7 @@ export class MechanicRosterPageComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.peopleService.getAllPeople().subscribe({
+    this.api.get<Record<string, unknown>[]>('/v1/people').subscribe({
       next: (people) => {
         this.people.set(Array.isArray(people) ? people : []);
         this.loading.set(false);
@@ -71,7 +70,7 @@ export class MechanicRosterPageComponent implements OnInit {
     this.createError.set(null);
     this.createSuccess.set(false);
 
-    this.peopleService.createEmployee(this.createForm.getRawValue() as unknown as CreateEmployeeRequest).subscribe({
+    this.api.post<Record<string, unknown>>('/v1/people/employees', this.createForm.getRawValue()).subscribe({
       next: () => {
         this.createLoading.set(false);
         this.createSuccess.set(true);

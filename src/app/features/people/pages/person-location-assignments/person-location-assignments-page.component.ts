@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { CreateStaffingAssignmentRequest, PeopleStaffingAssignmentsService, StaffingAssignmentResponse } from '@durion-sdk/people';
 import { LocationService } from '../../../location/services/location.service';
-import { PeopleService } from '../../services/people.service';
 
 @Component({
   selector: 'app-person-location-assignments-page',
@@ -14,14 +14,14 @@ import { PeopleService } from '../../services/people.service';
   styleUrl: './person-location-assignments-page.component.css',
 })
 export class PersonLocationAssignmentsPageComponent implements OnInit {
-  private readonly peopleService = inject(PeopleService);
+  private readonly staffingService = inject(PeopleStaffingAssignmentsService);
   private readonly locationService = inject(LocationService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly personId = signal('');
   readonly loading = signal(false);
-  readonly assignments = signal<unknown[]>([]);
+  readonly assignments = signal<StaffingAssignmentResponse[]>([]);
   readonly availableLocations = signal<unknown[]>([]);
   readonly error = signal<string | null>(null);
   readonly showCreateDialog = signal(false);
@@ -32,6 +32,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
 
   readonly createForm = new FormGroup({
     locationId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    role: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     effectiveStartAt: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     effectiveEndAt: new FormControl('', { nonNullable: true }),
     primary: new FormControl(false, { nonNullable: true }),
@@ -49,7 +50,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
   loadAssignments(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.peopleService.getPersonLocationAssignments(this.personId())
+    this.staffingService.getAssignments1(this.personId())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
@@ -75,7 +76,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
   }
 
   openCreateDialog(): void {
-    this.createForm.reset({ locationId: '', effectiveStartAt: '', effectiveEndAt: '', primary: false });
+    this.createForm.reset({ locationId: '', role: '', effectiveStartAt: '', effectiveEndAt: '', primary: false });
     this.conflictError.set(null);
     this.showCreateDialog.set(true);
   }
@@ -91,12 +92,18 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
     }
     this.submitting.set(true);
     this.conflictError.set(null);
-    const { locationId, effectiveStartAt, effectiveEndAt, primary } = this.createForm.getRawValue();
-    const body: Record<string, unknown> = { locationId, effectiveStartAt, primary };
+    const { locationId, role, effectiveStartAt, effectiveEndAt, primary } = this.createForm.getRawValue();
+    const body: CreateStaffingAssignmentRequest = {
+      personId: this.personId(),
+      locationId,
+      role,
+      effectiveFrom: effectiveStartAt,
+      isPrimary: primary,
+    };
     if (effectiveEndAt) {
-      body['effectiveEndAt'] = effectiveEndAt;
+      body.effectiveTo = effectiveEndAt;
     }
-    this.peopleService.createPersonLocationAssignment(this.personId(), body)
+    this.staffingService.createAssignment1(body)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -131,7 +138,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
       return;
     }
     this.submitting.set(true);
-    this.peopleService.endPersonLocationAssignment(assignmentId)
+    this.staffingService.endAssignment(assignmentId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -148,21 +155,20 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
       });
   }
 
-  getAssignmentId(a: unknown): string {
-    return String((a as Record<string, unknown>)['assignmentId'] ?? '');
+  getAssignmentId(a: StaffingAssignmentResponse): string {
+    return a.assignmentId;
   }
 
-  getLocationName(a: unknown, locations: unknown[]): string {
-    const locationId = String((a as Record<string, unknown>)['locationId'] ?? '');
-    const loc = locations.find(l => String((l as Record<string, unknown>)['locationId']) === locationId);
-    return loc ? String((loc as Record<string, unknown>)['name'] ?? locationId) : locationId;
+  getLocationName(a: StaffingAssignmentResponse, locations: unknown[]): string {
+    const loc = locations.find(l => String((l as Record<string, unknown>)['locationId']) === a.locationId);
+    return loc ? String((loc as Record<string, unknown>)['name'] ?? a.locationId) : a.locationId;
   }
 
-  getEffectiveStart(a: unknown): string {
-    return String((a as Record<string, unknown>)['effectiveStartAt'] ?? '');
+  getEffectiveStart(a: StaffingAssignmentResponse): string {
+    return a.effectiveFrom;
   }
 
-  getEffectiveEnd(a: unknown): string {
-    return String((a as Record<string, unknown>)['effectiveEndAt'] ?? '-');
+  getEffectiveEnd(a: StaffingAssignmentResponse): string {
+    return a.effectiveTo ?? '-';
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { AuditService } from '@durion-sdk/security';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   AuditEventDetail,
@@ -11,6 +12,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class SecurityAuditService {
+  private readonly auditSdk = inject(AuditService);
   private readonly api = inject(ApiBaseService);
 
   searchAuditEvents(filter: Partial<AuditEventFilter>): Observable<AuditEventPageResponse> {
@@ -34,7 +36,7 @@ export class SecurityAuditService {
   }
 
   getAuditEvent(eventId: string): Observable<AuditEventDetail> {
-    return this.api.get<AuditEventDetail>(`/v1/audit/events/${encodeURIComponent(eventId)}`);
+    return this.auditSdk.getEvent(eventId) as Observable<AuditEventDetail>;
   }
 
   requestAuditExport(filter: Partial<AuditEventFilter> | Record<string, unknown>): Observable<AuditExportJob> {

@@ -72,11 +72,10 @@ export class AppointmentDispatchAssignPageComponent implements OnInit {
     this.submitSuccess.set(false);
     this.conflicts.set([]);
 
-    const payload = {
-      resourceId: this.assignForm.controls.resourceId.value,
-      mechanicId: this.assignForm.controls.mechanicId.value,
-      role: this.assignForm.controls.role.value,
-    } as unknown as Partial<AssignmentDetail>;
+    const payload: Partial<AssignmentDetail> = {
+      bayId: this.assignForm.controls.resourceId.value || undefined,
+      assignmentType: this.assignForm.controls.role.value || undefined,
+    };
 
     this.appointmentService.createAssignment(this.appointmentId, payload).subscribe({
       next: (createdAssignment) => {
@@ -98,7 +97,6 @@ export class AppointmentDispatchAssignPageComponent implements OnInit {
   }
 
   getAssignmentRole(assignment: AssignmentDetail): string {
-    const candidate = assignment as unknown as Record<string, unknown>;
-    return String(candidate['role'] ?? assignment.assignmentType ?? 'UNASSIGNED');
+    return String(assignment.assignmentType ?? 'UNASSIGNED');
   }
 }

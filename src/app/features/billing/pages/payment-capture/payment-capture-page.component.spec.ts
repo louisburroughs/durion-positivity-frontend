@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
-import { BillingService } from '../../services/billing.service';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 import { PaymentTransactionRef } from '../../models/billing.models';
 import { PaymentCapturePageComponent } from './payment-capture-page.component';
 
@@ -35,20 +35,18 @@ describe('PaymentCapturePageComponent', () => {
   let fixture: ComponentFixture<PaymentCapturePageComponent>;
   let component: PaymentCapturePageComponent;
 
-  const billingMock = {
-    initiatePayment: vi.fn(),
-    capturePayment: vi.fn(),
+  const apiMock = {
+    post: vi.fn(),
   };
 
   beforeEach(async () => {
-    billingMock.initiatePayment.mockReset();
-    billingMock.capturePayment.mockReset();
+    apiMock.post.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [PaymentCapturePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: BillingService, useValue: billingMock },
+        { provide: ApiBaseService, useValue: apiMock },
         { provide: ActivatedRoute, useValue: routeStub },
       ],
     }).compileComponents();
@@ -59,8 +57,7 @@ describe('PaymentCapturePageComponent', () => {
   });
 
   it('transitions to ready after initiate and capture succeeds', () => {
-    billingMock.initiatePayment.mockReturnValue(of(initiatedTxFixture));
-    billingMock.capturePayment.mockReturnValue(of(capturedTxFixture));
+    apiMock.post.mockReturnValueOnce(of(initiatedTxFixture)).mockReturnValueOnce(of(capturedTxFixture));
 
     component.initiateAndCapture('CARD', 150);
 
@@ -69,7 +66,7 @@ describe('PaymentCapturePageComponent', () => {
   });
 
   it('sets error state before errorKey when capture flow fails', () => {
-    billingMock.initiatePayment.mockReturnValue(throwError(() => new Error('capture failed')));
+    apiMock.post.mockReturnValue(throwError(() => new Error('capture failed')));
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
 

@@ -8,7 +8,7 @@ import {
   PaymentMethod,
   PaymentTransactionRef,
 } from '../../models/billing.models';
-import { BillingService } from '../../services/billing.service';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 
 @Component({
   selector: 'app-payment-capture-page',
@@ -19,7 +19,7 @@ import { BillingService } from '../../services/billing.service';
 })
 export class PaymentCapturePageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly billing = inject(BillingService);
+  private readonly api = inject(ApiBaseService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly invoiceId = signal<string>('');
@@ -57,14 +57,14 @@ export class PaymentCapturePageComponent implements OnInit {
     this.state.set('submitting');
     this.errorKey.set(null);
 
-    this.billing
-      .initiatePayment(invoiceId, {
+    this.api
+      .post<PaymentTransactionRef>(`/v1/billing/invoices/${invoiceId}/payments`, {
         paymentMethod: method,
         amount,
         currency: 'USD',
       })
       .pipe(
-        switchMap(result => this.billing.capturePayment(invoiceId, result.paymentId)),
+        switchMap(result => this.api.post<PaymentTransactionRef>(`/v1/billing/invoices/${invoiceId}/payments/${result.paymentId}/capture`, {})),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({

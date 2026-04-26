@@ -13,7 +13,22 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@durion-sdk/accounting": ["node_modules/@durion-sdk/accounting/dist/types/durion-sdk-accounting.d.ts"],
+      "@durion-sdk/catalog": ["node_modules/@durion-sdk/catalog/dist/types/durion-sdk-catalog.d.ts"],
+      "@durion-sdk/customer": ["node_modules/@durion-sdk/customer/dist/types/durion-sdk-customer.d.ts"],
+      "@durion-sdk/inventory": ["node_modules/@durion-sdk/inventory/dist/types/durion-sdk-inventory.d.ts"],
+      "@durion-sdk/invoice": ["node_modules/@durion-sdk/invoice/dist/types/durion-sdk-invoice.d.ts"],
+      "@durion-sdk/location": ["node_modules/@durion-sdk/location/dist/types/durion-sdk-location.d.ts"],
+      "@durion-sdk/order": ["node_modules/@durion-sdk/order/dist/types/durion-sdk-order.d.ts"],
+      "@durion-sdk/people": ["node_modules/@durion-sdk/people/dist/types/durion-sdk-people.d.ts"],
+      "@durion-sdk/security": ["node_modules/@durion-sdk/security/dist/types/durion-sdk-security.d.ts"],
+      "@durion-sdk/shop-manager": ["node_modules/@durion-sdk/shop-manager/dist/types/durion-sdk-shop-manager.d.ts"],
+      "@durion-sdk/bulk-loader": ["node_modules/@durion-sdk/bulk-loader/types/durion-sdk-bulk-loader.d.ts"],
+      "@durion-sdk/workorder": ["node_modules/@durion-sdk/workorder/dist/types/durion-sdk-workorder.d.ts"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

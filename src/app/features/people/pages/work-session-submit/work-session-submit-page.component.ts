@@ -9,8 +9,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { v4 as uuidv4 } from 'uuid';
-import { PeopleService } from '../../services/people.service';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 
 type SubmitState = 'NOT_SUBMITTED' | 'SUBMITTING' | 'SUBMITTED' | 'FAILED';
 
@@ -23,7 +22,7 @@ type SubmitState = 'NOT_SUBMITTED' | 'SUBMITTING' | 'SUBMITTED' | 'FAILED';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkSessionSubmitPageComponent {
-  private readonly peopleService = inject(PeopleService);
+  private readonly api = inject(ApiBaseService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -32,7 +31,6 @@ export class WorkSessionSubmitPageComponent {
   readonly correlationId = signal<string | null>(null);
   readonly errorCode = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
-  readonly lastIdempotencyKey = signal<string | null>(null);
   readonly submitError = signal<string | null>(null);
 
   readonly canSubmit = computed(() => this.submitState() !== 'SUBMITTING' && this.submitState() !== 'SUBMITTED');
@@ -77,12 +75,6 @@ export class WorkSessionSubmitPageComponent {
       return;
     }
 
-    if (this.submitState() === 'NOT_SUBMITTED' || this.submitState() === 'FAILED') {
-      if (!this.lastIdempotencyKey()) {
-        this.lastIdempotencyKey.set(uuidv4());
-      }
-    }
-
     this.submitState.set('SUBMITTING');
     this.submitError.set(null);
     this.errorCode.set(null);
@@ -96,8 +88,8 @@ export class WorkSessionSubmitPageComponent {
       submittedAt: values.submittedAt,
     };
 
-    this.peopleService
-      .submitWorkSession(this.sessionId(), body, this.lastIdempotencyKey() ?? undefined)
+    this.api
+      .post<Record<string, unknown> | null>('/v1/people/workSessions/' + this.sessionId() + '/submit', body)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
