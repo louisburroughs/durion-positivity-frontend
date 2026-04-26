@@ -49,16 +49,16 @@ describe('InventoryCycleCountService', () => {
   // ── getCycleCountTask() ────────────────────────────────────────────────
 
   describe('getCycleCountTask()', () => {
-    const mockTask: CycleCountTask = {
-      cycleCountTaskId: 'task-001',
-      locationId: 'loc-01',
-      productSku: 'SKU-001',
-      uom: 'EA',
+    const sdkTask = {
+      taskId: 'task-001',
+      binLocation: 'BIN-01',
+      itemSku: 'SKU-001',
       status: 'PENDING',
+      auditorId: 'user-01',
     };
 
     it('calls cycleCountSdk.getTask with the taskId', () => {
-      cycleCountSdkStub.getTask.mockReturnValueOnce(of(mockTask));
+      cycleCountSdkStub.getTask.mockReturnValueOnce(of(sdkTask));
 
       service.getCycleCountTask('task-001').subscribe();
 
@@ -66,7 +66,7 @@ describe('InventoryCycleCountService', () => {
     });
 
     it('passes the taskId as-is to the SDK', () => {
-      cycleCountSdkStub.getTask.mockReturnValueOnce(of(mockTask));
+      cycleCountSdkStub.getTask.mockReturnValueOnce(of(sdkTask));
 
       service.getCycleCountTask('task/001').subscribe();
 
@@ -74,12 +74,20 @@ describe('InventoryCycleCountService', () => {
     });
 
     it('returns the CycleCountTask emitted by the SDK', () => {
-      cycleCountSdkStub.getTask.mockReturnValueOnce(of(mockTask));
+      cycleCountSdkStub.getTask.mockReturnValueOnce(of(sdkTask));
 
       let result: CycleCountTask | undefined;
       service.getCycleCountTask('task-001').subscribe(r => (result = r));
 
-      expect(result).toEqual(mockTask);
+      expect(result).toEqual({
+        cycleCountTaskId: 'task-001',
+        locationId: '',
+        storageLocationId: 'BIN-01',
+        productSku: 'SKU-001',
+        uom: '',
+        status: 'PENDING',
+        assignedToId: 'user-01',
+      });
     });
   });
 
@@ -89,35 +97,46 @@ describe('InventoryCycleCountService', () => {
     const mockRequest: CountSubmitRequest = {
       entries: [{ sequence: 1, countedQuantity: 95 }],
     };
-    const mockResponse: CountSubmitResponse = {
-      cycleCountTaskId: 'task-001',
-      status: 'SUBMITTED',
-      entries: [{ sequence: 1, timestamp: '2026-03-01T09:00:00Z', countedQuantity: 95, countedBy: 'user-01' }],
+    const sdkResponse = {
+      taskId: 'task-001',
+      taskStatus: 'SUBMITTED',
     };
 
     it('calls cycleCountSdk.submitCount with taskId merged into request', () => {
-      cycleCountSdkStub.submitCount.mockReturnValueOnce(of(mockResponse));
+      cycleCountSdkStub.submitCount.mockReturnValueOnce(of(sdkResponse));
 
       service.submitCount('task-001', mockRequest).subscribe();
 
-      expect(cycleCountSdkStub.submitCount).toHaveBeenCalledWith({ ...mockRequest, taskId: 'task-001' });
+      expect(cycleCountSdkStub.submitCount).toHaveBeenCalledWith({
+        taskId: 'task-001',
+        auditorId: '',
+        actualQuantity: 95,
+      });
     });
 
     it('passes the taskId as-is to the SDK', () => {
-      cycleCountSdkStub.submitCount.mockReturnValueOnce(of(mockResponse));
+      cycleCountSdkStub.submitCount.mockReturnValueOnce(of(sdkResponse));
 
       service.submitCount('task/001', mockRequest).subscribe();
 
-      expect(cycleCountSdkStub.submitCount).toHaveBeenCalledWith({ ...mockRequest, taskId: 'task/001' });
+      expect(cycleCountSdkStub.submitCount).toHaveBeenCalledWith({
+        taskId: 'task/001',
+        auditorId: '',
+        actualQuantity: 95,
+      });
     });
 
     it('returns the CountSubmitResponse emitted by the SDK', () => {
-      cycleCountSdkStub.submitCount.mockReturnValueOnce(of(mockResponse));
+      cycleCountSdkStub.submitCount.mockReturnValueOnce(of(sdkResponse));
 
       let result: CountSubmitResponse | undefined;
       service.submitCount('task-001', mockRequest).subscribe(r => (result = r));
 
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual({
+        cycleCountTaskId: 'task-001',
+        status: 'SUBMITTED',
+        entries: [],
+      });
     });
   });
 
@@ -129,13 +148,21 @@ describe('InventoryCycleCountService', () => {
       nextPageToken: null,
     };
 
-    it('calls adjustmentsSdk.listAdjustments with the filter status', () => {
+    it('calls adjustmentsSdk.listAdjustments with the SDK-supported filter status', () => {
       adjustmentsSdkStub.listAdjustments.mockReturnValueOnce(of(mockPage));
 
-      const filter: ApprovalQueueFilter = { locationId: 'loc-01', status: 'PENDING' };
+      const filter: ApprovalQueueFilter = { locationId: 'loc-01', status: 'PENDING_APPROVAL' };
       service.queryAdjustments(filter).subscribe();
 
-      expect(adjustmentsSdkStub.listAdjustments).toHaveBeenCalledWith('PENDING');
+      expect(adjustmentsSdkStub.listAdjustments).toHaveBeenCalledWith('PENDING_APPROVAL');
+    });
+
+    it('drops unsupported legacy statuses instead of passing them through to the SDK', () => {
+      adjustmentsSdkStub.listAdjustments.mockReturnValueOnce(of(mockPage));
+
+      service.queryAdjustments({ status: 'PENDING' }).subscribe();
+
+      expect(adjustmentsSdkStub.listAdjustments).toHaveBeenCalledWith(undefined);
     });
 
     it('passes undefined status when filter has no status', () => {
@@ -154,24 +181,70 @@ describe('InventoryCycleCountService', () => {
 
       expect(result).toEqual(mockPage);
     });
+
+    it('preserves approval-queue filtering when the SDK returns a page response', () => {
+      const page: AdjustmentPageResponse = {
+        items: [
+          {
+            adjustmentId: 'adj-keep',
+            locationId: 'loc-01',
+            productSku: 'SKU-001',
+            countedQuantity: 10,
+            expectedQuantity: 8,
+            varianceQuantity: 2,
+            status: 'PENDING_APPROVAL',
+            requiredApprovalTier: 2,
+            createdAt: '2026-04-10',
+          },
+          {
+            adjustmentId: 'adj-drop',
+            locationId: 'loc-02',
+            productSku: 'SKU-002',
+            countedQuantity: 10,
+            expectedQuantity: 8,
+            varianceQuantity: 2,
+            status: 'APPROVED',
+            requiredApprovalTier: 1,
+            createdAt: '2026-04-01',
+          },
+        ],
+        nextPageToken: 'next-adjustments',
+      };
+      adjustmentsSdkStub.listAdjustments.mockReturnValueOnce(of(page));
+
+      let result: AdjustmentPageResponse | undefined;
+      service.queryAdjustments({
+        status: 'PENDING_APPROVAL',
+        locationId: 'loc-01',
+        productSku: 'SKU-001',
+        requiredApprovalTier: 2,
+        dateFrom: '2026-04-05',
+        dateTo: '2026-04-20',
+        pageToken: 'current-adjustments',
+      }).subscribe(r => (result = r));
+
+      expect(adjustmentsSdkStub.listAdjustments).toHaveBeenCalledWith('PENDING_APPROVAL');
+      expect(result).toEqual({
+        items: [page.items[0]],
+        nextPageToken: 'next-adjustments',
+      });
+    });
   });
 
   // ── getAdjustmentDetail() ──────────────────────────────────────────────
 
   describe('getAdjustmentDetail()', () => {
-    const mockAdjustment: AdjustmentDetail = {
+    const sdkAdjustment = {
       adjustmentId: 'adj-001',
-      locationId: 'loc-01',
-      productSku: 'SKU-001',
+      stockItemId: 'SKU-001',
       countedQuantity: 97,
-      expectedQuantity: 100,
-      varianceQuantity: -3,
+      quantityOnHandBefore: 100,
+      quantityChange: -3,
       status: 'PENDING',
-      requiredApprovalTier: 1,
     };
 
     it('calls adjustmentsSdk.getAdjustment with the adjustmentId', () => {
-      adjustmentsSdkStub.getAdjustment.mockReturnValueOnce(of(mockAdjustment));
+      adjustmentsSdkStub.getAdjustment.mockReturnValueOnce(of(sdkAdjustment));
 
       service.getAdjustmentDetail('adj-001').subscribe();
 
@@ -179,7 +252,7 @@ describe('InventoryCycleCountService', () => {
     });
 
     it('passes the adjustmentId as-is to the SDK', () => {
-      adjustmentsSdkStub.getAdjustment.mockReturnValueOnce(of(mockAdjustment));
+      adjustmentsSdkStub.getAdjustment.mockReturnValueOnce(of(sdkAdjustment));
 
       service.getAdjustmentDetail('adj/001').subscribe();
 
@@ -187,31 +260,45 @@ describe('InventoryCycleCountService', () => {
     });
 
     it('returns the AdjustmentDetail emitted by the SDK', () => {
-      adjustmentsSdkStub.getAdjustment.mockReturnValueOnce(of(mockAdjustment));
+      adjustmentsSdkStub.getAdjustment.mockReturnValueOnce(of(sdkAdjustment));
 
       let result: AdjustmentDetail | undefined;
       service.getAdjustmentDetail('adj-001').subscribe(r => (result = r));
 
-      expect(result).toEqual(mockAdjustment);
+      expect(result).toEqual({
+        adjustmentId: 'adj-001',
+        locationId: '',
+        storageLocationId: undefined,
+        productSku: 'SKU-001',
+        countedQuantity: 97,
+        expectedQuantity: 100,
+        varianceQuantity: -3,
+        varianceValue: undefined,
+        status: 'PENDING',
+        requiredApprovalTier: 0,
+        createdAt: undefined,
+        approvedAt: undefined,
+        rejectedAt: undefined,
+        rejectionReason: undefined,
+        ledgerReference: undefined,
+      });
     });
   });
 
   // ── approveAdjustment() ────────────────────────────────────────────────
 
   describe('approveAdjustment()', () => {
-    const mockAdjustment: AdjustmentDetail = {
+    const sdkAdjustment = {
       adjustmentId: 'adj-001',
-      locationId: 'loc-01',
-      productSku: 'SKU-001',
       countedQuantity: 97,
-      expectedQuantity: 100,
-      varianceQuantity: -3,
+      quantityOnHandBefore: 100,
+      quantityChange: -3,
       status: 'APPROVED',
-      requiredApprovalTier: 1,
+      stockItemId: 'SKU-001',
     };
 
     it('calls adjustmentsSdk.approveAdjustment with the adjustmentId and empty body', () => {
-      adjustmentsSdkStub.approveAdjustment.mockReturnValueOnce(of(mockAdjustment));
+      adjustmentsSdkStub.approveAdjustment.mockReturnValueOnce(of(sdkAdjustment));
 
       service.approveAdjustment('adj-001').subscribe();
 
@@ -219,7 +306,7 @@ describe('InventoryCycleCountService', () => {
     });
 
     it('passes the adjustmentId as-is to the SDK', () => {
-      adjustmentsSdkStub.approveAdjustment.mockReturnValueOnce(of(mockAdjustment));
+      adjustmentsSdkStub.approveAdjustment.mockReturnValueOnce(of(sdkAdjustment));
 
       service.approveAdjustment('adj/001').subscribe();
 
@@ -231,7 +318,14 @@ describe('InventoryCycleCountService', () => {
 
   describe('rejectAdjustment()', () => {
     it('calls adjustmentsSdk.rejectAdjustment with the adjustmentId and rejection reason', () => {
-      adjustmentsSdkStub.rejectAdjustment.mockReturnValueOnce(of(undefined));
+      adjustmentsSdkStub.rejectAdjustment.mockReturnValueOnce(of({
+        adjustmentId: 'adj-001',
+        stockItemId: 'SKU-001',
+        countedQuantity: 97,
+        quantityOnHandBefore: 100,
+        quantityChange: -3,
+        status: 'REJECTED',
+      }));
 
       service.rejectAdjustment('adj-001', 'Count error').subscribe();
 
@@ -239,7 +333,14 @@ describe('InventoryCycleCountService', () => {
     });
 
     it('passes the adjustmentId as-is to the SDK', () => {
-      adjustmentsSdkStub.rejectAdjustment.mockReturnValueOnce(of(undefined));
+      adjustmentsSdkStub.rejectAdjustment.mockReturnValueOnce(of({
+        adjustmentId: 'adj-001',
+        stockItemId: 'SKU-001',
+        countedQuantity: 97,
+        quantityOnHandBefore: 100,
+        quantityChange: -3,
+        status: 'REJECTED',
+      }));
 
       service.rejectAdjustment('adj/001', 'reason').subscribe();
 
@@ -247,7 +348,14 @@ describe('InventoryCycleCountService', () => {
     });
 
     it('sends the rejection reason in the SDK payload', () => {
-      adjustmentsSdkStub.rejectAdjustment.mockReturnValueOnce(of(undefined));
+      adjustmentsSdkStub.rejectAdjustment.mockReturnValueOnce(of({
+        adjustmentId: 'adj-001',
+        stockItemId: 'SKU-001',
+        countedQuantity: 97,
+        quantityOnHandBefore: 100,
+        quantityChange: -3,
+        status: 'REJECTED',
+      }));
 
       service.rejectAdjustment('adj-001', 'Inaccurate count').subscribe();
 

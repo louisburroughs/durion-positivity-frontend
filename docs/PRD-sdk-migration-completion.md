@@ -3,10 +3,13 @@
 **Status:** Ready for Development  
 **Date:** 2026-04-25  
 **Owner:** Frontend Platform  
-**Prerequisite:** `durion-positivity-backend` PRD-missing-backend-endpoints.md — all five
-Category B endpoint groups implemented, OpenAPI specs regenerated, Angular SDK
-regenerated.  
-**Reference:** `sdk-migration-analysis.md` in this directory
+**Prerequisites:**  
+- `durion-positivity-backend` PRD-missing-backend-endpoints.md — all five Category B
+  endpoint groups implemented, OpenAPI specs regenerated, Angular SDK regenerated  
+- `PRD-sdk-publication-transition.md` — published/private-registry SDK adoption plan
+  executed through frontend dependency adoption and build-path cleanup
+**References:** `sdk-migration-analysis.md` and `PRD-sdk-publication-transition.md` in
+this directory
 
 ---
 
@@ -15,7 +18,8 @@ regenerated.
 Complete the migration of `durion-positivity-frontend` from direct `ApiBaseService`
 HTTP calls to the typed Angular SDK (`durion-positivity-sdk-angular`). Once finished,
 `ApiBaseService` is scoped exclusively to gateway/MCP traffic (`chat-api.service.ts`)
-and all domain services consume strongly-typed SDK observables.
+and all domain services consume strongly-typed SDK observables through published SDK
+packages rather than local packed artifacts.
 
 ---
 
@@ -45,6 +49,18 @@ PRD.
 - `auth.service.ts` — see Wave 4; included but treated as a separate, careful task.
 - Component-level `as` casts unrelated to SDK type mismatches (e.g. template binding
   coercions) — fix only casts that involve SDK model types.
+
+---
+
+## Additional Completion Requirement
+
+This PRD is not complete when the code merely uses SDK service classes. Final
+completion also requires the frontend to consume `@durion-sdk/*` through the published
+private-package workflow defined in `PRD-sdk-publication-transition.md`.
+
+Temporary local-pack bootstrapping (`.sdk-src`, `.sdk-tarballs`, custom SDK install
+scripts, and build-time SDK checkout assumptions) is transitional only and must not be
+the end-state for signoff.
 
 ---
 
@@ -369,6 +385,9 @@ grep -rn "as never\|as unknown" src/ --include="*.ts" | grep -v "spec\|test-prox
 
 # Confirm local model files are gone (after Wave 3)
 find src/ -name "*.models.ts" | grep -v "nav-item\|auth\|billing\|shopmgmt\|availability\|location"
+
+# Confirm published-SDK adoption cleanup is complete before final signoff
+rg -n "\\.sdk-src|\\.sdk-tarballs|DURION_SDK_" .
 ```
 
 ---
@@ -380,6 +399,10 @@ find src/ -name "*.models.ts" | grep -v "nav-item\|auth\|billing\|shopmgmt\|avai
 - [ ] Local model files deleted for all domains where the SDK provides equivalent
   types (billing excluded pending billing service implementation).
 - [ ] `auth.service.ts` does not use `HttpClient` directly.
+- [ ] Frontend consumes published/private-registry `@durion-sdk/*` packages per
+  `PRD-sdk-publication-transition.md`.
+- [ ] Standard frontend build paths do not require SDK checkout, local packing, or
+  tarball injection.
 - [ ] `ng build --configuration production` passes with zero warnings related to type
   safety.
 - [ ] All unit tests pass.
@@ -400,3 +423,4 @@ find src/ -name "*.models.ts" | grep -v "nav-item\|auth\|billing\|shopmgmt\|avai
 | **3** | Delete local model files domain-by-domain | After corresponding Wave 2 PR |
 | **4a** | Auth service migration | After Waves 1–3 stable |
 | **4b** | ApiBaseService retirement | After Wave 4a |
+| **5** | Published-SDK adoption and local-pack build-path retirement per `PRD-sdk-publication-transition.md` | Required before final migration signoff |

@@ -2,33 +2,70 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 
 import { RoleAssignmentPageComponent } from './role-assignment-page.component';
-import { PeopleAccessControlService } from '@durion-sdk/people';
+import { PeopleAccessControlService, RoleDto, UserRoleDto } from '@durion-sdk/people';
 
-const STUB_ASSIGNMENTS = [
+const translations = {
+  PEOPLE: {
+    ROLE_ASSIGNMENT: {
+      ARIA: { LAYOUT: 'Role assignment layout' },
+      ASSIGNED_ROLES: 'Assigned roles',
+      INCLUDE_HISTORY: 'Include history',
+      SCOPE_GLOBAL: 'Global',
+      SCOPE_LOCATION: 'Location',
+      STATUS: 'Status',
+      REVOKE: 'Revoke',
+      CONFIRM_REVOKE: 'Confirm revoke',
+      LOADING: 'Loading assignments...',
+      TITLE: 'Assign role',
+      DETAILS: 'Assignment details',
+      ROLE: 'Role',
+      SELECT_ROLE: 'Select a role',
+      SCOPE_TYPE: 'Scope type',
+      LOCATION_ID: 'Location ID',
+      EFFECTIVE_START: 'Effective start',
+      EFFECTIVE_END: 'Effective end',
+      SUBMIT: 'Assign role',
+      ERROR: {
+        LOAD_ASSIGNMENTS: 'Could not load assignments.',
+        LOAD_ROLES: 'Could not load roles.',
+        ASSIGN: 'Could not assign role.',
+        REVOKE: 'Could not revoke role.',
+      },
+    },
+  },
+  COMMON: {
+    CANCEL: 'Cancel',
+  },
+  STATUS: {
+    ACTIVE: 'Active',
+    INACTIVE: 'Inactive',
+  },
+};
+
+const STUB_ASSIGNMENTS: UserRoleDto[] = [
   {
-    assignmentId: 'asn-1',
-    personId: 'p-1',
+    userId: 'p-1',
     roleCode: 'ROLE_ADMIN',
-    scopeType: 'GLOBAL',
-    effectiveStartAt: '2026-01-01T00:00:00Z',
+    startDate: '2026-01-01',
+    active: true,
   },
   {
-    assignmentId: 'asn-2',
-    personId: 'p-1',
+    userId: 'p-1',
     roleCode: 'ROLE_MANAGER',
-    scopeType: 'LOCATION',
     locationId: 'loc-5',
-    effectiveStartAt: '2026-02-01T00:00:00Z',
+    startDate: '2026-02-01',
+    active: true,
   },
 ];
 
-const STUB_ROLES = [
-  { code: 'ROLE_ADMIN', label: 'Admin' },
-  { code: 'ROLE_MANAGER', label: 'Manager' },
-  { code: 'ROLE_VIEW', label: 'View Only' },
+const STUB_ROLES: RoleDto[] = [
+  { code: 'ROLE_ADMIN', name: 'Admin' },
+  { code: 'ROLE_MANAGER', name: 'Manager' },
+  { code: 'ROLE_VIEW', name: 'View Only' },
 ];
 
 const stubPeopleService = {
@@ -50,13 +87,17 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     stubPeopleService.revokeAssignment.mockReturnValue(of(null));
 
     await TestBed.configureTestingModule({
-      imports: [RoleAssignmentPageComponent],
+      imports: [RoleAssignmentPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: PeopleAccessControlService, useValue: stubPeopleService },
         { provide: ActivatedRoute, useValue: { params: of({ personUuid }) } },
       ],
     }).compileComponents();
+
+    const translateService = TestBed.inject(TranslateService);
+    translateService.setTranslation('en-US', translations);
+    translateService.use('en-US');
 
     fixture = TestBed.createComponent(RoleAssignmentPageComponent);
     component = fixture.componentInstance;
@@ -73,6 +114,21 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
   it('renders without crashing', async () => {
     await setup();
     expect(fixture.nativeElement).toBeTruthy();
+  });
+
+  it('renders translated headings, labels, and primary action text', async () => {
+    await setup();
+
+    const headingEls = fixture.nativeElement.querySelectorAll('h2');
+    const roleLabel = fixture.nativeElement.querySelector('label[for="role-select"]');
+    const scopeLabel = fixture.nativeElement.querySelector('label[for="scope-type"]');
+    const submitButton = fixture.nativeElement.querySelector('[data-testid="submit-assignment-btn"]');
+
+    expect(headingEls[0]?.textContent).toContain('Assigned roles');
+    expect(headingEls[1]?.textContent).toContain('Assign role');
+    expect(roleLabel?.textContent).toContain('Role');
+    expect(scopeLabel?.textContent).toContain('Scope type');
+    expect(submitButton?.textContent).toContain('Assign role');
   });
 
   // ── T2: Initialization ────────────────────────────────────────────────────
@@ -236,15 +292,16 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
     c(component).submitAssignment();
 
-    const [payload] = stubPeopleService.createAssignment.mock.calls[0];
+    const [, payload] = stubPeopleService.createAssignment.mock.calls[0];
     expect(payload).not.toHaveProperty('effectiveEndAt');
+    expect(payload).not.toHaveProperty('endDate');
   });
 
   // ── T7: revokeAssignment called on revoke ─────────────────────────────────
 
-  it('calls service.revokeAssignment with personUuid and roleCode', async () => {
+  it('calls service.revokeAssignment with personUuid and roleCode from the assignment', async () => {
     await setup('person-uuid-1');
-    c(component).revokeAssignment('ROLE_ADMIN');
+    c(component).revokeAssignment(STUB_ASSIGNMENTS[0]);
     expect(stubPeopleService.revokeAssignment).toHaveBeenCalledWith('person-uuid-1', 'ROLE_ADMIN');
   });
 
@@ -252,9 +309,48 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     await setup('person-uuid-1');
     const callsBefore = stubPeopleService.getAssignments.mock.calls.length;
 
-    c(component).revokeAssignment('ROLE_ADMIN');
+    c(component).revokeAssignment(STUB_ASSIGNMENTS[0]);
 
     expect(stubPeopleService.getAssignments.mock.calls.length).toBeGreaterThan(callsBefore);
+  });
+
+  it('renders duplicate roleCode rows across scopes and targets revoke confirmation by stable row key', async () => {
+    const duplicateAssignments: UserRoleDto[] = [
+      {
+        userId: 'p-1',
+        roleCode: 'ROLE_MANAGER',
+        startDate: '2026-03-01',
+        active: true,
+      },
+      {
+        userId: 'p-1',
+        roleCode: 'ROLE_MANAGER',
+        locationId: 'loc-5',
+        startDate: '2026-03-01',
+        active: true,
+      },
+    ];
+
+    await setup('person-uuid-1');
+    stubPeopleService.getAssignments.mockReturnValue(of(duplicateAssignments));
+    c(component).loadAssignments();
+    fixture.detectChanges();
+
+    const rowsBefore = Array.from(fixture.nativeElement.querySelectorAll('.assignment-item')) as HTMLElement[];
+    expect(rowsBefore).toHaveLength(2);
+    expect(rowsBefore[0].textContent).toContain('Global');
+    expect(rowsBefore[1].textContent).toContain('loc-5');
+
+    const revokeButtons = fixture.nativeElement.querySelectorAll('.assignment-item .btn--danger-outline');
+    revokeButtons[1].click();
+    fixture.detectChanges();
+
+    const rowsAfter = Array.from(fixture.nativeElement.querySelectorAll('.assignment-item')) as HTMLElement[];
+    expect(rowsAfter[0].textContent).toContain('Revoke');
+    expect(rowsAfter[0].textContent).not.toContain('Confirm revoke');
+    expect(rowsAfter[1].textContent).toContain('Confirm revoke');
+    expect(rowsAfter[1].textContent).toContain('Cancel');
+    expect(component.confirmingAssignmentId()).toBe(component.getAssignmentKey(duplicateAssignments[1]));
   });
 
   // ── T8: include-history toggle ────────────────────────────────────────────
@@ -277,17 +373,31 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
   // ── T9: Error paths and confirmingAssignmentId ────────────────────────────
 
-  it('startRevoke() sets confirmingAssignmentId to the given assignmentId', async () => {
+  it('startRevoke() sets confirmingAssignmentId to the stable assignment key', async () => {
     await setup();
-    c(component).startRevoke('asn-99');
-    expect(c(component).confirmingAssignmentId()).toBe('asn-99');
+    c(component).startRevoke(STUB_ASSIGNMENTS[1]);
+    expect(c(component).confirmingAssignmentId()).toBe(c(component).getAssignmentKey(STUB_ASSIGNMENTS[1]));
   });
 
   it('revokeAssignment() resets confirmingAssignmentId to null on success', async () => {
     await setup();
-    c(component).confirmingAssignmentId.set('asn-1');
-    c(component).revokeAssignment('ROLE_ADMIN');
+    c(component).confirmingAssignmentId.set(c(component).getAssignmentKey(STUB_ASSIGNMENTS[0]));
+    c(component).revokeAssignment(STUB_ASSIGNMENTS[0]);
     expect(c(component).confirmingAssignmentId()).toBeNull();
+  });
+
+  it('renders translated loading and error states', async () => {
+    await setup();
+
+    c(component).loading.set(true);
+    c(component).errorMessage.set('PEOPLE.ROLE_ASSIGNMENT.ERROR.LOAD_ASSIGNMENTS');
+    fixture.detectChanges();
+
+    const errorEl = fixture.nativeElement.querySelector('.alert--error');
+    const loadingEl = fixture.nativeElement.querySelector('.loading-state');
+
+    expect(errorEl?.textContent).toContain('Could not load assignments.');
+    expect(loadingEl?.textContent).toContain('Loading assignments...');
   });
 
   it('loadRoles() failure sets errorMessage to a non-null string', async () => {
@@ -314,7 +424,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     await setup();
     stubPeopleService.revokeAssignment.mockReturnValue(throwError(() => new Error('revoke failed')));
     c(component).errorMessage.set(null);
-    c(component).revokeAssignment('ROLE_ADMIN');
+    c(component).revokeAssignment(STUB_ASSIGNMENTS[0]);
     expect(c(component).errorMessage()).not.toBeNull();
   });
 });

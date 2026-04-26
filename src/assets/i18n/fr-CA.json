@@ -3243,6 +3243,80 @@
         "NAVIGATE": "Impossible de naviguer vers cette page. Veuillez vérifier l'ID et réessayer."
       }
     },
+    "INVOICE_DETAIL": {
+      "HEADER": {
+        "OVERLINE": "Facture"
+      },
+      "LOADING": "Chargement de la facture...",
+      "SECTION": {
+        "SUMMARY": "Resume de facture",
+        "ADJUSTMENTS": "Ajustements",
+        "TRACEABILITY": "Tracabilite",
+        "DOCUMENTS": "Documents"
+      },
+      "FIELD": {
+        "WORKORDER": "Workorder",
+        "PO_NUMBER": "Numero PO",
+        "CREATED": "Creee",
+        "ISSUED": "Emise"
+      },
+      "LINE_ITEM": {
+        "DESCRIPTION": "Description",
+        "TYPE": "Type",
+        "QTY": "Qt",
+        "UNIT": "Unite",
+        "TOTAL": "Total"
+      },
+      "TOTAL": {
+        "SUBTOTAL": "Sous-total",
+        "TAX": "Taxe",
+        "DISCOUNT": "Rabais",
+        "GRAND_TOTAL": "Total general"
+      },
+      "TRACEABILITY": {
+        "SNAPSHOT": "Capture",
+        "CAPTURED": "Capturee",
+        "WORKORDER_COMPLETED": "Workorder terminee",
+        "SNAPSHOT_VERSION": "Version de capture",
+        "GENERATED_BY": "Generee par"
+      },
+      "ADJUSTMENT": {
+        "META": "{{timestamp}} - par {{user}}"
+      },
+      "ARIA": {
+        "LINE_ITEMS": "Lignes de facture",
+        "TOTALS": "Totaux de facture"
+      },
+      "ACTION": {
+        "BACK_TO_WORKORDER": "Retour a workorder",
+        "ISSUE": "Emettre la facture",
+        "ISSUING": "Emission...",
+        "DOWNLOAD": "Telecharger"
+      },
+      "SUCCESS": {
+        "ISSUED": "Facture emise avec succes. Documents disponibles ci-dessous."
+      },
+      "ERROR": {
+        "NOT_FOUND": "Facture introuvable.",
+        "LOAD": "Impossible de charger la facture. Veuillez reessayer.",
+        "ALREADY_ISSUED": "La facture est deja emise.",
+        "ISSUE": "Impossible d'emettre la facture. Veuillez reessayer."
+      },
+      "ELEVATION": {
+        "ARIA_LABEL": "Elevation du gestionnaire requise",
+        "TITLE": "Autorisation du gestionnaire requise",
+        "DESCRIPTION": "L'emission de cette facture requiert une autorisation de niveau gestionnaire. Entrez le mot de passe du gestionnaire pour continuer.",
+        "PASSWORD_LABEL": "Mot de passe du gestionnaire",
+        "PASSWORD_PLACEHOLDER": "Entrez le mot de passe",
+        "AUTHORIZE": "Autoriser",
+        "VERIFYING": "Verification...",
+        "ERROR": {
+          "PASSWORD_REQUIRED": "Le mot de passe est requis.",
+          "INVALID_PASSWORD": "Mot de passe incorrect. Veuillez reessayer.",
+          "GENERIC": "Echec de l'elevation. Contactez votre gestionnaire."
+        }
+      }
+    },
     "PAYMENT": {
       "TITLE": "Paiement",
       "METHOD": {

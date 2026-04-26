@@ -2,8 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PaymentTransactionRef } from '../../models/billing.models';
+import { BillingTransportService } from '../../services/billing-transport.service';
 import { PaymentCapturePageComponent } from './payment-capture-page.component';
 
 const routeStub = {
@@ -35,18 +36,18 @@ describe('PaymentCapturePageComponent', () => {
   let fixture: ComponentFixture<PaymentCapturePageComponent>;
   let component: PaymentCapturePageComponent;
 
-  const apiMock = {
-    post: vi.fn(),
+  const billingTransportStub = {
+    initiateAndCapturePayment: vi.fn(),
   };
 
   beforeEach(async () => {
-    apiMock.post.mockReset();
+    billingTransportStub.initiateAndCapturePayment.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [PaymentCapturePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: ApiBaseService, useValue: apiMock },
+        { provide: BillingTransportService, useValue: billingTransportStub },
         { provide: ActivatedRoute, useValue: routeStub },
       ],
     }).compileComponents();
@@ -57,16 +58,19 @@ describe('PaymentCapturePageComponent', () => {
   });
 
   it('transitions to ready after initiate and capture succeeds', () => {
-    apiMock.post.mockReturnValueOnce(of(initiatedTxFixture)).mockReturnValueOnce(of(capturedTxFixture));
+    billingTransportStub.initiateAndCapturePayment.mockReturnValueOnce(of(capturedTxFixture));
 
     component.initiateAndCapture('CARD', 150);
 
+    expect(billingTransportStub.initiateAndCapturePayment).toHaveBeenCalledWith('inv-001', 'CARD', 150);
     expect(component.state()).toBe('ready');
     expect(component.transaction()).toEqual(capturedTxFixture);
   });
 
   it('sets error state before errorKey when capture flow fails', () => {
-    apiMock.post.mockReturnValue(throwError(() => new Error('capture failed')));
+    billingTransportStub.initiateAndCapturePayment.mockReturnValue(
+      throwError(() => new Error('capture failed')),
+    );
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
 
@@ -78,5 +82,15 @@ describe('PaymentCapturePageComponent', () => {
     const stateOrder = stateSetSpy.mock.invocationCallOrder.at(-1) ?? 0;
     const errorKeyOrder = errorKeySetSpy.mock.invocationCallOrder.at(-1) ?? 0;
     expect(stateOrder).toBeLessThan(errorKeyOrder);
+  });
+
+  it('fails fast when invoiceId is missing without calling transport', () => {
+    component.invoiceId.set('');
+
+    component.initiateAndCapture('CARD', 150);
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('BILLING.PAYMENT.ERROR.CAPTURE');
+    expect(billingTransportStub.initiateAndCapturePayment).not.toHaveBeenCalled();
   });
 });

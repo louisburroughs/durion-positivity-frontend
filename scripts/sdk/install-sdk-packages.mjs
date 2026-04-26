@@ -1,7 +1,16 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -28,6 +37,12 @@ const packDir = path.resolve(
   process.env.DURION_SDK_TARBALL_DIR ?? '.sdk-tarballs',
 );
 const manifestPath = path.join(packDir, 'manifest.json');
+const installStatePath = path.join(
+  projectRoot,
+  'node_modules',
+  '.cache',
+  'durion-sdk-install-state.json',
+);
 const sdkRootCandidates = [
   process.env.DURION_SDK_ANGULAR_PATH,
   path.join(projectRoot, '.sdk-src'),
@@ -73,6 +88,29 @@ function allPackagesInstalled() {
   return PACKAGE_NAMES.every(packageName => existsSync(installedPackagePath(packageName)));
 }
 
+function hashDirectoryContents(hash, dir, baseDir = dir) {
+  const entries = readdirSync(dir, { withFileTypes: true })
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    const relativePath = path.relative(baseDir, fullPath);
+
+    if (entry.isDirectory()) {
+      hash.update(`dir:${relativePath}\n`);
+      hashDirectoryContents(hash, fullPath, baseDir);
+      continue;
+    }
+
+    if (!entry.isFile()) {
+      continue;
+    }
+
+    const stat = statSync(fullPath);
+    hash.update(`file:${relativePath}:${stat.size}:${stat.mtimeMs}\n`);
+  }
+}
+
 function detectSdkRoot() {
   return sdkRootCandidates.find(candidate =>
     existsSync(path.join(candidate, 'package.json')) &&
@@ -105,6 +143,24 @@ function ensureSdkBuild(sdkRoot) {
   run('npm', ['run', 'build'], { cwd: sdkRoot });
 }
 
+function createSdkFingerprint(sdkRoot) {
+  const hash = createHash('sha256');
+
+  for (const packageName of PACKAGE_NAMES) {
+    const distDir = path.join(
+      sdkRoot,
+      'packages',
+      packageDirName(packageName),
+      'dist',
+    );
+
+    hash.update(`${packageName}\n`);
+    hashDirectoryContents(hash, distDir);
+  }
+
+  return hash.digest('hex');
+}
+
 function readManifest() {
   if (!existsSync(manifestPath)) {
     return null;
@@ -126,6 +182,36 @@ function manifestIsUsable(manifest) {
     const tarball = manifest.packages[packageName];
     return typeof tarball === 'string' && existsSync(path.join(packDir, tarball));
   });
+}
+
+function createManifestFingerprint(manifest) {
+  return createHash('sha256')
+    .update(JSON.stringify(manifest.packages))
+    .digest('hex');
+}
+
+function readInstallState() {
+  if (!existsSync(installStatePath)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(readFileSync(installStatePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function writeInstallState(state) {
+  mkdirSync(path.dirname(installStatePath), { recursive: true });
+  writeFileSync(installStatePath, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
+}
+
+function installedPackagesMatchState(state, fingerprint) {
+  return allPackagesInstalled() &&
+    state &&
+    typeof state === 'object' &&
+    state.fingerprint === fingerprint;
 }
 
 function packSdkPackages(sdkRoot) {
@@ -173,21 +259,50 @@ function installFromManifest(manifest) {
 }
 
 function main() {
-  if (allPackagesInstalled()) {
-    log('Required SDK packages already installed.');
-    return;
-  }
-
   const sdkRoot = detectSdkRoot();
+  const installState = readInstallState();
+
   if (sdkRoot) {
+    ensureSdkBuild(sdkRoot);
+
+    const fingerprint = createSdkFingerprint(sdkRoot);
+    if (installedPackagesMatchState(installState, fingerprint)) {
+      log(`Required SDK packages already installed for current SDK source at ${sdkRoot}.`);
+      return;
+    }
+
     const manifest = packSdkPackages(sdkRoot);
     installFromManifest(manifest);
+    writeInstallState({
+      source: 'sdk-root',
+      sdkRoot,
+      fingerprint,
+      generatedAt: manifest.generatedAt,
+      packages: manifest.packages,
+    });
     return;
   }
 
   const manifest = readManifest();
   if (manifestIsUsable(manifest)) {
+    const fingerprint = createManifestFingerprint(manifest);
+    if (installedPackagesMatchState(installState, fingerprint)) {
+      log(`Required SDK packages already installed from cached tarballs in ${packDir}.`);
+      return;
+    }
+
     installFromManifest(manifest);
+    writeInstallState({
+      source: 'tarballs',
+      fingerprint,
+      generatedAt: manifest.generatedAt,
+      packages: manifest.packages,
+    });
+    return;
+  }
+
+  if (allPackagesInstalled()) {
+    log('Required SDK packages already installed.');
     return;
   }
 

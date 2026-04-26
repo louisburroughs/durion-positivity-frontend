@@ -2,6 +2,7 @@ import { HttpParams } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { AuthService } from '../../../core/services/auth.service';
 import {
   AccountingEventsService,
   APPaymentsService,
@@ -44,12 +45,18 @@ describe('AccountingService', () => {
     getInvoiceStatus: vi.fn(),
   };
 
+  const authServiceStub = {
+    currentUserClaims: vi.fn(),
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
+    authServiceStub.currentUserClaims.mockReset();
     TestBed.configureTestingModule({
       providers: [
         AccountingService,
         { provide: ApiBaseService, useValue: apiBaseServiceStub },
+        { provide: AuthService, useValue: authServiceStub },
         { provide: AccountingEventsService, useValue: accountingEventsStub },
         { provide: APPaymentsService, useValue: {} },
         { provide: CreditMemosService, useValue: {} },
@@ -62,6 +69,32 @@ describe('AccountingService', () => {
   });
 
   afterEach(() => vi.clearAllMocks());
+
+  describe('reprocessSuspendedEvent()', () => {
+    it('sources the required actor from authenticated claims instead of sending an empty string', () => {
+      authServiceStub.currentUserClaims.mockReturnValue({ sub: 'user-123' });
+      accountingEventsStub.reprocessSuspendedEvent.mockReturnValueOnce(of({ jobId: 'job-1' }));
+
+      service.reprocessSuspendedEvent('evt-001', { justification: 'retry' }).subscribe();
+
+      expect(accountingEventsStub.reprocessSuspendedEvent).toHaveBeenCalledWith('evt-001', {
+        triggeredByUserId: 'user-123',
+        reprocessingNotes: 'retry',
+      });
+    });
+
+    it('falls back to preferred_username when sub is unavailable', () => {
+      authServiceStub.currentUserClaims.mockReturnValue({ preferred_username: 'cashier@example.com' });
+      accountingEventsStub.reprocessSuspendedEvent.mockReturnValueOnce(of({ jobId: 'job-2' }));
+
+      service.reprocessSuspendedEvent('evt-002', { justification: 'retry' }).subscribe();
+
+      expect(accountingEventsStub.reprocessSuspendedEvent).toHaveBeenCalledWith('evt-002', {
+        triggeredByUserId: 'cashier@example.com',
+        reprocessingNotes: 'retry',
+      });
+    });
+  });
 
   describe('listEvents()', () => {
     it('should map both items and content to AccountingEventListItem[]', () => {
@@ -94,19 +127,31 @@ describe('AccountingService', () => {
 
   describe('getEvent()', () => {
     it('should call accountingEventsService.getEvent(eventId) and return AccountingEventDetail', () => {
-      const fixture: AccountingEventDetail = {
+      const sdkFixture = {
         eventId: 'evt-001',
         eventType: 'InvoiceIssued',
-        processingStatus: IngestionProcessingStatus.Processed,
+        status: IngestionProcessingStatus.Received,
         receivedAt: '2025-01-01T10:00:00Z',
       };
-      accountingEventsStub.getEvent.mockReturnValueOnce(of(fixture));
+      accountingEventsStub.getEvent.mockReturnValueOnce(of(sdkFixture));
 
       let result: AccountingEventDetail | undefined;
       service.getEvent('evt-001').subscribe(r => (result = r));
 
       expect(accountingEventsStub.getEvent).toHaveBeenCalledWith('evt-001');
-      expect(result).toEqual(fixture);
+      expect(result).toEqual({
+        eventId: 'evt-001',
+        eventType: 'InvoiceIssued',
+        processingStatus: IngestionProcessingStatus.Received,
+        receivedAt: '2025-01-01T10:00:00Z',
+        processedAt: undefined,
+        journalEntryId: undefined,
+        errorMessage: undefined,
+        organizationId: undefined,
+        sourceSystem: undefined,
+        transactionDate: undefined,
+        payload: undefined,
+      });
     });
   });
 
@@ -149,21 +194,28 @@ describe('AccountingService', () => {
 
   describe('getInvoiceStatus() [Story #70]', () => {
     it('should call invoicePaymentsService.getInvoiceStatus(invoiceId) and return InvoicePaymentStatus', () => {
-      const fixture: InvoicePaymentStatus = {
+      const sdkFixture = {
         invoiceId: 'inv-001',
-        paymentStatus: 'PAID',
-        balanceDue: 0,
-        currency: 'USD',
-        totalAmount: 150,
-        paidAmount: 150,
+        status: 'PAID',
+        remainingBalance: 0,
+        invoiceTotal: 150,
+        totalPaid: 150,
+        latestTransactionReference: 'evt-123',
       };
-      invoicePaymentsStub.getInvoiceStatus.mockReturnValueOnce(of(fixture));
+      invoicePaymentsStub.getInvoiceStatus.mockReturnValueOnce(of(sdkFixture));
 
       let result: InvoicePaymentStatus | undefined;
       service.getInvoiceStatus('inv-001').subscribe((r: InvoicePaymentStatus) => (result = r));
 
       expect(invoicePaymentsStub.getInvoiceStatus).toHaveBeenCalledWith('inv-001');
-      expect(result).toEqual(fixture);
+      expect(result).toEqual({
+        invoiceId: 'inv-001',
+        paymentStatus: 'PAID',
+        balanceDue: 0,
+        totalAmount: 150,
+        paidAmount: 150,
+        latestEventId: 'evt-123',
+      });
     });
   });
 });

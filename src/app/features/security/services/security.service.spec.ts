@@ -50,15 +50,20 @@ describe('SecurityService', () => {
   });
 
   describe('getAllRoles()', () => {
-    it('calls roleManagementSdk.getAllRoles() and returns paged response', () => {
+    it('calls roleManagementSdk.getAllRoles() and maps the SDK role array into a paged response', () => {
       const pagedResp: PagedResponse<SecurityRole> = {
-        results: [{ name: 'ROLE_ADMIN' }],
+        results: [{ name: 'ROLE_ADMIN', description: 'Admin role' }],
         totalCount: 1,
         pageNumber: 0,
         pageSize: 20,
         totalPages: 1,
       };
-      roleManagementStub.getAllRoles.mockReturnValueOnce(of(pagedResp));
+      roleManagementStub.getAllRoles.mockReturnValueOnce(of([
+        {
+          name: 'ROLE_ADMIN',
+          description: 'Admin role',
+        },
+      ]));
 
       let result: PagedResponse<SecurityRole> | undefined;
       service.getAllRoles(0, 20).subscribe(r => (result = r));
@@ -68,7 +73,7 @@ describe('SecurityService', () => {
     });
 
     it('calls roleManagementSdk.getAllRoles() regardless of page/size args', () => {
-      roleManagementStub.getAllRoles.mockReturnValueOnce(of({ results: [], totalCount: 0, pageNumber: 2, pageSize: 5, totalPages: 0 }));
+      roleManagementStub.getAllRoles.mockReturnValueOnce(of([]));
       service.getAllRoles(2, 5).subscribe();
 
       expect(roleManagementStub.getAllRoles).toHaveBeenCalledWith();
@@ -132,7 +137,7 @@ describe('SecurityService', () => {
   });
 
   describe('updateRolePermissions()', () => {
-    it('calls roleManagementSdk.updateRolePermissions with the request body', () => {
+    it('maps roleName to roleId and permissionKeys to a permissionNames Set', () => {
       const req: UpdateRolePermissionsRequest = {
         roleName: 'ROLE_ADMIN',
         permissionKeys: ['PERM_READ', 'PERM_WRITE'],
@@ -141,7 +146,13 @@ describe('SecurityService', () => {
 
       service.updateRolePermissions(req).subscribe();
 
-      expect(roleManagementStub.updateRolePermissions).toHaveBeenCalledWith(req);
+      const sdkReq = roleManagementStub.updateRolePermissions.mock.calls[0]?.[0];
+      expect(sdkReq).toEqual({
+        roleId: 'ROLE_ADMIN',
+        permissionNames: new Set(['PERM_READ', 'PERM_WRITE']),
+      });
+      expect(sdkReq.permissionNames).toBeInstanceOf(Set);
+      expect(Array.from(sdkReq.permissionNames)).toEqual(['PERM_READ', 'PERM_WRITE']);
     });
   });
 
