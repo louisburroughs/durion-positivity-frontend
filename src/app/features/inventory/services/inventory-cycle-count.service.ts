@@ -27,6 +27,14 @@ import {
   CycleCountTask,
 } from '../models/inventory.models';
 
+type AdjustmentStatus =
+  | 'PENDING_APPROVAL'
+  | 'AUTO_APPROVED'
+  | 'APPROVED'
+  | 'POSTED'
+  | 'REJECTED'
+  | 'FAILED';
+
 @Injectable({ providedIn: 'root' })
 export class InventoryCycleCountService {
   private readonly api = inject(ApiBaseService);
@@ -48,7 +56,8 @@ export class InventoryCycleCountService {
   }
 
   queryAdjustments(filter: ApprovalQueueFilter): Observable<AdjustmentPageResponse> {
-    return this.adjustmentsSdk.listAdjustments(filter.status as never).pipe(
+    const status = this.toAdjustmentStatus(filter.status);
+    return this.adjustmentsSdk.listAdjustments(status).pipe(
       map((response: AdjustmentResponse[] | AdjustmentPageResponse) => {
         if (Array.isArray(response)) {
           return this.toFilteredAdjustmentPageResponse(response, filter);
@@ -174,6 +183,36 @@ export class InventoryCycleCountService {
     }
 
     return true;
+  }
+
+  private toAdjustmentStatus(
+    status?: string,
+  ): AdjustmentStatus | undefined {
+    if (!status) {
+      return undefined;
+    }
+
+    if (!this.isAdjustmentStatus(status)) {
+      return undefined;
+    }
+
+    return status;
+  }
+
+  private isAdjustmentStatus(
+    status: string,
+  ): status is AdjustmentStatus {
+    switch (status) {
+      case 'PENDING_APPROVAL':
+      case 'AUTO_APPROVED':
+      case 'APPROVED':
+      case 'POSTED':
+      case 'REJECTED':
+      case 'FAILED':
+        return true;
+      default:
+        return false;
+    }
   }
 
   private toAdjustmentDetail(dto: AdjustmentResponse): AdjustmentDetail {
