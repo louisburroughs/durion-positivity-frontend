@@ -3,17 +3,18 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test",
+    "sdk:install": "node scripts/sdk/install-sdk-packages.mjs",
+    "start": "npm run sdk:install && ng serve",
+    "build": "npm run sdk:install && ng build",
+    "watch": "npm run sdk:install && ng build --watch --configuration development",
+    "test": "npm run sdk:install && ng test",
     "a11y:smoke": "node scripts/a11y/smoke-routes.mjs",
     "a11y:smoke:strict": "A11Y_FAIL_ON_IMPACT=serious node scripts/a11y/smoke-routes.mjs",
     "i18n:check:missing": "node scripts/i18n/check-missing-keys.mjs",
     "i18n:pseudo:generate": "node scripts/i18n/generate-pseudo-locale.mjs",
     "i18n:pseudo:check": "node scripts/i18n/generate-pseudo-locale.mjs --check",
     "i18n:check": "npm run i18n:check:missing && npm run i18n:pseudo:check",
-    "serve:ssr:durion-positivity-frontend": "node dist/durion-positivity-frontend/server/server.mjs"
+    "serve:ssr:durion-positivity-frontend": "npm run sdk:install && node dist/durion-positivity-frontend/server/server.mjs"
   },
   "prettier": {
     "printWidth": 100,
@@ -46,18 +47,7 @@
     "tslib": "^2.3.0",
     "tus-js-client": "^4.3.1",
     "uuid": "^13.0.0",
-    "zone.js": "^0.16.1",
-    "@durion-sdk/accounting": "0.0.0",
-    "@durion-sdk/catalog": "0.0.0",
-    "@durion-sdk/customer": "0.0.0",
-    "@durion-sdk/inventory": "0.0.0",
-    "@durion-sdk/invoice": "0.0.0",
-    "@durion-sdk/location": "0.0.0",
-    "@durion-sdk/order": "0.0.0",
-    "@durion-sdk/people": "0.0.0",
-    "@durion-sdk/security": "0.0.0",
-    "@durion-sdk/shop-manager": "0.0.0",
-    "@durion-sdk/workorder": "0.0.0"
+    "zone.js": "^0.16.1"
   },
   "devDependencies": {
     "@angular-eslint/eslint-plugin": "^21.3.1",

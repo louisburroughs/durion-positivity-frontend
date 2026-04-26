@@ -1,0 +1,18 @@
+{
+  "sdkRoot": "/home/louis-burroughs/IdeaProjects/durion-positivity-sdk-angular",
+  "generatedAt": "2026-04-26T12:56:21.423Z",
+  "packages": {
+    "@durion-sdk/accounting": "durion-sdk-accounting-0.1.0-alpha.tgz",
+    "@durion-sdk/bulk-loader": "durion-sdk-bulk-loader-0.1.0-alpha.tgz",
+    "@durion-sdk/catalog": "durion-sdk-catalog-0.1.0-alpha.tgz",
+    "@durion-sdk/customer": "durion-sdk-customer-0.1.0-alpha.tgz",
+    "@durion-sdk/inventory": "durion-sdk-inventory-0.1.0-alpha.tgz",
+    "@durion-sdk/invoice": "durion-sdk-invoice-0.1.0-alpha.tgz",
+    "@durion-sdk/location": "durion-sdk-location-0.1.0-alpha.tgz",
+    "@durion-sdk/order": "durion-sdk-order-0.1.0-alpha.tgz",
+    "@durion-sdk/people": "durion-sdk-people-0.1.0-alpha.tgz",
+    "@durion-sdk/security": "durion-sdk-security-0.1.0-alpha.tgz",
+    "@durion-sdk/shop-manager": "durion-sdk-shop-manager-0.1.0-alpha.tgz",
+    "@durion-sdk/workorder": "durion-sdk-workorder-0.1.0-alpha.tgz"
+  }
+}

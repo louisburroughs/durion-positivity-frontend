@@ -14,6 +14,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout Angular SDK repo
+        uses: actions/checkout@v4
+        with:
+          repository: louisburroughs/durion-positivity-sdk-angular
+          path: .sdk-src
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
