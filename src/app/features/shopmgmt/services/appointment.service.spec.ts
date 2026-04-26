@@ -136,18 +136,36 @@ describe('AppointmentService [CAP-249]', () => {
   // ── createAssignment ──────────────────────────────────────────────────────
 
   describe('createAssignment', () => {
-    it('calls assignmentSdk.createAssignment with appointmentId and body', () => {
-      const body = { assignmentType: 'BAY', bayId: 'bay-2' };
+    it('maps mechanic and bay identifiers into the SDK assignment request', () => {
+      const body = {
+        assignmentType: 'LEAD',
+        bayId: 'bay-2',
+        mechanic: { mechanicId: 'mech-7' },
+      };
       service.createAssignment('appt-1', body).subscribe();
 
-      expect(assignmentStub.createAssignment).toHaveBeenCalledWith('appt-1', body);
+      expect(assignmentStub.createAssignment).toHaveBeenCalledWith('appt-1', {
+        appointmentId: 'appt-1',
+        resourceId: 'bay-2',
+        resourceType: 'BAY',
+        mechanics: [{ mechanicPersonId: 'mech-7', role: 'LEAD' }],
+      });
     });
 
-    it('forwards the request body to createAssignment', () => {
-      const body = { assignmentType: 'MOBILE_UNIT', mobileUnitId: 'mu-5' };
+    it('maps assist assignments to mobile-unit resources and mechanic role enums', () => {
+      const body = {
+        assignmentType: 'ASSIST',
+        mobileUnitId: 'mu-5',
+        mechanic: { mechanicId: 'mech-9' },
+      };
       service.createAssignment('appt-1', body).subscribe();
 
-      expect(assignmentStub.createAssignment).toHaveBeenCalledWith('appt-1', body);
+      expect(assignmentStub.createAssignment).toHaveBeenCalledWith('appt-1', {
+        appointmentId: 'appt-1',
+        resourceId: 'mu-5',
+        resourceType: 'MOBILE_UNIT',
+        mechanics: [{ mechanicPersonId: 'mech-9', role: 'ASSIST' }],
+      });
     });
   });
 
@@ -157,13 +175,21 @@ describe('AppointmentService [CAP-249]', () => {
     it('calls appointmentsSdk.rescheduleAppointment with appointmentId and body', () => {
       service.rescheduleAppointment('appt-1', STUB_RESCHEDULE_REQUEST).subscribe();
 
-      expect(appointmentsStub.rescheduleAppointment).toHaveBeenCalledWith('appt-1', STUB_RESCHEDULE_REQUEST);
+      expect(appointmentsStub.rescheduleAppointment).toHaveBeenCalledWith('appt-1', {
+        newStartAt: '2026-04-01T09:00:00Z',
+        newEndAt: '2026-04-01T10:00:00Z',
+        reason: 'CUSTOMER_REQUEST',
+        rescheduleReasonNotes: undefined,
+      });
     });
 
     it('forwards the reschedule body', () => {
       service.rescheduleAppointment('appt-1', STUB_RESCHEDULE_REQUEST).subscribe();
 
-      expect(appointmentsStub.rescheduleAppointment).toHaveBeenCalledWith('appt-1', STUB_RESCHEDULE_REQUEST);
+      expect(appointmentsStub.rescheduleAppointment).toHaveBeenCalledWith(
+        'appt-1',
+        expect.objectContaining({ reason: 'CUSTOMER_REQUEST' }),
+      );
     });
   });
 
@@ -188,22 +214,41 @@ describe('AppointmentService [CAP-249]', () => {
   // ── createAppointment ─────────────────────────────────────────────────────
 
   describe('createAppointment', () => {
-    it('calls appointmentsSdk.createAppointment with body and idempotencyKey', () => {
-      service.createAppointment(STUB_CREATE_PAYLOAD, 'idem-key-abc').subscribe();
+    it('maps customer and vehicle identifiers into the SDK appointment request', () => {
+      service.createAppointment(
+        {
+          ...STUB_CREATE_PAYLOAD,
+          crmCustomerId: 'cust-1',
+          crmVehicleId: 'veh-9',
+        },
+        'idem-key-abc',
+      ).subscribe();
 
-      expect(appointmentsStub.createAppointment).toHaveBeenCalledWith(STUB_CREATE_PAYLOAD, 'idem-key-abc');
+      expect(appointmentsStub.createAppointment).toHaveBeenCalledWith({
+        crmCustomerId: 'cust-1',
+        crmVehicleId: 'veh-9',
+        locationId: 'fac-1',
+        startAt: '2026-04-01T09:00:00Z',
+        endAt: '2026-04-01T09:00:00Z',
+        serviceRequestIds: [],
+        sourceType: 'ESTIMATE',
+        sourceId: 'est-100',
+      }, 'idem-key-abc');
     });
 
-    it('forwards the request body to the SDK', () => {
+    it('maps source identifiers into the SDK request', () => {
       service.createAppointment(STUB_CREATE_PAYLOAD, 'idem-key-abc').subscribe();
 
-      expect(appointmentsStub.createAppointment).toHaveBeenCalledWith(STUB_CREATE_PAYLOAD, expect.anything());
+      expect(appointmentsStub.createAppointment).toHaveBeenCalledWith(
+        expect.objectContaining({ sourceType: 'ESTIMATE', sourceId: 'est-100' }),
+        'idem-key-abc',
+      );
     });
 
     it('forwards the idempotencyKey as second argument to the SDK', () => {
       service.createAppointment(STUB_CREATE_PAYLOAD, 'idem-key-abc').subscribe();
 
-      expect(appointmentsStub.createAppointment).toHaveBeenCalledWith(expect.anything(), 'idem-key-abc');
+      expect(appointmentsStub.createAppointment).toHaveBeenCalledWith(expect.any(Object), 'idem-key-abc');
     });
   });
 
@@ -214,14 +259,20 @@ describe('AppointmentService [CAP-249]', () => {
       const body = { overrideReason: 'Manager approved' };
       service.executeOverride('appt-1', body).subscribe();
 
-      expect(conflictOverrideStub.executeOverride).toHaveBeenCalledWith('appt-1', body);
+      expect(conflictOverrideStub.executeOverride).toHaveBeenCalledWith('appt-1', {
+        appointmentId: 'appt-1',
+        overrideReason: 'Manager approved',
+      });
     });
 
     it('forwards the override body to the SDK', () => {
       const body = { overrideReason: 'Emergency' };
       service.executeOverride('appt-1', body).subscribe();
 
-      expect(conflictOverrideStub.executeOverride).toHaveBeenCalledWith('appt-1', body);
+      expect(conflictOverrideStub.executeOverride).toHaveBeenCalledWith(
+        'appt-1',
+        expect.objectContaining({ overrideReason: 'Emergency' }),
+      );
     });
   });
 
@@ -239,7 +290,7 @@ describe('AppointmentService [CAP-249]', () => {
       scheduleStub.viewSchedule.mockReturnValue(of({}));
       service.viewSchedule('loc-1', '2026-04-01').subscribe();
 
-      expect(scheduleStub.viewSchedule).toHaveBeenCalledWith('loc-1', '2026-04-01', expect.anything(), expect.anything());
+      expect(scheduleStub.viewSchedule).toHaveBeenCalledWith('loc-1', '2026-04-01', undefined, undefined);
     });
   });
 });

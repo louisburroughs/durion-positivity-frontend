@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Angular SDK packages
+        run: npm run sdk:install
+
       - name: Run accessibility smoke scan (blocking on critical)
         id: a11y_scan
         env:

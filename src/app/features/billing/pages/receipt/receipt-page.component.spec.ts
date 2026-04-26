@@ -2,8 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ReceiptRef } from '../../models/billing.models';
+import { BillingTransportService } from '../../services/billing-transport.service';
 import { ReceiptPageComponent } from './receipt-page.component';
 
 const receiptFixture: ReceiptRef = {
@@ -20,20 +21,22 @@ describe('ReceiptPageComponent', () => {
   let fixture: ComponentFixture<ReceiptPageComponent>;
   let component: ReceiptPageComponent;
 
-  const apiMock = {
-    get: vi.fn(),
-    post: vi.fn(),
+  const billingTransportStub = {
+    loadReceipt: vi.fn(),
+    generateReceipt: vi.fn(),
+    reprintReceipt: vi.fn(),
   };
 
   beforeEach(async () => {
-    apiMock.get.mockReset();
-    apiMock.post.mockReset();
+    billingTransportStub.loadReceipt.mockReset();
+    billingTransportStub.generateReceipt.mockReset();
+    billingTransportStub.reprintReceipt.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [ReceiptPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: ApiBaseService, useValue: apiMock },
+        { provide: BillingTransportService, useValue: billingTransportStub },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -57,18 +60,19 @@ describe('ReceiptPageComponent', () => {
   });
 
   it('loads receipt successfully when receiptId is present', () => {
-    apiMock.get.mockReturnValue(of(receiptFixture));
+    billingTransportStub.loadReceipt.mockReturnValue(of(receiptFixture));
 
     fixture = TestBed.createComponent(ReceiptPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
 
+    expect(billingTransportStub.loadReceipt).toHaveBeenCalledWith('inv-001', 'rcpt-001');
     expect(component.state()).toBe('ready');
     expect(component.receipt()).toEqual(receiptFixture);
   });
 
   it('sets error state before errorKey when receipt load fails', () => {
-    apiMock.get.mockReturnValue(throwError(() => new Error('load failed')));
+    billingTransportStub.loadReceipt.mockReturnValue(throwError(() => new Error('load failed')));
 
     fixture = TestBed.createComponent(ReceiptPageComponent);
     component = fixture.componentInstance;
@@ -87,13 +91,13 @@ describe('ReceiptPageComponent', () => {
   });
 
   it('sets error state before errorKey when generateAndShow fails', () => {
-    apiMock.get.mockReturnValue(of(receiptFixture));
+    billingTransportStub.loadReceipt.mockReturnValue(of(receiptFixture));
 
     fixture = TestBed.createComponent(ReceiptPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
 
-    apiMock.post.mockReturnValue(throwError(() => new Error('gen failed')));
+    billingTransportStub.generateReceipt.mockReturnValue(throwError(() => new Error('gen failed')));
 
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
@@ -109,13 +113,13 @@ describe('ReceiptPageComponent', () => {
   });
 
   it('sets error state before errorKey when reprint fails', () => {
-    apiMock.get.mockReturnValue(of(receiptFixture));
+    billingTransportStub.loadReceipt.mockReturnValue(of(receiptFixture));
 
     fixture = TestBed.createComponent(ReceiptPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
 
-    apiMock.post.mockReturnValue(throwError(() => new Error('reprint fail')));
+    billingTransportStub.reprintReceipt.mockReturnValue(throwError(() => new Error('reprint fail')));
 
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
@@ -139,19 +143,20 @@ describe('ReceiptPageComponent', () => {
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.MISSING_INVOICE');
-    expect(apiMock.post).not.toHaveBeenCalled();
+    expect(billingTransportStub.generateReceipt).not.toHaveBeenCalled();
   });
 
   describe('loadReceipt with empty invoiceId', () => {
     beforeEach(async () => {
-      apiMock.get.mockReset();
-      apiMock.post.mockReset();
+      billingTransportStub.loadReceipt.mockReset();
+      billingTransportStub.generateReceipt.mockReset();
+      billingTransportStub.reprintReceipt.mockReset();
       TestBed.resetTestingModule();
       await TestBed.configureTestingModule({
         imports: [ReceiptPageComponent, TranslateModule.forRoot()],
         providers: [
           provideRouter([]),
-          { provide: ApiBaseService, useValue: apiMock },
+          { provide: BillingTransportService, useValue: billingTransportStub },
           {
             provide: ActivatedRoute,
             useValue: {
@@ -181,7 +186,7 @@ describe('ReceiptPageComponent', () => {
 
       expect(component.state()).toBe('error');
       expect(component.errorKey()).toBe('BILLING.RECEIPT.ERROR.MISSING_INVOICE');
-      expect(apiMock.get).not.toHaveBeenCalled();
+      expect(billingTransportStub.loadReceipt).not.toHaveBeenCalled();
     });
   });
 });

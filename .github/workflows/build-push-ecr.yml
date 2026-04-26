@@ -9,7 +9,9 @@ on:
       - "package*.json"
       - "angular.json"
       - "tsconfig*.json"
+      - "scripts/sdk/**"
       - "Dockerfile"
+      - ".dockerignore"
       - ".github/workflows/build-push-ecr.yml"
   workflow_dispatch:
     inputs:
@@ -55,6 +57,18 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Angular SDK packages
+        run: npm run sdk:install
 
       - name: Log in to Amazon ECR
         id: login-ecr

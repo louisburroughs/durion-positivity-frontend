@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { environment } from '../../../../../environments/environment';
 import {
   InvoiceDetail,
@@ -34,7 +35,7 @@ type IssueState = 'idle' | 'elevating' | 'issuing' | 'success' | 'error';
 @Component({
   selector: 'app-invoice-detail-page',
   standalone: true,
-  imports: [CurrencyPipe, DatePipe, SlicePipe, FormsModule],
+  imports: [CurrencyPipe, DatePipe, SlicePipe, FormsModule, TranslatePipe],
   templateUrl: './invoice-detail-page.component.html',
   styleUrl: './invoice-detail-page.component.css',
 })
@@ -94,8 +95,8 @@ export class InvoiceDetailPageComponent implements OnInit {
         error: (err) => {
           this.errorMessage.set(
             err?.status === 404
-              ? 'Invoice not found.'
-              : 'Failed to load invoice. Please try again.',
+              ? 'BILLING.INVOICE_DETAIL.ERROR.NOT_FOUND'
+              : 'BILLING.INVOICE_DETAIL.ERROR.LOAD',
           );
           this.pageState.set('error');
         },
@@ -127,7 +128,7 @@ export class InvoiceDetailPageComponent implements OnInit {
   elevate(): void {
     const pw = this.elevationPassword().trim();
     if (!pw) {
-      this.elevationError.set('Password is required.');
+      this.elevationError.set('BILLING.INVOICE_DETAIL.ELEVATION.ERROR.PASSWORD_REQUIRED');
       return;
     }
     this.issueState.set('elevating');
@@ -147,8 +148,8 @@ export class InvoiceDetailPageComponent implements OnInit {
           this.issueState.set('idle');
           this.elevationError.set(
             err?.status === 401
-              ? 'Incorrect password. Please try again.'
-              : 'Elevation failed. Please contact your manager.',
+              ? 'BILLING.INVOICE_DETAIL.ELEVATION.ERROR.INVALID_PASSWORD'
+              : 'BILLING.INVOICE_DETAIL.ELEVATION.ERROR.GENERIC',
           );
         },
       });
@@ -180,8 +181,8 @@ export class InvoiceDetailPageComponent implements OnInit {
           this.issueState.set('error');
           this.issueError.set(
             err?.status === 409
-              ? 'Invoice has already been issued.'
-              : err?.error?.message ?? 'Failed to issue invoice. Please try again.',
+              ? 'BILLING.INVOICE_DETAIL.ERROR.ALREADY_ISSUED'
+              : err?.error?.message ?? 'BILLING.INVOICE_DETAIL.ERROR.ISSUE',
           );
         },
       });

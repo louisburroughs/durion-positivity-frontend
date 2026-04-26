@@ -132,13 +132,15 @@ All domain modules are lazy-loaded under the `/app` shell route.
 # Install dependencies
 npm install
 
-# Frontend commands auto-install the Angular SDK packages into node_modules
-# from one of:
+# If an Angular SDK checkout is available, npm install also refreshes the
+# @durion-sdk/* packages into node_modules from one of:
 #   1. DURION_SDK_ANGULAR_PATH
 #   2. ./.sdk-src
 #   3. ../durion-positivity-sdk-angular
 #
-# The sibling SDK repo must already exist locally unless CI/Docker provides .sdk-src.
+# If no SDK checkout is available yet, build/test/start commands still install
+# the packages before running. The sibling SDK repo must already exist locally
+# unless CI/Docker provides .sdk-src or prepacked tarballs.
 
 # Start the dev server (http://localhost:4200, hot reload)
 npm start
@@ -153,14 +155,17 @@ npm start
 # Production build (outputs to dist/)
 npm run build
 
-# If SDK packages are not already installed in node_modules, the build first
-# packs and installs them from the configured Angular SDK source checkout.
+# The build refreshes SDK packages from the configured Angular SDK source
+# checkout or cached tarballs before running ng build.
 #
 # Run the SSR production server locally
 npm run serve:ssr:durion-positivity-frontend   # http://localhost:4000
 
 # Watch build (development, incremental)
 npm run watch
+
+# Accessibility scan also refreshes SDK packages first
+npm run a11y:smoke
 ```
 
 ---

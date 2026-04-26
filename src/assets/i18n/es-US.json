@@ -3243,6 +3243,80 @@
         "NAVIGATE": "No se puede navegar a esa página. Por favor, verifique el ID e inténtelo de nuevo."
       }
     },
+    "INVOICE_DETAIL": {
+      "HEADER": {
+        "OVERLINE": "Factura"
+      },
+      "LOADING": "Cargando factura...",
+      "SECTION": {
+        "SUMMARY": "Resumen de factura",
+        "ADJUSTMENTS": "Ajustes",
+        "TRACEABILITY": "Trazabilidad",
+        "DOCUMENTS": "Documentos"
+      },
+      "FIELD": {
+        "WORKORDER": "Workorder",
+        "PO_NUMBER": "Numero de PO",
+        "CREATED": "Creada",
+        "ISSUED": "Emitida"
+      },
+      "LINE_ITEM": {
+        "DESCRIPTION": "Descripcion",
+        "TYPE": "Tipo",
+        "QTY": "Cant.",
+        "UNIT": "Unidad",
+        "TOTAL": "Total"
+      },
+      "TOTAL": {
+        "SUBTOTAL": "Subtotal",
+        "TAX": "Impuesto",
+        "DISCOUNT": "Descuento",
+        "GRAND_TOTAL": "Total general"
+      },
+      "TRACEABILITY": {
+        "SNAPSHOT": "Instantanea",
+        "CAPTURED": "Capturada",
+        "WORKORDER_COMPLETED": "Workorder completada",
+        "SNAPSHOT_VERSION": "Version de instantanea",
+        "GENERATED_BY": "Generada por"
+      },
+      "ADJUSTMENT": {
+        "META": "{{timestamp}} - por {{user}}"
+      },
+      "ARIA": {
+        "LINE_ITEMS": "Lineas de factura",
+        "TOTALS": "Totales de factura"
+      },
+      "ACTION": {
+        "BACK_TO_WORKORDER": "Volver a workorder",
+        "ISSUE": "Emitir factura",
+        "ISSUING": "Emitiendo...",
+        "DOWNLOAD": "Descargar"
+      },
+      "SUCCESS": {
+        "ISSUED": "Factura emitida correctamente. Documentos disponibles abajo."
+      },
+      "ERROR": {
+        "NOT_FOUND": "Factura no encontrada.",
+        "LOAD": "No se pudo cargar la factura. Intentelo de nuevo.",
+        "ALREADY_ISSUED": "La factura ya fue emitida.",
+        "ISSUE": "No se pudo emitir la factura. Intentelo de nuevo."
+      },
+      "ELEVATION": {
+        "ARIA_LABEL": "Se requiere elevacion de gerente",
+        "TITLE": "Se requiere autorizacion de gerente",
+        "DESCRIPTION": "Emitir esta factura requiere autorizacion de nivel gerente. Ingrese la contrasena del gerente para continuar.",
+        "PASSWORD_LABEL": "Contrasena de gerente",
+        "PASSWORD_PLACEHOLDER": "Ingrese la contrasena",
+        "AUTHORIZE": "Autorizar",
+        "VERIFYING": "Verificando...",
+        "ERROR": {
+          "PASSWORD_REQUIRED": "Se requiere contrasena.",
+          "INVALID_PASSWORD": "Contrasena incorrecta. Intentelo de nuevo.",
+          "GENERIC": "La elevacion fallo. Contacte a su gerente."
+        }
+      }
+    },
     "PAYMENT": {
       "TITLE": "Pago",
       "METHOD": {

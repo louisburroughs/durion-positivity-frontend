@@ -52,6 +52,56 @@ describe('ProductInventoryService', () => {
       expect(availSdkStub.queryInventoryAvailability).toHaveBeenCalledWith('SKU-002');
     });
 
+    it('filters list-based SDK responses to the requested location and recomputes totals', () => {
+      availSdkStub.queryInventoryAvailability.mockReturnValueOnce(of([
+        { locationId: 'loc-01', locationName: 'North', onHandQuantity: 2, availableToPromiseQuantity: 1 },
+        { locationId: 'loc-02', locationName: 'South', onHandQuantity: 5, availableToPromiseQuantity: 4 },
+      ]));
+
+      let result;
+      service.queryInventoryAvailability('SKU-002', 'loc-02').subscribe(value => {
+        result = value;
+      });
+
+      expect(result).toEqual({
+        sku: 'SKU-002',
+        totalOnHand: 5,
+        totalReserved: 0,
+        totalAtp: 4,
+        locationBreakdown: [
+          { locationId: 'loc-02', locationName: 'South', onHand: 5, reserved: 0, atp: 4 },
+        ],
+      });
+    });
+
+    it('filters aggregated SDK responses to the requested location and preserves matching rows only', () => {
+      availSdkStub.queryInventoryAvailability.mockReturnValueOnce(of({
+        sku: 'SKU-002',
+        totalOnHand: 7,
+        totalReserved: 1,
+        totalAtp: 6,
+        locationBreakdown: [
+          { locationId: 'loc-01', locationName: 'North', onHand: 2, reserved: 1, atp: 1 },
+          { locationId: 'loc-02', locationName: 'South', onHand: 5, reserved: 0, atp: 5 },
+        ],
+      }));
+
+      let result;
+      service.queryInventoryAvailability('SKU-002', 'loc-01').subscribe(value => {
+        result = value;
+      });
+
+      expect(result).toEqual({
+        sku: 'SKU-002',
+        totalOnHand: 2,
+        totalReserved: 1,
+        totalAtp: 1,
+        locationBreakdown: [
+          { locationId: 'loc-01', locationName: 'North', onHand: 2, reserved: 1, atp: 1 },
+        ],
+      });
+    });
+
     it('does NOT pass locationId to the SDK when omitted', () => {
       availSdkStub.queryInventoryAvailability.mockReturnValueOnce(of({ sku: 'SKU-003', totalOnHand: 0, totalReserved: 0, totalAtp: 0, locationBreakdown: [] }));
 

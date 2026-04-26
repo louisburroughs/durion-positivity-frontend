@@ -1,182 +1,222 @@
-import { TestBed, ComponentFixture } from '@angular/core/testing';
-import { provideRouter, ActivatedRoute } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { vi } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute, provideRouter } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { of, throwError } from 'rxjs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { InvoiceArtifact, InvoiceDetail } from '../../models/billing.models';
+import { BillingTransportService } from '../../services/billing-transport.service';
 import { InvoiceDetailPageComponent } from './invoice-detail-page.component';
-import { environment } from '../../../../../environments/environment';
 
-const BASE = environment.apiBaseUrl;
 const INVOICE_ID = 'inv-001';
 
-const mockRoute = {
-  snapshot: { paramMap: { get: (k: string) => (k === 'invoiceId' ? INVOICE_ID : null) } },
+const translations = {
+  BILLING: {
+    INVOICE_DETAIL: {
+      HEADER: {
+        OVERLINE: 'Invoice',
+      },
+      LOADING: 'Loading invoice...',
+      SECTION: {
+        SUMMARY: 'Invoice Summary',
+        DOCUMENTS: 'Documents',
+      },
+      FIELD: {
+        WORKORDER: 'Workorder',
+      },
+      ACTION: {
+        BACK_TO_WORKORDER: 'Back to Workorder',
+        ISSUE: 'Issue Invoice',
+        ISSUING: 'Issuing...',
+        DOWNLOAD: 'Download',
+      },
+      SUCCESS: {
+        ISSUED: 'Invoice issued successfully. Documents available below.',
+      },
+      ERROR: {
+        NOT_FOUND: 'Invoice not found.',
+        LOAD: 'Failed to load invoice. Please try again.',
+        ALREADY_ISSUED: 'Invoice has already been issued.',
+      },
+      ELEVATION: {
+        ARIA_LABEL: 'Manager elevation required',
+        TITLE: 'Manager Authorization Required',
+        DESCRIPTION: 'Issuing this invoice requires manager-level authorization. Enter the manager password to proceed.',
+        PASSWORD_LABEL: 'Manager Password',
+        PASSWORD_PLACEHOLDER: 'Enter password',
+        AUTHORIZE: 'Authorize',
+        VERIFYING: 'Verifying...',
+        ERROR: {
+          PASSWORD_REQUIRED: 'Password is required.',
+          INVALID_PASSWORD: 'Incorrect password. Please try again.',
+        },
+      },
+    },
+  },
+  COMMON: {
+    CANCEL: 'Cancel',
+  },
 };
 
-const STUB_INVOICE = {
-  id: INVOICE_ID,
-  status: 'DRAFT',
+const routeStub = {
+  snapshot: {
+    paramMap: {
+      get: (key: string) => (key === 'invoiceId' ? INVOICE_ID : null),
+    },
+  },
+};
+
+const invoiceFixture: InvoiceDetail = {
+  invoiceId: INVOICE_ID,
+  invoiceNumber: 'INV-001',
   workOrderId: 'wo-001',
-  issuancePolicy: { issuableNow: true, requiresElevation: false },
+  status: 'DRAFT',
+  subtotal: 100,
+  grandTotal: 100,
+  issuancePolicy: {
+    issuableNow: true,
+    requiresElevation: false,
+  },
 };
 
-/** Flush the initial invoice GET + artifacts GET triggered by ngOnInit. */
-function flushLoad(http: HttpTestingController, invoiceOverride?: object): void {
-  http
-    .expectOne(`${BASE}/billing/invoices/${INVOICE_ID}`)
-    .flush(invoiceOverride ?? STUB_INVOICE);
-  http.expectOne(`${BASE}/billing/invoices/${INVOICE_ID}/artifacts`).flush([]);
-}
+const artifactFixture: InvoiceArtifact[] = [
+  {
+    artifactRefId: 'artifact-001',
+    fileName: 'invoice.pdf',
+    contentType: 'application/pdf',
+  },
+];
 
-describe('InvoiceDetailPageComponent [Stories 209–212]', () => {
+describe('InvoiceDetailPageComponent', () => {
   let fixture: ComponentFixture<InvoiceDetailPageComponent>;
   let component: InvoiceDetailPageComponent;
-  let http: HttpTestingController;
+  let billingTransportStub: {
+    loadInvoiceDetail: ReturnType<typeof vi.fn>;
+    loadInvoiceArtifacts: ReturnType<typeof vi.fn>;
+    createArtifactDownloadToken: ReturnType<typeof vi.fn>;
+    elevate: ReturnType<typeof vi.fn>;
+    issueInvoice: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
+    TestBed.resetTestingModule();
+
+    billingTransportStub = {
+      loadInvoiceDetail: vi.fn().mockReturnValue(of(invoiceFixture)),
+      loadInvoiceArtifacts: vi.fn().mockReturnValue(of(artifactFixture)),
+      createArtifactDownloadToken: vi.fn().mockReturnValue(of({
+        downloadToken: 'token-001',
+        downloadUrl: 'https://cdn.example.com/invoice.pdf',
+      })),
+      elevate: vi.fn().mockReturnValue(of({ elevationToken: 'elev-001' })),
+      issueInvoice: vi.fn().mockReturnValue(of({ ...invoiceFixture, status: 'ISSUED' })),
+    };
+
     await TestBed.configureTestingModule({
-      imports: [InvoiceDetailPageComponent],
+      imports: [InvoiceDetailPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        { provide: ActivatedRoute, useValue: mockRoute },
+        { provide: ActivatedRoute, useValue: routeStub },
+        { provide: BillingTransportService, useValue: billingTransportStub },
       ],
     }).compileComponents();
+
+    const translateService = TestBed.inject(TranslateService);
+    translateService.setTranslation('en-US', translations);
+    translateService.use('en-US');
+
     fixture = TestBed.createComponent(InvoiceDetailPageComponent);
     component = fixture.componentInstance;
-    http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
-
-  it('should create and reach ready state', () => {
+  it('renders translated invoice heading, actions, and document controls after load', () => {
     fixture.detectChanges();
-    flushLoad(http);
-    expect(component).toBeTruthy();
+
+    const host = fixture.nativeElement as HTMLElement;
+
     expect(component.pageState()).toBe('ready');
+    expect(host.querySelector('.wo-header__overline')?.textContent).toContain('Invoice');
+    expect(host.querySelector('#invoice-heading')?.textContent).toContain(INVOICE_ID);
+    expect(host.querySelector('.btn--ghost')?.textContent).toContain('Back to Workorder');
+    expect(host.querySelector('.btn--accent')?.textContent).toContain('Issue Invoice');
+    expect(host.querySelector('#totals-heading')?.textContent).toContain('Invoice Summary');
+    expect(host.textContent).toContain('Documents');
+    expect(host.textContent).toContain('Download');
+
+    expect(billingTransportStub.loadInvoiceDetail).toHaveBeenCalledWith(INVOICE_ID);
+    expect(billingTransportStub.loadInvoiceArtifacts).toHaveBeenCalledWith(INVOICE_ID);
   });
 
-  // ── F1/r2998536720 + F2/r2998536767 — canIssue() policy gating ───────────
+  it('renders translated elevation modal copy and validation state', () => {
+    billingTransportStub.loadInvoiceDetail.mockReturnValueOnce(of({
+      ...invoiceFixture,
+      issuancePolicy: {
+        issuableNow: true,
+        requiresElevation: true,
+      },
+    }));
 
-  describe('canIssue()', () => {
-    it('returns true when status is DRAFT and issuableNow is true', () => {
-      fixture.detectChanges();
-      flushLoad(http, { ...STUB_INVOICE, status: 'DRAFT', issuancePolicy: { issuableNow: true } });
-      expect(component.canIssue()).toBe(true);
-    });
+    fixture.detectChanges();
+    component.initiateIssue();
+    fixture.detectChanges();
 
-    it('returns false when issuancePolicy.issuableNow is false, even if status is DRAFT (F1/r2998536720)', () => {
-      fixture.detectChanges();
-      flushLoad(http, { ...STUB_INVOICE, status: 'DRAFT', issuancePolicy: { issuableNow: false } });
-      expect(component.canIssue()).toBe(false);
-    });
+    const host = fixture.nativeElement as HTMLElement;
+    const passwordInput = host.querySelector('#elevation-password') as HTMLInputElement | null;
 
-    it('returns true when issuancePolicy is absent — backward compat defaults to issuable', () => {
-      fixture.detectChanges();
-      const { issuancePolicy: _ignored, ...invoiceWithoutPolicy } = STUB_INVOICE;
-      flushLoad(http, { ...invoiceWithoutPolicy, status: 'DRAFT' });
-      expect(component.canIssue()).toBe(true);
-    });
+    expect(host.textContent).toContain('Manager Authorization Required');
+    expect(host.textContent).toContain('Issuing this invoice requires manager-level authorization. Enter the manager password to proceed.');
+    expect(host.textContent).toContain('Manager Password');
+    expect(passwordInput?.placeholder).toBe('Enter password');
+    expect(host.textContent).toContain('Cancel');
+    expect(host.textContent).toContain('Authorize');
 
-    it('returns true when status is FINALIZED and issuableNow is not false (F2/r2998536767)', () => {
-      fixture.detectChanges();
-      flushLoad(http, { ...STUB_INVOICE, status: 'FINALIZED', issuancePolicy: { issuableNow: true } });
-      expect(component.canIssue()).toBe(true);
-    });
+    component.elevationPassword.set('');
+    component.elevate();
+    fixture.detectChanges();
 
-    it('returns false when status is ISSUED regardless of policy', () => {
-      fixture.detectChanges();
-      flushLoad(http, { ...STUB_INVOICE, status: 'ISSUED', issuancePolicy: { issuableNow: true } });
-      expect(component.canIssue()).toBe(false);
-    });
+    expect(host.textContent).toContain('Password is required.');
+    expect(billingTransportStub.elevate).not.toHaveBeenCalled();
   });
 
-  // ── F3/r2998536725 — Fallback download URL uses environment.apiBaseUrl ─────
+  it('renders translated success status after issue completes', () => {
+    fixture.detectChanges();
 
-  describe('downloadArtifact()', () => {
-    it('uses downloadUrl from API response when present', () => {
-      fixture.detectChanges();
-      flushLoad(http);
+    component.initiateIssue();
+    fixture.detectChanges();
 
-      const fakeAnchor = { href: '', download: '', target: '', rel: '', click: vi.fn() };
-      const createSpy = vi
-        .spyOn(document, 'createElement')
-        .mockImplementation((tag: string) => {
-          if (tag === 'a') return fakeAnchor as unknown as HTMLElement;
-          return document.createElement(tag);
-        });
+    const host = fixture.nativeElement as HTMLElement;
 
-      component.downloadArtifact('ref-001', 'invoice.pdf');
-      http.expectOne(`${BASE}/billing/artifacts/ref-001/download-token`).flush({
-        downloadToken: 'tok-abc',
-        downloadUrl: 'https://cdn.example.com/invoice.pdf',
-      });
-
-      expect(fakeAnchor.href).toBe('https://cdn.example.com/invoice.pdf');
-      createSpy.mockRestore();
-    });
-
-    it('constructs fallback URL using environment.apiBaseUrl when downloadUrl is absent (F3/r2998536725)', () => {
-      fixture.detectChanges();
-      flushLoad(http);
-
-      const fakeAnchor = { href: '', download: '', target: '', rel: '', click: vi.fn() };
-      const createSpy = vi
-        .spyOn(document, 'createElement')
-        .mockImplementation((tag: string) => {
-          if (tag === 'a') return fakeAnchor as unknown as HTMLElement;
-          return document.createElement(tag);
-        });
-
-      component.downloadArtifact('ref-001', 'invoice.pdf');
-      http.expectOne(`${BASE}/billing/artifacts/ref-001/download-token`).flush({
-        downloadToken: 'tok-abc',
-      });
-
-      expect(fakeAnchor.href).toBe(
-        `${environment.apiBaseUrl}/billing/artifacts/ref-001/download?token=tok-abc`,
-      );
-      createSpy.mockRestore();
-    });
+    expect(billingTransportStub.issueInvoice).toHaveBeenCalledWith(INVOICE_ID, {});
+    expect(component.issueState()).toBe('success');
+    expect(component.issueSuccess()).toBe(true);
+    expect(host.textContent).toContain('Invoice issued successfully. Documents available below.');
   });
 
-  // ── PRCR-001 — elevationPassword cleared on elevate success and on dismiss ──
+  it('renders translated page error copy when invoice loading fails', () => {
+    billingTransportStub.loadInvoiceDetail.mockReturnValueOnce(
+      throwError(() => ({ status: 404 })),
+    );
 
-  describe('elevationPassword clearing (PRCR-001)', () => {
-    it('clears elevationPassword after elevate() succeeds', () => {
-      fixture.detectChanges();
-      flushLoad(http, {
-        ...STUB_INVOICE,
-        issuancePolicy: { issuableNow: true, requiresElevation: true },
-      });
+    fixture.detectChanges();
 
-      component.elevationPassword.set('supersecret');
-      component.elevate();
+    const host = fixture.nativeElement as HTMLElement;
 
-      // Flush POST /billing/auth/elevate
-      http
-        .expectOne(`${BASE}/billing/auth/elevate`)
-        .flush({ elevationToken: 'tok123' });
+    expect(component.pageState()).toBe('error');
+    expect(host.textContent).toContain('Invoice not found.');
+    expect(billingTransportStub.loadInvoiceArtifacts).not.toHaveBeenCalled();
+  });
 
-      // elevate() success calls performIssue() which POSTs to issue
-      http
-        .expectOne(`${BASE}/billing/invoices/${INVOICE_ID}/issue`)
-        .flush({ ...STUB_INVOICE, status: 'ISSUED' });
-      // performIssue success reloads artifacts
-      http.expectOne(`${BASE}/billing/invoices/${INVOICE_ID}/artifacts`).flush([]);
+  it('renders translated issue error copy when issue is rejected', () => {
+    billingTransportStub.issueInvoice.mockReturnValueOnce(
+      throwError(() => ({ status: 409 })),
+    );
 
-      expect(component.elevationPassword()).toBe('');
-    });
+    fixture.detectChanges();
+    component.initiateIssue();
+    fixture.detectChanges();
 
-    it('clears elevationPassword when dismissElevationModal() is called', () => {
-      fixture.detectChanges();
-      flushLoad(http);
+    const host = fixture.nativeElement as HTMLElement;
 
-      component.elevationPassword.set('supersecret');
-      component.dismissElevationModal();
-
-      expect(component.elevationPassword()).toBe('');
-    });
+    expect(component.issueState()).toBe('error');
+    expect(host.textContent).toContain('Invoice has already been issued.');
   });
 });

@@ -3,21 +3,21 @@
   <header class="wo-header" aria-labelledby="invoice-heading">
     <div class="wo-header__inner">
       <div class="wo-header__identity">
-        <p class="wo-header__overline">Invoice</p>
+        <p class="wo-header__overline">{{ 'BILLING.INVOICE_DETAIL.HEADER.OVERLINE' | translate }}</p>
         <h1 id="invoice-heading" class="wo-header__id">{{ invoiceId() }}</h1>
         @if (invoice()) {
           <span class="status-chip status-chip--{{ statusClass(invoice()!.status) }}">{{ invoice()!.status }}</span>
         }
       </div>
       <div class="wo-header__actions">
-        <button class="btn btn--ghost" (click)="goBack()">← Back to Work Order</button>
+        <button class="btn btn--ghost" (click)="goBack()">{{ 'BILLING.INVOICE_DETAIL.ACTION.BACK_TO_WORKORDER' | translate }}</button>
         @if (canIssue()) {
           <button
             class="btn btn--accent"
             (click)="initiateIssue()"
             [attr.aria-busy]="issueState() === 'issuing'"
           >
-            {{ issueState() === 'issuing' ? 'Issuing…' : 'Issue Invoice' }}
+            {{ issueState() === 'issuing' ? ('BILLING.INVOICE_DETAIL.ACTION.ISSUING' | translate) : ('BILLING.INVOICE_DETAIL.ACTION.ISSUE' | translate) }}
           </button>
         }
       </div>
@@ -25,20 +25,20 @@
   </header>
 
   @if (pageState() === 'loading') {
-    <p class="hint-text" aria-busy="true">Loading invoice…</p>
+    <p class="hint-text" aria-busy="true">{{ 'BILLING.INVOICE_DETAIL.LOADING' | translate }}</p>
   }
 
   @if (pageState() === 'error') {
-    <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
+    <div class="alert alert--error" role="alert">{{ errorMessage()! | translate }}</div>
   }
 
   @if (issueError()) {
-    <div class="alert alert--error" role="alert">{{ issueError() }}</div>
+    <div class="alert alert--error" role="alert">{{ issueError()! | translate }}</div>
   }
 
   @if (issueSuccess()) {
     <div class="alert alert--success" role="status">
-      Invoice issued successfully. Documents available below.
+      {{ 'BILLING.INVOICE_DETAIL.SUCCESS.ISSUED' | translate }}
     </div>
   }
 
@@ -46,25 +46,25 @@
 
     <!-- Story 212: Totals summary ─────────────────────────────────────── -->
     <div class="wo-section invoice-totals" aria-labelledby="totals-heading">
-      <h2 id="totals-heading" class="section-heading">Invoice Summary</h2>
+      <h2 id="totals-heading" class="section-heading">{{ 'BILLING.INVOICE_DETAIL.SECTION.SUMMARY' | translate }}</h2>
       <div class="totals-grid">
         <div class="totals-grid__item">
-          <span class="totals-grid__label">Work Order</span>
+          <span class="totals-grid__label">{{ 'BILLING.INVOICE_DETAIL.FIELD.WORKORDER' | translate }}</span>
           <span class="totals-grid__value">{{ invoice()!.workOrderId }}</span>
         </div>
         @if (invoice()!.poNumber) {
           <div class="totals-grid__item">
-            <span class="totals-grid__label">PO Number</span>
+            <span class="totals-grid__label">{{ 'BILLING.INVOICE_DETAIL.FIELD.PO_NUMBER' | translate }}</span>
             <span class="totals-grid__value">{{ invoice()!.poNumber }}</span>
           </div>
         }
         <div class="totals-grid__item">
-          <span class="totals-grid__label">Created</span>
+          <span class="totals-grid__label">{{ 'BILLING.INVOICE_DETAIL.FIELD.CREATED' | translate }}</span>
           <span class="totals-grid__value">{{ invoice()!.createdAt | date:'medium' }}</span>
         </div>
         @if (invoice()!.issuedAt) {
           <div class="totals-grid__item">
-            <span class="totals-grid__label">Issued</span>
+            <span class="totals-grid__label">{{ 'BILLING.INVOICE_DETAIL.FIELD.ISSUED' | translate }}</span>
             <span class="totals-grid__value">{{ invoice()!.issuedAt | date:'medium' }}</span>
           </div>
         }
@@ -72,13 +72,13 @@
 
       <!-- Line items -->
       @if ((invoice()!.lineItems?.length ?? 0) > 0) {
-        <div class="line-items" aria-label="Invoice line items">
+        <div class="line-items" [attr.aria-label]="'BILLING.INVOICE_DETAIL.ARIA.LINE_ITEMS' | translate">
           <div class="line-items__header">
-            <span>Description</span>
-            <span>Type</span>
-            <span>Qty</span>
-            <span>Unit</span>
-            <span>Total</span>
+            <span>{{ 'BILLING.INVOICE_DETAIL.LINE_ITEM.DESCRIPTION' | translate }}</span>
+            <span>{{ 'BILLING.INVOICE_DETAIL.LINE_ITEM.TYPE' | translate }}</span>
+            <span>{{ 'BILLING.INVOICE_DETAIL.LINE_ITEM.QTY' | translate }}</span>
+            <span>{{ 'BILLING.INVOICE_DETAIL.LINE_ITEM.UNIT' | translate }}</span>
+            <span>{{ 'BILLING.INVOICE_DETAIL.LINE_ITEM.TOTAL' | translate }}</span>
           </div>
           @for (item of invoice()!.lineItems; track item.id; let even = $even) {
             <div class="line-items__row" [class.line-items__row--alt]="even">
@@ -95,25 +95,25 @@
       }
 
       <!-- Totals breakdown -->
-      <div class="totals-breakdown" role="complementary" aria-label="Invoice totals">
+      <div class="totals-breakdown" role="complementary" [attr.aria-label]="'BILLING.INVOICE_DETAIL.ARIA.TOTALS' | translate">
         <div class="totals-breakdown__row">
-          <span class="totals-breakdown__label">Subtotal</span>
+          <span class="totals-breakdown__label">{{ 'BILLING.INVOICE_DETAIL.TOTAL.SUBTOTAL' | translate }}</span>
           <span class="totals-breakdown__value">{{ invoice()!.subtotal | currency }}</span>
         </div>
         @if ((invoice()!.taxAmount ?? 0) > 0) {
           <div class="totals-breakdown__row">
-            <span class="totals-breakdown__label">Tax</span>
+            <span class="totals-breakdown__label">{{ 'BILLING.INVOICE_DETAIL.TOTAL.TAX' | translate }}</span>
             <span class="totals-breakdown__value">{{ invoice()!.taxAmount | currency }}</span>
           </div>
         }
         @if ((invoice()!.discountAmount ?? 0) > 0) {
           <div class="totals-breakdown__row totals-breakdown__row--discount">
-            <span class="totals-breakdown__label">Discount</span>
+            <span class="totals-breakdown__label">{{ 'BILLING.INVOICE_DETAIL.TOTAL.DISCOUNT' | translate }}</span>
             <span class="totals-breakdown__value">−{{ invoice()!.discountAmount | currency }}</span>
           </div>
         }
         <div class="totals-breakdown__row totals-breakdown__row--grand">
-          <span class="totals-breakdown__label">Grand Total</span>
+          <span class="totals-breakdown__label">{{ 'BILLING.INVOICE_DETAIL.TOTAL.GRAND_TOTAL' | translate }}</span>
           <span class="totals-breakdown__value totals-breakdown__value--grand">{{ invoice()!.grandTotal | currency }}</span>
         </div>
       </div>
@@ -122,7 +122,7 @@
     <!-- Story 210: Adjustments ─────────────────────────────────────────── -->
     @if (invoice()!.adjustments && invoice()!.adjustments!.length > 0) {
       <div class="wo-section" aria-labelledby="adjustments-heading">
-        <h2 id="adjustments-heading" class="section-heading">Adjustments</h2>
+        <h2 id="adjustments-heading" class="section-heading">{{ 'BILLING.INVOICE_DETAIL.SECTION.ADJUSTMENTS' | translate }}</h2>
         @for (adj of invoice()!.adjustments!; track adj.id; let even = $even) {
           <div class="adjustment-card" [class.adjustment-card--alt]="even">
             <div class="adjustment-card__header">
@@ -130,13 +130,13 @@
               <span class="adj-type status-chip status-chip--{{ adj.adjustmentType?.toLowerCase() }}">{{ adj.adjustmentType }}</span>
             </div>
             <div class="adjustment-card__meta hint-text">
-              {{ adj.adjustedAt | date:'medium' }} · by {{ adj.adjustedBy }}
+              {{ 'BILLING.INVOICE_DETAIL.ADJUSTMENT.META' | translate:{ timestamp: (adj.adjustedAt | date:'medium'), user: adj.adjustedBy } }}
             </div>
             <div class="adjustment-card__amount"
-              [class.adjustment-card__amount--debit]="(adj.amount ?? 0) > 0"
-              [class.adjustment-card__amount--credit]="(adj.amount ?? 0) < 0"
+              [class.adjustment-card__amount--debit]="adj.amount > 0"
+              [class.adjustment-card__amount--credit]="adj.amount < 0"
             >
-              {{ (adj.amount ?? 0) >= 0 ? '+' : '' }}{{ adj.amount | currency }}
+              {{ adj.amount >= 0 ? '+' : '' }}{{ adj.amount | currency }}
             </div>
           </div>
         }
@@ -146,35 +146,35 @@
     <!-- Story 211: Traceability ────────────────────────────────────────── -->
     @if (invoice()!.traceability) {
       <div class="wo-section" aria-labelledby="trace-heading">
-        <h2 id="trace-heading" class="section-heading">Traceability</h2>
+        <h2 id="trace-heading" class="section-heading">{{ 'BILLING.INVOICE_DETAIL.SECTION.TRACEABILITY' | translate }}</h2>
         <div class="trace-grid">
           @if (invoice()!.traceability!.snapshotId) {
             <div class="trace-grid__item">
-              <span class="trace-grid__label">Snapshot</span>
+              <span class="trace-grid__label">{{ 'BILLING.INVOICE_DETAIL.TRACEABILITY.SNAPSHOT' | translate }}</span>
               <span class="trace-grid__value trace-grid__value--mono">{{ invoice()!.traceability!.snapshotId | slice:0:8 }}…</span>
             </div>
           }
           @if (invoice()!.traceability!.snapshotCapturedAt) {
             <div class="trace-grid__item">
-              <span class="trace-grid__label">Captured</span>
+              <span class="trace-grid__label">{{ 'BILLING.INVOICE_DETAIL.TRACEABILITY.CAPTURED' | translate }}</span>
               <span class="trace-grid__value">{{ invoice()!.traceability!.snapshotCapturedAt | date:'medium' }}</span>
             </div>
           }
           @if (invoice()!.traceability!.workorderCompletedAt) {
             <div class="trace-grid__item">
-              <span class="trace-grid__label">Work Order Completed</span>
+              <span class="trace-grid__label">{{ 'BILLING.INVOICE_DETAIL.TRACEABILITY.WORKORDER_COMPLETED' | translate }}</span>
               <span class="trace-grid__value">{{ invoice()!.traceability!.workorderCompletedAt | date:'medium' }}</span>
             </div>
           }
           @if (invoice()!.traceability!.snapshotVersion) {
             <div class="trace-grid__item">
-              <span class="trace-grid__label">Snapshot Version</span>
+              <span class="trace-grid__label">{{ 'BILLING.INVOICE_DETAIL.TRACEABILITY.SNAPSHOT_VERSION' | translate }}</span>
               <span class="trace-grid__value">{{ invoice()!.traceability!.snapshotVersion }}</span>
             </div>
           }
           @if (invoice()!.traceability!.generatedById) {
             <div class="trace-grid__item">
-              <span class="trace-grid__label">Generated By</span>
+              <span class="trace-grid__label">{{ 'BILLING.INVOICE_DETAIL.TRACEABILITY.GENERATED_BY' | translate }}</span>
               <span class="trace-grid__value">{{ invoice()!.traceability!.generatedById }}</span>
             </div>
           }
@@ -185,13 +185,13 @@
     <!-- Artifacts ──────────────────────────────────────────────────────── -->
     @if (artifacts().length > 0) {
       <div class="wo-section" aria-labelledby="artifacts-heading">
-        <h2 id="artifacts-heading" class="section-heading">Documents</h2>
+        <h2 id="artifacts-heading" class="section-heading">{{ 'BILLING.INVOICE_DETAIL.SECTION.DOCUMENTS' | translate }}</h2>
         @for (art of artifacts(); track art.artifactRefId) {
           <div class="artifact-row">
             <span class="artifact-row__name">{{ art.fileName ?? art.filename }}</span>
             <span class="artifact-row__type hint-text">{{ art.contentType ?? art.mimeType }}</span>
             <button class="btn btn--ghost btn--sm" (click)="downloadArtifact(art.artifactRefId, art.fileName ?? art.filename ?? 'invoice')">
-              Download
+              {{ 'BILLING.INVOICE_DETAIL.ACTION.DOWNLOAD' | translate }}
             </button>
           </div>
         }
@@ -205,40 +205,39 @@
 <!-- Story 209: Elevation modal ─────────────────────────────────────────── -->
 @if (showElevationModal()) {
   <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="elevation-heading">
-    <div class="modal" aria-label="Manager elevation required">
+    <div class="modal" [attr.aria-label]="'BILLING.INVOICE_DETAIL.ELEVATION.ARIA_LABEL' | translate">
       <div class="modal__header">
-        <h2 id="elevation-heading" class="modal__title">Manager Authorisation Required</h2>
+        <h2 id="elevation-heading" class="modal__title">{{ 'BILLING.INVOICE_DETAIL.ELEVATION.TITLE' | translate }}</h2>
       </div>
       <div class="modal__body">
         <p class="modal__desc">
-          Issuing this invoice requires manager-level authorisation.
-          Enter the manager password to proceed.
+          {{ 'BILLING.INVOICE_DETAIL.ELEVATION.DESCRIPTION' | translate }}
         </p>
         <div class="form-field">
-          <label for="elevation-password" class="form-label">Manager Password</label>
+          <label for="elevation-password" class="form-label">{{ 'BILLING.INVOICE_DETAIL.ELEVATION.PASSWORD_LABEL' | translate }}</label>
           <input
             id="elevation-password"
             type="password"
             class="form-input"
             [value]="elevationPassword()"
             (input)="elevationPassword.set($any($event.target).value)"
-            placeholder="Enter password"
+            [attr.placeholder]="'BILLING.INVOICE_DETAIL.ELEVATION.PASSWORD_PLACEHOLDER' | translate"
             autocomplete="current-password"
           />
         </div>
         @if (elevationError()) {
-          <div class="alert alert--error" role="alert">{{ elevationError() }}</div>
+          <div class="alert alert--error" role="alert">{{ elevationError()! | translate }}</div>
         }
       </div>
       <div class="modal__footer">
-        <button class="btn btn--ghost" (click)="dismissElevationModal()">Cancel</button>
+        <button class="btn btn--ghost" (click)="dismissElevationModal()">{{ 'COMMON.CANCEL' | translate }}</button>
         <button
           class="btn btn--accent"
           (click)="elevate()"
           [attr.aria-busy]="issueState() === 'elevating'"
           [disabled]="issueState() === 'elevating'"
         >
-          {{ issueState() === 'elevating' ? 'Verifying…' : 'Authorise' }}
+          {{ issueState() === 'elevating' ? ('BILLING.INVOICE_DETAIL.ELEVATION.VERIFYING' | translate) : ('BILLING.INVOICE_DETAIL.ELEVATION.AUTHORIZE' | translate) }}
         </button>
       </div>
     </div>
