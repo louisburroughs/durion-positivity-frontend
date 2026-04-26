@@ -54,12 +54,15 @@ import {
   VendorPaymentRequest,
   VendorPaymentResult,
 } from '../models/accounting.models';
+import { AuthService } from '../../../core/services/auth.service';
+import type { JwtClaims } from '../../../core/models/auth.models';
 
 @Injectable({ providedIn: 'root' })
 export class AccountingService {
   private static readonly BASE = '/v1/accounting';
 
   private readonly api = inject(ApiBaseService);
+  private readonly authService = inject(AuthService);
   private readonly accountingEventsService = inject(AccountingEventsService);
   private readonly apPaymentsService = inject(APPaymentsService);
   private readonly creditMemosService = inject(CreditMemosService);
@@ -530,10 +533,29 @@ export class AccountingService {
   }
 
   private toReprocessEventRequest(req: ReprocessRequest): ReprocessEventRequest {
+    const claims = this.authService.currentUserClaims();
+    const actor = claims?.sub
+      ?? this.getOptionalClaim(claims, 'preferred_username')
+      ?? this.getOptionalClaim(claims, 'email')
+      ?? this.getOptionalClaim(claims, 'name');
+
+    if (!actor) {
+      throw new Error('Unable to reprocess event without an authenticated actor identifier');
+    }
+
     return {
-      triggeredByUserId: '',
+      triggeredByUserId: actor,
       reprocessingNotes: req.justification,
     };
+  }
+
+  private getOptionalClaim(claims: JwtClaims | null, key: string): string | undefined {
+    if (!claims) {
+      return undefined;
+    }
+
+    const value = (claims as unknown as Record<string, unknown>)[key];
+    return typeof value === 'string' ? value : undefined;
   }
 
   private toSdkPostingRuleSetCreateRequest(req: PostingRuleSetCreateRequest): SdkPostingRuleSetCreateRequest {

@@ -8,6 +8,7 @@ import {
   StorageLocationControllerService,
 } from '@durion-sdk/location';
 import type {
+  CoverageRuleRequest,
   LocationRequestDTO,
   LocationPatchRequest,
   BayRequest,
@@ -31,8 +32,8 @@ export class LocationService {
   }
 
   createLocation(body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return this.locationApi.createLocation(body as any as LocationRequestDTO) as Observable<unknown>;
+    const request = this.toLocationRequest(body);
+    return this.locationApi.createLocation(request) as Observable<unknown>;
   }
 
   getLocationById(locationId: string): Observable<unknown> {
@@ -44,8 +45,8 @@ export class LocationService {
   }
 
   updateLocation(locationId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return this.locationApi.updateLocation(locationId, body as any as LocationRequestDTO) as Observable<unknown>;
+    const request = this.toLocationRequest(body);
+    return this.locationApi.updateLocation(locationId, request) as Observable<unknown>;
   }
 
   getLocationDefaults(locationId: string): Observable<unknown> {
@@ -72,8 +73,8 @@ export class LocationService {
   }
 
   createBay(locationId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return this.bayApi.createBay(locationId, body as any as BayRequest) as Observable<unknown>;
+    const request = this.toBayRequest(body);
+    return this.bayApi.createBay(locationId, request) as Observable<unknown>;
   }
 
   getBay(locationId: string, bayId: string): Observable<unknown> {
@@ -87,18 +88,144 @@ export class LocationService {
   // ── Mobile Units ─────────────────────────────────────────────────────────
 
   listMobileUnits(params?: Record<string, string>): Observable<unknown[]> {
-    const page = params?.['page'] !== undefined ? Number(params['page']) : undefined;
-    const size = params?.['size'] !== undefined ? Number(params['size']) : undefined;
+    const page = params?.['page'] ? Number(params['page']) : undefined;
+    const size = params?.['size'] ? Number(params['size']) : undefined;
     return this.mobileUnitApi.listMobileUnits(page, size) as Observable<unknown[]>;
   }
 
   createMobileUnit(body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
-    return this.mobileUnitApi.createMobileUnit(body as MobileUnitRequest) as Observable<unknown>;
+    const request = this.toMobileUnitRequest(body);
+    return this.mobileUnitApi.createMobileUnit(request) as Observable<unknown>;
   }
 
   replaceCoverageRules(mobileUnitId: string, body: Record<string, unknown>[]): Observable<unknown> {
-    // The SDK generated signature uses { [key: string]: any } but the actual payload is an array;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return this.mobileUnitApi.replaceCoverageRules(mobileUnitId, body as any) as Observable<unknown>;
+    const requestBody = this.toCoverageRulesReplaceRequest(body);
+    return this.mobileUnitApi.replaceCoverageRules(mobileUnitId, requestBody) as Observable<unknown>;
+  }
+
+  private toLocationRequest(body: Record<string, unknown>): LocationRequestDTO {
+    return {
+      name: this.asString(body['name']),
+      code: this.asString(body['code']),
+      geographicalLocationId: this.asOptionalString(body['geographicalLocationId']),
+      addressLine1: this.asOptionalString(body['addressLine1']),
+      addressLine2: this.asOptionalString(body['addressLine2']),
+      city: this.asOptionalString(body['city']),
+      state: this.asOptionalString(body['state']),
+      postalCode: this.asOptionalString(body['postalCode']),
+      country: this.asOptionalString(body['country']),
+      mailingAddress: this.asOptionalString(body['mailingAddress']),
+      active: this.asOptionalBoolean(body['active']),
+      responsiblePersonId: this.asOptionalNumber(body['responsiblePersonId']),
+      timezone: this.asOptionalString(body['timezone']),
+      operatingHours: this.asArray(body['operatingHours']),
+      holidayClosures: this.asArray(body['holidayClosures']),
+      checkInBufferMinutes: this.asOptionalNumber(body['checkInBufferMinutes']),
+      cleanupBufferMinutes: this.asOptionalNumber(body['cleanupBufferMinutes']),
+      type: this.asLocationType(body['type']),
+      parents: this.asRecord(body['parents']),
+    };
+  }
+
+  private toBayRequest(body: Record<string, unknown>): BayRequest {
+    const maxConcurrentVehicles = this.asOptionalNumber(body['maxConcurrentVehicles']) ?? 0;
+    const capacity = this.asRecord(body['capacity']);
+
+    return {
+      name: this.asString(body['name']),
+      bayType: this.asString(body['bayType']),
+      capacity: {
+        maxConcurrentVehicles: this.asOptionalNumber(capacity['maxConcurrentVehicles']) ?? maxConcurrentVehicles,
+      },
+      maxConcurrentVehicles,
+      serviceCapabilityIds: this.asStringArray(body['serviceCapabilityIds']),
+      skillRequirementIds: this.asStringArray(body['skillRequirementIds']),
+      status: this.asOptionalString(body['status']),
+    };
+  }
+
+  private toMobileUnitRequest(body: Record<string, unknown>): MobileUnitRequest {
+    return {
+      name: this.asOptionalString(body['name']),
+      baseLocationId: this.asOptionalString(body['baseLocationId']),
+      status: this.asOptionalString(body['status']),
+      travelBufferPolicyId: this.asOptionalString(body['travelBufferPolicyId']),
+      notes: this.asOptionalString(body['notes']),
+      capabilityIds: this.asStringArray(body['capabilityIds']),
+      coverageRules: this.toCoverageRuleArray(body['coverageRules']),
+    };
+  }
+
+  private toCoverageRulesReplaceRequest(body: Record<string, unknown>[]): { [key: string]: unknown } {
+    return {
+      rules: body.map(rule => this.toCoverageRuleRequest(rule)),
+    };
+  }
+
+  private toCoverageRuleArray(value: unknown): CoverageRuleRequest[] | undefined {
+    if (!Array.isArray(value)) {
+      return undefined;
+    }
+    return value
+      .filter((entry): entry is Record<string, unknown> => this.isRecord(entry))
+      .map(entry => this.toCoverageRuleRequest(entry));
+  }
+
+  private toCoverageRuleRequest(rule: Record<string, unknown>): CoverageRuleRequest {
+    return {
+      serviceAreaId: this.asOptionalString(rule['serviceAreaId']),
+      ruleType: this.asOptionalString(rule['ruleType']),
+      priority: this.asOptionalNumber(rule['priority']),
+      validFrom: this.asOptionalString(rule['validFrom']),
+      validTo: this.asOptionalString(rule['validTo']),
+      maxDistance: this.asOptionalNumber(rule['maxDistance']),
+    };
+  }
+
+  private asLocationType(value: unknown): { id?: string; name?: string; description?: string } {
+    const record = this.asRecord(value);
+    return {
+      id: this.asOptionalString(record['id']),
+      name: this.asOptionalString(record['name']) ?? this.asString(record['name']),
+      description: this.asOptionalString(record['description']),
+    };
+  }
+
+  private asRecord(value: unknown): Record<string, unknown> {
+    return this.isRecord(value) ? value : {};
+  }
+
+  private asArray<T = unknown>(value: unknown): T[] | undefined {
+    if (!Array.isArray(value)) {
+      return undefined;
+    }
+    return value as T[];
+  }
+
+  private asStringArray(value: unknown): string[] | undefined {
+    if (!Array.isArray(value)) {
+      return undefined;
+    }
+    return value.filter((item): item is string => typeof item === 'string');
+  }
+
+  private asString(value: unknown): string {
+    return typeof value === 'string' ? value : '';
+  }
+
+  private asOptionalString(value: unknown): string | undefined {
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  private asOptionalNumber(value: unknown): number | undefined {
+    return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+  }
+
+  private asOptionalBoolean(value: unknown): boolean | undefined {
+    return typeof value === 'boolean' ? value : undefined;
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 }

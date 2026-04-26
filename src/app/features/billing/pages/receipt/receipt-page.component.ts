@@ -5,7 +5,7 @@ import { DatePipe } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { switchMap } from 'rxjs';
 import { GenerateReceiptRequest, ReceiptRef } from '../../models/billing.models';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { BillingTransportService } from '../../services/billing-transport.service';
 
 @Component({
   selector: 'app-receipt-page',
@@ -16,7 +16,7 @@ import { ApiBaseService } from '../../../../core/services/api-base.service';
 })
 export class ReceiptPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly api = inject(ApiBaseService);
+  private readonly billingService = inject(BillingTransportService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly invoiceId = signal<string>('');
@@ -50,12 +50,12 @@ export class ReceiptPageComponent implements OnInit {
     this.state.set('submitting');
     this.errorKey.set(null);
 
-    this.api
-      .post<{ receiptId: string }>(`/v1/billing/invoices/${this.invoiceId()}/receipts`, delivery ?? {})
+    this.billingService
+      .generateReceipt(this.invoiceId(), delivery ?? {})
       .pipe(
         switchMap(result => {
           this.receiptId.set(result.receiptId);
-          return this.api.get<ReceiptRef>(`/v1/billing/invoices/${this.invoiceId()}/receipts/${result.receiptId}`);
+          return this.billingService.loadReceipt(this.invoiceId(), result.receiptId);
         }),
         takeUntilDestroyed(this.destroyRef),
       )
@@ -108,8 +108,8 @@ export class ReceiptPageComponent implements OnInit {
     this.state.set('submitting');
     this.errorKey.set(null);
 
-    this.api
-      .post<ReceiptRef>(`/v1/billing/invoices/${this.invoiceId()}/receipts/${receiptId}/reprint`, {})
+    this.billingService
+      .reprintReceipt(this.invoiceId(), receiptId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: receipt => {
@@ -132,8 +132,8 @@ export class ReceiptPageComponent implements OnInit {
     this.state.set('loading');
     this.errorKey.set(null);
 
-    this.api
-      .get<ReceiptRef>(`/v1/billing/invoices/${this.invoiceId()}/receipts/${receiptId}`)
+    this.billingService
+      .loadReceipt(this.invoiceId(), receiptId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: receipt => {

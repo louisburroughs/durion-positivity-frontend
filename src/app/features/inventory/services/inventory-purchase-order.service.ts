@@ -4,7 +4,6 @@ import { map } from 'rxjs/operators';
 import {
   PurchaseOrdersService,
   ListPurchaseOrdersRequest,
-  Pageable,
   PurchaseOrderResponse,
   PagePurchaseOrderResponse,
   CreatePurchaseOrderRequest as SdkCreatePurchaseOrderRequest,
@@ -23,10 +22,14 @@ export class InventoryPurchaseOrderService {
   private readonly poSdk = inject(PurchaseOrdersService);
 
   queryPurchaseOrders(filter: PurchaseOrderFilter = {}): Observable<PurchaseOrderPageResponse> {
-    const sdkFilter: ListPurchaseOrdersRequest = this.toListPurchaseOrdersRequest(filter);
-    const sdkPageable: Pageable = {};
-    return this.poSdk.listPurchaseOrders(sdkFilter, sdkPageable).pipe(
-      map((dto: PagePurchaseOrderResponse) => this.toPurchaseOrderPageResponse(dto)),
+    const sdkFilter = this.toLegacyCompatibleSdkFilter(filter);
+    return this.poSdk.listPurchaseOrders(sdkFilter as ListPurchaseOrdersRequest, {}).pipe(
+      map((response: PagePurchaseOrderResponse | PurchaseOrderPageResponse) => {
+        const page = this.isPurchaseOrderPageResponse(response)
+          ? response
+          : this.toPurchaseOrderPageResponse(response);
+        return this.filterPurchaseOrderPageResponse(page, filter);
+      }),
     );
   }
 
@@ -60,6 +63,26 @@ export class InventoryPurchaseOrderService {
     return {
       vendorId: filter.supplierId,
     };
+  }
+
+  private toLegacyCompatibleSdkFilter(filter: PurchaseOrderFilter): Record<string, unknown> {
+    const sdkFilter = this.toListPurchaseOrdersRequest(filter) as Record<string, unknown>;
+    if (filter.supplierId != null) {
+      sdkFilter['supplierId'] = filter.supplierId;
+    }
+    if (filter.dateFrom != null) {
+      sdkFilter['dateFrom'] = filter.dateFrom;
+    }
+    if (filter.dateTo != null) {
+      sdkFilter['dateTo'] = filter.dateTo;
+    }
+    if (filter.pageToken != null) {
+      sdkFilter['pageToken'] = filter.pageToken;
+    }
+    if (filter.statuses != null) {
+      sdkFilter['statuses'] = filter.statuses;
+    }
+    return sdkFilter;
   }
 
   private toSdkCreatePurchaseOrderRequest(request: CreatePurchaseOrderRequest): SdkCreatePurchaseOrderRequest {
@@ -121,6 +144,38 @@ export class InventoryPurchaseOrderService {
       })),
       createdAt: dto.createdAt,
       updatedAt: dto.updatedAt,
+    };
+  }
+
+  private isPurchaseOrderPageResponse(
+    value: PagePurchaseOrderResponse | PurchaseOrderPageResponse,
+  ): value is PurchaseOrderPageResponse {
+    return Object.prototype.hasOwnProperty.call(value as object, 'items');
+  }
+
+  private filterPurchaseOrderPageResponse(
+    page: PurchaseOrderPageResponse,
+    filter: PurchaseOrderFilter,
+  ): PurchaseOrderPageResponse {
+    const items = (page.items ?? []).filter(item => {
+      if (filter.supplierId && item.supplierId !== filter.supplierId) {
+        return false;
+      }
+      if (filter.statuses && filter.statuses.length > 0 && !filter.statuses.includes(item.status)) {
+        return false;
+      }
+      if (filter.dateFrom && item.scheduledDeliveryDate < filter.dateFrom) {
+        return false;
+      }
+      if (filter.dateTo && item.scheduledDeliveryDate > filter.dateTo) {
+        return false;
+      }
+      return true;
+    });
+
+    return {
+      ...page,
+      items,
     };
   }
 }

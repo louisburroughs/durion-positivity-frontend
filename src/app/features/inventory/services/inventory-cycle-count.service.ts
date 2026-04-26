@@ -48,9 +48,13 @@ export class InventoryCycleCountService {
   }
 
   queryAdjustments(filter: ApprovalQueueFilter): Observable<AdjustmentPageResponse> {
-    const status = filter.status as 'PENDING_APPROVAL' | 'AUTO_APPROVED' | 'APPROVED' | 'POSTED' | 'REJECTED' | 'FAILED' | undefined;
-    return this.adjustmentsSdk.listAdjustments(status).pipe(
-      map((dtos: AdjustmentResponse[]) => this.toAdjustmentPageResponse(dtos)),
+    return this.adjustmentsSdk.listAdjustments(filter.status as never).pipe(
+      map((response: AdjustmentResponse[] | AdjustmentPageResponse) => {
+        if (Array.isArray(response)) {
+          return this.toFilteredAdjustmentPageResponse(response, filter);
+        }
+        return this.filterAdjustmentPageResponse(response, filter);
+      }),
     );
   }
 
@@ -123,6 +127,53 @@ export class InventoryCycleCountService {
       items: dtos.map((dto) => this.toAdjustmentDetail(dto)),
       nextPageToken: null,
     };
+  }
+
+  private toFilteredAdjustmentPageResponse(
+    dtos: AdjustmentResponse[],
+    filter: ApprovalQueueFilter,
+  ): AdjustmentPageResponse {
+    const page = this.toAdjustmentPageResponse(dtos);
+    return this.filterAdjustmentPageResponse(page, filter);
+  }
+
+  private filterAdjustmentPageResponse(
+    page: AdjustmentPageResponse,
+    filter: ApprovalQueueFilter,
+  ): AdjustmentPageResponse {
+    const items = (page.items ?? []).filter(item => this.matchesAdjustmentFilter(item, filter));
+    return {
+      ...page,
+      items,
+    };
+  }
+
+  private matchesAdjustmentFilter(item: AdjustmentDetail, filter: ApprovalQueueFilter): boolean {
+    if (filter.status && item.status !== filter.status) {
+      return false;
+    }
+    if (filter.locationId && item.locationId !== filter.locationId) {
+      return false;
+    }
+    if (filter.productSku && item.productSku !== filter.productSku) {
+      return false;
+    }
+    if (
+      filter.requiredApprovalTier != null
+      && item.requiredApprovalTier !== filter.requiredApprovalTier
+    ) {
+      return false;
+    }
+
+    const createdAt = item.createdAt;
+    if (filter.dateFrom && createdAt && createdAt < filter.dateFrom) {
+      return false;
+    }
+    if (filter.dateTo && createdAt && createdAt > filter.dateTo) {
+      return false;
+    }
+
+    return true;
   }
 
   private toAdjustmentDetail(dto: AdjustmentResponse): AdjustmentDetail {

@@ -7,14 +7,18 @@ import {
 } from '@angular/core';
 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { WorkSessionDto, WorkSessionsAPIService } from '@durion-sdk/people';
+import { TranslatePipe } from '@ngx-translate/core';
+import { WorkSessionsAPIService } from '@durion-sdk/people';
 import { ApiBaseService } from '../../../../core/services/api-base.service';
+
+type BreakType = 'MEAL' | 'REST' | 'OTHER';
 
 @Component({
   selector: 'app-work-session-page',
   standalone: true,
-  imports: [],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './work-session-page.component.html',
   styleUrl: './work-session-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,8 +29,10 @@ export class WorkSessionPageComponent {
   private readonly api = inject(ApiBaseService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly currentSession = signal<WorkSessionDto | null>(null);
+  readonly currentSession = signal<Record<string, unknown> | null>(null);
   readonly personId = signal('');
+  readonly workorderId = signal('');
+  readonly locationId = signal('');
 
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -40,39 +46,103 @@ export class WorkSessionPageComponent {
   readonly breaks = signal<unknown[]>([]);
   readonly breaksLoading = signal(false);
 
+  readonly breakForm = new FormGroup({
+    breakType: new FormControl<BreakType>('MEAL', { nonNullable: true, validators: [Validators.required] }),
+    notes: new FormControl('', { nonNullable: true }),
+  });
+
+  readonly breakTypes: BreakType[] = ['MEAL', 'REST', 'OTHER'];
+
   constructor() {
     this.route.queryParams
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
         this.personId.set(params['personId'] ?? '');
       });
+
+    this.route.params
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        this.workorderId.set(params['workorderId'] ?? '');
+        this.locationId.set(params['locationId'] ?? '');
+      });
   }
 
   private sessionId(): string | null {
-    return this.currentSession()?.sessionId ?? null;
+    const session = this.currentSession();
+    if (!session) {
+      return null;
+    }
+    return (session['sessionId'] as string) ?? (session['id'] as string) ?? null;
+  }
+
+  private idempotencyKey(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return `idem-${Date.now()}`;
   }
 
   startSession(): void {
     const personId = this.personId();
-    if (!personId) {
-      this.error.set('Person ID is required to start a session.');
+
+    if (personId) {
+      this.loading.set(true);
+      this.error.set(null);
+      this.actionSuccess.set(null);
+
+      this.workSessionsService
+        .startWorkSession({ personId })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (session) => {
+            this.currentSession.set(session as unknown as Record<string, unknown>);
+            this.sessionTimestamps.set({
+              clockedInAt: session.startedAt ?? (session as unknown as Record<string, string>)['clockedInAt'],
+            });
+            this.actionSuccess.set('PEOPLE.WORK_SESSION.ACTION_SUCCEEDED');
+            this.loading.set(false);
+            this.loadBreaks();
+          },
+          error: (err) => {
+            this.error.set(err?.error?.message ?? 'PEOPLE.WORK_SESSION.ERROR.START');
+            this.loading.set(false);
+          },
+        });
       return;
     }
+
+    const workorderId = this.workorderId();
+    const locationId = this.locationId();
+    if (!workorderId || !locationId) {
+      this.error.set('PEOPLE.WORK_SESSION.ERROR.REQUIRED_IDS');
+      return;
+    }
+
+    const idempotencyKey = this.idempotencyKey();
     this.loading.set(true);
     this.error.set(null);
     this.actionSuccess.set(null);
-    this.workSessionsService.startWorkSession({ personId })
+
+    this.api
+      .post<Record<string, unknown>>(
+        '/v1/people/workSessions/start',
+        { workorderId, locationId },
+        { headers: { 'Idempotency-Key': idempotencyKey } },
+      )
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (session) => {
           this.currentSession.set(session);
-          this.sessionTimestamps.set({ clockedInAt: session.startedAt });
-          this.actionSuccess.set('Clocked in successfully.');
+          this.sessionTimestamps.set({
+            clockedInAt: (session['clockedInAt'] as string) ?? (session['startedAt'] as string),
+          });
+          this.actionSuccess.set('PEOPLE.WORK_SESSION.ACTION_SUCCEEDED');
           this.loading.set(false);
           this.loadBreaks();
         },
         error: (err) => {
-          this.error.set(err?.error?.message ?? 'Failed to clock in.');
+          this.error.set(err?.error?.message ?? 'PEOPLE.WORK_SESSION.ERROR.START');
           this.loading.set(false);
         },
       });
@@ -80,59 +150,108 @@ export class WorkSessionPageComponent {
 
   stopSession(): void {
     const personId = this.personId();
-    if (!personId) return;
+    if (personId) {
+      this.loading.set(true);
+      this.actionSuccess.set(null);
+
+      this.workSessionsService
+        .stopWorkSession({ personId })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (session) => {
+            this.sessionTimestamps.set({
+              clockedInAt: this.sessionTimestamps()?.clockedInAt,
+              clockedOutAt: session.endedAt ?? (session as unknown as Record<string, string>)['clockedOutAt'],
+            });
+            this.currentSession.set(null);
+            this.onBreak.set(false);
+            this.actionSuccess.set('PEOPLE.WORK_SESSION.ACTION_SUCCEEDED');
+            this.loading.set(false);
+          },
+          error: (err) => {
+            this.error.set(err?.error?.message ?? 'PEOPLE.WORK_SESSION.ERROR.STOP');
+            this.loading.set(false);
+          },
+        });
+      return;
+    }
+
+    const sessionId = this.sessionId();
+    if (!sessionId) {
+      return;
+    }
+
+    const idempotencyKey = this.idempotencyKey();
     this.loading.set(true);
     this.actionSuccess.set(null);
-    this.workSessionsService.stopWorkSession({ personId })
+
+    this.api
+      .post<Record<string, unknown>>(
+        '/v1/people/workSessions/stop',
+        { sessionId },
+        { headers: { 'Idempotency-Key': idempotencyKey } },
+      )
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (session) => {
           this.sessionTimestamps.set({
             clockedInAt: this.sessionTimestamps()?.clockedInAt,
-            clockedOutAt: session.endedAt,
+            clockedOutAt: (session['clockedOutAt'] as string) ?? (session['endedAt'] as string),
           });
           this.currentSession.set(null);
           this.onBreak.set(false);
-          this.actionSuccess.set('Clocked out successfully.');
+          this.actionSuccess.set('PEOPLE.WORK_SESSION.ACTION_SUCCEEDED');
           this.loading.set(false);
         },
         error: (err) => {
-          this.error.set(err?.error?.message ?? 'Failed to clock out.');
+          this.error.set(err?.error?.message ?? 'PEOPLE.WORK_SESSION.ERROR.STOP');
           this.loading.set(false);
         },
       });
   }
 
   startBreak(): void {
-    const sid = this.sessionId();
-    if (!sid) {
-      this.error.set('No active session. Clock in first.');
+    this.breakForm.markAllAsTouched();
+    if (this.breakForm.invalid) {
       return;
     }
-    this.workSessionsService.startWorkSessionBreak(sid)
+
+    const sid = this.sessionId();
+    if (!sid) {
+      this.error.set('PEOPLE.WORK_SESSION.ERROR.START_BREAK');
+      return;
+    }
+
+    this.workSessionsService
+      .startWorkSessionBreak(sid)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.onBreak.set(true);
-          this.actionSuccess.set('Break started.');
+          this.actionSuccess.set('PEOPLE.WORK_SESSION.ACTION_SUCCEEDED');
+          this.breakForm.reset({ breakType: 'MEAL', notes: '' });
           this.loadBreaks();
         },
-        error: (err) => { this.error.set(err?.error?.message ?? 'Failed to start break.'); },
+        error: (err) => { this.error.set(err?.error?.message ?? 'PEOPLE.WORK_SESSION.ERROR.START_BREAK'); },
       });
   }
 
   stopBreak(): void {
     const sid = this.sessionId();
-    if (!sid) return;
-    this.workSessionsService.stopWorkSessionBreak(sid)
+    if (!sid) {
+      return;
+    }
+
+    this.workSessionsService
+      .stopWorkSessionBreak(sid)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.onBreak.set(false);
-          this.actionSuccess.set('Break ended.');
+          this.actionSuccess.set('PEOPLE.WORK_SESSION.ACTION_SUCCEEDED');
           this.loadBreaks();
         },
-        error: (err) => { this.error.set(err?.error?.message ?? 'Failed to end break.'); },
+        error: (err) => { this.error.set(err?.error?.message ?? 'PEOPLE.WORK_SESSION.ERROR.STOP_BREAK'); },
       });
   }
 
@@ -157,5 +276,9 @@ export class WorkSessionPageComponent {
 
   getSessionId(): string {
     return this.sessionId() ?? '';
+  }
+
+  get notesRequired(): boolean {
+    return this.breakForm.controls.breakType.value === 'OTHER';
   }
 }

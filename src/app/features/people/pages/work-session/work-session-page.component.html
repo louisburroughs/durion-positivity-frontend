@@ -1,45 +1,65 @@
 <main>
   <header class="page-header">
-    <h1>Work Session</h1>
+    <h1>{{ 'PEOPLE.WORK_SESSION.TITLE' | translate }}</h1>
   </header>
 
   <section class="panel">
-    <h2>Clock Status</h2>
-    <p class="status-chip" data-testid="clock-status">{{ isClocked ? 'Clocked In' : 'Clocked Out' }}</p>
+    <h2>{{ 'PEOPLE.WORK_SESSION.CONTROLS' | translate }}</h2>
+    <p class="status-chip" data-testid="clock-status">{{ (isClocked ? 'PEOPLE.WORK_SESSION.ACTIVE' : 'PEOPLE.WORK_SESSION.INACTIVE') | translate }}</p>
 
     @if (sessionTimestamps()?.clockedInAt) {
-    <p data-testid="clock-in-time">Clock In: {{ sessionTimestamps()?.clockedInAt }}</p>
+    <p data-testid="clock-in-time">{{ sessionTimestamps()?.clockedInAt }}</p>
     }
 
     @if (sessionTimestamps()?.clockedOutAt) {
-    <p data-testid="clock-out-time">Clock Out: {{ sessionTimestamps()?.clockedOutAt }}</p>
+    <p data-testid="clock-out-time">{{ sessionTimestamps()?.clockedOutAt }}</p>
     }
-
-    <p class="note-text" data-testid="timezone-note">All times in UTC</p>
 
     <div class="actions-row">
       <button type="button" (click)="startSession()" [disabled]="isClocked || loading()" data-testid="clock-in-btn">
-        Clock In
+        {{ 'PEOPLE.WORK_SESSION.START_SESSION' | translate }}
       </button>
       <button type="button" (click)="stopSession()" [disabled]="!isClocked || loading()" data-testid="clock-out-btn">
-        Clock Out
+        {{ 'PEOPLE.WORK_SESSION.STOP_SESSION' | translate }}
       </button>
     </div>
   </section>
 
   @if (isClocked) {
   <section class="panel">
-    <h2>Break Management</h2>
-    <p data-testid="break-status">{{ onBreak() ? 'On Break' : 'Not on break' }}</p>
+    <h2>{{ 'PEOPLE.WORK_SESSION.ON_BREAK' | translate }}</h2>
+    <p data-testid="break-status">{{ (onBreak() ? 'PEOPLE.WORK_SESSION.ON_BREAK' : 'PEOPLE.WORK_SESSION.INACTIVE') | translate }}</p>
 
-    <div class="actions-row">
-      <button type="button" (click)="startBreak()" [disabled]="onBreak() || loading()" data-testid="start-break-btn">
-        Start Break
-      </button>
-      <button type="button" (click)="stopBreak()" [disabled]="!onBreak() || loading()" data-testid="stop-break-btn">
-        End Break
-      </button>
-    </div>
+    <form class="form-grid" [formGroup]="breakForm" aria-label="Break controls form">
+      <div class="field">
+        <label for="break-type">Break Type</label>
+        <select id="break-type" formControlName="breakType" required data-testid="break-type-select">
+          @for (breakType of breakTypes; track breakType) {
+          <option [value]="breakType">{{ breakType }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="break-notes">
+          Notes
+          @if (notesRequired) {
+          <span class="required-mark" aria-hidden="true">*</span>
+          }
+        </label>
+        <textarea id="break-notes" rows="3" formControlName="notes" [attr.aria-required]="notesRequired"
+          data-testid="break-notes-input"></textarea>
+      </div>
+
+      <div class="actions-row">
+        <button type="button" (click)="startBreak()" [disabled]="onBreak() || loading()" data-testid="start-break-btn">
+          {{ 'PEOPLE.WORK_SESSION.START_BREAK' | translate }}
+        </button>
+        <button type="button" (click)="stopBreak()" [disabled]="!onBreak() || loading()" data-testid="stop-break-btn">
+          {{ 'PEOPLE.WORK_SESSION.STOP_BREAK' | translate }}
+        </button>
+      </div>
+    </form>
   </section>
   }
 
@@ -79,10 +99,10 @@
   }
 
   @if (actionSuccess()) {
-  <p class="success-text" data-testid="action-success" aria-live="polite">{{ actionSuccess() }}</p>
+  <p class="success-text" data-testid="action-success" aria-live="polite">{{ actionSuccess()! | translate }}</p>
   }
 
   @if (error()) {
-  <p class="error-text" data-testid="error-state" role="alert">{{ error() }}</p>
+  <p class="error-text" data-testid="error-state" role="alert">{{ error()! | translate }}</p>
   }
 </main>

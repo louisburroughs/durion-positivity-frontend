@@ -75,6 +75,9 @@ export class AppointmentDispatchAssignPageComponent implements OnInit {
     const payload: Partial<AssignmentDetail> = {
       bayId: this.assignForm.controls.resourceId.value || undefined,
       assignmentType: this.assignForm.controls.role.value || undefined,
+      mechanic: {
+        mechanicId: this.assignForm.controls.mechanicId.value,
+      },
     };
 
     this.appointmentService.createAssignment(this.appointmentId, payload).subscribe({

@@ -20,9 +20,11 @@ export class ProductInventoryService {
   private readonly api = inject(ApiBaseService);
   private readonly availSdk = inject(InventoryAvailabilityService);
 
-  queryInventoryAvailability(sku: string, _locationId?: string): Observable<InventoryAvailability> {
+  queryInventoryAvailability(sku: string, locationId?: string): Observable<InventoryAvailability> {
     return this.availSdk.queryInventoryAvailability(sku).pipe(
-      map((items: Array<LocationAvailabilityDto>) => this.toInventoryAvailability(sku, items)),
+      map((items: Array<LocationAvailabilityDto> | InventoryAvailability) =>
+        this.toInventoryAvailabilityResponse(sku, items, locationId),
+      ),
     );
   }
 
@@ -58,8 +60,39 @@ export class ProductInventoryService {
     };
   }
 
-  private toInventoryAvailability(sku: string, items: Array<LocationAvailabilityDto>): InventoryAvailability {
-    const breakdown = items.map(d => this.toLocationInventory(d));
+  private toInventoryAvailability(
+    sku: string,
+    items: Array<LocationAvailabilityDto>,
+    locationId?: string,
+  ): InventoryAvailability {
+    const normalizedLocationId = locationId?.trim();
+    const allRows = items.map(d => this.toLocationInventory(d));
+    const breakdown = normalizedLocationId
+      ? allRows.filter(row => row.locationId === normalizedLocationId)
+      : allRows;
+    return {
+      sku,
+      totalOnHand: breakdown.reduce((sum, l) => sum + l.onHand, 0),
+      totalReserved: breakdown.reduce((sum, l) => sum + l.reserved, 0),
+      totalAtp: breakdown.reduce((sum, l) => sum + l.atp, 0),
+      locationBreakdown: breakdown,
+    };
+  }
+
+  private toInventoryAvailabilityResponse(
+    sku: string,
+    response: Array<LocationAvailabilityDto> | InventoryAvailability,
+    locationId?: string,
+  ): InventoryAvailability {
+    if (Array.isArray(response)) {
+      return this.toInventoryAvailability(sku, response, locationId);
+    }
+
+    const normalizedLocationId = locationId?.trim();
+    const breakdown = normalizedLocationId
+      ? (response.locationBreakdown ?? []).filter(row => row.locationId === normalizedLocationId)
+      : (response.locationBreakdown ?? []);
+
     return {
       sku,
       totalOnHand: breakdown.reduce((sum, l) => sum + l.onHand, 0),

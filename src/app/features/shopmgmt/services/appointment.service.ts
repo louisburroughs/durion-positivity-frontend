@@ -1,9 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
+  AppointmentCreateRequestSourceTypeEnum,
   AppointmentsAPIService,
   AssignmentControllerService,
   ConflictOverrideAPIService,
+  MechanicAssignmentItemRoleEnum,
   ScheduleAPIService,
   ShopAPIService,
   ShopAuditControllerService,
@@ -41,10 +43,23 @@ export class AppointmentService {
   }
 
   createAssignment(appointmentId: string, body: Partial<AssignmentDetail>): Observable<AssignmentDetail> {
+    const role = body.assignmentType === 'ASSIST'
+      ? MechanicAssignmentItemRoleEnum.Assist
+      : MechanicAssignmentItemRoleEnum.Lead;
+    let resourceType: string | undefined;
+    if (body.mobileUnitId) {
+      resourceType = 'MOBILE_UNIT';
+    } else if (body.bayId) {
+      resourceType = 'BAY';
+    }
+
     const sdkRequest: CreateAssignmentRequest = {
       appointmentId,
       resourceId: body.bayId ?? body.mobileUnitId,
-      resourceType: body.assignmentType,
+      resourceType,
+      mechanics: body.mechanic?.mechanicId
+        ? [{ mechanicPersonId: body.mechanic.mechanicId, role }]
+        : undefined,
     };
     return this.assignment.createAssignment(appointmentId, sdkRequest) as Observable<AssignmentDetail>;
   }
@@ -65,13 +80,18 @@ export class AppointmentService {
   }
 
   createAppointment(body: CreateAppointmentPayload, idempotencyKey: string): Observable<AppointmentDetail> {
+    const sourceType = body.sourceType === 'WORKORDER'
+      ? AppointmentCreateRequestSourceTypeEnum.WorkOrder
+      : AppointmentCreateRequestSourceTypeEnum.Estimate;
     const sdkRequest: AppointmentCreateRequest = {
-      crmCustomerId: body.sourceId,
-      crmVehicleId: body.sourceId,
+      crmCustomerId: body.crmCustomerId ?? '',
+      crmVehicleId: body.crmVehicleId ?? '',
       locationId: body.facilityId,
       startAt: body.scheduledStartDateTime,
       endAt: body.scheduledEndDateTime ?? body.scheduledStartDateTime,
       serviceRequestIds: [],
+      sourceType,
+      sourceId: body.sourceId,
     };
     return this.appointments.createAppointment(sdkRequest, idempotencyKey) as Observable<AppointmentDetail>;
   }

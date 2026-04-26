@@ -16,7 +16,7 @@ import {
   InvoiceArtifact,
   IssueInvoiceRequest,
 } from '../../models/billing.models';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { BillingTransportService } from '../../services/billing-transport.service';
 
 type PageState = 'loading' | 'ready' | 'error';
 type IssueState = 'idle' | 'elevating' | 'issuing' | 'success' | 'error';
@@ -41,7 +41,7 @@ type IssueState = 'idle' | 'elevating' | 'issuing' | 'success' | 'error';
 export class InvoiceDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly api = inject(ApiBaseService);
+  private readonly billingService = inject(BillingTransportService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly invoiceId = signal<string>('');
@@ -82,8 +82,8 @@ export class InvoiceDetailPageComponent implements OnInit {
 
   private loadInvoice(id: string): void {
     this.pageState.set('loading');
-    this.api
-      .get<InvoiceDetail>(`/billing/invoices/${id}`)
+    this.billingService
+      .loadInvoiceDetail(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (inv) => {
@@ -103,8 +103,8 @@ export class InvoiceDetailPageComponent implements OnInit {
   }
 
   private loadArtifacts(id: string): void {
-    this.api
-      .get<InvoiceArtifact[]>(`/billing/invoices/${id}/artifacts`)
+    this.billingService
+      .loadInvoiceArtifacts(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (arts) => this.artifacts.set(arts ?? []),
@@ -132,8 +132,8 @@ export class InvoiceDetailPageComponent implements OnInit {
     }
     this.issueState.set('elevating');
     this.elevationError.set(null);
-    this.api
-      .post<{ elevationToken: string }>('/billing/auth/elevate', { password: pw })
+    this.billingService
+      .elevate(pw)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
@@ -166,8 +166,8 @@ export class InvoiceDetailPageComponent implements OnInit {
     const body: IssueInvoiceRequest = {};
     const token = this.elevationToken();
     if (token) body.elevationToken = token;
-    this.api
-      .post<InvoiceDetail>(`/billing/invoices/${this.invoiceId()}/issue`, body)
+    this.billingService
+      .issueInvoice(this.invoiceId(), body)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -188,8 +188,8 @@ export class InvoiceDetailPageComponent implements OnInit {
   }
 
   downloadArtifact(artifactRefId: string, filename: string): void {
-    this.api
-      .post<{ downloadToken: string; downloadUrl?: string }>(`/billing/artifacts/${artifactRefId}/download-token`, {})
+    this.billingService
+      .createArtifactDownloadToken(artifactRefId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
