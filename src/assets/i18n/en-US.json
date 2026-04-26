@@ -301,11 +301,39 @@
       "STOP_BREAK": "Stop break",
       "ACTION_SUCCEEDED": "Action succeeded.",
       "ERROR": {
-        "REQUIRED_IDS": "Workorder ID and Location ID are required to start a session.",
+        "REQUIRED_IDS": "Person ID is required to manage a work session.",
         "START": "Failed to start session.",
         "STOP": "Failed to stop session.",
         "START_BREAK": "Failed to start break.",
         "STOP_BREAK": "Failed to stop break."
+      }
+    },
+    "ROLE_ASSIGNMENT": {
+      "TITLE": "Assign role and scope",
+      "ASSIGNED_ROLES": "Assigned roles",
+      "INCLUDE_HISTORY": "Include history",
+      "LOADING": "Loading assignments...",
+      "DETAILS": "Role assignment details",
+      "ROLE": "Role",
+      "SELECT_ROLE": "Select a role",
+      "SCOPE_TYPE": "Scope type",
+      "SCOPE_GLOBAL": "GLOBAL",
+      "SCOPE_LOCATION": "LOCATION",
+      "LOCATION_ID": "Location ID",
+      "EFFECTIVE_START": "Effective start",
+      "EFFECTIVE_END": "Effective end (optional)",
+      "SUBMIT": "Assign role",
+      "REVOKE": "Revoke",
+      "CONFIRM_REVOKE": "Confirm revoke",
+      "STATUS": "Status",
+      "ARIA": {
+        "LAYOUT": "Role assignment"
+      },
+      "ERROR": {
+        "LOAD_ASSIGNMENTS": "Unable to load role assignments. Please try again.",
+        "LOAD_ROLES": "Unable to load available roles. Please try again.",
+        "ASSIGN": "Unable to assign the selected role. Please try again.",
+        "REVOKE": "Unable to revoke the role assignment. Please try again."
       }
     },
     "TIME_EXPORT": {

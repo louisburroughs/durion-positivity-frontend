@@ -1,12 +1,13 @@
 import { Component, computed, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { PeopleAccessControlService, PersonRoleAssignmentRequest, RoleDto, UserRoleDto } from '@durion-sdk/people';
 
 @Component({
   selector: 'app-role-assignment-page',
   standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './role-assignment-page.component.html',
   styleUrl: './role-assignment-page.component.css',
 })
@@ -58,7 +59,7 @@ export class RoleAssignmentPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.errorMessage.set('Unable to load role assignments. Please try again.');
+        this.errorMessage.set('PEOPLE.ROLE_ASSIGNMENT.ERROR.LOAD_ASSIGNMENTS');
         this.loading.set(false);
       },
     });
@@ -69,7 +70,7 @@ export class RoleAssignmentPageComponent implements OnInit {
     this.accessControlService.getRoles(this.personUuid()).subscribe({
       next: data => this.roles.set(data),
       error: () => {
-        this.errorMessage.set('Unable to load available roles. Please try again.');
+        this.errorMessage.set('PEOPLE.ROLE_ASSIGNMENT.ERROR.LOAD_ROLES');
       },
     });
   }
@@ -96,16 +97,31 @@ export class RoleAssignmentPageComponent implements OnInit {
     this.accessControlService.createAssignment(this.personUuid(), body).subscribe({
       next: () => this.loadAssignments(),
       error: () => {
-        this.errorMessage.set('Unable to assign the selected role. Please try again.');
+        this.errorMessage.set('PEOPLE.ROLE_ASSIGNMENT.ERROR.ASSIGN');
       },
     });
   }
 
-  startRevoke(assignmentId: string): void {
-    this.confirmingAssignmentId.set(assignmentId);
+  getAssignmentKey(assignment: UserRoleDto): string {
+    return [
+      assignment.roleCode ?? '',
+      assignment.locationId ?? '',
+      assignment.startDate ?? '',
+      assignment.endDate ?? '',
+      assignment.userId ?? '',
+    ].join('|');
   }
 
-  revokeAssignment(roleCode: string): void {
+  startRevoke(assignment: UserRoleDto): void {
+    this.confirmingAssignmentId.set(this.getAssignmentKey(assignment));
+  }
+
+  revokeAssignment(assignment: UserRoleDto): void {
+    const roleCode = assignment.roleCode;
+    if (!roleCode) {
+      return;
+    }
+
     this.errorMessage.set(null);
     this.accessControlService.revokeAssignment(this.personUuid(), roleCode).subscribe({
       next: () => {
@@ -113,7 +129,7 @@ export class RoleAssignmentPageComponent implements OnInit {
         this.loadAssignments();
       },
       error: () => {
-        this.errorMessage.set('Unable to revoke the role assignment. Please try again.');
+        this.errorMessage.set('PEOPLE.ROLE_ASSIGNMENT.ERROR.REVOKE');
         this.confirmingAssignmentId.set(null);
       },
     });

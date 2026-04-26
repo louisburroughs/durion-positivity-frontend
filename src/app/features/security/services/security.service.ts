@@ -55,6 +55,7 @@ export class SecurityService {
 
   updateRolePermissions(req: UpdateRolePermissionsRequest): Observable<void> {
     const sdkReq: RolePermissionsRequest = {
+      roleId: req.roleName,
       permissionNames: new Set(req.permissionKeys),
     };
     return this.roleManagement.updateRolePermissions(sdkReq).pipe(map(() => undefined));

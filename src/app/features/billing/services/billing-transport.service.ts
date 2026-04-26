@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
+import { FinalizationRequest, InvoiceDetailsResponse, InvoiceService } from '@durion-sdk/invoice';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   ArtifactDownloadToken,
@@ -16,9 +17,12 @@ import {
 @Injectable({ providedIn: 'root' })
 export class BillingTransportService {
   private readonly api = inject(ApiBaseService);
+  private readonly invoiceService = inject(InvoiceService);
 
   loadInvoiceDetail(invoiceId: string): Observable<InvoiceDetail> {
-    return this.api.get<InvoiceDetail>(`/billing/invoices/${invoiceId}`);
+    return this.invoiceService.getInvoice(invoiceId).pipe(
+      map(result => this.toInvoiceDetail(result)),
+    );
   }
 
   loadInvoiceArtifacts(invoiceId: string): Observable<InvoiceArtifact[]> {
@@ -30,7 +34,12 @@ export class BillingTransportService {
   }
 
   issueInvoice(invoiceId: string, request: IssueInvoiceRequest): Observable<InvoiceDetail> {
-    return this.api.post<InvoiceDetail>(`/billing/invoices/${invoiceId}/issue`, request);
+    const body: FinalizationRequest = {
+      managerApprovalCode: request.elevationToken,
+    };
+    return this.invoiceService.finalizeInvoice(invoiceId, body).pipe(
+      map(result => this.toInvoiceDetail(result)),
+    );
   }
 
   createArtifactDownloadToken(artifactRefId: string): Observable<ArtifactDownloadToken> {
@@ -86,5 +95,40 @@ export class BillingTransportService {
 
   reprintReceipt(invoiceId: string, receiptId: string): Observable<ReceiptRef> {
     return this.api.post<ReceiptRef>(`/v1/billing/invoices/${invoiceId}/receipts/${receiptId}/reprint`, {});
+  }
+
+  private toInvoiceDetail(source: InvoiceDetailsResponse): InvoiceDetail {
+    const status = source.status === 'FINALIZED' || source.status === 'DRAFT'
+      ? source.status
+      : 'DRAFT';
+
+    return {
+      invoiceId: source.invoiceId ?? '',
+      invoiceNumber: source.invoiceNumber,
+      workOrderId: source.workorderId,
+      status,
+      subtotal: source.subtotal,
+      taxTotal: source.tax,
+      adjustmentTotal: source.adjustments,
+      grandTotal: source.total,
+      createdAt: source.createdAt,
+      updatedAt: source.updatedAt,
+      lineItems: source.items?.map(item => ({
+        id: item.id ?? '',
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        lineTotal: item.amount,
+      })),
+      adjustments: source.adjustmentEntries?.map(entry => ({
+        id: entry.id ?? '',
+        reasonCode: entry.reason ?? 'UNKNOWN',
+        reason: entry.reason,
+        adjustmentType: entry.type,
+        amount: entry.amount ?? 0,
+        adjustedAt: entry.createdAt,
+        adjustedBy: entry.authorizedBy,
+      })),
+    };
   }
 }
