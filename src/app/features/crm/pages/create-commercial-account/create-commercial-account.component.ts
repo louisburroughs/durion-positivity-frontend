@@ -46,7 +46,7 @@ export class CreateCommercialAccountComponent implements OnInit {
 
   private loadBillingTerms(): void {
     this.state.set('loading-terms');
-    this.crm.getBillingTerms().subscribe({
+    this.crm.listBillingTerms().subscribe({
       next: terms => {
         this.billingTerms.set(terms);
         this.state.set('idle');

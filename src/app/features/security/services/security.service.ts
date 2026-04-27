@@ -2,7 +2,7 @@ import { HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { RoleManagementService, UserAPIService } from '@durion-sdk/security';
+import { RoleManagementService, UserAPIService, PermissionRegistryService } from '@durion-sdk/security';
 import type { RolePermissionsRequest } from '@durion-sdk/security';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
@@ -18,6 +18,7 @@ import {
 export class SecurityService {
   private readonly roleManagement = inject(RoleManagementService);
   private readonly userApi = inject(UserAPIService);
+  private readonly permissionRegistry = inject(PermissionRegistryService);
   private readonly api = inject(ApiBaseService);
 
   getAllRoles(_page = 0, _size = 20): Observable<PagedResponse<SecurityRole>> {
@@ -41,7 +42,17 @@ export class SecurityService {
   }
 
   createRole(req: CreateRoleRequest): Observable<SecurityRole> {
-    return this.api.post<SecurityRole>('/v1/roles', req);
+    return this.roleManagement.createRole(req as unknown as { [key: string]: string }).pipe(
+      map(dto => ({
+        name: dto.name ?? '',
+        description: dto.description,
+        grantedPermissions: dto.permissions
+          ? Array.from(dto.permissions).map(p => ({ permissionKey: p.name ?? '' }))
+          : undefined,
+        createdAt: dto.createdAt,
+        updatedAt: dto.lastModifiedAt,
+      } satisfies SecurityRole)),
+    );
   }
 
   getRoleByName(name: string): Observable<SecurityRole> {
@@ -66,7 +77,7 @@ export class SecurityService {
   }
 
   createUser(body: Record<string, unknown>): Observable<unknown> {
-    return this.api.post<unknown>('/v1/users', body);
+    return this.userApi.createUser(body as { [key: string]: unknown });
   }
 
   getUserById(userId: string): Observable<unknown> {

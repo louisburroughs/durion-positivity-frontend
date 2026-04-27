@@ -5,6 +5,7 @@ import {
   APPaymentsService,
   AccountingEventsService,
   CreditMemosService,
+  FinancialReportingService,
   InvoicePaymentsService,
   PaymentApplicationsService,
   PostingRulesService,
@@ -24,6 +25,8 @@ import {
   PaymentApplicationRequest as SdkPaymentApplicationRequest,
   CreateCreditMemoRequest,
   ExecuteAPPaymentRequest,
+  type Pageable,
+  type PageCreditMemoResponse,
 } from '@durion-sdk/accounting';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { environment } from '../../../../environments/environment';
@@ -66,6 +69,7 @@ export class AccountingService {
   private readonly accountingEventsService = inject(AccountingEventsService);
   private readonly apPaymentsService = inject(APPaymentsService);
   private readonly creditMemosService = inject(CreditMemosService);
+  private readonly financialReportingService = inject(FinancialReportingService);
   private readonly invoicePaymentsService = inject(InvoicePaymentsService);
   private readonly paymentApplicationsService = inject(PaymentApplicationsService);
   private readonly postingRulesService = inject(PostingRulesService);
@@ -226,8 +230,18 @@ export class AccountingService {
   // Credit memo
 
   listCreditMemos(page: number, size: number): Observable<PagedResponse<CreditMemoListItem>> {
-    const params = new HttpParams().set('page', String(page)).set('size', String(size));
-    return this.api.get<PagedResponse<CreditMemoListItem>>(`${AccountingService.BASE}/credit-memos`, params);
+    const pageable: Pageable = { page, size };
+    return this.creditMemosService.listCreditMemos(pageable).pipe(
+      map((sdkPage: PageCreditMemoResponse) => ({
+        items: (sdkPage.content ?? []).map(dto => this.toCreditMemoListItem(dto)),
+        content: (sdkPage.content ?? []).map(dto => this.toCreditMemoListItem(dto)),
+        totalCount: sdkPage.totalElements,
+        totalPages: sdkPage.totalPages,
+        pageNumber: sdkPage.number,
+        pageSize: sdkPage.size,
+        totalElements: sdkPage.totalElements,
+      })),
+    );
   }
 
   getCreditMemo(memoId: string): Observable<CreditMemo> {
@@ -454,6 +468,18 @@ export class AccountingService {
             amount: dto.customerCredit.amount,
           }
         : undefined,
+    };
+  }
+
+  private toCreditMemoListItem(dto: CreditMemoResponse): CreditMemoListItem {
+    return {
+      creditMemoId: dto.creditMemoId,
+      originalInvoiceId: dto.originalInvoiceId,
+      customerId: dto.customerId,
+      creditAmount: dto.creditAmount,
+      totalAmount: dto.totalAmount,
+      status: dto.status as CreditMemoListItem['status'],
+      creationTimestamp: dto.creationTimestamp,
     };
   }
 

@@ -55,8 +55,8 @@ export class CrmService {
   private readonly snapshotsApi = inject(CRMSnapshotsService);
   private readonly vehiclesApi = inject(CRMVehiclesService);
 
-  getBillingTerms(): Observable<BillingTermsRef[]> {
-    return this.api.get<BillingTermsRef[]>('/v1/crm/billing-terms');
+  listBillingTerms(): Observable<BillingTermsRef[]> {
+    return this.accountsApi.listBillingTerms() as Observable<BillingTermsRef[]>;
   }
 
   createCommercialAccount(

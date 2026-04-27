@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
-import { RoleManagementService, UserAPIService } from '@durion-sdk/security';
+import { PermissionRegistryService, RoleManagementService, UserAPIService } from '@durion-sdk/security';
 import {
   CreateRoleRequest,
   PagedResponse,
@@ -26,12 +26,14 @@ describe('SecurityService', () => {
 
   const roleManagementStub = {
     getAllRoles: vi.fn(),
+    createRole: vi.fn(),
     getRoleByName: vi.fn(),
     updateRolePermissions: vi.fn(),
     revokeRoleAssignment: vi.fn(),
     getUserRoleAssignments: vi.fn(),
   };
-  const userApiStub = { getUserById: vi.fn() };
+  const userApiStub = { getUserById: vi.fn(), createUser: vi.fn() };
+  const permissionRegistryStub = { getAllPermissions: vi.fn(), getAllPermissions1: vi.fn() };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -40,6 +42,7 @@ describe('SecurityService', () => {
         { provide: ApiBaseService, useValue: apiStub },
         { provide: RoleManagementService, useValue: roleManagementStub },
         { provide: UserAPIService, useValue: userApiStub },
+        { provide: PermissionRegistryService, useValue: permissionRegistryStub },
       ],
     });
     service = TestBed.inject(SecurityService);
@@ -81,16 +84,27 @@ describe('SecurityService', () => {
   });
 
   describe('createRole()', () => {
-    it('calls POST /v1/roles with the request body and returns created role', () => {
+    it('delegates to RoleManagementService.createRole and maps RoleDto to SecurityRole', () => {
       const req: CreateRoleRequest = { name: 'ROLE_MANAGER', description: 'Manager role' };
-      const createdRole: SecurityRole = { name: 'ROLE_MANAGER', description: 'Manager role' };
-      apiStub.post.mockReturnValueOnce(of(createdRole));
+      roleManagementStub.createRole.mockReturnValueOnce(of({
+        name: 'ROLE_MANAGER',
+        description: 'Manager role',
+        permissions: new Set(),
+        createdAt: '2024-01-01',
+        lastModifiedAt: '2024-01-02',
+      }));
 
       let result: SecurityRole | undefined;
       service.createRole(req).subscribe(r => (result = r));
 
-      expect(apiStub.post).toHaveBeenCalledWith('/v1/roles', req);
-      expect(result).toEqual(createdRole);
+      expect(roleManagementStub.createRole).toHaveBeenCalledWith(req);
+      expect(result).toEqual({
+        name: 'ROLE_MANAGER',
+        description: 'Manager role',
+        grantedPermissions: [],
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-02',
+      });
     });
   });
 

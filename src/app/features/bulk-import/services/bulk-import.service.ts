@@ -1,12 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { Upload } from 'tus-js-client';
 import {
   BulkLoadJobsAPIService,
   ColumnMappingAPIService,
+  ReviewQueueAPIService,
 } from '@durion-sdk/bulk-loader';
-import type { BulkLoadJobCreateRequest, BulkLoadJobResponse } from '@durion-sdk/bulk-loader';
+import type { AuditRecordResponse, BulkLoadJobCreateRequest, BulkLoadJobResponse } from '@durion-sdk/bulk-loader';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { environment } from '../../../../environments/environment';
 import {
@@ -89,6 +89,7 @@ export class BulkImportService {
   private readonly api = inject(ApiBaseService);
   private readonly bulkLoadJobsService = inject(BulkLoadJobsAPIService);
   private readonly columnMappingService = inject(ColumnMappingAPIService);
+  private readonly reviewQueueService = inject(ReviewQueueAPIService);
 
   createUploadSession(request: CreateUploadSessionRequest): Observable<CreateUploadSessionResponse> {
     return this.bulkLoadJobsService
@@ -166,22 +167,16 @@ export class BulkImportService {
   }
 
   retryJob(jobId: string): Observable<void> {
-    return this.api.post<void>(
-      `/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/retry`,
-      {},
-    );
+    return this.bulkLoadJobsService.retryJob(jobId).pipe(map(() => undefined as void));
   }
 
-  listAuditRecords(jobId: string, filters?: AuditRecordFilterParams): Observable<AuditRecordListResponse> {
-    let params = new HttpParams();
-    if (filters?.reviewStatus) { params = params.set('reviewStatus', filters.reviewStatus); }
-    if (filters?.pageSize != null) { params = params.set('pageSize', filters.pageSize.toString()); }
-    return this.api
-      .get<ApiAuditRecord[]>(`/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/audit`, params)
-      .pipe(map(records => ({
+  listAuditRecords(jobId: string, _filters?: AuditRecordFilterParams): Observable<AuditRecordListResponse> {
+    return this.reviewQueueService.getAuditRecords(jobId).pipe(
+      map(records => ({
         items: records.map(record => this.toAuditRecord(record)),
         nextPageToken: null,
-      })));
+      })),
+    );
   }
 
   submitCorrection(
@@ -293,16 +288,16 @@ export class BulkImportService {
     };
   }
 
-  private toAuditRecord(record: ApiAuditRecord): BulkLoadRecordAudit {
+  private toAuditRecord(record: AuditRecordResponse | ApiAuditRecord): BulkLoadRecordAudit {
     return {
-      recordId: record.id,
-      jobId: record.jobId,
-      entityType: record.entityType,
+      recordId: record.id ?? '',
+      jobId: record.jobId ?? '',
+      entityType: record.entityType ?? '',
       entityId: record.entityId,
-      rowNumber: record.rowNumber,
-      reviewStatus: this.toReviewStatus(record.reviewStatus),
-      reasonCodes: this.parseReasonCodes(record.reasonCodes),
-      originalValues: this.parseOriginalValues(record.originalValues),
+      rowNumber: record.rowNumber ?? 0,
+      reviewStatus: this.toReviewStatus(record.reviewStatus ?? ''),
+      reasonCodes: this.parseReasonCodes(record.reasonCodes ?? ''),
+      originalValues: this.parseOriginalValues(record.originalValues ?? ''),
       createdAt: record.createdAt,
     };
   }

@@ -1,4 +1,3 @@
-import { HttpParams } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -41,9 +40,11 @@ describe('BulkImportService', () => {
   let apiBaseServiceToken: typeof import('../../../core/services/api-base.service').ApiBaseService;
   let bulkLoadJobsServiceClass: typeof import('@durion-sdk/bulk-loader').BulkLoadJobsAPIService;
   let columnMappingServiceClass: typeof import('@durion-sdk/bulk-loader').ColumnMappingAPIService;
+  let reviewQueueServiceClass: typeof import('@durion-sdk/bulk-loader').ReviewQueueAPIService;
   const apiStub = { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() };
-  const bulkLoadJobsStub = { createJob: vi.fn(), getJob: vi.fn(), listJobs: vi.fn(), cancelJob: vi.fn() };
+  const bulkLoadJobsStub = { createJob: vi.fn(), getJob: vi.fn(), listJobs: vi.fn(), cancelJob: vi.fn(), retryJob: vi.fn() };
   const columnMappingStub = { getMappings: vi.fn(), approveMappings: vi.fn() };
+  const reviewQueueStub = { getAuditRecords: vi.fn(), downloadErrorReport: vi.fn(), submitCorrections: vi.fn() };
 
   beforeEach(async () => {
     tusState.instances.length = 0;
@@ -55,8 +56,11 @@ describe('BulkImportService', () => {
 
     ({ BulkImportService: bulkImportServiceClass } = await import('./bulk-import.service'));
     ({ ApiBaseService: apiBaseServiceToken } = await import('../../../core/services/api-base.service'));
-    ({ BulkLoadJobsAPIService: bulkLoadJobsServiceClass, ColumnMappingAPIService: columnMappingServiceClass } =
-      await import('@durion-sdk/bulk-loader'));
+    ({
+      BulkLoadJobsAPIService: bulkLoadJobsServiceClass,
+      ColumnMappingAPIService: columnMappingServiceClass,
+      ReviewQueueAPIService: reviewQueueServiceClass,
+    } = await import('@durion-sdk/bulk-loader'));
 
     TestBed.configureTestingModule({
       providers: [
@@ -64,6 +68,7 @@ describe('BulkImportService', () => {
         { provide: apiBaseServiceToken, useValue: apiStub },
         { provide: bulkLoadJobsServiceClass, useValue: bulkLoadJobsStub },
         { provide: columnMappingServiceClass, useValue: columnMappingStub },
+        { provide: reviewQueueServiceClass, useValue: reviewQueueStub },
       ],
     });
     service = TestBed.inject(bulkImportServiceClass);
@@ -296,12 +301,14 @@ describe('BulkImportService', () => {
   });
 
   describe('retryJob()', () => {
-    it('calls POST /bulk-loader/v1/bulk-jobs/:id/retry', () => {
-      apiStub.post.mockReturnValue(of(undefined));
+    it('delegates to BulkLoadJobsAPIService.retryJob and returns void', () => {
+      bulkLoadJobsStub.retryJob.mockReturnValue(of({ id: 'job-001', status: 'PENDING' }));
 
-      service.retryJob('job-001').subscribe();
+      let completed = false;
+      service.retryJob('job-001').subscribe({ complete: () => { completed = true; } });
 
-      expect(apiStub.post).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001/retry', {});
+      expect(bulkLoadJobsStub.retryJob).toHaveBeenCalledWith('job-001');
+      expect(completed).toBe(true);
     });
   });
 
@@ -316,44 +323,24 @@ describe('BulkImportService', () => {
       originalValues: '{"sku":"BAD-SKU"}',
     }];
 
-    it('calls GET /bulk-loader/v1/bulk-jobs/:id/audit and maps backend audit records', () => {
-      apiStub.get.mockReturnValue(of(auditResStub));
+    it('delegates to ReviewQueueAPIService.getAuditRecords and maps SDK audit records', () => {
+      reviewQueueStub.getAuditRecords.mockReturnValue(of(auditResStub));
 
       let response: AuditRecordListResponse | undefined;
       service.listAuditRecords('job-001').subscribe(value => {
         response = value;
       });
 
-      expect(apiStub.get).toHaveBeenCalledWith('/bulk-loader/v1/bulk-jobs/job-001/audit', expect.anything());
+      expect(reviewQueueStub.getAuditRecords).toHaveBeenCalledWith('job-001');
       expect(response).toEqual({ items: [mockAuditRecord], nextPageToken: null });
     });
 
-    it('passes reviewStatus as a query param when provided', () => {
-      apiStub.get.mockReturnValue(of(auditResStub));
-
-      service.listAuditRecords('job-001', { reviewStatus: 'PENDING' }).subscribe();
-
-      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('reviewStatus')).toBe('PENDING');
-    });
-
-    it('passes pageSize as a query param when provided', () => {
-      apiStub.get.mockReturnValue(of(auditResStub));
-
-      service.listAuditRecords('job-001', { pageSize: 5 }).subscribe();
-
-      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('pageSize')).toBe('5');
-    });
-
-    it('passes both reviewStatus and pageSize as query params when provided', () => {
-      apiStub.get.mockReturnValue(of(auditResStub));
+    it('ignores filters (SDK does not support server-side filtering)', () => {
+      reviewQueueStub.getAuditRecords.mockReturnValue(of(auditResStub));
 
       service.listAuditRecords('job-001', { reviewStatus: 'PENDING', pageSize: 5 }).subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('reviewStatus')).toBe('PENDING');
-      expect(params.get('pageSize')).toBe('5');
+      expect(reviewQueueStub.getAuditRecords).toHaveBeenCalledWith('job-001');
     });
   });
 
