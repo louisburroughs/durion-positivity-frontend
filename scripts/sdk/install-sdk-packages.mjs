@@ -15,6 +15,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 const PACKAGE_NAMES = [
+  '@durion-sdk/transport',
   '@durion-sdk/accounting',
   '@durion-sdk/bulk-loader',
   '@durion-sdk/catalog',
