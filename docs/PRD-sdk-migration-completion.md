@@ -1,9 +1,9 @@
 # PRD: Angular SDK Migration Completion
 
-**Status:** Complete  
-**Date:** 2026-04-29  
-**Owner:** Frontend Platform  
-**Related Issue:** `louisburroughs/durion#320`  
+**Status:** Complete
+**Date:** 2026-04-29
+**Owner:** Frontend Platform
+**Related Issue:** `louisburroughs/durion#320`
 **PR:** [#24 — work/cap-320-sdk-migration-completion](https://github.com/louisburroughs/durion-positivity-frontend/pull/24)
 
 ## Objective
@@ -89,7 +89,7 @@ team needs a precise completion plan based on the actual repository state.
    - UI-only view models
    - composite models spanning multiple backend responses
    - deliberately narrowed presentation models
-   They must not remain merely to mirror SDK transport contracts.
+     They must not remain merely to mirror SDK transport contracts.
 5. SDK publication and registry strategy are not completion gates for this PRD. The
    frontend’s current supported consumption model is the install flow implemented by
    `scripts/sdk/install-sdk-packages.mjs`. Publication work remains separate.
@@ -131,32 +131,32 @@ Current inventory of non-spec application files still importing or injecting
 
 #### Services (status as of 2026-04-29)
 
-| File | Status |
-| --- | --- |
-| `security/services/security.service.ts` | ✅ Migrated |
-| `security/services/security-audit.service.ts` | ✅ Migrated |
-| `crm/services/crm.service.ts` | ✅ Migrated |
-| `crm/services/crm-integration.service.ts` | ✅ Migrated |
-| `product/services/product-catalog.service.ts` | ✅ Migrated |
-| `product/services/product-inventory.service.ts` | ✅ Migrated |
-| `product/services/product-location.service.ts` | ✅ Migrated |
-| `bulk-import/services/bulk-import.service.ts` | ✅ Migrated (D6 exception) |
-| `accounting/services/accounting.service.ts` | ✅ Migrated (D4 exception) |
-| `inventory/services/inventory.service.ts` | 🔴 Blocked — D5: pervasive SDK/model field mismatches |
-| `inventory/services/inventory-cycle-count.service.ts` | ✅ Migrated |
-| `inventory/services/inventory-receiving.service.ts` | ✅ Migrated |
-| `workexec/services/workexec.service.ts` | ✅ Migrated (partial SDK gaps documented) |
-| `billing/services/billing-transport.service.ts` | ✅ Migrated |
+| File                                                  | Status                                                |
+| ----------------------------------------------------- | ----------------------------------------------------- |
+| `security/services/security.service.ts`               | ✅ Migrated                                           |
+| `security/services/security-audit.service.ts`         | ✅ Migrated                                           |
+| `crm/services/crm.service.ts`                         | ✅ Migrated                                           |
+| `crm/services/crm-integration.service.ts`             | ✅ Migrated                                           |
+| `product/services/product-catalog.service.ts`         | ✅ Migrated                                           |
+| `product/services/product-inventory.service.ts`       | ✅ Migrated                                           |
+| `product/services/product-location.service.ts`        | ✅ Migrated                                           |
+| `bulk-import/services/bulk-import.service.ts`         | ✅ Migrated (D6 exception)                            |
+| `accounting/services/accounting.service.ts`           | ✅ Migrated (D4 exception)                            |
+| `inventory/services/inventory.service.ts`             | 🔴 Blocked — D5: pervasive SDK/model field mismatches |
+| `inventory/services/inventory-cycle-count.service.ts` | ✅ Migrated                                           |
+| `inventory/services/inventory-receiving.service.ts`   | ✅ Migrated                                           |
+| `workexec/services/workexec.service.ts`               | ✅ Migrated (partial SDK gaps documented)             |
+| `billing/services/billing-transport.service.ts`       | ✅ Migrated                                           |
 
 #### Pages (status as of 2026-04-29)
 
-| File | Status |
-| --- | --- |
-| `shopmgmt/pages/mechanic-availability/mechanic-availability-page.component.ts` | ✅ Migrated |
-| `shopmgmt/pages/dispatch-board/dispatch-board-page.component.ts` | ✅ Migrated |
-| `shopmgmt/pages/mechanic-roster/mechanic-roster-page.component.ts` | ✅ Migrated (D1 contract gap) |
-| `people/pages/time-approval/time-approval-page.component.ts` | 🔴 Blocked — D3: 5 missing SDK operations |
-| `people/pages/work-session-submit/work-session-submit-page.component.ts` | 🔴 Blocked — D2: submit endpoint missing from SDK |
+| File                                                                           | Status                                            |
+| ------------------------------------------------------------------------------ | ------------------------------------------------- |
+| `shopmgmt/pages/mechanic-availability/mechanic-availability-page.component.ts` | ✅ Migrated                                       |
+| `shopmgmt/pages/dispatch-board/dispatch-board-page.component.ts`               | ✅ Migrated                                       |
+| `shopmgmt/pages/mechanic-roster/mechanic-roster-page.component.ts`             | ✅ Migrated (D1 contract gap)                     |
+| `people/pages/time-approval/time-approval-page.component.ts`                   | 🔴 Blocked — D3: 5 missing SDK operations         |
+| `people/pages/work-session-submit/work-session-submit-page.component.ts`       | 🔴 Blocked — D2: submit endpoint missing from SDK |
 
 ### Local model inventory
 
@@ -309,9 +309,9 @@ because the frontend previously outpaced the SDK.
 
 **Acceptance criteria:**
 
-- [ ] Every remaining local model file has a stated reason to exist. *(deferred)*
-- [ ] Duplicate transport contracts are removed or replaced with SDK aliases. *(deferred)*
-- [ ] Remaining SDK-related casts are removed. *(deferred)*
+- [ ] Every remaining local model file has a stated reason to exist. _(deferred)_
+- [ ] Duplicate transport contracts are removed or replaced with SDK aliases. _(deferred)_
+- [ ] Remaining SDK-related casts are removed. _(deferred)_
 
 ### Wave 4 — Close temporary exceptions and finalize signoff
 
@@ -323,19 +323,19 @@ tracked follow-up decisions.
 
 **Final exception register:**
 
-| ID | File/Method | Reason | Follow-up |
-| --- | --- | --- | --- |
-| D1 | `shopmgmt/mechanic-roster` — `createEmployee` | SDK contract mismatch; `createPerson` used; `role` dropped | SDK alignment or form redesign |
-| D2 | `people/work-session-submit` — `submitSession` | `POST .../workSessions/{id}/submit` missing from SDK | Backend OpenAPI update |
-| D3 | `people/time-approval` — 5 operations | Timekeeping approve/period/entries SDK operations absent | Backend OpenAPI update |
-| D4 | `accounting.service.ts` — `getEventEnvelopeContract` | `/v1/accounting/events/contract` not in SDK | SDK team to add endpoint |
-| D5 | `inventory.service.ts` — all | Pervasive field name mismatches between SDK DTOs and local models | Requires SDK model alignment |
-| D6 | `bulk-import.service.ts` — `submitAuditCorrection` | SDK endpoint pattern differs | SDK team to align endpoint |
-| — | `workexec.service.ts` — `getWorkorderWipStatus` | SDK path incompatible with legacy path | Consumer migration to new WIP API |
-| — | `workexec.service.ts` — `getWorkorderInvoiceView` | No SDK equivalent | SDK team to add endpoint |
-| — | `workexec.service.ts` — `requestInvoiceFinalization` | No SDK equivalent | SDK team to add endpoint |
-| — | `workexec.service.ts` — `listEstimatesForVehicle` | No vehicle-scoped estimate listing in SDK | SDK team to add endpoint |
-| — | `chat-api.service.ts` — all | Permanent exception: gateway/MCP traffic | Never migrate |
+| ID  | File/Method                                          | Reason                                                            | Follow-up                         |
+| --- | ---------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------- |
+| D1  | `shopmgmt/mechanic-roster` — `createEmployee`        | SDK contract mismatch; `createPerson` used; `role` dropped        | SDK alignment or form redesign    |
+| D2  | `people/work-session-submit` — `submitSession`       | `POST .../workSessions/{id}/submit` missing from SDK              | Backend OpenAPI update            |
+| D3  | `people/time-approval` — 5 operations                | Timekeeping approve/period/entries SDK operations absent          | Backend OpenAPI update            |
+| D4  | `accounting.service.ts` — `getEventEnvelopeContract` | `/v1/accounting/events/contract` not in SDK                       | SDK team to add endpoint          |
+| D5  | `inventory.service.ts` — all                         | Pervasive field name mismatches between SDK DTOs and local models | Requires SDK model alignment      |
+| D6  | `bulk-import.service.ts` — `submitAuditCorrection`   | SDK endpoint pattern differs                                      | SDK team to align endpoint        |
+| —   | `workexec.service.ts` — `getWorkorderWipStatus`      | SDK path incompatible with legacy path                            | Consumer migration to new WIP API |
+| —   | `workexec.service.ts` — `getWorkorderInvoiceView`    | No SDK equivalent                                                 | SDK team to add endpoint          |
+| —   | `workexec.service.ts` — `requestInvoiceFinalization` | No SDK equivalent                                                 | SDK team to add endpoint          |
+| —   | `workexec.service.ts` — `listEstimatesForVehicle`    | No vehicle-scoped estimate listing in SDK                         | SDK team to add endpoint          |
+| —   | `chat-api.service.ts` — all                          | Permanent exception: gateway/MCP traffic                          | Never migrate                     |
 
 **Acceptance criteria:**
 
@@ -388,7 +388,7 @@ not configured in this project.
 - [x] The frontend primarily consumes `durion-positivity-sdk-angular` generated services
       for domain transport.
 - [ ] Duplicate transport-model drift has been reduced through SDK model adoption or
-      explicit justification. *(Wave 3 deferred — pending D5 resolution.)*
+      explicit justification. _(Wave 3 deferred — pending D5 resolution.)_
 - [x] `npx ng build` passes. `npx ng test --no-watch` passes (1 pre-existing exception).
 
 ### Note: `chat-panel.component.spec.ts` test failure
