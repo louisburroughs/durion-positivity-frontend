@@ -147,17 +147,17 @@ None blocking PR. D1-D6 defects documented as follow-up SDK gaps (see Exception 
 
 ## Exception Register
 
-| File | Method/Path | Reason | Follow-up |
-| --- | --- | --- | --- |
-| `shell/services/chat-api.service.ts` | all | Permanent exception — gateway/MCP traffic outside migration scope | Never migrate |
-| `accounting.service.ts` | `getEventEnvelopeContract` | `/v1/accounting/events/contract` not in SDK | SDK team to add endpoint |
-| `inventory/services/inventory.service.ts` | all | D5: pervasive field name mismatches between SDK DTOs and local models | Requires SDK model alignment work |
-| `bulk-import.service.ts` | `submitAuditCorrection` | D6: SDK `submitCorrections` uses different URL/method pattern | SDK team to align endpoint |
-| `workexec.service.ts` | `listEstimatesForVehicle` | No vehicle-specific estimate listing in SDK | SDK team to add endpoint |
-| `workexec.service.ts` | `getWorkorderWipStatus` | SDK uses `/v1/workexec/wip/{id}` — incompatible with legacy path | Requires consumer migration to new WIP API |
-| `workexec.service.ts` | `getWorkorderInvoiceView` | No SDK equivalent | SDK team to add endpoint |
-| `workexec.service.ts` | `requestInvoiceFinalization` | No SDK equivalent | SDK team to add endpoint |
-| `workexec.service.ts` | `resolvePickScan/confirmPickLine/completePickList` | Pick-task SDK URLs differ from legacy `workexec/v1/...` paths | SDK team to confirm pick-task surface |
-| `people/pages/work-session-submit` | `submitSession` | D2: `POST /v1/people/workSessions/{sessionId}/submit` missing from SDK | Backend OpenAPI update required |
-| `people/pages/time-approval` | 5 timekeeping operations | D3: Missing SDK operations for timekeeping approvals | Backend OpenAPI update required |
-| `shopmgmt/pages/mechanic-roster` | `createEmployee` | D1: SDK createEmployee contract mismatch; `createPerson` used; `role` dropped | SDK alignment or form redesign |
+| File                                      | Method/Path                                        | Reason                                                                        | Follow-up                                  |
+| ----------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------ |
+| `shell/services/chat-api.service.ts`      | all                                                | Permanent exception — gateway/MCP traffic outside migration scope             | Never migrate                              |
+| `accounting.service.ts`                   | `getEventEnvelopeContract`                         | `/v1/accounting/events/contract` not in SDK                                   | SDK team to add endpoint                   |
+| `inventory/services/inventory.service.ts` | all                                                | D5: pervasive field name mismatches between SDK DTOs and local models         | Requires SDK model alignment work          |
+| `bulk-import.service.ts`                  | `submitAuditCorrection`                            | D6: SDK `submitCorrections` uses different URL/method pattern                 | SDK team to align endpoint                 |
+| `workexec.service.ts`                     | `listEstimatesForVehicle`                          | No vehicle-specific estimate listing in SDK                                   | SDK team to add endpoint                   |
+| `workexec.service.ts`                     | `getWorkorderWipStatus`                            | SDK uses `/v1/workexec/wip/{id}` — incompatible with legacy path              | Requires consumer migration to new WIP API |
+| `workexec.service.ts`                     | `getWorkorderInvoiceView`                          | No SDK equivalent                                                             | SDK team to add endpoint                   |
+| `workexec.service.ts`                     | `requestInvoiceFinalization`                       | No SDK equivalent                                                             | SDK team to add endpoint                   |
+| `workexec.service.ts`                     | `resolvePickScan/confirmPickLine/completePickList` | Pick-task SDK URLs differ from legacy `workexec/v1/...` paths                 | SDK team to confirm pick-task surface      |
+| `people/pages/work-session-submit`        | `submitSession`                                    | D2: `POST /v1/people/workSessions/{sessionId}/submit` missing from SDK        | Backend OpenAPI update required            |
+| `people/pages/time-approval`              | 5 timekeeping operations                           | D3: Missing SDK operations for timekeeping approvals                          | Backend OpenAPI update required            |
+| `shopmgmt/pages/mechanic-roster`          | `createEmployee`                                   | D1: SDK createEmployee contract mismatch; `createPerson` used; `role` dropped | SDK alignment or form redesign             |
