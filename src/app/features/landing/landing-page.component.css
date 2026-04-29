@@ -174,7 +174,7 @@
 
 .hero-brand-mark {
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--durion-blue-600), var(--durion-blue-500));
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;

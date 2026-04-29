@@ -9,6 +9,7 @@ import { TranslateLoader, TranslateModule, TranslationObject } from '@ngx-transl
 import { TranslateHttpLoader, TRANSLATE_HTTP_LOADER_CONFIG } from '@ngx-translate/http-loader';
 
 import { Configuration as AccountingConfiguration } from '@durion-sdk/accounting';
+import { Configuration as BulkLoaderConfiguration } from '@durion-sdk/bulk-loader';
 import { Configuration as CatalogConfiguration } from '@durion-sdk/catalog';
 import { Configuration as CustomerConfiguration } from '@durion-sdk/customer';
 import { Configuration as InventoryConfiguration } from '@durion-sdk/inventory';
@@ -78,6 +79,7 @@ export const appConfig: ApplicationConfig = {
     })),
     provideAppInitializer(() => inject(LocaleService).initialize()),
     { provide: AccountingConfiguration, useFactory: () => new AccountingConfiguration({ basePath: environment.apiBaseUrl }) },
+    { provide: BulkLoaderConfiguration, useFactory: () => new BulkLoaderConfiguration({ basePath: `${environment.apiBaseUrl}/bulk-loader` }) },
     { provide: CatalogConfiguration, useFactory: () => new CatalogConfiguration({ basePath: environment.apiBaseUrl }) },
     { provide: CustomerConfiguration, useFactory: () => new CustomerConfiguration({ basePath: environment.apiBaseUrl }) },
     { provide: InventoryConfiguration, useFactory: () => new InventoryConfiguration({ basePath: environment.apiBaseUrl }) },
