@@ -256,9 +256,17 @@ export class AccountingService {
     );
   }
 
-  listBillsByVendor(vendorId: string): Observable<VendorBill[]> {
+  /**
+   * Lists AP bills for a vendor.
+   * NOTE: SDK gap - APPaymentsService has no unpaged listBills endpoint.
+   * Pre-migration behavior returned all bills; this implementation fetches
+   * up to `size` bills per page. Default size is 100. For vendors with >100
+   * bills, callers should pass a larger `size` or handle pagination explicitly.
+   * Follow-up: request an unpaged /ap/bills endpoint in the accounting OpenAPI spec.
+   */
+  listBillsByVendor(vendorId: string, page = 0, size = 100): Observable<VendorBill[]> {
     return this.apPaymentsService
-      .listApBills({ page: 0, size: 100 }, vendorId)
+      .listApBills({ page, size }, vendorId)
       .pipe(map(p => (p.content ?? []).map(dto => this.toVendorBill(dto))));
   }
 

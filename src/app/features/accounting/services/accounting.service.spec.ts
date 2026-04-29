@@ -21,6 +21,7 @@ import {
   IngestionProcessingStatus,
   InvoicePaymentStatus,
   PagedResponse,
+  VendorBill,
 } from '../models/accounting.models';
 
 describe('AccountingService', () => {
@@ -223,6 +224,27 @@ describe('AccountingService', () => {
       expect(result?.items).toHaveLength(1);
       expect((result?.items as { vendorBillId: string }[])[0].vendorBillId).toBe('bill-1');
       expect(result?.totalCount).toBe(1);
+    });
+  });
+
+  describe('listBillsByVendor()', () => {
+    it('should call apPaymentsService.listApBills with default pageable and vendorId and map VendorBill[]', () => {
+      const vendorBillFixture: VendorBill = {
+        vendorBillId: 'bill-1',
+        vendorId: 'v-001',
+        status: 'OPEN',
+      };
+
+      apPaymentsStub.listApBills.mockReturnValueOnce(
+        of({ content: [{ vendorBillId: 'bill-1', vendorId: 'v-001', status: 'OPEN' }] }),
+      );
+
+      let result: VendorBill[] | undefined;
+      service.listBillsByVendor('v-001').subscribe(r => (result = r));
+
+      expect(apPaymentsStub.listApBills).toHaveBeenCalledWith({ page: 0, size: 100 }, 'v-001');
+      expect(result).toEqual([vendorBillFixture]);
+      expect(result?.[0].vendorBillId).toBe('bill-1');
     });
   });
 

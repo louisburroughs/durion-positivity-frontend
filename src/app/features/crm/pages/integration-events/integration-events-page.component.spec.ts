@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { EventProcessingLogEntry } from '@durion-sdk/accounting';
 import { Subject, of, throwError } from 'rxjs';
 import { CrmIntegrationService } from '../../services/crm-integration.service';
 import { IntegrationEventsPageComponent } from './integration-events-page.component';
@@ -12,7 +13,7 @@ describe('IntegrationEventsPageComponent', () => {
     listEvents: vi.fn().mockReturnValue(of({ items: [], totalCount: 0 })),
     getEvent: vi.fn().mockReturnValue(of(null)),
     getReprocessingHistory: vi.fn().mockReturnValue(of([])),
-    getEventProcessingLog: vi.fn().mockReturnValue(of('')),
+    getEventProcessingLog: vi.fn().mockReturnValue(of([])),
   };
 
   const sampleEvent = {
@@ -185,11 +186,19 @@ describe('IntegrationEventsPageComponent', () => {
   });
 
   it('populates processingLog signal on successful getEventProcessingLog()', () => {
-    const logText = 'Processed at 2026-01-01\nSuccess.';
+    const logEntryFixture: EventProcessingLogEntry = {
+      entryId: 'entry-1',
+      occurredAt: '2026-01-01T00:00:00Z',
+      severity: 'INFO',
+      message: 'Processed at 2026-01-01. Success.',
+      contextJson: null,
+    };
+    const logEntriesFixture: EventProcessingLogEntry[] = [logEntryFixture];
+
     fixture.detectChanges();
-    crmIntegrationServiceStub.getEventProcessingLog.mockReturnValueOnce(of(logText));
+    crmIntegrationServiceStub.getEventProcessingLog.mockReturnValueOnce(of(logEntriesFixture));
     fixture.componentInstance.selectEvent('ev-001');
-    expect(fixture.componentInstance.processingLog()).toBe(logText);
+    expect(fixture.componentInstance.processingLog()).toEqual(logEntriesFixture);
   });
 
   it('populates reprocessingHistory signal on successful getReprocessingHistory()', () => {
