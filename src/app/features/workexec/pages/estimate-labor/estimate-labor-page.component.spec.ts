@@ -51,7 +51,7 @@ describe('EstimateLaborPageComponent [Story 237]', () => {
     expect(addReq.request.body['serviceId']).toBe('svc-brake');
     addReq.flush({ id: 'item-2', estimateId: 'est-123', itemType: 'LABOR', quantity: 1, unitPrice: 129.99 });
 
-    http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate-totals`).flush({ subtotal: 129.99, taxAmount: 11.05, total: 141.04 });
+    http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate`).flush({ subtotal: 129.99, taxAmount: 11.05, total: 141.04 });
     http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({ id: 'est-123', status: 'DRAFT', customerId: 'c', vehicleId: 'v', items: [
       { id: 'item-2', estimateId: 'est-123', itemType: 'LABOR', quantity: 1, unitPrice: 129.99, lineTotal: 129.99 }
     ]});

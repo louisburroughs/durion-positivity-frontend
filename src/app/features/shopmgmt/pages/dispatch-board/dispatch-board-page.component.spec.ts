@@ -3,8 +3,7 @@ import { provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { DispatchBoardPageComponent } from './dispatch-board-page.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { DailyDispatchBoardDashboardService } from '@durion-sdk/workorder';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { DispatchBoardService } from '../../services/dispatch-board.service';
 
 // ---------------------------------------------------------------------------
 // Inline model types — match the planned production shapes from the story spec
@@ -58,9 +57,8 @@ describe('DispatchBoardPageComponent', () => {
 
   const dispatchBoardServiceStub = {
     getDashboard: vi.fn().mockReturnValue(of(emptyDashboard)),
-  };
-  const apiServiceStub = {
-    get: vi.fn().mockReturnValue(of({ locationId: 'LOC-1' })),
+    getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: 'LOC-1' })),
+    getAvailability: vi.fn().mockReturnValue(of([])),
   };
 
   beforeEach(async () => {
@@ -68,8 +66,7 @@ describe('DispatchBoardPageComponent', () => {
       imports: [DispatchBoardPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: DailyDispatchBoardDashboardService, useValue: dispatchBoardServiceStub },
-        { provide: ApiBaseService, useValue: apiServiceStub },
+        { provide: DispatchBoardService, useValue: dispatchBoardServiceStub },
       ],
     }).compileComponents();
 
@@ -85,7 +82,7 @@ describe('DispatchBoardPageComponent', () => {
     it('loads the current user primary location on init', () => {
       fixture.detectChanges();
 
-      expect(apiServiceStub.get).toHaveBeenCalledTimes(1);
+      expect(dispatchBoardServiceStub.getPrimaryLocation).toHaveBeenCalledTimes(1);
     });
 
     it('calls getDashboard with the primary location on init', () => {
@@ -95,7 +92,7 @@ describe('DispatchBoardPageComponent', () => {
     });
 
     it('does not call getDashboard when no location can be resolved', () => {
-      apiServiceStub.get.mockReturnValueOnce(of({}));
+      dispatchBoardServiceStub.getPrimaryLocation.mockReturnValueOnce(of({}));
       fixture.detectChanges();
 
       expect(dispatchBoardServiceStub.getDashboard).not.toHaveBeenCalled();
@@ -133,7 +130,7 @@ describe('DispatchBoardPageComponent', () => {
     });
 
     it('disables the refresh button when location is blank', () => {
-      apiServiceStub.get.mockReturnValueOnce(of({}));
+      dispatchBoardServiceStub.getPrimaryLocation.mockReturnValueOnce(of({}));
       fixture.detectChanges();
 
       const refreshButton: HTMLButtonElement | null = fixture.nativeElement.querySelector('button');

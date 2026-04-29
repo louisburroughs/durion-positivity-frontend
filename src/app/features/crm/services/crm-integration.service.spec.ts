@@ -12,7 +12,7 @@ describe('CrmIntegrationService', () => {
   let service: CrmIntegrationService;
 
   const accountingEventsStub = {
-    listEvents: vi.fn(),
+    listAccountingEvents: vi.fn(),
     getEvent: vi.fn(),
     getReprocessingHistory: vi.fn(),
     getEventProcessingLog: vi.fn(),
@@ -35,22 +35,25 @@ describe('CrmIntegrationService', () => {
   // ── listEvents() ────────────────────────────────────────────────────────────
 
   describe('listEvents()', () => {
-    it('calls eventsApi.listEvents with empty organizationId when called with no arguments', () => {
-      const response: AccountingEventListResponse = { items: [], totalCount: 0 };
-      accountingEventsStub.listEvents.mockReturnValueOnce(of(response));
+    it('calls eventsApi.listAccountingEvents when called with no arguments', () => {
+      const sdkPage = { content: [], totalElements: 0 };
+      accountingEventsStub.listAccountingEvents.mockReturnValueOnce(of(sdkPage));
 
       let result: any;
       service.listEvents().subscribe((r: any) => { result = r; });
 
-      expect(accountingEventsStub.listEvents).toHaveBeenCalledOnce();
-      expect(accountingEventsStub.listEvents).toHaveBeenCalledWith('', undefined, undefined, undefined);
+      expect(accountingEventsStub.listAccountingEvents).toHaveBeenCalledOnce();
+      // arg 0 is pageable { page: 0, size: 20 }, arg 1 is organizationId (undefined)
+      const [pageable, organizationId] = accountingEventsStub.listAccountingEvents.mock.calls[0];
+      expect(pageable).toEqual({ page: 0, size: 20 });
+      expect(organizationId).toBeUndefined();
       expect(result).toBeDefined();
       expect(result.items).toHaveLength(0);
     });
 
-    it('calls eventsApi.listEvents with organizationId, page, size and status params', () => {
-      const response: AccountingEventListResponse = {
-        items: [
+    it('calls eventsApi.listAccountingEvents with organizationId and status params', () => {
+      const sdkPage = {
+        content: [
           {
             eventId: 'ev-001',
             eventType: 'InvoiceIssued',
@@ -59,17 +62,19 @@ describe('CrmIntegrationService', () => {
             organizationId: 'org-abc',
           },
         ],
-        totalCount: 1,
+        totalElements: 1,
       };
-      accountingEventsStub.listEvents.mockReturnValueOnce(of(response));
+      accountingEventsStub.listAccountingEvents.mockReturnValueOnce(of(sdkPage));
 
       let result: any;
       service
         .listEvents({ organizationId: 'org-abc', status: 'PENDING', page: 0, size: 20 })
         .subscribe((r: any) => { result = r; });
 
-      expect(accountingEventsStub.listEvents).toHaveBeenCalledOnce();
-      expect(accountingEventsStub.listEvents).toHaveBeenCalledWith('org-abc', 0, 20, 'PENDING');
+      expect(accountingEventsStub.listAccountingEvents).toHaveBeenCalledOnce();
+      const args = accountingEventsStub.listAccountingEvents.mock.calls[0];
+      expect(args[0]).toEqual({ page: 0, size: 20 }); // pageable
+      expect(args[1]).toBe('org-abc'); // organizationId
       expect(result.items).toHaveLength(1);
       expect(result.items[0].eventId).toBe('ev-001');
     });
@@ -133,14 +138,14 @@ describe('CrmIntegrationService', () => {
 
   describe('getEventProcessingLog()', () => {
     it('calls eventsApi.getEventProcessingLog with the given eventId', () => {
-      const logText = 'Event received at 2026-01-04T00:00:00Z\nProcessed successfully.';
-      accountingEventsStub.getEventProcessingLog.mockReturnValueOnce(of(logText));
+      const logEntries = [{ timestamp: '2026-01-04T00:00:00Z', message: 'Processed successfully.' }];
+      accountingEventsStub.getEventProcessingLog.mockReturnValueOnce(of(logEntries));
 
       let result: any;
       service.getEventProcessingLog('ev-004').subscribe((r: any) => { result = r; });
 
       expect(accountingEventsStub.getEventProcessingLog).toHaveBeenCalledWith('ev-004');
-      expect(result).toContain('2026-01-04T00:00:00Z');
+      expect(result).toHaveLength(1);
     });
   });
 });

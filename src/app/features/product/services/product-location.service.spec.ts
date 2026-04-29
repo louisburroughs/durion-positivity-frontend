@@ -83,13 +83,18 @@ describe('ProductLocationService', () => {
     });
 
     it('returns the validation result', () => {
-      const result = { locationId: 'loc-01', valid: false, errors: ['address missing'], validatedAt: '2026-03-01T00:00:00Z' };
-      locationSdkStub.validateLocation.mockReturnValueOnce(of(result));
+      const sdkResponse = { locationId: 'loc-01', exists: false, active: false };
+      locationSdkStub.validateLocation.mockReturnValueOnce(of(sdkResponse));
 
       let observed: unknown;
       service.validateLocation('loc-01').subscribe(r => (observed = r));
 
-      expect(observed).toEqual(result);
+      expect(observed).toEqual({
+        locationId: 'loc-01',
+        valid: false,
+        errors: [],
+        validatedAt: '',
+      });
     });
   });
 

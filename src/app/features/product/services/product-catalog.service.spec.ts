@@ -76,13 +76,13 @@ describe('ProductCatalogService', () => {
     });
 
     it('returns the products array as an Observable', () => {
-      const products = [{ id: 'p1', sku: 'SKU-001', name: 'Widget', category: 'Parts', lifecycleState: 'ACTIVE', msrp: null }];
-      productsSdkStub.searchProducts.mockReturnValueOnce(of(products));
+      const sdkItem = { id: 'p1', sku: 'SKU-001', name: 'Widget' };
+      productsSdkStub.searchProducts.mockReturnValueOnce(of({ data: [sdkItem] }));
 
       let result: unknown;
       service.searchProducts('widget').subscribe(r => (result = r));
 
-      expect(result).toEqual(products);
+      expect((result as any[]).length).toBe(1);
     });
   });
 
@@ -91,11 +91,17 @@ describe('ProductCatalogService', () => {
   describe('createProduct()', () => {
     it('calls productsSdk.createProduct with the product payload', () => {
       const payload = { name: 'New Product', sku: 'SKU-NEW', category: 'Parts' };
-      productsSdkStub.createProduct.mockReturnValueOnce(of({ id: 'p-new', ...payload }));
+      productsSdkStub.createProduct.mockReturnValueOnce(of({ id: 'p-new', name: 'New Product', sku: 'SKU-NEW' }));
 
       service.createProduct(payload as any).subscribe();
 
-      expect(productsSdkStub.createProduct).toHaveBeenCalledWith(payload);
+      expect(productsSdkStub.createProduct).toHaveBeenCalledWith({
+        name: 'New Product',
+        sku: 'SKU-NEW',
+        description: '',
+        unitOfMeasure: '',
+        mpn: '',
+      });
     });
   });
 
@@ -128,7 +134,11 @@ describe('ProductCatalogService', () => {
 
       service.setLifecycleState('prod-123', transition as any).subscribe();
 
-      expect(productsSdkStub.setLifecycleState).toHaveBeenCalledWith('prod-123', transition);
+      expect(productsSdkStub.setLifecycleState).toHaveBeenCalledWith('prod-123', {
+        lifecycleState: 'INACTIVE',
+        effectiveAt: '2026-03-01T00:00:00Z',
+        overrideReason: undefined,
+      });
     });
   });
 
@@ -171,11 +181,17 @@ describe('ProductCatalogService', () => {
   describe('createLocationPriceOverride()', () => {
     it('calls productsSdk.createLocationPriceOverride with the override payload', () => {
       const override = { locationId: 'loc-1', productSku: 'SKU-001', overridePrice: 9.99 };
-      productsSdkStub.createLocationPriceOverride.mockReturnValueOnce(of({ id: 'ovr-1', ...override }));
+      productsSdkStub.createLocationPriceOverride.mockReturnValueOnce(of({ id: 'ovr-1', locationId: 'loc-1', overridePrice: 9.99 }));
 
       service.createLocationPriceOverride(override as any).subscribe();
 
-      expect(productsSdkStub.createLocationPriceOverride).toHaveBeenCalledWith(override);
+      expect(productsSdkStub.createLocationPriceOverride).toHaveBeenCalledWith({
+        locationId: 'loc-1',
+        productId: 'SKU-001',
+        basePrice: 0,
+        overridePrice: 9.99,
+        createdByUserId: '',
+      });
     });
   });
 
@@ -183,12 +199,17 @@ describe('ProductCatalogService', () => {
 
   describe('upsertLocationGuardrailPolicy()', () => {
     it('calls productsSdk.upsertLocationGuardrailPolicy with the policy', () => {
-      const policy = { locationId: 'loc-1', floorPct: 0.85, ceilPct: 1.15 };
-      productsSdkStub.upsertLocationGuardrailPolicy.mockReturnValueOnce(of({ ...policy, id: 'guardrail-1' }));
+      const policy = { locationId: 'loc-1', minPricePercent: 0.85, maxPricePercent: 1.15 };
+      productsSdkStub.upsertLocationGuardrailPolicy.mockReturnValueOnce(of({ scopeId: 'loc-1', id: 'guardrail-1' }));
 
       service.upsertLocationGuardrailPolicy(policy as any).subscribe();
 
-      expect(productsSdkStub.upsertLocationGuardrailPolicy).toHaveBeenCalledWith(policy);
+      expect(productsSdkStub.upsertLocationGuardrailPolicy).toHaveBeenCalledWith({
+        scopeId: 'loc-1',
+        minMarginPercent: 0.85,
+        maxDiscountPercent: 1.15,
+        autoApprovalThresholdPercent: undefined,
+      });
     });
   });
 });

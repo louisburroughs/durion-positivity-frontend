@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { HttpParams } from '@angular/common/http';
 import { TranslatePipe } from '@ngx-translate/core';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { PeopleAvailabilityResponse } from '@durion-sdk/people';
+import { DispatchBoardService } from '../../services/dispatch-board.service';
 
 @Component({
   selector: 'app-mechanic-availability-page',
@@ -13,10 +13,10 @@ import { ApiBaseService } from '../../../../core/services/api-base.service';
   styleUrl: './mechanic-availability-page.component.css',
 })
 export class MechanicAvailabilityPageComponent implements OnInit {
-  private readonly api = inject(ApiBaseService);
+  private readonly dispatchBoardService = inject(DispatchBoardService);
 
   readonly loading = signal(false);
-  readonly availabilityData = signal<unknown[]>([]);
+  readonly availabilityData = signal<PeopleAvailabilityResponse[]>([]);
   readonly locationId = signal('');
   readonly selectedDate = signal(this.todayIso());
   readonly error = signal<string | null>(null);
@@ -31,10 +31,9 @@ export class MechanicAvailabilityPageComponent implements OnInit {
   }
 
   loadCurrentLocation(): void {
-    this.api.get<Record<string, unknown>>('/v1/people/me/primary-location').subscribe({
+    this.dispatchBoardService.getPrimaryLocation().subscribe({
       next: (location) => {
-        const data = location as Record<string, unknown>;
-        const id = String(data['locationId'] ?? data['id'] ?? '');
+        const id = String(location.locationId ?? '').trim();
         this.locationId.set(id);
         this.filterForm.controls.locationId.setValue(id);
         this.loadAvailability();
@@ -54,8 +53,7 @@ export class MechanicAvailabilityPageComponent implements OnInit {
     const date = this.filterForm.controls.date.value.trim();
     this.locationId.set(locationId);
     this.selectedDate.set(date);
-    const params = new HttpParams().set('locationId', locationId).set('date', date);
-    this.api.get<unknown[]>('/v1/people/availability', params).subscribe({
+    this.dispatchBoardService.getAvailability(locationId, date).subscribe({
       next: (availability) => {
         this.availabilityData.set(Array.isArray(availability) ? availability : []);
         this.loading.set(false);

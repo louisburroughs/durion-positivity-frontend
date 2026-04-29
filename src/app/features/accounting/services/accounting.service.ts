@@ -1,9 +1,9 @@
-import { HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
   APPaymentsService,
   AccountingEventsService,
+  AccountingExportsService,
   CreditMemosService,
   FinancialReportingService,
   InvoicePaymentsService,
@@ -25,6 +25,7 @@ import {
   PaymentApplicationRequest as SdkPaymentApplicationRequest,
   CreateCreditMemoRequest,
   ExecuteAPPaymentRequest,
+  ExportJobRequest,
   type Pageable,
   type PageCreditMemoResponse,
 } from '@durion-sdk/accounting';
@@ -67,6 +68,7 @@ export class AccountingService {
   private readonly api = inject(ApiBaseService);
   private readonly authService = inject(AuthService);
   private readonly accountingEventsService = inject(AccountingEventsService);
+  private readonly accountingExportsService = inject(AccountingExportsService);
   private readonly apPaymentsService = inject(APPaymentsService);
   private readonly creditMemosService = inject(CreditMemosService);
   private readonly financialReportingService = inject(FinancialReportingService);
@@ -81,49 +83,34 @@ export class AccountingService {
     page = 0,
     size = 20,
   ): Observable<PagedResponse<AccountingEventListItem>> {
-    let params = new HttpParams().set('page', String(page)).set('size', String(size));
-
-    if (filters.organizationId) {
-      params = params.set('organizationId', filters.organizationId);
-    }
-    if (filters.processingStatus) {
-      params = params.set('status', filters.processingStatus);
-    }
-    if (filters.eventType) {
-      params = params.set('eventType', filters.eventType);
-    }
-    if (filters.idempotencyOutcome) {
-      params = params.set('idempotencyOutcome', filters.idempotencyOutcome);
-    }
-    if (filters.receivedAtFrom) {
-      params = params.set('receivedAtFrom', filters.receivedAtFrom);
-    }
-    if (filters.receivedAtTo) {
-      params = params.set('receivedAtTo', filters.receivedAtTo);
-    }
-    if (filters.eventId) {
-      params = params.set('eventId', filters.eventId);
-    }
-    if (filters.ingestionId) {
-      params = params.set('ingestionId', filters.ingestionId);
-    }
-    if (filters.domainKeyId) {
-      params = params.set('domainKeyId', filters.domainKeyId);
-    }
-    if (filters.invoiceId) {
-      params = params.set('invoiceId', filters.invoiceId);
-    }
-
-    return this.api
-      .get<PagedResponse<AccountingEventDetail>>(`${AccountingService.BASE}/events`, params)
+    const pageable: Pageable = { page, size };
+    return this.accountingEventsService
+      .listAccountingEvents(
+        pageable,
+        filters.organizationId,
+        filters.eventType,
+        filters.idempotencyOutcome,
+        filters.receivedAtFrom,
+        filters.receivedAtTo,
+        filters.eventId,
+        filters.ingestionId,
+        filters.domainKeyId,
+        filters.invoiceId,
+        filters.processingStatus,
+      )
       .pipe(
         map(resp => {
-          const mapped = (resp.items ?? resp.content ?? []).map(item => this.toListItem(item));
+          const mapped = (resp.content ?? []).map(dto =>
+            this.toListItem(this.toAccountingEventDetail(dto)),
+          );
           return {
-            ...resp,
             items: mapped,
             content: mapped,
-          };
+            totalCount: resp.totalElements ?? 0,
+            pageNumber: resp.number ?? page,
+            pageSize: resp.size ?? size,
+            totalPages: resp.totalPages ?? 0,
+          } satisfies PagedResponse<AccountingEventListItem>;
         }),
       );
   }
@@ -135,9 +122,7 @@ export class AccountingService {
   }
 
   getEventProcessingLog(eventId: string): Observable<EventProcessingLogEntry[]> {
-    return this.api.get<EventProcessingLogEntry[]>(
-      `${AccountingService.BASE}/events/${eventId}/processing-log`,
-    );
+    return this.accountingEventsService.getEventProcessingLog(eventId);
   }
 
   getInvoiceStatus(invoiceId: string): Observable<InvoicePaymentStatus> {
@@ -259,14 +244,30 @@ export class AccountingService {
   // Vendor payment
 
   listBills(page: number, size: number): Observable<PagedResponse<VendorBill>> {
-    const params = new HttpParams().set('page', String(page)).set('size', String(size));
-    return this.api.get<PagedResponse<VendorBill>>(`${AccountingService.BASE}/ap/bills`, params);
+    return this.apPaymentsService.listApBills({ page, size }).pipe(
+      map(p => ({
+        items: (p.content ?? []).map(dto => this.toVendorBill(dto)),
+        content: (p.content ?? []).map(dto => this.toVendorBill(dto)),
+        totalCount: p.totalElements ?? 0,
+        pageNumber: p.number ?? page,
+        pageSize: p.size ?? size,
+        totalPages: p.totalPages ?? 0,
+      } satisfies PagedResponse<VendorBill>)),
+    );
   }
 
-  listBillsByVendor(vendorId: string): Observable<VendorBill[]> {
+  /**
+   * Lists AP bills for a vendor.
+   * NOTE: SDK gap - APPaymentsService has no unpaged listBills endpoint.
+   * Pre-migration behavior returned all bills; this implementation fetches
+   * up to `size` bills per page. Default size is 100. For vendors with >100
+   * bills, callers should pass a larger `size` or handle pagination explicitly.
+   * Follow-up: request an unpaged /ap/bills endpoint in the accounting OpenAPI spec.
+   */
+  listBillsByVendor(vendorId: string, page = 0, size = 100): Observable<VendorBill[]> {
     return this.apPaymentsService
-      .listBills(vendorId)
-      .pipe(map(dtos => dtos.map(dto => this.toVendorBill(dto))));
+      .listApBills({ page, size }, vendorId)
+      .pipe(map(p => (p.content ?? []).map(dto => this.toVendorBill(dto))));
   }
 
   executePayment(req: VendorPaymentRequest): Observable<VendorPaymentResult> {
@@ -296,12 +297,24 @@ export class AccountingService {
       locationIds: string[];
       format: 'CSV' | 'JSON';
     },
+    // SDK gap: AccountingExportsService.requestExport1() does not expose an Idempotency-Key header
+    // parameter. The idempotencyKey is preserved here so that callers (e.g. TimeExportPageComponent)
+    // are not silently broken when the SDK is regenerated with header support. Until then, duplicate-job
+    // protection on retries is unavailable through this path.
+    // Follow-up: update accounting OpenAPI spec to declare Idempotency-Key on POST /v1/accounting/export/request.
     idempotencyKey?: string,
   ): Observable<{ exportId: string; status: string }> {
-    return this.api.post<{ exportId: string; status: string }>(
-      `${AccountingService.BASE}/export/request`,
-      body,
-      idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined,
+    const sdkRequest: ExportJobRequest = {
+      exportType: 'TIMEKEEPING',
+      format: body.format,
+      filters: {
+        startDate: body.startDate,
+        endDate: body.endDate,
+        locationIds: body.locationIds,
+      },
+    };
+    return this.accountingExportsService.requestExport1(sdkRequest).pipe(
+      map(r => ({ exportId: r.jobId ?? '', status: r.status ?? '' })),
     );
   }
 
@@ -315,28 +328,31 @@ export class AccountingService {
     errorCode?: string;
     message?: string;
   }> {
-    const params = new HttpParams().set('exportId', exportId);
-    return this.api.get<{
-      exportId: string;
-      status: string;
-      recordsExportedCount?: number;
-      recordsSkippedCount?: number;
-      requestedAt?: string;
-      completedAt?: string;
-      errorCode?: string;
-      message?: string;
-    }>(`${AccountingService.BASE}/export/status`, params);
+    return this.accountingExportsService.getExportStatus1(exportId).pipe(
+      map(r => ({
+        exportId: r.jobId ?? exportId,
+        status: r.status ?? '',
+        requestedAt: r.requestedAt,
+        completedAt: r.completedAt ?? undefined,
+        message: r.errorMessage ?? undefined,
+        // SDK gap: ExportJobResponse does not expose recordsExportedCount, recordsSkippedCount, or errorCode.
+        // These fields are explicitly undefined until the accounting OpenAPI spec is updated and
+        // @durion-sdk/accounting is regenerated. Consumers already guard with !== undefined checks.
+        recordsExportedCount: undefined,
+        recordsSkippedCount: undefined,
+        errorCode: undefined,
+      })),
+    );
   }
 
   getExportHistory(params?: { pageIndex?: number; pageSize?: number }): Observable<unknown[]> {
-    let httpParams = new HttpParams();
-    if (params?.pageIndex !== undefined) {
-      httpParams = httpParams.set('pageIndex', String(params.pageIndex));
-    }
-    if (params?.pageSize !== undefined) {
-      httpParams = httpParams.set('pageSize', String(params.pageSize));
-    }
-    return this.api.get<unknown[]>(`${AccountingService.BASE}/export/history`, httpParams);
+    const pageable: Pageable = {
+      page: params?.pageIndex ?? 0,
+      size: params?.pageSize ?? 20,
+    };
+    return this.accountingExportsService.listExportHistory(pageable).pipe(
+      map(p => p.content ?? []),
+    );
   }
 
   downloadExport(exportId: string): void {

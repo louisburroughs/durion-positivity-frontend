@@ -5,15 +5,11 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { MechanicAvailabilityPageComponent } from './mechanic-availability-page.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { DispatchBoardService } from '../../services/dispatch-board.service';
 
-const stubApiService = {
-  get: vi.fn().mockImplementation((url: string) => {
-    if (url.includes('/me/primary-location')) {
-      return of({ locationId: 'loc-1' });
-    }
-    return of([{ mechanicName: 'Alex', available: true }]);
-  }),
+const dispatchBoardServiceStub = {
+  getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: 'loc-1' })),
+  getAvailability: vi.fn().mockReturnValue(of([{ mechanicName: 'Alex', available: true }])),
 };
 
 describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
@@ -26,7 +22,7 @@ describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
       imports: [MechanicAvailabilityPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: ApiBaseService, useValue: stubApiService },
+        { provide: DispatchBoardService, useValue: dispatchBoardServiceStub },
       ],
     }).compileComponents();
 
@@ -46,15 +42,12 @@ describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
 
   it('calls getCurrentUserPrimaryLocation on init', async () => {
     await setup();
-    expect(stubApiService.get).toHaveBeenCalledWith(expect.stringContaining('/me/primary-location'));
+    expect(dispatchBoardServiceStub.getPrimaryLocation).toHaveBeenCalledTimes(1);
   });
 
   it('calls getPeopleAvailability on load', async () => {
     await setup();
-    expect(stubApiService.get).toHaveBeenCalledWith(
-      expect.stringContaining('/availability'),
-      expect.anything(),
-    );
+    expect(dispatchBoardServiceStub.getAvailability).toHaveBeenCalled();
   });
 
   it('renders .availability-grid when data loaded', async () => {
@@ -65,20 +58,16 @@ describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
 
   it('shows .error-banner on error', async () => {
     vi.clearAllMocks();
-    const errorApiService = {
-      get: vi.fn().mockImplementation((url: string) => {
-        if (url.includes('/me/primary-location')) {
-          return of({ locationId: 'loc-1' });
-        }
-        return throwError(() => new Error('boom'));
-      }),
+    const errorDispatchBoardService = {
+      getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: 'loc-1' })),
+      getAvailability: vi.fn().mockReturnValue(throwError(() => new Error('boom'))),
     };
 
     await TestBed.configureTestingModule({
       imports: [MechanicAvailabilityPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: ApiBaseService, useValue: errorApiService },
+        { provide: DispatchBoardService, useValue: errorDispatchBoardService },
       ],
     }).compileComponents();
 

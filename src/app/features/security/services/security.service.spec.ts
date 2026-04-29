@@ -33,7 +33,7 @@ describe('SecurityService', () => {
     getUserRoleAssignments: vi.fn(),
   };
   const userApiStub = { getUserById: vi.fn(), createUser: vi.fn() };
-  const permissionRegistryStub = { getAllPermissions: vi.fn(), getAllPermissions1: vi.fn() };
+  const permissionRegistryStub = { listPermissions: vi.fn(), getAllPermissions1: vi.fn() };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -129,24 +129,27 @@ describe('SecurityService', () => {
   });
 
   describe('getAllPermissions()', () => {
-    it('calls GET /v1/permissions with page and size params', () => {
-      const pagedResp: PagedResponse<SecurityPermission> = {
+    it('calls permissionRegistry.listPermissions and maps SDK page to PagedResponse', () => {
+      const sdkPage = {
+        content: [{ name: 'PERM_READ' }],
+        totalElements: 1,
+        number: 0,
+        size: 100,
+        totalPages: 1,
+      };
+      permissionRegistryStub.listPermissions.mockReturnValueOnce(of(sdkPage));
+
+      let result: PagedResponse<SecurityPermission> | undefined;
+      service.getAllPermissions(0, 100).subscribe(r => (result = r));
+
+      expect(permissionRegistryStub.listPermissions).toHaveBeenCalledOnce();
+      expect(result).toEqual({
         results: [{ permissionKey: 'PERM_READ' }],
         totalCount: 1,
         pageNumber: 0,
         pageSize: 100,
         totalPages: 1,
-      };
-      apiStub.get.mockReturnValueOnce(of(pagedResp));
-
-      let result: PagedResponse<SecurityPermission> | undefined;
-      service.getAllPermissions(0, 100).subscribe(r => (result = r));
-
-      const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/v1/permissions');
-      expect(params.get('page')).toBe('0');
-      expect(params.get('size')).toBe('100');
-      expect(result).toEqual(pagedResp);
+      });
     });
   });
 

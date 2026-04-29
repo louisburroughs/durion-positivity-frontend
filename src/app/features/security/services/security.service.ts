@@ -1,10 +1,10 @@
-import { HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RoleManagementService, UserAPIService, PermissionRegistryService } from '@durion-sdk/security';
 import type { RolePermissionsRequest } from '@durion-sdk/security';
-import { ApiBaseService } from '../../../core/services/api-base.service';
+import { ShopAuditService } from '@durion-sdk/shop-manager';
+import type { ShopAuditFilter } from '@durion-sdk/shop-manager';
 import {
   CreateRoleRequest,
   PagedResponse,
@@ -19,7 +19,7 @@ export class SecurityService {
   private readonly roleManagement = inject(RoleManagementService);
   private readonly userApi = inject(UserAPIService);
   private readonly permissionRegistry = inject(PermissionRegistryService);
-  private readonly api = inject(ApiBaseService);
+  private readonly shopAuditSdk = inject(ShopAuditService);
 
   getAllRoles(_page = 0, _size = 20): Observable<PagedResponse<SecurityRole>> {
     return this.roleManagement.getAllRoles().pipe(
@@ -59,9 +59,39 @@ export class SecurityService {
     return this.roleManagement.getRoleByName(name) as Observable<SecurityRole>;
   }
 
+  /**
+   * Returns all permissions as an unpaged list.
+   *
+   * SDK gap: `PermissionRegistryService.listPermissions()` accepts only an optional `domain` filter;
+   * it does not expose `page` or `size` parameters. The `page` and `size` arguments below are
+   * accepted for API compatibility but are NOT forwarded to the SDK. The call always returns the
+   * full permission set for the domain (or all domains if domain is unspecified).
+   *
+   * Follow-up: update the security OpenAPI spec to add `page`/`size` query params to
+   * `GET /v1/permissions` if pagination is required by consumers, then regenerate `@durion-sdk/security`.
+   */
   getAllPermissions(page = 0, size = 100): Observable<PagedResponse<SecurityPermission>> {
-    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
-    return this.api.get<PagedResponse<SecurityPermission>>('/v1/permissions', params);
+    return this.permissionRegistry.listPermissions().pipe(
+      map(p => {
+        const sdkPage = p as {
+          content?: Array<{ name?: string }>;
+          totalElements?: number;
+          number?: number;
+          size?: number;
+          totalPages?: number;
+        };
+
+        return ({
+          results: (sdkPage.content ?? []).map(perm => ({
+            permissionKey: perm.name ?? '',
+          } satisfies SecurityPermission)),
+          totalCount: sdkPage.totalElements ?? 0,
+          pageNumber: sdkPage.number ?? page,
+          pageSize: sdkPage.size ?? size,
+          totalPages: sdkPage.totalPages ?? 0,
+        } satisfies PagedResponse<SecurityPermission>);
+      }),
+    );
   }
 
   updateRolePermissions(req: UpdateRolePermissionsRequest): Observable<void> {
@@ -89,7 +119,8 @@ export class SecurityService {
   }
 
   searchAudit(appointmentId: string): Observable<unknown[]> {
-    const params = new HttpParams().set('appointmentId', appointmentId);
-    return this.api.get<unknown[]>('/v1/shop/audit', params);
+    const filter: ShopAuditFilter = { appointmentId };
+    const result$ = this.shopAuditSdk.searchShopAudit(filter);
+    return result$ as Observable<unknown[]>;
   }
 }

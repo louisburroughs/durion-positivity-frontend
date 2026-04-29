@@ -1,8 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
-import { ApiBaseService } from '../../../core/services/api-base.service';
-import { AuditService } from '@durion-sdk/security';
+import { AuditService, AuditExportsService } from '@durion-sdk/security';
 import { SecurityAuditService } from './security-audit.service';
 import {
   AuditEventDetail,
@@ -14,22 +12,22 @@ import {
 describe('SecurityAuditService', () => {
   let service: SecurityAuditService;
 
-  const apiStub = {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    patch: vi.fn(),
-    delete: vi.fn(),
+  const auditSdkStub = {
+    getEvent: vi.fn(),
+    searchAuditEvents: vi.fn(),
   };
 
-  const auditSdkStub = { getEvent: vi.fn() };
+  const auditExportsSdkStub = {
+    requestAuditExport: vi.fn(),
+    getAuditExportJob: vi.fn(),
+  };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         SecurityAuditService,
-        { provide: ApiBaseService, useValue: apiStub },
         { provide: AuditService, useValue: auditSdkStub },
+        { provide: AuditExportsService, useValue: auditExportsSdkStub },
       ],
     });
     service = TestBed.inject(SecurityAuditService);
@@ -47,41 +45,42 @@ describe('SecurityAuditService', () => {
       nextPageToken: null,
     };
 
-    it('calls GET /v1/audit/events with filter params', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPage));
+    it('calls auditSdk.searchAuditEvents with filter params', () => {
+      auditSdkStub.searchAuditEvents.mockReturnValueOnce(of(mockPage));
 
       const filter: Partial<AuditEventFilter> = { actorId: 'user-01', eventType: 'LOGIN' };
       service.searchAuditEvents(filter).subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/v1/audit/events');
-      expect((params as HttpParams).get('actorId')).toBe('user-01');
-      expect((params as HttpParams).get('eventType')).toBe('LOGIN');
+      expect(auditSdkStub.searchAuditEvents).toHaveBeenCalledOnce();
+      const args = auditSdkStub.searchAuditEvents.mock.calls[0];
+      // actorId is arg index 2, eventType is arg index 7
+      expect(args[2]).toBe('user-01');
+      expect(args[7]).toBe('LOGIN');
     });
 
     it('includes date range params when provided', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPage));
+      auditSdkStub.searchAuditEvents.mockReturnValueOnce(of(mockPage));
 
       service.searchAuditEvents({ fromDate: '2026-01-01', toDate: '2026-03-31' }).subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0];
-      expect((params as HttpParams).get('fromDate')).toBe('2026-01-01');
-      expect((params as HttpParams).get('toDate')).toBe('2026-03-31');
+      const args = auditSdkStub.searchAuditEvents.mock.calls[0];
+      // fromDate is arg index 0, toDate is arg index 1
+      expect(args[0]).toBe('2026-01-01');
+      expect(args[1]).toBe('2026-03-31');
     });
 
-    it('omits filter params that are not provided', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPage));
+    it('passes undefined for filter params that are not provided', () => {
+      auditSdkStub.searchAuditEvents.mockReturnValueOnce(of(mockPage));
 
       service.searchAuditEvents({}).subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0];
-      expect((params as HttpParams).has('actorId')).toBe(false);
-      expect((params as HttpParams).has('eventType')).toBe(false);
+      const args = auditSdkStub.searchAuditEvents.mock.calls[0];
+      expect(args[2]).toBeUndefined(); // actorId
+      expect(args[7]).toBeUndefined(); // eventType
     });
 
-    it('returns the AuditEventPageResponse emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPage));
+    it('returns the AuditEventPageResponse emitted by the SDK', () => {
+      auditSdkStub.searchAuditEvents.mockReturnValueOnce(of(mockPage));
 
       let result: AuditEventPageResponse | undefined;
       service.searchAuditEvents({}).subscribe((r: AuditEventPageResponse) => (result = r));
@@ -135,20 +134,19 @@ describe('SecurityAuditService', () => {
       status: 'PENDING',
     };
 
-    it('calls POST /v1/audit/exports with the filter as body', () => {
-      apiStub.post.mockReturnValueOnce(of(mockJob));
+    it('calls auditExportsSdk.requestAuditExport with the filter', () => {
+      auditExportsSdkStub.requestAuditExport.mockReturnValueOnce(of(mockJob));
 
       const filter: Partial<AuditEventFilter> = { actorId: 'user-01', fromDate: '2026-01-01', toDate: '2026-03-31' };
       service.requestAuditExport(filter).subscribe();
 
-      expect(apiStub.post).toHaveBeenCalledOnce();
-      const [path, body] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/v1/audit/exports');
+      expect(auditExportsSdkStub.requestAuditExport).toHaveBeenCalledOnce();
+      const [body] = auditExportsSdkStub.requestAuditExport.mock.calls[0];
       expect(body).toEqual(filter);
     });
 
-    it('returns the AuditExportJob emitted by the API', () => {
-      apiStub.post.mockReturnValueOnce(of(mockJob));
+    it('returns the AuditExportJob emitted by the SDK', () => {
+      auditExportsSdkStub.requestAuditExport.mockReturnValueOnce(of(mockJob));
 
       let result: AuditExportJob | undefined;
       service.requestAuditExport({}).subscribe((r: AuditExportJob) => (result = r));
@@ -156,13 +154,12 @@ describe('SecurityAuditService', () => {
       expect(result).toEqual(mockJob);
     });
 
-    it('accepts an empty filter and posts to the export endpoint', () => {
-      apiStub.post.mockReturnValueOnce(of(mockJob));
+    it('accepts an empty filter and calls the export SDK', () => {
+      auditExportsSdkStub.requestAuditExport.mockReturnValueOnce(of(mockJob));
 
       service.requestAuditExport({}).subscribe();
 
-      const [path] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/v1/audit/exports');
+      expect(auditExportsSdkStub.requestAuditExport).toHaveBeenCalledOnce();
     });
   });
 
@@ -176,27 +173,24 @@ describe('SecurityAuditService', () => {
       completedAt: '2026-03-01T09:05:00Z',
     };
 
-    it('calls GET /v1/audit/exports/{jobId}', () => {
-      apiStub.get.mockReturnValueOnce(of(mockJob));
+    it('calls auditExportsSdk.getAuditExportJob with the jobId', () => {
+      auditExportsSdkStub.getAuditExportJob.mockReturnValueOnce(of(mockJob));
 
       service.getAuditExportStatus('job-001').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/v1/audit/exports/job-001');
+      expect(auditExportsSdkStub.getAuditExportJob).toHaveBeenCalledWith('job-001');
     });
 
-    it('URL-encodes the jobId', () => {
-      apiStub.get.mockReturnValueOnce(of(mockJob));
+    it('passes jobId as-is to the SDK', () => {
+      auditExportsSdkStub.getAuditExportJob.mockReturnValueOnce(of(mockJob));
 
       service.getAuditExportStatus('job/001').subscribe();
 
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/v1/audit/exports/job%2F001');
+      expect(auditExportsSdkStub.getAuditExportJob).toHaveBeenCalledWith('job/001');
     });
 
-    it('returns the AuditExportJob emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockJob));
+    it('returns the AuditExportJob emitted by the SDK', () => {
+      auditExportsSdkStub.getAuditExportJob.mockReturnValueOnce(of(mockJob));
 
       let result: AuditExportJob | undefined;
       service.getAuditExportStatus('job-001').subscribe((r: AuditExportJob) => (result = r));

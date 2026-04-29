@@ -8,7 +8,7 @@ import {
   MechanicAssignmentItemRoleEnum,
   ScheduleAPIService,
   ShopAPIService,
-  ShopAuditControllerService,
+  ShopAuditService,
 } from '@durion-sdk/shop-manager';
 import type {
   AppointmentCreateRequest,
@@ -32,7 +32,7 @@ export class AppointmentService {
   private readonly conflictOverride = inject(ConflictOverrideAPIService);
   private readonly schedule = inject(ScheduleAPIService);
   private readonly shop = inject(ShopAPIService);
-  private readonly shopAudit = inject(ShopAuditControllerService);
+  private readonly shopAudit = inject(ShopAuditService);
 
   getAppointment(appointmentId: string): Observable<AppointmentDetail> {
     return this.appointments.getAppointment(appointmentId) as Observable<AppointmentDetail>;
@@ -76,7 +76,7 @@ export class AppointmentService {
 
   searchAudit(appointmentId: string): Observable<unknown[]> {
     const filter: ShopAuditFilter = { appointmentId };
-    return this.shopAudit.searchAudit(filter) as Observable<unknown[]>;
+    return this.shopAudit.searchShopAudit(filter);
   }
 
   createAppointment(body: CreateAppointmentPayload, idempotencyKey: string): Observable<AppointmentDetail> {

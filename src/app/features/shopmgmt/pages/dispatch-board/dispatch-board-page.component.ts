@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, interval, switchMap, catchError } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
-import { DailyDispatchBoardDashboardService, DashboardResponse, WorkorderSummary } from '@durion-sdk/workorder';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { DashboardResponse, WorkorderSummary } from '../../models/dispatch-board.models';
+import { DispatchBoardService } from '../../services/dispatch-board.service';
 
 @Component({
   selector: 'app-dispatch-board-page',
@@ -15,8 +15,7 @@ import { ApiBaseService } from '../../../../core/services/api-base.service';
   styleUrl: './dispatch-board-page.component.css',
 })
 export class DispatchBoardPageComponent implements OnInit {
-  private readonly dispatchBoardService = inject(DailyDispatchBoardDashboardService);
-  private readonly api = inject(ApiBaseService);
+  private readonly dispatchBoardService = inject(DispatchBoardService);
   private readonly destroyRef = inject(DestroyRef);
   private pollingStarted = false;
 
@@ -100,13 +99,12 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   private loadCurrentLocation(): void {
-    this.api
-      .get<Record<string, unknown>>('/v1/people/me/primary-location')
+    this.dispatchBoardService
+      .getPrimaryLocation()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: location => {
-          const payload = location as Record<string, unknown>;
-          const locationId = String(payload['locationId'] ?? payload['id'] ?? '').trim();
+          const locationId = String(location.locationId ?? '').trim();
 
           if (!locationId) {
             this.error.set('SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED');

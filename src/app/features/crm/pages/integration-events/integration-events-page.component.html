@@ -74,8 +74,8 @@
       <section class="processing-log-section">
         <h3 class="section-subheading">Processing Log</h3>
         <div class="processing-log-container" aria-live="polite">
-          @if (processingLog()) {
-          <pre class="processing-log-text">{{ processingLog() }}</pre>
+          @if (processingLog()?.length) {
+          <pre class="processing-log-text">{{ processingLog() | json }}</pre>
           } @else {
           <p class="state-empty-inline">No log entries available.</p>
           }

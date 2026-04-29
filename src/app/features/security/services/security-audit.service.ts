@@ -1,8 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AuditService } from '@durion-sdk/security';
-import { ApiBaseService } from '../../../core/services/api-base.service';
+import { AuditService, AuditExportsService } from '@durion-sdk/security';
+import type { AuditExportRequest, PageAuditLogEventDto } from '@durion-sdk/security';
 import {
   AuditEventDetail,
   AuditEventFilter,
@@ -13,26 +12,25 @@ import {
 @Injectable({ providedIn: 'root' })
 export class SecurityAuditService {
   private readonly auditSdk = inject(AuditService);
-  private readonly api = inject(ApiBaseService);
+  private readonly auditExportsSdk = inject(AuditExportsService);
 
   searchAuditEvents(filter: Partial<AuditEventFilter>): Observable<AuditEventPageResponse> {
-    let params = new HttpParams();
-    if (filter.fromDate != null) { params = params.set('fromDate', filter.fromDate); }
-    if (filter.toDate != null) { params = params.set('toDate', filter.toDate); }
-    if (filter.actorId != null) { params = params.set('actorId', filter.actorId); }
-    if (filter.workorderId != null) { params = params.set('workorderId', filter.workorderId); }
-    if (filter.movementId != null) { params = params.set('movementId', filter.movementId); }
-    if (filter.productId != null) { params = params.set('productId', filter.productId); }
-    if (filter.sku != null) { params = params.set('sku', filter.sku); }
-    if (filter.eventType != null) { params = params.set('eventType', filter.eventType); }
-    if (filter.aggregateId != null) { params = params.set('aggregateId', filter.aggregateId); }
-    if (filter.correlationId != null) { params = params.set('correlationId', filter.correlationId); }
-    if (filter.reasonCode != null) { params = params.set('reasonCode', filter.reasonCode); }
-    if (filter.pageToken != null) { params = params.set('pageToken', filter.pageToken); }
-    if (filter.locationIds != null && filter.locationIds.length > 0) {
-      filter.locationIds.forEach(id => { params = params.append('locationIds', id); });
-    }
-    return this.api.get<AuditEventPageResponse>('/v1/audit/events', params);
+    const result$: Observable<PageAuditLogEventDto> = this.auditSdk.searchAuditEvents(
+      filter.fromDate ?? undefined,
+      filter.toDate ?? undefined,
+      filter.actorId ?? undefined,
+      filter.workorderId ?? undefined,
+      filter.movementId ?? undefined,
+      filter.productId ?? undefined,
+      filter.sku ?? undefined,
+      filter.eventType ?? undefined,
+      filter.aggregateId ?? undefined,
+      filter.correlationId ?? undefined,
+      filter.reasonCode ?? undefined,
+      filter.pageToken ?? undefined,
+      filter.locationIds ?? undefined,
+    );
+    return result$ as Observable<AuditEventPageResponse>;
   }
 
   getAuditEvent(eventId: string): Observable<AuditEventDetail> {
@@ -40,10 +38,10 @@ export class SecurityAuditService {
   }
 
   requestAuditExport(filter: Partial<AuditEventFilter> | Record<string, unknown>): Observable<AuditExportJob> {
-    return this.api.post<AuditExportJob>('/v1/audit/exports', filter);
+    return this.auditExportsSdk.requestAuditExport(filter as AuditExportRequest) as Observable<AuditExportJob>;
   }
 
   getAuditExportStatus(jobId: string): Observable<AuditExportJob> {
-    return this.api.get<AuditExportJob>(`/v1/audit/exports/${encodeURIComponent(jobId)}`);
+    return this.auditExportsSdk.getAuditExportJob(jobId) as Observable<AuditExportJob>;
   }
 }
