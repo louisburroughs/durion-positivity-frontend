@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AccountingEventsService } from '@durion-sdk/accounting';
+import { map } from 'rxjs/operators';
+import { AccountingEventsService, EventProcessingLogEntry, Pageable } from '@durion-sdk/accounting';
 import {
   AccountingEventListResponse,
+  AccountingEventListItem,
   AccountingEventResponse,
   ReprocessingAttemptHistoryResponse,
 } from '../models/crm-integration.models';
@@ -17,12 +19,31 @@ export class CrmIntegrationService {
     page?: number;
     size?: number;
   }): Observable<AccountingEventListResponse> {
-    return this.eventsApi.listEvents(
-      params?.organizationId ?? '',
-      params?.page,
-      params?.size,
+    const pageable: Pageable = { page: params?.page ?? 0, size: params?.size ?? 20 };
+    return this.eventsApi.listAccountingEvents(
+      pageable,
+      params?.organizationId,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
       params?.status,
-    ) as Observable<AccountingEventListResponse>;
+    ).pipe(
+      map(p => ({
+        items: (p.content ?? []).map(e => ({
+          eventId: (e as AccountingEventListItem).eventId ?? '',
+          eventType: (e as AccountingEventListItem).eventType ?? '',
+          processingStatus: (e as AccountingEventListItem).processingStatus ?? 'PENDING',
+          receivedAt: (e as AccountingEventListItem).receivedAt ?? '',
+          organizationId: (e as AccountingEventListItem).organizationId,
+        } satisfies AccountingEventListItem)),
+        totalCount: p.totalElements ?? 0,
+      } satisfies AccountingEventListResponse)),
+    );
   }
 
   getEvent(eventId: string): Observable<AccountingEventResponse> {
@@ -33,7 +54,7 @@ export class CrmIntegrationService {
     return this.eventsApi.getReprocessingHistory(eventId) as Observable<ReprocessingAttemptHistoryResponse[]>;
   }
 
-  getEventProcessingLog(eventId: string): Observable<string> {
-    return this.eventsApi.getEventProcessingLog(eventId) as Observable<string>;
+  getEventProcessingLog(eventId: string): Observable<EventProcessingLogEntry[]> {
+    return this.eventsApi.getEventProcessingLog(eventId);
   }
 }

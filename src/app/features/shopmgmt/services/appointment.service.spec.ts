@@ -11,7 +11,7 @@ import {
   ConflictOverrideAPIService,
   ScheduleAPIService,
   ShopAPIService,
-  ShopAuditControllerService,
+  ShopAuditService,
 } from '@durion-sdk/shop-manager';
 
 // ---------------------------------------------------------------------------
@@ -58,7 +58,7 @@ const assignmentStub = { listAssignments: vi.fn(), createAssignment: vi.fn() };
 const conflictOverrideStub = { executeOverride: vi.fn() };
 const scheduleStub = { viewSchedule: vi.fn() };
 const shopStub = { getShopServiceDetails: vi.fn() };
-const shopAuditStub = { searchAudit: vi.fn() };
+const shopAuditStub = { searchShopAudit: vi.fn() };
 
 // ---------------------------------------------------------------------------
 // Suite
@@ -76,7 +76,7 @@ describe('AppointmentService [CAP-249]', () => {
     assignmentStub.createAssignment.mockReturnValue(of({}));
     conflictOverrideStub.executeOverride.mockReturnValue(of({}));
     scheduleStub.viewSchedule.mockReturnValue(of({}));
-    shopAuditStub.searchAudit.mockReturnValue(of([]));
+    shopAuditStub.searchShopAudit.mockReturnValue(of([]));
 
     TestBed.configureTestingModule({
       providers: [
@@ -86,7 +86,7 @@ describe('AppointmentService [CAP-249]', () => {
         { provide: ConflictOverrideAPIService, useValue: conflictOverrideStub },
         { provide: ScheduleAPIService, useValue: scheduleStub },
         { provide: ShopAPIService, useValue: shopStub },
-        { provide: ShopAuditControllerService, useValue: shopAuditStub },
+        { provide: ShopAuditService, useValue: shopAuditStub },
       ],
     });
 
@@ -196,18 +196,18 @@ describe('AppointmentService [CAP-249]', () => {
   // ── searchAudit ───────────────────────────────────────────────────────────
 
   describe('searchAudit', () => {
-    it('calls shopAuditSdk.searchAudit with appointmentId in filter object', () => {
-      shopAuditStub.searchAudit.mockReturnValue(of([]));
+    it('calls shopAuditSdk.searchShopAudit with appointmentId in filter object', () => {
+      shopAuditStub.searchShopAudit.mockReturnValue(of([]));
       service.searchAudit('appt-1').subscribe();
 
-      expect(shopAuditStub.searchAudit).toHaveBeenCalledWith({ appointmentId: 'appt-1' });
+      expect(shopAuditStub.searchShopAudit).toHaveBeenCalledWith({ appointmentId: 'appt-1' });
     });
 
     it('forwards the appointmentId to the SDK filter', () => {
-      shopAuditStub.searchAudit.mockReturnValue(of([]));
+      shopAuditStub.searchShopAudit.mockReturnValue(of([]));
       service.searchAudit('appt-1').subscribe();
 
-      expect(shopAuditStub.searchAudit).toHaveBeenCalledWith(expect.objectContaining({ appointmentId: 'appt-1' }));
+      expect(shopAuditStub.searchShopAudit).toHaveBeenCalledWith(expect.objectContaining({ appointmentId: 'appt-1' }));
     });
   });
 

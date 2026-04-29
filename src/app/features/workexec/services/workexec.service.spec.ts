@@ -122,9 +122,9 @@ describe('WorkexecService', () => {
 
   // ── Story 236 ─────────────────────────────────────────────────────────────
 
-  it('[236] calculateEstimateTotals — posts to /v1/workorders/estimates/{estimateId}/calculate-totals', () => {
+  it('[236] calculateEstimateTotals — posts to /v1/workorders/estimates/{estimateId}/calculate', () => {
     service.calculateEstimateTotals('est-1').subscribe();
-    const r = http.expectOne(`${BASE}/v1/workorders/estimates/est-1/calculate-totals`);
+    const r = http.expectOne(`${BASE}/v1/workorders/estimates/est-1/calculate`);
     expect(r.request.method).toBe('POST');
     r.flush({ subtotal: 100, taxAmount: 8.5, total: 108.5 });
   });
@@ -494,7 +494,7 @@ describe('WorkexecService', () => {
         `${BASE}/v1/workorders/wo-001/picked-items:consume`,
       );
       expect(req.request.method).toBe('POST');
-      expect(req.request.body['lines']).toHaveLength(1);
+      expect(req.request.body['items']).toHaveLength(1);
       req.flush(consumeResult);
     });
 

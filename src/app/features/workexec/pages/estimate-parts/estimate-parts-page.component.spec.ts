@@ -77,7 +77,7 @@ describe('EstimatePartsPageComponent [Story 238]', () => {
     expect(addReq.request.body['itemType']).toBe('PART');
     addReq.flush({ id: 'item-1', estimateId: 'est-123', itemType: 'PART', quantity: 2, unitPrice: 49.99 });
 
-    const calcReq = http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate-totals`);
+    const calcReq = http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate`);
     calcReq.flush({ subtotal: 99.98, taxAmount: 8.5, total: 108.48 });
 
     const reloadReq = http.expectOne(`${BASE}/v1/workorders/estimates/est-123`);

@@ -92,9 +92,9 @@ describe('AppointmentDispatchAssignPageComponent [CAP-138]', () => {
     submitButton.nativeElement.click();
 
     expect(stubService.createAssignment).toHaveBeenCalledWith('appt-1', {
-      resourceId: 'bay-2',
-      mechanicId: 'mech-7',
-      role: 'ASSIST',
+      bayId: 'bay-2',
+      assignmentType: 'ASSIST',
+      mechanic: { mechanicId: 'mech-7' },
     });
   });
 
@@ -106,9 +106,9 @@ describe('AppointmentDispatchAssignPageComponent [CAP-138]', () => {
     component.submitAssignment();
 
     expect(stubService.createAssignment).toHaveBeenCalledWith('appt-1', {
-      resourceId: 'bay-3',
-      mechanicId: 'mech-9',
-      role: 'LEAD',
+      bayId: 'bay-3',
+      assignmentType: 'LEAD',
+      mechanic: { mechanicId: 'mech-9' },
     });
   });
 

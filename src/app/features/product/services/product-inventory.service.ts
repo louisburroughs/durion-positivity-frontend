@@ -21,7 +21,7 @@ export class ProductInventoryService {
   private readonly availSdk = inject(InventoryAvailabilityService);
 
   queryInventoryAvailability(sku: string, locationId?: string): Observable<InventoryAvailability> {
-    return this.availSdk.queryInventoryAvailability(sku).pipe(
+    return this.availSdk.getInventoryAvailability(sku).pipe(
       map((items: Array<LocationAvailabilityDto> | InventoryAvailability) =>
         this.toInventoryAvailabilityResponse(sku, items, locationId),
       ),

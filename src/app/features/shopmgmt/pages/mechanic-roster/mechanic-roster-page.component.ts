@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { Person } from '@durion-sdk/people';
+import { ShopmgmtRosterService } from '../../services/shopmgmt-roster.service';
 
 @Component({
   selector: 'app-mechanic-roster-page',
@@ -12,10 +13,10 @@ import { ApiBaseService } from '../../../../core/services/api-base.service';
   styleUrl: './mechanic-roster-page.component.css',
 })
 export class MechanicRosterPageComponent implements OnInit {
-  private readonly api = inject(ApiBaseService);
+  private readonly rosterService = inject(ShopmgmtRosterService);
 
   readonly loading = signal(false);
-  readonly people = signal<unknown[]>([]);
+  readonly people = signal<Person[]>([]);
   readonly error = signal<string | null>(null);
   readonly showCreateModal = signal(false);
   readonly createLoading = signal(false);
@@ -37,7 +38,7 @@ export class MechanicRosterPageComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.api.get<Record<string, unknown>[]>('/v1/people').subscribe({
+    this.rosterService.getAllPeople().subscribe({
       next: (people) => {
         this.people.set(Array.isArray(people) ? people : []);
         this.loading.set(false);
@@ -70,7 +71,9 @@ export class MechanicRosterPageComponent implements OnInit {
     this.createError.set(null);
     this.createSuccess.set(false);
 
-    this.api.post<Record<string, unknown>>('/v1/people/employees', this.createForm.getRawValue()).subscribe({
+    const formValue = this.createForm.getRawValue();
+
+    this.rosterService.createPerson({ firstName: formValue.firstName, lastName: formValue.lastName, primaryEmail: formValue.email }).subscribe({
       next: () => {
         this.createLoading.set(false);
         this.createSuccess.set(true);

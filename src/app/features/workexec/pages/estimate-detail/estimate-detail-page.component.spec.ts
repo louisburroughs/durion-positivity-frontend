@@ -49,7 +49,7 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
     const estimate = estimateOverride ?? STUB_ESTIMATE;
     http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush(estimate);
     vi.advanceTimersByTime(350);
-    http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate-totals`).flush({ subtotal: 0, taxAmount: 0, total: 0 });
+    http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate`).flush({ subtotal: 0, taxAmount: 0, total: 0 });
     http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush(estimate);
   }
 
@@ -72,7 +72,7 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
     fixture.detectChanges();
     http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush(STUB_ESTIMATE);
     vi.advanceTimersByTime(350);
-    http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate-totals`).flush(
+    http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate`).flush(
       { code: 'ERR_TAX_CODE_MISSING', message: 'Tax code missing' },
       { status: 422, statusText: 'Unprocessable Entity' },
     );

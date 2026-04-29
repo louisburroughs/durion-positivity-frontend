@@ -1,7 +1,9 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { JsonPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, forkJoin } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { EventProcessingLogEntry } from '@durion-sdk/accounting';
 import {
   AccountingEventListItem,
   AccountingEventResponse,
@@ -11,7 +13,7 @@ import { CrmIntegrationService } from '../../services/crm-integration.service';
 @Component({
   selector: 'app-integration-events-page',
   standalone: true,
-  imports: [],
+  imports: [JsonPipe],
   templateUrl: './integration-events-page.component.html',
   styleUrl: './integration-events-page.component.css',
 })
@@ -21,7 +23,7 @@ export class IntegrationEventsPageComponent implements OnInit {
 
   events = signal<AccountingEventListItem[]>([]);
   selectedEvent = signal<AccountingEventResponse | null>(null);
-  processingLog = signal<string | null>(null);
+  processingLog = signal<EventProcessingLogEntry[] | null>(null);
   reprocessingHistory = signal<ReprocessingAttemptHistoryResponse[]>([]);
   loading = signal(false);
   errorState = signal<'none' | '403' | 'error'>('none');

@@ -30,12 +30,16 @@ describe('CrmService', () => {
     getBillingRules: vi.fn(),
   };
 
+  const crmAccountsStub = {
+    upsertBillingRules: vi.fn(),
+  };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         CrmService,
         { provide: ApiBaseService, useValue: apiBaseServiceStub },
-        { provide: CRMAccountsService, useValue: {} },
+        { provide: CRMAccountsService, useValue: crmAccountsStub },
         { provide: CRMCommunicationPreferencesService, useValue: {} },
         { provide: CRMContactsService, useValue: {} },
         { provide: CRMPartyRelationshipsService, useValue: {} },
@@ -119,7 +123,7 @@ describe('CrmService', () => {
   });
 
   describe('upsertBillingRules()', () => {
-    it('calls PUT /v1/crm/accounts/parties/{partyId}/billing-rules and omits readonly fields', () => {
+    it('calls accountsApi.upsertBillingRules omitting readonly fields', () => {
       const requestRules: Partial<BillingRules> = {
         requirePo: false,
         paymentTerms: 'COD',
@@ -136,16 +140,16 @@ describe('CrmService', () => {
         createdAt: '2026-03-30T10:00:00Z',
         updatedAt: '2026-03-30T11:00:00Z',
       };
-      apiBaseServiceStub.put.mockReturnValueOnce(of(responseRules));
+      crmAccountsStub.upsertBillingRules.mockReturnValueOnce(of(responseRules));
 
       let result: BillingRules | undefined;
       service.upsertBillingRules('party-321', requestRules).subscribe(value => {
         result = value;
       });
 
-      expect(apiBaseServiceStub.put).toHaveBeenCalledOnce();
-      const [path, payload] = apiBaseServiceStub.put.mock.calls[0];
-      expect(path).toBe('/v1/crm/accounts/parties/party-321/billing-rules');
+      expect(crmAccountsStub.upsertBillingRules).toHaveBeenCalledOnce();
+      const [partyId, payload] = crmAccountsStub.upsertBillingRules.mock.calls[0];
+      expect(partyId).toBe('party-321');
       expect(payload).toEqual({
         requirePo: false,
         paymentTerms: 'COD',

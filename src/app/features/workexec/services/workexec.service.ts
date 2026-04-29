@@ -350,6 +350,7 @@ export class WorkexecService {
    * (status: EstimateStatus required, id: string required).
    */
   private toEstimateResponse(dto: import('@durion-sdk/workorder').EstimateResponse): EstimateResponse {
+    const raw = dto as EstimateResponse & { items?: EstimateItemResponse[] };
     return {
       id: dto.id ?? '',
       estimateNumber: dto.estimateNumber,
@@ -378,6 +379,7 @@ export class WorkexecService {
       crmPartyId: dto.crmPartyId,
       crmVehicleId: dto.crmVehicleId,
       crmContactIds: dto.crmContactIds,
+      items: raw.items,
     };
   }
 
@@ -386,11 +388,15 @@ export class WorkexecService {
    * WorkorderDetailResponse (id, WorkorderStatus union).
    */
   private toWorkorderDetailResponse(dto: import('@durion-sdk/workorder').WorkorderDetailResponse): WorkorderDetailResponse {
+    const raw = dto as typeof dto & { crmPartyId?: string; crmVehicleId?: string; crmContactIds?: string[] };
     return {
       id: dto.workorderId,
       status: (dto.status as string as WorkorderStatus) ?? undefined,
       customerId: dto.customerId,
       vehicleId: dto.vehicleId,
+      crmPartyId: raw.crmPartyId,
+      crmVehicleId: raw.crmVehicleId,
+      crmContactIds: raw.crmContactIds,
       primaryTechnicianId: dto.assignedTechnicianId,
       primaryTechnicianName: dto.assignedTechnicianName,
       isStarted: dto.isStarted === 'true',
@@ -681,7 +687,7 @@ export class WorkexecService {
   listActiveWorkorders(filters?: WipListFilters): Observable<WorkorderWipView[]> {
     let params = new HttpParams();
     if (filters?.wipStatus?.length) {
-      filters.wipStatus.forEach(s => { params = params.append('wipStatus', s); });
+      params = params.set('wipStatus', filters.wipStatus.join(','));
     }
     return this.api.get<WorkorderWipView[]>('/v1/workorders/wip', params);
   }

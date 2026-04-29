@@ -16,7 +16,7 @@ describe('ProductInventoryService', () => {
     delete: vi.fn(),
   };
 
-  const availSdkStub = { queryInventoryAvailability: vi.fn() };
+  const availSdkStub = { getInventoryAvailability: vi.fn() };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -36,24 +36,24 @@ describe('ProductInventoryService', () => {
   // ── queryInventoryAvailability() ─────────────────────────────────────────────
 
   describe('queryInventoryAvailability()', () => {
-    it('calls availSdk.queryInventoryAvailability with the sku', () => {
-      availSdkStub.queryInventoryAvailability.mockReturnValueOnce(of({ sku: 'SKU-001', totalOnHand: 5, totalReserved: 0, totalAtp: 5, locationBreakdown: [] }));
+    it('calls availSdk.getInventoryAvailability with the sku', () => {
+      availSdkStub.getInventoryAvailability.mockReturnValueOnce(of({ sku: 'SKU-001', totalOnHand: 5, totalReserved: 0, totalAtp: 5, locationBreakdown: [] }));
 
       service.queryInventoryAvailability('SKU-001').subscribe();
 
-      expect(availSdkStub.queryInventoryAvailability).toHaveBeenCalledWith('SKU-001');
+      expect(availSdkStub.getInventoryAvailability).toHaveBeenCalledWith('SKU-001');
     });
 
     it('passes only the sku to the SDK even when locationId is provided', () => {
-      availSdkStub.queryInventoryAvailability.mockReturnValueOnce(of({ sku: 'SKU-002', totalOnHand: 2, totalReserved: 0, totalAtp: 2, locationBreakdown: [] }));
+      availSdkStub.getInventoryAvailability.mockReturnValueOnce(of({ sku: 'SKU-002', totalOnHand: 2, totalReserved: 0, totalAtp: 2, locationBreakdown: [] }));
 
       service.queryInventoryAvailability('SKU-002', 'loc-01').subscribe();
 
-      expect(availSdkStub.queryInventoryAvailability).toHaveBeenCalledWith('SKU-002');
+      expect(availSdkStub.getInventoryAvailability).toHaveBeenCalledWith('SKU-002');
     });
 
     it('filters list-based SDK responses to the requested location and recomputes totals', () => {
-      availSdkStub.queryInventoryAvailability.mockReturnValueOnce(of([
+      availSdkStub.getInventoryAvailability.mockReturnValueOnce(of([
         { locationId: 'loc-01', locationName: 'North', onHandQuantity: 2, availableToPromiseQuantity: 1 },
         { locationId: 'loc-02', locationName: 'South', onHandQuantity: 5, availableToPromiseQuantity: 4 },
       ]));
@@ -75,7 +75,7 @@ describe('ProductInventoryService', () => {
     });
 
     it('filters aggregated SDK responses to the requested location and preserves matching rows only', () => {
-      availSdkStub.queryInventoryAvailability.mockReturnValueOnce(of({
+      availSdkStub.getInventoryAvailability.mockReturnValueOnce(of({
         sku: 'SKU-002',
         totalOnHand: 7,
         totalReserved: 1,
@@ -103,11 +103,11 @@ describe('ProductInventoryService', () => {
     });
 
     it('does NOT pass locationId to the SDK when omitted', () => {
-      availSdkStub.queryInventoryAvailability.mockReturnValueOnce(of({ sku: 'SKU-003', totalOnHand: 0, totalReserved: 0, totalAtp: 0, locationBreakdown: [] }));
+      availSdkStub.getInventoryAvailability.mockReturnValueOnce(of({ sku: 'SKU-003', totalOnHand: 0, totalReserved: 0, totalAtp: 0, locationBreakdown: [] }));
 
       service.queryInventoryAvailability('SKU-003').subscribe();
 
-      expect(availSdkStub.queryInventoryAvailability).toHaveBeenCalledWith('SKU-003');
+      expect(availSdkStub.getInventoryAvailability).toHaveBeenCalledWith('SKU-003');
     });
   });
 

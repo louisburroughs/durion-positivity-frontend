@@ -1,8 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   CRMAccountsService,
   CRMCommunicationPreferencesService,
@@ -20,6 +18,7 @@ import type {
   CreatePartyRelationshipRequest as SdkCreatePartyRelationshipRequest,
   UpdateContactRolesRequest as SdkUpdateContactRolesRequest,
   UpsertCommunicationPreferencesRequest as SdkUpsertCommunicationPreferencesRequest,
+  UpsertBillingRulesRequest,
   CreateVehicleForPartyRequest as SdkCreateVehicleForPartyRequest,
 } from '@durion-sdk/customer';
 import {
@@ -46,7 +45,6 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class CrmService {
-  private readonly api = inject(ApiBaseService);
   private readonly accountsApi = inject(CRMAccountsService);
   private readonly communicationPrefsApi = inject(CRMCommunicationPreferencesService);
   private readonly contactsApi = inject(CRMContactsService);
@@ -84,8 +82,7 @@ export class CrmService {
   }
 
   checkCommercialAccountDuplicates(legalName: string): Observable<DuplicateCheckResponse> {
-    const params = new HttpParams().set('legalName', legalName).set('duplicateCheck', 'true');
-    return this.api.get<DuplicateCheckResponse>('/v1/crm/accounts/parties/search', params);
+    return this.accountsApi.checkPartyDuplicates(legalName) as Observable<DuplicateCheckResponse>;
   }
 
   getParty(partyId: string): Observable<PartyDetail> {
@@ -201,6 +198,6 @@ export class CrmService {
 
   upsertBillingRules(partyId: string, rules: Partial<BillingRules>): Observable<BillingRules> {
     const { createdAt, updatedAt, ...payload } = rules;
-    return this.api.put<BillingRules>(`/v1/crm/accounts/parties/${partyId}/billing-rules`, payload);
+    return this.accountsApi.upsertBillingRules(partyId, payload as UpsertBillingRulesRequest) as Observable<BillingRules>;
   }
 }
