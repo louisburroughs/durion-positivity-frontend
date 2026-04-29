@@ -4,6 +4,7 @@ WORKDIR /app
 RUN apk add --no-cache git
 RUN corepack enable && corepack prepare npm@11.6.4 --activate
 COPY package*.json ./
+COPY scripts/sdk/ ./scripts/sdk/
 RUN corepack npm ci
 COPY . .
 RUN if [ ! -d .sdk-src ]; then git clone --depth 1 https://github.com/louisburroughs/durion-positivity-sdk-angular.git .sdk-src; fi
