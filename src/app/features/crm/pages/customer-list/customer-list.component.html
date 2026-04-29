@@ -37,7 +37,9 @@
     }
 
     @if (state() === 'empty') {
-      <p class="hint-text">No accounts found matching your search.</p>
+      <p class="hint-text">
+        {{ searchForm.controls.query.value.trim() ? 'No accounts found matching your search.' : 'No accounts exist yet.' }}
+      </p>
     }
 
     @if (state() === 'access-denied') {
@@ -46,10 +48,6 @@
 
     @if (state() === 'error') {
       <p class="hint-text hint-text--error">{{ error() }}</p>
-    }
-
-    @if (state() === 'idle') {
-      <p class="hint-text">Enter a name or tax ID to search.</p>
     }
 
     @if (state() === 'ready' && parties().length) {

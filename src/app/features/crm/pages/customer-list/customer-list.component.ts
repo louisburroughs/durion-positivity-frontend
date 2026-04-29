@@ -7,7 +7,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
 import { PartyDetail } from '../../models/crm.models';
 
-type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error' | 'access-denied';
+type PageState = 'loading' | 'empty' | 'ready' | 'error' | 'access-denied';
 
 @Component({
   selector: 'app-customer-list',
@@ -22,7 +22,7 @@ export class CustomerListComponent implements OnInit {
   private readonly fb        = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly state   = signal<PageState>('idle');
+  readonly state   = signal<PageState>('loading');
   readonly parties = signal<PartyDetail[]>([]);
   readonly error   = signal<string | null>(null);
 
@@ -34,14 +34,10 @@ export class CustomerListComponent implements OnInit {
       distinctUntilChanged(),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(q => this.search(q));
+    this.search('');
   }
 
   search(q: string): void {
-    if (!q.trim()) {
-      this.parties.set([]);
-      this.state.set('idle');
-      return;
-    }
     this.state.set('loading');
     this.crm.searchParties(q).subscribe({
       next: res => {
