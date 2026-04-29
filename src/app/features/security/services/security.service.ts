@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators';
 import { RoleManagementService, UserAPIService, PermissionRegistryService } from '@durion-sdk/security';
 import type { RolePermissionsRequest } from '@durion-sdk/security';
 import { ShopAuditService } from '@durion-sdk/shop-manager';
-import type { ShopAuditEntryResponse, ShopAuditFilter } from '@durion-sdk/shop-manager';
+import type { ShopAuditFilter } from '@durion-sdk/shop-manager';
 import {
   CreateRoleRequest,
   PagedResponse,
@@ -19,9 +19,7 @@ export class SecurityService {
   private readonly roleManagement = inject(RoleManagementService);
   private readonly userApi = inject(UserAPIService);
   private readonly permissionRegistry = inject(PermissionRegistryService);
-  private readonly shopAuditSdk = inject(ShopAuditService) as {
-    searchShopAudit: (filter: ShopAuditFilter) => Observable<ShopAuditEntryResponse[]>;
-  };
+  private readonly shopAuditSdk = inject(ShopAuditService);
 
   getAllRoles(_page = 0, _size = 20): Observable<PagedResponse<SecurityRole>> {
     return this.roleManagement.getAllRoles().pipe(
@@ -61,6 +59,17 @@ export class SecurityService {
     return this.roleManagement.getRoleByName(name) as Observable<SecurityRole>;
   }
 
+  /**
+   * Returns all permissions as an unpaged list.
+   *
+   * SDK gap: `PermissionRegistryService.listPermissions()` accepts only an optional `domain` filter;
+   * it does not expose `page` or `size` parameters. The `page` and `size` arguments below are
+   * accepted for API compatibility but are NOT forwarded to the SDK. The call always returns the
+   * full permission set for the domain (or all domains if domain is unspecified).
+   *
+   * Follow-up: update the security OpenAPI spec to add `page`/`size` query params to
+   * `GET /v1/permissions` if pagination is required by consumers, then regenerate `@durion-sdk/security`.
+   */
   getAllPermissions(page = 0, size = 100): Observable<PagedResponse<SecurityPermission>> {
     return this.permissionRegistry.listPermissions().pipe(
       map(p => {

@@ -350,7 +350,11 @@ export class WorkexecService {
    * (status: EstimateStatus required, id: string required).
    */
   private toEstimateResponse(dto: import('@durion-sdk/workorder').EstimateResponse): EstimateResponse {
-    const raw = dto as EstimateResponse & { items?: EstimateItemResponse[] };
+    // SDK EstimateResponse does not declare an `items` field; items arrive as extra runtime properties.
+    // Cast to include items as SDK EstimateItemResponse[] so each entry can be normalised through the adapter.
+    const raw = dto as import('@durion-sdk/workorder').EstimateResponse & {
+      items?: import('@durion-sdk/workorder').EstimateItemResponse[];
+    };
     return {
       id: dto.id ?? '',
       estimateNumber: dto.estimateNumber,
@@ -379,7 +383,7 @@ export class WorkexecService {
       crmPartyId: dto.crmPartyId,
       crmVehicleId: dto.crmVehicleId,
       crmContactIds: dto.crmContactIds,
-      items: raw.items,
+      items: (raw.items ?? []).map(i => this.toEstimateItemResponse(i)),
     };
   }
 

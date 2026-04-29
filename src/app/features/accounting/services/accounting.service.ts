@@ -289,7 +289,12 @@ export class AccountingService {
       locationIds: string[];
       format: 'CSV' | 'JSON';
     },
-    _idempotencyKey?: string,
+    // SDK gap: AccountingExportsService.requestExport1() does not expose an Idempotency-Key header
+    // parameter. The idempotencyKey is preserved here so that callers (e.g. TimeExportPageComponent)
+    // are not silently broken when the SDK is regenerated with header support. Until then, duplicate-job
+    // protection on retries is unavailable through this path.
+    // Follow-up: update accounting OpenAPI spec to declare Idempotency-Key on POST /v1/accounting/export/request.
+    idempotencyKey?: string,
   ): Observable<{ exportId: string; status: string }> {
     const sdkRequest: ExportJobRequest = {
       exportType: 'TIMEKEEPING',
@@ -322,6 +327,12 @@ export class AccountingService {
         requestedAt: r.requestedAt,
         completedAt: r.completedAt ?? undefined,
         message: r.errorMessage ?? undefined,
+        // SDK gap: ExportJobResponse does not expose recordsExportedCount, recordsSkippedCount, or errorCode.
+        // These fields are explicitly undefined until the accounting OpenAPI spec is updated and
+        // @durion-sdk/accounting is regenerated. Consumers already guard with !== undefined checks.
+        recordsExportedCount: undefined,
+        recordsSkippedCount: undefined,
+        errorCode: undefined,
       })),
     );
   }

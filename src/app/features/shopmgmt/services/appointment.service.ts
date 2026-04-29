@@ -32,9 +32,7 @@ export class AppointmentService {
   private readonly conflictOverride = inject(ConflictOverrideAPIService);
   private readonly schedule = inject(ScheduleAPIService);
   private readonly shop = inject(ShopAPIService);
-  private readonly shopAudit = inject(ShopAuditService) as {
-    searchShopAudit: (filter: ShopAuditFilter) => Observable<unknown[]>;
-  };
+  private readonly shopAudit = inject(ShopAuditService);
 
   getAppointment(appointmentId: string): Observable<AppointmentDetail> {
     return this.appointments.getAppointment(appointmentId) as Observable<AppointmentDetail>;
