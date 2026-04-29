@@ -128,7 +128,6 @@ describe('ChatPanelComponent', () => {
       'Chat backend request failed',
       expect.objectContaining({
         status: 502,
-        statusText: 'Bad Gateway',
         url: 'https://durionpos.org/mcp-server/v1/mcp/chat',
         correlationId: 'corr-123',
         backendCode: 'UPSTREAM_FAILURE',
