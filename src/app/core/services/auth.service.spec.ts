@@ -71,6 +71,62 @@ describe('AuthService', () => {
     });
   });
 
+  describe('refreshTokens()', () => {
+    it('shares a single in-flight refresh request across concurrent callers', () => {
+      (environment as any).mockAuth = false;
+      seedStoredSession();
+
+      const refreshedResponse: LoginResponse = {
+        accessToken:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
+          '.eyJzdWIiOiJ1c3IiLCJyb2xlcyI6W10sImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNzAwMDAwMDAxfQ' +
+          '.sig',
+        refreshToken: 'rt-2',
+        tokenType: 'Bearer',
+      };
+
+      let firstResult: LoginResponse | undefined;
+      let secondResult: LoginResponse | undefined;
+
+      service.refreshTokens().subscribe(result => (firstResult = result));
+      service.refreshTokens().subscribe(result => (secondResult = result));
+
+      const refreshRequests = httpMock.match(r => r.url.includes('/security-service/v1/auth/refresh'));
+      expect(refreshRequests).toHaveLength(1);
+      expect(refreshRequests[0].request.method).toBe('POST');
+      expect(refreshRequests[0].request.body).toEqual({ refreshToken: 'rt' });
+
+      refreshRequests[0].flush(refreshedResponse);
+
+      expect(firstResult).toEqual(refreshedResponse);
+      expect(secondResult).toEqual(refreshedResponse);
+      expect(service.accessToken()).toBe(refreshedResponse.accessToken);
+    });
+
+    it('clears the shared refresh request after an error so a later call retries', () => {
+      (environment as any).mockAuth = false;
+      seedStoredSession();
+
+      let firstError: unknown;
+      service.refreshTokens().subscribe({
+        error: err => { firstError = err; },
+      });
+
+      const firstRefresh = httpMock.expectOne(r => r.url.includes('/security-service/v1/auth/refresh'));
+      firstRefresh.flush(null, { status: 401, statusText: 'Unauthorized' });
+
+      expect(firstError).toBeDefined();
+
+      let secondResult: LoginResponse | undefined;
+      service.refreshTokens().subscribe(result => (secondResult = result));
+
+      const secondRefresh = httpMock.expectOne(r => r.url.includes('/security-service/v1/auth/refresh'));
+      secondRefresh.flush(LOGIN_RESPONSE);
+
+      expect(secondResult).toEqual(LOGIN_RESPONSE);
+    });
+  });
+
   describe('validateSessionOnResume()', () => {
     it('returns true when the validate endpoint reports a valid stored token', () => {
       (environment as any).mockAuth = false;

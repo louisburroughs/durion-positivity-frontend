@@ -128,4 +128,22 @@ describe('authInterceptor', () => {
     expect(authServiceMock.refreshTokens).not.toHaveBeenCalled();
     expect(caughtError).toBe(serverErr);
   });
+
+  it('does not recurse when the refresh endpoint itself returns 401', () => {
+    authServiceMock.accessToken.mockReturnValue('old-token');
+    const refreshErr = new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' });
+    const req = new HttpRequest('POST', '/security-service/v1/auth/refresh', null);
+    const mockNext = vi.fn().mockReturnValue(throwError(() => refreshErr));
+
+    let caughtError: unknown;
+    TestBed.runInInjectionContext(() => {
+      authInterceptor(req, mockNext).subscribe({
+        error: err => { caughtError = err; },
+      });
+    });
+
+    expect(authServiceMock.refreshTokens).not.toHaveBeenCalled();
+    expect(authServiceMock.logoutWithRedirect).toHaveBeenCalledWith('/current-path');
+    expect(caughtError).toBe(refreshErr);
+  });
 });

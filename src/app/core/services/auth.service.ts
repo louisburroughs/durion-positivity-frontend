@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of, tap, throwError } from 'rxjs';
+import { Observable, of, shareReplay, tap, throwError, finalize } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
@@ -47,6 +47,7 @@ export class AuthService {
   private readonly _accessToken = signal<string | null>(this.loadFromStorage(ACCESS_TOKEN_KEY));
   private readonly _refreshToken = signal<string | null>(this.loadFromStorage(REFRESH_TOKEN_KEY));
   private readonly _roles = signal<string[]>(this.loadRolesFromSession());
+  private refreshRequest$: Observable<LoginResponse> | null = null;
   private expiryTimerId: ReturnType<typeof setTimeout> | null = null;
   private static readonly AUTH_BASE_PATH = '/security-service/v1/auth';
 
@@ -122,18 +123,24 @@ export class AuthService {
   refreshTokens(): Observable<LoginResponse> {
     const refreshToken = this._refreshToken();
     if (!refreshToken) {
-      this.logout();
       return throwError(() => new Error('No refresh token'));
     }
-    return this.http
+
+    if (this.refreshRequest$) {
+      return this.refreshRequest$;
+    }
+
+    this.refreshRequest$ = this.http
       .post<LoginResponse>(`${environment.apiBaseUrl}${AuthService.AUTH_BASE_PATH}/refresh`, { refreshToken })
       .pipe(
         tap(resp => this.storeTokens(resp.accessToken, resp.refreshToken)),
-        catchError(err => {
-          this.logout();
-          return throwError(() => err);
+        finalize(() => {
+          this.refreshRequest$ = null;
         }),
+        shareReplay({ bufferSize: 1, refCount: false }),
       );
+
+    return this.refreshRequest$;
   }
 
   validateSessionOnResume(): Observable<boolean> {
