@@ -4,7 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter, Router } from '@angular/router';
 
 import { AuthService } from './auth.service';
-import { LoginResponse, ValidateResponse } from '../models/auth.models';
+import { Configuration as SecurityConfiguration, TokenPairResponse, ValidateResponse } from '@durion-sdk/security';
 import { environment } from '../../../environments/environment';
 
 describe('AuthService', () => {
@@ -12,10 +12,9 @@ describe('AuthService', () => {
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
     '.eyJzdWIiOiJ1c3IiLCJyb2xlcyI6W10sImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNzAwMDAwMDAwfQ' +
     '.sig';
-  const LOGIN_RESPONSE: LoginResponse = {
+  const LOGIN_RESPONSE: TokenPairResponse = {
     accessToken: VALID_ACCESS_TOKEN,
     refreshToken: 'rt',
-    tokenType: 'Bearer',
   };
   const VALIDATE_SUCCESS_RESPONSE: ValidateResponse = { valid: true };
   const VALIDATE_FAILURE_RESPONSE: ValidateResponse = { valid: false };
@@ -31,6 +30,7 @@ describe('AuthService', () => {
         provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
+        { provide: SecurityConfiguration, useValue: new SecurityConfiguration({ basePath: `${environment.apiBaseUrl}/security-service` }) },
       ],
     });
 
@@ -76,17 +76,16 @@ describe('AuthService', () => {
       (environment as any).mockAuth = false;
       seedStoredSession();
 
-      const refreshedResponse: LoginResponse = {
+      const refreshedResponse: TokenPairResponse = {
         accessToken:
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
           '.eyJzdWIiOiJ1c3IiLCJyb2xlcyI6W10sImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNzAwMDAwMDAxfQ' +
           '.sig',
         refreshToken: 'rt-2',
-        tokenType: 'Bearer',
       };
 
-      let firstResult: LoginResponse | undefined;
-      let secondResult: LoginResponse | undefined;
+      let firstResult: TokenPairResponse | undefined;
+      let secondResult: TokenPairResponse | undefined;
 
       service.refreshTokens().subscribe(result => (firstResult = result));
       service.refreshTokens().subscribe(result => (secondResult = result));
@@ -117,7 +116,7 @@ describe('AuthService', () => {
 
       expect(firstError).toBeDefined();
 
-      let secondResult: LoginResponse | undefined;
+      let secondResult: TokenPairResponse | undefined;
       service.refreshTokens().subscribe(result => (secondResult = result));
 
       const secondRefresh = httpMock.expectOne(r => r.url.includes('/security-service/v1/auth/refresh'));

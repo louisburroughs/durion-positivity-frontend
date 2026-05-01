@@ -1,11 +1,11 @@
 import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, shareReplay, tap, throwError, finalize } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
-import { JwtClaims, LoginRequest, LoginResponse, ValidateResponse } from '../models/auth.models';
+import { AuthAPIService, JWTAPIService, LoginRequest, TokenPairResponse } from '@durion-sdk/security';
+import { JwtClaims } from '../models/auth.models';
 
 // Fake JWT used only when environment.mockAuth === true.
 // Payload decodes to: { sub: 'demo', roles: ['ROLE_ADMIN'], exp: 9999999999 }
@@ -13,10 +13,9 @@ const MOCK_ACCESS_TOKEN =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
   '.eyJzdWIiOiJkZW1vIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJleHAiOjk5OTk5OTk5OTksImlhdCI6MTcwMDAwMDAwMH0' +
   '.mock-signature-not-verified';
-const MOCK_RESPONSE: LoginResponse = {
+const MOCK_RESPONSE: TokenPairResponse = {
   accessToken: MOCK_ACCESS_TOKEN,
   refreshToken: 'mock-refresh-token',
-  tokenType: 'Bearer',
 };
 
 const ACCESS_TOKEN_KEY = 'durion-access-token';
@@ -28,12 +27,7 @@ const EXPIRY_SKEW_MS = 30_000;
 /**
  * AuthService
  * -----------
- * Handles JWT-based authentication against durion-positivity-backend.
- *
- * Endpoints (configured via environment.apiBaseUrl):
- *   POST /security-service/v1/auth/login   → LoginResponse
- *   POST /security-service/v1/auth/refresh → LoginResponse
- *   POST /security-service/v1/auth/logout  → 204 (Future enhancement: call backend to invalidate refresh token)
+ * Handles JWT-based authentication against durion-positivity-backend via @durion-sdk/security.
  *
  * Token storage: localStorage (access + refresh).
  * Guards read `isAuthenticated()` signal; HttpInterceptor reads `accessToken()`.
@@ -42,14 +36,14 @@ const EXPIRY_SKEW_MS = 30_000;
 export class AuthService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly router = inject(Router);
-  private readonly http = inject(HttpClient);
+  private readonly authApiService = inject(AuthAPIService);
+  private readonly jwtApiService = inject(JWTAPIService);
 
   private readonly _accessToken = signal<string | null>(this.loadFromStorage(ACCESS_TOKEN_KEY));
   private readonly _refreshToken = signal<string | null>(this.loadFromStorage(REFRESH_TOKEN_KEY));
   private readonly _roles = signal<string[]>(this.loadRolesFromSession());
-  private refreshRequest$: Observable<LoginResponse> | null = null;
+  private refreshRequest$: Observable<TokenPairResponse> | null = null;
   private expiryTimerId: ReturnType<typeof setTimeout> | null = null;
-  private static readonly AUTH_BASE_PATH = '/security-service/v1/auth';
 
   /** Reactive derived state. Components / guards can use these. */
   readonly accessToken = this._accessToken.asReadonly();
@@ -74,23 +68,20 @@ export class AuthService {
 
   // ── Public API ────────────────────────────────────────────────────────────
 
-  login(credentials: LoginRequest): Observable<LoginResponse> {
+  login(credentials: LoginRequest): Observable<TokenPairResponse> {
     if (environment.mockAuth) {
       // Mock mode: accept any credentials and return a fake session immediately.
       console.warn('[AuthService] mockAuth is enabled – using fake credentials. Disable in environment.ts before connecting a real backend.');
-      this.storeTokens(MOCK_RESPONSE.accessToken, MOCK_RESPONSE.refreshToken);
+      this.storeTokens(MOCK_RESPONSE.accessToken!, MOCK_RESPONSE.refreshToken!);
       return of(MOCK_RESPONSE);
     }
-    return this.http
-      .post<LoginResponse>(`${environment.apiBaseUrl}${AuthService.AUTH_BASE_PATH}/login`, credentials)
-      .pipe(
-        tap(resp => this.storeTokens(resp.accessToken, resp.refreshToken)),
-        catchError(err => throwError(() => err)),
-      );
+    return this.authApiService.login(credentials).pipe(
+      tap(resp => this.storeTokens(resp.accessToken!, resp.refreshToken!)),
+    );
   }
 
   logout(): void {
-    // Future enhancement: call POST /security-service/v1/auth/logout with refresh token when backend endpoint is available.
+    // Future enhancement: call revokeToken() with the current access token when backend revocation is needed.
     this.clearTokens();
     this.router.navigate(['/login']);
   }
@@ -114,13 +105,7 @@ export class AuthService {
     return roles.some(role => userRoles.includes(role));
   }
 
-  /**
-   * refreshTokens
-    * Future enhancement: complete full refresh flow lifecycle.
-   * The backend exposes POST /security-service/v1/auth/refresh accepting { refreshToken }.
-   * Call this automatically from AuthInterceptor when a 401 is received.
-   */
-  refreshTokens(): Observable<LoginResponse> {
+  refreshTokens(): Observable<TokenPairResponse> {
     const refreshToken = this._refreshToken();
     if (!refreshToken) {
       return throwError(() => new Error('No refresh token'));
@@ -130,15 +115,13 @@ export class AuthService {
       return this.refreshRequest$;
     }
 
-    this.refreshRequest$ = this.http
-      .post<LoginResponse>(`${environment.apiBaseUrl}${AuthService.AUTH_BASE_PATH}/refresh`, { refreshToken })
-      .pipe(
-        tap(resp => this.storeTokens(resp.accessToken, resp.refreshToken)),
-        finalize(() => {
-          this.refreshRequest$ = null;
-        }),
-        shareReplay({ bufferSize: 1, refCount: false }),
-      );
+    this.refreshRequest$ = this.jwtApiService.refreshAccessToken({ refreshToken }).pipe(
+      tap(resp => this.storeTokens(resp.accessToken!, resp.refreshToken!)),
+      finalize(() => {
+        this.refreshRequest$ = null;
+      }),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
 
     return this.refreshRequest$;
   }
@@ -153,22 +136,18 @@ export class AuthService {
       return of(false);
     }
 
-    return this.http
-      .get<ValidateResponse>(`${environment.apiBaseUrl}${AuthService.AUTH_BASE_PATH}/validate`, {
-        params: { token },
-      })
-      .pipe(
-        map(response => response.valid === true),
-        tap(isValid => {
-          if (!isValid) {
-            this.logoutWithRedirect(this.router.url);
-          }
-        }),
-        catchError(() => {
+    return this.jwtApiService.validateToken(token).pipe(
+      map(response => response.valid === true),
+      tap(isValid => {
+        if (!isValid) {
           this.logoutWithRedirect(this.router.url);
-          return of(false);
-        }),
-      );
+        }
+      }),
+      catchError(() => {
+        this.logoutWithRedirect(this.router.url);
+        return of(false);
+      }),
+    );
   }
 
   // ── Internals ─────────────────────────────────────────────────────────────

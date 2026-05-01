@@ -73,7 +73,7 @@ describe('authInterceptor', () => {
   it('on 401 with token, refreshes and retries with the new access token', () => {
     authServiceMock.accessToken.mockReturnValue('old-token');
     authServiceMock.refreshTokens.mockReturnValue(
-      of({ accessToken: 'new-token', refreshToken: 'rt', tokenType: 'Bearer' }),
+      of({ accessToken: 'new-token', refreshToken: 'rt' }),
     );
     const req = new HttpRequest('GET', '/api/test');
 
