@@ -229,7 +229,7 @@ jobs:
             -f docker-compose.yml \
             -f "\${PROD_OVERRIDE}" \
             --env-file "\${ENV_FILE}" \
-            up -d --force-recreate pos-frontend
+            up -d --no-deps --force-recreate pos-frontend
 
           docker compose \
             -f docker-compose.yml \
