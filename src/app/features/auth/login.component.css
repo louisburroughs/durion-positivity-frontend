@@ -36,10 +36,10 @@
 }
 
 .brand-logo {
-  width: 64px;
-  height: 64px;
+  width: 94px;
+  height: 94px;
   border-radius: var(--radius-md);
-  background: var(--brand-primary);
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -168,4 +168,15 @@ input.field-invalid {
 .theme-toggle-btn:focus-visible {
   outline: 2px solid var(--accentA400);
   outline-offset: 2px;
+}
+
+.login-brand-mark {
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
