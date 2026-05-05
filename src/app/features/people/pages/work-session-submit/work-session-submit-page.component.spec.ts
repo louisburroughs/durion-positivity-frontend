@@ -2,24 +2,24 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { of, throwError, NEVER } from 'rxjs';
 import { WorkSessionSubmitPageComponent } from './work-session-submit-page.component';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { PeopleService } from '../../services/people.service';
 
 describe('WorkSessionSubmitPageComponent', () => {
   let fixture: ComponentFixture<WorkSessionSubmitPageComponent>;
   let component: WorkSessionSubmitPageComponent;
-  let apiService: { post: ReturnType<typeof vi.fn> };
+  let peopleService: { submitWorkSession: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     TestBed.resetTestingModule();
 
-    apiService = {
-      post: vi.fn().mockReturnValue(of({ correlationId: 'CORR-1' })),
+    peopleService = {
+      submitWorkSession: vi.fn().mockReturnValue(of({ correlationId: 'CORR-1' })),
     };
 
     await TestBed.configureTestingModule({
       imports: [WorkSessionSubmitPageComponent],
       providers: [
-        { provide: ApiBaseService, useValue: apiService },
+        { provide: PeopleService, useValue: peopleService },
         { provide: ActivatedRoute, useValue: { params: of({ sessionId: 'SESSION-1' }) } },
       ],
     }).compileComponents();
@@ -49,12 +49,12 @@ describe('WorkSessionSubmitPageComponent', () => {
     expect(btn).toBeTruthy();
     expect(btn.disabled).toBe(false);
 
-    apiService.post.mockClear();
+    peopleService.submitWorkSession.mockClear();
     component.submitJobTime(); // billableMinutes=0 → form invalid → returns early
     fixture.detectChanges();
 
     expect(component.submitState()).toBe('NOT_SUBMITTED');
-    expect(apiService.post).not.toHaveBeenCalled();
+    expect(peopleService.submitWorkSession).not.toHaveBeenCalled();
   });
 
   it('submits successfully and shows result panel', () => {
@@ -84,7 +84,7 @@ describe('WorkSessionSubmitPageComponent', () => {
   });
 
   it('shows error panel when submit fails', () => {
-    apiService.post.mockReturnValue(
+    peopleService.submitWorkSession.mockReturnValue(
       throwError(() => ({ error: { code: 'ERR', message: 'Fail', correlationId: 'CORR-2' } })),
     );
     component.submitForm.controls.billableMinutes.setValue(120);
@@ -99,7 +99,7 @@ describe('WorkSessionSubmitPageComponent', () => {
   });
 
   it('shows error code in result panel on failure', () => {
-    apiService.post.mockReturnValue(
+    peopleService.submitWorkSession.mockReturnValue(
       throwError(() => ({ error: { code: 'ERR', message: 'Fail', correlationId: 'CORR-2' } })),
     );
     component.submitForm.controls.billableMinutes.setValue(120);
@@ -126,7 +126,7 @@ describe('WorkSessionSubmitPageComponent', () => {
   });
 
   it('canSubmit is false when SUBMITTING', () => {
-    apiService.post.mockReturnValue(NEVER);
+    peopleService.submitWorkSession.mockReturnValue(NEVER);
     component.submitForm.controls.billableMinutes.setValue(120);
     component.submitForm.controls.breakMinutes.setValue(15);
     component.submitForm.controls.submittedAt.setValue(new Date().toISOString());

@@ -5,7 +5,7 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { EmployeeProfilePageComponent } from './employee-profile-page.component';
-import { EmployeeAPIService } from '@durion-sdk/people';
+import { PeopleService } from '../../services/people.service';
 
 // ── Stubs ─────────────────────────────────────────────────────────────────
 
@@ -33,7 +33,7 @@ async function setupNew(): Promise<{ fixture: ComponentFixture<EmployeeProfilePa
     imports: [EmployeeProfilePageComponent],
     providers: [
       provideRouter([]),
-      { provide: EmployeeAPIService, useValue: stubPeopleService },
+      { provide: PeopleService, useValue: stubPeopleService },
       {
         provide: ActivatedRoute,
         useValue: { snapshot: { paramMap: { get: () => null } }, params: of({}) },
@@ -55,7 +55,7 @@ async function setupEdit(employeeId = 'emp-1'): Promise<{ fixture: ComponentFixt
     imports: [EmployeeProfilePageComponent],
     providers: [
       provideRouter([]),
-      { provide: EmployeeAPIService, useValue: stubPeopleService },
+      { provide: PeopleService, useValue: stubPeopleService },
       {
         provide: ActivatedRoute,
         useValue: { snapshot: { paramMap: { get: (k: string) => (k === 'id' ? employeeId : null) } }, params: of({ id: employeeId }) },
@@ -117,7 +117,7 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
       imports: [EmployeeProfilePageComponent],
       providers: [
         provideRouter([]),
-        { provide: EmployeeAPIService, useValue: stubPeopleService },
+        { provide: PeopleService, useValue: stubPeopleService },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: (k: string) => (k === 'id' ? 'emp-pending' : null) } }, params: of({ id: 'emp-pending' }) },
@@ -249,7 +249,7 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
       imports: [EmployeeProfilePageComponent],
       providers: [
         provideRouter([]),
-        { provide: EmployeeAPIService, useValue: stubPeopleService },
+        { provide: PeopleService, useValue: stubPeopleService },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: () => null } }, params: of({}) },

@@ -5,12 +5,11 @@ import { BehaviorSubject, of, throwError } from 'rxjs';
 import {
   CancelOrderRequest,
   CancellationResponse,
-  OrderCancellationService,
   SalesOrderLineResponse,
   SalesOrderResponse,
-  SalesOrdersService,
 } from '@durion-sdk/order';
 import { OrderCancelPageComponent } from './order-cancel-page.component';
+import { OrderService } from '../../services/order.service';
 
 const orderLineFixture: SalesOrderLineResponse = {
   orderLineId: 'line-1',
@@ -36,26 +35,22 @@ describe('OrderCancelPageComponent', () => {
   let component: OrderCancelPageComponent;
   let paramMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
-  const salesOrdersServiceMock = {
+  const orderServiceMock = {
     getOrder: vi.fn(),
-  };
-
-  const orderCancellationServiceMock = {
     cancelOrder: vi.fn(),
   };
 
   beforeEach(async () => {
     paramMap$ = new BehaviorSubject(convertToParamMap({ orderId: 'ord-1' }));
 
-    salesOrdersServiceMock.getOrder.mockReset();
-    orderCancellationServiceMock.cancelOrder.mockReset();
+    orderServiceMock.getOrder.mockReset();
+    orderServiceMock.cancelOrder.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [OrderCancelPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: SalesOrdersService, useValue: salesOrdersServiceMock },
-        { provide: OrderCancellationService, useValue: orderCancellationServiceMock },
+        { provide: OrderService, useValue: orderServiceMock },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -70,11 +65,11 @@ describe('OrderCancelPageComponent', () => {
   });
 
   it('loads order on init', () => {
-    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
 
     fixture.detectChanges();
 
-    expect(salesOrdersServiceMock.getOrder).toHaveBeenCalledWith('ord-1');
+    expect(orderServiceMock.getOrder).toHaveBeenCalledWith('ord-1');
     expect(component.order()).toEqual(orderFixture);
     expect(component.state()).toBe('ready');
   });
@@ -84,8 +79,8 @@ describe('OrderCancelPageComponent', () => {
       cancellationReason: 'CUSTOMER_CANCELLED',
     };
 
-    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
-    orderCancellationServiceMock.cancelOrder.mockReturnValue(throwError(() => new Error('cancel failed')));
+    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    orderServiceMock.cancelOrder.mockReturnValue(throwError(() => new Error('cancel failed')));
 
     fixture.detectChanges();
 
@@ -107,8 +102,8 @@ describe('OrderCancelPageComponent', () => {
       cancellationReason: 'CUSTOMER_CANCELLED',
     };
 
-    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
-    orderCancellationServiceMock.cancelOrder.mockReturnValue(of(cancelResultFixture));
+    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    orderServiceMock.cancelOrder.mockReturnValue(of(cancelResultFixture));
 
     fixture.detectChanges();
     component.confirmCancel(request);
@@ -118,7 +113,7 @@ describe('OrderCancelPageComponent', () => {
   });
 
   it('sets error state before errorKey when initial load fails', () => {
-    salesOrdersServiceMock.getOrder.mockReturnValue(throwError(() => new Error('load failed')));
+    orderServiceMock.getOrder.mockReturnValue(throwError(() => new Error('load failed')));
 
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');

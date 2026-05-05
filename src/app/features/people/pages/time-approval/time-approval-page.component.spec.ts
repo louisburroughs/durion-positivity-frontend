@@ -2,40 +2,37 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { TimeApprovalPageComponent } from './time-approval-page.component';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { PeopleService } from '../../services/people.service';
 
 describe('TimeApprovalPageComponent', () => {
   let fixture: ComponentFixture<TimeApprovalPageComponent>;
   let component: TimeApprovalPageComponent;
-  let apiService: { get: ReturnType<typeof vi.fn>; post: ReturnType<typeof vi.fn> };
+  let peopleService: {
+    listApprovalPeople: ReturnType<typeof vi.fn>;
+    listTimePeriods: ReturnType<typeof vi.fn>;
+    listTimekeepingEntries: ReturnType<typeof vi.fn>;
+    listTimePeriodApprovals: ReturnType<typeof vi.fn>;
+    approveTimePeriod: ReturnType<typeof vi.fn>;
+    rejectTimePeriod: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     TestBed.resetTestingModule();
 
-    apiService = {
-      get: vi.fn().mockImplementation((url: string) => {
-        if (url.includes('/approvals/people')) {
-          return of({ items: [{ personId: 'p1', displayName: 'Alice', employeeNumber: 'E001' }] });
-        }
-        if (url.includes('/time-periods') && !url.includes('approvals')) {
-          return of({ items: [{ id: 't1', status: 'SUBMISSION_CLOSED', periodStartAt: '2024-01-01', periodEndAt: '2024-01-31' }] });
-        }
-        if (url.includes('/timekeeping-entries')) {
-          return of({ items: [{ timeEntryId: 'e1', status: 'PENDING_APPROVAL', clockInAt: '08:00', clockOutAt: '17:00', locationId: 'loc-1' }] });
-        }
-        if (url.includes('/time-period-approvals')) {
-          return of({ items: [{ outcome: 'APPROVED', approvedAt: '2024-01-15' }] });
-        }
-        return of({});
-      }),
-      post: vi.fn().mockReturnValue(of({ status: 'ok' })),
+    peopleService = {
+      listApprovalPeople: vi.fn().mockReturnValue(of({ items: [{ personId: 'p1', displayName: 'Alice', employeeNumber: 'E001' }] })),
+      listTimePeriods: vi.fn().mockReturnValue(of({ items: [{ id: 't1', status: 'SUBMISSION_CLOSED', periodStartAt: '2024-01-01', periodEndAt: '2024-01-31' }] })),
+      listTimekeepingEntries: vi.fn().mockReturnValue(of({ items: [{ timeEntryId: 'e1', status: 'PENDING_APPROVAL', clockInAt: '08:00', clockOutAt: '17:00', locationId: 'loc-1' }] })),
+      listTimePeriodApprovals: vi.fn().mockReturnValue(of({ items: [{ outcome: 'APPROVED', approvedAt: '2024-01-15' }] })),
+      approveTimePeriod: vi.fn().mockReturnValue(of({ status: 'ok' })),
+      rejectTimePeriod: vi.fn().mockReturnValue(of({ status: 'ok' })),
     };
 
     await TestBed.configureTestingModule({
       imports: [TimeApprovalPageComponent],
       providers: [
         provideRouter([]),
-        { provide: ApiBaseService, useValue: apiService },
+        { provide: PeopleService, useValue: peopleService },
       ],
     }).compileComponents();
 
@@ -51,14 +48,14 @@ describe('TimeApprovalPageComponent', () => {
   });
 
   it('T2: loads people list on init − person-select shows placeholder plus one option per person', () => {
-    expect(apiService.get).toHaveBeenCalled();
+    expect(peopleService.listApprovalPeople).toHaveBeenCalled();
     expect(component.people().length).toBe(1);
     const options = fixture.nativeElement.querySelectorAll('[data-testid="person-select"] option');
     expect(options.length).toBe(2); // placeholder + 1 person
   });
 
   it('T3: loads time periods on init − period-select shows placeholder plus one option per period', () => {
-    expect(apiService.get).toHaveBeenCalled();
+    expect(peopleService.listTimePeriods).toHaveBeenCalled();
     expect(component.periods().length).toBe(1);
     const options = fixture.nativeElement.querySelectorAll('[data-testid="period-select"] option');
     expect(options.length).toBe(2); // placeholder + 1 period
@@ -72,10 +69,7 @@ describe('TimeApprovalPageComponent', () => {
   it('T5: setting personId + timePeriodId triggers loadDetail (get called for entries URL)', () => {
     component.selectionForm.patchValue({ personId: 'p1', timePeriodId: 't1' });
     fixture.detectChanges();
-    expect(apiService.get).toHaveBeenCalledWith(
-      expect.stringContaining('/timekeeping-entries'),
-      expect.anything(),
-    );
+    expect(peopleService.listTimekeepingEntries).toHaveBeenCalledWith('p1', 't1');
   });
 
   it('T6: shows entries-table when entries are loaded', () => {
@@ -114,12 +108,12 @@ describe('TimeApprovalPageComponent', () => {
     const submitBtn = fixture.nativeElement.querySelector('[data-testid="submit-reject-btn"]');
     submitBtn.click();
     fixture.detectChanges();
-    expect(apiService.post).toHaveBeenCalled();
+    expect(peopleService.rejectTimePeriod).toHaveBeenCalled();
     expect(fixture.nativeElement.querySelector('[data-testid="reject-dialog"]')).toBeNull();
   });
 
   it('T10: shows action-error when approvePeriod fails', () => {
-    apiService.post.mockReturnValue(
+    peopleService.approveTimePeriod.mockReturnValue(
       throwError(() => ({ error: { message: 'Approve failed' } })),
     );
     component.selectionForm.patchValue({ personId: 'p1', timePeriodId: 't1' });
@@ -131,4 +125,3 @@ describe('TimeApprovalPageComponent', () => {
     expect(errEl.textContent).toContain('Approve failed');
   });
 });
-

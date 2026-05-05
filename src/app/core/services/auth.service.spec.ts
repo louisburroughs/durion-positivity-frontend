@@ -72,6 +72,18 @@ describe('AuthService', () => {
   });
 
   describe('refreshTokens()', () => {
+    it('clamps extremely long expiry timers to the maximum browser-supported timeout', () => {
+      (environment as any).mockAuth = false;
+      const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+      seedStoredSession();
+
+      const lastDelay = setTimeoutSpy.mock.calls.at(-1)?.[1];
+      expect(typeof lastDelay).toBe('number');
+      expect(lastDelay as number).toBeLessThanOrEqual(2_147_483_647);
+
+      setTimeoutSpy.mockRestore();
+    });
+
     it('shares a single in-flight refresh request across concurrent callers', () => {
       (environment as any).mockAuth = false;
       seedStoredSession();

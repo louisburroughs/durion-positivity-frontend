@@ -6,7 +6,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 
 import { RoleAssignmentPageComponent } from './role-assignment-page.component';
-import { PeopleAccessControlService, RoleDto, UserRoleDto } from '@durion-sdk/people';
+import { RoleDto, UserRoleDto } from '@durion-sdk/people';
+import { PeopleService } from '../../services/people.service';
 
 const translations = {
   PEOPLE: {
@@ -69,10 +70,10 @@ const STUB_ROLES: RoleDto[] = [
 ];
 
 const stubPeopleService = {
-  getRoles: vi.fn(),
-  getAssignments: vi.fn(),
-  createAssignment: vi.fn(),
-  revokeAssignment: vi.fn(),
+  getAvailableRoles: vi.fn(),
+  getRoleAssignments: vi.fn(),
+  createRoleAssignment: vi.fn(),
+  revokeRoleAssignment: vi.fn(),
 };
 
 describe('RoleAssignmentPageComponent [Story #153]', () => {
@@ -81,16 +82,16 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
   const setup = async (personUuid = 'person-uuid-1') => {
     vi.clearAllMocks();
-    stubPeopleService.getAssignments.mockReturnValue(of(STUB_ASSIGNMENTS));
-    stubPeopleService.getRoles.mockReturnValue(of(STUB_ROLES));
-    stubPeopleService.createAssignment.mockReturnValue(of({ assignmentId: 'asn-new' }));
-    stubPeopleService.revokeAssignment.mockReturnValue(of(null));
+    stubPeopleService.getRoleAssignments.mockReturnValue(of(STUB_ASSIGNMENTS));
+    stubPeopleService.getAvailableRoles.mockReturnValue(of(STUB_ROLES));
+    stubPeopleService.createRoleAssignment.mockReturnValue(of({ assignmentId: 'asn-new' }));
+    stubPeopleService.revokeRoleAssignment.mockReturnValue(of(null));
 
     await TestBed.configureTestingModule({
       imports: [RoleAssignmentPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: PeopleAccessControlService, useValue: stubPeopleService },
+        { provide: PeopleService, useValue: stubPeopleService },
         { provide: ActivatedRoute, useValue: { params: of({ personUuid }) } },
       ],
     }).compileComponents();
@@ -135,12 +136,12 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
   it('calls getAssignments on init with personUuid from route and includeHistory=false', async () => {
     await setup('person-uuid-1');
-    expect(stubPeopleService.getAssignments).toHaveBeenCalledWith('person-uuid-1', false);
+    expect(stubPeopleService.getRoleAssignments).toHaveBeenCalledWith('person-uuid-1', false);
   });
 
   it('calls getRoles on init with personUuid from route', async () => {
     await setup('person-uuid-1');
-    expect(stubPeopleService.getRoles).toHaveBeenCalledWith('person-uuid-1');
+    expect(stubPeopleService.getAvailableRoles).toHaveBeenCalledWith('person-uuid-1');
   });
 
   const c = (cmp: RoleAssignmentPageComponent) => cmp;
@@ -242,7 +243,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
     c(component).submitAssignment();
 
-    const [uuid, payload] = stubPeopleService.createAssignment.mock.calls[0];
+    const [uuid, payload] = stubPeopleService.createRoleAssignment.mock.calls[0];
     expect(uuid).toBe('person-uuid-1');
     expect(payload).toEqual({
       roleCode: 'ROLE_ADMIN',
@@ -260,7 +261,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
     c(component).submitAssignment();
 
-    expect(stubPeopleService.createAssignment).toHaveBeenCalledWith(
+    expect(stubPeopleService.createRoleAssignment).toHaveBeenCalledWith(
       'person-uuid-1',
       expect.objectContaining({
         roleCode: 'ROLE_MANAGER',
@@ -279,7 +280,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
     c(component).submitAssignment();
 
-    const [, payload] = stubPeopleService.createAssignment.mock.calls[0];
+    const [, payload] = stubPeopleService.createRoleAssignment.mock.calls[0];
     expect(payload.endDate).toBe('2026-12-31T23:59:59Z');
   });
 
@@ -292,7 +293,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
     c(component).submitAssignment();
 
-    const [, payload] = stubPeopleService.createAssignment.mock.calls[0];
+    const [, payload] = stubPeopleService.createRoleAssignment.mock.calls[0];
     expect(payload).not.toHaveProperty('effectiveEndAt');
     expect(payload).not.toHaveProperty('endDate');
   });
@@ -302,16 +303,16 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
   it('calls service.revokeAssignment with personUuid and roleCode from the assignment', async () => {
     await setup('person-uuid-1');
     c(component).revokeAssignment(STUB_ASSIGNMENTS[0]);
-    expect(stubPeopleService.revokeAssignment).toHaveBeenCalledWith('person-uuid-1', 'ROLE_ADMIN');
+    expect(stubPeopleService.revokeRoleAssignment).toHaveBeenCalledWith('person-uuid-1', 'ROLE_ADMIN');
   });
 
   it('re-fetches assignments after successful revoke', async () => {
     await setup('person-uuid-1');
-    const callsBefore = stubPeopleService.getAssignments.mock.calls.length;
+    const callsBefore = stubPeopleService.getRoleAssignments.mock.calls.length;
 
     c(component).revokeAssignment(STUB_ASSIGNMENTS[0]);
 
-    expect(stubPeopleService.getAssignments.mock.calls.length).toBeGreaterThan(callsBefore);
+    expect(stubPeopleService.getRoleAssignments.mock.calls.length).toBeGreaterThan(callsBefore);
   });
 
   it('renders duplicate roleCode rows across scopes and targets revoke confirmation by stable row key', async () => {
@@ -332,7 +333,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     ];
 
     await setup('person-uuid-1');
-    stubPeopleService.getAssignments.mockReturnValue(of(duplicateAssignments));
+    stubPeopleService.getRoleAssignments.mockReturnValue(of(duplicateAssignments));
     c(component).loadAssignments();
     fixture.detectChanges();
 
@@ -357,18 +358,18 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
   it('re-fetches assignments with includeHistory=true when loadAssignments() called with flag set', async () => {
     await setup('person-uuid-1');
-    stubPeopleService.getAssignments.mockReturnValue(of([]));
+    stubPeopleService.getRoleAssignments.mockReturnValue(of([]));
     c(component).includeHistory.set(true);
     c(component).loadAssignments();
-    expect(stubPeopleService.getAssignments).toHaveBeenCalledWith('person-uuid-1', true);
+    expect(stubPeopleService.getRoleAssignments).toHaveBeenCalledWith('person-uuid-1', true);
   });
 
   it('re-fetches assignments with includeHistory=false when flag is cleared', async () => {
     await setup('person-uuid-1');
-    stubPeopleService.getAssignments.mockReturnValue(of([]));
+    stubPeopleService.getRoleAssignments.mockReturnValue(of([]));
     c(component).includeHistory.set(false);
     c(component).loadAssignments();
-    expect(stubPeopleService.getAssignments).toHaveBeenCalledWith('person-uuid-1', false);
+    expect(stubPeopleService.getRoleAssignments).toHaveBeenCalledWith('person-uuid-1', false);
   });
 
   // ── T9: Error paths and confirmingAssignmentId ────────────────────────────
@@ -402,7 +403,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
   it('loadRoles() failure sets errorMessage to a non-null string', async () => {
     await setup();
-    stubPeopleService.getRoles.mockReturnValue(throwError(() => new Error('server error')));
+    stubPeopleService.getAvailableRoles.mockReturnValue(throwError(() => new Error('server error')));
     c(component).errorMessage.set(null);
     c(component).loadRoles();
     expect(c(component).errorMessage()).not.toBeNull();
@@ -411,7 +412,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
   it('submitAssignment() failure sets errorMessage to a non-null string', async () => {
     await setup();
-    stubPeopleService.createAssignment.mockReturnValue(throwError(() => new Error('network error')));
+    stubPeopleService.createRoleAssignment.mockReturnValue(throwError(() => new Error('network error')));
     c(component).selectedRoleCode.set('ROLE_ADMIN');
     c(component).scopeType.set('GLOBAL');
     c(component).effectiveStartAt.set('2026-06-01T00:00:00Z');
@@ -422,7 +423,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
   it('revokeAssignment() failure sets errorMessage to a non-null string', async () => {
     await setup();
-    stubPeopleService.revokeAssignment.mockReturnValue(throwError(() => new Error('revoke failed')));
+    stubPeopleService.revokeRoleAssignment.mockReturnValue(throwError(() => new Error('revoke failed')));
     c(component).errorMessage.set(null);
     c(component).revokeAssignment(STUB_ASSIGNMENTS[0]);
     expect(c(component).errorMessage()).not.toBeNull();

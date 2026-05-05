@@ -2,8 +2,9 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { CreateStaffingAssignmentRequest, PeopleStaffingAssignmentsService, StaffingAssignmentResponse } from '@durion-sdk/people';
+import { CreateStaffingAssignmentRequest, StaffingAssignmentResponse } from '@durion-sdk/people';
 import { LocationService } from '../../../location/services/location.service';
+import { PeopleService } from '../../services/people.service';
 
 @Component({
   selector: 'app-person-location-assignments-page',
@@ -14,7 +15,7 @@ import { LocationService } from '../../../location/services/location.service';
   styleUrl: './person-location-assignments-page.component.css',
 })
 export class PersonLocationAssignmentsPageComponent implements OnInit {
-  private readonly staffingService = inject(PeopleStaffingAssignmentsService);
+  private readonly peopleService = inject(PeopleService);
   private readonly locationService = inject(LocationService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
@@ -50,7 +51,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
   loadAssignments(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.staffingService.getAssignments1(this.personId())
+    this.peopleService.getLocationAssignments(this.personId())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
@@ -103,7 +104,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
     if (effectiveEndAt) {
       body.effectiveTo = effectiveEndAt;
     }
-    this.staffingService.createAssignment1(body)
+    this.peopleService.createLocationAssignment(body)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -138,7 +139,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
       return;
     }
     this.submitting.set(true);
-    this.staffingService.endAssignment(assignmentId)
+    this.peopleService.endLocationAssignment(assignmentId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

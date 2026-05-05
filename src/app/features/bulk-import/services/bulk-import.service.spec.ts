@@ -11,28 +11,13 @@ import {
   SubmitCorrectionRequest,
 } from '../models/bulk-import.models';
 
-const tusState = vi.hoisted(() => ({
+const tusState = {
   instances: [] as Array<{ file: File; options: Record<string, unknown> }>,
   start: vi.fn(),
   abort: vi.fn().mockResolvedValue(undefined),
   findPreviousUploads: vi.fn(() => Promise.resolve([] as Array<{ uploadUrl: string }>)),
   resumeFromPreviousUpload: vi.fn(),
-}));
-
-vi.mock('tus-js-client', () => ({
-  Upload: function MockUpload(this: {
-    start: typeof tusState.start;
-    abort: typeof tusState.abort;
-    findPreviousUploads: typeof tusState.findPreviousUploads;
-    resumeFromPreviousUpload: typeof tusState.resumeFromPreviousUpload;
-  }, file: File, options: Record<string, unknown>) {
-    tusState.instances.push({ file, options });
-    this.start = tusState.start;
-    this.abort = tusState.abort;
-    this.findPreviousUploads = tusState.findPreviousUploads;
-    this.resumeFromPreviousUpload = tusState.resumeFromPreviousUpload;
-  },
-}));
+};
 
 describe('BulkImportService', () => {
   let service: import('./bulk-import.service').BulkImportService;
@@ -53,6 +38,20 @@ describe('BulkImportService', () => {
     tusState.findPreviousUploads.mockReset().mockResolvedValue([] as Array<{ uploadUrl: string }>);
     tusState.resumeFromPreviousUpload.mockReset();
     vi.resetModules();
+    vi.doMock('tus-js-client', () => ({
+      Upload: function MockUpload(this: {
+        start: typeof tusState.start;
+        abort: typeof tusState.abort;
+        findPreviousUploads: typeof tusState.findPreviousUploads;
+        resumeFromPreviousUpload: typeof tusState.resumeFromPreviousUpload;
+      }, file: File, options: Record<string, unknown>) {
+        tusState.instances.push({ file, options });
+        this.start = tusState.start;
+        this.abort = tusState.abort;
+        this.findPreviousUploads = tusState.findPreviousUploads;
+        this.resumeFromPreviousUpload = tusState.resumeFromPreviousUpload;
+      },
+    }));
 
     ({ BulkImportService: bulkImportServiceClass } = await import('./bulk-import.service'));
     ({ ApiBaseService: apiBaseServiceToken } = await import('../../../core/services/api-base.service'));
@@ -76,6 +75,7 @@ describe('BulkImportService', () => {
 
   afterEach(() => {
     tusState.instances.length = 0;
+    vi.doUnmock('tus-js-client');
     vi.clearAllMocks();
   });
 

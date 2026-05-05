@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { DiscrepancyReportPageComponent } from './discrepancy-report-page.component';
-import { PeopleReportsAPIService } from '@durion-sdk/people';
+import { PeopleService } from '../../services/people.service';
 
 describe('DiscrepancyReportPageComponent', () => {
   let fixture: ComponentFixture<DiscrepancyReportPageComponent>;
@@ -25,7 +25,7 @@ describe('DiscrepancyReportPageComponent', () => {
     await TestBed.configureTestingModule({
       imports: [DiscrepancyReportPageComponent],
       providers: [
-        { provide: PeopleReportsAPIService, useValue: peopleService },
+        { provide: PeopleService, useValue: peopleService },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParams: {} } } },
         { provide: Router, useValue: routerMock },
       ],

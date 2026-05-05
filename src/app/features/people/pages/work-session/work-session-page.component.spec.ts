@@ -4,7 +4,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { WorkSessionDto } from '@durion-sdk/people';
 import { of, throwError } from 'rxjs';
 import { WorkSessionPageComponent } from './work-session-page.component';
-import { WorkSessionService } from '../../services/work-session.service';
+import { PeopleService } from '../../services/people.service';
 
 const translations = {
   PEOPLE: {
@@ -38,7 +38,7 @@ const translations = {
 describe('WorkSessionPageComponent', () => {
   let fixture: ComponentFixture<WorkSessionPageComponent>;
   let component: WorkSessionPageComponent;
-  let workSessionService: {
+  let peopleService: {
     startSession: ReturnType<typeof vi.fn>;
     stopSession: ReturnType<typeof vi.fn>;
     startBreak: ReturnType<typeof vi.fn>;
@@ -61,7 +61,7 @@ describe('WorkSessionPageComponent', () => {
   beforeEach(async () => {
     TestBed.resetTestingModule();
 
-    workSessionService = {
+    peopleService = {
       startSession: vi.fn().mockReturnValue(of(activeSession)),
       stopSession: vi.fn().mockReturnValue(of(stoppedSession)),
       startBreak: vi.fn().mockReturnValue(of({ startedAt: '12:00', endedAt: undefined })),
@@ -72,7 +72,7 @@ describe('WorkSessionPageComponent', () => {
       imports: [WorkSessionPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: WorkSessionService, useValue: workSessionService },
+        { provide: PeopleService, useValue: peopleService },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -124,7 +124,7 @@ describe('WorkSessionPageComponent', () => {
     const btn = fixture.nativeElement.querySelector('[data-testid="clock-in-btn"]');
     btn.click();
     fixture.detectChanges();
-    expect(workSessionService.startSession).toHaveBeenCalledWith('person-001');
+    expect(peopleService.startSession).toHaveBeenCalledWith('person-001');
     const successEl = fixture.nativeElement.querySelector('[data-testid="action-success"]');
     expect(successEl).toBeTruthy();
     expect(successEl.textContent).toContain('Action succeeded.');
@@ -133,7 +133,7 @@ describe('WorkSessionPageComponent', () => {
   });
 
   it('T5: shows error-state when startWorkSession fails', () => {
-    workSessionService.startSession.mockReturnValue(
+    peopleService.startSession.mockReturnValue(
       throwError(() => ({ error: { message: 'Clock in failed' } })),
     );
     component.startSession();
@@ -163,7 +163,7 @@ describe('WorkSessionPageComponent', () => {
     const btn = fixture.nativeElement.querySelector('[data-testid="start-break-btn"]');
     btn.click();
     fixture.detectChanges();
-    expect(workSessionService.startBreak).toHaveBeenCalledWith('sess1');
+    expect(peopleService.startBreak).toHaveBeenCalledWith('sess1');
     expect(component.breaks()).toEqual([
       {
         breakType: 'MEAL',
@@ -182,7 +182,7 @@ describe('WorkSessionPageComponent', () => {
     const btn = fixture.nativeElement.querySelector('[data-testid="stop-break-btn"]');
     btn.click();
     fixture.detectChanges();
-    expect(workSessionService.stopBreak).toHaveBeenCalledWith('sess1');
+    expect(peopleService.stopBreak).toHaveBeenCalledWith('sess1');
     expect(component.onBreak()).toBe(false);
     expect(component.breaks()[0]?.endedAt).toBe('12:30');
   });
@@ -210,7 +210,7 @@ describe('WorkSessionPageComponent', () => {
     component.startSession();
     fixture.detectChanges();
 
-    expect(workSessionService.startSession).not.toHaveBeenCalled();
+    expect(peopleService.startSession).not.toHaveBeenCalled();
     const errEl = fixture.nativeElement.querySelector('[data-testid="error-state"]');
     expect(errEl?.textContent).toContain('PEOPLE.WORK_SESSION.ERROR.REQUIRED_IDS');
   });

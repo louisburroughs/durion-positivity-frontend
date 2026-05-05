@@ -11,7 +11,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { WorkSessionDto } from '@durion-sdk/people';
-import { WorkSessionService } from '../../services/work-session.service';
+import { PeopleService } from '../../services/people.service';
 
 type BreakType = 'MEAL' | 'REST' | 'OTHER';
 
@@ -41,7 +41,7 @@ interface WorkSessionBreak {
 })
 export class WorkSessionPageComponent {
   private readonly route = inject(ActivatedRoute);
-  private readonly workSessionService = inject(WorkSessionService);
+  private readonly peopleService = inject(PeopleService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly currentSession = signal<WorkSessionState | null>(null);
@@ -94,7 +94,7 @@ export class WorkSessionPageComponent {
     this.error.set(null);
     this.actionSuccess.set(null);
 
-    this.workSessionService
+    this.peopleService
       .startSession(personId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -125,7 +125,7 @@ export class WorkSessionPageComponent {
     this.loading.set(true);
     this.actionSuccess.set(null);
 
-    this.workSessionService
+    this.peopleService
       .stopSession(personId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -161,7 +161,7 @@ export class WorkSessionPageComponent {
 
     const selectedBreakType = this.breakForm.controls.breakType.value;
 
-    this.workSessionService
+    this.peopleService
       .startBreak(sid)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -189,7 +189,7 @@ export class WorkSessionPageComponent {
       return;
     }
 
-    this.workSessionService
+    this.peopleService
       .stopBreak(sid)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

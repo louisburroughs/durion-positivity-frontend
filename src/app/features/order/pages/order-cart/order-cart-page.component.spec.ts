@@ -2,9 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { BehaviorSubject, of, throwError } from 'rxjs';
-import { SalesOrderLineResponse, SalesOrderResponse, SalesOrdersService } from '@durion-sdk/order';
+import { SalesOrderLineResponse, SalesOrderResponse } from '@durion-sdk/order';
 import { AuthService } from '../../../../core/services/auth.service';
 import { OrderCartPageComponent } from './order-cart-page.component';
+import { OrderService } from '../../services/order.service';
 
 const orderLineFixture: SalesOrderLineResponse = {
   orderLineId: 'line-1',
@@ -25,7 +26,7 @@ describe('OrderCartPageComponent', () => {
   let component: OrderCartPageComponent;
   let paramMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
-  const salesOrdersServiceMock = {
+  const orderServiceMock = {
     createCart: vi.fn(),
     getOrder: vi.fn(),
     addItem: vi.fn(),
@@ -39,16 +40,16 @@ describe('OrderCartPageComponent', () => {
   beforeEach(async () => {
     paramMap$ = new BehaviorSubject(convertToParamMap({ orderId: 'ord-1' }));
 
-    salesOrdersServiceMock.createCart.mockReset();
-    salesOrdersServiceMock.getOrder.mockReset();
-    salesOrdersServiceMock.addItem.mockReset();
-    salesOrdersServiceMock.removeItem.mockReset();
+    orderServiceMock.createCart.mockReset();
+    orderServiceMock.getOrder.mockReset();
+    orderServiceMock.addItem.mockReset();
+    orderServiceMock.removeItem.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [OrderCartPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: SalesOrdersService, useValue: salesOrdersServiceMock },
+        { provide: OrderService, useValue: orderServiceMock },
         { provide: AuthService, useValue: authServiceMock },
         {
           provide: ActivatedRoute,
@@ -64,18 +65,18 @@ describe('OrderCartPageComponent', () => {
   });
 
   it('loads order when orderId route param is present', () => {
-    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
 
     fixture.detectChanges();
 
-    expect(salesOrdersServiceMock.getOrder).toHaveBeenCalledWith('ord-1');
+    expect(orderServiceMock.getOrder).toHaveBeenCalledWith('ord-1');
     expect(component.order()).toEqual(orderFixture);
     expect(component.state()).toBe('ready');
   });
 
   it('sets error state before errorKey when addItem fails', () => {
-    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
-    salesOrdersServiceMock.addItem.mockReturnValue(throwError(() => new Error('add failed')));
+    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    orderServiceMock.addItem.mockReturnValue(throwError(() => new Error('add failed')));
 
     fixture.detectChanges();
 
@@ -93,8 +94,8 @@ describe('OrderCartPageComponent', () => {
   });
 
   it('shows error state when createNewCart fails', () => {
-    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
-    salesOrdersServiceMock.createCart.mockReturnValue(throwError(() => new Error('fail')));
+    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    orderServiceMock.createCart.mockReturnValue(throwError(() => new Error('fail')));
 
     fixture.detectChanges();
 
@@ -117,8 +118,8 @@ describe('OrderCartPageComponent', () => {
   });
 
   it('shows error state when removeItem fails', () => {
-    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
-    salesOrdersServiceMock.removeItem.mockReturnValue(throwError(() => new Error('fail')));
+    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    orderServiceMock.removeItem.mockReturnValue(throwError(() => new Error('fail')));
 
     fixture.detectChanges();
 
@@ -141,7 +142,7 @@ describe('OrderCartPageComponent', () => {
   });
 
   it('sets error state before errorKey when initial load fails', () => {
-    salesOrdersServiceMock.getOrder.mockReturnValue(throwError(() => new Error('load failed')));
+    orderServiceMock.getOrder.mockReturnValue(throwError(() => new Error('load failed')));
 
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');

@@ -5,7 +5,7 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { NEVER, Observable, of, throwError } from 'rxjs';
 
 import { EmployeeOffboardPageComponent } from './employee-offboard-page.component';
-import { EmployeeAPIService } from '@durion-sdk/people';
+import { PeopleService } from '../../services/people.service';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────
 
@@ -45,7 +45,7 @@ async function setup(opts: {
     imports: [EmployeeOffboardPageComponent],
     providers: [
       provideRouter([]),
-      { provide: EmployeeAPIService, useValue: stubPeopleService },
+      { provide: PeopleService, useValue: stubPeopleService },
       {
         provide: ActivatedRoute,
         useValue: { snapshot: { paramMap: { get: () => 'emp-001' } } },

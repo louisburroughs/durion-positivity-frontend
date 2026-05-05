@@ -3,8 +3,9 @@ import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { CancelOrderRequest, CancellationResponse, OrderCancellationService, SalesOrderResponse, SalesOrdersService } from '@durion-sdk/order';
+import { CancelOrderRequest, CancellationResponse, SalesOrderResponse } from '@durion-sdk/order';
 import { Subscription, distinctUntilChanged, finalize, map, of, switchMap } from 'rxjs';
+import { OrderService } from '../../services/order.service';
 
 @Component({
   selector: 'app-order-cancel-page',
@@ -15,8 +16,7 @@ import { Subscription, distinctUntilChanged, finalize, map, of, switchMap } from
 })
 export class OrderCancelPageComponent {
   private readonly route = inject(ActivatedRoute);
-  private readonly salesOrdersService = inject(SalesOrdersService);
-  private readonly orderCancellationService = inject(OrderCancellationService);
+  private readonly orderService = inject(OrderService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly state = signal<'idle' | 'loading' | 'ready' | 'empty' | 'error'>('idle');
@@ -43,7 +43,7 @@ export class OrderCancelPageComponent {
 
             this.state.set('loading');
             this.errorKey.set(null);
-            return this.salesOrdersService.getOrder(orderId);
+            return this.orderService.getOrder(orderId);
           }),
         )
         .subscribe({
@@ -76,7 +76,7 @@ export class OrderCancelPageComponent {
     this.errorKey.set(null);
     this.submitting.set(true);
 
-    this.orderCancellationService
+    this.orderService
       .cancelOrder(orderId, request)
       .pipe(
         takeUntilDestroyed(this.destroyRef),

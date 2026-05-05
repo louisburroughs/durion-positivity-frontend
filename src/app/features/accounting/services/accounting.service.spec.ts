@@ -146,6 +146,7 @@ describe('AccountingService', () => {
         eventType: 'InvoiceIssued',
         status: IngestionProcessingStatus.Received,
         receivedAt: '2025-01-01T10:00:00Z',
+        payload: { invoiceId: 'inv-001' },
       };
       accountingEventsStub.getEvent.mockReturnValueOnce(of(sdkFixture));
 
@@ -164,7 +165,7 @@ describe('AccountingService', () => {
         organizationId: undefined,
         sourceSystem: undefined,
         transactionDate: undefined,
-        payload: undefined,
+        payload: { invoiceId: 'inv-001' },
       });
     });
   });

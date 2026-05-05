@@ -23,6 +23,7 @@ const REFRESH_TOKEN_KEY = 'durion-refresh-token';
 const ROLES_KEY = 'durion-user-roles';
 const ROLES_EXP_KEY = 'durion-user-roles-exp';
 const EXPIRY_SKEW_MS = 30_000;
+const MAX_TIMEOUT_DELAY_MS = 2_147_483_647;
 
 /**
  * AuthService
@@ -267,8 +268,13 @@ export class AuthService {
       this.expiryTimerId = null;
     }
 
-    const delay = Math.max(0, expiresAtMs - Date.now());
+    const delay = Math.min(MAX_TIMEOUT_DELAY_MS, Math.max(0, expiresAtMs - Date.now()));
     this.expiryTimerId = setTimeout(() => {
+      if (Date.now() < expiresAtMs) {
+        this.scheduleSessionExpiry(expiresAtMs);
+        return;
+      }
+
       this.clearTokens();
       this.router.navigate(['/login']);
     }, delay);

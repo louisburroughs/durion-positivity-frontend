@@ -4,12 +4,11 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import {
   PriceOverrideDetail,
-  PriceOverridesService,
   SalesOrderLineResponse,
   SalesOrderResponse,
-  SalesOrdersService,
 } from '@durion-sdk/order';
 import { PriceOverridePageComponent } from './price-override-page.component';
+import { OrderService } from '../../services/order.service';
 
 const orderLineFixture: SalesOrderLineResponse = {
   orderLineId: 'line-1',
@@ -41,28 +40,24 @@ describe('PriceOverridePageComponent', () => {
   let component: PriceOverridePageComponent;
   let paramMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
-  const priceOverridesServiceMock = {
+  const orderServiceMock = {
     getOverridesByOrder: vi.fn(),
     applyPriceOverride: vi.fn(),
-  };
-
-  const salesOrdersServiceMock = {
     getOrder: vi.fn(),
   };
 
   beforeEach(async () => {
     paramMap$ = new BehaviorSubject(convertToParamMap({ orderId: 'ord-1', lineId: 'line-1' }));
 
-    priceOverridesServiceMock.getOverridesByOrder.mockReset();
-    priceOverridesServiceMock.applyPriceOverride.mockReset();
-    salesOrdersServiceMock.getOrder.mockReset();
+    orderServiceMock.getOverridesByOrder.mockReset();
+    orderServiceMock.applyPriceOverride.mockReset();
+    orderServiceMock.getOrder.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [PriceOverridePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: PriceOverridesService, useValue: priceOverridesServiceMock },
-        { provide: SalesOrdersService, useValue: salesOrdersServiceMock },
+        { provide: OrderService, useValue: orderServiceMock },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -77,22 +72,22 @@ describe('PriceOverridePageComponent', () => {
   });
 
   it('loads overrides and order line on init', () => {
-    priceOverridesServiceMock.getOverridesByOrder.mockReturnValue(of(overridesFixture));
-    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    orderServiceMock.getOverridesByOrder.mockReturnValue(of(overridesFixture));
+    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
 
     fixture.detectChanges();
 
-    expect(priceOverridesServiceMock.getOverridesByOrder).toHaveBeenCalledWith('ord-1');
-    expect(salesOrdersServiceMock.getOrder).toHaveBeenCalledWith('ord-1');
+    expect(orderServiceMock.getOverridesByOrder).toHaveBeenCalledWith('ord-1');
+    expect(orderServiceMock.getOrder).toHaveBeenCalledWith('ord-1');
     expect(component.overrides()).toEqual(overridesFixture);
     expect(component.orderLine()).toEqual(orderLineFixture);
     expect(component.state()).toBe('ready');
   });
 
   it('sets error state before errorKey when applyOverride fails', () => {
-    priceOverridesServiceMock.getOverridesByOrder.mockReturnValue(of(overridesFixture));
-    salesOrdersServiceMock.getOrder.mockReturnValue(of(orderFixture));
-    priceOverridesServiceMock.applyPriceOverride.mockReturnValue(throwError(() => new Error('apply failed')));
+    orderServiceMock.getOverridesByOrder.mockReturnValue(of(overridesFixture));
+    orderServiceMock.getOrder.mockReturnValue(of(orderFixture));
+    orderServiceMock.applyPriceOverride.mockReturnValue(throwError(() => new Error('apply failed')));
 
     fixture.detectChanges();
 
@@ -110,8 +105,8 @@ describe('PriceOverridePageComponent', () => {
   });
 
   it('sets error state before errorKey when initial load fails', () => {
-    priceOverridesServiceMock.getOverridesByOrder.mockReturnValue(throwError(() => new Error('load failed')));
-    salesOrdersServiceMock.getOrder.mockReturnValue(throwError(() => new Error('load failed')));
+    orderServiceMock.getOverridesByOrder.mockReturnValue(throwError(() => new Error('load failed')));
+    orderServiceMock.getOrder.mockReturnValue(throwError(() => new Error('load failed')));
 
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');

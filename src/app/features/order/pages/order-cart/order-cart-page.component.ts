@@ -3,9 +3,10 @@ import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { AddItemRequest, CreateCartRequest, SalesOrderResponse, SalesOrdersService } from '@durion-sdk/order';
+import { AddItemRequest, CreateCartRequest, SalesOrderResponse } from '@durion-sdk/order';
 import { Subscription, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
+import { OrderService } from '../../services/order.service';
 
 @Component({
   selector: 'app-order-cart-page',
@@ -17,7 +18,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class OrderCartPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly salesOrdersService = inject(SalesOrdersService);
+  private readonly orderService = inject(OrderService);
   private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -44,7 +45,7 @@ export class OrderCartPageComponent {
             }
 
             this.state.set('loading');
-            return this.salesOrdersService.getOrder(orderId);
+            return this.orderService.getOrder(orderId);
           }),
         )
         .subscribe({
@@ -77,7 +78,7 @@ export class OrderCartPageComponent {
     this.state.set('loading');
     this.errorKey.set(null);
 
-    this.salesOrdersService
+    this.orderService
       .createCart(request)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -108,10 +109,10 @@ export class OrderCartPageComponent {
     this.addingItem.set(true);
     this.errorKey.set(null);
 
-    this.salesOrdersService
+    this.orderService
       .addItem(orderId, request)
       .pipe(
-        switchMap(() => this.salesOrdersService.getOrder(orderId)),
+        switchMap(() => this.orderService.getOrder(orderId)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
@@ -139,10 +140,10 @@ export class OrderCartPageComponent {
     this.errorKey.set(null);
     this.state.set('loading');
 
-    this.salesOrdersService
+    this.orderService
       .removeItem(orderId, lineId)
       .pipe(
-        switchMap(() => this.salesOrdersService.getOrder(orderId)),
+        switchMap(() => this.orderService.getOrder(orderId)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({

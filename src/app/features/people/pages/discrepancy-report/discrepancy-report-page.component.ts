@@ -8,7 +8,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PeopleReportsAPIService } from '@durion-sdk/people';
+import { PeopleService } from '../../services/people.service';
 
 type SortField = 'technicianName' | 'locationId' | 'reportDate' | 'totalAttendanceHours' | 'totalJobHours' | 'discrepancyHours';
 type SortDir = 'asc' | 'desc';
@@ -22,7 +22,7 @@ type SortDir = 'asc' | 'desc';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DiscrepancyReportPageComponent {
-  private readonly reportsApiService = inject(PeopleReportsAPIService);
+  private readonly peopleService = inject(PeopleService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -77,7 +77,7 @@ export class DiscrepancyReportPageComponent {
     this.error.set(null);
 
     const parsedTechnicianIds = technicianIds.trim() ? technicianIds.split(',').map(s => s.trim()) : undefined;
-    this.reportsApiService.getAttendanceDiscrepancyReport(
+    this.peopleService.getAttendanceDiscrepancyReport(
       startDate, endDate, timezone,
       locationId.trim() || undefined,
       parsedTechnicianIds,

@@ -9,7 +9,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { PeopleService } from '../../services/people.service';
 
 type SubmitState = 'NOT_SUBMITTED' | 'SUBMITTING' | 'SUBMITTED' | 'FAILED';
 
@@ -22,7 +22,7 @@ type SubmitState = 'NOT_SUBMITTED' | 'SUBMITTING' | 'SUBMITTED' | 'FAILED';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkSessionSubmitPageComponent {
-  private readonly api = inject(ApiBaseService);
+  private readonly peopleService = inject(PeopleService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -88,8 +88,8 @@ export class WorkSessionSubmitPageComponent {
       submittedAt: values.submittedAt,
     };
 
-    this.api
-      .post<Record<string, unknown> | null>('/v1/people/workSessions/' + this.sessionId() + '/submit', body)
+    this.peopleService
+      .submitWorkSession(this.sessionId(), body)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {

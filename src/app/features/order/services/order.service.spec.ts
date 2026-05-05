@@ -1,0 +1,124 @@
+import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+import {
+  AddItemRequest,
+  ApplyPriceOverrideRequest,
+  CancelOrderRequest,
+  CancellationResponse,
+  CreateCartRequest,
+  OrderCancellationService,
+  PriceOverrideDetail,
+  PriceOverrideResult,
+  PriceOverridesService,
+  SalesOrderLineResponse,
+  SalesOrderResponse,
+  SalesOrdersService,
+} from '@durion-sdk/order';
+import { OrderService } from './order.service';
+
+describe('OrderService', () => {
+  let service: OrderService;
+
+  const salesOrdersApiStub = {
+    getOrder: vi.fn(),
+    createCart: vi.fn(),
+    addItem: vi.fn(),
+    removeItem: vi.fn(),
+  };
+  const orderCancellationApiStub = {
+    cancelOrder: vi.fn(),
+  };
+  const priceOverridesApiStub = {
+    getOverridesByOrder: vi.fn(),
+    applyPriceOverride: vi.fn(),
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    TestBed.configureTestingModule({
+      providers: [
+        OrderService,
+        { provide: SalesOrdersService, useValue: salesOrdersApiStub },
+        { provide: OrderCancellationService, useValue: orderCancellationApiStub },
+        { provide: PriceOverridesService, useValue: priceOverridesApiStub },
+      ],
+    });
+
+    service = TestBed.inject(OrderService);
+  });
+
+  it('getOrder() delegates to SalesOrdersService.getOrder', () => {
+    const response: SalesOrderResponse = { orderId: 'ord-1' };
+    salesOrdersApiStub.getOrder.mockReturnValue(of(response));
+
+    service.getOrder('ord-1').subscribe(result => expect(result).toEqual(response));
+
+    expect(salesOrdersApiStub.getOrder).toHaveBeenCalledWith('ord-1');
+  });
+
+  it('createCart() delegates to SalesOrdersService.createCart', () => {
+    const request: CreateCartRequest = { clerkId: 'user-1', terminalId: 'TERM-1' };
+    const response: SalesOrderResponse = { orderId: 'ord-1' };
+    salesOrdersApiStub.createCart.mockReturnValue(of(response));
+
+    service.createCart(request).subscribe(result => expect(result).toEqual(response));
+
+    expect(salesOrdersApiStub.createCart).toHaveBeenCalledWith(request);
+  });
+
+  it('addItem() delegates to SalesOrdersService.addItem', () => {
+    const request: AddItemRequest = { itemSku: 'SKU-1', quantity: 2 };
+    const response: SalesOrderLineResponse = { orderLineId: 'line-1', itemSku: 'SKU-1', quantity: 2 };
+    salesOrdersApiStub.addItem.mockReturnValue(of(response));
+
+    service.addItem('ord-1', request).subscribe(result => expect(result).toEqual(response));
+
+    expect(salesOrdersApiStub.addItem).toHaveBeenCalledWith('ord-1', request);
+  });
+
+  it('removeItem() delegates to SalesOrdersService.removeItem', () => {
+    const response: SalesOrderLineResponse = { orderLineId: 'line-1', itemSku: 'SKU-1', quantity: 2 };
+    salesOrdersApiStub.removeItem.mockReturnValue(of(response));
+
+    service.removeItem('ord-1', 'line-1').subscribe(result => expect(result).toEqual(response));
+
+    expect(salesOrdersApiStub.removeItem).toHaveBeenCalledWith('ord-1', 'line-1');
+  });
+
+  it('cancelOrder() delegates to OrderCancellationService.cancelOrder', () => {
+    const request: CancelOrderRequest = { cancellationReason: 'CUSTOMER_CANCELLED' };
+    const response: CancellationResponse = { orderId: 'ord-1', status: 'CANCELLED' };
+    orderCancellationApiStub.cancelOrder.mockReturnValue(of(response));
+
+    service.cancelOrder('ord-1', request).subscribe(result => expect(result).toEqual(response));
+
+    expect(orderCancellationApiStub.cancelOrder).toHaveBeenCalledWith('ord-1', request);
+  });
+
+  it('getOverridesByOrder() delegates to PriceOverridesService.getOverridesByOrder', () => {
+    const response: PriceOverrideDetail[] = [{ overrideId: 'ov-1', orderId: 'ord-1', orderLineId: 'line-1', originalPrice: 100, overridePrice: 90, reasonCode: 'PRICE_MATCH' }];
+    priceOverridesApiStub.getOverridesByOrder.mockReturnValue(of(response));
+
+    service.getOverridesByOrder('ord-1').subscribe(result => expect(result).toEqual(response));
+
+    expect(priceOverridesApiStub.getOverridesByOrder).toHaveBeenCalledWith('ord-1');
+  });
+
+  it('applyPriceOverride() delegates to PriceOverridesService.applyPriceOverride', () => {
+    const request: ApplyPriceOverrideRequest = {
+      orderId: 'ord-1',
+      orderLineId: 'line-1',
+      productId: 'SKU-1',
+      originalPrice: 100,
+      overridePrice: 90,
+      reasonCode: 'PRICE_MATCH',
+    };
+    const response: PriceOverrideResult = { overrideId: 'ov-1', status: 'PENDING' };
+    priceOverridesApiStub.applyPriceOverride.mockReturnValue(of(response));
+
+    service.applyPriceOverride(request).subscribe(result => expect(result).toEqual(response));
+
+    expect(priceOverridesApiStub.applyPriceOverride).toHaveBeenCalledWith(request);
+  });
+});

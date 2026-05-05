@@ -6,12 +6,11 @@ import { TranslatePipe } from '@ngx-translate/core';
 import {
   ApplyPriceOverrideRequest,
   PriceOverrideDetail,
-  PriceOverridesService,
   SalesOrderLineResponse,
   SalesOrderResponse,
-  SalesOrdersService,
 } from '@durion-sdk/order';
 import { Subscription, distinctUntilChanged, forkJoin, map, of, switchMap } from 'rxjs';
+import { OrderService } from '../../services/order.service';
 
 @Component({
   selector: 'app-price-override-page',
@@ -23,8 +22,7 @@ import { Subscription, distinctUntilChanged, forkJoin, map, of, switchMap } from
 export class PriceOverridePageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly priceOverridesService = inject(PriceOverridesService);
-  private readonly salesOrdersService = inject(SalesOrdersService);
+  private readonly orderService = inject(OrderService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly state = signal<'idle' | 'loading' | 'ready' | 'empty' | 'error'>('idle');
@@ -63,8 +61,8 @@ export class PriceOverridePageComponent {
             this.state.set('loading');
             this.errorKey.set(null);
             return forkJoin({
-              overrides: this.priceOverridesService.getOverridesByOrder(params.orderId),
-              order: this.salesOrdersService.getOrder(params.orderId),
+              overrides: this.orderService.getOverridesByOrder(params.orderId),
+              order: this.orderService.getOrder(params.orderId),
             });
           }),
         )
@@ -107,7 +105,7 @@ export class PriceOverridePageComponent {
     this.state.set('loading');
     this.errorKey.set(null);
 
-    this.priceOverridesService
+    this.orderService
       .applyPriceOverride(request)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

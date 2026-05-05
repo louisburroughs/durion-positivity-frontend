@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EmployeeAPIService, EmployeeProfileDto, CreateEmployeeRequestStatusEnum, UpdateEmployeeRequestStatusEnum, EmployeeProfileDtoStatusEnum } from '@durion-sdk/people';
+import { EmployeeProfileDto, CreateEmployeeRequestStatusEnum, UpdateEmployeeRequestStatusEnum, EmployeeProfileDtoStatusEnum } from '@durion-sdk/people';
+import { PeopleService } from '../../services/people.service';
 
 @Component({
   selector: 'app-employee-profile-page',
@@ -13,7 +14,7 @@ import { EmployeeAPIService, EmployeeProfileDto, CreateEmployeeRequestStatusEnum
   styleUrl: './employee-profile-page.component.css',
 })
 export class EmployeeProfilePageComponent implements OnInit {
-  private readonly employeeApiService = inject(EmployeeAPIService);
+  private readonly peopleService = inject(PeopleService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -60,7 +61,7 @@ export class EmployeeProfilePageComponent implements OnInit {
 
     this.loading.set(true);
     this.error.set(null);
-    this.employeeApiService.getEmployee(this.employeeId)
+    this.peopleService.getEmployee(this.employeeId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (emp) => {
@@ -107,7 +108,7 @@ export class EmployeeProfilePageComponent implements OnInit {
         return;
       }
 
-      this.employeeApiService.updateEmployee(employeeId, {
+      this.peopleService.updateEmployee(employeeId, {
         legalName,
         employeeNumber,
         status: (status || 'ACTIVE') as UpdateEmployeeRequestStatusEnum,
@@ -128,7 +129,7 @@ export class EmployeeProfilePageComponent implements OnInit {
       return;
     }
 
-    this.employeeApiService.createEmployee({
+    this.peopleService.createEmployee({
       legalName,
       employeeNumber,
       status: status as CreateEmployeeRequestStatusEnum,

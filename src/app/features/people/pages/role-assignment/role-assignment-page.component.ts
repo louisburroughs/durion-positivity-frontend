@@ -2,7 +2,8 @@ import { Component, computed, DestroyRef, OnInit, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { PeopleAccessControlService, PersonRoleAssignmentRequest, RoleDto, UserRoleDto } from '@durion-sdk/people';
+import { PersonRoleAssignmentRequest, RoleDto, UserRoleDto } from '@durion-sdk/people';
+import { PeopleService } from '../../services/people.service';
 
 @Component({
   selector: 'app-role-assignment-page',
@@ -12,7 +13,7 @@ import { PeopleAccessControlService, PersonRoleAssignmentRequest, RoleDto, UserR
   styleUrl: './role-assignment-page.component.css',
 })
 export class RoleAssignmentPageComponent implements OnInit {
-  private readonly accessControlService = inject(PeopleAccessControlService);
+  private readonly peopleService = inject(PeopleService);
   private readonly destroyRef = inject(DestroyRef);
 
   personUuid = signal('');
@@ -53,7 +54,7 @@ export class RoleAssignmentPageComponent implements OnInit {
   loadAssignments(): void {
     this.errorMessage.set(null);
     this.loading.set(true);
-    this.accessControlService.getAssignments(this.personUuid(), this.includeHistory()).subscribe({
+    this.peopleService.getRoleAssignments(this.personUuid(), this.includeHistory()).subscribe({
       next: data => {
         this.assignments.set(data);
         this.loading.set(false);
@@ -67,7 +68,7 @@ export class RoleAssignmentPageComponent implements OnInit {
 
   loadRoles(): void {
     this.errorMessage.set(null);
-    this.accessControlService.getRoles(this.personUuid()).subscribe({
+    this.peopleService.getAvailableRoles(this.personUuid()).subscribe({
       next: data => this.roles.set(data),
       error: () => {
         this.errorMessage.set('PEOPLE.ROLE_ASSIGNMENT.ERROR.LOAD_ROLES');
@@ -94,7 +95,7 @@ export class RoleAssignmentPageComponent implements OnInit {
       body.endDate = this.effectiveEndAt();
     }
 
-    this.accessControlService.createAssignment(this.personUuid(), body).subscribe({
+    this.peopleService.createRoleAssignment(this.personUuid(), body).subscribe({
       next: () => this.loadAssignments(),
       error: () => {
         this.errorMessage.set('PEOPLE.ROLE_ASSIGNMENT.ERROR.ASSIGN');
@@ -123,7 +124,7 @@ export class RoleAssignmentPageComponent implements OnInit {
     }
 
     this.errorMessage.set(null);
-    this.accessControlService.revokeAssignment(this.personUuid(), roleCode).subscribe({
+    this.peopleService.revokeRoleAssignment(this.personUuid(), roleCode).subscribe({
       next: () => {
         this.confirmingAssignmentId.set(null);
         this.loadAssignments();

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { AvailabilityView } from '../../models/inventory.models';
@@ -12,7 +12,7 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 @Component({
   selector: 'app-inventory-availability',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, FormsModule, RouterLink],
+  imports: [CommonModule, TranslatePipe, FormsModule],
   templateUrl: './availability.component.html',
   styleUrl: './availability.component.css',
 })

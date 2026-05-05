@@ -41,7 +41,7 @@ export class ApprovalPartialPageComponent implements OnInit {
   /** Per-item approval decisions: key = itemId, value = true (approved) / false (declined) */
   readonly lineDecisions = signal<Record<string, boolean>>({});
   /** Rejection reasons for declined items */
-  readonly rejectionReasons = signal<Record<string, string>>({});
+  readonly rejectionReasons = signal<Record<string, string | undefined>>({});
 
   readonly headerForm = this.fb.nonNullable.group({
     customerId: ['', Validators.required],

@@ -9,8 +9,7 @@ import {
 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { HttpParams } from '@angular/common/http';
-import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { PeopleService } from '../../services/people.service';
 
 type PeriodStatus = 'OPEN' | 'SUBMISSION_CLOSED' | 'PAYROLL_CLOSED';
 
@@ -23,7 +22,7 @@ type PeriodStatus = 'OPEN' | 'SUBMISSION_CLOSED' | 'PAYROLL_CLOSED';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimeApprovalPageComponent {
-  private readonly api = inject(ApiBaseService);
+  private readonly peopleService = inject(PeopleService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly people = signal<unknown[]>([]);
@@ -82,7 +81,7 @@ export class TimeApprovalPageComponent {
 
   loadPeople(): void {
     this.peopleLoading.set(true);
-    this.api.get<Record<string, unknown>>('/v1/people/timekeeping/approvals/people')
+    this.peopleService.listApprovalPeople()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (r) => {
@@ -98,7 +97,7 @@ export class TimeApprovalPageComponent {
 
   loadPeriods(): void {
     this.periodsLoading.set(true);
-    this.api.get<Record<string, unknown>>('/v1/people/timekeeping/time-periods')
+    this.peopleService.listTimePeriods()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (r) => {
@@ -126,8 +125,7 @@ export class TimeApprovalPageComponent {
     this.actionSuccess.set(null);
     this.actionError.set(null);
 
-    const params = new HttpParams().set('personId', personId).set('timePeriodId', timePeriodId);
-    this.api.get<Record<string, unknown>>('/v1/people/timekeeping/timekeeping-entries', params)
+    this.peopleService.listTimekeepingEntries(personId, timePeriodId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (r) => {
@@ -141,8 +139,7 @@ export class TimeApprovalPageComponent {
       });
 
     this.historyLoading.set(true);
-    const historyParams = new HttpParams().set('personId', personId).set('timePeriodId', timePeriodId);
-    this.api.get<Record<string, unknown>>('/v1/people/timekeeping/time-period-approvals', historyParams)
+    this.peopleService.listTimePeriodApprovals(personId, timePeriodId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (r) => {
@@ -159,7 +156,7 @@ export class TimeApprovalPageComponent {
     this.actionInFlight.set(true);
     this.actionError.set(null);
     this.actionSuccess.set(null);
-    this.api.post<void>('/v1/people/timekeeping/time-periods/' + timePeriodId + '/people/' + personId + '/approve', {})
+    this.peopleService.approveTimePeriod(timePeriodId, personId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -195,7 +192,7 @@ export class TimeApprovalPageComponent {
     const { comments } = this.rejectForm.getRawValue();
     const body: Record<string, string> = {};
     if (comments.trim()) body['comments'] = comments.trim();
-    this.api.post<void>('/v1/people/timekeeping/time-periods/' + timePeriodId + '/people/' + personId + '/reject', body)
+    this.peopleService.rejectTimePeriod(timePeriodId, personId, body)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

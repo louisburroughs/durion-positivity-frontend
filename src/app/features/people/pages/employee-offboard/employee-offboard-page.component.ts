@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EmployeeAPIService, EmployeeProfileDto } from '@durion-sdk/people';
+import { EmployeeProfileDto } from '@durion-sdk/people';
+import { PeopleService } from '../../services/people.service';
 
 @Component({
   selector: 'app-employee-offboard-page',
@@ -13,7 +14,7 @@ import { EmployeeAPIService, EmployeeProfileDto } from '@durion-sdk/people';
   styleUrl: './employee-offboard-page.component.css',
 })
 export class EmployeeOffboardPageComponent implements OnInit {
-  private readonly employeeApiService = inject(EmployeeAPIService);
+  private readonly peopleService = inject(PeopleService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -41,7 +42,7 @@ export class EmployeeOffboardPageComponent implements OnInit {
 
   loadEmployee(): void {
     this.loading.set(true);
-    this.employeeApiService.getEmployee(this.employeeId)
+    this.peopleService.getEmployee(this.employeeId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (emp) => {
@@ -71,7 +72,7 @@ export class EmployeeOffboardPageComponent implements OnInit {
     }
 
     this.submitting.set(true);
-    this.employeeApiService.disableEmployee(this.employeeId, { assignmentEndDate: offboardDate })
+    this.peopleService.disableEmployee(this.employeeId, { assignmentEndDate: offboardDate })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

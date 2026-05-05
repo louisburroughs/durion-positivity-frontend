@@ -380,7 +380,7 @@ export class AccountingService {
       organizationId: dto.organizationId,
       sourceSystem: dto.sourceSystem,
       transactionDate: dto.transactionDate,
-      payload: dto.payload,
+      payload: this.toRecord(dto.payload),
     };
   }
 
@@ -663,5 +663,13 @@ export class AccountingService {
       errorMessage: item.errorMessage,
       domainKeyId: item.domainKeyId,
     };
+  }
+
+  private toRecord(value: object | undefined): Record<string, unknown> | undefined {
+    if (!value || Array.isArray(value)) {
+      return undefined;
+    }
+
+    return value as Record<string, unknown>;
   }
 }
