@@ -1,26 +1,33 @@
 /* Customer List */
 .crm-page { display: flex; flex-direction: column; gap: var(--space-6); max-width: 860px; padding: var(--space-6) var(--space-4); margin: 0 auto; }
 .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); }
-.page-header h1 { margin: 0; font-family: var(--font-primary); font-size: 1.5rem; font-weight: 700; color: var(--durion-on-surface); }
+.page-header h1 { margin: 0; font-family: var(--font-primary); font-size: 1.5rem; font-weight: 700; color: var(--currentTextColor); }
 .header-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
 .search-form { position: relative; }
-.search-input { width: 100%; box-sizing: border-box; background: var(--durion-surface-container-lowest); border: none; border-bottom: 2px solid var(--durion-outline); border-radius: var(--radius-sm) var(--radius-sm) 0 0; padding: var(--space-3) var(--space-4); font-size: 0.95rem; font-family: var(--font-body); color: var(--durion-on-surface); outline: none; transition: border-color var(--transition-fast); }
-.search-input:focus { border-bottom-color: var(--durion-primary); }
-.hint-text { margin: 0; font-size: 0.87rem; color: var(--durion-on-surface-variant); }
-.hint-text--warn { color: var(--durion-error); }
-.hint-text--error { color: var(--durion-error); }
-.party-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-3); }
-.party-card { background: var(--durion-surface-container-lowest); border-radius: var(--radius-md); overflow: hidden; }
-.party-card__inner { display: flex; flex-direction: column; gap: 2px; padding: var(--space-4); width: 100%; text-align: left; background: transparent; border: none; cursor: pointer; transition: background var(--transition-fast); }
-.party-card__inner:hover { background: var(--durion-surface-container-low); }
-.party-card__name { font-weight: 600; font-size: 0.95rem; color: var(--durion-on-surface); }
-.party-card__dba { font-size: 0.82rem; color: var(--durion-on-surface-variant); }
-.party-card__id { font-size: 0.78rem; color: var(--durion-on-surface-variant); font-family: 'Fira Code', monospace; }
+.search-input { width: 100%; box-sizing: border-box; background: var(--input-background); border: none; border-bottom: 2px solid var(--input-border); border-radius: var(--radius-sm) var(--radius-sm) 0 0; padding: var(--space-3) var(--space-4); font-size: 0.95rem; font-family: var(--font-body); color: var(--currentTextColor); outline: none; transition: border-color var(--transition-fast); }
+.search-input:focus { border-bottom-color: var(--brand-primary); }
+.hint-text { margin: 0; font-size: 0.87rem; color: color-mix(in srgb, var(--currentTextColor) 72%, transparent); }
+.hint-text--warn { color: var(--functional-error-red); }
+.hint-text--error { color: var(--functional-error-red); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--input-border); border-radius: var(--radius-lg); background: var(--cardBackground); }
+.party-table { width: 100%; border-collapse: collapse; }
+.party-table th, .party-table td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid color-mix(in srgb, var(--input-border) 72%, transparent); text-align: left; vertical-align: top; }
+.party-table thead tr th { font-size: 0.8125rem; font-weight: 600; color: color-mix(in srgb, var(--currentTextColor) 72%, transparent); text-transform: uppercase; letter-spacing: 0.04em; }
+.party-table tbody tr:last-child td { border-bottom: none; }
+.sort-btn { display: inline-flex; align-items: center; gap: var(--space-1); background: transparent; border: none; padding: 0; font-size: 0.8125rem; font-weight: 600; font-family: var(--font-body); color: color-mix(in srgb, var(--currentTextColor) 72%, transparent); text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer; }
+.sort-btn:hover { color: var(--currentTextColor); }
+.sort-icon { font-size: 0.75rem; opacity: 0.7; }
+.party-row { cursor: pointer; transition: background var(--transition-fast); }
+.party-row:hover, .party-row:focus-visible { background: color-mix(in srgb, var(--brand-primary) 8%, var(--cardBackground)); outline: none; }
+.party-row__name { display: block; font-weight: 600; font-size: 0.95rem; color: var(--currentTextColor); }
+.party-row__sub { display: block; font-size: 0.8rem; color: color-mix(in srgb, var(--currentTextColor) 72%, transparent); margin-top: 2px; }
+.party-row__empty { color: color-mix(in srgb, var(--currentTextColor) 40%, transparent); }
+.party-row__vehicles { font-weight: 600; font-variant-numeric: tabular-nums; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); border-radius: var(--radius-md); font-size: 0.875rem; font-weight: 600; font-family: var(--font-body); cursor: pointer; border: none; transition: opacity var(--transition-fast), transform var(--transition-fast); }
 .btn:active:not(:disabled) { transform: scale(0.97); }
-.btn--primary { background: var(--durion-primary); color: var(--durion-on-primary); }
+.btn--primary { background: var(--brand-primary); color: var(--contrastTextColor); }
 .btn--primary:hover { opacity: 0.9; }
-.btn--secondary { background: var(--durion-surface-container); color: var(--durion-on-surface); }
-.btn--ghost { background: transparent; color: var(--durion-primary); }
+.btn--secondary { background: var(--cardBackground); color: var(--currentTextColor); }
+.btn--ghost { background: transparent; color: var(--brand-primary); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 560px) { .page-header { flex-direction: column; align-items: flex-start; } .header-actions { width: 100%; } .btn { flex: 1; } }

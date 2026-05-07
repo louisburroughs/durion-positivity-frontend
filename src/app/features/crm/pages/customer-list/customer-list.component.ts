@@ -1,13 +1,15 @@
-import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
-import { PartyDetail } from '../../models/crm.models';
+import { Contact, PartyDetail } from '../../models/crm.models';
 
 type PageState = 'loading' | 'empty' | 'ready' | 'error' | 'access-denied';
+type SortField = 'name' | 'vehicles';
+type SortDir   = 'asc' | 'desc';
 
 @Component({
   selector: 'app-customer-list',
@@ -25,6 +27,20 @@ export class CustomerListComponent implements OnInit {
   readonly state   = signal<PageState>('loading');
   readonly parties = signal<PartyDetail[]>([]);
   readonly error   = signal<string | null>(null);
+
+  readonly sortField = signal<SortField>('name');
+  readonly sortDir   = signal<SortDir>('asc');
+
+  readonly sortedParties = computed(() => {
+    const field = this.sortField();
+    const dir   = this.sortDir();
+    return [...this.parties()].sort((a, b) => {
+      const cmp = field === 'name'
+        ? a.legalName.localeCompare(b.legalName)
+        : (a.vehicles?.length ?? 0) - (b.vehicles?.length ?? 0);
+      return dir === 'asc' ? cmp : -cmp;
+    });
+  });
 
   readonly searchForm = this.fb.nonNullable.group({ query: [''] });
 
@@ -49,6 +65,19 @@ export class CustomerListComponent implements OnInit {
         this.error.set(err?.error?.message ?? 'Search failed.');
       },
     });
+  }
+
+  sort(field: SortField): void {
+    if (this.sortField() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortField.set(field);
+      this.sortDir.set('asc');
+    }
+  }
+
+  primaryContact(party: PartyDetail): Contact | undefined {
+    return party.contacts?.find(c => c.roles.includes('PRIMARY')) ?? party.contacts?.[0];
   }
 
   openParty(partyId: string): void {

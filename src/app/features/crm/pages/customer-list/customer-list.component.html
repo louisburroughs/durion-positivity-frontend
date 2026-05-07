@@ -51,24 +51,57 @@
     }
 
     @if (state() === 'ready' && parties().length) {
-      <ul class="party-list" aria-label="Search results">
-        @for (party of parties(); track party.partyId) {
-          <li class="party-card">
-            <button
-              class="party-card__inner"
-              type="button"
-              (click)="openParty(party.partyId)"
-              [attr.aria-label]="'Open party record for ' + party.legalName"
-            >
-              <span class="party-card__name">{{ party.legalName }}</span>
-              @if (party.dba) {
-                <span class="party-card__dba">DBA: {{ party.dba }}</span>
-              }
-              <span class="party-card__id">{{ party.partyId }}</span>
-            </button>
-          </li>
-        }
-      </ul>
+      <div class="table-wrap">
+        <table class="party-table" aria-label="Search results">
+          <thead>
+            <tr>
+              <th>
+                <button class="sort-btn" type="button" (click)="sort('name')"
+                  [attr.aria-sort]="sortField() === 'name' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
+                  Name
+                  <span class="sort-icon" aria-hidden="true">{{ sortField() === 'name' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                </button>
+              </th>
+              <th>Primary Contact</th>
+              <th>
+                <button class="sort-btn" type="button" (click)="sort('vehicles')"
+                  [attr.aria-sort]="sortField() === 'vehicles' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
+                  Vehicles
+                  <span class="sort-icon" aria-hidden="true">{{ sortField() === 'vehicles' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (party of sortedParties(); track party.partyId) {
+              <tr class="party-row"
+                  tabindex="0"
+                  (click)="openParty(party.partyId)"
+                  (keydown.enter)="openParty(party.partyId)"
+                  (keydown.space)="$event.preventDefault(); openParty(party.partyId)"
+                  [attr.aria-label]="'Open party record for ' + party.legalName">
+                <td>
+                  <span class="party-row__name">{{ party.legalName }}</span>
+                  @if (party.dba) {
+                    <span class="party-row__sub">DBA: {{ party.dba }}</span>
+                  }
+                </td>
+                <td>
+                  @if (primaryContact(party); as contact) {
+                    <span class="party-row__name">{{ contact.name }}</span>
+                    @if (contact.email) {
+                      <span class="party-row__sub">{{ contact.email }}</span>
+                    }
+                  } @else {
+                    <span class="party-row__empty">—</span>
+                  }
+                </td>
+                <td class="party-row__vehicles">{{ party.vehicles?.length ?? 0 }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
   </div>
 
