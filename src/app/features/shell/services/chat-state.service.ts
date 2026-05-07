@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, effect, inject } from '@angular/core';
+import { AuthService } from '../../../core/services/auth.service';
 
 export interface ChatMessage {
   id:        string;
@@ -18,10 +19,25 @@ export interface ChatMessage {
  */
 @Injectable({ providedIn: 'root' })
 export class ChatStateService {
+  private readonly authService = inject(AuthService);
   private readonly _messages = signal<ChatMessage[]>([]);
+
+  // Tracks the sub of the user who owns the current in-memory messages.
+  // Plain (non-signal) field — changes to this do not re-trigger the effect.
+  private trackedUserId: string | null = null;
 
   readonly messages = this._messages.asReadonly();
   readonly isEmpty  = computed(() => this._messages().length === 0);
+
+  constructor() {
+    effect(() => {
+      const newUserId = this.authService.currentUserClaims()?.sub ?? null;
+      if (newUserId !== null && this.trackedUserId !== null && newUserId !== this.trackedUserId) {
+        this._messages.set([]);
+      }
+      this.trackedUserId = newUserId;
+    });
+  }
 
   addUserMessage(content: string): ChatMessage {
     const msg: ChatMessage = {
