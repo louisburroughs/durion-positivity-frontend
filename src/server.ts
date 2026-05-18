@@ -25,6 +25,11 @@ app.use(
   createProxyMiddleware({
     target: API_GATEWAY_URL,
     changeOrigin: true,
+    // Explicitly strip the /api mount prefix so the gateway receives
+    // /service/v1/... paths (e.g. /location/v1/locations), not /api/service/v1/...
+    // Express strips req.url but http-proxy-middleware may use req.originalUrl
+    // depending on version; pathRewrite makes the intent unambiguous.
+    pathRewrite: { '^/api': '' },
   }),
 );
 
