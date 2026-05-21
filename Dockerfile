@@ -9,7 +9,8 @@ RUN corepack npm ci
 COPY . .
 RUN if [ ! -d .sdk-src ]; then git clone --depth 1 https://github.com/louisburroughs/durion-positivity-sdk-angular.git .sdk-src; fi
 ENV DURION_SDK_ANGULAR_PATH=/app/.sdk-src
-RUN npm run build
+ARG BUILD_CONFIGURATION=production
+RUN npm run sdk:install && ng build --configuration ${BUILD_CONFIGURATION}
 
 # Stage 2: Runtime
 FROM node:22-alpine AS runner

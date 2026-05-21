@@ -79,6 +79,18 @@
               ],
               "outputHashing": "all"
             },
+            "alpha": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.alpha.ts"
+                }
+              ],
+              "optimization": true,
+              "extractLicenses": true,
+              "sourceMap": true,
+              "outputHashing": "all"
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -92,6 +104,9 @@
           "configurations": {
             "production": {
               "buildTarget": "durion-positivity-frontend:build:production"
+            },
+            "alpha": {
+              "buildTarget": "durion-positivity-frontend:build:alpha"
             },
             "development": {
               "buildTarget": "durion-positivity-frontend:build:development"
