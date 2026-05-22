@@ -3,35 +3,47 @@
   <button type="button" class="btn-primary open-create-btn" (click)="openCreateModal()">{{ 'LOCATION.LOCATIONS.CREATE_LOCATION' | translate }}</button>
 </section>
 
-<div *ngIf="error()" class="error-banner">{{ error()! | translate }}</div>
-<div *ngIf="createSuccess()" class="success-banner">{{ 'LOCATION.LOCATIONS.CREATE_SUCCESS' | translate }}</div>
+@if (error()) {
+  <div class="error-banner">{{ error()! | translate }}</div>
+}
 
-<section *ngIf="loading(); else locationsContent" class="locations-list">
-  <p>{{ 'LOCATION.LOCATIONS.LOADING' | translate }}</p>
-</section>
+@if (createSuccess()) {
+  <div class="success-banner">{{ 'LOCATION.LOCATIONS.CREATE_SUCCESS' | translate }}</div>
+}
 
-<ng-template #locationsContent>
-  <section *ngIf="locations().length > 0; else emptyState" class="locations-list">
-    <article *ngFor="let location of locations()" class="location-card">
-      <h3>{{ getLocationName(location) }}</h3>
-      <p>{{ getLocationType(location) }}</p>
-    </article>
+@if (loading()) {
+  <section class="locations-list">
+    <p>{{ 'LOCATION.LOCATIONS.LOADING' | translate }}</p>
   </section>
-</ng-template>
+} @else {
+  @if (locations().length > 0) {
+    <section class="locations-list">
+      @for (location of locations(); track $index) {
+        <article class="location-card">
+          <h3>{{ getLocationName(location) }}</h3>
+          <p>{{ getLocationType(location) }}</p>
+        </article>
+      }
+    </section>
+  } @else {
+    @if (!error()) {
+      <section class="empty-state">
+        <p>{{ 'LOCATION.LOCATIONS.EMPTY' | translate }}</p>
+      </section>
+    }
+  }
+}
 
-<ng-template #emptyState>
-  <section *ngIf="!error()" class="empty-state">
-    <p>{{ 'LOCATION.LOCATIONS.EMPTY' | translate }}</p>
-  </section>
-</ng-template>
-
-<div *ngIf="showCreateModal()" class="modal-overlay">
+@if (showCreateModal()) {
+  <div class="modal-overlay">
   <section class="create-modal">
     <header class="modal-header">
       <h3>{{ 'LOCATION.LOCATIONS.CREATE_LOCATION' | translate }}</h3>
     </header>
 
-    <div *ngIf="createError()" class="error-banner">{{ createError()! | translate }}</div>
+    @if (createError()) {
+      <div class="error-banner">{{ createError()! | translate }}</div>
+    }
 
     <div class="form-group">
       <label for="location-name">{{ 'LOCATION.LOCATIONS.NAME' | translate }}</label>
@@ -53,4 +65,5 @@
       <button type="button" class="btn-primary submit-create-btn" (click)="submitCreate()">{{ 'LOCATION.LOCATIONS.CREATE' | translate }}</button>
     </footer>
   </section>
-</div>
+  </div>
+}

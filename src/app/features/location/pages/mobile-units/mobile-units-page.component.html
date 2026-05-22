@@ -3,28 +3,33 @@
   <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">{{ 'LOCATION.MOBILE_UNITS.CREATE_MOBILE_UNIT' | translate }}</button>
 </section>
 
-<div *ngIf="error()" class="error-banner">{{ error()! | translate }}</div>
+@if (error()) {
+  <div class="error-banner">{{ error()! | translate }}</div>
+}
 
-<section *ngIf="loading(); else unitsContent" class="units-list">
-  <p>{{ 'LOCATION.MOBILE_UNITS.LOADING' | translate }}</p>
-</section>
-
-<ng-template #unitsContent>
-  <section *ngIf="mobileUnits().length > 0; else emptyState" class="units-list">
-    <article *ngFor="let unit of mobileUnits()" class="unit-card">
-      <h3>{{ getUnitName(unit) }}</h3>
-      <button type="button" class="btn-secondary" (click)="openCoverage(unit)">{{ 'LOCATION.MOBILE_UNITS.COVERAGE_RULES' | translate }}</button>
-    </article>
+@if (loading()) {
+  <section class="units-list">
+    <p>{{ 'LOCATION.MOBILE_UNITS.LOADING' | translate }}</p>
   </section>
-</ng-template>
+} @else {
+  @if (mobileUnits().length > 0) {
+    <section class="units-list">
+      @for (unit of mobileUnits(); track $index) {
+        <article class="unit-card">
+          <h3>{{ getUnitName(unit) }}</h3>
+          <button type="button" class="btn-secondary" (click)="openCoverage(unit)">{{ 'LOCATION.MOBILE_UNITS.COVERAGE_RULES' | translate }}</button>
+        </article>
+      }
+    </section>
+  } @else {
+    <section class="empty-state">
+      <p>{{ 'LOCATION.MOBILE_UNITS.EMPTY' | translate }}</p>
+    </section>
+  }
+}
 
-<ng-template #emptyState>
-  <section class="empty-state">
-    <p>{{ 'LOCATION.MOBILE_UNITS.EMPTY' | translate }}</p>
-  </section>
-</ng-template>
-
-<div *ngIf="showCreateModal()" class="create-modal-overlay">
+@if (showCreateModal()) {
+  <div class="create-modal-overlay">
   <section class="create-modal">
     <h3>{{ 'LOCATION.MOBILE_UNITS.CREATE_MOBILE_UNIT' | translate }}</h3>
 
@@ -39,9 +44,11 @@
       <button type="button" class="btn-primary submit-create-btn" (click)="submitCreate()">{{ 'LOCATION.MOBILE_UNITS.CREATE' | translate }}</button>
     </div>
   </section>
-</div>
+  </div>
+}
 
-<div *ngIf="showCoverageModal()" class="coverage-modal-overlay">
+@if (showCoverageModal()) {
+  <div class="coverage-modal-overlay">
   <section class="coverage-modal">
     <h3>{{ 'LOCATION.MOBILE_UNITS.COVERAGE_RULES' | translate }}</h3>
 
@@ -56,4 +63,5 @@
       <button type="button" class="btn-primary" (click)="submitCoverageRules()">{{ 'LOCATION.MOBILE_UNITS.SAVE' | translate }}</button>
     </div>
   </section>
-</div>
+  </div>
+}

@@ -3,27 +3,32 @@
   <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">{{ 'LOCATION.BAYS.CREATE_BAY' | translate }}</button>
 </section>
 
-<div *ngIf="error()" class="error-banner">{{ error()! | translate }}</div>
+@if (error()) {
+  <div class="error-banner">{{ error()! | translate }}</div>
+}
 
-<section *ngIf="loading(); else baysContent" class="bays-grid">
-  <p>{{ 'LOCATION.BAYS.LOADING' | translate }}</p>
-</section>
-
-<ng-template #baysContent>
-  <section *ngIf="bays().length > 0; else emptyState" class="bays-grid">
-    <button *ngFor="let bay of bays()" type="button" class="bay-card" (click)="selectBay(bay)">
-      <h3>{{ getBayName(bay) }}</h3>
-    </button>
+@if (loading()) {
+  <section class="bays-grid">
+    <p>{{ 'LOCATION.BAYS.LOADING' | translate }}</p>
   </section>
-</ng-template>
+} @else {
+  @if (bays().length > 0) {
+    <section class="bays-grid">
+      @for (bay of bays(); track $index) {
+        <button type="button" class="bay-card" (click)="selectBay(bay)">
+          <h3>{{ getBayName(bay) }}</h3>
+        </button>
+      }
+    </section>
+  } @else {
+    <section class="empty-state">
+      <p>{{ 'LOCATION.BAYS.EMPTY' | translate }}</p>
+    </section>
+  }
+}
 
-<ng-template #emptyState>
-  <section class="empty-state">
-    <p>{{ 'LOCATION.BAYS.EMPTY' | translate }}</p>
-  </section>
-</ng-template>
-
-<div *ngIf="showCreateModal()" class="create-modal-overlay">
+@if (showCreateModal()) {
+  <div class="create-modal-overlay">
   <section class="create-modal">
     <h3>{{ 'LOCATION.BAYS.CREATE_BAY' | translate }}</h3>
 
@@ -38,9 +43,11 @@
       <button type="button" class="btn-primary submit-create-btn" (click)="submitCreate()">{{ 'LOCATION.BAYS.CREATE' | translate }}</button>
     </div>
   </section>
-</div>
+  </div>
+}
 
-<div *ngIf="showEditModal()" class="edit-modal-overlay">
+@if (showEditModal()) {
+  <div class="edit-modal-overlay">
   <section class="edit-modal">
     <h3>{{ 'LOCATION.BAYS.EDIT_BAY' | translate }}</h3>
 
@@ -55,4 +62,5 @@
       <button type="button" class="btn-primary" (click)="submitEdit()">{{ 'LOCATION.BAYS.SAVE' | translate }}</button>
     </div>
   </section>
-</div>
+  </div>
+}
