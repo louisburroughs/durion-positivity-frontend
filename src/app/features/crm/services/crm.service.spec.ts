@@ -32,6 +32,7 @@ describe('CrmService', () => {
 
   const crmAccountsStub = {
     upsertBillingRules: vi.fn(),
+    searchParties: vi.fn(),
   };
 
   beforeEach(() => {
@@ -157,6 +158,24 @@ describe('CrmService', () => {
         notes: 'PO not required for this account',
       });
       expect(result).toEqual(responseRules);
+    });
+  });
+
+  describe('searchParties()', () => {
+    it('sends an unfiltered request payload for empty query', () => {
+      crmAccountsStub.searchParties.mockReturnValueOnce(of({ results: [] }));
+
+      service.searchParties('   ').subscribe();
+
+      expect(crmAccountsStub.searchParties).toHaveBeenCalledWith({});
+    });
+
+    it('sends trimmed name criteria for non-empty query', () => {
+      crmAccountsStub.searchParties.mockReturnValueOnce(of({ results: [] }));
+
+      service.searchParties('  acme  ').subscribe();
+
+      expect(crmAccountsStub.searchParties).toHaveBeenCalledWith({ name: 'acme' });
     });
   });
 });

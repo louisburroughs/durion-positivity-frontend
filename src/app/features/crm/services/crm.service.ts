@@ -90,7 +90,8 @@ export class CrmService {
   }
 
   searchParties(query: string): Observable<{ parties: PartyDetail[] }> {
-    const sdkRequest: SdkSearchPartiesRequest = { name: query };
+    const normalizedQuery = query.trim();
+    const sdkRequest: SdkSearchPartiesRequest = normalizedQuery ? { name: normalizedQuery } : {};
     return this.accountsApi.searchParties(sdkRequest).pipe(
       map(response => ({ parties: (response.results ?? []) as PartyDetail[] })),
     );
