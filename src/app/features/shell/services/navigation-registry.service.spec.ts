@@ -29,22 +29,22 @@ describe('NavigationRegistryService', () => {
   });
 
   describe('visibleNavItems()', () => {
-    it('returns 9 non-role-gated items when hasAnyRole returns false', () => {
+    it('returns 10 non-role-gated items when hasAnyRole returns false', () => {
       const items: NavItem[] = service.visibleNavItems();
 
-      expect(items).toHaveLength(9);
+      expect(items).toHaveLength(10);
 
       const keys = items.map(i => i.key);
       expect(keys).not.toContain('SHELL.NAV.ADMIN');
       expect(keys).not.toContain('SHELL.NAV.SECURITY');
     });
 
-    it('returns all 11 items when user has ROLE_ADMIN', () => {
+    it('returns all 12 items when user has ROLE_ADMIN', () => {
       roleSignal.set(true);
 
       const items: NavItem[] = service.visibleNavItems();
 
-      expect(items).toHaveLength(11);
+      expect(items).toHaveLength(12);
 
       const keys = items.map(i => i.key);
       expect(keys).toContain('SHELL.NAV.ADMIN');
@@ -52,15 +52,21 @@ describe('NavigationRegistryService', () => {
     });
 
     it('recomputes reactively when the underlying role signal changes', () => {
-      expect(service.visibleNavItems()).toHaveLength(9);
+      expect(service.visibleNavItems()).toHaveLength(10);
 
       roleSignal.set(true);
 
-      expect(service.visibleNavItems()).toHaveLength(11);
+      expect(service.visibleNavItems()).toHaveLength(12);
 
       roleSignal.set(false);
 
-      expect(service.visibleNavItems()).toHaveLength(9);
+      expect(service.visibleNavItems()).toHaveLength(10);
+    });
+
+    it('points the product nav item at the product landing page', () => {
+      const item = service.visibleNavItems().find(i => i.key === 'SHELL.NAV.PRODUCT');
+
+      expect(item?.route).toBe('/app/product');
     });
 
     it('points the location nav item at the location landing page', () => {

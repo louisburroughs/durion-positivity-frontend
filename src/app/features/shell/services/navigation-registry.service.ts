@@ -11,9 +11,10 @@ const NAV_REGISTRY: NavItem[] = [
   { key: 'SHELL.NAV.BILLING', icon: 'B', route: '/app/billing', order: 6, group: 'main' },
   { key: 'SHELL.NAV.PEOPLE', icon: 'P', route: '/app/people', order: 7, group: 'main' },
   { key: 'SHELL.NAV.INVENTORY', icon: 'I', route: '/app/inventory', order: 8, group: 'main' },
-  { key: 'SHELL.NAV.LOCATION', icon: 'L', route: '/app/location', order: 9, group: 'main' },
-  { key: 'SHELL.NAV.SECURITY', icon: 'S', route: '/app/security', roles: ['ROLE_ADMIN'], order: 10, group: 'admin' },
-  { key: 'SHELL.NAV.ADMIN', icon: 'Ad', route: '/app/admin', roles: ['ROLE_ADMIN'], order: 11, group: 'admin' },
+  { key: 'SHELL.NAV.PRODUCT', icon: 'Pr', route: '/app/product', order: 9, group: 'main' },
+  { key: 'SHELL.NAV.LOCATION', icon: 'L', route: '/app/location', order: 10, group: 'main' },
+  { key: 'SHELL.NAV.SECURITY', icon: 'S', route: '/app/security', roles: ['ROLE_ADMIN'], order: 11, group: 'admin' },
+  { key: 'SHELL.NAV.ADMIN', icon: 'Ad', route: '/app/admin', roles: ['ROLE_ADMIN'], order: 12, group: 'admin' },
 ];
 
 @Injectable({ providedIn: 'root' })

@@ -56,6 +56,7 @@
       "BILLING": "Facturation",
       "PEOPLE": "Personnes",
       "INVENTORY": "Inventaire",
+      "PRODUCT": "Produits",
       "LOCATION": "Emplacements",
       "SECURITY": "Sécurité",
       "ADMIN": "Administration"
