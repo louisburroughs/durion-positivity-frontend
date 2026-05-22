@@ -32,7 +32,7 @@ export class LocationsPageComponent implements OnInit {
     this.error.set(null);
     this.locationService.getAllLocations().subscribe({
       next: (locations) => {
-        this.locations.set(locations);
+        this.locations.set(this.normalizeLocations(locations));
         this.loading.set(false);
       },
       error: () => {
@@ -84,5 +84,21 @@ export class LocationsPageComponent implements OnInit {
   getLocationType(location: unknown): string {
     const candidate = location as Record<string, unknown>;
     return String(candidate['type'] ?? candidate['locationType'] ?? 'UNSPECIFIED');
+  }
+
+  private normalizeLocations(response: unknown): unknown[] {
+    if (Array.isArray(response)) {
+      return response;
+    }
+
+    if (response !== null && typeof response === 'object') {
+      const payload = response as Record<string, unknown>;
+      const items = payload['items'];
+      if (Array.isArray(items)) {
+        return items;
+      }
+    }
+
+    return [];
   }
 }

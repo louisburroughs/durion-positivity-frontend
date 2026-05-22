@@ -16,9 +16,9 @@ describe('LocationsPageComponent [CAP-136]', () => {
   let fixture: ComponentFixture<LocationsPageComponent>;
   let component: LocationsPageComponent;
 
-  const setup = async () => {
+  const setup = async (locationsResponse: unknown = [{ locationId: 'loc-1', name: 'North Shop' }]) => {
     vi.clearAllMocks();
-    stubService.getAllLocations.mockReturnValue(of([{ locationId: 'loc-1', name: 'North Shop' }]));
+    stubService.getAllLocations.mockReturnValue(of(locationsResponse));
     stubService.createLocation.mockReturnValue(of({ locationId: 'loc-2' }));
 
     await TestBed.configureTestingModule({
@@ -59,6 +59,15 @@ describe('LocationsPageComponent [CAP-136]', () => {
 
     const cards = fixture.debugElement.queryAll(By.css('.location-card'));
     expect(cards.length).toBe(2);
+  });
+
+  it('falls back to the empty state when the API returns null', async () => {
+    await setup(null);
+    fixture.detectChanges();
+
+    const emptyState = fixture.debugElement.query(By.css('.empty-state'));
+    expect(emptyState).toBeTruthy();
+    expect(component.locations()).toEqual([]);
   });
 
   it('opens .create-modal when create button clicked', async () => {
