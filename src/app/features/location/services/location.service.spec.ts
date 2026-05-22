@@ -5,7 +5,7 @@ import {
   LocationAPIService,
   MobileUnitAPIService,
   SiteDefaultsAPIService,
-  StorageLocationControllerService,
+  StorageLocationAPIService,
 } from '@durion-sdk/location';
 import { LocationService } from './location.service';
 
@@ -47,7 +47,7 @@ describe('LocationService', () => {
         { provide: BayAPIService, useValue: bayApiStub },
         { provide: MobileUnitAPIService, useValue: mobileUnitApiStub },
         { provide: SiteDefaultsAPIService, useValue: siteDefaultsApiStub },
-        { provide: StorageLocationControllerService, useValue: storageLocationApiStub },
+        { provide: StorageLocationAPIService, useValue: storageLocationApiStub },
       ],
     });
     service = TestBed.inject(LocationService);

@@ -8,7 +8,7 @@ import {
   EstimateAPIService,
   EstimatesFromAppointmentsService,
   OperationalContextService,
-  SubstituteLinkControllerService,
+  SubstituteLinkAPIService,
   TechnicianAssignmentAPIService,
   TravelSegmentAPIService,
   WIPDashboardService,
@@ -141,7 +141,7 @@ export class WorkexecService {
   private readonly workorderPickedItems = inject(WorkorderPickedItemsService);
   private readonly travelSegment = inject(TravelSegmentAPIService);
   private readonly wipDashboard = inject(WIPDashboardService);
-  private readonly substituteLink = inject(SubstituteLinkControllerService);
+  private readonly substituteLink = inject(SubstituteLinkAPIService);
   private readonly workorderPartAdjustments = inject(WorkorderPartAdjustmentsService);
   private readonly timeTracking = inject(WorkexecTimeTrackingAPIService);
 

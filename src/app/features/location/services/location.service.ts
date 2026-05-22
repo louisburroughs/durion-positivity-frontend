@@ -5,7 +5,7 @@ import {
   LocationAPIService,
   MobileUnitAPIService,
   SiteDefaultsAPIService,
-  StorageLocationControllerService,
+  StorageLocationAPIService,
 } from '@durion-sdk/location';
 import type {
   CoverageRuleRequest,
@@ -23,7 +23,7 @@ export class LocationService {
   private readonly bayApi = inject(BayAPIService);
   private readonly mobileUnitApi = inject(MobileUnitAPIService);
   private readonly siteDefaultsApi = inject(SiteDefaultsAPIService);
-  private readonly storageLocationApi = inject(StorageLocationControllerService);
+  private readonly storageLocationApi = inject(StorageLocationAPIService);
 
   // ── Locations ────────────────────────────────────────────────────────────
 

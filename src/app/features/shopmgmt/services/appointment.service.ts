@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import {
   AppointmentCreateRequestSourceTypeEnum,
   AppointmentsAPIService,
-  AssignmentControllerService,
+  AppointmentAssignmentsService,
   ConflictOverrideAPIService,
   MechanicAssignmentItemRoleEnum,
   ScheduleAPIService,
@@ -28,7 +28,7 @@ import type {
 @Injectable({ providedIn: 'root' })
 export class AppointmentService {
   private readonly appointments = inject(AppointmentsAPIService);
-  private readonly assignment = inject(AssignmentControllerService);
+  private readonly assignment = inject(AppointmentAssignmentsService);
   private readonly conflictOverride = inject(ConflictOverrideAPIService);
   private readonly schedule = inject(ScheduleAPIService);
   private readonly shop = inject(ShopAPIService);

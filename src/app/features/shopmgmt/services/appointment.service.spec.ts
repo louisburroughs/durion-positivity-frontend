@@ -7,7 +7,7 @@ import { of } from 'rxjs';
 import { AppointmentService } from './appointment.service';
 import {
   AppointmentsAPIService,
-  AssignmentControllerService,
+  AppointmentAssignmentsService,
   ConflictOverrideAPIService,
   ScheduleAPIService,
   ShopAPIService,
@@ -82,7 +82,7 @@ describe('AppointmentService [CAP-249]', () => {
       providers: [
         AppointmentService,
         { provide: AppointmentsAPIService, useValue: appointmentsStub },
-        { provide: AssignmentControllerService, useValue: assignmentStub },
+        { provide: AppointmentAssignmentsService, useValue: assignmentStub },
         { provide: ConflictOverrideAPIService, useValue: conflictOverrideStub },
         { provide: ScheduleAPIService, useValue: scheduleStub },
         { provide: ShopAPIService, useValue: shopStub },

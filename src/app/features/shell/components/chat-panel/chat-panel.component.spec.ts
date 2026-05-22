@@ -1,7 +1,9 @@
 import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
+import { JwtClaims } from '../../../../core/models/auth.models';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ChatApiService, ChatResponse } from '../../services/chat-api.service';
 import { ChatStateService } from '../../services/chat-state.service';
@@ -52,8 +54,9 @@ describe('ChatPanelComponent', () => {
     ingestDocument: vi.fn(),
   };
 
-  const authServiceStub: Pick<AuthService, 'hasAnyRole'> = {
+  const authServiceStub: Pick<AuthService, 'hasAnyRole' | 'currentUserClaims'> = {
     hasAnyRole: vi.fn().mockReturnValue(false),
+    currentUserClaims: signal<JwtClaims | null>(null),
   };
 
   beforeEach(async () => {
