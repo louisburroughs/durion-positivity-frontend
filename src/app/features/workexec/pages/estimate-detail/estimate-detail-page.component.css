@@ -87,15 +87,6 @@
   color: var(--functional-error-red);
 }
 
-.section-overline {
-  margin: 0 0 var(--space-3, 0.75rem);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--handleColor);
-}
-
 .item-group {
   background: var(--cardBackground, #fff);
   padding: var(--space-4, 1rem);
@@ -161,12 +152,6 @@
   margin: 0;
   font-size: 0.75rem;
   color: var(--handleColor);
-}
-
-.hint-text {
-  font-size: 0.875rem;
-  color: var(--handleColor);
-  margin: 0;
 }
 
 .alert {
@@ -304,74 +289,4 @@
 
 .promote-hint {
   margin-top: var(--space-3, 0.75rem);
-}
-
-/* Story 157: CRM References block */
-.crm-ref-block {
-  background: var(--cardBackground);
-  padding: var(--space-4);
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-4);
-}
-
-.crm-ref-grid {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: var(--space-2) var(--space-4);
-  align-items: baseline;
-}
-
-.crm-ref-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--handleColor);
-  white-space: nowrap;
-}
-
-.crm-ref-value {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.875rem;
-  color: var(--color-brand-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 28ch;
-}
-
-.crm-ref-value--empty {
-  font-family: inherit;
-  color: var(--handleColor);
-  font-style: italic;
-}
-
-.crm-ref-contacts {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.crm-ref-badge {
-  display: inline-flex;
-  align-items: center;
-  font-family: var(--font-mono, monospace);
-  font-size: 0.75rem;
-  background: var(--brand-primary-soft, var(--primaryA100));
-  color: var(--color-brand-primary);
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 22ch;
-  white-space: nowrap;
-}
-
-.crm-ref-block .section-overline {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--handleColor);
-  margin: 0 0 var(--space-2);
 }

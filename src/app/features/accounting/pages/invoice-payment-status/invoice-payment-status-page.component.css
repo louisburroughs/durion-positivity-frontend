@@ -184,17 +184,6 @@
   color: var(--currentTextColor, var(--durion-on-surface, var(--durion-grey-900)));
 }
 
-.ips-skeleton {
-  height: 3rem;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(90deg,
-      color-mix(in srgb, var(--surface-container, var(--durion-surface-container, var(--brand-surface))) 92%, transparent),
-      color-mix(in srgb, var(--color-secondary, var(--brand-secondary)) 14%, transparent),
-      color-mix(in srgb, var(--surface-container, var(--durion-surface-container, var(--brand-surface))) 92%, transparent));
-  background-size: 220% 100%;
-  animation: ips-shimmer 1.1s linear infinite;
-}
-
 .ips-history-wrap {
   overflow-x: auto;
 }
@@ -263,16 +252,6 @@
   background: color-mix(in srgb, var(--color-secondary, var(--brand-secondary)) 8%, transparent);
 }
 
-@keyframes ips-shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -20% 0;
-  }
-}
-
 @media (max-width: 768px) {
   .ips-section {
     padding: var(--space-4);
@@ -297,11 +276,5 @@
 
   .ips-history-table {
     min-width: 32rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ips-skeleton {
-    animation: none;
   }
 }

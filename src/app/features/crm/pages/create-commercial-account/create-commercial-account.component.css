@@ -210,57 +210,6 @@
 
 .btn--icon:hover { background: var(--durion-teal-100); }
 
-/* ── State panels ─────────────────────────────────────────────────────────── */
-.state-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-8);
-  text-align: center;
-  background: var(--cardBackground, #fff);
-  border-radius: var(--radius-lg);
-}
-
-.state-panel h2 {
-  margin: 0;
-  font-family: var(--font-primary);
-  font-size: 1.25rem;
-  color: var(--currentTextColor);
-}
-
-.state-panel p {
-  margin: 0;
-  color: var(--handleColor);
-}
-
-.state-panel--loading { color: var(--handleColor); }
-.state-panel--error   { background: rgba(200,76,71,.06); }
-.state-panel--denied  { background: rgba(200,76,71,.06); }
-.state-panel--success { background: rgba(91,190,114,.06); }
-
-.state-hint { font-size: 0.85rem; }
-
-.state-icon {
-  font-size: 2rem;
-  line-height: 1;
-}
-
-.state-icon--success { color: var(--functional-success); }
-
-/* Spinner */
-.spinner {
-  display: inline-block;
-  width: 28px;
-  height: 28px;
-  border: 3px solid var(--durion-graphite-100);
-  border-top-color: var(--durion-teal-400);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
 /* ── Duplicate panel ──────────────────────────────────────────────────────── */
 .duplicate-panel {
   background: rgba(230,165,64,.07);
@@ -365,20 +314,4 @@
 .alert--error {
   background: rgba(200,76,71,.08);
   color: var(--functional-error-red);
-}
-
-/* ── Responsive ─────────────────────────────────────────────────────────────── */
-@media (max-width: 600px) {
-  .crm-page {
-    padding: var(--space-4) var(--space-3);
-  }
-
-  .form-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .btn {
-    width: 100%;
-  }
 }
