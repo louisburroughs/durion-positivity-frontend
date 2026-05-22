@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { LocationsPageComponent } from './locations-page.component';
 import { TranslateModule } from '@ngx-translate/core';
@@ -95,5 +95,27 @@ describe('LocationsPageComponent [CAP-136]', () => {
       name: 'Airport Branch',
       type: 'STORE',
     });
+  });
+
+  it('shows error banner and hides empty state when API fails', async () => {
+    vi.clearAllMocks();
+    stubService.getAllLocations.mockReturnValue(throwError(() => new Error('403')));
+    stubService.createLocation.mockReturnValue(of({ locationId: 'loc-2' }));
+
+    await TestBed.configureTestingModule({
+      imports: [LocationsPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: LocationService, useValue: stubService },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(LocationsPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const emptyState = fixture.debugElement.query(By.css('.empty-state'));
+    expect(emptyState).toBeNull();
+    expect(component.error()).toBe('LOCATION.LOCATIONS.ERROR.LOAD');
   });
 });

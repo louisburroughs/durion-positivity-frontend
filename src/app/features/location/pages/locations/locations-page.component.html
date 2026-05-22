@@ -20,7 +20,7 @@
 </ng-template>
 
 <ng-template #emptyState>
-  <section class="empty-state">
+  <section *ngIf="!error()" class="empty-state">
     <p>{{ 'LOCATION.LOCATIONS.EMPTY' | translate }}</p>
   </section>
 </ng-template>
