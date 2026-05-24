@@ -13,6 +13,7 @@ import {
 import type {
   CreateCommercialAccountRequest as SdkCreateCommercialAccountRequest,
   MergePartiesRequest as SdkMergePartiesRequest,
+  Pageable as SdkPageable,
   SearchPartiesRequest as SdkSearchPartiesRequest,
   CreatePersonRequest as SdkCreatePersonRequest,
   CreatePartyRelationshipRequest as SdkCreatePartyRelationshipRequest,
@@ -90,9 +91,9 @@ export class CrmService {
   }
 
   browseParties(): Observable<{ parties: PartyDetail[] }> {
-    return (this.accountsApi as CRMAccountsService & {
-      browseParties(): Observable<{ results?: PartyDetail[] }>;
-    }).browseParties().pipe(
+    const sdkPageable: SdkPageable = {};
+
+    return this.accountsApi.browseParties(sdkPageable).pipe(
       map(response => ({ parties: (response.results ?? []) as PartyDetail[] })),
     );
   }
