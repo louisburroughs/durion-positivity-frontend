@@ -322,8 +322,8 @@ Run:
 
 ```bash
 cd /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse
-git --no-pager diff --stat HEAD~2..HEAD
+git --no-pager diff --stat master...HEAD
 git --no-pager status --short
 ```
 
-Expected: only the CRM service/component files and their specs are changed, with a clean working tree unless there are unrelated user-owned files already present.
+Expected: the branch diff should show the CRM service/component changes, the SDK tarball/manifest refresh needed for reproducibility, and the docs updates in this branch, while `git status --short` remains clean.
