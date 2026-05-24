@@ -46,3 +46,4 @@ Thumbs.db
 PR-Review-Processing.md
 
 .playwright-mcp/*
+.worktrees/
