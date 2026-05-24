@@ -25,11 +25,11 @@ The generated `@durion-sdk/customer` client used by this repo must expose the ne
 
 ### 1. SDK-backed browse entry point
 
-Add or consume the generated browse method on `CRMAccountsService` for the new accounts browse endpoint. The method should expose the backend response shape already shared with `searchParties`, including `results`, `totalCount`, `pageNumber`, and `pageSize`.
+Use the generated `CRMAccountsService.browseParties(pageable: Pageable)` method for the new accounts browse endpoint. The method exposes the shared backend response shape already used by `searchParties`, including `results`, `totalCount`, `pageNumber`, and `pageSize`.
 
 ### 2. CrmService normalization
 
-Add a new `CrmService.browseParties(...)` method alongside the existing `searchParties(...)` method. Both methods should map their SDK responses into the same frontend return shape so `CustomerListComponent` does not need to understand backend response differences.
+Add a new `CrmService.browseParties()` wrapper alongside the existing `searchParties(...)` method. The wrapper should call the SDK with an empty `Pageable` object (`{}`) so the backend applies its browse defaults until explicit pagination UI exists. Both methods should map their SDK responses into the same frontend return shape so `CustomerListComponent` does not need to understand backend response differences.
 
 For this issue, the normalized shape can remain centered on the existing list rendering contract:
 
@@ -76,13 +76,13 @@ This preserves current authorization and failure handling while fixing the incor
 
 - Existing client-side sort controls remain unchanged.
 - No explicit pagination controls are added in this issue.
-- Browse requests should use the SDK-backed browse endpoint so backend paging semantics remain correct even though the current UI still renders a single page of results.
+- Browse requests should use the SDK-backed browse endpoint with `Pageable = {}` so backend default paging and sorting semantics apply even though the current UI still renders a single page of results.
 
 ## Test plan
 
 ### `crm.service.spec.ts`
 
-- Verify browse mode calls the new SDK browse method, not `searchParties`
+- Verify browse mode calls the new SDK browse method with an empty `Pageable` object, not `searchParties`
 - Verify non-empty search still calls `searchParties`
 - Verify both methods normalize the shared response shape into `{ parties }`
 
@@ -96,8 +96,8 @@ This preserves current authorization and failure handling while fixing the incor
 
 ## Risks and mitigations
 
-- **Risk:** the SDK method name or generated signature may differ from expectations.
-  - **Mitigation:** anchor the frontend change to the actual generated SDK API once the package is refreshed, but keep the service/component boundaries described here.
+- **Risk:** the installed frontend SDK package may lag behind the generated SDK repo.
+  - **Mitigation:** refresh the SDK (`npm run generate && npm run build` in `durion-positivity-sdk-angular`, then `npm run sdk:install` in the frontend worktree) before implementing the browse wrapper.
 - **Risk:** future pagination UI may need metadata not currently surfaced by the component contract.
   - **Mitigation:** keep response normalization in `CrmService` so metadata can be added later without reworking the component’s browse/search branching logic.
 

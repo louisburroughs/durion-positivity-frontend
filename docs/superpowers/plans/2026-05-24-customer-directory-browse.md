@@ -4,7 +4,7 @@
 
 **Goal:** Make Customer Directory use the SDK-backed browse endpoint for empty or whitespace-only queries while preserving the existing search experience for non-empty queries.
 
-**Architecture:** Keep the browse-vs-search decision in `CustomerListComponent.search(q)` using `q.trim()` as the only branch point. Add a new `CrmService.browseParties()` wrapper that normalizes the SDK browse response into the same `{ parties }` shape already used by the component so the rendering path, empty state, and error handling remain unified.
+**Architecture:** Keep the browse-vs-search decision in `CustomerListComponent.search(q)` using `q.trim()` as the only branch point. Add a new `CrmService.browseParties()` wrapper that calls `CRMAccountsService.browseParties(pageable: Pageable)` with an empty `Pageable` object so the backend applies default browse paging and sorting. Map the browse response into the same `{ parties }` shape already used by the component so the rendering path, empty state, and error handling remain unified.
 
 **Tech Stack:** Angular 21 standalone components, TypeScript, RxJS, Vitest via `npx ng test`, generated `@durion-sdk/customer` SDK
 
@@ -12,21 +12,23 @@
 
 ## Preconditions
 
-Before starting Task 1, make sure the locally synced SDK exposes `browseParties` on `CRMAccountsService`.
+Before starting Task 1, refresh the local SDK and sync it into the frontend worktree.
 
 Run:
 
 ```bash
-npm install
-rg "browseParties" node_modules/@durion-sdk/customer/types/durion-sdk-customer.d.ts
+(cd /home/louis-burroughs/IdeaProjects/durion-positivity-sdk-angular && npm run generate && npm run build) && \
+(cd /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse && npm run sdk:install)
+rg "browseParties" /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse/node_modules/@durion-sdk/customer/types/durion-sdk-customer.d.ts
 ```
 
 Expected:
 
-- `npm install` completes successfully
-- `rg` prints a `browseParties(...)` signature from the generated SDK types
+- SDK generate/build completes successfully
+- `npm run sdk:install` refreshes the frontend worktree package
+- `rg` prints the `browseParties(pageable: Pageable)` signature from the installed SDK types
 
-If `rg` returns no matches, stop and refresh the sibling SDK checkout that `postinstall` syncs from before changing frontend code.
+If `rg` returns no matches, stop and fix the SDK refresh before changing frontend code.
 
 ### Task 1: Add the CRM service browse wrapper
 
@@ -37,9 +39,10 @@ If `rg` returns no matches, stop and refresh the sibling SDK checkout that `post
 
 - [ ] **Step 1: Write the failing service tests**
 
-Add a typed party fixture and the new browse stub in `src/app/features/crm/services/crm.service.spec.ts`:
+Add the SDK `Pageable` type, a typed party fixture, and the new browse stub in `src/app/features/crm/services/crm.service.spec.ts`:
 
 ```ts
+import type { Pageable } from '@durion-sdk/customer';
 import type { BillingRules, CrmSnapshot, PartyDetail } from '../models/crm.models';
 
 const browseParty: PartyDetail = {
@@ -60,7 +63,7 @@ Then add the failing browse/search coverage near the existing `searchParties()` 
 
 ```ts
 describe('browseParties()', () => {
-  it('calls crmAccounts.browseParties and maps results into parties', () => {
+  it('calls crmAccounts.browseParties with default pageable and maps results into parties', () => {
     crmAccountsStub.browseParties.mockReturnValueOnce(
       of({ results: [browseParty], totalCount: 1, pageNumber: 0, pageSize: 20 }),
     );
@@ -70,7 +73,9 @@ describe('browseParties()', () => {
       result = value;
     });
 
-    expect(crmAccountsStub.browseParties).toHaveBeenCalledOnce();
+    const expectedPageable: Pageable = {};
+
+    expect(crmAccountsStub.browseParties).toHaveBeenCalledWith(expectedPageable);
     expect(result).toEqual({ parties: [browseParty] });
   });
 });
@@ -91,18 +96,38 @@ describe('searchParties()', () => {
 Run:
 
 ```bash
+cd /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse
 npx ng test --include="src/app/features/crm/services/crm.service.spec.ts" --no-watch
 ```
 
-Expected: FAIL because `CrmService` does not yet expose `browseParties()`.
+Expected: FAIL because `CrmService.browseParties()` does not yet call the SDK with the required `Pageable` argument.
 
 - [ ] **Step 3: Write the minimal service implementation**
 
-Add the browse wrapper in `src/app/features/crm/services/crm.service.ts` immediately above `searchParties()`:
+Update the SDK type imports in `src/app/features/crm/services/crm.service.ts` to include `Pageable`:
+
+```ts
+import type {
+  CreateCommercialAccountRequest as SdkCreateCommercialAccountRequest,
+  MergePartiesRequest as SdkMergePartiesRequest,
+  Pageable as SdkPageable,
+  SearchPartiesRequest as SdkSearchPartiesRequest,
+  CreatePersonRequest as SdkCreatePersonRequest,
+  CreatePartyRelationshipRequest as SdkCreatePartyRelationshipRequest,
+  UpdateContactRolesRequest as SdkUpdateContactRolesRequest,
+  UpsertCommunicationPreferencesRequest as SdkUpsertCommunicationPreferencesRequest,
+  UpsertBillingRulesRequest,
+  CreateVehicleForPartyRequest as SdkCreateVehicleForPartyRequest,
+} from '@durion-sdk/customer';
+```
+
+Then replace the temporary browse wrapper with the SDK-backed version:
 
 ```ts
 browseParties(): Observable<{ parties: PartyDetail[] }> {
-  return this.accountsApi.browseParties().pipe(
+  const sdkPageable: SdkPageable = {};
+
+  return this.accountsApi.browseParties(sdkPageable).pipe(
     map(response => ({ parties: (response.results ?? []) as PartyDetail[] })),
   );
 }
@@ -126,16 +151,18 @@ searchParties(query: string): Observable<{ parties: PartyDetail[] }> {
 Run:
 
 ```bash
+cd /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse
 npx ng test --include="src/app/features/crm/services/crm.service.spec.ts" --no-watch
 ```
 
-Expected: PASS with the new browse wrapper and the existing trimmed-search behavior covered.
+Expected: PASS with the browse wrapper calling `browseParties({})` and the search path remaining trimmed and search-only.
 
 - [ ] **Step 5: Commit the service-layer change**
 
 Run:
 
 ```bash
+cd /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse
 git add src/app/features/crm/services/crm.service.ts src/app/features/crm/services/crm.service.spec.ts
 git commit -m "feat(crm): add browse parties service wrapper" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
 ```
@@ -198,6 +225,7 @@ it('returns to browse mode when the query is cleared', () => {
 Run:
 
 ```bash
+cd /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse
 npx ng test --include="src/app/features/crm/pages/customer-list/customer-list.component.spec.ts" --no-watch
 ```
 
@@ -233,6 +261,7 @@ search(q: string): void {
 Run:
 
 ```bash
+cd /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse
 npx ng test --include="src/app/features/crm/pages/customer-list/customer-list.component.spec.ts" --no-watch
 ```
 
@@ -243,6 +272,7 @@ Expected: PASS with initial load using browse, non-empty input using search, and
 Run:
 
 ```bash
+cd /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse
 git add src/app/features/crm/pages/customer-list/customer-list.component.ts src/app/features/crm/pages/customer-list/customer-list.component.spec.ts
 git commit -m "feat(crm): browse customer directory on empty query" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
 ```
@@ -258,6 +288,7 @@ git commit -m "feat(crm): browse customer directory on empty query" -m "Co-autho
 Run:
 
 ```bash
+cd /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse
 npx ng test --include="src/app/features/crm/services/crm.service.spec.ts" --include="src/app/features/crm/pages/customer-list/customer-list.component.spec.ts" --no-watch
 ```
 
@@ -268,6 +299,7 @@ Expected: PASS for both specs in one run.
 Run:
 
 ```bash
+cd /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse
 npx ng test --include="src/app/features/crm/**/*.spec.ts" --no-watch
 ```
 
@@ -278,6 +310,7 @@ Expected: PASS for the CRM feature suite with no regressions in nearby pages or 
 Run:
 
 ```bash
+cd /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse
 npm run build
 ```
 
@@ -288,6 +321,7 @@ Expected: PASS and produce the application build in `dist/`.
 Run:
 
 ```bash
+cd /home/louis-burroughs/IdeaProjects/durion-positivity-frontend/.worktrees/issue-25-customer-directory-browse
 git --no-pager diff --stat HEAD~2..HEAD
 git --no-pager status --short
 ```
