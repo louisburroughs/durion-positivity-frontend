@@ -11,7 +11,7 @@ import {
   CRMVehiclesService,
 } from '@durion-sdk/customer';
 import { CrmService } from './crm.service';
-import type { BillingRules, CrmSnapshot } from '../models/crm.models';
+import type { BillingRules, CrmSnapshot, PartyDetail } from '../models/crm.models';
 
 describe('CrmService', () => {
   let service: CrmService;
@@ -31,8 +31,16 @@ describe('CrmService', () => {
   };
 
   const crmAccountsStub = {
+    browseParties: vi.fn(),
     upsertBillingRules: vi.fn(),
     searchParties: vi.fn(),
+  };
+
+  const browseParty: PartyDetail = {
+    partyId: 'party-101',
+    legalName: 'Acme Fleet',
+    contacts: [],
+    vehicles: [],
   };
 
   beforeEach(() => {
@@ -161,15 +169,23 @@ describe('CrmService', () => {
     });
   });
 
-  describe('searchParties()', () => {
-    it('sends an unfiltered request payload for empty query', () => {
-      crmAccountsStub.searchParties.mockReturnValueOnce(of({ results: [] }));
+  describe('browseParties()', () => {
+    it('calls crmAccounts.browseParties and maps results into parties', () => {
+      crmAccountsStub.browseParties.mockReturnValueOnce(
+        of({ results: [browseParty], totalCount: 1, pageNumber: 0, pageSize: 20 }),
+      );
 
-      service.searchParties('   ').subscribe();
+      let result: { parties: PartyDetail[] } | undefined;
+      service.browseParties().subscribe(value => {
+        result = value;
+      });
 
-      expect(crmAccountsStub.searchParties).toHaveBeenCalledWith({});
+      expect(crmAccountsStub.browseParties).toHaveBeenCalledOnce();
+      expect(result).toEqual({ parties: [browseParty] });
     });
+  });
 
+  describe('searchParties()', () => {
     it('sends trimmed name criteria for non-empty query', () => {
       crmAccountsStub.searchParties.mockReturnValueOnce(of({ results: [] }));
 

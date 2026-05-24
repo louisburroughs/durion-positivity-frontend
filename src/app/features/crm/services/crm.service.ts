@@ -89,9 +89,17 @@ export class CrmService {
     return this.accountsApi.getParty(partyId) as Observable<PartyDetail>;
   }
 
+  browseParties(): Observable<{ parties: PartyDetail[] }> {
+    return (this.accountsApi as CRMAccountsService & {
+      browseParties(): Observable<{ results?: PartyDetail[] }>;
+    }).browseParties().pipe(
+      map(response => ({ parties: (response.results ?? []) as PartyDetail[] })),
+    );
+  }
+
   searchParties(query: string): Observable<{ parties: PartyDetail[] }> {
     const normalizedQuery = query.trim();
-    const sdkRequest: SdkSearchPartiesRequest = normalizedQuery ? { name: normalizedQuery } : {};
+    const sdkRequest: SdkSearchPartiesRequest = { name: normalizedQuery };
     return this.accountsApi.searchParties(sdkRequest).pipe(
       map(response => ({ parties: (response.results ?? []) as PartyDetail[] })),
     );
