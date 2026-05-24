@@ -6,6 +6,7 @@ import { CustomerListComponent } from './customer-list.component';
 import { CrmService } from '../../services/crm.service';
 
 const crmServiceStub = {
+  browseParties: vi.fn(),
   searchParties: vi.fn(),
 };
 
@@ -15,6 +16,7 @@ describe('CustomerListComponent', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    crmServiceStub.browseParties.mockReturnValue(of({ parties: [] }));
     crmServiceStub.searchParties.mockReturnValue(of({ parties: [] }));
 
     await TestBed.configureTestingModule({
@@ -34,17 +36,28 @@ describe('CustomerListComponent', () => {
     TestBed.resetTestingModule();
   });
 
-  it('calls search API on initial empty query to load all customers', () => {
+  it('calls browse API on initial empty query to load customers', () => {
     fixture.detectChanges();
 
-    expect(crmServiceStub.searchParties).toHaveBeenCalledWith('');
+    expect(crmServiceStub.browseParties).toHaveBeenCalled();
+    expect(crmServiceStub.searchParties).not.toHaveBeenCalled();
     expect(component.state()).toBe('empty');
+    expect(component.error()).toBeNull();
   });
 
   it('calls search API with trimmed query when searching', () => {
     component.search('  acme  ');
 
     expect(crmServiceStub.searchParties).toHaveBeenCalledWith('acme');
+    expect(crmServiceStub.browseParties).not.toHaveBeenCalled();
+  });
+
+  it('returns to browse mode when the query is cleared', () => {
+    component.search('acme');
+    component.search('   ');
+
+    expect(crmServiceStub.searchParties).toHaveBeenCalledWith('acme');
+    expect(crmServiceStub.browseParties).toHaveBeenCalledTimes(1);
   });
 
   it('surfaces error state when API search fails', () => {

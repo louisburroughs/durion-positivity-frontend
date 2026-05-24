@@ -55,9 +55,10 @@ export class CustomerListComponent implements OnInit {
 
   search(q: string): void {
     const query = q.trim();
+    const request$ = query ? this.crm.searchParties(query) : this.crm.browseParties();
     this.state.set('loading');
     this.error.set(null);
-    this.crm.searchParties(query).subscribe({
+    request$.subscribe({
       next: res => {
         this.parties.set(res.parties ?? []);
         this.state.set(res.parties?.length ? 'ready' : 'empty');
