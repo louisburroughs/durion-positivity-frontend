@@ -1,27 +1,18 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   ProductsAPIService,
   ItemCostAPIService,
   PriceBookAPIService,
   UOMConversionAPIService,
   SupplierItemCostAPIService,
+  SupplierItemCostListAPIService,
   ProductMSRPAPIService,
 } from '@durion-sdk/catalog';
 import { ProductCatalogService } from './product-catalog.service';
 
 describe('ProductCatalogService', () => {
   let service: ProductCatalogService;
-
-  const apiStub = {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    patch: vi.fn(),
-    delete: vi.fn(),
-  };
 
   const productsSdkStub = {
     searchProducts: vi.fn(),
@@ -42,18 +33,19 @@ describe('ProductCatalogService', () => {
   const priceBookSdkStub = { createPriceBook: vi.fn(), getPriceBook: vi.fn(), updatePriceBook: vi.fn(), listRules: vi.fn(), createRule: vi.fn(), updateRule: vi.fn(), deactivateRule: vi.fn() };
   const uomSdkStub = { listUomConversions: vi.fn(), createUomConversion: vi.fn(), updateUomConversion: vi.fn(), deactivateUomConversion: vi.fn() };
   const supplierCostSdkStub = { getCostStructure: vi.fn(), createCostStructure: vi.fn(), updateCostStructure: vi.fn(), deleteCostStructure: vi.fn() };
+  const supplierCostListSdkStub = { listCostStructures: vi.fn() };
   const msrpSdkStub = { listMsrp: vi.fn(), createMsrp: vi.fn(), updateMsrp: vi.fn(), getActiveMsrp: vi.fn() };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         ProductCatalogService,
-        { provide: ApiBaseService, useValue: apiStub },
         { provide: ProductsAPIService, useValue: productsSdkStub },
         { provide: ItemCostAPIService, useValue: itemCostSdkStub },
         { provide: PriceBookAPIService, useValue: priceBookSdkStub },
         { provide: UOMConversionAPIService, useValue: uomSdkStub },
         { provide: SupplierItemCostAPIService, useValue: supplierCostSdkStub },
+        { provide: SupplierItemCostListAPIService, useValue: supplierCostListSdkStub },
         { provide: ProductMSRPAPIService, useValue: msrpSdkStub },
       ],
     });
@@ -154,14 +146,15 @@ describe('ProductCatalogService', () => {
     });
   });
 
-  it('listCostStructures calls GET /catalog/v1/supplier-costs with itemId param', () => {
-    apiStub.get.mockReturnValue(of([]));
+  it('listCostStructures calls supplierCostListSdk.listCostStructures with pageable and itemId', () => {
+    supplierCostListSdkStub.listCostStructures.mockReturnValue(of({ content: [] }));
 
     service.listCostStructures('item-1').subscribe();
 
-    const [path, params] = apiStub.get.mock.calls.at(-1)!;
-    expect(path).toBe('/catalog/v1/supplier-costs');
-    expect((params as HttpParams)?.get('itemId')).toBe('item-1');
+    expect(supplierCostListSdkStub.listCostStructures).toHaveBeenCalledWith(
+      { page: 0, size: 50 },
+      'item-1',
+    );
   });
 
   // ── listMsrp() ───────────────────────────────────────────────────────────────

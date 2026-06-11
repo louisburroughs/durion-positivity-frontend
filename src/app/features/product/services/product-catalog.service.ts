@@ -1,14 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   ProductsAPIService,
   ItemCostAPIService,
   PriceBookAPIService,
   UOMConversionAPIService,
   SupplierItemCostAPIService,
+  SupplierItemCostListAPIService,
   ProductMSRPAPIService,
   CatalogSearchResultDto,
   ProductDto,
@@ -38,6 +37,7 @@ import {
   EffectiveLocationPriceResponseDto,
   GuardrailPolicyUpsertRequestDto,
   UomConversionDto,
+  Page,
   UomConversionCreateRequestDto,
   UomConversionUpdateRequestDto,
   ProductSummary as SdkProductSummary,
@@ -75,12 +75,12 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class ProductCatalogService {
-  private readonly api = inject(ApiBaseService);
   private readonly productsSdk = inject(ProductsAPIService);
   private readonly itemCostSdk = inject(ItemCostAPIService);
   private readonly priceBookSdk = inject(PriceBookAPIService);
   private readonly uomSdk = inject(UOMConversionAPIService);
   private readonly supplierCostSdk = inject(SupplierItemCostAPIService);
+  private readonly supplierCostListSdk = inject(SupplierItemCostListAPIService);
   private readonly msrpSdk = inject(ProductMSRPAPIService);
 
   // -------------------------------------------------------------------------
@@ -194,8 +194,11 @@ export class ProductCatalogService {
   }
 
   listCostStructures(itemId: string): Observable<CostStructure[]> {
-    const params = new HttpParams().set('itemId', itemId);
-    return this.api.get<CostStructure[]>('/catalog/v1/supplier-costs', params);
+    return this.supplierCostListSdk.listCostStructures({ page: 0, size: 50 }, itemId).pipe(
+      map((page: Page) =>
+        ((page.content ?? []) as SupplierItemCostDto[]).map(dto => this.toCostStructure(dto)),
+      ),
+    );
   }
 
   getCostStructure(costStructureId: string): Observable<CostStructure> {
