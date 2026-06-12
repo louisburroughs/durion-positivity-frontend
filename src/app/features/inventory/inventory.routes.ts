@@ -15,6 +15,27 @@ export const INVENTORY_ROUTES: Routes = [
           ),
       },
       {
+        path: 'by-location',
+        loadComponent: () =>
+          import(
+            './pages/by-location/location-overview/location-inventory-overview-page.component'
+          ).then(m => m.LocationInventoryOverviewPageComponent),
+      },
+      {
+        path: 'by-location/site/:siteId',
+        loadComponent: () =>
+          import('./pages/by-location/site-tree/site-inventory-tree-page.component').then(
+            m => m.SiteInventoryTreePageComponent,
+          ),
+      },
+      {
+        path: 'by-location/:locationId',
+        loadComponent: () =>
+          import(
+            './pages/by-location/location-overview/location-inventory-overview-page.component'
+          ).then(m => m.LocationInventoryOverviewPageComponent),
+      },
+      {
         path: 'availability',
         loadComponent: () =>
           import('./pages/availability/availability.component').then(
