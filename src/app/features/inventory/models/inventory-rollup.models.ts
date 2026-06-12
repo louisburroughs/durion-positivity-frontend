@@ -64,7 +64,7 @@ export function isRollupError(value: unknown): value is RollupError {
     typeof value === 'object'
     && value !== null
     && 'kind' in value
-    && typeof (value as { kind: unknown }).kind === 'string'
+    && typeof value.kind === 'string'
     && (ROLLUP_ERROR_KINDS as readonly string[]).includes((value as { kind: string }).kind)
   );
 }

@@ -4,6 +4,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { InventoryRollupService } from '@durion-sdk/inventory';
 import { InventoryRollupApiService } from './inventory-rollup.service';
 import {
+  isRollupError,
   LocationInventoryRollupResponse,
   RollupError,
   SiteInventoryRollupResponse,
@@ -47,6 +48,8 @@ describe('InventoryRollupApiService', () => {
       observable.subscribe({
         next: () => reject(new Error('expected error')),
         error: (err: RollupError) => resolve(err),
+        complete: () =>
+          reject(new Error('expected the observable to error, but it completed')),
       });
     });
   }
@@ -104,7 +107,7 @@ describe('InventoryRollupApiService', () => {
 
       const error = await captureError(service.getSiteRollup('site-1'));
 
-      expect(error.kind).toBe('upstream-down');
+      expect(error).toMatchObject({ kind: 'upstream-down', retryable: true });
     });
 
     it('maps 403 to forbidden', async () => {
@@ -133,6 +136,22 @@ describe('InventoryRollupApiService', () => {
       const error = await captureError(service.getSiteRollup('site-1'));
       expect(error).toEqual({ kind: 'unknown', message: 'boom' });
     });
+
+    it('falls back to the HttpErrorResponse message when the body has no string message', async () => {
+      const emptyBody = httpError(404, {});
+      sdkStub.getSiteInventoryRollup.mockReturnValue(throwError(() => emptyBody));
+      expect(await captureError(service.getSiteRollup('site-1'))).toEqual({
+        kind: 'not-found',
+        message: emptyBody.message,
+      });
+
+      const nonStringMessage = httpError(404, { code: 'NOT_FOUND', message: 42 });
+      sdkStub.getSiteInventoryRollup.mockReturnValue(throwError(() => nonStringMessage));
+      expect(await captureError(service.getSiteRollup('site-1'))).toEqual({
+        kind: 'not-found',
+        message: nonStringMessage.message,
+      });
+    });
   });
 
   describe('getLocationRollup', () => {
@@ -155,12 +174,49 @@ describe('InventoryRollupApiService', () => {
       expect(result).toEqual(locationResponse);
     });
 
+    it('treats a blank sku as absent', () => {
+      sdkStub.getLocationInventoryRollup.mockReturnValue(of(locationResponse));
+
+      service.getLocationRollup('loc-1', { sku: '   ' }).subscribe();
+
+      expect(sdkStub.getLocationInventoryRollup).toHaveBeenCalledWith(
+        'loc-1',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+      );
+    });
+
     it('maps errors with the same union as the site rollup', async () => {
       sdkStub.getLocationInventoryRollup.mockReturnValue(throwError(() => httpError(404)));
 
       const error = await captureError(service.getLocationRollup('loc-1'));
 
       expect(error.kind).toBe('not-found');
+    });
+  });
+
+  describe('isRollupError', () => {
+    it('accepts every valid kind', () => {
+      const kinds = ['not-found', 'upstream-down', 'forbidden', 'validation', 'unknown'] as const;
+      for (const kind of kinds) {
+        expect(isRollupError({ kind, message: 'm' }), kind).toBe(true);
+      }
+    });
+
+    it('rejects an object with an unrecognized kind', () => {
+      expect(isRollupError({ kind: 'nope', message: 'm' })).toBe(false);
+    });
+
+    it('rejects values that are not RollupError shapes', () => {
+      expect(isRollupError(null)).toBe(false);
+      expect(isRollupError(undefined)).toBe(false);
+      expect(isRollupError('not-found')).toBe(false);
+      expect(isRollupError(42)).toBe(false);
+      expect(isRollupError({})).toBe(false);
+      expect(isRollupError({ kind: 404 })).toBe(false);
     });
   });
 });
