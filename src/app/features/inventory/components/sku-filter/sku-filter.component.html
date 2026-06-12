@@ -1,0 +1,26 @@
+<div class="sku-filter">
+  <label class="sku-filter__label" for="sku-filter-input">
+    {{ 'INVENTORY.BY_LOCATION.SKU_FILTER.LABEL' | translate }}
+  </label>
+  <div class="sku-filter__input-wrap">
+    <input
+      id="sku-filter-input"
+      type="search"
+      class="sku-filter__input"
+      [value]="inputValue()"
+      [attr.placeholder]="'INVENTORY.BY_LOCATION.SKU_FILTER.PLACEHOLDER' | translate"
+      [attr.aria-label]="'INVENTORY.BY_LOCATION.SKU_FILTER.ARIA_LABEL' | translate"
+      (input)="onInput($event)"
+    />
+    @if (inputValue()) {
+      <button
+        type="button"
+        class="sku-filter__clear"
+        [attr.aria-label]="'INVENTORY.BY_LOCATION.SKU_FILTER.CLEAR_ARIA_LABEL' | translate"
+        (click)="clear()"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+    }
+  </div>
+</div>

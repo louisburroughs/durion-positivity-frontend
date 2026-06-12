@@ -3182,6 +3182,61 @@
       "SITE_PLACEHOLDER": {
         "TITLE": "Inventaire du site",
         "BODY": "L'arborescence des emplacements d'entreposage du site arrivera avec le récit F2."
+      },
+      "SKU_FILTER": {
+        "LABEL": "SKU",
+        "PLACEHOLDER": "Enter SKU",
+        "ARIA_LABEL": "Filter by SKU",
+        "CLEAR_ARIA_LABEL": "Clear SKU filter"
+      },
+      "SITE_TREE": {
+        "BREADCRUMB": {
+          "ARIA": "Page breadcrumb",
+          "OVERVIEW": "Inventory by Location"
+        },
+        "TOTALS": {
+          "ARIA": "Site totals",
+          "ON_HAND": "On Hand",
+          "ALLOCATED": "Allocated",
+          "AVAILABLE": "Available",
+          "OVER_ALLOCATED": "Over-Allocated"
+        },
+        "CONTROLS": {
+          "ARIA": "Tree controls",
+          "INCLUDE_EMPTY": "Show empty locations"
+        },
+        "STATE": {
+          "EMPTY": "No storage locations found for this site."
+        },
+        "ERROR": {
+          "NOT_FOUND": "Site not found. It may have been removed or the link is stale.",
+          "FORBIDDEN": "You do not have permission to view inventory for this site.",
+          "UPSTREAM_DOWN": "The location service is temporarily unavailable. Please retry.",
+          "UPSTREAM_DOWN_BANNER": "Location service unavailable — data shown may be stale.",
+          "UNKNOWN": "An unexpected error occurred loading site inventory."
+        },
+        "BADGE": {
+          "OVER_ALLOCATED": "Over-allocated: available is negative",
+          "OVER_ALLOCATED_ARIA": "Over-allocated locations",
+          "INACTIVE_STOCK": "Inactive location has stock"
+        },
+        "TREE": {
+          "ARIA": "Site storage location inventory tree",
+          "CAPTION": "Storage locations with inventory quantities",
+          "EXPAND": "Expand",
+          "COLLAPSE": "Collapse",
+          "COL": {
+            "NAME": "Location",
+            "TYPE": "Type",
+            "STATUS": "Status",
+            "OWN_ON_HAND": "Own On Hand",
+            "OWN_ALLOCATED": "Own Allocated",
+            "OWN_AVAILABLE": "Own Available",
+            "ROLLED_UP_ON_HAND": "Rolled-Up On Hand",
+            "ROLLED_UP_ALLOCATED": "Rolled-Up Allocated",
+            "ROLLED_UP_AVAILABLE": "Rolled-Up Available"
+          }
+        }
       }
     }
   },

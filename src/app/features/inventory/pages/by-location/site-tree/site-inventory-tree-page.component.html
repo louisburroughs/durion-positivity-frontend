@@ -1,0 +1,253 @@
+<main class="page" aria-labelledby="site-tree-title">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="{{ 'INVENTORY.BY_LOCATION.SITE_TREE.BREADCRUMB.ARIA' | translate }}">
+    <a [routerLink]="['/app/inventory/by-location']" class="breadcrumb__link">
+      {{ 'INVENTORY.BY_LOCATION.SITE_TREE.BREADCRUMB.OVERVIEW' | translate }}
+    </a>
+    <span class="breadcrumb__sep" aria-hidden="true">/</span>
+    <span class="breadcrumb__current" aria-current="page">{{ siteName() }}</span>
+  </nav>
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="page-header__title-group">
+      <h1 id="site-tree-title" class="page-title">{{ siteName() }}</h1>
+    </div>
+    <div class="page-header__actions">
+      <button type="button" class="btn-secondary" (click)="refresh()">
+        <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+        {{ 'COMMON.REFRESH' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Upstream-down non-destructive banner -->
+  @if (showUpstreamBanner()) {
+    <div class="banner banner--warning" role="alert" aria-live="polite">
+      <span class="material-symbols-outlined banner__icon" aria-hidden="true">cloud_off</span>
+      <span>{{ 'INVENTORY.BY_LOCATION.SITE_TREE.ERROR.UPSTREAM_DOWN_BANNER' | translate }}</span>
+      <button type="button" class="banner__retry btn-secondary" (click)="refresh()">
+        {{ 'COMMON.RETRY' | translate }}
+      </button>
+      <button type="button" class="banner__dismiss" [attr.aria-label]="'COMMON.CLOSE' | translate" (click)="dismissBanner()">
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+    </div>
+  }
+
+  <!-- Totals strip (shown when data is available) -->
+  @if (state() === 'ready' || state() === 'empty') {
+    @if (response(); as resp) {
+      <section class="totals-strip card" aria-label="{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TOTALS.ARIA' | translate }}">
+        <dl class="totals-strip__grid">
+          <div class="totals-strip__item">
+            <dt class="totals-strip__label">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TOTALS.ON_HAND' | translate }}</dt>
+            <dd class="totals-strip__value">{{ resp.totals.onHand | number }}</dd>
+          </div>
+          <div class="totals-strip__item">
+            <dt class="totals-strip__label">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TOTALS.ALLOCATED' | translate }}</dt>
+            <dd class="totals-strip__value">{{ resp.totals.allocated | number }}</dd>
+          </div>
+          <div class="totals-strip__item"
+            [class.totals-strip__item--negative]="resp.totals.available < 0">
+            <dt class="totals-strip__label">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TOTALS.AVAILABLE' | translate }}</dt>
+            <dd class="totals-strip__value">{{ resp.totals.available | number }}</dd>
+          </div>
+          @if (overAllocatedCount() > 0) {
+            <div class="totals-strip__item totals-strip__item--alert">
+              <dt class="totals-strip__label">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TOTALS.OVER_ALLOCATED' | translate }}</dt>
+              <dd class="totals-strip__value">
+                <span
+                  class="badge badge--error"
+                  [attr.aria-label]="('INVENTORY.BY_LOCATION.SITE_TREE.BADGE.OVER_ALLOCATED_ARIA' | translate) + ': ' + overAllocatedCount()">
+                  {{ overAllocatedCount() }}
+                </span>
+              </dd>
+            </div>
+          }
+        </dl>
+      </section>
+    }
+  }
+
+  <!-- Controls -->
+  <section class="controls card" aria-label="{{ 'INVENTORY.BY_LOCATION.SITE_TREE.CONTROLS.ARIA' | translate }}">
+    <app-sku-filter (skuChange)="onSkuChange($event)" />
+    <label class="toggle-label">
+      <input
+        #includeEmptyCheckbox
+        type="checkbox"
+        class="toggle-checkbox"
+        [checked]="includeEmpty()"
+        (change)="onIncludeEmptyChange(includeEmptyCheckbox.checked)"
+      />
+      {{ 'INVENTORY.BY_LOCATION.SITE_TREE.CONTROLS.INCLUDE_EMPTY' | translate }}
+    </label>
+  </section>
+
+  <!-- Loading skeleton -->
+  @if (state() === 'loading') {
+    <section class="card" aria-busy="true" aria-live="polite">
+      <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+      <div class="skeleton-tree">
+        <div class="skeleton-row skeleton-row--l1"></div>
+        <div class="skeleton-row skeleton-row--l2"></div>
+        <div class="skeleton-row skeleton-row--l2"></div>
+        <div class="skeleton-row skeleton-row--l1"></div>
+        <div class="skeleton-row skeleton-row--l2"></div>
+        <div class="skeleton-row skeleton-row--l3"></div>
+        <div class="skeleton-row skeleton-row--l3"></div>
+      </div>
+    </section>
+  }
+
+  <!-- Empty state (200 with zero nodes) -->
+  @if (state() === 'empty') {
+    <section class="card state-card" aria-live="polite">
+      <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+      <p>{{ 'INVENTORY.BY_LOCATION.SITE_TREE.STATE.EMPTY' | translate }}</p>
+    </section>
+  }
+
+  <!-- Error states -->
+  @if (state() === 'error') {
+    @if (rollupError()?.kind === 'not-found') {
+      <section class="card state-card" role="alert" aria-live="assertive">
+        <span class="material-symbols-outlined" aria-hidden="true">search_off</span>
+        <p>{{ 'INVENTORY.BY_LOCATION.SITE_TREE.ERROR.NOT_FOUND' | translate }}</p>
+        <a [routerLink]="['/app/inventory/by-location']" class="btn-secondary">
+          {{ 'INVENTORY.BY_LOCATION.SITE_TREE.BREADCRUMB.OVERVIEW' | translate }}
+        </a>
+      </section>
+    }
+    @if (rollupError()?.kind === 'forbidden') {
+      <section class="card state-card" role="alert" aria-live="assertive">
+        <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+        <p>{{ 'INVENTORY.BY_LOCATION.SITE_TREE.ERROR.FORBIDDEN' | translate }}</p>
+      </section>
+    }
+    @if (rollupError()?.kind === 'upstream-down' && response() === null) {
+      <section class="card state-card" role="alert" aria-live="assertive">
+        <span class="material-symbols-outlined" aria-hidden="true">cloud_off</span>
+        <p>{{ 'INVENTORY.BY_LOCATION.SITE_TREE.ERROR.UPSTREAM_DOWN' | translate }}</p>
+        <button type="button" class="btn-secondary" (click)="refresh()">{{ 'COMMON.RETRY' | translate }}</button>
+      </section>
+    }
+    @if (rollupError()?.kind === 'validation' || rollupError()?.kind === 'unknown') {
+      <section class="card state-card" role="alert" aria-live="assertive">
+        <span class="material-symbols-outlined" aria-hidden="true">error</span>
+        <p>{{ errorKey() | translate }}</p>
+        <button type="button" class="btn-secondary" (click)="refresh()">{{ 'COMMON.RETRY' | translate }}</button>
+      </section>
+    }
+  }
+
+  <!-- Tree (ready state) -->
+  @if (state() === 'ready') {
+    <section class="card tree-card">
+      <!-- treegrid table: visible rows, WAI-ARIA treegrid semantics -->
+      <!-- CDK virtual scroll activates at > 200 visible rows when @angular/cdk is available -->
+      <div class="tree-scroll-container">
+          <table
+            class="tree-table"
+            role="treegrid"
+            [attr.aria-label]="'INVENTORY.BY_LOCATION.SITE_TREE.TREE.ARIA' | translate">
+            <caption class="sr-only">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TREE.CAPTION' | translate }}</caption>
+            <thead>
+              <tr role="row">
+                <th scope="col" role="columnheader">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TREE.COL.NAME' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TREE.COL.TYPE' | translate }}</th>
+                <th scope="col" role="columnheader">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TREE.COL.STATUS' | translate }}</th>
+                <th scope="col" role="columnheader" class="qty-col">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TREE.COL.OWN_ON_HAND' | translate }}</th>
+                <th scope="col" role="columnheader" class="qty-col">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TREE.COL.OWN_ALLOCATED' | translate }}</th>
+                <th scope="col" role="columnheader" class="qty-col">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TREE.COL.OWN_AVAILABLE' | translate }}</th>
+                <th scope="col" role="columnheader" class="qty-col">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TREE.COL.ROLLED_UP_ON_HAND' | translate }}</th>
+                <th scope="col" role="columnheader" class="qty-col">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TREE.COL.ROLLED_UP_ALLOCATED' | translate }}</th>
+                <th scope="col" role="columnheader" class="qty-col">{{ 'INVENTORY.BY_LOCATION.SITE_TREE.TREE.COL.ROLLED_UP_AVAILABLE' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of visibleRows(); track row.node.storageLocationId) {
+                <tr
+                  role="row"
+                  class="tree-row"
+                  [class.tree-row--negative]="row.hasNegativeAvailable"
+                  [class.tree-row--inactive-stock]="row.hasStockInInactiveLocation"
+                  [attr.aria-level]="row.depth"
+                  [attr.aria-expanded]="row.hasChildren ? row.expanded : null"
+                  [attr.tabindex]="0"
+                  (click)="row.hasChildren && toggleRow(row.node.storageLocationId)"
+                  (keydown)="onRowKeydown($event, row)">
+                  <!-- Name + expand control -->
+                  <td [style.padding-left.rem]="(row.depth - 1) * 1.5 + 0.75">
+                    <div class="tree-row__name-cell">
+                      @if (row.hasChildren) {
+                        <button
+                          type="button"
+                          class="tree-row__toggle"
+                          [attr.aria-label]="(row.expanded
+                            ? ('INVENTORY.BY_LOCATION.SITE_TREE.TREE.COLLAPSE' | translate)
+                            : ('INVENTORY.BY_LOCATION.SITE_TREE.TREE.EXPAND' | translate)) + ' ' + row.node.name"
+                          (click)="$event.stopPropagation(); toggleRow(row.node.storageLocationId)">
+                          <span class="material-symbols-outlined" aria-hidden="true">
+                            {{ row.expanded ? 'expand_more' : 'chevron_right' }}
+                          </span>
+                        </button>
+                      } @else {
+                        <span class="tree-row__leaf-icon" aria-hidden="true"></span>
+                      }
+                      <span class="tree-row__name">{{ row.node.name || row.node.storageLocationId }}</span>
+                      @if (row.hasNegativeAvailable) {
+                        <span
+                          class="badge badge--error tree-row__badge"
+                          [attr.aria-label]="'INVENTORY.BY_LOCATION.SITE_TREE.BADGE.OVER_ALLOCATED' | translate">
+                          !
+                        </span>
+                      }
+                      @if (row.hasStockInInactiveLocation) {
+                        <span
+                          class="badge badge--warning tree-row__badge"
+                          [attr.aria-label]="'INVENTORY.BY_LOCATION.SITE_TREE.BADGE.INACTIVE_STOCK' | translate">
+                          !
+                        </span>
+                      }
+                    </div>
+                  </td>
+                  <!-- Type chip -->
+                  <td>
+                    @if (row.node.type) {
+                      <span class="chip chip--type">{{ row.node.type }}</span>
+                    }
+                  </td>
+                  <!-- Status chip -->
+                  <td>
+                    @if (row.node.status) {
+                      <span class="chip"
+                        [class.chip--active]="row.node.status === 'ACTIVE'"
+                        [class.chip--inactive]="isNonActive(row.node.status)">
+                        {{ row.node.status }}
+                      </span>
+                    }
+                  </td>
+                  <!-- Own quantities -->
+                  <td class="qty-col">{{ row.node.own.onHand | number }}</td>
+                  <td class="qty-col">{{ row.node.own.allocated | number }}</td>
+                  <td class="qty-col" [class.qty--negative]="row.node.own.available < 0">
+                    {{ row.node.own.available | number }}
+                  </td>
+                  <!-- Rolled-up quantities -->
+                  <td class="qty-col">{{ row.node.rolledUp.onHand | number }}</td>
+                  <td class="qty-col">{{ row.node.rolledUp.allocated | number }}</td>
+                  <td class="qty-col" [class.qty--negative]="row.node.rolledUp.available < 0">
+                    {{ row.node.rolledUp.available | number }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+    </section>
+  }
+</main>
