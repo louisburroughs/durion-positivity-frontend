@@ -51,11 +51,20 @@ export type RollupError =
   | { kind: 'validation'; message: string }
   | { kind: 'unknown'; message: string };
 
+const ROLLUP_ERROR_KINDS: readonly RollupError['kind'][] = [
+  'not-found',
+  'upstream-down',
+  'forbidden',
+  'validation',
+  'unknown',
+];
+
 export function isRollupError(value: unknown): value is RollupError {
   return (
     typeof value === 'object'
     && value !== null
     && 'kind' in value
     && typeof (value as { kind: unknown }).kind === 'string'
+    && (ROLLUP_ERROR_KINDS as readonly string[]).includes((value as { kind: string }).kind)
   );
 }

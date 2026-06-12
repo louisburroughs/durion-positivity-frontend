@@ -203,8 +203,8 @@
           "DESCRIPTION": "[!! ØØṕëëñ ŕøøľëë ààççëëšš ààñđ ľøøçààŧïïøøñ ààššïïğñḿëëñŧ ṕààğëëš ŵïïŧħ ŧħëë ÏÏĐš ÿøøüüŕ ŵøøŕķƒľøøŵ ñëëëëđš. !!]"
         },
         "DATA_IMPORT": {
-          "TITLE": "[!! Data Import !!]",
-          "DESCRIPTION": "[!! Bulk import people and HR data. !!]"
+          "TITLE": "[!! Đààŧàà ÏÏḿṕøøŕŧ !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ ṕëëøøṕľëë ààñđ ĦŔ đààŧàà. !!]"
         }
       },
       "CARD": {
@@ -249,8 +249,8 @@
           "DESCRIPTION": "[!! Ŕëëṽïïëëŵ ààñđ üüṕđààŧëë ľøøçààŧïïøøñ ààššïïğñḿëëñŧš ƒøøŕ àà šṕëëçïïƒïïç ṕëëŕšøøñ ÏÏĐ. !!]"
         },
         "IMPORT_PEOPLE": {
-          "TITLE": "[!! Import People !!]",
-          "DESCRIPTION": "[!! Bulk import people and HR records from a CSV or XLSX file. !!]"
+          "TITLE": "[!! ÏÏḿṕøøŕŧ Ṕëëøøṕľëë !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ ṕëëøøṕľëë ààñđ ĦŔ ŕëëçøøŕđš ƒŕøøḿ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë. !!]"
         }
       },
       "FIELD": {
@@ -275,7 +275,7 @@
         "OPEN_EMPLOYEE_OFFBOARD": "[!! ØØṕëëñ ØØƒƒƀøøààŕđ Ṕààğëë !!]",
         "OPEN_RBAC": "[!! ØØṕëëñ Ŕøøľëë AAššïïğñḿëëñŧ !!]",
         "OPEN_PERSON_LOCATIONS": "[!! ØØṕëëñ Ŀøøçààŧïïøøñ AAššïïğñḿëëñŧš !!]",
-        "IMPORT_DATA": "[!! Import Data !!]"
+        "IMPORT_DATA": "[!! ÏÏḿṕøøŕŧ Đààŧàà !!]"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "[!! ËËñŧëëŕ ŧħëë ŕëëqüüïïŕëëđ ïïđëëñŧïïƒïïëëŕ ƀëëƒøøŕëë øøṕëëñïïñğ ŧħïïš ṕààğëë. !!]",
@@ -395,8 +395,8 @@
           "DESCRIPTION": "[!! AAççëëšš ŧħëë ÇŔḾ šñààṕšħøøŧ ƒøøŕ çüüšŧøøḿëëŕ çøøñŧëëẍŧ ààŧ àà ğľààñçëë, ààñđ ŕëëṽïïëëŵ ïïñŧëëğŕààŧïïøøñ ëëṽëëñŧš ƒøøŕ đïïààğñøøšŧïïçš. !!]"
         },
         "DATA_IMPORT": {
-          "TITLE": "[!! Data Import !!]",
-          "DESCRIPTION": "[!! Bulk import CRM data. !!]"
+          "TITLE": "[!! Đààŧàà ÏÏḿṕøøŕŧ !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ ÇŔḾ đààŧàà. !!]"
         }
       },
       "CARD": {
@@ -445,16 +445,16 @@
           "DESCRIPTION": "[!! Ŕëëṽïïëëŵ ŧħëë ľøøğ øøƒ ïïñŧëëğŕààŧïïøøñ ëëṽëëñŧš ƀëëŧŵëëëëñ ŧħëë ÇŔḾ ààñđ ëëẍŧëëŕñààľ šÿšŧëëḿš. !!]"
         },
         "IMPORT_CUSTOMER": {
-          "TITLE": "[!! Import Customers !!]",
-          "DESCRIPTION": "[!! Bulk import customer records from a CSV or XLSX file. !!]"
+          "TITLE": "[!! ÏÏḿṕøøŕŧ Çüüšŧøøḿëëŕš !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ çüüšŧøøḿëëŕ ŕëëçøøŕđš ƒŕøøḿ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë. !!]"
         },
         "IMPORT_VEHICLE_INVENTORY": {
-          "TITLE": "[!! Import Vehicle Inventory !!]",
-          "DESCRIPTION": "[!! Bulk import vehicle inventory records from a CSV or XLSX file. !!]"
+          "TITLE": "[!! ÏÏḿṕøøŕŧ Ṽëëħïïçľëë ÏÏñṽëëñŧøøŕÿ !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ ṽëëħïïçľëë ïïñṽëëñŧøøŕÿ ŕëëçøøŕđš ƒŕøøḿ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë. !!]"
         },
         "IMPORT_VEHICLE_FITMENT": {
-          "TITLE": "[!! Import Vehicle Fitment !!]",
-          "DESCRIPTION": "[!! Bulk import vehicle fitment records from a CSV or XLSX file. !!]"
+          "TITLE": "[!! ÏÏḿṕøøŕŧ Ṽëëħïïçľëë Ƒïïŧḿëëñŧ !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ ṽëëħïïçľëë ƒïïŧḿëëñŧ ŕëëçøøŕđš ƒŕøøḿ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë. !!]"
         }
       },
       "FIELD": {
@@ -475,7 +475,7 @@
         "OPEN_BILLING_RULES": "[!! Ṽïïëëŵ Ɓïïľľïïñğ Ŕüüľëëš !!]",
         "OPEN_SNAPSHOT": "[!! Ŀøøààđ Šñààṕšħøøŧ !!]",
         "OPENING_PAGE": "[!! ØØṕëëñïïñğ... !!]",
-        "IMPORT_DATA": "[!! Import Data !!]"
+        "IMPORT_DATA": "[!! ÏÏḿṕøøŕŧ Đààŧàà !!]"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "[!! AA Ṕààŕŧÿ ÏÏĐ ïïš ŕëëqüüïïŕëëđ. !!]",
@@ -823,8 +823,8 @@
           "DESCRIPTION": "[!! AAççëëšš ƀààÿš, ḿøøƀïïľëë üüñïïŧš, šŧøøŕààğëë ľøøçààŧïïøøñš, ààñđ šÿñç ŧøøøøľš. !!]"
         },
         "DATA_IMPORT": {
-          "TITLE": "[!! Data Import !!]",
-          "DESCRIPTION": "[!! Bulk import location data. !!]"
+          "TITLE": "[!! Đààŧàà ÏÏḿṕøøŕŧ !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ ľøøçààŧïïøøñ đààŧàà. !!]"
         }
       },
       "CARD": {
@@ -861,8 +861,8 @@
           "DESCRIPTION": "[!! Ŕüüñ ààñđ ḿøøñïïŧøøŕ šÿñçħŕøøñïïžààŧïïøøñ ĵøøƀš ƒøøŕ ľøøçààŧïïøøñ đààŧàà. !!]"
         },
         "IMPORT_LOCATION": {
-          "TITLE": "[!! Import Locations !!]",
-          "DESCRIPTION": "[!! Bulk import location records from a CSV or XLSX file. !!]"
+          "TITLE": "[!! ÏÏḿṕøøŕŧ Ŀøøçààŧïïøøñš !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ ľøøçààŧïïøøñ ŕëëçøøŕđš ƒŕøøḿ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë. !!]"
         }
       },
       "FIELD": {
@@ -878,7 +878,7 @@
         "OPENING_PAGE": "[!! ØØṕëëñïïñğ… !!]",
         "OPEN_LOCATION": "[!! ØØṕëëñ Ŀøøçààŧïïøøñ !!]",
         "OPEN_LOCATION_DEFAULTS": "[!! ØØṕëëñ Đëëƒààüüľŧš !!]",
-        "IMPORT_DATA": "[!! Import Data !!]"
+        "IMPORT_DATA": "[!! ÏÏḿṕøøŕŧ Đààŧàà !!]"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "[!! ËËñŧëëŕ ŧħëë ŕëëqüüïïŕëëđ ïïđëëñŧïïƒïïëëŕ ƀëëƒøøŕëë øøṕëëñïïñğ ŧħïïš ṕààğëë. !!]",
@@ -1875,74 +1875,74 @@
       }
     },
     "LANDING": {
-      "EYEBROW": "[!! Product & Catalog !!]",
-      "TITLE": "[!! Product Management !!]",
-      "SUBTITLE": "[!! Manage your product catalog, pricing, inventory feeds, and bulk imports. !!]",
+      "EYEBROW": "[!! Ṕŕøøđüüçŧ & Çààŧààľøøğ !!]",
+      "TITLE": "[!! Ṕŕøøđüüçŧ Ḿààñààğëëḿëëñŧ !!]",
+      "SUBTITLE": "[!! Ḿààñààğëë ÿøøüüŕ ṕŕøøđüüçŧ çààŧààľøøğ, ṕŕïïçïïñğ, ïïñṽëëñŧøøŕÿ ƒëëëëđš, ààñđ ƀüüľķ ïïḿṕøøŕŧš. !!]",
       "HERO": {
-        "OPEN_CATALOG": "[!! Open Catalog !!]",
-        "OPEN_PRICE_BOOKS": "[!! Open Price Books !!]"
+        "OPEN_CATALOG": "[!! ØØṕëëñ Çààŧààľøøğ !!]",
+        "OPEN_PRICE_BOOKS": "[!! ØØṕëëñ Ṕŕïïçëë Ɓøøøøķš !!]"
       },
       "STAT": {
-        "ARIA": "[!! Product management statistics !!]",
-        "PAGES": "[!! Total pages !!]",
-        "DIRECT_LINKS": "[!! Quick links !!]",
-        "GUIDED_LAUNCHES": "[!! Guided launches !!]"
+        "ARIA": "[!! Ṕŕøøđüüçŧ ḿààñààğëëḿëëñŧ šŧààŧïïšŧïïçš !!]",
+        "PAGES": "[!! Ŧøøŧààľ ṕààğëëš !!]",
+        "DIRECT_LINKS": "[!! Qüüïïçķ ľïïñķš !!]",
+        "GUIDED_LAUNCHES": "[!! Ğüüïïđëëđ ľààüüñçħëëš !!]"
       },
-      "LOADING": "[!! Loading product data... !!]",
+      "LOADING": "[!! Ŀøøààđïïñğ ṕŕøøđüüçŧ đààŧàà... !!]",
       "ACTION": {
-        "OPEN_PAGE": "[!! Open !!]",
-        "IMPORT_DATA": "[!! Import Data !!]"
+        "OPEN_PAGE": "[!! ØØṕëëñ !!]",
+        "IMPORT_DATA": "[!! ÏÏḿṕøøŕŧ Đààŧàà !!]"
       },
       "SECTION": {
         "CATALOG": {
-          "TITLE": "[!! Catalog !!]",
-          "DESCRIPTION": "[!! Browse and manage product records. !!]"
+          "TITLE": "[!! Çààŧààľøøğ !!]",
+          "DESCRIPTION": "[!! Ɓŕøøŵšëë ààñđ ḿààñààğëë ṕŕøøđüüçŧ ŕëëçøøŕđš. !!]"
         },
         "PRICING": {
-          "TITLE": "[!! Pricing !!]",
-          "DESCRIPTION": "[!! Manage price books, MSRP, and location overrides. !!]"
+          "TITLE": "[!! Ṕŕïïçïïñğ !!]",
+          "DESCRIPTION": "[!! Ḿààñààğëë ṕŕïïçëë ƀøøøøķš, ḾŠŔṔ, ààñđ ľøøçààŧïïøøñ øøṽëëŕŕïïđëëš. !!]"
         },
         "INVENTORY": {
-          "TITLE": "[!! Inventory !!]",
-          "DESCRIPTION": "[!! Track availability and manage inventory feeds. !!]"
+          "TITLE": "[!! ÏÏñṽëëñŧøøŕÿ !!]",
+          "DESCRIPTION": "[!! Ŧŕààçķ ààṽààïïľààƀïïľïïŧÿ ààñđ ḿààñààğëë ïïñṽëëñŧøøŕÿ ƒëëëëđš. !!]"
         },
         "DATA_IMPORT": {
-          "TITLE": "[!! Data Import !!]",
-          "DESCRIPTION": "[!! Bulk import product catalog and pricing data. !!]"
+          "TITLE": "[!! Đààŧàà ÏÏḿṕøøŕŧ !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ ṕŕøøđüüçŧ çààŧààľøøğ ààñđ ṕŕïïçïïñğ đààŧàà. !!]"
         }
       },
       "CARD": {
         "CATALOG_LIST": {
-          "TITLE": "[!! Product List !!]",
-          "DESCRIPTION": "[!! View and manage all products in the catalog. !!]"
+          "TITLE": "[!! Ṕŕøøđüüçŧ Ŀïïšŧ !!]",
+          "DESCRIPTION": "[!! Ṽïïëëŵ ààñđ ḿààñààğëë ààľľ ṕŕøøđüüçŧš ïïñ ŧħëë çààŧààľøøğ. !!]"
         },
         "PRICE_BOOKS": {
-          "TITLE": "[!! Price Books !!]",
-          "DESCRIPTION": "[!! Manage price books and customer pricing tiers. !!]"
+          "TITLE": "[!! Ṕŕïïçëë Ɓøøøøķš !!]",
+          "DESCRIPTION": "[!! Ḿààñààğëë ṕŕïïçëë ƀøøøøķš ààñđ çüüšŧøøḿëëŕ ṕŕïïçïïñğ ŧïïëëŕš. !!]"
         },
         "MSRP": {
-          "TITLE": "[!! MSRP !!]",
-          "DESCRIPTION": "[!! Set and manage manufacturer suggested retail prices. !!]"
+          "TITLE": "[!! ḾŠŔṔ !!]",
+          "DESCRIPTION": "[!! Šëëŧ ààñđ ḿààñààğëë ḿààñüüƒààçŧüüŕëëŕ šüüğğëëšŧëëđ ŕëëŧààïïľ ṕŕïïçëëš. !!]"
         },
         "LOCATION_OVERRIDES": {
-          "TITLE": "[!! Location Overrides !!]",
-          "DESCRIPTION": "[!! Manage location-specific pricing overrides. !!]"
+          "TITLE": "[!! Ŀøøçààŧïïøøñ ØØṽëëŕŕïïđëëš !!]",
+          "DESCRIPTION": "[!! Ḿààñààğëë ľøøçààŧïïøøñ-šṕëëçïïƒïïç ṕŕïïçïïñğ øøṽëëŕŕïïđëëš. !!]"
         },
         "AVAILABILITY": {
-          "TITLE": "[!! Availability !!]",
-          "DESCRIPTION": "[!! Track and manage product availability. !!]"
+          "TITLE": "[!! AAṽààïïľààƀïïľïïŧÿ !!]",
+          "DESCRIPTION": "[!! Ŧŕààçķ ààñđ ḿààñààğëë ṕŕøøđüüçŧ ààṽààïïľààƀïïľïïŧÿ. !!]"
         },
         "FEEDS": {
-          "TITLE": "[!! Inventory Feeds !!]",
-          "DESCRIPTION": "[!! Manage automated inventory data feeds. !!]"
+          "TITLE": "[!! ÏÏñṽëëñŧøøŕÿ Ƒëëëëđš !!]",
+          "DESCRIPTION": "[!! Ḿààñààğëë ààüüŧøøḿààŧëëđ ïïñṽëëñŧøøŕÿ đààŧàà ƒëëëëđš. !!]"
         },
         "IMPORT_CATALOG": {
-          "TITLE": "[!! Import Catalog !!]",
-          "DESCRIPTION": "[!! Bulk import product catalog records from a CSV or XLSX file. !!]"
+          "TITLE": "[!! ÏÏḿṕøøŕŧ Çààŧààľøøğ !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ ṕŕøøđüüçŧ çààŧààľøøğ ŕëëçøøŕđš ƒŕøøḿ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë. !!]"
         },
         "IMPORT_PRICE": {
-          "TITLE": "[!! Import Pricing !!]",
-          "DESCRIPTION": "[!! Bulk import pricing data from a CSV or XLSX file. !!]"
+          "TITLE": "[!! ÏÏḿṕøøŕŧ Ṕŕïïçïïñğ !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ ṕŕïïçïïñğ đààŧàà ƒŕøøḿ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë. !!]"
         }
       }
     }
@@ -2267,8 +2267,8 @@
           "DESCRIPTION": "[!! Ḿààñààğëë ṕëëŕḿïïššïïøøñš ààñđ çøøñƒïïğüüŕààŧïïøøñ ƒøøŕ ïïñṽëëñŧøøŕÿ. !!]"
         },
         "DATA_IMPORT": {
-          "TITLE": "[!! Data Import !!]",
-          "DESCRIPTION": "[!! Bulk import stock inventory data. !!]"
+          "TITLE": "[!! Đààŧàà ÏÏḿṕøøŕŧ !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ šŧøøçķ ïïñṽëëñŧøøŕÿ đààŧàà. !!]"
         }
       },
       "CARD": {
@@ -2361,8 +2361,8 @@
           "DESCRIPTION": "[!! Ḿààñààğëë ïïñṽëëñŧøøŕÿ ààççëëšš ààñđ ṕëëŕḿïïššïïøøñ šëëŧŧïïñğš. !!]"
         },
         "IMPORT_STOCK": {
-          "TITLE": "[!! Import Stock !!]",
-          "DESCRIPTION": "[!! Bulk import stock inventory records from a CSV or XLSX file. !!]"
+          "TITLE": "[!! ÏÏḿṕøøŕŧ Šŧøøçķ !!]",
+          "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ šŧøøçķ ïïñṽëëñŧøøŕÿ ŕëëçøøŕđš ƒŕøøḿ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë. !!]"
         }
       },
       "FIELD": {
@@ -3173,6 +3173,16 @@
       "CATEGORY": {
         "INVENTORY": "[!! ÏÏñṽëëñŧøøŕÿ !!]"
       }
+    },
+    "BY_LOCATION": {
+      "OVERVIEW_PLACEHOLDER": {
+        "TITLE": "[!! ÏÏñṽëëñŧøøŕÿ ƀÿ Ŀøøçààŧïïøøñ !!]",
+        "BODY": "[!! Ŀøøçààŧïïøøñ øøṽëëŕṽïïëëŵ ààŕŕïïṽëëš ŵïïŧħ šŧøøŕÿ Ƒ3. !!]"
+      },
+      "SITE_PLACEHOLDER": {
+        "TITLE": "[!! Šïïŧëë ÏÏñṽëëñŧøøŕÿ !!]",
+        "BODY": "[!! Šïïŧëë šŧøøŕààğëë-ľøøçààŧïïøøñ ŧŕëëëë ààŕŕïïṽëëš ŵïïŧħ šŧøøŕÿ Ƒ2. !!]"
+      }
     }
   },
   "BILLING": {
@@ -3282,7 +3292,7 @@
         "GENERATED_BY": "[!! Ğëëñëëŕààŧëëđ Ɓÿ !!]"
       },
       "ADJUSTMENT": {
-        "META": "[!! {{timestamp}} - ƀÿ {{user}} !!]"
+        "META": "{{timestamp}}[!!  - ƀÿ  !!]{{user}}"
       },
       "ARIA": {
         "LINE_ITEMS": "[!! ÏÏñṽøøïïçëë ľïïñëë ïïŧëëḿš !!]",
@@ -3561,8 +3571,8 @@
           "DESCRIPTION": "[!! Ŕëëṽïïëëŵ šëëçüüŕïïŧÿ ààüüđïïŧ ëëñŧŕïïëëš ààñđ ŧħëë ƒüüľľ ṕľààŧƒøøŕḿ ààüüđïïŧ ëëṽëëñŧ ľøøğ. !!]"
         },
         "DATA_TOOLS": {
-          "TITLE": "[!! Data Tools !!]",
-          "DESCRIPTION": "[!! Manage bulk data imports and system data operations. !!]"
+          "TITLE": "[!! Đààŧàà Ŧøøøøľš !!]",
+          "DESCRIPTION": "[!! Ḿààñààğëë ƀüüľķ đààŧàà ïïḿṕøøŕŧš ààñđ šÿšŧëëḿ đààŧàà øøṕëëŕààŧïïøøñš. !!]"
         }
       },
       "CARD": {
@@ -3591,8 +3601,8 @@
           "DESCRIPTION": "[!! Ɓŕøøŵšëë ààñđ ëëẍṕøøŕŧ ŧħëë ƒüüľľ ṕľààŧƒøøŕḿ ààüüđïïŧ ëëṽëëñŧ ľøøğ ŵïïŧħ ààçŧøøŕ ààñđ ŧïïḿëëšŧààḿṕ ƒïïľŧëëŕš. !!]"
         },
         "IMPORT_JOBS": {
-          "TITLE": "[!! Import Jobs !!]",
-          "DESCRIPTION": "[!! View and manage all bulk data import jobs across all domains. !!]"
+          "TITLE": "[!! ÏÏḿṕøøŕŧ Ĵøøƀš !!]",
+          "DESCRIPTION": "[!! Ṽïïëëŵ ààñđ ḿààñààğëë ààľľ ƀüüľķ đààŧàà ïïḿṕøøŕŧ ĵøøƀš ààçŕøøšš ààľľ đøøḿààïïñš. !!]"
         }
       },
       "FIELD": {
@@ -3614,236 +3624,236 @@
   },
   "BULK_IMPORT": {
     "DOMAIN": {
-      "CATALOG": "[!! Product Catalog !!]",
-      "INVENTORY": "[!! Stock Inventory !!]",
-      "LOCATION": "[!! Location !!]",
-      "CUSTOMER": "[!! Customer !!]",
-      "PEOPLE": "[!! People / HR !!]",
-      "PRICE": "[!! Pricing !!]",
-      "VEHICLE_INVENTORY": "[!! Vehicle Inventory !!]",
-      "VEHICLE_FITMENT": "[!! Vehicle Fitment !!]"
+      "CATALOG": "[!! Ṕŕøøđüüçŧ Çààŧààľøøğ !!]",
+      "INVENTORY": "[!! Šŧøøçķ ÏÏñṽëëñŧøøŕÿ !!]",
+      "LOCATION": "[!! Ŀøøçààŧïïøøñ !!]",
+      "CUSTOMER": "[!! Çüüšŧøøḿëëŕ !!]",
+      "PEOPLE": "[!! Ṕëëøøṕľëë / ĦŔ !!]",
+      "PRICE": "[!! Ṕŕïïçïïñğ !!]",
+      "VEHICLE_INVENTORY": "[!! Ṽëëħïïçľëë ÏÏñṽëëñŧøøŕÿ !!]",
+      "VEHICLE_FITMENT": "[!! Ṽëëħïïçľëë Ƒïïŧḿëëñŧ !!]"
     },
     "STATUS": {
-      "CREATED": "[!! Created !!]",
-      "UPLOADING": "[!! Uploading !!]",
-      "DETECTING": "[!! Detecting !!]",
-      "MAPPING_REVIEW": "[!! Mapping Review !!]",
-      "DEDUP": "[!! Dedup !!]",
-      "PROCESSING": "[!! Processing !!]",
-      "COMPLETED": "[!! Completed !!]",
-      "FAILED": "[!! Failed !!]",
-      "CANCELLED": "[!! Cancelled !!]"
+      "CREATED": "[!! Çŕëëààŧëëđ !!]",
+      "UPLOADING": "[!! ÜÜṕľøøààđïïñğ !!]",
+      "DETECTING": "[!! Đëëŧëëçŧïïñğ !!]",
+      "MAPPING_REVIEW": "[!! Ḿààṕṕïïñğ Ŕëëṽïïëëŵ !!]",
+      "DEDUP": "[!! Đëëđüüṕ !!]",
+      "PROCESSING": "[!! Ṕŕøøçëëššïïñğ !!]",
+      "COMPLETED": "[!! Çøøḿṕľëëŧëëđ !!]",
+      "FAILED": "[!! Ƒààïïľëëđ !!]",
+      "CANCELLED": "[!! Çààñçëëľľëëđ !!]"
     },
     "JOBS": {
-      "TITLE": "[!! Import Jobs !!]",
-      "SUBTITLE": "[!! Track and manage all bulk data import jobs. !!]",
-      "LOADING": "[!! Loading jobs… !!]",
-      "EMPTY": "[!! No import jobs found. !!]",
-      "REFRESH": "[!! Refresh !!]",
+      "TITLE": "[!! ÏÏḿṕøøŕŧ Ĵøøƀš !!]",
+      "SUBTITLE": "[!! Ŧŕààçķ ààñđ ḿààñààğëë ààľľ ƀüüľķ đààŧàà ïïḿṕøøŕŧ ĵøøƀš. !!]",
+      "LOADING": "[!! Ŀøøààđïïñğ ĵøøƀš… !!]",
+      "EMPTY": "[!! Ňøø ïïḿṕøøŕŧ ĵøøƀš ƒøøüüñđ. !!]",
+      "REFRESH": "[!! Ŕëëƒŕëëšħ !!]",
       "ERROR": {
-        "LOAD": "[!! Unable to load jobs. Please try again. !!]"
+        "LOAD": "[!! ÜÜñààƀľëë ŧøø ľøøààđ ĵøøƀš. Ṕľëëààšëë ŧŕÿ ààğààïïñ. !!]"
       },
       "FILTERS": {
-        "ARIA_LABEL": "[!! Filter jobs !!]",
-        "DOMAIN": "[!! Domain !!]",
-        "STATUS": "[!! Status !!]",
-        "ALL_DOMAINS": "[!! All domains !!]",
-        "ALL_STATUSES": "[!! All statuses !!]"
+        "ARIA_LABEL": "[!! Ƒïïľŧëëŕ ĵøøƀš !!]",
+        "DOMAIN": "[!! Đøøḿààïïñ !!]",
+        "STATUS": "[!! Šŧààŧüüš !!]",
+        "ALL_DOMAINS": "[!! AAľľ đøøḿààïïñš !!]",
+        "ALL_STATUSES": "[!! AAľľ šŧààŧüüšëëš !!]"
       },
       "TABLE": {
-        "CAPTION": "[!! Import jobs list !!]",
-        "DOMAIN": "[!! Domain !!]",
-        "FILE": "[!! File !!]",
-        "STATUS": "[!! Status !!]",
-        "ROWS": "[!! Rows !!]",
-        "CREATED": "[!! Created !!]",
-        "ACTIONS": "[!! Actions !!]",
-        "VIEW": "[!! View !!]",
-        "OPEN_JOB": "[!! Open job !!]"
+        "CAPTION": "[!! ÏÏḿṕøøŕŧ ĵøøƀš ľïïšŧ !!]",
+        "DOMAIN": "[!! Đøøḿààïïñ !!]",
+        "FILE": "[!! Ƒïïľëë !!]",
+        "STATUS": "[!! Šŧààŧüüš !!]",
+        "ROWS": "[!! Ŕøøŵš !!]",
+        "CREATED": "[!! Çŕëëààŧëëđ !!]",
+        "ACTIONS": "[!! AAçŧïïøøñš !!]",
+        "VIEW": "[!! Ṽïïëëŵ !!]",
+        "OPEN_JOB": "[!! ØØṕëëñ ĵøøƀ !!]"
       }
     },
     "JOB_DETAIL": {
-      "TITLE": "[!! Job Details !!]",
-      "LOADING": "[!! Loading job details… !!]",
-      "BACK": "[!! Back to Jobs !!]",
-      "CANCEL": "[!! Cancel Job !!]",
-      "RETRY": "[!! Retry !!]",
-      "DOWNLOAD_ERRORS": "[!! Download Error Report !!]",
+      "TITLE": "[!! Ĵøøƀ Đëëŧààïïľš !!]",
+      "LOADING": "[!! Ŀøøààđïïñğ ĵøøƀ đëëŧààïïľš… !!]",
+      "BACK": "[!! Ɓààçķ ŧøø Ĵøøƀš !!]",
+      "CANCEL": "[!! Çààñçëëľ Ĵøøƀ !!]",
+      "RETRY": "[!! Ŕëëŧŕÿ !!]",
+      "DOWNLOAD_ERRORS": "[!! Đøøŵñľøøààđ ËËŕŕøøŕ Ŕëëṕøøŕŧ !!]",
       "ERROR": {
-        "LOAD": "[!! Unable to load job details. !!]",
-        "LOAD_AUDIT": "[!! Unable to load error records. !!]",
-        "CANCEL": "[!! Unable to cancel job. !!]",
-        "RETRY": "[!! Unable to retry job. !!]",
-        "CORRECTION": "[!! Failed to submit correction. Please try again. !!]"
+        "LOAD": "[!! ÜÜñààƀľëë ŧøø ľøøààđ ĵøøƀ đëëŧààïïľš. !!]",
+        "LOAD_AUDIT": "[!! ÜÜñààƀľëë ŧøø ľøøààđ ëëŕŕøøŕ ŕëëçøøŕđš. !!]",
+        "CANCEL": "[!! ÜÜñààƀľëë ŧøø çààñçëëľ ĵøøƀ. !!]",
+        "RETRY": "[!! ÜÜñààƀľëë ŧøø ŕëëŧŕÿ ĵøøƀ. !!]",
+        "CORRECTION": "[!! Ƒààïïľëëđ ŧøø šüüƀḿïïŧ çøøŕŕëëçŧïïøøñ. Ṕľëëààšëë ŧŕÿ ààğààïïñ. !!]"
       },
       "META": {
-        "ARIA_LABEL": "[!! Job metadata !!]",
-        "DOMAIN": "[!! Domain !!]",
-        "FILE": "[!! File !!]",
-        "STATUS": "[!! Status !!]",
-        "TOTAL_ROWS": "[!! Total Rows !!]",
-        "SUCCESS": "[!! Successful !!]",
-        "FAILURES": "[!! Failed Rows !!]"
+        "ARIA_LABEL": "[!! Ĵøøƀ ḿëëŧààđààŧàà !!]",
+        "DOMAIN": "[!! Đøøḿààïïñ !!]",
+        "FILE": "[!! Ƒïïľëë !!]",
+        "STATUS": "[!! Šŧààŧüüš !!]",
+        "TOTAL_ROWS": "[!! Ŧøøŧààľ Ŕøøŵš !!]",
+        "SUCCESS": "[!! Šüüççëëššƒüüľ !!]",
+        "FAILURES": "[!! Ƒààïïľëëđ Ŕøøŵš !!]"
       },
       "ERRORS": {
-        "ARIA_LABEL": "[!! Error records !!]",
-        "TITLE": "[!! Error Records !!]"
+        "ARIA_LABEL": "[!! ËËŕŕøøŕ ŕëëçøøŕđš !!]",
+        "TITLE": "[!! ËËŕŕøøŕ Ŕëëçøøŕđš !!]"
       }
     },
     "WIZARD": {
-      "LOADING": "[!! Loading… !!]",
-      "BACK": "[!! Back !!]",
+      "LOADING": "[!! Ŀøøààđïïñğ… !!]",
+      "BACK": "[!! Ɓààçķ !!]",
       "INVENTORY": {
-        "TITLE": "[!! Import Stock Inventory !!]",
-        "SUBTITLE": "[!! Upload a CSV or XLSX file to bulk-import stock inventory records. !!]"
+        "TITLE": "[!! ÏÏḿṕøøŕŧ Šŧøøçķ ÏÏñṽëëñŧøøŕÿ !!]",
+        "SUBTITLE": "[!! ÜÜṕľøøààđ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë ŧøø ƀüüľķ-ïïḿṕøøŕŧ šŧøøçķ ïïñṽëëñŧøøŕÿ ŕëëçøøŕđš. !!]"
       },
       "LOCATION": {
-        "TITLE": "[!! Import Locations !!]",
-        "SUBTITLE": "[!! Upload a CSV or XLSX file to bulk-import location data. !!]"
+        "TITLE": "[!! ÏÏḿṕøøŕŧ Ŀøøçààŧïïøøñš !!]",
+        "SUBTITLE": "[!! ÜÜṕľøøààđ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë ŧøø ƀüüľķ-ïïḿṕøøŕŧ ľøøçààŧïïøøñ đààŧàà. !!]"
       },
       "CATALOG": {
-        "TITLE": "[!! Import Product Catalog !!]",
-        "SUBTITLE": "[!! Upload a CSV or XLSX file to bulk-import product catalog records. !!]"
+        "TITLE": "[!! ÏÏḿṕøøŕŧ Ṕŕøøđüüçŧ Çààŧààľøøğ !!]",
+        "SUBTITLE": "[!! ÜÜṕľøøààđ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë ŧøø ƀüüľķ-ïïḿṕøøŕŧ ṕŕøøđüüçŧ çààŧààľøøğ ŕëëçøøŕđš. !!]"
       },
       "PRICE": {
-        "TITLE": "[!! Import Pricing !!]",
-        "SUBTITLE": "[!! Upload a CSV or XLSX file to bulk-import pricing data. !!]"
+        "TITLE": "[!! ÏÏḿṕøøŕŧ Ṕŕïïçïïñğ !!]",
+        "SUBTITLE": "[!! ÜÜṕľøøààđ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë ŧøø ƀüüľķ-ïïḿṕøøŕŧ ṕŕïïçïïñğ đààŧàà. !!]"
       },
       "CUSTOMER": {
-        "TITLE": "[!! Import Customers !!]",
-        "SUBTITLE": "[!! Upload a CSV or XLSX file to bulk-import customer records. !!]"
+        "TITLE": "[!! ÏÏḿṕøøŕŧ Çüüšŧøøḿëëŕš !!]",
+        "SUBTITLE": "[!! ÜÜṕľøøààđ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë ŧøø ƀüüľķ-ïïḿṕøøŕŧ çüüšŧøøḿëëŕ ŕëëçøøŕđš. !!]"
       },
       "PEOPLE": {
-        "TITLE": "[!! Import People / HR !!]",
-        "SUBTITLE": "[!! Upload a CSV or XLSX file to bulk-import people and HR records. !!]"
+        "TITLE": "[!! ÏÏḿṕøøŕŧ Ṕëëøøṕľëë / ĦŔ !!]",
+        "SUBTITLE": "[!! ÜÜṕľøøààđ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë ŧøø ƀüüľķ-ïïḿṕøøŕŧ ṕëëøøṕľëë ààñđ ĦŔ ŕëëçøøŕđš. !!]"
       },
       "VEHICLE_INVENTORY": {
-        "TITLE": "[!! Import Vehicle Inventory !!]",
-        "SUBTITLE": "[!! Upload a CSV or XLSX file to bulk-import vehicle inventory data. !!]"
+        "TITLE": "[!! ÏÏḿṕøøŕŧ Ṽëëħïïçľëë ÏÏñṽëëñŧøøŕÿ !!]",
+        "SUBTITLE": "[!! ÜÜṕľøøààđ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë ŧøø ƀüüľķ-ïïḿṕøøŕŧ ṽëëħïïçľëë ïïñṽëëñŧøøŕÿ đààŧàà. !!]"
       },
       "VEHICLE_FITMENT": {
-        "TITLE": "[!! Import Vehicle Fitment !!]",
-        "SUBTITLE": "[!! Upload a CSV or XLSX file to bulk-import vehicle fitment data. !!]"
+        "TITLE": "[!! ÏÏḿṕøøŕŧ Ṽëëħïïçľëë Ƒïïŧḿëëñŧ !!]",
+        "SUBTITLE": "[!! ÜÜṕľøøààđ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë ŧøø ƀüüľķ-ïïḿṕøøŕŧ ṽëëħïïçľëë ƒïïŧḿëëñŧ đààŧàà. !!]"
       },
       "ERROR": {
-        "LOAD": "[!! Unable to check active job status. !!]",
-        "UPLOAD": "[!! File upload failed. Please try again. !!]",
-        "CREATE_SESSION": "[!! Unable to start import session. !!]",
-        "LOAD_MAPPINGS": "[!! Unable to load column mappings. !!]",
-        "APPROVE_MAPPINGS": "[!! Unable to approve column mappings. !!]",
-        "RETRY": "[!! Unable to retry job. !!]",
-        "POLL": "[!! Failed to get import status. Please refresh. !!]"
+        "LOAD": "[!! ÜÜñààƀľëë ŧøø çħëëçķ ààçŧïïṽëë ĵøøƀ šŧààŧüüš. !!]",
+        "UPLOAD": "[!! Ƒïïľëë üüṕľøøààđ ƒààïïľëëđ. Ṕľëëààšëë ŧŕÿ ààğààïïñ. !!]",
+        "CREATE_SESSION": "[!! ÜÜñààƀľëë ŧøø šŧààŕŧ ïïḿṕøøŕŧ šëëššïïøøñ. !!]",
+        "LOAD_MAPPINGS": "[!! ÜÜñààƀľëë ŧøø ľøøààđ çøøľüüḿñ ḿààṕṕïïñğš. !!]",
+        "APPROVE_MAPPINGS": "[!! ÜÜñààƀľëë ŧøø ààṕṕŕøøṽëë çøøľüüḿñ ḿààṕṕïïñğš. !!]",
+        "RETRY": "[!! ÜÜñààƀľëë ŧøø ŕëëŧŕÿ ĵøøƀ. !!]",
+        "POLL": "[!! Ƒààïïľëëđ ŧøø ğëëŧ ïïḿṕøøŕŧ šŧààŧüüš. Ṕľëëààšëë ŕëëƒŕëëšħ. !!]"
       },
       "CONFLICT": {
-        "TITLE": "[!! Active Import in Progress !!]",
-        "MESSAGE": "[!! There is an active import job for another domain. Please wait for it to complete before starting a new import. !!]",
-        "VIEW_JOB": "[!! View Active Job !!]"
+        "TITLE": "[!! AAçŧïïṽëë ÏÏḿṕøøŕŧ ïïñ Ṕŕøøğŕëëšš !!]",
+        "MESSAGE": "[!! Ŧħëëŕëë ïïš ààñ ààçŧïïṽëë ïïḿṕøøŕŧ ĵøøƀ ƒøøŕ ààñøøŧħëëŕ đøøḿààïïñ. Ṕľëëààšëë ŵààïïŧ ƒøøŕ ïïŧ ŧøø çøøḿṕľëëŧëë ƀëëƒøøŕëë šŧààŕŧïïñğ àà ñëëŵ ïïḿṕøøŕŧ. !!]",
+        "VIEW_JOB": "[!! Ṽïïëëŵ AAçŧïïṽëë Ĵøøƀ !!]"
       },
       "STEP": {
         "UPLOAD": {
-          "ARIA_LABEL": "[!! Upload file step !!]",
-          "TITLE": "[!! Upload File !!]"
+          "ARIA_LABEL": "[!! ÜÜṕľøøààđ ƒïïľëë šŧëëṕ !!]",
+          "TITLE": "[!! ÜÜṕľøøààđ Ƒïïľëë !!]"
         },
         "UPLOADING": {
-          "ARIA_LABEL": "[!! File uploading !!]",
-          "TITLE": "[!! Uploading File !!]"
+          "ARIA_LABEL": "[!! Ƒïïľëë üüṕľøøààđïïñğ !!]",
+          "TITLE": "[!! ÜÜṕľøøààđïïñğ Ƒïïľëë !!]"
         },
         "MAPPING": {
-          "ARIA_LABEL": "[!! Column mapping review !!]",
-          "TITLE": "[!! Review Column Mappings !!]"
+          "ARIA_LABEL": "[!! Çøøľüüḿñ ḿààṕṕïïñğ ŕëëṽïïëëŵ !!]",
+          "TITLE": "[!! Ŕëëṽïïëëŵ Çøøľüüḿñ Ḿààṕṕïïñğš !!]"
         },
         "PROGRESS": {
-          "ARIA_LABEL": "[!! Import processing progress !!]",
-          "TITLE": "[!! Processing Import !!]",
-          "PROCESSED": "[!! Rows processed !!]",
-          "CANCEL": "[!! Cancel !!]"
+          "ARIA_LABEL": "[!! ÏÏḿṕøøŕŧ ṕŕøøçëëššïïñğ ṕŕøøğŕëëšš !!]",
+          "TITLE": "[!! Ṕŕøøçëëššïïñğ ÏÏḿṕøøŕŧ !!]",
+          "PROCESSED": "[!! Ŕøøŵš ṕŕøøçëëššëëđ !!]",
+          "CANCEL": "[!! Çààñçëëľ !!]"
         },
         "RESULTS": {
-          "ARIA_LABEL": "[!! Import results !!]"
+          "ARIA_LABEL": "[!! ÏÏḿṕøøŕŧ ŕëëšüüľŧš !!]"
         }
       }
     },
     "FILE_DROP": {
-      "ARIA_LABEL": "[!! File drop zone !!]",
-      "INSTRUCTION": "[!! Drag and drop a file here, or click to browse !!]",
-      "FORMATS": "[!! Accepted formats: .csv, .xlsx (max 100 MB) !!]",
-      "BROWSE_LABEL": "[!! Choose file !!]",
-      "BROWSE_BTN": "[!! Browse Files !!]",
-      "INPUT_ARIA": "[!! Select file to import !!]",
+      "ARIA_LABEL": "[!! Ƒïïľëë đŕøøṕ žøøñëë !!]",
+      "INSTRUCTION": "[!! Đŕààğ ààñđ đŕøøṕ àà ƒïïľëë ħëëŕëë, øøŕ çľïïçķ ŧøø ƀŕøøŵšëë !!]",
+      "FORMATS": "[!! AAççëëṕŧëëđ ƒøøŕḿààŧš: .çšṽ, .ẍľšẍ (ḿààẍ 100 ḾƁ) !!]",
+      "BROWSE_LABEL": "[!! Çħøøøøšëë ƒïïľëë !!]",
+      "BROWSE_BTN": "[!! Ɓŕøøŵšëë Ƒïïľëëš !!]",
+      "INPUT_ARIA": "[!! Šëëľëëçŧ ƒïïľëë ŧøø ïïḿṕøøŕŧ !!]",
       "ERROR": {
-        "INVALID_FORMAT": "[!! Invalid file format. Please upload a .csv or .xlsx file. !!]",
-        "TOO_LARGE": "[!! File is too large. Maximum allowed size is 100 MB. !!]"
+        "INVALID_FORMAT": "[!! ÏÏñṽààľïïđ ƒïïľëë ƒøøŕḿààŧ. Ṕľëëààšëë üüṕľøøààđ àà .çšṽ øøŕ .ẍľšẍ ƒïïľëë. !!]",
+        "TOO_LARGE": "[!! Ƒïïľëë ïïš ŧøøøø ľààŕğëë. Ḿààẍïïḿüüḿ ààľľøøŵëëđ šïïžëë ïïš 100 ḾƁ. !!]"
       }
     },
     "UPLOAD_PROGRESS": {
-      "ARIA_LABEL": "[!! Upload progress !!]",
-      "CANCEL": "[!! Cancel Upload !!]"
+      "ARIA_LABEL": "[!! ÜÜṕľøøààđ ṕŕøøğŕëëšš !!]",
+      "CANCEL": "[!! Çààñçëëľ ÜÜṕľøøààđ !!]"
     },
     "MAPPING": {
       "TABLE": {
-        "ARIA_LABEL": "[!! Column mapping table !!]",
-        "CAPTION": "[!! Column mappings from your file to system fields !!]"
+        "ARIA_LABEL": "[!! Çøøľüüḿñ ḿààṕṕïïñğ ŧààƀľëë !!]",
+        "CAPTION": "[!! Çøøľüüḿñ ḿààṕṕïïñğš ƒŕøøḿ ÿøøüüŕ ƒïïľëë ŧøø šÿšŧëëḿ ƒïïëëľđš !!]"
       },
       "COL": {
-        "SOURCE": "[!! Your Column !!]",
-        "TARGET": "[!! System Field !!]",
-        "CONFIDENCE": "[!! Match Confidence !!]"
+        "SOURCE": "[!! Ŷøøüüŕ Çøøľüüḿñ !!]",
+        "TARGET": "[!! Šÿšŧëëḿ Ƒïïëëľđ !!]",
+        "CONFIDENCE": "[!! Ḿààŧçħ Çøøñƒïïđëëñçëë !!]"
       },
-      "TARGET_LABEL_FOR": "[!! System field for column:  !!]",
+      "TARGET_LABEL_FOR": "[!! Šÿšŧëëḿ ƒïïëëľđ ƒøøŕ çøøľüüḿñ:  !!]",
       "TARGET_OPTION": {
-        "DO_NOT_IMPORT": "[!! Do Not Import !!]"
+        "DO_NOT_IMPORT": "[!! Đøø Ňøøŧ ÏÏḿṕøøŕŧ !!]"
       },
-      "APPROVE_BTN": "[!! Approve Mappings !!]",
+      "APPROVE_BTN": "[!! AAṕṕŕøøṽëë Ḿààṕṕïïñğš !!]",
       "CONFIDENCE": {
-        "HIGH": "[!! High !!]",
-        "MEDIUM": "[!! Medium !!]",
-        "LOW": "[!! Low !!]"
+        "HIGH": "[!! Ħïïğħ !!]",
+        "MEDIUM": "[!! Ḿëëđïïüüḿ !!]",
+        "LOW": "[!! Ŀøøŵ !!]"
       }
     },
     "LANDING": {
-      "ACTIVE_IMPORT": "[!! Active Import !!]"
+      "ACTIVE_IMPORT": "[!! AAçŧïïṽëë ÏÏḿṕøøŕŧ !!]"
     },
     "PROGRESS": {
       "STEPPER": {
-        "ARIA_LABEL": "[!! Import progress steps !!]"
+        "ARIA_LABEL": "[!! ÏÏḿṕøøŕŧ ṕŕøøğŕëëšš šŧëëṕš !!]"
       },
       "STEP": {
-        "UPLOAD": "[!! Upload !!]",
-        "DETECT": "[!! Detect !!]",
-        "MAPPING": "[!! Mapping !!]",
-        "DEDUP": "[!! Dedup !!]",
-        "PROCESS": "[!! Process !!]",
-        "DONE": "[!! Done !!]"
+        "UPLOAD": "[!! ÜÜṕľøøààđ !!]",
+        "DETECT": "[!! Đëëŧëëçŧ !!]",
+        "MAPPING": "[!! Ḿààṕṕïïñğ !!]",
+        "DEDUP": "[!! Đëëđüüṕ !!]",
+        "PROCESS": "[!! Ṕŕøøçëëšš !!]",
+        "DONE": "[!! Đøøñëë !!]"
       }
     },
     "RESULTS": {
-      "ARIA_LABEL": "[!! Import results summary !!]",
-      "TITLE": "[!! Import Complete !!]",
-      "TOTAL": "[!! Total Rows !!]",
-      "SUCCESS": "[!! Successful !!]",
-      "FAILURES": "[!! Failed !!]",
-      "DOWNLOAD_ERRORS": "[!! Download Error Report !!]",
-      "RETRY": "[!! Retry Failed Rows !!]"
+      "ARIA_LABEL": "[!! ÏÏḿṕøøŕŧ ŕëëšüüľŧš šüüḿḿààŕÿ !!]",
+      "TITLE": "[!! ÏÏḿṕøøŕŧ Çøøḿṕľëëŧëë !!]",
+      "TOTAL": "[!! Ŧøøŧààľ Ŕøøŵš !!]",
+      "SUCCESS": "[!! Šüüççëëššƒüüľ !!]",
+      "FAILURES": "[!! Ƒààïïľëëđ !!]",
+      "DOWNLOAD_ERRORS": "[!! Đøøŵñľøøààđ ËËŕŕøøŕ Ŕëëṕøøŕŧ !!]",
+      "RETRY": "[!! Ŕëëŧŕÿ Ƒààïïľëëđ Ŕøøŵš !!]"
     },
     "ERROR_RECORDS": {
-      "ARIA_LABEL": "[!! Error records !!]",
-      "EMPTY": "[!! No error records to display. !!]",
-      "SUBMIT": "[!! Submit Correction !!]",
-      "SUBMITTING": "[!! Saving… !!]",
+      "ARIA_LABEL": "[!! ËËŕŕøøŕ ŕëëçøøŕđš !!]",
+      "EMPTY": "[!! Ňøø ëëŕŕøøŕ ŕëëçøøŕđš ŧøø đïïšṕľààÿ. !!]",
+      "SUBMIT": "[!! Šüüƀḿïïŧ Çøøŕŕëëçŧïïøøñ !!]",
+      "SUBMITTING": "[!! Šààṽïïñğ… !!]",
       "TABLE": {
-        "CAPTION": "[!! Error records requiring review !!]"
+        "CAPTION": "[!! ËËŕŕøøŕ ŕëëçøøŕđš ŕëëqüüïïŕïïñğ ŕëëṽïïëëŵ !!]"
       },
       "COL": {
-        "ROW": "[!! Row !!]",
-        "REASONS": "[!! Reason(s) !!]",
-        "STATUS": "[!! Status !!]",
-        "CORRECTIONS": "[!! Corrections !!]",
-        "ACTIONS": "[!! Actions !!]"
+        "ROW": "[!! Ŕøøŵ !!]",
+        "REASONS": "[!! Ŕëëààšøøñ(š) !!]",
+        "STATUS": "[!! Šŧààŧüüš !!]",
+        "CORRECTIONS": "[!! Çøøŕŕëëçŧïïøøñš !!]",
+        "ACTIONS": "[!! AAçŧïïøøñš !!]"
       },
       "STATUS": {
-        "PENDING": "[!! Pending !!]",
-        "APPROVED": "[!! Approved !!]",
-        "REJECTED": "[!! Rejected !!]"
+        "PENDING": "[!! Ṕëëñđïïñğ !!]",
+        "APPROVED": "[!! AAṕṕŕøøṽëëđ !!]",
+        "REJECTED": "[!! Ŕëëĵëëçŧëëđ !!]"
       }
     }
   }

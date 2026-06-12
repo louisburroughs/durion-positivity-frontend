@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 /**
  * Site Inventory Tree — storage-location hierarchy with own/rolled-up
@@ -11,10 +12,11 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   selector: 'app-site-inventory-tree-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   template: `
     <section class="page-placeholder" aria-labelledby="siteInventoryHeading">
-      <h1 id="siteInventoryHeading">Site Inventory</h1>
-      <p>Site storage-location tree arrives with story F2.</p>
+      <h1 id="siteInventoryHeading">{{ 'INVENTORY.BY_LOCATION.SITE_PLACEHOLDER.TITLE' | translate }}</h1>
+      <p>{{ 'INVENTORY.BY_LOCATION.SITE_PLACEHOLDER.BODY' | translate }}</p>
     </section>
   `,
 })

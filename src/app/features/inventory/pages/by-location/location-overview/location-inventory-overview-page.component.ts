@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 /**
  * Location Inventory Overview — parent-location rollup with per-site
@@ -11,10 +12,11 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   selector: 'app-location-inventory-overview-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   template: `
     <section class="page-placeholder" aria-labelledby="invByLocationHeading">
-      <h1 id="invByLocationHeading">Inventory by Location</h1>
-      <p>Location overview arrives with story F3.</p>
+      <h1 id="invByLocationHeading">{{ 'INVENTORY.BY_LOCATION.OVERVIEW_PLACEHOLDER.TITLE' | translate }}</h1>
+      <p>{{ 'INVENTORY.BY_LOCATION.OVERVIEW_PLACEHOLDER.BODY' | translate }}</p>
     </section>
   `,
 })

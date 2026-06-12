@@ -3173,6 +3173,16 @@
       "CATEGORY": {
         "INVENTORY": "Inventaire"
       }
+    },
+    "BY_LOCATION": {
+      "OVERVIEW_PLACEHOLDER": {
+        "TITLE": "Inventaire par emplacement",
+        "BODY": "L'aperçu des emplacements arrivera avec le récit F3."
+      },
+      "SITE_PLACEHOLDER": {
+        "TITLE": "Inventaire du site",
+        "BODY": "L'arborescence des emplacements d'entreposage du site arrivera avec le récit F2."
+      }
     }
   },
   "BILLING": {

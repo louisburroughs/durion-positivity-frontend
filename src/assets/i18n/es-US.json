@@ -3173,6 +3173,16 @@
       "CATEGORY": {
         "INVENTORY": "Inventario"
       }
+    },
+    "BY_LOCATION": {
+      "OVERVIEW_PLACEHOLDER": {
+        "TITLE": "Inventario por ubicación",
+        "BODY": "La vista general de ubicaciones llegará con la historia F3."
+      },
+      "SITE_PLACEHOLDER": {
+        "TITLE": "Inventario del sitio",
+        "BODY": "El árbol de ubicaciones de almacenamiento del sitio llegará con la historia F2."
+      }
     }
   },
   "BILLING": {
