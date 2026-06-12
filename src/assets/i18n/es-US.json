@@ -3185,7 +3185,7 @@
       },
       "SKU_FILTER": {
         "LABEL": "SKU",
-        "PLACEHOLDER": "Enter SKU",
+        "PLACEHOLDER": "ej. SKU-001",
         "ARIA_LABEL": "Filter by SKU",
         "CLEAR_ARIA_LABEL": "Clear SKU filter"
       },
@@ -3236,6 +3236,56 @@
             "ROLLED_UP_ALLOCATED": "Rolled-Up Allocated",
             "ROLLED_UP_AVAILABLE": "Rolled-Up Available"
           }
+        }
+      },
+      "TITLE": "Inventario por Ubicación",
+      "REFRESH": "Actualizar",
+      "REFRESH_ARIA": "Actualizar datos de inventario",
+      "RETRY": "Reintentar",
+      "BACK": "Volver al resumen",
+      "PICKER": {
+        "LABEL": "Ubicación",
+        "PLACEHOLDER": "Buscar edificios o lugares...",
+        "SECTION_ARIA": "Filtros de ubicación y SKU",
+        "DROPDOWN_ARIA": "Ubicaciones coincidentes",
+        "NO_RESULTS": "No hay ubicaciones coincidentes"
+      },
+      "STATE": {
+        "IDLE": "Seleccione una ubicación para ver el inventario.",
+        "LOADING": "Cargando inventario...",
+        "EMPTY": "No hay sitios bajo esta ubicación."
+      },
+      "ERROR": {
+        "NOT_FOUND": "Ubicación no encontrada. Puede haber sido eliminada o el enlace está desactualizado.",
+        "FORBIDDEN": "No tiene permiso para ver el inventario de esta ubicación.",
+        "UPSTREAM_DOWN": "Servicio de ubicación no disponible. Inténtelo de nuevo.",
+        "UPSTREAM_DOWN_BANNER": "El servicio de ubicación no está disponible temporalmente. Mostrando últimos datos conocidos.",
+        "UNKNOWN": "Ocurrió un error inesperado al cargar el inventario."
+      },
+      "TOTALS": {
+        "TITLE": "Total General",
+        "ARIA": "Total general de inventario para la ubicación seleccionada",
+        "ON_HAND": "En Existencia",
+        "ALLOCATED": "Asignado",
+        "AVAILABLE": "Disponible"
+      },
+      "BADGE": {
+        "NEGATIVE_AVAILABLE_ARIA": "Advertencia: la cantidad disponible es negativa (sobreasignado)"
+      },
+      "TABLE": {
+        "ARIA": "Resumen de inventario por sitios",
+        "CAPTION": "Totales de inventario por sitio para la ubicación seleccionada",
+        "HEADER": {
+          "SITE_NAME": "Sitio",
+          "ON_HAND": "En Existencia",
+          "ALLOCATED": "Asignado",
+          "AVAILABLE": "Disponible"
+        },
+        "SORT": {
+          "SITE_NAME": "Ordenar por nombre de sitio",
+          "ON_HAND": "Ordenar por cantidad en existencia",
+          "ALLOCATED": "Ordenar por cantidad asignada",
+          "AVAILABLE": "Ordenar por cantidad disponible"
         }
       }
     }
