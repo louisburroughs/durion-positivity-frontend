@@ -47,3 +47,5 @@ PR-Review-Processing.md
 
 .playwright-mcp/*
 .worktrees/
+.tokensave
+repomix-output.*
