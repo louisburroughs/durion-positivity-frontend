@@ -93,6 +93,6 @@ export class CountExecuteComponent {
   }
 
   goBack(): void {
-    this.router.navigate(['/app/inventory/counts']);
+    this.router.navigate(['/app', 'inventory']);
   }
 }
