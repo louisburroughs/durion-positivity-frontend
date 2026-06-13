@@ -336,6 +336,10 @@
   line-height: 1.4;
 }
 
+.tree-row__badge-icon {
+  font-size: 0.9rem;
+}
+
 
 .chip {
   display: inline-flex;

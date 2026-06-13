@@ -8,12 +8,12 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
-import { Subject, Subscription } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Subject, Subscription, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 import { InventoryRollupApiService } from '../../../services/inventory-rollup.service';
 import {
@@ -29,6 +29,14 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 /** Set of expanded storageLocationIds. Preserved across SKU re-query. */
 type ExpandSet = Set<string>;
+
+/**
+ * Result union emitted by the inner query observable so that errors never
+ * propagate to (and terminate) the outer switchMap subscription.
+ */
+type QueryResult =
+  | { ok: true; response: SiteInventoryRollupResponse }
+  | { ok: false; error: RollupError };
 
 /**
  * A flattened row used for rendering and CDK virtual scroll.
@@ -69,9 +77,24 @@ export interface TreeRow {
 export class SiteInventoryTreePageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   private readonly rollupService = inject(InventoryRollupApiService);
   // DestroyRef unused directly — we manage querySub manually in ngOnDestroy
   private readonly _destroyRef = inject(DestroyRef);
+
+  constructor() {
+    const siteId = this.route.snapshot.paramMap.get('siteId') ?? '';
+    this.siteId.set(siteId);
+
+    // Router.getCurrentNavigation() is only non-null while a navigation is in
+    // flight, so it must be read in the constructor (Angular-documented
+    // pattern). On refresh/direct load it is null; fall back to the persisted
+    // history state, then to a short form of the siteId.
+    const nav = this.router.getCurrentNavigation();
+    const navState = nav?.extras?.state as { siteName?: string } | undefined;
+    const historyState = this.location.getState() as { siteName?: string } | null | undefined;
+    this.siteName.set(navState?.siteName ?? historyState?.siteName ?? siteId.slice(0, 12));
+  }
 
   // ── State signals ──────────────────────────────────────────────────────────
 
@@ -95,6 +118,16 @@ export class SiteInventoryTreePageComponent implements OnInit, OnDestroy {
 
   /** Non-destructive banner: true when upstream is down but data is stale-available. */
   readonly showUpstreamBanner = signal(false);
+
+  /** Roving tabindex: storageLocationId of the row that currently holds focus. */
+  readonly activeRowId = signal<string | null>(null);
+
+  /**
+   * Depth ≤ 2 default expansion is applied on first load only; subsequent
+   * re-queries (SKU/includeEmpty/refresh) preserve the user's expand AND
+   * collapse choices.
+   */
+  private depth2DefaultsApplied = false;
 
   // ── Query pipeline ─────────────────────────────────────────────────────────
 
@@ -125,19 +158,27 @@ export class SiteInventoryTreePageComponent implements OnInit, OnDestroy {
   /** Whether to use CDK virtual scroll (> 200 visible rows). */
   readonly useVirtualScroll = computed(() => this.visibleRows().length > 200);
 
+  /**
+   * The row that should carry tabindex=0 (roving tabindex). Falls back to the
+   * first visible row when no row has been focused yet, or when the active
+   * row has been hidden by a collapse.
+   */
+  readonly tabbableRowId = computed<string | null>(() => {
+    const rows = this.visibleRows();
+    const active = this.activeRowId();
+    if (active !== null && rows.some(r => r.node.storageLocationId === active)) {
+      return active;
+    }
+    return rows.length > 0 ? rows[0].node.storageLocationId : null;
+  });
+
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
-    const siteId = this.route.snapshot.paramMap.get('siteId') ?? '';
-    this.siteId.set(siteId);
-
-    // Pull site name from router navigation state (passed by overview page)
-    const nav = this.router.getCurrentNavigation();
-    const navState = nav?.extras?.state as { siteName?: string } | undefined;
-    const siteName = navState?.siteName ?? siteId.slice(0, 12);
-    this.siteName.set(siteName);
-
-    // Wire up the switchMap query pipeline — inflight cancellation on re-query
+    // Wire up the switchMap query pipeline — inflight cancellation on re-query.
+    // Errors are caught INSIDE the switchMap projection and mapped to a result
+    // union, so the outer subscription never terminates: retry/refresh/SKU/
+    // includeEmpty keep working after any failure.
     this.querySub = this.queryTrigger
       .pipe(
         switchMap(({ sku, includeEmpty }) => {
@@ -147,59 +188,76 @@ export class SiteInventoryTreePageComponent implements OnInit, OnDestroy {
           }
           this.errorKey.set(null);
 
-          return this.rollupService.getSiteRollup(siteId, { sku, includeEmpty });
+          return this.rollupService.getSiteRollup(this.siteId(), { sku, includeEmpty }).pipe(
+            map((response): QueryResult => ({ ok: true, response })),
+            catchError((err: unknown) => {
+              const error: RollupError = isRollupError(err)
+                ? err
+                : { kind: 'unknown', message: String(err) };
+              return of<QueryResult>({ ok: false, error });
+            }),
+          );
         }),
       )
-      .subscribe({
-        next: resp => {
-          this.showUpstreamBanner.set(false);
-          this.rollupError.set(null);
-          this.response.set(resp);
-
-          // Auto-expand paths to negative-available nodes
-          const negativePathIds = collectNegativeAvailablePaths(resp.nodes ?? []);
-          // Auto-expand depth ≤ 2 on first load and on filter change
-          const depth2Ids = collectDepth2Ids(resp.nodes ?? []);
-
-          this.expandedIds.update(current => {
-            const next = new Set(current);
-            negativePathIds.forEach(id => next.add(id));
-            depth2Ids.forEach(id => next.add(id));
-            return next;
-          });
-
-          this.state.set((resp.nodes ?? []).length === 0 ? 'empty' : 'ready');
-        },
-        error: (err: unknown) => {
-          const rollupErr: RollupError = isRollupError(err)
-            ? err
-            : { kind: 'unknown', message: String(err) };
-          this.rollupError.set(rollupErr);
-
-          if (rollupErr.kind === 'upstream-down') {
-            // Non-destructive: show banner, keep existing data visible
-            this.showUpstreamBanner.set(true);
-            if (this.response() === null) {
-              // No prior data to show — full error state
-              this.state.set('error');
-              this.errorKey.set('INVENTORY.BY_LOCATION.SITE_TREE.ERROR.UPSTREAM_DOWN');
-            }
-            // If data exists, state stays 'ready' — banner overlays it
-          } else if (rollupErr.kind === 'not-found') {
-            this.state.set('error');
-            this.errorKey.set('INVENTORY.BY_LOCATION.SITE_TREE.ERROR.NOT_FOUND');
-          } else if (rollupErr.kind === 'forbidden') {
-            this.state.set('error');
-            this.errorKey.set('INVENTORY.BY_LOCATION.SITE_TREE.ERROR.FORBIDDEN');
-          } else {
-            this.state.set('error');
-            this.errorKey.set('INVENTORY.BY_LOCATION.SITE_TREE.ERROR.UNKNOWN');
-            console.error('[SiteInventoryTreePage] Unexpected rollup error', err);
-          }
-        },
+      .subscribe(result => {
+        if (result.ok) {
+          this.handleQuerySuccess(result.response);
+        } else {
+          this.handleQueryError(result.error);
+        }
       });
 
     this.triggerQuery();
+  }
+
+  private handleQuerySuccess(resp: SiteInventoryRollupResponse): void {
+    this.showUpstreamBanner.set(false);
+    this.rollupError.set(null);
+    this.response.set(resp);
+
+    const nodes = resp.nodes ?? [];
+    // Auto-expand paths to negative-available nodes — re-applied each response
+    const negativePathIds = collectNegativeAvailablePaths(nodes);
+    // Auto-expand depth ≤ 2 on first load only; later re-queries must not
+    // override the user's collapse choices.
+    const depth2Ids = this.depth2DefaultsApplied ? [] : collectDepth2Ids(nodes);
+    if (nodes.length > 0) {
+      this.depth2DefaultsApplied = true;
+    }
+
+    this.expandedIds.update(current => {
+      const next = new Set(current);
+      negativePathIds.forEach(id => next.add(id));
+      depth2Ids.forEach(id => next.add(id));
+      return next;
+    });
+
+    this.state.set(nodes.length === 0 ? 'empty' : 'ready');
+  }
+
+  private handleQueryError(rollupErr: RollupError): void {
+    this.rollupError.set(rollupErr);
+
+    if (rollupErr.kind === 'upstream-down') {
+      // Non-destructive: show banner, keep existing data visible
+      this.showUpstreamBanner.set(true);
+      if (this.response() === null) {
+        // No prior data to show — full error state
+        this.state.set('error');
+        this.errorKey.set('INVENTORY.BY_LOCATION.SITE_TREE.ERROR.UPSTREAM_DOWN');
+      }
+      // If data exists, state stays 'ready' — banner overlays it
+    } else if (rollupErr.kind === 'not-found') {
+      this.state.set('error');
+      this.errorKey.set('INVENTORY.BY_LOCATION.SITE_TREE.ERROR.NOT_FOUND');
+    } else if (rollupErr.kind === 'forbidden') {
+      this.state.set('error');
+      this.errorKey.set('INVENTORY.BY_LOCATION.SITE_TREE.ERROR.FORBIDDEN');
+    } else {
+      this.state.set('error');
+      this.errorKey.set('INVENTORY.BY_LOCATION.SITE_TREE.ERROR.UNKNOWN');
+      console.error('[SiteInventoryTreePage] Unexpected rollup error', rollupErr);
+    }
   }
 
   ngOnDestroy(): void {
@@ -239,10 +297,12 @@ export class SiteInventoryTreePageComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Keyboard handler for treegrid rows.
+   * Keyboard handler for treegrid rows (APG treegrid row pattern).
    * Enter/Space: toggle expand/collapse.
    * ArrowRight: expand if collapsed and has children.
    * ArrowLeft: collapse if expanded.
+   * ArrowDown/ArrowUp: move focus to next/previous visible row.
+   * Home/End: move focus to first/last visible row.
    */
   onRowKeydown(event: KeyboardEvent, row: TreeRow): void {
     switch (event.key) {
@@ -269,8 +329,49 @@ export class SiteInventoryTreePageComponent implements OnInit, OnDestroy {
           });
         }
         break;
+      case 'ArrowDown':
+      case 'ArrowUp': {
+        event.preventDefault();
+        const el = event.currentTarget;
+        if (el instanceof HTMLElement) {
+          this.focusRowElement(
+            event.key === 'ArrowDown' ? el.nextElementSibling : el.previousElementSibling,
+          );
+        }
+        break;
+      }
+      case 'Home':
+      case 'End': {
+        event.preventDefault();
+        const el = event.currentTarget;
+        if (el instanceof HTMLElement && el.parentElement) {
+          this.focusRowElement(
+            event.key === 'Home'
+              ? el.parentElement.firstElementChild
+              : el.parentElement.lastElementChild,
+          );
+        }
+        break;
+      }
       default:
         break;
+    }
+  }
+
+  /** Focus handler keeps the roving tabindex on the most recently focused row. */
+  onRowFocus(row: TreeRow): void {
+    this.activeRowId.set(row.node.storageLocationId);
+  }
+
+  /** Roving tabindex: only the tabbable row participates in the tab order. */
+  rowTabindex(row: TreeRow): number {
+    return this.tabbableRowId() === row.node.storageLocationId ? 0 : -1;
+  }
+
+  /** Move DOM focus to a sibling treegrid row, if it is one. */
+  private focusRowElement(el: Element | null): void {
+    if (el instanceof HTMLElement && el.classList.contains('tree-row')) {
+      el.focus();
     }
   }
 

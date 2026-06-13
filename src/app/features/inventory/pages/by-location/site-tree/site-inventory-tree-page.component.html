@@ -176,8 +176,9 @@
                   [class.tree-row--inactive-stock]="row.hasStockInInactiveLocation"
                   [attr.aria-level]="row.depth"
                   [attr.aria-expanded]="row.hasChildren ? row.expanded : null"
-                  [attr.tabindex]="0"
+                  [attr.tabindex]="rowTabindex(row)"
                   (click)="row.hasChildren && toggleRow(row.node.storageLocationId)"
+                  (focus)="onRowFocus(row)"
                   (keydown)="onRowKeydown($event, row)">
                   <!-- Name + expand control -->
                   <td [style.padding-left.rem]="(row.depth - 1) * 1.5 + 0.75">
@@ -198,18 +199,20 @@
                         <span class="tree-row__leaf-icon" aria-hidden="true"></span>
                       }
                       <span class="tree-row__name">{{ row.node.name || row.node.storageLocationId }}</span>
+                      <!-- Badges use distinct glyphs (not color alone, WCAG 1.4.1):
+                           priority_high (!) = over-allocated, pause_circle = inactive with stock -->
                       @if (row.hasNegativeAvailable) {
                         <span
                           class="badge badge--error tree-row__badge"
                           [attr.aria-label]="'INVENTORY.BY_LOCATION.SITE_TREE.BADGE.OVER_ALLOCATED' | translate">
-                          !
+                          <span class="material-symbols-outlined tree-row__badge-icon" aria-hidden="true">priority_high</span>
                         </span>
                       }
                       @if (row.hasStockInInactiveLocation) {
                         <span
                           class="badge badge--warning tree-row__badge"
                           [attr.aria-label]="'INVENTORY.BY_LOCATION.SITE_TREE.BADGE.INACTIVE_STOCK' | translate">
-                          !
+                          <span class="material-symbols-outlined tree-row__badge-icon" aria-hidden="true">pause_circle</span>
                         </span>
                       }
                     </div>
