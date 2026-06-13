@@ -3260,6 +3260,7 @@
         "FORBIDDEN": "Vous n'avez pas la permission de voir l'inventaire de cet emplacement.",
         "UPSTREAM_DOWN": "Service d'emplacement indisponible. Veuillez réessayer.",
         "UPSTREAM_DOWN_BANNER": "Le service d'emplacement est temporairement indisponible. Affichage des dernières données connues.",
+        "VALIDATION": "Requête invalide. Veuillez ajuster vos filtres et réessayer.",
         "UNKNOWN": "Une erreur inattendue s'est produite lors du chargement de l'inventaire."
       },
       "TOTALS": {

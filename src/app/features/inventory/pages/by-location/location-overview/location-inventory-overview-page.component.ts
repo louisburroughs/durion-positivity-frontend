@@ -108,6 +108,8 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
   readonly pickerOpen = signal(false);
   /** True once the initial location list has finished loading. */
   readonly locationsLoaded = signal(false);
+  /** Index of the keyboard-active option in the listbox (-1 = none). */
+  readonly activeOptionIndex = signal(-1);
 
   readonly filteredLocations = computed<LocationResponseDTO[]>(() => {
     const q = this.pickerQuery().trim().toLowerCase();
@@ -173,11 +175,13 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
     this.loadParentLocations();
     this.setupSkuDebounce();
 
-    const locationId = this.route.snapshot.paramMap.get('locationId');
-    if (locationId) {
-      this.selectedLocationId.set(locationId);
-      this.loadRollup();
-    }
+    // URL is the single source of truth for the selected location (spec §3,
+    // ADR-0037): react to every paramMap emission so browser back/forward
+    // between /:locationId values reloads the rollup even when the router
+    // reuses this component instance.
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => this.onLocationParam(params.get('locationId')));
   }
 
   // ── Picker handlers ──────────────────────────────────────────────────────
@@ -185,11 +189,18 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
   onPickerInput(value: string): void {
     this.pickerQuery.set(value);
     this.pickerOpen.set(true);
+    this.activeOptionIndex.set(-1);
     if (!value.trim()) {
+      const hadSelection = this.selectedLocationId() !== null;
       this.selectedLocationId.set(null);
       this.selectedLocationName.set('');
       this.rollupData.set(null);
       this.state.set('idle');
+      if (hadSelection) {
+        // Clearing the picker returns to the idle route so the URL does not
+        // keep pointing at the cleared location (spec §3).
+        void this.router.navigate(['/inventory/by-location']);
+      }
     }
   }
 
@@ -199,7 +210,66 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
 
   onPickerBlur(): void {
     // Delay so that a click on a dropdown option can register before close.
-    setTimeout(() => this.pickerOpen.set(false), 150);
+    setTimeout(() => {
+      this.pickerOpen.set(false);
+      this.activeOptionIndex.set(-1);
+    }, 150);
+  }
+
+  onPickerKeydown(event: KeyboardEvent): void {
+    const options = this.filteredLocations();
+    switch (event.key) {
+      case 'ArrowDown': {
+        event.preventDefault();
+        if (!this.pickerOpen()) {
+          this.pickerOpen.set(true);
+          this.activeOptionIndex.set(options.length > 0 ? 0 : -1);
+          return;
+        }
+        if (options.length === 0) return;
+        this.activeOptionIndex.set((this.activeOptionIndex() + 1) % options.length);
+        break;
+      }
+      case 'ArrowUp': {
+        event.preventDefault();
+        if (!this.pickerOpen()) {
+          this.pickerOpen.set(true);
+          this.activeOptionIndex.set(options.length - 1);
+          return;
+        }
+        if (options.length === 0) return;
+        const current = this.activeOptionIndex();
+        this.activeOptionIndex.set(current <= 0 ? options.length - 1 : current - 1);
+        break;
+      }
+      case 'Enter': {
+        const index = this.activeOptionIndex();
+        if (this.pickerOpen() && index >= 0 && index < options.length) {
+          event.preventDefault();
+          this.selectLocation(options[index]);
+        }
+        break;
+      }
+      case 'Escape': {
+        if (this.pickerOpen()) {
+          event.preventDefault();
+          this.pickerOpen.set(false);
+          this.activeOptionIndex.set(-1);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  optionId(index: number): string {
+    return `loc-picker-option-${index}`;
+  }
+
+  activeDescendant(): string | null {
+    const index = this.activeOptionIndex();
+    return this.pickerOpen() && index >= 0 ? this.optionId(index) : null;
   }
 
   selectLocation(loc: LocationResponseDTO): void {
@@ -208,9 +278,11 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
     this.selectedLocationName.set(loc.name ?? id);
     this.pickerQuery.set(loc.name ?? id);
     this.pickerOpen.set(false);
+    this.activeOptionIndex.set(-1);
     this.skuInput.set('');
+    // Navigation is the single trigger for loading: the paramMap subscription
+    // reacts to this URL change and calls loadRollup().
     void this.router.navigate(['/inventory/by-location', id]);
-    this.loadRollup();
   }
 
   // ── SKU filter ───────────────────────────────────────────────────────────
@@ -244,6 +316,12 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
     });
   }
 
+  onRowSpace(event: Event, row: SiteRow): void {
+    // Prevent the default page scroll triggered by Space on a focused row.
+    event.preventDefault();
+    this.navigateToSite(row);
+  }
+
   // ── Refresh / retry ──────────────────────────────────────────────────────
 
   refresh(): void {
@@ -256,6 +334,33 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
   }
 
   // ── Private ──────────────────────────────────────────────────────────────
+
+  /** Reacts to a `locationId` route-param emission (URL is source of truth). */
+  private onLocationParam(locationId: string | null): void {
+    if (!locationId) {
+      this.selectedLocationId.set(null);
+      this.selectedLocationName.set('');
+      this.pickerQuery.set('');
+      this.rollupData.set(null);
+      this.state.set('idle');
+      return;
+    }
+
+    if (locationId !== this.selectedLocationId()) {
+      this.selectedLocationId.set(locationId);
+      this.skuInput.set('');
+      const match = this.allParentLocations().find(l => l.id === locationId);
+      if (match) {
+        this.selectedLocationName.set(match.name ?? locationId);
+        this.pickerQuery.set(match.name ?? locationId);
+      } else {
+        // Direct URL entry before the roster loads: loadParentLocations()
+        // back-fills the display name once locations arrive.
+        this.selectedLocationName.set('');
+      }
+    }
+    this.loadRollup();
+  }
 
   private loadParentLocations(): void {
     this.locationSdk
@@ -315,15 +420,18 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
 
     const sku = this.skuInput().trim() || undefined;
 
-    this.rollupSub = this.rollupService.getLocationRollup(locationId, { sku }).subscribe({
-      next: (response: LocationInventoryRollupResponse) => {
-        this.rollupData.set(response);
-        this.state.set(response.sites?.length ? 'ready' : 'empty');
-      },
-      error: (err: RollupError) => {
-        this.handleRollupError(err);
-      },
-    });
+    this.rollupSub = this.rollupService
+      .getLocationRollup(locationId, { sku })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response: LocationInventoryRollupResponse) => {
+          this.rollupData.set(response);
+          this.state.set(response.sites?.length ? 'ready' : 'empty');
+        },
+        error: (err: RollupError) => {
+          this.handleRollupError(err);
+        },
+      });
   }
 
   private handleRollupError(err: RollupError): void {
@@ -347,6 +455,11 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
           // Restore 'ready' — loadRollup set it to 'loading' before the error.
           this.state.set('ready');
         }
+        break;
+      case 'validation':
+        this.state.set('error');
+        this.errorKey.set('INVENTORY.BY_LOCATION.ERROR.VALIDATION');
+        console.error('[LocationInventoryOverview] Rollup validation error:', err);
         break;
       default:
         this.state.set('error');

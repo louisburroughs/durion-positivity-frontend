@@ -1,5 +1,5 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { of, throwError, Subject } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { LocationAPIService } from '@durion-sdk/location';
@@ -71,7 +71,10 @@ function createComponent(
       { provide: LocationAPIService, useValue: { ...locationServiceStub, ...locationStub } },
       {
         provide: ActivatedRoute,
-        useValue: { snapshot: { paramMap: { get: (k: string) => routeParams[k] ?? null } } },
+        useValue: {
+          paramMap: of(convertToParamMap(routeParams)),
+          snapshot: { paramMap: convertToParamMap(routeParams) },
+        },
       },
       { provide: Router, useValue: routerStub },
     ],

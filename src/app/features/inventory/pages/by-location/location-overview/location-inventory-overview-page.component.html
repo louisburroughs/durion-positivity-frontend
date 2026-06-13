@@ -30,20 +30,21 @@
       <label class="field-label" for="loc-picker-input">
         {{ 'INVENTORY.BY_LOCATION.PICKER.LABEL' | translate }}
       </label>
-      <div class="picker-wrap" role="combobox" aria-haspopup="listbox"
-           [attr.aria-expanded]="pickerOpen()"
-           aria-owns="loc-picker-listbox">
+      <div class="picker-wrap">
         <input
           id="loc-picker-input"
           type="text"
           class="input-underline"
           autocomplete="off"
-          role="searchbox"
+          role="combobox"
           aria-autocomplete="list"
           aria-controls="loc-picker-listbox"
+          [attr.aria-expanded]="pickerOpen()"
+          [attr.aria-activedescendant]="activeDescendant()"
           [value]="pickerQuery()"
           [attr.placeholder]="'INVENTORY.BY_LOCATION.PICKER.PLACEHOLDER' | translate"
           (input)="onPickerInput($any($event.target).value)"
+          (keydown)="onPickerKeydown($event)"
           (focus)="onPickerFocus()"
           (blur)="onPickerBlur()"
         />
@@ -54,10 +55,12 @@
           role="listbox"
           [attr.aria-label]="'INVENTORY.BY_LOCATION.PICKER.DROPDOWN_ARIA' | translate"
         >
-          @for (loc of filteredLocations(); track loc.id) {
+          @for (loc of filteredLocations(); track loc.id; let i = $index) {
           <li
             role="option"
             class="picker-option"
+            [id]="optionId(i)"
+            [class.picker-option-active]="i === activeOptionIndex()"
             [attr.aria-selected]="selectedLocationId() === loc.id"
             (mousedown)="selectLocation(loc)"
           >
@@ -268,10 +271,17 @@
             tabindex="0"
             (click)="navigateToSite(row)"
             (keydown.enter)="navigateToSite(row)"
-            (keydown.space)="navigateToSite(row)"
+            (keydown.space)="onRowSpace($event, row)"
             [attr.aria-label]="row.siteName"
           >
-            <td>{{ row.siteName }}</td>
+            <td>
+              <a
+                class="site-link"
+                [routerLink]="['/inventory/by-location/site', row.siteId]"
+                [state]="{ siteName: row.siteName }"
+                (click)="$event.stopPropagation()"
+              >{{ row.siteName }}</a>
+            </td>
             <td>{{ row.onHand | number }}</td>
             <td>{{ row.allocated | number }}</td>
             <td>
