@@ -2284,6 +2284,10 @@
           "TITLE": "Entrada del libro mayor",
           "DESCRIPTION": "Abrir una entrada específica del libro mayor por ID."
         },
+        "INVENTORY_BY_LOCATION": {
+          "TITLE": "Inventario por Ubicación",
+          "DESCRIPTION": "Vea las cantidades de stock consolidadas en la jerarquía de ubicaciones: edificio, sitio y ubicación de almacenamiento."
+        },
         "RECEIVE_INTO_STAGING": {
           "TITLE": "Recibir en área de preparación",
           "DESCRIPTION": "Recibir envíos entrantes en el área de preparación."

@@ -52,6 +52,12 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
     cards: [
       {
         kind: 'direct',
+        titleKey: 'INVENTORY.LANDING.CARD.INVENTORY_BY_LOCATION.TITLE',
+        descriptionKey: 'INVENTORY.LANDING.CARD.INVENTORY_BY_LOCATION.DESCRIPTION',
+        routerLink: ['/app', 'inventory', 'by-location'],
+      },
+      {
+        kind: 'direct',
         titleKey: 'INVENTORY.LANDING.CARD.AVAILABILITY.TITLE',
         descriptionKey: 'INVENTORY.LANDING.CARD.AVAILABILITY.DESCRIPTION',
         routerLink: ['/app', 'inventory', 'availability'],

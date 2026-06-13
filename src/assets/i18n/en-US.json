@@ -2284,6 +2284,10 @@
           "TITLE": "Ledger Entry",
           "DESCRIPTION": "Open a specific ledger entry by ID."
         },
+        "INVENTORY_BY_LOCATION": {
+          "TITLE": "Inventory by Location",
+          "DESCRIPTION": "View stock quantities rolled up across the location hierarchy — by building, site, and storage location."
+        },
         "RECEIVE_INTO_STAGING": {
           "TITLE": "Receive into Staging",
           "DESCRIPTION": "Receive incoming shipments into the staging area."

@@ -2284,6 +2284,10 @@
           "TITLE": "Entrée du grand livre",
           "DESCRIPTION": "Ouvrir une entrée spécifique du grand livre par identifiant."
         },
+        "INVENTORY_BY_LOCATION": {
+          "TITLE": "Inventaire par Emplacement",
+          "DESCRIPTION": "Consultez les quantités de stock consolidées dans la hiérarchie des emplacements : bâtiment, site et emplacement de stockage."
+        },
         "RECEIVE_INTO_STAGING": {
           "TITLE": "Réception en zone de transit",
           "DESCRIPTION": "Recevoir les expéditions entrantes en zone de transit."
