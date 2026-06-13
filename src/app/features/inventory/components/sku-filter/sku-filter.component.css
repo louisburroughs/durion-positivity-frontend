@@ -1,0 +1,49 @@
+:host {
+  display: block;
+}
+
+.sku-filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 12rem;
+}
+
+.sku-filter__label {
+  font-size: 0.85rem;
+  color: var(--currentTextColor);
+  opacity: 0.8;
+}
+
+.sku-filter__input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sku-filter__input {
+  width: 100%;
+  padding-right: 2rem;
+}
+
+.sku-filter__clear {
+  position: absolute;
+  right: 0.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--currentTextColor);
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+}
+
+.sku-filter__clear:hover {
+  opacity: 1;
+}
+
+.sku-filter__clear .material-symbols-outlined {
+  font-size: 1.1rem;
+}
