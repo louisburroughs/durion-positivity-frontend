@@ -311,6 +311,30 @@ describe('row navigation', () => {
       { state: { siteName: 'Beta Site' } },
     );
   }));
+
+  // PRCR-002: Space key calls preventDefault and navigates to site
+  it('Space key calls preventDefault and navigates to the correct site', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    rollupServiceStub.getLocationRollup.mockReturnValue(
+      of(locationResponse([site('site-42', 'Gamma Warehouse', 20, 5, 15)])),
+    );
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    const row = comp.siteRows()[0];
+
+    const mockEvent = { preventDefault: vi.fn() } as unknown as Event;
+    comp.onRowSpace(mockEvent, row);
+
+    expect(mockEvent.preventDefault).toHaveBeenCalledTimes(1);
+    expect(routerStub.navigate).toHaveBeenCalledWith(
+      ['/inventory/by-location/site', 'site-42'],
+      { state: { siteName: 'Gamma Warehouse' } },
+    );
+  }));
 });
 
 // ── Tests: empty state ────────────────────────────────────────────────────
@@ -431,6 +455,39 @@ describe('location picker', () => {
     const filtered = comp.filteredLocations();
     expect(filtered.length).toBe(2);
     expect(filtered.every(l => l.name?.toLowerCase().includes('building'))).toBe(true);
+  }));
+
+  // PRCR-003: clearing picker with a prior selection navigates to /inventory/by-location
+  it('clearing picker with a prior selection navigates to base route and resets state', fakeAsync(() => {
+    const locs: LocationResponseDTO[] = [parentLocation('b1', 'HQ', 'Building')];
+    locationServiceStub.getAllLocations.mockReturnValue(of(locs));
+    rollupServiceStub.getLocationRollup.mockReturnValue(
+      of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
+    );
+    // Start with a pre-selected location so the route provides locationId
+    const fixture = createComponent({}, {}, { locationId: 'b1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    expect(comp.selectedLocationId()).toBe('b1');
+    expect(comp.state()).toBe('ready');
+
+    vi.clearAllMocks();
+    routerStub.navigate.mockResolvedValue(true);
+
+    // Clear the picker input
+    comp.onPickerInput('');
+    tick();
+    fixture.detectChanges();
+
+    // Must navigate to the base route (spec §3: clearing returns to idle route)
+    expect(routerStub.navigate).toHaveBeenCalledWith(['/inventory/by-location']);
+    // Local state must be reset
+    expect(comp.selectedLocationId()).toBeNull();
+    expect(comp.rollupData()).toBeNull();
+    expect(comp.state()).toBe('idle');
   }));
 });
 
@@ -757,6 +814,58 @@ describe('sites table sort - extended coverage (Finding 5)', () => {
 
     expect(comp.ariaSort('allocated')).toBe('ascending');
     expect(comp.ariaSort('onHand')).toBe('none');
+  }));
+
+  // PRCR-001: DOM-level aria-sort attribute assertions on column switch
+  it('DOM th[aria-sort] attributes reflect column-switch lifecycle', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    // th order in DOM: siteName=0, onHand=1, allocated=2, available=3
+    const ths = (): NodeListOf<HTMLElement> =>
+      fixture.nativeElement.querySelectorAll('th[scope="col"]');
+
+    const ariaSort = (index: number) => ths().item(index).getAttribute('aria-sort');
+
+    // Initial state: siteName ascending, others none
+    expect(ariaSort(0)).toBe('ascending');
+    expect(ariaSort(1)).toBe('none');
+    expect(ariaSort(2)).toBe('none');
+    expect(ariaSort(3)).toBe('none');
+
+    // Switch to onHand ascending
+    fixture.componentInstance.sortBy('onHand');
+    fixture.detectChanges();
+
+    expect(ariaSort(0)).toBe('none');       // siteName reset to none
+    expect(ariaSort(1)).toBe('ascending');  // onHand now active
+    expect(ariaSort(2)).toBe('none');
+    expect(ariaSort(3)).toBe('none');
+
+    // Click onHand again → descending
+    fixture.componentInstance.sortBy('onHand');
+    fixture.detectChanges();
+
+    expect(ariaSort(1)).toBe('descending');
+    expect(ariaSort(0)).toBe('none');
+
+    // Switch to allocated → onHand resets to none
+    fixture.componentInstance.sortBy('allocated');
+    fixture.detectChanges();
+
+    expect(ariaSort(1)).toBe('none');       // onHand reset
+    expect(ariaSort(2)).toBe('ascending'); // allocated now active
+
+    // Switch to available ascending
+    fixture.componentInstance.sortBy('available');
+    fixture.detectChanges();
+
+    expect(ariaSort(2)).toBe('none');       // allocated reset
+    expect(ariaSort(3)).toBe('ascending'); // available now active
   }));
 });
 
