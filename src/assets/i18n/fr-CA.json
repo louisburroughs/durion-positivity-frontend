@@ -3185,7 +3185,7 @@
       },
       "SKU_FILTER": {
         "LABEL": "SKU",
-        "PLACEHOLDER": "Enter SKU",
+        "PLACEHOLDER": "p. ex. SKU-001",
         "ARIA_LABEL": "Filter by SKU",
         "CLEAR_ARIA_LABEL": "Clear SKU filter"
       },
@@ -3236,6 +3236,57 @@
             "ROLLED_UP_ALLOCATED": "Rolled-Up Allocated",
             "ROLLED_UP_AVAILABLE": "Rolled-Up Available"
           }
+        }
+      },
+      "TITLE": "Inventaire par emplacement",
+      "REFRESH": "Actualiser",
+      "REFRESH_ARIA": "Actualiser les données d'inventaire",
+      "RETRY": "Réessayer",
+      "BACK": "Retour à l'aperçu",
+      "PICKER": {
+        "LABEL": "Emplacement",
+        "PLACEHOLDER": "Rechercher des bâtiments ou des lieux...",
+        "SECTION_ARIA": "Filtres d'emplacement et de SKU",
+        "DROPDOWN_ARIA": "Emplacements correspondants",
+        "NO_RESULTS": "Aucun emplacement correspondant"
+      },
+      "STATE": {
+        "IDLE": "Sélectionnez un emplacement pour afficher l'inventaire.",
+        "LOADING": "Chargement de l'inventaire...",
+        "EMPTY": "Aucun site sous cet emplacement."
+      },
+      "ERROR": {
+        "NOT_FOUND": "Emplacement introuvable. Il a peut-être été supprimé ou le lien est obsolète.",
+        "FORBIDDEN": "Vous n'avez pas la permission de voir l'inventaire de cet emplacement.",
+        "UPSTREAM_DOWN": "Service d'emplacement indisponible. Veuillez réessayer.",
+        "UPSTREAM_DOWN_BANNER": "Le service d'emplacement est temporairement indisponible. Affichage des dernières données connues.",
+        "VALIDATION": "Requête invalide. Veuillez ajuster vos filtres et réessayer.",
+        "UNKNOWN": "Une erreur inattendue s'est produite lors du chargement de l'inventaire."
+      },
+      "TOTALS": {
+        "TITLE": "Total général",
+        "ARIA": "Total général d'inventaire pour l'emplacement sélectionné",
+        "ON_HAND": "En stock",
+        "ALLOCATED": "Alloué",
+        "AVAILABLE": "Disponible"
+      },
+      "BADGE": {
+        "NEGATIVE_AVAILABLE_ARIA": "Avertissement : la quantité disponible est négative (sur-allouée)"
+      },
+      "TABLE": {
+        "ARIA": "Résumé de l'inventaire des sites",
+        "CAPTION": "Totaux d'inventaire par site pour l'emplacement sélectionné",
+        "HEADER": {
+          "SITE_NAME": "Site",
+          "ON_HAND": "En stock",
+          "ALLOCATED": "Alloué",
+          "AVAILABLE": "Disponible"
+        },
+        "SORT": {
+          "SITE_NAME": "Trier par nom de site",
+          "ON_HAND": "Trier par quantité en stock",
+          "ALLOCATED": "Trier par quantité allouée",
+          "AVAILABLE": "Trier par quantité disponible"
         }
       }
     }

@@ -1,0 +1,305 @@
+<main class="page" aria-labelledby="inv-by-loc-title">
+  <header class="page-header">
+    <h1 id="inv-by-loc-title" class="page-title">
+      {{ 'INVENTORY.BY_LOCATION.TITLE' | translate }}
+    </h1>
+    <button
+      class="btn-secondary refresh-btn"
+      type="button"
+      (click)="refresh()"
+      [disabled]="!selectedLocationId()"
+      [attr.aria-label]="'INVENTORY.BY_LOCATION.REFRESH_ARIA' | translate"
+    >
+      {{ 'INVENTORY.BY_LOCATION.REFRESH' | translate }}
+    </button>
+  </header>
+
+  <!-- Non-destructive upstream-down retry banner -->
+  @if (showRetryBanner()) {
+  <div class="banner banner-warn" role="alert" aria-live="assertive">
+    <span>{{ 'INVENTORY.BY_LOCATION.ERROR.UPSTREAM_DOWN_BANNER' | translate }}</span>
+    <button class="btn-secondary btn-sm" type="button" (click)="retry()">
+      {{ 'INVENTORY.BY_LOCATION.RETRY' | translate }}
+    </button>
+  </div>
+  }
+
+  <!-- Location picker -->
+  <section class="card picker-card" aria-label="{{ 'INVENTORY.BY_LOCATION.PICKER.SECTION_ARIA' | translate }}">
+    <div class="field-group picker-field">
+      <label class="field-label" for="loc-picker-input">
+        {{ 'INVENTORY.BY_LOCATION.PICKER.LABEL' | translate }}
+      </label>
+      <div class="picker-wrap">
+        <input
+          id="loc-picker-input"
+          type="text"
+          class="input-underline"
+          autocomplete="off"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-controls="loc-picker-listbox"
+          [attr.aria-expanded]="pickerOpen()"
+          [attr.aria-activedescendant]="activeDescendant()"
+          [value]="pickerQuery()"
+          [attr.placeholder]="'INVENTORY.BY_LOCATION.PICKER.PLACEHOLDER' | translate"
+          (input)="onPickerInput($any($event.target).value)"
+          (keydown)="onPickerKeydown($event)"
+          (focus)="onPickerFocus()"
+          (blur)="onPickerBlur()"
+        />
+        @if (pickerOpen() && filteredLocations().length > 0) {
+        <ul
+          id="loc-picker-listbox"
+          class="picker-dropdown"
+          role="listbox"
+          [attr.aria-label]="'INVENTORY.BY_LOCATION.PICKER.DROPDOWN_ARIA' | translate"
+        >
+          @for (loc of filteredLocations(); track loc.id; let i = $index) {
+          <li
+            role="option"
+            class="picker-option"
+            [id]="optionId(i)"
+            [class.picker-option-active]="i === activeOptionIndex()"
+            [attr.aria-selected]="selectedLocationId() === loc.id"
+            (mousedown)="selectLocation(loc)"
+          >
+            {{ loc.name }}
+          </li>
+          }
+        </ul>
+        }
+        @if (pickerOpen() && filteredLocations().length === 0 && locationsLoaded()) {
+        <ul id="loc-picker-listbox" class="picker-dropdown" role="listbox">
+          <li class="picker-option picker-no-results" role="option" aria-disabled="true">
+            {{ 'INVENTORY.BY_LOCATION.PICKER.NO_RESULTS' | translate }}
+          </li>
+        </ul>
+        }
+      </div>
+    </div>
+
+    <!-- SKU filter -->
+    <!-- TODO: swap to shared sku-filter component once F2 merges and creates
+         src/app/features/inventory/components/sku-filter/ -->
+    <div class="field-group sku-field">
+      <label class="field-label" for="sku-filter-input">
+        {{ 'INVENTORY.BY_LOCATION.SKU_FILTER.LABEL' | translate }}
+      </label>
+      <input
+        id="sku-filter-input"
+        type="search"
+        class="input-underline"
+        [value]="skuInput()"
+        [disabled]="!selectedLocationId()"
+        [attr.placeholder]="'INVENTORY.BY_LOCATION.SKU_FILTER.PLACEHOLDER' | translate"
+        (input)="onSkuInput($any($event.target).value)"
+      />
+    </div>
+  </section>
+
+  <!-- Loading skeleton -->
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true" aria-live="polite">
+    <p class="sr-only">{{ 'INVENTORY.BY_LOCATION.STATE.LOADING' | translate }}</p>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+  </section>
+  }
+
+  <!-- Idle: no location selected -->
+  @if (state() === 'idle') {
+  <section class="card state-card" aria-live="polite">
+    <p>{{ 'INVENTORY.BY_LOCATION.STATE.IDLE' | translate }}</p>
+  </section>
+  }
+
+  <!-- Error: not-found -->
+  @if (state() === 'error' && errorKind() === 'not-found') {
+  <section class="card state-card error-panel" role="alert">
+    <span class="material-symbols-outlined error-icon" aria-hidden="true">location_off</span>
+    <p>{{ errorKey()! | translate }}</p>
+    <a class="btn-secondary" routerLink="/inventory/by-location">
+      {{ 'INVENTORY.BY_LOCATION.BACK' | translate }}
+    </a>
+  </section>
+  }
+
+  <!-- Error: forbidden -->
+  @if (state() === 'error' && errorKind() === 'forbidden') {
+  <section class="card state-card error-panel" role="alert">
+    <span class="material-symbols-outlined error-icon" aria-hidden="true">lock</span>
+    <p>{{ 'INVENTORY.BY_LOCATION.ERROR.FORBIDDEN' | translate }}</p>
+  </section>
+  }
+
+  <!-- Error: upstream-down (no prior data) -->
+  @if (state() === 'error' && errorKind() === 'upstream-down') {
+  <section class="card state-card error-panel" role="alert">
+    <span class="material-symbols-outlined error-icon" aria-hidden="true">cloud_off</span>
+    <p>{{ 'INVENTORY.BY_LOCATION.ERROR.UPSTREAM_DOWN' | translate }}</p>
+    <button class="btn-secondary" type="button" (click)="retry()">
+      {{ 'INVENTORY.BY_LOCATION.RETRY' | translate }}
+    </button>
+  </section>
+  }
+
+  <!-- Error: validation / unknown -->
+  @if (state() === 'error' && (errorKind() === 'validation' || errorKind() === 'unknown')) {
+  <div class="toast-error" role="alert" aria-live="assertive">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <span>{{ errorKey()! | translate }}</span>
+  </div>
+  }
+
+  <!-- Grand total strip (shown when data is available) -->
+  @if ((state() === 'ready' || state() === 'empty') && totals()) {
+  <section class="card totals-strip" aria-label="{{ 'INVENTORY.BY_LOCATION.TOTALS.ARIA' | translate }}">
+    <h2 class="totals-title">
+      {{ 'INVENTORY.BY_LOCATION.TOTALS.TITLE' | translate }}
+      <span class="location-name-badge">{{ selectedLocationName() }}</span>
+    </h2>
+    <div class="totals-row">
+      <div class="totals-cell">
+        <span class="totals-label">{{ 'INVENTORY.BY_LOCATION.TOTALS.ON_HAND' | translate }}</span>
+        <span class="totals-value">{{ totals()!.onHand | number }}</span>
+      </div>
+      <div class="totals-cell">
+        <span class="totals-label">{{ 'INVENTORY.BY_LOCATION.TOTALS.ALLOCATED' | translate }}</span>
+        <span class="totals-value">{{ totals()!.allocated | number }}</span>
+      </div>
+      <div class="totals-cell">
+        <span class="totals-label">{{ 'INVENTORY.BY_LOCATION.TOTALS.AVAILABLE' | translate }}</span>
+        <span
+          class="totals-value"
+          [class.totals-negative]="grandTotalNegative()"
+        >
+          {{ totals()!.available | number }}
+          @if (grandTotalNegative()) {
+          <span
+            class="badge badge-warn"
+            [attr.aria-label]="'INVENTORY.BY_LOCATION.BADGE.NEGATIVE_AVAILABLE_ARIA' | translate"
+          >!</span>
+          }
+        </span>
+      </div>
+    </div>
+  </section>
+  }
+
+  <!-- Empty state -->
+  @if (state() === 'empty') {
+  <section class="card state-card" aria-live="polite">
+    <p>{{ 'INVENTORY.BY_LOCATION.STATE.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  <!-- Sites table -->
+  @if (state() === 'ready' && siteRows().length > 0) {
+  <section class="card table-card">
+    <div class="table-wrap">
+      <table
+        class="data-table"
+        role="table"
+        aria-label="{{ 'INVENTORY.BY_LOCATION.TABLE.ARIA' | translate }}"
+      >
+        <caption class="sr-only">{{ 'INVENTORY.BY_LOCATION.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr role="row">
+            <th scope="col" role="columnheader" [attr.aria-sort]="ariaSort('siteName')">
+              <button
+                type="button"
+                class="sort-btn"
+                (click)="sortBy('siteName')"
+                [attr.aria-label]="'INVENTORY.BY_LOCATION.TABLE.SORT.SITE_NAME' | translate"
+              >
+                {{ 'INVENTORY.BY_LOCATION.TABLE.HEADER.SITE_NAME' | translate }}
+                <span class="sort-icon" aria-hidden="true">
+                  {{ ariaSort('siteName') === 'ascending' ? '▲' : ariaSort('siteName') === 'descending' ? '▼' : '⇅' }}
+                </span>
+              </button>
+            </th>
+            <th scope="col" role="columnheader" [attr.aria-sort]="ariaSort('onHand')">
+              <button
+                type="button"
+                class="sort-btn"
+                (click)="sortBy('onHand')"
+                [attr.aria-label]="'INVENTORY.BY_LOCATION.TABLE.SORT.ON_HAND' | translate"
+              >
+                {{ 'INVENTORY.BY_LOCATION.TABLE.HEADER.ON_HAND' | translate }}
+                <span class="sort-icon" aria-hidden="true">
+                  {{ ariaSort('onHand') === 'ascending' ? '▲' : ariaSort('onHand') === 'descending' ? '▼' : '⇅' }}
+                </span>
+              </button>
+            </th>
+            <th scope="col" role="columnheader" [attr.aria-sort]="ariaSort('allocated')">
+              <button
+                type="button"
+                class="sort-btn"
+                (click)="sortBy('allocated')"
+                [attr.aria-label]="'INVENTORY.BY_LOCATION.TABLE.SORT.ALLOCATED' | translate"
+              >
+                {{ 'INVENTORY.BY_LOCATION.TABLE.HEADER.ALLOCATED' | translate }}
+                <span class="sort-icon" aria-hidden="true">
+                  {{ ariaSort('allocated') === 'ascending' ? '▲' : ariaSort('allocated') === 'descending' ? '▼' : '⇅' }}
+                </span>
+              </button>
+            </th>
+            <th scope="col" role="columnheader" [attr.aria-sort]="ariaSort('available')">
+              <button
+                type="button"
+                class="sort-btn"
+                (click)="sortBy('available')"
+                [attr.aria-label]="'INVENTORY.BY_LOCATION.TABLE.SORT.AVAILABLE' | translate"
+              >
+                {{ 'INVENTORY.BY_LOCATION.TABLE.HEADER.AVAILABLE' | translate }}
+                <span class="sort-icon" aria-hidden="true">
+                  {{ ariaSort('available') === 'ascending' ? '▲' : ariaSort('available') === 'descending' ? '▼' : '⇅' }}
+                </span>
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of siteRows(); track row.siteId) {
+          <tr
+            role="row"
+            class="site-row"
+            tabindex="0"
+            (click)="navigateToSite(row)"
+            (keydown.enter)="navigateToSite(row)"
+            (keydown.space)="onRowSpace($event, row)"
+            [attr.aria-label]="row.siteName"
+          >
+            <td>
+              <a
+                class="site-link"
+                [routerLink]="['/inventory/by-location/site', row.siteId]"
+                [state]="{ siteName: row.siteName }"
+                (click)="$event.stopPropagation()"
+              >{{ row.siteName }}</a>
+            </td>
+            <td>{{ row.onHand | number }}</td>
+            <td>{{ row.allocated | number }}</td>
+            <td>
+              <span [class.cell-negative]="row.availableNegative">
+                {{ row.available | number }}
+              </span>
+              @if (row.availableNegative) {
+              <span
+                class="badge badge-warn"
+                [attr.aria-label]="'INVENTORY.BY_LOCATION.BADGE.NEGATIVE_AVAILABLE_ARIA' | translate"
+              >!</span>
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+</main>

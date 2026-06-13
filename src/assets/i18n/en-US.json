@@ -3185,7 +3185,7 @@
       },
       "SKU_FILTER": {
         "LABEL": "SKU",
-        "PLACEHOLDER": "Enter SKU",
+        "PLACEHOLDER": "e.g. SKU-001",
         "ARIA_LABEL": "Filter by SKU",
         "CLEAR_ARIA_LABEL": "Clear SKU filter"
       },
@@ -3236,6 +3236,57 @@
             "ROLLED_UP_ALLOCATED": "Rolled-Up Allocated",
             "ROLLED_UP_AVAILABLE": "Rolled-Up Available"
           }
+        }
+      },
+      "TITLE": "Inventory by Location",
+      "REFRESH": "Refresh",
+      "REFRESH_ARIA": "Refresh inventory data",
+      "RETRY": "Retry",
+      "BACK": "Back to Overview",
+      "PICKER": {
+        "LABEL": "Location",
+        "PLACEHOLDER": "Search buildings or places...",
+        "SECTION_ARIA": "Location and SKU filters",
+        "DROPDOWN_ARIA": "Matching locations",
+        "NO_RESULTS": "No matching locations"
+      },
+      "STATE": {
+        "IDLE": "Select a location to view inventory.",
+        "LOADING": "Loading inventory...",
+        "EMPTY": "No sites under this location."
+      },
+      "ERROR": {
+        "NOT_FOUND": "Location not found. It may have been removed or the link is stale.",
+        "FORBIDDEN": "You do not have permission to view inventory for this location.",
+        "UPSTREAM_DOWN": "Location service unavailable. Please try again.",
+        "UPSTREAM_DOWN_BANNER": "Location service is temporarily unavailable. Showing last known data.",
+        "VALIDATION": "Invalid request. Please adjust your filters and try again.",
+        "UNKNOWN": "An unexpected error occurred loading inventory."
+      },
+      "TOTALS": {
+        "TITLE": "Grand Total",
+        "ARIA": "Inventory grand total for selected location",
+        "ON_HAND": "On Hand",
+        "ALLOCATED": "Allocated",
+        "AVAILABLE": "Available"
+      },
+      "BADGE": {
+        "NEGATIVE_AVAILABLE_ARIA": "Warning: available quantity is negative (over-allocated)"
+      },
+      "TABLE": {
+        "ARIA": "Sites inventory summary",
+        "CAPTION": "Per-site inventory totals for the selected location",
+        "HEADER": {
+          "SITE_NAME": "Site",
+          "ON_HAND": "On Hand",
+          "ALLOCATED": "Allocated",
+          "AVAILABLE": "Available"
+        },
+        "SORT": {
+          "SITE_NAME": "Sort by site name",
+          "ON_HAND": "Sort by on-hand quantity",
+          "ALLOCATED": "Sort by allocated quantity",
+          "AVAILABLE": "Sort by available quantity"
         }
       }
     }
