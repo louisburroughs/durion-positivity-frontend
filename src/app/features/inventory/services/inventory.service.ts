@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { InventoryReferenceDataService } from '@durion-sdk/inventory';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   AvailabilityView,
@@ -26,6 +28,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class InventoryDomainService {
   private readonly api = inject(ApiBaseService);
+  private readonly refDataSdk = inject(InventoryReferenceDataService);
 
   queryAvailability(
     sku: string,
@@ -43,18 +46,34 @@ export class InventoryDomainService {
   }
 
   getLocations(): Observable<LocationRef[]> {
-    return this.api.get<LocationRef[]>('/inventory/v1/locations');
+    return this.refDataSdk.listInventoryLocations({ size: 200 }).pipe(
+      map((page: any) => ((page?.content ?? []) as Array<any>).map(dto => ({
+        locationId: dto.locationId ?? '',
+        name: dto.name ?? '',
+        status: dto.active ? 'ACTIVE' : 'INACTIVE',
+      }))),
+    );
   }
 
   getStorageLocations(locationId: string): Observable<StorageLocation[]> {
-    return this.api.get<StorageLocation[]>(
-      `/inventory/v1/locations/${encodeURIComponent(locationId)}/storage-locations`,
+    return this.refDataSdk.listInventoryStorageLocations({ size: 500 }, locationId).pipe(
+      map((page: any) => ((page?.content ?? []) as Array<any>).map(dto => ({
+        storageLocationId: dto.storageLocationId ?? '',
+        locationId: dto.locationId ?? '',
+        name: dto.code ?? '',
+        barcode: undefined,
+        status: dto.active ? 'ACTIVE' : 'INACTIVE',
+      }))),
     );
   }
 
   getLocationZones(locationId: string): Observable<LocationZone[]> {
-    return this.api.get<LocationZone[]>(
-      `/inventory/v1/locations/${encodeURIComponent(locationId)}/zones`,
+    return this.refDataSdk.listInventoryLocationZones({ size: 500 }, locationId).pipe(
+      map((page: any) => ((page?.content ?? []) as Array<any>).map(dto => ({
+        zoneId: dto.zoneId ?? '',
+        zoneName: dto.zoneName ?? '',
+        locationId: dto.locationId ?? '',
+      }))),
     );
   }
 
