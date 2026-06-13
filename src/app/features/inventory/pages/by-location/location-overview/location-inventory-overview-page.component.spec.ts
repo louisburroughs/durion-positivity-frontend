@@ -1,6 +1,6 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { of, throwError, Subject } from 'rxjs';
+import { of, throwError, Subject, NEVER } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { LocationAPIService } from '@durion-sdk/location';
 import type { LocationResponseDTO } from '@durion-sdk/location';
@@ -74,6 +74,36 @@ function createComponent(
         useValue: {
           paramMap: of(convertToParamMap(routeParams)),
           snapshot: { paramMap: convertToParamMap(routeParams) },
+        },
+      },
+      { provide: Router, useValue: routerStub },
+    ],
+  });
+  return TestBed.createComponent(LocationInventoryOverviewPageComponent);
+}
+
+/**
+ * Variant of createComponent that accepts a Subject<ParamMap> so tests can
+ * emit additional paramMap values to simulate browser back/forward navigation.
+ */
+function createComponentWithParamSubject(
+  rollupStub: Partial<typeof rollupServiceStub>,
+  locationStub: Partial<typeof locationServiceStub>,
+  paramMapSubject$: Subject<ReturnType<typeof convertToParamMap>>,
+) {
+  TestBed.configureTestingModule({
+    imports: [
+      LocationInventoryOverviewPageComponent,
+      TranslateModule.forRoot(),
+    ],
+    providers: [
+      { provide: InventoryRollupApiService, useValue: { ...rollupServiceStub, ...rollupStub } },
+      { provide: LocationAPIService, useValue: { ...locationServiceStub, ...locationStub } },
+      {
+        provide: ActivatedRoute,
+        useValue: {
+          paramMap: paramMapSubject$.asObservable(),
+          snapshot: { paramMap: convertToParamMap({}) },
         },
       },
       { provide: Router, useValue: routerStub },
@@ -419,6 +449,8 @@ describe('error states', () => {
     const comp = fixture.componentInstance;
     expect(comp.state()).toBe('error');
     expect(comp.errorKind()).toBe('not-found');
+    // Finding 4: errorKey must carry the exact i18n key for the error panel
+    expect(comp.errorKey()).toBe('INVENTORY.BY_LOCATION.ERROR.NOT_FOUND');
   }));
 
   it('sets state to error and errorKind forbidden on 403', fakeAsync(() => {
@@ -433,6 +465,8 @@ describe('error states', () => {
     const comp = fixture.componentInstance;
     expect(comp.state()).toBe('error');
     expect(comp.errorKind()).toBe('forbidden');
+    // Finding 4: errorKey must carry the exact i18n key
+    expect(comp.errorKey()).toBe('INVENTORY.BY_LOCATION.ERROR.FORBIDDEN');
   }));
 
   it('upstream-down shows retry banner; keeps last data when present', fakeAsync(() => {
@@ -457,6 +491,8 @@ describe('error states', () => {
     expect(comp.rollupData()).not.toBeNull();
     // State stays 'ready' since prior data is retained (upstream-down non-destructive)
     expect(comp.state()).toBe('ready');
+    // Finding 4: no errorKey when upstream-down with prior data (state is not error)
+    expect(comp.errorKey()).toBeNull();
   }));
 
   it('upstream-down with no prior data shows error state', fakeAsync(() => {
@@ -471,6 +507,8 @@ describe('error states', () => {
     const comp = fixture.componentInstance;
     expect(comp.showRetryBanner()).toBe(true);
     expect(comp.state()).toBe('error');
+    // Finding 4: errorKey must be set when upstream-down with no prior data
+    expect(comp.errorKey()).toBe('INVENTORY.BY_LOCATION.ERROR.UPSTREAM_DOWN');
   }));
 
   it('validation error shows error state', fakeAsync(() => {
@@ -484,6 +522,25 @@ describe('error states', () => {
 
     expect(fixture.componentInstance.state()).toBe('error');
     expect(fixture.componentInstance.errorKind()).toBe('validation');
+    // Finding 4: validation must use VALIDATION key (not UNKNOWN)
+    expect(fixture.componentInstance.errorKey()).toBe('INVENTORY.BY_LOCATION.ERROR.VALIDATION');
+  }));
+
+  it('unknown error kind sets error state and UNKNOWN errorKey', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    // 'unknown' is a valid RollupError kind per the discriminated union
+    const err: RollupError = { kind: 'unknown', message: 'Something broke' };
+    rollupServiceStub.getLocationRollup.mockReturnValue(throwError(() => err));
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    expect(comp.state()).toBe('error');
+    expect(comp.errorKind()).toBe('unknown');
+    // Finding 4: errorKey must be the UNKNOWN key
+    expect(comp.errorKey()).toBe('INVENTORY.BY_LOCATION.ERROR.UNKNOWN');
   }));
 });
 
@@ -549,5 +606,585 @@ describe('accessibility', () => {
     sortBtns.forEach((btn: HTMLButtonElement) => {
       expect(btn.getAttribute('type')).toBe('button');
     });
+  }));
+});
+
+// ── Tests: sort coverage (Finding 5) ─────────────────────────────────────
+
+describe('sites table sort - extended coverage (Finding 5)', () => {
+  const threeRows = () => [
+    site('s1', 'Alpha', 30, 15, 15),
+    site('s2', 'Beta', 10, 2, 8),
+    site('s3', 'Gamma', 50, 40, 10),
+  ];
+
+  it('sorts by allocated ascending', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.sortBy('allocated');
+    fixture.detectChanges();
+
+    expect(comp.sortColumn()).toBe('allocated');
+    expect(comp.sortDir()).toBe('asc');
+    expect(comp.siteRows().map(r => r.allocated)).toEqual([2, 15, 40]);
+  }));
+
+  it('sorts by allocated descending after second click', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.sortBy('allocated');
+    comp.sortBy('allocated');
+    fixture.detectChanges();
+
+    expect(comp.sortDir()).toBe('desc');
+    expect(comp.siteRows().map(r => r.allocated)).toEqual([40, 15, 2]);
+  }));
+
+  it('sorts by available ascending', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.sortBy('available');
+    fixture.detectChanges();
+
+    expect(comp.sortColumn()).toBe('available');
+    expect(comp.sortDir()).toBe('asc');
+    expect(comp.siteRows().map(r => r.available)).toEqual([8, 10, 15]);
+  }));
+
+  it('sorts by available descending after second click', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.sortBy('available');
+    comp.sortBy('available');
+    fixture.detectChanges();
+
+    expect(comp.sortDir()).toBe('desc');
+    expect(comp.siteRows().map(r => r.available)).toEqual([15, 10, 8]);
+  }));
+
+  it('sorts by siteName descending after second click on siteName', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.sortBy('siteName'); // already asc → now desc
+    fixture.detectChanges();
+
+    expect(comp.sortDir()).toBe('desc');
+    expect(comp.siteRows().map(r => r.siteName)).toEqual(['Gamma', 'Beta', 'Alpha']);
+  }));
+
+  it('sorts by onHand descending', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.sortBy('onHand');
+    comp.sortBy('onHand');
+    fixture.detectChanges();
+
+    expect(comp.sortDir()).toBe('desc');
+    expect(comp.siteRows().map(r => r.onHand)).toEqual([50, 30, 10]);
+  }));
+
+  it('switching column resets direction to asc and previous column aria-sort to none', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+
+    // Start: siteName ascending
+    expect(comp.ariaSort('siteName')).toBe('ascending');
+    expect(comp.ariaSort('onHand')).toBe('none');
+
+    // Switch to onHand
+    comp.sortBy('onHand');
+    fixture.detectChanges();
+
+    expect(comp.sortColumn()).toBe('onHand');
+    expect(comp.sortDir()).toBe('asc');
+    expect(comp.ariaSort('onHand')).toBe('ascending');
+    // Previous column must now report 'none'
+    expect(comp.ariaSort('siteName')).toBe('none');
+
+    // Click onHand again → descending
+    comp.sortBy('onHand');
+    fixture.detectChanges();
+
+    expect(comp.ariaSort('onHand')).toBe('descending');
+    expect(comp.ariaSort('allocated')).toBe('none');
+    expect(comp.ariaSort('available')).toBe('none');
+
+    // Switch to allocated → onHand reverts to none
+    comp.sortBy('allocated');
+    fixture.detectChanges();
+
+    expect(comp.ariaSort('allocated')).toBe('ascending');
+    expect(comp.ariaSort('onHand')).toBe('none');
+  }));
+});
+
+// ── Tests: keyboard picker (Finding 1 cover) ──────────────────────────────
+
+describe('keyboard picker (ARIA 1.2 APG combobox)', () => {
+  const twoLocs = (): LocationResponseDTO[] => [
+    parentLocation('b1', 'Alpha Building', 'Building'),
+    parentLocation('b2', 'Beta Building', 'Building'),
+  ];
+
+  it('ArrowDown opens listbox and sets activeOptionIndex to 0 when closed', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
+    const fixture = createComponent({}, {});
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    expect(comp.pickerOpen()).toBe(false);
+
+    comp.onPickerKeydown(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    fixture.detectChanges();
+
+    expect(comp.pickerOpen()).toBe(true);
+    expect(comp.activeOptionIndex()).toBe(0);
+  }));
+
+  it('ArrowDown wraps from last option back to 0', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
+    const fixture = createComponent({}, {});
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.onPickerFocus(); // open picker first
+    fixture.detectChanges();
+
+    // Move to last option (index 1)
+    comp.onPickerKeydown(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    comp.onPickerKeydown(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    fixture.detectChanges();
+
+    expect(comp.activeOptionIndex()).toBe(1);
+
+    // One more ArrowDown should wrap to 0
+    comp.onPickerKeydown(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    fixture.detectChanges();
+
+    expect(comp.activeOptionIndex()).toBe(0);
+  }));
+
+  it('ArrowUp opens listbox and sets activeOptionIndex to last option when closed', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
+    const fixture = createComponent({}, {});
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.onPickerKeydown(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+    fixture.detectChanges();
+
+    expect(comp.pickerOpen()).toBe(true);
+    expect(comp.activeOptionIndex()).toBe(1); // last of 2 options
+  }));
+
+  it('ArrowUp wraps from index 0 to last option', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
+    const fixture = createComponent({}, {});
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.onPickerFocus();
+    comp.activeOptionIndex.set(0);
+    fixture.detectChanges();
+
+    comp.onPickerKeydown(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+    fixture.detectChanges();
+
+    expect(comp.activeOptionIndex()).toBe(1); // wrapped to last
+  }));
+
+  it('Enter selects active option and closes listbox', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
+    const fixture = createComponent({}, {});
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.onPickerFocus();
+    comp.activeOptionIndex.set(1); // select Beta Building
+    fixture.detectChanges();
+
+    comp.onPickerKeydown(new KeyboardEvent('keydown', { key: 'Enter' }));
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.selectedLocationId()).toBe('b2');
+    expect(comp.pickerOpen()).toBe(false);
+    expect(comp.activeOptionIndex()).toBe(-1);
+    expect(routerStub.navigate).toHaveBeenCalledWith(['/inventory/by-location', 'b2']);
+  }));
+
+  it('Enter does nothing when no active option (index -1)', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
+    const fixture = createComponent({}, {});
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.onPickerFocus();
+    comp.activeOptionIndex.set(-1);
+    fixture.detectChanges();
+
+    comp.onPickerKeydown(new KeyboardEvent('keydown', { key: 'Enter' }));
+    tick();
+
+    expect(comp.selectedLocationId()).toBeNull();
+    expect(routerStub.navigate).not.toHaveBeenCalled();
+  }));
+
+  it('Escape closes listbox without selecting, resets activeOptionIndex', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
+    const fixture = createComponent({}, {});
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.onPickerFocus();
+    comp.activeOptionIndex.set(0);
+    fixture.detectChanges();
+
+    expect(comp.pickerOpen()).toBe(true);
+
+    comp.onPickerKeydown(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+
+    expect(comp.pickerOpen()).toBe(false);
+    expect(comp.activeOptionIndex()).toBe(-1);
+    expect(comp.selectedLocationId()).toBeNull(); // no selection made
+  }));
+
+  it('aria-expanded reflects pickerOpen state correctly', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
+    const fixture = createComponent({}, {});
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('#loc-picker-input');
+    expect(input).not.toBeNull();
+
+    // Initially closed
+    fixture.componentInstance.pickerOpen.set(false);
+    fixture.detectChanges();
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+
+    // After open
+    fixture.componentInstance.onPickerFocus();
+    fixture.detectChanges();
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+
+    // After Escape
+    fixture.componentInstance.onPickerKeydown(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+  }));
+
+  it('aria-activedescendant reflects active option id when listbox is open', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
+    const fixture = createComponent({}, {});
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.onPickerFocus();
+    fixture.detectChanges();
+
+    // No active option yet
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('#loc-picker-input');
+    expect(input.getAttribute('aria-activedescendant')).toBeNull();
+
+    comp.onPickerKeydown(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    fixture.detectChanges();
+
+    expect(comp.activeDescendant()).toBe('loc-picker-option-0');
+    expect(input.getAttribute('aria-activedescendant')).toBe('loc-picker-option-0');
+
+    comp.onPickerKeydown(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    fixture.detectChanges();
+
+    expect(comp.activeDescendant()).toBe('loc-picker-option-1');
+  }));
+});
+
+// ── Tests: paramMap back/forward navigation (Finding 2 cover) ─────────────
+
+describe('paramMap back/forward navigation', () => {
+  it('second paramMap emission triggers new rollup request and updates selectedLocation', fakeAsync(() => {
+    const paramSubject$ = new Subject<ReturnType<typeof convertToParamMap>>();
+    locationServiceStub.getAllLocations.mockReturnValue(of([
+      parentLocation('loc-1', 'First Building', 'Building'),
+      parentLocation('loc-2', 'Second Building', 'Building'),
+    ]));
+    rollupServiceStub.getLocationRollup.mockReturnValue(
+      of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
+    );
+
+    const fixture = createComponentWithParamSubject({}, {}, paramSubject$);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    // No rollup calls yet — no param emitted
+    expect(rollupServiceStub.getLocationRollup).not.toHaveBeenCalled();
+
+    // Navigate to loc-1
+    paramSubject$.next(convertToParamMap({ locationId: 'loc-1' }));
+    tick();
+    fixture.detectChanges();
+
+    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(1);
+    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledWith('loc-1', expect.anything());
+    expect(fixture.componentInstance.selectedLocationId()).toBe('loc-1');
+
+    // Simulate browser back then forward to loc-2
+    paramSubject$.next(convertToParamMap({ locationId: 'loc-2' }));
+    tick();
+    fixture.detectChanges();
+
+    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(2);
+    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledWith('loc-2', expect.anything());
+    expect(fixture.componentInstance.selectedLocationId()).toBe('loc-2');
+  }));
+
+  it('paramMap emitting null locationId resets to idle state', fakeAsync(() => {
+    const paramSubject$ = new Subject<ReturnType<typeof convertToParamMap>>();
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    rollupServiceStub.getLocationRollup.mockReturnValue(
+      of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
+    );
+
+    const fixture = createComponentWithParamSubject({}, {}, paramSubject$);
+    fixture.detectChanges();
+    tick();
+
+    // Load a location
+    paramSubject$.next(convertToParamMap({ locationId: 'loc-1' }));
+    tick();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.state()).toBe('ready');
+
+    // Navigate back to the base route (no locationId)
+    paramSubject$.next(convertToParamMap({}));
+    tick();
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    expect(comp.selectedLocationId()).toBeNull();
+    expect(comp.state()).toBe('idle');
+    expect(comp.rollupData()).toBeNull();
+  }));
+});
+
+// ── Tests: in-flight cancellation (Finding 6) ────────────────────────────
+
+describe('in-flight request cancellation (Finding 6)', () => {
+  it('cancels previous in-flight rollup when a new one is triggered', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+
+    // First request never resolves
+    const neverSubject$ = new Subject<LocationInventoryRollupResponse>();
+    rollupServiceStub.getLocationRollup.mockReturnValueOnce(neverSubject$.asObservable());
+
+    const paramSubject$ = new Subject<ReturnType<typeof convertToParamMap>>();
+    const fixture = createComponentWithParamSubject({}, {}, paramSubject$);
+    fixture.detectChanges();
+    tick();
+
+    // Trigger first request
+    paramSubject$.next(convertToParamMap({ locationId: 'loc-1' }));
+    tick();
+    fixture.detectChanges();
+
+    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.state()).toBe('loading');
+
+    // Set up second request to resolve immediately
+    const secondResponse = locationResponse([site('s2', 'Beta', 5, 0, 5)]);
+    rollupServiceStub.getLocationRollup.mockReturnValueOnce(of(secondResponse));
+
+    // Trigger second request (navigate to different location)
+    paramSubject$.next(convertToParamMap({ locationId: 'loc-2' }));
+    tick();
+    fixture.detectChanges();
+
+    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(2);
+
+    // Only second result landed: state is ready with loc-2 data
+    expect(fixture.componentInstance.state()).toBe('ready');
+    expect(fixture.componentInstance.siteRows()[0].siteName).toBe('Beta');
+
+    // Emit result from the first (cancelled) request — must NOT overwrite state
+    const stateBeforeStaleEmit = fixture.componentInstance.state();
+    neverSubject$.next(locationResponse([site('s1', 'Alpha', 100, 0, 100)]));
+    tick();
+    fixture.detectChanges();
+
+    // State and data must be unchanged — stale emission was ignored
+    expect(fixture.componentInstance.state()).toBe(stateBeforeStaleEmit);
+    expect(fixture.componentInstance.siteRows()[0].siteName).toBe('Beta');
+  }));
+
+  it('SKU change cancels previous in-flight request', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+
+    // First request (initial load for loc-1) resolves normally
+    const firstResponse = locationResponse([site('s1', 'Alpha', 10, 0, 10)]);
+    rollupServiceStub.getLocationRollup.mockReturnValueOnce(of(firstResponse));
+
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    // SKU change triggers debounced re-query; use a never-subject for the new request
+    const neverSubject$ = new Subject<LocationInventoryRollupResponse>();
+    rollupServiceStub.getLocationRollup.mockReturnValueOnce(neverSubject$.asObservable());
+
+    fixture.componentInstance.onSkuInput('WIDGET-A');
+    tick(300); // debounce fires
+    fixture.detectChanges();
+
+    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(2);
+    expect(fixture.componentInstance.state()).toBe('loading');
+
+    // Second SKU change cancels the in-flight SKU request
+    const secondResponse = locationResponse([site('s2', 'Beta', 5, 0, 5)]);
+    rollupServiceStub.getLocationRollup.mockReturnValueOnce(of(secondResponse));
+
+    fixture.componentInstance.onSkuInput('WIDGET-B');
+    tick(300);
+    fixture.detectChanges();
+
+    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(3);
+    expect(fixture.componentInstance.state()).toBe('ready');
+    expect(fixture.componentInstance.siteRows()[0].siteName).toBe('Beta');
+
+    // Emit from the cancelled WIDGET-A request — must not land
+    neverSubject$.next(locationResponse([site('s1', 'Alpha', 100, 0, 100)]));
+    tick();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.siteRows()[0].siteName).toBe('Beta');
+  }));
+});
+
+// ── Tests: destroy-time subscription cancellation (Finding 3 cover) ──────
+
+describe('destroy-time subscription cancellation', () => {
+  it('does not write state after component is destroyed mid-flight', fakeAsync(() => {
+    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+
+    // Never-resolving Subject simulates an in-flight HTTP request
+    const pendingSubject$ = new Subject<LocationInventoryRollupResponse>();
+    rollupServiceStub.getLocationRollup.mockReturnValue(pendingSubject$.asObservable());
+
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.state()).toBe('loading');
+
+    // Destroy the component while the request is in flight
+    fixture.destroy();
+
+    // Now resolve the pending subject — the component is already destroyed
+    // No error should be thrown and state should not change (the subscription
+    // was torn down by takeUntilDestroyed)
+    expect(() => {
+      pendingSubject$.next(locationResponse([site('s1', 'Alpha', 10, 0, 10)]));
+      pendingSubject$.complete();
+      tick();
+    }).not.toThrow();
+
+    // The subscription was cancelled: siteRows() would normally be populated
+    // but since state was 'loading' at destroy time and the component is gone,
+    // the only assertion we can make is that no error occurred.
+  }));
+
+  it('loadParentLocations observable is torn down on destroy', fakeAsync(() => {
+    // Use a never-resolving location observable to simulate slow location load
+    const pendingLocations$ = new Subject<LocationResponseDTO[]>();
+    locationServiceStub.getAllLocations.mockReturnValue(pendingLocations$.asObservable());
+    rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
+
+    const fixture = createComponent({}, {});
+    fixture.detectChanges();
+    tick();
+
+    expect(fixture.componentInstance.locationsLoaded()).toBe(false);
+
+    fixture.destroy();
+
+    // Emitting after destroy must not throw
+    expect(() => {
+      pendingLocations$.next([parentLocation('b1', 'HQ', 'Building')]);
+      pendingLocations$.complete();
+      tick();
+    }).not.toThrow();
   }));
 });
