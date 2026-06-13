@@ -23,33 +23,6 @@ import type {
   RollupQuantities,
 } from '../../../models/inventory-rollup.models';
 
-/**
- * Parent-location type names that identify "buildings/places" in the
- * pos-location roster.
- *
- * ASSUMPTION (spec open question 1, unresolved as of 2026-06-12):
- * The Location domain does not expose a dedicated "parent location" flag on
- * the roster endpoint.  `getAllLocations()` returns `LocationResponseDTO` with
- * `type: LocationTypeDTO { id, name, description }`.  We treat any location
- * whose `type.name` is one of the canonical BUILDING / PLACE / CAMPUS / HUB /
- * FACILITY strings (case-insensitive) as a parent location for the picker.
- * If no `type` is present the location is excluded.
- *
- * Rationale: The Location Management domain guide lists BUILDING and PLACE as
- * the two "parent" location-type concepts.  CAMPUS / HUB / FACILITY are common
- * synonyms that real data may carry; erring toward inclusion avoids an empty
- * picker.
- *
- * TODO: once open question 1 is formally resolved against the pos-location
- * contract, replace this heuristic with the confirmed filter param or type ID.
- */
-const PARENT_LOCATION_TYPE_NAMES = new Set([
-  'building',
-  'place',
-  'campus',
-  'hub',
-  'facility',
-]);
 
 export type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 export type RollupErrorKind = RollupError['kind'];
@@ -368,10 +341,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (locations: LocationResponseDTO[]) => {
-          const parents = locations.filter(loc =>
-            PARENT_LOCATION_TYPE_NAMES.has((loc.type?.name ?? '').toLowerCase()),
-          );
-          this.allParentLocations.set(parents);
+          this.allParentLocations.set(locations);
           this.locationsLoaded.set(true);
 
           // Back-fill display name when arriving via direct URL.
