@@ -347,7 +347,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
           // Back-fill display name when arriving via direct URL.
           const id = this.selectedLocationId();
           if (id && !this.selectedLocationName()) {
-            const match = parents.find(l => l.id === id);
+            const match = locations.find((l: LocationResponseDTO) => l.id === id);
             if (match) {
               this.selectedLocationName.set(match.name ?? id);
               this.pickerQuery.set(match.name ?? id);
