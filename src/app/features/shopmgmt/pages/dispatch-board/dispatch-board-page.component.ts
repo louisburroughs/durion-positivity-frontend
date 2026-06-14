@@ -4,8 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, interval, switchMap, catchError } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
+import { LocationResponseDTO } from '@durion-sdk/location';
 import { DashboardResponse, WorkorderSummary } from '../../models/dispatch-board.models';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
+
+const MAX_SUGGESTIONS = 8;
 
 @Component({
   selector: 'app-dispatch-board-page',
@@ -22,6 +25,22 @@ export class DispatchBoardPageComponent implements OnInit {
   readonly todayIso = signal(new Date().toISOString().slice(0, 10));
   readonly selectedDate = signal(this.todayIso());
   readonly selectedLocationId = signal('');
+  readonly locationDisplayName = signal('');
+  readonly allLocations = signal<LocationResponseDTO[]>([]);
+  readonly showSuggestions = signal(false);
+
+  readonly locationSuggestions = computed<LocationResponseDTO[]>(() => {
+    const q = this.locationDisplayName().trim().toLowerCase();
+    const locs = this.allLocations();
+    if (!q) return locs.slice(0, MAX_SUGGESTIONS);
+    return locs
+      .filter(l =>
+        l.name?.toLowerCase().includes(q) ||
+        l.code?.toLowerCase().includes(q),
+      )
+      .slice(0, MAX_SUGGESTIONS);
+  });
+
   readonly canRefresh = computed(() => this.selectedLocationId().trim().length > 0);
   readonly workorders = signal<WorkorderSummary[]>([]);
   readonly loading = signal(false);
@@ -34,7 +53,16 @@ export class DispatchBoardPageComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.loadCurrentLocation();
+    this.dispatchBoardService
+      .getAllLocations()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: locs => {
+          this.allLocations.set(locs);
+          this.loadCurrentLocation();
+        },
+        error: () => this.loadCurrentLocation(),
+      });
   }
 
   refresh(): void {
@@ -66,11 +94,32 @@ export class DispatchBoardPageComponent implements OnInit {
       });
   }
 
-  updateSelectedLocation(value: string): void {
-    this.selectedLocationId.set(value ?? '');
-    if (this.error() === 'SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED' && value.trim().length > 0) {
+  onLocationInput(value: string): void {
+    this.locationDisplayName.set(value);
+    this.selectedLocationId.set('');
+    this.showSuggestions.set(true);
+    if (this.error() === 'SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED') {
       this.error.set(null);
     }
+  }
+
+  onLocationFocus(): void {
+    if (this.allLocations().length > 0) {
+      this.showSuggestions.set(true);
+    }
+  }
+
+  onLocationBlur(): void {
+    setTimeout(() => this.showSuggestions.set(false), 150);
+  }
+
+  selectLocation(loc: LocationResponseDTO): void {
+    const id = loc.id ?? '';
+    const name = loc.name ?? loc.code ?? id;
+    this.selectedLocationId.set(id);
+    this.locationDisplayName.set(name);
+    this.showSuggestions.set(false);
+    this.error.set(null);
   }
 
   private startPolling(): void {
@@ -112,6 +161,8 @@ export class DispatchBoardPageComponent implements OnInit {
           }
 
           this.selectedLocationId.set(locationId);
+          const found = this.allLocations().find(l => l.id === locationId);
+          this.locationDisplayName.set(found?.name ?? found?.code ?? locationId);
           this.refresh();
         },
         error: () => {
