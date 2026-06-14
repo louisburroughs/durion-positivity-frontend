@@ -205,6 +205,10 @@
         "DATA_IMPORT": {
           "TITLE": "Importacion de datos",
           "DESCRIPTION": "Importe masivamente datos de personal y RR.HH."
+        },
+        "DIRECTORY": {
+          "TITLE": "Directorio",
+          "DESCRIPTION": "Busca y explora todas las personas en el sistema."
         }
       },
       "CARD": {
@@ -251,6 +255,10 @@
         "IMPORT_PEOPLE": {
           "TITLE": "Importar personal",
           "DESCRIPTION": "Importe masivamente registros de personal y RR.HH. desde un archivo CSV o XLSX."
+        },
+        "DIRECTORY": {
+          "TITLE": "Directorio de personas",
+          "DESCRIPTION": "Consulta y filtra todas las personas por tipo y estado."
         }
       },
       "FIELD": {
@@ -362,6 +370,35 @@
         "APPROVE": "No se pudieron aprobar las entradas.",
         "REJECT": "No se pudieron rechazar las entradas.",
         "ADJUSTMENT": "No se pudo crear el ajuste."
+      }
+    },
+    "DIRECTORY": {
+      "TITLE": "Directorio de personas",
+      "SEARCH_PLACEHOLDER": "Buscar por nombre, correo o usuario…",
+      "FILTER": {
+        "ALL": "Todos",
+        "EMPLOYEE": "Empleados",
+        "ACTIVE": "Activos",
+        "INACTIVE": "Inactivos"
+      },
+      "COL": {
+        "NAME": "Nombre",
+        "USERNAME": "Usuario",
+        "EMAIL": "Correo",
+        "PHONE": "Teléfono",
+        "ACTIONS": "Acciones"
+      },
+      "ACTION": {
+        "VIEW_PROFILE": "Ver perfil"
+      },
+      "LOADING": "Cargando personas…",
+      "EMPTY": "Ninguna persona coincide con la búsqueda.",
+      "CLEAR_SEARCH": "Limpiar búsqueda",
+      "PAGINATION": {
+        "PAGE_OF": "Página {{current}} de {{total}}"
+      },
+      "ERROR": {
+        "LOAD": "Error al cargar las personas."
       }
     }
   },

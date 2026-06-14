@@ -76,6 +76,13 @@ export const PEOPLE_ROUTES: Routes = [
           ),
       },
       {
+        path: 'directory',
+        loadComponent: () =>
+          import('./pages/directory/people-directory-page.component').then(
+            m => m.PeopleDirectoryPageComponent,
+          ),
+      },
+      {
         path: '**',
         redirectTo: '',
       },

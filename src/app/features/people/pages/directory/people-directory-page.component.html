@@ -1,0 +1,171 @@
+<main class="people-directory" aria-labelledby="directory-title">
+
+  <div class="directory-header">
+    <h1 id="directory-title" class="directory-title">
+      {{ 'PEOPLE.DIRECTORY.TITLE' | translate }}
+    </h1>
+    <div class="directory-search-wrap">
+      <input
+        class="directory-search"
+        type="search"
+        [placeholder]="'PEOPLE.DIRECTORY.SEARCH_PLACEHOLDER' | translate"
+        [value]="searchInputValue()"
+        (input)="onSearchInput($event)"
+        aria-label="{{ 'PEOPLE.DIRECTORY.SEARCH_PLACEHOLDER' | translate }}"
+      />
+    </div>
+  </div>
+
+  <div class="directory-filters" role="group" aria-label="{{ 'PEOPLE.DIRECTORY.FILTER.ALL' | translate }}">
+    @for (filter of filters; track filter.key) {
+      <button
+        class="filter-chip"
+        [class.filter-chip--active]="activeType() === filter.key"
+        [attr.aria-pressed]="activeType() === filter.key"
+        (click)="setTypeFilter(filter.key)"
+      >
+        {{ filter.labelKey | translate }}
+      </button>
+    }
+  </div>
+
+  @if (state() === 'loading') {
+    <div class="directory-state" aria-live="polite">
+      <span class="directory-state__spinner" aria-hidden="true"></span>
+      {{ 'PEOPLE.DIRECTORY.LOADING' | translate }}
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="directory-state directory-state--error" role="alert">
+      <span>{{ 'PEOPLE.DIRECTORY.ERROR.LOAD' | translate }}</span>
+      <button class="directory-action-btn" (click)="reload()">
+        {{ 'COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'empty') {
+    <div class="directory-state">
+      <span>{{ 'PEOPLE.DIRECTORY.EMPTY' | translate }}</span>
+      <button class="directory-link-btn" (click)="clearFilters()">
+        {{ 'PEOPLE.DIRECTORY.CLEAR_SEARCH' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'ready') {
+    <div class="directory-table-wrap">
+      <table class="directory-table">
+        <thead>
+          <tr>
+            <th
+              scope="col"
+              class="directory-th directory-th--sortable"
+              [attr.aria-sort]="ariaSort('lastName')"
+              (click)="sortBy('lastName')"
+            >
+              {{ 'PEOPLE.DIRECTORY.COL.NAME' | translate }}
+              <span class="sort-icon" aria-hidden="true">
+                @if (sortColumn() === 'lastName') { {{ sortDir() === 'asc' ? '↑' : '↓' }} } @else { ↕ }
+              </span>
+            </th>
+            <th
+              scope="col"
+              class="directory-th directory-th--sortable"
+              [attr.aria-sort]="ariaSort('username')"
+              (click)="sortBy('username')"
+            >
+              {{ 'PEOPLE.DIRECTORY.COL.USERNAME' | translate }}
+              <span class="sort-icon" aria-hidden="true">
+                @if (sortColumn() === 'username') { {{ sortDir() === 'asc' ? '↑' : '↓' }} } @else { ↕ }
+              </span>
+            </th>
+            <th
+              scope="col"
+              class="directory-th directory-th--sortable"
+              [attr.aria-sort]="ariaSort('primaryEmail')"
+              (click)="sortBy('primaryEmail')"
+            >
+              {{ 'PEOPLE.DIRECTORY.COL.EMAIL' | translate }}
+              <span class="sort-icon" aria-hidden="true">
+                @if (sortColumn() === 'primaryEmail') { {{ sortDir() === 'asc' ? '↑' : '↓' }} } @else { ↕ }
+              </span>
+            </th>
+            <th scope="col" class="directory-th">
+              {{ 'PEOPLE.DIRECTORY.COL.PHONE' | translate }}
+            </th>
+            <th scope="col" class="directory-th directory-th--actions">
+              {{ 'PEOPLE.DIRECTORY.COL.ACTIONS' | translate }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (person of paged(); track person.id ?? person.firstName + person.lastName) {
+            <tr class="directory-row">
+              <td class="directory-td directory-td--name">
+                @if (person.id) {
+                  <a class="directory-name-link" [routerLink]="['/app/people/employees', person.id]">
+                    {{ person.lastName }}, {{ person.firstName }}
+                  </a>
+                } @else {
+                  {{ person.lastName }}, {{ person.firstName }}
+                }
+              </td>
+              <td class="directory-td directory-td--mono">
+                {{ person.username || '—' }}
+              </td>
+              <td class="directory-td">
+                @if (person.primaryEmail) {
+                  <a [href]="'mailto:' + person.primaryEmail" class="directory-email-link">
+                    {{ person.primaryEmail }}
+                  </a>
+                } @else {
+                  <span class="directory-empty-cell">—</span>
+                }
+              </td>
+              <td class="directory-td">
+                {{ person.phoneNumbers?.[0] || '—' }}
+              </td>
+              <td class="directory-td directory-td--actions">
+                @if (person.id) {
+                  <a
+                    class="directory-action-link"
+                    [routerLink]="['/app/people/employees', person.id]"
+                  >
+                    {{ 'PEOPLE.DIRECTORY.ACTION.VIEW_PROFILE' | translate }}
+                  </a>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages() > 1) {
+      <div class="directory-pagination" role="navigation" aria-label="Pagination">
+        <button
+          class="pagination-btn"
+          [disabled]="pageIndex() === 0"
+          (click)="prevPage()"
+          aria-label="Previous page"
+        >
+          ‹
+        </button>
+        <span class="pagination-label">
+          {{ 'PEOPLE.DIRECTORY.PAGINATION.PAGE_OF' | translate: { current: pageIndex() + 1, total: totalPages() } }}
+        </span>
+        <button
+          class="pagination-btn"
+          [disabled]="pageIndex() >= totalPages() - 1"
+          (click)="nextPage()"
+          aria-label="Next page"
+        >
+          ›
+        </button>
+      </div>
+    }
+  }
+
+</main>

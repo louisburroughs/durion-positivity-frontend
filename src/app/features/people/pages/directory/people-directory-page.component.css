@@ -1,0 +1,285 @@
+.people-directory {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  max-width: 1200px;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.directory-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.directory-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.directory-search-wrap {
+  flex: 1;
+  min-width: 220px;
+}
+
+.directory-search {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  background: var(--input-background);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.directory-search:focus {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 1px;
+}
+
+/* ── Filter chips ────────────────────────────────────────────────────────── */
+
+.directory-filters {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-full, 9999px);
+  background: var(--cardBackground);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 120ms, color 120ms, border-color 120ms;
+}
+
+.filter-chip:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.filter-chip--active {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--brand-on-primary, #fff);
+}
+
+/* ── State banners ───────────────────────────────────────────────────────── */
+
+.directory-state {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.directory-state--error {
+  background: color-mix(in srgb, var(--error, #dc2626) 8%, var(--cardBackground));
+  color: var(--error, #dc2626);
+  border: 1px solid color-mix(in srgb, var(--error, #dc2626) 25%, transparent);
+}
+
+.directory-state__spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--brand-primary);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Table ───────────────────────────────────────────────────────────────── */
+
+.directory-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+}
+
+.directory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.directory-th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--cardBackground) 80%, var(--input-border));
+  border-bottom: 1px solid var(--input-border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.directory-th--sortable {
+  cursor: pointer;
+}
+
+.directory-th--sortable:hover {
+  color: var(--brand-primary);
+}
+
+.directory-th--actions {
+  text-align: right;
+}
+
+.sort-icon {
+  margin-left: var(--space-1);
+  opacity: 0.5;
+  font-size: 0.75rem;
+}
+
+.directory-row {
+  border-bottom: 1px solid color-mix(in srgb, var(--input-border) 60%, transparent);
+}
+
+.directory-row:last-child {
+  border-bottom: none;
+}
+
+.directory-row:hover {
+  background: color-mix(in srgb, var(--brand-primary) 4%, var(--cardBackground));
+}
+
+.directory-td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.directory-td--name {
+  font-weight: 500;
+}
+
+.directory-td--mono {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.directory-td--actions {
+  text-align: right;
+}
+
+.directory-name-link {
+  color: var(--brand-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.directory-name-link:hover {
+  text-decoration: underline;
+}
+
+.directory-email-link {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.directory-email-link:hover {
+  text-decoration: underline;
+}
+
+.directory-empty-cell {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.directory-action-link {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--brand-primary);
+  border-radius: var(--radius-sm);
+  color: var(--brand-primary);
+  font-size: 0.8rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.directory-action-link:hover {
+  background: var(--brand-primary);
+  color: var(--brand-on-primary, #fff);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+
+.directory-action-btn {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.directory-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--brand-primary);
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ── Pagination ──────────────────────────────────────────────────────────── */
+
+.directory-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.pagination-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--cardBackground);
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pagination-btn:not(:disabled):hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.pagination-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}

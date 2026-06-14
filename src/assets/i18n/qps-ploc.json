@@ -205,6 +205,10 @@
         "DATA_IMPORT": {
           "TITLE": "[!! Đààŧàà ÏÏḿṕøøŕŧ !!]",
           "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ ṕëëøøṕľëë ààñđ ĦŔ đààŧàà. !!]"
+        },
+        "DIRECTORY": {
+          "TITLE": "[!! Directory !!]",
+          "DESCRIPTION": "[!! Search and browse all people in the system. !!]"
         }
       },
       "CARD": {
@@ -251,6 +255,10 @@
         "IMPORT_PEOPLE": {
           "TITLE": "[!! ÏÏḿṕøøŕŧ Ṕëëøøṕľëë !!]",
           "DESCRIPTION": "[!! Ɓüüľķ ïïḿṕøøŕŧ ṕëëøøṕľëë ààñđ ĦŔ ŕëëçøøŕđš ƒŕøøḿ àà ÇŠṼ øøŕ ẌĿŠẌ ƒïïľëë. !!]"
+        },
+        "DIRECTORY": {
+          "TITLE": "[!! People Directory !!]",
+          "DESCRIPTION": "[!! View and filter all persons by type and status. !!]"
         }
       },
       "FIELD": {
@@ -362,6 +370,35 @@
         "APPROVE": "[!! Ƒààïïľëëđ ŧøø ààṕṕŕøøṽëë ëëñŧŕïïëëš. !!]",
         "REJECT": "[!! Ƒààïïľëëđ ŧøø ŕëëĵëëçŧ ëëñŧŕïïëëš. !!]",
         "ADJUSTMENT": "[!! Ƒààïïľëëđ ŧøø çŕëëààŧëë ààđĵüüšŧḿëëñŧ. !!]"
+      }
+    },
+    "DIRECTORY": {
+      "TITLE": "[!! People Directory !!]",
+      "SEARCH_PLACEHOLDER": "[!! Search by name, email, or username… !!]",
+      "FILTER": {
+        "ALL": "[!! All !!]",
+        "EMPLOYEE": "[!! Employees !!]",
+        "ACTIVE": "[!! Active !!]",
+        "INACTIVE": "[!! Inactive !!]"
+      },
+      "COL": {
+        "NAME": "[!! Name !!]",
+        "USERNAME": "[!! Username !!]",
+        "EMAIL": "[!! Email !!]",
+        "PHONE": "[!! Phone !!]",
+        "ACTIONS": "[!! Actions !!]"
+      },
+      "ACTION": {
+        "VIEW_PROFILE": "[!! View Profile !!]"
+      },
+      "LOADING": "[!! Loading people… !!]",
+      "EMPTY": "[!! No people match your search. !!]",
+      "CLEAR_SEARCH": "[!! Clear search !!]",
+      "PAGINATION": {
+        "PAGE_OF": "[!! Page {{current}} of {{total}} !!]"
+      },
+      "ERROR": {
+        "LOAD": "[!! Failed to load people. !!]"
       }
     }
   },

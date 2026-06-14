@@ -205,6 +205,10 @@
         "DATA_IMPORT": {
           "TITLE": "Data Import",
           "DESCRIPTION": "Bulk import people and HR data."
+        },
+        "DIRECTORY": {
+          "TITLE": "Directory",
+          "DESCRIPTION": "Search and browse all people in the system."
         }
       },
       "CARD": {
@@ -251,6 +255,10 @@
         "IMPORT_PEOPLE": {
           "TITLE": "Import People",
           "DESCRIPTION": "Bulk import people and HR records from a CSV or XLSX file."
+        },
+        "DIRECTORY": {
+          "TITLE": "People Directory",
+          "DESCRIPTION": "View and filter all persons by type and status."
         }
       },
       "FIELD": {
@@ -362,6 +370,35 @@
         "APPROVE": "Failed to approve entries.",
         "REJECT": "Failed to reject entries.",
         "ADJUSTMENT": "Failed to create adjustment."
+      }
+    },
+    "DIRECTORY": {
+      "TITLE": "People Directory",
+      "SEARCH_PLACEHOLDER": "Search by name, email, or username…",
+      "FILTER": {
+        "ALL": "All",
+        "EMPLOYEE": "Employees",
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive"
+      },
+      "COL": {
+        "NAME": "Name",
+        "USERNAME": "Username",
+        "EMAIL": "Email",
+        "PHONE": "Phone",
+        "ACTIONS": "Actions"
+      },
+      "ACTION": {
+        "VIEW_PROFILE": "View Profile"
+      },
+      "LOADING": "Loading people…",
+      "EMPTY": "No people match your search.",
+      "CLEAR_SEARCH": "Clear search",
+      "PAGINATION": {
+        "PAGE_OF": "Page {{current}} of {{total}}"
+      },
+      "ERROR": {
+        "LOAD": "Failed to load people."
       }
     }
   },

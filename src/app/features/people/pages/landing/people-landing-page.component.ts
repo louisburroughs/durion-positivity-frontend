@@ -158,6 +158,19 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
       },
     ],
   },
+  {
+    titleKey: 'PEOPLE.LANDING.SECTION.DIRECTORY.TITLE',
+    descriptionKey: 'PEOPLE.LANDING.SECTION.DIRECTORY.DESCRIPTION',
+    cards: [
+      {
+        kind: 'direct',
+        titleKey: 'PEOPLE.LANDING.CARD.DIRECTORY.TITLE',
+        descriptionKey: 'PEOPLE.LANDING.CARD.DIRECTORY.DESCRIPTION',
+        route: '/app/people/directory',
+        actionKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
+      },
+    ],
+  },
 ] as const;
 
 @Component({
