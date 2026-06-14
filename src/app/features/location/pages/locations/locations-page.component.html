@@ -18,10 +18,45 @@
 } @else {
   @if (locations().length > 0) {
     <section class="locations-list">
-      @for (location of locations(); track $index) {
+      @for (location of locations(); track location.id ?? $index) {
         <article class="location-card">
-          <h3>{{ getLocationName(location) }}</h3>
-          <p>{{ getLocationType(location) }}</p>
+          <header class="location-card-header">
+            <h3>{{ getLocationName(location) }}</h3>
+            <span class="status-badge" [class.status-active]="isActive(location)" [class.status-inactive]="!isActive(location)">
+              {{ (isActive(location) ? 'LOCATION.LOCATIONS.STATUS_ACTIVE' : 'LOCATION.LOCATIONS.STATUS_INACTIVE') | translate }}
+            </span>
+          </header>
+
+          <dl class="location-details">
+            @if (getLocationCode(location)) {
+              <div class="detail-row">
+                <dt>{{ 'LOCATION.LOCATIONS.CODE' | translate }}</dt>
+                <dd>{{ getLocationCode(location) }}</dd>
+              </div>
+            }
+            @if (getLocationType(location)) {
+              <div class="detail-row">
+                <dt>{{ 'LOCATION.LOCATIONS.TYPE' | translate }}</dt>
+                <dd>{{ getLocationType(location) }}</dd>
+              </div>
+            }
+            @if (location.type?.description) {
+              <div class="detail-row">
+                <dt>{{ 'LOCATION.LOCATIONS.TYPE_DESCRIPTION' | translate }}</dt>
+                <dd>{{ location.type!.description }}</dd>
+              </div>
+            }
+            @if (getLocationAddress(location)) {
+              <div class="detail-row">
+                <dt>{{ 'LOCATION.LOCATIONS.ADDRESS' | translate }}</dt>
+                <dd>{{ getLocationAddress(location) }}</dd>
+              </div>
+            }
+          </dl>
+
+          @if (location.id) {
+            <p class="location-id">{{ location.id }}</p>
+          }
         </article>
       }
     </section>

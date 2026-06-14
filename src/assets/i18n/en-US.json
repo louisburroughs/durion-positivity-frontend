@@ -759,7 +759,12 @@
         "LOAD": "Failed to load locations.",
         "NAME_TYPE_REQUIRED": "Name and type are required.",
         "CREATE": "Failed to create location."
-      }
+      },
+      "CODE": "Code",
+      "STATUS_ACTIVE": "Active",
+      "STATUS_INACTIVE": "Inactive",
+      "ADDRESS": "Address",
+      "TYPE_DESCRIPTION": "Description"
     },
     "BAYS": {
       "TITLE": "Bays",

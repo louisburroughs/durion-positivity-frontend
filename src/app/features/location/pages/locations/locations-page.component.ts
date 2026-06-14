@@ -4,6 +4,21 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LocationService } from '../../services/location.service';
 
+interface LocationItem {
+  id?: string;
+  name?: string;
+  code?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  mailingAddress?: string;
+  active?: boolean;
+  type?: { id?: string; name?: string; description?: string };
+}
+
 @Component({
   selector: 'app-locations-page',
   standalone: true,
@@ -15,7 +30,7 @@ export class LocationsPageComponent implements OnInit {
   private readonly locationService = inject(LocationService);
 
   readonly loading = signal(false);
-  readonly locations = signal<unknown[]>([]);
+  readonly locations = signal<LocationItem[]>([]);
   readonly error = signal<string | null>(null);
   readonly showCreateModal = signal(false);
   readonly createName = signal('');
@@ -76,26 +91,44 @@ export class LocationsPageComponent implements OnInit {
     });
   }
 
-  getLocationName(location: unknown): string {
-    const candidate = location as Record<string, unknown>;
-    return String(candidate['name'] ?? candidate['locationName'] ?? candidate['locationId'] ?? 'Unknown');
+  getLocationName(location: LocationItem): string {
+    return location.name ?? location.id ?? 'Unknown';
   }
 
-  getLocationType(location: unknown): string {
-    const candidate = location as Record<string, unknown>;
-    return String(candidate['type'] ?? candidate['locationType'] ?? 'UNSPECIFIED');
+  getLocationType(location: LocationItem): string {
+    return location.type?.name ?? '';
   }
 
-  private normalizeLocations(response: unknown): unknown[] {
+  getLocationCode(location: LocationItem): string {
+    return location.code ?? '';
+  }
+
+  getLocationAddress(location: LocationItem): string {
+    const parts = [
+      location.addressLine1,
+      location.addressLine2,
+      location.city,
+      location.state,
+      location.postalCode,
+      location.country,
+    ].filter(Boolean);
+    return parts.join(', ');
+  }
+
+  isActive(location: LocationItem): boolean {
+    return location.active ?? false;
+  }
+
+  private normalizeLocations(response: unknown): LocationItem[] {
     if (Array.isArray(response)) {
-      return response;
+      return response as LocationItem[];
     }
 
     if (response !== null && typeof response === 'object') {
       const payload = response as Record<string, unknown>;
       const items = payload['items'];
       if (Array.isArray(items)) {
-        return items;
+        return items as LocationItem[];
       }
     }
 

@@ -759,7 +759,12 @@
         "LOAD": "No se pudieron cargar las ubicaciones.",
         "NAME_TYPE_REQUIRED": "Nombre y tipo son obligatorios.",
         "CREATE": "No se pudo crear la ubicación."
-      }
+      },
+      "CODE": "Código",
+      "STATUS_ACTIVE": "Activo",
+      "STATUS_INACTIVE": "Inactivo",
+      "ADDRESS": "Dirección",
+      "TYPE_DESCRIPTION": "Descripción"
     },
     "BAYS": {
       "TITLE": "Bahías",
