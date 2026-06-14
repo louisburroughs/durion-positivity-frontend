@@ -21,7 +21,7 @@ export class DispatchBoardService {
   }
 
   getAllLocations(): Observable<LocationResponseDTO[]> {
-    return this.locationApi.getAllLocations() as Observable<LocationResponseDTO[]>;
+    return this.locationApi.getAllLocations('body', false, { transferCache: false }) as Observable<LocationResponseDTO[]>;
   }
 
   getAvailability(locationId: string, date: string): Observable<PeopleAvailabilityResponse[]> {
