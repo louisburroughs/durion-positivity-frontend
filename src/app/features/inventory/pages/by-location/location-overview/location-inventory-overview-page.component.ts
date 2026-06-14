@@ -15,7 +15,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { LocationAPIService } from '@durion-sdk/location';
-import type { LocationResponseDTO } from '@durion-sdk/location';
+import type { LocationRef } from '@durion-sdk/location';
 import { InventoryRollupApiService } from '../../../services/inventory-rollup.service';
 import type {
   LocationInventoryRollupResponse,
@@ -74,7 +74,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
   // ── Location picker ──────────────────────────────────────────────────────
 
   /** All parent-type locations loaded once on init. */
-  readonly allParentLocations = signal<LocationResponseDTO[]>([]);
+  readonly allParentLocations = signal<LocationRef[]>([]);
   /** Current typeahead filter text (also displays selected name). */
   readonly pickerQuery = signal('');
   /** Whether the typeahead dropdown is open. */
@@ -84,7 +84,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
   /** Index of the keyboard-active option in the listbox (-1 = none). */
   readonly activeOptionIndex = signal(-1);
 
-  readonly filteredLocations = computed<LocationResponseDTO[]>(() => {
+  readonly filteredLocations = computed<LocationRef[]>(() => {
     const q = this.pickerQuery().trim().toLowerCase();
     if (!q) return this.allParentLocations().slice(0, 20);
     return this.allParentLocations()
@@ -245,7 +245,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
     return this.pickerOpen() && index >= 0 ? this.optionId(index) : null;
   }
 
-  selectLocation(loc: LocationResponseDTO): void {
+  selectLocation(loc: LocationRef): void {
     const id = loc.id ?? '';
     this.selectedLocationId.set(id);
     this.selectedLocationName.set(loc.name ?? id);
@@ -337,17 +337,18 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
 
   private loadParentLocations(): void {
     this.locationSdk
-      .getAllLocations()
+      .getRoster({ page: 0, size: 500 })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (locations: LocationResponseDTO[]) => {
+        next: (page) => {
+          const locations: LocationRef[] = page.content ?? [];
           this.allParentLocations.set(locations);
           this.locationsLoaded.set(true);
 
           // Back-fill display name when arriving via direct URL.
           const id = this.selectedLocationId();
           if (id && !this.selectedLocationName()) {
-            const match = locations.find((l: LocationResponseDTO) => l.id === id);
+            const match = locations.find((l: LocationRef) => l.id === id);
             if (match) {
               this.selectedLocationName.set(match.name ?? id);
               this.pickerQuery.set(match.name ?? id);
