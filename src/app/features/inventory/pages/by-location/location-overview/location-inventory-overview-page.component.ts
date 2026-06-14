@@ -47,7 +47,7 @@ export type SortDir = 'asc' | 'desc';
  * - Grand total strip: onHand / allocated / available (negative available
  *   renders warning badge — unclamped per spec §2).
  * - Sites table with sortable columns; row click navigates to Screen 2
- *   (/inventory/by-location/site/:siteId) with siteName in router state.
+ *   (/app/inventory/by-location/site/:siteId) with siteName in router state.
  * - Local SKU filter (debounced 300 ms) that re-queries with sku=.
  *   TODO: swap to the shared sku-filter component once F2 merges.  F2 creates
  *   src/app/features/inventory/components/sku-filter/ — using a local input
@@ -172,7 +172,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
       if (hadSelection) {
         // Clearing the picker returns to the idle route so the URL does not
         // keep pointing at the cleared location (spec §3).
-        void this.router.navigate(['/inventory/by-location']);
+        void this.router.navigate(['/app/inventory/by-location']);
       }
     }
   }
@@ -255,7 +255,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
     this.skuInput.set('');
     // Navigation is the single trigger for loading: the paramMap subscription
     // reacts to this URL change and calls loadRollup().
-    void this.router.navigate(['/inventory/by-location', id]);
+    void this.router.navigate(['/app/inventory/by-location', id]);
   }
 
   // ── SKU filter ───────────────────────────────────────────────────────────
@@ -284,7 +284,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
   // ── Row navigation ───────────────────────────────────────────────────────
 
   navigateToSite(row: SiteRow): void {
-    void this.router.navigate(['/inventory/by-location/site', row.siteId], {
+    void this.router.navigate(['/app/inventory/by-location/site', row.siteId], {
       state: { siteName: row.siteName },
     });
   }
