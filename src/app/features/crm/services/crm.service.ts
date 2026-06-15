@@ -40,6 +40,7 @@ import {
   MergePartiesResponse,
   PartyDetail,
   Relationship,
+  RelationshipRole,
   UpdateContactRolesRequest,
   VehicleRef,
 } from '../models/crm.models';
@@ -142,7 +143,20 @@ export class CrmService {
   }
 
   getContactsWithRoles(partyId: string): Observable<Relationship[]> {
-    return this.contactsApi.getContactsWithRoles(partyId) as Observable<Relationship[]>;
+    return this.relationshipsApi.getContacts(partyId).pipe(
+      map(response => (response.contacts ?? []).map(c => ({
+        relationshipId: c.relationshipId ?? '',
+        personId: c.individualId ?? '',
+        personName: c.individual?.displayName ?? '',
+        email: c.individual?.email,
+        phone: c.individual?.phone,
+        role: (Array.from(c.roles ?? [])[0] ?? 'PRIMARY_CONTACT') as RelationshipRole,
+        effectiveFrom: c.effectiveFrom ?? '',
+        effectiveThru: c.effectiveTo,
+        isPrimaryBilling: c.primaryBilling ?? false,
+        status: (c.status ?? 'ACTIVE') as 'ACTIVE' | 'INACTIVE',
+      } satisfies Relationship)))
+    );
   }
 
   updateContactRoles(
