@@ -6,7 +6,38 @@
   <form [formGroup]="filterForm" (ngSubmit)="loadBoard()" novalidate>
     <div class="filter-group">
       <label for="svLocation">{{ 'SHOPMGMT.SCHEDULE_VIEW.LOCATION' | translate }}</label>
-      <input id="svLocation" name="locationId" type="text" formControlName="locationId" [placeholder]="'SHOPMGMT.SCHEDULE_VIEW.LOCATION_ID' | translate" />
+      <div class="location-picker-wrap">
+        <input
+          id="svLocation"
+          name="locationDisplay"
+          type="text"
+          autocomplete="off"
+          [value]="locationDisplayName()"
+          (input)="onLocationInput($any($event.target).value)"
+          (focus)="onLocationFocus()"
+          (blur)="onLocationBlur()"
+          [attr.aria-expanded]="showSuggestions() && locationSuggestions().length > 0"
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
+          [placeholder]="'SHOPMGMT.SCHEDULE_VIEW.LOCATION_ID' | translate"
+        />
+        @if (showSuggestions() && locationSuggestions().length > 0) {
+          <ul class="location-suggestions" role="listbox">
+            @for (loc of locationSuggestions(); track loc.id) {
+              <li
+                class="location-suggestion"
+                role="option"
+                (mousedown)="selectLocation(loc)"
+              >
+                <span class="suggestion-name">{{ loc.name }}</span>
+                @if (loc.code) {
+                  <span class="suggestion-code">{{ loc.code }}</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </div>
     </div>
     <div class="filter-group">
       <label for="svDate">{{ 'SHOPMGMT.SCHEDULE_VIEW.DATE' | translate }}</label>
