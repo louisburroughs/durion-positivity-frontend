@@ -14,70 +14,86 @@
 
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate aria-label="Create estimate form" class="estimate-form">
 
-    <!-- Customer ID -->
+    <!-- Customer search -->
     <div class="field-group">
-      <label for="customerId" class="field-label">Customer ID <span class="required" aria-hidden="true">*</span></label>
-      <input
-        id="customerId"
-        type="text"
-        formControlName="customerId"
-        class="field-input"
-        [class.field-input--error]="form.controls.customerId.invalid && form.controls.customerId.touched"
-        placeholder="e.g. 550e8400-e29b-41d4-a716-…"
-        aria-required="true"
-        [attr.aria-describedby]="form.controls.customerId.invalid && form.controls.customerId.touched ? 'customerId-err' : null"
-      />
+      <label for="customerSearch" class="field-label">Customer <span class="required" aria-hidden="true">*</span></label>
+      <div class="typeahead-wrap">
+        <input
+          id="customerSearch"
+          type="text"
+          autocomplete="off"
+          class="field-input"
+          [class.field-input--error]="form.controls.customerId.invalid && form.controls.customerId.touched"
+          [value]="customerDisplayName()"
+          (input)="onCustomerInput($any($event.target).value)"
+          (focus)="onCustomerFocus()"
+          (blur)="onCustomerBlur()"
+          [attr.aria-expanded]="showCustomerSuggestions() && customerSuggestions().length > 0"
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
+          placeholder="Search by name or email…"
+          aria-required="true"
+        />
+        @if (showCustomerSuggestions() && customerSuggestions().length > 0) {
+          <ul class="typeahead-suggestions" role="listbox">
+            @for (c of customerSuggestions(); track c.id) {
+              <li class="typeahead-item" role="option" (mousedown)="selectCustomer(c)">
+                <span class="suggestion-primary">{{ c.firstName }} {{ c.lastName }}</span>
+                @if (c.email) {
+                  <span class="suggestion-secondary">{{ c.email }}</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </div>
       @if (form.controls.customerId.invalid && form.controls.customerId.touched) {
-        <p id="customerId-err" class="field-error" role="alert">Customer ID is required.</p>
+        <p id="customerId-err" class="field-error" role="alert">Customer is required.</p>
       }
       @if (fieldError('customerId')) {
         <p class="field-error" role="alert">{{ fieldError('customerId') }}</p>
       }
     </div>
 
-    <!-- Vehicle ID -->
+    <!-- Vehicle VIN search -->
     <div class="field-group">
-      <label for="vehicleId" class="field-label">Vehicle ID <span class="required" aria-hidden="true">*</span></label>
-      <input
-        id="vehicleId"
-        type="text"
-        formControlName="vehicleId"
-        class="field-input"
-        [class.field-input--error]="form.controls.vehicleId.invalid && form.controls.vehicleId.touched"
-        placeholder="e.g. 550e8400-e29b-41d4-a716-…"
-        aria-required="true"
-        [attr.aria-describedby]="form.controls.vehicleId.invalid && form.controls.vehicleId.touched ? 'vehicleId-err' : null"
-      />
+      <label for="vehicleVinSearch" class="field-label">Vehicle VIN <span class="required" aria-hidden="true">*</span></label>
+      <div class="typeahead-wrap">
+        <input
+          id="vehicleVinSearch"
+          type="text"
+          autocomplete="off"
+          class="field-input"
+          [class.field-input--error]="form.controls.vehicleId.invalid && form.controls.vehicleId.touched"
+          [value]="vehicleVinInput()"
+          (input)="onVehicleInput($any($event.target).value)"
+          (focus)="onVehicleFocus()"
+          (blur)="onVehicleBlur()"
+          [attr.aria-expanded]="showVehicleSuggestions() && vehicleSuggestions().length > 0"
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
+          placeholder="Enter or search VIN…"
+          aria-required="true"
+        />
+        @if (showVehicleSuggestions() && vehicleSuggestions().length > 0) {
+          <ul class="typeahead-suggestions" role="listbox">
+            @for (v of vehicleSuggestions(); track v.vehicleId ?? v.vin) {
+              <li class="typeahead-item" role="option" (mousedown)="selectVehicle(v)">
+                <span class="suggestion-primary">{{ v.vin }}</span>
+                @if (v.year || v.make || v.model) {
+                  <span class="suggestion-secondary">{{ v.year }} {{ v.make }} {{ v.model }}</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </div>
       @if (form.controls.vehicleId.invalid && form.controls.vehicleId.touched) {
-        <p id="vehicleId-err" class="field-error" role="alert">Vehicle ID is required.</p>
+        <p id="vehicleId-err" class="field-error" role="alert">Vehicle VIN is required.</p>
       }
       @if (fieldError('vehicleId')) {
         <p class="field-error" role="alert">{{ fieldError('vehicleId') }}</p>
       }
-    </div>
-
-    <!-- CRM Party ID (optional context) -->
-    <div class="field-group">
-      <label for="crmPartyId" class="field-label">CRM Party ID <span class="field-optional">(optional)</span></label>
-      <input
-        id="crmPartyId"
-        type="text"
-        formControlName="crmPartyId"
-        class="field-input"
-        placeholder="CRM party reference"
-      />
-    </div>
-
-    <!-- CRM Vehicle ID (optional context) -->
-    <div class="field-group">
-      <label for="crmVehicleId" class="field-label">CRM Vehicle ID <span class="field-optional">(optional)</span></label>
-      <input
-        id="crmVehicleId"
-        type="text"
-        formControlName="crmVehicleId"
-        class="field-input"
-        placeholder="CRM vehicle reference"
-      />
     </div>
 
     <!-- Global error -->
