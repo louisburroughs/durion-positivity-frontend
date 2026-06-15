@@ -20,10 +20,10 @@ describe('TimeApprovalPageComponent', () => {
     TestBed.resetTestingModule();
 
     peopleService = {
-      listApprovalPeople: vi.fn().mockReturnValue(of({ items: [{ personId: 'p1', displayName: 'Alice', employeeNumber: 'E001' }] })),
-      listTimePeriods: vi.fn().mockReturnValue(of({ items: [{ id: 't1', status: 'SUBMISSION_CLOSED', periodStartAt: '2024-01-01', periodEndAt: '2024-01-31' }] })),
-      listTimekeepingEntries: vi.fn().mockReturnValue(of({ items: [{ timeEntryId: 'e1', status: 'PENDING_APPROVAL', clockInAt: '08:00', clockOutAt: '17:00', locationId: 'loc-1' }] })),
-      listTimePeriodApprovals: vi.fn().mockReturnValue(of({ items: [{ outcome: 'APPROVED', approvedAt: '2024-01-15' }] })),
+      listApprovalPeople: vi.fn().mockReturnValue(of([{ personId: 'p1', displayName: 'Alice', employeeNumber: 'E001' }])),
+      listTimePeriods: vi.fn().mockReturnValue(of([{ timePeriodId: 't1', status: 'SUBMISSION_CLOSED', startDate: '2024-01-01', endDate: '2024-01-31' }])),
+      listTimekeepingEntries: vi.fn().mockReturnValue(of([{ timekeepingEntryId: 'e1', approvalStatus: 'PENDING_APPROVAL', sessionStartTime: '2024-01-10T08:00:00Z', sessionEndTime: '2024-01-10T17:00:00Z' }])),
+      listTimePeriodApprovals: vi.fn().mockReturnValue(of({ personId: 'p1', timePeriodId: 't1', overallStatus: 'PENDING_APPROVAL', totalCount: 1, pendingCount: 1, approvedCount: 0, rejectedCount: 0 })),
       approveTimePeriod: vi.fn().mockReturnValue(of({ status: 'ok' })),
       rejectTimePeriod: vi.fn().mockReturnValue(of({ status: 'ok' })),
     };

@@ -56,8 +56,6 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     component.form.setValue({
       customerId: 'cust-1',
       vehicleId: 'veh-1',
-      crmPartyId: '',
-      crmVehicleId: '',
     });
     component.submit();
     expect(component.state()).toBe('saving');
@@ -67,7 +65,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
   });
 
   it('should display access-denied message on 403', () => {
-    component.form.setValue({ customerId: 'c', vehicleId: 'v', crmPartyId: '', crmVehicleId: '' });
+    component.form.setValue({ customerId: 'c', vehicleId: 'v' });
     component.submit();
     const req = http.expectOne(`${BASE}/v1/workorders/estimates`);
     req.flush({ code: 'FORBIDDEN', message: 'Forbidden' }, { status: 403, statusText: 'Forbidden' });
@@ -76,7 +74,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
   });
 
   it('should display error message on server error', () => {
-    component.form.setValue({ customerId: 'c', vehicleId: 'v', crmPartyId: '', crmVehicleId: '' });
+    component.form.setValue({ customerId: 'c', vehicleId: 'v' });
     component.submit();
     const req = http.expectOne(`${BASE}/v1/workorders/estimates`);
     req.flush({ code: 'INTERNAL_ERROR', message: 'Server error' }, { status: 500, statusText: 'Error' });

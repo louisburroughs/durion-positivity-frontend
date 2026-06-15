@@ -26,8 +26,8 @@
           aria-describedby="period-help">
           <option value="">Select pay period</option>
           @for (period of periods(); track $index) {
-          <option [value]="$any(period).id">
-            {{ $any(period).status }} - {{ $any(period).periodStartAt }} to {{ $any(period).periodEndAt }}
+          <option [value]="$any(period).timePeriodId">
+            {{ $any(period).status }} - {{ $any(period).startDate }} to {{ $any(period).endDate }}
           </option>
           }
         </select>
@@ -90,11 +90,11 @@
         <tbody>
           @for (entry of entries(); track $index) {
           <tr data-testid="entry-row">
-            <td>{{ $any(entry).timeEntryId ?? $any(entry).id ?? '-' }}</td>
-            <td>{{ $any(entry).status ?? '-' }}</td>
-            <td>{{ $any(entry).clockInAt ?? '-' }}</td>
-            <td>{{ $any(entry).clockOutAt ?? '-' }}</td>
-            <td>{{ $any(entry).locationId ?? '-' }}</td>
+            <td>{{ $any(entry).timekeepingEntryId ?? '-' }}</td>
+            <td>{{ $any(entry).approvalStatus ?? '-' }}</td>
+            <td>{{ $any(entry).sessionStartTime ?? '-' }}</td>
+            <td>{{ $any(entry).sessionEndTime ?? '-' }}</td>
+            <td>{{ $any(entry).associatedWorkOrderId ?? '-' }}</td>
           </tr>
           }
         </tbody>
@@ -138,21 +138,21 @@
       <table data-testid="history-table">
         <thead>
           <tr>
-            <th scope="col">Outcome</th>
-            <th scope="col">Approved At</th>
-            <th scope="col">Approved By User ID</th>
-            <th scope="col">Entry Count</th>
-            <th scope="col">Comments</th>
+            <th scope="col">Overall Status</th>
+            <th scope="col">Total</th>
+            <th scope="col">Pending</th>
+            <th scope="col">Approved</th>
+            <th scope="col">Rejected</th>
           </tr>
         </thead>
         <tbody>
           @for (history of approvalHistory(); track $index) {
           <tr data-testid="history-row">
-            <td>{{ $any(history).outcome ?? $any(history).status ?? '-' }}</td>
-            <td>{{ $any(history).approvedAt ?? '-' }}</td>
-            <td>{{ $any(history).approvedByUserId ?? '-' }}</td>
-            <td>{{ $any(history).entryCount ?? '-' }}</td>
-            <td>{{ $any(history).comments ?? '-' }}</td>
+            <td>{{ $any(history).overallStatus ?? '-' }}</td>
+            <td>{{ $any(history).totalCount ?? '-' }}</td>
+            <td>{{ $any(history).pendingCount ?? '-' }}</td>
+            <td>{{ $any(history).approvedCount ?? '-' }}</td>
+            <td>{{ $any(history).rejectedCount ?? '-' }}</td>
           </tr>
           }
         </tbody>

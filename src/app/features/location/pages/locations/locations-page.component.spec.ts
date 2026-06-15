@@ -52,8 +52,8 @@ describe('LocationsPageComponent [CAP-136]', () => {
   it('renders .location-card for each location', async () => {
     await setup();
     component.locations.set([
-      { locationId: 'loc-1', name: 'North Shop' },
-      { locationId: 'loc-2', name: 'South Shop' },
+      { id: 'loc-1', name: 'North Shop' },
+      { id: 'loc-2', name: 'South Shop' },
     ]);
     fixture.detectChanges();
 
