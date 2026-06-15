@@ -6,20 +6,72 @@
   <!-- Filter card -->
   <section class="card filter-card" aria-label="{{ 'INVENTORY.AVAILABILITY.FILTER.ARIA' | translate }}">
     <div class="filter-row">
+
+      <!-- Product name / SKU typeahead -->
       <div class="field-group">
         <label class="field-label" for="avail-sku">{{ 'INVENTORY.AVAILABILITY.FILTER.SKU' | translate }}</label>
-        <input id="avail-sku" type="search" class="input-underline" [value]="skuInput()"
-          (input)="onSkuChange($any($event.target).value)"
-          [attr.placeholder]="'INVENTORY.AVAILABILITY.FILTER.SKU_PLACEHOLDER' | translate" />
+        <div class="typeahead-wrap">
+          <input
+            id="avail-sku"
+            type="search"
+            class="input-underline"
+            autocomplete="off"
+            [value]="productDisplayName()"
+            (input)="onProductInput($any($event.target).value)"
+            (focus)="onProductFocus()"
+            (blur)="onProductBlur()"
+            [attr.aria-expanded]="showProductSuggestions() && productSuggestions().length > 0"
+            aria-autocomplete="list"
+            aria-haspopup="listbox"
+            [attr.placeholder]="'INVENTORY.AVAILABILITY.FILTER.SKU_PLACEHOLDER' | translate"
+          />
+          @if (showProductSuggestions() && productSuggestions().length > 0) {
+            <ul class="typeahead-suggestions" role="listbox">
+              @for (p of productSuggestions(); track p.productId) {
+                <li class="typeahead-item" role="option" (mousedown)="selectProduct(p)">
+                  <span class="suggestion-primary">{{ p.name }}</span>
+                  <span class="suggestion-secondary">{{ p.sku }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
       </div>
+
+      <!-- Location typeahead -->
       <div class="field-group">
-        <label class="field-label" for="avail-location">{{ 'INVENTORY.AVAILABILITY.FILTER.LOCATION' | translate
-          }}</label>
-        <input id="avail-location" type="text" class="input-underline" [value]="locationIdInput()"
-          (input)="onLocationChange($any($event.target).value)"
-          [attr.placeholder]="'INVENTORY.AVAILABILITY.FILTER.LOCATION_PLACEHOLDER' | translate" />
+        <label class="field-label" for="avail-location">{{ 'INVENTORY.AVAILABILITY.FILTER.LOCATION' | translate }}</label>
+        <div class="typeahead-wrap">
+          <input
+            id="avail-location"
+            type="text"
+            class="input-underline"
+            autocomplete="off"
+            [value]="locationDisplayName()"
+            (input)="onLocationInput($any($event.target).value)"
+            (focus)="onLocationFocus()"
+            (blur)="onLocationBlur()"
+            [attr.aria-expanded]="showLocationSuggestions() && locationSuggestions().length > 0"
+            aria-autocomplete="list"
+            aria-haspopup="listbox"
+            [attr.placeholder]="'INVENTORY.AVAILABILITY.FILTER.LOCATION_PLACEHOLDER' | translate"
+          />
+          @if (showLocationSuggestions() && locationSuggestions().length > 0) {
+            <ul class="typeahead-suggestions" role="listbox">
+              @for (loc of locationSuggestions(); track loc.id) {
+                <li class="typeahead-item" role="option" (mousedown)="selectLocation(loc)">
+                  <span class="suggestion-primary">{{ loc.name }}</span>
+                  @if (loc.code) {
+                    <span class="suggestion-secondary">{{ loc.code }}</span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </div>
       </div>
-      <button class="btn-primary" type="button" (click)="search()">
+
+      <button class="btn-primary" type="button" (click)="search()" [disabled]="!skuInput().trim()">
         {{ 'COMMON.SEARCH' | translate }}
       </button>
     </div>
@@ -65,8 +117,7 @@
           <tr role="row">
             <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.SKU' | translate }}</th>
             <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.LOCATION' | translate }}</th>
-            <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.STORAGE_LOCATION' | translate }}
-            </th>
+            <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.STORAGE_LOCATION' | translate }}</th>
             <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.ON_HAND' | translate }}</th>
             <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.ALLOCATED' | translate }}</th>
             <th scope="col" role="columnheader">{{ 'INVENTORY.AVAILABILITY.TABLE.HEADER.ATP' | translate }}</th>

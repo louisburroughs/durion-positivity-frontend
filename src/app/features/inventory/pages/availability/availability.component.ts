@@ -1,13 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
+import { ProductsAPIService, ProductSummary } from '@durion-sdk/catalog';
+import { LocationAPIService, LocationResponseDTO } from '@durion-sdk/location';
 import { AvailabilityView } from '../../models/inventory.models';
 import { InventoryDomainService } from '../../services/inventory.service';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
+
+const MAX_SUGGESTIONS = 8;
 
 @Component({
   selector: 'app-inventory-availability',
@@ -20,6 +25,8 @@ export class AvailabilityComponent {
   private readonly inventoryService = inject(InventoryDomainService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly productsApi = inject(ProductsAPIService);
+  private readonly locationApi = inject(LocationAPIService);
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -27,32 +34,109 @@ export class AvailabilityComponent {
   readonly locationIdInput = signal('');
   readonly results = signal<AvailabilityView[]>([]);
 
+  // ── Product typeahead ──────────────────────────────────────────────────────
+  readonly productDisplayName = signal('');
+  readonly productSuggestions = signal<ProductSummary[]>([]);
+  readonly showProductSuggestions = signal(false);
+  private readonly productSearch$ = new Subject<string>();
+
+  // ── Location typeahead ─────────────────────────────────────────────────────
+  readonly allLocations = signal<LocationResponseDTO[]>([]);
+  readonly locationDisplayName = signal('');
+  readonly showLocationSuggestions = signal(false);
+
+  readonly locationSuggestions = computed<LocationResponseDTO[]>(() => {
+    const q = this.locationDisplayName().trim().toLowerCase();
+    const locs = this.allLocations();
+    if (!q) return locs.slice(0, MAX_SUGGESTIONS);
+    return locs.filter(l =>
+      l.name?.toLowerCase().includes(q) || l.code?.toLowerCase().includes(q),
+    ).slice(0, MAX_SUGGESTIONS);
+  });
+
   constructor() {
+    // Product search: debounce keystrokes, then call API
+    this.productSearch$.pipe(
+      debounceTime(250),
+      distinctUntilChanged(),
+      switchMap(q => {
+        if (!q.trim()) return of({ data: [] });
+        return this.productsApi.searchProducts(
+          q, undefined, undefined, undefined, undefined, String(MAX_SUGGESTIONS),
+          'body', false, { transferCache: false },
+        ).pipe(catchError(() => of({ data: [] })));
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(result => {
+      this.productSuggestions.set((result as { data?: ProductSummary[] }).data ?? []);
+    });
+
+    // Load all locations for typeahead
+    this.locationApi.getAllLocations('body', false, { transferCache: false })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: locs => this.allLocations.set(locs as LocationResponseDTO[]),
+        error: () => {},
+      });
+
+    // Pre-fill from query params
     const params = this.route.snapshot.queryParamMap;
     const sku = params.get('sku');
     const locationId = params.get('locationId') ?? undefined;
     if (sku) {
       this.skuInput.set(sku);
-      if (locationId) {
-        this.locationIdInput.set(locationId);
-      }
+      this.productDisplayName.set(sku);
+      if (locationId) this.locationIdInput.set(locationId);
       this.search();
     }
   }
 
-  onSkuChange(v: string): void {
-    this.skuInput.set(v);
+  // ── Product typeahead handlers ─────────────────────────────────────────────
+  onProductInput(value: string): void {
+    this.productDisplayName.set(value);
+    this.skuInput.set('');
+    this.showProductSuggestions.set(true);
+    this.productSearch$.next(value);
   }
 
-  onLocationChange(v: string): void {
-    this.locationIdInput.set(v);
+  onProductFocus(): void {
+    if (this.productSuggestions().length > 0) this.showProductSuggestions.set(true);
+  }
+
+  onProductBlur(): void {
+    setTimeout(() => this.showProductSuggestions.set(false), 150);
+  }
+
+  selectProduct(product: ProductSummary): void {
+    this.skuInput.set(product.sku ?? '');
+    this.productDisplayName.set(product.name ? `${product.name} (${product.sku})` : (product.sku ?? ''));
+    this.showProductSuggestions.set(false);
+  }
+
+  // ── Location typeahead handlers ────────────────────────────────────────────
+  onLocationInput(value: string): void {
+    this.locationDisplayName.set(value);
+    this.locationIdInput.set('');
+    this.showLocationSuggestions.set(true);
+  }
+
+  onLocationFocus(): void {
+    if (this.allLocations().length > 0) this.showLocationSuggestions.set(true);
+  }
+
+  onLocationBlur(): void {
+    setTimeout(() => this.showLocationSuggestions.set(false), 150);
+  }
+
+  selectLocation(loc: LocationResponseDTO): void {
+    this.locationIdInput.set(loc.id ?? '');
+    this.locationDisplayName.set(loc.name ?? loc.code ?? loc.id ?? '');
+    this.showLocationSuggestions.set(false);
   }
 
   search(): void {
     const sku = this.skuInput().trim();
-    if (!sku) {
-      return;
-    }
+    if (!sku) return;
     const locationId = this.locationIdInput().trim() || undefined;
 
     this.state.set('loading');
