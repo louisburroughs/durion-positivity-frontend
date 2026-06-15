@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { InventoryReferenceDataService } from '@durion-sdk/inventory';
+import { InventoryAvailabilityService, InventoryReferenceDataService } from '@durion-sdk/inventory';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   AvailabilityView,
@@ -29,21 +29,15 @@ import {
 export class InventoryDomainService {
   private readonly api = inject(ApiBaseService);
   private readonly refDataSdk = inject(InventoryReferenceDataService);
+  private readonly availabilitySdk = inject(InventoryAvailabilityService);
 
   queryAvailability(
     sku: string,
     locationId?: string,
     storageLocationId?: string,
   ): Observable<AvailabilityView[]> {
-    let params = new HttpParams().set('productSku', sku);
-    if (locationId) {
-      params = params.set('locationId', locationId);
-    }
-    if (storageLocationId) {
-      params = params.set('storageLocationId', storageLocationId);
-    }
-    return this.api.get<AvailabilityView>('/inventory/v1/availability/by-sku', params).pipe(
-      map(view => (view ? [view] : [])),
+    return this.availabilitySdk.listAvailabilityBySku(sku, locationId, storageLocationId).pipe(
+      map(view => (view ? [view as unknown as AvailabilityView] : [])),
     );
   }
 
