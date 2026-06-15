@@ -57,7 +57,7 @@ export class TimeApprovalPageComponent {
 
   readonly selectedPeriodStatus = computed<PeriodStatus | null>(() => {
     const periodId = this.selectionForm.getRawValue().timePeriodId;
-    const period = (this.periods() as Array<Record<string, unknown>>).find((p) => p['id'] === periodId);
+    const period = (this.periods() as Array<Record<string, unknown>>).find((p) => p['timePeriodId'] === periodId);
     return (period?.['status'] as PeriodStatus) ?? null;
   });
 
@@ -67,7 +67,7 @@ export class TimeApprovalPageComponent {
     if (this.detailLoading() || this.actionInFlight()) return false;
     if (this.entries().length === 0) return false;
     if (status === 'OPEN' || status === 'PAYROLL_CLOSED') return false;
-    const allPending = (this.entries() as Array<Record<string, unknown>>).every(e => e['status'] === 'PENDING_APPROVAL');
+    const allPending = (this.entries() as Array<Record<string, unknown>>).every(e => e['approvalStatus'] === 'PENDING_APPROVAL');
     return allPending;
   });
 
@@ -85,7 +85,7 @@ export class TimeApprovalPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (r) => {
-          this.people.set(Array.isArray(r['items']) ? r['items'] : []);
+          this.people.set(Array.isArray(r) ? r : []);
           this.peopleLoading.set(false);
         },
         error: () => {
@@ -101,7 +101,7 @@ export class TimeApprovalPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (r) => {
-          this.periods.set(Array.isArray(r['items']) ? r['items'] : []);
+          this.periods.set(Array.isArray(r) ? r : []);
           this.periodsLoading.set(false);
         },
         error: () => {
@@ -129,7 +129,7 @@ export class TimeApprovalPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (r) => {
-          this.entries.set(Array.isArray(r['items']) ? r['items'] : []);
+          this.entries.set(Array.isArray(r) ? r : []);
           this.detailLoading.set(false);
         },
         error: () => {
@@ -143,7 +143,7 @@ export class TimeApprovalPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (r) => {
-          this.approvalHistory.set(Array.isArray(r['items']) ? r['items'] : []);
+          this.approvalHistory.set(r ? [r] : []);
           this.historyLoading.set(false);
         },
         error: () => { this.historyLoading.set(false); },
@@ -190,8 +190,7 @@ export class TimeApprovalPageComponent {
     this.actionError.set(null);
     this.actionSuccess.set(null);
     const { comments } = this.rejectForm.getRawValue();
-    const body: Record<string, string> = {};
-    if (comments.trim()) body['comments'] = comments.trim();
+    const body: Record<string, string> = { reason: comments.trim() };
     this.peopleService.rejectTimePeriod(timePeriodId, personId, body)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

@@ -27,7 +27,6 @@ export interface WorkSessionSubmitRequest {
 }
 
 type DisableEmployeeRequest = Parameters<EmployeeAPIService['disableEmployee']>[1];
-type TimekeepingCollectionResponse = Record<string, unknown>;
 
 @Injectable({ providedIn: 'root' })
 export class PeopleService {
@@ -100,23 +99,23 @@ export class PeopleService {
     return this.accessControlApi.revokeAssignment(personUuid, roleCode);
   }
 
-  listApprovalPeople(): Observable<TimekeepingCollectionResponse> {
-    return this.api.get<TimekeepingCollectionResponse>('/v1/people/timekeeping/approvals/people');
+  listApprovalPeople(): Observable<unknown[]> {
+    return this.api.get<unknown[]>('/v1/people/timekeeping/approvals/people');
   }
 
-  listTimePeriods(): Observable<TimekeepingCollectionResponse> {
-    return this.api.get<TimekeepingCollectionResponse>('/v1/people/timekeeping/time-periods');
+  listTimePeriods(): Observable<unknown[]> {
+    return this.api.get<unknown[]>('/v1/people/timekeeping/time-periods');
   }
 
-  listTimekeepingEntries(personId: string, timePeriodId: string): Observable<TimekeepingCollectionResponse> {
-    return this.api.get<TimekeepingCollectionResponse>(
+  listTimekeepingEntries(personId: string, timePeriodId: string): Observable<unknown[]> {
+    return this.api.get<unknown[]>(
       '/v1/people/timekeeping/timekeeping-entries',
       this.timekeepingParams(personId, timePeriodId),
     );
   }
 
-  listTimePeriodApprovals(personId: string, timePeriodId: string): Observable<TimekeepingCollectionResponse> {
-    return this.api.get<TimekeepingCollectionResponse>(
+  listTimePeriodApprovals(personId: string, timePeriodId: string): Observable<Record<string, unknown>> {
+    return this.api.get<Record<string, unknown>>(
       '/v1/people/timekeeping/time-period-approvals',
       this.timekeepingParams(personId, timePeriodId),
     );
