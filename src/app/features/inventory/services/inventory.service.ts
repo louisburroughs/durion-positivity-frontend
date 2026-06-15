@@ -35,14 +35,16 @@ export class InventoryDomainService {
     locationId?: string,
     storageLocationId?: string,
   ): Observable<AvailabilityView[]> {
-    let params = new HttpParams().set('sku', sku);
+    let params = new HttpParams().set('productSku', sku);
     if (locationId) {
       params = params.set('locationId', locationId);
     }
     if (storageLocationId) {
       params = params.set('storageLocationId', storageLocationId);
     }
-    return this.api.get<AvailabilityView[]>('/inventory/v1/availability', params);
+    return this.api.get<AvailabilityView>('/inventory/v1/availability/by-sku', params).pipe(
+      map(view => (view ? [view] : [])),
+    );
   }
 
   getLocations(): Observable<LocationRef[]> {
