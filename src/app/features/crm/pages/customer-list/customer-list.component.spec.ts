@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CustomerListComponent } from './customer-list.component';
 import { CrmService } from '../../services/crm.service';
@@ -10,13 +10,21 @@ const crmServiceStub = {
   searchParties: vi.fn(),
 };
 
+const party = (id: string) => ({ partyId: id, legalName: id });
+const partyPage = (parties: ReturnType<typeof party>[], totalCount: number) => ({
+  parties,
+  totalCount,
+  pageNumber: 0,
+  pageSize: 25,
+});
+
 describe('CustomerListComponent', () => {
   let fixture: ComponentFixture<CustomerListComponent>;
   let component: CustomerListComponent;
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    crmServiceStub.browseParties.mockReturnValue(of({ parties: [] }));
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage([], 0)));
     crmServiceStub.searchParties.mockReturnValue(of({ parties: [] }));
 
     await TestBed.configureTestingModule({
@@ -67,5 +75,52 @@ describe('CustomerListComponent', () => {
 
     expect(component.state()).toBe('error');
     expect(component.error()).toBe('Search failed.');
+  });
+
+  it('accumulates browse pages across loadMore and stops at the last page', () => {
+    crmServiceStub.browseParties
+      .mockReturnValueOnce(of(partyPage([party('a'), party('b')], 3)))
+      .mockReturnValueOnce(of(partyPage([party('c')], 3)));
+
+    fixture.detectChanges(); // ngOnInit -> first browse page
+    expect(component.parties().length).toBe(2);
+    expect(component.totalCount()).toBe(3);
+    expect(component.hasMore()).toBe(true);
+
+    component.loadMore();
+    expect(component.parties().map(p => p.partyId)).toEqual(['a', 'b', 'c']);
+    expect(component.hasMore()).toBe(false);
+
+    crmServiceStub.browseParties.mockClear();
+    component.loadMore(); // no more pages -> guarded
+    expect(crmServiceStub.browseParties).not.toHaveBeenCalled();
+  });
+
+  it('does not load browse pages while in search mode', () => {
+    fixture.detectChanges();
+    component.search('acme'); // searching = true
+    crmServiceStub.browseParties.mockClear();
+
+    component.loadMore();
+
+    expect(crmServiceStub.browseParties).not.toHaveBeenCalled();
+  });
+
+  it('discards a browse page that resolves after a newer search', () => {
+    const pending = new Subject<unknown>();
+    crmServiceStub.browseParties.mockReturnValueOnce(pending.asObservable());
+
+    fixture.detectChanges(); // first browse page in flight (unresolved)
+
+    crmServiceStub.searchParties.mockReturnValueOnce(of({ parties: [party('search-hit')] }));
+    component.search('acme'); // new generation; search results applied
+
+    // stale browse page now resolves — must be ignored, not appended
+    pending.next(partyPage([party('stale')], 99));
+    pending.complete();
+
+    expect(component.parties().map(p => p.partyId)).toEqual(['search-hit']);
+    expect(component.totalCount()).toBe(0);
+    expect(component.state()).toBe('ready');
   });
 });

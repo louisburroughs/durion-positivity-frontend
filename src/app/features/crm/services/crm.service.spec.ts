@@ -10,7 +10,7 @@ import {
   CRMSnapshotsService,
   CRMVehiclesService,
 } from '@durion-sdk/customer';
-import { CrmService } from './crm.service';
+import { CrmService, PartyPage } from './crm.service';
 import type { BillingRules, CrmSnapshot, PartyDetail } from '../models/crm.models';
 import type { Pageable } from '@durion-sdk/customer';
 
@@ -171,20 +171,25 @@ describe('CrmService', () => {
   });
 
   describe('browseParties()', () => {
-    it('calls crmAccounts.browseParties with default pageable and maps results into parties', () => {
+    it('requests the first page and maps results plus paging metadata', () => {
       crmAccountsStub.browseParties.mockReturnValueOnce(
         of({ results: [browseParty], totalCount: 1, pageNumber: 0, pageSize: 20 }),
       );
 
-      let result: { parties: PartyDetail[] } | undefined;
+      let result: PartyPage | undefined;
       service.browseParties().subscribe(value => {
         result = value;
       });
 
-      const expectedPageable: Pageable = {};
+      const expectedPageable: Pageable = { page: 0, size: 25 };
 
       expect(crmAccountsStub.browseParties).toHaveBeenCalledWith(expectedPageable);
-      expect(result).toEqual({ parties: [browseParty] });
+      expect(result).toEqual({
+        parties: [browseParty],
+        totalCount: 1,
+        pageNumber: 0,
+        pageSize: 20,
+      });
     });
   });
 

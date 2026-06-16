@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, DestroyRef, ViewChild, ElementRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -18,15 +18,44 @@ type SortDir   = 'asc' | 'desc';
   templateUrl: './customer-list.component.html',
   styleUrl: './customer-list.component.css',
 })
-export class CustomerListComponent implements OnInit {
+export class CustomerListComponent implements OnInit, OnDestroy {
   private readonly crm       = inject(CrmService);
   private readonly router    = inject(Router);
   private readonly fb        = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
+  private static readonly PAGE_SIZE = 25;
+
   readonly state   = signal<PageState>('loading');
   readonly parties = signal<PartyDetail[]>([]);
   readonly error   = signal<string | null>(null);
+
+  readonly totalCount  = signal(0);
+  readonly loadingMore = signal(false);
+  private page = 0;
+  /** True while showing search results, which are returned unpaged. */
+  private searching = false;
+  /**
+   * Generation token. Incremented on every new search/browse reset so that a
+   * slow in-flight request that resolves after the user has moved on (e.g. a
+   * browse page landing after a search started) is discarded instead of
+   * corrupting the list.
+   */
+  private loadSeq = 0;
+
+  /** More browse pages remain to load (not in search mode). */
+  readonly hasMore = computed(() => !this.searching && this.parties().length < this.totalCount());
+
+  private observer?: IntersectionObserver;
+
+  /** Sentinel at the bottom of the list; loads the next page when scrolled into view. */
+  @ViewChild('loadSentinel')
+  set loadSentinel(el: ElementRef<HTMLElement> | undefined) {
+    this.observer?.disconnect();
+    if (el?.nativeElement) {
+      this.observer?.observe(el.nativeElement);
+    }
+  }
 
   readonly sortField = signal<SortField>('name');
   readonly sortDir   = signal<SortDir>('asc');
@@ -45,6 +74,13 @@ export class CustomerListComponent implements OnInit {
   readonly searchForm = this.fb.nonNullable.group({ query: [''] });
 
   ngOnInit(): void {
+    if (typeof IntersectionObserver !== 'undefined') {
+      this.observer = new IntersectionObserver(entries => {
+        if (entries.some(e => e.isIntersecting)) {
+          this.loadMore();
+        }
+      });
+    }
     this.searchForm.controls.query.valueChanges.pipe(
       debounceTime(350),
       distinctUntilChanged(),
@@ -53,21 +89,77 @@ export class CustomerListComponent implements OnInit {
     this.search('');
   }
 
+  ngOnDestroy(): void {
+    this.observer?.disconnect();
+  }
+
   search(q: string): void {
     const query = q.trim();
-    const request$ = query ? this.crm.searchParties(query) : this.crm.browseParties();
+    const seq = ++this.loadSeq;
     this.state.set('loading');
     this.error.set(null);
-    request$.subscribe({
-      next: res => {
-        this.parties.set(res.parties ?? []);
-        this.state.set(res.parties?.length ? 'ready' : 'empty');
-      },
-      error: err => {
-        this.state.set(err?.status === 403 ? 'access-denied' : 'error');
-        this.error.set(err?.error?.message ?? 'Search failed.');
-      },
-    });
+    this.page = 0;
+    this.parties.set([]);
+    this.totalCount.set(0);
+    this.loadingMore.set(false);
+
+    if (query) {
+      // Search results are returned unpaged.
+      this.searching = true;
+      this.crm.searchParties(query).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: res => {
+          if (seq !== this.loadSeq) return;
+          this.parties.set(res.parties ?? []);
+          this.state.set(res.parties?.length ? 'ready' : 'empty');
+        },
+        error: err => {
+          if (seq !== this.loadSeq) return;
+          this.handleError(err);
+        },
+      });
+    } else {
+      this.searching = false;
+      this.loadBrowsePage(true, seq);
+    }
+  }
+
+  /** Load the next browse page (invoked by the scroll sentinel). */
+  loadMore(): void {
+    if (this.searching || this.loadingMore() || !this.hasMore()) {
+      return;
+    }
+    this.page += 1;
+    this.loadBrowsePage(false, this.loadSeq);
+  }
+
+  private loadBrowsePage(first: boolean, seq: number): void {
+    if (first) {
+      this.state.set('loading');
+    } else {
+      this.loadingMore.set(true);
+    }
+    this.crm.browseParties(this.page, CustomerListComponent.PAGE_SIZE)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          // Discard a page that resolved after a newer search/browse reset.
+          if (seq !== this.loadSeq) return;
+          this.parties.update(current => (first ? res.parties : [...current, ...res.parties]));
+          this.totalCount.set(res.totalCount);
+          this.loadingMore.set(false);
+          this.state.set(this.parties().length ? 'ready' : 'empty');
+        },
+        error: err => {
+          if (seq !== this.loadSeq) return;
+          this.loadingMore.set(false);
+          this.handleError(err);
+        },
+      });
+  }
+
+  private handleError(err: { status?: number; error?: { message?: string } }): void {
+    this.state.set(err?.status === 403 ? 'access-denied' : 'error');
+    this.error.set(err?.error?.message ?? 'Search failed.');
   }
 
   sort(field: SortField): void {
