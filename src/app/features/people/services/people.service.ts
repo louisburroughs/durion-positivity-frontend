@@ -100,37 +100,37 @@ export class PeopleService {
   }
 
   listApprovalPeople(): Observable<unknown[]> {
-    return this.api.get<unknown[]>('/v1/people/timekeeping/approvals/people');
+    return this.api.get<unknown[]>('/people/v1/people/timekeeping/approvals/people');
   }
 
   listTimePeriods(): Observable<unknown[]> {
-    return this.api.get<unknown[]>('/v1/people/timekeeping/time-periods');
+    return this.api.get<unknown[]>('/people/v1/people/timekeeping/time-periods');
   }
 
   listTimekeepingEntries(personId: string, timePeriodId: string): Observable<unknown[]> {
     return this.api.get<unknown[]>(
-      '/v1/people/timekeeping/timekeeping-entries',
+      '/people/v1/people/timekeeping/timekeeping-entries',
       this.timekeepingParams(personId, timePeriodId),
     );
   }
 
   listTimePeriodApprovals(personId: string, timePeriodId: string): Observable<Record<string, unknown>> {
     return this.api.get<Record<string, unknown>>(
-      '/v1/people/timekeeping/time-period-approvals',
+      '/people/v1/people/timekeeping/time-period-approvals',
       this.timekeepingParams(personId, timePeriodId),
     );
   }
 
   approveTimePeriod(timePeriodId: string, personId: string): Observable<void> {
     return this.api.post<void>(
-      `/v1/people/timekeeping/time-periods/${encodeURIComponent(timePeriodId)}/people/${encodeURIComponent(personId)}/approve`,
+      `/people/v1/people/timekeeping/time-periods/${encodeURIComponent(timePeriodId)}/people/${encodeURIComponent(personId)}/approve`,
       {},
     );
   }
 
   rejectTimePeriod(timePeriodId: string, personId: string, request: Record<string, string>): Observable<void> {
     return this.api.post<void>(
-      `/v1/people/timekeeping/time-periods/${encodeURIComponent(timePeriodId)}/people/${encodeURIComponent(personId)}/reject`,
+      `/people/v1/people/timekeeping/time-periods/${encodeURIComponent(timePeriodId)}/people/${encodeURIComponent(personId)}/reject`,
       request,
     );
   }
