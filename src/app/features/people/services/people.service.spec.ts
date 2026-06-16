@@ -240,7 +240,7 @@ describe('PeopleService', () => {
 
     service.listApprovalPeople().subscribe();
 
-    expect(apiBaseStub.get).toHaveBeenCalledWith('/v1/people/timekeeping/approvals/people');
+    expect(apiBaseStub.get).toHaveBeenCalledWith('/people/v1/people/timekeeping/approvals/people');
   });
 
   it('listTimePeriods() calls the time periods endpoint', () => {
@@ -248,7 +248,7 @@ describe('PeopleService', () => {
 
     service.listTimePeriods().subscribe();
 
-    expect(apiBaseStub.get).toHaveBeenCalledWith('/v1/people/timekeeping/time-periods');
+    expect(apiBaseStub.get).toHaveBeenCalledWith('/people/v1/people/timekeeping/time-periods');
   });
 
   it('listTimekeepingEntries() calls the entries endpoint with personId and timePeriodId params', () => {
@@ -257,7 +257,7 @@ describe('PeopleService', () => {
     service.listTimekeepingEntries('p-1', 'tp-1').subscribe();
 
     const [path, params] = apiBaseStub.get.mock.calls[0];
-    expect(path).toBe('/v1/people/timekeeping/timekeeping-entries');
+    expect(path).toBe('/people/v1/people/timekeeping/timekeeping-entries');
     expect(params.get('personId')).toBe('p-1');
     expect(params.get('timePeriodId')).toBe('tp-1');
   });
@@ -268,7 +268,7 @@ describe('PeopleService', () => {
     service.listTimePeriodApprovals('p-1', 'tp-1').subscribe();
 
     const [path, params] = apiBaseStub.get.mock.calls[0];
-    expect(path).toBe('/v1/people/timekeeping/time-period-approvals');
+    expect(path).toBe('/people/v1/people/timekeeping/time-period-approvals');
     expect(params.get('personId')).toBe('p-1');
     expect(params.get('timePeriodId')).toBe('tp-1');
   });
@@ -279,7 +279,7 @@ describe('PeopleService', () => {
     service.approveTimePeriod('tp/1', 'person 1').subscribe();
 
     expect(apiBaseStub.post).toHaveBeenCalledWith(
-      '/v1/people/timekeeping/time-periods/tp%2F1/people/person%201/approve',
+      '/people/v1/people/timekeeping/time-periods/tp%2F1/people/person%201/approve',
       {},
     );
   });
@@ -291,7 +291,7 @@ describe('PeopleService', () => {
     service.rejectTimePeriod('tp/1', 'person 1', request).subscribe();
 
     expect(apiBaseStub.post).toHaveBeenCalledWith(
-      '/v1/people/timekeeping/time-periods/tp%2F1/people/person%201/reject',
+      '/people/v1/people/timekeeping/time-periods/tp%2F1/people/person%201/reject',
       request,
     );
   });
@@ -343,7 +343,7 @@ describe('PeopleService', () => {
     service.submitWorkSession('session/1', request).subscribe();
 
     expect(apiBaseStub.post).toHaveBeenCalledWith(
-      '/v1/people/workSessions/session%2F1/submit',
+      '/people/v1/people/workSessions/session%2F1/submit',
       request,
     );
   });
