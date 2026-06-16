@@ -45,6 +45,14 @@ import {
   VehicleRef,
 } from '../models/crm.models';
 
+/** One server-side page of the customer directory. */
+export interface PartyPage {
+  parties: PartyDetail[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CrmService {
   private readonly accountsApi = inject(CRMAccountsService);
@@ -91,11 +99,21 @@ export class CrmService {
     return this.accountsApi.getParty(partyId) as Observable<PartyDetail>;
   }
 
-  browseParties(): Observable<{ parties: PartyDetail[] }> {
-    const sdkPageable: SdkPageable = {};
+  /**
+   * Browse customers one server-side page at a time. The directory loads pages
+   * incrementally as the user scrolls (see CustomerListComponent), so paging metadata
+   * (totalCount, pageNumber, pageSize) is returned alongside the page contents.
+   */
+  browseParties(page = 0, size = 25): Observable<PartyPage> {
+    const sdkPageable: SdkPageable = { page, size };
 
     return this.accountsApi.browseParties(sdkPageable).pipe(
-      map(response => ({ parties: (response.results ?? []) as PartyDetail[] })),
+      map(response => ({
+        parties: (response.results ?? []) as PartyDetail[],
+        totalCount: response.totalCount ?? 0,
+        pageNumber: response.pageNumber ?? page,
+        pageSize: response.pageSize ?? size,
+      })),
     );
   }
 

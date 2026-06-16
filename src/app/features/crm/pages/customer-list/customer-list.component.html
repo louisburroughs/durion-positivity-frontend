@@ -102,6 +102,20 @@
           </tbody>
         </table>
       </div>
+
+      @if (hasMore()) {
+        <div #loadSentinel class="load-sentinel" aria-hidden="true"></div>
+      }
+
+      @if (loadingMore()) {
+        <p class="hint-text" aria-busy="true">Loading more…</p>
+      }
+
+      @if (totalCount()) {
+        <p class="hint-text result-count" aria-live="polite">
+          Showing {{ parties().length }} of {{ totalCount() }}
+        </p>
+      }
     }
   </div>
 
