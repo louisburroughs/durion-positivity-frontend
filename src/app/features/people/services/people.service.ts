@@ -153,7 +153,7 @@ export class PeopleService {
 
   submitWorkSession(sessionId: string, request: WorkSessionSubmitRequest): Observable<Record<string, unknown> | null> {
     return this.api.post<Record<string, unknown> | null>(
-      `/people/v1/people/workSessions/${encodeURIComponent(sessionId)}/submit`,
+      `/v1/people/workSessions/${encodeURIComponent(sessionId)}/submit`,
       request,
     );
   }
