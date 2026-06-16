@@ -35,6 +35,13 @@ export class CustomerListComponent implements OnInit, OnDestroy {
   private page = 0;
   /** True while showing search results, which are returned unpaged. */
   private searching = false;
+  /**
+   * Generation token. Incremented on every new search/browse reset so that a
+   * slow in-flight request that resolves after the user has moved on (e.g. a
+   * browse page landing after a search started) is discarded instead of
+   * corrupting the list.
+   */
+  private loadSeq = 0;
 
   /** More browse pages remain to load (not in search mode). */
   readonly hasMore = computed(() => !this.searching && this.parties().length < this.totalCount());
@@ -88,25 +95,31 @@ export class CustomerListComponent implements OnInit, OnDestroy {
 
   search(q: string): void {
     const query = q.trim();
+    const seq = ++this.loadSeq;
     this.state.set('loading');
     this.error.set(null);
     this.page = 0;
     this.parties.set([]);
     this.totalCount.set(0);
+    this.loadingMore.set(false);
 
     if (query) {
       // Search results are returned unpaged.
       this.searching = true;
-      this.crm.searchParties(query).subscribe({
+      this.crm.searchParties(query).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: res => {
+          if (seq !== this.loadSeq) return;
           this.parties.set(res.parties ?? []);
           this.state.set(res.parties?.length ? 'ready' : 'empty');
         },
-        error: err => this.handleError(err),
+        error: err => {
+          if (seq !== this.loadSeq) return;
+          this.handleError(err);
+        },
       });
     } else {
       this.searching = false;
-      this.loadBrowsePage(true);
+      this.loadBrowsePage(true, seq);
     }
   }
 
@@ -116,27 +129,32 @@ export class CustomerListComponent implements OnInit, OnDestroy {
       return;
     }
     this.page += 1;
-    this.loadBrowsePage(false);
+    this.loadBrowsePage(false, this.loadSeq);
   }
 
-  private loadBrowsePage(first: boolean): void {
+  private loadBrowsePage(first: boolean, seq: number): void {
     if (first) {
       this.state.set('loading');
     } else {
       this.loadingMore.set(true);
     }
-    this.crm.browseParties(this.page, CustomerListComponent.PAGE_SIZE).subscribe({
-      next: res => {
-        this.parties.update(current => (first ? res.parties : [...current, ...res.parties]));
-        this.totalCount.set(res.totalCount);
-        this.loadingMore.set(false);
-        this.state.set(this.parties().length ? 'ready' : 'empty');
-      },
-      error: err => {
-        this.loadingMore.set(false);
-        this.handleError(err);
-      },
-    });
+    this.crm.browseParties(this.page, CustomerListComponent.PAGE_SIZE)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          // Discard a page that resolved after a newer search/browse reset.
+          if (seq !== this.loadSeq) return;
+          this.parties.update(current => (first ? res.parties : [...current, ...res.parties]));
+          this.totalCount.set(res.totalCount);
+          this.loadingMore.set(false);
+          this.state.set(this.parties().length ? 'ready' : 'empty');
+        },
+        error: err => {
+          if (seq !== this.loadSeq) return;
+          this.loadingMore.set(false);
+          this.handleError(err);
+        },
+      });
   }
 
   private handleError(err: { status?: number; error?: { message?: string } }): void {

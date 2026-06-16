@@ -30,7 +30,8 @@
   </form>
 
   <!-- Results -->
-  <div id="search-results" aria-live="polite" aria-atomic="true">
+  <!-- aria-atomic=false: incremental page appends announce only added rows/status, not the whole table -->
+  <div id="search-results" aria-live="polite" aria-atomic="false">
 
     @if (state() === 'loading') {
       <p class="hint-text" aria-busy="true">Searching…</p>
