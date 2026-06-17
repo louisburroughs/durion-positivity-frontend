@@ -187,6 +187,8 @@ export interface PartyDetail {
   contacts?: Contact[];
   /** Directory-row primary contact, supplied by browse/search responses. */
   primaryContact?: PrimaryContact;
+  /** Vehicle count supplied by browse/search responses (full list not included). */
+  vehicleCount?: number;
   vehicles?: VehicleRef[];
   mergedIntoPartyId?: string;
   readonly createdAt?: string;

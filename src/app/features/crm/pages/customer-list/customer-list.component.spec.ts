@@ -123,4 +123,18 @@ describe('CustomerListComponent', () => {
     expect(component.totalCount()).toBe(0);
     expect(component.state()).toBe('ready');
   });
+
+  it('returns the primary contact supplied on the party summary', () => {
+    const pc = { name: 'Jane Doe', email: 'jane@acme.com', phone: '555-1234' };
+    const contact = component.primaryContact({ partyId: 'p1', legalName: 'Acme', primaryContact: pc });
+
+    expect(contact).toEqual(pc);
+  });
+
+  it('returns undefined when the party has no primary contact', () => {
+    expect(component.primaryContact({ partyId: 'p1', legalName: 'Acme' })).toBeUndefined();
+    expect(
+      component.primaryContact({ partyId: 'p2', legalName: 'Beta', primaryContact: { email: 'x@y.com' } }),
+    ).toBeUndefined();
+  });
 });

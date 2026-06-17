@@ -66,7 +66,7 @@ export class CustomerListComponent implements OnInit, OnDestroy {
     return [...this.parties()].sort((a, b) => {
       const cmp = field === 'name'
         ? a.legalName.localeCompare(b.legalName)
-        : (a.vehicles?.length ?? 0) - (b.vehicles?.length ?? 0);
+        : (a.vehicleCount ?? a.vehicles?.length ?? 0) - (b.vehicleCount ?? b.vehicles?.length ?? 0);
       return dir === 'asc' ? cmp : -cmp;
     });
   });
