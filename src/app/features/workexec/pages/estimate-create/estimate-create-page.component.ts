@@ -43,8 +43,8 @@ export class EstimateCreatePageComponent implements OnInit {
     if (!q) return all.slice(0, MAX_SUGGESTIONS);
     return all.filter(c => {
       const name = `${c.firstName ?? ''} ${c.lastName ?? ''}`.toLowerCase();
-      const email = (c.email ?? '').toLowerCase();
-      return name.includes(q) || email.includes(q);
+      const customerNumber = (c.customerNumber ?? '').toLowerCase();
+      return name.includes(q) || customerNumber.includes(q);
     }).slice(0, MAX_SUGGESTIONS);
   });
 
