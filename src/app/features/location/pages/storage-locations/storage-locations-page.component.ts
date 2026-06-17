@@ -168,8 +168,16 @@ export class StorageLocationsPageComponent {
     const page = this.toRecord(response);
     const totalPages = Number(page?.['totalPages']);
     const totalElements = Number(page?.['totalElements']);
-    this.totalPages.set(Number.isFinite(totalPages) ? totalPages : 0);
+    const pages = Number.isFinite(totalPages) ? totalPages : 0;
+    this.totalPages.set(pages);
     this.totalElements.set(Number.isFinite(totalElements) ? totalElements : 0);
+
+    // If the current page fell out of range (e.g. deactivating the last row of
+    // the last page), clamp to the last valid page and reload once.
+    if (pages > 0 && this.pageIndex() >= pages) {
+      this.pageIndex.set(pages - 1);
+      this.loadStorageLocations();
+    }
   }
 
   loadStorageTypes(): void {
