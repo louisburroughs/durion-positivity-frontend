@@ -1,29 +1,48 @@
-<section class="page-header">
-  <h2>{{ 'LOCATION.BAYS.TITLE' | translate }}</h2>
-  <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">{{ 'LOCATION.BAYS.CREATE_BAY' | translate }}</button>
-</section>
+<app-location-picker
+  label="Location"
+  [selectedId]="locationId()"
+  (locationSelected)="onLocationSelected($event)"
+  (invalidSelection)="onInvalidSelection($event)"
+></app-location-picker>
+
+@if (invalidId()) {
+  <div class="error-banner" role="alert">Location not found — select another.</div>
+}
+
+@if (!locationId()) {
+  <section class="empty-state">
+    <p>Select a location to view and edit its bays.</p>
+  </section>
+}
 
 @if (error()) {
   <div class="error-banner">{{ error()! | translate }}</div>
 }
 
-@if (loading()) {
-  <section class="bays-grid">
-    <p>{{ 'LOCATION.BAYS.LOADING' | translate }}</p>
+@if (locationId()) {
+  <section class="page-header">
+    <h2>{{ 'LOCATION.BAYS.TITLE' | translate }}</h2>
+    <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">{{ 'LOCATION.BAYS.CREATE_BAY' | translate }}</button>
   </section>
-} @else {
-  @if (bays().length > 0) {
+
+  @if (loading()) {
     <section class="bays-grid">
-      @for (bay of bays(); track $index) {
-        <button type="button" class="bay-card" (click)="selectBay(bay)">
-          <h3>{{ getBayName(bay) }}</h3>
-        </button>
-      }
+      <p>{{ 'LOCATION.BAYS.LOADING' | translate }}</p>
     </section>
   } @else {
-    <section class="empty-state">
-      <p>{{ 'LOCATION.BAYS.EMPTY' | translate }}</p>
-    </section>
+    @if (bays().length > 0) {
+      <section class="bays-grid">
+        @for (bay of bays(); track $index) {
+          <button type="button" class="bay-card" (click)="selectBay(bay)">
+            <h3>{{ getBayName(bay) }}</h3>
+          </button>
+        }
+      </section>
+    } @else {
+      <section class="empty-state">
+        <p>{{ 'LOCATION.BAYS.EMPTY' | translate }}</p>
+      </section>
+    }
   }
 }
 
