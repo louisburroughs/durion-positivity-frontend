@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
-import { Contact, PartyDetail } from '../../models/crm.models';
+import { PartyDetail, PrimaryContact } from '../../models/crm.models';
 
 type PageState = 'loading' | 'empty' | 'ready' | 'error' | 'access-denied';
 type SortField = 'name' | 'vehicles';
@@ -171,8 +171,8 @@ export class CustomerListComponent implements OnInit, OnDestroy {
     }
   }
 
-  primaryContact(party: PartyDetail): Contact | undefined {
-    return party.contacts?.find(c => c.roles.includes('PRIMARY')) ?? party.contacts?.[0];
+  primaryContact(party: PartyDetail): PrimaryContact | undefined {
+    return party.primaryContact?.name ? party.primaryContact : undefined;
   }
 
   openParty(partyId: string): void {

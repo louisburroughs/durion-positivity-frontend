@@ -185,10 +185,19 @@ export interface PartyDetail {
   taxId?: string;
   defaultBillingTermsId?: string;
   contacts?: Contact[];
+  /** Directory-row primary contact, supplied by browse/search responses. */
+  primaryContact?: PrimaryContact;
   vehicles?: VehicleRef[];
   mergedIntoPartyId?: string;
   readonly createdAt?: string;
   readonly createdBy?: string;
+}
+
+/** Lightweight primary-contact projection returned with party summaries. */
+export interface PrimaryContact {
+  name?: string;
+  email?: string;
+  phone?: string;
 }
 
 export interface CrmSnapshot {
