@@ -6,7 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TranslateModule } from '@ngx-translate/core';
 import { StorageLocationsPageComponent } from './storage-locations-page.component';
 import { LocationService } from '../../services/location.service';
-import { InventoryService } from '../../services/inventory.service';
+import { InventoryLocationsService } from '@durion-sdk/inventory';
 
 // Location-service storage model: Spring page wrapper, `type`/`barcode`, no `code`.
 const STORAGE_PAGE = {
@@ -53,7 +53,7 @@ describe('StorageLocationsPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: locationServiceStub },
-        { provide: InventoryService, useValue: inventoryServiceStub },
+        { provide: InventoryLocationsService, useValue: inventoryServiceStub },
       ],
     }).compileComponents();
 
@@ -132,7 +132,7 @@ describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () 
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: locationServiceStub },
-        { provide: InventoryService, useValue: inventoryServiceStub },
+        { provide: InventoryLocationsService, useValue: inventoryServiceStub },
         {
           provide: ActivatedRoute,
           useValue: { queryParams: of({ locationId: 'LOC-001' }) },

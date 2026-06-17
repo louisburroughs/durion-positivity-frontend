@@ -13,8 +13,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
+import { InventoryLocationsService } from '@durion-sdk/inventory';
 import { LocationService, STORAGE_LOCATION_TYPES } from '../../services/location.service';
-import { InventoryService } from '../../services/inventory.service';
 import { LocationPickerComponent } from '../../components/location-picker/location-picker.component';
 
 interface LocationInventory {
@@ -34,7 +34,7 @@ export class StorageLocationsPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly locationService = inject(LocationService);
-  private readonly inventoryService = inject(InventoryService);
+  private readonly inventoryLocations = inject(InventoryLocationsService);
   private readonly destroyRef = inject(DestroyRef);
 
   private static readonly PAGE_SIZE = 20;
@@ -174,7 +174,7 @@ export class StorageLocationsPageComponent {
     }
 
     const calls = ids.map(id =>
-      this.inventoryService.listLocationInventoryItems(id).pipe(
+      this.inventoryLocations.listLocationInventoryItems(id).pipe(
         map(resp => ({ id, inv: this.toLocationInventory(resp) })),
         catchError(() => of({ id, inv: { count: 0, items: [] } as LocationInventory })),
       ),
