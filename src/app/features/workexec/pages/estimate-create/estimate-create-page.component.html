@@ -31,7 +31,7 @@
           [attr.aria-expanded]="showCustomerSuggestions() && customerSuggestions().length > 0"
           aria-autocomplete="list"
           aria-haspopup="listbox"
-          placeholder="Search by name or email…"
+          placeholder="Search by name or customer number…"
           aria-required="true"
         />
         @if (showCustomerSuggestions() && customerSuggestions().length > 0) {
@@ -39,8 +39,8 @@
             @for (c of customerSuggestions(); track c.id) {
               <li class="typeahead-item" role="option" (mousedown)="selectCustomer(c)">
                 <span class="suggestion-primary">{{ c.firstName }} {{ c.lastName }}</span>
-                @if (c.email) {
-                  <span class="suggestion-secondary">{{ c.email }}</span>
+                @if (c.customerNumber) {
+                  <span class="suggestion-secondary">{{ c.customerNumber }}</span>
                 }
               </li>
             }
