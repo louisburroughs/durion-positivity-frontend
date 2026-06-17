@@ -66,6 +66,37 @@ describe('LocationPickerComponent', () => {
     expect(component.displayValue()).toBe('');
   });
 
+  it('clears the selection when the input is emptied after a valid selection', () => {
+    const spy = vi.fn();
+    component.locationSelected.subscribe(spy);
+    component.select(locations[1]);
+    expect(component.displayValue()).toBe('Raleigh Yard');
+    component.onInput('');
+    expect(spy).toHaveBeenLastCalledWith('');
+    expect(component.displayValue()).toBe('');
+  });
+
+  it('emits invalidSelection exactly once for an unknown id despite other signal changes', () => {
+    const spy = vi.fn();
+    component.invalidSelection.subscribe(spy);
+    fixture.componentRef.setInput('selectedId', 'nope');
+    fixture.detectChanges();
+    component.onFocus();
+    fixture.detectChanges();
+    fixture.componentRef.setInput('selectedId', 'nope');
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it('selects the first suggestion via ArrowDown then Enter', () => {
+    const spy = vi.fn();
+    component.locationSelected.subscribe(spy);
+    component.onInput('');
+    component.onKeydown(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+    component.onKeydown(new KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(spy).toHaveBeenCalledWith('loc-1');
+  });
+
   it('shows an error state when locations fail to load', () => {
     locationServiceStub.getAllLocations.mockReturnValue(throwError(() => ({ status: 500 })));
     const fx = TestBed.createComponent(LocationPickerComponent);

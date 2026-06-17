@@ -61,6 +61,7 @@ export class LocationPickerComponent {
   readonly open = signal(false);
   readonly activeIndex = signal(-1);
   private readonly typed = signal(false);
+  private readonly lastInvalidEmitted = signal('');
 
   readonly displayValue = computed(() => {
     if (this.typed()) {
@@ -107,7 +108,10 @@ export class LocationPickerComponent {
         return;
       }
       if (!this.all().some(l => l.id === id)) {
-        this.invalidSelection.emit(id);
+        if (this.lastInvalidEmitted() !== id) {
+          this.lastInvalidEmitted.set(id);
+          this.invalidSelection.emit(id);
+        }
       }
     });
   }
@@ -120,6 +124,16 @@ export class LocationPickerComponent {
   }
 
   onInput(value: string): void {
+    if (!value.trim()) {
+      this.typed.set(true);
+      this.query.set('');
+      this.open.set(true);
+      this.activeIndex.set(-1);
+      this._selectedId.set('');
+      this.lastInvalidEmitted.set('');
+      this.locationSelected.emit('');
+      return;
+    }
     this.typed.set(true);
     this.query.set(value);
     this.open.set(true);
@@ -160,6 +174,7 @@ export class LocationPickerComponent {
     this.typed.set(false);
     this.query.set('');
     this._selectedId.set(loc.id);
+    this.lastInvalidEmitted.set('');
     this.open.set(false);
     this.activeIndex.set(-1);
     this.locationSelected.emit(loc.id);
