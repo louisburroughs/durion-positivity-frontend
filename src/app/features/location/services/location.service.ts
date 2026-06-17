@@ -15,7 +15,22 @@ import type {
   BayPatchRequest,
   MobileUnitRequest,
   SiteDefaultsRequest,
+  StorageLocationRequest,
+  StorageLocationPatchRequest,
 } from '@durion-sdk/location';
+
+/**
+ * Storage location types exposed by the location service
+ * (StorageLocationType enum). The location service has no meta endpoint, so the
+ * stable enum set is provided client-side for the create form.
+ */
+export const STORAGE_LOCATION_TYPES: ReadonlyArray<{ value: string; label: string }> = [
+  { value: 'FLOOR', label: 'Floor' },
+  { value: 'SHELF', label: 'Shelf' },
+  { value: 'BIN', label: 'Bin' },
+  { value: 'CAGE', label: 'Cage' },
+  { value: 'TRUCK', label: 'Truck' },
+];
 
 @Injectable({ providedIn: 'root' })
 export class LocationService {
@@ -60,6 +75,41 @@ export class LocationService {
     const pageable = { page: params?.pageIndex, size: params?.pageSize };
     const status = params?.status as 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE' | 'QUARANTINED' | undefined;
     return this.storageLocationApi.list2(siteId, pageable, undefined, status) as Observable<unknown>;
+  }
+
+  // NOTE: idempotencyKey is accepted for parity with the other write methods on
+  // this service, but the location SDK's create2/patch2 expose no Idempotency-Key
+  // header hook, so it is not yet forwarded. Threading it via an HttpContext
+  // interceptor is a separate follow-up.
+  createStorageLocation(
+    siteId: string,
+    body: Record<string, unknown>,
+    idempotencyKey?: string,
+  ): Observable<unknown> {
+    const request: StorageLocationRequest = {
+      name: this.asOptionalString(body['name']),
+      type: this.asOptionalString(body['type']) as StorageLocationRequest['type'],
+      barcode: this.asOptionalString(body['barcode']),
+      parentStorageLocationId: this.asOptionalString(body['parentStorageLocationId']),
+    };
+    return this.storageLocationApi.create2(siteId, request) as Observable<unknown>;
+  }
+
+  /**
+   * Deactivates a storage location by patching its status to INACTIVE. An
+   * optional destination is forwarded for the relocate-on-deactivate flow.
+   */
+  deactivateStorageLocation(
+    siteId: string,
+    storageLocationId: string,
+    body: Record<string, unknown>,
+    idempotencyKey?: string,
+  ): Observable<unknown> {
+    const patch: StorageLocationPatchRequest = {
+      status: 'INACTIVE' as StorageLocationPatchRequest['status'],
+      destinationStorageLocationId: this.asOptionalString(body['destinationStorageLocationId']),
+    };
+    return this.storageLocationApi.patch2(siteId, storageLocationId, patch) as Observable<unknown>;
   }
 
   configureLocationDefaults(locationId: string, body: unknown, idempotencyKey?: string): Observable<unknown> {
