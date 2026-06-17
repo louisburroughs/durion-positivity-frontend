@@ -58,14 +58,6 @@ export class InventoryService {
     return this.api.get<unknown>(`${InventoryService.BASE}/meta/storage-types`);
   }
 
-  /**
-   * On-hand stock items at a single storage location:
-   * { locationId, items: [{ stockItemId, onHandQuantity }] }.
-   */
-  listLocationInventoryItems(locationId: string): Observable<unknown> {
-    return this.api.get<unknown>(`${InventoryService.BASE}/locations/${locationId}/inventory-items`);
-  }
-
   listSyncLogs(params?: { pageIndex?: number; pageSize?: number; outcome?: string }): Observable<unknown> {
     const httpParams = this.toHttpParams(params);
     return this.api.get<unknown>(`${InventoryService.BASE}/sync-logs`, httpParams);
