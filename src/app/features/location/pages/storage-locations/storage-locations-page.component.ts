@@ -10,9 +10,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
 import { LocationService, STORAGE_LOCATION_TYPES } from '../../services/location.service';
+import { InventoryService } from '../../services/inventory.service';
 import { LocationPickerComponent } from '../../components/location-picker/location-picker.component';
+
+interface LocationInventory {
+  count: number;
+  items: { stockItemId: string; onHandQuantity: number }[];
+}
 
 @Component({
   selector: 'app-storage-locations-page',
@@ -26,6 +34,7 @@ export class StorageLocationsPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly locationService = inject(LocationService);
+  private readonly inventoryService = inject(InventoryService);
   private readonly destroyRef = inject(DestroyRef);
 
   private static readonly PAGE_SIZE = 20;
@@ -42,6 +51,8 @@ export class StorageLocationsPageComponent {
   readonly canNextPage = computed(() => this.pageIndex() + 1 < this.totalPages());
   readonly storageLocationsError = signal<string | null>(null);
   readonly storageTypesError = signal<string | null>(null);
+  readonly inventoryByLocation = signal<Record<string, LocationInventory>>({});
+  readonly expandedLocations = signal<Set<string>>(new Set());
   readonly showCreateForm = signal(false);
   readonly creating = signal(false);
   readonly createError = signal<string | null>(null);
@@ -105,6 +116,8 @@ export class StorageLocationsPageComponent {
     this.locationId.set('');
     this.storageLocations.set([]);
     this.storageTypes.set([]);
+    this.inventoryByLocation.set({});
+    this.expandedLocations.set(new Set());
     this.pageIndex.set(0);
     this.totalPages.set(0);
     this.totalElements.set(0);
@@ -133,15 +146,85 @@ export class StorageLocationsPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          this.storageLocations.set(this.normalizeItems(response));
+          const rows = this.normalizeItems(response);
+          this.storageLocations.set(rows);
           this.applyPageMeta(response);
           this.loading.set(false);
+          this.loadInventory(rows);
         },
         error: (err: unknown) => {
           this.storageLocationsError.set(this.errorMessage(err, 'Failed to load storage locations.'));
           this.loading.set(false);
         },
       });
+  }
+
+  /**
+   * Fetches on-hand contents for each storage location on the current page in
+   * parallel, so the row count and the expandable contents are ready together.
+   */
+  private loadInventory(rows: unknown[]): void {
+    this.inventoryByLocation.set({});
+    this.expandedLocations.set(new Set());
+    const ids = rows
+      .map(r => String(this.toRecord(r)?.['id'] ?? ''))
+      .filter(id => id.length > 0);
+    if (ids.length === 0) {
+      return;
+    }
+
+    const calls = ids.map(id =>
+      this.inventoryService.listLocationInventoryItems(id).pipe(
+        map(resp => ({ id, inv: this.toLocationInventory(resp) })),
+        catchError(() => of({ id, inv: { count: 0, items: [] } as LocationInventory })),
+      ),
+    );
+
+    forkJoin(calls)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(results => {
+        const map: Record<string, LocationInventory> = {};
+        for (const { id, inv } of results) {
+          map[id] = inv;
+        }
+        this.inventoryByLocation.set(map);
+      });
+  }
+
+  private toLocationInventory(resp: unknown): LocationInventory {
+    const payload = this.toRecord(resp);
+    const rawItems = Array.isArray(payload?.['items']) ? (payload?.['items'] as unknown[]) : [];
+    const items = rawItems.map(it => {
+      const rec = this.toRecord(it);
+      return {
+        stockItemId: String(rec?.['stockItemId'] ?? ''),
+        onHandQuantity: Number(rec?.['onHandQuantity'] ?? 0),
+      };
+    });
+    const count = items.reduce((sum, it) => sum + (Number.isFinite(it.onHandQuantity) ? it.onHandQuantity : 0), 0);
+    return { count, items };
+  }
+
+  inventoryCount(locationId: string): number {
+    return this.inventoryByLocation()[locationId]?.count ?? 0;
+  }
+
+  inventoryItems(locationId: string): { stockItemId: string; onHandQuantity: number }[] {
+    return this.inventoryByLocation()[locationId]?.items ?? [];
+  }
+
+  isExpanded(locationId: string): boolean {
+    return this.expandedLocations().has(locationId);
+  }
+
+  toggleExpand(locationId: string): void {
+    const next = new Set(this.expandedLocations());
+    if (next.has(locationId)) {
+      next.delete(locationId);
+    } else {
+      next.add(locationId);
+    }
+    this.expandedLocations.set(next);
   }
 
   goToPage(index: number): void {

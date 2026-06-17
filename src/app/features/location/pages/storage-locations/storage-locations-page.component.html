@@ -47,6 +47,7 @@
           <th>Type</th>
           <th>Barcode</th>
           <th>Status</th>
+          <th>Inventory</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -58,6 +59,18 @@
           <td>{{ $any(loc).barcode }}</td>
           <td>{{ $any(loc).status }}</td>
           <td>
+            @if (inventoryCount($any(loc).id) > 0) {
+            <button type="button" class="inventory-toggle"
+              [attr.aria-expanded]="isExpanded($any(loc).id)"
+              (click)="toggleExpand($any(loc).id)"
+              [attr.data-testid]="'inventory-toggle-' + $index">
+              {{ inventoryCount($any(loc).id) }} {{ isExpanded($any(loc).id) ? '▾' : '▸' }}
+            </button>
+            } @else {
+            <span data-testid="inventory-empty">0</span>
+            }
+          </td>
+          <td>
             @if ($any(loc).status === 'ACTIVE') {
             <button type="button" (click)="openDeactivateDialog(loc)" [attr.data-testid]="'deactivate-btn-' + $index">
               Deactivate
@@ -65,10 +78,29 @@
             }
           </td>
         </tr>
+        @if (isExpanded($any(loc).id)) {
+        <tr [attr.data-testid]="'inventory-contents-' + $index">
+          <td colspan="6">
+            <table class="inventory-contents">
+              <thead>
+                <tr><th>SKU</th><th>On hand</th></tr>
+              </thead>
+              <tbody>
+                @for (item of inventoryItems($any(loc).id); track item.stockItemId) {
+                <tr>
+                  <td>{{ item.stockItemId }}</td>
+                  <td>{{ item.onHandQuantity }}</td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </td>
+        </tr>
+        }
         }
         @empty {
         <tr>
-          <td colspan="5" data-testid="empty-state">No storage locations found.</td>
+          <td colspan="6" data-testid="empty-state">No storage locations found.</td>
         </tr>
         }
       </tbody>
