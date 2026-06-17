@@ -10,7 +10,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { v4 as uuidv4 } from 'uuid';
-import { InventoryService } from '../../services/inventory.service';
+import { LocationService, STORAGE_LOCATION_TYPES } from '../../services/location.service';
 import { LocationPickerComponent } from '../../components/location-picker/location-picker.component';
 
 @Component({
@@ -24,7 +24,7 @@ import { LocationPickerComponent } from '../../components/location-picker/locati
 export class StorageLocationsPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly inventoryService = inject(InventoryService);
+  private readonly locationService = inject(LocationService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly locationId = signal('');
@@ -47,7 +47,6 @@ export class StorageLocationsPageComponent {
 
   readonly createForm = new FormGroup({
     locationId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    code: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     storageType: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     parentStorageLocationId: new FormControl('', { nonNullable: true }),
@@ -113,7 +112,7 @@ export class StorageLocationsPageComponent {
     this.loading.set(true);
     this.storageLocationsError.set(null);
 
-    this.inventoryService.listStorageLocations(locationId, { pageSize: 50 })
+    this.locationService.listStorageLocations(locationId, { pageSize: 50 })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
@@ -128,17 +127,10 @@ export class StorageLocationsPageComponent {
   }
 
   loadStorageTypes(): void {
+    // The location service has no storage-types meta endpoint; the StorageLocationType
+    // enum is fixed, so the options are sourced from a client-side constant.
     this.storageTypesError.set(null);
-    this.inventoryService.listStorageTypes()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response) => {
-          this.storageTypes.set(this.normalizeItems(response));
-        },
-        error: (err: unknown) => {
-          this.storageTypesError.set(this.errorMessage(err, 'Failed to load storage types.'));
-        },
-      });
+    this.storageTypes.set([...STORAGE_LOCATION_TYPES]);
   }
 
   openCreateForm(): void {
@@ -147,7 +139,6 @@ export class StorageLocationsPageComponent {
     this.createError.set(null);
     this.createForm.reset({
       locationId: this.locationId(),
-      code: '',
       name: '',
       storageType: '',
       parentStorageLocationId: '',
@@ -170,9 +161,15 @@ export class StorageLocationsPageComponent {
     this.createError.set(null);
     this.createSuccess.set(false);
 
-    const body = this.createForm.getRawValue();
+    const form = this.createForm.getRawValue();
+    const body = {
+      name: form.name,
+      type: form.storageType,
+      barcode: form.barcode,
+      parentStorageLocationId: form.parentStorageLocationId,
+    };
 
-    this.inventoryService.createStorageLocation(body, uuidv4())
+    this.locationService.createStorageLocation(this.locationId(), body, uuidv4())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -226,7 +223,7 @@ export class StorageLocationsPageComponent {
         : {}),
     };
 
-    this.inventoryService.deactivateStorageLocation(id, body, uuidv4())
+    this.locationService.deactivateStorageLocation(this.locationId(), id, body, uuidv4())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -253,8 +250,8 @@ export class StorageLocationsPageComponent {
       return response;
     }
     const payload = this.toRecord(response);
-    const items = payload?.['items'];
-    return Array.isArray(items) ? items : [];
+    const content = payload?.['content'] ?? payload?.['items'];
+    return Array.isArray(content) ? content : [];
   }
 
   private isDestinationRequiredError(err: unknown): boolean {
