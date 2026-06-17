@@ -240,12 +240,19 @@ describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () 
 
   it('should set requiresDestination when DESTINATION_REQUIRED error returned', async () => {
     await setup();
+    // Location service surfaces an RFC 9457 ProblemDetail (422, marker in `detail`),
+    // not the legacy inventory `{ status: 409, error: { code } }` envelope.
     locationServiceStub.deactivateStorageLocation.mockReturnValue(
       throwError(
         () =>
           new HttpErrorResponse({
-            status: 409,
-            error: { code: 'DESTINATION_REQUIRED', message: 'Destination required.' },
+            status: 422,
+            error: {
+              type: 'about:blank',
+              title: 'Unprocessable Content',
+              status: 422,
+              detail: 'DESTINATION_REQUIRED',
+            },
           }),
       ),
     );

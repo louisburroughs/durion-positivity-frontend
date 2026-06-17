@@ -255,23 +255,22 @@ export class StorageLocationsPageComponent {
   }
 
   private isDestinationRequiredError(err: unknown): boolean {
-    const code = this.toCode(err);
-    return code === 'DESTINATION_REQUIRED';
+    // The location service returns an RFC 9457 ProblemDetail
+    // ({ status: 422, detail: 'DESTINATION_REQUIRED' }); the marker is in
+    // `detail`. Legacy `code`/`errorCode` are also checked for safety.
+    const payload = this.toRecord(this.toRecord(err)?.['error']);
+    const marker = payload?.['detail'] ?? payload?.['code'] ?? payload?.['errorCode'];
+    return typeof marker === 'string' && marker.includes('DESTINATION_REQUIRED');
   }
 
   private errorMessage(err: unknown, fallback: string): string {
+    // ProblemDetail carries the message in `detail`; fall back to legacy `message`.
     const payload = this.toRecord(this.toRecord(err)?.['error']);
-    const message = payload?.['message'];
+    const message = payload?.['detail'] ?? payload?.['message'];
     return typeof message === 'string' && message.trim().length > 0 ? message : fallback;
   }
 
   private toRecord(value: unknown): Record<string, unknown> | null {
     return value !== null && typeof value === 'object' ? value as Record<string, unknown> : null;
-  }
-
-  private toCode(err: unknown): string | null {
-    const payload = this.toRecord(this.toRecord(err)?.['error']);
-    const code = payload?.['code'] ?? payload?.['errorCode'];
-    return typeof code === 'string' ? code : null;
   }
 }

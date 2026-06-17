@@ -77,6 +77,10 @@ export class LocationService {
     return this.storageLocationApi.list2(siteId, pageable, undefined, status) as Observable<unknown>;
   }
 
+  // NOTE: idempotencyKey is accepted for parity with the other write methods on
+  // this service, but the location SDK's create2/patch2 expose no Idempotency-Key
+  // header hook, so it is not yet forwarded. Threading it via an HttpContext
+  // interceptor is a separate follow-up.
   createStorageLocation(
     siteId: string,
     body: Record<string, unknown>,

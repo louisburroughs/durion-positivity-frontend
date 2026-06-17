@@ -97,9 +97,7 @@
           data-testid="create-storage-type-select">
           <option value="">Select a storage type</option>
           @for (type of storageTypes(); track $index) {
-          <option [value]="$any(type).value ?? $any(type).storageType ?? $any(type).code">
-            {{ $any(type).label ?? $any(type).name ?? $any(type).value }}
-          </option>
+          <option [value]="$any(type).value">{{ $any(type).label }}</option>
           }
         </select>
         <span id="field-error-storage-type" role="alert" aria-live="polite" data-testid="field-error-storage-type">
