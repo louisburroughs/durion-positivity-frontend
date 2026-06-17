@@ -73,6 +73,20 @@
         }
       </tbody>
     </table>
+
+    @if (totalPages() > 1) {
+    <nav class="pagination" aria-label="Storage locations pagination" data-testid="storage-pagination">
+      <button type="button" (click)="prevPage()" [disabled]="!canPrevPage()" data-testid="page-prev">
+        Previous
+      </button>
+      <span aria-live="polite" data-testid="page-status">
+        Page {{ pageIndex() + 1 }} of {{ totalPages() }} ({{ totalElements() }} total)
+      </span>
+      <button type="button" (click)="nextPage()" [disabled]="!canNextPage()" data-testid="page-next">
+        Next
+      </button>
+    </nav>
+    }
   </section>
   }
 
