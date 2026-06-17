@@ -52,7 +52,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (loc of storageLocations(); track $index) {
+        @for (loc of storageLocations(); track $any(loc).id ?? $index) {
         <tr [attr.data-testid]="'storage-location-row-' + $index">
           <td>{{ $any(loc).name }}</td>
           <td>{{ $any(loc).type }}</td>
@@ -62,6 +62,7 @@
             @if (inventoryCount($any(loc).id) > 0) {
             <button type="button" class="inventory-toggle"
               [attr.aria-expanded]="isExpanded($any(loc).id)"
+              [attr.aria-label]="(isExpanded($any(loc).id) ? 'Hide contents, ' : 'Show contents, ') + inventoryCount($any(loc).id) + ' on hand'"
               (click)="toggleExpand($any(loc).id)"
               [attr.data-testid]="'inventory-toggle-' + $index">
               {{ inventoryCount($any(loc).id) }} {{ isExpanded($any(loc).id) ? '▾' : '▸' }}

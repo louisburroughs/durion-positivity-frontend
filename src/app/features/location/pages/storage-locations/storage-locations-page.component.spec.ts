@@ -366,4 +366,30 @@ describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () 
 
     expect(component.inventoryCount('SL-1')).toBe(0);
   });
+
+  it('clears inventory + expand state when the location is cleared', async () => {
+    await setup();
+    inventoryServiceStub.listLocationInventoryItems.mockImplementation((id: string) =>
+      of(id === 'SL-1' ? { items: [{ stockItemId: 'MICH-1', onHandQuantity: 9 }] } : { items: [] }));
+    component.loadStorageLocations();
+    component.toggleExpand('SL-1');
+    expect(component.inventoryByLocation()['SL-1']?.count).toBe(9);
+    expect(component.isExpanded('SL-1')).toBe(true);
+
+    component.onLocationSelected('');
+
+    expect(component.inventoryByLocation()).toEqual({});
+    expect(component.isExpanded('SL-1')).toBe(false);
+  });
+
+  it('re-fetches inventory for the new page on page change', async () => {
+    await setup({ content: [{ id: 'SL-1', name: 'A', type: 'BIN', status: 'ACTIVE' }], number: 0, totalPages: 3, totalElements: 45 });
+    locationServiceStub.listStorageLocations.mockReturnValue(
+      of({ content: [{ id: 'SL-9', name: 'Z', type: 'BIN', status: 'ACTIVE' }], number: 1, totalPages: 3, totalElements: 45 }));
+    inventoryServiceStub.listLocationInventoryItems.mockClear();
+
+    component.nextPage();
+
+    expect(inventoryServiceStub.listLocationInventoryItems).toHaveBeenCalledWith('SL-9');
+  });
 });
