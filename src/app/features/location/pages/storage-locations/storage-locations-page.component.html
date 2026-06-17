@@ -1,8 +1,29 @@
 <main>
   <header class="page-header">
     <h1>Storage Locations</h1>
-    <button type="button" (click)="openCreateForm()" data-testid="open-create-btn">Add Storage Location</button>
   </header>
+
+  <app-location-picker
+    label="Location"
+    [selectedId]="locationId()"
+    (locationSelected)="onLocationSelected($event)"
+    (invalidSelection)="onInvalidSelection($event)"
+  ></app-location-picker>
+
+  @if (invalidId()) {
+  <div class="error-banner" role="alert">Location not found — select another.</div>
+  }
+
+  @if (!locationId()) {
+  <section class="empty-state">
+    <p>Select a location to view and edit its storage locations.</p>
+  </section>
+  }
+
+  @if (locationId()) {
+  <section class="page-actions">
+    <button type="button" (click)="openCreateForm()" data-testid="open-create-btn">Add Storage Location</button>
+  </section>
 
   @if (loading()) {
   <p aria-live="polite" data-testid="loading">Loading...</p>
@@ -129,6 +150,7 @@
     <p role="alert" aria-live="polite" data-testid="create-error">{{ createError() }}</p>
     }
   </section>
+  }
   }
 
   @if (showDeactivateDialog()) {

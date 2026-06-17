@@ -1,10 +1,11 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
-import { provideRouter, ActivatedRoute } from '@angular/router';
+import { provideRouter, Router, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { HttpErrorResponse } from '@angular/common/http';
 import { StorageLocationsPageComponent } from './storage-locations-page.component';
 import { InventoryService } from '../../services/inventory.service';
+import { LocationService } from '../../services/location.service';
 
 const STORAGE_LOCATIONS = [
   { storageLocationId: 'SL-1', name: 'Staging Area', code: 'STG', storageType: 'STAGING', status: 'ACTIVE' },
@@ -23,12 +24,75 @@ const stubInventoryService = {
   deactivateStorageLocation: vi.fn(),
 };
 
-describe('StorageLocationsPageComponent [CAP-214 #103]', () => {
+const locationServiceStub = {
+  getAllLocations: vi.fn().mockReturnValue(of([
+    { id: 'loc-1', name: 'Depot' },
+    { id: 'LOC-001', name: 'Main Warehouse' },
+  ])),
+};
+
+describe('StorageLocationsPageComponent', () => {
+  let fixture: ComponentFixture<StorageLocationsPageComponent>;
+  let component: StorageLocationsPageComponent;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    locationServiceStub.getAllLocations.mockReturnValue(of([
+      { id: 'loc-1', name: 'Depot' },
+      { id: 'LOC-001', name: 'Main Warehouse' },
+    ]));
+    stubInventoryService.listStorageLocations.mockReturnValue(of({ items: [{ id: 's-1' }] }));
+    stubInventoryService.listStorageTypes.mockReturnValue(of({ items: [] }));
+
+    await TestBed.configureTestingModule({
+      imports: [StorageLocationsPageComponent],
+      providers: [
+        provideRouter([]),
+        { provide: InventoryService, useValue: stubInventoryService },
+        { provide: LocationService, useValue: locationServiceStub },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(StorageLocationsPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('does not load storage locations before a location is selected', () => {
+    expect(component.locationId()).toBe('');
+    expect(stubInventoryService.listStorageLocations).not.toHaveBeenCalled();
+  });
+
+  it('loads and writes the query param on selection', () => {
+    const navSpy = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component.onLocationSelected('loc-1');
+    expect(component.locationId()).toBe('loc-1');
+    expect(stubInventoryService.listStorageLocations).toHaveBeenCalledWith('loc-1', { pageSize: 50 });
+    expect(navSpy).toHaveBeenCalledWith([], expect.objectContaining({
+      queryParams: { locationId: 'loc-1' },
+      queryParamsHandling: 'merge',
+    }));
+  });
+
+  it('resets on invalid id', () => {
+    component.onLocationSelected('loc-1');
+    component.onInvalidSelection('bad');
+    expect(component.locationId()).toBe('');
+    expect(component.invalidId()).toBe(true);
+    expect(component.storageLocations()).toEqual([]);
+  });
+});
+
+describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () => {
   let fixture: ComponentFixture<StorageLocationsPageComponent>;
   let component: StorageLocationsPageComponent;
 
   const setup = async () => {
     vi.clearAllMocks();
+    locationServiceStub.getAllLocations.mockReturnValue(of([
+      { id: 'loc-1', name: 'Depot' },
+      { id: 'LOC-001', name: 'Main Warehouse' },
+    ]));
     stubInventoryService.listStorageLocations.mockReturnValue(of(STORAGE_LOCATIONS));
     stubInventoryService.listStorageTypes.mockReturnValue(of(STORAGE_TYPES));
     stubInventoryService.createStorageLocation.mockReturnValue(of({ storageLocationId: 'SL-NEW' }));
@@ -39,6 +103,7 @@ describe('StorageLocationsPageComponent [CAP-214 #103]', () => {
       providers: [
         provideRouter([]),
         { provide: InventoryService, useValue: stubInventoryService },
+        { provide: LocationService, useValue: locationServiceStub },
         {
           provide: ActivatedRoute,
           useValue: { queryParams: of({ locationId: 'LOC-001' }) },
@@ -73,6 +138,10 @@ describe('StorageLocationsPageComponent [CAP-214 #103]', () => {
 
   it('should show empty state when no storage locations', async () => {
     vi.clearAllMocks();
+    locationServiceStub.getAllLocations.mockReturnValue(of([
+      { id: 'loc-1', name: 'Depot' },
+      { id: 'LOC-001', name: 'Main Warehouse' },
+    ]));
     stubInventoryService.listStorageLocations.mockReturnValue(of([]));
     stubInventoryService.listStorageTypes.mockReturnValue(of(STORAGE_TYPES));
     stubInventoryService.createStorageLocation.mockReturnValue(of({}));
@@ -83,6 +152,7 @@ describe('StorageLocationsPageComponent [CAP-214 #103]', () => {
       providers: [
         provideRouter([]),
         { provide: InventoryService, useValue: stubInventoryService },
+        { provide: LocationService, useValue: locationServiceStub },
         {
           provide: ActivatedRoute,
           useValue: { queryParams: of({ locationId: 'LOC-001' }) },
