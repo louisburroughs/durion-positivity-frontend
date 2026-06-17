@@ -7,24 +7,28 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { v4 as uuidv4 } from 'uuid';
 import { InventoryService } from '../../services/inventory.service';
+import { LocationPickerComponent } from '../../components/location-picker/location-picker.component';
 
 @Component({
   selector: 'app-storage-locations-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe, LocationPickerComponent],
   templateUrl: './storage-locations-page.component.html',
   styleUrl: './storage-locations-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StorageLocationsPageComponent {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly inventoryService = inject(InventoryService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly locationId = signal('');
+  readonly invalidId = signal(false);
   readonly storageLocations = signal<unknown[]>([]);
   readonly storageTypes = signal<unknown[]>([]);
   readonly loading = signal(false);
@@ -55,6 +59,9 @@ export class StorageLocationsPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
         const routeLocationId = String(params['locationId'] ?? '');
+        if (routeLocationId === this.locationId()) {
+          return;
+        }
         this.locationId.set(routeLocationId);
         this.createForm.controls.locationId.setValue(routeLocationId);
         if (!routeLocationId) {
@@ -64,6 +71,37 @@ export class StorageLocationsPageComponent {
         this.loadStorageLocations();
         this.loadStorageTypes();
       });
+  }
+
+  onLocationSelected(locationId: string): void {
+    if (!locationId) {
+      this.resetToPrompt();
+      this.invalidId.set(false);
+      return;
+    }
+    this.invalidId.set(false);
+    this.locationId.set(locationId);
+    this.createForm.controls.locationId.setValue(locationId);
+    this.router.navigate([], { queryParams: { locationId }, queryParamsHandling: 'merge' });
+    this.loadStorageLocations();
+    this.loadStorageTypes();
+  }
+
+  onInvalidSelection(_id: string): void {
+    this.resetToPrompt();
+    this.invalidId.set(true);
+  }
+
+  private resetToPrompt(): void {
+    this.locationId.set('');
+    this.storageLocations.set([]);
+    this.storageTypes.set([]);
+    this.createSuccess.set(false);
+    this.showCreateForm.set(false);
+    this.storageLocationsError.set(null);
+    this.storageTypesError.set(null);
+    this.createForm.controls.locationId.setValue('');
+    this.router.navigate([], { queryParams: { locationId: null }, queryParamsHandling: 'merge' });
   }
 
   loadStorageLocations(): void {

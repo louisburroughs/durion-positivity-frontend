@@ -1,0 +1,46 @@
+<div class="location-picker">
+  <label class="location-picker__label" [attr.for]="inputId">{{ label ?? ('LOCATION.PICKER.LABEL' | translate) }}</label>
+  <input
+    [id]="inputId"
+    type="text"
+    class="location-picker__input"
+    role="combobox"
+    aria-autocomplete="list"
+    [attr.aria-expanded]="open() && suggestions().length > 0"
+    [attr.aria-controls]="listId"
+    [attr.aria-activedescendant]="open() && activeIndex() >= 0 ? (inputId + '-opt-' + activeIndex()) : null"
+    [value]="displayValue()"
+    [placeholder]="placeholder ?? ('LOCATION.PICKER.PLACEHOLDER' | translate)"
+    (input)="onInput($any($event.target).value)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    (keydown)="onKeydown($event)"
+  />
+  <span class="location-picker__sr-only" aria-live="polite" role="status">
+    @if (open()) {
+      {{ 'LOCATION.PICKER.RESULTS_COUNT' | translate: { count: suggestions().length } }}
+    }
+  </span>
+  @if (loadError()) {
+    <p class="location-picker__error" role="alert">{{ errorText ?? ('LOCATION.PICKER.ERROR_LOAD' | translate) }}</p>
+  }
+  @if (open() && suggestions().length > 0) {
+    <ul class="location-picker__list" [id]="listId" role="listbox">
+      @for (loc of suggestions(); track loc.id; let i = $index) {
+        <li
+          class="location-picker__item"
+          [class.location-picker__item--active]="i === activeIndex()"
+          [id]="inputId + '-opt-' + i"
+          role="option"
+          [attr.aria-selected]="i === activeIndex()"
+          (mousedown)="select(loc)"
+        >
+          <span class="location-picker__primary">{{ loc.name || loc.code }}</span>
+          @if (addressOf(loc)) {
+            <span class="location-picker__secondary">{{ addressOf(loc) }}</span>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

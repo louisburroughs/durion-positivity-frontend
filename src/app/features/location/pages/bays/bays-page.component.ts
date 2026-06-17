@@ -1,26 +1,30 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LocationService } from '../../services/location.service';
+import { LocationPickerComponent } from '../../components/location-picker/location-picker.component';
 
 @Component({
   selector: 'app-bays-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, LocationPickerComponent],
   templateUrl: './bays-page.component.html',
   styleUrl: './bays-page.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BaysPageComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly locationService = inject(LocationService);
 
   readonly loading = signal(false);
   readonly bays = signal<unknown[]>([]);
   readonly locationId = signal('');
+  readonly invalidId = signal(false);
   readonly error = signal<string | null>(null);
   readonly showCreateModal = signal(false);
   readonly createBayName = signal('');
@@ -29,12 +33,46 @@ export class BaysPageComponent implements OnInit {
   readonly showEditModal = signal(false);
 
   ngOnInit(): void {
-    this.route.params.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       const locationId = String(params['locationId'] ?? '');
+      if (locationId === this.locationId()) {
+        return;
+      }
       this.locationId.set(locationId);
       if (locationId) {
         this.loadBays(locationId);
+      } else {
+        this.bays.set([]);
       }
+    });
+  }
+
+  onLocationSelected(locationId: string): void {
+    if (!locationId) {
+      this.resetToPrompt();
+      this.invalidId.set(false);
+      return;
+    }
+    this.invalidId.set(false);
+    this.locationId.set(locationId);
+    this.router.navigate([], {
+      queryParams: { locationId },
+      queryParamsHandling: 'merge',
+    });
+    this.loadBays(locationId);
+  }
+
+  onInvalidSelection(_id: string): void {
+    this.resetToPrompt();
+    this.invalidId.set(true);
+  }
+
+  private resetToPrompt(): void {
+    this.locationId.set('');
+    this.bays.set([]);
+    this.router.navigate([], {
+      queryParams: { locationId: null },
+      queryParamsHandling: 'merge',
     });
   }
 

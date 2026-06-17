@@ -777,7 +777,9 @@
         "BAY_AND_NAME_REQUIRED": "La baie et le nom sont requis.",
         "CREATE": "Impossible de créer la baie.",
         "UPDATE": "Impossible de mettre à jour la baie."
-      }
+      },
+      "LABEL": "Emplacement",
+      "PROMPT": "Sélectionnez un emplacement pour afficher et modifier ses baies."
     },
     "MOBILE_UNITS": {
       "TITLE": "Unités mobiles",
@@ -796,7 +798,9 @@
         "SELECT_UNIT": "Une unité mobile doit être sélectionnée.",
         "CREATE": "Impossible de créer l'unité mobile.",
         "UPDATE_COVERAGE": "Impossible de mettre à jour les règles de couverture."
-      }
+      },
+      "LABEL": "Emplacement de base",
+      "PROMPT": "Sélectionnez un emplacement de base pour afficher et modifier ses unités mobiles."
     },
     "LANDING": {
       "TITLE": "Espace de travail des emplacements",
@@ -884,6 +888,17 @@
         "REQUIRED_IDENTIFIER": "Entrez l'identifiant requis avant d'ouvrir cette page.",
         "NAVIGATE": "Impossible d'ouvrir la page d'emplacement sélectionnée. Réessayez."
       }
+    },
+    "PICKER": {
+      "LABEL": "Emplacement",
+      "PLACEHOLDER": "Rechercher des emplacements par nom, code ou adresse…",
+      "ERROR_LOAD": "Impossible de charger les emplacements.",
+      "NOT_FOUND": "Emplacement introuvable — sélectionnez-en un autre.",
+      "RESULTS_COUNT": "{{count}} emplacements trouvés"
+    },
+    "STORAGE": {
+      "LABEL": "Emplacement",
+      "PROMPT": "Sélectionnez un emplacement pour afficher et modifier ses emplacements de stockage."
     }
   },
   "SHOPMGMT": {
