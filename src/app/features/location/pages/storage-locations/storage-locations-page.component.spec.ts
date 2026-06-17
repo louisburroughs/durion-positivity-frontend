@@ -80,6 +80,13 @@ describe('StorageLocationsPageComponent', () => {
     expect(component.locationId()).toBe('');
     expect(component.invalidId()).toBe(true);
     expect(component.storageLocations()).toEqual([]);
+    expect(component.storageTypes()).toEqual([]);
+    expect(component.createForm.controls.locationId.value).toBe('');
+  });
+
+  it('fetches storage locations exactly once on selection', () => {
+    component.onLocationSelected('loc-1');
+    expect(stubInventoryService.listStorageLocations).toHaveBeenCalledTimes(1);
   });
 });
 

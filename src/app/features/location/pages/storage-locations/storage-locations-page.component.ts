@@ -6,7 +6,6 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,7 +15,7 @@ import { LocationPickerComponent } from '../../components/location-picker/locati
 @Component({
   selector: 'app-storage-locations-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LocationPickerComponent],
+  imports: [ReactiveFormsModule, LocationPickerComponent],
   templateUrl: './storage-locations-page.component.html',
   styleUrl: './storage-locations-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -86,6 +85,12 @@ export class StorageLocationsPageComponent {
     this.invalidId.set(true);
     this.locationId.set('');
     this.storageLocations.set([]);
+    this.storageTypes.set([]);
+    this.createSuccess.set(false);
+    this.showCreateForm.set(false);
+    this.storageLocationsError.set(null);
+    this.storageTypesError.set(null);
+    this.createForm.controls.locationId.setValue('');
     this.router.navigate([], { queryParams: { locationId: null }, queryParamsHandling: 'merge' });
   }
 
