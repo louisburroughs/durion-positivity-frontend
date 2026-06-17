@@ -1,0 +1,9 @@
+.location-picker { position: relative; display: flex; flex-direction: column; gap: 0.25rem; max-width: 28rem; }
+.location-picker__label { font-weight: 600; font-size: 0.875rem; }
+.location-picker__input { padding: 0.5rem 0.75rem; border: 1px solid var(--border-color, #ccc); border-radius: 0.375rem; font-size: 0.95rem; }
+.location-picker__error { color: var(--error-color, #b00020); font-size: 0.8rem; margin: 0; }
+.location-picker__list { position: absolute; top: 100%; left: 0; right: 0; z-index: 20; margin: 0.25rem 0 0; padding: 0; list-style: none; max-height: 16rem; overflow-y: auto; background: var(--surface-color, #fff); border: 1px solid var(--border-color, #ccc); border-radius: 0.375rem; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); }
+.location-picker__item { display: flex; flex-direction: column; padding: 0.5rem 0.75rem; cursor: pointer; }
+.location-picker__item--active, .location-picker__item:hover { background: var(--hover-color, #eef2ff); }
+.location-picker__primary { font-weight: 600; }
+.location-picker__secondary { font-size: 0.8rem; color: var(--muted-color, #666); }
