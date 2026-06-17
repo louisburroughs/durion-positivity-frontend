@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -27,11 +28,18 @@ export class StorageLocationsPageComponent {
   private readonly locationService = inject(LocationService);
   private readonly destroyRef = inject(DestroyRef);
 
+  private static readonly PAGE_SIZE = 20;
+
   readonly locationId = signal('');
   readonly invalidId = signal(false);
   readonly storageLocations = signal<unknown[]>([]);
   readonly storageTypes = signal<unknown[]>([]);
   readonly loading = signal(false);
+  readonly pageIndex = signal(0);
+  readonly totalPages = signal(0);
+  readonly totalElements = signal(0);
+  readonly canPrevPage = computed(() => this.pageIndex() > 0);
+  readonly canNextPage = computed(() => this.pageIndex() + 1 < this.totalPages());
   readonly storageLocationsError = signal<string | null>(null);
   readonly storageTypesError = signal<string | null>(null);
   readonly showCreateForm = signal(false);
@@ -67,6 +75,7 @@ export class StorageLocationsPageComponent {
           this.storageLocations.set([]);
           return;
         }
+        this.pageIndex.set(0);
         this.loadStorageLocations();
         this.loadStorageTypes();
       });
@@ -82,6 +91,7 @@ export class StorageLocationsPageComponent {
     this.locationId.set(locationId);
     this.createForm.controls.locationId.setValue(locationId);
     this.router.navigate([], { queryParams: { locationId }, queryParamsHandling: 'merge' });
+    this.pageIndex.set(0);
     this.loadStorageLocations();
     this.loadStorageTypes();
   }
@@ -95,6 +105,9 @@ export class StorageLocationsPageComponent {
     this.locationId.set('');
     this.storageLocations.set([]);
     this.storageTypes.set([]);
+    this.pageIndex.set(0);
+    this.totalPages.set(0);
+    this.totalElements.set(0);
     this.createSuccess.set(false);
     this.showCreateForm.set(false);
     this.storageLocationsError.set(null);
@@ -112,11 +125,16 @@ export class StorageLocationsPageComponent {
     this.loading.set(true);
     this.storageLocationsError.set(null);
 
-    this.locationService.listStorageLocations(locationId, { pageSize: 50 })
+    this.locationService
+      .listStorageLocations(locationId, {
+        pageIndex: this.pageIndex(),
+        pageSize: StorageLocationsPageComponent.PAGE_SIZE,
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
           this.storageLocations.set(this.normalizeItems(response));
+          this.applyPageMeta(response);
           this.loading.set(false);
         },
         error: (err: unknown) => {
@@ -124,6 +142,42 @@ export class StorageLocationsPageComponent {
           this.loading.set(false);
         },
       });
+  }
+
+  goToPage(index: number): void {
+    if (index < 0 || index === this.pageIndex() || (this.totalPages() > 0 && index >= this.totalPages())) {
+      return;
+    }
+    this.pageIndex.set(index);
+    this.loadStorageLocations();
+  }
+
+  prevPage(): void {
+    if (this.canPrevPage()) {
+      this.goToPage(this.pageIndex() - 1);
+    }
+  }
+
+  nextPage(): void {
+    if (this.canNextPage()) {
+      this.goToPage(this.pageIndex() + 1);
+    }
+  }
+
+  private applyPageMeta(response: unknown): void {
+    const page = this.toRecord(response);
+    const totalPages = Number(page?.['totalPages']);
+    const totalElements = Number(page?.['totalElements']);
+    const pages = Number.isFinite(totalPages) ? totalPages : 0;
+    this.totalPages.set(pages);
+    this.totalElements.set(Number.isFinite(totalElements) ? totalElements : 0);
+
+    // If the current page fell out of range (e.g. deactivating the last row of
+    // the last page), clamp to the last valid page and reload once.
+    if (pages > 0 && this.pageIndex() >= pages) {
+      this.pageIndex.set(pages - 1);
+      this.loadStorageLocations();
+    }
   }
 
   loadStorageTypes(): void {

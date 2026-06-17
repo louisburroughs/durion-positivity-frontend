@@ -63,7 +63,7 @@ describe('StorageLocationsPageComponent', () => {
     const navSpy = vi.spyOn(TestBed.inject(Router), 'navigate');
     component.onLocationSelected('loc-1');
     expect(component.locationId()).toBe('loc-1');
-    expect(locationServiceStub.listStorageLocations).toHaveBeenCalledWith('loc-1', { pageSize: 50 });
+    expect(locationServiceStub.listStorageLocations).toHaveBeenCalledWith('loc-1', { pageIndex: 0, pageSize: 20 });
     expect(navSpy).toHaveBeenCalledWith([], expect.objectContaining({
       queryParams: { locationId: 'loc-1' },
       queryParamsHandling: 'merge',
@@ -263,5 +263,58 @@ describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () 
     expect(component.requiresDestination()).toBe(true);
     const input = fixture.debugElement.query(By.css('[data-testid="destination-input"]'));
     expect(input).toBeTruthy();
+  });
+
+  it('hides pagination when there is a single page', async () => {
+    await setup({ content: [{ id: 'SL-1', name: 'A', type: 'BIN', status: 'ACTIVE' }], totalPages: 1, totalElements: 1 });
+    expect(fixture.debugElement.query(By.css('[data-testid="storage-pagination"]'))).toBeNull();
+  });
+
+  it('renders pagination and reflects page metadata for a multi-page result', async () => {
+    await setup({ content: [{ id: 'SL-1', name: 'A', type: 'BIN', status: 'ACTIVE' }], number: 0, totalPages: 3, totalElements: 45 });
+    expect(component.totalPages()).toBe(3);
+    expect(component.canPrevPage()).toBe(false);
+    expect(component.canNextPage()).toBe(true);
+    const status = fixture.debugElement.query(By.css('[data-testid="page-status"]'));
+    expect(status.nativeElement.textContent).toContain('Page 1 of 3');
+    expect(status.nativeElement.textContent).toContain('45 total');
+  });
+
+  it('advances to the next page and requests it from the service', async () => {
+    await setup({ content: [{ id: 'SL-1', name: 'A', type: 'BIN', status: 'ACTIVE' }], number: 0, totalPages: 3, totalElements: 45 });
+    locationServiceStub.listStorageLocations.mockClear();
+
+    component.nextPage();
+
+    expect(component.pageIndex()).toBe(1);
+    expect(locationServiceStub.listStorageLocations).toHaveBeenCalledWith('LOC-001', { pageIndex: 1, pageSize: 20 });
+  });
+
+  it('clamps to the last valid page when the current page falls out of range', async () => {
+    // Land on page 2 (index 2) of a 3-page result.
+    await setup({ content: [{ id: 'SL-9', name: 'Z', type: 'BIN', status: 'ACTIVE' }], number: 2, totalPages: 3, totalElements: 41 });
+    component.goToPage(2);
+    expect(component.pageIndex()).toBe(2);
+
+    // Next reload (e.g. after deactivating the last row) returns fewer pages.
+    locationServiceStub.listStorageLocations.mockClear();
+    locationServiceStub.listStorageLocations
+      .mockReturnValueOnce(of({ content: [], number: 2, totalPages: 2, totalElements: 40 }))
+      .mockReturnValueOnce(of({ content: [{ id: 'SL-8' }], number: 1, totalPages: 2, totalElements: 40 }));
+
+    component.loadStorageLocations();
+
+    expect(component.pageIndex()).toBe(1);
+    expect(locationServiceStub.listStorageLocations).toHaveBeenLastCalledWith('LOC-001', { pageIndex: 1, pageSize: 20 });
+  });
+
+  it('does not page before the first page', async () => {
+    await setup({ content: [{ id: 'SL-1', name: 'A', type: 'BIN', status: 'ACTIVE' }], number: 0, totalPages: 3, totalElements: 45 });
+    locationServiceStub.listStorageLocations.mockClear();
+
+    component.prevPage();
+
+    expect(component.pageIndex()).toBe(0);
+    expect(locationServiceStub.listStorageLocations).not.toHaveBeenCalled();
   });
 });
