@@ -819,7 +819,9 @@
         "BAY_AND_NAME_REQUIRED": "La bahía y el nombre son obligatorios.",
         "CREATE": "No se pudo crear la bahía.",
         "UPDATE": "No se pudo actualizar la bahía."
-      }
+      },
+      "LABEL": "Ubicación",
+      "PROMPT": "Seleccione una ubicación para ver y editar sus bahías."
     },
     "MOBILE_UNITS": {
       "TITLE": "Unidades móviles",
@@ -838,7 +840,9 @@
         "SELECT_UNIT": "Se debe seleccionar una unidad móvil.",
         "CREATE": "No se pudo crear la unidad móvil.",
         "UPDATE_COVERAGE": "No se pudieron actualizar las reglas de cobertura."
-      }
+      },
+      "LABEL": "Ubicación base",
+      "PROMPT": "Seleccione una ubicación base para ver y editar sus unidades móviles."
     },
     "LANDING": {
       "TITLE": "Espacio de trabajo de ubicaciones",
@@ -926,6 +930,17 @@
         "REQUIRED_IDENTIFIER": "Ingresa el identificador requerido antes de abrir esta página.",
         "NAVIGATE": "No se pudo abrir la página de ubicación seleccionada. Inténtalo de nuevo."
       }
+    },
+    "PICKER": {
+      "LABEL": "Ubicación",
+      "PLACEHOLDER": "Buscar ubicaciones por nombre, código o dirección…",
+      "ERROR_LOAD": "No se pudieron cargar las ubicaciones.",
+      "NOT_FOUND": "Ubicación no encontrada: seleccione otra.",
+      "RESULTS_COUNT": "{{count}} ubicaciones encontradas"
+    },
+    "STORAGE": {
+      "LABEL": "Ubicación",
+      "PROMPT": "Seleccione una ubicación para ver y editar sus ubicaciones de almacenamiento."
     }
   },
   "SHOPMGMT": {

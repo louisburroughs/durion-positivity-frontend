@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { v4 as uuidv4 } from 'uuid';
 import { InventoryService } from '../../services/inventory.service';
@@ -15,7 +16,7 @@ import { LocationPickerComponent } from '../../components/location-picker/locati
 @Component({
   selector: 'app-storage-locations-page',
   standalone: true,
-  imports: [ReactiveFormsModule, LocationPickerComponent],
+  imports: [ReactiveFormsModule, TranslatePipe, LocationPickerComponent],
   templateUrl: './storage-locations-page.component.html',
   styleUrl: './storage-locations-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

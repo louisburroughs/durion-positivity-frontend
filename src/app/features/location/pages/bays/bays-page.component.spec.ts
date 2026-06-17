@@ -53,6 +53,11 @@ describe('BaysPageComponent', () => {
     }));
   });
 
+  it('fetches bays exactly once on selection', () => {
+    component.onLocationSelected('loc-1');
+    expect(locationServiceStub.listBays).toHaveBeenCalledTimes(1);
+  });
+
   it('shows a not-found notice and resets on invalid id', () => {
     component.onLocationSelected('loc-1');
     component.onInvalidSelection('bad-id');

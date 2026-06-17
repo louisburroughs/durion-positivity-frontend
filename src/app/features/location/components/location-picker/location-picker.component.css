@@ -7,3 +7,4 @@
 .location-picker__item--active, .location-picker__item:hover { background: var(--hover-color, #eef2ff); }
 .location-picker__primary { font-weight: 600; }
 .location-picker__secondary { font-size: 0.8rem; color: var(--muted-color, #666); }
+.location-picker__sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

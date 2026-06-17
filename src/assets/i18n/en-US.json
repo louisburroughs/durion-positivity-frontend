@@ -819,7 +819,9 @@
         "BAY_AND_NAME_REQUIRED": "Bay and name are required.",
         "CREATE": "Failed to create bay.",
         "UPDATE": "Failed to update bay."
-      }
+      },
+      "LABEL": "Location",
+      "PROMPT": "Select a location to view and edit its bays."
     },
     "MOBILE_UNITS": {
       "TITLE": "Mobile Units",
@@ -838,7 +840,9 @@
         "SELECT_UNIT": "A mobile unit must be selected.",
         "CREATE": "Failed to create mobile unit.",
         "UPDATE_COVERAGE": "Failed to update coverage rules."
-      }
+      },
+      "LABEL": "Base location",
+      "PROMPT": "Select a base location to view and edit its mobile units."
     },
     "LANDING": {
       "TITLE": "Location Workspace",
@@ -926,6 +930,17 @@
         "REQUIRED_IDENTIFIER": "Enter the required identifier before opening this page.",
         "NAVIGATE": "Could not open the selected location page. Try again."
       }
+    },
+    "PICKER": {
+      "LABEL": "Location",
+      "PLACEHOLDER": "Search locations by name, code, or address…",
+      "ERROR_LOAD": "Failed to load locations.",
+      "NOT_FOUND": "Location not found — select another.",
+      "RESULTS_COUNT": "{{count}} locations found"
+    },
+    "STORAGE": {
+      "LABEL": "Location",
+      "PROMPT": "Select a location to view and edit its storage locations."
     }
   },
   "SHOPMGMT": {

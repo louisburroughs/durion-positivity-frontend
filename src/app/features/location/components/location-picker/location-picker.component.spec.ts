@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LocationPickerComponent } from './location-picker.component';
@@ -20,7 +21,7 @@ describe('LocationPickerComponent', () => {
     locationServiceStub.getAllLocations.mockReturnValue(of(locations));
 
     await TestBed.configureTestingModule({
-      imports: [LocationPickerComponent],
+      imports: [LocationPickerComponent, TranslateModule.forRoot()],
       providers: [{ provide: LocationService, useValue: locationServiceStub }],
     }).compileComponents();
 
@@ -86,6 +87,27 @@ describe('LocationPickerComponent', () => {
     fixture.componentRef.setInput('selectedId', 'nope');
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it('emits invalidSelection once and shows no selection when focused without typing on an invalid preselect', () => {
+    const invalidSpy = vi.fn();
+    const selectedSpy = vi.fn();
+    component.invalidSelection.subscribe(invalidSpy);
+    component.locationSelected.subscribe(selectedSpy);
+
+    // Invalid/unresolvable preselected value arrives after load.
+    fixture.componentRef.setInput('selectedId', 'ghost');
+    fixture.detectChanges();
+
+    // User focuses the combobox but does NOT type anything.
+    component.onFocus();
+    fixture.detectChanges();
+
+    expect(invalidSpy).toHaveBeenCalledTimes(1);
+    expect(invalidSpy).toHaveBeenCalledWith('ghost');
+    // Focus alone must not fabricate a selection.
+    expect(component.displayValue()).toBe('');
+    expect(selectedSpy).not.toHaveBeenCalled();
   });
 
   it('selects the first suggestion via ArrowDown then Enter', () => {

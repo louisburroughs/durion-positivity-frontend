@@ -1,17 +1,17 @@
 <app-location-picker
-  label="Base location"
+  [label]="'LOCATION.MOBILE_UNITS.LABEL' | translate"
   [selectedId]="locationId()"
   (locationSelected)="onLocationSelected($event)"
   (invalidSelection)="onInvalidSelection($event)"
 ></app-location-picker>
 
 @if (invalidId()) {
-  <div class="error-banner" role="alert">Location not found — select another.</div>
+  <div class="error-banner" role="alert">{{ 'LOCATION.PICKER.NOT_FOUND' | translate }}</div>
 }
 
 @if (!locationId()) {
   <section class="empty-state">
-    <p>Select a base location to view and edit its mobile units.</p>
+    <p>{{ 'LOCATION.MOBILE_UNITS.PROMPT' | translate }}</p>
   </section>
 }
 

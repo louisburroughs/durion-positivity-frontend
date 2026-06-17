@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -13,6 +13,7 @@ import { LocationPickerComponent } from '../../components/location-picker/locati
   imports: [CommonModule, ReactiveFormsModule, TranslatePipe, LocationPickerComponent],
   templateUrl: './mobile-units-page.component.html',
   styleUrl: './mobile-units-page.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MobileUnitsPageComponent implements OnInit {
   private readonly locationService = inject(LocationService);

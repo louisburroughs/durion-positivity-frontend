@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
 import {
+  ChangeDetectionStrategy,
   Component,
   DestroyRef,
   EventEmitter,
   Input,
+  OnDestroy,
   Output,
   computed,
   effect,
@@ -11,6 +13,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslatePipe } from '@ngx-translate/core';
 import { LocationService } from '../../services/location.service';
 
 interface PickerLocation {
@@ -30,17 +33,19 @@ let pickerSeq = 0;
 @Component({
   selector: 'app-location-picker',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './location-picker.component.html',
   styleUrl: './location-picker.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LocationPickerComponent {
+export class LocationPickerComponent implements OnDestroy {
   private readonly locationService = inject(LocationService);
   private readonly destroyRef = inject(DestroyRef);
 
-  @Input() label = 'Location';
-  @Input() placeholder = 'Search locations by name, code, or address…';
-  @Input() errorText = 'Failed to load locations.';
+  // Optional overrides; when unset the template resolves translated fallbacks.
+  @Input() label?: string;
+  @Input() placeholder?: string;
+  @Input() errorText?: string;
 
   private readonly _selectedId = signal('');
   @Input() set selectedId(value: string | null | undefined) {
@@ -62,6 +67,7 @@ export class LocationPickerComponent {
   readonly activeIndex = signal(-1);
   private readonly typed = signal(false);
   private readonly lastInvalidEmitted = signal('');
+  private blurTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly displayValue = computed(() => {
     if (this.typed()) {
@@ -93,6 +99,7 @@ export class LocationPickerComponent {
       .subscribe({
         next: (rows) => {
           this.all.set((rows as PickerLocation[]).filter(r => !!r?.id));
+          this.loadError.set(false);
           this.loaded.set(true);
         },
         error: () => {
@@ -147,7 +154,20 @@ export class LocationPickerComponent {
   }
 
   onBlur(): void {
-    setTimeout(() => this.open.set(false), 150);
+    if (this.blurTimer !== null) {
+      clearTimeout(this.blurTimer);
+    }
+    this.blurTimer = setTimeout(() => {
+      this.open.set(false);
+      this.blurTimer = null;
+    }, 150);
+  }
+
+  ngOnDestroy(): void {
+    if (this.blurTimer !== null) {
+      clearTimeout(this.blurTimer);
+      this.blurTimer = null;
+    }
   }
 
   onKeydown(event: KeyboardEvent): void {
@@ -175,6 +195,7 @@ export class LocationPickerComponent {
     this.query.set('');
     this._selectedId.set(loc.id);
     this.lastInvalidEmitted.set('');
+    this.loadError.set(false);
     this.open.set(false);
     this.activeIndex.set(-1);
     this.locationSelected.emit(loc.id);

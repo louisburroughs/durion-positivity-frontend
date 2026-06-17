@@ -3,6 +3,7 @@ import { provideRouter, Router, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { HttpErrorResponse } from '@angular/common/http';
+import { TranslateModule } from '@ngx-translate/core';
 import { StorageLocationsPageComponent } from './storage-locations-page.component';
 import { InventoryService } from '../../services/inventory.service';
 import { LocationService } from '../../services/location.service';
@@ -45,7 +46,7 @@ describe('StorageLocationsPageComponent', () => {
     stubInventoryService.listStorageTypes.mockReturnValue(of({ items: [] }));
 
     await TestBed.configureTestingModule({
-      imports: [StorageLocationsPageComponent],
+      imports: [StorageLocationsPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: InventoryService, useValue: stubInventoryService },
@@ -119,7 +120,7 @@ describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () 
     stubInventoryService.deactivateStorageLocation.mockReturnValue(of({}));
 
     await TestBed.configureTestingModule({
-      imports: [StorageLocationsPageComponent],
+      imports: [StorageLocationsPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: InventoryService, useValue: stubInventoryService },
@@ -168,7 +169,7 @@ describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () 
     stubInventoryService.deactivateStorageLocation.mockReturnValue(of({}));
 
     await TestBed.configureTestingModule({
-      imports: [StorageLocationsPageComponent],
+      imports: [StorageLocationsPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: InventoryService, useValue: stubInventoryService },

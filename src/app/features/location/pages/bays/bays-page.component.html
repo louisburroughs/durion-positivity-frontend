@@ -1,17 +1,17 @@
 <app-location-picker
-  label="Location"
+  [label]="'LOCATION.BAYS.LABEL' | translate"
   [selectedId]="locationId()"
   (locationSelected)="onLocationSelected($event)"
   (invalidSelection)="onInvalidSelection($event)"
 ></app-location-picker>
 
 @if (invalidId()) {
-  <div class="error-banner" role="alert">Location not found — select another.</div>
+  <div class="error-banner" role="alert">{{ 'LOCATION.PICKER.NOT_FOUND' | translate }}</div>
 }
 
 @if (!locationId()) {
   <section class="empty-state">
-    <p>Select a location to view and edit its bays.</p>
+    <p>{{ 'LOCATION.BAYS.PROMPT' | translate }}</p>
   </section>
 }
 
