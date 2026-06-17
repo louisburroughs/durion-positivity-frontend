@@ -81,6 +81,38 @@ describe('LocationService', () => {
     });
   });
 
+  it('unwraps the Spring page content array from listBays', () => {
+    const bay = { id: 'bay-1', name: 'Bay 01' };
+    bayApiStub.listBays.mockReturnValueOnce(of({ content: [bay], totalElements: 1 }));
+
+    let result: unknown[] | undefined;
+    service.listBays('loc-01').subscribe(r => (result = r));
+
+    expect(result).toEqual([bay]);
+  });
+
+  it('unwraps the Spring page content array from listMobileUnits', () => {
+    const unit = { id: 'mu-1', name: 'Truck 1' };
+    mobileUnitApiStub.listMobileUnits.mockReturnValueOnce(of({ content: [unit], totalElements: 1 }));
+
+    let result: unknown[] | undefined;
+    service.listMobileUnits().subscribe(r => (result = r));
+
+    expect(result).toEqual([unit]);
+  });
+
+  it('returns a bare array unchanged and empty for a missing page body', () => {
+    bayApiStub.listBays.mockReturnValueOnce(of([{ id: 'bay-1' }]));
+    let asArray: unknown[] | undefined;
+    service.listBays('loc-01').subscribe(r => (asArray = r));
+    expect(asArray).toEqual([{ id: 'bay-1' }]);
+
+    mobileUnitApiStub.listMobileUnits.mockReturnValueOnce(of({}));
+    let asEmpty: unknown[] | undefined;
+    service.listMobileUnits().subscribe(r => (asEmpty = r));
+    expect(asEmpty).toEqual([]);
+  });
+
   it('maps mobile-unit coverageRules through the typed request mapper', () => {
     mobileUnitApiStub.createMobileUnit.mockReturnValueOnce(of({ mobileUnitId: 'mu-001' }));
 
