@@ -1,30 +1,49 @@
-<section class="page-header">
-  <h2>{{ 'LOCATION.MOBILE_UNITS.TITLE' | translate }}</h2>
-  <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">{{ 'LOCATION.MOBILE_UNITS.CREATE_MOBILE_UNIT' | translate }}</button>
-</section>
+<app-location-picker
+  label="Base location"
+  [selectedId]="locationId()"
+  (locationSelected)="onLocationSelected($event)"
+  (invalidSelection)="onInvalidSelection($event)"
+></app-location-picker>
 
-@if (error()) {
-  <div class="error-banner">{{ error()! | translate }}</div>
+@if (invalidId()) {
+  <div class="error-banner" role="alert">Location not found — select another.</div>
 }
 
-@if (loading()) {
-  <section class="units-list">
-    <p>{{ 'LOCATION.MOBILE_UNITS.LOADING' | translate }}</p>
+@if (!locationId()) {
+  <section class="empty-state">
+    <p>Select a base location to view and edit its mobile units.</p>
   </section>
-} @else {
-  @if (mobileUnits().length > 0) {
+}
+
+@if (locationId()) {
+  <section class="page-header">
+    <h2>{{ 'LOCATION.MOBILE_UNITS.TITLE' | translate }}</h2>
+    <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">{{ 'LOCATION.MOBILE_UNITS.CREATE_MOBILE_UNIT' | translate }}</button>
+  </section>
+
+  @if (error()) {
+    <div class="error-banner">{{ error()! | translate }}</div>
+  }
+
+  @if (loading()) {
     <section class="units-list">
-      @for (unit of mobileUnits(); track $index) {
-        <article class="unit-card">
-          <h3>{{ getUnitName(unit) }}</h3>
-          <button type="button" class="btn-secondary" (click)="openCoverage(unit)">{{ 'LOCATION.MOBILE_UNITS.COVERAGE_RULES' | translate }}</button>
-        </article>
-      }
+      <p>{{ 'LOCATION.MOBILE_UNITS.LOADING' | translate }}</p>
     </section>
   } @else {
-    <section class="empty-state">
-      <p>{{ 'LOCATION.MOBILE_UNITS.EMPTY' | translate }}</p>
-    </section>
+    @if (mobileUnits().length > 0) {
+      <section class="units-list">
+        @for (unit of mobileUnits(); track $index) {
+          <article class="unit-card">
+            <h3>{{ getUnitName(unit) }}</h3>
+            <button type="button" class="btn-secondary" (click)="openCoverage(unit)">{{ 'LOCATION.MOBILE_UNITS.COVERAGE_RULES' | translate }}</button>
+          </article>
+        }
+      </section>
+    } @else {
+      <section class="empty-state">
+        <p>{{ 'LOCATION.MOBILE_UNITS.EMPTY' | translate }}</p>
+      </section>
+    }
   }
 }
 
