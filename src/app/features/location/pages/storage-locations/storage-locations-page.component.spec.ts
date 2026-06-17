@@ -88,6 +88,19 @@ describe('StorageLocationsPageComponent', () => {
     component.onLocationSelected('loc-1');
     expect(stubInventoryService.listStorageLocations).toHaveBeenCalledTimes(1);
   });
+
+  it('resets to the prompt state when the picker selection is cleared', () => {
+    component.onLocationSelected('loc-1');
+    stubInventoryService.listStorageLocations.mockClear();
+
+    component.onLocationSelected('');
+
+    expect(component.storageLocations()).toEqual([]);
+    expect(component.locationId()).toBe('');
+    expect(component.invalidId()).toBe(false);
+    expect(component.createForm.controls.locationId.value).toBe('');
+    expect(stubInventoryService.listStorageLocations).not.toHaveBeenCalledWith('', expect.anything());
+  });
 });
 
 describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () => {

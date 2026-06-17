@@ -49,6 +49,11 @@ export class MobileUnitsPageComponent implements OnInit {
   }
 
   onLocationSelected(locationId: string): void {
+    if (!locationId) {
+      this.resetToPrompt();
+      this.invalidId.set(false);
+      return;
+    }
     this.invalidId.set(false);
     this.locationId.set(locationId);
     this.router.navigate([], { queryParams: { locationId }, queryParamsHandling: 'merge' });
@@ -56,7 +61,11 @@ export class MobileUnitsPageComponent implements OnInit {
   }
 
   onInvalidSelection(_id: string): void {
+    this.resetToPrompt();
     this.invalidId.set(true);
+  }
+
+  private resetToPrompt(): void {
     this.locationId.set('');
     this.mobileUnits.set([]);
     this.router.navigate([], { queryParams: { locationId: null }, queryParamsHandling: 'merge' });

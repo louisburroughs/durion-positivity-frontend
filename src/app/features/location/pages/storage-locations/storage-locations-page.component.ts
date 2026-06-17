@@ -73,6 +73,11 @@ export class StorageLocationsPageComponent {
   }
 
   onLocationSelected(locationId: string): void {
+    if (!locationId) {
+      this.resetToPrompt();
+      this.invalidId.set(false);
+      return;
+    }
     this.invalidId.set(false);
     this.locationId.set(locationId);
     this.createForm.controls.locationId.setValue(locationId);
@@ -82,7 +87,11 @@ export class StorageLocationsPageComponent {
   }
 
   onInvalidSelection(_id: string): void {
+    this.resetToPrompt();
     this.invalidId.set(true);
+  }
+
+  private resetToPrompt(): void {
     this.locationId.set('');
     this.storageLocations.set([]);
     this.storageTypes.set([]);

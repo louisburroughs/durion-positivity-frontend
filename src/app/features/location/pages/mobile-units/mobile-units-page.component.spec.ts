@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter, Router, ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -72,6 +72,23 @@ describe('MobileUnitsPageComponent', () => {
     expect(component.mobileUnits()).toEqual([]);
   });
 
+  it('resets to the prompt state when the picker selection is cleared', () => {
+    component.onLocationSelected('loc-1');
+    locationServiceStub.listMobileUnits.mockClear();
+
+    component.onLocationSelected('');
+
+    expect(component.mobileUnits()).toEqual([]);
+    expect(component.locationId()).toBe('');
+    expect(component.invalidId()).toBe(false);
+    expect(locationServiceStub.listMobileUnits).not.toHaveBeenCalled();
+  });
+
+  it('fetches mobile units exactly once on selection', () => {
+    component.onLocationSelected('loc-1');
+    expect(locationServiceStub.listMobileUnits).toHaveBeenCalledTimes(1);
+  });
+
   it('renders without crashing', () => {
     expect(fixture.nativeElement).toBeTruthy();
   });
@@ -107,5 +124,42 @@ describe('MobileUnitsPageComponent', () => {
     submitButton.nativeElement.click();
 
     expect(locationServiceStub.createMobileUnit).toHaveBeenCalledWith({ name: 'Downtown Unit' });
+  });
+});
+
+describe('MobileUnitsPageComponent (deep link)', () => {
+  let fixture: ComponentFixture<MobileUnitsPageComponent>;
+  let component: MobileUnitsPageComponent;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    locationServiceStub.listMobileUnits.mockReturnValue(of(units));
+
+    await TestBed.configureTestingModule({
+      imports: [MobileUnitsPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: LocationService, useValue: locationServiceStub },
+        {
+          provide: ActivatedRoute,
+          useValue: { queryParams: of({ locationId: 'loc-1' }) },
+        },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(MobileUnitsPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    TestBed.resetTestingModule();
+  });
+
+  it('loads and filters units on init from a deep-linked query param', () => {
+    expect(component.locationId()).toBe('loc-1');
+    expect(locationServiceStub.listMobileUnits).toHaveBeenCalled();
+    expect(component.mobileUnits().map((u: any) => u.baseLocationId)).toEqual(['loc-1', 'loc-1']);
   });
 });

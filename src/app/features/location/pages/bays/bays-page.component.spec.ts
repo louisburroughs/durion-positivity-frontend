@@ -61,6 +61,18 @@ describe('BaysPageComponent', () => {
     expect(component.bays()).toEqual([]);
   });
 
+  it('resets to the prompt state when the picker selection is cleared', () => {
+    component.onLocationSelected('loc-1');
+    locationServiceStub.listBays.mockClear();
+
+    component.onLocationSelected('');
+
+    expect(component.bays()).toEqual([]);
+    expect(component.locationId()).toBe('');
+    expect(component.invalidId()).toBe(false);
+    expect(locationServiceStub.listBays).not.toHaveBeenCalledWith('');
+  });
+
   it('renders one bay-card per bay after a location is selected', () => {
     locationServiceStub.listBays.mockReturnValue(
       of([

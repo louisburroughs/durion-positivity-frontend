@@ -47,6 +47,11 @@ export class BaysPageComponent implements OnInit {
   }
 
   onLocationSelected(locationId: string): void {
+    if (!locationId) {
+      this.resetToPrompt();
+      this.invalidId.set(false);
+      return;
+    }
     this.invalidId.set(false);
     this.locationId.set(locationId);
     this.router.navigate([], {
@@ -57,7 +62,11 @@ export class BaysPageComponent implements OnInit {
   }
 
   onInvalidSelection(_id: string): void {
+    this.resetToPrompt();
     this.invalidId.set(true);
+  }
+
+  private resetToPrompt(): void {
     this.locationId.set('');
     this.bays.set([]);
     this.router.navigate([], {
