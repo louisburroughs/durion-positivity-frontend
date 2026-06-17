@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import {
   BayAPIService,
   LocationAPIService,
@@ -69,7 +69,7 @@ export class LocationService {
   // ── Bays ─────────────────────────────────────────────────────────────────
 
   listBays(locationId: string): Observable<unknown[]> {
-    return this.bayApi.listBays(locationId) as Observable<unknown[]>;
+    return (this.bayApi.listBays(locationId) as Observable<unknown>).pipe(map(toContentArray));
   }
 
   createBay(locationId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
@@ -90,7 +90,7 @@ export class LocationService {
   listMobileUnits(params?: Record<string, string>): Observable<unknown[]> {
     const page = params?.['page'] ? Number(params['page']) : undefined;
     const size = params?.['size'] ? Number(params['size']) : undefined;
-    return this.mobileUnitApi.listMobileUnits(page, size) as Observable<unknown[]>;
+    return (this.mobileUnitApi.listMobileUnits(page, size) as Observable<unknown>).pipe(map(toContentArray));
   }
 
   createMobileUnit(body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
@@ -228,4 +228,17 @@ export class LocationService {
   private isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
+}
+
+/**
+ * Unwraps a list response into a plain array. Backend list endpoints return a
+ * Spring Data page (`{ content: [...] }`); some return `{ items: [...] }` or a
+ * bare array. Normalizes all three so callers always receive an array.
+ */
+function toContentArray(response: unknown): unknown[] {
+  if (Array.isArray(response)) {
+    return response;
+  }
+  const page = response as { content?: unknown[]; items?: unknown[] } | null;
+  return page?.content ?? page?.items ?? [];
 }
