@@ -6,6 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TranslateModule } from '@ngx-translate/core';
 import { StorageLocationsPageComponent } from './storage-locations-page.component';
 import { LocationService } from '../../services/location.service';
+import { InventoryService } from '../../services/inventory.service';
 
 // Location-service storage model: Spring page wrapper, `type`/`barcode`, no `code`.
 const STORAGE_PAGE = {
@@ -23,6 +24,10 @@ const locationServiceStub = {
   deactivateStorageLocation: vi.fn(),
 };
 
+const inventoryServiceStub = {
+  listLocationInventoryItems: vi.fn(),
+};
+
 function resetLocationStub() {
   locationServiceStub.getAllLocations.mockReturnValue(of([
     { id: 'loc-1', name: 'Depot' },
@@ -31,6 +36,8 @@ function resetLocationStub() {
   locationServiceStub.listStorageLocations.mockReturnValue(of({ content: [{ id: 's-1' }], totalElements: 1 }));
   locationServiceStub.createStorageLocation.mockReturnValue(of({ id: 'SL-NEW' }));
   locationServiceStub.deactivateStorageLocation.mockReturnValue(of({}));
+  // default: empty inventory for any location
+  inventoryServiceStub.listLocationInventoryItems.mockReturnValue(of({ items: [] }));
 }
 
 describe('StorageLocationsPageComponent', () => {
@@ -46,6 +53,7 @@ describe('StorageLocationsPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: locationServiceStub },
+        { provide: InventoryService, useValue: inventoryServiceStub },
       ],
     }).compileComponents();
 
@@ -124,6 +132,7 @@ describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () 
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: locationServiceStub },
+        { provide: InventoryService, useValue: inventoryServiceStub },
         {
           provide: ActivatedRoute,
           useValue: { queryParams: of({ locationId: 'LOC-001' }) },
@@ -316,5 +325,71 @@ describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () 
 
     expect(component.pageIndex()).toBe(0);
     expect(locationServiceStub.listStorageLocations).not.toHaveBeenCalled();
+  });
+
+  it('shows the inventory count (sum of on-hand) per location from the items call', async () => {
+    await setup();
+    inventoryServiceStub.listLocationInventoryItems.mockImplementation((id: string) =>
+      of(id === 'SL-1'
+        ? { items: [{ stockItemId: 'MICH-1', onHandQuantity: 10 }, { stockItemId: 'MICH-2', onHandQuantity: 5 }] }
+        : { items: [] }));
+    component.loadStorageLocations();
+    fixture.detectChanges();
+
+    expect(component.inventoryCount('SL-1')).toBe(15);
+    const toggle = fixture.debugElement.query(By.css('[data-testid="inventory-toggle-0"]'));
+    expect(toggle.nativeElement.textContent).toContain('15');
+  });
+
+  it('expands to show location contents (sku + qty) on toggle', async () => {
+    await setup();
+    inventoryServiceStub.listLocationInventoryItems.mockImplementation((id: string) =>
+      of(id === 'SL-1' ? { items: [{ stockItemId: 'MICH-XC2-0001', onHandQuantity: 24 }] } : { items: [] }));
+    component.loadStorageLocations();
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('[data-testid="inventory-contents-0"]'))).toBeNull();
+    component.toggleExpand('SL-1');
+    fixture.detectChanges();
+
+    const contents = fixture.debugElement.query(By.css('[data-testid="inventory-contents-0"]'));
+    expect(contents).toBeTruthy();
+    expect(contents.nativeElement.textContent).toContain('MICH-XC2-0001');
+    expect(contents.nativeElement.textContent).toContain('24');
+  });
+
+  it('falls back to count 0 when the inventory call fails', async () => {
+    await setup();
+    inventoryServiceStub.listLocationInventoryItems.mockReturnValue(throwError(() => new Error('boom')));
+    component.loadStorageLocations();
+    fixture.detectChanges();
+
+    expect(component.inventoryCount('SL-1')).toBe(0);
+  });
+
+  it('clears inventory + expand state when the location is cleared', async () => {
+    await setup();
+    inventoryServiceStub.listLocationInventoryItems.mockImplementation((id: string) =>
+      of(id === 'SL-1' ? { items: [{ stockItemId: 'MICH-1', onHandQuantity: 9 }] } : { items: [] }));
+    component.loadStorageLocations();
+    component.toggleExpand('SL-1');
+    expect(component.inventoryByLocation()['SL-1']?.count).toBe(9);
+    expect(component.isExpanded('SL-1')).toBe(true);
+
+    component.onLocationSelected('');
+
+    expect(component.inventoryByLocation()).toEqual({});
+    expect(component.isExpanded('SL-1')).toBe(false);
+  });
+
+  it('re-fetches inventory for the new page on page change', async () => {
+    await setup({ content: [{ id: 'SL-1', name: 'A', type: 'BIN', status: 'ACTIVE' }], number: 0, totalPages: 3, totalElements: 45 });
+    locationServiceStub.listStorageLocations.mockReturnValue(
+      of({ content: [{ id: 'SL-9', name: 'Z', type: 'BIN', status: 'ACTIVE' }], number: 1, totalPages: 3, totalElements: 45 }));
+    inventoryServiceStub.listLocationInventoryItems.mockClear();
+
+    component.nextPage();
+
+    expect(inventoryServiceStub.listLocationInventoryItems).toHaveBeenCalledWith('SL-9');
   });
 });
