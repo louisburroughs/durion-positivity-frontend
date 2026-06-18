@@ -48,12 +48,11 @@
     <button class="btn btn--ghost" type="button" (click)="clearFilters()" data-testid="clear-filters">Clear</button>
   </form>
 
-  <!-- Results -->
-  <!-- aria-atomic=false: incremental page appends announce only added rows/status, not the whole table -->
-  <div id="search-results" aria-live="polite" aria-atomic="false">
+  <!-- Results (status messages announced via the pagination status live region below) -->
+  <div id="search-results">
 
     @if (state() === 'loading') {
-      <p class="hint-text" aria-busy="true">Searching…</p>
+      <p class="hint-text" aria-busy="true">Loading…</p>
     }
 
     @if (state() === 'empty') {
@@ -61,7 +60,7 @@
     }
 
     @if (state() === 'access-denied') {
-      <p class="hint-text hint-text--warn">You do not have permission to search accounts.</p>
+      <p class="hint-text hint-text--warn">You do not have permission to view accounts.</p>
     }
 
     @if (state() === 'error') {
@@ -70,7 +69,7 @@
 
     @if (state() === 'ready' && parties().length) {
       <div class="table-wrap">
-        <table class="party-table" aria-label="Search results">
+        <table class="party-table" aria-label="Customer directory">
           <thead>
             <tr>
               <th>
