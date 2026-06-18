@@ -63,7 +63,10 @@
                   <span class="sort-icon" aria-hidden="true">{{ sortField() === 'name' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
                 </button>
               </th>
+              <th>Customer #</th>
               <th>Primary Contact</th>
+              <th>Phone</th>
+              <th>Status</th>
               <th>
                 <button class="sort-btn" type="button" (click)="sort('vehicles')"
                   [attr.aria-sort]="sortField() === 'vehicles' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
@@ -88,11 +91,32 @@
                   }
                 </td>
                 <td>
+                  @if (party.customerNumber) {
+                    {{ party.customerNumber }}
+                  } @else {
+                    <span class="party-row__empty">—</span>
+                  }
+                </td>
+                <td>
                   @if (primaryContact(party); as contact) {
                     <span class="party-row__name">{{ contact.name }}</span>
                     @if (contact.email) {
                       <span class="party-row__sub">{{ contact.email }}</span>
                     }
+                  } @else {
+                    <span class="party-row__empty">—</span>
+                  }
+                </td>
+                <td>
+                  @if (party.primaryContact?.phone; as phone) {
+                    {{ phone }}
+                  } @else {
+                    <span class="party-row__empty">—</span>
+                  }
+                </td>
+                <td>
+                  @if (party.status; as status) {
+                    <span class="party-row__status" [attr.data-status]="status">{{ status }}</span>
                   } @else {
                     <span class="party-row__empty">—</span>
                   }
