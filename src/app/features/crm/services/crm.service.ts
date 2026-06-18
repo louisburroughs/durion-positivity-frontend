@@ -53,6 +53,17 @@ export interface PartyPage {
   pageSize: number;
 }
 
+export interface BrowsePartiesOptions {
+  page?: number;
+  size?: number;
+  name?: string;
+  status?: string;
+  partyType?: string;
+  customerNumber?: string;
+  sortField?: 'name' | 'customerNumber';
+  sortOrder?: 'asc' | 'desc';
+}
+
 @Injectable({ providedIn: 'root' })
 export class CrmService {
   private readonly accountsApi = inject(CRMAccountsService);
@@ -104,17 +115,29 @@ export class CrmService {
    * incrementally as the user scrolls (see CustomerListComponent), so paging metadata
    * (totalCount, pageNumber, pageSize) is returned alongside the page contents.
    */
-  browseParties(page = 0, size = 25): Observable<PartyPage> {
+  browseParties(opts: BrowsePartiesOptions = {}): Observable<PartyPage> {
+    const page = opts.page ?? 0;
+    const size = opts.size ?? 25;
     const sdkPageable: SdkPageable = { page, size };
 
-    return this.accountsApi.browseParties(sdkPageable).pipe(
-      map(response => ({
-        parties: (response.results ?? []) as PartyDetail[],
-        totalCount: response.totalCount ?? 0,
-        pageNumber: response.pageNumber ?? page,
-        pageSize: response.pageSize ?? size,
-      })),
-    );
+    return this.accountsApi
+      .browseParties(
+        sdkPageable,
+        opts.name || undefined,
+        opts.status || undefined,
+        opts.partyType || undefined,
+        opts.customerNumber || undefined,
+        opts.sortField || undefined,
+        opts.sortOrder || undefined,
+      )
+      .pipe(
+        map(response => ({
+          parties: (response.results ?? []) as PartyDetail[],
+          totalCount: response.totalCount ?? 0,
+          pageNumber: response.pageNumber ?? page,
+          pageSize: response.pageSize ?? size,
+        })),
+      );
   }
 
   searchParties(query: string): Observable<{ parties: PartyDetail[] }> {

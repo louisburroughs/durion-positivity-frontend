@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
-import { of, throwError, Subject } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CustomerListComponent } from './customer-list.component';
 import { CrmService } from '../../services/crm.service';
@@ -26,7 +26,6 @@ describe('CustomerListComponent', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     crmServiceStub.browseParties.mockReturnValue(of(partyPage([], 0)));
-    crmServiceStub.searchParties.mockReturnValue(of({ parties: [] }));
 
     await TestBed.configureTestingModule({
       imports: [CustomerListComponent],
@@ -45,6 +44,15 @@ describe('CustomerListComponent', () => {
     TestBed.resetTestingModule();
   });
 
+  it('loads the first page via the browse API on init with default sort', () => {
+    fixture.detectChanges();
+
+    expect(crmServiceStub.browseParties).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 0, sortField: 'name', sortOrder: 'asc' }),
+    );
+    expect(component.state()).toBe('empty');
+  });
+
   it('renders customer number, phone and status columns from the browse rows', () => {
     crmServiceStub.browseParties.mockReturnValue(of(partyPage([{
       partyId: 'p1',
@@ -60,7 +68,8 @@ describe('CustomerListComponent', () => {
     expect(text).toContain('CUST-000123');
     expect(text).toContain('+1-555-0142');
     expect(text).toContain('ACTIVE');
-    const headers = fixture.debugElement.queryAll(By.css('.party-table thead th')).map(h => h.nativeElement.textContent.trim());
+    const headers = fixture.debugElement.queryAll(By.css('.party-table thead th'))
+      .map(h => h.nativeElement.textContent.replace(/[↑↓↕]/g, '').trim());
     expect(headers).toEqual(expect.arrayContaining(['Customer #', 'Phone', 'Status']));
   });
 
@@ -71,94 +80,92 @@ describe('CustomerListComponent', () => {
 
     const cells = fixture.debugElement.queryAll(By.css('.party-table tbody td'));
     const empties = cells.filter(c => c.query(By.css('.party-row__empty')));
-    // customer number, phone and status cells all fall back to —
     expect(empties.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('calls browse API on initial empty query to load customers', () => {
+  it('debounces filter changes and requests a filtered first page', async () => {
     fixture.detectChanges();
+    crmServiceStub.browseParties.mockClear();
 
-    expect(crmServiceStub.browseParties).toHaveBeenCalled();
-    expect(crmServiceStub.searchParties).not.toHaveBeenCalled();
-    expect(component.state()).toBe('empty');
-    expect(component.error()).toBeNull();
+    component.filterForm.patchValue({ name: 'acme', status: 'ACTIVE', partyType: 'ORGANIZATION', customerNumber: 'CUST-1' });
+    await new Promise(r => setTimeout(r, 400));
+
+    expect(crmServiceStub.browseParties).toHaveBeenCalledWith(
+      expect.objectContaining({
+        page: 0, name: 'acme', status: 'ACTIVE', partyType: 'ORGANIZATION', customerNumber: 'CUST-1',
+      }),
+    );
   });
 
-  it('calls search API with trimmed query when searching', () => {
-    component.search('  acme  ');
+  it('toggles sort field/direction and re-queries server-side', () => {
+    fixture.detectChanges();
+    crmServiceStub.browseParties.mockClear();
 
-    expect(crmServiceStub.searchParties).toHaveBeenCalledWith('acme');
-    expect(crmServiceStub.browseParties).not.toHaveBeenCalled();
+    component.sort('customerNumber');
+    expect(component.sortField()).toBe('customerNumber');
+    expect(component.sortDir()).toBe('asc');
+    expect(crmServiceStub.browseParties).toHaveBeenLastCalledWith(
+      expect.objectContaining({ sortField: 'customerNumber', sortOrder: 'asc', page: 0 }),
+    );
+
+    component.sort('customerNumber');
+    expect(component.sortDir()).toBe('desc');
+    expect(crmServiceStub.browseParties).toHaveBeenLastCalledWith(
+      expect.objectContaining({ sortField: 'customerNumber', sortOrder: 'desc' }),
+    );
   });
 
-  it('returns to browse mode when the query is cleared', () => {
-    component.search('acme');
-    component.search('   ');
+  it('pages forward/back and requests the right page; bounds are guarded', () => {
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage([party('a')], 60))); // 60/25 -> 3 pages
+    fixture.detectChanges();
+    expect(component.totalPages()).toBe(3);
+    expect(component.canPrevPage()).toBe(false);
+    expect(component.canNextPage()).toBe(true);
 
-    expect(crmServiceStub.searchParties).toHaveBeenCalledWith('acme');
+    component.nextPage();
+    expect(component.pageIndex()).toBe(1);
+    expect(crmServiceStub.browseParties).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 }));
+
+    crmServiceStub.browseParties.mockClear();
+    component.prevPage();
+    expect(component.pageIndex()).toBe(0);
+    component.prevPage(); // already first page -> no-op
     expect(crmServiceStub.browseParties).toHaveBeenCalledTimes(1);
   });
 
-  it('surfaces error state when API search fails', () => {
-    crmServiceStub.searchParties.mockReturnValueOnce(throwError(() => ({ status: 500 })));
-
-    component.search('acme');
-
-    expect(component.state()).toBe('error');
-    expect(component.error()).toBe('Search failed.');
-  });
-
-  it('accumulates browse pages across loadMore and stops at the last page', () => {
-    crmServiceStub.browseParties
-      .mockReturnValueOnce(of(partyPage([party('a'), party('b')], 3)))
-      .mockReturnValueOnce(of(partyPage([party('c')], 3)));
-
-    fixture.detectChanges(); // ngOnInit -> first browse page
-    expect(component.parties().length).toBe(2);
-    expect(component.totalCount()).toBe(3);
-    expect(component.hasMore()).toBe(true);
-
-    component.loadMore();
-    expect(component.parties().map(p => p.partyId)).toEqual(['a', 'b', 'c']);
-    expect(component.hasMore()).toBe(false);
-
-    crmServiceStub.browseParties.mockClear();
-    component.loadMore(); // no more pages -> guarded
-    expect(crmServiceStub.browseParties).not.toHaveBeenCalled();
-  });
-
-  it('does not load browse pages while in search mode', () => {
+  it('resets to page 0 when filters change after paging', async () => {
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage([party('a')], 60)));
     fixture.detectChanges();
-    component.search('acme'); // searching = true
-    crmServiceStub.browseParties.mockClear();
+    component.nextPage();
+    expect(component.pageIndex()).toBe(1);
 
-    component.loadMore();
-
-    expect(crmServiceStub.browseParties).not.toHaveBeenCalled();
+    component.filterForm.patchValue({ name: 'x' });
+    await new Promise(r => setTimeout(r, 400));
+    expect(component.pageIndex()).toBe(0);
   });
 
-  it('discards a browse page that resolves after a newer search', () => {
-    const pending = new Subject<unknown>();
-    crmServiceStub.browseParties.mockReturnValueOnce(pending.asObservable());
+  it('surfaces error state when the browse API fails', () => {
+    crmServiceStub.browseParties.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    fixture.detectChanges();
+    expect(component.state()).toBe('error');
+  });
 
-    fixture.detectChanges(); // first browse page in flight (unresolved)
+  it('surfaces access-denied on 403', () => {
+    crmServiceStub.browseParties.mockReturnValueOnce(throwError(() => ({ status: 403 })));
+    fixture.detectChanges();
+    expect(component.state()).toBe('access-denied');
+  });
 
-    crmServiceStub.searchParties.mockReturnValueOnce(of({ parties: [party('search-hit')] }));
-    component.search('acme'); // new generation; search results applied
-
-    // stale browse page now resolves — must be ignored, not appended
-    pending.next(partyPage([party('stale')], 99));
-    pending.complete();
-
-    expect(component.parties().map(p => p.partyId)).toEqual(['search-hit']);
-    expect(component.totalCount()).toBe(0);
-    expect(component.state()).toBe('ready');
+  it('clearFilters resets the filter form', () => {
+    fixture.detectChanges();
+    component.filterForm.patchValue({ name: 'acme', status: 'ACTIVE' });
+    component.clearFilters();
+    expect(component.filterForm.getRawValue()).toEqual({ name: '', status: '', partyType: '', customerNumber: '' });
   });
 
   it('returns the primary contact supplied on the party summary', () => {
     const pc = { name: 'Jane Doe', email: 'jane@acme.com', phone: '555-1234' };
     const contact = component.primaryContact({ partyId: 'p1', legalName: 'Acme', primaryContact: pc });
-
     expect(contact).toEqual(pc);
   });
 

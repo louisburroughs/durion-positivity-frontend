@@ -15,36 +15,52 @@
     </div>
   </header>
 
-  <!-- Search -->
-  <form [formGroup]="searchForm" class="search-form" aria-label="Search parties" role="search">
-    <label for="party-search" class="sr-only">Search accounts and parties</label>
-    <input
-      id="party-search"
-      type="search"
-      formControlName="query"
-      class="search-input"
-      placeholder="Search by name, DBA, or tax ID…"
-      aria-label="Search accounts and parties"
-      aria-controls="search-results"
-    />
+  <!-- Filters -->
+  <form [formGroup]="filterForm" class="filter-form" aria-label="Filter parties" role="search">
+    <div class="filter-field filter-field--grow">
+      <label for="filter-name" class="sr-only">Search by name</label>
+      <input id="filter-name" type="search" formControlName="name" class="search-input"
+        placeholder="Search by name…" aria-controls="search-results" data-testid="filter-name" />
+    </div>
+    <div class="filter-field">
+      <label for="filter-customer-number" class="sr-only">Customer number</label>
+      <input id="filter-customer-number" type="search" formControlName="customerNumber" class="search-input"
+        placeholder="Customer #…" data-testid="filter-customer-number" />
+    </div>
+    <div class="filter-field">
+      <label for="filter-status" class="sr-only">Status</label>
+      <select id="filter-status" formControlName="status" class="filter-select" data-testid="filter-status">
+        <option value="">All statuses</option>
+        <option value="ACTIVE">Active</option>
+        <option value="PENDING">Pending</option>
+        <option value="SUSPENDED">Suspended</option>
+        <option value="INACTIVE">Inactive</option>
+      </select>
+    </div>
+    <div class="filter-field">
+      <label for="filter-party-type" class="sr-only">Party type</label>
+      <select id="filter-party-type" formControlName="partyType" class="filter-select" data-testid="filter-party-type">
+        <option value="">All types</option>
+        <option value="ORGANIZATION">Commercial</option>
+        <option value="INDIVIDUAL">Individual</option>
+      </select>
+    </div>
+    <button class="btn btn--ghost" type="button" (click)="clearFilters()" data-testid="clear-filters">Clear</button>
   </form>
 
-  <!-- Results -->
-  <!-- aria-atomic=false: incremental page appends announce only added rows/status, not the whole table -->
-  <div id="search-results" aria-live="polite" aria-atomic="false">
+  <!-- Results (status messages announced via the pagination status live region below) -->
+  <div id="search-results">
 
     @if (state() === 'loading') {
-      <p class="hint-text" aria-busy="true">Searching…</p>
+      <p class="hint-text" aria-busy="true">Loading…</p>
     }
 
     @if (state() === 'empty') {
-      <p class="hint-text">
-        {{ searchForm.controls.query.value.trim() ? 'No accounts found matching your search.' : 'No accounts exist yet.' }}
-      </p>
+      <p class="hint-text">No accounts found matching your filters.</p>
     }
 
     @if (state() === 'access-denied') {
-      <p class="hint-text hint-text--warn">You do not have permission to search accounts.</p>
+      <p class="hint-text hint-text--warn">You do not have permission to view accounts.</p>
     }
 
     @if (state() === 'error') {
@@ -53,7 +69,7 @@
 
     @if (state() === 'ready' && parties().length) {
       <div class="table-wrap">
-        <table class="party-table" aria-label="Search results">
+        <table class="party-table" aria-label="Customer directory">
           <thead>
             <tr>
               <th>
@@ -63,21 +79,21 @@
                   <span class="sort-icon" aria-hidden="true">{{ sortField() === 'name' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
                 </button>
               </th>
-              <th>Customer #</th>
+              <th>
+                <button class="sort-btn" type="button" (click)="sort('customerNumber')"
+                  [attr.aria-sort]="sortField() === 'customerNumber' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
+                  Customer #
+                  <span class="sort-icon" aria-hidden="true">{{ sortField() === 'customerNumber' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
+                </button>
+              </th>
               <th>Primary Contact</th>
               <th>Phone</th>
               <th>Status</th>
-              <th>
-                <button class="sort-btn" type="button" (click)="sort('vehicles')"
-                  [attr.aria-sort]="sortField() === 'vehicles' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
-                  Vehicles
-                  <span class="sort-icon" aria-hidden="true">{{ sortField() === 'vehicles' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
-                </button>
-              </th>
+              <th>Vehicles</th>
             </tr>
           </thead>
           <tbody>
-            @for (party of sortedParties(); track party.partyId) {
+            @for (party of parties(); track party.partyId) {
               <tr class="party-row"
                   tabindex="0"
                   (click)="openParty(party.partyId)"
@@ -128,19 +144,15 @@
         </table>
       </div>
 
-      @if (hasMore()) {
-        <div #loadSentinel class="load-sentinel" aria-hidden="true"></div>
-      }
-
-      @if (loadingMore()) {
-        <p class="hint-text" aria-busy="true">Loading more…</p>
-      }
-
-      @if (totalCount()) {
-        <p class="hint-text result-count" aria-live="polite">
-          Showing {{ parties().length }} of {{ totalCount() }}
-        </p>
-      }
+      <nav class="pagination" aria-label="Customer directory pagination" data-testid="crm-pagination">
+        <button class="btn btn--ghost" type="button" (click)="prevPage()"
+          [disabled]="!canPrevPage()" data-testid="page-prev">Previous</button>
+        <span aria-live="polite" data-testid="page-status">
+          Page {{ pageIndex() + 1 }} of {{ totalPages() }} ({{ totalCount() }} total)
+        </span>
+        <button class="btn btn--ghost" type="button" (click)="nextPage()"
+          [disabled]="!canNextPage()" data-testid="page-next">Next</button>
+      </nav>
     }
   </div>
 
