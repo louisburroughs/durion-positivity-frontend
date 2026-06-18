@@ -44,6 +44,10 @@ describe('CrmService', () => {
     upsertCommunicationPreferences: vi.fn(),
   };
 
+  const relationshipsStub = {
+    createRelationship: vi.fn(),
+  };
+
   const browseParty: PartyDetail = {
     partyId: 'party-101',
     legalName: 'Acme Fleet',
@@ -59,7 +63,7 @@ describe('CrmService', () => {
         { provide: CRMAccountsService, useValue: crmAccountsStub },
         { provide: CRMCommunicationPreferencesService, useValue: commPrefsStub },
         { provide: CRMContactsService, useValue: {} },
-        { provide: CRMPartyRelationshipsService, useValue: {} },
+        { provide: CRMPartyRelationshipsService, useValue: relationshipsStub },
         { provide: CRMPersonsService, useValue: {} },
         { provide: CRMSnapshotsService, useValue: snapshotsApiStub },
         { provide: CRMVehiclesService, useValue: {} },
@@ -229,29 +233,65 @@ describe('CrmService', () => {
   });
 
   describe('getCommunicationPreferences() mapping', () => {
-    it('maps SDK preference enums to local booleans + preferredChannel', () => {
+    it('maps SDK OPT_IN/OPT_OUT enums to local booleans', () => {
       commPrefsStub.getCommunicationPreferences.mockReturnValueOnce(
-        of({ partyId: 'p1', emailPreference: 'ENABLED', smsPreference: 'DISABLED', phonePreference: 'SMS' }),
+        of({ partyId: 'p1', emailPreference: 'OPT_IN', smsPreference: 'OPT_OUT', phonePreference: 'OPT_IN' }),
       );
 
-      let result: { emailEnabled: boolean; smsEnabled: boolean; preferredChannel?: string } | undefined;
+      let result: CommunicationPreferences | undefined;
       service.getCommunicationPreferences('p1').subscribe(r => (result = r));
 
-      expect(result).toEqual({ emailEnabled: true, smsEnabled: false, preferredChannel: 'SMS' });
+      expect(result).toEqual({ emailEnabled: true, smsEnabled: false });
     });
   });
 
   describe('upsertCommunicationPreferences() mapping', () => {
-    it('returns the saved preferences on success (response does not echo values)', () => {
+    it('sends OPT_IN/OPT_OUT enums and returns the saved preferences (response does not echo values)', () => {
       commPrefsStub.upsertCommunicationPreferences.mockReturnValueOnce(
         of({ partyId: 'p1', operationType: 'UPDATE', status: 'OK' }),
       );
-      const prefs: CommunicationPreferences = { emailEnabled: true, smsEnabled: false, preferredChannel: 'EMAIL' };
+      const prefs: CommunicationPreferences = { emailEnabled: true, smsEnabled: false };
 
       let result: CommunicationPreferences | undefined;
       service.upsertCommunicationPreferences('p1', prefs).subscribe(r => (result = r));
 
+      const [partyId, payload] = commPrefsStub.upsertCommunicationPreferences.mock.calls[0];
+      expect(partyId).toBe('p1');
+      expect(payload).toEqual({ emailPreference: 'OPT_IN', smsPreference: 'OPT_OUT' });
       expect(result).toEqual(prefs);
+    });
+  });
+
+  describe('createRelationship() mapping', () => {
+    it('sends roles as a Set and maps the SDK response roles Set back to an array', () => {
+      relationshipsStub.createRelationship.mockReturnValueOnce(
+        of({
+          relationshipId: 'rel-1',
+          partyId: 'p1',
+          personId: 'per-1',
+          roles: new Set(['BILLING', 'PRIMARY_CONTACT']),
+          effectiveStartDate: '2026-01-01',
+          createdAt: '2026-01-02T00:00:00Z',
+          previousPrimaryDemoted: true,
+        }),
+      );
+
+      let result: { roles?: string[]; relationshipId?: string } | undefined;
+      service
+        .createRelationship('p1', {
+          personId: 'per-1',
+          roles: ['BILLING', 'PRIMARY_CONTACT'],
+          effectiveStartDate: '2026-01-01',
+        })
+        .subscribe(r => (result = r));
+
+      const [partyId, payload] = relationshipsStub.createRelationship.mock.calls[0];
+      expect(partyId).toBe('p1');
+      expect(payload.roles).toBeInstanceOf(Set);
+      expect(Array.from(payload.roles)).toEqual(['BILLING', 'PRIMARY_CONTACT']);
+      expect(Array.isArray(result?.roles)).toBe(true);
+      expect(result?.roles).toEqual(['BILLING', 'PRIMARY_CONTACT']);
+      expect(result?.relationshipId).toBe('rel-1');
     });
   });
 

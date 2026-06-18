@@ -233,9 +233,8 @@ export class CrmService {
   getCommunicationPreferences(partyId: string): Observable<CommunicationPreferences> {
     return this.communicationPrefsApi.getCommunicationPreferences(partyId).pipe(
       map(res => ({
-        emailEnabled: String(res.emailPreference) === 'ENABLED',
-        smsEnabled: String(res.smsPreference) === 'ENABLED',
-        preferredChannel: res.phonePreference != null ? String(res.phonePreference) : undefined,
+        emailEnabled: String(res.emailPreference) === 'OPT_IN',
+        smsEnabled: String(res.smsPreference) === 'OPT_IN',
       } satisfies CommunicationPreferences)),
     );
   }
@@ -245,9 +244,8 @@ export class CrmService {
     prefs: CommunicationPreferences,
   ): Observable<CommunicationPreferences> {
     const sdkRequest: SdkUpsertCommunicationPreferencesRequest = {
-      emailPreference: prefs.emailEnabled ? 'ENABLED' : 'DISABLED',
-      smsPreference: prefs.smsEnabled ? 'ENABLED' : 'DISABLED',
-      phonePreference: prefs.preferredChannel,
+      emailPreference: prefs.emailEnabled ? 'OPT_IN' : 'OPT_OUT',
+      smsPreference: prefs.smsEnabled ? 'OPT_IN' : 'OPT_OUT',
     };
     // The upsert response confirms the write but does not echo the preference
     // values, so the saved request is the authoritative post-save state.
