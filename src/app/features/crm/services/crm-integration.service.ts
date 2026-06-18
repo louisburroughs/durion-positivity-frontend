@@ -35,11 +35,11 @@ export class CrmIntegrationService {
     ).pipe(
       map(p => ({
         items: (p.content ?? []).map(e => ({
-          eventId: (e as AccountingEventListItem).eventId ?? '',
-          eventType: (e as AccountingEventListItem).eventType ?? '',
-          processingStatus: (e as AccountingEventListItem).processingStatus ?? 'PENDING',
-          receivedAt: (e as AccountingEventListItem).receivedAt ?? '',
-          organizationId: (e as AccountingEventListItem).organizationId,
+          eventId: (e as unknown as AccountingEventListItem).eventId ?? '',
+          eventType: (e as unknown as AccountingEventListItem).eventType ?? '',
+          processingStatus: (e as unknown as AccountingEventListItem).processingStatus ?? 'PENDING',
+          receivedAt: (e as unknown as AccountingEventListItem).receivedAt ?? '',
+          organizationId: (e as unknown as AccountingEventListItem).organizationId,
         } satisfies AccountingEventListItem)),
         totalCount: p.totalElements ?? 0,
       } satisfies AccountingEventListResponse)),
@@ -47,7 +47,7 @@ export class CrmIntegrationService {
   }
 
   getEvent(eventId: string): Observable<AccountingEventResponse> {
-    return this.eventsApi.getEvent(eventId) as Observable<AccountingEventResponse>;
+    return this.eventsApi.getEvent(eventId) as unknown as Observable<AccountingEventResponse>;
   }
 
   getReprocessingHistory(eventId: string): Observable<ReprocessingAttemptHistoryResponse[]> {

@@ -113,7 +113,7 @@ export class EstimateCreatePageComponent implements OnInit {
         const vehicles: VehicleSummary[] = (snapshot as { vehicles?: VehicleSummary[] } | null)?.vehicles ?? [];
         if (vehicles.length === 0 && customer.vehicleVins?.length) {
           // Fallback: build VehicleSummary stubs from VIN strings on the CustomerDTO
-          this.customerVehicles.set(customer.vehicleVins.map(vin => ({ vin })));
+          this.customerVehicles.set(customer.vehicleVins.map(vin => ({ vin })) as VehicleSummary[]);
         } else {
           this.customerVehicles.set(vehicles);
         }

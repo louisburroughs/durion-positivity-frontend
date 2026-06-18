@@ -577,7 +577,7 @@ export class ProductCatalogService {
 
   private toReplacementRequest(replacement: Partial<ReplacementProduct>): ProductReplacementRequest {
     return {
-      replacementProductId: replacement.replacementProductId,
+      replacementProductId: replacement.replacementProductId as string,
       priorityOrder: replacement.priority,
       notes: replacement.notes,
       effectiveAt: replacement.effectiveAt,

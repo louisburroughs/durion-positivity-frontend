@@ -266,19 +266,19 @@ export class CrmService {
   }
 
   fetchByParty(partyId: string): Observable<CrmSnapshot> {
-    return this.snapshotsApi.fetchByParty(partyId) as Observable<CrmSnapshot>;
+    return this.snapshotsApi.fetchByParty(partyId) as unknown as Observable<CrmSnapshot>;
   }
 
   fetchByVehicle(vehicleId: string): Observable<CrmSnapshot> {
-    return this.snapshotsApi.fetchByVehicle(vehicleId) as Observable<CrmSnapshot>;
+    return this.snapshotsApi.fetchByVehicle(vehicleId) as unknown as Observable<CrmSnapshot>;
   }
 
   getBillingRules(partyId: string): Observable<BillingRules> {
-    return this.snapshotsApi.getBillingRules(partyId) as Observable<BillingRules>;
+    return this.snapshotsApi.getBillingRules(partyId) as unknown as Observable<BillingRules>;
   }
 
   upsertBillingRules(partyId: string, rules: Partial<BillingRules>): Observable<BillingRules> {
     const { createdAt, updatedAt, ...payload } = rules;
-    return this.accountsApi.upsertBillingRules(partyId, payload as UpsertBillingRulesRequest) as Observable<BillingRules>;
+    return this.accountsApi.upsertBillingRules(partyId, payload as UpsertBillingRulesRequest) as unknown as Observable<BillingRules>;
   }
 }

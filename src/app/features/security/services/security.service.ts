@@ -115,7 +115,7 @@ export class SecurityService {
   }
 
   getUserRoleAssignments(userId: string): Observable<RoleAssignment[]> {
-    return this.roleManagement.getUserRoleAssignments(userId) as Observable<RoleAssignment[]>;
+    return this.roleManagement.getUserRoleAssignments(userId) as unknown as Observable<RoleAssignment[]>;
   }
 
   searchAudit(appointmentId: string): Observable<unknown[]> {

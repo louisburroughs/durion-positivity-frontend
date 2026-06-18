@@ -239,7 +239,7 @@ export class InventoryCycleCountService {
     return {
       locationId: request.locationId,
       zoneIds: request.zoneIds,
-      planName: request.planName,
+      planName: request.planName as string,
       scheduledDate: request.scheduledDate,
     };
   }
