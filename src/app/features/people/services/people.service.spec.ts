@@ -343,7 +343,7 @@ describe('PeopleService', () => {
     service.submitWorkSession('session/1', request).subscribe();
 
     expect(apiBaseStub.post).toHaveBeenCalledWith(
-      '/v1/people/workSessions/session%2F1/submit',
+      '/people/v1/people/workSessions/session%2F1/submit',
       request,
     );
   });
