@@ -64,7 +64,7 @@ export class CrmService {
   private readonly vehiclesApi = inject(CRMVehiclesService);
 
   listBillingTerms(): Observable<BillingTermsRef[]> {
-    return this.accountsApi.listBillingTerms() as Observable<BillingTermsRef[]>;
+    return this.accountsApi.listBillingTerms() as unknown as Observable<BillingTermsRef[]>;
   }
 
   createCommercialAccount(
@@ -86,13 +86,13 @@ export class CrmService {
     const sdkRequest: SdkMergePartiesRequest = {
       survivorPartyId: request.survivorPartyId,
       losingPartyId: request.losingPartyId,
-      justification: request.justification,
+      justification: request.justification as string,
     };
     return this.accountsApi.mergeParties(partyId, sdkRequest) as Observable<MergePartiesResponse>;
   }
 
   checkCommercialAccountDuplicates(legalName: string): Observable<DuplicateCheckResponse> {
-    return this.accountsApi.checkPartyDuplicates(legalName) as Observable<DuplicateCheckResponse>;
+    return this.accountsApi.checkPartyDuplicates(legalName) as unknown as Observable<DuplicateCheckResponse>;
   }
 
   getParty(partyId: string): Observable<PartyDetail> {
@@ -157,7 +157,7 @@ export class CrmService {
       effectiveEndDate: request.effectiveEndDate,
       primaryBillingContact: request.primaryBillingContact,
     };
-    return this.relationshipsApi.createRelationship(partyId, sdkRequest) as Observable<CreatePartyRelationshipResponse>;
+    return this.relationshipsApi.createRelationship(partyId, sdkRequest) as unknown as Observable<CreatePartyRelationshipResponse>;
   }
 
   getContactsWithRoles(partyId: string): Observable<Relationship[]> {
@@ -185,7 +185,7 @@ export class CrmService {
     const sdkRequest: SdkUpdateContactRolesRequest = {
       roles: request.roles.map(role => ({ roleCode: role as string })),
     };
-    return this.contactsApi.updateContactRoles(partyId, contactId, sdkRequest) as Observable<Contact>;
+    return this.contactsApi.updateContactRoles(partyId, contactId, sdkRequest) as unknown as Observable<Contact>;
   }
 
   designatePrimaryBillingContact(
@@ -200,7 +200,7 @@ export class CrmService {
   }
 
   getCommunicationPreferences(partyId: string): Observable<CommunicationPreferences> {
-    return this.communicationPrefsApi.getCommunicationPreferences(partyId) as Observable<CommunicationPreferences>;
+    return this.communicationPrefsApi.getCommunicationPreferences(partyId) as unknown as Observable<CommunicationPreferences>;
   }
 
   upsertCommunicationPreferences(
@@ -212,7 +212,7 @@ export class CrmService {
       smsPreference: prefs.smsEnabled ? 'ENABLED' : 'DISABLED',
       phonePreference: prefs.preferredChannel,
     };
-    return this.communicationPrefsApi.upsertCommunicationPreferences(partyId, sdkRequest) as Observable<CommunicationPreferences>;
+    return this.communicationPrefsApi.upsertCommunicationPreferences(partyId, sdkRequest) as unknown as Observable<CommunicationPreferences>;
   }
 
   createVehicleForParty(

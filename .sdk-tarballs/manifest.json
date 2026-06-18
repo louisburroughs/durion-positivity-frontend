@@ -1,6 +1,6 @@
 {
   "sdkRoot": "/home/louis-burroughs/IdeaProjects/durion-positivity-sdk-angular",
-  "generatedAt": "2026-06-17T22:39:44.324Z",
+  "generatedAt": "2026-06-18T01:29:40.923Z",
   "packages": {
     "@durion-sdk/transport": "durion-sdk-transport-0.1.0-alpha.tgz",
     "@durion-sdk/accounting": "durion-sdk-accounting-0.1.0-alpha.tgz",
