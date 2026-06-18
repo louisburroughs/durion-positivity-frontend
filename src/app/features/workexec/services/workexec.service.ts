@@ -573,7 +573,7 @@ export class WorkexecService {
    * GET /v1/workorders/estimates?customerId={customerId}
    */
   listEstimatesForCustomer(customerId: string): Observable<EstimateListItem[]> {
-    return this.estimateApi.getEstimatesByCustomer(customerId) as Observable<EstimateListItem[]>;
+    return this.estimateApi.getEstimatesByCustomer(customerId) as unknown as Observable<EstimateListItem[]>;
   }
 
   /**
@@ -894,22 +894,22 @@ export class WorkexecService {
    * GET /v1/workorders/{workorderId}/parts/usageHistory
    */
   getUsageHistory(workorderId: string): Observable<PartUsageResponse[]> {
-    return this.workorderParts.getUsageHistory(workorderId) as Observable<PartUsageResponse[]>;
+    return this.workorderParts.getUsageHistory(workorderId) as unknown as Observable<PartUsageResponse[]>;
   }
 
   getWorkorderPickList(workorderId: string): Observable<PickListView> {
-    return this.workorderPickFacade.getPickList(workorderId) as Observable<PickListView>;
+    return this.workorderPickFacade.getPickList(workorderId) as unknown as Observable<PickListView>;
   }
 
   getPickedItems(workorderId: string): Observable<PickedItemLine[]> {
-    return this.workorderPickedItems.getPickedItems(workorderId) as Observable<PickedItemLine[]>;
+    return this.workorderPickedItems.getPickedItems(workorderId) as unknown as Observable<PickedItemLine[]>;
   }
 
   consumePickedItems(
     workorderId: string,
     request: ConsumePickedItemsRequest,
   ): Observable<ConsumptionResult> {
-    return this.workorderPickedItems.consumePickedItems(workorderId, this.toSdkConsumePickedItemsRequest(request)) as Observable<ConsumptionResult>;
+    return this.workorderPickedItems.consumePickedItems(workorderId, this.toSdkConsumePickedItemsRequest(request)) as unknown as Observable<ConsumptionResult>;
   }
 
   resolvePickScan(workorderId: string, req: ScanResolveRequest): Observable<PickExecuteLine[]> {

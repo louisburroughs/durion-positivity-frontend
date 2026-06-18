@@ -15,6 +15,7 @@ import type {
   CancelAppointmentRequest,
   ConflictOverrideRequest,
   CreateAssignmentRequest,
+  MechanicAssignmentItem,
   RescheduleAppointmentRequest,
   ShopAuditFilter,
 } from '@durion-sdk/shop-manager';
@@ -35,7 +36,7 @@ export class AppointmentService {
   private readonly shopAudit = inject(ShopAuditService);
 
   getAppointment(appointmentId: string): Observable<AppointmentDetail> {
-    return this.appointments.getAppointment(appointmentId) as Observable<AppointmentDetail>;
+    return this.appointments.getAppointment(appointmentId) as unknown as Observable<AppointmentDetail>;
   }
 
   listAssignments(appointmentId: string): Observable<AssignmentDetail[]> {
@@ -57,9 +58,9 @@ export class AppointmentService {
       appointmentId,
       resourceId: body.bayId ?? body.mobileUnitId,
       resourceType,
-      mechanics: body.mechanic?.mechanicId
+      mechanics: (body.mechanic?.mechanicId
         ? [{ mechanicPersonId: body.mechanic.mechanicId, role }]
-        : undefined,
+        : []) as MechanicAssignmentItem[],
     };
     return this.assignment.createAssignment(appointmentId, sdkRequest) as Observable<AssignmentDetail>;
   }
@@ -71,7 +72,7 @@ export class AppointmentService {
       reason: (body.reason as RescheduleAppointmentRequest['reason']) ?? 'OTHER',
       rescheduleReasonNotes: body.notes,
     };
-    return this.appointments.rescheduleAppointment(appointmentId, sdkRequest) as Observable<AppointmentDetail>;
+    return this.appointments.rescheduleAppointment(appointmentId, sdkRequest) as unknown as Observable<AppointmentDetail>;
   }
 
   searchAudit(appointmentId: string): Observable<unknown[]> {
@@ -93,7 +94,7 @@ export class AppointmentService {
       sourceType,
       sourceId: body.sourceId,
     };
-    return this.appointments.createAppointment(sdkRequest, idempotencyKey) as Observable<AppointmentDetail>;
+    return this.appointments.createAppointment(sdkRequest, idempotencyKey) as unknown as Observable<AppointmentDetail>;
   }
 
   executeOverride(appointmentId: string, body: { overrideReason: string }): Observable<AppointmentDetail> {
@@ -101,7 +102,7 @@ export class AppointmentService {
       appointmentId,
       overrideReason: body.overrideReason,
     };
-    return this.conflictOverride.executeOverride(appointmentId, sdkRequest) as Observable<AppointmentDetail>;
+    return this.conflictOverride.executeOverride(appointmentId, sdkRequest) as unknown as Observable<AppointmentDetail>;
   }
 
   cancelAppointment(appointmentId: string, body: { cancellationReason: string; notes?: string }): Observable<AppointmentDetail> {
@@ -109,7 +110,7 @@ export class AppointmentService {
       cancellationReason: (body.cancellationReason as CancelAppointmentRequest['cancellationReason']) ?? 'OTHER',
       notes: body.notes,
     };
-    return this.appointments.cancelAppointment(appointmentId, sdkRequest) as Observable<AppointmentDetail>;
+    return this.appointments.cancelAppointment(appointmentId, sdkRequest) as unknown as Observable<AppointmentDetail>;
   }
 
   getShopServiceDetails(locationId: string, serviceId: string): Observable<unknown> {
