@@ -45,7 +45,6 @@ export class PartyDetailComponent implements OnInit {
   readonly prefsForm = this.fb.nonNullable.group({
     emailEnabled:       [false],
     smsEnabled:         [false],
-    preferredChannel:   [''],
   });
 
   get partyId(): string {
@@ -102,7 +101,6 @@ export class PartyDetailComponent implements OnInit {
     this.prefsForm.setValue({
       emailEnabled:     current?.emailEnabled ?? false,
       smsEnabled:       current?.smsEnabled ?? false,
-      preferredChannel: current?.preferredChannel ?? '',
     });
     this.prefsError.set(null);
     this.prefsEdit.set('editing');
@@ -122,7 +120,6 @@ export class PartyDetailComponent implements OnInit {
     this.crm.upsertCommunicationPreferences(this.partyId, {
       emailEnabled:     raw.emailEnabled,
       smsEnabled:       raw.smsEnabled,
-      preferredChannel: raw.preferredChannel || undefined,
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: updated => {
         this.prefs.set(updated);

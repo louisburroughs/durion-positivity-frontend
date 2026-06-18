@@ -153,7 +153,6 @@ export interface UpdateContactRolesRequest {
 export interface CommunicationPreferences {
   emailEnabled: boolean;
   smsEnabled: boolean;
-  preferredChannel?: string;
   optOutReasons?: string[];
 }
 

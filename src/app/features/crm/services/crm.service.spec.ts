@@ -11,7 +11,7 @@ import {
   CRMVehiclesService,
 } from '@durion-sdk/customer';
 import { CrmService, PartyPage } from './crm.service';
-import type { BillingRules, CrmSnapshot, PartyDetail } from '../models/crm.models';
+import type { BillingRules, CommunicationPreferences, CrmSnapshot, PartyDetail } from '../models/crm.models';
 import type { Pageable } from '@durion-sdk/customer';
 
 describe('CrmService', () => {
@@ -35,6 +35,17 @@ describe('CrmService', () => {
     browseParties: vi.fn(),
     upsertBillingRules: vi.fn(),
     searchParties: vi.fn(),
+    listBillingTerms: vi.fn(),
+    checkPartyDuplicates: vi.fn(),
+  };
+
+  const commPrefsStub = {
+    getCommunicationPreferences: vi.fn(),
+    upsertCommunicationPreferences: vi.fn(),
+  };
+
+  const relationshipsStub = {
+    createRelationship: vi.fn(),
   };
 
   const browseParty: PartyDetail = {
@@ -50,9 +61,9 @@ describe('CrmService', () => {
         CrmService,
         { provide: ApiBaseService, useValue: apiBaseServiceStub },
         { provide: CRMAccountsService, useValue: crmAccountsStub },
-        { provide: CRMCommunicationPreferencesService, useValue: {} },
+        { provide: CRMCommunicationPreferencesService, useValue: commPrefsStub },
         { provide: CRMContactsService, useValue: {} },
-        { provide: CRMPartyRelationshipsService, useValue: {} },
+        { provide: CRMPartyRelationshipsService, useValue: relationshipsStub },
         { provide: CRMPersonsService, useValue: {} },
         { provide: CRMSnapshotsService, useValue: snapshotsApiStub },
         { provide: CRMVehiclesService, useValue: {} },
@@ -192,6 +203,95 @@ describe('CrmService', () => {
         pageNumber: 0,
         pageSize: 20,
       });
+    });
+  });
+
+  describe('listBillingTerms() mapping', () => {
+    it('maps SDK {code,label} terms to local {id,name}', () => {
+      crmAccountsStub.listBillingTerms.mockReturnValueOnce(
+        of([{ code: 'NET30', label: 'Net 30', netDays: 30 }, { code: 'COD', label: 'Cash on Delivery', netDays: 0 }]),
+      );
+
+      let result: { id: string; name: string }[] | undefined;
+      service.listBillingTerms().subscribe(r => (result = r));
+
+      expect(result).toEqual([{ id: 'NET30', name: 'Net 30' }, { id: 'COD', name: 'Cash on Delivery' }]);
+    });
+  });
+
+  describe('checkCommercialAccountDuplicates() mapping', () => {
+    it('maps SDK potentialDuplicates -> local duplicates with matchReasons', () => {
+      crmAccountsStub.checkPartyDuplicates.mockReturnValueOnce(
+        of({ duplicatesFound: true, potentialDuplicates: [{ partyId: 'p1', legalName: 'Acme', score: 0.9, matchType: 'LEGAL_NAME' }] }),
+      );
+
+      let result: { duplicates: { partyId: string; legalName: string; matchReasons?: string[] }[] } | undefined;
+      service.checkCommercialAccountDuplicates('Acme').subscribe(r => (result = r));
+
+      expect(result).toEqual({ duplicates: [{ partyId: 'p1', legalName: 'Acme', matchReasons: ['LEGAL_NAME'] }] });
+    });
+  });
+
+  describe('getCommunicationPreferences() mapping', () => {
+    it('maps SDK OPT_IN/OPT_OUT enums to local booleans', () => {
+      commPrefsStub.getCommunicationPreferences.mockReturnValueOnce(
+        of({ partyId: 'p1', emailPreference: 'OPT_IN', smsPreference: 'OPT_OUT', phonePreference: 'OPT_IN' }),
+      );
+
+      let result: CommunicationPreferences | undefined;
+      service.getCommunicationPreferences('p1').subscribe(r => (result = r));
+
+      expect(result).toEqual({ emailEnabled: true, smsEnabled: false });
+    });
+  });
+
+  describe('upsertCommunicationPreferences() mapping', () => {
+    it('sends OPT_IN/OPT_OUT enums and returns the saved preferences (response does not echo values)', () => {
+      commPrefsStub.upsertCommunicationPreferences.mockReturnValueOnce(
+        of({ partyId: 'p1', operationType: 'UPDATE', status: 'OK' }),
+      );
+      const prefs: CommunicationPreferences = { emailEnabled: true, smsEnabled: false };
+
+      let result: CommunicationPreferences | undefined;
+      service.upsertCommunicationPreferences('p1', prefs).subscribe(r => (result = r));
+
+      const [partyId, payload] = commPrefsStub.upsertCommunicationPreferences.mock.calls[0];
+      expect(partyId).toBe('p1');
+      expect(payload).toEqual({ emailPreference: 'OPT_IN', smsPreference: 'OPT_OUT' });
+      expect(result).toEqual(prefs);
+    });
+  });
+
+  describe('createRelationship() mapping', () => {
+    it('sends roles as a Set and maps the SDK response roles Set back to an array', () => {
+      relationshipsStub.createRelationship.mockReturnValueOnce(
+        of({
+          relationshipId: 'rel-1',
+          partyId: 'p1',
+          personId: 'per-1',
+          roles: new Set(['BILLING', 'PRIMARY_CONTACT']),
+          effectiveStartDate: '2026-01-01',
+          createdAt: '2026-01-02T00:00:00Z',
+          previousPrimaryDemoted: true,
+        }),
+      );
+
+      let result: { roles?: string[]; relationshipId?: string } | undefined;
+      service
+        .createRelationship('p1', {
+          personId: 'per-1',
+          roles: ['BILLING', 'PRIMARY_CONTACT'],
+          effectiveStartDate: '2026-01-01',
+        })
+        .subscribe(r => (result = r));
+
+      const [partyId, payload] = relationshipsStub.createRelationship.mock.calls[0];
+      expect(partyId).toBe('p1');
+      expect(payload.roles).toBeInstanceOf(Set);
+      expect(Array.from(payload.roles)).toEqual(['BILLING', 'PRIMARY_CONTACT']);
+      expect(Array.isArray(result?.roles)).toBe(true);
+      expect(result?.roles).toEqual(['BILLING', 'PRIMARY_CONTACT']);
+      expect(result?.relationshipId).toBe('rel-1');
     });
   });
 

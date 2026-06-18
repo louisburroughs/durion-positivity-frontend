@@ -119,10 +119,6 @@
             <dd>{{ prefs()!.emailEnabled ? 'Opted in' : 'Opted out' }}</dd>
             <dt>SMS Notifications</dt>
             <dd>{{ prefs()!.smsEnabled ? 'Opted in' : 'Opted out' }}</dd>
-            @if (prefs()!.preferredChannel) {
-              <dt>Preferred Channel</dt>
-              <dd>{{ prefs()!.preferredChannel }}</dd>
-            }
           </dl>
         }
       }
@@ -150,16 +146,6 @@
               <span class="toggle-track" aria-hidden="true"></span>
               <span class="toggle-text">{{ prefsForm.controls.smsEnabled.value ? 'Opted in' : 'Opted out' }}</span>
             </label>
-          </div>
-
-          <div class="field">
-            <label for="preferredChannel" class="field__label">Preferred Channel</label>
-            <select id="preferredChannel" formControlName="preferredChannel" class="field__input field__input--select">
-              <option value="">Not set</option>
-              <option value="EMAIL">Email</option>
-              <option value="SMS">SMS</option>
-              <option value="PHONE">Phone</option>
-            </select>
           </div>
 
           <div class="form-actions">

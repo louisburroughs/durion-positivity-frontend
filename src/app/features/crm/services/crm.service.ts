@@ -4,7 +4,6 @@ import { map } from 'rxjs/operators';
 import {
   CRMAccountsService,
   CRMCommunicationPreferencesService,
-  CRMContactsService,
   CRMPartyRelationshipsService,
   CRMPersonsService,
   CRMSnapshotsService,
@@ -17,7 +16,6 @@ import type {
   SearchPartiesRequest as SdkSearchPartiesRequest,
   CreatePersonRequest as SdkCreatePersonRequest,
   CreatePartyRelationshipRequest as SdkCreatePartyRelationshipRequest,
-  UpdateContactRolesRequest as SdkUpdateContactRolesRequest,
   UpsertCommunicationPreferencesRequest as SdkUpsertCommunicationPreferencesRequest,
   UpsertBillingRulesRequest,
   CreateVehicleForPartyRequest as SdkCreateVehicleForPartyRequest,
@@ -33,7 +31,6 @@ import {
   CreatePersonResponse,
   CreateVehicleRequest,
   CommunicationPreferences,
-  Contact,
   CrmSnapshot,
   DuplicateCheckResponse,
   MergePartiesRequest,
@@ -41,7 +38,6 @@ import {
   PartyDetail,
   Relationship,
   RelationshipRole,
-  UpdateContactRolesRequest,
   VehicleRef,
 } from '../models/crm.models';
 
@@ -68,14 +64,18 @@ export interface BrowsePartiesOptions {
 export class CrmService {
   private readonly accountsApi = inject(CRMAccountsService);
   private readonly communicationPrefsApi = inject(CRMCommunicationPreferencesService);
-  private readonly contactsApi = inject(CRMContactsService);
   private readonly relationshipsApi = inject(CRMPartyRelationshipsService);
   private readonly personsApi = inject(CRMPersonsService);
   private readonly snapshotsApi = inject(CRMSnapshotsService);
   private readonly vehiclesApi = inject(CRMVehiclesService);
 
   listBillingTerms(): Observable<BillingTermsRef[]> {
-    return this.accountsApi.listBillingTerms() as unknown as Observable<BillingTermsRef[]>;
+    return this.accountsApi.listBillingTerms().pipe(
+      map(terms => (terms ?? []).map(t => ({
+        id: (t as { code?: string }).code ?? '',
+        name: (t as { label?: string }).label ?? '',
+      }))),
+    );
   }
 
   createCommercialAccount(
@@ -103,7 +103,15 @@ export class CrmService {
   }
 
   checkCommercialAccountDuplicates(legalName: string): Observable<DuplicateCheckResponse> {
-    return this.accountsApi.checkPartyDuplicates(legalName) as unknown as Observable<DuplicateCheckResponse>;
+    return this.accountsApi.checkPartyDuplicates(legalName).pipe(
+      map(res => ({
+        duplicates: (res.potentialDuplicates ?? []).map(m => ({
+          partyId: m.partyId ?? '',
+          legalName: m.legalName ?? '',
+          matchReasons: m.matchType != null ? [String(m.matchType)] : undefined,
+        })),
+      } satisfies DuplicateCheckResponse)),
+    );
   }
 
   getParty(partyId: string): Observable<PartyDetail> {
@@ -180,7 +188,18 @@ export class CrmService {
       effectiveEndDate: request.effectiveEndDate,
       primaryBillingContact: request.primaryBillingContact,
     };
-    return this.relationshipsApi.createRelationship(partyId, sdkRequest) as unknown as Observable<CreatePartyRelationshipResponse>;
+    return this.relationshipsApi.createRelationship(partyId, sdkRequest).pipe(
+      map(res => ({
+        relationshipId: res.relationshipId,
+        partyId: res.partyId,
+        personId: res.personId,
+        roles: res.roles ? (Array.from(res.roles) as RelationshipRole[]) : undefined,
+        effectiveStartDate: res.effectiveStartDate,
+        effectiveEndDate: res.effectiveEndDate,
+        createdAt: res.createdAt,
+        previousPrimaryDemoted: res.previousPrimaryDemoted,
+      } satisfies CreatePartyRelationshipResponse)),
+    );
   }
 
   getContactsWithRoles(partyId: string): Observable<Relationship[]> {
@@ -200,17 +219,6 @@ export class CrmService {
     );
   }
 
-  updateContactRoles(
-    partyId: string,
-    contactId: string,
-    request: UpdateContactRolesRequest,
-  ): Observable<Contact> {
-    const sdkRequest: SdkUpdateContactRolesRequest = {
-      roles: request.roles.map(role => ({ roleCode: role as string })),
-    };
-    return this.contactsApi.updateContactRoles(partyId, contactId, sdkRequest) as unknown as Observable<Contact>;
-  }
-
   designatePrimaryBillingContact(
     partyId: string,
     relationshipId: string,
@@ -223,7 +231,12 @@ export class CrmService {
   }
 
   getCommunicationPreferences(partyId: string): Observable<CommunicationPreferences> {
-    return this.communicationPrefsApi.getCommunicationPreferences(partyId) as unknown as Observable<CommunicationPreferences>;
+    return this.communicationPrefsApi.getCommunicationPreferences(partyId).pipe(
+      map(res => ({
+        emailEnabled: String(res.emailPreference) === 'OPT_IN',
+        smsEnabled: String(res.smsPreference) === 'OPT_IN',
+      } satisfies CommunicationPreferences)),
+    );
   }
 
   upsertCommunicationPreferences(
@@ -231,11 +244,14 @@ export class CrmService {
     prefs: CommunicationPreferences,
   ): Observable<CommunicationPreferences> {
     const sdkRequest: SdkUpsertCommunicationPreferencesRequest = {
-      emailPreference: prefs.emailEnabled ? 'ENABLED' : 'DISABLED',
-      smsPreference: prefs.smsEnabled ? 'ENABLED' : 'DISABLED',
-      phonePreference: prefs.preferredChannel,
+      emailPreference: prefs.emailEnabled ? 'OPT_IN' : 'OPT_OUT',
+      smsPreference: prefs.smsEnabled ? 'OPT_IN' : 'OPT_OUT',
     };
-    return this.communicationPrefsApi.upsertCommunicationPreferences(partyId, sdkRequest) as unknown as Observable<CommunicationPreferences>;
+    // The upsert response confirms the write but does not echo the preference
+    // values, so the saved request is the authoritative post-save state.
+    return this.communicationPrefsApi
+      .upsertCommunicationPreferences(partyId, sdkRequest)
+      .pipe(map(() => prefs));
   }
 
   createVehicleForParty(
