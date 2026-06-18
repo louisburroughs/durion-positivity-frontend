@@ -502,7 +502,6 @@
         "SNAPSHOT_PARTY_ID": "Cliente"
       },
       "PLACEHOLDER": {
-        "PARTY_ID": "Ingresa el UUID de la party",
         "CUSTOMER_SEARCH": "Buscar clientes por nombre…"
       },
       "TYPEAHEAD": {

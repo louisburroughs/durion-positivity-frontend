@@ -13,7 +13,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Observable, Subject, Subscription, forkJoin, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
 import { BillingRules, CrmSnapshot, PartyDetail } from '../../models/crm.models';
 
@@ -125,7 +125,7 @@ export class CrmSnapshotPageComponent {
           }
           this.searchingParty.set(true);
           return this.crm.searchParties(query).pipe(
-            switchMap(res => of(res.parties.slice(0, MAX_SUGGESTIONS))),
+            map(res => res.parties.slice(0, MAX_SUGGESTIONS)),
             catchError(() => of([] as PartyDetail[])),
           );
         }),

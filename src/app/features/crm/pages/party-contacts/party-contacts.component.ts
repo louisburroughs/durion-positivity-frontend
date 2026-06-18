@@ -11,7 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
 import { CreatePersonResponse, PartyDetail, Relationship, RelationshipRole } from '../../models/crm.models';
 
@@ -127,7 +127,7 @@ export class PartyContactsComponent implements OnInit {
           }
           this.searchingPerson.set(true);
           return this.crm.searchPersons(query).pipe(
-            switchMap(res => of(res.persons.slice(0, MAX_SUGGESTIONS))),
+            map(res => res.persons.slice(0, MAX_SUGGESTIONS)),
             catchError(() => of([] as CreatePersonResponse[])),
           );
         }),

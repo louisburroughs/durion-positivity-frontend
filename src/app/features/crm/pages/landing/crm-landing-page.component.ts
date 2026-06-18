@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subject, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { DomainType } from '../../../bulk-import/models/bulk-import.models';
 import { BulkImportService } from '../../../bulk-import/services/bulk-import.service';
 import { CrmService } from '../../services/crm.service';
@@ -34,7 +34,6 @@ interface LaunchCard {
   readonly descriptionKey: string;
   readonly field: LaunchField;
   readonly inputLabelKey: string;
-  readonly inputPlaceholderKey: string;
   readonly actionKey: string;
   readonly buildCommands: (value: string) => readonly string[];
 }
@@ -92,7 +91,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         descriptionKey: 'CRM.LANDING.CARD.PARTY_DETAIL.DESCRIPTION',
         field: 'partyDetailId',
         inputLabelKey: 'CRM.LANDING.FIELD.PARTY_DETAIL_ID',
-        inputPlaceholderKey: 'CRM.LANDING.PLACEHOLDER.PARTY_ID',
         actionKey: 'CRM.LANDING.ACTION.OPEN_PARTY',
         buildCommands: (value: string) => ['/app', 'crm', 'party', value],
       },
@@ -102,7 +100,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         descriptionKey: 'CRM.LANDING.CARD.ADD_VEHICLE.DESCRIPTION',
         field: 'addVehiclePartyId',
         inputLabelKey: 'CRM.LANDING.FIELD.ADD_VEHICLE_PARTY_ID',
-        inputPlaceholderKey: 'CRM.LANDING.PLACEHOLDER.PARTY_ID',
         actionKey: 'CRM.LANDING.ACTION.OPEN_VEHICLE_FORM',
         buildCommands: (value: string) => ['/app', 'crm', 'party', value, 'add-vehicle'],
       },
@@ -112,7 +109,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         descriptionKey: 'CRM.LANDING.CARD.PARTY_CONTACTS.DESCRIPTION',
         field: 'contactsPartyId',
         inputLabelKey: 'CRM.LANDING.FIELD.CONTACTS_PARTY_ID',
-        inputPlaceholderKey: 'CRM.LANDING.PLACEHOLDER.PARTY_ID',
         actionKey: 'CRM.LANDING.ACTION.OPEN_CONTACTS',
         buildCommands: (value: string) => ['/app', 'crm', 'party', value, 'contacts'],
       },
@@ -122,7 +118,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         descriptionKey: 'CRM.LANDING.CARD.BILLING_RULES.DESCRIPTION',
         field: 'billingRulesPartyId',
         inputLabelKey: 'CRM.LANDING.FIELD.BILLING_RULES_PARTY_ID',
-        inputPlaceholderKey: 'CRM.LANDING.PLACEHOLDER.PARTY_ID',
         actionKey: 'CRM.LANDING.ACTION.OPEN_BILLING_RULES',
         buildCommands: (value: string) => ['/app', 'crm', 'party', value, 'billing-rules'],
       },
@@ -145,7 +140,6 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         descriptionKey: 'CRM.LANDING.CARD.CRM_SNAPSHOT_PARTY.DESCRIPTION',
         field: 'snapshotPartyId',
         inputLabelKey: 'CRM.LANDING.FIELD.SNAPSHOT_PARTY_ID',
-        inputPlaceholderKey: 'CRM.LANDING.PLACEHOLDER.PARTY_ID',
         actionKey: 'CRM.LANDING.ACTION.OPEN_SNAPSHOT',
         buildCommands: (value: string) => ['/app', 'crm', 'crm-snapshot', value],
       },
@@ -256,7 +250,7 @@ export class CrmLandingPageComponent implements OnInit {
           }
           this.searchingField.set(field);
           return this.crm.searchParties(query).pipe(
-            switchMap(res => of({ field, parties: res.parties.slice(0, MAX_SUGGESTIONS) })),
+            map(res => ({ field, parties: res.parties.slice(0, MAX_SUGGESTIONS) })),
             catchError(() => of({ field, parties: [] as PartyDetail[] })),
           );
         }),
