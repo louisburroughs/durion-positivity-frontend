@@ -64,6 +64,17 @@ describe('CustomerListComponent', () => {
     expect(headers).toEqual(expect.arrayContaining(['Customer #', 'Phone', 'Status']));
   });
 
+  it('renders em-dash fallbacks when customer number, phone and status are absent', () => {
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage([party('p2')], 1)));
+
+    fixture.detectChanges();
+
+    const cells = fixture.debugElement.queryAll(By.css('.party-table tbody td'));
+    const empties = cells.filter(c => c.query(By.css('.party-row__empty')));
+    // customer number, phone and status cells all fall back to —
+    expect(empties.length).toBeGreaterThanOrEqual(3);
+  });
+
   it('calls browse API on initial empty query to load customers', () => {
     fixture.detectChanges();
 
