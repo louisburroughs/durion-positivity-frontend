@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
+import { InventoryAvailabilityService, InventoryReferenceDataService } from '@durion-sdk/inventory';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { InventoryDomainService } from './inventory.service';
 import {
@@ -34,25 +35,37 @@ describe('InventoryDomainService', () => {
     patch: vi.fn(),
     delete: vi.fn(),
   };
+  const availabilityStub = {
+    listAvailabilityBySku: vi.fn(),
+  };
+  const refDataStub = {
+    listInventoryLocations: vi.fn(),
+    listInventoryStorageLocations: vi.fn(),
+    listInventoryLocationZones: vi.fn(),
+  };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         InventoryDomainService,
         { provide: ApiBaseService, useValue: apiStub },
+        { provide: InventoryAvailabilityService, useValue: availabilityStub },
+        { provide: InventoryReferenceDataService, useValue: refDataStub },
       ],
     });
     service = TestBed.inject(InventoryDomainService);
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    // resetAllMocks (not clearAllMocks) also drains queued mockReturnValueOnce
+    // values, so a stub left un-consumed by one test can't leak into the next.
+    vi.resetAllMocks();
   });
 
   // ── queryAvailability() ────────────────────────────────────────────────
 
   describe('queryAvailability()', () => {
-    const mockView: AvailabilityView = {
+    const sdkView = {
       productSku: 'SKU-001',
       locationId: 'loc-01',
       onHandQuantity: 10,
@@ -61,115 +74,92 @@ describe('InventoryDomainService', () => {
       unitOfMeasure: 'EA',
     };
 
-    it('calls GET /inventory/v1/availability with sku param', () => {
-      apiStub.get.mockReturnValueOnce(of([mockView]));
-
-      service.queryAvailability('SKU-001').subscribe();
-
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/availability');
-      expect((params as HttpParams).get('sku')).toBe('SKU-001');
-    });
-
-    it('includes locationId param when provided', () => {
-      apiStub.get.mockReturnValueOnce(of([mockView]));
-
-      service.queryAvailability('SKU-001', 'loc-01').subscribe();
-
-      const [, params] = apiStub.get.mock.calls[0];
-      expect((params as HttpParams).get('locationId')).toBe('loc-01');
-    });
-
-    it('includes storageLocationId param when provided', () => {
-      apiStub.get.mockReturnValueOnce(of([{ ...mockView, storageLocationId: 'sl-02' }]));
+    it('passes sku/locationId/storageLocationId to the availability SDK', () => {
+      availabilityStub.listAvailabilityBySku.mockReturnValueOnce(of(sdkView));
 
       service.queryAvailability('SKU-001', 'loc-01', 'sl-02').subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0];
-      expect((params as HttpParams).get('storageLocationId')).toBe('sl-02');
+      expect(availabilityStub.listAvailabilityBySku).toHaveBeenCalledWith('SKU-001', 'loc-01', 'sl-02');
     });
 
-    it('does NOT include locationId param when omitted', () => {
-      apiStub.get.mockReturnValueOnce(of([mockView]));
+    it('passes undefined location filters when omitted', () => {
+      availabilityStub.listAvailabilityBySku.mockReturnValueOnce(of(sdkView));
 
       service.queryAvailability('SKU-001').subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0];
-      expect((params as HttpParams).has('locationId')).toBe(false);
+      expect(availabilityStub.listAvailabilityBySku).toHaveBeenCalledWith('SKU-001', undefined, undefined);
     });
 
-    it('returns the AvailabilityView array emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of([mockView]));
+    it('wraps the single availability view into an array', () => {
+      availabilityStub.listAvailabilityBySku.mockReturnValueOnce(of(sdkView));
 
       let result: AvailabilityView[] | undefined;
       service.queryAvailability('SKU-001').subscribe(r => (result = r));
 
-      expect(result).toEqual([mockView]);
+      expect(result).toEqual([sdkView]);
+    });
+
+    it('returns an empty array when the SDK yields no view', () => {
+      availabilityStub.listAvailabilityBySku.mockReturnValueOnce(of(undefined));
+
+      let result: AvailabilityView[] | undefined;
+      service.queryAvailability('SKU-001').subscribe(r => (result = r));
+
+      expect(result).toEqual([]);
     });
   });
 
   // ── getLocations() ─────────────────────────────────────────────────────
 
   describe('getLocations()', () => {
-    const mockLocations: LocationRef[] = [
-      { locationId: 'loc-01', name: 'Main Warehouse', status: 'ACTIVE' },
-      { locationId: 'loc-02', name: 'Secondary Warehouse', status: 'ACTIVE' },
-    ];
-
-    it('calls GET /inventory/v1/locations with no query params', () => {
-      apiStub.get.mockReturnValueOnce(of(mockLocations));
+    it('requests a large page from the reference-data SDK', () => {
+      refDataStub.listInventoryLocations.mockReturnValueOnce(of({ content: [] }));
 
       service.getLocations().subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/locations');
+      expect(refDataStub.listInventoryLocations).toHaveBeenCalledWith({ size: 200 });
     });
 
-    it('returns the LocationRef array emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockLocations));
+    it('maps SDK location DTOs to LocationRef (active -> ACTIVE)', () => {
+      refDataStub.listInventoryLocations.mockReturnValueOnce(of({
+        content: [
+          { locationId: 'loc-01', name: 'Main Warehouse', active: true },
+          { locationId: 'loc-02', name: 'Closed Depot', active: false },
+        ],
+      }));
 
       let result: LocationRef[] | undefined;
       service.getLocations().subscribe(r => (result = r));
 
-      expect(result).toEqual(mockLocations);
+      expect(result).toEqual([
+        { locationId: 'loc-01', name: 'Main Warehouse', status: 'ACTIVE' },
+        { locationId: 'loc-02', name: 'Closed Depot', status: 'INACTIVE' },
+      ]);
     });
   });
 
   // ── getStorageLocations() ──────────────────────────────────────────────
 
   describe('getStorageLocations()', () => {
-    const mockStorageLocations: StorageLocation[] = [
-      { storageLocationId: 'sl-01', name: 'Rack A', locationId: 'loc-01', status: 'ACTIVE' },
-    ];
-
-    it('calls GET /inventory/v1/locations/{locationId}/storage-locations', () => {
-      apiStub.get.mockReturnValueOnce(of(mockStorageLocations));
+    it('requests storage locations for the site from the SDK', () => {
+      refDataStub.listInventoryStorageLocations.mockReturnValueOnce(of({ content: [] }));
 
       service.getStorageLocations('loc-01').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/locations/loc-01/storage-locations');
+      expect(refDataStub.listInventoryStorageLocations).toHaveBeenCalledWith({ size: 500 }, 'loc-01');
     });
 
-    it('URL-encodes the locationId', () => {
-      apiStub.get.mockReturnValueOnce(of(mockStorageLocations));
-
-      service.getStorageLocations('loc/01').subscribe();
-
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/locations/loc%2F01/storage-locations');
-    });
-
-    it('returns the StorageLocation array emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockStorageLocations));
+    it('maps SDK storage DTOs to StorageLocation', () => {
+      refDataStub.listInventoryStorageLocations.mockReturnValueOnce(of({
+        content: [{ storageLocationId: 'sl-01', locationId: 'loc-01', code: 'Rack A', active: true }],
+      }));
 
       let result: StorageLocation[] | undefined;
       service.getStorageLocations('loc-01').subscribe(r => (result = r));
 
-      expect(result).toEqual(mockStorageLocations);
+      expect(result).toEqual([
+        { storageLocationId: 'sl-01', locationId: 'loc-01', name: 'Rack A', barcode: undefined, status: 'ACTIVE' },
+      ]);
     });
   });
 
@@ -410,37 +400,29 @@ describe('InventoryDomainService', () => {
   // ── getLocationZones() ────────────────────────────────────────────────
 
   describe('getLocationZones()', () => {
-    const mockZones: LocationZone[] = [
-      { zoneId: 'zone-01', zoneName: 'Zone A', locationId: 'loc-01' },
-      { zoneId: 'zone-02', zoneName: 'Zone B', locationId: 'loc-01' },
-    ];
-
-    it('calls GET /inventory/v1/locations/{locationId}/zones', () => {
-      apiStub.get.mockReturnValueOnce(of(mockZones));
+    it('requests zones for the site from the SDK', () => {
+      refDataStub.listInventoryLocationZones.mockReturnValueOnce(of({ content: [] }));
 
       service.getLocationZones('loc-01').subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/locations/loc-01/zones');
+      expect(refDataStub.listInventoryLocationZones).toHaveBeenCalledWith({ size: 500 }, 'loc-01');
     });
 
-    it('URL-encodes the locationId', () => {
-      apiStub.get.mockReturnValueOnce(of(mockZones));
-
-      service.getLocationZones('loc/01').subscribe();
-
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/locations/loc%2F01/zones');
-    });
-
-    it('returns the LocationZone array emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockZones));
+    it('maps SDK zone DTOs to LocationZone', () => {
+      refDataStub.listInventoryLocationZones.mockReturnValueOnce(of({
+        content: [
+          { zoneId: 'zone-01', zoneName: 'Zone A', locationId: 'loc-01' },
+          { zoneId: 'zone-02', zoneName: 'Zone B', locationId: 'loc-01' },
+        ],
+      }));
 
       let result: LocationZone[] | undefined;
       service.getLocationZones('loc-01').subscribe(r => (result = r));
 
-      expect(result).toEqual(mockZones);
+      expect(result).toEqual([
+        { zoneId: 'zone-01', zoneName: 'Zone A', locationId: 'loc-01' },
+        { zoneId: 'zone-02', zoneName: 'Zone B', locationId: 'loc-01' },
+      ]);
     });
   });
 
