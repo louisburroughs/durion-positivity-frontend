@@ -182,6 +182,10 @@ export interface PartyDetail {
   partyId: string;
   legalName: string;
   dba?: string;
+  /** Human-readable customer/account number, supplied by browse/search responses. */
+  customerNumber?: string;
+  /** Account status (ACTIVE|PENDING|SUSPENDED|INACTIVE), supplied by browse/search responses. */
+  status?: string;
   taxId?: string;
   defaultBillingTermsId?: string;
   contacts?: Contact[];

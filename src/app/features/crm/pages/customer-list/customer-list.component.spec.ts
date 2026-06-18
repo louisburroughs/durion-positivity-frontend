@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { By } from '@angular/platform-browser';
 import { of, throwError, Subject } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CustomerListComponent } from './customer-list.component';
@@ -42,6 +43,25 @@ describe('CustomerListComponent', () => {
   afterEach(() => {
     vi.clearAllMocks();
     TestBed.resetTestingModule();
+  });
+
+  it('renders customer number, phone and status columns from the browse rows', () => {
+    crmServiceStub.browseParties.mockReturnValue(of(partyPage([{
+      partyId: 'p1',
+      legalName: 'Acme Corp',
+      customerNumber: 'CUST-000123',
+      status: 'ACTIVE',
+      primaryContact: { name: 'Jane Doe', email: 'jane@acme.com', phone: '+1-555-0142' },
+    } as ReturnType<typeof party>], 1)));
+
+    fixture.detectChanges();
+
+    const text = fixture.debugElement.query(By.css('.party-table tbody')).nativeElement.textContent;
+    expect(text).toContain('CUST-000123');
+    expect(text).toContain('+1-555-0142');
+    expect(text).toContain('ACTIVE');
+    const headers = fixture.debugElement.queryAll(By.css('.party-table thead th')).map(h => h.nativeElement.textContent.trim());
+    expect(headers).toEqual(expect.arrayContaining(['Customer #', 'Phone', 'Status']));
   });
 
   it('calls browse API on initial empty query to load customers', () => {
