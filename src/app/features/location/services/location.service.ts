@@ -87,7 +87,7 @@ export class LocationService {
     idempotencyKey?: string,
   ): Observable<unknown> {
     const request: StorageLocationRequest = {
-      name: this.asOptionalString(body['name']),
+      name: this.asOptionalString(body['name']) as string,
       type: this.asOptionalString(body['type']) as StorageLocationRequest['type'],
       barcode: this.asOptionalString(body['barcode']),
       parentStorageLocationId: this.asOptionalString(body['parentStorageLocationId']),
@@ -196,7 +196,7 @@ export class LocationService {
 
   private toMobileUnitRequest(body: Record<string, unknown>): MobileUnitRequest {
     return {
-      name: this.asOptionalString(body['name']),
+      name: this.asOptionalString(body['name']) as string,
       baseLocationId: this.asOptionalString(body['baseLocationId']),
       status: this.asOptionalString(body['status']),
       travelBufferPolicyId: this.asOptionalString(body['travelBufferPolicyId']),
@@ -223,8 +223,8 @@ export class LocationService {
 
   private toCoverageRuleRequest(rule: Record<string, unknown>): CoverageRuleRequest {
     return {
-      serviceAreaId: this.asOptionalString(rule['serviceAreaId']),
-      ruleType: this.asOptionalString(rule['ruleType']),
+      serviceAreaId: this.asOptionalString(rule['serviceAreaId']) as string,
+      ruleType: this.asOptionalString(rule['ruleType']) as string,
       priority: this.asOptionalNumber(rule['priority']),
       validFrom: this.asOptionalString(rule['validFrom']),
       validTo: this.asOptionalString(rule['validTo']),
