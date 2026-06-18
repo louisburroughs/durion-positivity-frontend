@@ -183,7 +183,9 @@ describe('CrmService', () => {
 
       const expectedPageable: Pageable = { page: 0, size: 25 };
 
-      expect(crmAccountsStub.browseParties).toHaveBeenCalledWith(expectedPageable);
+      expect(crmAccountsStub.browseParties).toHaveBeenCalledWith(
+        expectedPageable, undefined, undefined, undefined, undefined, undefined, undefined,
+      );
       expect(result).toEqual({
         parties: [browseParty],
         totalCount: 1,
