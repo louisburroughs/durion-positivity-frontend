@@ -11,6 +11,7 @@ describe('CrmSnapshotPageComponent', () => {
     fetchByParty: vi.fn(),
     fetchByVehicle: vi.fn(),
     getBillingRules: vi.fn(),
+    searchParties: vi.fn(),
   };
 
   const activatedRouteStub = {
@@ -101,5 +102,44 @@ describe('CrmSnapshotPageComponent', () => {
     const stateOrder = stateSetSpy.mock.invocationCallOrder.at(-1) ?? 0;
     const errorKeyOrder = errorKeySetSpy.mock.invocationCallOrder.at(-1) ?? 0;
     expect(stateOrder).toBeLessThan(errorKeyOrder);
+  });
+
+  describe('customer typeahead', () => {
+    it('searches parties after debounce and stores suggestions', async () => {
+      crmServiceStub.searchParties.mockReturnValue(
+        of({ parties: [{ partyId: 'p-1', legalName: 'Acme Co', customerNumber: 'C100' }] }),
+      );
+      const fixture = TestBed.createComponent(CrmSnapshotPageComponent);
+      const component = fixture.componentInstance;
+
+      component.onPartyInput('acme');
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      expect(crmServiceStub.searchParties).toHaveBeenCalledWith('acme');
+      expect(component.partySuggestions()).toHaveLength(1);
+      expect(component.showPartySuggestions()).toBe(true);
+    });
+
+    it('does not search for queries shorter than two characters', async () => {
+      crmServiceStub.searchParties.mockClear();
+      const fixture = TestBed.createComponent(CrmSnapshotPageComponent);
+      const component = fixture.componentInstance;
+
+      component.onPartyInput('a');
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      expect(crmServiceStub.searchParties).not.toHaveBeenCalled();
+    });
+
+    it('selecting a party sets the form partyId and a readable label', () => {
+      const fixture = TestBed.createComponent(CrmSnapshotPageComponent);
+      const component = fixture.componentInstance;
+
+      component.selectParty({ partyId: 'p-9', legalName: 'Globex', customerNumber: 'C900' });
+
+      expect(component.snapshotForm.controls.partyId.value).toBe('p-9');
+      expect(component.partyQuery()).toBe('Globex (#C900)');
+      expect(component.showPartySuggestions()).toBe(false);
+    });
   });
 });

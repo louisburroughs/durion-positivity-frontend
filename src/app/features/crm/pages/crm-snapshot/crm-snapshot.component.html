@@ -5,9 +5,33 @@
   </header>
 
   <form [formGroup]="snapshotForm" class="crm-snapshot__lookup" novalidate>
-    <label class="crm-snapshot__label" for="partyId">{{ 'CRM.SNAPSHOT.FIELD.PARTY_ID' | translate }}</label>
-    <input id="partyId" class="crm-snapshot__input" type="text" formControlName="partyId"
-      [placeholder]="'CRM.SNAPSHOT.FIELD.UUID_PLACEHOLDER' | translate" />
+    <label class="crm-snapshot__label" for="partyId">{{ 'CRM.SNAPSHOT.FIELD.CUSTOMER' | translate }}</label>
+    <div class="crm-snapshot__typeahead">
+      <input id="partyId" class="crm-snapshot__input" type="text"
+        role="combobox" aria-autocomplete="list" aria-controls="partyId-listbox"
+        [attr.aria-expanded]="showPartySuggestions()"
+        autocomplete="off" spellcheck="false" [value]="partyQuery()"
+        [placeholder]="'CRM.SNAPSHOT.FIELD.CUSTOMER_SEARCH' | translate"
+        (input)="onPartyInput($any($event.target).value)"
+        (focus)="onPartyFocus()" (blur)="onPartyBlur()" />
+      @if (showPartySuggestions()) {
+      <ul id="partyId-listbox" class="crm-snapshot__suggestions" role="listbox">
+        @if (searchingParty()) {
+        <li class="crm-snapshot__suggestion-hint" role="presentation">{{ 'CRM.SNAPSHOT.TYPEAHEAD.SEARCHING' | translate }}</li>
+        } @else if (partySuggestions().length === 0) {
+        <li class="crm-snapshot__suggestion-hint" role="presentation">{{ 'CRM.SNAPSHOT.TYPEAHEAD.NO_RESULTS' | translate }}</li>
+        } @else {
+        @for (party of partySuggestions(); track party.partyId) {
+        <li class="crm-snapshot__suggestion" role="option"
+          [attr.aria-selected]="snapshotForm.controls.partyId.value === party.partyId">
+          <button type="button" class="crm-snapshot__suggestion-btn" data-testid="party-option"
+            (click)="selectParty(party)">{{ partyLabel(party) }}</button>
+        </li>
+        }
+        }
+      </ul>
+      }
+    </div>
 
     <label class="crm-snapshot__label" for="vehicleId">{{ 'CRM.SNAPSHOT.FIELD.VEHICLE_ID' | translate }}</label>
     <input id="vehicleId" class="crm-snapshot__input" type="text" formControlName="vehicleId"

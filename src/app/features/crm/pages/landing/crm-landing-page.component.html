@@ -67,12 +67,42 @@
             <label class="crm-field__label" [for]="card.field">
               {{ card.inputLabelKey | translate }}
             </label>
-            <input class="crm-field__input" [id]="card.field" [name]="card.field" type="text"
-              autocomplete="off" spellcheck="false" [value]="launchValue(card.field)"
-              [attr.aria-invalid]="launchError(card.field) ? 'true' : null"
-              [attr.aria-describedby]="launchError(card.field) ? card.field + '-error' : null"
-              [attr.placeholder]="card.inputPlaceholderKey | translate"
-              (input)="updateLaunchValue(card.field, $any($event.target).value)" />
+            <div class="crm-typeahead">
+              <input class="crm-field__input" [id]="card.field" [name]="card.field" type="text"
+                role="combobox" aria-autocomplete="list"
+                [attr.aria-expanded]="isFieldOpen(card.field)"
+                [attr.aria-controls]="card.field + '-listbox'"
+                autocomplete="off" spellcheck="false" [value]="launchQuery(card.field)"
+                [attr.aria-invalid]="launchError(card.field) ? 'true' : null"
+                [attr.aria-describedby]="launchError(card.field) ? card.field + '-error' : null"
+                [attr.placeholder]="'CRM.LANDING.PLACEHOLDER.CUSTOMER_SEARCH' | translate"
+                (input)="onCustomerInput(card.field, $any($event.target).value)"
+                (focus)="onCustomerFocus(card.field)"
+                (blur)="onCustomerBlur(card.field)" />
+              @if (isFieldOpen(card.field)) {
+              <ul class="crm-typeahead__list" role="listbox" [attr.id]="card.field + '-listbox'">
+                @if (searchingField() === card.field) {
+                <li class="crm-typeahead__hint" role="presentation">
+                  {{ 'CRM.LANDING.TYPEAHEAD.SEARCHING' | translate }}
+                </li>
+                } @else if (customerSuggestions(card.field).length === 0) {
+                <li class="crm-typeahead__hint" role="presentation">
+                  {{ 'CRM.LANDING.TYPEAHEAD.NO_RESULTS' | translate }}
+                </li>
+                } @else {
+                @for (party of customerSuggestions(card.field); track party.partyId) {
+                <li class="crm-typeahead__option" role="option" [attr.aria-selected]="launchValue(card.field) === party.partyId">
+                  <button type="button" class="crm-typeahead__option-btn"
+                    [attr.data-testid]="card.field + '-option'"
+                    (click)="selectCustomer(card.field, party)">
+                    {{ customerLabel(party) }}
+                  </button>
+                </li>
+                }
+                }
+              </ul>
+              }
+            </div>
             @if (launchError(card.field)) {
             <p class="crm-field__error" [attr.id]="card.field + '-error'" role="alert">
               {{ launchError(card.field)! | translate }}

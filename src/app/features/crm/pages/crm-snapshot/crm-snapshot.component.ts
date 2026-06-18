@@ -12,13 +12,15 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Observable, Subscription, forkJoin, of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Observable, Subject, Subscription, forkJoin, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
-import { BillingRules, CrmSnapshot } from '../../models/crm.models';
+import { BillingRules, CrmSnapshot, PartyDetail } from '../../models/crm.models';
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const MAX_SUGGESTIONS = 8;
 
 @Component({
   selector: 'app-crm-snapshot',
@@ -56,6 +58,13 @@ export class CrmSnapshotPageComponent {
     partyId: ['', Validators.pattern(UUID_PATTERN)],
     vehicleId: ['', Validators.pattern(UUID_PATTERN)],
   });
+
+  // ── Customer typeahead (party search) ──────────────────────────────────────
+  readonly partyQuery = signal('');
+  readonly partySuggestions = signal<PartyDetail[]>([]);
+  readonly showPartySuggestions = signal(false);
+  readonly searchingParty = signal(false);
+  private readonly partySearch$ = new Subject<string>();
 
   readonly canLoad = computed(() => {
     const value = this.snapshotForm.getRawValue();
@@ -105,6 +114,57 @@ export class CrmSnapshotPageComponent {
       },
       { allowSignalWrites: true },
     );
+
+    this.partySearch$
+      .pipe(
+        debounceTime(250),
+        distinctUntilChanged(),
+        switchMap(query => {
+          if (query.trim().length < 2) {
+            return of([] as PartyDetail[]);
+          }
+          this.searchingParty.set(true);
+          return this.crm.searchParties(query).pipe(
+            switchMap(res => of(res.parties.slice(0, MAX_SUGGESTIONS))),
+            catchError(() => of([] as PartyDetail[])),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(parties => {
+        this.partySuggestions.set(parties);
+        this.searchingParty.set(false);
+      });
+  }
+
+  /** Readable label for a party suggestion. */
+  partyLabel(party: PartyDetail): string {
+    const name = party.legalName?.trim() || party.dba?.trim() || party.partyId;
+    return party.customerNumber ? `${name} (#${party.customerNumber})` : name;
+  }
+
+  onPartyInput(value: string): void {
+    this.partyQuery.set(value);
+    this.snapshotForm.controls.partyId.setValue('');
+    this.showPartySuggestions.set(true);
+    this.partySearch$.next(value);
+  }
+
+  onPartyFocus(): void {
+    if (this.partySuggestions().length > 0) {
+      this.showPartySuggestions.set(true);
+    }
+  }
+
+  onPartyBlur(): void {
+    setTimeout(() => this.showPartySuggestions.set(false), 150);
+  }
+
+  selectParty(party: PartyDetail): void {
+    this.snapshotForm.controls.partyId.setValue(party.partyId);
+    this.snapshotForm.controls.partyId.markAsTouched();
+    this.partyQuery.set(this.partyLabel(party));
+    this.showPartySuggestions.set(false);
   }
 
   loadSnapshot(): void {
@@ -190,6 +250,9 @@ export class CrmSnapshotPageComponent {
 
   clear(): void {
     this.snapshotForm.reset({ partyId: '', vehicleId: '' });
+    this.partyQuery.set('');
+    this.partySuggestions.set([]);
+    this.showPartySuggestions.set(false);
     this.snapshot.set(null);
     this.billingRules.set(null);
     this.errorType.set(null);

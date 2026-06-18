@@ -4,6 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { CrmLandingPageComponent } from './crm-landing-page.component';
 import { BulkImportService } from '../../../bulk-import/services/bulk-import.service';
+import { CrmService } from '../../services/crm.service';
 
 describe('CrmLandingPageComponent', () => {
   let fixture: ComponentFixture<CrmLandingPageComponent>;
@@ -11,6 +12,9 @@ describe('CrmLandingPageComponent', () => {
   let router: Router;
   const bulkImportService = {
     getActiveJobDomains: vi.fn(),
+  };
+  const crmService = {
+    searchParties: vi.fn(),
   };
 
   /** Finds a launch card by field name, throwing if absent. */
@@ -28,12 +32,14 @@ describe('CrmLandingPageComponent', () => {
 
   beforeEach(async () => {
     bulkImportService.getActiveJobDomains.mockReturnValue(of(new Set()));
+    crmService.searchParties.mockReturnValue(of({ parties: [] }));
 
     await TestBed.configureTestingModule({
       imports: [CrmLandingPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: BulkImportService, useValue: bulkImportService },
+        { provide: CrmService, useValue: crmService },
       ],
     }).compileComponents();
 
@@ -281,5 +287,61 @@ describe('CrmLandingPageComponent', () => {
       'cust-5',
       'billing-rules',
     ]);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Customer search typeahead
+  // ---------------------------------------------------------------------------
+  describe('customer typeahead', () => {
+    it('queries CrmService.searchParties after debounce and stores suggestions', async () => {
+      crmService.searchParties.mockReturnValue(
+        of({ parties: [{ partyId: 'p-1', legalName: 'Acme Co', customerNumber: 'C100' }] }),
+      );
+
+      component.onCustomerInput('partyDetailId', 'acme');
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      expect(crmService.searchParties).toHaveBeenCalledWith('acme');
+      expect(component.customerSuggestions('partyDetailId')).toHaveLength(1);
+      expect(component.isFieldOpen('partyDetailId')).toBe(true);
+    });
+
+    it('does not search for queries shorter than two characters', async () => {
+      crmService.searchParties.mockClear();
+
+      component.onCustomerInput('partyDetailId', 'a');
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      expect(crmService.searchParties).not.toHaveBeenCalled();
+    });
+
+    it('typing clears any previously resolved party', () => {
+      component.updateLaunchValue('partyDetailId', 'p-1');
+      component.onCustomerInput('partyDetailId', 'new search');
+
+      expect(component.launchValue('partyDetailId')).toBe('');
+      expect(component.launchQuery('partyDetailId')).toBe('new search');
+    });
+
+    it('selecting a customer resolves the partyId and shows a readable label', () => {
+      component.selectCustomer('partyDetailId', {
+        partyId: 'p-9',
+        legalName: 'Globex',
+        customerNumber: 'C900',
+      });
+
+      expect(component.launchValue('partyDetailId')).toBe('p-9');
+      expect(component.launchQuery('partyDetailId')).toBe('Globex (#C900)');
+      expect(component.isFieldOpen('partyDetailId')).toBe(false);
+    });
+
+    it('navigates with the resolved partyId after a customer is selected', async () => {
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      component.selectCustomer('snapshotPartyId', { partyId: 'p-7', legalName: 'Initech' });
+      await component.openLaunch(findLaunchCard('snapshotPartyId'));
+
+      expect(navigateSpy).toHaveBeenCalledWith(['/app', 'crm', 'crm-snapshot', 'p-7']);
+    });
   });
 });
