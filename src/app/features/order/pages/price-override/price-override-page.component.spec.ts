@@ -20,6 +20,7 @@ const orderLineFixture: SalesOrderLineResponse = {
 
 const orderFixture: SalesOrderResponse = {
   orderId: 'ord-1',
+  status: 'OPEN',
   subtotal: 178,
   lines: [orderLineFixture],
 };
@@ -29,9 +30,17 @@ const overridesFixture: PriceOverrideDetail[] = [
     overrideId: 'ov-1',
     orderId: 'ord-1',
     orderLineId: 'line-1',
+    productId: 'SKU-1',
     overridePrice: 75,
     reasonCode: 'PRICE_MATCH',
     originalPrice: 89,
+    discountAmount: 14,
+    discountPercentage: 15.73,
+    status: 'PENDING',
+    requiresApproval: true,
+    affectsCommission: false,
+    requestedByUserId: 'user-1',
+    createdAt: '2026-05-01T00:00:00Z',
   },
 ];
 

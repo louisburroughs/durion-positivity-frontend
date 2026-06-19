@@ -405,7 +405,7 @@ describe('location picker', () => {
       parentLocation('b1', 'Main Building', 'Building'),
       parentLocation('p1', 'City Plaza', 'Place'),
       parentLocation('s1', 'Site A', 'Site'), // should be excluded
-      { id: 'x1', name: 'No Type', type: undefined }, // should be excluded
+      { id: 'x1', name: 'No Type', type: undefined, active: true }, // should be excluded
     ];
     locationServiceStub.getAllLocations.mockReturnValue(of(locs));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));

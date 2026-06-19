@@ -13,6 +13,7 @@ import {
   PaymentReversalService,
   PaymentService,
   ReceiptResponse,
+  ReceiptResponseStatusEnum,
   ReceiptService,
   RefundPaymentRequestReasonEnum,
   VoidPaymentRequestReasonEnum,
@@ -252,6 +253,7 @@ describe('BillingTransportService', () => {
   it('generates receipts through the receipt SDK client', () => {
     const receiptResponse: ReceiptResponse = {
       receiptId: 'rcpt-001',
+      status: ReceiptResponseStatusEnum.Generated,
     };
     receiptServiceStub.generateReceipt.mockReturnValueOnce(of(receiptResponse));
 
@@ -306,6 +308,7 @@ describe('BillingTransportService', () => {
     const receiptResponse: ReceiptResponse = {
       receiptId: 'rcpt-001',
       reference: 'R-1001',
+      status: ReceiptResponseStatusEnum.Generated,
     };
     receiptServiceStub.reprintReceipt.mockReturnValueOnce(of(receiptResponse));
 

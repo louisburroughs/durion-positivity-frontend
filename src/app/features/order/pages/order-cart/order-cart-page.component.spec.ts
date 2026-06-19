@@ -17,6 +17,7 @@ const orderLineFixture: SalesOrderLineResponse = {
 
 const orderFixture: SalesOrderResponse = {
   orderId: 'ord-1',
+  status: 'OPEN',
   subtotal: 100,
   lines: [orderLineFixture],
 };
