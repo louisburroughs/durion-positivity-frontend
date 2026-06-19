@@ -64,7 +64,10 @@ export class EstimateCreatePageComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.customerApi.getAllCustomers({ page: 0, size: 200 }, undefined, 'body', false, { transferCache: false })
+    // name/email left undefined: unfiltered listing (server-side search params added in #663).
+    this.customerApi.getAllCustomers({ page: 0, size: 200 }, undefined, undefined, undefined, 'body', false, {
+      transferCache: false,
+    })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: page => this.allCustomers.set(page.content ?? []),
