@@ -30,10 +30,10 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
 
-    // ngOnInit eagerly loads the customer list for the typeahead.
-    // Flush it so each test starts from a clean HTTP backend.
-    const initReq = http.match(r => r.method === 'GET' && r.url.endsWith('/v1/crm'));
-    initReq.forEach(req => req.flush({ content: [] }));
+    // ngOnInit eagerly loads the customer list for the typeahead exactly once.
+    // expectOne asserts the single init request (catches accidental double-loads)
+    // and flushing it leaves each test a clean HTTP backend.
+    http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm')).flush({ content: [] });
   });
 
   afterEach(() => {
