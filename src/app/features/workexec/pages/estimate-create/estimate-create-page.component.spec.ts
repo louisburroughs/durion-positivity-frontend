@@ -29,9 +29,17 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     component = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
+
+    // ngOnInit eagerly loads the customer list for the typeahead.
+    // Flush it so each test starts from a clean HTTP backend.
+    const initReq = http.match(r => r.method === 'GET' && r.url.endsWith('/v1/crm'));
+    initReq.forEach(req => req.flush({ content: [] }));
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    TestBed.resetTestingModule();
+  });
 
   it('should create the component', () => {
     expect(component).toBeTruthy();

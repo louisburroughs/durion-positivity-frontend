@@ -117,7 +117,7 @@ const rollupServiceStub = {
 };
 
 const locationServiceStub = {
-  getAllLocations: vi.fn(),
+  getRoster: vi.fn(),
 };
 
 const routerStub = {
@@ -133,7 +133,7 @@ beforeEach(() => {
 
 describe('grand total strip', () => {
   it('renders onHand, allocated, available from rollup response', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 50, 5, 45)], qty(50, 5, 45))),
     );
@@ -148,7 +148,7 @@ describe('grand total strip', () => {
   }));
 
   it('shows warning badge when grand total available is negative', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 10, 20, -10)], qty(10, 20, -10))),
     );
@@ -163,7 +163,7 @@ describe('grand total strip', () => {
   }));
 
   it('does NOT show warning badge when available is zero or positive', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 10, 5, 5)], qty(10, 5, 5))),
     );
@@ -181,7 +181,7 @@ describe('grand total strip', () => {
 
 describe('sites table sort', () => {
   it('sorts by siteName ascending by default', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(
         locationResponse([
@@ -202,7 +202,7 @@ describe('sites table sort', () => {
   }));
 
   it('toggles sort direction on same column', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(
         locationResponse([
@@ -224,7 +224,7 @@ describe('sites table sort', () => {
   }));
 
   it('sorts by onHand column', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(
         locationResponse([
@@ -247,7 +247,7 @@ describe('sites table sort', () => {
   }));
 
   it('renders sortable column headers with aria-sort attribute', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 10, 5, 5)])),
     );
@@ -269,7 +269,7 @@ describe('sites table sort', () => {
 
 describe('row navigation', () => {
   it('navigates to site page and passes siteName in router state', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('site-99', 'Main Warehouse', 10, 0, 10)])),
     );
@@ -282,13 +282,13 @@ describe('row navigation', () => {
     comp.navigateToSite(comp.siteRows()[0]);
 
     expect(routerStub.navigate).toHaveBeenCalledWith(
-      ['/inventory/by-location/site', 'site-99'],
+      ['/app/inventory/by-location/site', 'site-99'],
       { state: { siteName: 'Main Warehouse' } },
     );
   }));
 
   it('carries siteName for the clicked row, not a different row', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(
         locationResponse([
@@ -307,14 +307,14 @@ describe('row navigation', () => {
     comp.navigateToSite(betaRow);
 
     expect(routerStub.navigate).toHaveBeenCalledWith(
-      ['/inventory/by-location/site', 's2'],
+      ['/app/inventory/by-location/site', 's2'],
       { state: { siteName: 'Beta Site' } },
     );
   }));
 
   // PRCR-002: Space key calls preventDefault and navigates to site
   it('Space key calls preventDefault and navigates to the correct site', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('site-42', 'Gamma Warehouse', 20, 5, 15)])),
     );
@@ -331,7 +331,7 @@ describe('row navigation', () => {
 
     expect(mockEvent.preventDefault).toHaveBeenCalledTimes(1);
     expect(routerStub.navigate).toHaveBeenCalledWith(
-      ['/inventory/by-location/site', 'site-42'],
+      ['/app/inventory/by-location/site', 'site-42'],
       { state: { siteName: 'Gamma Warehouse' } },
     );
   }));
@@ -341,7 +341,7 @@ describe('row navigation', () => {
 
 describe('empty state', () => {
   it('shows empty state when response has no sites', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([], qty(0, 0, 0))),
     );
@@ -358,7 +358,7 @@ describe('empty state', () => {
 
 describe('SKU filter', () => {
   it('debounces 300 ms and re-queries rollup with sku', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
     );
@@ -383,7 +383,7 @@ describe('SKU filter', () => {
   }));
 
   it('does not re-query when no location is selected', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -400,14 +400,14 @@ describe('SKU filter', () => {
 // ── Tests: location picker ────────────────────────────────────────────────
 
 describe('location picker', () => {
-  it('filters to parent-type locations only (Building/Place)', fakeAsync(() => {
+  it('surfaces the parent-location roster returned by getRoster', fakeAsync(() => {
+    // getRoster returns the parent-only roster server-side; the component
+    // surfaces page.content verbatim (no client-side type filtering).
     const locs: LocationResponseDTO[] = [
       parentLocation('b1', 'Main Building', 'Building'),
       parentLocation('p1', 'City Plaza', 'Place'),
-      parentLocation('s1', 'Site A', 'Site'), // should be excluded
-      { id: 'x1', name: 'No Type', type: undefined, active: true }, // should be excluded
     ];
-    locationServiceStub.getAllLocations.mockReturnValue(of(locs));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: locs }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -420,7 +420,7 @@ describe('location picker', () => {
 
   it('selecting a location updates selectedLocationId and navigates', fakeAsync(() => {
     const locs: LocationResponseDTO[] = [parentLocation('b1', 'HQ', 'Building')];
-    locationServiceStub.getAllLocations.mockReturnValue(of(locs));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: locs }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -432,7 +432,7 @@ describe('location picker', () => {
     tick();
 
     expect(comp.selectedLocationId()).toBe('b1');
-    expect(routerStub.navigate).toHaveBeenCalledWith(['/inventory/by-location', 'b1']);
+    expect(routerStub.navigate).toHaveBeenCalledWith(['/app/inventory/by-location', 'b1']);
   }));
 
   it('applies typeahead filter to narrow results', fakeAsync(() => {
@@ -441,7 +441,7 @@ describe('location picker', () => {
       parentLocation('b2', 'East Building', 'Building'),
       parentLocation('p1', 'West Plaza', 'Place'),
     ];
-    locationServiceStub.getAllLocations.mockReturnValue(of(locs));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: locs }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -460,7 +460,7 @@ describe('location picker', () => {
   // PRCR-003: clearing picker with a prior selection navigates to /inventory/by-location
   it('clearing picker with a prior selection navigates to base route and resets state', fakeAsync(() => {
     const locs: LocationResponseDTO[] = [parentLocation('b1', 'HQ', 'Building')];
-    locationServiceStub.getAllLocations.mockReturnValue(of(locs));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: locs }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
     );
@@ -483,7 +483,7 @@ describe('location picker', () => {
     fixture.detectChanges();
 
     // Must navigate to the base route (spec §3: clearing returns to idle route)
-    expect(routerStub.navigate).toHaveBeenCalledWith(['/inventory/by-location']);
+    expect(routerStub.navigate).toHaveBeenCalledWith(['/app/inventory/by-location']);
     // Local state must be reset
     expect(comp.selectedLocationId()).toBeNull();
     expect(comp.rollupData()).toBeNull();
@@ -495,7 +495,7 @@ describe('location picker', () => {
 
 describe('error states', () => {
   it('sets state to error and errorKind not-found on 404', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     const err: RollupError = { kind: 'not-found', message: 'Not found' };
     rollupServiceStub.getLocationRollup.mockReturnValue(throwError(() => err));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
@@ -511,7 +511,7 @@ describe('error states', () => {
   }));
 
   it('sets state to error and errorKind forbidden on 403', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     const err: RollupError = { kind: 'forbidden', message: 'Forbidden' };
     rollupServiceStub.getLocationRollup.mockReturnValue(throwError(() => err));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
@@ -527,7 +527,7 @@ describe('error states', () => {
   }));
 
   it('upstream-down shows retry banner; keeps last data when present', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     const successResponse = locationResponse([site('s1', 'Alpha', 10, 0, 10)]);
     rollupServiceStub.getLocationRollup.mockReturnValueOnce(of(successResponse));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
@@ -553,7 +553,7 @@ describe('error states', () => {
   }));
 
   it('upstream-down with no prior data shows error state', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     const err: RollupError = { kind: 'upstream-down', message: 'down', retryable: true };
     rollupServiceStub.getLocationRollup.mockReturnValue(throwError(() => err));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
@@ -569,7 +569,7 @@ describe('error states', () => {
   }));
 
   it('validation error shows error state', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     const err: RollupError = { kind: 'validation', message: 'Bad request' };
     rollupServiceStub.getLocationRollup.mockReturnValue(throwError(() => err));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
@@ -584,7 +584,7 @@ describe('error states', () => {
   }));
 
   it('unknown error kind sets error state and UNKNOWN errorKey', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     // 'unknown' is a valid RollupError kind per the discriminated union
     const err: RollupError = { kind: 'unknown', message: 'Something broke' };
     rollupServiceStub.getLocationRollup.mockReturnValue(throwError(() => err));
@@ -605,7 +605,7 @@ describe('error states', () => {
 
 describe('accessibility', () => {
   it('table has role="table" attribute', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 10, 5, 5)])),
     );
@@ -620,7 +620,7 @@ describe('accessibility', () => {
   }));
 
   it('negative available cell has warning badge with aria-label', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 5, 20, -15)])),
     );
@@ -635,7 +635,7 @@ describe('accessibility', () => {
   }));
 
   it('picker input has aria-autocomplete and aria-controls', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -649,7 +649,7 @@ describe('accessibility', () => {
   }));
 
   it('sort buttons are keyboard operable (present in DOM and type=button)', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 10, 5, 5)])),
     );
@@ -676,7 +676,7 @@ describe('sites table sort - extended coverage (Finding 5)', () => {
   ];
 
   it('sorts by allocated ascending', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
     fixture.detectChanges();
@@ -693,7 +693,7 @@ describe('sites table sort - extended coverage (Finding 5)', () => {
   }));
 
   it('sorts by allocated descending after second click', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
     fixture.detectChanges();
@@ -710,7 +710,7 @@ describe('sites table sort - extended coverage (Finding 5)', () => {
   }));
 
   it('sorts by available ascending', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
     fixture.detectChanges();
@@ -727,7 +727,7 @@ describe('sites table sort - extended coverage (Finding 5)', () => {
   }));
 
   it('sorts by available descending after second click', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
     fixture.detectChanges();
@@ -744,7 +744,7 @@ describe('sites table sort - extended coverage (Finding 5)', () => {
   }));
 
   it('sorts by siteName descending after second click on siteName', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
     fixture.detectChanges();
@@ -760,7 +760,7 @@ describe('sites table sort - extended coverage (Finding 5)', () => {
   }));
 
   it('sorts by onHand descending', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
     fixture.detectChanges();
@@ -777,7 +777,7 @@ describe('sites table sort - extended coverage (Finding 5)', () => {
   }));
 
   it('switching column resets direction to asc and previous column aria-sort to none', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
     fixture.detectChanges();
@@ -818,7 +818,7 @@ describe('sites table sort - extended coverage (Finding 5)', () => {
 
   // PRCR-001: DOM-level aria-sort attribute assertions on column switch
   it('DOM th[aria-sort] attributes reflect column-switch lifecycle', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse(threeRows())));
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
     fixture.detectChanges();
@@ -878,7 +878,7 @@ describe('keyboard picker (ARIA 1.2 APG combobox)', () => {
   ];
 
   it('ArrowDown opens listbox and sets activeOptionIndex to 0 when closed', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: twoLocs() }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -896,7 +896,7 @@ describe('keyboard picker (ARIA 1.2 APG combobox)', () => {
   }));
 
   it('ArrowDown wraps from last option back to 0', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: twoLocs() }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -922,7 +922,7 @@ describe('keyboard picker (ARIA 1.2 APG combobox)', () => {
   }));
 
   it('ArrowUp opens listbox and sets activeOptionIndex to last option when closed', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: twoLocs() }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -938,7 +938,7 @@ describe('keyboard picker (ARIA 1.2 APG combobox)', () => {
   }));
 
   it('ArrowUp wraps from index 0 to last option', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: twoLocs() }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -957,7 +957,7 @@ describe('keyboard picker (ARIA 1.2 APG combobox)', () => {
   }));
 
   it('Enter selects active option and closes listbox', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: twoLocs() }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -976,11 +976,11 @@ describe('keyboard picker (ARIA 1.2 APG combobox)', () => {
     expect(comp.selectedLocationId()).toBe('b2');
     expect(comp.pickerOpen()).toBe(false);
     expect(comp.activeOptionIndex()).toBe(-1);
-    expect(routerStub.navigate).toHaveBeenCalledWith(['/inventory/by-location', 'b2']);
+    expect(routerStub.navigate).toHaveBeenCalledWith(['/app/inventory/by-location', 'b2']);
   }));
 
   it('Enter does nothing when no active option (index -1)', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: twoLocs() }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -1000,7 +1000,7 @@ describe('keyboard picker (ARIA 1.2 APG combobox)', () => {
   }));
 
   it('Escape closes listbox without selecting, resets activeOptionIndex', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: twoLocs() }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -1023,7 +1023,7 @@ describe('keyboard picker (ARIA 1.2 APG combobox)', () => {
   }));
 
   it('aria-expanded reflects pickerOpen state correctly', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: twoLocs() }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -1050,7 +1050,7 @@ describe('keyboard picker (ARIA 1.2 APG combobox)', () => {
   }));
 
   it('aria-activedescendant reflects active option id when listbox is open', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of(twoLocs()));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: twoLocs() }));
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
     const fixture = createComponent({}, {});
     fixture.detectChanges();
@@ -1083,10 +1083,10 @@ describe('keyboard picker (ARIA 1.2 APG combobox)', () => {
 describe('paramMap back/forward navigation', () => {
   it('second paramMap emission triggers new rollup request and updates selectedLocation', fakeAsync(() => {
     const paramSubject$ = new Subject<ReturnType<typeof convertToParamMap>>();
-    locationServiceStub.getAllLocations.mockReturnValue(of([
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [
       parentLocation('loc-1', 'First Building', 'Building'),
       parentLocation('loc-2', 'Second Building', 'Building'),
-    ]));
+    ] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
     );
@@ -1120,7 +1120,7 @@ describe('paramMap back/forward navigation', () => {
 
   it('paramMap emitting null locationId resets to idle state', fakeAsync(() => {
     const paramSubject$ = new Subject<ReturnType<typeof convertToParamMap>>();
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
     );
@@ -1152,7 +1152,7 @@ describe('paramMap back/forward navigation', () => {
 
 describe('in-flight request cancellation (Finding 6)', () => {
   it('cancels previous in-flight rollup when a new one is triggered', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
 
     // First request never resolves
     const neverSubject$ = new Subject<LocationInventoryRollupResponse>();
@@ -1198,7 +1198,7 @@ describe('in-flight request cancellation (Finding 6)', () => {
   }));
 
   it('SKU change cancels previous in-flight request', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
 
     // First request (initial load for loc-1) resolves normally
     const firstResponse = locationResponse([site('s1', 'Alpha', 10, 0, 10)]);
@@ -1245,7 +1245,7 @@ describe('in-flight request cancellation (Finding 6)', () => {
 
 describe('destroy-time subscription cancellation', () => {
   it('does not write state after component is destroyed mid-flight', fakeAsync(() => {
-    locationServiceStub.getAllLocations.mockReturnValue(of([]));
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
 
     // Never-resolving Subject simulates an in-flight HTTP request
     const pendingSubject$ = new Subject<LocationInventoryRollupResponse>();
@@ -1277,8 +1277,8 @@ describe('destroy-time subscription cancellation', () => {
 
   it('loadParentLocations observable is torn down on destroy', fakeAsync(() => {
     // Use a never-resolving location observable to simulate slow location load
-    const pendingLocations$ = new Subject<LocationResponseDTO[]>();
-    locationServiceStub.getAllLocations.mockReturnValue(pendingLocations$.asObservable());
+    const pendingLocations$ = new Subject<{ content: LocationResponseDTO[] }>();
+    locationServiceStub.getRoster.mockReturnValue(pendingLocations$.asObservable());
     rollupServiceStub.getLocationRollup.mockReturnValue(of(locationResponse([])));
 
     const fixture = createComponent({}, {});
@@ -1291,7 +1291,7 @@ describe('destroy-time subscription cancellation', () => {
 
     // Emitting after destroy must not throw
     expect(() => {
-      pendingLocations$.next([parentLocation('b1', 'HQ', 'Building')]);
+      pendingLocations$.next({ content: [parentLocation('b1', 'HQ', 'Building')] });
       pendingLocations$.complete();
       tick();
     }).not.toThrow();
