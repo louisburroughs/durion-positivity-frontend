@@ -115,7 +115,7 @@ describe('BulkImportService', () => {
       });
       expect(response).toEqual({
         jobId: 'job-001',
-        uploadUrl: 'http://localhost:8080/api/bulk-loader/v1/bulk-jobs/job-001/tus',
+        uploadUrl: '/api/bulk-loader/v1/bulk-jobs/job-001/tus',
       });
     });
   });
@@ -429,7 +429,7 @@ describe('BulkImportService', () => {
 
   describe('getTusUploadUrl()', () => {
     it('returns a resumable upload endpoint for an existing job', () => {
-      expect(service.getTusUploadUrl('job-123')).toBe('http://localhost:8080/api/bulk-loader/v1/bulk-jobs/job-123/tus');
+      expect(service.getTusUploadUrl('job-123')).toBe('/api/bulk-loader/v1/bulk-jobs/job-123/tus');
     });
   });
 });
