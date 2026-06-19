@@ -7,6 +7,7 @@ import {
   CreateStaffingAssignmentRequest,
   EmployeeAPIService,
   EmployeeProfileDto,
+  EmployeeProfileDtoStatusEnum,
   UpdateEmployeeRequest,
   PeopleAccessControlService,
   PeopleReportsAPIService,
@@ -76,7 +77,13 @@ describe('PeopleService', () => {
   });
 
   it('getEmployee() delegates to EmployeeAPIService.getEmployee', () => {
-    const response: EmployeeProfileDto = { id: 'emp-1', legalName: 'Jane Doe' };
+    const response: EmployeeProfileDto = {
+      id: 'emp-1',
+      legalName: 'Jane Doe',
+      employeeNumber: 'EMP-1',
+      status: EmployeeProfileDtoStatusEnum.Active,
+      hireDate: '2026-05-01',
+    };
     employeeApiStub.getEmployee.mockReturnValue(of(response));
 
     service.getEmployee('emp-1').subscribe(result => expect(result).toEqual(response));
@@ -91,7 +98,13 @@ describe('PeopleService', () => {
       status: CreateEmployeeRequestStatusEnum.Active,
       hireDate: '2026-05-01',
     };
-    const response: EmployeeProfileDto = { id: 'emp-1', legalName: 'Jane Doe' };
+    const response: EmployeeProfileDto = {
+      id: 'emp-1',
+      legalName: 'Jane Doe',
+      employeeNumber: 'EMP-1',
+      status: EmployeeProfileDtoStatusEnum.Active,
+      hireDate: '2026-05-01',
+    };
     employeeApiStub.createEmployee.mockReturnValue(of(response));
 
     service.createEmployee(request).subscribe(result => expect(result).toEqual(response));
@@ -106,7 +119,13 @@ describe('PeopleService', () => {
       status: UpdateEmployeeRequestStatusEnum.Active,
       hireDate: '2026-05-01',
     };
-    const response: EmployeeProfileDto = { id: 'emp-1', legalName: 'Updated Name' };
+    const response: EmployeeProfileDto = {
+      id: 'emp-1',
+      legalName: 'Updated Name',
+      employeeNumber: 'EMP-1',
+      status: EmployeeProfileDtoStatusEnum.Active,
+      hireDate: '2026-05-01',
+    };
     employeeApiStub.updateEmployee.mockReturnValue(of(response));
 
     service.updateEmployee('emp-1', request).subscribe(result => expect(result).toEqual(response));
@@ -297,7 +316,7 @@ describe('PeopleService', () => {
   });
 
   it('startSession() delegates to WorkSessionsAPIService.startWorkSession', () => {
-    const response: WorkSessionDto = { sessionId: 's-1', personId: 'p-1' };
+    const response: WorkSessionDto = { sessionId: 's-1', personId: 'p-1', status: 'ACTIVE' };
     workSessionsApiStub.startWorkSession.mockReturnValue(of(response));
 
     service.startSession('p-1').subscribe(result => expect(result).toEqual(response));
@@ -306,7 +325,7 @@ describe('PeopleService', () => {
   });
 
   it('stopSession() delegates to WorkSessionsAPIService.stopWorkSession', () => {
-    const response: WorkSessionDto = { sessionId: 's-1', personId: 'p-1', endedAt: '2026-05-05T12:00:00Z' };
+    const response: WorkSessionDto = { sessionId: 's-1', personId: 'p-1', status: 'STOPPED', endedAt: '2026-05-05T12:00:00Z' };
     workSessionsApiStub.stopWorkSession.mockReturnValue(of(response));
 
     service.stopSession('p-1').subscribe(result => expect(result).toEqual(response));

@@ -48,12 +48,14 @@ describe('WorkSessionPageComponent', () => {
   const activeSession: WorkSessionDto = {
     sessionId: 's-1',
     personId: 'person-001',
+    status: 'ACTIVE',
     startedAt: '2026-04-25T08:00:00Z',
   };
 
   const stoppedSession: WorkSessionDto = {
     sessionId: 's-1',
     personId: 'person-001',
+    status: 'STOPPED',
     startedAt: '2026-04-25T08:00:00Z',
     endedAt: '2026-04-25T17:00:00Z',
   };

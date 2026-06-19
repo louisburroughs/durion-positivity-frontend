@@ -16,6 +16,7 @@ describe('WorkSessionService', () => {
   const session: WorkSessionDto = {
     sessionId: 'session-001',
     personId: 'person-001',
+    status: 'ACTIVE',
     startedAt: '2026-04-25T08:00:00Z',
   };
 

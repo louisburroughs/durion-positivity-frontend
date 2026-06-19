@@ -49,7 +49,7 @@ describe('OrderService', () => {
   });
 
   it('getOrder() delegates to SalesOrdersService.getOrder', () => {
-    const response: SalesOrderResponse = { orderId: 'ord-1' };
+    const response: SalesOrderResponse = { orderId: 'ord-1', status: 'OPEN' };
     salesOrdersApiStub.getOrder.mockReturnValue(of(response));
 
     service.getOrder('ord-1').subscribe(result => expect(result).toEqual(response));
@@ -59,7 +59,7 @@ describe('OrderService', () => {
 
   it('createCart() delegates to SalesOrdersService.createCart', () => {
     const request: CreateCartRequest = { clerkId: 'user-1', terminalId: 'TERM-1' };
-    const response: SalesOrderResponse = { orderId: 'ord-1' };
+    const response: SalesOrderResponse = { orderId: 'ord-1', status: 'OPEN' };
     salesOrdersApiStub.createCart.mockReturnValue(of(response));
 
     service.createCart(request).subscribe(result => expect(result).toEqual(response));
@@ -97,7 +97,7 @@ describe('OrderService', () => {
   });
 
   it('getOverridesByOrder() delegates to PriceOverridesService.getOverridesByOrder', () => {
-    const response: PriceOverrideDetail[] = [{ overrideId: 'ov-1', orderId: 'ord-1', orderLineId: 'line-1', originalPrice: 100, overridePrice: 90, reasonCode: 'PRICE_MATCH' }];
+    const response: PriceOverrideDetail[] = [{ overrideId: 'ov-1', orderId: 'ord-1', orderLineId: 'line-1', productId: 'SKU-1', originalPrice: 100, overridePrice: 90, reasonCode: 'PRICE_MATCH', discountAmount: 10, discountPercentage: 10, status: 'PENDING', requiresApproval: true, affectsCommission: false, requestedByUserId: 'user-1', createdAt: '2026-05-01T00:00:00Z' }];
     priceOverridesApiStub.getOverridesByOrder.mockReturnValue(of(response));
 
     service.getOverridesByOrder('ord-1').subscribe(result => expect(result).toEqual(response));
@@ -114,7 +114,22 @@ describe('OrderService', () => {
       overridePrice: 90,
       reasonCode: 'PRICE_MATCH',
     };
-    const response: PriceOverrideResult = { overrideId: 'ov-1', status: 'PENDING' };
+    const response: PriceOverrideResult = {
+      overrideId: 'ov-1',
+      orderId: 'ord-1',
+      orderLineId: 'line-1',
+      productId: 'SKU-1',
+      originalPrice: 100,
+      overridePrice: 90,
+      discountAmount: 10,
+      discountPercentage: 10,
+      reasonCode: 'PRICE_MATCH',
+      status: 'PENDING',
+      requiresApproval: true,
+      affectsCommission: false,
+      requestedByUserId: 'user-1',
+      createdAt: '2026-05-01T00:00:00Z',
+    };
     priceOverridesApiStub.applyPriceOverride.mockReturnValue(of(response));
 
     service.applyPriceOverride(request).subscribe(result => expect(result).toEqual(response));
