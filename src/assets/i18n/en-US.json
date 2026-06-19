@@ -495,14 +495,18 @@
         }
       },
       "FIELD": {
-        "PARTY_DETAIL_ID": "Party ID",
-        "ADD_VEHICLE_PARTY_ID": "Party ID",
-        "CONTACTS_PARTY_ID": "Party ID",
-        "BILLING_RULES_PARTY_ID": "Party ID",
-        "SNAPSHOT_PARTY_ID": "Party ID"
+        "PARTY_DETAIL_ID": "Customer",
+        "ADD_VEHICLE_PARTY_ID": "Customer",
+        "CONTACTS_PARTY_ID": "Customer",
+        "BILLING_RULES_PARTY_ID": "Customer",
+        "SNAPSHOT_PARTY_ID": "Customer"
       },
       "PLACEHOLDER": {
-        "PARTY_ID": "Enter party UUID"
+        "CUSTOMER_SEARCH": "Search customers by name…"
+      },
+      "TYPEAHEAD": {
+        "SEARCHING": "Searching…",
+        "NO_RESULTS": "No matching customers"
       },
       "ACTION": {
         "OPEN_PAGE": "Open Page",
@@ -515,7 +519,7 @@
         "IMPORT_DATA": "Import Data"
       },
       "ERROR": {
-        "REQUIRED_IDENTIFIER": "A Party ID is required.",
+        "REQUIRED_IDENTIFIER": "Select a customer from the list first.",
         "NAVIGATE": "Unable to navigate to the requested page."
       }
     },
@@ -526,12 +530,18 @@
       },
       "FIELD": {
         "CUSTOMER_NAME": "Customer",
+        "CUSTOMER": "Customer",
+        "CUSTOMER_SEARCH": "Search customers by name…",
         "PARTY_TYPE": "Account Type",
         "VEHICLES": "Vehicles",
         "BILLING_SUMMARY": "Billing Rules",
         "PARTY_ID": "Party ID",
         "VEHICLE_ID": "Vehicle ID",
         "UUID_PLACEHOLDER": "UUID"
+      },
+      "TYPEAHEAD": {
+        "SEARCHING": "Searching…",
+        "NO_RESULTS": "No matching customers"
       },
       "ACTION": {
         "LOAD": "Load snapshot",

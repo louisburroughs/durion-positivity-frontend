@@ -184,10 +184,35 @@
 				}
 
 				<form [formGroup]="addContactForm" class="modal-form" novalidate>
-					<label class="field-label" for="personId">Person ID</label>
-					<input id="personId" class="field-input" type="text" formControlName="personId" placeholder="UUID" />
-					@if (addContactForm.controls.personId.touched && addContactForm.controls.personId.errors?.['pattern']) {
-						<p class="field-error" role="alert">Person ID must be a valid UUID.</p>
+					<label class="field-label" for="personId">Person</label>
+					<div class="person-typeahead">
+						<input id="personId" class="field-input" type="text"
+							role="combobox" aria-autocomplete="list" aria-controls="personId-listbox"
+							[attr.aria-expanded]="showPersonSuggestions()"
+							autocomplete="off" spellcheck="false" [value]="personQuery()"
+							placeholder="Search people by name…"
+							(input)="onPersonInput($any($event.target).value)"
+							(focus)="onPersonFocus()" (blur)="onPersonBlur()" />
+						@if (showPersonSuggestions()) {
+						<ul id="personId-listbox" class="person-typeahead__list" role="listbox">
+							@if (searchingPerson()) {
+							<li class="person-typeahead__hint" role="presentation">Searching…</li>
+							} @else if (personSuggestions().length === 0) {
+							<li class="person-typeahead__hint" role="presentation">No matching people</li>
+							} @else {
+							@for (person of personSuggestions(); track person.personId) {
+							<li class="person-typeahead__option" role="option"
+								[attr.aria-selected]="addContactForm.controls.personId.value === person.personId">
+								<button type="button" class="person-typeahead__option-btn" data-testid="person-option"
+									(click)="selectPerson(person)">{{ personLabel(person) }}</button>
+							</li>
+							}
+							}
+						</ul>
+						}
+					</div>
+					@if (addContactForm.controls.personId.touched && addContactForm.controls.personId.errors?.['required']) {
+						<p class="field-error" role="alert">Select a person from the list.</p>
 					}
 
 					<label class="field-label" for="role">Role</label>

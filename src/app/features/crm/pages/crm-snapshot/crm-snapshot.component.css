@@ -155,3 +155,51 @@
     padding: var(--space-4);
   }
 }
+/* Customer search typeahead */
+.crm-snapshot__typeahead {
+  position: relative;
+}
+
+.crm-snapshot__suggestions {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  max-height: 16rem;
+  overflow-y: auto;
+  background: var(--cardBackground, #fff);
+  border: 1px solid var(--input-border, var(--border-color));
+  border-radius: var(--radius-md, 0.375rem);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--currentTextColor) 12%, transparent);
+}
+
+.crm-snapshot__suggestion-hint {
+  padding: 0.5rem 0.75rem;
+  color: color-mix(in srgb, var(--currentTextColor) 65%, transparent);
+  font-size: 0.875rem;
+}
+
+.crm-snapshot__suggestion-btn {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: var(--currentTextColor);
+  font: inherit;
+}
+
+.crm-snapshot__suggestion-btn:hover,
+.crm-snapshot__suggestion-btn:focus-visible {
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+}
+
+.crm-snapshot__suggestion[aria-selected='true'] .crm-snapshot__suggestion-btn {
+  font-weight: 600;
+}

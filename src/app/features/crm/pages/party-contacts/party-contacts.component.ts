@@ -10,9 +10,12 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { switchMap } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
-import { PartyDetail, Relationship, RelationshipRole } from '../../models/crm.models';
+import { CreatePersonResponse, PartyDetail, Relationship, RelationshipRole } from '../../models/crm.models';
+
+const MAX_SUGGESTIONS = 8;
 
 @Component({
   selector: 'app-party-contacts',
@@ -42,6 +45,13 @@ export class PartyContactsComponent implements OnInit {
   readonly toast = signal<{ type: 'success' | 'error'; message: string } | null>(null);
 
   readonly pageSize = 25;
+
+  // ── Person typeahead (Add Contact) ─────────────────────────────────────────
+  readonly personQuery = signal('');
+  readonly personSuggestions = signal<CreatePersonResponse[]>([]);
+  readonly showPersonSuggestions = signal(false);
+  readonly searchingPerson = signal(false);
+  private readonly personSearch$ = new Subject<string>();
 
   readonly addContactForm = this.fb.nonNullable.group({
     personId: [
@@ -106,6 +116,56 @@ export class PartyContactsComponent implements OnInit {
           this.addContactForm.controls.primaryBillingContact.setValue(false);
         }
       });
+
+    this.personSearch$
+      .pipe(
+        debounceTime(250),
+        distinctUntilChanged(),
+        switchMap(query => {
+          if (query.trim().length < 2) {
+            return of([] as CreatePersonResponse[]);
+          }
+          this.searchingPerson.set(true);
+          return this.crm.searchPersons(query).pipe(
+            map(res => res.persons.slice(0, MAX_SUGGESTIONS)),
+            catchError(() => of([] as CreatePersonResponse[])),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(persons => {
+        this.personSuggestions.set(persons);
+        this.searchingPerson.set(false);
+      });
+  }
+
+  /** Readable label for a person suggestion. */
+  personLabel(person: CreatePersonResponse): string {
+    return `${person.firstName ?? ''} ${person.lastName ?? ''}`.trim() || person.personId;
+  }
+
+  onPersonInput(value: string): void {
+    this.personQuery.set(value);
+    this.addContactForm.controls.personId.setValue('');
+    this.showPersonSuggestions.set(true);
+    this.personSearch$.next(value);
+  }
+
+  onPersonFocus(): void {
+    if (this.personSuggestions().length > 0) {
+      this.showPersonSuggestions.set(true);
+    }
+  }
+
+  onPersonBlur(): void {
+    setTimeout(() => this.showPersonSuggestions.set(false), 150);
+  }
+
+  selectPerson(person: CreatePersonResponse): void {
+    this.addContactForm.controls.personId.setValue(person.personId);
+    this.addContactForm.controls.personId.markAsTouched();
+    this.personQuery.set(this.personLabel(person));
+    this.showPersonSuggestions.set(false);
   }
 
   loadParty(): void {
@@ -181,6 +241,9 @@ export class PartyContactsComponent implements OnInit {
       effectiveFrom: '',
       primaryBillingContact: false,
     });
+    this.personQuery.set('');
+    this.personSuggestions.set([]);
+    this.showPersonSuggestions.set(false);
     this.modalError.set(null);
     this.modalState.set('open');
   }
@@ -188,6 +251,9 @@ export class PartyContactsComponent implements OnInit {
   closeModal(): void {
     this.modalState.set('closed');
     this.modalError.set(null);
+    this.personQuery.set('');
+    this.personSuggestions.set([]);
+    this.showPersonSuggestions.set(false);
   }
 
   saveContact(): void {
