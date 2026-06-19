@@ -296,12 +296,35 @@ describe('CrmService', () => {
   });
 
   describe('searchParties()', () => {
-    it('sends trimmed name criteria for non-empty query', () => {
-      crmAccountsStub.searchParties.mockReturnValueOnce(of({ results: [] }));
+    it('browses the unified directory by trimmed name so individuals are found too (issue #59)', () => {
+      crmAccountsStub.browseParties.mockReturnValueOnce(
+        of({ results: [browseParty], totalCount: 1, pageNumber: 0, pageSize: 25 }),
+      );
 
-      service.searchParties('  acme  ').subscribe();
+      let result: { parties: unknown[] } | undefined;
+      service.searchParties('  Albert  ').subscribe(value => {
+        result = value;
+      });
 
-      expect(crmAccountsStub.searchParties).toHaveBeenCalledWith({ name: 'acme' });
+      const expectedPageable: Pageable = { page: 0, size: 25 };
+      expect(crmAccountsStub.browseParties).toHaveBeenCalledWith(
+        expectedPageable, 'Albert', undefined, undefined, undefined, undefined, undefined,
+      );
+      expect(crmAccountsStub.searchParties).not.toHaveBeenCalled();
+      expect(result).toEqual({ parties: [browseParty] });
+    });
+
+    it('omits the name filter for an empty query', () => {
+      crmAccountsStub.browseParties.mockReturnValueOnce(
+        of({ results: [], totalCount: 0, pageNumber: 0, pageSize: 25 }),
+      );
+
+      service.searchParties('   ').subscribe();
+
+      const expectedPageable: Pageable = { page: 0, size: 25 };
+      expect(crmAccountsStub.browseParties).toHaveBeenCalledWith(
+        expectedPageable, undefined, undefined, undefined, undefined, undefined, undefined,
+      );
     });
   });
 });
