@@ -29,9 +29,17 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     component = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
+
+    // ngOnInit eagerly loads the customer list for the typeahead exactly once.
+    // expectOne asserts the single init request (catches accidental double-loads)
+    // and flushing it leaves each test a clean HTTP backend.
+    http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm')).flush({ content: [] });
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    TestBed.resetTestingModule();
+  });
 
   it('should create the component', () => {
     expect(component).toBeTruthy();

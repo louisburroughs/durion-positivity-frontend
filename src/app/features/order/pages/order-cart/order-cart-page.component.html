@@ -65,7 +65,7 @@
           <td>{{ line.itemSku }}</td>
           <td>{{ line.quantity }}</td>
           <td>{{ line.unitPrice | currency:'USD':'symbol':'1.2-2' }}</td>
-          <td>{{ (line.quantity ?? 0) * (line.unitPrice ?? 0) | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ line.quantity * (line.unitPrice ?? 0) | currency:'USD':'symbol':'1.2-2' }}</td>
           <td>
             <button class="order-cart__remove-btn" type="button" (click)="removeItem(line.orderLineId!)">
               {{ 'ORDER.CART.ACTION.REMOVE_ITEM' | translate }}

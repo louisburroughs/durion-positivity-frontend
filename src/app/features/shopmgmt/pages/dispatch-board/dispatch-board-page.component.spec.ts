@@ -58,6 +58,7 @@ describe('DispatchBoardPageComponent', () => {
   const dispatchBoardServiceStub = {
     getDashboard: vi.fn().mockReturnValue(of(emptyDashboard)),
     getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: 'LOC-1' })),
+    getAllLocations: vi.fn().mockReturnValue(of([])),
     getAvailability: vi.fn().mockReturnValue(of([])),
   };
 
@@ -117,7 +118,7 @@ describe('DispatchBoardPageComponent', () => {
   describe('AC2: filter bar', () => {
     it('renders a location input in the filter bar', () => {
       fixture.detectChanges();
-      const locationInput = fixture.nativeElement.querySelector('input[name="locationId"]');
+      const locationInput = fixture.nativeElement.querySelector('input[name="locationDisplay"]');
       expect(locationInput).toBeTruthy();
     });
 
