@@ -13,7 +13,6 @@ import type {
   CreateCommercialAccountRequest as SdkCreateCommercialAccountRequest,
   MergePartiesRequest as SdkMergePartiesRequest,
   Pageable as SdkPageable,
-  SearchPartiesRequest as SdkSearchPartiesRequest,
   CreatePersonRequest as SdkCreatePersonRequest,
   CreatePartyRelationshipRequest as SdkCreatePartyRelationshipRequest,
   UpsertCommunicationPreferencesRequest as SdkUpsertCommunicationPreferencesRequest,
@@ -148,11 +147,16 @@ export class CrmService {
       );
   }
 
+  /**
+   * Customer typeahead search across the full directory. Delegates to browseParties
+   * (unified commercial accounts + individual person customers) rather than
+   * accountsApi.searchParties, which matches commercial legalName only and never
+   * returns individuals (CUST-PP-*). See issue #59.
+   */
   searchParties(query: string): Observable<{ parties: PartyDetail[] }> {
     const normalizedQuery = query.trim();
-    const sdkRequest: SdkSearchPartiesRequest = { name: normalizedQuery };
-    return this.accountsApi.searchParties(sdkRequest).pipe(
-      map(response => ({ parties: (response.results ?? []) as PartyDetail[] })),
+    return this.browseParties({ name: normalizedQuery || undefined }).pipe(
+      map(page => ({ parties: page.parties })),
     );
   }
 
