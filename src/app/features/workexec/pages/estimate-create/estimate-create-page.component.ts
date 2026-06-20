@@ -4,11 +4,20 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, of } from 'rxjs';
-import { CustomerAPIService, CustomerDTO, CRMSnapshotsService, VehicleSummary } from '@durion-sdk/customer';
+import {
+  CustomerAPIService,
+  CustomerDTO,
+  CRMSnapshotsService,
+  CRMVehiclesService,
+  CreateVehicleForPartyRequest,
+  VehicleResponse,
+  VehicleSummary,
+} from '@durion-sdk/customer';
 import { WorkexecService } from '../../services/workexec.service';
 import { PageState } from '../../models/workexec.models';
 
 const MAX_SUGGESTIONS = 8;
+const ADD_VEHICLE_OPTION = '__add__';
 
 @Component({
   selector: 'app-estimate-create-page',
@@ -24,6 +33,7 @@ export class EstimateCreatePageComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly customerApi = inject(CustomerAPIService);
   private readonly snapshotsApi = inject(CRMSnapshotsService);
+  private readonly vehiclesApi = inject(CRMVehiclesService);
 
   readonly state        = signal<PageState>('idle');
   readonly errorMessage = signal<string | null>(null);
@@ -34,8 +44,12 @@ export class EstimateCreatePageComponent implements OnInit {
   readonly showCustomerSuggestions = signal(false);
 
   readonly customerVehicles = signal<VehicleSummary[]>([]);
-  readonly vehicleVinInput = signal('');
-  readonly showVehicleSuggestions = signal(false);
+
+  readonly showAddVehicle = signal(false);
+  readonly vehicleSaving = signal(false);
+  readonly vehicleSaveError = signal<string | null>(null);
+
+  readonly addVehicleOption = ADD_VEHICLE_OPTION;
 
   readonly customerSuggestions = computed<CustomerDTO[]>(() => {
     const q = this.customerDisplayName().trim().toLowerCase();
@@ -48,19 +62,17 @@ export class EstimateCreatePageComponent implements OnInit {
     }).slice(0, MAX_SUGGESTIONS);
   });
 
-  readonly vehicleSuggestions = computed<VehicleSummary[]>(() => {
-    const q = this.vehicleVinInput().trim().toLowerCase();
-    const vehicles = this.customerVehicles();
-    if (!q) return vehicles.slice(0, MAX_SUGGESTIONS);
-    return vehicles.filter(v =>
-      v.vin?.toLowerCase().includes(q) ||
-      `${v.year ?? ''} ${v.make ?? ''} ${v.model ?? ''}`.toLowerCase().includes(q),
-    ).slice(0, MAX_SUGGESTIONS);
-  });
-
   readonly form = this.fb.nonNullable.group({
     customerId: ['', Validators.required],
     vehicleId:  ['', Validators.required],
+  });
+
+  readonly newVehicleForm = this.fb.nonNullable.group({
+    vinNumber:          ['', Validators.required],
+    description:        [''],
+    unitNumber:         [''],
+    licensePlate:       [''],
+    licensePlateRegion: [''],
   });
 
   ngOnInit(): void {
@@ -82,9 +94,7 @@ export class EstimateCreatePageComponent implements OnInit {
   onCustomerInput(value: string): void {
     this.customerDisplayName.set(value);
     this.form.patchValue({ customerId: '' });
-    this.customerVehicles.set([]);
-    this.vehicleVinInput.set('');
-    this.form.patchValue({ vehicleId: '' });
+    this.resetVehicleSelection();
     this.showCustomerSuggestions.set(true);
   }
 
@@ -101,8 +111,7 @@ export class EstimateCreatePageComponent implements OnInit {
     this.form.patchValue({ customerId: id });
     this.customerDisplayName.set(`${customer.firstName} ${customer.lastName}`);
     this.showCustomerSuggestions.set(false);
-    this.vehicleVinInput.set('');
-    this.form.patchValue({ vehicleId: '' });
+    this.resetVehicleSelection();
 
     if (!id) { return; }
 
@@ -123,26 +132,81 @@ export class EstimateCreatePageComponent implements OnInit {
       });
   }
 
-  onVehicleInput(value: string): void {
-    this.vehicleVinInput.set(value);
+  /** Human-readable label for a vehicle dropdown option. */
+  vehicleLabel(v: VehicleSummary): string {
+    const desc = `${v.year ?? ''} ${v.make ?? ''} ${v.model ?? ''}`.trim();
+    if (v.vin && desc) return `${v.vin} — ${desc}`;
+    return v.vin ?? v.vehicleId ?? 'Vehicle';
+  }
+
+  onVehicleSelect(value: string): void {
+    if (value === ADD_VEHICLE_OPTION) {
+      this.form.patchValue({ vehicleId: '' });
+      this.showAddVehicle.set(true);
+      this.vehicleSaveError.set(null);
+      return;
+    }
+    this.showAddVehicle.set(false);
+    this.form.patchValue({ vehicleId: value });
+  }
+
+  cancelAddVehicle(): void {
+    this.showAddVehicle.set(false);
+    this.vehicleSaveError.set(null);
+    this.newVehicleForm.reset();
+  }
+
+  saveNewVehicle(): void {
+    if (this.newVehicleForm.invalid) {
+      this.newVehicleForm.markAllAsTouched();
+      return;
+    }
+    const customerId = this.form.controls.customerId.value;
+    if (!customerId) { return; }
+
+    this.vehicleSaving.set(true);
+    this.vehicleSaveError.set(null);
+
+    const raw = this.newVehicleForm.getRawValue();
+    const request: CreateVehicleForPartyRequest = {
+      vinNumber: raw.vinNumber.trim(),
+      ...(raw.description.trim()        ? { description: raw.description.trim() } : {}),
+      ...(raw.unitNumber.trim()         ? { unitNumber: raw.unitNumber.trim() } : {}),
+      ...(raw.licensePlate.trim()       ? { licensePlate: raw.licensePlate.trim() } : {}),
+      ...(raw.licensePlateRegion.trim() ? { licensePlateRegion: raw.licensePlateRegion.trim() } : {}),
+    };
+
+    this.vehiclesApi.createVehicles(customerId, request, 'body', false, { transferCache: false })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (created: VehicleResponse) => {
+          this.vehicleSaving.set(false);
+          const summary: VehicleSummary = {
+            vehicleId: created.vehicleId ?? '',
+            vin: created.vin,
+            make: created.make,
+            model: created.model,
+            year: created.year,
+          };
+          this.customerVehicles.update(list => [...list, summary]);
+          this.form.patchValue({ vehicleId: summary.vehicleId });
+          this.showAddVehicle.set(false);
+          this.newVehicleForm.reset();
+        },
+        error: err => {
+          this.vehicleSaving.set(false);
+          const body = err.error;
+          this.vehicleSaveError.set(body?.message ?? 'Could not add vehicle. Please try again.');
+        },
+      });
+  }
+
+  private resetVehicleSelection(): void {
+    this.customerVehicles.set([]);
     this.form.patchValue({ vehicleId: '' });
-    this.showVehicleSuggestions.set(true);
-  }
-
-  onVehicleFocus(): void {
-    if (this.customerVehicles().length > 0) this.showVehicleSuggestions.set(true);
-  }
-
-  onVehicleBlur(): void {
-    setTimeout(() => this.showVehicleSuggestions.set(false), 150);
-  }
-
-  selectVehicle(vehicle: VehicleSummary): void {
-    // vehicleId must be a UUID; VIN stubs (no UUID) leave the field empty so form stays invalid
-    const id = vehicle.vehicleId ?? '';
-    this.form.patchValue({ vehicleId: id });
-    this.vehicleVinInput.set(vehicle.vin ?? id);
-    this.showVehicleSuggestions.set(false);
+    this.showAddVehicle.set(false);
+    this.vehicleSaveError.set(null);
+    this.newVehicleForm.reset();
   }
 
   submit(): void {

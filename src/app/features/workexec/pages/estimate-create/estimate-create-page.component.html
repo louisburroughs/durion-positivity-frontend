@@ -55,44 +55,95 @@
       }
     </div>
 
-    <!-- Vehicle VIN search -->
+    <!-- Vehicle selection -->
     <div class="field-group">
-      <label for="vehicleVinSearch" class="field-label">Vehicle VIN <span class="required" aria-hidden="true">*</span></label>
-      <div class="typeahead-wrap">
-        <input
-          id="vehicleVinSearch"
-          type="text"
-          autocomplete="off"
-          class="field-input"
-          [class.field-input--error]="form.controls.vehicleId.invalid && form.controls.vehicleId.touched"
-          [value]="vehicleVinInput()"
-          (input)="onVehicleInput($any($event.target).value)"
-          (focus)="onVehicleFocus()"
-          (blur)="onVehicleBlur()"
-          [attr.aria-expanded]="showVehicleSuggestions() && vehicleSuggestions().length > 0"
-          aria-autocomplete="list"
-          aria-haspopup="listbox"
-          placeholder="Enter or search VIN…"
-          aria-required="true"
-        />
-        @if (showVehicleSuggestions() && vehicleSuggestions().length > 0) {
-          <ul class="typeahead-suggestions" role="listbox">
-            @for (v of vehicleSuggestions(); track v.vehicleId ?? v.vin) {
-              <li class="typeahead-item" role="option" (mousedown)="selectVehicle(v)">
-                <span class="suggestion-primary">{{ v.vin }}</span>
-                @if (v.year || v.make || v.model) {
-                  <span class="suggestion-secondary">{{ v.year }} {{ v.make }} {{ v.model }}</span>
-                }
-              </li>
-            }
-          </ul>
+      <label for="vehicleSelect" class="field-label">Vehicle <span class="required" aria-hidden="true">*</span></label>
+      <select
+        id="vehicleSelect"
+        class="field-input"
+        [class.field-input--error]="form.controls.vehicleId.invalid && form.controls.vehicleId.touched"
+        [disabled]="!form.controls.customerId.value"
+        [value]="showAddVehicle() ? addVehicleOption : form.controls.vehicleId.value"
+        (change)="onVehicleSelect($any($event.target).value)"
+        [attr.aria-describedby]="form.controls.vehicleId.invalid && form.controls.vehicleId.touched && !showAddVehicle() ? 'vehicleId-err' : null"
+        aria-required="true"
+      >
+        <option value="" disabled>Select vehicle…</option>
+        @for (v of customerVehicles(); track v.vehicleId ?? v.vin) {
+          <option [value]="v.vehicleId">{{ vehicleLabel(v) }}</option>
         }
-      </div>
-      @if (form.controls.vehicleId.invalid && form.controls.vehicleId.touched) {
-        <p id="vehicleId-err" class="field-error" role="alert">Vehicle VIN is required.</p>
+        <option [value]="addVehicleOption">+ Add new vehicle…</option>
+      </select>
+      @if (form.controls.vehicleId.invalid && form.controls.vehicleId.touched && !showAddVehicle()) {
+        <p id="vehicleId-err" class="field-error" role="alert">Vehicle is required.</p>
       }
       @if (fieldError('vehicleId')) {
         <p class="field-error" role="alert">{{ fieldError('vehicleId') }}</p>
+      }
+
+      <!-- Inline add-vehicle form -->
+      @if (showAddVehicle()) {
+        <div class="add-vehicle" [formGroup]="newVehicleForm">
+          <p class="add-vehicle__title">New vehicle</p>
+
+          <div class="field-group">
+            <label for="newVin" class="field-label">VIN <span class="required" aria-hidden="true">*</span></label>
+            <input
+              id="newVin"
+              type="text"
+              autocomplete="off"
+              class="field-input"
+              formControlName="vinNumber"
+              [class.field-input--error]="newVehicleForm.controls.vinNumber.invalid && newVehicleForm.controls.vinNumber.touched"
+              [attr.aria-describedby]="newVehicleForm.controls.vinNumber.invalid && newVehicleForm.controls.vinNumber.touched ? 'newVin-err' : null"
+              placeholder="Vehicle Identification Number"
+              aria-required="true"
+            />
+            @if (newVehicleForm.controls.vinNumber.invalid && newVehicleForm.controls.vinNumber.touched) {
+              <p id="newVin-err" class="field-error" role="alert">VIN is required.</p>
+            }
+          </div>
+
+          <div class="field-group">
+            <label for="newDescription" class="field-label">Description</label>
+            <input id="newDescription" type="text" autocomplete="off" class="field-input"
+                   formControlName="description" placeholder="e.g. 2019 Ford F-150" />
+          </div>
+
+          <div class="field-group">
+            <label for="newUnitNumber" class="field-label">Unit number</label>
+            <input id="newUnitNumber" type="text" autocomplete="off" class="field-input"
+                   formControlName="unitNumber" placeholder="Unit or internal reference" />
+          </div>
+
+          <div class="add-vehicle__row">
+            <div class="field-group">
+              <label for="newPlate" class="field-label">License plate</label>
+              <input id="newPlate" type="text" autocomplete="off" class="field-input"
+                     formControlName="licensePlate" placeholder="Plate" />
+            </div>
+            <div class="field-group">
+              <label for="newPlateRegion" class="field-label">Region</label>
+              <input id="newPlateRegion" type="text" autocomplete="off" class="field-input"
+                     formControlName="licensePlateRegion" placeholder="State / province" />
+            </div>
+          </div>
+
+          @if (vehicleSaveError()) {
+            <p class="field-error" role="alert">{{ vehicleSaveError() }}</p>
+          }
+
+          <div class="add-vehicle__actions">
+            <button type="button" class="btn btn--primary btn--sm" (click)="saveNewVehicle()"
+                    [disabled]="vehicleSaving()" [attr.aria-busy]="vehicleSaving()">
+              @if (vehicleSaving()) { Saving… } @else { Save vehicle }
+            </button>
+            <button type="button" class="btn btn--ghost btn--sm" (click)="cancelAddVehicle()"
+                    [disabled]="vehicleSaving()">
+              Cancel
+            </button>
+          </div>
+        </div>
       }
     </div>
 
