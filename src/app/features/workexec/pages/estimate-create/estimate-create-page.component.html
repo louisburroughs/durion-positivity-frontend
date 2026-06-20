@@ -65,6 +65,7 @@
         [disabled]="!form.controls.customerId.value"
         [value]="showAddVehicle() ? addVehicleOption : form.controls.vehicleId.value"
         (change)="onVehicleSelect($any($event.target).value)"
+        [attr.aria-describedby]="form.controls.vehicleId.invalid && form.controls.vehicleId.touched && !showAddVehicle() ? 'vehicleId-err' : null"
         aria-required="true"
       >
         <option value="" disabled>Select vehicle…</option>
@@ -94,11 +95,12 @@
               class="field-input"
               formControlName="vinNumber"
               [class.field-input--error]="newVehicleForm.controls.vinNumber.invalid && newVehicleForm.controls.vinNumber.touched"
+              [attr.aria-describedby]="newVehicleForm.controls.vinNumber.invalid && newVehicleForm.controls.vinNumber.touched ? 'newVin-err' : null"
               placeholder="Vehicle Identification Number"
               aria-required="true"
             />
             @if (newVehicleForm.controls.vinNumber.invalid && newVehicleForm.controls.vinNumber.touched) {
-              <p class="field-error" role="alert">VIN is required.</p>
+              <p id="newVin-err" class="field-error" role="alert">VIN is required.</p>
             }
           </div>
 
