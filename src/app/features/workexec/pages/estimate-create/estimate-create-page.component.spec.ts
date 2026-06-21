@@ -104,9 +104,13 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     expect(component.form.controls.customerId.value).toBe('p-1');
     expect(component.customerDisplayName()).toBe('Acme Towing');
 
-    // selecting a customer triggers a CRM snapshot fetch for that party's vehicles
-    http.expectOne(r => r.method === 'GET' && r.url.includes('/snapshot') && r.url.includes('p-1'))
-      .flush({ vehicles: [] });
+    // selecting a customer loads that customer's complete vehicle list
+    http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/p-1/vehicles'))
+      .flush([
+        { vehicleId: 'v-1', vin: '1ABC', make: 'Ford', model: 'F-150', year: 2019 },
+        { vehicleId: 'v-2', vin: '2XYZ', make: 'GMC', model: 'Sierra', year: 2021 },
+      ]);
+    expect(component.customerVehicles().length).toBe(2);
   });
 
   it('should reveal inline add-vehicle form when add option chosen', () => {

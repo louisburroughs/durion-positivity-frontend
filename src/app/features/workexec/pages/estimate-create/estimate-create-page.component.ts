@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, of } from 'rxjs';
 import {
-  CRMSnapshotsService,
   CRMVehiclesService,
   CreateVehicleForPartyRequest,
   VehicleResponse,
@@ -32,7 +31,6 @@ export class EstimateCreatePageComponent implements OnInit {
   private readonly fb       = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly crm = inject(CrmService);
-  private readonly snapshotsApi = inject(CRMSnapshotsService);
   private readonly vehiclesApi = inject(CRMVehiclesService);
 
   readonly state        = signal<PageState>('idle');
@@ -115,21 +113,14 @@ export class EstimateCreatePageComponent implements OnInit {
 
     if (!id) { return; }
 
-    // Try CRM snapshot to get full VehicleSummary objects (vehicleId + vin + make/model/year)
-    this.snapshotsApi.fetchByParty(id, 'body', false, { transferCache: false })
+    // Authoritative, complete vehicle list for the customer (the CRM snapshot does
+    // not reliably carry vehicles for commercial accounts).
+    this.vehiclesApi.listVehiclesForCustomer(id, 'body', false, { transferCache: false })
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        catchError(() => of(null)),
+        catchError(() => of([] as VehicleSummary[])),
       )
-      .subscribe(snapshot => {
-        const vehicles: VehicleSummary[] = (snapshot as { vehicles?: VehicleSummary[] } | null)?.vehicles ?? [];
-        if (vehicles.length === 0 && party.vehicles?.length) {
-          // Fallback: vehicle refs carried on the directory row (vehicleId + vin + make/model/year)
-          this.customerVehicles.set(party.vehicles as VehicleSummary[]);
-        } else {
-          this.customerVehicles.set(vehicles);
-        }
-      });
+      .subscribe(vehicles => this.customerVehicles.set(vehicles ?? []));
   }
 
   /** Display label for a party row: legal name plus DBA / customer number when present. */
