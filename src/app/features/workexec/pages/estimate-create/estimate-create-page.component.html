@@ -36,11 +36,11 @@
         />
         @if (showCustomerSuggestions() && customerSuggestions().length > 0) {
           <ul class="typeahead-suggestions" role="listbox">
-            @for (c of customerSuggestions(); track c.id) {
-              <li class="typeahead-item" role="option" (mousedown)="selectCustomer(c)">
-                <span class="suggestion-primary">{{ c.firstName }} {{ c.lastName }}</span>
-                @if (c.customerNumber) {
-                  <span class="suggestion-secondary">{{ c.customerNumber }}</span>
+            @for (p of customerSuggestions(); track p.partyId) {
+              <li class="typeahead-item" role="option" (mousedown)="selectCustomer(p)">
+                <span class="suggestion-primary">{{ customerLabel(p) }}</span>
+                @if (p.customerNumber) {
+                  <span class="suggestion-secondary">{{ p.customerNumber }}</span>
                 }
               </li>
             }
