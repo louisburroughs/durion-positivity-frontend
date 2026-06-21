@@ -30,10 +30,11 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
 
-    // ngOnInit eagerly loads the customer list for the typeahead exactly once.
+    // ngOnInit eagerly browses the CRM party directory for the typeahead exactly once.
     // expectOne asserts the single init request (catches accidental double-loads)
     // and flushing it leaves each test a clean HTTP backend.
-    http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm')).flush({ content: [] });
+    http.expectOne(r => r.method === 'GET' && /\/v1\/crm\/accounts\/parties(\?|$)/.test(r.url))
+      .flush({ results: [], totalCount: 0, pageNumber: 0, pageSize: 200 });
   });
 
   afterEach(() => {
@@ -89,6 +90,23 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     fixture.detectChanges();
     expect(component.state()).toBe('error');
     expect(component.errorMessage()).toBe('Server error');
+  });
+
+  it('should suggest CRM parties by legal name / customer number and select by partyId', () => {
+    component.allCustomers.set([
+      { partyId: 'p-1', legalName: 'Acme Towing', customerNumber: 'C-100' },
+      { partyId: 'p-2', legalName: 'Bravo Logistics', customerNumber: 'C-200' },
+    ]);
+    component.onCustomerInput('acme');
+    expect(component.customerSuggestions().map(p => p.partyId)).toEqual(['p-1']);
+
+    component.selectCustomer({ partyId: 'p-1', legalName: 'Acme Towing', customerNumber: 'C-100' });
+    expect(component.form.controls.customerId.value).toBe('p-1');
+    expect(component.customerDisplayName()).toBe('Acme Towing');
+
+    // selecting a customer triggers a CRM snapshot fetch for that party's vehicles
+    http.expectOne(r => r.method === 'GET' && r.url.includes('/snapshot') && r.url.includes('p-1'))
+      .flush({ vehicles: [] });
   });
 
   it('should reveal inline add-vehicle form when add option chosen', () => {

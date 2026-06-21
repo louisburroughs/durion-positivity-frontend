@@ -5,14 +5,14 @@ import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, of } from 'rxjs';
 import {
-  CustomerAPIService,
-  CustomerDTO,
   CRMSnapshotsService,
   CRMVehiclesService,
   CreateVehicleForPartyRequest,
   VehicleResponse,
   VehicleSummary,
 } from '@durion-sdk/customer';
+import { CrmService } from '../../../crm/services/crm.service';
+import { PartyDetail } from '../../../crm/models/crm.models';
 import { WorkexecService } from '../../services/workexec.service';
 import { PageState } from '../../models/workexec.models';
 
@@ -31,7 +31,7 @@ export class EstimateCreatePageComponent implements OnInit {
   private readonly router   = inject(Router);
   private readonly fb       = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly customerApi = inject(CustomerAPIService);
+  private readonly crm = inject(CrmService);
   private readonly snapshotsApi = inject(CRMSnapshotsService);
   private readonly vehiclesApi = inject(CRMVehiclesService);
 
@@ -39,7 +39,7 @@ export class EstimateCreatePageComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly fieldErrors  = signal<Record<string, string>>({});
 
-  readonly allCustomers = signal<CustomerDTO[]>([]);
+  readonly allCustomers = signal<PartyDetail[]>([]);
   readonly customerDisplayName = signal('');
   readonly showCustomerSuggestions = signal(false);
 
@@ -51,14 +51,15 @@ export class EstimateCreatePageComponent implements OnInit {
 
   readonly addVehicleOption = ADD_VEHICLE_OPTION;
 
-  readonly customerSuggestions = computed<CustomerDTO[]>(() => {
+  readonly customerSuggestions = computed<PartyDetail[]>(() => {
     const q = this.customerDisplayName().trim().toLowerCase();
     const all = this.allCustomers();
     if (!q) return all.slice(0, MAX_SUGGESTIONS);
-    return all.filter(c => {
-      const name = `${c.firstName ?? ''} ${c.lastName ?? ''}`.toLowerCase();
-      const customerNumber = (c.customerNumber ?? '').toLowerCase();
-      return name.includes(q) || customerNumber.includes(q);
+    return all.filter(p => {
+      const name = (p.legalName ?? '').toLowerCase();
+      const dba = (p.dba ?? '').toLowerCase();
+      const customerNumber = (p.customerNumber ?? '').toLowerCase();
+      return name.includes(q) || dba.includes(q) || customerNumber.includes(q);
     }).slice(0, MAX_SUGGESTIONS);
   });
 
@@ -76,13 +77,12 @@ export class EstimateCreatePageComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // name/email left undefined: unfiltered listing (server-side search params added in #663).
-    this.customerApi.getAllCustomers({ page: 0, size: 200 }, undefined, undefined, undefined, 'body', false, {
-      transferCache: false,
-    })
+    // Load CRM parties (the canonical customer directory). Client-side filtered
+    // below; server-side name search can replace this when typeahead paging lands.
+    this.crm.browseParties({ page: 0, size: 200 })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: page => this.allCustomers.set(page.content ?? []),
+        next: page => this.allCustomers.set(page.parties ?? []),
         error: () => {},
       });
 
@@ -106,10 +106,10 @@ export class EstimateCreatePageComponent implements OnInit {
     setTimeout(() => this.showCustomerSuggestions.set(false), 150);
   }
 
-  selectCustomer(customer: CustomerDTO): void {
-    const id = customer.id ?? '';
+  selectCustomer(party: PartyDetail): void {
+    const id = party.partyId ?? '';
     this.form.patchValue({ customerId: id });
-    this.customerDisplayName.set(`${customer.firstName} ${customer.lastName}`);
+    this.customerDisplayName.set(this.customerLabel(party));
     this.showCustomerSuggestions.set(false);
     this.resetVehicleSelection();
 
@@ -123,13 +123,18 @@ export class EstimateCreatePageComponent implements OnInit {
       )
       .subscribe(snapshot => {
         const vehicles: VehicleSummary[] = (snapshot as { vehicles?: VehicleSummary[] } | null)?.vehicles ?? [];
-        if (vehicles.length === 0 && customer.vehicleVins?.length) {
-          // Fallback: build VehicleSummary stubs from VIN strings on the CustomerDTO
-          this.customerVehicles.set(customer.vehicleVins.map(vin => ({ vin })) as VehicleSummary[]);
+        if (vehicles.length === 0 && party.vehicles?.length) {
+          // Fallback: vehicle refs carried on the directory row (vehicleId + vin + make/model/year)
+          this.customerVehicles.set(party.vehicles as VehicleSummary[]);
         } else {
           this.customerVehicles.set(vehicles);
         }
       });
+  }
+
+  /** Display label for a party row: legal name plus DBA / customer number when present. */
+  customerLabel(party: PartyDetail): string {
+    return party.dba ? `${party.legalName} (${party.dba})` : party.legalName;
   }
 
   /** Human-readable label for a vehicle dropdown option. */
