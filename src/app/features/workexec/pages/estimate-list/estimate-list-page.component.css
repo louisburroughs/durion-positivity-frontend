@@ -1,3 +1,8 @@
+.estimate-list__search {
+  max-width: 28rem;
+  margin-bottom: var(--space-4, 1rem);
+}
+
 .estimate-list {
   display: flex;
   flex-direction: column;

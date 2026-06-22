@@ -4,6 +4,13 @@
     <h1>{{ 'WORKEXEC.ESTIMATE_LIST.TITLE' | translate }}</h1>
   </header>
 
+  <div class="estimate-list__search">
+    <app-customer-lookup [formControl]="customerControl"
+      inputId="estimateListCustomer"
+      [label]="'WORKEXEC.ESTIMATE_LIST.CUSTOMER_SEARCH.LABEL' | translate"
+      [placeholder]="'WORKEXEC.ESTIMATE_LIST.CUSTOMER_SEARCH.PLACEHOLDER' | translate" />
+  </div>
+
   @if (state() === 'idle') {
   <p class="estimate-list__idle">{{ 'WORKEXEC.ESTIMATE_LIST.IDLE' | translate }}</p>
   }

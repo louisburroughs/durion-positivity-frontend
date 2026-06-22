@@ -1,15 +1,19 @@
 import { CommonModule } from '@angular/common';
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { combineLatest, EMPTY, Subscription, switchMap } from 'rxjs';
+import { distinctUntilChanged } from 'rxjs/operators';
 import { EstimateListItem } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
+import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
 
 @Component({
   selector: 'app-estimate-list-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, CustomerLookupComponent],
   templateUrl: './estimate-list-page.component.html',
   styleUrl: './estimate-list-page.component.css',
 })
@@ -17,6 +21,9 @@ export class EstimateListPageComponent {
   private readonly workexec = inject(WorkexecService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly customerControl = new FormControl<string>('', { nonNullable: true });
 
   readonly state = signal<'idle' | 'loading' | 'ready' | 'empty' | 'error'>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -67,6 +74,24 @@ export class EstimateListPageComponent {
 
       onCleanup(() => sub.unsubscribe());
     }, { allowSignalWrites: true });
+
+    // Reflect any existing customerId filter in the lookup.
+    const initialCustomerId = this.route.snapshot?.queryParamMap?.get('customerId');
+    if (initialCustomerId) {
+      this.customerControl.setValue(initialCustomerId, { emitEvent: false });
+    }
+
+    // Selecting a customer drives the filter via the customerId query param
+    // (shareable URL); the effect above reacts and loads the estimates.
+    this.customerControl.valueChanges
+      .pipe(distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(customerId => {
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { customerId: customerId || null },
+          queryParamsHandling: 'merge',
+        });
+      });
   }
 
   openEstimateDetail(id: string): void {

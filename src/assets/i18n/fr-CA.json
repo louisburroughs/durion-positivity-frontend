@@ -1987,6 +1987,10 @@
         "ARIA_LABEL": "Estimation pour le client",
         "LAST_UPDATED": "Derniere mise a jour",
         "TOTAL": "Total"
+      },
+      "CUSTOMER_SEARCH": {
+        "LABEL": "Rechercher par client",
+        "PLACEHOLDER": "Rechercher par nom ou numero de client…"
       }
     },
     "ESTIMATE_STATUS": {
