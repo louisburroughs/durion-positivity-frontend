@@ -49,5 +49,6 @@
   background: var(--surface-hover, rgba(0, 52, 111, 0.06));
 }
 
+.customer-lookup__hint { font-size: 0.8125rem; color: var(--text-muted, #5a6b7b); margin: 0.25rem 0 0; }
 .customer-lookup__name { font-weight: 600; }
 .customer-lookup__num { font-size: 0.8125rem; color: var(--text-muted, #5a6b7b); font-family: monospace; }

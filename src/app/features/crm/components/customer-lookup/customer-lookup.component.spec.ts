@@ -1,4 +1,4 @@
-import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { TestBed, ComponentFixture, fakeAsync, tick } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { CustomerLookupComponent } from './customer-lookup.component';
 import { CrmService } from '../../services/crm.service';
@@ -7,37 +7,35 @@ import { PartyDetail } from '../../models/crm.models';
 const PARTIES: PartyDetail[] = [
   { partyId: 'p1', legalName: 'Acme Tire Co', dba: 'Acme', customerNumber: 'CUST-CP-001' },
   { partyId: 'p2', legalName: 'Blue Ridge Landscaping', customerNumber: 'CUST-CP-004' },
-  { partyId: 'p3', legalName: 'Angela Freeman', customerNumber: 'CUST-PP-004' },
 ];
 
 describe('CustomerLookupComponent', () => {
   let fixture: ComponentFixture<CustomerLookupComponent>;
   let component: CustomerLookupComponent;
+  let searchParties: ReturnType<typeof vi.fn>;
+  let getParty: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
+    searchParties = vi.fn().mockReturnValue(of({ parties: PARTIES }));
+    getParty = vi.fn().mockReturnValue(of(PARTIES[1]));
+
     await TestBed.configureTestingModule({
       imports: [CustomerLookupComponent],
-      providers: [
-        { provide: CrmService, useValue: { browseParties: () => of({ parties: PARTIES }) } },
-      ],
+      providers: [{ provide: CrmService, useValue: { searchParties, getParty } }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CustomerLookupComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges(); // ngOnInit → load parties
+    fixture.detectChanges();
   });
 
-  it('loads the party directory on init', () => {
-    expect(component.allCustomers().length).toBe(3);
-  });
-
-  it('filters suggestions by legal name, DBA, and customer number', () => {
-    component.onInput('acme');
-    expect(component.suggestions().map(p => p.partyId)).toEqual(['p1']);
-
-    component.onInput('CUST-CP-004');
-    expect(component.suggestions().map(p => p.partyId)).toEqual(['p2']);
-  });
+  it('searches server-side (debounced) on input', fakeAsync(() => {
+    component.onInput('blue');
+    expect(searchParties).not.toHaveBeenCalled(); // debounced
+    tick(250);
+    expect(searchParties).toHaveBeenCalledWith('blue');
+    expect(component.suggestions().map(p => p.partyId)).toEqual(['p1', 'p2']);
+  }));
 
   it('emits the selected party id and shows a readable label', () => {
     const seen: string[] = [];
@@ -51,28 +49,37 @@ describe('CustomerLookupComponent', () => {
     expect(component.query()).toContain('CUST-CP-001');
   });
 
-  it('clears the value when the user edits the text', () => {
+  it('clears the value when the user edits the text', fakeAsync(() => {
     component.select(PARTIES[0]);
     const seen: string[] = [];
     component.registerOnChange(v => seen.push(v));
 
     component.onInput('blu');
-
     expect(component.value()).toBe('');
     expect(seen).toEqual(['']);
+    tick(250);
+  }));
+
+  it('writeValue resolves a readable label via getParty', () => {
+    component.writeValue('p2');
+    expect(component.value()).toBe('p2');
+    expect(getParty).toHaveBeenCalledWith('p2');
+    expect(component.query()).toContain('Blue Ridge Landscaping');
   });
 
-  it('writeValue resolves the display label for a known id', () => {
-    component.writeValue('p3');
-    expect(component.value()).toBe('p3');
-    expect(component.query()).toContain('Angela Freeman');
+  it('writeValue with empty id clears the field and does not fetch', () => {
+    component.writeValue('');
+    expect(component.value()).toBe('');
+    expect(component.query()).toBe('');
+    expect(getParty).not.toHaveBeenCalled();
   });
 
-  it('Enter selects the active suggestion', () => {
+  it('Enter selects the active suggestion', fakeAsync(() => {
     component.onInput('cust');
+    tick(250);
     component.onKeydown(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
     const expected = component.suggestions()[0].partyId;
     component.onKeydown(new KeyboardEvent('keydown', { key: 'Enter' }));
     expect(component.value()).toBe(expected);
-  });
+  }));
 });

@@ -18,6 +18,10 @@
     (blur)="onBlur()"
     (keydown)="onKeydown($event)" />
 
+  @if (showList() && loading() && suggestions().length === 0) {
+    <p class="customer-lookup__hint" aria-busy="true">Searching…</p>
+  }
+
   @if (showList() && suggestions().length > 0) {
     <ul [id]="inputId + '-listbox'" class="customer-lookup__list" role="listbox" [attr.aria-label]="label">
       @for (party of suggestions(); track party.partyId; let i = $index) {

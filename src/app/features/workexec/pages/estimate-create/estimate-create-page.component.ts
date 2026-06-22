@@ -1,9 +1,10 @@
-import { Component, inject, signal, computed, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { catchError, of } from 'rxjs';
+import { Subject, catchError, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import {
   CRMVehiclesService,
   CreateVehicleForPartyRequest,
@@ -37,9 +38,11 @@ export class EstimateCreatePageComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly fieldErrors  = signal<Record<string, string>>({});
 
-  readonly allCustomers = signal<PartyDetail[]>([]);
+  readonly customerSuggestions = signal<PartyDetail[]>([]);
   readonly customerDisplayName = signal('');
   readonly showCustomerSuggestions = signal(false);
+  private readonly customerQuery$ = new Subject<string>();
+  private customerSearchPrimed = false;
 
   readonly customerVehicles = signal<VehicleSummary[]>([]);
 
@@ -49,17 +52,18 @@ export class EstimateCreatePageComponent implements OnInit {
 
   readonly addVehicleOption = ADD_VEHICLE_OPTION;
 
-  readonly customerSuggestions = computed<PartyDetail[]>(() => {
-    const q = this.customerDisplayName().trim().toLowerCase();
-    const all = this.allCustomers();
-    if (!q) return all.slice(0, MAX_SUGGESTIONS);
-    return all.filter(p => {
-      const name = (p.legalName ?? '').toLowerCase();
-      const dba = (p.dba ?? '').toLowerCase();
-      const customerNumber = (p.customerNumber ?? '').toLowerCase();
-      return name.includes(q) || dba.includes(q) || customerNumber.includes(q);
-    }).slice(0, MAX_SUGGESTIONS);
-  });
+  constructor() {
+    // Server-side customer search (debounced); the browse term matches name and
+    // customer number, so there is no client-side row cap.
+    this.customerQuery$
+      .pipe(
+        debounceTime(250),
+        distinctUntilChanged(),
+        switchMap(q => this.crm.searchParties(q).pipe(catchError(() => of({ parties: [] as PartyDetail[] })))),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(res => this.customerSuggestions.set((res.parties ?? []).slice(0, MAX_SUGGESTIONS)));
+  }
 
   readonly form = this.fb.nonNullable.group({
     customerId: ['', Validators.required],
@@ -75,15 +79,6 @@ export class EstimateCreatePageComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // Load CRM parties (the canonical customer directory). Client-side filtered
-    // below; server-side name search can replace this when typeahead paging lands.
-    this.crm.browseParties({ page: 0, size: 200 })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: page => this.allCustomers.set(page.parties ?? []),
-        error: () => {},
-      });
-
     const nav = this.router.getCurrentNavigation()?.extras?.state as Record<string, string> | undefined;
     if (nav?.['customerId']) this.form.patchValue({ customerId: nav['customerId'] });
     if (nav?.['vehicleId'])  this.form.patchValue({ vehicleId: nav['vehicleId'] });
@@ -94,10 +89,15 @@ export class EstimateCreatePageComponent implements OnInit {
     this.form.patchValue({ customerId: '' });
     this.resetVehicleSelection();
     this.showCustomerSuggestions.set(true);
+    this.customerQuery$.next(value);
   }
 
   onCustomerFocus(): void {
-    if (this.allCustomers().length > 0) this.showCustomerSuggestions.set(true);
+    this.showCustomerSuggestions.set(true);
+    if (!this.customerSearchPrimed) {
+      this.customerSearchPrimed = true;
+      this.customerQuery$.next(this.customerDisplayName());
+    }
   }
 
   onCustomerBlur(): void {
