@@ -2029,6 +2029,10 @@
         "ARIA_LABEL": "Estimate for customer",
         "LAST_UPDATED": "Last updated",
         "TOTAL": "Total"
+      },
+      "CUSTOMER_SEARCH": {
+        "LABEL": "Find by customer",
+        "PLACEHOLDER": "Search by name or customer number…"
       }
     },
     "ESTIMATE_STATUS": {
