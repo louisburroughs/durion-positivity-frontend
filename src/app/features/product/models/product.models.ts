@@ -19,6 +19,12 @@ export interface ProductSummary {
   msrp: number | null;
 }
 
+export interface ServiceSummary {
+  id: string;
+  name: string;
+  shortDescription: string;
+}
+
 export interface ProductLifecycle {
   productId: string;
   currentState: LifecycleState;
