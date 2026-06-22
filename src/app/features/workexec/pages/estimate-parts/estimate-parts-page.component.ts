@@ -3,9 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { switchMap } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateItemResponse, EstimateResponse, PageState } from '../../models/workexec.models';
+import { ProductCatalogService } from '../../../product/services/product-catalog.service';
+import { ProductSummary } from '../../../product/models/product.models';
 
 /**
  * EstimatePartsPageComponent — Story 238 (CAP-002)
@@ -21,6 +24,7 @@ import { EstimateItemResponse, EstimateResponse, PageState } from '../../models/
 })
 export class EstimatePartsPageComponent implements OnInit {
   private readonly workexec    = inject(WorkexecService);
+  private readonly catalog      = inject(ProductCatalogService);
   private readonly route       = inject(ActivatedRoute);
   private readonly router      = inject(Router);
   private readonly fb          = inject(FormBuilder);
@@ -33,6 +37,15 @@ export class EstimatePartsPageComponent implements OnInit {
   readonly errorMessage  = signal<string | null>(null);
   readonly fieldErrors   = signal<Record<string, string>>({});
 
+  // Catalog part search (name / SKU) — mirrors the product catalog list search.
+  readonly searchQuery   = signal('');
+  readonly searchState   = signal<'idle' | 'loading' | 'empty' | 'ready' | 'error'>('idle');
+  readonly searchResults = signal<ProductSummary[]>([]);
+  readonly selectedPart  = signal<ProductSummary | null>(null);
+  readonly priceState    = signal<'idle' | 'loading' | 'filled' | 'none'>('idle');
+  readonly activeIndex   = signal(-1);
+  private readonly searchChanges$ = new Subject<string>();
+
   estimateId = '';
 
   readonly addForm = this.fb.nonNullable.group({
@@ -43,9 +56,101 @@ export class EstimatePartsPageComponent implements OnInit {
     productId:   [''],
   });
 
+  constructor() {
+    this.searchChanges$
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(query => this.runPartSearch(query));
+  }
+
   ngOnInit(): void {
     this.estimateId = this.route.snapshot.paramMap.get('estimateId') ?? '';
     this.loadEstimate();
+  }
+
+  onSearchChange(query: string): void {
+    this.searchQuery.set(query);
+    this.activeIndex.set(-1);
+    this.searchChanges$.next(query);
+  }
+
+  onSearchKeydown(event: KeyboardEvent): void {
+    const results = this.searchResults();
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.activeIndex.set(Math.min(this.activeIndex() + 1, results.length - 1));
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.activeIndex.set(Math.max(this.activeIndex() - 1, 0));
+    } else if (event.key === 'Enter') {
+      const idx = this.activeIndex();
+      if (idx >= 0 && idx < results.length) {
+        event.preventDefault();
+        this.selectPart(results[idx]);
+      }
+    } else if (event.key === 'Escape') {
+      this.searchResults.set([]);
+      this.searchState.set('idle');
+      this.activeIndex.set(-1);
+    }
+  }
+
+  private runPartSearch(query: string): void {
+    if (!query.trim()) {
+      this.searchResults.set([]);
+      this.searchState.set('idle');
+      this.activeIndex.set(-1);
+      return;
+    }
+    this.searchState.set('loading');
+    this.catalog.searchProducts(query)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: products => {
+          this.searchResults.set(products);
+          this.activeIndex.set(-1);
+          this.searchState.set(products.length > 0 ? 'ready' : 'empty');
+        },
+        error: () => {
+          this.searchResults.set([]);
+          this.searchState.set('error');
+        },
+      });
+  }
+
+  selectPart(part: ProductSummary): void {
+    this.selectedPart.set(part);
+    this.addForm.patchValue({ description: part.name, productId: part.id });
+    this.searchResults.set([]);
+    this.searchState.set('idle');
+    this.activeIndex.set(-1);
+    this.searchQuery.set(part.sku ? `${part.name} (${part.sku})` : part.name);
+
+    // Auto-fill unit price from the product's active MSRP (no price on the summary/product).
+    this.priceState.set('loading');
+    this.catalog.getActiveMsrp(part.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: msrp => {
+          if (msrp?.amount != null) {
+            this.addForm.patchValue({ unitPrice: msrp.amount });
+            this.priceState.set('filled');
+          } else {
+            this.priceState.set('none');
+          }
+        },
+        // No active MSRP (e.g. 404) — leave the user-entered price untouched.
+        error: () => this.priceState.set('none'),
+      });
+  }
+
+  clearSelectedPart(): void {
+    this.selectedPart.set(null);
+    this.searchQuery.set('');
+    this.searchResults.set([]);
+    this.searchState.set('idle');
+    this.priceState.set('idle');
+    this.activeIndex.set(-1);
+    this.addForm.patchValue({ productId: '' });
   }
 
   loadEstimate(): void {
@@ -93,6 +198,11 @@ export class EstimatePartsPageComponent implements OnInit {
         this.items.set(est.items ?? []);
         this.saveState.set('success');
         this.addForm.reset({ quantity: 1, unitPrice: 0 });
+        this.selectedPart.set(null);
+        this.searchQuery.set('');
+        this.searchResults.set([]);
+        this.searchState.set('idle');
+        this.priceState.set('idle');
       },
       error: err => {
         this.saveState.set('error');
