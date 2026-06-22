@@ -8,6 +8,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
+import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
 
 /**
  * ApprovalDigitalPageComponent — Story 271 (CAP-003)
@@ -24,7 +25,7 @@ import { EstimateResponse, PageState } from '../../models/workexec.models';
 @Component({
   selector: 'app-approval-digital-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomerLookupComponent],
   templateUrl: './approval-digital-page.component.html',
   styleUrl: './approval-digital-page.component.css',
 })

@@ -18,12 +18,10 @@
       <p class="approval-description">Customer is present in-person. Confirm their approval below.</p>
       <form [formGroup]="approvalForm" novalidate aria-label="In-person approval" class="approval-form">
         <div class="field-group">
-          <label for="inPersonCustomerId" class="field-label">Customer ID <span class="required" aria-hidden="true">*</span></label>
-          <input id="inPersonCustomerId" type="text" formControlName="customerId" class="field-input"
-            [class.field-input--error]="approvalForm.controls.customerId.invalid && approvalForm.controls.customerId.touched"
-            placeholder="Customer identifier" aria-required="true" />
+          <app-customer-lookup formControlName="customerId" inputId="inPersonCustomerId"
+            label="Customer" [required]="true" />
           @if (approvalForm.controls.customerId.invalid && approvalForm.controls.customerId.touched) {
-            <p class="field-error" role="alert">Customer ID is required.</p>
+            <p class="field-error" role="alert">Customer is required.</p>
           }
         </div>
         <div class="field-group">

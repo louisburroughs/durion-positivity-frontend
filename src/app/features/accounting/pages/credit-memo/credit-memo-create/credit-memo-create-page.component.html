@@ -14,8 +14,8 @@
     <label for="original-invoice">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_ORIGINAL_INVOICE_ID' | translate }}</label>
     <input id="original-invoice" formControlName="originalInvoiceId" />
 
-    <label for="customer-id">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_CUSTOMER_ID' | translate }}</label>
-    <input id="customer-id" formControlName="customerId" />
+    <app-customer-lookup formControlName="customerId" inputId="customer-id"
+      [label]="'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_CUSTOMER_ID' | translate" [required]="true" />
 
     <label for="credit-amount">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.FIELD_CREDIT_AMOUNT' | translate }}</label>
     <input id="credit-amount" type="number" class="amount-input" formControlName="creditAmount" />
