@@ -5,9 +5,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { debounceTime, switchMap } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
+import { catchError, of } from 'rxjs';
+import { CRMVehiclesService, VehicleResponse } from '@durion-sdk/customer';
 import { WorkexecService } from '../../services/workexec.service';
 import { CrmService } from '../../../crm/services/crm.service';
-import { Relationship } from '../../../crm/models/crm.models';
+import { PartyDetail, Relationship } from '../../../crm/models/crm.models';
 import {
   EstimateItemResponse,
   EstimateResponse,
@@ -39,9 +41,14 @@ import {
 export class EstimateDetailPageComponent implements OnInit {
   private readonly workexec   = inject(WorkexecService);
   private readonly crm        = inject(CrmService);
+  private readonly vehiclesApi = inject(CRMVehiclesService);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+
+  /** Human-readable CRM labels resolved from the estimate's crmPartyId / crmVehicleId. */
+  readonly customerLabel = signal<string | null>(null);
+  readonly vehicleLabel  = signal<string | null>(null);
 
   readonly pageState    = signal<PageState>('loading');
   readonly totalsState  = signal<TotalsState>('idle');
@@ -112,6 +119,7 @@ export class EstimateDetailPageComponent implements OnInit {
           this.recalcTrigger$.next();
           this.buildApprovalScope(est);
           this.loadContacts(est);
+          this.resolveCrmRefs(est);
         },
         error: err => {
           this.pageState.set('error');
@@ -141,6 +149,40 @@ export class EstimateDetailPageComponent implements OnInit {
           this.contactsError.set(true);
         },
       });
+  }
+
+  /**
+   * Resolve human-readable customer and vehicle labels from the estimate's CRM
+   * refs (the estimate only carries the ids). Falls back to the raw id on failure.
+   */
+  private resolveCrmRefs(est: EstimateResponse): void {
+    const partyId = est.crmPartyId;
+    const vehicleId = est.crmVehicleId;
+    this.customerLabel.set(null);
+    this.vehicleLabel.set(null);
+
+    if (partyId) {
+      this.crm.getParty(partyId)
+        .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
+        .subscribe(party => this.customerLabel.set(party ? this.partyLabel(party) : null));
+
+      if (vehicleId) {
+        this.vehiclesApi.getVehiclesForCustomer(partyId, vehicleId, 'body', false, { transferCache: false })
+          .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
+          .subscribe(vehicle => this.vehicleLabel.set(vehicle ? this.vehicleLabelOf(vehicle) : null));
+      }
+    }
+  }
+
+  private partyLabel(party: PartyDetail): string {
+    const num = party.customerNumber ? ` · ${party.customerNumber}` : '';
+    return party.dba ? `${party.legalName} (${party.dba})${num}` : `${party.legalName}${num}`;
+  }
+
+  private vehicleLabelOf(v: VehicleResponse): string {
+    const desc = `${v.year ?? ''} ${v.make ?? ''} ${v.model ?? ''}`.trim();
+    if (desc && v.vin) return `${desc} — ${v.vin}`;
+    return v.description || desc || v.vin || '';
   }
 
   /** Humanize a role enum (e.g. PRIMARY_CONTACT -> "Primary Contact") for display. */
