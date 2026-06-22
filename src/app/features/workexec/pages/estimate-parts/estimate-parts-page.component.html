@@ -60,6 +60,48 @@
 
       <form [formGroup]="addForm" (ngSubmit)="addItem()" novalidate aria-label="Add part form" class="add-form">
 
+        <!-- Catalog Part Search (name / SKU) -->
+        <div class="field-row">
+          <div class="field-group field-group--grow part-search">
+            <label for="partSearch" class="field-label">Search Catalog <span class="field-optional">(name or SKU)</span></label>
+            <input id="partSearch" type="text" class="field-input"
+              role="combobox" [attr.aria-expanded]="searchState() === 'ready'" aria-controls="partSearchResults" autocomplete="off"
+              placeholder="Search parts by name or SKU…"
+              [value]="searchQuery()" (input)="onSearchChange($any($event.target).value)" />
+
+            @if (searchState() === 'loading') {
+              <p class="hint-text" aria-busy="true">Searching…</p>
+            }
+            @if (searchState() === 'empty') {
+              <p class="hint-text">No matching parts found.</p>
+            }
+            @if (searchState() === 'error') {
+              <p class="field-error" role="alert">Part search failed. Try again.</p>
+            }
+            @if (searchState() === 'ready') {
+              <ul id="partSearchResults" class="part-search__results" role="listbox" aria-label="Matching parts">
+                @for (part of searchResults(); track part.id) {
+                  <li role="option" class="part-search__option">
+                    <button type="button" class="part-search__option-btn" (click)="selectPart(part)">
+                      <span class="part-search__name">{{ part.name }}</span>
+                      @if (part.sku) { <span class="part-search__sku">{{ part.sku }}</span> }
+                      @if (part.category) { <span class="part-search__cat">{{ part.category }}</span> }
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+
+            @if (selectedPart()) {
+              <p class="part-search__selected">
+                Linked: <strong>{{ selectedPart()!.name }}</strong>
+                @if (selectedPart()!.sku) { <span class="part-search__sku">{{ selectedPart()!.sku }}</span> }
+                <button type="button" class="part-search__clear" (click)="clearSelectedPart()">Clear</button>
+              </p>
+            }
+          </div>
+        </div>
+
         <div class="field-row">
           <div class="field-group field-group--grow">
             <label for="partDescription" class="field-label">Description <span class="required" aria-hidden="true">*</span></label>
@@ -89,6 +131,13 @@
             @if (addForm.controls.unitPrice.invalid && addForm.controls.unitPrice.touched) {
               <p class="field-error" role="alert">Valid price required.</p>
             }
+            @if (priceState() === 'loading') {
+              <p class="hint-text" aria-busy="true">Fetching MSRP…</p>
+            } @else if (priceState() === 'filled') {
+              <p class="hint-text">Auto-filled from MSRP.</p>
+            } @else if (priceState() === 'none') {
+              <p class="hint-text">No MSRP on file — enter price.</p>
+            }
           </div>
         </div>
 
@@ -98,8 +147,9 @@
             <input id="partTaxCode" type="text" formControlName="taxCode" class="field-input" placeholder="e.g. TX-GENERAL" />
           </div>
           <div class="field-group field-group--grow">
-            <label for="partProductId" class="field-label">Catalog Product ID <span class="field-optional">(optional)</span></label>
-            <input id="partProductId" type="text" formControlName="productId" class="field-input" placeholder="Product catalog reference" />
+            <label for="partProductId" class="field-label">Catalog Product ID <span class="field-optional">(set by search)</span></label>
+            <input id="partProductId" type="text" formControlName="productId" class="field-input" readonly
+              placeholder="Linked via catalog search" />
           </div>
         </div>
 
