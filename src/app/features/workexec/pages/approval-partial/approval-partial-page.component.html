@@ -15,12 +15,10 @@
       <form [formGroup]="headerForm" novalidate aria-label="Approval header" class="header-form">
         <div class="field-row">
           <div class="field-group field-group--grow">
-            <label for="partialCustomerId" class="field-label">Customer ID <span class="required" aria-hidden="true">*</span></label>
-            <input id="partialCustomerId" type="text" formControlName="customerId" class="field-input"
-              [class.field-input--error]="headerForm.controls.customerId.invalid && headerForm.controls.customerId.touched"
-              placeholder="Customer identifier" aria-required="true" />
+            <app-customer-lookup formControlName="customerId" inputId="partialCustomerId"
+              label="Customer" [required]="true" />
             @if (headerForm.controls.customerId.invalid && headerForm.controls.customerId.touched) {
-              <p class="field-error" role="alert">Customer ID is required.</p>
+              <p class="field-error" role="alert">Customer is required.</p>
             }
           </div>
           <div class="field-group field-group--grow">

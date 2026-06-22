@@ -12,6 +12,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import { CreditMemo } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
+import { CustomerLookupComponent } from '../../../../crm/components/customer-lookup/customer-lookup.component';
 
 function creditAmountWithinBalanceValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -30,7 +31,7 @@ type CreditMemoCreateState = 'idle' | 'submitting' | 'success' | 'error' | 'forb
 @Component({
   selector: 'app-credit-memo-create-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, CustomerLookupComponent],
   templateUrl: './credit-memo-create-page.component.html',
   styleUrl: './credit-memo-create-page.component.css',
 })

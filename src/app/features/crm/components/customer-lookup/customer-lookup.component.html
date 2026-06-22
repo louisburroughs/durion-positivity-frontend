@@ -1,0 +1,35 @@
+<div class="customer-lookup">
+  <label [attr.for]="inputId" class="field-label">
+    {{ label }}
+    @if (required) { <span class="required" aria-hidden="true">*</span> }
+  </label>
+
+  <input [id]="inputId" type="text" class="field-input"
+    role="combobox" aria-autocomplete="list" autocomplete="off"
+    [attr.aria-expanded]="showList() && suggestions().length > 0"
+    [attr.aria-controls]="inputId + '-listbox'"
+    [attr.aria-activedescendant]="showList() && activeIndex() >= 0 ? (inputId + '-opt-' + activeIndex()) : null"
+    [attr.aria-required]="required ? 'true' : null"
+    [value]="query()"
+    [disabled]="disabled()"
+    [placeholder]="placeholder"
+    (input)="onInput($any($event.target).value)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    (keydown)="onKeydown($event)" />
+
+  @if (showList() && suggestions().length > 0) {
+    <ul [id]="inputId + '-listbox'" class="customer-lookup__list" role="listbox" [attr.aria-label]="label">
+      @for (party of suggestions(); track party.partyId; let i = $index) {
+        <li role="option" class="customer-lookup__option"
+          [id]="inputId + '-opt-' + i"
+          [class.customer-lookup__option--active]="i === activeIndex()"
+          [attr.aria-selected]="i === activeIndex()"
+          (mousedown)="select(party)">
+          <span class="customer-lookup__name">{{ party.legalName }}{{ party.dba ? ' (' + party.dba + ')' : '' }}</span>
+          @if (party.customerNumber) { <span class="customer-lookup__num">{{ party.customerNumber }}</span> }
+        </li>
+      }
+    </ul>
+  }
+</div>

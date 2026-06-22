@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
+import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
 
 /**
  * ApprovalInPersonPageComponent — Story 270 (CAP-003)
@@ -19,7 +20,7 @@ import { EstimateResponse, PageState } from '../../models/workexec.models';
 @Component({
   selector: 'app-approval-in-person-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomerLookupComponent],
   templateUrl: './approval-in-person-page.component.html',
   styleUrl: './approval-in-person-page.component.css',
 })
