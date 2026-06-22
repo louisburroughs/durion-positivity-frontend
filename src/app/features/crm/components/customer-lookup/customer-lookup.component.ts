@@ -1,19 +1,23 @@
 import {
-  Component, inject, signal, computed, forwardRef, Input, OnInit, DestroyRef,
+  Component, inject, signal, forwardRef, Input, DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
 import { PartyDetail } from '../../models/crm.models';
 
-const MAX_SUGGESTIONS = 8;
+const MAX_SUGGESTIONS = 12;
 
 /**
  * Reusable customer typeahead bound as a reactive-form control. The control
- * value is the selected party id (the canonical customerId). Loads the CRM
- * party directory once and filters client-side by legal name, DBA, and
- * customer number — replacing raw "Customer ID" text entry across the app.
+ * value is the selected party id (the canonical customerId).
+ *
+ * Searches the customer directory server-side per keystroke (debounced) via
+ * the unified browse term, which matches legal/display name and customer
+ * number — so there is no client-side row cap.
  */
 @Component({
   selector: 'app-customer-lookup',
@@ -29,7 +33,7 @@ const MAX_SUGGESTIONS = 8;
     },
   ],
 })
-export class CustomerLookupComponent implements OnInit, ControlValueAccessor {
+export class CustomerLookupComponent implements ControlValueAccessor {
   private readonly crm = inject(CrmService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -38,41 +42,33 @@ export class CustomerLookupComponent implements OnInit, ControlValueAccessor {
   @Input() required = false;
   @Input() placeholder = 'Search by name or customer number…';
 
-  readonly allCustomers = signal<PartyDetail[]>([]);
+  readonly suggestions = signal<PartyDetail[]>([]);
   readonly query        = signal('');
   readonly showList     = signal(false);
+  readonly loading      = signal(false);
   readonly activeIndex  = signal(-1);
   readonly disabled     = signal(false);
   readonly value        = signal('');
 
-  private pendingId: string | null = null;
+  private primed = false;
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
 
-  readonly suggestions = computed<PartyDetail[]>(() => {
-    const q = this.query().trim().toLowerCase();
-    const all = this.allCustomers();
-    if (!q) return all.slice(0, MAX_SUGGESTIONS);
-    return all.filter(p => {
-      const name = (p.legalName ?? '').toLowerCase();
-      const dba = (p.dba ?? '').toLowerCase();
-      const num = (p.customerNumber ?? '').toLowerCase();
-      return name.includes(q) || dba.includes(q) || num.includes(q);
-    }).slice(0, MAX_SUGGESTIONS);
-  });
+  private readonly queryChanges$ = new Subject<string>();
 
-  ngOnInit(): void {
-    this.crm.browseParties({ page: 0, size: 200 })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: page => {
-          this.allCustomers.set(page.parties ?? []);
-          if (this.pendingId) {
-            this.applyDisplayForId(this.pendingId);
-            this.pendingId = null;
-          }
-        },
-        error: () => {},
+  constructor() {
+    this.queryChanges$
+      .pipe(
+        debounceTime(250),
+        distinctUntilChanged(),
+        tap(() => this.loading.set(true)),
+        switchMap(q => this.crm.searchParties(q).pipe(catchError(() => of({ parties: [] as PartyDetail[] })))),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(res => {
+        this.suggestions.set((res.parties ?? []).slice(0, MAX_SUGGESTIONS));
+        this.activeIndex.set(-1);
+        this.loading.set(false);
       });
   }
 
@@ -82,11 +78,12 @@ export class CustomerLookupComponent implements OnInit, ControlValueAccessor {
     this.value.set(next);
     if (!next) {
       this.query.set('');
-    } else if (this.allCustomers().length > 0) {
-      this.applyDisplayForId(next);
-    } else {
-      this.pendingId = next;
+      return;
     }
+    // Resolve a readable label for a pre-populated id.
+    this.crm.getParty(next)
+      .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
+      .subscribe(party => { if (party) this.query.set(this.labelFor(party)); });
   }
 
   registerOnChange(fn: (value: string) => void): void { this.onChange = fn; }
@@ -98,12 +95,16 @@ export class CustomerLookupComponent implements OnInit, ControlValueAccessor {
     this.query.set(text);
     this.value.set('');
     this.onChange('');
-    this.activeIndex.set(-1);
     this.showList.set(true);
+    this.queryChanges$.next(text);
   }
 
   onFocus(): void {
-    if (this.allCustomers().length > 0) this.showList.set(true);
+    this.showList.set(true);
+    if (!this.primed) {
+      this.primed = true;
+      this.queryChanges$.next(this.query());
+    }
   }
 
   onBlur(): void {
@@ -144,10 +145,5 @@ export class CustomerLookupComponent implements OnInit, ControlValueAccessor {
   labelFor(party: PartyDetail): string {
     const num = party.customerNumber ? ` · ${party.customerNumber}` : '';
     return party.dba ? `${party.legalName} (${party.dba})${num}` : `${party.legalName}${num}`;
-  }
-
-  private applyDisplayForId(id: string): void {
-    const party = this.allCustomers().find(p => p.partyId === id);
-    if (party) this.query.set(this.labelFor(party));
   }
 }

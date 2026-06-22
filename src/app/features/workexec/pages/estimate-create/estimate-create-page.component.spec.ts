@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -29,12 +29,8 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     component = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
-
-    // ngOnInit eagerly browses the CRM party directory for the typeahead exactly once.
-    // expectOne asserts the single init request (catches accidental double-loads)
-    // and flushing it leaves each test a clean HTTP backend.
-    http.expectOne(r => r.method === 'GET' && /\/v1\/crm\/accounts\/parties(\?|$)/.test(r.url))
-      .flush({ results: [], totalCount: 0, pageNumber: 0, pageSize: 200 });
+    // Customer search is now server-side and lazy (fires on focus/input), so there
+    // is no eager request to flush here.
   });
 
   afterEach(() => {
@@ -92,12 +88,16 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     expect(component.errorMessage()).toBe('Server error');
   });
 
-  it('should suggest CRM parties by legal name / customer number and select by partyId', () => {
-    component.allCustomers.set([
-      { partyId: 'p-1', legalName: 'Acme Towing', customerNumber: 'C-100' },
-      { partyId: 'p-2', legalName: 'Bravo Logistics', customerNumber: 'C-200' },
-    ]);
+  it('should suggest CRM parties via server-side search and select by partyId', fakeAsync(() => {
     component.onCustomerInput('acme');
+    tick(250); // debounce
+
+    const search = http.expectOne(r =>
+      r.method === 'GET' && r.url.endsWith('/v1/crm/accounts/parties') && r.params.get('name') === 'acme');
+    search.flush({
+      results: [{ partyId: 'p-1', legalName: 'Acme Towing', customerNumber: 'C-100' }],
+      totalCount: 1, pageNumber: 0, pageSize: 25,
+    });
     expect(component.customerSuggestions().map(p => p.partyId)).toEqual(['p-1']);
 
     component.selectCustomer({ partyId: 'p-1', legalName: 'Acme Towing', customerNumber: 'C-100' });
@@ -111,7 +111,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
         { vehicleId: 'v-2', vin: '2XYZ', make: 'GMC', model: 'Sierra', year: 2021 },
       ]);
     expect(component.customerVehicles().length).toBe(2);
-  });
+  }));
 
   it('should reveal inline add-vehicle form when add option chosen', () => {
     expect(component.showAddVehicle()).toBe(false);
