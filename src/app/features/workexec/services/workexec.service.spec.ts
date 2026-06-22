@@ -285,54 +285,60 @@ describe('WorkexecService', () => {
   // ── CAP-248: Stories 259, 260, 261 ───────────────────────────────────────
 
   describe('CAP-248 service methods', () => {
-    it('listEstimatesForCustomer — gets /v1/workorders/estimates with customerId query', () => {
-      const fixture: EstimateListItem[] = [
+    it('listEstimatesForCustomer — maps API rows (id/total/currencyUomId) to the card model', () => {
+      // API shape: id / total / currencyUomId (not estimateId / totalAmount / currency).
+      const apiRows = [
         {
-          estimateId: 'est-259-1',
+          id: 'est-259-1',
           workorderId: 'wo-259-1',
           customerId: 'cust-259-1',
           vehicleId: 'veh-259-1',
           status: 'OPEN',
-          totalAmount: 250.45,
-          currency: 'USD',
-          lastUpdatedAt: '2026-03-30T12:00:00Z',
+          total: 250.45,
+          currencyUomId: 'USD',
           createdAt: '2026-03-29T12:00:00Z',
           notes: 'cap-248',
         },
       ];
 
       service.listEstimatesForCustomer('cust-259-1').subscribe(result => {
-        expect(result).toEqual(fixture);
+        expect(result).toEqual([
+          {
+            estimateId: 'est-259-1',
+            workorderId: 'wo-259-1',
+            customerId: 'cust-259-1',
+            vehicleId: 'veh-259-1',
+            status: 'OPEN',
+            totalAmount: 250.45,
+            currency: 'USD',
+            lastUpdatedAt: undefined,
+            createdAt: '2026-03-29T12:00:00Z',
+            notes: 'cap-248',
+          },
+        ] as EstimateListItem[]);
       });
 
       const req = http.expectOne(`${BASE}/v1/workorders/estimates/customer/cust-259-1`);
       expect(req.request.method).toBe('GET');
-      expect(req.request.url).toContain('/v1/workorders/estimates/customer/');
-      req.flush(fixture);
+      req.flush(apiRows);
     });
 
-    it('listEstimatesForVehicle — gets /v1/workorders/estimates with vehicleId query', () => {
-      const fixture: EstimateListItem[] = [
-        {
-          estimateId: 'est-259-2',
-          customerId: 'cust-259-2',
-          vehicleId: 'veh-259-2',
-          status: 'APPROVED',
-          totalAmount: 399,
-          currency: 'USD',
-        },
+    it('listEstimatesForVehicle — maps API rows and defaults missing total to 0', () => {
+      const apiRows = [
+        { id: 'est-259-2', customerId: 'cust-259-2', vehicleId: 'veh-259-2', status: 'APPROVED', currencyUomId: 'USD' },
       ];
 
       service.listEstimatesForVehicle('veh-259-2').subscribe(result => {
-        expect(result).toEqual(fixture);
+        expect(result[0].estimateId).toBe('est-259-2');
+        expect(result[0].totalAmount).toBe(0);
+        expect(result[0].currency).toBe('USD');
       });
 
       const req = http.expectOne(r =>
         r.url === `${BASE}/v1/workorders/estimates` && r.params.get('vehicleId') === 'veh-259-2',
       );
       expect(req.request.method).toBe('GET');
-      expect(req.request.url).toContain('/v1/workorders/estimates');
-      req.flush(fixture);
+      req.flush(apiRows);
     });
 
     it('listActiveWorkorders — gets /v1/workorders/wip with wipStatus query', () => {
