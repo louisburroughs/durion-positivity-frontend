@@ -6,6 +6,8 @@ import { Subject } from 'rxjs';
 import { debounceTime, switchMap } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
 import { WorkexecService } from '../../services/workexec.service';
+import { CrmService } from '../../../crm/services/crm.service';
+import { Relationship } from '../../../crm/models/crm.models';
 import {
   EstimateItemResponse,
   EstimateResponse,
@@ -36,6 +38,7 @@ import {
 })
 export class EstimateDetailPageComponent implements OnInit {
   private readonly workexec   = inject(WorkexecService);
+  private readonly crm        = inject(CrmService);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -46,6 +49,8 @@ export class EstimateDetailPageComponent implements OnInit {
   readonly items        = signal<EstimateItemResponse[]>([]);
   readonly errorMessage = signal<string | null>(null);
   readonly taxBlocked   = signal(false);
+  /** Customer contacts resolved from CRM via the estimate's crmPartyId */
+  readonly contacts     = signal<Relationship[]>([]);
 
   // ── CAP-004: Promotion state (Stories 231, 228, 227) ─────────────────────
   /** Promotion flow state machine */
@@ -104,11 +109,31 @@ export class EstimateDetailPageComponent implements OnInit {
           this.pageState.set('ready');
           this.recalcTrigger$.next();
           this.buildApprovalScope(est);
+          this.loadContacts(est);
         },
         error: err => {
           this.pageState.set('error');
           this.errorMessage.set(err.status === 404 ? 'Estimate not found.' : 'Failed to load estimate.');
         },
+      });
+  }
+
+  /**
+   * Resolve customer contacts from CRM using the estimate's crmPartyId.
+   * The estimate only carries crmContactIds (often empty); the authoritative
+   * contact list with names/roles comes from the party's relationships.
+   */
+  private loadContacts(est: EstimateResponse): void {
+    const partyId = est.crmPartyId;
+    if (!partyId) {
+      this.contacts.set([]);
+      return;
+    }
+    this.crm.getContactsWithRoles(partyId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: rels => this.contacts.set(rels.filter(r => r.status === 'ACTIVE')),
+        error: () => this.contacts.set([]),
       });
   }
 

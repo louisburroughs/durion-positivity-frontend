@@ -38,10 +38,10 @@
           }
 
           <span class="crm-ref-label">Contacts</span>
-          @if ((estimate()!.crmContactIds?.length ?? 0) > 0) {
+          @if (contacts().length > 0) {
           <span class="crm-ref-contacts">
-            @for (id of estimate()!.crmContactIds!; track id) {
-            <span class="crm-ref-badge" [title]="id">{{ id }}</span>
+            @for (c of contacts(); track c.relationshipId) {
+            <span class="crm-ref-badge" [title]="c.role">{{ c.personName }} ({{ c.role }})</span>
             }
           </span>
           } @else {
