@@ -5,6 +5,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { combineLatest, EMPTY, Subscription, switchMap } from 'rxjs';
+import { distinctUntilChanged } from 'rxjs/operators';
 import { EstimateListItem } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
@@ -83,7 +84,7 @@ export class EstimateListPageComponent {
     // Selecting a customer drives the filter via the customerId query param
     // (shareable URL); the effect above reacts and loads the estimates.
     this.customerControl.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(customerId => {
         this.router.navigate([], {
           relativeTo: this.route,
