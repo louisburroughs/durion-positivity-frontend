@@ -23,16 +23,16 @@
       <div class="crm-ref-block" aria-label="CRM references">
         <p class="section-overline">CRM References</p>
         <div class="crm-ref-grid">
-          <span class="crm-ref-label">Party</span>
+          <span class="crm-ref-label">Customer</span>
           @if (estimate()!.crmPartyId) {
-          <span class="crm-ref-value" [title]="estimate()!.crmPartyId!">{{ estimate()!.crmPartyId }}</span>
+          <span class="crm-ref-value" [title]="estimate()!.crmPartyId!">{{ customerLabel() ?? estimate()!.crmPartyId }}</span>
           } @else {
           <span class="crm-ref-value crm-ref-value--empty">Not set</span>
           }
 
           <span class="crm-ref-label">Vehicle</span>
           @if (estimate()!.crmVehicleId) {
-          <span class="crm-ref-value" [title]="estimate()!.crmVehicleId!">{{ estimate()!.crmVehicleId }}</span>
+          <span class="crm-ref-value" [title]="estimate()!.crmVehicleId!">{{ vehicleLabel() ?? estimate()!.crmVehicleId }}</span>
           } @else {
           <span class="crm-ref-value crm-ref-value--empty">Not set</span>
           }

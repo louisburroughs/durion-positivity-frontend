@@ -53,9 +53,18 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
   function drainPipeline(estimateOverride?: object): void {
     const estimate = estimateOverride ?? STUB_ESTIMATE;
     http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush(estimate);
-    // loadContacts() fires a CRM GET only when the estimate carries a crmPartyId
-    if ((estimate as { crmPartyId?: string }).crmPartyId) {
+    // loadContacts() + resolveCrmRefs() fire CRM GETs only when the estimate
+    // carries a crmPartyId.
+    const partyId = (estimate as { crmPartyId?: string }).crmPartyId;
+    if (partyId) {
       http.expectOne(r => r.url.endsWith('/contacts')).flush(contactsResponse);
+      http.expectOne(r => r.url.endsWith(`/accounts/parties/${partyId}`))
+        .flush({ partyId, legalName: 'Globex Corp', customerNumber: 'CUST-9' });
+      const vehId = (estimate as { crmVehicleId?: string }).crmVehicleId;
+      if (vehId) {
+        http.expectOne(r => r.url.endsWith(`/vehicles/${vehId}`))
+          .flush({ vehicleId: vehId, year: 2020, make: 'Ford', model: 'F-150', vin: '1FTEST' });
+      }
     }
     vi.advanceTimersByTime(350);
     http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate`).flush({ subtotal: 0, taxAmount: 0, total: 0 });
@@ -103,8 +112,11 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
 
       const crmRefBlock = fixture.nativeElement.querySelector('.crm-ref-block');
       expect(crmRefBlock).toBeTruthy();
-      expect(crmRefBlock?.textContent ?? '').toContain('crm-party-123');
-      expect(crmRefBlock?.textContent ?? '').toContain('crm-vehicle-456');
+      // Resolved labels are shown; the raw ids remain available via the title attribute.
+      expect(crmRefBlock?.textContent ?? '').toContain('Globex Corp');
+      expect(crmRefBlock?.textContent ?? '').toContain('2020 Ford F-150');
+      expect(crmRefBlock?.innerHTML ?? '').toContain('crm-party-123');
+      expect(crmRefBlock?.innerHTML ?? '').toContain('crm-vehicle-456');
     });
 
     it('resolves customer contacts from CRM and renders name + role', async () => {
@@ -146,6 +158,9 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
         { message: 'boom' },
         { status: 500, statusText: 'Server Error' },
       );
+      // resolveCrmRefs() also fires party/vehicle GETs when crmPartyId is present.
+      http.expectOne(r => r.url.endsWith('/accounts/parties/crm-party-123'))
+        .flush({ partyId: 'crm-party-123', legalName: 'Globex Corp' });
       vi.advanceTimersByTime(350);
       http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate`).flush({ subtotal: 0, taxAmount: 0, total: 0 });
       http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({ ...STUB_ESTIMATE, crmPartyId: 'crm-party-123' });
