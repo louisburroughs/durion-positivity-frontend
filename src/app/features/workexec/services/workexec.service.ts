@@ -125,6 +125,21 @@ import {
  *   declineChangeRequest       → POST   /v1/workorders/changeRequests/{changeId}/decline
  *   getChangeRequestById       → GET    /v1/workorders/changeRequests/{changeId}
  */
+/** Raw estimate row as returned by the workorder list endpoints (API field names). */
+interface RawEstimateSummary {
+  id?: string;
+  workorderId?: string;
+  customerId?: string;
+  vehicleId?: string;
+  status?: string;
+  total?: number;
+  currencyUomId?: string;
+  updatedAt?: string;
+  lastUpdatedAt?: string;
+  createdAt?: string;
+  notes?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class WorkexecService {
   private readonly api = inject(ApiBaseService);
@@ -573,7 +588,8 @@ export class WorkexecService {
    * GET /v1/workorders/estimates?customerId={customerId}
    */
   listEstimatesForCustomer(customerId: string): Observable<EstimateListItem[]> {
-    return this.estimateApi.getEstimatesByCustomer(customerId) as unknown as Observable<EstimateListItem[]>;
+    return (this.estimateApi.getEstimatesByCustomer(customerId) as unknown as Observable<RawEstimateSummary[]>)
+      .pipe(map(list => (list ?? []).map(r => this.toEstimateListItem(r))));
   }
 
   /**
@@ -582,7 +598,29 @@ export class WorkexecService {
    */
   listEstimatesForVehicle(vehicleId: string): Observable<EstimateListItem[]> {
     const params = new HttpParams().set('vehicleId', vehicleId);
-    return this.api.get<EstimateListItem[]>('/v1/workorders/estimates', params);
+    return this.api.get<RawEstimateSummary[]>('/v1/workorders/estimates', params)
+      .pipe(map(list => (list ?? []).map(r => this.toEstimateListItem(r))));
+  }
+
+  /**
+   * Adapts an estimate response/summary row to the list-card model. The API uses
+   * `id` / `total` / `currencyUomId`; the card model uses `estimateId` /
+   * `totalAmount` / `currency`, so a direct cast silently dropped the totals
+   * (and the estimate id used for navigation).
+   */
+  private toEstimateListItem(r: RawEstimateSummary): EstimateListItem {
+    return {
+      estimateId: r.id ?? '',
+      workorderId: r.workorderId,
+      customerId: r.customerId ?? '',
+      vehicleId: r.vehicleId,
+      status: (r.status ?? 'DRAFT') as EstimateListItem['status'],
+      totalAmount: r.total ?? 0,
+      currency: r.currencyUomId ?? 'USD',
+      lastUpdatedAt: r.updatedAt ?? r.lastUpdatedAt,
+      createdAt: r.createdAt,
+      notes: r.notes,
+    };
   }
 
   // ── CAP-003: Approval Workflow ────────────────────────────────────────────
