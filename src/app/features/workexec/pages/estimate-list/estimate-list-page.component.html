@@ -28,8 +28,8 @@
     @for (item of estimates(); track item.estimateId) {
     <li class="estimate-list__card" data-testid="estimate-row">
       <button type="button" (click)="openEstimateDetail(item.estimateId)"
-        [attr.aria-label]="('WORKEXEC.ESTIMATE_LIST.CARD.ARIA_LABEL' | translate) + ' ' + (item.customerId || item.estimateId) + ', ' + ('WORKEXEC.ESTIMATE_STATUS.' + item.status | translate)">
-        <span class="estimate-list__primary">{{ item.customerId }}</span>
+        [attr.aria-label]="('WORKEXEC.ESTIMATE_LIST.CARD.ARIA_LABEL' | translate) + ' ' + (customerName(item.customerId) || item.estimateId) + ', ' + ('WORKEXEC.ESTIMATE_STATUS.' + item.status | translate)">
+        <span class="estimate-list__primary">{{ customerName(item.customerId) }}</span>
 
         <span class="estimate-list__meta">
           <span class="estimate-list__status-badge">{{ ('WORKEXEC.ESTIMATE_STATUS.' + item.status) | translate }}</span>

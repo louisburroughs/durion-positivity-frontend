@@ -1,9 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { BehaviorSubject, Subject, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { EstimateListItem } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
+import { CrmService } from '../../../crm/services/crm.service';
 import { EstimateListPageComponent } from './estimate-list-page.component';
 
 describe('EstimateListPageComponent', () => {
@@ -16,17 +17,24 @@ describe('EstimateListPageComponent', () => {
     listEstimatesForVehicle: vi.fn(),
   };
 
+  const crmMock = {
+    getParty: vi.fn(),
+  };
+
   beforeEach(async () => {
     customerParamMap$ = new BehaviorSubject(convertToParamMap({ customerId: 'cust-1' }));
 
     serviceMock.listEstimatesForCustomer.mockReset();
     serviceMock.listEstimatesForVehicle.mockReset();
+    crmMock.getParty.mockReset();
+    crmMock.getParty.mockReturnValue(of({ partyId: 'cust-1', legalName: 'Acme Tire Co', customerNumber: 'CUST-CP-001' }));
 
     await TestBed.configureTestingModule({
       imports: [EstimateListPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: WorkexecService, useValue: serviceMock },
+        { provide: CrmService, useValue: crmMock },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -68,6 +76,19 @@ describe('EstimateListPageComponent', () => {
     expect(component.state()).toBe('ready');
     expect(component.estimates()).toEqual(estimatesFixture);
     expect(fixture.nativeElement.querySelectorAll('[data-testid="estimate-row"]').length).toBe(1);
+  });
+
+  it('resolves the customer display name for the cards', () => {
+    serviceMock.listEstimatesForCustomer.mockReturnValue(of([
+      { estimateId: 'est-1', customerId: 'cust-1', status: 'OPEN', totalAmount: 100, currency: 'USD' },
+    ] as EstimateListItem[]));
+
+    fixture.detectChanges();
+
+    expect(crmMock.getParty).toHaveBeenCalledWith('cust-1');
+    expect(component.customerName('cust-1')).toBe('Acme Tire Co · CUST-CP-001');
+    // Falls back to the raw id when unresolved.
+    expect(component.customerName('unknown')).toBe('unknown');
   });
 
   it('sets error state before errorKey when load fails', () => {

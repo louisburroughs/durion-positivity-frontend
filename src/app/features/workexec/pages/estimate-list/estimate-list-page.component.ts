@@ -4,10 +4,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { combineLatest, EMPTY, Subscription, switchMap } from 'rxjs';
-import { distinctUntilChanged } from 'rxjs/operators';
+import { combineLatest, EMPTY, forkJoin, of, Subscription, switchMap } from 'rxjs';
+import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
 import { EstimateListItem } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
+import { CrmService } from '../../../crm/services/crm.service';
+import { PartyDetail } from '../../../crm/models/crm.models';
 import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
 
 @Component({
@@ -19,6 +21,7 @@ import { CustomerLookupComponent } from '../../../crm/components/customer-lookup
 })
 export class EstimateListPageComponent {
   private readonly workexec = inject(WorkexecService);
+  private readonly crm = inject(CrmService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -29,6 +32,14 @@ export class EstimateListPageComponent {
   readonly errorKey = signal<string | null>(null);
   readonly estimates = signal<EstimateListItem[]>([]);
   readonly selectedEstimateId = signal<string | null>(null);
+
+  /** Resolved CRM display labels keyed by customerId (estimates only carry the id). */
+  readonly customerNames = signal<Record<string, string>>({});
+
+  /** Display label for an estimate's customer: resolved CRM name, else the raw id. */
+  customerName(id: string): string {
+    return this.customerNames()[id] ?? id;
+  }
 
   constructor() {
     effect(onCleanup => {
@@ -65,6 +76,7 @@ export class EstimateListPageComponent {
           next: estimates => {
             this.estimates.set(estimates);
             this.state.set(estimates.length > 0 ? 'ready' : 'empty');
+            this.resolveCustomerNames(estimates);
           },
           error: () => {
             this.state.set('error');
@@ -92,6 +104,35 @@ export class EstimateListPageComponent {
           queryParamsHandling: 'merge',
         });
       });
+  }
+
+  /** Look up CRM display labels for the distinct, not-yet-cached customer ids. */
+  private resolveCustomerNames(estimates: EstimateListItem[]): void {
+    const cached = this.customerNames();
+    const missing = [...new Set(estimates.map(e => e.customerId).filter(id => id && !cached[id]))];
+    if (missing.length === 0) return;
+
+    forkJoin(
+      missing.map(id =>
+        this.crm.getParty(id).pipe(
+          map(party => [id, this.partyLabel(party)] as const),
+          catchError(() => of([id, id] as const)),
+        ),
+      ),
+    )
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(pairs => {
+        this.customerNames.update(current => {
+          const next = { ...current };
+          for (const [id, label] of pairs) next[id] = label;
+          return next;
+        });
+      });
+  }
+
+  private partyLabel(party: PartyDetail): string {
+    const num = party.customerNumber ? ` · ${party.customerNumber}` : '';
+    return party.dba ? `${party.legalName} (${party.dba})${num}` : `${party.legalName}${num}`;
   }
 
   openEstimateDetail(id: string): void {
