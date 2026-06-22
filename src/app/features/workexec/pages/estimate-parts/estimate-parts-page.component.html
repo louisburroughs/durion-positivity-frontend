@@ -65,9 +65,11 @@
           <div class="field-group field-group--grow part-search">
             <label for="partSearch" class="field-label">Search Catalog <span class="field-optional">(name or SKU)</span></label>
             <input id="partSearch" type="text" class="field-input"
-              role="combobox" [attr.aria-expanded]="searchState() === 'ready'" aria-controls="partSearchResults" autocomplete="off"
+              role="combobox" aria-autocomplete="list" autocomplete="off"
+              [attr.aria-expanded]="searchState() === 'ready'" aria-controls="partSearchResults"
+              [attr.aria-activedescendant]="searchState() === 'ready' && activeIndex() >= 0 ? ('partSearch-opt-' + activeIndex()) : null"
               placeholder="Search parts by name or SKU…"
-              [value]="searchQuery()" (input)="onSearchChange($any($event.target).value)" />
+              [value]="searchQuery()" (input)="onSearchChange($any($event.target).value)" (keydown)="onSearchKeydown($event)" />
 
             @if (searchState() === 'loading') {
               <p class="hint-text" aria-busy="true">Searching…</p>
@@ -80,13 +82,15 @@
             }
             @if (searchState() === 'ready') {
               <ul id="partSearchResults" class="part-search__results" role="listbox" aria-label="Matching parts">
-                @for (part of searchResults(); track part.id) {
-                  <li role="option" class="part-search__option">
-                    <button type="button" class="part-search__option-btn" (click)="selectPart(part)">
-                      <span class="part-search__name">{{ part.name }}</span>
-                      @if (part.sku) { <span class="part-search__sku">{{ part.sku }}</span> }
-                      @if (part.category) { <span class="part-search__cat">{{ part.category }}</span> }
-                    </button>
+                @for (part of searchResults(); track part.id; let i = $index) {
+                  <li role="option" class="part-search__option"
+                    [id]="'partSearch-opt-' + i"
+                    [class.part-search__option--active]="i === activeIndex()"
+                    [attr.aria-selected]="i === activeIndex()"
+                    (mousedown)="selectPart(part)">
+                    <span class="part-search__name">{{ part.name }}</span>
+                    @if (part.sku) { <span class="part-search__sku">{{ part.sku }}</span> }
+                    @if (part.category) { <span class="part-search__cat">{{ part.category }}</span> }
                   </li>
                 }
               </ul>

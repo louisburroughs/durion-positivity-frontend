@@ -43,6 +43,7 @@ export class EstimatePartsPageComponent implements OnInit {
   readonly searchResults = signal<ProductSummary[]>([]);
   readonly selectedPart  = signal<ProductSummary | null>(null);
   readonly priceState    = signal<'idle' | 'loading' | 'filled' | 'none'>('idle');
+  readonly activeIndex   = signal(-1);
   private readonly searchChanges$ = new Subject<string>();
 
   estimateId = '';
@@ -68,13 +69,36 @@ export class EstimatePartsPageComponent implements OnInit {
 
   onSearchChange(query: string): void {
     this.searchQuery.set(query);
+    this.activeIndex.set(-1);
     this.searchChanges$.next(query);
+  }
+
+  onSearchKeydown(event: KeyboardEvent): void {
+    const results = this.searchResults();
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.activeIndex.set(Math.min(this.activeIndex() + 1, results.length - 1));
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.activeIndex.set(Math.max(this.activeIndex() - 1, 0));
+    } else if (event.key === 'Enter') {
+      const idx = this.activeIndex();
+      if (idx >= 0 && idx < results.length) {
+        event.preventDefault();
+        this.selectPart(results[idx]);
+      }
+    } else if (event.key === 'Escape') {
+      this.searchResults.set([]);
+      this.searchState.set('idle');
+      this.activeIndex.set(-1);
+    }
   }
 
   private runPartSearch(query: string): void {
     if (!query.trim()) {
       this.searchResults.set([]);
       this.searchState.set('idle');
+      this.activeIndex.set(-1);
       return;
     }
     this.searchState.set('loading');
@@ -83,6 +107,7 @@ export class EstimatePartsPageComponent implements OnInit {
       .subscribe({
         next: products => {
           this.searchResults.set(products);
+          this.activeIndex.set(-1);
           this.searchState.set(products.length > 0 ? 'ready' : 'empty');
         },
         error: () => {
@@ -97,6 +122,7 @@ export class EstimatePartsPageComponent implements OnInit {
     this.addForm.patchValue({ description: part.name, productId: part.id });
     this.searchResults.set([]);
     this.searchState.set('idle');
+    this.activeIndex.set(-1);
     this.searchQuery.set(part.sku ? `${part.name} (${part.sku})` : part.name);
 
     // Auto-fill unit price from the product's active MSRP (no price on the summary/product).
@@ -123,6 +149,7 @@ export class EstimatePartsPageComponent implements OnInit {
     this.searchResults.set([]);
     this.searchState.set('idle');
     this.priceState.set('idle');
+    this.activeIndex.set(-1);
     this.addForm.patchValue({ productId: '' });
   }
 
