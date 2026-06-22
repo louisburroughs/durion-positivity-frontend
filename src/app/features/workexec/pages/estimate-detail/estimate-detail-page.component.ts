@@ -51,6 +51,8 @@ export class EstimateDetailPageComponent implements OnInit {
   readonly taxBlocked   = signal(false);
   /** Customer contacts resolved from CRM via the estimate's crmPartyId */
   readonly contacts     = signal<Relationship[]>([]);
+  /** True when the CRM contacts lookup failed (distinct from "no contacts") */
+  readonly contactsError = signal(false);
 
   // ── CAP-004: Promotion state (Stories 231, 228, 227) ─────────────────────
   /** Promotion flow state machine */
@@ -125,6 +127,7 @@ export class EstimateDetailPageComponent implements OnInit {
    */
   private loadContacts(est: EstimateResponse): void {
     const partyId = est.crmPartyId;
+    this.contactsError.set(false);
     if (!partyId) {
       this.contacts.set([]);
       return;
@@ -133,8 +136,21 @@ export class EstimateDetailPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: rels => this.contacts.set(rels.filter(r => r.status === 'ACTIVE')),
-        error: () => this.contacts.set([]),
+        error: () => {
+          this.contacts.set([]);
+          this.contactsError.set(true);
+        },
       });
+  }
+
+  /** Humanize a role enum (e.g. PRIMARY_CONTACT -> "Primary Contact") for display. */
+  humanizeRole(role: string): string {
+    return role
+      .toLowerCase()
+      .split('_')
+      .filter(Boolean)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
   }
 
   recalculate(): void {

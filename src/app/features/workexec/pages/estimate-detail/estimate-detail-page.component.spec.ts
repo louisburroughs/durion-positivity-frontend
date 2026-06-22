@@ -131,7 +131,29 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
       expect(component.contacts().length).toBe(1);
       const crmRefBlock = fixture.nativeElement.querySelector('.crm-ref-block');
       expect(crmRefBlock?.textContent ?? '').toContain('Jane Roe');
-      expect(crmRefBlock?.textContent ?? '').toContain('PRIMARY_CONTACT');
+      // role enum is humanized for display
+      expect(crmRefBlock?.textContent ?? '').toContain('Primary Contact');
+      expect(crmRefBlock?.textContent ?? '').not.toContain('PRIMARY_CONTACT');
+    });
+
+    it('shows "Unavailable" when the CRM contacts lookup fails', async () => {
+      fixture.detectChanges();
+      http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({
+        ...STUB_ESTIMATE,
+        crmPartyId: 'crm-party-123',
+      });
+      http.expectOne(r => r.url.endsWith('/contacts')).flush(
+        { message: 'boom' },
+        { status: 500, statusText: 'Server Error' },
+      );
+      vi.advanceTimersByTime(350);
+      http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate`).flush({ subtotal: 0, taxAmount: 0, total: 0 });
+      http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({ ...STUB_ESTIMATE, crmPartyId: 'crm-party-123' });
+      fixture.detectChanges();
+
+      expect(component.contactsError()).toBe(true);
+      const crmRefBlock = fixture.nativeElement.querySelector('.crm-ref-block');
+      expect(crmRefBlock?.textContent ?? '').toContain('Unavailable');
     });
 
     it('shows "Not set" when estimate has no crmPartyId', async () => {

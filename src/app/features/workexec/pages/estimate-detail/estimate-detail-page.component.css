@@ -290,3 +290,7 @@
 .promote-hint {
   margin-top: var(--space-3, 0.75rem);
 }
+
+.crm-ref-value--error {
+  color: var(--functional-error-red, #c84c47);
+}
