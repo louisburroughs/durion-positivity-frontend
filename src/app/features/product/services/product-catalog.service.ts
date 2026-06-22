@@ -10,6 +10,7 @@ import {
   SupplierItemCostListAPIService,
   ProductMSRPAPIService,
   CatalogSearchResultDto,
+  ServiceDto,
   ProductDto,
   ProductLifecycleResponse,
   ReplacementOption,
@@ -52,6 +53,7 @@ import {
   ProductLifecycle,
   ProductSummary,
   ReplacementProduct,
+  ServiceSummary,
   UomConversion,
 } from '../models/product.models';
 import {
@@ -90,6 +92,12 @@ export class ProductCatalogService {
   searchProducts(query: string): Observable<ProductSummary[]> {
     return this.productsSdk.searchProducts(query).pipe(
       map((result: CatalogSearchResultDto) => (result.data ?? []).map(s => this.toProductSummary(s))),
+    );
+  }
+
+  searchServices(query: string): Observable<ServiceSummary[]> {
+    return this.productsSdk.searchServices(query).pipe(
+      map((services: Array<ServiceDto>) => services.map(s => this.toServiceSummary(s))),
     );
   }
 
@@ -378,6 +386,14 @@ export class ProductCatalogService {
       category: dto.category ?? '',
       lifecycleState: '',
       msrp: null,
+    };
+  }
+
+  private toServiceSummary(dto: ServiceDto): ServiceSummary {
+    return {
+      id: dto.id ?? '',
+      name: dto.name ?? '',
+      shortDescription: dto.shortDescription ?? '',
     };
   }
 

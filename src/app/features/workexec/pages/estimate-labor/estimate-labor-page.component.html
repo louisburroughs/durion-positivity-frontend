@@ -54,6 +54,50 @@
 
       <form [formGroup]="addForm" (ngSubmit)="addLaborItem()" novalidate aria-label="Add labor form" class="add-form">
 
+        <!-- Service Catalog Search (name) -->
+        <div class="field-row">
+          <div class="field-group field-group--grow service-search">
+            <label for="serviceSearch" class="field-label">Search Service Catalog <span class="field-optional">(by name)</span></label>
+            <input id="serviceSearch" type="text" class="field-input"
+              role="combobox" aria-autocomplete="list" autocomplete="off"
+              [attr.aria-expanded]="searchState() === 'ready'" aria-controls="serviceSearchResults"
+              [attr.aria-activedescendant]="searchState() === 'ready' && activeIndex() >= 0 ? ('serviceSearch-opt-' + activeIndex()) : null"
+              placeholder="Search services by name…"
+              [value]="searchQuery()" (input)="onSearchChange($any($event.target).value)" (keydown)="onSearchKeydown($event)" />
+
+            @if (searchState() === 'loading') {
+              <p class="hint-text" aria-busy="true">Searching…</p>
+            }
+            @if (searchState() === 'empty') {
+              <p class="hint-text">No matching services found.</p>
+            }
+            @if (searchState() === 'error') {
+              <p class="field-error" role="alert">Service search failed. Try again.</p>
+            }
+            @if (searchState() === 'ready') {
+              <ul id="serviceSearchResults" class="service-search__results" role="listbox" aria-label="Matching services">
+                @for (svc of searchResults(); track svc.id; let i = $index) {
+                  <li role="option" class="service-search__option"
+                    [id]="'serviceSearch-opt-' + i"
+                    [class.service-search__option--active]="i === activeIndex()"
+                    [attr.aria-selected]="i === activeIndex()"
+                    (mousedown)="selectService(svc)">
+                    <span class="service-search__name">{{ svc.name }}</span>
+                    @if (svc.shortDescription) { <span class="service-search__desc">{{ svc.shortDescription }}</span> }
+                  </li>
+                }
+              </ul>
+            }
+
+            @if (selectedService()) {
+              <p class="service-search__selected">
+                Linked: <strong>{{ selectedService()!.name }}</strong>
+                <button type="button" class="service-search__clear" (click)="clearSelectedService()">Clear</button>
+              </p>
+            }
+          </div>
+        </div>
+
         <div class="field-row">
           <div class="field-group field-group--grow">
             <label for="laborDesc" class="field-label">Service Description <span class="required" aria-hidden="true">*</span></label>
@@ -80,8 +124,9 @@
 
         <div class="field-row">
           <div class="field-group field-group--grow">
-            <label for="laborServiceId" class="field-label">Service Catalog ID <span class="field-optional">(optional)</span></label>
-            <input id="laborServiceId" type="text" formControlName="serviceId" class="field-input" placeholder="Service catalog reference" />
+            <label for="laborServiceId" class="field-label">Service Catalog ID <span class="field-optional">(set by search)</span></label>
+            <input id="laborServiceId" type="text" formControlName="serviceId" class="field-input" readonly
+              placeholder="Linked via catalog search" />
           </div>
           <div class="field-group field-group--grow">
             <label for="laborTaxCode" class="field-label">Tax Code <span class="field-optional">(optional)</span></label>
