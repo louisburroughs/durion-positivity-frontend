@@ -37,6 +37,7 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
   afterEach(() => {
     vi.useRealTimers();
     http.verify();
+    contactsResponse = { contacts: [] };
   });
 
   /**
@@ -45,9 +46,17 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
    * and the subsequent refresh GET (getEstimateById) so all pending requests are
    * settled before assertions or http.verify().
    */
+  // CRM contacts payload returned by the GET /v1/crm/parties/:id/contacts call
+  // that loadContacts() triggers; individual tests can reassign before draining.
+  let contactsResponse: object = { contacts: [] };
+
   function drainPipeline(estimateOverride?: object): void {
     const estimate = estimateOverride ?? STUB_ESTIMATE;
     http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush(estimate);
+    // loadContacts() fires a CRM GET only when the estimate carries a crmPartyId
+    if ((estimate as { crmPartyId?: string }).crmPartyId) {
+      http.expectOne(r => r.url.endsWith('/contacts')).flush(contactsResponse);
+    }
     vi.advanceTimersByTime(350);
     http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate`).flush({ subtotal: 0, taxAmount: 0, total: 0 });
     http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush(estimate);
@@ -96,6 +105,55 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
       expect(crmRefBlock).toBeTruthy();
       expect(crmRefBlock?.textContent ?? '').toContain('crm-party-123');
       expect(crmRefBlock?.textContent ?? '').toContain('crm-vehicle-456');
+    });
+
+    it('resolves customer contacts from CRM and renders name + role', async () => {
+      contactsResponse = {
+        contacts: [
+          {
+            relationshipId: 'rel-1',
+            individualId: 'person-1',
+            individual: { displayName: 'Jane Roe', email: 'jane@example.com', phone: '555-1212' },
+            roles: ['PRIMARY_CONTACT'],
+            status: 'ACTIVE',
+          },
+        ],
+      };
+      fixture.detectChanges();
+      drainPipeline({
+        ...STUB_ESTIMATE,
+        crmPartyId: 'crm-party-123',
+        crmVehicleId: 'crm-vehicle-456',
+        crmContactIds: [],
+      });
+      fixture.detectChanges();
+
+      expect(component.contacts().length).toBe(1);
+      const crmRefBlock = fixture.nativeElement.querySelector('.crm-ref-block');
+      expect(crmRefBlock?.textContent ?? '').toContain('Jane Roe');
+      // role enum is humanized for display
+      expect(crmRefBlock?.textContent ?? '').toContain('Primary Contact');
+      expect(crmRefBlock?.textContent ?? '').not.toContain('PRIMARY_CONTACT');
+    });
+
+    it('shows "Unavailable" when the CRM contacts lookup fails', async () => {
+      fixture.detectChanges();
+      http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({
+        ...STUB_ESTIMATE,
+        crmPartyId: 'crm-party-123',
+      });
+      http.expectOne(r => r.url.endsWith('/contacts')).flush(
+        { message: 'boom' },
+        { status: 500, statusText: 'Server Error' },
+      );
+      vi.advanceTimersByTime(350);
+      http.expectOne(`${BASE}/v1/workorders/estimates/est-123/calculate`).flush({ subtotal: 0, taxAmount: 0, total: 0 });
+      http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({ ...STUB_ESTIMATE, crmPartyId: 'crm-party-123' });
+      fixture.detectChanges();
+
+      expect(component.contactsError()).toBe(true);
+      const crmRefBlock = fixture.nativeElement.querySelector('.crm-ref-block');
+      expect(crmRefBlock?.textContent ?? '').toContain('Unavailable');
     });
 
     it('shows "Not set" when estimate has no crmPartyId', async () => {

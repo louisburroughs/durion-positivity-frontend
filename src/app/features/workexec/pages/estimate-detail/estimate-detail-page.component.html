@@ -38,12 +38,14 @@
           }
 
           <span class="crm-ref-label">Contacts</span>
-          @if ((estimate()!.crmContactIds?.length ?? 0) > 0) {
+          @if (contacts().length > 0) {
           <span class="crm-ref-contacts">
-            @for (id of estimate()!.crmContactIds!; track id) {
-            <span class="crm-ref-badge" [title]="id">{{ id }}</span>
+            @for (c of contacts(); track c.relationshipId) {
+            <span class="crm-ref-badge" [title]="humanizeRole(c.role)">{{ c.personName }} ({{ humanizeRole(c.role) }})</span>
             }
           </span>
+          } @else if (contactsError()) {
+          <span class="crm-ref-value crm-ref-value--error">Unavailable</span>
           } @else {
           <span class="crm-ref-value crm-ref-value--empty">Not set</span>
           }
