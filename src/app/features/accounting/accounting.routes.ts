@@ -111,6 +111,13 @@ export const ACCOUNTING_ROUTES: Routes = [
           ),
       },
       {
+        path: 'reports/labor-overhead',
+        loadComponent: () =>
+          import('./pages/reports/labor-overhead/labor-overhead-report-page.component').then(
+            m => m.LaborOverheadReportPageComponent,
+          ),
+      },
+      {
         path: 'invoices/:invoiceId/payment-status',
         loadComponent: () =>
           import('./pages/invoice-payment-status/invoice-payment-status-page.component').then(

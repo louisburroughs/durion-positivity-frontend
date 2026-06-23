@@ -156,6 +156,19 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
     ],
   },
   {
+    titleKey: 'ACCOUNTING.LANDING.SECTION.REPORTS.TITLE',
+    descriptionKey: 'ACCOUNTING.LANDING.SECTION.REPORTS.DESCRIPTION',
+    cards: [
+      {
+        kind: 'direct',
+        titleKey: 'ACCOUNTING.LANDING.CARD.LABOR_OVERHEAD.TITLE',
+        descriptionKey: 'ACCOUNTING.LANDING.CARD.LABOR_OVERHEAD.DESCRIPTION',
+        route: '/app/accounting/reports/labor-overhead',
+        actionKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
+      },
+    ],
+  },
+  {
     titleKey: 'ACCOUNTING.LANDING.SECTION.CREDIT_MEMOS.TITLE',
     descriptionKey: 'ACCOUNTING.LANDING.SECTION.CREDIT_MEMOS.DESCRIPTION',
     cards: [

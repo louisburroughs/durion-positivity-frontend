@@ -1552,6 +1552,10 @@
         "CREDIT_MEMOS": {
           "TITLE": "[!! Çŕëëđïïŧ Ḿëëḿøøš !!]",
           "DESCRIPTION": "[!! Çŕëëààŧëë ààñđ ḿààñààğëë çŕëëđïïŧ ḿëëḿøøš ƒøøŕ çüüšŧøøḿëëŕ ààççøøüüñŧš. !!]"
+        },
+        "REPORTS": {
+          "TITLE": "Reports",
+          "DESCRIPTION": "Read-only accounting reports."
         }
       },
       "CARD": {
@@ -1614,6 +1618,10 @@
         "CREDIT_MEMO_DETAIL": {
           "TITLE": "[!! Çŕëëđïïŧ Ḿëëḿøø Đëëŧààïïľ !!]",
           "DESCRIPTION": "[!! ØØṕëëñ ŧħëë đëëŧààïïľ ṽïïëëŵ ƒøøŕ àà šṕëëçïïƒïïç çŕëëđïïŧ ḿëëḿøø ƀÿ ÏÏĐ. !!]"
+        },
+        "LABOR_OVERHEAD": {
+          "TITLE": "Labor & Overhead Cost Report",
+          "DESCRIPTION": "Monthly + YTD labor and overhead costs by location and fiscal year, from posted GL data."
         }
       },
       "FIELD": {
@@ -1643,6 +1651,49 @@
         "REQUIRED_IDENTIFIER": "[!! AAñ ÏÏĐ ïïš ŕëëqüüïïŕëëđ. !!]",
         "NAVIGATE": "[!! ÜÜñààƀľëë ŧøø ñààṽïïğààŧëë ŧøø ŧħëë ŕëëqüüëëšŧëëđ ṕààğëë. !!]"
       }
+    },
+    "LABOR_OVERHEAD_REPORT": {
+      "OVERLINE": "Reports",
+      "TITLE": "Location Labor & Overhead Cost Report",
+      "WHOLE_DOLLARS_NOTE": "Amounts in whole dollars, local currency (except line 2.11.4, shown in USD).",
+      "SELECTORS_ARIA": "Report filters",
+      "LOCATION_LABEL": "Location / Dealer",
+      "YEAR_LABEL": "Fiscal Year",
+      "AS_OF_MONTH_LABEL": "As-of Month",
+      "AS_OF_MONTH_ALL": "Full year",
+      "IDLE": "Select a location and fiscal year to view the report.",
+      "EMPTY": "No posted activity for this location and period.",
+      "TABLE_ARIA": "Labor and overhead cost matrix",
+      "TABLE_CAPTION": "Labor & Overhead Costs",
+      "COL_LINE": "Cost Line",
+      "COL_YTD": "YTD",
+      "MONTH": {
+        "0": "Jan",
+        "1": "Feb",
+        "2": "Mar",
+        "3": "Apr",
+        "4": "May",
+        "5": "Jun",
+        "6": "Jul",
+        "7": "Aug",
+        "8": "Sep",
+        "9": "Oct",
+        "10": "Nov",
+        "11": "Dec"
+      },
+      "USD_ONLY": "Reported in USD even on local-currency plants.",
+      "USD_BADGE": "USD",
+      "HELP_ARIA": "Show line definition and classification",
+      "COST_TYPE_LABEL": "Type",
+      "COST_TYPE": {
+        "FIXED": "Fixed",
+        "VARIABLE": "Variable",
+        "FIXED_IF_LOW_VOLUME": "Fixed if volume change is minimal"
+      },
+      "CURRENCY_ROW": "Currency conversion",
+      "CURRENCY": "Currency",
+      "LOCAL_PER_USD": "Local currency per USD",
+      "AVG_RATE": "Average rate"
     }
   },
   "PRODUCT": {

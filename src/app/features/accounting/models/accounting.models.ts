@@ -346,3 +346,32 @@ export interface ReprocessingAttemptHistory {
   outcomeDetails?: string;
   mappingVersionUsed?: string;
 }
+
+// CAP-316 — Location Labor & Overhead Cost Report (read-only)
+
+export type LaborOverheadCostType = 'FIXED' | 'VARIABLE' | 'FIXED_IF_LOW_VOLUME';
+
+export interface LaborOverheadReportLine {
+  code: string;
+  label: string;
+  parentCode?: string;
+  level: number;
+  costType?: LaborOverheadCostType;
+  isSubtotal: boolean;
+  usdOnly: boolean;
+  definition?: string;
+  /** 12 monthly amounts, index 0 = January. */
+  monthly: number[];
+  ytd: number;
+}
+
+export interface LaborOverheadReport {
+  locationId: string;
+  locationLabel?: string;
+  fiscalYear: number;
+  asOfMonth: number;
+  currency: string;
+  localCurrencyPerUsd: number;
+  averageRate: number;
+  lines: LaborOverheadReportLine[];
+}
