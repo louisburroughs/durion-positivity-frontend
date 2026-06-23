@@ -88,7 +88,7 @@
           <th scope="row" class="line-col" [attr.data-level]="line.level">
             <span class="line-cell" [style.padding-left.px]="(line.level - 1) * 16">
               <span class="line-code">{{ line.code }}</span>
-              <span class="line-label">{{ line.label }}</span>
+              <span class="line-label">{{ lineLabelKey(line) | translate }}</span>
               @if (line.usdOnly) {
               <span class="usd-badge" [title]="'ACCOUNTING.LABOR_OVERHEAD_REPORT.USD_ONLY' | translate">
                 {{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.USD_BADGE' | translate }}
@@ -109,7 +109,7 @@
               </p>
               }
               @if (line.definition) {
-              <p class="help-definition">{{ line.definition }}</p>
+              <p class="help-definition">{{ lineDefinitionKey(line) | translate }}</p>
               }
             </div>
             }
