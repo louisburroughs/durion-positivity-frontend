@@ -2074,20 +2074,30 @@
       "ERROR": {
         "LOAD": "No se pudo cargar el estado WIP."
       },
+      "LOCATION": {
+        "LABEL": "Ubicacion",
+        "PLACEHOLDER": "Ingrese un ID de ubicacion",
+        "LOAD": "Cargar",
+        "HINT": "Ingrese un ID de ubicacion para ver el trabajo en progreso."
+      },
       "COLUMN": {
         "WORKORDER": "Orden de trabajo",
         "STATUS": "Estado",
         "TECHNICIAN": "Tecnico",
-        "BAY": "Bahia",
+        "CUSTOMER": "Cliente",
         "VEHICLE": "Vehiculo"
       }
     },
     "WIP_STATUS": {
-      "WAITING": "En espera",
-      "IN_PROGRESS": "En progreso",
-      "PARTS_PENDING": "Partes pendientes",
-      "READY": "Listo",
-      "COMPLETED": "Completado"
+      "DRAFT": "Borrador",
+      "APPROVED": "Aprobado",
+      "ASSIGNED": "Asignado",
+      "WORK_IN_PROGRESS": "En progreso",
+      "AWAITING_PARTS": "Esperando partes",
+      "AWAITING_APPROVAL": "Esperando aprobacion",
+      "READY_FOR_PICKUP": "Listo para recoger",
+      "COMPLETED": "Completado",
+      "CANCELLED": "Cancelado"
     },
     "INVOICE_FINALIZATION": {
       "TITLE": "Finalizacion de Factura",

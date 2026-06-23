@@ -20,6 +20,7 @@ import {
   WorkorderPartAdjustmentsService,
   WorkorderPickFacadeService,
   WorkorderPickedItemsService,
+  type Pageable,
 } from '@durion-sdk/workorder';
 import {
   AddEstimateItemRequest,
@@ -72,7 +73,7 @@ import {
   WorkorderStatus,
   WorkorderTransition,
   WorkorderWipView,
-  WipListFilters,
+  WipStatus,
 } from '../models/workexec.models';
 
 /**
@@ -723,23 +724,46 @@ export class WorkexecService {
   }
 
   /**
-   * operationId: listActiveWorkorders
-   * GET /v1/workorders/wip?wipStatus={...}
+   * operationId: listWip
+   * GET /v1/workexec/wip?locationId={id}&multiLocation={bool}
    */
-  listActiveWorkorders(filters?: WipListFilters): Observable<WorkorderWipView[]> {
-    let params = new HttpParams();
-    if (filters?.wipStatus?.length) {
-      params = params.set('wipStatus', filters.wipStatus.join(','));
-    }
-    return this.api.get<WorkorderWipView[]>('/v1/workorders/wip', params);
+  listActiveWorkorders(locationId: string, multiLocation = false): Observable<WorkorderWipView[]> {
+    const pageable: Pageable = { page: 0, size: 100, sort: [] };
+    return this.wipDashboard
+      .listWip(locationId, pageable, String(multiLocation))
+      .pipe(map(page => (page.content ?? []).map(view => this.toWorkorderWipView(view))));
   }
 
   /**
-   * operationId: getWorkorderWipStatus
-   * GET /v1/workorders/{workorderId}/wip-status
+   * operationId: getWipDetail
+   * GET /v1/workexec/wip/{workorderId}
    */
   getWorkorderWipStatus(workorderId: string): Observable<WorkorderWipView> {
-    return this.api.get<WorkorderWipView>(`/v1/workorders/${workorderId}/wip-status`);
+    return this.wipDashboard
+      .getWipDetail(workorderId)
+      .pipe(map(detail => this.toWorkorderWipView(detail)));
+  }
+
+  private toWorkorderWipView(view: {
+    workorderId?: string;
+    status?: string;
+    assignedTechnicianId?: string | null;
+    locationId?: string;
+    estimatedCompletionTime?: string | null;
+    customerName?: string;
+    vehicleInfo?: string;
+    lastUpdatedAt?: string | null;
+  }): WorkorderWipView {
+    return {
+      workorderId: view.workorderId ?? '',
+      status: (view.status ?? 'DRAFT') as WipStatus,
+      assignedTechnicianId: view.assignedTechnicianId ?? undefined,
+      locationId: view.locationId ?? '',
+      estimatedCompletionTime: view.estimatedCompletionTime ?? undefined,
+      customerName: view.customerName ?? undefined,
+      vehicleInfo: view.vehicleInfo ?? undefined,
+      lastUpdatedAt: view.lastUpdatedAt ?? undefined,
+    };
   }
 
   /**

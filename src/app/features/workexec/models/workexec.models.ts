@@ -192,21 +192,27 @@ export interface EstimateListItem {
   readonly notes?: string;
 }
 
-export type WipStatus = 'WAITING' | 'IN_PROGRESS' | 'PARTS_PENDING' | 'READY' | 'COMPLETED';
+export type WipStatus =
+  | 'DRAFT'
+  | 'APPROVED'
+  | 'ASSIGNED'
+  | 'WORK_IN_PROGRESS'
+  | 'AWAITING_PARTS'
+  | 'AWAITING_APPROVAL'
+  | 'READY_FOR_PICKUP'
+  | 'COMPLETED'
+  | 'CANCELLED';
 
+/** Mirrors the backend WorkorderStatusView returned by GET /v1/workexec/wip. */
 export interface WorkorderWipView {
   readonly workorderId: string;
-  readonly workorderNumber: string;
-  readonly wipStatus: WipStatus;
-  readonly assignedTechnicianName?: string;
-  readonly bayLocation?: string;
-  readonly customerId?: string;
-  readonly vehicleDescription?: string;
-  readonly statusUpdatedAt?: string;
-}
-
-export interface WipListFilters {
-  wipStatus?: WipStatus[];
+  readonly status: WipStatus;
+  readonly assignedTechnicianId?: string;
+  readonly locationId: string;
+  readonly estimatedCompletionTime?: string;
+  readonly customerName?: string;
+  readonly vehicleInfo?: string;
+  readonly lastUpdatedAt?: string;
 }
 
 export interface WorkorderInvoiceView {
