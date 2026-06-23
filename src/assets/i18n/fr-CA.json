@@ -2320,6 +2320,16 @@
         "REQUIRED_IDENTIFIER": "Un identifiant est requis pour ouvrir cette page.",
         "NAVIGATE": "Échec de la navigation. Vérifiez l'identifiant et réessayez."
       }
+    },
+    "FINDERS": {
+      "TITLE": "Find a record",
+      "ESTIMATE_LABEL": "Find estimate",
+      "ESTIMATE_PLACEHOLDER": "Search by customer name or estimate id",
+      "WORKORDER_LABEL": "Find workorder",
+      "WORKORDER_PLACEHOLDER": "Search by customer name or workorder id",
+      "LOADING": "Searching…",
+      "EMPTY": "No matches found",
+      "ERROR": "Search failed. Please try again."
     }
   },
   "INVENTORY": {

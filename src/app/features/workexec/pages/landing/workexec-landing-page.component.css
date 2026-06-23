@@ -118,6 +118,12 @@
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
+.workexec-finders__grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
 .workexec-card {
   min-width: 0;
   display: grid;

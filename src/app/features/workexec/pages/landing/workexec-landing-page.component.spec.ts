@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { of } from 'rxjs';
 import { vi, describe, beforeEach, it, expect } from 'vitest';
 
 import { WorkexecLandingPageComponent } from './workexec-landing-page.component';
+import { WorkexecService } from '../../services/workexec.service';
 
 describe('WorkexecLandingPageComponent', () => {
   let component: WorkexecLandingPageComponent;
@@ -22,10 +24,18 @@ describe('WorkexecLandingPageComponent', () => {
     return card;
   };
 
+  const workexecStub = {
+    searchEstimates: vi.fn().mockReturnValue(of([])),
+    searchWorkorders: vi.fn().mockReturnValue(of([])),
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [WorkexecLandingPageComponent, TranslateModule.forRoot()],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        { provide: WorkexecService, useValue: workexecStub },
+      ],
     }).compileComponents();
 
     router = TestBed.inject(Router);
@@ -223,6 +233,24 @@ describe('WorkexecLandingPageComponent', () => {
       await component.openLaunch(card);
       expect(component.state()).toBe('error');
       expect(component.errorKey()).toBe('WORKEXEC.LANDING.ERROR.NAVIGATE');
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Finders typeahead navigation
+  // ---------------------------------------------------------------------------
+
+  describe('Finders selection', () => {
+    it('navigates to the estimate summary when an estimate is selected', () => {
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      component.onEstimateSelected('e1');
+      expect(navigateSpy).toHaveBeenCalledWith(['/app', 'workexec', 'estimates', 'e1', 'summary']);
+    });
+
+    it('navigates to the workorder when a workorder is selected', () => {
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      component.onWorkorderSelected('w1');
+      expect(navigateSpy).toHaveBeenCalledWith(['/app', 'workexec', 'workorders', 'w1']);
     });
   });
 });

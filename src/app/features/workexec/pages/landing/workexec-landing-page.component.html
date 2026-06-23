@@ -40,6 +40,29 @@
     </section>
   }
 
+  <section class="workexec-section workexec-finders" aria-labelledby="workexec-finders-heading">
+    <div class="workexec-section__heading">
+      <h2 id="workexec-finders-heading" class="workexec-section__title">
+        {{ 'WORKEXEC.FINDERS.TITLE' | translate }}
+      </h2>
+    </div>
+
+    <div class="workexec-finders__grid">
+      <app-workexec-search-typeahead
+        [label]="'WORKEXEC.FINDERS.ESTIMATE_LABEL'"
+        [placeholder]="'WORKEXEC.FINDERS.ESTIMATE_PLACEHOLDER'"
+        [search]="estimateSearch"
+        (selected)="onEstimateSelected($event)"
+      />
+      <app-workexec-search-typeahead
+        [label]="'WORKEXEC.FINDERS.WORKORDER_LABEL'"
+        [placeholder]="'WORKEXEC.FINDERS.WORKORDER_PLACEHOLDER'"
+        [search]="workorderSearch"
+        (selected)="onWorkorderSelected($event)"
+      />
+    </div>
+  </section>
+
   @for (section of sections; track section.titleKey) {
     <section class="workexec-section" aria-labelledby="{{ section.titleKey }}-heading">
       <div class="workexec-section__heading">
