@@ -16,6 +16,8 @@ const STUB_EMPLOYEE = {
   status: 'ACTIVE' as const,
   hireDate: '2024-03-01',
   contactInfo: { primaryEmail: 'jane@example.com', primaryPhone: '555-1234' },
+  createdAt: '2024-03-01T09:30:00Z',
+  updatedAt: '2024-04-15T14:05:00Z',
 };
 
 const stubPeopleService = {
@@ -246,8 +248,35 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     const createdAt = fixture.debugElement.query(By.css('[data-testid="audit-created-at"]'));
     const updatedAt = fixture.debugElement.query(By.css('[data-testid="audit-updated-at"]'));
 
-    expect(createdAt).toBeTruthy();
-    expect(updatedAt).toBeTruthy();
+    expect(createdAt.nativeElement.textContent).toContain('2024');
+    expect(createdAt.nativeElement.textContent).not.toContain('Unavailable');
+    expect(updatedAt.nativeElement.textContent).toContain('2024');
+    expect(updatedAt.nativeElement.textContent).not.toContain('Unavailable');
+  });
+
+  it('shows "Unavailable" for audit fields when timestamps are absent', async () => {
+    vi.clearAllMocks();
+    stubPeopleService.getEmployee.mockReturnValue(
+      of({ ...STUB_EMPLOYEE, createdAt: undefined, updatedAt: undefined }),
+    );
+
+    await TestBed.configureTestingModule({
+      imports: [EmployeeProfilePageComponent],
+      providers: [
+        provideRouter([]),
+        { provide: PeopleService, useValue: stubPeopleService },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: { get: (k: string) => (k === 'id' ? 'emp-1' : null) } }, params: of({ id: 'emp-1' }) },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(EmployeeProfilePageComponent);
+    fixture.detectChanges();
+
+    const createdAt = fixture.debugElement.query(By.css('[data-testid="audit-created-at"]'));
+    expect(createdAt.nativeElement.textContent).toContain('Unavailable');
   });
 
   // ── T9: Required-field validation before submit ──────────────────────────
