@@ -31,7 +31,7 @@
           spellcheck="false"
           aria-autocomplete="list"
           aria-required="true"
-          aria-controls="technician-listbox"
+          [attr.aria-controls]="showTechList() && filteredTechnicians().length > 0 ? 'technician-listbox' : null"
           [attr.aria-expanded]="showTechList() && filteredTechnicians().length > 0"
           [attr.aria-activedescendant]="showTechList() && activeIndex() >= 0 ? ('technician-opt-' + activeIndex()) : null"
           [value]="techQuery()"

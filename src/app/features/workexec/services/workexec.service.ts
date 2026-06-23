@@ -836,7 +836,8 @@ export class WorkexecService {
    * those stems.
    */
   listTechniciansForLocation(locationId: string): Observable<LocationTechnician[]> {
-    return this.peopleAvailability.getPeopleAvailability(locationId.trim()).pipe(
+    const today = new Date().toISOString().slice(0, 10);
+    return this.peopleAvailability.getPeopleAvailability(locationId.trim(), today).pipe(
       map(roster => (roster ?? [])
         .filter(p => String(p.assignmentStatus) !== 'ENDED' && this.isTechnicianRole(p.role))
         .map(p => this.toLocationTechnician(p))),
