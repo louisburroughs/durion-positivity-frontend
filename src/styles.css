@@ -296,6 +296,18 @@ textarea::placeholder {
   opacity: 1;
 }
 
+/* Native <select> dropdown list. The option popup is rendered by the UA and
+   does not inherit the select's background in all browsers, so an unstyled
+   option list defaults to a light popup — in dark mode the inherited light
+   text then reads white-on-whitish. Pin both to theme tokens: light resolves
+   to white bg / grey-900 text (unchanged); dark resolves to graphite-800 bg /
+   #e8e9eb text (~9.9:1, WCAG AAA). */
+option,
+optgroup {
+  background: var(--input-background);
+  color: var(--currentTextColor);
+}
+
 /* ── Button Base ─────────────────────────────────────────────────────────── */
 button {
   cursor: pointer;
