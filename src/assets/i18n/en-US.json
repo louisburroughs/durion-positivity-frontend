@@ -2074,20 +2074,30 @@
       "ERROR": {
         "LOAD": "Unable to load WIP status."
       },
+      "LOCATION": {
+        "LABEL": "Location",
+        "PLACEHOLDER": "Enter a location ID",
+        "LOAD": "Load",
+        "HINT": "Enter a location ID to view work in progress."
+      },
       "COLUMN": {
         "WORKORDER": "Work Order",
         "STATUS": "Status",
         "TECHNICIAN": "Technician",
-        "BAY": "Bay",
+        "CUSTOMER": "Customer",
         "VEHICLE": "Vehicle"
       }
     },
     "WIP_STATUS": {
-      "WAITING": "Waiting",
-      "IN_PROGRESS": "In Progress",
-      "PARTS_PENDING": "Parts Pending",
-      "READY": "Ready",
-      "COMPLETED": "Completed"
+      "DRAFT": "Draft",
+      "APPROVED": "Approved",
+      "ASSIGNED": "Assigned",
+      "WORK_IN_PROGRESS": "In Progress",
+      "AWAITING_PARTS": "Awaiting Parts",
+      "AWAITING_APPROVAL": "Awaiting Approval",
+      "READY_FOR_PICKUP": "Ready for Pickup",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
     },
     "INVOICE_FINALIZATION": {
       "TITLE": "Invoice Finalization",

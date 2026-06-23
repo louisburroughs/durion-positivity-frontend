@@ -341,46 +341,45 @@ describe('WorkexecService', () => {
       req.flush(apiRows);
     });
 
-    it('listActiveWorkorders — gets /v1/workorders/wip with wipStatus query', () => {
-      const fixture: WorkorderWipView[] = [
+    it('listActiveWorkorders — gets /v1/workexec/wip with locationId query', () => {
+      const expected: WorkorderWipView[] = [
         {
           workorderId: 'wo-260-1',
-          workorderNumber: 'WO-260-1',
-          wipStatus: 'IN_PROGRESS',
-          assignedTechnicianName: 'Alex Tech',
-          bayLocation: 'Bay-1',
-          customerId: 'cust-260-1',
-          vehicleDescription: 'Sedan',
-          statusUpdatedAt: '2026-03-30T12:10:00Z',
+          status: 'WORK_IN_PROGRESS',
+          assignedTechnicianId: 'tech-260-1',
+          locationId: 'loc-260',
+          estimatedCompletionTime: '2026-03-30T16:00:00Z',
+          customerName: 'Jamie Customer',
+          vehicleInfo: '2022 Sedan',
+          lastUpdatedAt: '2026-03-30T12:10:00Z',
         },
       ];
 
-      service.listActiveWorkorders({ wipStatus: ['IN_PROGRESS', 'READY'] }).subscribe(result => {
-        expect(result).toEqual(fixture);
+      service.listActiveWorkorders('loc-260').subscribe(result => {
+        expect(result).toEqual(expected);
       });
 
       const req = http.expectOne(r =>
-        r.url === `${BASE}/v1/workorders/wip` && r.params.get('wipStatus') === 'IN_PROGRESS,READY',
+        r.url === `${BASE}/v1/workexec/wip` && r.params.get('locationId') === 'loc-260',
       );
       expect(req.request.method).toBe('GET');
-      expect(req.request.url).toContain('/v1/workorders/wip');
-      req.flush(fixture);
+      expect(req.request.params.get('multiLocation')).toBe('false');
+      req.flush({ content: expected, totalElements: 1 });
     });
 
-    it('getWorkorderWipStatus — gets /v1/workorders/{workorderId}/wip-status', () => {
+    it('getWorkorderWipStatus — gets /v1/workexec/wip/{workorderId}', () => {
       const fixture: WorkorderWipView = {
         workorderId: 'wo-260-2',
-        workorderNumber: 'WO-260-2',
-        wipStatus: 'WAITING',
+        status: 'AWAITING_PARTS',
+        locationId: 'loc-260',
       };
 
       service.getWorkorderWipStatus('wo-260-2').subscribe(result => {
         expect(result).toEqual(fixture);
       });
 
-      const req = http.expectOne(`${BASE}/v1/workorders/wo-260-2/wip-status`);
+      const req = http.expectOne(`${BASE}/v1/workexec/wip/wo-260-2`);
       expect(req.request.method).toBe('GET');
-      expect(req.request.url).toContain('/v1/workorders/wo-260-2/wip-status');
       req.flush(fixture);
     });
 

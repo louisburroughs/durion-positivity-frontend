@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Subscription } from 'rxjs';
 import { WorkorderWipView } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 
 @Component({
   selector: 'app-wip-status-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './wip-status-page.component.html',
   styleUrl: './wip-status-page.component.css',
 })
@@ -24,36 +24,30 @@ export class WipStatusPageComponent {
   readonly errorKey = signal<string | null>(null);
   readonly wipItems = signal<WorkorderWipView[]>([]);
   readonly selectedWorkorderId = signal<string | null>(null);
+  readonly locationId = signal('');
 
-  constructor() {
-    effect(
-      onCleanup => {
-        this.state.set('loading');
-        this.errorKey.set(null);
-
-        const sub: Subscription = this.workexec.listActiveWorkorders().subscribe({
-          next: items => {
-            this.wipItems.set(items);
-            this.state.set(items.length > 0 ? 'ready' : 'empty');
-          },
-          error: () => {
-            this.state.set('error');
-            this.errorKey.set('WORKEXEC.WIP.ERROR.LOAD');
-          },
-        });
-
-        onCleanup(() => sub.unsubscribe());
-      },
-      { allowSignalWrites: true },
-    );
+  loadLocation(value: string): void {
+    this.locationId.set(value.trim());
+    this.load();
   }
 
   refresh(): void {
+    this.load();
+  }
+
+  private load(): void {
+    const locationId = this.locationId();
+    if (!locationId) {
+      this.state.set('idle');
+      this.wipItems.set([]);
+      return;
+    }
+
     this.state.set('loading');
     this.errorKey.set(null);
 
     this.workexec
-      .listActiveWorkorders()
+      .listActiveWorkorders(locationId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: items => {

@@ -30,19 +30,28 @@ describe('WipStatusPageComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('renders ready state with WIP items', () => {
+  it('starts idle without a selected location', () => {
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('idle');
+    expect(serviceMock.listActiveWorkorders).not.toHaveBeenCalled();
+  });
+
+  it('renders ready state with WIP items after a location is loaded', () => {
     const fixtureItems: WorkorderWipView[] = [
       {
         workorderId: 'wo-1',
-        workorderNumber: 'WO-1',
-        wipStatus: 'IN_PROGRESS',
-        assignedTechnicianName: 'Tech One',
+        status: 'WORK_IN_PROGRESS',
+        locationId: 'loc-1',
+        assignedTechnicianId: 'tech-1',
       },
     ];
     serviceMock.listActiveWorkorders.mockReturnValue(of(fixtureItems));
 
+    component.loadLocation('loc-1');
     fixture.detectChanges();
 
+    expect(serviceMock.listActiveWorkorders).toHaveBeenCalledWith('loc-1');
     expect(component.state()).toBe('ready');
     expect(component.wipItems()).toEqual(fixtureItems);
     expect(fixture.nativeElement.querySelectorAll('[data-testid="wip-row"]').length).toBe(1);
@@ -53,7 +62,7 @@ describe('WipStatusPageComponent', () => {
     const stateSetSpy = vi.spyOn(component.state, 'set');
     const errorKeySetSpy = vi.spyOn(component.errorKey, 'set');
 
-    fixture.detectChanges();
+    component.loadLocation('loc-1');
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('WORKEXEC.WIP.ERROR.LOAD');
@@ -66,6 +75,7 @@ describe('WipStatusPageComponent', () => {
   it('sets error state before errorKey when refresh() fails', () => {
     serviceMock.listActiveWorkorders.mockReturnValue(throwError(() => new Error('refresh fail')));
 
+    component.locationId.set('loc-1');
     component.refresh();
 
     expect(component.state()).toBe('error');

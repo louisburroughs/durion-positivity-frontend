@@ -2032,20 +2032,30 @@
       "ERROR": {
         "LOAD": "Impossible de charger le statut WIP."
       },
+      "LOCATION": {
+        "LABEL": "Emplacement",
+        "PLACEHOLDER": "Entrez un ID d'emplacement",
+        "LOAD": "Charger",
+        "HINT": "Entrez un ID d'emplacement pour voir les travaux en cours."
+      },
       "COLUMN": {
         "WORKORDER": "Ordre de travail",
         "STATUS": "Statut",
         "TECHNICIAN": "Technicien",
-        "BAY": "Baie",
+        "CUSTOMER": "Client",
         "VEHICLE": "Vehicule"
       }
     },
     "WIP_STATUS": {
-      "WAITING": "En attente",
-      "IN_PROGRESS": "En cours",
-      "PARTS_PENDING": "Pieces en attente",
-      "READY": "Pret",
-      "COMPLETED": "Termine"
+      "DRAFT": "Brouillon",
+      "APPROVED": "Approuve",
+      "ASSIGNED": "Assigne",
+      "WORK_IN_PROGRESS": "En cours",
+      "AWAITING_PARTS": "En attente de pieces",
+      "AWAITING_APPROVAL": "En attente d'approbation",
+      "READY_FOR_PICKUP": "Pret pour ramassage",
+      "COMPLETED": "Termine",
+      "CANCELLED": "Annule"
     },
     "INVOICE_FINALIZATION": {
       "TITLE": "Finalisation de Facture",
