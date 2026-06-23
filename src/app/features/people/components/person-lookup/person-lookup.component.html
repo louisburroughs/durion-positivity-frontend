@@ -1,0 +1,49 @@
+<div class="person-lookup">
+  <label [attr.for]="inputId" class="person-lookup__label">
+    {{ labelKey | translate }}
+    @if (required) { <span class="person-lookup__required" aria-hidden="true">*</span> }
+  </label>
+
+  <input [id]="inputId" type="text" class="person-lookup__input"
+    role="combobox" aria-autocomplete="list" autocomplete="off" spellcheck="false"
+    [attr.data-testid]="testId"
+    [attr.aria-expanded]="showList() && suggestions().length > 0"
+    [attr.aria-controls]="inputId + '-listbox'"
+    [attr.aria-activedescendant]="showList() && activeIndex() >= 0 ? (inputId + '-opt-' + activeIndex()) : null"
+    [attr.aria-required]="required ? 'true' : null"
+    [attr.aria-invalid]="invalid ? 'true' : null"
+    [attr.aria-describedby]="invalid && errorId ? errorId : null"
+    [value]="query()"
+    [disabled]="disabled()"
+    [placeholder]="placeholderKey | translate"
+    (input)="onInput($any($event.target).value)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    (keydown)="onKeydown($event)" />
+
+  @if (showList() && loading() && suggestions().length === 0) {
+    <p class="person-lookup__hint" aria-busy="true">{{ 'PEOPLE.LOOKUP.SEARCHING' | translate }}</p>
+  }
+
+  @if (showList() && !loading() && query().trim().length > 0 && suggestions().length === 0) {
+    <p class="person-lookup__hint">{{ 'PEOPLE.LOOKUP.NO_MATCHES' | translate }}</p>
+  }
+
+  @if (showList() && suggestions().length > 0) {
+    <ul [id]="inputId + '-listbox'" class="person-lookup__list" role="listbox" [attr.aria-label]="labelKey | translate">
+      @for (person of suggestions(); track person.id; let i = $index) {
+        <li role="option" class="person-lookup__option"
+          [id]="inputId + '-opt-' + i"
+          [class.person-lookup__option--active]="i === activeIndex()"
+          [attr.aria-selected]="i === activeIndex()"
+          (mousedown)="select(person)">
+          <span class="person-lookup__name">{{ personName(person) }}</span>
+          <span class="person-lookup__meta">
+            @if (person.username) { <span class="person-lookup__username">&#64;{{ person.username }}</span> }
+            @if (person.primaryEmail) { <span class="person-lookup__email">{{ person.primaryEmail }}</span> }
+          </span>
+        </li>
+      }
+    </ul>
+  }
+</div>

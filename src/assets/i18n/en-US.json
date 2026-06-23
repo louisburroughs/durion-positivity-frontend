@@ -262,18 +262,18 @@
         }
       },
       "FIELD": {
-        "PERSON_UUID": "Person UUID",
+        "PERSON_UUID": "Name",
         "SESSION_ID": "Session ID",
-        "EMPLOYEE_ID": "Employee ID",
-        "OFFBOARD_EMPLOYEE_ID": "Employee ID",
-        "PERSON_ID": "Person ID"
+        "EMPLOYEE_ID": "Name or employee ID",
+        "OFFBOARD_EMPLOYEE_ID": "Name or employee ID",
+        "PERSON_ID": "Name or employee ID"
       },
       "PLACEHOLDER": {
-        "PERSON_UUID": "Enter person UUID…",
+        "PERSON_UUID": "Search by name…",
         "SESSION_ID": "Enter session ID…",
-        "EMPLOYEE_ID": "Enter employee ID…",
-        "OFFBOARD_EMPLOYEE_ID": "Enter employee ID…",
-        "PERSON_ID": "Enter person ID…"
+        "EMPLOYEE_ID": "Search by name or employee ID…",
+        "OFFBOARD_EMPLOYEE_ID": "Search by name or employee ID…",
+        "PERSON_ID": "Search by name or employee ID…"
       },
       "ACTION": {
         "OPEN_PAGE": "Open Page",
@@ -286,9 +286,15 @@
         "IMPORT_DATA": "Import Data"
       },
       "ERROR": {
-        "REQUIRED_IDENTIFIER": "Enter the required identifier before opening this page.",
+        "REQUIRED_IDENTIFIER": "Select a person from the list, or enter an identifier, before opening this page.",
         "NAVIGATE": "Could not open the selected people page. Try again."
       }
+    },
+    "LOOKUP": {
+      "LABEL": "Person",
+      "PLACEHOLDER": "Search by name…",
+      "SEARCHING": "Searching…",
+      "NO_MATCHES": "No matching people found."
     },
     "WORK_SESSION": {
       "TITLE": "Work Session",

@@ -262,18 +262,18 @@
         }
       },
       "FIELD": {
-        "PERSON_UUID": "UUID de persona",
+        "PERSON_UUID": "Nombre",
         "SESSION_ID": "ID de sesión",
-        "EMPLOYEE_ID": "ID de empleado",
-        "OFFBOARD_EMPLOYEE_ID": "ID de empleado",
-        "PERSON_ID": "ID de persona"
+        "EMPLOYEE_ID": "Nombre o ID de empleado",
+        "OFFBOARD_EMPLOYEE_ID": "Nombre o ID de empleado",
+        "PERSON_ID": "Nombre o ID de empleado"
       },
       "PLACEHOLDER": {
-        "PERSON_UUID": "Ingresa UUID de persona…",
+        "PERSON_UUID": "Buscar por nombre…",
         "SESSION_ID": "Ingresa ID de sesión…",
-        "EMPLOYEE_ID": "Ingresa ID de empleado…",
-        "OFFBOARD_EMPLOYEE_ID": "Ingresa ID de empleado…",
-        "PERSON_ID": "Ingresa ID de persona…"
+        "EMPLOYEE_ID": "Buscar por nombre o ID de empleado…",
+        "OFFBOARD_EMPLOYEE_ID": "Buscar por nombre o ID de empleado…",
+        "PERSON_ID": "Buscar por nombre o ID de empleado…"
       },
       "ACTION": {
         "OPEN_PAGE": "Abrir página",
@@ -286,9 +286,15 @@
         "IMPORT_DATA": "Importar datos"
       },
       "ERROR": {
-        "REQUIRED_IDENTIFIER": "Ingresa el identificador requerido antes de abrir esta página.",
+        "REQUIRED_IDENTIFIER": "Selecciona una persona de la lista, o ingresa un identificador, antes de abrir esta página.",
         "NAVIGATE": "No se pudo abrir la página de personal seleccionada. Inténtalo de nuevo."
       }
+    },
+    "LOOKUP": {
+      "LABEL": "Persona",
+      "PLACEHOLDER": "Buscar por nombre…",
+      "SEARCHING": "Buscando…",
+      "NO_MATCHES": "No se encontraron personas."
     },
     "WORK_SESSION": {
       "TITLE": "Sesión de trabajo",

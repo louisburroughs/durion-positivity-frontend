@@ -254,18 +254,18 @@
         }
       },
       "FIELD": {
-        "PERSON_UUID": "UUID de la personne",
+        "PERSON_UUID": "Nom",
         "SESSION_ID": "ID de session",
-        "EMPLOYEE_ID": "ID de l’employé",
-        "OFFBOARD_EMPLOYEE_ID": "ID de l’employé",
-        "PERSON_ID": "ID de la personne"
+        "EMPLOYEE_ID": "Nom ou ID de l’employé",
+        "OFFBOARD_EMPLOYEE_ID": "Nom ou ID de l’employé",
+        "PERSON_ID": "Nom ou ID de l’employé"
       },
       "PLACEHOLDER": {
-        "PERSON_UUID": "Saisir l’UUID de la personne…",
+        "PERSON_UUID": "Rechercher par nom…",
         "SESSION_ID": "Saisir l’ID de session…",
-        "EMPLOYEE_ID": "Saisir l’ID de l’employé…",
-        "OFFBOARD_EMPLOYEE_ID": "Saisir l’ID de l’employé…",
-        "PERSON_ID": "Saisir l’ID de la personne…"
+        "EMPLOYEE_ID": "Rechercher par nom ou ID de l’employé…",
+        "OFFBOARD_EMPLOYEE_ID": "Rechercher par nom ou ID de l’employé…",
+        "PERSON_ID": "Rechercher par nom ou ID de l’employé…"
       },
       "ACTION": {
         "OPEN_PAGE": "Ouvrir la page",
@@ -278,9 +278,15 @@
         "IMPORT_DATA": "Importer des donnees"
       },
       "ERROR": {
-        "REQUIRED_IDENTIFIER": "Saisissez l’identifiant requis avant d’ouvrir cette page.",
+        "REQUIRED_IDENTIFIER": "Sélectionnez une personne dans la liste, ou saisissez un identifiant, avant d’ouvrir cette page.",
         "NAVIGATE": "Impossible d’ouvrir la page du personnel sélectionnée. Réessayez."
       }
+    },
+    "LOOKUP": {
+      "LABEL": "Personne",
+      "PLACEHOLDER": "Rechercher par nom…",
+      "SEARCHING": "Recherche…",
+      "NO_MATCHES": "Aucune personne trouvée."
     },
     "WORK_SESSION": {
       "TITLE": "Session de travail",

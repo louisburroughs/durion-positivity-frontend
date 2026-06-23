@@ -65,6 +65,12 @@
 
         @if (isLaunchCard(card)) {
         <div class="people-card__launch">
+          @if (card.personSearch) {
+          <app-person-lookup [type]="card.personSearch" [inputId]="card.field" [testId]="card.field + '-search'"
+            [labelKey]="card.inputLabelKey" [placeholderKey]="card.inputPlaceholderKey"
+            [invalid]="launchError(card.field) !== null" [errorId]="card.field + '-error'"
+            [ngModel]="launchValue(card.field)" (ngModelChange)="updateLaunchValue(card.field, $event)"></app-person-lookup>
+          } @else {
           <label class="people-field__label" [for]="card.field">
             {{ card.inputLabelKey | translate }}
           </label>
@@ -74,6 +80,7 @@
             [attr.aria-describedby]="launchError(card.field) ? card.field + '-error' : null"
             [attr.placeholder]="card.inputPlaceholderKey | translate"
             (input)="updateLaunchValue(card.field, $any($event.target).value)" />
+          }
 
           @if (launchError(card.field)) {
           <p class="people-field__error" [attr.id]="card.field + '-error'" role="alert">
