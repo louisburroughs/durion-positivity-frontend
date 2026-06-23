@@ -156,9 +156,9 @@
     <h2>Audit details</h2>
     <dl>
       <dt>Created</dt>
-      <dd data-testid="audit-created-at">{{ employee()?.statusEffectiveAt || 'Unavailable' }}</dd>
+      <dd data-testid="audit-created-at">{{ (employee()?.createdAt | date: 'medium') || 'Unavailable' }}</dd>
       <dt>Last updated</dt>
-      <dd data-testid="audit-updated-at">Unavailable</dd>
+      <dd data-testid="audit-updated-at">{{ (employee()?.updatedAt | date: 'medium') || 'Unavailable' }}</dd>
     </dl>
   </section>
   }
