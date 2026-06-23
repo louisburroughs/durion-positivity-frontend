@@ -1,0 +1,52 @@
+<div class="wx-typeahead">
+  @if (label) {
+    <label class="wx-typeahead__label" [for]="'wx-ta-input'">{{ label | translate }}</label>
+  }
+
+  <input
+    id="wx-ta-input"
+    class="wx-typeahead__input"
+    type="text"
+    role="combobox"
+    autocomplete="off"
+    spellcheck="false"
+    aria-autocomplete="list"
+    aria-controls="wx-ta-listbox"
+    [attr.aria-expanded]="expanded"
+    [attr.aria-activedescendant]="activeIndex() >= 0 ? 'wx-opt-' + activeIndex() : null"
+    [placeholder]="placeholder | translate"
+    (input)="onInput($any($event.target).value)"
+    (keydown)="onKeydown($event)"
+  />
+
+  <ul id="wx-ta-listbox" class="wx-typeahead__list" role="listbox">
+    @switch (state()) {
+      @case ('loading') {
+        <li class="wx-typeahead__status" role="status">{{ 'WORKEXEC.FINDERS.LOADING' | translate }}</li>
+      }
+      @case ('empty') {
+        <li class="wx-typeahead__status" role="status">{{ 'WORKEXEC.FINDERS.EMPTY' | translate }}</li>
+      }
+      @case ('error') {
+        <li class="wx-typeahead__status wx-typeahead__status--error" role="alert">
+          {{ 'WORKEXEC.FINDERS.ERROR' | translate }}
+        </li>
+      }
+      @case ('loaded') {
+        @for (item of results(); track item.id; let i = $index) {
+          <li
+            [id]="'wx-opt-' + i"
+            class="wx-typeahead__option"
+            [class.wx-typeahead__option--active]="i === activeIndex()"
+            role="option"
+            [attr.aria-selected]="i === activeIndex()"
+            (click)="choose(item)"
+          >
+            <strong class="wx-typeahead__primary">{{ item.primary }}</strong>
+            <span class="wx-typeahead__secondary">{{ item.secondary }}</span>
+          </li>
+        }
+      }
+    }
+  </ul>
+</div>
