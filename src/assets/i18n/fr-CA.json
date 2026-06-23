@@ -3227,10 +3227,11 @@
         "BODY": "L'arborescence des emplacements d'entreposage du site arrivera avec le récit F2."
       },
       "SKU_FILTER": {
-        "LABEL": "SKU",
-        "PLACEHOLDER": "p. ex. SKU-001",
-        "ARIA_LABEL": "Filter by SKU",
-        "CLEAR_ARIA_LABEL": "Clear SKU filter"
+        "LABEL": "Rechercher par nom ou SKU",
+        "PLACEHOLDER": "Rechercher par nom de produit ou SKU…",
+        "ARIA_LABEL": "Filtrer par nom de produit ou SKU",
+        "CLEAR_ARIA_LABEL": "Effacer le filtre de produit",
+        "DROPDOWN_ARIA": "Produits correspondants"
       },
       "SITE_TREE": {
         "BREADCRUMB": {

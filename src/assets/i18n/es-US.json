@@ -3269,10 +3269,11 @@
         "BODY": "El árbol de ubicaciones de almacenamiento del sitio llegará con la historia F2."
       },
       "SKU_FILTER": {
-        "LABEL": "SKU",
-        "PLACEHOLDER": "ej. SKU-001",
-        "ARIA_LABEL": "Filter by SKU",
-        "CLEAR_ARIA_LABEL": "Clear SKU filter"
+        "LABEL": "Buscar por nombre o SKU",
+        "PLACEHOLDER": "Buscar por nombre de producto o SKU…",
+        "ARIA_LABEL": "Filtrar por nombre de producto o SKU",
+        "CLEAR_ARIA_LABEL": "Borrar filtro de producto",
+        "DROPDOWN_ARIA": "Productos coincidentes"
       },
       "SITE_TREE": {
         "BREADCRUMB": {
