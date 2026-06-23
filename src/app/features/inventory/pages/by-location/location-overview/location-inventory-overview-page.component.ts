@@ -12,10 +12,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Subject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject, Subscription, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { LocationAPIService } from '@durion-sdk/location';
 import type { LocationRef } from '@durion-sdk/location';
+import { ProductsAPIService } from '@durion-sdk/catalog';
+import type { ProductSummary } from '@durion-sdk/catalog';
 import { InventoryRollupApiService } from '../../../services/inventory-rollup.service';
 import type {
   LocationInventoryRollupResponse,
@@ -39,6 +41,9 @@ export interface SiteRow {
 export type SortColumn = 'siteName' | 'onHand' | 'allocated' | 'available';
 export type SortDir = 'asc' | 'desc';
 
+/** Max product suggestions shown in the name/SKU typeahead. */
+const MAX_PRODUCT_SUGGESTIONS = 8;
+
 /**
  * Location Inventory Overview page (CAP-218 story F3).
  *
@@ -48,10 +53,10 @@ export type SortDir = 'asc' | 'desc';
  *   renders warning badge — unclamped per spec §2).
  * - Sites table with sortable columns; row click navigates to Screen 2
  *   (/app/inventory/by-location/site/:siteId) with siteName in router state.
- * - Local SKU filter (debounced 300 ms) that re-queries with sku=.
- *   TODO: swap to the shared sku-filter component once F2 merges.  F2 creates
- *   src/app/features/inventory/components/sku-filter/ — using a local input
- *   here avoids merge conflicts with the parallel F2 branch.
+ * - Product filter: a "find by name or SKU" typeahead (debounced 250 ms)
+ *   backed by the catalog product search. Selecting a suggestion resolves to
+ *   its SKU and re-queries the rollup with sku=; clearing the input drops the
+ *   filter and re-queries the full rollup.
  * - Error states per spec §5.
  * - i18n: keys under INVENTORY.BY_LOCATION.*.
  * - State: Angular signals, component-local, OnPush.
@@ -67,6 +72,7 @@ export type SortDir = 'asc' | 'desc';
 export class LocationInventoryOverviewPageComponent implements OnInit {
   private readonly rollupService = inject(InventoryRollupApiService);
   private readonly locationSdk = inject(LocationAPIService);
+  private readonly productsApi = inject(ProductsAPIService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
@@ -117,10 +123,19 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
 
   readonly showRetryBanner = signal(false);
 
-  // ── SKU filter ───────────────────────────────────────────────────────────
+  // ── Product filter (find by name or SKU) ─────────────────────────────────
 
+  /** Resolved SKU passed to the rollup query ('' = no filter). */
   readonly skuInput = signal('');
-  private readonly skuSubject = new Subject<string>();
+  /** Free text shown in the typeahead input (product name, SKU, or "name (sku)"). */
+  readonly productDisplayName = signal('');
+  /** Current async suggestions from the catalog product search. */
+  readonly productSuggestions = signal<ProductSummary[]>([]);
+  /** Whether the suggestions dropdown is open. */
+  readonly showProductSuggestions = signal(false);
+  /** Index of the keyboard-active suggestion (-1 = none). */
+  readonly activeProductIndex = signal(-1);
+  private readonly productSearch$ = new Subject<string>();
   private rollupSub: Subscription | null = null;
 
   // ── Sites table sort ─────────────────────────────────────────────────────
@@ -146,7 +161,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadParentLocations();
-    this.setupSkuDebounce();
+    this.setupProductSearch();
 
     // URL is the single source of truth for the selected location (spec §3,
     // ADR-0037): react to every paramMap emission so browser back/forward
@@ -252,17 +267,108 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
     this.pickerQuery.set(loc.name ?? id);
     this.pickerOpen.set(false);
     this.activeOptionIndex.set(-1);
-    this.skuInput.set('');
+    this.resetProductFilter();
     // Navigation is the single trigger for loading: the paramMap subscription
     // reacts to this URL change and calls loadRollup().
     void this.router.navigate(['/app/inventory/by-location', id]);
   }
 
-  // ── SKU filter ───────────────────────────────────────────────────────────
+  // ── Product filter (find by name or SKU) ─────────────────────────────────
 
-  onSkuInput(value: string): void {
-    this.skuInput.set(value);
-    this.skuSubject.next(value);
+  onProductInput(value: string): void {
+    this.productDisplayName.set(value);
+    this.showProductSuggestions.set(true);
+    this.activeProductIndex.set(-1);
+    // Editing away from a resolved product clears the active filter and
+    // re-queries the full rollup once.
+    const hadSku = this.skuInput() !== '';
+    this.skuInput.set('');
+    this.productSearch$.next(value);
+    if (hadSku && this.selectedLocationId()) {
+      this.loadRollup();
+    }
+  }
+
+  onProductFocus(): void {
+    if (this.productSuggestions().length > 0) {
+      this.showProductSuggestions.set(true);
+    }
+  }
+
+  onProductBlur(): void {
+    // Delay so a mousedown on a suggestion registers before the list closes.
+    setTimeout(() => {
+      this.showProductSuggestions.set(false);
+      this.activeProductIndex.set(-1);
+    }, 150);
+  }
+
+  onProductKeydown(event: KeyboardEvent): void {
+    const options = this.productSuggestions();
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.showProductSuggestions() && options.length > 0) {
+          this.showProductSuggestions.set(true);
+          this.activeProductIndex.set(0);
+          return;
+        }
+        if (options.length === 0) return;
+        this.activeProductIndex.set((this.activeProductIndex() + 1) % options.length);
+        break;
+      case 'ArrowUp': {
+        event.preventDefault();
+        if (options.length === 0) return;
+        const current = this.activeProductIndex();
+        this.activeProductIndex.set(current <= 0 ? options.length - 1 : current - 1);
+        break;
+      }
+      case 'Enter': {
+        const index = this.activeProductIndex();
+        if (this.showProductSuggestions() && index >= 0 && index < options.length) {
+          event.preventDefault();
+          this.selectProduct(options[index]);
+        }
+        break;
+      }
+      case 'Escape':
+        if (this.showProductSuggestions()) {
+          event.preventDefault();
+          this.showProductSuggestions.set(false);
+          this.activeProductIndex.set(-1);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  productOptionId(index: number): string {
+    return `product-filter-option-${index}`;
+  }
+
+  activeProductDescendant(): string | null {
+    const index = this.activeProductIndex();
+    return this.showProductSuggestions() && index >= 0 ? this.productOptionId(index) : null;
+  }
+
+  selectProduct(product: ProductSummary): void {
+    const sku = product.sku ?? '';
+    this.skuInput.set(sku);
+    this.productDisplayName.set(product.name ? `${product.name} (${sku})` : sku);
+    this.showProductSuggestions.set(false);
+    this.activeProductIndex.set(-1);
+    if (this.selectedLocationId()) {
+      this.loadRollup();
+    }
+  }
+
+  private resetProductFilter(): void {
+    this.skuInput.set('');
+    this.productDisplayName.set('');
+    this.productSuggestions.set([]);
+    this.showProductSuggestions.set(false);
+    this.activeProductIndex.set(-1);
   }
 
   // ── Table sort ───────────────────────────────────────────────────────────
@@ -321,7 +427,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
 
     if (locationId !== this.selectedLocationId()) {
       this.selectedLocationId.set(locationId);
-      this.skuInput.set('');
+      this.resetProductFilter();
       const match = this.allParentLocations().find(l => l.id === locationId);
       if (match) {
         this.selectedLocationName.set(match.name ?? locationId);
@@ -363,17 +469,32 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
       });
   }
 
-  private setupSkuDebounce(): void {
-    this.skuSubject
+  private setupProductSearch(): void {
+    this.productSearch$
       .pipe(
-        debounceTime(300),
+        debounceTime(250),
         distinctUntilChanged(),
+        switchMap(q => {
+          if (!q.trim()) return of({ data: [] as ProductSummary[] });
+          return this.productsApi
+            .searchProducts(
+              q,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              String(MAX_PRODUCT_SUGGESTIONS),
+              'body',
+              false,
+              { transferCache: false },
+            )
+            .pipe(catchError(() => of({ data: [] as ProductSummary[] })));
+        }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(() => {
-        if (this.selectedLocationId()) {
-          this.loadRollup();
-        }
+      .subscribe(result => {
+        this.productSuggestions.set((result as { data?: ProductSummary[] }).data ?? []);
+        this.activeProductIndex.set(-1);
       });
   }
 

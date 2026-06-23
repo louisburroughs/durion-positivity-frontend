@@ -4,6 +4,8 @@ import { of, throwError, Subject, NEVER } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { LocationAPIService } from '@durion-sdk/location';
 import type { LocationResponseDTO } from '@durion-sdk/location';
+import { ProductsAPIService } from '@durion-sdk/catalog';
+import type { ProductSummary } from '@durion-sdk/catalog';
 import { InventoryRollupApiService } from '../../../services/inventory-rollup.service';
 import type {
   LocationInventoryRollupResponse,
@@ -69,6 +71,7 @@ function createComponent(
     providers: [
       { provide: InventoryRollupApiService, useValue: { ...rollupServiceStub, ...rollupStub } },
       { provide: LocationAPIService, useValue: { ...locationServiceStub, ...locationStub } },
+      { provide: ProductsAPIService, useValue: productsServiceStub },
       {
         provide: ActivatedRoute,
         useValue: {
@@ -99,6 +102,7 @@ function createComponentWithParamSubject(
     providers: [
       { provide: InventoryRollupApiService, useValue: { ...rollupServiceStub, ...rollupStub } },
       { provide: LocationAPIService, useValue: { ...locationServiceStub, ...locationStub } },
+      { provide: ProductsAPIService, useValue: productsServiceStub },
       {
         provide: ActivatedRoute,
         useValue: {
@@ -120,6 +124,10 @@ const locationServiceStub = {
   getRoster: vi.fn(),
 };
 
+const productsServiceStub = {
+  searchProducts: vi.fn().mockReturnValue(of({ data: [] as ProductSummary[] })),
+};
+
 const routerStub = {
   navigate: vi.fn().mockResolvedValue(true),
 };
@@ -127,6 +135,7 @@ const routerStub = {
 beforeEach(() => {
   vi.clearAllMocks();
   routerStub.navigate.mockResolvedValue(true);
+  productsServiceStub.searchProducts.mockReturnValue(of({ data: [] as ProductSummary[] }));
 });
 
 // ── Tests: grand total rendering ──────────────────────────────────────────
@@ -354,10 +363,41 @@ describe('empty state', () => {
   }));
 });
 
-// ── Tests: SKU filter debounce and re-query ───────────────────────────────
+// ── Tests: product filter (find by name or SKU) ───────────────────────────
 
-describe('SKU filter', () => {
-  it('debounces 300 ms and re-queries rollup with sku', fakeAsync(() => {
+describe('product filter', () => {
+  const productSummary = (sku: string, name: string): ProductSummary => ({
+    productId: `prod-${sku}`,
+    sku,
+    name,
+  });
+
+  it('searches the catalog (name or SKU) on typeahead input, debounced', fakeAsync(() => {
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
+    rollupServiceStub.getLocationRollup.mockReturnValue(
+      of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
+    );
+    productsServiceStub.searchProducts.mockReturnValue(
+      of({ data: [productSummary('SKU-7', 'Widget')] }),
+    );
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.onProductInput('wid');
+    tick(100);
+    // Debounce (250 ms) has not fired yet
+    expect(productsServiceStub.searchProducts).not.toHaveBeenCalled();
+
+    tick(200);
+    expect(productsServiceStub.searchProducts).toHaveBeenCalledTimes(1);
+    expect(productsServiceStub.searchProducts.mock.calls[0][0]).toBe('wid');
+    expect(comp.productSuggestions().length).toBe(1);
+  }));
+
+  it('re-queries rollup with the selected product SKU', fakeAsync(() => {
     locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
@@ -370,16 +410,39 @@ describe('SKU filter', () => {
     const initialCallCount = rollupServiceStub.getLocationRollup.mock.calls.length;
 
     const comp = fixture.componentInstance;
-    comp.onSkuInput('SKU-7');
-    tick(100);
-    // Not called yet — debounce hasn't fired
-    expect(rollupServiceStub.getLocationRollup.mock.calls.length).toBe(initialCallCount);
+    comp.selectProduct(productSummary('SKU-7', 'Widget'));
+    tick();
 
-    tick(300);
-    // Now it should have re-queried
     expect(rollupServiceStub.getLocationRollup.mock.calls.length).toBe(initialCallCount + 1);
     const lastCall = rollupServiceStub.getLocationRollup.mock.calls.at(-1) as unknown[];
     expect(lastCall[1]).toMatchObject({ sku: 'SKU-7' });
+    expect(comp.skuInput()).toBe('SKU-7');
+    expect(comp.productDisplayName()).toBe('Widget (SKU-7)');
+  }));
+
+  it('clears the filter and re-queries the full rollup when the input is edited', fakeAsync(() => {
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
+    rollupServiceStub.getLocationRollup.mockReturnValue(
+      of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
+    );
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.selectProduct(productSummary('SKU-7', 'Widget'));
+    tick();
+    const afterSelectCount = rollupServiceStub.getLocationRollup.mock.calls.length;
+
+    // Editing away from the resolved product drops the filter and reloads.
+    comp.onProductInput('w');
+    tick();
+
+    expect(rollupServiceStub.getLocationRollup.mock.calls.length).toBe(afterSelectCount + 1);
+    const lastCall = rollupServiceStub.getLocationRollup.mock.calls.at(-1) as unknown[];
+    expect((lastCall[1] as { sku?: string }).sku).toBeUndefined();
+    expect(comp.skuInput()).toBe('');
   }));
 
   it('does not re-query when no location is selected', fakeAsync(() => {
@@ -390,10 +453,40 @@ describe('SKU filter', () => {
     tick();
 
     const comp = fixture.componentInstance;
-    comp.onSkuInput('SKU-9');
+    comp.selectProduct(productSummary('SKU-9', 'Gadget'));
     tick(400);
 
     expect(rollupServiceStub.getLocationRollup).not.toHaveBeenCalled();
+  }));
+
+  it('navigates suggestions and selects with the keyboard', fakeAsync(() => {
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
+    rollupServiceStub.getLocationRollup.mockReturnValue(
+      of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
+    );
+    productsServiceStub.searchProducts.mockReturnValue(
+      of({ data: [productSummary('SKU-7', 'Widget'), productSummary('SKU-8', 'Gizmo')] }),
+    );
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.onProductInput('wi');
+    tick(300);
+    expect(comp.productSuggestions().length).toBe(2);
+
+    const preventDefault = vi.fn();
+    comp.onProductKeydown({ key: 'ArrowDown', preventDefault } as unknown as KeyboardEvent);
+    comp.onProductKeydown({ key: 'ArrowDown', preventDefault } as unknown as KeyboardEvent);
+    expect(comp.activeProductIndex()).toBe(1);
+
+    comp.onProductKeydown({ key: 'Enter', preventDefault } as unknown as KeyboardEvent);
+    tick();
+
+    expect(comp.skuInput()).toBe('SKU-8');
+    expect(comp.showProductSuggestions()).toBe(false);
   }));
 });
 
@@ -1197,7 +1290,7 @@ describe('in-flight request cancellation (Finding 6)', () => {
     expect(fixture.componentInstance.siteRows()[0].siteName).toBe('Beta');
   }));
 
-  it('SKU change cancels previous in-flight request', fakeAsync(() => {
+  it('product selection cancels previous in-flight request', fakeAsync(() => {
     locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
 
     // First request (initial load for loc-1) resolves normally
@@ -1209,23 +1302,23 @@ describe('in-flight request cancellation (Finding 6)', () => {
     tick(500);
     fixture.detectChanges();
 
-    // SKU change triggers debounced re-query; use a never-subject for the new request
+    // Selecting a product re-queries; use a never-subject for the new request
     const neverSubject$ = new Subject<LocationInventoryRollupResponse>();
     rollupServiceStub.getLocationRollup.mockReturnValueOnce(neverSubject$.asObservable());
 
-    fixture.componentInstance.onSkuInput('WIDGET-A');
-    tick(300); // debounce fires
+    fixture.componentInstance.selectProduct({ productId: 'p-a', sku: 'WIDGET-A', name: 'A' });
+    tick();
     fixture.detectChanges();
 
     expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(2);
     expect(fixture.componentInstance.state()).toBe('loading');
 
-    // Second SKU change cancels the in-flight SKU request
+    // Second product selection cancels the in-flight request
     const secondResponse = locationResponse([site('s2', 'Beta', 5, 0, 5)]);
     rollupServiceStub.getLocationRollup.mockReturnValueOnce(of(secondResponse));
 
-    fixture.componentInstance.onSkuInput('WIDGET-B');
-    tick(300);
+    fixture.componentInstance.selectProduct({ productId: 'p-b', sku: 'WIDGET-B', name: 'B' });
+    tick();
     fixture.detectChanges();
 
     expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(3);

@@ -3232,6 +3232,11 @@
         "ARIA_LABEL": "Filter by SKU",
         "CLEAR_ARIA_LABEL": "Clear SKU filter"
       },
+      "PRODUCT_FILTER": {
+        "LABEL": "Rechercher par nom ou SKU",
+        "PLACEHOLDER": "Rechercher par nom de produit ou SKU…",
+        "DROPDOWN_ARIA": "Produits correspondants"
+      },
       "SITE_TREE": {
         "BREADCRUMB": {
           "ARIA": "Page breadcrumb",

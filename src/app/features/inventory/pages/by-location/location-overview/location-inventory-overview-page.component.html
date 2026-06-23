@@ -79,22 +79,54 @@
       </div>
     </div>
 
-    <!-- SKU filter -->
-    <!-- TODO: swap to shared sku-filter component once F2 merges and creates
-         src/app/features/inventory/components/sku-filter/ -->
+    <!-- Product filter: find by name or SKU (typeahead) -->
     <div class="field-group sku-field">
-      <label class="field-label" for="sku-filter-input">
-        {{ 'INVENTORY.BY_LOCATION.SKU_FILTER.LABEL' | translate }}
+      <label class="field-label" for="product-filter-input">
+        {{ 'INVENTORY.BY_LOCATION.PRODUCT_FILTER.LABEL' | translate }}
       </label>
-      <input
-        id="sku-filter-input"
-        type="search"
-        class="input-underline"
-        [value]="skuInput()"
-        [disabled]="!selectedLocationId()"
-        [attr.placeholder]="'INVENTORY.BY_LOCATION.SKU_FILTER.PLACEHOLDER' | translate"
-        (input)="onSkuInput($any($event.target).value)"
-      />
+      <div class="typeahead-wrap">
+        <input
+          id="product-filter-input"
+          type="search"
+          class="input-underline"
+          autocomplete="off"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
+          aria-controls="product-filter-listbox"
+          [attr.aria-expanded]="showProductSuggestions() && productSuggestions().length > 0"
+          [attr.aria-activedescendant]="activeProductDescendant()"
+          [value]="productDisplayName()"
+          [disabled]="!selectedLocationId()"
+          [attr.placeholder]="'INVENTORY.BY_LOCATION.PRODUCT_FILTER.PLACEHOLDER' | translate"
+          (input)="onProductInput($any($event.target).value)"
+          (keydown)="onProductKeydown($event)"
+          (focus)="onProductFocus()"
+          (blur)="onProductBlur()"
+        />
+        @if (showProductSuggestions() && productSuggestions().length > 0) {
+        <ul
+          id="product-filter-listbox"
+          class="typeahead-suggestions"
+          role="listbox"
+          [attr.aria-label]="'INVENTORY.BY_LOCATION.PRODUCT_FILTER.DROPDOWN_ARIA' | translate"
+        >
+          @for (p of productSuggestions(); track p.productId; let i = $index) {
+          <li
+            class="typeahead-item"
+            role="option"
+            [id]="productOptionId(i)"
+            [class.typeahead-item-active]="i === activeProductIndex()"
+            [attr.aria-selected]="skuInput() === p.sku"
+            (mousedown)="selectProduct(p)"
+          >
+            <span class="suggestion-primary">{{ p.name }}</span>
+            <span class="suggestion-secondary">{{ p.sku }}</span>
+          </li>
+          }
+        </ul>
+        }
+      </div>
     </div>
   </section>
 
