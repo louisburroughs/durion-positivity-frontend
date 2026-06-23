@@ -397,7 +397,7 @@ describe('product filter', () => {
     expect(comp.productSuggestions().length).toBe(1);
   }));
 
-  it('re-queries rollup with the selected product SKU', fakeAsync(() => {
+  it('adds a chip and queries the selected SKU', fakeAsync(() => {
     locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
@@ -413,14 +413,58 @@ describe('product filter', () => {
     comp.selectProduct(productSummary('SKU-7', 'Widget'));
     tick();
 
+    expect(comp.selectedProducts()).toEqual([{ sku: 'SKU-7', name: 'Widget' }]);
     expect(rollupServiceStub.getLocationRollup.mock.calls.length).toBe(initialCallCount + 1);
     const lastCall = rollupServiceStub.getLocationRollup.mock.calls.at(-1) as unknown[];
     expect(lastCall[1]).toMatchObject({ sku: 'SKU-7' });
-    expect(comp.skuInput()).toBe('SKU-7');
-    expect(comp.productDisplayName()).toBe('Widget (SKU-7)');
+    // Search box resets so the next product can be added.
+    expect(comp.productDisplayName()).toBe('');
   }));
 
-  it('clears the filter and re-queries the full rollup when the input is edited', fakeAsync(() => {
+  it('fans out one query per selected SKU and tallies the responses', fakeAsync(() => {
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
+    rollupServiceStub.getLocationRollup.mockReturnValue(
+      of(locationResponse([site('s1', 'Alpha', 10, 0, 10)], qty(10, 0, 10))),
+    );
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+
+    // Per-SKU responses: SKU-7 only at s1; SKU-8 at s1 and s2.
+    rollupServiceStub.getLocationRollup.mockImplementation((_loc: string, opts: { sku?: string }) => {
+      if (opts.sku === 'SKU-7') {
+        return of(locationResponse([site('s1', 'Alpha', 5, 1, 4)], qty(5, 1, 4)));
+      }
+      if (opts.sku === 'SKU-8') {
+        return of(
+          locationResponse(
+            [site('s1', 'Alpha', 3, 0, 3), site('s2', 'Beta', 2, 0, 2)],
+            qty(5, 0, 5),
+          ),
+        );
+      }
+      return of(locationResponse([]));
+    });
+
+    comp.selectProduct(productSummary('SKU-7', 'Widget'));
+    tick();
+    comp.selectProduct(productSummary('SKU-8', 'Gizmo'));
+    tick();
+
+    expect(comp.selectedProducts().map(p => p.sku)).toEqual(['SKU-7', 'SKU-8']);
+    // Grand totals summed across both SKUs.
+    expect(comp.totals()).toMatchObject({ onHand: 10, allocated: 1, available: 9 });
+    // Site rows merged by siteId: s1 = 5+3 on hand, s2 = 2.
+    const rows = comp.siteRows();
+    expect(rows.find(r => r.siteId === 's1')!.onHand).toBe(8);
+    expect(rows.find(r => r.siteId === 's2')!.onHand).toBe(2);
+    expect(comp.state()).toBe('ready');
+  }));
+
+  it('re-queries when a product is removed and shows full rollup when none remain', fakeAsync(() => {
     locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
     rollupServiceStub.getLocationRollup.mockReturnValue(
       of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
@@ -433,16 +477,71 @@ describe('product filter', () => {
     const comp = fixture.componentInstance;
     comp.selectProduct(productSummary('SKU-7', 'Widget'));
     tick();
-    const afterSelectCount = rollupServiceStub.getLocationRollup.mock.calls.length;
+    comp.selectProduct(productSummary('SKU-8', 'Gizmo'));
+    tick();
+    expect(comp.selectedProducts().length).toBe(2);
 
-    // Editing away from the resolved product drops the filter and reloads.
-    comp.onProductInput('w');
+    rollupServiceStub.getLocationRollup.mockClear();
+    comp.removeProduct('SKU-7');
+    tick();
+    // One SKU remains → one fan-out call for SKU-8.
+    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(1);
+    expect((rollupServiceStub.getLocationRollup.mock.calls[0][1] as { sku?: string }).sku).toBe('SKU-8');
+
+    rollupServiceStub.getLocationRollup.mockClear();
+    comp.removeProduct('SKU-8');
+    tick();
+    // No products → single full-location rollup (no sku).
+    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(1);
+    expect((rollupServiceStub.getLocationRollup.mock.calls[0][1] as { sku?: string }).sku).toBeUndefined();
+    expect(comp.selectedProducts().length).toBe(0);
+  }));
+
+  it('clear all removes every chip and reloads the full rollup', fakeAsync(() => {
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
+    rollupServiceStub.getLocationRollup.mockReturnValue(
+      of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
+    );
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.selectProduct(productSummary('SKU-7', 'Widget'));
+    tick();
+    comp.selectProduct(productSummary('SKU-8', 'Gizmo'));
     tick();
 
-    expect(rollupServiceStub.getLocationRollup.mock.calls.length).toBe(afterSelectCount + 1);
-    const lastCall = rollupServiceStub.getLocationRollup.mock.calls.at(-1) as unknown[];
-    expect((lastCall[1] as { sku?: string }).sku).toBeUndefined();
-    expect(comp.skuInput()).toBe('');
+    rollupServiceStub.getLocationRollup.mockClear();
+    comp.clearSelectedProducts();
+    tick();
+
+    expect(comp.selectedProducts().length).toBe(0);
+    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(1);
+    expect((rollupServiceStub.getLocationRollup.mock.calls[0][1] as { sku?: string }).sku).toBeUndefined();
+  }));
+
+  it('ignores a duplicate product selection', fakeAsync(() => {
+    locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
+    rollupServiceStub.getLocationRollup.mockReturnValue(
+      of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
+    );
+    const fixture = createComponent({}, {}, { locationId: 'loc-1' });
+    fixture.detectChanges();
+    tick(500);
+    fixture.detectChanges();
+
+    const comp = fixture.componentInstance;
+    comp.selectProduct(productSummary('SKU-7', 'Widget'));
+    tick();
+
+    rollupServiceStub.getLocationRollup.mockClear();
+    comp.selectProduct(productSummary('SKU-7', 'Widget'));
+    tick();
+
+    expect(comp.selectedProducts().length).toBe(1);
+    expect(rollupServiceStub.getLocationRollup).not.toHaveBeenCalled();
   }));
 
   it('does not re-query when no location is selected', fakeAsync(() => {
@@ -485,7 +584,7 @@ describe('product filter', () => {
     comp.onProductKeydown({ key: 'Enter', preventDefault } as unknown as KeyboardEvent);
     tick();
 
-    expect(comp.skuInput()).toBe('SKU-8');
+    expect(comp.selectedProducts().map(p => p.sku)).toEqual(['SKU-8']);
     expect(comp.showProductSuggestions()).toBe(false);
   }));
 });
@@ -1290,42 +1389,42 @@ describe('in-flight request cancellation (Finding 6)', () => {
     expect(fixture.componentInstance.siteRows()[0].siteName).toBe('Beta');
   }));
 
-  it('product selection cancels previous in-flight request', fakeAsync(() => {
+  it('a newer load cancels the previous in-flight tally', fakeAsync(() => {
     locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
 
-    // First request (initial load for loc-1) resolves normally
-    const firstResponse = locationResponse([site('s1', 'Alpha', 10, 0, 10)]);
-    rollupServiceStub.getLocationRollup.mockReturnValueOnce(of(firstResponse));
+    // First request (initial full load for loc-1) resolves normally
+    rollupServiceStub.getLocationRollup.mockReturnValueOnce(
+      of(locationResponse([site('s1', 'Alpha', 10, 0, 10)])),
+    );
 
     const fixture = createComponent({}, {}, { locationId: 'loc-1' });
     fixture.detectChanges();
     tick(500);
     fixture.detectChanges();
 
-    // Selecting a product re-queries; use a never-subject for the new request
+    // Selecting a product fans out a tally whose only request never completes.
     const neverSubject$ = new Subject<LocationInventoryRollupResponse>();
     rollupServiceStub.getLocationRollup.mockReturnValueOnce(neverSubject$.asObservable());
 
     fixture.componentInstance.selectProduct({ productId: 'p-a', sku: 'WIDGET-A', name: 'A' });
     tick();
     fixture.detectChanges();
-
-    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(2);
     expect(fixture.componentInstance.state()).toBe('loading');
 
-    // Second product selection cancels the in-flight request
-    const secondResponse = locationResponse([site('s2', 'Beta', 5, 0, 5)]);
-    rollupServiceStub.getLocationRollup.mockReturnValueOnce(of(secondResponse));
+    // Removing it issues a newer full-rollup load that resolves; the in-flight
+    // tally subscription is cancelled.
+    rollupServiceStub.getLocationRollup.mockReturnValueOnce(
+      of(locationResponse([site('s2', 'Beta', 5, 0, 5)])),
+    );
 
-    fixture.componentInstance.selectProduct({ productId: 'p-b', sku: 'WIDGET-B', name: 'B' });
+    fixture.componentInstance.removeProduct('WIDGET-A');
     tick();
     fixture.detectChanges();
 
-    expect(rollupServiceStub.getLocationRollup).toHaveBeenCalledTimes(3);
     expect(fixture.componentInstance.state()).toBe('ready');
     expect(fixture.componentInstance.siteRows()[0].siteName).toBe('Beta');
 
-    // Emit from the cancelled WIDGET-A request — must not land
+    // Late emit from the cancelled WIDGET-A tally must not land.
     neverSubject$.next(locationResponse([site('s1', 'Alpha', 100, 0, 100)]));
     tick();
     fixture.detectChanges();

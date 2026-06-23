@@ -3234,8 +3234,11 @@
       },
       "PRODUCT_FILTER": {
         "LABEL": "Rechercher par nom ou SKU",
-        "PLACEHOLDER": "Rechercher par nom de produit ou SKU…",
-        "DROPDOWN_ARIA": "Produits correspondants"
+        "PLACEHOLDER": "Ajouter des produits par nom ou SKU…",
+        "DROPDOWN_ARIA": "Produits correspondants",
+        "SELECTED_ARIA": "Produits sélectionnés",
+        "CHIP_REMOVE_ARIA": "Retirer",
+        "CLEAR_ALL": "Tout effacer"
       },
       "SITE_TREE": {
         "BREADCRUMB": {

@@ -117,7 +117,7 @@
             role="option"
             [id]="productOptionId(i)"
             [class.typeahead-item-active]="i === activeProductIndex()"
-            [attr.aria-selected]="skuInput() === p.sku"
+            [attr.aria-selected]="isProductSelected(p.sku)"
             (mousedown)="selectProduct(p)"
           >
             <span class="suggestion-primary">{{ p.name }}</span>
@@ -127,6 +127,35 @@
         </ul>
         }
       </div>
+
+      <!-- Selected products (multi-select tally) -->
+      @if (selectedProducts().length > 0) {
+      <ul
+        class="selected-chips"
+        [attr.aria-label]="'INVENTORY.BY_LOCATION.PRODUCT_FILTER.SELECTED_ARIA' | translate"
+      >
+        @for (p of selectedProducts(); track p.sku) {
+        <li class="chip">
+          <span class="chip-label">{{ p.name }} ({{ p.sku }})</span>
+          <button
+            type="button"
+            class="chip-remove"
+            (click)="removeProduct(p.sku)"
+            [attr.aria-label]="
+              ('INVENTORY.BY_LOCATION.PRODUCT_FILTER.CHIP_REMOVE_ARIA' | translate) + ' ' + p.name
+            "
+          >×</button>
+        </li>
+        }
+      </ul>
+      <button
+        type="button"
+        class="link-button clear-all-btn"
+        (click)="clearSelectedProducts()"
+      >
+        {{ 'INVENTORY.BY_LOCATION.PRODUCT_FILTER.CLEAR_ALL' | translate }}
+      </button>
+      }
     </div>
   </section>
 

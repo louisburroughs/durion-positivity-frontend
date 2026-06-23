@@ -12,8 +12,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Subject, Subscription, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
+import { Subject, Subscription, of, forkJoin } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
 import { LocationAPIService } from '@durion-sdk/location';
 import type { LocationRef } from '@durion-sdk/location';
 import { ProductsAPIService } from '@durion-sdk/catalog';
@@ -23,6 +23,7 @@ import type {
   LocationInventoryRollupResponse,
   RollupError,
   RollupQuantities,
+  SiteRollupSummary,
 } from '../../../models/inventory-rollup.models';
 
 
@@ -41,6 +42,12 @@ export interface SiteRow {
 export type SortColumn = 'siteName' | 'onHand' | 'allocated' | 'available';
 export type SortDir = 'asc' | 'desc';
 
+/** A product chosen for the multi-select tally. */
+export interface SelectedProduct {
+  sku: string;
+  name: string;
+}
+
 /** Max product suggestions shown in the name/SKU typeahead. */
 const MAX_PRODUCT_SUGGESTIONS = 8;
 
@@ -54,9 +61,11 @@ const MAX_PRODUCT_SUGGESTIONS = 8;
  * - Sites table with sortable columns; row click navigates to Screen 2
  *   (/app/inventory/by-location/site/:siteId) with siteName in router state.
  * - Product filter: a "find by name or SKU" typeahead (debounced 250 ms)
- *   backed by the catalog product search. Selecting a suggestion resolves to
- *   its SKU and re-queries the rollup with sku=; clearing the input drops the
- *   filter and re-queries the full rollup.
+ *   backed by the catalog product search. Multi-select — each chosen product
+ *   becomes a removable chip. With no chips the full-location rollup is shown;
+ *   with one or more, the rollup endpoint (single-SKU only) is fanned out one
+ *   query per SKU and the responses are tallied client-side (grand totals and
+ *   per-site quantities summed across the selected products).
  * - Error states per spec §5.
  * - i18n: keys under INVENTORY.BY_LOCATION.*.
  * - State: Angular signals, component-local, OnPush.
@@ -125,9 +134,9 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
 
   // ── Product filter (find by name or SKU) ─────────────────────────────────
 
-  /** Resolved SKU passed to the rollup query ('' = no filter). */
-  readonly skuInput = signal('');
-  /** Free text shown in the typeahead input (product name, SKU, or "name (sku)"). */
+  /** Products chosen for the tally (deduped by SKU); empty = full rollup. */
+  readonly selectedProducts = signal<SelectedProduct[]>([]);
+  /** Free text in the typeahead search box. */
   readonly productDisplayName = signal('');
   /** Current async suggestions from the catalog product search. */
   readonly productSuggestions = signal<ProductSummary[]>([]);
@@ -279,14 +288,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
     this.productDisplayName.set(value);
     this.showProductSuggestions.set(true);
     this.activeProductIndex.set(-1);
-    // Editing away from a resolved product clears the active filter and
-    // re-queries the full rollup once.
-    const hadSku = this.skuInput() !== '';
-    this.skuInput.set('');
     this.productSearch$.next(value);
-    if (hadSku && this.selectedLocationId()) {
-      this.loadRollup();
-    }
   }
 
   onProductFocus(): void {
@@ -347,6 +349,10 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
     return `product-filter-option-${index}`;
   }
 
+  isProductSelected(sku: string | undefined): boolean {
+    return !!sku && this.selectedProducts().some(p => p.sku === sku);
+  }
+
   activeProductDescendant(): string | null {
     const index = this.activeProductIndex();
     return this.showProductSuggestions() && index >= 0 ? this.productOptionId(index) : null;
@@ -354,17 +360,38 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
 
   selectProduct(product: ProductSummary): void {
     const sku = product.sku ?? '';
-    this.skuInput.set(sku);
-    this.productDisplayName.set(product.name ? `${product.name} (${sku})` : sku);
+    const alreadySelected = this.selectedProducts().some(p => p.sku === sku);
+    if (sku && !alreadySelected) {
+      this.selectedProducts.update(list => [...list, { sku, name: product.name ?? sku }]);
+      if (this.selectedLocationId()) {
+        this.loadRollup();
+      }
+    }
+    // Reset the search box so the next product can be added.
+    this.productDisplayName.set('');
+    this.productSuggestions.set([]);
     this.showProductSuggestions.set(false);
     this.activeProductIndex.set(-1);
+  }
+
+  removeProduct(sku: string): void {
+    const before = this.selectedProducts().length;
+    this.selectedProducts.update(list => list.filter(p => p.sku !== sku));
+    if (this.selectedProducts().length !== before && this.selectedLocationId()) {
+      this.loadRollup();
+    }
+  }
+
+  clearSelectedProducts(): void {
+    if (this.selectedProducts().length === 0) return;
+    this.selectedProducts.set([]);
     if (this.selectedLocationId()) {
       this.loadRollup();
     }
   }
 
   private resetProductFilter(): void {
-    this.skuInput.set('');
+    this.selectedProducts.set([]);
     this.productDisplayName.set('');
     this.productSuggestions.set([]);
     this.showProductSuggestions.set(false);
@@ -510,10 +537,17 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
     this.errorKind.set(null);
     this.showRetryBanner.set(false);
 
-    const sku = this.skuInput().trim() || undefined;
+    const skus = this.selectedProducts().map(p => p.sku);
 
-    this.rollupSub = this.rollupService
-      .getLocationRollup(locationId, { sku })
+    // No products selected → one full-location rollup. One or more selected →
+    // fan out a query per SKU (the endpoint filters by a single SKU only) and
+    // tally the responses client-side.
+    const request$ = skus.length === 0
+      ? this.rollupService.getLocationRollup(locationId, {})
+      : forkJoin(skus.map(sku => this.rollupService.getLocationRollup(locationId, { sku })))
+          .pipe(map(responses => this.mergeRollups(locationId, responses)));
+
+    this.rollupSub = request$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response: LocationInventoryRollupResponse) => {
@@ -524,6 +558,46 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
           this.handleRollupError(err);
         },
       });
+  }
+
+  /**
+   * Tally per-SKU rollup responses into one: grand totals add up and site rows
+   * merge by siteId (quantities summed across the selected products).
+   */
+  private mergeRollups(
+    locationId: string,
+    responses: LocationInventoryRollupResponse[],
+  ): LocationInventoryRollupResponse {
+    const totals: RollupQuantities = { onHand: 0, allocated: 0, available: 0 };
+    const siteMap = new Map<string, SiteRollupSummary>();
+
+    for (const response of responses) {
+      totals.onHand += response.totals?.onHand ?? 0;
+      totals.allocated += response.totals?.allocated ?? 0;
+      totals.available += response.totals?.available ?? 0;
+
+      for (const site of response.sites ?? []) {
+        const existing = siteMap.get(site.siteId);
+        if (existing) {
+          existing.totals.onHand += site.totals.onHand;
+          existing.totals.allocated += site.totals.allocated;
+          existing.totals.available += site.totals.available;
+        } else {
+          siteMap.set(site.siteId, {
+            siteId: site.siteId,
+            siteName: site.siteName,
+            totals: { ...site.totals },
+          });
+        }
+      }
+    }
+
+    return {
+      locationId,
+      parentType: responses[0]?.parentType ?? 'PHYSICAL',
+      totals,
+      sites: Array.from(siteMap.values()),
+    };
   }
 
   private handleRollupError(err: RollupError): void {
