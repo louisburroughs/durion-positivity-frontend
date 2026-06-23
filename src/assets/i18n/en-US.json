@@ -3269,10 +3269,14 @@
         "BODY": "Site storage-location tree arrives with story F2."
       },
       "SKU_FILTER": {
+        "LABEL": "SKU",
+        "PLACEHOLDER": "e.g. SKU-001",
+        "ARIA_LABEL": "Filter by SKU",
+        "CLEAR_ARIA_LABEL": "Clear SKU filter"
+      },
+      "PRODUCT_FILTER": {
         "LABEL": "Find by name or SKU",
         "PLACEHOLDER": "Search by product name or SKU…",
-        "ARIA_LABEL": "Filter by product name or SKU",
-        "CLEAR_ARIA_LABEL": "Clear product filter",
         "DROPDOWN_ARIA": "Matching products"
       },
       "SITE_TREE": {

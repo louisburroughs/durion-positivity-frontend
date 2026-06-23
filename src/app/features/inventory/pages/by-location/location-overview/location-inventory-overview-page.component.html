@@ -82,7 +82,7 @@
     <!-- Product filter: find by name or SKU (typeahead) -->
     <div class="field-group sku-field">
       <label class="field-label" for="product-filter-input">
-        {{ 'INVENTORY.BY_LOCATION.SKU_FILTER.LABEL' | translate }}
+        {{ 'INVENTORY.BY_LOCATION.PRODUCT_FILTER.LABEL' | translate }}
       </label>
       <div class="typeahead-wrap">
         <input
@@ -98,7 +98,7 @@
           [attr.aria-activedescendant]="activeProductDescendant()"
           [value]="productDisplayName()"
           [disabled]="!selectedLocationId()"
-          [attr.placeholder]="'INVENTORY.BY_LOCATION.SKU_FILTER.PLACEHOLDER' | translate"
+          [attr.placeholder]="'INVENTORY.BY_LOCATION.PRODUCT_FILTER.PLACEHOLDER' | translate"
           (input)="onProductInput($any($event.target).value)"
           (keydown)="onProductKeydown($event)"
           (focus)="onProductFocus()"
@@ -109,7 +109,7 @@
           id="product-filter-listbox"
           class="typeahead-suggestions"
           role="listbox"
-          [attr.aria-label]="'INVENTORY.BY_LOCATION.SKU_FILTER.DROPDOWN_ARIA' | translate"
+          [attr.aria-label]="'INVENTORY.BY_LOCATION.PRODUCT_FILTER.DROPDOWN_ARIA' | translate"
         >
           @for (p of productSuggestions(); track p.productId; let i = $index) {
           <li
