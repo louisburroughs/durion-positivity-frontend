@@ -8,6 +8,7 @@ import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
 import { PartyDetail } from '../../models/crm.models';
+import { partyLabel } from '../../util/crm-labels';
 
 const MAX_SUGGESTIONS = 12;
 
@@ -83,7 +84,7 @@ export class CustomerLookupComponent implements ControlValueAccessor {
     // Resolve a readable label for a pre-populated id.
     this.crm.getParty(next)
       .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
-      .subscribe(party => { if (party) this.query.set(this.labelFor(party)); });
+      .subscribe(party => { if (party) this.query.set(partyLabel(party)); });
   }
 
   registerOnChange(fn: (value: string) => void): void { this.onChange = fn; }
@@ -136,14 +137,9 @@ export class CustomerLookupComponent implements ControlValueAccessor {
   select(party: PartyDetail): void {
     const id = party.partyId ?? '';
     this.value.set(id);
-    this.query.set(this.labelFor(party));
+    this.query.set(partyLabel(party));
     this.onChange(id);
     this.showList.set(false);
     this.activeIndex.set(-1);
-  }
-
-  labelFor(party: PartyDetail): string {
-    const num = party.customerNumber ? ` · ${party.customerNumber}` : '';
-    return party.dba ? `${party.legalName} (${party.dba})${num}` : `${party.legalName}${num}`;
   }
 }

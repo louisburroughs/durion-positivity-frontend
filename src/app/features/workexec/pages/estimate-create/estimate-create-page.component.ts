@@ -13,6 +13,7 @@ import {
 } from '@durion-sdk/customer';
 import { CrmService } from '../../../crm/services/crm.service';
 import { PartyDetail } from '../../../crm/models/crm.models';
+import { partyLabel as crmPartyLabel, vehicleLabel as crmVehicleLabel } from '../../../crm/util/crm-labels';
 import { WorkexecService } from '../../services/workexec.service';
 import { PageState } from '../../models/workexec.models';
 
@@ -123,16 +124,14 @@ export class EstimateCreatePageComponent implements OnInit {
       .subscribe(vehicles => this.customerVehicles.set(vehicles ?? []));
   }
 
-  /** Display label for a party row: legal name plus DBA / customer number when present. */
+  /** Display label for a party row (shared CRM label: name + DBA + customer number). */
   customerLabel(party: PartyDetail): string {
-    return party.dba ? `${party.legalName} (${party.dba})` : party.legalName;
+    return crmPartyLabel(party);
   }
 
   /** Human-readable label for a vehicle dropdown option. */
   vehicleLabel(v: VehicleSummary): string {
-    const desc = `${v.year ?? ''} ${v.make ?? ''} ${v.model ?? ''}`.trim();
-    if (v.vin && desc) return `${v.vin} — ${desc}`;
-    return v.vin ?? v.vehicleId ?? 'Vehicle';
+    return crmVehicleLabel(v) || v.vehicleId || 'Vehicle';
   }
 
   onVehicleSelect(value: string): void {

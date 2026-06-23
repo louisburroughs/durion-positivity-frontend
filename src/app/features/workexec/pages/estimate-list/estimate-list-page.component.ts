@@ -9,7 +9,7 @@ import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
 import { EstimateListItem } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 import { CrmService } from '../../../crm/services/crm.service';
-import { PartyDetail } from '../../../crm/models/crm.models';
+import { partyLabel } from '../../../crm/util/crm-labels';
 import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
 
 @Component({
@@ -115,7 +115,7 @@ export class EstimateListPageComponent {
     forkJoin(
       missing.map(id =>
         this.crm.getParty(id).pipe(
-          map(party => [id, this.partyLabel(party)] as const),
+          map(party => [id, partyLabel(party)] as const),
           catchError(() => of([id, id] as const)),
         ),
       ),
@@ -128,11 +128,6 @@ export class EstimateListPageComponent {
           return next;
         });
       });
-  }
-
-  private partyLabel(party: PartyDetail): string {
-    const num = party.customerNumber ? ` · ${party.customerNumber}` : '';
-    return party.dba ? `${party.legalName} (${party.dba})${num}` : `${party.legalName}${num}`;
   }
 
   openEstimateDetail(id: string): void {

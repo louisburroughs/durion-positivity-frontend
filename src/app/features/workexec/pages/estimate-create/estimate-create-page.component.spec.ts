@@ -102,7 +102,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
 
     component.selectCustomer({ partyId: 'p-1', legalName: 'Acme Towing', customerNumber: 'C-100' });
     expect(component.form.controls.customerId.value).toBe('p-1');
-    expect(component.customerDisplayName()).toBe('Acme Towing');
+    expect(component.customerDisplayName()).toBe('Acme Towing · C-100');
 
     // selecting a customer loads that customer's complete vehicle list
     http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/p-1/vehicles'))
