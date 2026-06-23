@@ -1,0 +1,137 @@
+<main class="accounting-page labor-overhead" aria-labelledby="labor-overhead-heading">
+  <header class="page-header">
+    <p class="section-overline">{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.OVERLINE' | translate }}</p>
+    <h1 id="labor-overhead-heading">{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.TITLE' | translate }}</h1>
+    <p class="page-note">{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.WHOLE_DOLLARS_NOTE' | translate }}</p>
+  </header>
+
+  <section class="selector-bar" aria-label="{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.SELECTORS_ARIA' | translate }}">
+    <div class="selector-field selector-field--location">
+      <app-location-picker
+        [label]="'ACCOUNTING.LABOR_OVERHEAD_REPORT.LOCATION_LABEL' | translate"
+        [selectedId]="locationId()"
+        (locationSelected)="onLocationSelected($event)"
+      ></app-location-picker>
+    </div>
+
+    <div class="selector-field">
+      <label for="fiscal-year-select">{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.YEAR_LABEL' | translate }}</label>
+      <select id="fiscal-year-select" [value]="fiscalYear()" (change)="onYearChange($any($event.target).value)">
+        @for (year of years(); track year) {
+        <option [value]="year">{{ year }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="selector-field">
+      <label for="as-of-month-select">{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.AS_OF_MONTH_LABEL' | translate }}</label>
+      <select id="as-of-month-select" [value]="asOfMonth() ?? ''" (change)="onAsOfMonthChange($any($event.target).value)">
+        <option value="">{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.AS_OF_MONTH_ALL' | translate }}</option>
+        @for (index of monthIndexes; track index) {
+        <option [value]="index + 1">{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.MONTH.' + index | translate }}</option>
+        }
+      </select>
+    </div>
+  </section>
+
+  @switch (state()) {
+  @case ('idle') {
+  <section class="state-panel" data-testid="idle-state">
+    {{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.IDLE' | translate }}
+  </section>
+  }
+  @case ('loading') {
+  <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-state">
+    {{ 'ACCOUNTING.COMMON.LOADING' | translate }}
+  </section>
+  }
+  @case ('forbidden') {
+  <section class="state-panel state-panel--forbidden" role="alert" data-testid="forbidden-state">
+    {{ 'ACCOUNTING.COMMON.ACCESS_DENIED' | translate }}
+  </section>
+  }
+  @case ('error') {
+  <section class="state-panel state-panel--error" role="alert" data-testid="error-state">
+    <p>{{ 'ACCOUNTING.COMMON.ERROR_LOADING' | translate }}</p>
+    <button type="button" class="retry-button" (click)="retry()">
+      {{ 'ACCOUNTING.COMMON.RETRY' | translate }}
+    </button>
+  </section>
+  }
+  @case ('empty') {
+  <section class="state-panel" data-testid="empty-state">
+    {{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.EMPTY' | translate }}
+  </section>
+  }
+  }
+
+  @if ((state() === 'loaded' || state() === 'empty') && report(); as data) {
+  <div class="table-scroll-container" data-testid="report-grid">
+    <table class="ledger-table labor-overhead-table"
+      [attr.aria-label]="'ACCOUNTING.LABOR_OVERHEAD_REPORT.TABLE_ARIA' | translate">
+      <caption>
+        {{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.TABLE_CAPTION' | translate }}
+        — {{ data.locationLabel || data.locationId }}, {{ data.fiscalYear }}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col" class="line-col">{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.COL_LINE' | translate }}</th>
+          @for (index of monthIndexes; track index) {
+          <th scope="col" class="amount-col">{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.MONTH.' + index | translate }}</th>
+          }
+          <th scope="col" class="amount-col ytd-col">{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.COL_YTD' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (line of data.lines; track line.code) {
+        <tr class="line-row" [class.subtotal-row]="line.isSubtotal" [attr.data-code]="line.code">
+          <th scope="row" class="line-col" [attr.data-level]="line.level">
+            <span class="line-cell" [style.padding-left.px]="(line.level - 1) * 16">
+              <span class="line-code">{{ line.code }}</span>
+              <span class="line-label">{{ line.label }}</span>
+              @if (line.usdOnly) {
+              <span class="usd-badge" [title]="'ACCOUNTING.LABOR_OVERHEAD_REPORT.USD_ONLY' | translate">
+                {{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.USD_BADGE' | translate }}
+              </span>
+              }
+              @if (line.definition || line.costType) {
+              <button type="button" class="help-toggle" [attr.aria-expanded]="isHelpOpen(line.code)"
+                [attr.aria-controls]="'help-' + line.code" (click)="toggleHelp(line.code)"
+                [attr.aria-label]="'ACCOUNTING.LABOR_OVERHEAD_REPORT.HELP_ARIA' | translate">ⓘ</button>
+              }
+            </span>
+            @if (isHelpOpen(line.code)) {
+            <div class="line-help" [id]="'help-' + line.code" role="note">
+              @if (costTypeKey(line); as ctKey) {
+              <p class="help-cost-type">
+                <span class="help-label">{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.COST_TYPE_LABEL' | translate }}:</span>
+                {{ ctKey | translate }}
+              </p>
+              }
+              @if (line.definition) {
+              <p class="help-definition">{{ line.definition }}</p>
+              }
+            </div>
+            }
+          </th>
+          @for (amount of line.monthly; track $index) {
+          <td class="amount-col" [class.negative]="isNegative(amount)">{{ formatAmount(amount) }}</td>
+          }
+          <td class="amount-col ytd-col" [class.negative]="isNegative(line.ytd)">{{ formatAmount(line.ytd) }}</td>
+        </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr class="currency-row">
+          <th scope="row" class="line-col">{{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.CURRENCY_ROW' | translate }}</th>
+          <td class="amount-col currency-context" [attr.colspan]="monthIndexes.length + 1">
+            {{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.CURRENCY' | translate }}: {{ data.currency }}
+            · {{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.LOCAL_PER_USD' | translate }}: {{ data.localCurrencyPerUsd }}
+            · {{ 'ACCOUNTING.LABOR_OVERHEAD_REPORT.AVG_RATE' | translate }}: {{ data.averageRate }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  }
+</main>

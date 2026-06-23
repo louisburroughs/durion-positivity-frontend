@@ -8,6 +8,7 @@ import {
   APPaymentsService,
   CreditMemosService,
   FinancialReportingService,
+  LocationCostReportingService,
   InvoicePaymentsService,
   PaymentApplicationsService,
   PostingRulesService,
@@ -59,6 +60,10 @@ describe('AccountingService', () => {
     getInvoiceStatus: vi.fn(),
   };
 
+  const locationCostReportingStub = {
+    generateLaborOverheadReport: vi.fn(),
+  };
+
   const authServiceStub = {
     currentUserClaims: vi.fn(),
   };
@@ -76,6 +81,7 @@ describe('AccountingService', () => {
         { provide: APPaymentsService, useValue: apPaymentsStub },
         { provide: CreditMemosService, useValue: { listCreditMemos: vi.fn() } },
         { provide: FinancialReportingService, useValue: {} },
+        { provide: LocationCostReportingService, useValue: locationCostReportingStub },
         { provide: InvoicePaymentsService, useValue: invoicePaymentsStub },
         { provide: PaymentApplicationsService, useValue: {} },
         { provide: PostingRulesService, useValue: {} },
@@ -85,6 +91,44 @@ describe('AccountingService', () => {
   });
 
   afterEach(() => vi.clearAllMocks());
+
+  describe('getLaborOverheadReport()', () => {
+    it('passes params through and maps the SDK report to the local model', () => {
+      locationCostReportingStub.generateLaborOverheadReport.mockReturnValueOnce(
+        of({
+          locationId: 'LOC-1',
+          locationLabel: 'Wooster',
+          fiscalYear: 2026,
+          asOfMonth: 6,
+          currency: 'USD',
+          localCurrencyPerUsd: 1.0,
+          averageRate: 1.0,
+          lines: [
+            {
+              code: '2.14',
+              label: 'Income from rubber dust sales',
+              level: 2,
+              costType: 'VARIABLE',
+              isSubtotal: false,
+              usdOnly: false,
+              monthly: [0, -250, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              ytd: -250,
+            },
+          ],
+        }),
+      );
+
+      let result: import('../models/accounting.models').LaborOverheadReport | undefined;
+      service.getLaborOverheadReport('LOC-1', 2026, 6).subscribe(r => (result = r));
+
+      expect(locationCostReportingStub.generateLaborOverheadReport).toHaveBeenCalledWith('LOC-1', 2026, 6);
+      expect(result?.currency).toBe('USD');
+      expect(result?.lines).toHaveLength(1);
+      expect(result?.lines[0].code).toBe('2.14');
+      expect(result?.lines[0].ytd).toBe(-250);
+      expect(result?.lines[0].costType).toBe('VARIABLE');
+    });
+  });
 
   describe('reprocessSuspendedEvent()', () => {
     it('sources the required actor from authenticated claims instead of sending an empty string', () => {

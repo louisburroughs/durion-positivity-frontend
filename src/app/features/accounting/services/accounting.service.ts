@@ -6,6 +6,7 @@ import {
   AccountingExportsService,
   CreditMemosService,
   FinancialReportingService,
+  LocationCostReportingService,
   InvoicePaymentsService,
   PaymentApplicationsService,
   PostingRulesService,
@@ -28,6 +29,7 @@ import {
   ExportJobRequest,
   type Pageable,
   type PageCreditMemoResponse,
+  type LaborOverheadCostReport,
 } from '@durion-sdk/accounting';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { environment } from '../../../../environments/environment';
@@ -44,6 +46,9 @@ import {
   IngestionProcessingStatus,
   IngestionSubmitOutcome,
   InvoicePaymentStatus,
+  LaborOverheadReport,
+  LaborOverheadReportLine,
+  LaborOverheadCostType,
   PagedResponse,
   PaymentApplication,
   PaymentApplicationRequest,
@@ -72,6 +77,7 @@ export class AccountingService {
   private readonly apPaymentsService = inject(APPaymentsService);
   private readonly creditMemosService = inject(CreditMemosService);
   private readonly financialReportingService = inject(FinancialReportingService);
+  private readonly locationCostReportingService = inject(LocationCostReportingService);
   private readonly invoicePaymentsService = inject(InvoicePaymentsService);
   private readonly paymentApplicationsService = inject(PaymentApplicationsService);
   private readonly postingRulesService = inject(PostingRulesService);
@@ -671,5 +677,47 @@ export class AccountingService {
     }
 
     return value as Record<string, unknown>;
+  }
+
+  // CAP-316 - Location Labor & Overhead Cost Report (read-only)
+
+  getLaborOverheadReport(
+    locationId: string,
+    fiscalYear: number,
+    asOfMonth?: number,
+  ): Observable<LaborOverheadReport> {
+    return this.locationCostReportingService
+      .generateLaborOverheadReport(locationId, fiscalYear, asOfMonth)
+      .pipe(map(dto => this.toLaborOverheadReport(dto)));
+  }
+
+  private toLaborOverheadReport(dto: LaborOverheadCostReport): LaborOverheadReport {
+    return {
+      locationId: dto.locationId,
+      locationLabel: dto.locationLabel,
+      fiscalYear: dto.fiscalYear,
+      asOfMonth: dto.asOfMonth,
+      currency: dto.currency,
+      localCurrencyPerUsd: dto.localCurrencyPerUsd,
+      averageRate: dto.averageRate,
+      lines: (dto.lines ?? []).map(line => this.toLaborOverheadLine(line)),
+    };
+  }
+
+  private toLaborOverheadLine(
+    line: LaborOverheadCostReport['lines'][number],
+  ): LaborOverheadReportLine {
+    return {
+      code: line.code,
+      label: line.label,
+      parentCode: line.parentCode,
+      level: line.level,
+      costType: line.costType as LaborOverheadCostType | undefined,
+      isSubtotal: line.isSubtotal,
+      usdOnly: line.usdOnly,
+      definition: line.definition,
+      monthly: line.monthly ?? [],
+      ytd: line.ytd,
+    };
   }
 }
