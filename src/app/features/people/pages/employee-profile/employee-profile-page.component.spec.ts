@@ -106,6 +106,37 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     expect(legalNameInput.nativeElement.value).toBe(STUB_EMPLOYEE.legalName);
   });
 
+  it('surfaces backend resolution warnings as a banner', async () => {
+    vi.clearAllMocks();
+    stubPeopleService.getEmployee.mockReturnValue(
+      of({ ...STUB_EMPLOYEE, warnings: ['Ambiguous duplicate match detected by legalName similarity'] }),
+    );
+
+    await TestBed.configureTestingModule({
+      imports: [EmployeeProfilePageComponent],
+      providers: [
+        provideRouter([]),
+        { provide: PeopleService, useValue: stubPeopleService },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: { get: (k: string) => (k === 'id' ? 'emp-warn' : null) } }, params: of({ id: 'emp-warn' }) },
+        },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(EmployeeProfilePageComponent);
+    fixture.detectChanges();
+
+    const banner = fixture.debugElement.query(By.css('[data-testid="profile-warnings"]'));
+    expect(banner).toBeTruthy();
+    expect(banner.nativeElement.textContent).toContain('Ambiguous duplicate match');
+  });
+
+  it('renders no warnings banner when the profile has none', async () => {
+    const { fixture } = await setupEdit('emp-1');
+    expect(fixture.debugElement.query(By.css('[data-testid="profile-warnings"]'))).toBeNull();
+  });
+
   // ── T3: Loading state ────────────────────────────────────────────────────
 
   it('shows a loading indicator while fetching employee data', async () => {

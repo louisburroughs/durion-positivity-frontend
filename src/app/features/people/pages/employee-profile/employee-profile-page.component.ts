@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -29,6 +29,8 @@ export class EmployeeProfilePageComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly conflictError = signal<string | null>(null);
   readonly fieldErrors = signal<Record<string, string>>({});
+  /** Non-fatal warnings returned by the backend while resolving the profile. */
+  readonly warnings = computed<string[]>(() => this.employee()?.warnings ?? []);
   readonly saveSuccess = signal(false);
 
   readonly form = new FormGroup({
