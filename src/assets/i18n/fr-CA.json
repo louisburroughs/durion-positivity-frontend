@@ -1611,47 +1611,261 @@
       }
     },
     "LABOR_OVERHEAD_REPORT": {
-      "OVERLINE": "Reports",
-      "TITLE": "Location Labor & Overhead Cost Report",
-      "WHOLE_DOLLARS_NOTE": "Amounts in whole dollars, local currency (except line 2.11.4, shown in USD).",
-      "SELECTORS_ARIA": "Report filters",
-      "LOCATION_LABEL": "Location / Dealer",
-      "YEAR_LABEL": "Fiscal Year",
-      "AS_OF_MONTH_LABEL": "As-of Month",
-      "AS_OF_MONTH_ALL": "Full year",
-      "IDLE": "Select a location and fiscal year to view the report.",
-      "EMPTY": "No posted activity for this location and period.",
-      "TABLE_ARIA": "Labor and overhead cost matrix",
-      "TABLE_CAPTION": "Labor & Overhead Costs",
-      "COL_LINE": "Cost Line",
-      "COL_YTD": "YTD",
+      "OVERLINE": "Rapports",
+      "TITLE": "Rapport des coûts de main-d'œuvre et frais généraux par emplacement",
+      "WHOLE_DOLLARS_NOTE": "Montants en dollars entiers, en devise locale (sauf la ligne 2.11.4, affichée en USD).",
+      "SELECTORS_ARIA": "Filtres du rapport",
+      "LOCATION_LABEL": "Emplacement / Concessionnaire",
+      "YEAR_LABEL": "Exercice financier",
+      "AS_OF_MONTH_LABEL": "Mois de référence",
+      "AS_OF_MONTH_ALL": "Année complète",
+      "IDLE": "Sélectionnez un emplacement et un exercice financier pour afficher le rapport.",
+      "EMPTY": "Aucune activité comptabilisée pour cet emplacement et cette période.",
+      "TABLE_ARIA": "Matrice des coûts de main-d'œuvre et frais généraux",
+      "TABLE_CAPTION": "Coûts de main-d'œuvre et frais généraux",
+      "COL_LINE": "Ligne de coût",
+      "COL_YTD": "Cumul annuel",
       "MONTH": {
-        "0": "Jan",
-        "1": "Feb",
-        "2": "Mar",
-        "3": "Apr",
-        "4": "May",
-        "5": "Jun",
-        "6": "Jul",
-        "7": "Aug",
-        "8": "Sep",
-        "9": "Oct",
-        "10": "Nov",
-        "11": "Dec"
+        "0": "janv.",
+        "1": "févr.",
+        "2": "mars",
+        "3": "avr.",
+        "4": "mai",
+        "5": "juin",
+        "6": "juill.",
+        "7": "août",
+        "8": "sept.",
+        "9": "oct.",
+        "10": "nov.",
+        "11": "déc."
       },
-      "USD_ONLY": "Reported in USD even on local-currency plants.",
+      "USD_ONLY": "Déclaré en USD même dans les usines en devise locale.",
       "USD_BADGE": "USD",
-      "HELP_ARIA": "Show line definition and classification",
+      "HELP_ARIA": "Afficher la définition et la classification de la ligne",
       "COST_TYPE_LABEL": "Type",
       "COST_TYPE": {
-        "FIXED": "Fixed",
+        "FIXED": "Fixe",
         "VARIABLE": "Variable",
-        "FIXED_IF_LOW_VOLUME": "Fixed if volume change is minimal"
+        "FIXED_IF_LOW_VOLUME": "Fixe si la variation de volume est minime"
       },
-      "CURRENCY_ROW": "Currency conversion",
-      "CURRENCY": "Currency",
-      "LOCAL_PER_USD": "Local currency per USD",
-      "AVG_RATE": "Average rate"
+      "CURRENCY_ROW": "Conversion de devise",
+      "CURRENCY": "Devise",
+      "LOCAL_PER_USD": "Devise locale par USD",
+      "AVG_RATE": "Taux moyen",
+      "LINE": {
+        "1_1": {
+          "LABEL": "Salaires et primes (y compris le gérant de l'atelier)",
+          "DEFINITION": "Somme de 1.1.1 à 1.1.2."
+        },
+        "1_1_1": {
+          "LABEL": "Salaires et primes horaires",
+          "DEFINITION": "Incl. : salaires/primes des travailleurs horaires de l'usine de rechapage (production, entretien, concierge, commis d'usine), correspondant aux heures du MRT Weekly Production Report. Excl. : salaires d'entreposage/distribution/ventes/siège social; production hors du procédé MRT."
+        },
+        "1_1_2": {
+          "LABEL": "Salaires de la direction",
+          "DEFINITION": "Incl. : salaires/primes du personnel salarié de l'usine de rechapage correspondant aux heures du MRT Weekly Production Report."
+        },
+        "1_2": {
+          "LABEL": "Main-d'œuvre diverse (employés de production contractuels et temporaires)",
+          "DEFINITION": "Incl. : salaires des travailleurs temporaires/contractuels correspondant aux heures du MRT Weekly Production Report."
+        },
+        "1_3": {
+          "LABEL": "Impôts et avantages sociaux",
+          "DEFINITION": "Relatifs aux salaires de la §1.1."
+        },
+        "1_3_1": {
+          "LABEL": "FICA",
+          "DEFINITION": "Charge sociale sur les salaires de la §1.1."
+        },
+        "1_3_2": {
+          "LABEL": "Assurance-chômage fédérale",
+          "DEFINITION": "Impôt fédéral d'assurance-chômage sur les salaires de la §1.1."
+        },
+        "1_3_3": {
+          "LABEL": "Assurance-chômage provinciale",
+          "DEFINITION": "Impôt provincial d'assurance-chômage sur les salaires de la §1.1."
+        },
+        "1_3_4": {
+          "LABEL": "Assurance médicale/dentaire, vie, santé, invalidité",
+          "DEFINITION": "Coûts des avantages sociaux des employés liés à la §1.1."
+        },
+        "1_3_5": {
+          "LABEL": "Cotisations au régime de retraite",
+          "DEFINITION": "Cotisations de retraite de l'employeur liées à la §1.1."
+        },
+        "1_3_6": {
+          "LABEL": "Assurance des employés – accidents du travail",
+          "DEFINITION": "Assurance accidents du travail pour les employés de l'usine."
+        },
+        "1_5": {
+          "LABEL": "Location d'uniformes / blanchisserie",
+          "DEFINITION": "Incl. : uniformes ou programme de chemises/pantalons, le cas échéant."
+        },
+        "TOTAL_LABOR": {
+          "LABEL": "Total de la main-d'œuvre",
+          "DEFINITION": "Sous-total de section : somme de 1.1, 1.2, 1.3, 1.5."
+        },
+        "2_1": {
+          "LABEL": "Bâtiment",
+          "DEFINITION": "Somme de 2.1.1 à 2.1.3."
+        },
+        "2_1_1": {
+          "LABEL": "Amortissement",
+          "DEFINITION": "Incl. : « bâti en dur », seulement si propriétaire, amortissement linéaire sur 20 ans. Excl. : si en location (utiliser 2.1.3); intérêts de financement du bâtiment; amortissement du terrain."
+        },
+        "2_1_2": {
+          "LABEL": "Entretien",
+          "DEFINITION": "Incl. : entretien du bâtiment, frais d'enlèvement des ordures."
+        },
+        "2_1_3": {
+          "LABEL": "Loyer",
+          "DEFINITION": "Incl. : location du bâtiment (uniquement le % de superficie de l'usine de rechapage); améliorations locatives si en propriété. Excl. : paiements hypothécaires."
+        },
+        "2_2": {
+          "LABEL": "Coûts de formation",
+          "DEFINITION": "Incl. : dépenses de formateurs externes. Excl. : main-d'œuvre du formateur/stagiaire (utiliser 1.1.1)."
+        },
+        "2_3": {
+          "LABEL": "Coûts de publicité d'emploi / recrutement",
+          "DEFINITION": "Recrutement/publicité pour le personnel de l'usine."
+        },
+        "2_4": {
+          "LABEL": "Dépenses de véhicules (remorque à poussière de caoutchouc, camion d'atelier)",
+          "DEFINITION": "Incl. : véhicules destinés uniquement à l'usine de rechapage; frais de la remorque à poussière de caoutchouc. Excl. : véhicules de vente/distribution/entreposage; assurance des véhicules (utiliser 2.7.3); chariots élévateurs (utiliser 2.11.5)."
+        },
+        "2_4_1": {
+          "LABEL": "Carburant et huile",
+          "DEFINITION": "Carburant/huile pour les véhicules de l'usine."
+        },
+        "2_4_2": {
+          "LABEL": "Entretien",
+          "DEFINITION": "Entretien des véhicules de l'usine."
+        },
+        "2_4_3": {
+          "LABEL": "Taxes",
+          "DEFINITION": "Taxes sur les véhicules de l'usine."
+        },
+        "2_4_4": {
+          "LABEL": "Amortissement",
+          "DEFINITION": "Amortissement des véhicules de l'usine (méthodes standard)."
+        },
+        "2_4_5": {
+          "LABEL": "Loyer",
+          "DEFINITION": "Location des véhicules de l'usine."
+        },
+        "2_5": {
+          "LABEL": "Téléphone",
+          "DEFINITION": "Incl. : lignes voix/modem/données de l'usine; téléphones cellulaires du personnel de l'usine."
+        },
+        "2_6": {
+          "LABEL": "Déplacements et représentation",
+          "DEFINITION": "Incl. : déplacements du directeur/des employés de l'usine (p. ex. PMPC). Excl. : déplacements du propriétaire/du siège social; promotion/représentation (coût de vente)."
+        },
+        "2_7": {
+          "LABEL": "Assurance",
+          "DEFINITION": "Incl. : incendie/vol/responsabilité de l'usine de rechapage; assurance des véhicules de l'usine (2.7.3). Excl. : assurance entrepôt/ventes."
+        },
+        "2_7_1": {
+          "LABEL": "Incendie",
+          "DEFINITION": "Assurance incendie de l'usine."
+        },
+        "2_7_2": {
+          "LABEL": "Vol",
+          "DEFINITION": "Assurance vol de l'usine."
+        },
+        "2_7_3": {
+          "LABEL": "Responsabilité civile",
+          "DEFINITION": "Assurance responsabilité civile de l'usine (y compris les véhicules de l'usine)."
+        },
+        "2_8": {
+          "LABEL": "Impôts fonciers",
+          "DEFINITION": "Incl. : impôts fonciers de l'usine appartenant au concessionnaire. Excl. : si le bâtiment est loué; taxes de vente/impôts sur le revenu."
+        },
+        "2_9": {
+          "LABEL": "Fournitures",
+          "DEFINITION": "Somme de 2.9.1 à 2.9.4."
+        },
+        "2_9_1": {
+          "LABEL": "Consommables d'atelier (râpes, meules, brosses)",
+          "DEFINITION": "Incl. : lames/brosses de ponçage, meules. Excl. : matériaux assemblés au pneu (caoutchouc de bande de roulement, gomme de coussin, gomme en cordon, rutières, ciment, peinture)."
+        },
+        "2_9_2": {
+          "LABEL": "Consommables de cuisson (enveloppes, lubrifiant, mèches, polyéthylène)",
+          "DEFINITION": "Incl. : enveloppes de cuisson, mèches, lubrifiant d'enveloppe, polyéthylène."
+        },
+        "2_9_3": {
+          "LABEL": "Divers",
+          "DEFINITION": "Incl. : fournitures d'entretien, produits chimiques de traitement, etc."
+        },
+        "2_9_4": {
+          "LABEL": "Bureau",
+          "DEFINITION": "Incl. : papier, stylos, étiquettes, fournitures de bureau."
+        },
+        "2_10": {
+          "LABEL": "Services publics – gaz, électricité, eau",
+          "DEFINITION": "Incl. : gaz/électricité/eau de l'usine (peut être un % réparti si partagé). Excl. : services publics des autres activités du bâtiment."
+        },
+        "2_11": {
+          "LABEL": "Dépenses d'équipement",
+          "DEFINITION": "Somme de 2.11.1 à 2.11.6."
+        },
+        "2_11_1": {
+          "LABEL": "Entretien",
+          "DEFINITION": "Incl. : réparations/pièces de rechange d'équipement, entretien informatique, nettoyage des moules sur mesure. Excl. : articles sous garantie MRT."
+        },
+        "2_11_2": {
+          "LABEL": "Location",
+          "DEFINITION": "Incl. : frais de location de compresseurs d'air, etc."
+        },
+        "2_11_3": {
+          "LABEL": "Petits outils et équipements",
+          "DEFINITION": "Achats de petits outils/équipements."
+        },
+        "2_11_4": {
+          "LABEL": "Amortissement – équipement du procédé MRT ($US seulement)",
+          "DEFINITION": "Incl. : équipement et installation du procédé MRT au démarrage/lors de l'expansion (peu importe la propriété); modifications MRT > 5 000 $; amortissement linéaire sur 10 ans (MRT fournit la valeur). Excl. : équipement hors procédé MRT. Déclaré en USD même dans les usines en devise locale."
+        },
+        "2_11_5": {
+          "LABEL": "Amortissement – autres équipements d'atelier (chaudière, cyclone, compresseurs d'air, coût en capital de la conversion)",
+          "DEFINITION": "Incl. : équipement de soutien au procédé installé par le concessionnaire, chariots élévateurs, coûts de conversion en capital; amortissement linéaire sur 10 ans (chariots/ordinateurs selon méthodes standard). Excl. : chauffe-eau au gaz fourni par MRT (dans 2.11.4); taxes de vente sur l'équipement; intérêts de financement de l'équipement."
+        },
+        "2_11_6": {
+          "LABEL": "Crédit-bail ou location d'équipement MRTI",
+          "DEFINITION": "Incl. : frais de licence des logiciels MRT (CIA, BIB TREAD); location de moules sur mesure. Excl. : équipement du procédé MRT loué auprès de MRT/d'un tiers (dans 2.11.4)."
+        },
+        "2_12": {
+          "LABEL": "Frais d'administration",
+          "DEFINITION": "Incl. : répartition pour le soutien comptabilité/paie/personnel du siège social (mensuel constant, non % des ventes). Excl. : coûts du siège social qui subsisteraient si l'usine fermait (salaires de la haute direction, commissions de vente)."
+        },
+        "2_13": {
+          "LABEL": "Charge d'inventaire",
+          "DEFINITION": "Charge/crédit d'intérêts pour les fonds finançant l'inventaire de matériaux et de consommables. Dépense = positif; revenu d'intérêts = négatif. Excl. : charges d'inventaire de carcasses/carcasses en stock; intérêts de financement de l'équipement."
+        },
+        "2_14": {
+          "LABEL": "Revenus des ventes de poussière de caoutchouc",
+          "DEFINITION": "Revenus des ventes de poussière de caoutchouc (saisir en négatif); ou coût d'enlèvement si non vendue (positif). Excl. : locations/frais de la remorque à poussière de caoutchouc (utiliser 2.4)."
+        },
+        "2_15": {
+          "LABEL": "Qualité de production",
+          "DEFINITION": "Somme de 2.15.1 à 2.15.2."
+        },
+        "2_15_1": {
+          "LABEL": "Carcasses mises au rebut en production (p. ex. ceintures déchirées par la rectifieuse)",
+          "DEFINITION": "Incl. : coût des carcasses endommagées par l'usine pendant la production (coût de la carcasse + élimination). Excl. : frais d'élimination des rebuts RAR."
+        },
+        "2_15_2": {
+          "LABEL": "Ajustements (retours clients, prix utilisateur plus transport aller-retour)",
+          "DEFINITION": "Incl. : coûts d'ajustement matériaux/main-d'œuvre (frais, transport), comptabilisés au mois du paiement (non couru), correspondant aux ajustements déclarés à MRT Quality. Excl. : ajustements de concessions commerciales; frais d'élimination RAR."
+        },
+        "TOTAL_OVERHEAD": {
+          "LABEL": "Total des frais généraux",
+          "DEFINITION": "Sous-total de section : somme de 2.1 à 2.15."
+        },
+        "TOTAL_LABOR_OVERHEAD": {
+          "LABEL": "Total de la main-d'œuvre et des frais généraux",
+          "DEFINITION": "Total général : Total de la main-d'œuvre + Total des frais généraux."
+        }
+      }
     }
   },
   "PRODUCT": {

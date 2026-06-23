@@ -114,6 +114,20 @@ export class LaborOverheadReportPageComponent {
     return line.costType ? `ACCOUNTING.LABOR_OVERHEAD_REPORT.COST_TYPE.${line.costType}` : null;
   }
 
+  /**
+   * i18n key for a line's display label. Codes carry dots (e.g. {@code "1.1.1"}),
+   * which ngx-translate treats as nesting separators, so they are flattened to
+   * underscores.
+   */
+  lineLabelKey(line: LaborOverheadReportLine): string {
+    return `ACCOUNTING.LABOR_OVERHEAD_REPORT.LINE.${line.code.replace(/\./g, '_')}.LABEL`;
+  }
+
+  /** i18n key for a line's include/exclude definition (the help tooltip body). */
+  lineDefinitionKey(line: LaborOverheadReportLine): string {
+    return `ACCOUNTING.LABOR_OVERHEAD_REPORT.LINE.${line.code.replace(/\./g, '_')}.DEFINITION`;
+  }
+
   private hasActivity(report: LaborOverheadReport): boolean {
     return report.lines.some(
       line => line.ytd !== 0 || line.monthly.some(amount => amount !== 0),

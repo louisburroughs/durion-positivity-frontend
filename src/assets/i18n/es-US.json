@@ -1653,47 +1653,261 @@
       }
     },
     "LABOR_OVERHEAD_REPORT": {
-      "OVERLINE": "Reports",
-      "TITLE": "Location Labor & Overhead Cost Report",
-      "WHOLE_DOLLARS_NOTE": "Amounts in whole dollars, local currency (except line 2.11.4, shown in USD).",
-      "SELECTORS_ARIA": "Report filters",
-      "LOCATION_LABEL": "Location / Dealer",
-      "YEAR_LABEL": "Fiscal Year",
-      "AS_OF_MONTH_LABEL": "As-of Month",
-      "AS_OF_MONTH_ALL": "Full year",
-      "IDLE": "Select a location and fiscal year to view the report.",
-      "EMPTY": "No posted activity for this location and period.",
-      "TABLE_ARIA": "Labor and overhead cost matrix",
-      "TABLE_CAPTION": "Labor & Overhead Costs",
-      "COL_LINE": "Cost Line",
-      "COL_YTD": "YTD",
+      "OVERLINE": "Informes",
+      "TITLE": "Informe de costos de mano de obra y gastos generales por ubicación",
+      "WHOLE_DOLLARS_NOTE": "Importes en dólares enteros, moneda local (excepto la línea 2.11.4, mostrada en USD).",
+      "SELECTORS_ARIA": "Filtros del informe",
+      "LOCATION_LABEL": "Ubicación / Distribuidor",
+      "YEAR_LABEL": "Año fiscal",
+      "AS_OF_MONTH_LABEL": "Mes de corte",
+      "AS_OF_MONTH_ALL": "Año completo",
+      "IDLE": "Seleccione una ubicación y un año fiscal para ver el informe.",
+      "EMPTY": "No hay actividad registrada para esta ubicación y período.",
+      "TABLE_ARIA": "Matriz de costos de mano de obra y gastos generales",
+      "TABLE_CAPTION": "Costos de mano de obra y gastos generales",
+      "COL_LINE": "Línea de costo",
+      "COL_YTD": "Año a la fecha",
       "MONTH": {
-        "0": "Jan",
+        "0": "Ene",
         "1": "Feb",
         "2": "Mar",
-        "3": "Apr",
+        "3": "Abr",
         "4": "May",
         "5": "Jun",
         "6": "Jul",
-        "7": "Aug",
+        "7": "Ago",
         "8": "Sep",
         "9": "Oct",
         "10": "Nov",
-        "11": "Dec"
+        "11": "Dic"
       },
-      "USD_ONLY": "Reported in USD even on local-currency plants.",
+      "USD_ONLY": "Se informa en USD incluso en plantas de moneda local.",
       "USD_BADGE": "USD",
-      "HELP_ARIA": "Show line definition and classification",
-      "COST_TYPE_LABEL": "Type",
+      "HELP_ARIA": "Mostrar la definición y la clasificación de la línea",
+      "COST_TYPE_LABEL": "Tipo",
       "COST_TYPE": {
-        "FIXED": "Fixed",
+        "FIXED": "Fijo",
         "VARIABLE": "Variable",
-        "FIXED_IF_LOW_VOLUME": "Fixed if volume change is minimal"
+        "FIXED_IF_LOW_VOLUME": "Fijo si el cambio de volumen es mínimo"
       },
-      "CURRENCY_ROW": "Currency conversion",
-      "CURRENCY": "Currency",
-      "LOCAL_PER_USD": "Local currency per USD",
-      "AVG_RATE": "Average rate"
+      "CURRENCY_ROW": "Conversión de moneda",
+      "CURRENCY": "Moneda",
+      "LOCAL_PER_USD": "Moneda local por USD",
+      "AVG_RATE": "Tasa promedio",
+      "LINE": {
+        "1_1": {
+          "LABEL": "Salarios y bonificaciones (incluido el gerente del taller)",
+          "DEFINITION": "Suma de 1.1.1–1.1.2."
+        },
+        "1_1_1": {
+          "LABEL": "Salarios y bonificaciones por hora",
+          "DEFINITION": "Incl.: salarios/bonificaciones de los trabajadores por hora de la planta de recauchutado (producción, mantenimiento, conserje, oficinista de planta), que coinciden con las horas del MRT Weekly Production Report. Excl.: salarios de almacenamiento/distribución/ventas/oficina corporativa; producción fuera del proceso MRT."
+        },
+        "1_1_2": {
+          "LABEL": "Salarios de la gerencia",
+          "DEFINITION": "Incl.: salarios/bonificaciones del personal asalariado de la planta de recauchutado que coinciden con las horas del MRT Weekly Production Report."
+        },
+        "1_2": {
+          "LABEL": "Mano de obra diversa (empleados de producción por contrato y temporales)",
+          "DEFINITION": "Incl.: salarios de trabajadores temporales/por contrato que coinciden con las horas del MRT Weekly Production Report."
+        },
+        "1_3": {
+          "LABEL": "Impuestos y beneficios",
+          "DEFINITION": "Relacionados con los salarios de la §1.1."
+        },
+        "1_3_1": {
+          "LABEL": "FICA",
+          "DEFINITION": "Impuesto sobre la nómina de los salarios de la §1.1."
+        },
+        "1_3_2": {
+          "LABEL": "Desempleo federal",
+          "DEFINITION": "Impuesto federal de desempleo sobre los salarios de la §1.1."
+        },
+        "1_3_3": {
+          "LABEL": "Desempleo estatal",
+          "DEFINITION": "Impuesto estatal de desempleo sobre los salarios de la §1.1."
+        },
+        "1_3_4": {
+          "LABEL": "Seguro médico/dental, vida, salud, invalidez",
+          "DEFINITION": "Costos de beneficios para empleados relacionados con la §1.1."
+        },
+        "1_3_5": {
+          "LABEL": "Aportes al plan de jubilación",
+          "DEFINITION": "Aportes de jubilación del empleador relacionados con la §1.1."
+        },
+        "1_3_6": {
+          "LABEL": "Seguro de empleados – indemnización laboral",
+          "DEFINITION": "Seguro de indemnización laboral para los empleados de la planta."
+        },
+        "1_5": {
+          "LABEL": "Alquiler de uniformes / lavandería",
+          "DEFINITION": "Incl.: uniformes o programa de camisas/pantalones, si se proporciona."
+        },
+        "TOTAL_LABOR": {
+          "LABEL": "Total de mano de obra",
+          "DEFINITION": "Subtotal de la sección: suma de 1.1, 1.2, 1.3, 1.5."
+        },
+        "2_1": {
+          "LABEL": "Edificio",
+          "DEFINITION": "Suma de 2.1.1–2.1.3."
+        },
+        "2_1_1": {
+          "LABEL": "Depreciación",
+          "DEFINITION": "Incl.: \"ladrillo y cemento\", solo si es propio, línea recta a 20 años. Excl.: si se alquila (use 2.1.3); intereses de financiación del edificio; depreciación del terreno."
+        },
+        "2_1_2": {
+          "LABEL": "Mantenimiento",
+          "DEFINITION": "Incl.: mantenimiento del edificio, tarifas de recolección de basura."
+        },
+        "2_1_3": {
+          "LABEL": "Alquiler",
+          "DEFINITION": "Incl.: alquiler del edificio (solo el % de superficie de la planta de recauchutado); mejoras al inmueble arrendado si son propias. Excl.: pagos de hipoteca."
+        },
+        "2_2": {
+          "LABEL": "Costos de capacitación",
+          "DEFINITION": "Incl.: gastos de capacitadores externos. Excl.: mano de obra del capacitador/aprendiz (use 1.1.1)."
+        },
+        "2_3": {
+          "LABEL": "Costos de publicidad de empleo / reclutamiento",
+          "DEFINITION": "Reclutamiento/publicidad para el personal de la planta."
+        },
+        "2_4": {
+          "LABEL": "Gastos de vehículos (remolque de polvo de caucho, camión del taller)",
+          "DEFINITION": "Incl.: vehículos solo para uso de la planta de recauchutado; tarifas del remolque de polvo de caucho. Excl.: vehículos de ventas/distribución/almacenamiento; seguro de vehículos (use 2.7.3); montacargas (use 2.11.5)."
+        },
+        "2_4_1": {
+          "LABEL": "Combustible y aceite",
+          "DEFINITION": "Combustible/aceite para los vehículos de la planta."
+        },
+        "2_4_2": {
+          "LABEL": "Mantenimiento",
+          "DEFINITION": "Mantenimiento de los vehículos de la planta."
+        },
+        "2_4_3": {
+          "LABEL": "Impuestos",
+          "DEFINITION": "Impuestos sobre los vehículos de la planta."
+        },
+        "2_4_4": {
+          "LABEL": "Depreciación",
+          "DEFINITION": "Depreciación de los vehículos de la planta (métodos estándar)."
+        },
+        "2_4_5": {
+          "LABEL": "Alquiler",
+          "DEFINITION": "Alquiler de los vehículos de la planta."
+        },
+        "2_5": {
+          "LABEL": "Teléfono",
+          "DEFINITION": "Incl.: líneas de voz/módem/datos de la planta; teléfonos celulares para el personal de la planta."
+        },
+        "2_6": {
+          "LABEL": "Viajes y representación",
+          "DEFINITION": "Incl.: viajes del gerente/empleados de la planta (p. ej. PMPC). Excl.: viajes del propietario/corporativos; promoción/representación (costo de ventas)."
+        },
+        "2_7": {
+          "LABEL": "Seguro",
+          "DEFINITION": "Incl.: incendio/robo/responsabilidad de la planta de recauchutado; seguro de vehículos de la planta (2.7.3). Excl.: seguro de almacén/ventas."
+        },
+        "2_7_1": {
+          "LABEL": "Incendio",
+          "DEFINITION": "Seguro contra incendios de la planta."
+        },
+        "2_7_2": {
+          "LABEL": "Robo",
+          "DEFINITION": "Seguro contra robo de la planta."
+        },
+        "2_7_3": {
+          "LABEL": "Responsabilidad civil",
+          "DEFINITION": "Seguro de responsabilidad civil de la planta (incl. vehículos de la planta)."
+        },
+        "2_8": {
+          "LABEL": "Impuestos sobre la propiedad",
+          "DEFINITION": "Incl.: impuestos sobre la propiedad de la planta propiedad del distribuidor. Excl.: si el edificio se alquila; impuestos sobre ventas/ingresos."
+        },
+        "2_9": {
+          "LABEL": "Suministros",
+          "DEFINITION": "Suma de 2.9.1–2.9.4."
+        },
+        "2_9_1": {
+          "LABEL": "Consumibles del taller (escofinas, muelas abrasivas, cepillos)",
+          "DEFINITION": "Incl.: cuchillas/cepillos de pulido, muelas abrasivas. Excl.: materiales ensamblados al neumático (caucho de banda de rodadura, goma de cojín, goma de cordón, parches, cemento, pintura)."
+        },
+        "2_9_2": {
+          "LABEL": "Consumibles de vulcanización (sobres, lubricante, mechas, poliétileno)",
+          "DEFINITION": "Incl.: sobres de vulcanización, mechas, lubricante de sobres, poliétileno."
+        },
+        "2_9_3": {
+          "LABEL": "Varios",
+          "DEFINITION": "Incl.: suministros de limpieza, productos químicos de tratamiento, etc."
+        },
+        "2_9_4": {
+          "LABEL": "Oficina",
+          "DEFINITION": "Incl.: papel, bolígrafos, etiquetas, suministros de oficina."
+        },
+        "2_10": {
+          "LABEL": "Servicios públicos – gas, electricidad, agua",
+          "DEFINITION": "Incl.: gas/electricidad/agua de la planta (puede ser un % asignado si es compartido). Excl.: servicios públicos de otras operaciones del edificio."
+        },
+        "2_11": {
+          "LABEL": "Gastos de equipo",
+          "DEFINITION": "Suma de 2.11.1–2.11.6."
+        },
+        "2_11_1": {
+          "LABEL": "Mantenimiento",
+          "DEFINITION": "Incl.: reparaciones/repuestos de equipos, mantenimiento de computadoras, limpieza de moldes personalizados. Excl.: artículos bajo garantía de MRT."
+        },
+        "2_11_2": {
+          "LABEL": "Alquiler",
+          "DEFINITION": "Incl.: tarifas de alquiler de compresores de aire, etc."
+        },
+        "2_11_3": {
+          "LABEL": "Herramientas y equipos pequeños",
+          "DEFINITION": "Compras de herramientas/equipos pequeños."
+        },
+        "2_11_4": {
+          "LABEL": "Depreciación – equipo del proceso MRT (solo $US)",
+          "DEFINITION": "Incl.: equipo e instalación del proceso MRT en el arranque/ampliación (independientemente de la propiedad); modificaciones MRT > $5,000; línea recta a 10 años (MRT proporciona el valor). Excl.: equipo ajeno al proceso MRT. Se informa en USD incluso en plantas de moneda local."
+        },
+        "2_11_5": {
+          "LABEL": "Depreciación – otros equipos del taller (caldera, ciclón, compresores de aire, costo de capital de conversión)",
+          "DEFINITION": "Incl.: equipo de apoyo al proceso instalado por el distribuidor, montacargas, costos de conversión de capital; línea recta a 10 años (montacargas/computadoras usan métodos estándar). Excl.: unidad de agua caliente a gas suministrada por MRT (en 2.11.4); impuestos sobre ventas de equipo; intereses de financiación de equipo."
+        },
+        "2_11_6": {
+          "LABEL": "Arrendamientos o alquiler de equipos MRTI",
+          "DEFINITION": "Incl.: tarifas de licencia de software MRT (CIA, BIB TREAD); alquiler de moldes personalizados. Excl.: equipo del proceso MRT alquilado a MRT/terceros (en 2.11.4)."
+        },
+        "2_12": {
+          "LABEL": "Cargos administrativos",
+          "DEFINITION": "Incl.: asignación para soporte corporativo de contabilidad/nómina/personal (mensual constante, no % de ventas). Excl.: costos corporativos que persistirían si la planta cerrara (salarios de la alta gerencia, comisiones de ventas)."
+        },
+        "2_13": {
+          "LABEL": "Cargo de inventario",
+          "DEFINITION": "Cargo/crédito de intereses por el dinero que financia el inventario de materiales y consumibles. Gasto = positivo; ingreso por intereses = negativo. Excl.: cargos de inventario de carcasas/carcasas en existencia; intereses de financiación de equipo."
+        },
+        "2_14": {
+          "LABEL": "Ingresos por ventas de polvo de caucho",
+          "DEFINITION": "Ingresos por ventas de polvo de caucho (ingréselos como negativo); o costo de remoción si no se vende (positivo). Excl.: alquileres/tarifas del remolque de polvo de caucho (use 2.4)."
+        },
+        "2_15": {
+          "LABEL": "Calidad de producción",
+          "DEFINITION": "Suma de 2.15.1–2.15.2."
+        },
+        "2_15_1": {
+          "LABEL": "Carcasas desechadas en producción (p. ej. cinturones rotos por la pulidora)",
+          "DEFINITION": "Incl.: costo de las carcasas dañadas por la planta durante la producción (costo de la carcasa + eliminación). Excl.: tarifas de eliminación de desechos RAR."
+        },
+        "2_15_2": {
+          "LABEL": "Ajustes (devoluciones de clientes, precio al usuario más transporte de ida y vuelta)",
+          "DEFINITION": "Incl.: costos de ajuste de materiales/mano de obra (tarifas, transporte), mostrados en el mes pagado (no devengado), coincidiendo con los ajustes informados a MRT Quality. Excl.: ajustes de concesiones comerciales; tarifas de eliminación RAR."
+        },
+        "TOTAL_OVERHEAD": {
+          "LABEL": "Total de gastos generales",
+          "DEFINITION": "Subtotal de la sección: suma de 2.1–2.15."
+        },
+        "TOTAL_LABOR_OVERHEAD": {
+          "LABEL": "Total de mano de obra y gastos generales",
+          "DEFINITION": "Total general: Total de mano de obra + Total de gastos generales."
+        }
+      }
     }
   },
   "PRODUCT": {
