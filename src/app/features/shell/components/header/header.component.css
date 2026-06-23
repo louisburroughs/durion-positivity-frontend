@@ -85,9 +85,8 @@
   outline-offset: 2px;
 }
 
-.locale-select option {
-  color: var(--durion-grey-900);
-}
+/* Option list governed by the global `option` rule in styles.css (theme-token
+   bg + text) so the header locale popup stays legible in light and dark. */
 
 .icon-btn {
   background: transparent;
