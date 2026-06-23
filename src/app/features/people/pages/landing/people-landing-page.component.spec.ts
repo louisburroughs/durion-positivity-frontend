@@ -87,6 +87,16 @@ describe('PeopleLandingPageComponent', () => {
     expect(lookups).toHaveLength(4);
   });
 
+  it('marks the typeahead input invalid and describes the error on failed launch', () => {
+    const launchButton = fixture.debugElement.query(By.css('[data-testid="personUuid-launch"]'));
+    launchButton.nativeElement.click();
+    fixture.detectChanges();
+
+    const lookupInput = fixture.debugElement.query(By.css('#personUuid')).nativeElement;
+    expect(lookupInput.getAttribute('aria-invalid')).toBe('true');
+    expect(lookupInput.getAttribute('aria-describedby')).toBe('personUuid-error');
+  });
+
   it('clears the field error when the user updates the launch value', () => {
     // Trigger a validation error first
     const launchButton = fixture.debugElement.query(By.css('[data-testid="personUuid-launch"]'));

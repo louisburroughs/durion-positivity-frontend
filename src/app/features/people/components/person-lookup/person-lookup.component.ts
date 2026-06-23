@@ -1,5 +1,5 @@
 import {
-  Component, inject, signal, forwardRef, Input, DestroyRef,
+  ChangeDetectionStrategy, Component, inject, signal, forwardRef, Input, DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -36,6 +36,7 @@ export type PersonLookupType = 'ALL' | 'EMPLOYEE' | 'ACTIVE' | 'INACTIVE';
   imports: [CommonModule, TranslatePipe],
   templateUrl: './person-lookup.component.html',
   styleUrl: './person-lookup.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -57,6 +58,10 @@ export class PersonLookupComponent implements ControlValueAccessor {
   @Input() placeholderKey = 'PEOPLE.LOOKUP.PLACEHOLDER';
   @Input() required = false;
   @Input() testId: string | null = null;
+  /** When true, marks the input invalid for assistive tech. */
+  @Input() invalid = false;
+  /** Id of an external error element to associate via aria-describedby. */
+  @Input() errorId: string | null = null;
 
   readonly suggestions = signal<Person[]>([]);
   readonly query        = signal('');
