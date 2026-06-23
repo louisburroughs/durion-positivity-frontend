@@ -3282,8 +3282,11 @@
       },
       "PRODUCT_FILTER": {
         "LABEL": "Find by name or SKU",
-        "PLACEHOLDER": "Search by product name or SKU…",
-        "DROPDOWN_ARIA": "Matching products"
+        "PLACEHOLDER": "Add products by name or SKU…",
+        "DROPDOWN_ARIA": "Matching products",
+        "SELECTED_ARIA": "Selected products",
+        "CHIP_REMOVE_ARIA": "Remove",
+        "CLEAR_ALL": "Clear all"
       },
       "SITE_TREE": {
         "BREADCRUMB": {
@@ -3340,14 +3343,17 @@
       "RETRY": "Retry",
       "BACK": "Back to Overview",
       "PICKER": {
-        "LABEL": "Location",
-        "PLACEHOLDER": "Search buildings or places...",
-        "SECTION_ARIA": "Location and SKU filters",
+        "LABEL": "Locations",
+        "PLACEHOLDER": "Add locations by name…",
+        "SECTION_ARIA": "Location and product filters",
         "DROPDOWN_ARIA": "Matching locations",
-        "NO_RESULTS": "No matching locations"
+        "NO_RESULTS": "No matching locations",
+        "SELECTED_ARIA": "Selected locations",
+        "CHIP_REMOVE_ARIA": "Remove",
+        "CLEAR_ALL": "Clear all"
       },
       "STATE": {
-        "IDLE": "Select a location to view inventory.",
+        "IDLE": "Select at least one location and one product to view inventory.",
         "LOADING": "Loading inventory...",
         "EMPTY": "No sites under this location."
       },
@@ -3368,6 +3374,19 @@
       },
       "BADGE": {
         "NEGATIVE_AVAILABLE_ARIA": "Warning: available quantity is negative (over-allocated)"
+      },
+      "RESULTS": {
+        "ARIA": "Inventory by location and product",
+        "CAPTION": "On-hand, allocated, and available quantities per location and product, with totals",
+        "TOTAL": "Total",
+        "HEADER": {
+          "LOCATION": "Location",
+          "PRODUCT": "Product",
+          "SKU": "SKU",
+          "ON_HAND": "On Hand",
+          "ALLOCATED": "Allocated",
+          "AVAILABLE": "Available"
+        }
       },
       "TABLE": {
         "ARIA": "Sites inventory summary",

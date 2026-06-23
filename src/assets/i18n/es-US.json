@@ -3282,8 +3282,11 @@
       },
       "PRODUCT_FILTER": {
         "LABEL": "Buscar por nombre o SKU",
-        "PLACEHOLDER": "Buscar por nombre de producto o SKU…",
-        "DROPDOWN_ARIA": "Productos coincidentes"
+        "PLACEHOLDER": "Agregar productos por nombre o SKU…",
+        "DROPDOWN_ARIA": "Productos coincidentes",
+        "SELECTED_ARIA": "Productos seleccionados",
+        "CHIP_REMOVE_ARIA": "Quitar",
+        "CLEAR_ALL": "Borrar todo"
       },
       "SITE_TREE": {
         "BREADCRUMB": {
@@ -3340,14 +3343,17 @@
       "RETRY": "Reintentar",
       "BACK": "Volver al resumen",
       "PICKER": {
-        "LABEL": "Ubicación",
-        "PLACEHOLDER": "Buscar edificios o lugares...",
-        "SECTION_ARIA": "Filtros de ubicación y SKU",
+        "LABEL": "Ubicaciones",
+        "PLACEHOLDER": "Agregar ubicaciones por nombre…",
+        "SECTION_ARIA": "Filtros de ubicación y producto",
         "DROPDOWN_ARIA": "Ubicaciones coincidentes",
-        "NO_RESULTS": "No hay ubicaciones coincidentes"
+        "NO_RESULTS": "No hay ubicaciones coincidentes",
+        "SELECTED_ARIA": "Ubicaciones seleccionadas",
+        "CHIP_REMOVE_ARIA": "Quitar",
+        "CLEAR_ALL": "Borrar todo"
       },
       "STATE": {
-        "IDLE": "Seleccione una ubicación para ver el inventario.",
+        "IDLE": "Seleccione al menos una ubicación y un producto para ver el inventario.",
         "LOADING": "Cargando inventario...",
         "EMPTY": "No hay sitios bajo esta ubicación."
       },
@@ -3368,6 +3374,19 @@
       },
       "BADGE": {
         "NEGATIVE_AVAILABLE_ARIA": "Advertencia: la cantidad disponible es negativa (sobreasignado)"
+      },
+      "RESULTS": {
+        "ARIA": "Inventario por ubicación y producto",
+        "CAPTION": "Cantidades en existencia, asignadas y disponibles por ubicación y producto, con totales",
+        "TOTAL": "Total",
+        "HEADER": {
+          "LOCATION": "Ubicación",
+          "PRODUCT": "Producto",
+          "SKU": "SKU",
+          "ON_HAND": "En Existencia",
+          "ALLOCATED": "Asignado",
+          "AVAILABLE": "Disponible"
+        }
       },
       "TABLE": {
         "ARIA": "Resumen de inventario por sitios",

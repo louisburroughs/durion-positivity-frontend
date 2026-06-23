@@ -3240,8 +3240,11 @@
       },
       "PRODUCT_FILTER": {
         "LABEL": "Rechercher par nom ou SKU",
-        "PLACEHOLDER": "Rechercher par nom de produit ou SKU…",
-        "DROPDOWN_ARIA": "Produits correspondants"
+        "PLACEHOLDER": "Ajouter des produits par nom ou SKU…",
+        "DROPDOWN_ARIA": "Produits correspondants",
+        "SELECTED_ARIA": "Produits sélectionnés",
+        "CHIP_REMOVE_ARIA": "Retirer",
+        "CLEAR_ALL": "Tout effacer"
       },
       "SITE_TREE": {
         "BREADCRUMB": {
@@ -3298,14 +3301,17 @@
       "RETRY": "Réessayer",
       "BACK": "Retour à l'aperçu",
       "PICKER": {
-        "LABEL": "Emplacement",
-        "PLACEHOLDER": "Rechercher des bâtiments ou des lieux...",
-        "SECTION_ARIA": "Filtres d'emplacement et de SKU",
+        "LABEL": "Emplacements",
+        "PLACEHOLDER": "Ajouter des emplacements par nom…",
+        "SECTION_ARIA": "Filtres d'emplacement et de produit",
         "DROPDOWN_ARIA": "Emplacements correspondants",
-        "NO_RESULTS": "Aucun emplacement correspondant"
+        "NO_RESULTS": "Aucun emplacement correspondant",
+        "SELECTED_ARIA": "Emplacements sélectionnés",
+        "CHIP_REMOVE_ARIA": "Retirer",
+        "CLEAR_ALL": "Tout effacer"
       },
       "STATE": {
-        "IDLE": "Sélectionnez un emplacement pour afficher l'inventaire.",
+        "IDLE": "Sélectionnez au moins un emplacement et un produit pour afficher l'inventaire.",
         "LOADING": "Chargement de l'inventaire...",
         "EMPTY": "Aucun site sous cet emplacement."
       },
@@ -3326,6 +3332,19 @@
       },
       "BADGE": {
         "NEGATIVE_AVAILABLE_ARIA": "Avertissement : la quantité disponible est négative (sur-allouée)"
+      },
+      "RESULTS": {
+        "ARIA": "Inventaire par emplacement et produit",
+        "CAPTION": "Quantités en stock, allouées et disponibles par emplacement et produit, avec totaux",
+        "TOTAL": "Total",
+        "HEADER": {
+          "LOCATION": "Emplacement",
+          "PRODUCT": "Produit",
+          "SKU": "SKU",
+          "ON_HAND": "En stock",
+          "ALLOCATED": "Alloué",
+          "AVAILABLE": "Disponible"
+        }
       },
       "TABLE": {
         "ARIA": "Résumé de l'inventaire des sites",
