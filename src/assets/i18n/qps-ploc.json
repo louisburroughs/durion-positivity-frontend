@@ -2362,6 +2362,16 @@
         "REQUIRED_IDENTIFIER": "[!! AAñ ïïđëëñŧïïƒïïëëŕ ïïš ŕëëqüüïïŕëëđ ŧøø øøṕëëñ ŧħïïš ṕààğëë. !!]",
         "NAVIGATE": "[!! Ňààṽïïğààŧïïøøñ ƒààïïľëëđ. Ṕľëëààšëë çħëëçķ ŧħëë ÏÏĐ ààñđ ŧŕÿ ààğààïïñ. !!]"
       }
+    },
+    "FINDERS": {
+      "TITLE": "Find a record",
+      "ESTIMATE_LABEL": "Find estimate",
+      "ESTIMATE_PLACEHOLDER": "Search by customer name or estimate id",
+      "WORKORDER_LABEL": "Find workorder",
+      "WORKORDER_PLACEHOLDER": "Search by customer name or workorder id",
+      "LOADING": "Searching…",
+      "EMPTY": "No matches found",
+      "ERROR": "Search failed. Please try again."
     }
   },
   "INVENTORY": {

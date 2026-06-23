@@ -1,6 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { Observable } from 'rxjs';
+import { WorkexecSearchTypeaheadComponent } from '../../components/search-typeahead/workexec-search-typeahead.component';
+import { SearchResultItem } from '../../models/workexec.models';
+import { WorkexecService } from '../../services/workexec.service';
 
 type LaunchField =
   | 'estimateId'
@@ -305,13 +309,18 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
 @Component({
   selector: 'app-workexec-landing-page',
   standalone: true,
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, WorkexecSearchTypeaheadComponent],
   templateUrl: './workexec-landing-page.component.html',
   styleUrl: './workexec-landing-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkexecLandingPageComponent {
   private readonly router = inject(Router);
+  private readonly workexec = inject(WorkexecService);
+
+  /** Arrow fields so `this` binds correctly when passed as `[search]` inputs. */
+  readonly estimateSearch = (q: string): Observable<SearchResultItem[]> => this.workexec.searchEstimates(q);
+  readonly workorderSearch = (q: string): Observable<SearchResultItem[]> => this.workexec.searchWorkorders(q);
 
   readonly state = signal<PageState>('ready');
   readonly errorKey = signal<string | null>(null);
@@ -352,6 +361,14 @@ export class WorkexecLandingPageComponent {
 
   isLaunchCard(card: DirectCard | LaunchCard): card is LaunchCard {
     return card.kind === 'launch';
+  }
+
+  onEstimateSelected(id: string): void {
+    void this.router.navigate(['/app', 'workexec', 'estimates', id, 'summary']);
+  }
+
+  onWorkorderSelected(id: string): void {
+    void this.router.navigate(['/app', 'workexec', 'workorders', id]);
   }
 
   updateLaunchValue(field: LaunchField, value: string): void {
