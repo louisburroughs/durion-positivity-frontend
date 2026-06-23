@@ -23,6 +23,17 @@ export type EstimateStatus =
 
 export type EstimateItemType = 'PART' | 'LABOR';
 
+// ── Typeahead search result (Finders) ────────────────────────────────────────
+
+/** Normalised search hit shown in the workexec finders typeahead. */
+export interface SearchResultItem {
+  id: string;
+  /** Primary line — customer name. */
+  primary: string;
+  /** Secondary line — estimate number / short workorder id + status. */
+  secondary: string;
+}
+
 // ── Error envelope ────────────────────────────────────────────────────────────
 
 export interface FieldError {

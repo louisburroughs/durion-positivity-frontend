@@ -7,6 +7,8 @@ import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   ChangeRequestAPIService,
   EstimateAPIService,
+  EstimateSearchService,
+  WorkorderSearchService,
   EstimatesFromAppointmentsService,
   OperationalContextService,
   SubstituteLinkAPIService,
@@ -69,6 +71,7 @@ import {
   WorkorderDetailResponse,
   WorkorderInvoiceView,
   WorkorderLaborEntryResponse,
+  SearchResultItem,
   WorkorderResponse,
   WorkorderSnapshotHistoryEntry,
   WorkorderStartResponse,
@@ -147,6 +150,8 @@ interface RawEstimateSummary {
 export class WorkexecService {
   private readonly api = inject(ApiBaseService);
   private readonly estimateApi = inject(EstimateAPIService);
+  private readonly estimateSearchApi = inject(EstimateSearchService);
+  private readonly workorderSearchApi = inject(WorkorderSearchService);
   private readonly estimatesFromAppointments = inject(EstimatesFromAppointmentsService);
   private readonly changeRequest = inject(ChangeRequestAPIService);
   private readonly operationalContext = inject(OperationalContextService);
@@ -585,6 +590,38 @@ export class WorkexecService {
    */
   getEstimateSummary(estimateId: string): Observable<EstimateSummaryResponse> {
     return this.estimateApi.getEstimateSummary(estimateId) as Observable<EstimateSummaryResponse>;
+  }
+
+  // ── Finders: typeahead search ─────────────────────────────────────────────
+
+  /**
+   * operationId: searchEstimates
+   * GET /v1/workexec/estimates/search?q={q}
+   * Free-text search matching estimate number, customer name, or estimate id.
+   */
+  searchEstimates(q: string): Observable<SearchResultItem[]> {
+    return this.estimateSearchApi.searchEstimates({ page: 0, size: 10 }, q).pipe(
+      map(page => (page.content ?? []).map(e => ({
+        id: e.id ?? '',
+        primary: e.customerName ?? '',
+        secondary: [e.estimateNumber, e.status].filter(Boolean).join(' · '),
+      }))),
+    );
+  }
+
+  /**
+   * operationId: searchWorkorders
+   * GET /v1/workorders/search?q={q}
+   * Free-text search matching customer name or workorder id.
+   */
+  searchWorkorders(q: string): Observable<SearchResultItem[]> {
+    return this.workorderSearchApi.searchWorkorders({ page: 0, size: 10 }, q).pipe(
+      map(page => (page.content ?? []).map(w => ({
+        id: w.workorderId ?? '',
+        primary: w.customerName ?? '',
+        secondary: [w.workorderId?.slice(0, 8), w.status].filter(Boolean).join(' · '),
+      }))),
+    );
   }
 
   /**

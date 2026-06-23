@@ -22,9 +22,11 @@ import {
   HttpClientTestingModule,
   HttpTestingController,
 } from '@angular/common/http/testing';
+import { of } from 'rxjs';
+import { vi } from 'vitest';
 import { WorkexecService } from './workexec.service';
 import { ApiBaseService } from '../../../core/services/api-base.service';
-import { BASE_PATH } from '@durion-sdk/workorder';
+import { BASE_PATH, EstimateSearchService, WorkorderSearchService } from '@durion-sdk/workorder';
 import { environment } from '../../../../environments/environment';
 import {
   ConsumePickedItemsRequest,
@@ -46,14 +48,21 @@ const BASE = environment.apiBaseUrl;
 describe('WorkexecService', () => {
   let service: WorkexecService;
   let http: HttpTestingController;
+  let estimateSearchStub: { searchEstimates: ReturnType<typeof vi.fn> };
+  let workorderSearchStub: { searchWorkorders: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
+    estimateSearchStub = { searchEstimates: vi.fn() };
+    workorderSearchStub = { searchWorkorders: vi.fn() };
+
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
         WorkexecService,
         ApiBaseService,
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
+        { provide: EstimateSearchService, useValue: estimateSearchStub },
+        { provide: WorkorderSearchService, useValue: workorderSearchStub },
       ],
     });
     service = TestBed.inject(WorkexecService);
@@ -559,6 +568,43 @@ describe('WorkexecService', () => {
       );
       expect(req.request.method).toBe('POST');
       req.flush({ status: 'COMPLETE' });
+    });
+  });
+
+  // ── Finders: typeahead search ────────────────────────────────────────────
+
+  describe('Finders search methods', () => {
+    it('searchEstimates — maps page content to SearchResultItem[]', () => {
+      estimateSearchStub.searchEstimates.mockReturnValue(
+        of({ content: [{ id: 'e1', estimateNumber: 'EST-1', customerName: 'Acme', status: 'DRAFT' }] }),
+      );
+
+      let result: unknown;
+      service.searchEstimates('acme').subscribe(r => (result = r));
+
+      expect(estimateSearchStub.searchEstimates).toHaveBeenCalledWith({ page: 0, size: 10 }, 'acme');
+      expect(result).toEqual([{ id: 'e1', primary: 'Acme', secondary: 'EST-1 · DRAFT' }]);
+    });
+
+    it('searchEstimates — yields [] for empty page content', () => {
+      estimateSearchStub.searchEstimates.mockReturnValue(of({ content: [] }));
+
+      let result: unknown;
+      service.searchEstimates('zzz').subscribe(r => (result = r));
+
+      expect(result).toEqual([]);
+    });
+
+    it('searchWorkorders — maps page content to SearchResultItem[] with short id', () => {
+      workorderSearchStub.searchWorkorders.mockReturnValue(
+        of({ content: [{ workorderId: 'w1234567', status: 'OPEN', customerName: 'Acme' }] }),
+      );
+
+      let result: unknown;
+      service.searchWorkorders('acme').subscribe(r => (result = r));
+
+      expect(workorderSearchStub.searchWorkorders).toHaveBeenCalledWith({ page: 0, size: 10 }, 'acme');
+      expect(result).toEqual([{ id: 'w1234567', primary: 'Acme', secondary: 'w1234567 · OPEN' }]);
     });
   });
 });
