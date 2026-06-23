@@ -20,17 +20,58 @@
     }
 
     <div class="assign-form">
-      <div class="field">
-        <label for="technicianId" class="field__label">Technician ID <span aria-hidden="true">*</span></label>
+      <div class="field tech-lookup">
+        <label for="technicianId" class="field__label">Technician <span aria-hidden="true">*</span></label>
         <input
           id="technicianId"
           class="field__input"
           type="text"
-          [value]="technicianId()"
-          (input)="technicianId.set($any($event.target).value)"
-          placeholder="Enter technician UUID"
+          role="combobox"
+          autocomplete="off"
+          spellcheck="false"
+          aria-autocomplete="list"
           aria-required="true"
+          [attr.aria-controls]="showTechList() && filteredTechnicians().length > 0 ? 'technician-listbox' : null"
+          [attr.aria-expanded]="showTechList() && filteredTechnicians().length > 0"
+          [attr.aria-activedescendant]="showTechList() && activeIndex() >= 0 ? ('technician-opt-' + activeIndex()) : null"
+          [value]="techQuery()"
+          (input)="onTechInput($any($event.target).value)"
+          (focus)="onTechFocus()"
+          (blur)="onTechBlur()"
+          (keydown)="onTechKeydown($event)"
+          placeholder="Search technicians at this location"
         />
+
+        @if (rosterState() === 'loading') {
+          <p class="hint-text" aria-busy="true">Loading technicians…</p>
+        }
+        @if (rosterState() === 'error') {
+          <p class="hint-text">Could not load technicians for this location.</p>
+        }
+        @if (rosterState() === 'ready' && technicians().length === 0) {
+          <p class="hint-text">No technicians assigned to this location.</p>
+        }
+
+        @if (showTechList() && filteredTechnicians().length > 0) {
+          <ul id="technician-listbox" class="tech-list" role="listbox" aria-label="Technicians at this location">
+            @for (tech of filteredTechnicians(); track tech.id; let i = $index) {
+              <li
+                role="option"
+                class="tech-option"
+                [id]="'technician-opt-' + i"
+                [class.tech-option--active]="i === activeIndex()"
+                [attr.aria-selected]="i === activeIndex()"
+                (mousedown)="selectTechnician(tech)"
+              >
+                <span class="tech-option__name">{{ tech.name }}</span>
+                @if (tech.role) { <span class="tech-option__role">{{ tech.role }}</span> }
+              </li>
+            }
+          </ul>
+        }
+        @if (showTechList() && rosterState() === 'ready' && technicians().length > 0 && filteredTechnicians().length === 0) {
+          <p class="hint-text">No technicians match “{{ techQuery() }}”.</p>
+        }
       </div>
       <div class="field">
         <label for="assignNotes" class="field__label">Notes</label>

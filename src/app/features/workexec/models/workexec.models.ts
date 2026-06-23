@@ -398,6 +398,18 @@ export interface AssignTechnicianRequest {
   notes?: string;
 }
 
+/**
+ * A technician staffed at a location, derived from the people-availability
+ * roster. Used to populate the assign-page typeahead so an operator selects a
+ * known technician instead of pasting a raw UUID.
+ */
+export interface LocationTechnician {
+  /** Canonical personId — the value submitted as technicianId. */
+  id: string;
+  name: string;
+  role?: string;
+}
+
 // ── CAP-005: Workorder start/status (Story 224) ───────────────────────────────
 
 export interface WorkorderStartResponse {
