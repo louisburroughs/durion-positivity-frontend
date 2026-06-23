@@ -1,5 +1,6 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
+import type { ParamMap } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { LocationAPIService } from '@durion-sdk/location';
@@ -58,6 +59,26 @@ function createComponent(routeQuery: Record<string, string> = {}, routePath: Rec
             paramMap: convertToParamMap(routePath),
             queryParamMap: convertToParamMap(routeQuery),
           },
+        },
+      },
+      { provide: Router, useValue: routerStub },
+    ],
+  });
+  return TestBed.createComponent(LocationInventoryOverviewPageComponent);
+}
+
+function createComponentWithQueryParam$(qp$: Subject<ParamMap>) {
+  TestBed.configureTestingModule({
+    imports: [LocationInventoryOverviewPageComponent, TranslateModule.forRoot()],
+    providers: [
+      { provide: InventoryRollupApiService, useValue: rollupServiceStub },
+      { provide: LocationAPIService, useValue: locationServiceStub },
+      { provide: ProductsAPIService, useValue: productsServiceStub },
+      {
+        provide: ActivatedRoute,
+        useValue: {
+          queryParamMap: qp$.asObservable(),
+          snapshot: { paramMap: convertToParamMap({}), queryParamMap: convertToParamMap({}) },
         },
       },
       { provide: Router, useValue: routerStub },
@@ -235,6 +256,34 @@ describe('selection management', () => {
     tick();
     expect(comp.selectedProducts().length).toBe(0);
     expect(comp.state()).toBe('idle');
+  }));
+
+  it('ignores stale query-param emissions from its own navigations', fakeAsync(() => {
+    const qp$ = new Subject<ParamMap>();
+    const fixture = createComponentWithQueryParam$(qp$);
+    fixture.detectChanges();
+    tick();
+
+    const comp = fixture.componentInstance;
+    // Two rapid selections → two self-navigations queued (router stub is a
+    // no-op, so the param emissions are simulated below, out of date).
+    comp.selectLocation(location('l1', 'HQ'));
+    tick();
+    comp.selectLocation(location('l2', 'Depot'));
+    tick();
+    expect(comp.selectedLocations().map(l => l.id)).toEqual(['l1', 'l2']);
+
+    // Stale self emissions must NOT revert the selection.
+    qp$.next(convertToParamMap({ locations: 'l1' }));
+    tick();
+    qp$.next(convertToParamMap({ locations: 'l1,l2' }));
+    tick();
+    expect(comp.selectedLocations().map(l => l.id)).toEqual(['l1', 'l2']);
+
+    // A genuine external change (e.g. back button) DOES reconcile.
+    qp$.next(convertToParamMap({ locations: 'l1' }));
+    tick();
+    expect(comp.selectedLocations().map(l => l.id)).toEqual(['l1']);
   }));
 
   it('writes the location selection to the ?locations query param', fakeAsync(() => {

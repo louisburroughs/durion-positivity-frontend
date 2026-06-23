@@ -157,6 +157,14 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
   );
 
   private rollupSub: Subscription | null = null;
+  /**
+   * Count of query-param navigations we triggered ourselves. Each produces a
+   * `queryParamMap` emission that must NOT reconcile the selection (the signal
+   * is already authoritative) — otherwise a stale in-order emission could
+   * momentarily revert a rapid multi-select. Only external changes (back /
+   * forward / deep link) fall through to reconciliation.
+   */
+  private pendingSelfNavigations = 0;
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -397,6 +405,13 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
 
   /** Reacts to a `locations` query-param emission (source of truth). */
   private onLocationsParam(csv: string | null): void {
+    // Skip emissions caused by our own navigations; the selection signal is
+    // already up to date for those.
+    if (this.pendingSelfNavigations > 0) {
+      this.pendingSelfNavigations--;
+      return;
+    }
+
     const ids = (csv ?? '')
       .split(',')
       .map(s => s.trim())
@@ -416,6 +431,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
 
   private pushLocationsToUrl(): void {
     const ids = this.selectedLocations().map(l => l.id);
+    this.pendingSelfNavigations++;
     void this.router.navigate(['/app/inventory/by-location'], {
       queryParams: { locations: ids.length ? ids.join(',') : null },
       queryParamsHandling: 'merge',
