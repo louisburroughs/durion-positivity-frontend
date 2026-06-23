@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { PeopleAvailabilityAPIService, PeopleAvailabilityResponse } from '@durion-sdk/people';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   ChangeRequestAPIService,
@@ -28,6 +29,7 @@ import {
   AssignTechnicianRequest,
   CalculateEstimateTotalsResponse,
   ChangeRequestResponse,
+  LocationTechnician,
   CompleteWorkorderRequest,
   CompleteWorkorderResponse,
   ConsumePickedItemsRequest,
@@ -160,6 +162,7 @@ export class WorkexecService {
   private readonly substituteLink = inject(SubstituteLinkAPIService);
   private readonly workorderPartAdjustments = inject(WorkorderPartAdjustmentsService);
   private readonly timeTracking = inject(WorkexecTimeTrackingAPIService);
+  private readonly peopleAvailability = inject(PeopleAvailabilityAPIService);
 
   /** Builds an options object carrying the Idempotency-Key header when a key is provided. */
   private idempotencyOptions(key?: string) {
@@ -820,6 +823,38 @@ export class WorkexecService {
    */
   getTechnicianAssignment(workorderId: string): Observable<TechnicianAssignmentResponse> {
     return this.technicianAssignment.getTechnicianAssignment(workorderId) as Observable<TechnicianAssignmentResponse>;
+  }
+
+  /**
+   * operationId: getPeopleAvailability
+   * GET /v1/people/availability?locationId={locationId}
+   *
+   * Returns the technicians staffed at a location, used to populate the assign
+   * page typeahead. Filters the location roster to ACTIVE assignments whose role
+   * denotes a technician/mechanic — role labels are not strictly normalised
+   * (TECHNICIAN, TECH, MECHANIC all occur), so the match is case-insensitive on
+   * those stems.
+   */
+  listTechniciansForLocation(locationId: string): Observable<LocationTechnician[]> {
+    return this.peopleAvailability.getPeopleAvailability(locationId.trim()).pipe(
+      map(roster => (roster ?? [])
+        .filter(p => String(p.assignmentStatus) !== 'ENDED' && this.isTechnicianRole(p.role))
+        .map(p => this.toLocationTechnician(p))),
+    );
+  }
+
+  private isTechnicianRole(role?: string): boolean {
+    const r = (role ?? '').toLowerCase();
+    return r.includes('tech') || r.includes('mechanic');
+  }
+
+  private toLocationTechnician(p: PeopleAvailabilityResponse): LocationTechnician {
+    const name = `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim();
+    return {
+      id: p.personId,
+      name: name || p.personId,
+      role: p.role,
+    };
   }
 
   // ── CAP-005: Start Work (Story 224) ──────────────────────────────────────
