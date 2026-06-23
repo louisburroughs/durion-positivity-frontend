@@ -117,7 +117,14 @@ export class EstimateDetailPageComponent implements OnInit {
           this.estimate.set(est);
           this.items.set(est.items ?? []);
           this.pageState.set('ready');
-          this.recalcTrigger$.next();
+          // Totals are only mutable while the estimate is in DRAFT. Once it is
+          // submitted/approved/declined the backend freezes totals and rejects
+          // /calculate with 409. Render the stored totals instead of recalculating.
+          if (est.status === 'DRAFT') {
+            this.recalcTrigger$.next();
+          } else {
+            this.totalsState.set('updated');
+          }
           this.buildApprovalScope(est);
           this.loadContacts(est);
           this.resolveCrmRefs(est);

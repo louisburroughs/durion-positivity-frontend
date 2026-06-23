@@ -99,6 +99,24 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
     expect(component.canSubmitForApproval()).toBe(false);
   });
 
+  it('does not call /calculate for a non-DRAFT estimate and renders stored totals', () => {
+    fixture.detectChanges();
+    // Estimate already promoted past DRAFT: backend freezes totals and returns
+    // 409 on /calculate. The page must render the persisted totals instead.
+    http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({
+      ...STUB_ESTIMATE,
+      status: 'APPROVED',
+      subtotal: 100,
+      taxAmount: 8,
+      total: 108,
+    });
+    vi.advanceTimersByTime(350);
+    // No POST /calculate is issued; http.verify() in afterEach asserts no
+    // outstanding requests. totalsState stays out of the 'error' state.
+    expect(component.totalsState()).toBe('updated');
+    expect(component.totalsState()).not.toBe('error');
+  });
+
   describe('CRM References [Story 157]', () => {
     it('displays crm-ref-block with populated CRM IDs when estimate has crmPartyId and crmVehicleId', async () => {
       fixture.detectChanges();
