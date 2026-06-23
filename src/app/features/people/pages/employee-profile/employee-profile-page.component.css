@@ -125,6 +125,21 @@ label {
   color: var(--functional-error-red);
 }
 
+.alert--warning {
+  background: color-mix(in srgb, var(--functional-warning-amber, #b8860b) 12%, var(--cardBackground));
+  color: var(--functional-warning-amber, #8a6d0b);
+}
+
+.alert__title {
+  margin: 0 0 var(--space-2);
+  font-weight: 600;
+}
+
+.alert__list {
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
 .status-badge {
   display: inline-flex;
   justify-self: start;

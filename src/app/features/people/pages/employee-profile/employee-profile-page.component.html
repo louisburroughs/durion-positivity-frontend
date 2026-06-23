@@ -23,6 +23,17 @@
   </section>
   }
 
+  @if (warnings().length > 0) {
+  <section class="alert alert--warning" role="status" aria-live="polite" data-testid="profile-warnings">
+    <p class="alert__title">Some profile details could not be fully resolved:</p>
+    <ul class="alert__list">
+      @for (warning of warnings(); track warning) {
+      <li>{{ warning }}</li>
+      }
+    </ul>
+  </section>
+  }
+
   <form [formGroup]="form" (ngSubmit)="save()" novalidate class="profile-form">
     <fieldset class="form-section">
       <legend>Personal details</legend>
