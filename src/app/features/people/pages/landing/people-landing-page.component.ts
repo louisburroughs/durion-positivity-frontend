@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DomainType } from '../../../bulk-import/models/bulk-import.models';
 import { BulkImportService } from '../../../bulk-import/services/bulk-import.service';
+import { PersonLookupComponent, PersonLookupType } from '../../components/person-lookup/person-lookup.component';
 
 type LaunchField =
   | 'personUuid'
@@ -32,6 +34,11 @@ interface LaunchCard extends BaseCard {
   inputLabelKey: string;
   inputPlaceholderKey: string;
   buildCommands: (value: string) => readonly string[];
+  /**
+   * When set, the raw id field is replaced by a person name typeahead scoped
+   * to this type. Omit for non-person identifiers (e.g. a session id).
+   */
+  personSearch?: PersonLookupType;
 }
 
 interface LandingSection {
@@ -105,6 +112,7 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         inputPlaceholderKey: 'PEOPLE.LANDING.PLACEHOLDER.EMPLOYEE_ID',
         actionKey: 'PEOPLE.LANDING.ACTION.OPEN_EMPLOYEE_PROFILE',
         buildCommands: value => ['/app', 'people', 'employees', value],
+        personSearch: 'EMPLOYEE',
       },
       {
         kind: 'launch',
@@ -115,6 +123,7 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         inputPlaceholderKey: 'PEOPLE.LANDING.PLACEHOLDER.OFFBOARD_EMPLOYEE_ID',
         actionKey: 'PEOPLE.LANDING.ACTION.OPEN_EMPLOYEE_OFFBOARD',
         buildCommands: value => ['/app', 'people', 'employees', value, 'offboard'],
+        personSearch: 'EMPLOYEE',
       },
     ],
   },
@@ -131,6 +140,7 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         inputPlaceholderKey: 'PEOPLE.LANDING.PLACEHOLDER.PERSON_UUID',
         actionKey: 'PEOPLE.LANDING.ACTION.OPEN_RBAC',
         buildCommands: value => ['/app', 'people', 'rbac', value],
+        personSearch: 'ALL',
       },
       {
         kind: 'launch',
@@ -141,6 +151,7 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         inputPlaceholderKey: 'PEOPLE.LANDING.PLACEHOLDER.PERSON_ID',
         actionKey: 'PEOPLE.LANDING.ACTION.OPEN_PERSON_LOCATIONS',
         buildCommands: value => ['/app', 'people', 'person', value, 'locations'],
+        personSearch: 'EMPLOYEE',
       },
     ],
   },
@@ -176,7 +187,7 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
 @Component({
   selector: 'app-people-landing-page',
   standalone: true,
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, FormsModule, TranslatePipe, PersonLookupComponent],
   templateUrl: './people-landing-page.component.html',
   styleUrl: './people-landing-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

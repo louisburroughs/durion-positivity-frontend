@@ -3,6 +3,7 @@ import { By } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of } from 'rxjs';
+import { PeopleAPIService } from '@durion-sdk/people';
 import { PeopleLandingPageComponent } from './people-landing-page.component';
 import { BulkImportService } from '../../../bulk-import/services/bulk-import.service';
 
@@ -12,6 +13,10 @@ describe('PeopleLandingPageComponent', () => {
   let router: Router;
   const bulkImportService = {
     getActiveJobDomains: vi.fn(),
+  };
+  const peopleApi = {
+    getAllPeople: vi.fn().mockReturnValue(of([])),
+    getPersonById: vi.fn().mockReturnValue(of(null)),
   };
 
   const findLaunchCard = (field: string) => {
@@ -34,6 +39,7 @@ describe('PeopleLandingPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: BulkImportService, useValue: bulkImportService },
+        { provide: PeopleAPIService, useValue: peopleApi },
       ],
     }).compileComponents();
 
@@ -61,17 +67,24 @@ describe('PeopleLandingPageComponent', () => {
     expect(directLinks.length).toBe(component.directLinkCount + 2);
   });
 
-  it('shows inline validation when a guided launch is missing its identifier', () => {
-    const launchButton = fixture.debugElement.query(By.css('[data-testid="personUuid-launch"]'));
+  it('shows inline validation when a plain-input guided launch is missing its identifier', () => {
+    // sessionId is the one launch card that keeps a raw text input (not a person typeahead).
+    const launchButton = fixture.debugElement.query(By.css('[data-testid="sessionId-launch"]'));
     launchButton.nativeElement.click();
     fixture.detectChanges();
 
-    const launchInput = fixture.debugElement.query(By.css('input[name="personUuid"]')).nativeElement;
+    const launchInput = fixture.debugElement.query(By.css('input[name="sessionId"]')).nativeElement;
     const errorMessage = fixture.debugElement.query(By.css('.people-field__error'));
 
     expect(errorMessage).toBeTruthy();
     expect(launchInput.getAttribute('aria-invalid')).toBe('true');
-    expect(launchInput.getAttribute('aria-describedby')).toBe('personUuid-error');
+    expect(launchInput.getAttribute('aria-describedby')).toBe('sessionId-error');
+  });
+
+  it('renders a person typeahead for each person-scoped launch card', () => {
+    const lookups = fixture.debugElement.queryAll(By.css('app-person-lookup'));
+    // Employee Profile, Employee Offboard, Role Assignment, Person Locations.
+    expect(lookups).toHaveLength(4);
   });
 
   it('clears the field error when the user updates the launch value', () => {
