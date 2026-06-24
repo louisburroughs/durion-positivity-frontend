@@ -104,6 +104,13 @@
   --shadow-nav: 2px 0 8px rgba(0, 0, 0, 0.12);
   --chat-bubble-user-bg: var(--durion-blue-100);
   --chat-bubble-system-bg: var(--durion-graphite-100);
+  /* Elevated surfaces (dropdowns/popovers/menus) + muted text. Previously
+     undefined, so the ~28 components referencing them fell back to light
+     values and rendered white-on-dark in dark mode. */
+  --surface-variant: var(--brand-surface);
+  --surface-2: var(--brand-surface);
+  --surface-hover: rgba(0, 52, 111, 0.06);
+  --text-muted: var(--handleColor);
 }
 
 /* ── DARK THEME ──────────────────────────────────────────────────────────── */
@@ -133,6 +140,12 @@
   --shadow-nav: 2px 0 8px rgba(0, 0, 0, 0.5);
   --chat-bubble-user-bg: var(--durion-blue-700);
   --chat-bubble-system-bg: var(--durion-graphite-700);
+  /* Dark variants of the elevated-surface + muted-text tokens. graphite-800
+     popup over grey-700 cards; handleColor (graphite-200) = 7.9:1 muted text. */
+  --surface-variant: var(--durion-graphite-800);
+  --surface-2: var(--cardBackground);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --text-muted: var(--handleColor);
 }
 
 /* ── Box-sizing & Reset ──────────────────────────────────────────────────── */
