@@ -605,6 +605,7 @@ export class WorkexecService {
         id: e.id ?? '',
         primary: e.customerName ?? '',
         secondary: [e.estimateNumber, e.status].filter(Boolean).join(' · '),
+        tertiary: this.vehicleTertiary(e.vehicleLabel, e.vin),
       }))),
     );
   }
@@ -612,16 +613,27 @@ export class WorkexecService {
   /**
    * operationId: searchWorkorders
    * GET /v1/workorders/search?q={q}
-   * Free-text search matching customer name or workorder id.
+   * Free-text search matching workorder number, customer name, or workorder id.
    */
   searchWorkorders(q: string): Observable<SearchResultItem[]> {
     return this.workorderSearchApi.searchWorkorders({ page: 0, size: 10 }, q).pipe(
       map(page => (page.content ?? []).map(w => ({
         id: w.workorderId ?? '',
         primary: w.customerName ?? '',
-        secondary: [w.workorderId?.slice(0, 8), w.status].filter(Boolean).join(' · '),
+        secondary: [w.workorderNumber ?? w.workorderId?.slice(0, 8), w.status].filter(Boolean).join(' · '),
+        tertiary: this.vehicleTertiary(w.vehicleLabel, w.vin),
       }))),
     );
+  }
+
+  /**
+   * Builds the dropdown tertiary line: vehicle label + last-8 of the VIN
+   * (truncation is a display concern; the API returns the full VIN).
+   */
+  private vehicleTertiary(vehicleLabel?: string, vin?: string): string | undefined {
+    const vinTail = vin ? `VIN …${vin.slice(-8)}` : undefined;
+    const line = [vehicleLabel, vinTail].filter(Boolean).join(' · ');
+    return line || undefined;
   }
 
   /**

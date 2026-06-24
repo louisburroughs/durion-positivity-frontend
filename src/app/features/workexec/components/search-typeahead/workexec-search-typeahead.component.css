@@ -64,8 +64,20 @@
   background: var(--surface-hover, rgba(0, 52, 111, 0.06));
 }
 
+.wx-typeahead__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
 .wx-typeahead__primary {
   font-weight: 600;
+}
+
+.wx-typeahead__tertiary {
+  font-size: 0.75rem;
+  color: var(--text-muted, #5a6b7b);
 }
 
 .wx-typeahead__secondary {

@@ -30,8 +30,10 @@ export interface SearchResultItem {
   id: string;
   /** Primary line — customer name. */
   primary: string;
-  /** Secondary line — estimate number / short workorder id + status. */
+  /** Secondary line — estimate/workorder number + status. */
   secondary: string;
+  /** Tertiary line — vehicle label + truncated VIN. */
+  tertiary?: string;
 }
 
 // ── Error envelope ────────────────────────────────────────────────────────────
