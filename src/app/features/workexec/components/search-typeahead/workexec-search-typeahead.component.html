@@ -42,7 +42,12 @@
             [attr.aria-selected]="i === activeIndex()"
             (click)="choose(item)"
           >
-            <strong class="wx-typeahead__primary">{{ item.primary }}</strong>
+            <span class="wx-typeahead__lines">
+              <strong class="wx-typeahead__primary">{{ item.primary }}</strong>
+              @if (item.tertiary) {
+                <span class="wx-typeahead__tertiary">{{ item.tertiary }}</span>
+              }
+            </span>
             <span class="wx-typeahead__secondary">{{ item.secondary }}</span>
           </li>
         }

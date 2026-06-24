@@ -606,5 +606,63 @@ describe('WorkexecService', () => {
       expect(workorderSearchStub.searchWorkorders).toHaveBeenCalledWith({ page: 0, size: 10 }, 'acme');
       expect(result).toEqual([{ id: 'w1234567', primary: 'Acme', secondary: 'w1234567 · OPEN' }]);
     });
+
+    it('searchEstimates — includes vehicle label + truncated VIN as tertiary', () => {
+      estimateSearchStub.searchEstimates.mockReturnValue(
+        of({
+          content: [
+            {
+              id: 'e1',
+              estimateNumber: 'EST-2026-1001',
+              customerName: 'Acme',
+              status: 'DRAFT',
+              vehicleLabel: '2019 Ford F-150',
+              vin: '1FTFW1E50KFA12345',
+            },
+          ],
+        }),
+      );
+
+      let result: unknown;
+      service.searchEstimates('acme').subscribe(r => (result = r));
+
+      expect(result).toEqual([
+        {
+          id: 'e1',
+          primary: 'Acme',
+          secondary: 'EST-2026-1001 · DRAFT',
+          tertiary: '2019 Ford F-150 · VIN …KFA12345',
+        },
+      ]);
+    });
+
+    it('searchWorkorders — uses workorderNumber and vehicle tertiary when present', () => {
+      workorderSearchStub.searchWorkorders.mockReturnValue(
+        of({
+          content: [
+            {
+              workorderId: 'w-uuid',
+              workorderNumber: 'WO-2026-1001',
+              status: 'OPEN',
+              customerName: 'Acme',
+              vehicleLabel: '2019 Ford F-150',
+              vin: '1FTFW1E50KFA12345',
+            },
+          ],
+        }),
+      );
+
+      let result: unknown;
+      service.searchWorkorders('acme').subscribe(r => (result = r));
+
+      expect(result).toEqual([
+        {
+          id: 'w-uuid',
+          primary: 'Acme',
+          secondary: 'WO-2026-1001 · OPEN',
+          tertiary: '2019 Ford F-150 · VIN …KFA12345',
+        },
+      ]);
+    });
   });
 });
