@@ -98,12 +98,16 @@
     @if (items().length === 0) {
     <p class="hint-text">No items were promoted from the estimate.</p>
     } @else {
+    @if (itemError()) {
+    <p class="hint-text hint-text--error" role="alert">{{ itemError() }}</p>
+    }
     <div class="ledger">
       <div class="ledger__header">
         <span>Description</span>
         <span>Qty</span>
         <span>Unit Price</span>
         <span>Line Total</span>
+        <span>Done</span>
       </div>
       @for (item of items(); track item.id; let even = $even) {
       <div class="ledger__row" [class.ledger__row--alt]="even" [attr.aria-label]="item.description">
@@ -115,6 +119,16 @@
         <span class="ledger__cell">{{ item.quantity }}</span>
         <span class="ledger__cell">{{ item.unitPrice | currency }}</span>
         <span class="ledger__cell ledger__cell--total">{{ item.lineTotal | currency }}</span>
+        <span class="ledger__cell ledger__cell--done">
+          <input
+            type="checkbox"
+            class="ledger__check"
+            [checked]="isItemCompleted(item)"
+            [disabled]="isItemCompleted(item) || !canCompleteItems() || completingItemId() !== null"
+            (change)="completeItem(item)"
+            [attr.aria-label]="'Mark ' + (item.description || 'item') + ' complete'"
+          />
+        </span>
       </div>
       }
     </div>

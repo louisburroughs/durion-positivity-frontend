@@ -91,6 +91,11 @@ export class WorkorderDetailPageComponent implements OnInit {
 
   readonly auditExpanded = signal(false);
 
+  // ── Per-item completion (#736) ────────────────────────────────────────────
+
+  readonly completingItemId = signal<string | null>(null);
+  readonly itemError = signal<string | null>(null);
+
   // ── Computed guards ───────────────────────────────────────────────────────
 
   readonly canStartWork = computed(() => {
@@ -118,6 +123,12 @@ export class WorkorderDetailPageComponent implements OnInit {
   );
 
   readonly items = computed((): WorkorderItemResponse[] => this.workorder()?.items ?? []);
+
+  /** Line items can be completed while the workorder is not terminal. */
+  readonly canCompleteItems = computed(() => {
+    const s = this.workorder()?.status;
+    return s !== undefined && s !== 'COMPLETED' && s !== 'CANCELLED';
+  });
 
   readonly technicianName = computed(() =>
     this.workorder()?.primaryTechnicianName ??
@@ -369,6 +380,44 @@ export class WorkorderDetailPageComponent implements OnInit {
                 : 'Failed to create invoice. Please try again.',
             );
           }
+        },
+      });
+  }
+
+  // ── Per-item completion (#736) ────────────────────────────────────────────
+
+  isItemCompleted(item: WorkorderItemResponse): boolean {
+    return item.status === 'COMPLETED';
+  }
+
+  /** Mark a single service/part line item complete via the per-item endpoint. */
+  completeItem(item: WorkorderItemResponse): void {
+    if (!item.id || this.isItemCompleted(item) || this.completingItemId() !== null) {
+      return;
+    }
+    this.completingItemId.set(item.id);
+    this.itemError.set(null);
+    this.service
+      .completeWorkorderItem(this.workorderId(), item)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (status) => {
+          this.completingItemId.set(null);
+          const wo = this.workorder();
+          if (wo?.items) {
+            this.workorder.set({
+              ...wo,
+              items: wo.items.map((i) => (i.id === item.id ? { ...i, status } : i)),
+            });
+          }
+        },
+        error: (err) => {
+          this.completingItemId.set(null);
+          this.itemError.set(
+            err?.status === 400
+              ? 'Item cannot be completed in its current state.'
+              : 'Failed to complete item. Please try again.',
+          );
         },
       });
   }
