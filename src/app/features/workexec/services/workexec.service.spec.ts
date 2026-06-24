@@ -665,4 +665,26 @@ describe('WorkexecService', () => {
       ]);
     });
   });
+
+  describe('Per-item completion (#736)', () => {
+    it('completeWorkorderItem — LABOR posts to services/{id}/complete', () => {
+      service
+        .completeWorkorderItem('wo-1', { id: 'svc-1', workorderId: 'wo-1', itemType: 'LABOR' })
+        .subscribe();
+      const r = http.expectOne(`${BASE}/v1/workorders/wo-1/services/svc-1/complete`);
+      expect(r.request.method).toBe('POST');
+      r.flush({ workorderId: 'wo-1', itemId: 'svc-1', itemType: 'SERVICE', status: 'COMPLETED' });
+    });
+
+    it('completeWorkorderItem — PART posts to parts/{id}/complete and returns status', () => {
+      let status: string | undefined;
+      service
+        .completeWorkorderItem('wo-1', { id: 'part-1', workorderId: 'wo-1', itemType: 'PART' })
+        .subscribe(s => (status = s));
+      const r = http.expectOne(`${BASE}/v1/workorders/wo-1/parts/part-1/complete`);
+      expect(r.request.method).toBe('POST');
+      r.flush({ workorderId: 'wo-1', itemId: 'part-1', itemType: 'PART', status: 'COMPLETED' });
+      expect(status).toBe('COMPLETED');
+    });
+  });
 });

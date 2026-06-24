@@ -69,6 +69,7 @@ import {
   TechnicianAssignmentResponse,
   UpdateEstimateItemRequest,
   WorkorderDetailResponse,
+  WorkorderItemResponse,
   WorkorderInvoiceView,
   WorkorderLaborEntryResponse,
   SearchResultItem,
@@ -417,6 +418,29 @@ export class WorkexecService {
    */
   private toWorkorderDetailResponse(dto: import('@durion-sdk/workorder').WorkorderDetailResponse): WorkorderDetailResponse {
     const raw = dto as typeof dto & { crmPartyId?: string; crmVehicleId?: string; crmContactIds?: string[] };
+    // Flatten service lines (LABOR) and parts (PART) into the scope item list so the
+    // detail page can render and act on each line. Item id is the underlying
+    // service-line / part id, which the per-item completion endpoints expect.
+    const serviceItems: WorkorderItemResponse[] = (dto.services ?? []).map(s => ({
+      id: s.id ?? '',
+      workorderId: dto.workorderId,
+      itemType: 'LABOR',
+      description: s.description,
+      quantity: s.quantity,
+      unitPrice: s.unitPrice,
+      lineTotal: s.lineTotal,
+      status: s.status as string | undefined,
+    }));
+    const partItems: WorkorderItemResponse[] = (dto.parts ?? []).map(p => ({
+      id: p.id,
+      workorderId: dto.workorderId,
+      itemType: 'PART',
+      description: p.description,
+      quantity: p.quantity,
+      unitPrice: p.unitPrice,
+      lineTotal: p.lineTotal,
+      status: p.status as string | undefined,
+    }));
     return {
       id: dto.workorderId,
       status: (dto.status as string as WorkorderStatus) ?? undefined,
@@ -431,7 +455,21 @@ export class WorkexecService {
       startedAt: dto.startedAt,
       isInProgress: dto.isInProgress === 'true',
       createdAt: dto.createdAt,
+      items: [...serviceItems, ...partItems],
     };
+  }
+
+  /**
+   * operationId: completeServiceItem / completePartItem
+   * POST /v1/workorders/{id}/services/{serviceLineId}/complete (LABOR)
+   * POST /v1/workorders/{id}/parts/{partId}/complete (PART)
+   * Marks a single workorder line item COMPLETED; returns the resulting status.
+   */
+  completeWorkorderItem(workorderId: string, item: WorkorderItemResponse): Observable<string> {
+    const op = item.itemType === 'PART'
+      ? this.workOrderApi.completePartItem(workorderId, item.id)
+      : this.workOrderApi.completeServiceItem(workorderId, item.id);
+    return op.pipe(map(res => (res as { status?: string }).status ?? 'COMPLETED'));
   }
 
   /**

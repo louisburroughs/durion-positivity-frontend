@@ -143,7 +143,7 @@
 
 .ledger__header {
   display: grid;
-  grid-template-columns: 3fr 1fr 1fr 1fr;
+  grid-template-columns: 3fr 1fr 1fr 1fr 0.5fr;
   gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
   font-size: 0.7rem;
@@ -159,11 +159,31 @@
 
 .ledger__row {
   display: grid;
-  grid-template-columns: 3fr 1fr 1fr 1fr;
+  grid-template-columns: 3fr 1fr 1fr 1fr 0.5fr;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-3);
   border-radius: var(--radius-sm);
   align-items: center;
+}
+
+.ledger__cell--done {
+  display: flex;
+  justify-content: center;
+}
+
+.ledger__check {
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+  accent-color: var(--brand-primary, var(--accentA400));
+}
+
+.ledger__check:disabled {
+  cursor: default;
+}
+
+.hint-text--error {
+  color: var(--functional-error-red, #c84c47);
 }
 
 .ledger--audit .ledger__row {
