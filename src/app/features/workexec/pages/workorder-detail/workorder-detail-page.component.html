@@ -18,7 +18,7 @@
     <div class="wo-header__inner">
       <div class="wo-header__identity">
         <p class="wo-header__overline">Work Order</p>
-        <h1 id="wo-heading" class="wo-header__id">{{ workorderId() }}</h1>
+        <h1 id="wo-heading" class="wo-header__id">{{ workorder()!.workorderNumber ?? workorderId() }}</h1>
         <span class="status-chip status-chip--{{ workorder()!.status?.toLowerCase() }}"
           aria-label="Status: {{ workorder()!.status }}">{{ workorder()!.status }}</span>
       </div>
@@ -262,7 +262,7 @@
 @if (showStartWorkModal()) {
 <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="start-work-modal-title">
   <div class="modal-glass">
-    <h2 id="start-work-modal-title" class="modal-glass__title">Start Work on {{ workorderId() }}?</h2>
+    <h2 id="start-work-modal-title" class="modal-glass__title">Start Work on {{ workorder()!.workorderNumber ?? workorderId() }}?</h2>
     <p class="modal-glass__body">
       This will move the work order to <strong>IN PROGRESS</strong> and allow labor and parts recording.
       This action cannot be undone from this screen.

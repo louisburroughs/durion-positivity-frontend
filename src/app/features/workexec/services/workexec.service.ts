@@ -443,6 +443,7 @@ export class WorkexecService {
     }));
     return {
       id: dto.workorderId,
+      workorderNumber: dto.workorderNumber,
       status: (dto.status as string as WorkorderStatus) ?? undefined,
       customerId: dto.customerId,
       vehicleId: dto.vehicleId,
