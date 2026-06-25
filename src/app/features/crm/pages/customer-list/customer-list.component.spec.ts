@@ -87,12 +87,12 @@ describe('CustomerListComponent', () => {
     fixture.detectChanges();
     crmServiceStub.browseParties.mockClear();
 
-    component.filterForm.patchValue({ name: 'acme', status: 'ACTIVE', partyType: 'ORGANIZATION', customerNumber: 'CUST-1' });
+    component.filterForm.patchValue({ name: 'acme', status: 'ACTIVE', partyType: 'COMMERCIAL', customerNumber: 'CUST-1' });
     await new Promise(r => setTimeout(r, 400));
 
     expect(crmServiceStub.browseParties).toHaveBeenCalledWith(
       expect.objectContaining({
-        page: 0, name: 'acme', status: 'ACTIVE', partyType: 'ORGANIZATION', customerNumber: 'CUST-1',
+        page: 0, name: 'acme', status: 'ACTIVE', partyType: 'COMMERCIAL', customerNumber: 'CUST-1',
       }),
     );
   });
