@@ -335,6 +335,7 @@ export interface WorkorderResponse {
 /** operationId: getWorkorderDetail — rich composite response */
 export interface WorkorderDetailResponse {
   id: string;
+  workorderNumber?: string;
   estimateId?: string;
   status?: WorkorderStatus;
   customerId?: string;
