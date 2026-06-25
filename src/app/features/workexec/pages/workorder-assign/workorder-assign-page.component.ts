@@ -14,7 +14,7 @@ import { WorkexecService } from '../../services/workexec.service';
 
 type PageState = 'loading' | 'ready' | 'error';
 type FormMode = 'assign' | 'reassign';
-type RosterState = 'idle' | 'loading' | 'ready' | 'error';
+type RosterState = 'idle' | 'loading' | 'ready' | 'error' | 'no-shop';
 
 /**
  * WorkorderAssignPageComponent — Story 225 (CAP-005)
@@ -97,7 +97,9 @@ export class WorkorderAssignPageComponent implements OnInit {
 
   private loadTechnicians(locationId: string | undefined): void {
     if (!locationId) {
-      this.rosterState.set('error');
+      // The work order has no shop, so there is no location to source a roster from.
+      // Distinct from 'error' (a failed availability call) so the UI can explain why.
+      this.rosterState.set('no-shop');
       return;
     }
     this.rosterState.set('loading');

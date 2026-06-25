@@ -48,6 +48,9 @@
         @if (rosterState() === 'error') {
           <p class="hint-text">Could not load technicians for this location.</p>
         }
+        @if (rosterState() === 'no-shop') {
+          <p class="hint-text">This work order has no shop assigned, so technicians cannot be listed.</p>
+        }
         @if (rosterState() === 'ready' && technicians().length === 0) {
           <p class="hint-text">No technicians assigned to this location.</p>
         }
