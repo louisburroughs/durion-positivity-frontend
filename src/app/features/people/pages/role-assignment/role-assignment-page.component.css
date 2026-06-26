@@ -68,13 +68,11 @@
 }
 
 .status-active {
-  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
-  color: var(--status-success-text, inherit);
+  background: var(--status-success-bg); color: var(--status-success-fg);
 }
 
 .status-revoked {
-  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
-  color: var(--status-error-text, inherit);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .loading-state {

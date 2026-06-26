@@ -76,8 +76,7 @@
 .error-banner {
   margin-bottom: var(--space-4);
   border: 1px solid var(--functional-error-red);
-  background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
 }
@@ -92,10 +91,10 @@
 
 .btn-primary {
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .btn-secondary {
   background: var(--brand-secondary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }

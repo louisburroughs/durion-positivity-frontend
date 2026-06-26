@@ -51,8 +51,8 @@
   background: var(--brand-primary-soft, var(--primaryA100));
   color: var(--brand-primary, var(--primaryA400));
 }
-.status-chip--approved { background: color-mix(in srgb, var(--functional-success) 15%, transparent); color: var(--functional-success); }
-.status-chip--expired  { background: color-mix(in srgb, var(--functional-error-red) 15%, transparent); color: var(--functional-error-red); }
+.status-chip--approved { background: var(--status-success-bg); color: var(--status-success-fg); }
+.status-chip--expired  { background: var(--status-error-bg); color: var(--status-error-fg); }
 
 /* ── Line items section ─────────────────────────────────────────────────── */
 .line-items-section {
@@ -151,7 +151,7 @@
 
 .field-label { font-size: 0.8125rem; font-weight: 600; color: var(--currentTextColor); }
 
-.required { color: var(--functional-error-red, #c84c47); margin-left: 2px; }
+.required { color: var(--functional-error-red, #ba1a1a); margin-left: 2px; }
 .field-optional { font-weight: 400; color: var(--handleColor); font-size: 0.75rem; }
 
 .field-input {
@@ -168,11 +168,11 @@
 }
 
 .field-input:focus { border-bottom-color: var(--input-focus-border, var(--accentA400)); }
-.field-input--error { border-bottom-color: var(--functional-error-red, #c84c47); }
-.field-error { margin: 0; font-size: 0.75rem; color: var(--functional-error-red, #c84c47); }
+.field-input--error { border-bottom-color: var(--functional-error-red, #ba1a1a); }
+.field-error { margin: 0; font-size: 0.75rem; color: var(--functional-error-red, #ba1a1a); }
 
 .alert { padding: var(--space-3, 0.75rem) var(--space-4, 1rem); border-radius: 0.125rem; }
-.alert--error { background: color-mix(in srgb, var(--functional-error-red, #c84c47) 10%, transparent); color: var(--functional-error-red, #c84c47); }
+.alert--error { background: var(--status-error-bg); color: var(--status-error-fg); }
 
 .hint-text { font-size: 0.875rem; color: var(--handleColor); margin: 0; }
 
@@ -242,7 +242,7 @@
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn--accent {
-  background: var(--brand-accent, var(--accentA700));
+  background: var(--accent-strong));
   color: #fff;
 }
 

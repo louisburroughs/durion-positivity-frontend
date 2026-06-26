@@ -38,13 +38,11 @@ h1 {
 }
 
 .state-panel--error {
-  background: color-mix(in srgb, var(--functional-error-red) 10%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
 }
 
 .state-panel--success {
-  background: color-mix(in srgb, var(--functional-success) 15%, var(--cardBackground));
-  color: #2f7f42;
+  background: var(--status-success-bg)); color: var(--status-success-fg);
 }
 
 .employee-context {
@@ -84,8 +82,7 @@ h1 {
 }
 
 .status-badge--active {
-  background: color-mix(in srgb, var(--functional-success) 25%, var(--cardBackground));
-  color: #2f7f42;
+  background: var(--status-success-bg)); color: var(--status-success-fg);
 }
 
 .status-badge--neutral {
@@ -94,8 +91,7 @@ h1 {
 }
 
 .status-badge--warning {
-  background: color-mix(in srgb, var(--functional-warning) 25%, var(--cardBackground));
-  color: #8a5e0a;
+  background: var(--status-warning-bg)); color: var(--status-warning-fg);
 }
 
 .alert {
@@ -103,8 +99,7 @@ h1 {
 }
 
 .alert--warning {
-  background: color-mix(in srgb, var(--functional-warning) 14%, var(--cardBackground));
-  color: #7d580c;
+  background: var(--status-warning-bg)); color: var(--status-warning-fg);
 }
 
 .field-row {
@@ -145,7 +140,7 @@ label {
 }
 
 .btn--danger:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--functional-error-red) 88%, #000000);
+  background: var(--status-error-bg);
 }
 
 .btn--ghost {

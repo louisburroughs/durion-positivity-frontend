@@ -32,8 +32,7 @@
   border: 0;
   border-radius: 999px;
   padding: 0.5rem 0.8rem;
-  background: color-mix(in srgb, var(--brand-primary) 10%, var(--cardBackground));
-  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--cardBackground)); color: var(--currentTextColor);
 }
 
 .asn-error {
@@ -79,7 +78,7 @@
 
 .result-icon {
   font-size: 3rem;
-  color: var(--functional-success);
+  color: #1b5e20;
   display: block;
   margin-bottom: 0.5rem;
 }

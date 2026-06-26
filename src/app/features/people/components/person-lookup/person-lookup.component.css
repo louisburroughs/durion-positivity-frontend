@@ -14,7 +14,7 @@
 }
 
 .person-lookup__required {
-  color: var(--functional-error-red, #c84c47);
+  color: var(--functional-error-red, #ba1a1a);
   margin-left: 2px;
 }
 

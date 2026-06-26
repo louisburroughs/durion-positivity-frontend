@@ -18,7 +18,7 @@
 }
 
 .notice {
-  background: color-mix(in srgb, var(--functional-warning) 8%, transparent);
+  background: var(--status-warning-bg);
   padding: var(--space-3);
   margin-top: var(--space-2);
 }
@@ -64,7 +64,7 @@ textarea.ng-invalid.ng-touched {
 button {
   width: fit-content;
   border: none;
-  background: var(--brand-accent);
+  background: var(--accent-strong);
   color: #fff;
   padding: var(--space-2) var(--space-4);
 }
@@ -79,9 +79,9 @@ button {
 }
 
 .state-panel--forbidden {
-  background: color-mix(in srgb, var(--functional-warning) 10%, transparent);
+  background: var(--status-warning-bg);
 }
 
 .state-panel--success {
-  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
+  background: var(--status-success-bg);
 }

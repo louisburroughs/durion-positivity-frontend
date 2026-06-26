@@ -112,8 +112,7 @@ label {
 }
 
 .state-panel--error {
-  background: color-mix(in srgb, var(--functional-error-red) 10%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
 }
 
 .alert {
@@ -121,13 +120,11 @@ label {
 }
 
 .alert--error {
-  background: color-mix(in srgb, var(--functional-error-red) 10%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
 }
 
 .alert--warning {
-  background: color-mix(in srgb, var(--functional-warning-amber, #b8860b) 12%, var(--cardBackground));
-  color: var(--functional-warning-amber, #8a6d0b);
+  background: var(--status-warning-bg)); color: var(--status-warning-fg);
 }
 
 .alert__title {
@@ -150,8 +147,7 @@ label {
 }
 
 .status-badge--active {
-  background: color-mix(in srgb, var(--functional-success) 25%, var(--cardBackground));
-  color: var(--functional-success);
+  background: var(--status-success-bg)); color: var(--status-success-fg);
 }
 
 .status-badge--neutral {
@@ -160,8 +156,7 @@ label {
 }
 
 .status-badge--warning {
-  background: color-mix(in srgb, var(--functional-warning) 25%, var(--cardBackground));
-  color: var(--functional-warning);
+  background: var(--status-warning-bg)); color: var(--status-warning-fg);
 }
 
 .audit-meta {

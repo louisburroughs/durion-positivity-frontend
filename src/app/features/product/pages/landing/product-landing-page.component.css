@@ -98,8 +98,7 @@
 
 .product-banner--error {
 	border-color: var(--functional-error-red);
-	background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
-	color: var(--functional-error-red);
+	background: var(--status-error-bg)); color: var(--status-error-fg);
 }
 
 .product-banner--loading {
@@ -180,7 +179,7 @@
 
 .product-button--primary {
 	background: var(--brand-primary);
-	color: var(--themeBackground);
+	color: var(--contrastTextColor);
 }
 
 .product-button--secondary {

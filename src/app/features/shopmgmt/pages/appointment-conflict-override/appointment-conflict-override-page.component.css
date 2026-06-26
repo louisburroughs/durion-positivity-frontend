@@ -44,7 +44,7 @@
 
 .conflict-panel {
   border: 1px solid var(--functional-warning);
-  background: color-mix(in srgb, var(--functional-warning) 12%, var(--cardBackground));
+  background: var(--status-warning-bg));
   border-radius: var(--radius-md);
   padding: var(--space-4);
   margin-bottom: var(--space-5);
@@ -85,15 +85,13 @@
 }
 
 .success-banner {
-  border: 1px solid var(--functional-success);
-  color: var(--functional-success);
-  background: color-mix(in srgb, var(--functional-success) 12%, var(--cardBackground));
+  border: 1px solid var(--functional-success); color: var(--status-success-fg);
+  background: var(--status-success-bg));
 }
 
 .error-banner {
-  border: 1px solid var(--functional-error-red);
-  color: var(--functional-error-red);
-  background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
+  border: 1px solid var(--functional-error-red); color: var(--status-error-fg);
+  background: var(--status-error-bg));
 }
 
 .btn-primary,
@@ -107,15 +105,15 @@
 
 .btn-primary {
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .btn-secondary {
   background: var(--brand-secondary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .btn-danger {
   background: var(--functional-error-red);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }

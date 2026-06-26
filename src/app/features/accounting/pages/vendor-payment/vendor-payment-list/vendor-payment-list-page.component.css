@@ -38,7 +38,7 @@
 
 .btn-primary {
   border: none;
-  background: var(--brand-accent);
+  background: var(--accent-strong);
   color: #fff;
   padding: var(--space-2) var(--space-4);
   cursor: pointer;
@@ -59,11 +59,11 @@
 }
 
 .state-panel--error {
-  background: color-mix(in srgb, var(--functional-error-red) 8%, transparent);
+  background: var(--status-error-bg);
 }
 
 .state-panel--forbidden {
-  background: color-mix(in srgb, var(--functional-warning) 10%, transparent);
+  background: var(--status-warning-bg);
 }
 
 .state-panel--empty {
@@ -102,7 +102,6 @@
 .status-badge {
   display: inline-block;
   padding: 0.15rem 0.4rem;
-  background: color-mix(in srgb, var(--functional-info-blue) 12%, transparent);
-  color: var(--functional-info-blue);
+  background: var(--status-info-bg); color: var(--status-info-fg);
   font-size: 0.75rem;
 }

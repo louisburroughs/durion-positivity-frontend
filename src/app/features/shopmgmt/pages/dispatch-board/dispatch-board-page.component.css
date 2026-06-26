@@ -175,15 +175,14 @@ input:focus-visible {
 }
 
 .stale-data-banner {
-  border-left-color: var(--functional-warning);
-  color: var(--functional-warning);
+  border-left-color: #8a5e0a;
+  color: #8a5e0a;
 }
 
 .loading-state {
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--primary50) 70%, transparent);
-  color: var(--brand-secondary);
+  background: color-mix(in srgb, var(--primary50) 70%, transparent); color: var(--currentTextColor);
 }
 
 .state-panel {
@@ -192,7 +191,7 @@ input:focus-visible {
   padding: var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid color-mix(in srgb, var(--functional-error-red) 35%, transparent);
-  background: color-mix(in srgb, var(--functional-error-red) 8%, var(--cardBackground));
+  background: var(--status-error-bg));
 }
 
 .state-panel p {
@@ -252,16 +251,14 @@ input:focus-visible {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  background: var(--primaryA100);
-  color: var(--brand-primary);
+  background: var(--primaryA100); color: var(--currentTextColor);
   padding: 0.125rem var(--space-2);
   font-size: 0.8125rem;
   font-weight: 600;
 }
 
 .exception-badge {
-  background: color-mix(in srgb, var(--functional-warning) 12%, var(--cardBackground));
-  color: var(--functional-warning);
+  background: var(--status-warning-bg)); color: var(--status-warning-fg);
 }
 
 @media (max-width: 64rem) {

@@ -38,13 +38,13 @@
 }
 
 .success-banner {
-  background: color-mix(in srgb, var(--functional-success) 20%, var(--brand-surface));
+  background: var(--status-success-bg));
   border-radius: var(--radius-sm);
   padding: var(--space-2);
 }
 
 .error-banner {
-  background: color-mix(in srgb, var(--functional-error-red) 20%, var(--brand-surface));
+  background: var(--status-error-bg));
   border-radius: var(--radius-sm);
   padding: var(--space-2);
 }

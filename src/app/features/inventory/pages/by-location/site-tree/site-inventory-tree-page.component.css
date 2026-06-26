@@ -81,12 +81,12 @@
 
 .btn-primary {
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .btn-secondary {
   background: var(--brand-secondary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .btn-secondary:hover {
@@ -104,9 +104,8 @@
 }
 
 .banner--warning {
-  background: color-mix(in srgb, var(--functional-warning) 15%, var(--cardBackground));
-  border: 1px solid var(--functional-warning);
-  color: var(--currentTextColor);
+  background: var(--status-warning-bg));
+  border: 1px solid var(--functional-warning); color: var(--status-warning-fg);
 }
 
 .banner__icon {
@@ -291,11 +290,11 @@
 }
 
 .tree-row--negative {
-  background: color-mix(in srgb, var(--functional-error-red) 6%, transparent);
+  background: var(--status-error-bg);
 }
 
 .tree-row--inactive-stock {
-  background: color-mix(in srgb, var(--functional-warning) 6%, transparent);
+  background: var(--status-warning-bg);
 }
 
 
@@ -354,18 +353,15 @@
 }
 
 .chip--type {
-  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
-  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent); color: var(--currentTextColor);
 }
 
 .chip--active {
-  background: color-mix(in srgb, var(--functional-success) 15%, transparent);
-  color: var(--functional-success);
+  background: var(--status-success-bg); color: var(--status-success-fg);
 }
 
 .chip--inactive {
-  background: color-mix(in srgb, var(--functional-warning) 15%, transparent);
-  color: color-mix(in srgb, var(--functional-warning) 80%, var(--currentTextColor));
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
 }
 
 
@@ -380,13 +376,11 @@
 }
 
 .badge--error {
-  background: color-mix(in srgb, var(--functional-error-red) 18%, transparent);
-  color: var(--functional-error-red);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .badge--warning {
-  background: color-mix(in srgb, var(--functional-warning) 18%, transparent);
-  color: color-mix(in srgb, var(--functional-warning) 80%, var(--currentTextColor));
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
 }
 
 

@@ -69,7 +69,7 @@
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-4);
   font-weight: 600;
-  background: var(--primaryA400);
+  background: var(--brand-primary);
   color: var(--contrastTextColor);
 }
 
@@ -138,8 +138,7 @@
 .order-cart__error {
   padding: var(--space-3);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--functional-error-red) 14%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
 }
 
 .order-cart__skeleton {

@@ -16,16 +16,14 @@
 }
 
 .success-banner {
-  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
-  color: var(--functional-success);
+  background: var(--status-success-bg); color: var(--status-success-fg);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
 }
 
 .version-mismatch-prompt {
-  background: color-mix(in srgb, var(--functional-warning) 12%, transparent);
-  color: var(--functional-warning);
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
@@ -65,7 +63,7 @@ form {
 }
 
 .conflict-panel {
-  background: color-mix(in srgb, var(--functional-error-red) 8%, var(--cardBackground));
+  background: var(--status-error-bg));
   border-radius: var(--radius-md);
   padding: var(--space-4);
   display: flex;
@@ -79,7 +77,7 @@ form {
 }
 
 .soft-conflict {
-  color: var(--functional-warning);
+  color: #8a5e0a;
   font-size: 0.875rem;
 }
 
@@ -108,7 +106,7 @@ form {
 }
 
 .action-row button[type="submit"] {
-  background: var(--brand-accent);
+  background: var(--accent-strong);
   color: var(--brand-surface);
   border: none;
   border-radius: var(--radius-sm);

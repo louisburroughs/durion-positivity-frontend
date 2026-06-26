@@ -104,11 +104,11 @@ button:disabled {
 }
 
 .required-mark {
-  color: var(--functional-warning);
+  color: #8a5e0a;
 }
 
 .success-text {
-  color: var(--functional-success);
+  color: #1b5e20;
 }
 
 .error-text {

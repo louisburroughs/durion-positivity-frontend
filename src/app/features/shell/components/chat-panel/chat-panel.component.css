@@ -174,8 +174,7 @@
   width: 40px;
   border: 1px solid var(--border-color, #d0d5dd);
   border-radius: var(--radius-md);
-  background: var(--cardBackground, #fff);
-  color: var(--textPrimary, #1a1a2e);
+  background: var(--cardBackground, #fff); color: var(--currentTextColor);
   font-size: 1rem;
   display: flex;
   align-items: center;

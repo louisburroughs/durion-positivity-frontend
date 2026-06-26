@@ -98,8 +98,7 @@
 
 .inventory-banner--error {
   border-color: var(--functional-error-red);
-  background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
 }
 
 .inventory-banner--loading {
@@ -236,7 +235,7 @@
 .inventory-card__launch-btn,
 .inventory-card__link {
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .inventory-button--secondary {

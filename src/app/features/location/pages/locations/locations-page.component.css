@@ -51,8 +51,7 @@
 }
 
 .status-active {
-  background: color-mix(in srgb, var(--functional-success) 15%, transparent);
-  color: var(--functional-success);
+  background: var(--status-success-bg); color: var(--status-success-fg);
 }
 
 .status-inactive {
@@ -104,7 +103,7 @@
   border: 1px dashed var(--input-border);
   border-radius: var(--radius-md);
   padding: var(--space-6);
-  background: var(--brand-surface);
+  background: var(--cardBackground);
   color: var(--currentTextColor);
 }
 
@@ -159,8 +158,7 @@
 .error-banner {
   margin-bottom: var(--space-4);
   border: 1px solid var(--functional-error-red);
-  background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
 }
@@ -168,8 +166,7 @@
 .success-banner {
   margin-bottom: var(--space-4);
   border: 1px solid var(--functional-success);
-  background: color-mix(in srgb, var(--functional-success) 12%, var(--cardBackground));
-  color: var(--functional-success);
+  background: var(--status-success-bg)); color: var(--status-success-fg);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
 }
@@ -184,10 +181,10 @@
 
 .btn-primary {
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .btn-secondary {
   background: var(--brand-secondary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }

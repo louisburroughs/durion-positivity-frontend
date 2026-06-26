@@ -91,13 +91,11 @@
 }
 
 .ips-status-badge--paid {
-  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
-  color: var(--functional-success);
+  background: var(--status-success-bg); color: var(--status-success-fg);
 }
 
 .ips-status-badge--unpaid {
-  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
-  color: var(--functional-error-red);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .ips-status-badge--partially-paid {
@@ -141,18 +139,15 @@
 }
 
 .ips-banner--error {
-  background: color-mix(in srgb, var(--functional-error-red, var(--functional-error-red)) 18%, transparent);
-  color: var(--functional-error-red, var(--functional-error-red));
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .ips-banner--critical {
-  background: color-mix(in srgb, var(--functional-error-red, var(--functional-error-red)) 30%, transparent);
-  color: var(--functional-error-red, var(--functional-error-red));
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .ips-banner--warning {
-  background: color-mix(in srgb, var(--functional-warning, var(--functional-warning)) 20%, transparent);
-  color: var(--currentTextColor, var(--durion-on-surface, var(--durion-grey-900)));
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
 }
 
 .ips-actions {

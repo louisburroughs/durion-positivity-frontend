@@ -151,9 +151,8 @@
 
 .invoice-fin__error {
   padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-  border-radius: var(--radius-md, 8px);
-  color: var(--functional-error-red, #c84c47);
-  background: color-mix(in srgb, var(--functional-error-red, #c84c47) 11%, transparent);
+  border-radius: var(--radius-md, 8px); color: var(--status-error-fg);
+  background: var(--status-error-bg);
 }
 
 @keyframes invoice-skeleton {

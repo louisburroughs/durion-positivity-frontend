@@ -51,7 +51,7 @@ tbody tr:nth-child(even) {
 }
 
 .needs-review-row {
-  background: color-mix(in srgb, var(--functional-warning) 14%, var(--cardBackground));
+  background: var(--status-warning-bg));
 }
 
 .status-pill {
@@ -61,8 +61,7 @@ tbody tr:nth-child(even) {
   padding: 0.2rem 0.6rem;
   font-size: 0.78rem;
   font-weight: 600;
-  background: color-mix(in srgb, var(--brand-primary) 10%, var(--cardBackground));
-  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 10%, var(--cardBackground)); color: var(--currentTextColor);
 }
 
 .print-button {

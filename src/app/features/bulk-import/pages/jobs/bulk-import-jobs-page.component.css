@@ -62,10 +62,9 @@
 	border: 1px solid color-mix(in srgb, var(--brand-primary) 25%, var(--input-border));
 }
 
-.jobs-banner--error {
-	color: var(--functional-error-red);
+.jobs-banner--error { color: var(--status-error-fg);
 	border-color: var(--functional-error-red);
-	background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
+	background: var(--status-error-bg));
 }
 
 .jobs-page__empty {

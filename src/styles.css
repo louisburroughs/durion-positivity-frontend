@@ -63,6 +63,7 @@
   --brand-primary-soft: var(--durion-blue-50);
   --brand-secondary: var(--durion-graphite-700);
   --brand-accent: var(--durion-teal-400);
+  --accent-strong: #006a6a; /* AA-safe accent for white text on a filled button (teal-400 is only 2.4:1; this is 5.8:1) */
   --brand-gold: var(--durion-gold-500);
   --brand-background: var(--durion-grey-100);
   --brand-surface: #ffffff;
@@ -133,6 +134,16 @@
   --surface-2: var(--brand-surface);
   --surface-hover: rgba(0, 52, 111, 0.06);
   --text-muted: var(--handleColor);
+  /* Status tint pairs — theme-aware, AA in light AND dark (ADR-0039).
+     Light: AA-dark text on a light tint. Use the -bg/-fg pair together. */
+  --status-error-bg: #fdecea;
+  --status-error-fg: #ba1a1a;
+  --status-warning-bg: #fff4e0;
+  --status-warning-fg: #8a5e0a;
+  --status-success-bg: #e7f4e8;
+  --status-success-fg: #1b5e20;
+  --status-info-bg: #e8eef6;
+  --status-info-fg: #355d92;
 }
 
 /* ── DARK THEME ──────────────────────────────────────────────────────────── */
@@ -170,6 +181,15 @@
   --surface-2: var(--cardBackground);
   --surface-hover: rgba(255, 255, 255, 0.08);
   --text-muted: var(--handleColor);
+  /* Dark: AA-light text on a deep tint. */
+  --status-error-bg: #4a2426;
+  --status-error-fg: #ffb4ab;
+  --status-warning-bg: #3d3424;
+  --status-warning-fg: #ffd479;
+  --status-success-bg: #24382a;
+  --status-success-fg: #a5d6a7;
+  --status-info-bg: #233246;
+  --status-info-fg: #aac4e4;
 }
 
 /* ── Box-sizing & Reset ──────────────────────────────────────────────────── */
@@ -238,20 +258,20 @@ body {
 }
 
 .alert-info {
-  background: var(--primary50);
+  background: var(--status-info-bg);
   border-color: var(--functional-info-blue);
-  color: var(--functional-info-blue);
+  color: var(--status-info-fg);
 }
 
 .alert-success {
   background: #edfaef;
-  border-color: var(--functional-success);
+  border-color: #1b5e20;
   color: #2e7d3a;
 }
 
 .alert-warning {
   background: #fef8ec;
-  border-color: var(--functional-warning);
+  border-color: #8a5e0a;
   color: #8a5e0a;
 }
 
@@ -286,7 +306,7 @@ body {
 
 .dur-status.primary {
   background: var(--primaryA100);
-  color: var(--brand-primary);
+  color: var(--currentTextColor);
 }
 
 .dur-status.valid {
@@ -525,8 +545,7 @@ app-workorder-detail-page .alert--warn {
 }
 
 app-workorder-detail-page .alert--success {
-  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
-  color: #1b5e20; /* functional-success (#2e7d32) is only 4.36:1 on its own tint; darker green = AA */
+  background: var(--status-success-bg); color: var(--status-success-fg); /* functional-success (#2e7d32) is only 4.36:1 on its own tint; darker green = AA */
   border: 1px solid var(--functional-success);
   border-radius: var(--radius-sm, 4px);
   padding: 0.75rem 1rem;
@@ -583,8 +602,8 @@ app-workorder-detail-page .tab-badge {
 }
 
 app-workorder-detail-page .tab-badge--warning {
-  background: var(--functional-warning, #f59e0b);
-  color: var(--currentTextColor, #1f2328);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
 }
 
 app-workorder-detail-page .inline-error {
@@ -631,7 +650,7 @@ app-workorder-detail-page .checklist-item__icon {
 }
 
 app-workorder-detail-page .checklist-item--ok .checklist-item__icon {
-  color: var(--functional-success, #16a34a);
+  color: #1b5e20;
 }
 
 app-workorder-detail-page .checklist-item--blocking .checklist-item__icon {
@@ -639,7 +658,7 @@ app-workorder-detail-page .checklist-item--blocking .checklist-item__icon {
 }
 
 app-workorder-detail-page .checklist-item--warning .checklist-item__icon {
-  color: var(--functional-warning, #f59e0b);
+  color: #8a5e0a;
 }
 
 app-workorder-detail-page .checklist-item__label {
@@ -704,7 +723,7 @@ app-workorder-detail-page .failed-check--blocking .failed-check__icon {
 }
 
 app-workorder-detail-page .failed-check--warning .failed-check__icon {
-  color: var(--functional-warning, #f59e0b);
+  color: #8a5e0a;
 }
 
 app-party-detail .modal-backdrop {
@@ -799,7 +818,7 @@ app-party-detail .btn--primary:hover:not(:disabled) {
 
 app-party-detail .btn--secondary {
   background: var(--primary50, var(--brand-primary-soft));
-  color: var(--brand-primary);
+  color: var(--currentTextColor);
 }
 
 app-party-detail .btn--ghost {
@@ -872,7 +891,7 @@ app-party-detail .loading-hint {
 }
 
 app-party-detail .hint-text--warn {
-  color: var(--functional-warning);
+  color: #8a5e0a;
 }
 
 app-party-detail .inline-error {
@@ -948,7 +967,7 @@ app-create-commercial-account .state-icon {
 }
 
 app-create-commercial-account .state-icon--success {
-  color: var(--functional-success);
+  color: #1b5e20;
 }
 
 app-create-commercial-account .spinner {

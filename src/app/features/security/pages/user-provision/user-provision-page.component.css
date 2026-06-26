@@ -38,13 +38,11 @@ h1 {
 }
 
 .state-panel--error {
-  background: color-mix(in srgb, var(--functional-error-red) 10%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
 }
 
 .state-panel--success {
-  background: color-mix(in srgb, var(--functional-success) 15%, var(--cardBackground));
-  color: #2f7f42;
+  background: var(--status-success-bg)); color: var(--status-success-fg);
 }
 
 .alert {
@@ -52,8 +50,7 @@ h1 {
 }
 
 .alert--info {
-  background: color-mix(in srgb, var(--functional-info-blue) 10%, var(--cardBackground));
-  color: var(--functional-info-blue);
+  background: var(--status-info-bg)); color: var(--status-info-fg);
 }
 
 .provision-form {

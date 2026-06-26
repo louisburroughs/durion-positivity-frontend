@@ -27,8 +27,7 @@
   border: 0;
   border-radius: var(--radius-md, 8px);
   padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
-  background: color-mix(in srgb, var(--accentA100, #d7f3f0) 72%, var(--cardBackground, #fff) 28%);
-  color: var(--brand-primary, var(--primaryA400));
+  background: color-mix(in srgb, var(--accentA100, #d7f3f0) 72%, var(--cardBackground, #fff) 28%); color: var(--currentTextColor);
   font-weight: 600;
 }
 
@@ -68,8 +67,7 @@
   border: 0;
   border-radius: var(--radius-md, 8px);
   padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
-  background: var(--brand-primary, var(--primaryA400));
-  color: var(--cardBackground, #fff);
+  background: var(--brand-primary, var(--primaryA400)); color: var(--contrastTextColor);
   font-weight: 600;
 }
 
@@ -134,34 +132,28 @@
 .wip__badge--draft,
 .wip__badge--approved,
 .wip__badge--assigned {
-  background: color-mix(in srgb, var(--primaryA100, #d3e3f6) 50%, transparent);
-  color: var(--brand-secondary, var(--currentTextColor));
+  background: color-mix(in srgb, var(--primaryA100, #d3e3f6) 50%, transparent); color: var(--currentTextColor);
 }
 
 .wip__badge--work-in-progress {
-  background: color-mix(in srgb, var(--primaryA100, #d3e3f6) 72%, transparent);
-  color: var(--brand-primary, var(--primaryA400));
+  background: color-mix(in srgb, var(--primaryA100, #d3e3f6) 72%, transparent); color: var(--currentTextColor);
 }
 
 .wip__badge--awaiting-parts,
 .wip__badge--awaiting-approval {
-  background: color-mix(in srgb, var(--functional-warning, #e6a540) 30%, transparent);
-  color: var(--functional-warning, #e6a540);
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
 }
 
 .wip__badge--ready-for-pickup {
-  background: color-mix(in srgb, var(--functional-success, #5bbe72) 32%, transparent);
-  color: color-mix(in srgb, var(--functional-success, #5bbe72) 70%, var(--brand-secondary));
+  background: var(--status-success-bg); color: var(--status-success-fg);
 }
 
 .wip__badge--completed {
-  background: color-mix(in srgb, var(--trackColor, #d7d9dd) 80%, transparent);
-  color: var(--brand-secondary, var(--currentTextColor));
+  background: color-mix(in srgb, var(--trackColor, #d7d9dd) 80%, transparent); color: var(--currentTextColor);
 }
 
 .wip__badge--cancelled {
-  background: color-mix(in srgb, var(--functional-error, #d9534f) 22%, transparent);
-  color: var(--functional-error, #d9534f);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .wip__skeleton {
@@ -183,9 +175,8 @@
 
 .wip__error {
   padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-  border-radius: var(--radius-md, 8px);
-  color: var(--functional-error-red, #c84c47);
-  background: color-mix(in srgb, var(--functional-error-red, #c84c47) 11%, transparent);
+  border-radius: var(--radius-md, 8px); color: var(--status-error-fg);
+  background: var(--status-error-bg);
 }
 
 @keyframes wip-skeleton {

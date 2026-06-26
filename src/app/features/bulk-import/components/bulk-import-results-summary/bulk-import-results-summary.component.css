@@ -54,7 +54,7 @@
 
 .results-btn--primary {
 	background: var(--brand-primary);
-	color: var(--themeBackground);
+	color: var(--contrastTextColor);
 }
 
 .results-btn--secondary {

@@ -113,18 +113,15 @@ label {
 }
 
 .badge--success {
-  background: color-mix(in srgb, var(--functional-success) 20%, transparent);
-  color: var(--functional-success);
+  background: var(--status-success-bg); color: var(--status-success-fg);
 }
 
 .badge--warning {
-  background: color-mix(in srgb, var(--functional-warning) 20%, transparent);
-  color: var(--functional-warning);
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
 }
 
 .badge--error {
-  background: color-mix(in srgb, var(--functional-error-red) 20%, transparent);
-  color: var(--functional-error-red);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .badge--neutral {
@@ -155,9 +152,8 @@ label {
 
 .error-banner {
   align-items: center;
-  background: color-mix(in srgb, var(--functional-error-red) 10%, transparent);
-  border-radius: 0.9rem;
-  color: var(--functional-error-red);
+  background: var(--status-error-bg);
+  border-radius: 0.9rem; color: var(--status-error-fg);
   display: flex;
   gap: 0.75rem;
   margin-top: 1rem;

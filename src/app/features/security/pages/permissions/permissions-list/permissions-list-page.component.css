@@ -35,8 +35,7 @@
 }
 
 .readonly-label {
-  background: color-mix(in srgb, var(--primary50) 75%, transparent);
-  color: var(--brand-secondary);
+  background: color-mix(in srgb, var(--primary50) 75%, transparent); color: var(--currentTextColor);
   border-radius: 999px;
   padding: var(--space-1) var(--space-3);
   font-size: 0.75rem;

@@ -92,5 +92,5 @@
 }
 
 .wx-typeahead__status--error {
-  color: var(--functional-error-red, #c84c47);
+  color: var(--functional-error-red, #ba1a1a);
 }

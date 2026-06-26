@@ -136,8 +136,7 @@
   margin: 0;
   padding: var(--space-3);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
-  color: var(--durion-on-error-container, var(--functional-error-red));
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 @keyframes crm-snapshot-shimmer {

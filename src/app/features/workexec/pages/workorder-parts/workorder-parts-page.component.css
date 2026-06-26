@@ -41,6 +41,6 @@
 .subst-option {display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3);border-radius:var(--radius-sm);cursor:pointer;background:var(--cardBackground,#f6f8fa);}
 .subst-option--selected {background:#e0f2f1;outline:2px solid var(--brand-accent,#006a62);}
 .subst-option__id {font-size:0.8rem;font-family:monospace;flex:1;word-break:break-all;}
-.subst-type-badge {font-size:0.65rem;text-transform:uppercase;padding:2px 6px;border-radius:var(--radius-sm);background:#e3f2fd;color:#0277bd;}
+.subst-type-badge {font-size:0.65rem;text-transform:uppercase;padding:2px 6px;border-radius:var(--radius-sm);background:#e3f2fd;color: #01579b;}
 .subst-priority {font-size:0.75rem;opacity:0.6;}
 .btn-icon {background:none;border:none;cursor:pointer;font-size:1rem;padding:var(--space-1);color:var(--currentTextColor,#1f2328);}

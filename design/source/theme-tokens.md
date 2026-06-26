@@ -27,6 +27,11 @@ Defined in `:root` and never changed by theme switching.
 | `--functional-info-blue` | `#355d92` | Info states |
 | `--functional-success` | `#2e7d32` | Success states |
 
+> **Fills/icons, not text.** `--functional-warning` (#e6a540) and `--functional-success`
+> (#2e7d32) fail WCAG AA as text on white/light tints. For coloured status **text** use the
+> AA-dark values: warning `#8a5e0a`, success `#1b5e20`, error `#ba1a1a`. See
+> `durion-style-guide.md` §8.
+
 ### Heritage Gold ramp
 
 | Token | Hex | Note |
@@ -70,7 +75,8 @@ Stable aliases mapping palette tokens to roles. Shared across light and dark.
 | `--brand-primary` | `--durion-blue-700` | Primary actions, nav |
 | `--brand-primary-soft` | `--durion-blue-50` | Subtle primary tones |
 | `--brand-secondary` | `--durion-graphite-700` | Secondary text/UI |
-| `--brand-accent` | `--durion-teal-400` | **UI accent / highlight** |
+| `--brand-accent` | `--durion-teal-400` | **UI accent / highlight** (borders, icons, small fills) |
+| `--accent-strong` | `#006a6a` | **Filled accent button with white text** — teal-400 is only 2.4:1 on white; this is 5.8:1. Never put white text on `--brand-accent`. |
 | `--brand-gold` | `--durion-gold-500` | **Heritage / premium accent — NOT the UI accent** |
 | `--brand-background` | `--durion-grey-100` | Page background |
 | `--brand-surface` | `#ffffff` | Card / modal surface |
@@ -121,6 +127,13 @@ These flip when `data-theme` changes on `<html>`. **Consume these in all compone
 | `--surface-2` | brand-surface | cardBackground | Secondary elevated surface |
 | `--surface-hover` | `rgba(0,52,111,.06)` | `rgba(255,255,255,.08)` | Hover wash |
 | `--text-muted` | handleColor | handleColor | Muted / secondary text |
+| `--status-error-bg` / `-fg` | `#fdecea` / `#ba1a1a` | `#4a2426` / `#ffb4ab` | Error chip/alert fill + text (AA both themes) |
+| `--status-warning-bg` / `-fg` | `#fff4e0` / `#8a5e0a` | `#3d3424` / `#ffd479` | Warning chip/alert fill + text |
+| `--status-success-bg` / `-fg` | `#e7f4e8` / `#1b5e20` | `#24382a` / `#a5d6a7` | Success chip/alert fill + text |
+| `--status-info-bg` / `-fg` | `#e8eef6` / `#355d92` | `#233246` / `#aac4e4` | Info chip/alert fill + text |
+
+> **Status surfaces use the `--status-<kind>-bg` + `-fg` pair** (see `durion-style-guide.md` §8),
+> never `color-mix(--functional-x …)` + a functional text colour — that fails AA in dark.
 
 ## Unsanctioned tokens (do NOT use)
 
