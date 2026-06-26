@@ -185,7 +185,7 @@
 
 .billing-button--primary {
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 @media (max-width: 880px) {

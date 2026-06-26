@@ -38,7 +38,7 @@
 	border-radius: 999px;
 	border: 1px solid color-mix(in srgb, var(--brand-primary) 40%, var(--input-border));
 	background: var(--brand-primary);
-	color: var(--themeBackground);
+	color: var(--contrastTextColor);
 	font-weight: 600;
 	text-decoration: none;
 	cursor: pointer;

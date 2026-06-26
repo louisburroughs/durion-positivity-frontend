@@ -71,7 +71,7 @@
 	border-radius: 999px;
 	border: 1px solid transparent;
 	background: var(--brand-primary);
-	color: var(--themeBackground);
+	color: var(--contrastTextColor);
 	padding: var(--space-2) var(--space-3);
 	font-weight: 600;
 	cursor: pointer;

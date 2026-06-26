@@ -80,7 +80,7 @@
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
   padding: var(--space-2) var(--space-4);
   cursor: pointer;
 }

@@ -90,7 +90,7 @@
 .shopmgmt-card-direct-link,
 .shopmgmt-card-launch-btn {
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .shopmgmt-btn-secondary {

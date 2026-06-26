@@ -71,7 +71,7 @@
 
 .mapping-btn--primary {
 	background: var(--brand-primary);
-	color: var(--themeBackground);
+	color: var(--contrastTextColor);
 }
 
 .sr-only {

@@ -103,7 +103,7 @@
   border: 1px dashed var(--input-border);
   border-radius: var(--radius-md);
   padding: var(--space-6);
-  background: var(--brand-surface);
+  background: var(--cardBackground);
   color: var(--currentTextColor);
 }
 
@@ -181,10 +181,10 @@
 
 .btn-primary {
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .btn-secondary {
   background: var(--brand-secondary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }

@@ -27,8 +27,7 @@
   border: 0;
   border-radius: var(--radius-md, 8px);
   padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
-  background: color-mix(in srgb, var(--accentA100, #d7f3f0) 72%, var(--cardBackground, #fff) 28%);
-  color: var(--brand-primary, var(--primaryA400));
+  background: color-mix(in srgb, var(--accentA100, #d7f3f0) 72%, var(--cardBackground, #fff) 28%); color: var(--currentTextColor);
   font-weight: 600;
 }
 
@@ -68,8 +67,7 @@
   border: 0;
   border-radius: var(--radius-md, 8px);
   padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
-  background: var(--brand-primary, var(--primaryA400));
-  color: var(--cardBackground, #fff);
+  background: var(--brand-primary, var(--primaryA400)); color: var(--contrastTextColor);
   font-weight: 600;
 }
 
@@ -134,13 +132,11 @@
 .wip__badge--draft,
 .wip__badge--approved,
 .wip__badge--assigned {
-  background: color-mix(in srgb, var(--primaryA100, #d3e3f6) 50%, transparent);
-  color: var(--brand-secondary, var(--currentTextColor));
+  background: color-mix(in srgb, var(--primaryA100, #d3e3f6) 50%, transparent); color: var(--currentTextColor);
 }
 
 .wip__badge--work-in-progress {
-  background: color-mix(in srgb, var(--primaryA100, #d3e3f6) 72%, transparent);
-  color: var(--brand-primary, var(--primaryA400));
+  background: color-mix(in srgb, var(--primaryA100, #d3e3f6) 72%, transparent); color: var(--currentTextColor);
 }
 
 .wip__badge--awaiting-parts,
@@ -153,8 +149,7 @@
 }
 
 .wip__badge--completed {
-  background: color-mix(in srgb, var(--trackColor, #d7d9dd) 80%, transparent);
-  color: var(--brand-secondary, var(--currentTextColor));
+  background: color-mix(in srgb, var(--trackColor, #d7d9dd) 80%, transparent); color: var(--currentTextColor);
 }
 
 .wip__badge--cancelled {

@@ -179,7 +179,7 @@
 
 .product-button--primary {
 	background: var(--brand-primary);
-	color: var(--themeBackground);
+	color: var(--contrastTextColor);
 }
 
 .product-button--secondary {

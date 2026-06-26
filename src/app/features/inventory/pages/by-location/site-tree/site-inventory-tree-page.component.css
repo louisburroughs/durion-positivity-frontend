@@ -81,12 +81,12 @@
 
 .btn-primary {
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .btn-secondary {
   background: var(--brand-secondary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .btn-secondary:hover {
@@ -353,8 +353,7 @@
 }
 
 .chip--type {
-  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
-  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent); color: var(--currentTextColor);
 }
 
 .chip--active {

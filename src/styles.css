@@ -258,9 +258,9 @@ body {
 }
 
 .alert-info {
-  background: var(--primary50);
+  background: var(--status-info-bg);
   border-color: var(--functional-info-blue);
-  color: var(--functional-info-blue);
+  color: var(--status-info-fg);
 }
 
 .alert-success {
@@ -306,7 +306,7 @@ body {
 
 .dur-status.primary {
   background: var(--primaryA100);
-  color: var(--brand-primary);
+  color: var(--currentTextColor);
 }
 
 .dur-status.valid {
@@ -602,8 +602,8 @@ app-workorder-detail-page .tab-badge {
 }
 
 app-workorder-detail-page .tab-badge--warning {
-  background: var(--functional-warning, #f59e0b);
-  color: var(--currentTextColor, #1f2328);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
 }
 
 app-workorder-detail-page .inline-error {
@@ -818,7 +818,7 @@ app-party-detail .btn--primary:hover:not(:disabled) {
 
 app-party-detail .btn--secondary {
   background: var(--primary50, var(--brand-primary-soft));
-  color: var(--brand-primary);
+  color: var(--currentTextColor);
 }
 
 app-party-detail .btn--ghost {

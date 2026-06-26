@@ -202,7 +202,7 @@
 
 .location-button--primary {
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .location-button--secondary {

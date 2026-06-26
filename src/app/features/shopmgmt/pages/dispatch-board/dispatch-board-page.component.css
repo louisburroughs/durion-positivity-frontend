@@ -182,8 +182,7 @@ input:focus-visible {
 .loading-state {
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--primary50) 70%, transparent);
-  color: var(--brand-secondary);
+  background: color-mix(in srgb, var(--primary50) 70%, transparent); color: var(--currentTextColor);
 }
 
 .state-panel {
@@ -252,8 +251,7 @@ input:focus-visible {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  background: var(--primaryA100);
-  color: var(--brand-primary);
+  background: var(--primaryA100); color: var(--currentTextColor);
   padding: 0.125rem var(--space-2);
   font-size: 0.8125rem;
   font-weight: 600;

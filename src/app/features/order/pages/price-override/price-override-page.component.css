@@ -71,7 +71,7 @@
   border: 0;
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-4);
-  background: var(--primaryA400);
+  background: var(--brand-primary);
   color: var(--contrastTextColor);
   font-weight: 600;
 }

@@ -235,7 +235,7 @@
 .inventory-card__launch-btn,
 .inventory-card__link {
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .inventory-button--secondary {

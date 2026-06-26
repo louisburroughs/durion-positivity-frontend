@@ -91,10 +91,10 @@
 
 .btn-primary {
   background: var(--brand-primary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }
 
 .btn-secondary {
   background: var(--brand-secondary);
-  color: var(--themeBackground);
+  color: var(--contrastTextColor);
 }

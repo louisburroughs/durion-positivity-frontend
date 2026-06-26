@@ -84,7 +84,7 @@
 
 .job-btn--primary {
 	background: var(--brand-primary);
-	color: var(--themeBackground);
+	color: var(--contrastTextColor);
 }
 
 .job-btn--secondary {
