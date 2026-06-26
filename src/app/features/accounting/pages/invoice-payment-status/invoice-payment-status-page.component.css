@@ -91,8 +91,8 @@
 }
 
 .ips-status-badge--paid {
-  background: var(--primary50);
-  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
+  color: var(--functional-success);
 }
 
 .ips-status-badge--unpaid {
