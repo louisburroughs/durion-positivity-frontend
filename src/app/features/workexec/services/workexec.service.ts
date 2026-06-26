@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { PeopleAvailabilityAPIService, PeopleAvailabilityResponse } from '@durion-sdk/people';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { EmployeeAPIService, PeopleAvailabilityAPIService, PeopleAvailabilityResponse } from '@durion-sdk/people';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   ChangeRequestAPIService,
@@ -169,6 +169,7 @@ export class WorkexecService {
   private readonly workorderPartAdjustments = inject(WorkorderPartAdjustmentsService);
   private readonly timeTracking = inject(WorkexecTimeTrackingAPIService);
   private readonly peopleAvailability = inject(PeopleAvailabilityAPIService);
+  private readonly employeeApi = inject(EmployeeAPIService);
 
   /** Builds an options object carrying the Idempotency-Key header when a key is provided. */
   private idempotencyOptions(key?: string) {
@@ -964,6 +965,23 @@ export class WorkexecService {
       name: name || p.personId,
       role: p.role,
     };
+  }
+
+  /**
+   * operationId: getEmployee
+   * GET /v1/people/employees/{employeeId}
+   *
+   * Resolves a technician's unique employee number from the People domain. The
+   * workorder payload carries the technician id and display name but not the
+   * employee number, so the detail header enriches itself with this lookup
+   * keyed by the assigned technician id. Resolves to null when the technician
+   * has no employee profile or the call fails, so the name still renders alone.
+   */
+  getTechnicianEmployeeNumber(technicianId: string): Observable<string | null> {
+    return this.employeeApi.getEmployee(technicianId).pipe(
+      map(emp => emp.employeeNumber || null),
+      catchError(() => of(null)),
+    );
   }
 
   // ── CAP-005: Start Work (Story 224) ──────────────────────────────────────

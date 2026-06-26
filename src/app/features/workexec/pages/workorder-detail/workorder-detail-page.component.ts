@@ -156,6 +156,28 @@ export class WorkorderDetailPageComponent implements OnInit {
     null,
   );
 
+  /**
+   * Employee number for the assigned technician, resolved from the People
+   * domain (it is not present on the workorder payload). Null until/unless the
+   * lookup succeeds.
+   */
+  readonly technicianEmployeeNumber = signal<string | null>(null);
+
+  /**
+   * Header display for the assigned technician — name plus employee number when
+   * available (e.g. "Jane Smith · #EMP-001"), falling back to the name alone
+   * while the number resolves or if the technician has no employee profile.
+   * Null when no technician is assigned.
+   */
+  readonly technicianDisplay = computed(() => {
+    const name = this.technicianName();
+    if (!name) {
+      return null;
+    }
+    const employeeNumber = this.technicianEmployeeNumber();
+    return employeeNumber ? `${name} · #${employeeNumber}` : name;
+  });
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('workorderId') ?? '';
     this.workorderId.set(id);
@@ -172,6 +194,7 @@ export class WorkorderDetailPageComponent implements OnInit {
         next: (detail) => {
           this.workorder.set(detail);
           this.pageState.set('ready');
+          this.loadTechnicianEmployeeNumber(detail.primaryTechnicianId);
           if (this.activeTab() === 'audit') {
             this.loadTransitions(id);
           }
@@ -188,6 +211,24 @@ export class WorkorderDetailPageComponent implements OnInit {
           );
           this.pageState.set('error');
         },
+      });
+  }
+
+  /**
+   * Resolves the assigned technician's employee number for the header. No-op
+   * (clearing any prior value) when the work order has no assigned technician.
+   */
+  private loadTechnicianEmployeeNumber(technicianId: string | undefined): void {
+    this.technicianEmployeeNumber.set(null);
+    if (!technicianId) {
+      return;
+    }
+    this.service
+      .getTechnicianEmployeeNumber(technicianId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (employeeNumber) => this.technicianEmployeeNumber.set(employeeNumber),
+        error: () => this.technicianEmployeeNumber.set(null),
       });
   }
 
