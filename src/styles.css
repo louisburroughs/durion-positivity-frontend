@@ -521,7 +521,7 @@ app-workorder-detail-page .alert--error {
 
 app-workorder-detail-page .alert--warn {
   background: #fff8e1;
-  color: #f57f17;
+  color: #8a5e0a;
 }
 
 app-workorder-detail-page .alert--success {
