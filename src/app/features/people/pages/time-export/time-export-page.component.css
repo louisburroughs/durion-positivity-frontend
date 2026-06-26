@@ -1,13 +1,13 @@
 :host {
   display: block;
-  background: var(--bodyBackground);
-  color: var(--textPrimary);
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
 }
 
 main {
   background: var(--cardBackground);
   border-radius: var(--radius-md);
-  border-top: 2px solid var(--primary);
+  border-top: 2px solid var(--brand-primary);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -22,19 +22,19 @@ table {
 th,
 td {
   padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-color);
   text-align: left;
 }
 
 th {
   font-weight: 600;
-  color: var(--textSecondary);
+  color: var(--text-muted);
 }
 
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: var(--surface-overlay);
+  background: var(--surface-variant);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -49,7 +49,7 @@ th {
 }
 
 .panel {
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--space-4);
   background: var(--cardBackground);
@@ -69,7 +69,7 @@ th {
 label,
 legend,
 dt {
-  color: var(--textSecondary);
+  color: var(--text-muted);
   font-weight: 600;
 }
 
@@ -77,11 +77,11 @@ input,
 select,
 textarea,
 button {
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
   background: var(--cardBackground);
-  color: var(--textPrimary);
+  color: var(--currentTextColor);
 }
 
 button {
@@ -121,16 +121,16 @@ button:disabled {
 }
 
 .status-badge {
-  color: var(--primary);
+  color: var(--brand-primary);
   font-weight: 600;
 }
 
 .note-text {
-  color: var(--textSecondary);
+  color: var(--text-muted);
 }
 
 .error-text {
-  color: var(--errorText);
+  color: var(--functional-error-red);
 }
 
 .table-wrap {

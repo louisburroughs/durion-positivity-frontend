@@ -406,7 +406,7 @@ app-estimate-detail-page .crm-ref-value,
 app-workorder-detail-page .crm-ref-value {
   font-family: var(--font-mono, monospace);
   font-size: 0.875rem;
-  color: var(--color-brand-primary);
+  color: var(--brand-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -439,7 +439,7 @@ app-estimate-detail-page .crm-ref-badge {
   font-family: var(--font-mono, monospace);
   font-size: 0.75rem;
   background: var(--brand-primary-soft, var(--primaryA100));
-  color: var(--color-brand-primary);
+  color: var(--brand-primary);
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
   overflow: hidden;
@@ -454,7 +454,7 @@ app-workorder-detail-page .crm-ref-badge {
   font-family: var(--font-mono, monospace);
   font-size: 0.7rem;
   background: var(--brand-primary-soft, var(--primaryA100));
-  color: var(--color-brand-primary);
+  color: var(--brand-primary);
   padding: 2px 7px;
   border-radius: 9999px;
   overflow: hidden;

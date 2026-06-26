@@ -5,7 +5,7 @@
 main {
   background: var(--cardBackground);
   border-radius: var(--radius-md);
-  border-top: 2px solid var(--primary);
+  border-top: 2px solid var(--brand-primary);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);

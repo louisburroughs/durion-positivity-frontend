@@ -1,6 +1,14 @@
 {
   "//": "Durion drift guardrail. Run: npx stylelint \"src/**/*.css\". See design/source/durion-style-guide.md.",
+  "plugins": ["stylelint-value-no-unknown-custom-properties"],
   "rules": {
+    "csstools/value-no-unknown-custom-properties": [
+      true,
+      {
+        "importFrom": ["src/styles.css"],
+        "//": "Catches ANY undefined var(--x) (incl. fallback-less, which render broken). Sanctioned tokens are defined in src/styles.css. Add new runtime tokens there, not inline."
+      }
+    ],
     "selector-disallowed-list": [
       ["/\\.mic-(elevation|status)/"],
       {

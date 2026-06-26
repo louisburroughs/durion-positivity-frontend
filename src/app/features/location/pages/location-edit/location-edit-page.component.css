@@ -9,5 +9,5 @@ main {
   padding: var(--space-4);
   background: var(--cardBackground);
   border-radius: var(--radius-md);
-  border-top: 2px solid var(--primary);
+  border-top: 2px solid var(--brand-primary);
 }

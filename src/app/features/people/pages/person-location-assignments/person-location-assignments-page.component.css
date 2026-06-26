@@ -9,7 +9,7 @@ main {
   padding: var(--space-4);
   background: var(--cardBackground);
   border-radius: var(--radius-md);
-  border-top: 2px solid var(--primary);
+  border-top: 2px solid var(--brand-primary);
 }
 
 .assignment-table {
@@ -20,19 +20,19 @@ main {
 .assignment-table th,
 .assignment-table td {
   padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-color);
   text-align: left;
 }
 
 .assignment-table th {
   font-weight: 600;
-  color: var(--textSecondary);
+  color: var(--text-muted);
 }
 
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: var(--surface-overlay);
+  background: var(--surface-variant);
   z-index: 1000;
   display: flex;
   align-items: center;

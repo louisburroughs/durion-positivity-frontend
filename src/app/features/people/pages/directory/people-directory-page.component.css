@@ -18,7 +18,7 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--currentTextColor);
   flex-shrink: 0;
 }
 
@@ -33,7 +33,7 @@
   border: 1px solid var(--input-border);
   border-radius: var(--radius-md);
   background: var(--input-background);
-  color: var(--text-primary);
+  color: var(--currentTextColor);
   font-size: 0.9rem;
 }
 
@@ -55,7 +55,7 @@
   border: 1px solid var(--input-border);
   border-radius: var(--radius-full, 9999px);
   background: var(--cardBackground);
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 0.85rem;
   cursor: pointer;
   transition: background 120ms, color 120ms, border-color 120ms;
@@ -81,7 +81,7 @@
   padding: var(--space-4);
   border-radius: var(--radius-md);
   background: var(--cardBackground);
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -127,7 +127,7 @@
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   background: color-mix(in srgb, var(--cardBackground) 80%, var(--input-border));
   border-bottom: 1px solid var(--input-border);
   white-space: nowrap;
@@ -166,7 +166,7 @@
 
 .directory-td {
   padding: var(--space-3) var(--space-4);
-  color: var(--text-primary);
+  color: var(--currentTextColor);
   vertical-align: middle;
 }
 
@@ -177,7 +177,7 @@
 .directory-td--mono {
   font-family: var(--font-mono, monospace);
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
 .directory-td--actions {
@@ -195,7 +195,7 @@
 }
 
 .directory-email-link {
-  color: var(--text-primary);
+  color: var(--currentTextColor);
   text-decoration: none;
 }
 
@@ -204,7 +204,7 @@
 }
 
 .directory-empty-cell {
-  color: var(--text-secondary);
+  color: var(--text-muted);
   opacity: 0.5;
 }
 
@@ -261,7 +261,7 @@
   border: 1px solid var(--input-border);
   border-radius: var(--radius-sm);
   background: var(--cardBackground);
-  color: var(--text-primary);
+  color: var(--currentTextColor);
   font-size: 1.1rem;
   cursor: pointer;
   display: flex;
@@ -281,5 +281,5 @@
 
 .pagination-label {
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
