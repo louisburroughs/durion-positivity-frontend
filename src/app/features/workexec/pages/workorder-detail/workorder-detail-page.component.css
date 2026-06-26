@@ -37,7 +37,7 @@
 }
 
 .wo-header__id {
-  font-family: var(--font-display, 'Public Sans', sans-serif);
+  font-family: var(--font-primary);
   font-size: 1.4rem;
   font-weight: 700;
   margin: 0;
@@ -313,18 +313,20 @@
 }
 
 .modal-glass {
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: var(--radius-xl, 16px);
-  padding: var(--space-7);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
   max-width: 480px;
   width: 100%;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-card), 0 8px 40px rgba(0, 0, 0, 0.18);
 }
 
 .modal-glass__title {
-  font-family: var(--font-display, 'Public Sans', sans-serif);
+  font-family: var(--font-primary);
   font-size: 1.15rem;
   font-weight: 700;
   margin: 0 0 var(--space-3);
