@@ -138,8 +138,7 @@
 .order-cart__error {
   padding: var(--space-3);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--functional-error-red) 14%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
 }
 
 .order-cart__skeleton {

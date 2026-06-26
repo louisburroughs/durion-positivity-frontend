@@ -69,11 +69,11 @@
 }
 
 .state-panel--error {
-  background: color-mix(in srgb, var(--functional-error-red) 8%, transparent);
+  background: var(--status-error-bg);
 }
 
 .state-panel--forbidden {
-  background: color-mix(in srgb, var(--functional-warning) 10%, transparent);
+  background: var(--status-warning-bg);
 }
 
 .retry-button {
@@ -159,8 +159,7 @@
   display: inline-block;
   padding: 0.05rem 0.35rem;
   font-size: 0.7rem;
-  background: color-mix(in srgb, var(--functional-info-blue) 12%, transparent);
-  color: var(--functional-info-blue);
+  background: var(--status-info-bg); color: var(--status-info-fg);
 }
 
 .help-toggle {

@@ -94,8 +94,7 @@
 
 .accounting-banner--error {
   border-color: var(--functional-error-red);
-  background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
 }
 
 .accounting-section {

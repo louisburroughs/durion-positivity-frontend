@@ -16,8 +16,7 @@
 }
 
 .sse-error-banner {
-  background: color-mix(in srgb, var(--functional-warning) 12%, transparent);
-  color: #8a5e0a;
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
   border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-4);
   margin-bottom: var(--space-4);
@@ -25,8 +24,7 @@
 }
 
 .update-notification {
-  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
-  color: #1b5e20;
+  background: var(--status-success-bg); color: var(--status-success-fg);
   border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-4);
   margin-bottom: var(--space-4);

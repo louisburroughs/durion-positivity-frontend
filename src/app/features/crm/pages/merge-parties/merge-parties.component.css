@@ -87,8 +87,7 @@ th {
 }
 
 .error-state {
-  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
-  color: var(--functional-error-red);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .table-wrap {

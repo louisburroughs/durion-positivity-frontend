@@ -78,13 +78,11 @@
 }
 
 .status-chip--approved {
-  background: color-mix(in srgb, var(--functional-success) 15%, transparent);
-  color: #1b5e20;
+  background: var(--status-success-bg); color: var(--status-success-fg);
 }
 
 .status-chip--expired {
-  background: color-mix(in srgb, var(--functional-error-red) 15%, transparent);
-  color: var(--functional-error-red);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .item-group {
@@ -161,13 +159,11 @@
 }
 
 .alert--error {
-  background: color-mix(in srgb, var(--functional-error-red, #ba1a1a) 10%, transparent);
-  color: var(--functional-error-red, #ba1a1a);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .alert--warn {
-  background: color-mix(in srgb, var(--functional-warning, #e6a540) 12%, transparent);
-  color: #8a5e0a;
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
 }
 
 .btn {
@@ -246,7 +242,7 @@
 }
 
 .partial-scope-note {
-  background: color-mix(in srgb, var(--functional-warning, #e6a540) 10%, transparent);
+  background: var(--status-warning-bg);
   border-radius: 0.125rem;
   padding: var(--space-3, 0.75rem);
   margin-top: var(--space-3, 0.75rem);

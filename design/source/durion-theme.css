@@ -181,6 +181,15 @@ body {
   --surface-2: var(--brand-surface);
   --surface-hover: rgba(0, 52, 111, 0.06);
   --text-muted: var(--handleColor);
+  /* Status tint pairs — theme-aware, AA in light AND dark */
+  --status-error-bg: #fdecea;
+  --status-error-fg: #ba1a1a;
+  --status-warning-bg: #fff4e0;
+  --status-warning-fg: #8a5e0a;
+  --status-success-bg: #e7f4e8;
+  --status-success-fg: #1b5e20;
+  --status-info-bg: #e8eef6;
+  --status-info-fg: #355d92;
 }
 
 /* Dark */
@@ -216,6 +225,15 @@ body {
   --surface-2: var(--cardBackground);
   --surface-hover: rgba(255, 255, 255, 0.08);
   --text-muted: var(--handleColor);
+  /* Dark: AA-light text on a deep tint. */
+  --status-error-bg: #4a2426;
+  --status-error-fg: #ffb4ab;
+  --status-warning-bg: #3d3424;
+  --status-warning-fg: #ffd479;
+  --status-success-bg: #24382a;
+  --status-success-fg: #a5d6a7;
+  --status-info-bg: #233246;
+  --status-info-fg: #aac4e4;
 }
 
 /* ========================================================================= */

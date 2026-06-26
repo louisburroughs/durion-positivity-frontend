@@ -100,15 +100,13 @@
 }
 
 .rag-status--success {
-  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--functional-success) 40%, transparent);
-  color: #1b5e20;
+  background: var(--status-success-bg);
+  border: 1px solid color-mix(in srgb, var(--functional-success) 40%, transparent); color: var(--status-success-fg);
 }
 
 .rag-status--error {
-  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--functional-error-red) 40%, transparent);
-  color: var(--functional-error-red);
+  background: var(--status-error-bg);
+  border: 1px solid color-mix(in srgb, var(--functional-error-red) 40%, transparent); color: var(--status-error-fg);
 }
 
 .rag-status__icon {

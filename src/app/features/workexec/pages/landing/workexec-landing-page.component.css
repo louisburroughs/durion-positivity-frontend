@@ -98,8 +98,7 @@
 
 .workexec-banner--error {
   border-color: var(--functional-error-red);
-  background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
 }
 
 .workexec-section {
@@ -175,8 +174,7 @@
 }
 
 .workexec-card__badge--guided {
-  background: color-mix(in srgb, #d97706 14%, var(--cardBackground));
-  color: #9a5b00;
+  background: var(--status-warning-bg)); color: var(--status-warning-fg);
 }
 
 .workexec-field__label {

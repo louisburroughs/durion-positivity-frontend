@@ -160,12 +160,23 @@ Recurring traps and their fixes:
 |---|---|---|
 | White text on a teal button | `background: var(--brand-accent)` (teal-400, 2.4:1) | `background: var(--accent-strong)` (#006a6a, 5.8:1) |
 | Coloured **status text** | `--functional-warning` / `--functional-success` as `color:` | warning `#8a5e0a`, success `#1b5e20`, error `#ba1a1a` |
-| Status **chip / badge** | hardcoded pastel + a mid-tone text (e.g. `#f57f17` on `#fff8e1`) | darken the text (`#8a5e0a`); keep the light pastel fill |
-| Status **alert/banner** | `color-mix(--functional-x 12%) ` fill + the same functional colour as text | fill stays; text = the AA-dark value above |
+| Status **chip / badge / alert / banner** | hardcoded pastel + mid-tone text, or `color-mix(--functional-x N%)` fill + the functional colour as text — both fail in dark | the **theme-aware status pair** below |
 | Form field | hardcoded `background: #fff` | `var(--input-background)` (theme-aware) so dark mode flips to graphite |
 
-> **Known dark-mode gap (tracked):** status **tint** badges/alerts built with
-> `color-mix(--functional-x N%, transparent)` over the card sit on a dark tint in dark mode,
-> where the AA-dark text above no longer passes. A proper fix needs theme-aware status tokens
-> (lighter functional shades in dark). Until then, prefer fixed light pastel fills + AA-dark
-> text for status chips, which pass in both themes.
+### Status tint pairs (theme-aware, AA in both themes)
+
+Use the **`--status-<kind>-bg` + `--status-<kind>-fg`** pair together for any error/warning/
+success/info chip, badge, alert, or banner. They flip per theme — AA-dark text on a light
+tint in light mode, AA-light text on a deep tint in dark mode — so a status surface passes
+in **both** themes with no per-component overrides.
+
+```css
+.badge--unpaid  { background: var(--status-error-bg);   color: var(--status-error-fg); }
+.badge--pending { background: var(--status-warning-bg); color: var(--status-warning-fg); }
+.badge--paid    { background: var(--status-success-bg); color: var(--status-success-fg); }
+.badge--info    { background: var(--status-info-bg);    color: var(--status-info-fg); }
+```
+
+Do **not** rebuild status surfaces from `color-mix(--functional-x …)` + a functional/hardcoded
+text colour — that was the old pattern and it fails AA in dark. Raw `--functional-*` stays for
+borders/icons where you control the background.

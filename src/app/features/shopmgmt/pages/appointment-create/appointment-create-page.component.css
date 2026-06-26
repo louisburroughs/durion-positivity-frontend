@@ -30,8 +30,7 @@
 }
 
 .error-banner {
-  background: color-mix(in srgb, var(--functional-error-red) 10%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
@@ -47,8 +46,7 @@
 }
 
 .eligibility-error {
-  background: color-mix(in srgb, var(--functional-warning) 10%, var(--cardBackground));
-  color: #8a5e0a;
+  background: var(--status-warning-bg)); color: var(--status-warning-fg);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
@@ -91,7 +89,7 @@ form {
 }
 
 .conflict-panel {
-  background: color-mix(in srgb, var(--functional-error-red) 8%, var(--cardBackground));
+  background: var(--status-error-bg));
   border-radius: var(--radius-md);
   padding: var(--space-4);
   display: flex;

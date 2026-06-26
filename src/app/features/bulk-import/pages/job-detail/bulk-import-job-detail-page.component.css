@@ -26,10 +26,9 @@
 	background: color-mix(in srgb, var(--brand-primary) 8%, var(--cardBackground));
 }
 
-.job-detail__banner--error {
-	color: var(--functional-error-red);
+.job-detail__banner--error { color: var(--status-error-fg);
 	border-color: var(--functional-error-red);
-	background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
+	background: var(--status-error-bg));
 }
 
 .job-detail__meta,
@@ -95,8 +94,7 @@
 }
 
 .job-btn--danger {
-	background: color-mix(in srgb, var(--functional-error-red) 92%, #000 8%);
-	color: #fff;
+	background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .job-status {

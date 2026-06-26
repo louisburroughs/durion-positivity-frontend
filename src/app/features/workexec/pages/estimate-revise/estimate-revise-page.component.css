@@ -11,8 +11,8 @@
 .status-chip { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--brand-primary-soft, var(--primaryA100)); color: var(--brand-primary); }
 .revise-description { margin: 0; font-size: 0.875rem; color: var(--handleColor); }
 .alert { padding: var(--space-3, 0.75rem) var(--space-4, 1rem); border-radius: 0.125rem; font-size: 0.875rem; }
-.alert--error { background: color-mix(in srgb, var(--functional-error-red, #ba1a1a) 10%, transparent); color: var(--functional-error-red, #ba1a1a); }
-.alert--warn { background: color-mix(in srgb, var(--functional-warning, #e6a540) 12%, transparent); color: #8a5e0a; }
+.alert--error { background: var(--status-error-bg); color: var(--status-error-fg); }
+.alert--warn { background: var(--status-warning-bg); color: var(--status-warning-fg); }
 .hint-text { font-size: 0.875rem; color: var(--handleColor); margin: 0; }
 .confirm-panel { background: var(--themeBackground); padding: var(--space-5, 1.25rem); border-radius: 0.25rem; display: flex; flex-direction: column; gap: var(--space-4, 1rem); }
 .confirm-heading { margin: 0; font-size: 1rem; font-weight: 700; color: var(--currentTextColor); }

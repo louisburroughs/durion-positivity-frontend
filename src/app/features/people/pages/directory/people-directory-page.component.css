@@ -86,8 +86,7 @@
 }
 
 .directory-state--error {
-  background: color-mix(in srgb, var(--error, #dc2626) 8%, var(--cardBackground));
-  color: var(--error, #dc2626);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
   border: 1px solid color-mix(in srgb, var(--error, #dc2626) 25%, transparent);
 }
 

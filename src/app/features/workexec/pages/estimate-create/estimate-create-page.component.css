@@ -113,8 +113,7 @@
 }
 
 .alert--error {
-  background: color-mix(in srgb, var(--functional-error-red, #ba1a1a) 10%, transparent);
-  color: var(--functional-error-red, #ba1a1a);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 /* ── Actions ────────────────────────────────────────────────────────────── */

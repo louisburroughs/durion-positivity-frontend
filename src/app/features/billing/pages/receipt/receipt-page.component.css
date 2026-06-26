@@ -103,8 +103,7 @@
 }
 
 .receipt__error {
-  background: color-mix(in srgb, var(--functional-error-red) 16%, transparent);
-  color: var(--functional-error-red);
+  background: var(--status-error-bg); color: var(--status-error-fg);
   border-radius: var(--radius-sm);
   padding: var(--space-3) var(--space-4);
 }

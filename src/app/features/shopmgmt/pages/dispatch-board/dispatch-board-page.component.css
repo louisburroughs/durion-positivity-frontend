@@ -192,7 +192,7 @@ input:focus-visible {
   padding: var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid color-mix(in srgb, var(--functional-error-red) 35%, transparent);
-  background: color-mix(in srgb, var(--functional-error-red) 8%, var(--cardBackground));
+  background: var(--status-error-bg));
 }
 
 .state-panel p {
@@ -260,8 +260,7 @@ input:focus-visible {
 }
 
 .exception-badge {
-  background: color-mix(in srgb, var(--functional-warning) 12%, var(--cardBackground));
-  color: #8a5e0a;
+  background: var(--status-warning-bg)); color: var(--status-warning-fg);
 }
 
 @media (max-width: 64rem) {

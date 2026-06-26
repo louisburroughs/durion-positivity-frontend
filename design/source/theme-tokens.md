@@ -127,6 +127,13 @@ These flip when `data-theme` changes on `<html>`. **Consume these in all compone
 | `--surface-2` | brand-surface | cardBackground | Secondary elevated surface |
 | `--surface-hover` | `rgba(0,52,111,.06)` | `rgba(255,255,255,.08)` | Hover wash |
 | `--text-muted` | handleColor | handleColor | Muted / secondary text |
+| `--status-error-bg` / `-fg` | `#fdecea` / `#ba1a1a` | `#4a2426` / `#ffb4ab` | Error chip/alert fill + text (AA both themes) |
+| `--status-warning-bg` / `-fg` | `#fff4e0` / `#8a5e0a` | `#3d3424` / `#ffd479` | Warning chip/alert fill + text |
+| `--status-success-bg` / `-fg` | `#e7f4e8` / `#1b5e20` | `#24382a` / `#a5d6a7` | Success chip/alert fill + text |
+| `--status-info-bg` / `-fg` | `#e8eef6` / `#355d92` | `#233246` / `#aac4e4` | Info chip/alert fill + text |
+
+> **Status surfaces use the `--status-<kind>-bg` + `-fg` pair** (see `durion-style-guide.md` §8),
+> never `color-mix(--functional-x …)` + a functional text colour — that fails AA in dark.
 
 ## Unsanctioned tokens (do NOT use)
 

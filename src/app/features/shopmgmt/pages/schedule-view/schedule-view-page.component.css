@@ -117,8 +117,7 @@
 }
 
 .availability-warning {
-  background: color-mix(in srgb, var(--functional-warning) 12%, transparent);
-  color: #8a5e0a;
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
@@ -199,8 +198,7 @@
 
 .conflict-badge {
   font-size: 0.75rem;
-  background: color-mix(in srgb, var(--functional-warning) 20%, transparent);
-  color: #8a5e0a;
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
   border-radius: var(--radius-sm);
   padding: 0 var(--space-1);
 }

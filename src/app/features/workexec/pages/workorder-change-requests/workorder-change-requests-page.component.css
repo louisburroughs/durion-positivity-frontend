@@ -53,9 +53,8 @@
   margin: 1rem 1.5rem;
   padding: 0.85rem 1rem;
   border-radius: var(--radius-sm, 4px);
-  background: color-mix(in srgb, var(--functional-warning) 16%, transparent);
-  border: 1px solid var(--functional-warning);
-  color: var(--currentTextColor);
+  background: var(--status-warning-bg);
+  border: 1px solid var(--functional-warning); color: var(--status-warning-fg);
   font-size: 0.875rem;
   line-height: 1.5;
 }

@@ -103,8 +103,7 @@
 }
 
 .error-banner {
-  background: color-mix(in srgb, var(--functional-error-red) 10%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;

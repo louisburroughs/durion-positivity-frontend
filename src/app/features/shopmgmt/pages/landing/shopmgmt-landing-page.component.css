@@ -128,8 +128,7 @@
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid var(--functional-error-red);
-  background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
-  color: var(--functional-error-red);
+  background: var(--status-error-bg)); color: var(--status-error-fg);
 }
 
 .shopmgmt-section {
@@ -198,8 +197,7 @@
 }
 
 .shopmgmt-card-badge--guided {
-  background: color-mix(in srgb, #d97706 14%, var(--cardBackground));
-  color: #9a5b00;
+  background: var(--status-warning-bg)); color: var(--status-warning-fg);
 }
 
 .shopmgmt-card-launch {

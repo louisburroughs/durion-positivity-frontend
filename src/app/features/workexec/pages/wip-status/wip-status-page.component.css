@@ -145,13 +145,11 @@
 
 .wip__badge--awaiting-parts,
 .wip__badge--awaiting-approval {
-  background: color-mix(in srgb, var(--functional-warning, #e6a540) 30%, transparent);
-  color: #8a5e0a;
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
 }
 
 .wip__badge--ready-for-pickup {
-  background: color-mix(in srgb, var(--functional-success, #5bbe72) 32%, transparent);
-  color: color-mix(in srgb, var(--functional-success, #5bbe72) 70%, var(--brand-secondary));
+  background: var(--status-success-bg); color: var(--status-success-fg);
 }
 
 .wip__badge--completed {
@@ -160,8 +158,7 @@
 }
 
 .wip__badge--cancelled {
-  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
-  color: var(--functional-error-red);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .wip__skeleton {
@@ -183,9 +180,8 @@
 
 .wip__error {
   padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-  border-radius: var(--radius-md, 8px);
-  color: var(--functional-error-red, #ba1a1a);
-  background: color-mix(in srgb, var(--functional-error-red, #ba1a1a) 11%, transparent);
+  border-radius: var(--radius-md, 8px); color: var(--status-error-fg);
+  background: var(--status-error-bg);
 }
 
 @keyframes wip-skeleton {

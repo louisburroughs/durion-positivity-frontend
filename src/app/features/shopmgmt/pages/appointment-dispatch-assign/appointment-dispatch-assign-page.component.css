@@ -67,15 +67,13 @@
 }
 
 .success-banner {
-  border: 1px solid var(--functional-success);
-  color: #1b5e20;
-  background: color-mix(in srgb, var(--functional-success) 12%, var(--cardBackground));
+  border: 1px solid var(--functional-success); color: var(--status-success-fg);
+  background: var(--status-success-bg));
 }
 
 .error-banner {
-  border: 1px solid var(--functional-error-red);
-  color: var(--functional-error-red);
-  background: color-mix(in srgb, var(--functional-error-red) 12%, var(--cardBackground));
+  border: 1px solid var(--functional-error-red); color: var(--status-error-fg);
+  background: var(--status-error-bg));
 }
 
 .btn-primary {
