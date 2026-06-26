@@ -294,18 +294,17 @@ export interface ApproveEstimateRequest {
 
 // ── CAP-004: Workorder types (Stories 231, 230, 229, 228, 227, 226) ──────────
 
+// Mirrors the backend WorkorderStatus enum / SDK WorkorderDetailResponseStatusEnum.
 export type WorkorderStatus =
   | 'DRAFT'
-  | 'PLANNED'
-  | 'PENDING_ASSIGNMENT'
+  | 'APPROVED'
   | 'ASSIGNED'
-  | 'IN_PROGRESS'
-  | 'ON_HOLD'
-  | 'PENDING_REVIEW'
+  | 'WORK_IN_PROGRESS'
+  | 'AWAITING_PARTS'
+  | 'AWAITING_APPROVAL'
+  | 'READY_FOR_PICKUP'
   | 'COMPLETED'
-  | 'INVOICED'
-  | 'CANCELLED'
-  | 'ARCHIVED';
+  | 'CANCELLED';
 
 export type ChangeRequestStatus =
   | 'AWAITING_ADVISOR_REVIEW'

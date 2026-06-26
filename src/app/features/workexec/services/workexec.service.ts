@@ -492,7 +492,7 @@ export class WorkexecService {
   private toReopenWorkorderResponse(dto: import('@durion-sdk/workorder').ReopenWorkorderResponse): ReopenWorkorderResponse {
     return {
       workorderId: dto.workorderId ?? '',
-      status: (dto.currentStatus as WorkorderStatus) ?? 'IN_PROGRESS',
+      status: (dto.currentStatus as WorkorderStatus) ?? 'WORK_IN_PROGRESS',
       reopenedAt: dto.reopenedAt,
     };
   }
@@ -783,6 +783,26 @@ export class WorkexecService {
 
   getWorkorder(workorderId: string): Observable<WorkorderResponse> {
     return this.getWorkorderById(workorderId);
+  }
+
+  /**
+   * operationId: approveWorkorder
+   * POST /v1/workorders/{workorderId}/approval
+   * Advances a DRAFT workorder to APPROVED. Click-confirm approval: customer +
+   * signer name, no signature image (CLICK_CONFIRM approval method).
+   */
+  approveWorkorder(
+    workorderId: string,
+    customerId: string,
+    signerName?: string,
+    notes?: string,
+  ): Observable<WorkorderResponse> {
+    const request: import('@durion-sdk/workorder').ApproveWorkorderRequest = {
+      customerId,
+      signerName: signerName || undefined,
+      notes: notes || undefined,
+    };
+    return this.workOrderApi.approveWorkorder(workorderId, request) as Observable<WorkorderResponse>;
   }
 
   /**

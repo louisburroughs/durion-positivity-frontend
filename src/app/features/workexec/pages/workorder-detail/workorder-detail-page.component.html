@@ -45,6 +45,9 @@
 
       <!-- Primary CTAs — Electric Teal only for positive primary action -->
       <div class="wo-header__actions">
+        @if (canApprove()) {
+        <button class="btn btn--accent" (click)="openApproveModal()">Approve Work Order</button>
+        }
         @if (canStartWork()) {
         <button class="btn btn--accent" (click)="openStartWorkModal()">Start Work</button>
         }
@@ -67,7 +70,9 @@
         @if (invoiceError()) {
         <span class="inline-error" role="alert">{{ invoiceError() }}</span>
         }
-        <button class="btn btn--ghost" (click)="navigateToAssign()">
+        <button class="btn btn--ghost" (click)="navigateToAssign()"
+          [disabled]="!canAssignTechnician()"
+          [attr.title]="canAssignTechnician() ? null : 'Approve the work order before assigning a technician'">
           {{ technicianName() ? 'Reassign' : 'Assign Technician' }}
         </button>
       </div>
@@ -259,6 +264,42 @@
 }
 
 <!-- Start Work confirmation modal — glassmorphism per design authority -->
+@if (showApproveModal()) {
+<div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="approve-modal-title">
+  <div class="modal-glass">
+    <h2 id="approve-modal-title" class="modal-glass__title">Approve {{ workorder()!.workorderNumber ?? workorderId() }}?</h2>
+    <p class="modal-glass__body">
+      This moves the work order to <strong>APPROVED</strong>, after which a technician can be assigned.
+    </p>
+
+    <label class="field">
+      <span class="field__label">Approved by (name)</span>
+      <input class="field__input" type="text" [value]="approveSignerName()"
+        (input)="approveSignerName.set($any($event.target).value)"
+        placeholder="Name of approver" />
+    </label>
+    <label class="field">
+      <span class="field__label">Notes (optional)</span>
+      <textarea class="field__input" rows="2" [value]="approveNotes()"
+        (input)="approveNotes.set($any($event.target).value)"></textarea>
+    </label>
+
+    @if (approveError()) {
+    <div class="alert alert--error" role="alert">{{ approveError() }}</div>
+    }
+
+    <div class="modal-glass__actions">
+      <button class="btn btn--ghost" (click)="cancelApprove()"
+        [disabled]="approveModalState() === 'loading'">Cancel</button>
+      <button class="btn btn--accent" (click)="confirmApprove()"
+        [disabled]="approveModalState() === 'loading'" [attr.aria-busy]="approveModalState() === 'loading'">
+        {{ approveModalState() === 'loading' ? 'Approving…' : 'Confirm — Approve' }}
+      </button>
+    </div>
+  </div>
+</div>
+}
+
 @if (showStartWorkModal()) {
 <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="start-work-modal-title">
   <div class="modal-glass">
