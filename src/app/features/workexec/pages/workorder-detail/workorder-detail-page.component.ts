@@ -223,13 +223,12 @@ export class WorkorderDetailPageComponent implements OnInit {
     if (!technicianId) {
       return;
     }
+    // getTechnicianEmployeeNumber resolves to null on failure (no error path), so
+    // a single next handler covers both the resolved and failed cases.
     this.service
       .getTechnicianEmployeeNumber(technicianId)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (employeeNumber) => this.technicianEmployeeNumber.set(employeeNumber),
-        error: () => this.technicianEmployeeNumber.set(null),
-      });
+      .subscribe((employeeNumber) => this.technicianEmployeeNumber.set(employeeNumber));
   }
 
   private loadChangeRequests(id: string): void {
