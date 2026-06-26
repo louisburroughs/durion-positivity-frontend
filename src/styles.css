@@ -526,7 +526,7 @@ app-workorder-detail-page .alert--warn {
 
 app-workorder-detail-page .alert--success {
   background: color-mix(in srgb, var(--functional-success) 12%, transparent);
-  color: var(--functional-success);
+  color: #1b5e20; /* functional-success (#2e7d32) is only 4.36:1 on its own tint; darker green = AA */
   border: 1px solid var(--functional-success);
   border-radius: var(--radius-sm, 4px);
   padding: 0.75rem 1rem;
@@ -789,12 +789,12 @@ app-party-detail .btn--sm {
 }
 
 app-party-detail .btn--primary {
-  background: var(--durion-teal-400);
+  background: #006a6a; /* teal-400 (#2bbbad) gives white only 2.4:1; darker teal = 6.4:1 AA */
   color: #fff;
 }
 
 app-party-detail .btn--primary:hover:not(:disabled) {
-  background: var(--durion-teal-500);
+  background: #00504f;
 }
 
 app-party-detail .btn--secondary {
