@@ -6,6 +6,7 @@
 /* ── Durion Brand Palette (raw tokens) ───────────────────────────────────── */
 
 @import 'assets/fonts/barlow/barlow-semi-condensed.css';
+@import 'assets/fonts/noto-sans/noto-sans.css';
 
 :root {
   /* Blueprint Blues */
