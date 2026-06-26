@@ -10,7 +10,7 @@ Implementation token source of truth:
 
 This design system moves beyond "Standard Banking" into the realm of **The Architectural Ledger**. The North Star for this system is the intersection of blueprint precision and editorial authority. We reject the "boxed-in" look of traditional fintech. Instead, we embrace a layout that feels like a premium financial broadsheet—utilizing intentional asymmetry, vast white space, and a sophisticated layering of Blueprint Blues.
 
-By replacing 'Michelin Unit Titling' with **Public Sans**, we shift from rigid industrialism to a modern, humanist authority. The aesthetic is "Conservative Professional," but the execution is "High-End Editorial." We do not use borders to define containers; we use the weight of typography and the subtle shifts in surface tonality to guide the eye.
+By replacing 'Barlow Semi Condensed' with **Public Sans**, we shift from rigid industrialism to a modern, humanist authority. The aesthetic is "Conservative Professional," but the execution is "High-End Editorial." We do not use borders to define containers; we use the weight of typography and the subtle shifts in surface tonality to guide the eye.
 
 ## 2. Colors & Tonal Depth
 
@@ -53,7 +53,7 @@ We utilize a dual-font system to balance institutional trust with modern clarity
 Traditional shadows are often a crutch for poor layout. In this system, depth is earned through **Tonal Layering**.
 
 - **The Layering Principle:** Place a `surface-container-lowest` card on a `surface-container-low` background. The slight shift in hex value creates a "soft lift" that is felt rather than seen.
-- **Ambient Shadows:** If a component *must* float (e.g., a dropdown), use a shadow with a blur radius of 32px and 4% opacity, using a tinted color (`on_surface` variant).
+- **Ambient Shadows:** If a component _must_ float (e.g., a dropdown), use a shadow with a blur radius of 32px and 4% opacity, using a tinted color (`on_surface` variant).
 - **The "Ghost Border" Fallback:** If accessibility requires a stroke, use `outline-variant` (`#c2c6d3`) at **15% opacity**. Never use 100% opaque borders.
 - **Glassmorphism:** Use semi-transparent `surface_variant` for overlays to allow the underlying Blueprint Blues to bleed through, maintaining the "Blueprint" aesthetic.
 

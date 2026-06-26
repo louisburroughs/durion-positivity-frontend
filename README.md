@@ -326,7 +326,7 @@ Component CSS files should reference **Tier 2 or Tier 3 tokens only**.
 
 | Token                                         | Value                 |
 | --------------------------------------------- | --------------------- |
-| `--font-primary`                              | Michelin Unit Titling |
+| `--font-primary`                              | Barlow Semi Condensed |
 | `--font-body`                                 | Noto Sans             |
 | `--space-1` … `--space-8`                     | 0.25 rem … 2 rem      |
 | `--radius-sm` / `--radius-md` / `--radius-lg` | 4 px / 8 px / 16 px   |

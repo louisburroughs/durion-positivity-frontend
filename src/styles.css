@@ -4,6 +4,9 @@
    ============================================================================= */
 
 /* ── Durion Brand Palette (raw tokens) ───────────────────────────────────── */
+
+@import 'assets/fonts/barlow/barlow-semi-condensed.css';
+
 :root {
   /* Blueprint Blues */
   --durion-blue-800: #1c2e48;
@@ -54,7 +57,7 @@
   --brand-surface: #ffffff;
 
   /* Typography */
-  --font-primary: 'Michelin Unit Titling', 'Noto Sans', sans-serif;
+  --font-primary: 'Barlow Semi Condensed', 'Noto Sans', sans-serif;
   --font-body: 'Noto Sans', sans-serif;
 
   /* Spacing scale */
