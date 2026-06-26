@@ -104,9 +104,15 @@ export class WorkorderLaborPageComponent implements OnInit {
       this.sessionError.set('Select a labor service line to start a session.');
       return;
     }
+    const technicianId =
+      this.workorder()?.primaryTechnicianId ?? this.workorder()?.technician?.technicianId;
+    if (!technicianId) {
+      this.sessionError.set('This work order has no assigned technician. Assign a technician before starting labor.');
+      return;
+    }
     this.sessionState.set('starting');
     this.sessionError.set(null);
-    const request: StartLaborRequest = { workorderServiceId: serviceId };
+    const request: StartLaborRequest = { workorderServiceId: serviceId, technicianId };
     this.service
       .startLaborSession(id, serviceId, request, uuidv4())
       .pipe(takeUntilDestroyed(this.destroyRef))
