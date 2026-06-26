@@ -27,6 +27,7 @@ import { vi } from 'vitest';
 import { WorkexecService } from './workexec.service';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { BASE_PATH, EstimateSearchService, WorkorderSearchService } from '@durion-sdk/workorder';
+import { Configuration as PeopleConfiguration } from '@durion-sdk/people';
 import { environment } from '../../../../environments/environment';
 import {
   ConsumePickedItemsRequest,
@@ -61,6 +62,7 @@ describe('WorkexecService', () => {
         WorkexecService,
         ApiBaseService,
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
+        { provide: PeopleConfiguration, useValue: new PeopleConfiguration({ basePath: environment.apiBaseUrl }) },
         { provide: EstimateSearchService, useValue: estimateSearchStub },
         { provide: WorkorderSearchService, useValue: workorderSearchStub },
       ],
@@ -685,6 +687,26 @@ describe('WorkexecService', () => {
       expect(r.request.method).toBe('POST');
       r.flush({ workorderId: 'wo-1', itemId: 'part-1', itemType: 'PART', status: 'COMPLETED' });
       expect(status).toBe('COMPLETED');
+    });
+  });
+
+  describe('getTechnicianEmployeeNumber', () => {
+    it('gets /v1/people/employees/{id} and returns the employee number', () => {
+      let result: string | null | undefined;
+      service.getTechnicianEmployeeNumber('tech-1').subscribe(n => (result = n));
+      const r = http.expectOne(`${BASE}/v1/people/employees/tech-1`);
+      expect(r.request.method).toBe('GET');
+      r.flush({ id: 'tech-1', legalName: 'Jane Smith', employeeNumber: 'EMP-007', status: 'ACTIVE', hireDate: '2024-01-01' });
+      expect(result).toBe('EMP-007');
+    });
+
+    it('resolves to null when the employee lookup fails', () => {
+      let result: string | null | undefined;
+      service.getTechnicianEmployeeNumber('tech-1').subscribe(n => (result = n));
+      http
+        .expectOne(`${BASE}/v1/people/employees/tech-1`)
+        .flush({ message: 'not found' }, { status: 404, statusText: 'Not Found' });
+      expect(result).toBeNull();
     });
   });
 });

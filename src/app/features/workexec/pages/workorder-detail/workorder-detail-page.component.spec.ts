@@ -5,6 +5,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { vi } from 'vitest';
 import { WorkorderDetailPageComponent } from './workorder-detail-page.component';
 import { BASE_PATH } from '@durion-sdk/workorder';
+import { Configuration as PeopleConfiguration } from '@durion-sdk/people';
 import { environment } from '../../../../../environments/environment';
 
 const BASE = environment.apiBaseUrl;
@@ -43,6 +44,7 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: mockRoute },
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
+        { provide: PeopleConfiguration, useValue: new PeopleConfiguration({ basePath: environment.apiBaseUrl }) },
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(WorkorderDetailPageComponent);
@@ -198,6 +200,61 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
       const assign = buttons.find(b => (b.textContent ?? '').includes('Assign Technician'));
       expect(approve).toBeUndefined();
       expect(assign?.disabled).toBe(false);
+    });
+  });
+
+  describe('technician header — name + employee number', () => {
+    const TECH_ID = 'tech-uuid-1';
+
+    /** Flush detail (with technician), the employee lookup, and changeRequests. */
+    function drainWithTechnician(employeeFlush: () => void): void {
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`).flush({
+        ...STUB_WORKORDER,
+        assignedTechnicianId: TECH_ID,
+        assignedTechnicianName: 'Jane Smith',
+      });
+      employeeFlush();
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}/changeRequests`).flush([]);
+    }
+
+    it('renders the technician name with employee number once the lookup resolves', () => {
+      fixture.detectChanges();
+      drainWithTechnician(() =>
+        http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush({
+          id: TECH_ID,
+          legalName: 'Jane Smith',
+          employeeNumber: 'EMP-007',
+          status: 'ACTIVE',
+          hireDate: '2024-01-01',
+        }),
+      );
+      fixture.detectChanges();
+
+      expect(component.technicianDisplay()).toBe('Jane Smith · #EMP-007');
+      const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
+      expect(value?.textContent ?? '').toContain('Jane Smith');
+      expect(value?.textContent ?? '').toContain('EMP-007');
+    });
+
+    it('falls back to the technician name alone when the employee lookup fails', () => {
+      fixture.detectChanges();
+      drainWithTechnician(() =>
+        http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush(
+          { message: 'not found' },
+          { status: 404, statusText: 'Not Found' },
+        ),
+      );
+      fixture.detectChanges();
+
+      expect(component.technicianEmployeeNumber()).toBeNull();
+      expect(component.technicianDisplay()).toBe('Jane Smith');
+    });
+
+    it('does not call the employee endpoint when no technician is assigned', () => {
+      fixture.detectChanges();
+      drainInit(http);
+      http.expectNone(`${BASE}/v1/people/employees/${TECH_ID}`);
+      expect(component.technicianDisplay()).toBeNull();
     });
   });
 
