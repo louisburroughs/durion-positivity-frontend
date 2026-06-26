@@ -55,6 +55,14 @@ export class WorkorderDetailPageComponent implements OnInit {
   readonly activeTab = signal<WorkorderTab>('items');
   readonly errorMessage = signal<string | null>(null);
 
+  // ── Approve Workorder modal (DRAFT → APPROVED) ────────────────────────────
+
+  readonly showApproveModal = signal(false);
+  readonly approveModalState = signal<ModalState>('idle');
+  readonly approveSignerName = signal('');
+  readonly approveNotes = signal('');
+  readonly approveError = signal<string | null>(null);
+
   // ── Start Work modal ──────────────────────────────────────────────────────
 
   readonly showStartWorkModal = signal(false);
@@ -98,25 +106,37 @@ export class WorkorderDetailPageComponent implements OnInit {
 
   // ── Computed guards ───────────────────────────────────────────────────────
 
-  readonly canStartWork = computed(() => {
-    const wo = this.workorder();
-    return wo?.status === 'ASSIGNED' || wo?.status === 'PENDING_ASSIGNMENT';
+  /** DRAFT is the only status that can be approved (DRAFT → APPROVED). */
+  readonly canApprove = computed(() => this.workorder()?.status === 'DRAFT');
+
+  /** Technician (re)assignment is allowed once approved and before completion. */
+  readonly canAssignTechnician = computed(() => {
+    const s = this.workorder()?.status;
+    return s === 'APPROVED' || s === 'ASSIGNED' || s === 'WORK_IN_PROGRESS';
   });
 
-  readonly isInProgress = computed(() => this.workorder()?.status === 'IN_PROGRESS');
+  readonly canStartWork = computed(() => {
+    const s = this.workorder()?.status;
+    return s === 'APPROVED' || s === 'ASSIGNED';
+  });
+
+  readonly isInProgress = computed(() => this.workorder()?.status === 'WORK_IN_PROGRESS');
 
   readonly isCompleted = computed(() => this.workorder()?.status === 'COMPLETED');
 
   readonly canComplete = computed(() => {
-    const wo = this.workorder();
-    return wo?.status === 'IN_PROGRESS' || wo?.status === 'PENDING_REVIEW';
+    const s = this.workorder()?.status;
+    return (
+      s === 'WORK_IN_PROGRESS' ||
+      s === 'AWAITING_PARTS' ||
+      s === 'AWAITING_APPROVAL' ||
+      s === 'READY_FOR_PICKUP'
+    );
   });
 
   readonly canReopen = computed(() => this.workorder()?.status === 'COMPLETED');
 
-  readonly canCreateInvoice = computed(() =>
-    this.workorder()?.status === 'COMPLETED' || this.workorder()?.status === 'INVOICED',
-  );
+  readonly canCreateInvoice = computed(() => this.workorder()?.status === 'COMPLETED');
 
   readonly pendingCrCount = computed(
     () => this.changeRequests().filter(cr => cr.status === 'AWAITING_ADVISOR_REVIEW').length,
@@ -124,10 +144,10 @@ export class WorkorderDetailPageComponent implements OnInit {
 
   readonly items = computed((): WorkorderItemResponse[] => this.workorder()?.items ?? []);
 
-  /** Line items can be completed while the workorder is not terminal. */
+  /** Line items can only be completed once work has started (not in DRAFT/APPROVED/ASSIGNED). */
   readonly canCompleteItems = computed(() => {
     const s = this.workorder()?.status;
-    return s !== undefined && s !== 'COMPLETED' && s !== 'CANCELLED';
+    return s === 'WORK_IN_PROGRESS' || s === 'AWAITING_PARTS' || s === 'AWAITING_APPROVAL';
   });
 
   readonly technicianName = computed(() =>
@@ -203,6 +223,47 @@ export class WorkorderDetailPageComponent implements OnInit {
   }
 
   // ── Start Work ────────────────────────────────────────────────────────────
+
+  // ── Approve Workorder (DRAFT → APPROVED) ─────────────────────────────────
+
+  openApproveModal(): void {
+    this.approveError.set(null);
+    this.approveModalState.set('confirming');
+    this.approveSignerName.set('');
+    this.approveNotes.set('');
+    this.showApproveModal.set(true);
+  }
+
+  confirmApprove(): void {
+    const id = this.workorderId();
+    const customerId = this.workorder()?.customerId;
+    if (!customerId) {
+      this.approveError.set('Work order has no customer; cannot approve.');
+      return;
+    }
+    this.approveModalState.set('loading');
+    this.approveError.set(null);
+    this.service
+      .approveWorkorder(id, customerId, this.approveSignerName().trim() || undefined, this.approveNotes().trim() || undefined)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.approveModalState.set('success');
+          this.showApproveModal.set(false);
+          this.loadWorkorder(id);
+        },
+        error: (err) => {
+          this.approveModalState.set('error');
+          this.approveError.set(err?.error?.message ?? 'Failed to approve work order. Please try again.');
+        },
+      });
+  }
+
+  cancelApprove(): void {
+    this.showApproveModal.set(false);
+    this.approveError.set(null);
+    this.approveModalState.set('idle');
+  }
 
   openStartWorkModal(): void {
     this.startWorkError.set(null);
@@ -425,6 +486,9 @@ export class WorkorderDetailPageComponent implements OnInit {
   // ── Navigation helpers ────────────────────────────────────────────────────
 
   navigateToAssign(): void {
+    if (!this.canAssignTechnician()) {
+      return;
+    }
     this.router.navigate(['/app/workexec/workorders', this.workorderId(), 'assign']);
   }
 

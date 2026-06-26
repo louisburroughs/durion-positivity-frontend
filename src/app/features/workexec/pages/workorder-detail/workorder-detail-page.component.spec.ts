@@ -116,7 +116,7 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
 
     it('does not call loadWorkorder after component is destroyed before 1200 ms elapses (F5/r2998536732)', () => {
       fixture.detectChanges();
-      drainInit(http, { ...STUB_WORKORDER, status: 'IN_PROGRESS' });
+      drainInit(http, { ...STUB_WORKORDER, status: 'WORK_IN_PROGRESS' });
 
       component.completionNotes.set('all done');
       component.confirmComplete();
@@ -167,11 +167,37 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
   describe('checklist DOM structure (PRCR-003)', () => {
     it('renders ul.checklist-list when pageState is ready and canComplete() is true', () => {
       fixture.detectChanges();
-      drainInit(http, { ...STUB_WORKORDER, status: 'IN_PROGRESS' });
+      drainInit(http, { ...STUB_WORKORDER, status: 'WORK_IN_PROGRESS' });
       fixture.detectChanges();
 
       const list = fixture.nativeElement.querySelector('ul.checklist-list');
       expect(list).not.toBeNull();
+    });
+  });
+
+  describe('status-gated workflow actions', () => {
+    it('shows Approve and disables Assign Technician when DRAFT', () => {
+      fixture.detectChanges();
+      drainInit(http, { ...STUB_WORKORDER, status: 'DRAFT' });
+      fixture.detectChanges();
+
+      const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+      const approve = buttons.find(b => (b.textContent ?? '').includes('Approve Work Order'));
+      const assign = buttons.find(b => (b.textContent ?? '').includes('Assign Technician'));
+      expect(approve).toBeTruthy();
+      expect(assign?.disabled).toBe(true);
+    });
+
+    it('hides Approve and enables Assign Technician when APPROVED', () => {
+      fixture.detectChanges();
+      drainInit(http, { ...STUB_WORKORDER, status: 'APPROVED' });
+      fixture.detectChanges();
+
+      const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+      const approve = buttons.find(b => (b.textContent ?? '').includes('Approve Work Order'));
+      const assign = buttons.find(b => (b.textContent ?? '').includes('Assign Technician'));
+      expect(approve).toBeUndefined();
+      expect(assign?.disabled).toBe(false);
     });
   });
 
