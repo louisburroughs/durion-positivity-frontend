@@ -1,0 +1,33 @@
+/* =============================================================================
+   Barlow Semi Condensed — Durion display / titling face (--font-primary)
+   Self-hosted. Place the .woff2 files next to this file (handoff/fonts/),
+   then copy this whole folder to the app's served fonts dir, e.g.
+   src/assets/fonts/barlow/ — and adjust the url() paths if the dir differs.
+
+   Weights: 500 (medium), 600 (semibold), 700 (bold). Normal style only —
+   the titling use never needs italics.
+   ============================================================================= */
+
+@font-face {
+  font-family: 'Barlow Semi Condensed';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('barlow-semi-condensed-v16-latin-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow Semi Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('barlow-semi-condensed-v16-latin-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow Semi Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('barlow-semi-condensed-v16-latin-700.woff2') format('woff2');
+}
