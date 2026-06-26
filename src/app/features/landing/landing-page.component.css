@@ -272,7 +272,7 @@
 
 .feature-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--mic-elevation-3, 0 4px 16px rgba(0, 0, 0, 0.14));
+  box-shadow: var(--dur-elevation-3, 0 4px 16px rgba(0, 0, 0, 0.14));
 }
 
 /* Left accent bar per DESIGN.md "Content Grouping" rule */

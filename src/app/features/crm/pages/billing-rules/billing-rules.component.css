@@ -58,16 +58,16 @@
   width: 100%;
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--on-surface-variant);
+  border-bottom: 1px solid var(--border-color);
   border-radius: 0;
   padding: 4px 0 6px;
   font: inherit;
-  color: var(--on-surface);
+  color: var(--currentTextColor);
   outline: none;
 }
 
 .billing-rules__input:focus {
-  border-bottom-color: var(--color-primary);
+  border-bottom-color: var(--brand-primary);
 }
 
 .billing-rules__field--toggle input {

@@ -1,168 +1,141 @@
 # Durion Style Guide
 
-This guide is derived from `durion/theme/durion-theme.css` and the `durion/theme/fonts` + `durion/theme/images` asset folders.
+> **v2 · June 2026 — reconciled to `src/styles.css`.** Changes in this revision: functional
+> error/success hex corrected (`#ba1a1a` / `#2e7d32`); **Heritage Gold** added as a documented
+> token; display font moved from the retired `'Michelin Unit Titling'` to **Barlow Semi
+> Condensed**; both fonts now self-hosted; utility prefix confirmed as **`.dur-*`** (the shipped
+> `.mic-*` is drift and is being renamed back). See `theme-tokens.md` for the full token inventory.
 
-Excluded by request:
-
-- `durion/theme/tiotf-theme.css`
+This guide is derived from `src/styles.css` and the asset folders under `src/assets/` and
+`design/source/`.
 
 ## 1. Brand Foundation
 
 Durion uses a cool industrial palette:
 
-- Blueprint Blues for primary brand actions and navigation
-- Graphite + neutral greys for structure and UI chrome
-- Electric Teal for accent and secondary emphasis
-- Functional colors for alerts and status semantics
+- **Blueprint Blues** — primary brand actions and navigation
+- **Graphite + neutral greys** — structure and UI chrome
+- **Electric Teal** — the UI accent and secondary emphasis (UI only; never in the logo)
+- **Heritage Gold** — the logo shield border, and sparing heritage/premium accent
+- **Functional colors** — alerts and status semantics
 
 ## 2. Typography
 
-Primary font families:
+- **Display / headings (`--font-primary`):** `Barlow Semi Condensed` → falls back to `Noto Sans`, `sans-serif`.
+- **Body & UI (`--font-body`):** `Noto Sans` (400, 400i, 500, 600, 700, 700i) → `sans-serif`.
+- **Icon fonts:** `Material Symbols Round`, `Material Icons Two Tone`.
 
-- `Noto Sans` (regular + italic, bold + bold italic)
+Both text faces are **self-hosted** under `src/assets/fonts/` and loaded via `@font-face`
+(`@import`ed at the top of `styles.css`). Do not rely on system-installed fonts.
 
-Icon fonts:
+### Ratified Barlow display weight scale
 
-- `Material Icons Two Tone`
-- `Material Symbols Round`
+Only **three** Barlow Semi Condensed weights are hosted: **500 / 600 / 700**. These are the
+**only** valid weights for `--font-primary`. Requesting any other weight (100–400, 800, 900)
+has no matching `@font-face`, so the browser **synthesises** a faux weight — banned.
 
-Global behavior:
+| Token | Weight | Role |
+|---|---|---|
+| `--font-weight-display` | **700** (Bold) | `h1`, page titles, strong display emphasis |
+| `--font-weight-heading` | **600** (SemiBold) | `h2`–`h4`, card/section titles, overlines, labels, status chips, buttons |
+| `--font-weight-medium`  | **500** (Medium) | large or lighter display subheads where 600 is too heavy |
 
-- Universal fallback: `Noto Sans, sans-serif`
-- Body stack:  `Noto Sans`, sans-serif
+Use the tokens (defined in `styles.css` / `durion-theme.css`) rather than raw numbers, and
+never pair `--font-primary` with a weight outside {500, 600, 700}. Body text keeps the full
+Noto Sans range (400–700).
+
+> `'Michelin Unit Titling'` is **retired** — it is licensed to Michelin and was never shipped,
+> so it silently fell back to Noto Sans. Removed from the stack.
 
 ## 3. Core Color Tokens
 
-### Blueprint Blues
+See `theme-tokens.md` for full ramps. Canonical values (matching `styles.css`):
 
-| Token | Hex | Preview |
-| --- | --- | --- |
-| `--durion-blue-800` | `#1c2e48` | <span style="display:inline-block;width:64px;height:20px;background:#1c2e48;border:1px solid #ccc;"></span> |
-| `--durion-blue-700` | `#2b4c78` | <span style="display:inline-block;width:64px;height:20px;background:#2b4c78;border:1px solid #ccc;"></span> |
-| `--durion-blue-600` | `#355d92` | <span style="display:inline-block;width:64px;height:20px;background:#355d92;border:1px solid #ccc;"></span> |
-| `--durion-blue-500` | `#4d76b2` | <span style="display:inline-block;width:64px;height:20px;background:#4d76b2;border:1px solid #ccc;"></span> |
-| `--durion-blue-400` | `#668fc2` | <span style="display:inline-block;width:64px;height:20px;background:#668fc2;border:1px solid #ccc;"></span> |
-| `--durion-blue-300` | `#7fa4d1` | <span style="display:inline-block;width:64px;height:20px;background:#7fa4d1;border:1px solid #ccc;"></span> |
-| `--durion-blue-200` | `#aac4e4` | <span style="display:inline-block;width:64px;height:20px;background:#aac4e4;border:1px solid #ccc;"></span> |
-| `--durion-blue-100` | `#d3e3f6` | <span style="display:inline-block;width:64px;height:20px;background:#d3e3f6;border:1px solid #ccc;"></span> |
-| `--durion-blue-50` | `#f4f8fe` | <span style="display:inline-block;width:64px;height:20px;background:#f4f8fe;border:1px solid #ccc;"></span> |
+### Blueprint Blues
+`800 #1c2e48 · 700 #2b4c78 · 600 #355d92 · 500 #4d76b2 · 400 #668fc2 · 300 #7fa4d1 · 200 #aac4e4 · 100 #d3e3f6 · 50 #f4f8fe`
 
 ### Graphite
+`800 #333842 · 700 #444a55 · 600 #5a616e · 500 #727986 · 200 #d7d9dd · 100 #e7e8eb`
 
-| Token | Hex | Preview |
-| --- | --- | --- |
-| `--durion-graphite-800` | `#333842` | <span style="display:inline-block;width:64px;height:20px;background:#333842;border:1px solid #ccc;"></span> |
-| `--durion-graphite-700` | `#444a55` | <span style="display:inline-block;width:64px;height:20px;background:#444a55;border:1px solid #ccc;"></span> |
-| `--durion-graphite-600` | `#5a616e` | <span style="display:inline-block;width:64px;height:20px;background:#5a616e;border:1px solid #ccc;"></span> |
-| `--durion-graphite-500` | `#727986` | <span style="display:inline-block;width:64px;height:20px;background:#727986;border:1px solid #ccc;"></span> |
-| `--durion-graphite-200` | `#d7d9dd` | <span style="display:inline-block;width:64px;height:20px;background:#d7d9dd;border:1px solid #ccc;"></span> |
-| `--durion-graphite-100` | `#e7e8eb` | <span style="display:inline-block;width:64px;height:20px;background:#e7e8eb;border:1px solid #ccc;"></span> |
+### Electric Teal (UI accent)
+`600 #158f83 · 500 #1fa497 · 400 #2bbbad · 300 #55d7cc · 200 #a4e9e1 · 100 #d7f3f0`
 
-### Electric Teal
-
-| Token | Hex | Preview |
-| --- | --- | --- |
-| `--durion-teal-600` | `#158f83` | <span style="display:inline-block;width:64px;height:20px;background:#158f83;border:1px solid #ccc;"></span> |
-| `--durion-teal-500` | `#1fa497` | <span style="display:inline-block;width:64px;height:20px;background:#1fa497;border:1px solid #ccc;"></span> |
-| `--durion-teal-400` | `#2bbbad` | <span style="display:inline-block;width:64px;height:20px;background:#2bbbad;border:1px solid #ccc;"></span> |
-| `--durion-teal-300` | `#55d7cc` | <span style="display:inline-block;width:64px;height:20px;background:#55d7cc;border:1px solid #ccc;"></span> |
-| `--durion-teal-200` | `#a4e9e1` | <span style="display:inline-block;width:64px;height:20px;background:#a4e9e1;border:1px solid #ccc;"></span> |
-| `--durion-teal-100` | `#d7f3f0` | <span style="display:inline-block;width:64px;height:20px;background:#d7f3f0;border:1px solid #ccc;"></span> |
+### Heritage Gold (logo + heritage accent)
+`600 #a06a1a · 500 #cc9030 (canonical) · 400 #d8a449 · 300 #e3bd78 · 200 #efd6a8 · 100 #f8edd5`
 
 ### Neutrals
-
-| Token | Hex | Preview |
-| --- | --- | --- |
-| `--durion-grey-900` | `#121213` | <span style="display:inline-block;width:64px;height:20px;background:#121213;border:1px solid #ccc;"></span> |
-| `--durion-grey-800` | `#1f2022` | <span style="display:inline-block;width:64px;height:20px;background:#1f2022;border:1px solid #ccc;"></span> |
-| `--durion-grey-700` | `#3a3a3e` | <span style="display:inline-block;width:64px;height:20px;background:#3a3a3e;border:1px solid #ccc;"></span> |
-| `--durion-grey-500` | `#707078` | <span style="display:inline-block;width:64px;height:20px;background:#707078;border:1px solid #ccc;"></span> |
-| `--durion-grey-100` | `#f2f2f4` | <span style="display:inline-block;width:64px;height:20px;background:#f2f2f4;border:1px solid #ccc;"></span> |
+`900 #121213 · 800 #1f2022 · 700 #3a3a3e · 500 #707078 · 100 #f2f2f4`
 
 ### Functional
-
-| Token | Hex | Preview |
-| --- | --- | --- |
-| `--functional-error-red` | `#c84c47` | <span style="display:inline-block;width:64px;height:20px;background:#c84c47;border:1px solid #ccc;"></span> |
-| `--functional-warning` | `#e6a540` | <span style="display:inline-block;width:64px;height:20px;background:#e6a540;border:1px solid #ccc;"></span> |
-| `--functional-info-blue` | `#355d92` | <span style="display:inline-block;width:64px;height:20px;background:#355d92;border:1px solid #ccc;"></span> |
-| `--functional-success` | `#5bbe72` | <span style="display:inline-block;width:64px;height:20px;background:#5bbe72;border:1px solid #ccc;"></span> |
+`error #ba1a1a · warning #e6a540 · info #355d92 · success #2e7d32`
 
 ### Brand Semantic Tokens
-
 - `--brand-primary: var(--durion-blue-700)`
 - `--brand-primary-soft: var(--durion-blue-50)`
 - `--brand-secondary: var(--durion-graphite-700)`
-- `--brand-accent: var(--durion-teal-400)`
+- `--brand-accent: var(--durion-teal-400)` — UI accent
+- `--brand-gold: var(--durion-gold-500)` — heritage accent (not the UI accent)
 - `--brand-background: var(--durion-grey-100)`
 - `--brand-surface: #ffffff`
 
 ## 4. Theme Mapping
 
-Durion theme is applied via:
-
-- `html[data-brand="durion"][data-theme="light"]`
-- `html[data-brand="durion"][data-theme="dark"]`
-
-Mapped runtime tokens include:
-
-- Primary: `--primaryA400`, `--primaryA300`, `--primaryA100`, `--primary50`
-- Accent: `--accentA400`, `--accentA700`, `--accentA100`
-- Layout surfaces: `--themeBackground`, `--navBackground`, `--menuBackground`, `--cardBackground`, `--subMenuBackground`
-- Text: `--currentTextColor`, `--contrastTextColor`
-- Scrollbars: `--trackColor`, `--handleColor`
-
-Body adopts theme-level background and text color when `data-theme` is present.
+Applied via `[data-theme="light"]` (default) and `[data-theme="dark"]` on `<html>`.
+Runtime tokens (`--themeBackground`, `--navBackground`, `--cardBackground`,
+`--currentTextColor`, `--primaryA*`, `--accentA*`, `--goldA*`, `--trackColor`,
+`--handleColor`, and the extended set) flip per theme — consume these in components, never
+raw palette tokens. Full light/dark table in `theme-tokens.md`.
 
 ## 5. Component Styling Patterns
 
 ### Elevation
-
-Utility classes:
-
-- `.dur-elevation-1` through `.dur-elevation-4`
+Utility classes `.dur-elevation-1` … `.dur-elevation-4`.
+> The shipped code currently uses `.mic-elevation-*` (upstream-template drift) — rename to `.dur-*`.
 
 ### Alerts
-
-`.alert` variants:
-
-- `.alert-info`, `.alert-success`, `.alert-warning`, `.alert-error`, `.alert-critical`, `.alert-soft`
+`.alert` with `.alert-info`, `.alert-success`, `.alert-warning`, `.alert-error`,
+`.alert-critical`, `.alert-soft`.
 
 ### Links
+Underline-style border (`border-bottom: 2px`) using theme colors. Variants `.accent`, `.white`.
 
-- Default links use underline-style border (`border-bottom: 2px`) and theme colors
-- Variants: `.accent`, `.white`
-
-### Navigation and Sidebar
-
-- `.dur-navbar` uses themed nav background
-- `.dur-navbar.white` swaps to light menu style
-- `.dur-sidebar` primary item state uses `primary` token mapping
+### Navigation & Sidebar
+`.dur-navbar` (themed nav background; `.white` for light menu). `.dur-sidebar` primary item
+state uses the `primary` token mapping.
 
 ### Status Chips
-
-- `.dur-status` base style plus variants: `.primary`, `.valid`, `.warn`, `.error`
-- Dark theme override present for chip background
+`.dur-status` base + `.primary`, `.valid`, `.warn`, `.error`; dark-theme override present.
+> Shipped as `.mic-status` (drift) — rename to `.dur-status`.
 
 ### Content, Scrollbars, Tables, Timeline
-
-- Main content follows theme background/text tokens
-- Custom scrollbar track/thumb tokens
-- Table focus and row hover states mapped to primary tokens
-- Timeline dots use primary/accent colors
+Follow theme background/text tokens; custom scrollbar track/thumb; table focus + row hover
+mapped to primary tokens; timeline dots use primary/accent colors.
 
 ## 6. Asset Expectations
 
-Theme expects assets under relative paths:
+### Fonts
+Self-hosted under `src/assets/fonts/` — `barlow/` and `noto-sans/`, each with its own
+`@font-face` CSS. Keep `@import`s at the top of `styles.css`.
 
-- Fonts under `../assets/fonts/...`
-- Icon fonts under `../assets/fonts/icons/...`
+### Logo & brand assets
+- Place from the **supplied logo files** — never redraw, re-trace, or AI-regenerate the emblem.
+- Three approved lockups: **primary** (shield + wordmark), **icon/emblem**, **wordmark**.
+- **Clear space** ≥ ½ shield height on all sides. **Minimum size:** primary ≥ 120px wide, icon ≥ 32px.
+- Gold in the logo is **locked artwork** — do not recolor; do not sample it for UI (use `--goldA400`).
+- **Gap:** no reversed/white lockup exists yet. On dark backgrounds, place the mark on a light
+  plaque until a reversed version is produced. (The badge/banner protos are off-brand — they
+  redrew the emblem and dropped the gold border; retire them.)
 
-When integrating this theme, ensure those assets are available at the expected relative URLs.
+See the **Brand & Asset Guide** for full logo anatomy, misuse, and the pre-ship checklist.
 
 ## 7. Implementation Notes
 
-- **Contrast Compliance (ADR-0039):** All information-bearing layout elements must meet WCAG 2.2 AA contrast thresholds: 4.5:1 for small text (<18pt, or <14pt bold) and 3:1 for large text (≥18pt, or >=14pt bold). This applies across all states (normal, hover, focus, disabled, validation).
-- Keep token usage semantic (prefer `--brand-*`, `--primary*`, `--accent*`) over hardcoded hex in component code.
-- For new components, support both light and dark mappings by consuming runtime variables (`--themeBackground`, `--currentTextColor`, etc.).
-- Reuse existing utility classes (`.dur-elevation-*`, status/link variants) before introducing new variants.
+- **Contrast (ADR-0039):** all information-bearing elements meet WCAG 2.2 AA (4.5:1 small text
+  < 18pt/14pt bold; 3:1 large) across all states (normal, hover, focus, disabled, validation).
+- Keep token usage semantic (`--brand-*`, `--primary*`, `--accent*`, `--goldA*`) over hardcoded hex.
+- Support light **and** dark by consuming runtime variables (`--themeBackground`,
+  `--currentTextColor`, etc.).
+- **Do not** introduce Material-3 token names (`--color-*`, `--surface-container-*`, `--on-*`),
+  `--spacing-*`, `--typescale-*`, the `.mic-*` prefix, or literal `#cc9030` — these
+  are caught by the stylelint guardrail. Use the sanctioned equivalents (see `theme-tokens.md`).
+- Reuse existing utilities (`.dur-elevation-*`, status/link variants) before adding new ones.

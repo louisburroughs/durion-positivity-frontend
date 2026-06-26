@@ -53,9 +53,9 @@
   margin: 1rem 1.5rem;
   padding: 0.85rem 1rem;
   border-radius: var(--radius-sm, 4px);
-  background: var(--color-warning-surface, #fef3c7);
-  border: 1px solid var(--color-warning, #d97706);
-  color: var(--color-warning-on, #92400e);
+  background: color-mix(in srgb, var(--functional-warning) 16%, transparent);
+  border: 1px solid var(--functional-warning);
+  color: var(--currentTextColor);
   font-size: 0.875rem;
   line-height: 1.5;
 }
