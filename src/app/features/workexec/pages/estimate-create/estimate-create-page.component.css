@@ -68,7 +68,7 @@
 }
 
 .required {
-  color: var(--functional-error-red, #c84c47);
+  color: var(--functional-error-red, #ba1a1a);
   margin-left: 2px;
 }
 
@@ -96,13 +96,13 @@
 }
 
 .field-input--error {
-  border-bottom-color: var(--functional-error-red, #c84c47);
+  border-bottom-color: var(--functional-error-red, #ba1a1a);
 }
 
 .field-error {
   margin: 0;
   font-size: 0.75rem;
-  color: var(--functional-error-red, #c84c47);
+  color: var(--functional-error-red, #ba1a1a);
 }
 
 /* ── Alerts ─────────────────────────────────────────────────────────────── */
@@ -113,8 +113,8 @@
 }
 
 .alert--error {
-  background: color-mix(in srgb, var(--functional-error-red, #c84c47) 10%, transparent);
-  color: var(--functional-error-red, #c84c47);
+  background: color-mix(in srgb, var(--functional-error-red, #ba1a1a) 10%, transparent);
+  color: var(--functional-error-red, #ba1a1a);
 }
 
 /* ── Actions ────────────────────────────────────────────────────────────── */

@@ -48,7 +48,7 @@
 
 .eligibility-error {
   background: color-mix(in srgb, var(--functional-warning) 10%, var(--cardBackground));
-  color: var(--functional-warning);
+  color: #8a5e0a;
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
@@ -105,7 +105,7 @@ form {
 }
 
 .soft-conflict {
-  color: var(--functional-warning);
+  color: #8a5e0a;
   font-size: 0.875rem;
 }
 
@@ -130,7 +130,7 @@ form {
 }
 
 .action-row button[type="submit"] {
-  background: var(--brand-accent);
+  background: var(--accent-strong);
   color: var(--brand-surface);
   border: none;
   border-radius: var(--radius-sm);

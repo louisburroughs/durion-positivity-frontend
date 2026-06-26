@@ -175,8 +175,8 @@ input:focus-visible {
 }
 
 .stale-data-banner {
-  border-left-color: var(--functional-warning);
-  color: var(--functional-warning);
+  border-left-color: #8a5e0a;
+  color: #8a5e0a;
 }
 
 .loading-state {
@@ -261,7 +261,7 @@ input:focus-visible {
 
 .exception-badge {
   background: color-mix(in srgb, var(--functional-warning) 12%, var(--cardBackground));
-  color: var(--functional-warning);
+  color: #8a5e0a;
 }
 
 @media (max-width: 64rem) {

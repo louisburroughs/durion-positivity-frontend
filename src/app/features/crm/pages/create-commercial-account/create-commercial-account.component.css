@@ -178,7 +178,7 @@
 
 /* Teal variant for the create CTA specifically */
 .crm-create-account .btn--primary {
-  background: var(--durion-teal-400);
+  background: var(--accent-strong);
   color: #fff;
 }
 

@@ -75,7 +75,7 @@ button {
   width: fit-content;
   padding: var(--space-2) var(--space-4);
   border: none;
-  background: var(--brand-accent);
+  background: var(--accent-strong);
   color: #fff;
 }
 

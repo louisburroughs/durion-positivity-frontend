@@ -63,6 +63,7 @@
   --brand-primary-soft: var(--durion-blue-50);
   --brand-secondary: var(--durion-graphite-700);
   --brand-accent: var(--durion-teal-400);
+  --accent-strong: #006a6a; /* AA-safe accent for white text on a filled button (teal-400 is only 2.4:1; this is 5.8:1) */
   --brand-gold: var(--durion-gold-500);
   --brand-background: var(--durion-grey-100);
   --brand-surface: #ffffff;
@@ -245,13 +246,13 @@ body {
 
 .alert-success {
   background: #edfaef;
-  border-color: var(--functional-success);
+  border-color: #1b5e20;
   color: #2e7d3a;
 }
 
 .alert-warning {
   background: #fef8ec;
-  border-color: var(--functional-warning);
+  border-color: #8a5e0a;
   color: #8a5e0a;
 }
 
@@ -631,7 +632,7 @@ app-workorder-detail-page .checklist-item__icon {
 }
 
 app-workorder-detail-page .checklist-item--ok .checklist-item__icon {
-  color: var(--functional-success, #16a34a);
+  color: #1b5e20;
 }
 
 app-workorder-detail-page .checklist-item--blocking .checklist-item__icon {
@@ -639,7 +640,7 @@ app-workorder-detail-page .checklist-item--blocking .checklist-item__icon {
 }
 
 app-workorder-detail-page .checklist-item--warning .checklist-item__icon {
-  color: var(--functional-warning, #f59e0b);
+  color: #8a5e0a;
 }
 
 app-workorder-detail-page .checklist-item__label {
@@ -704,7 +705,7 @@ app-workorder-detail-page .failed-check--blocking .failed-check__icon {
 }
 
 app-workorder-detail-page .failed-check--warning .failed-check__icon {
-  color: var(--functional-warning, #f59e0b);
+  color: #8a5e0a;
 }
 
 app-party-detail .modal-backdrop {
@@ -872,7 +873,7 @@ app-party-detail .loading-hint {
 }
 
 app-party-detail .hint-text--warn {
-  color: var(--functional-warning);
+  color: #8a5e0a;
 }
 
 app-party-detail .inline-error {
@@ -948,7 +949,7 @@ app-create-commercial-account .state-icon {
 }
 
 app-create-commercial-account .state-icon--success {
-  color: var(--functional-success);
+  color: #1b5e20;
 }
 
 app-create-commercial-account .spinner {

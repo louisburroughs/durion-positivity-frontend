@@ -27,6 +27,11 @@ Defined in `:root` and never changed by theme switching.
 | `--functional-info-blue` | `#355d92` | Info states |
 | `--functional-success` | `#2e7d32` | Success states |
 
+> **Fills/icons, not text.** `--functional-warning` (#e6a540) and `--functional-success`
+> (#2e7d32) fail WCAG AA as text on white/light tints. For coloured status **text** use the
+> AA-dark values: warning `#8a5e0a`, success `#1b5e20`, error `#ba1a1a`. See
+> `durion-style-guide.md` §8.
+
 ### Heritage Gold ramp
 
 | Token | Hex | Note |
@@ -70,7 +75,8 @@ Stable aliases mapping palette tokens to roles. Shared across light and dark.
 | `--brand-primary` | `--durion-blue-700` | Primary actions, nav |
 | `--brand-primary-soft` | `--durion-blue-50` | Subtle primary tones |
 | `--brand-secondary` | `--durion-graphite-700` | Secondary text/UI |
-| `--brand-accent` | `--durion-teal-400` | **UI accent / highlight** |
+| `--brand-accent` | `--durion-teal-400` | **UI accent / highlight** (borders, icons, small fills) |
+| `--accent-strong` | `#006a6a` | **Filled accent button with white text** — teal-400 is only 2.4:1 on white; this is 5.8:1. Never put white text on `--brand-accent`. |
 | `--brand-gold` | `--durion-gold-500` | **Heritage / premium accent — NOT the UI accent** |
 | `--brand-background` | `--durion-grey-100` | Page background |
 | `--brand-surface` | `#ffffff` | Card / modal surface |

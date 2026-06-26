@@ -133,7 +133,7 @@
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .btn--primary {
-  background: var(--durion-teal-400);
+  background: var(--accent-strong);
   color: #fff;
 }
 
@@ -177,7 +177,7 @@
 .state-panel--success { background: rgba(91,190,114,.06); }
 
 .state-icon { font-size: 2rem; line-height: 1; }
-.state-icon--success { color: var(--functional-success); }
+.state-icon--success { color: #1b5e20; }
 
 .success-id-block {
   display: flex;

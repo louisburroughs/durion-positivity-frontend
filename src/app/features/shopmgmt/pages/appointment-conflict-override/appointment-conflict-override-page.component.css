@@ -86,7 +86,7 @@
 
 .success-banner {
   border: 1px solid var(--functional-success);
-  color: var(--functional-success);
+  color: #1b5e20;
   background: color-mix(in srgb, var(--functional-success) 12%, var(--cardBackground));
 }
 

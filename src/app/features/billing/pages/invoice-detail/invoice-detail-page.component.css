@@ -96,7 +96,7 @@
   color: var(--currentTextColor, #1f2328);
 }
 
-.totals-breakdown__row--discount .totals-breakdown__value { color: var(--functional-success, #16a34a); }
+.totals-breakdown__row--discount .totals-breakdown__value { color: #1b5e20; }
 
 .totals-breakdown__row--grand {
   border-top: 1px solid var(--color-outline-variant, #d0d7de);
@@ -145,7 +145,7 @@
 }
 
 .adjustment-card__amount--debit { color: var(--functional-error-red, #dc2626); }
-.adjustment-card__amount--credit { color: var(--functional-success, #16a34a); }
+.adjustment-card__amount--credit { color: #1b5e20; }
 
 /* ── Traceability grid ──────────────────────────────────────────────────── */
 

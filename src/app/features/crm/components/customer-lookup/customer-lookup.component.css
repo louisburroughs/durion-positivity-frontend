@@ -3,7 +3,7 @@
 /* Self-contained field styles (component styles are scoped, so the host page's
    .field-* rules do not reach this template). */
 .field-label { font-size: 0.8125rem; font-weight: 600; color: var(--currentTextColor); }
-.required { color: var(--functional-error-red, #c84c47); margin-left: 2px; }
+.required { color: var(--functional-error-red, #ba1a1a); margin-left: 2px; }
 .field-input {
   background: var(--input-background, #fff);
   border: none;

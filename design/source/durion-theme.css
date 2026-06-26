@@ -109,6 +109,7 @@ body {
   --brand-primary-soft: var(--durion-blue-50);
   --brand-secondary: var(--durion-graphite-700);
   --brand-accent: var(--durion-teal-400);
+  --accent-strong: #006a6a; /* AA-safe accent for white text on a filled button (5.8:1) */
   --brand-gold: var(--durion-gold-500);
   --brand-background: var(--durion-grey-100);
   --brand-surface: #ffffff;

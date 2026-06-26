@@ -52,7 +52,7 @@
 
 .status-active {
   background: color-mix(in srgb, var(--functional-success) 15%, transparent);
-  color: var(--functional-success);
+  color: #1b5e20;
 }
 
 .status-inactive {
@@ -169,7 +169,7 @@
   margin-bottom: var(--space-4);
   border: 1px solid var(--functional-success);
   background: color-mix(in srgb, var(--functional-success) 12%, var(--cardBackground));
-  color: var(--functional-success);
+  color: #1b5e20;
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
 }

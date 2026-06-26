@@ -117,12 +117,12 @@
 
 .badge--success {
   background: color-mix(in srgb, var(--functional-success) 20%, transparent);
-  color: var(--functional-success);
+  color: #1b5e20;
 }
 
 .badge--warning {
   background: color-mix(in srgb, var(--functional-warning) 20%, transparent);
-  color: var(--functional-warning);
+  color: #8a5e0a;
 }
 
 .badge--error {

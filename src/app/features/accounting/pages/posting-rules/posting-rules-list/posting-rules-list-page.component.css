@@ -28,7 +28,7 @@
 
 button {
   border: none;
-  background: var(--brand-accent);
+  background: var(--accent-strong);
   color: #fff;
   padding: var(--space-2) var(--space-4);
 }

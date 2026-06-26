@@ -183,7 +183,7 @@
 }
 
 .hint-text--error {
-  color: var(--functional-error-red, #c84c47);
+  color: var(--functional-error-red, #ba1a1a);
 }
 
 .ledger--audit .ledger__row {
@@ -224,7 +224,7 @@
 
 .ledger__type-badge--labor {
   background: #e8f5e9;
-  color: #2e7d32;
+  color: #1b5e20;
 }
 
 /* Audit section */
@@ -267,7 +267,7 @@
 
 .status-chip--in_progress {
   background: #e8f5e9;
-  color: #2e7d32;
+  color: #1b5e20;
 }
 
 .status-chip--assigned {

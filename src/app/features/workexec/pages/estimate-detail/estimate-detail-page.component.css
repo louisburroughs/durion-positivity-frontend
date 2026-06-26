@@ -79,7 +79,7 @@
 
 .status-chip--approved {
   background: color-mix(in srgb, var(--functional-success) 15%, transparent);
-  color: var(--functional-success);
+  color: #1b5e20;
 }
 
 .status-chip--expired {
@@ -161,13 +161,13 @@
 }
 
 .alert--error {
-  background: color-mix(in srgb, var(--functional-error-red, #c84c47) 10%, transparent);
-  color: var(--functional-error-red, #c84c47);
+  background: color-mix(in srgb, var(--functional-error-red, #ba1a1a) 10%, transparent);
+  color: var(--functional-error-red, #ba1a1a);
 }
 
 .alert--warn {
   background: color-mix(in srgb, var(--functional-warning, #e6a540) 12%, transparent);
-  color: var(--functional-warning, #e6a540);
+  color: #8a5e0a;
 }
 
 .btn {
@@ -190,7 +190,7 @@
 }
 
 .btn--accent {
-  background: var(--brand-accent, var(--accentA700));
+  background: var(--accent-strong));
   color: #fff;
 }
 
@@ -256,7 +256,7 @@
 .partial-scope-note__title {
   font-weight: 700;
   margin: 0 0 var(--space-1);
-  color: var(--functional-warning, #b46e00);
+  color: #8a5e0a;
 }
 
 .partial-scope-note__body {
@@ -292,5 +292,5 @@
 }
 
 .crm-ref-value--error {
-  color: var(--functional-error-red, #c84c47);
+  color: var(--functional-error-red, #ba1a1a);
 }

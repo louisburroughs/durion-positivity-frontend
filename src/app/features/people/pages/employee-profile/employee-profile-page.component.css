@@ -127,7 +127,7 @@ label {
 
 .alert--warning {
   background: color-mix(in srgb, var(--functional-warning-amber, #b8860b) 12%, var(--cardBackground));
-  color: var(--functional-warning-amber, #8a6d0b);
+  color: #8a5e0a;
 }
 
 .alert__title {
@@ -151,7 +151,7 @@ label {
 
 .status-badge--active {
   background: color-mix(in srgb, var(--functional-success) 25%, var(--cardBackground));
-  color: var(--functional-success);
+  color: #1b5e20;
 }
 
 .status-badge--neutral {
@@ -161,7 +161,7 @@ label {
 
 .status-badge--warning {
   background: color-mix(in srgb, var(--functional-warning) 25%, var(--cardBackground));
-  color: var(--functional-warning);
+  color: #8a5e0a;
 }
 
 .audit-meta {

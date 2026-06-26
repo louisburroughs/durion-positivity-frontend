@@ -360,7 +360,7 @@
 
 .chip--active {
   background: color-mix(in srgb, var(--functional-success) 15%, transparent);
-  color: var(--functional-success);
+  color: #1b5e20;
 }
 
 .chip--inactive {

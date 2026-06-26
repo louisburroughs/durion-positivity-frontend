@@ -69,11 +69,20 @@ See `theme-tokens.md` for full ramps. Canonical values (matching `styles.css`):
 ### Functional
 `error #ba1a1a · warning #e6a540 · info #355d92 · success #2e7d32`
 
+> **Functional colours are surface/icon colours, not text colours.** `--functional-warning`
+> (#e6a540) and `--functional-success` (#2e7d32) **fail WCAG AA as text** on white or on
+> their own light tint. When a status word/number must be coloured text, use the AA-dark
+> values: **error `#ba1a1a` · warning `#8a5e0a` · success `#1b5e20`** (or `info #355d92`).
+> See §8.
+
 ### Brand Semantic Tokens
 - `--brand-primary: var(--durion-blue-700)`
 - `--brand-primary-soft: var(--durion-blue-50)`
 - `--brand-secondary: var(--durion-graphite-700)`
-- `--brand-accent: var(--durion-teal-400)` — UI accent
+- `--brand-accent: var(--durion-teal-400)` — UI accent (borders, icons, small fills)
+- `--accent-strong: #006a6a` — **filled accent button with white text.** `--brand-accent`
+  (teal-400) is only 2.4:1 against white and **must not** carry white text; `--accent-strong`
+  is 5.8:1. Use it for any solid teal button/CTA.
 - `--brand-gold: var(--durion-gold-500)` — heritage accent (not the UI accent)
 - `--brand-background: var(--durion-grey-100)`
 - `--brand-surface: #ffffff`
@@ -138,4 +147,25 @@ See the **Brand & Asset Guide** for full logo anatomy, misuse, and the pre-ship 
 - **Do not** introduce Material-3 token names (`--color-*`, `--surface-container-*`, `--on-*`),
   `--spacing-*`, `--typescale-*`, the `.mic-*` prefix, or literal `#cc9030` — these
   are caught by the stylelint guardrail. Use the sanctioned equivalents (see `theme-tokens.md`).
+- Never reference an **undefined** custom property (even with a fallback) — the
+  `value-no-unknown-custom-properties` guard fails CI. Define new runtime tokens in `styles.css`.
 - Reuse existing utilities (`.dur-elevation-*`, status/link variants) before adding new ones.
+
+## 8. Colour Contrast Rules (AA, ADR-0039)
+
+Every information-bearing text/background pair must meet WCAG 2.2 AA (4.5:1 normal, 3:1 large).
+Recurring traps and their fixes:
+
+| Situation | Wrong | Right |
+|---|---|---|
+| White text on a teal button | `background: var(--brand-accent)` (teal-400, 2.4:1) | `background: var(--accent-strong)` (#006a6a, 5.8:1) |
+| Coloured **status text** | `--functional-warning` / `--functional-success` as `color:` | warning `#8a5e0a`, success `#1b5e20`, error `#ba1a1a` |
+| Status **chip / badge** | hardcoded pastel + a mid-tone text (e.g. `#f57f17` on `#fff8e1`) | darken the text (`#8a5e0a`); keep the light pastel fill |
+| Status **alert/banner** | `color-mix(--functional-x 12%) ` fill + the same functional colour as text | fill stays; text = the AA-dark value above |
+| Form field | hardcoded `background: #fff` | `var(--input-background)` (theme-aware) so dark mode flips to graphite |
+
+> **Known dark-mode gap (tracked):** status **tint** badges/alerts built with
+> `color-mix(--functional-x N%, transparent)` over the card sit on a dark tint in dark mode,
+> where the AA-dark text above no longer passes. A proper fix needs theme-aware status tokens
+> (lighter functional shades in dark). Until then, prefer fixed light pastel fills + AA-dark
+> text for status chips, which pass in both themes.
