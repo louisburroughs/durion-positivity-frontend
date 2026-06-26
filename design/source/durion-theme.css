@@ -1,8 +1,12 @@
 /* ========================================================================= */
-/* DURION THEME                                                              */
+/* DURION THEME — design/source reference                                    */
+/*                                                                           */
+/* Regenerated to mirror src/styles.css (the single source of truth). Token  */
+/* values, light/dark mapping, and the gold + extended token sets here MUST   */
+/* match styles.css. The app toggles `data-theme` on <html> (see             */
+/* core/services/theme.service.ts); the old `data-brand="durion"` selectors   */
+/* are removed — the app never sets that attribute.                          */
 /* ========================================================================= */
-
-
 
 .material-icons-default {
   font-weight: normal;
@@ -26,8 +30,7 @@
   font-variation-settings: 'FILL' 1;
 }
 
-/* Global base */
-
+/* Global base — display face on body, body face everywhere else */
 html,
 body,
 app-root {
@@ -35,20 +38,20 @@ app-root {
   margin: 0;
   width: 100%;
   height: 100%;
-  background: #ffffff;
-  color: rgba(0, 0, 0, 0.87);
 }
 
 * {
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--font-body);
 }
 
 body {
-  font-family: 'Barlow Semi Condensed', 'Noto Sans', sans-serif;
+  font-family: var(--font-primary);
+  background-color: var(--themeBackground);
+  color: var(--currentTextColor);
 }
 
 /* ========================================================================= */
-/* 1. DURION COLOR TOKENS                                                    */
+/* 1. RAW PALETTE TOKENS (mirror styles.css)                                 */
 /* ========================================================================= */
 
 :root {
@@ -79,6 +82,15 @@ body {
   --durion-teal-200: #a4e9e1;
   --durion-teal-100: #d7f3f0;
 
+  /* Heritage Gold — sampled from the primary logo shield */
+  --durion-gold-600: #a06a1a;
+  /* stylelint-disable-next-line declaration-property-value-disallowed-list -- canonical token definition; everywhere else use --goldA400 */
+  --durion-gold-500: #cc9030;
+  --durion-gold-400: #d8a449;
+  --durion-gold-300: #e3bd78;
+  --durion-gold-200: #efd6a8;
+  --durion-gold-100: #f8edd5;
+
   /* Neutrals */
   --durion-grey-900: #121213;
   --durion-grey-800: #1f2022;
@@ -92,155 +104,186 @@ body {
   --functional-info-blue: #355d92;
   --functional-success: #2e7d32;
 
-  /* Status chips (generic names) */
-  --status-success-bg: #ceeac6;
-  --status-success-fg: #2e7d32;
-  --status-warn-bg: #f3c9bc;
-  --status-warn-fg: #b71c1c;
-  --status-error-bg: rgba(186, 26, 26, 0.12);
-  --status-error-fg: #ba1a1a;
-
-  /* Text */
-  --text-normal: rgba(0, 0, 0, 0.87);
-  --text-helper: rgba(0, 0, 0, 0.6);
-  --text-disabled: rgba(0, 0, 0, 0.54);
-  --text-error: #ba1a1a;
-  --text-normal-light: #ffffff;
-  --text-helper-light: rgba(255, 255, 255, 0.7);
-  --white-disabled-hover: rgba(255, 255, 255, 0.38);
-
-  /* Brand semantic */
+  /* Brand Semantic */
   --brand-primary: var(--durion-blue-700);
   --brand-primary-soft: var(--durion-blue-50);
   --brand-secondary: var(--durion-graphite-700);
   --brand-accent: var(--durion-teal-400);
+  --brand-gold: var(--durion-gold-500);
   --brand-background: var(--durion-grey-100);
   --brand-surface: #ffffff;
 
-  /* Dark mode variants */
-  --dark-bg: #101112;
-  --dark-surface: #181a1c;
-  --dark-text: #f1f1f3;
-  --dark-primary: #a5c7f1;
-  --dark-primary-strong: #1c2e48;
-  --dark-graphite: #8e939b;
-  --dark-teal: #55d7cc;
+  /* Typography */
+  --font-primary: 'Barlow Semi Condensed', 'Noto Sans', sans-serif;
+  --font-body: 'Noto Sans', sans-serif;
+
+  /* Ratified Barlow display weight scale (only 500/600/700 are hosted) */
+  --font-weight-display: 700;   /* h1 / page titles / strong emphasis */
+  --font-weight-heading: 600;   /* h2–h4, card titles, overlines, labels, chips, buttons */
+  --font-weight-medium: 500;    /* large/light display subheads */
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
 }
 
 /* ========================================================================= */
-/* 2. THEME MAPPING FOR DURION                                               */
+/* 2. RUNTIME THEME MAPPING (mirror styles.css)                              */
 /* ========================================================================= */
 
-/* Light theme */
-html[data-brand="durion"][data-theme="light"] {
+/* Light (default) */
+:root,
+[data-theme='light'] {
+  --themeBackground: var(--durion-grey-100);
+  --navBackground: var(--durion-blue-800);
+  --menuBackground: var(--durion-blue-700);
+  --subMenuBackground: var(--durion-blue-600);
+  --cardBackground: var(--brand-surface);
+  --currentTextColor: var(--durion-grey-900);
+  --contrastTextColor: #ffffff;
   --primaryA400: var(--brand-primary);
   --primaryA300: var(--durion-blue-500);
   --primaryA100: var(--durion-blue-100);
   --primary50: var(--durion-blue-50);
-
   --accentA400: var(--durion-teal-600);
   --accentA700: #006a6a;
   --accentA100: var(--durion-teal-100);
-  --warnA400: var(--functional-warning);
-
-  --themeBackground: var(--brand-background);
-  --navBackground: var(--primaryA400);
-  --menuBackground: #ffffff;
-  --cardBackground: #ffffff;
-  --subMenuBackground: var(--durion-grey-100);
-
-  --currentTextColor: var(--text-normal);
-  --contrastTextColor: var(--text-normal-light);
-
+  --goldA400: var(--durion-gold-600);
+  --goldA100: var(--durion-gold-100);
   --trackColor: var(--durion-graphite-200);
-  --handleColor: var(--primaryA400);
+  --handleColor: var(--durion-graphite-600);
+  /* Extended local tokens */
+  --border-color: var(--durion-graphite-200);
+  --input-background: #ffffff;
+  --input-border: var(--durion-graphite-200);
+  --input-focus-border: var(--durion-blue-500);
+  --input-placeholder-color: var(--handleColor);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-nav: 2px 0 8px rgba(0, 0, 0, 0.12);
+  --chat-bubble-user-bg: var(--durion-blue-100);
+  --chat-bubble-system-bg: var(--durion-graphite-100);
+  --surface-variant: var(--brand-surface);
+  --surface-2: var(--brand-surface);
+  --surface-hover: rgba(0, 52, 111, 0.06);
+  --text-muted: var(--handleColor);
 }
 
-/* Dark theme */
-html[data-brand="durion"][data-theme="dark"] {
-  --primaryA400: var(--dark-primary);
-  --primaryA300: var(--dark-primary-strong);
-  --primaryA100: #d3e3ff;
-  --primary50: #202432;
-
-  --accentA400: var(--dark-teal);
-  --accentA700: #2aa89c;
-  --accentA100: #b7f1ea;
-  --warnA400: var(--functional-warning);
-
-  --themeBackground: var(--dark-bg);
-  --navBackground: var(--dark-primary-strong);
-  --menuBackground: var(--dark-surface);
-  --cardBackground: var(--dark-surface);
-  --subMenuBackground: #21242a;
-
-  --currentTextColor: var(--dark-text);
-  --contrastTextColor: #000000;
-
-  --trackColor: var(--dark-graphite);
-  --handleColor: var(--primaryA100);
-}
-
-/* Apply theme */
-html[data-brand="durion"][data-theme] body {
-  background-color: var(--themeBackground);
-  color: var(--currentTextColor);
+/* Dark */
+[data-theme='dark'] {
+  --themeBackground: var(--durion-grey-800);
+  --navBackground: var(--durion-grey-900);
+  --menuBackground: #16181c;
+  --subMenuBackground: var(--durion-graphite-800);
+  --cardBackground: var(--durion-grey-700);
+  --currentTextColor: #e8e9eb;
+  --contrastTextColor: #ffffff;
+  --primaryA400: var(--durion-blue-400);
+  --primaryA300: var(--durion-blue-300);
+  --primaryA100: var(--durion-blue-700);
+  --primary50: var(--durion-blue-800);
+  --accentA400: var(--durion-teal-300);
+  --accentA700: var(--durion-teal-400);
+  --accentA100: var(--durion-teal-600);
+  --goldA400: var(--durion-gold-300);
+  --goldA100: var(--durion-gold-600);
+  --trackColor: var(--durion-grey-700);
+  --handleColor: var(--durion-graphite-200);
+  --border-color: var(--durion-graphite-700);
+  --input-background: var(--durion-graphite-800);
+  --input-border: var(--durion-graphite-600);
+  --input-focus-border: var(--durion-blue-400);
+  --input-placeholder-color: var(--handleColor);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-nav: 2px 0 8px rgba(0, 0, 0, 0.5);
+  --chat-bubble-user-bg: var(--durion-blue-700);
+  --chat-bubble-system-bg: var(--durion-graphite-700);
+  --surface-variant: var(--durion-graphite-800);
+  --surface-2: var(--cardBackground);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --text-muted: var(--handleColor);
 }
 
 /* ========================================================================= */
-/* 3. UTILITIES & COMPONENT HOOKS (DURION)                                   */
+/* 3. UTILITIES & COMPONENT HOOKS                                            */
 /* ========================================================================= */
 
-/* Elevation */
+/* Elevation (mirror styles.css) */
 .dur-elevation-1 {
-  box-shadow: 0 4px 8px 0 rgba(102, 102, 102, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .dur-elevation-2 {
-  box-shadow: 0 8px 16px 0 rgba(102, 102, 102, 0.16);
+  box-shadow: var(--shadow-card);
 }
 
 .dur-elevation-3 {
-  box-shadow: 0 16px 32px 0 rgba(102, 102, 102, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
 }
 
 .dur-elevation-4 {
-  box-shadow: 0 32px 64px 0 rgba(102, 102, 102, 0.32);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .font-noto-sans {
-  font-family: 'Noto Sans', sans-serif;
+  font-family: var(--font-body);
 }
 
 /* Alerts */
 .alert {
-  color: var(--contrastTextColor);
-  border-radius: 4px;
-  padding: 8px 12px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
+  border-left: 4px solid transparent;
 }
 
 .alert.alert-info {
-  background-color: var(--primaryA400);
+  background: var(--primary50);
+  border-color: var(--functional-info-blue);
+  color: var(--functional-info-blue);
 }
 
 .alert.alert-success {
-  background-color: var(--functional-success);
+  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
+  border-color: var(--functional-success);
+  color: var(--functional-success);
 }
 
 .alert.alert-warning {
-  background-color: var(--warnA400);
+  background: color-mix(in srgb, var(--functional-warning) 16%, transparent);
+  border-color: var(--functional-warning);
   color: var(--currentTextColor);
 }
 
-.alert.alert-error,
+.alert.alert-error {
+  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
+  border-color: var(--functional-error-red);
+  color: var(--functional-error-red);
+}
+
 .alert.alert-critical {
-  background-color: var(--functional-error-red);
+  background: var(--functional-error-red);
+  border-color: #8b2020;
+  color: #ffffff;
 }
 
 .alert.alert-soft {
-  background-color: var(--accentA100);
-  color: var(--accentA700);
+  background: var(--cardBackground);
+  border-color: var(--border-color);
+  color: var(--currentTextColor);
 }
 
 /* Links */
@@ -282,8 +325,7 @@ a.white:focus {
 }
 
 /* Navbar */
-.dur-navbar .mat-toolbar,
-.dur-navbar .toolbar {
+.dur-navbar {
   color: #ffffff;
   background-color: var(--navBackground);
 }
@@ -291,11 +333,6 @@ a.white:focus {
 .dur-navbar.white {
   background-color: var(--menuBackground);
   color: var(--currentTextColor);
-}
-
-.dur-navbar.white .mat-mdc-tab-link:hover,
-.dur-navbar.white .mat-tab-link.mat-tab-label-active {
-  border-color: var(--primaryA400) !important;
 }
 
 /* Sidebar */
@@ -318,76 +355,53 @@ a.white:focus {
 }
 
 /* Status chips */
-.dur-status .mat-mdc-chip {
-  background-color: #ffffff;
-  color: var(--primaryA400);
+.dur-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-heading);
 }
 
-html[data-brand="durion"][data-theme="dark"] .dur-status .mat-mdc-chip {
-  background-color: #53565a;
+.dur-status.primary {
+  background: var(--primaryA100);
+  color: var(--brand-primary);
 }
 
-.dur-status.primary .mat-mdc-chip {
-  background-color: var(--primary50) !important;
+.dur-status.valid {
+  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
+  color: var(--functional-success);
 }
 
-.dur-status.valid .mat-mdc-chip {
-  background-color: var(--status-success-bg) !important;
-  color: var(--status-success-fg) !important;
+.dur-status.warn {
+  background: color-mix(in srgb, var(--functional-warning) 16%, transparent);
+  color: var(--currentTextColor);
 }
 
-.dur-status.warn .mat-mdc-chip {
-  background-color: var(--status-warn-bg) !important;
-  color: var(--status-warn-fg) !important;
-}
-
-.dur-status.error .mat-mdc-chip {
-  background-color: var(--status-error-bg) !important;
-  color: var(--status-error-fg) !important;
+.dur-status.error {
+  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
+  color: var(--functional-error-red);
 }
 
 /* Main content */
-dur-main-content,
 .main-content {
   background-color: var(--themeBackground);
   color: var(--currentTextColor);
 }
 
 /* Scrollbars */
-.os-scrollbar-track,
 .dur-scroll::-webkit-scrollbar-track {
-  background: var(--trackColor) !important;
+  background: var(--trackColor);
 }
 
-.os-scrollbar-handle,
 .dur-scroll::-webkit-scrollbar-thumb {
-  background: var(--handleColor) !important;
+  background: var(--handleColor);
   border-radius: 5px;
 }
 
-/* Tables */
-table.mat-mdc-table {
-  border: 1px solid transparent;
-}
-
-table.mat-mdc-table:focus {
-  outline: none;
-  border-color: var(--primaryA400);
-}
-
-tr.clickable:not(.mat-mdc-header-row):hover td {
-  background-color: var(--primary50) !important;
-}
-
 /* Timelines */
-dur-timeline-entry-dot {
-  background-color: var(--primaryA400);
-}
-
-dur-timeline-entry-dot.accent {
-  background-color: var(--accentA400);
-}
-
 .timeline-entry-card {
   background-color: var(--cardBackground);
 }

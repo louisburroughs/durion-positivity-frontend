@@ -100,15 +100,15 @@
 }
 
 .rag-status--success {
-  background: var(--color-success-bg, #ecfdf5);
-  border: 1px solid var(--color-success-border, #6ee7b7);
-  color: var(--color-success-text, #065f46);
+  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--functional-success) 40%, transparent);
+  color: var(--functional-success);
 }
 
 .rag-status--error {
-  background: var(--color-error-bg, #fef2f2);
-  border: 1px solid var(--color-error-border, #fca5a5);
-  color: var(--color-error-text, #991b1b);
+  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--functional-error-red) 40%, transparent);
+  color: var(--functional-error-red);
 }
 
 .rag-status__icon {
@@ -138,7 +138,7 @@
 }
 
 .rag-field__required {
-  color: var(--color-error-text, #991b1b);
+  color: var(--functional-error-red);
   margin-left: 2px;
 }
 
@@ -159,13 +159,13 @@
 .rag-field__input:focus,
 .rag-field__textarea:focus {
   outline: none;
-  border-color: var(--color-primary, #5b21b6);
+  border-color: var(--brand-primary, #5b21b6);
   box-shadow: 0 0 0 3px rgb(91 33 182 / 15%);
 }
 
 .rag-field__input[aria-invalid="true"],
 .rag-field__textarea[aria-invalid="true"] {
-  border-color: var(--color-error-border, #fca5a5);
+  border-color: color-mix(in srgb, var(--functional-error-red) 40%, transparent);
 }
 
 .rag-field__input:disabled,
@@ -183,7 +183,7 @@
 .rag-field__error {
   margin: 0;
   font-size: 0.8rem;
-  color: var(--color-error-text, #991b1b);
+  color: var(--functional-error-red);
 }
 
 /* Buttons */
@@ -204,13 +204,13 @@
 }
 
 .rag-btn--primary {
-  background: var(--color-primary, #5b21b6);
+  background: var(--brand-primary, #5b21b6);
   color: #fff;
-  border-color: var(--color-primary, #5b21b6);
+  border-color: var(--brand-primary, #5b21b6);
 }
 
 .rag-btn--primary:hover:not(:disabled) {
-  background: var(--color-primary-hover, #4c1d95);
+  background: var(--brand-primary-hover, #4c1d95);
 }
 
 .rag-btn--secondary {

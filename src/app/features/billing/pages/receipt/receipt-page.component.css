@@ -62,7 +62,7 @@
 
 .receipt__input {
   border: none;
-  border-bottom: 1px solid var(--on-surface-variant);
+  border-bottom: 1px solid var(--border-color);
   border-radius: 0;
   background: transparent;
   padding: var(--space-2) 0;

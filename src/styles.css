@@ -36,6 +36,15 @@
   --durion-teal-200: #a4e9e1;
   --durion-teal-100: #d7f3f0;
 
+  /* Heritage Gold — sampled from the primary logo shield (#cc9030) */
+  --durion-gold-600: #a06a1a;  /* darkest — 4.6:1 on white, AA for text */
+  /* stylelint-disable-next-line declaration-property-value-disallowed-list -- canonical token definition; everywhere else use --goldA400 */
+  --durion-gold-500: #cc9030;  /* canonical — matches the shield border */
+  --durion-gold-400: #d8a449;
+  --durion-gold-300: #e3bd78;
+  --durion-gold-200: #efd6a8;
+  --durion-gold-100: #f8edd5;  /* lightest — soft fill / wash */
+
   /* Neutrals */
   --durion-grey-900: #121213;
   --durion-grey-800: #1f2022;
@@ -54,6 +63,7 @@
   --brand-primary-soft: var(--durion-blue-50);
   --brand-secondary: var(--durion-graphite-700);
   --brand-accent: var(--durion-teal-400);
+  --brand-gold: var(--durion-gold-500);
   --brand-background: var(--durion-grey-100);
   --brand-surface: #ffffff;
 
@@ -61,11 +71,17 @@
   --font-primary: 'Barlow Semi Condensed', 'Noto Sans', sans-serif;
   --font-body: 'Noto Sans', sans-serif;
 
+  /* Ratified Barlow display weight scale — only 500/600/700 are hosted */
+  --font-weight-display: 700;   /* h1 / page titles / strong emphasis */
+  --font-weight-heading: 600;   /* h2–h4, card titles, overlines, labels, chips, buttons */
+  --font-weight-medium: 500;    /* large / lighter display subheads */
+
   /* Spacing scale */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
+  --space-5: 1.25rem;   /* fills the 4 → 6 gap */
   --space-6: 1.5rem;
   --space-8: 2rem;
 
@@ -96,6 +112,8 @@
   --accentA400: var(--durion-teal-600);
   --accentA700: #006a6a;
   --accentA100: var(--durion-teal-100);
+  --goldA400: var(--durion-gold-600);  /* heritage accent text/icon — 4.6:1 on white */
+  --goldA100: var(--durion-gold-100);  /* soft gold fill / wash */
   --trackColor: var(--durion-graphite-200);
   --handleColor: var(--durion-graphite-600); /* graphite-500 (#727986) fails 4.5:1 on white; graphite-600 (#5a616e) = 6.2:1 */
   /* Extended local tokens – see design/source/theme-tokens.md */
@@ -133,6 +151,8 @@
   --accentA400: var(--durion-teal-300);
   --accentA700: var(--durion-teal-400);
   --accentA100: var(--durion-teal-600);
+  --goldA400: var(--durion-gold-300);  /* lighter so it reads on dark surfaces (6.3:1) */
+  --goldA100: var(--durion-gold-600);  /* deep gold wash on dark */
   --trackColor: var(--durion-grey-700);
   --handleColor: var(--durion-graphite-200); /* graphite-500 (#727986) fails 4.5:1 on dark card (#3a3a3e); graphite-200 (#d7d9dd) = 7.9:1 */
   --border-color: var(--durion-graphite-700);
@@ -193,19 +213,19 @@ body {
 }
 
 /* ── Elevation Utilities ─────────────────────────────────────────────────── */
-.mic-elevation-1 {
+.dur-elevation-1 {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
-.mic-elevation-2 {
+.dur-elevation-2 {
   box-shadow: var(--shadow-card);
 }
 
-.mic-elevation-3 {
+.dur-elevation-3 {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
 }
 
-.mic-elevation-4 {
+.dur-elevation-4 {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
@@ -254,7 +274,7 @@ body {
 }
 
 /* ── Status Chips ────────────────────────────────────────────────────────── */
-.mic-status {
+.dur-status {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
@@ -264,22 +284,22 @@ body {
   font-weight: 600;
 }
 
-.mic-status.primary {
+.dur-status.primary {
   background: var(--primaryA100);
   color: var(--brand-primary);
 }
 
-.mic-status.valid {
+.dur-status.valid {
   background: #edfaef;
   color: #2e7d3a;
 }
 
-.mic-status.warn {
+.dur-status.warn {
   background: #fef8ec;
   color: #8a5e0a;
 }
 
-.mic-status.error {
+.dur-status.error {
   background: #fbeaea;
   color: var(--functional-error-red);
 }
@@ -505,9 +525,9 @@ app-workorder-detail-page .alert--warn {
 }
 
 app-workorder-detail-page .alert--success {
-  background: var(--color-success-surface, #dcfce7);
-  color: var(--color-success, #16a34a);
-  border: 1px solid var(--color-success, #16a34a);
+  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
+  color: var(--functional-success);
+  border: 1px solid var(--functional-success);
   border-radius: var(--radius-sm, 4px);
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
@@ -563,13 +583,13 @@ app-workorder-detail-page .tab-badge {
 }
 
 app-workorder-detail-page .tab-badge--warning {
-  background: var(--color-warning, #f59e0b);
-  color: var(--color-on-warning, #1f2328);
+  background: var(--functional-warning, #f59e0b);
+  color: var(--currentTextColor, #1f2328);
 }
 
 app-workorder-detail-page .inline-error {
   font-size: 0.8rem;
-  color: var(--color-error, #dc2626);
+  color: var(--functional-error-red, #dc2626);
   margin-left: 0.5rem;
 }
 
@@ -577,14 +597,14 @@ app-workorder-detail-page .checklist-panel {
   margin: 1.25rem 1.5rem;
   padding: 1rem 1.25rem;
   border-radius: var(--radius-md, 8px);
-  background: var(--color-surface-container-low, #f8fafc);
+  background: var(--cardBackground);
   border: 1px solid var(--color-outline-variant, #d0d7de);
 }
 
 app-workorder-detail-page .checklist-panel__title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-on-surface, #1f2328);
+  color: var(--currentTextColor, #1f2328);
   margin-bottom: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -611,15 +631,15 @@ app-workorder-detail-page .checklist-item__icon {
 }
 
 app-workorder-detail-page .checklist-item--ok .checklist-item__icon {
-  color: var(--color-success, #16a34a);
+  color: var(--functional-success, #16a34a);
 }
 
 app-workorder-detail-page .checklist-item--blocking .checklist-item__icon {
-  color: var(--color-error, #dc2626);
+  color: var(--functional-error-red, #dc2626);
 }
 
 app-workorder-detail-page .checklist-item--warning .checklist-item__icon {
-  color: var(--color-warning, #f59e0b);
+  color: var(--functional-warning, #f59e0b);
 }
 
 app-workorder-detail-page .checklist-item__label {
@@ -635,7 +655,7 @@ app-workorder-detail-page .form-label {
   font-size: 0.875rem;
   font-weight: 500;
   margin-bottom: 0.35rem;
-  color: var(--color-on-surface, #1f2328);
+  color: var(--currentTextColor, #1f2328);
 }
 
 app-workorder-detail-page .form-textarea {
@@ -647,7 +667,7 @@ app-workorder-detail-page .form-textarea {
   font-family: inherit;
   resize: vertical;
   background: var(--color-surface, #ffffff);
-  color: var(--color-on-surface, #1f2328);
+  color: var(--currentTextColor, #1f2328);
 }
 
 app-workorder-detail-page .form-textarea:focus {
@@ -657,7 +677,7 @@ app-workorder-detail-page .form-textarea:focus {
 }
 
 app-workorder-detail-page .required-mark {
-  color: var(--color-error, #dc2626);
+  color: var(--functional-error-red, #dc2626);
 }
 
 app-workorder-detail-page .failed-checks {
@@ -680,11 +700,11 @@ app-workorder-detail-page .failed-check__icon {
 }
 
 app-workorder-detail-page .failed-check--blocking .failed-check__icon {
-  color: var(--color-error, #dc2626);
+  color: var(--functional-error-red, #dc2626);
 }
 
 app-workorder-detail-page .failed-check--warning .failed-check__icon {
-  color: var(--color-warning, #f59e0b);
+  color: var(--functional-warning, #f59e0b);
 }
 
 app-party-detail .modal-backdrop {
@@ -950,9 +970,9 @@ app-invoice-payment-status-page .ips-skeleton {
   border-radius: var(--radius-sm);
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--surface-container, var(--durion-surface-container, var(--brand-surface))) 92%, transparent),
-    color-mix(in srgb, var(--color-secondary, var(--brand-secondary)) 14%, transparent),
-    color-mix(in srgb, var(--surface-container, var(--durion-surface-container, var(--brand-surface))) 92%, transparent)
+    color-mix(in srgb, var(--cardBackground) 92%, transparent),
+    color-mix(in srgb, var(--brand-secondary) 14%, transparent),
+    color-mix(in srgb, var(--cardBackground) 92%, transparent)
   );
   background-size: 220% 100%;
   animation: invoice-payment-status-shimmer 1.1s linear infinite;

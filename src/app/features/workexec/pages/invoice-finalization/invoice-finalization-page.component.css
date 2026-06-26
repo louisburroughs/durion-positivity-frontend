@@ -109,7 +109,7 @@
   resize: vertical;
   min-height: 4.5rem;
   border: none;
-  border-bottom: 1px solid var(--input-border, var(--on-surface-variant));
+  border-bottom: 1px solid var(--input-border);
   border-radius: 0;
   background: transparent;
   padding-left: 0;

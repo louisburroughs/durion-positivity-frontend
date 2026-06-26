@@ -1,0 +1,32 @@
+{
+  "//": "Durion drift guardrail. Run: npx stylelint \"src/**/*.css\". See design/source/durion-style-guide.md.",
+  "rules": {
+    "selector-disallowed-list": [
+      ["/\\.mic-(elevation|status)/"],
+      {
+        "message": "Use the .dur-* utility prefix, not .mic-* (mic- is upstream-template drift). See design/source/durion-style-guide.md §05.",
+        "severity": "error"
+      }
+    ],
+    "declaration-property-value-disallowed-list": [
+      {
+        "/.+/": [
+          "/--surface-container[a-z0-9-]*/",
+          "/--secondary-container/",
+          "/--on-surface[a-z-]*/",
+          "/--on-(secondary|error)-container/",
+          "/--error-container/",
+          "/--color-(primary|secondary|error|warning|success|on-[a-z-]+)/",
+          "/--typescale-[a-z0-9-]+/",
+          "/--spacing-[0-9]/",
+          "/Michelin Unit Titling/",
+          "/#cc9030/i"
+        ]
+      },
+      {
+        "message": "Unsanctioned or undefined token. Use a documented Durion token (design/source/theme-tokens.md): --space-* not --spacing-*; --brand-primary / --cardBackground / --currentTextColor not Material-3 names like --color-primary or --surface-container-*; --goldA400 not raw #cc9030; Barlow Semi Condensed not 'Michelin Unit Titling'.",
+        "severity": "error"
+      }
+    ]
+  }
+}

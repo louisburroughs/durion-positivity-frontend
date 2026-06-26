@@ -2,7 +2,7 @@
   display: grid;
   gap: var(--space-6);
   padding: var(--space-6);
-  background: var(--surface-container-lowest, var(--durion-surface-container-lowest, var(--brand-surface)));
+  background: var(--cardBackground);
   color: var(--currentTextColor, var(--durion-on-surface, var(--durion-grey-900)));
 }
 
@@ -16,14 +16,14 @@
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-secondary, var(--brand-secondary));
+  color: var(--brand-secondary, var(--brand-secondary));
 }
 
 .ips-title {
   margin: 0;
   font-family: var(--font-primary);
   font-size: clamp(1.5rem, 2.2vw, 2.1rem);
-  color: var(--color-primary, var(--brand-primary));
+  color: var(--brand-primary, var(--brand-primary));
 }
 
 .display-lg {
@@ -31,7 +31,7 @@
   font-family: var(--font-primary);
   font-size: clamp(1.75rem, 3.5vw, 2.6rem);
   line-height: 1.1;
-  color: var(--color-primary, var(--brand-primary));
+  color: var(--brand-primary, var(--brand-primary));
 }
 
 .body-md {
@@ -51,7 +51,7 @@
   gap: var(--space-4);
   padding: var(--space-6);
   border-radius: var(--radius-lg);
-  background: var(--surface-container, var(--durion-surface-container, var(--brand-surface)));
+  background: var(--cardBackground);
   box-shadow: var(--shadow-card);
 }
 
@@ -86,23 +86,23 @@
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.01em;
-  background: var(--surface-container-highest);
-  color: var(--on-surface);
+  background: var(--surface-variant);
+  color: var(--currentTextColor);
 }
 
 .ips-status-badge--paid {
-  background: var(--secondary-container);
-  color: var(--on-secondary-container);
+  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
+  color: var(--functional-success);
 }
 
 .ips-status-badge--unpaid {
-  background: var(--error-container);
-  color: var(--on-error-container);
+  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
+  color: var(--functional-error-red);
 }
 
 .ips-status-badge--partially-paid {
-  background: var(--surface-container-highest);
-  color: var(--on-surface);
+  background: var(--surface-variant);
+  color: var(--currentTextColor);
 }
 
 .ips-ingestion-row {
@@ -110,9 +110,9 @@
   gap: var(--space-4);
   padding: var(--space-5, 1.25rem);
   padding-left: 12px;
-  border-left: 2px solid var(--color-primary);
+  border-left: 2px solid var(--brand-primary);
   border-radius: var(--radius-md);
-  background: var(--surface-container-lowest, var(--durion-surface-container-lowest, var(--brand-surface)));
+  background: var(--cardBackground);
 }
 
 .ips-posting-refs {
@@ -120,9 +120,9 @@
   gap: var(--space-1);
   padding: var(--space-3);
   padding-left: 12px;
-  border-left: 2px solid var(--color-primary);
+  border-left: 2px solid var(--brand-primary);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--color-secondary, var(--brand-secondary)) 8%, transparent);
+  background: color-mix(in srgb, var(--brand-secondary, var(--brand-secondary)) 8%, transparent);
 }
 
 .ips-posting-refs__primary {
@@ -130,7 +130,7 @@
 }
 
 .ips-posting-refs__secondary {
-  color: var(--color-secondary, var(--brand-secondary));
+  color: var(--brand-secondary, var(--brand-secondary));
 }
 
 .ips-banner {
@@ -141,17 +141,17 @@
 }
 
 .ips-banner--error {
-  background: color-mix(in srgb, var(--color-error, var(--functional-error-red)) 18%, transparent);
-  color: var(--color-error, var(--functional-error-red));
+  background: color-mix(in srgb, var(--functional-error-red, var(--functional-error-red)) 18%, transparent);
+  color: var(--functional-error-red, var(--functional-error-red));
 }
 
 .ips-banner--critical {
-  background: color-mix(in srgb, var(--color-error, var(--functional-error-red)) 30%, transparent);
-  color: var(--color-error, var(--functional-error-red));
+  background: color-mix(in srgb, var(--functional-error-red, var(--functional-error-red)) 30%, transparent);
+  color: var(--functional-error-red, var(--functional-error-red));
 }
 
 .ips-banner--warning {
-  background: color-mix(in srgb, var(--color-warning, var(--functional-warning)) 20%, transparent);
+  background: color-mix(in srgb, var(--functional-warning, var(--functional-warning)) 20%, transparent);
   color: var(--currentTextColor, var(--durion-on-surface, var(--durion-grey-900)));
 }
 
@@ -170,17 +170,17 @@
 
 .ips-button:focus-visible,
 .ips-history-row:focus-visible {
-  outline: 2px solid var(--color-secondary, var(--brand-accent));
+  outline: 2px solid var(--brand-secondary, var(--brand-accent));
   outline-offset: 2px;
 }
 
 .ips-button--primary {
-  background: var(--color-primary, var(--brand-primary));
+  background: var(--brand-primary, var(--brand-primary));
   color: var(--contrastTextColor, var(--brand-surface));
 }
 
 .ips-button--secondary {
-  background: color-mix(in srgb, var(--color-secondary, var(--brand-secondary)) 16%, transparent);
+  background: color-mix(in srgb, var(--brand-secondary, var(--brand-secondary)) 16%, transparent);
   color: var(--currentTextColor, var(--durion-on-surface, var(--durion-grey-900)));
 }
 
@@ -192,7 +192,7 @@
   width: 100%;
   min-width: 44rem;
   border-collapse: collapse;
-  background: var(--surface-container, var(--durion-surface-container, var(--brand-surface)));
+  background: var(--cardBackground);
   border-radius: var(--radius-md);
   overflow: hidden;
 }
@@ -214,42 +214,42 @@
 }
 
 .ips-history-row:hover {
-  background: color-mix(in srgb, var(--color-secondary, var(--brand-secondary)) 10%, transparent);
+  background: color-mix(in srgb, var(--brand-secondary, var(--brand-secondary)) 10%, transparent);
 }
 
 .ips-event-detail {
-  padding: var(--spacing-4, 16px);
-  background: var(--surface-container-lowest);
-  margin-top: var(--spacing-2, 8px);
+  padding: var(--space-4, 16px);
+  background: var(--cardBackground);
+  margin-top: var(--space-2, 8px);
 }
 
 .ips-event-detail__title {
-  font-size: var(--typescale-title-sm-size, 0.875rem);
+  font-size: 0.875rem;
   font-weight: 600;
-  margin-bottom: var(--spacing-2, 8px);
-  color: var(--on-surface);
+  margin-bottom: var(--space-2, 8px);
+  color: var(--currentTextColor);
 }
 
 .ips-event-detail__fields {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: var(--spacing-1, 4px) var(--spacing-4, 16px);
+  gap: var(--space-1, 4px) var(--space-4, 16px);
 }
 
 .ips-event-detail__fields dt {
-  color: var(--on-surface-variant);
-  font-size: var(--typescale-label-sm-size, 0.75rem);
+  color: var(--text-muted);
+  font-size: 0.75rem;
 }
 
 .ips-event-detail__fields dd {
-  color: var(--on-surface);
-  font-size: var(--typescale-body-sm-size, 0.875rem);
+  color: var(--currentTextColor);
+  font-size: 0.875rem;
 }
 
 .ips-empty-state {
   padding: var(--space-4);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--color-secondary, var(--brand-secondary)) 8%, transparent);
+  background: color-mix(in srgb, var(--brand-secondary, var(--brand-secondary)) 8%, transparent);
 }
 
 @media (max-width: 768px) {

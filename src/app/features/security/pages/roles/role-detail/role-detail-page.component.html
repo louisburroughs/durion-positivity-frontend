@@ -10,7 +10,7 @@
   }
 
   @if (role(); as currentRole) {
-  <section class="role-summary mic-elevation-2">
+  <section class="role-summary dur-elevation-2">
     <div class="panel-accent" aria-hidden="true"></div>
     <header class="summary-header">
       <h1 id="role-detail-title">{{ 'SECURITY.ROLE_DETAIL.TITLE' | translate: { name: currentRole.name } }}</h1>
@@ -30,16 +30,16 @@
         <dt>{{ 'SECURITY.ROLE_DETAIL.STATUS' | translate }}</dt>
         <dd>
           @if (currentRole.status === 'INACTIVE') {
-          <span class="mic-status warn">{{ 'SECURITY.ROLE_DETAIL.STATUS_INACTIVE' | translate }}</span>
+          <span class="dur-status warn">{{ 'SECURITY.ROLE_DETAIL.STATUS_INACTIVE' | translate }}</span>
           } @else {
-          <span class="mic-status valid">{{ 'SECURITY.ROLE_DETAIL.STATUS_ACTIVE' | translate }}</span>
+          <span class="dur-status valid">{{ 'SECURITY.ROLE_DETAIL.STATUS_ACTIVE' | translate }}</span>
           }
         </dd>
       </div>
     </dl>
   </section>
 
-  <section class="permissions-panel mic-elevation-2" [attr.aria-label]="'SECURITY.ROLE_DETAIL.ARIAS.ROLE_PERMISSIONS' | translate">
+  <section class="permissions-panel dur-elevation-2" [attr.aria-label]="'SECURITY.ROLE_DETAIL.ARIAS.ROLE_PERMISSIONS' | translate">
     <div class="panel-accent" aria-hidden="true"></div>
 
     <header class="permissions-header">
@@ -104,7 +104,7 @@
 
   @if (showGrantModal()) {
   <section class="modal-backdrop">
-    <dialog class="modal-surface mic-elevation-4" open [attr.aria-label]="'SECURITY.ROLE_DETAIL.ARIAS.GRANT_DIALOG' | translate">
+    <dialog class="modal-surface dur-elevation-4" open [attr.aria-label]="'SECURITY.ROLE_DETAIL.ARIAS.GRANT_DIALOG' | translate">
       <header class="modal-header">
         <h2>{{ 'SECURITY.ROLE_DETAIL.GRANT_PERMISSIONS' | translate }}</h2>
         <p>{{ 'SECURITY.ROLE_DETAIL.GRANT_HELP' | translate }}</p>

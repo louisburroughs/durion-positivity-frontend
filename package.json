@@ -16,7 +16,8 @@
     "i18n:pseudo:generate": "node scripts/i18n/generate-pseudo-locale.mjs",
     "i18n:pseudo:check": "node scripts/i18n/generate-pseudo-locale.mjs --check",
     "i18n:check": "npm run i18n:check:missing && npm run i18n:pseudo:check",
-    "serve:ssr:durion-positivity-frontend": "npm run sdk:install && node dist/durion-positivity-frontend/server/server.mjs"
+    "serve:ssr:durion-positivity-frontend": "npm run sdk:install && node dist/durion-positivity-frontend/server/server.mjs",
+    "lint:css": "stylelint \"src/**/*.css\""
   },
   "prettier": {
     "printWidth": 100,
@@ -65,6 +66,7 @@
     "axe-core": "^4.11.1",
     "eslint": "^10.2.0",
     "jsdom": "^27.1.0",
+    "stylelint": "^17.14.0",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
   }

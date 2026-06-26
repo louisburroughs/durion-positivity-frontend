@@ -78,7 +78,7 @@
   margin: 0;
   font-size: var(--font-display-sm, 1.5rem);
   font-weight: 600;
-  color: var(--on-surface);
+  color: var(--currentTextColor);
   line-height: 1.2;
 }
 
