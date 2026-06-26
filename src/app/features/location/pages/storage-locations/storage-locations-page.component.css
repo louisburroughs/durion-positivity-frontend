@@ -5,7 +5,7 @@
 main {
   background: var(--cardBackground);
   border-radius: var(--radius-md);
-  border-top: 2px solid var(--primary);
+  border-top: 2px solid var(--brand-primary);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -37,7 +37,7 @@ td {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: var(--surface-overlay);
+  background: var(--surface-variant);
   z-index: 1000;
   display: flex;
   align-items: center;

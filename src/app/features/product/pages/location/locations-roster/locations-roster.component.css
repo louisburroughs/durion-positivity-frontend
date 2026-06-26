@@ -54,7 +54,7 @@ label {
 }
 
 .input-underline:focus {
-  box-shadow: inset 0 -1px 0 var(--brand-primary-500);
+  box-shadow: inset 0 -1px 0 var(--brand-primary);
 }
 
 .table-wrap {
@@ -142,15 +142,15 @@ label {
 }
 
 .btn-primary {
-  background: var(--brand-primary-500);
+  background: var(--brand-primary);
   border: none;
-  color: var(--inverseTextColor);
+  color: var(--contrastTextColor);
 }
 
 .btn-secondary {
   background: var(--brand-primary-soft);
   border: none;
-  color: var(--brand-primary-500);
+  color: var(--brand-primary);
 }
 
 .error-banner {
@@ -169,7 +169,7 @@ label {
   align-items: center;
   background: var(--functional-error-red);
   border-radius: 999px;
-  color: var(--inverseTextColor);
+  color: var(--contrastTextColor);
   display: inline-flex;
   font-size: 0.75rem;
   font-weight: 700;

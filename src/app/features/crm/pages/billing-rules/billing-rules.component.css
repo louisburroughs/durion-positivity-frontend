@@ -8,8 +8,8 @@
   padding: var(--space-5);
   display: grid;
   gap: var(--space-4);
-  background: var(--durion-surface-container);
-  color: var(--durion-on-surface);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
   border-radius: var(--radius-md);
 }
 
@@ -23,8 +23,8 @@
   border: none;
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
-  background: var(--durion-surface-container-high);
-  color: var(--durion-on-surface);
+  background: var(--surface-variant);
+  color: var(--currentTextColor);
   cursor: pointer;
 }
 
@@ -33,7 +33,7 @@
 .billing-rules__summary {
   display: grid;
   gap: var(--space-3);
-  background: var(--durion-surface-container-low);
+  background: var(--cardBackground);
   border-radius: var(--radius-sm);
   padding: var(--space-4);
 }
@@ -51,7 +51,7 @@
 .billing-rules__field label {
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--durion-on-surface-variant);
+  color: var(--text-muted);
 }
 
 .billing-rules__input {
@@ -79,8 +79,8 @@
   margin: 0;
   padding: var(--space-3);
   border-radius: var(--radius-sm);
-  background: var(--durion-surface-container-low);
-  color: var(--durion-on-surface-variant);
+  background: var(--cardBackground);
+  color: var(--text-muted);
 }
 
 .billing-rules__actions {
@@ -92,8 +92,8 @@
   border: none;
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-4);
-  background: var(--durion-primary);
-  color: var(--durion-on-primary);
+  background: var(--brand-primary);
+  color: var(--contrastTextColor);
   font-weight: 700;
   cursor: pointer;
 }
@@ -107,17 +107,17 @@
   margin: 0;
   padding: var(--space-3);
   border-radius: var(--radius-sm);
-  background: var(--durion-error-container);
-  color: var(--durion-on-error-container, var(--durion-error));
+  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
+  color: var(--durion-on-error-container, var(--functional-error-red));
 }
 
 .billing-rules__skeleton {
   height: 1rem;
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
   background: linear-gradient(90deg,
-      var(--durion-surface-container-low) 25%,
-      var(--durion-surface-container-high) 50%,
-      var(--durion-surface-container-low) 75%);
+      var(--cardBackground) 25%,
+      var(--surface-variant) 50%,
+      var(--cardBackground) 75%);
   background-size: 220% 100%;
   animation: billing-rules-shimmer 1.2s infinite;
 }

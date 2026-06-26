@@ -67,6 +67,7 @@
     "eslint": "^10.2.0",
     "jsdom": "^27.1.0",
     "stylelint": "^17.14.0",
+    "stylelint-value-no-unknown-custom-properties": "^6.1.1",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
   }

@@ -9,14 +9,14 @@
   max-width: 1100px;
   margin: 0 auto;
   padding: var(--space-6) var(--space-4);
-  color: var(--durion-on-surface-variant);
+  color: var(--text-muted);
 }
 
 h1,
 h2,
 h3,
 th {
-  color: var(--durion-on-surface);
+  color: var(--currentTextColor);
 }
 
 .page-head h1 {
@@ -31,7 +31,7 @@ th {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  background: var(--durion-surface-container-lowest);
+  background: var(--cardBackground);
   border-radius: var(--radius-md);
   padding: var(--space-5);
 }
@@ -50,19 +50,19 @@ th {
 .field-input {
   width: 100%;
   box-sizing: border-box;
-  background: var(--durion-surface-container-low);
+  background: var(--cardBackground);
   border: none;
-  border-bottom: 2px solid var(--durion-primary);
+  border-bottom: 2px solid var(--brand-primary);
   border-radius: 0;
   padding: var(--space-2) var(--space-3);
   font: inherit;
-  color: var(--durion-on-surface-variant);
+  color: var(--text-muted);
   outline: none;
 }
 
 .field-error {
   margin: 0;
-  color: var(--durion-error);
+  color: var(--functional-error-red);
 }
 
 .actions-row {
@@ -79,16 +79,16 @@ th {
 }
 
 .loading-state {
-  background: var(--durion-surface-container-low);
+  background: var(--cardBackground);
 }
 
 .empty-state {
-  background: var(--durion-surface-container-low);
+  background: var(--cardBackground);
 }
 
 .error-state {
-  background: var(--durion-error-container);
-  color: var(--durion-error);
+  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
+  color: var(--functional-error-red);
 }
 
 .table-wrap {
@@ -108,21 +108,21 @@ th {
 }
 
 .data-blueprint-table thead tr {
-  background: var(--durion-surface-container);
+  background: var(--cardBackground);
 }
 
 .data-blueprint-table tbody tr:nth-child(odd) {
-  background: var(--durion-surface);
+  background: var(--cardBackground);
 }
 
 .data-blueprint-table tbody tr:nth-child(even) {
-  background: var(--durion-surface-container-low);
+  background: var(--cardBackground);
 }
 
 .badge-muted {
   margin-left: var(--space-2);
-  background: var(--durion-surface-container);
-  color: var(--durion-on-surface-variant);
+  background: var(--cardBackground);
+  color: var(--text-muted);
   border-radius: var(--radius-sm);
   padding: 2px var(--space-2);
   font-size: 0.78rem;
@@ -133,7 +133,7 @@ th {
   justify-content: space-between;
   gap: var(--space-3);
   align-items: center;
-  background: var(--durion-surface-container-low);
+  background: var(--cardBackground);
   border-radius: var(--radius-sm);
   padding: var(--space-3) var(--space-4);
 }
@@ -145,7 +145,7 @@ th {
 
 .party-card {
   flex: 1;
-  background: var(--durion-surface-container-low);
+  background: var(--cardBackground);
   border-radius: var(--radius-sm);
   padding: var(--space-4);
 }
@@ -162,7 +162,7 @@ th {
 }
 
 .success-panel {
-  background: var(--durion-surface-container-low);
+  background: var(--cardBackground);
 }
 
 .btn-primary,
@@ -176,13 +176,13 @@ th {
 }
 
 .btn-primary {
-  background: var(--durion-primary);
-  color: var(--durion-on-primary);
+  background: var(--brand-primary);
+  color: var(--contrastTextColor);
 }
 
 .btn-ghost {
   background: transparent;
-  color: var(--durion-primary);
+  color: var(--brand-primary);
 }
 
 .btn-primary:disabled,

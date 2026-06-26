@@ -68,12 +68,12 @@
 }
 
 .status-active {
-  background: var(--status-success-bg);
+  background: color-mix(in srgb, var(--functional-success) 12%, transparent);
   color: var(--status-success-text, inherit);
 }
 
 .status-revoked {
-  background: var(--status-error-bg);
+  background: color-mix(in srgb, var(--functional-error-red) 12%, transparent);
   color: var(--status-error-text, inherit);
 }
 
@@ -123,13 +123,13 @@ input[type='datetime-local'] {
 select:focus,
 input[type='text']:focus,
 input[type='datetime-local']:focus {
-  outline: 2px solid var(--color-brand-primary);
+  outline: 2px solid var(--brand-primary);
   outline-offset: 2px;
 }
 
 button[data-testid='submit-assignment-btn'] {
   justify-self: start;
-  background: var(--color-brand-primary);
+  background: var(--brand-primary);
   color: var(--text-on-brand, inherit);
   border: 0;
   border-radius: var(--radius-sm);
