@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -8,7 +9,7 @@ import { EstimateResponse } from '../../models/workexec.models';
 @Component({
   selector: 'app-estimate-from-appointment-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './estimate-from-appointment-page.component.html',
   styleUrl: './estimate-from-appointment-page.component.css',
 })

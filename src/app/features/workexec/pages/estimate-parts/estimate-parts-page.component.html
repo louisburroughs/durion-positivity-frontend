@@ -1,17 +1,17 @@
 <section class="workexec-page estimate-parts" aria-labelledby="estimate-parts-heading">
 
   <header class="page-header">
-    <p class="page-overline">Estimate</p>
+    <p class="page-overline">{{ 'WORKEXEC.ESTIMATE_DETAIL.OVERLINE' | translate }}</p>
     @if (estimate()) {
-      <h1 id="estimate-parts-heading">Parts — {{ estimate()!.estimateNumber ?? estimateId }}</h1>
-      <p class="page-meta">Status: <span class="status-chip status-chip--{{ estimate()!.status | lowercase }}">{{ estimate()!.status }}</span></p>
+      <h1 id="estimate-parts-heading">{{ 'WORKEXEC.ESTIMATE_PARTS.TITLE_WITH_NUM' | translate: { num: (estimate()!.estimateNumber ?? estimateId) } }}</h1>
+      <p class="page-meta">{{ 'WORKEXEC.ESTIMATE_COMMON.STATUS_INLINE' | translate }} <span class="status-chip status-chip--{{ estimate()!.status | lowercase }}">{{ estimate()!.status }}</span></p>
     } @else {
-      <h1 id="estimate-parts-heading">Parts</h1>
+      <h1 id="estimate-parts-heading">{{ 'WORKEXEC.ESTIMATE_PARTS.TITLE' | translate }}</h1>
     }
   </header>
 
   @if (state() === 'loading') {
-    <p class="hint-text" aria-busy="true">Loading estimate…</p>
+    <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.ESTIMATE_COMMON.LOADING' | translate }}</p>
   }
 
   @if (state() === 'error') {
@@ -21,23 +21,23 @@
   @if (state() === 'ready') {
 
     <!-- Line Items Table -->
-    <div class="line-items-section" aria-label="Parts line items">
-      <p class="section-overline">Current Parts</p>
+    <div class="line-items-section" [attr.aria-label]="'WORKEXEC.ESTIMATE_PARTS.LINE_ITEMS_ARIA' | translate">
+      <p class="section-overline">{{ 'WORKEXEC.ESTIMATE_PARTS.CURRENT_PARTS' | translate }}</p>
 
       @if (items().length === 0) {
-        <p class="hint-text">No parts added yet.</p>
+        <p class="hint-text">{{ 'WORKEXEC.ESTIMATE_PARTS.NONE_YET' | translate }}</p>
       }
 
       @for (item of items(); track item.id) {
         @if (item.itemType === 'PART') {
           <div class="line-item">
             <div class="line-item__desc">
-              <span class="line-item__type-badge">PART</span>
+              <span class="line-item__type-badge">{{ 'WORKEXEC.ESTIMATE_PARTS.BADGE' | translate }}</span>
               <span>{{ item.description }}</span>
             </div>
             <div class="line-item__meta">
-              <span>Qty: {{ item.quantity }}</span>
-              <span>@ {{ item.unitPrice | currency }}</span>
+              <span>{{ 'WORKEXEC.ESTIMATE_PARTS.QTY_LABEL' | translate: { qty: item.quantity } }}</span>
+              <span>{{ 'WORKEXEC.ESTIMATE_PARTS.AT_PRICE' | translate: { price: (item.unitPrice | currency) } }}</span>
               <span class="line-item__total">{{ item.lineTotal | currency }}</span>
             </div>
           </div>
@@ -47,41 +47,41 @@
 
     <!-- Totals -->
     @if (estimate()?.subtotal != null) {
-      <div class="totals-panel" aria-label="Estimate totals">
-        <div class="totals-row"><span>Subtotal</span><span>{{ estimate()!.subtotal | currency }}</span></div>
-        <div class="totals-row"><span>Tax</span><span>{{ estimate()!.taxAmount | currency }}</span></div>
-        <div class="totals-row totals-row--total"><span>Total</span><span>{{ estimate()!.total | currency }}</span></div>
+      <div class="totals-panel" [attr.aria-label]="'WORKEXEC.ESTIMATE_COMMON.TOTALS_ARIA' | translate">
+        <div class="totals-row"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.SUBTOTAL' | translate }}</span><span>{{ estimate()!.subtotal | currency }}</span></div>
+        <div class="totals-row"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.TAX' | translate }}</span><span>{{ estimate()!.taxAmount | currency }}</span></div>
+        <div class="totals-row totals-row--total"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.TOTAL' | translate }}</span><span>{{ estimate()!.total | currency }}</span></div>
       </div>
     }
 
     <!-- Add Part Form -->
-    <div class="add-item-panel" aria-label="Add part">
-      <p class="section-overline">Add Part</p>
+    <div class="add-item-panel" [attr.aria-label]="'WORKEXEC.ESTIMATE_PARTS.ADD_PANEL_ARIA' | translate">
+      <p class="section-overline">{{ 'WORKEXEC.ESTIMATE_PARTS.ADD_TITLE' | translate }}</p>
 
-      <form [formGroup]="addForm" (ngSubmit)="addItem()" novalidate aria-label="Add part form" class="add-form">
+      <form [formGroup]="addForm" (ngSubmit)="addItem()" novalidate [attr.aria-label]="'WORKEXEC.ESTIMATE_PARTS.ADD_FORM_ARIA' | translate" class="add-form">
 
         <!-- Catalog Part Search (name / SKU) -->
         <div class="field-row">
           <div class="field-group field-group--grow part-search">
-            <label for="partSearch" class="field-label">Search Catalog <span class="field-optional">(name or SKU)</span></label>
+            <label for="partSearch" class="field-label">{{ 'WORKEXEC.ESTIMATE_PARTS.SEARCH_LABEL' | translate }} <span class="field-optional">{{ 'WORKEXEC.ESTIMATE_PARTS.SEARCH_BY' | translate }}</span></label>
             <input id="partSearch" type="text" class="field-input"
               role="combobox" aria-autocomplete="list" autocomplete="off"
               [attr.aria-expanded]="searchState() === 'ready'" aria-controls="partSearchResults"
               [attr.aria-activedescendant]="searchState() === 'ready' && activeIndex() >= 0 ? ('partSearch-opt-' + activeIndex()) : null"
-              placeholder="Search parts by name or SKU…"
+              [placeholder]="'WORKEXEC.ESTIMATE_PARTS.SEARCH_PH' | translate"
               [value]="searchQuery()" (input)="onSearchChange($any($event.target).value)" (keydown)="onSearchKeydown($event)" />
 
             @if (searchState() === 'loading') {
-              <p class="hint-text" aria-busy="true">Searching…</p>
+              <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.ESTIMATE_COMMON.SEARCHING' | translate }}</p>
             }
             @if (searchState() === 'empty') {
-              <p class="hint-text">No matching parts found.</p>
+              <p class="hint-text">{{ 'WORKEXEC.ESTIMATE_PARTS.NO_MATCH' | translate }}</p>
             }
             @if (searchState() === 'error') {
-              <p class="field-error" role="alert">Part search failed. Try again.</p>
+              <p class="field-error" role="alert">{{ 'WORKEXEC.ESTIMATE_PARTS.SEARCH_FAILED' | translate }}</p>
             }
             @if (searchState() === 'ready') {
-              <ul id="partSearchResults" class="part-search__results" role="listbox" aria-label="Matching parts">
+              <ul id="partSearchResults" class="part-search__results" role="listbox" [attr.aria-label]="'WORKEXEC.ESTIMATE_PARTS.RESULTS_ARIA' | translate">
                 @for (part of searchResults(); track part.id; let i = $index) {
                   <li role="option" class="part-search__option"
                     [id]="'partSearch-opt-' + i"
@@ -98,9 +98,9 @@
 
             @if (selectedPart()) {
               <p class="part-search__selected">
-                Linked: <strong>{{ selectedPart()!.name }}</strong>
+                {{ 'WORKEXEC.ESTIMATE_PARTS.LINKED' | translate: { name: selectedPart()!.name } }}
                 @if (selectedPart()!.sku) { <span class="part-search__sku">{{ selectedPart()!.sku }}</span> }
-                <button type="button" class="part-search__clear" (click)="clearSelectedPart()">Clear</button>
+                <button type="button" class="part-search__clear" (click)="clearSelectedPart()">{{ 'WORKEXEC.ESTIMATE_PARTS.CLEAR' | translate }}</button>
               </p>
             }
           </div>
@@ -108,52 +108,52 @@
 
         <div class="field-row">
           <div class="field-group field-group--grow">
-            <label for="partDescription" class="field-label">Description <span class="required" aria-hidden="true">*</span></label>
+            <label for="partDescription" class="field-label">{{ 'WORKEXEC.ESTIMATE_COMMON.DESCRIPTION' | translate }} <span class="required" aria-hidden="true">*</span></label>
             <input id="partDescription" type="text" formControlName="description" class="field-input"
               [class.field-input--error]="addForm.controls.description.invalid && addForm.controls.description.touched"
-              placeholder="Part description" aria-required="true" />
+              [placeholder]="'WORKEXEC.ESTIMATE_PARTS.DESCRIPTION_PH' | translate" aria-required="true" />
             @if (addForm.controls.description.invalid && addForm.controls.description.touched) {
-              <p class="field-error" role="alert">Description is required.</p>
+              <p class="field-error" role="alert">{{ 'WORKEXEC.ESTIMATE_COMMON.DESCRIPTION_REQUIRED' | translate }}</p>
             }
           </div>
 
           <div class="field-group field-group--narrow">
-            <label for="partQty" class="field-label">Qty <span class="required" aria-hidden="true">*</span></label>
+            <label for="partQty" class="field-label">{{ 'WORKEXEC.ESTIMATE_PARTS.QTY' | translate }} <span class="required" aria-hidden="true">*</span></label>
             <input id="partQty" type="number" formControlName="quantity" class="field-input"
               [class.field-input--error]="addForm.controls.quantity.invalid && addForm.controls.quantity.touched"
               min="0.0001" step="1" aria-required="true" />
             @if (addForm.controls.quantity.invalid && addForm.controls.quantity.touched) {
-              <p class="field-error" role="alert">Valid quantity required.</p>
+              <p class="field-error" role="alert">{{ 'WORKEXEC.ESTIMATE_PARTS.QTY_REQUIRED' | translate }}</p>
             }
           </div>
 
           <div class="field-group field-group--narrow">
-            <label for="partPrice" class="field-label">Unit Price <span class="required" aria-hidden="true">*</span></label>
+            <label for="partPrice" class="field-label">{{ 'WORKEXEC.ESTIMATE_PARTS.UNIT_PRICE' | translate }} <span class="required" aria-hidden="true">*</span></label>
             <input id="partPrice" type="number" formControlName="unitPrice" class="field-input"
               [class.field-input--error]="addForm.controls.unitPrice.invalid && addForm.controls.unitPrice.touched"
               min="0" step="0.01" aria-required="true" />
             @if (addForm.controls.unitPrice.invalid && addForm.controls.unitPrice.touched) {
-              <p class="field-error" role="alert">Valid price required.</p>
+              <p class="field-error" role="alert">{{ 'WORKEXEC.ESTIMATE_PARTS.PRICE_REQUIRED' | translate }}</p>
             }
             @if (priceState() === 'loading') {
-              <p class="hint-text" aria-busy="true">Fetching MSRP…</p>
+              <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.ESTIMATE_PARTS.FETCHING_MSRP' | translate }}</p>
             } @else if (priceState() === 'filled') {
-              <p class="hint-text">Auto-filled from MSRP.</p>
+              <p class="hint-text">{{ 'WORKEXEC.ESTIMATE_PARTS.MSRP_FILLED' | translate }}</p>
             } @else if (priceState() === 'none') {
-              <p class="hint-text">No MSRP on file — enter price.</p>
+              <p class="hint-text">{{ 'WORKEXEC.ESTIMATE_PARTS.MSRP_NONE' | translate }}</p>
             }
           </div>
         </div>
 
         <div class="field-row">
           <div class="field-group field-group--grow">
-            <label for="partTaxCode" class="field-label">Tax Code <span class="field-optional">(optional)</span></label>
-            <input id="partTaxCode" type="text" formControlName="taxCode" class="field-input" placeholder="e.g. TX-GENERAL" />
+            <label for="partTaxCode" class="field-label">{{ 'WORKEXEC.ESTIMATE_COMMON.TAX_CODE' | translate }} <span class="field-optional">{{ 'WORKEXEC.ESTIMATE_COMMON.OPTIONAL' | translate }}</span></label>
+            <input id="partTaxCode" type="text" formControlName="taxCode" class="field-input" [placeholder]="'WORKEXEC.ESTIMATE_PARTS.TAX_CODE_PH' | translate" />
           </div>
           <div class="field-group field-group--grow">
-            <label for="partProductId" class="field-label">Catalog Product ID <span class="field-optional">(set by search)</span></label>
+            <label for="partProductId" class="field-label">{{ 'WORKEXEC.ESTIMATE_PARTS.PRODUCT_ID' | translate }} <span class="field-optional">{{ 'WORKEXEC.ESTIMATE_PARTS.SET_BY_SEARCH' | translate }}</span></label>
             <input id="partProductId" type="text" formControlName="productId" class="field-input" readonly
-              placeholder="Linked via catalog search" />
+              [placeholder]="'WORKEXEC.ESTIMATE_PARTS.LINKED_VIA_SEARCH' | translate" />
           </div>
         </div>
 
@@ -167,9 +167,9 @@
 
         <div class="form-actions">
           <button type="submit" class="btn btn--accent" [disabled]="saveState() === 'saving'" [attr.aria-busy]="saveState() === 'saving'">
-            @if (saveState() === 'saving') { Adding… } @else { Add Part }
+            @if (saveState() === 'saving') { {{ 'WORKEXEC.ESTIMATE_COMMON.ADDING' | translate }} } @else { {{ 'WORKEXEC.ESTIMATE_PARTS.ADD_PART' | translate }} }
           </button>
-          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId]">Back to Estimate</a>
+          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId]">{{ 'WORKEXEC.ESTIMATE_COMMON.BACK_TO_ESTIMATE' | translate }}</a>
         </div>
 
       </form>

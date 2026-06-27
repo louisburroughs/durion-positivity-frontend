@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
+import { TranslateModule } from '@ngx-translate/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
@@ -23,7 +24,7 @@ describe('EstimateFromAppointmentPageComponent [CAP-140]', () => {
     stubWorkexecService.createEstimateFromAppointment.mockReturnValue(of({ estimateId: 'est-1' }));
 
     await TestBed.configureTestingModule({
-      imports: [EstimateFromAppointmentPageComponent],
+      imports: [EstimateFromAppointmentPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: WorkexecService, useValue: stubWorkexecService },

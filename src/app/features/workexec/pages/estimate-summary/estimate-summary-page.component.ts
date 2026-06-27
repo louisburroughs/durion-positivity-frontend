@@ -1,5 +1,6 @@
 import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs/operators';
@@ -18,7 +19,7 @@ import { EstimateSummaryResponse, PageState } from '../../models/workexec.models
 @Component({
   selector: 'app-estimate-summary-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslatePipe],
   templateUrl: './estimate-summary-page.component.html',
   styleUrl: './estimate-summary-page.component.css',
 })
