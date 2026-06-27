@@ -1,11 +1,11 @@
 <section class="workexec-page approval-submit" aria-labelledby="approval-submit-heading">
 
   <header class="page-header">
-    <p class="page-overline">Approval</p>
-    <h1 id="approval-submit-heading">Submit for Customer Approval</h1>
+    <p class="page-overline">{{ 'WORKEXEC.APPROVAL.SUBMIT.OVERLINE' | translate }}</p>
+    <h1 id="approval-submit-heading">{{ 'WORKEXEC.APPROVAL.SUBMIT.TITLE' | translate }}</h1>
   </header>
 
-  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading estimate…</p> }
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.APPROVAL.SUBMIT.LOADING' | translate }}</p> }
   @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
   @if (pageState() === 'access-denied') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
 
@@ -14,31 +14,31 @@
     <div class="approval-card">
 
       <div class="estimate-context">
-        <p class="label-sm">Estimate</p>
+        <p class="label-sm">{{ 'WORKEXEC.APPROVAL.SUBMIT.ESTIMATE' | translate }}</p>
         <p class="estimate-ref">{{ estimate()!.estimateNumber ?? estimateId }}</p>
         <p class="estimate-meta">
-          Status: <span class="status-chip">{{ estimate()!.status }}</span>
-          <span class="audit-meta">Created by {{ estimate()!.createdByUserId }}</span>
+          {{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span>
+          <span class="audit-meta">{{ 'WORKEXEC.APPROVAL.SUBMIT.CREATED_BY' | translate: { by: estimate()!.createdByUserId } }}</span>
         </p>
         @if (estimate()!.total != null) {
-          <p class="estimate-total">Total: <strong>{{ estimate()!.total | currency }}</strong></p>
+          <p class="estimate-total">{{ 'WORKEXEC.APPROVAL.COMMON.TOTAL_INLINE' | translate }} <strong>{{ estimate()!.total | currency }}</strong></p>
         }
       </div>
 
       <div class="submit-description">
-        <p>Submitting this estimate will:</p>
+        <p>{{ 'WORKEXEC.APPROVAL.SUBMIT.INTRO' | translate }}</p>
         <ul class="submit-checklist">
-          <li>Validate estimate completeness (customer, vehicle, line items, calculated totals)</li>
-          <li>Create an immutable snapshot</li>
-          <li>Transition the estimate to <strong>Pending Approval</strong> status</li>
+          <li>{{ 'WORKEXEC.APPROVAL.SUBMIT.CHECK_VALIDATE' | translate }}</li>
+          <li>{{ 'WORKEXEC.APPROVAL.SUBMIT.CHECK_SNAPSHOT' | translate }}</li>
+          <li>{{ 'WORKEXEC.APPROVAL.SUBMIT.CHECK_TRANSITION' | translate: { status: ('WORKEXEC.APPROVAL.SUBMIT.PENDING_APPROVAL' | translate) } }}</li>
         </ul>
-        <p class="hint-text">This action cannot be undone without creating a new revision.</p>
+        <p class="hint-text">{{ 'WORKEXEC.APPROVAL.SUBMIT.CANNOT_UNDO' | translate }}</p>
       </div>
 
       <!-- Field-level errors from backend -->
       @if (fieldErrors().length > 0) {
-        <div class="field-errors-list" role="alert" aria-label="Validation errors">
-          <p class="label-sm">Please resolve the following before submitting:</p>
+        <div class="field-errors-list" role="alert" [attr.aria-label]="'WORKEXEC.APPROVAL.SUBMIT.VALIDATION_ERRORS_ARIA' | translate">
+          <p class="label-sm">{{ 'WORKEXEC.APPROVAL.SUBMIT.RESOLVE_ERRORS' | translate }}</p>
           @for (fe of fieldErrors(); track fe.field) {
             <p class="field-error">{{ fe.field }}: {{ fe.message }}</p>
           }
@@ -47,24 +47,24 @@
 
       @if (submitState() === 'idle') {
         <div class="form-actions">
-          <button class="btn btn--accent" (click)="confirmSubmit()">Submit for Approval</button>
-          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId]">Back to Estimate</a>
+          <button class="btn btn--accent" (click)="confirmSubmit()">{{ 'WORKEXEC.APPROVAL.SUBMIT.SUBMIT_FOR_APPROVAL' | translate }}</button>
+          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId]">{{ 'WORKEXEC.APPROVAL.COMMON.BACK_TO_ESTIMATE' | translate }}</a>
         </div>
       }
 
       @if (submitState() === 'confirming') {
         <div class="confirm-panel" role="dialog" aria-labelledby="confirm-submit-heading" aria-modal="true">
-          <p id="confirm-submit-heading" class="confirm-heading">Confirm Submission</p>
-          <p>This will move the estimate to Pending Approval and lock the current version. Are you sure?</p>
+          <p id="confirm-submit-heading" class="confirm-heading">{{ 'WORKEXEC.APPROVAL.SUBMIT.CONFIRM_TITLE' | translate }}</p>
+          <p>{{ 'WORKEXEC.APPROVAL.SUBMIT.CONFIRM_BODY' | translate }}</p>
           <div class="form-actions">
-            <button class="btn btn--accent" (click)="executeSubmit()">Yes, Submit</button>
-            <button class="btn btn--ghost" (click)="cancelSubmit()">Cancel</button>
+            <button class="btn btn--accent" (click)="executeSubmit()">{{ 'WORKEXEC.APPROVAL.SUBMIT.YES_SUBMIT' | translate }}</button>
+            <button class="btn btn--ghost" (click)="cancelSubmit()">{{ 'WORKEXEC.APPROVAL.SUBMIT.CANCEL' | translate }}</button>
           </div>
         </div>
       }
 
       @if (submitState() === 'saving') {
-        <p class="hint-text" aria-busy="true">Submitting…</p>
+        <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.APPROVAL.COMMON.SUBMITTING' | translate }}</p>
       }
 
       @if (submitState() === 'error' && errorMessage()) {
@@ -73,14 +73,14 @@
 
       @if (submitState() === 'success') {
         <div class="success-panel" role="status">
-          <p class="success-heading">Submitted Successfully</p>
-          <p class="estimate-meta">Status: <span class="status-chip status-chip--pending">{{ estimate()!.status }}</span></p>
+          <p class="success-heading">{{ 'WORKEXEC.APPROVAL.SUBMIT.SUCCESS_TITLE' | translate }}</p>
+          <p class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip status-chip--pending">{{ estimate()!.status }}</span></p>
           @if (estimate()!.submittedAt) {
-            <p class="audit-meta">Submitted by {{ estimate()!.submittedBy }} at {{ estimate()!.submittedAt | date:'medium' }}</p>
+            <p class="audit-meta">{{ 'WORKEXEC.APPROVAL.COMMON.SUBMITTED_BY_AT' | translate: { by: estimate()!.submittedBy, at: (estimate()!.submittedAt | date:'medium') } }}</p>
           }
           <div class="form-actions">
-            <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'digital']">Capture Digital Approval</a>
-            <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'in-person']">In-Person Approval</a>
+            <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'digital']">{{ 'WORKEXEC.APPROVAL.SUBMIT.CAPTURE_DIGITAL' | translate }}</a>
+            <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'in-person']">{{ 'WORKEXEC.APPROVAL.SUBMIT.IN_PERSON' | translate }}</a>
           </div>
         </div>
       }

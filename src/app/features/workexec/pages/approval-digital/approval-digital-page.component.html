@@ -1,20 +1,20 @@
 <section class="workexec-page approval-digital" aria-labelledby="approval-digital-heading">
 
   <header class="page-header">
-    <p class="page-overline">Approval / Digital Signature</p>
-    <h1 id="approval-digital-heading">Capture Digital Approval</h1>
+    <p class="page-overline">{{ 'WORKEXEC.APPROVAL.DIGITAL.OVERLINE' | translate }}</p>
+    <h1 id="approval-digital-heading">{{ 'WORKEXEC.APPROVAL.DIGITAL.TITLE' | translate }}</h1>
     @if (estimate()) {
-      <p class="page-meta">{{ estimate()!.estimateNumber ?? estimateId }} · Total: {{ estimate()!.total | currency }}</p>
+      <p class="page-meta">{{ estimate()!.estimateNumber ?? estimateId }} · {{ 'WORKEXEC.APPROVAL.COMMON.TOTAL_INLINE' | translate }} {{ estimate()!.total | currency }}</p>
     }
   </header>
 
-  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading…</p> }
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.APPROVAL.COMMON.LOADING' | translate }}</p> }
   @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
   @if (pageState() === 'expired') {
     <div class="alert alert--error" role="alert">
-      <strong>Approval Expired</strong><br>{{ errorMessage() }}
+      <strong>{{ 'WORKEXEC.APPROVAL.COMMON.EXPIRED_TITLE' | translate }}</strong><br>{{ errorMessage() }}
       <div style="margin-top: 0.75rem;">
-        <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'revise']">Create Revision</a>
+        <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'revise']">{{ 'WORKEXEC.APPROVAL.COMMON.CREATE_REVISION' | translate }}</a>
       </div>
     </div>
   }
@@ -24,47 +24,47 @@
     <div class="approval-card">
 
       <!-- Signer info form -->
-      <form [formGroup]="signerForm" novalidate aria-label="Signer information" class="signer-form">
+      <form [formGroup]="signerForm" novalidate [attr.aria-label]="'WORKEXEC.APPROVAL.DIGITAL.SIGNER_INFO_ARIA' | translate" class="signer-form">
         <div class="field-row">
           <div class="field-group field-group--grow">
             <app-customer-lookup formControlName="customerId" inputId="customerId"
-              label="Customer" [required]="true" />
+              [label]="'WORKEXEC.APPROVAL.COMMON.CUSTOMER' | translate" [required]="true" />
             @if (signerForm.controls.customerId.invalid && signerForm.controls.customerId.touched) {
-              <p class="field-error" role="alert">Customer is required.</p>
+              <p class="field-error" role="alert">{{ 'WORKEXEC.APPROVAL.COMMON.CUSTOMER_REQUIRED' | translate }}</p>
             }
           </div>
           <div class="field-group field-group--grow">
-            <label for="signerName" class="field-label">Signer Name <span class="required" aria-hidden="true">*</span></label>
+            <label for="signerName" class="field-label">{{ 'WORKEXEC.APPROVAL.DIGITAL.SIGNER_NAME' | translate }} <span class="required" aria-hidden="true">*</span></label>
             <input id="signerName" type="text" formControlName="signerName" class="field-input"
               [class.field-input--error]="signerForm.controls.signerName.invalid && signerForm.controls.signerName.touched"
-              placeholder="Customer's full name" aria-required="true" />
+              [placeholder]="'WORKEXEC.APPROVAL.DIGITAL.SIGNER_NAME_PH' | translate" aria-required="true" />
             @if (signerForm.controls.signerName.invalid && signerForm.controls.signerName.touched) {
-              <p class="field-error" role="alert">Signer name is required.</p>
+              <p class="field-error" role="alert">{{ 'WORKEXEC.APPROVAL.DIGITAL.SIGNER_NAME_REQUIRED' | translate }}</p>
             }
           </div>
         </div>
         <div class="field-group">
-          <label for="approvalNotes" class="field-label">Notes <span class="field-optional">(optional)</span></label>
-          <input id="approvalNotes" type="text" formControlName="notes" class="field-input" placeholder="Approval notes" />
+          <label for="approvalNotes" class="field-label">{{ 'WORKEXEC.APPROVAL.COMMON.NOTES' | translate }} <span class="field-optional">{{ 'WORKEXEC.APPROVAL.COMMON.OPTIONAL' | translate }}</span></label>
+          <input id="approvalNotes" type="text" formControlName="notes" class="field-input" [placeholder]="'WORKEXEC.APPROVAL.DIGITAL.NOTES_PH' | translate" />
         </div>
         <div class="field-group">
-          <label for="poNumber" class="field-label">Purchase Order Number <span class="field-optional">(commercial accounts)</span></label>
-          <input id="poNumber" type="text" formControlName="purchaseOrderNumber" class="field-input" placeholder="PO number if required" />
+          <label for="poNumber" class="field-label">{{ 'WORKEXEC.APPROVAL.COMMON.PO_NUMBER' | translate }} <span class="field-optional">{{ 'WORKEXEC.APPROVAL.DIGITAL.PO_COMMERCIAL' | translate }}</span></label>
+          <input id="poNumber" type="text" formControlName="purchaseOrderNumber" class="field-input" [placeholder]="'WORKEXEC.APPROVAL.DIGITAL.PO_PH' | translate" />
         </div>
       </form>
 
       <!-- Signature canvas -->
-      <div class="signature-section" aria-label="Signature capture area">
-        <p class="section-overline">Customer Signature</p>
-        <p class="hint-text">Customer signs below using a finger or stylus.</p>
+      <div class="signature-section" [attr.aria-label]="'WORKEXEC.APPROVAL.DIGITAL.SIGNATURE_AREA_ARIA' | translate">
+        <p class="section-overline">{{ 'WORKEXEC.APPROVAL.DIGITAL.CUSTOMER_SIGNATURE' | translate }}</p>
+        <p class="hint-text">{{ 'WORKEXEC.APPROVAL.DIGITAL.SIGN_HINT' | translate }}</p>
 
-        <div class="canvas-wrapper" role="img" aria-label="Signature drawing area">
+        <div class="canvas-wrapper" role="img" [attr.aria-label]="'WORKEXEC.APPROVAL.DIGITAL.SIGNATURE_DRAW_ARIA' | translate">
           <canvas
             #signatureCanvas
             width="560"
             height="200"
             class="signature-canvas"
-            aria-label="Signature capture canvas"
+            [attr.aria-label]="'WORKEXEC.APPROVAL.DIGITAL.SIGNATURE_CANVAS_ARIA' | translate"
             (pointerdown)="onPointerDown($event)"
             (pointermove)="onPointerMove($event)"
             (pointerup)="onPointerUp()"
@@ -73,7 +73,7 @@
         </div>
 
         <button type="button" class="btn-link" (click)="clearSignature()" [disabled]="signatureEmpty()">
-          Clear Signature
+          {{ 'WORKEXEC.APPROVAL.DIGITAL.CLEAR_SIGNATURE' | translate }}
         </button>
       </div>
 
@@ -86,18 +86,18 @@
           <button class="btn btn--accent" (click)="submitApproval()"
             [disabled]="submitState() === 'saving' || signatureEmpty()"
             [attr.aria-busy]="submitState() === 'saving'">
-            @if (submitState() === 'saving') { Submitting… } @else { Confirm Digital Approval }
+            @if (submitState() === 'saving') { {{ 'WORKEXEC.APPROVAL.COMMON.SUBMITTING' | translate }} } @else { {{ 'WORKEXEC.APPROVAL.DIGITAL.CONFIRM_DIGITAL' | translate }} }
           </button>
-          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'submit']">Back</a>
+          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'submit']">{{ 'WORKEXEC.APPROVAL.COMMON.BACK' | translate }}</a>
         </div>
       }
 
       @if (submitState() === 'success') {
         <div class="success-panel" role="status">
-          <p class="success-heading">Approval Captured</p>
-          <p class="estimate-meta">Status: <span class="status-chip">{{ estimate()!.status }}</span></p>
+          <p class="success-heading">{{ 'WORKEXEC.APPROVAL.DIGITAL.SUCCESS_TITLE' | translate }}</p>
+          <p class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span></p>
           @if (estimate()!.approvedAt) {
-            <p class="audit-meta">Approved by {{ estimate()!.signerName }} at {{ estimate()!.approvedAt | date:'medium' }}</p>
+            <p class="audit-meta">{{ 'WORKEXEC.APPROVAL.COMMON.APPROVED_BY_AT' | translate: { by: estimate()!.signerName, at: (estimate()!.approvedAt | date:'medium') } }}</p>
           }
         </div>
       }

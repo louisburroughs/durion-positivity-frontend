@@ -1,37 +1,37 @@
 <section class="workexec-page approval-partial" aria-labelledby="approval-partial-heading">
   <header class="page-header">
-    <p class="page-overline">Approval / Partial</p>
-    <h1 id="approval-partial-heading">Record Partial Approval</h1>
+    <p class="page-overline">{{ 'WORKEXEC.APPROVAL.PARTIAL.OVERLINE' | translate }}</p>
+    <h1 id="approval-partial-heading">{{ 'WORKEXEC.APPROVAL.PARTIAL.TITLE' | translate }}</h1>
     @if (estimate()) { <p class="page-meta">{{ estimate()!.estimateNumber ?? estimateId }}</p> }
   </header>
-  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading…</p> }
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.APPROVAL.COMMON.LOADING' | translate }}</p> }
   @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
-  @if (pageState() === 'expired') { <div class="alert alert--error" role="alert"><strong>Approval Expired</strong><br>{{ errorMessage() }}</div> }
+  @if (pageState() === 'expired') { <div class="alert alert--error" role="alert"><strong>{{ 'WORKEXEC.APPROVAL.COMMON.EXPIRED_TITLE' | translate }}</strong><br>{{ errorMessage() }}</div> }
 
   @if (pageState() === 'ready' && estimate()) {
     <div class="approval-card">
 
       <!-- Header form -->
-      <form [formGroup]="headerForm" novalidate aria-label="Approval header" class="header-form">
+      <form [formGroup]="headerForm" novalidate [attr.aria-label]="'WORKEXEC.APPROVAL.PARTIAL.HEADER_FORM_ARIA' | translate" class="header-form">
         <div class="field-row">
           <div class="field-group field-group--grow">
             <app-customer-lookup formControlName="customerId" inputId="partialCustomerId"
-              label="Customer" [required]="true" />
+              [label]="'WORKEXEC.APPROVAL.COMMON.CUSTOMER' | translate" [required]="true" />
             @if (headerForm.controls.customerId.invalid && headerForm.controls.customerId.touched) {
-              <p class="field-error" role="alert">Customer is required.</p>
+              <p class="field-error" role="alert">{{ 'WORKEXEC.APPROVAL.COMMON.CUSTOMER_REQUIRED' | translate }}</p>
             }
           </div>
           <div class="field-group field-group--grow">
-            <label for="partialNotes" class="field-label">Notes <span class="field-optional">(optional)</span></label>
+            <label for="partialNotes" class="field-label">{{ 'WORKEXEC.APPROVAL.COMMON.NOTES' | translate }} <span class="field-optional">{{ 'WORKEXEC.APPROVAL.COMMON.OPTIONAL' | translate }}</span></label>
             <input id="partialNotes" type="text" formControlName="notes" class="field-input" />
           </div>
         </div>
       </form>
 
       <!-- Line items approval table -->
-      <div class="line-items-section" aria-label="Line item approval decisions">
-        <p class="section-overline">Approve / Decline Items</p>
-        <p class="hint-text">{{ approvedCount() }} approved, {{ declinedCount() }} declined</p>
+      <div class="line-items-section" [attr.aria-label]="'WORKEXEC.APPROVAL.PARTIAL.DECISIONS_ARIA' | translate">
+        <p class="section-overline">{{ 'WORKEXEC.APPROVAL.PARTIAL.APPROVE_DECLINE' | translate }}</p>
+        <p class="hint-text">{{ 'WORKEXEC.APPROVAL.PARTIAL.COUNTS' | translate: { approved: approvedCount(), declined: declinedCount() } }}</p>
 
         @for (item of items(); track item.id) {
           <div class="line-item" [class.line-item--declined]="lineDecisions()[item.id] === false">
@@ -44,21 +44,21 @@
               <button type="button" class="decision-btn decision-btn--approve"
                 [class.active]="lineDecisions()[item.id] === true"
                 (click)="setDecision(item.id, true)"
-                aria-label="Approve {{ item.description }}">
-                Approve
+                [attr.aria-label]="'WORKEXEC.APPROVAL.PARTIAL.APPROVE_ARIA' | translate: { desc: item.description }">
+                {{ 'WORKEXEC.APPROVAL.PARTIAL.APPROVE' | translate }}
               </button>
               <button type="button" class="decision-btn decision-btn--decline"
                 [class.active]="lineDecisions()[item.id] === false"
                 (click)="setDecision(item.id, false)"
-                aria-label="Decline {{ item.description }}">
-                Decline
+                [attr.aria-label]="'WORKEXEC.APPROVAL.PARTIAL.DECLINE_ARIA' | translate: { desc: item.description }">
+                {{ 'WORKEXEC.APPROVAL.PARTIAL.DECLINE' | translate }}
               </button>
             </div>
             @if (lineDecisions()[item.id] === false) {
               <div class="rejection-reason">
-                <label [for]="'reason-' + item.id" class="field-label">Decline Reason</label>
+                <label [for]="'reason-' + item.id" class="field-label">{{ 'WORKEXEC.APPROVAL.PARTIAL.DECLINE_REASON' | translate }}</label>
                 <input [id]="'reason-' + item.id" type="text" class="field-input"
-                  placeholder="Reason for declining"
+                  [placeholder]="'WORKEXEC.APPROVAL.PARTIAL.DECLINE_REASON_PH' | translate"
                   [value]="rejectionReasons()[item.id] ?? ''"
                   (input)="setRejectionReason(item.id, $any($event.target).value)" />
               </div>
@@ -74,17 +74,17 @@
       @if (submitState() !== 'success') {
         <div class="form-actions">
           <button class="btn btn--accent" (click)="submitPartialApproval()" [disabled]="submitState() === 'saving'" [attr.aria-busy]="submitState() === 'saving'">
-            @if (submitState() === 'saving') { Submitting… } @else { Confirm Partial Approval }
+            @if (submitState() === 'saving') { {{ 'WORKEXEC.APPROVAL.COMMON.SUBMITTING' | translate }} } @else { {{ 'WORKEXEC.APPROVAL.PARTIAL.CONFIRM_PARTIAL' | translate }} }
           </button>
-          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'submit']">Back</a>
+          <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'submit']">{{ 'WORKEXEC.APPROVAL.COMMON.BACK' | translate }}</a>
         </div>
       }
 
       @if (submitState() === 'success') {
         <div class="success-panel" role="status">
-          <p class="success-heading">Partial Approval Recorded</p>
-          <p class="estimate-meta">Status: <span class="status-chip">{{ estimate()!.status }}</span></p>
-          @if (estimate()!.total != null) { <p>Approved Total: {{ estimate()!.total | currency }}</p> }
+          <p class="success-heading">{{ 'WORKEXEC.APPROVAL.PARTIAL.SUCCESS_TITLE' | translate }}</p>
+          <p class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span></p>
+          @if (estimate()!.total != null) { <p>{{ 'WORKEXEC.APPROVAL.PARTIAL.APPROVED_TOTAL' | translate: { total: (estimate()!.total | currency) } }}</p> }
         </div>
       }
     </div>

@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslatePipe } from '@ngx-translate/core';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
 
@@ -21,7 +22,7 @@ import { EstimateResponse, PageState } from '../../models/workexec.models';
 @Component({
   selector: 'app-approval-submit-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslatePipe],
   templateUrl: './approval-submit-page.component.html',
   styleUrl: './approval-submit-page.component.css',
 })
