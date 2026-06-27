@@ -1268,20 +1268,20 @@
       "REVERSAL": "Reversión"
     },
     "INGESTION_MONITOR_LIST": {
-      "OVERLINE": "Ingestion Monitor",
-      "TITLE": "Ingestion Events",
-      "SUBTITLE": "Monitor ingestion envelope processing status",
-      "FILTERS_LABEL": "Ingestion filters",
-      "FILTER_EVENT_TYPE": "Event type",
-      "ERROR": "Failed to load ingestion events.",
-      "EMPTY": "No ingestion events match the selected filters.",
-      "TABLE_ARIA": "Ingestion events table",
-      "TABLE_CAPTION": "Ingestion events",
-      "STATUS_ARIA": "Ingestion status",
-      "COL_EVENT_ID": "Event ID",
-      "COL_EVENT_TYPE": "Event type",
+      "OVERLINE": "Monitor de ingestión",
+      "TITLE": "Eventos de ingestión",
+      "SUBTITLE": "Supervisar el estado de procesamiento de sobres de ingestión",
+      "FILTERS_LABEL": "Filtros de ingestión",
+      "FILTER_EVENT_TYPE": "Tipo de evento",
+      "ERROR": "No se pudieron cargar los eventos de ingestión.",
+      "EMPTY": "Ningún evento de ingestión coincide con los filtros seleccionados.",
+      "TABLE_ARIA": "Tabla de eventos de ingestión",
+      "TABLE_CAPTION": "Eventos de ingestión",
+      "STATUS_ARIA": "Estado de ingestión",
+      "COL_EVENT_ID": "ID de evento",
+      "COL_EVENT_TYPE": "Tipo de evento",
       "COL_STATUS": "Status",
-      "COL_RECEIVED_AT": "Received at",
+      "COL_RECEIVED_AT": "Recibido el",
       "STATUS": {
         "RECEIVED": "Received",
         "PROCESSING": "Processing",
@@ -1293,24 +1293,24 @@
       }
     },
     "INGESTION_MONITOR_DETAIL": {
-      "OVERLINE": "Ingestion Monitor",
-      "TITLE": "Ingestion Event Detail",
-      "ERROR": "Failed to load event detail.",
-      "FIELD_EVENT_ID": "Event ID",
-      "FIELD_EVENT_TYPE": "Event type",
+      "OVERLINE": "Monitor de ingestión",
+      "TITLE": "Detalle del evento de ingestión",
+      "ERROR": "No se pudo cargar el detalle del evento.",
+      "FIELD_EVENT_ID": "ID de evento",
+      "FIELD_EVENT_TYPE": "Tipo de evento",
       "FIELD_STATUS": "Status",
-      "FIELD_RECEIVED_AT": "Received at",
+      "FIELD_RECEIVED_AT": "Recibido el",
       "PAYLOAD": "Payload",
-      "PAYLOAD_RESTRICTED": "Payload is restricted for your permissions.",
-      "RETRY_TITLE": "Retry Processing",
-      "RETRY_JUSTIFICATION": "Retry justification",
-      "HISTORY_TITLE": "Reprocessing History",
-      "HISTORY_EMPTY": "No reprocessing attempts recorded.",
-      "HISTORY_TABLE_ARIA": "Reprocessing history table",
-      "HISTORY_TABLE_CAPTION": "Reprocessing attempts",
-      "HISTORY_COL_ATTEMPT": "Attempt ID",
-      "HISTORY_COL_AT": "Attempted at",
-      "HISTORY_COL_BY": "Triggered by",
+      "PAYLOAD_RESTRICTED": "La carga útil está restringida para sus permisos.",
+      "RETRY_TITLE": "Reintentar procesamiento",
+      "RETRY_JUSTIFICATION": "Justificación del reintento",
+      "HISTORY_TITLE": "Historial de reprocesamiento",
+      "HISTORY_EMPTY": "No hay intentos de reprocesamiento registrados.",
+      "HISTORY_TABLE_ARIA": "Tabla del historial de reprocesamiento",
+      "HISTORY_TABLE_CAPTION": "Intentos de reprocesamiento",
+      "HISTORY_COL_ATTEMPT": "ID de intento",
+      "HISTORY_COL_AT": "Intentado el",
+      "HISTORY_COL_BY": "Activado por",
       "HISTORY_COL_OUTCOME": "Outcome",
       "STATUS": {
         "RECEIVED": "Received",
@@ -1328,46 +1328,46 @@
     },
     "EVENT_ENVELOPE_CONTRACT": {
       "OVERLINE": "Contract",
-      "TITLE": "Event Envelope Contract",
-      "TABS_ARIA": "Event contract tabs",
+      "TITLE": "Contrato de sobre de evento",
+      "TABS_ARIA": "Pestañas del contrato de evento",
       "TAB_FIELDS": "Fields",
-      "TAB_TRACEABILITY": "Traceability IDs",
+      "TAB_TRACEABILITY": "ID de trazabilidad",
       "TAB_EXAMPLES": "Examples",
-      "EMPTY_FIELDS": "No contract fields are available.",
-      "EMPTY_TRACEABILITY": "No traceability IDs are available.",
-      "EMPTY_EXAMPLES": "No examples are available.",
-      "FIELDS_TABLE_ARIA": "Contract fields table",
-      "FIELDS_TABLE_CAPTION": "Envelope field definitions",
-      "TRACE_TABLE_ARIA": "Traceability IDs table",
-      "TRACE_TABLE_CAPTION": "Traceability identifier definitions",
+      "EMPTY_FIELDS": "No hay campos de contrato disponibles.",
+      "EMPTY_TRACEABILITY": "No hay ID de trazabilidad disponibles.",
+      "EMPTY_EXAMPLES": "No hay ejemplos disponibles.",
+      "FIELDS_TABLE_ARIA": "Tabla de campos del contrato",
+      "FIELDS_TABLE_CAPTION": "Definiciones de campos del sobre",
+      "TRACE_TABLE_ARIA": "Tabla de ID de trazabilidad",
+      "TRACE_TABLE_CAPTION": "Definiciones de identificadores de trazabilidad",
       "COL_NAME": "Name",
       "COL_TYPE": "Type",
       "COL_REQUIRED": "Required"
     },
     "INGESTION_SUBMIT": {
-      "OVERLINE": "Operations Tool",
-      "TITLE": "Submit Ingestion Event",
-      "INTERNAL_TOOL_NOTICE": "This is an internal accounting operations tool.",
-      "FIELD_EVENT_ID": "Event ID",
-      "FIELD_EVENT_TYPE": "Event type",
-      "FIELD_ORGANIZATION_ID": "Organization ID",
-      "FIELD_SOURCE_SYSTEM": "Source system",
-      "FIELD_PAYLOAD": "Payload JSON",
-      "SUBMIT": "Submit event",
-      "ERROR": "Submission failed. Verify data and try again.",
-      "EMPTY": "Populate the form and submit an event.",
-      "RESULT_TITLE": "Submission Result",
-      "RESULT_EVENT_ID": "Submitted event ID"
+      "OVERLINE": "Herramienta de operaciones",
+      "TITLE": "Enviar evento de ingestión",
+      "INTERNAL_TOOL_NOTICE": "Esta es una herramienta interna de operaciones contables.",
+      "FIELD_EVENT_ID": "ID de evento",
+      "FIELD_EVENT_TYPE": "Tipo de evento",
+      "FIELD_ORGANIZATION_ID": "ID de organización",
+      "FIELD_SOURCE_SYSTEM": "Sistema de origen",
+      "FIELD_PAYLOAD": "JSON de carga útil",
+      "SUBMIT": "Enviar evento",
+      "ERROR": "El envío falló. Verifique los datos e inténtelo de nuevo.",
+      "EMPTY": "Complete el formulario y envíe un evento.",
+      "RESULT_TITLE": "Resultado del envío",
+      "RESULT_EVENT_ID": "ID del evento enviado"
     },
     "POSTING_RULES_LIST": {
-      "OVERLINE": "Posting Rules",
-      "TITLE": "Posting Rule Sets",
-      "NEW_RULE_SET": "New rule set",
-      "EMPTY": "No posting rule sets found.",
-      "TABLE_ARIA": "Posting rule sets table",
-      "TABLE_CAPTION": "Posting rule sets",
+      "OVERLINE": "Reglas de contabilización",
+      "TITLE": "Conjuntos de reglas de contabilización",
+      "NEW_RULE_SET": "Nuevo conjunto de reglas",
+      "EMPTY": "No se encontraron conjuntos de reglas de contabilización.",
+      "TABLE_ARIA": "Tabla de conjuntos de reglas de contabilización",
+      "TABLE_CAPTION": "Conjuntos de reglas de contabilización",
       "COL_NAME": "Name",
-      "COL_EVENT_TYPE": "Event type",
+      "COL_EVENT_TYPE": "Tipo de evento",
       "COL_VERSION": "Version",
       "COL_STATUS": "Status",
       "STATUS": {
@@ -1377,8 +1377,8 @@
       }
     },
     "POSTING_RULES_DETAIL": {
-      "OVERLINE": "Posting Rules",
-      "TITLE": "Posting Rule Set Detail",
+      "OVERLINE": "Reglas de contabilización",
+      "TITLE": "Detalle del conjunto de reglas de contabilización",
       "EMPTY": "No hay detalles de reglas de contabilización.",
       "FIELD_ID": "ID del conjunto de reglas",
       "FIELD_NAME": "Nombre",
@@ -1393,33 +1393,33 @@
       "COL_PUBLISHED_BY": "Publicado por"
     },
     "PAYMENT_APPLY": {
-      "OVERLINE": "Accounts Receivable",
-      "TITLE": "Apply Payment",
-      "FIELD_PAYMENT_ID": "Payment ID",
-      "FIELD_APPLICATIONS": "Applications JSON",
-      "SUBMIT": "Apply payment",
-      "ERROR": "Unable to apply payment.",
-      "EMPTY": "Provide allocation data to apply payment.",
-      "RESULT_TITLE": "Application Result",
-      "RESULT_PAYMENT_ID": "Payment ID",
-      "RESULT_TOTAL": "Payment total",
-      "RESULT_APPLIED": "Applied total"
+      "OVERLINE": "Cuentas por cobrar",
+      "TITLE": "Aplicar pago",
+      "FIELD_PAYMENT_ID": "ID de pago",
+      "FIELD_APPLICATIONS": "JSON de aplicaciones",
+      "SUBMIT": "Aplicar pago",
+      "ERROR": "No se pudo aplicar el pago.",
+      "EMPTY": "Proporcione datos de asignación para aplicar el pago.",
+      "RESULT_TITLE": "Resultado de la aplicación",
+      "RESULT_PAYMENT_ID": "ID de pago",
+      "RESULT_TOTAL": "Total del pago",
+      "RESULT_APPLIED": "Total aplicado"
     },
     "CREDIT_MEMO_CREATE": {
-      "OVERLINE": "Accounts Receivable",
-      "TITLE": "Create Credit Memo",
-      "FIELD_ORIGINAL_INVOICE_ID": "Original invoice ID",
-      "FIELD_CUSTOMER_ID": "Customer ID",
-      "FIELD_CREDIT_AMOUNT": "Credit amount",
-      "FIELD_OUTSTANDING_BALANCE": "Outstanding balance",
-      "FIELD_REASON_CODE": "Reason code",
+      "OVERLINE": "Cuentas por cobrar",
+      "TITLE": "Crear nota de crédito",
+      "FIELD_ORIGINAL_INVOICE_ID": "ID de factura original",
+      "FIELD_CUSTOMER_ID": "ID de cliente",
+      "FIELD_CREDIT_AMOUNT": "Importe del crédito",
+      "FIELD_OUTSTANDING_BALANCE": "Saldo pendiente",
+      "FIELD_REASON_CODE": "Código de motivo",
       "FIELD_JUSTIFICATION_NOTE": "Justification",
-      "SUBMIT": "Create credit memo",
-      "ERROR": "Unable to create credit memo.",
-      "EMPTY": "Enter required fields to create a credit memo.",
-      "RESULT_TITLE": "Credit Memo Created",
-      "RESULT_CREDIT_MEMO_ID": "Credit memo ID",
-      "RESULT_TOTAL": "Total amount"
+      "SUBMIT": "Crear nota de crédito",
+      "ERROR": "No se pudo crear la nota de crédito.",
+      "EMPTY": "Ingrese los campos obligatorios para crear una nota de crédito.",
+      "RESULT_TITLE": "Nota de crédito creada",
+      "RESULT_CREDIT_MEMO_ID": "ID de nota de crédito",
+      "RESULT_TOTAL": "Importe total"
     },
     "CREDIT_MEMO_LIST": {
       "OVERLINE": "Cuentas por Cobrar",
@@ -1498,26 +1498,26 @@
       }
     },
     "VENDOR_PAYMENT_NEW": {
-      "OVERLINE": "Accounts Payable",
-      "TITLE": "New Vendor Payment",
-      "BILLS_TITLE": "Open Bills",
-      "LOAD_BILLS": "Load bills",
-      "EMPTY_BILLS": "No bills loaded for this vendor.",
-      "BILLS_TABLE_ARIA": "Vendor bills table",
-      "BILLS_TABLE_CAPTION": "Open vendor bills",
-      "COL_BILL_NUMBER": "Bill number",
-      "COL_DUE_DATE": "Due date",
-      "COL_OPEN_AMOUNT": "Open amount",
-      "FIELD_VENDOR_ID": "Vendor ID",
-      "FIELD_GROSS_AMOUNT": "Gross amount",
+      "OVERLINE": "Cuentas por pagar",
+      "TITLE": "Nuevo pago a proveedor",
+      "BILLS_TITLE": "Facturas pendientes",
+      "LOAD_BILLS": "Cargar facturas",
+      "EMPTY_BILLS": "No hay facturas cargadas para este proveedor.",
+      "BILLS_TABLE_ARIA": "Tabla de facturas de proveedor",
+      "BILLS_TABLE_CAPTION": "Facturas de proveedor pendientes",
+      "COL_BILL_NUMBER": "Número de factura",
+      "COL_DUE_DATE": "Fecha de vencimiento",
+      "COL_OPEN_AMOUNT": "Importe pendiente",
+      "FIELD_VENDOR_ID": "ID de proveedor",
+      "FIELD_GROSS_AMOUNT": "Importe bruto",
       "FIELD_CURRENCY": "Currency",
-      "FIELD_PAYMENT_METHOD": "Payment method",
-      "FIELD_PAYMENT_REF": "Payment reference",
-      "FIELD_ALLOCATIONS": "Allocations JSON",
-      "SUBMIT": "Submit payment",
-      "ERROR": "Unable to submit vendor payment.",
-      "RESULT_TITLE": "Vendor Payment Result",
-      "RESULT_PAYMENT_ID": "Payment ID",
+      "FIELD_PAYMENT_METHOD": "Método de pago",
+      "FIELD_PAYMENT_REF": "Referencia de pago",
+      "FIELD_ALLOCATIONS": "JSON de asignaciones",
+      "SUBMIT": "Enviar pago",
+      "ERROR": "No se pudo enviar el pago al proveedor.",
+      "RESULT_TITLE": "Resultado del pago a proveedor",
+      "RESULT_PAYMENT_ID": "ID de pago",
       "RESULT_STATUS": "Status"
     },
     "VENDOR_PAYMENT_LIST": {
@@ -1580,7 +1580,7 @@
         },
         "REPORTS": {
           "TITLE": "Reports",
-          "DESCRIPTION": "Read-only accounting reports."
+          "DESCRIPTION": "Informes contables de solo lectura."
         }
       },
       "CARD": {
@@ -1645,8 +1645,8 @@
           "DESCRIPTION": "Abre la vista detallada de una nota de crédito específica por ID."
         },
         "LABOR_OVERHEAD": {
-          "TITLE": "Labor & Overhead Cost Report",
-          "DESCRIPTION": "Monthly + YTD labor and overhead costs by location and fiscal year, from posted GL data."
+          "TITLE": "Informe de costos de mano de obra y gastos generales",
+          "DESCRIPTION": "Costos mensuales y acumulados del año de mano de obra y gastos generales por ubicación y año fiscal, a partir de los datos contabilizados del libro mayor."
         }
       },
       "FIELD": {
@@ -2603,14 +2603,14 @@
       }
     },
     "FINDERS": {
-      "TITLE": "Find a record",
-      "ESTIMATE_LABEL": "Find estimate",
-      "ESTIMATE_PLACEHOLDER": "Search by customer name or estimate id",
-      "WORKORDER_LABEL": "Find workorder",
-      "WORKORDER_PLACEHOLDER": "Search by customer name or workorder id",
+      "TITLE": "Buscar un registro",
+      "ESTIMATE_LABEL": "Buscar presupuesto",
+      "ESTIMATE_PLACEHOLDER": "Buscar por nombre de cliente o ID de presupuesto",
+      "WORKORDER_LABEL": "Buscar orden de trabajo",
+      "WORKORDER_PLACEHOLDER": "Buscar por nombre de cliente o ID de orden de trabajo",
       "LOADING": "Searching…",
-      "EMPTY": "No matches found",
-      "ERROR": "Search failed. Please try again."
+      "EMPTY": "No se encontraron coincidencias",
+      "ERROR": "La búsqueda falló. Inténtelo de nuevo."
     },
     "APPROVAL": {
       "COMMON": {
@@ -4151,8 +4151,8 @@
       "SKU_FILTER": {
         "LABEL": "SKU",
         "PLACEHOLDER": "ej. SKU-001",
-        "ARIA_LABEL": "Filter by SKU",
-        "CLEAR_ARIA_LABEL": "Clear SKU filter"
+        "ARIA_LABEL": "Filtrar por SKU",
+        "CLEAR_ARIA_LABEL": "Borrar filtro de SKU"
       },
       "PRODUCT_FILTER": {
         "LABEL": "Buscar por nombre o SKU",
@@ -4164,47 +4164,47 @@
       },
       "SITE_TREE": {
         "BREADCRUMB": {
-          "ARIA": "Page breadcrumb",
-          "OVERVIEW": "Inventory by Location"
+          "ARIA": "Ruta de navegación de la página",
+          "OVERVIEW": "Inventario por ubicación"
         },
         "TOTALS": {
-          "ARIA": "Site totals",
+          "ARIA": "Totales del sitio",
           "ON_HAND": "On Hand",
           "ALLOCATED": "Allocated",
           "AVAILABLE": "Available",
           "OVER_ALLOCATED": "Over-Allocated"
         },
         "CONTROLS": {
-          "ARIA": "Tree controls",
-          "INCLUDE_EMPTY": "Show empty locations"
+          "ARIA": "Controles del árbol",
+          "INCLUDE_EMPTY": "Mostrar ubicaciones vacías"
         },
         "STATE": {
-          "EMPTY": "No storage locations found for this site."
+          "EMPTY": "No se encontraron ubicaciones de almacenamiento para este sitio."
         },
         "ERROR": {
-          "NOT_FOUND": "Site not found. It may have been removed or the link is stale.",
-          "FORBIDDEN": "You do not have permission to view inventory for this site.",
-          "UPSTREAM_DOWN": "The location service is temporarily unavailable. Please retry.",
-          "UPSTREAM_DOWN_BANNER": "Location service unavailable — data shown may be stale.",
-          "UNKNOWN": "An unexpected error occurred loading site inventory."
+          "NOT_FOUND": "Sitio no encontrado. Es posible que se haya eliminado o que el enlace esté obsoleto.",
+          "FORBIDDEN": "No tiene permiso para ver el inventario de este sitio.",
+          "UPSTREAM_DOWN": "El servicio de ubicaciones no está disponible temporalmente. Inténtelo de nuevo.",
+          "UPSTREAM_DOWN_BANNER": "Servicio de ubicaciones no disponible: los datos mostrados pueden estar obsoletos.",
+          "UNKNOWN": "Ocurrió un error inesperado al cargar el inventario del sitio."
         },
         "BADGE": {
-          "OVER_ALLOCATED": "Over-allocated: available is negative",
-          "OVER_ALLOCATED_ARIA": "Over-allocated locations",
-          "INACTIVE_STOCK": "Inactive location has stock"
+          "OVER_ALLOCATED": "Sobreasignado: la disponibilidad es negativa",
+          "OVER_ALLOCATED_ARIA": "Ubicaciones sobreasignadas",
+          "INACTIVE_STOCK": "La ubicación inactiva tiene existencias"
         },
         "TREE": {
-          "ARIA": "Site storage location inventory tree",
-          "CAPTION": "Storage locations with inventory quantities",
+          "ARIA": "Árbol de inventario de ubicaciones de almacenamiento del sitio",
+          "CAPTION": "Ubicaciones de almacenamiento con cantidades de inventario",
           "EXPAND": "Expand",
           "COLLAPSE": "Collapse",
           "COL": {
             "NAME": "Location",
             "TYPE": "Type",
             "STATUS": "Status",
-            "OWN_ON_HAND": "Own On Hand",
-            "OWN_ALLOCATED": "Own Allocated",
-            "OWN_AVAILABLE": "Own Available",
+            "OWN_ON_HAND": "Existencias propias",
+            "OWN_ALLOCATED": "Asignado propio",
+            "OWN_AVAILABLE": "Disponible propio",
             "ROLLED_UP_ON_HAND": "Rolled-Up On Hand",
             "ROLLED_UP_ALLOCATED": "Rolled-Up Allocated",
             "ROLLED_UP_AVAILABLE": "Rolled-Up Available"
