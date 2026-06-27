@@ -1,10 +1,11 @@
-import { Component, signal, HostListener, ElementRef, ViewChild } from '@angular/core';
+import { Component, signal, HostListener, ElementRef, ViewChild, inject } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { HeaderComponent }       from './components/header/header.component';
 import { FooterComponent }       from './components/footer/footer.component';
 import { NavComponent }          from './components/nav/nav.component';
 import { ChatPanelComponent }    from './components/chat-panel/chat-panel.component';
 import { ContentPanelComponent } from './components/content-panel/content-panel.component';
+import { ChatUiService }         from './services/chat-ui.service';
 
 @Component({
   selector: 'app-shell',
@@ -22,6 +23,10 @@ import { ContentPanelComponent } from './components/content-panel/content-panel.
 })
 export class ShellComponent {
   readonly NAV_ID = 'shell-nav';
+  readonly CHAT_ID = 'shell-chat';
+
+  private readonly chatUi = inject(ChatUiService);
+  readonly chatCollapsed = this.chatUi.collapsed;
 
   /** Controls sidebar collapsed state; collapses automatically on narrow viewports. */
   readonly navCollapsed = signal(false);
@@ -37,6 +42,10 @@ export class ShellComponent {
 
   toggleNav(): void {
     this.navCollapsed.update(v => !v);
+  }
+
+  toggleChat(): void {
+    this.chatUi.toggle();
   }
 
   skipToMainContent(event: Event): void {

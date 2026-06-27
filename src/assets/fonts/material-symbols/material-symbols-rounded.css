@@ -1,0 +1,33 @@
+/* =============================================================================
+   Material Symbols Rounded — Durion icon face.
+   Self-hosted so icons render offline / behind CSP, with no fonts.googleapis.com
+   dependency. Single static instance (opsz 24, wght 400, FILL 0, GRAD 0).
+
+   Usage: <span class="material-symbols-rounded" aria-hidden="true">forum</span>
+   The text content is a ligature name that the font renders as a glyph.
+   ============================================================================= */
+
+@font-face {
+  font-family: 'Material Symbols Rounded';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('material-symbols-rounded.woff2') format('woff2');
+}
+
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}

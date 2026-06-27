@@ -7,6 +7,7 @@ import { JwtClaims } from '../../../core/models/auth.models';
 import { AuthService } from '../../../core/services/auth.service';
 import { ChatApiService, ChatResponse } from '../services/chat-api.service';
 import { ChatStateService } from '../services/chat-state.service';
+import { ChatUiService } from '../services/chat-ui.service';
 import { DashboardComponent } from './dashboard.component';
 
 describe('DashboardComponent', () => {
@@ -124,6 +125,19 @@ describe('DashboardComponent', () => {
     expect(messages.some(m => m.sender === 'user' && m.content === 'hello')).toBe(true);
     expect(messages.some(m => m.sender === 'system' && m.content === 'pong')).toBe(true);
     expect(component.assistantInput()).toBe('');
+  });
+
+  it('opens the shell chat panel when a message is submitted', () => {
+    const chatUi = TestBed.inject(ChatUiService);
+    const openSpy = vi.spyOn(chatUi, 'open');
+    (chatApiStub.sendMessage as ReturnType<typeof vi.fn>).mockReturnValue(
+      of<ChatResponse>({ response: 'pong' }),
+    );
+
+    component.assistantInput.set('hello');
+    component.submitAssistant();
+
+    expect(openSpy).toHaveBeenCalled();
   });
 
   it('adds a fallback system message when the chat API errors', () => {

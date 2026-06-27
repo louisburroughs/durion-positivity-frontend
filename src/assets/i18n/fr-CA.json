@@ -65,6 +65,7 @@
       "NAV_TOGGLE_ARIA": "Basculer la barre latérale de navigation",
       "NAV_OVERLAY_CLOSE": "Fermer la navigation",
       "NAV_TOGGLE_TITLE": "Basculer la barre latérale",
+      "CHAT_TOGGLE": "Basculer le clavardage de l'assistant",
       "THEME_TO_LIGHT": "Passer en mode clair",
       "THEME_TO_DARK": "Passer en mode sombre",
       "USER_CHIP_ARIA": "Utilisateur connecté",
@@ -124,6 +125,7 @@
     "SKIP_TO_CONTENT": "Passer au contenu principal",
     "CHAT": {
       "PANEL_ARIA": "Panneau de discussion",
+      "CLOSE_ARIA": "Réduire le panneau de discussion",
       "MESSAGES_ARIA": "Messages de discussion",
       "EMPTY_HEADING": "Démarrez une conversation",
       "EMPTY_BODY": "Saisissez un message ci-dessous pour commencer.",

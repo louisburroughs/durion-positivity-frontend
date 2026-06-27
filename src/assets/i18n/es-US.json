@@ -65,6 +65,7 @@
       "NAV_TOGGLE_ARIA": "Alternar barra lateral de navegación",
       "NAV_OVERLAY_CLOSE": "Cerrar navegación",
       "NAV_TOGGLE_TITLE": "Alternar barra lateral",
+      "CHAT_TOGGLE": "Alternar chat del asistente",
       "THEME_TO_LIGHT": "Cambiar al modo claro",
       "THEME_TO_DARK": "Cambiar al modo oscuro",
       "USER_CHIP_ARIA": "Usuario conectado",
@@ -124,6 +125,7 @@
     "SKIP_TO_CONTENT": "Saltar al contenido principal",
     "CHAT": {
       "PANEL_ARIA": "Panel de chat",
+      "CLOSE_ARIA": "Contraer el panel de chat",
       "MESSAGES_ARIA": "Mensajes de chat",
       "EMPTY_HEADING": "Inicia una conversación",
       "EMPTY_BODY": "Escribe un mensaje a continuación para comenzar.",

@@ -6,6 +6,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { ChatStateService } from '../services/chat-state.service';
 import { ChatApiService } from '../services/chat-api.service';
+import { ChatUiService } from '../services/chat-ui.service';
 
 /** Visual tone for a quick-action tile; maps to a CSS class. */
 type ActionTone = 'teal' | 'blue' | 'info' | 'gold' | 'error';
@@ -52,6 +53,7 @@ export class DashboardComponent {
   private readonly auth = inject(AuthService);
   private readonly chatState = inject(ChatStateService);
   private readonly chatApi = inject(ChatApiService);
+  private readonly chatUi = inject(ChatUiService);
   private readonly translate = inject(TranslateService);
 
   /** First name derived from the JWT `sub` claim, or null when unresolved.
@@ -100,6 +102,7 @@ export class DashboardComponent {
     this.chatState.addUserMessage(text);
     this.assistantInput.set('');
     this.assistantSending.set(true);
+    this.chatUi.open(); // surface the conversation in the shell chat panel
 
     this.chatApi
       .sendMessage({ message: text })
