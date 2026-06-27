@@ -14,6 +14,7 @@ const BASE = environment.apiBaseUrl;
 const translations = { WORKEXEC: { ESTIMATE_CREATE: {
   TITLE: 'New Estimate',
   NO_VEHICLES: 'No vehicles on file for this customer — add one below.',
+  VEHICLES_ERROR: 'Couldn’t load vehicles for this customer.',
 } } };
 
 describe('EstimateCreatePageComponent [Story 239]', () => {
@@ -127,16 +128,54 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
   it('should show a no-vehicles empty state when the customer has no resolvable vehicles', () => {
     component.selectCustomer({ partyId: 'p-9', legalName: 'No Cars Co', customerNumber: 'C-900' });
 
-    expect(component.vehiclesLoading()).toBe(true);
+    expect(component.vehiclesState()).toBe('loading');
     http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/p-9/vehicles')).flush([]);
 
-    expect(component.vehiclesLoading()).toBe(false);
-    expect(component.vehiclesLoaded()).toBe(true);
+    expect(component.vehiclesState()).toBe('loaded');
     expect(component.customerVehicles().length).toBe(0);
 
     fixture.detectChanges();
     const hint = (fixture.nativeElement as HTMLElement).querySelector('[role="status"]');
     expect(hint?.textContent ?? '').toContain('No vehicles on file');
+  });
+
+  it('should show an error state (not the empty state) when the vehicle fetch fails', () => {
+    component.selectCustomer({ partyId: 'p-err', legalName: 'Acme', customerNumber: 'C-1' });
+
+    expect(component.vehiclesState()).toBe('loading');
+    http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/p-err/vehicles'))
+      .flush({ message: 'boom' }, { status: 500, statusText: 'Server Error' });
+
+    expect(component.vehiclesState()).toBe('error');
+
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    // A failed fetch must NOT render the misleading "no vehicles" empty state.
+    expect(host.querySelector('[role="status"]')).toBeNull();
+    expect(host.textContent ?? '').toContain('Couldn’t load vehicles');
+
+    // Retry re-fires the fetch and can recover.
+    component.retryLoadVehicles();
+    expect(component.vehiclesState()).toBe('loading');
+    http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/p-err/vehicles'))
+      .flush([{ vehicleId: 'v-1', vin: '1ABC', make: 'Ford', model: 'F-150', year: 2019 }]);
+    expect(component.vehiclesState()).toBe('loaded');
+    expect(component.customerVehicles().length).toBe(1);
+  });
+
+  it('should not let a stale vehicle response overwrite a newer customer selection', () => {
+    component.selectCustomer({ partyId: 'cust-A', legalName: 'A', customerNumber: 'C-A' });
+    const reqA = http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/cust-A/vehicles'));
+
+    // Switch before A resolves; switchMap should cancel reqA.
+    component.selectCustomer({ partyId: 'cust-B', legalName: 'B', customerNumber: 'C-B' });
+    const reqB = http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/cust-B/vehicles'));
+
+    reqB.flush([{ vehicleId: 'v-b', vin: 'BBB', make: 'GMC', model: 'Sierra', year: 2021 }]);
+
+    expect(component.customerVehicles().map(v => v.vehicleId)).toEqual(['v-b']);
+    // reqA was unsubscribed by switchMap, so flushing it must not change state.
+    expect(reqA.cancelled).toBe(true);
   });
 
   it('should reveal inline add-vehicle form when add option chosen', () => {

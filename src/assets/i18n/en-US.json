@@ -2767,7 +2767,9 @@
       "CREATING": "Creating…",
       "CREATE_ESTIMATE": "Create Estimate",
       "LOADING_VEHICLES": "Loading vehicles…",
-      "NO_VEHICLES": "No vehicles on file for this customer — add one below."
+      "NO_VEHICLES": "No vehicles on file for this customer — add one below.",
+      "VEHICLES_ERROR": "Couldn’t load vehicles for this customer.",
+      "VEHICLES_RETRY": "Retry"
     },
     "ESTIMATE_DETAIL": {
       "OVERLINE": "Estimate",
