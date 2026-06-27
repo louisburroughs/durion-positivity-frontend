@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -12,6 +13,18 @@ const BASE = environment.apiBaseUrl;
 const mockRoute = { snapshot: { paramMap: { get: (k: string) => k === 'estimateId' ? 'est-123' : null } } };
 const STUB_ESTIMATE = { id: 'est-123', status: 'DRAFT', customerId: 'c', vehicleId: 'v', items: [] };
 
+// Minimal real-text translations so the TranslatePipe resolves the keys (and
+// interpolates params) that the DOM assertions below depend on.
+const translations = {
+  WORKEXEC: {
+    ESTIMATE_DETAIL: {
+      CONTACT_BADGE: '{{name}} ({{role}})',
+      UNAVAILABLE: 'Unavailable',
+      NOT_SET: 'Not set',
+    },
+  },
+};
+
 describe('EstimateDetailPageComponent [Story 236]', () => {
   let fixture: ComponentFixture<EstimateDetailPageComponent>;
   let component: EstimateDetailPageComponent;
@@ -20,7 +33,7 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
   beforeEach(async () => {
     vi.useFakeTimers();
     await TestBed.configureTestingModule({
-      imports: [EstimateDetailPageComponent],
+      imports: [EstimateDetailPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([{ path: '**', redirectTo: '' }]),
         provideHttpClient(),
@@ -29,6 +42,9 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
       ],
     }).compileComponents();
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', translations);
+    translate.use('en-US');
     fixture = TestBed.createComponent(EstimateDetailPageComponent);
     component = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController);

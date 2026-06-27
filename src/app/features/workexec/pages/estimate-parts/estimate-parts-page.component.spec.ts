@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { TranslateModule } from '@ngx-translate/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -20,7 +21,7 @@ describe('EstimatePartsPageComponent [Story 238]', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [EstimatePartsPageComponent],
+      imports: [EstimatePartsPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         provideHttpClient(),

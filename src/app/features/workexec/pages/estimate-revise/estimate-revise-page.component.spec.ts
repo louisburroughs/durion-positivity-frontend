@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { TranslateModule } from '@ngx-translate/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -17,7 +18,7 @@ describe('EstimateRevisePageComponent [Story 235]', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [EstimateRevisePageComponent],
+      imports: [EstimateRevisePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([{ path: '**', redirectTo: '' }]),
         provideHttpClient(),
