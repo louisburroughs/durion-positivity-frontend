@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -30,7 +31,7 @@ type PartAction = 'issue' | 'consume' | 'return';
 @Component({
   selector: 'app-workorder-parts-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './workorder-parts-page.component.html',
   styleUrl: './workorder-parts-page.component.css',
 })
