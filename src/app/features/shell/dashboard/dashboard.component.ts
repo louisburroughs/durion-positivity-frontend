@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
+import { MaterialSymbolPipe } from '../../../shared/material-symbol.pipe';
 import { ChatStateService } from '../services/chat-state.service';
 import { ChatApiService } from '../services/chat-api.service';
 import { ChatUiService } from '../services/chat-ui.service';
@@ -45,7 +46,7 @@ interface FavoriteArea {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule, RouterLink, TranslatePipe],
+  imports: [FormsModule, RouterLink, TranslatePipe, MaterialSymbolPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })

@@ -1,7 +1,7 @@
 <div class="dashboard">
   <!-- Assistant strip -->
   <section class="assistant" [attr.aria-label]="'SHELL.DASHBOARD.ASSISTANT.REGION_ARIA' | translate">
-    <span class="assistant-icon material-symbols-rounded" aria-hidden="true">forum</span>
+    <span class="assistant-icon material-symbols-rounded" aria-hidden="true">{{ 'forum' | msIcon }}</span>
     <input
       class="assistant-input"
       type="text"
@@ -19,7 +19,7 @@
       [attr.aria-label]="'SHELL.DASHBOARD.ASSISTANT.SEND_ARIA' | translate"
       (click)="submitAssistant()"
     >
-      <span class="material-symbols-rounded" aria-hidden="true">send</span>
+      <span class="material-symbols-rounded" aria-hidden="true">{{ 'send' | msIcon }}</span>
     </button>
   </section>
 
@@ -45,7 +45,7 @@
         <li>
           <a class="action-card" [routerLink]="action.route">
             <span class="action-tile" [class]="'tone-' + action.tone">
-              <span class="material-symbols-rounded" aria-hidden="true">{{ action.icon }}</span>
+              <span class="material-symbols-rounded" aria-hidden="true">{{ action.icon | msIcon }}</span>
             </span>
             <span class="action-body">
               <span class="action-label">{{ action.labelKey | translate }}</span>
@@ -68,13 +68,13 @@
           <li>
             <a class="recent-row" [routerLink]="item.route">
               <span class="recent-tile">
-                <span class="material-symbols-rounded" aria-hidden="true">{{ item.icon }}</span>
+                <span class="material-symbols-rounded" aria-hidden="true">{{ item.icon | msIcon }}</span>
               </span>
               <span class="recent-text">
                 <span class="recent-label">{{ item.labelKey | translate }}</span>
                 <span class="recent-meta">{{ item.metaKey | translate }}</span>
               </span>
-              <span class="recent-chevron material-symbols-rounded" aria-hidden="true">chevron_right</span>
+              <span class="recent-chevron material-symbols-rounded" aria-hidden="true">{{ 'chevron_right' | msIcon }}</span>
             </a>
           </li>
         }
@@ -87,9 +87,9 @@
         @for (area of favoriteAreas; track area.route) {
           <li>
             <a class="favorite-row" [routerLink]="area.route">
-              <span class="favorite-icon material-symbols-rounded" aria-hidden="true">{{ area.icon }}</span>
+              <span class="favorite-icon material-symbols-rounded" aria-hidden="true">{{ area.icon | msIcon }}</span>
               <span class="favorite-label">{{ area.labelKey | translate }}</span>
-              <span class="favorite-star material-symbols-rounded" aria-hidden="true">star</span>
+              <span class="favorite-star material-symbols-rounded" aria-hidden="true">{{ 'star' | msIcon }}</span>
             </a>
           </li>
         }

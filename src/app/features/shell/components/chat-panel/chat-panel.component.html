@@ -3,7 +3,7 @@
   <!-- Collapse control -->
   <button type="button" class="chat-close-btn" (click)="close.emit()"
     [attr.aria-label]="'SHELL.CHAT.CLOSE_ARIA' | translate" [title]="'SHELL.CHAT.CLOSE_ARIA' | translate">
-    <span class="material-symbols-rounded" aria-hidden="true">close</span>
+    <span class="material-symbols-rounded" aria-hidden="true">{{ 'close' | msIcon }}</span>
   </button>
 
   <!-- Message list -->
