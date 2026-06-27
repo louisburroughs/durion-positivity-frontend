@@ -1,6 +1,6 @@
 <main>
   <header class="page-header">
-    <h1>Job Timer</h1>
+    <h1>{{ 'WORKEXEC.TIMER.TITLE' | translate }}</h1>
   </header>
 
   @if (loadError()) {
@@ -9,57 +9,57 @@
 
   <section class="card" data-testid="timer-status-panel">
     @if (timerState() === 'ACTIVE') {
-    <p data-testid="timer-active-indicator">Timer running</p>
+    <p data-testid="timer-active-indicator">{{ 'WORKEXEC.TIMER.RUNNING' | translate }}</p>
     <ul class="list-reset" data-testid="active-timers-list">
       @for (entry of activeTimers(); track $index) {
       <li class="active-entry" data-testid="active-timer-entry">
-        <p>Work Order: <code>{{ $any(entry).workOrderId }}</code></p>
-        <p>Entry ID: <code>{{ $any(entry).timeEntryId }}</code></p>
-        <p>Start: {{ $any(entry).startTime }}</p>
+        <p>{{ 'WORKEXEC.TIMER.WO_LABEL' | translate }} <code>{{ $any(entry).workOrderId }}</code></p>
+        <p>{{ 'WORKEXEC.TIMER.ENTRY_ID_LABEL' | translate }} <code>{{ $any(entry).timeEntryId }}</code></p>
+        <p>{{ 'WORKEXEC.TIMER.START_LABEL' | translate }} {{ $any(entry).startTime }}</p>
       </li>
       }
     </ul>
     }
     @if (timerState() === 'NONE') {
-    <p data-testid="timer-idle-indicator">No active timer.</p>
+    <p data-testid="timer-idle-indicator">{{ 'WORKEXEC.TIMER.IDLE' | translate }}</p>
     }
     @if (timerState() === 'STARTING' || timerState() === 'STOPPING') {
     <p aria-live="polite" data-testid="timer-in-progress">
-      {{ timerState() === 'STARTING' ? 'Starting timer…' : 'Stopping timer…' }}
+      {{ (timerState() === 'STARTING' ? 'WORKEXEC.TIMER.STARTING' : 'WORKEXEC.TIMER.STOPPING') | translate }}
     </p>
     }
   </section>
 
   @if (!hasActiveTimer()) {
   <section class="card">
-    <h2>Start Timer</h2>
+    <h2>{{ 'WORKEXEC.TIMER.START_HEADING' | translate }}</h2>
     <form class="form-grid" [formGroup]="startForm" (ngSubmit)="startTimer()">
       <div class="field">
-        <label for="start-work-order-id">Work Order ID</label>
+        <label for="start-work-order-id">{{ 'WORKEXEC.TIMER.WORK_ORDER_ID' | translate }}</label>
         <input id="start-work-order-id" type="text" formControlName="workOrderId"
           aria-describedby="field-error-work-order-id" />
         <span id="field-error-work-order-id" aria-live="polite" role="alert">
           @if (startForm.controls.workOrderId.touched && startForm.controls.workOrderId.invalid) {
-          Work Order ID is required.
+          {{ 'WORKEXEC.TIMER.WO_REQUIRED' | translate }}
           }
         </span>
       </div>
 
       <div class="field">
-        <label for="start-work-order-item-id">Work Order Item ID</label>
+        <label for="start-work-order-item-id">{{ 'WORKEXEC.TIMER.WO_ITEM_ID' | translate }}</label>
         <input id="start-work-order-item-id" type="text" formControlName="workOrderItemId"
           aria-describedby="field-error-work-order-item-id" />
         <span id="field-error-work-order-item-id" aria-live="polite" role="alert"></span>
       </div>
 
       <div class="field">
-        <label for="start-labor-code">Labor Code</label>
+        <label for="start-labor-code">{{ 'WORKEXEC.TIMER.LABOR_CODE' | translate }}</label>
         <input id="start-labor-code" type="text" formControlName="laborCode"
           aria-describedby="field-error-labor-code" />
         <span id="field-error-labor-code" aria-live="polite" role="alert"></span>
       </div>
 
-      <button type="submit" [disabled]="!canStart()" data-testid="start-timer-btn">Start Timer</button>
+      <button type="submit" [disabled]="!canStart()" data-testid="start-timer-btn">{{ 'WORKEXEC.TIMER.START_BTN' | translate }}</button>
     </form>
   </section>
   }
@@ -67,7 +67,7 @@
   @if (hasActiveTimer()) {
   <section class="card" data-testid="stop-section">
     <button type="button" [disabled]="!canStop()" (click)="stopTimers()" data-testid="stop-timer-btn">
-      Stop Timer
+      {{ 'WORKEXEC.TIMER.STOP_BTN' | translate }}
     </button>
   </section>
   }
@@ -81,15 +81,15 @@
 
   @if (stoppedEntries().length > 0) {
   <section class="card" data-testid="stopped-entries-section">
-    <h2>Last Stopped</h2>
+    <h2>{{ 'WORKEXEC.TIMER.LAST_STOPPED' | translate }}</h2>
     <table data-testid="stopped-entries-table">
       <thead>
         <tr>
-          <th>Entry ID</th>
-          <th>Work Order</th>
-          <th>Start</th>
-          <th>End</th>
-          <th>Duration (sec)</th>
+          <th>{{ 'WORKEXEC.TIMER.COL_ENTRY_ID' | translate }}</th>
+          <th>{{ 'WORKEXEC.TIMER.COL_WORK_ORDER' | translate }}</th>
+          <th>{{ 'WORKEXEC.TIMER.COL_START' | translate }}</th>
+          <th>{{ 'WORKEXEC.TIMER.COL_END' | translate }}</th>
+          <th>{{ 'WORKEXEC.TIMER.COL_DURATION' | translate }}</th>
         </tr>
       </thead>
       <tbody>

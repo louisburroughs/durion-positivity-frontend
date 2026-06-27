@@ -1,30 +1,30 @@
 <section>
   <header class="page-header">
-    <h1>Travel Time</h1>
+    <h1>{{ 'WORKEXEC.TRAVEL.TITLE' | translate }}</h1>
   </header>
 
   <form class="start-form" [formGroup]="startForm" (ngSubmit)="startTravel()">
-    <input type="text" formControlName="mobileWorkAssignmentId" placeholder="Assignment ID"
-      aria-label="Assignment ID" />
-    <input type="text" formControlName="workorderId" placeholder="Workorder ID" aria-label="Workorder ID" />
-    <textarea formControlName="notes" placeholder="Notes" aria-label="Notes"></textarea>
-    <button type="submit">Start travel</button>
+    <input type="text" formControlName="mobileWorkAssignmentId" [placeholder]="'WORKEXEC.TRAVEL.ASSIGNMENT_ID' | translate"
+      [attr.aria-label]="'WORKEXEC.TRAVEL.ASSIGNMENT_ID' | translate" />
+    <input type="text" formControlName="workorderId" [placeholder]="'WORKEXEC.TRAVEL.WORKORDER_ID' | translate" [attr.aria-label]="'WORKEXEC.TRAVEL.WORKORDER_ID' | translate" />
+    <textarea formControlName="notes" [placeholder]="'WORKEXEC.TRAVEL.NOTES' | translate" [attr.aria-label]="'WORKEXEC.TRAVEL.NOTES' | translate"></textarea>
+    <button type="submit">{{ 'WORKEXEC.TRAVEL.START' | translate }}</button>
   </form>
 
   <div class="active-segment" *ngIf="activeSegment(); else inactiveState">
-    Active travel segment
+    {{ 'WORKEXEC.TRAVEL.ACTIVE_SEGMENT' | translate }}
     <button class="stop-btn" type="button" (click)="stopTravel(getSegmentId())"
-      [disabled]="!getSegmentId()">Stop</button>
+      [disabled]="!getSegmentId()">{{ 'WORKEXEC.TRAVEL.STOP' | translate }}</button>
   </div>
 
   <ng-template #inactiveState>
-    <div class="travel-inactive">No active travel segment.</div>
+    <div class="travel-inactive">{{ 'WORKEXEC.TRAVEL.INACTIVE' | translate }}</div>
   </ng-template>
 
   <button class="submit-all-btn" type="button" (click)="submitAll(mobileWorkAssignmentId())"
-    [disabled]="!mobileWorkAssignmentId()">Submit all</button>
+    [disabled]="!mobileWorkAssignmentId()">{{ 'WORKEXEC.TRAVEL.SUBMIT_ALL' | translate }}</button>
 
-  <p class="success-banner" *ngIf="submitSuccess()">Travel submitted.</p>
+  <p class="success-banner" *ngIf="submitSuccess()">{{ 'WORKEXEC.TRAVEL.SUBMITTED' | translate }}</p>
   <p class="error-banner" *ngIf="startError() || stopError() || submitError()">{{ startError() || stopError() ||
     submitError() }}</p>
 </section>

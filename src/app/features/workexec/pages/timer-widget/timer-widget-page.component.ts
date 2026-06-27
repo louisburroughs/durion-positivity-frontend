@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslatePipe } from '@ngx-translate/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,7 +19,7 @@ type TimerState = 'NONE' | 'ACTIVE' | 'STARTING' | 'STOPPING' | 'ERROR';
 @Component({
   selector: 'app-timer-widget-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './timer-widget-page.component.html',
   styleUrl: './timer-widget-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

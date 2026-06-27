@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
+import { TranslateModule } from '@ngx-translate/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
@@ -23,7 +24,7 @@ describe('TravelTimePageComponent [CAP-139]', () => {
     stubWorkexecService.submitTravelSegments.mockReturnValue(of({ status: 'ok' }));
 
     await TestBed.configureTestingModule({
-      imports: [TravelTimePageComponent],
+      imports: [TravelTimePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: WorkexecService, useValue: stubWorkexecService },

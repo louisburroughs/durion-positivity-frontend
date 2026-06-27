@@ -71,10 +71,16 @@ Representative strings (workorder-detail): `Retry`, `Work Order`, `Technician`,
 
 Group the 21 files so each PR is reviewable and independently shippable.
 
-- **Phase 1 — Approval (5):** approval-detail, -digital, -in-person, -partial, -submit
-- **Phase 2 — Estimate (7):** estimate-create, -detail, -labor, -parts, -summary, -revise, -from-appointment
-- **Phase 3 — Workorder (6):** workorder-detail, -parts, -labor, -change-requests, -finalize, -assign
-- **Phase 4 — Misc (3):** travel-time, timer-widget, operational-context
+- **Phase 1 — Approval (5):** approval-detail, -digital, -in-person, -partial, -submit ✅ done (PR #117)
+- **Phase 2 — Estimate (7):** estimate-create, -detail, -labor, -parts, -summary, -revise, -from-appointment ✅ done (PR #118)
+- **Phase 3 — Workorder (6):** workorder-detail, -parts, -labor, -change-requests, -finalize, -assign ✅ done (PR #119)
+- **Phase 4 — Misc (3):** travel-time, timer-widget, operational-context ✅ done (this PR)
+
+**Guardrail shipped (Phase 4):** `scripts/i18n/check-hardcoded-strings.mjs`
+(`npm run i18n:check:hardcoded`, wired into `i18n:check`) fails CI on any
+user-visible literal in `workexec/**/*.html`. es-US / fr-CA strings across all
+phases are machine-assisted and FLAGGED FOR NATIVE REVIEW. Pre-existing a11y
+diagnostics tracked separately in issue #120.
 
 Per template (the loop):
 1. Extract every user-facing string; design a `WORKEXEC.<PAGE>.*` key tree

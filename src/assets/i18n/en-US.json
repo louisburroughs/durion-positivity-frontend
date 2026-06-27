@@ -3139,6 +3139,52 @@
       "SUBST_REASON_PH": "Why substituting?",
       "SUBSTITUTING": "Substituting…",
       "CONFIRM_SUBST": "Confirm Substitution"
+    },
+    "TRAVEL": {
+      "TITLE": "Travel Time",
+      "ASSIGNMENT_ID": "Assignment ID",
+      "WORKORDER_ID": "Workorder ID",
+      "NOTES": "Notes",
+      "START": "Start travel",
+      "ACTIVE_SEGMENT": "Active travel segment",
+      "STOP": "Stop",
+      "INACTIVE": "No active travel segment.",
+      "SUBMIT_ALL": "Submit all",
+      "SUBMITTED": "Travel submitted."
+    },
+    "TIMER": {
+      "TITLE": "Job Timer",
+      "RUNNING": "Timer running",
+      "WO_LABEL": "Work Order:",
+      "ENTRY_ID_LABEL": "Entry ID:",
+      "START_LABEL": "Start:",
+      "IDLE": "No active timer.",
+      "STARTING": "Starting timer…",
+      "STOPPING": "Stopping timer…",
+      "START_HEADING": "Start Timer",
+      "WORK_ORDER_ID": "Work Order ID",
+      "WO_REQUIRED": "Work Order ID is required.",
+      "WO_ITEM_ID": "Work Order Item ID",
+      "LABOR_CODE": "Labor Code",
+      "START_BTN": "Start Timer",
+      "STOP_BTN": "Stop Timer",
+      "LAST_STOPPED": "Last Stopped",
+      "COL_ENTRY_ID": "Entry ID",
+      "COL_WORK_ORDER": "Work Order",
+      "COL_START": "Start",
+      "COL_END": "End",
+      "COL_DURATION": "Duration (sec)"
+    },
+    "OPS_CONTEXT": {
+      "TITLE": "Operational Context",
+      "EMPTY": "No context loaded.",
+      "OVERRIDE": "Override context",
+      "CONTEXT_KEY": "Context key",
+      "CONTEXT_VALUE": "Context value",
+      "REASON": "Reason",
+      "SUBMIT": "Submit override",
+      "CLOSE": "Close",
+      "SAVED": "Override saved."
     }
   },
   "INVENTORY": {
