@@ -56,7 +56,11 @@
 }
 
 .nav-icon {
-  font-size: 1.1rem;
+  /* Intentional Material Symbol size for the rail; overrides the global
+     .material-symbols-rounded 24px default on purpose (the component-scoped
+     selector wins under emulated encapsulation). */
+  font-size: 1.375rem;
+  line-height: 1;
   flex-shrink: 0;
   width: 24px;
   text-align: center;
