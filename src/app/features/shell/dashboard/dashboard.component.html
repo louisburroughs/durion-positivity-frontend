@@ -1,31 +1,103 @@
-<div class="dashboard-placeholder">
-  <h2>{{ 'SHELL.DASHBOARD.WELCOME_HEADING' | translate }}</h2>
-  <p>{{ 'SHELL.DASHBOARD.WELCOME_BODY' | translate }}</p>
+<div class="dashboard">
+  <!-- Assistant strip -->
+  <section class="assistant" [attr.aria-label]="'SHELL.DASHBOARD.ASSISTANT.REGION_ARIA' | translate">
+    <span class="assistant-icon material-symbols-rounded" aria-hidden="true">forum</span>
+    <input
+      class="assistant-input"
+      type="text"
+      [attr.aria-label]="'SHELL.DASHBOARD.ASSISTANT.INPUT_ARIA' | translate"
+      [placeholder]="'SHELL.DASHBOARD.ASSISTANT.PLACEHOLDER' | translate"
+      [ngModel]="assistantInput()"
+      (ngModelChange)="assistantInput.set($event)"
+      (keydown)="onAssistantKeydown($event)"
+    />
+    <span class="assistant-hint" aria-hidden="true">{{ 'SHELL.DASHBOARD.ASSISTANT.HINT' | translate }}</span>
+    <button
+      type="button"
+      class="assistant-send"
+      [disabled]="!assistantInput().trim() || assistantSending()"
+      [attr.aria-label]="'SHELL.DASHBOARD.ASSISTANT.SEND_ARIA' | translate"
+      (click)="submitAssistant()"
+    >
+      <span class="material-symbols-rounded" aria-hidden="true">send</span>
+    </button>
+  </section>
 
-  <div class="placeholder-cards">
-    <a class="placeholder-card dur-elevation-1" routerLink="/app/workexec">
-      <span class="card-icon" aria-hidden="true">W</span>
-      <span>{{ 'SHELL.DASHBOARD.CARD.WORKORDERS' | translate }}</span>
-    </a>
-    <a class="placeholder-card dur-elevation-1" routerLink="/app/crm">
-      <span class="card-icon" aria-hidden="true">C</span>
-      <span>{{ 'SHELL.DASHBOARD.CARD.CUSTOMERS' | translate }}</span>
-    </a>
-    <a class="placeholder-card dur-elevation-1" routerLink="/app/accounting">
-      <span class="card-icon" aria-hidden="true">A</span>
-      <span>{{ 'SHELL.DASHBOARD.CARD.ACCOUNTING' | translate }}</span>
-    </a>
-    <a class="placeholder-card dur-elevation-1" routerLink="/app/shopmgmt/dispatch-board">
-      <span class="card-icon" aria-hidden="true">S</span>
-      <span>{{ 'SHELL.DASHBOARD.CARD.SHOPMGMT' | translate }}</span>
-    </a>
-    <a class="placeholder-card dur-elevation-1" routerLink="/app/billing">
-      <span class="card-icon" aria-hidden="true">B</span>
-      <span>{{ 'SHELL.DASHBOARD.CARD.BILLING' | translate }}</span>
-    </a>
-    <a class="placeholder-card dur-elevation-1" routerLink="/app/people">
-      <span class="card-icon" aria-hidden="true">P</span>
-      <span>{{ 'SHELL.DASHBOARD.CARD.PEOPLE' | translate }}</span>
-    </a>
+  <!-- Greeting -->
+  <header class="greeting">
+    <div class="greeting-text">
+      @if (firstName(); as name) {
+        <h1>{{ 'SHELL.DASHBOARD.WELCOME_HEADING' | translate: { name } }}</h1>
+      } @else {
+        <h1>{{ 'SHELL.DASHBOARD.WELCOME_HEADING_GENERIC' | translate }}</h1>
+      }
+      <p>{{ 'SHELL.DASHBOARD.WELCOME_BODY' | translate }}</p>
+    </div>
+    <button type="button" class="customize" (click)="onCustomize()">
+      <span class="customize-icon material-symbols-rounded" aria-hidden="true">push_pin</span>
+      {{ 'SHELL.DASHBOARD.CUSTOMIZE' | translate }}
+    </button>
+  </header>
+
+  <!-- Pinned quick actions -->
+  <section class="quick-actions" aria-labelledby="dash-quick-actions-title">
+    <h2 id="dash-quick-actions-title" class="overline">
+      {{ 'SHELL.DASHBOARD.QUICK_ACTIONS.TITLE' | translate }}
+    </h2>
+    <ul class="action-grid">
+      @for (action of quickActions; track action.route) {
+        <li>
+          <a class="action-card" [routerLink]="action.route">
+            <span class="action-tile" [class]="'tone-' + action.tone">
+              <span class="material-symbols-rounded" aria-hidden="true">{{ action.icon }}</span>
+            </span>
+            <span class="action-body">
+              <span class="action-label">{{ action.labelKey | translate }}</span>
+              <span class="action-sub">{{ action.subKey | translate }}</span>
+            </span>
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <!-- Recently opened + Favorite areas -->
+  <div class="lists">
+    <section class="card recent" aria-labelledby="dash-recent-title">
+      <div class="card-head">
+        <h2 id="dash-recent-title" class="overline">{{ 'SHELL.DASHBOARD.RECENT.TITLE' | translate }}</h2>
+      </div>
+      <ul class="recent-list">
+        @for (item of recentItems; track item.route) {
+          <li>
+            <a class="recent-row" [routerLink]="item.route">
+              <span class="recent-tile">
+                <span class="material-symbols-rounded" aria-hidden="true">{{ item.icon }}</span>
+              </span>
+              <span class="recent-text">
+                <span class="recent-label">{{ item.labelKey | translate }}</span>
+                <span class="recent-meta">{{ item.metaKey | translate }}</span>
+              </span>
+              <span class="recent-chevron material-symbols-rounded" aria-hidden="true">chevron_right</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="card favorites" aria-labelledby="dash-fav-title">
+      <h2 id="dash-fav-title" class="overline">{{ 'SHELL.DASHBOARD.FAVORITES.TITLE' | translate }}</h2>
+      <ul class="favorite-list">
+        @for (area of favoriteAreas; track area.route) {
+          <li>
+            <a class="favorite-row" [routerLink]="area.route">
+              <span class="favorite-icon material-symbols-rounded" aria-hidden="true">{{ area.icon }}</span>
+              <span class="favorite-label">{{ area.labelKey | translate }}</span>
+              <span class="favorite-star material-symbols-rounded" aria-hidden="true">star</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
   </div>
 </div>
