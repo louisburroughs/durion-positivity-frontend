@@ -5,7 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, catchError, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import {
   CRMVehiclesService,
   CreateVehicleForPartyRequest,
@@ -47,6 +47,12 @@ export class EstimateCreatePageComponent implements OnInit {
   private customerSearchPrimed = false;
 
   readonly customerVehicles = signal<VehicleSummary[]>([]);
+  // Single-signal lifecycle for the vehicle fetch so the template can distinguish
+  // loading, a genuinely empty list ('loaded' + length 0), and a failed fetch
+  // ('error') — an error must NOT look like "no vehicles" or users re-create
+  // vehicles that already exist.
+  readonly vehiclesState = signal<'idle' | 'loading' | 'loaded' | 'error'>('idle');
+  private readonly vehicleCustomer$ = new Subject<string>();
 
   readonly showAddVehicle = signal(false);
   readonly vehicleSaving = signal(false);
@@ -55,6 +61,24 @@ export class EstimateCreatePageComponent implements OnInit {
   readonly addVehicleOption = ADD_VEHICLE_OPTION;
 
   constructor() {
+    // Authoritative vehicle list for the selected customer. switchMap cancels an
+    // in-flight request when the customer changes, so a slow earlier response can
+    // never overwrite a later selection's vehicles.
+    this.vehicleCustomer$
+      .pipe(
+        switchMap(id =>
+          this.vehiclesApi.listVehiclesForCustomer(id, 'body', false, { transferCache: false }).pipe(
+            map(vehicles => ({ ok: true, vehicles: vehicles ?? [] })),
+            catchError(() => of({ ok: false, vehicles: [] as VehicleSummary[] })),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(res => {
+        this.customerVehicles.set(res.vehicles);
+        this.vehiclesState.set(res.ok ? 'loaded' : 'error');
+      });
+
     // Server-side customer search (debounced); the browse term matches name and
     // customer number, so there is no client-side row cap.
     this.customerQuery$
@@ -82,7 +106,12 @@ export class EstimateCreatePageComponent implements OnInit {
 
   ngOnInit(): void {
     const nav = this.router.getCurrentNavigation()?.extras?.state as Record<string, string> | undefined;
-    if (nav?.['customerId']) this.form.patchValue({ customerId: nav['customerId'] });
+    if (nav?.['customerId']) {
+      this.form.patchValue({ customerId: nav['customerId'] });
+      // Deep-linked customer still needs its vehicle list loaded (with the same
+      // loading / empty / error UI as an interactive selection).
+      this.loadVehicles(nav['customerId']);
+    }
     if (nav?.['vehicleId'])  this.form.patchValue({ vehicleId: nav['vehicleId'] });
   }
 
@@ -114,15 +143,19 @@ export class EstimateCreatePageComponent implements OnInit {
     this.resetVehicleSelection();
 
     if (!id) { return; }
+    this.loadVehicles(id);
+  }
 
-    // Authoritative, complete vehicle list for the customer (the CRM snapshot does
-    // not reliably carry vehicles for commercial accounts).
-    this.vehiclesApi.listVehiclesForCustomer(id, 'body', false, { transferCache: false })
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        catchError(() => of([] as VehicleSummary[])),
-      )
-      .subscribe(vehicles => this.customerVehicles.set(vehicles ?? []));
+  /** Kick off (or retry) the vehicle fetch for a customer via the cancelling pipeline. */
+  private loadVehicles(customerId: string): void {
+    this.vehiclesState.set('loading');
+    this.vehicleCustomer$.next(customerId);
+  }
+
+  /** Retry handler for the vehicle-fetch error state. */
+  retryLoadVehicles(): void {
+    const id = this.form.controls.customerId.value;
+    if (id) { this.loadVehicles(id); }
   }
 
   /** Display label for a party row (shared CRM label: name + DBA + customer number). */
@@ -185,6 +218,7 @@ export class EstimateCreatePageComponent implements OnInit {
             year: created.year,
           };
           this.customerVehicles.update(list => [...list, summary]);
+          this.vehiclesState.set('loaded');
           this.form.patchValue({ vehicleId: summary.vehicleId });
           this.showAddVehicle.set(false);
           this.newVehicleForm.reset();
@@ -199,6 +233,7 @@ export class EstimateCreatePageComponent implements OnInit {
 
   private resetVehicleSelection(): void {
     this.customerVehicles.set([]);
+    this.vehiclesState.set('idle');
     this.form.patchValue({ vehicleId: '' });
     this.showAddVehicle.set(false);
     this.vehicleSaveError.set(null);

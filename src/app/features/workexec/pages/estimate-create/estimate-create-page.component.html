@@ -74,6 +74,16 @@
         }
         <option [value]="addVehicleOption">{{ 'WORKEXEC.ESTIMATE_CREATE.ADD_NEW_VEHICLE' | translate }}</option>
       </select>
+      @if (vehiclesState() === 'loading') {
+        <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.ESTIMATE_CREATE.LOADING_VEHICLES' | translate }}</p>
+      } @else if (vehiclesState() === 'error') {
+        <p class="field-error" role="alert">
+          {{ 'WORKEXEC.ESTIMATE_CREATE.VEHICLES_ERROR' | translate }}
+          <button type="button" class="btn-link" (click)="retryLoadVehicles()">{{ 'WORKEXEC.ESTIMATE_CREATE.VEHICLES_RETRY' | translate }}</button>
+        </p>
+      } @else if (vehiclesState() === 'loaded' && customerVehicles().length === 0 && !showAddVehicle()) {
+        <p class="hint-text" role="status">{{ 'WORKEXEC.ESTIMATE_CREATE.NO_VEHICLES' | translate }}</p>
+      }
       @if (form.controls.vehicleId.invalid && form.controls.vehicleId.touched && !showAddVehicle()) {
         <p id="vehicleId-err" class="field-error" role="alert">{{ 'WORKEXEC.ESTIMATE_CREATE.VEHICLE_REQUIRED' | translate }}</p>
       }

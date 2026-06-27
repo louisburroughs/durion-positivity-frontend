@@ -2765,7 +2765,11 @@
       "SAVING": "Guardando…",
       "SAVE_VEHICLE": "Guardar vehículo",
       "CREATING": "Creando…",
-      "CREATE_ESTIMATE": "Crear presupuesto"
+      "CREATE_ESTIMATE": "Crear presupuesto",
+      "LOADING_VEHICLES": "Cargando vehículos…",
+      "NO_VEHICLES": "No hay vehículos registrados para este cliente: agregue uno a continuación.",
+      "VEHICLES_ERROR": "No se pudieron cargar los vehículos de este cliente.",
+      "VEHICLES_RETRY": "Reintentar"
     },
     "ESTIMATE_DETAIL": {
       "OVERLINE": "Presupuesto",

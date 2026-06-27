@@ -2765,7 +2765,11 @@
       "SAVING": "Enregistrement…",
       "SAVE_VEHICLE": "Enregistrer le véhicule",
       "CREATING": "Création…",
-      "CREATE_ESTIMATE": "Créer l'estimation"
+      "CREATE_ESTIMATE": "Créer l'estimation",
+      "LOADING_VEHICLES": "Chargement des véhicules…",
+      "NO_VEHICLES": "Aucun véhicule enregistré pour ce client — ajoutez-en un ci-dessous.",
+      "VEHICLES_ERROR": "Impossible de charger les véhicules de ce client.",
+      "VEHICLES_RETRY": "Réessayer"
     },
     "ESTIMATE_DETAIL": {
       "OVERLINE": "Estimation",
