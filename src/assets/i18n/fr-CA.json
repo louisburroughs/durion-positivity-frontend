@@ -230,6 +230,10 @@
         "DATA_IMPORT": {
           "TITLE": "Importation de donnees",
           "DESCRIPTION": "Importer en masse des donnees de personnel et RH."
+        },
+        "DIRECTORY": {
+          "TITLE": "Répertoire",
+          "DESCRIPTION": "Recherchez et parcourez toutes les personnes du système."
         }
       },
       "CARD": {
@@ -276,6 +280,10 @@
         "IMPORT_PEOPLE": {
           "TITLE": "Importer le personnel",
           "DESCRIPTION": "Importer en masse les enregistrements de personnel et RH a partir d'un fichier CSV ou XLSX."
+        },
+        "DIRECTORY": {
+          "TITLE": "Répertoire des personnes",
+          "DESCRIPTION": "Consultez et filtrez toutes les personnes par type et statut."
         }
       },
       "FIELD": {
@@ -393,6 +401,35 @@
         "APPROVE": "Impossible d'approuver les entrées.",
         "REJECT": "Impossible de rejeter les entrées.",
         "ADJUSTMENT": "Impossible de créer l'ajustement."
+      }
+    },
+    "DIRECTORY": {
+      "TITLE": "Répertoire des personnes",
+      "SEARCH_PLACEHOLDER": "Rechercher par nom, courriel ou nom d’utilisateur…",
+      "FILTER": {
+        "ALL": "Tous",
+        "EMPLOYEE": "Employés",
+        "ACTIVE": "Actifs",
+        "INACTIVE": "Inactifs"
+      },
+      "COL": {
+        "NAME": "Nom",
+        "USERNAME": "Nom d’utilisateur",
+        "EMAIL": "Courriel",
+        "PHONE": "Téléphone",
+        "ACTIONS": "Actions"
+      },
+      "ACTION": {
+        "VIEW_PROFILE": "Voir le profil"
+      },
+      "LOADING": "Chargement des personnes…",
+      "EMPTY": "Aucune personne ne correspond à votre recherche.",
+      "CLEAR_SEARCH": "Effacer la recherche",
+      "PAGINATION": {
+        "PAGE_OF": "Page {{current}} sur {{total}}"
+      },
+      "ERROR": {
+        "LOAD": "Échec du chargement des personnes."
       }
     }
   },
@@ -800,7 +837,12 @@
         "LOAD": "Impossible de charger les emplacements.",
         "NAME_TYPE_REQUIRED": "Le nom et le type sont requis.",
         "CREATE": "Impossible de créer l'emplacement."
-      }
+      },
+      "CODE": "Code",
+      "STATUS_ACTIVE": "Actif",
+      "STATUS_INACTIVE": "Inactif",
+      "ADDRESS": "Adresse",
+      "TYPE_DESCRIPTION": "Description"
     },
     "BAYS": {
       "TITLE": "Baies",
