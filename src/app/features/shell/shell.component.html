@@ -24,7 +24,7 @@
       <!-- Top frame: Chat panel — collapsible, collapsed by default -->
       @if (!chatCollapsed()) {
       <div class="frame-chat" [id]="CHAT_ID">
-        <app-chat-panel (close)="toggleChat()" />
+        <app-chat-panel (collapse)="toggleChat()" />
       </div>
       }
 

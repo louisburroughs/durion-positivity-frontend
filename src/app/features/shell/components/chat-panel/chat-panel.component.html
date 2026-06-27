@@ -1,7 +1,7 @@
 <section class="chat-panel" [attr.aria-label]="'SHELL.CHAT.PANEL_ARIA' | translate">
 
   <!-- Collapse control -->
-  <button type="button" class="chat-close-btn" (click)="close.emit()"
+  <button type="button" class="chat-close-btn" (click)="collapse.emit()"
     [attr.aria-label]="'SHELL.CHAT.CLOSE_ARIA' | translate" [title]="'SHELL.CHAT.CLOSE_ARIA' | translate">
     <span class="material-symbols-rounded" aria-hidden="true">{{ 'close' | msIcon }}</span>
   </button>

@@ -38,7 +38,7 @@ export class ChatPanelComponent implements AfterViewChecked {
   private readonly authService = inject(AuthService);
 
   /** Emitted when the user collapses the panel via its close button. */
-  readonly close = output<void>();
+  readonly collapse = output<void>();
 
   readonly isAdmin = computed(() => this.authService.hasAnyRole(['ROLE_ADMIN']));
   readonly showRagDialog = signal(false);
