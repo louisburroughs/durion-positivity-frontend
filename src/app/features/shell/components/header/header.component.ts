@@ -27,8 +27,17 @@ export class HeaderComponent {
   readonly navCollapsed = input(false);
   readonly navId = input('shell-nav');
 
+  /** Emitted when the chat-toggle button is clicked. */
+  readonly chatToggle = output<void>();
+  readonly chatCollapsed = input(true);
+  readonly chatId = input('shell-chat');
+
   toggleNav(): void {
     this.navToggle.emit();
+  }
+
+  onChatToggle(): void {
+    this.chatToggle.emit();
   }
 
   logout(): void {

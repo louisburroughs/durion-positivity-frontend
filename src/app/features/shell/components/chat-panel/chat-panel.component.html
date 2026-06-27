@@ -1,5 +1,11 @@
 <section class="chat-panel" [attr.aria-label]="'SHELL.CHAT.PANEL_ARIA' | translate">
 
+  <!-- Collapse control -->
+  <button type="button" class="chat-close-btn" (click)="close.emit()"
+    [attr.aria-label]="'SHELL.CHAT.CLOSE_ARIA' | translate" [title]="'SHELL.CHAT.CLOSE_ARIA' | translate">
+    <span class="material-symbols-rounded" aria-hidden="true">close</span>
+  </button>
+
   <!-- Message list -->
   <div class="message-list" #messageList role="log" aria-live="polite"
     [attr.aria-label]="'SHELL.CHAT.MESSAGES_ARIA' | translate">

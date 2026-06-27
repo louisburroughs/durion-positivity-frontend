@@ -3,6 +3,7 @@ import {
   computed,
   DestroyRef,
   inject,
+  output,
   signal,
   ViewChild,
   ElementRef,
@@ -34,6 +35,9 @@ export class ChatPanelComponent implements AfterViewChecked {
   private readonly chatApi = inject(ChatApiService);
   private readonly translateService = inject(TranslateService);
   private readonly authService = inject(AuthService);
+
+  /** Emitted when the user collapses the panel via its close button. */
+  readonly close = output<void>();
 
   readonly isAdmin = computed(() => this.authService.hasAnyRole(['ROLE_ADMIN']));
   readonly showRagDialog = signal(false);

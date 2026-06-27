@@ -3,7 +3,8 @@
     }}</a>
 
   <!-- Top bar -->
-  <app-shell-header (navToggle)="toggleNav()" [navCollapsed]="navCollapsed()" [navId]="NAV_ID" />
+  <app-shell-header (navToggle)="toggleNav()" [navCollapsed]="navCollapsed()" [navId]="NAV_ID"
+    (chatToggle)="toggleChat()" [chatCollapsed]="chatCollapsed()" [chatId]="CHAT_ID" />
 
   <!-- Body: sidebar + main column -->
   <div class="shell-body">
@@ -20,10 +21,12 @@
     <!-- Main column -->
     <main id="main-content" #mainContent class="shell-main" role="main" tabindex="-1">
 
-      <!-- Top frame: Chat panel (fixed-height, resize from bottom edge) -->
-      <div class="frame-chat">
-        <app-chat-panel />
+      <!-- Top frame: Chat panel — collapsible, collapsed by default -->
+      @if (!chatCollapsed()) {
+      <div class="frame-chat" [id]="CHAT_ID">
+        <app-chat-panel (close)="toggleChat()" />
       </div>
+      }
 
       <!-- Bottom frame: Content / routed page -->
       <div class="frame-content">

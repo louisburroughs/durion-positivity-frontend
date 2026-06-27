@@ -7,18 +7,8 @@
   gap: var(--space-6);
 }
 
-.material-symbols-rounded {
-  font-family: 'Material Symbols Rounded', sans-serif;
-  font-weight: normal;
-  font-style: normal;
-  line-height: 1;
-  letter-spacing: normal;
-  white-space: nowrap;
-  direction: ltr;
-  -webkit-font-feature-settings: 'liga';
-  font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
-}
+/* Base `.material-symbols-rounded` styling (font-family, ligatures) is defined
+   globally in styles.css via the self-hosted face; only sizes are tuned here. */
 
 /* ── Assistant strip ───────────────────────────────────────────────── */
 .assistant {

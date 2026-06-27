@@ -24,6 +24,13 @@
       }
     </select>
 
+    <button class="icon-btn chat-toggle-btn" type="button" (click)="onChatToggle()"
+      [class.active]="!chatCollapsed()"
+      [attr.aria-label]="'SHELL.HEADER.CHAT_TOGGLE' | translate" [attr.aria-expanded]="!chatCollapsed()"
+      [attr.aria-controls]="chatId()" [title]="'SHELL.HEADER.CHAT_TOGGLE' | translate">
+      <span class="material-symbols-rounded" aria-hidden="true">forum</span>
+    </button>
+
     <button class="icon-btn" type="button" (click)="themeService.toggle()"
       [attr.aria-label]="themeService.isDark() ? ('SHELL.HEADER.THEME_TO_LIGHT' | translate) : ('SHELL.HEADER.THEME_TO_DARK' | translate)"
       [title]="themeService.isDark() ? ('SHELL.HEADER.THEME_TO_LIGHT' | translate) : ('SHELL.HEADER.THEME_TO_DARK' | translate)">
