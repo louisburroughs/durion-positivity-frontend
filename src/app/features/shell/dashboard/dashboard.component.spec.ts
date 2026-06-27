@@ -66,11 +66,11 @@ describe('DashboardComponent', () => {
     expect(host().querySelectorAll('h1').length).toBe(1);
   });
 
-  it('derives the first name from the JWT sub claim', () => {
-    claims.set({ sub: 'admin.alpha', exp: 9999999999 });
+  it('derives the first name from the first token of an email/dotted JWT sub', () => {
+    claims.set({ sub: 'jane.doe@durion.com', exp: 9999999999 });
     fixture.detectChanges();
-    expect(component.firstName()).toBe('Alpha');
-    expect(host().querySelector('h1')?.textContent).toContain('Alpha');
+    expect(component.firstName()).toBe('Jane');
+    expect(host().querySelector('h1')?.textContent).toContain('Jane');
   });
 
   it('falls back to a generic greeting when no claim is present', () => {
@@ -88,11 +88,22 @@ describe('DashboardComponent', () => {
     expect(hrefs).toContain('/app/inventory');
   });
 
-  it('uses buttons (not anchors) for the customize and send controls', () => {
-    const customize = host().querySelector<HTMLButtonElement>('.customize');
+  it('uses a button (not an anchor) for the send control', () => {
     const send = host().querySelector<HTMLButtonElement>('.assistant-send');
-    expect(customize?.getAttribute('type')).toBe('button');
+    expect(send?.tagName).toBe('BUTTON');
     expect(send?.getAttribute('type')).toBe('button');
+  });
+
+  it('keeps a People-area entry point on the home page', () => {
+    const hrefs = Array.from(host().querySelectorAll<HTMLAnchorElement>('a[href]')).map(a =>
+      a.getAttribute('href'),
+    );
+    expect(hrefs).toContain('/app/people');
+  });
+
+  it('routes the schedule quick action to the schedule view', () => {
+    const action = component.quickActions.find(a => a.labelKey.endsWith('SCHEDULE'));
+    expect(action?.route).toBe('/app/shopmgmt/schedule');
   });
 
   it('disables send while the assistant input is empty', () => {

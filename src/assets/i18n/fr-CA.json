@@ -84,7 +84,6 @@
       "WELCOME_HEADING": "Bon retour, {{name}}",
       "WELCOME_HEADING_GENERIC": "Bon retour",
       "WELCOME_BODY": "Reprenez où vous en étiez ou accédez directement à une action épinglée.",
-      "CUSTOMIZE": "Personnaliser",
       "ASSISTANT": {
         "REGION_ARIA": "Assistant",
         "PLACEHOLDER": "Demandez à l'assistant ou saisissez un message pour démarrer une conversation…",
@@ -107,16 +106,13 @@
       },
       "RECENT": {
         "TITLE": "Ouvert récemment",
-        "VIEW_ALL": "Tout voir",
-        "EMPTY": "Rien d'ouvert récemment.",
         "WORKORDERS_META": "Travaux et répartition",
         "CRM_META": "Comptes et contacts",
         "BILLING_META": "Factures et paiements",
         "INVENTORY_META": "Pièces et stock"
       },
       "FAVORITES": {
-        "TITLE": "Zones favorites",
-        "EMPTY": "Marquez une zone d'une étoile pour l'épingler ici."
+        "TITLE": "Zones favorites"
       }
     },
     "FOOTER": {

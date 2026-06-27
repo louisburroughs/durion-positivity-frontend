@@ -84,7 +84,6 @@
       "WELCOME_HEADING": "Hola de nuevo, {{name}}",
       "WELCOME_HEADING_GENERIC": "Hola de nuevo",
       "WELCOME_BODY": "Continúa donde lo dejaste o ve directo a una acción fijada.",
-      "CUSTOMIZE": "Personalizar",
       "ASSISTANT": {
         "REGION_ARIA": "Asistente",
         "PLACEHOLDER": "Pregunta al asistente o escribe un mensaje para iniciar una conversación…",
@@ -107,16 +106,13 @@
       },
       "RECENT": {
         "TITLE": "Abierto recientemente",
-        "VIEW_ALL": "Ver todo",
-        "EMPTY": "Nada abierto recientemente.",
         "WORKORDERS_META": "Trabajos y despacho",
         "CRM_META": "Cuentas y contactos",
         "BILLING_META": "Facturas y pagos",
         "INVENTORY_META": "Piezas y existencias"
       },
       "FAVORITES": {
-        "TITLE": "Áreas favoritas",
-        "EMPTY": "Marca un área para fijarla aquí."
+        "TITLE": "Áreas favoritas"
       }
     },
     "FOOTER": {

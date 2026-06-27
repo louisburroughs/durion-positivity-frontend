@@ -31,6 +31,10 @@
   padding: var(--space-3) var(--space-4);
 }
 
+.assistant:focus-within {
+  border-color: var(--accentA400);
+}
+
 .assistant-icon {
   font-size: 1.4rem;
   color: var(--accentA700);
@@ -52,7 +56,9 @@
 }
 
 .assistant-input:focus-visible {
-  outline: none;
+  outline: 2px solid var(--accentA400);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .assistant-hint {
@@ -116,37 +122,6 @@
   font-size: 1rem;
   line-height: 1.5;
   color: var(--text-muted);
-}
-
-.customize {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-primary);
-  font-weight: var(--font-weight-heading);
-  font-size: 0.8125rem;
-  color: var(--currentTextColor);
-  background: var(--surface-2);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-3);
-  cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
-}
-
-.customize:hover {
-  background: var(--surface-hover);
-  border-color: var(--accentA400);
-}
-
-.customize:focus-visible {
-  outline: 2px solid var(--accentA400);
-  outline-offset: 2px;
-}
-
-.customize-icon {
-  font-size: 1.125rem;
-  color: var(--goldA400);
 }
 
 /* ── Overline section headings ─────────────────────────────────────── */

@@ -1,7 +1,6 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
@@ -50,17 +49,17 @@ interface FavoriteArea {
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent {
-  private readonly destroyRef = inject(DestroyRef);
   private readonly auth = inject(AuthService);
   private readonly chatState = inject(ChatStateService);
   private readonly chatApi = inject(ChatApiService);
   private readonly translate = inject(TranslateService);
 
-  /** First name derived from the JWT `sub` claim, or null when unresolved. */
+  /** First name derived from the JWT `sub` claim, or null when unresolved.
+   *  Uses the FIRST token of an email/dotted id (e.g. `jane.doe@durion.com` → `Jane`). */
   readonly firstName = computed<string | null>(() => {
     const sub = this.auth.currentUserClaims()?.sub?.trim();
     if (!sub) return null;
-    const segment = sub.split(/[.@]/).filter(Boolean).pop() ?? sub;
+    const segment = sub.split(/[.@]/).filter(Boolean)[0] ?? sub;
     return segment.charAt(0).toUpperCase() + segment.slice(1);
   });
 
@@ -71,7 +70,7 @@ export class DashboardComponent {
     { icon: 'assignment_add', labelKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.NEW_WORKORDER', subKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.NEW_WORKORDER_SUB', route: '/app/workexec', tone: 'teal' },
     { icon: 'person_add', labelKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.ADD_CUSTOMER', subKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.ADD_CUSTOMER_SUB', route: '/app/crm', tone: 'blue' },
     { icon: 'payments', labelKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.TAKE_PAYMENT', subKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.TAKE_PAYMENT_SUB', route: '/app/billing', tone: 'info' },
-    { icon: 'event', labelKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.SCHEDULE', subKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.SCHEDULE_SUB', route: '/app/shopmgmt', tone: 'gold' },
+    { icon: 'event', labelKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.SCHEDULE', subKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.SCHEDULE_SUB', route: '/app/shopmgmt/schedule', tone: 'gold' },
     { icon: 'inventory_2', labelKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.LOW_STOCK', subKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.LOW_STOCK_SUB', route: '/app/inventory', tone: 'error' },
   ];
 
@@ -87,9 +86,13 @@ export class DashboardComponent {
     { icon: 'account_balance', labelKey: 'SHELL.NAV.ACCOUNTING', route: '/app/accounting' },
     { icon: 'inventory_2', labelKey: 'SHELL.NAV.INVENTORY', route: '/app/inventory' },
     { icon: 'storefront', labelKey: 'SHELL.NAV.DISPATCH', route: '/app/shopmgmt' },
+    { icon: 'badge', labelKey: 'SHELL.NAV.PEOPLE', route: '/app/people' },
   ];
 
-  /** Forward the assistant-strip text into the shared chat panel. */
+  /** Forward the assistant-strip text into the shared chat panel.
+   *  Deliberately NOT tied to this component's lifecycle: the reply is written
+   *  to the root ChatStateService consumed by the always-visible shell chat
+   *  panel, so it must still land if a quick-action navigates away mid-request. */
   submitAssistant(): void {
     const text = this.assistantInput().trim();
     if (!text || this.assistantSending()) return;
@@ -100,10 +103,7 @@ export class DashboardComponent {
 
     this.chatApi
       .sendMessage({ message: text })
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => this.assistantSending.set(false)),
-      )
+      .pipe(finalize(() => this.assistantSending.set(false)))
       .subscribe({
         next: resp => this.chatState.addSystemMessage(resp.response),
         error: () => this.chatState.addSystemMessage(this.translate.instant('SHELL.CHAT.ERROR_BACKEND')),
@@ -115,10 +115,5 @@ export class DashboardComponent {
       event.preventDefault();
       this.submitAssistant();
     }
-  }
-
-  /** Placeholder for the future pin-customization flow (ADR-tracked, not built yet). */
-  onCustomize(): void {
-    // Intentionally a no-op this iteration; the control is present for layout parity.
   }
 }

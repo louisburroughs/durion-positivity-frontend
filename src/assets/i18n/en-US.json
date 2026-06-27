@@ -84,7 +84,6 @@
       "WELCOME_HEADING": "Welcome back, {{name}}",
       "WELCOME_HEADING_GENERIC": "Welcome back",
       "WELCOME_BODY": "Pick up where you left off, or jump straight to a pinned action.",
-      "CUSTOMIZE": "Customize",
       "ASSISTANT": {
         "REGION_ARIA": "Assistant",
         "PLACEHOLDER": "Ask the assistant or type a message to start a conversation…",
@@ -107,16 +106,13 @@
       },
       "RECENT": {
         "TITLE": "Recently opened",
-        "VIEW_ALL": "View all",
-        "EMPTY": "Nothing opened recently.",
         "WORKORDERS_META": "Jobs and dispatch",
         "CRM_META": "Accounts and contacts",
         "BILLING_META": "Invoices and payments",
         "INVENTORY_META": "Parts and stock"
       },
       "FAVORITES": {
-        "TITLE": "Favorite areas",
-        "EMPTY": "Star an area to pin it here."
+        "TITLE": "Favorite areas"
       }
     },
     "FOOTER": {
