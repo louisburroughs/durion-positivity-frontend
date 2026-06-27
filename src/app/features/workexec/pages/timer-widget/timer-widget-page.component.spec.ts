@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { TimerWidgetPageComponent } from './timer-widget-page.component';
@@ -34,12 +35,15 @@ describe('TimerWidgetPageComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [TimerWidgetPageComponent],
+      imports: [TimerWidgetPageComponent, TranslateModule.forRoot()],
       providers: [
         { provide: WorkexecService, useValue: workexecService },
         { provide: ActivatedRoute, useValue: { queryParams: of({ workOrderId: 'WO-1' }) } },
       ],
     }).compileComponents();
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', { WORKEXEC: { TIMER: { TITLE: 'Job Timer' } } });
+    translate.use('en-US');
 
     fixture = TestBed.createComponent(TimerWidgetPageComponent);
     component = fixture.componentInstance;

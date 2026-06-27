@@ -13,9 +13,10 @@
     "a11y:smoke": "npm run sdk:install && node scripts/a11y/smoke-routes.mjs",
     "a11y:smoke:strict": "npm run sdk:install && A11Y_FAIL_ON_IMPACT=serious node scripts/a11y/smoke-routes.mjs",
     "i18n:check:missing": "node scripts/i18n/check-missing-keys.mjs",
+    "i18n:check:hardcoded": "node scripts/i18n/check-hardcoded-strings.mjs",
     "i18n:pseudo:generate": "node scripts/i18n/generate-pseudo-locale.mjs",
     "i18n:pseudo:check": "node scripts/i18n/generate-pseudo-locale.mjs --check",
-    "i18n:check": "npm run i18n:check:missing && npm run i18n:pseudo:check",
+    "i18n:check": "npm run i18n:check:missing && npm run i18n:check:hardcoded && npm run i18n:pseudo:check",
     "serve:ssr:durion-positivity-frontend": "npm run sdk:install && node dist/durion-positivity-frontend/server/server.mjs",
     "lint:css": "stylelint \"src/**/*.css\""
   },

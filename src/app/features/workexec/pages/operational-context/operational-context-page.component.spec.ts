@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
+import { TranslateModule } from '@ngx-translate/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, provideRouter } from '@angular/router';
@@ -21,7 +22,7 @@ describe('OperationalContextPageComponent [CAP-140]', () => {
     stubWorkexecService.overrideOperationalContext.mockReturnValue(of({ workorderId: 'wo-1', status: 'OVERRIDDEN' }));
 
     await TestBed.configureTestingModule({
-      imports: [OperationalContextPageComponent],
+      imports: [OperationalContextPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: WorkexecService, useValue: stubWorkexecService },

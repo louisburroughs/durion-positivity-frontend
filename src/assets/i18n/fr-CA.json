@@ -3139,6 +3139,52 @@
       "SUBST_REASON_PH": "Pourquoi substituer ?",
       "SUBSTITUTING": "Substitution…",
       "CONFIRM_SUBST": "Confirmer la substitution"
+    },
+    "TRAVEL": {
+      "TITLE": "Temps de déplacement",
+      "ASSIGNMENT_ID": "ID d’affectation",
+      "WORKORDER_ID": "ID de bon de travail",
+      "NOTES": "Notes",
+      "START": "Démarrer le déplacement",
+      "ACTIVE_SEGMENT": "Segment de déplacement actif",
+      "STOP": "Arrêter",
+      "INACTIVE": "Aucun segment de déplacement actif.",
+      "SUBMIT_ALL": "Tout soumettre",
+      "SUBMITTED": "Déplacement soumis."
+    },
+    "TIMER": {
+      "TITLE": "Minuteur de travail",
+      "RUNNING": "Minuteur en cours",
+      "WO_LABEL": "Bon de travail :",
+      "ENTRY_ID_LABEL": "ID d’entrée :",
+      "START_LABEL": "Début :",
+      "IDLE": "Aucun minuteur actif.",
+      "STARTING": "Démarrage du minuteur…",
+      "STOPPING": "Arrêt du minuteur…",
+      "START_HEADING": "Démarrer le minuteur",
+      "WORK_ORDER_ID": "ID de bon de travail",
+      "WO_REQUIRED": "L’ID de bon de travail est requis.",
+      "WO_ITEM_ID": "ID d’article de bon de travail",
+      "LABOR_CODE": "Code de main-d’œuvre",
+      "START_BTN": "Démarrer le minuteur",
+      "STOP_BTN": "Arrêter le minuteur",
+      "LAST_STOPPED": "Dernier arrêt",
+      "COL_ENTRY_ID": "ID d’entrée",
+      "COL_WORK_ORDER": "Bon de travail",
+      "COL_START": "Début",
+      "COL_END": "Fin",
+      "COL_DURATION": "Durée (s)"
+    },
+    "OPS_CONTEXT": {
+      "TITLE": "Contexte opérationnel",
+      "EMPTY": "Aucun contexte chargé.",
+      "OVERRIDE": "Remplacer le contexte",
+      "CONTEXT_KEY": "Clé de contexte",
+      "CONTEXT_VALUE": "Valeur de contexte",
+      "REASON": "Motif",
+      "SUBMIT": "Soumettre le remplacement",
+      "CLOSE": "Fermer",
+      "SAVED": "Remplacement enregistré."
     }
   },
   "INVENTORY": {

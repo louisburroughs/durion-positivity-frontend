@@ -3139,6 +3139,52 @@
       "SUBST_REASON_PH": "¿Por qué sustituye?",
       "SUBSTITUTING": "Sustituyendo…",
       "CONFIRM_SUBST": "Confirmar sustitución"
+    },
+    "TRAVEL": {
+      "TITLE": "Tiempo de viaje",
+      "ASSIGNMENT_ID": "ID de asignación",
+      "WORKORDER_ID": "ID de orden de trabajo",
+      "NOTES": "Notas",
+      "START": "Iniciar viaje",
+      "ACTIVE_SEGMENT": "Segmento de viaje activo",
+      "STOP": "Detener",
+      "INACTIVE": "No hay segmento de viaje activo.",
+      "SUBMIT_ALL": "Enviar todo",
+      "SUBMITTED": "Viaje enviado."
+    },
+    "TIMER": {
+      "TITLE": "Temporizador de trabajo",
+      "RUNNING": "Temporizador en marcha",
+      "WO_LABEL": "Orden de trabajo:",
+      "ENTRY_ID_LABEL": "ID de entrada:",
+      "START_LABEL": "Inicio:",
+      "IDLE": "No hay temporizador activo.",
+      "STARTING": "Iniciando temporizador…",
+      "STOPPING": "Deteniendo temporizador…",
+      "START_HEADING": "Iniciar temporizador",
+      "WORK_ORDER_ID": "ID de orden de trabajo",
+      "WO_REQUIRED": "El ID de orden de trabajo es obligatorio.",
+      "WO_ITEM_ID": "ID de artículo de orden de trabajo",
+      "LABOR_CODE": "Código de mano de obra",
+      "START_BTN": "Iniciar temporizador",
+      "STOP_BTN": "Detener temporizador",
+      "LAST_STOPPED": "Último detenido",
+      "COL_ENTRY_ID": "ID de entrada",
+      "COL_WORK_ORDER": "Orden de trabajo",
+      "COL_START": "Inicio",
+      "COL_END": "Fin",
+      "COL_DURATION": "Duración (s)"
+    },
+    "OPS_CONTEXT": {
+      "TITLE": "Contexto operativo",
+      "EMPTY": "No se cargó ningún contexto.",
+      "OVERRIDE": "Anular contexto",
+      "CONTEXT_KEY": "Clave de contexto",
+      "CONTEXT_VALUE": "Valor de contexto",
+      "REASON": "Motivo",
+      "SUBMIT": "Enviar anulación",
+      "CLOSE": "Cerrar",
+      "SAVED": "Anulación guardada."
     }
   },
   "INVENTORY": {
