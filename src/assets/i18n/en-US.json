@@ -2765,7 +2765,9 @@
       "SAVING": "Saving…",
       "SAVE_VEHICLE": "Save vehicle",
       "CREATING": "Creating…",
-      "CREATE_ESTIMATE": "Create Estimate"
+      "CREATE_ESTIMATE": "Create Estimate",
+      "LOADING_VEHICLES": "Loading vehicles…",
+      "NO_VEHICLES": "No vehicles on file for this customer — add one below."
     },
     "ESTIMATE_DETAIL": {
       "OVERLINE": "Estimate",

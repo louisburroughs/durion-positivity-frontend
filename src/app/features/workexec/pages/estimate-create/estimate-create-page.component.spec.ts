@@ -11,7 +11,10 @@ import { environment } from '../../../../../environments/environment';
 const BASE = environment.apiBaseUrl;
 
 // Minimal real-text translations so the TranslatePipe resolves keys asserted in the DOM.
-const translations = { WORKEXEC: { ESTIMATE_CREATE: { TITLE: 'New Estimate' } } };
+const translations = { WORKEXEC: { ESTIMATE_CREATE: {
+  TITLE: 'New Estimate',
+  NO_VEHICLES: 'No vehicles on file for this customer — add one below.',
+} } };
 
 describe('EstimateCreatePageComponent [Story 239]', () => {
   let fixture: ComponentFixture<EstimateCreatePageComponent>;
@@ -120,6 +123,21 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
       ]);
     expect(component.customerVehicles().length).toBe(2);
   }));
+
+  it('should show a no-vehicles empty state when the customer has no resolvable vehicles', () => {
+    component.selectCustomer({ partyId: 'p-9', legalName: 'No Cars Co', customerNumber: 'C-900' });
+
+    expect(component.vehiclesLoading()).toBe(true);
+    http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/p-9/vehicles')).flush([]);
+
+    expect(component.vehiclesLoading()).toBe(false);
+    expect(component.vehiclesLoaded()).toBe(true);
+    expect(component.customerVehicles().length).toBe(0);
+
+    fixture.detectChanges();
+    const hint = (fixture.nativeElement as HTMLElement).querySelector('[role="status"]');
+    expect(hint?.textContent ?? '').toContain('No vehicles on file');
+  });
 
   it('should reveal inline add-vehicle form when add option chosen', () => {
     expect(component.showAddVehicle()).toBe(false);

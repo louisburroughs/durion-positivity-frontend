@@ -47,6 +47,10 @@ export class EstimateCreatePageComponent implements OnInit {
   private customerSearchPrimed = false;
 
   readonly customerVehicles = signal<VehicleSummary[]>([]);
+  // Track the vehicle fetch so the template can show a loading hint and, once the
+  // list resolves empty, a clear "no vehicles" state instead of a bare dropdown.
+  readonly vehiclesLoading = signal(false);
+  readonly vehiclesLoaded  = signal(false);
 
   readonly showAddVehicle = signal(false);
   readonly vehicleSaving = signal(false);
@@ -117,12 +121,18 @@ export class EstimateCreatePageComponent implements OnInit {
 
     // Authoritative, complete vehicle list for the customer (the CRM snapshot does
     // not reliably carry vehicles for commercial accounts).
+    this.vehiclesLoading.set(true);
+    this.vehiclesLoaded.set(false);
     this.vehiclesApi.listVehiclesForCustomer(id, 'body', false, { transferCache: false })
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         catchError(() => of([] as VehicleSummary[])),
       )
-      .subscribe(vehicles => this.customerVehicles.set(vehicles ?? []));
+      .subscribe(vehicles => {
+        this.customerVehicles.set(vehicles ?? []);
+        this.vehiclesLoading.set(false);
+        this.vehiclesLoaded.set(true);
+      });
   }
 
   /** Display label for a party row (shared CRM label: name + DBA + customer number). */
@@ -199,6 +209,8 @@ export class EstimateCreatePageComponent implements OnInit {
 
   private resetVehicleSelection(): void {
     this.customerVehicles.set([]);
+    this.vehiclesLoading.set(false);
+    this.vehiclesLoaded.set(false);
     this.form.patchValue({ vehicleId: '' });
     this.showAddVehicle.set(false);
     this.vehicleSaveError.set(null);
