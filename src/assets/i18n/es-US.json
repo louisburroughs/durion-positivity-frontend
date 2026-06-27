@@ -81,15 +81,38 @@
       }
     },
     "DASHBOARD": {
-      "WELCOME_HEADING": "Bienvenido a Positivity",
-      "WELCOME_BODY": "Selecciona un área de la navegación para comenzar.",
-      "CARD": {
-        "WORKORDERS": "Órdenes de trabajo",
-        "CUSTOMERS": "Clientes",
-        "ACCOUNTING": "Contabilidad",
-        "SHOPMGMT": "Gestión de taller",
-        "BILLING": "Facturación",
-        "PEOPLE": "Personas"
+      "WELCOME_HEADING": "Hola de nuevo, {{name}}",
+      "WELCOME_HEADING_GENERIC": "Hola de nuevo",
+      "WELCOME_BODY": "Continúa donde lo dejaste o ve directo a una acción fijada.",
+      "ASSISTANT": {
+        "REGION_ARIA": "Asistente",
+        "PLACEHOLDER": "Pregunta al asistente o escribe un mensaje para iniciar una conversación…",
+        "HINT": "Entrar para enviar",
+        "INPUT_ARIA": "Pregunta al asistente",
+        "SEND_ARIA": "Enviar mensaje"
+      },
+      "QUICK_ACTIONS": {
+        "TITLE": "Acciones rápidas fijadas",
+        "NEW_WORKORDER": "Nueva orden de trabajo",
+        "NEW_WORKORDER_SUB": "Abrir un ticket de trabajo",
+        "ADD_CUSTOMER": "Agregar cliente",
+        "ADD_CUSTOMER_SUB": "Crear un perfil",
+        "TAKE_PAYMENT": "Cobrar pago",
+        "TAKE_PAYMENT_SUB": "Facturar y cobrar",
+        "SCHEDULE": "Agenda de hoy",
+        "SCHEDULE_SUB": "Ver reservas",
+        "LOW_STOCK": "Stock bajo",
+        "LOW_STOCK_SUB": "Artículos para reordenar"
+      },
+      "RECENT": {
+        "TITLE": "Abierto recientemente",
+        "WORKORDERS_META": "Trabajos y despacho",
+        "CRM_META": "Cuentas y contactos",
+        "BILLING_META": "Facturas y pagos",
+        "INVENTORY_META": "Piezas y existencias"
+      },
+      "FAVORITES": {
+        "TITLE": "Áreas favoritas"
       }
     },
     "FOOTER": {

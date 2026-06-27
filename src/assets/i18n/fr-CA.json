@@ -81,15 +81,38 @@
       }
     },
     "DASHBOARD": {
-      "WELCOME_HEADING": "Bienvenue sur Positivity",
-      "WELCOME_BODY": "Sélectionnez une section dans la navigation pour commencer.",
-      "CARD": {
-        "WORKORDERS": "Bons de travail",
-        "CUSTOMERS": "Clients",
-        "ACCOUNTING": "Comptabilité",
-        "SHOPMGMT": "Gestion d'atelier",
-        "BILLING": "Facturation",
-        "PEOPLE": "Personnes"
+      "WELCOME_HEADING": "Bon retour, {{name}}",
+      "WELCOME_HEADING_GENERIC": "Bon retour",
+      "WELCOME_BODY": "Reprenez où vous en étiez ou accédez directement à une action épinglée.",
+      "ASSISTANT": {
+        "REGION_ARIA": "Assistant",
+        "PLACEHOLDER": "Demandez à l'assistant ou saisissez un message pour démarrer une conversation…",
+        "HINT": "Entrée pour envoyer",
+        "INPUT_ARIA": "Demander à l'assistant",
+        "SEND_ARIA": "Envoyer le message"
+      },
+      "QUICK_ACTIONS": {
+        "TITLE": "Actions rapides épinglées",
+        "NEW_WORKORDER": "Nouveau bon de travail",
+        "NEW_WORKORDER_SUB": "Ouvrir un billet de travail",
+        "ADD_CUSTOMER": "Ajouter un client",
+        "ADD_CUSTOMER_SUB": "Créer un profil",
+        "TAKE_PAYMENT": "Encaisser un paiement",
+        "TAKE_PAYMENT_SUB": "Facturer et encaisser",
+        "SCHEDULE": "Horaire du jour",
+        "SCHEDULE_SUB": "Voir les réservations",
+        "LOW_STOCK": "Stock faible",
+        "LOW_STOCK_SUB": "Articles à réapprovisionner"
+      },
+      "RECENT": {
+        "TITLE": "Ouvert récemment",
+        "WORKORDERS_META": "Travaux et répartition",
+        "CRM_META": "Comptes et contacts",
+        "BILLING_META": "Factures et paiements",
+        "INVENTORY_META": "Pièces et stock"
+      },
+      "FAVORITES": {
+        "TITLE": "Zones favorites"
       }
     },
     "FOOTER": {

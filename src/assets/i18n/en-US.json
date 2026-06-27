@@ -81,15 +81,38 @@
       }
     },
     "DASHBOARD": {
-      "WELCOME_HEADING": "Welcome to Positivity",
-      "WELCOME_BODY": "Select an area from the navigation to get started.",
-      "CARD": {
-        "WORKORDERS": "Work Orders",
-        "CUSTOMERS": "Customers",
-        "ACCOUNTING": "Accounting",
-        "SHOPMGMT": "Shop Management",
-        "BILLING": "Billing",
-        "PEOPLE": "People"
+      "WELCOME_HEADING": "Welcome back, {{name}}",
+      "WELCOME_HEADING_GENERIC": "Welcome back",
+      "WELCOME_BODY": "Pick up where you left off, or jump straight to a pinned action.",
+      "ASSISTANT": {
+        "REGION_ARIA": "Assistant",
+        "PLACEHOLDER": "Ask the assistant or type a message to start a conversation…",
+        "HINT": "Enter to send",
+        "INPUT_ARIA": "Ask the assistant",
+        "SEND_ARIA": "Send message"
+      },
+      "QUICK_ACTIONS": {
+        "TITLE": "Pinned quick actions",
+        "NEW_WORKORDER": "New work order",
+        "NEW_WORKORDER_SUB": "Open a job ticket",
+        "ADD_CUSTOMER": "Add customer",
+        "ADD_CUSTOMER_SUB": "Create a profile",
+        "TAKE_PAYMENT": "Take payment",
+        "TAKE_PAYMENT_SUB": "Invoice & bill",
+        "SCHEDULE": "Today's schedule",
+        "SCHEDULE_SUB": "View bookings",
+        "LOW_STOCK": "Low stock",
+        "LOW_STOCK_SUB": "Items to reorder"
+      },
+      "RECENT": {
+        "TITLE": "Recently opened",
+        "WORKORDERS_META": "Jobs and dispatch",
+        "CRM_META": "Accounts and contacts",
+        "BILLING_META": "Invoices and payments",
+        "INVENTORY_META": "Parts and stock"
+      },
+      "FAVORITES": {
+        "TITLE": "Favorite areas"
       }
     },
     "FOOTER": {
