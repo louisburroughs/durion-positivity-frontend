@@ -1,33 +1,33 @@
 <section class="workexec-page workorder-parts" aria-labelledby="parts-heading">
 
-  <button class="btn btn--ghost back-btn" (click)="back()">← Work Order</button>
+  <button class="btn btn--ghost back-btn" (click)="back()">{{ 'WORKEXEC.WORKORDER_COMMON.BACK_SHORT' | translate }}</button>
 
-  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading parts…</p> }
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.WORKORDER_PARTS.LOADING' | translate }}</p> }
   @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
 
   @if (pageState() === 'ready') {
     <header class="page-header">
-      <p class="page-overline">Work Order {{ workorderId() }}</p>
-      <h1 id="parts-heading">Parts</h1>
+      <p class="page-overline">{{ 'WORKEXEC.WORKORDER_COMMON.WO_OVERLINE' | translate: { id: workorderId() } }}</p>
+      <h1 id="parts-heading">{{ 'WORKEXEC.WORKORDER_PARTS.TITLE' | translate }}</h1>
     </header>
 
     <!-- Scope parts list with actions -->
     <div class="parts-scope">
       <div class="section-row">
-        <p class="section-overline">Scope Parts</p>
+        <p class="section-overline">{{ 'WORKEXEC.WORKORDER_PARTS.SCOPE' | translate }}</p>
         <div class="action-btns">
-          <button class="btn btn--ghost btn--sm" (click)="openAction('issue')">Issue Parts</button>
-          <button class="btn btn--ghost btn--sm" (click)="openAction('consume')">Consume</button>
-          <button class="btn btn--ghost btn--sm" (click)="openAction('return')">Return</button>
+          <button class="btn btn--ghost btn--sm" (click)="openAction('issue')">{{ 'WORKEXEC.WORKORDER_PARTS.ISSUE_PARTS' | translate }}</button>
+          <button class="btn btn--ghost btn--sm" (click)="openAction('consume')">{{ 'WORKEXEC.WORKORDER_PARTS.CONSUME' | translate }}</button>
+          <button class="btn btn--ghost btn--sm" (click)="openAction('return')">{{ 'WORKEXEC.WORKORDER_PARTS.RETURN' | translate }}</button>
         </div>
       </div>
 
       @if (partItems().length === 0) {
-        <p class="hint-text">No parts in this work order scope.</p>
+        <p class="hint-text">{{ 'WORKEXEC.WORKORDER_PARTS.SCOPE_EMPTY' | translate }}</p>
       } @else {
         <div class="ledger">
           <div class="ledger__header">
-            <span>Part / Description</span><span>Qty</span><span>Unit Price</span><span>Actions</span>
+            <span>{{ 'WORKEXEC.WORKORDER_PARTS.COL_PART_DESC' | translate }}</span><span>{{ 'WORKEXEC.WORKORDER_COMMON.COL_QTY' | translate }}</span><span>{{ 'WORKEXEC.WORKORDER_COMMON.COL_UNIT_PRICE' | translate }}</span><span>{{ 'WORKEXEC.WORKORDER_COMMON.COL_ACTIONS' | translate }}</span>
           </div>
           @for (item of partItems(); track item.id; let even = $even) {
             <div class="ledger__row" [class.ledger__row--alt]="even">
@@ -35,8 +35,8 @@
               <span class="ledger__cell">{{ item.quantity }}</span>
               <span class="ledger__cell">{{ item.unitPrice | currency }}</span>
               <span class="ledger__cell ledger__cell--actions">
-                <button class="btn-link" (click)="openAction('issue', item.id)">Issue</button>
-                <button class="btn-link" (click)="openSubstPanel(item.id)">Substitute</button>
+                <button class="btn-link" (click)="openAction('issue', item.id)">{{ 'WORKEXEC.WORKORDER_PARTS.ISSUE' | translate }}</button>
+                <button class="btn-link" (click)="openSubstPanel(item.id)">{{ 'WORKEXEC.WORKORDER_PARTS.SUBSTITUTE' | translate }}</button>
               </span>
             </div>
           }
@@ -46,27 +46,27 @@
 
     <!-- Part action inline form -->
     @if (activeAction()) {
-      <div class="action-form" role="dialog" aria-label="Part action form">
-        <p class="section-overline">{{ activeAction() | titlecase }} Parts</p>
+      <div class="action-form" role="dialog" [attr.aria-label]="'WORKEXEC.WORKORDER_PARTS.ACTION_ARIA' | translate">
+        <p class="section-overline">{{ 'WORKEXEC.WORKORDER_PARTS.ACTION_TITLE' | translate: { action: (activeAction() | titlecase) } }}</p>
         <div class="field">
-          <label class="field__label">Part ID <span aria-hidden="true">*</span></label>
-          <input class="field__input" type="text" [value]="actionPartId()" (input)="actionPartId.set($any($event.target).value)" placeholder="Part UUID" />
+          <label class="field__label">{{ 'WORKEXEC.WORKORDER_PARTS.PART_ID' | translate }} <span aria-hidden="true">*</span></label>
+          <input class="field__input" type="text" [value]="actionPartId()" (input)="actionPartId.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_PARTS.PART_UUID_PH' | translate" />
         </div>
         <div class="field">
-          <label class="field__label">Quantity</label>
+          <label class="field__label">{{ 'WORKEXEC.WORKORDER_COMMON.QUANTITY' | translate }}</label>
           <input class="field__input" type="number" min="1" [value]="actionQuantity()" (input)="actionQuantity.set(+$any($event.target).value)" />
         </div>
         @if (activeAction() === 'issue' || activeAction() === 'return') {
           <div class="field">
-            <label class="field__label">Notes</label>
-            <input class="field__input" type="text" [value]="actionNotes()" (input)="actionNotes.set($any($event.target).value)" placeholder="Optional" />
+            <label class="field__label">{{ 'WORKEXEC.WORKORDER_COMMON.NOTES' | translate }}</label>
+            <input class="field__input" type="text" [value]="actionNotes()" (input)="actionNotes.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_COMMON.OPTIONAL_PH' | translate" />
           </div>
         }
         @if (actionError()) { <div class="alert alert--error" role="alert">{{ actionError() }}</div> }
         <div class="form-actions">
-          <button class="btn btn--ghost" (click)="closeAction()">Cancel</button>
+          <button class="btn btn--ghost" (click)="closeAction()">{{ 'WORKEXEC.WORKORDER_COMMON.CANCEL' | translate }}</button>
           <button class="btn btn--accent" (click)="submitAction()" [attr.aria-busy]="actionState() === 'loading'" [disabled]="actionState() === 'loading'">
-            {{ actionState() === 'loading' ? 'Saving…' : 'Confirm' }}
+            {{ (actionState() === 'loading' ? 'WORKEXEC.WORKORDER_COMMON.SAVING' : 'WORKEXEC.WORKORDER_COMMON.CONFIRM') | translate }}
           </button>
         </div>
       </div>
@@ -74,13 +74,13 @@
 
     <!-- Usage history ledger -->
     <div class="usage-history">
-      <p class="section-overline">Usage History ({{ usageHistory().length }})</p>
+      <p class="section-overline">{{ 'WORKEXEC.WORKORDER_PARTS.USAGE_COUNT' | translate: { count: usageHistory().length } }}</p>
       @if (usageHistory().length === 0) {
-        <p class="hint-text">No usage recorded yet.</p>
+        <p class="hint-text">{{ 'WORKEXEC.WORKORDER_PARTS.USAGE_EMPTY' | translate }}</p>
       } @else {
         <div class="ledger">
           <div class="ledger__header">
-            <span>Part ID</span><span>Issued</span><span>Consumed</span><span>Returned</span><span>When</span>
+            <span>{{ 'WORKEXEC.WORKORDER_PARTS.COL_PART_ID' | translate }}</span><span>{{ 'WORKEXEC.WORKORDER_PARTS.COL_ISSUED' | translate }}</span><span>{{ 'WORKEXEC.WORKORDER_PARTS.COL_CONSUMED' | translate }}</span><span>{{ 'WORKEXEC.WORKORDER_PARTS.COL_RETURNED' | translate }}</span><span>{{ 'WORKEXEC.WORKORDER_COMMON.COL_WHEN' | translate }}</span>
           </div>
           @for (entry of usageHistory(); track entry.id; let even = $even) {
             <div class="ledger__row" [class.ledger__row--alt]="even">
@@ -103,16 +103,16 @@
   <div class="subst-backdrop" role="dialog" aria-modal="true" aria-labelledby="subst-panel-title">
     <div class="subst-panel">
       <div class="subst-panel__header">
-        <h2 id="subst-panel-title" class="subst-panel__title">Find Substitute for Part</h2>
-        <button class="btn-icon" (click)="closeSubstPanel()" aria-label="Close substitution panel">✕</button>
+        <h2 id="subst-panel-title" class="subst-panel__title">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_TITLE' | translate }}</h2>
+        <button class="btn-icon" (click)="closeSubstPanel()" [attr.aria-label]="'WORKEXEC.WORKORDER_PARTS.SUBST_CLOSE_ARIA' | translate">✕</button>
       </div>
-      <p class="hint-text subst-part-id">Part: {{ substSourcePartId() }}</p>
+      <p class="hint-text subst-part-id">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_PART' | translate: { id: substSourcePartId() } }}</p>
 
-      @if (substLoadState() === 'loading') { <p class="hint-text" aria-busy="true">Loading suggestions…</p> }
-      @if (substLoadState() === 'error') { <div class="alert alert--error">Failed to load suggestions.</div> }
+      @if (substLoadState() === 'loading') { <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_LOADING' | translate }}</p> }
+      @if (substLoadState() === 'error') { <div class="alert alert--error">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_LOAD_ERROR' | translate }}</div> }
 
       @if (substSuggestions().length === 0 && substLoadState() === 'idle') {
-        <p class="hint-text">No substitutes found for this part.</p>
+        <p class="hint-text">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_EMPTY' | translate }}</p>
       }
 
       @if (substSuggestions().length > 0) {
@@ -128,21 +128,21 @@
               />
               <span class="subst-option__id">{{ sub.substitutePartId }}</span>
               <span class="subst-type-badge subst-type-badge--{{ sub.substituteType?.toLowerCase() }}">{{ sub.substituteType }}</span>
-              <span class="subst-priority">Priority {{ sub.priority }}</span>
+              <span class="subst-priority">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_PRIORITY' | translate: { priority: sub.priority } }}</span>
             </label>
           }
         </div>
 
         <div class="field">
-          <label class="field__label">Reason <span aria-hidden="true">*</span></label>
-          <input class="field__input" type="text" [value]="substReason()" (input)="substReason.set($any($event.target).value)" placeholder="Why substituting?" />
+          <label class="field__label">{{ 'WORKEXEC.WORKORDER_PARTS.REASON' | translate }} <span aria-hidden="true">*</span></label>
+          <input class="field__input" type="text" [value]="substReason()" (input)="substReason.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_PARTS.SUBST_REASON_PH' | translate" />
         </div>
       }
 
       @if (substError()) { <div class="alert alert--error" role="alert">{{ substError() }}</div> }
 
       <div class="subst-panel__actions">
-        <button class="btn btn--ghost" (click)="closeSubstPanel()">Cancel</button>
+        <button class="btn btn--ghost" (click)="closeSubstPanel()">{{ 'WORKEXEC.WORKORDER_COMMON.CANCEL' | translate }}</button>
         @if (substSuggestions().length > 0) {
           <button
             class="btn btn--accent"
@@ -150,7 +150,7 @@
             [disabled]="substSaveState() === 'loading' || !substSelectedId() || !substReason().trim()"
             [attr.aria-busy]="substSaveState() === 'loading'"
           >
-            {{ substSaveState() === 'loading' ? 'Substituting…' : 'Confirm Substitution' }}
+            {{ (substSaveState() === 'loading' ? 'WORKEXEC.WORKORDER_PARTS.SUBSTITUTING' : 'WORKEXEC.WORKORDER_PARTS.CONFIRM_SUBST') | translate }}
           </button>
         }
       </div>

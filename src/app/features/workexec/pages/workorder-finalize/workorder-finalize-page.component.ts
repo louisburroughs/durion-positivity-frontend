@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import {
   Component,
@@ -32,7 +33,7 @@ type FinalizeState = 'idle' | 'loading' | 'success' | 'error';
 @Component({
   selector: 'app-workorder-finalize-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './workorder-finalize-page.component.html',
   styleUrl: './workorder-finalize-page.component.css',
 })

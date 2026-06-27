@@ -1,27 +1,27 @@
 <section class="workexec-page workorder-assign" aria-labelledby="assign-heading">
 
-  <button class="btn btn--ghost back-btn" (click)="cancel()">← Back to Work Order</button>
+  <button class="btn btn--ghost back-btn" (click)="cancel()">{{ 'WORKEXEC.WORKORDER_COMMON.BACK' | translate }}</button>
 
-  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading…</p> }
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.WORKORDER_COMMON.LOADING' | translate }}</p> }
   @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
 
   @if (pageState() === 'ready') {
     <header class="page-header">
-      <p class="page-overline">Work Order {{ workorderId() }}</p>
-      <h1 id="assign-heading">{{ formMode() === 'reassign' ? 'Reassign Technician' : 'Assign Technician' }}</h1>
+      <p class="page-overline">{{ 'WORKEXEC.WORKORDER_COMMON.WO_OVERLINE' | translate: { id: workorderId() } }}</p>
+      <h1 id="assign-heading">{{ (formMode() === 'reassign' ? 'WORKEXEC.WORKORDER_ASSIGN.REASSIGN_TITLE' : 'WORKEXEC.WORKORDER_ASSIGN.ASSIGN_TITLE') | translate }}</h1>
     </header>
 
     @if (currentAssignment()) {
-      <div class="current-assignment" aria-label="Current technician assignment">
-        <p class="section-overline">Current Assignment</p>
+      <div class="current-assignment" [attr.aria-label]="'WORKEXEC.WORKORDER_ASSIGN.CURRENT_ARIA' | translate">
+        <p class="section-overline">{{ 'WORKEXEC.WORKORDER_ASSIGN.CURRENT' | translate }}</p>
         <p><strong>{{ currentAssignment()!.technicianName ?? currentAssignment()!.technicianId }}</strong></p>
-        <p class="hint-text">Assigned {{ currentAssignment()!.assignedAt | date:'medium' }}</p>
+        <p class="hint-text">{{ 'WORKEXEC.WORKORDER_ASSIGN.ASSIGNED_AT' | translate: { at: (currentAssignment()!.assignedAt | date:'medium') } }}</p>
       </div>
     }
 
     <div class="assign-form">
       <div class="field tech-lookup">
-        <label for="technicianId" class="field__label">Technician <span aria-hidden="true">*</span></label>
+        <label for="technicianId" class="field__label">{{ 'WORKEXEC.WORKORDER_ASSIGN.TECHNICIAN' | translate }} <span aria-hidden="true">*</span></label>
         <input
           id="technicianId"
           class="field__input"
@@ -39,24 +39,24 @@
           (focus)="onTechFocus()"
           (blur)="onTechBlur()"
           (keydown)="onTechKeydown($event)"
-          placeholder="Search technicians at this location"
+          [placeholder]="'WORKEXEC.WORKORDER_ASSIGN.SEARCH_PH' | translate"
         />
 
         @if (rosterState() === 'loading') {
-          <p class="hint-text" aria-busy="true">Loading technicians…</p>
+          <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.WORKORDER_ASSIGN.ROSTER_LOADING' | translate }}</p>
         }
         @if (rosterState() === 'error') {
-          <p class="hint-text">Could not load technicians for this location.</p>
+          <p class="hint-text">{{ 'WORKEXEC.WORKORDER_ASSIGN.ROSTER_ERROR' | translate }}</p>
         }
         @if (rosterState() === 'no-shop') {
-          <p class="hint-text">This work order has no shop assigned, so technicians cannot be listed.</p>
+          <p class="hint-text">{{ 'WORKEXEC.WORKORDER_ASSIGN.NO_SHOP' | translate }}</p>
         }
         @if (rosterState() === 'ready' && technicians().length === 0) {
-          <p class="hint-text">No technicians assigned to this location.</p>
+          <p class="hint-text">{{ 'WORKEXEC.WORKORDER_ASSIGN.ROSTER_EMPTY' | translate }}</p>
         }
 
         @if (showTechList() && filteredTechnicians().length > 0) {
-          <ul id="technician-listbox" class="tech-list" role="listbox" aria-label="Technicians at this location">
+          <ul id="technician-listbox" class="tech-list" role="listbox" [attr.aria-label]="'WORKEXEC.WORKORDER_ASSIGN.LISTBOX_ARIA' | translate">
             @for (tech of filteredTechnicians(); track tech.id; let i = $index) {
               <li
                 role="option"
@@ -73,18 +73,18 @@
           </ul>
         }
         @if (showTechList() && rosterState() === 'ready' && technicians().length > 0 && filteredTechnicians().length === 0) {
-          <p class="hint-text">No technicians match “{{ techQuery() }}”.</p>
+          <p class="hint-text">{{ 'WORKEXEC.WORKORDER_ASSIGN.NO_MATCH' | translate: { query: techQuery() } }}</p>
         }
       </div>
       <div class="field">
-        <label for="assignNotes" class="field__label">Notes</label>
+        <label for="assignNotes" class="field__label">{{ 'WORKEXEC.WORKORDER_COMMON.NOTES' | translate }}</label>
         <textarea
           id="assignNotes"
           class="field__input field__input--textarea"
           [value]="notes()"
           (input)="notes.set($any($event.target).value)"
           rows="3"
-          placeholder="Optional notes"
+          [placeholder]="'WORKEXEC.WORKORDER_ASSIGN.NOTES_PH' | translate"
         ></textarea>
       </div>
 
@@ -93,14 +93,14 @@
       }
 
       <div class="form-actions">
-        <button class="btn btn--ghost" (click)="cancel()" [disabled]="saveState() === 'loading'">Cancel</button>
+        <button class="btn btn--ghost" (click)="cancel()" [disabled]="saveState() === 'loading'">{{ 'WORKEXEC.WORKORDER_COMMON.CANCEL' | translate }}</button>
         <button
           class="btn btn--accent"
           (click)="save()"
           [disabled]="saveState() === 'loading'"
           [attr.aria-busy]="saveState() === 'loading'"
         >
-          {{ saveState() === 'loading' ? 'Saving…' : (formMode() === 'reassign' ? 'Reassign' : 'Assign') }}
+          {{ (saveState() === 'loading' ? 'WORKEXEC.WORKORDER_COMMON.SAVING' : (formMode() === 'reassign' ? 'WORKEXEC.WORKORDER_ASSIGN.REASSIGN' : 'WORKEXEC.WORKORDER_ASSIGN.ASSIGN')) | translate }}
         </button>
       </div>
     </div>

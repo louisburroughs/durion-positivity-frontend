@@ -1,13 +1,13 @@
 <section class="workexec-page workorder-detail" aria-labelledby="wo-heading">
 
   @if (pageState() === 'loading') {
-  <p class="hint-text" aria-busy="true">Loading work order…</p>
+  <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.WORKORDER_DETAIL.LOADING' | translate }}</p>
   }
 
   @if (pageState() === 'error') {
   <div class="alert alert--error" role="alert">
     {{ errorMessage() }}
-    <button class="btn-link" (click)="refresh()">Retry</button>
+    <button class="btn-link" (click)="refresh()">{{ 'WORKEXEC.WORKORDER_COMMON.RETRY' | translate }}</button>
   </div>
   }
 
@@ -17,27 +17,27 @@
   <header class="wo-header" aria-labelledby="wo-heading">
     <div class="wo-header__inner">
       <div class="wo-header__identity">
-        <p class="wo-header__overline">Work Order</p>
+        <p class="wo-header__overline">{{ 'WORKEXEC.WORKORDER_COMMON.WORK_ORDER' | translate }}</p>
         <h1 id="wo-heading" class="wo-header__id">{{ workorder()!.workorderNumber ?? workorderId() }}</h1>
         <span class="status-chip status-chip--{{ workorder()!.status?.toLowerCase() }}"
-          aria-label="Status: {{ workorder()!.status }}">{{ workorder()!.status }}</span>
+          [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.STATUS_ARIA' | translate: { status: workorder()!.status }">{{ workorder()!.status }}</span>
       </div>
 
       <div class="wo-header__meta">
         @if (hasTechnician()) {
         <p class="wo-header__meta-item">
-          <span class="wo-header__meta-label">Technician</span>
+          <span class="wo-header__meta-label">{{ 'WORKEXEC.WORKORDER_DETAIL.TECHNICIAN' | translate }}</span>
           <span class="wo-header__meta-value">{{ technicianDisplay() ?? '…' }}</span>
         </p>
         } @else {
         <p class="wo-header__meta-item">
-          <span class="wo-header__meta-label">Technician</span>
-          <span class="wo-header__meta-value wo-header__meta-value--empty">Unassigned</span>
+          <span class="wo-header__meta-label">{{ 'WORKEXEC.WORKORDER_DETAIL.TECHNICIAN' | translate }}</span>
+          <span class="wo-header__meta-value wo-header__meta-value--empty">{{ 'WORKEXEC.WORKORDER_DETAIL.UNASSIGNED' | translate }}</span>
         </p>
         }
         @if (workorder()!.startedAt) {
         <p class="wo-header__meta-item">
-          <span class="wo-header__meta-label">Started</span>
+          <span class="wo-header__meta-label">{{ 'WORKEXEC.WORKORDER_DETAIL.STARTED' | translate }}</span>
           <span class="wo-header__meta-value">{{ workorder()!.startedAt | date:'medium' }}</span>
         </p>
         }
@@ -46,73 +46,72 @@
       <!-- Primary CTAs — Electric Teal only for positive primary action -->
       <div class="wo-header__actions">
         @if (canApprove()) {
-        <button class="btn btn--accent" (click)="openApproveModal()">Approve Work Order</button>
+        <button class="btn btn--accent" (click)="openApproveModal()">{{ 'WORKEXEC.WORKORDER_DETAIL.APPROVE_WO' | translate }}</button>
         }
         @if (canStartWork()) {
-        <button class="btn btn--accent" (click)="openStartWorkModal()">Start Work</button>
+        <button class="btn btn--accent" (click)="openStartWorkModal()">{{ 'WORKEXEC.WORKORDER_DETAIL.START_WORK' | translate }}</button>
         }
         @if (isInProgress()) {
-        <button class="btn btn--ghost" (click)="navigateToLabor()">Record Labor</button>
-        <button class="btn btn--ghost" (click)="navigateToParts()">Manage Parts</button>
-        <button class="btn btn--ghost" (click)="navigateToChangeRequests()">Change Requests</button>
-        <button class="btn btn--ghost" (click)="navigateToFinalize()">Finalize for Billing</button>
+        <button class="btn btn--ghost" (click)="navigateToLabor()">{{ 'WORKEXEC.WORKORDER_DETAIL.RECORD_LABOR' | translate }}</button>
+        <button class="btn btn--ghost" (click)="navigateToParts()">{{ 'WORKEXEC.WORKORDER_DETAIL.MANAGE_PARTS' | translate }}</button>
+        <button class="btn btn--ghost" (click)="navigateToChangeRequests()">{{ 'WORKEXEC.WORKORDER_DETAIL.CHANGE_REQUESTS' | translate }}</button>
+        <button class="btn btn--ghost" (click)="navigateToFinalize()">{{ 'WORKEXEC.WORKORDER_DETAIL.FINALIZE' | translate }}</button>
         }
         @if (canComplete()) {
-        <button class="btn btn--accent" (click)="openCompleteModal()">Complete Work Order</button>
+        <button class="btn btn--accent" (click)="openCompleteModal()">{{ 'WORKEXEC.WORKORDER_DETAIL.COMPLETE_WO' | translate }}</button>
         }
         @if (canReopen()) {
-        <button class="btn btn--ghost" (click)="openReopenModal()">Reopen</button>
+        <button class="btn btn--ghost" (click)="openReopenModal()">{{ 'WORKEXEC.WORKORDER_DETAIL.REOPEN' | translate }}</button>
         }
         @if (canCreateInvoice()) {
         <button class="btn btn--accent" (click)="generateInvoice()" [disabled]="invoiceLoading()"
-          [attr.aria-busy]="invoiceLoading()">{{ invoiceLoading() ? 'Creating Invoice…' : 'Create Invoice' }}</button>
+          [attr.aria-busy]="invoiceLoading()">{{ (invoiceLoading() ? 'WORKEXEC.WORKORDER_DETAIL.CREATING_INVOICE' : 'WORKEXEC.WORKORDER_DETAIL.CREATE_INVOICE') | translate }}</button>
         }
         @if (invoiceError()) {
         <span class="inline-error" role="alert">{{ invoiceError() }}</span>
         }
         <button class="btn btn--ghost" (click)="navigateToAssign()"
           [disabled]="!canAssignTechnician()"
-          [attr.title]="canAssignTechnician() ? null : 'Approve the work order before assigning a technician'">
-          {{ hasTechnician() ? 'Reassign' : 'Assign Technician' }}
+          [attr.title]="canAssignTechnician() ? null : ('WORKEXEC.WORKORDER_DETAIL.ASSIGN_BLOCKED_TITLE' | translate)">
+          {{ (hasTechnician() ? 'WORKEXEC.WORKORDER_DETAIL.REASSIGN' : 'WORKEXEC.WORKORDER_DETAIL.ASSIGN_TECH') | translate }}
         </button>
       </div>
     </div>
   </header>
 
   <!-- Tab bar — 2px secondary bottom indicator only, no box shadow -->
-  <nav class="wo-tabs" aria-label="Work Order sections">
+  <nav class="wo-tabs" [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.TABS_ARIA' | translate">
     <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'items'" (click)="selectTab('items')"
-      aria-selected="{{ activeTab() === 'items' }}">Scope</button>
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'labor'" (click)="navigateToLabor()">Labor</button>
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'parts'" (click)="navigateToParts()">Parts</button>
+      [attr.aria-selected]="activeTab() === 'items'">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_SCOPE' | translate }}</button>
+    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'labor'" (click)="navigateToLabor()">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_LABOR' | translate }}</button>
+    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'parts'" (click)="navigateToParts()">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_PARTS' | translate }}</button>
     <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'change-requests'"
       (click)="navigateToChangeRequests()">
-      Change Requests
+      {{ 'WORKEXEC.WORKORDER_DETAIL.CHANGE_REQUESTS' | translate }}
       @if (pendingCrCount() > 0) {
-      <span class="tab-badge tab-badge--warning" aria-label="{{ pendingCrCount() }} pending">{{ pendingCrCount()
+      <span class="tab-badge tab-badge--warning" [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.PENDING_ARIA' | translate: { count: pendingCrCount() }">{{ pendingCrCount()
         }}</span>
       }
     </button>
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'audit'" (click)="selectTab('audit')">Audit
-      Trail</button>
+    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'audit'" (click)="selectTab('audit')">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_AUDIT' | translate }}</button>
   </nav>
 
   <!-- Scope/Items tab — Story 229 -->
   @if (activeTab() === 'items') {
-  <div class="wo-section" aria-label="Work Order scope">
+  <div class="wo-section" [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.SCOPE_ARIA' | translate">
     @if (items().length === 0) {
-    <p class="hint-text">No items were promoted from the estimate.</p>
+    <p class="hint-text">{{ 'WORKEXEC.WORKORDER_DETAIL.NO_ITEMS' | translate }}</p>
     } @else {
     @if (itemError()) {
     <p class="hint-text hint-text--error" role="alert">{{ itemError() }}</p>
     }
     <div class="ledger">
       <div class="ledger__header">
-        <span>Description</span>
-        <span>Qty</span>
-        <span>Unit Price</span>
-        <span>Line Total</span>
-        <span>Done</span>
+        <span>{{ 'WORKEXEC.WORKORDER_COMMON.COL_DESCRIPTION' | translate }}</span>
+        <span>{{ 'WORKEXEC.WORKORDER_COMMON.COL_QTY' | translate }}</span>
+        <span>{{ 'WORKEXEC.WORKORDER_COMMON.COL_UNIT_PRICE' | translate }}</span>
+        <span>{{ 'WORKEXEC.WORKORDER_DETAIL.COL_LINE_TOTAL' | translate }}</span>
+        <span>{{ 'WORKEXEC.WORKORDER_DETAIL.COL_DONE' | translate }}</span>
       </div>
       @for (item of items(); track item.id; let even = $even) {
       <div class="ledger__row" [class.ledger__row--alt]="even" [attr.aria-label]="item.description">
@@ -131,7 +130,7 @@
             [checked]="isItemCompleted(item)"
             [disabled]="isItemCompleted(item) || !canCompleteItems() || completingItemId() !== null"
             (change)="completeItem(item)"
-            [attr.aria-label]="'Mark ' + (item.description || 'item') + ' complete'"
+            [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.MARK_COMPLETE' | translate: { desc: (item.description || ('WORKEXEC.WORKORDER_DETAIL.TAB_SCOPE' | translate)) }"
           />
         </span>
       </div>
@@ -143,12 +142,12 @@
 
   <!-- Audit trail tab — Story 226 -->
   @if (activeTab() === 'audit') {
-  <div class="wo-section" aria-label="Promotion and transition audit trail">
+  <div class="wo-section" [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.AUDIT_ARIA' | translate">
     @if (workorder()!.estimateId) {
     <div class="audit-origin">
-      <p class="section-overline">Promoted From</p>
+      <p class="section-overline">{{ 'WORKEXEC.WORKORDER_DETAIL.PROMOTED_FROM' | translate }}</p>
       <p>
-        Estimate
+        {{ 'WORKEXEC.WORKORDER_DETAIL.ESTIMATE' | translate }}
         <a [routerLink]="['/app/workexec/estimates', workorder()!.estimateId]" class="audit-link">
           {{ workorder()!.estimateId }}
         </a>
@@ -156,24 +155,24 @@
     </div>
     }
 
-    <div class="crm-ref-block" aria-label="CRM references">
-      <p class="section-overline">CRM References</p>
+    <div class="crm-ref-block" [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.CRM_ARIA' | translate">
+      <p class="section-overline">{{ 'WORKEXEC.WORKORDER_DETAIL.CRM_REFERENCES' | translate }}</p>
       <div class="crm-ref-grid">
-        <span class="crm-ref-label">Party</span>
+        <span class="crm-ref-label">{{ 'WORKEXEC.WORKORDER_DETAIL.PARTY' | translate }}</span>
         @if (workorder()!.crmPartyId) {
         <span class="crm-ref-value" [title]="workorder()!.crmPartyId!">{{ workorder()!.crmPartyId }}</span>
         } @else {
-        <span class="crm-ref-value crm-ref-value--empty">Not set</span>
+        <span class="crm-ref-value crm-ref-value--empty">{{ 'WORKEXEC.WORKORDER_DETAIL.NOT_SET' | translate }}</span>
         }
 
-        <span class="crm-ref-label">Vehicle</span>
+        <span class="crm-ref-label">{{ 'WORKEXEC.WORKORDER_DETAIL.VEHICLE' | translate }}</span>
         @if (workorder()!.crmVehicleId) {
         <span class="crm-ref-value" [title]="workorder()!.crmVehicleId!">{{ workorder()!.crmVehicleId }}</span>
         } @else {
-        <span class="crm-ref-value crm-ref-value--empty">Not set</span>
+        <span class="crm-ref-value crm-ref-value--empty">{{ 'WORKEXEC.WORKORDER_DETAIL.NOT_SET' | translate }}</span>
         }
 
-        <span class="crm-ref-label">Contacts</span>
+        <span class="crm-ref-label">{{ 'WORKEXEC.WORKORDER_DETAIL.CONTACTS' | translate }}</span>
         @if ((workorder()!.crmContactIds?.length ?? 0) > 0) {
         <span class="crm-ref-contacts">
           @for (id of workorder()!.crmContactIds!; track id) {
@@ -181,7 +180,7 @@
           }
         </span>
         } @else {
-        <span class="crm-ref-value crm-ref-value--empty">Not set</span>
+        <span class="crm-ref-value crm-ref-value--empty">{{ 'WORKEXEC.WORKORDER_DETAIL.NOT_SET' | translate }}</span>
         }
       </div>
     </div>
@@ -189,20 +188,20 @@
     <div class="audit-transitions">
       <button class="audit-toggle btn-link" (click)="auditExpanded.set(!auditExpanded())"
         [attr.aria-expanded]="auditExpanded()">
-        {{ auditExpanded() ? 'Hide' : 'Show' }} Transition History ({{ transitions().length }})
+        {{ (auditExpanded() ? 'WORKEXEC.WORKORDER_DETAIL.HIDE' : 'WORKEXEC.WORKORDER_DETAIL.SHOW') | translate }} {{ 'WORKEXEC.WORKORDER_DETAIL.TRANSITION_HISTORY' | translate: { count: transitions().length } }}
       </button>
 
       @if (auditExpanded()) {
       @if (transitions().length === 0) {
-      <p class="hint-text">No transitions recorded yet.</p>
+      <p class="hint-text">{{ 'WORKEXEC.WORKORDER_DETAIL.NO_TRANSITIONS' | translate }}</p>
       } @else {
       <div class="ledger ledger--audit">
         <div class="ledger__header">
-          <span>From</span>
-          <span>To</span>
-          <span>Actor</span>
-          <span>When</span>
-          <span>Reason</span>
+          <span>{{ 'WORKEXEC.WORKORDER_DETAIL.COL_FROM' | translate }}</span>
+          <span>{{ 'WORKEXEC.WORKORDER_DETAIL.COL_TO' | translate }}</span>
+          <span>{{ 'WORKEXEC.WORKORDER_DETAIL.COL_ACTOR' | translate }}</span>
+          <span>{{ 'WORKEXEC.WORKORDER_COMMON.COL_WHEN' | translate }}</span>
+          <span>{{ 'WORKEXEC.WORKORDER_COMMON.COL_REASON' | translate }}</span>
         </div>
         @for (t of transitions(); track t.id; let even = $even) {
         <div class="ledger__row" [class.ledger__row--alt]="even">
@@ -230,24 +229,24 @@
 
 <!-- Completion Checklist Panel (Story 218) — shown when canComplete -->
 @if (pageState() === 'ready' && canComplete()) {
-<aside class="checklist-panel" aria-label="Completion readiness checklist">
-  <h3 class="checklist-panel__title">Completion Checklist</h3>
+<aside class="checklist-panel" [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.CHECKLIST_ARIA' | translate">
+  <h3 class="checklist-panel__title">{{ 'WORKEXEC.WORKORDER_DETAIL.CHECKLIST_TITLE' | translate }}</h3>
   @if (checklistLoading()) {
-  <p class="hint-text" aria-busy="true">Checking prerequisites…</p>
+  <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.WORKORDER_DETAIL.CHECKING' | translate }}</p>
   } @else {
   <ul class="checklist-list">
     @if (pendingCrCount() > 0) {
     <li class="checklist-item checklist-item--blocking">
       <span class="checklist-item__icon" aria-hidden="true">✗</span>
       <span class="checklist-item__label">
-        {{ pendingCrCount() }} change request(s) pending advisor review — resolve before completing.
+        {{ 'WORKEXEC.WORKORDER_DETAIL.CR_PENDING' | translate: { count: pendingCrCount() } }}
       </span>
-      <button class="btn-link" (click)="navigateToChangeRequests()">View Change Requests</button>
+      <button class="btn-link" (click)="navigateToChangeRequests()">{{ 'WORKEXEC.WORKORDER_DETAIL.VIEW_CR' | translate }}</button>
     </li>
     } @else {
     <li class="checklist-item checklist-item--ok">
       <span class="checklist-item__icon" aria-hidden="true">✓</span>
-      <span class="checklist-item__label">No pending change requests.</span>
+      <span class="checklist-item__label">{{ 'WORKEXEC.WORKORDER_DETAIL.NO_PENDING_CR' | translate }}</span>
     </li>
     }
     @if (failedChecks().length > 0) {
@@ -267,19 +266,19 @@
 @if (showApproveModal()) {
 <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="approve-modal-title">
   <div class="modal-glass">
-    <h2 id="approve-modal-title" class="modal-glass__title">Approve {{ workorder()!.workorderNumber ?? workorderId() }}?</h2>
+    <h2 id="approve-modal-title" class="modal-glass__title">{{ 'WORKEXEC.WORKORDER_DETAIL.APPROVE_MODAL_TITLE' | translate: { wo: (workorder()!.workorderNumber ?? workorderId()) } }}</h2>
     <p class="modal-glass__body">
-      This moves the work order to <strong>APPROVED</strong>, after which a technician can be assigned.
+      {{ 'WORKEXEC.WORKORDER_DETAIL.APPROVE_BODY_1' | translate }} <strong>{{ 'WORKEXEC.WORKORDER_COMMON.STATUS_APPROVED' | translate }}</strong>{{ 'WORKEXEC.WORKORDER_DETAIL.APPROVE_BODY_2' | translate }}
     </p>
 
     <label class="field">
-      <span class="field__label">Approved by (name)</span>
+      <span class="field__label">{{ 'WORKEXEC.WORKORDER_DETAIL.APPROVED_BY' | translate }}</span>
       <input class="field__input" type="text" [value]="approveSignerName()"
         (input)="approveSignerName.set($any($event.target).value)"
-        placeholder="Name of approver" />
+        [placeholder]="'WORKEXEC.WORKORDER_DETAIL.APPROVER_PH' | translate" />
     </label>
     <label class="field">
-      <span class="field__label">Notes (optional)</span>
+      <span class="field__label">{{ 'WORKEXEC.WORKORDER_DETAIL.NOTES_OPTIONAL' | translate }}</span>
       <textarea class="field__input" rows="2" [value]="approveNotes()"
         (input)="approveNotes.set($any($event.target).value)"></textarea>
     </label>
@@ -290,10 +289,10 @@
 
     <div class="modal-glass__actions">
       <button class="btn btn--ghost" (click)="cancelApprove()"
-        [disabled]="approveModalState() === 'loading'">Cancel</button>
+        [disabled]="approveModalState() === 'loading'">{{ 'WORKEXEC.WORKORDER_COMMON.CANCEL' | translate }}</button>
       <button class="btn btn--accent" (click)="confirmApprove()"
         [disabled]="approveModalState() === 'loading'" [attr.aria-busy]="approveModalState() === 'loading'">
-        {{ approveModalState() === 'loading' ? 'Approving…' : 'Confirm — Approve' }}
+        {{ (approveModalState() === 'loading' ? 'WORKEXEC.WORKORDER_DETAIL.APPROVING' : 'WORKEXEC.WORKORDER_DETAIL.CONFIRM_APPROVE') | translate }}
       </button>
     </div>
   </div>
@@ -303,10 +302,9 @@
 @if (showStartWorkModal()) {
 <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="start-work-modal-title">
   <div class="modal-glass">
-    <h2 id="start-work-modal-title" class="modal-glass__title">Start Work on {{ workorder()!.workorderNumber ?? workorderId() }}?</h2>
+    <h2 id="start-work-modal-title" class="modal-glass__title">{{ 'WORKEXEC.WORKORDER_DETAIL.START_MODAL_TITLE' | translate: { wo: (workorder()!.workorderNumber ?? workorderId()) } }}</h2>
     <p class="modal-glass__body">
-      This will move the work order to <strong>IN PROGRESS</strong> and allow labor and parts recording.
-      This action cannot be undone from this screen.
+      {{ 'WORKEXEC.WORKORDER_DETAIL.START_BODY_1' | translate }} <strong>{{ 'WORKEXEC.WORKORDER_COMMON.STATUS_IN_PROGRESS' | translate }}</strong> {{ 'WORKEXEC.WORKORDER_DETAIL.START_BODY_2' | translate }}
     </p>
 
     @if (startWorkError()) {
@@ -314,10 +312,10 @@
     }
 
     <div class="modal-glass__actions">
-      <button class="btn btn--ghost" (click)="cancelStartWork()" [disabled]="startWorkLoading()">Cancel</button>
+      <button class="btn btn--ghost" (click)="cancelStartWork()" [disabled]="startWorkLoading()">{{ 'WORKEXEC.WORKORDER_COMMON.CANCEL' | translate }}</button>
       <button class="btn btn--accent" (click)="confirmStartWork()" [disabled]="startWorkLoading()"
         [attr.aria-busy]="startWorkLoading()">
-        {{ startWorkLoading() ? 'Starting…' : 'Confirm — Start Work' }}
+        {{ (startWorkLoading() ? 'WORKEXEC.WORKORDER_DETAIL.STARTING' : 'WORKEXEC.WORKORDER_DETAIL.CONFIRM_START') | translate }}
       </button>
     </div>
   </div>
@@ -328,21 +326,21 @@
 @if (showCompleteModal()) {
 <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="complete-modal-title">
   <div class="modal-glass">
-    <h2 id="complete-modal-title" class="modal-glass__title">Complete Work Order</h2>
+    <h2 id="complete-modal-title" class="modal-glass__title">{{ 'WORKEXEC.WORKORDER_DETAIL.COMPLETE_MODAL_TITLE' | translate }}</h2>
 
     @if (completeModalState() === 'success') {
-    <div class="alert alert--success" role="status">Work order completed successfully.</div>
+    <div class="alert alert--success" role="status">{{ 'WORKEXEC.WORKORDER_DETAIL.COMPLETE_SUCCESS' | translate }}</div>
     } @else {
     <p class="modal-glass__body">
-      Mark this work order as <strong>COMPLETED</strong>. Ensure all labor and parts have been recorded.
+      {{ 'WORKEXEC.WORKORDER_DETAIL.COMPLETE_BODY_1' | translate }} <strong>{{ 'WORKEXEC.WORKORDER_COMMON.STATUS_COMPLETED' | translate }}</strong>{{ 'WORKEXEC.WORKORDER_DETAIL.COMPLETE_BODY_2' | translate }}
     </p>
 
     <div class="form-field">
-      <label for="completion-notes" class="form-label">Completion Notes <span
-          class="hint-text">(optional)</span></label>
+      <label for="completion-notes" class="form-label">{{ 'WORKEXEC.WORKORDER_DETAIL.COMPLETION_NOTES' | translate }} <span
+          class="hint-text">{{ 'WORKEXEC.WORKORDER_COMMON.OPTIONAL_PAREN' | translate }}</span></label>
       <textarea id="completion-notes" class="form-textarea" rows="3" [value]="completionNotes()"
         (input)="completionNotes.set($any($event.target).value)"
-        placeholder="Describe any final notes or observations…"></textarea>
+        [placeholder]="'WORKEXEC.WORKORDER_DETAIL.COMPLETION_NOTES_PH' | translate"></textarea>
     </div>
 
     @if (completeError()) {
@@ -350,7 +348,7 @@
     }
 
     @if (failedChecks().length > 0) {
-    <ul class="failed-checks" aria-label="Completion blockers">
+    <ul class="failed-checks" [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.BLOCKERS_ARIA' | translate">
       @for (check of failedChecks(); track check.checkId) {
       <li class="failed-check failed-check--{{ check.severity.toLowerCase() }}">
         <span class="failed-check__icon" aria-hidden="true">{{ check.severity === 'BLOCKING' ? '✗' : '!' }}</span>
@@ -362,11 +360,11 @@
 
     <div class="modal-glass__actions">
       <button class="btn btn--ghost" (click)="cancelComplete()"
-        [disabled]="completeModalState() === 'loading'">Cancel</button>
+        [disabled]="completeModalState() === 'loading'">{{ 'WORKEXEC.WORKORDER_COMMON.CANCEL' | translate }}</button>
       <button class="btn btn--accent" (click)="confirmComplete()"
         [disabled]="completeModalState() === 'loading' || pendingCrCount() > 0"
         [attr.aria-busy]="completeModalState() === 'loading'">
-        {{ completeModalState() === 'loading' ? 'Completing…' : 'Confirm — Complete Work Order' }}
+        {{ (completeModalState() === 'loading' ? 'WORKEXEC.WORKORDER_DETAIL.COMPLETING' : 'WORKEXEC.WORKORDER_DETAIL.CONFIRM_COMPLETE') | translate }}
       </button>
     </div>
     }
@@ -378,22 +376,21 @@
 @if (showReopenModal()) {
 <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="reopen-modal-title">
   <div class="modal-glass">
-    <h2 id="reopen-modal-title" class="modal-glass__title">Reopen Work Order</h2>
+    <h2 id="reopen-modal-title" class="modal-glass__title">{{ 'WORKEXEC.WORKORDER_DETAIL.REOPEN_MODAL_TITLE' | translate }}</h2>
 
     @if (reopenModalState() === 'success') {
-    <div class="alert alert--success" role="status">Work order reopened successfully.</div>
+    <div class="alert alert--success" role="status">{{ 'WORKEXEC.WORKORDER_DETAIL.REOPEN_SUCCESS' | translate }}</div>
     } @else {
     <p class="modal-glass__body">
-      This will move the work order back to <strong>IN PROGRESS</strong>.
-      A reason is required.
+      {{ 'WORKEXEC.WORKORDER_DETAIL.REOPEN_BODY_1' | translate }} <strong>{{ 'WORKEXEC.WORKORDER_COMMON.STATUS_IN_PROGRESS' | translate }}</strong>{{ 'WORKEXEC.WORKORDER_DETAIL.REOPEN_BODY_2' | translate }}
     </p>
 
     <div class="form-field">
-      <label for="reopen-reason" class="form-label">Reopen Reason <span class="required-mark"
+      <label for="reopen-reason" class="form-label">{{ 'WORKEXEC.WORKORDER_DETAIL.REOPEN_REASON' | translate }} <span class="required-mark"
           aria-hidden="true">*</span></label>
       <textarea id="reopen-reason" class="form-textarea" rows="3" [value]="reopenReason()"
         (input)="reopenReason.set($any($event.target).value)"
-        placeholder="Explain why this work order is being reopened…" required aria-required="true"></textarea>
+        [placeholder]="'WORKEXEC.WORKORDER_DETAIL.REOPEN_REASON_PH' | translate" required aria-required="true"></textarea>
     </div>
 
     @if (reopenError()) {
@@ -402,11 +399,11 @@
 
     <div class="modal-glass__actions">
       <button class="btn btn--ghost" (click)="cancelReopen()"
-        [disabled]="reopenModalState() === 'loading'">Cancel</button>
+        [disabled]="reopenModalState() === 'loading'">{{ 'WORKEXEC.WORKORDER_COMMON.CANCEL' | translate }}</button>
       <button class="btn btn--accent" (click)="confirmReopen()"
         [disabled]="reopenModalState() === 'loading' || !reopenReason().trim()"
         [attr.aria-busy]="reopenModalState() === 'loading'">
-        {{ reopenModalState() === 'loading' ? 'Reopening…' : 'Confirm — Reopen Work Order' }}
+        {{ (reopenModalState() === 'loading' ? 'WORKEXEC.WORKORDER_DETAIL.REOPENING' : 'WORKEXEC.WORKORDER_DETAIL.CONFIRM_REOPEN') | translate }}
       </button>
     </div>
     }

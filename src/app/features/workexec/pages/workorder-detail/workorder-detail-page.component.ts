@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import {
   Component,
@@ -38,7 +39,7 @@ type ModalState = 'idle' | 'confirming' | 'loading' | 'success' | 'error';
 @Component({
   selector: 'app-workorder-detail-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe],
   templateUrl: './workorder-detail-page.component.html',
   styleUrl: './workorder-detail-page.component.css',
 })

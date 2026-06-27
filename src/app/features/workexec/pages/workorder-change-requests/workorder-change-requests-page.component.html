@@ -1,50 +1,50 @@
 <section class="workexec-page workorder-change-requests" aria-labelledby="cr-heading">
 
-  <button class="btn btn--ghost back-btn" (click)="back()">← Work Order</button>
+  <button class="btn btn--ghost back-btn" (click)="back()">{{ 'WORKEXEC.WORKORDER_COMMON.BACK_SHORT' | translate }}</button>
 
-  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading change requests…</p> }
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.WORKORDER_CR.LOADING' | translate }}</p> }
   @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
 
   @if (pageState() === 'ready') {
     <header class="page-header">
-      <p class="page-overline">Work Order {{ workorderId() }}</p>
-      <h1 id="cr-heading">Change Requests</h1>
+      <p class="page-overline">{{ 'WORKEXEC.WORKORDER_COMMON.WO_OVERLINE' | translate: { id: workorderId() } }}</p>
+      <h1 id="cr-heading">{{ 'WORKEXEC.WORKORDER_CR.TITLE' | translate }}</h1>
     </header>
 
     <!-- Story 217: Blocker banner -->
     @if (blockers().length > 0) {
-      <div class="blocker-banner" role="alert" aria-label="Approval blockers">
+      <div class="blocker-banner" role="alert" [attr.aria-label]="'WORKEXEC.WORKORDER_CR.BLOCKERS_ARIA' | translate">
         <span class="blocker-banner__icon" aria-hidden="true">⚠</span>
         <span>
-          <strong>{{ blockers().length }} {{ blockers().length === 1 ? 'change request requires' : 'change requests require' }} your approval</strong>
-          before this work order can be completed. Resolve all items below.
+          <strong>{{ (blockers().length === 1 ? 'WORKEXEC.WORKORDER_CR.BLOCKER_ONE' : 'WORKEXEC.WORKORDER_CR.BLOCKER_MANY') | translate: { count: blockers().length } }}</strong>
+          {{ 'WORKEXEC.WORKORDER_CR.BLOCKER_TAIL' | translate }}
         </span>
       </div>
     }
 
     @if (resolvedCount() > 0 && blockers().length === 0) {
       <div class="alert alert--success" role="status">
-        All change requests resolved. Work order is clear to complete.
+        {{ 'WORKEXEC.WORKORDER_CR.ALL_RESOLVED' | translate }}
       </div>
     }
 
     <div class="cr-header-row">
-      <p class="section-overline">Requests ({{ changeRequests().length }})</p>
-      <button class="btn btn--accent btn--sm" (click)="openCreateForm()">+ New Request</button>
+      <p class="section-overline">{{ 'WORKEXEC.WORKORDER_CR.REQUESTS_COUNT' | translate: { count: changeRequests().length } }}</p>
+      <button class="btn btn--accent btn--sm" (click)="openCreateForm()">{{ 'WORKEXEC.WORKORDER_CR.NEW_REQUEST' | translate }}</button>
     </div>
 
     <!-- Create form -->
     @if (showCreateForm()) {
-      <div class="cr-form" role="form" aria-label="Create change request">
+      <div class="cr-form" role="form" [attr.aria-label]="'WORKEXEC.WORKORDER_CR.CREATE_ARIA' | translate">
         <div class="field">
-          <label class="field__label">Description <span aria-hidden="true">*</span></label>
-          <textarea class="field__input field__input--textarea" rows="3" [value]="crDescription()" (input)="crDescription.set($any($event.target).value)" placeholder="Describe the additional work needed…"></textarea>
+          <label class="field__label">{{ 'WORKEXEC.WORKORDER_COMMON.DESCRIPTION' | translate }} <span aria-hidden="true">*</span></label>
+          <textarea class="field__input field__input--textarea" rows="3" [value]="crDescription()" (input)="crDescription.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_CR.DESC_PH' | translate"></textarea>
         </div>
 
         <div class="cr-items-section">
           <div class="section-row">
-            <p class="section-overline">Requested Items</p>
-            <button class="btn btn--ghost btn--sm" (click)="addItem()">+ Add Item</button>
+            <p class="section-overline">{{ 'WORKEXEC.WORKORDER_CR.REQUESTED_ITEMS' | translate }}</p>
+            <button class="btn btn--ghost btn--sm" (click)="addItem()">{{ 'WORKEXEC.WORKORDER_CR.ADD_ITEM' | translate }}</button>
           </div>
           @for (item of crItems(); track $index) {
             <div class="cr-item-row">
@@ -52,25 +52,25 @@
                 class="field__input"
                 [value]="item.type"
                 (change)="updateItem($index, $any($event.target).value === 'SERVICE' ? { type: 'SERVICE', partId: undefined } : { type: 'PART', serviceId: undefined })">
-                <option value="SERVICE">Service</option>
-                <option value="PART">Part</option>
+                <option value="SERVICE">{{ 'WORKEXEC.WORKORDER_CR.SERVICE' | translate }}</option>
+                <option value="PART">{{ 'WORKEXEC.WORKORDER_CR.PART' | translate }}</option>
               </select>
-              <input class="field__input" type="text" [value]="item.serviceId ?? item.partId ?? ''" (input)="updateItem($index, item.type === 'SERVICE' ? { serviceId: $any($event.target).value } : { partId: $any($event.target).value })" placeholder="ID" />
+              <input class="field__input" type="text" [value]="item.serviceId ?? item.partId ?? ''" (input)="updateItem($index, item.type === 'SERVICE' ? { serviceId: $any($event.target).value } : { partId: $any($event.target).value })" [placeholder]="'WORKEXEC.WORKORDER_CR.ID_PH' | translate" />
               <input class="field__input cr-qty" type="number" min="1" [value]="item.quantity" (input)="updateItem($index, { quantity: +$any($event.target).value })" />
               <label class="cr-emergency">
                 <input type="checkbox" [checked]="item.isEmergency" (change)="updateItem($index, { isEmergency: $any($event.target).checked })" />
-                Emergency
+                {{ 'WORKEXEC.WORKORDER_CR.EMERGENCY' | translate }}
               </label>
-              <button class="btn-icon" (click)="removeItem($index)" aria-label="Remove item">✕</button>
+              <button class="btn-icon" (click)="removeItem($index)" [attr.aria-label]="'WORKEXEC.WORKORDER_CR.REMOVE_ITEM' | translate">✕</button>
             </div>
           }
         </div>
 
         @if (createError()) { <div class="alert alert--error" role="alert">{{ createError() }}</div> }
         <div class="form-actions">
-          <button class="btn btn--ghost" (click)="showCreateForm.set(false)">Cancel</button>
+          <button class="btn btn--ghost" (click)="showCreateForm.set(false)">{{ 'WORKEXEC.WORKORDER_COMMON.CANCEL' | translate }}</button>
           <button class="btn btn--accent" (click)="submitCreate()" [attr.aria-busy]="createState() === 'loading'" [disabled]="createState() === 'loading'">
-            {{ createState() === 'loading' ? 'Submitting…' : 'Submit Request' }}
+            {{ (createState() === 'loading' ? 'WORKEXEC.WORKORDER_CR.SUBMITTING' : 'WORKEXEC.WORKORDER_CR.SUBMIT_REQUEST') | translate }}
           </button>
         </div>
       </div>
@@ -82,7 +82,7 @@
 
     <!-- Change request list -->
     @if (changeRequests().length === 0) {
-      <p class="hint-text">No change requests for this work order.</p>
+      <p class="hint-text">{{ 'WORKEXEC.WORKORDER_CR.NONE' | translate }}</p>
     } @else {
       @for (cr of changeRequests(); track cr.id; let even = $even) {
         <div class="cr-card" [class.cr-card--alt]="even">
@@ -93,26 +93,26 @@
           </div>
           <p class="cr-card__description">{{ cr.description }}</p>
           @if (cr.requestedItems && cr.requestedItems.length > 0) {
-            <p class="hint-text">{{ cr.requestedItems.length }} item(s) requested</p>
+            <p class="hint-text">{{ 'WORKEXEC.WORKORDER_CR.ITEMS_REQUESTED' | translate: { count: cr.requestedItems.length } }}</p>
           }
           <!-- Approve/decline only for AWAITING_ADVISOR_REVIEW -->
           @if (cr.status === 'AWAITING_ADVISOR_REVIEW') {
             <div class="cr-card__actions">
               <div class="field">
-                <label class="field__label">Notes</label>
-                <input class="field__input cr-notes" type="text" [value]="resolveNotes()" (input)="resolveNotes.set($any($event.target).value)" placeholder="Optional" />
+                <label class="field__label">{{ 'WORKEXEC.WORKORDER_COMMON.NOTES' | translate }}</label>
+                <input class="field__input cr-notes" type="text" [value]="resolveNotes()" (input)="resolveNotes.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_COMMON.OPTIONAL_PH' | translate" />
               </div>
               <div class="action-btns">
                 <button
                   class="btn btn--approve"
                   (click)="approve(cr.id)"
                   [disabled]="resolveState() === 'loading' && resolveId() === cr.id"
-                >Approve</button>
+                >{{ 'WORKEXEC.WORKORDER_CR.APPROVE' | translate }}</button>
                 <button
                   class="btn btn--decline"
                   (click)="decline(cr.id)"
                   [disabled]="resolveState() === 'loading' && resolveId() === cr.id"
-                >Decline</button>
+                >{{ 'WORKEXEC.WORKORDER_CR.DECLINE' | translate }}</button>
               </div>
             </div>
           }

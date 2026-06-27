@@ -1,4 +1,5 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { provideRouter, ActivatedRoute, Router } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -21,6 +22,17 @@ const STUB_WORKORDER = {
   items: [],
 };
 
+// Minimal real-text translations so the TranslatePipe resolves keys asserted in the DOM.
+const translations = {
+  WORKEXEC: {
+    WORKORDER_DETAIL: {
+      APPROVE_WO: 'Approve Work Order',
+      ASSIGN_TECH: 'Assign Technician',
+      NOT_SET: 'Not set',
+    },
+  },
+};
+
 /** Flush the initial workorder detail GET + changeRequests GET triggered by ngOnInit. */
 function drainInit(http: HttpTestingController, workorderOverride?: object): void {
   http
@@ -37,7 +49,7 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [WorkorderDetailPageComponent],
+      imports: [WorkorderDetailPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([{ path: '**', redirectTo: '' }]),
         provideHttpClient(),
@@ -47,6 +59,9 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
         { provide: PeopleConfiguration, useValue: new PeopleConfiguration({ basePath: environment.apiBaseUrl }) },
       ],
     }).compileComponents();
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', translations);
+    translate.use('en-US');
     fixture = TestBed.createComponent(WorkorderDetailPageComponent);
     component = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController);

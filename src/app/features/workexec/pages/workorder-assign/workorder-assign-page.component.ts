@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -24,7 +25,7 @@ type RosterState = 'idle' | 'loading' | 'ready' | 'error' | 'no-shop';
 @Component({
   selector: 'app-workorder-assign-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './workorder-assign-page.component.html',
   styleUrl: './workorder-assign-page.component.css',
 })
