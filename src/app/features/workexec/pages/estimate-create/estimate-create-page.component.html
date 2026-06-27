@@ -1,9 +1,9 @@
 <section class="workexec-page estimate-create" aria-labelledby="estimate-create-heading">
 
   <header class="page-header">
-    <p class="page-overline">Work Execution / Estimates</p>
-    <h1 id="estimate-create-heading">New Estimate</h1>
-    <p class="page-subtitle">Select a customer and vehicle to create a Draft estimate.</p>
+    <p class="page-overline">{{ 'WORKEXEC.ESTIMATE_CREATE.OVERLINE' | translate }}</p>
+    <h1 id="estimate-create-heading">{{ 'WORKEXEC.ESTIMATE_CREATE.TITLE' | translate }}</h1>
+    <p class="page-subtitle">{{ 'WORKEXEC.ESTIMATE_CREATE.SUBTITLE' | translate }}</p>
   </header>
 
   @if (state() === 'access-denied') {
@@ -12,11 +12,11 @@
     </div>
   }
 
-  <form [formGroup]="form" (ngSubmit)="submit()" novalidate aria-label="Create estimate form" class="estimate-form">
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate [attr.aria-label]="'WORKEXEC.ESTIMATE_CREATE.FORM_ARIA' | translate" class="estimate-form">
 
     <!-- Customer search -->
     <div class="field-group">
-      <label for="customerSearch" class="field-label">Customer <span class="required" aria-hidden="true">*</span></label>
+      <label for="customerSearch" class="field-label">{{ 'WORKEXEC.ESTIMATE_CREATE.CUSTOMER' | translate }} <span class="required" aria-hidden="true">*</span></label>
       <div class="typeahead-wrap">
         <input
           id="customerSearch"
@@ -31,7 +31,7 @@
           [attr.aria-expanded]="showCustomerSuggestions() && customerSuggestions().length > 0"
           aria-autocomplete="list"
           aria-haspopup="listbox"
-          placeholder="Search by name or customer number…"
+          [placeholder]="'WORKEXEC.ESTIMATE_CREATE.CUSTOMER_PH' | translate"
           aria-required="true"
         />
         @if (showCustomerSuggestions() && customerSuggestions().length > 0) {
@@ -48,7 +48,7 @@
         }
       </div>
       @if (form.controls.customerId.invalid && form.controls.customerId.touched) {
-        <p id="customerId-err" class="field-error" role="alert">Customer is required.</p>
+        <p id="customerId-err" class="field-error" role="alert">{{ 'WORKEXEC.ESTIMATE_CREATE.CUSTOMER_REQUIRED' | translate }}</p>
       }
       @if (fieldError('customerId')) {
         <p class="field-error" role="alert">{{ fieldError('customerId') }}</p>
@@ -57,7 +57,7 @@
 
     <!-- Vehicle selection -->
     <div class="field-group">
-      <label for="vehicleSelect" class="field-label">Vehicle <span class="required" aria-hidden="true">*</span></label>
+      <label for="vehicleSelect" class="field-label">{{ 'WORKEXEC.ESTIMATE_CREATE.VEHICLE' | translate }} <span class="required" aria-hidden="true">*</span></label>
       <select
         id="vehicleSelect"
         class="field-input"
@@ -68,14 +68,14 @@
         [attr.aria-describedby]="form.controls.vehicleId.invalid && form.controls.vehicleId.touched && !showAddVehicle() ? 'vehicleId-err' : null"
         aria-required="true"
       >
-        <option value="" disabled>Select vehicle…</option>
+        <option value="" disabled>{{ 'WORKEXEC.ESTIMATE_CREATE.SELECT_VEHICLE' | translate }}</option>
         @for (v of customerVehicles(); track v.vehicleId ?? v.vin) {
           <option [value]="v.vehicleId">{{ vehicleLabel(v) }}</option>
         }
-        <option [value]="addVehicleOption">+ Add new vehicle…</option>
+        <option [value]="addVehicleOption">{{ 'WORKEXEC.ESTIMATE_CREATE.ADD_NEW_VEHICLE' | translate }}</option>
       </select>
       @if (form.controls.vehicleId.invalid && form.controls.vehicleId.touched && !showAddVehicle()) {
-        <p id="vehicleId-err" class="field-error" role="alert">Vehicle is required.</p>
+        <p id="vehicleId-err" class="field-error" role="alert">{{ 'WORKEXEC.ESTIMATE_CREATE.VEHICLE_REQUIRED' | translate }}</p>
       }
       @if (fieldError('vehicleId')) {
         <p class="field-error" role="alert">{{ fieldError('vehicleId') }}</p>
@@ -84,10 +84,10 @@
       <!-- Inline add-vehicle form -->
       @if (showAddVehicle()) {
         <div class="add-vehicle" [formGroup]="newVehicleForm">
-          <p class="add-vehicle__title">New vehicle</p>
+          <p class="add-vehicle__title">{{ 'WORKEXEC.ESTIMATE_CREATE.NEW_VEHICLE' | translate }}</p>
 
           <div class="field-group">
-            <label for="newVin" class="field-label">VIN <span class="required" aria-hidden="true">*</span></label>
+            <label for="newVin" class="field-label">{{ 'WORKEXEC.ESTIMATE_CREATE.VIN' | translate }} <span class="required" aria-hidden="true">*</span></label>
             <input
               id="newVin"
               type="text"
@@ -96,36 +96,36 @@
               formControlName="vinNumber"
               [class.field-input--error]="newVehicleForm.controls.vinNumber.invalid && newVehicleForm.controls.vinNumber.touched"
               [attr.aria-describedby]="newVehicleForm.controls.vinNumber.invalid && newVehicleForm.controls.vinNumber.touched ? 'newVin-err' : null"
-              placeholder="Vehicle Identification Number"
+              [placeholder]="'WORKEXEC.ESTIMATE_CREATE.VIN_PH' | translate"
               aria-required="true"
             />
             @if (newVehicleForm.controls.vinNumber.invalid && newVehicleForm.controls.vinNumber.touched) {
-              <p id="newVin-err" class="field-error" role="alert">VIN is required.</p>
+              <p id="newVin-err" class="field-error" role="alert">{{ 'WORKEXEC.ESTIMATE_CREATE.VIN_REQUIRED' | translate }}</p>
             }
           </div>
 
           <div class="field-group">
-            <label for="newDescription" class="field-label">Description</label>
+            <label for="newDescription" class="field-label">{{ 'WORKEXEC.ESTIMATE_CREATE.DESCRIPTION' | translate }}</label>
             <input id="newDescription" type="text" autocomplete="off" class="field-input"
-                   formControlName="description" placeholder="e.g. 2019 Ford F-150" />
+                   formControlName="description" [placeholder]="'WORKEXEC.ESTIMATE_CREATE.DESCRIPTION_PH' | translate" />
           </div>
 
           <div class="field-group">
-            <label for="newUnitNumber" class="field-label">Unit number</label>
+            <label for="newUnitNumber" class="field-label">{{ 'WORKEXEC.ESTIMATE_CREATE.UNIT_NUMBER' | translate }}</label>
             <input id="newUnitNumber" type="text" autocomplete="off" class="field-input"
-                   formControlName="unitNumber" placeholder="Unit or internal reference" />
+                   formControlName="unitNumber" [placeholder]="'WORKEXEC.ESTIMATE_CREATE.UNIT_NUMBER_PH' | translate" />
           </div>
 
           <div class="add-vehicle__row">
             <div class="field-group">
-              <label for="newPlate" class="field-label">License plate</label>
+              <label for="newPlate" class="field-label">{{ 'WORKEXEC.ESTIMATE_CREATE.LICENSE_PLATE' | translate }}</label>
               <input id="newPlate" type="text" autocomplete="off" class="field-input"
-                     formControlName="licensePlate" placeholder="Plate" />
+                     formControlName="licensePlate" [placeholder]="'WORKEXEC.ESTIMATE_CREATE.PLATE_PH' | translate" />
             </div>
             <div class="field-group">
-              <label for="newPlateRegion" class="field-label">Region</label>
+              <label for="newPlateRegion" class="field-label">{{ 'WORKEXEC.ESTIMATE_CREATE.REGION' | translate }}</label>
               <input id="newPlateRegion" type="text" autocomplete="off" class="field-input"
-                     formControlName="licensePlateRegion" placeholder="State / province" />
+                     formControlName="licensePlateRegion" [placeholder]="'WORKEXEC.ESTIMATE_CREATE.REGION_PH' | translate" />
             </div>
           </div>
 
@@ -136,11 +136,11 @@
           <div class="add-vehicle__actions">
             <button type="button" class="btn btn--primary btn--sm" (click)="saveNewVehicle()"
                     [disabled]="vehicleSaving()" [attr.aria-busy]="vehicleSaving()">
-              @if (vehicleSaving()) { Saving… } @else { Save vehicle }
+              @if (vehicleSaving()) { {{ 'WORKEXEC.ESTIMATE_CREATE.SAVING' | translate }} } @else { {{ 'WORKEXEC.ESTIMATE_CREATE.SAVE_VEHICLE' | translate }} }
             </button>
             <button type="button" class="btn btn--ghost btn--sm" (click)="cancelAddVehicle()"
                     [disabled]="vehicleSaving()">
-              Cancel
+              {{ 'WORKEXEC.ESTIMATE_COMMON.CANCEL' | translate }}
             </button>
           </div>
         </div>
@@ -162,10 +162,10 @@
         [disabled]="state() === 'saving'"
         [attr.aria-busy]="state() === 'saving'"
       >
-        @if (state() === 'saving') { Creating… } @else { Create Estimate }
+        @if (state() === 'saving') { {{ 'WORKEXEC.ESTIMATE_CREATE.CREATING' | translate }} } @else { {{ 'WORKEXEC.ESTIMATE_CREATE.CREATE_ESTIMATE' | translate }} }
       </button>
       <button type="button" class="btn btn--ghost" (click)="cancel()" [disabled]="state() === 'saving'">
-        Cancel
+        {{ 'WORKEXEC.ESTIMATE_COMMON.CANCEL' | translate }}
       </button>
     </div>
 

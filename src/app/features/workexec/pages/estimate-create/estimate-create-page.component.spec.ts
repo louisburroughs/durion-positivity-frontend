@@ -1,4 +1,5 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -9,6 +10,9 @@ import { environment } from '../../../../../environments/environment';
 
 const BASE = environment.apiBaseUrl;
 
+// Minimal real-text translations so the TranslatePipe resolves keys asserted in the DOM.
+const translations = { WORKEXEC: { ESTIMATE_CREATE: { TITLE: 'New Estimate' } } };
+
 describe('EstimateCreatePageComponent [Story 239]', () => {
   let fixture: ComponentFixture<EstimateCreatePageComponent>;
   let component: EstimateCreatePageComponent;
@@ -16,7 +20,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [EstimateCreatePageComponent],
+      imports: [EstimateCreatePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([{ path: '**', redirectTo: '' }]),
         provideHttpClient(),
@@ -24,6 +28,10 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', translations);
+    translate.use('en-US');
 
     fixture  = TestBed.createComponent(EstimateCreatePageComponent);
     component = fixture.componentInstance;
