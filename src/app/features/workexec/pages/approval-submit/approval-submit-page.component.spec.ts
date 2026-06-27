@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ComponentFixture } from '@angular/core/testing';
+import { TranslateModule } from '@ngx-translate/core';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -17,7 +18,7 @@ describe('ApprovalSubmitPageComponent [Story 233]', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ApprovalSubmitPageComponent],
+      imports: [ApprovalSubmitPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         provideHttpClient(),

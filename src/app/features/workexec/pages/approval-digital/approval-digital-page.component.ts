@@ -9,6 +9,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
 import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 /**
  * ApprovalDigitalPageComponent — Story 271 (CAP-003)
@@ -25,7 +26,7 @@ import { CustomerLookupComponent } from '../../../crm/components/customer-lookup
 @Component({
   selector: 'app-approval-digital-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomerLookupComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomerLookupComponent, TranslatePipe],
   templateUrl: './approval-digital-page.component.html',
   styleUrl: './approval-digital-page.component.css',
 })

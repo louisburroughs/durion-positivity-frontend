@@ -6,6 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
 import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
+import { TranslatePipe } from '@ngx-translate/core';
 
 /**
  * ApprovalInPersonPageComponent — Story 270 (CAP-003)
@@ -20,7 +21,7 @@ import { CustomerLookupComponent } from '../../../crm/components/customer-lookup
 @Component({
   selector: 'app-approval-in-person-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomerLookupComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, CustomerLookupComponent, TranslatePipe],
   templateUrl: './approval-in-person-page.component.html',
   styleUrl: './approval-in-person-page.component.css',
 })

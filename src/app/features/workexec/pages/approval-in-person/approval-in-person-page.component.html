@@ -1,52 +1,52 @@
 <section class="workexec-page approval-in-person" aria-labelledby="approval-inperson-heading">
   <header class="page-header">
-    <p class="page-overline">Approval / In-Person</p>
-    <h1 id="approval-inperson-heading">Capture In-Person Approval</h1>
-    @if (estimate()) { <p class="page-meta">{{ estimate()!.estimateNumber ?? estimateId }} · Total: {{ estimate()!.total | currency }}</p> }
+    <p class="page-overline">{{ 'WORKEXEC.APPROVAL.IN_PERSON.OVERLINE' | translate }}</p>
+    <h1 id="approval-inperson-heading">{{ 'WORKEXEC.APPROVAL.IN_PERSON.TITLE' | translate }}</h1>
+    @if (estimate()) { <p class="page-meta">{{ estimate()!.estimateNumber ?? estimateId }} · {{ 'WORKEXEC.APPROVAL.COMMON.TOTAL_INLINE' | translate }} {{ estimate()!.total | currency }}</p> }
   </header>
-  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">Loading…</p> }
+  @if (pageState() === 'loading') { <p class="hint-text" aria-busy="true">{{ 'WORKEXEC.APPROVAL.COMMON.LOADING' | translate }}</p> }
   @if (pageState() === 'error') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
   @if (pageState() === 'access-denied') { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
   @if (pageState() === 'expired') {
     <div class="alert alert--error" role="alert">
-      <strong>Approval Expired</strong><br>{{ errorMessage() }}
-      <div style="margin-top: 0.75rem;"><a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'revise']">Create Revision</a></div>
+      <strong>{{ 'WORKEXEC.APPROVAL.COMMON.EXPIRED_TITLE' | translate }}</strong><br>{{ errorMessage() }}
+      <div style="margin-top: 0.75rem;"><a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'revise']">{{ 'WORKEXEC.APPROVAL.COMMON.CREATE_REVISION' | translate }}</a></div>
     </div>
   }
   @if (pageState() === 'ready' && estimate()) {
     <div class="approval-card">
-      <p class="approval-description">Customer is present in-person. Confirm their approval below.</p>
-      <form [formGroup]="approvalForm" novalidate aria-label="In-person approval" class="approval-form">
+      <p class="approval-description">{{ 'WORKEXEC.APPROVAL.IN_PERSON.DESCRIPTION' | translate }}</p>
+      <form [formGroup]="approvalForm" novalidate [attr.aria-label]="'WORKEXEC.APPROVAL.IN_PERSON.FORM_ARIA' | translate" class="approval-form">
         <div class="field-group">
           <app-customer-lookup formControlName="customerId" inputId="inPersonCustomerId"
-            label="Customer" [required]="true" />
+            [label]="'WORKEXEC.APPROVAL.COMMON.CUSTOMER' | translate" [required]="true" />
           @if (approvalForm.controls.customerId.invalid && approvalForm.controls.customerId.touched) {
-            <p class="field-error" role="alert">Customer is required.</p>
+            <p class="field-error" role="alert">{{ 'WORKEXEC.APPROVAL.COMMON.CUSTOMER_REQUIRED' | translate }}</p>
           }
         </div>
         <div class="field-group">
-          <label for="inPersonNotes" class="field-label">Approval Notes <span class="field-optional">(optional)</span></label>
-          <input id="inPersonNotes" type="text" formControlName="notes" class="field-input" placeholder="e.g. Customer confirmed in person" />
+          <label for="inPersonNotes" class="field-label">{{ 'WORKEXEC.APPROVAL.IN_PERSON.APPROVAL_NOTES' | translate }} <span class="field-optional">{{ 'WORKEXEC.APPROVAL.COMMON.OPTIONAL' | translate }}</span></label>
+          <input id="inPersonNotes" type="text" formControlName="notes" class="field-input" [placeholder]="'WORKEXEC.APPROVAL.IN_PERSON.NOTES_PH' | translate" />
         </div>
         <div class="field-group">
-          <label for="inPersonPO" class="field-label">Purchase Order Number <span class="field-optional">(if required)</span></label>
+          <label for="inPersonPO" class="field-label">{{ 'WORKEXEC.APPROVAL.COMMON.PO_NUMBER' | translate }} <span class="field-optional">{{ 'WORKEXEC.APPROVAL.IN_PERSON.PO_IF_REQUIRED' | translate }}</span></label>
           <input id="inPersonPO" type="text" formControlName="purchaseOrderNumber" class="field-input" />
         </div>
         @if (submitState() === 'error' && errorMessage()) { <div class="alert alert--error" role="alert">{{ errorMessage() }}</div> }
         @if (submitState() !== 'success') {
           <div class="form-actions">
             <button type="button" class="btn btn--accent" (click)="submitApproval()" [disabled]="submitState() === 'saving'" [attr.aria-busy]="submitState() === 'saving'">
-              @if (submitState() === 'saving') { Recording… } @else { Confirm In-Person Approval }
+              @if (submitState() === 'saving') { {{ 'WORKEXEC.APPROVAL.IN_PERSON.RECORDING' | translate }} } @else { {{ 'WORKEXEC.APPROVAL.IN_PERSON.CONFIRM_INPERSON' | translate }} }
             </button>
-            <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'submit']">Back</a>
+            <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'submit']">{{ 'WORKEXEC.APPROVAL.COMMON.BACK' | translate }}</a>
           </div>
         }
       </form>
       @if (submitState() === 'success') {
         <div class="success-panel" role="status">
-          <p class="success-heading">Approval Recorded</p>
-          <p class="estimate-meta">Status: <span class="status-chip">{{ estimate()!.status }}</span></p>
-          @if (estimate()!.approvedAt) { <p class="audit-meta">Approved at {{ estimate()!.approvedAt | date:'medium' }}</p> }
+          <p class="success-heading">{{ 'WORKEXEC.APPROVAL.IN_PERSON.SUCCESS_TITLE' | translate }}</p>
+          <p class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span></p>
+          @if (estimate()!.approvedAt) { <p class="audit-meta">{{ 'WORKEXEC.APPROVAL.COMMON.APPROVED_AT' | translate: { at: (estimate()!.approvedAt | date:'medium') } }}</p> }
         </div>
       }
     </div>
