@@ -4,7 +4,7 @@
   <a class="nav-item" [routerLink]="item.route" routerLinkActive="nav-item--active"
     [routerLinkActiveOptions]="{ exact: item.exact ?? false }" [attr.aria-label]="item.key | translate"
     [title]="item.key | translate">
-    <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
+    <span class="nav-icon material-symbols-rounded" aria-hidden="true">{{ item.icon | msIcon }}</span>
     @if (!collapsed()) {
     <span class="nav-label">{{ item.key | translate }}</span>
     }

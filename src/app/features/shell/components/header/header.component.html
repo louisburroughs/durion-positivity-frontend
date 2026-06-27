@@ -28,7 +28,7 @@
       [class.active]="!chatCollapsed()"
       [attr.aria-label]="'SHELL.HEADER.CHAT_TOGGLE' | translate" [attr.aria-expanded]="!chatCollapsed()"
       [attr.aria-controls]="chatId()" [title]="'SHELL.HEADER.CHAT_TOGGLE' | translate">
-      <span class="material-symbols-rounded" aria-hidden="true">forum</span>
+      <span class="material-symbols-rounded" aria-hidden="true">{{ 'forum' | msIcon }}</span>
     </button>
 
     <button class="icon-btn" type="button" (click)="themeService.toggle()"

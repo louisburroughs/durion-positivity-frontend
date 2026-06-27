@@ -19,11 +19,12 @@ import { ChatStateService } from '../../services/chat-state.service';
 import { ChatApiService } from '../../services/chat-api.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { RagIngestDialogComponent } from '../rag-ingest-dialog/rag-ingest-dialog.component';
+import { MaterialSymbolPipe } from '../../../../shared/material-symbol.pipe';
 
 @Component({
   selector: 'app-chat-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, TranslatePipe, RagIngestDialogComponent],
+  imports: [CommonModule, FormsModule, DatePipe, TranslatePipe, RagIngestDialogComponent, MaterialSymbolPipe],
   templateUrl: './chat-panel.component.html',
   styleUrl: './chat-panel.component.css',
 })
@@ -37,7 +38,7 @@ export class ChatPanelComponent implements AfterViewChecked {
   private readonly authService = inject(AuthService);
 
   /** Emitted when the user collapses the panel via its close button. */
-  readonly close = output<void>();
+  readonly collapse = output<void>();
 
   readonly isAdmin = computed(() => this.authService.hasAnyRole(['ROLE_ADMIN']));
   readonly showRagDialog = signal(false);

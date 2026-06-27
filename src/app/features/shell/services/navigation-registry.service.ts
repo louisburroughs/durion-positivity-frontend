@@ -3,18 +3,18 @@ import { AuthService } from '../../../core/services/auth.service';
 import { NavItem } from '../models/nav-item.model';
 
 const NAV_REGISTRY: NavItem[] = [
-  { key: 'SHELL.NAV.DASHBOARD', icon: 'D', route: '/app', exact: true, order: 1, group: 'main' },
-  { key: 'SHELL.NAV.WORKORDERS', icon: 'W', route: '/app/workexec', order: 2, group: 'main' },
-  { key: 'SHELL.NAV.CRM', icon: 'C', route: '/app/crm', order: 3, group: 'main' },
-  { key: 'SHELL.NAV.DISPATCH', icon: 'S', route: '/app/shopmgmt', order: 4, group: 'main' },
-  { key: 'SHELL.NAV.ACCOUNTING', icon: 'A', route: '/app/accounting', order: 5, group: 'main' },
-  { key: 'SHELL.NAV.BILLING', icon: 'B', route: '/app/billing', order: 6, group: 'main' },
-  { key: 'SHELL.NAV.PEOPLE', icon: 'P', route: '/app/people', order: 7, group: 'main' },
-  { key: 'SHELL.NAV.INVENTORY', icon: 'I', route: '/app/inventory', order: 8, group: 'main' },
-  { key: 'SHELL.NAV.PRODUCT', icon: 'Pr', route: '/app/product', order: 9, group: 'main' },
-  { key: 'SHELL.NAV.LOCATION', icon: 'L', route: '/app/location', order: 10, group: 'main' },
-  { key: 'SHELL.NAV.SECURITY', icon: 'S', route: '/app/security', roles: ['ROLE_ADMIN'], order: 11, group: 'admin' },
-  { key: 'SHELL.NAV.ADMIN', icon: 'Ad', route: '/app/admin', roles: ['ROLE_ADMIN'], order: 12, group: 'admin' },
+  { key: 'SHELL.NAV.DASHBOARD', icon: 'space_dashboard', route: '/app', exact: true, order: 1, group: 'main' },
+  { key: 'SHELL.NAV.WORKORDERS', icon: 'construction', route: '/app/workexec', order: 2, group: 'main' },
+  { key: 'SHELL.NAV.CRM', icon: 'groups', route: '/app/crm', order: 3, group: 'main' },
+  { key: 'SHELL.NAV.DISPATCH', icon: 'storefront', route: '/app/shopmgmt', order: 4, group: 'main' },
+  { key: 'SHELL.NAV.ACCOUNTING', icon: 'account_balance', route: '/app/accounting', order: 5, group: 'main' },
+  { key: 'SHELL.NAV.BILLING', icon: 'receipt_long', route: '/app/billing', order: 6, group: 'main' },
+  { key: 'SHELL.NAV.PEOPLE', icon: 'badge', route: '/app/people', order: 7, group: 'main' },
+  { key: 'SHELL.NAV.INVENTORY', icon: 'inventory_2', route: '/app/inventory', order: 8, group: 'main' },
+  { key: 'SHELL.NAV.PRODUCT', icon: 'category', route: '/app/product', order: 9, group: 'main' },
+  { key: 'SHELL.NAV.LOCATION', icon: 'location_city', route: '/app/location', order: 10, group: 'main' },
+  { key: 'SHELL.NAV.SECURITY', icon: 'shield', route: '/app/security', roles: ['ROLE_ADMIN'], order: 11, group: 'admin' },
+  { key: 'SHELL.NAV.ADMIN', icon: 'admin_panel_settings', route: '/app/admin', roles: ['ROLE_ADMIN'], order: 12, group: 'admin' },
 ];
 
 @Injectable({ providedIn: 'root' })

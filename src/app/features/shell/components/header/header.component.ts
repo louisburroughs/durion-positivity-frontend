@@ -3,11 +3,12 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../../../core/services/theme.service';
 import { AuthService }  from '../../../../core/services/auth.service';
 import { LocaleService } from '../../../../core/services/locale.service';
+import { MaterialSymbolPipe } from '../../../../shared/material-symbol.pipe';
 
 @Component({
   selector: 'app-shell-header',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, MaterialSymbolPipe],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
