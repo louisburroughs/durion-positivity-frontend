@@ -24,10 +24,10 @@
       </div>
 
       <div class="wo-header__meta">
-        @if (technicianName()) {
+        @if (hasTechnician()) {
         <p class="wo-header__meta-item">
           <span class="wo-header__meta-label">Technician</span>
-          <span class="wo-header__meta-value">{{ technicianDisplay() }}</span>
+          <span class="wo-header__meta-value">{{ technicianDisplay() ?? '…' }}</span>
         </p>
         } @else {
         <p class="wo-header__meta-item">
@@ -73,7 +73,7 @@
         <button class="btn btn--ghost" (click)="navigateToAssign()"
           [disabled]="!canAssignTechnician()"
           [attr.title]="canAssignTechnician() ? null : 'Approve the work order before assigning a technician'">
-          {{ technicianName() ? 'Reassign' : 'Assign Technician' }}
+          {{ hasTechnician() ? 'Reassign' : 'Assign Technician' }}
         </button>
       </div>
     </div>

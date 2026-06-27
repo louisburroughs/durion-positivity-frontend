@@ -971,16 +971,22 @@ export class WorkexecService {
    * operationId: getEmployee
    * GET /v1/people/employees/{employeeId}
    *
-   * Resolves a technician's unique employee number from the People domain. The
-   * workorder payload carries the technician id and display name but not the
-   * employee number, so the detail header enriches itself with this lookup
-   * keyed by the assigned technician id. Resolves to null when the technician
-   * has no employee profile or the call fails, so the name still renders alone.
+   * Resolves the assigned technician's display name and employee number from the
+   * People domain. The workorder payload carries only the technician id (its name
+   * field is not populated by the workorder service), so the detail header
+   * enriches itself with this lookup keyed by the assigned technician id. Each
+   * field resolves to null when the technician has no employee profile or the
+   * call fails.
    */
-  getTechnicianEmployeeNumber(technicianId: string): Observable<string | null> {
+  getTechnicianProfile(
+    technicianId: string,
+  ): Observable<{ name: string | null; employeeNumber: string | null }> {
     return this.employeeApi.getEmployee(technicianId).pipe(
-      map(emp => emp.employeeNumber || null),
-      catchError(() => of(null)),
+      map(emp => ({
+        name: emp.preferredName || emp.legalName || null,
+        employeeNumber: emp.employeeNumber || null,
+      })),
+      catchError(() => of({ name: null, employeeNumber: null })),
     );
   }
 

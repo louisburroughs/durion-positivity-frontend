@@ -690,23 +690,32 @@ describe('WorkexecService', () => {
     });
   });
 
-  describe('getTechnicianEmployeeNumber', () => {
-    it('gets /v1/people/employees/{id} and returns the employee number', () => {
-      let result: string | null | undefined;
-      service.getTechnicianEmployeeNumber('tech-1').subscribe(n => (result = n));
+  describe('getTechnicianProfile', () => {
+    it('gets /v1/people/employees/{id} and returns the name and employee number', () => {
+      let result: { name: string | null; employeeNumber: string | null } | undefined;
+      service.getTechnicianProfile('tech-1').subscribe(p => (result = p));
       const r = http.expectOne(`${BASE}/v1/people/employees/tech-1`);
       expect(r.request.method).toBe('GET');
       r.flush({ id: 'tech-1', legalName: 'Jane Smith', employeeNumber: 'EMP-007', status: 'ACTIVE', hireDate: '2024-01-01' });
-      expect(result).toBe('EMP-007');
+      expect(result).toEqual({ name: 'Jane Smith', employeeNumber: 'EMP-007' });
     });
 
-    it('resolves to null when the employee lookup fails', () => {
-      let result: string | null | undefined;
-      service.getTechnicianEmployeeNumber('tech-1').subscribe(n => (result = n));
+    it('prefers the preferred name over the legal name', () => {
+      let result: { name: string | null; employeeNumber: string | null } | undefined;
+      service.getTechnicianProfile('tech-1').subscribe(p => (result = p));
+      http
+        .expectOne(`${BASE}/v1/people/employees/tech-1`)
+        .flush({ id: 'tech-1', legalName: 'Jane Smith', preferredName: 'Janie', employeeNumber: 'EMP-007', status: 'ACTIVE', hireDate: '2024-01-01' });
+      expect(result?.name).toBe('Janie');
+    });
+
+    it('resolves to null fields when the employee lookup fails', () => {
+      let result: { name: string | null; employeeNumber: string | null } | undefined;
+      service.getTechnicianProfile('tech-1').subscribe(p => (result = p));
       http
         .expectOne(`${BASE}/v1/people/employees/tech-1`)
         .flush({ message: 'not found' }, { status: 404, statusText: 'Not Found' });
-      expect(result).toBeNull();
+      expect(result).toEqual({ name: null, employeeNumber: null });
     });
   });
 });

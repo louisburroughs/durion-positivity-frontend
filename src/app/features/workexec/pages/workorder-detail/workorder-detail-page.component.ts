@@ -150,24 +150,37 @@ export class WorkorderDetailPageComponent implements OnInit {
     return s === 'WORK_IN_PROGRESS' || s === 'AWAITING_PARTS' || s === 'AWAITING_APPROVAL';
   });
 
-  readonly technicianName = computed(() =>
-    this.workorder()?.primaryTechnicianName ??
-    this.workorder()?.technician?.technicianName ??
-    null,
+  /**
+   * Id of the assigned technician, if any. This — not the name — is the source
+   * of truth for "is a technician assigned", because the name is resolved
+   * asynchronously from the People domain and the workorder payload does not
+   * carry it.
+   */
+  readonly technicianId = computed(
+    () => this.workorder()?.primaryTechnicianId ?? this.workorder()?.technician?.technicianId ?? null,
   );
 
+  readonly hasTechnician = computed(() => !!this.technicianId());
+
   /**
-   * Employee number for the assigned technician, resolved from the People
-   * domain (it is not present on the workorder payload). Null until/unless the
-   * lookup succeeds.
+   * Assigned technician's name and employee number, resolved from the People
+   * domain (neither is carried on the workorder payload). Each field stays null
+   * until/unless the lookup succeeds.
    */
-  readonly technicianEmployeeNumber = signal<string | null>(null);
+  readonly technicianProfile = signal<{ name: string | null; employeeNumber: string | null }>({
+    name: null,
+    employeeNumber: null,
+  });
+
+  readonly technicianName = computed(() => this.technicianProfile().name);
+
+  readonly technicianEmployeeNumber = computed(() => this.technicianProfile().employeeNumber);
 
   /**
    * Header display for the assigned technician — name plus employee number when
    * available (e.g. "Jane Smith · #EMP-001"), falling back to the name alone
-   * while the number resolves or if the technician has no employee profile.
-   * Null when no technician is assigned.
+   * while the number resolves. Null when no technician is assigned or the name
+   * has not yet resolved.
    */
   readonly technicianDisplay = computed(() => {
     const name = this.technicianName();
@@ -194,7 +207,7 @@ export class WorkorderDetailPageComponent implements OnInit {
         next: (detail) => {
           this.workorder.set(detail);
           this.pageState.set('ready');
-          this.loadTechnicianEmployeeNumber(detail.primaryTechnicianId);
+          this.loadTechnicianProfile(detail.primaryTechnicianId);
           if (this.activeTab() === 'audit') {
             this.loadTransitions(id);
           }
@@ -215,20 +228,21 @@ export class WorkorderDetailPageComponent implements OnInit {
   }
 
   /**
-   * Resolves the assigned technician's employee number for the header. No-op
-   * (clearing any prior value) when the work order has no assigned technician.
+   * Resolves the assigned technician's name and employee number for the header.
+   * No-op (clearing any prior value) when the work order has no assigned
+   * technician.
    */
-  private loadTechnicianEmployeeNumber(technicianId: string | undefined): void {
-    this.technicianEmployeeNumber.set(null);
+  private loadTechnicianProfile(technicianId: string | undefined): void {
+    this.technicianProfile.set({ name: null, employeeNumber: null });
     if (!technicianId) {
       return;
     }
-    // getTechnicianEmployeeNumber resolves to null on failure (no error path), so
+    // getTechnicianProfile resolves to null fields on failure (no error path), so
     // a single next handler covers both the resolved and failed cases.
     this.service
-      .getTechnicianEmployeeNumber(technicianId)
+      .getTechnicianProfile(technicianId)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((employeeNumber) => this.technicianEmployeeNumber.set(employeeNumber));
+      .subscribe((profile) => this.technicianProfile.set(profile));
   }
 
   private loadChangeRequests(id: string): void {

@@ -206,18 +206,21 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
   describe('technician header — name + employee number', () => {
     const TECH_ID = 'tech-uuid-1';
 
-    /** Flush detail (with technician), the employee lookup, and changeRequests. */
+    /**
+     * Flush detail (with technician), the employee lookup, and changeRequests.
+     * The workorder payload carries no technician name — it is resolved from the
+     * People domain — so assignedTechnicianName is left unset here.
+     */
     function drainWithTechnician(employeeFlush: () => void): void {
       http.expectOne(`${BASE}/v1/workorders/${WO_ID}/detail`).flush({
         ...STUB_WORKORDER,
         assignedTechnicianId: TECH_ID,
-        assignedTechnicianName: 'Jane Smith',
       });
       employeeFlush();
       http.expectOne(`${BASE}/v1/workorders/${WO_ID}/changeRequests`).flush([]);
     }
 
-    it('renders the technician name with employee number once the lookup resolves', () => {
+    it('renders the technician name (from People) with employee number once the lookup resolves', () => {
       fixture.detectChanges();
       drainWithTechnician(() =>
         http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush({
@@ -234,9 +237,11 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
       const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
       expect(value?.textContent ?? '').toContain('Jane Smith');
       expect(value?.textContent ?? '').toContain('EMP-007');
+      // Never the raw technician id.
+      expect(value?.textContent ?? '').not.toContain(TECH_ID);
     });
 
-    it('falls back to the technician name alone when the employee lookup fails', () => {
+    it('shows a placeholder (never the technician id) when the employee lookup fails', () => {
       fixture.detectChanges();
       drainWithTechnician(() =>
         http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush(
@@ -246,8 +251,12 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
       );
       fixture.detectChanges();
 
+      // The header still shows the technician row (id is present) but no name/number resolved.
+      expect(component.hasTechnician()).toBe(true);
       expect(component.technicianEmployeeNumber()).toBeNull();
-      expect(component.technicianDisplay()).toBe('Jane Smith');
+      expect(component.technicianDisplay()).toBeNull();
+      const value = fixture.nativeElement.querySelector('.wo-header__meta-value');
+      expect(value?.textContent ?? '').not.toContain(TECH_ID);
     });
 
     it('does not call the employee endpoint when no technician is assigned', () => {
