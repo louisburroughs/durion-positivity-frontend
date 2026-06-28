@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -7,7 +7,7 @@ import { WorkexecService } from '../../services/workexec.service';
 @Component({
   selector: 'app-travel-time-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './travel-time-page.component.html',
   styleUrl: './travel-time-page.component.css',
 })

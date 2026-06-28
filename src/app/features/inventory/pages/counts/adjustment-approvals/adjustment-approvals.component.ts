@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -14,7 +14,7 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 @Component({
   selector: 'app-adjustment-approvals',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './adjustment-approvals.component.html',
   styleUrl: './adjustment-approvals.component.css',
 })

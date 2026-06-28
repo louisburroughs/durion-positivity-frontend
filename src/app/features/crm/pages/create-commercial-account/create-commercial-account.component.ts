@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { CrmService } from '../../services/crm.service';
 import {
   BillingTermsRef,
@@ -13,7 +13,7 @@ type PageState = 'idle' | 'loading-terms' | 'terms-error' | 'checking' | 'duplic
 @Component({
   selector: 'app-create-commercial-account',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './create-commercial-account.component.html',
   styleUrl: './create-commercial-account.component.css',
 })

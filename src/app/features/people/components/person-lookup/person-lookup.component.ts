@@ -1,7 +1,7 @@
 import {
   ChangeDetectionStrategy, Component, inject, signal, forwardRef, Input, DestroyRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -33,7 +33,7 @@ export type PersonLookupType = 'ALL' | 'EMPLOYEE' | 'ACTIVE' | 'INACTIVE';
 @Component({
   selector: 'app-person-lookup',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './person-lookup.component.html',
   styleUrl: './person-lookup.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

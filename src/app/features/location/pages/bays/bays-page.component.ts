@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -10,7 +10,7 @@ import { LocationPickerComponent } from '../../components/location-picker/locati
 @Component({
   selector: 'app-bays-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, LocationPickerComponent],
+  imports: [ReactiveFormsModule, TranslatePipe, LocationPickerComponent],
   templateUrl: './bays-page.component.html',
   styleUrl: './bays-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -173,9 +173,14 @@
           rows="4"></textarea>
       </div>
       <div class="actions-row">
+        <!-- autofocus moves focus into this non-native role="alertdialog" on open (Cancel is the
+             safe default for a destructive confirm); no JS focus-trap exists, so this is the only
+             mechanism placing keyboard/SR users inside the modal. ADR-0029 keyboard-flow. -->
+        <!-- eslint-disable @angular-eslint/template/no-autofocus -->
         <button type="button" (click)="closeRejectDialog()" data-testid="cancel-reject-btn" autofocus>
           Cancel
         </button>
+        <!-- eslint-enable @angular-eslint/template/no-autofocus -->
         <button type="button" (click)="submitReject()" data-testid="submit-reject-btn" [disabled]="actionInFlight()">
           Submit Reject
         </button>

@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -20,7 +20,7 @@ const YEAR_SPAN = 5;
 @Component({
   selector: 'app-labor-overhead-report-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, LocationPickerComponent],
+  imports: [TranslatePipe, LocationPickerComponent],
   templateUrl: './labor-overhead-report-page.component.html',
   styleUrl: './labor-overhead-report-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

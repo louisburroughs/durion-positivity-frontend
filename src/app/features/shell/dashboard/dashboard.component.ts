@@ -1,12 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { MaterialSymbolPipe } from '../../../shared/material-symbol.pipe';
-import { ChatStateService } from '../services/chat-state.service';
-import { ChatApiService } from '../services/chat-api.service';
+import { ChatSendService } from '../services/chat-send.service';
 import { ChatUiService } from '../services/chat-ui.service';
 
 /** Visual tone for a quick-action tile; maps to a CSS class. */
@@ -52,10 +50,8 @@ interface FavoriteArea {
 })
 export class DashboardComponent {
   private readonly auth = inject(AuthService);
-  private readonly chatState = inject(ChatStateService);
-  private readonly chatApi = inject(ChatApiService);
+  private readonly chatSend = inject(ChatSendService);
   private readonly chatUi = inject(ChatUiService);
-  private readonly translate = inject(TranslateService);
 
   /** First name derived from the JWT `sub` claim, or null when unresolved.
    *  Uses the FIRST token of an email/dotted id (e.g. `jane.doe@durion.com` → `Jane`). */
@@ -100,18 +96,13 @@ export class DashboardComponent {
     const text = this.assistantInput().trim();
     if (!text || this.assistantSending()) return;
 
-    this.chatState.addUserMessage(text);
     this.assistantInput.set('');
     this.assistantSending.set(true);
     this.chatUi.open(); // surface the conversation in the shell chat panel
 
-    this.chatApi
-      .sendMessage({ message: text })
-      .pipe(finalize(() => this.assistantSending.set(false)))
-      .subscribe({
-        next: resp => this.chatState.addSystemMessage(resp.response),
-        error: () => this.chatState.addSystemMessage(this.translate.instant('SHELL.CHAT.ERROR_BACKEND')),
-      });
+    this.chatSend.send(text, {
+      onSettled: () => this.assistantSending.set(false),
+    });
   }
 
   onAssistantKeydown(event: KeyboardEvent): void {

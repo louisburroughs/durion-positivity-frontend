@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -39,7 +39,7 @@ type SubmitState = 'idle' | 'submitting' | 'success' | 'error' | 'forbidden';
 @Component({
   selector: 'app-ingestion-submit-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './ingestion-submit-page.component.html',
   styleUrl: './ingestion-submit-page.component.css',
 })

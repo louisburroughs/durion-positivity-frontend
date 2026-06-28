@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
@@ -11,7 +11,7 @@ type RulesState = 'loading' | 'ready' | 'error' | 'forbidden';
 @Component({
   selector: 'app-posting-rules-list-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './posting-rules-list-page.component.html',
   styleUrl: './posting-rules-list-page.component.css',
 })

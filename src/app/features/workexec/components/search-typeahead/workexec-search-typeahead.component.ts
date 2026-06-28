@@ -8,7 +8,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, Subject, of } from 'rxjs';
@@ -31,7 +31,7 @@ type TypeaheadState = 'idle' | 'loading' | 'loaded' | 'empty' | 'error';
 @Component({
   selector: 'app-workexec-search-typeahead',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './workexec-search-typeahead.component.html',
   styleUrl: './workexec-search-typeahead.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

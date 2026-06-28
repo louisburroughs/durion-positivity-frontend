@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -12,7 +12,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'error';
 @Component({
   selector: 'app-cycle-count-plan-form-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, RouterLink],
+  imports: [TranslatePipe, RouterLink],
   templateUrl: './cycle-count-plan-form-page.component.html',
   styleUrl: './cycle-count-plan-form-page.component.css',
 })

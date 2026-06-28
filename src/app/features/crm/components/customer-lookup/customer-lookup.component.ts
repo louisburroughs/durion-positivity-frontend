@@ -1,7 +1,7 @@
 import {
   Component, inject, signal, forwardRef, Input, DestroyRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, of } from 'rxjs';
@@ -23,7 +23,7 @@ const MAX_SUGGESTIONS = 12;
 @Component({
   selector: 'app-customer-lookup',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './customer-lookup.component.html',
   styleUrl: './customer-lookup.component.css',
   providers: [

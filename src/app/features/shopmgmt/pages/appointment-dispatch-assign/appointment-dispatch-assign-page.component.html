@@ -2,21 +2,29 @@
   <h2>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.TITLE' | translate }}</h2>
 </section>
 
-<div *ngIf="submitSuccess()" class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.SUCCESS' | translate }}</div>
-<div *ngIf="submitError()" class="error-banner">{{ submitError()! | translate }}</div>
+@if (submitSuccess()) {
+  <div class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.SUCCESS' | translate }}</div>
+}
+@if (submitError()) {
+  <div class="error-banner">{{ submitError()! | translate }}</div>
+}
 
-<section *ngIf="appointment() as appt" class="appointment-header">
-  <h3>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.APPOINTMENT' | translate: { id: appt.appointmentId } }}</h3>
-  <p>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.STATUS' | translate }}: {{ appt.status }}</p>
-  <p>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.FACILITY' | translate }}: {{ appt.facilityId }}</p>
-</section>
+@if (appointment(); as appt) {
+  <section class="appointment-header">
+    <h3>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.APPOINTMENT' | translate: { id: appt.appointmentId } }}</h3>
+    <p>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.STATUS' | translate }}: {{ appt.status }}</p>
+    <p>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.FACILITY' | translate }}: {{ appt.facilityId }}</p>
+  </section>
+}
 
 <section class="assignment-history">
   <h3>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.ASSIGNMENT_HISTORY' | translate }}</h3>
-  <article *ngFor="let assignment of assignments()" class="assignment-item">
-    <p>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.ROLE' | translate }}: {{ getAssignmentRole(assignment) }}</p>
-    <p>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.MECHANIC' | translate }}: {{ assignment.mechanic?.displayName ?? assignment.mechanic?.mechanicId }}</p>
-  </article>
+  @for (assignment of assignments(); track assignment) {
+    <article class="assignment-item">
+      <p>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.ROLE' | translate }}: {{ getAssignmentRole(assignment) }}</p>
+      <p>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.MECHANIC' | translate }}: {{ assignment.mechanic?.displayName ?? assignment.mechanic?.mechanicId }}</p>
+    </article>
+  }
 </section>
 
 <form [formGroup]="assignForm" class="create-form" (ngSubmit)="submitAssignment()">
@@ -39,15 +47,18 @@
   </div>
 
   <button type="submit" class="btn-primary submit-assignment-btn"
-    [disabled]="submitLoading()">{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.CREATE' | translate }}</button>
+  [disabled]="submitLoading()">{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.CREATE' | translate }}</button>
 </form>
 
-<section *ngIf="conflicts().length > 0" class="conflict-panel">
-  <h3>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.CONFLICTS' | translate }}</h3>
-
-  <article *ngFor="let conflict of conflicts()" class="conflict-item"
-    [ngClass]="conflict.type === 'HARD' ? 'hard-conflict' : 'soft-conflict'">
-    <strong>{{ conflict.type }}</strong>
-    <p>{{ conflict.message }}</p>
-  </article>
-</section>
+@if (conflicts().length > 0) {
+  <section class="conflict-panel">
+    <h3>{{ 'SHOPMGMT.APPOINTMENT_DISPATCH_ASSIGN.CONFLICTS' | translate }}</h3>
+    @for (conflict of conflicts(); track conflict) {
+      <article class="conflict-item"
+        [ngClass]="conflict.type === 'HARD' ? 'hard-conflict' : 'soft-conflict'">
+        <strong>{{ conflict.type }}</strong>
+        <p>{{ conflict.message }}</p>
+      </article>
+    }
+  </section>
+}

@@ -15,9 +15,13 @@
     </div>
 
     <button class="submit-btn" type="submit"
-      [disabled]="estimateForm.controls.appointmentId.value.trim().length === 0 || loading()">{{ 'WORKEXEC.ESTIMATE_FROM_APPT.CREATE' | translate }}</button>
+    [disabled]="estimateForm.controls.appointmentId.value.trim().length === 0 || loading()">{{ 'WORKEXEC.ESTIMATE_FROM_APPT.CREATE' | translate }}</button>
   </form>
 
-  <p class="success-banner" *ngIf="createSuccess()">{{ 'WORKEXEC.ESTIMATE_FROM_APPT.SUCCESS' | translate }}</p>
-  <p class="error-banner" *ngIf="createError()">{{ createError() }}</p>
+  @if (createSuccess()) {
+    <p class="success-banner">{{ 'WORKEXEC.ESTIMATE_FROM_APPT.SUCCESS' | translate }}</p>
+  }
+  @if (createError()) {
+    <p class="error-banner">{{ createError() }}</p>
+  }
 </section>

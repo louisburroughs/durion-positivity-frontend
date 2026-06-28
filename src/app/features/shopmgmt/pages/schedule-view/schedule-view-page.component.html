@@ -20,7 +20,7 @@
           aria-autocomplete="list"
           aria-haspopup="listbox"
           [placeholder]="'SHOPMGMT.SCHEDULE_VIEW.LOCATION_ID' | translate"
-        />
+          />
         @if (showSuggestions() && locationSuggestions().length > 0) {
           <ul class="location-suggestions" role="listbox">
             @for (loc of locationSuggestions(); track loc.id) {
@@ -28,7 +28,7 @@
                 class="location-suggestion"
                 role="option"
                 (mousedown)="selectLocation(loc)"
-              >
+                >
                 <span class="suggestion-name">{{ loc.name }}</span>
                 @if (loc.code) {
                   <span class="suggestion-code">{{ loc.code }}</span>
@@ -58,52 +58,67 @@
   </form>
 </div>
 
-<div *ngIf="availabilityError()" class="availability-warning">
-  {{ 'SHOPMGMT.SCHEDULE_VIEW.ERROR_LOAD' | translate }}
-</div>
-
-<div *ngIf="loading()" class="loading-state">{{ 'SHOPMGMT.SCHEDULE_VIEW.LOADING' | translate }}</div>
-
-<ng-container *ngIf="!loading()">
-  <div *ngIf="scheduleData().length === 0 && !availabilityError()" class="empty-board">
-    {{ 'SHOPMGMT.SCHEDULE_VIEW.EMPTY' | translate }}
+@if (availabilityError()) {
+  <div class="availability-warning">
+    {{ 'SHOPMGMT.SCHEDULE_VIEW.ERROR_LOAD' | translate }}
   </div>
+}
 
-  <div *ngIf="scheduleData().length > 0" class="board-region">
-    <div *ngFor="let resource of scheduleData()" class="resource-lane">
-      <div class="lane-header">
-        <span class="resource-type">{{ resource.resourceType }}</span>
-        <span class="resource-name">{{ resource.resourceName ?? resource.resourceId }}</span>
-      </div>
-      <div class="lane-items">
-        <div *ngFor="let appt of resource.appointments" class="work-item-card" (click)="selectItem(appt)">
-          <span class="item-id">{{ appt.appointmentId }}</span>
-          <span class="item-time">{{ appt.scheduledStart }}</span>
-          <span class="item-status">{{ appt.status }}</span>
-          <span *ngIf="appt.rescheduleCount && appt.rescheduleCount > 0" class="conflict-badge">
-            {{ 'SHOPMGMT.SCHEDULE_VIEW.RESCHEDULED_X' | translate: { count: appt.rescheduleCount } }}
-          </span>
+@if (loading()) {
+  <div class="loading-state">{{ 'SHOPMGMT.SCHEDULE_VIEW.LOADING' | translate }}</div>
+}
+
+@if (!loading()) {
+  @if (scheduleData().length === 0 && !availabilityError()) {
+    <div class="empty-board">
+      {{ 'SHOPMGMT.SCHEDULE_VIEW.EMPTY' | translate }}
+    </div>
+  }
+  @if (scheduleData().length > 0) {
+    <div class="board-region">
+      @for (resource of scheduleData(); track resource) {
+        <div class="resource-lane">
+          <div class="lane-header">
+            <span class="resource-type">{{ resource.resourceType }}</span>
+            <span class="resource-name">{{ resource.resourceName ?? resource.resourceId }}</span>
+          </div>
+          <div class="lane-items">
+            @for (appt of resource.appointments; track appt) {
+              <div class="work-item-card" (click)="selectItem(appt)">
+                <span class="item-id">{{ appt.appointmentId }}</span>
+                <span class="item-time">{{ appt.scheduledStart }}</span>
+                <span class="item-status">{{ appt.status }}</span>
+                @if (appt.rescheduleCount && appt.rescheduleCount > 0) {
+                  <span class="conflict-badge">
+                    {{ 'SHOPMGMT.SCHEDULE_VIEW.RESCHEDULED_X' | translate: { count: appt.rescheduleCount } }}
+                  </span>
+                }
+              </div>
+            }
+          </div>
         </div>
-      </div>
+      }
+    </div>
+  }
+}
+
+@if (selectedItem()) {
+  <div class="details-panel">
+    <div class="details-header">
+      <h3>{{ 'SHOPMGMT.SCHEDULE_VIEW.APPOINTMENT' | translate: { id: selectedItem()!.appointmentId } }}</h3>
+      <button class="details-close" (click)="closeDetails()" [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.CLOSE_DETAILS' | translate">&#x2715;</button>
+    </div>
+    <div class="details-row">
+      <span class="label">{{ 'SHOPMGMT.SCHEDULE_VIEW.STATUS' | translate }}</span>
+      <span class="value">{{ selectedItem()!.status }}</span>
+    </div>
+    <div class="details-row">
+      <span class="label">{{ 'SHOPMGMT.SCHEDULE_VIEW.START' | translate }}</span>
+      <span class="value">{{ selectedItem()!.scheduledStart }}</span>
+    </div>
+    <div class="details-row">
+      <span class="label">{{ 'SHOPMGMT.SCHEDULE_VIEW.END' | translate }}</span>
+      <span class="value">{{ selectedItem()!.scheduledEnd }}</span>
     </div>
   </div>
-</ng-container>
-
-<div *ngIf="selectedItem()" class="details-panel">
-  <div class="details-header">
-    <h3>{{ 'SHOPMGMT.SCHEDULE_VIEW.APPOINTMENT' | translate: { id: selectedItem()!.appointmentId } }}</h3>
-    <button class="details-close" (click)="closeDetails()" [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.CLOSE_DETAILS' | translate">&#x2715;</button>
-  </div>
-  <div class="details-row">
-    <span class="label">{{ 'SHOPMGMT.SCHEDULE_VIEW.STATUS' | translate }}</span>
-    <span class="value">{{ selectedItem()!.status }}</span>
-  </div>
-  <div class="details-row">
-    <span class="label">{{ 'SHOPMGMT.SCHEDULE_VIEW.START' | translate }}</span>
-    <span class="value">{{ selectedItem()!.scheduledStart }}</span>
-  </div>
-  <div class="details-row">
-    <span class="label">{{ 'SHOPMGMT.SCHEDULE_VIEW.END' | translate }}</span>
-    <span class="value">{{ selectedItem()!.scheduledEnd }}</span>
-  </div>
-</div>
+}

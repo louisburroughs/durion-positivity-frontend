@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -11,7 +11,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'resolved' | 'err
 @Component({
   selector: 'app-shortage-resolution-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, RouterLink],
+  imports: [TranslatePipe, RouterLink],
   templateUrl: './shortage-resolution-page.component.html',
   styleUrls: ['./shortage-resolution-page.component.css'],
 })

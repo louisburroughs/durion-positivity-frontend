@@ -7,32 +7,43 @@
     <button class="open-create-btn" type="button" (click)="openCreateModal()">{{ 'SHOPMGMT.MECHANIC_ROSTER.CREATE_EMPLOYEE' | translate }}</button>
   </div>
 
-  <p class="success-banner" *ngIf="createSuccess()">{{ 'SHOPMGMT.MECHANIC_ROSTER.EMPLOYEE_CREATED' | translate }}</p>
-  <p class="error-banner" *ngIf="error() || createError()">{{ (error() || createError())! | translate }}</p>
+  @if (createSuccess()) {
+    <p class="success-banner">{{ 'SHOPMGMT.MECHANIC_ROSTER.EMPLOYEE_CREATED' | translate }}</p>
+  }
+  @if (error() || createError()) {
+    <p class="error-banner">{{ (error() || createError())! | translate }}</p>
+  }
 
-  <div class="roster-table" *ngIf="!loading() && people().length > 0">
-    <div class="roster-row" *ngFor="let person of people()">{{ getDisplayName(person) }}</div>
-  </div>
+  @if (!loading() && people().length > 0) {
+    <div class="roster-table">
+      @for (person of people(); track person) {
+        <div class="roster-row">{{ getDisplayName(person) }}</div>
+      }
+    </div>
+  }
 
-  <p class="empty-state" *ngIf="!loading() && !error() && people().length === 0">{{ 'SHOPMGMT.MECHANIC_ROSTER.EMPTY' | translate }}</p>
+  @if (!loading() && !error() && people().length === 0) {
+    <p class="empty-state">{{ 'SHOPMGMT.MECHANIC_ROSTER.EMPTY' | translate }}</p>
+  }
 
-  <div class="create-modal-overlay" *ngIf="showCreateModal()">
-    <form [formGroup]="createForm" (ngSubmit)="submitCreateEmployee()">
-      <div class="form-group">
-        <label>{{ 'SHOPMGMT.MECHANIC_ROSTER.FIRST_NAME' | translate }} <input type="text" formControlName="firstName" /></label>
-      </div>
-      <div class="form-group">
-        <label>{{ 'SHOPMGMT.MECHANIC_ROSTER.LAST_NAME' | translate }} <input type="text" formControlName="lastName" /></label>
-      </div>
-      <div class="form-group">
-        <label>{{ 'SHOPMGMT.MECHANIC_ROSTER.EMAIL' | translate }} <input type="email" formControlName="email" /></label>
-      </div>
-      <div class="form-group">
-        <label>{{ 'SHOPMGMT.MECHANIC_ROSTER.ROLE' | translate }} <input type="text" formControlName="role" /></label>
-      </div>
-
-      <button class="submit-create-btn" type="submit">{{ 'SHOPMGMT.MECHANIC_ROSTER.SAVE' | translate }}</button>
-      <button type="button" (click)="closeCreateModal()">{{ 'SHOPMGMT.MECHANIC_ROSTER.CLOSE' | translate }}</button>
-    </form>
-  </div>
+  @if (showCreateModal()) {
+    <div class="create-modal-overlay">
+      <form [formGroup]="createForm" (ngSubmit)="submitCreateEmployee()">
+        <div class="form-group">
+          <label>{{ 'SHOPMGMT.MECHANIC_ROSTER.FIRST_NAME' | translate }} <input type="text" formControlName="firstName" /></label>
+        </div>
+        <div class="form-group">
+          <label>{{ 'SHOPMGMT.MECHANIC_ROSTER.LAST_NAME' | translate }} <input type="text" formControlName="lastName" /></label>
+        </div>
+        <div class="form-group">
+          <label>{{ 'SHOPMGMT.MECHANIC_ROSTER.EMAIL' | translate }} <input type="email" formControlName="email" /></label>
+        </div>
+        <div class="form-group">
+          <label>{{ 'SHOPMGMT.MECHANIC_ROSTER.ROLE' | translate }} <input type="text" formControlName="role" /></label>
+        </div>
+        <button class="submit-create-btn" type="submit">{{ 'SHOPMGMT.MECHANIC_ROSTER.SAVE' | translate }}</button>
+        <button type="button" (click)="closeCreateModal()">{{ 'SHOPMGMT.MECHANIC_ROSTER.CLOSE' | translate }}</button>
+      </form>
+    </div>
+  }
 </section>
