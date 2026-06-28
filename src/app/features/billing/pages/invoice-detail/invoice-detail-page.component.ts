@@ -189,12 +189,13 @@ export class InvoiceDetailPageComponent implements OnInit {
   }
 
   downloadArtifact(artifactRefId: string, filename: string): void {
+    const invoiceId = this.invoiceId();
     this.billingService
-      .createArtifactDownloadToken(artifactRefId)
+      .createArtifactDownloadToken(invoiceId, artifactRefId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          const url = res.downloadUrl ?? `${environment.apiBaseUrl}/billing/artifacts/${artifactRefId}/download?token=${res.downloadToken}`;
+          const url = res.downloadUrl ?? `${environment.apiBaseUrl}/invoice/v1/invoices/${invoiceId}/artifacts/${artifactRefId}/download?token=${res.downloadToken}`;
           const a = document.createElement('a');
           a.href = url;
           a.download = filename;

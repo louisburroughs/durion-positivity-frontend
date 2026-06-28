@@ -138,7 +138,7 @@ describe('BillingTransportService', () => {
 
     service.loadInvoiceArtifacts('inv-001').subscribe();
 
-    expect(apiStub.get).toHaveBeenCalledWith('/billing/invoices/inv-001/artifacts');
+    expect(apiStub.get).toHaveBeenCalledWith('/invoice/v1/invoices/inv-001/artifacts');
   });
 
   it('elevates through the billing transport endpoint and emits the elevation token response', () => {
@@ -282,12 +282,12 @@ describe('BillingTransportService', () => {
     apiStub.post.mockReturnValueOnce(of(tokenResponse));
 
     let result: unknown;
-    service.createArtifactDownloadToken('artifact-001').subscribe(value => {
+    service.createArtifactDownloadToken('inv-001', 'artifact-001').subscribe(value => {
       result = value;
     });
 
     expect(apiStub.post).toHaveBeenCalledWith(
-      '/billing/artifacts/artifact-001/download-token',
+      '/invoice/v1/invoices/inv-001/artifacts/artifact-001/download-token',
       {},
     );
     expect(receiptServiceStub.generateReceipt).not.toHaveBeenCalled();
