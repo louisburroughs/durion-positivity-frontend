@@ -12,16 +12,24 @@
   <span>{{ facilityTimeZoneId() }}</span>
 </div>
 
-<div *ngIf="errorMessage()" class="error-banner">
-  {{ errorMessage()! | translate }}
-  <span *ngIf="correlationId()" class="correlation-id">{{ correlationId() }}</span>
-  <a *ngIf="showBackToSource()" class="back-to-source" href="#">{{ 'SHOPMGMT.APPOINTMENT_CREATE.BACK_TO_SOURCE' | translate }}</a>
-</div>
+@if (errorMessage()) {
+  <div class="error-banner">
+    {{ errorMessage()! | translate }}
+    @if (correlationId()) {
+      <span class="correlation-id">{{ correlationId() }}</span>
+    }
+    @if (showBackToSource()) {
+      <a class="back-to-source" href="#">{{ 'SHOPMGMT.APPOINTMENT_CREATE.BACK_TO_SOURCE' | translate }}</a>
+    }
+  </div>
+}
 
-<div *ngIf="showEligibilityError()" class="eligibility-error">
-  {{ 'SHOPMGMT.APPOINTMENT_CREATE.ELIGIBILITY_ERROR' | translate }}
-  <a class="back-to-source" href="#">{{ 'SHOPMGMT.APPOINTMENT_CREATE.BACK_TO_SOURCE' | translate }}</a>
-</div>
+@if (showEligibilityError()) {
+  <div class="eligibility-error">
+    {{ 'SHOPMGMT.APPOINTMENT_CREATE.ELIGIBILITY_ERROR' | translate }}
+    <a class="back-to-source" href="#">{{ 'SHOPMGMT.APPOINTMENT_CREATE.BACK_TO_SOURCE' | translate }}</a>
+  </div>
+}
 
 <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
   <div class="form-group">
@@ -36,29 +44,39 @@
       formControlName="scheduledEndDateTime" />
   </div>
 
-  <ng-container *ngIf="conflicts().length > 0">
+  @if (conflicts().length > 0) {
     <div class="conflict-panel">
-      <div *ngFor="let c of conflicts()">
-        <div *ngIf="c.type === 'HARD'" class="hard-conflict">
-          <span class="severity-badge">{{ 'SHOPMGMT.APPOINTMENT_CREATE.HARD' | translate }}</span> {{ c.message }}
+      @for (c of conflicts(); track c) {
+        <div>
+          @if (c.type === 'HARD') {
+            <div class="hard-conflict">
+              <span class="severity-badge">{{ 'SHOPMGMT.APPOINTMENT_CREATE.HARD' | translate }}</span> {{ c.message }}
+            </div>
+          }
+          @if (c.type === 'SOFT') {
+            <div class="soft-conflict">
+              <span class="severity-badge">{{ 'SHOPMGMT.APPOINTMENT_CREATE.SOFT' | translate }}</span> {{ c.message }}
+            </div>
+          }
         </div>
-        <div *ngIf="c.type === 'SOFT'" class="soft-conflict">
-          <span class="severity-badge">{{ 'SHOPMGMT.APPOINTMENT_CREATE.SOFT' | translate }}</span> {{ c.message }}
-        </div>
-      </div>
+      }
     </div>
-  </ng-container>
+  }
 
-  <div *ngIf="hasSoftOnly()" class="override-section">
-    <label>
-      <input type="checkbox" (change)="overrideEnabled.set($any($event.target).checked)" />
-      {{ 'SHOPMGMT.APPOINTMENT_CREATE.OVERRIDE_SOFT' | translate }}
-    </label>
-    <div *ngIf="overrideEnabled()" class="override-reason form-group">
-      <label for="overrideReason">{{ 'SHOPMGMT.APPOINTMENT_CREATE.OVERRIDE_REASON' | translate }}</label>
-      <textarea id="overrideReason" name="overrideReason" formControlName="overrideReason" rows="2"></textarea>
+  @if (hasSoftOnly()) {
+    <div class="override-section">
+      <label>
+        <input type="checkbox" (change)="overrideEnabled.set($any($event.target).checked)" />
+        {{ 'SHOPMGMT.APPOINTMENT_CREATE.OVERRIDE_SOFT' | translate }}
+      </label>
+      @if (overrideEnabled()) {
+        <div class="override-reason form-group">
+          <label for="overrideReason">{{ 'SHOPMGMT.APPOINTMENT_CREATE.OVERRIDE_REASON' | translate }}</label>
+          <textarea id="overrideReason" name="overrideReason" formControlName="overrideReason" rows="2"></textarea>
+        </div>
+      }
     </div>
-  </div>
+  }
 
   <div class="action-row">
     <button type="submit" [disabled]="isSubmitDisabled">{{ 'SHOPMGMT.APPOINTMENT_CREATE.CREATE' | translate }}</button>

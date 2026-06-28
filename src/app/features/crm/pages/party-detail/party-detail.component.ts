@@ -1,5 +1,5 @@
 import { Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -17,7 +17,7 @@ type EditState    = 'view' | 'editing' | 'saving';
 @Component({
   selector: 'app-party-detail',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './party-detail.component.html',
   styleUrl: './party-detail.component.css',
 })

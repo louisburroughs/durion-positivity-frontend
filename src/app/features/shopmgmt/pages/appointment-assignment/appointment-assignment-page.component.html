@@ -2,43 +2,48 @@
   <h2>{{ 'SHOPMGMT.APPOINTMENT_ASSIGNMENT.TITLE' | translate }}</h2>
 </div>
 
-<ng-container *ngIf="loading()">
+@if (loading()) {
   <div class="loading-state">{{ 'SHOPMGMT.APPOINTMENT_ASSIGNMENT.LOADING' | translate }}</div>
-</ng-container>
+}
 
-<ng-container *ngIf="!loading()">
-  <div *ngIf="error()" class="error-banner">{{ error()! | translate }}</div>
-  <div *ngIf="sseError()" class="sse-error-banner">{{ 'SHOPMGMT.APPOINTMENT_ASSIGNMENT.LIVE_UPDATES_UNAVAILABLE' | translate }}</div>
-  <div *ngIf="showUpdateNotification()" class="update-notification">{{ 'SHOPMGMT.APPOINTMENT_ASSIGNMENT.UPDATED' | translate }}</div>
-
-  <ng-container *ngIf="assignment(); else emptyTpl">
+@if (!loading()) {
+  @if (error()) {
+    <div class="error-banner">{{ error()! | translate }}</div>
+  }
+  @if (sseError()) {
+    <div class="sse-error-banner">{{ 'SHOPMGMT.APPOINTMENT_ASSIGNMENT.LIVE_UPDATES_UNAVAILABLE' | translate }}</div>
+  }
+  @if (showUpdateNotification()) {
+    <div class="update-notification">{{ 'SHOPMGMT.APPOINTMENT_ASSIGNMENT.UPDATED' | translate }}</div>
+  }
+  @if (assignment()) {
     <div class="assignment-section">
       <div class="assignment-type-label">{{ assignment()!.assignmentType }}</div>
-
-      <ng-container *ngIf="assignment()!.assignmentType === 'BAY'">
+      @if (assignment()!.assignmentType === 'BAY') {
         <div class="bay-details">
           <span>{{ assignment()!.bayIdentifier }}</span>
-          <span *ngIf="assignment()!.bayName">&nbsp;— {{ assignment()!.bayName }}</span>
+          @if (assignment()!.bayName) {
+            <span>&nbsp;— {{ assignment()!.bayName }}</span>
+          }
         </div>
-      </ng-container>
-
-      <ng-container *ngIf="assignment()!.assignmentType === 'MOBILE_UNIT'">
+      }
+      @if (assignment()!.assignmentType === 'MOBILE_UNIT') {
         <div class="mobile-unit-details">
           <span>{{ assignment()!.mobileUnitId }}</span>
         </div>
-      </ng-container>
-
-      <div *ngIf="assignment()!.mechanic" class="mechanic-display">
-        {{ mechanicDisplay }}
-      </div>
-
-      <div *ngIf="assignment()!.notes" class="assignment-notes">
-        {{ assignment()!.notes }}
-      </div>
+      }
+      @if (assignment()!.mechanic) {
+        <div class="mechanic-display">
+          {{ mechanicDisplay }}
+        </div>
+      }
+      @if (assignment()!.notes) {
+        <div class="assignment-notes">
+          {{ assignment()!.notes }}
+        </div>
+      }
     </div>
-  </ng-container>
-
-  <ng-template #emptyTpl>
+  } @else {
     <div class="empty-state empty-assignment">{{ 'SHOPMGMT.APPOINTMENT_ASSIGNMENT.EMPTY' | translate }}</div>
-  </ng-template>
-</ng-container>
+  }
+}

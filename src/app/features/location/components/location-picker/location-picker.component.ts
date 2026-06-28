@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -33,7 +33,7 @@ let pickerSeq = 0;
 @Component({
   selector: 'app-location-picker',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './location-picker.component.html',
   styleUrl: './location-picker.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

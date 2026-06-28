@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,7 +12,7 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 @Component({
   selector: 'app-putaway-execute',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './putaway-execute.component.html',
   styleUrl: './putaway-execute.component.css',
 })

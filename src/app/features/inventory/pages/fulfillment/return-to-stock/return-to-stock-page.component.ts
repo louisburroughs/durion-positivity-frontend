@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -18,7 +18,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'success' | 'erro
 @Component({
   selector: 'app-return-to-stock-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, RouterLink],
+  imports: [TranslatePipe, RouterLink],
   templateUrl: './return-to-stock-page.component.html',
   styleUrls: ['./return-to-stock-page.component.css'],
 })

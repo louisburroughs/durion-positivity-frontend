@@ -2,32 +2,32 @@
   <h2>{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.TITLE' | translate }}</h2>
 </div>
 
-<ng-container *ngIf="loading()">
+@if (loading()) {
   <div class="loading-state">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.LOADING' | translate }}</div>
-</ng-container>
+}
 
-<ng-container *ngIf="!loading()">
-  <div *ngIf="successMessage()" class="success-banner">
-    {{ successMessage()! | translate }}
-  </div>
-
-  <div *ngIf="versionMismatch()" class="version-mismatch-prompt">
-    {{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.VERSION_MISMATCH' | translate }}
-  </div>
-
+@if (!loading()) {
+  @if (successMessage()) {
+    <div class="success-banner">
+      {{ successMessage()! | translate }}
+    </div>
+  }
+  @if (versionMismatch()) {
+    <div class="version-mismatch-prompt">
+      {{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.VERSION_MISMATCH' | translate }}
+    </div>
+  }
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="form-group">
       <label for="scheduledStartDateTime">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.NEW_START' | translate }}</label>
       <input id="scheduledStartDateTime" name="scheduledStartDateTime" type="datetime-local"
         formControlName="scheduledStartDateTime" />
     </div>
-
     <div class="form-group">
       <label for="scheduledEndDateTime">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.NEW_END' | translate }}</label>
       <input id="scheduledEndDateTime" name="scheduledEndDateTime" type="datetime-local"
         formControlName="scheduledEndDateTime" />
     </div>
-
     <div class="form-group">
       <label for="reason">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.RESCHEDULE_REASON' | translate }}</label>
       <select id="reason" name="reason" formControlName="reason">
@@ -38,45 +38,54 @@
         <option value="OTHER">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.REASONS.OTHER' | translate }}</option>
       </select>
     </div>
-
     <div class="form-group">
       <label for="notes">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.NOTES' | translate }}</label>
       <textarea id="notes" name="notes" formControlName="notes" rows="3"></textarea>
     </div>
-
-    <ng-container *ngIf="fieldErrors().length > 0">
-      <div *ngFor="let fe of fieldErrors()" class="field-error">
-        {{ fe.message | translate }}
-      </div>
-    </ng-container>
-
-    <ng-container *ngIf="conflicts().length > 0">
+    @if (fieldErrors().length > 0) {
+      @for (fe of fieldErrors(); track fe) {
+        <div class="field-error">
+          {{ fe.message | translate }}
+        </div>
+      }
+    }
+    @if (conflicts().length > 0) {
       <div class="conflict-panel">
-        <div *ngFor="let c of conflicts()">
-          <div *ngIf="c.type === 'HARD'" class="hard-conflict">{{ c.message }}</div>
-          <div *ngIf="c.type === 'SOFT'" class="soft-conflict">{{ c.message }}</div>
-        </div>
-
-        <div *ngIf="suggestedAlternatives().length > 0" class="suggested-slots">
-          <div *ngFor="let slot of suggestedAlternatives()" class="suggested-slot">
-            {{ slot.scheduledStartDateTime }} &ndash; {{ slot.scheduledEndDateTime }}
+        @for (c of conflicts(); track c) {
+          <div>
+            @if (c.type === 'HARD') {
+              <div class="hard-conflict">{{ c.message }}</div>
+            }
+            @if (c.type === 'SOFT') {
+              <div class="soft-conflict">{{ c.message }}</div>
+            }
           </div>
-        </div>
+        }
+        @if (suggestedAlternatives().length > 0) {
+          <div class="suggested-slots">
+            @for (slot of suggestedAlternatives(); track slot) {
+              <div class="suggested-slot">
+                {{ slot.scheduledStartDateTime }} &ndash; {{ slot.scheduledEndDateTime }}
+              </div>
+            }
+          </div>
+        }
       </div>
-    </ng-container>
-
-    <div *ngIf="showOverrideReason()" class="override-reason-field form-group">
-      <label for="overrideReason">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.OVERRIDE_REASON' | translate }}</label>
-      <textarea id="overrideReason" name="overrideReason" formControlName="overrideReason" rows="2"></textarea>
-    </div>
-
-    <div *ngIf="showApprovalReason()" class="approval-reason-field form-group">
-      <label for="approvalReason">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.APPROVAL_REASON' | translate }}</label>
-      <textarea id="approvalReason" name="approvalReason" formControlName="approvalReason" rows="2"></textarea>
-    </div>
-
+    }
+    @if (showOverrideReason()) {
+      <div class="override-reason-field form-group">
+        <label for="overrideReason">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.OVERRIDE_REASON' | translate }}</label>
+        <textarea id="overrideReason" name="overrideReason" formControlName="overrideReason" rows="2"></textarea>
+      </div>
+    }
+    @if (showApprovalReason()) {
+      <div class="approval-reason-field form-group">
+        <label for="approvalReason">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.APPROVAL_REASON' | translate }}</label>
+        <textarea id="approvalReason" name="approvalReason" formControlName="approvalReason" rows="2"></textarea>
+      </div>
+    }
     <div class="action-row">
       <button type="submit" [disabled]="isSubmitDisabled">{{ 'SHOPMGMT.APPOINTMENT_RESCHEDULE.RESCHEDULE' | translate }}</button>
     </div>
   </form>
-</ng-container>
+}

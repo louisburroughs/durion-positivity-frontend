@@ -26,7 +26,7 @@
             [attr.aria-expanded]="showSuggestions() && locationSuggestions().length > 0"
             aria-autocomplete="list"
             aria-haspopup="listbox"
-          />
+            />
           @if (showSuggestions() && locationSuggestions().length > 0) {
             <ul class="location-suggestions" role="listbox">
               @for (loc of locationSuggestions(); track loc.id) {
@@ -34,7 +34,7 @@
                   class="location-suggestion"
                   role="option"
                   (mousedown)="selectLocation(loc)"
-                >
+                  >
                   <span class="suggestion-name">{{ loc.name }}</span>
                   @if (loc.code) {
                     <span class="suggestion-code">{{ loc.code }}</span>
@@ -60,51 +60,68 @@
       </button>
     </div>
 
-    <div class="last-updated" *ngIf="lastRefreshed()" aria-live="polite">
-      {{ 'SHOPMGMT.DISPATCH_BOARD.LAST_UPDATED' | translate }}: {{ lastRefreshed() | date: 'short' }}
-    </div>
+    @if (lastRefreshed()) {
+      <div class="last-updated" aria-live="polite">
+        {{ 'SHOPMGMT.DISPATCH_BOARD.LAST_UPDATED' | translate }}: {{ lastRefreshed() | date: 'short' }}
+      </div>
+    }
 
-    <div class="banners-row" *ngIf="dataQualityWarning() || isStale()">
-      <output class="data-quality-warning alert alert-warning" *ngIf="dataQualityWarning()" aria-live="polite">
-        {{ 'SHOPMGMT.DISPATCH_BOARD.DATA_QUALITY_WARNING' | translate }}
-      </output>
+    @if (dataQualityWarning() || isStale()) {
+      <div class="banners-row">
+        @if (dataQualityWarning()) {
+          <output class="data-quality-warning alert alert-warning" aria-live="polite">
+            {{ 'SHOPMGMT.DISPATCH_BOARD.DATA_QUALITY_WARNING' | translate }}
+          </output>
+        }
+        @if (isStale()) {
+          <output class="stale-data-banner alert alert-warning" aria-live="polite">
+            {{ 'SHOPMGMT.DISPATCH_BOARD.STALE_DATA' | translate }}
+          </output>
+        }
+      </div>
+    }
 
-      <output class="stale-data-banner alert alert-warning" *ngIf="isStale()" aria-live="polite">
-        {{ 'SHOPMGMT.DISPATCH_BOARD.STALE_DATA' | translate }}
-      </output>
-    </div>
+    @if (loading()) {
+      <div class="loading-state" aria-live="polite">
+        {{ 'SHOPMGMT.DISPATCH_BOARD.LOADING' | translate }}
+      </div>
+    }
 
-    <div class="loading-state" *ngIf="loading()" aria-live="polite">
-      {{ 'SHOPMGMT.DISPATCH_BOARD.LOADING' | translate }}
-    </div>
+    @if (error(); as errorMessage) {
+      <div class="state-panel" role="alert" aria-live="polite">
+        <p>{{ errorMessage | translate }}</p>
+        <button type="button" class="btn-text" (click)="refresh()"
+          [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.RETRY_ARIA' | translate">
+          {{ 'SHOPMGMT.DISPATCH_BOARD.RETRY' | translate }}
+        </button>
+      </div>
+    }
 
-    <div class="state-panel" *ngIf="error() as errorMessage" role="alert" aria-live="polite">
-      <p>{{ errorMessage | translate }}</p>
-      <button type="button" class="btn-text" (click)="refresh()"
-        [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.RETRY_ARIA' | translate">
-        {{ 'SHOPMGMT.DISPATCH_BOARD.RETRY' | translate }}
-      </button>
-    </div>
+    @if (!loading() && !error() && workorders().length === 0) {
+      <div class="empty-state" aria-live="polite">
+        <h2>{{ 'SHOPMGMT.DISPATCH_BOARD.EMPTY_TITLE' | translate }}</h2>
+        <p>{{ 'SHOPMGMT.DISPATCH_BOARD.EMPTY_DESC' | translate }}</p>
+      </div>
+    }
 
-    <div class="empty-state" *ngIf="!loading() && !error() && workorders().length === 0" aria-live="polite">
-      <h2>{{ 'SHOPMGMT.DISPATCH_BOARD.EMPTY_TITLE' | translate }}</h2>
-      <p>{{ 'SHOPMGMT.DISPATCH_BOARD.EMPTY_DESC' | translate }}</p>
-    </div>
-
-    <div class="workorders" *ngIf="!loading() && workorders().length > 0" aria-live="polite">
-      <article class="workorder-row" *ngFor="let workorder of workorders()"
-        [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.WORKORDER_ARIA' | translate">
-        <div class="workorder-id">
-          <span class="row-label">{{ 'SHOPMGMT.DISPATCH_BOARD.WORKORDER' | translate }}</span>
-          <span>{{ workorder.workorderId }}</span>
-        </div>
-        <div class="workorder-status">
-          <span class="row-label">{{ 'SHOPMGMT.DISPATCH_BOARD.STATUS' | translate }}</span>
-          <span class="status-chip" [class.exception-badge]="workorder.status.toLowerCase().includes('exception')">
-            {{ workorder.status }}
-          </span>
-        </div>
-      </article>
-    </div>
+    @if (!loading() && workorders().length > 0) {
+      <div class="workorders" aria-live="polite">
+        @for (workorder of workorders(); track workorder) {
+          <article class="workorder-row"
+            [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.WORKORDER_ARIA' | translate">
+            <div class="workorder-id">
+              <span class="row-label">{{ 'SHOPMGMT.DISPATCH_BOARD.WORKORDER' | translate }}</span>
+              <span>{{ workorder.workorderId }}</span>
+            </div>
+            <div class="workorder-status">
+              <span class="row-label">{{ 'SHOPMGMT.DISPATCH_BOARD.STATUS' | translate }}</span>
+              <span class="status-chip" [class.exception-badge]="workorder.status.toLowerCase().includes('exception')">
+                {{ workorder.status }}
+              </span>
+            </div>
+          </article>
+        }
+      </div>
+    }
   </section>
 </section>

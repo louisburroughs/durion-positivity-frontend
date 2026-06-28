@@ -2,16 +2,26 @@
   <h2>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.TITLE' | translate }}</h2>
 </section>
 
-<div *ngIf="rescheduleSuccess()" class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.SUCCESS.RESCHEDULE' | translate }}</div>
-<div *ngIf="overrideSuccess()" class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.SUCCESS.OVERRIDE' | translate }}</div>
-<div *ngIf="rescheduleError()" class="error-banner">{{ rescheduleError()! | translate }}</div>
-<div *ngIf="overrideError()" class="error-banner">{{ overrideError()! | translate }}</div>
+@if (rescheduleSuccess()) {
+  <div class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.SUCCESS.RESCHEDULE' | translate }}</div>
+}
+@if (overrideSuccess()) {
+  <div class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.SUCCESS.OVERRIDE' | translate }}</div>
+}
+@if (rescheduleError()) {
+  <div class="error-banner">{{ rescheduleError()! | translate }}</div>
+}
+@if (overrideError()) {
+  <div class="error-banner">{{ overrideError()! | translate }}</div>
+}
 
-<section *ngIf="appointment() as appt" class="appointment-summary">
-  <h3>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.APPOINTMENT' | translate: { id: appt.appointmentId } }}</h3>
-  <p>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.STATUS' | translate }}: {{ appt.status }}</p>
-  <p>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.FACILITY' | translate }}: {{ appt.facilityId }}</p>
-</section>
+@if (appointment(); as appt) {
+  <section class="appointment-summary">
+    <h3>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.APPOINTMENT' | translate: { id: appt.appointmentId } }}</h3>
+    <p>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.STATUS' | translate }}: {{ appt.status }}</p>
+    <p>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.FACILITY' | translate }}: {{ appt.facilityId }}</p>
+  </section>
+}
 
 <form [formGroup]="rescheduleForm" class="reschedule-form" (ngSubmit)="submitReschedule()">
   <div class="form-group">
@@ -30,30 +40,33 @@
   </div>
 
   <button type="submit" class="btn-primary submit-reschedule-btn"
-    [disabled]="rescheduleLoading()">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.RESCHEDULE' | translate }}</button>
+  [disabled]="rescheduleLoading()">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.RESCHEDULE' | translate }}</button>
 </form>
 
-<section *ngIf="showConflictPanel() && hasConflicts()" class="conflict-panel">
-  <h3>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.CONFLICTS' | translate }}</h3>
-
-  <article *ngFor="let conflict of conflicts()" class="conflict-item"
-    [ngClass]="conflict.type === 'HARD' ? 'hard-conflict' : 'soft-conflict'">
-    <strong>{{ conflict.type }}</strong>
-    <p>{{ conflict.message }}</p>
-  </article>
-
-  <button type="button" class="btn-danger enable-override-btn"
+@if (showConflictPanel() && hasConflicts()) {
+  <section class="conflict-panel">
+    <h3>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.CONFLICTS' | translate }}</h3>
+    @for (conflict of conflicts(); track conflict) {
+      <article class="conflict-item"
+        [ngClass]="conflict.type === 'HARD' ? 'hard-conflict' : 'soft-conflict'">
+        <strong>{{ conflict.type }}</strong>
+        <p>{{ conflict.message }}</p>
+      </article>
+    }
+    <button type="button" class="btn-danger enable-override-btn"
     (click)="enableOverrideMode()">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ENABLE_OVERRIDE' | translate }}</button>
-</section>
+  </section>
+}
 
-<section *ngIf="overrideMode()" class="override-panel">
-  <form [formGroup]="overrideForm" (ngSubmit)="submitOverride()">
-    <div class="form-group override-reason-field">
-      <label for="override-reason">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.OVERRIDE_REASON' | translate }}</label>
-      <textarea id="override-reason" formControlName="overrideReason" rows="4"></textarea>
-    </div>
-
-    <button type="submit" class="btn-secondary submit-override-btn"
+@if (overrideMode()) {
+  <section class="override-panel">
+    <form [formGroup]="overrideForm" (ngSubmit)="submitOverride()">
+      <div class="form-group override-reason-field">
+        <label for="override-reason">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.OVERRIDE_REASON' | translate }}</label>
+        <textarea id="override-reason" formControlName="overrideReason" rows="4"></textarea>
+      </div>
+      <button type="submit" class="btn-secondary submit-override-btn"
       [disabled]="overrideLoading()">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.SUBMIT_OVERRIDE' | translate }}</button>
-  </form>
-</section>
+    </form>
+  </section>
+}

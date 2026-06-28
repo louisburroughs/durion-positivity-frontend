@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -8,7 +8,7 @@ import { ShopmgmtRosterService } from '../../services/shopmgmt-roster.service';
 @Component({
   selector: 'app-mechanic-roster-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './mechanic-roster-page.component.html',
   styleUrl: './mechanic-roster-page.component.css',
 })

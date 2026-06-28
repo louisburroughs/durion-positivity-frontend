@@ -11,20 +11,25 @@
     <button type="submit">{{ 'WORKEXEC.TRAVEL.START' | translate }}</button>
   </form>
 
-  <div class="active-segment" *ngIf="activeSegment(); else inactiveState">
-    {{ 'WORKEXEC.TRAVEL.ACTIVE_SEGMENT' | translate }}
-    <button class="stop-btn" type="button" (click)="stopTravel(getSegmentId())"
+  @if (activeSegment()) {
+    <div class="active-segment">
+      {{ 'WORKEXEC.TRAVEL.ACTIVE_SEGMENT' | translate }}
+      <button class="stop-btn" type="button" (click)="stopTravel(getSegmentId())"
       [disabled]="!getSegmentId()">{{ 'WORKEXEC.TRAVEL.STOP' | translate }}</button>
-  </div>
-
-  <ng-template #inactiveState>
+    </div>
+  } @else {
     <div class="travel-inactive">{{ 'WORKEXEC.TRAVEL.INACTIVE' | translate }}</div>
-  </ng-template>
+  }
+
 
   <button class="submit-all-btn" type="button" (click)="submitAll(mobileWorkAssignmentId())"
-    [disabled]="!mobileWorkAssignmentId()">{{ 'WORKEXEC.TRAVEL.SUBMIT_ALL' | translate }}</button>
+  [disabled]="!mobileWorkAssignmentId()">{{ 'WORKEXEC.TRAVEL.SUBMIT_ALL' | translate }}</button>
 
-  <p class="success-banner" *ngIf="submitSuccess()">{{ 'WORKEXEC.TRAVEL.SUBMITTED' | translate }}</p>
-  <p class="error-banner" *ngIf="startError() || stopError() || submitError()">{{ startError() || stopError() ||
+  @if (submitSuccess()) {
+    <p class="success-banner">{{ 'WORKEXEC.TRAVEL.SUBMITTED' | translate }}</p>
+  }
+  @if (startError() || stopError() || submitError()) {
+    <p class="error-banner">{{ startError() || stopError() ||
     submitError() }}</p>
+  }
 </section>

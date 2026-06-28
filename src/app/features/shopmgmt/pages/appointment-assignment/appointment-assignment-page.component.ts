@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -9,7 +9,7 @@ import type { AppointmentDetail, AssignmentDetail } from '../../models/appointme
 @Component({
   selector: 'app-appointment-assignment-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './appointment-assignment-page.component.html',
   styleUrl: './appointment-assignment-page.component.css',
 })

@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
@@ -11,7 +11,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'picking' | 'complete' | 'error'
 @Component({
   selector: 'app-pick-execute-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './pick-execute-page.component.html',
   styleUrls: ['./pick-execute-page.component.css'],
 })

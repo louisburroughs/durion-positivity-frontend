@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -13,7 +13,7 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 @Component({
   selector: 'app-availability',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './availability.component.html',
   styleUrl: './availability.component.css',
 })

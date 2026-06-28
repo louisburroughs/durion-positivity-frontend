@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, inject, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
@@ -17,7 +17,7 @@ const MAX_SUGGESTIONS = 8;
 @Component({
   selector: 'app-inventory-availability',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, FormsModule],
+  imports: [TranslatePipe, FormsModule],
   templateUrl: './availability.component.html',
   styleUrl: './availability.component.css',
 })

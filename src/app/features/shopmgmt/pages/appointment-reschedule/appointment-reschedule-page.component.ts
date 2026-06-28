@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
@@ -10,7 +10,7 @@ import type { AppointmentDetail, Conflict, TimeSlot } from '../../models/appoint
 @Component({
   selector: 'app-appointment-reschedule-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './appointment-reschedule-page.component.html',
   styleUrl: './appointment-reschedule-page.component.css',
 })

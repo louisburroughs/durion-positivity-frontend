@@ -15,17 +15,25 @@
     <button type="submit">{{ 'SHOPMGMT.MECHANIC_AVAILABILITY.LOAD' | translate }}</button>
   </form>
 
-  <p class="error-banner" *ngIf="error()">{{ error()! | translate }}</p>
+  @if (error()) {
+    <p class="error-banner">{{ error()! | translate }}</p>
+  }
 
-  <div class="availability-grid" *ngIf="!loading() && availabilityData().length > 0">
-    <div class="mechanic-row" *ngFor="let row of availabilityData()">
-      <span class="mechanic-name">{{ getMechanicName(row) }}</span>
-      <span class="availability-cell" [ngClass]="isAvailable(row) ? 'available-slot' : 'unavailable-slot'">
-        {{ isAvailable(row) ? ('SHOPMGMT.MECHANIC_AVAILABILITY.AVAILABLE' | translate) : ('SHOPMGMT.MECHANIC_AVAILABILITY.UNAVAILABLE' | translate) }}
-      </span>
+  @if (!loading() && availabilityData().length > 0) {
+    <div class="availability-grid">
+      @for (row of availabilityData(); track row) {
+        <div class="mechanic-row">
+          <span class="mechanic-name">{{ getMechanicName(row) }}</span>
+          <span class="availability-cell" [ngClass]="isAvailable(row) ? 'available-slot' : 'unavailable-slot'">
+            {{ isAvailable(row) ? ('SHOPMGMT.MECHANIC_AVAILABILITY.AVAILABLE' | translate) : ('SHOPMGMT.MECHANIC_AVAILABILITY.UNAVAILABLE' | translate) }}
+          </span>
+        </div>
+      }
     </div>
-  </div>
+  }
 
-  <p class="empty-state" *ngIf="!loading() && !error() && availabilityData().length === 0">{{ 'SHOPMGMT.MECHANIC_AVAILABILITY.EMPTY' | translate }}
-  </p>
+  @if (!loading() && !error() && availabilityData().length === 0) {
+    <p class="empty-state">{{ 'SHOPMGMT.MECHANIC_AVAILABILITY.EMPTY' | translate }}
+    </p>
+  }
 </section>

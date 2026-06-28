@@ -50,20 +50,24 @@
     <legend class="section-legend">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.SECTION_SERVICE_REQUESTS' | translate }}</legend>
 
     <div formArrayName="serviceRequests">
-      <div *ngFor="let ctrl of serviceRequestsArray.controls; let i = index" class="service-request-row">
-        <input [formControlName]="i" type="text" class="service-request-input"
-          [attr.placeholder]="'SHOPMGMT.APPOINTMENT_CREATE_CRM.SERVICE_REQUEST_PLACEHOLDER' | translate"
-          [name]="'serviceRequest-' + i" />
-        <button type="button" class="btn-remove" (click)="removeServiceRequest(i)"
+      @for (ctrl of serviceRequestsArray.controls; track ctrl; let i = $index) {
+        <div class="service-request-row">
+          <input [formControlName]="i" type="text" class="service-request-input"
+            [attr.placeholder]="'SHOPMGMT.APPOINTMENT_CREATE_CRM.SERVICE_REQUEST_PLACEHOLDER' | translate"
+            [name]="'serviceRequest-' + i" />
+          <button type="button" class="btn-remove" (click)="removeServiceRequest(i)"
           [attr.aria-label]="'SHOPMGMT.APPOINTMENT_CREATE_CRM.REMOVE_SERVICE_ARIA' | translate">&#x2715;</button>
-      </div>
+        </div>
+      }
     </div>
 
     <button type="button" class="btn-add-service"
-      (click)="addServiceRequest()">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.ADD_SERVICE' | translate }}</button>
+    (click)="addServiceRequest()">{{ 'SHOPMGMT.APPOINTMENT_CREATE_CRM.ADD_SERVICE' | translate }}</button>
   </fieldset>
 
-  <div *ngIf="error()" class="error-banner">{{ error()! | translate }}</div>
+  @if (error()) {
+    <div class="error-banner">{{ error()! | translate }}</div>
+  }
 
   <div class="form-actions">
     <button type="submit" class="btn-primary" [disabled]="createForm.invalid || loading()">

@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { CrmService } from '../../services/crm.service';
 
 type PageState = 'idle' | 'submitting' | 'success' | 'error' | 'access-denied';
@@ -9,7 +9,7 @@ type PageState = 'idle' | 'submitting' | 'success' | 'error' | 'access-denied';
 @Component({
   selector: 'app-create-vehicle',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './create-vehicle.component.html',
   styleUrl: './create-vehicle.component.css',
 })

@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -11,7 +11,7 @@ type ContractTab = 'fields' | 'traceability' | 'examples';
 @Component({
   selector: 'app-event-envelope-contract-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './event-envelope-contract-page.component.html',
   styleUrl: './event-envelope-contract-page.component.css',
 })

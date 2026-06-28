@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
@@ -15,7 +15,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'reviewing' | 'submitting' | 'su
 @Component({
   selector: 'app-cross-dock-receive-page',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './cross-dock-receive-page.component.html',
   styleUrl: './cross-dock-receive-page.component.css',
 })

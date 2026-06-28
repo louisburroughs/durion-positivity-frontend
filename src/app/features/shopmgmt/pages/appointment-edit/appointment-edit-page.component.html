@@ -1,136 +1,163 @@
 <div class="page-header">
   <h2>{{ 'SHOPMGMT.APPOINTMENT_EDIT.TITLE' | translate }}</h2>
-  <span *ngIf="appointment()" class="appt-id">{{ appointment()!.appointmentId }}</span>
+  @if (appointment()) {
+    <span class="appt-id">{{ appointment()!.appointmentId }}</span>
+  }
 </div>
 
-<ng-container *ngIf="loading()">
+@if (loading()) {
   <div class="loading-state">{{ 'SHOPMGMT.APPOINTMENT_EDIT.LOADING' | translate }}</div>
-</ng-container>
+}
 
-<ng-container *ngIf="!loading()">
-  <div *ngIf="rescheduleSuccess()" class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE_SUCCESS' | translate }}</div>
-  <div *ngIf="cancelSuccess()" class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_SUCCESS' | translate }}</div>
-
-  <div *ngIf="appointment()" class="appointment-summary">
-    <div class="summary-row">
-      <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.STATUS' | translate }}</span>
-      <span class="value status-badge">{{ appointment()!.status }}</span>
+@if (!loading()) {
+  @if (rescheduleSuccess()) {
+    <div class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE_SUCCESS' | translate }}</div>
+  }
+  @if (cancelSuccess()) {
+    <div class="success-banner">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_SUCCESS' | translate }}</div>
+  }
+  @if (appointment()) {
+    <div class="appointment-summary">
+      <div class="summary-row">
+        <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.STATUS' | translate }}</span>
+        <span class="value status-badge">{{ appointment()!.status }}</span>
+      </div>
+      @if (appointment()!.scheduledStart) {
+        <div class="summary-row">
+          <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.SCHEDULED_START' | translate }}</span>
+          <span class="value">{{ appointment()!.scheduledStart }}</span>
+        </div>
+      }
+      @if (appointment()!.scheduledEnd) {
+        <div class="summary-row">
+          <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.SCHEDULED_END' | translate }}</span>
+          <span class="value">{{ appointment()!.scheduledEnd }}</span>
+        </div>
+      }
+      <div class="summary-row">
+        <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.FACILITY' | translate }}</span>
+        <span class="value">{{ appointment()!.facilityId }}</span>
+      </div>
     </div>
-    <div class="summary-row" *ngIf="appointment()!.scheduledStart">
-      <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.SCHEDULED_START' | translate }}</span>
-      <span class="value">{{ appointment()!.scheduledStart }}</span>
-    </div>
-    <div class="summary-row" *ngIf="appointment()!.scheduledEnd">
-      <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.SCHEDULED_END' | translate }}</span>
-      <span class="value">{{ appointment()!.scheduledEnd }}</span>
-    </div>
-    <div class="summary-row">
-      <span class="label">{{ 'SHOPMGMT.APPOINTMENT_EDIT.FACILITY' | translate }}</span>
-      <span class="value">{{ appointment()!.facilityId }}</span>
-    </div>
-  </div>
-
+  }
   <div class="actions-row">
-    <ng-container *ngIf="canModify; else disabledActions">
+    @if (canModify) {
       <button class="btn-primary" (click)="openReschedule()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE' | translate }}</button>
       <button class="btn-danger" (click)="openCancel()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</button>
-    </ng-container>
-    <ng-template #disabledActions>
+    } @else {
       <button class="btn-primary" disabled>{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE' | translate }}</button>
       <button class="btn-danger" disabled>{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</button>
       <span class="actions-helper-text">
         {{ 'SHOPMGMT.APPOINTMENT_EDIT.CANNOT_MODIFY' | translate: { status: appointment()?.status } }}
       </span>
-    </ng-template>
+    }
   </div>
-
   <div class="audit-section">
     <h3>{{ 'SHOPMGMT.APPOINTMENT_EDIT.AUDIT_HISTORY' | translate }}</h3>
-    <div *ngIf="auditUnavailable()" class="audit-unavailable">
-      {{ 'SHOPMGMT.APPOINTMENT_EDIT.AUDIT_UNAVAILABLE' | translate }}
-    </div>
-    <div *ngIf="!auditUnavailable()">
-      <div *ngIf="auditEntries().length === 0" class="audit-empty">{{ 'SHOPMGMT.APPOINTMENT_EDIT.AUDIT_EMPTY' | translate }}</div>
-      <div *ngFor="let entry of auditEntries()" class="audit-entry">
-        <span class="audit-timestamp">{{ entry.timestamp }}</span>
-        <span class="audit-actor">{{ entry.actor }}</span>
-        <span class="audit-action">{{ entry.action }}</span>
-        <span class="audit-details">{{ entry.details }}</span>
+    @if (auditUnavailable()) {
+      <div class="audit-unavailable">
+        {{ 'SHOPMGMT.APPOINTMENT_EDIT.AUDIT_UNAVAILABLE' | translate }}
       </div>
-    </div>
+    }
+    @if (!auditUnavailable()) {
+      <div>
+        @if (auditEntries().length === 0) {
+          <div class="audit-empty">{{ 'SHOPMGMT.APPOINTMENT_EDIT.AUDIT_EMPTY' | translate }}</div>
+        }
+        @for (entry of auditEntries(); track entry) {
+          <div class="audit-entry">
+            <span class="audit-timestamp">{{ entry.timestamp }}</span>
+            <span class="audit-actor">{{ entry.actor }}</span>
+            <span class="audit-action">{{ entry.action }}</span>
+            <span class="audit-details">{{ entry.details }}</span>
+          </div>
+        }
+      </div>
+    }
   </div>
-</ng-container>
+}
 
-<div *ngIf="showRescheduleModal()" class="modal-overlay">
-  <div class="modal reschedule-modal" role="dialog" aria-modal="true">
-    <div class="modal-header">
-      <h3>{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE_APPOINTMENT' | translate }}</h3>
-      <button class="modal-close" (click)="closeReschedule()" [attr.aria-label]="'SHOPMGMT.APPOINTMENT_EDIT.CLOSE' | translate">&#x2715;</button>
-    </div>
-    <form [formGroup]="rescheduleForm" (ngSubmit)="submitReschedule()" novalidate>
-      <div class="form-group">
-        <label for="rsStart">{{ 'SHOPMGMT.APPOINTMENT_EDIT.NEW_START' | translate }}</label>
-        <input id="rsStart" name="scheduledStartDateTime" type="datetime-local"
-          formControlName="scheduledStartDateTime" />
+@if (showRescheduleModal()) {
+  <div class="modal-overlay">
+    <div class="modal reschedule-modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3>{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE_APPOINTMENT' | translate }}</h3>
+        <button class="modal-close" (click)="closeReschedule()" [attr.aria-label]="'SHOPMGMT.APPOINTMENT_EDIT.CLOSE' | translate">&#x2715;</button>
       </div>
-      <div class="form-group">
-        <label for="rsEnd">{{ 'SHOPMGMT.APPOINTMENT_EDIT.NEW_END' | translate }}</label>
-        <input id="rsEnd" name="scheduledEndDateTime" type="datetime-local" formControlName="scheduledEndDateTime" />
-      </div>
-      <div class="form-group">
-        <label for="rsReason">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASON' | translate }}</label>
-        <input id="rsReason" name="reason" type="text" formControlName="reason" />
-      </div>
-
-      <div *ngIf="rescheduleError()" class="error-banner">{{ rescheduleError()! | translate }}</div>
-
-      <div *ngIf="rescheduleConflicts().length > 0" class="conflict-panel">
-        <div *ngFor="let c of rescheduleConflicts()">
-          <div *ngIf="c.type === 'HARD'" class="hard-conflict">{{ c.message }}</div>
-          <div *ngIf="c.type === 'SOFT'" class="soft-conflict">{{ c.message }}</div>
+      <form [formGroup]="rescheduleForm" (ngSubmit)="submitReschedule()" novalidate>
+        <div class="form-group">
+          <label for="rsStart">{{ 'SHOPMGMT.APPOINTMENT_EDIT.NEW_START' | translate }}</label>
+          <input id="rsStart" name="scheduledStartDateTime" type="datetime-local"
+            formControlName="scheduledStartDateTime" />
         </div>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="closeReschedule()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL' | translate }}</button>
-        <button type="submit" class="btn-primary" [disabled]="rescheduleForm.invalid || rescheduleLoading()">
-          {{ 'SHOPMGMT.APPOINTMENT_EDIT.SAVE' | translate }}
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<div *ngIf="showCancelModal()" class="modal-overlay">
-  <div class="modal cancel-modal" role="dialog" aria-modal="true">
-    <div class="modal-header">
-      <h3>{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</h3>
-      <button class="modal-close" (click)="closeCancel()" [attr.aria-label]="'SHOPMGMT.APPOINTMENT_EDIT.CLOSE' | translate">&#x2715;</button>
+        <div class="form-group">
+          <label for="rsEnd">{{ 'SHOPMGMT.APPOINTMENT_EDIT.NEW_END' | translate }}</label>
+          <input id="rsEnd" name="scheduledEndDateTime" type="datetime-local" formControlName="scheduledEndDateTime" />
+        </div>
+        <div class="form-group">
+          <label for="rsReason">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASON' | translate }}</label>
+          <input id="rsReason" name="reason" type="text" formControlName="reason" />
+        </div>
+        @if (rescheduleError()) {
+          <div class="error-banner">{{ rescheduleError()! | translate }}</div>
+        }
+        @if (rescheduleConflicts().length > 0) {
+          <div class="conflict-panel">
+            @for (c of rescheduleConflicts(); track c) {
+              <div>
+                @if (c.type === 'HARD') {
+                  <div class="hard-conflict">{{ c.message }}</div>
+                }
+                @if (c.type === 'SOFT') {
+                  <div class="soft-conflict">{{ c.message }}</div>
+                }
+              </div>
+            }
+          </div>
+        }
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeReschedule()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL' | translate }}</button>
+          <button type="submit" class="btn-primary" [disabled]="rescheduleForm.invalid || rescheduleLoading()">
+            {{ 'SHOPMGMT.APPOINTMENT_EDIT.SAVE' | translate }}
+          </button>
+        </div>
+      </form>
     </div>
-    <form [formGroup]="cancelForm" (ngSubmit)="submitCancel()" novalidate>
-      <div class="form-group">
-        <label for="cancelReason">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCELLATION_REASON' | translate }}</label>
-        <select id="cancelReason" name="cancellationReason" formControlName="cancellationReason">
-          <option value="CUSTOMER_REQUEST">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASONS.CUSTOMER_REQUEST' | translate }}</option>
-          <option value="TECHNICIAN_UNAVAILABLE">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASONS.TECHNICIAN_UNAVAILABLE' | translate }}</option>
-          <option value="WEATHER">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASONS.WEATHER' | translate }}</option>
-          <option value="VEHICLE_NOT_READY">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASONS.VEHICLE_NOT_READY' | translate }}</option>
-          <option value="OTHER">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASONS.OTHER' | translate }}</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="cancelNotes">{{ 'SHOPMGMT.APPOINTMENT_EDIT.NOTES_OPTIONAL' | translate }}</label>
-        <textarea id="cancelNotes" name="notes" formControlName="notes" rows="3"></textarea>
-      </div>
-
-      <div *ngIf="cancelError()" class="error-banner">{{ cancelError()! | translate }}</div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" (click)="closeCancel()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.BACK' | translate }}</button>
-        <button type="submit" class="btn-danger" [disabled]="cancelForm.invalid || cancelLoading()">
-          {{ 'SHOPMGMT.APPOINTMENT_EDIT.CONFIRM_CANCEL' | translate }}
-        </button>
-      </div>
-    </form>
   </div>
-</div>
+}
+
+@if (showCancelModal()) {
+  <div class="modal-overlay">
+    <div class="modal cancel-modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3>{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</h3>
+        <button class="modal-close" (click)="closeCancel()" [attr.aria-label]="'SHOPMGMT.APPOINTMENT_EDIT.CLOSE' | translate">&#x2715;</button>
+      </div>
+      <form [formGroup]="cancelForm" (ngSubmit)="submitCancel()" novalidate>
+        <div class="form-group">
+          <label for="cancelReason">{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCELLATION_REASON' | translate }}</label>
+          <select id="cancelReason" name="cancellationReason" formControlName="cancellationReason">
+            <option value="CUSTOMER_REQUEST">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASONS.CUSTOMER_REQUEST' | translate }}</option>
+            <option value="TECHNICIAN_UNAVAILABLE">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASONS.TECHNICIAN_UNAVAILABLE' | translate }}</option>
+            <option value="WEATHER">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASONS.WEATHER' | translate }}</option>
+            <option value="VEHICLE_NOT_READY">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASONS.VEHICLE_NOT_READY' | translate }}</option>
+            <option value="OTHER">{{ 'SHOPMGMT.APPOINTMENT_EDIT.REASONS.OTHER' | translate }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="cancelNotes">{{ 'SHOPMGMT.APPOINTMENT_EDIT.NOTES_OPTIONAL' | translate }}</label>
+          <textarea id="cancelNotes" name="notes" formControlName="notes" rows="3"></textarea>
+        </div>
+        @if (cancelError()) {
+          <div class="error-banner">{{ cancelError()! | translate }}</div>
+        }
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeCancel()">{{ 'SHOPMGMT.APPOINTMENT_EDIT.BACK' | translate }}</button>
+          <button type="submit" class="btn-danger" [disabled]="cancelForm.invalid || cancelLoading()">
+            {{ 'SHOPMGMT.APPOINTMENT_EDIT.CONFIRM_CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
