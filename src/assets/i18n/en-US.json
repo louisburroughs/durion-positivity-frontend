@@ -634,7 +634,38 @@
       "AUDIT_LOG": "Audit Log",
       "ROLES_TAB": "Roles tab",
       "PERMISSIONS_TAB": "Permissions tab",
-      "AUDIT_TAB": "Audit log tab"
+      "AUDIT_TAB": "Audit log tab",
+      "IDENTITY_COMPLIANCE": "Identity Compliance",
+      "IDENTITY_COMPLIANCE_TAB": "Identity compliance tab"
+    },
+    "IDENTITY_COMPLIANCE": {
+      "SECTION": "Security",
+      "TITLE": "Identity Compliance",
+      "SUBTITLE": "Active user accounts whose linked person is inactive (suspended, terminated, or disabled).",
+      "REFRESH": "Refresh",
+      "STATE": {
+        "EMPTY": "No active users on inactive persons."
+      },
+      "TABLE": {
+        "ARIA": "Identity compliance findings",
+        "CAPTION": "Active users linked to inactive persons",
+        "HEADER": {
+          "PERSON_STATUS": "Person Status",
+          "USERNAME": "Username",
+          "PERSON_ID": "Person ID",
+          "EFFECTIVE_AT": "Status Effective"
+        }
+      },
+      "STATUS": {
+        "ACTIVE": "Active",
+        "ON_LEAVE": "On Leave",
+        "SUSPENDED": "Suspended",
+        "TERMINATED": "Terminated",
+        "DISABLED": "Disabled"
+      },
+      "ERROR": {
+        "LOAD": "Failed to load identity compliance findings."
+      }
     },
     "ROLES_LIST": {
       "SECTION": "Security",

@@ -1,0 +1,84 @@
+<main class="page" aria-labelledby="identity-compliance-title">
+  <header class="page-header header-row">
+    <div>
+      <p class="page-overline">{{ 'SECURITY.IDENTITY_COMPLIANCE.SECTION' | translate }}</p>
+      <h1 id="identity-compliance-title" class="page-title">
+        {{ 'SECURITY.IDENTITY_COMPLIANCE.TITLE' | translate }}
+      </h1>
+      <p class="page-subtitle">{{ 'SECURITY.IDENTITY_COMPLIANCE.SUBTITLE' | translate }}</p>
+    </div>
+    <button class="btn-secondary" type="button" (click)="load()" [disabled]="state() === 'loading'"
+      [attr.aria-label]="'SECURITY.IDENTITY_COMPLIANCE.REFRESH' | translate">
+      <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+      {{ 'SECURITY.IDENTITY_COMPLIANCE.REFRESH' | translate }}
+    </button>
+  </header>
+
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true" aria-live="polite">
+    <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="card state-card" aria-live="polite" data-testid="compliant-state">
+    <span class="material-symbols-outlined state-icon" aria-hidden="true">verified_user</span>
+    <p>{{ 'SECURITY.IDENTITY_COMPLIANCE.STATE.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="card state-card" role="alert">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <p>{{ errorKey() | translate }}</p>
+    <button class="btn-secondary" type="button" (click)="load()">{{ 'COMMON.RETRY' | translate }}</button>
+  </section>
+  }
+
+  @if (state() === 'ready') {
+  <section class="card table-card">
+    <div class="table-wrap">
+      <table class="data-table" aria-label="{{ 'SECURITY.IDENTITY_COMPLIANCE.TABLE.ARIA' | translate }}">
+        <caption class="sr-only">{{ 'SECURITY.IDENTITY_COMPLIANCE.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr role="row">
+            <th scope="col" role="columnheader">
+              {{ 'SECURITY.IDENTITY_COMPLIANCE.TABLE.HEADER.PERSON_STATUS' | translate }}
+            </th>
+            <th scope="col" role="columnheader">
+              {{ 'SECURITY.IDENTITY_COMPLIANCE.TABLE.HEADER.USERNAME' | translate }}
+            </th>
+            <th scope="col" role="columnheader">
+              {{ 'SECURITY.IDENTITY_COMPLIANCE.TABLE.HEADER.PERSON_ID' | translate }}
+            </th>
+            <th scope="col" role="columnheader">
+              {{ 'SECURITY.IDENTITY_COMPLIANCE.TABLE.HEADER.EFFECTIVE_AT' | translate }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (finding of findings(); track finding.linkId) {
+          <tr role="row">
+            <td class="badge-cell">
+              <span class="badge" [ngClass]="badgeClass(finding.personStatus)">
+                {{ ('SECURITY.IDENTITY_COMPLIANCE.STATUS.' + finding.personStatus) | translate }}
+              </span>
+            </td>
+            <td>{{ finding.username }}</td>
+            <td class="mono">{{ finding.personId }}</td>
+            <td>
+              {{ finding.personStatusEffectiveAt
+                ? (finding.personStatusEffectiveAt | date:'mediumDate':'UTC')
+                : ('COMMON.EMPTY_VALUE' | translate) }}
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  }
+</main>
