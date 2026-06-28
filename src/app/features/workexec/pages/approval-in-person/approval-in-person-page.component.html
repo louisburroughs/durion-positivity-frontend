@@ -44,9 +44,9 @@
       </form>
       @if (submitState() === 'success') {
         <output class="success-panel">
-          <p class="success-heading">{{ 'WORKEXEC.APPROVAL.IN_PERSON.SUCCESS_TITLE' | translate }}</p>
-          <p class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span></p>
-          @if (estimate()!.approvedAt) { <p class="audit-meta">{{ 'WORKEXEC.APPROVAL.COMMON.APPROVED_AT' | translate: { at: (estimate()!.approvedAt | date:'medium') } }}</p> }
+          <span class="success-heading">{{ 'WORKEXEC.APPROVAL.IN_PERSON.SUCCESS_TITLE' | translate }}</span>
+          <span class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span></span>
+          @if (estimate()!.approvedAt) { <span class="audit-meta">{{ 'WORKEXEC.APPROVAL.COMMON.APPROVED_AT' | translate: { at: (estimate()!.approvedAt | date:'medium') } }}</span> }
         </output>
       }
     </div>

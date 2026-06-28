@@ -94,10 +94,10 @@
 
       @if (submitState() === 'success') {
         <output class="success-panel">
-          <p class="success-heading">{{ 'WORKEXEC.APPROVAL.DIGITAL.SUCCESS_TITLE' | translate }}</p>
-          <p class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span></p>
+          <span class="success-heading">{{ 'WORKEXEC.APPROVAL.DIGITAL.SUCCESS_TITLE' | translate }}</span>
+          <span class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span></span>
           @if (estimate()!.approvedAt) {
-            <p class="audit-meta">{{ 'WORKEXEC.APPROVAL.COMMON.APPROVED_BY_AT' | translate: { by: estimate()!.signerName, at: (estimate()!.approvedAt | date:'medium') } }}</p>
+            <span class="audit-meta">{{ 'WORKEXEC.APPROVAL.COMMON.APPROVED_BY_AT' | translate: { by: estimate()!.signerName, at: (estimate()!.approvedAt | date:'medium') } }}</span>
           }
         </output>
       }

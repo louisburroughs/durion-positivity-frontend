@@ -73,15 +73,15 @@
 
       @if (submitState() === 'success') {
         <output class="success-panel">
-          <p class="success-heading">{{ 'WORKEXEC.APPROVAL.SUBMIT.SUCCESS_TITLE' | translate }}</p>
-          <p class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip status-chip--pending">{{ estimate()!.status }}</span></p>
+          <span class="success-heading">{{ 'WORKEXEC.APPROVAL.SUBMIT.SUCCESS_TITLE' | translate }}</span>
+          <span class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip status-chip--pending">{{ estimate()!.status }}</span></span>
           @if (estimate()!.submittedAt) {
-            <p class="audit-meta">{{ 'WORKEXEC.APPROVAL.COMMON.SUBMITTED_BY_AT' | translate: { by: estimate()!.submittedBy, at: (estimate()!.submittedAt | date:'medium') } }}</p>
+            <span class="audit-meta">{{ 'WORKEXEC.APPROVAL.COMMON.SUBMITTED_BY_AT' | translate: { by: estimate()!.submittedBy, at: (estimate()!.submittedAt | date:'medium') } }}</span>
           }
-          <div class="form-actions">
+          <span class="form-actions">
             <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'digital']">{{ 'WORKEXEC.APPROVAL.SUBMIT.CAPTURE_DIGITAL' | translate }}</a>
             <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'approval', 'in-person']">{{ 'WORKEXEC.APPROVAL.SUBMIT.IN_PERSON' | translate }}</a>
-          </div>
+          </span>
         </output>
       }
 

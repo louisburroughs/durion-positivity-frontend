@@ -18,7 +18,7 @@
       @if (sessionState() === 'active' && activeSession()) {
         <output class="session-active" aria-live="polite">
           <span class="session-badge">{{ 'WORKEXEC.WORKORDER_LABOR.SESSION_ACTIVE' | translate }}</span>
-          <p class="hint-text">{{ 'WORKEXEC.WORKORDER_LABOR.STARTED' | translate: { at: (activeSession()!.startTime | date:'medium') } }}</p>
+          <span class="hint-text">{{ 'WORKEXEC.WORKORDER_LABOR.STARTED' | translate: { at: (activeSession()!.startTime | date:'medium') } }}</span>
           <button
             class="btn btn--warn"
             (click)="stopSession()"
