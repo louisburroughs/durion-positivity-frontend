@@ -46,30 +46,30 @@
 
     <!-- Part action inline form -->
     @if (activeAction()) {
-      <div class="action-form" role="dialog" [attr.aria-label]="'WORKEXEC.WORKORDER_PARTS.ACTION_ARIA' | translate">
+      <form class="action-form" [attr.aria-label]="'WORKEXEC.WORKORDER_PARTS.ACTION_ARIA' | translate" (ngSubmit)="submitAction()">
         <p class="section-overline">{{ 'WORKEXEC.WORKORDER_PARTS.ACTION_TITLE' | translate: { action: (activeAction() | titlecase) } }}</p>
         <div class="field">
-          <label class="field__label">{{ 'WORKEXEC.WORKORDER_PARTS.PART_ID' | translate }} <span aria-hidden="true">*</span></label>
-          <input class="field__input" type="text" [value]="actionPartId()" (input)="actionPartId.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_PARTS.PART_UUID_PH' | translate" />
+          <label class="field__label" for="action-part-id">{{ 'WORKEXEC.WORKORDER_PARTS.PART_ID' | translate }} <span aria-hidden="true">*</span></label>
+          <input id="action-part-id" class="field__input" type="text" [value]="actionPartId()" (input)="actionPartId.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_PARTS.PART_UUID_PH' | translate" />
         </div>
         <div class="field">
-          <label class="field__label">{{ 'WORKEXEC.WORKORDER_COMMON.QUANTITY' | translate }}</label>
-          <input class="field__input" type="number" min="1" [value]="actionQuantity()" (input)="actionQuantity.set(+$any($event.target).value)" />
+          <label class="field__label" for="action-quantity">{{ 'WORKEXEC.WORKORDER_COMMON.QUANTITY' | translate }}</label>
+          <input id="action-quantity" class="field__input" type="number" min="1" [value]="actionQuantity()" (input)="actionQuantity.set(+$any($event.target).value)" />
         </div>
         @if (activeAction() === 'issue' || activeAction() === 'return') {
           <div class="field">
-            <label class="field__label">{{ 'WORKEXEC.WORKORDER_COMMON.NOTES' | translate }}</label>
-            <input class="field__input" type="text" [value]="actionNotes()" (input)="actionNotes.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_COMMON.OPTIONAL_PH' | translate" />
+            <label class="field__label" for="action-notes">{{ 'WORKEXEC.WORKORDER_COMMON.NOTES' | translate }}</label>
+            <input id="action-notes" class="field__input" type="text" [value]="actionNotes()" (input)="actionNotes.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_COMMON.OPTIONAL_PH' | translate" />
           </div>
         }
         @if (actionError()) { <div class="alert alert--error" role="alert">{{ actionError() }}</div> }
         <div class="form-actions">
-          <button class="btn btn--ghost" (click)="closeAction()">{{ 'WORKEXEC.WORKORDER_COMMON.CANCEL' | translate }}</button>
-          <button class="btn btn--accent" (click)="submitAction()" [attr.aria-busy]="actionState() === 'loading'" [disabled]="actionState() === 'loading'">
+          <button type="button" class="btn btn--ghost" (click)="closeAction()">{{ 'WORKEXEC.WORKORDER_COMMON.CANCEL' | translate }}</button>
+          <button type="submit" class="btn btn--accent" [attr.aria-busy]="actionState() === 'loading'" [disabled]="actionState() === 'loading'">
             {{ (actionState() === 'loading' ? 'WORKEXEC.WORKORDER_COMMON.SAVING' : 'WORKEXEC.WORKORDER_COMMON.CONFIRM') | translate }}
           </button>
         </div>
-      </div>
+      </form>
     }
 
     <!-- Usage history ledger -->
@@ -100,7 +100,7 @@
 
 <!-- Story 221: Substitution slide-out panel -->
 @if (showSubstPanel()) {
-  <div class="subst-backdrop" role="dialog" aria-modal="true" aria-labelledby="subst-panel-title">
+  <dialog class="subst-backdrop" appModalDialog (modalCancel)="closeSubstPanel()" aria-labelledby="subst-panel-title">
     <div class="subst-panel">
       <div class="subst-panel__header">
         <h2 id="subst-panel-title" class="subst-panel__title">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_TITLE' | translate }}</h2>
@@ -134,8 +134,8 @@
         </div>
 
         <div class="field">
-          <label class="field__label">{{ 'WORKEXEC.WORKORDER_PARTS.REASON' | translate }} <span aria-hidden="true">*</span></label>
-          <input class="field__input" type="text" [value]="substReason()" (input)="substReason.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_PARTS.SUBST_REASON_PH' | translate" />
+          <label class="field__label" for="subst-reason">{{ 'WORKEXEC.WORKORDER_PARTS.REASON' | translate }} <span aria-hidden="true">*</span></label>
+          <input id="subst-reason" class="field__input" type="text" [value]="substReason()" (input)="substReason.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_PARTS.SUBST_REASON_PH' | translate" />
         </div>
       }
 
@@ -155,5 +155,5 @@
         }
       </div>
     </div>
-  </div>
+  </dialog>
 }

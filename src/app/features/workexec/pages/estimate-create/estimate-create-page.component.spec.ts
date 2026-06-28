@@ -1,6 +1,5 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick, ComponentFixture } from '@angular/core/testing';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -135,7 +134,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     expect(component.customerVehicles().length).toBe(0);
 
     fixture.detectChanges();
-    const hint = (fixture.nativeElement as HTMLElement).querySelector('[role="status"]');
+    const hint = (fixture.nativeElement as HTMLElement).querySelector('output');
     expect(hint?.textContent ?? '').toContain('No vehicles on file');
   });
 
@@ -151,7 +150,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
     // A failed fetch must NOT render the misleading "no vehicles" empty state.
-    expect(host.querySelector('[role="status"]')).toBeNull();
+    expect(host.querySelector('output')).toBeNull();
     expect(host.textContent ?? '').toContain('Couldn’t load vehicles');
 
     // Retry re-fires the fetch and can recover.

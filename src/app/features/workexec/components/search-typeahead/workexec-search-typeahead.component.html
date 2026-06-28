@@ -19,6 +19,12 @@
     (keydown)="onKeydown($event)"
   />
 
+  <!--
+    Intentional WAI-ARIA 1.2 combobox (active-descendant). Sonar Web:S6842/S6819
+    flag role on <ul>/<li>; kept on purpose — native <select>/<datalist> can't
+    render multi-line options or loading/empty/error states. Won't-fix: see
+    sonar-project.properties and issue #120.
+  -->
   <ul id="wx-ta-listbox" class="wx-typeahead__list" role="listbox">
     @switch (state()) {
       @case ('loading') {

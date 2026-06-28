@@ -36,14 +36,14 @@
       }
 
       @if (reviseState() === 'confirming') {
-        <div class="confirm-panel" role="dialog" aria-labelledby="confirm-heading" aria-modal="true">
+        <dialog class="confirm-panel" appModalDialog (modalCancel)="cancelRevise()" aria-labelledby="confirm-heading">
           <p id="confirm-heading" class="confirm-heading">{{ 'WORKEXEC.ESTIMATE_REVISE.CONFIRM_TITLE' | translate }}</p>
           <p>{{ 'WORKEXEC.ESTIMATE_REVISE.CONFIRM_BODY' | translate }} @if (estimate()!.status === 'PENDING_APPROVAL') { {{ 'WORKEXEC.ESTIMATE_REVISE.CONFIRM_PENDING' | translate }} }</p>
           <div class="form-actions">
             <button class="btn btn--accent" (click)="executeRevise()">{{ 'WORKEXEC.ESTIMATE_REVISE.YES_REVISE' | translate }}</button>
             <button class="btn btn--ghost" (click)="cancelRevise()">{{ 'WORKEXEC.ESTIMATE_COMMON.CANCEL' | translate }}</button>
           </div>
-        </div>
+        </dialog>
       }
 
       @if (reviseState() === 'saving') {

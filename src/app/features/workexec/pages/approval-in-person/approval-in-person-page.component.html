@@ -43,11 +43,11 @@
         }
       </form>
       @if (submitState() === 'success') {
-        <div class="success-panel" role="status">
+        <output class="success-panel">
           <p class="success-heading">{{ 'WORKEXEC.APPROVAL.IN_PERSON.SUCCESS_TITLE' | translate }}</p>
           <p class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span></p>
           @if (estimate()!.approvedAt) { <p class="audit-meta">{{ 'WORKEXEC.APPROVAL.COMMON.APPROVED_AT' | translate: { at: (estimate()!.approvedAt | date:'medium') } }}</p> }
-        </div>
+        </output>
       }
     </div>
   }

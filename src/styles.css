@@ -258,6 +258,11 @@ body {
   border-left: 4px solid transparent;
 }
 
+/* <output> (implicit role=status) used as an alert banner must stay block-level like the <div> it replaced. */
+output.alert {
+  display: block;
+}
+
 .alert-info {
   background: var(--status-info-bg);
   border-color: var(--functional-info-blue);
@@ -529,6 +534,7 @@ app-workorder-detail-page .btn-link {
 }
 
 app-workorder-detail-page .alert {
+  display: block; /* keeps <output role=status> banners full-width like the divs they replaced */
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-3);

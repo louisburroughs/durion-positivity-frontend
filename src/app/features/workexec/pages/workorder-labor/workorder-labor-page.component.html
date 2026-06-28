@@ -16,7 +16,7 @@
       <p class="section-overline">{{ 'WORKEXEC.WORKORDER_LABOR.SESSION' | translate }}</p>
 
       @if (sessionState() === 'active' && activeSession()) {
-        <div class="session-active" role="status" aria-live="polite">
+        <output class="session-active" aria-live="polite">
           <span class="session-badge">{{ 'WORKEXEC.WORKORDER_LABOR.SESSION_ACTIVE' | translate }}</span>
           <p class="hint-text">{{ 'WORKEXEC.WORKORDER_LABOR.STARTED' | translate: { at: (activeSession()!.startTime | date:'medium') } }}</p>
           <button
@@ -26,7 +26,7 @@
           >
             {{ (sessionState() === 'stopping' ? 'WORKEXEC.WORKORDER_LABOR.STOPPING' : 'WORKEXEC.WORKORDER_LABOR.STOP') | translate }}
           </button>
-        </div>
+        </output>
       } @else {
         <div class="session-start">
           @if (serviceItems().length > 0) {
@@ -69,8 +69,8 @@
       <div class="manual-form">
         <div class="field-row">
           <div class="field">
-            <label class="field__label">{{ 'WORKEXEC.WORKORDER_LABOR.SERVICE_LINE' | translate }}</label>
-            <select class="field__input" [value]="manualServiceId()" (change)="manualServiceId.set($any($event.target).value)">
+            <label class="field__label" for="manual-service-line">{{ 'WORKEXEC.WORKORDER_LABOR.SERVICE_LINE' | translate }}</label>
+            <select id="manual-service-line" class="field__input" [value]="manualServiceId()" (change)="manualServiceId.set($any($event.target).value)">
               <option value="">{{ 'WORKEXEC.WORKORDER_LABOR.OPTIONAL_OPT' | translate }}</option>
               @for (item of serviceItems(); track item.id) {
                 <option [value]="item.id">{{ item.description }}</option>
@@ -78,22 +78,22 @@
             </select>
           </div>
           <div class="field">
-            <label class="field__label">{{ 'WORKEXEC.WORKORDER_LABOR.LABOR_CODE' | translate }}</label>
-            <input class="field__input" type="text" [value]="manualLaborCode()" (input)="manualLaborCode.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_LABOR.CODE_PH' | translate" />
+            <label class="field__label" for="manual-labor-code">{{ 'WORKEXEC.WORKORDER_LABOR.LABOR_CODE' | translate }}</label>
+            <input id="manual-labor-code" class="field__input" type="text" [value]="manualLaborCode()" (input)="manualLaborCode.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_LABOR.CODE_PH' | translate" />
           </div>
         </div>
         <div class="field">
-          <label class="field__label">{{ 'WORKEXEC.WORKORDER_COMMON.DESCRIPTION' | translate }}</label>
-          <input class="field__input" type="text" [value]="manualDescription()" (input)="manualDescription.set($any($event.target).value)" />
+          <label class="field__label" for="manual-description">{{ 'WORKEXEC.WORKORDER_COMMON.DESCRIPTION' | translate }}</label>
+          <input id="manual-description" class="field__input" type="text" [value]="manualDescription()" (input)="manualDescription.set($any($event.target).value)" />
         </div>
         <div class="field-row">
           <div class="field">
-            <label class="field__label">{{ 'WORKEXEC.WORKORDER_LABOR.HOURS' | translate }}</label>
-            <input class="field__input" type="number" min="0.1" step="0.25" [value]="manualHours()" (input)="manualHours.set(+$any($event.target).value)" />
+            <label class="field__label" for="manual-hours">{{ 'WORKEXEC.WORKORDER_LABOR.HOURS' | translate }}</label>
+            <input id="manual-hours" class="field__input" type="number" min="0.1" step="0.25" [value]="manualHours()" (input)="manualHours.set(+$any($event.target).value)" />
           </div>
           <div class="field field--inline">
-            <label class="field__label">{{ 'WORKEXEC.WORKORDER_LABOR.FLAT_RATE' | translate }}</label>
-            <input type="checkbox" [checked]="manualFlatRate()" (change)="manualFlatRate.set($any($event.target).checked)" />
+            <label class="field__label" for="manual-flat-rate">{{ 'WORKEXEC.WORKORDER_LABOR.FLAT_RATE' | translate }}</label>
+            <input id="manual-flat-rate" type="checkbox" [checked]="manualFlatRate()" (change)="manualFlatRate.set($any($event.target).checked)" />
           </div>
         </div>
         @if (manualError()) { <div class="alert alert--error" role="alert">{{ manualError() }}</div> }

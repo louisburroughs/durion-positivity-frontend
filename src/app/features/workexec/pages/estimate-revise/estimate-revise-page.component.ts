@@ -6,6 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs/operators';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
+import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 /**
  * EstimateRevisePageComponent — Story 235 (CAP-002)
@@ -18,7 +19,7 @@ import { EstimateResponse, PageState } from '../../models/workexec.models';
 @Component({
   selector: 'app-estimate-revise-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslatePipe],
+  imports: [CommonModule, RouterLink, TranslatePipe, ModalDialogDirective],
   templateUrl: './estimate-revise-page.component.html',
   styleUrl: './estimate-revise-page.component.css',
 })

@@ -23,9 +23,9 @@
     }
 
     @if (resolvedCount() > 0 && blockers().length === 0) {
-      <div class="alert alert--success" role="status">
+      <output class="alert alert--success">
         {{ 'WORKEXEC.WORKORDER_CR.ALL_RESOLVED' | translate }}
-      </div>
+      </output>
     }
 
     <div class="cr-header-row">
@@ -35,45 +35,46 @@
 
     <!-- Create form -->
     @if (showCreateForm()) {
-      <div class="cr-form" role="form" [attr.aria-label]="'WORKEXEC.WORKORDER_CR.CREATE_ARIA' | translate">
+      <form class="cr-form" [attr.aria-label]="'WORKEXEC.WORKORDER_CR.CREATE_ARIA' | translate" (ngSubmit)="submitCreate()">
         <div class="field">
-          <label class="field__label">{{ 'WORKEXEC.WORKORDER_COMMON.DESCRIPTION' | translate }} <span aria-hidden="true">*</span></label>
-          <textarea class="field__input field__input--textarea" rows="3" [value]="crDescription()" (input)="crDescription.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_CR.DESC_PH' | translate"></textarea>
+          <label class="field__label" for="cr-description">{{ 'WORKEXEC.WORKORDER_COMMON.DESCRIPTION' | translate }} <span aria-hidden="true">*</span></label>
+          <textarea id="cr-description" class="field__input field__input--textarea" rows="3" [value]="crDescription()" (input)="crDescription.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_CR.DESC_PH' | translate"></textarea>
         </div>
 
         <div class="cr-items-section">
           <div class="section-row">
             <p class="section-overline">{{ 'WORKEXEC.WORKORDER_CR.REQUESTED_ITEMS' | translate }}</p>
-            <button class="btn btn--ghost btn--sm" (click)="addItem()">{{ 'WORKEXEC.WORKORDER_CR.ADD_ITEM' | translate }}</button>
+            <button type="button" class="btn btn--ghost btn--sm" (click)="addItem()">{{ 'WORKEXEC.WORKORDER_CR.ADD_ITEM' | translate }}</button>
           </div>
           @for (item of crItems(); track $index) {
             <div class="cr-item-row">
               <select
                 class="field__input"
                 [value]="item.type"
+                [attr.aria-label]="'WORKEXEC.WORKORDER_CR.ITEM_TYPE_ARIA' | translate"
                 (change)="updateItem($index, $any($event.target).value === 'SERVICE' ? { type: 'SERVICE', partId: undefined } : { type: 'PART', serviceId: undefined })">
                 <option value="SERVICE">{{ 'WORKEXEC.WORKORDER_CR.SERVICE' | translate }}</option>
                 <option value="PART">{{ 'WORKEXEC.WORKORDER_CR.PART' | translate }}</option>
               </select>
-              <input class="field__input" type="text" [value]="item.serviceId ?? item.partId ?? ''" (input)="updateItem($index, item.type === 'SERVICE' ? { serviceId: $any($event.target).value } : { partId: $any($event.target).value })" [placeholder]="'WORKEXEC.WORKORDER_CR.ID_PH' | translate" />
-              <input class="field__input cr-qty" type="number" min="1" [value]="item.quantity" (input)="updateItem($index, { quantity: +$any($event.target).value })" />
+              <input class="field__input" type="text" [attr.aria-label]="'WORKEXEC.WORKORDER_CR.ITEM_ID_ARIA' | translate" [value]="item.serviceId ?? item.partId ?? ''" (input)="updateItem($index, item.type === 'SERVICE' ? { serviceId: $any($event.target).value } : { partId: $any($event.target).value })" [placeholder]="'WORKEXEC.WORKORDER_CR.ID_PH' | translate" />
+              <input class="field__input cr-qty" type="number" min="1" [attr.aria-label]="'WORKEXEC.WORKORDER_CR.ITEM_QTY_ARIA' | translate" [value]="item.quantity" (input)="updateItem($index, { quantity: +$any($event.target).value })" />
               <label class="cr-emergency">
                 <input type="checkbox" [checked]="item.isEmergency" (change)="updateItem($index, { isEmergency: $any($event.target).checked })" />
                 {{ 'WORKEXEC.WORKORDER_CR.EMERGENCY' | translate }}
               </label>
-              <button class="btn-icon" (click)="removeItem($index)" [attr.aria-label]="'WORKEXEC.WORKORDER_CR.REMOVE_ITEM' | translate">✕</button>
+              <button type="button" class="btn-icon" (click)="removeItem($index)" [attr.aria-label]="'WORKEXEC.WORKORDER_CR.REMOVE_ITEM' | translate">✕</button>
             </div>
           }
         </div>
 
         @if (createError()) { <div class="alert alert--error" role="alert">{{ createError() }}</div> }
         <div class="form-actions">
-          <button class="btn btn--ghost" (click)="showCreateForm.set(false)">{{ 'WORKEXEC.WORKORDER_COMMON.CANCEL' | translate }}</button>
-          <button class="btn btn--accent" (click)="submitCreate()" [attr.aria-busy]="createState() === 'loading'" [disabled]="createState() === 'loading'">
+          <button type="button" class="btn btn--ghost" (click)="showCreateForm.set(false)">{{ 'WORKEXEC.WORKORDER_COMMON.CANCEL' | translate }}</button>
+          <button type="submit" class="btn btn--accent" [attr.aria-busy]="createState() === 'loading'" [disabled]="createState() === 'loading'">
             {{ (createState() === 'loading' ? 'WORKEXEC.WORKORDER_CR.SUBMITTING' : 'WORKEXEC.WORKORDER_CR.SUBMIT_REQUEST') | translate }}
           </button>
         </div>
-      </div>
+      </form>
     }
 
     @if (resolveError()) {
@@ -99,8 +100,8 @@
           @if (cr.status === 'AWAITING_ADVISOR_REVIEW') {
             <div class="cr-card__actions">
               <div class="field">
-                <label class="field__label">{{ 'WORKEXEC.WORKORDER_COMMON.NOTES' | translate }}</label>
-                <input class="field__input cr-notes" type="text" [value]="resolveNotes()" (input)="resolveNotes.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_COMMON.OPTIONAL_PH' | translate" />
+                <label class="field__label" [for]="'cr-notes-' + cr.id">{{ 'WORKEXEC.WORKORDER_COMMON.NOTES' | translate }}</label>
+                <input [id]="'cr-notes-' + cr.id" class="field__input cr-notes" type="text" [value]="resolveNotes()" (input)="resolveNotes.set($any($event.target).value)" [placeholder]="'WORKEXEC.WORKORDER_COMMON.OPTIONAL_PH' | translate" />
               </div>
               <div class="action-btns">
                 <button
