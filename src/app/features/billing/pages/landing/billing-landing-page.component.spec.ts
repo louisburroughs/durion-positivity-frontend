@@ -23,21 +23,41 @@ describe('BillingLandingPageComponent', () => {
     component = TestBed.createComponent(BillingLandingPageComponent).componentInstance;
   });
 
-  it('marks the invoice-detail card as a finder and no other card', () => {
+  it('marks every invoice-id entry card as a finder', () => {
     const cards = component.sections.flatMap(s => s.cards);
     const finders = cards.filter(c => c.finder);
-    expect(finders).toHaveLength(1);
-    expect(finders[0].field).toBe('invoiceDetailId');
+    // invoice-detail, payment-capture, void-refund, receipt-list, receipt-detail
+    expect(finders.map(c => c.field)).toEqual([
+      'invoiceDetailId',
+      'paymentCaptureInvoiceId',
+      'voidRefundInvoiceId',
+      'receiptListInvoiceId',
+      'receiptDetailInvoiceId',
+    ]);
   });
 
-  it('renders the finder component for the invoice-detail card', () => {
+  it('renders a finder component for every finder card', () => {
     const fixture = TestBed.createComponent(BillingLandingPageComponent);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('app-billing-invoice-finder')).not.toBeNull();
+    const finders = fixture.nativeElement.querySelectorAll('app-billing-invoice-finder');
+    expect(finders.length).toBe(5);
+  });
+
+  it('single-field finder selection navigates immediately', () => {
+    const card = component.sections.flatMap(s => s.cards).find(c => c.field === 'paymentCaptureInvoiceId')!;
+    component.onFinderSelected(card, 'inv-123');
+    expect(routerStub.navigate).toHaveBeenCalledWith(['/app', 'billing', 'invoices', 'inv-123', 'payment-capture']);
+  });
+
+  it('two-field finder selection fills the invoice value without navigating', () => {
+    const card = component.sections.flatMap(s => s.cards).find(c => c.field === 'voidRefundInvoiceId')!;
+    component.onFinderSelected(card, 'inv-456');
+    expect(routerStub.navigate).not.toHaveBeenCalled();
+    expect(component.launchValue('voidRefundInvoiceId')).toBe('inv-456');
   });
 
   it('openFinderSelection navigates to the selected invoice detail page', async () => {
-    const card = component.sections.flatMap(s => s.cards).find(c => c.finder)!;
+    const card = component.sections.flatMap(s => s.cards).find(c => c.field === 'invoiceDetailId')!;
     await component.openFinderSelection(card, 'inv-123');
     expect(routerStub.navigate).toHaveBeenCalledWith(['/app', 'billing', 'invoices', 'inv-123']);
     expect(component.state()).toBe('ready');

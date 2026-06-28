@@ -4391,7 +4391,8 @@
         "PLACEHOLDER": "Search by customer, invoice #, or workorder #",
         "LOADING": "Searching…",
         "EMPTY": "No matching invoices",
-        "ERROR": "Search failed. Try again."
+        "ERROR": "Search failed. Try again.",
+        "SELECTED": "Selected invoice:"
       }
     },
     "INVOICE_DETAIL": {

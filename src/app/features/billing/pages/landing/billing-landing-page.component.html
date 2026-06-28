@@ -44,27 +44,38 @@
                   [label]="card.inputLabelKey"
                   [placeholder]="card.inputPlaceholderKey"
                   [search]="invoiceSearch"
-                  (selected)="openFinderSelection(card, $event)"
+                  (selected)="onFinderSelected(card, $event)"
                 />
+                @if (card.field2 && launchValue(card.field)) {
+                  <p class="billing-field__selected" [attr.id]="card.field + '-selected'">
+                    {{ 'BILLING.LANDING.FINDER.SELECTED' | translate }} {{ launchValue(card.field) }}
+                  </p>
+                }
+                @if (launchError(card.field)) {
+                  <p class="billing-field__error" [attr.id]="card.field + '-error'" role="alert">
+                    {{ launchError(card.field)! | translate }}
+                  </p>
+                }
               } @else {
-              <label class="billing-field__label" [for]="card.field">{{ card.inputLabelKey | translate }}</label>
-              <input
-                class="billing-field__input"
-                [id]="card.field"
-                [name]="card.field"
-                type="text"
-                autocomplete="off"
-                spellcheck="false"
-                [value]="launchValue(card.field)"
-                [attr.aria-invalid]="launchError(card.field) ? 'true' : null"
-                [attr.aria-describedby]="launchError(card.field) ? card.field + '-error' : null"
-                [attr.placeholder]="card.inputPlaceholderKey | translate"
-                (input)="updateLaunchValue(card.field, $any($event.target).value)"
-              />
-              @if (launchError(card.field)) {
-                <p class="billing-field__error" [attr.id]="card.field + '-error'" role="alert">
-                  {{ launchError(card.field)! | translate }}
-                </p>
+                <label class="billing-field__label" [for]="card.field">{{ card.inputLabelKey | translate }}</label>
+                <input
+                  class="billing-field__input"
+                  [id]="card.field"
+                  [name]="card.field"
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  [value]="launchValue(card.field)"
+                  [attr.aria-invalid]="launchError(card.field) ? 'true' : null"
+                  [attr.aria-describedby]="launchError(card.field) ? card.field + '-error' : null"
+                  [attr.placeholder]="card.inputPlaceholderKey | translate"
+                  (input)="updateLaunchValue(card.field, $any($event.target).value)"
+                />
+                @if (launchError(card.field)) {
+                  <p class="billing-field__error" [attr.id]="card.field + '-error'" role="alert">
+                    {{ launchError(card.field)! | translate }}
+                  </p>
+                }
               }
               @if (card.field2 && card.input2LabelKey && card.input2PlaceholderKey) {
                 <label class="billing-field__label" [for]="card.field2">{{ card.input2LabelKey | translate }}</label>
@@ -87,19 +98,20 @@
                   </p>
                 }
               }
-              <button
-                class="billing-button billing-button--primary"
-                type="button"
-                [attr.data-testid]="card.field + '-launch'"
-                [disabled]="state() === 'loading' && activeLaunchField() === card.field"
-                (click)="openLaunch(card)"
-              >
-                @if (state() === 'loading' && activeLaunchField() === card.field) {
-                  {{ 'BILLING.LANDING.ACTION.OPENING_PAGE' | translate }}
-                } @else {
-                  {{ card.actionKey | translate }}
-                }
-              </button>
+              @if (!card.finder || card.field2) {
+                <button
+                  class="billing-button billing-button--primary"
+                  type="button"
+                  [attr.data-testid]="card.field + '-launch'"
+                  [disabled]="state() === 'loading' && activeLaunchField() === card.field"
+                  (click)="openLaunch(card)"
+                >
+                  @if (state() === 'loading' && activeLaunchField() === card.field) {
+                    {{ 'BILLING.LANDING.ACTION.OPENING_PAGE' | translate }}
+                  } @else {
+                    {{ card.actionKey | translate }}
+                  }
+                </button>
               }
             </div>
           </article>

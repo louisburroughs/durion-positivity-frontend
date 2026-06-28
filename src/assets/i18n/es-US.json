@@ -4391,7 +4391,8 @@
         "PLACEHOLDER": "Buscar por cliente, n.º de factura u orden de trabajo",
         "LOADING": "Buscando…",
         "EMPTY": "No se encontraron facturas",
-        "ERROR": "La búsqueda falló. Inténtelo de nuevo."
+        "ERROR": "La búsqueda falló. Inténtelo de nuevo.",
+        "SELECTED": "Factura seleccionada:"
       }
     },
     "INVOICE_DETAIL": {

@@ -4391,7 +4391,8 @@
         "PLACEHOLDER": "Rechercher par client, n° de facture ou bon de travail",
         "LOADING": "Recherche…",
         "EMPTY": "Aucune facture correspondante",
-        "ERROR": "Échec de la recherche. Réessayez."
+        "ERROR": "Échec de la recherche. Réessayez.",
+        "SELECTED": "Facture sélectionnée :"
       }
     },
     "INVOICE_DETAIL": {
