@@ -4385,6 +4385,14 @@
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Un identifiant est requis.",
         "NAVIGATE": "Impossible de naviguer vers cette page. Veuillez vérifier l'ID et réessayer."
+      },
+      "FINDER": {
+        "LABEL": "Rechercher une facture",
+        "PLACEHOLDER": "Rechercher par client, n° de facture ou bon de travail",
+        "LOADING": "Recherche…",
+        "EMPTY": "Aucune facture correspondante",
+        "ERROR": "Échec de la recherche. Réessayez.",
+        "SELECTED": "Facture sélectionnée :"
       }
     },
     "INVOICE_DETAIL": {
@@ -4534,6 +4542,12 @@
         "REPRINT": "Impossible de reimprimer le recu. Veuillez reessayer.",
         "MISSING_INVOICE": "Aucun ID de facture fourni."
       }
+    },
+    "INVOICE_STATUS": {
+      "DRAFT": "Brouillon",
+      "FINALIZED": "Finalisée",
+      "POSTED": "Comptabilisée",
+      "ERROR": "Erreur"
     }
   },
   "ORDER": {

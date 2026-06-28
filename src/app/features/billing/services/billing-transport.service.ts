@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Observable, throwError } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import {
@@ -10,6 +11,8 @@ import {
   InitiatePaymentResponse,
   InitiatePaymentResponseStatusEnum,
   InvoiceDetailsResponse,
+  InvoiceSearchResult,
+  InvoiceSearchService,
   InvoiceService,
   PaymentReversalService,
   PaymentService,
@@ -27,6 +30,7 @@ import {
   GenerateReceiptRequest as UiGenerateReceiptRequest,
   InvoiceArtifact,
   InvoiceDetail,
+  InvoiceFinderItem,
   IssueInvoiceRequest,
   PaymentMethod,
   PaymentTransactionRef,
@@ -42,6 +46,8 @@ export class BillingTransportService {
   //   executeRefund (full refund path without amount), loadReceipt
   private readonly api = inject(ApiBaseService);
   private readonly invoiceService = inject(InvoiceService);
+  private readonly invoiceSearchService = inject(InvoiceSearchService);
+  private readonly translate = inject(TranslateService);
   private readonly paymentService = inject(PaymentService);
   private readonly paymentReversalService = inject(PaymentReversalService);
   private readonly receiptService = inject(ReceiptService);
@@ -49,6 +55,12 @@ export class BillingTransportService {
   loadInvoiceDetail(invoiceId: string): Observable<InvoiceDetail> {
     return this.invoiceService.getInvoice(invoiceId).pipe(
       map(result => this.toInvoiceDetail(result)),
+    );
+  }
+
+  searchInvoices(q: string): Observable<InvoiceFinderItem[]> {
+    return this.invoiceSearchService.searchInvoices({ page: 0, size: 10 }, q).pipe(
+      map(page => (page.content ?? []).map(result => this.toInvoiceFinderItem(result))),
     );
   }
 
@@ -177,6 +189,20 @@ export class BillingTransportService {
     return this.receiptService.reprintReceipt(invoiceId, receiptId, request).pipe(
       map(result => this.toReceiptRef(invoiceId, result)),
     );
+  }
+
+  private toInvoiceFinderItem(result: InvoiceSearchResult): InvoiceFinderItem {
+    const invoiceNumber = result.invoiceNumber ?? result.invoiceId;
+    const statusLabel = result.status
+      ? this.translate.instant(`BILLING.INVOICE_STATUS.${result.status}`)
+      : null;
+    const secondary = statusLabel ? `${invoiceNumber} · ${statusLabel}` : invoiceNumber;
+    return {
+      id: result.invoiceId,
+      primary: result.customerName ?? invoiceNumber,
+      secondary,
+      tertiary: result.workorderNumber ?? undefined,
+    };
   }
 
   private toPaymentToken(paymentMethod: PaymentMethod): string {

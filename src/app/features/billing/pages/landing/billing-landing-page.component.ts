@@ -1,6 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { Observable } from 'rxjs';
+import { BillingInvoiceFinderComponent } from '../../components/invoice-finder/billing-invoice-finder.component';
+import { InvoiceFinderItem } from '../../models/billing.models';
+import { BillingTransportService } from '../../services/billing-transport.service';
 
 type LaunchField =
   | 'invoiceDetailId'
@@ -20,6 +24,8 @@ interface LaunchCard {
   readonly field: LaunchField;
   readonly inputLabelKey: string;
   readonly inputPlaceholderKey: string;
+  /** When true, render an invoice search finder instead of a free-text id input. */
+  readonly finder?: boolean;
   readonly field2?: LaunchField;
   readonly input2LabelKey?: string;
   readonly input2PlaceholderKey?: string;
@@ -43,8 +49,9 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         titleKey: 'BILLING.LANDING.CARD.INVOICE_DETAIL.TITLE',
         descriptionKey: 'BILLING.LANDING.CARD.INVOICE_DETAIL.DESCRIPTION',
         field: 'invoiceDetailId',
-        inputLabelKey: 'BILLING.LANDING.FIELD.INVOICE_ID',
-        inputPlaceholderKey: 'BILLING.LANDING.PLACEHOLDER.INVOICE_ID',
+        inputLabelKey: 'BILLING.LANDING.FINDER.LABEL',
+        inputPlaceholderKey: 'BILLING.LANDING.FINDER.PLACEHOLDER',
+        finder: true,
         actionKey: 'BILLING.LANDING.ACTION.OPEN_INVOICE',
         buildCommands: v => ['/app', 'billing', 'invoices', v],
       },
@@ -59,8 +66,9 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         titleKey: 'BILLING.LANDING.CARD.PAYMENT_CAPTURE.TITLE',
         descriptionKey: 'BILLING.LANDING.CARD.PAYMENT_CAPTURE.DESCRIPTION',
         field: 'paymentCaptureInvoiceId',
-        inputLabelKey: 'BILLING.LANDING.FIELD.INVOICE_ID',
-        inputPlaceholderKey: 'BILLING.LANDING.PLACEHOLDER.INVOICE_ID',
+        inputLabelKey: 'BILLING.LANDING.FINDER.LABEL',
+        inputPlaceholderKey: 'BILLING.LANDING.FINDER.PLACEHOLDER',
+        finder: true,
         actionKey: 'BILLING.LANDING.ACTION.OPEN_PAYMENT_CAPTURE',
         buildCommands: v => ['/app', 'billing', 'invoices', v, 'payment-capture'],
       },
@@ -69,8 +77,9 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         titleKey: 'BILLING.LANDING.CARD.PAYMENT_VOID_REFUND.TITLE',
         descriptionKey: 'BILLING.LANDING.CARD.PAYMENT_VOID_REFUND.DESCRIPTION',
         field: 'voidRefundInvoiceId',
-        inputLabelKey: 'BILLING.LANDING.FIELD.INVOICE_ID',
-        inputPlaceholderKey: 'BILLING.LANDING.PLACEHOLDER.INVOICE_ID',
+        inputLabelKey: 'BILLING.LANDING.FINDER.LABEL',
+        inputPlaceholderKey: 'BILLING.LANDING.FINDER.PLACEHOLDER',
+        finder: true,
         field2: 'voidRefundPaymentId',
         input2LabelKey: 'BILLING.LANDING.FIELD.PAYMENT_ID',
         input2PlaceholderKey: 'BILLING.LANDING.PLACEHOLDER.PAYMENT_ID',
@@ -88,8 +97,9 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         titleKey: 'BILLING.LANDING.CARD.RECEIPT_LIST.TITLE',
         descriptionKey: 'BILLING.LANDING.CARD.RECEIPT_LIST.DESCRIPTION',
         field: 'receiptListInvoiceId',
-        inputLabelKey: 'BILLING.LANDING.FIELD.INVOICE_ID',
-        inputPlaceholderKey: 'BILLING.LANDING.PLACEHOLDER.INVOICE_ID',
+        inputLabelKey: 'BILLING.LANDING.FINDER.LABEL',
+        inputPlaceholderKey: 'BILLING.LANDING.FINDER.PLACEHOLDER',
+        finder: true,
         actionKey: 'BILLING.LANDING.ACTION.OPEN_RECEIPT_LIST',
         buildCommands: v => ['/app', 'billing', 'invoices', v, 'receipts'],
       },
@@ -98,8 +108,9 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
         titleKey: 'BILLING.LANDING.CARD.RECEIPT_DETAIL.TITLE',
         descriptionKey: 'BILLING.LANDING.CARD.RECEIPT_DETAIL.DESCRIPTION',
         field: 'receiptDetailInvoiceId',
-        inputLabelKey: 'BILLING.LANDING.FIELD.INVOICE_ID',
-        inputPlaceholderKey: 'BILLING.LANDING.PLACEHOLDER.INVOICE_ID',
+        inputLabelKey: 'BILLING.LANDING.FINDER.LABEL',
+        inputPlaceholderKey: 'BILLING.LANDING.FINDER.PLACEHOLDER',
+        finder: true,
         field2: 'receiptDetailId',
         input2LabelKey: 'BILLING.LANDING.FIELD.RECEIPT_ID',
         input2PlaceholderKey: 'BILLING.LANDING.PLACEHOLDER.RECEIPT_ID',
@@ -113,13 +124,17 @@ const LANDING_SECTIONS: readonly LandingSection[] = [
 @Component({
   selector: 'app-billing-landing-page',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, BillingInvoiceFinderComponent],
   templateUrl: './billing-landing-page.component.html',
   styleUrl: './billing-landing-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BillingLandingPageComponent {
   private readonly router = inject(Router);
+  private readonly transport = inject(BillingTransportService);
+
+  /** Search function bound into the invoice finder. */
+  readonly invoiceSearch = (q: string): Observable<InvoiceFinderItem[]> => this.transport.searchInvoices(q);
 
   readonly state = signal<PageState>('ready');
   readonly errorKey = signal<string | null>(null);
@@ -184,6 +199,44 @@ export class BillingLandingPageComponent {
 
     try {
       const navigated = await this.router.navigate([...card.buildCommands(value, value2)]);
+      if (!navigated) {
+        this.state.set('error');
+        this.errorKey.set('BILLING.LANDING.ERROR.NAVIGATE');
+        return;
+      }
+      this.state.set('ready');
+    } catch {
+      this.state.set('error');
+      this.errorKey.set('BILLING.LANDING.ERROR.NAVIGATE');
+    } finally {
+      this.activeLaunchField.set(null);
+    }
+  }
+
+  /**
+   * Handle an invoice picked from the finder. Single-field cards launch immediately; cards
+   * with a second identifier (payment/receipt id) fill the invoice value and keep the second
+   * input + launch button so the user can complete the remaining field.
+   */
+  onFinderSelected(card: LaunchCard, invoiceId: string): void {
+    if (card.field2) {
+      this.updateLaunchValue(card.field, invoiceId);
+      return;
+    }
+    void this.openFinderSelection(card, invoiceId);
+  }
+
+  /** Navigate to the selected invoice from the finder dropdown. */
+  async openFinderSelection(card: LaunchCard, invoiceId: string): Promise<void> {
+    if (!invoiceId) return;
+
+    this.launchErrors.update(() => ({}));
+    this.errorKey.set(null);
+    this.state.set('loading');
+    this.activeLaunchField.set(card.field);
+
+    try {
+      const navigated = await this.router.navigate([...card.buildCommands(invoiceId)]);
       if (!navigated) {
         this.state.set('error');
         this.errorKey.set('BILLING.LANDING.ERROR.NAVIGATE');

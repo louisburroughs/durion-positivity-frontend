@@ -4385,6 +4385,14 @@
       "ERROR": {
         "REQUIRED_IDENTIFIER": "An identifier is required.",
         "NAVIGATE": "Unable to navigate to that page. Please check the ID and try again."
+      },
+      "FINDER": {
+        "LABEL": "Find invoice",
+        "PLACEHOLDER": "Search by customer, invoice #, or workorder #",
+        "LOADING": "Searching…",
+        "EMPTY": "No matching invoices",
+        "ERROR": "Search failed. Try again.",
+        "SELECTED": "Selected invoice:"
       }
     },
     "INVOICE_DETAIL": {
@@ -4534,6 +4542,12 @@
         "REPRINT": "Unable to reprint receipt. Please try again.",
         "MISSING_INVOICE": "No invoice ID provided."
       }
+    },
+    "INVOICE_STATUS": {
+      "DRAFT": "Draft",
+      "FINALIZED": "Finalized",
+      "POSTED": "Posted",
+      "ERROR": "Error"
     }
   },
   "ORDER": {
