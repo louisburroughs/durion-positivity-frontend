@@ -39,6 +39,14 @@
               <p class="billing-card__description">{{ card.descriptionKey | translate }}</p>
             </div>
             <div class="billing-card__launch">
+              @if (card.finder) {
+                <app-billing-invoice-finder
+                  [label]="card.inputLabelKey"
+                  [placeholder]="card.inputPlaceholderKey"
+                  [search]="invoiceSearch"
+                  (selected)="openFinderSelection(card, $event)"
+                />
+              } @else {
               <label class="billing-field__label" [for]="card.field">{{ card.inputLabelKey | translate }}</label>
               <input
                 class="billing-field__input"
@@ -92,6 +100,7 @@
                   {{ card.actionKey | translate }}
                 }
               </button>
+              }
             </div>
           </article>
         }

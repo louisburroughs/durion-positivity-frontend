@@ -4385,6 +4385,13 @@
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Un identifiant est requis.",
         "NAVIGATE": "Impossible de naviguer vers cette page. Veuillez vérifier l'ID et réessayer."
+      },
+      "FINDER": {
+        "LABEL": "Rechercher une facture",
+        "PLACEHOLDER": "Rechercher par client, n° de facture ou bon de travail",
+        "LOADING": "Recherche…",
+        "EMPTY": "Aucune facture correspondante",
+        "ERROR": "Échec de la recherche. Réessayez."
       }
     },
     "INVOICE_DETAIL": {

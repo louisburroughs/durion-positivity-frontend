@@ -8,6 +8,25 @@
 
 export type InvoiceStatus = 'DRAFT' | 'PENDING_REVIEW' | 'ISSUED' | 'FINALIZED' | 'VOID' | 'CANCELLED';
 
+// ── Invoice finder (search dropdown) ──────────────────────────────────────────
+
+/**
+ * Lightweight invoice finder row for the billing landing search dropdown.
+ *
+ * Rendered as three lines: customer name (primary), invoice number + status
+ * (secondary) and human workorder number (tertiary).
+ */
+export interface InvoiceFinderItem {
+  /** Invoice id used to launch the invoice-detail page. */
+  id: string;
+  /** Primary line — customer name. */
+  primary: string;
+  /** Secondary line — invoice number + status. */
+  secondary: string;
+  /** Tertiary line — workorder number. */
+  tertiary?: string;
+}
+
 // ── Invoice line items ────────────────────────────────────────────────────────
 
 export interface InvoiceLineItem {

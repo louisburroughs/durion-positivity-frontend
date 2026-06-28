@@ -9,7 +9,10 @@ import {
   InvoiceAdjustmentResponseTypeEnum,
   InvoiceDetailsResponse,
   InvoiceDetailsResponseStatusEnum,
+  InvoiceSearchResultStatusEnum,
+  InvoiceSearchService,
   InvoiceService,
+  PageInvoiceSearchResult,
   PaymentReversalService,
   PaymentService,
   ReceiptResponse,
@@ -32,6 +35,10 @@ describe('BillingTransportService', () => {
   const invoiceServiceStub = {
     getInvoice: vi.fn(),
     finalizeInvoice: vi.fn(),
+  };
+
+  const invoiceSearchServiceStub = {
+    searchInvoices: vi.fn(),
   };
 
   const paymentServiceStub = {
@@ -85,6 +92,7 @@ describe('BillingTransportService', () => {
         BillingTransportService,
         { provide: ApiBaseService, useValue: apiStub },
         { provide: InvoiceService, useValue: invoiceServiceStub },
+        { provide: InvoiceSearchService, useValue: invoiceSearchServiceStub },
         { provide: PaymentService, useValue: paymentServiceStub },
         { provide: PaymentReversalService, useValue: paymentReversalServiceStub },
         { provide: ReceiptService, useValue: receiptServiceStub },
@@ -326,5 +334,64 @@ describe('BillingTransportService', () => {
       invoiceId: 'inv-001',
       receiptNumber: 'R-1001',
     });
+  });
+
+  it('searchInvoices maps search results to finder items', () => {
+    const page: PageInvoiceSearchResult = {
+      content: [
+        {
+          invoiceId: 'inv-001',
+          invoiceNumber: 'INV-001',
+          customerName: 'Acme Towing LLC',
+          workorderId: 'wo-001',
+          workorderNumber: 'WO-2026-1001',
+          status: InvoiceSearchResultStatusEnum.Draft,
+          total: 113,
+        },
+      ],
+    };
+    invoiceSearchServiceStub.searchInvoices.mockReturnValue(of(page));
+
+    let result: unknown;
+    service.searchInvoices('Acme').subscribe(value => {
+      result = value;
+    });
+
+    expect(invoiceSearchServiceStub.searchInvoices).toHaveBeenCalledWith({ page: 0, size: 10 }, 'Acme');
+    expect(result).toEqual([
+      {
+        id: 'inv-001',
+        primary: 'Acme Towing LLC',
+        secondary: 'INV-001 · DRAFT',
+        tertiary: 'WO-2026-1001',
+      },
+    ]);
+  });
+
+  it('searchInvoices falls back to invoice number when customer name is absent', () => {
+    const page: PageInvoiceSearchResult = {
+      content: [
+        {
+          invoiceId: 'inv-002',
+          invoiceNumber: 'INV-002',
+          status: InvoiceSearchResultStatusEnum.Finalized,
+        },
+      ],
+    };
+    invoiceSearchServiceStub.searchInvoices.mockReturnValue(of(page));
+
+    let result: unknown;
+    service.searchInvoices('INV-002').subscribe(value => {
+      result = value;
+    });
+
+    expect(result).toEqual([
+      {
+        id: 'inv-002',
+        primary: 'INV-002',
+        secondary: 'INV-002 · FINALIZED',
+        tertiary: undefined,
+      },
+    ]);
   });
 });

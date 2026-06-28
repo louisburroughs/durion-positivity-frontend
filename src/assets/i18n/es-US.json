@@ -4385,6 +4385,13 @@
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Se requiere un identificador.",
         "NAVIGATE": "No se puede navegar a esa página. Por favor, verifique el ID e inténtelo de nuevo."
+      },
+      "FINDER": {
+        "LABEL": "Buscar factura",
+        "PLACEHOLDER": "Buscar por cliente, n.º de factura u orden de trabajo",
+        "LOADING": "Buscando…",
+        "EMPTY": "No se encontraron facturas",
+        "ERROR": "La búsqueda falló. Inténtelo de nuevo."
       }
     },
     "INVOICE_DETAIL": {
