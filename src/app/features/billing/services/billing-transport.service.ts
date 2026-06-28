@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Observable, throwError } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import {
@@ -46,6 +47,7 @@ export class BillingTransportService {
   private readonly api = inject(ApiBaseService);
   private readonly invoiceService = inject(InvoiceService);
   private readonly invoiceSearchService = inject(InvoiceSearchService);
+  private readonly translate = inject(TranslateService);
   private readonly paymentService = inject(PaymentService);
   private readonly paymentReversalService = inject(PaymentReversalService);
   private readonly receiptService = inject(ReceiptService);
@@ -191,7 +193,10 @@ export class BillingTransportService {
 
   private toInvoiceFinderItem(result: InvoiceSearchResult): InvoiceFinderItem {
     const invoiceNumber = result.invoiceNumber ?? result.invoiceId;
-    const secondary = result.status ? `${invoiceNumber} · ${result.status}` : invoiceNumber;
+    const statusLabel = result.status
+      ? this.translate.instant(`BILLING.INVOICE_STATUS.${result.status}`)
+      : null;
+    const secondary = statusLabel ? `${invoiceNumber} · ${statusLabel}` : invoiceNumber;
     return {
       id: result.invoiceId,
       primary: result.customerName ?? invoiceNumber,

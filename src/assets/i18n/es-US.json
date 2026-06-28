@@ -4541,6 +4541,12 @@
         "REPRINT": "No se pudo reimprimir el recibo. Intentelo de nuevo.",
         "MISSING_INVOICE": "No se proporcionó ID de factura."
       }
+    },
+    "INVOICE_STATUS": {
+      "DRAFT": "Borrador",
+      "FINALIZED": "Finalizada",
+      "POSTED": "Registrada",
+      "ERROR": "Error"
     }
   },
   "ORDER": {

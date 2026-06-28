@@ -4541,6 +4541,12 @@
         "REPRINT": "Unable to reprint receipt. Please try again.",
         "MISSING_INVOICE": "No invoice ID provided."
       }
+    },
+    "INVOICE_STATUS": {
+      "DRAFT": "Draft",
+      "FINALIZED": "Finalized",
+      "POSTED": "Posted",
+      "ERROR": "Error"
     }
   },
   "ORDER": {

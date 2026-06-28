@@ -50,6 +50,27 @@
   display: none;
 }
 
+.bf-finder__status-region {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin-top: 0.25rem;
+}
+
+.bf-finder__status-region:empty {
+  display: none;
+}
+
+.bf-finder__status-region > * {
+  margin: 0;
+  background: var(--surface-variant, var(--surface-2, #fff));
+  border: 1px solid var(--border-color, transparent);
+  border-radius: var(--radius-md, 0.25rem);
+  box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.12);
+}
+
 .bf-finder__option {
   display: flex;
   align-items: baseline;

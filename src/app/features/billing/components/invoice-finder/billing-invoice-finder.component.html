@@ -1,61 +1,68 @@
 <div class="bf-finder">
   @if (label) {
-    <label class="bf-finder__label" [for]="'bf-finder-input'">{{ label | translate }}</label>
+    <label class="bf-finder__label" [for]="idPrefix + '-input'">{{ label | translate }}</label>
   }
 
   <input
-    id="bf-finder-input"
+    [id]="idPrefix + '-input'"
     class="bf-finder__input"
     type="text"
     role="combobox"
     autocomplete="off"
     spellcheck="false"
     aria-autocomplete="list"
-    aria-controls="bf-finder-listbox"
+    [attr.aria-controls]="idPrefix + '-listbox'"
     [attr.aria-expanded]="expanded"
-    [attr.aria-activedescendant]="activeIndex() >= 0 ? 'bf-opt-' + activeIndex() : null"
+    [attr.aria-activedescendant]="activeIndex() >= 0 ? idPrefix + '-opt-' + activeIndex() : null"
     [placeholder]="placeholder | translate"
     (input)="onInput($any($event.target).value)"
     (keydown)="onKeydown($event)"
   />
 
   <!--
-    Intentional WAI-ARIA 1.2 combobox (active-descendant). Sonar Web:S6842/S6819
-    flag role on <ul>/<li>; kept on purpose — native <select>/<datalist> can't
-    render multi-line options or loading/empty/error states.
+    Loading/empty/error are live-region status outside the listbox: a listbox may own only
+    option children, so status/alert text lives in a sibling polite/assertive region.
   -->
-  <ul id="bf-finder-listbox" class="bf-finder__list" role="listbox">
+  <div class="bf-finder__status-region" aria-live="polite">
     @switch (state()) {
       @case ('loading') {
-        <li class="bf-finder__status" role="status">{{ 'BILLING.LANDING.FINDER.LOADING' | translate }}</li>
+        <p class="bf-finder__status">{{ 'BILLING.LANDING.FINDER.LOADING' | translate }}</p>
       }
       @case ('empty') {
-        <li class="bf-finder__status" role="status">{{ 'BILLING.LANDING.FINDER.EMPTY' | translate }}</li>
+        <p class="bf-finder__status">{{ 'BILLING.LANDING.FINDER.EMPTY' | translate }}</p>
       }
       @case ('error') {
-        <li class="bf-finder__status bf-finder__status--error" role="alert">
+        <p class="bf-finder__status bf-finder__status--error" role="alert">
           {{ 'BILLING.LANDING.FINDER.ERROR' | translate }}
-        </li>
+        </p>
       }
-      @case ('loaded') {
-        @for (item of results(); track item.id; let i = $index) {
-          <li
-            [id]="'bf-opt-' + i"
-            class="bf-finder__option"
-            [class.bf-finder__option--active]="i === activeIndex()"
-            role="option"
-            [attr.aria-selected]="i === activeIndex()"
-            (click)="choose(item)"
-          >
-            <span class="bf-finder__lines">
-              <strong class="bf-finder__primary">{{ item.primary }}</strong>
-              @if (item.tertiary) {
-                <span class="bf-finder__tertiary">{{ item.tertiary }}</span>
-              }
-            </span>
-            <span class="bf-finder__secondary">{{ item.secondary }}</span>
-          </li>
-        }
+    }
+  </div>
+
+  <!--
+    Intentional WAI-ARIA 1.2 combobox (active-descendant). Sonar Web:S6842/S6819
+    flag role on <ul>/<li>; kept on purpose — native <select>/<datalist> can't
+    render multi-line options.
+  -->
+  <ul [id]="idPrefix + '-listbox'" class="bf-finder__list" role="listbox">
+    @if (state() === 'loaded') {
+      @for (item of results(); track item.id; let i = $index) {
+        <li
+          [id]="idPrefix + '-opt-' + i"
+          class="bf-finder__option"
+          [class.bf-finder__option--active]="i === activeIndex()"
+          role="option"
+          [attr.aria-selected]="i === activeIndex()"
+          (click)="choose(item)"
+        >
+          <span class="bf-finder__lines">
+            <strong class="bf-finder__primary">{{ item.primary }}</strong>
+            @if (item.tertiary) {
+              <span class="bf-finder__tertiary">{{ item.tertiary }}</span>
+            }
+          </span>
+          <span class="bf-finder__secondary">{{ item.secondary }}</span>
+        </li>
       }
     }
   </ul>

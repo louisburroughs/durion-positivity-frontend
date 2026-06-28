@@ -11,11 +11,14 @@ import {
 
 import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, Subject, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, filter, switchMap } from 'rxjs/operators';
+import { Observable, Subject, of, timer } from 'rxjs';
+import { catchError, debounce, distinctUntilChanged, filter, switchMap } from 'rxjs/operators';
 import { InvoiceFinderItem } from '../../models/billing.models';
 
 type FinderState = 'idle' | 'loading' | 'loaded' | 'empty' | 'error';
+
+/** Per-instance id seed so multiple finders on one page keep unique DOM ids / ARIA wiring. */
+let finderInstanceCounter = 0;
 
 /**
  * Accessible, reusable invoice finder. Debounces input, calls the injected `search`
@@ -42,6 +45,9 @@ export class BillingInvoiceFinderComponent {
 
   @Output() selected = new EventEmitter<string>();
 
+  /** Unique per-instance id prefix for input/listbox/option ids and ARIA references. */
+  readonly idPrefix = `bf-finder-${finderInstanceCounter++}`;
+
   readonly results = signal<InvoiceFinderItem[]>([]);
   readonly state = signal<FinderState>('idle');
   readonly activeIndex = signal(-1);
@@ -51,7 +57,8 @@ export class BillingInvoiceFinderComponent {
   constructor() {
     this.query$
       .pipe(
-        debounceTime(this.debounceMs),
+        // Read debounce/minChars lazily so @Input() overrides (bound after construction) apply.
+        debounce(() => timer(this.debounceMs)),
         distinctUntilChanged(),
         filter(q => q.length >= this.minChars),
         switchMap(q =>
@@ -77,13 +84,16 @@ export class BillingInvoiceFinderComponent {
   }
 
   onInput(value: string): void {
+    // Push every value into the stream — including sub-minChars ones — so clearing the input
+    // restarts the debounce and cancels any pending result for a longer prior query (the
+    // sub-minChars value is dropped by the filter, leaving the dropdown closed).
     if (value.length < this.minChars) {
       this.state.set('idle');
       this.results.set([]);
       this.activeIndex.set(-1);
-      return;
+    } else {
+      this.state.set('loading');
     }
-    this.state.set('loading');
     this.query$.next(value);
   }
 
@@ -129,7 +139,8 @@ export class BillingInvoiceFinderComponent {
     this.state.set('idle');
   }
 
+  /** The popup is shown for any non-idle state (loading/empty/error/loaded), per WAI-ARIA. */
   get expanded(): boolean {
-    return this.results().length > 0;
+    return this.state() !== 'idle';
   }
 }
