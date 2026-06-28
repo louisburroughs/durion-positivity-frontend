@@ -20,7 +20,9 @@
 .alert { padding: var(--space-3, 0.75rem) var(--space-4, 1rem); border-radius: 0.125rem; font-size: 0.875rem; }
 .alert--error { background: var(--status-error-bg); color: var(--status-error-fg); }
 .hint-text { font-size: 0.875rem; color: var(--handleColor); margin: 0; }
-.confirm-panel { background: var(--themeBackground); padding: var(--space-5, 1.25rem); border-radius: 0.25rem; display: flex; flex-direction: column; gap: var(--space-4, 1rem); }
+/* Native <dialog> opened via showModal() — centered card with a dimmed ::backdrop. */
+.confirm-panel { background: var(--themeBackground); color: var(--currentTextColor); padding: var(--space-5, 1.25rem); border: 0; border-radius: 0.25rem; max-width: min(32rem, calc(100vw - 2rem)); display: flex; flex-direction: column; gap: var(--space-4, 1rem); }
+.confirm-panel::backdrop { background: rgba(15, 53, 96, 0.4); }
 .confirm-heading { margin: 0; font-size: 1rem; font-weight: 700; color: var(--currentTextColor); }
 .success-panel { background: var(--status-success-bg); padding: var(--space-5, 1.25rem); border-radius: 0.25rem; display: flex; flex-direction: column; gap: var(--space-3, 0.75rem); }
 .success-heading { margin: 0; font-size: 1rem; font-weight: 700; color: #1b5e20; }

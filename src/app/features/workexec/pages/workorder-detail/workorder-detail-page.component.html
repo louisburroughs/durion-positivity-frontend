@@ -264,7 +264,7 @@
 
 <!-- Start Work confirmation modal — glassmorphism per design authority -->
 @if (showApproveModal()) {
-<div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="approve-modal-title">
+<dialog class="modal-backdrop" appModalDialog (modalCancel)="cancelApprove()" aria-labelledby="approve-modal-title">
   <div class="modal-glass">
     <h2 id="approve-modal-title" class="modal-glass__title">{{ 'WORKEXEC.WORKORDER_DETAIL.APPROVE_MODAL_TITLE' | translate: { wo: (workorder()!.workorderNumber ?? workorderId()) } }}</h2>
     <p class="modal-glass__body">
@@ -296,11 +296,11 @@
       </button>
     </div>
   </div>
-</div>
+</dialog>
 }
 
 @if (showStartWorkModal()) {
-<div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="start-work-modal-title">
+<dialog class="modal-backdrop" appModalDialog (modalCancel)="cancelStartWork()" aria-labelledby="start-work-modal-title">
   <div class="modal-glass">
     <h2 id="start-work-modal-title" class="modal-glass__title">{{ 'WORKEXEC.WORKORDER_DETAIL.START_MODAL_TITLE' | translate: { wo: (workorder()!.workorderNumber ?? workorderId()) } }}</h2>
     <p class="modal-glass__body">
@@ -319,17 +319,17 @@
       </button>
     </div>
   </div>
-</div>
+</dialog>
 }
 
 <!-- Complete Work Order modal (Story 215) — glassmorphism -->
 @if (showCompleteModal()) {
-<div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="complete-modal-title">
+<dialog class="modal-backdrop" appModalDialog (modalCancel)="cancelComplete()" aria-labelledby="complete-modal-title">
   <div class="modal-glass">
     <h2 id="complete-modal-title" class="modal-glass__title">{{ 'WORKEXEC.WORKORDER_DETAIL.COMPLETE_MODAL_TITLE' | translate }}</h2>
 
     @if (completeModalState() === 'success') {
-    <div class="alert alert--success" role="status">{{ 'WORKEXEC.WORKORDER_DETAIL.COMPLETE_SUCCESS' | translate }}</div>
+    <output class="alert alert--success">{{ 'WORKEXEC.WORKORDER_DETAIL.COMPLETE_SUCCESS' | translate }}</output>
     } @else {
     <p class="modal-glass__body">
       {{ 'WORKEXEC.WORKORDER_DETAIL.COMPLETE_BODY_1' | translate }} <strong>{{ 'WORKEXEC.WORKORDER_COMMON.STATUS_COMPLETED' | translate }}</strong>{{ 'WORKEXEC.WORKORDER_DETAIL.COMPLETE_BODY_2' | translate }}
@@ -369,17 +369,17 @@
     </div>
     }
   </div>
-</div>
+</dialog>
 }
 
 <!-- Reopen work order modal (Story 214) — glassmorphism -->
 @if (showReopenModal()) {
-<div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="reopen-modal-title">
+<dialog class="modal-backdrop" appModalDialog (modalCancel)="cancelReopen()" aria-labelledby="reopen-modal-title">
   <div class="modal-glass">
     <h2 id="reopen-modal-title" class="modal-glass__title">{{ 'WORKEXEC.WORKORDER_DETAIL.REOPEN_MODAL_TITLE' | translate }}</h2>
 
     @if (reopenModalState() === 'success') {
-    <div class="alert alert--success" role="status">{{ 'WORKEXEC.WORKORDER_DETAIL.REOPEN_SUCCESS' | translate }}</div>
+    <output class="alert alert--success">{{ 'WORKEXEC.WORKORDER_DETAIL.REOPEN_SUCCESS' | translate }}</output>
     } @else {
     <p class="modal-glass__body">
       {{ 'WORKEXEC.WORKORDER_DETAIL.REOPEN_BODY_1' | translate }} <strong>{{ 'WORKEXEC.WORKORDER_COMMON.STATUS_IN_PROGRESS' | translate }}</strong>{{ 'WORKEXEC.WORKORDER_DETAIL.REOPEN_BODY_2' | translate }}
@@ -408,5 +408,5 @@
     </div>
     }
   </div>
-</div>
+</dialog>
 }

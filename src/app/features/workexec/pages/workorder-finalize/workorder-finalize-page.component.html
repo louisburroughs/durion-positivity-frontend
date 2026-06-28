@@ -51,9 +51,9 @@
         }
 
         @if (finalizeState() === 'success' && finalizeResult()) {
-          <div class="alert alert--success" role="status">
+          <output class="alert alert--success">
             {{ 'WORKEXEC.WORKORDER_FINALIZE.SUCCESS' | translate: { version: finalizeResult()!.snapshotVersion, total: (finalizeResult()!.grandTotal | currency) } }}
-          </div>
+          </output>
         }
 
         <div class="finalize-card__actions">
@@ -68,9 +68,9 @@
         </div>
       </div>
     } @else {
-      <div class="alert alert--info" role="status">
+      <output class="alert alert--info">
         {{ 'WORKEXEC.WORKORDER_FINALIZE.ACTIVE_EXISTS' | translate }}
-      </div>
+      </output>
     }
 
     <!-- Snapshot history -->

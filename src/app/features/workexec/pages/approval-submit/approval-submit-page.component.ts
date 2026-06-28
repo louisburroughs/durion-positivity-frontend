@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
+import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 /**
  * ApprovalSubmitPageComponent — Story 233 (CAP-003)
@@ -22,7 +23,7 @@ import { EstimateResponse, PageState } from '../../models/workexec.models';
 @Component({
   selector: 'app-approval-submit-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslatePipe],
+  imports: [CommonModule, RouterLink, TranslatePipe, ModalDialogDirective],
   templateUrl: './approval-submit-page.component.html',
   styleUrl: './approval-submit-page.component.css',
 })
