@@ -32,6 +32,9 @@ jobs:
       - name: Install Angular SDK packages
         run: npm run sdk:install
 
+      - name: Check Material Symbols glyph map is current
+        run: npm run icons:check
+
       - name: Run accessibility smoke scan (blocking on critical)
         id: a11y_scan
         env:
