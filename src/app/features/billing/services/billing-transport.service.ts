@@ -54,7 +54,8 @@ export class BillingTransportService {
 
   loadInvoiceArtifacts(invoiceId: string): Observable<InvoiceArtifact[]> {
     // ADR-0041 temporary exception: SDK invoice transport does not yet expose artifact listing.
-    return this.api.get<InvoiceArtifact[]>(`/billing/invoices/${invoiceId}/artifacts`);
+    // Direct call to the pos-invoice route (gateway /invoice/** -> /v1/invoices/...).
+    return this.api.get<InvoiceArtifact[]>(`/invoice/v1/invoices/${invoiceId}/artifacts`);
   }
 
   elevate(password: string): Observable<{ elevationToken: string }> {
@@ -71,9 +72,13 @@ export class BillingTransportService {
     );
   }
 
-  createArtifactDownloadToken(artifactRefId: string): Observable<ArtifactDownloadToken> {
+  createArtifactDownloadToken(invoiceId: string, artifactRefId: string): Observable<ArtifactDownloadToken> {
     // ADR-0041 temporary exception: SDK does not yet expose artifact download-token creation.
-    return this.api.post<ArtifactDownloadToken>(`/billing/artifacts/${artifactRefId}/download-token`, {});
+    // Direct call to the pos-invoice route (gateway /invoice/** -> /v1/invoices/...).
+    return this.api.post<ArtifactDownloadToken>(
+      `/invoice/v1/invoices/${invoiceId}/artifacts/${artifactRefId}/download-token`,
+      {},
+    );
   }
 
   initiateAndCapturePayment(
