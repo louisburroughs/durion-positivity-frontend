@@ -240,7 +240,8 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
       drainWithTechnician(() =>
         http.expectOne(`${BASE}/v1/people/employees/${TECH_ID}`).flush({
           id: TECH_ID,
-          legalName: 'Jane Smith',
+          firstName: 'Jane',
+          lastName: 'Smith',
           employeeNumber: 'EMP-007',
           status: 'ACTIVE',
           hireDate: '2024-01-01',
