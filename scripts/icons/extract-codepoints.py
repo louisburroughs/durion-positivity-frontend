@@ -13,6 +13,7 @@ Run after replacing the woff2:
 Then regenerate the TS map:
     npm run icons:generate
 """
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -21,6 +22,7 @@ from fontTools.ttLib import TTFont
 ROOT = Path(__file__).resolve().parents[2]
 WOFF2 = ROOT / "src/assets/fonts/material-symbols/material-symbols-rounded.woff2"
 OUT = ROOT / "src/assets/fonts/material-symbols/material-symbols-rounded.codepoints"
+HASH_OUT = ROOT / "src/assets/fonts/material-symbols/material-symbols-rounded.woff2.sha256"
 
 NAME_RE = re.compile(r"^[a-z0-9_]+$")
 
@@ -43,6 +45,13 @@ def main() -> int:
     rows.sort(key=lambda r: r[0])
     OUT.write_text("".join(f"{name} {cp:04x}\n" for name, cp in rows), encoding="utf-8")
     print(f"wrote {len(rows)} icons -> {OUT.relative_to(ROOT)}")
+
+    # Pin the font this map was extracted from. `npm run icons:check` recomputes
+    # this hash so a woff2 swap without re-running this script fails CI — closing
+    # the codepoints<->font drift gap with no Python dependency in the Node CI.
+    digest = hashlib.sha256(WOFF2.read_bytes()).hexdigest()
+    HASH_OUT.write_text(f"{digest}  {WOFF2.name}\n", encoding="utf-8")
+    print(f"pinned woff2 sha256 -> {HASH_OUT.relative_to(ROOT)}")
     return 0
 
 if __name__ == "__main__":
