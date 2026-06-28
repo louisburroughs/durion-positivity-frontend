@@ -66,6 +66,20 @@
   text-align: center;
 }
 
+/* Glyph and letter fallback both inherit the rail icon size. The fallback
+   (shown until the icon font loads — see IconFontService) keeps the system
+   font so it stays readable even when Material Symbols never loads. */
+.nav-icon .material-symbols-rounded,
+.nav-fallback {
+  font-size: inherit;
+  line-height: 1;
+}
+
+.nav-fallback {
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
 .nav-label {
   flex: 1;
   overflow: hidden;
