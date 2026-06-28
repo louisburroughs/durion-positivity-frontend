@@ -1,5 +1,5 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, DestroyRef, Input, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, Input, computed, inject, signal, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { WorkexecService } from '../../services/workexec.service';
@@ -11,7 +11,7 @@ import { WorkexecService } from '../../services/workexec.service';
   templateUrl: './operational-cost.component.html',
   styleUrl: './operational-cost.component.css',
 })
-export class OperationalCostComponent {
+export class OperationalCostComponent implements OnInit {
   private readonly workexecService = inject(WorkexecService);
   private readonly destroyRef = inject(DestroyRef);
 
