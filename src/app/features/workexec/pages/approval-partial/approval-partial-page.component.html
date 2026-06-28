@@ -82,9 +82,9 @@
 
       @if (submitState() === 'success') {
         <output class="success-panel">
-          <p class="success-heading">{{ 'WORKEXEC.APPROVAL.PARTIAL.SUCCESS_TITLE' | translate }}</p>
-          <p class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span></p>
-          @if (estimate()!.total != null) { <p>{{ 'WORKEXEC.APPROVAL.PARTIAL.APPROVED_TOTAL' | translate: { total: (estimate()!.total | currency) } }}</p> }
+          <span class="success-heading">{{ 'WORKEXEC.APPROVAL.PARTIAL.SUCCESS_TITLE' | translate }}</span>
+          <span class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span></span>
+          @if (estimate()!.total != null) { <span>{{ 'WORKEXEC.APPROVAL.PARTIAL.APPROVED_TOTAL' | translate: { total: (estimate()!.total | currency) } }}</span> }
         </output>
       }
     </div>
