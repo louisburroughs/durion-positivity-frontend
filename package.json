@@ -18,6 +18,8 @@
     "i18n:pseudo:check": "node scripts/i18n/generate-pseudo-locale.mjs --check",
     "i18n:check": "npm run i18n:check:missing && npm run i18n:check:hardcoded && npm run i18n:pseudo:check",
     "serve:ssr:durion-positivity-frontend": "npm run sdk:install && node dist/durion-positivity-frontend/server/server.mjs",
+    "lint": "ng lint",
+    "lint:fix": "ng lint --fix",
     "lint:css": "stylelint \"src/**/*.css\"",
     "icons:generate": "node scripts/icons/generate-glyph-map.mjs",
     "icons:check": "node scripts/icons/generate-glyph-map.mjs --check"
@@ -56,6 +58,7 @@
     "zone.js": "^0.16.1"
   },
   "devDependencies": {
+    "@angular-eslint/builder": "^21.4.0",
     "@angular-eslint/eslint-plugin": "^21.3.1",
     "@angular-eslint/eslint-plugin-template": "^21.3.1",
     "@angular-eslint/schematics": "^21.3.1",
@@ -63,15 +66,18 @@
     "@angular/build": "^21.1.5",
     "@angular/cli": "^21.1.5",
     "@angular/compiler-cli": "^21.1.0",
+    "@eslint/js": "^9.39.4",
     "@types/express": "^5.0.1",
     "@types/node": "^20.17.19",
     "@types/uuid": "^10.0.0",
+    "angular-eslint": "^21.4.0",
     "axe-core": "^4.11.1",
     "eslint": "^10.2.0",
     "jsdom": "^27.1.0",
     "stylelint": "^17.14.0",
     "stylelint-value-no-unknown-custom-properties": "^6.1.1",
     "typescript": "~5.9.2",
+    "typescript-eslint": "^8.62.0",
     "vitest": "^4.0.8"
   }
 }
