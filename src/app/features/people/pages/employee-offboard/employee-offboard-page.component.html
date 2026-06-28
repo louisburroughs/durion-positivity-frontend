@@ -28,7 +28,7 @@
     <h2>Employee context</h2>
     <dl>
       <dt>Name</dt>
-      <dd>{{ employee()?.legalName }}</dd>
+      <dd>{{ employee()?.firstName }} {{ employee()?.lastName }}</dd>
       <dt>Status</dt>
       <dd>
         <span class="status-badge" [class.status-badge--active]="employee()?.status === 'ACTIVE'"

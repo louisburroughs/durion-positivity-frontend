@@ -35,7 +35,8 @@ export class EmployeeProfilePageComponent implements OnInit {
   readonly saveSuccess = signal(false);
 
   readonly form = new FormGroup({
-    legalName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    firstName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    lastName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     employeeNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     status: new FormControl<CreateEmployeeRequestStatusEnum | ''>('', {
       nonNullable: true,
@@ -70,7 +71,8 @@ export class EmployeeProfilePageComponent implements OnInit {
         next: (emp) => {
           this.employee.set(emp);
           this.form.patchValue({
-            legalName: emp.legalName ?? '',
+            firstName: emp.firstName ?? '',
+            lastName: emp.lastName ?? '',
             employeeNumber: emp.employeeNumber ?? '',
             status: this.toCreateStatus(emp.status),
             hireDate: emp.hireDate ?? '',
@@ -97,7 +99,7 @@ export class EmployeeProfilePageComponent implements OnInit {
     this.fieldErrors.set({});
     this.saving.set(true);
 
-    const { legalName, employeeNumber, status, hireDate, email, phone } = this.form.getRawValue();
+    const { firstName, lastName, employeeNumber, status, hireDate, email, phone } = this.form.getRawValue();
     const contactInfo = (email || phone) ? {
       primaryEmail: email || undefined,
       primaryPhone: phone || undefined,
@@ -112,7 +114,8 @@ export class EmployeeProfilePageComponent implements OnInit {
       }
 
       this.peopleService.updateEmployee(employeeId, {
-        legalName,
+        firstName,
+        lastName,
         employeeNumber,
         status: (status || 'ACTIVE') as UpdateEmployeeRequestStatusEnum,
         hireDate,
@@ -133,7 +136,8 @@ export class EmployeeProfilePageComponent implements OnInit {
     }
 
     this.peopleService.createEmployee({
-      legalName,
+      firstName,
+      lastName,
       employeeNumber,
       status: status as CreateEmployeeRequestStatusEnum,
       hireDate,
