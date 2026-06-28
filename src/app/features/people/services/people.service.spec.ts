@@ -79,7 +79,8 @@ describe('PeopleService', () => {
   it('getEmployee() delegates to EmployeeAPIService.getEmployee', () => {
     const response: EmployeeProfileDto = {
       id: 'emp-1',
-      legalName: 'Jane Doe',
+      firstName: 'Jane',
+      lastName: 'Doe',
       employeeNumber: 'EMP-1',
       status: EmployeeProfileDtoStatusEnum.Active,
       hireDate: '2026-05-01',
@@ -93,14 +94,16 @@ describe('PeopleService', () => {
 
   it('createEmployee() delegates to EmployeeAPIService.createEmployee', () => {
     const request: CreateEmployeeRequest = {
-      legalName: 'Jane Doe',
+      firstName: 'Jane',
+      lastName: 'Doe',
       employeeNumber: 'EMP-1',
       status: CreateEmployeeRequestStatusEnum.Active,
       hireDate: '2026-05-01',
     };
     const response: EmployeeProfileDto = {
       id: 'emp-1',
-      legalName: 'Jane Doe',
+      firstName: 'Jane',
+      lastName: 'Doe',
       employeeNumber: 'EMP-1',
       status: EmployeeProfileDtoStatusEnum.Active,
       hireDate: '2026-05-01',
@@ -114,14 +117,16 @@ describe('PeopleService', () => {
 
   it('updateEmployee() delegates to EmployeeAPIService.updateEmployee', () => {
     const request: UpdateEmployeeRequest = {
-      legalName: 'Updated Name',
+      firstName: 'Updated',
+      lastName: 'Name',
       employeeNumber: 'EMP-1',
       status: UpdateEmployeeRequestStatusEnum.Active,
       hireDate: '2026-05-01',
     };
     const response: EmployeeProfileDto = {
       id: 'emp-1',
-      legalName: 'Updated Name',
+      firstName: 'Updated',
+      lastName: 'Name',
       employeeNumber: 'EMP-1',
       status: EmployeeProfileDtoStatusEnum.Active,
       hireDate: '2026-05-01',
@@ -135,7 +140,7 @@ describe('PeopleService', () => {
 
   it('disableEmployee() delegates to EmployeeAPIService.disableEmployee', () => {
     const request = { assignmentEndDate: '2026-05-31' };
-    employeeApiStub.disableEmployee.mockReturnValue(of({ id: 'emp-1', legalName: 'Jane Doe' }));
+    employeeApiStub.disableEmployee.mockReturnValue(of({ id: 'emp-1', firstName: 'Jane', lastName: 'Doe' }));
 
     service.disableEmployee('emp-1', request).subscribe();
 

@@ -696,16 +696,16 @@ describe('WorkexecService', () => {
       service.getTechnicianProfile('tech-1').subscribe(p => (result = p));
       const r = http.expectOne(`${BASE}/v1/people/employees/tech-1`);
       expect(r.request.method).toBe('GET');
-      r.flush({ id: 'tech-1', legalName: 'Jane Smith', employeeNumber: 'EMP-007', status: 'ACTIVE', hireDate: '2024-01-01' });
+      r.flush({ id: 'tech-1', firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-007', status: 'ACTIVE', hireDate: '2024-01-01' });
       expect(result).toEqual({ name: 'Jane Smith', employeeNumber: 'EMP-007' });
     });
 
-    it('prefers the preferred name over the legal name', () => {
+    it('prefers the preferred name over the structured name', () => {
       let result: { name: string | null; employeeNumber: string | null } | undefined;
       service.getTechnicianProfile('tech-1').subscribe(p => (result = p));
       http
         .expectOne(`${BASE}/v1/people/employees/tech-1`)
-        .flush({ id: 'tech-1', legalName: 'Jane Smith', preferredName: 'Janie', employeeNumber: 'EMP-007', status: 'ACTIVE', hireDate: '2024-01-01' });
+        .flush({ id: 'tech-1', firstName: 'Jane', lastName: 'Smith', preferredName: 'Janie', employeeNumber: 'EMP-007', status: 'ACTIVE', hireDate: '2024-01-01' });
       expect(result?.name).toBe('Janie');
     });
 

@@ -983,7 +983,7 @@ export class WorkexecService {
   ): Observable<{ name: string | null; employeeNumber: string | null }> {
     return this.employeeApi.getEmployee(technicianId).pipe(
       map(emp => ({
-        name: emp.preferredName || emp.legalName || null,
+        name: emp.preferredName || [emp.firstName, emp.lastName].filter(Boolean).join(' ') || null,
         employeeNumber: emp.employeeNumber || null,
       })),
       catchError(() => of({ name: null, employeeNumber: null })),

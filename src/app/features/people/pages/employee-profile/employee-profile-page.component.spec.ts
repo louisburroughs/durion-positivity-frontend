@@ -11,7 +11,8 @@ import { PeopleService } from '../../services/people.service';
 
 const STUB_EMPLOYEE = {
   id: 'emp-1',
-  legalName: 'Jane Smith',
+  firstName: 'Jane',
+  lastName: 'Smith',
   employeeNumber: 'EMP-001',
   status: 'ACTIVE' as const,
   hireDate: '2024-03-01',
@@ -88,10 +89,10 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     const form = fixture.debugElement.query(By.css('form'));
     expect(form).toBeTruthy();
 
-    // No pre-filled legal-name value
-    const legalNameInput = fixture.debugElement.query(By.css('[data-testid="legal-name-input"]'));
-    expect(legalNameInput).toBeTruthy();
-    expect(legalNameInput.nativeElement.value).toBe('');
+    // No pre-filled first-name value
+    const firstNameInput = fixture.debugElement.query(By.css('[data-testid="first-name-input"]'));
+    expect(firstNameInput).toBeTruthy();
+    expect(firstNameInput.nativeElement.value).toBe('');
   });
 
   // ── T2: Edit route loads employee data ───────────────────────────────────
@@ -104,14 +105,14 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
   it('populates form fields with the loaded employee data', async () => {
     const { fixture } = await setupEdit('emp-1');
 
-    const legalNameInput = fixture.debugElement.query(By.css('[data-testid="legal-name-input"]'));
-    expect(legalNameInput.nativeElement.value).toBe(STUB_EMPLOYEE.legalName);
+    const firstNameInput = fixture.debugElement.query(By.css('[data-testid="first-name-input"]'));
+    expect(firstNameInput.nativeElement.value).toBe(STUB_EMPLOYEE.firstName);
   });
 
   it('surfaces backend resolution warnings as a banner', async () => {
     vi.clearAllMocks();
     stubPeopleService.getEmployee.mockReturnValue(
-      of({ ...STUB_EMPLOYEE, warnings: ['Ambiguous duplicate match detected by legalName similarity'] }),
+      of({ ...STUB_EMPLOYEE, warnings: ['Ambiguous duplicate match detected by name similarity'] }),
     );
 
     await TestBed.configureTestingModule({
@@ -172,7 +173,7 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     const { fixture, component } = await setupNew();
 
     // Fill required fields so the form is valid
-    component.form.patchValue({ legalName: 'Jane', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: 'ACTIVE' as any });
+    component.form.patchValue({ firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: 'ACTIVE' as any });
     fixture.detectChanges();
 
     // Trigger save
@@ -205,7 +206,7 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     const { fixture, component } = await setupNew();
 
     // Fill required fields so the form is valid
-    component.form.patchValue({ legalName: 'Jane', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: 'ACTIVE' as any });
+    component.form.patchValue({ firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: 'ACTIVE' as any });
     fixture.detectChanges();
 
     (component as any).save?.();
@@ -222,22 +223,22 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
       throwError(() =>
         Object.assign(new Error('Bad Request'), {
           status: 400,
-          error: { errors: [{ field: 'legalName', message: 'Legal name is required' }] },
+          error: { errors: [{ field: 'firstName', message: 'First name is required' }] },
         })
       )
     );
     const { fixture, component } = await setupNew();
 
     // Fill required fields so the form is valid
-    component.form.patchValue({ legalName: 'Jane', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: 'ACTIVE' as any });
+    component.form.patchValue({ firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: 'ACTIVE' as any });
     fixture.detectChanges();
 
     (component as any).save?.();
     fixture.detectChanges();
 
-    const fieldError = fixture.debugElement.query(By.css('[data-testid="field-error-legal-name"]'));
+    const fieldError = fixture.debugElement.query(By.css('[data-testid="field-error-first-name"]'));
     expect(fieldError).toBeTruthy();
-    expect(fieldError.nativeElement.textContent).toContain('Legal name is required');
+    expect(fieldError.nativeElement.textContent).toContain('First name is required');
   });
 
   // ── T8: Audit metadata display ───────────────────────────────────────────
@@ -288,8 +289,8 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     (component as any).save?.();
     fixture.detectChanges();
 
-    const legalNameError = fixture.debugElement.query(By.css('[data-testid="validation-legal-name"]'));
-    expect(legalNameError).toBeTruthy();
+    const firstNameError = fixture.debugElement.query(By.css('[data-testid="validation-first-name"]'));
+    expect(firstNameError).toBeTruthy();
 
     const statusError = fixture.debugElement.query(By.css('[data-testid="validation-employment-status"]'));
     expect(statusError).toBeTruthy();
@@ -322,7 +323,7 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     fixture.detectChanges();
 
     // Fill required fields so form is valid before saving
-    component.form.patchValue({ legalName: 'Jane', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: 'ACTIVE' as any });
+    component.form.patchValue({ firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: 'ACTIVE' as any });
     fixture.detectChanges();
 
     // Trigger save to put component into saving state

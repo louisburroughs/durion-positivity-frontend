@@ -11,7 +11,8 @@ import { PeopleService } from '../../services/people.service';
 
 const mockEmployee = {
   id: 'emp-001',
-  legalName: 'Jane Doe',
+  firstName: 'Jane',
+  lastName: 'Doe',
   status: 'ACTIVE',
   hireDate: '2020-01-01',
 };
