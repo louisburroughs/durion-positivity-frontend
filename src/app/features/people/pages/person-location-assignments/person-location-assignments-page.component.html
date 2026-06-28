@@ -146,10 +146,15 @@
         This will end the selected assignment for this person.
       </p>
       <footer class="form-footer">
+        <!-- autofocus moves focus into this non-native role="alertdialog" on open (Cancel is the
+             safe default for a destructive confirm); no JS focus-trap exists, so this is the only
+             mechanism placing keyboard/SR users inside the modal. ADR-0029 keyboard-flow. -->
+        <!-- eslint-disable @angular-eslint/template/no-autofocus -->
         <button type="button" class="btn btn--ghost" data-testid="cancel-end-btn" [disabled]="submitting()"
-          (click)="closeEndDialog()">
+          (click)="closeEndDialog()" autofocus>
           Cancel
         </button>
+        <!-- eslint-enable @angular-eslint/template/no-autofocus -->
         <button type="button" class="btn btn--danger" data-testid="confirm-end-btn" [disabled]="submitting()"
           (click)="confirmEnd()">
           @if (submitting()) {

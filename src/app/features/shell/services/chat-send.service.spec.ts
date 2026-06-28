@@ -90,6 +90,9 @@ describe('ChatSendService', () => {
     const onSettled = vi.fn();
     service.send('Hello', { onSettled });
 
+    // The user's own message must still be recorded even when the send fails.
+    expect(chatState.messages().some(m => m.sender === 'user' && m.content === 'Hello')).toBe(true);
+
     const systemMessages = chatState
       .messages()
       .filter(message => message.sender === 'system')

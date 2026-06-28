@@ -69,10 +69,15 @@
         This action is destructive and cannot be undone from this screen.
       </p>
       <footer class="modal-footer">
+        <!-- autofocus moves focus into this non-native role="alertdialog" on open (Cancel is the
+             safe default for a destructive confirm); no JS focus-trap exists, so this is the only
+             mechanism placing keyboard/SR users inside the modal. ADR-0029 keyboard-flow. -->
+        <!-- eslint-disable @angular-eslint/template/no-autofocus -->
         <button type="button" class="btn btn--ghost" data-testid="offboard-cancel-btn" [disabled]="submitting()"
-          (click)="cancelConfirmDialog()">
+          (click)="cancelConfirmDialog()" autofocus>
           Cancel
         </button>
+        <!-- eslint-enable @angular-eslint/template/no-autofocus -->
         <button type="button" class="btn btn--danger" data-testid="offboard-confirm-btn" [disabled]="submitting()"
           (click)="confirmOffboard()">
           @if (submitting()) {

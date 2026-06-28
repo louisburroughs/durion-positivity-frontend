@@ -8,8 +8,10 @@ const angular = require('angular-eslint');
 
 module.exports = tseslint.config(
   {
-    // Build output and generated assets — never linted.
-    ignores: ['dist/**', 'coverage/**', '.angular/**', 'node_modules/**'],
+    // Build output, generated assets, and the static bootstrap document — never linted.
+    // src/index.html is plain HTML, not an Angular component template; the template
+    // parser + a11y rules would raise false positives on it.
+    ignores: ['dist/**', 'coverage/**', '.angular/**', 'node_modules/**', 'src/index.html'],
   },
   {
     files: ['**/*.ts'],
