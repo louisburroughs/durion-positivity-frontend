@@ -110,7 +110,6 @@ export interface InvoiceDetail {
   poNumber?: string;
   status: InvoiceStatus;
   subtotal?: number;
-  taxTotal?: number;
   taxAmount?: number;
   feeTotal?: number;
   discountAmount?: number;

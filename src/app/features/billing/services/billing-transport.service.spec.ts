@@ -120,7 +120,7 @@ describe('BillingTransportService', () => {
       invoiceId: 'inv-001',
       workOrderId: 'wo-001',
       status: 'FINALIZED',
-      taxTotal: 8,
+      taxAmount: 8,
       adjustmentTotal: 5,
       grandTotal: 113,
     }));

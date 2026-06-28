@@ -299,7 +299,7 @@ export class BillingTransportService {
       workOrderId: source.workorderId,
       status,
       subtotal: source.subtotal,
-      taxTotal: source.tax,
+      taxAmount: source.tax,
       adjustmentTotal: source.adjustments,
       grandTotal: source.total,
       createdAt: source.createdAt,
