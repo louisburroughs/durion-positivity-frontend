@@ -1,0 +1,86 @@
+<div class="landing-finder" [class.landing-finder--filled]="filled">
+  @if (label) {
+    <label class="landing-finder__label" [for]="idPrefix + '-input'">{{ label | translate }}</label>
+  }
+
+  <div class="landing-finder__box">
+    <span class="landing-finder__lead material-symbols-rounded" aria-hidden="true">{{ 'search' | msIcon }}</span>
+    <input
+      [id]="idPrefix + '-input'"
+      class="landing-finder__input"
+      type="text"
+      [attr.role]="mode === 'search' ? 'combobox' : null"
+      autocomplete="off"
+      spellcheck="false"
+      [attr.aria-autocomplete]="mode === 'search' ? 'list' : null"
+      [attr.aria-controls]="mode === 'search' ? idPrefix + '-listbox' : null"
+      [attr.aria-expanded]="mode === 'search' ? expanded : null"
+      [attr.aria-activedescendant]="activeIndex() >= 0 ? idPrefix + '-opt-' + activeIndex() : null"
+      [placeholder]="placeholder | translate"
+      (input)="onInput($any($event.target).value)"
+      (keydown)="onKeydown($event)"
+      (blur)="onBlur($any($event.target).value)"
+    />
+    @if (filled) {
+      <button
+        type="button"
+        class="landing-finder__clear"
+        (click)="clearSelection()"
+        [attr.aria-label]="'LANDING.FINDER.CLEAR' | translate"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">{{ 'check_circle' | msIcon }}</span>
+      </button>
+    }
+  </div>
+
+  @if (mode === 'search') {
+    <!--
+      Intentional WAI-ARIA 1.2 combobox (active-descendant). Sonar Web:S6842/S6819
+      flag role on <ul>/<li>; kept on purpose — native <select>/<datalist> can't
+      render multi-line options or loading/empty/error states.
+    -->
+    <ul [id]="idPrefix + '-listbox'" class="landing-finder__list" role="listbox">
+      @switch (state()) {
+        @case ('loading') {
+          <li class="landing-finder__status" role="status">{{ 'LANDING.FINDER.LOADING' | translate }}</li>
+        }
+        @case ('empty') {
+          <li class="landing-finder__status" role="status">{{ 'LANDING.FINDER.EMPTY' | translate }}</li>
+        }
+        @case ('error') {
+          <li class="landing-finder__status landing-finder__status--error" role="alert">
+            {{ 'LANDING.FINDER.ERROR' | translate }}
+          </li>
+        }
+        @case ('loaded') {
+          @for (item of results(); track item.id; let i = $index) {
+            <!--
+              Active-descendant combobox: options are not individually focusable;
+              keyboard activation is handled on the input (ArrowUp/Down/Enter).
+              The click handler is a pointer affordance only.
+            -->
+            <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+            <li
+              [id]="idPrefix + '-opt-' + i"
+              class="landing-finder__option"
+              [class.landing-finder__option--active]="i === activeIndex()"
+              role="option"
+              [attr.aria-selected]="i === activeIndex()"
+              (click)="choose(item)"
+            >
+              <span class="landing-finder__lines">
+                <strong class="landing-finder__primary">{{ item.primary }}</strong>
+                @if (item.tertiary) {
+                  <span class="landing-finder__tertiary">{{ item.tertiary }}</span>
+                }
+              </span>
+              @if (item.secondary) {
+                <span class="landing-finder__secondary">{{ item.secondary }}</span>
+              }
+            </li>
+          }
+        }
+      }
+    </ul>
+  }
+</div>

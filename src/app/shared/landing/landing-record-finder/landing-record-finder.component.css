@@ -1,0 +1,143 @@
+:host {
+  display: block;
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+}
+
+.landing-finder__label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-heading);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.landing-finder__box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--input-background);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  transition: border-color 0.15s ease;
+}
+
+.landing-finder--filled .landing-finder__box {
+  border-color: var(--brand-accent);
+}
+
+.landing-finder__box:focus-within {
+  border-color: var(--input-focus-border);
+}
+
+.landing-finder__lead {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.landing-finder__input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--currentTextColor);
+}
+
+.landing-finder__input::placeholder {
+  color: var(--input-placeholder-color);
+}
+
+.landing-finder__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--brand-accent);
+  flex-shrink: 0;
+}
+
+.landing-finder__clear .material-symbols-rounded {
+  font-size: 1.15rem;
+}
+
+.landing-finder__list {
+  list-style: none;
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--cardBackground);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.landing-finder__list:empty {
+  display: none;
+}
+
+.landing-finder__status {
+  padding: var(--space-3);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.landing-finder__status--error {
+  color: var(--functional-error-red);
+}
+
+.landing-finder__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  cursor: pointer;
+}
+
+.landing-finder__option--active,
+.landing-finder__option:hover {
+  background: var(--surface-hover);
+}
+
+.landing-finder__lines {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.landing-finder__primary {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-heading);
+  color: var(--currentTextColor);
+}
+
+.landing-finder__tertiary {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.landing-finder__secondary {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
