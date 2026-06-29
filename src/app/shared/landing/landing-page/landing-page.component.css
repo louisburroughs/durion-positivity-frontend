@@ -263,6 +263,35 @@
   text-align: center;
 }
 
+.landing-card__sec-label {
+  display: block;
+  margin: var(--space-3) 0 var(--space-1);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-heading);
+  color: var(--text-muted);
+}
+
+.landing-card__sec-input {
+  width: 100%;
+  background: var(--input-background);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--currentTextColor);
+}
+
+.landing-card__sec-input::placeholder {
+  color: var(--input-placeholder-color);
+}
+
+.landing-card__sec-input:focus {
+  outline: none;
+  border-color: var(--input-focus-border);
+}
+
 /* ── BUTTONS ────────────────────────────────────────────────────────── */
 .landing-btn {
   display: inline-flex;

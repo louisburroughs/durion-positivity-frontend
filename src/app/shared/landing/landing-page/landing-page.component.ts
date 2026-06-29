@@ -37,6 +37,8 @@ export class LandingPageComponent {
 
   /** Selected record id per section, keyed by section index. */
   private readonly selected = signal<Record<number, string>>({});
+  /** Secondary free-text identifiers, keyed by card key. */
+  private readonly secondary = signal<Record<string, string>>({});
   /** Card key currently showing its tooltip. */
   readonly hoveredKey = signal<string | null>(null);
 
@@ -88,15 +90,30 @@ export class LandingPageComponent {
     });
   }
 
-  /** A guided card is pending until its section's selector holds a record. */
-  isPending(section: LandingSection, sectionIndex: number, card: LandingCard): boolean {
+  /**
+   * A guided card is pending until its section's selector holds a record and,
+   * when the card declares a secondary input, that value is filled too.
+   */
+  isPending(section: LandingSection, sectionIndex: number, cardIndex: number, card: LandingCard): boolean {
     if (card.kind !== 'guided') return false;
     if (!section.recordKind) return false;
-    return this.selectedId(sectionIndex).trim().length === 0;
+    if (this.selectedId(sectionIndex).trim().length === 0) return true;
+    if (card.secondary) {
+      return this.secondaryValue(this.cardKey(sectionIndex, cardIndex)).trim().length === 0;
+    }
+    return false;
   }
 
   cardKey(sectionIndex: number, cardIndex: number): string {
     return `${sectionIndex}-${cardIndex}`;
+  }
+
+  secondaryValue(cardKey: string): string {
+    return this.secondary()[cardKey] ?? '';
+  }
+
+  onSecondaryInput(cardKey: string, value: string): void {
+    this.secondary.update(prev => ({ ...prev, [cardKey]: value }));
   }
 
   showTip(sectionIndex: number, cardIndex: number): boolean {
@@ -116,9 +133,18 @@ export class LandingPageComponent {
     return cta.route;
   }
 
-  launchGuided(section: LandingSection, sectionIndex: number, card: LandingGuidedCard): void {
+  launchGuided(
+    section: LandingSection,
+    sectionIndex: number,
+    cardIndex: number,
+    card: LandingGuidedCard,
+  ): void {
     const id = this.selectedId(sectionIndex).trim();
     if (!id) return;
-    void this.router.navigate([...card.buildCommands(id)]);
+    const secondaryId = card.secondary
+      ? this.secondaryValue(this.cardKey(sectionIndex, cardIndex)).trim()
+      : undefined;
+    if (card.secondary && !secondaryId) return;
+    void this.router.navigate([...card.buildCommands(id, secondaryId)]);
   }
 }

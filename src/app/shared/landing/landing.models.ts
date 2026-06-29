@@ -68,10 +68,22 @@ export interface LandingDirectCard extends LandingCardBase {
   readonly route: string | readonly string[];
 }
 
+/** An extra free-text identifier some guided cards need beyond the section record. */
+export interface LandingSecondaryInput {
+  readonly labelKey: string;
+  readonly placeholderKey: string;
+}
+
 /** Needs the section's selected record; gated (locked) until one is chosen. */
 export interface LandingGuidedCard extends LandingCardBase {
   readonly kind: 'guided';
-  readonly buildCommands: (recordId: string) => readonly string[];
+  /**
+   * Optional second identifier captured on the card itself (e.g. payment id,
+   * receipt id). When present, the CTA stays locked until both the section
+   * record and this value are filled.
+   */
+  readonly secondary?: LandingSecondaryInput;
+  readonly buildCommands: (recordId: string, secondaryId?: string) => readonly string[];
 }
 
 export type LandingCard = LandingDirectCard | LandingGuidedCard;

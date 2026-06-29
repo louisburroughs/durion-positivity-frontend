@@ -63,13 +63,13 @@ describe('LandingPageComponent', () => {
   it('gates guided cards until a record is selected', () => {
     const section = CONFIG.sections[0];
     const guided = section.cards[1];
-    expect(component.isPending(section, 0, guided)).toBe(true);
+    expect(component.isPending(section, 0, 1, guided)).toBe(true);
 
     component.onRecordSelected(0, 'EST-1');
-    expect(component.isPending(section, 0, guided)).toBe(false);
+    expect(component.isPending(section, 0, 1, guided)).toBe(false);
 
     component.onRecordCleared(0);
-    expect(component.isPending(section, 0, guided)).toBe(true);
+    expect(component.isPending(section, 0, 1, guided)).toBe(true);
   });
 
   it('navigates a guided card using the selected record id', () => {
@@ -78,12 +78,43 @@ describe('LandingPageComponent', () => {
     const guided = section.cards[1];
 
     // No-op while pending.
-    component.launchGuided(section, 0, guided as never);
+    component.launchGuided(section, 0, 1, guided as never);
     expect(navigate).not.toHaveBeenCalled();
 
     component.onRecordSelected(0, 'EST-1');
-    component.launchGuided(section, 0, guided as never);
+    component.launchGuided(section, 0, 1, guided as never);
     expect(navigate).toHaveBeenCalledWith(['/x', 'EST-1']);
+  });
+
+  it('keeps a card with a secondary input pending until both values are set', () => {
+    const section: (typeof CONFIG.sections)[number] = {
+      titleKey: 'SEC.C',
+      descriptionKey: 'D',
+      recordKind: 'invoice',
+      cards: [
+        {
+          kind: 'guided',
+          icon: 'undo',
+          titleKey: 'C.VOID',
+          descriptionKey: 'D',
+          ctaKey: 'CTA',
+          secondary: { labelKey: 'PAY', placeholderKey: 'PAY.PH' },
+          buildCommands: (id, pid) => ['/inv', id, 'payments', pid ?? '', 'void'],
+        },
+      ],
+    };
+    component.config = { ...CONFIG, sections: [section] };
+    const card = section.cards[0];
+
+    component.onRecordSelected(0, 'INV-1');
+    expect(component.isPending(section, 0, 0, card)).toBe(true);
+
+    component.onSecondaryInput(component.cardKey(0, 0), 'PAY-9');
+    expect(component.isPending(section, 0, 0, card)).toBe(false);
+
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    component.launchGuided(section, 0, 0, card as never);
+    expect(navigate).toHaveBeenCalledWith(['/inv', 'INV-1', 'payments', 'PAY-9', 'void']);
   });
 
   it('resolves selector placeholder from the record kind by default', () => {

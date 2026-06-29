@@ -109,21 +109,36 @@
             <div class="landing-card__spacer"></div>
 
             @if (isGuided(card)) {
+              @if (card.secondary) {
+                <label class="landing-card__sec-label" [for]="'sec-' + cardKey(si, ci)">
+                  {{ card.secondary.labelKey | translate }}
+                </label>
+                <input
+                  [id]="'sec-' + cardKey(si, ci)"
+                  class="landing-card__sec-input"
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  [placeholder]="card.secondary.placeholderKey | translate"
+                  [value]="secondaryValue(cardKey(si, ci))"
+                  (input)="onSecondaryInput(cardKey(si, ci), $any($event.target).value)"
+                />
+              }
               <button
                 type="button"
                 class="landing-btn landing-btn--primary landing-card__cta"
-                [class.landing-card__cta--pending]="isPending(section, si, card)"
-                [disabled]="isPending(section, si, card)"
-                (click)="launchGuided(section, si, card)"
-                [attr.aria-disabled]="isPending(section, si, card)"
+                [class.landing-card__cta--pending]="isPending(section, si, ci, card)"
+                [disabled]="isPending(section, si, ci, card)"
+                (click)="launchGuided(section, si, ci, card)"
+                [attr.aria-disabled]="isPending(section, si, ci, card)"
                 [attr.aria-label]="(card.titleKey | translate) + ': ' + (card.ctaKey | translate)"
               >
                 <span class="material-symbols-rounded" aria-hidden="true">{{
-                  (isPending(section, si, card) ? 'lock' : card.ctaIcon ?? 'login') | msIcon
+                  (isPending(section, si, ci, card) ? 'lock' : card.ctaIcon ?? 'login') | msIcon
                 }}</span>
                 {{ card.ctaKey | translate }}
               </button>
-              @if (isPending(section, si, card)) {
+              @if (isPending(section, si, ci, card)) {
                 <p class="landing-card__hint">{{ 'LANDING.CARD.SELECT_FIRST' | translate }}</p>
               }
             } @else {
