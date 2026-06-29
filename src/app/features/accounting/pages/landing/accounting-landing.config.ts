@@ -146,6 +146,37 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
       ],
     },
     {
+      titleKey: 'ACCOUNTING.LANDING.SECTION.CREDIT_MEMOS.TITLE',
+      descriptionKey: 'ACCOUNTING.LANDING.SECTION.CREDIT_MEMOS.DESCRIPTION',
+      recordKind: 'creditMemo',
+      cards: [
+        {
+          kind: 'direct',
+          icon: 'request_quote',
+          titleKey: 'ACCOUNTING.LANDING.CARD.CREDIT_MEMOS_LIST.TITLE',
+          descriptionKey: 'ACCOUNTING.LANDING.CARD.CREDIT_MEMOS_LIST.DESCRIPTION',
+          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/accounting/credit-memos',
+        },
+        {
+          kind: 'direct',
+          icon: 'post_add',
+          titleKey: 'ACCOUNTING.LANDING.CARD.CREDIT_MEMOS_NEW.TITLE',
+          descriptionKey: 'ACCOUNTING.LANDING.CARD.CREDIT_MEMOS_NEW.DESCRIPTION',
+          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/accounting/credit-memos/new',
+        },
+        {
+          kind: 'guided',
+          icon: 'description',
+          titleKey: 'ACCOUNTING.LANDING.CARD.CREDIT_MEMO_DETAIL.TITLE',
+          descriptionKey: 'ACCOUNTING.LANDING.CARD.CREDIT_MEMO_DETAIL.DESCRIPTION',
+          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_CREDIT_MEMO',
+          buildCommands: (id: string) => ['/app', 'accounting', 'credit-memos', id],
+        },
+      ],
+    },
+    {
       titleKey: 'ACCOUNTING.LANDING.SECTION.REPORTS.TITLE',
       descriptionKey: 'ACCOUNTING.LANDING.SECTION.REPORTS.DESCRIPTION',
       cards: [

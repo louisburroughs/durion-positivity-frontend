@@ -19,6 +19,7 @@ export type RecordKind =
   | 'event'
   | 'ruleset'
   | 'vendorPayment'
+  | 'creditMemo'
   | 'location'
   | 'role'
   | 'payment'

@@ -64,6 +64,7 @@
       "EVENT": { "LABEL": "Evento de ingesta", "PLACEHOLDER": "Ingresa el UUID del evento" },
       "RULESET": { "LABEL": "Conjunto de reglas", "PLACEHOLDER": "Ingresa el id del conjunto de reglas" },
       "VENDOR_PAYMENT": { "LABEL": "Pago a proveedor", "PLACEHOLDER": "Ingresa el id del pago a proveedor" },
+      "CREDIT_MEMO": { "LABEL": "Nota de crédito", "PLACEHOLDER": "Ingresa el id de la nota de crédito" },
       "LOCATION": { "LABEL": "Ubicación", "PLACEHOLDER": "Ingresa el id de la ubicación" },
       "ROLE": { "LABEL": "Rol", "PLACEHOLDER": "Ingresa el nombre del rol (p. ej. ROLE_MANAGER)" },
       "PAYMENT": { "LABEL": "Pago", "PLACEHOLDER": "Ingresa el id del pago (p. ej. PAY-00456)" },

@@ -19,6 +19,7 @@ export const RECORD_KINDS: Record<RecordKind, RecordKindMeta> = {
   event: { labelKey: 'LANDING.KIND.EVENT.LABEL', placeholderKey: 'LANDING.KIND.EVENT.PLACEHOLDER', nameSearch: false },
   ruleset: { labelKey: 'LANDING.KIND.RULESET.LABEL', placeholderKey: 'LANDING.KIND.RULESET.PLACEHOLDER', nameSearch: false },
   vendorPayment: { labelKey: 'LANDING.KIND.VENDOR_PAYMENT.LABEL', placeholderKey: 'LANDING.KIND.VENDOR_PAYMENT.PLACEHOLDER', nameSearch: false },
+  creditMemo: { labelKey: 'LANDING.KIND.CREDIT_MEMO.LABEL', placeholderKey: 'LANDING.KIND.CREDIT_MEMO.PLACEHOLDER', nameSearch: false },
   location: { labelKey: 'LANDING.KIND.LOCATION.LABEL', placeholderKey: 'LANDING.KIND.LOCATION.PLACEHOLDER', nameSearch: false },
   role: { labelKey: 'LANDING.KIND.ROLE.LABEL', placeholderKey: 'LANDING.KIND.ROLE.PLACEHOLDER', nameSearch: false },
   payment: { labelKey: 'LANDING.KIND.PAYMENT.LABEL', placeholderKey: 'LANDING.KIND.PAYMENT.PLACEHOLDER', nameSearch: false },

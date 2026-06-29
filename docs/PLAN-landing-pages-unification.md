@@ -1,7 +1,7 @@
 # PLAN — Positivity Landing Pages Unification
 
-**Status:** In progress
-**Branch:** `feat/landing-pages-unification`
+**Status:** Waves 0–4 complete (all 11 domain landings migrated)
+**Branch:** `feat/landing-pages-unification` (Wave 0) → `feat/landing-wave1-billing-crm` (Waves 1–4, contains all)
 **Design source:** `../durion/Positivity Landing Pages.dc.html` (data-driven comp, 10 domain "pages")
 **Owner:** frontend
 
@@ -160,3 +160,35 @@ Each domain shrinks to a **config file + thin component** supplying its `Landing
 - **People SDK regen timing:** if People needs a backend change, land SDK on `.sdk-src` main first
   or the FE PR fails (FE CI SDK-precedence gotcha).
 - **Theme:** comp is dark-only; light mode must be derived, not dropped.
+
+---
+
+## 9. Progress log
+
+- **Wave 0** (`5905455`): shared kit (models, record-kind registry, `LandingRecordFinder`,
+  `LandingPageComponent`) + workexec migrated. Kit maps comp hex to existing theme tokens
+  (`--brand-accent`, `--durion-gold-300`, …) so light mode is preserved.
+- **Wave 1** (`09b9e99`): billing + crm. Kit gained an optional per-card **secondary input**
+  (two-id cards: void/refund payment id, receipt id). CRM adapts `PartyDetail → RecordHit`.
+- **Wave 2** (`b08294e`): people. Backend question closed — the people directory `q` matches
+  name/email/username only (no employee-number search); section hints say "Search by name".
+  No backend/SDK change needed; the whole effort is frontend-only.
+- **Wave 3** (`ad0f190`): accounting, admin, inventory, location, product, shopmgmt. Kit gained
+  per-section `idMode` (inventory workorder) + `vendorPayment` record kind. Accounting Payments
+  split into two single-kind sections.
+- **Wave 4** (this commit): restored accounting Credit Memos (+ `creditMemo` kind/i18n);
+  removed 3 now-orphaned finder components (`person-lookup`, `workexec-search-typeahead`,
+  `billing-invoice-finder`); regenerated `qps-ploc` pseudo-locale; `i18n:check` passes
+  (en/es/fr aligned at 3316 keys). All 11 domain landings + kit: 39 specs pass.
+
+### Deliberate deviations from prior behaviour
+- Bulk-import "active import" live badges dropped on crm/people/product/location (not in comp).
+- `PersonLookup`'s paste-a-raw-id-then-launch path not reproduced (finder commits on selection).
+
+### Known pre-existing (not introduced here)
+- Full-project `ng lint` reports ~145 errors (unused `idempotencyKey`/`partId` args, etc.) in
+  unrelated services/specs/templates. All landing files added/changed in this work lint clean.
+
+### Remaining (optional follow-ups)
+- a11y audit pass on the kit in a real browser (keyboard nav verified by unit tests only).
+- Consolidate the two branches into one PR; the marketing `landing-page.component` stays as-is.
