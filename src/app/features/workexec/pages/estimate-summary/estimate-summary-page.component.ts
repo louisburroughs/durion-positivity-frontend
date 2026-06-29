@@ -51,7 +51,7 @@ export class EstimateSummaryPageComponent implements OnInit {
         this.summary.set(summary);
         this.pageState.set('ready');
       },
-      error: err => {
+      error: _err => {
         // Fall back to just loading summary if snapshot fails (may already exist)
         this.workexec.getEstimateSummary(this.estimateId)
           .pipe(takeUntilDestroyed(this.destroyRef))

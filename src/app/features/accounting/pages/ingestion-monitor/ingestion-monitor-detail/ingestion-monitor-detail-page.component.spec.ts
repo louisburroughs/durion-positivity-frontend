@@ -99,7 +99,7 @@ describe('IngestionMonitorDetailPageComponent', () => {
         of({ processingStatus: 'RECEIVED' }),
       );
       fixture.componentInstance.retryState.set('polling');
-      (fixture.componentInstance as any).pollRetryOutcome();
+      fixture.componentInstance['pollRetryOutcome']();
       vi.advanceTimersByTime(3000);
       expect(fixture.componentInstance.retryState()).toBe('error');
     });

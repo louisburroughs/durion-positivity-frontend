@@ -44,7 +44,7 @@ describe('OperationalCostComponent', () => {
     });
 
     it('should not have netTotalInput property', () => {
-      expect((component as any).netTotalInput).toBeUndefined();
+      expect((component as { netTotalInput?: unknown }).netTotalInput).toBeUndefined();
     });
   });
 });

@@ -10,6 +10,8 @@ import {
   ProductMSRPAPIService,
 } from '@durion-sdk/catalog';
 import { ProductCatalogService } from './product-catalog.service';
+import type { Product, ProductSummary, LifecycleStateTransition } from '../models/product.models';
+import type { GuardrailPolicy, LocationPriceOverride } from '../models/pricing.models';
 
 describe('ProductCatalogService', () => {
   let service: ProductCatalogService;
@@ -71,10 +73,10 @@ describe('ProductCatalogService', () => {
       const sdkItem = { id: 'p1', sku: 'SKU-001', name: 'Widget' };
       productsSdkStub.searchProducts.mockReturnValueOnce(of({ data: [sdkItem] }));
 
-      let result: unknown;
+      let result: ProductSummary[] | undefined;
       service.searchProducts('widget').subscribe(r => (result = r));
 
-      expect((result as any[]).length).toBe(1);
+      expect(result?.length).toBe(1);
     });
   });
 
@@ -82,10 +84,10 @@ describe('ProductCatalogService', () => {
 
   describe('createProduct()', () => {
     it('calls productsSdk.createProduct with the product payload', () => {
-      const payload = { name: 'New Product', sku: 'SKU-NEW', category: 'Parts' };
+      const payload: Partial<Product> = { name: 'New Product', sku: 'SKU-NEW', category: 'Parts' };
       productsSdkStub.createProduct.mockReturnValueOnce(of({ id: 'p-new', name: 'New Product', sku: 'SKU-NEW' }));
 
-      service.createProduct(payload as any).subscribe();
+      service.createProduct(payload).subscribe();
 
       expect(productsSdkStub.createProduct).toHaveBeenCalledWith({
         name: 'New Product',
@@ -121,10 +123,10 @@ describe('ProductCatalogService', () => {
 
   describe('setLifecycleState()', () => {
     it('calls productsSdk.setLifecycleState with productId and transition', () => {
-      const transition = { targetState: 'INACTIVE', effectiveAt: '2026-03-01T00:00:00Z' };
+      const transition: LifecycleStateTransition = { targetState: 'INACTIVE', effectiveAt: '2026-03-01T00:00:00Z' };
       productsSdkStub.setLifecycleState.mockReturnValueOnce(of({ productId: 'prod-123', currentState: 'INACTIVE' }));
 
-      service.setLifecycleState('prod-123', transition as any).subscribe();
+      service.setLifecycleState('prod-123', transition).subscribe();
 
       expect(productsSdkStub.setLifecycleState).toHaveBeenCalledWith('prod-123', {
         lifecycleState: 'INACTIVE',
@@ -173,10 +175,10 @@ describe('ProductCatalogService', () => {
 
   describe('createLocationPriceOverride()', () => {
     it('calls productsSdk.createLocationPriceOverride with the override payload', () => {
-      const override = { locationId: 'loc-1', productSku: 'SKU-001', overridePrice: 9.99 };
+      const override: Partial<LocationPriceOverride> = { locationId: 'loc-1', productSku: 'SKU-001', overridePrice: 9.99 };
       productsSdkStub.createLocationPriceOverride.mockReturnValueOnce(of({ id: 'ovr-1', locationId: 'loc-1', overridePrice: 9.99 }));
 
-      service.createLocationPriceOverride(override as any).subscribe();
+      service.createLocationPriceOverride(override).subscribe();
 
       expect(productsSdkStub.createLocationPriceOverride).toHaveBeenCalledWith({
         locationId: 'loc-1',
@@ -192,16 +194,21 @@ describe('ProductCatalogService', () => {
 
   describe('upsertLocationGuardrailPolicy()', () => {
     it('calls productsSdk.upsertLocationGuardrailPolicy with the policy', () => {
-      const policy = { locationId: 'loc-1', minPricePercent: 0.85, maxPricePercent: 1.15 };
+      const policy: GuardrailPolicy = {
+        locationId: 'loc-1',
+        minPricePercent: 0.85,
+        maxPricePercent: 1.15,
+        requiresApprovalAbovePercent: 0.5,
+      };
       productsSdkStub.upsertLocationGuardrailPolicy.mockReturnValueOnce(of({ scopeId: 'loc-1', id: 'guardrail-1' }));
 
-      service.upsertLocationGuardrailPolicy(policy as any).subscribe();
+      service.upsertLocationGuardrailPolicy(policy).subscribe();
 
       expect(productsSdkStub.upsertLocationGuardrailPolicy).toHaveBeenCalledWith({
         scopeId: 'loc-1',
         minMarginPercent: 0.85,
         maxDiscountPercent: 1.15,
-        autoApprovalThresholdPercent: undefined,
+        autoApprovalThresholdPercent: 0.5,
       });
     });
   });

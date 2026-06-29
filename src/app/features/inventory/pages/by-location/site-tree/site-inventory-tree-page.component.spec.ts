@@ -3,7 +3,7 @@ import { Location } from '@angular/common';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { TranslateModule } from '@ngx-translate/core';
-import { of, Subject, throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { SiteInventoryTreePageComponent, TreeRow, flattenNodes, collectNegativeAvailablePaths } from './site-inventory-tree-page.component';
 import { InventoryRollupApiService } from '../../../services/inventory-rollup.service';
 import { SkuFilterComponent } from '../../../components/sku-filter/sku-filter.component';
@@ -273,7 +273,6 @@ describe('SiteInventoryTreePageComponent', () => {
 
       // Manually expand a node
       comp.expandedIds.update(s => new Set([...s, 'shelf-2']));
-      const expandedBefore = new Set(comp.expandedIds());
 
       // Change SKU
       comp.onSkuChange('SKU-99');

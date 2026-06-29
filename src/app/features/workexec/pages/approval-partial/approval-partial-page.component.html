@@ -84,7 +84,7 @@
         <output class="success-panel">
           <span class="success-heading">{{ 'WORKEXEC.APPROVAL.PARTIAL.SUCCESS_TITLE' | translate }}</span>
           <span class="estimate-meta">{{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span></span>
-          @if (estimate()!.total != null) { <span>{{ 'WORKEXEC.APPROVAL.PARTIAL.APPROVED_TOTAL' | translate: { total: (estimate()!.total | currency) } }}</span> }
+          @if (estimate()!.total !== undefined) { <span>{{ 'WORKEXEC.APPROVAL.PARTIAL.APPROVED_TOTAL' | translate: { total: (estimate()!.total | currency) } }}</span> }
         </output>
       }
     </div>

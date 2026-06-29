@@ -7,7 +7,6 @@ import { CreditMemoDetailPageComponent } from './credit-memo-detail-page.compone
 
 describe('CreditMemoDetailPageComponent', () => {
   let fixture: ComponentFixture<CreditMemoDetailPageComponent>;
-  let component: CreditMemoDetailPageComponent;
 
   const accountingServiceStub = {
     getCreditMemo: vi.fn().mockReturnValue(
@@ -38,7 +37,6 @@ describe('CreditMemoDetailPageComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(CreditMemoDetailPageComponent);
-    component = fixture.componentInstance;
   });
 
   it('renders loading state initially', () => {

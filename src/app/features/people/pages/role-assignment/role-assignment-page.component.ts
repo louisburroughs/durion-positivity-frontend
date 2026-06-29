@@ -15,6 +15,7 @@ import { PeopleService } from '../../services/people.service';
 export class RoleAssignmentPageComponent implements OnInit {
   private readonly peopleService = inject(PeopleService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
 
   personUuid = signal('');
   assignments = signal<UserRoleDto[]>([]);
@@ -34,10 +35,6 @@ export class RoleAssignmentPageComponent implements OnInit {
     !!this.selectedRoleCode() &&
     (this.scopeType() === 'GLOBAL' || !!this.locationId()),
   );
-
-  constructor(
-    private readonly route: ActivatedRoute,
-  ) { }
 
   ngOnInit(): void {
     this.route.params.pipe(

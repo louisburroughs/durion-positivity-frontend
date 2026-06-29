@@ -16,7 +16,6 @@ const testItems: NavItem[] = [
 
 describe('NavComponent', () => {
   let fixture: ComponentFixture<NavComponent>;
-  let component: NavComponent;
 
   const navRegistryServiceStub: Pick<NavigationRegistryService, 'visibleNavItems'> = {
     visibleNavItems: signal(testItems),
@@ -36,7 +35,6 @@ describe('NavComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(NavComponent);
-    component = fixture.componentInstance;
     fixture.detectChanges();
   });
 

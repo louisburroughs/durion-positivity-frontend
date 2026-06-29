@@ -4,6 +4,7 @@ import { Subject, of, throwError } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { ProductListComponent } from './product-list.component';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
+import { ProductSummary } from '../../../models/product.models';
 
 describe('ProductListComponent', () => {
   let fixture: ComponentFixture<ProductListComponent>;
@@ -50,7 +51,7 @@ describe('ProductListComponent', () => {
   // ── State: loading ────────────────────────────────────────────────────────────
 
   it('transitions to "loading" when a non-empty query is submitted', fakeAsync(() => {
-    const pending$ = new Subject<any>();
+    const pending$ = new Subject<ProductSummary[]>();
     mockCatalog.searchProducts.mockReturnValue(pending$);
 
     component.query.set('widget');

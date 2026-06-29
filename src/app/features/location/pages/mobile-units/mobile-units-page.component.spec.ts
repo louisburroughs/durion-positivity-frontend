@@ -57,7 +57,7 @@ describe('MobileUnitsPageComponent', () => {
   it('filters units by baseLocationId on selection and writes the query param', () => {
     const navSpy = vi.spyOn(TestBed.inject(Router), 'navigate');
     component.onLocationSelected('loc-1');
-    expect(component.mobileUnits().map((u: any) => u.id)).toEqual(['u-1', 'u-3']);
+    expect((component.mobileUnits() as Array<{ id: string }>).map(u => u.id)).toEqual(['u-1', 'u-3']);
     expect(navSpy).toHaveBeenCalledWith([], expect.objectContaining({
       queryParams: { locationId: 'loc-1' },
       queryParamsHandling: 'merge',
@@ -160,6 +160,6 @@ describe('MobileUnitsPageComponent (deep link)', () => {
   it('loads and filters units on init from a deep-linked query param', () => {
     expect(component.locationId()).toBe('loc-1');
     expect(locationServiceStub.listMobileUnits).toHaveBeenCalled();
-    expect(component.mobileUnits().map((u: any) => u.baseLocationId)).toEqual(['loc-1', 'loc-1']);
+    expect((component.mobileUnits() as Array<{ baseLocationId: string }>).map(u => u.baseLocationId)).toEqual(['loc-1', 'loc-1']);
   });
 });

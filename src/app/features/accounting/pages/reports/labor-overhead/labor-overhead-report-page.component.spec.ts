@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subject, of, throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { LaborOverheadReport } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
 import { LocationService } from '../../../../location/services/location.service';

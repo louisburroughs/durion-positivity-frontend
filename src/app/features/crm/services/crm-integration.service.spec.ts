@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { AccountingEventsService } from '@durion-sdk/accounting';
+import { AccountingEventsService, EventProcessingLogEntry } from '@durion-sdk/accounting';
 import { CrmIntegrationService } from './crm-integration.service';
 import type {
   AccountingEventListResponse,
@@ -39,8 +39,8 @@ describe('CrmIntegrationService', () => {
       const sdkPage = { content: [], totalElements: 0 };
       accountingEventsStub.listAccountingEvents.mockReturnValueOnce(of(sdkPage));
 
-      let result: any;
-      service.listEvents().subscribe((r: any) => { result = r; });
+      let result!: AccountingEventListResponse;
+      service.listEvents().subscribe(r => { result = r; });
 
       expect(accountingEventsStub.listAccountingEvents).toHaveBeenCalledOnce();
       // arg 0 is pageable { page: 0, size: 20 }, arg 1 is organizationId (undefined)
@@ -66,10 +66,10 @@ describe('CrmIntegrationService', () => {
       };
       accountingEventsStub.listAccountingEvents.mockReturnValueOnce(of(sdkPage));
 
-      let result: any;
+      let result!: AccountingEventListResponse;
       service
         .listEvents({ organizationId: 'org-abc', status: 'PENDING', page: 0, size: 20 })
-        .subscribe((r: any) => { result = r; });
+        .subscribe(r => { result = r; });
 
       expect(accountingEventsStub.listAccountingEvents).toHaveBeenCalledOnce();
       const args = accountingEventsStub.listAccountingEvents.mock.calls[0];
@@ -92,8 +92,8 @@ describe('CrmIntegrationService', () => {
       };
       accountingEventsStub.getEvent.mockReturnValueOnce(of(response));
 
-      let result: any;
-      service.getEvent('ev-002').subscribe((r: any) => { result = r; });
+      let result!: AccountingEventResponse;
+      service.getEvent('ev-002').subscribe(r => { result = r; });
 
       expect(accountingEventsStub.getEvent).toHaveBeenCalledWith('ev-002');
       expect(result.eventId).toBe('ev-002');
@@ -116,8 +116,8 @@ describe('CrmIntegrationService', () => {
       ];
       accountingEventsStub.getReprocessingHistory.mockReturnValueOnce(of(response));
 
-      let result: any;
-      service.getReprocessingHistory('ev-003').subscribe((r: any) => { result = r; });
+      let result!: ReprocessingAttemptHistoryResponse[];
+      service.getReprocessingHistory('ev-003').subscribe(r => { result = r; });
 
       expect(accountingEventsStub.getReprocessingHistory).toHaveBeenCalledWith('ev-003');
       expect(result).toHaveLength(1);
@@ -127,8 +127,8 @@ describe('CrmIntegrationService', () => {
     it('returns an empty array when the event has no reprocessing history', () => {
       accountingEventsStub.getReprocessingHistory.mockReturnValueOnce(of([]));
 
-      let result: any;
-      service.getReprocessingHistory('ev-no-history').subscribe((r: any) => { result = r; });
+      let result!: ReprocessingAttemptHistoryResponse[];
+      service.getReprocessingHistory('ev-no-history').subscribe(r => { result = r; });
 
       expect(result).toHaveLength(0);
     });
@@ -141,8 +141,8 @@ describe('CrmIntegrationService', () => {
       const logEntries = [{ timestamp: '2026-01-04T00:00:00Z', message: 'Processed successfully.' }];
       accountingEventsStub.getEventProcessingLog.mockReturnValueOnce(of(logEntries));
 
-      let result: any;
-      service.getEventProcessingLog('ev-004').subscribe((r: any) => { result = r; });
+      let result!: EventProcessingLogEntry[];
+      service.getEventProcessingLog('ev-004').subscribe(r => { result = r; });
 
       expect(accountingEventsStub.getEventProcessingLog).toHaveBeenCalledWith('ev-004');
       expect(result).toHaveLength(1);

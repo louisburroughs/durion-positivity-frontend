@@ -46,7 +46,7 @@ export class LocationService {
     return this.locationApi.getAllLocations() as Observable<unknown[]>;
   }
 
-  createLocation(body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
+  createLocation(body: Record<string, unknown>, _idempotencyKey?: string): Observable<unknown> {
     const request = this.toLocationRequest(body);
     return this.locationApi.createLocation(request) as Observable<unknown>;
   }
@@ -59,7 +59,7 @@ export class LocationService {
     return this.locationApi.patchLocation(locationId, patch as LocationPatchRequest) as Observable<unknown>;
   }
 
-  updateLocation(locationId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
+  updateLocation(locationId: string, body: Record<string, unknown>, _idempotencyKey?: string): Observable<unknown> {
     const request = this.toLocationRequest(body);
     return this.locationApi.updateLocation(locationId, request) as Observable<unknown>;
   }
@@ -84,7 +84,7 @@ export class LocationService {
   createStorageLocation(
     siteId: string,
     body: Record<string, unknown>,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<unknown> {
     const request: StorageLocationRequest = {
       name: this.asOptionalString(body['name']) as string,
@@ -103,7 +103,7 @@ export class LocationService {
     siteId: string,
     storageLocationId: string,
     body: Record<string, unknown>,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<unknown> {
     const patch: StorageLocationPatchRequest = {
       status: 'INACTIVE' as StorageLocationPatchRequest['status'],
@@ -112,7 +112,7 @@ export class LocationService {
     return this.storageLocationApi.patch2(siteId, storageLocationId, patch) as Observable<unknown>;
   }
 
-  configureLocationDefaults(locationId: string, body: unknown, idempotencyKey?: string): Observable<unknown> {
+  configureLocationDefaults(locationId: string, body: unknown, _idempotencyKey?: string): Observable<unknown> {
     return this.siteDefaultsApi.configureDefaults(locationId, body as SiteDefaultsRequest) as Observable<unknown>;
   }
 
@@ -122,7 +122,7 @@ export class LocationService {
     return (this.bayApi.listBays(locationId) as Observable<unknown>).pipe(map(toContentArray));
   }
 
-  createBay(locationId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
+  createBay(locationId: string, body: Record<string, unknown>, _idempotencyKey?: string): Observable<unknown> {
     const request = this.toBayRequest(body);
     return this.bayApi.createBay(locationId, request) as Observable<unknown>;
   }
@@ -143,7 +143,7 @@ export class LocationService {
     return (this.mobileUnitApi.listMobileUnits(page, size) as Observable<unknown>).pipe(map(toContentArray));
   }
 
-  createMobileUnit(body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
+  createMobileUnit(body: Record<string, unknown>, _idempotencyKey?: string): Observable<unknown> {
     const request = this.toMobileUnitRequest(body);
     return this.mobileUnitApi.createMobileUnit(request) as Observable<unknown>;
   }

@@ -5,6 +5,7 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ApprovalPartialPageComponent } from './approval-partial-page.component';
+import { LineItemApprovalDto } from '../../models/workexec.models';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
 
@@ -66,7 +67,7 @@ describe('ApprovalPartialPageComponent [Story 269]', () => {
     component.submitPartialApproval();
     const req = http.expectOne(`${BASE}/v1/workorders/estimates/est-123/approval`);
     expect(req.request.body['lineItemApprovals']).toHaveLength(2);
-    const declined = req.request.body['lineItemApprovals'].find((l: any) => l.lineItemId === 'item-2');
+    const declined = req.request.body['lineItemApprovals'].find((l: LineItemApprovalDto) => l.lineItemId === 'item-2');
     expect(declined.approved).toBe(false);
     expect(declined.rejectionReason).toBe('Too expensive');
     req.flush({ id: 'est-123', status: 'APPROVED', customerId: 'c', vehicleId: 'v' });

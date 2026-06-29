@@ -188,7 +188,7 @@
   }
 
   @if (showDeactivateDialog()) {
-  <dialog class="modal-backdrop" open (keydown.escape)="cancelDeactivate()" aria-modal="true"
+  <dialog class="modal-backdrop" open tabindex="-1" (keydown.escape)="cancelDeactivate()" aria-modal="true"
     aria-labelledby="deactivate-dialog-title" data-testid="deactivate-dialog">
     <div class="modal-panel">
       <h2 id="deactivate-dialog-title">Deactivate Storage Location</h2>

@@ -7,7 +7,6 @@ import { PostingRulesDetailPageComponent } from './posting-rules-detail-page.com
 
 describe('PostingRulesDetailPageComponent', () => {
   let fixture: ComponentFixture<PostingRulesDetailPageComponent>;
-  let component: PostingRulesDetailPageComponent;
 
   const accountingServiceStub = {
     getPostingRuleSet: vi.fn().mockReturnValue(
@@ -36,7 +35,6 @@ describe('PostingRulesDetailPageComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(PostingRulesDetailPageComponent);
-    component = fixture.componentInstance;
   });
 
   it('renders loading state initially', () => {

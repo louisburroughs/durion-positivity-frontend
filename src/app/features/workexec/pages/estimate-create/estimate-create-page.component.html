@@ -37,7 +37,9 @@
         @if (showCustomerSuggestions() && customerSuggestions().length > 0) {
           <ul class="typeahead-suggestions" role="listbox">
             @for (p of customerSuggestions(); track p.partyId) {
-              <li class="typeahead-item" role="option" (mousedown)="selectCustomer(p)">
+              <li class="typeahead-item" role="option"
+                [attr.aria-selected]="form.controls.customerId.value === p.partyId"
+                (mousedown)="selectCustomer(p)">
                 <span class="suggestion-primary">{{ customerLabel(p) }}</span>
                 @if (p.customerNumber) {
                   <span class="suggestion-secondary">{{ p.customerNumber }}</span>

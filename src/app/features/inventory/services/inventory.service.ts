@@ -25,6 +25,34 @@ import {
   StorageLocation,
 } from '../models/inventory.models';
 
+/**
+ * Minimal shapes of the paged reference-data DTOs. The generated inventory SDK
+ * types these list endpoints loosely as `Observable<string>`, so the concrete
+ * response fields are described here and narrowed via {@link pageContent}.
+ */
+interface InventoryLocationDto {
+  locationId?: string;
+  name?: string;
+  active?: boolean;
+}
+
+interface InventoryStorageLocationDto {
+  storageLocationId?: string;
+  locationId?: string;
+  code?: string;
+  active?: boolean;
+}
+
+interface InventoryLocationZoneDto {
+  zoneId?: string;
+  zoneName?: string;
+  locationId?: string;
+}
+
+interface SpringPage<T> {
+  content?: T[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class InventoryDomainService {
   private readonly api = inject(ApiBaseService);
@@ -42,8 +70,8 @@ export class InventoryDomainService {
   }
 
   getLocations(): Observable<LocationRef[]> {
-    return this.refDataSdk.listInventoryLocations({ size: 200 }).pipe(
-      map((page: any) => ((page?.content ?? []) as Array<any>).map(dto => ({
+    return (this.refDataSdk.listInventoryLocations({ size: 200 }) as Observable<unknown>).pipe(
+      map(page => pageContent<InventoryLocationDto>(page).map(dto => ({
         locationId: dto.locationId ?? '',
         name: dto.name ?? '',
         status: dto.active ? 'ACTIVE' : 'INACTIVE',
@@ -52,8 +80,8 @@ export class InventoryDomainService {
   }
 
   getStorageLocations(locationId: string): Observable<StorageLocation[]> {
-    return this.refDataSdk.listInventoryStorageLocations({ size: 500 }, locationId).pipe(
-      map((page: any) => ((page?.content ?? []) as Array<any>).map(dto => ({
+    return (this.refDataSdk.listInventoryStorageLocations({ size: 500 }, locationId) as Observable<unknown>).pipe(
+      map(page => pageContent<InventoryStorageLocationDto>(page).map(dto => ({
         storageLocationId: dto.storageLocationId ?? '',
         locationId: dto.locationId ?? '',
         name: dto.code ?? '',
@@ -64,8 +92,8 @@ export class InventoryDomainService {
   }
 
   getLocationZones(locationId: string): Observable<LocationZone[]> {
-    return this.refDataSdk.listInventoryLocationZones({ size: 500 }, locationId).pipe(
-      map((page: any) => ((page?.content ?? []) as Array<any>).map(dto => ({
+    return (this.refDataSdk.listInventoryLocationZones({ size: 500 }, locationId) as Observable<unknown>).pipe(
+      map(page => pageContent<InventoryLocationZoneDto>(page).map(dto => ({
         zoneId: dto.zoneId ?? '',
         zoneName: dto.zoneName ?? '',
         locationId: dto.locationId ?? '',
@@ -153,4 +181,13 @@ export class InventoryDomainService {
       request,
     );
   }
+}
+
+/**
+ * Extracts the `content` array from a Spring Data page response. The inventory
+ * SDK types these list endpoints as `string`, so the body is received as
+ * `unknown` and narrowed here. Returns an empty array when absent.
+ */
+function pageContent<T>(page: unknown): T[] {
+  return (page as SpringPage<T>).content ?? [];
 }

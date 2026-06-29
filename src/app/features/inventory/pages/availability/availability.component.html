@@ -28,7 +28,7 @@
           @if (showProductSuggestions() && productSuggestions().length > 0) {
             <ul class="typeahead-suggestions" role="listbox">
               @for (p of productSuggestions(); track p.productId) {
-                <li class="typeahead-item" role="option" (mousedown)="selectProduct(p)">
+                <li class="typeahead-item" role="option" aria-selected="false" (mousedown)="selectProduct(p)">
                   <span class="suggestion-primary">{{ p.name }}</span>
                   <span class="suggestion-secondary">{{ p.sku }}</span>
                 </li>
@@ -59,7 +59,7 @@
           @if (showLocationSuggestions() && locationSuggestions().length > 0) {
             <ul class="typeahead-suggestions" role="listbox">
               @for (loc of locationSuggestions(); track loc.id) {
-                <li class="typeahead-item" role="option" (mousedown)="selectLocation(loc)">
+                <li class="typeahead-item" role="option" aria-selected="false" (mousedown)="selectLocation(loc)">
                   <span class="suggestion-primary">{{ loc.name }}</span>
                   @if (loc.code) {
                     <span class="suggestion-secondary">{{ loc.code }}</span>

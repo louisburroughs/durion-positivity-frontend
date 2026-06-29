@@ -35,21 +35,6 @@ type ApiDomainType =
   | 'VEHICLE'
   | 'VEHICLE_FITMENT';
 
-interface ApiBulkLoadJob {
-  id: string;
-  locationId?: string | null;
-  fileName: string;
-  domainType: ApiDomainType;
-  status: string;
-  totalRows?: number | null;
-  processedRows?: number | null;
-  successCount?: number | null;
-  failureCount?: number | null;
-  createdAt?: string;
-  startedAt?: string;
-  completedAt?: string;
-}
-
 interface ApiAuditRecord {
   id: string;
   jobId: string;

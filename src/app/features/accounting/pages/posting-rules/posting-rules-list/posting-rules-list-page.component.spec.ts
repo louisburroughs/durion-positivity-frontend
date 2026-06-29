@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { Subject, of, throwError } from 'rxjs';
+import { RuleSetStatus } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
 import { PostingRulesListPageComponent } from './posting-rules-list-page.component';
 
@@ -81,7 +82,7 @@ describe('PostingRulesListPageComponent', () => {
       name: 'Invoice Rules',
       eventType: 'InvoiceIssued',
       latestVersionNumber: 1,
-      latestState: 'PUBLISHED' as any,
+      latestState: RuleSetStatus.Published,
     });
     expect(spy).toHaveBeenCalledWith(['/app/accounting/posting-rules', 'rs-99']);
   });
@@ -96,7 +97,7 @@ describe('PostingRulesListPageComponent', () => {
       name: 'Draft',
       eventType: 'InvoiceIssued',
       latestVersionNumber: 0,
-      latestState: 'DRAFT' as any,
+      latestState: RuleSetStatus.Draft,
     });
     expect(spy).not.toHaveBeenCalled();
   });

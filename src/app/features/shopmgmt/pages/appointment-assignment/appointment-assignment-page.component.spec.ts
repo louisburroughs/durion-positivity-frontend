@@ -28,8 +28,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
-import { Subject, of, throwError } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
+import { Subject, of } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { AppointmentAssignmentPageComponent } from './appointment-assignment-page.component';
 import { TranslateModule } from '@ngx-translate/core';

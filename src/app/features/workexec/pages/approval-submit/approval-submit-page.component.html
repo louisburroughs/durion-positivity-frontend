@@ -20,7 +20,7 @@
           {{ 'WORKEXEC.APPROVAL.COMMON.STATUS_INLINE' | translate }} <span class="status-chip">{{ estimate()!.status }}</span>
           <span class="audit-meta">{{ 'WORKEXEC.APPROVAL.SUBMIT.CREATED_BY' | translate: { by: estimate()!.createdByUserId } }}</span>
         </p>
-        @if (estimate()!.total != null) {
+        @if (estimate()!.total !== undefined) {
           <p class="estimate-total">{{ 'WORKEXEC.APPROVAL.COMMON.TOTAL_INLINE' | translate }} <strong>{{ estimate()!.total | currency }}</strong></p>
         }
       </div>

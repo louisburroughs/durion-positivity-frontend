@@ -19,6 +19,7 @@ import { CrmIntegrationService } from '../../services/crm-integration.service';
 })
 export class IntegrationEventsPageComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly crmIntegrationService = inject(CrmIntegrationService);
   private readonly selectedEventId$ = new Subject<string>();
 
   events = signal<AccountingEventListItem[]>([]);
@@ -28,8 +29,6 @@ export class IntegrationEventsPageComponent implements OnInit {
   loading = signal(false);
   errorState = signal<'none' | '403' | 'error'>('none');
   detailErrorState = signal<string | null>(null);
-
-  constructor(private readonly crmIntegrationService: CrmIntegrationService) { }
 
   ngOnInit(): void {
     this.loading.set(true);

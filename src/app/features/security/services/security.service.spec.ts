@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { PermissionRegistryService, RoleManagementService, UserAPIService } from '@durion-sdk/security';

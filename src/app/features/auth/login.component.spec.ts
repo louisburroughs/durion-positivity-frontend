@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
+import { TokenPairResponse } from '@durion-sdk/security';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { LoginComponent } from './login.component';
@@ -119,11 +120,11 @@ describe('LoginComponent', () => {
       fixture.detectChanges();
       const router = TestBed.inject(Router);
       const spy = vi.spyOn(router, 'navigateByUrl');
-      const subject = new Subject<any>();
+      const subject = new Subject<TokenPairResponse>();
       authServiceStub.login.mockReturnValueOnce(subject);
       component.form.setValue({ username: 'admin', password: /* test credential */ 'pass1' });
       component.submit();
-      subject.next({ accessToken: 'tok', refreshToken: 'rt', tokenType: 'Bearer' });
+      subject.next({ accessToken: 'tok', refreshToken: 'rt' });
 
       expect(spy).toHaveBeenCalledWith('/app/security');
     });
@@ -133,11 +134,11 @@ describe('LoginComponent', () => {
       fixture.detectChanges();
       const router = TestBed.inject(Router);
       const spy = vi.spyOn(router, 'navigateByUrl');
-      const subject = new Subject<any>();
+      const subject = new Subject<TokenPairResponse>();
       authServiceStub.login.mockReturnValueOnce(subject);
       component.form.setValue({ username: 'admin', password: /* test credential */ 'pass1' });
       component.submit();
-      subject.next({ accessToken: 'tok', refreshToken: 'rt', tokenType: 'Bearer' });
+      subject.next({ accessToken: 'tok', refreshToken: 'rt' });
 
       expect(spy).toHaveBeenCalledWith('/chat');
     });

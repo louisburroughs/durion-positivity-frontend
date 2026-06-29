@@ -33,6 +33,7 @@ import {
   ConsumePickedItemsRequest,
   ConsumptionResult,
   EstimateListItem,
+  EstimateResponse,
   FinalizeInvoiceResponse,
   PickConfirmRequest,
   PickExecuteLine,
@@ -230,7 +231,7 @@ describe('WorkexecService', () => {
   // ── Story 268 — Approval Expiration ──────────────────────────────────────
 
   it('[268] getEstimateById — returns expiresAt for expiration detection', () => {
-    let result: any;
+    let result: EstimateResponse | undefined;
     service.getEstimateById('est-expired').subscribe(r => (result = r));
     const r = http.expectOne(`${BASE}/v1/workorders/estimates/est-expired`);
     r.flush({
@@ -240,8 +241,8 @@ describe('WorkexecService', () => {
       customerId: 'c',
       vehicleId: 'v',
     });
-    expect(result.status).toBe('EXPIRED');
-    expect(result.expiresAt).toBeTruthy();
+    expect(result?.status).toBe('EXPIRED');
+    expect(result?.expiresAt).toBeTruthy();
   });
 
   // ── Idempotency-Key header forwarding ─────────────────────────────────────

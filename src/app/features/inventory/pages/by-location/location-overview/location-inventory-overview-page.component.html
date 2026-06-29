@@ -74,7 +74,7 @@
         }
         @if (locationPickerOpen() && filteredLocations().length === 0 && locationsLoaded()) {
         <ul id="loc-picker-listbox" class="picker-dropdown" role="listbox">
-          <li class="picker-option picker-no-results" role="option" aria-disabled="true">
+          <li class="picker-option picker-no-results" role="option" aria-disabled="true" aria-selected="false">
             {{ 'INVENTORY.BY_LOCATION.PICKER.NO_RESULTS' | translate }}
           </li>
         </ul>

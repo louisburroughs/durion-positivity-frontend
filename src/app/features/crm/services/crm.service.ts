@@ -282,7 +282,8 @@ export class CrmService {
   }
 
   upsertBillingRules(partyId: string, rules: Partial<BillingRules>): Observable<BillingRules> {
-    const { createdAt, updatedAt, ...payload } = rules;
+    // Strip server-set read-only fields before upsert (intentional omit).
+    const { createdAt: _createdAt, updatedAt: _updatedAt, ...payload } = rules;
     return this.accountsApi.upsertBillingRules(partyId, payload as UpsertBillingRulesRequest) as unknown as Observable<BillingRules>;
   }
 }

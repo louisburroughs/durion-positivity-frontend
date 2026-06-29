@@ -1,5 +1,5 @@
 
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -43,7 +43,7 @@ type SubmitState = 'idle' | 'submitting' | 'success' | 'error' | 'forbidden';
   templateUrl: './ingestion-submit-page.component.html',
   styleUrl: './ingestion-submit-page.component.css',
 })
-export class IngestionSubmitPageComponent implements OnInit {
+export class IngestionSubmitPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly accountingService = inject(AccountingService);
   private readonly destroyRef = inject(DestroyRef);
@@ -58,10 +58,6 @@ export class IngestionSubmitPageComponent implements OnInit {
     sourceSystem: [''],
     payload: ['', [jsonValidator()]],
   });
-
-  ngOnInit(): void {
-    // Permission visibility is backend-authoritative (403 response handling).
-  }
 
   submit(): void {
     if (this.state() === 'forbidden' || this.form.invalid) {

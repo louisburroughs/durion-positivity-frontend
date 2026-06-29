@@ -64,7 +64,7 @@
 
   @if (showCreateDialog()) {
   <dialog class="modal-backdrop" aria-modal="true" aria-labelledby="create-assignment-title"
-    aria-describedby="create-assignment-description" data-testid="create-dialog" open
+    aria-describedby="create-assignment-description" data-testid="create-dialog" open tabindex="0"
     (keydown.escape)="closeCreateDialog()">
     <div class="modal-panel">
       <h2 id="create-assignment-title">Create Location Assignment</h2>
