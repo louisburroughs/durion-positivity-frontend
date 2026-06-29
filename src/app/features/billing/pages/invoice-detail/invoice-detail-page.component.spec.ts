@@ -111,7 +111,8 @@ describe('InvoiceDetailPageComponent', () => {
         downloadUrl: 'https://cdn.example.com/invoice.pdf',
       })),
       elevate: vi.fn().mockReturnValue(of({ elevationToken: 'elev-001' })),
-      issueInvoice: vi.fn().mockReturnValue(of({ ...invoiceFixture, status: 'ISSUED' })),
+      // Backend finalize transitions DRAFT → FINALIZED (no ISSUED transition).
+      issueInvoice: vi.fn().mockReturnValue(of({ ...invoiceFixture, status: 'FINALIZED' })),
     };
     // Default: non-manager — exercises the manager-approval modal path.
     authServiceStub = { hasAnyRole: vi.fn().mockReturnValue(false) };
@@ -294,6 +295,34 @@ describe('InvoiceDetailPageComponent', () => {
     expect(component.issueState()).toBe('success');
     expect(component.issueSuccess()).toBe(true);
     expect(host.textContent).toContain('Invoice issued successfully. Documents available below.');
+  });
+
+  it('reloads the enriched detail after issuing — renders assigned number and resolved workorder', () => {
+    // ngOnInit loads a numberless draft; issuing must reload via GET, which carries the
+    // assigned invoice number plus enrichment (resolved workorderNumber, line-item types)
+    // that the thinner finalize response lacks. Guards against regressing to a raw UUID.
+    const draft: InvoiceDetail = { ...invoiceFixture, invoiceNumber: undefined, status: 'DRAFT' };
+    const finalized: InvoiceDetail = {
+      ...invoiceFixture,
+      status: 'FINALIZED',
+      invoiceNumber: 'INV-2026-777',
+      workOrderNumber: 'WO-777',
+      lineItems: [{ id: 'li1', description: 'Brake pads', quantity: 1, unitPrice: 50, lineTotal: 50, type: 'PART' }],
+    };
+    billingTransportStub.loadInvoiceDetail
+      .mockReturnValueOnce(of(draft))
+      .mockReturnValueOnce(of(finalized));
+
+    fixture.detectChanges();
+    component.initiateIssue();
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(billingTransportStub.loadInvoiceDetail).toHaveBeenCalledTimes(2);
+    expect(host.querySelector('#invoice-heading')?.textContent).toContain('INV-2026-777');
+    // Regression guard (#1): resolved workorder number, not the raw UUID.
+    expect(host.textContent).toContain('WO-777');
+    expect(host.textContent).not.toContain('wo-001');
   });
 
   it('renders translated page error copy when invoice loading fails', () => {

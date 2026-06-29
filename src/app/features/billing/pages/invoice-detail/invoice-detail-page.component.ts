@@ -203,8 +203,12 @@ export class InvoiceDetailPageComponent implements OnInit {
         next: () => {
           this.issueState.set('success');
           this.issueSuccess.set(true);
-          this.invoice.update(inv => inv ? { ...inv, status: 'ISSUED' } : inv);
-          this.loadArtifacts(this.invoiceId());
+          // Reload the full detail via GET rather than using the finalize response
+          // directly. GET carries the assigned invoice number (assigned at draft) plus
+          // enrichment the finalize payload lacks — the resolved workorderNumber and
+          // line-item types — so the summary/items don't regress to a raw UUID and
+          // lose their type chips after issuing. loadInvoice also refreshes artifacts.
+          this.loadInvoice(this.invoiceId());
         },
         error: (err) => {
           this.issueState.set('error');
