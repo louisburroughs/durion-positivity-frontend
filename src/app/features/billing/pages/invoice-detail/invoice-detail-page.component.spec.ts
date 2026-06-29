@@ -224,6 +224,45 @@ describe('InvoiceDetailPageComponent', () => {
     expect(billingTransportStub.elevate).not.toHaveBeenCalled();
   });
 
+  it('on successful elevate: stores token, closes modal, and issues with the token', () => {
+    billingTransportStub.loadInvoiceDetail.mockReturnValueOnce(of({
+      ...invoiceFixture,
+      issuancePolicy: { issuableNow: true, requiresElevation: true },
+    }));
+    billingTransportStub.elevate.mockReturnValueOnce(of({ elevationToken: 'elev-xyz' }));
+
+    fixture.detectChanges();
+    component.initiateIssue();
+    component.managerEmployeeNumber.set('EMP-0001');
+    component.elevate();
+    fixture.detectChanges();
+
+    expect(billingTransportStub.elevate).toHaveBeenCalledWith('EMP-0001', INVOICE_ID);
+    expect(component.elevationToken()).toBe('elev-xyz');
+    expect(component.showElevationModal()).toBe(false);
+    expect(billingTransportStub.issueInvoice).toHaveBeenCalledWith(INVOICE_ID, { elevationToken: 'elev-xyz' });
+  });
+
+  it('maps a 401 elevate error to NOT_AUTHORIZED and a non-401 error to GENERIC', () => {
+    billingTransportStub.loadInvoiceDetail.mockReturnValue(of({
+      ...invoiceFixture,
+      issuancePolicy: { issuableNow: true, requiresElevation: true },
+    }));
+
+    fixture.detectChanges();
+    component.initiateIssue();
+
+    component.managerEmployeeNumber.set('EMP-0001');
+    billingTransportStub.elevate.mockReturnValueOnce(throwError(() => ({ status: 401 })));
+    component.elevate();
+    expect(component.elevationError()).toBe('BILLING.INVOICE_DETAIL.ELEVATION.ERROR.NOT_AUTHORIZED');
+
+    component.managerEmployeeNumber.set('EMP-0001');
+    billingTransportStub.elevate.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    component.elevate();
+    expect(component.elevationError()).toBe('BILLING.INVOICE_DETAIL.ELEVATION.ERROR.GENERIC');
+  });
+
   it('skips the elevation modal and issues directly for a manager with override role', () => {
     authServiceStub.hasAnyRole.mockReturnValue(true);
     billingTransportStub.loadInvoiceDetail.mockReturnValueOnce(of({

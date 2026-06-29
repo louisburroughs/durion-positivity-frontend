@@ -232,11 +232,13 @@
             [value]="managerEmployeeNumber()"
             (input)="managerEmployeeNumber.set($any($event.target).value)"
             [attr.placeholder]="'BILLING.INVOICE_DETAIL.ELEVATION.MANAGER_NUMBER_PLACEHOLDER' | translate"
+            [attr.aria-invalid]="elevationError() ? 'true' : null"
+            [attr.aria-describedby]="elevationError() ? 'elevation-error' : null"
             autocomplete="off"
           />
         </div>
         @if (elevationError()) {
-          <div class="alert alert--error" role="alert">{{ elevationError()! | translate }}</div>
+          <div id="elevation-error" class="alert alert--error" role="alert">{{ elevationError()! | translate }}</div>
         }
       </div>
       <div class="modal__footer">

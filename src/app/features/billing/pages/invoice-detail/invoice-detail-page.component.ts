@@ -26,7 +26,12 @@ type IssueState = 'idle' | 'elevating' | 'issuing' | 'success' | 'error';
 /**
  * Roles whose holders carry the invoice:finalize:override authority and may therefore
  * issue an elevation-required invoice directly, without a manager approval code.
- * Backend re-enforces the authority; this is a UX gate only.
+ * Backend re-enforces the authority; this is a UX gate only (AuthService exposes roles,
+ * not authorities).
+ *
+ * Source of truth for the grant is the backend migration
+ * `V21__add_invoice_finalize_override_permission.sql` — keep this list in sync if that
+ * grant changes. Drift only degrades UX (an extra modal) or yields a handled 403.
  */
 const FINALIZE_OVERRIDE_ROLES = [
   'ROLE_SHOP_MANAGER',
