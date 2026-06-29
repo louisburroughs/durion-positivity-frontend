@@ -224,15 +224,15 @@
           {{ 'BILLING.INVOICE_DETAIL.ELEVATION.DESCRIPTION' | translate }}
         </p>
         <div class="form-field">
-          <label for="elevation-password" class="form-label">{{ 'BILLING.INVOICE_DETAIL.ELEVATION.PASSWORD_LABEL' | translate }}</label>
+          <label for="elevation-manager-number" class="form-label">{{ 'BILLING.INVOICE_DETAIL.ELEVATION.MANAGER_NUMBER_LABEL' | translate }}</label>
           <input
-            id="elevation-password"
-            type="password"
+            id="elevation-manager-number"
+            type="text"
             class="form-input"
-            [value]="elevationPassword()"
-            (input)="elevationPassword.set($any($event.target).value)"
-            [attr.placeholder]="'BILLING.INVOICE_DETAIL.ELEVATION.PASSWORD_PLACEHOLDER' | translate"
-            autocomplete="current-password"
+            [value]="managerEmployeeNumber()"
+            (input)="managerEmployeeNumber.set($any($event.target).value)"
+            [attr.placeholder]="'BILLING.INVOICE_DETAIL.ELEVATION.MANAGER_NUMBER_PLACEHOLDER' | translate"
+            autocomplete="off"
           />
         </div>
         @if (elevationError()) {

@@ -18,9 +18,21 @@ import {
   IssueInvoiceRequest,
 } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 type PageState = 'loading' | 'ready' | 'error';
 type IssueState = 'idle' | 'elevating' | 'issuing' | 'success' | 'error';
+
+/**
+ * Roles whose holders carry the invoice:finalize:override authority and may therefore
+ * issue an elevation-required invoice directly, without a manager approval code.
+ * Backend re-enforces the authority; this is a UX gate only.
+ */
+const FINALIZE_OVERRIDE_ROLES = [
+  'ROLE_SHOP_MANAGER',
+  'ROLE_LOCATION_MANAGER',
+  'ROLE_ADMIN',
+] as const;
 
 /**
  * InvoiceDetailPageComponent — CAP-007 Stories 209–212.
@@ -43,6 +55,7 @@ export class InvoiceDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly billingService = inject(BillingTransportService);
+  private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly invoiceId = signal<string>('');
@@ -57,7 +70,7 @@ export class InvoiceDetailPageComponent implements OnInit {
   readonly issueSuccess = signal(false);
   /** Elevation modal */
   readonly showElevationModal = signal(false);
-  readonly elevationPassword = signal('');
+  readonly managerEmployeeNumber = signal('');
   readonly elevationToken = signal<string | null>(null);
   readonly elevationError = signal<string | null>(null);
 
@@ -113,33 +126,43 @@ export class InvoiceDetailPageComponent implements OnInit {
       });
   }
 
+  /** True when the current user holds a role that carries the finalize-override authority. */
+  readonly canSelfApprove = computed(() =>
+    this.authService.hasAnyRole(FINALIZE_OVERRIDE_ROLES),
+  );
+
   /** Issue flow entry point. */
   initiateIssue(): void {
     if (!this.canIssue()) return;
-    if (this.requiresElevation() && !this.elevationToken()) {
-      this.elevationError.set(null);
-      this.elevationPassword.set('');
-      this.showElevationModal.set(true);
-    } else {
+    if (!this.requiresElevation() || this.elevationToken()) {
       this.performIssue();
+      return;
     }
+    // Managers/admins hold the override authority and issue directly — no approval code.
+    if (this.canSelfApprove()) {
+      this.performIssue();
+      return;
+    }
+    this.elevationError.set(null);
+    this.managerEmployeeNumber.set('');
+    this.showElevationModal.set(true);
   }
 
   elevate(): void {
-    const pw = this.elevationPassword().trim();
-    if (!pw) {
-      this.elevationError.set('BILLING.INVOICE_DETAIL.ELEVATION.ERROR.PASSWORD_REQUIRED');
+    const employeeNumber = this.managerEmployeeNumber().trim();
+    if (!employeeNumber) {
+      this.elevationError.set('BILLING.INVOICE_DETAIL.ELEVATION.ERROR.EMPLOYEE_REQUIRED');
       return;
     }
     this.issueState.set('elevating');
     this.elevationError.set(null);
     this.billingService
-      .elevate(pw)
+      .elevate(employeeNumber, this.invoiceId())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
           this.elevationToken.set(res.elevationToken);
-          this.elevationPassword.set('');
+          this.managerEmployeeNumber.set('');
           this.showElevationModal.set(false);
           this.issueState.set('idle');
           this.performIssue();
@@ -148,7 +171,7 @@ export class InvoiceDetailPageComponent implements OnInit {
           this.issueState.set('idle');
           this.elevationError.set(
             err?.status === 401
-              ? 'BILLING.INVOICE_DETAIL.ELEVATION.ERROR.INVALID_PASSWORD'
+              ? 'BILLING.INVOICE_DETAIL.ELEVATION.ERROR.NOT_AUTHORIZED'
               : 'BILLING.INVOICE_DETAIL.ELEVATION.ERROR.GENERIC',
           );
         },
@@ -157,7 +180,7 @@ export class InvoiceDetailPageComponent implements OnInit {
 
   dismissElevationModal(): void {
     this.showElevationModal.set(false);
-    this.elevationPassword.set('');
+    this.managerEmployeeNumber.set('');
     this.issueState.set('idle');
   }
 

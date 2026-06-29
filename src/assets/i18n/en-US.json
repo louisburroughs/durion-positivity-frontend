@@ -4458,14 +4458,14 @@
       "ELEVATION": {
         "ARIA_LABEL": "Manager elevation required",
         "TITLE": "Manager Authorization Required",
-        "DESCRIPTION": "Issuing this invoice requires manager-level authorization. Enter the manager password to proceed.",
-        "PASSWORD_LABEL": "Manager Password",
-        "PASSWORD_PLACEHOLDER": "Enter password",
+        "DESCRIPTION": "Issuing this invoice requires manager-level authorization. Enter an authorizing manager's employee number to proceed.",
+        "MANAGER_NUMBER_LABEL": "Manager Employee Number",
+        "MANAGER_NUMBER_PLACEHOLDER": "Enter manager employee number",
         "AUTHORIZE": "Authorize",
         "VERIFYING": "Verifying...",
         "ERROR": {
-          "PASSWORD_REQUIRED": "Password is required.",
-          "INVALID_PASSWORD": "Incorrect password. Please try again.",
+          "EMPLOYEE_REQUIRED": "Manager employee number is required.",
+          "NOT_AUTHORIZED": "That employee number is not an authorized manager. Please try again.",
           "GENERIC": "Elevation failed. Please contact your manager."
         }
       }

@@ -27,6 +27,7 @@ import {
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   ArtifactDownloadToken,
+  ElevateResponse,
   GenerateReceiptRequest as UiGenerateReceiptRequest,
   InvoiceArtifact,
   InvoiceDetail,
@@ -71,9 +72,14 @@ export class BillingTransportService {
     return this.api.get<InvoiceArtifact[]>(`/invoice/v1/invoices/${invoiceId}/artifacts`);
   }
 
-  elevate(password: string): Observable<{ elevationToken: string }> {
+  elevate(managerEmployeeNumber: string, invoiceId: string): Observable<ElevateResponse> {
     // ADR-0041 temporary exception: SDK does not yet expose elevation token transport.
-    return this.api.post<{ elevationToken: string }>('/billing/auth/elevate', { password });
+    // No gateway /billing route exists; the elevate endpoint lives on the invoice service
+    // (gateway /invoice/** -> pos-invoice /v1/billing/auth/elevate).
+    return this.api.post<ElevateResponse>('/invoice/v1/billing/auth/elevate', {
+      managerEmployeeNumber,
+      invoiceId,
+    });
   }
 
   issueInvoice(invoiceId: string, request: IssueInvoiceRequest): Observable<InvoiceDetail> {

@@ -146,7 +146,10 @@ export interface IssueInvoiceRequest {
 }
 
 export interface ElevateRequest {
-  password: string;
+  /** Employee number of the approving manager. */
+  managerEmployeeNumber: string;
+  /** Invoice the elevation token will authorise. */
+  invoiceId: string;
 }
 
 export interface ElevateResponse {

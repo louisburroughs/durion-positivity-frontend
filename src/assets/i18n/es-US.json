@@ -4458,14 +4458,14 @@
       "ELEVATION": {
         "ARIA_LABEL": "Se requiere elevacion de gerente",
         "TITLE": "Se requiere autorizacion de gerente",
-        "DESCRIPTION": "Emitir esta factura requiere autorizacion de nivel gerente. Ingrese la contrasena del gerente para continuar.",
-        "PASSWORD_LABEL": "Contrasena de gerente",
-        "PASSWORD_PLACEHOLDER": "Ingrese la contrasena",
+        "DESCRIPTION": "Emitir esta factura requiere autorizacion de nivel gerente. Ingrese el numero de empleado de un gerente autorizado para continuar.",
+        "MANAGER_NUMBER_LABEL": "Numero de empleado del gerente",
+        "MANAGER_NUMBER_PLACEHOLDER": "Ingrese el numero de empleado del gerente",
         "AUTHORIZE": "Autorizar",
         "VERIFYING": "Verificando...",
         "ERROR": {
-          "PASSWORD_REQUIRED": "Se requiere contrasena.",
-          "INVALID_PASSWORD": "Contrasena incorrecta. Intentelo de nuevo.",
+          "EMPLOYEE_REQUIRED": "Se requiere el numero de empleado del gerente.",
+          "NOT_AUTHORIZED": "Ese numero de empleado no es un gerente autorizado. Intentelo de nuevo.",
           "GENERIC": "La elevacion fallo. Contacte a su gerente."
         }
       }

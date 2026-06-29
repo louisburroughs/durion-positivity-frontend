@@ -4458,14 +4458,14 @@
       "ELEVATION": {
         "ARIA_LABEL": "Elevation du gestionnaire requise",
         "TITLE": "Autorisation du gestionnaire requise",
-        "DESCRIPTION": "L'emission de cette facture requiert une autorisation de niveau gestionnaire. Entrez le mot de passe du gestionnaire pour continuer.",
-        "PASSWORD_LABEL": "Mot de passe du gestionnaire",
-        "PASSWORD_PLACEHOLDER": "Entrez le mot de passe",
+        "DESCRIPTION": "L'emission de cette facture requiert une autorisation de niveau gestionnaire. Entrez le numero d'employe d'un gestionnaire autorise pour continuer.",
+        "MANAGER_NUMBER_LABEL": "Numero d'employe du gestionnaire",
+        "MANAGER_NUMBER_PLACEHOLDER": "Entrez le numero d'employe du gestionnaire",
         "AUTHORIZE": "Autoriser",
         "VERIFYING": "Verification...",
         "ERROR": {
-          "PASSWORD_REQUIRED": "Le mot de passe est requis.",
-          "INVALID_PASSWORD": "Mot de passe incorrect. Veuillez reessayer.",
+          "EMPLOYEE_REQUIRED": "Le numero d'employe du gestionnaire est requis.",
+          "NOT_AUTHORIZED": "Ce numero d'employe n'est pas un gestionnaire autorise. Veuillez reessayer.",
           "GENERIC": "Echec de l'elevation. Contactez votre gestionnaire."
         }
       }
