@@ -68,6 +68,7 @@ export class LandingPageComponent {
 
   selectorMode(section: LandingSection): 'search' | 'id' {
     if (!section.recordKind) return 'id';
+    if (section.idMode) return 'id';
     return RECORD_KINDS[section.recordKind].nameSearch ? 'search' : 'id';
   }
 

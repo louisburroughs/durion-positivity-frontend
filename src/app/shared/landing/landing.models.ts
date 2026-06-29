@@ -18,6 +18,7 @@ export type RecordKind =
   | 'po'
   | 'event'
   | 'ruleset'
+  | 'vendorPayment'
   | 'location'
   | 'role'
   | 'payment'
@@ -95,6 +96,12 @@ export interface LandingSection {
   readonly recordKind?: RecordKind;
   /** Overrides the kind's default placeholder for this section. */
   readonly searchHintKey?: string;
+  /**
+   * Forces the selector into plain id-input mode regardless of the kind's
+   * default. Use when a name-search kind (e.g. workorder) has no backend search
+   * wired in this domain and the operator enters a raw identifier.
+   */
+  readonly idMode?: boolean;
   readonly cards: readonly LandingCard[];
 }
 

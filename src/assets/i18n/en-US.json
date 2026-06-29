@@ -63,6 +63,7 @@
       "PO": { "LABEL": "Purchase order", "PLACEHOLDER": "Enter purchase order id (e.g. PO-001)" },
       "EVENT": { "LABEL": "Ingestion event", "PLACEHOLDER": "Enter event UUID" },
       "RULESET": { "LABEL": "Rule set", "PLACEHOLDER": "Enter rule set id" },
+      "VENDOR_PAYMENT": { "LABEL": "Vendor payment", "PLACEHOLDER": "Enter vendor payment id" },
       "LOCATION": { "LABEL": "Location", "PLACEHOLDER": "Enter location id" },
       "ROLE": { "LABEL": "Role", "PLACEHOLDER": "Enter role name (e.g. ROLE_MANAGER)" },
       "PAYMENT": { "LABEL": "Payment", "PLACEHOLDER": "Enter payment id (e.g. PAY-00456)" },

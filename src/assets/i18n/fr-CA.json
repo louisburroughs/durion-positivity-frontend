@@ -63,6 +63,7 @@
       "PO": { "LABEL": "Bon de commande", "PLACEHOLDER": "Saisir l'id du bon de commande (p. ex. PO-001)" },
       "EVENT": { "LABEL": "Événement d'ingestion", "PLACEHOLDER": "Saisir l'UUID de l'événement" },
       "RULESET": { "LABEL": "Ensemble de règles", "PLACEHOLDER": "Saisir l'id de l'ensemble de règles" },
+      "VENDOR_PAYMENT": { "LABEL": "Paiement fournisseur", "PLACEHOLDER": "Saisir l'id du paiement fournisseur" },
       "LOCATION": { "LABEL": "Emplacement", "PLACEHOLDER": "Saisir l'id de l'emplacement" },
       "ROLE": { "LABEL": "Rôle", "PLACEHOLDER": "Saisir le nom du rôle (p. ex. ROLE_MANAGER)" },
       "PAYMENT": { "LABEL": "Paiement", "PLACEHOLDER": "Saisir l'id du paiement (p. ex. PAY-00456)" },
