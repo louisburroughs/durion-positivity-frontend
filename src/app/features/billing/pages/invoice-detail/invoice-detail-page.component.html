@@ -4,7 +4,11 @@
     <div class="wo-header__inner">
       <div class="wo-header__identity">
         <p class="wo-header__overline">{{ 'BILLING.INVOICE_DETAIL.HEADER.OVERLINE' | translate }}</p>
-        <h1 id="invoice-heading" class="wo-header__id">{{ invoiceId() }}</h1>
+        <h1 id="invoice-heading" class="wo-header__id">
+          @if (invoice()) {
+            {{ invoice()!.invoiceNumber || ('BILLING.INVOICE_DETAIL.HEADER.DRAFT_NO_NUMBER' | translate) }}
+          }
+        </h1>
         @if (invoice()) {
           <span class="status-chip status-chip--{{ statusClass(invoice()!.status) }}">{{ invoice()!.status }}</span>
         }
@@ -50,7 +54,7 @@
       <div class="totals-grid">
         <div class="totals-grid__item">
           <span class="totals-grid__label">{{ 'BILLING.INVOICE_DETAIL.FIELD.WORKORDER' | translate }}</span>
-          <span class="totals-grid__value">{{ invoice()!.workOrderId }}</span>
+          <span class="totals-grid__value">{{ invoice()!.workOrderNumber || invoice()!.workOrderId }}</span>
         </div>
         @if (invoice()!.poNumber) {
           <div class="totals-grid__item">
@@ -84,7 +88,11 @@
             <div class="line-items__row" [class.line-items__row--alt]="even">
               <span>{{ item.description }}</span>
               <span>
-                <span class="type-chip type-chip--{{ item.type?.toLowerCase() }}">{{ item.type }}</span>
+                @if (item.type) {
+                  <span class="type-chip type-chip--{{ item.type.toLowerCase() }}">{{ item.type }}</span>
+                } @else {
+                  <span class="hint-text">—</span>
+                }
               </span>
               <span>{{ item.quantity }}</span>
               <span>{{ item.unitPrice | currency }}</span>
@@ -187,13 +195,15 @@
       <div class="wo-section" aria-labelledby="artifacts-heading">
         <h2 id="artifacts-heading" class="section-heading">{{ 'BILLING.INVOICE_DETAIL.SECTION.DOCUMENTS' | translate }}</h2>
         @for (art of artifacts(); track art.artifactRefId) {
-          <div class="artifact-row">
-            <span class="artifact-row__name">{{ art.fileName ?? art.filename }}</span>
-            <span class="artifact-row__type hint-text">{{ art.contentType ?? art.mimeType }}</span>
-            <button class="btn btn--ghost btn--sm" (click)="downloadArtifact(art.artifactRefId, art.fileName ?? art.filename ?? 'invoice')">
-              {{ 'BILLING.INVOICE_DETAIL.ACTION.DOWNLOAD' | translate }}
-            </button>
-          </div>
+          <button
+            type="button"
+            class="doc-link"
+            (click)="downloadArtifact(art.artifactRefId, art.fileName ?? art.filename ?? 'invoice')"
+            [attr.aria-label]="('BILLING.INVOICE_DETAIL.ACTION.DOWNLOAD' | translate) + ': ' + (art.fileName ?? art.filename ?? 'invoice')"
+          >
+            <span class="doc-link__icon" aria-hidden="true">📄</span>
+            <span class="doc-link__name">{{ art.fileName ?? art.filename ?? 'invoice' }}</span>
+          </button>
         }
       </div>
     }

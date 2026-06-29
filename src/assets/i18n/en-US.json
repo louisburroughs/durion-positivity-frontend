@@ -4397,7 +4397,8 @@
     },
     "INVOICE_DETAIL": {
       "HEADER": {
-        "OVERLINE": "Invoice"
+        "OVERLINE": "Invoice",
+        "DRAFT_NO_NUMBER": "Draft (number assigned when issued)"
       },
       "LOADING": "Loading invoice...",
       "SECTION": {
