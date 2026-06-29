@@ -10,8 +10,8 @@ import {
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, filter, switchMap } from 'rxjs/operators';
+import { Subject, of, timer } from 'rxjs';
+import { catchError, debounce, distinctUntilChanged, filter, switchMap } from 'rxjs/operators';
 import { MaterialSymbolPipe } from '../../material-symbol.pipe';
 import { RecordHit, RecordSearchFn } from '../landing.models';
 
@@ -67,7 +67,8 @@ export class LandingRecordFinderComponent {
   constructor() {
     this.query$
       .pipe(
-        debounceTime(this.debounceMs),
+        // Read debounceMs lazily so a host-bound @Input (set after construction) applies.
+        debounce(() => timer(this.debounceMs)),
         distinctUntilChanged(),
         filter(q => q.length >= this.minChars),
         switchMap(q => {
@@ -100,6 +101,12 @@ export class LandingRecordFinderComponent {
     if (this.mode === 'id') {
       // No lookup — committing happens on Enter/blur.
       return;
+    }
+    // Editing the query invalidates a previously chosen record so the section
+    // re-locks its guided cards until a new hit is selected.
+    if (this.value()) {
+      this.value.set('');
+      this.cleared.emit();
     }
     if (raw.length < this.minChars) {
       this.state.set('idle');

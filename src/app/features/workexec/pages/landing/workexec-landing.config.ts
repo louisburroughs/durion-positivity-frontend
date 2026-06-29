@@ -136,7 +136,13 @@ export const WORKEXEC_LANDING_CONFIG: LandingPageConfig = {
           titleKey: 'WORKEXEC.LANDING.CARD.APPROVAL_DETAIL.TITLE',
           descriptionKey: 'WORKEXEC.LANDING.CARD.APPROVAL_DETAIL.DESCRIPTION',
           ctaKey: 'WORKEXEC.LANDING.ACTION.OPEN_APPROVAL_DETAIL',
-          buildCommands: E('approval'),
+          // Route is estimates/:estimateId/approval/:approvalId — the section
+          // selector resolves the estimate; the approval id is captured here.
+          secondary: {
+            labelKey: 'WORKEXEC.LANDING.FIELD.APPROVAL_ID',
+            placeholderKey: 'WORKEXEC.LANDING.PLACEHOLDER.APPROVAL_ID',
+          },
+          buildCommands: (id, approvalId) => ['/app', 'workexec', 'estimates', id, 'approval', approvalId ?? ''],
         },
       ],
     },

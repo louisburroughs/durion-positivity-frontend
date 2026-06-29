@@ -50,4 +50,21 @@ describe('WorkexecLandingPageComponent', () => {
     const title = fixture.nativeElement.querySelector('#landing-title');
     expect(title).toBeTruthy();
   });
+
+  it('Approval Detail builds the full estimate+approval route (regression: 6 segments)', () => {
+    const card = component.config.sections
+      .flatMap(s => s.cards)
+      .find(c => c.titleKey === 'WORKEXEC.LANDING.CARD.APPROVAL_DETAIL.TITLE');
+    expect(card?.kind).toBe('guided');
+    if (card?.kind !== 'guided') throw new Error('expected guided card');
+    expect(card.secondary?.labelKey).toBe('WORKEXEC.LANDING.FIELD.APPROVAL_ID');
+    expect(card.buildCommands('EST-1', 'APR-5')).toEqual([
+      '/app',
+      'workexec',
+      'estimates',
+      'EST-1',
+      'approval',
+      'APR-5',
+    ]);
+  });
 });
