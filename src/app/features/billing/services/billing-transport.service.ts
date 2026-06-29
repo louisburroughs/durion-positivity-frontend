@@ -294,10 +294,25 @@ export class BillingTransportService {
     };
   }
 
+  private toLineItemType(raw?: string): InvoiceLineItem['type'] {
+    switch (raw?.toUpperCase()) {
+      case 'PART':
+        return 'PART';
+      case 'LABOR':
+        return 'LABOR';
+      case 'FEE':
+        return 'FEE';
+      case 'TAX':
+        return 'TAX';
+      default:
+        return undefined;
+    }
+  }
+
   private toInvoiceDetail(source: InvoiceDetailsResponse): InvoiceDetail {
-    const status = source.status === 'FINALIZED' || source.status === 'DRAFT'
-      ? source.status
-      : 'DRAFT';
+    // Preserve the real lifecycle status. Coercing unknown statuses to DRAFT
+    // previously made issued/posted invoices look re-issuable (canIssue → true).
+    const status = (source.status ?? 'DRAFT') as InvoiceDetail['status'];
 
     return {
       invoiceId: source.invoiceId ?? '',
@@ -320,7 +335,7 @@ export class BillingTransportService {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         lineTotal: item.amount,
-        type: item.type as InvoiceLineItem['type'],
+        type: this.toLineItemType(item.type),
       })),
       adjustments: source.adjustmentEntries?.map(entry => ({
         id: entry.id ?? '',

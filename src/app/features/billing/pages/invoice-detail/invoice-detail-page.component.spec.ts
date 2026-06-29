@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { of, throwError } from 'rxjs';
+import { EMPTY, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { InvoiceArtifact, InvoiceDetail } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
@@ -14,6 +14,7 @@ const translations = {
     INVOICE_DETAIL: {
       HEADER: {
         OVERLINE: 'Invoice',
+        DRAFT_NO_NUMBER: 'Draft (number assigned when issued)',
       },
       LOADING: 'Loading invoice...',
       SECTION: {
@@ -144,6 +145,47 @@ describe('InvoiceDetailPageComponent', () => {
 
     expect(billingTransportStub.loadInvoiceDetail).toHaveBeenCalledWith(INVOICE_ID);
     expect(billingTransportStub.loadInvoiceArtifacts).toHaveBeenCalledWith(INVOICE_ID);
+  });
+
+  it('renders the workorder number and line-item type chip', () => {
+    billingTransportStub.loadInvoiceDetail.mockReturnValueOnce(of({
+      ...invoiceFixture,
+      workOrderNumber: 'WO-2026-1001',
+      lineItems: [
+        { id: 'li-1', description: 'Diagnostics', quantity: 1, unitPrice: 100, lineTotal: 100, type: 'LABOR' as const },
+      ],
+    }));
+
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    const workorderValue = host.querySelector('.totals-grid__value')?.textContent ?? '';
+    expect(workorderValue).toContain('WO-2026-1001');
+    expect(workorderValue).not.toContain('wo-001');
+    expect(host.querySelector('.type-chip')?.textContent).toContain('LABOR');
+  });
+
+  it('shows the draft fallback heading when a draft invoice has no number', () => {
+    billingTransportStub.loadInvoiceDetail.mockReturnValueOnce(of({
+      ...invoiceFixture,
+      invoiceNumber: undefined,
+      status: 'DRAFT' as const,
+    }));
+
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('#invoice-heading')?.textContent).toContain('Draft (number assigned when issued)');
+  });
+
+  it('does not show the draft fallback heading while loading', () => {
+    billingTransportStub.loadInvoiceDetail.mockReturnValueOnce(EMPTY);
+
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(component.pageState()).toBe('loading');
+    expect(host.querySelector('#invoice-heading')?.textContent).not.toContain('Draft');
   });
 
   it('renders translated elevation modal copy and validation state', () => {

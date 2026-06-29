@@ -324,6 +324,12 @@
 .btn:active:not(:disabled) { transform: scale(0.97); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.btn:focus-visible,
+.doc-link:focus-visible {
+  outline: 2px solid var(--brand-accent, #14c8b4);
+  outline-offset: 2px;
+}
+
 .btn--sm {
   padding: var(--space-1, 0.25rem) var(--space-4, 1rem);
   font-size: 0.82rem;

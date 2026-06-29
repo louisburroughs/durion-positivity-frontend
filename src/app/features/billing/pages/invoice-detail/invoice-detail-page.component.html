@@ -5,7 +5,9 @@
       <div class="wo-header__identity">
         <p class="wo-header__overline">{{ 'BILLING.INVOICE_DETAIL.HEADER.OVERLINE' | translate }}</p>
         <h1 id="invoice-heading" class="wo-header__id">
-          {{ invoice()?.invoiceNumber || ('BILLING.INVOICE_DETAIL.HEADER.DRAFT_NO_NUMBER' | translate) }}
+          @if (invoice()) {
+            {{ invoice()!.invoiceNumber || ('BILLING.INVOICE_DETAIL.HEADER.DRAFT_NO_NUMBER' | translate) }}
+          }
         </h1>
         @if (invoice()) {
           <span class="status-chip status-chip--{{ statusClass(invoice()!.status) }}">{{ invoice()!.status }}</span>
@@ -197,10 +199,10 @@
             type="button"
             class="doc-link"
             (click)="downloadArtifact(art.artifactRefId, art.fileName ?? art.filename ?? 'invoice')"
-            [attr.aria-label]="('BILLING.INVOICE_DETAIL.ACTION.DOWNLOAD' | translate) + ': ' + (art.fileName ?? art.filename)"
+            [attr.aria-label]="('BILLING.INVOICE_DETAIL.ACTION.DOWNLOAD' | translate) + ': ' + (art.fileName ?? art.filename ?? 'invoice')"
           >
             <span class="doc-link__icon" aria-hidden="true">📄</span>
-            <span class="doc-link__name">{{ art.fileName ?? art.filename }}</span>
+            <span class="doc-link__name">{{ art.fileName ?? art.filename ?? 'invoice' }}</span>
           </button>
         }
       </div>

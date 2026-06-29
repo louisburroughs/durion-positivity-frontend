@@ -69,6 +69,8 @@ describe('BillingTransportService', () => {
     invoiceId: 'inv-001',
     invoiceNumber: 'INV-001',
     workorderId: 'wo-001',
+    workorderNumber: 'WO-2026-1001',
+    requiresManagerApproval: true,
     status: InvoiceDetailsResponseStatusEnum.Finalized,
     subtotal: 100,
     tax: 8,
@@ -81,6 +83,7 @@ describe('BillingTransportService', () => {
         quantity: 1,
         unitPrice: 100,
         amount: 100,
+        type: 'LABOR',
       },
     ],
     adjustmentEntries: [
@@ -129,11 +132,27 @@ describe('BillingTransportService', () => {
     expect(result).toEqual(expect.objectContaining({
       invoiceId: 'inv-001',
       workOrderId: 'wo-001',
+      workOrderNumber: 'WO-2026-1001',
       status: 'FINALIZED',
       taxAmount: 8,
       adjustmentTotal: 5,
       grandTotal: 113,
     }));
+    expect((result as { issuancePolicy?: { requiresElevation?: boolean } }).issuancePolicy?.requiresElevation).toBe(true);
+    expect((result as { lineItems?: { type?: string }[] }).lineItems?.[0]?.type).toBe('LABOR');
+  });
+
+  it('preserves a non-draft/non-finalized status instead of coercing it to DRAFT', () => {
+    invoiceServiceStub.getInvoice.mockReturnValueOnce(
+      of({ ...invoiceResponse, status: InvoiceDetailsResponseStatusEnum.Posted }),
+    );
+
+    let result: unknown;
+    service.loadInvoiceDetail('inv-001').subscribe(value => {
+      result = value;
+    });
+
+    expect((result as { status?: string }).status).toBe('POSTED');
   });
 
   it('finalizes an invoice through the invoice SDK with the manager approval code mapping', () => {
