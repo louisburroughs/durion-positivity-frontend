@@ -90,7 +90,7 @@ describe('RolesListPageComponent', () => {
     it('clears stale roles and totalPages when service errors after previous load', () => {
       fixture.detectChanges();
 
-      component.roles.set([{ name: 'OLD_ROLE' } as any]);
+      component.roles.set([{ name: 'OLD_ROLE' }]);
       component.totalPages.set(3);
 
       securityServiceStub.getAllRoles.mockReturnValueOnce(
@@ -274,7 +274,7 @@ describe('RolesListPageComponent', () => {
       const router = TestBed.inject(Router);
       const spy = vi.spyOn(router, 'navigate');
 
-      component.navigateToDetail({ name: 'ROLE_ADMIN' } as any);
+      component.navigateToDetail({ name: 'ROLE_ADMIN' });
 
       expect(spy).toHaveBeenCalledWith(['/app/security/roles', 'ROLE_ADMIN']);
     });

@@ -75,7 +75,7 @@ describe('MsrpComponent', () => {
   }));
 
   it('onSkuChange("") clears msrpList after debounce', fakeAsync(() => {
-    component.msrpList.set([sampleMsrp as any]);
+    component.msrpList.set([sampleMsrp]);
     component.onSkuChange('');
     tick(300);
 

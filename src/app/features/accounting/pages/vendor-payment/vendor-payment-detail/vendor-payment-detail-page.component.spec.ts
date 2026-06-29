@@ -7,7 +7,6 @@ import { VendorPaymentDetailPageComponent } from './vendor-payment-detail-page.c
 
 describe('VendorPaymentDetailPageComponent', () => {
   let fixture: ComponentFixture<VendorPaymentDetailPageComponent>;
-  let component: VendorPaymentDetailPageComponent;
 
   const accountingServiceStub = {
     getPayment: vi.fn().mockReturnValue(
@@ -37,7 +36,6 @@ describe('VendorPaymentDetailPageComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(VendorPaymentDetailPageComponent);
-    component = fixture.componentInstance;
   });
 
   it('renders loading state initially', () => {

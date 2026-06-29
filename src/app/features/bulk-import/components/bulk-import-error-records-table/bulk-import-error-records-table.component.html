@@ -35,7 +35,7 @@
 							type="text"
 							[value]="getDraft(record.recordId, field)"
 							(input)="updateDraft(record.recordId, field, $any($event.target).value)"
-							[attr.placeholder]="record.originalValues[field] != null ? ('' + record.originalValues[field]) : ''"
+							[attr.placeholder]="record.originalValues[field] !== null && record.originalValues[field] !== undefined ? ('' + record.originalValues[field]) : ''"
 						/>
 					</div>
 					}

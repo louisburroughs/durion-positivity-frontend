@@ -5,7 +5,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AppointmentService } from '../../services/appointment.service';
-import type { AppointmentDetail, AssignmentDetail, Conflict, TimeSlot } from '../../models/appointment.models';
+import type { AppointmentDetail, Conflict } from '../../models/appointment.models';
 
 export interface AuditEntry {
   id?: string;

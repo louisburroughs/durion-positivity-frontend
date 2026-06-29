@@ -1,3 +1,4 @@
+import { ElementRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ComponentFixture } from '@angular/core/testing';
 import { TranslateModule } from '@ngx-translate/core';
@@ -65,7 +66,7 @@ describe('ApprovalDigitalPageComponent [Story 271]', () => {
     const canvas = document.createElement('canvas');
     const spy = vi.fn().mockReturnValue('data:image/png;base64,abc');
     canvas.toDataURL = spy;
-    component.canvasRef = { nativeElement: canvas } as any;
+    component.canvasRef = { nativeElement: canvas } as ElementRef<HTMLCanvasElement>;
     component.signerForm.setValue({ customerId: 'cust-1', signerName: 'Jane Customer', notes: '', purchaseOrderNumber: '' });
     component.submitApproval();
     const req = http.expectOne(`${BASE}/v1/workorders/estimates/est-123/approval`);
@@ -81,7 +82,7 @@ describe('ApprovalDigitalPageComponent [Story 271]', () => {
     component.signatureEmpty.set(false);
     const canvas = document.createElement('canvas');
     canvas.toDataURL = () => 'data:image/png;base64,abc';
-    component.canvasRef = { nativeElement: canvas } as any;
+    component.canvasRef = { nativeElement: canvas } as ElementRef<HTMLCanvasElement>;
     component.signerForm.setValue({ customerId: 'cust-1', signerName: 'Jane', notes: '', purchaseOrderNumber: '' });
     component.submitApproval();
     const req = http.expectOne(`${BASE}/v1/workorders/estimates/est-123/approval`);

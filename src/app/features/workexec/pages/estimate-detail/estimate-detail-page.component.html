@@ -113,7 +113,7 @@
       </div>
       }
 
-      @if (estimate()!.subtotal != null) {
+      @if (estimate()!.subtotal !== undefined) {
       <div class="totals-list">
         <div class="totals-row"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.SUBTOTAL' | translate }}</span><span>{{ estimate()!.subtotal | currency }}</span></div>
         <div class="totals-row"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.TAX' | translate }}</span><span>{{ estimate()!.taxAmount | currency }}</span></div>

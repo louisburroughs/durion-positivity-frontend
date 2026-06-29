@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -27,8 +27,7 @@ export interface ApiRequestOptions {
 @Injectable({ providedIn: 'root' })
 export class ApiBaseService {
   private readonly base = environment.apiBaseUrl;
-
-  constructor(private readonly http: HttpClient) { }
+  private readonly http = inject(HttpClient);
 
   get<T>(path: string, params?: HttpParams, options?: ApiRequestOptions): Observable<T> {
     return this.http.get<T>(this.url(path, options?.baseUrlOverride), {

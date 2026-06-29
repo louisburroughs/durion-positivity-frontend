@@ -41,7 +41,7 @@ describe('AuthService', () => {
 
   afterEach(() => {
     httpMock.verify();
-    (environment as any).mockAuth = true;
+    environment.mockAuth = true;
   });
 
   function seedStoredSession(): void {
@@ -73,7 +73,7 @@ describe('AuthService', () => {
 
   describe('refreshTokens()', () => {
     it('clamps extremely long expiry timers to the maximum browser-supported timeout', () => {
-      (environment as any).mockAuth = false;
+      environment.mockAuth = false;
       const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
       seedStoredSession();
 
@@ -85,7 +85,7 @@ describe('AuthService', () => {
     });
 
     it('shares a single in-flight refresh request across concurrent callers', () => {
-      (environment as any).mockAuth = false;
+      environment.mockAuth = false;
       seedStoredSession();
 
       const refreshedResponse: TokenPairResponse = {
@@ -115,7 +115,7 @@ describe('AuthService', () => {
     });
 
     it('clears the shared refresh request after an error so a later call retries', () => {
-      (environment as any).mockAuth = false;
+      environment.mockAuth = false;
       seedStoredSession();
 
       let firstError: unknown;
@@ -140,7 +140,7 @@ describe('AuthService', () => {
 
   describe('validateSessionOnResume()', () => {
     it('returns true when the validate endpoint reports a valid stored token', () => {
-      (environment as any).mockAuth = false;
+      environment.mockAuth = false;
       seedStoredSession();
 
       let result: boolean | undefined;
@@ -156,7 +156,7 @@ describe('AuthService', () => {
     });
 
     it('calls logoutWithRedirect() and returns of(false) when validate endpoint errors', () => {
-      (environment as any).mockAuth = false;
+      environment.mockAuth = false;
       const logoutRedirectSpy = vi.spyOn(service, 'logoutWithRedirect');
       seedStoredSession();
 
@@ -171,7 +171,7 @@ describe('AuthService', () => {
     });
 
     it('returns of(false) without navigate when there is no token', () => {
-      (environment as any).mockAuth = false;
+      environment.mockAuth = false;
       const navigateSpy = vi.spyOn(router, 'navigate');
 
       let result: boolean | undefined;
@@ -182,7 +182,7 @@ describe('AuthService', () => {
     });
 
     it('calls logoutWithRedirect() and returns false when validate endpoint reports valid=false', () => {
-      (environment as any).mockAuth = false;
+      environment.mockAuth = false;
       const logoutRedirectSpy = vi.spyOn(service, 'logoutWithRedirect');
       seedStoredSession();
 
@@ -197,7 +197,7 @@ describe('AuthService', () => {
     });
 
     it('calls logoutWithRedirect() and returns of(false) when validate endpoint returns 500', () => {
-      (environment as any).mockAuth = false;
+      environment.mockAuth = false;
       const logoutRedirectSpy = vi.spyOn(service, 'logoutWithRedirect');
       seedStoredSession();
 
@@ -223,7 +223,7 @@ describe('AuthService', () => {
 
     // T5: no-token fast path returns false without any routing side-effects
     it('T5: returns of(false) without router.navigate when mockAuth is false and no token is stored', () => {
-      (environment as any).mockAuth = false;
+      environment.mockAuth = false;
       const navigateSpy = vi.spyOn(router, 'navigate');
 
       let result: boolean | undefined;
@@ -235,7 +235,7 @@ describe('AuthService', () => {
 
     // T6: token present but endpoint 401 → logoutWithRedirect with sessionExpired=true
     it('T6: calls logoutWithRedirect with sessionExpired=true and returns of(false) on 401', () => {
-      (environment as any).mockAuth = false;
+      environment.mockAuth = false;
       const navigateSpy = vi.spyOn(router, 'navigate');
       seedStoredSession();
 
@@ -257,7 +257,7 @@ describe('AuthService', () => {
 
   describe('greenfield PERM token compatibility', () => {
     it('keeps session authenticated when token omits roles/authorities claims', () => {
-      (environment as any).mockAuth = false;
+      environment.mockAuth = false;
 
       service.login({ username: 'demo', password: 'testpass' }).subscribe();
 
@@ -277,7 +277,7 @@ describe('AuthService', () => {
     });
 
     it('normalizes unprefixed roles claim to ROLE_* format', () => {
-      (environment as any).mockAuth = false;
+      environment.mockAuth = false;
 
       service.login({ username: 'demo', password: 'testpass' }).subscribe();
 

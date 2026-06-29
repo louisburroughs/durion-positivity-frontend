@@ -29,7 +29,49 @@
     "CTA_TITLE": "Ready to take control of your shop?",
     "CTA_BUTTON": "Sign In Now",
     "FOOTER_TAGLINE": "Positivity Platform",
-    "FOOTER_COPYRIGHT": "© 2026 Durion Support Services. All rights reserved."
+    "FOOTER_COPYRIGHT": "© 2026 Durion Support Services. All rights reserved.",
+    "STATS_ARIA": "Page summary",
+    "STAT": {
+      "TOTAL_PAGES": "Total Pages",
+      "DIRECT_PAGES": "Direct Pages",
+      "GUIDED_LAUNCHES": "Guided Launches"
+    },
+    "LEGEND": {
+      "DIRECT": "Direct — opens immediately",
+      "GUIDED": "Guided — needs a record selected"
+    },
+    "FINDER": {
+      "FIND_RECORD": "Find a record",
+      "LOADING": "Searching…",
+      "EMPTY": "No matches found",
+      "ERROR": "Search failed. Try again.",
+      "CLEAR": "Clear selection"
+    },
+    "CARD": {
+      "SELECT_FIRST": "Select a record first"
+    },
+    "KIND": {
+      "ESTIMATE": { "LABEL": "Estimate", "PLACEHOLDER": "Search by customer name or estimate id" },
+      "WORKORDER": { "LABEL": "Workorder", "PLACEHOLDER": "Search by customer name or workorder id" },
+      "APPROVAL": { "LABEL": "Approval", "PLACEHOLDER": "Search by customer name, estimate id or workorder id" },
+      "CUSTOMER": { "LABEL": "Customer", "PLACEHOLDER": "Search customers by name…" },
+      "INVOICE": { "LABEL": "Invoice", "PLACEHOLDER": "Search by customer, invoice #, or workorder #" },
+      "EMPLOYEE": { "LABEL": "Employee", "PLACEHOLDER": "Search by name or employee ID…" },
+      "PERSON": { "LABEL": "Person", "PLACEHOLDER": "Search by name…" },
+      "APPOINTMENT": { "LABEL": "Appointment", "PLACEHOLDER": "Enter appointment id (e.g. APT-1234)" },
+      "LEDGER": { "LABEL": "Ledger entry", "PLACEHOLDER": "Enter ledger entry id (e.g. LE-001)" },
+      "PO": { "LABEL": "Purchase order", "PLACEHOLDER": "Enter purchase order id (e.g. PO-001)" },
+      "EVENT": { "LABEL": "Ingestion event", "PLACEHOLDER": "Enter event UUID" },
+      "RULESET": { "LABEL": "Rule set", "PLACEHOLDER": "Enter rule set id" },
+      "VENDOR_PAYMENT": { "LABEL": "Vendor payment", "PLACEHOLDER": "Enter vendor payment id" },
+      "CREDIT_MEMO": { "LABEL": "Credit memo", "PLACEHOLDER": "Enter credit memo id" },
+      "LOCATION": { "LABEL": "Location", "PLACEHOLDER": "Enter location id" },
+      "ROLE": { "LABEL": "Role", "PLACEHOLDER": "Enter role name (e.g. ROLE_MANAGER)" },
+      "PAYMENT": { "LABEL": "Payment", "PLACEHOLDER": "Enter payment id (e.g. PAY-00456)" },
+      "RECEIPT": { "LABEL": "Receipt", "PLACEHOLDER": "Enter receipt id (e.g. REC-00789)" },
+      "SESSION": { "LABEL": "Work session", "PLACEHOLDER": "Enter session id" },
+      "PUTAWAY": { "LABEL": "Putaway task", "PLACEHOLDER": "Enter putaway task id (e.g. PT-001)" }
+    }
   },
   "SYSTEM": {
     "ACCESS_DENIED": {

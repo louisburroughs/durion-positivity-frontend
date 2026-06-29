@@ -6,6 +6,7 @@ import { of, throwError } from 'rxjs';
 
 import { EmployeeProfilePageComponent } from './employee-profile-page.component';
 import { PeopleService } from '../../services/people.service';
+import { CreateEmployeeRequestStatusEnum } from '@durion-sdk/people';
 
 // ── Stubs ─────────────────────────────────────────────────────────────────
 
@@ -173,11 +174,11 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     const { fixture, component } = await setupNew();
 
     // Fill required fields so the form is valid
-    component.form.patchValue({ firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: 'ACTIVE' as any });
+    component.form.patchValue({ firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: CreateEmployeeRequestStatusEnum.Active });
     fixture.detectChanges();
 
     // Trigger save
-    (component as any).save?.();
+    component.save();
     fixture.detectChanges();
 
     expect(stubPeopleService.createEmployee).toHaveBeenCalled();
@@ -190,7 +191,7 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     stubPeopleService.updateEmployee.mockReturnValue(of(STUB_EMPLOYEE));
     const { fixture, component } = await setupEdit('emp-1');
 
-    (component as any).save?.();
+    component.save();
     fixture.detectChanges();
 
     expect(stubPeopleService.updateEmployee).toHaveBeenCalledWith('emp-1', expect.any(Object));
@@ -206,10 +207,10 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     const { fixture, component } = await setupNew();
 
     // Fill required fields so the form is valid
-    component.form.patchValue({ firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: 'ACTIVE' as any });
+    component.form.patchValue({ firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: CreateEmployeeRequestStatusEnum.Active });
     fixture.detectChanges();
 
-    (component as any).save?.();
+    component.save();
     fixture.detectChanges();
 
     const errorMsg = fixture.debugElement.query(By.css('[data-testid="conflict-error"]'));
@@ -230,10 +231,10 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     const { fixture, component } = await setupNew();
 
     // Fill required fields so the form is valid
-    component.form.patchValue({ firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: 'ACTIVE' as any });
+    component.form.patchValue({ firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: CreateEmployeeRequestStatusEnum.Active });
     fixture.detectChanges();
 
-    (component as any).save?.();
+    component.save();
     fixture.detectChanges();
 
     const fieldError = fixture.debugElement.query(By.css('[data-testid="field-error-first-name"]'));
@@ -286,7 +287,7 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     const { fixture, component } = await setupNew();
 
     // Attempt save with no data
-    (component as any).save?.();
+    component.save();
     fixture.detectChanges();
 
     const firstNameError = fixture.debugElement.query(By.css('[data-testid="validation-first-name"]'));
@@ -323,11 +324,11 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     fixture.detectChanges();
 
     // Fill required fields so form is valid before saving
-    component.form.patchValue({ firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: 'ACTIVE' as any });
+    component.form.patchValue({ firstName: 'Jane', lastName: 'Smith', employeeNumber: 'EMP-002', hireDate: '2024-01-01', status: CreateEmployeeRequestStatusEnum.Active });
     fixture.detectChanges();
 
     // Trigger save to put component into saving state
-    (component as any).save?.();
+    component.save();
     fixture.detectChanges();
 
     const saveBtn = fixture.debugElement.query(By.css('[data-testid="save-button"]'));

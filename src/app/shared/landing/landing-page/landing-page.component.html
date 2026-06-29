@@ -1,0 +1,161 @@
+<section class="landing" aria-labelledby="landing-title">
+  <!-- HERO -->
+  <section class="landing-hero">
+    <div class="landing-hero__content">
+      <p class="landing-hero__eyebrow">{{ config.eyebrowKey | translate }}</p>
+      <h1 id="landing-title" class="landing-hero__title">{{ config.titleKey | translate }}</h1>
+      <p class="landing-hero__description">{{ config.descriptionKey | translate }}</p>
+
+      @if (config.primaryCta || config.secondaryCta) {
+        <div class="landing-hero__actions">
+          @if (config.primaryCta; as cta) {
+            <a class="landing-btn landing-btn--primary" [routerLink]="ctaRoute(cta)">
+              @if (cta.icon) {
+                <span class="material-symbols-rounded" aria-hidden="true">{{ cta.icon | msIcon }}</span>
+              }
+              {{ cta.labelKey | translate }}
+            </a>
+          }
+          @if (config.secondaryCta; as cta) {
+            <a class="landing-btn landing-btn--secondary" [routerLink]="ctaRoute(cta)">
+              {{ cta.labelKey | translate }}
+            </a>
+          }
+        </div>
+      }
+    </div>
+
+    <dl class="landing-stats" [attr.aria-label]="'LANDING.STATS_ARIA' | translate">
+      <div class="landing-stat">
+        <dt>{{ 'LANDING.STAT.TOTAL_PAGES' | translate }}</dt>
+        <dd>{{ totalCount() }}</dd>
+      </div>
+      <div class="landing-stat">
+        <dt>{{ 'LANDING.STAT.DIRECT_PAGES' | translate }}</dt>
+        <dd>{{ directCount() }}</dd>
+      </div>
+      <div class="landing-stat">
+        <dt>{{ 'LANDING.STAT.GUIDED_LAUNCHES' | translate }}</dt>
+        <dd>{{ guidedCount() }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <!-- TYPE LEGEND -->
+  @if (hasGuided()) {
+    <div class="landing-legend" aria-hidden="true">
+      <span class="landing-legend__item">
+        <span class="landing-legend__dot landing-legend__dot--direct"></span>
+        {{ 'LANDING.LEGEND.DIRECT' | translate }}
+      </span>
+      <span class="landing-legend__item">
+        <span class="landing-legend__dot landing-legend__dot--guided"></span>
+        {{ 'LANDING.LEGEND.GUIDED' | translate }}
+      </span>
+    </div>
+  }
+
+  <!-- SECTIONS -->
+  @for (section of config.sections; track section.titleKey; let si = $index) {
+    <section class="landing-section" aria-labelledby="{{ section.titleKey }}-heading">
+      <div class="landing-section__heading">
+        <h2 id="{{ section.titleKey }}-heading" class="landing-section__title">
+          {{ section.titleKey | translate }}
+        </h2>
+        <p class="landing-section__description">{{ section.descriptionKey | translate }}</p>
+      </div>
+
+      @if (hasSelector(section)) {
+        <div class="landing-selector">
+          <span class="landing-selector__hint">
+            <span class="material-symbols-rounded" aria-hidden="true">{{ 'search' | msIcon }}</span>
+            {{ 'LANDING.FINDER.FIND_RECORD' | translate }}
+          </span>
+          <app-landing-record-finder
+            [label]="selectorLabelKey(section)"
+            [placeholder]="selectorPlaceholderKey(section)"
+            [mode]="selectorMode(section)"
+            [search]="selectorSearch(section)"
+            (selected)="onRecordSelected(si, $event)"
+            (cleared)="onRecordCleared(si)"
+          />
+        </div>
+      }
+
+      <div class="landing-grid">
+        @for (card of section.cards; track card.titleKey; let ci = $index) {
+          <article
+            class="landing-card"
+            (mouseenter)="onEnter(si, ci)"
+            (mouseleave)="onLeave(si, ci)"
+          >
+            @if (showTip(si, ci)) {
+              <div class="landing-card__tip" role="tooltip">{{ card.descriptionKey | translate }}</div>
+            }
+
+            <div class="landing-card__header">
+              <span
+                class="landing-card__icon material-symbols-rounded"
+                [class.landing-card__icon--guided]="isGuided(card)"
+                aria-hidden="true"
+                >{{ card.icon | msIcon }}</span
+              >
+              <h3 class="landing-card__title">{{ card.titleKey | translate }}</h3>
+              <span class="landing-card__info material-symbols-rounded" aria-hidden="true">{{ 'info' | msIcon }}</span>
+            </div>
+
+            <p class="landing-card__description">{{ card.descriptionKey | translate }}</p>
+
+            <div class="landing-card__spacer"></div>
+
+            @if (isGuided(card)) {
+              @if (card.secondary) {
+                <label class="landing-card__sec-label" [for]="'sec-' + cardKey(si, ci)">
+                  {{ card.secondary.labelKey | translate }}
+                </label>
+                <input
+                  [id]="'sec-' + cardKey(si, ci)"
+                  class="landing-card__sec-input"
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  [placeholder]="card.secondary.placeholderKey | translate"
+                  [value]="secondaryValue(cardKey(si, ci))"
+                  (input)="onSecondaryInput(cardKey(si, ci), $any($event.target).value)"
+                />
+              }
+              <button
+                type="button"
+                class="landing-btn landing-btn--primary landing-card__cta"
+                [class.landing-card__cta--pending]="isPending(section, si, ci, card)"
+                [disabled]="isPending(section, si, ci, card)"
+                (click)="launchGuided(section, si, ci, card)"
+                [attr.aria-disabled]="isPending(section, si, ci, card)"
+                [attr.aria-label]="(card.titleKey | translate) + ': ' + (card.ctaKey | translate)"
+              >
+                <span class="material-symbols-rounded" aria-hidden="true">{{
+                  (isPending(section, si, ci, card) ? 'lock' : card.ctaIcon ?? 'login') | msIcon
+                }}</span>
+                {{ card.ctaKey | translate }}
+              </button>
+              @if (isPending(section, si, ci, card)) {
+                <p class="landing-card__hint">{{ 'LANDING.CARD.SELECT_FIRST' | translate }}</p>
+              }
+            } @else {
+              <a
+                class="landing-btn landing-btn--primary landing-card__cta"
+                [routerLink]="card.route"
+                [attr.aria-label]="(card.titleKey | translate) + ': ' + (card.ctaKey | translate)"
+              >
+                <span class="material-symbols-rounded" aria-hidden="true">{{
+                  (card.ctaIcon ?? 'open_in_new') | msIcon
+                }}</span>
+                {{ card.ctaKey | translate }}
+              </a>
+            }
+          </article>
+        }
+      </div>
+    </section>
+  }
+</section>

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
+import { IngestionProcessingStatus } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
 import { IngestionMonitorListPageComponent } from './ingestion-monitor-list-page.component';
 
@@ -104,7 +105,7 @@ describe('IngestionMonitorListPageComponent', () => {
     fixture.detectChanges();
     const router = TestBed.inject(Router);
     const spy = vi.spyOn(router, 'navigate');
-    component.goToDetail({ eventId: 'e-99', eventType: 'InvoiceIssued', processingStatus: 'PROCESSED' as any });
+    component.goToDetail({ eventId: 'e-99', eventType: 'InvoiceIssued', processingStatus: IngestionProcessingStatus.Processed });
     expect(spy).toHaveBeenCalledWith(['/app/accounting/events', 'e-99']);
   });
 

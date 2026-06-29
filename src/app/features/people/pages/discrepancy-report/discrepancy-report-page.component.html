@@ -117,7 +117,7 @@
             <td>{{ $any(row).totalJobHours ?? '-' }}</td>
             <td>
               <div>{{ $any(row).discrepancyHours ?? '-' }}</div>
-              @if ($any(row).thresholdApplied != null) {
+              @if ($any(row).thresholdApplied !== null && $any(row).thresholdApplied !== undefined) {
               <small>Threshold applied: {{ $any(row).thresholdApplied }}</small>
               }
             </td>

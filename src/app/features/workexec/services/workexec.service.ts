@@ -535,7 +535,7 @@ export class WorkexecService {
   addEstimateItem(
     estimateId: string,
     request: AddEstimateItemRequest,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<EstimateItemResponse> {
     return this.estimateApi.addEstimateItem(estimateId, this.toSdkAddEstimateItemRequest(request)).pipe(
       map(dto => this.toEstimateItemResponse(dto)),
@@ -551,7 +551,7 @@ export class WorkexecService {
     estimateId: string,
     itemId: string,
     request: UpdateEstimateItemRequest,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<EstimateItemResponse> {
     return this.estimateApi.updateEstimateItem(estimateId, itemId, request).pipe(
       map(dto => this.toEstimateItemResponse(dto)),
@@ -562,7 +562,7 @@ export class WorkexecService {
    * operationId: deleteEstimateItem
    * DELETE /v1/workorders/estimates/{estimateId}/items/{itemId}
    */
-  deleteEstimateItem(estimateId: string, itemId: string, idempotencyKey?: string): Observable<void> {
+  deleteEstimateItem(estimateId: string, itemId: string, _idempotencyKey?: string): Observable<void> {
     return this.estimateApi.deleteEstimateItem(estimateId, itemId);
   }
 
@@ -575,7 +575,7 @@ export class WorkexecService {
    */
   calculateEstimateTotals(
     estimateId: string,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<CalculateEstimateTotalsResponse> {
     return this.estimateApi.calculateEstimateTotals(estimateId) as Observable<CalculateEstimateTotalsResponse>;
   }
@@ -590,7 +590,7 @@ export class WorkexecService {
   patchEstimateStatus(
     estimateId: string,
     patch: Record<string, unknown>,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<EstimateResponse> {
     return this.estimateApi.patchEstimateStatus(estimateId, patch).pipe(
       map(dto => this.toEstimateResponse(dto as import('@durion-sdk/workorder').EstimateResponse)),
@@ -602,7 +602,7 @@ export class WorkexecService {
    * POST /v1/workorders/estimates/{estimateId}/reopen
    * Story 235
    */
-  reopenEstimate(estimateId: string, idempotencyKey?: string): Observable<EstimateResponse> {
+  reopenEstimate(estimateId: string, _idempotencyKey?: string): Observable<EstimateResponse> {
     return this.estimateApi.reopenEstimate(estimateId).pipe(
       map(dto => this.toEstimateResponse(dto)),
     );
@@ -618,7 +618,7 @@ export class WorkexecService {
   createEstimateSnapshot(
     estimateId: string,
     notes?: string,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<EstimateSnapshotResponse> {
     return this.estimateApi.createEstimateSnapshot(estimateId, notes) as Observable<EstimateSnapshotResponse>;
   }
@@ -729,7 +729,7 @@ export class WorkexecService {
    */
   submitForApproval(
     estimateId: string,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<EstimateResponse> {
     return this.estimateApi.submitForApproval(estimateId).pipe(
       map(dto => this.toEstimateResponse(dto)),
@@ -751,7 +751,7 @@ export class WorkexecService {
   approveEstimate(
     estimateId: string,
     request: ApproveEstimateRequest,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<EstimateResponse> {
     return this.estimateApi.approveEstimate(estimateId, request).pipe(
       map(dto => this.toEstimateResponse(dto)),
@@ -769,7 +769,7 @@ export class WorkexecService {
    * POST /v1/workorders/estimates/{estimateId}/promote with optional Idempotency-Key header.
    * Returns WorkorderResponse (201) or 409 Conflict with existingWorkorderId.
    */
-  promoteEstimateToWorkorder(estimateId: string, idempotencyKey?: string): Observable<WorkorderResponse> {
+  promoteEstimateToWorkorder(estimateId: string, _idempotencyKey?: string): Observable<WorkorderResponse> {
     return this.estimateApi.promoteEstimateToWorkorder(estimateId) as Observable<WorkorderResponse>;
   }
 
@@ -996,7 +996,7 @@ export class WorkexecService {
    * operationId: startWork
    * POST /v1/workorders/{workorderId}/start
    */
-  startWork(workorderId: string, idempotencyKey?: string): Observable<WorkorderStartResponse> {
+  startWork(workorderId: string, _idempotencyKey?: string): Observable<WorkorderStartResponse> {
     return this.operationalContext.startWork(workorderId) as Observable<WorkorderStartResponse>;
   }
 
@@ -1107,7 +1107,7 @@ export class WorkexecService {
    * POST /v1/workorders/{workorderId}/suggestSubstitutes
    * Story 221
    */
-  suggestSubstitutes(workorderId: string, partId: string): Observable<SubstituteLinkResponse[]> {
+  suggestSubstitutes(workorderId: string, _partId: string): Observable<SubstituteLinkResponse[]> {
     return this.substituteLink.suggestSubstitutes(workorderId) as Observable<SubstituteLinkResponse[]>;
   }
 
@@ -1200,7 +1200,7 @@ export class WorkexecService {
    * POST /v1/workorders/changeRequests/{changeId}/approve
    * Story 220 (manager flow)
    */
-  approveChangeRequest(changeId: string, notes?: string, idempotencyKey?: string): Observable<ChangeRequestResponse> {
+  approveChangeRequest(changeId: string, notes?: string, _idempotencyKey?: string): Observable<ChangeRequestResponse> {
     const sdkRequest: import('@durion-sdk/workorder').ApproveChangeRequestDTO = {
       approvalNote: notes ?? '',
     };
@@ -1211,7 +1211,7 @@ export class WorkexecService {
    * operationId: declineChangeRequest
    * POST /v1/workorders/changeRequests/{changeId}/decline
    */
-  declineChangeRequest(changeId: string, reason?: string, idempotencyKey?: string): Observable<ChangeRequestResponse> {
+  declineChangeRequest(changeId: string, reason?: string, _idempotencyKey?: string): Observable<ChangeRequestResponse> {
     const sdkRequest: import('@durion-sdk/workorder').DeclineChangeRequestDTO = {
       approvalNote: reason ?? '',
     };
@@ -1227,7 +1227,7 @@ export class WorkexecService {
   completeWorkorder(
     workorderId: string,
     body: CompleteWorkorderRequest,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<CompleteWorkorderResponse> {
     return this.workOrderApi.completeWorkorder(workorderId, this.toSdkCompleteWorkorderRequest(body)).pipe(
       map(dto => this.toCompleteWorkorderResponse(dto)),
@@ -1241,7 +1241,7 @@ export class WorkexecService {
   reopenWorkorder(
     workorderId: string,
     body: ReopenWorkorderRequest,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<ReopenWorkorderResponse> {
     return this.workOrderApi.reopenWorkorder(workorderId, this.toSdkReopenWorkorderRequest(body)).pipe(
       map(dto => this.toReopenWorkorderResponse(dto)),
@@ -1290,7 +1290,7 @@ export class WorkexecService {
   overrideOperationalContext(
     workorderId: string,
     body: Record<string, unknown>,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<OperationalContextResponse> {
     const sdkRequest: import('@durion-sdk/workorder').OperationalContextOverrideRequest = {
       locationId: typeof body['locationId'] === 'string' ? body['locationId'] : '',
@@ -1336,7 +1336,7 @@ export class WorkexecService {
    * operationId: startTravelSegment
    * POST /v1/workorders/travelSegments/start
    */
-  startTravelSegment(body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
+  startTravelSegment(body: Record<string, unknown>, _idempotencyKey?: string): Observable<unknown> {
     const sdkRequest: import('@durion-sdk/workorder').StartTravelSegmentRequest = {
       mobileWorkAssignmentId: typeof body['mobileWorkAssignmentId'] === 'string' ? body['mobileWorkAssignmentId'] : '',
       technicianId: typeof body['technicianId'] === 'string' ? body['technicianId'] : '',
@@ -1352,7 +1352,7 @@ export class WorkexecService {
    * operationId: stopTravelSegment
    * POST /v1/workorders/travelSegments/{travelSegmentId}/stop
    */
-  stopTravelSegment(travelSegmentId: string, body: Record<string, unknown>, idempotencyKey?: string): Observable<unknown> {
+  stopTravelSegment(travelSegmentId: string, body: Record<string, unknown>, _idempotencyKey?: string): Observable<unknown> {
     const sdkRequest: import('@durion-sdk/workorder').StopTravelSegmentRequest = {
       toLocationId: typeof body['toLocationId'] === 'string' ? body['toLocationId'] : undefined,
       notes: typeof body['notes'] === 'string' ? body['notes'] : undefined,
@@ -1367,7 +1367,7 @@ export class WorkexecService {
   submitTravelSegments(
     mobileWorkAssignmentId: string,
     body: Record<string, unknown>,
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<unknown> {
     const sdkRequest: import('@durion-sdk/workorder').SubmitTravelSegmentsRequest = {
       workDate: typeof body['workDate'] === 'string' ? body['workDate'] : new Date().toISOString().slice(0, 10),
@@ -1387,7 +1387,7 @@ export class WorkexecService {
     return this.timeTracking.startTimer(this.toSdkTimerStartRequest(body), idempotencyKey);
   }
 
-  stopTimers(idempotencyKey: string): Observable<unknown> {
+  stopTimers(_idempotencyKey: string): Observable<unknown> {
     return this.timeTracking.stopTimers();
   }
 }

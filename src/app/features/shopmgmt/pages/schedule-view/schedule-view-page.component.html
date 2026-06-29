@@ -27,6 +27,7 @@
               <li
                 class="location-suggestion"
                 role="option"
+                [attr.aria-selected]="loc.id === filterForm.value.locationId"
                 (mousedown)="selectLocation(loc)"
                 >
                 <span class="suggestion-name">{{ loc.name }}</span>
@@ -84,7 +85,8 @@
           </div>
           <div class="lane-items">
             @for (appt of resource.appointments; track appt) {
-              <div class="work-item-card" (click)="selectItem(appt)">
+              <div class="work-item-card" role="button" tabindex="0" (click)="selectItem(appt)"
+                (keydown.enter)="selectItem(appt)" (keydown.space)="selectItem(appt)">
                 <span class="item-id">{{ appt.appointmentId }}</span>
                 <span class="item-time">{{ appt.scheduledStart }}</span>
                 <span class="item-status">{{ appt.status }}</span>

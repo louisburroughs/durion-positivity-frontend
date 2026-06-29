@@ -308,7 +308,7 @@ export class AccountingService {
     // are not silently broken when the SDK is regenerated with header support. Until then, duplicate-job
     // protection on retries is unavailable through this path.
     // Follow-up: update accounting OpenAPI spec to declare Idempotency-Key on POST /v1/accounting/export/request.
-    idempotencyKey?: string,
+    _idempotencyKey?: string,
   ): Observable<{ exportId: string; status: string }> {
     const sdkRequest: ExportJobRequest = {
       exportType: 'TIMEKEEPING',

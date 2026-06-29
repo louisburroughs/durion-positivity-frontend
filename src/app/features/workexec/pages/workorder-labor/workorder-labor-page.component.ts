@@ -9,7 +9,6 @@ import {
   CreateLaborPerformedRequest,
   StartLaborRequest,
   WorkorderDetailResponse,
-  WorkorderItemResponse,
   WorkorderLaborEntryResponse,
 } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';

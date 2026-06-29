@@ -29,7 +29,49 @@
     "CTA_TITLE": "¿Listo para tomar el control de tu negocio?",
     "CTA_BUTTON": "Iniciar sesión ahora",
     "FOOTER_TAGLINE": "Plataforma Positivity",
-    "FOOTER_COPYRIGHT": "© 2026 Durion Support Services. Todos los derechos reservados."
+    "FOOTER_COPYRIGHT": "© 2026 Durion Support Services. Todos los derechos reservados.",
+    "STATS_ARIA": "Resumen de la página",
+    "STAT": {
+      "TOTAL_PAGES": "Páginas totales",
+      "DIRECT_PAGES": "Páginas directas",
+      "GUIDED_LAUNCHES": "Lanzamientos guiados"
+    },
+    "LEGEND": {
+      "DIRECT": "Directo: se abre de inmediato",
+      "GUIDED": "Guiado: requiere seleccionar un registro"
+    },
+    "FINDER": {
+      "FIND_RECORD": "Buscar un registro",
+      "LOADING": "Buscando…",
+      "EMPTY": "No se encontraron coincidencias",
+      "ERROR": "La búsqueda falló. Inténtalo de nuevo.",
+      "CLEAR": "Borrar selección"
+    },
+    "CARD": {
+      "SELECT_FIRST": "Selecciona un registro primero"
+    },
+    "KIND": {
+      "ESTIMATE": { "LABEL": "Presupuesto", "PLACEHOLDER": "Buscar por nombre de cliente o id de presupuesto" },
+      "WORKORDER": { "LABEL": "Orden de trabajo", "PLACEHOLDER": "Buscar por nombre de cliente o id de orden de trabajo" },
+      "APPROVAL": { "LABEL": "Aprobación", "PLACEHOLDER": "Buscar por nombre de cliente, id de presupuesto o de orden de trabajo" },
+      "CUSTOMER": { "LABEL": "Cliente", "PLACEHOLDER": "Buscar clientes por nombre…" },
+      "INVOICE": { "LABEL": "Factura", "PLACEHOLDER": "Buscar por cliente, n.º de factura o n.º de orden de trabajo" },
+      "EMPLOYEE": { "LABEL": "Empleado", "PLACEHOLDER": "Buscar por nombre o ID de empleado…" },
+      "PERSON": { "LABEL": "Persona", "PLACEHOLDER": "Buscar por nombre…" },
+      "APPOINTMENT": { "LABEL": "Cita", "PLACEHOLDER": "Ingresa el id de la cita (p. ej. APT-1234)" },
+      "LEDGER": { "LABEL": "Asiento contable", "PLACEHOLDER": "Ingresa el id del asiento (p. ej. LE-001)" },
+      "PO": { "LABEL": "Orden de compra", "PLACEHOLDER": "Ingresa el id de la orden de compra (p. ej. PO-001)" },
+      "EVENT": { "LABEL": "Evento de ingesta", "PLACEHOLDER": "Ingresa el UUID del evento" },
+      "RULESET": { "LABEL": "Conjunto de reglas", "PLACEHOLDER": "Ingresa el id del conjunto de reglas" },
+      "VENDOR_PAYMENT": { "LABEL": "Pago a proveedor", "PLACEHOLDER": "Ingresa el id del pago a proveedor" },
+      "CREDIT_MEMO": { "LABEL": "Nota de crédito", "PLACEHOLDER": "Ingresa el id de la nota de crédito" },
+      "LOCATION": { "LABEL": "Ubicación", "PLACEHOLDER": "Ingresa el id de la ubicación" },
+      "ROLE": { "LABEL": "Rol", "PLACEHOLDER": "Ingresa el nombre del rol (p. ej. ROLE_MANAGER)" },
+      "PAYMENT": { "LABEL": "Pago", "PLACEHOLDER": "Ingresa el id del pago (p. ej. PAY-00456)" },
+      "RECEIPT": { "LABEL": "Recibo", "PLACEHOLDER": "Ingresa el id del recibo (p. ej. REC-00789)" },
+      "SESSION": { "LABEL": "Sesión de trabajo", "PLACEHOLDER": "Ingresa el id de la sesión" },
+      "PUTAWAY": { "LABEL": "Tarea de almacenamiento", "PLACEHOLDER": "Ingresa el id de la tarea (p. ej. PT-001)" }
+    }
   },
   "SYSTEM": {
     "ACCESS_DENIED": {

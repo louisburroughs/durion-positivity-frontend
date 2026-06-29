@@ -6,7 +6,6 @@ import { of, throwError } from 'rxjs';
 import { InventorySecurityAdminPageComponent } from './inventory-security-admin-page.component';
 import { SecurityService } from '../../../../security/services/security.service';
 import { AuthService } from '../../../../../core/services/auth.service';
-import { InventoryPermissionEntry } from '../../../models/inventory.models';
 import { PagedResponse, SecurityPermission } from '../../../../security/models/security.models';
 
 const mockSecurityService = {
@@ -30,13 +29,6 @@ const pagedResponseFixture: PagedResponse<SecurityPermission> = {
   pageSize: 500,
   totalPages: 1,
 };
-
-const derivedPermissionsFixture: InventoryPermissionEntry[] = securityPermissionsFixture.map(p => ({
-  permissionKey: p.permissionKey,
-  description: p.description ?? '',
-  category: 'inventory',
-  isCurrentUserGranted: false,
-}));
 
 async function setupSecurityAdmin() {
   await TestBed.configureTestingModule({

@@ -29,7 +29,49 @@
     "CTA_TITLE": "Prêt à prendre le contrôle de votre commerce?",
     "CTA_BUTTON": "Se connecter maintenant",
     "FOOTER_TAGLINE": "Plateforme Positivity",
-    "FOOTER_COPYRIGHT": "© 2026 Durion Support Services. Tous droits réservés."
+    "FOOTER_COPYRIGHT": "© 2026 Durion Support Services. Tous droits réservés.",
+    "STATS_ARIA": "Résumé de la page",
+    "STAT": {
+      "TOTAL_PAGES": "Pages totales",
+      "DIRECT_PAGES": "Pages directes",
+      "GUIDED_LAUNCHES": "Lancements guidés"
+    },
+    "LEGEND": {
+      "DIRECT": "Direct — s'ouvre immédiatement",
+      "GUIDED": "Guidé — nécessite un enregistrement sélectionné"
+    },
+    "FINDER": {
+      "FIND_RECORD": "Trouver un enregistrement",
+      "LOADING": "Recherche…",
+      "EMPTY": "Aucun résultat trouvé",
+      "ERROR": "Échec de la recherche. Réessayez.",
+      "CLEAR": "Effacer la sélection"
+    },
+    "CARD": {
+      "SELECT_FIRST": "Sélectionnez d'abord un enregistrement"
+    },
+    "KIND": {
+      "ESTIMATE": { "LABEL": "Estimation", "PLACEHOLDER": "Rechercher par nom de client ou id d'estimation" },
+      "WORKORDER": { "LABEL": "Bon de travail", "PLACEHOLDER": "Rechercher par nom de client ou id de bon de travail" },
+      "APPROVAL": { "LABEL": "Approbation", "PLACEHOLDER": "Rechercher par nom de client, id d'estimation ou de bon de travail" },
+      "CUSTOMER": { "LABEL": "Client", "PLACEHOLDER": "Rechercher des clients par nom…" },
+      "INVOICE": { "LABEL": "Facture", "PLACEHOLDER": "Rechercher par client, n° de facture ou n° de bon de travail" },
+      "EMPLOYEE": { "LABEL": "Employé", "PLACEHOLDER": "Rechercher par nom ou ID d'employé…" },
+      "PERSON": { "LABEL": "Personne", "PLACEHOLDER": "Rechercher par nom…" },
+      "APPOINTMENT": { "LABEL": "Rendez-vous", "PLACEHOLDER": "Saisir l'id du rendez-vous (p. ex. APT-1234)" },
+      "LEDGER": { "LABEL": "Écriture comptable", "PLACEHOLDER": "Saisir l'id de l'écriture (p. ex. LE-001)" },
+      "PO": { "LABEL": "Bon de commande", "PLACEHOLDER": "Saisir l'id du bon de commande (p. ex. PO-001)" },
+      "EVENT": { "LABEL": "Événement d'ingestion", "PLACEHOLDER": "Saisir l'UUID de l'événement" },
+      "RULESET": { "LABEL": "Ensemble de règles", "PLACEHOLDER": "Saisir l'id de l'ensemble de règles" },
+      "VENDOR_PAYMENT": { "LABEL": "Paiement fournisseur", "PLACEHOLDER": "Saisir l'id du paiement fournisseur" },
+      "CREDIT_MEMO": { "LABEL": "Note de crédit", "PLACEHOLDER": "Saisir l'id de la note de crédit" },
+      "LOCATION": { "LABEL": "Emplacement", "PLACEHOLDER": "Saisir l'id de l'emplacement" },
+      "ROLE": { "LABEL": "Rôle", "PLACEHOLDER": "Saisir le nom du rôle (p. ex. ROLE_MANAGER)" },
+      "PAYMENT": { "LABEL": "Paiement", "PLACEHOLDER": "Saisir l'id du paiement (p. ex. PAY-00456)" },
+      "RECEIPT": { "LABEL": "Reçu", "PLACEHOLDER": "Saisir l'id du reçu (p. ex. REC-00789)" },
+      "SESSION": { "LABEL": "Session de travail", "PLACEHOLDER": "Saisir l'id de la session" },
+      "PUTAWAY": { "LABEL": "Tâche de rangement", "PLACEHOLDER": "Saisir l'id de la tâche (p. ex. PT-001)" }
+    }
   },
   "SYSTEM": {
     "ACCESS_DENIED": {

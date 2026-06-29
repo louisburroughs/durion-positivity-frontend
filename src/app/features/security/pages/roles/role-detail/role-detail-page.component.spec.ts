@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { Subject, of, throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { SecurityService } from '../../../services/security.service';
 import { RoleDetailPageComponent } from './role-detail-page.component';
 import { TranslateModule } from '@ngx-translate/core';
@@ -118,8 +118,8 @@ describe('RoleDetailPageComponent', () => {
     it('clears stale role, permissions, and confirmRevokeKey when service errors after previous load', () => {
       fixture.detectChanges();
 
-      component.role.set({ name: 'STALE_ROLE' } as any);
-      component.permissions.set([{ permissionKey: 'STALE_PERM' } as any]);
+      component.role.set({ name: 'STALE_ROLE' });
+      component.permissions.set([{ permissionKey: 'STALE_PERM' }]);
       component.confirmRevokeKey.set('SOME_KEY');
 
       securityServiceStub.getRoleByName.mockReturnValueOnce(

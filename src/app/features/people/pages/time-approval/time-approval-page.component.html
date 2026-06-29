@@ -163,7 +163,7 @@
   }
 
   @if (showRejectDialog()) {
-  <div class="modal-overlay" (keydown.escape)="closeRejectDialog()">
+  <div class="modal-overlay" tabindex="0" (keydown.escape)="closeRejectDialog()">
     <section class="modal-panel" role="alertdialog" aria-modal="true" aria-labelledby="reject-dialog-title"
       data-testid="reject-dialog">
       <h2 id="reject-dialog-title">Reject Period</h2>

@@ -33,6 +33,7 @@
                 <li
                   class="location-suggestion"
                   role="option"
+                  [attr.aria-selected]="loc.id === selectedLocationId()"
                   (mousedown)="selectLocation(loc)"
                   >
                   <span class="suggestion-name">{{ loc.name }}</span>
