@@ -200,15 +200,15 @@ export class InvoiceDetailPageComponent implements OnInit {
       .issueInvoice(this.invoiceId(), body)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (issued) => {
+        next: () => {
           this.issueState.set('success');
           this.issueSuccess.set(true);
-          // Use the finalized invoice the backend returns — it carries the assigned
-          // invoice number and the real lifecycle status. Manually patching only the
-          // status (the previous behaviour) left invoiceNumber undefined, so the header
-          // stayed on the draft placeholder after issuance.
-          this.invoice.set(issued);
-          this.loadArtifacts(this.invoiceId());
+          // Reload the full detail via GET rather than using the finalize response
+          // directly. GET carries the assigned invoice number (assigned at draft) plus
+          // enrichment the finalize payload lacks — the resolved workorderNumber and
+          // line-item types — so the summary/items don't regress to a raw UUID and
+          // lose their type chips after issuing. loadInvoice also refreshes artifacts.
+          this.loadInvoice(this.invoiceId());
         },
         error: (err) => {
           this.issueState.set('error');
