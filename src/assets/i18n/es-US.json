@@ -4397,7 +4397,8 @@
     },
     "INVOICE_DETAIL": {
       "HEADER": {
-        "OVERLINE": "Factura"
+        "OVERLINE": "Factura",
+        "DRAFT_NO_NUMBER": "Borrador (número asignado al emitir)"
       },
       "LOADING": "Cargando factura...",
       "SECTION": {

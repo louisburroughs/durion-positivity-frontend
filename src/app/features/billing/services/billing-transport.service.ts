@@ -31,6 +31,7 @@ import {
   InvoiceArtifact,
   InvoiceDetail,
   InvoiceFinderItem,
+  InvoiceLineItem,
   IssueInvoiceRequest,
   PaymentMethod,
   PaymentTransactionRef,
@@ -302,6 +303,7 @@ export class BillingTransportService {
       invoiceId: source.invoiceId ?? '',
       invoiceNumber: source.invoiceNumber,
       workOrderId: source.workorderId,
+      workOrderNumber: source.workorderNumber,
       status,
       subtotal: source.subtotal,
       taxAmount: source.tax,
@@ -309,12 +311,16 @@ export class BillingTransportService {
       grandTotal: source.total,
       createdAt: source.createdAt,
       updatedAt: source.updatedAt,
+      issuancePolicy: {
+        requiresElevation: source.requiresManagerApproval ?? false,
+      },
       lineItems: source.items?.map(item => ({
         id: item.id ?? '',
         description: item.description,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         lineTotal: item.amount,
+        type: item.type as InvoiceLineItem['type'],
       })),
       adjustments: source.adjustmentEntries?.map(entry => ({
         id: entry.id ?? '',

@@ -175,25 +175,6 @@
   font-size: 0.8rem;
 }
 
-/* ── Artifacts ──────────────────────────────────────────────────────────── */
-
-.artifact-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.65rem 0;
-  border-bottom: 1px solid var(--color-outline-variant, #d0d7de);
-  font-size: 0.875rem;
-}
-
-.artifact-row:last-child { border-bottom: none; }
-
-.artifact-row__name {
-  flex: 1;
-  font-weight: 500;
-  color: var(--currentTextColor, #1f2328);
-}
-
 /* ── Form ───────────────────────────────────────────────────────────────── */
 
 .form-field { margin-bottom: 0.75rem; }
@@ -221,4 +202,239 @@
   outline: 2px solid var(--brand-accent, #14c8b4);
   outline-offset: 1px;
   border-color: var(--brand-accent, #14c8b4);
+}
+
+/* ── Page header ────────────────────────────────────────────────────────── */
+/* These class names are shared with other detail pages but are component-scoped
+   in each, so the invoice-detail page must carry its own copies. */
+
+.wo-header {
+  background: linear-gradient(135deg, #0f3560, #2b4c78);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-5, 1.5rem) var(--space-6, 2rem);
+  margin-bottom: var(--space-5, 1.5rem);
+  color: #fff;
+}
+
+.wo-header__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4, 1rem);
+}
+
+.wo-header__identity {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+}
+
+.wo-header__overline {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+  margin: 0;
+}
+
+.wo-header__id {
+  font-family: var(--font-primary, inherit);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.wo-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 0.5rem);
+  align-items: center;
+  margin-left: auto;
+}
+
+.wo-header__actions .btn--ghost {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+  background: transparent;
+}
+
+.wo-header__actions .btn--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Sections ───────────────────────────────────────────────────────────── */
+
+.wo-section {
+  padding: var(--space-4, 1rem) 0;
+}
+
+.section-heading {
+  font-family: var(--font-primary, inherit);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 var(--space-3, 0.75rem);
+  color: var(--currentTextColor, #1f2328);
+}
+
+.hint-text {
+  opacity: 0.55;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* ── Status chip ────────────────────────────────────────────────────────── */
+
+.status-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  align-self: flex-start;
+}
+
+.status-chip--draft { background: #f5f5f5; color: #616161; }
+.status-chip--pending-review { background: #fff3e0; color: #bf360c; }
+.status-chip--issued { background: #e3f2fd; color: #01579b; }
+.status-chip--finalized { background: #e8f5e9; color: #1b5e20; }
+.status-chip--void,
+.status-chip--cancelled { background: #ffebee; color: #c62828; }
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2, 0.5rem);
+  padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn--sm {
+  padding: var(--space-1, 0.25rem) var(--space-4, 1rem);
+  font-size: 0.82rem;
+}
+
+.btn--accent {
+  background: linear-gradient(135deg, #006a62, #00897b);
+  color: #fff;
+  border: none;
+}
+
+.btn--ghost {
+  background: transparent;
+  border: 1px solid rgba(var(--outline-variant-rgb, 130, 130, 130), 0.35);
+  color: var(--currentTextColor, #1f2328);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--themeBackground, rgba(0, 0, 0, 0.04));
+}
+
+/* ── Alerts ─────────────────────────────────────────────────────────────── */
+
+.alert {
+  display: block;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md, 8px);
+  margin-bottom: var(--space-3, 0.75rem);
+  font-size: 0.875rem;
+}
+
+.alert--error { background: #ffebee; color: #c62828; }
+.alert--success { background: #e8f5e9; color: #1b5e20; }
+
+/* ── Document links ─────────────────────────────────────────────────────── */
+
+.doc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--brand-accent, #006a62);
+  text-decoration: underline;
+}
+
+.doc-link:hover { text-decoration: none; }
+.doc-link__icon { font-size: 1.1rem; text-decoration: none; }
+
+/* ── Type chip extra variants ───────────────────────────────────────────── */
+
+.type-chip--fee { background: #fef3c7; color: #92400e; border-color: #92400e; }
+.type-chip--tax { background: #ede9fe; color: #5b21b6; border-color: #5b21b6; }
+
+/* ── Modal ──────────────────────────────────────────────────────────────── */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 18, 19, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: var(--space-4, 1rem);
+}
+
+.modal {
+  background: var(--cardBackground, #fff);
+  border-radius: var(--radius-lg, 12px);
+  min-width: 320px;
+  max-width: 480px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal__header {
+  padding: var(--space-4, 1rem) var(--space-6, 2rem);
+  background: var(--themeBackground, #f8f9fb);
+}
+
+.modal__title {
+  margin: 0;
+  font-family: var(--font-primary, inherit);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--currentTextColor, #1f2328);
+}
+
+.modal__body {
+  padding: var(--space-6, 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+}
+
+.modal__desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--currentTextColor, #1f2328);
+}
+
+.modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-4, 1rem) var(--space-6, 2rem);
+  background: var(--themeBackground, #f8f9fb);
 }

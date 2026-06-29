@@ -107,6 +107,7 @@ export interface InvoiceDetail {
   invoiceId: string;
   invoiceNumber?: string;
   workOrderId?: string;
+  workOrderNumber?: string;
   poNumber?: string;
   status: InvoiceStatus;
   subtotal?: number;

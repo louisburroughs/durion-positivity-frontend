@@ -4397,7 +4397,8 @@
     },
     "INVOICE_DETAIL": {
       "HEADER": {
-        "OVERLINE": "Facture"
+        "OVERLINE": "Facture",
+        "DRAFT_NO_NUMBER": "Brouillon (numéro attribué à l’émission)"
       },
       "LOADING": "Chargement de la facture...",
       "SECTION": {

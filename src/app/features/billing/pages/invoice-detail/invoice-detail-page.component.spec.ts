@@ -135,12 +135,12 @@ describe('InvoiceDetailPageComponent', () => {
 
     expect(component.pageState()).toBe('ready');
     expect(host.querySelector('.wo-header__overline')?.textContent).toContain('Invoice');
-    expect(host.querySelector('#invoice-heading')?.textContent).toContain(INVOICE_ID);
+    expect(host.querySelector('#invoice-heading')?.textContent).toContain('INV-001');
     expect(host.querySelector('.btn--ghost')?.textContent).toContain('Back to Workorder');
     expect(host.querySelector('.btn--accent')?.textContent).toContain('Issue Invoice');
     expect(host.querySelector('#totals-heading')?.textContent).toContain('Invoice Summary');
     expect(host.textContent).toContain('Documents');
-    expect(host.textContent).toContain('Download');
+    expect(host.querySelector('.doc-link')?.textContent).toContain('invoice.pdf');
 
     expect(billingTransportStub.loadInvoiceDetail).toHaveBeenCalledWith(INVOICE_ID);
     expect(billingTransportStub.loadInvoiceArtifacts).toHaveBeenCalledWith(INVOICE_ID);
