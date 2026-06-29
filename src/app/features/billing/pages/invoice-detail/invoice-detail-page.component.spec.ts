@@ -5,6 +5,7 @@ import { EMPTY, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { InvoiceArtifact, InvoiceDetail } from '../../models/billing.models';
 import { BillingTransportService } from '../../services/billing-transport.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { InvoiceDetailPageComponent } from './invoice-detail-page.component';
 
 const INVOICE_ID = 'inv-001';
@@ -41,14 +42,14 @@ const translations = {
       ELEVATION: {
         ARIA_LABEL: 'Manager elevation required',
         TITLE: 'Manager Authorization Required',
-        DESCRIPTION: 'Issuing this invoice requires manager-level authorization. Enter the manager password to proceed.',
-        PASSWORD_LABEL: 'Manager Password',
-        PASSWORD_PLACEHOLDER: 'Enter password',
+        DESCRIPTION: "Issuing this invoice requires manager-level authorization. Enter an authorizing manager's employee number to proceed.",
+        MANAGER_NUMBER_LABEL: 'Manager Employee Number',
+        MANAGER_NUMBER_PLACEHOLDER: 'Enter manager employee number',
         AUTHORIZE: 'Authorize',
         VERIFYING: 'Verifying...',
         ERROR: {
-          PASSWORD_REQUIRED: 'Password is required.',
-          INVALID_PASSWORD: 'Incorrect password. Please try again.',
+          EMPLOYEE_REQUIRED: 'Manager employee number is required.',
+          NOT_AUTHORIZED: 'That employee number is not an authorized manager. Please try again.',
         },
       },
     },
@@ -97,6 +98,7 @@ describe('InvoiceDetailPageComponent', () => {
     elevate: ReturnType<typeof vi.fn>;
     issueInvoice: ReturnType<typeof vi.fn>;
   };
+  let authServiceStub: { hasAnyRole: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     TestBed.resetTestingModule();
@@ -111,6 +113,8 @@ describe('InvoiceDetailPageComponent', () => {
       elevate: vi.fn().mockReturnValue(of({ elevationToken: 'elev-001' })),
       issueInvoice: vi.fn().mockReturnValue(of({ ...invoiceFixture, status: 'ISSUED' })),
     };
+    // Default: non-manager — exercises the manager-approval modal path.
+    authServiceStub = { hasAnyRole: vi.fn().mockReturnValue(false) };
 
     await TestBed.configureTestingModule({
       imports: [InvoiceDetailPageComponent, TranslateModule.forRoot()],
@@ -118,6 +122,7 @@ describe('InvoiceDetailPageComponent', () => {
         provideRouter([]),
         { provide: ActivatedRoute, useValue: routeStub },
         { provide: BillingTransportService, useValue: billingTransportStub },
+        { provide: AuthService, useValue: authServiceStub },
       ],
     }).compileComponents();
 
@@ -202,21 +207,79 @@ describe('InvoiceDetailPageComponent', () => {
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
-    const passwordInput = host.querySelector('#elevation-password') as HTMLInputElement | null;
+    const managerInput = host.querySelector('#elevation-manager-number') as HTMLInputElement | null;
 
     expect(host.textContent).toContain('Manager Authorization Required');
-    expect(host.textContent).toContain('Issuing this invoice requires manager-level authorization. Enter the manager password to proceed.');
-    expect(host.textContent).toContain('Manager Password');
-    expect(passwordInput?.placeholder).toBe('Enter password');
+    expect(host.textContent).toContain("Issuing this invoice requires manager-level authorization. Enter an authorizing manager's employee number to proceed.");
+    expect(host.textContent).toContain('Manager Employee Number');
+    expect(managerInput?.placeholder).toBe('Enter manager employee number');
     expect(host.textContent).toContain('Cancel');
     expect(host.textContent).toContain('Authorize');
 
-    component.elevationPassword.set('');
+    component.managerEmployeeNumber.set('');
     component.elevate();
     fixture.detectChanges();
 
-    expect(host.textContent).toContain('Password is required.');
+    expect(host.textContent).toContain('Manager employee number is required.');
     expect(billingTransportStub.elevate).not.toHaveBeenCalled();
+  });
+
+  it('on successful elevate: stores token, closes modal, and issues with the token', () => {
+    billingTransportStub.loadInvoiceDetail.mockReturnValueOnce(of({
+      ...invoiceFixture,
+      issuancePolicy: { issuableNow: true, requiresElevation: true },
+    }));
+    billingTransportStub.elevate.mockReturnValueOnce(of({ elevationToken: 'elev-xyz' }));
+
+    fixture.detectChanges();
+    component.initiateIssue();
+    component.managerEmployeeNumber.set('EMP-0001');
+    component.elevate();
+    fixture.detectChanges();
+
+    expect(billingTransportStub.elevate).toHaveBeenCalledWith('EMP-0001', INVOICE_ID);
+    expect(component.elevationToken()).toBe('elev-xyz');
+    expect(component.showElevationModal()).toBe(false);
+    expect(billingTransportStub.issueInvoice).toHaveBeenCalledWith(INVOICE_ID, { elevationToken: 'elev-xyz' });
+  });
+
+  it('maps a 401 elevate error to NOT_AUTHORIZED and a non-401 error to GENERIC', () => {
+    billingTransportStub.loadInvoiceDetail.mockReturnValue(of({
+      ...invoiceFixture,
+      issuancePolicy: { issuableNow: true, requiresElevation: true },
+    }));
+
+    fixture.detectChanges();
+    component.initiateIssue();
+
+    component.managerEmployeeNumber.set('EMP-0001');
+    billingTransportStub.elevate.mockReturnValueOnce(throwError(() => ({ status: 401 })));
+    component.elevate();
+    expect(component.elevationError()).toBe('BILLING.INVOICE_DETAIL.ELEVATION.ERROR.NOT_AUTHORIZED');
+
+    component.managerEmployeeNumber.set('EMP-0001');
+    billingTransportStub.elevate.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    component.elevate();
+    expect(component.elevationError()).toBe('BILLING.INVOICE_DETAIL.ELEVATION.ERROR.GENERIC');
+  });
+
+  it('skips the elevation modal and issues directly for a manager with override role', () => {
+    authServiceStub.hasAnyRole.mockReturnValue(true);
+    billingTransportStub.loadInvoiceDetail.mockReturnValueOnce(of({
+      ...invoiceFixture,
+      issuancePolicy: {
+        issuableNow: true,
+        requiresElevation: true,
+      },
+    }));
+
+    fixture.detectChanges();
+    component.initiateIssue();
+    fixture.detectChanges();
+
+    expect(component.showElevationModal()).toBe(false);
+    expect(billingTransportStub.elevate).not.toHaveBeenCalled();
+    expect(billingTransportStub.issueInvoice).toHaveBeenCalled();
   });
 
   it('renders translated success status after issue completes', () => {

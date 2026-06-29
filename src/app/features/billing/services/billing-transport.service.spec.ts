@@ -183,12 +183,13 @@ describe('BillingTransportService', () => {
     apiStub.post.mockReturnValueOnce(of(elevationResponse));
 
     let result: unknown;
-    service.elevate('manager-secret').subscribe(value => {
+    service.elevate('EMP-0001', 'inv-001').subscribe(value => {
       result = value;
     });
 
-    expect(apiStub.post).toHaveBeenCalledWith('/billing/auth/elevate', {
-      password: 'manager-secret',
+    expect(apiStub.post).toHaveBeenCalledWith('/invoice/v1/billing/auth/elevate', {
+      managerEmployeeNumber: 'EMP-0001',
+      invoiceId: 'inv-001',
     });
     expect(invoiceServiceStub.finalizeInvoice).not.toHaveBeenCalled();
     expect(result).toEqual(elevationResponse);

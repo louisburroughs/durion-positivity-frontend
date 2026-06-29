@@ -224,19 +224,21 @@
           {{ 'BILLING.INVOICE_DETAIL.ELEVATION.DESCRIPTION' | translate }}
         </p>
         <div class="form-field">
-          <label for="elevation-password" class="form-label">{{ 'BILLING.INVOICE_DETAIL.ELEVATION.PASSWORD_LABEL' | translate }}</label>
+          <label for="elevation-manager-number" class="form-label">{{ 'BILLING.INVOICE_DETAIL.ELEVATION.MANAGER_NUMBER_LABEL' | translate }}</label>
           <input
-            id="elevation-password"
-            type="password"
+            id="elevation-manager-number"
+            type="text"
             class="form-input"
-            [value]="elevationPassword()"
-            (input)="elevationPassword.set($any($event.target).value)"
-            [attr.placeholder]="'BILLING.INVOICE_DETAIL.ELEVATION.PASSWORD_PLACEHOLDER' | translate"
-            autocomplete="current-password"
+            [value]="managerEmployeeNumber()"
+            (input)="managerEmployeeNumber.set($any($event.target).value)"
+            [attr.placeholder]="'BILLING.INVOICE_DETAIL.ELEVATION.MANAGER_NUMBER_PLACEHOLDER' | translate"
+            [attr.aria-invalid]="elevationError() ? 'true' : null"
+            [attr.aria-describedby]="elevationError() ? 'elevation-error' : null"
+            autocomplete="off"
           />
         </div>
         @if (elevationError()) {
-          <div class="alert alert--error" role="alert">{{ elevationError()! | translate }}</div>
+          <div id="elevation-error" class="alert alert--error" role="alert">{{ elevationError()! | translate }}</div>
         }
       </div>
       <div class="modal__footer">
