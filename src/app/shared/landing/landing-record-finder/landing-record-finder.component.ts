@@ -191,6 +191,8 @@ export class LandingRecordFinderComponent {
   }
 
   get expanded(): boolean {
-    return this.mode === 'search' && this.results().length > 0;
+    // The listbox popup is displayed whenever it has content — results OR a
+    // loading/empty/error status message — so aria-expanded must reflect that.
+    return this.mode === 'search' && this.state() !== 'idle';
   }
 }
