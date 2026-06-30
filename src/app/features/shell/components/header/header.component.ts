@@ -20,7 +20,9 @@ export class HeaderComponent {
   readonly localeOptions = [
     { code: 'en-US', labelKey: 'SHELL.HEADER.LOCALE.OPTION.EN_US' },
     { code: 'es-US', labelKey: 'SHELL.HEADER.LOCALE.OPTION.ES_US' },
+    { code: 'es-MX', labelKey: 'SHELL.HEADER.LOCALE.OPTION.ES_MX' },
     { code: 'fr-CA', labelKey: 'SHELL.HEADER.LOCALE.OPTION.FR_CA' },
+    { code: 'fr-FR', labelKey: 'SHELL.HEADER.LOCALE.OPTION.FR_FR' },
   ] as const;
 
   /** Emitted when the hamburger button is clicked (mobile nav toggle). */
