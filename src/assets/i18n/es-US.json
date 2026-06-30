@@ -119,7 +119,9 @@
         "OPTION": {
           "EN_US": "Inglés (EE. UU.)",
           "ES_US": "Español (EE. UU.)",
-          "FR_CA": "Francés (Canadá)"
+          "ES_MX": "Español (México)",
+          "FR_CA": "Francés (Canadá)",
+          "FR_FR": "Francés (Francia)"
         }
       }
     },

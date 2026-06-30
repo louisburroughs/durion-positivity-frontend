@@ -178,8 +178,10 @@
         "ARIA": "Seleccionar idioma de la aplicación",
         "OPTION": {
           "EN_US": "Inglés (EE. UU.)",
+          "ES_US": "Español (EE. UU.)",
+          "ES_MX": "Español (México)",
           "FR_CA": "Francés (Canadá)",
-          "ES_MX": "Español (México)"
+          "FR_FR": "Francés (Francia)"
         }
       }
     },

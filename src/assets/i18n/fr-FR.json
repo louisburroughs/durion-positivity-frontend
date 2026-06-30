@@ -179,6 +179,8 @@
         "OPTION": {
           "EN_US": "Anglais (États-Unis)",
           "ES_US": "Espagnol (États-Unis)",
+          "ES_MX": "Espagnol (Mexique)",
+          "FR_CA": "Français (Canada)",
           "FR_FR": "Français (France)"
         }
       }
