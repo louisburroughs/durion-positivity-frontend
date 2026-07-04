@@ -2,15 +2,15 @@
  * InventoryService unit tests — CAP-214 Wave H
  *
  * API paths covered:
- *   listInventoryLocations      → GET  /v1/inventory/locations
- *   listStorageLocations        → GET  /v1/inventory/storage-locations?locationId=...
- *   getStorageLocation          → GET  /v1/inventory/storage-locations/{id}
- *   createStorageLocation       → POST /v1/inventory/storage-locations (Idempotency-Key)
- *   updateStorageLocation       → PUT  /v1/inventory/storage-locations/{id} (Idempotency-Key)
- *   deactivateStorageLocation   → POST /v1/inventory/storage-locations/{id}/deactivate
- *   listStorageTypes            → GET  /v1/inventory/meta/storage-types
- *   listSyncLogs                → GET  /v1/inventory/sync-logs
- *   triggerLocationSync         → POST /v1/inventory/locations/sync (Idempotency-Key)
+ *   listInventoryLocations      → GET  /inventory/v1/inventory/locations
+ *   listStorageLocations        → GET  /inventory/v1/inventory/storage-locations?locationId=...
+ *   getStorageLocation          → GET  /inventory/v1/inventory/storage-locations/{id}
+ *   createStorageLocation       → POST /inventory/v1/inventory/storage-locations (Idempotency-Key)
+ *   updateStorageLocation       → PUT  /inventory/v1/inventory/storage-locations/{id} (Idempotency-Key)
+ *   deactivateStorageLocation   → POST /inventory/v1/inventory/storage-locations/{id}/deactivate
+ *   listStorageTypes            → GET  /inventory/v1/inventory/meta/storage-types
+ *   listSyncLogs                → GET  /inventory/v1/inventory/sync-logs
+ *   triggerLocationSync         → POST /inventory/v1/inventory/locations/sync (Idempotency-Key)
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
@@ -62,11 +62,11 @@ describe('InventoryService [CAP-214]', () => {
   // ── listInventoryLocations() ───────────────────────────────────────────────
 
   describe('listInventoryLocations()', () => {
-    it('calls GET /v1/inventory/locations', () => {
+    it('calls GET /inventory/v1/inventory/locations', () => {
       service.listInventoryLocations().subscribe();
 
       const [path] = apiMock.get.mock.calls[0];
-      expect(path).toBe('/v1/inventory/locations');
+      expect(path).toBe('/inventory/v1/inventory/locations');
     });
 
     it('returns the locations array as an Observable', () => {
@@ -90,11 +90,11 @@ describe('InventoryService [CAP-214]', () => {
   // ── listStorageLocations() ─────────────────────────────────────────────────
 
   describe('listStorageLocations()', () => {
-    it('calls GET /v1/inventory/storage-locations with locationId param', () => {
+    it('calls GET /inventory/v1/inventory/storage-locations with locationId param', () => {
       service.listStorageLocations('loc-abc').subscribe();
 
       const [path, params] = apiMock.get.mock.calls[0] as [string, HttpParams];
-      expect(path).toBe('/v1/inventory/storage-locations');
+      expect(path).toBe('/inventory/v1/inventory/storage-locations');
       expect(params.get('locationId')).toBe('loc-abc');
     });
 
@@ -120,11 +120,11 @@ describe('InventoryService [CAP-214]', () => {
   // ── getStorageLocation() ───────────────────────────────────────────────────
 
   describe('getStorageLocation()', () => {
-    it('calls GET /v1/inventory/storage-locations/{id}', () => {
+    it('calls GET /inventory/v1/inventory/storage-locations/{id}', () => {
       service.getStorageLocation('sl-999').subscribe();
 
       const [path] = apiMock.get.mock.calls[0];
-      expect(path).toBe('/v1/inventory/storage-locations/sl-999');
+      expect(path).toBe('/inventory/v1/inventory/storage-locations/sl-999');
     });
 
     it('returns the storage location object as an Observable', () => {
@@ -143,11 +143,11 @@ describe('InventoryService [CAP-214]', () => {
   describe('createStorageLocation()', () => {
     const payload = { name: 'Bin 42', locationId: 'loc-1' };
 
-    it('calls POST /v1/inventory/storage-locations', () => {
+    it('calls POST /inventory/v1/inventory/storage-locations', () => {
       service.createStorageLocation(payload, 'idem-key-1').subscribe();
 
       const [path] = apiMock.post.mock.calls[0];
-      expect(path).toBe('/v1/inventory/storage-locations');
+      expect(path).toBe('/inventory/v1/inventory/storage-locations');
     });
 
     it('sends the body', () => {
@@ -177,11 +177,11 @@ describe('InventoryService [CAP-214]', () => {
   describe('updateStorageLocation()', () => {
     const updateBody = { name: 'Bin 43' };
 
-    it('calls PUT /v1/inventory/storage-locations/{id}', () => {
+    it('calls PUT /inventory/v1/inventory/storage-locations/{id}', () => {
       service.updateStorageLocation('sl-1', updateBody, 'idem-key-update').subscribe();
 
       const [path] = apiMock.put.mock.calls[0];
-      expect(path).toBe('/v1/inventory/storage-locations/sl-1');
+      expect(path).toBe('/inventory/v1/inventory/storage-locations/sl-1');
     });
 
     it('sends the body', () => {
@@ -204,11 +204,11 @@ describe('InventoryService [CAP-214]', () => {
   describe('deactivateStorageLocation()', () => {
     const deactivateBody = { reason: 'OBSOLETE' };
 
-    it('calls POST /v1/inventory/storage-locations/{id}/deactivate', () => {
+    it('calls POST /inventory/v1/inventory/storage-locations/{id}/deactivate', () => {
       service.deactivateStorageLocation('sl-2', deactivateBody, 'idem-key-deact').subscribe();
 
       const [path] = apiMock.post.mock.calls[0];
-      expect(path).toBe('/v1/inventory/storage-locations/sl-2/deactivate');
+      expect(path).toBe('/inventory/v1/inventory/storage-locations/sl-2/deactivate');
     });
 
     it('sends the body', () => {
@@ -229,11 +229,11 @@ describe('InventoryService [CAP-214]', () => {
   // ── listStorageTypes() ────────────────────────────────────────────────────
 
   describe('listStorageTypes()', () => {
-    it('calls GET /v1/inventory/meta/storage-types', () => {
+    it('calls GET /inventory/v1/inventory/meta/storage-types', () => {
       service.listStorageTypes().subscribe();
 
       const [path] = apiMock.get.mock.calls[0];
-      expect(path).toBe('/v1/inventory/meta/storage-types');
+      expect(path).toBe('/inventory/v1/inventory/meta/storage-types');
     });
 
     it('returns the storage types array as an Observable', () => {
@@ -250,11 +250,11 @@ describe('InventoryService [CAP-214]', () => {
   // ── listSyncLogs() ────────────────────────────────────────────────────────
 
   describe('listSyncLogs()', () => {
-    it('calls GET /v1/inventory/sync-logs', () => {
+    it('calls GET /inventory/v1/inventory/sync-logs', () => {
       service.listSyncLogs().subscribe();
 
       const [path] = apiMock.get.mock.calls[0];
-      expect(path).toBe('/v1/inventory/sync-logs');
+      expect(path).toBe('/inventory/v1/inventory/sync-logs');
     });
 
     it('returns the sync logs array as an Observable', () => {
@@ -286,11 +286,11 @@ describe('InventoryService [CAP-214]', () => {
   // ── triggerLocationSync() ─────────────────────────────────────────────────
 
   describe('triggerLocationSync()', () => {
-    it('calls POST /v1/inventory/locations/sync', () => {
+    it('calls POST /inventory/v1/inventory/locations/sync', () => {
       service.triggerLocationSync('idem-key-sync').subscribe();
 
       const [path] = apiMock.post.mock.calls[0];
-      expect(path).toBe('/v1/inventory/locations/sync');
+      expect(path).toBe('/inventory/v1/inventory/locations/sync');
     });
 
     it('sends an empty body', () => {

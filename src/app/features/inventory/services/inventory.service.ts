@@ -130,12 +130,12 @@ export class InventoryDomainService {
     if (locationId) {
       params = params.set('locationId', locationId);
     }
-    return this.api.get<PutawayTask[]>('/inventory/v1/putaway/tasks', params);
+    return this.api.get<PutawayTask[]>('/inventory/v1/inventory/putaway/tasks', params);
   }
 
   completePutawayTask(taskId: string, body: PutawayCompleteRequest): Observable<PutawayResult> {
     return this.api.post<PutawayResult>(
-      `/inventory/v1/putaway/tasks/${encodeURIComponent(taskId)}/complete`,
+      `/inventory/v1/inventory/putaway/tasks/${encodeURIComponent(taskId)}/complete`,
       body,
     );
   }
@@ -145,7 +145,7 @@ export class InventoryDomainService {
     if (locationId) {
       params = params.set('locationId', locationId);
     }
-    return this.api.get<ReplenishmentTask[]>('/inventory/v1/replenishment/tasks', params);
+    return this.api.get<ReplenishmentTask[]>('/inventory/v1/inventory/replenishment/tasks', params);
   }
 
   getReturnableItems(workorderId: string): Observable<ReturnableItem[]> {

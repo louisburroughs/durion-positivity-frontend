@@ -43,28 +43,48 @@ leading `/{module}` segment yields `/api/v1/{domain}/...`, which 404s.
 
 ## Applied in this branch
 
-- **`events/contract`** — `AccountingService.BASE` corrected to
-  `/accounting/v1/accounting` (SDK-canonical). Accounting service + event-contract
-  page specs pass.
+All corrected to the SDK-canonical `/api/{domain}/v1/{domain}/...` pattern,
+with their contract-test assertions updated. All affected service specs pass.
 
-## Not applied (need runtime confirmation before touching)
+- **`events/contract`** — `AccountingService.BASE` `/v1/accounting` → `/accounting/v1/accounting`.
+- **location-sync** (`features/location/services/inventory.service.ts`) —
+  `BASE` `/v1/inventory` → `/inventory/v1/inventory` (fixes `locations`,
+  `storage-locations`, `sync-logs`, `meta/storage-types`, `locations/sync`).
+- **`cycle-count-plans`** (`features/inventory/services/inventory-cycle-count.service.ts`) —
+  `/inventory/v1/cycle-count-plans` → `/inventory/v1/inventory/cycleCountPlans`
+  (matches the SDK's `createPlan`/`getPlan` collection; SDK has no list method).
+- **putaway / replenishment** (`features/inventory/services/inventory.service.ts`) —
+  `/inventory/v1/putaway/tasks` (+`/complete`) and `/inventory/v1/replenishment/tasks`
+  → inserted the inner `/inventory` domain segment. Both SDK-confirmed.
 
-The inventory-side 404s (`cycle-count-plans`, `putaway`, `replenishment`,
-location-sync `locations`) all point to the same root cause: the local
-inventory services (`features/inventory/services/*`, `features/location/services/inventory.service.ts`)
-were written to a **different path scheme** than the SDK
-(kebab-case, single `/v1/inventory` prefix vs SDK camelCase, `/inventory/v1/inventory`).
-Correcting them is mechanical but:
+Note: `sync-logs`, `meta/storage-types`, `locations/sync` are not modelled in
+the inventory SDK; they follow the same module-prefix pattern but their exact
+op paths are backend-defined and unconfirmed at runtime.
 
-1. touches many methods across two services,
-2. requires rewriting ~40 contract-test assertions, and
-3. the local response models may differ from the SDK DTOs (as seen for
-   `EventEnvelopeContract`), so a blind switch to SDK services risks shape
-   mismatches.
+## Not applied — diverge from the SDK, need backend contract reconciliation
 
-Recommend confirming one corrected inventory path at runtime (or against the
-backend module's OpenAPI) before applying the batch, so the contract-test
-rewrite is done once against a verified target.
+Other methods in `features/inventory/services/inventory.service.ts` are **not**
+a simple missing-prefix case — they use a resource structure the current SDK
+does not model the same way, so a blind prefix fix would produce a different
+wrong path:
+
+- `reasons`, `movements/return-to-stock` — not in the inventory SDK.
+- `workorders/{id}/returnable-items` — SDK exposes this under
+  `returns/returnable-items`, not `workorders/{id}/...`.
+- `workorders/{id}/allocations/{id}/shortage-options`, `.../resolve-shortage` — not in the SDK.
+- `ledger` — SDK-confirmed (`/v1/inventory/ledger`) and latently mis-prefixed,
+  but not an audit-flagged page; left out of this focused batch.
+
+These need the backend inventory module's actual routes (or a runtime probe)
+to correct safely, since the frontend and SDK disagree on their shape.
+
+## Runtime confirmation
+
+The applied path corrections are **SDK-derived, not yet runtime-confirmed** on
+the deployed backend (authenticated production probing was out of scope). They
+match the gateway pattern verified via `/api/people/v1/people` = 200 and the
+per-module basePaths, and cannot regress the affected pages (which 404 today).
+A re-run of `npm run audit:site` after backend deploys will confirm.
 
 ## Suggested next steps
 
