@@ -41,36 +41,12 @@
 
       <!-- Location typeahead -->
       <div class="field-group">
-        <label class="field-label" for="avail-location">{{ 'INVENTORY.AVAILABILITY.FILTER.LOCATION' | translate }}</label>
-        <div class="typeahead-wrap">
-          <input
-            id="avail-location"
-            type="text"
-            role="combobox"
-            class="input-underline"
-            autocomplete="off"
-            [value]="locationDisplayName()"
-            (input)="onLocationInput($any($event.target).value)"
-            (focus)="onLocationFocus()"
-            (blur)="onLocationBlur()"
-            [attr.aria-expanded]="showLocationSuggestions() && locationSuggestions().length > 0"
-            aria-autocomplete="list"
-            aria-haspopup="listbox"
-            [attr.placeholder]="'INVENTORY.AVAILABILITY.FILTER.LOCATION_PLACEHOLDER' | translate"
-          />
-          @if (showLocationSuggestions() && locationSuggestions().length > 0) {
-            <ul class="typeahead-suggestions" role="listbox">
-              @for (loc of locationSuggestions(); track loc.id) {
-                <li class="typeahead-item" role="option" aria-selected="false" (mousedown)="selectLocation(loc)">
-                  <span class="suggestion-primary">{{ loc.name }}</span>
-                  @if (loc.code) {
-                    <span class="suggestion-secondary">{{ loc.code }}</span>
-                  }
-                </li>
-              }
-            </ul>
-          }
-        </div>
+        <app-location-picker
+          [label]="'INVENTORY.AVAILABILITY.FILTER.LOCATION' | translate"
+          [placeholder]="'INVENTORY.AVAILABILITY.FILTER.LOCATION_PLACEHOLDER' | translate"
+          [selectedId]="locationIdInput()"
+          (locationSelected)="onLocationPicked($event)"
+        ></app-location-picker>
       </div>
 
       <button class="btn-primary" type="button" (click)="search()" [disabled]="!skuInput().trim()">

@@ -1,9 +1,13 @@
-import { TestBed, fakeAsync, tick, ComponentFixture } from '@angular/core/testing';
+import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { vi } from 'vitest';
+import { of } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { EstimateCreatePageComponent } from './estimate-create-page.component';
+import { CrmService } from '../../../crm/services/crm.service';
+import { PartyDetail } from '../../../crm/models/crm.models';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
 
@@ -29,6 +33,16 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
+        // Customer search + label resolution now live in the shared app-customer-lookup
+        // (bound to the customerId control). Stub CrmService so those don't hit HTTP;
+        // the vehicle list (CRMVehiclesService) stays real HTTP below.
+        {
+          provide: CrmService,
+          useValue: {
+            searchParties: vi.fn().mockReturnValue(of({ parties: [] as PartyDetail[] })),
+            getParty: vi.fn().mockReturnValue(of({ partyId: 'p', legalName: 'Party' } satisfies PartyDetail)),
+          },
+        },
       ],
     }).compileComponents();
 
@@ -72,7 +86,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     component.form.setValue({
       customerId: 'cust-1',
       vehicleId: 'veh-1',
-    });
+    }, { emitEvent: false });
     component.submit();
     expect(component.state()).toBe('saving');
     const req = http.expectOne(`${BASE}/v1/workorders/estimates`);
@@ -81,7 +95,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
   });
 
   it('should display access-denied message on 403', () => {
-    component.form.setValue({ customerId: 'c', vehicleId: 'v' });
+    component.form.setValue({ customerId: 'c', vehicleId: 'v' }, { emitEvent: false });
     component.submit();
     const req = http.expectOne(`${BASE}/v1/workorders/estimates`);
     req.flush({ code: 'FORBIDDEN', message: 'Forbidden' }, { status: 403, statusText: 'Forbidden' });
@@ -90,7 +104,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
   });
 
   it('should display error message on server error', () => {
-    component.form.setValue({ customerId: 'c', vehicleId: 'v' });
+    component.form.setValue({ customerId: 'c', vehicleId: 'v' }, { emitEvent: false });
     component.submit();
     const req = http.expectOne(`${BASE}/v1/workorders/estimates`);
     req.flush({ code: 'INTERNAL_ERROR', message: 'Server error' }, { status: 500, statusText: 'Error' });
@@ -99,33 +113,22 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     expect(component.errorMessage()).toBe('Server error');
   });
 
-  it('should suggest CRM parties via server-side search and select by partyId', fakeAsync(() => {
-    component.onCustomerInput('acme');
-    tick(250); // debounce
+  it('loads the selected customer\'s vehicle list when customerId is set (via app-customer-lookup)', () => {
+    // The shared customer-lookup drives the customerId control; setting it fires the
+    // valueChanges wiring that loads that customer's complete vehicle list.
+    component.form.patchValue({ customerId: 'p-1' });
+    expect(component.vehiclesState()).toBe('loading');
 
-    const search = http.expectOne(r =>
-      r.method === 'GET' && r.url.endsWith('/v1/crm/accounts/parties') && r.params.get('name') === 'acme');
-    search.flush({
-      results: [{ partyId: 'p-1', legalName: 'Acme Towing', customerNumber: 'C-100' }],
-      totalCount: 1, pageNumber: 0, pageSize: 25,
-    });
-    expect(component.customerSuggestions().map(p => p.partyId)).toEqual(['p-1']);
-
-    component.selectCustomer({ partyId: 'p-1', legalName: 'Acme Towing', customerNumber: 'C-100' });
-    expect(component.form.controls.customerId.value).toBe('p-1');
-    expect(component.customerDisplayName()).toBe('Acme Towing · C-100');
-
-    // selecting a customer loads that customer's complete vehicle list
     http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/p-1/vehicles'))
       .flush([
         { vehicleId: 'v-1', vin: '1ABC', make: 'Ford', model: 'F-150', year: 2019 },
         { vehicleId: 'v-2', vin: '2XYZ', make: 'GMC', model: 'Sierra', year: 2021 },
       ]);
     expect(component.customerVehicles().length).toBe(2);
-  }));
+  });
 
   it('should show a no-vehicles empty state when the customer has no resolvable vehicles', () => {
-    component.selectCustomer({ partyId: 'p-9', legalName: 'No Cars Co', customerNumber: 'C-900' });
+    component.form.patchValue({ customerId: 'p-9' });
 
     expect(component.vehiclesState()).toBe('loading');
     http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/p-9/vehicles')).flush([]);
@@ -139,7 +142,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
   });
 
   it('should show an error state (not the empty state) when the vehicle fetch fails', () => {
-    component.selectCustomer({ partyId: 'p-err', legalName: 'Acme', customerNumber: 'C-1' });
+    component.form.patchValue({ customerId: 'p-err' });
 
     expect(component.vehiclesState()).toBe('loading');
     http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/p-err/vehicles'))
@@ -163,11 +166,11 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
   });
 
   it('should not let a stale vehicle response overwrite a newer customer selection', () => {
-    component.selectCustomer({ partyId: 'cust-A', legalName: 'A', customerNumber: 'C-A' });
+    component.form.patchValue({ customerId: 'cust-A' });
     const reqA = http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/cust-A/vehicles'));
 
     // Switch before A resolves; switchMap should cancel reqA.
-    component.selectCustomer({ partyId: 'cust-B', legalName: 'B', customerNumber: 'C-B' });
+    component.form.patchValue({ customerId: 'cust-B' });
     const reqB = http.expectOne(r => r.method === 'GET' && r.url.endsWith('/v1/crm/cust-B/vehicles'));
 
     reqB.flush([{ vehicleId: 'v-b', vin: 'BBB', make: 'GMC', model: 'Sierra', year: 2021 }]);
@@ -185,7 +188,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
   });
 
   it('should not POST a new vehicle when VIN is empty', () => {
-    component.form.patchValue({ customerId: 'cust-1' });
+    component.form.patchValue({ customerId: 'cust-1' }, { emitEvent: false });
     component.onVehicleSelect(component.addVehicleOption);
     component.saveNewVehicle();
     expect(component.newVehicleForm.controls.vinNumber.touched).toBe(true);
@@ -193,7 +196,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
   });
 
   it('should POST new vehicle then select it on success', () => {
-    component.form.patchValue({ customerId: 'cust-1' });
+    component.form.patchValue({ customerId: 'cust-1' }, { emitEvent: false });
     component.onVehicleSelect(component.addVehicleOption);
     component.newVehicleForm.patchValue({ vinNumber: '1FTABC123', description: 'F-150' });
 
@@ -209,7 +212,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
   });
 
   it('should surface an error when vehicle creation fails', () => {
-    component.form.patchValue({ customerId: 'cust-1' });
+    component.form.patchValue({ customerId: 'cust-1' }, { emitEvent: false });
     component.onVehicleSelect(component.addVehicleOption);
     component.newVehicleForm.patchValue({ vinNumber: '1FTABC123' });
 

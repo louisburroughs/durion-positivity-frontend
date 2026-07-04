@@ -81,54 +81,6 @@
   border-radius: 0;
 }
 
-/* ── Location typeahead ──────────────────────────────────────────────────── */
-
-.location-picker-wrap {
-  position: relative;
-}
-
-.location-suggestions {
-  position: absolute;
-  z-index: 200;
-  top: calc(100% + 2px);
-  left: 0;
-  right: 0;
-  margin: 0;
-  padding: var(--space-1) 0;
-  list-style: none;
-  background: var(--cardBackground);
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--currentTextColor) 12%, transparent);
-  max-height: 18rem;
-  overflow-y: auto;
-}
-
-.location-suggestion {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  cursor: pointer;
-  font-size: 0.875rem;
-  color: var(--currentTextColor);
-}
-
-.location-suggestion:hover {
-  background: color-mix(in srgb, var(--brand-primary) 8%, var(--cardBackground));
-}
-
-.suggestion-name {
-  flex: 1;
-  font-weight: 500;
-}
-
-.suggestion-code {
-  font-size: 0.75rem;
-  color: var(--brand-secondary);
-  font-family: var(--font-mono, monospace);
-}
-
 .btn-primary {
   background: var(--brand-primary);
   color: var(--contrastTextColor);

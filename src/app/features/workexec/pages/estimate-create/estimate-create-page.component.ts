@@ -5,26 +5,24 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, catchError, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import {
   CRMVehiclesService,
   CreateVehicleForPartyRequest,
   VehicleResponse,
   VehicleSummary,
 } from '@durion-sdk/customer';
-import { CrmService } from '../../../crm/services/crm.service';
-import { PartyDetail } from '../../../crm/models/crm.models';
-import { partyLabel as crmPartyLabel, vehicleLabel as crmVehicleLabel } from '../../../crm/util/crm-labels';
+import { vehicleLabel as crmVehicleLabel } from '../../../crm/util/crm-labels';
+import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
 import { WorkexecService } from '../../services/workexec.service';
 import { PageState } from '../../models/workexec.models';
 
-const MAX_SUGGESTIONS = 8;
 const ADD_VEHICLE_OPTION = '__add__';
 
 @Component({
   selector: 'app-estimate-create-page',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, TranslatePipe, CustomerLookupComponent],
   templateUrl: './estimate-create-page.component.html',
   styleUrl: './estimate-create-page.component.css',
 })
@@ -33,18 +31,11 @@ export class EstimateCreatePageComponent implements OnInit {
   private readonly router   = inject(Router);
   private readonly fb       = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly crm = inject(CrmService);
   private readonly vehiclesApi = inject(CRMVehiclesService);
 
   readonly state        = signal<PageState>('idle');
   readonly errorMessage = signal<string | null>(null);
   readonly fieldErrors  = signal<Record<string, string>>({});
-
-  readonly customerSuggestions = signal<PartyDetail[]>([]);
-  readonly customerDisplayName = signal('');
-  readonly showCustomerSuggestions = signal(false);
-  private readonly customerQuery$ = new Subject<string>();
-  private customerSearchPrimed = false;
 
   readonly customerVehicles = signal<VehicleSummary[]>([]);
   // Single-signal lifecycle for the vehicle fetch so the template can distinguish
@@ -78,17 +69,6 @@ export class EstimateCreatePageComponent implements OnInit {
         this.customerVehicles.set(res.vehicles);
         this.vehiclesState.set(res.ok ? 'loaded' : 'error');
       });
-
-    // Server-side customer search (debounced); the browse term matches name and
-    // customer number, so there is no client-side row cap.
-    this.customerQuery$
-      .pipe(
-        debounceTime(250),
-        distinctUntilChanged(),
-        switchMap(q => this.crm.searchParties(q).pipe(catchError(() => of({ parties: [] as PartyDetail[] })))),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(res => this.customerSuggestions.set((res.parties ?? []).slice(0, MAX_SUGGESTIONS)));
   }
 
   readonly form = this.fb.nonNullable.group({
@@ -105,45 +85,22 @@ export class EstimateCreatePageComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    // The customer-lookup control drives the vehicle list: a new customer id
+    // (interactive select or deep-link patch) resets and reloads vehicles;
+    // clearing the field resets the selection.
+    this.form.controls.customerId.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(id => {
+        this.resetVehicleSelection();
+        if (id) { this.loadVehicles(id); }
+      });
+
     const nav = this.router.getCurrentNavigation()?.extras?.state as Record<string, string> | undefined;
     if (nav?.['customerId']) {
+      // patchValue fires customerId.valueChanges above, which loads vehicles.
       this.form.patchValue({ customerId: nav['customerId'] });
-      // Deep-linked customer still needs its vehicle list loaded (with the same
-      // loading / empty / error UI as an interactive selection).
-      this.loadVehicles(nav['customerId']);
     }
     if (nav?.['vehicleId'])  this.form.patchValue({ vehicleId: nav['vehicleId'] });
-  }
-
-  onCustomerInput(value: string): void {
-    this.customerDisplayName.set(value);
-    this.form.patchValue({ customerId: '' });
-    this.resetVehicleSelection();
-    this.showCustomerSuggestions.set(true);
-    this.customerQuery$.next(value);
-  }
-
-  onCustomerFocus(): void {
-    this.showCustomerSuggestions.set(true);
-    if (!this.customerSearchPrimed) {
-      this.customerSearchPrimed = true;
-      this.customerQuery$.next(this.customerDisplayName());
-    }
-  }
-
-  onCustomerBlur(): void {
-    setTimeout(() => this.showCustomerSuggestions.set(false), 150);
-  }
-
-  selectCustomer(party: PartyDetail): void {
-    const id = party.partyId ?? '';
-    this.form.patchValue({ customerId: id });
-    this.customerDisplayName.set(this.customerLabel(party));
-    this.showCustomerSuggestions.set(false);
-    this.resetVehicleSelection();
-
-    if (!id) { return; }
-    this.loadVehicles(id);
   }
 
   /** Kick off (or retry) the vehicle fetch for a customer via the cancelling pipeline. */
@@ -156,11 +113,6 @@ export class EstimateCreatePageComponent implements OnInit {
   retryLoadVehicles(): void {
     const id = this.form.controls.customerId.value;
     if (id) { this.loadVehicles(id); }
-  }
-
-  /** Display label for a party row (shared CRM label: name + DBA + customer number). */
-  customerLabel(party: PartyDetail): string {
-    return crmPartyLabel(party);
   }
 
   /** Human-readable label for a vehicle dropdown option. */

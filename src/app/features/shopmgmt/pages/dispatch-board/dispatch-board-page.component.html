@@ -11,41 +11,11 @@
 
     <div class="filter-bar">
       <div class="field-group">
-        <label class="field-label" for="dispatch-location">{{ 'SHOPMGMT.DISPATCH_BOARD.LOCATION' | translate }}</label>
-        <div class="location-picker-wrap">
-          <input
-            id="dispatch-location"
-            name="locationDisplay"
-            type="text"
-            role="combobox"
-            autocomplete="off"
-            [value]="locationDisplayName()"
-            (input)="onLocationInput($any($event.target).value)"
-            (focus)="onLocationFocus()"
-            (blur)="onLocationBlur()"
-            [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.LOCATION_ARIA' | translate"
-            [attr.aria-expanded]="showSuggestions() && locationSuggestions().length > 0"
-            aria-autocomplete="list"
-            aria-haspopup="listbox"
-            />
-          @if (showSuggestions() && locationSuggestions().length > 0) {
-            <ul class="location-suggestions" role="listbox">
-              @for (loc of locationSuggestions(); track loc.id) {
-                <li
-                  class="location-suggestion"
-                  role="option"
-                  [attr.aria-selected]="loc.id === selectedLocationId()"
-                  (mousedown)="selectLocation(loc)"
-                  >
-                  <span class="suggestion-name">{{ loc.name }}</span>
-                  @if (loc.code) {
-                    <span class="suggestion-code">{{ loc.code }}</span>
-                  }
-                </li>
-              }
-            </ul>
-          }
-        </div>
+        <app-location-picker
+          [label]="'SHOPMGMT.DISPATCH_BOARD.LOCATION' | translate"
+          [selectedId]="selectedLocationId()"
+          (locationSelected)="onLocationPicked($event)"
+        ></app-location-picker>
       </div>
 
       <div class="field-group">

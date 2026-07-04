@@ -1,14 +1,14 @@
 
-import { Component, DestroyRef, inject, signal, computed } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
 import { ProductsAPIService, ProductSummary } from '@durion-sdk/catalog';
-import { LocationAPIService, LocationResponseDTO } from '@durion-sdk/location';
 import { AvailabilityView } from '../../models/inventory.models';
 import { InventoryDomainService } from '../../services/inventory.service';
+import { LocationPickerComponent } from '../../../location/components/location-picker/location-picker.component';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
@@ -17,7 +17,7 @@ const MAX_SUGGESTIONS = 8;
 @Component({
   selector: 'app-inventory-availability',
   standalone: true,
-  imports: [TranslatePipe, FormsModule],
+  imports: [TranslatePipe, FormsModule, LocationPickerComponent],
   templateUrl: './availability.component.html',
   styleUrl: './availability.component.css',
 })
@@ -26,7 +26,6 @@ export class AvailabilityComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly productsApi = inject(ProductsAPIService);
-  private readonly locationApi = inject(LocationAPIService);
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -39,20 +38,6 @@ export class AvailabilityComponent {
   readonly productSuggestions = signal<ProductSummary[]>([]);
   readonly showProductSuggestions = signal(false);
   private readonly productSearch$ = new Subject<string>();
-
-  // ── Location typeahead ─────────────────────────────────────────────────────
-  readonly allLocations = signal<LocationResponseDTO[]>([]);
-  readonly locationDisplayName = signal('');
-  readonly showLocationSuggestions = signal(false);
-
-  readonly locationSuggestions = computed<LocationResponseDTO[]>(() => {
-    const q = this.locationDisplayName().trim().toLowerCase();
-    const locs = this.allLocations();
-    if (!q) return locs.slice(0, MAX_SUGGESTIONS);
-    return locs.filter(l =>
-      l.name?.toLowerCase().includes(q) || l.code?.toLowerCase().includes(q),
-    ).slice(0, MAX_SUGGESTIONS);
-  });
 
   constructor() {
     // Product search: debounce keystrokes, then call API
@@ -70,14 +55,6 @@ export class AvailabilityComponent {
     ).subscribe(result => {
       this.productSuggestions.set((result as { data?: ProductSummary[] }).data ?? []);
     });
-
-    // Load all locations for typeahead
-    this.locationApi.getAllLocations('body', false, { transferCache: false })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: locs => this.allLocations.set(locs as LocationResponseDTO[]),
-        error: () => {},
-      });
 
     // Pre-fill from query params
     const params = this.route.snapshot.queryParamMap;
@@ -113,25 +90,9 @@ export class AvailabilityComponent {
     this.showProductSuggestions.set(false);
   }
 
-  // ── Location typeahead handlers ────────────────────────────────────────────
-  onLocationInput(value: string): void {
-    this.locationDisplayName.set(value);
-    this.locationIdInput.set('');
-    this.showLocationSuggestions.set(true);
-  }
-
-  onLocationFocus(): void {
-    if (this.allLocations().length > 0) this.showLocationSuggestions.set(true);
-  }
-
-  onLocationBlur(): void {
-    setTimeout(() => this.showLocationSuggestions.set(false), 150);
-  }
-
-  selectLocation(loc: LocationResponseDTO): void {
-    this.locationIdInput.set(loc.id ?? '');
-    this.locationDisplayName.set(loc.name ?? loc.code ?? loc.id ?? '');
-    this.showLocationSuggestions.set(false);
+  // ── Location typeahead ─────────────────────────────────────────────────────
+  onLocationPicked(id: string): void {
+    this.locationIdInput.set(id);
   }
 
   search(): void {
