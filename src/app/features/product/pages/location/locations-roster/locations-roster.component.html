@@ -36,7 +36,7 @@
         <thead>
           <tr>
             <th>{{ 'PRODUCT.LOCATION.ROSTER.TABLE.NAME' | translate }}</th>
-            <th>{{ 'PRODUCT.LOCATION.ROSTER.TABLE.REGION' | translate }}</th>
+            <th>{{ 'PRODUCT.LOCATION.ROSTER.TABLE.CODE' | translate }}</th>
             <th>{{ 'PRODUCT.LOCATION.ROSTER.TABLE.STATUS' | translate }}</th>
             <th>{{ 'PRODUCT.LOCATION.ROSTER.TABLE.LAST_VALIDATED' | translate }}</th>
             <th>{{ 'PRODUCT.LOCATION.ROSTER.TABLE.VALIDATION_STATUS' | translate }}</th>
@@ -47,7 +47,7 @@
           @for (entry of roster(); track entry.id) {
           <tr>
             <td>{{ entry.name }}</td>
-            <td>{{ entry.region }}</td>
+            <td>{{ entry.code }}</td>
             <td>
               <span class="badge" [class.badge--success]="entry.status === 'ACTIVE'"
                 [class.badge--neutral]="entry.status === 'INACTIVE'">

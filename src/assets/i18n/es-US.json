@@ -2198,7 +2198,7 @@
           "STATUS": "Estado"
         },
         "TABLE": {
-          "REGION": "Región",
+          "CODE": "Código",
           "NAME": "Nombre",
           "STATUS": "Estado",
           "VALIDATION_STATUS": "Validación",

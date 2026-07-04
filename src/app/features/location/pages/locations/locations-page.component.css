@@ -90,15 +90,6 @@
   word-break: break-word;
 }
 
-.location-id {
-  margin: 0;
-  font-size: 0.7rem;
-  color: var(--currentTextColor);
-  opacity: 0.4;
-  font-family: monospace;
-  word-break: break-all;
-}
-
 .empty-state {
   border: 1px dashed var(--input-border);
   border-radius: var(--radius-md);
