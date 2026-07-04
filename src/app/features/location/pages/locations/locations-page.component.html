@@ -1,5 +1,5 @@
 <section class="page-header">
-  <h2>{{ 'LOCATION.LOCATIONS.TITLE' | translate }}</h2>
+  <h1>{{ 'LOCATION.LOCATIONS.TITLE' | translate }}</h1>
   <button type="button" class="btn-primary open-create-btn" (click)="openCreateModal()">{{ 'LOCATION.LOCATIONS.CREATE_LOCATION' | translate }}</button>
 </section>
 
@@ -53,10 +53,6 @@
               </div>
             }
           </dl>
-
-          @if (location.id) {
-            <p class="location-id">{{ location.id }}</p>
-          }
         </article>
       }
     </section>

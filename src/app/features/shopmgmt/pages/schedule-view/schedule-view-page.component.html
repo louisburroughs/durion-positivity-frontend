@@ -1,5 +1,5 @@
 <div class="page-header">
-  <h2>{{ 'SHOPMGMT.SCHEDULE_VIEW.TITLE' | translate }}</h2>
+  <h1>{{ 'SHOPMGMT.SCHEDULE_VIEW.TITLE' | translate }}</h1>
 </div>
 
 <div class="filter-bar">
@@ -11,6 +11,7 @@
           id="svLocation"
           name="locationDisplay"
           type="text"
+          role="combobox"
           autocomplete="off"
           [value]="locationDisplayName()"
           (input)="onLocationInput($any($event.target).value)"

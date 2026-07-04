@@ -68,7 +68,7 @@
           <button class="btn-primary" type="submit" [disabled]="!canSubmit() || state() === 'submitting'">
             {{ 'INVENTORY.COUNTS.PLAN_FORM.ACTION.SUBMIT' | translate }}
           </button>
-          <a class="btn-secondary" routerLink="/app/inventory/counts/plans">{{ 'COMMON.CANCEL' | translate }}</a>
+          <button class="btn-secondary" type="button" (click)="cancel()">{{ 'COMMON.CANCEL' | translate }}</button>
         </div>
       </fieldset>
     </form>

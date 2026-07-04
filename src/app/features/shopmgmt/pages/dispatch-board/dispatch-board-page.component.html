@@ -17,6 +17,7 @@
             id="dispatch-location"
             name="locationDisplay"
             type="text"
+            role="combobox"
             autocomplete="off"
             [value]="locationDisplayName()"
             (input)="onLocationInput($any($event.target).value)"

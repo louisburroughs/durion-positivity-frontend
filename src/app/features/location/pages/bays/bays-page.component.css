@@ -5,7 +5,7 @@
   margin-bottom: var(--space-6);
 }
 
-.page-header h2 {
+.page-header h1 {
   margin: 0;
   font-family: var(--font-primary);
   color: var(--currentTextColor);

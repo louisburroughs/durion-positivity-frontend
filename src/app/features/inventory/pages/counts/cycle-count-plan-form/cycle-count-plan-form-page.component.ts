@@ -2,7 +2,7 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { InventoryDomainService } from '../../../services/inventory.service';
 import { InventoryCycleCountService } from '../../../services/inventory-cycle-count.service';
 import { LocationRef, LocationZone } from '../../../models/inventory.models';
@@ -12,7 +12,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'submitting' | 'error';
 @Component({
   selector: 'app-cycle-count-plan-form-page',
   standalone: true,
-  imports: [TranslatePipe, RouterLink],
+  imports: [TranslatePipe],
   templateUrl: './cycle-count-plan-form-page.component.html',
   styleUrl: './cycle-count-plan-form-page.component.css',
 })
@@ -131,6 +131,10 @@ export class CycleCountPlanFormPageComponent {
           this.errorKey.set('INVENTORY.COUNTS.PLANS.ERROR.SUBMIT');
         },
       });
+  }
+
+  cancel(): void {
+    this.router.navigate(['/app/inventory/counts/plans']);
   }
 
   private isScheduledDateValid(dateInput: string): boolean {
