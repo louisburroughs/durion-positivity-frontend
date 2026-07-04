@@ -112,7 +112,7 @@ describe('ScheduleViewPageComponent [CAP-137]', () => {
   it('renders .filter-bar with form inputs', async () => {
     await setup();
     expect(fixture.debugElement.query(By.css('.filter-bar'))).not.toBeNull();
-    expect(fixture.debugElement.query(By.css('input[name="locationDisplay"]'))).not.toBeNull();
+    expect(fixture.debugElement.query(By.css('app-location-picker'))).not.toBeNull();
     expect(fixture.debugElement.query(By.css('input[name="selectedDate"]'))).not.toBeNull();
   });
 

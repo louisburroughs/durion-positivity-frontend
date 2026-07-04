@@ -16,40 +16,13 @@
 
     <!-- Customer search -->
     <div class="field-group">
-      <label for="customerSearch" class="field-label">{{ 'WORKEXEC.ESTIMATE_CREATE.CUSTOMER' | translate }} <span class="required" aria-hidden="true">*</span></label>
-      <div class="typeahead-wrap">
-        <input
-          id="customerSearch"
-          type="text"
-          role="combobox"
-          autocomplete="off"
-          class="field-input"
-          [class.field-input--error]="form.controls.customerId.invalid && form.controls.customerId.touched"
-          [value]="customerDisplayName()"
-          (input)="onCustomerInput($any($event.target).value)"
-          (focus)="onCustomerFocus()"
-          (blur)="onCustomerBlur()"
-          [attr.aria-expanded]="showCustomerSuggestions() && customerSuggestions().length > 0"
-          aria-autocomplete="list"
-          aria-haspopup="listbox"
-          [placeholder]="'WORKEXEC.ESTIMATE_CREATE.CUSTOMER_PH' | translate"
-          aria-required="true"
-        />
-        @if (showCustomerSuggestions() && customerSuggestions().length > 0) {
-          <ul class="typeahead-suggestions" role="listbox">
-            @for (p of customerSuggestions(); track p.partyId) {
-              <li class="typeahead-item" role="option"
-                [attr.aria-selected]="form.controls.customerId.value === p.partyId"
-                (mousedown)="selectCustomer(p)">
-                <span class="suggestion-primary">{{ customerLabel(p) }}</span>
-                @if (p.customerNumber) {
-                  <span class="suggestion-secondary">{{ p.customerNumber }}</span>
-                }
-              </li>
-            }
-          </ul>
-        }
-      </div>
+      <app-customer-lookup
+        inputId="customerSearch"
+        [formControl]="form.controls.customerId"
+        [required]="true"
+        [label]="'WORKEXEC.ESTIMATE_CREATE.CUSTOMER' | translate"
+        [placeholder]="'WORKEXEC.ESTIMATE_CREATE.CUSTOMER_PH' | translate"
+      ></app-customer-lookup>
       @if (form.controls.customerId.invalid && form.controls.customerId.touched) {
         <p id="customerId-err" class="field-error" role="alert">{{ 'WORKEXEC.ESTIMATE_CREATE.CUSTOMER_REQUIRED' | translate }}</p>
       }

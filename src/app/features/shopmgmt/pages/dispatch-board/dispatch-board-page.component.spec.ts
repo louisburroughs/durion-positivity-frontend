@@ -116,10 +116,10 @@ describe('DispatchBoardPageComponent', () => {
   // AC2: Filter bar — location input and date input defaulting to today
   // -------------------------------------------------------------------------
   describe('AC2: filter bar', () => {
-    it('renders a location input in the filter bar', () => {
+    it('renders a location picker in the filter bar', () => {
       fixture.detectChanges();
-      const locationInput = fixture.nativeElement.querySelector('input[name="locationDisplay"]');
-      expect(locationInput).toBeTruthy();
+      const locationPicker = fixture.nativeElement.querySelector('app-location-picker');
+      expect(locationPicker).toBeTruthy();
     });
 
     it('renders a date input whose value defaults to today ISO date', () => {
