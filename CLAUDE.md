@@ -21,6 +21,7 @@ npx ng test --include="src/app/features/<domain>/**/*.spec.ts" --no-watch   # on
 npm run lint:css                     # stylelint src/**/*.css
 npm run i18n:check                   # missing-keys + pseudo-locale check
 npm run a11y:smoke                   # axe-core route scan (a11y:smoke:strict fails on serious)
+npm run audit:site                   # Playwright crawl+audit of deployed site (docs/testing/frontend-audit-test-plan.md)
 npm run serve:ssr:durion-positivity-frontend   # run SSR server locally → :4000
 ```
 

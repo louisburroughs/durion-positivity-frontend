@@ -2258,7 +2258,7 @@
           "STATUS": "Estado"
         },
         "TABLE": {
-          "ID": "ID",
+          "CODE": "Código",
           "NAME": "Nombre",
           "STATUS": "Estado",
           "VALIDATION_STATUS": "Validación",

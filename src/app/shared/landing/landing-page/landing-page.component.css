@@ -36,7 +36,9 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   font-weight: var(--font-weight-heading);
-  color: var(--brand-accent);
+  /* accentA700 is the AA-safe accent-text token; --brand-accent (teal-400) is
+     only ~2.4:1 on the card surface and fails WCAG AA (ADR-0039). */
+  color: var(--accentA700);
 }
 
 .landing-hero__title {

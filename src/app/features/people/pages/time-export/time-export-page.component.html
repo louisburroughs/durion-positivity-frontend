@@ -26,8 +26,9 @@
       </div>
 
       <fieldset class="field">
-        <legend>Format</legend>
-        <select id="format" formControlName="format" data-testid="format-select">
+        <legend id="format-legend">Format</legend>
+        <select id="format" formControlName="format" data-testid="format-select"
+          aria-labelledby="format-legend">
           <option value="CSV">CSV</option>
           <option value="JSON">JSON</option>
         </select>

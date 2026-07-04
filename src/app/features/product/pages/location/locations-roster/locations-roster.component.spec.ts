@@ -12,7 +12,7 @@ describe('LocationsRosterComponent', () => {
     id: 'loc-01',
     name: 'Main Shop',
     status: 'ACTIVE' as const,
-    region: 'North',
+    code: 'WH-01',
     lastValidatedAt: '2026-01-01T00:00:00Z',
     validationStatus: 'PENDING' as const,
   };

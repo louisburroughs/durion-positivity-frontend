@@ -46,6 +46,11 @@ Thumbs.db
 PR-Review-Processing.md
 
 .playwright-mcp/*
+
+# Playwright site audit output
+/artifacts/audit/
+/test-results/
+/playwright-report/
 .worktrees/
 .tokensave
 repomix-output.*

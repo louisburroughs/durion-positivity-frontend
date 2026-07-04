@@ -278,14 +278,14 @@ describe('InventoryDomainService', () => {
       },
     ];
 
-    it('calls GET /inventory/v1/putaway/tasks without locationId param when not provided', () => {
+    it('calls GET /inventory/v1/inventory/putaway/tasks without locationId param when not provided', () => {
       apiStub.get.mockReturnValueOnce(of(mockTasks));
 
       service.getPutawayTasks().subscribe();
 
       expect(apiStub.get).toHaveBeenCalledOnce();
       const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/putaway/tasks');
+      expect(path).toBe('/inventory/v1/inventory/putaway/tasks');
       expect((params as HttpParams).has('locationId')).toBe(false);
     });
 
@@ -321,14 +321,14 @@ describe('InventoryDomainService', () => {
       ledgerEntryId: 'le-001',
     };
 
-    it('calls POST /inventory/v1/putaway/tasks/{taskId}/complete', () => {
+    it('calls POST /inventory/v1/inventory/putaway/tasks/{taskId}/complete', () => {
       apiStub.post.mockReturnValueOnce(of(mockResult));
 
       service.completePutawayTask('task-001', mockBody).subscribe();
 
       expect(apiStub.post).toHaveBeenCalledOnce();
       const [path, body] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/putaway/tasks/task-001/complete');
+      expect(path).toBe('/inventory/v1/inventory/putaway/tasks/task-001/complete');
       expect(body).toEqual(mockBody);
     });
 
@@ -338,7 +338,7 @@ describe('InventoryDomainService', () => {
       service.completePutawayTask('task/001', mockBody).subscribe();
 
       const [path] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/putaway/tasks/task%2F001/complete');
+      expect(path).toBe('/inventory/v1/inventory/putaway/tasks/task%2F001/complete');
     });
 
     it('returns the PutawayResult emitted by the API', () => {
@@ -367,14 +367,14 @@ describe('InventoryDomainService', () => {
       },
     ];
 
-    it('calls GET /inventory/v1/replenishment/tasks without locationId param when not provided', () => {
+    it('calls GET /inventory/v1/inventory/replenishment/tasks without locationId param when not provided', () => {
       apiStub.get.mockReturnValueOnce(of(mockTasks));
 
       service.getReplenishmentTasks().subscribe();
 
       expect(apiStub.get).toHaveBeenCalledOnce();
       const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/replenishment/tasks');
+      expect(path).toBe('/inventory/v1/inventory/replenishment/tasks');
       expect((params as HttpParams).has('locationId')).toBe(false);
     });
 

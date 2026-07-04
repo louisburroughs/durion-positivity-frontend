@@ -377,14 +377,14 @@ describe('InventoryCycleCountService', () => {
       },
     ];
 
-    it('calls GET /inventory/v1/cycle-count-plans', () => {
+    it('calls GET /inventory/v1/inventory/cycleCountPlans', () => {
       apiStub.get.mockReturnValueOnce(of(mockPlans));
 
       service.getCycleCountPlans().subscribe();
 
       expect(apiStub.get).toHaveBeenCalledOnce();
       const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/cycle-count-plans');
+      expect(path).toBe('/inventory/v1/inventory/cycleCountPlans');
     });
 
     it('includes locationId param when provided', () => {

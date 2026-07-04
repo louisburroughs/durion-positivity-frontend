@@ -6,7 +6,11 @@ import { ApiBaseService } from '../../../core/services/api-base.service';
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
   private readonly api = inject(ApiBaseService);
-  private static readonly BASE = '/v1/inventory';
+  // Gateway routes the inventory module under /{module}/v1/{domain}, i.e.
+  // /api/inventory/v1/inventory/* (matches the SDK's InventoryConfiguration
+  // basePath of `${apiBaseUrl}/inventory`). Without the leading /inventory
+  // module segment these calls 404.
+  private static readonly BASE = '/inventory/v1/inventory';
 
   private idempotencyOptions(key?: string) {
     return key ? { headers: { 'Idempotency-Key': key } } : undefined;

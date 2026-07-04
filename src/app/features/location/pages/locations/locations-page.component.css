@@ -6,7 +6,7 @@
   margin-bottom: var(--space-6);
 }
 
-.page-header h2 {
+.page-header h1 {
   margin: 0;
   font-family: var(--font-primary);
   color: var(--currentTextColor);
@@ -88,15 +88,6 @@
   font-size: 0.875rem;
   color: var(--currentTextColor);
   word-break: break-word;
-}
-
-.location-id {
-  margin: 0;
-  font-size: 0.7rem;
-  color: var(--currentTextColor);
-  opacity: 0.4;
-  font-family: monospace;
-  word-break: break-all;
 }
 
 .empty-state {

@@ -1,7 +1,7 @@
 /* ApprovalDetailPage — Story 268 */
 .approval-detail { display: flex; flex-direction: column; gap: var(--space-6, 1.5rem); padding: var(--space-6, 1.5rem) var(--space-4, 1rem); max-width: 640px; margin: 0 auto; }
 .page-header { display: flex; flex-direction: column; gap: var(--space-1, 0.25rem); }
-.page-overline { margin: 0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand-accent, var(--accentA700)); }
+.page-overline { margin: 0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accentA700); }
 .page-header h1 { margin: 0; font-family: var(--font-primary, 'Public Sans', sans-serif); font-size: 1.5rem; font-weight: 700; color: var(--currentTextColor); }
 .page-meta { margin: 0; font-size: 0.875rem; color: var(--handleColor); }
 /* Expiration banner */

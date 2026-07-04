@@ -72,16 +72,16 @@
         <table class="party-table" aria-label="Customer directory">
           <thead>
             <tr>
-              <th>
-                <button class="sort-btn" type="button" (click)="sort('name')"
-                  [attr.aria-sort]="sortField() === 'name' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
+              <th scope="col"
+                [attr.aria-sort]="sortField() === 'name' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
+                <button class="sort-btn" type="button" (click)="sort('name')">
                   Name
                   <span class="sort-icon" aria-hidden="true">{{ sortField() === 'name' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
                 </button>
               </th>
-              <th>
-                <button class="sort-btn" type="button" (click)="sort('customerNumber')"
-                  [attr.aria-sort]="sortField() === 'customerNumber' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
+              <th scope="col"
+                [attr.aria-sort]="sortField() === 'customerNumber' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : 'none'">
+                <button class="sort-btn" type="button" (click)="sort('customerNumber')">
                   Customer #
                   <span class="sort-icon" aria-hidden="true">{{ sortField() === 'customerNumber' ? (sortDir() === 'asc' ? '↑' : '↓') : '↕' }}</span>
                 </button>

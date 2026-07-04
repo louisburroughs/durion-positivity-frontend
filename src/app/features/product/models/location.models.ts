@@ -5,7 +5,7 @@ export interface LocationRosterEntry {
   id: string;
   name: string;
   status: LocationStatus;
-  region: string;
+  code: string;
   lastValidatedAt: string;
   validationStatus: LocationValidationStatus;
 }

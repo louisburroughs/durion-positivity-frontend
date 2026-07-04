@@ -2198,7 +2198,7 @@
           "STATUS": "Status"
         },
         "TABLE": {
-          "ID": "ID",
+          "CODE": "Code",
           "NAME": "Name",
           "STATUS": "Status",
           "VALIDATION_STATUS": "Validation",

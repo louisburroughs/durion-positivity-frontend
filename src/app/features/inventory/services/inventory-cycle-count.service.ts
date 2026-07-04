@@ -92,7 +92,11 @@ export class InventoryCycleCountService {
     if (locationId) {
       params = params.set('locationId', locationId);
     }
-    return this.api.get<CycleCountPlan[]>('/inventory/v1/cycle-count-plans', params);
+    // The SDK models createPlan (POST) and getPlan (GET /{planId}) at the
+    // collection /v1/inventory/cycleCountPlans under module /inventory, but no
+    // list method — so this GET is hand-rolled against the same canonical
+    // collection path: /api/inventory/v1/inventory/cycleCountPlans.
+    return this.api.get<CycleCountPlan[]>('/inventory/v1/inventory/cycleCountPlans', params);
   }
 
   createCycleCountPlan(request: CycleCountPlanRequest): Observable<CycleCountPlan> {

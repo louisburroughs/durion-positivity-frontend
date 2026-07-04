@@ -30,7 +30,7 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--brand-accent, var(--accentA700));
+  color: var(--accentA700);
 }
 
 .page-header h1 {

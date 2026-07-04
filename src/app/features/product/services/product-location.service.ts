@@ -51,7 +51,7 @@ export class ProductLocationService {
       id: dto.id ?? '',
       name: dto.name ?? '',
       status: (dto.status ?? 'INACTIVE') as LocationStatus,
-      region: '',
+      code: dto.code ?? '',
       lastValidatedAt: dto.updatedAt ?? '',
       validationStatus: 'STALE' as LocationValidationStatus,
     };
