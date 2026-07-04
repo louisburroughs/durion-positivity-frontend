@@ -1124,7 +1124,6 @@
       "TITLE": "Daily Dispatch Board",
       "PANEL_ARIA": "Dispatch board controls and workorders",
       "LOCATION": "Location",
-      "LOCATION_ARIA": "Location",
       "DATE": "Date",
       "DATE_ARIA": "Date",
       "REFRESH": "Refresh",

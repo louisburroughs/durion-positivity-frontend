@@ -7,6 +7,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { EstimateCreatePageComponent } from './estimate-create-page.component';
 import { CrmService } from '../../../crm/services/crm.service';
+import { PartyDetail } from '../../../crm/models/crm.models';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
 
@@ -38,8 +39,8 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
         {
           provide: CrmService,
           useValue: {
-            searchParties: vi.fn().mockReturnValue(of({ parties: [] })),
-            getParty: vi.fn().mockReturnValue(of({ partyId: 'p', legalName: 'Party' })),
+            searchParties: vi.fn().mockReturnValue(of({ parties: [] as PartyDetail[] })),
+            getParty: vi.fn().mockReturnValue(of({ partyId: 'p', legalName: 'Party' } satisfies PartyDetail)),
           },
         },
       ],

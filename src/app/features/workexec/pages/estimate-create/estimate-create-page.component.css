@@ -95,6 +95,11 @@
   border-bottom-color: var(--input-focus-border, var(--accentA400));
 }
 
+/* Still applied to the vehicle <select> and the new-vehicle VIN <input>. */
+.field-input--error {
+  border-bottom-color: var(--functional-error-red, #ba1a1a);
+}
+
 .field-error {
   margin: 0;
   font-size: 0.75rem;

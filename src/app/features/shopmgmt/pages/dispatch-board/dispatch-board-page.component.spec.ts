@@ -58,7 +58,6 @@ describe('DispatchBoardPageComponent', () => {
   const dispatchBoardServiceStub = {
     getDashboard: vi.fn().mockReturnValue(of(emptyDashboard)),
     getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: 'LOC-1' })),
-    getAllLocations: vi.fn().mockReturnValue(of([])),
     getAvailability: vi.fn().mockReturnValue(of([])),
   };
 

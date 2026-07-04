@@ -1124,7 +1124,6 @@
       "TITLE": "Tablero diario de despacho",
       "PANEL_ARIA": "Controles del tablero de despacho y órdenes de trabajo",
       "LOCATION": "Ubicación",
-      "LOCATION_ARIA": "Ubicación",
       "DATE": "Fecha",
       "DATE_ARIA": "Fecha",
       "REFRESH": "Actualizar",
