@@ -2258,7 +2258,7 @@
           "STATUS": "Statut"
         },
         "TABLE": {
-          "ID": "ID",
+          "REGION": "Région",
           "NAME": "Nom",
           "STATUS": "Statut",
           "VALIDATION_STATUS": "Validation",
