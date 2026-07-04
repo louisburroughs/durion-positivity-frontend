@@ -67,6 +67,11 @@ export class LocationPickerComponent implements OnDestroy {
   readonly activeIndex = signal(-1);
   private readonly typed = signal(false);
   private readonly lastInvalidEmitted = signal('');
+  // A preset id that isn't in the loaded list (e.g. an inactive/out-of-scope
+  // location, or when the list load failed) resolved by id, so the field shows
+  // the location's name instead of going blank. See issue #147.
+  private readonly resolvedExtra = signal<PickerLocation | null>(null);
+  private lastResolveId = '';
   private blurTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly displayValue = computed(() => {
@@ -74,8 +79,20 @@ export class LocationPickerComponent implements OnDestroy {
       return this.query();
     }
     const id = this._selectedId();
+    if (!id) {
+      return '';
+    }
     const match = this.all().find(l => l.id === id);
-    return match ? (match.name || match.code || '') : '';
+    if (match) {
+      return match.name || match.code || '';
+    }
+    // Not in the loaded list — fall back to a by-id resolution (issue #147)
+    // rather than rendering a silently blank field for a still-selected id.
+    const extra = this.resolvedExtra();
+    if (extra && extra.id === id) {
+      return extra.name || extra.code || '';
+    }
+    return '';
   });
 
   readonly suggestions = computed<PickerLocation[]>(() => {
@@ -120,6 +137,39 @@ export class LocationPickerComponent implements OnDestroy {
           this.invalidSelection.emit(id);
         }
       }
+    });
+
+    // Resolve a preset id that the loaded list doesn't contain (inactive /
+    // out-of-scope location, or a failed list load) by id, so the field shows
+    // its name instead of going blank (issue #147). Independent of
+    // invalidSelection, which consumers may still use to reject out-of-list ids.
+    effect((onCleanup) => {
+      const id = this._selectedId();
+      if (!this.loaded() || !id || this.typed()) {
+        return;
+      }
+      if (this.all().some(l => l.id === id)) {
+        return; // resolvable from the list already
+      }
+      if (this.lastResolveId === id) {
+        return; // fetch at most once per id
+      }
+      this.lastResolveId = id;
+      const sub = this.locationService.getLocationById(id).subscribe({
+        next: loc => {
+          const resolved = loc as PickerLocation | null;
+          // Ignore a stale response after the selection changed.
+          if (resolved && this._selectedId() === id) {
+            this.resolvedExtra.set({ ...resolved, id });
+          }
+        },
+        error: () => {
+          if (this._selectedId() === id) {
+            this.loadError.set(true);
+          }
+        },
+      });
+      onCleanup(() => sub.unsubscribe());
     });
   }
 

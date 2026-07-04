@@ -73,6 +73,7 @@ describe('LaborOverheadReportPageComponent', () => {
   };
   const locationServiceStub = {
     getAllLocations: vi.fn().mockReturnValue(of([])),
+    getLocationById: vi.fn().mockReturnValue(of(null)),
   };
 
   beforeEach(async () => {

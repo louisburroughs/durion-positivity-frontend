@@ -10,7 +10,7 @@ const locations = [
   { id: 'loc-2', name: 'Raleigh Yard', code: 'RAL', addressLine1: '5 Oak Ave', city: 'Raleigh', state: 'NC' },
 ];
 
-const locationServiceStub = { getAllLocations: vi.fn() };
+const locationServiceStub = { getAllLocations: vi.fn(), getLocationById: vi.fn() };
 
 describe('LocationPickerComponent', () => {
   let fixture: ComponentFixture<LocationPickerComponent>;
@@ -19,6 +19,8 @@ describe('LocationPickerComponent', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     locationServiceStub.getAllLocations.mockReturnValue(of(locations));
+    // Default: an out-of-list id is not resolvable (keeps the unknown-id tests blank).
+    locationServiceStub.getLocationById.mockReturnValue(of(null));
 
     await TestBed.configureTestingModule({
       imports: [LocationPickerComponent, TranslateModule.forRoot()],
@@ -65,6 +67,23 @@ describe('LocationPickerComponent', () => {
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledWith('nope');
     expect(component.displayValue()).toBe('');
+  });
+
+  it('resolves a preset id not in the loaded list by id and shows its name (#147)', () => {
+    locationServiceStub.getLocationById.mockReturnValue(
+      of({ id: 'loc-archived', name: 'Archived Depot', code: 'ARC' }),
+    );
+    fixture.componentRef.setInput('selectedId', 'loc-archived');
+    fixture.detectChanges();
+    expect(locationServiceStub.getLocationById).toHaveBeenCalledWith('loc-archived');
+    expect(component.displayValue()).toBe('Archived Depot');
+  });
+
+  it('surfaces the error state when a preset out-of-list id cannot be resolved (#147)', () => {
+    locationServiceStub.getLocationById.mockReturnValue(throwError(() => ({ status: 500 })));
+    fixture.componentRef.setInput('selectedId', 'loc-unreachable');
+    fixture.detectChanges();
+    expect(component.loadError()).toBe(true);
   });
 
   it('clears the selection when the input is emptied after a valid selection', () => {
