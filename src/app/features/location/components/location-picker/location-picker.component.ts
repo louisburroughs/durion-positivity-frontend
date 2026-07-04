@@ -71,6 +71,10 @@ export class LocationPickerComponent implements OnDestroy {
   // location, or when the list load failed) resolved by id, so the field shows
   // the location's name instead of going blank. See issue #147.
   private readonly resolvedExtra = signal<PickerLocation | null>(null);
+  // Deliberately a plain field, NOT a signal: the resolve effect below reads it
+  // as a once-per-id guard. Making it reactive (or merging that effect into the
+  // signal-based validation effect) would self-retrigger the effect on set, and
+  // its onCleanup would cancel the just-started getLocationById request.
   private lastResolveId = '';
   private blurTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -163,11 +167,10 @@ export class LocationPickerComponent implements OnDestroy {
             this.resolvedExtra.set({ ...resolved, id });
           }
         },
-        error: () => {
-          if (this._selectedId() === id) {
-            this.loadError.set(true);
-          }
-        },
+        // Swallow to a blank field (like customer-lookup's getParty), rather than
+        // flipping the picker into its list-load error state — the list loaded fine;
+        // only this one id couldn't be resolved.
+        error: () => {},
       });
       onCleanup(() => sub.unsubscribe());
     });

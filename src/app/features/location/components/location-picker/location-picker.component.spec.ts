@@ -79,11 +79,14 @@ describe('LocationPickerComponent', () => {
     expect(component.displayValue()).toBe('Archived Depot');
   });
 
-  it('surfaces the error state when a preset out-of-list id cannot be resolved (#147)', () => {
+  it('stays blank without flipping to the list-load error when a preset out-of-list id cannot be resolved (#147)', () => {
     locationServiceStub.getLocationById.mockReturnValue(throwError(() => ({ status: 500 })));
     fixture.componentRef.setInput('selectedId', 'loc-unreachable');
     fixture.detectChanges();
-    expect(component.loadError()).toBe(true);
+    // The list itself loaded fine, so a single failed by-id lookup must not show
+    // the "failed to load locations" state — it degrades to a blank field.
+    expect(component.displayValue()).toBe('');
+    expect(component.loadError()).toBe(false);
   });
 
   it('clears the selection when the input is emptied after a valid selection', () => {
