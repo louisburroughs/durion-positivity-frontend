@@ -4,65 +4,72 @@ Triage of the `failed-api-request` / `console-error` findings from the
 durionpos.org site audit (see `frontend-audit-test-plan.md`,
 `artifacts/audit/error-pages.md`).
 
-**Bottom line:** every one of these is a **backend / SDK** issue — a missing
-endpoint, a server-side 500, or a URL built inside `@durion-sdk/*`. The
-frontend pages already handle the failures with ADR-0031 error states
-(verified below), so there is **no frontend code change** for this cluster.
-The `console-error` entries are the browser auto-logging the failed 4xx/5xx
-network responses, not errors emitted by application code.
+Ground truth for endpoint paths is the **`@durion-sdk/*`** packages (the
+generated gateway client) plus the per-module `AccountingConfiguration`-style
+basePaths wired in `src/app/app.config.ts`. Where the SDK does not model an
+endpoint, the contract lives in the corresponding `durion-positivity-backend`
+module.
 
-## Calibration (how the classification was verified)
+## Gateway path pattern (verified)
 
-Using the audit account's access token against the live API:
+Every SDK module is configured with `basePath = ${apiBaseUrl}/{module}`
+(`app.config.ts`), and every SDK operation path is `/v1/{domain}/...`. So the
+canonical full path is:
 
-- `GET /api/people/v1/people` → **200** — confirms the token is valid and the
-  dominant `/{domain}/v1/...` gateway convention resolves.
+```
+/api/{domain}/v1/{domain}/{resource}
+```
 
-So a `404` on an endpoint that uses the correct convention means the
-**endpoint is not implemented**, and a `500` means the route exists but the
-**server handler errors**.
+Confirmed against the live API with the audit token:
+- `GET /api/people/v1/people` → **200** (token valid, pattern resolves).
+- `GET /api/accounting/v1/accounting/posting-rules` → **500** (route exists; server errors).
+
+A local service that calls `ApiBaseService` (which only prepends `/api`) must
+therefore include the full `/{module}/v1/{domain}` prefix itself. Dropping the
+leading `/{module}` segment yields `/api/v1/{domain}/...`, which 404s.
 
 ## Findings
 
-| Page | Called URL | Status | Classification | Recommendation |
+| Page | Called URL | Status | Verdict | Action |
 |---|---|---|---|---|
-| `/app/accounting/posting-rules` | `/api/accounting/v1/accounting/posting-rules` | **500** | Backend defect. URL is built by `@durion-sdk/accounting` (`PostingRulesService`); a 500 means the route matched and the handler threw. | Backend: fix the 500. Confirm whether the doubled `accounting` segment is the intended gateway path — if not, fix in the SDK repo, not here. |
-| `/app/accounting/events/contract` | `/api/v1/accounting/events/contract` | 404 | Backend-missing, or wrong prefix (uses deviant `/v1/accounting`). | Needs backend OpenAPI to confirm the path; do not guess (see "Prefix inconsistency"). |
-| `/app/inventory/counts/plans` | `/api/inventory/v1/cycle-count-plans` | 404 | Backend-missing. Uses the **correct** `/inventory/v1/` convention yet 404s. | Backend: implement the endpoint. |
-| `/app/inventory/putaway/tasks` | `/api/inventory/v1/putaway/tasks` | 404 | Backend-missing (correct convention). | Backend: implement. |
-| `/app/inventory/replenishment/tasks` | `/api/inventory/v1/replenishment/tasks` | 404 | Backend-missing (correct convention). | Backend: implement. |
-| `/app/location/location-sync` | `/api/v1/inventory/sync-logs`, `/api/v1/inventory/locations` | 404 | Backend-missing, or wrong prefix (deviant `/v1/inventory`). | Needs OpenAPI to confirm (see below). |
-| `/app/shopmgmt/dispatch-board` | `/api/people/v1/people/me/primary-location` | 404 | Backend-missing sub-resource. Base `/api/people/v1/people` returns 200; the `me/primary-location` sub-path 404s. | Backend: implement the sub-resource. |
-| `/app/shopmgmt/mechanics/availability` | `.../people/me/primary-location`, `/api/people/v1/people/availability?...` | 404 | Same primary-location gap + availability endpoint missing. | Backend: implement. |
+| `/app/accounting/events/contract` | `/api/v1/accounting/events/contract` | 404 | **Frontend bug — FIXED.** SDK defines `/v1/accounting/events/contract`; local `AccountingService.BASE` dropped the `/accounting` module prefix. | Fixed: `BASE` → `/accounting/v1/accounting` (also fixes the latent `export/download` URL that shared it). |
+| `/app/accounting/posting-rules` | `/api/accounting/v1/accounting/posting-rules` | 500 | **Backend defect.** Path is SDK-correct (built by `@durion-sdk/accounting`); 500 = handler throws. | Backend: fix the 500. |
+| `/app/shopmgmt/dispatch-board` | `/api/people/v1/people/me/primary-location` | 404 | **Backend / expected.** Path matches SDK `/v1/people/me/primary-location`. 404 most likely means the audit user has no primary location assigned; the page already falls back to "select a location". | Backend: confirm semantics; no frontend change. |
+| `/app/shopmgmt/mechanics/availability` | `.../me/primary-location`, `/api/people/v1/people/availability?...` | 404 | Same primary-location case; `/v1/people/availability` is SDK-defined, so 404 = backend-missing or empty. | Backend. |
+| `/app/inventory/counts/plans` | `/api/inventory/v1/cycle-count-plans` | 404 | **Frontend path mismatch (not yet applied).** SDK op is `/v1/inventory/cycleCountPlans` (camelCase) under module `/inventory` → `/api/inventory/v1/inventory/cycleCountPlans`. The local `inventory-cycle-count.service.ts` uses a different kebab-case, single-prefix scheme across many methods with a full spec suite. | Needs a coordinated rewrite to the SDK paths + spec update; verify one call at runtime before mass-applying. |
+| `/app/location/location-sync` | `/api/v1/inventory/sync-logs`, `/api/v1/inventory/locations` | 404 | Mixed. `/v1/inventory/locations` **is** SDK-defined → correct full path is `/api/inventory/v1/inventory/locations` (local `location/services/inventory.service.ts` `BASE='/v1/inventory'` drops the module prefix). `sync-logs` is **not** in the inventory SDK → backend-module-defined. | `location/services/inventory.service.ts` has 28 contract tests on the deviant scheme; correct the module prefix + tests as a coordinated change. Confirm `sync-logs` path with the backend module. |
+| `/app/inventory/putaway/tasks` | `/api/inventory/v1/putaway/tasks` | 404 | SDK defines `/v1/inventory/putaway/tasks`; correct full path is `/api/inventory/v1/inventory/putaway/tasks`. Same missing-module-prefix pattern as the local inventory services. | Same coordinated fix; verify at runtime. |
+| `/app/inventory/replenishment/tasks` | `/api/inventory/v1/replenishment/tasks` | 404 | SDK defines `/v1/inventory/replenishment/tasks`; correct full path `/api/inventory/v1/inventory/replenishment/tasks`. | Same coordinated fix. |
 
-## Prefix inconsistency (needs the backend contract to resolve)
+## Applied in this branch
 
-Two conventions coexist in the frontend services:
+- **`events/contract`** — `AccountingService.BASE` corrected to
+  `/accounting/v1/accounting` (SDK-canonical). Accounting service + event-contract
+  page specs pass.
 
-- Dominant: `/{domain}/v1/...` (e.g. `/inventory/v1` ×28, `/people/v1` ×11) — **verified working** for people.
-- Deviant: `/v1/{domain}/...` (e.g. `/v1/inventory` ×10 in `location/services/inventory.service.ts`, `/v1/accounting` ×1).
+## Not applied (need runtime confirmation before touching)
 
-`location/services/inventory.service.ts` (`BASE = '/v1/inventory'`) is the
-strongest wrong-prefix suspect, but it ships **28 contract tests** pinning
-those exact paths, so flipping the prefix blind would break the contract and
-possibly working calls. **Do not change these without the backend OpenAPI
-spec or an authenticated production probe** confirming which prefix the
-gateway accepts.
+The inventory-side 404s (`cycle-count-plans`, `putaway`, `replenishment`,
+location-sync `locations`) all point to the same root cause: the local
+inventory services (`features/inventory/services/*`, `features/location/services/inventory.service.ts`)
+were written to a **different path scheme** than the SDK
+(kebab-case, single `/v1/inventory` prefix vs SDK camelCase, `/inventory/v1/inventory`).
+Correcting them is mechanical but:
 
-## ADR-0031 compliance (frontend already handles these)
+1. touches many methods across two services,
+2. requires rewriting ~40 contract-test assertions, and
+3. the local response models may differ from the SDK DTOs (as seen for
+   `EventEnvelopeContract`), so a blind switch to SDK services risks shape
+   mismatches.
 
-Each affected page renders a user-facing error state on failure — no silent
-breakage:
-
-- `dispatch-board` — `getPrimaryLocation()` error → `ERROR_LOCATION_REQUIRED` handled state.
-- `location-sync` — `role="alert"` banners per failed call (inventory-locations, sync-logs, trigger).
-- `mechanic-availability` — `error()` banner.
-- `cycle-count-plan-list` — two-signal state machine with an error card.
+Recommend confirming one corrected inventory path at runtime (or against the
+backend module's OpenAPI) before applying the batch, so the contract-test
+rewrite is done once against a verified target.
 
 ## Suggested next steps
 
-1. Backend team: implement the missing endpoints and fix the posting-rules 500.
-2. Publish/point to the gateway OpenAPI so the `/v1/inventory` vs `/inventory/v1`
-   prefix question can be settled and any genuine frontend wrong-prefix bug fixed
-   with a matching contract-test update.
-3. Re-run `npm run audit:site` after the backend work to confirm the cluster clears.
+1. Backend: fix the `posting-rules` 500 and confirm the `primary-location`
+   semantics.
+2. Confirm the inventory module's actual gateway paths, then apply the
+   coordinated frontend path + contract-test correction.
+3. Re-run `npm run audit:site` to confirm the cluster clears.

@@ -68,7 +68,11 @@ import type { JwtClaims } from '../../../core/models/auth.models';
 
 @Injectable({ providedIn: 'root' })
 export class AccountingService {
-  private static readonly BASE = '/v1/accounting';
+  // Gateway routes accounting under /{module}/v1/{domain}, i.e. /api/accounting/v1/accounting/*
+  // (matches the SDK's AccountingConfiguration basePath of `${apiBaseUrl}/accounting`).
+  // The two hand-rolled ApiBaseService calls below (events/contract, export/download) must
+  // carry this full prefix; without the leading /accounting module segment they 404.
+  private static readonly BASE = '/accounting/v1/accounting';
 
   private readonly api = inject(ApiBaseService);
   private readonly authService = inject(AuthService);
