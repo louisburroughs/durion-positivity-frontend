@@ -60,8 +60,9 @@
 }
 
 .no-lines-hint {
-  color: var(--brand-secondary, var(--currentTextColor));
-  opacity: 0.7;
+  /* --text-muted (graphite-600) is AA on the card surface; opacity dimming
+     dropped this below the WCAG AA threshold (ADR-0039). */
+  color: var(--text-muted);
   font-size: 0.9rem;
   margin: 0.5rem 0;
 }
