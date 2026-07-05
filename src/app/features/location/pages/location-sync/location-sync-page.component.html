@@ -29,8 +29,8 @@
         <tr>
           <th>ID</th>
           <th>Name</th>
-          <th>Status</th>
-          <th>Timezone</th>
+          <th>Type</th>
+          <th>Active</th>
         </tr>
       </thead>
       <tbody>
@@ -38,8 +38,8 @@
         <tr [attr.data-testid]="'inventory-location-row-' + $index">
           <td>{{ $any(loc).locationId }}</td>
           <td>{{ $any(loc).name }}</td>
-          <td>{{ $any(loc).status }}</td>
-          <td>{{ $any(loc).timezone }}</td>
+          <td>{{ $any(loc).type }}</td>
+          <td>{{ $any(loc).active ? 'Active' : 'Inactive' }}</td>
         </tr>
         }
         @empty {

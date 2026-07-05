@@ -7,7 +7,7 @@ import { LocationSyncPageComponent } from './location-sync-page.component';
 import { InventoryService } from '../../services/inventory.service';
 
 const INVENTORY_LOCATIONS = [
-  { locationId: 'L-1', name: 'Main', status: 'ACTIVE', timezone: 'UTC' },
+  { locationId: 'L-1', name: 'Main', type: 'WAREHOUSE', active: true },
 ];
 
 const SYNC_LOGS = [
@@ -68,6 +68,8 @@ describe('LocationSyncPageComponent [CAP-214 #104]', () => {
     expect(rows.length).toBe(1);
     expect(rows[0].nativeElement.textContent).toContain('L-1');
     expect(rows[0].nativeElement.textContent).toContain('Main');
+    expect(rows[0].nativeElement.textContent).toContain('WAREHOUSE');
+    expect(rows[0].nativeElement.textContent).toContain('Active');
   });
 
   it('should unwrap a Spring Page (content) for the locations table', async () => {
