@@ -70,6 +70,29 @@ describe('LocationSyncPageComponent [CAP-214 #104]', () => {
     expect(rows[0].nativeElement.textContent).toContain('Main');
   });
 
+  it('should unwrap a Spring Page (content) for the locations table', async () => {
+    vi.clearAllMocks();
+    stubInventoryService.listInventoryLocations.mockReturnValue(of({ content: INVENTORY_LOCATIONS }));
+    stubInventoryService.listSyncLogs.mockReturnValue(of(SYNC_LOGS));
+
+    await TestBed.configureTestingModule({
+      imports: [LocationSyncPageComponent],
+      providers: [
+        provideRouter([]),
+        { provide: InventoryService, useValue: stubInventoryService },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(LocationSyncPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.inventoryLocations()).toHaveLength(1);
+    expect((component.inventoryLocations()[0] as Record<string, unknown>)['locationId']).toBe('L-1');
+    const rows = fixture.debugElement.queryAll(By.css('[data-testid^="inventory-location-row-"]'));
+    expect(rows.length).toBe(1);
+  });
+
   it('should load sync logs on init', async () => {
     await setup();
     expect(stubInventoryService.listSyncLogs).toHaveBeenCalledWith({ pageSize: 20 });

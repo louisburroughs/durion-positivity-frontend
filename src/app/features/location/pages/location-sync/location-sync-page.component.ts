@@ -109,6 +109,12 @@ export class LocationSyncPageComponent {
       return response;
     }
     const payload = this.toRecord(response);
+    // /locations returns a Spring `Page` (rows under `content`); the paged
+    // sync-logs response uses `items`. Accept either wrapper.
+    const content = payload?.['content'];
+    if (Array.isArray(content)) {
+      return content;
+    }
     const items = payload?.['items'];
     return Array.isArray(items) ? items : [];
   }
