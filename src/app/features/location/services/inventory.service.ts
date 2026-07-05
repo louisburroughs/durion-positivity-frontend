@@ -1,33 +1,49 @@
-import { HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { InventoryReferenceDataService, LocationSyncService } from '@durion-sdk/inventory';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { pageContent } from '../../../core/util/spring-page';
+import {
+  LocationDto,
+  LocationSyncRunResponse,
+  StorageLocationDto,
+  SyncLogResponse,
+} from '../models/location-sync.models';
+
+/** Outcome filter accepted by the SDK `listSyncLogs` operation. */
+type SyncLogOutcome = 'OK' | 'PARTIAL' | 'FAILED' | 'INVALID_PAYLOAD';
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
   private readonly api = inject(ApiBaseService);
+  private readonly refDataSdk = inject(InventoryReferenceDataService);
+  private readonly locationSyncSdk = inject(LocationSyncService);
+
   // Gateway routes the inventory module under /{module}/v1/{domain}, i.e.
   // /api/inventory/v1/inventory/* (matches the SDK's InventoryConfiguration
   // basePath of `${apiBaseUrl}/inventory`). Without the leading /inventory
-  // module segment these calls 404.
+  // module segment these calls 404. Still used by the storage-location
+  // write operations, which the generated SDK does not yet expose.
   private static readonly BASE = '/inventory/v1/inventory';
 
   private idempotencyOptions(key?: string) {
     return key ? { headers: { 'Idempotency-Key': key } } : undefined;
   }
 
-  listInventoryLocations(params?: { status?: string; pageIndex?: number; pageSize?: number }): Observable<unknown> {
-    const httpParams = this.toHttpParams(params);
-    return this.api.get<unknown>(`${InventoryService.BASE}/locations`, httpParams);
+  listInventoryLocations(params?: { pageIndex?: number; pageSize?: number }): Observable<LocationDto[]> {
+    return (this.refDataSdk.listInventoryLocations(this.toPageable(params)) as Observable<unknown>).pipe(
+      map(page => pageContent<LocationDto>(page)),
+    );
   }
 
   listStorageLocations(
     locationId: string,
-    params?: { status?: string; pageIndex?: number; pageSize?: number },
-  ): Observable<unknown> {
-    let httpParams = this.toHttpParams(params);
-    httpParams = httpParams.set('locationId', locationId);
-    return this.api.get<unknown>(`${InventoryService.BASE}/storage-locations`, httpParams);
+    params?: { pageIndex?: number; pageSize?: number },
+  ): Observable<StorageLocationDto[]> {
+    return (
+      this.refDataSdk.listInventoryStorageLocations(this.toPageable(params), locationId) as Observable<unknown>
+    ).pipe(map(page => pageContent<StorageLocationDto>(page)));
   }
 
   getStorageLocation(storageLocationId: string): Observable<unknown> {
@@ -58,41 +74,40 @@ export class InventoryService {
     );
   }
 
-  listStorageTypes(): Observable<unknown> {
-    return this.api.get<unknown>(`${InventoryService.BASE}/meta/storage-types`);
+  listStorageTypes(): Observable<string[]> {
+    return this.refDataSdk.listStorageTypes();
   }
 
-  listSyncLogs(params?: { pageIndex?: number; pageSize?: number; outcome?: string }): Observable<unknown> {
-    const httpParams = this.toHttpParams(params);
-    return this.api.get<unknown>(`${InventoryService.BASE}/sync-logs`, httpParams);
-  }
-
-  getSyncLog(syncLogId: string): Observable<unknown> {
-    return this.api.get<unknown>(`${InventoryService.BASE}/sync-logs/${syncLogId}`);
-  }
-
-  triggerLocationSync(idempotencyKey: string): Observable<unknown> {
-    return this.api.post<unknown>(
-      `${InventoryService.BASE}/locations/sync`,
-      {},
-      this.idempotencyOptions(idempotencyKey),
+  listSyncLogs(params?: {
+    pageIndex?: number;
+    pageSize?: number;
+    outcome?: SyncLogOutcome;
+  }): Observable<SyncLogResponse[]> {
+    return this.locationSyncSdk.listSyncLogs(
+      params?.outcome,
+      undefined,
+      undefined,
+      params?.pageIndex,
+      params?.pageSize,
     );
   }
 
-  private toHttpParams(params?: { status?: string; pageIndex?: number; pageSize?: number; outcome?: string }): HttpParams {
-    let httpParams = new HttpParams();
-    if (params?.status) {
-      httpParams = httpParams.set('status', params.status);
-    }
-    if (params?.outcome) {
-      httpParams = httpParams.set('outcome', params.outcome);
-    }
+  getSyncLog(syncLogId: string): Observable<SyncLogResponse> {
+    return this.locationSyncSdk.getSyncLog(syncLogId);
+  }
+
+  triggerLocationSync(idempotencyKey: string): Observable<LocationSyncRunResponse> {
+    return this.locationSyncSdk.triggerLocationSync(idempotencyKey);
+  }
+
+  private toPageable(params?: { pageIndex?: number; pageSize?: number }): { page?: number; size?: number } {
+    const pageable: { page?: number; size?: number } = {};
     if (params?.pageIndex !== undefined) {
-      httpParams = httpParams.set('pageIndex', String(params.pageIndex));
+      pageable.page = params.pageIndex;
     }
     if (params?.pageSize !== undefined) {
-      httpParams = httpParams.set('pageSize', String(params.pageSize));
+      pageable.size = params.pageSize;
     }
-    return httpParams;
+    return pageable;
   }
 }

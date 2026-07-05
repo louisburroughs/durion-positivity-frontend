@@ -1,15 +1,15 @@
 <main>
   <header class="page-header">
-    <h1>Location Sync</h1>
+    <h1>{{ 'LOCATION.SYNC.TITLE' | translate }}</h1>
     <button type="button" [disabled]="!canTriggerSync()" (click)="triggerSync()" data-testid="trigger-sync-btn">
-      {{ triggering() ? 'Syncing...' : 'Sync Now' }}
+      {{ (triggering() ? 'LOCATION.SYNC.SYNCING' : 'LOCATION.SYNC.SYNC_NOW') | translate }}
     </button>
   </header>
 
   @if (triggerSuccess()) {
-  <output aria-live="polite" data-testid="trigger-success">Sync triggered successfully.</output>
+  <output aria-live="polite" data-testid="trigger-success">{{ 'LOCATION.SYNC.TRIGGER_SUCCESS' | translate }}</output>
   @if (lastSyncRunId()) {
-  <p>Sync Run ID: <code data-testid="sync-run-id">{{ lastSyncRunId() }}</code></p>
+  <p>{{ 'LOCATION.SYNC.SYNC_RUN_ID' | translate }} <code data-testid="sync-run-id">{{ lastSyncRunId() }}</code></p>
   }
   }
   @if (triggerError()) {
@@ -17,9 +17,9 @@
   }
 
   <section data-testid="inventory-locations-section">
-    <h2>Synced Locations</h2>
+    <h2>{{ 'LOCATION.SYNC.SYNCED_LOCATIONS' | translate }}</h2>
     @if (loading()) {
-    <p aria-live="polite" data-testid="locations-loading">Loading locations...</p>
+    <p aria-live="polite" data-testid="locations-loading">{{ 'LOCATION.SYNC.LOADING_LOCATIONS' | translate }}</p>
     }
     @if (inventoryLocationsError()) {
     <p role="alert" aria-live="polite" data-testid="inventory-locations-error">{{ inventoryLocationsError() }}</p>
@@ -27,24 +27,24 @@
     <table data-testid="inventory-locations-table">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Active</th>
+          <th>{{ 'LOCATION.SYNC.COL_ID' | translate }}</th>
+          <th>{{ 'LOCATION.SYNC.COL_NAME' | translate }}</th>
+          <th>{{ 'LOCATION.SYNC.COL_TYPE' | translate }}</th>
+          <th>{{ 'LOCATION.SYNC.COL_ACTIVE' | translate }}</th>
         </tr>
       </thead>
       <tbody>
-        @for (loc of inventoryLocations(); track $any(loc).locationId) {
+        @for (loc of inventoryLocations(); track loc.locationId) {
         <tr [attr.data-testid]="'inventory-location-row-' + $index">
-          <td>{{ $any(loc).locationId }}</td>
-          <td>{{ $any(loc).name }}</td>
-          <td>{{ $any(loc).type }}</td>
-          <td>{{ $any(loc).active ? 'Active' : 'Inactive' }}</td>
+          <td>{{ loc.locationId }}</td>
+          <td>{{ loc.name }}</td>
+          <td>{{ loc.type }}</td>
+          <td>{{ (loc.active ? 'LOCATION.SYNC.ACTIVE' : 'LOCATION.SYNC.INACTIVE') | translate }}</td>
         </tr>
         }
         @empty {
         <tr>
-          <td colspan="4" data-testid="locations-empty">No synced locations.</td>
+          <td colspan="4" data-testid="locations-empty">{{ 'LOCATION.SYNC.NO_LOCATIONS' | translate }}</td>
         </tr>
         }
       </tbody>
@@ -52,34 +52,34 @@
   </section>
 
   <section data-testid="sync-logs-section">
-    <h2>Sync Logs</h2>
+    <h2>{{ 'LOCATION.SYNC.SYNC_LOGS' | translate }}</h2>
     @if (syncLogsError()) {
     <p role="alert" aria-live="polite" data-testid="sync-logs-error">{{ syncLogsError() }}</p>
     }
     @if (syncLogsLoading()) {
-    <p aria-live="polite" data-testid="sync-logs-loading">Loading sync logs...</p>
+    <p aria-live="polite" data-testid="sync-logs-loading">{{ 'LOCATION.SYNC.LOADING_SYNC_LOGS' | translate }}</p>
     }
     <table data-testid="sync-logs-table">
       <thead>
         <tr>
-          <th>Run ID</th>
-          <th>Outcome</th>
-          <th>Created At</th>
-          <th>Correlation ID</th>
+          <th>{{ 'LOCATION.SYNC.COL_RUN_ID' | translate }}</th>
+          <th>{{ 'LOCATION.SYNC.COL_OUTCOME' | translate }}</th>
+          <th>{{ 'LOCATION.SYNC.COL_CREATED_AT' | translate }}</th>
+          <th>{{ 'LOCATION.SYNC.COL_CORRELATION_ID' | translate }}</th>
         </tr>
       </thead>
       <tbody>
-        @for (log of syncLogs(); track ($any(log).syncRunId ?? $any(log).syncLogId)) {
+        @for (log of syncLogs(); track log.syncLogId) {
         <tr [attr.data-testid]="'sync-log-row-' + $index">
-          <td>{{ $any(log).syncRunId ?? $any(log).syncLogId }}</td>
-          <td>{{ $any(log).outcome }}</td>
-          <td>{{ $any(log).createdAt }}</td>
-          <td>{{ $any(log).correlationId }}</td>
+          <td>{{ log.syncRunId }}</td>
+          <td>{{ log.outcome }}</td>
+          <td>{{ log.createdAt }}</td>
+          <td>{{ log.correlationId }}</td>
         </tr>
         }
         @empty {
         <tr>
-          <td colspan="4" data-testid="sync-logs-empty">No sync logs available.</td>
+          <td colspan="4" data-testid="sync-logs-empty">{{ 'LOCATION.SYNC.NO_SYNC_LOGS' | translate }}</td>
         </tr>
         }
       </tbody>

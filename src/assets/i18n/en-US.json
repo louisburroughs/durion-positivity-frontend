@@ -895,6 +895,29 @@
     }
   },
   "LOCATION": {
+    "SYNC": {
+      "TITLE": "Location Sync",
+      "SYNC_NOW": "Sync Now",
+      "SYNCING": "Syncing...",
+      "TRIGGER_SUCCESS": "Sync triggered successfully.",
+      "SYNC_RUN_ID": "Sync Run ID:",
+      "SYNCED_LOCATIONS": "Synced Locations",
+      "SYNC_LOGS": "Sync Logs",
+      "LOADING_LOCATIONS": "Loading locations...",
+      "LOADING_SYNC_LOGS": "Loading sync logs...",
+      "NO_LOCATIONS": "No synced locations.",
+      "NO_SYNC_LOGS": "No sync logs available.",
+      "COL_ID": "ID",
+      "COL_NAME": "Name",
+      "COL_TYPE": "Type",
+      "COL_ACTIVE": "Active",
+      "COL_RUN_ID": "Run ID",
+      "COL_OUTCOME": "Outcome",
+      "COL_CREATED_AT": "Created At",
+      "COL_CORRELATION_ID": "Correlation ID",
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive"
+    },
     "LOCATIONS": {
       "TITLE": "Locations",
       "CREATE_LOCATION": "Create Location",
