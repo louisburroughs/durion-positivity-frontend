@@ -94,7 +94,7 @@ export class ShortageResolutionPageComponent {
     this.errorKey.set(null);
 
     this.inventoryService
-      .getShortageOptions(workorderId, allocationLineId)
+      .getShortageOptions(allocationLineId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: options => {

@@ -179,7 +179,7 @@ describe('InventoryDomainService', () => {
       nextPageToken: null,
     };
 
-    it('calls GET /inventory/v1/ledger with filter params', () => {
+    it('calls GET /inventory/v1/inventory/ledger with filter params', () => {
       apiStub.get.mockReturnValueOnce(of(mockPage));
 
       const filter: LedgerFilter = { locationId: 'loc-01', productSku: 'SKU-001' };
@@ -187,7 +187,7 @@ describe('InventoryDomainService', () => {
 
       expect(apiStub.get).toHaveBeenCalledOnce();
       const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/ledger');
+      expect(path).toBe('/inventory/v1/inventory/ledger');
       expect((params as HttpParams).get('locationId')).toBe('loc-01');
       expect((params as HttpParams).get('productSku')).toBe('SKU-001');
     });
@@ -234,14 +234,14 @@ describe('InventoryDomainService', () => {
       uom: 'EA',
     };
 
-    it('calls GET /inventory/v1/ledger/{ledgerEntryId}', () => {
+    it('calls GET /inventory/v1/inventory/ledger/{ledgerEntryId}', () => {
       apiStub.get.mockReturnValueOnce(of(mockEntry));
 
       service.getLedgerEntry('entry-001').subscribe();
 
       expect(apiStub.get).toHaveBeenCalledOnce();
       const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/ledger/entry-001');
+      expect(path).toBe('/inventory/v1/inventory/ledger/entry-001');
     });
 
     it('URL-encodes the ledgerEntryId', () => {
@@ -250,7 +250,7 @@ describe('InventoryDomainService', () => {
       service.getLedgerEntry('entry/001').subscribe();
 
       const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/ledger/entry%2F001');
+      expect(path).toBe('/inventory/v1/inventory/ledger/entry%2F001');
     });
 
     it('returns the InventoryLedgerEntry emitted by the API', () => {
@@ -438,23 +438,15 @@ describe('InventoryDomainService', () => {
       },
     ];
 
-    it('calls GET /inventory/v1/workorders/{workorderId}/returnable-items', () => {
+    it('calls GET /inventory/v1/inventory/returns/returnable-items with workorderId param', () => {
       apiStub.get.mockReturnValueOnce(of(mockItems));
 
       service.getReturnableItems('wo-001').subscribe();
 
       expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/workorders/wo-001/returnable-items');
-    });
-
-    it('URL-encodes the workorderId', () => {
-      apiStub.get.mockReturnValueOnce(of(mockItems));
-
-      service.getReturnableItems('wo/001').subscribe();
-
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/workorders/wo%2F001/returnable-items');
+      const [path, params] = apiStub.get.mock.calls[0];
+      expect(path).toBe('/inventory/v1/inventory/returns/returnable-items');
+      expect((params as HttpParams).get('workorderId')).toBe('wo-001');
     });
 
     it('returns the ReturnableItem array emitted by the API', () => {
@@ -475,14 +467,14 @@ describe('InventoryDomainService', () => {
       { code: 'UNUSED', label: 'Unused part' },
     ];
 
-    it('calls GET /inventory/v1/reasons with type param', () => {
+    it('calls GET /inventory/v1/inventory/returns/reason-codes with type param', () => {
       apiStub.get.mockReturnValueOnce(of(mockCodes));
 
       service.getReasonCodes('RETURN').subscribe();
 
       expect(apiStub.get).toHaveBeenCalledOnce();
       const [path, params] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/reasons');
+      expect(path).toBe('/inventory/v1/inventory/returns/reason-codes');
       expect((params as HttpParams).get('type')).toBe('RETURN');
     });
 
@@ -512,14 +504,14 @@ describe('InventoryDomainService', () => {
       totalItemsReturned: 2,
     };
 
-    it('calls POST /inventory/v1/movements/return-to-stock with request body', () => {
+    it('calls POST /inventory/v1/inventory/returns/submit-to-stock with request body', () => {
       apiStub.post.mockReturnValueOnce(of(mockResult));
 
       service.submitReturnToStock(mockRequest).subscribe();
 
       expect(apiStub.post).toHaveBeenCalledOnce();
       const [path, body] = apiStub.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/movements/return-to-stock');
+      expect(path).toBe('/inventory/v1/inventory/returns/submit-to-stock');
       expect(body).toEqual(mockRequest);
     });
 
@@ -541,32 +533,22 @@ describe('InventoryDomainService', () => {
       { optionId: 'opt-02', decisionType: 'BACKORDER', label: 'Backorder part', leadTimeDays: 3 },
     ];
 
-    it('calls GET /inventory/v1/workorders/{workorderId}/allocations/{allocationLineId}/shortage-options', () => {
+    it('calls GET /inventory/v1/inventory/shortage/options with allocationId param', () => {
       apiStub.get.mockReturnValueOnce(of(mockOptions));
 
-      service.getShortageOptions('wo-001', 'alloc-001').subscribe();
+      service.getShortageOptions('alloc-001').subscribe();
 
       expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe(
-        '/inventory/v1/workorders/wo-001/allocations/alloc-001/shortage-options',
-      );
-    });
-
-    it('URL-encodes workorderId and allocationLineId', () => {
-      apiStub.get.mockReturnValueOnce(of(mockOptions));
-
-      service.getShortageOptions('wo/001', 'alloc/001').subscribe();
-
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toContain('wo%2F001/allocations/alloc%2F001');
+      const [path, params] = apiStub.get.mock.calls[0];
+      expect(path).toBe('/inventory/v1/inventory/shortage/options');
+      expect((params as HttpParams).get('allocationId')).toBe('alloc-001');
     });
 
     it('returns the ShortageOption array emitted by the API', () => {
       apiStub.get.mockReturnValueOnce(of(mockOptions));
 
       let result: ShortageOption[] | undefined;
-      service.getShortageOptions('wo-001', 'alloc-001').subscribe(r => (result = r));
+      service.getShortageOptions('alloc-001').subscribe(r => (result = r));
 
       expect(result).toEqual(mockOptions);
     });
@@ -588,16 +570,14 @@ describe('InventoryDomainService', () => {
       resolvedDecisionType: 'SUBSTITUTE',
     };
 
-    it('calls POST /inventory/v1/workorders/{workorderId}/allocations/{allocationLineId}/resolve-shortage', () => {
+    it('calls POST /inventory/v1/inventory/shortage/resolve', () => {
       apiStub.post.mockReturnValueOnce(of(mockResult));
 
       service.resolveShortage(mockRequest).subscribe();
 
       expect(apiStub.post).toHaveBeenCalledOnce();
       const [path] = apiStub.post.mock.calls[0];
-      expect(path).toBe(
-        '/inventory/v1/workorders/wo-001/allocations/alloc-001/resolve-shortage',
-      );
+      expect(path).toBe('/inventory/v1/inventory/shortage/resolve');
     });
 
     it('posts the full ShortageResolutionRequest as body', () => {
