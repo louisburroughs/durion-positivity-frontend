@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { InventoryAvailabilityService, InventoryReferenceDataService } from '@durion-sdk/inventory';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { pageContent } from '../../../core/util/spring-page';
 import {
   AvailabilityView,
   InventoryLedgerEntry,
@@ -47,10 +48,6 @@ interface InventoryLocationZoneDto {
   zoneId?: string;
   zoneName?: string;
   locationId?: string;
-}
-
-interface SpringPage<T> {
-  content?: T[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -182,13 +179,4 @@ export class InventoryDomainService {
       request,
     );
   }
-}
-
-/**
- * Extracts the `content` array from a Spring Data page response. The inventory
- * SDK types these list endpoints as `string`, so the body is received as
- * `unknown` and narrowed here. Returns an empty array when absent.
- */
-function pageContent<T>(page: unknown): T[] {
-  return (page as SpringPage<T>).content ?? [];
 }

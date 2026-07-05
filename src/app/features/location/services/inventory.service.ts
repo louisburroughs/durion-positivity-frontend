@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { InventoryReferenceDataService, LocationSyncService } from '@durion-sdk/inventory';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { pageContent } from '../../../core/util/spring-page';
 import {
   LocationDto,
   LocationSyncRunResponse,
@@ -12,10 +13,6 @@ import {
 
 /** Outcome filter accepted by the SDK `listSyncLogs` operation. */
 type SyncLogOutcome = 'OK' | 'PARTIAL' | 'FAILED' | 'INVALID_PAYLOAD';
-
-interface SpringPage<T> {
-  content?: T[];
-}
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
@@ -113,17 +110,4 @@ export class InventoryService {
     }
     return pageable;
   }
-}
-
-/**
- * Extracts the `content` array from a Spring Data page response. The inventory
- * SDK types these reference-data list endpoints as `string`, so the body is
- * received as `unknown` and narrowed here. A plain array (some endpoints return
- * one directly) passes through unchanged. Returns an empty array when absent.
- */
-function pageContent<T>(page: unknown): T[] {
-  if (Array.isArray(page)) {
-    return page as T[];
-  }
-  return (page as SpringPage<T>)?.content ?? [];
 }
