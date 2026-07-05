@@ -1,26 +1,32 @@
 /**
- * InventoryService unit tests — CAP-214 Wave H
+ * InventoryService unit tests
  *
- * API paths covered:
- *   listInventoryLocations      → GET  /inventory/v1/inventory/locations
- *   listStorageLocations        → GET  /inventory/v1/inventory/storage-locations?locationId=...
- *   getStorageLocation          → GET  /inventory/v1/inventory/storage-locations/{id}
- *   createStorageLocation       → POST /inventory/v1/inventory/storage-locations (Idempotency-Key)
- *   updateStorageLocation       → PUT  /inventory/v1/inventory/storage-locations/{id} (Idempotency-Key)
- *   deactivateStorageLocation   → POST /inventory/v1/inventory/storage-locations/{id}/deactivate
- *   listStorageTypes            → GET  /inventory/v1/inventory/meta/storage-types
- *   listSyncLogs                → GET  /inventory/v1/inventory/sync-logs
- *   triggerLocationSync         → POST /inventory/v1/inventory/locations/sync (Idempotency-Key)
+ * Sync + reference-data operations delegate to the generated
+ * `@durion-sdk/inventory` services:
+ *   listInventoryLocations  → InventoryReferenceDataService.listInventoryLocations
+ *   listStorageLocations    → InventoryReferenceDataService.listInventoryStorageLocations
+ *   listStorageTypes        → InventoryReferenceDataService.listStorageTypes
+ *   listSyncLogs            → LocationSyncService.listSyncLogs
+ *   getSyncLog              → LocationSyncService.getSyncLog
+ *   triggerLocationSync     → LocationSyncService.triggerLocationSync
+ *
+ * Storage-location writes (and the single storage-location read) have no SDK
+ * operation and remain hand-written paths through ApiBaseService:
+ *   getStorageLocation      → GET  /inventory/v1/inventory/storage-locations/{id}
+ *   createStorageLocation   → POST /inventory/v1/inventory/storage-locations (Idempotency-Key)
+ *   updateStorageLocation   → PUT  /inventory/v1/inventory/storage-locations/{id} (Idempotency-Key)
+ *   deactivateStorageLocation → POST /inventory/v1/inventory/storage-locations/{id}/deactivate
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { HttpParams } from '@angular/common/http';
+import { InventoryReferenceDataService, LocationSyncService } from '@durion-sdk/inventory';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { InventoryService } from './inventory.service';
+import { LocationDto, StorageLocationDto, SyncLogResponse } from '../models/location-sync.models';
 
 // ---------------------------------------------------------------------------
-// Shared mock
+// Shared mocks
 // ---------------------------------------------------------------------------
 
 const apiMock = {
@@ -32,23 +38,43 @@ const apiMock = {
   deleteWithBody: vi.fn(),
 };
 
+const refDataMock = {
+  listInventoryLocations: vi.fn(),
+  listInventoryStorageLocations: vi.fn(),
+  listStorageTypes: vi.fn(),
+};
+
+const syncMock = {
+  listSyncLogs: vi.fn(),
+  getSyncLog: vi.fn(),
+  triggerLocationSync: vi.fn(),
+};
+
 // ---------------------------------------------------------------------------
 // Suite
 // ---------------------------------------------------------------------------
 
-describe('InventoryService [CAP-214]', () => {
+describe('InventoryService', () => {
   let service: InventoryService;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    apiMock.get.mockReturnValue(of([]));
+    apiMock.get.mockReturnValue(of({}));
     apiMock.post.mockReturnValue(of({}));
     apiMock.put.mockReturnValue(of({}));
+    refDataMock.listInventoryLocations.mockReturnValue(of({ content: [] }));
+    refDataMock.listInventoryStorageLocations.mockReturnValue(of({ content: [] }));
+    refDataMock.listStorageTypes.mockReturnValue(of([]));
+    syncMock.listSyncLogs.mockReturnValue(of([]));
+    syncMock.getSyncLog.mockReturnValue(of({}));
+    syncMock.triggerLocationSync.mockReturnValue(of({}));
 
     TestBed.configureTestingModule({
       providers: [
         InventoryService,
         { provide: ApiBaseService, useValue: apiMock },
+        { provide: InventoryReferenceDataService, useValue: refDataMock },
+        { provide: LocationSyncService, useValue: syncMock },
       ],
     });
 
@@ -62,58 +88,49 @@ describe('InventoryService [CAP-214]', () => {
   // ── listInventoryLocations() ───────────────────────────────────────────────
 
   describe('listInventoryLocations()', () => {
-    it('calls GET /inventory/v1/inventory/locations', () => {
-      service.listInventoryLocations().subscribe();
+    it('delegates to the SDK with a pageable derived from pageIndex/pageSize', () => {
+      service.listInventoryLocations({ pageIndex: 2, pageSize: 50 }).subscribe();
 
-      const [path] = apiMock.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/locations');
+      expect(refDataMock.listInventoryLocations).toHaveBeenCalledWith({ page: 2, size: 50 });
     });
 
-    it('returns the locations array as an Observable', () => {
-      const locations = [{ locationId: 'loc-1' }, { locationId: 'loc-2' }];
-      apiMock.get.mockReturnValueOnce(of(locations));
+    it('unwraps the Spring Page content into a typed array', () => {
+      const rows: LocationDto[] = [{ locationId: 'loc-1', name: 'Main', type: 'WAREHOUSE', active: true }];
+      refDataMock.listInventoryLocations.mockReturnValueOnce(of({ content: rows }));
 
-      let result: unknown;
-      service.listInventoryLocations().subscribe((r) => (result = r));
+      let result: LocationDto[] | undefined;
+      service.listInventoryLocations({ pageSize: 50 }).subscribe(r => (result = r));
 
-      expect(result).toEqual(locations);
+      expect(result).toEqual(rows);
     });
 
-    it('passes status param when provided', () => {
-      service.listInventoryLocations({ status: 'ACTIVE' }).subscribe();
+    it('returns an empty array when the page has no content', () => {
+      refDataMock.listInventoryLocations.mockReturnValueOnce(of({}));
 
-      const [, params] = apiMock.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('status')).toBe('ACTIVE');
+      let result: LocationDto[] | undefined;
+      service.listInventoryLocations().subscribe(r => (result = r));
+
+      expect(result).toEqual([]);
     });
   });
 
   // ── listStorageLocations() ─────────────────────────────────────────────────
 
   describe('listStorageLocations()', () => {
-    it('calls GET /inventory/v1/inventory/storage-locations with locationId param', () => {
-      service.listStorageLocations('loc-abc').subscribe();
+    it('delegates to the SDK with pageable and locationId', () => {
+      service.listStorageLocations('loc-abc', { pageSize: 25 }).subscribe();
 
-      const [path, params] = apiMock.get.mock.calls[0] as [string, HttpParams];
-      expect(path).toBe('/inventory/v1/inventory/storage-locations');
-      expect(params.get('locationId')).toBe('loc-abc');
+      expect(refDataMock.listInventoryStorageLocations).toHaveBeenCalledWith({ size: 25 }, 'loc-abc');
     });
 
-    it('returns the storage locations array as an Observable', () => {
-      const storageLocs = [{ storageLocationId: 'sl-1' }];
-      apiMock.get.mockReturnValueOnce(of(storageLocs));
+    it('unwraps the Spring Page content into a typed array', () => {
+      const rows: StorageLocationDto[] = [{ storageLocationId: 'sl-1', locationId: 'loc-abc', code: 'A1', active: true }];
+      refDataMock.listInventoryStorageLocations.mockReturnValueOnce(of({ content: rows }));
 
-      let result: unknown;
-      service.listStorageLocations('loc-abc').subscribe((r) => (result = r));
+      let result: StorageLocationDto[] | undefined;
+      service.listStorageLocations('loc-abc').subscribe(r => (result = r));
 
-      expect(result).toEqual(storageLocs);
-    });
-
-    it('passes optional status param when provided', () => {
-      service.listStorageLocations('loc-abc', { status: 'ACTIVE' }).subscribe();
-
-      const [, params] = apiMock.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('status')).toBe('ACTIVE');
-      expect(params.get('locationId')).toBe('loc-abc');
+      expect(result).toEqual(rows);
     });
   });
 
@@ -126,16 +143,6 @@ describe('InventoryService [CAP-214]', () => {
       const [path] = apiMock.get.mock.calls[0];
       expect(path).toBe('/inventory/v1/inventory/storage-locations/sl-999');
     });
-
-    it('returns the storage location object as an Observable', () => {
-      const location = { storageLocationId: 'sl-999', name: 'Shelf A' };
-      apiMock.get.mockReturnValueOnce(of(location));
-
-      let result: unknown;
-      service.getStorageLocation('sl-999').subscribe((r) => (result = r));
-
-      expect(result).toEqual(location);
-    });
   });
 
   // ── createStorageLocation() ────────────────────────────────────────────────
@@ -143,17 +150,11 @@ describe('InventoryService [CAP-214]', () => {
   describe('createStorageLocation()', () => {
     const payload = { name: 'Bin 42', locationId: 'loc-1' };
 
-    it('calls POST /inventory/v1/inventory/storage-locations', () => {
+    it('calls POST /inventory/v1/inventory/storage-locations with the body', () => {
       service.createStorageLocation(payload, 'idem-key-1').subscribe();
 
-      const [path] = apiMock.post.mock.calls[0];
+      const [path, body] = apiMock.post.mock.calls[0];
       expect(path).toBe('/inventory/v1/inventory/storage-locations');
-    });
-
-    it('sends the body', () => {
-      service.createStorageLocation(payload, 'idem-key-1').subscribe();
-
-      const [, body] = apiMock.post.mock.calls[0];
       expect(body).toEqual(payload);
     });
 
@@ -177,17 +178,11 @@ describe('InventoryService [CAP-214]', () => {
   describe('updateStorageLocation()', () => {
     const updateBody = { name: 'Bin 43' };
 
-    it('calls PUT /inventory/v1/inventory/storage-locations/{id}', () => {
+    it('calls PUT /inventory/v1/inventory/storage-locations/{id} with the body', () => {
       service.updateStorageLocation('sl-1', updateBody, 'idem-key-update').subscribe();
 
-      const [path] = apiMock.put.mock.calls[0];
+      const [path, body] = apiMock.put.mock.calls[0];
       expect(path).toBe('/inventory/v1/inventory/storage-locations/sl-1');
-    });
-
-    it('sends the body', () => {
-      service.updateStorageLocation('sl-1', updateBody, 'idem-key-update').subscribe();
-
-      const [, body] = apiMock.put.mock.calls[0];
       expect(body).toEqual(updateBody);
     });
 
@@ -204,17 +199,11 @@ describe('InventoryService [CAP-214]', () => {
   describe('deactivateStorageLocation()', () => {
     const deactivateBody = { reason: 'OBSOLETE' };
 
-    it('calls POST /inventory/v1/inventory/storage-locations/{id}/deactivate', () => {
+    it('calls POST /inventory/v1/inventory/storage-locations/{id}/deactivate with the body', () => {
       service.deactivateStorageLocation('sl-2', deactivateBody, 'idem-key-deact').subscribe();
 
-      const [path] = apiMock.post.mock.calls[0];
+      const [path, body] = apiMock.post.mock.calls[0];
       expect(path).toBe('/inventory/v1/inventory/storage-locations/sl-2/deactivate');
-    });
-
-    it('sends the body', () => {
-      service.deactivateStorageLocation('sl-2', deactivateBody, 'idem-key-deact').subscribe();
-
-      const [, body] = apiMock.post.mock.calls[0];
       expect(body).toEqual(deactivateBody);
     });
 
@@ -229,19 +218,18 @@ describe('InventoryService [CAP-214]', () => {
   // ── listStorageTypes() ────────────────────────────────────────────────────
 
   describe('listStorageTypes()', () => {
-    it('calls GET /inventory/v1/inventory/meta/storage-types', () => {
+    it('delegates to the SDK', () => {
       service.listStorageTypes().subscribe();
 
-      const [path] = apiMock.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/meta/storage-types');
+      expect(refDataMock.listStorageTypes).toHaveBeenCalled();
     });
 
-    it('returns the storage types array as an Observable', () => {
-      const types = [{ code: 'SHELF' }, { code: 'BIN' }];
-      apiMock.get.mockReturnValueOnce(of(types));
+    it('returns the storage types array', () => {
+      const types = ['SHELF', 'BIN'];
+      refDataMock.listStorageTypes.mockReturnValueOnce(of(types));
 
-      let result: unknown;
-      service.listStorageTypes().subscribe((r) => (result = r));
+      let result: string[] | undefined;
+      service.listStorageTypes().subscribe(r => (result = r));
 
       expect(result).toEqual(types);
     });
@@ -250,69 +238,56 @@ describe('InventoryService [CAP-214]', () => {
   // ── listSyncLogs() ────────────────────────────────────────────────────────
 
   describe('listSyncLogs()', () => {
-    it('calls GET /inventory/v1/inventory/sync-logs', () => {
-      service.listSyncLogs().subscribe();
+    it('delegates to the SDK with outcome and pagination aliases', () => {
+      service.listSyncLogs({ outcome: 'FAILED', pageIndex: 1, pageSize: 20 }).subscribe();
 
-      const [path] = apiMock.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/sync-logs');
+      expect(syncMock.listSyncLogs).toHaveBeenCalledWith('FAILED', undefined, undefined, 1, 20);
     });
 
-    it('returns the sync logs array as an Observable', () => {
-      const logs = [{ syncLogId: 'log-1', outcome: 'SUCCESS' }];
-      apiMock.get.mockReturnValueOnce(of(logs));
+    it('passes undefined filters when no params are provided', () => {
+      service.listSyncLogs().subscribe();
 
-      let result: unknown;
-      service.listSyncLogs().subscribe((r) => (result = r));
+      expect(syncMock.listSyncLogs).toHaveBeenCalledWith(undefined, undefined, undefined, undefined, undefined);
+    });
+
+    it('returns the sync logs array', () => {
+      const logs: SyncLogResponse[] = [
+        { syncLogId: 'log-1', syncRunId: 'run-1', scope: 'RUN', outcome: 'OK', createdAt: '2025-01-01T00:00:00Z' },
+      ];
+      syncMock.listSyncLogs.mockReturnValueOnce(of(logs));
+
+      let result: SyncLogResponse[] | undefined;
+      service.listSyncLogs().subscribe(r => (result = r));
 
       expect(result).toEqual(logs);
     });
+  });
 
-    it('passes outcome param when provided', () => {
-      service.listSyncLogs({ outcome: 'FAILURE' }).subscribe();
+  // ── getSyncLog() ──────────────────────────────────────────────────────────
 
-      const [, params] = apiMock.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('outcome')).toBe('FAILURE');
-    });
+  describe('getSyncLog()', () => {
+    it('delegates to the SDK with the log id', () => {
+      service.getSyncLog('log-1').subscribe();
 
-    it('passes pagination params when provided', () => {
-      service.listSyncLogs({ pageIndex: 0, pageSize: 20 }).subscribe();
-
-      const [, params] = apiMock.get.mock.calls[0] as [string, HttpParams];
-      expect(params.get('pageIndex')).toBe('0');
-      expect(params.get('pageSize')).toBe('20');
+      expect(syncMock.getSyncLog).toHaveBeenCalledWith('log-1');
     });
   });
 
   // ── triggerLocationSync() ─────────────────────────────────────────────────
 
   describe('triggerLocationSync()', () => {
-    it('calls POST /inventory/v1/inventory/locations/sync', () => {
+    it('delegates to the SDK with the idempotency key', () => {
       service.triggerLocationSync('idem-key-sync').subscribe();
 
-      const [path] = apiMock.post.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/locations/sync');
+      expect(syncMock.triggerLocationSync).toHaveBeenCalledWith('idem-key-sync');
     });
 
-    it('sends an empty body', () => {
-      service.triggerLocationSync('idem-key-sync').subscribe();
-
-      const [, body] = apiMock.post.mock.calls[0];
-      expect(body).toEqual({});
-    });
-
-    it('forwards the Idempotency-Key header', () => {
-      service.triggerLocationSync('idem-key-sync-xyz').subscribe();
-
-      const [, , options] = apiMock.post.mock.calls[0];
-      expect(options?.headers?.['Idempotency-Key']).toBe('idem-key-sync-xyz');
-    });
-
-    it('returns the server response as an Observable', () => {
-      const response = { syncJobId: 'job-1', status: 'INITIATED' };
-      apiMock.post.mockReturnValueOnce(of(response));
+    it('returns the server response', () => {
+      const response = { syncRunId: 'run-1', outcome: 'OK' };
+      syncMock.triggerLocationSync.mockReturnValueOnce(of(response));
 
       let result: unknown;
-      service.triggerLocationSync('idem-key-sync').subscribe((r) => (result = r));
+      service.triggerLocationSync('idem-key-sync').subscribe(r => (result = r));
 
       expect(result).toEqual(response);
     });

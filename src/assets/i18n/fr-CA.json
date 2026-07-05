@@ -895,6 +895,29 @@
     }
   },
   "LOCATION": {
+    "SYNC": {
+      "TITLE": "Synchronisation des emplacements",
+      "SYNC_NOW": "Synchroniser maintenant",
+      "SYNCING": "Synchronisation...",
+      "TRIGGER_SUCCESS": "Synchronisation déclenchée avec succès.",
+      "SYNC_RUN_ID": "ID d'exécution de synchronisation :",
+      "SYNCED_LOCATIONS": "Emplacements synchronisés",
+      "SYNC_LOGS": "Journaux de synchronisation",
+      "LOADING_LOCATIONS": "Chargement des emplacements...",
+      "LOADING_SYNC_LOGS": "Chargement des journaux de synchronisation...",
+      "NO_LOCATIONS": "Aucun emplacement synchronisé.",
+      "NO_SYNC_LOGS": "Aucun journal de synchronisation disponible.",
+      "COL_ID": "ID",
+      "COL_NAME": "Nom",
+      "COL_TYPE": "Type",
+      "COL_ACTIVE": "Actif",
+      "COL_RUN_ID": "ID d'exécution",
+      "COL_OUTCOME": "Résultat",
+      "COL_CREATED_AT": "Créé le",
+      "COL_CORRELATION_ID": "ID de corrélation",
+      "ACTIVE": "Actif",
+      "INACTIVE": "Inactif"
+    },
     "LOCATIONS": {
       "TITLE": "Emplacements",
       "CREATE_LOCATION": "Créer un emplacement",
