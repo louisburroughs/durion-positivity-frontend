@@ -36,21 +36,28 @@ export class MechanicAvailabilityPageComponent implements OnInit {
         const id = String(location.locationId ?? '').trim();
         this.locationId.set(id);
         this.filterForm.controls.locationId.setValue(id);
-        this.loadAvailability();
+        if (id) {
+          this.loadAvailability();
+        }
       },
       error: () => {
         this.error.set('SHOPMGMT.MECHANIC_AVAILABILITY.ERROR.LOAD_LOCATION');
-        this.loadAvailability();
       },
     });
   }
 
   loadAvailability(): void {
+    const locationId = this.filterForm.controls.locationId.value.trim();
+    const date = this.filterForm.controls.date.value.trim();
+    if (!locationId) {
+      this.error.set('SHOPMGMT.MECHANIC_AVAILABILITY.ERROR.LOCATION_REQUIRED');
+      this.availabilityData.set([]);
+      return;
+    }
+
     this.loading.set(true);
     this.error.set(null);
 
-    const locationId = this.filterForm.controls.locationId.value.trim();
-    const date = this.filterForm.controls.date.value.trim();
     this.locationId.set(locationId);
     this.selectedDate.set(date);
     this.dispatchBoardService.getAvailability(locationId, date).subscribe({

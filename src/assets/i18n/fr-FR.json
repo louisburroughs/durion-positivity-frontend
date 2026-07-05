@@ -1160,7 +1160,8 @@
       "EMPTY": "Aucune donnée de disponibilité trouvée.",
       "ERROR": {
         "LOAD_LOCATION": "Impossible de charger l'emplacement.",
-        "LOAD_AVAILABILITY": "Impossible de charger la disponibilité."
+        "LOAD_AVAILABILITY": "Impossible de charger la disponibilité.",
+        "LOCATION_REQUIRED": "Saisissez un emplacement pour charger la disponibilité."
       }
     },
     "MECHANIC_ROSTER": {

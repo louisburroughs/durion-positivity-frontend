@@ -56,6 +56,42 @@ describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
     expect(grid).toBeTruthy();
   });
 
+  it('does not call getAvailability when primary location lookup fails', async () => {
+    vi.clearAllMocks();
+    const errorDispatchBoardService = {
+      getPrimaryLocation: vi.fn().mockReturnValue(throwError(() => new Error('404'))),
+      getAvailability: vi.fn().mockReturnValue(of([])),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [MechanicAvailabilityPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: DispatchBoardService, useValue: errorDispatchBoardService },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(MechanicAvailabilityPageComponent);
+    fixture.detectChanges();
+
+    expect(errorDispatchBoardService.getAvailability).not.toHaveBeenCalled();
+    const banner = fixture.debugElement.query(By.css('.error-banner'));
+    expect(banner).toBeTruthy();
+  });
+
+  it('requires a location before loading availability', async () => {
+    await setup();
+    vi.clearAllMocks();
+
+    const component = fixture.componentInstance;
+    component.filterForm.controls.locationId.setValue('   ');
+    component.loadAvailability();
+    fixture.detectChanges();
+
+    expect(dispatchBoardServiceStub.getAvailability).not.toHaveBeenCalled();
+    expect(component.error()).toBe('SHOPMGMT.MECHANIC_AVAILABILITY.ERROR.LOCATION_REQUIRED');
+  });
+
   it('shows .error-banner on error', async () => {
     vi.clearAllMocks();
     const errorDispatchBoardService = {

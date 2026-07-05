@@ -1123,7 +1123,8 @@
       "EMPTY": "No availability data found.",
       "ERROR": {
         "LOAD_LOCATION": "Failed to load location.",
-        "LOAD_AVAILABILITY": "Failed to load availability."
+        "LOAD_AVAILABILITY": "Failed to load availability.",
+        "LOCATION_REQUIRED": "Enter a location to load availability."
       }
     },
     "MECHANIC_ROSTER": {
