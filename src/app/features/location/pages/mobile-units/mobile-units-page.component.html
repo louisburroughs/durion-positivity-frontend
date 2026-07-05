@@ -1,3 +1,10 @@
+<section class="page-header">
+  <h1>{{ 'LOCATION.MOBILE_UNITS.TITLE' | translate }}</h1>
+  @if (locationId()) {
+    <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">{{ 'LOCATION.MOBILE_UNITS.CREATE_MOBILE_UNIT' | translate }}</button>
+  }
+</section>
+
 <app-location-picker
   [label]="'LOCATION.MOBILE_UNITS.LABEL' | translate"
   [selectedId]="locationId()"
@@ -16,11 +23,6 @@
 }
 
 @if (locationId()) {
-  <section class="page-header">
-    <h1>{{ 'LOCATION.MOBILE_UNITS.TITLE' | translate }}</h1>
-    <button type="button" class="btn-primary open-create-btn" (click)="openCreate()">{{ 'LOCATION.MOBILE_UNITS.CREATE_MOBILE_UNIT' | translate }}</button>
-  </section>
-
   @if (error()) {
     <div class="error-banner">{{ error()! | translate }}</div>
   }

@@ -6,6 +6,10 @@
     </button>
   </div>
 
+  <header class="page-header">
+    <h1 id="count-execute-title">{{ 'INVENTORY.COUNTS.EXECUTE.TITLE' | translate }}</h1>
+  </header>
+
   @if (state() === 'loading') {
   <section class="card" aria-busy="true" aria-live="polite">
     <p class="sr-only">{{ 'COMMON.LOADING' | translate }}</p>
@@ -32,7 +36,6 @@
   @if (state() === 'ready' && task()) {
   <!-- Task context -->
   <section class="card">
-    <h1 id="count-execute-title">{{ 'INVENTORY.COUNTS.EXECUTE.TITLE' | translate }}</h1>
     <dl class="detail-grid">
       <dt>{{ 'INVENTORY.COUNTS.EXECUTE.FIELD.LOCATION' | translate }}</dt>
       <dd>{{ task()!.locationId }}</dd>
