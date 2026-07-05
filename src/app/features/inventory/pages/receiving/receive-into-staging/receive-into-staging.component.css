@@ -9,7 +9,7 @@
 }
 
 .asn-entry-section h2 {
-  font-family: 'Public Sans', var(--font-body);
+  font-family: var(--font-primary);
   color: var(--brand-primary);
   background: color-mix(in srgb, var(--brand-primary-soft) 80%, var(--cardBackground));
   border-radius: 12px;

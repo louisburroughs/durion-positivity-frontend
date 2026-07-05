@@ -38,11 +38,11 @@ h1 {
 }
 
 .state-panel--error {
-  background: var(--status-error-bg)); color: var(--status-error-fg);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .state-panel--success {
-  background: var(--status-success-bg)); color: var(--status-success-fg);
+  background: var(--status-success-bg); color: var(--status-success-fg);
 }
 
 .alert {
@@ -50,7 +50,7 @@ h1 {
 }
 
 .alert--info {
-  background: var(--status-info-bg)); color: var(--status-info-fg);
+  background: var(--status-info-bg); color: var(--status-info-fg);
 }
 
 .provision-form {

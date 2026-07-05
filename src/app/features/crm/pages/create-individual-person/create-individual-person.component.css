@@ -79,7 +79,7 @@
 }
 
 .field__input {
-  background: var(--surfaceContainerHighest, var(--primary50));
+  background: var(--primary50);
   border: none;
   border-bottom: 2px solid var(--durion-graphite-200);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;

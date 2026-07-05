@@ -37,7 +37,7 @@
 .link-button {
   border: none;
   background: transparent;
-  color: var(--brand-accent);
+  color: var(--accentA700);
   text-decoration: underline;
   padding: 0;
   cursor: pointer;
@@ -91,11 +91,11 @@
 }
 
 .ledger-table th {
-  border-bottom: 2px solid var(--surface-variant, var(--durion-graphite-200));
+  border-bottom: 2px solid var(--border-color);
 }
 
 .ledger-table td {
-  border-bottom: 1px solid var(--surface-variant, var(--durion-graphite-200));
+  border-bottom: 1px solid var(--border-color);
 }
 
 .status-badge {

@@ -11,7 +11,7 @@
   padding: 1.5rem;
   border-radius: var(--radius-md, 8px);
   background: var(--cardBackground);
-  border: 1px solid var(--color-outline-variant, #d0d7de);
+  border: 1px solid var(--border-color);
 }
 
 .finalize-card__title {
@@ -48,7 +48,7 @@
   width: 100%;
   max-width: 24rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-outline-variant, #d0d7de);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm, 4px);
   font-size: 0.875rem;
   font-family: inherit;
@@ -65,9 +65,9 @@
 /* ── Info alert ─────────────────────────────────────────────────────────── */
 
 .alert--info {
-  background: var(--color-info-surface, #dbeafe);
-  color: var(--color-info, #1d4ed8);
-  border: 1px solid var(--color-info, #1d4ed8);
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+  border: 1px solid var(--status-info-fg);
   border-radius: var(--radius-sm, 4px);
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
@@ -86,6 +86,6 @@
 /* ── Ledger mono cell ───────────────────────────────────────────────────── */
 
 .ledger__cell--mono {
-  font-family: var(--font-mono, ui-monospace, monospace);
+  font-family: var(--font-mono);
   font-size: 0.8rem;
 }

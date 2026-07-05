@@ -219,7 +219,7 @@
 
 .landing-card__icon {
   font-size: 1.25rem;
-  color: var(--brand-accent);
+  color: var(--accentA700);
   flex-shrink: 0;
 }
 

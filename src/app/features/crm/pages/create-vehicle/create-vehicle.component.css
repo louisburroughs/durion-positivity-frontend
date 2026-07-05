@@ -11,7 +11,7 @@
 .field { display: flex; flex-direction: column; gap: var(--space-1); }
 .field__label { font-size: 0.85rem; font-weight: 500; color: var(--currentTextColor); }
 .required-mark { color: var(--functional-error-red); margin-left: 2px; }
-.field__input { background: var(--surfaceContainerHighest, var(--primary50)); border: none; border-bottom: 2px solid var(--durion-graphite-200); border-radius: var(--radius-sm) var(--radius-sm) 0 0; padding: var(--space-3); font-size: 0.95rem; font-family: var(--font-body); color: var(--currentTextColor); transition: border-color var(--transition-fast); outline: none; width: 100%; box-sizing: border-box; }
+.field__input { background: var(--primary50); border: none; border-bottom: 2px solid var(--durion-graphite-200); border-radius: var(--radius-sm) var(--radius-sm) 0 0; padding: var(--space-3); font-size: 0.95rem; font-family: var(--font-body); color: var(--currentTextColor); transition: border-color var(--transition-fast); outline: none; width: 100%; box-sizing: border-box; }
 .field__input:focus { border-bottom-color: var(--durion-teal-400); }
 .field__input:disabled { opacity: 0.5; cursor: not-allowed; }
 .field__input[aria-invalid='true'] { border-bottom-color: var(--functional-error-red); }

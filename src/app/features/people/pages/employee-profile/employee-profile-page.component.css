@@ -112,7 +112,7 @@ label {
 }
 
 .state-panel--error {
-  background: var(--status-error-bg)); color: var(--status-error-fg);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .alert {
@@ -120,11 +120,11 @@ label {
 }
 
 .alert--error {
-  background: var(--status-error-bg)); color: var(--status-error-fg);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .alert--warning {
-  background: var(--status-warning-bg)); color: var(--status-warning-fg);
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
 }
 
 .alert__title {
@@ -147,7 +147,7 @@ label {
 }
 
 .status-badge--active {
-  background: var(--status-success-bg)); color: var(--status-success-fg);
+  background: var(--status-success-bg); color: var(--status-success-fg);
 }
 
 .status-badge--neutral {
@@ -156,7 +156,7 @@ label {
 }
 
 .status-badge--warning {
-  background: var(--status-warning-bg)); color: var(--status-warning-fg);
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
 }
 
 .audit-meta {

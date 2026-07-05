@@ -46,7 +46,7 @@
 .suggestion-secondary {
   font-size: 0.75rem;
   color: var(--handleColor, var(--brand-secondary));
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
 }
 
 .filter-row {

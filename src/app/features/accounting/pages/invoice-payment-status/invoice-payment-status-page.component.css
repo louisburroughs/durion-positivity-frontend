@@ -3,7 +3,7 @@
   gap: var(--space-6);
   padding: var(--space-6);
   background: var(--cardBackground);
-  color: var(--currentTextColor, var(--durion-on-surface, var(--durion-grey-900)));
+  color: var(--currentTextColor);
 }
 
 .ips-header {
@@ -38,7 +38,7 @@
   margin: 0;
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--currentTextColor, var(--durion-on-surface, var(--durion-grey-800)));
+  color: var(--currentTextColor);
 }
 
 .ips-loading {
@@ -176,7 +176,7 @@
 
 .ips-button--secondary {
   background: color-mix(in srgb, var(--brand-secondary, var(--brand-secondary)) 16%, transparent);
-  color: var(--currentTextColor, var(--durion-on-surface, var(--durion-grey-900)));
+  color: var(--currentTextColor);
 }
 
 .ips-history-wrap {

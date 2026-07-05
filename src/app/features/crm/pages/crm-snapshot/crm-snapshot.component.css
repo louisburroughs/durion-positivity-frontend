@@ -76,7 +76,7 @@
 
 .crm-snapshot__customer-name {
   margin: 0;
-  font-size: var(--font-display-sm, 1.5rem);
+  font-size: 1.5rem;
   font-weight: 600;
   color: var(--currentTextColor);
   line-height: 1.2;
@@ -86,7 +86,7 @@
   display: inline-flex;
   width: fit-content;
   padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill, 999px);
+  border-radius: 999px;
   background: var(--surface-variant);
   color: var(--text-muted);
   font-size: 0.78rem;

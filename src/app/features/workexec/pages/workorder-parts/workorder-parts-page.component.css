@@ -22,7 +22,7 @@
 .field__input:focus {border-bottom:2px solid var(--brand-accent,#006a62);}
 .form-actions {display:flex;gap:var(--space-3);justify-content:flex-end;}
 .hint-text {font-size:0.875rem;opacity:0.55;font-style:italic;}
-.btn-link {background:none;border:none;cursor:pointer;color:var(--brand-accent,#006a62);text-decoration:underline;font-size:0.8rem;padding:0;}
+.btn-link {background:none;border:none;cursor:pointer;color:var(--accentA700);text-decoration:underline;font-size:0.8rem;padding:0;}
 .alert {padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);font-size:0.875rem;}
 .alert--error {background:#ffebee;color:#c62828;}
 .btn {display:inline-flex;align-items:center;justify-content:center;padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);font-size:0.875rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:opacity 0.15s;}

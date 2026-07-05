@@ -60,11 +60,11 @@
 }
 
 .ledger-table th {
-  border-bottom: 2px solid var(--surface-variant, var(--durion-graphite-200));
+  border-bottom: 2px solid var(--border-color);
 }
 
 .ledger-table td {
-  border-bottom: 1px solid var(--surface-variant, var(--durion-graphite-200));
+  border-bottom: 1px solid var(--border-color);
 }
 
 .ledger-table tbody tr {
@@ -99,7 +99,7 @@
 .link-button {
   border: none;
   background: transparent;
-  color: var(--brand-accent);
+  color: var(--accentA700);
   padding: 0;
   text-decoration: underline;
 }

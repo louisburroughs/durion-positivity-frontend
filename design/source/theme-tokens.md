@@ -49,6 +49,7 @@ Defined in `:root` and never changed by theme switching.
 |---|---|---|
 | `--font-primary` | `'Barlow Semi Condensed', 'Noto Sans', sans-serif` | Display / headings / overlines |
 | `--font-body` | `'Noto Sans', sans-serif` | Body & UI |
+| `--font-mono` | `ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace` | SKUs, IDs, code, log output |
 | `--font-weight-display` | `700` | `h1` / page titles / strong emphasis |
 | `--font-weight-heading` | `600` | `h2`–`h4`, card titles, overlines, labels, chips, buttons |
 | `--font-weight-medium` | `500` | large / lighter display subheads |
@@ -151,6 +152,24 @@ are caught by the stylelint guardrail. Use the sanctioned token instead:
 | `.mic-elevation-*` / `.mic-status` | `.dur-elevation-*` / `.dur-status` |
 | `'Michelin Unit Titling'` | `'Barlow Semi Condensed'` |
 | literal `#cc9030` for text | `--goldA400` |
+| `--color-border` / `--color-outline-variant` / `--outline-variant-rgb` / `--border-subtle` | `--border-color` (or `--input-border` on form fields) |
+| `--color-danger*` / `--color-warn*` / `--color-info*` / `--error` / `--error-color` | `--status-<kind>-bg` + `-fg` pair (or `--functional-*` for fills/borders) |
+| `--color-surface` / `--surface-color` / `--surface` / `--surface-primary` / `--surface-secondary` | `--cardBackground` (or `--surface-variant` for dropdowns/popovers) |
+| `--color-text` / `--text-primary` / `--bodyColor` | `--currentTextColor` |
+| `--color-text-muted` / `--muted-color` | `--text-muted` |
+| `--color-hover` / `--hover-color` / `--hoverBackground` | `--surface-hover` |
+| `--color-input-bg` | `--input-background` |
+| `--brand-primary-light` | `--primaryA100` |
+| `--brand-on-primary` / `--text-on-brand` | `--contrastTextColor` |
+| `--inter` / `--publicSans` / `'Inter'` / `'Public Sans'` | `--font-body` / `--font-primary` |
+| `--mono` | `--font-mono` |
+| `--radius-full` / `--radius-pill` | literal `9999px` |
+| `--text-lg` / `--text-xl` / `--font-display-sm` | explicit `rem` sizes |
+
+> **Fallbacks don't excuse drift.** `var(--undefined-name, #hex)` silently paints the light-theme
+> fallback in **both** themes — the classic "white text on white background in dark mode" bug.
+> The stylelint unknown-property rule only catches fallback-less usage, so the disallowed-list
+> above blocks the known drift names explicitly.
 
 ## Usage Guidelines
 

@@ -32,7 +32,7 @@
 /* ── Line items table ───────────────────────────────────────────────────── */
 
 .line-items {
-  border: 1px solid var(--color-outline-variant, #d0d7de);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm, 4px);
   overflow: hidden;
   margin-bottom: 1.25rem;
@@ -52,10 +52,10 @@
   background: var(--cardBackground);
   font-weight: 600;
   color: var(--currentTextColor, #1f2328);
-  border-bottom: 1px solid var(--color-outline-variant, #d0d7de);
+  border-bottom: 1px solid var(--border-color);
 }
 
-.line-items__row { border-bottom: 1px solid var(--color-outline-variant, #d0d7de); }
+.line-items__row { border-bottom: 1px solid var(--border-color); }
 .line-items__row:last-child { border-bottom: none; }
 .line-items__row--alt { background: var(--cardBackground); }
 
@@ -71,7 +71,7 @@
   font-weight: 500;
   background: var(--cardBackground);
   color: var(--text-muted);
-  border: 1px solid var(--color-outline-variant, #d0d7de);
+  border: 1px solid var(--border-color);
 }
 .type-chip--part { background: #dbeafe; color: #1e40af; border-color: #1e40af; }
 .type-chip--service { background: #dcfce7; color: #166534; border-color: #166534; }
@@ -81,7 +81,7 @@
 
 .totals-breakdown {
   background: var(--cardBackground);
-  border: 1px solid var(--color-outline-variant, #d0d7de);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm, 4px);
   padding: 0.75rem 1rem;
   max-width: 28rem;
@@ -99,7 +99,7 @@
 .totals-breakdown__row--discount .totals-breakdown__value { color: #1b5e20; }
 
 .totals-breakdown__row--grand {
-  border-top: 1px solid var(--color-outline-variant, #d0d7de);
+  border-top: 1px solid var(--border-color);
   margin-top: 0.35rem;
   padding-top: 0.5rem;
 }
@@ -114,7 +114,7 @@
 
 .adjustment-card {
   padding: 0.9rem 1rem;
-  border: 1px solid var(--color-outline-variant, #d0d7de);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm, 4px);
   margin-bottom: 0.5rem;
   background: var(--input-background);
@@ -171,7 +171,7 @@
 }
 
 .trace-grid__value--mono {
-  font-family: var(--font-mono, ui-monospace, monospace);
+  font-family: var(--font-mono);
   font-size: 0.8rem;
 }
 
@@ -190,7 +190,7 @@
 .form-input {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-outline-variant, #d0d7de);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm, 4px);
   font-size: 0.875rem;
   font-family: inherit;
@@ -343,7 +343,7 @@
 
 .btn--ghost {
   background: transparent;
-  border: 1px solid rgba(var(--outline-variant-rgb, 130, 130, 130), 0.35);
+  border: 1px solid var(--border-color);
   color: var(--currentTextColor, #1f2328);
 }
 
@@ -375,7 +375,7 @@
   border: none;
   cursor: pointer;
   font-size: 0.9rem;
-  color: var(--brand-accent, #006a62);
+  color: var(--accentA700);
   text-decoration: underline;
 }
 

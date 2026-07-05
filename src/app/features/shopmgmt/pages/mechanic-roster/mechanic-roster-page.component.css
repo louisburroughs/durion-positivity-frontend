@@ -38,13 +38,13 @@
 }
 
 .success-banner {
-  background: var(--status-success-bg));
+  background: var(--status-success-bg);
   border-radius: var(--radius-sm);
   padding: var(--space-2);
 }
 
 .error-banner {
-  background: var(--status-error-bg));
+  background: var(--status-error-bg);
   border-radius: var(--radius-sm);
   padding: var(--space-2);
 }

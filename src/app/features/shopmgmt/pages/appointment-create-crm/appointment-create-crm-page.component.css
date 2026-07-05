@@ -99,11 +99,11 @@
 
 .btn-add-service:hover {
   border-color: var(--brand-accent);
-  color: var(--brand-accent);
+  color: var(--accentA700);
 }
 
 .error-banner {
-  background: var(--status-error-bg)); color: var(--status-error-fg);
+  background: var(--status-error-bg); color: var(--status-error-fg);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;

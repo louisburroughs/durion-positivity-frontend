@@ -104,7 +104,7 @@
 }
 
 .banner--warning {
-  background: var(--status-warning-bg));
+  background: var(--status-warning-bg);
   border: 1px solid var(--functional-warning); color: var(--status-warning-fg);
 }
 

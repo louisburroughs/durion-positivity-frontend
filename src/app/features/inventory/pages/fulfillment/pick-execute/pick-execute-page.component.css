@@ -5,11 +5,11 @@
 .page {
   background: var(--themeBackground);
   color: var(--currentTextColor);
-  font-family: 'Inter', var(--font-body);
+  font-family: var(--font-body);
 }
 
 .page-title {
-  font-family: 'Public Sans', var(--font-body);
+  font-family: var(--font-primary);
 }
 
 .pick-layout {

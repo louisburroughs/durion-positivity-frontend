@@ -13,12 +13,12 @@
   width: min(600px, 95vw);
   max-height: 90vh;
   overflow-y: auto;
-  border: 1px solid var(--color-border, #d0d5dd);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 0;
-  background: var(--color-surface, #fff);
+  background: var(--cardBackground);
   box-shadow: 0 20px 60px rgb(0 0 0 / 20%);
-  color: var(--color-text, #1a1a2e);
+  color: var(--currentTextColor);
 }
 
 /* Native dialog open styles */
@@ -37,7 +37,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--color-border, #d0d5dd);
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
@@ -45,7 +45,7 @@
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--color-text, #1a1a2e);
+  color: var(--currentTextColor);
 }
 
 .rag-dialog__close {
@@ -54,15 +54,15 @@
   cursor: pointer;
   padding: 4px 8px;
   font-size: 1rem;
-  color: var(--color-text-muted, #6b7280);
+  color: var(--text-muted);
   border-radius: 4px;
   line-height: 1;
   transition: background 0.15s ease;
 }
 
 .rag-dialog__close:hover {
-  background: var(--color-hover, #f3f4f6);
-  color: var(--color-text, #1a1a2e);
+  background: var(--surface-hover);
+  color: var(--currentTextColor);
 }
 
 /* Body */
@@ -81,7 +81,7 @@
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 24px;
-  border-top: 1px solid var(--color-border, #d0d5dd);
+  border-top: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
@@ -132,7 +132,7 @@
 .rag-field__label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-text, #1a1a2e);
+  color: var(--currentTextColor);
 }
 
 .rag-field__required {
@@ -143,11 +143,11 @@
 .rag-field__input,
 .rag-field__textarea {
   padding: 8px 12px;
-  border: 1px solid var(--color-border, #d0d5dd);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 0.875rem;
-  background: var(--color-input-bg, #fff);
-  color: var(--color-text, #1a1a2e);
+  background: var(--input-background);
+  color: var(--currentTextColor);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   font-family: inherit;
   width: 100%;
@@ -170,7 +170,7 @@
 .rag-field__textarea:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background: var(--color-disabled-bg, #f9fafb);
+  background: var(--themeBackground);
 }
 
 .rag-field__textarea {
@@ -208,17 +208,17 @@
 }
 
 .rag-btn--primary:hover:not(:disabled) {
-  background: var(--brand-primary-hover, #4c1d95);
+  background: var(--durion-blue-800);
 }
 
 .rag-btn--secondary {
-  background: var(--color-surface, #fff);
-  color: var(--color-text, #1a1a2e);
-  border-color: var(--color-border, #d0d5dd);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  border-color: var(--border-color);
 }
 
 .rag-btn--secondary:hover:not(:disabled) {
-  background: var(--color-hover, #f3f4f6);
+  background: var(--surface-hover);
 }
 
 @media (max-width: 480px) {
