@@ -10,13 +10,24 @@ const UUID_TEXT = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[089ab][0-9a-f]{3}
 // ---------------------------------------------------------------------------
 
 export async function checkUuidExposure(page: Page, path: string): Promise<Finding[]> {
-  const { bodyText, inputValues } = await page.evaluate(() => ({
-    bodyText: document.body?.innerText ?? '',
-    inputValues: Array.from(document.querySelectorAll('input, textarea'))
-      .filter(el => (el as HTMLElement).offsetParent !== null)
-      .map(el => (el as HTMLInputElement).value)
-      .filter(v => !!v),
-  }));
+  // Only input types whose value is rendered as text the user can read.
+  // checkbox/radio/hidden values are wiring (the visible label is what the
+  // user sees), and button-ish types show their label, not their value.
+  const INVISIBLE_VALUE_TYPES = [
+    'checkbox', 'radio', 'hidden', 'button', 'submit', 'reset',
+    'image', 'file', 'range', 'color', 'password',
+  ];
+  const { bodyText, inputValues } = await page.evaluate(
+    ({ skipTypes }) => ({
+      bodyText: document.body?.innerText ?? '',
+      inputValues: Array.from(document.querySelectorAll('input, textarea'))
+        .filter(el => (el as HTMLElement).offsetParent !== null)
+        .filter(el => !skipTypes.includes((el as HTMLInputElement).type))
+        .map(el => (el as HTMLInputElement).value)
+        .filter(v => !!v),
+    }),
+    { skipTypes: INVISIBLE_VALUE_TYPES },
+  );
 
   const findings: Finding[] = [];
   const seen = new Set<string>();
@@ -160,7 +171,15 @@ export async function checkSearchUsability(page: Page, path: string): Promise<Fi
 const RAW_I18N_KEY = /\b[A-Z][A-Z0-9_]{2,}(?:\.[A-Z0-9_]{2,}){2,}\b/g;
 
 export async function checkRenderingArtifacts(page: Page, path: string): Promise<Finding[]> {
-  const bodyText: string = await page.evaluate(() => document.body?.innerText ?? '');
+  // codeText: identifiers deliberately rendered as technical values inside
+  // <code>/<pre>/<kbd>/<samp> (e.g. permission keys on admin pages) are data,
+  // not missed translations — exclude them from the raw-i18n-key rule.
+  const { bodyText, codeText } = await page.evaluate(() => ({
+    bodyText: document.body?.innerText ?? '',
+    codeText: Array.from(document.querySelectorAll('code, pre, kbd, samp'))
+      .map(el => (el as HTMLElement).innerText)
+      .join('\n'),
+  }));
   const findings: Finding[] = [];
 
   const artifacts: Array<{ re: RegExp; label: string; severity: Severity; ref: string }> = [
@@ -189,7 +208,9 @@ export async function checkRenderingArtifacts(page: Page, path: string): Promise
 
   const keys = new Set<string>();
   for (const m of bodyText.matchAll(RAW_I18N_KEY)) keys.add(m[0]);
-  for (const key of [...keys].slice(0, 10)) {
+  const renderedAsCode = new Set<string>();
+  for (const m of codeText.matchAll(RAW_I18N_KEY)) renderedAsCode.add(m[0]);
+  for (const key of [...keys].filter(k => !renderedAsCode.has(k)).slice(0, 10)) {
     findings.push({
       ruleId: 'raw-i18n-key',
       severity: 'high',

@@ -95,11 +95,11 @@ it to Chromium at launch, since Chromium does not read it from the environment o
 | `uncaught-exception` | `pageerror` during load | Critical | — |
 | `page-unreachable` | document 4xx/5xx or navigation failure | Critical | — |
 | `failed-api-request` | XHR/fetch 5xx (Critical) or 4xx/network-fail (High) | Critical/High | ADR-0031 |
-| `uuid-on-screen` | UUID in visible text or visible input values | High | UI rule |
+| `uuid-on-screen` | UUID in visible text or text-like input values (checkbox/radio/hidden values are wiring, not UI — excluded) | High | UI rule |
 | `uuid-in-picker-options` | UUIDs as select/option labels | High | UI rule |
 | `search-by-internal-id` | search field labeled UUID/GUID | High | UI rule |
 | `search-possibly-id-keyed` | search field labeled bare "ID" with no human-readable term | Medium | UI rule |
-| `raw-i18n-key` | `DOMAIN.SECTION.KEY`-shaped text rendered | High | ADR-0030 |
+| `raw-i18n-key` | `DOMAIN.SECTION.KEY`-shaped text rendered (identifiers inside `<code>`/`<pre>` count as intentional data) | High | ADR-0030 |
 | `rendering-artifact` | `Invalid Date`, `NaN`, `[object Object]`, stray `undefined` | High/Medium | ADR-0038 |
 | `console-error` | `console.error` during load | High | — |
 | `dangling-route` | route/link lands on `/not-found` | High | — |

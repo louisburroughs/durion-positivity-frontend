@@ -7,12 +7,23 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { VendorBill, VendorPaymentResult } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
 
+// Human-readable payment reference (PAY-YYYYMMDD-XXXXXX) — this value is shown
+// in a visible input, so it must not be a raw UUID.
 function generatePaymentRef(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    // Fallback note: randomUUID() generates UUID v4, not UUID v7.
-    return crypto.randomUUID();
+  const now = new Date();
+  const stamp = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('');
+  let suffix: string;
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const bytes = crypto.getRandomValues(new Uint8Array(4));
+    suffix = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('').toUpperCase().slice(0, 6);
+  } else {
+    suffix = Date.now().toString(36).toUpperCase().slice(-6);
   }
-  return `pay-${Date.now()}`;
+  return `PAY-${stamp}-${suffix}`;
 }
 
 type VendorPaymentState =

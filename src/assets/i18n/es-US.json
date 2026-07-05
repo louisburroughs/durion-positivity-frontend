@@ -1123,7 +1123,8 @@
       "EMPTY": "No se encontraron datos de disponibilidad.",
       "ERROR": {
         "LOAD_LOCATION": "No se pudo cargar la ubicación.",
-        "LOAD_AVAILABILITY": "No se pudo cargar la disponibilidad."
+        "LOAD_AVAILABILITY": "No se pudo cargar la disponibilidad.",
+        "LOCATION_REQUIRED": "Ingrese una ubicación para cargar la disponibilidad."
       }
     },
     "MECHANIC_ROSTER": {
