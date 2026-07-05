@@ -68,6 +68,10 @@ Public-pages-only run (no credentials): `npm run audit:site:public`
 | `AUDIT_PAGE_TIMEOUT_MS` | `30000` | Per-page navigation timeout |
 | `AUDIT_OUT_DIR` | `artifacts/audit` | Report output directory |
 | `AUDIT_CHROMIUM_PATH` | — | Explicit chromium binary (sandboxed/CI images) |
+| `AUDIT_BROWSER_ARGS` | — | Extra chromium flags, whitespace-separated (e.g. `--ssl-version-max=tls1.2` when an egress proxy resets Chromium's TLS 1.3 ClientHello) |
+
+Proxied environments: `HTTPS_PROXY`/`https_proxy` is honored automatically — the config passes
+it to Chromium at launch, since Chromium does not read it from the environment on its own.
 
 ## 4. Crawl strategy
 
