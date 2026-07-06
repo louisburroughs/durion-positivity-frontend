@@ -10,7 +10,7 @@ Everything below the line was re-probed after backend PR 817 deployed:
 
 | Endpoint | Was | Now |
 |---|---|---|
-| `/api/people/v1/people/me/primary-location` | 404 | **200** ✅ |
+| `/api/people/v1/people/me/primary-location` | 404 | **UNSTABLE** ⚠️ — 200 at 12:58Z, 404×5 by 13:05Z (see #160) |
 | `/api/people/v1/people/availability?locationId=<real>&date=…` | 404 | **200** ✅ |
 | `/api/inventory/v1/inventory/sync-logs` | 404 | **200** ✅ |
 | `/api/accounting/v1/accounting/posting-rules` | 500 | **200** ✅ |
@@ -19,6 +19,7 @@ Everything below the line was re-probed after backend PR 817 deployed:
 | `/api/inventory/v1/inventory/replenishment/tasks` | 404 | **200** ✅ |
 | `/api/inventory/v1/inventory/cycleCountPlans` | 404 | **200** ✅ |
 | CRM party detail cluster (below) | 404 | **404 — still broken** ❌ |
+| `/api/location/v1/locations/{id}` (+`/defaults`) | n/a | 404 during the 12:59Z crawl, **200** on direct probes minutes later — mid-rollout transient, not a defect |
 
 **Remaining defect — CRM list/detail inconsistency (customer module).**
 `GET /api/customer/v1/crm/accounts/parties` returns 20 parties, but for those
