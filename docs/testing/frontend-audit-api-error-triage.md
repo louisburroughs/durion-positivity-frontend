@@ -4,6 +4,46 @@ Triage of the `failed-api-request` / `console-error` findings from the
 durionpos.org site audit (see `frontend-audit-test-plan.md`,
 `artifacts/audit/error-pages.md`).
 
+## Post-backend-PR-817 re-triage (2026-07-06, authenticated probes)
+
+Everything below the line was re-probed after backend PR 817 deployed:
+
+| Endpoint | Was | Now |
+|---|---|---|
+| `/api/people/v1/people/me/primary-location` | 404 | **200** ✅ |
+| `/api/people/v1/people/availability?locationId=<real>&date=…` | 404 | **200** ✅ |
+| `/api/inventory/v1/inventory/sync-logs` | 404 | **200** ✅ |
+| `/api/accounting/v1/accounting/posting-rules` | 500 | **200** ✅ |
+| `/api/inventory/v1/inventory/locations` | 404 | **200** ✅ (empty dataset) |
+| `/api/inventory/v1/inventory/putaway/tasks` | 404 | **200** ✅ |
+| `/api/inventory/v1/inventory/replenishment/tasks` | 404 | **200** ✅ |
+| `/api/inventory/v1/inventory/cycleCountPlans` | 404 | **200** ✅ |
+| CRM party detail cluster (below) | 404 | **404 — still broken** ❌ |
+
+**Remaining defect — CRM list/detail inconsistency (customer module).**
+`GET /api/customer/v1/crm/accounts/parties` returns 20 parties, but for those
+exact `partyId`s — ACTIVE and INACTIVE alike, PERSON type — every detail
+endpoint 404s:
+
+- `/v1/crm/accounts/parties/{partyId}` — Spring error body, `"path"` echoed
+- `/v1/crm/parties/{partyId}/communicationPreferences` — Spring error body
+- `/v1/crm/commercial-accounts/{partyId}/contacts` — Spring error body
+- `/v1/crm/snapshot/party/{partyId}` (+`/billing-rules`) — bodyless 404
+
+All paths are SDK-canonical (`@durion-sdk/customer`). The JSON error bodies
+show the customer service itself answering (not the gateway), so either the
+detail handlers query a store the list projection doesn't share, or the
+handlers aren't registered. Impact: the party-detail, contacts, billing-rules
+and CRM-snapshot pages render error/empty states for every real customer.
+Tracked as [#158](https://github.com/louisburroughs/durion-positivity-frontend/issues/158)
+(backend-owned; frontend already shows handled ADR-0031 error states).
+
+Related finding from the same day's investigation: stale pre-deploy tabs
+dead-click lazy-module nav links after a deploy —
+[#159](https://github.com/louisburroughs/durion-positivity-frontend/issues/159).
+
+---
+
 Ground truth for endpoint paths is the **`@durion-sdk/*`** packages (the
 generated gateway client) plus the per-module `AccountingConfiguration`-style
 basePaths wired in `src/app/app.config.ts`. Where the SDK does not model an
