@@ -454,6 +454,7 @@
     },
     "ROLE_ASSIGNMENT": {
       "TITLE": "Attribuer un rôle et une portée",
+      "PAGE_TITLE": "Attributions de rôles",
       "ASSIGNED_ROLES": "Rôles attribués",
       "INCLUDE_HISTORY": "Inclure l'historique",
       "LOADING": "Chargement des attributions...",
