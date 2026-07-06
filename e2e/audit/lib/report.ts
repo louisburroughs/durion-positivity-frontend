@@ -45,6 +45,31 @@ function sitemapMarkdown(report: AuditReport): string {
     lines.push('', '## Seeds not visited (crawl cap reached)', '');
     for (const s of report.unvisitedSeeds) lines.push(`- ${s}`);
   }
+
+  if (report.templateCoverage.length > 0) {
+    const outcomeByPath = new Map(report.pages.map(p => [p.path, p.outcome]));
+    lines.push(
+      '',
+      '## Parameterized route coverage (api-harvested ids)',
+      '',
+      'Detail routes are filled with real entity ids observed in the API responses',
+      'the crawled pages made. "no ids observed" means no page the crawl reached',
+      'returned data for that entity — the route needs a manual seed or test data.',
+      '',
+      '| Route template | Instances audited | Notes |',
+      '|---|---|---|',
+    );
+    for (const t of [...report.templateCoverage].sort((a, b) => a.template.localeCompare(b.template))) {
+      const visitedInstances = t.instances.filter(i => outcomeByPath.has(i));
+      const note =
+        t.missingParams.length > 0
+          ? `no ids observed for :${t.missingParams.join(', :')}`
+          : t.instances.length > visitedInstances.length
+            ? 'some instances not visited (crawl cap)'
+            : '';
+      lines.push(`| ${md(t.template)} | ${visitedInstances.length} | ${md(note)} |`);
+    }
+  }
   return lines.join('\n') + '\n';
 }
 
@@ -124,12 +149,15 @@ function summaryMarkdown(report: AuditReport): string {
     p => p.outcome !== 'audited' || p.pageErrors.length > 0 || p.failedRequests.length > 0,
   ).length;
 
+  const coveredTemplates = report.templateCoverage.filter(t => t.instances.length > 0).length;
+
   return [
     '# Frontend Audit Summary',
     '',
     `- **Target:** ${report.baseUrl}`,
     `- **Run:** ${report.startedAt} → ${report.finishedAt}`,
     `- **Pages visited:** ${report.pagesVisited} (authenticated: ${report.authenticated ? 'yes' : 'no'})`,
+    `- **Detail-route templates covered:** ${coveredTemplates}/${report.templateCoverage.length} (see sitemap.md)`,
     `- **Pages with problems:** ${errorPages}`,
     '',
     '| Severity | Findings |',

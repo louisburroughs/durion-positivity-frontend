@@ -75,4 +75,6 @@ export interface AuditReport {
   findings: Finding[];
   /** Seed routes that were never reached (crawl cap hit, etc.). */
   unvisitedSeeds: string[];
+  /** Per-template outcome of api-harvested parameterized route coverage. */
+  templateCoverage: import('./id-harvest').TemplateCoverage[];
 }

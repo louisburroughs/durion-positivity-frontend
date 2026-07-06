@@ -81,10 +81,17 @@ it to Chromium at launch, since Chromium does not read it from the environment o
 2. **Discovery** — on each audited page, all same-origin `<a href>` targets are harvested and
    queued (BFS). This is how parameterized routes (`/app/billing/invoices/:invoiceId`, …) get
    covered with *real* entity ids, without the audit inventing or mutating data.
-3. **Pattern sampling** — id-like path segments (UUIDs, numbers, `WO-123`-style) are collapsed
+3. **API id harvesting** — most list pages navigate via click handlers, not anchors, so link
+   discovery alone misses nearly all detail routes. The crawler therefore also *observes* the
+   JSON API responses each page already makes, remembers id-like field values (`invoiceId`,
+   `partyId`, `workorderId`, …), and when the link queue runs dry fills the route templates in
+   `route-seeds.ts` (`PARAM_TEMPLATES`) with those real ids. Still zero extra requests and
+   GET-only. Mutation-flow pages (order cancel, approval submit, offboard, …) are deliberately
+   excluded from auto-visitation. Coverage per template is reported in `sitemap.md`.
+4. **Pattern sampling** — id-like path segments (UUIDs, numbers, `WO-123`-style) are collapsed
    into a `{id}` pattern; at most `AUDIT_MAX_PER_PATTERN` concrete instances of each pattern are
    visited so long lists don't exhaust the `AUDIT_MAX_PAGES` budget.
-4. **Outcome classification** — each visit is recorded as `audited`, `auth-required`,
+5. **Outcome classification** — each visit is recorded as `audited`, `auth-required`,
    `forbidden` (role-gated), `not-found`, `http-error`, or `load-failed`. Checks only run on
    `audited` pages; the rest still appear in the site map and error report.
 
@@ -137,6 +144,10 @@ axe impact mapping: `critical→High`, `serious→Medium`, `moderate→Low`, `mi
 4. `dangling-route` on a *seed* means a route in code isn't deployed/served; on a *discovered
    link* it means a broken link on the source page (listed in "Discovered from").
 5. Re-run after fixes and diff `report.json` finding counts.
+6. A finding verified as intentional (e.g. an admin-only exact-id lookup) is recorded in
+   `e2e/audit/lib/accepted-findings.ts` with its rationale. Accepted findings are downgraded
+   to Info and prefixed `[accepted]` — they stay visible in every report rather than being
+   silenced, and the entry is removed when the underlying behavior changes.
 
 ## 8. Known limitations
 
@@ -149,9 +160,12 @@ axe impact mapping: `critical→High`, `serious→Medium`, `moderate→Low`, `mi
   full-page-reload links can't be reliably detected in the deployed DOM. Covered instead by the
   action-anchor/dead-anchor checks here plus code review; a repo-side template grep is the
   reliable enforcement point.
-- **Deep flows** — pages only reachable via form submission/multi-step wizards (e.g.
-  `:orderId/price-override/:lineId`) are not crawled unless linked; they appear in
-  `route-seeds.ts` comments as parameterized and can be added as explicit seeds with known ids.
+- **Detail-route coverage depends on data** — parameterized routes are filled with ids
+  harvested from API responses (`PARAM_TEMPLATES` in `route-seeds.ts`). If no crawled page
+  returns data for an entity (empty environment, wrong field name in the template's `params`),
+  that template reports "no ids observed" in `sitemap.md` — fix by seeding test data or adding
+  the actual response field name. Mutation-flow pages (cancel, approval submit, offboard, …)
+  are excluded by design and stay uncovered unless added as explicit seeds with known ids.
 - **Seeds drift** — `e2e/audit/lib/route-seeds.ts` must be updated when routes change
   (`grep "path:" src/app/features/*/*.routes.ts`).
 
