@@ -46,6 +46,9 @@ Always read applicable ADRs before coding. Frontend-specific ADRs:
 
 ## PR Checklist
 
+**Merge policy:** merge PRs with a regular merge commit (`--merge`), not squash or
+rebase — preserve the branch's per-commit history on `master`.
+
 Before submitting or approving a frontend PR, verify **all** items below:
 
 ### Error Handling (ADR-0031)
