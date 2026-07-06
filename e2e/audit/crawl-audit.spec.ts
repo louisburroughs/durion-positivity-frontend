@@ -3,7 +3,9 @@ import { test } from '@playwright/test';
 import { AUDIT_CONFIG, AUTH_MODE_PATH } from './lib/config';
 import { attachMonitors, routePattern, visit } from './lib/crawler';
 import { monitorFindings, runPageChecks } from './lib/checks';
-import { APP_SEEDS, PUBLIC_SEEDS } from './lib/route-seeds';
+import { attachIdHarvester, fillTemplates, templateCoverage } from './lib/id-harvest';
+import { APP_SEEDS, PARAM_TEMPLATES, PUBLIC_SEEDS } from './lib/route-seeds';
+import { applyAcceptedFindings } from './lib/accepted-findings';
 import { emptyCounts, tallyFindings, writeReports } from './lib/report';
 import type { AuditReport, Finding, PageRecord } from './lib/types';
 
@@ -23,13 +25,29 @@ test('crawl site and audit every page', async ({ page }) => {
   }));
 
   const monitors = attachMonitors(page);
+  const harvest = attachIdHarvester(page);
+  const generatedByTemplate = new Map<string, Set<string>>();
   const visited = new Set<string>();
   const patternCounts = new Map<string, number>();
   const pages: PageRecord[] = [];
   const findings: Finding[] = [];
   const startedAt = new Date().toISOString();
 
-  while (queue.length > 0 && pages.length < AUDIT_CONFIG.maxPages) {
+  // When anchor-based discovery runs dry, fill parameterized route templates
+  // with entity ids harvested from the API responses already observed.
+  const refillFromHarvest = (): boolean => {
+    if (!authenticated) return false;
+    const fresh = fillTemplates(
+      PARAM_TEMPLATES,
+      harvest,
+      AUDIT_CONFIG.maxPerPattern,
+      generatedByTemplate,
+    ).filter(p => !visited.has(p));
+    for (const p of fresh) queue.push({ path: p, from: '(api id harvest)' });
+    return fresh.length > 0;
+  };
+
+  while ((queue.length > 0 || refillFromHarvest()) && pages.length < AUDIT_CONFIG.maxPages) {
     const { path: target, from } = queue.shift()!;
     if (visited.has(target)) continue;
     visited.add(target);
@@ -94,7 +112,8 @@ test('crawl site and audit every page', async ({ page }) => {
     }
   }
 
-  tallyFindings(pages, findings);
+  const finalFindings = applyAcceptedFindings(findings);
+  tallyFindings(pages, finalFindings);
 
   const report: AuditReport = {
     baseUrl: AUDIT_CONFIG.baseUrl,
@@ -103,8 +122,9 @@ test('crawl site and audit every page', async ({ page }) => {
     authenticated,
     pagesVisited: pages.length,
     pages,
-    findings,
+    findings: finalFindings,
     unvisitedSeeds: seeds.filter(s => !visited.has(s)),
+    templateCoverage: templateCoverage(PARAM_TEMPLATES, harvest, generatedByTemplate),
   };
 
   const outDir = writeReports(report);
