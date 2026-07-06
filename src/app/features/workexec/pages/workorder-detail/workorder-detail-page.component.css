@@ -126,7 +126,7 @@
 }
 
 .wo-tab--active {
-  border-bottom: 2px solid var(--brand-accent, #006a62);
+  border-bottom: 2px solid var(--accentA700);
   opacity: 1;
   color: var(--accentA700);
 }
