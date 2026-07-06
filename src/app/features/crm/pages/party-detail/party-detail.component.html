@@ -6,24 +6,26 @@
   </nav>
 
   <!-- ── Party header ─────────────────────────────────────────────────── -->
-  @if (partyState() === 'loading') {
-    <div class="skeleton-header" aria-busy="true" aria-label="Loading party details"></div>
-  }
-  @if (partyState() === 'access-denied') {
-    <div class="state-panel state-panel--denied" role="alert">
-      <span class="state-icon" aria-hidden="true">🔒</span>
-      <p>You do not have permission to view this party.</p>
-    </div>
-  }
-  @if (partyState() === 'error') {
-    <div class="state-panel state-panel--error" role="alert">
-      <p>Could not load party details.</p>
-      <button class="btn btn--secondary" type="button" (click)="loadParty()">Retry</button>
-    </div>
-  }
-  @if (partyState() === 'ready' && party()) {
-    <header class="party-header">
-      <h1 id="party-heading">{{ party()!.legalName }}</h1>
+  <header class="party-header">
+    <!-- Persistent h1: renders a generic title while loading/on error so every
+         state keeps its landmark heading (ADR-0029). -->
+    <h1 id="party-heading">{{ party()?.legalName || 'Account Details' }}</h1>
+    @if (partyState() === 'loading') {
+      <div class="skeleton-header" aria-busy="true" aria-label="Loading party details"></div>
+    }
+    @if (partyState() === 'access-denied') {
+      <div class="state-panel state-panel--denied" role="alert">
+        <span class="state-icon" aria-hidden="true">🔒</span>
+        <p>You do not have permission to view this party.</p>
+      </div>
+    }
+    @if (partyState() === 'error') {
+      <div class="state-panel state-panel--error" role="alert">
+        <p>Could not load party details.</p>
+        <button class="btn btn--secondary" type="button" (click)="loadParty()">Retry</button>
+      </div>
+    }
+    @if (partyState() === 'ready' && party()) {
       <div class="party-header-actions">
         <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToBillingRules()">Billing Rules →</button>
       </div>
@@ -38,8 +40,8 @@
           <dd>{{ party()!.taxId }}</dd>
         }
       </dl>
-    </header>
-  }
+    }
+  </header>
 
   <!-- ── Contacts section ─────────────────────────────────────────────── -->
   <section class="detail-section" aria-labelledby="contacts-heading">

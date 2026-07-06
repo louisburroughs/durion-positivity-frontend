@@ -65,7 +65,7 @@ function sitemapMarkdown(report: AuditReport): string {
         t.missingParams.length > 0
           ? `no ids observed for :${t.missingParams.join(', :')}`
           : t.instances.length > visitedInstances.length
-            ? 'some instances not visited (crawl cap)'
+            ? 'instances skipped (pattern already sampled via links, or crawl cap)'
             : '';
       lines.push(`| ${md(t.template)} | ${visitedInstances.length} | ${md(note)} |`);
     }

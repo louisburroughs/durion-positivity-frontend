@@ -41,6 +41,25 @@ leading `/{module}` segment yields `/api/v1/{domain}/...`, which 404s.
 | `/app/inventory/putaway/tasks` | `/api/inventory/v1/putaway/tasks` | 404 | SDK defines `/v1/inventory/putaway/tasks`; correct full path is `/api/inventory/v1/inventory/putaway/tasks`. Same missing-module-prefix pattern as the local inventory services. | Same coordinated fix; verify at runtime. |
 | `/app/inventory/replenishment/tasks` | `/api/inventory/v1/replenishment/tasks` | 404 | SDK defines `/v1/inventory/replenishment/tasks`; correct full path `/api/inventory/v1/inventory/replenishment/tasks`. | Same coordinated fix. |
 
+## CRM detail endpoints (found by the api-id-harvest crawl extension)
+
+The detail-route crawl (party ids harvested from the CRM parties list API on
+the same deployment) surfaced a list/detail inconsistency in the customer
+module. All of these paths are **SDK-canonical** (`@durion-sdk/customer`
+defines them verbatim), so no frontend path fix applies:
+
+| Called URL | Status | Notes |
+|---|---|---|
+| `/api/customer/v1/crm/accounts/parties/{partyId}` | 404 | partyId came from the parties list API on the same host |
+| `/api/customer/v1/crm/parties/{partyId}/communicationPreferences` | 404 | SDK op |
+| `/api/customer/v1/crm/commercial-accounts/{partyId}/contacts` | 404 | SDK op |
+| `/api/customer/v1/crm/snapshot/party/{partyId}` (+`/billing-rules`) | 404 | SDK op |
+
+Backend: confirm why ids returned by the list endpoint 404 on the detail
+endpoints (partial seed data, or the detail handlers not deployed). The
+frontend pages show their handled error states (verified: party-detail
+renders its ADR-0031 error panel), so this is not a frontend defect.
+
 ## Applied in this branch
 
 All corrected to the SDK-canonical `/api/{domain}/v1/{domain}/...` pattern,

@@ -4,6 +4,10 @@
   gap: var(--space-4);
 }
 
+.role-assignment-layout > .page-header {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 992px) {
   .role-assignment-layout {
     grid-template-columns: 1fr;

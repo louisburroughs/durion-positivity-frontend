@@ -394,6 +394,7 @@
     },
     "ROLE_ASSIGNMENT": {
       "TITLE": "Asignar rol y alcance",
+      "PAGE_TITLE": "Asignaciones de roles",
       "ASSIGNED_ROLES": "Roles asignados",
       "INCLUDE_HISTORY": "Incluir historial",
       "LOADING": "Cargando asignaciones...",

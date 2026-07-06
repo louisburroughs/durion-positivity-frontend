@@ -87,7 +87,7 @@
             <select id="location-select" formControlName="locationId" data-testid="location-select">
               <option value="" disabled>Select location</option>
               @for (location of availableLocations(); track $index) {
-              <option [value]="$any(location).locationId">{{ $any(location).name || $any(location).locationId }}
+              <option [value]="getLocationId(location)">{{ $any(location).name || getLocationId(location) }}
               </option>
               }
             </select>

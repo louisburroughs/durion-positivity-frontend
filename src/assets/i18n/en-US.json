@@ -394,6 +394,7 @@
     },
     "ROLE_ASSIGNMENT": {
       "TITLE": "Assign role and scope",
+      "PAGE_TITLE": "Role Assignments",
       "ASSIGNED_ROLES": "Assigned roles",
       "INCLUDE_HISTORY": "Include history",
       "LOADING": "Loading assignments...",

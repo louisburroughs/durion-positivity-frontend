@@ -160,8 +160,15 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
     return a.assignmentId;
   }
 
+  // The location SDK's LocationResponseDTO keys locations by `id`; older local
+  // models used `locationId`. Accept both so the display name resolves.
+  getLocationId(location: unknown): string {
+    const rec = location as Record<string, unknown>;
+    return String(rec['locationId'] ?? rec['id'] ?? '');
+  }
+
   getLocationName(a: StaffingAssignmentResponse, locations: unknown[]): string {
-    const loc = locations.find(l => String((l as Record<string, unknown>)['locationId']) === a.locationId);
+    const loc = locations.find(l => this.getLocationId(l) === a.locationId);
     return loc ? String((loc as Record<string, unknown>)['name'] ?? a.locationId) : a.locationId;
   }
 
