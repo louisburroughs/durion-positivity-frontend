@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -167,9 +167,21 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
     return String(rec['locationId'] ?? rec['id'] ?? '');
   }
 
-  getLocationName(a: StaffingAssignmentResponse, locations: unknown[]): string {
-    const loc = locations.find(l => this.getLocationId(l) === a.locationId);
-    return loc ? String((loc as Record<string, unknown>)['name'] ?? a.locationId) : a.locationId;
+  // Memoized so table rows do an O(1) lookup per change-detection cycle
+  // instead of a linear scan over availableLocations per row.
+  readonly locationNameById = computed(() => {
+    const names = new Map<string, string>();
+    for (const location of this.availableLocations()) {
+      const id = this.getLocationId(location);
+      if (!id) continue;
+      const name = (location as Record<string, unknown>)['name'];
+      names.set(id, name ? String(name) : id);
+    }
+    return names;
+  });
+
+  getLocationName(a: StaffingAssignmentResponse): string {
+    return this.locationNameById().get(a.locationId) ?? a.locationId;
   }
 
   getEffectiveStart(a: StaffingAssignmentResponse): string {

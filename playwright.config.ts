@@ -11,13 +11,16 @@ import { AUDIT_CONFIG, AUTH_STATE_PATH } from './e2e/audit/lib/config';
  * point at production. See docs/testing/frontend-audit-test-plan.md.
  */
 
-// Prefer Playwright's own browser install; fall back to a system-provided
-// chromium (e.g. sandboxed CI images that pre-install one) when absent.
 // Chromium does not read HTTPS_PROXY from the environment; sandboxed/CI images
 // that force egress through a proxy need it passed explicitly at launch.
-function proxyFromEnv(): { server: string } | undefined {
+// NO_PROXY must ride along as the bypass list: an explicit Playwright proxy
+// disables Chromium's implicit loopback bypass, so without this a run against
+// a localhost/intranet AUDIT_BASE_URL would be tunneled through the proxy.
+function proxyFromEnv(): { server: string; bypass?: string } | undefined {
   const server = process.env['HTTPS_PROXY'] ?? process.env['https_proxy'];
-  return server ? { server } : undefined;
+  if (!server) return undefined;
+  const bypass = process.env['NO_PROXY'] ?? process.env['no_proxy'];
+  return bypass ? { server, bypass } : { server };
 }
 
 // Extra chromium flags, whitespace-separated. Example: some egress proxies
@@ -26,6 +29,8 @@ function auditBrowserArgs(): string[] {
   return (process.env['AUDIT_BROWSER_ARGS'] ?? '').split(/\s+/).filter(Boolean);
 }
 
+// Prefer Playwright's own browser install; fall back to a system-provided
+// chromium (e.g. sandboxed CI images that pre-install one) when absent.
 function chromiumExecutablePath(): string | undefined {
   if (process.env['AUDIT_CHROMIUM_PATH']) return process.env['AUDIT_CHROMIUM_PATH'];
   try {
@@ -60,10 +65,9 @@ export default defineConfig({
     {
       name: 'setup',
       testMatch: /auth\.setup\.ts/,
-      use: {
-        ...devices['Desktop Chrome'],
-        launchOptions: { executablePath: chromiumExecutablePath(), args: auditBrowserArgs() },
-      },
+      // Top-level use.launchOptions/proxy are inherited: project `use` merges
+      // key-shallow and devices['Desktop Chrome'] sets no launchOptions.
+      use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'audit',
@@ -72,7 +76,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: AUTH_STATE_PATH,
-        launchOptions: { executablePath: chromiumExecutablePath(), args: auditBrowserArgs() },
       },
     },
   ],

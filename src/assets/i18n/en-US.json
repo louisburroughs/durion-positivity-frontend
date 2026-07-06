@@ -479,6 +479,7 @@
     }
   },
   "CRM": {
+    "PARTY_DETAIL": { "FALLBACK_TITLE": "Account Details" },
     "LANDING": {
       "TITLE": "Customers",
       "SUBTITLE": "Manage customer accounts, track party details, and access integration insights.",

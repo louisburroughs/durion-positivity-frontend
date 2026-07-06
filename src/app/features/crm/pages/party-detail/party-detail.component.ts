@@ -1,4 +1,5 @@
 import { Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -17,7 +18,7 @@ type EditState    = 'view' | 'editing' | 'saving';
 @Component({
   selector: 'app-party-detail',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './party-detail.component.html',
   styleUrl: './party-detail.component.css',
 })

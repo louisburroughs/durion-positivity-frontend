@@ -12,10 +12,11 @@ const UUID_TEXT = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[089ab][0-9a-f]{3}
 export async function checkUuidExposure(page: Page, path: string): Promise<Finding[]> {
   // Only input types whose value is rendered as text the user can read.
   // checkbox/radio/hidden values are wiring (the visible label is what the
-  // user sees), and button-ish types show their label, not their value.
+  // user sees). Note: <input type=button|submit|reset> stay IN scope — for
+  // those, the value attribute IS the visible button label, and innerText
+  // never includes input values, so this scan is their only coverage.
   const INVISIBLE_VALUE_TYPES = [
-    'checkbox', 'radio', 'hidden', 'button', 'submit', 'reset',
-    'image', 'file', 'range', 'color', 'password',
+    'checkbox', 'radio', 'hidden', 'image', 'file', 'range', 'color', 'password',
   ];
   const { bodyText, inputValues } = await page.evaluate(
     ({ skipTypes }) => ({
@@ -206,11 +207,20 @@ export async function checkRenderingArtifacts(page: Page, path: string): Promise
     }
   }
 
-  const keys = new Set<string>();
-  for (const m of bodyText.matchAll(RAW_I18N_KEY)) keys.add(m[0]);
-  const renderedAsCode = new Set<string>();
-  for (const m of codeText.matchAll(RAW_I18N_KEY)) renderedAsCode.add(m[0]);
-  for (const key of [...keys].filter(k => !renderedAsCode.has(k)).slice(0, 10)) {
+  // Suppress by occurrence count, not key identity: a key shown as <code> data
+  // AND rendered raw elsewhere on the same page must still be flagged.
+  const bodyCounts = new Map<string, number>();
+  for (const m of bodyText.matchAll(RAW_I18N_KEY)) {
+    bodyCounts.set(m[0], (bodyCounts.get(m[0]) ?? 0) + 1);
+  }
+  const codeCounts = new Map<string, number>();
+  for (const m of codeText.matchAll(RAW_I18N_KEY)) {
+    codeCounts.set(m[0], (codeCounts.get(m[0]) ?? 0) + 1);
+  }
+  const rawKeys = [...bodyCounts.entries()]
+    .filter(([key, count]) => count > (codeCounts.get(key) ?? 0))
+    .map(([key]) => key);
+  for (const key of rawKeys.slice(0, 10)) {
     findings.push({
       ruleId: 'raw-i18n-key',
       severity: 'high',
