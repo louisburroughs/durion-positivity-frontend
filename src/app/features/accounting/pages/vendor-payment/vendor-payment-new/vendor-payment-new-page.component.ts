@@ -7,8 +7,11 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { VendorBill, VendorPaymentResult } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
 
-// Human-readable payment reference (PAY-YYYYMMDD-XXXXXX) — this value is shown
-// in a visible input, so it must not be a raw UUID.
+// Human-readable payment reference (PAY-YYYYMMDD-XXXXXXXXXXXX) — shown in a
+// visible input, so no raw UUIDs; but it is also the payment's idempotency /
+// lookup key (getPaymentByRef), so the suffix keeps 48 bits of entropy to make
+// same-day collisions negligible. crypto.getRandomValues exists in every
+// supported runtime (evergreen browsers + the Node SSR server).
 function generatePaymentRef(): string {
   const now = new Date();
   const stamp = [
@@ -16,13 +19,8 @@ function generatePaymentRef(): string {
     String(now.getMonth() + 1).padStart(2, '0'),
     String(now.getDate()).padStart(2, '0'),
   ].join('');
-  let suffix: string;
-  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
-    const bytes = crypto.getRandomValues(new Uint8Array(4));
-    suffix = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('').toUpperCase().slice(0, 6);
-  } else {
-    suffix = Date.now().toString(36).toUpperCase().slice(-6);
-  }
+  const bytes = crypto.getRandomValues(new Uint8Array(6));
+  const suffix = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
   return `PAY-${stamp}-${suffix}`;
 }
 

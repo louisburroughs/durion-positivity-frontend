@@ -13,11 +13,7 @@ import type { Page } from '@playwright/test';
  * No extra requests are made: this only observes traffic the app generates.
  */
 
-const UUID_VALUE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const NUMERIC_VALUE = /^\d{1,18}$/;
-const PREFIXED_VALUE = /^[A-Za-z]{1,6}-[A-Za-z0-9]{1,20}$/; // WO-123, PO-9, APT-1234
-/** Only fields that are unambiguously identifiers are harvested. */
-const ID_FIELD_NAME = /(Id|Uuid)$/;
+import { isIdShaped } from './id-patterns';
 
 const MAX_BODY_BYTES = 2_000_000;
 const MAX_DEPTH = 6;
@@ -42,14 +38,42 @@ export interface TemplateCoverage {
   missingParams: string[];
 }
 
-export function attachIdHarvester(page: Page): IdHarvest {
+export interface IdHarvester {
+  harvest: IdHarvest;
+  /**
+   * Resolves when all response bodies observed so far have been parsed.
+   * Body parsing runs in detached promises; callers deciding whether the
+   * crawl is done (refill-from-harvest) must await this first, or ids from
+   * the last-visited pages can be missed nondeterministically.
+   */
+  idle(): Promise<void>;
+}
+
+/**
+ * `fields` is the exact set of response field names the route templates
+ * consume (see PARAM_TEMPLATES) — everything else is skipped unparsed.
+ * Bare `id` fields are ambiguous across entities, so they are harvested under
+ * a scoped key `id@<resource>` derived from the API path's last static
+ * segment (e.g. `/api/inventory/v1/inventory/locations` → `id@locations`);
+ * templates opt in with that scoped name.
+ */
+export function attachIdHarvester(page: Page, fields: ReadonlySet<string>): IdHarvester {
   const harvest: IdHarvest = new Map();
+  const pending = new Set<Promise<void>>();
+
   page.on('response', res => {
     const type = res.request().resourceType();
     if (type !== 'xhr' && type !== 'fetch') return;
     if (res.status() !== 200) return;
     if (!res.url().includes('/api/')) return;
-    res
+    // Gate on headers before transferring the body out of the browser.
+    const headers = res.headers();
+    if (!(headers['content-type'] ?? '').includes('json')) return;
+    const declaredLength = Number(headers['content-length']);
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) return;
+
+    const idScope = `id@${apiResource(res.url())}`;
+    const task = res
       .text()
       .then(body => {
         if (!body || body.length > MAX_BODY_BYTES) return;
@@ -59,34 +83,65 @@ export function attachIdHarvester(page: Page): IdHarvest {
         } catch {
           return;
         }
-        collect(json, harvest, 0);
+        collect(json, harvest, fields, idScope, 0);
       })
       // Bodies of responses that raced a navigation are gone; that's fine.
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => pending.delete(task));
+    pending.add(task);
   });
-  return harvest;
+
+  return {
+    harvest,
+    idle: () => Promise.all([...pending]).then(() => undefined),
+  };
 }
 
-function collect(node: unknown, harvest: IdHarvest, depth: number): void {
+/** Last path segment of an API URL that isn't itself an id (e.g. "locations"). */
+function apiResource(url: string): string {
+  const segments = new URL(url).pathname.split('/').filter(Boolean);
+  for (let i = segments.length - 1; i >= 0; i--) {
+    if (!isIdShaped(segments[i])) return segments[i];
+  }
+  return '';
+}
+
+function collect(
+  node: unknown,
+  harvest: IdHarvest,
+  fields: ReadonlySet<string>,
+  idScope: string,
+  depth: number,
+): void {
   if (depth > MAX_DEPTH || node === null || typeof node !== 'object') return;
   if (Array.isArray(node)) {
-    for (const item of node.slice(0, MAX_ARRAY_ITEMS)) collect(item, harvest, depth + 1);
+    for (const item of node.slice(0, MAX_ARRAY_ITEMS)) {
+      collect(item, harvest, fields, idScope, depth + 1);
+    }
     return;
   }
   for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
     if (typeof value === 'string' || typeof value === 'number') {
-      if (!ID_FIELD_NAME.test(key)) continue;
+      const harvestKey = key === 'id' ? idScope : key;
+      if (!fields.has(harvestKey)) continue;
       const str = String(value);
       if (str.length === 0 || str.length > 64) continue;
-      if (UUID_VALUE.test(str) || NUMERIC_VALUE.test(str) || PREFIXED_VALUE.test(str)) {
-        let values = harvest.get(key);
-        if (!values) harvest.set(key, (values = new Set()));
+      // Only shapes routePattern() collapses to {id} — anything else would
+      // dodge per-pattern sampling when it becomes a path segment.
+      if (isIdShaped(str)) {
+        let values = harvest.get(harvestKey);
+        if (!values) harvest.set(harvestKey, (values = new Set()));
         if (values.size < MAX_VALUES_PER_FIELD) values.add(str);
       }
     } else {
-      collect(value, harvest, depth + 1);
+      collect(value, harvest, fields, idScope, depth + 1);
     }
   }
+}
+
+/** All response field names referenced by a template set (harvester allowlist). */
+export function templateFields(templates: readonly ParamRouteTemplate[]): Set<string> {
+  return new Set(templates.flatMap(t => Object.values(t.params).flat()));
 }
 
 /**

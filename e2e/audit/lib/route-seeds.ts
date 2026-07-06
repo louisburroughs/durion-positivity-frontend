@@ -171,9 +171,11 @@ export const PARAM_TEMPLATES: readonly ParamRouteTemplate[] = [
   { template: '/app/inventory/purchase-orders/:poId', params: { poId: ['poId', 'purchaseOrderId'] } },
   { template: '/app/inventory/fulfillment/workorders/:workorderId/pick-list', params: { workorderId: ['workorderId', 'workOrderId'] } },
 
-  // Location
-  { template: '/app/location/locations/:id', params: { id: ['locationId'] } },
-  { template: '/app/location/locations/:locationId/defaults', params: { locationId: ['locationId'] } },
+  // Location — the location SDK's LocationResponseDTO keys by bare `id`, which
+  // the harvester scopes to the API resource ('id@locations'); 'locationId'
+  // still matches other domains' FK fields.
+  { template: '/app/location/locations/:id', params: { id: ['locationId', 'id@locations'] } },
+  { template: '/app/location/locations/:locationId/defaults', params: { locationId: ['locationId', 'id@locations'] } },
 
   // Order
   { template: '/app/order/cart/:orderId', params: { orderId: ['orderId'] } },

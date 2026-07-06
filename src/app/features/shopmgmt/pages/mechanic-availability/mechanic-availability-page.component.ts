@@ -36,9 +36,9 @@ export class MechanicAvailabilityPageComponent implements OnInit {
         const id = String(location.locationId ?? '').trim();
         this.locationId.set(id);
         this.filterForm.controls.locationId.setValue(id);
-        if (id) {
-          this.loadAvailability();
-        }
+        // loadAvailability guards empty ids itself and prompts for a location,
+        // which is also the right outcome when the primary location is blank.
+        this.loadAvailability();
       },
       error: () => {
         this.error.set('SHOPMGMT.MECHANIC_AVAILABILITY.ERROR.LOAD_LOCATION');

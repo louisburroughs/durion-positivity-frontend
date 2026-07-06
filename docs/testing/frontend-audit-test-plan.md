@@ -71,7 +71,8 @@ Public-pages-only run (no credentials): `npm run audit:site:public`
 | `AUDIT_BROWSER_ARGS` | — | Extra chromium flags, whitespace-separated (e.g. `--ssl-version-max=tls1.2` when an egress proxy resets Chromium's TLS 1.3 ClientHello) |
 
 Proxied environments: `HTTPS_PROXY`/`https_proxy` is honored automatically — the config passes
-it to Chromium at launch, since Chromium does not read it from the environment on its own.
+it to Chromium at launch (Chromium does not read it from the environment on its own), and
+`NO_PROXY`/`no_proxy` becomes the bypass list so localhost/intranet targets are not tunneled.
 
 ## 4. Crawl strategy
 
@@ -85,7 +86,9 @@ it to Chromium at launch, since Chromium does not read it from the environment o
    discovery alone misses nearly all detail routes. The crawler therefore also *observes* the
    JSON API responses each page already makes, remembers id-like field values (`invoiceId`,
    `partyId`, `workorderId`, …), and when the link queue runs dry fills the route templates in
-   `route-seeds.ts` (`PARAM_TEMPLATES`) with those real ids. Still zero extra requests and
+   `route-seeds.ts` (`PARAM_TEMPLATES`) with those real ids — only the field names the
+   templates reference are harvested, and bare `id` fields are scoped per API resource
+   (`id@locations`). Still zero extra requests and
    GET-only. Mutation-flow pages (order cancel, approval submit, offboard, …) are deliberately
    excluded from auto-visitation. Coverage per template is reported in `sitemap.md`.
 4. **Pattern sampling** — id-like path segments (UUIDs, numbers, `WO-123`-style) are collapsed
@@ -102,11 +105,11 @@ it to Chromium at launch, since Chromium does not read it from the environment o
 | `uncaught-exception` | `pageerror` during load | Critical | — |
 | `page-unreachable` | document 4xx/5xx or navigation failure | Critical | — |
 | `failed-api-request` | XHR/fetch 5xx (Critical) or 4xx/network-fail (High) | Critical/High | ADR-0031 |
-| `uuid-on-screen` | UUID in visible text or text-like input values (checkbox/radio/hidden values are wiring, not UI — excluded) | High | UI rule |
+| `uuid-on-screen` | UUID in visible text or rendered input values (checkbox/radio/hidden values are wiring and excluded; button/submit values ARE their visible label and stay in scope) | High | UI rule |
 | `uuid-in-picker-options` | UUIDs as select/option labels | High | UI rule |
 | `search-by-internal-id` | search field labeled UUID/GUID | High | UI rule |
 | `search-possibly-id-keyed` | search field labeled bare "ID" with no human-readable term | Medium | UI rule |
-| `raw-i18n-key` | `DOMAIN.SECTION.KEY`-shaped text rendered (identifiers inside `<code>`/`<pre>` count as intentional data) | High | ADR-0030 |
+| `raw-i18n-key` | `DOMAIN.SECTION.KEY`-shaped text rendered (occurrences inside `<code>`/`<pre>` count as intentional data; a key shown as code AND rendered raw elsewhere still flags) | High | ADR-0030 |
 | `rendering-artifact` | `Invalid Date`, `NaN`, `[object Object]`, stray `undefined` | High/Medium | ADR-0038 |
 | `console-error` | `console.error` during load | High | — |
 | `dangling-route` | route/link lands on `/not-found` | High | — |

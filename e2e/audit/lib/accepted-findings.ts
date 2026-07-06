@@ -1,3 +1,4 @@
+import { routePattern } from './crawler';
 import type { Finding } from './types';
 
 /**
@@ -10,7 +11,11 @@ import type { Finding } from './types';
  */
 interface AcceptedFinding {
   ruleId: string;
-  /** Exact page path the acceptance applies to. */
+  /**
+   * Page the acceptance applies to: an exact path for static routes, or a
+   * collapsed pattern for detail routes (e.g. '/app/billing/invoices/{id}' —
+   * concrete harvested ids change run to run, so patterns are the stable form).
+   */
   page: string;
   /** Why this is intentional, and what was verified. */
   reason: string;
@@ -31,7 +36,9 @@ const ACCEPTED: readonly AcceptedFinding[] = [
 /** Downgrade accepted findings to info, annotating them with the rationale. */
 export function applyAcceptedFindings(findings: Finding[]): Finding[] {
   return findings.map(f => {
-    const accepted = ACCEPTED.find(a => a.ruleId === f.ruleId && a.page === f.page);
+    const accepted = ACCEPTED.find(
+      a => a.ruleId === f.ruleId && (a.page === f.page || a.page === routePattern(f.page)),
+    );
     if (!accepted) return f;
     return {
       ...f,

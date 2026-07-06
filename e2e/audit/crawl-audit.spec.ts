@@ -3,7 +3,7 @@ import { test } from '@playwright/test';
 import { AUDIT_CONFIG, AUTH_MODE_PATH } from './lib/config';
 import { attachMonitors, routePattern, visit } from './lib/crawler';
 import { monitorFindings, runPageChecks } from './lib/checks';
-import { attachIdHarvester, fillTemplates, templateCoverage } from './lib/id-harvest';
+import { attachIdHarvester, fillTemplates, templateCoverage, templateFields } from './lib/id-harvest';
 import { APP_SEEDS, PARAM_TEMPLATES, PUBLIC_SEEDS } from './lib/route-seeds';
 import { applyAcceptedFindings } from './lib/accepted-findings';
 import { emptyCounts, tallyFindings, writeReports } from './lib/report';
@@ -25,7 +25,10 @@ test('crawl site and audit every page', async ({ page }) => {
   }));
 
   const monitors = attachMonitors(page);
-  const harvest = attachIdHarvester(page);
+  // Refill only makes sense when /app pages (and their API calls) are reachable.
+  const harvester = authenticated
+    ? attachIdHarvester(page, templateFields(PARAM_TEMPLATES))
+    : null;
   const generatedByTemplate = new Map<string, Set<string>>();
   const visited = new Set<string>();
   const patternCounts = new Map<string, number>();
@@ -36,10 +39,10 @@ test('crawl site and audit every page', async ({ page }) => {
   // When anchor-based discovery runs dry, fill parameterized route templates
   // with entity ids harvested from the API responses already observed.
   const refillFromHarvest = (): boolean => {
-    if (!authenticated) return false;
+    if (!harvester) return false;
     const fresh = fillTemplates(
       PARAM_TEMPLATES,
-      harvest,
+      harvester.harvest,
       AUDIT_CONFIG.maxPerPattern,
       generatedByTemplate,
     ).filter(p => !visited.has(p));
@@ -47,7 +50,15 @@ test('crawl site and audit every page', async ({ page }) => {
     return fresh.length > 0;
   };
 
-  while ((queue.length > 0 || refillFromHarvest()) && pages.length < AUDIT_CONFIG.maxPages) {
+  while (pages.length < AUDIT_CONFIG.maxPages) {
+    if (queue.length === 0) {
+      if (!harvester) break;
+      // Body parsing runs detached; wait for in-flight responses before
+      // deciding the harvest has nothing more to offer.
+      await harvester.idle();
+      if (!refillFromHarvest()) break;
+      continue;
+    }
     const { path: target, from } = queue.shift()!;
     if (visited.has(target)) continue;
     visited.add(target);
@@ -124,7 +135,11 @@ test('crawl site and audit every page', async ({ page }) => {
     pages,
     findings: finalFindings,
     unvisitedSeeds: seeds.filter(s => !visited.has(s)),
-    templateCoverage: templateCoverage(PARAM_TEMPLATES, harvest, generatedByTemplate),
+    templateCoverage: templateCoverage(
+      PARAM_TEMPLATES,
+      harvester?.harvest ?? new Map(),
+      generatedByTemplate,
+    ),
   };
 
   const outDir = writeReports(report);

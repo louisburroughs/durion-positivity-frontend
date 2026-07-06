@@ -1,12 +1,7 @@
 import type { Page, Response } from '@playwright/test';
 import { AUDIT_CONFIG } from './config';
+import { LONG_HEX_SEGMENT, NUMERIC_SEGMENT, PREFIXED_ID_SEGMENT, UUID_SEGMENT } from './id-patterns';
 import type { FailedRequest, PageOutcome } from './types';
-
-const UUID_SEGMENT =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const NUMERIC_SEGMENT = /^\d{2,}$/;
-const PREFIXED_ID_SEGMENT = /^[A-Za-z]{1,6}-\d+$/; // WO-123, EMP-42, PO-9
-const LONG_HEX_SEGMENT = /^[0-9a-f]{16,}$/i;
 
 /** File extensions the crawler must never navigate to. */
 const SKIP_EXTENSIONS =

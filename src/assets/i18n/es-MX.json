@@ -539,6 +539,7 @@
     }
   },
   "CRM": {
+    "PARTY_DETAIL": { "FALLBACK_TITLE": "Detalles de la cuenta" },
     "LANDING": {
       "TITLE": "Clientes",
       "SUBTITLE": "Administra cuentas de clientes, rastrea detalles de parties y accede a información de integración.",

@@ -79,6 +79,30 @@ describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
     expect(banner).toBeTruthy();
   });
 
+  it('prompts for a location when the primary location is blank', async () => {
+    vi.clearAllMocks();
+    const blankLocationService = {
+      getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: null })),
+      getAvailability: vi.fn().mockReturnValue(of([])),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [MechanicAvailabilityPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: DispatchBoardService, useValue: blankLocationService },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(MechanicAvailabilityPageComponent);
+    fixture.detectChanges();
+
+    expect(blankLocationService.getAvailability).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.error()).toBe(
+      'SHOPMGMT.MECHANIC_AVAILABILITY.ERROR.LOCATION_REQUIRED',
+    );
+  });
+
   it('requires a location before loading availability', async () => {
     await setup();
     vi.clearAllMocks();

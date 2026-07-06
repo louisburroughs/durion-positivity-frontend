@@ -43,7 +43,7 @@
         <tbody>
           @for (assignment of assignments(); track $index) {
           <tr data-testid="assignment-item">
-            <td>{{ getLocationName(assignment, availableLocations()) }}</td>
+            <td>{{ getLocationName(assignment) }}</td>
             <td>{{ assignment.isPrimary ? 'Yes' : 'No' }}</td>
             <td>{{ getEffectiveStart(assignment) }}</td>
             <td>{{ getEffectiveEnd(assignment) }}</td>
