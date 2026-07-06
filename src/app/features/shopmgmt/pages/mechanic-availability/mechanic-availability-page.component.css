@@ -43,11 +43,11 @@
 }
 
 .available-slot {
-  background: var(--status-success-bg));
+  background: var(--status-success-bg);
 }
 
 .unavailable-slot {
-  background: var(--status-error-bg));
+  background: var(--status-error-bg);
 }
 
 .empty-state {
@@ -55,7 +55,7 @@
 }
 
 .error-banner {
-  background: var(--status-error-bg)); color: var(--status-error-fg);
+  background: var(--status-error-bg); color: var(--status-error-fg);
   border-radius: var(--radius-sm);
   padding: var(--space-2);
 }

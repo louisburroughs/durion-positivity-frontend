@@ -33,7 +33,7 @@
 }
 
 .status--pending { color: var(--status-warning-fg);
-	background: var(--status-warning-bg));
+	background: var(--status-warning-bg);
 }
 
 .status--approved {

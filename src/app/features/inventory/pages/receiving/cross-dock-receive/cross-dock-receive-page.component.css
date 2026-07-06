@@ -5,13 +5,13 @@
 .page {
   background: var(--themeBackground);
   color: var(--currentTextColor);
-  font-family: 'Inter', var(--font-body);
+  font-family: var(--font-body);
 }
 
 .page-title,
 legend,
 .summary-card h2 {
-  font-family: 'Public Sans', var(--font-body);
+  font-family: var(--font-primary);
 }
 
 .form-card,

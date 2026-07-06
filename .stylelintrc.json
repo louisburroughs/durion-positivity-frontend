@@ -19,20 +19,44 @@
     "declaration-property-value-disallowed-list": [
       {
         "/.+/": [
+          "/var\\([^,)]*,/",
           "/--surface-container[a-z0-9-]*/",
+          "/--surfaceContainer[A-Za-z]*/",
           "/--secondary-container/",
           "/--on-surface[a-z-]*/",
           "/--on-(secondary|error)-container/",
           "/--error-container/",
-          "/--color-(primary|secondary|error|warning|success|on-[a-z-]+)/",
+          "/--color-[a-z0-9-]+/",
           "/--typescale-[a-z0-9-]+/",
           "/--spacing-[0-9]/",
+          "/--durion-(on-surface|surface-container[a-z-]*)/",
+          "/--brand-(primary-light|primary-hover|on-primary)/",
+          "/--bodyColor/",
+          "/--border-subtle/",
+          "/--surface-(color|subtle|primary|secondary)/",
+          "/--outline-variant-rgb/",
+          "/--hoverBackground/",
+          "/--hover-color/",
+          "/--muted-color/",
+          "/--error-color/",
+          "/--text-(primary|on-brand|lg|xl)([^a-z-]|$)/",
+          "/--status-warning-text/",
+          "/--radius-(full|pill)/",
+          "/--font-display-sm/",
+          "/--inter[^a-z-]/",
+          "/--publicSans/",
+          "/var\\(--mono[,)]/",
+          "/var\\(--surface[,)]/",
+          "/var\\(--error[,)]/",
+          "/var\\(--dur-elevation/",
           "/Michelin Unit Titling/",
+          "/'Inter'/",
+          "/'Public Sans'/",
           "/#cc9030/i"
         ]
       },
       {
-        "message": "Unsanctioned or undefined token. Use a documented Durion token (design/source/theme-tokens.md): --space-* not --spacing-*; --brand-primary / --cardBackground / --currentTextColor not Material-3 names like --color-primary or --surface-container-*; --goldA400 not raw #cc9030; Barlow Semi Condensed not 'Michelin Unit Titling'.",
+        "message": "Unsanctioned token or var() fallback. var(--x, fallback) is banned outright: styles.css is the sole render-blocking stylesheet so fallbacks are dead code, they hide undefined names from the unknown-custom-properties rule, and a stale fallback paints light-theme colors in dark mode. Write bare var(--x) with a token defined in src/styles.css. Token mappings (design/source/theme-tokens.md): --border-color not --color-outline-variant/--border-subtle; --status-<kind>-bg/-fg not --color-danger/--color-warn*; --cardBackground/--surface-variant not --color-surface/--surface-color; --currentTextColor not --color-text/--bodyColor/--text-primary; --primaryA100 not --brand-primary-light; --font-mono not --mono; --font-primary/--font-body not Inter/Public Sans; --goldA400 not raw #cc9030.",
         "severity": "error"
       }
     ]

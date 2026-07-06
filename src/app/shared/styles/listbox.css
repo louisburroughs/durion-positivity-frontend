@@ -1,0 +1,71 @@
+/* ── Shared combobox/typeahead listbox chrome ─────────────────────────────
+   Single source of truth for dropdown panels + option rows (theme-aware).
+   Selector groups cover the class vocabularies in use (.picker-* /
+   .typeahead-* pages and the BEM LocationPicker); emulated encapsulation
+   keeps unmatched selectors inert in each importing component. Widget-
+   specific layout (row vs column options, mono SKU text) stays in the
+   component's own stylesheet. */
+
+.picker-wrap,
+.typeahead-wrap {
+  position: relative;
+}
+
+.picker-dropdown,
+.typeahead-suggestions,
+.location-picker__list {
+  position: absolute;
+  z-index: 200;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: 0.25rem 0 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: var(--surface-variant);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.picker-option,
+.typeahead-item,
+.location-picker__item {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.picker-option:hover,
+.picker-option[aria-selected='true'],
+.typeahead-item:hover,
+.typeahead-item[aria-selected='true'],
+.location-picker__item:hover {
+  background: var(--primaryA100);
+}
+
+/* Keyboard-active option (aria-activedescendant target). */
+.picker-option-active,
+.typeahead-item-active,
+.location-picker__item--active {
+  background: var(--primaryA100);
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: -2px;
+}
+
+.picker-no-results {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.suggestion-primary {
+  flex: 1;
+  font-weight: 500;
+}
+
+.suggestion-secondary,
+.location-picker__secondary {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

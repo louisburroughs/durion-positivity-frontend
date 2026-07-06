@@ -86,7 +86,7 @@
 
 /* Underline-style input: no box border, 2px bottom accent on focus */
 .field__input {
-  background: var(--surfaceContainerHighest, var(--primary50));
+  background: var(--primary50);
   border: none;
   border-bottom: 2px solid var(--durion-graphite-200);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
@@ -102,7 +102,7 @@
 
 .field__input:focus {
   border-bottom-color: var(--durion-teal-400);
-  background: var(--surfaceContainerHigh, var(--cardBackground, #fff));
+  background: var(--cardBackground);
 }
 
 .field__input:disabled {
@@ -187,7 +187,7 @@
 }
 
 .btn--secondary {
-  background: var(--primary50, var(--brand-primary-soft)); color: var(--currentTextColor);
+  background: var(--primary50); color: var(--currentTextColor);
 }
 
 .btn--ghost {
@@ -196,7 +196,7 @@
 }
 
 .btn--ghost:hover:not(:disabled) {
-  background: var(--primary50, rgba(0,0,0,0.04));
+  background: var(--primary50);
 }
 
 .btn--icon {
@@ -249,7 +249,7 @@
   flex-direction: column;
   gap: 2px;
   padding: var(--space-3) var(--space-4);
-  background: var(--themeBackground, #f8f9fb);
+  background: var(--themeBackground);
   border-radius: var(--radius-md);
 }
 
@@ -278,7 +278,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  background: var(--themeBackground, #f2f2f4);
+  background: var(--themeBackground);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   flex-wrap: wrap;

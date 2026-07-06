@@ -53,7 +53,7 @@
 .filter-chip {
   padding: var(--space-1) var(--space-3);
   border: 1px solid var(--input-border);
-  border-radius: var(--radius-full, 9999px);
+  border-radius: 9999px;
   background: var(--cardBackground);
   color: var(--text-muted);
   font-size: 0.85rem;
@@ -69,7 +69,7 @@
 .filter-chip--active {
   background: var(--brand-primary);
   border-color: var(--brand-primary);
-  color: var(--brand-on-primary, #fff);
+  color: var(--contrastTextColor);
 }
 
 /* ── State banners ───────────────────────────────────────────────────────── */
@@ -86,8 +86,8 @@
 }
 
 .directory-state--error {
-  background: var(--status-error-bg)); color: var(--status-error-fg);
-  border: 1px solid color-mix(in srgb, var(--error, #dc2626) 25%, transparent);
+  background: var(--status-error-bg); color: var(--status-error-fg);
+  border: 1px solid color-mix(in srgb, var(--functional-error-red) 25%, transparent);
 }
 
 .directory-state__spinner {
@@ -174,7 +174,7 @@
 }
 
 .directory-td--mono {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--text-muted);
 }
@@ -220,7 +220,7 @@
 
 .directory-action-link:hover {
   background: var(--brand-primary);
-  color: var(--brand-on-primary, #fff);
+  color: var(--contrastTextColor);
 }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */

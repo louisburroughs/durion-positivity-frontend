@@ -31,7 +31,7 @@
   font-family: var(--font-primary);
   font-size: 1.5rem;
   line-height: 1.2;
-  color: var(--bodyColor, var(--currentTextColor));
+  color: var(--currentTextColor);
 }
 
 .btn-primary {
@@ -127,7 +127,7 @@ textarea:focus-visible {
   margin: 0;
   font-family: var(--font-primary);
   font-size: 1.25rem;
-  color: var(--bodyColor, var(--currentTextColor));
+  color: var(--currentTextColor);
 }
 
 .table-scroll {
@@ -164,7 +164,7 @@ textarea:focus-visible {
 
 .role-name {
   font-weight: 700;
-  color: var(--bodyColor, var(--currentTextColor));
+  color: var(--currentTextColor);
 }
 
 .actions-col {
@@ -229,7 +229,7 @@ textarea:focus-visible {
 }
 
 .field-label {
-  color: var(--bodyColor, var(--currentTextColor));
+  color: var(--currentTextColor);
   font-weight: 600;
 }
 

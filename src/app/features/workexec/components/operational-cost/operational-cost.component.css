@@ -29,7 +29,7 @@ dl div {
   grid-template-columns: 1fr auto;
   gap: var(--space-2);
   padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--surface-variant, var(--durion-graphite-200));
+  border-bottom: 1px solid var(--border-color);
 }
 
 dt,

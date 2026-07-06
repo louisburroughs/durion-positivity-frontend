@@ -149,7 +149,7 @@
 .error-banner {
   margin-bottom: var(--space-4);
   border: 1px solid var(--functional-error-red);
-  background: var(--status-error-bg)); color: var(--status-error-fg);
+  background: var(--status-error-bg); color: var(--status-error-fg);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
 }
@@ -157,7 +157,7 @@
 .success-banner {
   margin-bottom: var(--space-4);
   border: 1px solid var(--functional-success);
-  background: var(--status-success-bg)); color: var(--status-success-fg);
+  background: var(--status-success-bg); color: var(--status-success-fg);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
 }

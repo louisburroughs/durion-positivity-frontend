@@ -16,7 +16,7 @@
 
   <!-- Non-destructive upstream-down retry banner -->
   @if (showRetryBanner()) {
-  <div class="banner banner-warn" role="alert" aria-live="assertive">
+  <div class="alert alert-warning banner" role="alert" aria-live="assertive">
     <span>{{ 'INVENTORY.BY_LOCATION.ERROR.UPSTREAM_DOWN_BANNER' | translate }}</span>
     <button class="btn-secondary btn-sm" type="button" (click)="retry()">
       {{ 'INVENTORY.BY_LOCATION.RETRY' | translate }}
@@ -230,7 +230,7 @@
 
   <!-- Error: validation / unknown -->
   @if (state() === 'error' && (errorKind() === 'validation' || errorKind() === 'unknown')) {
-  <div class="toast-error" role="alert" aria-live="assertive">
+  <div class="alert alert-error toast-error" role="alert" aria-live="assertive">
     <span class="material-symbols-outlined" aria-hidden="true">error</span>
     <span>{{ errorKey()! | translate }}</span>
   </div>

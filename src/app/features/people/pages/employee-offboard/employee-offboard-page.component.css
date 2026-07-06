@@ -38,11 +38,11 @@ h1 {
 }
 
 .state-panel--error {
-  background: var(--status-error-bg)); color: var(--status-error-fg);
+  background: var(--status-error-bg); color: var(--status-error-fg);
 }
 
 .state-panel--success {
-  background: var(--status-success-bg)); color: var(--status-success-fg);
+  background: var(--status-success-bg); color: var(--status-success-fg);
 }
 
 .employee-context {
@@ -82,7 +82,7 @@ h1 {
 }
 
 .status-badge--active {
-  background: var(--status-success-bg)); color: var(--status-success-fg);
+  background: var(--status-success-bg); color: var(--status-success-fg);
 }
 
 .status-badge--neutral {
@@ -91,7 +91,7 @@ h1 {
 }
 
 .status-badge--warning {
-  background: var(--status-warning-bg)); color: var(--status-warning-fg);
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
 }
 
 .alert {
@@ -99,7 +99,7 @@ h1 {
 }
 
 .alert--warning {
-  background: var(--status-warning-bg)); color: var(--status-warning-fg);
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
 }
 
 .field-row {

@@ -1,24 +1,24 @@
 /* EstimateRevisePage — Story 235 */
-.estimate-revise { display: flex; flex-direction: column; gap: var(--space-6, 1.5rem); padding: var(--space-6, 1.5rem) var(--space-4, 1rem); max-width: 640px; margin: 0 auto; }
-.page-header { display: flex; flex-direction: column; gap: var(--space-1, 0.25rem); }
+.estimate-revise { display: flex; flex-direction: column; gap: var(--space-6); padding: var(--space-6) var(--space-4); max-width: 640px; margin: 0 auto; }
+.page-header { display: flex; flex-direction: column; gap: var(--space-1); }
 .page-overline { margin: 0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accentA700); }
-.page-header h1 { margin: 0; font-family: var(--font-primary, 'Public Sans', sans-serif); font-size: 1.5rem; font-weight: 700; color: var(--currentTextColor); }
-.revise-card { background: var(--cardBackground, #fff); padding: var(--space-6, 1.5rem); border-radius: 0.25rem; display: flex; flex-direction: column; gap: var(--space-5, 1.25rem); }
-.revise-context { display: flex; flex-direction: column; gap: var(--space-3, 0.75rem); }
+.page-header h1 { margin: 0; font-family: var(--font-primary); font-size: 1.5rem; font-weight: 700; color: var(--currentTextColor); }
+.revise-card { background: var(--cardBackground); padding: var(--space-6); border-radius: 0.25rem; display: flex; flex-direction: column; gap: var(--space-5); }
+.revise-context { display: flex; flex-direction: column; gap: var(--space-3); }
 .label-overline { margin: 0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--handleColor); }
 .estimate-id { margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--currentTextColor); }
 .estimate-meta { margin: 0; font-size: 0.875rem; color: var(--handleColor); }
-.status-chip { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--brand-primary-soft, var(--primaryA100)); color: var(--brand-primary); }
+.status-chip { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--brand-primary-soft); color: var(--brand-primary); }
 .revise-description { margin: 0; font-size: 0.875rem; color: var(--handleColor); }
-.alert { padding: var(--space-3, 0.75rem) var(--space-4, 1rem); border-radius: 0.125rem; font-size: 0.875rem; }
+.alert { padding: var(--space-3) var(--space-4); border-radius: 0.125rem; font-size: 0.875rem; }
 .alert--error { background: var(--status-error-bg); color: var(--status-error-fg); }
 .alert--warn { background: var(--status-warning-bg); color: var(--status-warning-fg); }
 .hint-text { font-size: 0.875rem; color: var(--handleColor); margin: 0; }
 /* Native <dialog> opened via showModal() — centered card with a dimmed ::backdrop. */
-.confirm-panel { background: var(--themeBackground); color: var(--currentTextColor); padding: var(--space-5, 1.25rem); border: 0; border-radius: 0.25rem; max-width: min(32rem, calc(100vw - 2rem)); display: flex; flex-direction: column; gap: var(--space-4, 1rem); }
+.confirm-panel { background: var(--themeBackground); color: var(--currentTextColor); padding: var(--space-5); border: 0; border-radius: 0.25rem; max-width: min(32rem, calc(100vw - 2rem)); display: flex; flex-direction: column; gap: var(--space-4); }
 .confirm-panel::backdrop { background: rgba(15, 53, 96, 0.4); }
 .confirm-heading { margin: 0; font-size: 1rem; font-weight: 700; color: var(--currentTextColor); }
-.form-actions { display: flex; gap: var(--space-3, 0.75rem); flex-wrap: wrap; }
-.btn { padding: var(--space-3, 0.75rem) var(--space-5, 1.25rem); font-size: 0.9375rem; font-weight: 600; border: none; border-radius: 0.125rem; cursor: pointer; transition: opacity 0.15s; text-decoration: none; display: inline-flex; align-items: center; }
-.btn--accent { background: var(--accent-strong)); color: #fff; }
-.btn--ghost { background: transparent; color: var(--brand-primary, #00346f); padding-left: 0; padding-right: 0; }
+.form-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.btn { padding: var(--space-3) var(--space-5); font-size: 0.9375rem; font-weight: 600; border: none; border-radius: 0.125rem; cursor: pointer; transition: opacity 0.15s; text-decoration: none; display: inline-flex; align-items: center; }
+.btn--accent { background: var(--accent-strong); color: #fff; }
+.btn--ghost { background: transparent; color: var(--brand-primary); padding-left: 0; padding-right: 0; }

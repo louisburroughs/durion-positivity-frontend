@@ -205,9 +205,9 @@
 .rag-ingest-btn {
   height: 40px;
   width: 40px;
-  border: 1px solid var(--border-color, #d0d5dd);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  background: var(--cardBackground, #fff); color: var(--currentTextColor);
+  background: var(--cardBackground); color: var(--currentTextColor);
   font-size: 1rem;
   display: flex;
   align-items: center;
@@ -218,8 +218,8 @@
 }
 
 .rag-ingest-btn:hover {
-  background: var(--hoverBackground, #f3f4f6);
-  border-color: var(--brand-primary, #5b21b6);
+  background: var(--surface-hover);
+  border-color: var(--brand-primary);
 }
 
 .rag-ingest-btn:focus-visible {

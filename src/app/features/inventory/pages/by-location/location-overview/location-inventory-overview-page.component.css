@@ -13,20 +13,13 @@
 }
 
 /* ── Upstream-down retry banner ─────────────────────────────────────────── */
+/* Colors come from the global .alert.alert-warning classes. */
 
 .banner {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
   margin-bottom: 1rem;
-}
-
-.banner-warn {
-  background: var(--color-warn-bg, #fff3cd);
-  border: 1px solid var(--color-warn-border, #ffc107);
-  color: var(--color-warn-text, #664d03);
 }
 
 /* ── Picker ─────────────────────────────────────────────────────────────── */
@@ -48,48 +41,7 @@
   flex: 1 1 12rem;
 }
 
-.picker-wrap {
-  position: relative;
-}
-
-.picker-dropdown {
-  position: absolute;
-  z-index: 200;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin: 0;
-  padding: 0.25rem 0;
-  list-style: none;
-  background: var(--surface-color, #fff);
-  border: 1px solid var(--border-color, #ccc);
-  border-radius: 4px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-  max-height: 16rem;
-  overflow-y: auto;
-}
-
-.picker-option {
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-}
-
-.picker-option:hover,
-.picker-option[aria-selected='true'] {
-  background: var(--brand-primary-light, #e8f0fe);
-}
-
-/* Keyboard-active option (aria-activedescendant target). */
-.picker-option-active {
-  background: var(--brand-primary-light, #e8f0fe);
-  outline: 2px solid var(--brand-primary, #1a73e8);
-  outline-offset: -2px;
-}
-
-.picker-no-results {
-  color: var(--text-muted, #6c757d);
-  cursor: default;
-}
+/* Listbox chrome comes from the shared stylesheet (shared/styles/listbox.css). */
 
 /* ── Results table ──────────────────────────────────────────────────────── */
 
@@ -99,13 +51,13 @@
 }
 
 .data-table .mono {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.875rem;
 }
 
 .results-total-row {
   font-weight: 700;
-  border-top: 2px solid var(--border-color, #ccc);
+  border-top: 2px solid var(--border-color);
 }
 
 .results-total-row th {
@@ -127,16 +79,16 @@
 }
 
 .badge-warn {
-  background: var(--color-warn, #ffc107);
-  color: var(--color-warn-text-on, #000);
+  background: var(--functional-warning);
+  color: var(--durion-grey-900);
 }
 
 .totals-negative {
-  color: var(--color-danger, #dc3545);
+  color: var(--status-error-fg);
 }
 
 .cell-negative {
-  color: var(--color-danger, #dc3545);
+  color: var(--status-error-fg);
   font-weight: 600;
 }
 
@@ -152,7 +104,7 @@
 }
 
 .error-panel {
-  color: var(--color-danger, #dc3545);
+  color: var(--status-error-fg);
 }
 
 .error-icon {
@@ -160,16 +112,12 @@
 }
 
 /* ── Toast error ────────────────────────────────────────────────────────── */
+/* Colors come from the global .alert.alert-error classes. */
 
 .toast-error {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
-  background: var(--color-danger-bg, #f8d7da);
-  color: var(--color-danger-text, #842029);
-  border: 1px solid var(--color-danger-border, #f5c2c7);
   margin-bottom: 1rem;
 }
 
@@ -209,56 +157,15 @@
 }
 
 /* ── Product filter typeahead (find by name or SKU) ─────────────────────── */
-.typeahead-wrap {
-  position: relative;
-}
-
-.typeahead-suggestions {
-  position: absolute;
-  z-index: 200;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin: 0;
-  padding: 0.25rem 0;
-  list-style: none;
-  background: var(--surface-color, #fff);
-  border: 1px solid var(--border-color, #ccc);
-  border-radius: 4px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-  max-height: 16rem;
-  overflow-y: auto;
-}
-
+/* Listbox chrome comes from the shared stylesheet (shared/styles/listbox.css). */
 .typeahead-item {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-}
-
-.typeahead-item:hover,
-.typeahead-item[aria-selected='true'] {
-  background: var(--brand-primary-light, #e8f0fe);
-}
-
-/* Keyboard-active option (aria-activedescendant target). */
-.typeahead-item-active {
-  background: var(--brand-primary-light, #e8f0fe);
-  outline: 2px solid var(--brand-primary, #1a73e8);
-  outline-offset: -2px;
-}
-
-.suggestion-primary {
-  flex: 1;
-  font-weight: 500;
 }
 
 .suggestion-secondary {
-  font-size: 0.75rem;
-  color: var(--text-muted, #6c757d);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
 }
 
 /* ── Selected-product chips (multi-select tally) ────────────────────────── */
@@ -276,8 +183,8 @@
   align-items: center;
   gap: 0.375rem;
   padding: 0.25rem 0.5rem;
-  background: var(--brand-primary-light, #e8f0fe);
-  border: 1px solid var(--border-color, #ccc);
+  background: var(--primaryA100);
+  border: 1px solid var(--border-color);
   border-radius: 1rem;
   font-size: 0.8125rem;
 }
@@ -296,7 +203,7 @@
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: var(--text-muted, #6c757d);
+  color: var(--text-muted);
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
@@ -304,7 +211,7 @@
 
 .chip-remove:hover,
 .chip-remove:focus-visible {
-  background: var(--brand-primary, #1a73e8);
+  background: var(--brand-primary);
   color: #fff;
 }
 
@@ -313,7 +220,7 @@
   padding: 0;
   border: none;
   background: none;
-  color: var(--brand-primary, #1a73e8);
+  color: var(--accentA700);
   font-size: 0.8125rem;
   cursor: pointer;
 }

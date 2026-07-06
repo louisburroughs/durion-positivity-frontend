@@ -5,7 +5,7 @@
 .page {
   background: var(--themeBackground);
   color: var(--currentTextColor);
-  font-family: var(--inter, 'Inter', sans-serif);
+  font-family: var(--font-body);
   min-height: 100%;
   padding: 1.5rem;
 }
@@ -15,7 +15,7 @@
 }
 
 .page-title {
-  font-family: var(--publicSans, 'Public Sans', sans-serif);
+  font-family: var(--font-primary);
   font-size: 1.6rem;
   margin: 0;
 }
@@ -64,7 +64,7 @@ label {
 }
 
 .stat-card h2 {
-  font-family: var(--publicSans, 'Public Sans', sans-serif);
+  font-family: var(--font-primary);
   font-size: 0.9rem;
   margin: 0 0 0.35rem;
 }

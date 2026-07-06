@@ -72,6 +72,7 @@
   /* Typography */
   --font-primary: 'Barlow Semi Condensed', 'Noto Sans', sans-serif;
   --font-body: 'Noto Sans', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 
   /* Ratified Barlow display weight scale — only 500/600/700 are hosted */
   --font-weight-display: 700;   /* h1 / page titles / strong emphasis */
@@ -270,21 +271,21 @@ output.alert {
 }
 
 .alert-success {
-  background: #edfaef;
-  border-color: #1b5e20;
-  color: #2e7d3a;
+  background: var(--status-success-bg);
+  border-color: var(--functional-success);
+  color: var(--status-success-fg);
 }
 
 .alert-warning {
-  background: #fef8ec;
-  border-color: #8a5e0a;
-  color: #8a5e0a;
+  background: var(--status-warning-bg);
+  border-color: var(--status-warning-fg);
+  color: var(--status-warning-fg);
 }
 
 .alert-error {
-  background: #fbeaea;
+  background: var(--status-error-bg);
   border-color: var(--functional-error-red);
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .alert-critical {
@@ -379,7 +380,7 @@ button {
 
 /* ── Scoped Shared Styles Extracted From Oversized Component Stylesheets ── */
 app-estimate-detail-page .section-overline {
-  margin: 0 0 var(--space-3, 0.75rem);
+  margin: 0 0 var(--space-3);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -430,7 +431,7 @@ app-workorder-detail-page .crm-ref-label {
 
 app-estimate-detail-page .crm-ref-value,
 app-workorder-detail-page .crm-ref-value {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.875rem;
   color: var(--brand-primary);
   overflow: hidden;
@@ -462,9 +463,9 @@ app-workorder-detail-page .crm-ref-contacts {
 app-estimate-detail-page .crm-ref-badge {
   display: inline-flex;
   align-items: center;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.75rem;
-  background: var(--brand-primary-soft, var(--primaryA100));
+  background: var(--brand-primary-soft);
   color: var(--brand-primary);
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
@@ -477,9 +478,9 @@ app-estimate-detail-page .crm-ref-badge {
 app-workorder-detail-page .crm-ref-badge {
   display: inline-flex;
   align-items: center;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.7rem;
-  background: var(--brand-primary-soft, var(--primaryA100));
+  background: var(--brand-primary-soft);
   color: var(--brand-primary);
   padding: 2px 7px;
   border-radius: 9999px;
@@ -502,7 +503,7 @@ app-workorder-detail-page .section-overline {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--currentTextColor, #1f2328);
+  color: var(--currentTextColor);
   opacity: 0.55;
   margin: 0 0 var(--space-3);
 }
@@ -528,7 +529,7 @@ app-workorder-detail-page .btn-link {
   border: none;
   cursor: pointer;
   padding: 0;
-  color: var(--brand-accent, #006a62);
+  color: var(--accentA700);
   text-decoration: underline;
   font-size: inherit;
 }
@@ -554,7 +555,7 @@ app-workorder-detail-page .alert--warn {
 app-workorder-detail-page .alert--success {
   background: var(--status-success-bg); color: var(--status-success-fg); /* functional-success (#2e7d32) is only 4.36:1 on its own tint; darker green = AA */
   border: 1px solid var(--functional-success);
-  border-radius: var(--radius-sm, 4px);
+  border-radius: var(--radius-sm);
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
 }
@@ -586,8 +587,8 @@ app-workorder-detail-page .btn--accent:disabled {
 
 app-workorder-detail-page .btn--ghost {
   background: transparent;
-  border: 1px solid rgba(var(--outline-variant-rgb, 130, 130, 130), 0.35);
-  color: var(--currentTextColor, #1f2328);
+  border: 1px solid var(--border-color);
+  color: var(--currentTextColor);
 }
 
 app-workorder-detail-page .btn--full {
@@ -615,22 +616,22 @@ app-workorder-detail-page .tab-badge--warning {
 
 app-workorder-detail-page .inline-error {
   font-size: 0.8rem;
-  color: var(--functional-error-red, #dc2626);
+  color: var(--functional-error-red);
   margin-left: 0.5rem;
 }
 
 app-workorder-detail-page .checklist-panel {
   margin: 1.25rem 1.5rem;
   padding: 1rem 1.25rem;
-  border-radius: var(--radius-md, 8px);
+  border-radius: var(--radius-md);
   background: var(--cardBackground);
-  border: 1px solid var(--color-outline-variant, #d0d7de);
+  border: 1px solid var(--border-color);
 }
 
 app-workorder-detail-page .checklist-panel__title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--currentTextColor, #1f2328);
+  color: var(--currentTextColor);
   margin-bottom: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -642,7 +643,7 @@ app-workorder-detail-page .checklist-item {
   gap: 0.5rem;
   padding: 0.5rem 0;
   font-size: 0.875rem;
-  border-bottom: 1px solid var(--color-outline-variant, #d0d7de);
+  border-bottom: 1px solid var(--border-color);
 }
 
 app-workorder-detail-page .checklist-item:last-child {
@@ -661,7 +662,7 @@ app-workorder-detail-page .checklist-item--ok .checklist-item__icon {
 }
 
 app-workorder-detail-page .checklist-item--blocking .checklist-item__icon {
-  color: var(--functional-error-red, #dc2626);
+  color: var(--functional-error-red);
 }
 
 app-workorder-detail-page .checklist-item--warning .checklist-item__icon {
@@ -681,14 +682,14 @@ app-workorder-detail-page .form-label {
   font-size: 0.875rem;
   font-weight: 500;
   margin-bottom: 0.35rem;
-  color: var(--currentTextColor, #1f2328);
+  color: var(--currentTextColor);
 }
 
 app-workorder-detail-page .form-textarea {
   width: 100%;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--input-border);
-  border-radius: var(--radius-sm, 4px);
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-family: inherit;
   resize: vertical;
@@ -697,13 +698,13 @@ app-workorder-detail-page .form-textarea {
 }
 
 app-workorder-detail-page .form-textarea:focus {
-  outline: 2px solid var(--brand-accent, #14c8b4);
+  outline: 2px solid var(--brand-accent);
   outline-offset: 1px;
-  border-color: var(--brand-accent, #14c8b4);
+  border-color: var(--brand-accent);
 }
 
 app-workorder-detail-page .required-mark {
-  color: var(--functional-error-red, #dc2626);
+  color: var(--functional-error-red);
 }
 
 app-workorder-detail-page .failed-checks {
@@ -726,7 +727,7 @@ app-workorder-detail-page .failed-check__icon {
 }
 
 app-workorder-detail-page .failed-check--blocking .failed-check__icon {
-  color: var(--functional-error-red, #dc2626);
+  color: var(--functional-error-red);
 }
 
 app-workorder-detail-page .failed-check--warning .failed-check__icon {
@@ -745,7 +746,7 @@ app-party-detail .modal-backdrop {
 }
 
 app-party-detail .modal {
-  background: var(--cardBackground, #fff);
+  background: var(--cardBackground);
   border-radius: var(--radius-lg);
   min-width: 320px;
   max-width: 480px;
@@ -760,7 +761,7 @@ app-party-detail .modal__header {
   align-items: center;
   justify-content: space-between;
   padding: var(--space-4) var(--space-6);
-  background: var(--themeBackground, #f8f9fb);
+  background: var(--themeBackground);
 }
 
 app-party-detail .modal__header h3 {
@@ -782,7 +783,7 @@ app-party-detail .modal__footer {
   display: flex;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-6);
-  background: var(--themeBackground, #f8f9fb);
+  background: var(--themeBackground);
 }
 
 app-party-detail .btn {
@@ -824,7 +825,7 @@ app-party-detail .btn--primary:hover:not(:disabled) {
 }
 
 app-party-detail .btn--secondary {
-  background: var(--primary50, var(--brand-primary-soft));
+  background: var(--primary50);
   color: var(--currentTextColor);
 }
 
@@ -834,7 +835,7 @@ app-party-detail .btn--ghost {
 }
 
 app-party-detail .btn--ghost:hover:not(:disabled) {
-  background: var(--themeBackground, rgba(0, 0, 0, 0.04));
+  background: var(--themeBackground);
 }
 
 app-party-detail .btn--icon {
@@ -935,7 +936,7 @@ app-create-commercial-account .state-panel {
   gap: var(--space-4);
   padding: var(--space-8);
   text-align: center;
-  background: var(--cardBackground, #fff);
+  background: var(--cardBackground);
   border-radius: var(--radius-lg);
 }
 

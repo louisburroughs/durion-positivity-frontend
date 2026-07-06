@@ -63,7 +63,7 @@ form {
 }
 
 .conflict-panel {
-  background: var(--status-error-bg));
+  background: var(--status-error-bg);
   border-radius: var(--radius-md);
   padding: var(--space-4);
   display: flex;

@@ -31,7 +31,7 @@
   font-family: var(--font-primary);
   font-size: 1.5rem;
   line-height: 1.2;
-  color: var(--bodyColor, var(--currentTextColor));
+  color: var(--currentTextColor);
 }
 
 .readonly-label {
@@ -124,7 +124,7 @@ input:focus-visible {
   margin: 0;
   font-family: var(--font-primary);
   font-size: 1.25rem;
-  color: var(--bodyColor, var(--currentTextColor));
+  color: var(--currentTextColor);
 }
 
 .empty-state p {

@@ -104,7 +104,7 @@
 .wo-tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid rgba(var(--outline-variant-rgb, 130, 130, 130), 0.15);
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: var(--space-4);
 }
 
@@ -115,7 +115,7 @@
   padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--currentTextColor, #1f2328);
+  color: var(--currentTextColor);
   cursor: pointer;
   opacity: 0.65;
   transition: opacity 0.15s, border-color 0.15s;
@@ -126,9 +126,9 @@
 }
 
 .wo-tab--active {
-  border-bottom: 2px solid var(--brand-accent, #006a62);
+  border-bottom: 2px solid var(--accentA700);
   opacity: 1;
-  color: var(--brand-accent, #006a62);
+  color: var(--accentA700);
 }
 
 /* Section container */
@@ -175,7 +175,7 @@
   width: 1.1rem;
   height: 1.1rem;
   cursor: pointer;
-  accent-color: var(--brand-primary, var(--accentA400));
+  accent-color: var(--brand-primary);
 }
 
 .ledger__check:disabled {
@@ -183,7 +183,7 @@
 }
 
 .hint-text--error {
-  color: var(--functional-error-red, #ba1a1a);
+  color: var(--functional-error-red);
 }
 
 .ledger--audit .ledger__row {
@@ -191,7 +191,7 @@
 }
 
 .ledger__row--alt {
-  background: var(--cardBackground, #f6f8fa);
+  background: var(--cardBackground);
 }
 
 .ledger__cell {
@@ -213,7 +213,7 @@
   text-transform: uppercase;
   padding: 2px 5px;
   border-radius: var(--radius-sm);
-  background: var(--themeBackground, #eef1f5);
+  background: var(--themeBackground);
   opacity: 0.7;
 }
 
@@ -231,12 +231,12 @@
 .audit-origin {
   margin-bottom: var(--space-5);
   padding: var(--space-4);
-  background: var(--cardBackground, #f6f8fa);
+  background: var(--cardBackground);
   border-radius: var(--radius-md);
 }
 
 .audit-link {
-  color: var(--brand-accent, #006a62);
+  color: var(--accentA700);
   text-decoration: underline;
 }
 
@@ -247,7 +247,7 @@
 .audit-toggle {
   font-size: 0.875rem;
   cursor: pointer;
-  color: var(--brand-accent, #006a62);
+  color: var(--accentA700);
   background: none;
   border: none;
   padding: 0;
@@ -258,7 +258,7 @@
 .status-chip {
   display: inline-block;
   padding: 2px 8px;
-  border-radius: var(--radius-sm, 4px);
+  border-radius: var(--radius-sm);
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;

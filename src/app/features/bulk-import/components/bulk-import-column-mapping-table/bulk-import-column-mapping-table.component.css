@@ -52,7 +52,7 @@
 }
 
 .mapping-confidence--medium { color: var(--status-warning-fg);
-	background: var(--status-warning-bg));
+	background: var(--status-warning-bg);
 }
 
 .mapping-confidence--low {

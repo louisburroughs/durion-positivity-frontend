@@ -64,7 +64,7 @@
 
 .jobs-banner--error { color: var(--status-error-fg);
 	border-color: var(--functional-error-red);
-	background: var(--status-error-bg));
+	background: var(--status-error-bg);
 }
 
 .jobs-page__empty {

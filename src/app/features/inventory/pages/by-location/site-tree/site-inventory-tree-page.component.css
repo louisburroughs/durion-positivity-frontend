@@ -104,7 +104,7 @@
 }
 
 .banner--warning {
-  background: var(--status-warning-bg));
+  background: var(--status-warning-bg);
   border: 1px solid var(--functional-warning); color: var(--status-warning-fg);
 }
 
@@ -199,9 +199,9 @@
   border-radius: var(--radius-sm);
   background: linear-gradient(
     90deg,
-    var(--primary50, #f4f8fe) 25%,
-    var(--cardBackground, #fff) 50%,
-    var(--primary50, #f4f8fe) 75%
+    var(--primary50) 25%,
+    var(--cardBackground) 50%,
+    var(--primary50) 75%
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.3s ease-in-out infinite;

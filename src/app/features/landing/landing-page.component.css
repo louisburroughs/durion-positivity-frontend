@@ -269,7 +269,7 @@
 
 .feature-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--dur-elevation-3, 0 4px 16px rgba(0, 0, 0, 0.14));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
 }
 
 /* Left accent bar per DESIGN.md "Content Grouping" rule */
@@ -287,7 +287,7 @@
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--brand-accent);
+  color: var(--accentA700);
   font-family: var(--font-body);
 }
 

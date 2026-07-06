@@ -9,15 +9,15 @@
 .finalize-card {
   margin: 1.5rem;
   padding: 1.5rem;
-  border-radius: var(--radius-md, 8px);
+  border-radius: var(--radius-md);
   background: var(--cardBackground);
-  border: 1px solid var(--color-outline-variant, #d0d7de);
+  border: 1px solid var(--border-color);
 }
 
 .finalize-card__title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--currentTextColor, #1f2328);
+  color: var(--currentTextColor);
   margin-bottom: 0.5rem;
 }
 
@@ -41,34 +41,34 @@
   font-size: 0.875rem;
   font-weight: 500;
   margin-bottom: 0.35rem;
-  color: var(--currentTextColor, #1f2328);
+  color: var(--currentTextColor);
 }
 
 .form-input {
   width: 100%;
   max-width: 24rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-outline-variant, #d0d7de);
-  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-family: inherit;
   background: var(--input-background);
-  color: var(--currentTextColor, #1f2328);
+  color: var(--currentTextColor);
 }
 
 .form-input:focus {
-  outline: 2px solid var(--brand-accent, #14c8b4);
+  outline: 2px solid var(--brand-accent);
   outline-offset: 1px;
-  border-color: var(--brand-accent, #14c8b4);
+  border-color: var(--brand-accent);
 }
 
 /* ── Info alert ─────────────────────────────────────────────────────────── */
 
 .alert--info {
-  background: var(--color-info-surface, #dbeafe);
-  color: var(--color-info, #1d4ed8);
-  border: 1px solid var(--color-info, #1d4ed8);
-  border-radius: var(--radius-sm, 4px);
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+  border: 1px solid var(--status-info-fg);
+  border-radius: var(--radius-sm);
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   margin: 1.5rem;
@@ -79,13 +79,13 @@
 .section-heading {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--currentTextColor, #1f2328);
+  color: var(--currentTextColor);
   margin-bottom: 1rem;
 }
 
 /* ── Ledger mono cell ───────────────────────────────────────────────────── */
 
 .ledger__cell--mono {
-  font-family: var(--font-mono, ui-monospace, monospace);
+  font-family: var(--font-mono);
   font-size: 0.8rem;
 }

@@ -9,7 +9,7 @@
 }
 
 .asn-entry-section h2 {
-  font-family: 'Public Sans', var(--font-body);
+  font-family: var(--font-primary);
   color: var(--brand-primary);
   background: color-mix(in srgb, var(--brand-primary-soft) 80%, var(--cardBackground));
   border-radius: 12px;
@@ -50,7 +50,7 @@
 
 .detail-grid dt {
   font-weight: 600;
-  color: var(--brand-secondary, var(--currentTextColor));
+  color: var(--brand-secondary);
   font-size: 0.85rem;
   opacity: 0.8;
   white-space: nowrap;

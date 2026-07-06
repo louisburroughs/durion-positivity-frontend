@@ -80,7 +80,7 @@ const MAX_SUGGESTIONS = 8;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './location-inventory-overview-page.component.html',
-  styleUrl: './location-inventory-overview-page.component.css',
+  styleUrls: ['./location-inventory-overview-page.component.css', '../../../../../shared/styles/listbox.css'],
 })
 export class LocationInventoryOverviewPageComponent implements OnInit {
   private readonly rollupService = inject(InventoryRollupApiService);

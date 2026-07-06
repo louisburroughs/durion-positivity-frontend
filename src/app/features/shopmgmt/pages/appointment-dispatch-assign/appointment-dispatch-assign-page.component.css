@@ -68,12 +68,12 @@
 
 .success-banner {
   border: 1px solid var(--functional-success); color: var(--status-success-fg);
-  background: var(--status-success-bg));
+  background: var(--status-success-bg);
 }
 
 .error-banner {
   border: 1px solid var(--functional-error-red); color: var(--status-error-fg);
-  background: var(--status-error-bg));
+  background: var(--status-error-bg);
 }
 
 .btn-primary {
