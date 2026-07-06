@@ -19,7 +19,7 @@ const MAX_SUGGESTIONS = 8;
   standalone: true,
   imports: [TranslatePipe, FormsModule, LocationPickerComponent],
   templateUrl: './availability.component.html',
-  styleUrl: './availability.component.css',
+  styleUrls: ['./availability.component.css', '../../../../shared/styles/listbox.css'],
 })
 export class AvailabilityComponent {
   private readonly inventoryService = inject(InventoryDomainService);

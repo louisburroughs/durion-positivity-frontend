@@ -35,7 +35,7 @@ let pickerSeq = 0;
   standalone: true,
   imports: [TranslatePipe],
   templateUrl: './location-picker.component.html',
-  styleUrl: './location-picker.component.css',
+  styleUrls: ['./location-picker.component.css', '../../../../shared/styles/listbox.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LocationPickerComponent implements OnDestroy {
