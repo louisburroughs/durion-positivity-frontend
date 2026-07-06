@@ -115,7 +115,7 @@
   padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--currentTextColor, #1f2328);
+  color: var(--currentTextColor);
   cursor: pointer;
   opacity: 0.65;
   transition: opacity 0.15s, border-color 0.15s;
@@ -175,7 +175,7 @@
   width: 1.1rem;
   height: 1.1rem;
   cursor: pointer;
-  accent-color: var(--brand-primary, var(--accentA400));
+  accent-color: var(--brand-primary);
 }
 
 .ledger__check:disabled {
@@ -183,7 +183,7 @@
 }
 
 .hint-text--error {
-  color: var(--functional-error-red, #ba1a1a);
+  color: var(--functional-error-red);
 }
 
 .ledger--audit .ledger__row {
@@ -191,7 +191,7 @@
 }
 
 .ledger__row--alt {
-  background: var(--cardBackground, #f6f8fa);
+  background: var(--cardBackground);
 }
 
 .ledger__cell {
@@ -213,7 +213,7 @@
   text-transform: uppercase;
   padding: 2px 5px;
   border-radius: var(--radius-sm);
-  background: var(--themeBackground, #eef1f5);
+  background: var(--themeBackground);
   opacity: 0.7;
 }
 
@@ -231,7 +231,7 @@
 .audit-origin {
   margin-bottom: var(--space-5);
   padding: var(--space-4);
-  background: var(--cardBackground, #f6f8fa);
+  background: var(--cardBackground);
   border-radius: var(--radius-md);
 }
 
@@ -258,7 +258,7 @@
 .status-chip {
   display: inline-block;
   padding: 2px 8px;
-  border-radius: var(--radius-sm, 4px);
+  border-radius: var(--radius-sm);
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;

@@ -4,7 +4,7 @@
 .wizard-page__title { margin: 0; font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
 .wizard-page__subtitle { margin: 0; color: var(--currentTextColor); opacity: 0.7; }
 .wizard-banner { padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--brand-surface); }
-.wizard-banner--error { background: var(--status-error-bg); border: 1px solid var(--functional-error-red, #ef4444); }
+.wizard-banner--error { background: var(--status-error-bg); border: 1px solid var(--functional-error-red); }
 .wizard-step { display: grid; gap: var(--space-4); padding: var(--space-5); background: var(--cardBackground); border: 1px solid var(--input-border); border-radius: var(--radius-lg); }
 .wizard-step__title { margin: 0; }
 .wizard-conflict { padding: var(--space-5); border-radius: var(--radius-lg); background: var(--status-warning-bg); border: 1px solid #f59e0b; display: grid; gap: var(--space-3); }

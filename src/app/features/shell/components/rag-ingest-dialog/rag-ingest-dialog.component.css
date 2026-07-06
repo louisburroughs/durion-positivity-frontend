@@ -157,7 +157,7 @@
 .rag-field__input:focus,
 .rag-field__textarea:focus {
   outline: none;
-  border-color: var(--brand-primary, #5b21b6);
+  border-color: var(--brand-primary);
   box-shadow: 0 0 0 3px rgb(91 33 182 / 15%);
 }
 
@@ -202,9 +202,9 @@
 }
 
 .rag-btn--primary {
-  background: var(--brand-primary, #5b21b6);
+  background: var(--brand-primary);
   color: #fff;
-  border-color: var(--brand-primary, #5b21b6);
+  border-color: var(--brand-primary);
 }
 
 .rag-btn--primary:hover:not(:disabled) {

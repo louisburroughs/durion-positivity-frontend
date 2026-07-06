@@ -38,7 +38,7 @@
   gap: var(--space-1) var(--space-4);
   margin: var(--space-3) 0 0;
   padding: var(--space-3) var(--space-4);
-  background: var(--themeBackground, #f2f2f4);
+  background: var(--themeBackground);
   border-radius: var(--radius-md);
 }
 
@@ -68,7 +68,7 @@
   flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-6);
-  background: var(--cardBackground, #fff);
+  background: var(--cardBackground);
   border-radius: var(--radius-lg);
 }
 
@@ -116,7 +116,7 @@
 }
 
 .contacts-table tbody tr:nth-child(even) {
-  background: var(--themeBackground, #f8f9fb);
+  background: var(--themeBackground);
 }
 
 .contact-name { font-weight: 500; }
@@ -296,7 +296,7 @@
   transition: background var(--transition-fast);
 }
 
-.role-row:hover { background: var(--themeBackground, #f2f2f4); }
+.role-row:hover { background: var(--themeBackground); }
 
 .role-checkbox {
   width: 16px;

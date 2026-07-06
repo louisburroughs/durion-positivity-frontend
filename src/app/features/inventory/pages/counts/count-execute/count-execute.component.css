@@ -26,7 +26,7 @@
 
 .detail-grid dt {
   font-weight: 600;
-  color: var(--brand-secondary, var(--currentTextColor));
+  color: var(--brand-secondary);
   font-size: 0.85rem;
   opacity: 0.8;
   white-space: nowrap;
@@ -51,7 +51,7 @@
 }
 
 .field-hint {
-  color: var(--brand-secondary, var(--currentTextColor));
+  color: var(--brand-secondary);
   font-size: 0.8rem;
   opacity: 0.75;
   margin: 0.25rem 0 0;

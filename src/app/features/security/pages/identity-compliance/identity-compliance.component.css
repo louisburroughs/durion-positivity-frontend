@@ -135,7 +135,7 @@
 }
 
 .state-icon {
-  color: var(--status-success-fg, var(--brand-primary));
+  color: var(--status-success-fg);
   font-size: 2rem;
 }
 

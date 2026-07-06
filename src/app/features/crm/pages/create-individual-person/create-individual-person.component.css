@@ -95,7 +95,7 @@
 
 .field__input:focus {
   border-bottom-color: var(--durion-teal-400);
-  background: var(--cardBackground, #fff);
+  background: var(--cardBackground);
 }
 
 .field__input:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -140,7 +140,7 @@
 .btn--primary:hover:not(:disabled) { background: var(--durion-teal-500); }
 
 .btn--secondary {
-  background: var(--primary50, var(--brand-primary-soft)); color: var(--currentTextColor);
+  background: var(--primary50); color: var(--currentTextColor);
 }
 
 .btn--icon {
@@ -160,7 +160,7 @@
   gap: var(--space-4);
   padding: var(--space-8);
   text-align: center;
-  background: var(--cardBackground, #fff);
+  background: var(--cardBackground);
   border-radius: var(--radius-lg);
 }
 
@@ -182,7 +182,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  background: var(--themeBackground, #f2f2f4);
+  background: var(--themeBackground);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   flex-wrap: wrap;

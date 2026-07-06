@@ -1,23 +1,23 @@
 .estimate-list__search {
   max-width: 28rem;
-  margin-bottom: var(--space-4, 1rem);
+  margin-bottom: var(--space-4);
 }
 
 .estimate-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4, 1rem);
+  gap: var(--space-4);
   max-width: 1080px;
   margin: 0 auto;
-  padding: var(--space-6, 1.5rem) var(--space-4, 1rem);
-  background: color-mix(in srgb, var(--cardBackground, #fff) 82%, var(--themeBackground) 18%);
-  border-radius: var(--radius-lg, 16px);
+  padding: var(--space-6) var(--space-4);
+  background: color-mix(in srgb, var(--cardBackground) 82%, var(--themeBackground) 18%);
+  border-radius: var(--radius-lg);
 }
 
 .estimate-list__header h1 {
   margin: 0;
   color: var(--currentTextColor);
-  font-family: var(--font-primary, var(--font-body));
+  font-family: var(--font-primary);
   font-size: 1.5rem;
 }
 
@@ -25,14 +25,14 @@
   list-style: none;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4, 1rem);
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
 }
 
 .estimate-list__card {
-  background: color-mix(in srgb, var(--primary50, #f4f8fe) 55%, var(--cardBackground, #fff) 45%);
-  border-radius: var(--radius-md, 8px);
+  background: color-mix(in srgb, var(--primary50) 55%, var(--cardBackground) 45%);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
 }
 
@@ -44,13 +44,13 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-2, 0.5rem);
-  padding: var(--space-4, 1rem);
+  gap: var(--space-2);
+  padding: var(--space-4);
   text-align: left;
 }
 
 .estimate-list__card button:focus-visible {
-  outline: 2px solid var(--input-focus-border, var(--primaryA400));
+  outline: 2px solid var(--input-focus-border);
   outline-offset: 2px;
 }
 
@@ -63,16 +63,16 @@
   display: flex;
   width: 100%;
   justify-content: space-between;
-  gap: var(--space-3, 0.75rem);
+  gap: var(--space-3);
   color: var(--handleColor);
   font-size: 0.875rem;
 }
 
 .estimate-list__status-badge {
   display: inline-flex;
-  padding: var(--space-1, 0.25rem) var(--space-2, 0.5rem);
+  padding: var(--space-1) var(--space-2);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accentA100, #d7f3f0) 65%, transparent); color: var(--currentTextColor);
+  background: color-mix(in srgb, var(--accentA100) 65%, transparent); color: var(--currentTextColor);
   font-weight: 600;
 }
 
@@ -85,13 +85,13 @@
 
 .estimate-list__skeleton {
   display: grid;
-  gap: var(--space-3, 0.75rem);
+  gap: var(--space-3);
 }
 
 .estimate-list__skeleton-row {
   height: 5rem;
-  border-radius: var(--radius-md, 8px);
-  background: linear-gradient(90deg, var(--primary50, #f4f8fe), var(--cardBackground, #fff), var(--primary50, #f4f8fe));
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, var(--primary50), var(--cardBackground), var(--primary50));
   background-size: 200% 100%;
   animation: estimate-list-skeleton 1.2s ease-in-out infinite;
 }
@@ -102,8 +102,8 @@
 }
 
 .estimate-list__error {
-  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-  border-radius: var(--radius-md, 8px); color: var(--status-error-fg);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md); color: var(--status-error-fg);
   background: var(--status-error-bg);
 }
 

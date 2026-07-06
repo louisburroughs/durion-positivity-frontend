@@ -76,7 +76,7 @@
 }
 
 .loading-state {
-  color: var(--text-muted, inherit);
+  color: var(--text-muted);
 }
 
 .assignment-form {

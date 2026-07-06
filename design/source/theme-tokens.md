@@ -166,10 +166,14 @@ are caught by the stylelint guardrail. Use the sanctioned token instead:
 | `--radius-full` / `--radius-pill` | literal `9999px` |
 | `--text-lg` / `--text-xl` / `--font-display-sm` | explicit `rem` sizes |
 
-> **Fallbacks don't excuse drift.** `var(--undefined-name, #hex)` silently paints the light-theme
-> fallback in **both** themes — the classic "white text on white background in dark mode" bug.
-> The stylelint unknown-property rule only catches fallback-less usage, so the disallowed-list
-> above blocks the known drift names explicitly.
+> **`var()` fallbacks are banned outright** (stylelint enforces this). `src/styles.css` is the
+> sole render-blocking stylesheet — every token is on `:root` at first paint, SSR included — so
+> fallbacks are dead code. Worse, they are actively harmful: the unknown-custom-properties rule
+> skips any `var()` that carries a fallback, so `var(--undefined-name, #hex)` silently paints the
+> light-theme fallback in **both** themes — the classic "white text on white background in dark
+> mode" bug. Write bare `var(--token)`; if the token doesn't exist, define it in `styles.css`
+> (both themes) and document it here. The disallowed-list additionally blocks the known drift
+> names above so the lint message can point at the correct replacement.
 
 ## Usage Guidelines
 
