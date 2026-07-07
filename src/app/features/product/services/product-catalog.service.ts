@@ -122,13 +122,18 @@ export class ProductCatalogService {
       catchError(() => of(null)),
     );
     return forkJoin({ detail: detail$, msrp: msrp$ }).pipe(
-      map(({ detail, msrp }) => ({
-        ...summary,
-        lifecycleState: detail?.lifecycleState ?? '',
-        effectiveAt: detail?.lifecycleStateEffectiveAt ?? '',
-        msrp: msrp ? parseFloat(msrp.amount ?? '0') : null,
-        msrpCurrency: msrp?.currency ?? 'USD',
-      })),
+      map(({ detail, msrp }) => {
+        const amount = msrp ? Number.parseFloat(msrp.amount ?? '') : Number.NaN;
+        return {
+          ...summary,
+          lifecycleState: detail?.lifecycleState ?? '',
+          effectiveAt: detail?.lifecycleStateEffectiveAt ?? '',
+          // A missing or non-numeric amount degrades to null so the UI shows the
+          // empty-value placeholder rather than a misleading $0.00.
+          msrp: Number.isFinite(amount) ? amount : null,
+          msrpCurrency: msrp?.currency ?? 'USD',
+        };
+      }),
     );
   }
 
