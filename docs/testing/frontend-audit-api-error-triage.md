@@ -4,6 +4,65 @@ Triage of the `failed-api-request` / `console-error` findings from the
 durionpos.org site audit (see `frontend-audit-test-plan.md`,
 `artifacts/audit/error-pages.md`).
 
+## Post-#820 re-run (2026-07-07, full authenticated crawl): 4 High / 2 problem pages — all 500s cleared
+
+Re-ran `npm run audit:site` against durionpos.org after the people staffing /
+location-assignment 500s were fixed (backend
+[#820](https://github.com/louisburroughs/durion-positivity-backend/issues/820),
+which is where frontend #162 was transferred — now **closed/completed**).
+
+> Chromium hit `net::ERR_CONNECTION_RESET` on the first attempt while curl to
+> the same origin returned 200 — the egress proxy resets Chromium's TLS 1.3
+> ClientHello. Re-ran with `AUDIT_BROWSER_ARGS="--ssl-version-max=tls1.2"` (the
+> documented workaround in the test plan) and the crawl went through.
+
+**Result: 96 pages, 0 Critical, and zero API 5xx anywhere in the crawl**
+(verified in `report.json` — the only failed API requests are 404s, below).
+The previously-500ing surfaces are all healthy now:
+
+| Surface | Prior run | This run |
+|---|---|---|
+| `/app/accounting/posting-rules` | 500 | ✅ 200, no findings |
+| CRM party/detail cluster | 500/404 cluster | ✅ all 200, no findings |
+| People list / directory / employee detail | staffing 500s (#162/#820) | ✅ all 200, no findings |
+
+People coverage note: `/app/people/directory` loaded real data (the crawl
+harvested employee UUIDs from it) and both `/app/people/employees/{id}` detail
+pages audited clean — including `583fa3b3-d1bf-a40d-8e21-8cd54424d5d0`
+(admin.alpha), the exact id from #820's repro. The
+`/app/people/person/:personId/locations` template itself reports "no ids
+observed" (the crawler harvests `:id`, not `:personId`, from the directory), so
+that one route wasn't re-exercised by the crawl; but the whole people cluster
+it depends on returns 200 and #820 is closed, so the #162 error-state condition
+is gone.
+
+> Direct curl replay of the token from `.auth/state.json` is **not** a reliable
+> confirmation here: replayed/aged tokens hit the gateway's empty-`200` gotcha
+> (`HTTP 200`, `len=0`), which can't be distinguished from real success. The
+> in-browser crawl (token used in its live, silently-refreshing context) is the
+> authoritative signal, and it shows real bodies + zero 5xx.
+
+### Remaining findings (4 High + 1 Info) — no new defects
+
+Both surviving High rules are the **same** already-triaged, working-as-intended
+case, firing on two pages:
+
+- `/app/shopmgmt/dispatch-board` and `/app/shopmgmt/mechanics/availability` →
+  `GET /api/people/v1/people/me/primary-location` **404** (`failed-api-request`
+  High ×2) plus the browser's automatic "Failed to load resource: 404"
+  `console-error` (High ×2). This is
+  [#160](https://github.com/louisburroughs/durion-positivity-frontend/issues/160)
+  (closed, not-planned): admin.alpha has no primary-location assignment, the
+  page degrades gracefully to "select a location" (frontend PR #157), and the
+  console line is Chromium's own network log, not app code. Not a defect. To
+  clear it from the report entirely, run the audit with an account that **has**
+  a primary-location assignment, or add it to `accepted-findings.ts`.
+- Info ×1: `/app/security/audit-logs` `search-possibly-id-keyed` — already an
+  accepted finding (ROLE_ADMIN-only exact-id correlation lookup).
+
+Net: **backend #820 (= frontend #162) is confirmed resolved**; the audit is
+otherwise clean, with only the pre-existing #160 accepted case remaining.
+
 ## Post-backend re-triage (2026-07-07, authenticated probes)
 
 Re-probed after the second backend deploy, with a **fresh** audit token.
