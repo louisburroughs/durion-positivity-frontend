@@ -26,7 +26,9 @@ describe('BulkImportService', () => {
   let bulkLoadJobsServiceClass: typeof import('@durion-sdk/bulk-loader').BulkLoadJobsAPIService;
   let columnMappingServiceClass: typeof import('@durion-sdk/bulk-loader').ColumnMappingAPIService;
   let reviewQueueServiceClass: typeof import('@durion-sdk/bulk-loader').ReviewQueueAPIService;
+  let authServiceClass: typeof import('../../../core/services/auth.service').AuthService;
   const apiStub = { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() };
+  const authStub = { accessToken: vi.fn<() => string | null>(() => 'test-jwt') };
   const bulkLoadJobsStub = { createJob: vi.fn(), getJob: vi.fn(), listJobs: vi.fn(), cancelJob: vi.fn(), retryJob: vi.fn() };
   const columnMappingStub = { getMappings: vi.fn(), approveMappings: vi.fn() };
   const reviewQueueStub = { getAuditRecords: vi.fn(), downloadErrorReport: vi.fn(), submitCorrections: vi.fn() };
@@ -53,8 +55,11 @@ describe('BulkImportService', () => {
       },
     }));
 
+    authStub.accessToken.mockReset().mockReturnValue('test-jwt');
+
     ({ BulkImportService: bulkImportServiceClass } = await import('./bulk-import.service'));
     ({ ApiBaseService: apiBaseServiceToken } = await import('../../../core/services/api-base.service'));
+    ({ AuthService: authServiceClass } = await import('../../../core/services/auth.service'));
     ({
       BulkLoadJobsAPIService: bulkLoadJobsServiceClass,
       ColumnMappingAPIService: columnMappingServiceClass,
@@ -65,6 +70,7 @@ describe('BulkImportService', () => {
       providers: [
         bulkImportServiceClass,
         { provide: apiBaseServiceToken, useValue: apiStub },
+        { provide: authServiceClass, useValue: authStub },
         { provide: bulkLoadJobsServiceClass, useValue: bulkLoadJobsStub },
         { provide: columnMappingServiceClass, useValue: columnMappingStub },
         { provide: reviewQueueServiceClass, useValue: reviewQueueStub },
@@ -416,6 +422,36 @@ describe('BulkImportService', () => {
 
       expect(tusState.resumeFromPreviousUpload).toHaveBeenCalledWith({ uploadUrl: 'https://upload.example/files/abc' });
       expect(tusState.start).toHaveBeenCalled();
+    });
+
+    it('attaches the current JWT to every tus request via onBeforeRequest', () => {
+      const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
+      service.uploadFile('https://upload.example', file).subscribe();
+
+      const onBeforeRequest = tusState.instances[0].options['onBeforeRequest'] as
+        ((req: { setHeader(name: string, value: string): void }) => void);
+      const setHeader = vi.fn();
+      onBeforeRequest({ setHeader });
+
+      expect(setHeader).toHaveBeenCalledWith('Authorization', 'Bearer test-jwt');
+
+      // A refreshed token is picked up on the next request.
+      authStub.accessToken.mockReturnValue('refreshed-jwt');
+      onBeforeRequest({ setHeader });
+      expect(setHeader).toHaveBeenLastCalledWith('Authorization', 'Bearer refreshed-jwt');
+    });
+
+    it('sends no Authorization header when there is no token', () => {
+      authStub.accessToken.mockReturnValue(null);
+      const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
+      service.uploadFile('https://upload.example', file).subscribe();
+
+      const onBeforeRequest = tusState.instances[0].options['onBeforeRequest'] as
+        ((req: { setHeader(name: string, value: string): void }) => void);
+      const setHeader = vi.fn();
+      onBeforeRequest({ setHeader });
+
+      expect(setHeader).not.toHaveBeenCalled();
     });
 
     it('aborts upload on unsubscribe', () => {
