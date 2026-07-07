@@ -1,6 +1,6 @@
 import { provideAppInitializer, ApplicationConfig, provideBrowserGlobalErrorListeners, importProvidersFrom, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withNavigationErrorHandler } from '@angular/router';
 import { HttpClient, provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { firstValueFrom, Observable, of } from 'rxjs';
@@ -22,6 +22,7 @@ import { Configuration as ShopManagerConfiguration } from '@durion-sdk/shop-mana
 import { Configuration as WorkorderConfiguration } from '@durion-sdk/workorder';
 
 import { routes } from './app.routes';
+import { recoverFromChunkError } from './core/router/chunk-error-recovery';
 import { AuthService } from './core/services/auth.service';
 import { LocaleService } from './core/services/locale.service';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
@@ -61,7 +62,17 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAppInitializer(() => firstValueFrom(inject(AuthService).validateSessionOnResume())),
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withComponentInputBinding()),
+    provideRouter(
+      routes,
+      withComponentInputBinding(),
+      // Recover stale-tab lazy-chunk failures after a deploy by reloading the
+      // attempted URL (browser only; a no-op during SSR).
+      withNavigationErrorHandler(event => {
+        if (isPlatformBrowser(inject(PLATFORM_ID))) {
+          recoverFromChunkError(event);
+        }
+      }),
+    ),
     provideHttpClient(
       withFetch(),
       withInterceptors([authInterceptor]),
