@@ -4,6 +4,75 @@ Triage of the `failed-api-request` / `console-error` findings from the
 durionpos.org site audit (see `frontend-audit-test-plan.md`,
 `artifacts/audit/error-pages.md`).
 
+## Post-backend re-triage (2026-07-07, authenticated probes)
+
+Re-probed after the second backend deploy, with a **fresh** audit token.
+
+> ⚠️ **Gateway auth gotcha that misled the first pass.** An expired or
+> bad-signature bearer token makes the gateway return **`200` with an empty
+> body** (not `401`). During the 2026-07-06 pass the audit token had aged out,
+> so the CRM endpoints looked like empty-200s. With a freshly minted token
+> (re-run `playwright test --project=setup`), the picture below is the real
+> one. Missing token / structurally-invalid token → `401`; valid-structure
+> bad-signature token → `200` empty. (Worth a separate gateway hardening note.)
+
+| Endpoint | Now | Verdict |
+|---|---|---|
+| CRM party detail cluster (parties/{id}, communicationPreferences, commercial-accounts/{id}/contacts, snapshot/party/{id}, .../billing-rules) | **200 with real bodies** | ✅ **FIXED** — transferred to backend as durion-positivity-backend#818, closed |
+| `/api/people/v1/people/me/primary-location` | **404** `"No primary location assignment exists for requester on <date>"` | ✅ **working as intended** — admin.alpha has no primary location; frontend handles it (post-#157). #160 closed. |
+| `/api/people/v1/people/availability?locationId=<real>&date=…` | 200 | ✅ |
+| `/api/inventory/...` (sync-logs, locations, putaway, replenishment, cycleCountPlans) | 200 | ✅ |
+| `/api/accounting/v1/accounting/posting-rules` | 200 | ✅ |
+| `/api/location/v1/locations/{id}` (+`/defaults`) | 200 | ✅ (12:59Z crawl 404s were a mid-rollout transient) |
+| **people staffing / location-assignment query path** (below) | **500** | ❌ **new defect — #162** |
+
+**New defect — people staffing/location endpoints throw 500.** Uncovered while
+confirming #160. With a valid admin token, these all `500 Internal Server
+Error` (Spring problem+json), while sibling people endpoints are fine:
+
+| Endpoint | Status |
+|---|---|
+| `GET /v1/people/me` | **500** |
+| `GET /v1/people/me/locations` | **500** |
+| `GET /v1/people/{id}/locations` | **500** |
+| `GET /v1/people/{id}/primary-location` | **500** (note: `me/primary-location` correctly 404s — inconsistent) |
+| `GET /v1/people/staffing/assignments?personId={id}` | **500** |
+| `GET /v1/people/{id}/staffing/assignments` | **500** |
+| `GET /v1/people/{id}` | 200 ✅ |
+| `GET /v1/people/{id}/access/assignments` | 200 ✅ |
+| `GET /v1/people` (list) | 200 ✅ |
+
+Frontend impact: `/app/people/person/{personId}/locations`
+(person-location-assignments) calls `getAssignments1(personId)` →
+`/v1/people/staffing/assignments?personId=…`, which 500s, so the page shows its
+error state for every person. Tracked as
+[#162](https://github.com/louisburroughs/durion-positivity-frontend/issues/162).
+
+Related finding from the same investigation: stale pre-deploy tabs dead-click
+lazy-module nav links after a deploy —
+[#159](https://github.com/louisburroughs/durion-positivity-frontend/issues/159).
+
+### Post-deploy audit run (2026-07-07, fresh token): 12 High / 4 problem pages (was 33 / 12)
+
+The CRM cluster clearing dropped the count sharply. Remaining findings:
+
+- **uuid-on-screen ×4** — party-detail showed "Party ID: \<uuid\>",
+  location-defaults showed "Location ID: \<uuid\>". These only appeared *because*
+  the backend fix made the pages load real data. **Fixed on this branch**:
+  party-detail now shows the account/customer number (best-effort snapshot
+  fetch), location-defaults shows the location name·code.
+- **shopmgmt dispatch-board + mechanics/availability** — `me/primary-location`
+  404 (= #160, working as intended; admin.alpha has no primary location). The
+  `console-error` is the browser's automatic "Failed to load resource 404" log,
+  not app code — unavoidable while the user has no assignment. Not a defect.
+- **location detail 404** (`/app/location/locations/01960001-…/{,defaults}`) —
+  the crawler harvested locationId `01960001-…` from some record, but the real
+  locations are all `01960003-…`, so it's a **dangling location reference** in
+  seed data (some entity points at a location that doesn't exist). Backend/data
+  hygiene, low priority; the page shows its error state correctly. Not filed.
+
+---
+
 Ground truth for endpoint paths is the **`@durion-sdk/*`** packages (the
 generated gateway client) plus the per-module `AccountingConfiguration`-style
 basePaths wired in `src/app/app.config.ts`. Where the SDK does not model an

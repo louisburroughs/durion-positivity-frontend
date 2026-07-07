@@ -27,6 +27,7 @@ export class LocationDefaultsPageComponent {
   private readonly formStateTick = signal(0);
 
   readonly locationId = signal('');
+  readonly locationLabel = signal('');
   readonly siteDefaults = signal<Record<string, unknown> | null>(null);
   readonly storageLocations = signal<unknown[]>([]);
   readonly loading = signal(false);
@@ -65,11 +66,13 @@ export class LocationDefaultsPageComponent {
       .subscribe(params => {
         const routeLocationId = String(params['locationId'] ?? '');
         this.locationId.set(routeLocationId);
+        this.locationLabel.set('');
         if (!routeLocationId) {
           this.siteDefaults.set(null);
           this.storageLocations.set([]);
           return;
         }
+        this.loadLocationLabel();
         this.loadDefaults();
         this.loadStorageLocations();
       });
@@ -84,6 +87,36 @@ export class LocationDefaultsPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.formStateTick.update(v => v + 1);
+      });
+  }
+
+  // Human-readable label for the location so the page never publishes the raw
+  // UUID on screen (UI rule). If the lookup fails (e.g. a dangling id) the label
+  // stays empty and the header simply omits the identifier — the raw id is never
+  // shown as a fallback. Guarded against out-of-order responses on rapid nav.
+  private loadLocationLabel(): void {
+    const locationId = this.locationId();
+    if (!locationId) {
+      return;
+    }
+    this.locationService.getLocationById(locationId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (location) => {
+          if (this.locationId() !== locationId) {
+            return; // route changed while this request was in flight
+          }
+          const rec = this.toRecord(location);
+          const name = rec?.['name'];
+          const code = rec?.['code'];
+          const label = [name, code].filter(v => typeof v === 'string' && v.trim()).join(' · ');
+          this.locationLabel.set(label);
+        },
+        error: () => {
+          if (this.locationId() === locationId) {
+            this.locationLabel.set('');
+          }
+        },
       });
   }
 

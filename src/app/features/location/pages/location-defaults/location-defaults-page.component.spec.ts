@@ -18,6 +18,7 @@ const STORAGE_LOCATIONS = [
 ];
 
 const stubLocationService = {
+  getLocationById: vi.fn(),
   getLocationDefaults: vi.fn(),
   listStorageLocations: vi.fn(),
   configureLocationDefaults: vi.fn(),
@@ -34,6 +35,9 @@ describe('LocationDefaultsPageComponent [CAP-214 #102]', () => {
 
   const setup = async (options: SetupOptions = {}) => {
     vi.clearAllMocks();
+    stubLocationService.getLocationById.mockReturnValue(
+      of({ id: 'LOC-001', name: 'Charlotte Hub', code: 'CLT-01' }),
+    );
     stubLocationService.getLocationDefaults.mockReturnValue(
       options.defaultsResult ?? of(DEFAULTS),
     );
@@ -66,11 +70,14 @@ describe('LocationDefaultsPageComponent [CAP-214 #102]', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should display location ID from route param', async () => {
+  it('resolves the location from the route param and shows a human-readable label', async () => {
     await setup();
     expect(component.locationId()).toBe('LOC-001');
-    const el = fixture.debugElement.query(By.css('[data-testid="location-id"]'));
-    expect(el.nativeElement.textContent.trim()).toBe('LOC-001');
+    expect(stubLocationService.getLocationById).toHaveBeenCalledWith('LOC-001');
+    const el = fixture.debugElement.query(By.css('[data-testid="location-label"]'));
+    expect(el.nativeElement.textContent.trim()).toBe('Charlotte Hub · CLT-01');
+    // The raw location UUID must not be published on screen (UI rule).
+    expect(fixture.nativeElement.textContent).not.toContain('LOC-001');
   });
 
   it('should load defaults and storage locations on init', async () => {

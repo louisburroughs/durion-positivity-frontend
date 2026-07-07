@@ -32,6 +32,10 @@ export class PartyDetailComponent implements OnInit {
   // ── Party ───────────────────────────────────────────────────────────────
   readonly partyState  = signal<SectionState>('loading');
   readonly party       = signal<PartyDetail | null>(null);
+  // Human-readable account number so we never publish the raw partyId UUID on
+  // screen (UI rule). The party detail endpoint omits it; the snapshot's
+  // account block carries it, so we fetch it best-effort.
+  readonly customerNumber = signal('');
 
   // ── Contacts ─────────────────────────────────────────────────────────
   readonly contactsState = signal<SectionState>('loading');
@@ -52,10 +56,37 @@ export class PartyDetailComponent implements OnInit {
     return this.route.snapshot.paramMap.get('partyId') ?? '';
   }
 
+  // Customer number passed via router state when navigating from the customer
+  // list (captured at construction, before the navigation settles).
+  private readonly passedCustomerNumber =
+    this.router.getCurrentNavigation()?.extras.state?.['customerNumber'];
+
   ngOnInit(): void {
     this.loadParty();
     this.loadContacts();
     this.loadPrefs();
+    this.loadCustomerNumber();
+  }
+
+  // Human-readable account number for the header (UI rule: no raw UUID on
+  // screen). Prefer the value carried from the browse row; only on direct
+  // navigation / refresh do we fall back to a best-effort snapshot fetch. The
+  // h1 name still identifies the party if neither is available.
+  private loadCustomerNumber(): void {
+    if (typeof this.passedCustomerNumber === 'string' && this.passedCustomerNumber) {
+      this.customerNumber.set(this.passedCustomerNumber);
+      return;
+    }
+    this.crm.fetchByParty(this.partyId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: snapshot => {
+        // The snapshot's account block is AccountSummary at runtime
+        // (`accountNumber`), though the local model still types it as PartyDetail.
+        const account = (snapshot?.account ?? {}) as Record<string, unknown>;
+        const number = account['accountNumber'] ?? account['customerNumber'];
+        this.customerNumber.set(typeof number === 'string' ? number : '');
+      },
+      error: () => this.customerNumber.set(''),
+    });
   }
 
   // ── Load party ─────────────────────────────────────────────────────────

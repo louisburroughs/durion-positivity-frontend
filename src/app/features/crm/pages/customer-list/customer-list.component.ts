@@ -134,8 +134,11 @@ export class CustomerListComponent implements OnInit {
     return party.primaryContact?.name ? party.primaryContact : undefined;
   }
 
-  openParty(partyId: string): void {
-    this.router.navigate(['/app/crm/party', partyId]);
+  openParty(partyId: string, customerNumber?: string): void {
+    // Carry the human-readable customer number so the detail page can show it
+    // without re-fetching (the party detail endpoint omits it). Falls back to a
+    // snapshot fetch on direct navigation / refresh where no state is passed.
+    this.router.navigate(['/app/crm/party', partyId], { state: { customerNumber } });
   }
 
   createCommercial(): void {
