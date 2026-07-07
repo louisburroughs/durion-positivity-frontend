@@ -2048,7 +2048,8 @@
         "NAME": "Nom",
         "CATEGORY": "Catégorie",
         "STATUS": "Statut",
-        "MSRP": "PDSF"
+        "MSRP": "PDSF",
+        "EFFECTIVE_AT": "Date d'entrée en vigueur"
       },
       "ACTION": {
         "NEW_PRODUCT": "Nouveau produit"
@@ -4757,7 +4758,10 @@
     "RECEIVED": "Reçu",
     "OVER_RECEIVED": "Sur-réception",
     "NOT_RECEIVABLE": "Non réceptionnable",
-    "REQUIRES_LOCATION_SELECTION": "En attente d'emplacement"
+    "REQUIRES_LOCATION_SELECTION": "En attente d'emplacement",
+    "ACTIVE": "Actif",
+    "INACTIVE": "Inactif",
+    "DISCONTINUED": "Abandonné"
   },
   "ADMIN": {
     "LANDING": {

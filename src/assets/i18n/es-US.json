@@ -2048,7 +2048,8 @@
         "NAME": "Nombre",
         "CATEGORY": "Categoría",
         "STATUS": "Estado",
-        "MSRP": "PVP"
+        "MSRP": "PVP",
+        "EFFECTIVE_AT": "Fecha de vigencia"
       },
       "ACTION": {
         "NEW_PRODUCT": "Nuevo producto"
@@ -4757,7 +4758,10 @@
     "RECEIVED": "Recibido",
     "OVER_RECEIVED": "Exceso de recepción",
     "NOT_RECEIVABLE": "No recibible",
-    "REQUIRES_LOCATION_SELECTION": "Esperando ubicación"
+    "REQUIRES_LOCATION_SELECTION": "Esperando ubicación",
+    "ACTIVE": "Activo",
+    "INACTIVE": "Inactivo",
+    "DISCONTINUED": "Descontinuado"
   },
   "ADMIN": {
     "LANDING": {

@@ -57,6 +57,7 @@
             <th>{{ 'PRODUCT.LIST.TABLE.CATEGORY' | translate }}</th>
             <th>{{ 'PRODUCT.LIST.TABLE.STATUS' | translate }}</th>
             <th>{{ 'PRODUCT.LIST.TABLE.MSRP' | translate }}</th>
+            <th>{{ 'PRODUCT.LIST.TABLE.EFFECTIVE_AT' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -66,14 +67,31 @@
             <td>{{ p.name }}</td>
             <td>{{ p.category }}</td>
             <td>
+              @if (p.lifecycleState) {
               <span class="badge" [class.badge--success]="p.lifecycleState === 'ACTIVE'"
                 [class.badge--neutral]="p.lifecycleState === 'INACTIVE'"
                 [class.badge--error]="p.lifecycleState === 'DISCONTINUED'"
                 [class.badge--warning]="p.lifecycleState !== 'ACTIVE' && p.lifecycleState !== 'INACTIVE' && p.lifecycleState !== 'DISCONTINUED'">
                 {{ 'STATUS.' + p.lifecycleState | translate }}
               </span>
+              } @else {
+              <span class="muted">{{ 'COMMON.EMPTY_VALUE' | translate }}</span>
+              }
             </td>
-            <td>{{ p.msrp ?? 0 | currency:'USD':'symbol':'1.2-2' }}</td>
+            <td>
+              @if (p.msrp !== null) {
+              {{ p.msrp | currency:(p.msrpCurrency || 'USD'):'symbol':'1.2-2' }}
+              } @else {
+              <span class="muted">{{ 'COMMON.EMPTY_VALUE' | translate }}</span>
+              }
+            </td>
+            <td>
+              @if (p.effectiveAt) {
+              {{ p.effectiveAt | date:'mediumDate' }}
+              } @else {
+              <span class="muted">{{ 'COMMON.EMPTY_VALUE' | translate }}</span>
+              }
+            </td>
           </tr>
           }
         </tbody>

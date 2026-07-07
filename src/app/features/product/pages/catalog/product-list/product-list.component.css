@@ -123,6 +123,11 @@
   outline-offset: -2px;
 }
 
+.muted {
+  color: var(--currentTextColor);
+  opacity: 0.6;
+}
+
 .badge {
   border-radius: 999px;
   display: inline-flex;

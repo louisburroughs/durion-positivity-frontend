@@ -2048,7 +2048,8 @@
         "NAME": "Name",
         "CATEGORY": "Category",
         "STATUS": "Status",
-        "MSRP": "MSRP"
+        "MSRP": "MSRP",
+        "EFFECTIVE_AT": "Effective date"
       },
       "ACTION": {
         "NEW_PRODUCT": "New product"
@@ -4757,7 +4758,10 @@
     "RECEIVED": "Received",
     "OVER_RECEIVED": "Over-received",
     "NOT_RECEIVABLE": "Not receivable",
-    "REQUIRES_LOCATION_SELECTION": "Awaiting Location"
+    "REQUIRES_LOCATION_SELECTION": "Awaiting Location",
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "DISCONTINUED": "Discontinued"
   },
   "ADMIN": {
     "LANDING": {
