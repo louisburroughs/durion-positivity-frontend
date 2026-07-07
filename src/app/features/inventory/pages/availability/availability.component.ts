@@ -48,7 +48,7 @@ export class AvailabilityComponent {
         if (!q.trim()) return of({ data: [] });
         return this.productsApi.searchProducts(
           q, undefined, undefined, undefined, undefined, String(MAX_SUGGESTIONS),
-          'body', false, { transferCache: false },
+          undefined, 'body', false, { transferCache: false },
         ).pipe(catchError(() => of({ data: [] })));
       }),
       takeUntilDestroyed(this.destroyRef),

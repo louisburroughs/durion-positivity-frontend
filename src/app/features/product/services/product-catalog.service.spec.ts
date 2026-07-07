@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import {
   ProductsAPIService,
   ItemCostAPIService,
@@ -8,13 +8,9 @@ import {
   SupplierItemCostAPIService,
   SupplierItemCostListAPIService,
   ProductMSRPAPIService,
-  ProductDtoLifecycleStateEnum,
+  ProductSummaryLifecycleStateEnum,
 } from '@durion-sdk/catalog';
-import type {
-  CatalogSearchResultDto,
-  ProductDto,
-  ProductMsrpDto,
-} from '@durion-sdk/catalog';
+import type { CatalogSearchResultDto } from '@durion-sdk/catalog';
 import { ProductCatalogService } from './product-catalog.service';
 import type { Product, ProductSummary, LifecycleStateTransition } from '../models/product.models';
 import type { GuardrailPolicy, LocationPriceOverride } from '../models/pricing.models';
@@ -89,36 +85,34 @@ describe('ProductCatalogService', () => {
   // ── searchProductsDetailed() ──────────────────────────────────────────────────
 
   describe('searchProductsDetailed()', () => {
-    const oneRowSearch: CatalogSearchResultDto = {
-      data: [{ productId: 'p1', sku: 'SKU-001', name: 'Widget', category: 'Parts' }],
-      limit: 20,
-    };
-
-    it('enriches each summary with lifecycle state, effective date, and active MSRP', () => {
-      const detail: ProductDto = {
-        id: 'p1',
-        name: 'Widget',
-        lifecycleState: ProductDtoLifecycleStateEnum.Active,
-        lifecycleStateEffectiveAt: '2026-01-01T00:00:00Z',
+    it('requests detailed=true and maps inline lifecycle + MSRP fields in a single call', () => {
+      const searchResult: CatalogSearchResultDto = {
+        data: [
+          {
+            productId: 'p1',
+            sku: 'SKU-001',
+            name: 'Widget',
+            category: 'Parts',
+            lifecycleState: ProductSummaryLifecycleStateEnum.Active,
+            lifecycleStateEffectiveAt: '2026-01-01T00:00:00Z',
+            msrpAmount: '9.99',
+            msrpCurrency: 'USD',
+          },
+        ],
+        limit: 20,
       };
-      const activeMsrp: ProductMsrpDto = {
-        msrpId: 'm1',
-        productId: 'p1',
-        amount: '9.99',
-        currency: 'USD',
-        effectiveStartDate: '2026-01-01',
-        createdAt: '2026-01-01T00:00:00Z',
-        version: 0,
-      };
-      productsSdkStub.searchProducts.mockReturnValueOnce(of(oneRowSearch));
-      productsSdkStub.getProductById.mockReturnValueOnce(of(detail));
-      msrpSdkStub.getActiveMsrp.mockReturnValueOnce(of(activeMsrp));
+      productsSdkStub.searchProducts.mockReturnValueOnce(of(searchResult));
 
       let result: ProductSummary[] | undefined;
       service.searchProductsDetailed('widget').subscribe(r => (result = r));
 
-      expect(productsSdkStub.getProductById).toHaveBeenCalledWith('p1');
-      expect(msrpSdkStub.getActiveMsrp).toHaveBeenCalledWith('p1');
+      // detailed flag is the 7th positional arg of the SDK searchProducts signature
+      expect(productsSdkStub.searchProducts).toHaveBeenCalledWith(
+        'widget', undefined, undefined, undefined, undefined, undefined, true,
+      );
+      // no per-row enrichment fan-out
+      expect(productsSdkStub.getProductById).not.toHaveBeenCalled();
+      expect(msrpSdkStub.getActiveMsrp).not.toHaveBeenCalled();
       expect(result?.[0]).toMatchObject({
         id: 'p1',
         lifecycleState: 'ACTIVE',
@@ -128,15 +122,20 @@ describe('ProductCatalogService', () => {
       });
     });
 
-    it('degrades gracefully when a product has no active MSRP', () => {
-      const detail: ProductDto = {
-        id: 'p1',
-        name: 'Widget',
-        lifecycleState: ProductDtoLifecycleStateEnum.Active,
+    it('maps a row with no active MSRP to a null price', () => {
+      const searchResult: CatalogSearchResultDto = {
+        data: [
+          {
+            productId: 'p1',
+            sku: 'SKU-001',
+            name: 'Widget',
+            category: 'Parts',
+            lifecycleState: ProductSummaryLifecycleStateEnum.Active,
+          },
+        ],
+        limit: 20,
       };
-      productsSdkStub.searchProducts.mockReturnValueOnce(of(oneRowSearch));
-      productsSdkStub.getProductById.mockReturnValueOnce(of(detail));
-      msrpSdkStub.getActiveMsrp.mockReturnValueOnce(throwError(() => new Error('404')));
+      productsSdkStub.searchProducts.mockReturnValueOnce(of(searchResult));
 
       let result: ProductSummary[] | undefined;
       service.searchProductsDetailed('widget').subscribe(r => (result = r));
@@ -145,19 +144,13 @@ describe('ProductCatalogService', () => {
     });
 
     it('treats a blank or non-numeric MSRP amount as null, not $0', () => {
-      const detail: ProductDto = { id: 'p1', name: 'Widget', lifecycleState: ProductDtoLifecycleStateEnum.Active };
-      const blankMsrp: ProductMsrpDto = {
-        msrpId: 'm1',
-        productId: 'p1',
-        amount: '',
-        currency: 'USD',
-        effectiveStartDate: '2026-01-01',
-        createdAt: '2026-01-01T00:00:00Z',
-        version: 0,
+      const searchResult: CatalogSearchResultDto = {
+        data: [
+          { productId: 'p1', sku: 'SKU-001', name: 'Widget', category: 'Parts', msrpAmount: '', msrpCurrency: 'USD' },
+        ],
+        limit: 20,
       };
-      productsSdkStub.searchProducts.mockReturnValueOnce(of(oneRowSearch));
-      productsSdkStub.getProductById.mockReturnValueOnce(of(detail));
-      msrpSdkStub.getActiveMsrp.mockReturnValueOnce(of(blankMsrp));
+      productsSdkStub.searchProducts.mockReturnValueOnce(of(searchResult));
 
       let result: ProductSummary[] | undefined;
       service.searchProductsDetailed('widget').subscribe(r => (result = r));
@@ -165,7 +158,7 @@ describe('ProductCatalogService', () => {
       expect(result?.[0].msrp).toBeNull();
     });
 
-    it('returns an empty array without enrichment calls when search yields nothing', () => {
+    it('returns an empty array when search yields nothing', () => {
       const emptySearch: CatalogSearchResultDto = { data: [], limit: 20 };
       productsSdkStub.searchProducts.mockReturnValueOnce(of(emptySearch));
 
@@ -173,8 +166,6 @@ describe('ProductCatalogService', () => {
       service.searchProductsDetailed('widget').subscribe(r => (result = r));
 
       expect(result).toEqual([]);
-      expect(productsSdkStub.getProductById).not.toHaveBeenCalled();
-      expect(msrpSdkStub.getActiveMsrp).not.toHaveBeenCalled();
     });
   });
 
