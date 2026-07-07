@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, forkJoin, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import {
   ProductsAPIService,
   ItemCostAPIService,
@@ -92,6 +92,43 @@ export class ProductCatalogService {
   searchProducts(query: string): Observable<ProductSummary[]> {
     return this.productsSdk.searchProducts(query).pipe(
       map((result: CatalogSearchResultDto) => (result.data ?? []).map(s => this.toProductSummary(s))),
+    );
+  }
+
+  /**
+   * Search results enriched with lifecycle state, effective date, and active MSRP.
+   *
+   * The search endpoint returns lean summaries (no status/price), so each row is
+   * enriched with `getProductById` + `getActiveMsrp`. This is an N+1 fan-out; the
+   * per-row lookups are individually guarded so a single failure (e.g. a product
+   * with no MSRP on file) degrades that field to a default rather than failing the
+   * whole list.
+   */
+  searchProductsDetailed(query: string): Observable<ProductSummary[]> {
+    return this.searchProducts(query).pipe(
+      switchMap(summaries =>
+        summaries.length === 0
+          ? of<ProductSummary[]>([])
+          : forkJoin(summaries.map(summary => this.enrichProductSummary(summary))),
+      ),
+    );
+  }
+
+  private enrichProductSummary(summary: ProductSummary): Observable<ProductSummary> {
+    const detail$ = this.productsSdk.getProductById(summary.id).pipe(
+      catchError(() => of(null)),
+    );
+    const msrp$ = this.msrpSdk.getActiveMsrp(summary.id).pipe(
+      catchError(() => of(null)),
+    );
+    return forkJoin({ detail: detail$, msrp: msrp$ }).pipe(
+      map(({ detail, msrp }) => ({
+        ...summary,
+        lifecycleState: detail?.lifecycleState ?? '',
+        effectiveAt: detail?.lifecycleStateEffectiveAt ?? '',
+        msrp: msrp ? parseFloat(msrp.amount ?? '0') : null,
+        msrpCurrency: msrp?.currency ?? 'USD',
+      })),
     );
   }
 
@@ -386,6 +423,8 @@ export class ProductCatalogService {
       category: dto.category ?? '',
       lifecycleState: '',
       msrp: null,
+      msrpCurrency: 'USD',
+      effectiveAt: '',
     };
   }
 

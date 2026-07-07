@@ -17,6 +17,8 @@ export interface ProductSummary {
   category: string;
   lifecycleState: string;
   msrp: number | null;
+  msrpCurrency: string;
+  effectiveAt: string;
 }
 
 export interface ServiceSummary {

@@ -11,14 +11,14 @@ describe('ProductListComponent', () => {
   let component: ProductListComponent;
 
   const mockCatalog = {
-    searchProducts: vi.fn().mockReturnValue(of([])),
+    searchProductsDetailed: vi.fn().mockReturnValue(of([])),
     createProduct: vi.fn().mockReturnValue(of({})),
     getProductById: vi.fn().mockReturnValue(of({})),
   };
 
   const sampleProducts = [
-    { id: 'p1', sku: 'SKU-001', name: 'Widget A', category: 'Parts', lifecycleState: 'ACTIVE', msrp: null },
-    { id: 'p2', sku: 'SKU-002', name: 'Widget B', category: 'Parts', lifecycleState: 'ACTIVE', msrp: 9.99 },
+    { id: 'p1', sku: 'SKU-001', name: 'Widget A', category: 'Parts', lifecycleState: 'ACTIVE', msrp: null, msrpCurrency: 'USD', effectiveAt: '' },
+    { id: 'p2', sku: 'SKU-002', name: 'Widget B', category: 'Parts', lifecycleState: 'ACTIVE', msrp: 9.99, msrpCurrency: 'USD', effectiveAt: '2026-01-01T00:00:00Z' },
   ];
 
   beforeEach(async () => {
@@ -52,7 +52,7 @@ describe('ProductListComponent', () => {
 
   it('transitions to "loading" when a non-empty query is submitted', fakeAsync(() => {
     const pending$ = new Subject<ProductSummary[]>();
-    mockCatalog.searchProducts.mockReturnValue(pending$);
+    mockCatalog.searchProductsDetailed.mockReturnValue(pending$);
 
     component.query.set('widget');
     component.search();
@@ -65,7 +65,7 @@ describe('ProductListComponent', () => {
   // ── State: ready ──────────────────────────────────────────────────────────────
 
   it('transitions to "ready" when service returns non-empty results', fakeAsync(() => {
-    mockCatalog.searchProducts.mockReturnValue(of(sampleProducts));
+    mockCatalog.searchProductsDetailed.mockReturnValue(of(sampleProducts));
 
     component.query.set('widget');
     component.search();
@@ -78,7 +78,7 @@ describe('ProductListComponent', () => {
   // ── State: empty ──────────────────────────────────────────────────────────────
 
   it('transitions to "empty" when service returns an empty array', fakeAsync(() => {
-    mockCatalog.searchProducts.mockReturnValue(of([]));
+    mockCatalog.searchProductsDetailed.mockReturnValue(of([]));
 
     component.query.set('noresults');
     component.search();
@@ -91,7 +91,7 @@ describe('ProductListComponent', () => {
   // ── State: error ──────────────────────────────────────────────────────────────
 
   it('transitions to "error" when service throws', fakeAsync(() => {
-    mockCatalog.searchProducts.mockReturnValue(throwError(() => new Error('network error')));
+    mockCatalog.searchProductsDetailed.mockReturnValue(throwError(() => new Error('network error')));
 
     component.query.set('widget');
     component.search();
@@ -104,7 +104,7 @@ describe('ProductListComponent', () => {
   // ── Back to idle ──────────────────────────────────────────────────────────────
 
   it('resets to "idle" when query is cleared after a prior search', fakeAsync(() => {
-    mockCatalog.searchProducts.mockReturnValue(of(sampleProducts));
+    mockCatalog.searchProductsDetailed.mockReturnValue(of(sampleProducts));
     component.query.set('widget');
     component.search();
     tick(300);

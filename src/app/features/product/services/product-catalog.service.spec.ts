@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import {
   ProductsAPIService,
   ItemCostAPIService,
@@ -77,6 +77,57 @@ describe('ProductCatalogService', () => {
       service.searchProducts('widget').subscribe(r => (result = r));
 
       expect(result?.length).toBe(1);
+    });
+  });
+
+  // ── searchProductsDetailed() ──────────────────────────────────────────────────
+
+  describe('searchProductsDetailed()', () => {
+    it('enriches each summary with lifecycle state, effective date, and active MSRP', () => {
+      productsSdkStub.searchProducts.mockReturnValueOnce(
+        of({ data: [{ productId: 'p1', sku: 'SKU-001', name: 'Widget', category: 'Parts' }] }),
+      );
+      productsSdkStub.getProductById.mockReturnValueOnce(
+        of({ lifecycleState: 'ACTIVE', lifecycleStateEffectiveAt: '2026-01-01T00:00:00Z' }),
+      );
+      msrpSdkStub.getActiveMsrp.mockReturnValueOnce(of({ amount: '9.99', currency: 'USD' }));
+
+      let result: ProductSummary[] | undefined;
+      service.searchProductsDetailed('widget').subscribe(r => (result = r));
+
+      expect(productsSdkStub.getProductById).toHaveBeenCalledWith('p1');
+      expect(msrpSdkStub.getActiveMsrp).toHaveBeenCalledWith('p1');
+      expect(result?.[0]).toMatchObject({
+        id: 'p1',
+        lifecycleState: 'ACTIVE',
+        effectiveAt: '2026-01-01T00:00:00Z',
+        msrp: 9.99,
+        msrpCurrency: 'USD',
+      });
+    });
+
+    it('degrades gracefully when a product has no active MSRP', () => {
+      productsSdkStub.searchProducts.mockReturnValueOnce(
+        of({ data: [{ productId: 'p1', sku: 'SKU-001', name: 'Widget', category: 'Parts' }] }),
+      );
+      productsSdkStub.getProductById.mockReturnValueOnce(of({ lifecycleState: 'ACTIVE' }));
+      msrpSdkStub.getActiveMsrp.mockReturnValueOnce(throwError(() => new Error('404')));
+
+      let result: ProductSummary[] | undefined;
+      service.searchProductsDetailed('widget').subscribe(r => (result = r));
+
+      expect(result?.[0]).toMatchObject({ lifecycleState: 'ACTIVE', msrp: null, msrpCurrency: 'USD' });
+    });
+
+    it('returns an empty array without enrichment calls when search yields nothing', () => {
+      productsSdkStub.searchProducts.mockReturnValueOnce(of({ data: [] }));
+
+      let result: ProductSummary[] | undefined;
+      service.searchProductsDetailed('widget').subscribe(r => (result = r));
+
+      expect(result).toEqual([]);
+      expect(productsSdkStub.getProductById).not.toHaveBeenCalled();
+      expect(msrpSdkStub.getActiveMsrp).not.toHaveBeenCalled();
     });
   });
 

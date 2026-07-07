@@ -63,7 +63,7 @@ export class ProductListComponent {
     this.errorKey.set(null);
 
     this.productCatalog
-      .searchProducts(query)
+      .searchProductsDetailed(query)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: products => {
