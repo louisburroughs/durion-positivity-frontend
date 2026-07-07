@@ -483,6 +483,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
               undefined,
               undefined,
               String(MAX_SUGGESTIONS),
+              undefined,
               'body',
               false,
               { transferCache: false },

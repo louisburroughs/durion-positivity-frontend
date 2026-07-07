@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, forkJoin, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import {
   ProductsAPIService,
   ItemCostAPIService,
@@ -96,45 +96,18 @@ export class ProductCatalogService {
   }
 
   /**
-   * Search results enriched with lifecycle state, effective date, and active MSRP.
-   *
-   * The search endpoint returns lean summaries (no status/price), so each row is
-   * enriched with `getProductById` + `getActiveMsrp`. This is an N+1 fan-out; the
-   * per-row lookups are individually guarded so a single failure (e.g. a product
-   * with no MSRP on file) degrades that field to a default rather than failing the
-   * whole list.
+   * Search results enriched with lifecycle state, effective date, and active MSRP,
+   * resolved server-side in a single request via `detailed=true`. Rows without an
+   * active MSRP come back with null price fields.
    */
   searchProductsDetailed(query: string): Observable<ProductSummary[]> {
-    return this.searchProducts(query).pipe(
-      switchMap(summaries =>
-        summaries.length === 0
-          ? of<ProductSummary[]>([])
-          : forkJoin(summaries.map(summary => this.enrichProductSummary(summary))),
-      ),
-    );
-  }
-
-  private enrichProductSummary(summary: ProductSummary): Observable<ProductSummary> {
-    const detail$ = this.productsSdk.getProductById(summary.id).pipe(
-      catchError(() => of(null)),
-    );
-    const msrp$ = this.msrpSdk.getActiveMsrp(summary.id).pipe(
-      catchError(() => of(null)),
-    );
-    return forkJoin({ detail: detail$, msrp: msrp$ }).pipe(
-      map(({ detail, msrp }) => {
-        const amount = msrp ? Number.parseFloat(msrp.amount ?? '') : Number.NaN;
-        return {
-          ...summary,
-          lifecycleState: detail?.lifecycleState ?? '',
-          effectiveAt: detail?.lifecycleStateEffectiveAt ?? '',
-          // A missing or non-numeric amount degrades to null so the UI shows the
-          // empty-value placeholder rather than a misleading $0.00.
-          msrp: Number.isFinite(amount) ? amount : null,
-          msrpCurrency: msrp?.currency ?? 'USD',
-        };
-      }),
-    );
+    return this.productsSdk
+      .searchProducts(query, undefined, undefined, undefined, undefined, undefined, true)
+      .pipe(
+        map((result: CatalogSearchResultDto) =>
+          (result.data ?? []).map(s => this.toProductSummary(s)),
+        ),
+      );
   }
 
   searchServices(query: string): Observable<ServiceSummary[]> {
@@ -421,15 +394,20 @@ export class ProductCatalogService {
   // =========================================================================
 
   private toProductSummary(dto: SdkProductSummary): ProductSummary {
+    // Lifecycle/MSRP fields are only populated for detailed search (detailed=true);
+    // for lean search they are absent and fall through to the empty defaults.
+    const amount = dto.msrpAmount != null ? Number.parseFloat(dto.msrpAmount) : Number.NaN;
     return {
       id: dto.productId ?? '',
       name: dto.name ?? '',
       sku: dto.sku ?? '',
       category: dto.category ?? '',
-      lifecycleState: '',
-      msrp: null,
-      msrpCurrency: 'USD',
-      effectiveAt: '',
+      lifecycleState: dto.lifecycleState ?? '',
+      // A missing or non-numeric amount degrades to null so the UI shows the
+      // empty-value placeholder rather than a misleading $0.00.
+      msrp: Number.isFinite(amount) ? amount : null,
+      msrpCurrency: dto.msrpCurrency ?? 'USD',
+      effectiveAt: dto.lifecycleStateEffectiveAt ?? '',
     };
   }
 
