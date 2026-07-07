@@ -14,12 +14,7 @@ import { ThemeService } from '../../core/services/theme.service';
 export class LandingPageComponent {
   readonly localeService = inject(LocaleService);
   readonly themeService = inject(ThemeService);
-
-  readonly localeOptions = [
-    { code: 'en-US', labelKey: 'SHELL.HEADER.LOCALE.OPTION.EN_US' },
-    { code: 'es-US', labelKey: 'SHELL.HEADER.LOCALE.OPTION.ES_US' },
-    { code: 'fr-CA', labelKey: 'SHELL.HEADER.LOCALE.OPTION.FR_CA' },
-  ] as const;
+  readonly localeOptions = this.localeService.localeOptions;
 
   readonly features = [
     {

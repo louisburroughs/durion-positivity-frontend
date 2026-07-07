@@ -344,7 +344,9 @@ Translation is handled by **@ngx-translate/core**. Translation keys live in JSON
 | ----------------- | ---------------------------------------------------- |
 | English (US)      | `en-US.json`                                         |
 | Spanish (US)      | `es-US.json`                                         |
+| Spanish (Mexico)  | `es-MX.json`                                         |
 | French (Canadian) | `fr-CA.json`                                         |
+| French (France)   | `fr-FR.json`                                         |
 | Pseudo locale     | `qps-ploc.json` (generated; used for layout testing) |
 
 **Use `TranslatePipe` in every template** — hardcoded user-facing strings are a lint error.

@@ -3,7 +3,18 @@ import { isPlatformBrowser } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 
-const SUPPORTED_LOCALES = ['en-US', 'es-US', 'fr-CA'] as const;
+export const LOCALE_OPTIONS = [
+  { code: 'en-US', labelKey: 'SHELL.HEADER.LOCALE.OPTION.EN_US' },
+  { code: 'es-US', labelKey: 'SHELL.HEADER.LOCALE.OPTION.ES_US' },
+  { code: 'es-MX', labelKey: 'SHELL.HEADER.LOCALE.OPTION.ES_MX' },
+  { code: 'fr-CA', labelKey: 'SHELL.HEADER.LOCALE.OPTION.FR_CA' },
+  { code: 'fr-FR', labelKey: 'SHELL.HEADER.LOCALE.OPTION.FR_FR' },
+] as const;
+
+const SUPPORTED_LOCALES = LOCALE_OPTIONS.map((locale) => locale.code) as [
+  (typeof LOCALE_OPTIONS)[number]['code'],
+  ...(typeof LOCALE_OPTIONS)[number]['code'][],
+];
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
 @Injectable({ providedIn: 'root' })
@@ -14,6 +25,7 @@ export class LocaleService {
   private readonly defaultLocale: SupportedLocale = 'en-US';
 
   readonly supportedLocales = SUPPORTED_LOCALES;
+  readonly localeOptions = LOCALE_OPTIONS;
   readonly currentLocale = signal<SupportedLocale>(this.defaultLocale);
 
   async initialize(): Promise<void> {
