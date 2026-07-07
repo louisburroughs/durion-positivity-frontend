@@ -8,6 +8,7 @@ import {
 } from '@durion-sdk/bulk-loader';
 import type { AuditRecordResponse, BulkLoadJobCreateRequest, BulkLoadJobResponse } from '@durion-sdk/bulk-loader';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
 import {
   ACTIVE_JOB_STATUSES,
@@ -72,6 +73,7 @@ const API_TO_FRONTEND_DOMAIN_TYPE: Record<ApiDomainType, DomainType> = {
 @Injectable({ providedIn: 'root' })
 export class BulkImportService {
   private readonly api = inject(ApiBaseService);
+  private readonly auth = inject(AuthService);
   private readonly bulkLoadJobsService = inject(BulkLoadJobsAPIService);
   private readonly columnMappingService = inject(ColumnMappingAPIService);
   private readonly reviewQueueService = inject(ReviewQueueAPIService);
@@ -193,6 +195,15 @@ export class BulkImportService {
         },
         removeFingerprintOnSuccess: true,
         retryDelays: [0, 1000, 3000, 5000],
+        // tus-js-client issues its own XHRs, bypassing authInterceptor, so the
+        // gateway rejects /bulk-loader/** with 401 unless the JWT is attached
+        // here. Read the token per request so retries pick up a refreshed one.
+        onBeforeRequest: req => {
+          const token = this.auth.accessToken();
+          if (token) {
+            req.setHeader('Authorization', `Bearer ${token}`);
+          }
+        },
         onProgress: (bytesSent, bytesTotal) => {
           if (bytesTotal > 0) {
             observer.next(Math.round((bytesSent / bytesTotal) * 100));
