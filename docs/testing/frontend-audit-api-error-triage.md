@@ -4,43 +4,52 @@ Triage of the `failed-api-request` / `console-error` findings from the
 durionpos.org site audit (see `frontend-audit-test-plan.md`,
 `artifacts/audit/error-pages.md`).
 
-## Post-backend-PR-817 re-triage (2026-07-06, authenticated probes)
+## Post-backend re-triage (2026-07-07, authenticated probes)
 
-Everything below the line was re-probed after backend PR 817 deployed:
+Re-probed after the second backend deploy, with a **fresh** audit token.
 
-| Endpoint | Was | Now |
+> ⚠️ **Gateway auth gotcha that misled the first pass.** An expired or
+> bad-signature bearer token makes the gateway return **`200` with an empty
+> body** (not `401`). During the 2026-07-06 pass the audit token had aged out,
+> so the CRM endpoints looked like empty-200s. With a freshly minted token
+> (re-run `playwright test --project=setup`), the picture below is the real
+> one. Missing token / structurally-invalid token → `401`; valid-structure
+> bad-signature token → `200` empty. (Worth a separate gateway hardening note.)
+
+| Endpoint | Now | Verdict |
 |---|---|---|
-| `/api/people/v1/people/me/primary-location` | 404 | **UNSTABLE** ⚠️ — 200 at 12:58Z, 404×5 by 13:05Z (see #160) |
-| `/api/people/v1/people/availability?locationId=<real>&date=…` | 404 | **200** ✅ |
-| `/api/inventory/v1/inventory/sync-logs` | 404 | **200** ✅ |
-| `/api/accounting/v1/accounting/posting-rules` | 500 | **200** ✅ |
-| `/api/inventory/v1/inventory/locations` | 404 | **200** ✅ (empty dataset) |
-| `/api/inventory/v1/inventory/putaway/tasks` | 404 | **200** ✅ |
-| `/api/inventory/v1/inventory/replenishment/tasks` | 404 | **200** ✅ |
-| `/api/inventory/v1/inventory/cycleCountPlans` | 404 | **200** ✅ |
-| CRM party detail cluster (below) | 404 | **404 — still broken** ❌ |
-| `/api/location/v1/locations/{id}` (+`/defaults`) | n/a | 404 during the 12:59Z crawl, **200** on direct probes minutes later — mid-rollout transient, not a defect |
+| CRM party detail cluster (parties/{id}, communicationPreferences, commercial-accounts/{id}/contacts, snapshot/party/{id}, .../billing-rules) | **200 with real bodies** | ✅ **FIXED** — transferred to backend as durion-positivity-backend#818, closed |
+| `/api/people/v1/people/me/primary-location` | **404** `"No primary location assignment exists for requester on <date>"` | ✅ **working as intended** — admin.alpha has no primary location; frontend handles it (post-#157). #160 closed. |
+| `/api/people/v1/people/availability?locationId=<real>&date=…` | 200 | ✅ |
+| `/api/inventory/...` (sync-logs, locations, putaway, replenishment, cycleCountPlans) | 200 | ✅ |
+| `/api/accounting/v1/accounting/posting-rules` | 200 | ✅ |
+| `/api/location/v1/locations/{id}` (+`/defaults`) | 200 | ✅ (12:59Z crawl 404s were a mid-rollout transient) |
+| **people staffing / location-assignment query path** (below) | **500** | ❌ **new defect — #162** |
 
-**Remaining defect — CRM list/detail inconsistency (customer module).**
-`GET /api/customer/v1/crm/accounts/parties` returns 20 parties, but for those
-exact `partyId`s — ACTIVE and INACTIVE alike, PERSON type — every detail
-endpoint 404s:
+**New defect — people staffing/location endpoints throw 500.** Uncovered while
+confirming #160. With a valid admin token, these all `500 Internal Server
+Error` (Spring problem+json), while sibling people endpoints are fine:
 
-- `/v1/crm/accounts/parties/{partyId}` — Spring error body, `"path"` echoed
-- `/v1/crm/parties/{partyId}/communicationPreferences` — Spring error body
-- `/v1/crm/commercial-accounts/{partyId}/contacts` — Spring error body
-- `/v1/crm/snapshot/party/{partyId}` (+`/billing-rules`) — bodyless 404
+| Endpoint | Status |
+|---|---|
+| `GET /v1/people/me` | **500** |
+| `GET /v1/people/me/locations` | **500** |
+| `GET /v1/people/{id}/locations` | **500** |
+| `GET /v1/people/{id}/primary-location` | **500** (note: `me/primary-location` correctly 404s — inconsistent) |
+| `GET /v1/people/staffing/assignments?personId={id}` | **500** |
+| `GET /v1/people/{id}/staffing/assignments` | **500** |
+| `GET /v1/people/{id}` | 200 ✅ |
+| `GET /v1/people/{id}/access/assignments` | 200 ✅ |
+| `GET /v1/people` (list) | 200 ✅ |
 
-All paths are SDK-canonical (`@durion-sdk/customer`). The JSON error bodies
-show the customer service itself answering (not the gateway), so either the
-detail handlers query a store the list projection doesn't share, or the
-handlers aren't registered. Impact: the party-detail, contacts, billing-rules
-and CRM-snapshot pages render error/empty states for every real customer.
-Tracked as [#158](https://github.com/louisburroughs/durion-positivity-frontend/issues/158)
-(backend-owned; frontend already shows handled ADR-0031 error states).
+Frontend impact: `/app/people/person/{personId}/locations`
+(person-location-assignments) calls `getAssignments1(personId)` →
+`/v1/people/staffing/assignments?personId=…`, which 500s, so the page shows its
+error state for every person. Tracked as
+[#162](https://github.com/louisburroughs/durion-positivity-frontend/issues/162).
 
-Related finding from the same day's investigation: stale pre-deploy tabs
-dead-click lazy-module nav links after a deploy —
+Related finding from the same investigation: stale pre-deploy tabs dead-click
+lazy-module nav links after a deploy —
 [#159](https://github.com/louisburroughs/durion-positivity-frontend/issues/159).
 
 ---
