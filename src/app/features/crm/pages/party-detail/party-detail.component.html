@@ -33,8 +33,10 @@
         <p class="party-dba">DBA: {{ party()!.dba }}</p>
       }
       <dl class="party-meta">
-        <dt>Party ID</dt>
-        <dd><code>{{ party()!.partyId }}</code></dd>
+        @if (customerNumber(); as customerNo) {
+          <dt>Customer #</dt>
+          <dd data-testid="customer-number">{{ customerNo }}</dd>
+        }
         @if (party()!.taxId) {
           <dt>Tax ID</dt>
           <dd>{{ party()!.taxId }}</dd>

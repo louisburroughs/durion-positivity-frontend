@@ -1,7 +1,9 @@
 <main>
   <header class="page-header">
     <h1>Site Default Locations</h1>
-    <p>Location ID: <code data-testid="location-id">{{ locationId() }}</code></p>
+    @if (locationLabel(); as label) {
+    <p data-testid="location-label">{{ label }}</p>
+    }
   </header>
 
   @if (loading()) {

@@ -32,6 +32,10 @@ export class PartyDetailComponent implements OnInit {
   // ── Party ───────────────────────────────────────────────────────────────
   readonly partyState  = signal<SectionState>('loading');
   readonly party       = signal<PartyDetail | null>(null);
+  // Human-readable account number so we never publish the raw partyId UUID on
+  // screen (UI rule). The party detail endpoint omits it; the snapshot's
+  // account block carries it, so we fetch it best-effort.
+  readonly customerNumber = signal('');
 
   // ── Contacts ─────────────────────────────────────────────────────────
   readonly contactsState = signal<SectionState>('loading');
@@ -56,6 +60,20 @@ export class PartyDetailComponent implements OnInit {
     this.loadParty();
     this.loadContacts();
     this.loadPrefs();
+    this.loadCustomerNumber();
+  }
+
+  // Best-effort human-readable account number for the header (UI rule: no raw
+  // UUID on screen). Silent on failure — the h1 name still identifies the party.
+  private loadCustomerNumber(): void {
+    this.crm.fetchByParty(this.partyId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: snapshot => {
+        const account = (snapshot?.account ?? {}) as Record<string, unknown>;
+        const number = account['accountNumber'] ?? account['customerNumber'];
+        this.customerNumber.set(typeof number === 'string' ? number : '');
+      },
+      error: () => this.customerNumber.set(''),
+    });
   }
 
   // ── Load party ─────────────────────────────────────────────────────────
