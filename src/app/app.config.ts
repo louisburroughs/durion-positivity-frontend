@@ -1,6 +1,7 @@
 import { provideAppInitializer, ApplicationConfig, provideBrowserGlobalErrorListeners, importProvidersFrom, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { NavigationEnd, provideRouter, Router, withComponentInputBinding, withNavigationErrorHandler } from '@angular/router';
+import { filter, take } from 'rxjs/operators';
 import { HttpClient, provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { firstValueFrom, Observable, of } from 'rxjs';
@@ -22,6 +23,7 @@ import { Configuration as ShopManagerConfiguration } from '@durion-sdk/shop-mana
 import { Configuration as WorkorderConfiguration } from '@durion-sdk/workorder';
 
 import { routes } from './app.routes';
+import { clearChunkReloadGuard, recoverFromChunkError } from './core/router/chunk-error-recovery';
 import { AuthService } from './core/services/auth.service';
 import { LocaleService } from './core/services/locale.service';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
@@ -61,7 +63,26 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAppInitializer(() => firstValueFrom(inject(AuthService).validateSessionOnResume())),
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withComponentInputBinding()),
+    provideRouter(
+      routes,
+      withComponentInputBinding(),
+      // Recover stale-tab lazy-chunk failures after a deploy by reloading the
+      // attempted URL (browser only; a no-op during SSR).
+      withNavigationErrorHandler(event => {
+        if (isPlatformBrowser(inject(PLATFORM_ID))) {
+          recoverFromChunkError(event);
+        }
+      }),
+    ),
+    // Reset the chunk-reload budget once the app completes a navigation: a
+    // successful nav proves the tab is healthy, so the next stale-chunk click
+    // gets a fresh recovery attempt (see chunk-error-recovery.ts).
+    provideAppInitializer(() => {
+      if (!isPlatformBrowser(inject(PLATFORM_ID))) return;
+      inject(Router).events
+        .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd), take(1))
+        .subscribe(() => clearChunkReloadGuard());
+    }),
     provideHttpClient(
       withFetch(),
       withInterceptors([authInterceptor]),
