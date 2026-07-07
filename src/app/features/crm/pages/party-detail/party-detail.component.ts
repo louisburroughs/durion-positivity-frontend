@@ -56,6 +56,11 @@ export class PartyDetailComponent implements OnInit {
     return this.route.snapshot.paramMap.get('partyId') ?? '';
   }
 
+  // Customer number passed via router state when navigating from the customer
+  // list (captured at construction, before the navigation settles).
+  private readonly passedCustomerNumber =
+    this.router.getCurrentNavigation()?.extras.state?.['customerNumber'];
+
   ngOnInit(): void {
     this.loadParty();
     this.loadContacts();
@@ -63,11 +68,19 @@ export class PartyDetailComponent implements OnInit {
     this.loadCustomerNumber();
   }
 
-  // Best-effort human-readable account number for the header (UI rule: no raw
-  // UUID on screen). Silent on failure — the h1 name still identifies the party.
+  // Human-readable account number for the header (UI rule: no raw UUID on
+  // screen). Prefer the value carried from the browse row; only on direct
+  // navigation / refresh do we fall back to a best-effort snapshot fetch. The
+  // h1 name still identifies the party if neither is available.
   private loadCustomerNumber(): void {
+    if (typeof this.passedCustomerNumber === 'string' && this.passedCustomerNumber) {
+      this.customerNumber.set(this.passedCustomerNumber);
+      return;
+    }
     this.crm.fetchByParty(this.partyId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: snapshot => {
+        // The snapshot's account block is AccountSummary at runtime
+        // (`accountNumber`), though the local model still types it as PartyDetail.
         const account = (snapshot?.account ?? {}) as Record<string, unknown>;
         const number = account['accountNumber'] ?? account['customerNumber'];
         this.customerNumber.set(typeof number === 'string' ? number : '');

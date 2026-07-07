@@ -96,9 +96,9 @@
             @for (party of parties(); track party.partyId) {
               <tr class="party-row"
                   tabindex="0"
-                  (click)="openParty(party.partyId)"
-                  (keydown.enter)="openParty(party.partyId)"
-                  (keydown.space)="$event.preventDefault(); openParty(party.partyId)"
+                  (click)="openParty(party.partyId, party.customerNumber)"
+                  (keydown.enter)="openParty(party.partyId, party.customerNumber)"
+                  (keydown.space)="$event.preventDefault(); openParty(party.partyId, party.customerNumber)"
                   [attr.aria-label]="'Open party record for ' + party.legalName">
                 <td>
                   <span class="party-row__name">{{ party.legalName }}</span>

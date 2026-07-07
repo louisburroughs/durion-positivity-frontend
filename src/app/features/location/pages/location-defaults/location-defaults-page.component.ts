@@ -91,7 +91,9 @@ export class LocationDefaultsPageComponent {
   }
 
   // Human-readable label for the location so the page never publishes the raw
-  // UUID on screen (UI rule). Falls back silently to the id if the lookup fails.
+  // UUID on screen (UI rule). If the lookup fails (e.g. a dangling id) the label
+  // stays empty and the header simply omits the identifier — the raw id is never
+  // shown as a fallback. Guarded against out-of-order responses on rapid nav.
   private loadLocationLabel(): void {
     const locationId = this.locationId();
     if (!locationId) {
@@ -101,13 +103,20 @@ export class LocationDefaultsPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (location) => {
+          if (this.locationId() !== locationId) {
+            return; // route changed while this request was in flight
+          }
           const rec = this.toRecord(location);
           const name = rec?.['name'];
           const code = rec?.['code'];
           const label = [name, code].filter(v => typeof v === 'string' && v.trim()).join(' · ');
           this.locationLabel.set(label);
         },
-        error: () => this.locationLabel.set(''),
+        error: () => {
+          if (this.locationId() === locationId) {
+            this.locationLabel.set('');
+          }
+        },
       });
   }
 

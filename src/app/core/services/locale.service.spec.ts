@@ -1,5 +1,6 @@
 import '@angular/compiler';
-import { createEnvironmentInjector, PLATFORM_ID, runInInjectionContext } from '@angular/core';
+import { createEnvironmentInjector, EnvironmentInjector, PLATFORM_ID, runInInjectionContext } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { TranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -49,7 +50,7 @@ describe('LocaleService', () => {
     const injector = createEnvironmentInjector([
       { provide: PLATFORM_ID, useValue: 'browser' },
       { provide: TranslateService, useValue: translateService },
-    ], null);
+    ], TestBed.inject(EnvironmentInjector));
 
     service = runInInjectionContext(injector, () => new LocaleService());
   });
