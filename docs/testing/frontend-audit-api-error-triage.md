@@ -52,6 +52,25 @@ Related finding from the same investigation: stale pre-deploy tabs dead-click
 lazy-module nav links after a deploy —
 [#159](https://github.com/louisburroughs/durion-positivity-frontend/issues/159).
 
+### Post-deploy audit run (2026-07-07, fresh token): 12 High / 4 problem pages (was 33 / 12)
+
+The CRM cluster clearing dropped the count sharply. Remaining findings:
+
+- **uuid-on-screen ×4** — party-detail showed "Party ID: \<uuid\>",
+  location-defaults showed "Location ID: \<uuid\>". These only appeared *because*
+  the backend fix made the pages load real data. **Fixed on this branch**:
+  party-detail now shows the account/customer number (best-effort snapshot
+  fetch), location-defaults shows the location name·code.
+- **shopmgmt dispatch-board + mechanics/availability** — `me/primary-location`
+  404 (= #160, working as intended; admin.alpha has no primary location). The
+  `console-error` is the browser's automatic "Failed to load resource 404" log,
+  not app code — unavoidable while the user has no assignment. Not a defect.
+- **location detail 404** (`/app/location/locations/01960001-…/{,defaults}`) —
+  the crawler harvested locationId `01960001-…` from some record, but the real
+  locations are all `01960003-…`, so it's a **dangling location reference** in
+  seed data (some entity points at a location that doesn't exist). Backend/data
+  hygiene, low priority; the page shows its error state correctly. Not filed.
+
 ---
 
 Ground truth for endpoint paths is the **`@durion-sdk/*`** packages (the
