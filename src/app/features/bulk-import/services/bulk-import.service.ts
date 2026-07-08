@@ -241,9 +241,19 @@ export class BulkImportService {
           // entries without an absolute URL (persisted by builds that used a
           // relative endpoint) or the browser resolves them against the page
           // URL and the SPA fallback answers instead of the API.
-          const resumable = previousUploads.find(prev => URL.canParse(prev.uploadUrl ?? ''));
-          if (resumable) {
-            upload.resumeFromPreviousUpload(resumable);
+const endpointUrl = new URL(endpoint);
+const endpointPathPrefix = endpointUrl.pathname.endsWith('/') ? endpointUrl.pathname : `${endpointUrl.pathname}/`;
+const resumable = previousUploads.find(prev => {
+  try {
+    const url = new URL(prev.uploadUrl ?? '');
+    return url.origin === endpointUrl.origin && url.pathname.startsWith(endpointPathPrefix);
+  } catch {
+    return false;
+  }
+});
+if (resumable) {
+  upload.resumeFromPreviousUpload(resumable);
+}
           }
 
           upload.start();
