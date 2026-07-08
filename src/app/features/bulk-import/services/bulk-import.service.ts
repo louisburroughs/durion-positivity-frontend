@@ -188,8 +188,17 @@ export class BulkImportService {
    */
   uploadFile(uploadUrl: string, file: File): Observable<number> {
     return new Observable<number>(observer => {
+      // tus-js-client resolves the creation response's Location header via
+      // `new URL(location, endpoint)`, which throws when the endpoint is a
+      // bare path like `/api/...` and the backend sends a relative Location.
+      const endpoint = new URL(uploadUrl, window.location.origin).toString();
+
+      // Tracks whether the upload reached a terminal state (success/error) so
+      // the teardown below only terminates genuinely cancelled uploads.
+      let isSettled = false;
+
       const upload = new Upload(file, {
-        endpoint: uploadUrl,
+        endpoint,
         metadata: {
           filename: file.name,
         },
@@ -210,10 +219,12 @@ export class BulkImportService {
           }
         },
         onSuccess: () => {
+          isSettled = true;
           observer.next(100);
           observer.complete();
         },
         onError: error => {
+          isSettled = true;
           observer.error(error);
         },
       });
@@ -226,8 +237,9 @@ export class BulkImportService {
             return;
           }
 
-          if (previousUploads.length > 0) {
-            upload.resumeFromPreviousUpload(previousUploads[0]);
+          const resumable = previousUploads.find(prev => this.isTrustedUploadUrl(prev.uploadUrl));
+          if (resumable) {
+            upload.resumeFromPreviousUpload(resumable);
           }
 
           upload.start();
@@ -240,7 +252,14 @@ export class BulkImportService {
 
       return () => {
         isDisposed = true;
-        void upload.abort(true);
+        // Teardown also runs after complete/error; only an unsettled upload
+        // is a cancellation that should delete the partial upload server-side.
+        if (!isSettled) {
+          upload.abort(true).catch(() => {
+            // Best-effort cleanup; a failed DELETE must not become an
+            // unhandled rejection.
+          });
+        }
       };
     });
   }
@@ -300,6 +319,30 @@ export class BulkImportService {
 
   private buildTusUploadEndpoint(jobId: string): string {
     return `${environment.apiBaseUrl}/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/tus`;
+  }
+
+  /**
+   * Accepts only stored tus upload URLs on our API origin under the apiBaseUrl
+   * path. tus-js-client replays stored URLs verbatim and onBeforeRequest
+   * attaches the JWT to whatever URL it targets, so a foreign or relative URL
+   * persisted in localStorage must never be resumed. The check is anchored to
+   * apiBaseUrl (not the creation endpoint's full path) because the backend
+   * issues upload URLs under /bulk-loader/v1/tus/, outside the endpoint path.
+   */
+  private isTrustedUploadUrl(uploadUrl: string | null | undefined): boolean {
+    if (!uploadUrl) {
+      return false;
+    }
+
+    const apiBase = new URL(environment.apiBaseUrl, window.location.origin);
+    const apiPathPrefix = apiBase.pathname.endsWith('/') ? apiBase.pathname : `${apiBase.pathname}/`;
+
+    try {
+      const url = new URL(uploadUrl);
+      return url.origin === apiBase.origin && url.pathname.startsWith(apiPathPrefix);
+    } catch {
+      return false;
+    }
   }
 
   private toJobStatus(status: string): BulkLoadJob['status'] {
