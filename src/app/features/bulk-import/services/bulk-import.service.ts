@@ -188,8 +188,17 @@ export class BulkImportService {
    */
   uploadFile(uploadUrl: string, file: File): Observable<number> {
     return new Observable<number>(observer => {
+      // tus-js-client resolves the creation response's Location header via
+      // `new URL(location, endpoint)`, which throws when the endpoint is a
+      // bare path like `/api/...` and the backend sends a relative Location.
+      const endpoint = new URL(uploadUrl, window.location.origin).toString();
+
+      // Tracks whether the upload reached a terminal state (success/error) so
+      // the teardown below only terminates genuinely cancelled uploads.
+      let isSettled = false;
+
       const upload = new Upload(file, {
-        endpoint: uploadUrl,
+        endpoint,
         metadata: {
           filename: file.name,
         },
@@ -210,10 +219,12 @@ export class BulkImportService {
           }
         },
         onSuccess: () => {
+          isSettled = true;
           observer.next(100);
           observer.complete();
         },
         onError: error => {
+          isSettled = true;
           observer.error(error);
         },
       });
@@ -226,8 +237,13 @@ export class BulkImportService {
             return;
           }
 
-          if (previousUploads.length > 0) {
-            upload.resumeFromPreviousUpload(previousUploads[0]);
+          // Stored upload URLs are replayed verbatim by tus-js-client; skip
+          // entries without an absolute URL (persisted by builds that used a
+          // relative endpoint) or the browser resolves them against the page
+          // URL and the SPA fallback answers instead of the API.
+          const resumable = previousUploads.find(prev => URL.canParse(prev.uploadUrl ?? ''));
+          if (resumable) {
+            upload.resumeFromPreviousUpload(resumable);
           }
 
           upload.start();
@@ -240,7 +256,14 @@ export class BulkImportService {
 
       return () => {
         isDisposed = true;
-        void upload.abort(true);
+        // Teardown also runs after complete/error; only an unsettled upload
+        // is a cancellation that should delete the partial upload server-side.
+        if (!isSettled) {
+          upload.abort(true).catch(() => {
+            // Best-effort cleanup; a failed DELETE must not become an
+            // unhandled rejection.
+          });
+        }
       };
     });
   }

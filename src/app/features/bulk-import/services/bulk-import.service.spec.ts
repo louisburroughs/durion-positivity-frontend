@@ -406,15 +406,49 @@ describe('BulkImportService', () => {
       onSuccess();
 
       expect(instance.file).toBe(file);
-      expect(instance.options['endpoint']).toBe('https://upload.example');
+      expect(instance.options['endpoint']).toBe('https://upload.example/');
       expect(instance.options['metadata']).toEqual({ filename: 'test.csv' });
       expect(tusState.start).toHaveBeenCalled();
       expect(progress).toEqual([50, 100]);
       expect(completed).toBe(true);
     });
 
+    it('absolutizes a path-only endpoint against the page origin', () => {
+      const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
+      service.uploadFile('/api/bulk-loader/v1/bulk-jobs/job-001/tus', file).subscribe();
+
+      expect(tusState.instances[0].options['endpoint'])
+        .toBe(`${window.location.origin}/api/bulk-loader/v1/bulk-jobs/job-001/tus`);
+    });
+
+    it('does not terminate the upload when it completes or errors', () => {
+      const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
+
+      service.uploadFile('https://upload.example', file).subscribe();
+      (tusState.instances[0].options['onSuccess'] as () => void)();
+
+      service.uploadFile('https://upload.example', file).subscribe({ error: () => undefined });
+      (tusState.instances[1].options['onError'] as (error: Error) => void)(new Error('boom'));
+
+      expect(tusState.abort).not.toHaveBeenCalled();
+    });
+
     it('resumes from a previous tus upload when one exists', async () => {
       tusState.findPreviousUploads.mockResolvedValueOnce([{ uploadUrl: 'https://upload.example/files/abc' }]);
+      const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
+
+      service.uploadFile('https://upload.example', file).subscribe();
+      await Promise.resolve();
+
+      expect(tusState.resumeFromPreviousUpload).toHaveBeenCalledWith({ uploadUrl: 'https://upload.example/files/abc' });
+      expect(tusState.start).toHaveBeenCalled();
+    });
+
+    it('ignores previous uploads whose stored URL is not absolute', async () => {
+      tusState.findPreviousUploads.mockResolvedValueOnce([
+        { uploadUrl: '../../tus/019f4010' },
+        { uploadUrl: 'https://upload.example/files/abc' },
+      ]);
       const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
 
       service.uploadFile('https://upload.example', file).subscribe();
