@@ -433,28 +433,32 @@ describe('BulkImportService', () => {
       expect(tusState.abort).not.toHaveBeenCalled();
     });
 
-    it('resumes from a previous tus upload when one exists', async () => {
-      tusState.findPreviousUploads.mockResolvedValueOnce([{ uploadUrl: 'https://upload.example/files/abc' }]);
+    it('resumes from a previous tus upload stored under the API base', async () => {
+      const storedUrl = `${window.location.origin}/api/bulk-loader/v1/tus/abc`;
+      tusState.findPreviousUploads.mockResolvedValueOnce([{ uploadUrl: storedUrl }]);
       const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
 
-      service.uploadFile('https://upload.example', file).subscribe();
+      service.uploadFile('/api/bulk-loader/v1/bulk-jobs/job-001/tus', file).subscribe();
       await Promise.resolve();
 
-      expect(tusState.resumeFromPreviousUpload).toHaveBeenCalledWith({ uploadUrl: 'https://upload.example/files/abc' });
+      expect(tusState.resumeFromPreviousUpload).toHaveBeenCalledWith({ uploadUrl: storedUrl });
       expect(tusState.start).toHaveBeenCalled();
     });
 
-    it('ignores previous uploads whose stored URL is not absolute', async () => {
+    it('ignores previous uploads whose stored URL is relative, foreign, or outside the API base', async () => {
+      const trustedUrl = `${window.location.origin}/api/bulk-loader/v1/tus/abc`;
       tusState.findPreviousUploads.mockResolvedValueOnce([
         { uploadUrl: '../../tus/019f4010' },
-        { uploadUrl: 'https://upload.example/files/abc' },
+        { uploadUrl: 'https://evil.example/api/bulk-loader/v1/tus/abc' },
+        { uploadUrl: `${window.location.origin}/tus/abc` },
+        { uploadUrl: trustedUrl },
       ]);
       const file = new File(['a,b'], 'test.csv', { type: 'text/csv' });
 
-      service.uploadFile('https://upload.example', file).subscribe();
+      service.uploadFile('/api/bulk-loader/v1/bulk-jobs/job-001/tus', file).subscribe();
       await Promise.resolve();
 
-      expect(tusState.resumeFromPreviousUpload).toHaveBeenCalledWith({ uploadUrl: 'https://upload.example/files/abc' });
+      expect(tusState.resumeFromPreviousUpload).toHaveBeenCalledWith({ uploadUrl: trustedUrl });
       expect(tusState.start).toHaveBeenCalled();
     });
 

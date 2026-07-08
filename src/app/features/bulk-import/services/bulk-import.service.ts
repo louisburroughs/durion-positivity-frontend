@@ -237,23 +237,9 @@ export class BulkImportService {
             return;
           }
 
-          // Stored upload URLs are replayed verbatim by tus-js-client; skip
-          // entries without an absolute URL (persisted by builds that used a
-          // relative endpoint) or the browser resolves them against the page
-          // URL and the SPA fallback answers instead of the API.
-const endpointUrl = new URL(endpoint);
-const endpointPathPrefix = endpointUrl.pathname.endsWith('/') ? endpointUrl.pathname : `${endpointUrl.pathname}/`;
-const resumable = previousUploads.find(prev => {
-  try {
-    const url = new URL(prev.uploadUrl ?? '');
-    return url.origin === endpointUrl.origin && url.pathname.startsWith(endpointPathPrefix);
-  } catch {
-    return false;
-  }
-});
-if (resumable) {
-  upload.resumeFromPreviousUpload(resumable);
-}
+          const resumable = previousUploads.find(prev => this.isTrustedUploadUrl(prev.uploadUrl));
+          if (resumable) {
+            upload.resumeFromPreviousUpload(resumable);
           }
 
           upload.start();
@@ -333,6 +319,30 @@ if (resumable) {
 
   private buildTusUploadEndpoint(jobId: string): string {
     return `${environment.apiBaseUrl}/bulk-loader/v1/bulk-jobs/${encodeURIComponent(jobId)}/tus`;
+  }
+
+  /**
+   * Accepts only stored tus upload URLs on our API origin under the apiBaseUrl
+   * path. tus-js-client replays stored URLs verbatim and onBeforeRequest
+   * attaches the JWT to whatever URL it targets, so a foreign or relative URL
+   * persisted in localStorage must never be resumed. The check is anchored to
+   * apiBaseUrl (not the creation endpoint's full path) because the backend
+   * issues upload URLs under /bulk-loader/v1/tus/, outside the endpoint path.
+   */
+  private isTrustedUploadUrl(uploadUrl: string | null | undefined): boolean {
+    if (!uploadUrl) {
+      return false;
+    }
+
+    const apiBase = new URL(environment.apiBaseUrl, window.location.origin);
+    const apiPathPrefix = apiBase.pathname.endsWith('/') ? apiBase.pathname : `${apiBase.pathname}/`;
+
+    try {
+      const url = new URL(uploadUrl);
+      return url.origin === apiBase.origin && url.pathname.startsWith(apiPathPrefix);
+    } catch {
+      return false;
+    }
   }
 
   private toJobStatus(status: string): BulkLoadJob['status'] {
