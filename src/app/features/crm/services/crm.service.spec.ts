@@ -8,8 +8,8 @@ import {
   CRMPartyRelationshipsService,
   CRMPersonsService,
   CRMSnapshotsService,
-  CRMVehiclesService,
 } from '@durion-sdk/customer';
+import { VehicleRegistryAPIService } from '@durion-sdk/vehicle-inventory';
 import { CrmService, PartyPage } from './crm.service';
 import type { BillingRules, CommunicationPreferences, CrmSnapshot, PartyDetail } from '../models/crm.models';
 import type { Pageable } from '@durion-sdk/customer';
@@ -66,7 +66,7 @@ describe('CrmService', () => {
         { provide: CRMPartyRelationshipsService, useValue: relationshipsStub },
         { provide: CRMPersonsService, useValue: {} },
         { provide: CRMSnapshotsService, useValue: snapshotsApiStub },
-        { provide: CRMVehiclesService, useValue: {} },
+        { provide: VehicleRegistryAPIService, useValue: {} },
       ],
     });
 

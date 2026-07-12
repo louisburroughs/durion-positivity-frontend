@@ -7,8 +7,9 @@ import {
   CRMPartyRelationshipsService,
   CRMPersonsService,
   CRMSnapshotsService,
-  CRMVehiclesService,
 } from '@durion-sdk/customer';
+import { VehicleRegistryAPIService } from '@durion-sdk/vehicle-inventory';
+import type { CreateVehicleRequest as RegistryCreateVehicleRequest } from '@durion-sdk/vehicle-inventory';
 import type {
   CreateCommercialAccountRequest as SdkCreateCommercialAccountRequest,
   MergePartiesRequest as SdkMergePartiesRequest,
@@ -17,7 +18,6 @@ import type {
   CreatePartyRelationshipRequest as SdkCreatePartyRelationshipRequest,
   UpsertCommunicationPreferencesRequest as SdkUpsertCommunicationPreferencesRequest,
   UpsertBillingRulesRequest,
-  CreateVehicleForPartyRequest as SdkCreateVehicleForPartyRequest,
 } from '@durion-sdk/customer';
 import {
   BillingRules,
@@ -66,7 +66,7 @@ export class CrmService {
   private readonly relationshipsApi = inject(CRMPartyRelationshipsService);
   private readonly personsApi = inject(CRMPersonsService);
   private readonly snapshotsApi = inject(CRMSnapshotsService);
-  private readonly vehiclesApi = inject(CRMVehiclesService);
+  private readonly vehicleRegistryApi = inject(VehicleRegistryAPIService);
 
   listBillingTerms(): Observable<BillingTermsRef[]> {
     return this.accountsApi.listBillingTerms().pipe(
@@ -262,11 +262,27 @@ export class CrmService {
     partyId: string,
     request: CreateVehicleRequest,
   ): Observable<VehicleRef> {
-    const sdkRequest: SdkCreateVehicleForPartyRequest = {
-      vinNumber: request.vin,
-      unitNumber: request.unitNumber,
+    // ADR-0044 §6 (#843): vehicles are created directly in the vehicle registry, which owns
+    // registry writes; the CRM vehicle-party association follows via vehicle.events.v1, so the
+    // vehicle may take a moment to appear in CRM lists.
+    const registryRequest: RegistryCreateVehicleRequest = {
+      accountId: partyId,
+      vin: request.vin,
+      ...(request.unitNumber ? { unitNumber: request.unitNumber } : {}),
+      ...(request.year !== undefined ? { year: request.year } : {}),
+      ...(request.make ? { make: request.make } : {}),
+      ...(request.model ? { model: request.model } : {}),
     };
-    return this.vehiclesApi.createVehicles(partyId, sdkRequest) as Observable<VehicleRef>;
+    return this.vehicleRegistryApi.createVehicle(registryRequest).pipe(
+      map(created => ({
+        vehicleId: created.vehicleId ?? '',
+        vin: created.vin ?? request.vin,
+        year: created.year,
+        make: created.make,
+        model: created.model,
+        unitNumber: created.unitNumber,
+      })),
+    );
   }
 
   fetchByParty(partyId: string): Observable<CrmSnapshot> {

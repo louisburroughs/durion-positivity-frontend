@@ -9,6 +9,7 @@ import { EstimateCreatePageComponent } from './estimate-create-page.component';
 import { CrmService } from '../../../crm/services/crm.service';
 import { PartyDetail } from '../../../crm/models/crm.models';
 import { BASE_PATH } from '@durion-sdk/workorder';
+import { BASE_PATH as VEHICLE_INVENTORY_BASE_PATH } from '@durion-sdk/vehicle-inventory';
 import { environment } from '../../../../../environments/environment';
 
 const BASE = environment.apiBaseUrl;
@@ -33,6 +34,8 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
+        // New vehicles are created directly in the vehicle registry (ADR-0044 §6, #843).
+        { provide: VEHICLE_INVENTORY_BASE_PATH, useValue: environment.apiBaseUrl },
         // Customer search + label resolution now live in the shared app-customer-lookup
         // (bound to the customerId control). Stub CrmService so those don't hit HTTP;
         // the vehicle list (CRMVehiclesService) stays real HTTP below.
@@ -192,7 +195,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
     component.onVehicleSelect(component.addVehicleOption);
     component.saveNewVehicle();
     expect(component.newVehicleForm.controls.vinNumber.touched).toBe(true);
-    http.expectNone(r => r.method === 'POST' && /\/v1\/crm\/.+\/vehicles$/.test(r.url));
+    http.expectNone(r => r.method === 'POST' && r.url.endsWith('/v1/vehicle-registry'));
   });
 
   it('should POST new vehicle then select it on success', () => {
@@ -202,8 +205,8 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
 
     component.saveNewVehicle();
 
-    const req = http.expectOne(r => r.method === 'POST' && r.url.endsWith('/v1/crm/cust-1/vehicles'));
-    expect(req.request.body).toEqual({ vinNumber: '1FTABC123', description: 'F-150' });
+    const req = http.expectOne(r => r.method === 'POST' && r.url.endsWith('/v1/vehicle-registry'));
+    expect(req.request.body).toEqual({ accountId: 'cust-1', vin: '1FTABC123', description: 'F-150' });
     req.flush({ vehicleId: 'veh-new', vin: '1FTABC123', make: 'Ford', model: 'F-150', year: 2019 });
 
     expect(component.customerVehicles().some(v => v.vehicleId === 'veh-new')).toBe(true);
@@ -218,7 +221,7 @@ describe('EstimateCreatePageComponent [Story 239]', () => {
 
     component.saveNewVehicle();
 
-    const req = http.expectOne(r => r.method === 'POST' && r.url.endsWith('/v1/crm/cust-1/vehicles'));
+    const req = http.expectOne(r => r.method === 'POST' && r.url.endsWith('/v1/vehicle-registry'));
     req.flush({ message: 'Duplicate VIN' }, { status: 409, statusText: 'Conflict' });
 
     expect(component.vehicleSaving()).toBe(false);

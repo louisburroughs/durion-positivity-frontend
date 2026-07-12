@@ -6,12 +6,12 @@ import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, catchError, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import {
-  CRMVehiclesService,
-  CreateVehicleForPartyRequest,
+import { CRMVehiclesService, VehicleSummary } from '@durion-sdk/customer';
+import { VehicleRegistryAPIService } from '@durion-sdk/vehicle-inventory';
+import type {
+  CreateVehicleRequest as RegistryCreateVehicleRequest,
   VehicleResponse,
-  VehicleSummary,
-} from '@durion-sdk/customer';
+} from '@durion-sdk/vehicle-inventory';
 import { vehicleLabel as crmVehicleLabel } from '../../../crm/util/crm-labels';
 import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
 import { WorkexecService } from '../../services/workexec.service';
@@ -32,6 +32,7 @@ export class EstimateCreatePageComponent implements OnInit {
   private readonly fb       = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly vehiclesApi = inject(CRMVehiclesService);
+  private readonly vehicleRegistryApi = inject(VehicleRegistryAPIService);
 
   readonly state        = signal<PageState>('idle');
   readonly errorMessage = signal<string | null>(null);
@@ -149,15 +150,19 @@ export class EstimateCreatePageComponent implements OnInit {
     this.vehicleSaveError.set(null);
 
     const raw = this.newVehicleForm.getRawValue();
-    const request: CreateVehicleForPartyRequest = {
-      vinNumber: raw.vinNumber.trim(),
+    // ADR-0044 §6 (#843): vehicles are created directly in the vehicle registry (owner of
+    // registry writes); the CRM association follows asynchronously via vehicle.events.v1,
+    // so the locally appended summary below bridges the replica lag.
+    const request: RegistryCreateVehicleRequest = {
+      accountId: customerId,
+      vin: raw.vinNumber.trim(),
       ...(raw.description.trim()        ? { description: raw.description.trim() } : {}),
       ...(raw.unitNumber.trim()         ? { unitNumber: raw.unitNumber.trim() } : {}),
       ...(raw.licensePlate.trim()       ? { licensePlate: raw.licensePlate.trim() } : {}),
-      ...(raw.licensePlateRegion.trim() ? { licensePlateRegion: raw.licensePlateRegion.trim() } : {}),
+      ...(raw.licensePlateRegion.trim() ? { licensePlateJurisdiction: raw.licensePlateRegion.trim() } : {}),
     };
 
-    this.vehiclesApi.createVehicles(customerId, request, 'body', false, { transferCache: false })
+    this.vehicleRegistryApi.createVehicle(request, 'body', false, { transferCache: false })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (created: VehicleResponse) => {
