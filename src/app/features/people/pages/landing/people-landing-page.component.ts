@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { PeopleAPIService, Person } from '@durion-sdk/people';
+import { PeopleAPIService, Person } from '@durion-sdk/people-contact';
 import { LandingPageComponent } from '../../../../shared/landing/landing-page/landing-page.component';
 import { RecordHit, RecordSearchMap } from '../../../../shared/landing/landing.models';
 import { PEOPLE_LANDING_CONFIG } from './people-landing.config';
@@ -20,11 +20,11 @@ export class PeopleLandingPageComponent {
 
   /** Directory search scoped to employees (excludes non-employee persons). */
   private readonly employeeSearch = (q: string): Observable<RecordHit[]> =>
-    this.peopleApi.getAllPeople('EMPLOYEE', q).pipe(map(people => this.toHits(people)));
+    this.peopleApi.getAllPeople(q).pipe(map(people => this.toHits(people)));
 
   /** Directory search across all persons (RBAC + location assignments by person UUID). */
   private readonly personSearch = (q: string): Observable<RecordHit[]> =>
-    this.peopleApi.getAllPeople('ALL', q).pipe(map(people => this.toHits(people)));
+    this.peopleApi.getAllPeople(q).pipe(map(people => this.toHits(people)));
 
   readonly searchFns: RecordSearchMap = {
     employee: this.employeeSearch,

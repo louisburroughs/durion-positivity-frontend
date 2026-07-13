@@ -2,7 +2,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Person } from '@durion-sdk/people';
+import { Person } from '@durion-sdk/people-contact';
 import { ShopmgmtRosterService } from '../../services/shopmgmt-roster.service';
 
 @Component({

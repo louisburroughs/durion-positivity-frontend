@@ -2,7 +2,7 @@ import { Component, computed, DestroyRef, OnInit, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { PersonRoleAssignmentRequest, RoleDto, UserRoleDto } from '@durion-sdk/people';
+import { PersonRoleAssignmentRequest, RoleDto, UserRoleDto } from '@durion-sdk/people-contact';
 import { PeopleService } from '../../services/people.service';
 
 @Component({

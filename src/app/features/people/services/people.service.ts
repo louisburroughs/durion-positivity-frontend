@@ -7,17 +7,19 @@ import {
   CreateStaffingAssignmentRequest,
   EmployeeAPIService,
   EmployeeProfileDto,
-  PeopleAccessControlService,
   PeopleReportsAPIService,
   PeopleStaffingAssignmentsService,
-  PersonRoleAssignmentRequest,
-  RoleDto,
   StaffingAssignmentResponse,
-  UserRoleDto,
   WorkSessionDto,
   WorkSessionsAPIService,
   UpdateEmployeeRequest,
 } from '@durion-sdk/people';
+import {
+  PeopleAccessControlService,
+  PersonRoleAssignmentRequest,
+  RoleDto,
+  UserRoleDto,
+} from '@durion-sdk/people-contact';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 
 export interface WorkSessionSubmitRequest {
@@ -72,11 +74,11 @@ export class PeopleService {
   }
 
   getLocationAssignments(personId: string): Observable<StaffingAssignmentResponse[]> {
-    return this.staffingApi.getAssignments1(personId);
+    return this.staffingApi.getAssignments(personId);
   }
 
   createLocationAssignment(request: CreateStaffingAssignmentRequest): Observable<StaffingAssignmentResponse> {
-    return this.staffingApi.createAssignment1(request);
+    return this.staffingApi.createAssignment(request);
   }
 
   endLocationAssignment(assignmentId: string): Observable<void> {

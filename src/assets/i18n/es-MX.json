@@ -511,12 +511,6 @@
     "DIRECTORY": {
       "TITLE": "Directorio de personas",
       "SEARCH_PLACEHOLDER": "Buscar por nombre, correo o usuario…",
-      "FILTER": {
-        "ALL": "Todos",
-        "EMPLOYEE": "Empleados",
-        "ACTIVE": "Activos",
-        "INACTIVE": "Inactivos"
-      },
       "COL": {
         "NAME": "Nombre",
         "USERNAME": "Usuario",
@@ -539,7 +533,9 @@
     }
   },
   "CRM": {
-    "PARTY_DETAIL": { "FALLBACK_TITLE": "Detalles de la cuenta" },
+    "PARTY_DETAIL": {
+      "FALLBACK_TITLE": "Detalles de la cuenta"
+    },
     "LANDING": {
       "TITLE": "Clientes",
       "SUBTITLE": "Administra cuentas de clientes, rastrea detalles de parties y accede a información de integración.",
@@ -740,38 +736,7 @@
       "AUDIT_LOG": "Registro de auditoría",
       "ROLES_TAB": "Pestaña de roles",
       "PERMISSIONS_TAB": "Pestaña de permisos",
-      "AUDIT_TAB": "Pestaña de auditoría",
-      "IDENTITY_COMPLIANCE": "Cumplimiento de identidad",
-      "IDENTITY_COMPLIANCE_TAB": "Pestaña de cumplimiento de identidad"
-    },
-    "IDENTITY_COMPLIANCE": {
-      "SECTION": "Seguridad",
-      "TITLE": "Cumplimiento de identidad",
-      "SUBTITLE": "Cuentas de usuario activas cuya persona vinculada está inactiva (suspendida, terminada o deshabilitada).",
-      "REFRESH": "Actualizar",
-      "STATE": {
-        "EMPTY": "No hay usuarios activos en personas inactivas."
-      },
-      "TABLE": {
-        "ARIA": "Hallazgos de cumplimiento de identidad",
-        "CAPTION": "Usuarios activos vinculados a personas inactivas",
-        "HEADER": {
-          "PERSON_STATUS": "Estado de la persona",
-          "USERNAME": "Nombre de usuario",
-          "PERSON_ID": "ID de persona",
-          "EFFECTIVE_AT": "Estado vigente"
-        }
-      },
-      "STATUS": {
-        "ACTIVE": "Activo",
-        "ON_LEAVE": "De permiso",
-        "SUSPENDED": "Suspendido",
-        "TERMINATED": "Terminado",
-        "DISABLED": "Deshabilitado"
-      },
-      "ERROR": {
-        "LOAD": "No se pudieron cargar los hallazgos de cumplimiento de identidad."
-      }
+      "AUDIT_TAB": "Pestaña de auditoría"
     },
     "ROLES_LIST": {
       "SECTION": "Seguridad",
