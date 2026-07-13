@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PeopleAPIService } from '@durion-sdk/people';
+import { PeopleAPIService } from '@durion-sdk/people-contact';
 import { PeopleLandingPageComponent } from './people-landing-page.component';
 
 describe('PeopleLandingPageComponent', () => {
@@ -38,12 +38,12 @@ describe('PeopleLandingPageComponent', () => {
   it('searches employees scoped to EMPLOYEE and adapts to finder hits', () => {
     let hits: ReadonlyArray<{ id: string; primary: string; secondary?: string }> = [];
     component.searchFns.employee!('ada').subscribe(r => (hits = r));
-    expect(peopleApi.getAllPeople).toHaveBeenCalledWith('EMPLOYEE', 'ada');
+    expect(peopleApi.getAllPeople).toHaveBeenCalledWith('ada');
     expect(hits[0]).toEqual({ id: 'PER-1', primary: 'Ada Lovelace', secondary: 'ada@x.io' });
   });
 
-  it('searches persons scoped to ALL', () => {
+  it('searches all persons via the identity directory', () => {
     component.searchFns.person!('ada').subscribe();
-    expect(peopleApi.getAllPeople).toHaveBeenCalledWith('ALL', 'ada');
+    expect(peopleApi.getAllPeople).toHaveBeenCalledWith('ada');
   });
 });

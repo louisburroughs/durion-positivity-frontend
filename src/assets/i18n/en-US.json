@@ -51,26 +51,86 @@
       "SELECT_FIRST": "Select a record first"
     },
     "KIND": {
-      "ESTIMATE": { "LABEL": "Estimate", "PLACEHOLDER": "Search by customer name or estimate id" },
-      "WORKORDER": { "LABEL": "Workorder", "PLACEHOLDER": "Search by customer name or workorder id" },
-      "APPROVAL": { "LABEL": "Approval", "PLACEHOLDER": "Search by customer name, estimate id or workorder id" },
-      "CUSTOMER": { "LABEL": "Customer", "PLACEHOLDER": "Search customers by name…" },
-      "INVOICE": { "LABEL": "Invoice", "PLACEHOLDER": "Search by customer, invoice #, or workorder #" },
-      "EMPLOYEE": { "LABEL": "Employee", "PLACEHOLDER": "Search by name or employee ID…" },
-      "PERSON": { "LABEL": "Person", "PLACEHOLDER": "Search by name…" },
-      "APPOINTMENT": { "LABEL": "Appointment", "PLACEHOLDER": "Enter appointment id (e.g. APT-1234)" },
-      "LEDGER": { "LABEL": "Ledger entry", "PLACEHOLDER": "Enter ledger entry id (e.g. LE-001)" },
-      "PO": { "LABEL": "Purchase order", "PLACEHOLDER": "Enter purchase order id (e.g. PO-001)" },
-      "EVENT": { "LABEL": "Ingestion event", "PLACEHOLDER": "Enter event UUID" },
-      "RULESET": { "LABEL": "Rule set", "PLACEHOLDER": "Enter rule set id" },
-      "VENDOR_PAYMENT": { "LABEL": "Vendor payment", "PLACEHOLDER": "Enter vendor payment id" },
-      "CREDIT_MEMO": { "LABEL": "Credit memo", "PLACEHOLDER": "Enter credit memo id" },
-      "LOCATION": { "LABEL": "Location", "PLACEHOLDER": "Enter location id" },
-      "ROLE": { "LABEL": "Role", "PLACEHOLDER": "Enter role name (e.g. ROLE_MANAGER)" },
-      "PAYMENT": { "LABEL": "Payment", "PLACEHOLDER": "Enter payment id (e.g. PAY-00456)" },
-      "RECEIPT": { "LABEL": "Receipt", "PLACEHOLDER": "Enter receipt id (e.g. REC-00789)" },
-      "SESSION": { "LABEL": "Work session", "PLACEHOLDER": "Enter session id" },
-      "PUTAWAY": { "LABEL": "Putaway task", "PLACEHOLDER": "Enter putaway task id (e.g. PT-001)" }
+      "ESTIMATE": {
+        "LABEL": "Estimate",
+        "PLACEHOLDER": "Search by customer name or estimate id"
+      },
+      "WORKORDER": {
+        "LABEL": "Workorder",
+        "PLACEHOLDER": "Search by customer name or workorder id"
+      },
+      "APPROVAL": {
+        "LABEL": "Approval",
+        "PLACEHOLDER": "Search by customer name, estimate id or workorder id"
+      },
+      "CUSTOMER": {
+        "LABEL": "Customer",
+        "PLACEHOLDER": "Search customers by name…"
+      },
+      "INVOICE": {
+        "LABEL": "Invoice",
+        "PLACEHOLDER": "Search by customer, invoice #, or workorder #"
+      },
+      "EMPLOYEE": {
+        "LABEL": "Employee",
+        "PLACEHOLDER": "Search by name or employee ID…"
+      },
+      "PERSON": {
+        "LABEL": "Person",
+        "PLACEHOLDER": "Search by name…"
+      },
+      "APPOINTMENT": {
+        "LABEL": "Appointment",
+        "PLACEHOLDER": "Enter appointment id (e.g. APT-1234)"
+      },
+      "LEDGER": {
+        "LABEL": "Ledger entry",
+        "PLACEHOLDER": "Enter ledger entry id (e.g. LE-001)"
+      },
+      "PO": {
+        "LABEL": "Purchase order",
+        "PLACEHOLDER": "Enter purchase order id (e.g. PO-001)"
+      },
+      "EVENT": {
+        "LABEL": "Ingestion event",
+        "PLACEHOLDER": "Enter event UUID"
+      },
+      "RULESET": {
+        "LABEL": "Rule set",
+        "PLACEHOLDER": "Enter rule set id"
+      },
+      "VENDOR_PAYMENT": {
+        "LABEL": "Vendor payment",
+        "PLACEHOLDER": "Enter vendor payment id"
+      },
+      "CREDIT_MEMO": {
+        "LABEL": "Credit memo",
+        "PLACEHOLDER": "Enter credit memo id"
+      },
+      "LOCATION": {
+        "LABEL": "Location",
+        "PLACEHOLDER": "Enter location id"
+      },
+      "ROLE": {
+        "LABEL": "Role",
+        "PLACEHOLDER": "Enter role name (e.g. ROLE_MANAGER)"
+      },
+      "PAYMENT": {
+        "LABEL": "Payment",
+        "PLACEHOLDER": "Enter payment id (e.g. PAY-00456)"
+      },
+      "RECEIPT": {
+        "LABEL": "Receipt",
+        "PLACEHOLDER": "Enter receipt id (e.g. REC-00789)"
+      },
+      "SESSION": {
+        "LABEL": "Work session",
+        "PLACEHOLDER": "Enter session id"
+      },
+      "PUTAWAY": {
+        "LABEL": "Putaway task",
+        "PLACEHOLDER": "Enter putaway task id (e.g. PT-001)"
+      }
     }
   },
   "SYSTEM": {
@@ -451,12 +511,6 @@
     "DIRECTORY": {
       "TITLE": "People Directory",
       "SEARCH_PLACEHOLDER": "Search by name, email, or username…",
-      "FILTER": {
-        "ALL": "All",
-        "EMPLOYEE": "Employees",
-        "ACTIVE": "Active",
-        "INACTIVE": "Inactive"
-      },
       "COL": {
         "NAME": "Name",
         "USERNAME": "Username",
@@ -479,7 +533,9 @@
     }
   },
   "CRM": {
-    "PARTY_DETAIL": { "FALLBACK_TITLE": "Account Details" },
+    "PARTY_DETAIL": {
+      "FALLBACK_TITLE": "Account Details"
+    },
     "LANDING": {
       "TITLE": "Customers",
       "SUBTITLE": "Manage customer accounts, track party details, and access integration insights.",
@@ -680,38 +736,7 @@
       "AUDIT_LOG": "Audit Log",
       "ROLES_TAB": "Roles tab",
       "PERMISSIONS_TAB": "Permissions tab",
-      "AUDIT_TAB": "Audit log tab",
-      "IDENTITY_COMPLIANCE": "Identity Compliance",
-      "IDENTITY_COMPLIANCE_TAB": "Identity compliance tab"
-    },
-    "IDENTITY_COMPLIANCE": {
-      "SECTION": "Security",
-      "TITLE": "Identity Compliance",
-      "SUBTITLE": "Active user accounts whose linked person is inactive (suspended, terminated, or disabled).",
-      "REFRESH": "Refresh",
-      "STATE": {
-        "EMPTY": "No active users on inactive persons."
-      },
-      "TABLE": {
-        "ARIA": "Identity compliance findings",
-        "CAPTION": "Active users linked to inactive persons",
-        "HEADER": {
-          "PERSON_STATUS": "Person Status",
-          "USERNAME": "Username",
-          "PERSON_ID": "Person ID",
-          "EFFECTIVE_AT": "Status Effective"
-        }
-      },
-      "STATUS": {
-        "ACTIVE": "Active",
-        "ON_LEAVE": "On Leave",
-        "SUSPENDED": "Suspended",
-        "TERMINATED": "Terminated",
-        "DISABLED": "Disabled"
-      },
-      "ERROR": {
-        "LOAD": "Failed to load identity compliance findings."
-      }
+      "AUDIT_TAB": "Audit log tab"
     },
     "ROLES_LIST": {
       "SECTION": "Security",

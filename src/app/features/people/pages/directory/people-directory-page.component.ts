@@ -13,26 +13,13 @@ import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { PeopleAPIService, Person } from '@durion-sdk/people';
+import { PeopleAPIService, Person } from '@durion-sdk/people-contact';
 
-export type PersonTypeFilter = 'ALL' | 'EMPLOYEE' | 'ACTIVE' | 'INACTIVE';
 type SortColumn = 'lastName' | 'firstName' | 'username' | 'primaryEmail';
 type SortDir = 'asc' | 'desc';
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 const PAGE_SIZE = 25;
-
-interface FilterOption {
-  key: PersonTypeFilter;
-  labelKey: string;
-}
-
-const FILTER_OPTIONS: FilterOption[] = [
-  { key: 'ALL',      labelKey: 'PEOPLE.DIRECTORY.FILTER.ALL' },
-  { key: 'EMPLOYEE', labelKey: 'PEOPLE.DIRECTORY.FILTER.EMPLOYEE' },
-  { key: 'ACTIVE',   labelKey: 'PEOPLE.DIRECTORY.FILTER.ACTIVE' },
-  { key: 'INACTIVE', labelKey: 'PEOPLE.DIRECTORY.FILTER.INACTIVE' },
-];
 
 @Component({
   selector: 'app-people-directory-page',
@@ -46,11 +33,9 @@ export class PeopleDirectoryPageComponent implements OnInit {
   private readonly peopleApi = inject(PeopleAPIService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly filters = FILTER_OPTIONS;
   readonly state = signal<PageState>('idle');
   readonly allPeople = signal<Person[]>([]);
   readonly searchInputValue = signal('');
-  readonly activeType = signal<PersonTypeFilter>('ALL');
   readonly pageIndex = signal(0);
   readonly sortColumn = signal<SortColumn>('lastName');
   readonly sortDir = signal<SortDir>('asc');
@@ -99,16 +84,8 @@ export class PeopleDirectoryPageComponent implements OnInit {
     }
   }
 
-  setTypeFilter(type: PersonTypeFilter): void {
-    if (this.activeType() === type) return;
-    this.activeType.set(type);
-    this.pageIndex.set(0);
-    this.loadPeople();
-  }
-
   clearFilters(): void {
     this.searchInputValue.set('');
-    this.activeType.set('ALL');
     this.pageIndex.set(0);
     this.loadPeople();
   }
@@ -143,11 +120,13 @@ export class PeopleDirectoryPageComponent implements OnInit {
     this.peopleSub?.unsubscribe();
     this.state.set('loading');
 
-    const type = this.activeType();
+    // Employment-type filtering left with the ADR-0044 people split: the identity
+    // directory (pos-people-contact) has no employment data; HR views live under
+    // the employee pages backed by pos-people.
     const q = this.searchInputValue().trim();
 
     this.peopleSub = this.peopleApi
-      .getAllPeople(type === 'ALL' ? undefined : type, q || undefined)
+      .getAllPeople(q || undefined)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: people => {

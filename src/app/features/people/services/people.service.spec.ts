@@ -9,18 +9,20 @@ import {
   EmployeeProfileDto,
   EmployeeProfileDtoStatusEnum,
   UpdateEmployeeRequest,
-  PeopleAccessControlService,
   PeopleReportsAPIService,
   PeopleStaffingAssignmentsService,
-  PersonRoleAssignmentRequest,
-  RoleDto,
   StaffingAssignmentResponse,
   StaffingAssignmentResponseStatusEnum,
   UpdateEmployeeRequestStatusEnum,
-  UserRoleDto,
   WorkSessionDto,
   WorkSessionsAPIService,
 } from '@durion-sdk/people';
+import {
+  PeopleAccessControlService,
+  PersonRoleAssignmentRequest,
+  RoleDto,
+  UserRoleDto,
+} from '@durion-sdk/people-contact';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { PeopleService, WorkSessionSubmitRequest } from './people.service';
 
@@ -37,8 +39,8 @@ describe('PeopleService', () => {
     getAttendanceDiscrepancyReport: vi.fn(),
   };
   const staffingApiStub = {
-    getAssignments1: vi.fn(),
-    createAssignment1: vi.fn(),
+    getAssignments: vi.fn(),
+    createAssignment: vi.fn(),
     endAssignment: vi.fn(),
   };
   const accessControlApiStub = {
@@ -174,7 +176,7 @@ describe('PeopleService', () => {
     );
   });
 
-  it('getLocationAssignments() delegates to PeopleStaffingAssignmentsService.getAssignments1', () => {
+  it('getLocationAssignments() delegates to PeopleStaffingAssignmentsService.getAssignments', () => {
     const response: StaffingAssignmentResponse[] = [{
       assignmentId: 'a-1',
       personId: 'p-1',
@@ -184,14 +186,14 @@ describe('PeopleService', () => {
       effectiveFrom: '2026-05-01',
       isPrimary: true,
     }];
-    staffingApiStub.getAssignments1.mockReturnValue(of(response));
+    staffingApiStub.getAssignments.mockReturnValue(of(response));
 
     service.getLocationAssignments('p-1').subscribe(result => expect(result).toEqual(response));
 
-    expect(staffingApiStub.getAssignments1).toHaveBeenCalledWith('p-1');
+    expect(staffingApiStub.getAssignments).toHaveBeenCalledWith('p-1');
   });
 
-  it('createLocationAssignment() delegates to PeopleStaffingAssignmentsService.createAssignment1', () => {
+  it('createLocationAssignment() delegates to PeopleStaffingAssignmentsService.createAssignment', () => {
     const request: CreateStaffingAssignmentRequest = {
       personId: 'p-1',
       locationId: 'loc-1',
@@ -208,11 +210,11 @@ describe('PeopleService', () => {
       effectiveFrom: '2026-05-01',
       isPrimary: true,
     };
-    staffingApiStub.createAssignment1.mockReturnValue(of(response));
+    staffingApiStub.createAssignment.mockReturnValue(of(response));
 
     service.createLocationAssignment(request).subscribe(result => expect(result).toEqual(response));
 
-    expect(staffingApiStub.createAssignment1).toHaveBeenCalledWith(request);
+    expect(staffingApiStub.createAssignment).toHaveBeenCalledWith(request);
   });
 
   it('endLocationAssignment() delegates to PeopleStaffingAssignmentsService.endAssignment', () => {

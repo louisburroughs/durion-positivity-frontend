@@ -15,13 +15,6 @@ export const SECURITY_ROUTES: Routes = [
       { path: 'permissions', component: PermissionsListPageComponent },
       { path: 'audit', component: SecurityAuditListPageComponent },
       {
-        path: 'identity-compliance',
-        data: { roles: ['ROLE_ADMIN'] },
-        loadComponent: () =>
-          import('./pages/identity-compliance/identity-compliance.component')
-            .then(m => m.IdentityComplianceComponent),
-      },
-      {
         path: 'audit-logs',
         loadComponent: () =>
           import('./pages/audit-logs/audit-logs.component')

@@ -77,7 +77,7 @@ describe('PersonLocationAssignmentsPageComponent [CAP-119 #150]', () => {
 
   // T1 ─────────────────────────────────────────────────────────────────────
 
-  it('T1: shows loading-indicator while getAssignments1 is pending', async () => {
+  it('T1: shows loading-indicator while getAssignments is pending', async () => {
     stubStaffingService.getLocationAssignments.mockReturnValue(NEVER);
     stubLocationService.getAllLocations.mockReturnValue(of(mockLocations));
 

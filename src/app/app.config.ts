@@ -18,6 +18,7 @@ import { Configuration as InvoiceConfiguration } from '@durion-sdk/invoice';
 import { Configuration as LocationConfiguration } from '@durion-sdk/location';
 import { Configuration as OrderConfiguration } from '@durion-sdk/order';
 import { Configuration as PeopleConfiguration } from '@durion-sdk/people';
+import { Configuration as PeopleContactConfiguration } from '@durion-sdk/people-contact';
 import { Configuration as SecurityConfiguration } from '@durion-sdk/security';
 import { Configuration as ShopManagerConfiguration } from '@durion-sdk/shop-manager';
 import { Configuration as VehicleInventoryConfiguration } from '@durion-sdk/vehicle-inventory';
@@ -109,6 +110,7 @@ export const appConfig: ApplicationConfig = {
     { provide: LocationConfiguration, useFactory: () => new LocationConfiguration({ basePath: `${environment.apiBaseUrl}/location` }) },
     { provide: OrderConfiguration, useFactory: () => new OrderConfiguration({ basePath: `${environment.apiBaseUrl}/order` }) },
     { provide: PeopleConfiguration, useFactory: () => new PeopleConfiguration({ basePath: `${environment.apiBaseUrl}/people` }) },
+    { provide: PeopleContactConfiguration, useFactory: () => new PeopleContactConfiguration({ basePath: `${environment.apiBaseUrl}/people-contact` }) },
     { provide: SecurityConfiguration, useFactory: () => new SecurityConfiguration({ basePath: `${environment.apiBaseUrl}/security-service` }) },
     { provide: ShopManagerConfiguration, useFactory: () => new ShopManagerConfiguration({ basePath: `${environment.apiBaseUrl}/shop-manager` }) },
     { provide: VehicleInventoryConfiguration, useFactory: () => new VehicleInventoryConfiguration({ basePath: `${environment.apiBaseUrl}/vehicle-inventory` }) },

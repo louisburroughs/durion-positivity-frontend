@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PeopleAPIService, Person } from '@durion-sdk/people';
+import { PeopleAPIService, Person } from '@durion-sdk/people-contact';
 
 export interface CreatePersonRequest {
   firstName: string;

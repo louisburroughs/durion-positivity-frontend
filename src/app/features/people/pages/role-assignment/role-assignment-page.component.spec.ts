@@ -6,7 +6,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 
 import { RoleAssignmentPageComponent } from './role-assignment-page.component';
-import { RoleDto, UserRoleDto } from '@durion-sdk/people';
+import { RoleDto, UserRoleDto } from '@durion-sdk/people-contact';
 import { PeopleService } from '../../services/people.service';
 
 const translations = {

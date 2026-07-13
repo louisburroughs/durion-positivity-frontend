@@ -16,19 +16,6 @@
     </div>
   </div>
 
-  <div class="directory-filters" role="group" aria-label="{{ 'PEOPLE.DIRECTORY.FILTER.ALL' | translate }}">
-    @for (filter of filters; track filter.key) {
-      <button
-        class="filter-chip"
-        [class.filter-chip--active]="activeType() === filter.key"
-        [attr.aria-pressed]="activeType() === filter.key"
-        (click)="setTypeFilter(filter.key)"
-      >
-        {{ filter.labelKey | translate }}
-      </button>
-    }
-  </div>
-
   @if (state() === 'loading') {
     <div class="directory-state" aria-live="polite">
       <span class="directory-state__spinner" aria-hidden="true"></span>

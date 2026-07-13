@@ -3,7 +3,7 @@ import { of } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { ShopmgmtRosterService } from './shopmgmt-roster.service';
-import { PeopleAPIService, Person } from '@durion-sdk/people';
+import { PeopleAPIService, Person } from '@durion-sdk/people-contact';
 
 // ADR-0032: typed as the exact domain interface
 const samplePerson: Person = { id: 'p1', firstName: 'Alex', lastName: 'Smith' };
