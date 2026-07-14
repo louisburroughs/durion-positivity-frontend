@@ -61,7 +61,6 @@ const appointmentServiceStub = {
   createAppointment: vi.fn(),
   executeOverride: vi.fn(),
   viewSchedule: vi.fn(),
-  getShopServiceDetails: vi.fn(),
 };
 
 // ---------------------------------------------------------------------------

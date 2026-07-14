@@ -10,7 +10,6 @@ import {
   AppointmentAssignmentsService,
   ConflictOverrideAPIService,
   ScheduleAPIService,
-  ShopAPIService,
   ShopAuditService,
 } from '@durion-sdk/shop-manager';
 
@@ -57,7 +56,6 @@ const appointmentsStub = {
 const assignmentStub = { listAssignments: vi.fn(), createAssignment: vi.fn() };
 const conflictOverrideStub = { executeOverride: vi.fn() };
 const scheduleStub = { viewSchedule: vi.fn() };
-const shopStub = { getShopServiceDetails: vi.fn() };
 const shopAuditStub = { searchShopAudit: vi.fn() };
 
 // ---------------------------------------------------------------------------
@@ -85,7 +83,6 @@ describe('AppointmentService [CAP-249]', () => {
         { provide: AppointmentAssignmentsService, useValue: assignmentStub },
         { provide: ConflictOverrideAPIService, useValue: conflictOverrideStub },
         { provide: ScheduleAPIService, useValue: scheduleStub },
-        { provide: ShopAPIService, useValue: shopStub },
         { provide: ShopAuditService, useValue: shopAuditStub },
       ],
     });
