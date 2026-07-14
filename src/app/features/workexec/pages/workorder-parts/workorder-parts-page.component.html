@@ -129,6 +129,9 @@
               <span class="subst-option__id">{{ sub.substitutePartId }}</span>
               <span class="subst-type-badge subst-type-badge--{{ sub.substituteType?.toLowerCase() }}">{{ sub.substituteType }}</span>
               <span class="subst-priority">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_PRIORITY' | translate: { priority: sub.priority } }}</span>
+              @if (sub.productId) {
+                <span class="subst-product-id">{{ 'WORKEXEC.WORKORDER_PARTS.SUBST_APPLIES_TO' | translate: { id: sub.productId } }}</span>
+              }
             </label>
           }
         </div>

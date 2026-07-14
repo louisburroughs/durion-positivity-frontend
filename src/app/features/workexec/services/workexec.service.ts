@@ -1106,8 +1106,11 @@ export class WorkexecService {
    * operationId: suggestSubstitutes
    * POST /v1/workorders/{workorderId}/suggestSubstitutes
    * Story 221
+   *
+   * Workorder-scoped: the contract exposes no part parameter (#141). Each returned
+   * link carries `productId` identifying the product the substitute applies to.
    */
-  suggestSubstitutes(workorderId: string, _partId: string): Observable<SubstituteLinkResponse[]> {
+  suggestSubstitutes(workorderId: string): Observable<SubstituteLinkResponse[]> {
     return this.substituteLink.suggestSubstitutes(workorderId) as Observable<SubstituteLinkResponse[]>;
   }
 
