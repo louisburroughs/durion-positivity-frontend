@@ -253,6 +253,17 @@ export interface CreditMemoListItem {
   creationTimestamp?: string;
 }
 
+/**
+ * AP vendor directory entry (issue #816): the name-to-vendorId resolution
+ * used by the vendor typeahead on the vendor-payment pages.
+ */
+export interface VendorDirectoryEntry {
+  vendorId?: string;
+  name?: string;
+  vendorNumber?: string;
+  status?: 'ACTIVE' | 'INACTIVE';
+}
+
 export interface VendorBill {
   vendorBillId?: string;
   vendorId?: string;

@@ -1,0 +1,39 @@
+<div class="vendor-lookup">
+  <label [attr.for]="inputId" class="field-label">
+    {{ label }}
+    @if (required) { <span class="required" aria-hidden="true">*</span> }
+  </label>
+
+  <input [id]="inputId" type="text" class="field-input"
+    role="combobox" aria-autocomplete="list" autocomplete="off"
+    [attr.aria-expanded]="showList() && suggestions().length > 0"
+    [attr.aria-controls]="inputId + '-listbox'"
+    [attr.aria-activedescendant]="showList() && activeIndex() >= 0 ? (inputId + '-opt-' + activeIndex()) : null"
+    [attr.aria-required]="required ? 'true' : null"
+    [value]="query()"
+    [disabled]="disabled()"
+    [placeholder]="placeholder"
+    (input)="onInput($any($event.target).value)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    (keydown)="onKeydown($event)" />
+
+  @if (showList() && loading() && suggestions().length === 0) {
+    <p class="vendor-lookup__hint" aria-busy="true">Searching…</p>
+  }
+
+  @if (showList() && suggestions().length > 0) {
+    <ul [id]="inputId + '-listbox'" class="vendor-lookup__list" role="listbox" [attr.aria-label]="label">
+      @for (vendor of suggestions(); track vendor.vendorId; let i = $index) {
+        <li role="option" class="vendor-lookup__option"
+          [id]="inputId + '-opt-' + i"
+          [class.vendor-lookup__option--active]="i === activeIndex()"
+          [attr.aria-selected]="i === activeIndex()"
+          (mousedown)="select(vendor)">
+          <span class="vendor-lookup__name">{{ vendor.name }}</span>
+          @if (vendor.vendorNumber) { <span class="vendor-lookup__num">{{ vendor.vendorNumber }}</span> }
+        </li>
+      }
+    </ul>
+  }
+</div>

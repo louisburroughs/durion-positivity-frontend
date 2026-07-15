@@ -14,6 +14,11 @@ describe('VendorPaymentNewPageComponent', () => {
     executePayment: vi.fn().mockReturnValue(
       of({ paymentId: 'pay-new', status: 'SETTLED' }),
     ),
+    // Used by the embedded app-vendor-lookup typeahead (issue #816).
+    searchVendors: vi.fn().mockReturnValue(of([])),
+    getVendor: vi.fn().mockReturnValue(
+      of({ vendorId: 'vendor-1', name: 'Acme Auto Parts', status: 'ACTIVE' }),
+    ),
   };
 
   const queryParamGetSpy = vi.fn().mockReturnValue(null);
@@ -40,6 +45,20 @@ describe('VendorPaymentNewPageComponent', () => {
   it('renders form in initial state', () => {
     const form = fixture.nativeElement.querySelector('form');
     expect(form).toBeTruthy();
+  });
+
+  it('renders the vendor typeahead instead of a raw Vendor ID input (uuid-on-screen)', () => {
+    const lookup = fixture.nativeElement.querySelector('app-vendor-lookup input#vendor-id');
+    expect(lookup).toBeTruthy();
+    expect(lookup.getAttribute('role')).toBe('combobox');
+  });
+
+  it('resolves a prefilled vendorId to a readable vendor name in the typeahead', () => {
+    component.form.controls.vendorId.setValue('vendor-1');
+    fixture.detectChanges();
+    expect(accountingServiceStub.getVendor).toHaveBeenCalledWith('vendor-1');
+    const lookup = fixture.nativeElement.querySelector('app-vendor-lookup input#vendor-id');
+    expect(lookup.value).toBe('Acme Auto Parts');
   });
 
   it('Load Bills button is disabled when vendorId is empty', () => {
