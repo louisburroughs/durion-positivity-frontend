@@ -278,6 +278,10 @@
         "DIRECTORY": {
           "TITLE": "Répertoire",
           "DESCRIPTION": "Recherchez et parcourez toutes les personnes du système."
+        },
+        "COMPLIANCE": {
+          "TITLE": "Conformité",
+          "DESCRIPTION": "Rapports d'hygiène des identités et des accès."
         }
       },
       "CARD": {
@@ -328,6 +332,10 @@
         "DIRECTORY": {
           "TITLE": "Répertoire des personnes",
           "DESCRIPTION": "Consultez et filtrez toutes les personnes par type et statut."
+        },
+        "IDENTITY_COMPLIANCE": {
+          "TITLE": "Conformité des identités",
+          "DESCRIPTION": "Examinez les comptes d'utilisateur actifs liés à des personnes inactives."
         }
       },
       "FIELD": {
@@ -475,6 +483,36 @@
       },
       "ERROR": {
         "LOAD": "Échec du chargement des personnes."
+      }
+    },
+    "IDENTITY_COMPLIANCE": {
+      "SECTION": "Personnes",
+      "TITLE": "Conformité des identités",
+      "SUBTITLE": "Comptes d'utilisateur actifs dont la personne liée est inactive (suspendue, résiliée ou désactivée).",
+      "REPLICA_NOTE": "Les données de liens proviennent d'une réplique de l'autorité des liens; les résultats peuvent donc accuser un retard correspondant au délai de propagation des événements.",
+      "REFRESH": "Actualiser",
+      "STATE": {
+        "EMPTY": "Aucun utilisateur actif sur des personnes inactives."
+      },
+      "TABLE": {
+        "ARIA": "Constats de conformité des identités",
+        "CAPTION": "Utilisateurs actifs liés à des personnes inactives",
+        "HEADER": {
+          "PERSON_STATUS": "Statut de la personne",
+          "USERNAME": "Nom d'utilisateur",
+          "PERSON_ID": "ID de personne",
+          "EFFECTIVE_AT": "Statut en vigueur"
+        }
+      },
+      "STATUS": {
+        "ACTIVE": "Actif",
+        "ON_LEAVE": "En congé",
+        "SUSPENDED": "Suspendu",
+        "TERMINATED": "Résilié",
+        "DISABLED": "Désactivé"
+      },
+      "ERROR": {
+        "LOAD": "Échec du chargement des constats de conformité des identités."
       }
     }
   },
@@ -680,38 +718,7 @@
       "AUDIT_LOG": "Journal d'audit",
       "ROLES_TAB": "Onglet des rôles",
       "PERMISSIONS_TAB": "Onglet des autorisations",
-      "AUDIT_TAB": "Onglet du journal d'audit",
-      "IDENTITY_COMPLIANCE": "Conformité des identités",
-      "IDENTITY_COMPLIANCE_TAB": "Onglet de conformité des identités"
-    },
-    "IDENTITY_COMPLIANCE": {
-      "SECTION": "Sécurité",
-      "TITLE": "Conformité des identités",
-      "SUBTITLE": "Comptes d'utilisateur actifs dont la personne liée est inactive (suspendue, résiliée ou désactivée).",
-      "REFRESH": "Actualiser",
-      "STATE": {
-        "EMPTY": "Aucun utilisateur actif sur des personnes inactives."
-      },
-      "TABLE": {
-        "ARIA": "Constats de conformité des identités",
-        "CAPTION": "Utilisateurs actifs liés à des personnes inactives",
-        "HEADER": {
-          "PERSON_STATUS": "Statut de la personne",
-          "USERNAME": "Nom d'utilisateur",
-          "PERSON_ID": "ID de personne",
-          "EFFECTIVE_AT": "Statut en vigueur"
-        }
-      },
-      "STATUS": {
-        "ACTIVE": "Actif",
-        "ON_LEAVE": "En congé",
-        "SUSPENDED": "Suspendu",
-        "TERMINATED": "Résilié",
-        "DISABLED": "Désactivé"
-      },
-      "ERROR": {
-        "LOAD": "Échec du chargement des constats de conformité des identités."
-      }
+      "AUDIT_TAB": "Onglet du journal d'audit"
     },
     "ROLES_LIST": {
       "SECTION": "Sécurité",

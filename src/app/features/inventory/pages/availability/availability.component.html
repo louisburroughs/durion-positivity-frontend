@@ -24,10 +24,11 @@
             [attr.aria-expanded]="showProductSuggestions() && productSuggestions().length > 0"
             aria-autocomplete="list"
             aria-haspopup="listbox"
+            aria-controls="avail-sku-listbox"
             [attr.placeholder]="'INVENTORY.AVAILABILITY.FILTER.SKU_PLACEHOLDER' | translate"
           />
           @if (showProductSuggestions() && productSuggestions().length > 0) {
-            <ul class="typeahead-suggestions" role="listbox">
+            <ul id="avail-sku-listbox" class="typeahead-suggestions" role="listbox">
               @for (p of productSuggestions(); track p.productId) {
                 <li class="typeahead-item" role="option" aria-selected="false" (mousedown)="selectProduct(p)">
                   <span class="suggestion-primary">{{ p.name }}</span>
