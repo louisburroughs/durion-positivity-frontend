@@ -156,5 +156,19 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
         },
       ],
     },
+    {
+      titleKey: 'PEOPLE.LANDING.SECTION.COMPLIANCE.TITLE',
+      descriptionKey: 'PEOPLE.LANDING.SECTION.COMPLIANCE.DESCRIPTION',
+      cards: [
+        {
+          kind: 'direct',
+          icon: 'verified_user',
+          titleKey: 'PEOPLE.LANDING.CARD.IDENTITY_COMPLIANCE.TITLE',
+          descriptionKey: 'PEOPLE.LANDING.CARD.IDENTITY_COMPLIANCE.DESCRIPTION',
+          ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/people/identity-compliance',
+        },
+      ],
+    },
   ],
 };

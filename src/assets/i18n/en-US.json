@@ -338,6 +338,10 @@
         "DIRECTORY": {
           "TITLE": "Directory",
           "DESCRIPTION": "Search and browse all people in the system."
+        },
+        "COMPLIANCE": {
+          "TITLE": "Compliance",
+          "DESCRIPTION": "Identity and access hygiene reports."
         }
       },
       "CARD": {
@@ -388,6 +392,10 @@
         "DIRECTORY": {
           "TITLE": "People Directory",
           "DESCRIPTION": "View and filter all persons by type and status."
+        },
+        "IDENTITY_COMPLIANCE": {
+          "TITLE": "Identity Compliance",
+          "DESCRIPTION": "Review active user accounts linked to inactive persons."
         }
       },
       "FIELD": {
@@ -529,6 +537,36 @@
       },
       "ERROR": {
         "LOAD": "Failed to load people."
+      }
+    },
+    "IDENTITY_COMPLIANCE": {
+      "SECTION": "People",
+      "TITLE": "Identity Compliance",
+      "SUBTITLE": "Active user accounts whose linked person is inactive (suspended, terminated, or disabled).",
+      "REPLICA_NOTE": "Link facts come from a replica of the link authority, so results can trail it by the event-propagation delay.",
+      "REFRESH": "Refresh",
+      "STATE": {
+        "EMPTY": "No active users on inactive persons."
+      },
+      "TABLE": {
+        "ARIA": "Identity compliance findings",
+        "CAPTION": "Active users linked to inactive persons",
+        "HEADER": {
+          "PERSON_STATUS": "Person Status",
+          "USERNAME": "Username",
+          "PERSON_ID": "Person ID",
+          "EFFECTIVE_AT": "Status Effective"
+        }
+      },
+      "STATUS": {
+        "ACTIVE": "Active",
+        "ON_LEAVE": "On Leave",
+        "SUSPENDED": "Suspended",
+        "TERMINATED": "Terminated",
+        "DISABLED": "Disabled"
+      },
+      "ERROR": {
+        "LOAD": "Failed to load identity compliance findings."
       }
     }
   },

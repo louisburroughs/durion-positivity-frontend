@@ -278,6 +278,10 @@
         "DIRECTORY": {
           "TITLE": "Directorio",
           "DESCRIPTION": "Busca y explora todas las personas en el sistema."
+        },
+        "COMPLIANCE": {
+          "TITLE": "Cumplimiento",
+          "DESCRIPTION": "Informes de higiene de identidad y acceso."
         }
       },
       "CARD": {
@@ -328,6 +332,10 @@
         "DIRECTORY": {
           "TITLE": "Directorio de personas",
           "DESCRIPTION": "Consulta y filtra todas las personas por tipo y estado."
+        },
+        "IDENTITY_COMPLIANCE": {
+          "TITLE": "Cumplimiento de identidad",
+          "DESCRIPTION": "Revisa las cuentas de usuario activas vinculadas a personas inactivas."
         }
       },
       "FIELD": {
@@ -475,6 +483,36 @@
       },
       "ERROR": {
         "LOAD": "Error al cargar las personas."
+      }
+    },
+    "IDENTITY_COMPLIANCE": {
+      "SECTION": "Personas",
+      "TITLE": "Cumplimiento de identidad",
+      "SUBTITLE": "Cuentas de usuario activas cuya persona vinculada está inactiva (suspendida, terminada o deshabilitada).",
+      "REPLICA_NOTE": "Los datos de vínculos provienen de una réplica de la autoridad de vínculos, por lo que los resultados pueden retrasarse según la demora de propagación de eventos.",
+      "REFRESH": "Actualizar",
+      "STATE": {
+        "EMPTY": "No hay usuarios activos en personas inactivas."
+      },
+      "TABLE": {
+        "ARIA": "Hallazgos de cumplimiento de identidad",
+        "CAPTION": "Usuarios activos vinculados a personas inactivas",
+        "HEADER": {
+          "PERSON_STATUS": "Estado de la persona",
+          "USERNAME": "Nombre de usuario",
+          "PERSON_ID": "ID de persona",
+          "EFFECTIVE_AT": "Estado vigente"
+        }
+      },
+      "STATUS": {
+        "ACTIVE": "Activo",
+        "ON_LEAVE": "De permiso",
+        "SUSPENDED": "Suspendido",
+        "TERMINATED": "Terminado",
+        "DISABLED": "Deshabilitado"
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los hallazgos de cumplimiento de identidad."
       }
     }
   },
@@ -680,38 +718,7 @@
       "AUDIT_LOG": "Registro de auditoría",
       "ROLES_TAB": "Pestaña de roles",
       "PERMISSIONS_TAB": "Pestaña de permisos",
-      "AUDIT_TAB": "Pestaña de auditoría",
-      "IDENTITY_COMPLIANCE": "Cumplimiento de identidad",
-      "IDENTITY_COMPLIANCE_TAB": "Pestaña de cumplimiento de identidad"
-    },
-    "IDENTITY_COMPLIANCE": {
-      "SECTION": "Seguridad",
-      "TITLE": "Cumplimiento de identidad",
-      "SUBTITLE": "Cuentas de usuario activas cuya persona vinculada está inactiva (suspendida, terminada o deshabilitada).",
-      "REFRESH": "Actualizar",
-      "STATE": {
-        "EMPTY": "No hay usuarios activos en personas inactivas."
-      },
-      "TABLE": {
-        "ARIA": "Hallazgos de cumplimiento de identidad",
-        "CAPTION": "Usuarios activos vinculados a personas inactivas",
-        "HEADER": {
-          "PERSON_STATUS": "Estado de la persona",
-          "USERNAME": "Nombre de usuario",
-          "PERSON_ID": "ID de persona",
-          "EFFECTIVE_AT": "Estado vigente"
-        }
-      },
-      "STATUS": {
-        "ACTIVE": "Activo",
-        "ON_LEAVE": "De permiso",
-        "SUSPENDED": "Suspendido",
-        "TERMINATED": "Terminado",
-        "DISABLED": "Deshabilitado"
-      },
-      "ERROR": {
-        "LOAD": "No se pudieron cargar los hallazgos de cumplimiento de identidad."
-      }
+      "AUDIT_TAB": "Pestaña de auditoría"
     },
     "ROLES_LIST": {
       "SECTION": "Seguridad",
