@@ -452,7 +452,6 @@ export class WorkexecService {
       crmVehicleId: raw.crmVehicleId,
       crmContactIds: raw.crmContactIds,
       primaryTechnicianId: dto.assignedTechnicianId,
-      primaryTechnicianName: dto.assignedTechnicianName,
       isStarted: dto.isStarted === 'true',
       startedAt: dto.startedAt,
       isInProgress: dto.isInProgress === 'true',
@@ -1107,8 +1106,8 @@ export class WorkexecService {
    * POST /v1/workorders/{workorderId}/suggestSubstitutes
    * Story 221
    */
-  suggestSubstitutes(workorderId: string, _partId: string): Observable<SubstituteLinkResponse[]> {
-    return this.substituteLink.suggestSubstitutes(workorderId) as Observable<SubstituteLinkResponse[]>;
+  suggestSubstitutes(workorderId: string, partId: string): Observable<SubstituteLinkResponse[]> {
+    return this.substituteLink.suggestSubstitutes(workorderId, { partId }) as Observable<SubstituteLinkResponse[]>;
   }
 
   /**
