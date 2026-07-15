@@ -173,19 +173,17 @@ export class WorkorderPartsPageComponent implements OnInit {
     this.substError.set(null);
     this.substSaveState.set('idle');
     this.showSubstPanel.set(true);
-    this.loadSuggestions();
+    this.loadSuggestions(partId);
   }
 
   closeSubstPanel(): void {
     this.showSubstPanel.set(false);
   }
 
-  // suggestSubstitutes is workorder-scoped (#141): the endpoint accepts no part
-  // parameter, so suggestions cover all parts and each row shows its productId.
-  private loadSuggestions(): void {
+  private loadSuggestions(partId: string): void {
     this.substLoadState.set('loading');
     this.service
-      .suggestSubstitutes(this.workorderId())
+      .suggestSubstitutes(this.workorderId(), partId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (suggestions) => {

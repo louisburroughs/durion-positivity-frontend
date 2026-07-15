@@ -452,7 +452,6 @@ export class WorkexecService {
       crmVehicleId: raw.crmVehicleId,
       crmContactIds: raw.crmContactIds,
       primaryTechnicianId: dto.assignedTechnicianId,
-      primaryTechnicianName: dto.assignedTechnicianName,
       isStarted: dto.isStarted === 'true',
       startedAt: dto.startedAt,
       isInProgress: dto.isInProgress === 'true',
@@ -1106,12 +1105,9 @@ export class WorkexecService {
    * operationId: suggestSubstitutes
    * POST /v1/workorders/{workorderId}/suggestSubstitutes
    * Story 221
-   *
-   * Workorder-scoped: the contract exposes no part parameter (#141). Each returned
-   * link carries `productId` identifying the product the substitute applies to.
    */
-  suggestSubstitutes(workorderId: string): Observable<SubstituteLinkResponse[]> {
-    return this.substituteLink.suggestSubstitutes(workorderId) as Observable<SubstituteLinkResponse[]>;
+  suggestSubstitutes(workorderId: string, partId: string): Observable<SubstituteLinkResponse[]> {
+    return this.substituteLink.suggestSubstitutes(workorderId, { partId }) as Observable<SubstituteLinkResponse[]>;
   }
 
   /**
