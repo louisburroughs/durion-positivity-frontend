@@ -9,10 +9,11 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
+import { InactivePersonActiveUserResponsePersonStatusEnum } from '@durion-sdk/people';
 import { IdentityComplianceFinding, PersonStatus } from '../../models/identity-compliance.models';
 import { IdentityComplianceService } from '../../services/identity-compliance.service';
 
-type PageState = 'loading' | 'empty' | 'ready' | 'error';
+type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 @Component({
   selector: 'app-identity-compliance-page',
@@ -26,7 +27,7 @@ export class IdentityCompliancePageComponent implements OnInit {
   private readonly complianceService = inject(IdentityComplianceService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly state = signal<PageState>('loading');
+  readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
   readonly findings = signal<IdentityComplianceFinding[]>([]);
 
@@ -56,11 +57,11 @@ export class IdentityCompliancePageComponent implements OnInit {
 
   /** Maps a person status to a badge severity modifier class. */
   badgeClass(status: PersonStatus | undefined): string {
-    switch (status as string) {
-      case 'TERMINATED':
-      case 'DISABLED':
+    switch (status) {
+      case InactivePersonActiveUserResponsePersonStatusEnum.Terminated:
+      case InactivePersonActiveUserResponsePersonStatusEnum.Disabled:
         return 'badge--error';
-      case 'SUSPENDED':
+      case InactivePersonActiveUserResponsePersonStatusEnum.Suspended:
         return 'badge--warning';
       default:
         return 'badge--neutral';
