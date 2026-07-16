@@ -1,8 +1,16 @@
 # Durion Positivity Frontend
 
-Angular 21 standalone frontend for the Durion POS platform. This application uses lazy-loaded feature domains, Angular Signals for page state, `@ngx-translate` for localization, and SSR output for production deployment.
+![Angular](https://img.shields.io/badge/Angular-21.1.x-dd0031)
+![Node](https://img.shields.io/badge/Node-22_LTS-339933)
+![Branch](https://img.shields.io/badge/branch-master-brightgreen)
 
-## Stack
+## Overview
+
+Angular 21 standalone frontend for the Durion POS platform. The app uses
+lazy-loaded feature domains, Angular Signals for page state, `@ngx-translate`
+for localization, and SSR output for production runtime.
+
+## Tech Stack
 
 - Angular `21.1.x`
 - TypeScript `5.9.x`
@@ -10,109 +18,56 @@ Angular 21 standalone frontend for the Durion POS platform. This application use
 - Express `5` (SSR runtime)
 - `@ngx-translate/core` `17`
 - ESLint + Angular ESLint
-- Vitest via Angular test builder
-
-## Core Principles
-
-- Standalone components and route-based lazy loading (no NgModules)
-- `ApiBaseService` is the only HTTP abstraction for feature services
-- Angular Signals for page/component state
-- All user-facing text via translation keys (`TranslatePipe`)
-- Accessibility checks included in project workflow
+- Angular test builder (`ng test`)
 
 ## Prerequisites
 
 - Node.js 22 LTS
 - npm 11+ (project uses `npm@11.6.4`)
 - Optional sibling checkout: `../durion-positivity-sdk-angular`
-- Optional backend running at `http://localhost:8080`
+- Optional backend at `http://localhost:8080`
 
-## Install and Run
+## Quick Start
 
 ```bash
+# Install dependencies
 npm install
+
+# Start dev server
 npm start
 ```
 
-Notes:
+Development notes:
 
-- `npm start` runs `sdk:install` first, then serves Angular.
-- In development, `proxy.conf.json` proxies backend traffic to `http://localhost:8080`.
-- Default dev environment sets `mockAuth: true`.
+- `npm start` runs `sdk:install` before serving.
+- `proxy.conf.json` proxies backend traffic to `http://localhost:8080`.
+- `mockAuth` defaults to `true` in the development environment.
 
-## Build and SSR
+## Common Commands
 
 ```bash
+# Build browser + server bundles
 npm run build
+
+# Run SSR server locally
 npm run serve:ssr:durion-positivity-frontend
-```
-
-- Browser and server bundles are generated in `dist/durion-positivity-frontend/`.
-- SSR server listens on port `4000` by default.
-
-## Quality Gates
-
-```bash
-# Unit tests (watch by default)
-npm test
-
-# Single-run tests
-npx ng test --no-watch
 
 # Lint
 npm run lint
 
-# Accessibility smoke checks
+# Unit tests
+npm test
+npx ng test --no-watch
+
+# Accessibility checks
 npm run a11y:smoke
 npm run a11y:smoke:strict
 
-# i18n checks
+# Localization checks
 npm run i18n:check
 ```
 
-## Feature Routing
-
-Public routes:
-
-- `/` -> landing page
-- `/login` -> login page
-- `/forbidden` -> access denied
-- `/not-found` -> 404 page
-
-Protected shell:
-
-- `/app` guarded by `authGuard` and `rolesChildGuard`
-
-Current lazy-loaded feature children under `/app`:
-
-- `admin` (role-gated)
-- `crm`
-- `workexec`
-- `accounting`
-- `billing`
-- `people`
-- `location`
-- `inventory`
-- `product`
-- `order`
-- `security` (role-gated)
-- `shopmgmt`
-- `bulk-import`
-
-## Internationalization
-
-Locales in `src/assets/i18n/`:
-
-- `en-US.json`
-- `es-US.json`
-- `es-MX.json`
-- `fr-CA.json`
-- `fr-FR.json`
-- `qps-ploc.json`
-
-Use translation keys for all UI text in templates and components.
-
-## Project Layout
+## Repository Layout
 
 ```text
 durion-positivity-frontend/
@@ -135,19 +90,40 @@ durion-positivity-frontend/
 └── AGENTS.md
 ```
 
-## CI/CD Workflows
+## Standards and Workflow
 
-GitHub workflows in `.github/workflows/`:
+Core frontend standards:
+
+- Standalone components and route-based lazy loading
+- `ApiBaseService` as the only feature HTTP abstraction
+- Signals-based state in pages/components
+- All user-facing strings localized via translation keys
+- Accessibility checks and i18n validation in standard workflow
+
+Current routing model:
+
+- Public routes: `/`, `/login`, `/forbidden`, `/not-found`
+- Protected shell: `/app` with `authGuard` and `rolesChildGuard`
+- Lazy children under `/app`: `admin`, `crm`, `workexec`, `accounting`,
+  `billing`, `people`, `location`, `inventory`, `product`, `order`,
+  `security`, `shopmgmt`, `bulk-import`
+
+Locale files in `src/assets/i18n/`:
+
+- `en-US.json`
+- `es-US.json`
+- `es-MX.json`
+- `fr-CA.json`
+- `fr-FR.json`
+- `qps-ploc.json`
+
+CI workflows in `.github/workflows/`:
 
 - `accessibility-gate.yml`
 - `build-push-ecr.yml`
 
-## Development Guidance
-
-Read these before non-trivial changes:
+## References
 
 - `AGENTS.md`
-- relevant ADRs under `../durion/docs/adr/`
-- nearest feature-level `README.md` (if present)
-
-Focus areas enforced by policy include i18n, accessibility, state/error conventions, route navigation policy, and test coverage expectations.
+- `../durion/docs/adr/`
+- `README.v1.md`
