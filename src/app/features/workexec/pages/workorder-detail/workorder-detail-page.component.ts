@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { filter, interval, switchMap, take } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import {
   ChangeRequestResponse,
@@ -481,8 +482,14 @@ export class WorkorderDetailPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          this.invoiceLoading.set(false);
-          this.router.navigate(['/app/billing/invoices', res.invoiceId]);
+          if (res.invoiceId) {
+            this.invoiceLoading.set(false);
+            this.router.navigate(['/app/billing/invoices', res.invoiceId]);
+            return;
+          }
+          // ADR-0044 #900: generation is asynchronous — the backend answers 202 PENDING and
+          // the invoice id appears on the workorder once the invoice fact links it.
+          this.pollForLinkedInvoice(id);
         },
         error: (err) => {
           this.invoiceLoading.set(false);
@@ -497,6 +504,36 @@ export class WorkorderDetailPageComponent implements OnInit {
                 : 'Failed to create invoice. Please try again.',
             );
           }
+        },
+      });
+  }
+
+  /** Poll the workorder until the async generation links an invoiceId (ADR-0044 #900). */
+  private pollForLinkedInvoice(id: string): void {
+    interval(2000)
+      .pipe(
+        take(15),
+        switchMap(() => this.service.getWorkorder(id)),
+        filter((wo) => !!wo.invoiceId),
+        take(1),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (wo) => {
+          this.invoiceLoading.set(false);
+          this.router.navigate(['/app/billing/invoices', wo.invoiceId]);
+        },
+        complete: () => {
+          if (this.invoiceLoading()) {
+            this.invoiceLoading.set(false);
+            this.invoiceError.set(
+              'Invoice generation was queued but is taking longer than expected. Refresh this page shortly.',
+            );
+          }
+        },
+        error: () => {
+          this.invoiceLoading.set(false);
+          this.invoiceError.set('Failed to confirm invoice creation. Refresh this page shortly.');
         },
       });
   }
