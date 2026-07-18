@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { filter, interval, switchMap, take } from 'rxjs';
+import { filter, interval, switchMap, take, tap } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import {
   ChangeRequestResponse,
@@ -508,11 +508,17 @@ export class WorkorderDetailPageComponent implements OnInit {
       });
   }
 
+  private static readonly INVOICE_POLL_MAX_ATTEMPTS = 15;
+
   /** Poll the workorder until the async generation links an invoiceId (ADR-0044 #900). */
   private pollForLinkedInvoice(id: string): void {
+    // takeUntilDestroyed also completes this stream on destroy, so the complete
+    // handler must distinguish "all attempts exhausted" from "navigated away".
+    let attempts = 0;
     interval(2000)
       .pipe(
-        take(15),
+        take(WorkorderDetailPageComponent.INVOICE_POLL_MAX_ATTEMPTS),
+        tap(() => attempts++),
         switchMap(() => this.service.getWorkorder(id)),
         filter((wo) => !!wo.invoiceId),
         take(1),
@@ -524,7 +530,10 @@ export class WorkorderDetailPageComponent implements OnInit {
           this.router.navigate(['/app/billing/invoices', wo.invoiceId]);
         },
         complete: () => {
-          if (this.invoiceLoading()) {
+          if (
+            attempts >= WorkorderDetailPageComponent.INVOICE_POLL_MAX_ATTEMPTS &&
+            this.invoiceLoading()
+          ) {
             this.invoiceLoading.set(false);
             this.invoiceError.set(
               'Invoice generation was queued but is taking longer than expected. Refresh this page shortly.',

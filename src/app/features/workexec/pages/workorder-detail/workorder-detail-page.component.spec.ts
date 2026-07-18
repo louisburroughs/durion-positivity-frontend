@@ -125,6 +125,108 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
     });
   });
 
+  // ── #900 — async generation: poll the workorder until invoiceId is linked ──
+
+  describe('generateInvoice() — async generation polling (#900)', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    /** Kick off generateInvoice and flush the 202-style response without an invoiceId. */
+    function startAsyncGeneration(): void {
+      component.generateInvoice();
+      http
+        .expectOne(`${BASE}/v1/workorders/${WO_ID}/generate-invoice`)
+        .flush({ status: 'PENDING' });
+    }
+
+    it('polls GET /v1/workorders/{id} until invoiceId appears, then navigates', () => {
+      fixture.detectChanges();
+      drainInit(http);
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      startAsyncGeneration();
+      expect(component.invoiceLoading()).toBe(true);
+
+      // First poll: invoice not linked yet.
+      vi.advanceTimersByTime(2000);
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}`).flush({ id: WO_ID, status: 'COMPLETED' });
+      expect(navigateSpy).not.toHaveBeenCalled();
+      expect(component.invoiceLoading()).toBe(true);
+
+      // Second poll: invoiceId linked — navigate and stop polling.
+      vi.advanceTimersByTime(2000);
+      http
+        .expectOne(`${BASE}/v1/workorders/${WO_ID}`)
+        .flush({ id: WO_ID, status: 'COMPLETED', invoiceId: 'inv-900' });
+
+      expect(navigateSpy).toHaveBeenCalledWith(['/app/billing/invoices', 'inv-900']);
+      expect(component.invoiceLoading()).toBe(false);
+      expect(component.invoiceError()).toBeNull();
+
+      // No further polling after success.
+      vi.advanceTimersByTime(4000);
+      http.expectNone(`${BASE}/v1/workorders/${WO_ID}`);
+    });
+
+    it('sets the timeout invoiceError after 15 attempts without an invoiceId', () => {
+      fixture.detectChanges();
+      drainInit(http);
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      startAsyncGeneration();
+
+      for (let i = 0; i < 15; i++) {
+        vi.advanceTimersByTime(2000);
+        http.expectOne(`${BASE}/v1/workorders/${WO_ID}`).flush({ id: WO_ID, status: 'COMPLETED' });
+      }
+
+      expect(component.invoiceLoading()).toBe(false);
+      expect(component.invoiceError()).toBe(
+        'Invoice generation was queued but is taking longer than expected. Refresh this page shortly.',
+      );
+      expect(navigateSpy).not.toHaveBeenCalled();
+
+      // Polling stopped after the 15th attempt.
+      vi.advanceTimersByTime(4000);
+      http.expectNone(`${BASE}/v1/workorders/${WO_ID}`);
+    });
+
+    it('does not set the timeout error when the component is destroyed mid-poll', () => {
+      fixture.detectChanges();
+      drainInit(http);
+
+      startAsyncGeneration();
+
+      vi.advanceTimersByTime(2000);
+      http.expectOne(`${BASE}/v1/workorders/${WO_ID}`).flush({ id: WO_ID, status: 'COMPLETED' });
+
+      // Navigate away while polling — takeUntilDestroyed completes the stream.
+      fixture.destroy();
+      vi.advanceTimersByTime(4000);
+      http.expectNone(`${BASE}/v1/workorders/${WO_ID}`);
+      expect(component.invoiceError()).toBeNull();
+    });
+
+    it('sets a poll-failure invoiceError when a poll request errors', () => {
+      fixture.detectChanges();
+      drainInit(http);
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      startAsyncGeneration();
+
+      vi.advanceTimersByTime(2000);
+      http
+        .expectOne(`${BASE}/v1/workorders/${WO_ID}`)
+        .flush({ message: 'boom' }, { status: 500, statusText: 'Internal Server Error' });
+
+      expect(component.invoiceLoading()).toBe(false);
+      expect(component.invoiceError()).toBe(
+        'Failed to confirm invoice creation. Refresh this page shortly.',
+      );
+      expect(navigateSpy).not.toHaveBeenCalled();
+    });
+  });
+
   // ── F5/r2998536732 — confirmComplete() setTimeout cleared on destroy ───────
 
   describe('confirmComplete() — setTimeout cleared on destroy', () => {
