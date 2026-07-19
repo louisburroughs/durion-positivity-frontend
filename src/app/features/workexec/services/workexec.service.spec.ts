@@ -41,6 +41,7 @@ import {
   PickTaskLine,
   PickedItemLine,
   ScanResolveRequest,
+  SubstituteLinkResponse,
   WorkorderInvoiceView,
   WorkorderWipView,
 } from '../models/workexec.models';
@@ -292,6 +293,26 @@ describe('WorkexecService', () => {
     expect(r.request.method).toBe('GET');
     expect(r.request.headers.has('X-Authorities')).toBeFalsy();
     r.flush({ id: 'wo-1' });
+  });
+
+  it('[221] suggestSubstitutes — posts partId to /v1/workorders/{workorderId}/suggestSubstitutes (#141)', () => {
+    const links: SubstituteLinkResponse[] = [
+      {
+        id: 'sl-1',
+        productId: 'prod-9',
+        substitutePartId: 'part-7',
+        substituteType: 'EQUIVALENT',
+        priority: 1,
+        active: true,
+      },
+    ];
+    let result: SubstituteLinkResponse[] | undefined;
+    service.suggestSubstitutes('wo-1', 'part-1').subscribe((r) => (result = r));
+    const r = http.expectOne(`${BASE}/v1/workorders/wo-1/suggestSubstitutes`);
+    expect(r.request.method).toBe('POST');
+    expect(r.request.body).toEqual({ partId: 'part-1' });
+    r.flush(links);
+    expect(result).toEqual(links);
   });
 
   // ── CAP-248: Stories 259, 260, 261 ───────────────────────────────────────

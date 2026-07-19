@@ -28,5 +28,14 @@ describe('PEOPLE_ROUTES', () => {
     expect(childPaths).toContain('employees/:id');
     expect(childPaths).toContain('employees/:id/offboard');
     expect(childPaths).toContain('person/:personId/locations');
+    expect(childPaths).toContain('identity-compliance');
+  });
+
+  it('gates the identity-compliance report on ROLE_ADMIN', () => {
+    const complianceRoute = rootRoute?.children?.find(
+      child => child.path === 'identity-compliance',
+    );
+
+    expect(complianceRoute?.data?.['roles']).toEqual(['ROLE_ADMIN']);
   });
 });
