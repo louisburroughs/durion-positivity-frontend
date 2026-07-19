@@ -1660,6 +1660,9 @@
         "MISSING_ID": "No invoice ID provided."
       }
     },
+    "VENDOR_LOOKUP": {
+      "SEARCHING": "Searching…"
+    },
     "VENDOR_PAYMENT_NEW": {
       "OVERLINE": "Accounts Payable",
       "TITLE": "New Vendor Payment",

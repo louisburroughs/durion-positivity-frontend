@@ -1604,6 +1604,9 @@
         "MISSING_ID": "Aucun ID de facture fourni."
       }
     },
+    "VENDOR_LOOKUP": {
+      "SEARCHING": "Recherche…"
+    },
     "VENDOR_PAYMENT_NEW": {
       "OVERLINE": "Comptes fournisseurs",
       "TITLE": "Nouveau paiement au fournisseur",

@@ -1,4 +1,5 @@
 import { TestBed, ComponentFixture, fakeAsync, tick } from '@angular/core/testing';
+import { TranslateModule } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { VendorLookupComponent } from './vendor-lookup.component';
 import { AccountingService } from '../../services/accounting.service';
@@ -20,7 +21,7 @@ describe('VendorLookupComponent', () => {
     getVendor = vi.fn().mockReturnValue(of(VENDORS[1]));
 
     await TestBed.configureTestingModule({
-      imports: [VendorLookupComponent],
+      imports: [VendorLookupComponent, TranslateModule.forRoot()],
       providers: [{ provide: AccountingService, useValue: { searchVendors, getVendor } }],
     }).compileComponents();
 
@@ -81,4 +82,18 @@ describe('VendorLookupComponent', () => {
     component.onKeydown(new KeyboardEvent('keydown', { key: 'Enter' }));
     expect(component.value()).toBe(expected);
   }));
+
+  it('ignores ArrowUp/ArrowDown when there are no suggestions', () => {
+    expect(component.suggestions()).toEqual([]);
+
+    const up = new KeyboardEvent('keydown', { key: 'ArrowUp', cancelable: true });
+    component.onKeydown(up);
+    expect(component.activeIndex()).toBe(-1);
+    expect(up.defaultPrevented).toBe(false); // caret movement left to the input
+
+    const down = new KeyboardEvent('keydown', { key: 'ArrowDown', cancelable: true });
+    component.onKeydown(down);
+    expect(component.activeIndex()).toBe(-1);
+    expect(down.defaultPrevented).toBe(false);
+  });
 });

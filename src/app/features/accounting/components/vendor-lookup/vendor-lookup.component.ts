@@ -3,6 +3,7 @@ import {
 } from '@angular/core';
 
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
@@ -24,7 +25,7 @@ const MAX_SUGGESTIONS = 12;
 @Component({
   selector: 'app-vendor-lookup',
   standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './vendor-lookup.component.html',
   styleUrl: './vendor-lookup.component.css',
   providers: [
@@ -117,10 +118,13 @@ export class VendorLookupComponent implements ControlValueAccessor {
   onKeydown(event: KeyboardEvent): void {
     const items = this.suggestions();
     if (event.key === 'ArrowDown') {
+      // No suggestions → leave the caret alone and keep aria-activedescendant unset.
+      if (items.length === 0) { return; }
       event.preventDefault();
       this.showList.set(true);
       this.activeIndex.set(Math.min(this.activeIndex() + 1, items.length - 1));
     } else if (event.key === 'ArrowUp') {
+      if (items.length === 0) { return; }
       event.preventDefault();
       this.activeIndex.set(Math.max(this.activeIndex() - 1, 0));
     } else if (event.key === 'Enter') {

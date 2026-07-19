@@ -1599,6 +1599,9 @@
         "MISSING_ID": "No se proporcionó ID de factura."
       }
     },
+    "VENDOR_LOOKUP": {
+      "SEARCHING": "Buscando…"
+    },
     "VENDOR_PAYMENT_NEW": {
       "OVERLINE": "Cuentas por pagar",
       "TITLE": "Nuevo pago a proveedor",
