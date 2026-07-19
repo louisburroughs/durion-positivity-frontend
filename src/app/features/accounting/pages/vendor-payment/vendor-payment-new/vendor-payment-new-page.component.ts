@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { VendorLookupComponent } from '../../../components/vendor-lookup/vendor-lookup.component';
 import { VendorBill, VendorPaymentResult } from '../../../models/accounting.models';
 import { AccountingService } from '../../../services/accounting.service';
 
@@ -37,7 +38,7 @@ type VendorPaymentState =
 @Component({
   selector: 'app-vendor-payment-new-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe, VendorLookupComponent],
   templateUrl: './vendor-payment-new-page.component.html',
   styleUrl: './vendor-payment-new-page.component.css',
 })

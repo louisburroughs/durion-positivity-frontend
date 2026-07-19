@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpParams } from '@angular/common/http';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -23,6 +24,7 @@ import {
   InvoicePaymentStatus,
   PagedResponse,
   VendorBill,
+  VendorDirectoryEntry,
 } from '../models/accounting.models';
 
 describe('AccountingService', () => {
@@ -290,6 +292,47 @@ describe('AccountingService', () => {
       expect(apPaymentsStub.listApBills).toHaveBeenCalledWith({ page: 0, size: 100 }, 'v-001');
       expect(result).toEqual([vendorBillFixture]);
       expect(result?.[0].vendorBillId).toBe('bill-1');
+    });
+  });
+
+  describe('searchVendors() [issue #816]', () => {
+    it('should GET /vendors with name and limit params', () => {
+      apiBaseServiceStub.get.mockReturnValueOnce(
+        of([{ vendorId: 'v-001', name: 'Acme Auto Parts', status: 'ACTIVE' }]),
+      );
+
+      let result: VendorDirectoryEntry[] | undefined;
+      service.searchVendors('acme').subscribe(r => (result = r));
+
+      const [path, params] = apiBaseServiceStub.get.mock.calls[0];
+      expect(path).toBe('/accounting/v1/accounting/vendors');
+      expect((params as HttpParams).get('name')).toBe('acme');
+      expect((params as HttpParams).get('limit')).toBe('20');
+      expect(result?.[0].vendorId).toBe('v-001');
+      expect(result?.[0].name).toBe('Acme Auto Parts');
+    });
+
+    it('should omit the name param for a blank term (list-all)', () => {
+      apiBaseServiceStub.get.mockReturnValueOnce(of([]));
+
+      service.searchVendors('   ').subscribe();
+
+      const [, params] = apiBaseServiceStub.get.mock.calls[0];
+      expect((params as HttpParams).has('name')).toBe(false);
+    });
+  });
+
+  describe('getVendor() [issue #816]', () => {
+    it('should GET /vendors/{vendorId}', () => {
+      apiBaseServiceStub.get.mockReturnValueOnce(
+        of({ vendorId: 'v-001', name: 'Acme Auto Parts' }),
+      );
+
+      let result: VendorDirectoryEntry | undefined;
+      service.getVendor('v-001').subscribe(r => (result = r));
+
+      expect(apiBaseServiceStub.get).toHaveBeenCalledWith('/accounting/v1/accounting/vendors/v-001');
+      expect(result?.name).toBe('Acme Auto Parts');
     });
   });
 

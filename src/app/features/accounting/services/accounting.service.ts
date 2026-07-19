@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import {
   APPaymentsService,
@@ -59,6 +60,7 @@ import {
   ReprocessRequest,
   ReprocessingAttemptHistory,
   VendorBill,
+  VendorDirectoryEntry,
   VendorPaymentDetail,
   VendorPaymentRequest,
   VendorPaymentResult,
@@ -278,6 +280,32 @@ export class AccountingService {
     return this.apPaymentsService
       .listApBills({ page, size }, vendorId)
       .pipe(map(p => (p.content ?? []).map(dto => this.toVendorBill(dto))));
+  }
+
+  /**
+   * Vendor directory (issue #816): name typeahead search over the AP vendor
+   * directory. Case-insensitive contains match, ordered by name, capped
+   * server-side (default 20, max 100) — so there is no client row cap.
+   * NOTE: SDK gap — hand-rolled until GET /v1/accounting/vendors lands in a
+   * regenerated @durion-sdk/accounting.
+   */
+  searchVendors(name: string, limit = 20): Observable<VendorDirectoryEntry[]> {
+    let params = new HttpParams().set('limit', limit);
+    const term = name.trim();
+    if (term) {
+      params = params.set('name', term);
+    }
+    return this.api.get<VendorDirectoryEntry[]>(`${AccountingService.BASE}/vendors`, params);
+  }
+
+  /**
+   * Vendor directory (issue #816): resolve a single vendor by id, e.g. to
+   * label a deep-linked ?vendorId=. Same SDK gap as searchVendors.
+   */
+  getVendor(vendorId: string): Observable<VendorDirectoryEntry> {
+    return this.api.get<VendorDirectoryEntry>(
+      `${AccountingService.BASE}/vendors/${encodeURIComponent(vendorId)}`,
+    );
   }
 
   executePayment(req: VendorPaymentRequest): Observable<VendorPaymentResult> {

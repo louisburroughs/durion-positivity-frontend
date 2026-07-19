@@ -1660,6 +1660,9 @@
         "MISSING_ID": "No invoice ID provided."
       }
     },
+    "VENDOR_LOOKUP": {
+      "SEARCHING": "Searching…"
+    },
     "VENDOR_PAYMENT_NEW": {
       "OVERLINE": "Accounts Payable",
       "TITLE": "New Vendor Payment",
@@ -1671,7 +1674,8 @@
       "COL_BILL_NUMBER": "Bill number",
       "COL_DUE_DATE": "Due date",
       "COL_OPEN_AMOUNT": "Open amount",
-      "FIELD_VENDOR_ID": "Vendor ID",
+      "FIELD_VENDOR": "Vendor",
+      "VENDOR_PLACEHOLDER": "Search by vendor name…",
       "FIELD_GROSS_AMOUNT": "Gross amount",
       "FIELD_CURRENCY": "Currency",
       "FIELD_PAYMENT_METHOD": "Payment method",

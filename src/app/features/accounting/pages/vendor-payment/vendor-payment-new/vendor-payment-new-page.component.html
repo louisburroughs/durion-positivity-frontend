@@ -43,8 +43,9 @@
   </section>
 
   <form class="new-payment-form" [formGroup]="form" (ngSubmit)="submit()">
-    <label for="vendor-id">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_VENDOR_ID' | translate }}</label>
-    <input id="vendor-id" formControlName="vendorId" />
+    <app-vendor-lookup inputId="vendor-id" formControlName="vendorId" [required]="true"
+      [label]="'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_VENDOR' | translate"
+      [placeholder]="'ACCOUNTING.VENDOR_PAYMENT_NEW.VENDOR_PLACEHOLDER' | translate" />
 
     <label for="gross-amount">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_GROSS_AMOUNT' | translate }}</label>
     <input id="gross-amount" type="number" class="col-amount" formControlName="grossAmount" />
