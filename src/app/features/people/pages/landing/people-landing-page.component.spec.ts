@@ -25,7 +25,7 @@ describe('PeopleLandingPageComponent', () => {
 
   it('supplies the people landing config', () => {
     expect(component.config.titleKey).toBe('PEOPLE.LANDING.TITLE');
-    expect(component.config.sections.length).toBe(5);
+    expect(component.config.sections.length).toBe(6);
   });
 
   it('scopes employee + person sections to the right record kinds', () => {

@@ -83,6 +83,16 @@ export const PEOPLE_ROUTES: Routes = [
           ),
       },
       {
+        // HR-scoped compliance report (backend permission people:compliance:view);
+        // the frontend guard model is role-based, so gate on ROLE_ADMIN.
+        path: 'identity-compliance',
+        data: { roles: ['ROLE_ADMIN'] },
+        loadComponent: () =>
+          import('./pages/identity-compliance/identity-compliance-page.component').then(
+            m => m.IdentityCompliancePageComponent,
+          ),
+      },
+      {
         path: '**',
         redirectTo: '',
       },
