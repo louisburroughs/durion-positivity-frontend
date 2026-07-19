@@ -327,6 +327,8 @@ export interface WorkorderResponse {
   createdAt?: string;
   updatedAt?: string;
   version?: number;
+  /** Set once async invoice generation links an invoice to the workorder (ADR-0044 #900) */
+  invoiceId?: string;
   /** Present on 409 — id of the existing work order */
   existingWorkorderId?: string;
 }
