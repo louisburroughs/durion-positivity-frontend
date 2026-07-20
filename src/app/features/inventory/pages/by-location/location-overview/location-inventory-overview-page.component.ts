@@ -23,6 +23,7 @@ import type {
   RollupError,
   RollupQuantities,
 } from '../../../models/inventory-rollup.models';
+import { nowMs, recordOperation, recordOperationMeasurement } from '../../../../../core/observability/operation-telemetry';
 
 
 export type PageState = 'idle' | 'loading' | 'ready' | 'error';
@@ -530,6 +531,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
       }
     }
 
+    const loadStartedAt = nowMs();
     this.rollupSub = forkJoin(
       pairs.map(({ loc, prod }) =>
         this.rollupService
@@ -542,9 +544,22 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
         next: (rows: ResultRow[]) => {
           this.resultRows.set(rows);
           this.state.set('ready');
+          recordOperation({
+            name: 'View Inventory By Location',
+            type: 'ui_view',
+            outcome: 'success',
+          });
+          recordOperationMeasurement('view-inventory-by-location', {
+            duration_ms: nowMs() - loadStartedAt,
+          });
         },
         error: (err: RollupError) => {
           this.handleRollupError(err);
+          recordOperation({
+            name: 'View Inventory By Location',
+            type: 'ui_view',
+            outcome: 'failure',
+          });
         },
       });
   }

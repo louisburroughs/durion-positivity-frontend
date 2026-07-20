@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { MaterialSymbolPipe } from '../../../shared/material-symbol.pipe';
 import { ChatSendService } from '../services/chat-send.service';
 import { ChatUiService } from '../services/chat-ui.service';
+import { recordOperation } from '../../../core/observability/operation-telemetry';
 
 /** Visual tone for a quick-action tile; maps to a CSS class. */
 type ActionTone = 'teal' | 'blue' | 'info' | 'gold' | 'error';
@@ -52,6 +53,17 @@ export class DashboardComponent {
   private readonly auth = inject(AuthService);
   private readonly chatSend = inject(ChatSendService);
   private readonly chatUi = inject(ChatUiService);
+
+  constructor() {
+    // Static page (no async data load) — outcome is 'success' as soon as it
+    // constructs/renders. See operations.yaml `view-operations-dashboard` and
+    // docs/observability/plan.md 5.2 (durion-positivity-backend repo).
+    recordOperation({
+      name: 'View Operations Dashboard',
+      type: 'ui_view',
+      outcome: 'success',
+    });
+  }
 
   /** First name derived from the JWT `sub` claim, or null when unresolved.
    *  Uses the FIRST token of an email/dotted id (e.g. `jane.doe@durion.com` → `Jane`). */

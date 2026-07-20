@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BulkImportService } from '../../services/bulk-import.service';
 import { BulkLoadJob, DomainType, JobStatus } from '../../models/bulk-import.models';
+import { recordOperation } from '../../../../core/observability/operation-telemetry';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'empty' | 'error';
 
@@ -44,10 +45,20 @@ export class BulkImportJobsPageComponent implements OnInit {
         next: result => {
           this.jobs.set(result.items);
           this.state.set(result.items.length === 0 ? 'empty' : 'ready');
+          recordOperation({
+            name: 'Complete Bulk Import Job',
+            type: 'ui_view',
+            outcome: 'success',
+          });
         },
         error: () => {
           this.state.set('error');
           this.errorKey.set('BULK_IMPORT.JOBS.ERROR.LOAD');
+          recordOperation({
+            name: 'Complete Bulk Import Job',
+            type: 'ui_view',
+            outcome: 'failure',
+          });
         },
       });
   }

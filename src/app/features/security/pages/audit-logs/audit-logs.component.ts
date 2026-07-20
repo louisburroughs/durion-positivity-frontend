@@ -9,6 +9,7 @@ import {
   AuditExportJob,
 } from '../../models/security-audit.models';
 import { SecurityAuditService } from '../../services/security-audit.service';
+import { nowMs, recordOperation, recordOperationMeasurement } from '../../../../core/observability/operation-telemetry';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
@@ -37,6 +38,7 @@ export class AuditLogsComponent {
     this.events.set([]);
     this.nextPageToken.set(null);
 
+    const loadStartedAt = nowMs();
     this.auditService
       .searchAuditEvents(this.filter())
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -45,10 +47,23 @@ export class AuditLogsComponent {
           this.events.set(resp.items);
           this.nextPageToken.set(resp.nextPageToken ?? null);
           this.state.set(resp.items.length === 0 ? 'empty' : 'ready');
+          recordOperation({
+            name: 'View Security Audit Log',
+            type: 'ui_view',
+            outcome: 'success',
+          });
+          recordOperationMeasurement('view-security-audit-log', {
+            duration_ms: nowMs() - loadStartedAt,
+          });
         },
         error: () => {
           this.state.set('error');
           this.errorKey.set('SECURITY.AUDIT_LOGS.ERROR.LOAD');
+          recordOperation({
+            name: 'View Security Audit Log',
+            type: 'ui_view',
+            outcome: 'failure',
+          });
         },
       });
   }

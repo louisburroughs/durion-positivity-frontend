@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { WorkorderWipView } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
+import { nowMs, recordOperation, recordOperationMeasurement } from '../../../../core/observability/operation-telemetry';
 
 @Component({
   selector: 'app-wip-status-page',
@@ -46,6 +47,7 @@ export class WipStatusPageComponent {
     this.state.set('loading');
     this.errorKey.set(null);
 
+    const loadStartedAt = nowMs();
     this.workexec
       .listActiveWorkorders(locationId)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -53,10 +55,23 @@ export class WipStatusPageComponent {
         next: items => {
           this.wipItems.set(items);
           this.state.set(items.length > 0 ? 'ready' : 'empty');
+          recordOperation({
+            name: 'View Work In Progress Board',
+            type: 'ui_view',
+            outcome: 'success',
+          });
+          recordOperationMeasurement('view-work-in-progress-board', {
+            duration_ms: nowMs() - loadStartedAt,
+          });
         },
         error: () => {
           this.state.set('error');
           this.errorKey.set('WORKEXEC.WIP.ERROR.LOAD');
+          recordOperation({
+            name: 'View Work In Progress Board',
+            type: 'ui_view',
+            outcome: 'failure',
+          });
         },
       });
   }

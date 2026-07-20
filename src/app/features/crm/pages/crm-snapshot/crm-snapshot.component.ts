@@ -16,6 +16,7 @@ import { Observable, Subject, Subscription, forkJoin, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
 import { BillingRules, CrmSnapshot, PartyDetail } from '../../models/crm.models';
+import { nowMs, recordOperation, recordOperationMeasurement } from '../../../../core/observability/operation-telemetry';
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -95,12 +96,21 @@ export class CrmSnapshotPageComponent {
           return;
         }
 
+        const loadStartedAt = nowMs();
         const sub: Subscription = this.loadByPartyId(routePartyId)
           .subscribe({
             next: ({ snapshot, billingRules }) => {
               this.snapshot.set(this.mergeSnapshotWithBillingRules(snapshot, billingRules));
               this.billingRules.set(billingRules);
               this.state.set(snapshot.partyId ? 'ready' : 'empty');
+              recordOperation({
+                name: 'View Customer Snapshot',
+                type: 'ui_view',
+                outcome: 'success',
+              });
+              recordOperationMeasurement('view-customer-snapshot', {
+                duration_ms: nowMs() - loadStartedAt,
+              });
             },
             error: (err: HttpErrorResponse) => {
               this.snapshot.set(null);
@@ -108,6 +118,11 @@ export class CrmSnapshotPageComponent {
               this.state.set('error');
               this.errorKey.set('CRM.SNAPSHOT.ERROR.LOAD');
               this.mapError(err);
+              recordOperation({
+                name: 'View Customer Snapshot',
+                type: 'ui_view',
+                outcome: 'failure',
+              });
             },
           });
         onCleanup(() => sub.unsubscribe());

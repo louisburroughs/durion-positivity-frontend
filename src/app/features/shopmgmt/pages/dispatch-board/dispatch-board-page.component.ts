@@ -7,6 +7,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { DashboardResponse, WorkorderSummary } from '../../models/dispatch-board.models';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
 import { LocationPickerComponent } from '../../../location/components/location-picker/location-picker.component';
+import { nowMs, recordOperation, recordOperationMeasurement } from '../../../../core/observability/operation-telemetry';
 
 @Component({
   selector: 'app-dispatch-board-page',
@@ -51,6 +52,7 @@ export class DispatchBoardPageComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
+    const loadStartedAt = nowMs();
     this.dispatchBoardService
       .getDashboard(locationId, this.selectedDate())
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -60,10 +62,23 @@ export class DispatchBoardPageComponent implements OnInit {
           if (!this.pollingStarted) {
             this.startPolling();
           }
+          recordOperation({
+            name: 'View Dispatch Board',
+            type: 'ui_view',
+            outcome: 'success',
+          });
+          recordOperationMeasurement('view-dispatch-board', {
+            duration_ms: nowMs() - loadStartedAt,
+          });
         },
         error: err => {
           this.applyError(err);
           this.loading.set(false);
+          recordOperation({
+            name: 'View Dispatch Board',
+            type: 'ui_view',
+            outcome: 'failure',
+          });
         },
       });
   }

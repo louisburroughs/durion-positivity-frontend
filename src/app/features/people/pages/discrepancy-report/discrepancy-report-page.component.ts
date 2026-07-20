@@ -9,6 +9,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PeopleService } from '../../services/people.service';
+import { recordOperation } from '../../../../core/observability/operation-telemetry';
 
 type SortField = 'technicianName' | 'locationId' | 'reportDate' | 'totalAttendanceHours' | 'totalJobHours' | 'discrepancyHours';
 type SortDir = 'asc' | 'desc';
@@ -90,12 +91,22 @@ export class DiscrepancyReportPageComponent {
           this.priorRows.set(items);
           this.rows.set(this.sortRows(this.applyFilters(items, flaggedOnly)));
           this.loading.set(false);
+          recordOperation({
+            name: 'View Timekeeping Discrepancy Report',
+            type: 'ui_view',
+            outcome: 'success',
+          });
         },
         error: (err) => {
           // Preserve prior rows on error, re-applying the active filter
           this.rows.set(this.sortRows(this.applyFilters(this.priorRows(), flaggedOnly)));
           this.error.set(err?.error?.message ?? 'Failed to load discrepancy report.');
           this.loading.set(false);
+          recordOperation({
+            name: 'View Timekeeping Discrepancy Report',
+            type: 'ui_view',
+            outcome: 'failure',
+          });
         },
       });
   }

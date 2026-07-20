@@ -2,6 +2,7 @@ import { Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { ThemeService } from './core/services/theme.service';
+import { FaroRouteTracker } from './core/observability/faro-route-tracker.service';
 
 /**
  * Root application component.
@@ -18,6 +19,9 @@ import { ThemeService } from './core/services/theme.service';
 export class App implements OnInit {
   private readonly themeService = inject(ThemeService);
   private readonly platformId = inject(PLATFORM_ID);
+  // Injected only to start the route-change -> Faro setView() subscription;
+  // no direct usage needed (see FaroRouteTracker).
+  private readonly _faroRouteTracker = inject(FaroRouteTracker);
 
   ngOnInit(): void {
     // Eagerly apply the persisted theme on the browser so there's no flash.

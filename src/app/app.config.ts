@@ -1,4 +1,4 @@
-import { provideAppInitializer, ApplicationConfig, provideBrowserGlobalErrorListeners, importProvidersFrom, inject, PLATFORM_ID } from '@angular/core';
+import { provideAppInitializer, ApplicationConfig, ErrorHandler, provideBrowserGlobalErrorListeners, importProvidersFrom, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { NavigationEnd, provideRouter, Router, withComponentInputBinding, withNavigationErrorHandler } from '@angular/router';
 import { filter, take } from 'rxjs/operators';
@@ -29,6 +29,7 @@ import { clearChunkReloadGuard, recoverFromChunkError } from './core/router/chun
 import { AuthService } from './core/services/auth.service';
 import { LocaleService } from './core/services/locale.service';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { FaroErrorHandler } from './core/observability/faro-error-handler';
 import { environment } from '../environments/environment';
 
 /**
@@ -65,6 +66,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAppInitializer(() => firstValueFrom(inject(AuthService).validateSessionOnResume())),
     provideBrowserGlobalErrorListeners(),
+    { provide: ErrorHandler, useClass: FaroErrorHandler },
     provideRouter(
       routes,
       withComponentInputBinding(),

@@ -9,6 +9,7 @@ import {
   BulkLoadJob,
   BulkLoadRecordAudit,
 } from '../../models/bulk-import.models';
+import { recordOperation } from '../../../../core/observability/operation-telemetry';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -66,6 +67,22 @@ export class BulkImportJobDetailPageComponent {
         next: result => {
           this.auditRecords.set(result.items);
           this.state.set('ready');
+          // Wizard session completion (file drop -> results summary): only
+          // fires once the job reaches a terminal status.
+          const status = this.job()?.status;
+          if (status === 'COMPLETED') {
+            recordOperation({
+              name: 'Complete Bulk Import Job',
+              type: 'ui_action',
+              outcome: 'success',
+            });
+          } else if (status === 'FAILED' || status === 'CANCELLED') {
+            recordOperation({
+              name: 'Complete Bulk Import Job',
+              type: 'ui_action',
+              outcome: 'failure',
+            });
+          }
         },
         error: () => {
           this.state.set('error');
