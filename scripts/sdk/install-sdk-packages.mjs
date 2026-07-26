@@ -223,8 +223,10 @@ function packSdkPackages(sdkRoot) {
   rmSync(packDir, { recursive: true, force: true });
   mkdirSync(packDir, { recursive: true });
 
+  // The manifest is committed, so it must stay portable: never record the
+  // absolute SDK checkout path of whoever packed the tarballs. Only `packages`
+  // is consumed downstream (install + fingerprint).
   const manifest = {
-    sdkRoot,
     generatedAt: new Date().toISOString(),
     packages: {},
   };
