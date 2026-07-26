@@ -68,8 +68,6 @@ export interface CreateEstimateRequest {
   locationId?: string;
   /** Optional: Currency code — defaults when omitted */
   currencyUomId?: string;
-  /** Optional: Tax region ID — defaults when omitted */
-  taxRegionId?: string;
 }
 
 // ── CAP-002: Estimate Response (Stories 239, 238, 237, 236, 235, 234) ────────
@@ -81,7 +79,6 @@ export interface EstimateResponse {
   vehicleId: string;
   locationId?: string;
   currencyUomId?: string;
-  taxRegionId?: string;
   status: EstimateStatus;
   createdByUserId?: string;
   createdAt?: string;
