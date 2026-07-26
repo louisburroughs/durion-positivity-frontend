@@ -190,7 +190,6 @@ export class WorkexecService {
       crmContactIds: r.crmContactIds ?? [],
       locationId: r.locationId,
       currencyUomId: r.currencyUomId,
-      taxRegionId: r.taxRegionId,
     };
   }
 
@@ -388,7 +387,6 @@ export class WorkexecService {
       vehicleId: dto.vehicleId ?? '',
       locationId: dto.locationId,
       currencyUomId: dto.currencyUomId,
-      taxRegionId: dto.taxRegionId,
       status: (dto.status as EstimateStatus) ?? 'DRAFT',
       createdByUserId: dto.createdByUserId,
       createdAt: dto.createdAt,
@@ -841,7 +839,7 @@ export class WorkexecService {
   listActiveWorkorders(locationId: string, multiLocation = false): Observable<WorkorderWipView[]> {
     const pageable: Pageable = { page: 0, size: 100, sort: [] };
     return this.wipDashboard
-      .listWip(locationId, pageable, String(multiLocation))
+      .listWip(locationId, pageable, multiLocation)
       .pipe(map(page => (page.content ?? []).map(view => this.toWorkorderWipView(view))));
   }
 

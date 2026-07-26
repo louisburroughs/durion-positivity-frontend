@@ -47,7 +47,7 @@ export class AvailabilityComponent {
       switchMap(q => {
         if (!q.trim()) return of({ data: [] });
         return this.productsApi.searchProducts(
-          q, undefined, undefined, undefined, undefined, String(MAX_SUGGESTIONS),
+          q, undefined, undefined, undefined, undefined, MAX_SUGGESTIONS,
           undefined, 'body', false, { transferCache: false },
         ).pipe(catchError(() => of({ data: [] })));
       }),

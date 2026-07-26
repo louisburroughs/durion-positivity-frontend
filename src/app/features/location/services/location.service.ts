@@ -166,7 +166,7 @@ export class LocationService {
       country: this.asOptionalString(body['country']),
       mailingAddress: this.asOptionalString(body['mailingAddress']),
       active: this.asOptionalBoolean(body['active']),
-      responsiblePersonId: this.asOptionalNumber(body['responsiblePersonId']),
+      responsiblePersonId: this.asOptionalString(body['responsiblePersonId']),
       timezone: this.asOptionalString(body['timezone']),
       operatingHours: this.asArray(body['operatingHours']),
       holidayClosures: this.asArray(body['holidayClosures']),
