@@ -45,6 +45,9 @@ function resolveKey(tree, key) {
   return typeof value === 'string' ? value : null;
 }
 
+/** Group precedence — must match GROUP_ORDER in sitemap-page.component.ts. */
+const GROUP_ORDER = ['main', 'admin'];
+
 const source = loadJson(sourcePath);
 const baseLocale = loadJson(baseLocalePath);
 
@@ -80,7 +83,12 @@ const artifact = {
   application: source.application,
   version: source.version,
   generatedAt: new Date().toISOString(),
-  sections: sections.sort((a, b) => a.order - b.order),
+  // Serialize by (group, order) so the artifact ordering matches the rendered
+  // page, which groups main before admin then sorts by order within each group.
+  sections: sections.sort((a, b) => {
+    const byGroup = GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group);
+    return byGroup !== 0 ? byGroup : a.order - b.order;
+  }),
 };
 
 fs.mkdirSync(path.dirname(outputPath), { recursive: true });

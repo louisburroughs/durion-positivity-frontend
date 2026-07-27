@@ -63,12 +63,12 @@
         "group": {
           "type": "string",
           "enum": ["main", "admin"],
-          "description": "Visual/logical grouping of the section."
+          "description": "Grouping of the section. Groups are ordered main before admin; sections[] is serialized by (group, order)."
         },
         "order": {
           "type": "integer",
           "minimum": 1,
-          "description": "Display order across the site map."
+          "description": "Sort order within the section's group (lower sorts earlier)."
         }
       }
     }

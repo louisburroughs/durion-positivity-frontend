@@ -19,9 +19,9 @@ export interface SiteMapSection {
   descriptionKey: string;
   /** Roles required to see this section; undefined = all authenticated users. */
   roles?: readonly string[];
-  /** Visual grouping on the page. */
+  /** Visual grouping; groups always render/serialize `main` before `admin`. */
   group: 'main' | 'admin';
-  /** Display order within its group. */
+  /** Sort order within the section's group (lower sorts earlier). */
   order: number;
 }
 
