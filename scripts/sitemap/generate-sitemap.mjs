@@ -54,8 +54,10 @@ function titleCase(segment) {
     .join(' ');
 }
 
-// Group precedence — must match GROUP_ORDER in sitemap-page.component.ts, with
-// `other` (auto-discovered, uncurated top-level segments) sorted last.
+// Group precedence for the artifact. This is a SUPERSET of the page's order:
+// sitemap-page.component.ts renders only the curated 'main'/'admin' groups, while
+// the artifact appends 'other' (auto-discovered top-level segments) after them.
+// Keep the shared 'main' < 'admin' precedence aligned; 'other' is artifact-only.
 const GROUP_ORDER = ['main', 'admin', 'other'];
 
 const source = loadJson(sourcePath);

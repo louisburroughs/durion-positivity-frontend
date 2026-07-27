@@ -150,14 +150,25 @@ function walkRoutes(arrayLiteral, basePath, inheritedRoles, currentDir) {
     const children = getProp(el, 'children');
 
     if (loadChildren) {
+      // Fail fast on any unrecognized loadChildren shape or unresolved target —
+      // silently skipping would drop whole subtrees from the manifest/contract
+      // without a signal, and CI would not catch a route-tree pattern change.
       const target = loadChildrenTarget(loadChildren);
-      if (target) {
-        const childFile = resolve(currentDir, `${target.importPath}.ts`);
-        const childArray = findRoutesArray(parseFile(childFile), target.exportName);
-        if (childArray) {
-          out.push(...walkRoutes(childArray, full, roles, dirname(childFile)));
-        }
+      if (!target) {
+        throw new Error(
+          `Unable to parse loadChildren for route "${full}" — unexpected pattern. ` +
+            `Expected () => import('...').then(m => m.NAME).`,
+        );
       }
+      const childFile = resolve(currentDir, `${target.importPath}.ts`);
+      const childArray = findRoutesArray(parseFile(childFile), target.exportName);
+      if (!childArray) {
+        throw new Error(
+          `Could not find routes array "${target.exportName ?? '(unknown)'}" in ` +
+            `${childFile} (referenced by loadChildren on route "${full}").`,
+        );
+      }
+      out.push(...walkRoutes(childArray, full, roles, dirname(childFile)));
       continue; // the mount point itself is not a page
     }
 
