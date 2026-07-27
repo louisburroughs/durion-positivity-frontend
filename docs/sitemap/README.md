@@ -53,6 +53,8 @@ site-map.data.json ──▶ SitemapPageComponent   (humans, /app/sitemap)
   consumers never hold a stale index across a deployment.
 - Conforms to [`sitemap.schema.json`](./sitemap.schema.json). Bump `version`
   in `site-map.data.json` and the schema together on any breaking shape change.
+- Consumer guidance: [`client-module.md`](./client-module.md) specifies how
+  `pos-mcp-server` should fetch, validate, cache, and expose the artifact.
 
 ### Example
 
