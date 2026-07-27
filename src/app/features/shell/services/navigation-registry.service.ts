@@ -15,6 +15,7 @@ const NAV_REGISTRY: NavItem[] = [
   { key: 'SHELL.NAV.LOCATION', icon: 'location_city', route: '/app/location', order: 10, group: 'main' },
   { key: 'SHELL.NAV.SECURITY', icon: 'shield', route: '/app/security', roles: ['ROLE_ADMIN'], order: 11, group: 'admin' },
   { key: 'SHELL.NAV.ADMIN', icon: 'admin_panel_settings', route: '/app/admin', roles: ['ROLE_ADMIN'], order: 12, group: 'admin' },
+  { key: 'SHELL.NAV.SITEMAP', icon: 'account_tree', route: '/app/sitemap', roles: ['ROLE_ADMIN'], order: 13, group: 'admin' },
 ];
 
 @Injectable({ providedIn: 'root' })

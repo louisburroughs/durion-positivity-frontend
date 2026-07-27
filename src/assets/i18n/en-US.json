@@ -161,7 +161,8 @@
       "PRODUCT": "Products",
       "LOCATION": "Locations",
       "SECURITY": "Security",
-      "ADMIN": "Admin"
+      "ADMIN": "Admin",
+      "SITEMAP": "Site Map"
     },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Toggle navigation sidebar",

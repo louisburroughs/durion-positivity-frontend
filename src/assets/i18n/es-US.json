@@ -161,7 +161,8 @@
       "PRODUCT": "Productos",
       "LOCATION": "Sucursales",
       "SECURITY": "Seguridad",
-      "ADMIN": "Administración"
+      "ADMIN": "Administración",
+      "SITEMAP": "Mapa del sitio"
     },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Alternar barra lateral de navegación",

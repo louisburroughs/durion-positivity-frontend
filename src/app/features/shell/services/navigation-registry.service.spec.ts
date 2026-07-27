@@ -39,16 +39,17 @@ describe('NavigationRegistryService', () => {
       expect(keys).not.toContain('SHELL.NAV.SECURITY');
     });
 
-    it('returns all 12 items when user has ROLE_ADMIN', () => {
+    it('returns all 13 items when user has ROLE_ADMIN', () => {
       roleSignal.set(true);
 
       const items: NavItem[] = service.visibleNavItems();
 
-      expect(items).toHaveLength(12);
+      expect(items).toHaveLength(13);
 
       const keys = items.map(i => i.key);
       expect(keys).toContain('SHELL.NAV.ADMIN');
       expect(keys).toContain('SHELL.NAV.SECURITY');
+      expect(keys).toContain('SHELL.NAV.SITEMAP');
     });
 
     it('recomputes reactively when the underlying role signal changes', () => {
@@ -56,7 +57,7 @@ describe('NavigationRegistryService', () => {
 
       roleSignal.set(true);
 
-      expect(service.visibleNavItems()).toHaveLength(12);
+      expect(service.visibleNavItems()).toHaveLength(13);
 
       roleSignal.set(false);
 
