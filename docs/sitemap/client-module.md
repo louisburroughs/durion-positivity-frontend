@@ -54,18 +54,26 @@ interface SiteMap {
 }
 
 interface SiteMapClient {
-  // Returns cached data if fresh; otherwise fetches, validates, caches.
-  // On fetch failure, returns last-known-good and logs a warning.
-  getSiteMap(): SiteMap
+  // Async — may perform HTTP I/O. Returns cached data if fresh; otherwise
+  // fetches, validates, caches. On fetch failure, resolves to last-known-good
+  // and logs a warning (or rejects with SiteMapUnavailable if the cache is cold).
+  getSiteMap(): Promise<SiteMap>
 
-  // Sections the given roles can reach (a section with no `roles` is open to
+  // Async — forces a fetch regardless of TTL (e.g. an admin "reload" action).
+  refresh(): Promise<SiteMap>
+
+  // Pure, cached-only helper — no I/O. Filters the currently cached SiteMap to
+  // the sections the given roles can reach (a section with no `roles` is open to
   // any authenticated user; otherwise the user must hold >=1 listed role).
+  // Callers must ensure the cache is warm (await getSiteMap()) beforehand.
   visibleSections(userRoles: string[]): SiteMapSection[]
-
-  // Force a refresh regardless of TTL (e.g. an admin "reload" action).
-  refresh(): SiteMap
 }
 ```
+
+> Types are illustrative. Adapt `Promise<T>` to your language's async idiom
+> (futures, coroutines, blocking calls); the point is that the fetch-capable
+> methods do I/O while `visibleSections()` is a synchronous, pure filter over
+> the cached copy.
 
 ## Fetch + validation rules
 
