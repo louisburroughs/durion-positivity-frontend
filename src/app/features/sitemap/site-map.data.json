@@ -1,0 +1,92 @@
+{
+  "application": "durion-positivity-frontend",
+  "version": 1,
+  "sections": [
+    {
+      "route": "/app",
+      "titleKey": "SHELL.NAV.DASHBOARD",
+      "descriptionKey": "SITEMAP.SECTIONS.DASHBOARD.DESC",
+      "group": "main",
+      "order": 1
+    },
+    {
+      "route": "/app/workexec",
+      "titleKey": "SHELL.NAV.WORKORDERS",
+      "descriptionKey": "SITEMAP.SECTIONS.WORKORDERS.DESC",
+      "group": "main",
+      "order": 2
+    },
+    {
+      "route": "/app/crm",
+      "titleKey": "SHELL.NAV.CRM",
+      "descriptionKey": "SITEMAP.SECTIONS.CRM.DESC",
+      "group": "main",
+      "order": 3
+    },
+    {
+      "route": "/app/shopmgmt",
+      "titleKey": "SHELL.NAV.DISPATCH",
+      "descriptionKey": "SITEMAP.SECTIONS.DISPATCH.DESC",
+      "group": "main",
+      "order": 4
+    },
+    {
+      "route": "/app/accounting",
+      "titleKey": "SHELL.NAV.ACCOUNTING",
+      "descriptionKey": "SITEMAP.SECTIONS.ACCOUNTING.DESC",
+      "group": "main",
+      "order": 5
+    },
+    {
+      "route": "/app/billing",
+      "titleKey": "SHELL.NAV.BILLING",
+      "descriptionKey": "SITEMAP.SECTIONS.BILLING.DESC",
+      "group": "main",
+      "order": 6
+    },
+    {
+      "route": "/app/people",
+      "titleKey": "SHELL.NAV.PEOPLE",
+      "descriptionKey": "SITEMAP.SECTIONS.PEOPLE.DESC",
+      "group": "main",
+      "order": 7
+    },
+    {
+      "route": "/app/inventory",
+      "titleKey": "SHELL.NAV.INVENTORY",
+      "descriptionKey": "SITEMAP.SECTIONS.INVENTORY.DESC",
+      "group": "main",
+      "order": 8
+    },
+    {
+      "route": "/app/product",
+      "titleKey": "SHELL.NAV.PRODUCT",
+      "descriptionKey": "SITEMAP.SECTIONS.PRODUCT.DESC",
+      "group": "main",
+      "order": 9
+    },
+    {
+      "route": "/app/location",
+      "titleKey": "SHELL.NAV.LOCATION",
+      "descriptionKey": "SITEMAP.SECTIONS.LOCATION.DESC",
+      "group": "main",
+      "order": 10
+    },
+    {
+      "route": "/app/security",
+      "titleKey": "SHELL.NAV.SECURITY",
+      "descriptionKey": "SITEMAP.SECTIONS.SECURITY.DESC",
+      "roles": ["ROLE_ADMIN"],
+      "group": "admin",
+      "order": 11
+    },
+    {
+      "route": "/app/admin",
+      "titleKey": "SHELL.NAV.ADMIN",
+      "descriptionKey": "SITEMAP.SECTIONS.ADMIN.DESC",
+      "roles": ["ROLE_ADMIN"],
+      "group": "admin",
+      "order": 12
+    }
+  ]
+}

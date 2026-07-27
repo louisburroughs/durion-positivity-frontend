@@ -1,0 +1,24 @@
+<section class="sitemap" aria-labelledby="sitemap-title">
+  <header class="sitemap__header">
+    <h1 id="sitemap-title" class="sitemap__title">{{ 'SITEMAP.TITLE' | translate }}</h1>
+    <p class="sitemap__intro">{{ 'SITEMAP.INTRO' | translate }}</p>
+  </header>
+
+  @if (state() === 'empty') {
+  <p class="sitemap__empty" role="status">{{ 'SITEMAP.EMPTY' | translate }}</p>
+  } @else {
+  @for (group of groups(); track group.headingKey) {
+  <section class="sitemap__group" [attr.aria-label]="group.headingKey | translate">
+    <h2 class="sitemap__group-heading">{{ group.headingKey | translate }}</h2>
+    <ul class="sitemap__list">
+      @for (section of group.sections; track section.route) {
+      <li class="sitemap__item">
+        <a class="sitemap__link" [routerLink]="section.route">{{ section.titleKey | translate }}</a>
+        <p class="sitemap__desc">{{ section.descriptionKey | translate }}</p>
+      </li>
+      }
+    </ul>
+  </section>
+  }
+  }
+</section>

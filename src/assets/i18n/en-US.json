@@ -221,7 +221,8 @@
       }
     },
     "FOOTER": {
-      "COPYRIGHT": "© {{ year }} Durion Support Services. All rights reserved."
+      "COPYRIGHT": "© {{ year }} Durion Support Services. All rights reserved.",
+      "SITEMAP": "Site Map"
     },
     "CONTENT_PANEL": {
       "ARIA_LABEL": "Main content area"
@@ -5142,6 +5143,53 @@
         "PENDING": "Pending",
         "APPROVED": "Approved",
         "REJECTED": "Rejected"
+      }
+    }
+  },
+  "SITEMAP": {
+    "TITLE": "Site Map",
+    "INTRO": "Browse every area of the application available to you.",
+    "EMPTY": "No sections are available for your account.",
+    "GROUP": {
+      "MAIN": "Main",
+      "ADMIN": "Administration"
+    },
+    "SECTIONS": {
+      "DASHBOARD": {
+        "DESC": "Overview of activity and quick access to your work."
+      },
+      "WORKORDERS": {
+        "DESC": "Create, schedule, and track work orders."
+      },
+      "CRM": {
+        "DESC": "Manage customers, contacts, and relationships."
+      },
+      "DISPATCH": {
+        "DESC": "Coordinate shop operations and dispatching."
+      },
+      "ACCOUNTING": {
+        "DESC": "Ledgers, journals, and financial records."
+      },
+      "BILLING": {
+        "DESC": "Invoices, payments, and billing activity."
+      },
+      "PEOPLE": {
+        "DESC": "Employees, roles, and timekeeping."
+      },
+      "INVENTORY": {
+        "DESC": "Track stock levels and inventory movements."
+      },
+      "PRODUCT": {
+        "DESC": "Browse the product catalog and definitions."
+      },
+      "LOCATION": {
+        "DESC": "Sites, facilities, and location records."
+      },
+      "SECURITY": {
+        "DESC": "Access control and security administration."
+      },
+      "ADMIN": {
+        "DESC": "System administration and configuration."
       }
     }
   }

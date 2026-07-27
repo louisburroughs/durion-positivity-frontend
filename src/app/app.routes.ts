@@ -60,6 +60,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'sitemap',
+        loadComponent: () =>
+          import('./features/sitemap/pages/sitemap/sitemap-page.component').then(
+            m => m.SitemapPageComponent,
+          ),
+      },
+      {
         path: 'admin',
         data: { roles: ['ROLE_ADMIN'] },
         loadChildren: () =>

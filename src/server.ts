@@ -64,6 +64,18 @@ app.use(
 );
 
 /**
+ * The site-map artifact is a build-time export consumed by the backend
+ * `pos-mcp-server`. It is not fingerprinted and changes per deployment, so it
+ * must not be long-cached — otherwise consumers could keep a stale site index
+ * after a release. Served explicitly before the long-cached static handler.
+ */
+app.get('/sitemap.json', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.sendFile(join(browserDistFolder, 'sitemap.json'));
+});
+
+/**
  * Serve static files from /browser
  */
 app.use(

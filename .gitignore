@@ -47,6 +47,9 @@ PR-Review-Processing.md
 
 .playwright-mcp/*
 
+# Generated site-map build artifact (produced by scripts/sitemap/generate-sitemap.mjs)
+/public/sitemap.json
+
 # Playwright site audit output
 /artifacts/audit/
 /test-results/
