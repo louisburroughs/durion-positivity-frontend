@@ -10,6 +10,14 @@ HTTP, validates it, caches it, and exposes the parsed sections to the rest of
 the server. It must not import frontend code or types — the only shared contract
 is [`sitemap.schema.json`](./sitemap.schema.json).
 
+> **The artifact is redacted.** It is served unauthenticated, so the frontend
+> strips the privileged surface before publishing: no `security`/`admin`
+> sections, no role-gated pages, and no `roles` fields. Consequently **every
+> route in the artifact is reachable by any authenticated user** — treat the
+> list as role-unrestricted. The `roles` fields below remain in the schema for
+> forward-compatibility but are not present today; a consumer must not rely on
+> the artifact to learn about admin-only routes.
+
 ## Responsibilities
 
 1. **Fetch** `GET ${FRONTEND_BASE_URL}/sitemap.json` (no auth header).
@@ -158,9 +166,9 @@ The client module's test suite MUST cover the following cases. Use the
 | # | Case | Expectation |
 |---|------|-------------|
 | 1 | Happy path — 200 + valid body | `getSiteMap()` returns parsed `SiteMap` with all sections in `(group, order)` order |
-| 2 | `visibleSections([])` (no roles) | returns only sections without a `roles` array |
-| 3 | `visibleSections(["ROLE_ADMIN"])` | includes admin-gated sections (e.g. `/app/admin`) |
-| 4 | Section role match is "any of" | a section requiring `["ROLE_A","ROLE_B"]` is visible to a user holding just `ROLE_B` |
+| 2 | `visibleSections([])` | returns **all** sections — the redacted artifact carries no `roles`, so none are gated |
+| 3 | Redaction invariant (sections) | no section has `group:"admin"` or a `roles` field; no `/app/security` or `/app/admin` section is present |
+| 4 | Role helper is defensive | given a SYNTHETIC section with `["ROLE_A","ROLE_B"]`, `visibleSections(["ROLE_B"])` includes it (any-of match) — guards a future non-redacted feed |
 | 5 | HTTP 500 / timeout with a warm cache | returns last-known-good; logs a warning; does not throw |
 | 6 | HTTP failure with a cold cache | surfaces a clear "unavailable" error, not a raw parse/HTTP exception |
 | 7 | Non-JSON or malformed body | treated as a fetch failure (case 5/6 behavior) |
@@ -169,8 +177,8 @@ The client module's test suite MUST cover the following cases. Use the
 | 10 | TTL not elapsed | second call returns cached copy without a second HTTP request |
 | 11 | `refresh()` | performs an HTTP request even within TTL |
 | 12 | Unknown extra field on a section/page | ignored, not fatal (forward-compat) |
-| 13 | `visiblePages([])` | returns pages from open sections only, dropping `roles`-gated pages |
-| 14 | `visiblePages(["ROLE_ADMIN"])` | includes admin-section pages and role-gated pages (e.g. `/app/people/identity-compliance`) |
+| 13 | `visiblePages([])` | returns **all** pages — the redacted artifact carries no role-gated pages |
+| 14 | Redaction invariant (pages) | no page has a `roles` field; the admin-only `/app/people/identity-compliance` is absent |
 | 15 | Dynamic page shape | a page with `dynamic:true` carries a `:param` route and a `params` array |
 | 16 | `other`-group section | parsed with a `title` and no `titleKey`/`description` |
 
@@ -202,17 +210,6 @@ sync. Conforms to [`sitemap.schema.json`](./sitemap.schema.json).
           "params": ["partyId"]
         }
       ]
-    },
-    {
-      "route": "/app/admin",
-      "titleKey": "SHELL.NAV.ADMIN",
-      "title": "Admin",
-      "descriptionKey": "SITEMAP.SECTIONS.ADMIN.DESC",
-      "description": "System administration and configuration.",
-      "roles": ["ROLE_ADMIN"],
-      "group": "admin",
-      "order": 12,
-      "pages": []
     },
     {
       "route": "/app/bulk-import",
