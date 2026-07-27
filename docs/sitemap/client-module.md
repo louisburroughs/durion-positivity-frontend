@@ -32,6 +32,35 @@ is [`sitemap.schema.json`](./sitemap.schema.json).
 Do **not** hardcode the host. `/sitemap.json` is served by the frontend itself,
 ahead of any auth, so send **no** `Authorization` header.
 
+### Environment wiring
+
+`FRONTEND_BASE_URL` is set in the **backend deployment config** (the pos-mcp-server
+side), not in the frontend. The frontend only *serves* `/sitemap.json` at its own
+origin — there is nothing to configure in `src/environments/*.ts` for this.
+
+| Environment | `FRONTEND_BASE_URL` | Full artifact URL |
+|-------------|---------------------|-------------------|
+| Alpha (in-cluster, preferred) | `http://pos-frontend:4000` | `http://pos-frontend:4000/sitemap.json` |
+| Alpha (public edge) | `https://durionpos.org` | `https://durionpos.org/sitemap.json` |
+
+- **`pos-frontend`** is the frontend's docker-compose service name; the SSR server
+  listens on **port 4000** (`Dockerfile`: `ENV PORT=4000` / `EXPOSE 4000`). This is
+  the same alpha compose network on which the API gateway is `pos-api-gateway:8080`.
+- **Prefer the in-cluster service name** (`http://pos-frontend:4000`) for
+  container-to-container fetches — it avoids a public round-trip, TLS, and any edge
+  auth. Use the public URL only if pos-mcp-server runs outside that network.
+- **Where to set it for alpha:** the alpha env file (`/opt/durion/alpha/.env`) and/or
+  the pos-mcp-server service block in the alpha `docker-compose.prod.yml` (both in
+  the backend/deploy repo under `/opt/durion/alpha/`, not this frontend repo):
+
+  ```
+  FRONTEND_BASE_URL=http://pos-frontend:4000
+  ```
+
+> `FRONTEND_BASE_URL` is the name used throughout this spec; pos-mcp-server must
+> read that variable. If its code uses a different name, set that one to the same
+> value.
+
 ## Interface (language-agnostic)
 
 ```
