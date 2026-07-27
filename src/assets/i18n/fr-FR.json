@@ -221,7 +221,8 @@
       }
     },
     "FOOTER": {
-      "COPYRIGHT": "© {{ year }} Durion Support Services. Tous droits réservés."
+      "COPYRIGHT": "© {{ year }} Durion Support Services. Tous droits réservés.",
+      "SITEMAP": "Plan du site"
     },
     "CONTENT_PANEL": {
       "ARIA_LABEL": "Zone de contenu principal"
@@ -539,7 +540,9 @@
     }
   },
   "CRM": {
-    "PARTY_DETAIL": { "FALLBACK_TITLE": "Détails du compte" },
+    "PARTY_DETAIL": {
+      "FALLBACK_TITLE": "Détails du compte"
+    },
     "LANDING": {
       "TITLE": "Clients",
       "SUBTITLE": "Gérez les comptes clients, suivez les détails des parties et accédez aux informations d'intégration.",
@@ -5112,6 +5115,53 @@
         "PENDING": "En attente",
         "APPROVED": "Approuve",
         "REJECTED": "Rejete"
+      }
+    }
+  },
+  "SITEMAP": {
+    "TITLE": "Plan du site",
+    "INTRO": "Parcourez toutes les sections de l’application qui vous sont accessibles.",
+    "EMPTY": "Aucune section n’est disponible pour votre compte.",
+    "GROUP": {
+      "MAIN": "Principal",
+      "ADMIN": "Administration"
+    },
+    "SECTIONS": {
+      "DASHBOARD": {
+        "DESC": "Aperçu de l'activité et accès rapide à votre travail."
+      },
+      "WORKORDERS": {
+        "DESC": "Créez, planifiez et suivez les ordres de travail."
+      },
+      "CRM": {
+        "DESC": "Gérez les clients, les contacts et les relations."
+      },
+      "DISPATCH": {
+        "DESC": "Coordonnez les opérations de l'atelier et la répartition."
+      },
+      "ACCOUNTING": {
+        "DESC": "Grands livres, journaux et registres financiers."
+      },
+      "BILLING": {
+        "DESC": "Factures, paiements et activité de facturation."
+      },
+      "PEOPLE": {
+        "DESC": "Employés, rôles et gestion du temps."
+      },
+      "INVENTORY": {
+        "DESC": "Suivez les niveaux de stock et les mouvements d’inventaire."
+      },
+      "PRODUCT": {
+        "DESC": "Parcourez le catalogue et les définitions de produits."
+      },
+      "LOCATION": {
+        "DESC": "Sites, installations et registres d’emplacement."
+      },
+      "SECURITY": {
+        "DESC": "Contrôle d’accès et administration de la sécurité."
+      },
+      "ADMIN": {
+        "DESC": "Administration et configuration du système."
       }
     }
   }

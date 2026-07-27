@@ -51,26 +51,86 @@
       "SELECT_FIRST": "Sélectionnez d'abord un enregistrement"
     },
     "KIND": {
-      "ESTIMATE": { "LABEL": "Estimation", "PLACEHOLDER": "Rechercher par nom de client ou id d'estimation" },
-      "WORKORDER": { "LABEL": "Bon de travail", "PLACEHOLDER": "Rechercher par nom de client ou id de bon de travail" },
-      "APPROVAL": { "LABEL": "Approbation", "PLACEHOLDER": "Rechercher par nom de client, id d'estimation ou de bon de travail" },
-      "CUSTOMER": { "LABEL": "Client", "PLACEHOLDER": "Rechercher des clients par nom…" },
-      "INVOICE": { "LABEL": "Facture", "PLACEHOLDER": "Rechercher par client, n° de facture ou n° de bon de travail" },
-      "EMPLOYEE": { "LABEL": "Employé", "PLACEHOLDER": "Rechercher par nom ou ID d'employé…" },
-      "PERSON": { "LABEL": "Personne", "PLACEHOLDER": "Rechercher par nom…" },
-      "APPOINTMENT": { "LABEL": "Rendez-vous", "PLACEHOLDER": "Saisir l'id du rendez-vous (p. ex. APT-1234)" },
-      "LEDGER": { "LABEL": "Écriture comptable", "PLACEHOLDER": "Saisir l'id de l'écriture (p. ex. LE-001)" },
-      "PO": { "LABEL": "Bon de commande", "PLACEHOLDER": "Saisir l'id du bon de commande (p. ex. PO-001)" },
-      "EVENT": { "LABEL": "Événement d'ingestion", "PLACEHOLDER": "Saisir l'UUID de l'événement" },
-      "RULESET": { "LABEL": "Ensemble de règles", "PLACEHOLDER": "Saisir l'id de l'ensemble de règles" },
-      "VENDOR_PAYMENT": { "LABEL": "Paiement fournisseur", "PLACEHOLDER": "Saisir l'id du paiement fournisseur" },
-      "CREDIT_MEMO": { "LABEL": "Note de crédit", "PLACEHOLDER": "Saisir l'id de la note de crédit" },
-      "LOCATION": { "LABEL": "Emplacement", "PLACEHOLDER": "Saisir l'id de l'emplacement" },
-      "ROLE": { "LABEL": "Rôle", "PLACEHOLDER": "Saisir le nom du rôle (p. ex. ROLE_MANAGER)" },
-      "PAYMENT": { "LABEL": "Paiement", "PLACEHOLDER": "Saisir l'id du paiement (p. ex. PAY-00456)" },
-      "RECEIPT": { "LABEL": "Reçu", "PLACEHOLDER": "Saisir l'id du reçu (p. ex. REC-00789)" },
-      "SESSION": { "LABEL": "Session de travail", "PLACEHOLDER": "Saisir l'id de la session" },
-      "PUTAWAY": { "LABEL": "Tâche de rangement", "PLACEHOLDER": "Saisir l'id de la tâche (p. ex. PT-001)" }
+      "ESTIMATE": {
+        "LABEL": "Estimation",
+        "PLACEHOLDER": "Rechercher par nom de client ou id d'estimation"
+      },
+      "WORKORDER": {
+        "LABEL": "Bon de travail",
+        "PLACEHOLDER": "Rechercher par nom de client ou id de bon de travail"
+      },
+      "APPROVAL": {
+        "LABEL": "Approbation",
+        "PLACEHOLDER": "Rechercher par nom de client, id d'estimation ou de bon de travail"
+      },
+      "CUSTOMER": {
+        "LABEL": "Client",
+        "PLACEHOLDER": "Rechercher des clients par nom…"
+      },
+      "INVOICE": {
+        "LABEL": "Facture",
+        "PLACEHOLDER": "Rechercher par client, n° de facture ou n° de bon de travail"
+      },
+      "EMPLOYEE": {
+        "LABEL": "Employé",
+        "PLACEHOLDER": "Rechercher par nom ou ID d'employé…"
+      },
+      "PERSON": {
+        "LABEL": "Personne",
+        "PLACEHOLDER": "Rechercher par nom…"
+      },
+      "APPOINTMENT": {
+        "LABEL": "Rendez-vous",
+        "PLACEHOLDER": "Saisir l'id du rendez-vous (p. ex. APT-1234)"
+      },
+      "LEDGER": {
+        "LABEL": "Écriture comptable",
+        "PLACEHOLDER": "Saisir l'id de l'écriture (p. ex. LE-001)"
+      },
+      "PO": {
+        "LABEL": "Bon de commande",
+        "PLACEHOLDER": "Saisir l'id du bon de commande (p. ex. PO-001)"
+      },
+      "EVENT": {
+        "LABEL": "Événement d'ingestion",
+        "PLACEHOLDER": "Saisir l'UUID de l'événement"
+      },
+      "RULESET": {
+        "LABEL": "Ensemble de règles",
+        "PLACEHOLDER": "Saisir l'id de l'ensemble de règles"
+      },
+      "VENDOR_PAYMENT": {
+        "LABEL": "Paiement fournisseur",
+        "PLACEHOLDER": "Saisir l'id du paiement fournisseur"
+      },
+      "CREDIT_MEMO": {
+        "LABEL": "Note de crédit",
+        "PLACEHOLDER": "Saisir l'id de la note de crédit"
+      },
+      "LOCATION": {
+        "LABEL": "Emplacement",
+        "PLACEHOLDER": "Saisir l'id de l'emplacement"
+      },
+      "ROLE": {
+        "LABEL": "Rôle",
+        "PLACEHOLDER": "Saisir le nom du rôle (p. ex. ROLE_MANAGER)"
+      },
+      "PAYMENT": {
+        "LABEL": "Paiement",
+        "PLACEHOLDER": "Saisir l'id du paiement (p. ex. PAY-00456)"
+      },
+      "RECEIPT": {
+        "LABEL": "Reçu",
+        "PLACEHOLDER": "Saisir l'id du reçu (p. ex. REC-00789)"
+      },
+      "SESSION": {
+        "LABEL": "Session de travail",
+        "PLACEHOLDER": "Saisir l'id de la session"
+      },
+      "PUTAWAY": {
+        "LABEL": "Tâche de rangement",
+        "PLACEHOLDER": "Saisir l'id de la tâche (p. ex. PT-001)"
+      }
     }
   },
   "SYSTEM": {
@@ -161,7 +221,8 @@
       }
     },
     "FOOTER": {
-      "COPYRIGHT": "© {{ year }} Durion Support Services. Tous droits réservés."
+      "COPYRIGHT": "© {{ year }} Durion Support Services. Tous droits réservés.",
+      "SITEMAP": "Plan du site"
     },
     "CONTENT_PANEL": {
       "ARIA_LABEL": "Zone de contenu principal"
@@ -517,7 +578,9 @@
     }
   },
   "CRM": {
-    "PARTY_DETAIL": { "FALLBACK_TITLE": "Détails du compte" },
+    "PARTY_DETAIL": {
+      "FALLBACK_TITLE": "Détails du compte"
+    },
     "LANDING": {
       "TITLE": "Clients",
       "SUBTITLE": "Gérez les comptes clients, suivez les détails des parties et accédez aux informations d'intégration.",
@@ -5086,6 +5149,53 @@
         "PENDING": "En attente",
         "APPROVED": "Approuve",
         "REJECTED": "Rejete"
+      }
+    }
+  },
+  "SITEMAP": {
+    "TITLE": "Plan du site",
+    "INTRO": "Parcourez toutes les sections de l’application qui vous sont accessibles.",
+    "EMPTY": "Aucune section n’est disponible pour votre compte.",
+    "GROUP": {
+      "MAIN": "Principal",
+      "ADMIN": "Administration"
+    },
+    "SECTIONS": {
+      "DASHBOARD": {
+        "DESC": "Aperçu de l'activité et accès rapide à votre travail."
+      },
+      "WORKORDERS": {
+        "DESC": "Créez, planifiez et suivez les ordres de travail."
+      },
+      "CRM": {
+        "DESC": "Gérez les clients, les contacts et les relations."
+      },
+      "DISPATCH": {
+        "DESC": "Coordonnez les opérations de l'atelier et la répartition."
+      },
+      "ACCOUNTING": {
+        "DESC": "Grands livres, journaux et registres financiers."
+      },
+      "BILLING": {
+        "DESC": "Factures, paiements et activité de facturation."
+      },
+      "PEOPLE": {
+        "DESC": "Employés, rôles et gestion du temps."
+      },
+      "INVENTORY": {
+        "DESC": "Suivez les niveaux de stock et les mouvements d’inventaire."
+      },
+      "PRODUCT": {
+        "DESC": "Parcourez le catalogue et les définitions de produits."
+      },
+      "LOCATION": {
+        "DESC": "Sites, installations et registres d’emplacement."
+      },
+      "SECURITY": {
+        "DESC": "Contrôle d’accès et administration de la sécurité."
+      },
+      "ADMIN": {
+        "DESC": "Administration et configuration du système."
       }
     }
   }

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://durion.example/schemas/sitemap-1.json",
+  "title": "Durion Positivity Frontend Site Map",
+  "description": "Machine-readable index of the frontend's navigable sections, published as the read-only /sitemap.json build artifact and consumed by pos-mcp-server. Versioned; bump `version` on breaking shape changes.",
+  "type": "object",
+  "required": ["application", "version", "generatedAt", "sections"],
+  "additionalProperties": false,
+  "properties": {
+    "application": {
+      "type": "string",
+      "description": "Owning application identifier.",
+      "const": "durion-positivity-frontend"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Contract version of the site-map shape."
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of when this artifact was generated (per build)."
+    },
+    "sections": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/section" }
+    }
+  },
+  "$defs": {
+    "section": {
+      "type": "object",
+      "required": ["route", "titleKey", "title", "descriptionKey", "description", "group", "order"],
+      "additionalProperties": false,
+      "properties": {
+        "route": {
+          "type": "string",
+          "description": "Canonical in-app route path, e.g. /app/crm.",
+          "pattern": "^/"
+        },
+        "titleKey": {
+          "type": "string",
+          "description": "i18n key for the section title (SHELL.NAV.*)."
+        },
+        "title": {
+          "type": "string",
+          "description": "Section title resolved to the base locale (en-US)."
+        },
+        "descriptionKey": {
+          "type": "string",
+          "description": "i18n key for the section description (SITEMAP.SECTIONS.*)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Section description resolved to the base locale (en-US)."
+        },
+        "roles": {
+          "type": "array",
+          "description": "Roles required to access the section; absent = all authenticated users.",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "group": {
+          "type": "string",
+          "enum": ["main", "admin"],
+          "description": "Grouping of the section. Groups are ordered main before admin; sections[] is serialized by (group, order)."
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Sort order within the section's group (lower sorts earlier)."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+.sitemap {
+  padding: var(--space-6);
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.sitemap__header {
+  margin-bottom: var(--space-6);
+}
+
+.sitemap__title {
+  margin: 0 0 var(--space-2);
+  color: var(--currentTextColor);
+}
+
+.sitemap__intro {
+  margin: 0;
+  color: var(--handleColor);
+}
+
+.sitemap__empty {
+  color: var(--handleColor);
+}
+
+.sitemap__group {
+  margin-bottom: var(--space-6);
+}
+
+.sitemap__group-heading {
+  margin: 0 0 var(--space-3);
+  font-size: 1.125rem;
+  color: var(--currentTextColor);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--space-2);
+}
+
+.sitemap__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.sitemap__item {
+  border: 1px solid var(--border-color);
+  background: var(--cardBackground);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.sitemap__link {
+  color: var(--brand-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sitemap__link:hover,
+.sitemap__link:focus-visible {
+  text-decoration: underline;
+}
+
+.sitemap__desc {
+  margin: var(--space-2) 0 0;
+  color: var(--handleColor);
+  font-size: 0.875rem;
+}

@@ -221,7 +221,8 @@
       }
     },
     "FOOTER": {
-      "COPYRIGHT": "© {{ year }} Durion Support Services. Todos los derechos reservados."
+      "COPYRIGHT": "© {{ year }} Durion Support Services. Todos los derechos reservados.",
+      "SITEMAP": "Mapa del sitio"
     },
     "CONTENT_PANEL": {
       "ARIA_LABEL": "Área de contenido principal"
@@ -5077,6 +5078,53 @@
         "PENDING": "Pendiente",
         "APPROVED": "Aprobado",
         "REJECTED": "Rechazado"
+      }
+    }
+  },
+  "SITEMAP": {
+    "TITLE": "Mapa del sitio",
+    "INTRO": "Explore todas las áreas de la aplicación disponibles para usted.",
+    "EMPTY": "No hay secciones disponibles para su cuenta.",
+    "GROUP": {
+      "MAIN": "Principal",
+      "ADMIN": "Administración"
+    },
+    "SECTIONS": {
+      "DASHBOARD": {
+        "DESC": "Resumen de la actividad y acceso rápido a su trabajo."
+      },
+      "WORKORDERS": {
+        "DESC": "Cree, programe y realice seguimiento de órdenes de trabajo."
+      },
+      "CRM": {
+        "DESC": "Gestione clientes, contactos y relaciones."
+      },
+      "DISPATCH": {
+        "DESC": "Coordine las operaciones del taller y el despacho."
+      },
+      "ACCOUNTING": {
+        "DESC": "Libros contables, asientos y registros financieros."
+      },
+      "BILLING": {
+        "DESC": "Facturas, pagos y actividad de facturación."
+      },
+      "PEOPLE": {
+        "DESC": "Empleados, roles y control de horarios."
+      },
+      "INVENTORY": {
+        "DESC": "Controle los niveles de stock y los movimientos de inventario."
+      },
+      "PRODUCT": {
+        "DESC": "Explore el catálogo y las definiciones de productos."
+      },
+      "LOCATION": {
+        "DESC": "Sitios, instalaciones y registros de ubicación."
+      },
+      "SECURITY": {
+        "DESC": "Control de acceso y administración de seguridad."
+      },
+      "ADMIN": {
+        "DESC": "Administración y configuración del sistema."
       }
     }
   }

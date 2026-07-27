@@ -51,26 +51,86 @@
       "SELECT_FIRST": "Selecciona un registro primero"
     },
     "KIND": {
-      "ESTIMATE": { "LABEL": "Presupuesto", "PLACEHOLDER": "Buscar por nombre de cliente o id de presupuesto" },
-      "WORKORDER": { "LABEL": "Orden de trabajo", "PLACEHOLDER": "Buscar por nombre de cliente o id de orden de trabajo" },
-      "APPROVAL": { "LABEL": "Aprobación", "PLACEHOLDER": "Buscar por nombre de cliente, id de presupuesto o de orden de trabajo" },
-      "CUSTOMER": { "LABEL": "Cliente", "PLACEHOLDER": "Buscar clientes por nombre…" },
-      "INVOICE": { "LABEL": "Factura", "PLACEHOLDER": "Buscar por cliente, n.º de factura o n.º de orden de trabajo" },
-      "EMPLOYEE": { "LABEL": "Empleado", "PLACEHOLDER": "Buscar por nombre o ID de empleado…" },
-      "PERSON": { "LABEL": "Persona", "PLACEHOLDER": "Buscar por nombre…" },
-      "APPOINTMENT": { "LABEL": "Cita", "PLACEHOLDER": "Ingresa el id de la cita (p. ej. APT-1234)" },
-      "LEDGER": { "LABEL": "Asiento contable", "PLACEHOLDER": "Ingresa el id del asiento (p. ej. LE-001)" },
-      "PO": { "LABEL": "Orden de compra", "PLACEHOLDER": "Ingresa el id de la orden de compra (p. ej. PO-001)" },
-      "EVENT": { "LABEL": "Evento de ingesta", "PLACEHOLDER": "Ingresa el UUID del evento" },
-      "RULESET": { "LABEL": "Conjunto de reglas", "PLACEHOLDER": "Ingresa el id del conjunto de reglas" },
-      "VENDOR_PAYMENT": { "LABEL": "Pago a proveedor", "PLACEHOLDER": "Ingresa el id del pago a proveedor" },
-      "CREDIT_MEMO": { "LABEL": "Nota de crédito", "PLACEHOLDER": "Ingresa el id de la nota de crédito" },
-      "LOCATION": { "LABEL": "Ubicación", "PLACEHOLDER": "Ingresa el id de la ubicación" },
-      "ROLE": { "LABEL": "Rol", "PLACEHOLDER": "Ingresa el nombre del rol (p. ej. ROLE_MANAGER)" },
-      "PAYMENT": { "LABEL": "Pago", "PLACEHOLDER": "Ingresa el id del pago (p. ej. PAY-00456)" },
-      "RECEIPT": { "LABEL": "Recibo", "PLACEHOLDER": "Ingresa el id del recibo (p. ej. REC-00789)" },
-      "SESSION": { "LABEL": "Sesión de trabajo", "PLACEHOLDER": "Ingresa el id de la sesión" },
-      "PUTAWAY": { "LABEL": "Tarea de almacenamiento", "PLACEHOLDER": "Ingresa el id de la tarea (p. ej. PT-001)" }
+      "ESTIMATE": {
+        "LABEL": "Presupuesto",
+        "PLACEHOLDER": "Buscar por nombre de cliente o id de presupuesto"
+      },
+      "WORKORDER": {
+        "LABEL": "Orden de trabajo",
+        "PLACEHOLDER": "Buscar por nombre de cliente o id de orden de trabajo"
+      },
+      "APPROVAL": {
+        "LABEL": "Aprobación",
+        "PLACEHOLDER": "Buscar por nombre de cliente, id de presupuesto o de orden de trabajo"
+      },
+      "CUSTOMER": {
+        "LABEL": "Cliente",
+        "PLACEHOLDER": "Buscar clientes por nombre…"
+      },
+      "INVOICE": {
+        "LABEL": "Factura",
+        "PLACEHOLDER": "Buscar por cliente, n.º de factura o n.º de orden de trabajo"
+      },
+      "EMPLOYEE": {
+        "LABEL": "Empleado",
+        "PLACEHOLDER": "Buscar por nombre o ID de empleado…"
+      },
+      "PERSON": {
+        "LABEL": "Persona",
+        "PLACEHOLDER": "Buscar por nombre…"
+      },
+      "APPOINTMENT": {
+        "LABEL": "Cita",
+        "PLACEHOLDER": "Ingresa el id de la cita (p. ej. APT-1234)"
+      },
+      "LEDGER": {
+        "LABEL": "Asiento contable",
+        "PLACEHOLDER": "Ingresa el id del asiento (p. ej. LE-001)"
+      },
+      "PO": {
+        "LABEL": "Orden de compra",
+        "PLACEHOLDER": "Ingresa el id de la orden de compra (p. ej. PO-001)"
+      },
+      "EVENT": {
+        "LABEL": "Evento de ingesta",
+        "PLACEHOLDER": "Ingresa el UUID del evento"
+      },
+      "RULESET": {
+        "LABEL": "Conjunto de reglas",
+        "PLACEHOLDER": "Ingresa el id del conjunto de reglas"
+      },
+      "VENDOR_PAYMENT": {
+        "LABEL": "Pago a proveedor",
+        "PLACEHOLDER": "Ingresa el id del pago a proveedor"
+      },
+      "CREDIT_MEMO": {
+        "LABEL": "Nota de crédito",
+        "PLACEHOLDER": "Ingresa el id de la nota de crédito"
+      },
+      "LOCATION": {
+        "LABEL": "Ubicación",
+        "PLACEHOLDER": "Ingresa el id de la ubicación"
+      },
+      "ROLE": {
+        "LABEL": "Rol",
+        "PLACEHOLDER": "Ingresa el nombre del rol (p. ej. ROLE_MANAGER)"
+      },
+      "PAYMENT": {
+        "LABEL": "Pago",
+        "PLACEHOLDER": "Ingresa el id del pago (p. ej. PAY-00456)"
+      },
+      "RECEIPT": {
+        "LABEL": "Recibo",
+        "PLACEHOLDER": "Ingresa el id del recibo (p. ej. REC-00789)"
+      },
+      "SESSION": {
+        "LABEL": "Sesión de trabajo",
+        "PLACEHOLDER": "Ingresa el id de la sesión"
+      },
+      "PUTAWAY": {
+        "LABEL": "Tarea de almacenamiento",
+        "PLACEHOLDER": "Ingresa el id de la tarea (p. ej. PT-001)"
+      }
     }
   },
   "SYSTEM": {
@@ -161,7 +221,8 @@
       }
     },
     "FOOTER": {
-      "COPYRIGHT": "© {{ year }} Durion Support Services. Todos los derechos reservados."
+      "COPYRIGHT": "© {{ year }} Durion Support Services. Todos los derechos reservados.",
+      "SITEMAP": "Mapa del sitio"
     },
     "CONTENT_PANEL": {
       "ARIA_LABEL": "Área de contenido principal"
@@ -517,7 +578,9 @@
     }
   },
   "CRM": {
-    "PARTY_DETAIL": { "FALLBACK_TITLE": "Detalles de la cuenta" },
+    "PARTY_DETAIL": {
+      "FALLBACK_TITLE": "Detalles de la cuenta"
+    },
     "LANDING": {
       "TITLE": "Clientes",
       "SUBTITLE": "Administra cuentas de clientes, rastrea detalles de parties y accede a información de integración.",
@@ -5086,6 +5149,53 @@
         "PENDING": "Pendiente",
         "APPROVED": "Aprobado",
         "REJECTED": "Rechazado"
+      }
+    }
+  },
+  "SITEMAP": {
+    "TITLE": "Mapa del sitio",
+    "INTRO": "Explore todas las áreas de la aplicación disponibles para usted.",
+    "EMPTY": "No hay secciones disponibles para su cuenta.",
+    "GROUP": {
+      "MAIN": "Principal",
+      "ADMIN": "Administración"
+    },
+    "SECTIONS": {
+      "DASHBOARD": {
+        "DESC": "Resumen de la actividad y acceso rápido a su trabajo."
+      },
+      "WORKORDERS": {
+        "DESC": "Cree, programe y realice seguimiento de órdenes de trabajo."
+      },
+      "CRM": {
+        "DESC": "Gestione clientes, contactos y relaciones."
+      },
+      "DISPATCH": {
+        "DESC": "Coordine las operaciones del taller y el despacho."
+      },
+      "ACCOUNTING": {
+        "DESC": "Libros contables, asientos y registros financieros."
+      },
+      "BILLING": {
+        "DESC": "Facturas, pagos y actividad de facturación."
+      },
+      "PEOPLE": {
+        "DESC": "Empleados, roles y control de horarios."
+      },
+      "INVENTORY": {
+        "DESC": "Controle los niveles de stock y los movimientos de inventario."
+      },
+      "PRODUCT": {
+        "DESC": "Explore el catálogo y las definiciones de productos."
+      },
+      "LOCATION": {
+        "DESC": "Sitios, instalaciones y registros de ubicación."
+      },
+      "SECURITY": {
+        "DESC": "Control de acceso y administración de seguridad."
+      },
+      "ADMIN": {
+        "DESC": "Administración y configuración del sistema."
       }
     }
   }
