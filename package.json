@@ -6,8 +6,8 @@
     "sdk:install": "node scripts/sdk/install-sdk-packages.mjs",
     "sdk:install:if-available": "node scripts/sdk/install-sdk-packages.mjs --if-available",
     "postinstall": "npm run sdk:install:if-available",
-    "start": "npm run sdk:install && npm run sitemap:generate && ng serve",
-    "build": "npm run sdk:install && npm run icons:check && npm run sitemap:generate && ng build",
+    "start": "npm run sdk:install && npm run sitemap:routes:generate && npm run sitemap:generate && ng serve",
+    "build": "npm run sdk:install && npm run icons:check && npm run sitemap:routes:check && npm run sitemap:generate && ng build",
     "watch": "npm run sdk:install && ng build --watch --configuration development",
     "test": "npm run sdk:install && ng test",
     "a11y:smoke": "npm run sdk:install && node scripts/a11y/smoke-routes.mjs",
@@ -25,7 +25,9 @@
     "lint:css": "stylelint \"src/**/*.css\"",
     "icons:generate": "node scripts/icons/generate-glyph-map.mjs",
     "icons:check": "node scripts/icons/generate-glyph-map.mjs --check",
-    "sitemap:generate": "node scripts/sitemap/generate-sitemap.mjs"
+    "sitemap:generate": "node scripts/sitemap/generate-sitemap.mjs",
+    "sitemap:routes:generate": "node scripts/sitemap/generate-routes-module.mjs",
+    "sitemap:routes:check": "node scripts/sitemap/generate-routes-module.mjs --check"
   },
   "prettier": {
     "printWidth": 100,

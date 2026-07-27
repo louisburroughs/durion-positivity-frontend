@@ -11,10 +11,19 @@
   <section class="sitemap__group" [attr.aria-label]="group.headingKey | translate">
     <h2 class="sitemap__group-heading">{{ group.headingKey | translate }}</h2>
     <ul class="sitemap__list">
-      @for (section of group.sections; track section.route) {
+      @for (view of group.sections; track view.section.route) {
       <li class="sitemap__item">
-        <a class="sitemap__link" [routerLink]="section.route">{{ section.titleKey | translate }}</a>
-        <p class="sitemap__desc">{{ section.descriptionKey | translate }}</p>
+        <a class="sitemap__link" [routerLink]="view.section.route">{{ view.section.titleKey | translate }}</a>
+        <p class="sitemap__desc">{{ view.section.descriptionKey | translate }}</p>
+        @if (view.pages.length) {
+        <ul class="sitemap__pages">
+          @for (page of view.pages; track page.route) {
+          <li class="sitemap__page">
+            <a class="sitemap__page-link" [routerLink]="page.route">{{ page.label }}</a>
+          </li>
+          }
+        </ul>
+        }
       </li>
       }
     </ul>

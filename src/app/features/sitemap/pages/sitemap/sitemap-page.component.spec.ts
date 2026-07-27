@@ -17,6 +17,7 @@ describe('SitemapPageComponent', () => {
   let auth: AuthServiceStub;
 
   async function setup(roles: string[]): Promise<void> {
+    TestBed.resetTestingModule();
     auth = new AuthServiceStub();
     auth.roles = roles;
 
@@ -51,7 +52,7 @@ describe('SitemapPageComponent', () => {
       'SITEMAP.GROUP.ADMIN',
     ]);
     const admin = groups.find(g => g.headingKey === 'SITEMAP.GROUP.ADMIN');
-    expect(admin?.sections.map(s => s.route)).toEqual([
+    expect(admin?.sections.map(s => s.section.route)).toEqual([
       '/app/security',
       '/app/admin',
     ]);
@@ -59,16 +60,46 @@ describe('SitemapPageComponent', () => {
 
   it('sorts sections within a group by order', async () => {
     await setup([]);
-    const main = component.groups()[0].sections;
-    const orders = main.map(s => s.order);
-    expect(orders).toEqual([...orders].sort((a, b) => a - b));
+    const main = component.groups()[0].sections.map(s => s.section.order);
+    expect(main).toEqual([...main].sort((a, b) => a - b));
   });
 
-  it('renders a routerLink and description for every visible section', async () => {
+  it('lists static child pages under a section but omits dynamic :param routes', async () => {
+    await setup([]);
+    const crm = component
+      .groups()[0]
+      .sections.find(s => s.section.route === '/app/crm');
+    const routes = crm?.pages.map(p => p.route) ?? [];
+
+    expect(routes).toContain('/app/crm/customers');
+    expect(routes.every(r => !r.includes(':'))).toBe(true); // no dynamic routes
+    expect(crm?.pages.every(p => p.dynamic === false)).toBe(true);
+  });
+
+  it('hides admin-gated child pages from non-admins but shows them to admins', async () => {
+    await setup([]);
+    const peopleNonAdmin = component
+      .groups()[0]
+      .sections.find(s => s.section.route === '/app/people');
+    expect(peopleNonAdmin?.pages.map(p => p.route)).not.toContain(
+      '/app/people/identity-compliance',
+    );
+
     await setup(['ROLE_ADMIN']);
-    const links = fixture.nativeElement.querySelectorAll('.sitemap__link');
-    const descs = fixture.nativeElement.querySelectorAll('.sitemap__desc');
-    expect(links.length).toBe(12);
-    expect(descs.length).toBe(12);
+    const peopleAdmin = component
+      .groups()
+      .flatMap(g => g.sections)
+      .find(s => s.section.route === '/app/people');
+    expect(peopleAdmin?.pages.map(p => p.route)).toContain(
+      '/app/people/identity-compliance',
+    );
+  });
+
+  it('renders section links and child-page links in the DOM', async () => {
+    await setup(['ROLE_ADMIN']);
+    const sectionLinks = fixture.nativeElement.querySelectorAll('.sitemap__link');
+    const pageLinks = fixture.nativeElement.querySelectorAll('.sitemap__page-link');
+    expect(sectionLinks.length).toBe(12);
+    expect(pageLinks.length).toBeGreaterThan(20);
   });
 });

@@ -1,6 +1,6 @@
 {
   "application": "durion-positivity-frontend",
-  "version": 1,
+  "version": 2,
   "sections": [
     {
       "route": "/app",

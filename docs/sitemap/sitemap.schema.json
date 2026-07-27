@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://durion.example/schemas/sitemap-1.json",
+  "$id": "https://durion.example/schemas/sitemap-2.json",
   "title": "Durion Positivity Frontend Site Map",
-  "description": "Machine-readable index of the frontend's navigable sections, published as the read-only /sitemap.json build artifact and consumed by pos-mcp-server. Versioned; bump `version` on breaking shape changes.",
+  "description": "Machine-readable index of the frontend's navigable sections and their reachable pages, published as the read-only /sitemap.json build artifact and consumed by pos-mcp-server. Versioned; bump `version` on breaking shape changes.",
   "type": "object",
   "required": ["application", "version", "generatedAt", "sections"],
   "additionalProperties": false,
@@ -15,7 +15,7 @@
     "version": {
       "type": "integer",
       "minimum": 1,
-      "description": "Contract version of the site-map shape."
+      "description": "Contract version of the site-map shape. Current: 2 (adds sections[].pages[])."
     },
     "generatedAt": {
       "type": "string",
@@ -30,29 +30,29 @@
   "$defs": {
     "section": {
       "type": "object",
-      "required": ["route", "titleKey", "title", "descriptionKey", "description", "group", "order"],
+      "required": ["route", "title", "group", "order", "pages"],
       "additionalProperties": false,
       "properties": {
         "route": {
           "type": "string",
-          "description": "Canonical in-app route path, e.g. /app/crm.",
+          "description": "Canonical in-app section route, e.g. /app/crm.",
           "pattern": "^/"
         },
         "titleKey": {
           "type": "string",
-          "description": "i18n key for the section title (SHELL.NAV.*)."
+          "description": "i18n key for the section title (SHELL.NAV.*). Absent for auto-discovered `other`-group sections."
         },
         "title": {
           "type": "string",
-          "description": "Section title resolved to the base locale (en-US)."
+          "description": "Section title resolved to the base locale (en-US), or derived for `other`-group sections."
         },
         "descriptionKey": {
           "type": "string",
-          "description": "i18n key for the section description (SITEMAP.SECTIONS.*)."
+          "description": "i18n key for the section description (SITEMAP.SECTIONS.*). Absent for `other`-group sections."
         },
         "description": {
           "type": "string",
-          "description": "Section description resolved to the base locale (en-US)."
+          "description": "Section description resolved to the base locale (en-US). Absent for `other`-group sections."
         },
         "roles": {
           "type": "array",
@@ -62,13 +62,50 @@
         },
         "group": {
           "type": "string",
-          "enum": ["main", "admin"],
-          "description": "Grouping of the section. Groups are ordered main before admin; sections[] is serialized by (group, order)."
+          "enum": ["main", "admin", "other"],
+          "description": "Grouping of the section. Ordered main, then admin, then other (auto-discovered top-level segments with no curated metadata); sections[] is serialized by (group, order)."
         },
         "order": {
           "type": "integer",
           "minimum": 1,
           "description": "Sort order within the section's group (lower sorts earlier)."
+        },
+        "pages": {
+          "type": "array",
+          "description": "Every reachable route under this section (excluding the section route itself), auto-extracted from the Angular route tree. Static pages sort before dynamic ones.",
+          "items": { "$ref": "#/$defs/page" }
+        }
+      }
+    },
+    "page": {
+      "type": "object",
+      "required": ["route", "label", "dynamic"],
+      "additionalProperties": false,
+      "properties": {
+        "route": {
+          "type": "string",
+          "description": "Full route path. Dynamic routes include `:param` segments, e.g. /app/crm/party/:partyId.",
+          "pattern": "^/"
+        },
+        "label": {
+          "type": "string",
+          "description": "Label derived from the route's last static segment (title-cased). Not localized."
+        },
+        "dynamic": {
+          "type": "boolean",
+          "description": "True when the route contains `:param` segments and cannot be linked without an entity id."
+        },
+        "params": {
+          "type": "array",
+          "description": "Names of the `:param` segments, present only when dynamic.",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "roles": {
+          "type": "array",
+          "description": "Roles required to reach this page; absent = inherits the section's access.",
+          "items": { "type": "string" },
+          "minItems": 1
         }
       }
     }
