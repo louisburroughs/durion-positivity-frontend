@@ -130,18 +130,42 @@ sections.sort((a, b) => {
   return byGroup !== 0 ? byGroup : a.order - b.order;
 });
 
-const pageCount = sections.reduce((n, s) => n + s.pages.length, 0);
+// The artifact is served unauthenticated (see src/server.ts), so it must not
+// enumerate the privileged surface to anonymous callers. Redact it:
+//   - drop role-gated sections entirely (security, admin);
+//   - drop role-gated pages from the sections that remain (e.g. identity-compliance);
+//   - emit no `roles` fields at all.
+// The result is an invariant: every route in the artifact is reachable by any
+// authenticated user. The in-app route manifest (site-map.routes.generated.ts)
+// keeps the full, role-aware tree — the sitemap PAGE is auth-gated and filters
+// per user, so admins still see their pages there.
+const publicSections = sections
+  .filter(section => !section.roles)
+  .map(({ roles: _sectionRoles, ...section }) => ({
+    ...section,
+    pages: section.pages
+      .filter(page => !page.roles)
+      .map(({ roles: _pageRoles, ...page }) => page),
+  }));
+
+const redactedSections = sections.length - publicSections.length;
+const redactedPages =
+  sections.reduce((n, s) => n + s.pages.length, 0) -
+  publicSections.reduce((n, s) => n + s.pages.length, 0);
+const pageCount = publicSections.reduce((n, s) => n + s.pages.length, 0);
 
 const artifact = {
   application: source.application,
   version: source.version,
   generatedAt: new Date().toISOString(),
-  sections,
+  sections: publicSections,
 };
 
 fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 fs.writeFileSync(outputPath, `${JSON.stringify(artifact, null, 2)}\n`, 'utf8');
 console.log(
   `Generated ${path.relative(repoRoot, outputPath)} ` +
-    `(${sections.length} sections, ${pageCount} pages) from site-map.data.json + route tree.`,
+    `(${publicSections.length} sections, ${pageCount} pages; ` +
+    `redacted ${redactedSections} role-gated sections + ${redactedPages} role-gated pages) ` +
+    `from site-map.data.json + route tree.`,
 );

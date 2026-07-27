@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://durion.example/schemas/sitemap-2.json",
   "title": "Durion Positivity Frontend Site Map",
-  "description": "Machine-readable index of the frontend's navigable sections and their reachable pages, published as the read-only /sitemap.json build artifact and consumed by pos-mcp-server. Versioned; bump `version` on breaking shape changes.",
+  "description": "Machine-readable index of the frontend's navigable sections and their reachable pages, published as the read-only /sitemap.json build artifact and consumed by pos-mcp-server. Versioned; bump `version` on breaking shape changes. SECURITY: the artifact is served unauthenticated and is REDACTED — role-gated sections and pages are omitted and no `roles` fields are emitted, so every listed route is reachable by any authenticated user. The `roles` and `group:\"admin\"` shapes below remain valid but are not present in the published artifact.",
   "type": "object",
   "required": ["application", "version", "generatedAt", "sections"],
   "additionalProperties": false,

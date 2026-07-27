@@ -59,7 +59,7 @@ app.routes + *.routes.ts ──────┤     (static pages only)
    │  extract-routes.mjs        │
    ├─▶ site-map.routes.generated.ts ─┘
    │
-   └─▶ generate-sitemap.mjs ──▶ /sitemap.json (all pages) ──▶ pos-mcp-server (pull, read-only)
+   └─▶ generate-sitemap.mjs ──▶ /sitemap.json (redacted: non-privileged pages) ──▶ pos-mcp-server (pull, read-only)
 ```
 
 ## The artifact (`/sitemap.json`)
@@ -68,6 +68,15 @@ app.routes + *.routes.ts ──────┤     (static pages only)
   script). It is **not committed** — it is a build output (git-ignored).
 - Served with `Cache-Control: no-cache` by the SSR server (`src/server.ts`) so
   consumers never hold a stale index across a deployment.
+- **Served unauthenticated, so it is redacted.** `generate-sitemap.mjs` strips
+  the privileged surface from the published artifact: role-gated sections
+  (`security`, `admin`) are dropped, role-gated pages (e.g.
+  `people/identity-compliance`) are dropped, and no `roles` fields are emitted.
+  The result is an invariant — **every route in the artifact is reachable by any
+  authenticated user**, so anonymous callers can't enumerate the admin/security
+  surface. The in-app manifest (`site-map.routes.generated.ts`) keeps the full,
+  role-aware tree; the auth-gated `/app/sitemap` page filters it per user, so
+  admins still see their pages there.
 - Conforms to [`sitemap.schema.json`](./sitemap.schema.json). Bump `version`
   in `site-map.data.json` and the schema together on any breaking shape change.
 - Consumer guidance: [`client-module.md`](./client-module.md) specifies how
