@@ -32,3 +32,20 @@ export interface SiteMapData {
   version: number;
   sections: SiteMapSection[];
 }
+
+/**
+ * A single reachable route, auto-extracted from the Angular route tree by
+ * `scripts/sitemap/extract-routes.mjs`. Backs the generated
+ * `site-map.routes.generated.ts` (consumed by the sitemap page) and the
+ * `pages[]` in the `sitemap.json` artifact.
+ */
+export interface SiteMapRouteEntry {
+  /** Full route path, e.g. `/app/crm/customers` or `/app/crm/party/:partyId`. */
+  route: string;
+  /** Derived label from the last static path segment; '' for a section root. */
+  label: string;
+  /** True when the route contains a `:param` and cannot be linked directly. */
+  dynamic: boolean;
+  /** Roles required to reach this route; undefined = all authenticated users. */
+  roles?: readonly string[];
+}

@@ -66,3 +66,25 @@
   color: var(--handleColor);
   font-size: 0.875rem;
 }
+
+.sitemap__pages {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) 0 0;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sitemap__page-link {
+  color: var(--currentTextColor);
+  text-decoration: none;
+  font-size: 0.8125rem;
+}
+
+.sitemap__page-link:hover,
+.sitemap__page-link:focus-visible {
+  color: var(--brand-primary);
+  text-decoration: underline;
+}

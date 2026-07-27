@@ -27,7 +27,7 @@ is [`sitemap.schema.json`](./sitemap.schema.json).
 | `FRONTEND_BASE_URL` | yes | — | Origin of the frontend SSR server (not the API gateway). The SSR server listens on `PORT`, default `4000`. |
 | `SITEMAP_CACHE_TTL` | no | `600s` | How long a fetched copy is served before a refresh is attempted. |
 | `SITEMAP_FETCH_TIMEOUT` | no | `5s` | Per-request HTTP timeout. |
-| `SITEMAP_EXPECTED_VERSION` | no | `1` | Contract version this build was written against. |
+| `SITEMAP_EXPECTED_VERSION` | no | `2` | Contract version this build was written against. |
 
 Do **not** hardcode the host. `/sitemap.json` is served by the frontend itself,
 ahead of any auth, so send **no** `Authorization` header.
@@ -35,22 +35,32 @@ ahead of any auth, so send **no** `Authorization` header.
 ## Interface (language-agnostic)
 
 ```
+interface SiteMapPage {
+  route: string          // full path, e.g. "/app/crm/party/:partyId"
+  label: string          // derived from last static segment; NOT localized
+  dynamic: boolean       // true => contains :param, not directly linkable
+  params?: string[]      // :param names, present only when dynamic
+  roles?: string[]       // absent => inherits the section's access
+}
+
 interface SiteMapSection {
-  route: string          // canonical in-app route, e.g. "/app/crm"
-  titleKey: string       // i18n key
-  title: string          // resolved en-US text
-  descriptionKey: string
-  description: string
+  route: string          // canonical in-app section route, e.g. "/app/crm"
+  titleKey?: string      // i18n key; absent for "other"-group sections
+  title: string          // resolved en-US text (or derived for "other")
+  descriptionKey?: string
+  description?: string
   roles?: string[]       // absent => all authenticated users
-  group: "main" | "admin"
+  group: "main" | "admin" | "other"
   order: number          // sort order within group
+  pages: SiteMapPage[]   // every reachable route under the section (excl. the
+                         // section route); static pages sort before dynamic
 }
 
 interface SiteMap {
   application: string    // "durion-positivity-frontend"
-  version: number
+  version: number        // 2
   generatedAt: string    // ISO-8601
-  sections: SiteMapSection[]   // ordered by (group, order): main before admin
+  sections: SiteMapSection[]   // ordered by (group, order): main, admin, other
 }
 
 interface SiteMapClient {
@@ -67,6 +77,11 @@ interface SiteMapClient {
   // any authenticated user; otherwise the user must hold >=1 listed role).
   // Callers must ensure the cache is warm (await getSiteMap()) beforehand.
   visibleSections(userRoles: string[]): SiteMapSection[]
+
+  // Pure, cached-only helper — flattens visible sections to the pages the given
+  // roles can reach (a page with no `roles` inherits its section's access).
+  // Useful for "where can I go?" navigation over concrete + :param routes.
+  visiblePages(userRoles: string[]): SiteMapPage[]
 }
 ```
 
@@ -124,7 +139,11 @@ The client module's test suite MUST cover the following cases. Use the
 | 9 | `version` higher than expected | parses known fields, ignores unknown ones, does not throw |
 | 10 | TTL not elapsed | second call returns cached copy without a second HTTP request |
 | 11 | `refresh()` | performs an HTTP request even within TTL |
-| 12 | Unknown extra field on a section | ignored, not fatal (forward-compat) |
+| 12 | Unknown extra field on a section/page | ignored, not fatal (forward-compat) |
+| 13 | `visiblePages([])` | returns pages from open sections only, dropping `roles`-gated pages |
+| 14 | `visiblePages(["ROLE_ADMIN"])` | includes admin-section pages and role-gated pages (e.g. `/app/people/identity-compliance`) |
+| 15 | Dynamic page shape | a page with `dynamic:true` carries a `:param` route and a `params` array |
+| 16 | `other`-group section | parsed with a `title` and no `titleKey`/`description` |
 
 ## Example payload
 
@@ -134,7 +153,7 @@ sync. Conforms to [`sitemap.schema.json`](./sitemap.schema.json).
 ```json
 {
   "application": "durion-positivity-frontend",
-  "version": 1,
+  "version": 2,
   "generatedAt": "2026-07-27T00:00:00.000Z",
   "sections": [
     {
@@ -144,7 +163,16 @@ sync. Conforms to [`sitemap.schema.json`](./sitemap.schema.json).
       "descriptionKey": "SITEMAP.SECTIONS.CRM.DESC",
       "description": "Manage customers, contacts, and relationships.",
       "group": "main",
-      "order": 3
+      "order": 3,
+      "pages": [
+        { "route": "/app/crm/customers", "label": "Customers", "dynamic": false },
+        {
+          "route": "/app/crm/party/:partyId",
+          "label": "Party",
+          "dynamic": true,
+          "params": ["partyId"]
+        }
+      ]
     },
     {
       "route": "/app/admin",
@@ -154,7 +182,17 @@ sync. Conforms to [`sitemap.schema.json`](./sitemap.schema.json).
       "description": "System administration and configuration.",
       "roles": ["ROLE_ADMIN"],
       "group": "admin",
-      "order": 12
+      "order": 12,
+      "pages": []
+    },
+    {
+      "route": "/app/bulk-import",
+      "title": "Bulk Import",
+      "group": "other",
+      "order": 900,
+      "pages": [
+        { "route": "/app/bulk-import/jobs", "label": "Jobs", "dynamic": false }
+      ]
     }
   ]
 }
