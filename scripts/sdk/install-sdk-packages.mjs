@@ -23,12 +23,14 @@ const PACKAGE_NAMES = [
   '@durion-sdk/inventory',
   '@durion-sdk/invoice',
   '@durion-sdk/location',
+  '@durion-sdk/marketing',
   '@durion-sdk/order',
   '@durion-sdk/people',
   '@durion-sdk/people-contact',
   '@durion-sdk/security',
   '@durion-sdk/shop-manager',
   '@durion-sdk/vehicle-inventory',
+  '@durion-sdk/warranty',
   '@durion-sdk/workorder',
 ];
 
