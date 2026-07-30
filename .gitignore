@@ -54,6 +54,7 @@ PR-Review-Processing.md
 /artifacts/audit/
 /test-results/
 /playwright-report/
+.vitest-attachments/
 .worktrees/
 .tokensave
 repomix-output.*

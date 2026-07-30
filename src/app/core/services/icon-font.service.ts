@@ -24,15 +24,19 @@ export class IconFontService {
   constructor() {
     afterNextRender(() => {
       const fonts = document.fonts;
-      if (!fonts) return; // unsupported → keep text fallback
+      if (!fonts || typeof fonts.check !== 'function' || typeof fonts.load !== 'function') {
+        return; // unsupported → keep text fallback
+      }
 
       const mark = (): void => {
-        if (fonts.check(ICON_FONT)) this.ready.set(true);
+        if (typeof fonts.check === 'function' && fonts.check(ICON_FONT)) this.ready.set(true);
       };
 
       mark(); // already cached from a previous load?
       fonts.load(ICON_FONT).then(mark).catch(() => {/* CSP/offline → stay false */});
-      fonts.ready.then(mark).catch(() => {/* ignore */});
+      if (fonts.ready && typeof fonts.ready.then === 'function') {
+        fonts.ready.then(mark).catch(() => {/* ignore */});
+      }
     });
   }
 }

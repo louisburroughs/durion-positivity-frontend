@@ -1,5 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
 import 'zone.js/testing';
+import './test-shims/node-crypto';
 
 const zoneApi = (globalThis as unknown as { Zone?: Record<string, unknown> }).Zone as
   | (Record<string, unknown> & { current?: unknown; root?: unknown })
