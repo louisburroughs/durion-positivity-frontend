@@ -5635,6 +5635,108 @@
       "ERROR": {
         "LOAD": "No se pudieron cargar las líneas sin coincidencia."
       }
+    },
+    "AVAILABILITY": {
+      "TITLE": "Disponibilidad del proveedor",
+      "SUBTITLE": "Existencias en vivo informadas por cada proveedor configurado para la ubicación de entrega que elija.",
+      "PROMPT_LOCATION": "Elija una ubicación de entrega para consultar la disponibilidad del proveedor.",
+      "LOADING": "Consultando la disponibilidad del proveedor…",
+      "NO_VENDORS": "Ningún proveedor está configurado para informar existencias en esta ubicación.",
+      "QUANTITY": "Disponible",
+      "WAREHOUSE": "Almacén",
+      "EARLIEST_DELIVERY": "Entrega más temprana",
+      "LEAD_TIME": "Plazo de entrega",
+      "LEAD_TIME_DAYS": "{{count}} días",
+      "CUTOFF": "Pedir antes de",
+      "VENDOR_CODE": "Código del proveedor",
+      "AS_OF": "Datos del proveedor al",
+      "CHECKED_AT": "Consultado el",
+      "STATUS_LABEL": "Estado del proveedor:",
+      "STATUS": {
+        "OK": "Disponible",
+        "SUPPLIER_UNAVAILABLE": "Proveedor inaccesible",
+        "NOT_LISTED": "No lo distribuye",
+        "CAPABILITY_NOT_CONFIGURED": "No habilitado"
+      },
+      "STATUS_DETAIL": {
+        "OK": "El proveedor informó existencias para esta ubicación.",
+        "SUPPLIER_UNAVAILABLE": "El proveedor no respondió, por lo que no se conoce ninguna cantidad. Inténtelo de nuevo.",
+        "NOT_LISTED": "Este proveedor no distribuye este producto.",
+        "CAPABILITY_NOT_CONFIGURED": "El informe de existencias no está habilitado para este proveedor."
+      },
+      "LOCATION": {
+        "LABEL": "Ubicación de entrega",
+        "PROCUREMENT_LABEL": "Ubicación de entrega para las consultas de disponibilidad",
+        "PLACEHOLDER": "Elija una ubicación de entrega",
+        "HINT": "Se recuerda solo durante esta sesión. No se consulta a ningún proveedor hasta que elija una.",
+        "LOADING": "Cargando ubicaciones…",
+        "EMPTY": "No hay ninguna ubicación activa a la que entregar.",
+        "ERROR": {
+          "LOAD": "No se pudo cargar la lista de ubicaciones, por lo que no se puede consultar la disponibilidad."
+        }
+      },
+      "CHECK": {
+        "ACTION": "Consultar disponibilidad",
+        "COLUMN": "Disponibilidad del proveedor",
+        "NEEDS_LOCATION": "Elija una ubicación de entrega para consultar esta línea.",
+        "LINE_CHANGED": "Esta línea cambió después de la consulta. Vuelva a consultarla."
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la disponibilidad del proveedor. El resto de esta página no se ve afectada.",
+        "CHECK": "No se pudo consultar esta línea con el proveedor."
+      }
+    },
+    "ENRICHMENT": {
+      "TITLE": "Contenido del fabricante",
+      "PROVENANCE": "Suministrado por {{manufacturer}}. Contenido de marketing del fabricante, no datos del catálogo.",
+      "LOCALE_FALLBACK": "El fabricante no ha publicado este texto en su idioma, por lo que se muestra en otro idioma.",
+      "GALLERY": "Imágenes del fabricante",
+      "PUBLISHED_AT": "Publicado por el fabricante",
+      "FETCHED_AT": "Última descarga",
+      "ERROR": {
+        "LOAD": "No se pudo cargar el contenido del fabricante."
+      },
+      "UNMATCHED": {
+        "TITLE": "Contenido del fabricante sin coincidencia",
+        "SUBTITLE": "Contenido del fabricante recibido para productos que el catálogo no reconoce.",
+        "WORKLIST_NOTICE": "Estos registros permanecen listados hasta que una corrección del catálogo permita asociarlos. No pueden asociarse ni descartarse desde esta pantalla.",
+        "EMPTY": "No hay contenido del fabricante sin coincidencia. Todo lo recibido se asoció a un producto.",
+        "COUNT": "{{count}} registros sin coincidencia",
+        "NO_PREVIEW": "Sin vista previa publicada",
+        "FILTER": {
+          "VENDOR": "Proveedor",
+          "ALL_VENDORS": "Todos los proveedores",
+          "REASON": "Motivo",
+          "ALL_REASONS": "Todos los motivos",
+          "SEARCH": "Buscar",
+          "DATE_FROM": "Primera aparición desde",
+          "DATE_TO": "Última aparición hasta"
+        },
+        "REASON": {
+          "NO_EAN_MATCH": "Sin coincidencia de EAN",
+          "NO_GTIN_MATCH": "Sin coincidencia de GTIN",
+          "NO_MPN_MATCH": "Sin coincidencia de número de pieza del fabricante",
+          "AMBIGUOUS_MATCH": "Coincidencia ambigua",
+          "MISSING_IDENTIFIERS": "Sin identificadores utilizables"
+        },
+        "TABLE": {
+          "CAPTION": "Contenido del fabricante pendiente de asociar a un producto",
+          "EAN": "EAN",
+          "GTIN": "GTIN",
+          "MPN": "Número de pieza del fabricante",
+          "MANUFACTURER": "Fabricante",
+          "VENDOR": "Proveedor",
+          "PREVIEW": "Vista previa del contenido",
+          "IMAGES": "Imágenes",
+          "REASON": "Motivo",
+          "FIRST_SEEN": "Primera aparición",
+          "LAST_SEEN": "Última aparición",
+          "OCCURRENCES": "Apariciones"
+        },
+        "ERROR": {
+          "LOAD": "No se pudo cargar el contenido del fabricante sin coincidencia."
+        }
+      }
     }
   }
 }

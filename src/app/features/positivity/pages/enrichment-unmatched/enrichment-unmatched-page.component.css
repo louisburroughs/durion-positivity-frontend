@@ -1,0 +1,65 @@
+.enrich-unmatched {
+	display: grid;
+	gap: var(--space-4);
+	padding: var(--space-5);
+}
+
+.enrich-unmatched__breadcrumb {
+	display: flex;
+	gap: var(--space-2);
+	font-size: 0.875rem;
+}
+
+.enrich-unmatched__breadcrumb a {
+	color: var(--brand-primary);
+	font-weight: 600;
+}
+
+.enrich-unmatched__breadcrumb a:focus-visible {
+	outline: 3px solid var(--input-focus-border);
+	outline-offset: 2px;
+}
+
+.enrich-unmatched__header h1 {
+	margin: 0;
+}
+
+.enrich-unmatched__subtitle {
+	margin: var(--space-1) 0 0;
+	color: var(--text-muted);
+}
+
+.enrich-unmatched__filters {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+	gap: var(--space-3);
+	align-items: end;
+}
+
+.enrich-unmatched__filter-actions {
+	display: flex;
+	gap: var(--space-2);
+	padding-bottom: var(--space-3);
+}
+
+.enrich-unmatched__count {
+	margin: 0;
+	font-weight: 600;
+}
+
+.enrich-unmatched__empty {
+	margin: 0;
+	color: var(--text-muted);
+}
+
+.enrich-unmatched__code {
+	font-family: var(--font-mono);
+	font-size: 0.8125rem;
+	white-space: nowrap;
+	text-align: left;
+}
+
+/* Preview is manufacturer prose of unbounded length; cap it so identifiers stay readable. */
+.enrich-unmatched__preview {
+	max-width: 22rem;
+}

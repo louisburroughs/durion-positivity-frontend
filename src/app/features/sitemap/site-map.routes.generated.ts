@@ -104,6 +104,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/people/timekeeping/work-session', label: "Work Session", dynamic: false },
   { route: '/app/people/timekeeping/work-session/:sessionId/submit', label: "Submit", dynamic: true },
   { route: '/app/positivity', label: "", dynamic: false, roles: ['ROLE_ADMIN'] },
+  { route: '/app/positivity/enrichment/unmatched', label: "Unmatched", dynamic: false, roles: ['ROLE_ADMIN'] },
   { route: '/app/positivity/exchanges', label: "Exchanges", dynamic: false, roles: ['ROLE_ADMIN'] },
   { route: '/app/positivity/exchanges/:exchangeId', label: "Exchanges", dynamic: true, roles: ['ROLE_ADMIN'] },
   { route: '/app/positivity/profiles/:vendorProfileId', label: "Profiles", dynamic: true, roles: ['ROLE_ADMIN'] },

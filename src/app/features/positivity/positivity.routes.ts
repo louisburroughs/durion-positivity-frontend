@@ -15,6 +15,7 @@ import { Routes } from '@angular/router';
  *   /app/positivity                                        profile list
  *   /app/positivity/exchanges                              exchange audit list
  *   /app/positivity/exchanges/:exchangeId                  exchange audit detail
+ *   /app/positivity/enrichment/unmatched                   MKCAT enrichment worklist
  *   /app/positivity/profiles/:vendorProfileId              profile detail (tabs)
  *   /app/positivity/profiles/:vendorProfileId/unmatched-lines   PRICAT worklist
  */
@@ -40,6 +41,14 @@ export const POSITIVITY_ROUTES: Routes = [
     loadComponent: () =>
       import('./pages/exchange-audit-detail/exchange-audit-detail-page.component').then(
         m => m.ExchangeAuditDetailPageComponent,
+      ),
+  },
+  {
+    path: 'enrichment/unmatched',
+    pathMatch: 'full',
+    loadComponent: () =>
+      import('./pages/enrichment-unmatched/enrichment-unmatched-page.component').then(
+        m => m.EnrichmentUnmatchedPageComponent,
       ),
   },
   {

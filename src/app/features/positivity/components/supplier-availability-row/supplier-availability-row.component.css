@@ -1,0 +1,101 @@
+/*
+ * One vendor availability row. Vendors are listed as peers — there is no
+ * highlight, ordering weight or "best" treatment, because ranking vendors is a
+ * commercial decision this UI is explicitly not allowed to make (#190).
+ */
+.avail-row {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-3);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+}
+
+.avail-row__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-2);
+}
+
+.avail-row__identity {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.avail-row__vendor {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 600;
+}
+
+.avail-row__warehouse {
+	display: flex;
+	gap: var(--space-1);
+	margin: 0;
+	font-size: 0.8125rem;
+}
+
+.avail-row__facts {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+	gap: var(--space-2);
+	margin: 0;
+}
+
+.avail-row__fact {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.avail-row__term {
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--text-muted);
+}
+
+.avail-row__value {
+	margin: 0;
+	font-size: 0.9375rem;
+}
+
+.avail-row__value--quantity {
+	font-size: 1.125rem;
+	font-weight: 600;
+}
+
+.avail-row__uom {
+	margin-left: var(--space-1);
+	font-size: 0.8125rem;
+	font-weight: 400;
+	color: var(--text-muted);
+}
+
+.avail-row__status-detail {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}
+
+.avail-row__error-code {
+	display: flex;
+	gap: var(--space-1);
+	align-items: baseline;
+	margin: 0;
+	font-size: 0.75rem;
+}
+
+.avail-row__error-code code {
+	font-family: var(--font-mono);
+}
+
+.avail-row__freshness {
+	display: block;
+}

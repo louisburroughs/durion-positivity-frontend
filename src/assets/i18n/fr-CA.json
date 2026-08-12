@@ -5635,6 +5635,108 @@
       "ERROR": {
         "LOAD": "Les lignes non appariées n’ont pas pu être chargées."
       }
+    },
+    "AVAILABILITY": {
+      "TITLE": "Disponibilité fournisseur",
+      "SUBTITLE": "Stock en direct déclaré par chaque fournisseur configuré pour le lieu de livraison que vous choisissez.",
+      "PROMPT_LOCATION": "Choisissez un lieu de livraison pour vérifier la disponibilité fournisseur.",
+      "LOADING": "Vérification de la disponibilité fournisseur…",
+      "NO_VENDORS": "Aucun fournisseur n’est configuré pour déclarer du stock pour ce lieu.",
+      "QUANTITY": "Disponible",
+      "WAREHOUSE": "Entrepôt",
+      "EARLIEST_DELIVERY": "Livraison au plus tôt",
+      "LEAD_TIME": "Délai",
+      "LEAD_TIME_DAYS": "{{count}} jours",
+      "CUTOFF": "Commander avant",
+      "VENDOR_CODE": "Code fournisseur",
+      "AS_OF": "Données fournisseur au",
+      "CHECKED_AT": "Vérifié le",
+      "STATUS_LABEL": "État du fournisseur :",
+      "STATUS": {
+        "OK": "Disponible",
+        "SUPPLIER_UNAVAILABLE": "Fournisseur injoignable",
+        "NOT_LISTED": "Non distribué",
+        "CAPABILITY_NOT_CONFIGURED": "Non activé"
+      },
+      "STATUS_DETAIL": {
+        "OK": "Le fournisseur a déclaré du stock pour ce lieu.",
+        "SUPPLIER_UNAVAILABLE": "Le fournisseur n’a pas répondu; aucune quantité n’est connue. Réessayez.",
+        "NOT_LISTED": "Ce fournisseur ne distribue pas ce produit.",
+        "CAPABILITY_NOT_CONFIGURED": "La déclaration de stock n’est pas activée pour ce fournisseur."
+      },
+      "LOCATION": {
+        "LABEL": "Lieu de livraison",
+        "PROCUREMENT_LABEL": "Lieu de livraison pour les vérifications de disponibilité",
+        "PLACEHOLDER": "Choisissez un lieu de livraison",
+        "HINT": "Mémorisé pour cette session seulement. Aucun fournisseur n’est interrogé tant que vous n’en avez pas choisi un.",
+        "LOADING": "Chargement des lieux…",
+        "EMPTY": "Aucun lieu actif n’est disponible pour la livraison.",
+        "ERROR": {
+          "LOAD": "La liste des lieux n’a pas pu être chargée; la disponibilité ne peut donc pas être vérifiée."
+        }
+      },
+      "CHECK": {
+        "ACTION": "Vérifier la disponibilité",
+        "COLUMN": "Disponibilité fournisseur",
+        "NEEDS_LOCATION": "Choisissez un lieu de livraison pour vérifier cette ligne.",
+        "LINE_CHANGED": "Cette ligne a changé après la vérification. Vérifiez-la de nouveau."
+      },
+      "ERROR": {
+        "LOAD": "La disponibilité fournisseur n’a pas pu être chargée. Le reste de cette page n’est pas touché.",
+        "CHECK": "Cette ligne n’a pas pu être vérifiée auprès du fournisseur."
+      }
+    },
+    "ENRICHMENT": {
+      "TITLE": "Contenu du fabricant",
+      "PROVENANCE": "Fourni par {{manufacturer}}. Contenu marketing du fabricant, et non données de catalogue.",
+      "LOCALE_FALLBACK": "Le fabricant n’a pas publié ce texte dans votre langue; une autre langue est donc affichée.",
+      "GALLERY": "Images du fabricant",
+      "PUBLISHED_AT": "Publié par le fabricant",
+      "FETCHED_AT": "Dernière récupération",
+      "ERROR": {
+        "LOAD": "Le contenu du fabricant n’a pas pu être chargé."
+      },
+      "UNMATCHED": {
+        "TITLE": "Contenu du fabricant non apparié",
+        "SUBTITLE": "Contenu du fabricant reçu pour des produits que le catalogue ne reconnaît pas.",
+        "WORKLIST_NOTICE": "Ces enregistrements restent listés jusqu’à ce qu’une correction du catalogue permette de les apparier. Ils ne peuvent être ni appariés ni écartés depuis cet écran.",
+        "EMPTY": "Aucun contenu du fabricant non apparié. Tout ce qui a été reçu a été associé à un produit.",
+        "COUNT": "{{count}} enregistrements non appariés",
+        "NO_PREVIEW": "Aucun aperçu publié",
+        "FILTER": {
+          "VENDOR": "Fournisseur",
+          "ALL_VENDORS": "Tous les fournisseurs",
+          "REASON": "Motif",
+          "ALL_REASONS": "Tous les motifs",
+          "SEARCH": "Rechercher",
+          "DATE_FROM": "Première occurrence depuis",
+          "DATE_TO": "Dernière occurrence jusqu’au"
+        },
+        "REASON": {
+          "NO_EAN_MATCH": "Aucune correspondance EAN",
+          "NO_GTIN_MATCH": "Aucune correspondance GTIN",
+          "NO_MPN_MATCH": "Aucune correspondance de référence fabricant",
+          "AMBIGUOUS_MATCH": "Correspondance ambiguë",
+          "MISSING_IDENTIFIERS": "Aucun identifiant exploitable"
+        },
+        "TABLE": {
+          "CAPTION": "Contenu du fabricant en attente d’appariement",
+          "EAN": "EAN",
+          "GTIN": "GTIN",
+          "MPN": "Référence fabricant",
+          "MANUFACTURER": "Fabricant",
+          "VENDOR": "Fournisseur",
+          "PREVIEW": "Aperçu du contenu",
+          "IMAGES": "Images",
+          "REASON": "Motif",
+          "FIRST_SEEN": "Première occurrence",
+          "LAST_SEEN": "Dernière occurrence",
+          "OCCURRENCES": "Occurrences"
+        },
+        "ERROR": {
+          "LOAD": "Le contenu du fabricant non apparié n’a pas pu être chargé."
+        }
+      }
     }
   }
 }

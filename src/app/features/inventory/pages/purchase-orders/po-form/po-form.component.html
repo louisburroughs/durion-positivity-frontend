@@ -75,6 +75,15 @@
         {{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.ACTION.ADD' | translate }}
       </button>
     </div>
+
+    <!--
+      Supplier availability (#190). One shared delivery-location picker for the
+      whole line table, then an explicit per-line check. Nothing is fetched
+      automatically: vendor stock APIs are quota-metered, so the user asks.
+      Both components own their own state; a failed check never blocks saving.
+    -->
+    <app-supplier-location-select labelKey="POSITIVITY.AVAILABILITY.LOCATION.PROCUREMENT_LABEL" />
+
     @if (lines().length > 0) {
     <div class="table-wrap">
       <table class="data-table lines-table" role="table"
@@ -87,6 +96,9 @@
               }}</th>
             <th scope="col" role="columnheader">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.LINES.TABLE.HEADER.UNIT_PRICE' |
               translate }}</th>
+            <th scope="col" role="columnheader">
+              {{ 'POSITIVITY.AVAILABILITY.CHECK.COLUMN' | translate }}
+            </th>
             <th scope="col" role="columnheader">
               <span class="sr-only">{{ 'COMMON.ACTIONS' | translate }}</span>
             </th>
@@ -118,6 +130,9 @@
               <input id="line-price-{{ $index }}" type="number" class="input-underline line-input line-input--narrow"
                 [value]="line.unitPrice" min="0" step="0.01"
                 (input)="updateLine($index, 'unitPrice', +$any($event.target).value)" />
+            </td>
+            <td>
+              <app-supplier-availability-check [sku]="line.productSku" [quantity]="line.orderedQty" />
             </td>
             <td>
               <button class="btn-destructive" type="button" (click)="removeLine($index)"

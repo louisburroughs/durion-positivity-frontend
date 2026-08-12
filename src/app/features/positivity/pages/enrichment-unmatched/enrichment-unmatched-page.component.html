@@ -1,0 +1,149 @@
+<main class="enrich-unmatched" aria-labelledby="enrich-unmatched-title">
+  <nav class="enrich-unmatched__breadcrumb" [attr.aria-label]="'POSITIVITY.COMMON.BREADCRUMB' | translate">
+    <a [routerLink]="['/app', 'positivity']">{{ 'POSITIVITY.PROFILES.TITLE' | translate }}</a>
+  </nav>
+
+  <header class="enrich-unmatched__header">
+    <h1 id="enrich-unmatched-title">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TITLE' | translate }}</h1>
+    <p class="enrich-unmatched__subtitle">
+      {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.SUBTITLE' | translate }}
+    </p>
+  </header>
+
+  <p class="pos-banner pos-banner--info">
+    {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.WORKLIST_NOTICE' | translate }}
+  </p>
+
+  <form class="enrich-unmatched__filters" [formGroup]="filterForm" (ngSubmit)="applyFilter()">
+    @if (vendorFilterAvailable()) {
+      <div class="pos-field">
+        <label class="pos-field__label" for="enrich-unmatched-vendor">
+          {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.FILTER.VENDOR' | translate }}
+        </label>
+        <select id="enrich-unmatched-vendor" class="pos-field__input" formControlName="vendorProfileId">
+          <option value="">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.FILTER.ALL_VENDORS' | translate }}</option>
+          @for (vendor of vendorOptions(); track vendor.vendorProfileId) {
+            <option [value]="vendor.vendorProfileId">{{ vendor.displayName }}</option>
+          }
+        </select>
+      </div>
+    }
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="enrich-unmatched-reason">
+        {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.FILTER.REASON' | translate }}
+      </label>
+      <select id="enrich-unmatched-reason" class="pos-field__input" formControlName="reason">
+        <option value="">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.FILTER.ALL_REASONS' | translate }}</option>
+        @for (reason of reasons; track reason) {
+          <option [value]="reason">
+            {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.REASON.' + reason | translate }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="enrich-unmatched-search">
+        {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.FILTER.SEARCH' | translate }}
+      </label>
+      <input id="enrich-unmatched-search" class="pos-field__input" type="search" formControlName="search" />
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="enrich-unmatched-date-from">
+        {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.FILTER.DATE_FROM' | translate }}
+      </label>
+      <input id="enrich-unmatched-date-from" class="pos-field__input" type="date" formControlName="dateFrom" />
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="enrich-unmatched-date-to">
+        {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.FILTER.DATE_TO' | translate }}
+      </label>
+      <input id="enrich-unmatched-date-to" class="pos-field__input" type="date" formControlName="dateTo" />
+    </div>
+
+    <div class="enrich-unmatched__filter-actions">
+      <button class="pos-btn pos-btn--primary" type="submit">
+        {{ 'POSITIVITY.COMMON.APPLY_FILTER' | translate }}
+      </button>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="clearFilter()">
+        {{ 'POSITIVITY.COMMON.CLEAR_FILTER' | translate }}
+      </button>
+    </div>
+  </form>
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      <span>{{ errorKey()! | translate }}</span>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="load()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'empty') {
+    <p class="enrich-unmatched__empty">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.EMPTY' | translate }}</p>
+  }
+
+  @if (state() === 'ready') {
+    <p class="enrich-unmatched__count" aria-live="polite">
+      {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.COUNT' | translate: { count: totalCount() } }}
+    </p>
+
+    <div class="pos-table-wrap">
+      <table class="pos-table">
+        <caption class="sr-only">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TABLE.EAN' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TABLE.GTIN' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TABLE.MPN' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TABLE.MANUFACTURER' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TABLE.VENDOR' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TABLE.PREVIEW' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TABLE.IMAGES' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TABLE.REASON' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TABLE.FIRST_SEEN' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TABLE.LAST_SEEN' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TABLE.OCCURRENCES' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.unmatchedEnrichmentId) {
+            <tr>
+              <th scope="row" class="enrich-unmatched__code">{{ row.ean || '—' }}</th>
+              <td class="enrich-unmatched__code">{{ row.gtin || '—' }}</td>
+              <td class="enrich-unmatched__code">{{ row.manufacturerPartNumber || '—' }}</td>
+              <td>{{ row.manufacturerName || '—' }}</td>
+              <td>{{ row.vendorDisplayName }}</td>
+              <td class="enrich-unmatched__preview">
+                @if (previewFor(row); as preview) {
+                  {{ preview }}
+                } @else {
+                  {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.NO_PREVIEW' | translate }}
+                }
+              </td>
+              <td>{{ row.imageCount }}</td>
+              <td>{{ 'POSITIVITY.ENRICHMENT.UNMATCHED.REASON.' + row.reason | translate }}</td>
+              <td>{{ row.firstSeenAt | date: 'medium' }}</td>
+              <td>{{ row.lastSeenAt | date: 'medium' }}</td>
+              <td>{{ row.occurrences }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</main>

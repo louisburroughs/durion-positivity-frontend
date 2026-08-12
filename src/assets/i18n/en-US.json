@@ -5629,6 +5629,108 @@
       "ERROR": {
         "LOAD": "The unmatched lines could not be loaded."
       }
+    },
+    "AVAILABILITY": {
+      "TITLE": "Supplier availability",
+      "SUBTITLE": "Live stock reported by each configured supplier for the delivery location you choose.",
+      "PROMPT_LOCATION": "Choose a delivery location to check supplier availability.",
+      "LOADING": "Checking supplier availability…",
+      "NO_VENDORS": "No supplier is configured to report stock for this location.",
+      "QUANTITY": "Available",
+      "WAREHOUSE": "Warehouse",
+      "EARLIEST_DELIVERY": "Earliest delivery",
+      "LEAD_TIME": "Lead time",
+      "LEAD_TIME_DAYS": "{{count}} days",
+      "CUTOFF": "Order before",
+      "VENDOR_CODE": "Supplier code",
+      "AS_OF": "Supplier data as of",
+      "CHECKED_AT": "Checked at",
+      "STATUS_LABEL": "Supplier status:",
+      "STATUS": {
+        "OK": "Available",
+        "SUPPLIER_UNAVAILABLE": "Supplier unreachable",
+        "NOT_LISTED": "Not carried",
+        "CAPABILITY_NOT_CONFIGURED": "Not enabled"
+      },
+      "STATUS_DETAIL": {
+        "OK": "The supplier reported stock for this location.",
+        "SUPPLIER_UNAVAILABLE": "The supplier did not answer, so no quantity is known. Try again.",
+        "NOT_LISTED": "This supplier does not carry this product.",
+        "CAPABILITY_NOT_CONFIGURED": "Stock reporting is not enabled for this supplier."
+      },
+      "LOCATION": {
+        "LABEL": "Delivery location",
+        "PROCUREMENT_LABEL": "Delivery location for availability checks",
+        "PLACEHOLDER": "Choose a delivery location",
+        "HINT": "Remembered for this session only. Nothing is requested from suppliers until you choose one.",
+        "LOADING": "Loading locations…",
+        "EMPTY": "No active location is available to deliver to.",
+        "ERROR": {
+          "LOAD": "The location list could not be loaded, so availability cannot be checked."
+        }
+      },
+      "CHECK": {
+        "ACTION": "Check availability",
+        "COLUMN": "Supplier availability",
+        "NEEDS_LOCATION": "Choose a delivery location to check this line.",
+        "LINE_CHANGED": "This line changed after the check. Check it again."
+      },
+      "ERROR": {
+        "LOAD": "Supplier availability could not be loaded. The rest of this page is unaffected.",
+        "CHECK": "This line could not be checked with the supplier."
+      }
+    },
+    "ENRICHMENT": {
+      "TITLE": "Manufacturer content",
+      "PROVENANCE": "Supplied by {{manufacturer}}. Manufacturer marketing content, not catalogue data.",
+      "LOCALE_FALLBACK": "The manufacturer has not published this text in your language, so another language is shown.",
+      "GALLERY": "Manufacturer images",
+      "PUBLISHED_AT": "Published by manufacturer",
+      "FETCHED_AT": "Last fetched",
+      "ERROR": {
+        "LOAD": "Manufacturer content could not be loaded."
+      },
+      "UNMATCHED": {
+        "TITLE": "Unmatched manufacturer content",
+        "SUBTITLE": "Manufacturer content received for products the catalogue does not recognise.",
+        "WORKLIST_NOTICE": "These records stay listed until a catalogue correction makes them matchable. They cannot be matched or dismissed from this screen.",
+        "EMPTY": "No unmatched manufacturer content. Everything received was matched to a product.",
+        "COUNT": "{{count}} unmatched records",
+        "NO_PREVIEW": "No preview published",
+        "FILTER": {
+          "VENDOR": "Supplier",
+          "ALL_VENDORS": "All suppliers",
+          "REASON": "Reason",
+          "ALL_REASONS": "All reasons",
+          "SEARCH": "Search",
+          "DATE_FROM": "First seen from",
+          "DATE_TO": "Last seen to"
+        },
+        "REASON": {
+          "NO_EAN_MATCH": "No EAN match",
+          "NO_GTIN_MATCH": "No GTIN match",
+          "NO_MPN_MATCH": "No manufacturer part number match",
+          "AMBIGUOUS_MATCH": "Ambiguous match",
+          "MISSING_IDENTIFIERS": "No usable identifiers"
+        },
+        "TABLE": {
+          "CAPTION": "Manufacturer content awaiting a product match",
+          "EAN": "EAN",
+          "GTIN": "GTIN",
+          "MPN": "Manufacturer part number",
+          "MANUFACTURER": "Manufacturer",
+          "VENDOR": "Supplier",
+          "PREVIEW": "Content preview",
+          "IMAGES": "Images",
+          "REASON": "Reason",
+          "FIRST_SEEN": "First seen",
+          "LAST_SEEN": "Last seen",
+          "OCCURRENCES": "Occurrences"
+        },
+        "ERROR": {
+          "LOAD": "The unmatched manufacturer content could not be loaded."
+        }
+      }
     }
   }
 }

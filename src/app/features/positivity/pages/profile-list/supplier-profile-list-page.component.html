@@ -8,6 +8,12 @@
       <a class="pos-btn pos-btn--secondary" [routerLink]="['/app', 'positivity', 'exchanges']">
         {{ 'POSITIVITY.AUDIT.TITLE' | translate }}
       </a>
+      <a
+        class="pos-btn pos-btn--secondary"
+        [routerLink]="['/app', 'positivity', 'enrichment', 'unmatched']"
+      >
+        {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TITLE' | translate }}
+      </a>
       <button class="pos-btn pos-btn--primary" type="button" (click)="openCreate()">
         {{ 'POSITIVITY.PROFILES.CREATE' | translate }}
       </button>

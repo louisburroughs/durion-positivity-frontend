@@ -10,13 +10,30 @@ import {
   CreatePurchaseOrderRequest,
 } from '../../../models/inventory.models';
 import { InventoryPurchaseOrderService } from '../../../services/inventory-purchase-order.service';
+import { SupplierAvailabilityCheckComponent } from '../../../../positivity/components/supplier-availability-check/supplier-availability-check.component';
+import { SupplierLocationSelectComponent } from '../../../../positivity/components/supplier-location-select/supplier-location-select.component';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
+/**
+ * Purchase-order create/revise form.
+ *
+ * This is the screen that owns purchase-order **line editing** (`addLine`,
+ * `removeLine`, `updateLine`), which is why the per-line supplier availability
+ * check from #190 lives here and not on `po-detail`: `po-detail` renders a
+ * committed order read-only, and availability is a decision aid for the moment
+ * *before* you commit. The check is imported as a positivity component — this
+ * component gains no supplier model, service or state (#190 cross-domain rule).
+ */
 @Component({
   selector: 'app-po-form',
   standalone: true,
-  imports: [TranslatePipe, FormsModule],
+  imports: [
+    TranslatePipe,
+    FormsModule,
+    SupplierAvailabilityCheckComponent,
+    SupplierLocationSelectComponent,
+  ],
   templateUrl: './po-form.component.html',
   styleUrl: './po-form.component.css',
 })
