@@ -2,59 +2,72 @@
  * Supplier vendor-profile administration client.
  *
  * ── Transport ────────────────────────────────────────────────────────────────
- * There is no `@durion-sdk/supplier` package. Per the documented convention for
- * SDK-less domains this service calls `ApiBaseService` directly (ADR-0010 —
- * never `HttpClient` in a feature). When the generated supplier SDK lands, only
- * this file changes; models, components, and pages are already SDK-agnostic.
+ * Backed by the generated `@durion-sdk/supplier` client (ADR-0010: a feature
+ * never injects `HttpClient`). The admin surface lives under
+ * `/v1/supplier/admin/**` and is reached through four generated services:
  *
- * ── Assumed endpoint contract (`/supplier/v1/**`) ────────────────────────────
- * Coded against durion-positivity-backend#1222 (admin API) as specified by
- * ADR-0050. Reconcile this block against the controller when the backend lands.
+ *   SupplierVendorProfilesService      profiles
+ *   SupplierAuthConfigsService         auth configs
+ *   SupplierCommercialAccountsService  billing / delivery accounts
+ *   SupplierEndpointBindingsService    capability bindings
  *
- *   GET    /supplier/v1/vendor-profiles                              → VendorProfileSummary[]
- *   POST   /supplier/v1/vendor-profiles                              → VendorProfile
- *   GET    /supplier/v1/vendor-profiles/{profileId}                  → VendorProfile
- *   PUT    /supplier/v1/vendor-profiles/{profileId}                  → VendorProfile
- *   DELETE /supplier/v1/vendor-profiles/{profileId}                  → void
+ * SDK view fields are almost all optional. That optionality is resolved **here**,
+ * once, so pages and templates get the required-field shapes in
+ * `models/supplier-profile.models.ts` and never carry `?? ''` noise.
  *
- *   GET    /supplier/v1/vendor-profiles/{profileId}/auth-configs     → SupplierAuthConfig[]
- *   POST   /supplier/v1/vendor-profiles/{profileId}/auth-configs     → SupplierAuthConfig
- *   PUT    /supplier/v1/vendor-profiles/{profileId}/auth-configs/{authConfigId}
- *   DELETE /supplier/v1/vendor-profiles/{profileId}/auth-configs/{authConfigId}
+ * ── Delivery mapping gaps ────────────────────────────────────────────────────
+ * The supplier contract has no active-location roster: a delivery account only
+ * carries the `deliveryLocationId` it maps. The roster comes from
+ * `@durion-sdk/location`, and the two are composed here so the accounts panel
+ * still consumes a single `SupplierAccounts`-shaped result.
  *
- *   GET    /supplier/v1/vendor-profiles/{profileId}/accounts         → SupplierAccounts
- *   PUT    /supplier/v1/vendor-profiles/{profileId}/accounts/billing → SupplierBillingAccount
- *   PUT    /supplier/v1/vendor-profiles/{profileId}/accounts/delivery/{locationId}
- *   DELETE /supplier/v1/vendor-profiles/{profileId}/accounts/delivery/{locationId}
+ * A failure of the location call degrades **only** the gap check
+ * (`locationsAvailable: false`) — the mappings the operator came to read still
+ * render. Erroring the whole tab because a different domain was unreachable
+ * would hide correct data to report an unrelated fault.
  *
- *   GET    /supplier/v1/vendor-profiles/{profileId}/bindings         → SupplierBinding[]
- *   POST   /supplier/v1/vendor-profiles/{profileId}/bindings         → SupplierBinding
- *   PUT    /supplier/v1/vendor-profiles/{profileId}/bindings/{bindingId}
- *   DELETE /supplier/v1/vendor-profiles/{profileId}/bindings/{bindingId}
+ * ── Source-of-truth lock ─────────────────────────────────────────────────────
+ * A profile with `sourceOfTruth: 'YAML'` rejects every mutation with `409`
+ * (ADR-0050 §6). That is enforced by the backend; the UI surfaces it up front
+ * by disabling write controls with a stated reason rather than hiding them.
  *
- *   GET    /supplier/v1/vendor-profiles/{profileId}/health           → SupplierBindingHealth[]
- *   GET    /supplier/v1/capabilities                                 → SupplierCapabilityDescriptor[]
- *
- * The accounts response carries `activeLocations` so the UI can flag delivery
- * mapping gaps without reaching across the domain boundary into pos-location.
- *
- * Credential fields are write-only reference strings in both directions
- * (ADR-0050 §4): request payloads carry `env:`-style references and responses
- * never contain a resolved secret.
+ * ── Not in the contract ──────────────────────────────────────────────────────
+ * There is no health/circuit-breaker endpoint and no capability-registry
+ * endpoint anywhere in the supplier SDK. Neither is called from here.
  */
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { ApiBaseService } from '../../../core/services/api-base.service';
+import { Observable, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import {
+  AuthConfigRequest,
+  AuthConfigRequestTypeEnum,
+  AuthConfigView,
+  CommercialAccountRequest,
+  CommercialAccountRequestRoleEnum,
+  CommercialAccountView,
+  CommercialAccountViewRoleEnum,
+  EndpointBindingRequest,
+  EndpointBindingRequestCaptureLevelEnum,
+  EndpointBindingView,
+  SupplierAuthConfigsService,
+  SupplierCommercialAccountsService,
+  SupplierEndpointBindingsService,
+  SupplierVendorProfilesService,
+  VendorProfileRequest as SdkVendorProfileRequest,
+  VendorProfileRequestRetryBackoffEnum,
+  VendorProfileView,
+} from '@durion-sdk/supplier';
+import { LocationAPIService, LocationResponseDTO } from '@durion-sdk/location';
 import {
   SupplierAccounts,
+  SupplierActiveLocation,
   SupplierAuthConfig,
   SupplierAuthConfigRequest,
   SupplierBillingAccount,
   SupplierBillingAccountRequest,
   SupplierBinding,
-  SupplierBindingHealth,
   SupplierBindingRequest,
-  SupplierCapabilityDescriptor,
+  SupplierCaptureLevel,
   SupplierDeliveryAccount,
   SupplierDeliveryAccountRequest,
   VendorProfile,
@@ -62,51 +75,62 @@ import {
   VendorProfileSummary,
 } from '../models/supplier-profile.models';
 
-const ROOT = '/supplier/v1/vendor-profiles';
-
 @Injectable({ providedIn: 'root' })
 export class SupplierProfileService {
-  private readonly api = inject(ApiBaseService);
+  private readonly profilesSdk = inject(SupplierVendorProfilesService);
+  private readonly authConfigsSdk = inject(SupplierAuthConfigsService);
+  private readonly accountsSdk = inject(SupplierCommercialAccountsService);
+  private readonly bindingsSdk = inject(SupplierEndpointBindingsService);
+  private readonly locationSdk = inject(LocationAPIService);
 
   // ── Profiles ───────────────────────────────────────────────────────────────
 
   listProfiles(): Observable<VendorProfileSummary[]> {
-    return this.api.get<VendorProfileSummary[]>(ROOT);
+    return this.profilesSdk
+      .listProfiles()
+      .pipe(map(views => views.map(view => this.toProfileSummary(view))));
   }
 
   getProfile(vendorProfileId: string): Observable<VendorProfile> {
-    return this.api.get<VendorProfile>(`${ROOT}/${vendorProfileId}`);
+    return this.profilesSdk
+      .getProfile(vendorProfileId)
+      .pipe(map(view => this.toProfile(view)));
   }
 
   createProfile(request: VendorProfileRequest): Observable<VendorProfile> {
-    return this.api.post<VendorProfile>(ROOT, request);
+    return this.profilesSdk
+      .createProfile(this.toSdkProfileRequest(request))
+      .pipe(map(view => this.toProfile(view)));
   }
 
   updateProfile(
     vendorProfileId: string,
     request: VendorProfileRequest,
   ): Observable<VendorProfile> {
-    return this.api.put<VendorProfile>(`${ROOT}/${vendorProfileId}`, request);
+    return this.profilesSdk
+      .updateProfile(vendorProfileId, this.toSdkProfileRequest(request))
+      .pipe(map(view => this.toProfile(view)));
   }
 
   deleteProfile(vendorProfileId: string): Observable<void> {
-    return this.api.delete<void>(`${ROOT}/${vendorProfileId}`);
+    return this.profilesSdk.deleteProfile(vendorProfileId).pipe(map(() => undefined));
   }
 
   // ── Auth configs ───────────────────────────────────────────────────────────
 
   listAuthConfigs(vendorProfileId: string): Observable<SupplierAuthConfig[]> {
-    return this.api.get<SupplierAuthConfig[]>(`${ROOT}/${vendorProfileId}/auth-configs`);
+    return this.authConfigsSdk
+      .listAuthConfigs(vendorProfileId)
+      .pipe(map(views => views.map(view => this.toAuthConfig(view))));
   }
 
   createAuthConfig(
     vendorProfileId: string,
     request: SupplierAuthConfigRequest,
   ): Observable<SupplierAuthConfig> {
-    return this.api.post<SupplierAuthConfig>(
-      `${ROOT}/${vendorProfileId}/auth-configs`,
-      request,
-    );
+    return this.authConfigsSdk
+      .createAuthConfig(vendorProfileId, this.toSdkAuthConfigRequest(request))
+      .pipe(map(view => this.toAuthConfig(view)));
   }
 
   updateAuthConfig(
@@ -114,60 +138,88 @@ export class SupplierProfileService {
     authConfigId: string,
     request: SupplierAuthConfigRequest,
   ): Observable<SupplierAuthConfig> {
-    return this.api.put<SupplierAuthConfig>(
-      `${ROOT}/${vendorProfileId}/auth-configs/${authConfigId}`,
-      request,
-    );
+    return this.authConfigsSdk
+      .updateAuthConfig(vendorProfileId, authConfigId, this.toSdkAuthConfigRequest(request))
+      .pipe(map(view => this.toAuthConfig(view)));
   }
 
   deleteAuthConfig(vendorProfileId: string, authConfigId: string): Observable<void> {
-    return this.api.delete<void>(`${ROOT}/${vendorProfileId}/auth-configs/${authConfigId}`);
+    return this.authConfigsSdk
+      .deleteAuthConfig(vendorProfileId, authConfigId)
+      .pipe(map(() => undefined));
   }
 
   // ── Accounts (billing / delivery — canonical vocabulary, ADR-0050 §5) ───────
 
+  /**
+   * Accounts plus the active-location roster used for the mapping-gap check.
+   *
+   * The roster call is deliberately fault-tolerant: a pos-location outage sets
+   * `locationsAvailable: false` and leaves the mappings intact.
+   */
   getAccounts(vendorProfileId: string): Observable<SupplierAccounts> {
-    return this.api.get<SupplierAccounts>(`${ROOT}/${vendorProfileId}/accounts`);
+    return forkJoin({
+      accounts: this.accountsSdk.listAccounts(vendorProfileId),
+      locations: this.locationSdk
+        .getAllLocations()
+        .pipe(catchError(() => of<LocationResponseDTO[] | null>(null))),
+    }).pipe(map(result => this.toAccounts(result.accounts, result.locations)));
   }
 
-  updateBillingAccount(
+  /** Create or replace the profile's single BILLING account. */
+  saveBillingAccount(
     vendorProfileId: string,
     request: SupplierBillingAccountRequest,
   ): Observable<SupplierBillingAccount> {
-    return this.api.put<SupplierBillingAccount>(
-      `${ROOT}/${vendorProfileId}/accounts/billing`,
-      request,
-    );
+    const payload: CommercialAccountRequest = {
+      role: CommercialAccountRequestRoleEnum.Billing,
+      accountNumber: request.accountNumber,
+      agencyCode: request.agencyCode,
+    };
+    const call$ = request.accountId
+      ? this.accountsSdk.updateAccount(vendorProfileId, request.accountId, payload)
+      : this.accountsSdk.createAccount(vendorProfileId, payload);
+    return call$.pipe(map(view => this.toBillingAccount(view)));
   }
 
-  upsertDeliveryAccount(
+  /** Create or replace the DELIVERY account for one pos-location. */
+  saveDeliveryAccount(
     vendorProfileId: string,
     request: SupplierDeliveryAccountRequest,
   ): Observable<SupplierDeliveryAccount> {
-    const { locationId, ...payload } = request;
-    return this.api.put<SupplierDeliveryAccount>(
-      `${ROOT}/${vendorProfileId}/accounts/delivery/${locationId}`,
-      payload,
-    );
+    const payload: CommercialAccountRequest = {
+      role: CommercialAccountRequestRoleEnum.Delivery,
+      accountNumber: request.accountNumber,
+      agencyCode: request.agencyCode,
+      deliveryLocationId: request.locationId,
+    };
+    const call$ = request.accountId
+      ? this.accountsSdk.updateAccount(vendorProfileId, request.accountId, payload)
+      : this.accountsSdk.createAccount(vendorProfileId, payload);
+    return call$.pipe(map(view => this.toDeliveryAccount(view)));
   }
 
-  deleteDeliveryAccount(vendorProfileId: string, locationId: string): Observable<void> {
-    return this.api.delete<void>(
-      `${ROOT}/${vendorProfileId}/accounts/delivery/${locationId}`,
-    );
+  deleteAccount(vendorProfileId: string, accountId: string): Observable<void> {
+    return this.accountsSdk
+      .deleteAccount(vendorProfileId, accountId)
+      .pipe(map(() => undefined));
   }
 
   // ── Capability bindings ────────────────────────────────────────────────────
 
   listBindings(vendorProfileId: string): Observable<SupplierBinding[]> {
-    return this.api.get<SupplierBinding[]>(`${ROOT}/${vendorProfileId}/bindings`);
+    return this.bindingsSdk
+      .listBindings(vendorProfileId)
+      .pipe(map(views => views.map(view => this.toBinding(view))));
   }
 
   createBinding(
     vendorProfileId: string,
     request: SupplierBindingRequest,
   ): Observable<SupplierBinding> {
-    return this.api.post<SupplierBinding>(`${ROOT}/${vendorProfileId}/bindings`, request);
+    return this.bindingsSdk
+      .createBinding(vendorProfileId, this.toSdkBindingRequest(request))
+      .pipe(map(view => this.toBinding(view)));
   }
 
   updateBinding(
@@ -175,23 +227,159 @@ export class SupplierProfileService {
     bindingId: string,
     request: SupplierBindingRequest,
   ): Observable<SupplierBinding> {
-    return this.api.put<SupplierBinding>(
-      `${ROOT}/${vendorProfileId}/bindings/${bindingId}`,
-      request,
-    );
+    return this.bindingsSdk
+      .updateBinding(vendorProfileId, bindingId, this.toSdkBindingRequest(request))
+      .pipe(map(view => this.toBinding(view)));
   }
 
   deleteBinding(vendorProfileId: string, bindingId: string): Observable<void> {
-    return this.api.delete<void>(`${ROOT}/${vendorProfileId}/bindings/${bindingId}`);
+    return this.bindingsSdk
+      .deleteBinding(vendorProfileId, bindingId)
+      .pipe(map(() => undefined));
   }
 
-  // ── Health / registry ──────────────────────────────────────────────────────
+  // ── Mapping (SDK view ⇄ domain model) ──────────────────────────────────────
 
-  getHealth(vendorProfileId: string): Observable<SupplierBindingHealth[]> {
-    return this.api.get<SupplierBindingHealth[]>(`${ROOT}/${vendorProfileId}/health`);
+  private toProfileSummary(view: VendorProfileView): VendorProfileSummary {
+    return {
+      vendorProfileId: view.vendorProfileId ?? '',
+      supplierRef: view.supplierRef ?? '',
+      displayName: view.displayName ?? '',
+      enabled: view.enabled ?? false,
+      sandbox: view.sandbox ?? false,
+      sourceOfTruth: view.sourceOfTruth ?? 'ADMIN',
+    };
   }
 
-  listCapabilities(): Observable<SupplierCapabilityDescriptor[]> {
-    return this.api.get<SupplierCapabilityDescriptor[]>('/supplier/v1/capabilities');
+  private toProfile(view: VendorProfileView): VendorProfile {
+    return {
+      ...this.toProfileSummary(view),
+      connectTimeoutMillis: view.connectTimeoutMillis,
+      readTimeoutMillis: view.readTimeoutMillis,
+      maxRetries: view.maxRetries,
+      sandboxBaseUrlOverride: view.sandboxBaseUrlOverride,
+      retryBackoff: view.retryBackoff,
+    };
+  }
+
+  private toSdkProfileRequest(request: VendorProfileRequest): SdkVendorProfileRequest {
+    return {
+      supplierRef: request.supplierRef,
+      displayName: request.displayName,
+      enabled: request.enabled,
+      sandbox: request.sandbox,
+      connectTimeoutMillis: request.connectTimeoutMillis,
+      readTimeoutMillis: request.readTimeoutMillis,
+      maxRetries: request.maxRetries,
+      sandboxBaseUrlOverride: request.sandboxBaseUrlOverride,
+      retryBackoff: request.retryBackoff as VendorProfileRequestRetryBackoffEnum | undefined,
+    };
+  }
+
+  private toAuthConfig(view: AuthConfigView): SupplierAuthConfig {
+    return {
+      authConfigId: view.authConfigId ?? '',
+      authRef: view.name ?? '',
+      authType: view.type ?? 'BASIC_PLUS_APIKEY',
+      apiKeyHeader: view.apiKeyHeader,
+    };
+  }
+
+  private toSdkAuthConfigRequest(request: SupplierAuthConfigRequest): AuthConfigRequest {
+    return {
+      name: request.authRef,
+      type: request.authType as AuthConfigRequestTypeEnum,
+      usernameRef: request.usernameRef,
+      passwordRef: request.passwordRef,
+      apiKeyRef: request.apiKeyRef,
+      apiKeyHeader: request.apiKeyHeader,
+      tokenUrlRef: request.tokenUrlRef,
+      clientIdRef: request.clientIdRef,
+      clientSecretRef: request.clientSecretRef,
+      bearerTokenRef: request.bearerTokenRef,
+    };
+  }
+
+  private toBillingAccount(view: CommercialAccountView): SupplierBillingAccount {
+    return {
+      accountId: view.accountId ?? '',
+      accountNumber: view.accountNumber ?? '',
+      agencyCode: view.agencyCode,
+    };
+  }
+
+  private toDeliveryAccount(
+    view: CommercialAccountView,
+    locationNames?: ReadonlyMap<string, string>,
+  ): SupplierDeliveryAccount {
+    const locationId = view.deliveryLocationId ?? '';
+    return {
+      accountId: view.accountId ?? '',
+      locationId,
+      locationName: locationNames?.get(locationId),
+      accountNumber: view.accountNumber ?? '',
+      agencyCode: view.agencyCode,
+    };
+  }
+
+  /**
+   * Compose the accounts view.
+   *
+   * `locations === null` means the roster call failed; the gap check is then
+   * unavailable rather than empty — an empty roster would claim "no gaps", which
+   * is the opposite of what we know.
+   */
+  private toAccounts(
+    accounts: CommercialAccountView[],
+    locations: LocationResponseDTO[] | null,
+  ): SupplierAccounts {
+    const activeLocations: SupplierActiveLocation[] = (locations ?? [])
+      .filter(location => location.active === true)
+      .map(location => ({ locationId: location.id, name: location.name }));
+    const locationNames = new Map(
+      (locations ?? []).map(location => [location.id, location.name] as const),
+    );
+
+    const billingView = accounts.find(
+      account => account.role === CommercialAccountViewRoleEnum.Billing,
+    );
+
+    return {
+      billing: billingView ? this.toBillingAccount(billingView) : null,
+      delivery: accounts
+        .filter(account => account.role === CommercialAccountViewRoleEnum.Delivery)
+        .map(account => this.toDeliveryAccount(account, locationNames)),
+      activeLocations,
+      locationsAvailable: locations !== null,
+    };
+  }
+
+  private toBinding(view: EndpointBindingView): SupplierBinding {
+    return {
+      bindingId: view.bindingId ?? '',
+      capability: view.capability ?? '',
+      protocolFamily: view.protocolFamily ?? '',
+      protocolVersion: view.version ?? '',
+      baseUrl: view.baseUrl ?? '',
+      path: view.path ?? '',
+      authRef: view.authConfigName ?? '',
+      cronSchedule: view.schedule ?? null,
+      enabled: view.enabled ?? false,
+      captureLevel: view.captureLevel as SupplierCaptureLevel | undefined,
+    };
+  }
+
+  private toSdkBindingRequest(request: SupplierBindingRequest): EndpointBindingRequest {
+    return {
+      capability: request.capability,
+      protocolFamily: request.protocolFamily,
+      version: request.protocolVersion,
+      baseUrl: request.baseUrl,
+      path: request.path,
+      authConfigName: request.authRef,
+      schedule: request.cronSchedule ?? undefined,
+      enabled: request.enabled,
+      captureLevel: request.captureLevel as EndpointBindingRequestCaptureLevelEnum | undefined,
+    };
   }
 }

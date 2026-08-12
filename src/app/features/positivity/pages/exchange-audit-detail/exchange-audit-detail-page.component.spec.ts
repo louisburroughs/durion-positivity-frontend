@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ExchangeAuditDetailPageComponent } from './exchange-audit-detail-page.component';
 import { SupplierExchangeAuditService } from '../../services/supplier-exchange-audit.service';
 import {
+  ExchangeAuditPage,
   ExchangeAuditRecord,
   ExchangePayloadView,
 } from '../../models/supplier-exchange.models';
@@ -14,32 +15,41 @@ import {
 const EXCHANGE_ID = 'exch-1';
 
 const record: ExchangeAuditRecord = {
-  exchangeId: EXCHANGE_ID,
+  exchangeAuditId: EXCHANGE_ID,
   vendorProfileId: 'profile-1',
-  vendorDisplayName: 'Michelin EU',
+  supplierRef: 'michelin-eu',
+  bindingId: 'bind-1',
   capability: 'ORDER',
   protocolFamily: 'EDIWHEEL_C1',
   protocolVersion: 'C1_1',
+  httpMethod: 'POST',
+  endpointUri: 'https://edi.example.com/order?token=***',
+  attempt: 1,
+  correlationId: 'corr-1',
   outcome: 'SUCCESS',
   httpStatus: 200,
-  durationMs: 412,
-  correlationId: 'corr-1',
-  captureLevel: 'REDACTED',
   startedAt: '2026-08-12T09:00:00Z',
-  finishedAt: '2026-08-12T09:00:01Z',
-  unmappedFields: ['Order.Geolocation'],
+  durationMs: 412,
+  captureLevel: 'REDACTED',
+  requestPayloadPresent: true,
+  responsePayloadPresent: true,
+  createdBy: 'operator@example.com',
 };
 
 const payload: ExchangePayloadView = {
-  exchangeId: EXCHANGE_ID,
+  exchangeAuditId: EXCHANGE_ID,
   captureLevel: 'REDACTED',
-  requestContentType: 'application/xml',
-  requestBody: '<Order><BuyerParty>***</BuyerParty></Order>',
-  requestHeaders: [{ name: 'Authorization', value: '***', redacted: true }],
-  responseContentType: 'application/xml',
-  responseBody: '<OrderResponse/>',
-  responseHeaders: [{ name: 'Content-Type', value: 'application/xml', redacted: false }],
-  redactedFields: ['Order.BuyerParty'],
+  redacted: true,
+  requestPayload: '<Order><BuyerParty>***</BuyerParty></Order>',
+  responsePayload: '<OrderResponse/>',
+};
+
+const singleAttemptPage: ExchangeAuditPage = {
+  items: [record],
+  page: 0,
+  size: 25,
+  totalCount: 1,
+  totalPages: 1,
 };
 
 describe('ExchangeAuditDetailPageComponent', () => {
@@ -48,30 +58,25 @@ describe('ExchangeAuditDetailPageComponent', () => {
   let service: {
     getExchange: ReturnType<typeof vi.fn>;
     getExchangePayload: ReturnType<typeof vi.fn>;
+    traceCorrelation: ReturnType<typeof vi.fn>;
   };
 
   async function setup(options?: {
     exchange?: ExchangeAuditRecord | HttpErrorResponse;
     payload?: ExchangePayloadView | HttpErrorResponse;
+    attempts?: ExchangeAuditPage | HttpErrorResponse;
   }): Promise<void> {
     const exchangeResult = options?.exchange ?? record;
     const payloadResult = options?.payload ?? payload;
+    const attemptsResult = options?.attempts ?? singleAttemptPage;
+
+    const asObservable = (value: unknown) =>
+      value instanceof HttpErrorResponse ? throwError(() => value) : of(value);
 
     service = {
-      getExchange: vi
-        .fn()
-        .mockReturnValue(
-          exchangeResult instanceof HttpErrorResponse
-            ? throwError(() => exchangeResult)
-            : of(exchangeResult),
-        ),
-      getExchangePayload: vi
-        .fn()
-        .mockReturnValue(
-          payloadResult instanceof HttpErrorResponse
-            ? throwError(() => payloadResult)
-            : of(payloadResult),
-        ),
+      getExchange: vi.fn().mockReturnValue(asObservable(exchangeResult)),
+      getExchangePayload: vi.fn().mockReturnValue(asObservable(payloadResult)),
+      traceCorrelation: vi.fn().mockReturnValue(asObservable(attemptsResult)),
     };
 
     TestBed.resetTestingModule();
@@ -119,7 +124,73 @@ describe('ExchangeAuditDetailPageComponent', () => {
     expect(component.errorKey()).toBe('POSITIVITY.ERROR.FORBIDDEN');
   });
 
-  // ── Two-pane payload view ──────────────────────────────────────────────────
+  // ── Retry sequence ────────────────────────────────────────────────────────
+
+  it('traces the correlation to assemble the retry sequence', async () => {
+    await setup();
+
+    expect(service.traceCorrelation).toHaveBeenCalledWith('corr-1');
+  });
+
+  it('shows each attempt of a retried call, oldest first', async () => {
+    const retried: ExchangeAuditPage = {
+      ...singleAttemptPage,
+      items: [
+        { ...record, exchangeAuditId: 'a1', attempt: 1, outcome: 'TIMEOUT', httpStatus: null },
+        { ...record, exchangeAuditId: 'a2', attempt: 2, outcome: 'FAILURE', httpStatus: 502 },
+        { ...record, exchangeAuditId: EXCHANGE_ID, attempt: 3, outcome: 'SUCCESS' },
+      ],
+      totalCount: 3,
+    };
+    await setup({ attempts: retried });
+
+    expect(component.hasRetrySequence()).toBe(true);
+    expect(component.attempts().map(a => a.attempt)).toEqual([1, 2, 3]);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'POSITIVITY.AUDIT.ATTEMPTS.HINT',
+    );
+  });
+
+  it('says so plainly when the call was not retried', async () => {
+    await setup();
+
+    expect(component.hasRetrySequence()).toBe(false);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'POSITIVITY.AUDIT.ATTEMPTS.SINGLE',
+    );
+  });
+
+  it('links sibling attempts but not the one being viewed', async () => {
+    const retried: ExchangeAuditPage = {
+      ...singleAttemptPage,
+      items: [
+        { ...record, exchangeAuditId: 'a1', attempt: 1 },
+        { ...record, exchangeAuditId: EXCHANGE_ID, attempt: 2 },
+      ],
+      totalCount: 2,
+    };
+    await setup({ attempts: retried });
+    const links = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.exchange-detail__link'),
+    );
+
+    expect(links).toHaveLength(1);
+    expect(links[0].getAttribute('href')).toBe('/app/positivity/exchanges/a1');
+  });
+
+  it('keeps the page usable when the retry trace fails', async () => {
+    await setup({ attempts: new HttpErrorResponse({ status: 500, statusText: 'x' }) });
+
+    // The row itself loaded; losing the trace costs the sequence and nothing else.
+    expect(component.state()).toBe('ready');
+    expect(component.errorKey()).toBeNull();
+    expect(component.attemptsFailed()).toBe(true);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'POSITIVITY.AUDIT.ATTEMPTS.UNAVAILABLE',
+    );
+  });
+
+  // ── Two-pane payload view ─────────────────────────────────────────────────
 
   it('renders request and response as two separate panes', async () => {
     await setup();
@@ -132,27 +203,26 @@ describe('ExchangeAuditDetailPageComponent', () => {
     expect(panes[1].textContent).toContain('POSITIVITY.AUDIT.PAYLOAD.RESPONSE');
   });
 
-  it('renders payloads exactly as delivered, keeping redaction intact', async () => {
+  it('renders payloads exactly as delivered and says they are not the wire documents', async () => {
     await setup();
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
 
     expect(text).toContain('<Order><BuyerParty>***</BuyerParty></Order>');
     expect(text).toContain('POSITIVITY.AUDIT.PAYLOAD.REDACTION_NOTE');
-    expect(text).toContain('Order.BuyerParty');
   });
 
-  it('flags redacted headers as redacted', async () => {
-    await setup();
-    const flags = (fixture.nativeElement as HTMLElement).querySelectorAll(
-      '.exchange-detail__redacted-flag',
+  it('omits the redaction warning when the documents were stored unaltered', async () => {
+    await setup({ payload: { ...payload, captureLevel: 'FULL', redacted: false } });
+
+    expect(component.payloadState()).toBe('ready');
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain(
+      'POSITIVITY.AUDIT.PAYLOAD.REDACTION_NOTE',
     );
-
-    expect(flags).toHaveLength(1);
   });
 
-  // ── payload-restricted ─────────────────────────────────────────────────────
+  // ── The four no-content states ────────────────────────────────────────────
 
-  it('renders payload-restricted when the payload endpoint answers 403, keeping the metadata', async () => {
+  it('renders payload-restricted on 403, keeping the metadata on screen', async () => {
     await setup({ payload: new HttpErrorResponse({ status: 403, statusText: 'x' }) });
 
     expect(component.state()).toBe('ready');
@@ -163,7 +233,7 @@ describe('ExchangeAuditDetailPageComponent', () => {
     const host = fixture.nativeElement as HTMLElement;
     expect(host.querySelector('.exchange-detail__pane')).toBeNull();
     expect(host.textContent).toContain('POSITIVITY.AUDIT.PAYLOAD.RESTRICTED');
-    // metadata is still on screen — a payload denial is not a page failure
+    // A payload denial is not a page failure.
     expect(host.textContent).toContain('corr-1');
   });
 
@@ -185,31 +255,123 @@ describe('ExchangeAuditDetailPageComponent', () => {
   it('reports metadata-only capture as its own state, not an error', async () => {
     await setup({
       payload: {
-        exchangeId: EXCHANGE_ID,
+        exchangeAuditId: EXCHANGE_ID,
         captureLevel: 'METADATA_ONLY',
-        requestBody: null,
-        responseBody: null,
+        redacted: false,
+        requestPayload: null,
+        responsePayload: null,
       },
     });
 
     expect(component.payloadState()).toBe('metadata-only');
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
-      'POSITIVITY.AUDIT.PAYLOAD.METADATA_ONLY',
-    );
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.textContent).toContain('POSITIVITY.AUDIT.PAYLOAD.METADATA_ONLY');
+    expect(host.querySelector('.pos-banner--error')).toBeNull();
   });
 
   it('reports a retention-purged payload as its own state', async () => {
     await setup({
-      payload: { ...payload, payloadPurgedAt: '2026-07-01T00:00:00Z' },
+      exchange: { ...record, payloadsPurgedAt: '2027-09-15T00:00:00Z' },
+      payload: {
+        exchangeAuditId: EXCHANGE_ID,
+        captureLevel: 'REDACTED',
+        redacted: true,
+        requestPayload: null,
+        responsePayload: null,
+      },
     });
 
-    expect(component.payloadState()).toBe('payload-purged');
+    expect(component.payloadState()).toBe('purged');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain(
       'POSITIVITY.AUDIT.PAYLOAD.PURGED',
     );
   });
 
-  // ── Read-only + a11y ───────────────────────────────────────────────────────
+  it('distinguishes "never captured" from "purged" when nothing was purged', async () => {
+    await setup({
+      exchange: { ...record, payloadsPurgedAt: null },
+      payload: {
+        exchangeAuditId: EXCHANGE_ID,
+        captureLevel: 'FULL',
+        redacted: false,
+        requestPayload: null,
+        responsePayload: null,
+      },
+    });
+
+    expect(component.payloadState()).toBe('not-captured');
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('POSITIVITY.AUDIT.PAYLOAD.NOT_CAPTURED');
+    expect(text).not.toContain('POSITIVITY.AUDIT.PAYLOAD.PURGED');
+  });
+
+  it('renders a one-sided capture without claiming the whole payload is missing', async () => {
+    await setup({
+      payload: { ...payload, redacted: false, captureLevel: 'FULL', requestPayload: null },
+    });
+
+    expect(component.payloadState()).toBe('ready');
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('POSITIVITY.AUDIT.PAYLOAD.NO_REQUEST_BODY');
+    expect(text).toContain('<OrderResponse/>');
+  });
+
+  // ── Truthful rendering of degenerate values ───────────────────────────────
+
+  it('renders a null HTTP status as "no response", never as 0', async () => {
+    await setup({ exchange: { ...record, httpStatus: null, durationMs: null, outcome: 'TIMEOUT' } });
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(text).toContain('POSITIVITY.AUDIT.NO_RESPONSE_DETAIL');
+    expect(text).not.toMatch(/\b0\b/);
+  });
+
+  it('labels the endpoint as a path, not a URI, at METADATA_ONLY', async () => {
+    await setup({
+      exchange: { ...record, captureLevel: 'METADATA_ONLY', endpointUri: '/order' },
+    });
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(component.endpointIsPathOnly()).toBe(true);
+    expect(text).toContain('POSITIVITY.AUDIT.ENDPOINT_PATH');
+    expect(text).toContain('POSITIVITY.AUDIT.ENDPOINT_PATH_NOTE');
+    expect(text).not.toContain('POSITIVITY.AUDIT.ENDPOINT_URI');
+  });
+
+  it('labels the endpoint as an address when the query string was retained', async () => {
+    await setup();
+
+    expect(component.endpointIsPathOnly()).toBe(false);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'POSITIVITY.AUDIT.ENDPOINT_URI',
+    );
+  });
+
+  it('marks the supplier alias as a point-in-time snapshot', async () => {
+    await setup();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(text).toContain('michelin-eu');
+    expect(text).toContain('POSITIVITY.AUDIT.SUPPLIER_REF_SNAPSHOT');
+  });
+
+  it('quotes the vendor failure detail as data when there is one', async () => {
+    await setup({ exchange: { ...record, outcome: 'FAILURE', failureDetail: 'HTTP 502 from vendor' } });
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(text).toContain('POSITIVITY.AUDIT.FAILURE_DETAIL');
+    expect(text).toContain('HTTP 502 from vendor');
+  });
+
+  it('omits the failure block on a successful exchange', async () => {
+    await setup();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain(
+      'POSITIVITY.AUDIT.FAILURE_DETAIL',
+    );
+  });
+
+  // ── Read-only + a11y ──────────────────────────────────────────────────────
 
   it('offers no retry or replay of the exchange itself', async () => {
     await setup();
@@ -219,14 +381,6 @@ describe('ExchangeAuditDetailPageComponent', () => {
 
     expect(labels.some(l => l.includes('REPLAY'))).toBe(false);
     expect(labels.some(l => l.includes('RESEND'))).toBe(false);
-  });
-
-  it('surfaces fields the bound protocol version could not express', async () => {
-    await setup();
-    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
-
-    expect(text).toContain('POSITIVITY.AUDIT.UNMAPPED_FIELDS');
-    expect(text).toContain('Order.Geolocation');
   });
 
   it('links back to the audit list with routerLink (ADR-0037)', async () => {

@@ -55,6 +55,26 @@
 	max-width: 24rem;
 }
 
+.profile-detail__settings {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+	gap: var(--space-3);
+	margin: 0;
+}
+
+.profile-detail__setting dt {
+	margin: 0;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+}
+
+.profile-detail__setting dd {
+	margin: var(--space-1) 0 0;
+	overflow-wrap: anywhere;
+}
+
 .profile-detail__form {
 	border: 1px solid var(--input-border);
 	border-radius: var(--radius-md);

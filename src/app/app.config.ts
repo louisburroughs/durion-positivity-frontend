@@ -21,6 +21,7 @@ import { Configuration as PeopleConfiguration } from '@durion-sdk/people';
 import { Configuration as PeopleContactConfiguration } from '@durion-sdk/people-contact';
 import { Configuration as SecurityConfiguration } from '@durion-sdk/security';
 import { Configuration as ShopManagerConfiguration } from '@durion-sdk/shop-manager';
+import { Configuration as SupplierConfiguration } from '@durion-sdk/supplier';
 import { Configuration as VehicleInventoryConfiguration } from '@durion-sdk/vehicle-inventory';
 import { Configuration as WorkorderConfiguration } from '@durion-sdk/workorder';
 
@@ -113,6 +114,7 @@ export const appConfig: ApplicationConfig = {
     { provide: PeopleContactConfiguration, useFactory: () => new PeopleContactConfiguration({ basePath: `${environment.apiBaseUrl}/people-contact` }) },
     { provide: SecurityConfiguration, useFactory: () => new SecurityConfiguration({ basePath: `${environment.apiBaseUrl}/security-service` }) },
     { provide: ShopManagerConfiguration, useFactory: () => new ShopManagerConfiguration({ basePath: `${environment.apiBaseUrl}/shop-manager` }) },
+    { provide: SupplierConfiguration, useFactory: () => new SupplierConfiguration({ basePath: `${environment.apiBaseUrl}/supplier` }) },
     { provide: VehicleInventoryConfiguration, useFactory: () => new VehicleInventoryConfiguration({ basePath: `${environment.apiBaseUrl}/vehicle-inventory` }) },
     { provide: WorkorderConfiguration, useFactory: () => new WorkorderConfiguration({ basePath: `${environment.apiBaseUrl}/workorder` }) },
   ],

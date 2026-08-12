@@ -25,27 +25,42 @@
   @if (exchange(); as record) {
     <header class="exchange-detail__header">
       <h1 id="exchange-detail-title">{{ 'POSITIVITY.AUDIT.DETAIL_TITLE' | translate }}</h1>
-      <app-supplier-status-chip
-        [labelKey]="'POSITIVITY.AUDIT.OUTCOME.' + record.outcome"
-        [tone]="outcomeTone(record.outcome)"
-        descriptionKey="POSITIVITY.AUDIT.TABLE.OUTCOME"
-      />
+      @if (isKnownOutcome(record.outcome)) {
+        <app-supplier-status-chip
+          [labelKey]="'POSITIVITY.AUDIT.OUTCOME.' + record.outcome"
+          [tone]="outcomeTone(record.outcome)"
+          descriptionKey="POSITIVITY.AUDIT.TABLE.OUTCOME"
+        />
+      } @else {
+        <code>{{ record.outcome }}</code>
+      }
     </header>
 
     <dl class="exchange-detail__meta">
       <div class="exchange-detail__meta-item">
         <dt>{{ 'POSITIVITY.AUDIT.TABLE.VENDOR' | translate }}</dt>
-        <dd>{{ record.vendorDisplayName }}</dd>
+        <!-- The alias as at the time of the exchange: a snapshot, not a lookup
+             key, and possibly different from the profile's current ref. -->
+        <dd>
+          {{ record.supplierRef }}
+          <span class="exchange-detail__note">{{ 'POSITIVITY.AUDIT.SUPPLIER_REF_SNAPSHOT' | translate }}</span>
+        </dd>
       </div>
       <div class="exchange-detail__meta-item">
         <dt>{{ 'POSITIVITY.AUDIT.TABLE.CAPABILITY' | translate }}</dt>
-        <dd>{{ 'POSITIVITY.CAPABILITY.' + record.capability | translate }}</dd>
+        <dd>
+          @if (isKnownCapability(record.capability)) {
+            {{ 'POSITIVITY.CAPABILITY.' + record.capability | translate }}
+          } @else {
+            <code>{{ record.capability }}</code>
+          }
+        </dd>
       </div>
       <div class="exchange-detail__meta-item">
         <dt>{{ 'POSITIVITY.BINDINGS.FIELD.PROTOCOL_FAMILY' | translate }}</dt>
         <dd>
-          {{ 'POSITIVITY.PROTOCOL_FAMILY.' + record.protocolFamily | translate }}
-          {{ record.protocolVersion }}
+          <code>{{ record.protocolFamily }}</code>
+          <span class="exchange-detail__version">{{ record.protocolVersion }}</span>
         </dd>
       </div>
       <div class="exchange-detail__meta-item">
@@ -53,22 +68,34 @@
         <dd>{{ record.startedAt | date: 'medium' }}</dd>
       </div>
       <div class="exchange-detail__meta-item">
-        <dt>{{ 'POSITIVITY.AUDIT.TABLE.FINISHED' | translate }}</dt>
+        <dt>{{ 'POSITIVITY.AUDIT.TABLE.HTTP_METHOD' | translate }}</dt>
+        <dd>{{ record.httpMethod || '—' }}</dd>
+      </div>
+      <div class="exchange-detail__meta-item">
+        <dt>{{ 'POSITIVITY.AUDIT.TABLE.HTTP_STATUS' | translate }}</dt>
+        <!-- Null means no response arrived at all — a connect failure, a timeout
+             before headers, or a breaker-suppressed attempt. Never shown as 0. -->
         <dd>
-          @if (record.finishedAt) {
-            {{ record.finishedAt | date: 'medium' }}
+          @if (record.httpStatus !== null) {
+            {{ record.httpStatus }}
           } @else {
-            {{ 'POSITIVITY.AUDIT.NOT_FINISHED' | translate }}
+            <span class="exchange-detail__note">{{ 'POSITIVITY.AUDIT.NO_RESPONSE_DETAIL' | translate }}</span>
           }
         </dd>
       </div>
       <div class="exchange-detail__meta-item">
-        <dt>{{ 'POSITIVITY.AUDIT.TABLE.HTTP_STATUS' | translate }}</dt>
-        <dd>{{ record.httpStatus ?? '—' }}</dd>
+        <dt>{{ 'POSITIVITY.AUDIT.TABLE.DURATION' | translate }}</dt>
+        <dd>
+          @if (record.durationMs !== null) {
+            {{ record.durationMs }}
+          } @else {
+            <span aria-hidden="true">—</span>
+          }
+        </dd>
       </div>
       <div class="exchange-detail__meta-item">
-        <dt>{{ 'POSITIVITY.AUDIT.TABLE.DURATION' | translate }}</dt>
-        <dd>{{ record.durationMs ?? '—' }}</dd>
+        <dt>{{ 'POSITIVITY.AUDIT.TABLE.ATTEMPT' | translate }}</dt>
+        <dd>{{ record.attempt }}</dd>
       </div>
       <div class="exchange-detail__meta-item">
         <dt>{{ 'POSITIVITY.AUDIT.TABLE.CORRELATION_ID' | translate }}</dt>
@@ -78,25 +105,133 @@
         <dt>{{ 'POSITIVITY.AUDIT.CAPTURE_LEVEL' | translate }}</dt>
         <dd>{{ 'POSITIVITY.AUDIT.CAPTURE.' + record.captureLevel | translate }}</dd>
       </div>
+      <div class="exchange-detail__meta-item">
+        <dt>{{ 'POSITIVITY.AUDIT.CREATED_BY' | translate }}</dt>
+        <dd>{{ record.createdBy || '—' }}</dd>
+      </div>
+      @if (record.endpointUri) {
+        <div class="exchange-detail__meta-item exchange-detail__meta-item--wide">
+          <!-- At METADATA_ONLY the query string is stripped, so this is the path
+               alone; labelling it as a full URI would be a lie. -->
+          <dt>
+            @if (endpointIsPathOnly()) {
+              {{ 'POSITIVITY.AUDIT.ENDPOINT_PATH' | translate }}
+            } @else {
+              {{ 'POSITIVITY.AUDIT.ENDPOINT_URI' | translate }}
+            }
+          </dt>
+          <dd>
+            <code class="exchange-detail__endpoint">{{ record.endpointUri }}</code>
+            @if (endpointIsPathOnly()) {
+              <span class="exchange-detail__note">
+                {{ 'POSITIVITY.AUDIT.ENDPOINT_PATH_NOTE' | translate }}
+              </span>
+            } @else {
+              <span class="exchange-detail__note">
+                {{ 'POSITIVITY.AUDIT.ENDPOINT_REDACTED_NOTE' | translate }}
+              </span>
+            }
+          </dd>
+        </div>
+      }
     </dl>
 
-    @if (record.unmappedFields?.length) {
+    @if (record.failureDetail) {
       <div class="pos-banner pos-banner--warning">
-        <p class="exchange-detail__unmapped-title">
-          {{ 'POSITIVITY.AUDIT.UNMAPPED_FIELDS' | translate }}
+        <p class="exchange-detail__failure-title">
+          {{ 'POSITIVITY.AUDIT.FAILURE_DETAIL' | translate }}
         </p>
-        <ul class="exchange-detail__unmapped-list">
-          @for (field of record.unmappedFields; track field) {
-            <li><code>{{ field }}</code></li>
-          }
-        </ul>
+        <!-- Backend data quoted verbatim, not UI copy. -->
+        <p class="exchange-detail__failure-body">{{ record.failureDetail }}</p>
       </div>
     }
+
+    <!-- ── Retry sequence ───────────────────────────────────────────────────
+         Retries are separate rows sharing a correlation id, so one row alone
+         cannot say whether the call ultimately succeeded. -->
+    <section class="exchange-detail__attempts" [attr.aria-label]="'POSITIVITY.AUDIT.ATTEMPTS.TITLE' | translate">
+      <h2 class="exchange-detail__attempts-title">{{ 'POSITIVITY.AUDIT.ATTEMPTS.TITLE' | translate }}</h2>
+
+      @if (attemptsFailed()) {
+        <p class="exchange-detail__note">{{ 'POSITIVITY.AUDIT.ATTEMPTS.UNAVAILABLE' | translate }}</p>
+      } @else if (hasRetrySequence()) {
+        <p class="exchange-detail__attempts-hint">
+          {{ 'POSITIVITY.AUDIT.ATTEMPTS.HINT' | translate: { count: attempts().length } }}
+        </p>
+        <div class="pos-table-wrap">
+          <table class="pos-table">
+            <caption class="sr-only">{{ 'POSITIVITY.AUDIT.ATTEMPTS.CAPTION' | translate }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.ATTEMPT' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.STARTED' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.OUTCOME' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.HTTP_STATUS' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.DURATION' | translate }}</th>
+                <th scope="col">
+                  <span class="sr-only">{{ 'POSITIVITY.COMMON.ACTIONS' | translate }}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (attempt of attempts(); track attempt.exchangeAuditId) {
+                <tr [class.exchange-detail__attempt--current]="attempt.exchangeAuditId === exchangeId()">
+                  <th scope="row">
+                    {{ attempt.attempt }}
+                    @if (attempt.exchangeAuditId === exchangeId()) {
+                      <span class="sr-only">{{ 'POSITIVITY.AUDIT.ATTEMPTS.CURRENT' | translate }}</span>
+                    }
+                  </th>
+                  <td>{{ attempt.startedAt | date: 'medium' }}</td>
+                  <td>
+                    @if (isKnownOutcome(attempt.outcome)) {
+                      {{ 'POSITIVITY.AUDIT.OUTCOME.' + attempt.outcome | translate }}
+                    } @else {
+                      <code>{{ attempt.outcome }}</code>
+                    }
+                  </td>
+                  <td>
+                    @if (attempt.httpStatus !== null) {
+                      {{ attempt.httpStatus }}
+                    } @else {
+                      <span class="exchange-detail__note">
+                        {{ 'POSITIVITY.AUDIT.NO_RESPONSE' | translate }}
+                      </span>
+                    }
+                  </td>
+                  <td>
+                    @if (attempt.durationMs !== null) {
+                      {{ attempt.durationMs }}
+                    } @else {
+                      <span aria-hidden="true">—</span>
+                    }
+                  </td>
+                  <td>
+                    @if (attempt.exchangeAuditId !== exchangeId()) {
+                      <a
+                        class="exchange-detail__link"
+                        [routerLink]="['/app', 'positivity', 'exchanges', attempt.exchangeAuditId]"
+                      >
+                        {{ 'POSITIVITY.AUDIT.TABLE.VIEW' | translate }}
+                        <span class="sr-only">{{ attempt.attempt }}</span>
+                      </a>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="exchange-detail__note">{{ 'POSITIVITY.AUDIT.ATTEMPTS.SINGLE' | translate }}</p>
+      }
+    </section>
   }
 
   <!-- ── Payload panes ──────────────────────────────────────────────────────
-       A separate, tighter permission governs raw payloads. The backend 403 is
-       the authority; we render a restricted pane rather than guessing. -->
+       Reading content is a separate, individually audited call governed by a
+       tighter permission. The backend 403 is the authority; we render a
+       restricted pane rather than guessing at permissions client-side. -->
   <section class="exchange-detail__payload" [attr.aria-label]="'POSITIVITY.AUDIT.PAYLOAD.TITLE' | translate">
     <h2 class="exchange-detail__payload-title">{{ 'POSITIVITY.AUDIT.PAYLOAD.TITLE' | translate }}</h2>
 
@@ -110,12 +245,17 @@
       </div>
     }
 
+    <!-- Three different, normal reasons for no content. Not errors. -->
     @if (payloadState() === 'metadata-only') {
       <p class="pos-banner pos-banner--info">{{ 'POSITIVITY.AUDIT.PAYLOAD.METADATA_ONLY' | translate }}</p>
     }
 
-    @if (payloadState() === 'payload-purged') {
+    @if (payloadState() === 'purged') {
       <p class="pos-banner pos-banner--info">{{ 'POSITIVITY.AUDIT.PAYLOAD.PURGED' | translate }}</p>
+    }
+
+    @if (payloadState() === 'not-captured') {
+      <p class="pos-banner pos-banner--info">{{ 'POSITIVITY.AUDIT.PAYLOAD.NOT_CAPTURED' | translate }}</p>
     }
 
     @if (payloadState() === 'error') {
@@ -128,60 +268,34 @@
     }
 
     @if (payloadState() === 'ready' && payload(); as view) {
-      @if (view.redactedFields?.length) {
-        <p class="exchange-detail__redaction-note">
+      @if (view.redacted) {
+        <!-- Not the wire documents: the originals were never persisted. -->
+        <p class="pos-banner pos-banner--warning exchange-detail__redaction-note">
           {{ 'POSITIVITY.AUDIT.PAYLOAD.REDACTION_NOTE' | translate }}
-          @for (field of view.redactedFields; track field) {
-            <code class="exchange-detail__redacted-field">{{ field }}</code>
-          }
         </p>
       }
 
       <div class="exchange-detail__panes">
-        <article class="exchange-detail__pane" [attr.aria-labelledby]="'payload-request-heading'">
+        <article class="exchange-detail__pane" aria-labelledby="payload-request-heading">
           <h3 class="exchange-detail__pane-title" id="payload-request-heading">
             {{ 'POSITIVITY.AUDIT.PAYLOAD.REQUEST' | translate }}
           </h3>
-          <p class="exchange-detail__content-type">{{ view.requestContentType || '—' }}</p>
-          @if (view.requestHeaders?.length) {
-            <ul class="exchange-detail__headers">
-              @for (header of view.requestHeaders; track header.name) {
-                <li>
-                  <code>{{ header.name }}</code>
-                  <span>{{ header.value }}</span>
-                  @if (header.redacted) {
-                    <span class="exchange-detail__redacted-flag">
-                      {{ 'POSITIVITY.AUDIT.PAYLOAD.REDACTED' | translate }}
-                    </span>
-                  }
-                </li>
-              }
-            </ul>
+          @if (view.requestPayload !== null) {
+            <pre class="exchange-detail__body"><code>{{ view.requestPayload }}</code></pre>
+          } @else {
+            <p class="exchange-detail__note">{{ 'POSITIVITY.AUDIT.PAYLOAD.NO_REQUEST_BODY' | translate }}</p>
           }
-          <pre class="exchange-detail__body"><code>{{ view.requestBody || '' }}</code></pre>
         </article>
 
-        <article class="exchange-detail__pane" [attr.aria-labelledby]="'payload-response-heading'">
+        <article class="exchange-detail__pane" aria-labelledby="payload-response-heading">
           <h3 class="exchange-detail__pane-title" id="payload-response-heading">
             {{ 'POSITIVITY.AUDIT.PAYLOAD.RESPONSE' | translate }}
           </h3>
-          <p class="exchange-detail__content-type">{{ view.responseContentType || '—' }}</p>
-          @if (view.responseHeaders?.length) {
-            <ul class="exchange-detail__headers">
-              @for (header of view.responseHeaders; track header.name) {
-                <li>
-                  <code>{{ header.name }}</code>
-                  <span>{{ header.value }}</span>
-                  @if (header.redacted) {
-                    <span class="exchange-detail__redacted-flag">
-                      {{ 'POSITIVITY.AUDIT.PAYLOAD.REDACTED' | translate }}
-                    </span>
-                  }
-                </li>
-              }
-            </ul>
+          @if (view.responsePayload !== null) {
+            <pre class="exchange-detail__body"><code>{{ view.responsePayload }}</code></pre>
+          } @else {
+            <p class="exchange-detail__note">{{ 'POSITIVITY.AUDIT.PAYLOAD.NO_RESPONSE_BODY' | translate }}</p>
           }
-          <pre class="exchange-detail__body"><code>{{ view.responseBody || '' }}</code></pre>
         </article>
       </div>
     }

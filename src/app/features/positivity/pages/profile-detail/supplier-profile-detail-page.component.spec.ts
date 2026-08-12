@@ -35,8 +35,6 @@ describe('SupplierProfileDetailPageComponent', () => {
     listAuthConfigs: ReturnType<typeof vi.fn>;
     getAccounts: ReturnType<typeof vi.fn>;
     listBindings: ReturnType<typeof vi.fn>;
-    listCapabilities: ReturnType<typeof vi.fn>;
-    getHealth: ReturnType<typeof vi.fn>;
   };
   let router: { navigate: ReturnType<typeof vi.fn> };
 
@@ -54,8 +52,6 @@ describe('SupplierProfileDetailPageComponent', () => {
         .fn()
         .mockReturnValue(of({ billing: null, delivery: [], activeLocations: [] })),
       listBindings: vi.fn().mockReturnValue(of([])),
-      listCapabilities: vi.fn().mockReturnValue(of([])),
-      getHealth: vi.fn().mockReturnValue(of([])),
     };
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
@@ -198,13 +194,49 @@ describe('SupplierProfileDetailPageComponent', () => {
 
   // ── YAML read-only ─────────────────────────────────────────────────────────
 
-  it('treats a YAML-managed profile as read-only and hides its write controls', async () => {
+  it('shows a YAML-managed profile’s write controls disabled, with the reason', async () => {
     await setup(yamlProfile);
 
     expect(component.readOnly()).toBe(true);
     const host = fixture.nativeElement as HTMLElement;
-    expect(host.querySelector('.pos-btn--danger')).toBeNull();
-    expect(host.textContent).toContain('POSITIVITY.COMMON.YAML_MANAGED_READONLY');
+
+    // Visible but inert: a hidden control tells the operator nothing about why
+    // the system will not accept a change (ADR-0050 §6).
+    const danger = host.querySelector<HTMLButtonElement>('.pos-btn--danger');
+    expect(danger, 'the delete control must remain visible').not.toBeNull();
+    expect(danger!.disabled).toBe(true);
+    expect(danger!.getAttribute('aria-describedby')).toBe('profile-readonly-reason');
+
+    expect(host.querySelector('#profile-readonly-reason')?.textContent).toContain(
+      'POSITIVITY.COMMON.YAML_MANAGED_READONLY',
+    );
+  });
+
+  it('reports a 409 on a YAML profile as the source-of-truth lock, not a generic failure', async () => {
+    await setup(yamlProfile);
+    component['handleMutationError'](
+      new HttpErrorResponse({ status: 409, statusText: 'x' }),
+      'POSITIVITY.PROFILES.ERROR.SAVE',
+    );
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('POSITIVITY.ERROR.CONFLICT_YAML');
+    expect(component.conflict()).toBe(true);
+    // Retrying would fail identically, so no retry is offered.
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.pos-banner--error')?.textContent,
+    ).not.toContain('POSITIVITY.COMMON.RETRY');
+  });
+
+  it('surfaces the profile’s real timeout, retry and sandbox settings', async () => {
+    await setup();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(text).toContain('POSITIVITY.PROFILES.FIELD.CONNECT_TIMEOUT');
+    expect(text).toContain('POSITIVITY.PROFILES.FIELD.READ_TIMEOUT');
+    expect(text).toContain('POSITIVITY.PROFILES.FIELD.MAX_RETRIES');
+    expect(text).toContain('POSITIVITY.PROFILES.FIELD.RETRY_BACKOFF');
   });
 
   it('blocks profile mutations for a YAML-managed profile', async () => {
@@ -243,7 +275,9 @@ describe('SupplierProfileDetailPageComponent', () => {
           new HttpErrorResponse({
             status: 400,
             statusText: 'x',
-            error: { fieldErrors: [{ field: 'displayName', code: 'UNKNOWN_CODE' }] },
+            error: {
+              fieldErrors: [{ field: 'displayName', message: 'must not be blank' }],
+            },
           }),
       ),
     );
@@ -252,7 +286,28 @@ describe('SupplierProfileDetailPageComponent', () => {
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('POSITIVITY.ERROR.VALIDATION');
-    expect(component.fieldError('displayName')).toBe('POSITIVITY.ERROR.FIELD.INVALID');
+    // Keyed off `field` — the contract's FieldError carries no `code`.
+    expect(component.fieldError('displayName')).toBe('POSITIVITY.ERROR.FIELD.DISPLAY_NAME');
+    // Backend text is kept as secondary detail, never as the label.
+    expect(component.fieldDetail('displayName')).toBe('must not be blank');
+  });
+
+  it('degrades a field name it does not recognise to a generic translated message', async () => {
+    await setup();
+    service.updateProfile.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'x',
+            error: { fieldErrors: [{ field: 'somethingNew', message: 'nope' }] },
+          }),
+      ),
+    );
+    component.openEdit();
+    component.saveProfile();
+
+    expect(component.fieldError('somethingNew')).toBe('POSITIVITY.ERROR.FIELD.INVALID');
   });
 
   it('returns to the profile list after a delete', async () => {

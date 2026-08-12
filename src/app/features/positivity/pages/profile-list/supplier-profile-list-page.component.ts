@@ -41,6 +41,7 @@ export class SupplierProfileListPageComponent {
   readonly errorKey = signal<string | null>(null);
   readonly profiles = signal<VendorProfileSummary[]>([]);
   readonly fieldErrors = signal<Record<string, string>>({});
+  readonly fieldDetails = signal<Record<string, string>>({});
   readonly createOpen = signal(false);
   readonly saving = signal(false);
 
@@ -57,6 +58,11 @@ export class SupplierProfileListPageComponent {
 
   fieldError(field: string): string | null {
     return this.fieldErrors()[field] ?? null;
+  }
+
+  /** Backend detail text for a field. Server data — rendered beneath the translated label only. */
+  fieldDetail(field: string): string | null {
+    return this.fieldDetails()[field] ?? null;
   }
 
   load(): void {
@@ -81,6 +87,7 @@ export class SupplierProfileListPageComponent {
 
   openCreate(): void {
     this.fieldErrors.set({});
+    this.fieldDetails.set({});
     this.createForm.reset({ supplierRef: '', displayName: '', sandbox: false, enabled: true });
     this.createOpen.set(true);
   }
@@ -88,6 +95,7 @@ export class SupplierProfileListPageComponent {
   cancelCreate(): void {
     this.createOpen.set(false);
     this.fieldErrors.set({});
+    this.fieldDetails.set({});
   }
 
   create(): void {
@@ -106,6 +114,7 @@ export class SupplierProfileListPageComponent {
 
     this.saving.set(true);
     this.fieldErrors.set({});
+    this.fieldDetails.set({});
 
     this.service
       .createProfile(request)
@@ -123,6 +132,7 @@ export class SupplierProfileListPageComponent {
           this.state.set('error');
           this.errorKey.set(outcome.errorKey);
           this.fieldErrors.set(outcome.fieldErrors);
+          this.fieldDetails.set(outcome.fieldDetails);
         },
       });
   }

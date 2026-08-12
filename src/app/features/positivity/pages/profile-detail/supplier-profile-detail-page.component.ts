@@ -19,8 +19,13 @@ import { SupplierHealthPanelComponent } from '../../components/supplier-health-p
 import { SupplierPricatPanelComponent } from '../../components/supplier-pricat-panel/supplier-pricat-panel.component';
 import { SupplierStatusChipComponent } from '../../components/supplier-status-chip/supplier-status-chip.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
-import { VendorProfile, VendorProfileRequest } from '../../models/supplier-profile.models';
+import {
+  SupplierRetryBackoff,
+  VendorProfile,
+  VendorProfileRequest,
+} from '../../models/supplier-profile.models';
 import { mapSupplierError } from '../../utils/supplier-error.util';
+import { SUPPLIER_RETRY_BACKOFFS } from '../../utils/supplier-capability-keys';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error' | 'forbidden';
 
@@ -40,9 +45,16 @@ export type ProfileTab = (typeof PROFILE_TABS)[number];
  * key navigation, and `aria-controls`/`aria-labelledby` wiring between each tab
  * and its panel (ADR-0029).
  *
- * A YAML-managed profile is read-only throughout — the admin API rejects writes
- * to it by design (ADR-0050 §6), so `readOnly` is threaded into every panel
- * rather than letting the user discover the rejection by hitting Save.
+ * A YAML-managed profile is read-only throughout — the admin API rejects **every**
+ * mutation on it with `409` by design (ADR-0050 §6), so `readOnly` is threaded
+ * into every panel. The controls stay visible and disabled with a stated reason
+ * rather than disappearing: a hidden control teaches the operator nothing about
+ * why the system will not let them proceed, and leaves them looking for a button
+ * that is not there.
+ *
+ * The Health tab is present but reports that connection health is not yet
+ * available: there is no health or circuit-breaker endpoint in the supplier
+ * contract. See the panel for the reasoning.
  */
 @Component({
   selector: 'app-supplier-profile-detail-page',
@@ -73,11 +85,19 @@ export class SupplierProfileDetailPageComponent {
   readonly profile = signal<VendorProfile | null>(null);
   readonly vendorProfileId = signal<string | null>(null);
   readonly fieldErrors = signal<Record<string, string>>({});
+  readonly fieldDetails = signal<Record<string, string>>({});
   readonly editOpen = signal(false);
   readonly saving = signal(false);
+  /** Set when the last mutation was rejected with `409` — the source-of-truth lock. */
+  readonly conflict = signal(false);
 
   readonly tabs = PROFILE_TABS;
   readonly activeTab = signal<ProfileTab>('auth');
+
+  /** Read at access time — see `utils/supplier-capability-keys.ts`. */
+  get retryBackoffs(): readonly SupplierRetryBackoff[] {
+    return SUPPLIER_RETRY_BACKOFFS;
+  }
 
   /** YAML-sourced profiles are configuration rollouts, not operator data. */
   readonly readOnly = computed(() => this.profile()?.sourceOfTruth === 'YAML');
@@ -87,6 +107,11 @@ export class SupplierProfileDetailPageComponent {
     displayName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     sandbox: new FormControl(false, { nonNullable: true }),
     enabled: new FormControl(true, { nonNullable: true }),
+    sandboxBaseUrlOverride: new FormControl('', { nonNullable: true }),
+    connectTimeoutMillis: new FormControl<number | null>(null),
+    readTimeoutMillis: new FormControl<number | null>(null),
+    maxRetries: new FormControl<number | null>(null),
+    retryBackoff: new FormControl<SupplierRetryBackoff | ''>('', { nonNullable: true }),
   });
 
   constructor() {
@@ -154,6 +179,11 @@ export class SupplierProfileDetailPageComponent {
     return this.fieldErrors()[field] ?? null;
   }
 
+  /** Backend detail text for a field. Server data — rendered beneath the translated label only. */
+  fieldDetail(field: string): string | null {
+    return this.fieldDetails()[field] ?? null;
+  }
+
   loadProfile(vendorProfileId: string): void {
     this.state.set('loading');
     this.errorKey.set(null);
@@ -169,6 +199,11 @@ export class SupplierProfileDetailPageComponent {
             displayName: profile.displayName,
             sandbox: profile.sandbox,
             enabled: profile.enabled,
+            sandboxBaseUrlOverride: profile.sandboxBaseUrlOverride ?? '',
+            connectTimeoutMillis: profile.connectTimeoutMillis ?? null,
+            readTimeoutMillis: profile.readTimeoutMillis ?? null,
+            maxRetries: profile.maxRetries ?? null,
+            retryBackoff: profile.retryBackoff ?? '',
           });
           this.state.set('ready');
         },
@@ -188,13 +223,13 @@ export class SupplierProfileDetailPageComponent {
   }
 
   openEdit(): void {
-    this.fieldErrors.set({});
+    this.clearFieldFeedback();
     this.editOpen.set(true);
   }
 
   cancelEdit(): void {
     this.editOpen.set(false);
-    this.fieldErrors.set({});
+    this.clearFieldFeedback();
   }
 
   saveProfile(): void {
@@ -210,10 +245,15 @@ export class SupplierProfileDetailPageComponent {
       displayName: raw.displayName.trim(),
       sandbox: raw.sandbox,
       enabled: raw.enabled,
+      sandboxBaseUrlOverride: raw.sandboxBaseUrlOverride.trim() || undefined,
+      connectTimeoutMillis: raw.connectTimeoutMillis ?? undefined,
+      readTimeoutMillis: raw.readTimeoutMillis ?? undefined,
+      maxRetries: raw.maxRetries ?? undefined,
+      retryBackoff: raw.retryBackoff || undefined,
     };
 
     this.saving.set(true);
-    this.fieldErrors.set({});
+    this.clearFieldFeedback();
 
     this.service
       .updateProfile(profileId, request)
@@ -227,10 +267,7 @@ export class SupplierProfileDetailPageComponent {
         },
         error: (err: unknown) => {
           this.saving.set(false);
-          const outcome = mapSupplierError(err, 'POSITIVITY.PROFILES.ERROR.SAVE');
-          this.state.set('error');
-          this.errorKey.set(outcome.errorKey);
-          this.fieldErrors.set(outcome.fieldErrors);
+          this.handleMutationError(err, 'POSITIVITY.PROFILES.ERROR.SAVE');
         },
       });
   }
@@ -248,11 +285,33 @@ export class SupplierProfileDetailPageComponent {
         next: () => {
           void this.router.navigate(['/app', 'positivity']);
         },
-        error: (err: unknown) => {
-          const outcome = mapSupplierError(err, 'POSITIVITY.PROFILES.ERROR.DELETE');
-          this.state.set('error');
-          this.errorKey.set(outcome.errorKey);
-        },
+        error: (err: unknown) => this.handleMutationError(err, 'POSITIVITY.PROFILES.ERROR.DELETE'),
       });
+  }
+
+  private clearFieldFeedback(): void {
+    this.fieldErrors.set({});
+    this.fieldDetails.set({});
+    this.conflict.set(false);
+  }
+
+  /**
+   * `409` is its own outcome, not a generic failure: on a YAML-managed profile
+   * it is the source-of-truth lock, and offering a Retry there would just invite
+   * the operator to fail again.
+   */
+  private handleMutationError(err: unknown, fallbackKey: string): void {
+    const outcome = mapSupplierError(err, fallbackKey);
+    this.state.set('error');
+    this.errorKey.set(
+      outcome.kind === 'conflict'
+        ? this.readOnly()
+          ? 'POSITIVITY.ERROR.CONFLICT_YAML'
+          : 'POSITIVITY.ERROR.CONFLICT'
+        : outcome.errorKey,
+    );
+    this.conflict.set(outcome.kind === 'conflict');
+    this.fieldErrors.set(outcome.fieldErrors);
+    this.fieldDetails.set(outcome.fieldDetails);
   }
 }

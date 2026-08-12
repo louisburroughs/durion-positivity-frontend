@@ -2,57 +2,63 @@
  * Supplier (positivity) vendor-profile domain model.
  *
  * Interfaces only — no logic, no Angular imports (AGENTS.md file-structure rule).
+ * These shapes mirror `@durion-sdk/supplier` (ADR-0050/ADR-0051) but keep the
+ * frontend's own naming and required-ness: almost every SDK view field is
+ * optional, and that optionality is resolved once in the service mapping layer
+ * rather than being pushed into every template.
  *
  * Vocabulary is canonical per ADR-0050 §5: **billing** and **delivery**. Vendor
  * wire vocabulary (`billTo`/`shipTo`, `BuyerParty`/`Consignee`) lives only inside
  * backend adapters and must never appear in this layer or in the UI.
  *
  * Credential-bearing fields are **write-only reference strings** (ADR-0050 §4),
- * e.g. `env:MICHELIN_EDI_USER`. The backend never echoes a resolved secret and
- * the UI must never ask for one — hence every credential field on this model is
- * named `*Ref` and is documented as a reference, not a value.
+ * e.g. `env:MICHELIN_EDI_USER`. `AuthConfigView` carries no credential material
+ * at all by shape, so the read model below has no `*Ref` property to render.
  */
-
-/** Who owns a profile's configuration (ADR-0050 §6). `YAML` profiles are read-only in the admin UI. */
-export type SupplierSourceOfTruth = 'YAML' | 'ADMIN';
-
-/** Supported auth config shapes (ADR-0050 §4). */
-export type SupplierAuthType =
-  | 'BASIC_PLUS_APIKEY'
-  | 'OAUTH2_CLIENT_CREDENTIALS'
-  | 'BEARER';
-
-/** Protocol families registered by the backend adapter registry (ADR-0051 §2). */
-export type SupplierProtocolFamily =
-  | 'EDIWHEEL_A25'
-  | 'EDIWHEEL_C1'
-  | 'EDIWHEEL_B'
-  | 'EDIWHEEL_JSON'
-  | 'MICHELIN_S2S';
-
-/** Business capabilities a vendor profile can bind (ADR-0051 §3). */
-export type SupplierCapability =
-  | 'ORDER'
-  | 'ORDER_STATUS'
-  | 'STOCK_REPORT'
-  | 'PRICE_CATALOG'
-  | 'PRODUCT_CATALOG'
-  | 'DELIVERY_NOTE';
-
-/** Circuit-breaker state reported by the health endpoint (read-only in the UI). */
-export type SupplierBreakerState = 'CLOSED' | 'OPEN' | 'HALF_OPEN' | 'UNKNOWN';
+import type {
+  AuthConfigViewTypeEnum,
+  CommercialAccountViewRoleEnum,
+  EndpointBindingViewCaptureLevelEnum,
+  VendorProfileViewRetryBackoffEnum,
+  VendorProfileViewSourceOfTruthEnum,
+} from '@durion-sdk/supplier';
 
 /**
- * Health roll-up per capability. `NOT_CONFIGURED` is the typed status for an
- * absent binding (ADR-0050 §3) — absence is meaningful and is rendered as an
- * explicitly disabled row, never hidden.
+ * Who owns a profile's configuration (ADR-0050 §6). Every mutation is rejected
+ * with `409` while this is `YAML`.
  */
-export type SupplierHealthStatus =
-  | 'HEALTHY'
-  | 'DEGRADED'
-  | 'FAILING'
-  | 'NOT_CONFIGURED'
-  | 'UNKNOWN';
+export type SupplierSourceOfTruth = `${VendorProfileViewSourceOfTruthEnum}`;
+
+/** Supported auth config shapes (ADR-0050 §4), driven off the generated enum. */
+export type SupplierAuthType = `${AuthConfigViewTypeEnum}`;
+
+/** Canonical commercial-account roles (ADR-0050 §5), driven off the generated enum. */
+export type SupplierAccountRole = `${CommercialAccountViewRoleEnum}`;
+
+/** Retry backoff strategies offered by the profile contract. */
+export type SupplierRetryBackoff = `${VendorProfileViewRetryBackoffEnum}`;
+
+/** Per-binding payload capture level (ADR-0050 §7). */
+export type SupplierCaptureLevel = `${EndpointBindingViewCaptureLevelEnum}`;
+
+/**
+ * Protocol family key of the adapter to use.
+ *
+ * Deliberately an **open** string, not a closed union: the contract types this as
+ * a free-form key so a newly registered adapter family needs no frontend change.
+ * Unknown keys are rejected server-side with `SUPPLIER_UNKNOWN_PROTOCOL_FAMILY`;
+ * the frontend must not pre-reject a value the backend would have accepted.
+ */
+export type SupplierProtocolFamily = string;
+
+/**
+ * Canonical supplier capability key.
+ *
+ * Also an open string, for the same reason. See
+ * `utils/supplier-capability-keys.ts` for the display aid used to render
+ * unbound capabilities.
+ */
+export type SupplierCapability = string;
 
 /** Row shape for the profile list. */
 export interface VendorProfileSummary {
@@ -64,15 +70,19 @@ export interface VendorProfileSummary {
   /** True when the profile resolves its sandbox overlay instead of production endpoints. */
   sandbox: boolean;
   sourceOfTruth: SupplierSourceOfTruth;
-  readonly updatedAt?: string;
 }
 
 /** Full profile record returned by the detail endpoint. */
 export interface VendorProfile extends VendorProfileSummary {
-  connectTimeoutMs?: number;
-  readTimeoutMs?: number;
+  /** Default connect timeout in **milliseconds** — contract name, not an abbreviation. */
+  connectTimeoutMillis?: number;
+  /** Default read timeout in **milliseconds**. */
+  readTimeoutMillis?: number;
+  /** Pre-send retry budget. Only pre-send failures are retried. */
   maxRetries?: number;
-  readonly createdAt?: string;
+  /** Base URL the bindings use while `sandbox` is set (ADR-0050 §2). */
+  sandboxBaseUrlOverride?: string;
+  retryBackoff?: SupplierRetryBackoff;
 }
 
 /** Create/update payload — server-generated fields are omitted entirely (ADR-0034). */
@@ -81,98 +91,107 @@ export interface VendorProfileRequest {
   displayName: string;
   enabled: boolean;
   sandbox: boolean;
-  connectTimeoutMs?: number;
-  readTimeoutMs?: number;
+  connectTimeoutMillis?: number;
+  readTimeoutMillis?: number;
   maxRetries?: number;
+  sandboxBaseUrlOverride?: string;
+  retryBackoff?: SupplierRetryBackoff;
 }
 
 /**
- * An auth configuration attached to a profile.
+ * An auth configuration attached to a profile, as **read**.
  *
- * Every credential-bearing property is a **secret reference string** resolved at
- * call time by the backend. The API never returns a plaintext value for these
- * fields and the UI never renders one.
+ * The contract's read model carries no secret reference field of any kind — not
+ * even a masked one — so there is nothing here for a template to leak. The
+ * `apiKeyHeader` below is the header *name*, which is ordinary configuration.
  */
 export interface SupplierAuthConfig {
   readonly authConfigId: string;
-  /** Logical name bindings point at via `authRef`. */
+  /** Config name, unique within the profile. Bindings reference it by this name. */
   authRef: string;
   authType: SupplierAuthType;
-  /** Reference to the basic-auth username, e.g. `env:MICHELIN_EDI_USER`. */
-  usernameRef?: string;
-  /** Reference to the basic-auth password. Never a password. */
-  passwordRef?: string;
-  /** Reference to the API key. Never an API key. */
-  apiKeyRef?: string;
-  /** Reference to the OAuth2 client id. */
-  clientIdRef?: string;
-  /** Reference to the OAuth2 client secret. Never a secret. */
-  clientSecretRef?: string;
-  /** OAuth2 token endpoint — ordinary configuration data, not a credential. */
-  tokenUrl?: string;
-  /** OAuth2 scope — ordinary configuration data. */
-  scope?: string;
-  /** Reference to a static bearer token. Never a token. */
-  tokenRef?: string;
-  readonly createdAt?: string;
-  readonly updatedAt?: string;
+  /** Header NAME the API key is sent in — configuration data, not a secret. */
+  apiKeyHeader?: string;
 }
 
-/** Create/update payload for an auth config (ADR-0034: no server-generated fields). */
+/**
+ * Create/update payload for an auth config (ADR-0034: no server-generated fields).
+ *
+ * Every `*Ref` is a scheme-prefixed reference such as `env:MICHELIN_EDI_USER`
+ * resolved at call time. Plaintext credentials are rejected by the backend, and
+ * references are write-only: they never come back in any response.
+ */
 export interface SupplierAuthConfigRequest {
   authRef: string;
   authType: SupplierAuthType;
+  /** BASIC_PLUS_APIKEY only. */
   usernameRef?: string;
+  /** BASIC_PLUS_APIKEY only. */
   passwordRef?: string;
+  /** BASIC_PLUS_APIKEY only. */
   apiKeyRef?: string;
+  /** Header name for the API key — plain configuration, not a reference. */
+  apiKeyHeader?: string;
+  /** OAUTH2_CLIENT_CREDENTIALS only. A reference, not the URL itself. */
+  tokenUrlRef?: string;
+  /** OAUTH2_CLIENT_CREDENTIALS only. */
   clientIdRef?: string;
+  /** OAUTH2_CLIENT_CREDENTIALS only. */
   clientSecretRef?: string;
-  tokenUrl?: string;
-  scope?: string;
-  tokenRef?: string;
+  /** BEARER only. */
+  bearerTokenRef?: string;
 }
 
 /** Invoicing/settlement account for the profile (ADR-0050 §5). */
 export interface SupplierBillingAccount {
+  readonly accountId: string;
   accountNumber: string;
   agencyCode?: string;
 }
 
 /** Per-Durion-location receiving account mapping (ADR-0050 §5). */
 export interface SupplierDeliveryAccount {
+  readonly accountId: string;
   /** pos-location site UUID. */
   locationId: string;
-  /** Denormalized site name supplied by the backend for display only. */
+  /** Resolved from the pos-location roster for display only. */
   locationName?: string;
   accountNumber: string;
   agencyCode?: string;
 }
 
-/**
- * An active Durion location the deployment expects a delivery mapping for.
- * Supplied by the accounts endpoint so the UI can flag mapping gaps without
- * reaching across the domain boundary into pos-location.
- */
+/** An active Durion location a delivery mapping is expected for. */
 export interface SupplierActiveLocation {
   locationId: string;
   name: string;
 }
 
-/** Accounts tab payload: billing account, delivery mappings, and the active-location roster. */
+/**
+ * Accounts tab payload: billing account, delivery mappings, and the active-location
+ * roster used for the mapping-gap check.
+ *
+ * The roster comes from a *different* domain (pos-location) than the accounts, so
+ * its availability is reported separately: losing it must degrade the gap check
+ * alone, never the mappings the operator came here to read.
+ */
 export interface SupplierAccounts {
   billing: SupplierBillingAccount | null;
   delivery: SupplierDeliveryAccount[];
   activeLocations: SupplierActiveLocation[];
+  /** False when the pos-location roster could not be read; the gap check is then unavailable. */
+  locationsAvailable: boolean;
 }
 
-/** Update payload for the billing account. */
+/** Upsert payload for the billing account. `accountId` absent ⇒ create. */
 export interface SupplierBillingAccountRequest {
+  accountId?: string;
   accountNumber: string;
   agencyCode?: string;
 }
 
-/** Upsert payload for a single delivery mapping. */
+/** Upsert payload for a single delivery mapping. `accountId` absent ⇒ create. */
 export interface SupplierDeliveryAccountRequest {
+  accountId?: string;
   locationId: string;
   accountNumber: string;
   agencyCode?: string;
@@ -183,16 +202,17 @@ export interface SupplierBinding {
   readonly bindingId: string;
   capability: SupplierCapability;
   protocolFamily: SupplierProtocolFamily;
+  /** Adapter version key within the family. Free-form by contract. */
   protocolVersion: string;
   baseUrl: string;
   path: string;
   /** Points at a `SupplierAuthConfig.authRef` on the same profile. */
   authRef: string;
-  /** Optional cron schedule for batch capabilities. */
+  /** Optional cron schedule for scheduled capabilities. */
   cronSchedule?: string | null;
   enabled: boolean;
-  readonly createdAt?: string;
-  readonly updatedAt?: string;
+  /** Payload capture level for this binding; absent means the deployment default. */
+  captureLevel?: SupplierCaptureLevel;
 }
 
 /** Create/update payload for a binding (ADR-0034: no server-generated fields). */
@@ -205,52 +225,31 @@ export interface SupplierBindingRequest {
   authRef: string;
   cronSchedule?: string | null;
   enabled: boolean;
-}
-
-/** One `(protocolFamily, version[])` option offered for a capability. */
-export interface SupplierProtocolOption {
-  protocolFamily: SupplierProtocolFamily;
-  versions: string[];
-}
-
-/** Registry-derived catalog of bindable capabilities and their protocol options. */
-export interface SupplierCapabilityDescriptor {
-  capability: SupplierCapability;
-  protocolOptions: SupplierProtocolOption[];
+  captureLevel?: SupplierCaptureLevel;
 }
 
 /**
- * Read-only health/breaker snapshot for one capability of a profile.
- * `bindingId` is null when the capability is unbound (`NOT_CONFIGURED`).
+ * One field-level validation failure returned by the admin API.
+ *
+ * The contract's `FieldError` is `{ field, message }` — **there is no `code`**;
+ * `code` lives on the enclosing `ApiError`. `code` is retained as optional here
+ * only because the PRICAT surface still goes through `ApiBaseService` against a
+ * backend that emits the older shape.
  */
-export interface SupplierBindingHealth {
-  capability: SupplierCapability;
-  bindingId: string | null;
-  status: SupplierHealthStatus;
-  breakerState: SupplierBreakerState;
-  consecutiveFailures?: number;
-  lastSuccessAt?: string | null;
-  lastFailureAt?: string | null;
-  /** When the backend sampled this snapshot. */
-  observedAt: string;
-  /** Backend-delivered staleness threshold for the snapshot, in minutes. */
-  stalenessThresholdMinutes: number;
-}
-
-/** One field-level validation failure returned by the admin API on `400`. */
 export interface SupplierFieldError {
-  /** Payload field path, e.g. `authRef`, `cronSchedule`, `delivery[0].locationId`. */
+  /** Payload field path, e.g. `authRef`, `schedule`, `deliveryLocationId`. */
   field: string;
-  /** Stable machine code, e.g. `BINDING_AUTH_REQUIRED`, `CRON_MALFORMED`. */
-  code: string;
-  /** Optional backend-supplied English detail; the UI prefers its own translated copy. */
+  /** Backend detail text. **Data, not UI copy** — never rendered as the primary label. */
   message?: string;
+  /** Legacy machine code, still produced by the `ApiBaseService` PRICAT path. */
+  code?: string;
 }
 
-/** Problem body shape accepted from the admin API. */
+/** Standard Durion error envelope, as much of it as this UI consumes. */
 export interface SupplierApiErrorBody {
   code?: string;
   message?: string;
   fieldErrors?: SupplierFieldError[];
+  /** Legacy alias still emitted by the `ApiBaseService` PRICAT path. */
   errors?: SupplierFieldError[];
 }

@@ -63,3 +63,30 @@
 	color: var(--brand-primary);
 	font-weight: 600;
 }
+
+.audit-page__prompt {
+	margin: 0;
+	color: var(--text-muted);
+}
+
+.audit-page__outcome-note {
+	margin: 0;
+}
+
+.audit-page__no-status {
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.audit-page__pagination {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.audit-page__page-status {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}

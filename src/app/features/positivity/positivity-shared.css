@@ -101,6 +101,14 @@
 	color: var(--status-error-fg);
 }
 
+/* Backend-supplied detail beneath the translated label. Untranslated server
+   data, so it is rendered subordinate and never as the field's message. */
+.pos-field__detail {
+	display: block;
+	font-weight: 400;
+	color: var(--text-muted);
+}
+
 .pos-banner {
 	display: flex;
 	flex-wrap: wrap;

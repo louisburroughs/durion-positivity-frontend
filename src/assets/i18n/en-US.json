@@ -5208,7 +5208,7 @@
       "BREADCRUMB": "Breadcrumb",
       "APPLY_FILTER": "Apply filters",
       "CLEAR_FILTER": "Clear filters",
-      "YAML_MANAGED_READONLY": "This profile is managed by deployment configuration (YAML) and cannot be edited here. Change it through your configuration pipeline."
+      "YAML_MANAGED_READONLY": "This profile is managed by deployment configuration (YAML). Every change here is rejected by the service, so the controls are shown but disabled. Change it through your configuration pipeline."
     },
     "ERROR": {
       "VALIDATION": "Some fields were rejected. Correct the highlighted values and save again.",
@@ -5226,8 +5226,18 @@
         "AUTH_REF_DUPLICATE": "This reference name is already used on this profile.",
         "CREDENTIAL_REFERENCE_MALFORMED": "Enter a secret reference such as env:MY_SECRET_NAME, not the secret itself.",
         "BASE_URL_MALFORMED": "Enter a valid base URL.",
-        "PROFILE_YAML_MANAGED": "This profile is managed by configuration and cannot be changed here."
-      }
+        "PROFILE_YAML_MANAGED": "This profile is managed by configuration and cannot be changed here.",
+        "SUPPLIER_REF": "This configuration alias was rejected. It must be unique and cannot be blank.",
+        "DISPLAY_NAME": "A display name is required.",
+        "AUTH_TYPE": "Select an authentication type.",
+        "ACCOUNT_ROLE": "This account role was rejected.",
+        "UNKNOWN_CAPABILITY": "The service does not recognise this capability key.",
+        "UNKNOWN_PROTOCOL_FAMILY": "The service does not recognise this protocol family key.",
+        "PROTOCOL_VERSION": "This version key was rejected. It must match a registered adapter exactly and be at most 64 characters.",
+        "TIMEOUT_INVALID": "Enter a timeout greater than zero, or leave it empty to use the deployment default.",
+        "MAX_RETRIES_INVALID": "Enter zero or more retries, or leave it empty to use the deployment default."
+      },
+      "CONFLICT_YAML": "This profile is managed by deployment configuration (YAML), so the service rejected the change. Update it through your configuration pipeline instead."
     },
     "FRESHNESS": {
       "ARIA_LABEL": "Data freshness",
@@ -5268,7 +5278,15 @@
         "SUPPLIER_REF_HINT": "A short, human-readable name used in configuration and logs.",
         "DISPLAY_NAME": "Display name",
         "SANDBOX": "Use sandbox endpoints",
-        "ENABLED": "Profile enabled"
+        "ENABLED": "Profile enabled",
+        "CONNECT_TIMEOUT": "Connect timeout (ms)",
+        "READ_TIMEOUT": "Read timeout (ms)",
+        "TIMEOUT_HINT": "Leave empty to use the deployment default.",
+        "MAX_RETRIES": "Retry budget",
+        "MAX_RETRIES_HINT": "Only failures that happen before the request is sent are retried. Leave empty to use the deployment default.",
+        "RETRY_BACKOFF": "Retry backoff",
+        "SANDBOX_BASE_URL": "Sandbox base URL override",
+        "SANDBOX_BASE_URL_HINT": "Used by every binding while sandbox mode is on. Leave empty to keep each binding’s own base URL."
       },
       "FORM": {
         "CREATE_TITLE": "Create supplier profile",
@@ -5308,6 +5326,12 @@
         "CREATE": "The supplier profile could not be created.",
         "SAVE": "The supplier profile could not be saved.",
         "DELETE": "The supplier profile could not be deleted."
+      },
+      "DEPLOYMENT_DEFAULT": "Deployment default",
+      "SANDBOX_URL_UNCHANGED": "Bindings keep their own base URLs",
+      "BACKOFF": {
+        "FIXED": "Fixed",
+        "EXPONENTIAL": "Exponential"
       }
     },
     "AUTH": {
@@ -5328,22 +5352,24 @@
         "apiKeyRef": "API key reference",
         "clientIdRef": "Client ID reference",
         "clientSecretRef": "Client secret reference",
-        "tokenRef": "Bearer token reference",
-        "tokenUrl": "Token endpoint URL",
-        "scope": "Scope"
+        "tokenUrlRef": "Token endpoint reference",
+        "bearerTokenRef": "Bearer token reference",
+        "apiKeyHeader": "API key header name"
       },
       "FORM": {
         "CREATE_TITLE": "Add authentication configuration",
         "EDIT_TITLE": "Edit authentication configuration",
         "CREDENTIAL_REFERENCES": "Credential references",
         "CREDENTIAL_HINT": "Enter the reference the platform resolves at call time, for example env:MICHELIN_EDI_USER. Never paste the secret itself.",
-        "ENDPOINT_SETTINGS": "Endpoint settings"
+        "ENDPOINT_SETTINGS": "Endpoint settings",
+        "REENTER_HINT": "Credential references are never returned by the service, so they are blank here. Re-enter every reference this configuration needs before saving."
       },
       "TABLE": {
         "CAPTION": "Authentication configurations for this profile",
         "AUTH_REF": "Reference name",
         "TYPE": "Type",
-        "REFERENCES": "Secret references"
+        "API_KEY_HEADER": "API key header",
+        "ADAPTER_DEFAULT": "Adapter default"
       },
       "ERROR": {
         "LOAD": "The authentication configurations could not be loaded.",
@@ -5371,7 +5397,8 @@
         "SELECT_LOCATION": "Select a location",
         "EMPTY": "No delivery accounts are mapped yet.",
         "TABLE_CAPTION": "Delivery account mapped to each location",
-        "GAP_WARNING": "These active locations have no delivery account. Orders for them will be rejected before they reach the vendor."
+        "GAP_WARNING": "These active locations have no delivery account. Orders for them will be rejected before they reach the vendor.",
+        "GAP_UNVERIFIED": "Your active locations could not be read, so these mappings could not be verified against them. The mappings below are shown as configured."
       },
       "ERROR": {
         "LOAD": "The account configuration could not be loaded.",
@@ -5382,9 +5409,8 @@
     },
     "BINDINGS": {
       "TITLE": "Capability bindings",
-      "HINT": "Every capability the platform supports is listed. A capability with no binding is switched off for this vendor.",
+      "HINT": "Every capability this screen can name is listed. A capability with no binding is switched off for this vendor and reports that it is not configured.",
       "CONFIGURE": "Configure",
-      "EMPTY_REGISTRY": "No capabilities are registered.",
       "NOT_BOUND_HINT": "Not configured",
       "NO_SCHEDULE": "On demand",
       "STATUS": {
@@ -5399,14 +5425,15 @@
         "PATH": "Path",
         "CRON": "Schedule (cron)",
         "CRON_HINT": "Optional. Leave empty to run this capability only on demand.",
-        "ENABLED": "Binding enabled"
+        "ENABLED": "Binding enabled",
+        "CAPTURE_LEVEL": "Payload capture level",
+        "CAPTURE_LEVEL_HINT": "Controls how much of each exchange is stored. Exchange metadata is always kept, whatever you choose here.",
+        "PROTOCOL_FAMILY_HINT": "Suggestions are the families shipped today. A newer key can be typed in and the service will decide.",
+        "PROTOCOL_VERSION_HINT": "Suggestions are the versions shipped today. A newer key can be typed in, but it must match a registered adapter exactly or the capability will not resolve."
       },
       "FORM": {
         "CREATE_TITLE": "Configure binding",
         "EDIT_TITLE": "Edit binding",
-        "SELECT_CAPABILITY": "Select a capability",
-        "SELECT_FAMILY": "Select a protocol family",
-        "SELECT_VERSION": "Select a version",
         "SELECT_AUTH": "Select an authentication configuration"
       },
       "CONFIRM": {
@@ -5421,56 +5448,29 @@
         "PROTOCOL": "Protocol",
         "ENDPOINT": "Endpoint",
         "AUTH_REF": "Authentication",
-        "SCHEDULE": "Schedule"
+        "SCHEDULE": "Schedule",
+        "CAPTURE": "Payload capture"
       },
       "ERROR": {
         "LOAD": "The capability bindings could not be loaded.",
         "SAVE": "The binding could not be saved.",
         "DELETE": "The binding could not be deleted."
-      }
+      },
+      "CAPTURE_DEFAULT": "Deployment default"
     },
     "HEALTH": {
       "TITLE": "Connection health",
-      "READ_ONLY_HINT": "Reported by the platform. These indicators are read-only.",
-      "EMPTY": "No health information has been reported yet.",
-      "NEVER": "Never",
-      "OBSERVED_AT": "Measured at",
-      "BREAKER_LABEL": "Circuit breaker:",
-      "STATUS": {
-        "HEALTHY": "Healthy",
-        "DEGRADED": "Degraded",
-        "FAILING": "Failing",
-        "NOT_CONFIGURED": "Not configured",
-        "UNKNOWN": "Unknown"
-      },
-      "BREAKER": {
-        "CLOSED": "Closed",
-        "HALF_OPEN": "Half open",
-        "OPEN": "Open",
-        "UNKNOWN": "Unknown"
-      },
-      "TABLE": {
-        "CAPTION": "Connection health per capability",
-        "STATUS": "Health",
-        "BREAKER": "Circuit breaker",
-        "FAILURES": "Consecutive failures",
-        "LAST_SUCCESS": "Last success",
-        "LAST_FAILURE": "Last failure"
-      },
-      "ERROR": {
-        "LOAD": "The health information could not be loaded."
-      }
+      "UNAVAILABLE": "Connection health reporting is not available yet.",
+      "UNAVAILABLE_DETAIL": "The supplier service does not yet publish health or circuit-breaker status. Until it does, use the exchange audit to see how recent calls to this vendor actually went."
     },
     "AUDIT": {
       "TITLE": "Exchange audit",
-      "SUBTITLE": "Every outbound exchange with a supplier, as it happened.",
+      "SUBTITLE": "Every outbound exchange with a supplier, as it happened. Retries appear as separate attempts.",
       "DETAIL_TITLE": "Exchange detail",
       "READ_ONLY_NOTICE": "These are historical records kept for dispute resolution. They cannot be retried or replayed from this screen.",
       "EMPTY": "No exchanges match these filters.",
       "COUNT": "{{count}} exchanges",
-      "NOT_FINISHED": "Not finished",
       "CAPTURE_LEVEL": "Payload capture",
-      "UNMAPPED_FIELDS": "The bound protocol version could not express these fields:",
       "CAPTURE": {
         "FULL": "Full",
         "REDACTED": "Redacted",
@@ -5489,36 +5489,69 @@
         "OUTCOME": "Outcome",
         "DATE_FROM": "From date",
         "DATE_TO": "To date",
-        "ALL_VENDORS": "All vendors",
         "ALL_CAPABILITIES": "All capabilities",
-        "ALL_OUTCOMES": "All outcomes"
+        "ALL_OUTCOMES": "All outcomes",
+        "SELECT_VENDOR": "Select a vendor",
+        "VENDOR_HINT": "Required. Exchanges are reported one vendor at a time.",
+        "OUTCOME_HINT": "Narrows the exchanges already loaded on this page.",
+        "DATE_TO_HINT": "The whole of this day is included."
       },
       "TABLE": {
         "CAPTION": "Outbound supplier exchanges",
         "STARTED": "Started",
-        "FINISHED": "Finished",
         "VENDOR": "Vendor",
         "CAPABILITY": "Capability",
         "OUTCOME": "Outcome",
         "HTTP_STATUS": "HTTP status",
         "DURATION": "Duration (ms)",
         "CORRELATION_ID": "Correlation ID",
-        "VIEW": "View"
+        "VIEW": "View",
+        "ATTEMPT": "Attempt",
+        "HTTP_METHOD": "Method"
       },
       "PAYLOAD": {
         "TITLE": "Request and response",
         "REQUEST": "Request",
         "RESPONSE": "Response",
-        "REDACTED": "Redacted",
-        "REDACTION_NOTE": "These fields were redacted before delivery:",
-        "RESTRICTED": "You do not have permission to view raw exchange payloads. The exchange summary above is still available.",
-        "METADATA_ONLY": "Payload capture is disabled for this binding, so only the summary was recorded.",
-        "PURGED": "This payload has passed its retention period and was deleted. The summary above is retained."
+        "REDACTION_NOTE": "Sensitive values in these documents were replaced before they were stored. These are not the documents that went over the wire, and the originals were never kept, so they cannot be recovered from anywhere.",
+        "RESTRICTED": "You do not have permission to read stored exchange content. The summary above is still available.",
+        "METADATA_ONLY": "This binding stores metadata only, so no request or response content was captured for this exchange.",
+        "PURGED": "The stored content of this exchange has passed its retention period and was deleted. The summary above is kept permanently.",
+        "NOT_CAPTURED": "This exchange carried no request or response body, so there is nothing stored to show.",
+        "NO_REQUEST_BODY": "No request body was stored for this exchange.",
+        "NO_RESPONSE_BODY": "No response body was stored for this exchange."
       },
       "ERROR": {
         "LOAD": "The exchange audit could not be loaded.",
         "LOAD_DETAIL": "This exchange could not be loaded.",
-        "LOAD_PAYLOAD": "The exchange payload could not be loaded."
+        "LOAD_PAYLOAD": "The exchange payload could not be loaded.",
+        "LOAD_VENDORS": "The vendor list could not be loaded."
+      },
+      "SELECT_VENDOR_PROMPT": "Choose a vendor to see its exchanges. The service reports one vendor at a time.",
+      "NO_RESPONSE": "No response",
+      "NO_RESPONSE_DETAIL": "No response was received — the connection failed, timed out before any reply, or the attempt was stopped by the circuit breaker.",
+      "CREATED_BY": "Started by",
+      "SUPPLIER_REF_SNAPSHOT": "The alias recorded at the time of this exchange. The profile may have been renamed since.",
+      "ENDPOINT_URI": "Request address",
+      "ENDPOINT_PATH": "Request path",
+      "ENDPOINT_PATH_NOTE": "Metadata-only capture keeps the path alone. Any query string was discarded when the exchange was recorded and cannot be recovered.",
+      "ENDPOINT_REDACTED_NOTE": "Any credential-bearing parameters were removed when the exchange was recorded.",
+      "FAILURE_DETAIL": "What the vendor reported",
+      "OUTCOME_FILTER_SCOPE": "Showing {{shown}} of the {{loaded}} exchanges on this page. The outcome filter applies to the page you are viewing, not to the whole date range.",
+      "OUTCOME_FILTER_EMPTY": "No exchange on this page has that outcome. Other pages in this date range may.",
+      "PAGINATION": {
+        "ARIA_LABEL": "Exchange list pages",
+        "PREVIOUS": "Previous",
+        "NEXT": "Next",
+        "STATUS": "Page {{page}} of {{total}}"
+      },
+      "ATTEMPTS": {
+        "TITLE": "Attempts in this call",
+        "CAPTION": "Every attempt sharing this correlation ID, oldest first",
+        "HINT": "This call was attempted {{count}} times. Each attempt is recorded separately.",
+        "SINGLE": "This call was attempted once; it was not retried.",
+        "CURRENT": "The attempt you are viewing",
+        "UNAVAILABLE": "The other attempts in this call could not be loaded. The attempt above is unaffected."
       }
     },
     "PRICAT": {

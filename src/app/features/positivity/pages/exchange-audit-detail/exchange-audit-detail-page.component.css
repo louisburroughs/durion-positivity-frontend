@@ -61,18 +61,6 @@
 	font-size: 0.8125rem;
 }
 
-.exchange-detail__unmapped-title {
-	margin: 0;
-	font-weight: 700;
-	flex-basis: 100%;
-}
-
-.exchange-detail__unmapped-list {
-	flex-basis: 100%;
-	margin: 0;
-	padding-inline-start: var(--space-5);
-}
-
 .exchange-detail__payload {
 	display: grid;
 	gap: var(--space-3);
@@ -85,14 +73,68 @@
 
 .exchange-detail__redaction-note {
 	margin: 0;
+}
+
+.exchange-detail__note {
+	display: block;
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+.exchange-detail__version {
+	margin-inline-start: var(--space-2);
+	font-weight: 600;
+}
+
+.exchange-detail__endpoint {
+	overflow-wrap: anywhere;
+}
+
+.exchange-detail__meta-item--wide {
+	grid-column: 1 / -1;
+}
+
+.exchange-detail__failure-title {
+	margin: 0;
+	font-weight: 700;
+	flex-basis: 100%;
+}
+
+.exchange-detail__failure-body {
+	margin: 0;
+	flex-basis: 100%;
+	overflow-wrap: anywhere;
+}
+
+.exchange-detail__attempts {
+	display: grid;
+	gap: var(--space-2);
+}
+
+.exchange-detail__attempts-title {
+	margin: 0;
+	font-size: 1.125rem;
+}
+
+.exchange-detail__attempts-hint {
+	margin: 0;
 	font-size: 0.8125rem;
 	color: var(--text-muted);
 }
 
-.exchange-detail__redacted-field {
-	font-family: var(--font-mono);
-	font-size: 0.75rem;
-	margin-inline-start: var(--space-2);
+.exchange-detail__attempt--current {
+	background: var(--surface-variant);
+	font-weight: 600;
+}
+
+.exchange-detail__link {
+	color: var(--brand-primary);
+	font-weight: 600;
+}
+
+.exchange-detail__link:focus-visible {
+	outline: 3px solid var(--input-focus-border);
+	outline-offset: 2px;
 }
 
 .exchange-detail__panes {
@@ -115,36 +157,6 @@
 .exchange-detail__pane-title {
 	margin: 0;
 	font-size: 1rem;
-}
-
-.exchange-detail__content-type {
-	margin: 0;
-	font-size: 0.75rem;
-	color: var(--text-muted);
-}
-
-.exchange-detail__headers {
-	margin: 0;
-	padding: 0;
-	list-style: none;
-	display: grid;
-	gap: var(--space-1);
-	font-size: 0.75rem;
-}
-
-.exchange-detail__headers code {
-	font-family: var(--font-mono);
-	font-weight: 700;
-	margin-inline-end: var(--space-2);
-}
-
-.exchange-detail__redacted-flag {
-	margin-inline-start: var(--space-2);
-	padding: 0 var(--space-1);
-	border-radius: var(--radius-sm);
-	background: var(--status-warning-bg);
-	color: var(--status-warning-fg);
-	font-weight: 700;
 }
 
 .exchange-detail__body {

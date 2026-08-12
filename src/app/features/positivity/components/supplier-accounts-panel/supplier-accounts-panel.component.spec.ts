@@ -8,32 +8,50 @@ import { SupplierProfileService } from '../../services/supplier-profile.service'
 import {
   SupplierAccounts,
   SupplierApiErrorBody,
+  SupplierBillingAccount,
   SupplierDeliveryAccount,
 } from '../../models/supplier-profile.models';
 
 const PROFILE_ID = 'profile-1';
 
 const springfield: SupplierDeliveryAccount = {
+  accountId: 'acct-delivery-1',
   locationId: 'loc-1',
   locationName: 'Springfield Main',
   accountNumber: '4711-01',
   agencyCode: 'A1',
 };
 
+const billing: SupplierBillingAccount = {
+  accountId: 'acct-billing',
+  accountNumber: '4711',
+  agencyCode: 'A1',
+};
+
 const fullyMapped: SupplierAccounts = {
-  billing: { accountNumber: '4711', agencyCode: 'A1' },
+  billing,
   delivery: [springfield],
   activeLocations: [{ locationId: 'loc-1', name: 'Springfield Main' }],
+  locationsAvailable: true,
 };
 
 const withGap: SupplierAccounts = {
-  billing: { accountNumber: '4711', agencyCode: 'A1' },
+  billing,
   delivery: [springfield],
   activeLocations: [
     { locationId: 'loc-1', name: 'Springfield Main' },
     { locationId: 'loc-2', name: 'Shelbyville Depot' },
     { locationId: 'loc-3', name: 'Ogdenville Yard' },
   ],
+  locationsAvailable: true,
+};
+
+/** The pos-location roster was unreachable: the gap check cannot be run. */
+const locationsUnavailable: SupplierAccounts = {
+  billing,
+  delivery: [springfield],
+  activeLocations: [],
+  locationsAvailable: false,
 };
 
 function httpError(status: number, body?: SupplierApiErrorBody): HttpErrorResponse {
@@ -45,9 +63,9 @@ describe('SupplierAccountsPanelComponent', () => {
   let component: SupplierAccountsPanelComponent;
   let service: {
     getAccounts: ReturnType<typeof vi.fn>;
-    updateBillingAccount: ReturnType<typeof vi.fn>;
-    upsertDeliveryAccount: ReturnType<typeof vi.fn>;
-    deleteDeliveryAccount: ReturnType<typeof vi.fn>;
+    saveBillingAccount: ReturnType<typeof vi.fn>;
+    saveDeliveryAccount: ReturnType<typeof vi.fn>;
+    deleteAccount: ReturnType<typeof vi.fn>;
   };
 
   async function setup(
@@ -59,9 +77,9 @@ describe('SupplierAccountsPanelComponent', () => {
         .mockReturnValue(
           accounts instanceof HttpErrorResponse ? throwError(() => accounts) : of(accounts),
         ),
-      updateBillingAccount: vi.fn().mockReturnValue(of(fullyMapped.billing)),
-      upsertDeliveryAccount: vi.fn().mockReturnValue(of(springfield)),
-      deleteDeliveryAccount: vi.fn().mockReturnValue(of(undefined)),
+      saveBillingAccount: vi.fn().mockReturnValue(of(billing)),
+      saveDeliveryAccount: vi.fn().mockReturnValue(of(springfield)),
+      deleteAccount: vi.fn().mockReturnValue(of(undefined)),
     };
 
     TestBed.resetTestingModule();
@@ -122,6 +140,36 @@ describe('SupplierAccountsPanelComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('.pos-banner--warning')).toBeNull();
   });
 
+  // ── Degradation when the location roster is unreachable ───────────────────
+
+  it('still renders the delivery mappings when the location roster is unavailable', async () => {
+    await setup(locationsUnavailable);
+
+    // A pos-location outage must not error the whole accounts tab.
+    expect(component.state()).toBe('ready');
+    expect(component.errorKey()).toBeNull();
+    expect(component.deliveryAccounts()).toHaveLength(1);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.pos-table')).not.toBeNull();
+  });
+
+  it('says the gap check could not be run rather than claiming there are no gaps', async () => {
+    await setup(locationsUnavailable);
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(component.locationsAvailable()).toBe(false);
+    expect(component.hasMappingGap()).toBe(false);
+    expect(host.textContent).toContain('POSITIVITY.ACCOUNTS.DELIVERY.GAP_UNVERIFIED');
+    expect(host.querySelector('.pos-banner--warning')).toBeNull();
+  });
+
+  it('shows no unverified note when the roster loaded normally', async () => {
+    await setup(fullyMapped);
+
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain(
+      'POSITIVITY.ACCOUNTS.DELIVERY.GAP_UNVERIFIED',
+    );
+  });
+
   it('pre-selects the location when the admin acts on a flagged gap', async () => {
     await setup(withGap);
     component.startMapLocation(component.unmappedLocations()[0]);
@@ -151,7 +199,8 @@ describe('SupplierAccountsPanelComponent', () => {
     component.billingForm.patchValue({ accountNumber: '9000', agencyCode: 'B2' });
     component.saveBilling();
 
-    expect(service.updateBillingAccount).toHaveBeenCalledWith(PROFILE_ID, {
+    expect(service.saveBillingAccount).toHaveBeenCalledWith(PROFILE_ID, {
+      accountId: 'acct-billing',
       accountNumber: '9000',
       agencyCode: 'B2',
     });
@@ -162,7 +211,8 @@ describe('SupplierAccountsPanelComponent', () => {
     component.billingForm.patchValue({ accountNumber: '9000', agencyCode: '  ' });
     component.saveBilling();
 
-    expect(service.updateBillingAccount).toHaveBeenCalledWith(PROFILE_ID, {
+    expect(service.saveBillingAccount).toHaveBeenCalledWith(PROFILE_ID, {
+      accountId: 'acct-billing',
       accountNumber: '9000',
       agencyCode: undefined,
     });
@@ -178,7 +228,8 @@ describe('SupplierAccountsPanelComponent', () => {
     });
     component.saveDelivery();
 
-    expect(service.upsertDeliveryAccount).toHaveBeenCalledWith(PROFILE_ID, {
+    expect(service.saveDeliveryAccount).toHaveBeenCalledWith(PROFILE_ID, {
+      accountId: undefined,
       locationId: 'loc-2',
       accountNumber: '4711-02',
       agencyCode: 'A1',
@@ -187,9 +238,11 @@ describe('SupplierAccountsPanelComponent', () => {
 
   it('maps a malformed location UUID 400 to the locationId field with state and errorKey set', async () => {
     await setup(withGap);
-    service.upsertDeliveryAccount.mockReturnValue(
+    service.saveDeliveryAccount.mockReturnValue(
       throwError(() =>
-        httpError(400, { fieldErrors: [{ field: 'locationId', code: 'LOCATION_UUID_MALFORMED' }] }),
+        httpError(400, {
+          fieldErrors: [{ field: 'deliveryLocationId', message: 'must be a UUID' }],
+        }),
       ),
     );
     component.startAddDelivery();
@@ -198,17 +251,18 @@ describe('SupplierAccountsPanelComponent', () => {
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('POSITIVITY.ERROR.VALIDATION');
-    expect(component.fieldError('locationId')).toBe(
+    expect(component.fieldError('deliveryLocationId')).toBe(
       'POSITIVITY.ERROR.FIELD.LOCATION_UUID_MALFORMED',
     );
+    expect(component.fieldDetail('deliveryLocationId')).toBe('must be a UUID');
   });
 
   it('maps a billing 400 to the account number field with state and errorKey set', async () => {
     await setup();
-    service.updateBillingAccount.mockReturnValue(
+    service.saveBillingAccount.mockReturnValue(
       throwError(() =>
         httpError(400, {
-          fieldErrors: [{ field: 'accountNumber', code: 'ACCOUNT_NUMBER_REQUIRED' }],
+          fieldErrors: [{ field: 'accountNumber', message: 'must not be blank' }],
         }),
       ),
     );
@@ -224,7 +278,7 @@ describe('SupplierAccountsPanelComponent', () => {
 
   it('sets both state and errorKey when removing a mapping fails', async () => {
     await setup();
-    service.deleteDeliveryAccount.mockReturnValue(throwError(() => httpError(500)));
+    service.deleteAccount.mockReturnValue(throwError(() => httpError(500)));
     component.removeDelivery(springfield);
 
     expect(component.state()).toBe('error');
@@ -240,9 +294,72 @@ describe('SupplierAccountsPanelComponent', () => {
     component.saveDelivery();
     component.removeDelivery(springfield);
 
-    expect(service.updateBillingAccount).not.toHaveBeenCalled();
-    expect(service.upsertDeliveryAccount).not.toHaveBeenCalled();
-    expect(service.deleteDeliveryAccount).not.toHaveBeenCalled();
+    expect(service.saveBillingAccount).not.toHaveBeenCalled();
+    expect(service.saveDeliveryAccount).not.toHaveBeenCalled();
+    expect(service.deleteAccount).not.toHaveBeenCalled();
+  });
+
+  it('shows the write controls disabled, with the reason, on a YAML-managed profile', async () => {
+    await setup(withGap);
+    fixture.componentRef.setInput('readOnly', true);
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const reason = host.querySelector('#accounts-readonly-reason');
+    expect(reason?.textContent).toContain('POSITIVITY.COMMON.YAML_MANAGED_READONLY');
+
+    // Visible but inert — a hidden control would teach the operator nothing.
+    const saveBilling = host.querySelector<HTMLButtonElement>('.accounts-form button[type="submit"]');
+    expect(saveBilling).not.toBeNull();
+    expect(saveBilling!.disabled).toBe(true);
+    expect(saveBilling!.getAttribute('aria-describedby')).toBe('accounts-readonly-reason');
+  });
+
+  it('keeps the mapping controls visible and disabled rather than removing them', async () => {
+    await setup(withGap);
+    fixture.componentRef.setInput('readOnly', true);
+    fixture.detectChanges();
+
+    const rowButtons = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
+        'tbody button, .accounts-panel__gap-list button',
+      ),
+    );
+
+    expect(rowButtons.length).toBeGreaterThan(0);
+    expect(rowButtons.every(b => b.disabled)).toBe(true);
+  });
+
+  it('reports a 409 on a YAML profile as the source-of-truth lock, not a generic failure', async () => {
+    await setup();
+    fixture.componentRef.setInput('readOnly', true);
+    fixture.detectChanges();
+    // Bypass the client-side guard to prove the server rejection is handled too.
+    service.saveBillingAccount.mockReturnValue(throwError(() => httpError(409)));
+    component.billingForm.patchValue({ accountNumber: '9000' });
+    component['handleMutationError'](httpError(409), 'POSITIVITY.ACCOUNTS.ERROR.SAVE_BILLING');
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('POSITIVITY.ERROR.CONFLICT_YAML');
+    expect(component.conflict()).toBe(true);
+  });
+
+  it('offers no retry button for a conflict — retrying would fail identically', async () => {
+    await setup();
+    component['handleMutationError'](httpError(409), 'POSITIVITY.ACCOUNTS.ERROR.SAVE_BILLING');
+    fixture.detectChanges();
+
+    const banner = (fixture.nativeElement as HTMLElement).querySelector('.pos-banner--error');
+    expect(banner?.textContent).not.toContain('POSITIVITY.COMMON.RETRY');
+  });
+
+  it('reports a 409 on an admin-managed profile as an ordinary conflict', async () => {
+    await setup();
+    component['handleMutationError'](httpError(409), 'POSITIVITY.ACCOUNTS.ERROR.SAVE_BILLING');
+
+    expect(component.errorKey()).toBe('POSITIVITY.ERROR.CONFLICT');
+    expect(component.conflict()).toBe(true);
   });
 
   it('does not submit an incomplete delivery mapping', async () => {
@@ -250,7 +367,7 @@ describe('SupplierAccountsPanelComponent', () => {
     component.startAddDelivery();
     component.saveDelivery();
 
-    expect(service.upsertDeliveryAccount).not.toHaveBeenCalled();
+    expect(service.saveDeliveryAccount).not.toHaveBeenCalled();
   });
 
   it('uses canonical billing/delivery vocabulary only — no vendor terms in the rendered UI', async () => {

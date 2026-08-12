@@ -25,6 +25,10 @@
 	color: var(--text-muted);
 }
 
+.accounts-panel__gap-unknown {
+	width: 100%;
+}
+
 .accounts-panel__gap-title {
 	margin: 0;
 	font-weight: 700;

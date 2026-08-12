@@ -6,9 +6,11 @@
   @if (state() === 'error') {
     <div class="pos-banner pos-banner--error" role="alert">
       {{ errorKey()! | translate }}
-      <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
-        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
-      </button>
+      @if (!conflict()) {
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+          {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+        </button>
+      }
     </div>
   }
 
@@ -52,21 +54,90 @@
         </div>
       </div>
 
-      @if (!readOnly()) {
-        <div class="profile-detail__actions">
-          <button class="pos-btn pos-btn--secondary" type="button" (click)="openEdit()">
-            {{ 'POSITIVITY.PROFILES.EDIT' | translate }}
-          </button>
-          <button class="pos-btn pos-btn--danger" type="button" (click)="deleteProfile()">
-            {{ 'POSITIVITY.PROFILES.DELETE' | translate }}
-          </button>
-        </div>
-      } @else {
-        <p class="pos-banner pos-banner--info profile-detail__yaml-note">
+      <!-- Disabled with a stated reason, never hidden: every mutation on a
+           YAML-managed profile is rejected with 409 (ADR-0050 §6), and the
+           operator needs to know that rather than hunt for a missing button. -->
+      <div class="profile-detail__actions">
+        <button
+          class="pos-btn pos-btn--secondary"
+          type="button"
+          [disabled]="readOnly()"
+          [attr.aria-describedby]="readOnly() ? 'profile-readonly-reason' : null"
+          (click)="openEdit()"
+        >
+          {{ 'POSITIVITY.PROFILES.EDIT' | translate }}
+        </button>
+        <button
+          class="pos-btn pos-btn--danger"
+          type="button"
+          [disabled]="readOnly()"
+          [attr.aria-describedby]="readOnly() ? 'profile-readonly-reason' : null"
+          (click)="deleteProfile()"
+        >
+          {{ 'POSITIVITY.PROFILES.DELETE' | translate }}
+        </button>
+      </div>
+      @if (readOnly()) {
+        <p class="pos-banner pos-banner--info profile-detail__yaml-note" id="profile-readonly-reason">
           {{ 'POSITIVITY.COMMON.YAML_MANAGED_READONLY' | translate }}
         </p>
       }
     </header>
+
+    <dl class="profile-detail__settings">
+      <div class="profile-detail__setting">
+        <dt>{{ 'POSITIVITY.PROFILES.FIELD.CONNECT_TIMEOUT' | translate }}</dt>
+        <dd>
+          @if (current.connectTimeoutMillis !== undefined) {
+            {{ current.connectTimeoutMillis }}
+          } @else {
+            {{ 'POSITIVITY.PROFILES.DEPLOYMENT_DEFAULT' | translate }}
+          }
+        </dd>
+      </div>
+      <div class="profile-detail__setting">
+        <dt>{{ 'POSITIVITY.PROFILES.FIELD.READ_TIMEOUT' | translate }}</dt>
+        <dd>
+          @if (current.readTimeoutMillis !== undefined) {
+            {{ current.readTimeoutMillis }}
+          } @else {
+            {{ 'POSITIVITY.PROFILES.DEPLOYMENT_DEFAULT' | translate }}
+          }
+        </dd>
+      </div>
+      <div class="profile-detail__setting">
+        <dt>{{ 'POSITIVITY.PROFILES.FIELD.MAX_RETRIES' | translate }}</dt>
+        <dd>
+          @if (current.maxRetries !== undefined) {
+            {{ current.maxRetries }}
+          } @else {
+            {{ 'POSITIVITY.PROFILES.DEPLOYMENT_DEFAULT' | translate }}
+          }
+        </dd>
+      </div>
+      <div class="profile-detail__setting">
+        <dt>{{ 'POSITIVITY.PROFILES.FIELD.RETRY_BACKOFF' | translate }}</dt>
+        <dd>
+          @if (current.retryBackoff; as backoff) {
+            {{ 'POSITIVITY.PROFILES.BACKOFF.' + backoff | translate }}
+          } @else {
+            {{ 'POSITIVITY.PROFILES.DEPLOYMENT_DEFAULT' | translate }}
+          }
+        </dd>
+      </div>
+      @if (current.sandbox) {
+        <div class="profile-detail__setting">
+          <dt>{{ 'POSITIVITY.PROFILES.FIELD.SANDBOX_BASE_URL' | translate }}</dt>
+          <dd>
+            @if (current.sandboxBaseUrlOverride; as override) {
+              <code>{{ override }}</code>
+            } @else {
+              {{ 'POSITIVITY.PROFILES.SANDBOX_URL_UNCHANGED' | translate }}
+            }
+          </dd>
+        </div>
+      }
+    </dl>
 
     @if (editOpen()) {
       <form class="profile-detail__form" [formGroup]="editForm" (ngSubmit)="saveProfile()">
@@ -85,7 +156,12 @@
             [attr.aria-describedby]="fieldError('supplierRef') ? 'edit-supplier-ref-error' : null"
           />
           @if (fieldError('supplierRef'); as key) {
-            <p class="pos-field__error" id="edit-supplier-ref-error" role="alert">{{ key | translate }}</p>
+            <p class="pos-field__error" id="edit-supplier-ref-error" role="alert">
+              {{ key | translate }}
+              @if (fieldDetail('supplierRef'); as detail) {
+                <span class="pos-field__detail">{{ detail }}</span>
+              }
+            </p>
           }
         </div>
 
@@ -102,7 +178,12 @@
             [attr.aria-describedby]="fieldError('displayName') ? 'edit-display-name-error' : null"
           />
           @if (fieldError('displayName'); as key) {
-            <p class="pos-field__error" id="edit-display-name-error" role="alert">{{ key | translate }}</p>
+            <p class="pos-field__error" id="edit-display-name-error" role="alert">
+              {{ key | translate }}
+              @if (fieldDetail('displayName'); as detail) {
+                <span class="pos-field__detail">{{ detail }}</span>
+              }
+            </p>
           }
         </div>
 
@@ -120,8 +201,120 @@
           </label>
         </div>
 
+        <div class="pos-field">
+          <label class="pos-field__label" for="edit-sandbox-base-url">
+            {{ 'POSITIVITY.PROFILES.FIELD.SANDBOX_BASE_URL' | translate }}
+          </label>
+          <input
+            id="edit-sandbox-base-url"
+            class="pos-field__input"
+            type="url"
+            formControlName="sandboxBaseUrlOverride"
+            aria-describedby="edit-sandbox-base-url-hint"
+            [attr.aria-invalid]="fieldError('sandboxBaseUrlOverride') ? 'true' : null"
+          />
+          <p class="pos-field__hint" id="edit-sandbox-base-url-hint">
+            {{ 'POSITIVITY.PROFILES.FIELD.SANDBOX_BASE_URL_HINT' | translate }}
+          </p>
+          @if (fieldError('sandboxBaseUrlOverride'); as key) {
+            <p class="pos-field__error" role="alert">
+              {{ key | translate }}
+              @if (fieldDetail('sandboxBaseUrlOverride'); as detail) {
+                <span class="pos-field__detail">{{ detail }}</span>
+              }
+            </p>
+          }
+        </div>
+
+        <div class="pos-field">
+          <label class="pos-field__label" for="edit-connect-timeout">
+            {{ 'POSITIVITY.PROFILES.FIELD.CONNECT_TIMEOUT' | translate }}
+          </label>
+          <input
+            id="edit-connect-timeout"
+            class="pos-field__input"
+            type="number"
+            min="1"
+            formControlName="connectTimeoutMillis"
+            aria-describedby="edit-timeout-hint"
+            [attr.aria-invalid]="fieldError('connectTimeoutMillis') ? 'true' : null"
+          />
+          @if (fieldError('connectTimeoutMillis'); as key) {
+            <p class="pos-field__error" role="alert">
+              {{ key | translate }}
+              @if (fieldDetail('connectTimeoutMillis'); as detail) {
+                <span class="pos-field__detail">{{ detail }}</span>
+              }
+            </p>
+          }
+        </div>
+
+        <div class="pos-field">
+          <label class="pos-field__label" for="edit-read-timeout">
+            {{ 'POSITIVITY.PROFILES.FIELD.READ_TIMEOUT' | translate }}
+          </label>
+          <input
+            id="edit-read-timeout"
+            class="pos-field__input"
+            type="number"
+            min="1"
+            formControlName="readTimeoutMillis"
+            aria-describedby="edit-timeout-hint"
+            [attr.aria-invalid]="fieldError('readTimeoutMillis') ? 'true' : null"
+          />
+          <p class="pos-field__hint" id="edit-timeout-hint">
+            {{ 'POSITIVITY.PROFILES.FIELD.TIMEOUT_HINT' | translate }}
+          </p>
+          @if (fieldError('readTimeoutMillis'); as key) {
+            <p class="pos-field__error" role="alert">
+              {{ key | translate }}
+              @if (fieldDetail('readTimeoutMillis'); as detail) {
+                <span class="pos-field__detail">{{ detail }}</span>
+              }
+            </p>
+          }
+        </div>
+
+        <div class="pos-field">
+          <label class="pos-field__label" for="edit-max-retries">
+            {{ 'POSITIVITY.PROFILES.FIELD.MAX_RETRIES' | translate }}
+          </label>
+          <input
+            id="edit-max-retries"
+            class="pos-field__input"
+            type="number"
+            min="0"
+            formControlName="maxRetries"
+            aria-describedby="edit-max-retries-hint"
+            [attr.aria-invalid]="fieldError('maxRetries') ? 'true' : null"
+          />
+          <p class="pos-field__hint" id="edit-max-retries-hint">
+            {{ 'POSITIVITY.PROFILES.FIELD.MAX_RETRIES_HINT' | translate }}
+          </p>
+          @if (fieldError('maxRetries'); as key) {
+            <p class="pos-field__error" role="alert">
+              {{ key | translate }}
+              @if (fieldDetail('maxRetries'); as detail) {
+                <span class="pos-field__detail">{{ detail }}</span>
+              }
+            </p>
+          }
+        </div>
+
+        <div class="pos-field">
+          <label class="pos-field__label" for="edit-retry-backoff">
+            {{ 'POSITIVITY.PROFILES.FIELD.RETRY_BACKOFF' | translate }}
+          </label>
+          <select id="edit-retry-backoff" class="pos-field__input" formControlName="retryBackoff">
+            <option value="">{{ 'POSITIVITY.PROFILES.DEPLOYMENT_DEFAULT' | translate }}</option>
+            @for (backoff of retryBackoffs; track backoff) {
+              <option [value]="backoff">{{ 'POSITIVITY.PROFILES.BACKOFF.' + backoff | translate }}</option>
+            }
+          </select>
+        </div>
+
         <div class="profile-detail__form-actions">
-          <button class="pos-btn pos-btn--primary" type="submit" [disabled]="saving()">
+          <button class="pos-btn pos-btn--primary" type="submit" [disabled]="saving() || readOnly()">
             {{ 'POSITIVITY.COMMON.SAVE' | translate }}
           </button>
           <button class="pos-btn pos-btn--secondary" type="button" (click)="cancelEdit()">

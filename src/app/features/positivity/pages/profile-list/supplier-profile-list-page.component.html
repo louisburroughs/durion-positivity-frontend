@@ -59,7 +59,12 @@
           {{ 'POSITIVITY.PROFILES.FIELD.SUPPLIER_REF_HINT' | translate }}
         </p>
         @if (fieldError('supplierRef'); as key) {
-          <p class="pos-field__error" id="profile-supplier-ref-error" role="alert">{{ key | translate }}</p>
+          <p class="pos-field__error" id="profile-supplier-ref-error" role="alert">
+            {{ key | translate }}
+            @if (fieldDetail('supplierRef'); as detail) {
+              <span class="pos-field__detail">{{ detail }}</span>
+            }
+          </p>
         }
       </div>
 
@@ -76,7 +81,12 @@
           [attr.aria-describedby]="fieldError('displayName') ? 'profile-display-name-error' : null"
         />
         @if (fieldError('displayName'); as key) {
-          <p class="pos-field__error" id="profile-display-name-error" role="alert">{{ key | translate }}</p>
+          <p class="pos-field__error" id="profile-display-name-error" role="alert">
+            {{ key | translate }}
+            @if (fieldDetail('displayName'); as detail) {
+              <span class="pos-field__detail">{{ detail }}</span>
+            }
+          </p>
         }
       </div>
 

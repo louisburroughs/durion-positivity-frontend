@@ -2,21 +2,32 @@
   <header class="auth-panel__header">
     <h2 class="auth-panel__title">{{ 'POSITIVITY.AUTH.TITLE' | translate }}</h2>
     <p class="auth-panel__hint">{{ 'POSITIVITY.AUTH.REFERENCE_NOTICE' | translate }}</p>
-    @if (!readOnly()) {
-      <button class="pos-btn pos-btn--primary" type="button" (click)="startCreate()">
-        {{ 'POSITIVITY.AUTH.ADD' | translate }}
-      </button>
-    } @else {
-      <p class="auth-panel__hint">{{ 'POSITIVITY.COMMON.YAML_MANAGED_READONLY' | translate }}</p>
-    }
+    <!-- Disabled with a stated reason, never hidden (ADR-0050 §6). -->
+    <button
+      class="pos-btn pos-btn--primary"
+      type="button"
+      [disabled]="readOnly()"
+      [attr.aria-describedby]="readOnly() ? 'auth-readonly-reason' : null"
+      (click)="startCreate()"
+    >
+      {{ 'POSITIVITY.AUTH.ADD' | translate }}
+    </button>
   </header>
+
+  @if (readOnly()) {
+    <p class="pos-banner pos-banner--info" id="auth-readonly-reason">
+      {{ 'POSITIVITY.COMMON.YAML_MANAGED_READONLY' | translate }}
+    </p>
+  }
 
   @if (state() === 'error') {
     <div class="pos-banner pos-banner--error" role="alert">
       {{ errorKey()! | translate }}
-      <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
-        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
-      </button>
+      @if (!conflict()) {
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+          {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+        </button>
+      }
     </div>
   }
 
@@ -42,46 +53,45 @@
           <tr>
             <th scope="col">{{ 'POSITIVITY.AUTH.TABLE.AUTH_REF' | translate }}</th>
             <th scope="col">{{ 'POSITIVITY.AUTH.TABLE.TYPE' | translate }}</th>
-            <th scope="col">{{ 'POSITIVITY.AUTH.TABLE.REFERENCES' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.AUTH.TABLE.API_KEY_HEADER' | translate }}</th>
             <th scope="col">
               <span class="sr-only">{{ 'POSITIVITY.COMMON.ACTIONS' | translate }}</span>
             </th>
           </tr>
         </thead>
         <tbody>
+          <!-- The read model carries no credential material at all, so there is
+               no reference column to render and nothing here to redact. -->
           @for (config of configs(); track config.authConfigId) {
             <tr>
               <td>{{ config.authRef }}</td>
               <td>{{ 'POSITIVITY.AUTH.TYPE.' + config.authType | translate }}</td>
-              <td class="auth-panel__refs">
-                @if (config.usernameRef) {
-                  <code class="auth-panel__ref">{{ config.usernameRef }}</code>
-                }
-                @if (config.passwordRef) {
-                  <code class="auth-panel__ref">{{ config.passwordRef }}</code>
-                }
-                @if (config.apiKeyRef) {
-                  <code class="auth-panel__ref">{{ config.apiKeyRef }}</code>
-                }
-                @if (config.clientIdRef) {
-                  <code class="auth-panel__ref">{{ config.clientIdRef }}</code>
-                }
-                @if (config.clientSecretRef) {
-                  <code class="auth-panel__ref">{{ config.clientSecretRef }}</code>
-                }
-                @if (config.tokenRef) {
-                  <code class="auth-panel__ref">{{ config.tokenRef }}</code>
+              <td>
+                @if (config.apiKeyHeader) {
+                  <code class="auth-panel__ref">{{ config.apiKeyHeader }}</code>
+                } @else {
+                  {{ 'POSITIVITY.AUTH.TABLE.ADAPTER_DEFAULT' | translate }}
                 }
               </td>
               <td class="pos-table__actions">
-                @if (!readOnly()) {
-                  <button class="pos-btn pos-btn--secondary" type="button" (click)="startEdit(config)">
-                    {{ 'POSITIVITY.COMMON.EDIT' | translate }}
-                  </button>
-                  <button class="pos-btn pos-btn--danger" type="button" (click)="remove(config)">
-                    {{ 'POSITIVITY.COMMON.DELETE' | translate }}
-                  </button>
-                }
+                <button
+                  class="pos-btn pos-btn--secondary"
+                  type="button"
+                  [disabled]="readOnly()"
+                  [attr.aria-describedby]="readOnly() ? 'auth-readonly-reason' : null"
+                  (click)="startEdit(config)"
+                >
+                  {{ 'POSITIVITY.COMMON.EDIT' | translate }}
+                </button>
+                <button
+                  class="pos-btn pos-btn--danger"
+                  type="button"
+                  [disabled]="readOnly()"
+                  [attr.aria-describedby]="readOnly() ? 'auth-readonly-reason' : null"
+                  (click)="remove(config)"
+                >
+                  {{ 'POSITIVITY.COMMON.DELETE' | translate }}
+                </button>
               </td>
             </tr>
           }
@@ -100,6 +110,10 @@
         }
       </h3>
 
+      @if (editingId()) {
+        <p class="auth-form__hint">{{ 'POSITIVITY.AUTH.FORM.REENTER_HINT' | translate }}</p>
+      }
+
       <div class="pos-field">
         <label class="pos-field__label" for="auth-ref">{{ 'POSITIVITY.AUTH.FIELD.AUTH_REF' | translate }}</label>
         <input
@@ -107,11 +121,16 @@
           class="pos-field__input"
           type="text"
           formControlName="authRef"
-          [attr.aria-describedby]="fieldError('authRef') ? 'auth-ref-error' : null"
-          [attr.aria-invalid]="fieldError('authRef') ? 'true' : null"
+          [attr.aria-describedby]="fieldError('name') ? 'auth-ref-error' : null"
+          [attr.aria-invalid]="fieldError('name') ? 'true' : null"
         />
-        @if (fieldError('authRef'); as key) {
-          <p class="pos-field__error" id="auth-ref-error" role="alert">{{ key | translate }}</p>
+        @if (fieldError('name'); as key) {
+          <p class="pos-field__error" id="auth-ref-error" role="alert">
+            {{ key | translate }}
+            @if (fieldDetail('name'); as detail) {
+              <span class="pos-field__detail">{{ detail }}</span>
+            }
+          </p>
         }
       </div>
 
@@ -148,6 +167,9 @@
             @if (fieldError(field); as key) {
               <p class="pos-field__error" [id]="'auth-' + field + '-error'" role="alert">
                 {{ key | translate }}
+                @if (fieldDetail(field); as detail) {
+                  <span class="pos-field__detail">{{ detail }}</span>
+                }
               </p>
             }
           </div>
@@ -173,6 +195,9 @@
               @if (fieldError(field); as key) {
                 <p class="pos-field__error" [id]="'auth-' + field + '-error'" role="alert">
                   {{ key | translate }}
+                  @if (fieldDetail(field); as detail) {
+                    <span class="pos-field__detail">{{ detail }}</span>
+                  }
                 </p>
               }
             </div>
@@ -181,7 +206,7 @@
       }
 
       <div class="auth-form__actions">
-        <button class="pos-btn pos-btn--primary" type="submit" [disabled]="saving()">
+        <button class="pos-btn pos-btn--primary" type="submit" [disabled]="saving() || readOnly()">
           {{ 'POSITIVITY.COMMON.SAVE' | translate }}
         </button>
         <button class="pos-btn pos-btn--secondary" type="button" (click)="cancelForm()">

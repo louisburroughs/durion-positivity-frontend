@@ -26,13 +26,24 @@ type PanelState = 'idle' | 'loading' | 'ready' | 'error' | 'forbidden';
  * Accounts tab of the vendor-profile detail screen.
  *
  * Vocabulary is canonical throughout (ADR-0050 §5): **billing** is the
- * invoicing/settlement account, **delivery** is the per-Durion-location
- * receiving account. Vendor terms (`billTo`/`shipTo`, `BuyerParty`/`Consignee`)
- * do not appear here, in the template, or in the translation keys.
+ * invoicing/settlement account, **delivery** maps a pos-location to its vendor
+ * account number. Vendor terms (`billTo`/`shipTo`, `BuyerParty`/`Consignee`) do
+ * not appear here, in the template, or in the translation keys.
  *
+ * ── The mapping-gap check is a second domain ─────────────────────────────────
  * A delivery mapping missing for an *active* location is a configuration error
- * that would otherwise only surface when an order fails, so the panel flags the
- * gap up front and names every unmapped location.
+ * that would otherwise only surface when an order fails, so the panel flags it
+ * up front. But the roster of active locations comes from pos-location, not from
+ * supplier: when that roster is unavailable the panel says the gap check could
+ * not be run and still renders every mapping. "We could not verify" and "there
+ * are no gaps" are different claims and must not look alike.
+ *
+ * ── YAML lock ────────────────────────────────────────────────────────────────
+ * A YAML-managed profile rejects every mutation with `409` (ADR-0050 §6). The
+ * write controls stay **visible and disabled with a stated reason** rather than
+ * disappearing: a hidden control teaches an operator nothing about why the
+ * system will not let them proceed. A `409` that arrives anyway is surfaced as
+ * its own message, not as a generic failure.
  */
 @Component({
   selector: 'app-supplier-accounts-panel',
@@ -53,8 +64,13 @@ export class SupplierAccountsPanelComponent {
   readonly errorKey = signal<string | null>(null);
   readonly accounts = signal<SupplierAccounts | null>(null);
   readonly fieldErrors = signal<Record<string, string>>({});
+  readonly fieldDetails = signal<Record<string, string>>({});
   readonly deliveryFormOpen = signal(false);
+  readonly editingAccountId = signal<string | null>(null);
   readonly editingLocationId = signal<string | null>(null);
+
+  /** Set when the last mutation was rejected with `409` — the source-of-truth lock. */
+  readonly conflict = signal(false);
 
   readonly billingForm = new FormGroup({
     accountNumber: new FormControl('', {
@@ -77,12 +93,19 @@ export class SupplierAccountsPanelComponent {
 
   readonly activeLocations = computed(() => this.accounts()?.activeLocations ?? []);
 
+  /** False when the pos-location roster could not be read; the gap check is then unknown. */
+  readonly locationsAvailable = computed(() => this.accounts()?.locationsAvailable ?? true);
+
   /**
-   * Active locations with no delivery mapping. Surfaced as a warning because an
-   * order for one of these locations is a configuration error the backend raises
-   * before any network call (ADR-0050 §5).
+   * Active locations with no delivery mapping.
+   *
+   * Empty whenever the roster is unavailable — the panel renders the
+   * "not verified" note in that case rather than an all-clear.
    */
   readonly unmappedLocations = computed<SupplierActiveLocation[]>(() => {
+    if (!this.locationsAvailable()) {
+      return [];
+    }
     const mapped = new Set(this.deliveryAccounts().map(entry => entry.locationId));
     return this.activeLocations().filter(location => !mapped.has(location.locationId));
   });
@@ -109,19 +132,8 @@ export class SupplierAccountsPanelComponent {
       this.errorKey.set(null);
 
       const sub: Subscription = this.service.getAccounts(profileId).subscribe({
-        next: accounts => {
-          this.accounts.set(accounts);
-          this.billingForm.reset({
-            accountNumber: accounts.billing?.accountNumber ?? '',
-            agencyCode: accounts.billing?.agencyCode ?? '',
-          });
-          this.state.set('ready');
-        },
-        error: (err: unknown) => {
-          const outcome = mapSupplierError(err, 'POSITIVITY.ACCOUNTS.ERROR.LOAD');
-          this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
-          this.errorKey.set(outcome.errorKey);
-        },
+        next: accounts => this.applyAccounts(accounts),
+        error: (err: unknown) => this.handleLoadError(err),
       });
 
       onCleanup(() => sub.unsubscribe());
@@ -130,6 +142,11 @@ export class SupplierAccountsPanelComponent {
 
   fieldError(field: string): string | null {
     return this.fieldErrors()[field] ?? null;
+  }
+
+  /** Backend detail text for a field. Server data — rendered beneath the translated label only. */
+  fieldDetail(field: string): string | null {
+    return this.fieldDetails()[field] ?? null;
   }
 
   locationName(locationId: string): string {
@@ -146,10 +163,11 @@ export class SupplierAccountsPanelComponent {
     }
 
     const raw = this.billingForm.getRawValue();
-    this.fieldErrors.set({});
+    this.clearFieldFeedback();
 
     this.service
-      .updateBillingAccount(this.vendorProfileId(), {
+      .saveBillingAccount(this.vendorProfileId(), {
+        accountId: this.accounts()?.billing?.accountId,
         accountNumber: raw.accountNumber.trim(),
         agencyCode: raw.agencyCode.trim() || undefined,
       })
@@ -159,25 +177,22 @@ export class SupplierAccountsPanelComponent {
           this.errorKey.set(null);
           this.reload();
         },
-        error: (err: unknown) => {
-          const outcome = mapSupplierError(err, 'POSITIVITY.ACCOUNTS.ERROR.SAVE_BILLING');
-          this.state.set('error');
-          this.errorKey.set(outcome.errorKey);
-          this.fieldErrors.set(outcome.fieldErrors);
-        },
+        error: (err: unknown) => this.handleMutationError(err, 'POSITIVITY.ACCOUNTS.ERROR.SAVE_BILLING'),
       });
   }
 
   startAddDelivery(): void {
+    this.editingAccountId.set(null);
     this.editingLocationId.set(null);
-    this.fieldErrors.set({});
+    this.clearFieldFeedback();
     this.deliveryForm.reset({ locationId: '', accountNumber: '', agencyCode: '' });
     this.deliveryFormOpen.set(true);
   }
 
   startEditDelivery(entry: SupplierDeliveryAccount): void {
+    this.editingAccountId.set(entry.accountId);
     this.editingLocationId.set(entry.locationId);
-    this.fieldErrors.set({});
+    this.clearFieldFeedback();
     this.deliveryForm.reset({
       locationId: entry.locationId,
       accountNumber: entry.accountNumber,
@@ -194,8 +209,9 @@ export class SupplierAccountsPanelComponent {
 
   cancelDelivery(): void {
     this.deliveryFormOpen.set(false);
+    this.editingAccountId.set(null);
     this.editingLocationId.set(null);
-    this.fieldErrors.set({});
+    this.clearFieldFeedback();
   }
 
   saveDelivery(): void {
@@ -205,10 +221,11 @@ export class SupplierAccountsPanelComponent {
     }
 
     const raw = this.deliveryForm.getRawValue();
-    this.fieldErrors.set({});
+    this.clearFieldFeedback();
 
     this.service
-      .upsertDeliveryAccount(this.vendorProfileId(), {
+      .saveDeliveryAccount(this.vendorProfileId(), {
+        accountId: this.editingAccountId() ?? undefined,
         locationId: raw.locationId,
         accountNumber: raw.accountNumber.trim(),
         agencyCode: raw.agencyCode.trim() || undefined,
@@ -217,16 +234,13 @@ export class SupplierAccountsPanelComponent {
       .subscribe({
         next: () => {
           this.deliveryFormOpen.set(false);
+          this.editingAccountId.set(null);
           this.editingLocationId.set(null);
           this.errorKey.set(null);
           this.reload();
         },
-        error: (err: unknown) => {
-          const outcome = mapSupplierError(err, 'POSITIVITY.ACCOUNTS.ERROR.SAVE_DELIVERY');
-          this.state.set('error');
-          this.errorKey.set(outcome.errorKey);
-          this.fieldErrors.set(outcome.fieldErrors);
-        },
+        error: (err: unknown) =>
+          this.handleMutationError(err, 'POSITIVITY.ACCOUNTS.ERROR.SAVE_DELIVERY'),
       });
   }
 
@@ -236,18 +250,15 @@ export class SupplierAccountsPanelComponent {
     }
 
     this.service
-      .deleteDeliveryAccount(this.vendorProfileId(), entry.locationId)
+      .deleteAccount(this.vendorProfileId(), entry.accountId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.errorKey.set(null);
           this.reload();
         },
-        error: (err: unknown) => {
-          const outcome = mapSupplierError(err, 'POSITIVITY.ACCOUNTS.ERROR.DELETE_DELIVERY');
-          this.state.set('error');
-          this.errorKey.set(outcome.errorKey);
-        },
+        error: (err: unknown) =>
+          this.handleMutationError(err, 'POSITIVITY.ACCOUNTS.ERROR.DELETE_DELIVERY'),
       });
   }
 
@@ -259,19 +270,49 @@ export class SupplierAccountsPanelComponent {
       .getAccounts(this.vendorProfileId())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: accounts => {
-          this.accounts.set(accounts);
-          this.billingForm.reset({
-            accountNumber: accounts.billing?.accountNumber ?? '',
-            agencyCode: accounts.billing?.agencyCode ?? '',
-          });
-          this.state.set('ready');
-        },
-        error: (err: unknown) => {
-          const outcome = mapSupplierError(err, 'POSITIVITY.ACCOUNTS.ERROR.LOAD');
-          this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
-          this.errorKey.set(outcome.errorKey);
-        },
+        next: accounts => this.applyAccounts(accounts),
+        error: (err: unknown) => this.handleLoadError(err),
       });
+  }
+
+  private applyAccounts(accounts: SupplierAccounts): void {
+    this.accounts.set(accounts);
+    this.billingForm.reset({
+      accountNumber: accounts.billing?.accountNumber ?? '',
+      agencyCode: accounts.billing?.agencyCode ?? '',
+    });
+    this.state.set('ready');
+  }
+
+  private clearFieldFeedback(): void {
+    this.fieldErrors.set({});
+    this.fieldDetails.set({});
+    this.conflict.set(false);
+  }
+
+  private handleLoadError(err: unknown): void {
+    const outcome = mapSupplierError(err, 'POSITIVITY.ACCOUNTS.ERROR.LOAD');
+    this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
+    this.errorKey.set(outcome.errorKey);
+  }
+
+  /**
+   * `409` is its own outcome, not a generic failure: on a YAML-managed profile
+   * it is the source-of-truth lock and the operator needs to be told that, not
+   * invited to retry.
+   */
+  private handleMutationError(err: unknown, fallbackKey: string): void {
+    const outcome = mapSupplierError(err, fallbackKey);
+    this.state.set('error');
+    this.errorKey.set(
+      outcome.kind === 'conflict'
+        ? this.readOnly()
+          ? 'POSITIVITY.ERROR.CONFLICT_YAML'
+          : 'POSITIVITY.ERROR.CONFLICT'
+        : outcome.errorKey,
+    );
+    this.conflict.set(outcome.kind === 'conflict');
+    this.fieldErrors.set(outcome.fieldErrors);
+    this.fieldDetails.set(outcome.fieldDetails);
   }
 }

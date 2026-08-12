@@ -2,9 +2,11 @@
   @if (state() === 'error') {
     <div class="pos-banner pos-banner--error" role="alert">
       {{ errorKey()! | translate }}
-      <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
-        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
-      </button>
+      @if (!conflict()) {
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+          {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+        </button>
+      }
     </div>
   }
 
@@ -19,6 +21,12 @@
   }
 
   @if (state() !== 'forbidden') {
+    @if (readOnly()) {
+      <p class="pos-banner pos-banner--info" id="accounts-readonly-reason">
+        {{ 'POSITIVITY.COMMON.YAML_MANAGED_READONLY' | translate }}
+      </p>
+    }
+
     <!-- ── Billing account ────────────────────────────────────────────────── -->
     <section class="accounts-panel__section">
       <h2 class="accounts-panel__title">{{ 'POSITIVITY.ACCOUNTS.BILLING.TITLE' | translate }}</h2>
@@ -34,12 +42,16 @@
             class="pos-field__input"
             type="text"
             formControlName="accountNumber"
+            [attr.disabled]="readOnly() ? '' : null"
             [attr.aria-invalid]="fieldError('accountNumber') ? 'true' : null"
             [attr.aria-describedby]="fieldError('accountNumber') ? 'billing-account-number-error' : null"
           />
           @if (fieldError('accountNumber'); as key) {
             <p class="pos-field__error" id="billing-account-number-error" role="alert">
               {{ key | translate }}
+              @if (fieldDetail('accountNumber'); as detail) {
+                <span class="pos-field__detail">{{ detail }}</span>
+              }
             </p>
           }
         </div>
@@ -53,21 +65,30 @@
             class="pos-field__input"
             type="text"
             formControlName="agencyCode"
+            [attr.disabled]="readOnly() ? '' : null"
             [attr.aria-invalid]="fieldError('agencyCode') ? 'true' : null"
             [attr.aria-describedby]="fieldError('agencyCode') ? 'billing-agency-code-error' : null"
           />
           @if (fieldError('agencyCode'); as key) {
             <p class="pos-field__error" id="billing-agency-code-error" role="alert">
               {{ key | translate }}
+              @if (fieldDetail('agencyCode'); as detail) {
+                <span class="pos-field__detail">{{ detail }}</span>
+              }
             </p>
           }
         </div>
 
-        @if (!readOnly()) {
-          <button class="pos-btn pos-btn--primary" type="submit">
-            {{ 'POSITIVITY.ACCOUNTS.BILLING.SAVE' | translate }}
-          </button>
-        }
+        <!-- Disabled with a stated reason, never hidden: a missing control
+             explains nothing about why the system will not accept a change. -->
+        <button
+          class="pos-btn pos-btn--primary"
+          type="submit"
+          [disabled]="readOnly()"
+          [attr.aria-describedby]="readOnly() ? 'accounts-readonly-reason' : null"
+        >
+          {{ 'POSITIVITY.ACCOUNTS.BILLING.SAVE' | translate }}
+        </button>
       </form>
     </section>
 
@@ -76,7 +97,12 @@
       <h2 class="accounts-panel__title">{{ 'POSITIVITY.ACCOUNTS.DELIVERY.TITLE' | translate }}</h2>
       <p class="accounts-panel__hint">{{ 'POSITIVITY.ACCOUNTS.DELIVERY.HINT' | translate }}</p>
 
-      @if (hasMappingGap()) {
+      @if (!locationsAvailable()) {
+        <!-- "Could not verify" is not "no gaps found". -->
+        <p class="pos-banner pos-banner--info accounts-panel__gap-unknown">
+          {{ 'POSITIVITY.ACCOUNTS.DELIVERY.GAP_UNVERIFIED' | translate }}
+        </p>
+      } @else if (hasMappingGap()) {
         <div class="pos-banner pos-banner--warning" role="alert">
           <p class="accounts-panel__gap-title">
             {{ 'POSITIVITY.ACCOUNTS.DELIVERY.GAP_WARNING' | translate }}
@@ -85,15 +111,15 @@
             @for (location of unmappedLocations(); track location.locationId) {
               <li>
                 <span>{{ location.name }}</span>
-                @if (!readOnly()) {
-                  <button
-                    class="pos-btn pos-btn--secondary"
-                    type="button"
-                    (click)="startMapLocation(location)"
-                  >
-                    {{ 'POSITIVITY.ACCOUNTS.DELIVERY.MAP_NOW' | translate }}
-                  </button>
-                }
+                <button
+                  class="pos-btn pos-btn--secondary"
+                  type="button"
+                  [disabled]="readOnly()"
+                  [attr.aria-describedby]="readOnly() ? 'accounts-readonly-reason' : null"
+                  (click)="startMapLocation(location)"
+                >
+                  {{ 'POSITIVITY.ACCOUNTS.DELIVERY.MAP_NOW' | translate }}
+                </button>
               </li>
             }
           </ul>
@@ -115,28 +141,30 @@
               </tr>
             </thead>
             <tbody>
-              @for (entry of deliveryAccounts(); track entry.locationId) {
+              @for (entry of deliveryAccounts(); track entry.accountId) {
                 <tr>
                   <td>{{ entry.locationName || locationName(entry.locationId) }}</td>
                   <td>{{ entry.accountNumber }}</td>
                   <td>{{ entry.agencyCode || '—' }}</td>
                   <td class="pos-table__actions">
-                    @if (!readOnly()) {
-                      <button
-                        class="pos-btn pos-btn--secondary"
-                        type="button"
-                        (click)="startEditDelivery(entry)"
-                      >
-                        {{ 'POSITIVITY.COMMON.EDIT' | translate }}
-                      </button>
-                      <button
-                        class="pos-btn pos-btn--danger"
-                        type="button"
-                        (click)="removeDelivery(entry)"
-                      >
-                        {{ 'POSITIVITY.COMMON.DELETE' | translate }}
-                      </button>
-                    }
+                    <button
+                      class="pos-btn pos-btn--secondary"
+                      type="button"
+                      [disabled]="readOnly()"
+                      [attr.aria-describedby]="readOnly() ? 'accounts-readonly-reason' : null"
+                      (click)="startEditDelivery(entry)"
+                    >
+                      {{ 'POSITIVITY.COMMON.EDIT' | translate }}
+                    </button>
+                    <button
+                      class="pos-btn pos-btn--danger"
+                      type="button"
+                      [disabled]="readOnly()"
+                      [attr.aria-describedby]="readOnly() ? 'accounts-readonly-reason' : null"
+                      (click)="removeDelivery(entry)"
+                    >
+                      {{ 'POSITIVITY.COMMON.DELETE' | translate }}
+                    </button>
                   </td>
                 </tr>
               }
@@ -147,8 +175,14 @@
         <p class="accounts-panel__empty">{{ 'POSITIVITY.ACCOUNTS.DELIVERY.EMPTY' | translate }}</p>
       }
 
-      @if (!readOnly() && !deliveryFormOpen()) {
-        <button class="pos-btn pos-btn--primary" type="button" (click)="startAddDelivery()">
+      @if (!deliveryFormOpen()) {
+        <button
+          class="pos-btn pos-btn--primary"
+          type="button"
+          [disabled]="readOnly()"
+          [attr.aria-describedby]="readOnly() ? 'accounts-readonly-reason' : null"
+          (click)="startAddDelivery()"
+        >
           {{ 'POSITIVITY.ACCOUNTS.DELIVERY.ADD' | translate }}
         </button>
       }
@@ -163,17 +197,20 @@
               id="delivery-location"
               class="pos-field__input"
               formControlName="locationId"
-              [attr.aria-invalid]="fieldError('locationId') ? 'true' : null"
-              [attr.aria-describedby]="fieldError('locationId') ? 'delivery-location-error' : null"
+              [attr.aria-invalid]="fieldError('deliveryLocationId') ? 'true' : null"
+              [attr.aria-describedby]="fieldError('deliveryLocationId') ? 'delivery-location-error' : null"
             >
               <option value="">{{ 'POSITIVITY.ACCOUNTS.DELIVERY.SELECT_LOCATION' | translate }}</option>
               @for (location of selectableLocations(); track location.locationId) {
                 <option [value]="location.locationId">{{ location.name }}</option>
               }
             </select>
-            @if (fieldError('locationId'); as key) {
+            @if (fieldError('deliveryLocationId'); as key) {
               <p class="pos-field__error" id="delivery-location-error" role="alert">
                 {{ key | translate }}
+                @if (fieldDetail('deliveryLocationId'); as detail) {
+                  <span class="pos-field__detail">{{ detail }}</span>
+                }
               </p>
             }
           </div>
@@ -193,6 +230,9 @@
             @if (fieldError('accountNumber'); as key) {
               <p class="pos-field__error" id="delivery-account-number-error" role="alert">
                 {{ key | translate }}
+                @if (fieldDetail('accountNumber'); as detail) {
+                  <span class="pos-field__detail">{{ detail }}</span>
+                }
               </p>
             }
           </div>
@@ -210,7 +250,12 @@
           </div>
 
           <div class="accounts-form__actions">
-            <button class="pos-btn pos-btn--primary" type="submit">
+            <button
+              class="pos-btn pos-btn--primary"
+              type="submit"
+              [disabled]="readOnly()"
+              [attr.aria-describedby]="readOnly() ? 'accounts-readonly-reason' : null"
+            >
               {{ 'POSITIVITY.COMMON.SAVE' | translate }}
             </button>
             <button class="pos-btn pos-btn--secondary" type="button" (click)="cancelDelivery()">

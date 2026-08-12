@@ -16,44 +16,61 @@ import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive'
 import { SupplierStatusChipComponent } from '../supplier-status-chip/supplier-status-chip.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
 import {
+  KNOWN_SUPPLIER_CAPABILITIES,
+  KNOWN_SUPPLIER_PROTOCOL_FAMILIES,
+  KNOWN_SUPPLIER_PROTOCOL_VERSIONS,
+  SUPPLIER_CAPTURE_LEVELS,
+} from '../../utils/supplier-capability-keys';
+import {
   SupplierAuthConfig,
   SupplierBinding,
   SupplierBindingRequest,
   SupplierCapability,
-  SupplierCapabilityDescriptor,
-  SupplierProtocolFamily,
+  SupplierCaptureLevel,
 } from '../../models/supplier-profile.models';
 import { mapSupplierError } from '../../utils/supplier-error.util';
 
 type PanelState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden';
 
 /**
- * One row of the bindings table: a capability the registry offers, with its
- * binding when one exists. `binding === null` means the capability is
- * configured-off for this vendor — rendered explicitly as disabled, never
- * omitted.
+ * One row of the bindings table: a capability with its binding when one exists.
+ * `binding === null` means the capability is configured-off for this vendor —
+ * rendered explicitly as disabled, never omitted.
  */
 export interface BindingRow {
   capability: SupplierCapability;
   binding: SupplierBinding | null;
-  descriptor: SupplierCapabilityDescriptor;
+  /** True when this row exists only to show the capability as unconfigured. */
+  unbound: boolean;
 }
 
 /**
  * Bindings tab of the vendor-profile detail screen.
  *
- * Two rules from issue #188 shape this component:
+ * ── Absence is meaningful ────────────────────────────────────────────────────
+ * An absent or disabled binding means the capability resolves to the typed
+ * `CAPABILITY_NOT_CONFIGURED` outcome (ADR-0050 §3) — a normal HTTP 200 result,
+ * not an error. So the table lists every capability this UI can name, not only
+ * the bound ones: hiding an unbound capability would make "switched off" and
+ * "does not exist" look identical.
  *
- * 1. **Absence is meaningful.** The table is driven by the registry's capability
- *    catalog, not by the binding list, so a capability with no binding renders
- *    as an explicitly disabled row ("not configured", ADR-0050 §3). Hiding it
- *    would make "disabled" and "does not exist" look identical.
+ * There is **no capability-registry endpoint** in the supplier contract, so that
+ * roster comes from `KNOWN_SUPPLIER_CAPABILITIES` — a display aid, unioned with
+ * whatever the profile is actually bound to so a capability the frontend has
+ * never heard of still appears. It is not validation: any key is submitted as
+ * typed and the backend decides, rejecting unknown ones with
+ * `SUPPLIER_UNKNOWN_CAPABILITY`.
  *
- * 2. **Editing a live binding is confirmed.** Resolving the story's open
- *    question conservatively: any edit to a binding that is currently *enabled*
- *    goes through an explicit confirmation dialog before the request is sent,
- *    because that binding is carrying production traffic. Creating a binding,
- *    and editing a disabled one, do not prompt.
+ * ── Version and family are free-form ─────────────────────────────────────────
+ * `version` is deliberately not an enum in the contract (ADR-0051 §3) so a
+ * vendor's new norm needs no code change, and `protocolFamily` is typed as a
+ * plain string. Both are comboboxes — a text input with `<datalist>`
+ * suggestions — never a closed dropdown that would reject a valid new key.
+ *
+ * ── Editing a live binding is confirmed ──────────────────────────────────────
+ * Any edit to a currently *enabled* binding goes through an explicit
+ * confirmation, because that binding is carrying production traffic. Creating a
+ * binding, and editing a disabled one, do not prompt.
  */
 @Component({
   selector: 'app-supplier-bindings-panel',
@@ -73,22 +90,41 @@ export class SupplierBindingsPanelComponent {
   readonly state = signal<PanelState>('idle');
   readonly errorKey = signal<string | null>(null);
   readonly bindings = signal<SupplierBinding[]>([]);
-  readonly capabilities = signal<SupplierCapabilityDescriptor[]>([]);
   readonly authConfigs = signal<SupplierAuthConfig[]>([]);
   readonly fieldErrors = signal<Record<string, string>>({});
+  readonly fieldDetails = signal<Record<string, string>>({});
   readonly formOpen = signal(false);
   readonly saving = signal(false);
   readonly editingBindingId = signal<string | null>(null);
+  readonly conflict = signal(false);
+
+  /**
+   * Combobox suggestions. Not closed sets — see the class comment.
+   *
+   * Getters, not fields: see `utils/supplier-capability-keys.ts` for why these
+   * must be read at access time.
+   */
+  get protocolFamilySuggestions(): readonly string[] {
+    return KNOWN_SUPPLIER_PROTOCOL_FAMILIES;
+  }
+
+  get protocolVersionSuggestions(): readonly string[] {
+    return KNOWN_SUPPLIER_PROTOCOL_VERSIONS;
+  }
+
+  get captureLevels(): readonly SupplierCaptureLevel[] {
+    return SUPPLIER_CAPTURE_LEVELS;
+  }
 
   /** Set when an edit to a currently-enabled binding is awaiting explicit confirmation. */
   readonly pendingConfirmation = signal<SupplierBindingRequest | null>(null);
 
   readonly form = new FormGroup({
-    capability: new FormControl<SupplierCapability | ''>('', {
+    capability: new FormControl<SupplierCapability>('', {
       nonNullable: true,
       validators: [Validators.required],
     }),
-    protocolFamily: new FormControl<SupplierProtocolFamily | ''>('', {
+    protocolFamily: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required],
     }),
@@ -101,34 +137,27 @@ export class SupplierBindingsPanelComponent {
     authRef: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     cronSchedule: new FormControl('', { nonNullable: true }),
     enabled: new FormControl(true, { nonNullable: true }),
+    captureLevel: new FormControl<SupplierCaptureLevel | ''>('', { nonNullable: true }),
   });
 
-  private readonly selectedCapability = signal<SupplierCapability | ''>('');
-  private readonly selectedFamily = signal<SupplierProtocolFamily | ''>('');
-
-  /** Every registry capability, with its binding when one exists. */
+  /**
+   * Every capability this UI can name, plus every capability actually bound.
+   *
+   * The union matters: a binding for a key the frontend does not know about must
+   * still be listed and editable rather than silently vanishing from the table.
+   */
   readonly rows = computed<BindingRow[]>(() => {
     const byCapability = new Map(this.bindings().map(b => [b.capability, b]));
-    return this.capabilities().map(descriptor => ({
-      capability: descriptor.capability,
-      binding: byCapability.get(descriptor.capability) ?? null,
-      descriptor,
-    }));
-  });
-
-  readonly protocolFamilies = computed<SupplierProtocolFamily[]>(() => {
-    const capability = this.selectedCapability();
-    const descriptor = this.capabilities().find(d => d.capability === capability);
-    return descriptor?.protocolOptions.map(option => option.protocolFamily) ?? [];
-  });
-
-  readonly protocolVersions = computed<string[]>(() => {
-    const capability = this.selectedCapability();
-    const family = this.selectedFamily();
-    const descriptor = this.capabilities().find(d => d.capability === capability);
-    return (
-      descriptor?.protocolOptions.find(option => option.protocolFamily === family)?.versions ?? []
-    );
+    const capabilities = [
+      ...KNOWN_SUPPLIER_CAPABILITIES,
+      ...this.bindings()
+        .map(b => b.capability)
+        .filter(capability => !KNOWN_SUPPLIER_CAPABILITIES.includes(capability)),
+    ];
+    return capabilities.map(capability => {
+      const binding = byCapability.get(capability) ?? null;
+      return { capability, binding, unbound: binding === null };
+    });
   });
 
   /** The binding currently being edited, if any. */
@@ -138,14 +167,6 @@ export class SupplierBindingsPanelComponent {
   });
 
   constructor() {
-    this.form.controls.capability.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(value => this.selectedCapability.set(value));
-
-    this.form.controls.protocolFamily.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(value => this.selectedFamily.set(value));
-
     effect(onCleanup => {
       const profileId = this.vendorProfileId();
       if (!profileId) {
@@ -157,20 +178,14 @@ export class SupplierBindingsPanelComponent {
 
       const sub: Subscription = forkJoin({
         bindings: this.service.listBindings(profileId),
-        capabilities: this.service.listCapabilities(),
         authConfigs: this.service.listAuthConfigs(profileId),
       }).subscribe({
         next: result => {
           this.bindings.set(result.bindings);
-          this.capabilities.set(result.capabilities);
           this.authConfigs.set(result.authConfigs);
-          this.state.set(result.capabilities.length === 0 ? 'empty' : 'ready');
+          this.state.set('ready');
         },
-        error: (err: unknown) => {
-          const outcome = mapSupplierError(err, 'POSITIVITY.BINDINGS.ERROR.LOAD');
-          this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
-          this.errorKey.set(outcome.errorKey);
-        },
+        error: (err: unknown) => this.handleLoadError(err),
       });
 
       onCleanup(() => sub.unsubscribe());
@@ -179,6 +194,25 @@ export class SupplierBindingsPanelComponent {
 
   fieldError(field: string): string | null {
     return this.fieldErrors()[field] ?? null;
+  }
+
+  fieldDetail(field: string): string | null {
+    return this.fieldDetails()[field] ?? null;
+  }
+
+  /**
+   * True when this UI has translated copy for the key.
+   *
+   * A key it has never heard of is rendered verbatim rather than through a
+   * translation that would resolve to the raw key anyway — showing the operator
+   * exactly what the backend said.
+   */
+  isKnownCapability(capability: SupplierCapability): boolean {
+    return KNOWN_SUPPLIER_CAPABILITIES.includes(capability);
+  }
+
+  isKnownProtocolFamily(family: string): boolean {
+    return KNOWN_SUPPLIER_PROTOCOL_FAMILIES.includes(family);
   }
 
   statusLabelKey(row: BindingRow): string {
@@ -196,7 +230,7 @@ export class SupplierBindingsPanelComponent {
 
   startCreate(row: BindingRow): void {
     this.editingBindingId.set(null);
-    this.fieldErrors.set({});
+    this.clearFieldFeedback();
     this.form.reset({
       capability: row.capability,
       protocolFamily: '',
@@ -206,15 +240,14 @@ export class SupplierBindingsPanelComponent {
       authRef: '',
       cronSchedule: '',
       enabled: true,
+      captureLevel: '',
     });
-    this.selectedCapability.set(row.capability);
-    this.selectedFamily.set('');
     this.formOpen.set(true);
   }
 
   startEdit(binding: SupplierBinding): void {
     this.editingBindingId.set(binding.bindingId);
-    this.fieldErrors.set({});
+    this.clearFieldFeedback();
     this.form.reset({
       capability: binding.capability,
       protocolFamily: binding.protocolFamily,
@@ -224,9 +257,8 @@ export class SupplierBindingsPanelComponent {
       authRef: binding.authRef,
       cronSchedule: binding.cronSchedule ?? '',
       enabled: binding.enabled,
+      captureLevel: binding.captureLevel ?? '',
     });
-    this.selectedCapability.set(binding.capability);
-    this.selectedFamily.set(binding.protocolFamily);
     this.formOpen.set(true);
   }
 
@@ -234,20 +266,21 @@ export class SupplierBindingsPanelComponent {
     this.formOpen.set(false);
     this.editingBindingId.set(null);
     this.pendingConfirmation.set(null);
-    this.fieldErrors.set({});
+    this.clearFieldFeedback();
   }
 
   buildRequest(): SupplierBindingRequest {
     const raw = this.form.getRawValue();
     return {
-      capability: raw.capability as SupplierCapability,
-      protocolFamily: raw.protocolFamily as SupplierProtocolFamily,
-      protocolVersion: raw.protocolVersion,
+      capability: raw.capability.trim(),
+      protocolFamily: raw.protocolFamily.trim(),
+      protocolVersion: raw.protocolVersion.trim(),
       baseUrl: raw.baseUrl.trim(),
       path: raw.path.trim(),
       authRef: raw.authRef,
       cronSchedule: raw.cronSchedule.trim() || null,
       enabled: raw.enabled,
+      captureLevel: raw.captureLevel || undefined,
     };
   }
 
@@ -291,7 +324,7 @@ export class SupplierBindingsPanelComponent {
     const editingId = this.editingBindingId();
 
     this.saving.set(true);
-    this.fieldErrors.set({});
+    this.clearFieldFeedback();
 
     const call$ = editingId
       ? this.service.updateBinding(profileId, editingId, request)
@@ -307,10 +340,7 @@ export class SupplierBindingsPanelComponent {
       },
       error: (err: unknown) => {
         this.saving.set(false);
-        const outcome = mapSupplierError(err, 'POSITIVITY.BINDINGS.ERROR.SAVE');
-        this.state.set('error');
-        this.errorKey.set(outcome.errorKey);
-        this.fieldErrors.set(outcome.fieldErrors);
+        this.handleMutationError(err, 'POSITIVITY.BINDINGS.ERROR.SAVE');
       },
     });
   }
@@ -328,11 +358,8 @@ export class SupplierBindingsPanelComponent {
           this.errorKey.set(null);
           this.reload();
         },
-        error: (err: unknown) => {
-          const outcome = mapSupplierError(err, 'POSITIVITY.BINDINGS.ERROR.DELETE');
-          this.state.set('error');
-          this.errorKey.set(outcome.errorKey);
-        },
+        error: (err: unknown) =>
+          this.handleMutationError(err, 'POSITIVITY.BINDINGS.ERROR.DELETE'),
       });
   }
 
@@ -343,22 +370,44 @@ export class SupplierBindingsPanelComponent {
 
     forkJoin({
       bindings: this.service.listBindings(profileId),
-      capabilities: this.service.listCapabilities(),
       authConfigs: this.service.listAuthConfigs(profileId),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: result => {
           this.bindings.set(result.bindings);
-          this.capabilities.set(result.capabilities);
           this.authConfigs.set(result.authConfigs);
-          this.state.set(result.capabilities.length === 0 ? 'empty' : 'ready');
+          this.state.set('ready');
         },
-        error: (err: unknown) => {
-          const outcome = mapSupplierError(err, 'POSITIVITY.BINDINGS.ERROR.LOAD');
-          this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
-          this.errorKey.set(outcome.errorKey);
-        },
+        error: (err: unknown) => this.handleLoadError(err),
       });
+  }
+
+  private clearFieldFeedback(): void {
+    this.fieldErrors.set({});
+    this.fieldDetails.set({});
+    this.conflict.set(false);
+  }
+
+  private handleLoadError(err: unknown): void {
+    const outcome = mapSupplierError(err, 'POSITIVITY.BINDINGS.ERROR.LOAD');
+    this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
+    this.errorKey.set(outcome.errorKey);
+  }
+
+  /** `409` is its own outcome: on a YAML profile it is the source-of-truth lock. */
+  private handleMutationError(err: unknown, fallbackKey: string): void {
+    const outcome = mapSupplierError(err, fallbackKey);
+    this.state.set('error');
+    this.errorKey.set(
+      outcome.kind === 'conflict'
+        ? this.readOnly()
+          ? 'POSITIVITY.ERROR.CONFLICT_YAML'
+          : 'POSITIVITY.ERROR.CONFLICT'
+        : outcome.errorKey,
+    );
+    this.conflict.set(outcome.kind === 'conflict');
+    this.fieldErrors.set(outcome.fieldErrors);
+    this.fieldDetails.set(outcome.fieldDetails);
   }
 }

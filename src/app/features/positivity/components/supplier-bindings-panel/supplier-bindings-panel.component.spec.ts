@@ -9,28 +9,10 @@ import {
   SupplierApiErrorBody,
   SupplierAuthConfig,
   SupplierBinding,
-  SupplierCapabilityDescriptor,
 } from '../../models/supplier-profile.models';
+import { KNOWN_SUPPLIER_CAPABILITIES } from '../../utils/supplier-capability-keys';
 
 const PROFILE_ID = 'profile-1';
-
-const capabilityCatalog: SupplierCapabilityDescriptor[] = [
-  {
-    capability: 'ORDER',
-    protocolOptions: [
-      { protocolFamily: 'EDIWHEEL_C1', versions: ['C1_0', 'C1_1'] },
-      { protocolFamily: 'MICHELIN_S2S', versions: ['V1'] },
-    ],
-  },
-  {
-    capability: 'PRICE_CATALOG',
-    protocolOptions: [{ protocolFamily: 'EDIWHEEL_B', versions: ['B4_0'] }],
-  },
-  {
-    capability: 'STOCK_REPORT',
-    protocolOptions: [{ protocolFamily: 'EDIWHEEL_B', versions: ['B2_1'] }],
-  },
-];
 
 const enabledOrderBinding: SupplierBinding = {
   bindingId: 'bind-1',
@@ -71,7 +53,6 @@ describe('SupplierBindingsPanelComponent', () => {
   let component: SupplierBindingsPanelComponent;
   let service: {
     listBindings: ReturnType<typeof vi.fn>;
-    listCapabilities: ReturnType<typeof vi.fn>;
     listAuthConfigs: ReturnType<typeof vi.fn>;
     createBinding: ReturnType<typeof vi.fn>;
     updateBinding: ReturnType<typeof vi.fn>;
@@ -86,7 +67,6 @@ describe('SupplierBindingsPanelComponent', () => {
       listBindings: vi
         .fn()
         .mockReturnValue(failure ? throwError(() => failure) : of(bindings)),
-      listCapabilities: vi.fn().mockReturnValue(of(capabilityCatalog)),
       listAuthConfigs: vi.fn().mockReturnValue(of([authConfig])),
       createBinding: vi.fn().mockReturnValue(of(enabledOrderBinding)),
       updateBinding: vi.fn().mockReturnValue(of(enabledOrderBinding)),
@@ -107,13 +87,19 @@ describe('SupplierBindingsPanelComponent', () => {
 
   beforeEach(() => vi.clearAllMocks());
 
-  it('loads bindings, the capability registry and auth configs together', async () => {
+  it('loads bindings and auth configs together', async () => {
     await setup();
 
     expect(service.listBindings).toHaveBeenCalledWith(PROFILE_ID);
-    expect(service.listCapabilities).toHaveBeenCalled();
     expect(service.listAuthConfigs).toHaveBeenCalledWith(PROFILE_ID);
     expect(component.state()).toBe('ready');
+  });
+
+  it('requests no capability registry — the contract exposes none', async () => {
+    await setup();
+
+    expect(service).not.toHaveProperty('listCapabilities');
+    expect((service as Record<string, unknown>)['listCapabilities']).toBeUndefined();
   });
 
   it('sets both state and errorKey when the load fails', async () => {
@@ -132,16 +118,22 @@ describe('SupplierBindingsPanelComponent', () => {
 
   // ── Absence is meaningful ──────────────────────────────────────────────────
 
-  it('renders a row for every registry capability, including unbound ones', async () => {
+  it('renders a row for every capability it can name, including unbound ones', async () => {
     await setup();
 
-    expect(component.rows().map(r => r.capability)).toEqual([
-      'ORDER',
-      'PRICE_CATALOG',
-      'STOCK_REPORT',
-    ]);
+    expect(component.rows().map(r => r.capability)).toEqual([...KNOWN_SUPPLIER_CAPABILITIES]);
     const rows = (fixture.nativeElement as HTMLElement).querySelectorAll('tbody tr');
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(KNOWN_SUPPLIER_CAPABILITIES.length);
+  });
+
+  it('also lists a bound capability this UI has never heard of', async () => {
+    const exotic: SupplierBinding = { ...enabledOrderBinding, bindingId: 'bind-9', capability: 'BRAND_NEW' };
+    await setup([enabledOrderBinding, exotic]);
+
+    // The known list is a display aid, not a filter: a real binding must never vanish.
+    expect(component.rows().map(r => r.capability)).toContain('BRAND_NEW');
+    expect(component.isKnownCapability('BRAND_NEW')).toBe(false);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('BRAND_NEW');
   });
 
   it('marks an unbound capability explicitly disabled rather than hiding it', async () => {
@@ -157,35 +149,107 @@ describe('SupplierBindingsPanelComponent', () => {
       (fixture.nativeElement as HTMLElement).querySelectorAll('tbody tr'),
     );
     const disabledRows = domRows.filter(r => r.getAttribute('aria-disabled') === 'true');
-    expect(disabledRows).toHaveLength(1);
+    // Every capability without a binding, not just one.
+    expect(disabledRows).toHaveLength(KNOWN_SUPPLIER_CAPABILITIES.length - 2);
     expect(disabledRows[0].textContent).toContain('POSITIVITY.BINDINGS.STATUS.NOT_CONFIGURED');
   });
 
   it('distinguishes enabled, disabled and unbound in the status chip', async () => {
     await setup();
-    const [order, pricat, stock] = component.rows();
+    const rows = component.rows();
+    const order = rows.find(r => r.capability === 'ORDER')!;
+    const pricat = rows.find(r => r.capability === 'PRICE_CATALOG')!;
+    const stock = rows.find(r => r.capability === 'STOCK_REPORT')!;
 
     expect(component.statusLabelKey(order)).toBe('POSITIVITY.BINDINGS.STATUS.ENABLED');
     expect(component.statusLabelKey(pricat)).toBe('POSITIVITY.BINDINGS.STATUS.DISABLED');
     expect(component.statusLabelKey(stock)).toBe('POSITIVITY.BINDINGS.STATUS.NOT_CONFIGURED');
   });
 
-  // ── Protocol selectors ─────────────────────────────────────────────────────
+  // ── Open unions: version and family are comboboxes, not closed dropdowns ────
 
-  it('narrows protocol families and versions to the selected capability', async () => {
+  it('offers version and family as free-text comboboxes with suggestions', async () => {
     await setup();
     component.startCreate(component.rows()[0]);
+    fixture.detectChanges();
 
-    expect(component.protocolFamilies()).toEqual(['EDIWHEEL_C1', 'MICHELIN_S2S']);
-    expect(component.protocolVersions()).toEqual([]);
+    const host = fixture.nativeElement as HTMLElement;
+    const version = host.querySelector<HTMLInputElement>('#binding-version');
+    const family = host.querySelector<HTMLInputElement>('#binding-family');
 
-    component.form.controls.protocolFamily.setValue('EDIWHEEL_C1');
-    expect(component.protocolVersions()).toEqual(['C1_0', 'C1_1']);
+    // A <select> here would reject a valid key the backend has just registered.
+    expect(version?.tagName).toBe('INPUT');
+    expect(version?.getAttribute('list')).toBe('binding-version-options');
+    expect(family?.tagName).toBe('INPUT');
+    expect(host.querySelector('#binding-version-options')?.tagName).toBe('DATALIST');
+  });
+
+  it('suggests the version keys shipped today without restricting entry to them', async () => {
+    await setup();
+
+    expect(component.protocolVersionSuggestions).toEqual([
+      'A2_5',
+      'B2_1',
+      'B3_3',
+      'B4_0',
+      'C1_0',
+      'C1_1',
+      'C1_2',
+      'S2S_V1',
+    ]);
+  });
+
+  it('submits a version key that is not among the suggestions', async () => {
+    await setup();
+    component.startCreate(component.rows().find(r => r.capability === 'STOCK_REPORT')!);
+    component.form.patchValue({
+      protocolFamily: 'BRAND_NEW_FAMILY',
+      protocolVersion: 'Z9_9',
+      baseUrl: 'https://edi.example.com',
+      authRef: 'michelin-prod',
+    });
+    component.save();
+
+    const payload = service.createBinding.mock.calls[0][1] as Record<string, unknown>;
+    expect(payload['protocolVersion']).toBe('Z9_9');
+    expect(payload['protocolFamily']).toBe('BRAND_NEW_FAMILY');
+  });
+
+  it('carries the capture level through, and omits it to accept the deployment default', async () => {
+    await setup();
+    component.startCreate(component.rows().find(r => r.capability === 'STOCK_REPORT')!);
+    component.form.patchValue({
+      protocolFamily: 'EDIWHEEL_B',
+      protocolVersion: 'B2_1',
+      baseUrl: 'https://edi.example.com',
+      authRef: 'michelin-prod',
+      captureLevel: 'METADATA_ONLY',
+    });
+    component.save();
+
+    expect(service.createBinding.mock.calls[0][1]).toMatchObject({
+      captureLevel: 'METADATA_ONLY',
+    });
+
+    service.createBinding.mockClear();
+    component.startCreate(component.rows().find(r => r.capability === 'STOCK_REPORT')!);
+    component.form.patchValue({
+      protocolFamily: 'EDIWHEEL_B',
+      protocolVersion: 'B2_1',
+      baseUrl: 'https://edi.example.com',
+      authRef: 'michelin-prod',
+      captureLevel: '',
+    });
+    component.save();
+
+    expect(
+      (service.createBinding.mock.calls[0][1] as Record<string, unknown>)['captureLevel'],
+    ).toBeUndefined();
   });
 
   it('pre-selects the capability when configuring an unbound row', async () => {
     await setup();
-    const stockRow = component.rows()[2];
+    const stockRow = component.rows().find(r => r.capability === 'STOCK_REPORT')!;
     component.startCreate(stockRow);
 
     expect(component.form.getRawValue().capability).toBe('STOCK_REPORT');
@@ -246,7 +310,7 @@ describe('SupplierBindingsPanelComponent', () => {
 
   it('does not prompt when creating a new binding', async () => {
     await setup();
-    component.startCreate(component.rows()[2]);
+    component.startCreate(component.rows().find(r => r.capability === 'STOCK_REPORT')!);
     component.form.patchValue({
       protocolFamily: 'EDIWHEEL_B',
       protocolVersion: 'B2_1',
@@ -263,7 +327,7 @@ describe('SupplierBindingsPanelComponent', () => {
 
   it('sends a null cron rather than an empty string when no schedule is set', async () => {
     await setup();
-    component.startCreate(component.rows()[2]);
+    component.startCreate(component.rows().find(r => r.capability === 'STOCK_REPORT')!);
     component.form.patchValue({
       protocolFamily: 'EDIWHEEL_B',
       protocolVersion: 'B2_1',
@@ -282,10 +346,10 @@ describe('SupplierBindingsPanelComponent', () => {
     await setup();
     service.createBinding.mockReturnValue(
       throwError(() =>
-        httpError(400, { fieldErrors: [{ field: 'authRef', code: 'BINDING_AUTH_REQUIRED' }] }),
+        httpError(400, { fieldErrors: [{ field: 'authConfigName', message: 'must exist' }] }),
       ),
     );
-    component.startCreate(component.rows()[2]);
+    component.startCreate(component.rows().find(r => r.capability === 'STOCK_REPORT')!);
     component.form.patchValue({
       protocolFamily: 'EDIWHEEL_B',
       protocolVersion: 'B2_1',
@@ -296,7 +360,7 @@ describe('SupplierBindingsPanelComponent', () => {
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('POSITIVITY.ERROR.VALIDATION');
-    expect(component.fieldError('authRef')).toBe(
+    expect(component.fieldError('authConfigName')).toBe(
       'POSITIVITY.ERROR.FIELD.BINDING_AUTH_REQUIRED',
     );
   });
@@ -305,10 +369,10 @@ describe('SupplierBindingsPanelComponent', () => {
     await setup();
     service.createBinding.mockReturnValue(
       throwError(() =>
-        httpError(400, { fieldErrors: [{ field: 'cronSchedule', code: 'CRON_MALFORMED' }] }),
+        httpError(400, { fieldErrors: [{ field: 'schedule', message: 'invalid cron' }] }),
       ),
     );
-    component.startCreate(component.rows()[2]);
+    component.startCreate(component.rows().find(r => r.capability === 'STOCK_REPORT')!);
     component.form.patchValue({
       protocolFamily: 'EDIWHEEL_B',
       protocolVersion: 'B2_1',
@@ -319,13 +383,13 @@ describe('SupplierBindingsPanelComponent', () => {
     component.save();
 
     expect(component.state()).toBe('error');
-    expect(component.fieldError('cronSchedule')).toBe('POSITIVITY.ERROR.FIELD.CRON_MALFORMED');
+    expect(component.fieldError('schedule')).toBe('POSITIVITY.ERROR.FIELD.CRON_MALFORMED');
   });
 
-  it('maps a 409 duplicate capability binding to the capability field', async () => {
+  it('reports a 409 as its own conflict state, distinct from a generic failure', async () => {
     await setup();
     service.createBinding.mockReturnValue(throwError(() => httpError(409)));
-    component.startCreate(component.rows()[2]);
+    component.startCreate(component.rows().find(r => r.capability === 'STOCK_REPORT')!);
     component.form.patchValue({
       protocolFamily: 'EDIWHEEL_B',
       protocolVersion: 'B2_1',
@@ -336,15 +400,22 @@ describe('SupplierBindingsPanelComponent', () => {
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('POSITIVITY.ERROR.CONFLICT');
-    expect(component.fieldError('capability')).toBe(
-      'POSITIVITY.ERROR.FIELD.DUPLICATE_CAPABILITY_BINDING',
-    );
+    expect(component.conflict()).toBe(true);
+  });
+
+  it('reports a 409 on a YAML profile as the source-of-truth lock', async () => {
+    await setup();
+    fixture.componentRef.setInput('readOnly', true);
+    fixture.detectChanges();
+    component['handleMutationError'](httpError(409), 'POSITIVITY.BINDINGS.ERROR.SAVE');
+
+    expect(component.errorKey()).toBe('POSITIVITY.ERROR.CONFLICT_YAML');
   });
 
   it('treats a 5xx save as retryable with both state and errorKey set', async () => {
     await setup();
     service.createBinding.mockReturnValue(throwError(() => httpError(502)));
-    component.startCreate(component.rows()[2]);
+    component.startCreate(component.rows().find(r => r.capability === 'STOCK_REPORT')!);
     component.form.patchValue({
       protocolFamily: 'EDIWHEEL_B',
       protocolVersion: 'B2_1',
@@ -377,6 +448,24 @@ describe('SupplierBindingsPanelComponent', () => {
 
     expect(service.updateBinding).not.toHaveBeenCalled();
     expect(service.deleteBinding).not.toHaveBeenCalled();
+  });
+
+  it('shows the write controls disabled with a stated reason rather than hiding them', async () => {
+    await setup();
+    fixture.componentRef.setInput('readOnly', true);
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('#bindings-readonly-reason')?.textContent).toContain(
+      'POSITIVITY.COMMON.YAML_MANAGED_READONLY',
+    );
+
+    const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('tbody button'));
+    expect(buttons.length).toBeGreaterThan(0);
+    expect(buttons.every(b => b.disabled)).toBe(true);
+    expect(buttons.every(b => b.getAttribute('aria-describedby') === 'bindings-readonly-reason')).toBe(
+      true,
+    );
   });
 
   it('labels every form control (ADR-0029)', async () => {

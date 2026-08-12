@@ -17,12 +17,20 @@
       <label class="pos-field__label" for="audit-vendor">
         {{ 'POSITIVITY.AUDIT.FILTER.VENDOR' | translate }}
       </label>
-      <select id="audit-vendor" class="pos-field__input" formControlName="vendorProfileId">
-        <option value="">{{ 'POSITIVITY.AUDIT.FILTER.ALL_VENDORS' | translate }}</option>
+      <select
+        id="audit-vendor"
+        class="pos-field__input"
+        formControlName="vendorProfileId"
+        aria-describedby="audit-vendor-hint"
+      >
+        <option value="">{{ 'POSITIVITY.AUDIT.FILTER.SELECT_VENDOR' | translate }}</option>
         @for (profile of profiles(); track profile.vendorProfileId) {
           <option [value]="profile.vendorProfileId">{{ profile.displayName }}</option>
         }
       </select>
+      <p class="pos-field__hint" id="audit-vendor-hint">
+        {{ 'POSITIVITY.AUDIT.FILTER.VENDOR_HINT' | translate }}
+      </p>
     </div>
 
     <div class="pos-field">
@@ -37,16 +45,25 @@
       </select>
     </div>
 
+    <!-- Client-side only: the contract has no outcome query parameter. -->
     <div class="pos-field">
       <label class="pos-field__label" for="audit-outcome">
         {{ 'POSITIVITY.AUDIT.FILTER.OUTCOME' | translate }}
       </label>
-      <select id="audit-outcome" class="pos-field__input" formControlName="outcome">
+      <select
+        id="audit-outcome"
+        class="pos-field__input"
+        formControlName="outcome"
+        aria-describedby="audit-outcome-hint"
+      >
         <option value="">{{ 'POSITIVITY.AUDIT.FILTER.ALL_OUTCOMES' | translate }}</option>
         @for (outcome of outcomes; track outcome) {
           <option [value]="outcome">{{ 'POSITIVITY.AUDIT.OUTCOME.' + outcome | translate }}</option>
         }
       </select>
+      <p class="pos-field__hint" id="audit-outcome-hint">
+        {{ 'POSITIVITY.AUDIT.FILTER.OUTCOME_HINT' | translate }}
+      </p>
     </div>
 
     <div class="pos-field">
@@ -60,7 +77,16 @@
       <label class="pos-field__label" for="audit-date-to">
         {{ 'POSITIVITY.AUDIT.FILTER.DATE_TO' | translate }}
       </label>
-      <input id="audit-date-to" class="pos-field__input" type="date" formControlName="dateTo" />
+      <input
+        id="audit-date-to"
+        class="pos-field__input"
+        type="date"
+        formControlName="dateTo"
+        aria-describedby="audit-date-to-hint"
+      />
+      <p class="pos-field__hint" id="audit-date-to-hint">
+        {{ 'POSITIVITY.AUDIT.FILTER.DATE_TO_HINT' | translate }}
+      </p>
     </div>
 
     <div class="audit-filters__actions">
@@ -92,6 +118,13 @@
     <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
   }
 
+  <!-- Nothing has been asked for yet, so nothing is claimed about results. -->
+  @if (state() === 'prompt') {
+    <p class="audit-page__prompt" aria-live="polite">
+      {{ 'POSITIVITY.AUDIT.SELECT_VENDOR_PROMPT' | translate }}
+    </p>
+  }
+
   @if (state() === 'empty') {
     <p class="audit-page__empty">{{ 'POSITIVITY.AUDIT.EMPTY' | translate }}</p>
   }
@@ -101,52 +134,114 @@
       {{ 'POSITIVITY.AUDIT.COUNT' | translate: { count: totalCount() } }}
     </p>
 
-    <div class="pos-table-wrap">
-      <table class="pos-table">
-        <caption class="sr-only">{{ 'POSITIVITY.AUDIT.TABLE.CAPTION' | translate }}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.STARTED' | translate }}</th>
-            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.VENDOR' | translate }}</th>
-            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.CAPABILITY' | translate }}</th>
-            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.OUTCOME' | translate }}</th>
-            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.HTTP_STATUS' | translate }}</th>
-            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.DURATION' | translate }}</th>
-            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.CORRELATION_ID' | translate }}</th>
-            <th scope="col">
-              <span class="sr-only">{{ 'POSITIVITY.COMMON.ACTIONS' | translate }}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (exchange of exchanges(); track exchange.exchangeId) {
+    @if (outcomeFilterActive()) {
+      <p class="pos-banner pos-banner--info audit-page__outcome-note">
+        {{ 'POSITIVITY.AUDIT.OUTCOME_FILTER_SCOPE' | translate: { shown: exchanges().length, loaded: loadedExchanges().length } }}
+      </p>
+    }
+
+    @if (hiddenByOutcomeFilter()) {
+      <p class="audit-page__empty">{{ 'POSITIVITY.AUDIT.OUTCOME_FILTER_EMPTY' | translate }}</p>
+    }
+
+    @if (exchanges().length > 0) {
+      <div class="pos-table-wrap">
+        <table class="pos-table">
+          <caption class="sr-only">{{ 'POSITIVITY.AUDIT.TABLE.CAPTION' | translate }}</caption>
+          <thead>
             <tr>
-              <th scope="row" class="audit-page__started">{{ exchange.startedAt | date: 'medium' }}</th>
-              <td>{{ exchange.vendorDisplayName }}</td>
-              <td>{{ 'POSITIVITY.CAPABILITY.' + exchange.capability | translate }}</td>
-              <td>
-                <app-supplier-status-chip
-                  [labelKey]="'POSITIVITY.AUDIT.OUTCOME.' + exchange.outcome"
-                  [tone]="outcomeTone(exchange.outcome)"
-                  descriptionKey="POSITIVITY.AUDIT.TABLE.OUTCOME"
-                />
-              </td>
-              <td>{{ exchange.httpStatus ?? '—' }}</td>
-              <td>{{ exchange.durationMs ?? '—' }}</td>
-              <td class="audit-page__correlation">{{ exchange.correlationId }}</td>
-              <td>
-                <a
-                  class="audit-page__link"
-                  [routerLink]="['/app', 'positivity', 'exchanges', exchange.exchangeId]"
-                >
-                  {{ 'POSITIVITY.AUDIT.TABLE.VIEW' | translate }}
-                  <span class="sr-only">{{ exchange.correlationId }}</span>
-                </a>
-              </td>
+              <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.STARTED' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.VENDOR' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.CAPABILITY' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.OUTCOME' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.HTTP_STATUS' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.DURATION' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.ATTEMPT' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.CORRELATION_ID' | translate }}</th>
+              <th scope="col">
+                <span class="sr-only">{{ 'POSITIVITY.COMMON.ACTIONS' | translate }}</span>
+              </th>
             </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            @for (exchange of exchanges(); track exchange.exchangeAuditId) {
+              <tr>
+                <th scope="row" class="audit-page__started">{{ exchange.startedAt | date: 'medium' }}</th>
+                <td>{{ vendorLabel(exchange) }}</td>
+                <td>
+                  @if (isKnownCapability(exchange.capability)) {
+                    {{ 'POSITIVITY.CAPABILITY.' + exchange.capability | translate }}
+                  } @else {
+                    <code>{{ exchange.capability }}</code>
+                  }
+                </td>
+                <td>
+                  @if (isKnownOutcome(exchange.outcome)) {
+                    <app-supplier-status-chip
+                      [labelKey]="'POSITIVITY.AUDIT.OUTCOME.' + exchange.outcome"
+                      [tone]="outcomeTone(exchange.outcome)"
+                      descriptionKey="POSITIVITY.AUDIT.TABLE.OUTCOME"
+                    />
+                  } @else {
+                    <code>{{ exchange.outcome }}</code>
+                  }
+                </td>
+                <!-- A null status means no response was received at all. It is
+                     never rendered as 0, which would read as a real status. -->
+                <td>
+                  @if (exchange.httpStatus !== null) {
+                    {{ exchange.httpStatus }}
+                  } @else {
+                    <span class="audit-page__no-status">
+                      {{ 'POSITIVITY.AUDIT.NO_RESPONSE' | translate }}
+                    </span>
+                  }
+                </td>
+                <td>
+                  @if (exchange.durationMs !== null) {
+                    {{ exchange.durationMs }}
+                  } @else {
+                    <span aria-hidden="true">—</span>
+                  }
+                </td>
+                <td>{{ exchange.attempt }}</td>
+                <td class="audit-page__correlation">{{ exchange.correlationId }}</td>
+                <td>
+                  <a
+                    class="audit-page__link"
+                    [routerLink]="['/app', 'positivity', 'exchanges', exchange.exchangeAuditId]"
+                  >
+                    {{ 'POSITIVITY.AUDIT.TABLE.VIEW' | translate }}
+                    <span class="sr-only">{{ exchange.correlationId }}</span>
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <nav class="audit-page__pagination" [attr.aria-label]="'POSITIVITY.AUDIT.PAGINATION.ARIA_LABEL' | translate">
+      <button
+        class="pos-btn pos-btn--secondary"
+        type="button"
+        [disabled]="!hasPreviousPage()"
+        (click)="previousPage()"
+      >
+        {{ 'POSITIVITY.AUDIT.PAGINATION.PREVIOUS' | translate }}
+      </button>
+      <p class="audit-page__page-status" aria-live="polite">
+        {{ 'POSITIVITY.AUDIT.PAGINATION.STATUS' | translate: { page: pageNumber(), total: totalPages() } }}
+      </p>
+      <button
+        class="pos-btn pos-btn--secondary"
+        type="button"
+        [disabled]="!hasNextPage()"
+        (click)="nextPage()"
+      >
+        {{ 'POSITIVITY.AUDIT.PAGINATION.NEXT' | translate }}
+      </button>
+    </nav>
   }
 </main>
