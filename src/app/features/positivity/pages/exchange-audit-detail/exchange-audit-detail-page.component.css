@@ -1,0 +1,175 @@
+.exchange-detail {
+	display: grid;
+	gap: var(--space-4);
+	padding: var(--space-5);
+}
+
+.exchange-detail__breadcrumb a {
+	color: var(--brand-primary);
+	font-weight: 600;
+	font-size: 0.875rem;
+}
+
+.exchange-detail__breadcrumb a:focus-visible {
+	outline: 3px solid var(--input-focus-border);
+	outline-offset: 2px;
+}
+
+.exchange-detail__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.exchange-detail__header h1 {
+	margin: 0;
+}
+
+.exchange-detail__meta {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+	gap: var(--space-3);
+	margin: 0;
+	padding: var(--space-4);
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+}
+
+.exchange-detail__meta-item {
+	display: grid;
+	gap: var(--space-1);
+}
+
+.exchange-detail__meta-item dt {
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+}
+
+.exchange-detail__meta-item dd {
+	margin: 0;
+	font-size: 0.9375rem;
+	color: var(--currentTextColor);
+}
+
+.exchange-detail__meta-item code {
+	font-family: var(--font-mono);
+	font-size: 0.8125rem;
+}
+
+.exchange-detail__payload {
+	display: grid;
+	gap: var(--space-3);
+}
+
+.exchange-detail__payload-title {
+	margin: 0;
+	font-size: 1.125rem;
+}
+
+.exchange-detail__redaction-note {
+	margin: 0;
+}
+
+.exchange-detail__note {
+	display: block;
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+.exchange-detail__version {
+	margin-inline-start: var(--space-2);
+	font-weight: 600;
+}
+
+.exchange-detail__endpoint {
+	overflow-wrap: anywhere;
+}
+
+.exchange-detail__meta-item--wide {
+	grid-column: 1 / -1;
+}
+
+.exchange-detail__failure-title {
+	margin: 0;
+	font-weight: 700;
+	flex-basis: 100%;
+}
+
+.exchange-detail__failure-body {
+	margin: 0;
+	flex-basis: 100%;
+	overflow-wrap: anywhere;
+}
+
+.exchange-detail__attempts {
+	display: grid;
+	gap: var(--space-2);
+}
+
+.exchange-detail__attempts-title {
+	margin: 0;
+	font-size: 1.125rem;
+}
+
+.exchange-detail__attempts-hint {
+	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.exchange-detail__attempt--current {
+	background: var(--surface-variant);
+	font-weight: 600;
+}
+
+.exchange-detail__link {
+	color: var(--brand-primary);
+	font-weight: 600;
+}
+
+.exchange-detail__link:focus-visible {
+	outline: 3px solid var(--input-focus-border);
+	outline-offset: 2px;
+}
+
+.exchange-detail__panes {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+	gap: var(--space-4);
+}
+
+.exchange-detail__pane {
+	display: grid;
+	gap: var(--space-2);
+	align-content: start;
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+	padding: var(--space-4);
+	min-width: 0;
+}
+
+.exchange-detail__pane-title {
+	margin: 0;
+	font-size: 1rem;
+}
+
+.exchange-detail__body {
+	margin: 0;
+	max-height: 24rem;
+	overflow: auto;
+	padding: var(--space-3);
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-sm);
+	background: var(--surface-variant);
+	color: var(--currentTextColor);
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	white-space: pre-wrap;
+	word-break: break-word;
+}

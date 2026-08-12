@@ -1,0 +1,72 @@
+@if (hasActions()) {
+  <div class="review-actions">
+    <p class="review-actions__notice">
+      {{ 'POSITIVITY.MANUAL_REVIEW.ACTIONS_NOTICE' | translate }}
+    </p>
+    <div class="review-actions__buttons">
+      @for (action of actions(); track action.action) {
+        <button
+          class="pos-btn pos-btn--secondary review-actions__trigger"
+          type="button"
+          [disabled]="busy()"
+          (click)="request(action)"
+        >
+          @if (labelFor(action); as key) {
+            {{ key | translate }}
+          } @else {
+            {{ action.action }}
+          }
+          @if (contextLabel(); as context) {
+            <span class="sr-only">{{ context }}</span>
+          }
+        </button>
+      }
+    </div>
+  </div>
+}
+
+@if (pending(); as action) {
+  <dialog
+    class="review-confirm"
+    appModalDialog
+    [attr.id]="dialogId"
+    [attr.aria-labelledby]="dialogId + '-title'"
+    [attr.aria-describedby]="dialogId + '-body'"
+    (modalCancel)="cancel()"
+  >
+    <h3 class="review-confirm__title" [attr.id]="dialogId + '-title'">
+      {{ 'POSITIVITY.MANUAL_REVIEW.CONFIRM.TITLE' | translate }}
+    </h3>
+    <div class="review-confirm__body" [attr.id]="dialogId + '-body'">
+      @if (contextLabel(); as context) {
+        <p class="review-confirm__context">
+          <span class="review-confirm__term">{{ 'POSITIVITY.MANUAL_REVIEW.CONFIRM.CONTEXT' | translate }}</span>
+          <span>{{ context }}</span>
+        </p>
+      }
+      <p class="review-confirm__action">
+        <span class="review-confirm__term">{{ 'POSITIVITY.MANUAL_REVIEW.CONFIRM.ACTION' | translate }}</span>
+        @if (labelFor(action); as key) {
+          <span>{{ key | translate }}</span>
+        } @else {
+          <span>{{ action.action }}</span>
+        }
+      </p>
+      @if (action.description) {
+        <p class="review-confirm__detail">{{ action.description }}</p>
+      }
+      <p class="review-confirm__risk">{{ riskKeyFor(action) | translate }}</p>
+      <p class="review-confirm__no-resend">
+        {{ 'POSITIVITY.MANUAL_REVIEW.CONFIRM.NO_RESEND' | translate }}
+      </p>
+    </div>
+    <div class="review-confirm__actions">
+      <button class="pos-btn pos-btn--primary" type="button" (click)="confirm()">
+        {{ 'POSITIVITY.MANUAL_REVIEW.CONFIRM.ACCEPT' | translate }}
+      </button>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="cancel()">
+        {{ 'POSITIVITY.COMMON.CANCEL' | translate }}
+      </button>
+    </div>
+  </dialog>
+}

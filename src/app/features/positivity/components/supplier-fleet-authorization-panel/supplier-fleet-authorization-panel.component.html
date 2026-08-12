@@ -1,0 +1,254 @@
+<section class="fleet-auth" aria-labelledby="fleet-auth-title">
+  <header class="fleet-auth__header">
+    <h2 class="fleet-auth__title" id="fleet-auth-title">
+      {{ 'POSITIVITY.FLEET.AUTHORIZATION.TITLE' | translate }}
+    </h2>
+    @if (state() === 'ready' && authorization()) {
+      <app-supplier-status-chip
+        class="fleet-auth__state-chip"
+        [labelKey]="stateLabelKey()"
+        [tone]="stateTone()"
+        [icon]="stateIcon()"
+        descriptionKey="POSITIVITY.FLEET.AUTHORIZATION.STATE_LABEL"
+      />
+    }
+  </header>
+
+  <p class="fleet-auth__read-only">{{ 'POSITIVITY.FLEET.AUTHORIZATION.READ_ONLY_NOTE' | translate }}</p>
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'empty') {
+    <p class="fleet-auth__empty">{{ 'POSITIVITY.FLEET.AUTHORIZATION.NOT_FLEET' | translate }}</p>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  <!-- Vendor unreachable: degraded on this panel only; the workorder screen
+       behind it keeps every control it had. -->
+  @if (state() === 'unreachable') {
+    <div class="pos-banner pos-banner--warning" role="status">
+      <span>{{ 'POSITIVITY.FLEET.AUTHORIZATION.UNREACHABLE_NOTE' | translate }}</span>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="refresh()">
+        {{ 'POSITIVITY.COMMON.REFRESH' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      <span>{{ errorKey()! | translate }}</span>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="refresh()">
+        {{ 'POSITIVITY.COMMON.REFRESH' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'ready' && authorization(); as data) {
+    <dl class="fleet-auth__facts">
+      <div class="fleet-auth__fact">
+        <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.FLEET_MANAGER' | translate }}</dt>
+        <dd class="fleet-auth__value">{{ data.vendorDisplayName }}</dd>
+      </div>
+      <div class="fleet-auth__fact">
+        <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.REFERENCE' | translate }}</dt>
+        <dd class="fleet-auth__value">
+          @if (data.authorizationReference) {
+            <code class="fleet-auth__ref">{{ data.authorizationReference }}</code>
+          } @else {
+            {{ 'POSITIVITY.FLEET.AUTHORIZATION.NO_REFERENCE' | translate }}
+          }
+        </dd>
+      </div>
+      <div class="fleet-auth__fact">
+        <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.REQUESTED_AT' | translate }}</dt>
+        <dd class="fleet-auth__value">
+          @if (data.requestedAt) {
+            <time [attr.datetime]="data.requestedAt">{{ data.requestedAt | date: 'medium' }}</time>
+          } @else {
+            —
+          }
+        </dd>
+      </div>
+      <div class="fleet-auth__fact">
+        <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.DECIDED_AT' | translate }}</dt>
+        <dd class="fleet-auth__value">
+          @if (data.decidedAt) {
+            <time [attr.datetime]="data.decidedAt">{{ data.decidedAt | date: 'medium' }}</time>
+          } @else {
+            {{ 'POSITIVITY.FLEET.AUTHORIZATION.NO_DECISION' | translate }}
+          }
+        </dd>
+      </div>
+      @if (data.authorizedAmount) {
+        <div class="fleet-auth__fact">
+          <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.AUTHORIZED_AMOUNT' | translate }}</dt>
+          <dd class="fleet-auth__value fleet-auth__amount">
+            <span class="fleet-auth__amount-value">{{ data.authorizedAmount }}</span>
+            @if (data.currency) {
+              <span class="fleet-auth__currency">{{ data.currency }}</span>
+            }
+          </dd>
+        </div>
+      }
+    </dl>
+
+    @if (contract(); as fleetContract) {
+      <p class="fleet-auth__contract">
+        <span class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.CONTRACT' | translate }}</span>
+        <span class="fleet-auth__contract-value">
+          {{ fleetContract.fleetManagerName }}
+          @if (fleetContract.contractNumber) {
+            <code class="fleet-auth__ref">{{ fleetContract.contractNumber }}</code>
+          }
+        </span>
+        <span class="fleet-auth__contract-dates">
+          @if (effectiveDateFor(fleetContract.effectiveFrom); as from) {
+            {{ from | date: 'mediumDate' }}
+          } @else {
+            —
+          }
+          –
+          @if (effectiveDateFor(fleetContract.effectiveTo); as to) {
+            {{ to | date: 'mediumDate' }}
+          } @else {
+            —
+          }
+        </span>
+      </p>
+    }
+
+    <!-- PENDING: progress plus a refresh that re-reads. It never re-asks the
+         fleet manager — the client has no way to make that request (#194 §5). -->
+    @if (isPending()) {
+      <div class="fleet-auth__pending" role="status">
+        <p class="fleet-auth__pending-body">
+          {{ 'POSITIVITY.FLEET.AUTHORIZATION.PENDING_BODY' | translate }}
+        </p>
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="refresh()">
+          {{ 'POSITIVITY.COMMON.REFRESH' | translate }}
+        </button>
+      </div>
+    }
+
+    <!-- DENIED: translated label, vendor's own words verbatim (#194 §4). -->
+    @if (isDenied()) {
+      <div class="fleet-auth__denied" role="status">
+        <p class="fleet-auth__denied-title">
+          {{ 'POSITIVITY.FLEET.AUTHORIZATION.DENIED_TITLE' | translate }}
+        </p>
+        <p class="fleet-auth__vendor-reason">
+          <span class="fleet-auth__term">{{ 'POSITIVITY.FLEET.VENDOR_REASON' | translate }}</span>
+          @if (data.vendorReason) {
+            <span class="fleet-auth__vendor-text">{{ data.vendorReason }}</span>
+          } @else {
+            <span class="fleet-auth__vendor-text-missing">
+              {{ 'POSITIVITY.FLEET.NO_VENDOR_REASON' | translate }}
+            </span>
+          }
+        </p>
+        <p class="fleet-auth__denied-next">
+          {{ 'POSITIVITY.FLEET.AUTHORIZATION.DENIED_NEXT' | translate }}
+        </p>
+      </div>
+    }
+
+    @if (needsManualReview()) {
+      <div class="fleet-auth__review" role="status">
+        <p class="fleet-auth__review-title">
+          {{ 'POSITIVITY.FLEET.AUTHORIZATION.MANUAL_REVIEW_TITLE' | translate }}
+        </p>
+        @if (data.vendorReason) {
+          <p class="fleet-auth__vendor-reason">
+            <span class="fleet-auth__term">{{ 'POSITIVITY.FLEET.VENDOR_REASON' | translate }}</span>
+            <span class="fleet-auth__vendor-text">{{ data.vendorReason }}</span>
+          </p>
+        }
+        <p class="fleet-auth__review-next">
+          {{ 'POSITIVITY.FLEET.AUTHORIZATION.MANUAL_REVIEW_NEXT' | translate }}
+        </p>
+      </div>
+    }
+
+    @if (hasCompletionApproval() && completionApproval(); as approval) {
+      <section class="fleet-auth__completion" aria-labelledby="fleet-auth-completion-title">
+        <header class="fleet-auth__completion-header">
+          <h3 class="fleet-auth__subtitle" id="fleet-auth-completion-title">
+            {{ 'POSITIVITY.FLEET.COMPLETION.TITLE' | translate }}
+          </h3>
+          <app-supplier-status-chip
+            class="fleet-auth__completion-chip"
+            [labelKey]="approvalLabelKey()"
+            [tone]="approvalTone()"
+            [icon]="approvalIcon()"
+            descriptionKey="POSITIVITY.FLEET.COMPLETION.STATE_LABEL"
+          />
+        </header>
+
+        <p class="fleet-auth__completion-note">{{ 'POSITIVITY.FLEET.COMPLETION.BACKEND_DRIVEN' | translate }}</p>
+
+        <dl class="fleet-auth__facts">
+          <div class="fleet-auth__fact">
+            <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.COMPLETION.ATTEMPTS' | translate }}</dt>
+            <dd class="fleet-auth__value">
+              @if (approval.attemptCount !== null && approval.attemptCount !== undefined) {
+                {{ approval.attemptCount }}
+              } @else {
+                —
+              }
+            </dd>
+          </div>
+          <div class="fleet-auth__fact">
+            <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.COMPLETION.LAST_ATTEMPT' | translate }}</dt>
+            <dd class="fleet-auth__value">
+              @if (approval.lastAttemptAt) {
+                <time [attr.datetime]="approval.lastAttemptAt">{{ approval.lastAttemptAt | date: 'medium' }}</time>
+              } @else {
+                —
+              }
+            </dd>
+          </div>
+          <div class="fleet-auth__fact">
+            <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.COMPLETION.NEXT_ATTEMPT' | translate }}</dt>
+            <dd class="fleet-auth__value">
+              @if (approval.nextAttemptAt) {
+                <time [attr.datetime]="approval.nextAttemptAt">{{ approval.nextAttemptAt | date: 'medium' }}</time>
+              } @else {
+                —
+              }
+            </dd>
+          </div>
+        </dl>
+
+        @if (approval.vendorReason) {
+          <p class="fleet-auth__vendor-reason">
+            <span class="fleet-auth__term">{{ 'POSITIVITY.FLEET.VENDOR_REASON' | translate }}</span>
+            <span class="fleet-auth__vendor-text fleet-auth__completion-reason">{{ approval.vendorReason }}</span>
+          </p>
+        }
+
+        @if (approvalNeedsManualReview()) {
+          <p class="fleet-auth__completion-review">
+            {{ 'POSITIVITY.FLEET.COMPLETION.MANUAL_REVIEW_NEXT' | translate }}
+          </p>
+        }
+      </section>
+    }
+
+    <app-staleness-indicator
+      class="fleet-auth__freshness"
+      [asOf]="data.asOf"
+      asOfLabelKey="POSITIVITY.FLEET.AS_OF"
+      [fetchedAt]="data.fetchedAt"
+      fetchedAtLabelKey="POSITIVITY.FLEET.FETCHED_AT"
+      [thresholdMinutes]="data.stalenessThresholdMinutes"
+      [nowMs]="nowMs()"
+    />
+  }
+</section>

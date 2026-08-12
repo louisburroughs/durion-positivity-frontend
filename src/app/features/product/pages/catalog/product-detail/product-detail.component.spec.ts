@@ -1,9 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
+import { signal } from '@angular/core';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { ProductDetailComponent } from './product-detail.component';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
+import { SupplierAvailabilityService } from '../../../../positivity/services/supplier-availability.service';
+import { SupplierDeliveryLocationService } from '../../../../positivity/services/supplier-delivery-location.service';
+import { SupplierEnrichmentService } from '../../../../positivity/services/supplier-enrichment.service';
 
 describe('ProductDetailComponent', () => {
   let fixture: ComponentFixture<ProductDetailComponent>;
@@ -160,5 +165,188 @@ describe('ProductDetailComponent', () => {
 
   it('loadProduct() calls getAuditHistory with productId', () => {
     expect(mockCatalog.getAuditHistory).toHaveBeenCalledWith('prod-123');
+  });
+});
+
+// ── Supplier section isolation (issues #190 / #195) ─────────────────────────────
+//
+// The guarantee under test: the supplier availability and manufacturer
+// enrichment sections load independently, and *no* outcome of theirs — timeout,
+// 500, 403, or a pos-location outage — may reach this page's own state machine
+// (DECISION-POSITIVITY-004). These tests render the real child components with
+// failing supplier services and assert that the page still reports `ready` with
+// a null `errorKey`, and that the catalog-owned content is still on screen.
+
+describe('ProductDetailComponent — supplier section isolation', () => {
+  const mockProduct = {
+    id: 'prod-123',
+    sku: 'SKU-001',
+    name: 'Test Product',
+    category: 'Parts',
+    description: 'A test product',
+    status: 'ACTIVE',
+    msrp: null,
+  };
+
+  const mockLifecycle = {
+    productId: 'prod-123',
+    currentState: 'ACTIVE' as const,
+    effectiveAt: '2026-01-01T00:00:00Z',
+    lastChangedBy: 'system',
+    lastChangedAt: '2026-01-01T00:00:00Z',
+  };
+
+  const mockCatalog = {
+    getProductById: vi.fn(),
+    getProductLifecycle: vi.fn(),
+    getReplacements: vi.fn(),
+    listUomConversions: vi.fn(),
+    getItemCosts: vi.fn(),
+    listCostStructures: vi.fn(),
+    getAuditHistory: vi.fn(),
+    setLifecycleState: vi.fn(),
+    addReplacementProduct: vi.fn(),
+    createUomConversion: vi.fn(),
+    updateUomConversion: vi.fn(),
+    deactivateUomConversion: vi.fn(),
+    updateStandardCost: vi.fn(),
+  };
+
+  const availabilityService = {
+    getAvailabilityByProductId: vi.fn(),
+    getAvailabilityBySku: vi.fn(),
+  };
+  const enrichmentService = { getProductEnrichment: vi.fn(), listUnmatchedEnrichment: vi.fn() };
+  const selectedLocationId = signal<string | null>(null);
+  const locationService = {
+    listActiveLocations: vi.fn(),
+    select: vi.fn((id: string | null) => selectedLocationId.set(id)),
+    selectedLocationId,
+  };
+
+  async function setup(): Promise<ComponentFixture<ProductDetailComponent>> {
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [ProductDetailComponent, TranslateModule.forRoot()],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: { paramMap: of(convertToParamMap({ productId: 'prod-123' })) },
+        },
+        { provide: ProductCatalogService, useValue: mockCatalog },
+        { provide: SupplierAvailabilityService, useValue: availabilityService },
+        { provide: SupplierEnrichmentService, useValue: enrichmentService },
+        { provide: SupplierDeliveryLocationService, useValue: locationService },
+      ],
+    }).compileComponents();
+
+    const created = TestBed.createComponent(ProductDetailComponent);
+    created.detectChanges();
+    return created;
+  }
+
+  beforeEach(() => {
+    selectedLocationId.set('loc-a');
+    mockCatalog.getProductById.mockReturnValue(of(mockProduct));
+    mockCatalog.getProductLifecycle.mockReturnValue(of(mockLifecycle));
+    mockCatalog.getReplacements.mockReturnValue(of([]));
+    mockCatalog.listUomConversions.mockReturnValue(of([]));
+    mockCatalog.getItemCosts.mockReturnValue(
+      of({ id: 'ic-1', itemId: 'prod-123', standardCost: 10, costStructures: [] }),
+    );
+    mockCatalog.listCostStructures.mockReturnValue(
+      of([{ id: 'cs-1', itemId: 'prod-123', structures: [] }]),
+    );
+    mockCatalog.getAuditHistory.mockReturnValue(of([]));
+    locationService.listActiveLocations.mockReturnValue(
+      of([{ locationId: 'loc-a', name: 'Downtown Service Center' }]),
+    );
+    availabilityService.getAvailabilityByProductId.mockReturnValue(
+      of({
+        productId: 'prod-123',
+        deliveryLocationId: 'loc-a',
+        fetchedAt: '2026-08-12T11:59:00Z',
+        stalenessThresholdMinutes: 60,
+        vendors: [],
+      }),
+    );
+    enrichmentService.getProductEnrichment.mockReturnValue(of(null));
+  });
+
+  afterEach(() => vi.clearAllMocks());
+
+  it('renders the availability section and keeps the page ready', async () => {
+    const isolated = await setup();
+    const el = isolated.nativeElement as HTMLElement;
+
+    expect(el.querySelector('app-supplier-availability-panel')).not.toBeNull();
+    expect(isolated.componentInstance.state()).toBe('ready');
+  });
+
+  it('a supplier availability failure never flips the page into an error state', async () => {
+    availabilityService.getAvailabilityByProductId.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 504, statusText: 'Gateway Timeout' })),
+    );
+    const isolated = await setup();
+
+    expect(isolated.componentInstance.state()).toBe('ready');
+    expect(isolated.componentInstance.errorKey()).toBeNull();
+  });
+
+  it('a supplier availability failure leaves the catalog-owned content on screen', async () => {
+    availabilityService.getAvailabilityByProductId.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 500, statusText: 'Server Error' })),
+    );
+    const isolated = await setup();
+    const el = isolated.nativeElement as HTMLElement;
+
+    expect(el.querySelector('#product-detail-title')?.textContent?.trim()).toBe('Test Product');
+    expect(el.querySelector('.tabs')).not.toBeNull();
+    expect(isolated.componentInstance.product()).toEqual(mockProduct);
+  });
+
+  it('a 403 from the supplier API never flips the page into an error state', async () => {
+    availabilityService.getAvailabilityByProductId.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 403, statusText: 'Forbidden' })),
+    );
+    const isolated = await setup();
+
+    expect(isolated.componentInstance.state()).toBe('ready');
+    expect(isolated.componentInstance.errorKey()).toBeNull();
+  });
+
+  it('a pos-location outage degrades only the location picker, not the page', async () => {
+    locationService.listActiveLocations.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 503, statusText: 'Service Unavailable' })),
+    );
+    const isolated = await setup();
+
+    expect(isolated.componentInstance.state()).toBe('ready');
+    expect(isolated.componentInstance.errorKey()).toBeNull();
+  });
+
+  it('an enrichment failure never flips the page into an error state', async () => {
+    enrichmentService.getProductEnrichment.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 500, statusText: 'Server Error' })),
+    );
+    const isolated = await setup();
+
+    expect(isolated.componentInstance.state()).toBe('ready');
+    expect(isolated.componentInstance.errorKey()).toBeNull();
+  });
+
+  it('renders no enrichment markup at all for an unenriched product', async () => {
+    const isolated = await setup();
+    const el = isolated.nativeElement as HTMLElement;
+
+    expect(el.querySelector('.enrich-panel')).toBeNull();
+    expect(el.textContent).not.toContain('POSITIVITY.ENRICHMENT.TITLE');
+  });
+
+  it('holds no supplier state of its own — the sections are imported, not absorbed', async () => {
+    const isolated = await setup();
+    const keys = Object.keys(isolated.componentInstance as unknown as Record<string, unknown>);
+
+    expect(keys.some(key => /supplier|availability|enrichment|vendor/i.test(key))).toBe(false);
   });
 });

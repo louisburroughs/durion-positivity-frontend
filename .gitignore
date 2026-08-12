@@ -52,6 +52,11 @@ PR-Review-Processing.md
 
 # Playwright site audit output
 /artifacts/audit/
+
+# axe-core smoke report (regenerated per run by scripts/a11y/smoke-routes.mjs).
+# Committing it lets the CI gate-summary step print a stale scan on a run where
+# the scan itself was skipped or failed — a passing report beside a red gate.
+/artifacts/a11y/
 /test-results/
 /playwright-report/
 .vitest-attachments/

@@ -162,7 +162,8 @@
       "LOCATION": "Locations",
       "SECURITY": "Security",
       "ADMIN": "Admin",
-      "SITEMAP": "Site Map"
+      "SITEMAP": "Site Map",
+      "SUPPLIER": "Supplier Connectivity"
     },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Toggle navigation sidebar",
@@ -1750,6 +1751,10 @@
         "REPORTS": {
           "TITLE": "Reports",
           "DESCRIPTION": "Read-only accounting reports."
+        },
+        "PAYABLES": {
+          "TITLE": "Payables",
+          "DESCRIPTION": "Vendor invoices received electronically, their voucher linkage and the exceptions to clear before a payment run."
         }
       },
       "CARD": {
@@ -1816,6 +1821,18 @@
         "LABOR_OVERHEAD": {
           "TITLE": "Labor & Overhead Cost Report",
           "DESCRIPTION": "Monthly + YTD labor and overhead costs by location and fiscal year, from posted GL data."
+        },
+        "VENDOR_INVOICES": {
+          "TITLE": "Vendor invoices",
+          "DESCRIPTION": "Everything vendors have sent electronically, with amounts and currency exactly as received."
+        },
+        "VENDOR_INVOICE_EXCEPTIONS": {
+          "TITLE": "Vendor invoice exceptions",
+          "DESCRIPTION": "Unmatched invoices and re-issued invoices whose amounts changed."
+        },
+        "VENDOR_INVOICE_DETAIL": {
+          "TITLE": "Open a vendor invoice",
+          "DESCRIPTION": "Lines, purchase order linkage and every delivered version of one invoice."
         }
       },
       "FIELD": {
@@ -1839,7 +1856,8 @@
         "OPEN_CREDIT_MEMO": "Open Credit Memo",
         "OPEN_VENDOR_PAYMENT": "Open Vendor Payment",
         "OPEN_INVOICE_STATUS": "View Status",
-        "OPENING_PAGE": "Opening..."
+        "OPENING_PAGE": "Opening...",
+        "OPEN_VENDOR_INVOICE": "Open vendor invoice"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "An ID is required.",
@@ -5191,6 +5209,924 @@
       },
       "ADMIN": {
         "DESC": "System administration and configuration."
+      }
+    }
+  },
+  "POSITIVITY": {
+    "COMMON": {
+      "LOADING": "Loading…",
+      "RETRY": "Retry",
+      "REFRESH": "Refresh",
+      "SAVE": "Save",
+      "CANCEL": "Cancel",
+      "EDIT": "Edit",
+      "DELETE": "Delete",
+      "ACTIONS": "Actions",
+      "BREADCRUMB": "Breadcrumb",
+      "APPLY_FILTER": "Apply filters",
+      "CLEAR_FILTER": "Clear filters",
+      "YAML_MANAGED_READONLY": "This profile is managed by deployment configuration (YAML). Every change here is rejected by the service, so the controls are shown but disabled. Change it through your configuration pipeline."
+    },
+    "ERROR": {
+      "VALIDATION": "Some fields were rejected. Correct the highlighted values and save again.",
+      "FORBIDDEN": "You do not have permission to view this information.",
+      "CONFLICT": "That configuration conflicts with an existing entry.",
+      "RETRYABLE": "The service is temporarily unavailable. Try again.",
+      "FIELD": {
+        "INVALID": "This value was rejected by the service.",
+        "BINDING_AUTH_REQUIRED": "Select an authentication configuration for this binding.",
+        "CRON_MALFORMED": "This is not a valid cron expression.",
+        "DUPLICATE_CAPABILITY_BINDING": "This capability is already bound for this profile.",
+        "LOCATION_UUID_MALFORMED": "This is not a valid location identifier.",
+        "ACCOUNT_NUMBER_REQUIRED": "An account number is required.",
+        "AUTH_REF_REQUIRED": "An authentication reference name is required.",
+        "AUTH_REF_DUPLICATE": "This reference name is already used on this profile.",
+        "CREDENTIAL_REFERENCE_MALFORMED": "Enter a secret reference such as env:MY_SECRET_NAME, not the secret itself.",
+        "BASE_URL_MALFORMED": "Enter a valid base URL.",
+        "PROFILE_YAML_MANAGED": "This profile is managed by configuration and cannot be changed here.",
+        "SUPPLIER_REF": "This configuration alias was rejected. It must be unique and cannot be blank.",
+        "DISPLAY_NAME": "A display name is required.",
+        "AUTH_TYPE": "Select an authentication type.",
+        "ACCOUNT_ROLE": "This account role was rejected.",
+        "UNKNOWN_CAPABILITY": "The service does not recognise this capability key.",
+        "UNKNOWN_PROTOCOL_FAMILY": "The service does not recognise this protocol family key.",
+        "PROTOCOL_VERSION": "This version key was rejected. It must match a registered adapter exactly and be at most 64 characters.",
+        "TIMEOUT_INVALID": "Enter a timeout greater than zero, or leave it empty to use the deployment default.",
+        "MAX_RETRIES_INVALID": "Enter zero or more retries, or leave it empty to use the deployment default."
+      },
+      "CONFLICT_YAML": "This profile is managed by deployment configuration (YAML), so the service rejected the change. Update it through your configuration pipeline instead."
+    },
+    "FRESHNESS": {
+      "ARIA_LABEL": "Data freshness",
+      "AS_OF": "Data as of",
+      "FETCHED_AT": "Last fetched",
+      "CURRENT": "Current",
+      "STALE": "Stale",
+      "UNKNOWN": "Unknown",
+      "CHIP_DESCRIPTION": "Freshness:",
+      "NO_VENDOR_TIMESTAMP": "No vendor timestamp",
+      "NEVER_FETCHED": "Never fetched",
+      "STALE_NOTE": "This data is older than the configured threshold. The fetch time below is when we last checked, not how current the data is."
+    },
+    "CAPABILITY": {
+      "ORDER": "Order",
+      "ORDER_STATUS": "Order status",
+      "STOCK_REPORT": "Stock report",
+      "PRICE_CATALOG": "Price catalogue (PRICAT)",
+      "PRODUCT_CATALOG": "Product catalogue",
+      "DELIVERY_NOTE": "Delivery note"
+    },
+    "PROTOCOL_FAMILY": {
+      "EDIWHEEL_A25": "EDIWheel A2.5",
+      "EDIWHEEL_C1": "EDIWheel C1",
+      "EDIWHEEL_B": "EDIWheel B",
+      "EDIWHEEL_JSON": "EDIWheel JSON",
+      "MICHELIN_S2S": "Michelin S2S"
+    },
+    "PROFILES": {
+      "TITLE": "Supplier profiles",
+      "SUBTITLE": "Vendor connectivity configured for this deployment.",
+      "CREATE": "New profile",
+      "EDIT": "Edit profile",
+      "DELETE": "Delete profile",
+      "EMPTY": "No supplier profiles are configured yet.",
+      "FIELD": {
+        "SUPPLIER_REF": "Configuration alias",
+        "SUPPLIER_REF_HINT": "A short, human-readable name used in configuration and logs.",
+        "DISPLAY_NAME": "Display name",
+        "SANDBOX": "Use sandbox endpoints",
+        "ENABLED": "Profile enabled",
+        "CONNECT_TIMEOUT": "Connect timeout (ms)",
+        "READ_TIMEOUT": "Read timeout (ms)",
+        "TIMEOUT_HINT": "Leave empty to use the deployment default.",
+        "MAX_RETRIES": "Retry budget",
+        "MAX_RETRIES_HINT": "Only failures that happen before the request is sent are retried. Leave empty to use the deployment default.",
+        "RETRY_BACKOFF": "Retry backoff",
+        "SANDBOX_BASE_URL": "Sandbox base URL override",
+        "SANDBOX_BASE_URL_HINT": "Used by every binding while sandbox mode is on. Leave empty to keep each binding’s own base URL."
+      },
+      "FORM": {
+        "CREATE_TITLE": "Create supplier profile",
+        "EDIT_TITLE": "Edit supplier profile"
+      },
+      "STATE": {
+        "ENABLED": "Enabled",
+        "DISABLED": "Disabled"
+      },
+      "ENVIRONMENT": {
+        "SANDBOX": "Sandbox",
+        "PRODUCTION": "Production"
+      },
+      "SOURCE": {
+        "YAML": "Configuration (YAML)",
+        "ADMIN": "Administered here"
+      },
+      "TABS": {
+        "ARIA_LABEL": "Supplier profile sections",
+        "auth": "Auth",
+        "accounts": "Accounts",
+        "bindings": "Bindings",
+        "health": "Health",
+        "pricat": "PRICAT"
+      },
+      "TABLE": {
+        "CAPTION": "Supplier profiles configured for this deployment",
+        "NAME": "Profile",
+        "STATE": "State",
+        "ENVIRONMENT": "Environment",
+        "SOURCE": "Configuration source",
+        "OPEN": "Open"
+      },
+      "ERROR": {
+        "LOAD": "The supplier profiles could not be loaded.",
+        "LOAD_DETAIL": "This supplier profile could not be loaded.",
+        "CREATE": "The supplier profile could not be created.",
+        "SAVE": "The supplier profile could not be saved.",
+        "DELETE": "The supplier profile could not be deleted."
+      },
+      "DEPLOYMENT_DEFAULT": "Deployment default",
+      "SANDBOX_URL_UNCHANGED": "Bindings keep their own base URLs",
+      "BACKOFF": {
+        "FIXED": "Fixed",
+        "EXPONENTIAL": "Exponential"
+      }
+    },
+    "AUTH": {
+      "TITLE": "Authentication configurations",
+      "ADD": "Add configuration",
+      "EMPTY": "No authentication configurations yet. Bindings need one before they can run.",
+      "REFERENCE_NOTICE": "Credentials are stored as references to your secret store. This screen never shows or asks for a secret value.",
+      "TYPE": {
+        "BASIC_PLUS_APIKEY": "Basic + API key",
+        "OAUTH2_CLIENT_CREDENTIALS": "OAuth2 client credentials",
+        "BEARER": "Bearer token"
+      },
+      "FIELD": {
+        "AUTH_REF": "Reference name",
+        "TYPE": "Authentication type",
+        "usernameRef": "Username reference",
+        "passwordRef": "Password reference",
+        "apiKeyRef": "API key reference",
+        "clientIdRef": "Client ID reference",
+        "clientSecretRef": "Client secret reference",
+        "tokenUrlRef": "Token endpoint reference",
+        "bearerTokenRef": "Bearer token reference",
+        "apiKeyHeader": "API key header name"
+      },
+      "FORM": {
+        "CREATE_TITLE": "Add authentication configuration",
+        "EDIT_TITLE": "Edit authentication configuration",
+        "CREDENTIAL_REFERENCES": "Credential references",
+        "CREDENTIAL_HINT": "Enter the reference the platform resolves at call time, for example env:MICHELIN_EDI_USER. Never paste the secret itself.",
+        "ENDPOINT_SETTINGS": "Endpoint settings",
+        "REENTER_HINT": "Credential references are never returned by the service, so they are blank here. Re-enter every reference this configuration needs before saving."
+      },
+      "TABLE": {
+        "CAPTION": "Authentication configurations for this profile",
+        "AUTH_REF": "Reference name",
+        "TYPE": "Type",
+        "API_KEY_HEADER": "API key header",
+        "ADAPTER_DEFAULT": "Adapter default"
+      },
+      "ERROR": {
+        "LOAD": "The authentication configurations could not be loaded.",
+        "SAVE": "The authentication configuration could not be saved.",
+        "DELETE": "The authentication configuration could not be deleted."
+      }
+    },
+    "ACCOUNTS": {
+      "TITLE": "Accounts",
+      "FIELD": {
+        "ACCOUNT_NUMBER": "Account number",
+        "AGENCY_CODE": "Agency code",
+        "LOCATION": "Location"
+      },
+      "BILLING": {
+        "TITLE": "Billing account",
+        "HINT": "The invoicing and settlement account for this vendor profile.",
+        "SAVE": "Save billing account"
+      },
+      "DELIVERY": {
+        "TITLE": "Delivery accounts",
+        "HINT": "The receiving account used for each of your locations.",
+        "ADD": "Add delivery account",
+        "MAP_NOW": "Map this location",
+        "SELECT_LOCATION": "Select a location",
+        "EMPTY": "No delivery accounts are mapped yet.",
+        "TABLE_CAPTION": "Delivery account mapped to each location",
+        "GAP_WARNING": "These active locations have no delivery account. Orders for them will be rejected before they reach the vendor.",
+        "GAP_UNVERIFIED": "Your active locations could not be read, so these mappings could not be verified against them. The mappings below are shown as configured."
+      },
+      "ERROR": {
+        "LOAD": "The account configuration could not be loaded.",
+        "SAVE_BILLING": "The billing account could not be saved.",
+        "SAVE_DELIVERY": "The delivery account could not be saved.",
+        "DELETE_DELIVERY": "The delivery account could not be removed."
+      }
+    },
+    "BINDINGS": {
+      "TITLE": "Capability bindings",
+      "HINT": "Every capability this screen can name is listed. A capability with no binding is switched off for this vendor and reports that it is not configured.",
+      "CONFIGURE": "Configure",
+      "NOT_BOUND_HINT": "Not configured",
+      "NO_SCHEDULE": "On demand",
+      "STATUS": {
+        "ENABLED": "Enabled",
+        "DISABLED": "Disabled",
+        "NOT_CONFIGURED": "Not configured"
+      },
+      "FIELD": {
+        "PROTOCOL_FAMILY": "Protocol family",
+        "PROTOCOL_VERSION": "Protocol version",
+        "BASE_URL": "Base URL",
+        "PATH": "Path",
+        "CRON": "Schedule (cron)",
+        "CRON_HINT": "Optional. Leave empty to run this capability only on demand.",
+        "ENABLED": "Binding enabled",
+        "CAPTURE_LEVEL": "Payload capture level",
+        "CAPTURE_LEVEL_HINT": "Controls how much of each exchange is stored. Exchange metadata is always kept, whatever you choose here.",
+        "PROTOCOL_FAMILY_HINT": "Suggestions are the families shipped today. A newer key can be typed in and the service will decide.",
+        "PROTOCOL_VERSION_HINT": "Suggestions are the versions shipped today. A newer key can be typed in, but it must match a registered adapter exactly or the capability will not resolve."
+      },
+      "FORM": {
+        "CREATE_TITLE": "Configure binding",
+        "EDIT_TITLE": "Edit binding",
+        "SELECT_AUTH": "Select an authentication configuration"
+      },
+      "CONFIRM": {
+        "TITLE": "This binding is live",
+        "BODY": "This binding is enabled and may be carrying traffic right now. Saving applies your changes immediately.",
+        "ACCEPT": "Save changes"
+      },
+      "TABLE": {
+        "CAPTION": "Capability bindings for this profile",
+        "CAPABILITY": "Capability",
+        "STATUS": "Status",
+        "PROTOCOL": "Protocol",
+        "ENDPOINT": "Endpoint",
+        "AUTH_REF": "Authentication",
+        "SCHEDULE": "Schedule",
+        "CAPTURE": "Payload capture"
+      },
+      "ERROR": {
+        "LOAD": "The capability bindings could not be loaded.",
+        "SAVE": "The binding could not be saved.",
+        "DELETE": "The binding could not be deleted."
+      },
+      "CAPTURE_DEFAULT": "Deployment default"
+    },
+    "HEALTH": {
+      "TITLE": "Connection health",
+      "UNAVAILABLE": "Connection health reporting is not available yet.",
+      "UNAVAILABLE_DETAIL": "The supplier service does not yet publish health or circuit-breaker status. Until it does, use the exchange audit to see how recent calls to this vendor actually went."
+    },
+    "AUDIT": {
+      "TITLE": "Exchange audit",
+      "SUBTITLE": "Every outbound exchange with a supplier, as it happened. Retries appear as separate attempts.",
+      "DETAIL_TITLE": "Exchange detail",
+      "READ_ONLY_NOTICE": "These are historical records kept for dispute resolution. They cannot be retried or replayed from this screen.",
+      "EMPTY": "No exchanges match these filters.",
+      "COUNT": "{{count}} exchanges",
+      "CAPTURE_LEVEL": "Payload capture",
+      "CAPTURE": {
+        "FULL": "Full",
+        "REDACTED": "Redacted",
+        "METADATA_ONLY": "Metadata only"
+      },
+      "OUTCOME": {
+        "SUCCESS": "Success",
+        "FAILURE": "Failure",
+        "TIMEOUT": "Timed out",
+        "REJECTED": "Rejected",
+        "CIRCUIT_OPEN": "Circuit open"
+      },
+      "FILTER": {
+        "VENDOR": "Vendor",
+        "CAPABILITY": "Capability",
+        "OUTCOME": "Outcome",
+        "DATE_FROM": "From date",
+        "DATE_TO": "To date",
+        "ALL_CAPABILITIES": "All capabilities",
+        "ALL_OUTCOMES": "All outcomes",
+        "SELECT_VENDOR": "Select a vendor",
+        "VENDOR_HINT": "Required. Exchanges are reported one vendor at a time.",
+        "OUTCOME_HINT": "Narrows the exchanges already loaded on this page.",
+        "DATE_TO_HINT": "The whole of this day is included."
+      },
+      "TABLE": {
+        "CAPTION": "Outbound supplier exchanges",
+        "STARTED": "Started",
+        "VENDOR": "Vendor",
+        "CAPABILITY": "Capability",
+        "OUTCOME": "Outcome",
+        "HTTP_STATUS": "HTTP status",
+        "DURATION": "Duration (ms)",
+        "CORRELATION_ID": "Correlation ID",
+        "VIEW": "View",
+        "ATTEMPT": "Attempt",
+        "HTTP_METHOD": "Method"
+      },
+      "PAYLOAD": {
+        "TITLE": "Request and response",
+        "REQUEST": "Request",
+        "RESPONSE": "Response",
+        "REDACTION_NOTE": "Sensitive values in these documents were replaced before they were stored. These are not the documents that went over the wire, and the originals were never kept, so they cannot be recovered from anywhere.",
+        "RESTRICTED": "You do not have permission to read stored exchange content. The summary above is still available.",
+        "METADATA_ONLY": "This binding stores metadata only, so no request or response content was captured for this exchange.",
+        "PURGED": "The stored content of this exchange has passed its retention period and was deleted. The summary above is kept permanently.",
+        "NOT_CAPTURED": "This exchange carried no request or response body, so there is nothing stored to show.",
+        "NO_REQUEST_BODY": "No request body was stored for this exchange.",
+        "NO_RESPONSE_BODY": "No response body was stored for this exchange."
+      },
+      "ERROR": {
+        "LOAD": "The exchange audit could not be loaded.",
+        "LOAD_DETAIL": "This exchange could not be loaded.",
+        "LOAD_PAYLOAD": "The exchange payload could not be loaded.",
+        "LOAD_VENDORS": "The vendor list could not be loaded."
+      },
+      "SELECT_VENDOR_PROMPT": "Choose a vendor to see its exchanges. The service reports one vendor at a time.",
+      "NO_RESPONSE": "No response",
+      "NO_RESPONSE_DETAIL": "No response was received — the connection failed, timed out before any reply, or the attempt was stopped by the circuit breaker.",
+      "CREATED_BY": "Started by",
+      "SUPPLIER_REF_SNAPSHOT": "The alias recorded at the time of this exchange. The profile may have been renamed since.",
+      "ENDPOINT_URI": "Request address",
+      "ENDPOINT_PATH": "Request path",
+      "ENDPOINT_PATH_NOTE": "Metadata-only capture keeps the path alone. Any query string was discarded when the exchange was recorded and cannot be recovered.",
+      "ENDPOINT_REDACTED_NOTE": "Any credential-bearing parameters were removed when the exchange was recorded.",
+      "FAILURE_DETAIL": "What the vendor reported",
+      "OUTCOME_FILTER_SCOPE": "Showing {{shown}} of the {{loaded}} exchanges on this page. The outcome filter applies to the page you are viewing, not to the whole date range.",
+      "OUTCOME_FILTER_EMPTY": "No exchange on this page has that outcome. Other pages in this date range may.",
+      "PAGINATION": {
+        "ARIA_LABEL": "Exchange list pages",
+        "PREVIOUS": "Previous",
+        "NEXT": "Next",
+        "STATUS": "Page {{page}} of {{total}}"
+      },
+      "ATTEMPTS": {
+        "TITLE": "Attempts in this call",
+        "CAPTION": "Every attempt sharing this correlation ID, oldest first",
+        "HINT": "This call was attempted {{count}} times. Each attempt is recorded separately.",
+        "SINGLE": "This call was attempted once; it was not retried.",
+        "CURRENT": "The attempt you are viewing",
+        "UNAVAILABLE": "The other attempts in this call could not be loaded. The attempt above is unaffected."
+      }
+    },
+    "PRICAT": {
+      "TITLE": "PRICAT synchronisation",
+      "EMPTY": "No PRICAT runs have been recorded for this vendor yet.",
+      "NOT_BOUND": "The price catalogue capability is not configured for this vendor, so no runs can be scheduled or started.",
+      "RUN_NOW": "Run now",
+      "RUN_ACCEPTED": "The run was accepted and will appear below as it progresses.",
+      "IN_PROGRESS": "In progress",
+      "UNMATCHED_LINK": "Unmatched lines",
+      "UNMATCHED_BADGE_SR": "unmatched catalogue lines awaiting resolution",
+      "PREVIOUS_DATA_AUTHORITATIVE": "No new data was received. The previously received supplier prices remain authoritative.",
+      "OUTCOME": {
+        "RUNNING": "Running",
+        "SUCCESS": "Success",
+        "PARTIAL": "Partial",
+        "EMPTY": "Nothing received",
+        "FAILED": "Failed"
+      },
+      "FRESHNESS": {
+        "EFFECTIVE_DATE": "Vendor effective date",
+        "LAST_FETCH": "Last fetched from vendor"
+      },
+      "TABLE": {
+        "CAPTION": "PRICAT run history for this vendor",
+        "STARTED": "Started",
+        "FINISHED": "Finished",
+        "WINDOW": "Window",
+        "OUTCOME": "Outcome",
+        "FETCHED": "Lines fetched",
+        "STORED": "Lines stored",
+        "UNMATCHED": "Unmatched",
+        "DUPLICATES": "Duplicates",
+        "CHECKPOINT": "Checkpoint"
+      },
+      "ERROR": {
+        "LOAD": "The PRICAT run history could not be loaded.",
+        "TRIGGER": "The run could not be started.",
+        "TRIGGER_FORBIDDEN": "You do not have permission to start a PRICAT run."
+      }
+    },
+    "UNMATCHED": {
+      "TITLE": "Unmatched catalogue lines",
+      "SUBTITLE": "Supplier catalogue lines that could not be matched to a product.",
+      "BACK_TO_PROFILE": "Supplier profile",
+      "EXPORT_CSV": "Export CSV",
+      "EMPTY": "No unmatched lines. Every received catalogue line was matched to a product.",
+      "COUNT": "{{count}} unmatched lines",
+      "WORKLIST_NOTICE": "These lines stay listed until a catalogue correction makes them matchable. They cannot be dismissed from this screen.",
+      "FILTER": {
+        "REASON": "Reason",
+        "SEARCH": "Search",
+        "DATE_FROM": "First seen from",
+        "DATE_TO": "Last seen to",
+        "ALL_REASONS": "All reasons"
+      },
+      "REASON": {
+        "NO_EAN_MATCH": "No EAN match",
+        "NO_UPC_MATCH": "No UPC match",
+        "NO_MPN_MATCH": "No manufacturer part number match",
+        "AMBIGUOUS_MATCH": "Ambiguous match",
+        "MISSING_IDENTIFIERS": "No usable identifiers"
+      },
+      "TABLE": {
+        "CAPTION": "Supplier catalogue lines awaiting a product match",
+        "EAN": "EAN",
+        "GTIN": "GTIN",
+        "MPN": "Manufacturer part number",
+        "DESCRIPTION": "Description",
+        "REASON": "Reason",
+        "FIRST_SEEN": "First seen",
+        "LAST_SEEN": "Last seen",
+        "OCCURRENCES": "Occurrences"
+      },
+      "ERROR": {
+        "LOAD": "The unmatched lines could not be loaded."
+      }
+    },
+    "AVAILABILITY": {
+      "TITLE": "Supplier availability",
+      "SUBTITLE": "Live stock reported by each configured supplier for the delivery location you choose.",
+      "PROMPT_LOCATION": "Choose a delivery location to check supplier availability.",
+      "LOADING": "Checking supplier availability…",
+      "NO_VENDORS": "No supplier is configured to report stock for this location.",
+      "QUANTITY": "Available",
+      "WAREHOUSE": "Warehouse",
+      "EARLIEST_DELIVERY": "Earliest delivery",
+      "LEAD_TIME": "Lead time",
+      "LEAD_TIME_DAYS": "{{count}} days",
+      "CUTOFF": "Order before",
+      "VENDOR_CODE": "Supplier code",
+      "AS_OF": "Supplier data as of",
+      "CHECKED_AT": "Checked at",
+      "STATUS_LABEL": "Supplier status:",
+      "STATUS": {
+        "OK": "Available",
+        "SUPPLIER_UNAVAILABLE": "Supplier unreachable",
+        "NOT_LISTED": "Not carried",
+        "CAPABILITY_NOT_CONFIGURED": "Not enabled"
+      },
+      "STATUS_DETAIL": {
+        "OK": "The supplier reported stock for this location.",
+        "SUPPLIER_UNAVAILABLE": "The supplier did not answer, so no quantity is known. Try again.",
+        "NOT_LISTED": "This supplier does not carry this product.",
+        "CAPABILITY_NOT_CONFIGURED": "Stock reporting is not enabled for this supplier."
+      },
+      "LOCATION": {
+        "LABEL": "Delivery location",
+        "PROCUREMENT_LABEL": "Delivery location for availability checks",
+        "PLACEHOLDER": "Choose a delivery location",
+        "HINT": "Remembered for this session only. Nothing is requested from suppliers until you choose one.",
+        "LOADING": "Loading locations…",
+        "EMPTY": "No active location is available to deliver to.",
+        "ERROR": {
+          "LOAD": "The location list could not be loaded, so availability cannot be checked."
+        }
+      },
+      "CHECK": {
+        "ACTION": "Check availability",
+        "COLUMN": "Supplier availability",
+        "NEEDS_LOCATION": "Choose a delivery location to check this line.",
+        "LINE_CHANGED": "This line changed after the check. Check it again."
+      },
+      "ERROR": {
+        "LOAD": "Supplier availability could not be loaded. The rest of this page is unaffected.",
+        "CHECK": "This line could not be checked with the supplier."
+      }
+    },
+    "ENRICHMENT": {
+      "TITLE": "Manufacturer content",
+      "PROVENANCE": "Supplied by {{manufacturer}}. Manufacturer marketing content, not catalogue data.",
+      "LOCALE_FALLBACK": "The manufacturer has not published this text in your language, so another language is shown.",
+      "GALLERY": "Manufacturer images",
+      "PUBLISHED_AT": "Published by manufacturer",
+      "FETCHED_AT": "Last fetched",
+      "ERROR": {
+        "LOAD": "Manufacturer content could not be loaded."
+      },
+      "UNMATCHED": {
+        "TITLE": "Unmatched manufacturer content",
+        "SUBTITLE": "Manufacturer content received for products the catalogue does not recognise.",
+        "WORKLIST_NOTICE": "These records stay listed until a catalogue correction makes them matchable. They cannot be matched or dismissed from this screen.",
+        "EMPTY": "No unmatched manufacturer content. Everything received was matched to a product.",
+        "COUNT": "{{count}} unmatched records",
+        "NO_PREVIEW": "No preview published",
+        "FILTER": {
+          "VENDOR": "Supplier",
+          "ALL_VENDORS": "All suppliers",
+          "REASON": "Reason",
+          "ALL_REASONS": "All reasons",
+          "SEARCH": "Search",
+          "DATE_FROM": "First seen from",
+          "DATE_TO": "Last seen to"
+        },
+        "REASON": {
+          "NO_EAN_MATCH": "No EAN match",
+          "NO_GTIN_MATCH": "No GTIN match",
+          "NO_MPN_MATCH": "No manufacturer part number match",
+          "AMBIGUOUS_MATCH": "Ambiguous match",
+          "MISSING_IDENTIFIERS": "No usable identifiers"
+        },
+        "TABLE": {
+          "CAPTION": "Manufacturer content awaiting a product match",
+          "EAN": "EAN",
+          "GTIN": "GTIN",
+          "MPN": "Manufacturer part number",
+          "MANUFACTURER": "Manufacturer",
+          "VENDOR": "Supplier",
+          "PREVIEW": "Content preview",
+          "IMAGES": "Images",
+          "REASON": "Reason",
+          "FIRST_SEEN": "First seen",
+          "LAST_SEEN": "Last seen",
+          "OCCURRENCES": "Occurrences"
+        },
+        "ERROR": {
+          "LOAD": "The unmatched manufacturer content could not be loaded."
+        }
+      }
+    },
+    "TIMELINE": {
+      "ARIA_LABEL": "Event history",
+      "EMPTY": "Nothing has been reported yet."
+    },
+    "TRANSMISSION": {
+      "TITLE": "Vendor transmission",
+      "STATE_LABEL": "Transmission state:",
+      "VENDOR": "Vendor",
+      "VENDOR_ORDER_NUMBER": "Vendor order number",
+      "NO_VENDOR_ORDER_NUMBER": "Not provided by the vendor",
+      "DOCUMENT_ID": "Document reference",
+      "NO_DOCUMENT_ID": "No document reference",
+      "REFERENCE_NOTE": "Vendor references are shown for correspondence with the vendor. Links inside this application always use the order's own identifier.",
+      "AS_OF": "Vendor state as of",
+      "FETCHED_AT": "Last fetched",
+      "MANUAL_REVIEW_REASON": "Why this needs review",
+      "MANUAL_REVIEW_ADMIN_ONLY": "An administrator resolves this from the supplier manual-review queue.",
+      "NO_RESEND_NOTE": "This order is not re-sent from here. The vendor may already hold it, so re-sending would risk a duplicate physical order.",
+      "NOT_TRANSMITTED": "This order was not sent to the vendor electronically, so there is no transmission state to show.",
+      "STATE": {
+        "QUEUED": "Queued for the vendor",
+        "SENT": "Sent to the vendor",
+        "CONFIRMED": "Confirmed by the vendor",
+        "PARTIALLY_CONFIRMED": "Partially confirmed",
+        "REJECTED": "Rejected by the vendor",
+        "MANUAL_REVIEW": "Needs manual review",
+        "UNKNOWN": "Unknown state"
+      },
+      "OUTCOME": {
+        "ACCEPTED": "Accepted",
+        "REJECTED": "Rejected",
+        "BACKORDERED": "Backordered",
+        "PENDING": "Awaiting vendor answer"
+      },
+      "LINES": {
+        "TITLE": "Line confirmations",
+        "CAPTION": "Vendor answer for each line of this purchase order",
+        "SKU": "SKU",
+        "PRODUCT": "Product",
+        "ORDERED": "Ordered",
+        "CONFIRMED": "Confirmed",
+        "OUTCOME": "Vendor outcome",
+        "EXPECTED_SHIP": "Expected ship date",
+        "VENDOR_REASON": "Vendor reason",
+        "NOT_ANSWERED": "No answer yet",
+        "EMPTY": "The vendor has not answered for any line yet."
+      },
+      "HISTORY": {
+        "TITLE": "Status history",
+        "ARIA_LABEL": "Vendor status history",
+        "EMPTY": "The vendor has reported no status change yet.",
+        "APPEND_ONLY": "This history is a record of what the vendor reported. Entries are never edited or removed.",
+        "VENDOR_STATUS": "Vendor status",
+        "NOTE": "Vendor note",
+        "UNKNOWN_STATUS": "Status change reported"
+      },
+      "ERROR": {
+        "LOAD": "The vendor transmission state could not be loaded. The rest of this order is unaffected."
+      }
+    },
+    "MANUAL_REVIEW": {
+      "TITLE": "Orders needing review",
+      "SUBTITLE": "Transmissions where the platform cannot tell whether the vendor received the order.",
+      "NO_RESEND_NOTICE": "Nothing on this screen re-sends an order. A vendor may already hold an order listed here, so re-sending would risk a duplicate physical delivery. Resolve each row using the actions the service offers.",
+      "ACTIONS_NOTICE": "Resolution actions offered by the service for this order.",
+      "EMPTY": "No transmission needs review.",
+      "COUNT": "{{count}} transmissions need review",
+      "REASON_UNKNOWN": "The service did not give a reason.",
+      "ACTION": {
+        "CONFIRM_MATCHED": "Confirm the vendor has this order",
+        "MARK_REJECTED": "Mark as rejected by the vendor"
+      },
+      "CONFIRM": {
+        "TITLE": "Confirm this resolution",
+        "CONTEXT": "Purchase order",
+        "ACTION": "Action",
+        "ACCEPT": "Yes, apply this resolution",
+        "NO_RESEND": "This does not send anything to the vendor. It records what you believe already happened.",
+        "RISK_CONFIRM_MATCHED": "Only confirm this if you have verified with the vendor that they hold this order. Confirming an order the vendor never received means the parts will never arrive, and ordering again later can produce a duplicate physical order.",
+        "RISK_MARK_REJECTED": "Only mark this rejected if you have verified with the vendor that they will not fulfil it. If the vendor does hold the order, a real delivery will arrive against an order recorded as rejected.",
+        "RISK_GENERIC": "Only apply this if you have verified the outcome with the vendor. Recording the wrong outcome on an ambiguous transmission can lead to a missing delivery or a duplicate physical order."
+      },
+      "FILTER": {
+        "VENDOR": "Vendor",
+        "ALL_VENDORS": "All vendors",
+        "SEARCH": "Order or vendor reference",
+        "DATE_FROM": "Detected from",
+        "DATE_TO": "Detected to"
+      },
+      "TABLE": {
+        "CAPTION": "Transmissions awaiting human reconciliation",
+        "PO": "Purchase order",
+        "VENDOR": "Vendor",
+        "VENDOR_ORDER_NUMBER": "Vendor order number",
+        "STATE": "State",
+        "REASON": "Reason",
+        "DETECTED_AT": "Detected",
+        "OPEN_ORDER": "Open order"
+      },
+      "NOTICE": {
+        "RESOLVED": "Resolution recorded.",
+        "RACED_BY_VENDOR": "The vendor updated this order first. The row now shows the latest state."
+      },
+      "ERROR": {
+        "LOAD": "The review queue could not be loaded.",
+        "RESOLVE": "The resolution could not be applied. Nothing was sent to the vendor."
+      }
+    },
+    "SHIPMENT": {
+      "TITLE": "Shipment events",
+      "APPEND_ONLY": "Events reported by the vendor and carrier, oldest first. Entries are never edited or removed.",
+      "ARIA_LABEL": "Shipment event history",
+      "EMPTY": "No shipment event has been reported for this order.",
+      "DESCRIPTION": "Carrier description",
+      "CARRIER": "Carrier",
+      "TRACKING": "Tracking reference",
+      "PACKAGES": "Packages",
+      "RECEIVED_AT": "Received by this platform",
+      "EVENT": {
+        "PICKED_UP": "Collected from the vendor",
+        "SHIPPED": "Shipped",
+        "IN_TRANSIT": "In transit",
+        "OUT_FOR_DELIVERY": "Out for delivery",
+        "DELIVERED": "Delivered",
+        "EXCEPTION": "Carrier exception",
+        "RETURNED": "Returned"
+      },
+      "ERROR": {
+        "LOAD": "Shipment events could not be loaded. The rest of this order is unaffected."
+      },
+      "UNLINKED": {
+        "TITLE": "Unlinked shipment events",
+        "SUBTITLE": "Shipment events that matched no purchase order.",
+        "WORKLIST_NOTICE": "These events are real shipments the platform could not match to an order. Rows clear when a matching order appears or the vendor corrects its reference. There is no way to dismiss one: hiding an event hides an inbound delivery.",
+        "EMPTY": "Every shipment event is linked to an order.",
+        "COUNT": "{{count}} unlinked events",
+        "FILTER": {
+          "VENDOR": "Vendor",
+          "ALL_VENDORS": "All vendors",
+          "SEARCH": "Vendor order, tracking or carrier",
+          "DATE_FROM": "Event from",
+          "DATE_TO": "Event to"
+        },
+        "TABLE": {
+          "CAPTION": "Shipment events that matched no purchase order",
+          "EVENT": "Event",
+          "VENDOR": "Vendor",
+          "VENDOR_ORDER_NUMBER": "Vendor order number",
+          "CARRIER": "Carrier",
+          "TRACKING": "Tracking reference",
+          "OCCURRED_AT": "Reported by carrier",
+          "RECEIVED_AT": "Received by this platform",
+          "REASON": "Why it is unlinked"
+        },
+        "ERROR": {
+          "LOAD": "The unlinked shipment events could not be loaded."
+        }
+      }
+    },
+    "STOCK_SNAPSHOT": {
+      "TITLE": "Supplier stock snapshot",
+      "SUBTITLE": "The latest stock a supplier published for a country or agency.",
+      "SUPPLIER_STOCK_NOTICE": "These quantities are supplier stock, reported by the vendor for planning. They are not your own on-hand inventory and must never be added to it.",
+      "META_TITLE": "Snapshot details",
+      "VENDOR": "Vendor",
+      "SCOPE_LABEL": "Scope",
+      "LINE_COUNT": "Products in snapshot",
+      "AS_OF": "Vendor snapshot taken",
+      "FETCHED_AT": "Last fetched",
+      "NOT_REPORTED": "Not reported",
+      "SEARCH_NOT_REPORTED": "This vendor did not report \"{{search}}\" in this snapshot. That is not the same as reporting none in stock.",
+      "LEGEND": "\"Not reported\" means the vendor's snapshot said nothing about that product. A quantity of 0 means the vendor reported none in stock.",
+      "CHOOSE_VENDOR_PROMPT": "Choose a vendor to view its latest stock snapshot.",
+      "NO_SNAPSHOT": "This vendor has published no stock snapshot yet. That is not the same as reporting none in stock.",
+      "SCOPE": {
+        "COUNTRY": "Country",
+        "AGENCY": "Agency",
+        "WAREHOUSE": "Warehouse"
+      },
+      "FILTER": {
+        "VENDOR": "Vendor",
+        "CHOOSE_VENDOR": "Choose a vendor",
+        "NO_VENDORS": "No vendor profile could be loaded, so no snapshot can be requested.",
+        "SCOPE_CODE": "Scope code",
+        "SCOPE_CODE_HINT": "Country or agency code as published by the vendor, for example FR.",
+        "SEARCH": "SKU, EAN or product"
+      },
+      "TABLE": {
+        "CAPTION": "Products in the latest vendor stock snapshot",
+        "SKU": "SKU",
+        "PRODUCT": "Product",
+        "EAN": "EAN",
+        "WAREHOUSE": "Vendor warehouse",
+        "SUPPLIER_QUANTITY": "Supplier stock",
+        "SUPPLIER_QUANTITY_NOTE": "Vendor reported, informational only",
+        "UOM": "Unit"
+      },
+      "ERROR": {
+        "LOAD": "The stock snapshot could not be loaded."
+      }
+    },
+    "INVOICE": {
+      "PAYABLES": "Payables",
+      "SOURCE_NOTE": "Amounts, currency and dates are shown exactly as the vendor sent them. Nothing on this screen converts or recalculates a figure.",
+      "BREADCRUMB": {
+        "ACCOUNTING": "Accounting"
+      },
+      "LIST": {
+        "TITLE": "Vendor invoices",
+        "SUBTITLE": "Invoices and credit notes received electronically from vendors, with their voucher linkage.",
+        "EMPTY": "No vendor invoices have been received yet.",
+        "COUNT": "{{count}} vendor invoices",
+        "OPEN_EXCEPTIONS": "Open the exception worklist"
+      },
+      "EXCEPTIONS": {
+        "TITLE": "Vendor invoice exceptions",
+        "SUBTITLE": "Invoices flagged as unmatched or as carrying a discrepancy, to review before a payment run.",
+        "EMPTY": "No vendor invoices are currently flagged.",
+        "WORKLIST_NOTICE": "Rows stay on this list until the service resolves the flag. There is no way to dismiss one from here, because dismissing it would not change the amount that is about to be paid."
+      },
+      "FILTER": {
+        "VENDOR": "Vendor",
+        "ALL_VENDORS": "All vendors",
+        "SEARCH": "Search",
+        "SEARCH_HINT": "Matches invoice number, voucher reference and purchase order number.",
+        "TYPE": "Document type",
+        "ALL_TYPES": "All types",
+        "FLAG": "Exception",
+        "ALL_FLAGS": "All invoices",
+        "DATE_FROM": "Issued from",
+        "DATE_TO": "Issued to"
+      },
+      "TABLE": {
+        "CAPTION": "Ingested vendor invoices with type, amount, voucher linkage and exception flags",
+        "INVOICE_NUMBER": "Invoice number",
+        "VENDOR": "Vendor",
+        "TYPE": "Type",
+        "ISSUE_DATE": "Issue date",
+        "AMOUNT": "Amount",
+        "VOUCHER": "Voucher",
+        "FLAGS": "Exceptions",
+        "FETCHED_AT": "Received"
+      },
+      "TYPE": {
+        "INVOICE": "Invoice",
+        "CREDIT_NOTE": "Credit note"
+      },
+      "FLAG": {
+        "UNMATCHED": "Unmatched",
+        "DISCREPANCY": "Discrepancy",
+        "NONE": "None",
+        "BACKEND_OWNED_NOTE": "This flag is set and cleared by the service. It disappears from the worklist once the service reports the exception resolved."
+      },
+      "VOUCHER": {
+        "PENDING": "Voucher pending",
+        "PENDING_NOTE": "The service has not created a voucher for this invoice yet. Nothing is required from you here.",
+        "REFERENCE_NOTE": "Voucher reference for your accounting system of record."
+      },
+      "AMOUNT": {
+        "CREDIT_SR": "Credit, negative amount:"
+      },
+      "ERROR": {
+        "LOAD": "Vendor invoices could not be loaded.",
+        "LOAD_DETAIL": "This vendor invoice could not be loaded."
+      },
+      "DETAIL": {
+        "TITLE": "Vendor invoice",
+        "SUMMARY": "Document",
+        "AS_DELIVERED": "Every figure below is shown as the vendor sent it.",
+        "AS_OF": "Vendor effective time",
+        "FETCHED_AT": "Received by the platform",
+        "LINKAGE": "Linkage",
+        "PURCHASE_ORDER": "Purchase order",
+        "PO_UNMATCHED": "No purchase order has been matched to this invoice.",
+        "EXCEPTION_DETAIL": "Detail from the service",
+        "VERSIONS": "Delivered versions",
+        "VERSIONS_NOTE": "Both versions are shown as received. Neither is merged into the other and no difference is calculated here.",
+        "VERSIONS_CAPTION": "Each delivered version of this invoice, with its own reference, issue date and amount",
+        "LINES": "Lines",
+        "LINES_CAPTION": "Invoice lines as delivered by the vendor",
+        "LINES_EMPTY": "The vendor sent no line detail with this invoice.",
+        "NO_CLIENT_TOTAL": "No total is calculated here: the document total above is the vendor's own."
+      },
+      "VERSION": {
+        "REFERENCE": "Version",
+        "RECEIVED_AT": "Received",
+        "STANDING": "Standing",
+        "CURRENT": "Current",
+        "SUPERSEDED": "Superseded"
+      },
+      "LINE": {
+        "SKU": "Part number",
+        "DESCRIPTION": "Description",
+        "QUANTITY": "Quantity",
+        "UNIT_AMOUNT": "Unit amount",
+        "LINE_AMOUNT": "Line amount"
+      }
+    },
+    "FLEET": {
+      "AS_OF": "Fleet manager effective time",
+      "FETCHED_AT": "Received by the platform",
+      "VENDOR_REASON": "Reason from the fleet manager",
+      "NO_VENDOR_REASON": "The fleet manager gave no reason.",
+      "LOOKUP": {
+        "TITLE": "Fleet contract lookup",
+        "ADVISORY_ONLY": "This check is for information. It does not block the estimate or the creation of a workorder.",
+        "IDENTIFIER": "Vehicle identifier",
+        "IDENTIFIER_HINT": "VIN, licence plate or fleet number, as the fleet manager knows the vehicle.",
+        "CHECK": "Check with the fleet manager",
+        "IDLE": "Enter a vehicle identifier to check it against the fleet manager.",
+        "OUTCOME_LABEL": "Lookup result:",
+        "OUTCOME": {
+          "FOUND": "Vehicle found",
+          "NOT_FOUND": "Not known to the fleet manager",
+          "UNREACHABLE": "Fleet manager unreachable",
+          "UNKNOWN": "Not checked"
+        },
+        "UNREACHABLE_NOTE": "The fleet manager could not be reached, so contract coverage is unknown right now. The estimate is unaffected.",
+        "NOT_FOUND_TITLE": "Vehicle or contract unknown to the fleet manager",
+        "NOT_FOUND_BODY": "The fleet manager has no vehicle registered under {{identifier}}.",
+        "NOT_FOUND_NEXT": "Check the identifier, or continue and bill the customer directly.",
+        "FLEET_MANAGER": "Fleet manager",
+        "VEHICLE": "Vehicle",
+        "VIN": "VIN",
+        "PLATE": "Licence plate",
+        "CONTRACTS": "Applicable contracts",
+        "EFFECTIVE": "Effective",
+        "NO_POLICIES": "The fleet manager listed no policies for this contract.",
+        "NO_CONTRACTS": "The fleet manager knows this vehicle but lists no applicable contract.",
+        "ERROR": {
+          "LOAD": "The fleet contract lookup could not be completed."
+        }
+      },
+      "AUTHORIZATION": {
+        "TITLE": "Fleet authorization",
+        "READ_ONLY_NOTE": "Authorization is decided by the fleet manager and recorded by the service. Nothing on this screen changes it.",
+        "STATE_LABEL": "Authorization:",
+        "STATE": {
+          "PENDING": "Awaiting the fleet manager",
+          "GRANTED": "Authorized",
+          "DENIED": "Denied",
+          "MANUAL_REVIEW": "Needs manual review",
+          "UNKNOWN": "Unknown"
+        },
+        "NOT_FLEET": "This workorder is not under a fleet contract.",
+        "UNREACHABLE_NOTE": "The fleet manager could not be reached, so the authorization status shown may be out of date. The rest of this workorder is unaffected.",
+        "FLEET_MANAGER": "Fleet manager",
+        "REFERENCE": "Authorization reference",
+        "NO_REFERENCE": "None issued yet",
+        "REQUESTED_AT": "Requested",
+        "DECIDED_AT": "Decided",
+        "NO_DECISION": "No decision yet",
+        "AUTHORIZED_AMOUNT": "Authorized amount",
+        "CONTRACT": "Contract",
+        "PENDING_BODY": "The fleet manager has not answered yet. Refresh to see the latest status.",
+        "DENIED_TITLE": "The fleet manager denied this work.",
+        "DENIED_NEXT": "Discuss the reason above with the customer or the fleet manager before continuing.",
+        "MANUAL_REVIEW_TITLE": "This authorization needs manual review.",
+        "MANUAL_REVIEW_NEXT": "The service could not obtain a decision. Contact the fleet manager directly.",
+        "ERROR": {
+          "LOAD": "The fleet authorization could not be loaded."
+        }
+      },
+      "COMPLETION": {
+        "TITLE": "Completion approval",
+        "STATE_LABEL": "Completion approval:",
+        "STATE": {
+          "PENDING": "Not sent yet",
+          "APPROVED": "Approved",
+          "RETRYING": "Retrying",
+          "MANUAL_REVIEW": "Needs manual review",
+          "UNKNOWN": "Unknown"
+        },
+        "BACKEND_DRIVEN": "The service sends the completion to the fleet manager and retries on its own schedule.",
+        "ATTEMPTS": "Attempts",
+        "LAST_ATTEMPT": "Last attempt",
+        "NEXT_ATTEMPT": "Next attempt",
+        "MANUAL_REVIEW_NEXT": "The service has stopped retrying. Contact the fleet manager to confirm the completion."
       }
     }
   }

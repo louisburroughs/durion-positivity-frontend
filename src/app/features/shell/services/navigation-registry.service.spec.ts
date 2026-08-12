@@ -39,17 +39,28 @@ describe('NavigationRegistryService', () => {
       expect(keys).not.toContain('SHELL.NAV.SECURITY');
     });
 
-    it('returns all 13 items when user has ROLE_ADMIN', () => {
+    it('returns all 14 items when user has ROLE_ADMIN', () => {
       roleSignal.set(true);
 
       const items: NavItem[] = service.visibleNavItems();
 
-      expect(items).toHaveLength(13);
+      expect(items).toHaveLength(14);
 
       const keys = items.map(i => i.key);
       expect(keys).toContain('SHELL.NAV.ADMIN');
       expect(keys).toContain('SHELL.NAV.SECURITY');
       expect(keys).toContain('SHELL.NAV.SITEMAP');
+      expect(keys).toContain('SHELL.NAV.SUPPLIER');
+    });
+
+    it('points the supplier nav item at the positivity landing page', () => {
+      roleSignal.set(true);
+
+      const item = service.visibleNavItems().find(i => i.key === 'SHELL.NAV.SUPPLIER');
+
+      expect(item?.route).toBe('/app/positivity');
+      expect(item?.group).toBe('admin');
+      expect(item?.roles).toEqual(['ROLE_ADMIN']);
     });
 
     it('recomputes reactively when the underlying role signal changes', () => {
@@ -57,7 +68,7 @@ describe('NavigationRegistryService', () => {
 
       roleSignal.set(true);
 
-      expect(service.visibleNavItems()).toHaveLength(13);
+      expect(service.visibleNavItems()).toHaveLength(14);
 
       roleSignal.set(false);
 

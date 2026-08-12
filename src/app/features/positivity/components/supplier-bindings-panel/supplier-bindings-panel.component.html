@@ -1,0 +1,399 @@
+<section class="bindings-panel" [attr.aria-label]="'POSITIVITY.BINDINGS.TITLE' | translate">
+  <header class="bindings-panel__header">
+    <h2 class="bindings-panel__title">{{ 'POSITIVITY.BINDINGS.TITLE' | translate }}</h2>
+    <p class="bindings-panel__hint">{{ 'POSITIVITY.BINDINGS.HINT' | translate }}</p>
+  </header>
+
+  @if (readOnly()) {
+    <p class="pos-banner pos-banner--info" id="bindings-readonly-reason">
+      {{ 'POSITIVITY.COMMON.YAML_MANAGED_READONLY' | translate }}
+    </p>
+  }
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      @if (!conflict()) {
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+          {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+        </button>
+      }
+    </div>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (rows().length > 0 && state() !== 'forbidden') {
+    <div class="pos-table-wrap">
+      <table class="pos-table">
+        <caption class="sr-only">{{ 'POSITIVITY.BINDINGS.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'POSITIVITY.BINDINGS.TABLE.CAPABILITY' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.BINDINGS.TABLE.STATUS' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.BINDINGS.TABLE.PROTOCOL' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.BINDINGS.TABLE.ENDPOINT' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.BINDINGS.TABLE.AUTH_REF' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.BINDINGS.TABLE.SCHEDULE' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.BINDINGS.TABLE.CAPTURE' | translate }}</th>
+            <th scope="col">
+              <span class="sr-only">{{ 'POSITIVITY.COMMON.ACTIONS' | translate }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Unbound capabilities are listed as explicitly disabled, never
+               omitted: an absent binding IS the "not configured" outcome. -->
+          @for (row of rows(); track row.capability) {
+            <tr [attr.aria-disabled]="row.binding ? null : 'true'" [class.bindings-row--unbound]="!row.binding">
+              <th scope="row" class="bindings-row__capability">
+                @if (isKnownCapability(row.capability)) {
+                  {{ 'POSITIVITY.CAPABILITY.' + row.capability | translate }}
+                } @else {
+                  <code>{{ row.capability }}</code>
+                }
+              </th>
+              <td>
+                <app-supplier-status-chip
+                  [labelKey]="statusLabelKey(row)"
+                  [tone]="statusTone(row)"
+                  descriptionKey="POSITIVITY.BINDINGS.TABLE.STATUS"
+                />
+              </td>
+              <td>
+                @if (row.binding; as binding) {
+                  @if (isKnownProtocolFamily(binding.protocolFamily)) {
+                    {{ 'POSITIVITY.PROTOCOL_FAMILY.' + binding.protocolFamily | translate }}
+                  } @else {
+                    <code>{{ binding.protocolFamily }}</code>
+                  }
+                  <span class="bindings-row__version">{{ binding.protocolVersion }}</span>
+                } @else {
+                  <span class="bindings-row__none">{{ 'POSITIVITY.BINDINGS.NOT_BOUND_HINT' | translate }}</span>
+                }
+              </td>
+              <td>
+                @if (row.binding) {
+                  <code class="bindings-row__endpoint">{{ row.binding.baseUrl }}{{ row.binding.path }}</code>
+                } @else {
+                  <span aria-hidden="true">—</span>
+                }
+              </td>
+              <td>
+                @if (row.binding) {
+                  {{ row.binding.authRef }}
+                } @else {
+                  <span aria-hidden="true">—</span>
+                }
+              </td>
+              <td>
+                @if (row.binding?.cronSchedule) {
+                  <code class="bindings-row__cron">{{ row.binding!.cronSchedule }}</code>
+                } @else {
+                  <span class="bindings-row__none">{{ 'POSITIVITY.BINDINGS.NO_SCHEDULE' | translate }}</span>
+                }
+              </td>
+              <td>
+                @if (row.binding?.captureLevel; as level) {
+                  {{ 'POSITIVITY.AUDIT.CAPTURE.' + level | translate }}
+                } @else if (row.binding) {
+                  <span class="bindings-row__none">{{ 'POSITIVITY.BINDINGS.CAPTURE_DEFAULT' | translate }}</span>
+                } @else {
+                  <span aria-hidden="true">—</span>
+                }
+              </td>
+              <td class="pos-table__actions">
+                @if (row.binding; as binding) {
+                  <button
+                    class="pos-btn pos-btn--secondary"
+                    type="button"
+                    [disabled]="readOnly()"
+                    [attr.aria-describedby]="readOnly() ? 'bindings-readonly-reason' : null"
+                    (click)="startEdit(binding)"
+                  >
+                    {{ 'POSITIVITY.COMMON.EDIT' | translate }}
+                  </button>
+                  <button
+                    class="pos-btn pos-btn--danger"
+                    type="button"
+                    [disabled]="readOnly()"
+                    [attr.aria-describedby]="readOnly() ? 'bindings-readonly-reason' : null"
+                    (click)="remove(binding)"
+                  >
+                    {{ 'POSITIVITY.COMMON.DELETE' | translate }}
+                  </button>
+                } @else {
+                  <button
+                    class="pos-btn pos-btn--primary"
+                    type="button"
+                    [disabled]="readOnly()"
+                    [attr.aria-describedby]="readOnly() ? 'bindings-readonly-reason' : null"
+                    (click)="startCreate(row)"
+                  >
+                    {{ 'POSITIVITY.BINDINGS.CONFIGURE' | translate }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (formOpen()) {
+    <form class="bindings-form" [formGroup]="form" (ngSubmit)="save()">
+      <h3 class="bindings-form__title">
+        @if (editingBindingId()) {
+          {{ 'POSITIVITY.BINDINGS.FORM.EDIT_TITLE' | translate }}
+        } @else {
+          {{ 'POSITIVITY.BINDINGS.FORM.CREATE_TITLE' | translate }}
+        }
+      </h3>
+
+      <div class="pos-field">
+        <label class="pos-field__label" for="binding-capability">
+          {{ 'POSITIVITY.BINDINGS.TABLE.CAPABILITY' | translate }}
+        </label>
+        <input
+          id="binding-capability"
+          class="pos-field__input"
+          type="text"
+          readonly
+          formControlName="capability"
+          [attr.aria-invalid]="fieldError('capability') ? 'true' : null"
+          [attr.aria-describedby]="fieldError('capability') ? 'binding-capability-error' : null"
+        />
+        @if (fieldError('capability'); as key) {
+          <p class="pos-field__error" id="binding-capability-error" role="alert">
+            {{ key | translate }}
+            @if (fieldDetail('capability'); as detail) {
+              <span class="pos-field__detail">{{ detail }}</span>
+            }
+          </p>
+        }
+      </div>
+
+      <!-- Combobox, not a closed dropdown: the contract types this as a free-form
+           key so a newly registered adapter family needs no frontend change. -->
+      <div class="pos-field">
+        <label class="pos-field__label" for="binding-family">
+          {{ 'POSITIVITY.BINDINGS.FIELD.PROTOCOL_FAMILY' | translate }}
+        </label>
+        <input
+          id="binding-family"
+          class="pos-field__input"
+          type="text"
+          list="binding-family-options"
+          formControlName="protocolFamily"
+          [attr.aria-invalid]="fieldError('protocolFamily') ? 'true' : null"
+          [attr.aria-describedby]="
+            fieldError('protocolFamily')
+              ? 'binding-family-error binding-family-hint'
+              : 'binding-family-hint'
+          "
+        />
+        <datalist id="binding-family-options">
+          @for (family of protocolFamilySuggestions; track family) {
+            <option [value]="family"></option>
+          }
+        </datalist>
+        <p class="pos-field__hint" id="binding-family-hint">
+          {{ 'POSITIVITY.BINDINGS.FIELD.PROTOCOL_FAMILY_HINT' | translate }}
+        </p>
+        @if (fieldError('protocolFamily'); as key) {
+          <p class="pos-field__error" id="binding-family-error" role="alert">
+            {{ key | translate }}
+            @if (fieldDetail('protocolFamily'); as detail) {
+              <span class="pos-field__detail">{{ detail }}</span>
+            }
+          </p>
+        }
+      </div>
+
+      <div class="pos-field">
+        <label class="pos-field__label" for="binding-version">
+          {{ 'POSITIVITY.BINDINGS.FIELD.PROTOCOL_VERSION' | translate }}
+        </label>
+        <input
+          id="binding-version"
+          class="pos-field__input"
+          type="text"
+          list="binding-version-options"
+          formControlName="protocolVersion"
+          [attr.aria-invalid]="fieldError('version') ? 'true' : null"
+          [attr.aria-describedby]="
+            fieldError('version') ? 'binding-version-error binding-version-hint' : 'binding-version-hint'
+          "
+        />
+        <datalist id="binding-version-options">
+          @for (version of protocolVersionSuggestions; track version) {
+            <option [value]="version"></option>
+          }
+        </datalist>
+        <p class="pos-field__hint" id="binding-version-hint">
+          {{ 'POSITIVITY.BINDINGS.FIELD.PROTOCOL_VERSION_HINT' | translate }}
+        </p>
+        @if (fieldError('version'); as key) {
+          <p class="pos-field__error" id="binding-version-error" role="alert">
+            {{ key | translate }}
+            @if (fieldDetail('version'); as detail) {
+              <span class="pos-field__detail">{{ detail }}</span>
+            }
+          </p>
+        }
+      </div>
+
+      <div class="pos-field">
+        <label class="pos-field__label" for="binding-base-url">
+          {{ 'POSITIVITY.BINDINGS.FIELD.BASE_URL' | translate }}
+        </label>
+        <input
+          id="binding-base-url"
+          class="pos-field__input"
+          type="url"
+          formControlName="baseUrl"
+          [attr.aria-invalid]="fieldError('baseUrl') ? 'true' : null"
+          [attr.aria-describedby]="fieldError('baseUrl') ? 'binding-base-url-error' : null"
+        />
+        @if (fieldError('baseUrl'); as key) {
+          <p class="pos-field__error" id="binding-base-url-error" role="alert">
+            {{ key | translate }}
+            @if (fieldDetail('baseUrl'); as detail) {
+              <span class="pos-field__detail">{{ detail }}</span>
+            }
+          </p>
+        }
+      </div>
+
+      <div class="pos-field">
+        <label class="pos-field__label" for="binding-path">
+          {{ 'POSITIVITY.BINDINGS.FIELD.PATH' | translate }}
+        </label>
+        <input id="binding-path" class="pos-field__input" type="text" formControlName="path" />
+      </div>
+
+      <div class="pos-field">
+        <label class="pos-field__label" for="binding-auth-ref">
+          {{ 'POSITIVITY.BINDINGS.TABLE.AUTH_REF' | translate }}
+        </label>
+        <select
+          id="binding-auth-ref"
+          class="pos-field__input"
+          formControlName="authRef"
+          [attr.aria-invalid]="fieldError('authConfigName') ? 'true' : null"
+          [attr.aria-describedby]="fieldError('authConfigName') ? 'binding-auth-ref-error' : null"
+        >
+          <option value="">{{ 'POSITIVITY.BINDINGS.FORM.SELECT_AUTH' | translate }}</option>
+          @for (config of authConfigs(); track config.authConfigId) {
+            <option [value]="config.authRef">{{ config.authRef }}</option>
+          }
+        </select>
+        @if (fieldError('authConfigName'); as key) {
+          <p class="pos-field__error" id="binding-auth-ref-error" role="alert">
+            {{ key | translate }}
+            @if (fieldDetail('authConfigName'); as detail) {
+              <span class="pos-field__detail">{{ detail }}</span>
+            }
+          </p>
+        }
+      </div>
+
+      <div class="pos-field">
+        <label class="pos-field__label" for="binding-cron">
+          {{ 'POSITIVITY.BINDINGS.FIELD.CRON' | translate }}
+        </label>
+        <input
+          id="binding-cron"
+          class="pos-field__input"
+          type="text"
+          formControlName="cronSchedule"
+          [attr.aria-invalid]="fieldError('schedule') ? 'true' : null"
+          [attr.aria-describedby]="
+            fieldError('schedule') ? 'binding-cron-error binding-cron-hint' : 'binding-cron-hint'
+          "
+        />
+        <p class="pos-field__hint" id="binding-cron-hint">
+          {{ 'POSITIVITY.BINDINGS.FIELD.CRON_HINT' | translate }}
+        </p>
+        @if (fieldError('schedule'); as key) {
+          <p class="pos-field__error" id="binding-cron-error" role="alert">
+            {{ key | translate }}
+            @if (fieldDetail('schedule'); as detail) {
+              <span class="pos-field__detail">{{ detail }}</span>
+            }
+          </p>
+        }
+      </div>
+
+      <div class="pos-field">
+        <label class="pos-field__label" for="binding-capture">
+          {{ 'POSITIVITY.BINDINGS.FIELD.CAPTURE_LEVEL' | translate }}
+        </label>
+        <select
+          id="binding-capture"
+          class="pos-field__input"
+          formControlName="captureLevel"
+          aria-describedby="binding-capture-hint"
+        >
+          <option value="">{{ 'POSITIVITY.BINDINGS.CAPTURE_DEFAULT' | translate }}</option>
+          @for (level of captureLevels; track level) {
+            <option [value]="level">{{ 'POSITIVITY.AUDIT.CAPTURE.' + level | translate }}</option>
+          }
+        </select>
+        <p class="pos-field__hint" id="binding-capture-hint">
+          {{ 'POSITIVITY.BINDINGS.FIELD.CAPTURE_LEVEL_HINT' | translate }}
+        </p>
+      </div>
+
+      <div class="pos-field pos-field--inline">
+        <input id="binding-enabled" type="checkbox" formControlName="enabled" />
+        <label class="pos-field__label" for="binding-enabled">
+          {{ 'POSITIVITY.BINDINGS.FIELD.ENABLED' | translate }}
+        </label>
+      </div>
+
+      <div class="bindings-form__actions">
+        <button class="pos-btn pos-btn--primary" type="submit" [disabled]="saving() || readOnly()">
+          {{ 'POSITIVITY.COMMON.SAVE' | translate }}
+        </button>
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="cancelForm()">
+          {{ 'POSITIVITY.COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (pendingConfirmation()) {
+    <dialog
+      class="bindings-confirm"
+      appModalDialog
+      aria-labelledby="binding-confirm-title"
+      aria-describedby="binding-confirm-body"
+      (modalCancel)="cancelConfirmation()"
+    >
+      <h3 class="bindings-confirm__title" id="binding-confirm-title">
+        {{ 'POSITIVITY.BINDINGS.CONFIRM.TITLE' | translate }}
+      </h3>
+      <p class="bindings-confirm__body" id="binding-confirm-body">
+        {{ 'POSITIVITY.BINDINGS.CONFIRM.BODY' | translate }}
+      </p>
+      <div class="bindings-confirm__actions">
+        <button class="pos-btn pos-btn--primary" type="button" (click)="confirmSave()">
+          {{ 'POSITIVITY.BINDINGS.CONFIRM.ACCEPT' | translate }}
+        </button>
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="cancelConfirmation()">
+          {{ 'POSITIVITY.COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </dialog>
+  }
+</section>

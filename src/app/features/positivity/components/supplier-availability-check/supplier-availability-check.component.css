@@ -1,0 +1,37 @@
+/*
+ * Per-line availability check. Sized to sit inside a purchase-order line row
+ * without pushing the editable fields around when a result appears.
+ */
+.avail-check {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-width: 14rem;
+}
+
+.avail-check__trigger {
+	align-self: flex-start;
+}
+
+.avail-check__hint {
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+.avail-check__result {
+	display: block;
+}
+
+.avail-check__list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.avail-check__item {
+	margin: 0;
+}

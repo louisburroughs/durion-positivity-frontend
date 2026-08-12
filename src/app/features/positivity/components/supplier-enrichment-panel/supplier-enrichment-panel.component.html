@@ -1,0 +1,78 @@
+@if (state() === 'error') {
+  <div class="pos-banner pos-banner--warning" role="alert">
+    <span>{{ errorKey()! | translate }}</span>
+    <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+      {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+    </button>
+  </div>
+}
+
+@if (state() === 'forbidden') {
+  <div class="pos-banner pos-banner--warning" role="alert">
+    {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+  </div>
+}
+
+@if (visible()) {
+  <section class="enrich-panel" aria-labelledby="supplier-enrichment-title">
+    <header class="enrich-panel__header">
+      <h3 id="supplier-enrichment-title" class="enrich-panel__title">
+        {{ 'POSITIVITY.ENRICHMENT.TITLE' | translate }}
+      </h3>
+      <p class="enrich-panel__provenance">
+        {{
+          'POSITIVITY.ENRICHMENT.PROVENANCE'
+            | translate: { manufacturer: enrichment()!.manufacturerName || enrichment()!.vendorDisplayName }
+        }}
+      </p>
+    </header>
+
+    @if (description(); as prose) {
+      <div class="enrich-panel__description">
+        <p>{{ prose }}</p>
+        @if (descriptionIsFallback()) {
+          <p class="enrich-panel__note">
+            {{ 'POSITIVITY.ENRICHMENT.LOCALE_FALLBACK' | translate }}
+          </p>
+        }
+      </div>
+    }
+
+    @if (attributeViews().length > 0) {
+      <dl class="enrich-panel__attributes">
+        @for (attribute of attributeViews(); track attribute.code) {
+          <div class="enrich-panel__attribute">
+            <dt class="enrich-panel__term">{{ attribute.label }}</dt>
+            <dd class="enrich-panel__value">{{ attribute.value }}</dd>
+          </div>
+        }
+      </dl>
+    }
+
+    @if (imageViews().length > 0) {
+      <ul class="enrich-panel__gallery" [attr.aria-label]="'POSITIVITY.ENRICHMENT.GALLERY' | translate">
+        @for (image of imageViews(); track image.imageId) {
+          <li class="enrich-panel__figure">
+            <img
+              class="enrich-panel__image"
+              [src]="image.url"
+              [alt]="image.altText"
+              loading="lazy"
+              decoding="async"
+            />
+          </li>
+        }
+      </ul>
+    }
+
+    <app-staleness-indicator
+      class="enrich-panel__freshness"
+      [asOf]="enrichment()!.asOf"
+      asOfLabelKey="POSITIVITY.ENRICHMENT.PUBLISHED_AT"
+      [fetchedAt]="enrichment()!.fetchedAt"
+      fetchedAtLabelKey="POSITIVITY.ENRICHMENT.FETCHED_AT"
+      [thresholdMinutes]="enrichment()!.stalenessThresholdMinutes"
+      [nowMs]="nowMs()"
+    />
+  </section>
+}

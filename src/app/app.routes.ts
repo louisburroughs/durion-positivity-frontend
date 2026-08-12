@@ -133,6 +133,12 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/bulk-import/bulk-import.routes').then(m => m.BULK_IMPORT_ROUTES),
       },
+      {
+        path: 'positivity',
+        data: { roles: ['ROLE_ADMIN'] },
+        loadChildren: () =>
+          import('./features/positivity/positivity.routes').then(m => m.POSITIVITY_ROUTES),
+      },
     ],
   },
   {

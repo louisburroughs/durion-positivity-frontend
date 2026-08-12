@@ -1,0 +1,97 @@
+/*
+ * Manufacturer enrichment section. Deliberately distinguished from the
+ * catalog-owned panels by its provenance line, so marketing copy is never read
+ * as platform-owned product data.
+ */
+.enrich-panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+}
+
+.enrich-panel__header {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.enrich-panel__title {
+	margin: 0;
+	font-size: 1.0625rem;
+	font-weight: 600;
+}
+
+.enrich-panel__provenance {
+	margin: 0;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+.enrich-panel__description p {
+	margin: 0;
+	font-size: 0.9375rem;
+	line-height: 1.55;
+}
+
+.enrich-panel__note {
+	margin-top: var(--space-1);
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+.enrich-panel__attributes {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+	gap: var(--space-2);
+	margin: 0;
+}
+
+.enrich-panel__attribute {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.enrich-panel__term {
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--text-muted);
+}
+
+.enrich-panel__value {
+	margin: 0;
+	font-size: 0.9375rem;
+}
+
+.enrich-panel__gallery {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.enrich-panel__figure {
+	margin: 0;
+}
+
+.enrich-panel__image {
+	display: block;
+	width: 10rem;
+	height: auto;
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-sm);
+	background: var(--surface-variant);
+}
+
+.enrich-panel__freshness {
+	display: block;
+}

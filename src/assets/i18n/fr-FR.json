@@ -162,7 +162,8 @@
       "LOCATION": "Emplacements",
       "SECURITY": "Sécurité",
       "ADMIN": "Administration",
-      "SITEMAP": "Plan du site"
+      "SITEMAP": "Plan du site",
+      "SUPPLIER": "Connectivité des fournisseurs"
     },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Basculer la barre latérale de navigation",
@@ -5163,6 +5164,442 @@
       },
       "ADMIN": {
         "DESC": "Administration et configuration du système."
+      }
+    }
+  },
+  "POSITIVITY": {
+    "COMMON": {
+      "LOADING": "Chargement…",
+      "RETRY": "Réessayer",
+      "REFRESH": "Actualiser",
+      "SAVE": "Enregistrer",
+      "CANCEL": "Annuler",
+      "EDIT": "Modifier",
+      "DELETE": "Supprimer",
+      "ACTIONS": "Actions",
+      "BREADCRUMB": "Fil d’Ariane",
+      "APPLY_FILTER": "Appliquer les filtres",
+      "CLEAR_FILTER": "Effacer les filtres",
+      "YAML_MANAGED_READONLY": "Ce profil est géré par la configuration de déploiement (YAML). Toute modification faite ici est refusée par le service, c’est pourquoi les commandes sont affichées mais désactivées. Modifiez-le au moyen de votre pipeline de configuration."
+    },
+    "ERROR": {
+      "VALIDATION": "Certains champs ont été refusés. Corrigez les valeurs signalées puis enregistrez de nouveau.",
+      "FORBIDDEN": "Vous n’avez pas la permission de consulter ces informations.",
+      "CONFLICT": "Cette configuration entre en conflit avec une entrée existante.",
+      "RETRYABLE": "Le service est temporairement indisponible. Réessayez.",
+      "FIELD": {
+        "INVALID": "Cette valeur a été refusée par le service.",
+        "BINDING_AUTH_REQUIRED": "Sélectionnez une configuration d’authentification pour cette liaison.",
+        "CRON_MALFORMED": "Cette expression cron n’est pas valide.",
+        "DUPLICATE_CAPABILITY_BINDING": "Cette capacité est déjà liée pour ce profil.",
+        "LOCATION_UUID_MALFORMED": "Cet identifiant d’emplacement n’est pas valide.",
+        "ACCOUNT_NUMBER_REQUIRED": "Un numéro de compte est requis.",
+        "AUTH_REF_REQUIRED": "Un nom de référence d’authentification est requis.",
+        "AUTH_REF_DUPLICATE": "Ce nom de référence est déjà utilisé sur ce profil.",
+        "CREDENTIAL_REFERENCE_MALFORMED": "Saisissez une référence de secret telle que env:MON_SECRET, et non le secret lui-même.",
+        "BASE_URL_MALFORMED": "Saisissez une URL de base valide.",
+        "PROFILE_YAML_MANAGED": "Ce profil est géré par configuration et ne peut pas être modifié ici.",
+        "SUPPLIER_REF": "Cet alias de configuration a été refusé. Il doit être unique et ne peut pas être vide.",
+        "DISPLAY_NAME": "Un nom d’affichage est requis.",
+        "AUTH_TYPE": "Sélectionnez un type d’authentification.",
+        "ACCOUNT_ROLE": "Ce rôle de compte a été refusé.",
+        "UNKNOWN_CAPABILITY": "Le service ne reconnaît pas cette clé de capacité.",
+        "UNKNOWN_PROTOCOL_FAMILY": "Le service ne reconnaît pas cette clé de famille de protocole.",
+        "PROTOCOL_VERSION": "Cette clé de version a été refusée. Elle doit correspondre exactement à un adaptateur enregistré et compter au plus 64 caractères.",
+        "TIMEOUT_INVALID": "Saisissez un délai supérieur à zéro, ou laissez le champ vide pour utiliser la valeur par défaut du déploiement.",
+        "MAX_RETRIES_INVALID": "Saisissez zéro nouvelle tentative ou plus, ou laissez le champ vide pour utiliser la valeur par défaut du déploiement."
+      },
+      "CONFLICT_YAML": "Ce profil est géré par la configuration de déploiement (YAML) ; le service a donc refusé la modification. Mettez-le à jour au moyen de votre pipeline de configuration."
+    },
+    "FRESHNESS": {
+      "ARIA_LABEL": "Fraîcheur des données",
+      "AS_OF": "Données en date du",
+      "FETCHED_AT": "Dernière récupération",
+      "CURRENT": "À jour",
+      "STALE": "Périmé",
+      "UNKNOWN": "Inconnu",
+      "CHIP_DESCRIPTION": "Fraîcheur :",
+      "NO_VENDOR_TIMESTAMP": "Aucune date du fournisseur",
+      "NEVER_FETCHED": "Jamais récupéré",
+      "STALE_NOTE": "Ces données sont plus anciennes que le seuil configuré. L’heure de récupération indique notre dernière consultation, pas l’actualité des données."
+    },
+    "CAPABILITY": {
+      "ORDER": "Commande",
+      "ORDER_STATUS": "Statut de commande",
+      "STOCK_REPORT": "État des stocks",
+      "PRICE_CATALOG": "Catalogue de prix (PRICAT)",
+      "PRODUCT_CATALOG": "Catalogue de produits",
+      "DELIVERY_NOTE": "Bon de livraison"
+    },
+    "PROTOCOL_FAMILY": {
+      "EDIWHEEL_A25": "EDIWheel A2.5",
+      "EDIWHEEL_C1": "EDIWheel C1",
+      "EDIWHEEL_B": "EDIWheel B",
+      "EDIWHEEL_JSON": "EDIWheel JSON",
+      "MICHELIN_S2S": "Michelin S2S"
+    },
+    "PROFILES": {
+      "TITLE": "Profils fournisseurs",
+      "SUBTITLE": "Connectivité fournisseur configurée pour ce déploiement.",
+      "CREATE": "Nouveau profil",
+      "EDIT": "Modifier le profil",
+      "DELETE": "Supprimer le profil",
+      "EMPTY": "Aucun profil fournisseur n’est encore configuré.",
+      "FIELD": {
+        "SUPPLIER_REF": "Alias de configuration",
+        "SUPPLIER_REF_HINT": "Un nom court et lisible utilisé dans la configuration et les journaux.",
+        "DISPLAY_NAME": "Nom affiché",
+        "SANDBOX": "Utiliser les points d’accès de test",
+        "ENABLED": "Profil activé",
+        "CONNECT_TIMEOUT": "Délai de connexion (ms)",
+        "READ_TIMEOUT": "Délai de lecture (ms)",
+        "TIMEOUT_HINT": "Laissez vide pour utiliser la valeur par défaut du déploiement.",
+        "MAX_RETRIES": "Budget de nouvelles tentatives",
+        "MAX_RETRIES_HINT": "Seuls les échecs survenant avant l’envoi de la requête font l’objet d’une nouvelle tentative. Laissez vide pour utiliser la valeur par défaut du déploiement.",
+        "RETRY_BACKOFF": "Attente entre les tentatives",
+        "SANDBOX_BASE_URL": "URL de base de remplacement pour le bac à sable",
+        "SANDBOX_BASE_URL_HINT": "Utilisée par toutes les liaisons lorsque le mode bac à sable est actif. Laissez vide pour conserver l’URL de base propre à chaque liaison."
+      },
+      "FORM": {
+        "CREATE_TITLE": "Créer un profil fournisseur",
+        "EDIT_TITLE": "Modifier le profil fournisseur"
+      },
+      "STATE": {
+        "ENABLED": "Activé",
+        "DISABLED": "Désactivé"
+      },
+      "ENVIRONMENT": {
+        "SANDBOX": "Test",
+        "PRODUCTION": "Production"
+      },
+      "SOURCE": {
+        "YAML": "Configuration (YAML)",
+        "ADMIN": "Administré ici"
+      },
+      "TABS": {
+        "ARIA_LABEL": "Sections du profil fournisseur",
+        "auth": "Authentification",
+        "accounts": "Comptes",
+        "bindings": "Liaisons",
+        "health": "État",
+        "pricat": "PRICAT"
+      },
+      "TABLE": {
+        "CAPTION": "Profils fournisseurs configurés pour ce déploiement",
+        "NAME": "Profil",
+        "STATE": "État",
+        "ENVIRONMENT": "Environnement",
+        "SOURCE": "Source de configuration",
+        "OPEN": "Ouvrir"
+      },
+      "ERROR": {
+        "LOAD": "Les profils fournisseurs n’ont pas pu être chargés.",
+        "LOAD_DETAIL": "Ce profil fournisseur n’a pas pu être chargé.",
+        "CREATE": "Le profil fournisseur n’a pas pu être créé.",
+        "SAVE": "Le profil fournisseur n’a pas pu être enregistré.",
+        "DELETE": "Le profil fournisseur n’a pas pu être supprimé."
+      },
+      "DEPLOYMENT_DEFAULT": "Valeur par défaut du déploiement",
+      "SANDBOX_URL_UNCHANGED": "Les liaisons conservent leurs propres URL de base",
+      "BACKOFF": {
+        "FIXED": "Fixe",
+        "EXPONENTIAL": "Exponentielle"
+      }
+    },
+    "AUTH": {
+      "TITLE": "Configurations d’authentification",
+      "ADD": "Ajouter une configuration",
+      "EMPTY": "Aucune configuration d’authentification pour l’instant. Les liaisons en ont besoin pour fonctionner.",
+      "REFERENCE_NOTICE": "Les identifiants sont enregistrés comme références vers votre coffre à secrets. Cet écran n’affiche ni ne demande jamais la valeur d’un secret.",
+      "TYPE": {
+        "BASIC_PLUS_APIKEY": "Basique + clé d’API",
+        "OAUTH2_CLIENT_CREDENTIALS": "Identifiants client OAuth2",
+        "BEARER": "Jeton bearer"
+      },
+      "FIELD": {
+        "AUTH_REF": "Nom de référence",
+        "TYPE": "Type d’authentification",
+        "usernameRef": "Référence de l’identifiant",
+        "passwordRef": "Référence du mot de passe",
+        "apiKeyRef": "Référence de la clé d’API",
+        "clientIdRef": "Référence de l’ID client",
+        "clientSecretRef": "Référence du secret client",
+        "tokenUrlRef": "Référence du point de terminaison de jeton",
+        "bearerTokenRef": "Référence du jeton du porteur",
+        "apiKeyHeader": "Nom de l’en-tête de la clé d’API"
+      },
+      "FORM": {
+        "CREATE_TITLE": "Ajouter une configuration d’authentification",
+        "EDIT_TITLE": "Modifier la configuration d’authentification",
+        "CREDENTIAL_REFERENCES": "Références d’identifiants",
+        "CREDENTIAL_HINT": "Saisissez la référence que la plateforme résout au moment de l’appel, par exemple env:MICHELIN_EDI_USER. Ne collez jamais le secret lui-même.",
+        "ENDPOINT_SETTINGS": "Paramètres du point d’accès",
+        "REENTER_HINT": "Le service ne renvoie jamais les références d’identifiants ; elles sont donc vides ici. Saisissez à nouveau toutes les références nécessaires à cette configuration avant d’enregistrer."
+      },
+      "TABLE": {
+        "CAPTION": "Configurations d’authentification de ce profil",
+        "AUTH_REF": "Nom de référence",
+        "TYPE": "Type",
+        "API_KEY_HEADER": "En-tête de la clé d’API",
+        "ADAPTER_DEFAULT": "Valeur par défaut de l’adaptateur"
+      },
+      "ERROR": {
+        "LOAD": "Les configurations d’authentification n’ont pas pu être chargées.",
+        "SAVE": "La configuration d’authentification n’a pas pu être enregistrée.",
+        "DELETE": "La configuration d’authentification n’a pas pu être supprimée."
+      }
+    },
+    "ACCOUNTS": {
+      "TITLE": "Comptes",
+      "FIELD": {
+        "ACCOUNT_NUMBER": "Numéro de compte",
+        "AGENCY_CODE": "Code d’agence",
+        "LOCATION": "Emplacement"
+      },
+      "BILLING": {
+        "TITLE": "Compte de facturation",
+        "HINT": "Le compte de facturation et de règlement de ce profil fournisseur.",
+        "SAVE": "Enregistrer le compte de facturation"
+      },
+      "DELIVERY": {
+        "TITLE": "Comptes de livraison",
+        "HINT": "Le compte de réception utilisé pour chacun de vos emplacements.",
+        "ADD": "Ajouter un compte de livraison",
+        "MAP_NOW": "Associer cet emplacement",
+        "SELECT_LOCATION": "Sélectionnez un emplacement",
+        "EMPTY": "Aucun compte de livraison n’est encore associé.",
+        "TABLE_CAPTION": "Compte de livraison associé à chaque emplacement",
+        "GAP_WARNING": "Ces emplacements actifs n’ont pas de compte de livraison. Les commandes les concernant seront refusées avant d’atteindre le fournisseur.",
+        "GAP_UNVERIFIED": "Vos emplacements actifs n’ont pas pu être lus ; ces associations n’ont donc pas pu être vérifiées par rapport à eux. Les associations ci-dessous sont affichées telles qu’elles sont configurées."
+      },
+      "ERROR": {
+        "LOAD": "La configuration des comptes n’a pas pu être chargée.",
+        "SAVE_BILLING": "Le compte de facturation n’a pas pu être enregistré.",
+        "SAVE_DELIVERY": "Le compte de livraison n’a pas pu être enregistré.",
+        "DELETE_DELIVERY": "Le compte de livraison n’a pas pu être supprimé."
+      }
+    },
+    "BINDINGS": {
+      "TITLE": "Liaisons de capacités",
+      "HINT": "Toutes les capacités que cet écran peut nommer sont répertoriées. Une capacité sans liaison est désactivée pour ce fournisseur et signale qu’elle n’est pas configurée.",
+      "CONFIGURE": "Configurer",
+      "NOT_BOUND_HINT": "Non configurée",
+      "NO_SCHEDULE": "À la demande",
+      "STATUS": {
+        "ENABLED": "Activée",
+        "DISABLED": "Désactivée",
+        "NOT_CONFIGURED": "Non configurée"
+      },
+      "FIELD": {
+        "PROTOCOL_FAMILY": "Famille de protocole",
+        "PROTOCOL_VERSION": "Version du protocole",
+        "BASE_URL": "URL de base",
+        "PATH": "Chemin",
+        "CRON": "Planification (cron)",
+        "CRON_HINT": "Facultatif. Laissez vide pour n’exécuter cette capacité qu’à la demande.",
+        "ENABLED": "Liaison activée",
+        "CAPTURE_LEVEL": "Niveau de capture du contenu",
+        "CAPTURE_LEVEL_HINT": "Détermine la quantité de contenu conservée pour chaque échange. Les métadonnées de l’échange sont toujours conservées, quel que soit votre choix.",
+        "PROTOCOL_FAMILY_HINT": "Les suggestions correspondent aux familles livrées à ce jour. Vous pouvez saisir une clé plus récente et le service tranchera.",
+        "PROTOCOL_VERSION_HINT": "Les suggestions correspondent aux versions livrées à ce jour. Vous pouvez saisir une clé plus récente, mais elle doit correspondre exactement à un adaptateur enregistré, sinon la capacité ne sera pas résolue."
+      },
+      "FORM": {
+        "CREATE_TITLE": "Configurer la liaison",
+        "EDIT_TITLE": "Modifier la liaison",
+        "SELECT_AUTH": "Sélectionnez une configuration d’authentification"
+      },
+      "CONFIRM": {
+        "TITLE": "Cette liaison est active",
+        "BODY": "Cette liaison est activée et peut acheminer du trafic en ce moment. L’enregistrement applique vos modifications immédiatement.",
+        "ACCEPT": "Enregistrer les modifications"
+      },
+      "TABLE": {
+        "CAPTION": "Liaisons de capacités de ce profil",
+        "CAPABILITY": "Capacité",
+        "STATUS": "Statut",
+        "PROTOCOL": "Protocole",
+        "ENDPOINT": "Point d’accès",
+        "AUTH_REF": "Authentification",
+        "SCHEDULE": "Planification",
+        "CAPTURE": "Capture du contenu"
+      },
+      "ERROR": {
+        "LOAD": "Les liaisons de capacités n’ont pas pu être chargées.",
+        "SAVE": "La liaison n’a pas pu être enregistrée.",
+        "DELETE": "La liaison n’a pas pu être supprimée."
+      },
+      "CAPTURE_DEFAULT": "Valeur par défaut du déploiement"
+    },
+    "HEALTH": {
+      "TITLE": "État de la connexion",
+      "UNAVAILABLE": "Les rapports sur l’état de la connexion ne sont pas encore disponibles.",
+      "UNAVAILABLE_DETAIL": "Le service fournisseur ne publie pas encore l’état de santé ni celui du disjoncteur. En attendant, utilisez l’audit des échanges pour voir comment se sont réellement déroulés les appels récents à ce fournisseur."
+    },
+    "AUDIT": {
+      "TITLE": "Audit des échanges",
+      "SUBTITLE": "Tous les échanges sortants avec un fournisseur, tels qu’ils se sont produits. Les nouvelles tentatives apparaissent comme des tentatives distinctes.",
+      "DETAIL_TITLE": "Détail de l’échange",
+      "READ_ONLY_NOTICE": "Ce sont des enregistrements historiques conservés pour le règlement des litiges. Ils ne peuvent être ni relancés ni rejoués depuis cet écran.",
+      "EMPTY": "Aucun échange ne correspond à ces filtres.",
+      "COUNT": "{{count}} échanges",
+      "CAPTURE_LEVEL": "Capture du contenu",
+      "CAPTURE": {
+        "FULL": "Complète",
+        "REDACTED": "Caviardée",
+        "METADATA_ONLY": "Métadonnées seules"
+      },
+      "OUTCOME": {
+        "SUCCESS": "Succès",
+        "FAILURE": "Échec",
+        "TIMEOUT": "Délai dépassé",
+        "REJECTED": "Rejeté",
+        "CIRCUIT_OPEN": "Disjoncteur ouvert"
+      },
+      "FILTER": {
+        "VENDOR": "Fournisseur",
+        "CAPABILITY": "Capacité",
+        "OUTCOME": "Résultat",
+        "DATE_FROM": "Date de début",
+        "DATE_TO": "Date de fin",
+        "ALL_CAPABILITIES": "Toutes les capacités",
+        "ALL_OUTCOMES": "Tous les résultats",
+        "SELECT_VENDOR": "Sélectionnez un fournisseur",
+        "VENDOR_HINT": "Obligatoire. Les échanges sont présentés pour un fournisseur à la fois.",
+        "OUTCOME_HINT": "Restreint les échanges déjà chargés sur cette page.",
+        "DATE_TO_HINT": "Cette journée est incluse en entier."
+      },
+      "TABLE": {
+        "CAPTION": "Échanges sortants avec les fournisseurs",
+        "STARTED": "Débuté",
+        "VENDOR": "Fournisseur",
+        "CAPABILITY": "Capacité",
+        "OUTCOME": "Résultat",
+        "HTTP_STATUS": "Statut HTTP",
+        "DURATION": "Durée (ms)",
+        "CORRELATION_ID": "ID de corrélation",
+        "VIEW": "Consulter",
+        "ATTEMPT": "Tentative",
+        "HTTP_METHOD": "Méthode"
+      },
+      "PAYLOAD": {
+        "TITLE": "Requête et réponse",
+        "REQUEST": "Requête",
+        "RESPONSE": "Réponse",
+        "REDACTION_NOTE": "Les valeurs sensibles de ces documents ont été remplacées avant leur stockage. Il ne s’agit pas des documents réellement transmis, et les originaux n’ont jamais été conservés : ils ne peuvent donc être récupérés nulle part.",
+        "RESTRICTED": "Vous n’avez pas l’autorisation de lire le contenu stocké des échanges. Le résumé ci-dessus reste accessible.",
+        "METADATA_ONLY": "Cette liaison ne conserve que les métadonnées ; aucun contenu de requête ou de réponse n’a donc été capturé pour cet échange.",
+        "PURGED": "Le contenu stocké de cet échange a dépassé sa durée de conservation et a été supprimé. Le résumé ci-dessus est conservé de façon permanente.",
+        "NOT_CAPTURED": "Cet échange ne comportait ni corps de requête ni corps de réponse ; il n’y a donc rien de stocké à afficher.",
+        "NO_REQUEST_BODY": "Aucun corps de requête n’a été conservé pour cet échange.",
+        "NO_RESPONSE_BODY": "Aucun corps de réponse n’a été conservé pour cet échange."
+      },
+      "ERROR": {
+        "LOAD": "L’audit des échanges n’a pas pu être chargé.",
+        "LOAD_DETAIL": "Cet échange n’a pas pu être chargé.",
+        "LOAD_PAYLOAD": "Le contenu de l’échange n’a pas pu être chargé.",
+        "LOAD_VENDORS": "La liste des fournisseurs n’a pas pu être chargée."
+      },
+      "SELECT_VENDOR_PROMPT": "Choisissez un fournisseur pour voir ses échanges. Le service en présente un seul à la fois.",
+      "NO_RESPONSE": "Aucune réponse",
+      "NO_RESPONSE_DETAIL": "Aucune réponse n’a été reçue : la connexion a échoué, le délai a expiré avant toute réponse, ou la tentative a été stoppée par le disjoncteur.",
+      "CREATED_BY": "Lancé par",
+      "SUPPLIER_REF_SNAPSHOT": "L’alias enregistré au moment de cet échange. Le profil a pu être renommé depuis.",
+      "ENDPOINT_URI": "Adresse de la requête",
+      "ENDPOINT_PATH": "Chemin de la requête",
+      "ENDPOINT_PATH_NOTE": "La capture des métadonnées seules ne conserve que le chemin. Toute chaîne de requête a été supprimée lors de l’enregistrement de l’échange et ne peut être récupérée.",
+      "ENDPOINT_REDACTED_NOTE": "Les paramètres contenant des identifiants ont été supprimés lors de l’enregistrement de l’échange.",
+      "FAILURE_DETAIL": "Ce que le fournisseur a signalé",
+      "OUTCOME_FILTER_SCOPE": "Affichage de {{shown}} des {{loaded}} échanges de cette page. Le filtre de résultat s’applique à la page affichée, et non à toute la plage de dates.",
+      "OUTCOME_FILTER_EMPTY": "Aucun échange de cette page ne présente ce résultat. D’autres pages de cette plage de dates peuvent en contenir.",
+      "PAGINATION": {
+        "ARIA_LABEL": "Pages de la liste des échanges",
+        "PREVIOUS": "Précédent",
+        "NEXT": "Suivant",
+        "STATUS": "Page {{page}} sur {{total}}"
+      },
+      "ATTEMPTS": {
+        "TITLE": "Tentatives de cet appel",
+        "CAPTION": "Toutes les tentatives partageant cet identifiant de corrélation, de la plus ancienne à la plus récente",
+        "HINT": "Cet appel a fait l’objet de {{count}} tentatives. Chaque tentative est enregistrée séparément.",
+        "SINGLE": "Cet appel a été tenté une seule fois ; il n’a pas été relancé.",
+        "CURRENT": "La tentative que vous consultez",
+        "UNAVAILABLE": "Les autres tentatives de cet appel n’ont pas pu être chargées. La tentative ci-dessus n’est pas concernée."
+      }
+    },
+    "PRICAT": {
+      "TITLE": "Synchronisation PRICAT",
+      "EMPTY": "Aucune exécution PRICAT n’a encore été enregistrée pour ce fournisseur.",
+      "NOT_BOUND": "La capacité catalogue de prix n’est pas configurée pour ce fournisseur ; aucune exécution ne peut être planifiée ni lancée.",
+      "RUN_NOW": "Exécuter maintenant",
+      "RUN_ACCEPTED": "L’exécution a été acceptée et apparaîtra ci-dessous au fur et à mesure.",
+      "IN_PROGRESS": "En cours",
+      "UNMATCHED_LINK": "Lignes non appariées",
+      "UNMATCHED_BADGE_SR": "lignes de catalogue non appariées à traiter",
+      "PREVIOUS_DATA_AUTHORITATIVE": "Aucune donnée nouvelle n’a été reçue. Les prix fournisseur reçus précédemment font toujours foi.",
+      "OUTCOME": {
+        "RUNNING": "En cours",
+        "SUCCESS": "Réussie",
+        "PARTIAL": "Partielle",
+        "EMPTY": "Aucune donnée reçue",
+        "FAILED": "Échouée"
+      },
+      "FRESHNESS": {
+        "EFFECTIVE_DATE": "Date d’effet du fournisseur",
+        "LAST_FETCH": "Dernière récupération auprès du fournisseur"
+      },
+      "TABLE": {
+        "CAPTION": "Historique des exécutions PRICAT pour ce fournisseur",
+        "STARTED": "Débutée",
+        "FINISHED": "Terminée",
+        "WINDOW": "Intervalle",
+        "OUTCOME": "Résultat",
+        "FETCHED": "Lignes récupérées",
+        "STORED": "Lignes enregistrées",
+        "UNMATCHED": "Non appariées",
+        "DUPLICATES": "Doublons",
+        "CHECKPOINT": "Point de reprise"
+      },
+      "ERROR": {
+        "LOAD": "L’historique des exécutions PRICAT n’a pas pu être chargé.",
+        "TRIGGER": "L’exécution n’a pas pu être lancée.",
+        "TRIGGER_FORBIDDEN": "Vous n’avez pas la permission de lancer une exécution PRICAT."
+      }
+    },
+    "UNMATCHED": {
+      "TITLE": "Lignes de catalogue non appariées",
+      "SUBTITLE": "Lignes du catalogue fournisseur qui n’ont pas pu être associées à un produit.",
+      "BACK_TO_PROFILE": "Profil fournisseur",
+      "EXPORT_CSV": "Exporter en CSV",
+      "EMPTY": "Aucune ligne non appariée. Toutes les lignes reçues ont été associées à un produit.",
+      "COUNT": "{{count}} lignes non appariées",
+      "WORKLIST_NOTICE": "Ces lignes restent listées jusqu’à ce qu’une correction du catalogue permette de les apparier. Elles ne peuvent pas être écartées depuis cet écran.",
+      "FILTER": {
+        "REASON": "Motif",
+        "SEARCH": "Rechercher",
+        "DATE_FROM": "Première occurrence depuis",
+        "DATE_TO": "Dernière occurrence jusqu’au",
+        "ALL_REASONS": "Tous les motifs"
+      },
+      "REASON": {
+        "NO_EAN_MATCH": "Aucune correspondance EAN",
+        "NO_UPC_MATCH": "Aucune correspondance UPC",
+        "NO_MPN_MATCH": "Aucune correspondance de référence fabricant",
+        "AMBIGUOUS_MATCH": "Correspondance ambiguë",
+        "MISSING_IDENTIFIERS": "Aucun identifiant exploitable"
+      },
+      "TABLE": {
+        "CAPTION": "Lignes du catalogue fournisseur en attente d’appariement",
+        "EAN": "EAN",
+        "GTIN": "GTIN",
+        "MPN": "Référence fabricant",
+        "DESCRIPTION": "Description",
+        "REASON": "Motif",
+        "FIRST_SEEN": "Première occurrence",
+        "LAST_SEEN": "Dernière occurrence",
+        "OCCURRENCES": "Occurrences"
+      },
+      "ERROR": {
+        "LOAD": "Les lignes non appariées n’ont pas pu être chargées."
       }
     }
   }

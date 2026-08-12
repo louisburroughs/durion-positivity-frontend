@@ -22,6 +22,15 @@ const ROUTES = [
   '/app/accounting/vendor-payments',
   '/app/people/employees/EMP-123',
   '/app/location/locations',
+  // Supplier connectivity (positivity domain, issues #188-#195). These pages are
+  // data-dense — filter forms, tabbed detail, worklist tables and timelines — so
+  // they are the ones worth scanning as the domain grows.
+  '/app/positivity',
+  '/app/positivity/exchanges',
+  '/app/positivity/orders/manual-review',
+  '/app/positivity/stock-snapshots',
+  '/app/positivity/enrichment/unmatched',
+  '/app/accounting/payables/vendor-invoices',
 ];
 
 const IMPACT_RANK = {

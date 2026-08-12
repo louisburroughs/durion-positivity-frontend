@@ -1,0 +1,210 @@
+<main class="vendor-invoices" aria-labelledby="vendor-invoices-title">
+  <nav class="vendor-invoices__breadcrumb" [attr.aria-label]="'POSITIVITY.COMMON.BREADCRUMB' | translate">
+    <a [routerLink]="['/app', 'accounting']">{{ 'POSITIVITY.INVOICE.BREADCRUMB.ACCOUNTING' | translate }}</a>
+    @if (exceptionsOnly()) {
+      <span class="vendor-invoices__breadcrumb-sep" aria-hidden="true">/</span>
+      <a [routerLink]="['/app', 'accounting', 'payables', 'vendor-invoices']">
+        {{ 'POSITIVITY.INVOICE.LIST.TITLE' | translate }}
+      </a>
+    }
+  </nav>
+
+  <header class="vendor-invoices__header">
+    <p class="vendor-invoices__overline">{{ 'POSITIVITY.INVOICE.PAYABLES' | translate }}</p>
+    <h1 id="vendor-invoices-title">{{ titleKey() | translate }}</h1>
+    <p class="vendor-invoices__subtitle">{{ subtitleKey() | translate }}</p>
+  </header>
+
+  @if (exceptionsOnly()) {
+    <p class="pos-banner pos-banner--info">{{ 'POSITIVITY.INVOICE.EXCEPTIONS.WORKLIST_NOTICE' | translate }}</p>
+  } @else {
+    <p class="vendor-invoices__links">
+      <a class="pos-btn pos-btn--secondary" [routerLink]="['/app', 'accounting', 'payables', 'vendor-invoices', 'exceptions']">
+        {{ 'POSITIVITY.INVOICE.LIST.OPEN_EXCEPTIONS' | translate }}
+      </a>
+    </p>
+  }
+
+  <p class="vendor-invoices__source-note">{{ 'POSITIVITY.INVOICE.SOURCE_NOTE' | translate }}</p>
+
+  <form class="vendor-invoices__filters" [formGroup]="filterForm" (ngSubmit)="applyFilter()">
+    @if (vendorFilterAvailable()) {
+      <div class="pos-field">
+        <label class="pos-field__label" for="vendor-invoices-vendor">
+          {{ 'POSITIVITY.INVOICE.FILTER.VENDOR' | translate }}
+        </label>
+        <select id="vendor-invoices-vendor" class="pos-field__input" formControlName="vendorProfileId">
+          <option value="">{{ 'POSITIVITY.INVOICE.FILTER.ALL_VENDORS' | translate }}</option>
+          @for (vendor of vendorOptions(); track vendor.vendorProfileId) {
+            <option [value]="vendor.vendorProfileId">{{ vendor.displayName }}</option>
+          }
+        </select>
+      </div>
+    }
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="vendor-invoices-search">
+        {{ 'POSITIVITY.INVOICE.FILTER.SEARCH' | translate }}
+      </label>
+      <input id="vendor-invoices-search" class="pos-field__input" type="search" formControlName="search" />
+      <p class="pos-field__hint">{{ 'POSITIVITY.INVOICE.FILTER.SEARCH_HINT' | translate }}</p>
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="vendor-invoices-type">
+        {{ 'POSITIVITY.INVOICE.FILTER.TYPE' | translate }}
+      </label>
+      <select id="vendor-invoices-type" class="pos-field__input" formControlName="type">
+        <option value="">{{ 'POSITIVITY.INVOICE.FILTER.ALL_TYPES' | translate }}</option>
+        <option value="INVOICE">{{ 'POSITIVITY.INVOICE.TYPE.INVOICE' | translate }}</option>
+        <option value="CREDIT_NOTE">{{ 'POSITIVITY.INVOICE.TYPE.CREDIT_NOTE' | translate }}</option>
+      </select>
+    </div>
+
+    @if (!exceptionsOnly()) {
+      <div class="pos-field">
+        <label class="pos-field__label" for="vendor-invoices-flag">
+          {{ 'POSITIVITY.INVOICE.FILTER.FLAG' | translate }}
+        </label>
+        <select id="vendor-invoices-flag" class="pos-field__input" formControlName="flag">
+          <option value="">{{ 'POSITIVITY.INVOICE.FILTER.ALL_FLAGS' | translate }}</option>
+          <option value="UNMATCHED">{{ 'POSITIVITY.INVOICE.FLAG.UNMATCHED' | translate }}</option>
+          <option value="DISCREPANCY">{{ 'POSITIVITY.INVOICE.FLAG.DISCREPANCY' | translate }}</option>
+        </select>
+      </div>
+    }
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="vendor-invoices-date-from">
+        {{ 'POSITIVITY.INVOICE.FILTER.DATE_FROM' | translate }}
+      </label>
+      <input id="vendor-invoices-date-from" class="pos-field__input" type="date" formControlName="dateFrom" />
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="vendor-invoices-date-to">
+        {{ 'POSITIVITY.INVOICE.FILTER.DATE_TO' | translate }}
+      </label>
+      <input id="vendor-invoices-date-to" class="pos-field__input" type="date" formControlName="dateTo" />
+    </div>
+
+    <div class="vendor-invoices__filter-actions">
+      <button class="pos-btn pos-btn--primary" type="submit">
+        {{ 'POSITIVITY.COMMON.APPLY_FILTER' | translate }}
+      </button>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="clearFilter()">
+        {{ 'POSITIVITY.COMMON.CLEAR_FILTER' | translate }}
+      </button>
+    </div>
+  </form>
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      <span>{{ errorKey()! | translate }}</span>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="load()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'empty') {
+    <p class="vendor-invoices__empty">{{ emptyKey() | translate }}</p>
+  }
+
+  @if (state() === 'ready') {
+    <p class="vendor-invoices__count" aria-live="polite">
+      {{ 'POSITIVITY.INVOICE.LIST.COUNT' | translate: { count: totalCount() } }}
+    </p>
+
+    <div class="pos-table-wrap">
+      <table class="pos-table">
+        <caption class="sr-only">{{ 'POSITIVITY.INVOICE.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'POSITIVITY.INVOICE.TABLE.INVOICE_NUMBER' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.INVOICE.TABLE.VENDOR' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.INVOICE.TABLE.TYPE' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.INVOICE.TABLE.ISSUE_DATE' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.INVOICE.TABLE.AMOUNT' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.INVOICE.TABLE.VOUCHER' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.INVOICE.TABLE.FLAGS' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.INVOICE.TABLE.FETCHED_AT' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.invoiceId) {
+            <tr>
+              <th scope="row" class="vendor-invoices__number">
+                <a [routerLink]="['/app', 'accounting', 'payables', 'vendor-invoices', row.invoiceId]">
+                  {{ row.invoiceNumber }}
+                </a>
+              </th>
+              <td>{{ row.vendorDisplayName }}</td>
+              <td>
+                <app-supplier-status-chip
+                  [labelKey]="typeLabelKey(row.type)"
+                  [tone]="typeTone(row.type)"
+                  [icon]="typeIcon(row.type)"
+                  descriptionKey="POSITIVITY.INVOICE.TABLE.TYPE"
+                />
+              </td>
+              <td>
+                @if (issueDateFor(row.issueDate); as issued) {
+                  {{ issued | date: 'mediumDate' }}
+                } @else {
+                  —
+                }
+              </td>
+              <td class="vendor-invoices__amount" [class.vendor-invoices__amount--credit]="isCredit(row)">
+                @if (isCredit(row)) {
+                  <span class="sr-only">{{ 'POSITIVITY.INVOICE.AMOUNT.CREDIT_SR' | translate }}</span>
+                }
+                <span class="vendor-invoices__amount-value">{{ row.amount }}</span>
+                <span class="vendor-invoices__currency">{{ row.currency }}</span>
+              </td>
+              <td>
+                @if (row.voucherStatus === 'LINKED' && row.voucherReference) {
+                  <code class="vendor-invoices__ref">{{ row.voucherReference }}</code>
+                } @else {
+                  <app-supplier-status-chip
+                    labelKey="POSITIVITY.INVOICE.VOUCHER.PENDING"
+                    tone="neutral"
+                    icon="hourglass_empty"
+                    descriptionKey="POSITIVITY.INVOICE.TABLE.VOUCHER"
+                  />
+                }
+              </td>
+              <td class="vendor-invoices__flags">
+                @if (row.flags.length > 0) {
+                  @for (flag of row.flags; track flag) {
+                    <app-supplier-status-chip
+                      [labelKey]="flagLabelKey(flag)"
+                      [tone]="flagTone(flag)"
+                      [icon]="flagIcon(flag)"
+                      descriptionKey="POSITIVITY.INVOICE.TABLE.FLAGS"
+                    />
+                  }
+                } @else {
+                  <span class="vendor-invoices__no-flags">{{ 'POSITIVITY.INVOICE.FLAG.NONE' | translate }}</span>
+                }
+              </td>
+              <td>
+                <time [attr.datetime]="row.fetchedAt">{{ row.fetchedAt | date: 'medium' }}</time>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</main>

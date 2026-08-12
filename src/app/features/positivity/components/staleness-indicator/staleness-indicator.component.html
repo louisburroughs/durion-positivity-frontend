@@ -1,0 +1,37 @@
+<div class="staleness" role="group" [attr.aria-label]="'POSITIVITY.FRESHNESS.ARIA_LABEL' | translate">
+  <dl class="staleness__facts">
+    <div class="staleness__fact">
+      <dt class="staleness__term">{{ asOfLabelKey() | translate }}</dt>
+      <dd class="staleness__value">
+        @if (asOfDisplay(); as value) {
+          {{ value | date: asOfFormat() }}
+        } @else {
+          {{ 'POSITIVITY.FRESHNESS.NO_VENDOR_TIMESTAMP' | translate }}
+        }
+      </dd>
+    </div>
+    <div class="staleness__fact">
+      <dt class="staleness__term">{{ fetchedAtLabelKey() | translate }}</dt>
+      <dd class="staleness__value">
+        @if (fetchedAtDisplay(); as value) {
+          {{ value | date: 'medium' }}
+        } @else {
+          {{ 'POSITIVITY.FRESHNESS.NEVER_FETCHED' | translate }}
+        }
+      </dd>
+    </div>
+  </dl>
+
+  <app-supplier-status-chip
+    class="staleness__chip"
+    [labelKey]="freshnessLabelKey()"
+    [tone]="freshnessTone()"
+    descriptionKey="POSITIVITY.FRESHNESS.CHIP_DESCRIPTION"
+  />
+
+  @if (stale()) {
+    <p class="staleness__note" aria-live="polite">
+      {{ 'POSITIVITY.FRESHNESS.STALE_NOTE' | translate }}
+    </p>
+  }
+</div>

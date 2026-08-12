@@ -1,0 +1,92 @@
+.audit-page {
+	display: grid;
+	gap: var(--space-4);
+	padding: var(--space-5);
+}
+
+.audit-page__breadcrumb a {
+	color: var(--brand-primary);
+	font-weight: 600;
+	font-size: 0.875rem;
+}
+
+.audit-page__breadcrumb a:focus-visible,
+.audit-page__link:focus-visible {
+	outline: 3px solid var(--input-focus-border);
+	outline-offset: 2px;
+}
+
+.audit-page__header h1 {
+	margin: 0;
+}
+
+.audit-page__subtitle {
+	margin: var(--space-1) 0 0;
+	color: var(--text-muted);
+}
+
+.audit-filters {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+	gap: var(--space-3);
+	align-items: end;
+}
+
+.audit-filters__actions {
+	display: flex;
+	gap: var(--space-2);
+	padding-bottom: var(--space-3);
+}
+
+.audit-page__count {
+	margin: 0;
+	font-weight: 600;
+}
+
+.audit-page__empty {
+	margin: 0;
+	color: var(--text-muted);
+}
+
+.audit-page__started {
+	font-weight: 600;
+	text-align: left;
+	white-space: nowrap;
+}
+
+.audit-page__correlation {
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+}
+
+.audit-page__link {
+	color: var(--brand-primary);
+	font-weight: 600;
+}
+
+.audit-page__prompt {
+	margin: 0;
+	color: var(--text-muted);
+}
+
+.audit-page__outcome-note {
+	margin: 0;
+}
+
+.audit-page__no-status {
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.audit-page__pagination {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.audit-page__page-status {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}

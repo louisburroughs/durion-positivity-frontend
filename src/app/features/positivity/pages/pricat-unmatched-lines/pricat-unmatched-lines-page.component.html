@@ -1,0 +1,133 @@
+<main class="unmatched-page" aria-labelledby="unmatched-page-title">
+  <nav class="unmatched-page__breadcrumb" [attr.aria-label]="'POSITIVITY.COMMON.BREADCRUMB' | translate">
+    <a [routerLink]="['/app', 'positivity']">{{ 'POSITIVITY.PROFILES.TITLE' | translate }}</a>
+    @if (vendorProfileId(); as profileId) {
+      <span aria-hidden="true">/</span>
+      <a [routerLink]="['/app', 'positivity', 'profiles', profileId]">
+        {{ 'POSITIVITY.UNMATCHED.BACK_TO_PROFILE' | translate }}
+      </a>
+    }
+  </nav>
+
+  <header class="unmatched-page__header">
+    <div>
+      <h1 id="unmatched-page-title">{{ 'POSITIVITY.UNMATCHED.TITLE' | translate }}</h1>
+      <p class="unmatched-page__subtitle">{{ 'POSITIVITY.UNMATCHED.SUBTITLE' | translate }}</p>
+    </div>
+    <button
+      class="pos-btn pos-btn--secondary"
+      type="button"
+      [disabled]="!canExport()"
+      (click)="exportCsv()"
+    >
+      {{ 'POSITIVITY.UNMATCHED.EXPORT_CSV' | translate }}
+    </button>
+  </header>
+
+  <p class="pos-banner pos-banner--info">{{ 'POSITIVITY.UNMATCHED.WORKLIST_NOTICE' | translate }}</p>
+
+  <form class="unmatched-filters" [formGroup]="filterForm" (ngSubmit)="applyFilter()">
+    <div class="pos-field">
+      <label class="pos-field__label" for="unmatched-reason">
+        {{ 'POSITIVITY.UNMATCHED.FILTER.REASON' | translate }}
+      </label>
+      <select id="unmatched-reason" class="pos-field__input" formControlName="reason">
+        <option value="">{{ 'POSITIVITY.UNMATCHED.FILTER.ALL_REASONS' | translate }}</option>
+        @for (reason of reasons; track reason) {
+          <option [value]="reason">{{ 'POSITIVITY.UNMATCHED.REASON.' + reason | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="unmatched-search">
+        {{ 'POSITIVITY.UNMATCHED.FILTER.SEARCH' | translate }}
+      </label>
+      <input id="unmatched-search" class="pos-field__input" type="search" formControlName="search" />
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="unmatched-date-from">
+        {{ 'POSITIVITY.UNMATCHED.FILTER.DATE_FROM' | translate }}
+      </label>
+      <input id="unmatched-date-from" class="pos-field__input" type="date" formControlName="dateFrom" />
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="unmatched-date-to">
+        {{ 'POSITIVITY.UNMATCHED.FILTER.DATE_TO' | translate }}
+      </label>
+      <input id="unmatched-date-to" class="pos-field__input" type="date" formControlName="dateTo" />
+    </div>
+
+    <div class="unmatched-filters__actions">
+      <button class="pos-btn pos-btn--primary" type="submit">
+        {{ 'POSITIVITY.COMMON.APPLY_FILTER' | translate }}
+      </button>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="clearFilter()">
+        {{ 'POSITIVITY.COMMON.CLEAR_FILTER' | translate }}
+      </button>
+    </div>
+  </form>
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="load()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'empty') {
+    <p class="unmatched-page__empty">{{ 'POSITIVITY.UNMATCHED.EMPTY' | translate }}</p>
+  }
+
+  @if (state() === 'ready') {
+    <p class="unmatched-page__count" aria-live="polite">
+      {{ 'POSITIVITY.UNMATCHED.COUNT' | translate: { count: totalCount() } }}
+    </p>
+
+    <div class="pos-table-wrap">
+      <table class="pos-table">
+        <caption class="sr-only">{{ 'POSITIVITY.UNMATCHED.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'POSITIVITY.UNMATCHED.TABLE.EAN' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.UNMATCHED.TABLE.GTIN' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.UNMATCHED.TABLE.MPN' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.UNMATCHED.TABLE.DESCRIPTION' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.UNMATCHED.TABLE.REASON' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.UNMATCHED.TABLE.FIRST_SEEN' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.UNMATCHED.TABLE.LAST_SEEN' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.UNMATCHED.TABLE.OCCURRENCES' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of lines(); track line.unmatchedLineId) {
+            <tr>
+              <th scope="row" class="unmatched-page__code">{{ line.ean || '—' }}</th>
+              <td class="unmatched-page__code">{{ line.gtin || '—' }}</td>
+              <td class="unmatched-page__code">{{ line.manufacturerPartNumber || '—' }}</td>
+              <td>{{ line.description || '—' }}</td>
+              <td>{{ 'POSITIVITY.UNMATCHED.REASON.' + line.reason | translate }}</td>
+              <td>{{ line.firstSeenAt | date: 'medium' }}</td>
+              <td>{{ line.lastSeenAt | date: 'medium' }}</td>
+              <td>{{ line.occurrences }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</main>

@@ -110,6 +110,43 @@ export const ACCOUNTING_ROUTES: Routes = [
             m => m.VendorPaymentDetailPageComponent,
           ),
       },
+      // ── Payables → Vendor invoices (issue #192, CAP-321) ──────────────────
+      //
+      // These are an accounting surface: an AP user reviews what arrived,
+      // what it linked to and what is flagged before a payment run, so the
+      // route lives here per #192 §4 ("Accounting → Payables → Vendor
+      // invoices"). The *components* stay in `positivity/` and this feature
+      // only lazy-loads them, so no supplier HTTP call and no supplier model
+      // enters the accounting domain (ADR-0010) — the same containment
+      // `inventory` keeps for the transmission and shipment panels.
+      //
+      // `exceptions` is declared before `:invoiceId` on purpose: Angular
+      // matches in order, and the reverse would resolve the worklist as an
+      // invoice whose id is the literal string "exceptions".
+      {
+        path: 'payables/vendor-invoices',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import(
+            '../positivity/pages/vendor-invoice-list/vendor-invoice-list-page.component'
+          ).then(m => m.VendorInvoiceListPageComponent),
+      },
+      {
+        path: 'payables/vendor-invoices/exceptions',
+        pathMatch: 'full',
+        data: { exceptionsOnly: true },
+        loadComponent: () =>
+          import(
+            '../positivity/pages/vendor-invoice-list/vendor-invoice-list-page.component'
+          ).then(m => m.VendorInvoiceListPageComponent),
+      },
+      {
+        path: 'payables/vendor-invoices/:invoiceId',
+        loadComponent: () =>
+          import(
+            '../positivity/pages/vendor-invoice-detail/vendor-invoice-detail-page.component'
+          ).then(m => m.VendorInvoiceDetailPageComponent),
+      },
       {
         path: 'reports/labor-overhead',
         loadComponent: () =>

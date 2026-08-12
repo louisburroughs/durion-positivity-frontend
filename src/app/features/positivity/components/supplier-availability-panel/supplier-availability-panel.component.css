@@ -1,0 +1,84 @@
+/*
+ * Supplier availability section. Visually a peer of the other Product Detail
+ * panels — it must not look like part of the catalog-owned product record, and
+ * it must not look more authoritative than local stock either.
+ */
+.avail-panel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+}
+
+.avail-panel__header {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.avail-panel__title {
+	margin: 0;
+	font-size: 1.0625rem;
+	font-weight: 600;
+}
+
+.avail-panel__subtitle {
+	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.avail-panel__prompt {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}
+
+.avail-panel__loading {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}
+
+/* Immediate, cheap feedback so a slow vendor never reads as a frozen screen. */
+.avail-panel__skeleton {
+	display: block;
+	height: 1.5rem;
+	border-radius: var(--radius-sm);
+	background: var(--surface-variant);
+}
+
+.avail-panel__list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.avail-panel__item {
+	margin: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.avail-panel__skeleton {
+		animation: avail-panel-pulse 1.4s ease-in-out infinite;
+	}
+}
+
+@keyframes avail-panel-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+
+	50% {
+		opacity: 0.55;
+	}
+}

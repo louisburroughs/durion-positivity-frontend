@@ -162,7 +162,8 @@
       "LOCATION": "Sucursales",
       "SECURITY": "Seguridad",
       "ADMIN": "Administración",
-      "SITEMAP": "Mapa del sitio"
+      "SITEMAP": "Mapa del sitio",
+      "SUPPLIER": "Conectividad de proveedores"
     },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Alternar barra lateral de navegación",
@@ -1756,6 +1757,10 @@
         "REPORTS": {
           "TITLE": "Reports",
           "DESCRIPTION": "Informes contables de solo lectura."
+        },
+        "PAYABLES": {
+          "TITLE": "Cuentas por pagar",
+          "DESCRIPTION": "Facturas de proveedores recibidas electrónicamente, su vínculo al comprobante y las excepciones que resolver antes de un pago."
         }
       },
       "CARD": {
@@ -1822,6 +1827,18 @@
         "LABOR_OVERHEAD": {
           "TITLE": "Informe de costos de mano de obra y gastos generales",
           "DESCRIPTION": "Costos mensuales y acumulados del año de mano de obra y gastos generales por ubicación y año fiscal, a partir de los datos contabilizados del libro mayor."
+        },
+        "VENDOR_INVOICES": {
+          "TITLE": "Facturas de proveedores",
+          "DESCRIPTION": "Todo lo que los proveedores han enviado electrónicamente, con importes y moneda exactamente como se recibieron."
+        },
+        "VENDOR_INVOICE_EXCEPTIONS": {
+          "TITLE": "Excepciones de facturas de proveedores",
+          "DESCRIPTION": "Facturas sin conciliar y facturas reemitidas cuyos importes cambiaron."
+        },
+        "VENDOR_INVOICE_DETAIL": {
+          "TITLE": "Abrir una factura de proveedor",
+          "DESCRIPTION": "Líneas, vínculo con la orden de compra y todas las versiones recibidas de una factura."
         }
       },
       "FIELD": {
@@ -1845,7 +1862,8 @@
         "OPEN_CREDIT_MEMO": "Abrir nota de crédito",
         "OPEN_VENDOR_PAYMENT": "Abrir pago a proveedor",
         "OPEN_INVOICE_STATUS": "Ver estado",
-        "OPENING_PAGE": "Abriendo..."
+        "OPENING_PAGE": "Abriendo...",
+        "OPEN_VENDOR_INVOICE": "Abrir factura de proveedor"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Se requiere un ID.",
@@ -5197,6 +5215,924 @@
       },
       "ADMIN": {
         "DESC": "Administración y configuración del sistema."
+      }
+    }
+  },
+  "POSITIVITY": {
+    "COMMON": {
+      "LOADING": "Cargando…",
+      "RETRY": "Reintentar",
+      "REFRESH": "Actualizar",
+      "SAVE": "Guardar",
+      "CANCEL": "Cancelar",
+      "EDIT": "Editar",
+      "DELETE": "Eliminar",
+      "ACTIONS": "Acciones",
+      "BREADCRUMB": "Ruta de navegación",
+      "APPLY_FILTER": "Aplicar filtros",
+      "CLEAR_FILTER": "Borrar filtros",
+      "YAML_MANAGED_READONLY": "Este perfil se gestiona mediante la configuración de despliegue (YAML). El servicio rechaza cualquier cambio hecho aquí, por eso los controles se muestran desactivados. Modifíquelo a través de su canalización de configuración."
+    },
+    "ERROR": {
+      "VALIDATION": "Se rechazaron algunos campos. Corrija los valores resaltados y vuelva a guardar.",
+      "FORBIDDEN": "No tiene permiso para ver esta información.",
+      "CONFLICT": "Esa configuración entra en conflicto con una entrada existente.",
+      "RETRYABLE": "El servicio no está disponible temporalmente. Inténtelo de nuevo.",
+      "FIELD": {
+        "INVALID": "El servicio rechazó este valor.",
+        "BINDING_AUTH_REQUIRED": "Seleccione una configuración de autenticación para esta vinculación.",
+        "CRON_MALFORMED": "Esta no es una expresión cron válida.",
+        "DUPLICATE_CAPABILITY_BINDING": "Esta capacidad ya está vinculada en este perfil.",
+        "LOCATION_UUID_MALFORMED": "Este no es un identificador de ubicación válido.",
+        "ACCOUNT_NUMBER_REQUIRED": "Se requiere un número de cuenta.",
+        "AUTH_REF_REQUIRED": "Se requiere un nombre de referencia de autenticación.",
+        "AUTH_REF_DUPLICATE": "Este nombre de referencia ya se usa en este perfil.",
+        "CREDENTIAL_REFERENCE_MALFORMED": "Introduzca una referencia de secreto como env:MI_SECRETO, no el secreto en sí.",
+        "BASE_URL_MALFORMED": "Introduzca una URL base válida.",
+        "PROFILE_YAML_MANAGED": "Este perfil se gestiona por configuración y no puede cambiarse aquí.",
+        "SUPPLIER_REF": "Se rechazó este alias de configuración. Debe ser único y no puede estar vacío.",
+        "DISPLAY_NAME": "Se requiere un nombre visible.",
+        "AUTH_TYPE": "Seleccione un tipo de autenticación.",
+        "ACCOUNT_ROLE": "Se rechazó esta función de cuenta.",
+        "UNKNOWN_CAPABILITY": "El servicio no reconoce esta clave de capacidad.",
+        "UNKNOWN_PROTOCOL_FAMILY": "El servicio no reconoce esta clave de familia de protocolo.",
+        "PROTOCOL_VERSION": "Se rechazó esta clave de versión. Debe coincidir exactamente con un adaptador registrado y tener 64 caracteres como máximo.",
+        "TIMEOUT_INVALID": "Introduzca un tiempo de espera mayor que cero, o déjelo vacío para usar el valor predeterminado del despliegue.",
+        "MAX_RETRIES_INVALID": "Introduzca cero o más reintentos, o déjelo vacío para usar el valor predeterminado del despliegue."
+      },
+      "CONFLICT_YAML": "Este perfil se gestiona mediante la configuración de despliegue (YAML), por lo que el servicio rechazó el cambio. Actualícelo a través de su canalización de configuración."
+    },
+    "FRESHNESS": {
+      "ARIA_LABEL": "Actualidad de los datos",
+      "AS_OF": "Datos vigentes al",
+      "FETCHED_AT": "Última descarga",
+      "CURRENT": "Vigente",
+      "STALE": "Desactualizado",
+      "UNKNOWN": "Desconocido",
+      "CHIP_DESCRIPTION": "Actualidad:",
+      "NO_VENDOR_TIMESTAMP": "Sin fecha del proveedor",
+      "NEVER_FETCHED": "Nunca descargado",
+      "STALE_NOTE": "Estos datos son más antiguos que el umbral configurado. La hora de descarga indica cuándo consultamos, no la vigencia de los datos."
+    },
+    "CAPABILITY": {
+      "ORDER": "Pedido",
+      "ORDER_STATUS": "Estado del pedido",
+      "STOCK_REPORT": "Informe de existencias",
+      "PRICE_CATALOG": "Catálogo de precios (PRICAT)",
+      "PRODUCT_CATALOG": "Catálogo de productos",
+      "DELIVERY_NOTE": "Albarán de entrega"
+    },
+    "PROTOCOL_FAMILY": {
+      "EDIWHEEL_A25": "EDIWheel A2.5",
+      "EDIWHEEL_C1": "EDIWheel C1",
+      "EDIWHEEL_B": "EDIWheel B",
+      "EDIWHEEL_JSON": "EDIWheel JSON",
+      "MICHELIN_S2S": "Michelin S2S"
+    },
+    "PROFILES": {
+      "TITLE": "Perfiles de proveedor",
+      "SUBTITLE": "Conectividad de proveedores configurada para este despliegue.",
+      "CREATE": "Nuevo perfil",
+      "EDIT": "Editar perfil",
+      "DELETE": "Eliminar perfil",
+      "EMPTY": "Todavía no hay perfiles de proveedor configurados.",
+      "FIELD": {
+        "SUPPLIER_REF": "Alias de configuración",
+        "SUPPLIER_REF_HINT": "Un nombre corto y legible usado en la configuración y los registros.",
+        "DISPLAY_NAME": "Nombre visible",
+        "SANDBOX": "Usar puntos finales de prueba",
+        "ENABLED": "Perfil habilitado",
+        "CONNECT_TIMEOUT": "Tiempo de espera de conexión (ms)",
+        "READ_TIMEOUT": "Tiempo de espera de lectura (ms)",
+        "TIMEOUT_HINT": "Déjelo vacío para usar el valor predeterminado del despliegue.",
+        "MAX_RETRIES": "Presupuesto de reintentos",
+        "MAX_RETRIES_HINT": "Solo se reintentan los fallos que ocurren antes de enviar la solicitud. Déjelo vacío para usar el valor predeterminado del despliegue.",
+        "RETRY_BACKOFF": "Espera entre reintentos",
+        "SANDBOX_BASE_URL": "URL base alternativa de la zona de pruebas",
+        "SANDBOX_BASE_URL_HINT": "Se usa en todos los enlaces mientras el modo de pruebas está activo. Déjelo vacío para conservar la URL base de cada enlace."
+      },
+      "FORM": {
+        "CREATE_TITLE": "Crear perfil de proveedor",
+        "EDIT_TITLE": "Editar perfil de proveedor"
+      },
+      "STATE": {
+        "ENABLED": "Habilitado",
+        "DISABLED": "Deshabilitado"
+      },
+      "ENVIRONMENT": {
+        "SANDBOX": "Prueba",
+        "PRODUCTION": "Producción"
+      },
+      "SOURCE": {
+        "YAML": "Configuración (YAML)",
+        "ADMIN": "Administrado aquí"
+      },
+      "TABS": {
+        "ARIA_LABEL": "Secciones del perfil de proveedor",
+        "auth": "Autenticación",
+        "accounts": "Cuentas",
+        "bindings": "Vinculaciones",
+        "health": "Estado",
+        "pricat": "PRICAT"
+      },
+      "TABLE": {
+        "CAPTION": "Perfiles de proveedor configurados para este despliegue",
+        "NAME": "Perfil",
+        "STATE": "Estado",
+        "ENVIRONMENT": "Entorno",
+        "SOURCE": "Origen de configuración",
+        "OPEN": "Abrir"
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los perfiles de proveedor.",
+        "LOAD_DETAIL": "No se pudo cargar este perfil de proveedor.",
+        "CREATE": "No se pudo crear el perfil de proveedor.",
+        "SAVE": "No se pudo guardar el perfil de proveedor.",
+        "DELETE": "No se pudo eliminar el perfil de proveedor."
+      },
+      "DEPLOYMENT_DEFAULT": "Valor predeterminado del despliegue",
+      "SANDBOX_URL_UNCHANGED": "Los enlaces conservan sus propias URL base",
+      "BACKOFF": {
+        "FIXED": "Fija",
+        "EXPONENTIAL": "Exponencial"
+      }
+    },
+    "AUTH": {
+      "TITLE": "Configuraciones de autenticación",
+      "ADD": "Añadir configuración",
+      "EMPTY": "Todavía no hay configuraciones de autenticación. Las vinculaciones necesitan una para funcionar.",
+      "REFERENCE_NOTICE": "Las credenciales se guardan como referencias a su almacén de secretos. Esta pantalla nunca muestra ni solicita el valor de un secreto.",
+      "TYPE": {
+        "BASIC_PLUS_APIKEY": "Básica + clave de API",
+        "OAUTH2_CLIENT_CREDENTIALS": "Credenciales de cliente OAuth2",
+        "BEARER": "Token bearer"
+      },
+      "FIELD": {
+        "AUTH_REF": "Nombre de referencia",
+        "TYPE": "Tipo de autenticación",
+        "usernameRef": "Referencia del usuario",
+        "passwordRef": "Referencia de la contraseña",
+        "apiKeyRef": "Referencia de la clave de API",
+        "clientIdRef": "Referencia del ID de cliente",
+        "clientSecretRef": "Referencia del secreto de cliente",
+        "tokenUrlRef": "Referencia del extremo de token",
+        "bearerTokenRef": "Referencia del token de portador",
+        "apiKeyHeader": "Nombre del encabezado de la clave de API"
+      },
+      "FORM": {
+        "CREATE_TITLE": "Añadir configuración de autenticación",
+        "EDIT_TITLE": "Editar configuración de autenticación",
+        "CREDENTIAL_REFERENCES": "Referencias de credenciales",
+        "CREDENTIAL_HINT": "Introduzca la referencia que la plataforma resuelve al llamar, por ejemplo env:MICHELIN_EDI_USER. Nunca pegue el secreto en sí.",
+        "ENDPOINT_SETTINGS": "Ajustes del punto final",
+        "REENTER_HINT": "El servicio nunca devuelve las referencias de credenciales, por eso aparecen vacías. Vuelva a introducir todas las referencias que necesita esta configuración antes de guardar."
+      },
+      "TABLE": {
+        "CAPTION": "Configuraciones de autenticación de este perfil",
+        "AUTH_REF": "Nombre de referencia",
+        "TYPE": "Tipo",
+        "API_KEY_HEADER": "Encabezado de la clave de API",
+        "ADAPTER_DEFAULT": "Valor predeterminado del adaptador"
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las configuraciones de autenticación.",
+        "SAVE": "No se pudo guardar la configuración de autenticación.",
+        "DELETE": "No se pudo eliminar la configuración de autenticación."
+      }
+    },
+    "ACCOUNTS": {
+      "TITLE": "Cuentas",
+      "FIELD": {
+        "ACCOUNT_NUMBER": "Número de cuenta",
+        "AGENCY_CODE": "Código de agencia",
+        "LOCATION": "Ubicación"
+      },
+      "BILLING": {
+        "TITLE": "Cuenta de facturación",
+        "HINT": "La cuenta de facturación y liquidación de este perfil de proveedor.",
+        "SAVE": "Guardar cuenta de facturación"
+      },
+      "DELIVERY": {
+        "TITLE": "Cuentas de entrega",
+        "HINT": "La cuenta de recepción utilizada para cada una de sus ubicaciones.",
+        "ADD": "Añadir cuenta de entrega",
+        "MAP_NOW": "Asignar esta ubicación",
+        "SELECT_LOCATION": "Seleccione una ubicación",
+        "EMPTY": "Todavía no hay cuentas de entrega asignadas.",
+        "TABLE_CAPTION": "Cuenta de entrega asignada a cada ubicación",
+        "GAP_WARNING": "Estas ubicaciones activas no tienen cuenta de entrega. Los pedidos para ellas se rechazarán antes de llegar al proveedor.",
+        "GAP_UNVERIFIED": "No se pudieron leer sus ubicaciones activas, por lo que no fue posible verificar estas asignaciones frente a ellas. Las asignaciones siguientes se muestran tal como están configuradas."
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la configuración de cuentas.",
+        "SAVE_BILLING": "No se pudo guardar la cuenta de facturación.",
+        "SAVE_DELIVERY": "No se pudo guardar la cuenta de entrega.",
+        "DELETE_DELIVERY": "No se pudo eliminar la cuenta de entrega."
+      }
+    },
+    "BINDINGS": {
+      "TITLE": "Vinculaciones de capacidades",
+      "HINT": "Se enumeran todas las capacidades que esta pantalla puede nombrar. Una capacidad sin enlace está desactivada para este proveedor e informa de que no está configurada.",
+      "CONFIGURE": "Configurar",
+      "NOT_BOUND_HINT": "Sin configurar",
+      "NO_SCHEDULE": "Bajo demanda",
+      "STATUS": {
+        "ENABLED": "Habilitada",
+        "DISABLED": "Deshabilitada",
+        "NOT_CONFIGURED": "Sin configurar"
+      },
+      "FIELD": {
+        "PROTOCOL_FAMILY": "Familia de protocolo",
+        "PROTOCOL_VERSION": "Versión del protocolo",
+        "BASE_URL": "URL base",
+        "PATH": "Ruta",
+        "CRON": "Programación (cron)",
+        "CRON_HINT": "Opcional. Déjelo vacío para ejecutar esta capacidad solo bajo demanda.",
+        "ENABLED": "Vinculación habilitada",
+        "CAPTURE_LEVEL": "Nivel de captura de contenido",
+        "CAPTURE_LEVEL_HINT": "Controla cuánto se almacena de cada intercambio. Los metadatos del intercambio se conservan siempre, sea cual sea su elección.",
+        "PROTOCOL_FAMILY_HINT": "Las sugerencias son las familias incluidas actualmente. Puede escribir una clave más reciente y el servicio decidirá.",
+        "PROTOCOL_VERSION_HINT": "Las sugerencias son las versiones incluidas actualmente. Puede escribir una clave más reciente, pero debe coincidir exactamente con un adaptador registrado o la capacidad no se resolverá."
+      },
+      "FORM": {
+        "CREATE_TITLE": "Configurar vinculación",
+        "EDIT_TITLE": "Editar vinculación",
+        "SELECT_AUTH": "Seleccione una configuración de autenticación"
+      },
+      "CONFIRM": {
+        "TITLE": "Esta vinculación está activa",
+        "BODY": "Esta vinculación está habilitada y puede estar cursando tráfico en este momento. Al guardar, los cambios se aplican de inmediato.",
+        "ACCEPT": "Guardar cambios"
+      },
+      "TABLE": {
+        "CAPTION": "Vinculaciones de capacidades de este perfil",
+        "CAPABILITY": "Capacidad",
+        "STATUS": "Estado",
+        "PROTOCOL": "Protocolo",
+        "ENDPOINT": "Punto final",
+        "AUTH_REF": "Autenticación",
+        "SCHEDULE": "Programación",
+        "CAPTURE": "Captura de contenido"
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las vinculaciones de capacidades.",
+        "SAVE": "No se pudo guardar la vinculación.",
+        "DELETE": "No se pudo eliminar la vinculación."
+      },
+      "CAPTURE_DEFAULT": "Valor predeterminado del despliegue"
+    },
+    "HEALTH": {
+      "TITLE": "Estado de la conexión",
+      "UNAVAILABLE": "Los informes del estado de la conexión aún no están disponibles.",
+      "UNAVAILABLE_DETAIL": "El servicio de proveedores todavía no publica el estado de salud ni del cortacircuitos. Mientras tanto, use la auditoría de intercambios para ver cómo resultaron las llamadas recientes a este proveedor."
+    },
+    "AUDIT": {
+      "TITLE": "Auditoría de intercambios",
+      "SUBTITLE": "Todos los intercambios salientes con un proveedor, tal como ocurrieron. Los reintentos aparecen como intentos separados.",
+      "DETAIL_TITLE": "Detalle del intercambio",
+      "READ_ONLY_NOTICE": "Son registros históricos conservados para la resolución de disputas. No pueden reintentarse ni reenviarse desde esta pantalla.",
+      "EMPTY": "Ningún intercambio coincide con estos filtros.",
+      "COUNT": "{{count}} intercambios",
+      "CAPTURE_LEVEL": "Captura de contenido",
+      "CAPTURE": {
+        "FULL": "Completa",
+        "REDACTED": "Censurada",
+        "METADATA_ONLY": "Solo metadatos"
+      },
+      "OUTCOME": {
+        "SUCCESS": "Correcto",
+        "FAILURE": "Fallo",
+        "TIMEOUT": "Tiempo agotado",
+        "REJECTED": "Rechazado",
+        "CIRCUIT_OPEN": "Circuito abierto"
+      },
+      "FILTER": {
+        "VENDOR": "Proveedor",
+        "CAPABILITY": "Capacidad",
+        "OUTCOME": "Resultado",
+        "DATE_FROM": "Fecha desde",
+        "DATE_TO": "Fecha hasta",
+        "ALL_CAPABILITIES": "Todas las capacidades",
+        "ALL_OUTCOMES": "Todos los resultados",
+        "SELECT_VENDOR": "Seleccione un proveedor",
+        "VENDOR_HINT": "Obligatorio. Los intercambios se informan de un proveedor a la vez.",
+        "OUTCOME_HINT": "Filtra los intercambios ya cargados en esta página.",
+        "DATE_TO_HINT": "Se incluye este día completo."
+      },
+      "TABLE": {
+        "CAPTION": "Intercambios salientes con proveedores",
+        "STARTED": "Iniciado",
+        "VENDOR": "Proveedor",
+        "CAPABILITY": "Capacidad",
+        "OUTCOME": "Resultado",
+        "HTTP_STATUS": "Estado HTTP",
+        "DURATION": "Duración (ms)",
+        "CORRELATION_ID": "ID de correlación",
+        "VIEW": "Ver",
+        "ATTEMPT": "Intento",
+        "HTTP_METHOD": "Método"
+      },
+      "PAYLOAD": {
+        "TITLE": "Solicitud y respuesta",
+        "REQUEST": "Solicitud",
+        "RESPONSE": "Respuesta",
+        "REDACTION_NOTE": "Los valores sensibles de estos documentos se sustituyeron antes de almacenarlos. Estos no son los documentos que se enviaron por la red, y los originales nunca se conservaron, por lo que no se pueden recuperar de ningún sitio.",
+        "RESTRICTED": "No tiene permiso para leer el contenido almacenado de los intercambios. El resumen anterior sigue disponible.",
+        "METADATA_ONLY": "Este enlace solo almacena metadatos, por lo que no se capturó contenido de solicitud ni de respuesta para este intercambio.",
+        "PURGED": "El contenido almacenado de este intercambio superó su periodo de conservación y se eliminó. El resumen anterior se conserva de forma permanente.",
+        "NOT_CAPTURED": "Este intercambio no incluyó cuerpo de solicitud ni de respuesta, por lo que no hay nada almacenado que mostrar.",
+        "NO_REQUEST_BODY": "No se almacenó ningún cuerpo de solicitud para este intercambio.",
+        "NO_RESPONSE_BODY": "No se almacenó ningún cuerpo de respuesta para este intercambio."
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la auditoría de intercambios.",
+        "LOAD_DETAIL": "No se pudo cargar este intercambio.",
+        "LOAD_PAYLOAD": "No se pudo cargar el contenido del intercambio.",
+        "LOAD_VENDORS": "No se pudo cargar la lista de proveedores."
+      },
+      "SELECT_VENDOR_PROMPT": "Elija un proveedor para ver sus intercambios. El servicio informa de un proveedor a la vez.",
+      "NO_RESPONSE": "Sin respuesta",
+      "NO_RESPONSE_DETAIL": "No se recibió respuesta: la conexión falló, se agotó el tiempo antes de cualquier respuesta o el cortacircuitos detuvo el intento.",
+      "CREATED_BY": "Iniciado por",
+      "SUPPLIER_REF_SNAPSHOT": "El alias registrado en el momento de este intercambio. Es posible que el perfil se haya renombrado desde entonces.",
+      "ENDPOINT_URI": "Dirección de la solicitud",
+      "ENDPOINT_PATH": "Ruta de la solicitud",
+      "ENDPOINT_PATH_NOTE": "La captura de solo metadatos conserva únicamente la ruta. Cualquier cadena de consulta se descartó al registrar el intercambio y no se puede recuperar.",
+      "ENDPOINT_REDACTED_NOTE": "Los parámetros que contenían credenciales se eliminaron al registrar el intercambio.",
+      "FAILURE_DETAIL": "Lo que informó el proveedor",
+      "OUTCOME_FILTER_SCOPE": "Se muestran {{shown}} de los {{loaded}} intercambios de esta página. El filtro de resultado se aplica a la página que está viendo, no a todo el intervalo de fechas.",
+      "OUTCOME_FILTER_EMPTY": "Ningún intercambio de esta página tiene ese resultado. Otras páginas de este intervalo de fechas podrían tenerlo.",
+      "PAGINATION": {
+        "ARIA_LABEL": "Páginas de la lista de intercambios",
+        "PREVIOUS": "Anterior",
+        "NEXT": "Siguiente",
+        "STATUS": "Página {{page}} de {{total}}"
+      },
+      "ATTEMPTS": {
+        "TITLE": "Intentos de esta llamada",
+        "CAPTION": "Todos los intentos que comparten este identificador de correlación, del más antiguo al más reciente",
+        "HINT": "Esta llamada se intentó {{count}} veces. Cada intento se registra por separado.",
+        "SINGLE": "Esta llamada se intentó una sola vez; no se reintentó.",
+        "CURRENT": "El intento que está viendo",
+        "UNAVAILABLE": "No se pudieron cargar los demás intentos de esta llamada. El intento anterior no se ve afectado."
+      }
+    },
+    "PRICAT": {
+      "TITLE": "Sincronización PRICAT",
+      "EMPTY": "Todavía no se han registrado ejecuciones PRICAT para este proveedor.",
+      "NOT_BOUND": "La capacidad de catálogo de precios no está configurada para este proveedor, así que no pueden programarse ni iniciarse ejecuciones.",
+      "RUN_NOW": "Ejecutar ahora",
+      "RUN_ACCEPTED": "La ejecución se aceptó y aparecerá abajo a medida que avance.",
+      "IN_PROGRESS": "En curso",
+      "UNMATCHED_LINK": "Líneas sin coincidencia",
+      "UNMATCHED_BADGE_SR": "líneas de catálogo sin coincidencia pendientes de resolver",
+      "PREVIOUS_DATA_AUTHORITATIVE": "No se recibieron datos nuevos. Los precios de proveedor recibidos anteriormente siguen siendo los válidos.",
+      "OUTCOME": {
+        "RUNNING": "En ejecución",
+        "SUCCESS": "Correcta",
+        "PARTIAL": "Parcial",
+        "EMPTY": "Sin datos recibidos",
+        "FAILED": "Fallida"
+      },
+      "FRESHNESS": {
+        "EFFECTIVE_DATE": "Fecha de vigencia del proveedor",
+        "LAST_FETCH": "Última descarga del proveedor"
+      },
+      "TABLE": {
+        "CAPTION": "Historial de ejecuciones PRICAT de este proveedor",
+        "STARTED": "Iniciada",
+        "FINISHED": "Finalizada",
+        "WINDOW": "Intervalo",
+        "OUTCOME": "Resultado",
+        "FETCHED": "Líneas descargadas",
+        "STORED": "Líneas guardadas",
+        "UNMATCHED": "Sin coincidencia",
+        "DUPLICATES": "Duplicadas",
+        "CHECKPOINT": "Punto de control"
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar el historial de ejecuciones PRICAT.",
+        "TRIGGER": "No se pudo iniciar la ejecución.",
+        "TRIGGER_FORBIDDEN": "No tiene permiso para iniciar una ejecución PRICAT."
+      }
+    },
+    "UNMATCHED": {
+      "TITLE": "Líneas de catálogo sin coincidencia",
+      "SUBTITLE": "Líneas del catálogo del proveedor que no pudieron asociarse a un producto.",
+      "BACK_TO_PROFILE": "Perfil de proveedor",
+      "EXPORT_CSV": "Exportar CSV",
+      "EMPTY": "No hay líneas sin coincidencia. Todas las líneas recibidas se asociaron a un producto.",
+      "COUNT": "{{count}} líneas sin coincidencia",
+      "WORKLIST_NOTICE": "Estas líneas permanecen listadas hasta que una corrección del catálogo permita asociarlas. No pueden descartarse desde esta pantalla.",
+      "FILTER": {
+        "REASON": "Motivo",
+        "SEARCH": "Buscar",
+        "DATE_FROM": "Primera aparición desde",
+        "DATE_TO": "Última aparición hasta",
+        "ALL_REASONS": "Todos los motivos"
+      },
+      "REASON": {
+        "NO_EAN_MATCH": "Sin coincidencia de EAN",
+        "NO_UPC_MATCH": "Sin coincidencia de UPC",
+        "NO_MPN_MATCH": "Sin coincidencia de número de pieza del fabricante",
+        "AMBIGUOUS_MATCH": "Coincidencia ambigua",
+        "MISSING_IDENTIFIERS": "Sin identificadores utilizables"
+      },
+      "TABLE": {
+        "CAPTION": "Líneas del catálogo del proveedor pendientes de asociar a un producto",
+        "EAN": "EAN",
+        "GTIN": "GTIN",
+        "MPN": "Número de pieza del fabricante",
+        "DESCRIPTION": "Descripción",
+        "REASON": "Motivo",
+        "FIRST_SEEN": "Primera aparición",
+        "LAST_SEEN": "Última aparición",
+        "OCCURRENCES": "Apariciones"
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las líneas sin coincidencia."
+      }
+    },
+    "AVAILABILITY": {
+      "TITLE": "Disponibilidad del proveedor",
+      "SUBTITLE": "Existencias en vivo informadas por cada proveedor configurado para la ubicación de entrega que elija.",
+      "PROMPT_LOCATION": "Elija una ubicación de entrega para consultar la disponibilidad del proveedor.",
+      "LOADING": "Consultando la disponibilidad del proveedor…",
+      "NO_VENDORS": "Ningún proveedor está configurado para informar existencias en esta ubicación.",
+      "QUANTITY": "Disponible",
+      "WAREHOUSE": "Almacén",
+      "EARLIEST_DELIVERY": "Entrega más temprana",
+      "LEAD_TIME": "Plazo de entrega",
+      "LEAD_TIME_DAYS": "{{count}} días",
+      "CUTOFF": "Pedir antes de",
+      "VENDOR_CODE": "Código del proveedor",
+      "AS_OF": "Datos del proveedor al",
+      "CHECKED_AT": "Consultado el",
+      "STATUS_LABEL": "Estado del proveedor:",
+      "STATUS": {
+        "OK": "Disponible",
+        "SUPPLIER_UNAVAILABLE": "Proveedor inaccesible",
+        "NOT_LISTED": "No lo distribuye",
+        "CAPABILITY_NOT_CONFIGURED": "No habilitado"
+      },
+      "STATUS_DETAIL": {
+        "OK": "El proveedor informó existencias para esta ubicación.",
+        "SUPPLIER_UNAVAILABLE": "El proveedor no respondió, por lo que no se conoce ninguna cantidad. Inténtelo de nuevo.",
+        "NOT_LISTED": "Este proveedor no distribuye este producto.",
+        "CAPABILITY_NOT_CONFIGURED": "El informe de existencias no está habilitado para este proveedor."
+      },
+      "LOCATION": {
+        "LABEL": "Ubicación de entrega",
+        "PROCUREMENT_LABEL": "Ubicación de entrega para las consultas de disponibilidad",
+        "PLACEHOLDER": "Elija una ubicación de entrega",
+        "HINT": "Se recuerda solo durante esta sesión. No se consulta a ningún proveedor hasta que elija una.",
+        "LOADING": "Cargando ubicaciones…",
+        "EMPTY": "No hay ninguna ubicación activa a la que entregar.",
+        "ERROR": {
+          "LOAD": "No se pudo cargar la lista de ubicaciones, por lo que no se puede consultar la disponibilidad."
+        }
+      },
+      "CHECK": {
+        "ACTION": "Consultar disponibilidad",
+        "COLUMN": "Disponibilidad del proveedor",
+        "NEEDS_LOCATION": "Elija una ubicación de entrega para consultar esta línea.",
+        "LINE_CHANGED": "Esta línea cambió después de la consulta. Vuelva a consultarla."
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la disponibilidad del proveedor. El resto de esta página no se ve afectada.",
+        "CHECK": "No se pudo consultar esta línea con el proveedor."
+      }
+    },
+    "ENRICHMENT": {
+      "TITLE": "Contenido del fabricante",
+      "PROVENANCE": "Suministrado por {{manufacturer}}. Contenido de marketing del fabricante, no datos del catálogo.",
+      "LOCALE_FALLBACK": "El fabricante no ha publicado este texto en su idioma, por lo que se muestra en otro idioma.",
+      "GALLERY": "Imágenes del fabricante",
+      "PUBLISHED_AT": "Publicado por el fabricante",
+      "FETCHED_AT": "Última descarga",
+      "ERROR": {
+        "LOAD": "No se pudo cargar el contenido del fabricante."
+      },
+      "UNMATCHED": {
+        "TITLE": "Contenido del fabricante sin coincidencia",
+        "SUBTITLE": "Contenido del fabricante recibido para productos que el catálogo no reconoce.",
+        "WORKLIST_NOTICE": "Estos registros permanecen listados hasta que una corrección del catálogo permita asociarlos. No pueden asociarse ni descartarse desde esta pantalla.",
+        "EMPTY": "No hay contenido del fabricante sin coincidencia. Todo lo recibido se asoció a un producto.",
+        "COUNT": "{{count}} registros sin coincidencia",
+        "NO_PREVIEW": "Sin vista previa publicada",
+        "FILTER": {
+          "VENDOR": "Proveedor",
+          "ALL_VENDORS": "Todos los proveedores",
+          "REASON": "Motivo",
+          "ALL_REASONS": "Todos los motivos",
+          "SEARCH": "Buscar",
+          "DATE_FROM": "Primera aparición desde",
+          "DATE_TO": "Última aparición hasta"
+        },
+        "REASON": {
+          "NO_EAN_MATCH": "Sin coincidencia de EAN",
+          "NO_GTIN_MATCH": "Sin coincidencia de GTIN",
+          "NO_MPN_MATCH": "Sin coincidencia de número de pieza del fabricante",
+          "AMBIGUOUS_MATCH": "Coincidencia ambigua",
+          "MISSING_IDENTIFIERS": "Sin identificadores utilizables"
+        },
+        "TABLE": {
+          "CAPTION": "Contenido del fabricante pendiente de asociar a un producto",
+          "EAN": "EAN",
+          "GTIN": "GTIN",
+          "MPN": "Número de pieza del fabricante",
+          "MANUFACTURER": "Fabricante",
+          "VENDOR": "Proveedor",
+          "PREVIEW": "Vista previa del contenido",
+          "IMAGES": "Imágenes",
+          "REASON": "Motivo",
+          "FIRST_SEEN": "Primera aparición",
+          "LAST_SEEN": "Última aparición",
+          "OCCURRENCES": "Apariciones"
+        },
+        "ERROR": {
+          "LOAD": "No se pudo cargar el contenido del fabricante sin coincidencia."
+        }
+      }
+    },
+    "TIMELINE": {
+      "ARIA_LABEL": "Historial de eventos",
+      "EMPTY": "Todavía no se ha reportado nada."
+    },
+    "TRANSMISSION": {
+      "TITLE": "Transmisión al proveedor",
+      "STATE_LABEL": "Estado de la transmisión:",
+      "VENDOR": "Proveedor",
+      "VENDOR_ORDER_NUMBER": "Número de pedido del proveedor",
+      "NO_VENDOR_ORDER_NUMBER": "El proveedor no lo proporcionó",
+      "DOCUMENT_ID": "Referencia del documento",
+      "NO_DOCUMENT_ID": "Sin referencia de documento",
+      "REFERENCE_NOTE": "Las referencias del proveedor se muestran para su correspondencia con él. Los enlaces dentro de esta aplicación siempre usan el identificador propio del pedido.",
+      "AS_OF": "Estado del proveedor al",
+      "FETCHED_AT": "Última consulta",
+      "MANUAL_REVIEW_REASON": "Por qué requiere revisión",
+      "MANUAL_REVIEW_ADMIN_ONLY": "Un administrador lo resuelve desde la cola de revisión manual de proveedores.",
+      "NO_RESEND_NOTE": "Este pedido no se reenvía desde aquí. Es posible que el proveedor ya lo tenga, así que reenviarlo arriesgaría un pedido físico duplicado.",
+      "NOT_TRANSMITTED": "Este pedido no se envió al proveedor de forma electrónica, por lo que no hay estado de transmisión que mostrar.",
+      "STATE": {
+        "QUEUED": "En cola para el proveedor",
+        "SENT": "Enviado al proveedor",
+        "CONFIRMED": "Confirmado por el proveedor",
+        "PARTIALLY_CONFIRMED": "Confirmado parcialmente",
+        "REJECTED": "Rechazado por el proveedor",
+        "MANUAL_REVIEW": "Requiere revisión manual",
+        "UNKNOWN": "Estado desconocido"
+      },
+      "OUTCOME": {
+        "ACCEPTED": "Aceptada",
+        "REJECTED": "Rechazada",
+        "BACKORDERED": "En pedido pendiente",
+        "PENDING": "A la espera del proveedor"
+      },
+      "LINES": {
+        "TITLE": "Confirmaciones por línea",
+        "CAPTION": "Respuesta del proveedor para cada línea de esta orden de compra",
+        "SKU": "SKU",
+        "PRODUCT": "Producto",
+        "ORDERED": "Pedido",
+        "CONFIRMED": "Confirmado",
+        "OUTCOME": "Resultado del proveedor",
+        "EXPECTED_SHIP": "Fecha de envío prevista",
+        "VENDOR_REASON": "Motivo del proveedor",
+        "NOT_ANSWERED": "Aún sin respuesta",
+        "EMPTY": "El proveedor todavía no ha respondido ninguna línea."
+      },
+      "HISTORY": {
+        "TITLE": "Historial de estados",
+        "ARIA_LABEL": "Historial de estados del proveedor",
+        "EMPTY": "El proveedor todavía no ha reportado ningún cambio de estado.",
+        "APPEND_ONLY": "Este historial es el registro de lo que reportó el proveedor. Las entradas nunca se editan ni se eliminan.",
+        "VENDOR_STATUS": "Estado del proveedor",
+        "NOTE": "Nota del proveedor",
+        "UNKNOWN_STATUS": "Cambio de estado reportado"
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar el estado de transmisión del proveedor. El resto de este pedido no se ve afectado."
+      }
+    },
+    "MANUAL_REVIEW": {
+      "TITLE": "Pedidos que requieren revisión",
+      "SUBTITLE": "Transmisiones en las que la plataforma no puede determinar si el proveedor recibió el pedido.",
+      "NO_RESEND_NOTICE": "Nada en esta pantalla reenvía un pedido. Un proveedor puede tener ya un pedido listado aquí, así que reenviarlo arriesgaría una entrega física duplicada. Resuelva cada fila con las acciones que ofrece el servicio.",
+      "ACTIONS_NOTICE": "Acciones de resolución que el servicio ofrece para este pedido.",
+      "EMPTY": "Ninguna transmisión requiere revisión.",
+      "COUNT": "{{count}} transmisiones requieren revisión",
+      "REASON_UNKNOWN": "El servicio no indicó un motivo.",
+      "ACTION": {
+        "CONFIRM_MATCHED": "Confirmar que el proveedor tiene este pedido",
+        "MARK_REJECTED": "Marcar como rechazado por el proveedor"
+      },
+      "CONFIRM": {
+        "TITLE": "Confirme esta resolución",
+        "CONTEXT": "Orden de compra",
+        "ACTION": "Acción",
+        "ACCEPT": "Sí, aplicar esta resolución",
+        "NO_RESEND": "Esto no envía nada al proveedor. Registra lo que usted cree que ya ocurrió.",
+        "RISK_CONFIRM_MATCHED": "Confirme solo si ha verificado con el proveedor que tiene este pedido. Confirmar un pedido que el proveedor nunca recibió significa que las piezas nunca llegarán, y volver a pedirlas más tarde puede generar un pedido físico duplicado.",
+        "RISK_MARK_REJECTED": "Marque como rechazado solo si ha verificado con el proveedor que no lo va a surtir. Si el proveedor sí tiene el pedido, llegará una entrega real contra un pedido registrado como rechazado.",
+        "RISK_GENERIC": "Aplique esto solo si ha verificado el resultado con el proveedor. Registrar el resultado equivocado en una transmisión ambigua puede provocar una entrega faltante o un pedido físico duplicado."
+      },
+      "FILTER": {
+        "VENDOR": "Proveedor",
+        "ALL_VENDORS": "Todos los proveedores",
+        "SEARCH": "Pedido o referencia del proveedor",
+        "DATE_FROM": "Detectado desde",
+        "DATE_TO": "Detectado hasta"
+      },
+      "TABLE": {
+        "CAPTION": "Transmisiones a la espera de conciliación humana",
+        "PO": "Orden de compra",
+        "VENDOR": "Proveedor",
+        "VENDOR_ORDER_NUMBER": "Número de pedido del proveedor",
+        "STATE": "Estado",
+        "REASON": "Motivo",
+        "DETECTED_AT": "Detectado",
+        "OPEN_ORDER": "Abrir pedido"
+      },
+      "NOTICE": {
+        "RESOLVED": "Resolución registrada.",
+        "RACED_BY_VENDOR": "El proveedor actualizó este pedido primero. La fila muestra ahora el estado más reciente."
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la cola de revisión.",
+        "RESOLVE": "No se pudo aplicar la resolución. No se envió nada al proveedor."
+      }
+    },
+    "SHIPMENT": {
+      "TITLE": "Eventos de envío",
+      "APPEND_ONLY": "Eventos reportados por el proveedor y el transportista, del más antiguo al más reciente. Las entradas nunca se editan ni se eliminan.",
+      "ARIA_LABEL": "Historial de eventos de envío",
+      "EMPTY": "No se ha reportado ningún evento de envío para este pedido.",
+      "DESCRIPTION": "Descripción del transportista",
+      "CARRIER": "Transportista",
+      "TRACKING": "Referencia de seguimiento",
+      "PACKAGES": "Bultos",
+      "RECEIVED_AT": "Recibido por esta plataforma",
+      "EVENT": {
+        "PICKED_UP": "Recogido en el proveedor",
+        "SHIPPED": "Enviado",
+        "IN_TRANSIT": "En tránsito",
+        "OUT_FOR_DELIVERY": "En reparto",
+        "DELIVERED": "Entregado",
+        "EXCEPTION": "Incidencia del transportista",
+        "RETURNED": "Devuelto"
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los eventos de envío. El resto de este pedido no se ve afectado."
+      },
+      "UNLINKED": {
+        "TITLE": "Eventos de envío sin vincular",
+        "SUBTITLE": "Eventos de envío que no coincidieron con ninguna orden de compra.",
+        "WORKLIST_NOTICE": "Estos eventos son envíos reales que la plataforma no pudo vincular a un pedido. Las filas desaparecen cuando aparece un pedido coincidente o el proveedor corrige su referencia. No se pueden descartar: ocultar un evento oculta una entrega entrante.",
+        "EMPTY": "Todos los eventos de envío están vinculados a un pedido.",
+        "COUNT": "{{count}} eventos sin vincular",
+        "FILTER": {
+          "VENDOR": "Proveedor",
+          "ALL_VENDORS": "Todos los proveedores",
+          "SEARCH": "Pedido del proveedor, seguimiento o transportista",
+          "DATE_FROM": "Evento desde",
+          "DATE_TO": "Evento hasta"
+        },
+        "TABLE": {
+          "CAPTION": "Eventos de envío que no coincidieron con ninguna orden de compra",
+          "EVENT": "Evento",
+          "VENDOR": "Proveedor",
+          "VENDOR_ORDER_NUMBER": "Número de pedido del proveedor",
+          "CARRIER": "Transportista",
+          "TRACKING": "Referencia de seguimiento",
+          "OCCURRED_AT": "Reportado por el transportista",
+          "RECEIVED_AT": "Recibido por esta plataforma",
+          "REASON": "Por qué no está vinculado"
+        },
+        "ERROR": {
+          "LOAD": "No se pudieron cargar los eventos de envío sin vincular."
+        }
+      }
+    },
+    "STOCK_SNAPSHOT": {
+      "TITLE": "Instantánea de stock del proveedor",
+      "SUBTITLE": "El último stock que un proveedor publicó para un país o una agencia.",
+      "SUPPLIER_STOCK_NOTICE": "Estas cantidades son stock del proveedor, reportado por él para planificación. No son su inventario propio disponible y nunca deben sumarse a él.",
+      "META_TITLE": "Detalles de la instantánea",
+      "VENDOR": "Proveedor",
+      "SCOPE_LABEL": "Ámbito",
+      "LINE_COUNT": "Productos en la instantánea",
+      "AS_OF": "Instantánea del proveedor tomada el",
+      "FETCHED_AT": "Última consulta",
+      "NOT_REPORTED": "No reportado",
+      "SEARCH_NOT_REPORTED": "Este proveedor no reportó \"{{search}}\" en esta instantánea. Eso no es lo mismo que reportar cero existencias.",
+      "LEGEND": "\"No reportado\" significa que la instantánea del proveedor no dijo nada sobre ese producto. Una cantidad de 0 significa que el proveedor reportó que no tiene existencias.",
+      "CHOOSE_VENDOR_PROMPT": "Elija un proveedor para ver su última instantánea de stock.",
+      "NO_SNAPSHOT": "Este proveedor todavía no ha publicado ninguna instantánea de stock. Eso no es lo mismo que reportar cero existencias.",
+      "SCOPE": {
+        "COUNTRY": "País",
+        "AGENCY": "Agencia",
+        "WAREHOUSE": "Almacén"
+      },
+      "FILTER": {
+        "VENDOR": "Proveedor",
+        "CHOOSE_VENDOR": "Elija un proveedor",
+        "NO_VENDORS": "No se pudo cargar ningún perfil de proveedor, así que no se puede solicitar una instantánea.",
+        "SCOPE_CODE": "Código de ámbito",
+        "SCOPE_CODE_HINT": "Código de país o de agencia publicado por el proveedor, por ejemplo FR.",
+        "SEARCH": "SKU, EAN o producto"
+      },
+      "TABLE": {
+        "CAPTION": "Productos en la última instantánea de stock del proveedor",
+        "SKU": "SKU",
+        "PRODUCT": "Producto",
+        "EAN": "EAN",
+        "WAREHOUSE": "Almacén del proveedor",
+        "SUPPLIER_QUANTITY": "Stock del proveedor",
+        "SUPPLIER_QUANTITY_NOTE": "Reportado por el proveedor, solo informativo",
+        "UOM": "Unidad"
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la instantánea de stock."
+      }
+    },
+    "INVOICE": {
+      "PAYABLES": "Cuentas por pagar",
+      "SOURCE_NOTE": "Los importes, la moneda y las fechas se muestran exactamente como los envió el proveedor. Nada en esta pantalla convierte ni recalcula una cifra.",
+      "BREADCRUMB": {
+        "ACCOUNTING": "Contabilidad"
+      },
+      "LIST": {
+        "TITLE": "Facturas de proveedores",
+        "SUBTITLE": "Facturas y notas de crédito recibidas electrónicamente de los proveedores, con su vínculo al comprobante.",
+        "EMPTY": "Todavía no se ha recibido ninguna factura de proveedor.",
+        "COUNT": "{{count}} facturas de proveedores",
+        "OPEN_EXCEPTIONS": "Abrir la lista de excepciones"
+      },
+      "EXCEPTIONS": {
+        "TITLE": "Excepciones de facturas de proveedores",
+        "SUBTITLE": "Facturas marcadas como no conciliadas o con discrepancia, para revisar antes de un pago.",
+        "EMPTY": "Ninguna factura de proveedor está marcada actualmente.",
+        "WORKLIST_NOTICE": "Las filas permanecen en esta lista hasta que el servicio resuelva la marca. No se pueden descartar desde aquí, porque descartarlas no cambiaría el importe que está a punto de pagarse."
+      },
+      "FILTER": {
+        "VENDOR": "Proveedor",
+        "ALL_VENDORS": "Todos los proveedores",
+        "SEARCH": "Buscar",
+        "SEARCH_HINT": "Coincide con el número de factura, la referencia del comprobante y el número de orden de compra.",
+        "TYPE": "Tipo de documento",
+        "ALL_TYPES": "Todos los tipos",
+        "FLAG": "Excepción",
+        "ALL_FLAGS": "Todas las facturas",
+        "DATE_FROM": "Emitidas desde",
+        "DATE_TO": "Emitidas hasta"
+      },
+      "TABLE": {
+        "CAPTION": "Facturas de proveedores recibidas con tipo, importe, vínculo al comprobante y marcas de excepción",
+        "INVOICE_NUMBER": "Número de factura",
+        "VENDOR": "Proveedor",
+        "TYPE": "Tipo",
+        "ISSUE_DATE": "Fecha de emisión",
+        "AMOUNT": "Importe",
+        "VOUCHER": "Comprobante",
+        "FLAGS": "Excepciones",
+        "FETCHED_AT": "Recibida"
+      },
+      "TYPE": {
+        "INVOICE": "Factura",
+        "CREDIT_NOTE": "Nota de crédito"
+      },
+      "FLAG": {
+        "UNMATCHED": "Sin conciliar",
+        "DISCREPANCY": "Discrepancia",
+        "NONE": "Ninguna",
+        "BACKEND_OWNED_NOTE": "Esta marca la establece y la borra el servicio. Desaparece de la lista cuando el servicio informa que la excepción está resuelta."
+      },
+      "VOUCHER": {
+        "PENDING": "Comprobante pendiente",
+        "PENDING_NOTE": "El servicio todavía no ha creado un comprobante para esta factura. Aquí no se requiere ninguna acción suya.",
+        "REFERENCE_NOTE": "Referencia del comprobante para su sistema contable de registro."
+      },
+      "AMOUNT": {
+        "CREDIT_SR": "Crédito, importe negativo:"
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar las facturas de proveedores.",
+        "LOAD_DETAIL": "No se pudo cargar esta factura de proveedor."
+      },
+      "DETAIL": {
+        "TITLE": "Factura de proveedor",
+        "SUMMARY": "Documento",
+        "AS_DELIVERED": "Todas las cifras siguientes se muestran tal como las envió el proveedor.",
+        "AS_OF": "Hora efectiva del proveedor",
+        "FETCHED_AT": "Recibida por la plataforma",
+        "LINKAGE": "Vínculos",
+        "PURCHASE_ORDER": "Orden de compra",
+        "PO_UNMATCHED": "No se ha conciliado ninguna orden de compra con esta factura.",
+        "EXCEPTION_DETAIL": "Detalle del servicio",
+        "VERSIONS": "Versiones recibidas",
+        "VERSIONS_NOTE": "Ambas versiones se muestran tal como se recibieron. Ninguna se fusiona con la otra y aquí no se calcula ninguna diferencia.",
+        "VERSIONS_CAPTION": "Cada versión recibida de esta factura, con su propia referencia, fecha de emisión e importe",
+        "LINES": "Líneas",
+        "LINES_CAPTION": "Líneas de la factura tal como las envió el proveedor",
+        "LINES_EMPTY": "El proveedor no envió detalle de líneas con esta factura.",
+        "NO_CLIENT_TOTAL": "Aquí no se calcula ningún total: el total del documento que aparece arriba es el del proveedor."
+      },
+      "VERSION": {
+        "REFERENCE": "Versión",
+        "RECEIVED_AT": "Recibida",
+        "STANDING": "Situación",
+        "CURRENT": "Vigente",
+        "SUPERSEDED": "Sustituida"
+      },
+      "LINE": {
+        "SKU": "Número de pieza",
+        "DESCRIPTION": "Descripción",
+        "QUANTITY": "Cantidad",
+        "UNIT_AMOUNT": "Importe unitario",
+        "LINE_AMOUNT": "Importe de la línea"
+      }
+    },
+    "FLEET": {
+      "AS_OF": "Hora efectiva del gestor de flota",
+      "FETCHED_AT": "Recibido por la plataforma",
+      "VENDOR_REASON": "Motivo del gestor de flota",
+      "NO_VENDOR_REASON": "El gestor de flota no indicó ningún motivo.",
+      "LOOKUP": {
+        "TITLE": "Consulta de contrato de flota",
+        "ADVISORY_ONLY": "Esta consulta es informativa. No bloquea el presupuesto ni la creación de una orden de trabajo.",
+        "IDENTIFIER": "Identificador del vehículo",
+        "IDENTIFIER_HINT": "VIN, placa o número de flota, tal como el gestor de flota conoce el vehículo.",
+        "CHECK": "Consultar al gestor de flota",
+        "IDLE": "Introduzca un identificador de vehículo para consultarlo con el gestor de flota.",
+        "OUTCOME_LABEL": "Resultado de la consulta:",
+        "OUTCOME": {
+          "FOUND": "Vehículo encontrado",
+          "NOT_FOUND": "Desconocido para el gestor de flota",
+          "UNREACHABLE": "Gestor de flota inaccesible",
+          "UNKNOWN": "Sin consultar"
+        },
+        "UNREACHABLE_NOTE": "No se pudo contactar con el gestor de flota, así que la cobertura del contrato se desconoce en este momento. El presupuesto no se ve afectado.",
+        "NOT_FOUND_TITLE": "Vehículo o contrato desconocido para el gestor de flota",
+        "NOT_FOUND_BODY": "El gestor de flota no tiene ningún vehículo registrado con {{identifier}}.",
+        "NOT_FOUND_NEXT": "Verifique el identificador o continúe y facture directamente al cliente.",
+        "FLEET_MANAGER": "Gestor de flota",
+        "VEHICLE": "Vehículo",
+        "VIN": "VIN",
+        "PLATE": "Placa",
+        "CONTRACTS": "Contratos aplicables",
+        "EFFECTIVE": "Vigencia",
+        "NO_POLICIES": "El gestor de flota no indicó ninguna póliza para este contrato.",
+        "NO_CONTRACTS": "El gestor de flota conoce este vehículo pero no indica ningún contrato aplicable.",
+        "ERROR": {
+          "LOAD": "No se pudo completar la consulta del contrato de flota."
+        }
+      },
+      "AUTHORIZATION": {
+        "TITLE": "Autorización de flota",
+        "READ_ONLY_NOTE": "La autorización la decide el gestor de flota y la registra el servicio. Nada en esta pantalla la modifica.",
+        "STATE_LABEL": "Autorización:",
+        "STATE": {
+          "PENDING": "Esperando al gestor de flota",
+          "GRANTED": "Autorizado",
+          "DENIED": "Denegado",
+          "MANUAL_REVIEW": "Requiere revisión manual",
+          "UNKNOWN": "Desconocido"
+        },
+        "NOT_FLEET": "Esta orden de trabajo no está bajo un contrato de flota.",
+        "UNREACHABLE_NOTE": "No se pudo contactar con el gestor de flota, así que el estado de autorización mostrado puede estar desactualizado. El resto de esta orden de trabajo no se ve afectado.",
+        "FLEET_MANAGER": "Gestor de flota",
+        "REFERENCE": "Referencia de autorización",
+        "NO_REFERENCE": "Todavía no emitida",
+        "REQUESTED_AT": "Solicitada",
+        "DECIDED_AT": "Resuelta",
+        "NO_DECISION": "Todavía sin decisión",
+        "AUTHORIZED_AMOUNT": "Importe autorizado",
+        "CONTRACT": "Contrato",
+        "PENDING_BODY": "El gestor de flota todavía no ha respondido. Actualice para ver el estado más reciente.",
+        "DENIED_TITLE": "El gestor de flota denegó este trabajo.",
+        "DENIED_NEXT": "Comente el motivo anterior con el cliente o con el gestor de flota antes de continuar.",
+        "MANUAL_REVIEW_TITLE": "Esta autorización requiere revisión manual.",
+        "MANUAL_REVIEW_NEXT": "El servicio no pudo obtener una decisión. Contacte directamente con el gestor de flota.",
+        "ERROR": {
+          "LOAD": "No se pudo cargar la autorización de flota."
+        }
+      },
+      "COMPLETION": {
+        "TITLE": "Aprobación de finalización",
+        "STATE_LABEL": "Aprobación de finalización:",
+        "STATE": {
+          "PENDING": "Todavía sin enviar",
+          "APPROVED": "Aprobada",
+          "RETRYING": "Reintentando",
+          "MANUAL_REVIEW": "Requiere revisión manual",
+          "UNKNOWN": "Desconocido"
+        },
+        "BACKEND_DRIVEN": "El servicio envía la finalización al gestor de flota y reintenta según su propia programación.",
+        "ATTEMPTS": "Intentos",
+        "LAST_ATTEMPT": "Último intento",
+        "NEXT_ATTEMPT": "Próximo intento",
+        "MANUAL_REVIEW_NEXT": "El servicio dejó de reintentar. Contacte con el gestor de flota para confirmar la finalización."
       }
     }
   }

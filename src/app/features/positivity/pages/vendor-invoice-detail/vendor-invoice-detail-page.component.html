@@ -1,0 +1,288 @@
+<main class="invoice-detail" aria-labelledby="invoice-detail-title">
+  <nav class="invoice-detail__breadcrumb" [attr.aria-label]="'POSITIVITY.COMMON.BREADCRUMB' | translate">
+    <a [routerLink]="['/app', 'accounting']">{{ 'POSITIVITY.INVOICE.BREADCRUMB.ACCOUNTING' | translate }}</a>
+    <span class="invoice-detail__breadcrumb-sep" aria-hidden="true">/</span>
+    <a [routerLink]="['/app', 'accounting', 'payables', 'vendor-invoices']">
+      {{ 'POSITIVITY.INVOICE.LIST.TITLE' | translate }}
+    </a>
+  </nav>
+
+  <header class="invoice-detail__header">
+    <p class="invoice-detail__overline">{{ 'POSITIVITY.INVOICE.PAYABLES' | translate }}</p>
+    <h1 id="invoice-detail-title">
+      @if (invoice(); as data) {
+        {{ data.invoiceNumber }}
+      } @else {
+        {{ 'POSITIVITY.INVOICE.DETAIL.TITLE' | translate }}
+      }
+    </h1>
+  </header>
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      <span>{{ errorKey()! | translate }}</span>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'ready' && invoice(); as data) {
+    <section class="invoice-detail__summary" aria-labelledby="invoice-detail-summary-title">
+      <h2 class="invoice-detail__subtitle" id="invoice-detail-summary-title">
+        {{ 'POSITIVITY.INVOICE.DETAIL.SUMMARY' | translate }}
+      </h2>
+
+      <div class="invoice-detail__chips">
+        <app-supplier-status-chip
+          [labelKey]="typeLabelKey(data.type)"
+          [tone]="typeTone(data.type)"
+          [icon]="typeIcon(data.type)"
+          descriptionKey="POSITIVITY.INVOICE.TABLE.TYPE"
+        />
+        @for (flag of data.flags; track flag) {
+          <app-supplier-status-chip
+            [labelKey]="flagLabelKey(flag)"
+            tone="warning"
+            [icon]="flagIcon(flag)"
+            descriptionKey="POSITIVITY.INVOICE.TABLE.FLAGS"
+          />
+        }
+      </div>
+
+      <dl class="invoice-detail__facts">
+        <div class="invoice-detail__fact">
+          <dt class="invoice-detail__term">{{ 'POSITIVITY.INVOICE.TABLE.VENDOR' | translate }}</dt>
+          <dd class="invoice-detail__value">{{ data.vendorDisplayName }}</dd>
+        </div>
+        <div class="invoice-detail__fact">
+          <dt class="invoice-detail__term">{{ 'POSITIVITY.INVOICE.TABLE.ISSUE_DATE' | translate }}</dt>
+          <dd class="invoice-detail__value">
+            @if (issueDateFor(data.issueDate); as issued) {
+              {{ issued | date: 'mediumDate' }}
+            } @else {
+              —
+            }
+          </dd>
+        </div>
+        <div class="invoice-detail__fact">
+          <dt class="invoice-detail__term">{{ 'POSITIVITY.INVOICE.TABLE.AMOUNT' | translate }}</dt>
+          <dd
+            class="invoice-detail__value invoice-detail__amount"
+            [class.invoice-detail__amount--credit]="isCredit(data.amount)"
+          >
+            @if (isCredit(data.amount)) {
+              <span class="sr-only">{{ 'POSITIVITY.INVOICE.AMOUNT.CREDIT_SR' | translate }}</span>
+            }
+            <span class="invoice-detail__amount-value">{{ data.amount }}</span>
+            <span class="invoice-detail__currency">{{ data.currency }}</span>
+          </dd>
+        </div>
+      </dl>
+
+      <p class="invoice-detail__as-delivered">{{ 'POSITIVITY.INVOICE.DETAIL.AS_DELIVERED' | translate }}</p>
+
+      <app-staleness-indicator
+        class="invoice-detail__freshness"
+        [asOf]="data.asOf ?? null"
+        asOfLabelKey="POSITIVITY.INVOICE.DETAIL.AS_OF"
+        [fetchedAt]="data.fetchedAt"
+        fetchedAtLabelKey="POSITIVITY.INVOICE.DETAIL.FETCHED_AT"
+        [thresholdMinutes]="data.stalenessThresholdMinutes ?? 0"
+        [nowMs]="nowMs()"
+      />
+    </section>
+
+    <section class="invoice-detail__linkage" aria-labelledby="invoice-detail-linkage-title">
+      <h2 class="invoice-detail__subtitle" id="invoice-detail-linkage-title">
+        {{ 'POSITIVITY.INVOICE.DETAIL.LINKAGE' | translate }}
+      </h2>
+
+      <dl class="invoice-detail__facts">
+        <div class="invoice-detail__fact">
+          <dt class="invoice-detail__term">{{ 'POSITIVITY.INVOICE.DETAIL.PURCHASE_ORDER' | translate }}</dt>
+          <dd class="invoice-detail__value">
+            @if (purchaseOrderId(); as poId) {
+              <a class="invoice-detail__po-link" [routerLink]="['/app', 'inventory', 'purchase-orders', poId]">
+                {{ data.poNumber || poId }}
+              </a>
+            } @else if (isUnmatched()) {
+              <span class="invoice-detail__unmatched">
+                {{ 'POSITIVITY.INVOICE.DETAIL.PO_UNMATCHED' | translate }}
+              </span>
+            } @else {
+              —
+            }
+          </dd>
+        </div>
+
+        <div class="invoice-detail__fact">
+          <dt class="invoice-detail__term">{{ 'POSITIVITY.INVOICE.TABLE.VOUCHER' | translate }}</dt>
+          <dd class="invoice-detail__value">
+            @if (voucherPending()) {
+              <app-supplier-status-chip
+                labelKey="POSITIVITY.INVOICE.VOUCHER.PENDING"
+                tone="neutral"
+                icon="hourglass_empty"
+                descriptionKey="POSITIVITY.INVOICE.TABLE.VOUCHER"
+              />
+              <p class="invoice-detail__voucher-note">
+                {{ 'POSITIVITY.INVOICE.VOUCHER.PENDING_NOTE' | translate }}
+              </p>
+            } @else {
+              <code class="invoice-detail__ref">{{ data.voucherReference }}</code>
+              <p class="invoice-detail__voucher-note">
+                {{ 'POSITIVITY.INVOICE.VOUCHER.REFERENCE_NOTE' | translate }}
+              </p>
+            }
+          </dd>
+        </div>
+      </dl>
+
+      @if (data.exceptionDetail) {
+        <p class="invoice-detail__exception">
+          <span class="invoice-detail__term">{{ 'POSITIVITY.INVOICE.DETAIL.EXCEPTION_DETAIL' | translate }}</span>
+          <span class="invoice-detail__exception-text">{{ data.exceptionDetail }}</span>
+        </p>
+      }
+
+      @if (data.flags.length > 0) {
+        <p class="invoice-detail__flag-note">{{ 'POSITIVITY.INVOICE.FLAG.BACKEND_OWNED_NOTE' | translate }}</p>
+      }
+    </section>
+
+    @if (showVersions()) {
+      <section class="invoice-detail__versions" aria-labelledby="invoice-detail-versions-title">
+        <h2 class="invoice-detail__subtitle" id="invoice-detail-versions-title">
+          {{ 'POSITIVITY.INVOICE.DETAIL.VERSIONS' | translate }}
+        </h2>
+        <p class="invoice-detail__versions-note">{{ 'POSITIVITY.INVOICE.DETAIL.VERSIONS_NOTE' | translate }}</p>
+
+        <div class="pos-table-wrap">
+          <table class="pos-table">
+            <caption class="sr-only">{{ 'POSITIVITY.INVOICE.DETAIL.VERSIONS_CAPTION' | translate }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'POSITIVITY.INVOICE.VERSION.REFERENCE' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.INVOICE.TABLE.INVOICE_NUMBER' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.INVOICE.TABLE.ISSUE_DATE' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.INVOICE.TABLE.AMOUNT' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.INVOICE.VERSION.RECEIVED_AT' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.INVOICE.VERSION.STANDING' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (version of versions(); track version.versionRef) {
+                <tr class="invoice-detail__version-row">
+                  <th scope="row" class="invoice-detail__ref">{{ version.versionRef }}</th>
+                  <td class="invoice-detail__version-number">{{ version.invoiceNumber }}</td>
+                  <td>
+                    @if (issueDateFor(version.issueDate); as issued) {
+                      {{ issued | date: 'mediumDate' }}
+                    } @else {
+                      —
+                    }
+                  </td>
+                  <td
+                    class="invoice-detail__amount"
+                    [class.invoice-detail__amount--credit]="isCredit(version.amount)"
+                  >
+                    @if (isCredit(version.amount)) {
+                      <span class="sr-only">{{ 'POSITIVITY.INVOICE.AMOUNT.CREDIT_SR' | translate }}</span>
+                    }
+                    <span class="invoice-detail__amount-value">{{ version.amount }}</span>
+                    <span class="invoice-detail__currency">{{ version.currency }}</span>
+                  </td>
+                  <td>
+                    <time [attr.datetime]="version.receivedAt">{{ version.receivedAt | date: 'medium' }}</time>
+                  </td>
+                  <td>
+                    @if (version.current) {
+                      <app-supplier-status-chip
+                        labelKey="POSITIVITY.INVOICE.VERSION.CURRENT"
+                        tone="info"
+                        icon="fact_check"
+                        descriptionKey="POSITIVITY.INVOICE.VERSION.STANDING"
+                      />
+                    } @else {
+                      <app-supplier-status-chip
+                        labelKey="POSITIVITY.INVOICE.VERSION.SUPERSEDED"
+                        tone="neutral"
+                        icon="schedule"
+                        descriptionKey="POSITIVITY.INVOICE.VERSION.STANDING"
+                      />
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    <section class="invoice-detail__lines" aria-labelledby="invoice-detail-lines-title">
+      <h2 class="invoice-detail__subtitle" id="invoice-detail-lines-title">
+        {{ 'POSITIVITY.INVOICE.DETAIL.LINES' | translate }}
+      </h2>
+
+      @if (hasLines()) {
+        <div class="pos-table-wrap">
+          <table class="pos-table">
+            <caption class="sr-only">{{ 'POSITIVITY.INVOICE.DETAIL.LINES_CAPTION' | translate }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'POSITIVITY.INVOICE.LINE.SKU' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.INVOICE.LINE.DESCRIPTION' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.INVOICE.LINE.QUANTITY' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.INVOICE.LINE.UNIT_AMOUNT' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.INVOICE.LINE.LINE_AMOUNT' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of lines(); track line.lineId) {
+                <tr>
+                  <th scope="row" class="invoice-detail__ref">{{ line.sku || '—' }}</th>
+                  <td>{{ line.description || '—' }}</td>
+                  <td class="invoice-detail__qty">
+                    {{ line.quantity || '—' }}
+                    @if (line.unitOfMeasure) {
+                      <span class="invoice-detail__uom">{{ line.unitOfMeasure }}</span>
+                    }
+                  </td>
+                  <td class="invoice-detail__amount">
+                    <span class="invoice-detail__amount-value">{{ line.unitAmount || '—' }}</span>
+                  </td>
+                  <td
+                    class="invoice-detail__amount"
+                    [class.invoice-detail__amount--credit]="isCredit(line.lineAmount)"
+                  >
+                    @if (isCredit(line.lineAmount)) {
+                      <span class="sr-only">{{ 'POSITIVITY.INVOICE.AMOUNT.CREDIT_SR' | translate }}</span>
+                    }
+                    <span class="invoice-detail__amount-value">{{ line.lineAmount }}</span>
+                    <span class="invoice-detail__currency">{{ line.currency }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="invoice-detail__empty">{{ 'POSITIVITY.INVOICE.DETAIL.LINES_EMPTY' | translate }}</p>
+      }
+
+      <p class="invoice-detail__no-total">{{ 'POSITIVITY.INVOICE.DETAIL.NO_CLIENT_TOTAL' | translate }}</p>
+    </section>
+  }
+</main>

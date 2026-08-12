@@ -1,0 +1,11 @@
+<section class="health-panel" [attr.aria-label]="'POSITIVITY.HEALTH.TITLE' | translate">
+  <header class="health-panel__header">
+    <h2 class="health-panel__title">{{ 'POSITIVITY.HEALTH.TITLE' | translate }}</h2>
+  </header>
+
+  <!-- Informational, not an error: there is no endpoint to fail. -->
+  <p class="pos-banner pos-banner--info health-panel__unavailable">
+    {{ 'POSITIVITY.HEALTH.UNAVAILABLE' | translate }}
+  </p>
+  <p class="health-panel__hint">{{ 'POSITIVITY.HEALTH.UNAVAILABLE_DETAIL' | translate }}</p>
+</section>

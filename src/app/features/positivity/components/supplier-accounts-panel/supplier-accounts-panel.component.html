@@ -1,0 +1,269 @@
+<section class="accounts-panel" [attr.aria-label]="'POSITIVITY.ACCOUNTS.TITLE' | translate">
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      @if (!conflict()) {
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+          {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+        </button>
+      }
+    </div>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() !== 'forbidden') {
+    @if (readOnly()) {
+      <p class="pos-banner pos-banner--info" id="accounts-readonly-reason">
+        {{ 'POSITIVITY.COMMON.YAML_MANAGED_READONLY' | translate }}
+      </p>
+    }
+
+    <!-- ── Billing account ────────────────────────────────────────────────── -->
+    <section class="accounts-panel__section">
+      <h2 class="accounts-panel__title">{{ 'POSITIVITY.ACCOUNTS.BILLING.TITLE' | translate }}</h2>
+      <p class="accounts-panel__hint">{{ 'POSITIVITY.ACCOUNTS.BILLING.HINT' | translate }}</p>
+
+      <form class="accounts-form" [formGroup]="billingForm" (ngSubmit)="saveBilling()">
+        <div class="pos-field">
+          <label class="pos-field__label" for="billing-account-number">
+            {{ 'POSITIVITY.ACCOUNTS.FIELD.ACCOUNT_NUMBER' | translate }}
+          </label>
+          <input
+            id="billing-account-number"
+            class="pos-field__input"
+            type="text"
+            formControlName="accountNumber"
+            [attr.disabled]="readOnly() ? '' : null"
+            [attr.aria-invalid]="fieldError('accountNumber') ? 'true' : null"
+            [attr.aria-describedby]="fieldError('accountNumber') ? 'billing-account-number-error' : null"
+          />
+          @if (fieldError('accountNumber'); as key) {
+            <p class="pos-field__error" id="billing-account-number-error" role="alert">
+              {{ key | translate }}
+              @if (fieldDetail('accountNumber'); as detail) {
+                <span class="pos-field__detail">{{ detail }}</span>
+              }
+            </p>
+          }
+        </div>
+
+        <div class="pos-field">
+          <label class="pos-field__label" for="billing-agency-code">
+            {{ 'POSITIVITY.ACCOUNTS.FIELD.AGENCY_CODE' | translate }}
+          </label>
+          <input
+            id="billing-agency-code"
+            class="pos-field__input"
+            type="text"
+            formControlName="agencyCode"
+            [attr.disabled]="readOnly() ? '' : null"
+            [attr.aria-invalid]="fieldError('agencyCode') ? 'true' : null"
+            [attr.aria-describedby]="fieldError('agencyCode') ? 'billing-agency-code-error' : null"
+          />
+          @if (fieldError('agencyCode'); as key) {
+            <p class="pos-field__error" id="billing-agency-code-error" role="alert">
+              {{ key | translate }}
+              @if (fieldDetail('agencyCode'); as detail) {
+                <span class="pos-field__detail">{{ detail }}</span>
+              }
+            </p>
+          }
+        </div>
+
+        <!-- Disabled with a stated reason, never hidden: a missing control
+             explains nothing about why the system will not accept a change. -->
+        <button
+          class="pos-btn pos-btn--primary"
+          type="submit"
+          [disabled]="readOnly()"
+          [attr.aria-describedby]="readOnly() ? 'accounts-readonly-reason' : null"
+        >
+          {{ 'POSITIVITY.ACCOUNTS.BILLING.SAVE' | translate }}
+        </button>
+      </form>
+    </section>
+
+    <!-- ── Delivery mappings ──────────────────────────────────────────────── -->
+    <section class="accounts-panel__section">
+      <h2 class="accounts-panel__title">{{ 'POSITIVITY.ACCOUNTS.DELIVERY.TITLE' | translate }}</h2>
+      <p class="accounts-panel__hint">{{ 'POSITIVITY.ACCOUNTS.DELIVERY.HINT' | translate }}</p>
+
+      @if (!locationsAvailable()) {
+        <!-- "Could not verify" is not "no gaps found". -->
+        <p class="pos-banner pos-banner--info accounts-panel__gap-unknown">
+          {{ 'POSITIVITY.ACCOUNTS.DELIVERY.GAP_UNVERIFIED' | translate }}
+        </p>
+      } @else if (hasMappingGap()) {
+        <div class="pos-banner pos-banner--warning" role="alert">
+          <p class="accounts-panel__gap-title">
+            {{ 'POSITIVITY.ACCOUNTS.DELIVERY.GAP_WARNING' | translate }}
+          </p>
+          <ul class="accounts-panel__gap-list">
+            @for (location of unmappedLocations(); track location.locationId) {
+              <li>
+                <span>{{ location.name }}</span>
+                <button
+                  class="pos-btn pos-btn--secondary"
+                  type="button"
+                  [disabled]="readOnly()"
+                  [attr.aria-describedby]="readOnly() ? 'accounts-readonly-reason' : null"
+                  (click)="startMapLocation(location)"
+                >
+                  {{ 'POSITIVITY.ACCOUNTS.DELIVERY.MAP_NOW' | translate }}
+                </button>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (deliveryAccounts().length > 0) {
+        <div class="pos-table-wrap">
+          <table class="pos-table">
+            <caption class="sr-only">{{ 'POSITIVITY.ACCOUNTS.DELIVERY.TABLE_CAPTION' | translate }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'POSITIVITY.ACCOUNTS.FIELD.LOCATION' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.ACCOUNTS.FIELD.ACCOUNT_NUMBER' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.ACCOUNTS.FIELD.AGENCY_CODE' | translate }}</th>
+                <th scope="col">
+                  <span class="sr-only">{{ 'POSITIVITY.COMMON.ACTIONS' | translate }}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of deliveryAccounts(); track entry.accountId) {
+                <tr>
+                  <td>{{ entry.locationName || locationName(entry.locationId) }}</td>
+                  <td>{{ entry.accountNumber }}</td>
+                  <td>{{ entry.agencyCode || '—' }}</td>
+                  <td class="pos-table__actions">
+                    <button
+                      class="pos-btn pos-btn--secondary"
+                      type="button"
+                      [disabled]="readOnly()"
+                      [attr.aria-describedby]="readOnly() ? 'accounts-readonly-reason' : null"
+                      (click)="startEditDelivery(entry)"
+                    >
+                      {{ 'POSITIVITY.COMMON.EDIT' | translate }}
+                    </button>
+                    <button
+                      class="pos-btn pos-btn--danger"
+                      type="button"
+                      [disabled]="readOnly()"
+                      [attr.aria-describedby]="readOnly() ? 'accounts-readonly-reason' : null"
+                      (click)="removeDelivery(entry)"
+                    >
+                      {{ 'POSITIVITY.COMMON.DELETE' | translate }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else if (state() === 'ready') {
+        <p class="accounts-panel__empty">{{ 'POSITIVITY.ACCOUNTS.DELIVERY.EMPTY' | translate }}</p>
+      }
+
+      @if (!deliveryFormOpen()) {
+        <button
+          class="pos-btn pos-btn--primary"
+          type="button"
+          [disabled]="readOnly()"
+          [attr.aria-describedby]="readOnly() ? 'accounts-readonly-reason' : null"
+          (click)="startAddDelivery()"
+        >
+          {{ 'POSITIVITY.ACCOUNTS.DELIVERY.ADD' | translate }}
+        </button>
+      }
+
+      @if (deliveryFormOpen()) {
+        <form class="accounts-form accounts-form--boxed" [formGroup]="deliveryForm" (ngSubmit)="saveDelivery()">
+          <div class="pos-field">
+            <label class="pos-field__label" for="delivery-location">
+              {{ 'POSITIVITY.ACCOUNTS.FIELD.LOCATION' | translate }}
+            </label>
+            <select
+              id="delivery-location"
+              class="pos-field__input"
+              formControlName="locationId"
+              [attr.aria-invalid]="fieldError('deliveryLocationId') ? 'true' : null"
+              [attr.aria-describedby]="fieldError('deliveryLocationId') ? 'delivery-location-error' : null"
+            >
+              <option value="">{{ 'POSITIVITY.ACCOUNTS.DELIVERY.SELECT_LOCATION' | translate }}</option>
+              @for (location of selectableLocations(); track location.locationId) {
+                <option [value]="location.locationId">{{ location.name }}</option>
+              }
+            </select>
+            @if (fieldError('deliveryLocationId'); as key) {
+              <p class="pos-field__error" id="delivery-location-error" role="alert">
+                {{ key | translate }}
+                @if (fieldDetail('deliveryLocationId'); as detail) {
+                  <span class="pos-field__detail">{{ detail }}</span>
+                }
+              </p>
+            }
+          </div>
+
+          <div class="pos-field">
+            <label class="pos-field__label" for="delivery-account-number">
+              {{ 'POSITIVITY.ACCOUNTS.FIELD.ACCOUNT_NUMBER' | translate }}
+            </label>
+            <input
+              id="delivery-account-number"
+              class="pos-field__input"
+              type="text"
+              formControlName="accountNumber"
+              [attr.aria-invalid]="fieldError('accountNumber') ? 'true' : null"
+              [attr.aria-describedby]="fieldError('accountNumber') ? 'delivery-account-number-error' : null"
+            />
+            @if (fieldError('accountNumber'); as key) {
+              <p class="pos-field__error" id="delivery-account-number-error" role="alert">
+                {{ key | translate }}
+                @if (fieldDetail('accountNumber'); as detail) {
+                  <span class="pos-field__detail">{{ detail }}</span>
+                }
+              </p>
+            }
+          </div>
+
+          <div class="pos-field">
+            <label class="pos-field__label" for="delivery-agency-code">
+              {{ 'POSITIVITY.ACCOUNTS.FIELD.AGENCY_CODE' | translate }}
+            </label>
+            <input
+              id="delivery-agency-code"
+              class="pos-field__input"
+              type="text"
+              formControlName="agencyCode"
+            />
+          </div>
+
+          <div class="accounts-form__actions">
+            <button
+              class="pos-btn pos-btn--primary"
+              type="submit"
+              [disabled]="readOnly()"
+              [attr.aria-describedby]="readOnly() ? 'accounts-readonly-reason' : null"
+            >
+              {{ 'POSITIVITY.COMMON.SAVE' | translate }}
+            </button>
+            <button class="pos-btn pos-btn--secondary" type="button" (click)="cancelDelivery()">
+              {{ 'POSITIVITY.COMMON.CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      }
+    </section>
+  }
+</section>

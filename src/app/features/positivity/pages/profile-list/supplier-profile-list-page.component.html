@@ -1,0 +1,194 @@
+<main class="profiles-page" aria-labelledby="profiles-page-title">
+  <header class="profiles-page__header">
+    <div>
+      <h1 id="profiles-page-title">{{ 'POSITIVITY.PROFILES.TITLE' | translate }}</h1>
+      <p class="profiles-page__subtitle">{{ 'POSITIVITY.PROFILES.SUBTITLE' | translate }}</p>
+    </div>
+    <div class="profiles-page__actions">
+      <a class="pos-btn pos-btn--secondary" [routerLink]="['/app', 'positivity', 'exchanges']">
+        {{ 'POSITIVITY.AUDIT.TITLE' | translate }}
+      </a>
+      <a
+        class="pos-btn pos-btn--secondary"
+        [routerLink]="['/app', 'positivity', 'enrichment', 'unmatched']"
+      >
+        {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TITLE' | translate }}
+      </a>
+      <a
+        class="pos-btn pos-btn--secondary"
+        [routerLink]="['/app', 'positivity', 'orders', 'manual-review']"
+      >
+        {{ 'POSITIVITY.MANUAL_REVIEW.TITLE' | translate }}
+      </a>
+      <a
+        class="pos-btn pos-btn--secondary"
+        [routerLink]="['/app', 'positivity', 'shipments', 'unlinked']"
+      >
+        {{ 'POSITIVITY.SHIPMENT.UNLINKED.TITLE' | translate }}
+      </a>
+      <a class="pos-btn pos-btn--secondary" [routerLink]="['/app', 'positivity', 'stock-snapshots']">
+        {{ 'POSITIVITY.STOCK_SNAPSHOT.TITLE' | translate }}
+      </a>
+      <button class="pos-btn pos-btn--primary" type="button" (click)="openCreate()">
+        {{ 'POSITIVITY.PROFILES.CREATE' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="load()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'empty') {
+    <p class="profiles-page__empty">{{ 'POSITIVITY.PROFILES.EMPTY' | translate }}</p>
+  }
+
+  @if (createOpen()) {
+    <form class="profiles-form" [formGroup]="createForm" (ngSubmit)="create()">
+      <h2 class="profiles-form__title">{{ 'POSITIVITY.PROFILES.FORM.CREATE_TITLE' | translate }}</h2>
+
+      <div class="pos-field">
+        <label class="pos-field__label" for="profile-supplier-ref">
+          {{ 'POSITIVITY.PROFILES.FIELD.SUPPLIER_REF' | translate }}
+        </label>
+        <input
+          id="profile-supplier-ref"
+          class="pos-field__input"
+          type="text"
+          formControlName="supplierRef"
+          [attr.aria-invalid]="fieldError('supplierRef') ? 'true' : null"
+          [attr.aria-describedby]="
+            fieldError('supplierRef') ? 'profile-supplier-ref-error profile-supplier-ref-hint' : 'profile-supplier-ref-hint'
+          "
+        />
+        <p class="pos-field__hint" id="profile-supplier-ref-hint">
+          {{ 'POSITIVITY.PROFILES.FIELD.SUPPLIER_REF_HINT' | translate }}
+        </p>
+        @if (fieldError('supplierRef'); as key) {
+          <p class="pos-field__error" id="profile-supplier-ref-error" role="alert">
+            {{ key | translate }}
+            @if (fieldDetail('supplierRef'); as detail) {
+              <span class="pos-field__detail">{{ detail }}</span>
+            }
+          </p>
+        }
+      </div>
+
+      <div class="pos-field">
+        <label class="pos-field__label" for="profile-display-name">
+          {{ 'POSITIVITY.PROFILES.FIELD.DISPLAY_NAME' | translate }}
+        </label>
+        <input
+          id="profile-display-name"
+          class="pos-field__input"
+          type="text"
+          formControlName="displayName"
+          [attr.aria-invalid]="fieldError('displayName') ? 'true' : null"
+          [attr.aria-describedby]="fieldError('displayName') ? 'profile-display-name-error' : null"
+        />
+        @if (fieldError('displayName'); as key) {
+          <p class="pos-field__error" id="profile-display-name-error" role="alert">
+            {{ key | translate }}
+            @if (fieldDetail('displayName'); as detail) {
+              <span class="pos-field__detail">{{ detail }}</span>
+            }
+          </p>
+        }
+      </div>
+
+      <div class="pos-field profiles-form__toggle">
+        <input id="profile-sandbox" type="checkbox" formControlName="sandbox" />
+        <label class="pos-field__label" for="profile-sandbox">
+          {{ 'POSITIVITY.PROFILES.FIELD.SANDBOX' | translate }}
+        </label>
+      </div>
+
+      <div class="pos-field profiles-form__toggle">
+        <input id="profile-enabled" type="checkbox" formControlName="enabled" />
+        <label class="pos-field__label" for="profile-enabled">
+          {{ 'POSITIVITY.PROFILES.FIELD.ENABLED' | translate }}
+        </label>
+      </div>
+
+      <div class="profiles-form__actions">
+        <button class="pos-btn pos-btn--primary" type="submit" [disabled]="saving()">
+          {{ 'POSITIVITY.COMMON.SAVE' | translate }}
+        </button>
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="cancelCreate()">
+          {{ 'POSITIVITY.COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </form>
+  }
+
+  @if (profiles().length > 0) {
+    <div class="pos-table-wrap">
+      <table class="pos-table">
+        <caption class="sr-only">{{ 'POSITIVITY.PROFILES.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'POSITIVITY.PROFILES.TABLE.NAME' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PROFILES.FIELD.SUPPLIER_REF' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PROFILES.TABLE.STATE' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PROFILES.TABLE.ENVIRONMENT' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PROFILES.TABLE.SOURCE' | translate }}</th>
+            <th scope="col">
+              <span class="sr-only">{{ 'POSITIVITY.COMMON.ACTIONS' | translate }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (profile of profiles(); track profile.vendorProfileId) {
+            <tr>
+              <th scope="row" class="profiles-page__name">{{ profile.displayName }}</th>
+              <td><code class="profiles-page__ref">{{ profile.supplierRef }}</code></td>
+              <td>
+                <app-supplier-status-chip
+                  [labelKey]="
+                    profile.enabled ? 'POSITIVITY.PROFILES.STATE.ENABLED' : 'POSITIVITY.PROFILES.STATE.DISABLED'
+                  "
+                  [tone]="profile.enabled ? 'success' : 'neutral'"
+                  descriptionKey="POSITIVITY.PROFILES.TABLE.STATE"
+                />
+              </td>
+              <td>
+                <app-supplier-status-chip
+                  [labelKey]="
+                    profile.sandbox ? 'POSITIVITY.PROFILES.ENVIRONMENT.SANDBOX' : 'POSITIVITY.PROFILES.ENVIRONMENT.PRODUCTION'
+                  "
+                  [tone]="profile.sandbox ? 'info' : 'neutral'"
+                  descriptionKey="POSITIVITY.PROFILES.TABLE.ENVIRONMENT"
+                />
+              </td>
+              <td>{{ 'POSITIVITY.PROFILES.SOURCE.' + profile.sourceOfTruth | translate }}</td>
+              <td>
+                <a
+                  class="profiles-page__link"
+                  [routerLink]="['/app', 'positivity', 'profiles', profile.vendorProfileId]"
+                >
+                  {{ 'POSITIVITY.PROFILES.TABLE.OPEN' | translate }}
+                  <span class="sr-only">{{ profile.displayName }}</span>
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</main>

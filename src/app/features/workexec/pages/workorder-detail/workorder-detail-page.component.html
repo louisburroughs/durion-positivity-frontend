@@ -96,6 +96,11 @@
     <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'audit'" (click)="selectTab('audit')">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_AUDIT' | translate }}</button>
   </nav>
 
+  <!-- CAP-323 (#194): fleet authorization status. Read-only, and it owns its
+       own state — a fleet-manager outage degrades this panel and leaves the
+       rest of this screen, including every transition control, intact. -->
+  <app-supplier-fleet-authorization-panel class="fleet-auth-slot" [workorderId]="workorderId()" />
+
   <!-- Scope/Items tab — Story 229 -->
   @if (activeTab() === 'items') {
   <div class="wo-section" [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.SCOPE_ARIA' | translate">
