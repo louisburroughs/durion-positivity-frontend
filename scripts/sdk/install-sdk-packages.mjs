@@ -266,6 +266,15 @@ function installFromManifest(manifest) {
   run('npm', ['install', '--no-save', '--no-package-lock', ...tarballs]);
 }
 
+function installFromSourcePackages(sdkRoot) {
+  const packagePaths = PACKAGE_NAMES.map(packageName =>
+    path.join(sdkRoot, 'packages', packageDirName(packageName)),
+  );
+
+  log(`Installing SDK packages from local SDK source at ${sdkRoot}`);
+  run('npm', ['install', '--no-save', '--no-package-lock', ...packagePaths]);
+}
+
 function main() {
   const sdkRoot = detectSdkRoot();
   const installState = readInstallState();
@@ -279,14 +288,16 @@ function main() {
       return;
     }
 
-    const manifest = packSdkPackages(sdkRoot);
-    installFromManifest(manifest);
+    installFromSourcePackages(sdkRoot);
     writeInstallState({
       source: 'sdk-root',
       sdkRoot,
       fingerprint,
-      generatedAt: manifest.generatedAt,
-      packages: manifest.packages,
+      generatedAt: new Date().toISOString(),
+      packages: PACKAGE_NAMES.reduce((acc, packageName) => {
+        acc[packageName] = packageDirName(packageName);
+        return acc;
+      }, {}),
     });
     return;
   }
