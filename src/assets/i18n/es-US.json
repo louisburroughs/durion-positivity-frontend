@@ -5754,9 +5754,9 @@
       "AS_OF": "Estado del proveedor al",
       "FETCHED_AT": "Última consulta",
       "MANUAL_REVIEW_REASON": "Por qué requiere revisión",
-      "NO_RESEND_NOTE": "Este pedido no se reenvía desde aquí. Es posible que el proveedor ya lo tenga, así que reenviarlo arriesgaría un pedido físico duplicado. Resuélvalo con las acciones de abajo.",
+      "MANUAL_REVIEW_ADMIN_ONLY": "Un administrador lo resuelve desde la cola de revisión manual de proveedores.",
+      "NO_RESEND_NOTE": "Este pedido no se reenvía desde aquí. Es posible que el proveedor ya lo tenga, así que reenviarlo arriesgaría un pedido físico duplicado.",
       "NOT_TRANSMITTED": "Este pedido no se envió al proveedor de forma electrónica, por lo que no hay estado de transmisión que mostrar.",
-      "RACED_BY_VENDOR": "El proveedor actualizó este pedido mientras usted decidía. Arriba se muestra el estado más reciente.",
       "STATE": {
         "QUEUED": "En cola para el proveedor",
         "SENT": "Enviado al proveedor",
@@ -5795,8 +5795,7 @@
         "UNKNOWN_STATUS": "Cambio de estado reportado"
       },
       "ERROR": {
-        "LOAD": "No se pudo cargar el estado de transmisión del proveedor. El resto de este pedido no se ve afectado.",
-        "RESOLVE": "No se pudo aplicar la resolución. No se envió nada al proveedor."
+        "LOAD": "No se pudo cargar el estado de transmisión del proveedor. El resto de este pedido no se ve afectado."
       }
     },
     "MANUAL_REVIEW": {

@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   computed,
   effect,
   inject,
@@ -10,7 +9,6 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription, forkJoin } from 'rxjs';
 import { SupplierOrderTransmissionService } from '../../services/supplier-order-transmission.service';
@@ -27,7 +25,6 @@ import {
   SupplierEventTimelineComponent,
   SupplierTimelineEntry,
 } from '../supplier-event-timeline/supplier-event-timeline.component';
-import { SupplierManualReviewActionsComponent } from '../supplier-manual-review-actions/supplier-manual-review-actions.component';
 import { SupplierStatusChipComponent, SupplierStatusTone } from '../supplier-status-chip/supplier-status-chip.component';
 
 type PanelState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden';
@@ -87,16 +84,18 @@ const OUTCOME_ICONS: Readonly<Record<SupplierLineConfirmationOutcome, string>> =
  * There is no control on this panel that re-transmits an order, and the service
  * behind it has no such method. A `MANUAL_REVIEW` order is ambiguous *because*
  * the vendor may already hold it; a retry button would convert that ambiguity
- * into a duplicate physical delivery. The only actions rendered are the ones the
- * backend delivers in `resolutionActions`, each behind a confirmation naming
- * that risk. `supplier-transmission-panel.component.spec.ts` asserts the absence
- * of any re-send affordance, and so does `po-detail.component.spec.ts`.
+ * into a duplicate physical delivery.
+ * `supplier-transmission-panel.component.spec.ts` asserts the absence of any
+ * re-send affordance, and so does `po-detail.component.spec.ts`.
  *
- * ── A raced resolution refreshes rather than dead-ends ──────────────────────
- * A `409` means the vendor moved while the operator was deciding. The panel
- * re-reads the transmission and shows a translated notice instead of an error
- * banner over facts that are already out of date: the operator's next decision
- * should be made against what the vendor says now.
+ * ── This panel is read-only; resolution lives in the admin queue ────────────
+ * Issue #191 scopes the manual-review queue to administrators and lists this
+ * panel's contents as status only. Resolving an ambiguous transmission risks a
+ * duplicate physical order, and this panel's host route (`po-detail`) carries
+ * no role guard, whereas the queue sits behind `ROLE_ADMIN` routing. Rendering
+ * resolution controls here would put an admin-scoped, operationally risky
+ * action on an unguarded route with backend gating as the only barrier, so the
+ * panel reports `MANUAL_REVIEW` and points at the queue instead of acting.
  */
 @Component({
   selector: 'app-supplier-transmission-panel',
@@ -106,7 +105,6 @@ const OUTCOME_ICONS: Readonly<Record<SupplierLineConfirmationOutcome, string>> =
     TranslatePipe,
     StalenessIndicatorComponent,
     SupplierEventTimelineComponent,
-    SupplierManualReviewActionsComponent,
     SupplierStatusChipComponent,
   ],
   templateUrl: './supplier-transmission-panel.component.html',
@@ -115,12 +113,11 @@ const OUTCOME_ICONS: Readonly<Record<SupplierLineConfirmationOutcome, string>> =
 })
 export class SupplierTransmissionPanelComponent {
   private readonly service = inject(SupplierOrderTransmissionService);
-  private readonly destroyRef = inject(DestroyRef);
 
   /** Platform purchase-order UUID. Null while the host resolves the route. */
   readonly purchaseOrderId = input<string | null>(null);
 
-  /** Human PO number, echoed into the resolution confirmation. Display only. */
+  /** Human PO number. Display only — never a navigation key. */
   readonly poNumber = input<string | null>(null);
 
   /** Test seam for "now", forwarded to the freshness indicator. */
@@ -130,9 +127,6 @@ export class SupplierTransmissionPanelComponent {
   readonly errorKey = signal<string | null>(null);
   readonly transmission = signal<SupplierOrderTransmission | null>(null);
   readonly history = signal<SupplierOrderStatusEvent[]>([]);
-  readonly resolving = signal(false);
-  /** True after a `409`: the vendor moved while the operator was deciding. */
-  readonly racedByVendor = signal(false);
 
   private readonly reloadToken = signal(0);
 
@@ -143,8 +137,6 @@ export class SupplierTransmissionPanelComponent {
   readonly hasLines = computed(() => this.lines().length > 0);
 
   readonly needsManualReview = computed(() => this.transmissionState() === 'MANUAL_REVIEW');
-
-  readonly resolutionActions = computed(() => this.transmission()?.resolutionActions ?? []);
 
   readonly stateLabelKey = computed(() => {
     const state = this.transmissionState();
@@ -245,45 +237,6 @@ export class SupplierTransmissionPanelComponent {
   /** Re-read state and history. Re-runs the effect, cancelling anything in flight. */
   reload(): void {
     this.reloadToken.update(value => value + 1);
-  }
-
-  /**
-   * Apply one backend-delivered resolution action.
-   *
-   * `action` arrived from the backend and is posted back untouched. On `409` the
-   * panel refreshes instead of erroring — see the class doc.
-   */
-  resolve(action: string): void {
-    const purchaseOrderId = this.purchaseOrderId();
-    if (!purchaseOrderId || this.resolving()) {
-      return;
-    }
-
-    this.resolving.set(true);
-    this.racedByVendor.set(false);
-
-    this.service
-      .resolveManualReview(purchaseOrderId, action)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.resolving.set(false);
-          this.reload();
-        },
-        error: (err: unknown) => {
-          this.resolving.set(false);
-          const outcome = mapSupplierError(err, 'POSITIVITY.TRANSMISSION.ERROR.RESOLVE');
-          if (outcome.kind === 'conflict') {
-            // The vendor moved first. Re-read rather than arguing with it.
-            this.racedByVendor.set(true);
-            this.reload();
-            return;
-          }
-          // ADR-0031: state first, then the key.
-          this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
-          this.errorKey.set(outcome.errorKey);
-        },
-      });
   }
 
   private toTimelineEntry(event: SupplierOrderStatusEvent): SupplierTimelineEntry {

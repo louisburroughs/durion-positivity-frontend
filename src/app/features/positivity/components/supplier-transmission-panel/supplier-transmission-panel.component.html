@@ -36,12 +36,6 @@
     </div>
   }
 
-  @if (racedByVendor()) {
-    <p class="pos-banner pos-banner--warning" aria-live="polite">
-      {{ 'POSITIVITY.TRANSMISSION.RACED_BY_VENDOR' | translate }}
-    </p>
-  }
-
   @if (state() === 'ready' && transmission(); as data) {
     <dl class="transmission__facts">
       <div class="transmission__fact">
@@ -95,12 +89,9 @@
           }
         </p>
         <p class="transmission__no-resend">{{ 'POSITIVITY.TRANSMISSION.NO_RESEND_NOTE' | translate }}</p>
-        <app-supplier-manual-review-actions
-          [actions]="resolutionActions()"
-          [busy]="resolving()"
-          [contextLabel]="poNumber()"
-          (resolve)="resolve($event)"
-        />
+        <p class="transmission__review-routing">
+          {{ 'POSITIVITY.TRANSMISSION.MANUAL_REVIEW_ADMIN_ONLY' | translate }}
+        </p>
       </div>
     }
 

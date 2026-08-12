@@ -166,10 +166,13 @@ describe('PoDetailComponent', () => {
         .toLowerCase();
 
       expect(controlText).not.toMatch(/resend|re-send|retransmit|re-transmit|send.?again|transmit/);
-      // The transmission panel is rendering MANUAL_REVIEW with backend actions:
-      // the only controls offered are those, each behind a confirmation.
-      expect(el.querySelectorAll('.review-actions__trigger')).toHaveLength(2);
-      expect(el.querySelector('.review-confirm')).toBeNull();
+      // The transmission panel is rendering MANUAL_REVIEW and the backend
+      // offered resolution actions, but this route carries no role guard while
+      // the administrator queue does (#191). So the page offers no resolution
+      // control at all, and never reaches the resolution endpoint.
+      expect(el.querySelectorAll('.review-actions__trigger')).toHaveLength(0);
+      expect(el.querySelector('app-supplier-manual-review-actions')).toBeNull();
+      expect(mockTransmissionService.resolveManualReview).not.toHaveBeenCalled();
     });
 
     it('keeps rendering the order when the supplier services fail', () => {

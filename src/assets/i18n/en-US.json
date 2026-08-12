@@ -5748,9 +5748,9 @@
       "AS_OF": "Vendor state as of",
       "FETCHED_AT": "Last fetched",
       "MANUAL_REVIEW_REASON": "Why this needs review",
-      "NO_RESEND_NOTE": "This order is not re-sent from here. The vendor may already hold it, so re-sending would risk a duplicate physical order. Resolve it using the actions below.",
+      "MANUAL_REVIEW_ADMIN_ONLY": "An administrator resolves this from the supplier manual-review queue.",
+      "NO_RESEND_NOTE": "This order is not re-sent from here. The vendor may already hold it, so re-sending would risk a duplicate physical order.",
       "NOT_TRANSMITTED": "This order was not sent to the vendor electronically, so there is no transmission state to show.",
-      "RACED_BY_VENDOR": "The vendor updated this order while you were deciding. The latest state is shown above.",
       "STATE": {
         "QUEUED": "Queued for the vendor",
         "SENT": "Sent to the vendor",
@@ -5789,8 +5789,7 @@
         "UNKNOWN_STATUS": "Status change reported"
       },
       "ERROR": {
-        "LOAD": "The vendor transmission state could not be loaded. The rest of this order is unaffected.",
-        "RESOLVE": "The resolution could not be applied. Nothing was sent to the vendor."
+        "LOAD": "The vendor transmission state could not be loaded. The rest of this order is unaffected."
       }
     },
     "MANUAL_REVIEW": {

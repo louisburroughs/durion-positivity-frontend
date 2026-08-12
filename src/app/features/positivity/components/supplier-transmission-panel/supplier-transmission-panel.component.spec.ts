@@ -288,85 +288,42 @@ describe('SupplierTransmissionPanelComponent', () => {
     expect(el.querySelector('[data-action="resend"]')).toBeNull();
   });
 
-  it('renders only the resolution actions the backend delivered for MANUAL_REVIEW', () => {
+  // Issue #191 scopes resolution to the administrator queue, which sits behind
+  // ROLE_ADMIN routing. This panel's host route (po-detail) has no role guard,
+  // so rendering a resolution control here would place an admin-scoped action
+  // that risks a duplicate physical order on an unguarded route, with backend
+  // gating as the only barrier. The panel reports state and routes the user.
+  it('renders no resolution control for MANUAL_REVIEW, even when the backend offers actions', () => {
     service.getTransmission.mockReturnValue(of(manualReview));
     const el = render();
 
-    const triggers = Array.from(el.querySelectorAll('.review-actions__trigger')).map(t =>
-      t.textContent?.trim(),
-    );
-    expect(triggers).toHaveLength(2);
-    expect(triggers[0]).toContain('POSITIVITY.MANUAL_REVIEW.ACTION.CONFIRM_MATCHED');
-    expect(triggers[1]).toContain('POSITIVITY.MANUAL_REVIEW.ACTION.MARK_REJECTED');
-  });
-
-  it('renders no resolution action when the backend delivers none', () => {
-    service.getTransmission.mockReturnValue(
-      of({ ...manualReview, resolutionActions: [] }),
-    );
-    const el = render();
-
+    expect(manualReview.resolutionActions.length).toBeGreaterThan(0);
     expect(el.querySelector('.review-actions')).toBeNull();
+    expect(el.querySelector('app-supplier-manual-review-actions')).toBeNull();
+
+    const controlText = Array.from(el.querySelectorAll('button, a, [role="button"]'))
+      .map(c => c.textContent ?? '')
+      .join(' ');
+    expect(controlText).not.toMatch(/CONFIRM_MATCHED|MARK_REJECTED/);
   });
 
-  it('requires an explicit confirmation before a resolution reaches the backend', () => {
+  it('never calls the resolution endpoint from this panel', () => {
     service.getTransmission.mockReturnValue(of(manualReview));
     const el = render();
 
-    el.querySelector<HTMLButtonElement>('.review-actions__trigger')?.click();
+    el.querySelectorAll<HTMLButtonElement>('button').forEach(button => button.click());
     fixture.detectChanges();
 
     expect(service.resolveManualReview).not.toHaveBeenCalled();
-    expect(el.querySelector('.review-confirm__risk')).not.toBeNull();
   });
 
-  it('posts the backend action token and reloads after a confirmed resolution', () => {
+  it('routes the user to the administrator queue for MANUAL_REVIEW', () => {
     service.getTransmission.mockReturnValue(of(manualReview));
-    render();
-    service.getTransmission.mockClear();
+    const el = render();
 
-    fixture.componentInstance.resolve('CONFIRM_MATCHED');
-    fixture.detectChanges();
-
-    expect(service.resolveManualReview).toHaveBeenCalledWith(PO_ID, 'CONFIRM_MATCHED');
-    expect(service.getTransmission).toHaveBeenCalledWith(PO_ID);
-    expect(fixture.componentInstance.resolving()).toBe(false);
-  });
-
-  it('refreshes the row on 409 instead of showing a dead error', () => {
-    service.getTransmission.mockReturnValue(of(manualReview));
-    render();
-    service.resolveManualReview.mockReturnValue(
-      throwError(() => new HttpErrorResponse({ status: 409, statusText: 'Conflict' })),
+    expect(el.querySelector('.transmission__review-routing')?.textContent?.trim()).toBe(
+      'POSITIVITY.TRANSMISSION.MANUAL_REVIEW_ADMIN_ONLY',
     );
-    service.getTransmission.mockClear();
-    service.getTransmission.mockReturnValue(of({ ...transmission, state: 'CONFIRMED' as const }));
-
-    fixture.componentInstance.resolve('CONFIRM_MATCHED');
-    fixture.detectChanges();
-
-    expect(fixture.componentInstance.racedByVendor()).toBe(true);
-    expect(fixture.componentInstance.state()).toBe('ready');
-    expect(fixture.componentInstance.errorKey()).toBeNull();
-    expect(service.getTransmission).toHaveBeenCalledWith(PO_ID);
-    expect(
-      (fixture.nativeElement as HTMLElement).querySelector('.pos-banner--warning')?.textContent?.trim(),
-    ).toBe('POSITIVITY.TRANSMISSION.RACED_BY_VENDOR');
-  });
-
-  it('sets state then errorKey when a resolution fails for any other reason (ADR-0031)', () => {
-    service.getTransmission.mockReturnValue(of(manualReview));
-    render();
-    service.resolveManualReview.mockReturnValue(
-      throwError(() => new HttpErrorResponse({ status: 500, statusText: 'Server Error' })),
-    );
-
-    fixture.componentInstance.resolve('MARK_REJECTED');
-    fixture.detectChanges();
-
-    expect(fixture.componentInstance.state()).toBe('error');
-    expect(fixture.componentInstance.errorKey()).toBe('POSITIVITY.ERROR.RETRYABLE');
-    expect(fixture.componentInstance.racedByVendor()).toBe(false);
   });
 
   it('renders a 403 as a restricted state (ADR-0031)', () => {

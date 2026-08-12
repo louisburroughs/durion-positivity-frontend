@@ -5754,9 +5754,9 @@
       "AS_OF": "État du fournisseur au",
       "FETCHED_AT": "Dernière récupération",
       "MANUAL_REVIEW_REASON": "Pourquoi une révision est requise",
-      "NO_RESEND_NOTE": "Cette commande n'est pas renvoyée d'ici. Le fournisseur la détient peut-être déjà, un renvoi risquerait donc une commande physique en double. Résolvez-la avec les actions ci-dessous.",
+      "MANUAL_REVIEW_ADMIN_ONLY": "Un administrateur la traite depuis la file de révision manuelle des fournisseurs.",
+      "NO_RESEND_NOTE": "Cette commande n'est pas renvoyée d'ici. Le fournisseur la détient peut-être déjà, un renvoi risquerait donc une commande physique en double.",
       "NOT_TRANSMITTED": "Cette commande n'a pas été transmise au fournisseur par voie électronique; il n'y a donc aucun état de transmission à afficher.",
-      "RACED_BY_VENDOR": "Le fournisseur a mis à jour cette commande pendant votre décision. L'état le plus récent est affiché ci-dessus.",
       "STATE": {
         "QUEUED": "En file d'attente pour le fournisseur",
         "SENT": "Transmise au fournisseur",
@@ -5795,8 +5795,7 @@
         "UNKNOWN_STATUS": "Changement d'état signalé"
       },
       "ERROR": {
-        "LOAD": "L'état de transmission au fournisseur n'a pas pu être chargé. Le reste de cette commande n'est pas touché.",
-        "RESOLVE": "La résolution n'a pas pu être appliquée. Rien n'a été envoyé au fournisseur."
+        "LOAD": "L'état de transmission au fournisseur n'a pas pu être chargé. Le reste de cette commande n'est pas touché."
       }
     },
     "MANUAL_REVIEW": {
