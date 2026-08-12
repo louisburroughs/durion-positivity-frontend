@@ -25,7 +25,7 @@ import { Configuration as PeopleConfiguration } from '@durion-sdk/people/configu
 import { Configuration as PeopleContactConfiguration } from '@durion-sdk/people-contact/configuration';
 import { Configuration as SecurityConfiguration } from '@durion-sdk/security/configuration';
 import { Configuration as ShopManagerConfiguration } from '@durion-sdk/shop-manager/configuration';
-import { Configuration as SupplierConfiguration } from '@durion-sdk/supplier/configuration';
+import { Configuration as SupplierConfiguration } from '@durion-sdk/supplier';
 import { Configuration as VehicleInventoryConfiguration } from '@durion-sdk/vehicle-inventory/configuration';
 import { Configuration as WorkorderConfiguration } from '@durion-sdk/workorder/configuration';
 
