@@ -1,0 +1,189 @@
+<main class="exchange-detail" aria-labelledby="exchange-detail-title">
+  <nav class="exchange-detail__breadcrumb" [attr.aria-label]="'POSITIVITY.COMMON.BREADCRUMB' | translate">
+    <a [routerLink]="['/app', 'positivity', 'exchanges']">{{ 'POSITIVITY.AUDIT.TITLE' | translate }}</a>
+  </nav>
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (exchange(); as record) {
+    <header class="exchange-detail__header">
+      <h1 id="exchange-detail-title">{{ 'POSITIVITY.AUDIT.DETAIL_TITLE' | translate }}</h1>
+      <app-supplier-status-chip
+        [labelKey]="'POSITIVITY.AUDIT.OUTCOME.' + record.outcome"
+        [tone]="outcomeTone(record.outcome)"
+        descriptionKey="POSITIVITY.AUDIT.TABLE.OUTCOME"
+      />
+    </header>
+
+    <dl class="exchange-detail__meta">
+      <div class="exchange-detail__meta-item">
+        <dt>{{ 'POSITIVITY.AUDIT.TABLE.VENDOR' | translate }}</dt>
+        <dd>{{ record.vendorDisplayName }}</dd>
+      </div>
+      <div class="exchange-detail__meta-item">
+        <dt>{{ 'POSITIVITY.AUDIT.TABLE.CAPABILITY' | translate }}</dt>
+        <dd>{{ 'POSITIVITY.CAPABILITY.' + record.capability | translate }}</dd>
+      </div>
+      <div class="exchange-detail__meta-item">
+        <dt>{{ 'POSITIVITY.BINDINGS.FIELD.PROTOCOL_FAMILY' | translate }}</dt>
+        <dd>
+          {{ 'POSITIVITY.PROTOCOL_FAMILY.' + record.protocolFamily | translate }}
+          {{ record.protocolVersion }}
+        </dd>
+      </div>
+      <div class="exchange-detail__meta-item">
+        <dt>{{ 'POSITIVITY.AUDIT.TABLE.STARTED' | translate }}</dt>
+        <dd>{{ record.startedAt | date: 'medium' }}</dd>
+      </div>
+      <div class="exchange-detail__meta-item">
+        <dt>{{ 'POSITIVITY.AUDIT.TABLE.FINISHED' | translate }}</dt>
+        <dd>
+          @if (record.finishedAt) {
+            {{ record.finishedAt | date: 'medium' }}
+          } @else {
+            {{ 'POSITIVITY.AUDIT.NOT_FINISHED' | translate }}
+          }
+        </dd>
+      </div>
+      <div class="exchange-detail__meta-item">
+        <dt>{{ 'POSITIVITY.AUDIT.TABLE.HTTP_STATUS' | translate }}</dt>
+        <dd>{{ record.httpStatus ?? '—' }}</dd>
+      </div>
+      <div class="exchange-detail__meta-item">
+        <dt>{{ 'POSITIVITY.AUDIT.TABLE.DURATION' | translate }}</dt>
+        <dd>{{ record.durationMs ?? '—' }}</dd>
+      </div>
+      <div class="exchange-detail__meta-item">
+        <dt>{{ 'POSITIVITY.AUDIT.TABLE.CORRELATION_ID' | translate }}</dt>
+        <dd><code>{{ record.correlationId }}</code></dd>
+      </div>
+      <div class="exchange-detail__meta-item">
+        <dt>{{ 'POSITIVITY.AUDIT.CAPTURE_LEVEL' | translate }}</dt>
+        <dd>{{ 'POSITIVITY.AUDIT.CAPTURE.' + record.captureLevel | translate }}</dd>
+      </div>
+    </dl>
+
+    @if (record.unmappedFields?.length) {
+      <div class="pos-banner pos-banner--warning">
+        <p class="exchange-detail__unmapped-title">
+          {{ 'POSITIVITY.AUDIT.UNMAPPED_FIELDS' | translate }}
+        </p>
+        <ul class="exchange-detail__unmapped-list">
+          @for (field of record.unmappedFields; track field) {
+            <li><code>{{ field }}</code></li>
+          }
+        </ul>
+      </div>
+    }
+  }
+
+  <!-- ── Payload panes ──────────────────────────────────────────────────────
+       A separate, tighter permission governs raw payloads. The backend 403 is
+       the authority; we render a restricted pane rather than guessing. -->
+  <section class="exchange-detail__payload" [attr.aria-label]="'POSITIVITY.AUDIT.PAYLOAD.TITLE' | translate">
+    <h2 class="exchange-detail__payload-title">{{ 'POSITIVITY.AUDIT.PAYLOAD.TITLE' | translate }}</h2>
+
+    @if (payloadState() === 'loading') {
+      <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+    }
+
+    @if (payloadState() === 'payload-restricted') {
+      <div class="pos-banner pos-banner--warning" role="alert">
+        {{ 'POSITIVITY.AUDIT.PAYLOAD.RESTRICTED' | translate }}
+      </div>
+    }
+
+    @if (payloadState() === 'metadata-only') {
+      <p class="pos-banner pos-banner--info">{{ 'POSITIVITY.AUDIT.PAYLOAD.METADATA_ONLY' | translate }}</p>
+    }
+
+    @if (payloadState() === 'payload-purged') {
+      <p class="pos-banner pos-banner--info">{{ 'POSITIVITY.AUDIT.PAYLOAD.PURGED' | translate }}</p>
+    }
+
+    @if (payloadState() === 'error') {
+      <div class="pos-banner pos-banner--error" role="alert">
+        {{ payloadErrorKey()! | translate }}
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+          {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+        </button>
+      </div>
+    }
+
+    @if (payloadState() === 'ready' && payload(); as view) {
+      @if (view.redactedFields?.length) {
+        <p class="exchange-detail__redaction-note">
+          {{ 'POSITIVITY.AUDIT.PAYLOAD.REDACTION_NOTE' | translate }}
+          @for (field of view.redactedFields; track field) {
+            <code class="exchange-detail__redacted-field">{{ field }}</code>
+          }
+        </p>
+      }
+
+      <div class="exchange-detail__panes">
+        <article class="exchange-detail__pane" [attr.aria-labelledby]="'payload-request-heading'">
+          <h3 class="exchange-detail__pane-title" id="payload-request-heading">
+            {{ 'POSITIVITY.AUDIT.PAYLOAD.REQUEST' | translate }}
+          </h3>
+          <p class="exchange-detail__content-type">{{ view.requestContentType || '—' }}</p>
+          @if (view.requestHeaders?.length) {
+            <ul class="exchange-detail__headers">
+              @for (header of view.requestHeaders; track header.name) {
+                <li>
+                  <code>{{ header.name }}</code>
+                  <span>{{ header.value }}</span>
+                  @if (header.redacted) {
+                    <span class="exchange-detail__redacted-flag">
+                      {{ 'POSITIVITY.AUDIT.PAYLOAD.REDACTED' | translate }}
+                    </span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+          <pre class="exchange-detail__body"><code>{{ view.requestBody || '' }}</code></pre>
+        </article>
+
+        <article class="exchange-detail__pane" [attr.aria-labelledby]="'payload-response-heading'">
+          <h3 class="exchange-detail__pane-title" id="payload-response-heading">
+            {{ 'POSITIVITY.AUDIT.PAYLOAD.RESPONSE' | translate }}
+          </h3>
+          <p class="exchange-detail__content-type">{{ view.responseContentType || '—' }}</p>
+          @if (view.responseHeaders?.length) {
+            <ul class="exchange-detail__headers">
+              @for (header of view.responseHeaders; track header.name) {
+                <li>
+                  <code>{{ header.name }}</code>
+                  <span>{{ header.value }}</span>
+                  @if (header.redacted) {
+                    <span class="exchange-detail__redacted-flag">
+                      {{ 'POSITIVITY.AUDIT.PAYLOAD.REDACTED' | translate }}
+                    </span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+          <pre class="exchange-detail__body"><code>{{ view.responseBody || '' }}</code></pre>
+        </article>
+      </div>
+    }
+  </section>
+</main>

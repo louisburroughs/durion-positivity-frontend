@@ -1,0 +1,184 @@
+/*
+ * Shared presentation utilities for the positivity (supplier) domain.
+ *
+ * Angular component styles are scoped, so this sheet is added to each
+ * positivity component's `styleUrls` alongside its own file — the same pattern
+ * the location picker uses with `shared/styles/listbox.css`. Keeping the button,
+ * field, table and banner treatments here means the supplier surfaces stay
+ * visually consistent as waves B–D add screens, and the AA-compliant
+ * foreground/background token pairs (ADR-0039) are defined once.
+ *
+ * Only tokens defined in src/styles.css are referenced, and no var() fallbacks
+ * are used (see .stylelintrc.json).
+ */
+
+.pos-btn {
+	min-height: 2.5rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-1);
+	border-radius: var(--radius-sm);
+	border: 1px solid transparent;
+	padding: var(--space-2) var(--space-4);
+	font-family: inherit;
+	font-size: 0.875rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.pos-btn:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.pos-btn:focus-visible {
+	outline: 3px solid var(--input-focus-border);
+	outline-offset: 2px;
+}
+
+.pos-btn--primary {
+	background: var(--brand-primary);
+	color: var(--contrastTextColor);
+}
+
+.pos-btn--secondary {
+	background: transparent;
+	color: var(--currentTextColor);
+	border-color: var(--input-border);
+}
+
+.pos-btn--danger {
+	background: var(--status-error-bg);
+	color: var(--status-error-fg);
+	border-color: var(--functional-error-red);
+}
+
+.pos-field {
+	display: grid;
+	gap: var(--space-1);
+	margin-bottom: var(--space-3);
+}
+
+.pos-field__label {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--currentTextColor);
+}
+
+.pos-field__input {
+	min-height: 2.5rem;
+	width: 100%;
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-sm);
+	background: var(--input-background);
+	color: var(--currentTextColor);
+	padding: var(--space-2) var(--space-3);
+	font-family: inherit;
+	font-size: 0.9375rem;
+}
+
+.pos-field__input:focus-visible {
+	outline: 2px solid var(--input-focus-border);
+	outline-offset: 1px;
+}
+
+.pos-field__input:disabled {
+	background: var(--surface-variant);
+	color: var(--text-muted);
+}
+
+.pos-field__hint {
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+.pos-field__error {
+	margin: 0;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--status-error-fg);
+}
+
+.pos-banner {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+	margin: 0 0 var(--space-3);
+	padding: var(--space-3) var(--space-4);
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+	color: var(--currentTextColor);
+}
+
+.pos-banner--error {
+	background: var(--status-error-bg);
+	border-color: var(--functional-error-red);
+	color: var(--status-error-fg);
+}
+
+.pos-banner--warning {
+	background: var(--status-warning-bg);
+	border-color: var(--functional-warning);
+	color: var(--status-warning-fg);
+}
+
+.pos-banner--info {
+	background: var(--status-info-bg);
+	border-color: var(--functional-info-blue);
+	color: var(--status-info-fg);
+}
+
+.pos-table-wrap {
+	overflow-x: auto;
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+}
+
+.pos-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.9375rem;
+}
+
+.pos-table th,
+.pos-table td {
+	padding: var(--space-3);
+	border-bottom: 1px solid var(--input-border);
+	text-align: left;
+	vertical-align: top;
+	color: var(--currentTextColor);
+}
+
+.pos-table thead th {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	background: var(--surface-variant);
+}
+
+.pos-table__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.pos-table tr[aria-disabled='true'] td {
+	color: var(--text-muted);
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}

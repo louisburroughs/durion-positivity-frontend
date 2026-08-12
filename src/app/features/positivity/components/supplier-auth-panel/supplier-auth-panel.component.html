@@ -1,0 +1,193 @@
+<section class="auth-panel" [attr.aria-label]="'POSITIVITY.AUTH.TITLE' | translate">
+  <header class="auth-panel__header">
+    <h2 class="auth-panel__title">{{ 'POSITIVITY.AUTH.TITLE' | translate }}</h2>
+    <p class="auth-panel__hint">{{ 'POSITIVITY.AUTH.REFERENCE_NOTICE' | translate }}</p>
+    @if (!readOnly()) {
+      <button class="pos-btn pos-btn--primary" type="button" (click)="startCreate()">
+        {{ 'POSITIVITY.AUTH.ADD' | translate }}
+      </button>
+    } @else {
+      <p class="auth-panel__hint">{{ 'POSITIVITY.COMMON.YAML_MANAGED_READONLY' | translate }}</p>
+    }
+  </header>
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'empty') {
+    <p class="auth-panel__empty">{{ 'POSITIVITY.AUTH.EMPTY' | translate }}</p>
+  }
+
+  @if (configs().length > 0) {
+    <div class="pos-table-wrap">
+      <table class="pos-table">
+        <caption class="sr-only">{{ 'POSITIVITY.AUTH.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'POSITIVITY.AUTH.TABLE.AUTH_REF' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.AUTH.TABLE.TYPE' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.AUTH.TABLE.REFERENCES' | translate }}</th>
+            <th scope="col">
+              <span class="sr-only">{{ 'POSITIVITY.COMMON.ACTIONS' | translate }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (config of configs(); track config.authConfigId) {
+            <tr>
+              <td>{{ config.authRef }}</td>
+              <td>{{ 'POSITIVITY.AUTH.TYPE.' + config.authType | translate }}</td>
+              <td class="auth-panel__refs">
+                @if (config.usernameRef) {
+                  <code class="auth-panel__ref">{{ config.usernameRef }}</code>
+                }
+                @if (config.passwordRef) {
+                  <code class="auth-panel__ref">{{ config.passwordRef }}</code>
+                }
+                @if (config.apiKeyRef) {
+                  <code class="auth-panel__ref">{{ config.apiKeyRef }}</code>
+                }
+                @if (config.clientIdRef) {
+                  <code class="auth-panel__ref">{{ config.clientIdRef }}</code>
+                }
+                @if (config.clientSecretRef) {
+                  <code class="auth-panel__ref">{{ config.clientSecretRef }}</code>
+                }
+                @if (config.tokenRef) {
+                  <code class="auth-panel__ref">{{ config.tokenRef }}</code>
+                }
+              </td>
+              <td class="pos-table__actions">
+                @if (!readOnly()) {
+                  <button class="pos-btn pos-btn--secondary" type="button" (click)="startEdit(config)">
+                    {{ 'POSITIVITY.COMMON.EDIT' | translate }}
+                  </button>
+                  <button class="pos-btn pos-btn--danger" type="button" (click)="remove(config)">
+                    {{ 'POSITIVITY.COMMON.DELETE' | translate }}
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (formOpen()) {
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="save()">
+      <h3 class="auth-form__title">
+        @if (editingId()) {
+          {{ 'POSITIVITY.AUTH.FORM.EDIT_TITLE' | translate }}
+        } @else {
+          {{ 'POSITIVITY.AUTH.FORM.CREATE_TITLE' | translate }}
+        }
+      </h3>
+
+      <div class="pos-field">
+        <label class="pos-field__label" for="auth-ref">{{ 'POSITIVITY.AUTH.FIELD.AUTH_REF' | translate }}</label>
+        <input
+          id="auth-ref"
+          class="pos-field__input"
+          type="text"
+          formControlName="authRef"
+          [attr.aria-describedby]="fieldError('authRef') ? 'auth-ref-error' : null"
+          [attr.aria-invalid]="fieldError('authRef') ? 'true' : null"
+        />
+        @if (fieldError('authRef'); as key) {
+          <p class="pos-field__error" id="auth-ref-error" role="alert">{{ key | translate }}</p>
+        }
+      </div>
+
+      <div class="pos-field">
+        <label class="pos-field__label" for="auth-type">{{ 'POSITIVITY.AUTH.FIELD.TYPE' | translate }}</label>
+        <select id="auth-type" class="pos-field__input" formControlName="authType">
+          @for (type of authTypes; track type) {
+            <option [value]="type">{{ 'POSITIVITY.AUTH.TYPE.' + type | translate }}</option>
+          }
+        </select>
+      </div>
+
+      <fieldset class="auth-form__group">
+        <legend class="auth-form__legend">{{ 'POSITIVITY.AUTH.FORM.CREDENTIAL_REFERENCES' | translate }}</legend>
+        <p class="auth-form__hint" id="credential-ref-hint">
+          {{ 'POSITIVITY.AUTH.FORM.CREDENTIAL_HINT' | translate }}
+        </p>
+        @for (field of credentialFields(); track field) {
+          <div class="pos-field">
+            <label class="pos-field__label" [attr.for]="'auth-' + field">
+              {{ 'POSITIVITY.AUTH.FIELD.' + field | translate }}
+            </label>
+            <input
+              class="pos-field__input"
+              type="text"
+              autocomplete="off"
+              [id]="'auth-' + field"
+              [formControlName]="field"
+              [attr.aria-describedby]="
+                fieldError(field) ? 'auth-' + field + '-error credential-ref-hint' : 'credential-ref-hint'
+              "
+              [attr.aria-invalid]="fieldError(field) ? 'true' : null"
+            />
+            @if (fieldError(field); as key) {
+              <p class="pos-field__error" [id]="'auth-' + field + '-error'" role="alert">
+                {{ key | translate }}
+              </p>
+            }
+          </div>
+        }
+      </fieldset>
+
+      @if (plainFields().length > 0) {
+        <fieldset class="auth-form__group">
+          <legend class="auth-form__legend">{{ 'POSITIVITY.AUTH.FORM.ENDPOINT_SETTINGS' | translate }}</legend>
+          @for (field of plainFields(); track field) {
+            <div class="pos-field">
+              <label class="pos-field__label" [attr.for]="'auth-' + field">
+                {{ 'POSITIVITY.AUTH.FIELD.' + field | translate }}
+              </label>
+              <input
+                class="pos-field__input"
+                type="text"
+                [id]="'auth-' + field"
+                [formControlName]="field"
+                [attr.aria-describedby]="fieldError(field) ? 'auth-' + field + '-error' : null"
+                [attr.aria-invalid]="fieldError(field) ? 'true' : null"
+              />
+              @if (fieldError(field); as key) {
+                <p class="pos-field__error" [id]="'auth-' + field + '-error'" role="alert">
+                  {{ key | translate }}
+                </p>
+              }
+            </div>
+          }
+        </fieldset>
+      }
+
+      <div class="auth-form__actions">
+        <button class="pos-btn pos-btn--primary" type="submit" [disabled]="saving()">
+          {{ 'POSITIVITY.COMMON.SAVE' | translate }}
+        </button>
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="cancelForm()">
+          {{ 'POSITIVITY.COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

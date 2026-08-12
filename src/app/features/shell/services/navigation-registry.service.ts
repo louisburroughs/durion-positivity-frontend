@@ -16,6 +16,10 @@ const NAV_REGISTRY: NavItem[] = [
   { key: 'SHELL.NAV.SECURITY', icon: 'shield', route: '/app/security', roles: ['ROLE_ADMIN'], order: 11, group: 'admin' },
   { key: 'SHELL.NAV.ADMIN', icon: 'admin_panel_settings', route: '/app/admin', roles: ['ROLE_ADMIN'], order: 12, group: 'admin' },
   { key: 'SHELL.NAV.SITEMAP', icon: 'account_tree', route: '/app/sitemap', roles: ['ROLE_ADMIN'], order: 13, group: 'admin' },
+  // Supplier connectivity (positivity domain): vendor profiles, exchange audit,
+  // PRICAT sync. Admin-only for now — the Pricing Analyst entry point outside
+  // Administration stays closed until the durion#371 precedence policy lands.
+  { key: 'SHELL.NAV.SUPPLIER', icon: 'hub', route: '/app/positivity', roles: ['ROLE_ADMIN'], order: 14, group: 'admin' },
 ];
 
 @Injectable({ providedIn: 'root' })

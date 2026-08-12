@@ -1,0 +1,64 @@
+.accounts-panel {
+	display: grid;
+	gap: var(--space-5);
+}
+
+.accounts-panel__section {
+	display: grid;
+	gap: var(--space-3);
+	justify-items: start;
+}
+
+.accounts-panel__title {
+	margin: 0;
+	font-size: 1.125rem;
+}
+
+.accounts-panel__hint {
+	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.accounts-panel__empty {
+	margin: 0;
+	color: var(--text-muted);
+}
+
+.accounts-panel__gap-title {
+	margin: 0;
+	font-weight: 700;
+	flex-basis: 100%;
+}
+
+.accounts-panel__gap-list {
+	flex-basis: 100%;
+	margin: 0;
+	padding-inline-start: var(--space-5);
+	display: grid;
+	gap: var(--space-2);
+}
+
+.accounts-panel__gap-list li {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.accounts-form {
+	width: 100%;
+	max-width: 34rem;
+}
+
+.accounts-form--boxed {
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+	padding: var(--space-4);
+}
+
+.accounts-form__actions {
+	display: flex;
+	gap: var(--space-2);
+}

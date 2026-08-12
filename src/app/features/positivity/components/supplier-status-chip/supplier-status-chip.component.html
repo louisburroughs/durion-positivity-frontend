@@ -1,0 +1,9 @@
+<span class="supplier-chip" [class]="'supplier-chip ' + toneClass()">
+  @if (descriptionKey(); as description) {
+    <span class="sr-only">{{ description | translate }}</span>
+  }
+  <span class="supplier-chip__icon material-symbols-rounded" aria-hidden="true">{{
+    resolvedIcon() | msIcon
+  }}</span>
+  <span class="supplier-chip__label">{{ labelKey() | translate }}</span>
+</span>

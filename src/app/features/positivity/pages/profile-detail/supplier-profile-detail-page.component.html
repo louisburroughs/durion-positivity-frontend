@@ -1,0 +1,187 @@
+<main class="profile-detail" aria-labelledby="profile-detail-title">
+  <nav class="profile-detail__breadcrumb" [attr.aria-label]="'POSITIVITY.COMMON.BREADCRUMB' | translate">
+    <a [routerLink]="['/app', 'positivity']">{{ 'POSITIVITY.PROFILES.TITLE' | translate }}</a>
+  </nav>
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (profile(); as current) {
+    <header class="profile-detail__header">
+      <div class="profile-detail__identity">
+        <h1 id="profile-detail-title">{{ current.displayName }}</h1>
+        <code class="profile-detail__ref">{{ current.supplierRef }}</code>
+        <div class="profile-detail__chips">
+          <app-supplier-status-chip
+            [labelKey]="
+              current.enabled ? 'POSITIVITY.PROFILES.STATE.ENABLED' : 'POSITIVITY.PROFILES.STATE.DISABLED'
+            "
+            [tone]="current.enabled ? 'success' : 'neutral'"
+            descriptionKey="POSITIVITY.PROFILES.TABLE.STATE"
+          />
+          <app-supplier-status-chip
+            [labelKey]="
+              current.sandbox
+                ? 'POSITIVITY.PROFILES.ENVIRONMENT.SANDBOX'
+                : 'POSITIVITY.PROFILES.ENVIRONMENT.PRODUCTION'
+            "
+            [tone]="current.sandbox ? 'info' : 'neutral'"
+            descriptionKey="POSITIVITY.PROFILES.TABLE.ENVIRONMENT"
+          />
+          <app-supplier-status-chip
+            [labelKey]="'POSITIVITY.PROFILES.SOURCE.' + current.sourceOfTruth"
+            tone="neutral"
+            descriptionKey="POSITIVITY.PROFILES.TABLE.SOURCE"
+          />
+        </div>
+      </div>
+
+      @if (!readOnly()) {
+        <div class="profile-detail__actions">
+          <button class="pos-btn pos-btn--secondary" type="button" (click)="openEdit()">
+            {{ 'POSITIVITY.PROFILES.EDIT' | translate }}
+          </button>
+          <button class="pos-btn pos-btn--danger" type="button" (click)="deleteProfile()">
+            {{ 'POSITIVITY.PROFILES.DELETE' | translate }}
+          </button>
+        </div>
+      } @else {
+        <p class="pos-banner pos-banner--info profile-detail__yaml-note">
+          {{ 'POSITIVITY.COMMON.YAML_MANAGED_READONLY' | translate }}
+        </p>
+      }
+    </header>
+
+    @if (editOpen()) {
+      <form class="profile-detail__form" [formGroup]="editForm" (ngSubmit)="saveProfile()">
+        <h2 class="profile-detail__form-title">{{ 'POSITIVITY.PROFILES.FORM.EDIT_TITLE' | translate }}</h2>
+
+        <div class="pos-field">
+          <label class="pos-field__label" for="edit-supplier-ref">
+            {{ 'POSITIVITY.PROFILES.FIELD.SUPPLIER_REF' | translate }}
+          </label>
+          <input
+            id="edit-supplier-ref"
+            class="pos-field__input"
+            type="text"
+            formControlName="supplierRef"
+            [attr.aria-invalid]="fieldError('supplierRef') ? 'true' : null"
+            [attr.aria-describedby]="fieldError('supplierRef') ? 'edit-supplier-ref-error' : null"
+          />
+          @if (fieldError('supplierRef'); as key) {
+            <p class="pos-field__error" id="edit-supplier-ref-error" role="alert">{{ key | translate }}</p>
+          }
+        </div>
+
+        <div class="pos-field">
+          <label class="pos-field__label" for="edit-display-name">
+            {{ 'POSITIVITY.PROFILES.FIELD.DISPLAY_NAME' | translate }}
+          </label>
+          <input
+            id="edit-display-name"
+            class="pos-field__input"
+            type="text"
+            formControlName="displayName"
+            [attr.aria-invalid]="fieldError('displayName') ? 'true' : null"
+            [attr.aria-describedby]="fieldError('displayName') ? 'edit-display-name-error' : null"
+          />
+          @if (fieldError('displayName'); as key) {
+            <p class="pos-field__error" id="edit-display-name-error" role="alert">{{ key | translate }}</p>
+          }
+        </div>
+
+        <div class="pos-field profile-detail__toggle">
+          <input id="edit-sandbox" type="checkbox" formControlName="sandbox" />
+          <label class="pos-field__label" for="edit-sandbox">
+            {{ 'POSITIVITY.PROFILES.FIELD.SANDBOX' | translate }}
+          </label>
+        </div>
+
+        <div class="pos-field profile-detail__toggle">
+          <input id="edit-enabled" type="checkbox" formControlName="enabled" />
+          <label class="pos-field__label" for="edit-enabled">
+            {{ 'POSITIVITY.PROFILES.FIELD.ENABLED' | translate }}
+          </label>
+        </div>
+
+        <div class="profile-detail__form-actions">
+          <button class="pos-btn pos-btn--primary" type="submit" [disabled]="saving()">
+            {{ 'POSITIVITY.COMMON.SAVE' | translate }}
+          </button>
+          <button class="pos-btn pos-btn--secondary" type="button" (click)="cancelEdit()">
+            {{ 'POSITIVITY.COMMON.CANCEL' | translate }}
+          </button>
+        </div>
+      </form>
+    }
+
+    <div
+      class="profile-detail__tablist"
+      role="tablist"
+      [attr.aria-label]="'POSITIVITY.PROFILES.TABS.ARIA_LABEL' | translate"
+    >
+      @for (tab of tabs; track tab) {
+        <button
+          class="profile-detail__tab"
+          type="button"
+          role="tab"
+          [id]="tabId(tab)"
+          [attr.aria-selected]="activeTab() === tab"
+          [attr.aria-controls]="panelId(tab)"
+          [tabIndex]="activeTab() === tab ? 0 : -1"
+          [class.profile-detail__tab--active]="activeTab() === tab"
+          (click)="selectTab(tab)"
+          (keydown)="onTabKeydown($event, tab)"
+        >
+          {{ 'POSITIVITY.PROFILES.TABS.' + tab | translate }}
+        </button>
+      }
+    </div>
+
+    @if (vendorProfileId(); as profileId) {
+      <div class="profile-detail__panels">
+        @if (activeTab() === 'auth') {
+          <div role="tabpanel" [id]="panelId('auth')" [attr.aria-labelledby]="tabId('auth')" tabindex="0">
+            <app-supplier-auth-panel [vendorProfileId]="profileId" [readOnly]="readOnly()" />
+          </div>
+        }
+        @if (activeTab() === 'accounts') {
+          <div role="tabpanel" [id]="panelId('accounts')" [attr.aria-labelledby]="tabId('accounts')" tabindex="0">
+            <app-supplier-accounts-panel [vendorProfileId]="profileId" [readOnly]="readOnly()" />
+          </div>
+        }
+        @if (activeTab() === 'bindings') {
+          <div role="tabpanel" [id]="panelId('bindings')" [attr.aria-labelledby]="tabId('bindings')" tabindex="0">
+            <app-supplier-bindings-panel [vendorProfileId]="profileId" [readOnly]="readOnly()" />
+          </div>
+        }
+        @if (activeTab() === 'health') {
+          <div role="tabpanel" [id]="panelId('health')" [attr.aria-labelledby]="tabId('health')" tabindex="0">
+            <app-supplier-health-panel [vendorProfileId]="profileId" />
+          </div>
+        }
+        @if (activeTab() === 'pricat') {
+          <div role="tabpanel" [id]="panelId('pricat')" [attr.aria-labelledby]="tabId('pricat')" tabindex="0">
+            <app-supplier-pricat-panel [vendorProfileId]="profileId" />
+          </div>
+        }
+      </div>
+    }
+  }
+</main>

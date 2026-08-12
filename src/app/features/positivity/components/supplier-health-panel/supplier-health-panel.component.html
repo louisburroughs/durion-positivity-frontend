@@ -1,0 +1,95 @@
+<section class="health-panel" [attr.aria-label]="'POSITIVITY.HEALTH.TITLE' | translate">
+  <header class="health-panel__header">
+    <h2 class="health-panel__title">{{ 'POSITIVITY.HEALTH.TITLE' | translate }}</h2>
+    <p class="health-panel__hint">{{ 'POSITIVITY.HEALTH.READ_ONLY_HINT' | translate }}</p>
+    <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+      {{ 'POSITIVITY.COMMON.REFRESH' | translate }}
+    </button>
+  </header>
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'empty') {
+    <p class="health-panel__empty">{{ 'POSITIVITY.HEALTH.EMPTY' | translate }}</p>
+  }
+
+  @if (state() === 'ready') {
+    <app-staleness-indicator
+      [asOf]="oldestObservedAt()"
+      asOfLabelKey="POSITIVITY.HEALTH.OBSERVED_AT"
+      [fetchedAt]="fetchedAt()"
+      [thresholdMinutes]="stalenessThresholdMinutes()"
+    />
+
+    <div class="pos-table-wrap">
+      <table class="pos-table">
+        <caption class="sr-only">{{ 'POSITIVITY.HEALTH.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'POSITIVITY.BINDINGS.TABLE.CAPABILITY' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.HEALTH.TABLE.STATUS' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.HEALTH.TABLE.BREAKER' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.HEALTH.TABLE.FAILURES' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.HEALTH.TABLE.LAST_SUCCESS' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.HEALTH.TABLE.LAST_FAILURE' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of health(); track entry.capability) {
+            <tr [attr.aria-disabled]="entry.status === 'NOT_CONFIGURED' ? 'true' : null">
+              <th scope="row" class="health-panel__capability">
+                {{ 'POSITIVITY.CAPABILITY.' + entry.capability | translate }}
+              </th>
+              <td>
+                <app-supplier-status-chip
+                  [labelKey]="'POSITIVITY.HEALTH.STATUS.' + entry.status"
+                  [tone]="statusTone(entry.status)"
+                  descriptionKey="POSITIVITY.HEALTH.TABLE.STATUS"
+                />
+              </td>
+              <td>
+                <app-supplier-status-chip
+                  [labelKey]="'POSITIVITY.HEALTH.BREAKER.' + entry.breakerState"
+                  [tone]="breakerTone(entry.breakerState)"
+                  descriptionKey="POSITIVITY.HEALTH.TABLE.BREAKER"
+                />
+              </td>
+              <td>{{ entry.consecutiveFailures ?? 0 }}</td>
+              <td>
+                @if (entry.lastSuccessAt) {
+                  {{ entry.lastSuccessAt | date: 'medium' }}
+                } @else {
+                  {{ 'POSITIVITY.HEALTH.NEVER' | translate }}
+                }
+              </td>
+              <td>
+                @if (entry.lastFailureAt) {
+                  {{ entry.lastFailureAt | date: 'medium' }}
+                } @else {
+                  {{ 'POSITIVITY.HEALTH.NEVER' | translate }}
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

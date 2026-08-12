@@ -162,7 +162,8 @@
       "LOCATION": "Locations",
       "SECURITY": "Security",
       "ADMIN": "Admin",
-      "SITEMAP": "Site Map"
+      "SITEMAP": "Site Map",
+      "SUPPLIER": "Supplier Connectivity"
     },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Toggle navigation sidebar",
@@ -5191,6 +5192,409 @@
       },
       "ADMIN": {
         "DESC": "System administration and configuration."
+      }
+    }
+  },
+  "POSITIVITY": {
+    "COMMON": {
+      "LOADING": "Loading…",
+      "RETRY": "Retry",
+      "REFRESH": "Refresh",
+      "SAVE": "Save",
+      "CANCEL": "Cancel",
+      "EDIT": "Edit",
+      "DELETE": "Delete",
+      "ACTIONS": "Actions",
+      "BREADCRUMB": "Breadcrumb",
+      "APPLY_FILTER": "Apply filters",
+      "CLEAR_FILTER": "Clear filters",
+      "YAML_MANAGED_READONLY": "This profile is managed by deployment configuration (YAML) and cannot be edited here. Change it through your configuration pipeline."
+    },
+    "ERROR": {
+      "VALIDATION": "Some fields were rejected. Correct the highlighted values and save again.",
+      "FORBIDDEN": "You do not have permission to view this information.",
+      "CONFLICT": "That configuration conflicts with an existing entry.",
+      "RETRYABLE": "The service is temporarily unavailable. Try again.",
+      "FIELD": {
+        "INVALID": "This value was rejected by the service.",
+        "BINDING_AUTH_REQUIRED": "Select an authentication configuration for this binding.",
+        "CRON_MALFORMED": "This is not a valid cron expression.",
+        "DUPLICATE_CAPABILITY_BINDING": "This capability is already bound for this profile.",
+        "LOCATION_UUID_MALFORMED": "This is not a valid location identifier.",
+        "ACCOUNT_NUMBER_REQUIRED": "An account number is required.",
+        "AUTH_REF_REQUIRED": "An authentication reference name is required.",
+        "AUTH_REF_DUPLICATE": "This reference name is already used on this profile.",
+        "CREDENTIAL_REFERENCE_MALFORMED": "Enter a secret reference such as env:MY_SECRET_NAME, not the secret itself.",
+        "BASE_URL_MALFORMED": "Enter a valid base URL.",
+        "PROFILE_YAML_MANAGED": "This profile is managed by configuration and cannot be changed here."
+      }
+    },
+    "FRESHNESS": {
+      "ARIA_LABEL": "Data freshness",
+      "AS_OF": "Data as of",
+      "FETCHED_AT": "Last fetched",
+      "CURRENT": "Current",
+      "STALE": "Stale",
+      "UNKNOWN": "Unknown",
+      "CHIP_DESCRIPTION": "Freshness:",
+      "NO_VENDOR_TIMESTAMP": "No vendor timestamp",
+      "NEVER_FETCHED": "Never fetched",
+      "STALE_NOTE": "This data is older than the configured threshold. The fetch time below is when we last checked, not how current the data is."
+    },
+    "CAPABILITY": {
+      "ORDER": "Order",
+      "ORDER_STATUS": "Order status",
+      "STOCK_REPORT": "Stock report",
+      "PRICE_CATALOG": "Price catalogue (PRICAT)",
+      "PRODUCT_CATALOG": "Product catalogue",
+      "DELIVERY_NOTE": "Delivery note"
+    },
+    "PROTOCOL_FAMILY": {
+      "EDIWHEEL_A25": "EDIWheel A2.5",
+      "EDIWHEEL_C1": "EDIWheel C1",
+      "EDIWHEEL_B": "EDIWheel B",
+      "EDIWHEEL_JSON": "EDIWheel JSON",
+      "MICHELIN_S2S": "Michelin S2S"
+    },
+    "PROFILES": {
+      "TITLE": "Supplier profiles",
+      "SUBTITLE": "Vendor connectivity configured for this deployment.",
+      "CREATE": "New profile",
+      "EDIT": "Edit profile",
+      "DELETE": "Delete profile",
+      "EMPTY": "No supplier profiles are configured yet.",
+      "FIELD": {
+        "SUPPLIER_REF": "Configuration alias",
+        "SUPPLIER_REF_HINT": "A short, human-readable name used in configuration and logs.",
+        "DISPLAY_NAME": "Display name",
+        "SANDBOX": "Use sandbox endpoints",
+        "ENABLED": "Profile enabled"
+      },
+      "FORM": {
+        "CREATE_TITLE": "Create supplier profile",
+        "EDIT_TITLE": "Edit supplier profile"
+      },
+      "STATE": {
+        "ENABLED": "Enabled",
+        "DISABLED": "Disabled"
+      },
+      "ENVIRONMENT": {
+        "SANDBOX": "Sandbox",
+        "PRODUCTION": "Production"
+      },
+      "SOURCE": {
+        "YAML": "Configuration (YAML)",
+        "ADMIN": "Administered here"
+      },
+      "TABS": {
+        "ARIA_LABEL": "Supplier profile sections",
+        "auth": "Auth",
+        "accounts": "Accounts",
+        "bindings": "Bindings",
+        "health": "Health",
+        "pricat": "PRICAT"
+      },
+      "TABLE": {
+        "CAPTION": "Supplier profiles configured for this deployment",
+        "NAME": "Profile",
+        "STATE": "State",
+        "ENVIRONMENT": "Environment",
+        "SOURCE": "Configuration source",
+        "OPEN": "Open"
+      },
+      "ERROR": {
+        "LOAD": "The supplier profiles could not be loaded.",
+        "LOAD_DETAIL": "This supplier profile could not be loaded.",
+        "CREATE": "The supplier profile could not be created.",
+        "SAVE": "The supplier profile could not be saved.",
+        "DELETE": "The supplier profile could not be deleted."
+      }
+    },
+    "AUTH": {
+      "TITLE": "Authentication configurations",
+      "ADD": "Add configuration",
+      "EMPTY": "No authentication configurations yet. Bindings need one before they can run.",
+      "REFERENCE_NOTICE": "Credentials are stored as references to your secret store. This screen never shows or asks for a secret value.",
+      "TYPE": {
+        "BASIC_PLUS_APIKEY": "Basic + API key",
+        "OAUTH2_CLIENT_CREDENTIALS": "OAuth2 client credentials",
+        "BEARER": "Bearer token"
+      },
+      "FIELD": {
+        "AUTH_REF": "Reference name",
+        "TYPE": "Authentication type",
+        "usernameRef": "Username reference",
+        "passwordRef": "Password reference",
+        "apiKeyRef": "API key reference",
+        "clientIdRef": "Client ID reference",
+        "clientSecretRef": "Client secret reference",
+        "tokenRef": "Bearer token reference",
+        "tokenUrl": "Token endpoint URL",
+        "scope": "Scope"
+      },
+      "FORM": {
+        "CREATE_TITLE": "Add authentication configuration",
+        "EDIT_TITLE": "Edit authentication configuration",
+        "CREDENTIAL_REFERENCES": "Credential references",
+        "CREDENTIAL_HINT": "Enter the reference the platform resolves at call time, for example env:MICHELIN_EDI_USER. Never paste the secret itself.",
+        "ENDPOINT_SETTINGS": "Endpoint settings"
+      },
+      "TABLE": {
+        "CAPTION": "Authentication configurations for this profile",
+        "AUTH_REF": "Reference name",
+        "TYPE": "Type",
+        "REFERENCES": "Secret references"
+      },
+      "ERROR": {
+        "LOAD": "The authentication configurations could not be loaded.",
+        "SAVE": "The authentication configuration could not be saved.",
+        "DELETE": "The authentication configuration could not be deleted."
+      }
+    },
+    "ACCOUNTS": {
+      "TITLE": "Accounts",
+      "FIELD": {
+        "ACCOUNT_NUMBER": "Account number",
+        "AGENCY_CODE": "Agency code",
+        "LOCATION": "Location"
+      },
+      "BILLING": {
+        "TITLE": "Billing account",
+        "HINT": "The invoicing and settlement account for this vendor profile.",
+        "SAVE": "Save billing account"
+      },
+      "DELIVERY": {
+        "TITLE": "Delivery accounts",
+        "HINT": "The receiving account used for each of your locations.",
+        "ADD": "Add delivery account",
+        "MAP_NOW": "Map this location",
+        "SELECT_LOCATION": "Select a location",
+        "EMPTY": "No delivery accounts are mapped yet.",
+        "TABLE_CAPTION": "Delivery account mapped to each location",
+        "GAP_WARNING": "These active locations have no delivery account. Orders for them will be rejected before they reach the vendor."
+      },
+      "ERROR": {
+        "LOAD": "The account configuration could not be loaded.",
+        "SAVE_BILLING": "The billing account could not be saved.",
+        "SAVE_DELIVERY": "The delivery account could not be saved.",
+        "DELETE_DELIVERY": "The delivery account could not be removed."
+      }
+    },
+    "BINDINGS": {
+      "TITLE": "Capability bindings",
+      "HINT": "Every capability the platform supports is listed. A capability with no binding is switched off for this vendor.",
+      "CONFIGURE": "Configure",
+      "EMPTY_REGISTRY": "No capabilities are registered.",
+      "NOT_BOUND_HINT": "Not configured",
+      "NO_SCHEDULE": "On demand",
+      "STATUS": {
+        "ENABLED": "Enabled",
+        "DISABLED": "Disabled",
+        "NOT_CONFIGURED": "Not configured"
+      },
+      "FIELD": {
+        "PROTOCOL_FAMILY": "Protocol family",
+        "PROTOCOL_VERSION": "Protocol version",
+        "BASE_URL": "Base URL",
+        "PATH": "Path",
+        "CRON": "Schedule (cron)",
+        "CRON_HINT": "Optional. Leave empty to run this capability only on demand.",
+        "ENABLED": "Binding enabled"
+      },
+      "FORM": {
+        "CREATE_TITLE": "Configure binding",
+        "EDIT_TITLE": "Edit binding",
+        "SELECT_CAPABILITY": "Select a capability",
+        "SELECT_FAMILY": "Select a protocol family",
+        "SELECT_VERSION": "Select a version",
+        "SELECT_AUTH": "Select an authentication configuration"
+      },
+      "CONFIRM": {
+        "TITLE": "This binding is live",
+        "BODY": "This binding is enabled and may be carrying traffic right now. Saving applies your changes immediately.",
+        "ACCEPT": "Save changes"
+      },
+      "TABLE": {
+        "CAPTION": "Capability bindings for this profile",
+        "CAPABILITY": "Capability",
+        "STATUS": "Status",
+        "PROTOCOL": "Protocol",
+        "ENDPOINT": "Endpoint",
+        "AUTH_REF": "Authentication",
+        "SCHEDULE": "Schedule"
+      },
+      "ERROR": {
+        "LOAD": "The capability bindings could not be loaded.",
+        "SAVE": "The binding could not be saved.",
+        "DELETE": "The binding could not be deleted."
+      }
+    },
+    "HEALTH": {
+      "TITLE": "Connection health",
+      "READ_ONLY_HINT": "Reported by the platform. These indicators are read-only.",
+      "EMPTY": "No health information has been reported yet.",
+      "NEVER": "Never",
+      "OBSERVED_AT": "Measured at",
+      "BREAKER_LABEL": "Circuit breaker:",
+      "STATUS": {
+        "HEALTHY": "Healthy",
+        "DEGRADED": "Degraded",
+        "FAILING": "Failing",
+        "NOT_CONFIGURED": "Not configured",
+        "UNKNOWN": "Unknown"
+      },
+      "BREAKER": {
+        "CLOSED": "Closed",
+        "HALF_OPEN": "Half open",
+        "OPEN": "Open",
+        "UNKNOWN": "Unknown"
+      },
+      "TABLE": {
+        "CAPTION": "Connection health per capability",
+        "STATUS": "Health",
+        "BREAKER": "Circuit breaker",
+        "FAILURES": "Consecutive failures",
+        "LAST_SUCCESS": "Last success",
+        "LAST_FAILURE": "Last failure"
+      },
+      "ERROR": {
+        "LOAD": "The health information could not be loaded."
+      }
+    },
+    "AUDIT": {
+      "TITLE": "Exchange audit",
+      "SUBTITLE": "Every outbound exchange with a supplier, as it happened.",
+      "DETAIL_TITLE": "Exchange detail",
+      "READ_ONLY_NOTICE": "These are historical records kept for dispute resolution. They cannot be retried or replayed from this screen.",
+      "EMPTY": "No exchanges match these filters.",
+      "COUNT": "{{count}} exchanges",
+      "NOT_FINISHED": "Not finished",
+      "CAPTURE_LEVEL": "Payload capture",
+      "UNMAPPED_FIELDS": "The bound protocol version could not express these fields:",
+      "CAPTURE": {
+        "FULL": "Full",
+        "REDACTED": "Redacted",
+        "METADATA_ONLY": "Metadata only"
+      },
+      "OUTCOME": {
+        "SUCCESS": "Success",
+        "FAILURE": "Failure",
+        "TIMEOUT": "Timed out",
+        "REJECTED": "Rejected",
+        "CIRCUIT_OPEN": "Circuit open"
+      },
+      "FILTER": {
+        "VENDOR": "Vendor",
+        "CAPABILITY": "Capability",
+        "OUTCOME": "Outcome",
+        "DATE_FROM": "From date",
+        "DATE_TO": "To date",
+        "ALL_VENDORS": "All vendors",
+        "ALL_CAPABILITIES": "All capabilities",
+        "ALL_OUTCOMES": "All outcomes"
+      },
+      "TABLE": {
+        "CAPTION": "Outbound supplier exchanges",
+        "STARTED": "Started",
+        "FINISHED": "Finished",
+        "VENDOR": "Vendor",
+        "CAPABILITY": "Capability",
+        "OUTCOME": "Outcome",
+        "HTTP_STATUS": "HTTP status",
+        "DURATION": "Duration (ms)",
+        "CORRELATION_ID": "Correlation ID",
+        "VIEW": "View"
+      },
+      "PAYLOAD": {
+        "TITLE": "Request and response",
+        "REQUEST": "Request",
+        "RESPONSE": "Response",
+        "REDACTED": "Redacted",
+        "REDACTION_NOTE": "These fields were redacted before delivery:",
+        "RESTRICTED": "You do not have permission to view raw exchange payloads. The exchange summary above is still available.",
+        "METADATA_ONLY": "Payload capture is disabled for this binding, so only the summary was recorded.",
+        "PURGED": "This payload has passed its retention period and was deleted. The summary above is retained."
+      },
+      "ERROR": {
+        "LOAD": "The exchange audit could not be loaded.",
+        "LOAD_DETAIL": "This exchange could not be loaded.",
+        "LOAD_PAYLOAD": "The exchange payload could not be loaded."
+      }
+    },
+    "PRICAT": {
+      "TITLE": "PRICAT synchronisation",
+      "EMPTY": "No PRICAT runs have been recorded for this vendor yet.",
+      "NOT_BOUND": "The price catalogue capability is not configured for this vendor, so no runs can be scheduled or started.",
+      "RUN_NOW": "Run now",
+      "RUN_ACCEPTED": "The run was accepted and will appear below as it progresses.",
+      "IN_PROGRESS": "In progress",
+      "UNMATCHED_LINK": "Unmatched lines",
+      "UNMATCHED_BADGE_SR": "unmatched catalogue lines awaiting resolution",
+      "PREVIOUS_DATA_AUTHORITATIVE": "No new data was received. The previously received supplier prices remain authoritative.",
+      "OUTCOME": {
+        "RUNNING": "Running",
+        "SUCCESS": "Success",
+        "PARTIAL": "Partial",
+        "EMPTY": "Nothing received",
+        "FAILED": "Failed"
+      },
+      "FRESHNESS": {
+        "EFFECTIVE_DATE": "Vendor effective date",
+        "LAST_FETCH": "Last fetched from vendor"
+      },
+      "TABLE": {
+        "CAPTION": "PRICAT run history for this vendor",
+        "STARTED": "Started",
+        "FINISHED": "Finished",
+        "WINDOW": "Window",
+        "OUTCOME": "Outcome",
+        "FETCHED": "Lines fetched",
+        "STORED": "Lines stored",
+        "UNMATCHED": "Unmatched",
+        "DUPLICATES": "Duplicates",
+        "CHECKPOINT": "Checkpoint"
+      },
+      "ERROR": {
+        "LOAD": "The PRICAT run history could not be loaded.",
+        "TRIGGER": "The run could not be started.",
+        "TRIGGER_FORBIDDEN": "You do not have permission to start a PRICAT run."
+      }
+    },
+    "UNMATCHED": {
+      "TITLE": "Unmatched catalogue lines",
+      "SUBTITLE": "Supplier catalogue lines that could not be matched to a product.",
+      "BACK_TO_PROFILE": "Supplier profile",
+      "EXPORT_CSV": "Export CSV",
+      "EMPTY": "No unmatched lines. Every received catalogue line was matched to a product.",
+      "COUNT": "{{count}} unmatched lines",
+      "WORKLIST_NOTICE": "These lines stay listed until a catalogue correction makes them matchable. They cannot be dismissed from this screen.",
+      "FILTER": {
+        "REASON": "Reason",
+        "SEARCH": "Search",
+        "DATE_FROM": "First seen from",
+        "DATE_TO": "Last seen to",
+        "ALL_REASONS": "All reasons"
+      },
+      "REASON": {
+        "NO_EAN_MATCH": "No EAN match",
+        "NO_UPC_MATCH": "No UPC match",
+        "NO_MPN_MATCH": "No manufacturer part number match",
+        "AMBIGUOUS_MATCH": "Ambiguous match",
+        "MISSING_IDENTIFIERS": "No usable identifiers"
+      },
+      "TABLE": {
+        "CAPTION": "Supplier catalogue lines awaiting a product match",
+        "EAN": "EAN",
+        "GTIN": "GTIN",
+        "MPN": "Manufacturer part number",
+        "DESCRIPTION": "Description",
+        "REASON": "Reason",
+        "FIRST_SEEN": "First seen",
+        "LAST_SEEN": "Last seen",
+        "OCCURRENCES": "Occurrences"
+      },
+      "ERROR": {
+        "LOAD": "The unmatched lines could not be loaded."
       }
     }
   }

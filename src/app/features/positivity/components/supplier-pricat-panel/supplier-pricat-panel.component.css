@@ -1,0 +1,74 @@
+.pricat-panel {
+	display: grid;
+	gap: var(--space-4);
+}
+
+.pricat-panel__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.pricat-panel__title {
+	margin: 0;
+	font-size: 1.125rem;
+	flex: 1 1 12rem;
+}
+
+.pricat-panel__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.pricat-panel__unmatched-link {
+	text-decoration: none;
+}
+
+.pricat-panel__badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.5rem;
+	padding: 0 var(--space-1);
+	border-radius: var(--radius-sm);
+	background: var(--status-warning-bg);
+	color: var(--status-warning-fg);
+	border: 1px solid var(--functional-warning);
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+
+.pricat-panel__empty {
+	margin: 0;
+	color: var(--text-muted);
+}
+
+.pricat-panel__started {
+	font-weight: 600;
+	text-align: left;
+	white-space: nowrap;
+}
+
+.pricat-panel__window {
+	white-space: nowrap;
+}
+
+.pricat-panel__note {
+	margin: var(--space-1) 0 0;
+	font-size: 0.75rem;
+	color: var(--currentTextColor);
+	max-width: 18rem;
+}
+
+.pricat-panel__checkpoint code {
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+}
+
+.pricat-panel__checkpoint-at {
+	display: block;
+	font-size: 0.6875rem;
+	color: var(--text-muted);
+}

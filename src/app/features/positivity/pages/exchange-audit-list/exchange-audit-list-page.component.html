@@ -1,0 +1,152 @@
+<main class="audit-page" aria-labelledby="audit-page-title">
+  <nav class="audit-page__breadcrumb" [attr.aria-label]="'POSITIVITY.COMMON.BREADCRUMB' | translate">
+    <a [routerLink]="['/app', 'positivity']">{{ 'POSITIVITY.PROFILES.TITLE' | translate }}</a>
+  </nav>
+
+  <header class="audit-page__header">
+    <div>
+      <h1 id="audit-page-title">{{ 'POSITIVITY.AUDIT.TITLE' | translate }}</h1>
+      <p class="audit-page__subtitle">{{ 'POSITIVITY.AUDIT.SUBTITLE' | translate }}</p>
+    </div>
+  </header>
+
+  <p class="pos-banner pos-banner--info">{{ 'POSITIVITY.AUDIT.READ_ONLY_NOTICE' | translate }}</p>
+
+  <form class="audit-filters" [formGroup]="filterForm" (ngSubmit)="applyFilter()">
+    <div class="pos-field">
+      <label class="pos-field__label" for="audit-vendor">
+        {{ 'POSITIVITY.AUDIT.FILTER.VENDOR' | translate }}
+      </label>
+      <select id="audit-vendor" class="pos-field__input" formControlName="vendorProfileId">
+        <option value="">{{ 'POSITIVITY.AUDIT.FILTER.ALL_VENDORS' | translate }}</option>
+        @for (profile of profiles(); track profile.vendorProfileId) {
+          <option [value]="profile.vendorProfileId">{{ profile.displayName }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="audit-capability">
+        {{ 'POSITIVITY.AUDIT.FILTER.CAPABILITY' | translate }}
+      </label>
+      <select id="audit-capability" class="pos-field__input" formControlName="capability">
+        <option value="">{{ 'POSITIVITY.AUDIT.FILTER.ALL_CAPABILITIES' | translate }}</option>
+        @for (capability of capabilities; track capability) {
+          <option [value]="capability">{{ 'POSITIVITY.CAPABILITY.' + capability | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="audit-outcome">
+        {{ 'POSITIVITY.AUDIT.FILTER.OUTCOME' | translate }}
+      </label>
+      <select id="audit-outcome" class="pos-field__input" formControlName="outcome">
+        <option value="">{{ 'POSITIVITY.AUDIT.FILTER.ALL_OUTCOMES' | translate }}</option>
+        @for (outcome of outcomes; track outcome) {
+          <option [value]="outcome">{{ 'POSITIVITY.AUDIT.OUTCOME.' + outcome | translate }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="audit-date-from">
+        {{ 'POSITIVITY.AUDIT.FILTER.DATE_FROM' | translate }}
+      </label>
+      <input id="audit-date-from" class="pos-field__input" type="date" formControlName="dateFrom" />
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="audit-date-to">
+        {{ 'POSITIVITY.AUDIT.FILTER.DATE_TO' | translate }}
+      </label>
+      <input id="audit-date-to" class="pos-field__input" type="date" formControlName="dateTo" />
+    </div>
+
+    <div class="audit-filters__actions">
+      <button class="pos-btn pos-btn--primary" type="submit">
+        {{ 'POSITIVITY.COMMON.APPLY_FILTER' | translate }}
+      </button>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="clearFilter()">
+        {{ 'POSITIVITY.COMMON.CLEAR_FILTER' | translate }}
+      </button>
+    </div>
+  </form>
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="load()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'empty') {
+    <p class="audit-page__empty">{{ 'POSITIVITY.AUDIT.EMPTY' | translate }}</p>
+  }
+
+  @if (state() === 'ready') {
+    <p class="audit-page__count" aria-live="polite">
+      {{ 'POSITIVITY.AUDIT.COUNT' | translate: { count: totalCount() } }}
+    </p>
+
+    <div class="pos-table-wrap">
+      <table class="pos-table">
+        <caption class="sr-only">{{ 'POSITIVITY.AUDIT.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.STARTED' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.VENDOR' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.CAPABILITY' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.OUTCOME' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.HTTP_STATUS' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.DURATION' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.AUDIT.TABLE.CORRELATION_ID' | translate }}</th>
+            <th scope="col">
+              <span class="sr-only">{{ 'POSITIVITY.COMMON.ACTIONS' | translate }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (exchange of exchanges(); track exchange.exchangeId) {
+            <tr>
+              <th scope="row" class="audit-page__started">{{ exchange.startedAt | date: 'medium' }}</th>
+              <td>{{ exchange.vendorDisplayName }}</td>
+              <td>{{ 'POSITIVITY.CAPABILITY.' + exchange.capability | translate }}</td>
+              <td>
+                <app-supplier-status-chip
+                  [labelKey]="'POSITIVITY.AUDIT.OUTCOME.' + exchange.outcome"
+                  [tone]="outcomeTone(exchange.outcome)"
+                  descriptionKey="POSITIVITY.AUDIT.TABLE.OUTCOME"
+                />
+              </td>
+              <td>{{ exchange.httpStatus ?? '—' }}</td>
+              <td>{{ exchange.durationMs ?? '—' }}</td>
+              <td class="audit-page__correlation">{{ exchange.correlationId }}</td>
+              <td>
+                <a
+                  class="audit-page__link"
+                  [routerLink]="['/app', 'positivity', 'exchanges', exchange.exchangeId]"
+                >
+                  {{ 'POSITIVITY.AUDIT.TABLE.VIEW' | translate }}
+                  <span class="sr-only">{{ exchange.correlationId }}</span>
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</main>

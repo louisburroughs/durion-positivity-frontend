@@ -1,0 +1,143 @@
+<section class="pricat-panel" [attr.aria-label]="'POSITIVITY.PRICAT.TITLE' | translate">
+  <header class="pricat-panel__header">
+    <h2 class="pricat-panel__title">{{ 'POSITIVITY.PRICAT.TITLE' | translate }}</h2>
+    <div class="pricat-panel__actions">
+      <a
+        class="pos-btn pos-btn--secondary pricat-panel__unmatched-link"
+        [routerLink]="['/app', 'positivity', 'profiles', vendorProfileId(), 'unmatched-lines']"
+      >
+        {{ 'POSITIVITY.PRICAT.UNMATCHED_LINK' | translate }}
+        <span class="pricat-panel__badge">{{ unmatchedCount() }}</span>
+        <span class="sr-only">{{ 'POSITIVITY.PRICAT.UNMATCHED_BADGE_SR' | translate }}</span>
+      </a>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="refreshRuns()">
+        {{ 'POSITIVITY.COMMON.REFRESH' | translate }}
+      </button>
+      <button
+        class="pos-btn pos-btn--primary"
+        type="button"
+        [disabled]="!canTrigger()"
+        (click)="runNow()"
+      >
+        {{ 'POSITIVITY.PRICAT.RUN_NOW' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (!hasPricatBinding() && state() === 'ready') {
+    <p class="pos-banner pos-banner--info">{{ 'POSITIVITY.PRICAT.NOT_BOUND' | translate }}</p>
+  }
+
+  @if (triggerForbidden()) {
+    <p class="pos-banner pos-banner--warning" role="alert">
+      {{ 'POSITIVITY.PRICAT.ERROR.TRIGGER_FORBIDDEN' | translate }}
+    </p>
+  }
+
+  @if (triggerAcceptedRunId()) {
+    <p class="pos-banner pos-banner--info" aria-live="polite">
+      {{ 'POSITIVITY.PRICAT.RUN_ACCEPTED' | translate }}
+    </p>
+  }
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="refreshRuns()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (freshness(); as fresh) {
+    <app-staleness-indicator
+      [asOf]="fresh.latestEffectiveDate"
+      asOfLabelKey="POSITIVITY.PRICAT.FRESHNESS.EFFECTIVE_DATE"
+      [fetchedAt]="fresh.lastFetchedAt"
+      fetchedAtLabelKey="POSITIVITY.PRICAT.FRESHNESS.LAST_FETCH"
+      [thresholdMinutes]="fresh.stalenessThresholdMinutes"
+    />
+  }
+
+  @if (state() === 'empty') {
+    <p class="pricat-panel__empty">{{ 'POSITIVITY.PRICAT.EMPTY' | translate }}</p>
+  }
+
+  @if (runs().length > 0) {
+    <div class="pos-table-wrap">
+      <table class="pos-table">
+        <caption class="sr-only">{{ 'POSITIVITY.PRICAT.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'POSITIVITY.PRICAT.TABLE.STARTED' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PRICAT.TABLE.FINISHED' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PRICAT.TABLE.WINDOW' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PRICAT.TABLE.OUTCOME' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PRICAT.TABLE.FETCHED' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PRICAT.TABLE.STORED' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PRICAT.TABLE.UNMATCHED' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PRICAT.TABLE.DUPLICATES' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.PRICAT.TABLE.CHECKPOINT' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (run of runs(); track run.runId) {
+            <tr>
+              <th scope="row" class="pricat-panel__started">{{ run.startedAt | date: 'medium' }}</th>
+              <td>
+                @if (run.finishedAt) {
+                  {{ run.finishedAt | date: 'medium' }}
+                } @else {
+                  {{ 'POSITIVITY.PRICAT.IN_PROGRESS' | translate }}
+                }
+              </td>
+              <td class="pricat-panel__window">
+                @if (run.windowFrom && run.windowTo) {
+                  {{ run.windowFrom | date: 'short' }} – {{ run.windowTo | date: 'short' }}
+                } @else {
+                  <span aria-hidden="true">—</span>
+                }
+              </td>
+              <td>
+                <app-supplier-status-chip
+                  [labelKey]="'POSITIVITY.PRICAT.OUTCOME.' + run.outcome"
+                  [tone]="outcomeTone(run.outcome)"
+                  descriptionKey="POSITIVITY.PRICAT.TABLE.OUTCOME"
+                />
+                @if (isNonDestructive(run)) {
+                  <p class="pricat-panel__note">
+                    {{ 'POSITIVITY.PRICAT.PREVIOUS_DATA_AUTHORITATIVE' | translate }}
+                  </p>
+                }
+              </td>
+              <td>{{ run.linesFetched }}</td>
+              <td>{{ run.linesStored }}</td>
+              <td>{{ run.linesUnmatched }}</td>
+              <td>{{ run.linesDuplicate }}</td>
+              <td class="pricat-panel__checkpoint">
+                @if (run.checkpointState) {
+                  <code>{{ run.checkpointState }}</code>
+                  @if (run.checkpointAt) {
+                    <span class="pricat-panel__checkpoint-at">{{ run.checkpointAt | date: 'short' }}</span>
+                  }
+                } @else {
+                  <span aria-hidden="true">—</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

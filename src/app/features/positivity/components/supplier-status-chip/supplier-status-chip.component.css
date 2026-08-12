@@ -1,0 +1,72 @@
+/*
+ * Status chip. Colour is redundant with the glyph and the text label — never the
+ * sole carrier of meaning (ADR-0029 / ADR-0039). Foreground/background pairs are
+ * the sanctioned --status-*-fg/-bg tokens, which are theme-aware and meet the
+ * AA contrast threshold in both themes.
+ */
+.supplier-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	padding: 2px var(--space-2);
+	border-radius: var(--radius-sm);
+	border: 1px solid transparent;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	line-height: 1.4;
+	white-space: nowrap;
+}
+
+.supplier-chip__icon {
+	font-size: 1rem;
+	line-height: 1;
+}
+
+.supplier-chip--neutral {
+	background: var(--surface-variant);
+	border-color: var(--input-border);
+	color: var(--currentTextColor);
+}
+
+.supplier-chip--info {
+	background: var(--status-info-bg);
+	border-color: var(--functional-info-blue);
+	color: var(--status-info-fg);
+}
+
+.supplier-chip--success {
+	background: var(--status-success-bg);
+	border-color: var(--functional-success);
+	color: var(--status-success-fg);
+}
+
+.supplier-chip--warning {
+	background: var(--status-warning-bg);
+	border-color: var(--functional-warning);
+	color: var(--status-warning-fg);
+}
+
+.supplier-chip--danger {
+	background: var(--status-error-bg);
+	border-color: var(--functional-error-red);
+	color: var(--status-error-fg);
+}
+
+/* Forced-colours mode drops the palette; the glyph and label still carry the state. */
+@media (forced-colors: active) {
+	.supplier-chip {
+		border-color: currentcolor;
+	}
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}

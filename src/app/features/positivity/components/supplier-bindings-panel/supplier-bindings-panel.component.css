@@ -1,0 +1,93 @@
+.bindings-panel {
+	display: grid;
+	gap: var(--space-4);
+}
+
+.bindings-panel__header {
+	display: grid;
+	gap: var(--space-1);
+}
+
+.bindings-panel__title {
+	margin: 0;
+	font-size: 1.125rem;
+}
+
+.bindings-panel__hint,
+.bindings-panel__empty {
+	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.bindings-row__capability {
+	font-weight: 600;
+	text-align: left;
+}
+
+/*
+ * An unbound capability is dimmed but still fully readable — the "not
+ * configured" chip and this row's text carry the meaning, so the dimming is
+ * only a secondary cue (ADR-0039).
+ */
+.bindings-row--unbound td {
+	color: var(--text-muted);
+}
+
+.bindings-row__none {
+	font-style: italic;
+}
+
+.bindings-row__version,
+.bindings-row__endpoint,
+.bindings-row__cron {
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+}
+
+.bindings-form {
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+	padding: var(--space-4);
+	max-width: 34rem;
+}
+
+.bindings-form__title {
+	margin: 0 0 var(--space-3);
+	font-size: 1rem;
+}
+
+.bindings-form__actions {
+	display: flex;
+	gap: var(--space-2);
+}
+
+.pos-field--inline {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+
+.bindings-confirm {
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+	color: var(--currentTextColor);
+	padding: var(--space-4);
+	max-width: 28rem;
+}
+
+.bindings-confirm__title {
+	margin: 0 0 var(--space-2);
+	font-size: 1rem;
+}
+
+.bindings-confirm__body {
+	margin: 0 0 var(--space-4);
+}
+
+.bindings-confirm__actions {
+	display: flex;
+	gap: var(--space-2);
+}
