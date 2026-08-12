@@ -5,13 +5,28 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { PurchaseOrderDetail } from '../../../models/inventory.models';
 import { InventoryPurchaseOrderService } from '../../../services/inventory-purchase-order.service';
+import { SupplierTransmissionPanelComponent } from '../../../../positivity/components/supplier-transmission-panel/supplier-transmission-panel.component';
+import { SupplierShipmentPanelComponent } from '../../../../positivity/components/supplier-shipment-panel/supplier-shipment-panel.component';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
+/**
+ * Purchase-order detail — the committed, read-only view of an order.
+ *
+ * The vendor transmission panel (#191) and the shipment-event timeline (#193)
+ * are hosted here because this is the screen that answers "what is happening
+ * with this order?": `po-form` edits lines before commitment, where no
+ * transmission state can exist, and receiving is downstream of the question.
+ *
+ * Both panels are supplier-domain components that own their own state and their
+ * own HTTP (ADR-0010). This page passes a purchase-order id and nothing else —
+ * no supplier service is injected here and no supplier model is imported, so a
+ * vendor outage degrades those sections only and leaves the order rendering.
+ */
 @Component({
   selector: 'app-po-detail',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, SupplierTransmissionPanelComponent, SupplierShipmentPanelComponent],
   templateUrl: './po-detail.component.html',
   styleUrl: './po-detail.component.css',
 })

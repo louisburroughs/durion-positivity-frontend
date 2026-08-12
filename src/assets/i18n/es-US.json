@@ -5737,6 +5737,208 @@
           "LOAD": "No se pudo cargar el contenido del fabricante sin coincidencia."
         }
       }
+    },
+    "TIMELINE": {
+      "ARIA_LABEL": "Historial de eventos",
+      "EMPTY": "Todavía no se ha reportado nada."
+    },
+    "TRANSMISSION": {
+      "TITLE": "Transmisión al proveedor",
+      "STATE_LABEL": "Estado de la transmisión:",
+      "VENDOR": "Proveedor",
+      "VENDOR_ORDER_NUMBER": "Número de pedido del proveedor",
+      "NO_VENDOR_ORDER_NUMBER": "El proveedor no lo proporcionó",
+      "DOCUMENT_ID": "Referencia del documento",
+      "NO_DOCUMENT_ID": "Sin referencia de documento",
+      "REFERENCE_NOTE": "Las referencias del proveedor se muestran para su correspondencia con él. Los enlaces dentro de esta aplicación siempre usan el identificador propio del pedido.",
+      "AS_OF": "Estado del proveedor al",
+      "FETCHED_AT": "Última consulta",
+      "MANUAL_REVIEW_REASON": "Por qué requiere revisión",
+      "NO_RESEND_NOTE": "Este pedido no se reenvía desde aquí. Es posible que el proveedor ya lo tenga, así que reenviarlo arriesgaría un pedido físico duplicado. Resuélvalo con las acciones de abajo.",
+      "NOT_TRANSMITTED": "Este pedido no se envió al proveedor de forma electrónica, por lo que no hay estado de transmisión que mostrar.",
+      "RACED_BY_VENDOR": "El proveedor actualizó este pedido mientras usted decidía. Arriba se muestra el estado más reciente.",
+      "STATE": {
+        "QUEUED": "En cola para el proveedor",
+        "SENT": "Enviado al proveedor",
+        "CONFIRMED": "Confirmado por el proveedor",
+        "PARTIALLY_CONFIRMED": "Confirmado parcialmente",
+        "REJECTED": "Rechazado por el proveedor",
+        "MANUAL_REVIEW": "Requiere revisión manual",
+        "UNKNOWN": "Estado desconocido"
+      },
+      "OUTCOME": {
+        "ACCEPTED": "Aceptada",
+        "REJECTED": "Rechazada",
+        "BACKORDERED": "En pedido pendiente",
+        "PENDING": "A la espera del proveedor"
+      },
+      "LINES": {
+        "TITLE": "Confirmaciones por línea",
+        "CAPTION": "Respuesta del proveedor para cada línea de esta orden de compra",
+        "SKU": "SKU",
+        "PRODUCT": "Producto",
+        "ORDERED": "Pedido",
+        "CONFIRMED": "Confirmado",
+        "OUTCOME": "Resultado del proveedor",
+        "EXPECTED_SHIP": "Fecha de envío prevista",
+        "VENDOR_REASON": "Motivo del proveedor",
+        "NOT_ANSWERED": "Aún sin respuesta",
+        "EMPTY": "El proveedor todavía no ha respondido ninguna línea."
+      },
+      "HISTORY": {
+        "TITLE": "Historial de estados",
+        "ARIA_LABEL": "Historial de estados del proveedor",
+        "EMPTY": "El proveedor todavía no ha reportado ningún cambio de estado.",
+        "APPEND_ONLY": "Este historial es el registro de lo que reportó el proveedor. Las entradas nunca se editan ni se eliminan.",
+        "VENDOR_STATUS": "Estado del proveedor",
+        "NOTE": "Nota del proveedor",
+        "UNKNOWN_STATUS": "Cambio de estado reportado"
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar el estado de transmisión del proveedor. El resto de este pedido no se ve afectado.",
+        "RESOLVE": "No se pudo aplicar la resolución. No se envió nada al proveedor."
+      }
+    },
+    "MANUAL_REVIEW": {
+      "TITLE": "Pedidos que requieren revisión",
+      "SUBTITLE": "Transmisiones en las que la plataforma no puede determinar si el proveedor recibió el pedido.",
+      "NO_RESEND_NOTICE": "Nada en esta pantalla reenvía un pedido. Un proveedor puede tener ya un pedido listado aquí, así que reenviarlo arriesgaría una entrega física duplicada. Resuelva cada fila con las acciones que ofrece el servicio.",
+      "ACTIONS_NOTICE": "Acciones de resolución que el servicio ofrece para este pedido.",
+      "EMPTY": "Ninguna transmisión requiere revisión.",
+      "COUNT": "{{count}} transmisiones requieren revisión",
+      "REASON_UNKNOWN": "El servicio no indicó un motivo.",
+      "ACTION": {
+        "CONFIRM_MATCHED": "Confirmar que el proveedor tiene este pedido",
+        "MARK_REJECTED": "Marcar como rechazado por el proveedor"
+      },
+      "CONFIRM": {
+        "TITLE": "Confirme esta resolución",
+        "CONTEXT": "Orden de compra",
+        "ACTION": "Acción",
+        "ACCEPT": "Sí, aplicar esta resolución",
+        "NO_RESEND": "Esto no envía nada al proveedor. Registra lo que usted cree que ya ocurrió.",
+        "RISK_CONFIRM_MATCHED": "Confirme solo si ha verificado con el proveedor que tiene este pedido. Confirmar un pedido que el proveedor nunca recibió significa que las piezas nunca llegarán, y volver a pedirlas más tarde puede generar un pedido físico duplicado.",
+        "RISK_MARK_REJECTED": "Marque como rechazado solo si ha verificado con el proveedor que no lo va a surtir. Si el proveedor sí tiene el pedido, llegará una entrega real contra un pedido registrado como rechazado.",
+        "RISK_GENERIC": "Aplique esto solo si ha verificado el resultado con el proveedor. Registrar el resultado equivocado en una transmisión ambigua puede provocar una entrega faltante o un pedido físico duplicado."
+      },
+      "FILTER": {
+        "VENDOR": "Proveedor",
+        "ALL_VENDORS": "Todos los proveedores",
+        "SEARCH": "Pedido o referencia del proveedor",
+        "DATE_FROM": "Detectado desde",
+        "DATE_TO": "Detectado hasta"
+      },
+      "TABLE": {
+        "CAPTION": "Transmisiones a la espera de conciliación humana",
+        "PO": "Orden de compra",
+        "VENDOR": "Proveedor",
+        "VENDOR_ORDER_NUMBER": "Número de pedido del proveedor",
+        "STATE": "Estado",
+        "REASON": "Motivo",
+        "DETECTED_AT": "Detectado",
+        "OPEN_ORDER": "Abrir pedido"
+      },
+      "NOTICE": {
+        "RESOLVED": "Resolución registrada.",
+        "RACED_BY_VENDOR": "El proveedor actualizó este pedido primero. La fila muestra ahora el estado más reciente."
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la cola de revisión.",
+        "RESOLVE": "No se pudo aplicar la resolución. No se envió nada al proveedor."
+      }
+    },
+    "SHIPMENT": {
+      "TITLE": "Eventos de envío",
+      "APPEND_ONLY": "Eventos reportados por el proveedor y el transportista, del más antiguo al más reciente. Las entradas nunca se editan ni se eliminan.",
+      "ARIA_LABEL": "Historial de eventos de envío",
+      "EMPTY": "No se ha reportado ningún evento de envío para este pedido.",
+      "DESCRIPTION": "Descripción del transportista",
+      "CARRIER": "Transportista",
+      "TRACKING": "Referencia de seguimiento",
+      "PACKAGES": "Bultos",
+      "RECEIVED_AT": "Recibido por esta plataforma",
+      "EVENT": {
+        "PICKED_UP": "Recogido en el proveedor",
+        "SHIPPED": "Enviado",
+        "IN_TRANSIT": "En tránsito",
+        "OUT_FOR_DELIVERY": "En reparto",
+        "DELIVERED": "Entregado",
+        "EXCEPTION": "Incidencia del transportista",
+        "RETURNED": "Devuelto"
+      },
+      "ERROR": {
+        "LOAD": "No se pudieron cargar los eventos de envío. El resto de este pedido no se ve afectado."
+      },
+      "UNLINKED": {
+        "TITLE": "Eventos de envío sin vincular",
+        "SUBTITLE": "Eventos de envío que no coincidieron con ninguna orden de compra.",
+        "WORKLIST_NOTICE": "Estos eventos son envíos reales que la plataforma no pudo vincular a un pedido. Las filas desaparecen cuando aparece un pedido coincidente o el proveedor corrige su referencia. No se pueden descartar: ocultar un evento oculta una entrega entrante.",
+        "EMPTY": "Todos los eventos de envío están vinculados a un pedido.",
+        "COUNT": "{{count}} eventos sin vincular",
+        "FILTER": {
+          "VENDOR": "Proveedor",
+          "ALL_VENDORS": "Todos los proveedores",
+          "SEARCH": "Pedido del proveedor, seguimiento o transportista",
+          "DATE_FROM": "Evento desde",
+          "DATE_TO": "Evento hasta"
+        },
+        "TABLE": {
+          "CAPTION": "Eventos de envío que no coincidieron con ninguna orden de compra",
+          "EVENT": "Evento",
+          "VENDOR": "Proveedor",
+          "VENDOR_ORDER_NUMBER": "Número de pedido del proveedor",
+          "CARRIER": "Transportista",
+          "TRACKING": "Referencia de seguimiento",
+          "OCCURRED_AT": "Reportado por el transportista",
+          "RECEIVED_AT": "Recibido por esta plataforma",
+          "REASON": "Por qué no está vinculado"
+        },
+        "ERROR": {
+          "LOAD": "No se pudieron cargar los eventos de envío sin vincular."
+        }
+      }
+    },
+    "STOCK_SNAPSHOT": {
+      "TITLE": "Instantánea de stock del proveedor",
+      "SUBTITLE": "El último stock que un proveedor publicó para un país o una agencia.",
+      "SUPPLIER_STOCK_NOTICE": "Estas cantidades son stock del proveedor, reportado por él para planificación. No son su inventario propio disponible y nunca deben sumarse a él.",
+      "META_TITLE": "Detalles de la instantánea",
+      "VENDOR": "Proveedor",
+      "SCOPE_LABEL": "Ámbito",
+      "LINE_COUNT": "Productos en la instantánea",
+      "AS_OF": "Instantánea del proveedor tomada el",
+      "FETCHED_AT": "Última consulta",
+      "NOT_REPORTED": "No reportado",
+      "SEARCH_NOT_REPORTED": "Este proveedor no reportó \"{{search}}\" en esta instantánea. Eso no es lo mismo que reportar cero existencias.",
+      "LEGEND": "\"No reportado\" significa que la instantánea del proveedor no dijo nada sobre ese producto. Una cantidad de 0 significa que el proveedor reportó que no tiene existencias.",
+      "CHOOSE_VENDOR_PROMPT": "Elija un proveedor para ver su última instantánea de stock.",
+      "NO_SNAPSHOT": "Este proveedor todavía no ha publicado ninguna instantánea de stock. Eso no es lo mismo que reportar cero existencias.",
+      "SCOPE": {
+        "COUNTRY": "País",
+        "AGENCY": "Agencia",
+        "WAREHOUSE": "Almacén"
+      },
+      "FILTER": {
+        "VENDOR": "Proveedor",
+        "CHOOSE_VENDOR": "Elija un proveedor",
+        "NO_VENDORS": "No se pudo cargar ningún perfil de proveedor, así que no se puede solicitar una instantánea.",
+        "SCOPE_CODE": "Código de ámbito",
+        "SCOPE_CODE_HINT": "Código de país o de agencia publicado por el proveedor, por ejemplo FR.",
+        "SEARCH": "SKU, EAN o producto"
+      },
+      "TABLE": {
+        "CAPTION": "Productos en la última instantánea de stock del proveedor",
+        "SKU": "SKU",
+        "PRODUCT": "Producto",
+        "EAN": "EAN",
+        "WAREHOUSE": "Almacén del proveedor",
+        "SUPPLIER_QUANTITY": "Stock del proveedor",
+        "SUPPLIER_QUANTITY_NOTE": "Reportado por el proveedor, solo informativo",
+        "UOM": "Unidad"
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la instantánea de stock."
+      }
     }
   }
 }

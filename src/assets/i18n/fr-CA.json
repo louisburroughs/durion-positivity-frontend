@@ -5737,6 +5737,208 @@
           "LOAD": "Le contenu du fabricant non apparié n’a pas pu être chargé."
         }
       }
+    },
+    "TIMELINE": {
+      "ARIA_LABEL": "Historique des événements",
+      "EMPTY": "Rien n'a encore été signalé."
+    },
+    "TRANSMISSION": {
+      "TITLE": "Transmission au fournisseur",
+      "STATE_LABEL": "État de la transmission :",
+      "VENDOR": "Fournisseur",
+      "VENDOR_ORDER_NUMBER": "Numéro de commande du fournisseur",
+      "NO_VENDOR_ORDER_NUMBER": "Non fourni par le fournisseur",
+      "DOCUMENT_ID": "Référence du document",
+      "NO_DOCUMENT_ID": "Aucune référence de document",
+      "REFERENCE_NOTE": "Les références du fournisseur sont affichées pour vos échanges avec lui. Les liens dans cette application utilisent toujours l'identifiant propre à la commande.",
+      "AS_OF": "État du fournisseur au",
+      "FETCHED_AT": "Dernière récupération",
+      "MANUAL_REVIEW_REASON": "Pourquoi une révision est requise",
+      "NO_RESEND_NOTE": "Cette commande n'est pas renvoyée d'ici. Le fournisseur la détient peut-être déjà, un renvoi risquerait donc une commande physique en double. Résolvez-la avec les actions ci-dessous.",
+      "NOT_TRANSMITTED": "Cette commande n'a pas été transmise au fournisseur par voie électronique; il n'y a donc aucun état de transmission à afficher.",
+      "RACED_BY_VENDOR": "Le fournisseur a mis à jour cette commande pendant votre décision. L'état le plus récent est affiché ci-dessus.",
+      "STATE": {
+        "QUEUED": "En file d'attente pour le fournisseur",
+        "SENT": "Transmise au fournisseur",
+        "CONFIRMED": "Confirmée par le fournisseur",
+        "PARTIALLY_CONFIRMED": "Partiellement confirmée",
+        "REJECTED": "Refusée par le fournisseur",
+        "MANUAL_REVIEW": "Révision manuelle requise",
+        "UNKNOWN": "État inconnu"
+      },
+      "OUTCOME": {
+        "ACCEPTED": "Acceptée",
+        "REJECTED": "Refusée",
+        "BACKORDERED": "En rupture, à livrer",
+        "PENDING": "En attente du fournisseur"
+      },
+      "LINES": {
+        "TITLE": "Confirmations par ligne",
+        "CAPTION": "Réponse du fournisseur pour chaque ligne de ce bon de commande",
+        "SKU": "UGS",
+        "PRODUCT": "Produit",
+        "ORDERED": "Commandé",
+        "CONFIRMED": "Confirmé",
+        "OUTCOME": "Résultat du fournisseur",
+        "EXPECTED_SHIP": "Date d'expédition prévue",
+        "VENDOR_REASON": "Motif du fournisseur",
+        "NOT_ANSWERED": "Aucune réponse pour l'instant",
+        "EMPTY": "Le fournisseur n'a encore répondu pour aucune ligne."
+      },
+      "HISTORY": {
+        "TITLE": "Historique des états",
+        "ARIA_LABEL": "Historique des états du fournisseur",
+        "EMPTY": "Le fournisseur n'a encore signalé aucun changement d'état.",
+        "APPEND_ONLY": "Cet historique est le registre de ce que le fournisseur a signalé. Les entrées ne sont jamais modifiées ni supprimées.",
+        "VENDOR_STATUS": "État du fournisseur",
+        "NOTE": "Note du fournisseur",
+        "UNKNOWN_STATUS": "Changement d'état signalé"
+      },
+      "ERROR": {
+        "LOAD": "L'état de transmission au fournisseur n'a pas pu être chargé. Le reste de cette commande n'est pas touché.",
+        "RESOLVE": "La résolution n'a pas pu être appliquée. Rien n'a été envoyé au fournisseur."
+      }
+    },
+    "MANUAL_REVIEW": {
+      "TITLE": "Commandes à réviser",
+      "SUBTITLE": "Transmissions pour lesquelles la plateforme ne peut pas déterminer si le fournisseur a reçu la commande.",
+      "NO_RESEND_NOTICE": "Rien sur cet écran ne renvoie une commande. Un fournisseur détient peut-être déjà une commande listée ici; un renvoi risquerait une livraison physique en double. Résolvez chaque ligne avec les actions offertes par le service.",
+      "ACTIONS_NOTICE": "Actions de résolution offertes par le service pour cette commande.",
+      "EMPTY": "Aucune transmission à réviser.",
+      "COUNT": "{{count}} transmissions à réviser",
+      "REASON_UNKNOWN": "Le service n'a donné aucun motif.",
+      "ACTION": {
+        "CONFIRM_MATCHED": "Confirmer que le fournisseur a cette commande",
+        "MARK_REJECTED": "Marquer comme refusée par le fournisseur"
+      },
+      "CONFIRM": {
+        "TITLE": "Confirmez cette résolution",
+        "CONTEXT": "Bon de commande",
+        "ACTION": "Action",
+        "ACCEPT": "Oui, appliquer cette résolution",
+        "NO_RESEND": "Cette action n'envoie rien au fournisseur. Elle consigne ce que vous croyez déjà arrivé.",
+        "RISK_CONFIRM_MATCHED": "Ne confirmez que si vous avez vérifié auprès du fournisseur qu'il détient cette commande. Confirmer une commande que le fournisseur n'a jamais reçue signifie que les pièces n'arriveront jamais, et la recommander plus tard peut créer une commande physique en double.",
+        "RISK_MARK_REJECTED": "Ne marquez comme refusée que si vous avez vérifié auprès du fournisseur qu'il ne l'exécutera pas. Si le fournisseur détient bien la commande, une livraison réelle arrivera contre une commande consignée comme refusée.",
+        "RISK_GENERIC": "N'appliquez ceci que si vous avez vérifié le résultat auprès du fournisseur. Consigner le mauvais résultat sur une transmission ambiguë peut entraîner une livraison manquante ou une commande physique en double."
+      },
+      "FILTER": {
+        "VENDOR": "Fournisseur",
+        "ALL_VENDORS": "Tous les fournisseurs",
+        "SEARCH": "Commande ou référence du fournisseur",
+        "DATE_FROM": "Détecté à partir du",
+        "DATE_TO": "Détecté jusqu'au"
+      },
+      "TABLE": {
+        "CAPTION": "Transmissions en attente de rapprochement humain",
+        "PO": "Bon de commande",
+        "VENDOR": "Fournisseur",
+        "VENDOR_ORDER_NUMBER": "Numéro de commande du fournisseur",
+        "STATE": "État",
+        "REASON": "Motif",
+        "DETECTED_AT": "Détecté",
+        "OPEN_ORDER": "Ouvrir la commande"
+      },
+      "NOTICE": {
+        "RESOLVED": "Résolution consignée.",
+        "RACED_BY_VENDOR": "Le fournisseur a mis à jour cette commande en premier. La ligne affiche maintenant l'état le plus récent."
+      },
+      "ERROR": {
+        "LOAD": "La file de révision n'a pas pu être chargée.",
+        "RESOLVE": "La résolution n'a pas pu être appliquée. Rien n'a été envoyé au fournisseur."
+      }
+    },
+    "SHIPMENT": {
+      "TITLE": "Événements d'expédition",
+      "APPEND_ONLY": "Événements signalés par le fournisseur et le transporteur, du plus ancien au plus récent. Les entrées ne sont jamais modifiées ni supprimées.",
+      "ARIA_LABEL": "Historique des événements d'expédition",
+      "EMPTY": "Aucun événement d'expédition n'a été signalé pour cette commande.",
+      "DESCRIPTION": "Description du transporteur",
+      "CARRIER": "Transporteur",
+      "TRACKING": "Référence de suivi",
+      "PACKAGES": "Colis",
+      "RECEIVED_AT": "Reçu par cette plateforme",
+      "EVENT": {
+        "PICKED_UP": "Ramassé chez le fournisseur",
+        "SHIPPED": "Expédié",
+        "IN_TRANSIT": "En transit",
+        "OUT_FOR_DELIVERY": "En cours de livraison",
+        "DELIVERED": "Livré",
+        "EXCEPTION": "Incident du transporteur",
+        "RETURNED": "Retourné"
+      },
+      "ERROR": {
+        "LOAD": "Les événements d'expédition n'ont pas pu être chargés. Le reste de cette commande n'est pas touché."
+      },
+      "UNLINKED": {
+        "TITLE": "Événements d'expédition non rattachés",
+        "SUBTITLE": "Événements d'expédition qui ne correspondent à aucun bon de commande.",
+        "WORKLIST_NOTICE": "Ces événements sont de véritables expéditions que la plateforme n'a pas pu rattacher à une commande. Les lignes disparaissent lorsqu'une commande correspondante apparaît ou que le fournisseur corrige sa référence. Aucun rejet n'est possible : masquer un événement masque une livraison à venir.",
+        "EMPTY": "Tous les événements d'expédition sont rattachés à une commande.",
+        "COUNT": "{{count}} événements non rattachés",
+        "FILTER": {
+          "VENDOR": "Fournisseur",
+          "ALL_VENDORS": "Tous les fournisseurs",
+          "SEARCH": "Commande fournisseur, suivi ou transporteur",
+          "DATE_FROM": "Événement à partir du",
+          "DATE_TO": "Événement jusqu'au"
+        },
+        "TABLE": {
+          "CAPTION": "Événements d'expédition ne correspondant à aucun bon de commande",
+          "EVENT": "Événement",
+          "VENDOR": "Fournisseur",
+          "VENDOR_ORDER_NUMBER": "Numéro de commande du fournisseur",
+          "CARRIER": "Transporteur",
+          "TRACKING": "Référence de suivi",
+          "OCCURRED_AT": "Signalé par le transporteur",
+          "RECEIVED_AT": "Reçu par cette plateforme",
+          "REASON": "Pourquoi il n'est pas rattaché"
+        },
+        "ERROR": {
+          "LOAD": "Les événements d'expédition non rattachés n'ont pas pu être chargés."
+        }
+      }
+    },
+    "STOCK_SNAPSHOT": {
+      "TITLE": "Instantané de stock fournisseur",
+      "SUBTITLE": "Le dernier stock qu'un fournisseur a publié pour un pays ou une agence.",
+      "SUPPLIER_STOCK_NOTICE": "Ces quantités sont du stock fournisseur, déclaré par le fournisseur à des fins de planification. Ce n'est pas votre stock en main et cela ne doit jamais y être additionné.",
+      "META_TITLE": "Détails de l'instantané",
+      "VENDOR": "Fournisseur",
+      "SCOPE_LABEL": "Portée",
+      "LINE_COUNT": "Produits dans l'instantané",
+      "AS_OF": "Instantané du fournisseur pris le",
+      "FETCHED_AT": "Dernière récupération",
+      "NOT_REPORTED": "Non déclaré",
+      "SEARCH_NOT_REPORTED": "Ce fournisseur n'a pas déclaré « {{search}} » dans cet instantané. Ce n'est pas la même chose que déclarer un stock nul.",
+      "LEGEND": "« Non déclaré » signifie que l'instantané du fournisseur ne disait rien sur ce produit. Une quantité de 0 signifie que le fournisseur a déclaré n'en avoir aucun.",
+      "CHOOSE_VENDOR_PROMPT": "Choisissez un fournisseur pour voir son dernier instantané de stock.",
+      "NO_SNAPSHOT": "Ce fournisseur n'a encore publié aucun instantané de stock. Ce n'est pas la même chose que déclarer un stock nul.",
+      "SCOPE": {
+        "COUNTRY": "Pays",
+        "AGENCY": "Agence",
+        "WAREHOUSE": "Entrepôt"
+      },
+      "FILTER": {
+        "VENDOR": "Fournisseur",
+        "CHOOSE_VENDOR": "Choisissez un fournisseur",
+        "NO_VENDORS": "Aucun profil fournisseur n'a pu être chargé; aucun instantané ne peut donc être demandé.",
+        "SCOPE_CODE": "Code de portée",
+        "SCOPE_CODE_HINT": "Code de pays ou d'agence publié par le fournisseur, par exemple FR.",
+        "SEARCH": "UGS, EAN ou produit"
+      },
+      "TABLE": {
+        "CAPTION": "Produits dans le dernier instantané de stock du fournisseur",
+        "SKU": "UGS",
+        "PRODUCT": "Produit",
+        "EAN": "EAN",
+        "WAREHOUSE": "Entrepôt du fournisseur",
+        "SUPPLIER_QUANTITY": "Stock fournisseur",
+        "SUPPLIER_QUANTITY_NOTE": "Déclaré par le fournisseur, à titre informatif",
+        "UOM": "Unité"
+      },
+      "ERROR": {
+        "LOAD": "L'instantané de stock n'a pas pu être chargé."
+      }
     }
   }
 }

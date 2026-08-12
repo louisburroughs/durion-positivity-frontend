@@ -5731,6 +5731,208 @@
           "LOAD": "The unmatched manufacturer content could not be loaded."
         }
       }
+    },
+    "TIMELINE": {
+      "ARIA_LABEL": "Event history",
+      "EMPTY": "Nothing has been reported yet."
+    },
+    "TRANSMISSION": {
+      "TITLE": "Vendor transmission",
+      "STATE_LABEL": "Transmission state:",
+      "VENDOR": "Vendor",
+      "VENDOR_ORDER_NUMBER": "Vendor order number",
+      "NO_VENDOR_ORDER_NUMBER": "Not provided by the vendor",
+      "DOCUMENT_ID": "Document reference",
+      "NO_DOCUMENT_ID": "No document reference",
+      "REFERENCE_NOTE": "Vendor references are shown for correspondence with the vendor. Links inside this application always use the order's own identifier.",
+      "AS_OF": "Vendor state as of",
+      "FETCHED_AT": "Last fetched",
+      "MANUAL_REVIEW_REASON": "Why this needs review",
+      "NO_RESEND_NOTE": "This order is not re-sent from here. The vendor may already hold it, so re-sending would risk a duplicate physical order. Resolve it using the actions below.",
+      "NOT_TRANSMITTED": "This order was not sent to the vendor electronically, so there is no transmission state to show.",
+      "RACED_BY_VENDOR": "The vendor updated this order while you were deciding. The latest state is shown above.",
+      "STATE": {
+        "QUEUED": "Queued for the vendor",
+        "SENT": "Sent to the vendor",
+        "CONFIRMED": "Confirmed by the vendor",
+        "PARTIALLY_CONFIRMED": "Partially confirmed",
+        "REJECTED": "Rejected by the vendor",
+        "MANUAL_REVIEW": "Needs manual review",
+        "UNKNOWN": "Unknown state"
+      },
+      "OUTCOME": {
+        "ACCEPTED": "Accepted",
+        "REJECTED": "Rejected",
+        "BACKORDERED": "Backordered",
+        "PENDING": "Awaiting vendor answer"
+      },
+      "LINES": {
+        "TITLE": "Line confirmations",
+        "CAPTION": "Vendor answer for each line of this purchase order",
+        "SKU": "SKU",
+        "PRODUCT": "Product",
+        "ORDERED": "Ordered",
+        "CONFIRMED": "Confirmed",
+        "OUTCOME": "Vendor outcome",
+        "EXPECTED_SHIP": "Expected ship date",
+        "VENDOR_REASON": "Vendor reason",
+        "NOT_ANSWERED": "No answer yet",
+        "EMPTY": "The vendor has not answered for any line yet."
+      },
+      "HISTORY": {
+        "TITLE": "Status history",
+        "ARIA_LABEL": "Vendor status history",
+        "EMPTY": "The vendor has reported no status change yet.",
+        "APPEND_ONLY": "This history is a record of what the vendor reported. Entries are never edited or removed.",
+        "VENDOR_STATUS": "Vendor status",
+        "NOTE": "Vendor note",
+        "UNKNOWN_STATUS": "Status change reported"
+      },
+      "ERROR": {
+        "LOAD": "The vendor transmission state could not be loaded. The rest of this order is unaffected.",
+        "RESOLVE": "The resolution could not be applied. Nothing was sent to the vendor."
+      }
+    },
+    "MANUAL_REVIEW": {
+      "TITLE": "Orders needing review",
+      "SUBTITLE": "Transmissions where the platform cannot tell whether the vendor received the order.",
+      "NO_RESEND_NOTICE": "Nothing on this screen re-sends an order. A vendor may already hold an order listed here, so re-sending would risk a duplicate physical delivery. Resolve each row using the actions the service offers.",
+      "ACTIONS_NOTICE": "Resolution actions offered by the service for this order.",
+      "EMPTY": "No transmission needs review.",
+      "COUNT": "{{count}} transmissions need review",
+      "REASON_UNKNOWN": "The service did not give a reason.",
+      "ACTION": {
+        "CONFIRM_MATCHED": "Confirm the vendor has this order",
+        "MARK_REJECTED": "Mark as rejected by the vendor"
+      },
+      "CONFIRM": {
+        "TITLE": "Confirm this resolution",
+        "CONTEXT": "Purchase order",
+        "ACTION": "Action",
+        "ACCEPT": "Yes, apply this resolution",
+        "NO_RESEND": "This does not send anything to the vendor. It records what you believe already happened.",
+        "RISK_CONFIRM_MATCHED": "Only confirm this if you have verified with the vendor that they hold this order. Confirming an order the vendor never received means the parts will never arrive, and ordering again later can produce a duplicate physical order.",
+        "RISK_MARK_REJECTED": "Only mark this rejected if you have verified with the vendor that they will not fulfil it. If the vendor does hold the order, a real delivery will arrive against an order recorded as rejected.",
+        "RISK_GENERIC": "Only apply this if you have verified the outcome with the vendor. Recording the wrong outcome on an ambiguous transmission can lead to a missing delivery or a duplicate physical order."
+      },
+      "FILTER": {
+        "VENDOR": "Vendor",
+        "ALL_VENDORS": "All vendors",
+        "SEARCH": "Order or vendor reference",
+        "DATE_FROM": "Detected from",
+        "DATE_TO": "Detected to"
+      },
+      "TABLE": {
+        "CAPTION": "Transmissions awaiting human reconciliation",
+        "PO": "Purchase order",
+        "VENDOR": "Vendor",
+        "VENDOR_ORDER_NUMBER": "Vendor order number",
+        "STATE": "State",
+        "REASON": "Reason",
+        "DETECTED_AT": "Detected",
+        "OPEN_ORDER": "Open order"
+      },
+      "NOTICE": {
+        "RESOLVED": "Resolution recorded.",
+        "RACED_BY_VENDOR": "The vendor updated this order first. The row now shows the latest state."
+      },
+      "ERROR": {
+        "LOAD": "The review queue could not be loaded.",
+        "RESOLVE": "The resolution could not be applied. Nothing was sent to the vendor."
+      }
+    },
+    "SHIPMENT": {
+      "TITLE": "Shipment events",
+      "APPEND_ONLY": "Events reported by the vendor and carrier, oldest first. Entries are never edited or removed.",
+      "ARIA_LABEL": "Shipment event history",
+      "EMPTY": "No shipment event has been reported for this order.",
+      "DESCRIPTION": "Carrier description",
+      "CARRIER": "Carrier",
+      "TRACKING": "Tracking reference",
+      "PACKAGES": "Packages",
+      "RECEIVED_AT": "Received by this platform",
+      "EVENT": {
+        "PICKED_UP": "Collected from the vendor",
+        "SHIPPED": "Shipped",
+        "IN_TRANSIT": "In transit",
+        "OUT_FOR_DELIVERY": "Out for delivery",
+        "DELIVERED": "Delivered",
+        "EXCEPTION": "Carrier exception",
+        "RETURNED": "Returned"
+      },
+      "ERROR": {
+        "LOAD": "Shipment events could not be loaded. The rest of this order is unaffected."
+      },
+      "UNLINKED": {
+        "TITLE": "Unlinked shipment events",
+        "SUBTITLE": "Shipment events that matched no purchase order.",
+        "WORKLIST_NOTICE": "These events are real shipments the platform could not match to an order. Rows clear when a matching order appears or the vendor corrects its reference. There is no way to dismiss one: hiding an event hides an inbound delivery.",
+        "EMPTY": "Every shipment event is linked to an order.",
+        "COUNT": "{{count}} unlinked events",
+        "FILTER": {
+          "VENDOR": "Vendor",
+          "ALL_VENDORS": "All vendors",
+          "SEARCH": "Vendor order, tracking or carrier",
+          "DATE_FROM": "Event from",
+          "DATE_TO": "Event to"
+        },
+        "TABLE": {
+          "CAPTION": "Shipment events that matched no purchase order",
+          "EVENT": "Event",
+          "VENDOR": "Vendor",
+          "VENDOR_ORDER_NUMBER": "Vendor order number",
+          "CARRIER": "Carrier",
+          "TRACKING": "Tracking reference",
+          "OCCURRED_AT": "Reported by carrier",
+          "RECEIVED_AT": "Received by this platform",
+          "REASON": "Why it is unlinked"
+        },
+        "ERROR": {
+          "LOAD": "The unlinked shipment events could not be loaded."
+        }
+      }
+    },
+    "STOCK_SNAPSHOT": {
+      "TITLE": "Supplier stock snapshot",
+      "SUBTITLE": "The latest stock a supplier published for a country or agency.",
+      "SUPPLIER_STOCK_NOTICE": "These quantities are supplier stock, reported by the vendor for planning. They are not your own on-hand inventory and must never be added to it.",
+      "META_TITLE": "Snapshot details",
+      "VENDOR": "Vendor",
+      "SCOPE_LABEL": "Scope",
+      "LINE_COUNT": "Products in snapshot",
+      "AS_OF": "Vendor snapshot taken",
+      "FETCHED_AT": "Last fetched",
+      "NOT_REPORTED": "Not reported",
+      "SEARCH_NOT_REPORTED": "This vendor did not report \"{{search}}\" in this snapshot. That is not the same as reporting none in stock.",
+      "LEGEND": "\"Not reported\" means the vendor's snapshot said nothing about that product. A quantity of 0 means the vendor reported none in stock.",
+      "CHOOSE_VENDOR_PROMPT": "Choose a vendor to view its latest stock snapshot.",
+      "NO_SNAPSHOT": "This vendor has published no stock snapshot yet. That is not the same as reporting none in stock.",
+      "SCOPE": {
+        "COUNTRY": "Country",
+        "AGENCY": "Agency",
+        "WAREHOUSE": "Warehouse"
+      },
+      "FILTER": {
+        "VENDOR": "Vendor",
+        "CHOOSE_VENDOR": "Choose a vendor",
+        "NO_VENDORS": "No vendor profile could be loaded, so no snapshot can be requested.",
+        "SCOPE_CODE": "Scope code",
+        "SCOPE_CODE_HINT": "Country or agency code as published by the vendor, for example FR.",
+        "SEARCH": "SKU, EAN or product"
+      },
+      "TABLE": {
+        "CAPTION": "Products in the latest vendor stock snapshot",
+        "SKU": "SKU",
+        "PRODUCT": "Product",
+        "EAN": "EAN",
+        "WAREHOUSE": "Vendor warehouse",
+        "SUPPLIER_QUANTITY": "Supplier stock",
+        "SUPPLIER_QUANTITY_NOTE": "Vendor reported, informational only",
+        "UOM": "Unit"
+      },
+      "ERROR": {
+        "LOAD": "The stock snapshot could not be loaded."
+      }
     }
   }
 }

@@ -1,0 +1,131 @@
+/*
+ * Vendor transmission panel.
+ *
+ * Vendor references (order number, document id) are rendered in the monospace
+ * reference treatment used elsewhere for vendor-supplied codes, so they read as
+ * data the vendor gave us rather than as a link or a platform identifier.
+ */
+.transmission {
+	display: grid;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+}
+
+.transmission__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.transmission__title {
+	margin: 0;
+	font-size: 1.125rem;
+	color: var(--currentTextColor);
+}
+
+.transmission__subtitle {
+	margin: var(--space-2) 0 0;
+	font-size: 1rem;
+	color: var(--currentTextColor);
+}
+
+.transmission__facts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-4);
+	margin: 0;
+}
+
+.transmission__fact {
+	display: grid;
+	gap: var(--space-1);
+}
+
+.transmission__term {
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+}
+
+.transmission__value {
+	margin: 0;
+	font-size: 0.9375rem;
+	color: var(--currentTextColor);
+}
+
+.transmission__ref {
+	font-family: var(--font-mono);
+	font-size: 0.875rem;
+}
+
+.transmission__reference-note,
+.transmission__append-only,
+.transmission__no-resend {
+	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.transmission__review {
+	display: grid;
+	gap: var(--space-2);
+	padding: var(--space-3);
+	border: 1px solid var(--functional-warning);
+	border-radius: var(--radius-md);
+	background: var(--status-warning-bg);
+	color: var(--status-warning-fg);
+}
+
+.transmission__review-reason {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	margin: 0;
+	font-size: 0.9375rem;
+}
+
+.transmission__qty {
+	text-align: end;
+	font-variant-numeric: tabular-nums;
+}
+
+.transmission__unanswered {
+	font-style: italic;
+	color: var(--text-muted);
+}
+
+.transmission__sku {
+	font-family: var(--font-mono);
+	font-size: 0.875rem;
+}
+
+.transmission__reason {
+	max-width: 24rem;
+}
+
+.transmission__empty {
+	margin: 0;
+	padding: var(--space-3);
+	border: 1px dashed var(--input-border);
+	border-radius: var(--radius-md);
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}

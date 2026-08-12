@@ -1,0 +1,149 @@
+<main class="review-queue" aria-labelledby="review-queue-title">
+  <nav class="review-queue__breadcrumb" [attr.aria-label]="'POSITIVITY.COMMON.BREADCRUMB' | translate">
+    <a [routerLink]="['/app', 'positivity']">{{ 'POSITIVITY.PROFILES.TITLE' | translate }}</a>
+  </nav>
+
+  <header class="review-queue__header">
+    <h1 id="review-queue-title">{{ 'POSITIVITY.MANUAL_REVIEW.TITLE' | translate }}</h1>
+    <p class="review-queue__subtitle">{{ 'POSITIVITY.MANUAL_REVIEW.SUBTITLE' | translate }}</p>
+  </header>
+
+  <p class="pos-banner pos-banner--info">{{ 'POSITIVITY.MANUAL_REVIEW.NO_RESEND_NOTICE' | translate }}</p>
+
+  <form class="review-queue__filters" [formGroup]="filterForm" (ngSubmit)="applyFilter()">
+    @if (vendorFilterAvailable()) {
+      <div class="pos-field">
+        <label class="pos-field__label" for="review-queue-vendor">
+          {{ 'POSITIVITY.MANUAL_REVIEW.FILTER.VENDOR' | translate }}
+        </label>
+        <select id="review-queue-vendor" class="pos-field__input" formControlName="vendorProfileId">
+          <option value="">{{ 'POSITIVITY.MANUAL_REVIEW.FILTER.ALL_VENDORS' | translate }}</option>
+          @for (vendor of vendorOptions(); track vendor.vendorProfileId) {
+            <option [value]="vendor.vendorProfileId">{{ vendor.displayName }}</option>
+          }
+        </select>
+      </div>
+    }
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="review-queue-search">
+        {{ 'POSITIVITY.MANUAL_REVIEW.FILTER.SEARCH' | translate }}
+      </label>
+      <input id="review-queue-search" class="pos-field__input" type="search" formControlName="search" />
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="review-queue-date-from">
+        {{ 'POSITIVITY.MANUAL_REVIEW.FILTER.DATE_FROM' | translate }}
+      </label>
+      <input id="review-queue-date-from" class="pos-field__input" type="date" formControlName="dateFrom" />
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="review-queue-date-to">
+        {{ 'POSITIVITY.MANUAL_REVIEW.FILTER.DATE_TO' | translate }}
+      </label>
+      <input id="review-queue-date-to" class="pos-field__input" type="date" formControlName="dateTo" />
+    </div>
+
+    <div class="review-queue__filter-actions">
+      <button class="pos-btn pos-btn--primary" type="submit">
+        {{ 'POSITIVITY.COMMON.APPLY_FILTER' | translate }}
+      </button>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="clearFilter()">
+        {{ 'POSITIVITY.COMMON.CLEAR_FILTER' | translate }}
+      </button>
+    </div>
+  </form>
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      <span>{{ errorKey()! | translate }}</span>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="load()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'empty') {
+    <p class="review-queue__empty">{{ 'POSITIVITY.MANUAL_REVIEW.EMPTY' | translate }}</p>
+  }
+
+  @if (state() === 'ready') {
+    <p class="review-queue__count" aria-live="polite">
+      {{ 'POSITIVITY.MANUAL_REVIEW.COUNT' | translate: { count: totalCount() } }}
+    </p>
+
+    <div class="pos-table-wrap">
+      <table class="pos-table">
+        <caption class="sr-only">{{ 'POSITIVITY.MANUAL_REVIEW.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'POSITIVITY.MANUAL_REVIEW.TABLE.PO' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.MANUAL_REVIEW.TABLE.VENDOR' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.MANUAL_REVIEW.TABLE.VENDOR_ORDER_NUMBER' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.MANUAL_REVIEW.TABLE.STATE' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.MANUAL_REVIEW.TABLE.REASON' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.MANUAL_REVIEW.TABLE.DETECTED_AT' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.COMMON.ACTIONS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.purchaseOrderId) {
+            <tr class="review-queue__row">
+              <th scope="row">
+                <a
+                  class="review-queue__link"
+                  [routerLink]="['/app', 'inventory', 'purchase-orders', row.purchaseOrderId]"
+                >
+                  {{ row.poNumber || ('POSITIVITY.MANUAL_REVIEW.TABLE.OPEN_ORDER' | translate) }}
+                </a>
+              </th>
+              <td>{{ row.vendorDisplayName }}</td>
+              <td>
+                @if (row.vendorOrderNumber) {
+                  <code class="review-queue__ref">{{ row.vendorOrderNumber }}</code>
+                } @else {
+                  {{ 'POSITIVITY.TRANSMISSION.NO_VENDOR_ORDER_NUMBER' | translate }}
+                }
+              </td>
+              <td>
+                <app-supplier-status-chip
+                  [labelKey]="'POSITIVITY.TRANSMISSION.STATE.' + row.state"
+                  [tone]="row.resolved ? 'success' : 'warning'"
+                  [icon]="row.resolved ? 'check_circle' : 'fact_check'"
+                  descriptionKey="POSITIVITY.MANUAL_REVIEW.TABLE.STATE"
+                />
+              </td>
+              <td class="review-queue__reason">{{ row.reason }}</td>
+              <td>
+                <time [attr.datetime]="row.detectedAt">{{ row.detectedAt | date: 'medium' }}</time>
+              </td>
+              <td>
+                <app-supplier-manual-review-actions
+                  [actions]="row.resolutionActions"
+                  [busy]="isResolving(row.purchaseOrderId)"
+                  [contextLabel]="row.poNumber ?? null"
+                  (resolve)="resolve(row, $event)"
+                />
+                @if (noticeFor(row.purchaseOrderId); as notice) {
+                  <p class="review-queue__notice" aria-live="polite">{{ notice | translate }}</p>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</main>
