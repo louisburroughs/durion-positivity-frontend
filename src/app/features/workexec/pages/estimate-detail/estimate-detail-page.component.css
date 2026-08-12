@@ -290,3 +290,10 @@
 .crm-ref-value--error {
   color: var(--functional-error-red);
 }
+
+/* CAP-323 (#194): slot for the fleet lookup panel. Spacing only — the panel
+   brings its own surface, and this host contributes no supplier styling. */
+.fleet-lookup-slot {
+  display: block;
+  margin-top: var(--space-4);
+}

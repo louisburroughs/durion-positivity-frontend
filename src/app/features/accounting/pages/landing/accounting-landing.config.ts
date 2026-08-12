@@ -176,6 +176,55 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
         },
       ],
     },
+    /**
+     * Payables — electronically ingested vendor invoices (issue #192).
+     *
+     * The screens behind these cards are implemented in the positivity domain
+     * and lazy-loaded by the accounting route tree; this section is only the
+     * entry point the story asks for ("Accounting → Payables → Vendor
+     * invoices"). `idMode` keeps the guided card a plain identifier input: the
+     * `invoice` kind's typeahead searches billing invoices, which are a
+     * different record from an ingested vendor invoice and would return
+     * confidently wrong matches.
+     */
+    {
+      titleKey: 'ACCOUNTING.LANDING.SECTION.PAYABLES.TITLE',
+      descriptionKey: 'ACCOUNTING.LANDING.SECTION.PAYABLES.DESCRIPTION',
+      recordKind: 'invoice',
+      idMode: true,
+      cards: [
+        {
+          kind: 'direct',
+          icon: 'receipt_long',
+          titleKey: 'ACCOUNTING.LANDING.CARD.VENDOR_INVOICES.TITLE',
+          descriptionKey: 'ACCOUNTING.LANDING.CARD.VENDOR_INVOICES.DESCRIPTION',
+          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/accounting/payables/vendor-invoices',
+        },
+        {
+          kind: 'direct',
+          icon: 'link_off',
+          titleKey: 'ACCOUNTING.LANDING.CARD.VENDOR_INVOICE_EXCEPTIONS.TITLE',
+          descriptionKey: 'ACCOUNTING.LANDING.CARD.VENDOR_INVOICE_EXCEPTIONS.DESCRIPTION',
+          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/accounting/payables/vendor-invoices/exceptions',
+        },
+        {
+          kind: 'guided',
+          icon: 'description',
+          titleKey: 'ACCOUNTING.LANDING.CARD.VENDOR_INVOICE_DETAIL.TITLE',
+          descriptionKey: 'ACCOUNTING.LANDING.CARD.VENDOR_INVOICE_DETAIL.DESCRIPTION',
+          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_VENDOR_INVOICE',
+          buildCommands: (id: string) => [
+            '/app',
+            'accounting',
+            'payables',
+            'vendor-invoices',
+            id,
+          ],
+        },
+      ],
+    },
     {
       titleKey: 'ACCOUNTING.LANDING.SECTION.REPORTS.TITLE',
       descriptionKey: 'ACCOUNTING.LANDING.SECTION.REPORTS.DESCRIPTION',

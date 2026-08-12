@@ -1,0 +1,174 @@
+/* Fleet vehicle/contract lookup panel on the estimate screen. Layout only. */
+.fleet-lookup {
+	display: grid;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+}
+
+.fleet-lookup__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+}
+
+.fleet-lookup__title {
+	margin: 0;
+	font-size: 1.0625rem;
+	color: var(--currentTextColor);
+}
+
+.fleet-lookup__subtitle {
+	margin: var(--space-2) 0 0;
+	font-size: 0.9375rem;
+	color: var(--currentTextColor);
+}
+
+.fleet-lookup__advisory,
+.fleet-lookup__idle,
+.fleet-lookup__contracts-empty,
+.fleet-lookup__policies-empty,
+.fleet-lookup__not-found-next {
+	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.fleet-lookup__form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: var(--space-3);
+}
+
+.fleet-lookup__field {
+	flex: 1 1 16rem;
+	margin-bottom: 0;
+}
+
+.fleet-lookup__submit {
+	flex: 0 0 auto;
+}
+
+.fleet-lookup__facts {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+	gap: var(--space-3);
+	margin: 0;
+}
+
+.fleet-lookup__fact {
+	display: grid;
+	gap: var(--space-1);
+}
+
+.fleet-lookup__term {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+.fleet-lookup__value {
+	margin: 0;
+	color: var(--currentTextColor);
+}
+
+.fleet-lookup__ref {
+	font-family: var(--font-mono);
+	font-size: 0.875rem;
+}
+
+/* NOT_FOUND is an answer, not a failure: informational surface, no error
+   tokens, and the meaning is carried by the heading text plus the chip
+   glyph rather than by colour (ADR-0029). */
+.fleet-lookup__not-found {
+	display: grid;
+	gap: var(--space-1);
+	padding: var(--space-3);
+	border: 1px dashed var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--surface-variant);
+}
+
+.fleet-lookup__not-found-title {
+	margin: 0;
+	font-weight: 600;
+	color: var(--currentTextColor);
+}
+
+.fleet-lookup__not-found-body {
+	margin: 0;
+	color: var(--currentTextColor);
+}
+
+/* Vendor words, rendered subordinate to the translated label beside them. */
+.fleet-lookup__vendor-reason {
+	display: grid;
+	gap: var(--space-1);
+	margin: 0;
+}
+
+.fleet-lookup__vendor-text {
+	color: var(--currentTextColor);
+}
+
+.fleet-lookup__contracts,
+.fleet-lookup__policies {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: grid;
+	gap: var(--space-2);
+}
+
+.fleet-lookup__contract {
+	display: grid;
+	gap: var(--space-1);
+	padding: var(--space-3);
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-sm);
+}
+
+.fleet-lookup__contract-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2);
+	margin: 0;
+}
+
+.fleet-lookup__contract-name {
+	font-weight: 600;
+	color: var(--currentTextColor);
+}
+
+.fleet-lookup__contract-status {
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.fleet-lookup__contract-dates {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--currentTextColor);
+}
+
+.fleet-lookup__policy {
+	display: grid;
+	gap: var(--space-1);
+}
+
+.fleet-lookup__policy-text {
+	color: var(--currentTextColor);
+}
+
+.fleet-lookup__policy-note {
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}

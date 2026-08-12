@@ -1757,6 +1757,10 @@
         "REPORTS": {
           "TITLE": "Reports",
           "DESCRIPTION": "Rapports comptables en lecture seule."
+        },
+        "PAYABLES": {
+          "TITLE": "Comptes fournisseurs",
+          "DESCRIPTION": "Factures fournisseurs reçues électroniquement, leur lien vers la pièce comptable et les exceptions à régler avant un cycle de paiement."
         }
       },
       "CARD": {
@@ -1823,6 +1827,18 @@
         "LABOR_OVERHEAD": {
           "TITLE": "Rapport des coûts de main-d’œuvre et frais généraux",
           "DESCRIPTION": "Coûts mensuels et cumulatifs annuels de main-d’œuvre et frais généraux par emplacement et exercice, à partir des données comptabilisées du grand livre."
+        },
+        "VENDOR_INVOICES": {
+          "TITLE": "Factures fournisseurs",
+          "DESCRIPTION": "Tout ce que les fournisseurs ont transmis électroniquement, montants et devise exactement tels que reçus."
+        },
+        "VENDOR_INVOICE_EXCEPTIONS": {
+          "TITLE": "Exceptions de factures fournisseurs",
+          "DESCRIPTION": "Factures non appariées et factures réémises dont les montants ont changé."
+        },
+        "VENDOR_INVOICE_DETAIL": {
+          "TITLE": "Ouvrir une facture fournisseur",
+          "DESCRIPTION": "Lignes, lien vers le bon de commande et chaque version reçue d'une facture."
         }
       },
       "FIELD": {
@@ -1846,7 +1862,8 @@
         "OPEN_CREDIT_MEMO": "Ouvrir l'avoir",
         "OPEN_VENDOR_PAYMENT": "Ouvrir le paiement fournisseur",
         "OPEN_INVOICE_STATUS": "Voir le statut",
-        "OPENING_PAGE": "Ouverture..."
+        "OPENING_PAGE": "Ouverture...",
+        "OPEN_VENDOR_INVOICE": "Ouvrir la facture fournisseur"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Un ID est requis.",
@@ -5937,6 +5954,185 @@
       },
       "ERROR": {
         "LOAD": "L'instantané de stock n'a pas pu être chargé."
+      }
+    },
+    "INVOICE": {
+      "PAYABLES": "Comptes fournisseurs",
+      "SOURCE_NOTE": "Les montants, la devise et les dates sont affichés exactement comme le fournisseur les a transmis. Rien sur cet écran ne convertit ni ne recalcule un chiffre.",
+      "BREADCRUMB": {
+        "ACCOUNTING": "Comptabilité"
+      },
+      "LIST": {
+        "TITLE": "Factures fournisseurs",
+        "SUBTITLE": "Factures et notes de crédit reçues électroniquement des fournisseurs, avec leur lien vers la pièce comptable.",
+        "EMPTY": "Aucune facture fournisseur n'a encore été reçue.",
+        "COUNT": "{{count}} factures fournisseurs",
+        "OPEN_EXCEPTIONS": "Ouvrir la liste des exceptions"
+      },
+      "EXCEPTIONS": {
+        "TITLE": "Exceptions de factures fournisseurs",
+        "SUBTITLE": "Factures signalées comme non appariées ou présentant un écart, à examiner avant un cycle de paiement.",
+        "EMPTY": "Aucune facture fournisseur n'est signalée pour le moment.",
+        "WORKLIST_NOTICE": "Les lignes restent dans cette liste jusqu'à ce que le service lève le signalement. On ne peut pas les écarter ici, car les écarter ne changerait pas le montant sur le point d'être payé."
+      },
+      "FILTER": {
+        "VENDOR": "Fournisseur",
+        "ALL_VENDORS": "Tous les fournisseurs",
+        "SEARCH": "Rechercher",
+        "SEARCH_HINT": "Correspond au numéro de facture, à la référence de pièce et au numéro de bon de commande.",
+        "TYPE": "Type de document",
+        "ALL_TYPES": "Tous les types",
+        "FLAG": "Exception",
+        "ALL_FLAGS": "Toutes les factures",
+        "DATE_FROM": "Émises à partir du",
+        "DATE_TO": "Émises jusqu'au"
+      },
+      "TABLE": {
+        "CAPTION": "Factures fournisseurs reçues avec type, montant, lien vers la pièce comptable et signalements d'exception",
+        "INVOICE_NUMBER": "Numéro de facture",
+        "VENDOR": "Fournisseur",
+        "TYPE": "Type",
+        "ISSUE_DATE": "Date d'émission",
+        "AMOUNT": "Montant",
+        "VOUCHER": "Pièce comptable",
+        "FLAGS": "Exceptions",
+        "FETCHED_AT": "Reçue"
+      },
+      "TYPE": {
+        "INVOICE": "Facture",
+        "CREDIT_NOTE": "Note de crédit"
+      },
+      "FLAG": {
+        "UNMATCHED": "Non appariée",
+        "DISCREPANCY": "Écart",
+        "NONE": "Aucune",
+        "BACKEND_OWNED_NOTE": "Ce signalement est posé et levé par le service. Il disparaît de la liste dès que le service déclare l'exception résolue."
+      },
+      "VOUCHER": {
+        "PENDING": "Pièce comptable en attente",
+        "PENDING_NOTE": "Le service n'a pas encore créé de pièce comptable pour cette facture. Aucune action n'est attendue de votre part ici.",
+        "REFERENCE_NOTE": "Référence de pièce comptable pour votre système comptable de référence."
+      },
+      "AMOUNT": {
+        "CREDIT_SR": "Crédit, montant négatif :"
+      },
+      "ERROR": {
+        "LOAD": "Les factures fournisseurs n'ont pas pu être chargées.",
+        "LOAD_DETAIL": "Cette facture fournisseur n'a pas pu être chargée."
+      },
+      "DETAIL": {
+        "TITLE": "Facture fournisseur",
+        "SUMMARY": "Document",
+        "AS_DELIVERED": "Tous les chiffres ci-dessous sont affichés tels que le fournisseur les a transmis.",
+        "AS_OF": "Heure effective du fournisseur",
+        "FETCHED_AT": "Reçue par la plateforme",
+        "LINKAGE": "Liens",
+        "PURCHASE_ORDER": "Bon de commande",
+        "PO_UNMATCHED": "Aucun bon de commande n'a été apparié à cette facture.",
+        "EXCEPTION_DETAIL": "Détail fourni par le service",
+        "VERSIONS": "Versions reçues",
+        "VERSIONS_NOTE": "Les deux versions sont affichées telles que reçues. Aucune n'est fusionnée dans l'autre et aucun écart n'est calculé ici.",
+        "VERSIONS_CAPTION": "Chaque version reçue de cette facture, avec sa propre référence, sa date d'émission et son montant",
+        "LINES": "Lignes",
+        "LINES_CAPTION": "Lignes de la facture telles que transmises par le fournisseur",
+        "LINES_EMPTY": "Le fournisseur n'a transmis aucun détail de ligne avec cette facture.",
+        "NO_CLIENT_TOTAL": "Aucun total n'est calculé ici : le total du document ci-dessus est celui du fournisseur."
+      },
+      "VERSION": {
+        "REFERENCE": "Version",
+        "RECEIVED_AT": "Reçue",
+        "STANDING": "Statut",
+        "CURRENT": "En vigueur",
+        "SUPERSEDED": "Remplacée"
+      },
+      "LINE": {
+        "SKU": "Numéro de pièce",
+        "DESCRIPTION": "Description",
+        "QUANTITY": "Quantité",
+        "UNIT_AMOUNT": "Montant unitaire",
+        "LINE_AMOUNT": "Montant de la ligne"
+      }
+    },
+    "FLEET": {
+      "AS_OF": "Heure effective du gestionnaire de flotte",
+      "FETCHED_AT": "Reçu par la plateforme",
+      "VENDOR_REASON": "Motif du gestionnaire de flotte",
+      "NO_VENDOR_REASON": "Le gestionnaire de flotte n'a donné aucun motif.",
+      "LOOKUP": {
+        "TITLE": "Vérification du contrat de flotte",
+        "ADVISORY_ONLY": "Cette vérification est informative. Elle ne bloque ni l'estimation ni la création d'un bon de travail.",
+        "IDENTIFIER": "Identifiant du véhicule",
+        "IDENTIFIER_HINT": "NIV, plaque d'immatriculation ou numéro de flotte, tel que le gestionnaire de flotte connaît le véhicule.",
+        "CHECK": "Vérifier auprès du gestionnaire de flotte",
+        "IDLE": "Saisissez un identifiant de véhicule pour le vérifier auprès du gestionnaire de flotte.",
+        "OUTCOME_LABEL": "Résultat de la vérification :",
+        "OUTCOME": {
+          "FOUND": "Véhicule trouvé",
+          "NOT_FOUND": "Inconnu du gestionnaire de flotte",
+          "UNREACHABLE": "Gestionnaire de flotte injoignable",
+          "UNKNOWN": "Non vérifié"
+        },
+        "UNREACHABLE_NOTE": "Le gestionnaire de flotte n'a pas pu être joint : la couverture contractuelle est inconnue pour l'instant. L'estimation n'est pas affectée.",
+        "NOT_FOUND_TITLE": "Véhicule ou contrat inconnu du gestionnaire de flotte",
+        "NOT_FOUND_BODY": "Le gestionnaire de flotte n'a aucun véhicule enregistré sous {{identifier}}.",
+        "NOT_FOUND_NEXT": "Vérifiez l'identifiant, ou poursuivez et facturez directement le client.",
+        "FLEET_MANAGER": "Gestionnaire de flotte",
+        "VEHICLE": "Véhicule",
+        "VIN": "NIV",
+        "PLATE": "Plaque d'immatriculation",
+        "CONTRACTS": "Contrats applicables",
+        "EFFECTIVE": "Validité",
+        "NO_POLICIES": "Le gestionnaire de flotte n'indique aucune police pour ce contrat.",
+        "NO_CONTRACTS": "Le gestionnaire de flotte connaît ce véhicule mais n'indique aucun contrat applicable.",
+        "ERROR": {
+          "LOAD": "La vérification du contrat de flotte n'a pas pu aboutir."
+        }
+      },
+      "AUTHORIZATION": {
+        "TITLE": "Autorisation de flotte",
+        "READ_ONLY_NOTE": "L'autorisation est décidée par le gestionnaire de flotte et consignée par le service. Rien sur cet écran ne la modifie.",
+        "STATE_LABEL": "Autorisation :",
+        "STATE": {
+          "PENDING": "En attente du gestionnaire de flotte",
+          "GRANTED": "Autorisé",
+          "DENIED": "Refusé",
+          "MANUAL_REVIEW": "Révision manuelle requise",
+          "UNKNOWN": "Inconnu"
+        },
+        "NOT_FLEET": "Ce bon de travail n'est pas couvert par un contrat de flotte.",
+        "UNREACHABLE_NOTE": "Le gestionnaire de flotte n'a pas pu être joint : le statut d'autorisation affiché peut ne plus être à jour. Le reste de ce bon de travail n'est pas affecté.",
+        "FLEET_MANAGER": "Gestionnaire de flotte",
+        "REFERENCE": "Référence d'autorisation",
+        "NO_REFERENCE": "Pas encore émise",
+        "REQUESTED_AT": "Demandée",
+        "DECIDED_AT": "Décidée",
+        "NO_DECISION": "Aucune décision pour l'instant",
+        "AUTHORIZED_AMOUNT": "Montant autorisé",
+        "CONTRACT": "Contrat",
+        "PENDING_BODY": "Le gestionnaire de flotte n'a pas encore répondu. Actualisez pour voir le statut le plus récent.",
+        "DENIED_TITLE": "Le gestionnaire de flotte a refusé ces travaux.",
+        "DENIED_NEXT": "Discutez du motif ci-dessus avec le client ou le gestionnaire de flotte avant de poursuivre.",
+        "MANUAL_REVIEW_TITLE": "Cette autorisation nécessite une révision manuelle.",
+        "MANUAL_REVIEW_NEXT": "Le service n'a pas pu obtenir de décision. Communiquez directement avec le gestionnaire de flotte.",
+        "ERROR": {
+          "LOAD": "L'autorisation de flotte n'a pas pu être chargée."
+        }
+      },
+      "COMPLETION": {
+        "TITLE": "Approbation de fin de travaux",
+        "STATE_LABEL": "Approbation de fin de travaux :",
+        "STATE": {
+          "PENDING": "Pas encore transmise",
+          "APPROVED": "Approuvée",
+          "RETRYING": "Nouvelle tentative en cours",
+          "MANUAL_REVIEW": "Révision manuelle requise",
+          "UNKNOWN": "Inconnu"
+        },
+        "BACKEND_DRIVEN": "Le service transmet la fin des travaux au gestionnaire de flotte et réessaie selon son propre calendrier.",
+        "ATTEMPTS": "Tentatives",
+        "LAST_ATTEMPT": "Dernière tentative",
+        "NEXT_ATTEMPT": "Prochaine tentative",
+        "MANUAL_REVIEW_NEXT": "Le service a cessé de réessayer. Communiquez avec le gestionnaire de flotte pour confirmer la fin des travaux."
       }
     }
   }

@@ -83,6 +83,11 @@
       </div>
       }
 
+      <!-- CAP-323 (#194): fleet vehicle/contract lookup. Advisory only — it
+           informs the advisor and gates nothing on this page. The panel owns
+           its own state, so a fleet-manager outage cannot reach this screen. -->
+      <app-supplier-fleet-lookup-panel class="fleet-lookup-slot" [vehicleIdentifier]="vehicleVin()" />
+
       <!-- Quick nav actions -->
       <div class="item-actions">
         <a class="btn btn--ghost" [routerLink]="['/app/workexec/estimates', estimateId, 'parts']">{{ 'WORKEXEC.ESTIMATE_DETAIL.ADD_PARTS' | translate }}</a>

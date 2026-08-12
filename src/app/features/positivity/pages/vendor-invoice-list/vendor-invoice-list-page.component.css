@@ -1,0 +1,108 @@
+/* Ingested vendor invoice list / exception worklist. Layout only. */
+.vendor-invoices {
+	display: grid;
+	gap: var(--space-4);
+	padding: var(--space-4);
+}
+
+.vendor-invoices__breadcrumb {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	font-size: 0.875rem;
+}
+
+.vendor-invoices__breadcrumb-sep {
+	color: var(--text-muted);
+}
+
+.vendor-invoices__overline {
+	margin: 0;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-muted);
+}
+
+.vendor-invoices__header h1 {
+	margin: 0 0 var(--space-1);
+	font-size: 1.5rem;
+	color: var(--currentTextColor);
+}
+
+.vendor-invoices__subtitle,
+.vendor-invoices__source-note {
+	margin: 0;
+	font-size: 0.9375rem;
+	color: var(--text-muted);
+}
+
+.vendor-invoices__links {
+	margin: 0;
+}
+
+.vendor-invoices__filters {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+	gap: var(--space-3);
+	align-items: end;
+}
+
+.vendor-invoices__filter-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	margin-bottom: var(--space-3);
+}
+
+.vendor-invoices__count {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}
+
+.vendor-invoices__empty {
+	margin: 0;
+	padding: var(--space-4);
+	border: 1px dashed var(--input-border);
+	border-radius: var(--radius-md);
+	color: var(--text-muted);
+}
+
+.vendor-invoices__number,
+.vendor-invoices__ref {
+	font-family: var(--font-mono);
+	font-size: 0.875rem;
+}
+
+/* Amounts are delivered decimal text. Tabular figures keep columns aligned
+   without any client-side reformatting of the value itself. */
+.vendor-invoices__amount {
+	white-space: nowrap;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Credit emphasis is decoration: the leading minus sign and the screen-reader
+   cue carry the meaning, so removing all colour loses nothing (ADR-0029). */
+.vendor-invoices__amount--credit .vendor-invoices__amount-value {
+	font-weight: 600;
+	color: var(--status-info-fg);
+}
+
+.vendor-invoices__currency {
+	margin-left: var(--space-1);
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+}
+
+.vendor-invoices__flags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1);
+}
+
+.vendor-invoices__no-flags {
+	color: var(--text-muted);
+}

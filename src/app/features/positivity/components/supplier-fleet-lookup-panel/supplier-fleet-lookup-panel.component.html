@@ -1,0 +1,196 @@
+<section class="fleet-lookup" aria-labelledby="fleet-lookup-title">
+  <header class="fleet-lookup__header">
+    <h2 class="fleet-lookup__title" id="fleet-lookup-title">
+      {{ 'POSITIVITY.FLEET.LOOKUP.TITLE' | translate }}
+    </h2>
+    @if (state() === 'found' || state() === 'not-found' || state() === 'unreachable') {
+      <app-supplier-status-chip
+        [labelKey]="outcomeLabelKey()"
+        [tone]="outcomeTone()"
+        [icon]="outcomeIcon()"
+        descriptionKey="POSITIVITY.FLEET.LOOKUP.OUTCOME_LABEL"
+      />
+    }
+  </header>
+
+  <p class="fleet-lookup__advisory">{{ 'POSITIVITY.FLEET.LOOKUP.ADVISORY_ONLY' | translate }}</p>
+
+  <form class="fleet-lookup__form" [formGroup]="lookupForm" (ngSubmit)="submitLookup()">
+    <div class="pos-field fleet-lookup__field">
+      <label class="pos-field__label" for="fleet-lookup-identifier">
+        {{ 'POSITIVITY.FLEET.LOOKUP.IDENTIFIER' | translate }}
+      </label>
+      <input
+        id="fleet-lookup-identifier"
+        class="pos-field__input"
+        type="text"
+        autocomplete="off"
+        formControlName="vehicleIdentifier"
+      />
+      <p class="pos-field__hint">{{ 'POSITIVITY.FLEET.LOOKUP.IDENTIFIER_HINT' | translate }}</p>
+    </div>
+    <button class="pos-btn pos-btn--primary fleet-lookup__submit" type="submit">
+      {{ 'POSITIVITY.FLEET.LOOKUP.CHECK' | translate }}
+    </button>
+  </form>
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'idle') {
+    <p class="fleet-lookup__idle">{{ 'POSITIVITY.FLEET.LOOKUP.IDLE' | translate }}</p>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  <!-- Vendor unreachable: a degraded state on this panel only. The estimate
+       screen behind it is untouched, so the advisor can still write up work. -->
+  @if (state() === 'unreachable') {
+    <div class="pos-banner pos-banner--warning" role="status">
+      <span>{{ 'POSITIVITY.FLEET.LOOKUP.UNREACHABLE_NOTE' | translate }}</span>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      <span>{{ errorKey()! | translate }}</span>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- NOT_FOUND. Deliberately not an alert and not error styling: the fleet
+       manager answered the question, and this is the answer (#194 §4). -->
+  @if (isNotFound() && lookup(); as data) {
+    <div class="fleet-lookup__not-found" role="status">
+      <p class="fleet-lookup__not-found-title">
+        {{ 'POSITIVITY.FLEET.LOOKUP.NOT_FOUND_TITLE' | translate }}
+      </p>
+      <p class="fleet-lookup__not-found-body">
+        {{ 'POSITIVITY.FLEET.LOOKUP.NOT_FOUND_BODY' | translate: { identifier: data.vehicleIdentifier } }}
+      </p>
+      @if (data.notFoundReason) {
+        <p class="fleet-lookup__vendor-reason">
+          <span class="fleet-lookup__term">{{ 'POSITIVITY.FLEET.VENDOR_REASON' | translate }}</span>
+          <span class="fleet-lookup__vendor-text">{{ data.notFoundReason }}</span>
+        </p>
+      }
+      <p class="fleet-lookup__not-found-next">
+        {{ 'POSITIVITY.FLEET.LOOKUP.NOT_FOUND_NEXT' | translate }}
+      </p>
+    </div>
+  }
+
+  @if (state() === 'found' && lookup(); as data) {
+    <dl class="fleet-lookup__facts">
+      <div class="fleet-lookup__fact">
+        <dt class="fleet-lookup__term">{{ 'POSITIVITY.FLEET.LOOKUP.FLEET_MANAGER' | translate }}</dt>
+        <dd class="fleet-lookup__value">{{ data.vendorDisplayName || '—' }}</dd>
+      </div>
+      <div class="fleet-lookup__fact">
+        <dt class="fleet-lookup__term">{{ 'POSITIVITY.FLEET.LOOKUP.VEHICLE' | translate }}</dt>
+        <dd class="fleet-lookup__value">
+          @if (data.vehicle?.description) {
+            {{ data.vehicle!.description }}
+          } @else {
+            <code class="fleet-lookup__ref">{{ data.vehicleIdentifier }}</code>
+          }
+        </dd>
+      </div>
+      <div class="fleet-lookup__fact">
+        <dt class="fleet-lookup__term">{{ 'POSITIVITY.FLEET.LOOKUP.VIN' | translate }}</dt>
+        <dd class="fleet-lookup__value">
+          @if (data.vehicle?.vin) {
+            <code class="fleet-lookup__ref">{{ data.vehicle!.vin }}</code>
+          } @else {
+            —
+          }
+        </dd>
+      </div>
+      <div class="fleet-lookup__fact">
+        <dt class="fleet-lookup__term">{{ 'POSITIVITY.FLEET.LOOKUP.PLATE' | translate }}</dt>
+        <dd class="fleet-lookup__value">
+          @if (data.vehicle?.plate) {
+            <code class="fleet-lookup__ref">{{ data.vehicle!.plate }}</code>
+          } @else {
+            —
+          }
+        </dd>
+      </div>
+    </dl>
+
+    <h3 class="fleet-lookup__subtitle">{{ 'POSITIVITY.FLEET.LOOKUP.CONTRACTS' | translate }}</h3>
+    @if (hasContracts()) {
+      <ul class="fleet-lookup__contracts">
+        @for (contract of contracts(); track contract.contractId) {
+          <li class="fleet-lookup__contract">
+            <p class="fleet-lookup__contract-head">
+              <span class="fleet-lookup__contract-name">{{ contract.fleetManagerName }}</span>
+              @if (contract.contractNumber) {
+                <code class="fleet-lookup__ref">{{ contract.contractNumber }}</code>
+              }
+              @if (contract.status) {
+                <span class="fleet-lookup__contract-status">{{ contract.status }}</span>
+              }
+            </p>
+            <p class="fleet-lookup__contract-dates">
+              <span class="fleet-lookup__term">{{ 'POSITIVITY.FLEET.LOOKUP.EFFECTIVE' | translate }}</span>
+              <span>
+                @if (effectiveDateFor(contract.effectiveFrom); as from) {
+                  {{ from | date: 'mediumDate' }}
+                } @else {
+                  —
+                }
+                –
+                @if (effectiveDateFor(contract.effectiveTo); as to) {
+                  {{ to | date: 'mediumDate' }}
+                } @else {
+                  —
+                }
+              </span>
+            </p>
+            @if (contract.policies.length > 0) {
+              <ul class="fleet-lookup__policies">
+                @for (policy of contract.policies; track policy.policyId) {
+                  <li class="fleet-lookup__policy">
+                    <span class="fleet-lookup__policy-text">{{ policy.description || policy.policyId }}</span>
+                    @if (policy.coverageNote) {
+                      <span class="fleet-lookup__policy-note">{{ policy.coverageNote }}</span>
+                    }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="fleet-lookup__policies-empty">
+                {{ 'POSITIVITY.FLEET.LOOKUP.NO_POLICIES' | translate }}
+              </p>
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="fleet-lookup__contracts-empty">
+        {{ 'POSITIVITY.FLEET.LOOKUP.NO_CONTRACTS' | translate }}
+      </p>
+    }
+
+    <app-staleness-indicator
+      class="fleet-lookup__freshness"
+      [asOf]="data.asOf"
+      asOfLabelKey="POSITIVITY.FLEET.AS_OF"
+      [fetchedAt]="data.fetchedAt"
+      fetchedAtLabelKey="POSITIVITY.FLEET.FETCHED_AT"
+      [thresholdMinutes]="data.stalenessThresholdMinutes"
+      [nowMs]="nowMs()"
+    />
+  }
+</section>

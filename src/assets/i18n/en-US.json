@@ -1751,6 +1751,10 @@
         "REPORTS": {
           "TITLE": "Reports",
           "DESCRIPTION": "Read-only accounting reports."
+        },
+        "PAYABLES": {
+          "TITLE": "Payables",
+          "DESCRIPTION": "Vendor invoices received electronically, their voucher linkage and the exceptions to clear before a payment run."
         }
       },
       "CARD": {
@@ -1817,6 +1821,18 @@
         "LABOR_OVERHEAD": {
           "TITLE": "Labor & Overhead Cost Report",
           "DESCRIPTION": "Monthly + YTD labor and overhead costs by location and fiscal year, from posted GL data."
+        },
+        "VENDOR_INVOICES": {
+          "TITLE": "Vendor invoices",
+          "DESCRIPTION": "Everything vendors have sent electronically, with amounts and currency exactly as received."
+        },
+        "VENDOR_INVOICE_EXCEPTIONS": {
+          "TITLE": "Vendor invoice exceptions",
+          "DESCRIPTION": "Unmatched invoices and re-issued invoices whose amounts changed."
+        },
+        "VENDOR_INVOICE_DETAIL": {
+          "TITLE": "Open a vendor invoice",
+          "DESCRIPTION": "Lines, purchase order linkage and every delivered version of one invoice."
         }
       },
       "FIELD": {
@@ -1840,7 +1856,8 @@
         "OPEN_CREDIT_MEMO": "Open Credit Memo",
         "OPEN_VENDOR_PAYMENT": "Open Vendor Payment",
         "OPEN_INVOICE_STATUS": "View Status",
-        "OPENING_PAGE": "Opening..."
+        "OPENING_PAGE": "Opening...",
+        "OPEN_VENDOR_INVOICE": "Open vendor invoice"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "An ID is required.",
@@ -5931,6 +5948,185 @@
       },
       "ERROR": {
         "LOAD": "The stock snapshot could not be loaded."
+      }
+    },
+    "INVOICE": {
+      "PAYABLES": "Payables",
+      "SOURCE_NOTE": "Amounts, currency and dates are shown exactly as the vendor sent them. Nothing on this screen converts or recalculates a figure.",
+      "BREADCRUMB": {
+        "ACCOUNTING": "Accounting"
+      },
+      "LIST": {
+        "TITLE": "Vendor invoices",
+        "SUBTITLE": "Invoices and credit notes received electronically from vendors, with their voucher linkage.",
+        "EMPTY": "No vendor invoices have been received yet.",
+        "COUNT": "{{count}} vendor invoices",
+        "OPEN_EXCEPTIONS": "Open the exception worklist"
+      },
+      "EXCEPTIONS": {
+        "TITLE": "Vendor invoice exceptions",
+        "SUBTITLE": "Invoices flagged as unmatched or as carrying a discrepancy, to review before a payment run.",
+        "EMPTY": "No vendor invoices are currently flagged.",
+        "WORKLIST_NOTICE": "Rows stay on this list until the service resolves the flag. There is no way to dismiss one from here, because dismissing it would not change the amount that is about to be paid."
+      },
+      "FILTER": {
+        "VENDOR": "Vendor",
+        "ALL_VENDORS": "All vendors",
+        "SEARCH": "Search",
+        "SEARCH_HINT": "Matches invoice number, voucher reference and purchase order number.",
+        "TYPE": "Document type",
+        "ALL_TYPES": "All types",
+        "FLAG": "Exception",
+        "ALL_FLAGS": "All invoices",
+        "DATE_FROM": "Issued from",
+        "DATE_TO": "Issued to"
+      },
+      "TABLE": {
+        "CAPTION": "Ingested vendor invoices with type, amount, voucher linkage and exception flags",
+        "INVOICE_NUMBER": "Invoice number",
+        "VENDOR": "Vendor",
+        "TYPE": "Type",
+        "ISSUE_DATE": "Issue date",
+        "AMOUNT": "Amount",
+        "VOUCHER": "Voucher",
+        "FLAGS": "Exceptions",
+        "FETCHED_AT": "Received"
+      },
+      "TYPE": {
+        "INVOICE": "Invoice",
+        "CREDIT_NOTE": "Credit note"
+      },
+      "FLAG": {
+        "UNMATCHED": "Unmatched",
+        "DISCREPANCY": "Discrepancy",
+        "NONE": "None",
+        "BACKEND_OWNED_NOTE": "This flag is set and cleared by the service. It disappears from the worklist once the service reports the exception resolved."
+      },
+      "VOUCHER": {
+        "PENDING": "Voucher pending",
+        "PENDING_NOTE": "The service has not created a voucher for this invoice yet. Nothing is required from you here.",
+        "REFERENCE_NOTE": "Voucher reference for your accounting system of record."
+      },
+      "AMOUNT": {
+        "CREDIT_SR": "Credit, negative amount:"
+      },
+      "ERROR": {
+        "LOAD": "Vendor invoices could not be loaded.",
+        "LOAD_DETAIL": "This vendor invoice could not be loaded."
+      },
+      "DETAIL": {
+        "TITLE": "Vendor invoice",
+        "SUMMARY": "Document",
+        "AS_DELIVERED": "Every figure below is shown as the vendor sent it.",
+        "AS_OF": "Vendor effective time",
+        "FETCHED_AT": "Received by the platform",
+        "LINKAGE": "Linkage",
+        "PURCHASE_ORDER": "Purchase order",
+        "PO_UNMATCHED": "No purchase order has been matched to this invoice.",
+        "EXCEPTION_DETAIL": "Detail from the service",
+        "VERSIONS": "Delivered versions",
+        "VERSIONS_NOTE": "Both versions are shown as received. Neither is merged into the other and no difference is calculated here.",
+        "VERSIONS_CAPTION": "Each delivered version of this invoice, with its own reference, issue date and amount",
+        "LINES": "Lines",
+        "LINES_CAPTION": "Invoice lines as delivered by the vendor",
+        "LINES_EMPTY": "The vendor sent no line detail with this invoice.",
+        "NO_CLIENT_TOTAL": "No total is calculated here: the document total above is the vendor's own."
+      },
+      "VERSION": {
+        "REFERENCE": "Version",
+        "RECEIVED_AT": "Received",
+        "STANDING": "Standing",
+        "CURRENT": "Current",
+        "SUPERSEDED": "Superseded"
+      },
+      "LINE": {
+        "SKU": "Part number",
+        "DESCRIPTION": "Description",
+        "QUANTITY": "Quantity",
+        "UNIT_AMOUNT": "Unit amount",
+        "LINE_AMOUNT": "Line amount"
+      }
+    },
+    "FLEET": {
+      "AS_OF": "Fleet manager effective time",
+      "FETCHED_AT": "Received by the platform",
+      "VENDOR_REASON": "Reason from the fleet manager",
+      "NO_VENDOR_REASON": "The fleet manager gave no reason.",
+      "LOOKUP": {
+        "TITLE": "Fleet contract lookup",
+        "ADVISORY_ONLY": "This check is for information. It does not block the estimate or the creation of a workorder.",
+        "IDENTIFIER": "Vehicle identifier",
+        "IDENTIFIER_HINT": "VIN, licence plate or fleet number, as the fleet manager knows the vehicle.",
+        "CHECK": "Check with the fleet manager",
+        "IDLE": "Enter a vehicle identifier to check it against the fleet manager.",
+        "OUTCOME_LABEL": "Lookup result:",
+        "OUTCOME": {
+          "FOUND": "Vehicle found",
+          "NOT_FOUND": "Not known to the fleet manager",
+          "UNREACHABLE": "Fleet manager unreachable",
+          "UNKNOWN": "Not checked"
+        },
+        "UNREACHABLE_NOTE": "The fleet manager could not be reached, so contract coverage is unknown right now. The estimate is unaffected.",
+        "NOT_FOUND_TITLE": "Vehicle or contract unknown to the fleet manager",
+        "NOT_FOUND_BODY": "The fleet manager has no vehicle registered under {{identifier}}.",
+        "NOT_FOUND_NEXT": "Check the identifier, or continue and bill the customer directly.",
+        "FLEET_MANAGER": "Fleet manager",
+        "VEHICLE": "Vehicle",
+        "VIN": "VIN",
+        "PLATE": "Licence plate",
+        "CONTRACTS": "Applicable contracts",
+        "EFFECTIVE": "Effective",
+        "NO_POLICIES": "The fleet manager listed no policies for this contract.",
+        "NO_CONTRACTS": "The fleet manager knows this vehicle but lists no applicable contract.",
+        "ERROR": {
+          "LOAD": "The fleet contract lookup could not be completed."
+        }
+      },
+      "AUTHORIZATION": {
+        "TITLE": "Fleet authorization",
+        "READ_ONLY_NOTE": "Authorization is decided by the fleet manager and recorded by the service. Nothing on this screen changes it.",
+        "STATE_LABEL": "Authorization:",
+        "STATE": {
+          "PENDING": "Awaiting the fleet manager",
+          "GRANTED": "Authorized",
+          "DENIED": "Denied",
+          "MANUAL_REVIEW": "Needs manual review",
+          "UNKNOWN": "Unknown"
+        },
+        "NOT_FLEET": "This workorder is not under a fleet contract.",
+        "UNREACHABLE_NOTE": "The fleet manager could not be reached, so the authorization status shown may be out of date. The rest of this workorder is unaffected.",
+        "FLEET_MANAGER": "Fleet manager",
+        "REFERENCE": "Authorization reference",
+        "NO_REFERENCE": "None issued yet",
+        "REQUESTED_AT": "Requested",
+        "DECIDED_AT": "Decided",
+        "NO_DECISION": "No decision yet",
+        "AUTHORIZED_AMOUNT": "Authorized amount",
+        "CONTRACT": "Contract",
+        "PENDING_BODY": "The fleet manager has not answered yet. Refresh to see the latest status.",
+        "DENIED_TITLE": "The fleet manager denied this work.",
+        "DENIED_NEXT": "Discuss the reason above with the customer or the fleet manager before continuing.",
+        "MANUAL_REVIEW_TITLE": "This authorization needs manual review.",
+        "MANUAL_REVIEW_NEXT": "The service could not obtain a decision. Contact the fleet manager directly.",
+        "ERROR": {
+          "LOAD": "The fleet authorization could not be loaded."
+        }
+      },
+      "COMPLETION": {
+        "TITLE": "Completion approval",
+        "STATE_LABEL": "Completion approval:",
+        "STATE": {
+          "PENDING": "Not sent yet",
+          "APPROVED": "Approved",
+          "RETRYING": "Retrying",
+          "MANUAL_REVIEW": "Needs manual review",
+          "UNKNOWN": "Unknown"
+        },
+        "BACKEND_DRIVEN": "The service sends the completion to the fleet manager and retries on its own schedule.",
+        "ATTEMPTS": "Attempts",
+        "LAST_ATTEMPT": "Last attempt",
+        "NEXT_ATTEMPT": "Next attempt",
+        "MANUAL_REVIEW_NEXT": "The service has stopped retrying. Contact the fleet manager to confirm the completion."
       }
     }
   }
