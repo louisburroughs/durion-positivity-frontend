@@ -124,8 +124,12 @@ describe('AppointmentCreateCrmPageComponent [CAP-137]', () => {
     component.addServiceRequest();
     component.addServiceRequest();
     fixture.detectChanges();
-    component.removeServiceRequest(0);
+
+    const removeButtons = fixture.debugElement.queryAll(By.css('.btn-remove'));
+    (removeButtons[0].nativeElement as HTMLButtonElement).click();
+    await fixture.whenStable();
     fixture.detectChanges();
+
     const rows = fixture.debugElement.queryAll(By.css('.service-request-row'));
     expect(rows.length).toBe(1);
   });

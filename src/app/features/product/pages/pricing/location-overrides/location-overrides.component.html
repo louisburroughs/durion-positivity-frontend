@@ -107,15 +107,15 @@
     <div class="guardrail-summary">
       <p>
         <strong>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.GUARDRAIL.MIN' | translate }}:</strong>
-        {{ guardrail()?.minPricePercent | percent:'1.0-2' }}
+        {{ $safeNavigationMigration(guardrail()?.minPricePercent) | percent:'1.0-2' }}
       </p>
       <p>
         <strong>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.GUARDRAIL.MAX' | translate }}:</strong>
-        {{ guardrail()?.maxPricePercent | percent:'1.0-2' }}
+        {{ $safeNavigationMigration(guardrail()?.maxPricePercent) | percent:'1.0-2' }}
       </p>
       <p>
         <strong>{{ 'PRODUCT.PRICING.LOCATION_OVERRIDES.GUARDRAIL.APPROVAL' | translate }}:</strong>
-        {{ guardrail()?.requiresApprovalAbovePercent | percent:'1.0-2' }}
+        {{ $safeNavigationMigration(guardrail()?.requiresApprovalAbovePercent) | percent:'1.0-2' }}
       </p>
     </div>
     }

@@ -1,6 +1,4 @@
-import {
-  Component, inject, signal, forwardRef, Input, DestroyRef,
-} from '@angular/core';
+import { Component, inject, signal, forwardRef, Input, DestroyRef } from '@angular/core';
 
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';

@@ -1,13 +1,4 @@
-import {
-  Component,
-  computed,
-  inject,
-  output,
-  signal,
-  ViewChild,
-  ElementRef,
-  AfterViewChecked,
-} from '@angular/core';
+import { Component, computed, inject, output, signal, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';

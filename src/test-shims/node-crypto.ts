@@ -2,7 +2,7 @@ const browserCrypto = globalThis.crypto as Crypto | undefined;
 
 export const randomFillSync = (buffer: Uint8Array): Uint8Array => {
   if (browserCrypto?.getRandomValues) {
-    browserCrypto.getRandomValues(buffer);
+    browserCrypto.getRandomValues(buffer as Uint8Array<ArrayBuffer>);
     return buffer;
   }
 

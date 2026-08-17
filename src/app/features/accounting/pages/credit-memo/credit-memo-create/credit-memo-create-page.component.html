@@ -41,7 +41,7 @@
   <section class="state-panel state-panel--success">
     <h2>{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.RESULT_TITLE' | translate }}</h2>
     <p>{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.RESULT_CREDIT_MEMO_ID' | translate }}: {{ result()?.creditMemoId }}</p>
-    <p class="amount-field">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.RESULT_TOTAL' | translate }}: {{ result()?.totalAmount |
+    <p class="amount-field">{{ 'ACCOUNTING.CREDIT_MEMO_CREATE.RESULT_TOTAL' | translate }}: {{ $safeNavigationMigration(result()?.totalAmount) |
       currency:'USD' }}</p>
   </section>
   }

@@ -46,7 +46,7 @@
     </div>
 
     <!-- Totals -->
-    @if (estimate()?.subtotal !== undefined) {
+    @if ($safeNavigationMigration(estimate()?.subtotal) !== undefined) {
       <div class="totals-panel" [attr.aria-label]="'WORKEXEC.ESTIMATE_COMMON.TOTALS_ARIA' | translate">
         <div class="totals-row"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.SUBTOTAL' | translate }}</span><span>{{ estimate()!.subtotal | currency }}</span></div>
         <div class="totals-row"><span>{{ 'WORKEXEC.ESTIMATE_COMMON.TAX' | translate }}</span><span>{{ estimate()!.taxAmount | currency }}</span></div>

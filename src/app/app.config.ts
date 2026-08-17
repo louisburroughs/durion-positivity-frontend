@@ -3,7 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { NavigationEnd, provideRouter, Router, withComponentInputBinding, withNavigationErrorHandler } from '@angular/router';
 import { filter, take } from 'rxjs/operators';
 import { HttpClient, provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { provideClientHydration, withEventReplay, withNoIncrementalHydration } from '@angular/platform-browser';
 import { firstValueFrom, Observable, of } from 'rxjs';
 
 import { TranslateLoader, TranslateModule, TranslationObject } from '@ngx-translate/core';
@@ -99,7 +99,7 @@ export const appConfig: ApplicationConfig = {
       withFetch(),
       withInterceptors([authInterceptor]),
     ),
-    provideClientHydration(withEventReplay()),
+    provideClientHydration(withEventReplay(), withNoIncrementalHydration()),
     // Required by @ngx-translate/http-loader v17 when TranslateHttpLoader uses inject().
     { provide: TRANSLATE_HTTP_LOADER_CONFIG, useValue: {} },
     importProvidersFrom(TranslateModule.forRoot({
