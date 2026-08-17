@@ -1,6 +1,9 @@
 {
   "name": "durion-positivity-frontend",
   "version": "0.0.0",
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
   "scripts": {
     "ng": "ng",
     "sdk:install": "node scripts/sdk/install-sdk-packages.mjs",

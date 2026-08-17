@@ -1,19 +1,19 @@
 # Durion Positivity Frontend
 
-![Angular](https://img.shields.io/badge/Angular-21.1.x-dd0031)
+![Angular](https://img.shields.io/badge/Angular-22.1.x-dd0031)
 ![Node](https://img.shields.io/badge/Node-22_LTS-339933)
 ![Branch](https://img.shields.io/badge/branch-master-brightgreen)
 
 ## Overview
 
-Angular 21 standalone frontend for the Durion POS platform. The app uses
+Angular 22 standalone frontend for the Durion POS platform. The app uses
 lazy-loaded feature domains, Angular Signals for page state, `@ngx-translate`
 for localization, and SSR output for production runtime.
 
 ## Tech Stack
 
-- Angular `21.1.x`
-- TypeScript `5.9.x`
+- Angular `22.1.x`
+- TypeScript `6.0`
 - RxJS `7.8`
 - Express `5` (SSR runtime)
 - `@ngx-translate/core` `17`
@@ -22,7 +22,7 @@ for localization, and SSR output for production runtime.
 
 ## Prerequisites
 
-- Node.js 22 LTS
+- Node.js 22.23.2+ (LTS) or 24.15.0+
 - npm 11+ (project uses `npm@11.6.4`)
 - Optional sibling checkout: `../durion-positivity-sdk-angular`
 - Optional backend at `http://localhost:8080`
