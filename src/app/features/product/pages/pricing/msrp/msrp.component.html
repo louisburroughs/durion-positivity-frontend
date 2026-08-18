@@ -37,7 +37,7 @@
       <span class="dot" aria-hidden="true">•</span>
       <span>{{ activeMsrp()?.amount ?? 0 | currency:(activeMsrp()?.currency ?? 'USD'):'symbol':'1.2-2' }}</span>
     </p>
-    <p>{{ $safeNavigationMigration(activeMsrp()?.effectiveAt) | date:'mediumDate' }}</p>
+    <p>{{ activeMsrp()?.effectiveAt | date:'mediumDate' }}</p>
   </section>
   }
 

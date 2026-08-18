@@ -81,7 +81,7 @@
       </p>
       <p>
         <strong>{{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.EFFECTIVE_AT' | translate }}:</strong>
-        {{ $safeNavigationMigration(lifecycle()?.effectiveAt) | date:'medium' }}
+        {{ lifecycle()?.effectiveAt | date:'medium' }}
       </p>
       <p>
         <strong>{{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.LAST_CHANGED_BY' | translate }}:</strong>
@@ -89,7 +89,7 @@
       </p>
       <p>
         <strong>{{ 'PRODUCT.CATALOG.DETAIL.LIFECYCLE.LAST_CHANGED_AT' | translate }}:</strong>
-        {{ $safeNavigationMigration(lifecycle()?.lastChangedAt) | date:'medium' }}
+        {{ lifecycle()?.lastChangedAt | date:'medium' }}
       </p>
     </div>
 

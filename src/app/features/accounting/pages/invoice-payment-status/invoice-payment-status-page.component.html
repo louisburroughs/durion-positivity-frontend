@@ -75,7 +75,7 @@
       <p>
         {{
         invoiceStatus()?.latestIngestionStatus
-        ? (('STATUS.' + $safeNavigationMigration(invoiceStatus()?.latestIngestionStatus)) | translate)
+        ? (('STATUS.' + invoiceStatus()?.latestIngestionStatus) | translate)
         : ('ACCOUNTING.INVOICE_PAYMENT_STATUS.EMPTY_INGESTION' | translate)
         }}
       </p>

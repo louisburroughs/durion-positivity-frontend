@@ -30,9 +30,9 @@
     [attr.aria-label]="'ACCOUNTING.PAYMENT_APPLY.RESULT_TITLE' | translate">
     <h2>{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_TITLE' | translate }}</h2>
     <p>{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_PAYMENT_ID' | translate }}: {{ result()?.paymentId }}</p>
-    <p class="amount-field">{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_TOTAL' | translate }}: {{ $safeNavigationMigration(result()?.totalAmount) |
+    <p class="amount-field">{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_TOTAL' | translate }}: {{ result()?.totalAmount |
       currency:'USD' }}</p>
-    <p class="amount-field">{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_APPLIED' | translate }}: {{ $safeNavigationMigration(result()?.appliedAmount) |
+    <p class="amount-field">{{ 'ACCOUNTING.PAYMENT_APPLY.RESULT_APPLIED' | translate }}: {{ result()?.appliedAmount |
       currency:'USD' }}</p>
   </section>
   }

@@ -48,7 +48,7 @@
       <button class="btn-primary" disabled>{{ 'SHOPMGMT.APPOINTMENT_EDIT.RESCHEDULE' | translate }}</button>
       <button class="btn-danger" disabled>{{ 'SHOPMGMT.APPOINTMENT_EDIT.CANCEL_APPOINTMENT' | translate }}</button>
       <span class="actions-helper-text">
-        {{ 'SHOPMGMT.APPOINTMENT_EDIT.CANNOT_MODIFY' | translate: { status: $safeNavigationMigration(appointment()?.status) } }}
+        {{ 'SHOPMGMT.APPOINTMENT_EDIT.CANNOT_MODIFY' | translate: { status: appointment()?.status } }}
       </span>
     }
   </div>
