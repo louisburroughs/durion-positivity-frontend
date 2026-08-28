@@ -522,12 +522,6 @@
     "DIRECTORY": {
       "TITLE": "Directorio de personas",
       "SEARCH_PLACEHOLDER": "Buscar por nombre, correo o usuario…",
-      "FILTER": {
-        "ALL": "Todos",
-        "EMPLOYEE": "Empleados",
-        "ACTIVE": "Activos",
-        "INACTIVE": "Inactivos"
-      },
       "COL": {
         "NAME": "Nombre",
         "USERNAME": "Usuario",
