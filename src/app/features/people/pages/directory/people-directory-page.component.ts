@@ -126,7 +126,7 @@ export class PeopleDirectoryPageComponent implements OnInit {
     const q = this.searchInputValue().trim();
 
     this.peopleSub = this.peopleApi
-      .getAllPeople(q || undefined)
+      .listPeople(q || undefined)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: people => {

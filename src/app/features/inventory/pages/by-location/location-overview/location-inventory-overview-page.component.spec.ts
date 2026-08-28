@@ -40,8 +40,8 @@ const location = (id: string, name: string): LocationRef => ({ id, name } as Loc
 // ── Setup ─────────────────────────────────────────────────────────────────
 
 const rollupServiceStub = { getLocationRollup: vi.fn() };
-const locationServiceStub = { getRoster: vi.fn() };
-const productsServiceStub = { searchProducts: vi.fn() };
+const locationServiceStub = { getLocationRoster: vi.fn() };
+const productsServiceStub = { searchCatalogProducts: vi.fn() };
 const routerStub = { navigate: vi.fn().mockResolvedValue(true) };
 
 function createComponent(routeQuery: Record<string, string> = {}, routePath: Record<string, string> = {}) {
@@ -90,9 +90,9 @@ function createComponentWithQueryParam$(qp$: Subject<ParamMap>) {
 beforeEach(() => {
   vi.clearAllMocks();
   routerStub.navigate.mockResolvedValue(true);
-  locationServiceStub.getRoster.mockReturnValue(of({ content: [] }));
+  locationServiceStub.getLocationRoster.mockReturnValue(of({ content: [] }));
   rollupServiceStub.getLocationRollup.mockReturnValue(of(rollup(qty(0, 0, 0))));
-  productsServiceStub.searchProducts.mockReturnValue(of({ data: [] as ProductSummary[] }));
+  productsServiceStub.searchCatalogProducts.mockReturnValue(of({ data: [] as ProductSummary[] }));
 });
 
 // ── Idle / gating ───────────────────────────────────────────────────────
@@ -306,7 +306,7 @@ describe('selection management', () => {
 
 describe('deep link via ?locations', () => {
   it('seeds the selection from the query param and back-fills names from the roster', fakeAsync(() => {
-    locationServiceStub.getRoster.mockReturnValue(
+    locationServiceStub.getLocationRoster.mockReturnValue(
       of({ content: [location('l1', 'HQ'), location('l2', 'Depot')] }),
     );
     rollupServiceStub.getLocationRollup.mockReturnValue(of(rollup(qty(1, 0, 1))));
@@ -331,7 +331,7 @@ describe('deep link via ?locations', () => {
 
 describe('product typeahead', () => {
   it('searches the catalog (name or SKU), debounced', fakeAsync(() => {
-    productsServiceStub.searchProducts.mockReturnValue(of({ data: [product('SKU-7', 'Widget')] }));
+    productsServiceStub.searchCatalogProducts.mockReturnValue(of({ data: [product('SKU-7', 'Widget')] }));
     const fixture = createComponent();
     fixture.detectChanges();
     tick();
@@ -339,14 +339,14 @@ describe('product typeahead', () => {
     const comp = fixture.componentInstance;
     comp.onProductInput('wid');
     tick(100);
-    expect(productsServiceStub.searchProducts).not.toHaveBeenCalled();
+    expect(productsServiceStub.searchCatalogProducts).not.toHaveBeenCalled();
     tick(200);
-    expect(productsServiceStub.searchProducts).toHaveBeenCalledTimes(1);
+    expect(productsServiceStub.searchCatalogProducts).toHaveBeenCalledTimes(1);
     expect(comp.productSuggestions().length).toBe(1);
   }));
 
   it('navigates suggestions and selects with the keyboard', fakeAsync(() => {
-    productsServiceStub.searchProducts.mockReturnValue(
+    productsServiceStub.searchCatalogProducts.mockReturnValue(
       of({ data: [product('SKU-7', 'Widget'), product('SKU-8', 'Gizmo')] }),
     );
     const fixture = createComponent();

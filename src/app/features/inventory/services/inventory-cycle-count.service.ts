@@ -1,8 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
   CycleCountAPIService,
   CycleCountAdjustmentsService,
@@ -37,27 +35,26 @@ type AdjustmentStatus =
 
 @Injectable({ providedIn: 'root' })
 export class InventoryCycleCountService {
-  private readonly api = inject(ApiBaseService);
   private readonly cycleCountSdk = inject(CycleCountAPIService);
   private readonly adjustmentsSdk = inject(CycleCountAdjustmentsService);
   private readonly plansSdk = inject(CycleCountPlansService);
 
   getCycleCountTask(taskId: string): Observable<CycleCountTask> {
-    return this.cycleCountSdk.getTask(taskId).pipe(
+    return this.cycleCountSdk.getCycleCountTask(taskId).pipe(
       map((dto: CycleCountTaskResponse) => this.toCycleCountTask(dto)),
     );
   }
 
   submitCount(taskId: string, req: CountSubmitRequest): Observable<CountSubmitResponse> {
     const sdkRequest: SubmitCountRequest = this.toSubmitCountRequest(taskId, req);
-    return this.cycleCountSdk.submitCount(sdkRequest).pipe(
+    return this.cycleCountSdk.submitCycleCount(sdkRequest).pipe(
       map((dto: CountResponse) => this.toCountSubmitResponse(dto)),
     );
   }
 
   queryAdjustments(filter: ApprovalQueueFilter): Observable<AdjustmentPageResponse> {
     const status = this.toAdjustmentStatus(filter.status);
-    return this.adjustmentsSdk.listAdjustments(status).pipe(
+    return this.adjustmentsSdk.listCycleCountAdjustments(status).pipe(
       map((response: AdjustmentResponse[] | AdjustmentPageResponse) => {
         if (Array.isArray(response)) {
           return this.toFilteredAdjustmentPageResponse(response, filter);
@@ -68,40 +65,34 @@ export class InventoryCycleCountService {
   }
 
   getAdjustmentDetail(adjustmentId: string): Observable<AdjustmentDetail> {
-    return this.adjustmentsSdk.getAdjustment(adjustmentId).pipe(
+    return this.adjustmentsSdk.getCycleCountAdjustment(adjustmentId).pipe(
       map((dto: AdjustmentResponse) => this.toAdjustmentDetail(dto)),
     );
   }
 
   approveAdjustment(adjustmentId: string): Observable<AdjustmentDetail> {
     const sdkRequest: ApproveAdjustmentRequest = {};
-    return this.adjustmentsSdk.approveAdjustment(adjustmentId, sdkRequest).pipe(
+    return this.adjustmentsSdk.approveCycleCountAdjustment(adjustmentId, sdkRequest).pipe(
       map((dto: AdjustmentResponse) => this.toAdjustmentDetail(dto)),
     );
   }
 
   rejectAdjustment(adjustmentId: string, rejectionReason: string): Observable<AdjustmentDetail> {
     const sdkRequest: RejectAdjustmentRequest = { rejectorUserId: '', rejectionReason };
-    return this.adjustmentsSdk.rejectAdjustment(adjustmentId, sdkRequest).pipe(
+    return this.adjustmentsSdk.rejectCycleCountAdjustment(adjustmentId, sdkRequest).pipe(
       map((dto: AdjustmentResponse) => this.toAdjustmentDetail(dto)),
     );
   }
 
   getCycleCountPlans(locationId?: string): Observable<CycleCountPlan[]> {
-    let params = new HttpParams();
-    if (locationId) {
-      params = params.set('locationId', locationId);
-    }
-    // The SDK models createPlan (POST) and getPlan (GET /{planId}) at the
-    // collection /v1/inventory/cycleCountPlans under module /inventory, but no
-    // list method — so this GET is hand-rolled against the same canonical
-    // collection path: /api/inventory/v1/inventory/cycleCountPlans.
-    return this.api.get<CycleCountPlan[]>('/inventory/v1/inventory/cycleCountPlans', params);
+    return this.plansSdk.listCycleCountPlans(locationId).pipe(
+      map((dtos: CycleCountPlanResponse[]) => dtos.map(dto => this.toCycleCountPlan(dto))),
+    );
   }
 
   createCycleCountPlan(request: CycleCountPlanRequest): Observable<CycleCountPlan> {
     const sdkRequest: CreateCycleCountPlanRequest = this.toCreateCycleCountPlanRequest(request);
-    return this.plansSdk.createPlan(sdkRequest).pipe(
+    return this.plansSdk.createCycleCountPlan(sdkRequest).pipe(
       map((dto: CycleCountPlanResponse) => this.toCycleCountPlan(dto)),
     );
   }

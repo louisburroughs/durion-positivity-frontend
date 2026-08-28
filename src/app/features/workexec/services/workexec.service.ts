@@ -23,7 +23,6 @@ import {
   WorkorderPartAdjustmentsService,
   WorkorderPickFacadeService,
   WorkorderPickedItemsService,
-  type Pageable,
 } from '@durion-sdk/workorder';
 import {
   AddEstimateItemRequest,
@@ -517,7 +516,7 @@ export class WorkexecService {
    * Stories 239, 238, 237, 234, 235
    */
   getEstimateById(estimateId: string): Observable<EstimateResponse> {
-    return this.estimateApi.getEstimateById(estimateId).pipe(
+    return this.estimateApi.getEstimate(estimateId).pipe(
       map(dto => this.toEstimateResponse(dto)),
     );
   }
@@ -637,7 +636,7 @@ export class WorkexecService {
    * Free-text search matching estimate number, customer name, or estimate id.
    */
   searchEstimates(q: string): Observable<SearchResultItem[]> {
-    return this.estimateSearchApi.searchEstimates({ page: 0, size: 10 }, q).pipe(
+    return this.estimateSearchApi.searchEstimates(q, undefined, undefined, 0, 10).pipe(
       map(page => (page.content ?? []).map(e => ({
         id: e.id ?? '',
         primary: e.customerName ?? '',
@@ -653,7 +652,7 @@ export class WorkexecService {
    * Free-text search matching workorder number, customer name, or workorder id.
    */
   searchWorkorders(q: string): Observable<SearchResultItem[]> {
-    return this.workorderSearchApi.searchWorkorders({ page: 0, size: 10 }, q).pipe(
+    return this.workorderSearchApi.searchWorkorders(q, undefined, undefined, 0, 10).pipe(
       map(page => (page.content ?? []).map(w => ({
         id: w.workorderId ?? '',
         primary: w.customerName ?? '',
@@ -678,7 +677,7 @@ export class WorkexecService {
    * GET /v1/workorders/estimates?customerId={customerId}
    */
   listEstimatesForCustomer(customerId: string): Observable<EstimateListItem[]> {
-    return (this.estimateApi.getEstimatesByCustomer(customerId) as unknown as Observable<RawEstimateSummary[]>)
+    return (this.estimateApi.listEstimatesByCustomer(customerId) as unknown as Observable<RawEstimateSummary[]>)
       .pipe(map(list => (list ?? []).map(r => this.toEstimateListItem(r))));
   }
 
@@ -728,7 +727,7 @@ export class WorkexecService {
     estimateId: string,
     _idempotencyKey?: string,
   ): Observable<EstimateResponse> {
-    return this.estimateApi.submitForApproval(estimateId).pipe(
+    return this.estimateApi.submitEstimateForApproval(estimateId).pipe(
       map(dto => this.toEstimateResponse(dto)),
     );
   }
@@ -767,7 +766,7 @@ export class WorkexecService {
    * Returns WorkorderResponse (201) or 409 Conflict with existingWorkorderId.
    */
   promoteEstimateToWorkorder(estimateId: string, _idempotencyKey?: string): Observable<WorkorderResponse> {
-    return this.estimateApi.promoteEstimateToWorkorder(estimateId) as Observable<WorkorderResponse>;
+    return this.estimateApi.promoteEstimate(estimateId) as Observable<WorkorderResponse>;
   }
 
   /**
@@ -776,7 +775,7 @@ export class WorkexecService {
    * Stories 230, 228
    */
   getWorkorderById(workorderId: string): Observable<WorkorderResponse> {
-    return this.workOrderApi.getWorkorderById(workorderId) as Observable<WorkorderResponse>;
+    return this.workOrderApi.getWorkorder(workorderId) as Observable<WorkorderResponse>;
   }
 
   getWorkorder(workorderId: string): Observable<WorkorderResponse> {
@@ -820,7 +819,7 @@ export class WorkexecService {
    * Stories 226, 224
    */
   getTransitionHistory(workorderId: string): Observable<WorkorderTransition[]> {
-    return this.workOrderApi.getTransitionHistory(workorderId) as Observable<WorkorderTransition[]>;
+    return this.workOrderApi.getWorkorderTransitions(workorderId) as Observable<WorkorderTransition[]>;
   }
 
   /**
@@ -837,9 +836,8 @@ export class WorkexecService {
    * GET /v1/workexec/wip?locationId={id}&multiLocation={bool}
    */
   listActiveWorkorders(locationId: string, multiLocation = false): Observable<WorkorderWipView[]> {
-    const pageable: Pageable = { page: 0, size: 100, sort: [] };
     return this.wipDashboard
-      .listWip(locationId, pageable, multiLocation)
+      .listWipWorkorders(locationId, multiLocation, 0, 100)
       .pipe(map(page => (page.content ?? []).map(view => this.toWorkorderWipView(view))));
   }
 
@@ -943,7 +941,7 @@ export class WorkexecService {
    */
   listTechniciansForLocation(locationId: string): Observable<LocationTechnician[]> {
     const today = new Date().toISOString().slice(0, 10);
-    return this.peopleAvailability.getPeopleAvailability(locationId.trim(), today).pipe(
+    return this.peopleAvailability.listPeopleAvailability(locationId.trim(), today).pipe(
       map(roster => (roster ?? [])
         .filter(p => String(p.assignmentStatus) !== 'ENDED' && this.isTechnicianRole(p.role))
         .map(p => this.toLocationTechnician(p))),
@@ -994,7 +992,7 @@ export class WorkexecService {
    * POST /v1/workorders/{workorderId}/start
    */
   startWork(workorderId: string, _idempotencyKey?: string): Observable<WorkorderStartResponse> {
-    return this.operationalContext.startWork(workorderId) as Observable<WorkorderStartResponse>;
+    return this.operationalContext.startWorkorder(workorderId) as Observable<WorkorderStartResponse>;
   }
 
   // ── CAP-005: Labor Sessions (Story 223) ──────────────────────────────────
@@ -1083,7 +1081,7 @@ export class WorkexecService {
    * POST /v1/workorders/{workorderId}/parts/returnUnused
    */
   returnUnusedQuantity(workorderId: string, request: ReturnPartsRequest, idempotencyKey?: string): Observable<PartUsageResponse> {
-    return this.workorderPartAdjustments.returnUnusedQuantity(workorderId, this.toSdkReturnPartQuantityRequest(request), idempotencyKey) as Observable<PartUsageResponse>;
+    return this.workorderPartAdjustments.returnUnusedPartQuantity(workorderId, this.toSdkReturnPartQuantityRequest(request), idempotencyKey) as Observable<PartUsageResponse>;
   }
 
   /**
@@ -1105,7 +1103,7 @@ export class WorkexecService {
    * Story 221
    */
   suggestSubstitutes(workorderId: string, partId: string): Observable<SubstituteLinkResponse[]> {
-    return this.substituteLink.suggestSubstitutes(workorderId, { partId }) as Observable<SubstituteLinkResponse[]>;
+    return this.substituteLink.suggestWorkorderSubstitutes(workorderId, { partId }) as Observable<SubstituteLinkResponse[]>;
   }
 
   /**
@@ -1121,11 +1119,11 @@ export class WorkexecService {
    * GET /v1/workorders/{workorderId}/parts/usageHistory
    */
   getUsageHistory(workorderId: string): Observable<PartUsageResponse[]> {
-    return this.workorderParts.getUsageHistory(workorderId) as unknown as Observable<PartUsageResponse[]>;
+    return this.workorderParts.getPartsUsageHistory(workorderId) as unknown as Observable<PartUsageResponse[]>;
   }
 
   getWorkorderPickList(workorderId: string): Observable<PickListView> {
-    return this.workorderPickFacade.getPickList(workorderId) as unknown as Observable<PickListView>;
+    return this.workorderPickFacade.getWorkorderPickList(workorderId) as unknown as Observable<PickListView>;
   }
 
   getPickedItems(workorderId: string): Observable<PickedItemLine[]> {
@@ -1136,7 +1134,7 @@ export class WorkexecService {
     workorderId: string,
     request: ConsumePickedItemsRequest,
   ): Observable<ConsumptionResult> {
-    return this.workorderPickedItems.consumePickedItems(workorderId, this.toSdkConsumePickedItemsRequest(request)) as unknown as Observable<ConsumptionResult>;
+    return this.workorderPickedItems.consumeWorkorderPickedItems(workorderId, this.toSdkConsumePickedItemsRequest(request)) as unknown as Observable<ConsumptionResult>;
   }
 
   resolvePickScan(workorderId: string, req: ScanResolveRequest): Observable<PickExecuteLine[]> {
@@ -1169,7 +1167,7 @@ export class WorkexecService {
    * GET /v1/workorders/{workorderId}/changeRequests
    */
   getChangeRequestsByWorkorder(workorderId: string): Observable<ChangeRequestResponse[]> {
-    return this.changeRequest.getChangeRequestsByWorkorder(workorderId) as Observable<ChangeRequestResponse[]>;
+    return this.changeRequest.listChangeRequests(workorderId) as Observable<ChangeRequestResponse[]>;
   }
 
   /**
@@ -1189,7 +1187,7 @@ export class WorkexecService {
    * GET /v1/workorders/changeRequests/{changeId}
    */
   getChangeRequestById(changeId: string): Observable<ChangeRequestResponse> {
-    return this.changeRequest.getChangeRequestById(changeId) as Observable<ChangeRequestResponse>;
+    return this.changeRequest.getChangeRequest(changeId) as Observable<ChangeRequestResponse>;
   }
 
   /**
@@ -1266,7 +1264,7 @@ export class WorkexecService {
    * GET /v1/workorders/{workorderId}/snapshots
    */
   getSnapshotHistory(workorderId: string): Observable<WorkorderSnapshotHistoryEntry[]> {
-    return this.workOrderApi.getSnapshotHistory(workorderId) as Observable<WorkorderSnapshotHistoryEntry[]>;
+    return this.workOrderApi.getWorkorderSnapshots(workorderId) as Observable<WorkorderSnapshotHistoryEntry[]>;
   }
 
   /**
@@ -1275,7 +1273,7 @@ export class WorkexecService {
    * CAP-007 Story 213 — triggers invoice draft creation; use billing service for detail.
    */
   generateInvoice(workorderId: string, idempotencyKey?: string): Observable<{ invoiceId: string; status?: string }> {
-    return this.workOrderApi.generateInvoice(workorderId, idempotencyKey) as Observable<{ invoiceId: string; status?: string }>;
+    return this.workOrderApi.generateWorkorderInvoice(workorderId, idempotencyKey) as Observable<{ invoiceId: string; status?: string }>;
   }
 
   // ── CAP-140: Operational Context override ───────────────────────────────
@@ -1374,7 +1372,7 @@ export class WorkexecService {
   }
 
   getActiveTimerEntries(): Observable<unknown> {
-    return this.timeTracking.getActiveTimerEntries();
+    return this.timeTracking.getActiveTimers();
   }
 
   startTimer(

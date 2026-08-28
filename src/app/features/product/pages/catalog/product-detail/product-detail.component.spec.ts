@@ -38,7 +38,6 @@ describe('ProductDetailComponent', () => {
     getReplacements: vi.fn().mockReturnValue(of([])),
     listUomConversions: vi.fn().mockReturnValue(of([])),
     getItemCosts: vi.fn().mockReturnValue(of({ id: 'ic-1', itemId: 'prod-123', standardCost: 10, costStructures: [] })),
-    listCostStructures: vi.fn().mockReturnValue(of([{ id: 'cs-1', itemId: 'prod-123', structures: [] }])),
     getAuditHistory: vi.fn().mockReturnValue(of([])),
     setLifecycleState: vi.fn().mockReturnValue(of({ ...mockLifecycle, currentState: 'INACTIVE' as const })),
     addReplacementProduct: vi.fn().mockReturnValue(of({})),
@@ -159,10 +158,6 @@ describe('ProductDetailComponent', () => {
 
   // ── loadProduct() initial service calls ───────────────────────────────────────
 
-  it('loadProduct() calls listCostStructures with productId', () => {
-    expect(mockCatalog.listCostStructures).toHaveBeenCalledWith('prod-123');
-  });
-
   it('loadProduct() calls getAuditHistory with productId', () => {
     expect(mockCatalog.getAuditHistory).toHaveBeenCalledWith('prod-123');
   });
@@ -202,7 +197,6 @@ describe('ProductDetailComponent — supplier section isolation', () => {
     getReplacements: vi.fn(),
     listUomConversions: vi.fn(),
     getItemCosts: vi.fn(),
-    listCostStructures: vi.fn(),
     getAuditHistory: vi.fn(),
     setLifecycleState: vi.fn(),
     addReplacementProduct: vi.fn(),
@@ -253,9 +247,6 @@ describe('ProductDetailComponent — supplier section isolation', () => {
     mockCatalog.listUomConversions.mockReturnValue(of([]));
     mockCatalog.getItemCosts.mockReturnValue(
       of({ id: 'ic-1', itemId: 'prod-123', standardCost: 10, costStructures: [] }),
-    );
-    mockCatalog.listCostStructures.mockReturnValue(
-      of([{ id: 'cs-1', itemId: 'prod-123', structures: [] }]),
     );
     mockCatalog.getAuditHistory.mockReturnValue(of([]));
     locationService.listActiveLocations.mockReturnValue(

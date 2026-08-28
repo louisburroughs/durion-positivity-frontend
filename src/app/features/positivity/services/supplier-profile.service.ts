@@ -87,19 +87,19 @@ export class SupplierProfileService {
 
   listProfiles(): Observable<VendorProfileSummary[]> {
     return this.profilesSdk
-      .listProfiles()
+      .listVendorProfiles()
       .pipe(map(views => views.map(view => this.toProfileSummary(view))));
   }
 
   getProfile(vendorProfileId: string): Observable<VendorProfile> {
     return this.profilesSdk
-      .getProfile(vendorProfileId)
+      .getVendorProfile(vendorProfileId)
       .pipe(map(view => this.toProfile(view)));
   }
 
   createProfile(request: VendorProfileRequest): Observable<VendorProfile> {
     return this.profilesSdk
-      .createProfile(this.toSdkProfileRequest(request))
+      .createVendorProfile(this.toSdkProfileRequest(request))
       .pipe(map(view => this.toProfile(view)));
   }
 
@@ -108,12 +108,12 @@ export class SupplierProfileService {
     request: VendorProfileRequest,
   ): Observable<VendorProfile> {
     return this.profilesSdk
-      .updateProfile(vendorProfileId, this.toSdkProfileRequest(request))
+      .updateVendorProfile(vendorProfileId, this.toSdkProfileRequest(request))
       .pipe(map(view => this.toProfile(view)));
   }
 
   deleteProfile(vendorProfileId: string): Observable<void> {
-    return this.profilesSdk.deleteProfile(vendorProfileId).pipe(map(() => undefined));
+    return this.profilesSdk.deleteVendorProfile(vendorProfileId).pipe(map(() => undefined));
   }
 
   // ── Auth configs ───────────────────────────────────────────────────────────
@@ -159,9 +159,9 @@ export class SupplierProfileService {
    */
   getAccounts(vendorProfileId: string): Observable<SupplierAccounts> {
     return forkJoin({
-      accounts: this.accountsSdk.listAccounts(vendorProfileId),
+      accounts: this.accountsSdk.listCommercialAccounts(vendorProfileId),
       locations: this.locationSdk
-        .getAllLocations()
+        .listLocations()
         .pipe(catchError(() => of<LocationResponseDTO[] | null>(null))),
     }).pipe(map(result => this.toAccounts(result.accounts, result.locations)));
   }
@@ -177,8 +177,8 @@ export class SupplierProfileService {
       agencyCode: request.agencyCode,
     };
     const call$ = request.accountId
-      ? this.accountsSdk.updateAccount(vendorProfileId, request.accountId, payload)
-      : this.accountsSdk.createAccount(vendorProfileId, payload);
+      ? this.accountsSdk.updateCommercialAccount(vendorProfileId, request.accountId, payload)
+      : this.accountsSdk.createCommercialAccount(vendorProfileId, payload);
     return call$.pipe(map(view => this.toBillingAccount(view)));
   }
 
@@ -194,14 +194,14 @@ export class SupplierProfileService {
       deliveryLocationId: request.locationId,
     };
     const call$ = request.accountId
-      ? this.accountsSdk.updateAccount(vendorProfileId, request.accountId, payload)
-      : this.accountsSdk.createAccount(vendorProfileId, payload);
+      ? this.accountsSdk.updateCommercialAccount(vendorProfileId, request.accountId, payload)
+      : this.accountsSdk.createCommercialAccount(vendorProfileId, payload);
     return call$.pipe(map(view => this.toDeliveryAccount(view)));
   }
 
   deleteAccount(vendorProfileId: string, accountId: string): Observable<void> {
     return this.accountsSdk
-      .deleteAccount(vendorProfileId, accountId)
+      .deleteCommercialAccount(vendorProfileId, accountId)
       .pipe(map(() => undefined));
   }
 
@@ -209,7 +209,7 @@ export class SupplierProfileService {
 
   listBindings(vendorProfileId: string): Observable<SupplierBinding[]> {
     return this.bindingsSdk
-      .listBindings(vendorProfileId)
+      .listEndpointBindings(vendorProfileId)
       .pipe(map(views => views.map(view => this.toBinding(view))));
   }
 
@@ -218,7 +218,7 @@ export class SupplierProfileService {
     request: SupplierBindingRequest,
   ): Observable<SupplierBinding> {
     return this.bindingsSdk
-      .createBinding(vendorProfileId, this.toSdkBindingRequest(request))
+      .createEndpointBinding(vendorProfileId, this.toSdkBindingRequest(request))
       .pipe(map(view => this.toBinding(view)));
   }
 
@@ -228,13 +228,13 @@ export class SupplierProfileService {
     request: SupplierBindingRequest,
   ): Observable<SupplierBinding> {
     return this.bindingsSdk
-      .updateBinding(vendorProfileId, bindingId, this.toSdkBindingRequest(request))
+      .updateEndpointBinding(vendorProfileId, bindingId, this.toSdkBindingRequest(request))
       .pipe(map(view => this.toBinding(view)));
   }
 
   deleteBinding(vendorProfileId: string, bindingId: string): Observable<void> {
     return this.bindingsSdk
-      .deleteBinding(vendorProfileId, bindingId)
+      .deleteEndpointBinding(vendorProfileId, bindingId)
       .pipe(map(() => undefined));
   }
 

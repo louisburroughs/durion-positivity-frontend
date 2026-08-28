@@ -43,7 +43,7 @@ export class LocationService {
   // ── Locations ────────────────────────────────────────────────────────────
 
   getAllLocations(): Observable<unknown[]> {
-    return this.locationApi.getAllLocations() as Observable<unknown[]>;
+    return this.locationApi.listLocations() as Observable<unknown[]>;
   }
 
   createLocation(body: Record<string, unknown>, _idempotencyKey?: string): Observable<unknown> {
@@ -65,16 +65,21 @@ export class LocationService {
   }
 
   getLocationDefaults(locationId: string): Observable<unknown> {
-    return this.siteDefaultsApi.getDefaults(locationId) as Observable<unknown>;
+    return this.siteDefaultsApi.getSiteDefaults(locationId) as Observable<unknown>;
   }
 
   listStorageLocations(
     siteId: string,
     params?: { status?: string; pageIndex?: number; pageSize?: number },
   ): Observable<unknown> {
-    const pageable = { page: params?.pageIndex, size: params?.pageSize };
     const status = params?.status as 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE' | 'QUARANTINED' | undefined;
-    return this.storageLocationApi.list2(siteId, pageable, undefined, status) as Observable<unknown>;
+    return this.storageLocationApi.listStorageLocations(
+      siteId,
+      undefined,
+      status,
+      params?.pageIndex,
+      params?.pageSize,
+    ) as Observable<unknown>;
   }
 
   // NOTE: idempotencyKey is accepted for parity with the other write methods on
@@ -92,7 +97,7 @@ export class LocationService {
       barcode: this.asOptionalString(body['barcode']),
       parentStorageLocationId: this.asOptionalString(body['parentStorageLocationId']),
     };
-    return this.storageLocationApi.create2(siteId, request) as Observable<unknown>;
+    return this.storageLocationApi.createStorageLocation(siteId, request) as Observable<unknown>;
   }
 
   /**
@@ -109,11 +114,11 @@ export class LocationService {
       status: 'INACTIVE' as StorageLocationPatchRequest['status'],
       destinationStorageLocationId: this.asOptionalString(body['destinationStorageLocationId']),
     };
-    return this.storageLocationApi.patch2(siteId, storageLocationId, patch) as Observable<unknown>;
+    return this.storageLocationApi.patchStorageLocation(siteId, storageLocationId, patch) as Observable<unknown>;
   }
 
   configureLocationDefaults(locationId: string, body: unknown, _idempotencyKey?: string): Observable<unknown> {
-    return this.siteDefaultsApi.configureDefaults(locationId, body as SiteDefaultsRequest) as Observable<unknown>;
+    return this.siteDefaultsApi.configureSiteDefaults(locationId, body as SiteDefaultsRequest) as Observable<unknown>;
   }
 
   // ── Bays ─────────────────────────────────────────────────────────────────

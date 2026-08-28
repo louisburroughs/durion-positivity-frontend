@@ -9,7 +9,7 @@ import { PeopleAPIService, Person } from '@durion-sdk/people-contact';
 const samplePerson: Person = { id: 'p1', firstName: 'Alex', lastName: 'Smith' };
 
 const peopleApiStub = {
-  getAllPeople: vi.fn(),
+  listPeople: vi.fn(),
   createPerson: vi.fn(),
 };
 
@@ -18,7 +18,7 @@ describe('ShopmgmtRosterService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    peopleApiStub.getAllPeople.mockReturnValue(of([samplePerson]));
+    peopleApiStub.listPeople.mockReturnValue(of([samplePerson]));
     peopleApiStub.createPerson.mockReturnValue(of(samplePerson));
 
     TestBed.configureTestingModule({
@@ -38,7 +38,7 @@ describe('ShopmgmtRosterService', () => {
   it('delegates getAllPeople() to PeopleAPIService.getAllPeople()', () => {
     service.getAllPeople().subscribe();
 
-    expect(peopleApiStub.getAllPeople).toHaveBeenCalledTimes(1);
+    expect(peopleApiStub.listPeople).toHaveBeenCalledTimes(1);
   });
 
   it('delegates createPerson() to PeopleAPIService.createPerson() with firstName, lastName, primaryEmail', () => {

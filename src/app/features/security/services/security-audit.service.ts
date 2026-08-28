@@ -34,7 +34,7 @@ export class SecurityAuditService {
   }
 
   getAuditEvent(eventId: string): Observable<AuditEventDetail> {
-    return this.auditSdk.getEvent(eventId) as Observable<AuditEventDetail>;
+    return this.auditSdk.getAuditEvent(eventId) as Observable<AuditEventDetail>;
   }
 
   requestAuditExport(filter: Partial<AuditEventFilter> | Record<string, unknown>): Observable<AuditExportJob> {

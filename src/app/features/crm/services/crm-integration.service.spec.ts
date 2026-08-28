@@ -13,8 +13,8 @@ describe('CrmIntegrationService', () => {
 
   const accountingEventsStub = {
     listAccountingEvents: vi.fn(),
-    getEvent: vi.fn(),
-    getReprocessingHistory: vi.fn(),
+    getAccountingEvent: vi.fn(),
+    getEventReprocessingHistory: vi.fn(),
     getEventProcessingLog: vi.fn(),
   };
 
@@ -43,10 +43,11 @@ describe('CrmIntegrationService', () => {
       service.listEvents().subscribe(r => { result = r; });
 
       expect(accountingEventsStub.listAccountingEvents).toHaveBeenCalledOnce();
-      // arg 0 is pageable { page: 0, size: 20 }, arg 1 is organizationId (undefined)
-      const [pageable, organizationId] = accountingEventsStub.listAccountingEvents.mock.calls[0];
-      expect(pageable).toEqual({ page: 0, size: 20 });
-      expect(organizationId).toBeUndefined();
+      // arg 0 is organizationId; page/size are positional args 10 and 11
+      const args = accountingEventsStub.listAccountingEvents.mock.calls[0];
+      expect(args[0]).toBeUndefined();
+      expect(args[10]).toBe(0);
+      expect(args[11]).toBe(20);
       expect(result).toBeDefined();
       expect(result.items).toHaveLength(0);
     });
@@ -73,8 +74,10 @@ describe('CrmIntegrationService', () => {
 
       expect(accountingEventsStub.listAccountingEvents).toHaveBeenCalledOnce();
       const args = accountingEventsStub.listAccountingEvents.mock.calls[0];
-      expect(args[0]).toEqual({ page: 0, size: 20 }); // pageable
-      expect(args[1]).toBe('org-abc'); // organizationId
+      expect(args[0]).toBe('org-abc'); // organizationId
+      expect(args[9]).toBe('PENDING'); // status
+      expect(args[10]).toBe(0); // page
+      expect(args[11]).toBe(20); // size
       expect(result.items).toHaveLength(1);
       expect(result.items[0].eventId).toBe('ev-001');
     });
@@ -90,12 +93,12 @@ describe('CrmIntegrationService', () => {
         processingStatus: 'PROCESSED',
         receivedAt: '2026-01-02T00:00:00Z',
       };
-      accountingEventsStub.getEvent.mockReturnValueOnce(of(response));
+      accountingEventsStub.getAccountingEvent.mockReturnValueOnce(of(response));
 
       let result!: AccountingEventResponse;
       service.getEvent('ev-002').subscribe(r => { result = r; });
 
-      expect(accountingEventsStub.getEvent).toHaveBeenCalledWith('ev-002');
+      expect(accountingEventsStub.getAccountingEvent).toHaveBeenCalledWith('ev-002');
       expect(result.eventId).toBe('ev-002');
       expect(result.processingStatus).toBe('PROCESSED');
     });
@@ -114,18 +117,18 @@ describe('CrmIntegrationService', () => {
           errorMessage: 'downstream timeout',
         },
       ];
-      accountingEventsStub.getReprocessingHistory.mockReturnValueOnce(of(response));
+      accountingEventsStub.getEventReprocessingHistory.mockReturnValueOnce(of(response));
 
       let result!: ReprocessingAttemptHistoryResponse[];
       service.getReprocessingHistory('ev-003').subscribe(r => { result = r; });
 
-      expect(accountingEventsStub.getReprocessingHistory).toHaveBeenCalledWith('ev-003');
+      expect(accountingEventsStub.getEventReprocessingHistory).toHaveBeenCalledWith('ev-003');
       expect(result).toHaveLength(1);
       expect(result[0].attemptId).toBe('att-1');
     });
 
     it('returns an empty array when the event has no reprocessing history', () => {
-      accountingEventsStub.getReprocessingHistory.mockReturnValueOnce(of([]));
+      accountingEventsStub.getEventReprocessingHistory.mockReturnValueOnce(of([]));
 
       let result!: ReprocessingAttemptHistoryResponse[];
       service.getReprocessingHistory('ev-no-history').subscribe(r => { result = r; });

@@ -80,7 +80,7 @@ export class BulkImportService {
 
   createUploadSession(request: CreateUploadSessionRequest): Observable<CreateUploadSessionResponse> {
     return this.bulkLoadJobsService
-      .createJob(this.toCreateJobRequest(request))
+      .createBulkLoadJob(this.toCreateJobRequest(request))
       .pipe(map(job => ({
         jobId: job.id ?? '',
         uploadUrl: this.buildTusUploadEndpoint(job.id ?? ''),
@@ -89,7 +89,7 @@ export class BulkImportService {
 
   getJob(jobId: string): Observable<BulkLoadJob> {
     return this.bulkLoadJobsService
-      .getJob(jobId)
+      .getBulkLoadJob(jobId)
       .pipe(map(job => this.toBulkLoadJob(job)));
   }
 
@@ -115,7 +115,7 @@ export class BulkImportService {
 
   listJobs(filters?: JobFilterParams): Observable<JobListResponse> {
     return this.bulkLoadJobsService
-      .listJobs({ size: filters?.pageSize ?? 20 })
+      .listBulkLoadJobs(0, filters?.pageSize ?? 20)
       .pipe(map(page => ({
         items: this.applyJobFilters((page.content ?? []).map(job => this.toBulkLoadJob(job)), filters),
         nextPageToken: null,
@@ -128,7 +128,7 @@ export class BulkImportService {
 
   getColumnMappings(jobId: string): Observable<BulkLoadColumnMapping[]> {
     return this.columnMappingService
-      .getMappings(jobId)
+      .getColumnMappings(jobId)
       .pipe(map(mappings => mappings.map(mapping => ({
         mappingId: mapping.id ?? '',
         jobId: mapping.jobId ?? '',
@@ -140,7 +140,7 @@ export class BulkImportService {
   }
 
   approveColumnMappings(jobId: string, request: ApproveColumnMappingsRequest): Observable<void> {
-    return this.columnMappingService.approveMappings(jobId, {
+    return this.columnMappingService.approveColumnMappings(jobId, {
       mappings: request.overrides.map(override => ({
         mappingId: override.mappingId,
         sourceColumn: override.sourceColumn,
@@ -150,15 +150,15 @@ export class BulkImportService {
   }
 
   cancelJob(jobId: string): Observable<void> {
-    return this.bulkLoadJobsService.cancelJob(jobId).pipe(map(() => undefined as void));
+    return this.bulkLoadJobsService.cancelBulkLoadJob(jobId).pipe(map(() => undefined as void));
   }
 
   retryJob(jobId: string): Observable<void> {
-    return this.bulkLoadJobsService.retryJob(jobId).pipe(map(() => undefined as void));
+    return this.bulkLoadJobsService.retryBulkLoadJob(jobId).pipe(map(() => undefined as void));
   }
 
   listAuditRecords(jobId: string, _filters?: AuditRecordFilterParams): Observable<AuditRecordListResponse> {
-    return this.reviewQueueService.getAuditRecords(jobId).pipe(
+    return this.reviewQueueService.listAuditRecords(jobId).pipe(
       map(records => ({
         items: records.map(record => this.toAuditRecord(record)),
         nextPageToken: null,

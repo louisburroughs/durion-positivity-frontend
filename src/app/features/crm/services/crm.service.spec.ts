@@ -12,7 +12,6 @@ import {
 import { VehicleRegistryAPIService } from '@durion-sdk/vehicle-inventory';
 import { CrmService, PartyPage } from './crm.service';
 import type { BillingRules, CommunicationPreferences, CrmSnapshot, PartyDetail } from '../models/crm.models';
-import type { Pageable } from '@durion-sdk/customer';
 
 describe('CrmService', () => {
   let service: CrmService;
@@ -26,14 +25,14 @@ describe('CrmService', () => {
   };
 
   const snapshotsApiStub = {
-    fetchByParty: vi.fn(),
-    fetchByVehicle: vi.fn(),
-    getBillingRules: vi.fn(),
+    getSnapshotByParty: vi.fn(),
+    getSnapshotByVehicle: vi.fn(),
+    getPartyBillingRules: vi.fn(),
   };
 
   const crmAccountsStub = {
     browseParties: vi.fn(),
-    upsertBillingRules: vi.fn(),
+    upsertPartyBillingRules: vi.fn(),
     searchParties: vi.fn(),
     listBillingTerms: vi.fn(),
     checkPartyDuplicates: vi.fn(),
@@ -45,7 +44,7 @@ describe('CrmService', () => {
   };
 
   const relationshipsStub = {
-    createRelationship: vi.fn(),
+    createPartyRelationship: vi.fn(),
   };
 
   const browseParty: PartyDetail = {
@@ -88,14 +87,14 @@ describe('CrmService', () => {
         timestamp: '2026-03-30T12:00:00Z',
         source: 'CRM',
       };
-      snapshotsApiStub.fetchByParty.mockReturnValueOnce(of(partySnapshot));
+      snapshotsApiStub.getSnapshotByParty.mockReturnValueOnce(of(partySnapshot));
 
       let result: CrmSnapshot | undefined;
       service.fetchByParty('party-123').subscribe(value => {
         result = value;
       });
 
-      expect(snapshotsApiStub.fetchByParty).toHaveBeenCalledWith('party-123');
+      expect(snapshotsApiStub.getSnapshotByParty).toHaveBeenCalledWith('party-123');
       expect(result).toEqual(partySnapshot);
     });
   });
@@ -111,14 +110,14 @@ describe('CrmService', () => {
         timestamp: '2026-03-30T12:05:00Z',
         source: 'CRM',
       };
-      snapshotsApiStub.fetchByVehicle.mockReturnValueOnce(of(vehicleSnapshot));
+      snapshotsApiStub.getSnapshotByVehicle.mockReturnValueOnce(of(vehicleSnapshot));
 
       let result: CrmSnapshot | undefined;
       service.fetchByVehicle('vehicle-42').subscribe(value => {
         result = value;
       });
 
-      expect(snapshotsApiStub.fetchByVehicle).toHaveBeenCalledWith('vehicle-42');
+      expect(snapshotsApiStub.getSnapshotByVehicle).toHaveBeenCalledWith('vehicle-42');
       expect(result).toEqual(vehicleSnapshot);
     });
   });
@@ -131,14 +130,14 @@ describe('CrmService', () => {
         creditLimit: 10000,
         notes: 'Commercial account',
       };
-      snapshotsApiStub.getBillingRules.mockReturnValueOnce(of(rules));
+      snapshotsApiStub.getPartyBillingRules.mockReturnValueOnce(of(rules));
 
       let result: BillingRules | undefined;
       service.getBillingRules('party-321').subscribe(value => {
         result = value;
       });
 
-      expect(snapshotsApiStub.getBillingRules).toHaveBeenCalledWith('party-321');
+      expect(snapshotsApiStub.getPartyBillingRules).toHaveBeenCalledWith('party-321');
       expect(result).toEqual(rules);
     });
   });
@@ -161,15 +160,15 @@ describe('CrmService', () => {
         createdAt: '2026-03-30T10:00:00Z',
         updatedAt: '2026-03-30T11:00:00Z',
       };
-      crmAccountsStub.upsertBillingRules.mockReturnValueOnce(of(responseRules));
+      crmAccountsStub.upsertPartyBillingRules.mockReturnValueOnce(of(responseRules));
 
       let result: BillingRules | undefined;
       service.upsertBillingRules('party-321', requestRules).subscribe(value => {
         result = value;
       });
 
-      expect(crmAccountsStub.upsertBillingRules).toHaveBeenCalledOnce();
-      const [partyId, payload] = crmAccountsStub.upsertBillingRules.mock.calls[0];
+      expect(crmAccountsStub.upsertPartyBillingRules).toHaveBeenCalledOnce();
+      const [partyId, payload] = crmAccountsStub.upsertPartyBillingRules.mock.calls[0];
       expect(partyId).toBe('party-321');
       expect(payload).toEqual({
         requirePo: false,
@@ -192,10 +191,8 @@ describe('CrmService', () => {
         result = value;
       });
 
-      const expectedPageable: Pageable = { page: 0, size: 25 };
-
       expect(crmAccountsStub.browseParties).toHaveBeenCalledWith(
-        expectedPageable, undefined, undefined, undefined, undefined, undefined, undefined,
+        0, 25, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
       );
       expect(result).toEqual({
         parties: [browseParty],
@@ -264,7 +261,7 @@ describe('CrmService', () => {
 
   describe('createRelationship() mapping', () => {
     it('sends roles as a Set and maps the SDK response roles Set back to an array', () => {
-      relationshipsStub.createRelationship.mockReturnValueOnce(
+      relationshipsStub.createPartyRelationship.mockReturnValueOnce(
         of({
           relationshipId: 'rel-1',
           partyId: 'p1',
@@ -285,7 +282,7 @@ describe('CrmService', () => {
         })
         .subscribe(r => (result = r));
 
-      const [partyId, payload] = relationshipsStub.createRelationship.mock.calls[0];
+      const [partyId, payload] = relationshipsStub.createPartyRelationship.mock.calls[0];
       expect(partyId).toBe('p1');
       expect(payload.roles).toBeInstanceOf(Set);
       expect(Array.from(payload.roles)).toEqual(['BILLING', 'PRIMARY_CONTACT']);
@@ -306,9 +303,8 @@ describe('CrmService', () => {
         result = value;
       });
 
-      const expectedPageable: Pageable = { page: 0, size: 25 };
       expect(crmAccountsStub.browseParties).toHaveBeenCalledWith(
-        expectedPageable, 'Albert', undefined, undefined, undefined, undefined, undefined,
+        0, 25, undefined, 'Albert', undefined, undefined, undefined, undefined, undefined,
       );
       expect(crmAccountsStub.searchParties).not.toHaveBeenCalled();
       expect(result).toEqual({ parties: [browseParty] });
@@ -321,9 +317,8 @@ describe('CrmService', () => {
 
       service.searchParties('   ').subscribe();
 
-      const expectedPageable: Pageable = { page: 0, size: 25 };
       expect(crmAccountsStub.browseParties).toHaveBeenCalledWith(
-        expectedPageable, undefined, undefined, undefined, undefined, undefined, undefined,
+        0, 25, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
       );
     });
   });

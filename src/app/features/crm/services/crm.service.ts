@@ -13,7 +13,6 @@ import type { CreateVehicleRequest as RegistryCreateVehicleRequest } from '@duri
 import type {
   CreateCommercialAccountRequest as SdkCreateCommercialAccountRequest,
   MergePartiesRequest as SdkMergePartiesRequest,
-  Pageable as SdkPageable,
   CreatePersonRequest as SdkCreatePersonRequest,
   CreatePartyRelationshipRequest as SdkCreatePartyRelationshipRequest,
   UpsertCommunicationPreferencesRequest as SdkUpsertCommunicationPreferencesRequest,
@@ -89,7 +88,7 @@ export class CrmService {
         return acc;
       }, {}),
     };
-    return this.accountsApi.createCommercialAccount(sdkRequest) as Observable<CreateCommercialAccountResponse>;
+    return this.accountsApi.createCrmCommercialAccount(sdkRequest) as Observable<CreateCommercialAccountResponse>;
   }
 
   mergeParties(partyId: string, request: MergePartiesRequest): Observable<MergePartiesResponse> {
@@ -125,11 +124,11 @@ export class CrmService {
   browseParties(opts: BrowsePartiesOptions = {}): Observable<PartyPage> {
     const page = opts.page ?? 0;
     const size = opts.size ?? 25;
-    const sdkPageable: SdkPageable = { page, size };
-
     return this.accountsApi
       .browseParties(
-        sdkPageable,
+        page,
+        size,
+        undefined,
         opts.name || undefined,
         opts.status || undefined,
         opts.partyType || undefined,
@@ -168,7 +167,7 @@ export class CrmService {
       emails: request.email ? [{ value: request.email }] : undefined,
       phones: request.phone ? [{ value: request.phone }] : undefined,
     };
-    return this.personsApi.createPerson(sdkRequest) as Observable<CreatePersonResponse>;
+    return this.personsApi.createCrmPerson(sdkRequest) as Observable<CreatePersonResponse>;
   }
 
   getPerson(personId: string): Observable<CreatePersonResponse> {
@@ -192,7 +191,7 @@ export class CrmService {
       effectiveEndDate: request.effectiveEndDate,
       primaryBillingContact: request.primaryBillingContact,
     };
-    return this.relationshipsApi.createRelationship(partyId, sdkRequest).pipe(
+    return this.relationshipsApi.createPartyRelationship(partyId, sdkRequest).pipe(
       map(res => ({
         relationshipId: res.relationshipId,
         partyId: res.partyId,
@@ -207,7 +206,7 @@ export class CrmService {
   }
 
   getContactsWithRoles(partyId: string): Observable<Relationship[]> {
-    return this.relationshipsApi.getContacts(partyId).pipe(
+    return this.relationshipsApi.getCommercialAccountContacts(partyId).pipe(
       map(response => (response.contacts ?? []).map(c => ({
         relationshipId: c.relationshipId ?? '',
         personId: c.individualId ?? '',
@@ -231,7 +230,7 @@ export class CrmService {
   }
 
   deactivateRelationship(partyId: string, relationshipId: string): Observable<void> {
-    return this.relationshipsApi.deactivateRelationship(partyId, relationshipId) as Observable<void>;
+    return this.relationshipsApi.deactivatePartyRelationship(partyId, relationshipId) as Observable<void>;
   }
 
   getCommunicationPreferences(partyId: string): Observable<CommunicationPreferences> {
@@ -286,20 +285,20 @@ export class CrmService {
   }
 
   fetchByParty(partyId: string): Observable<CrmSnapshot> {
-    return this.snapshotsApi.fetchByParty(partyId) as unknown as Observable<CrmSnapshot>;
+    return this.snapshotsApi.getSnapshotByParty(partyId) as unknown as Observable<CrmSnapshot>;
   }
 
   fetchByVehicle(vehicleId: string): Observable<CrmSnapshot> {
-    return this.snapshotsApi.fetchByVehicle(vehicleId) as unknown as Observable<CrmSnapshot>;
+    return this.snapshotsApi.getSnapshotByVehicle(vehicleId) as unknown as Observable<CrmSnapshot>;
   }
 
   getBillingRules(partyId: string): Observable<BillingRules> {
-    return this.snapshotsApi.getBillingRules(partyId) as unknown as Observable<BillingRules>;
+    return this.snapshotsApi.getPartyBillingRules(partyId) as unknown as Observable<BillingRules>;
   }
 
   upsertBillingRules(partyId: string, rules: Partial<BillingRules>): Observable<BillingRules> {
     // Strip server-set read-only fields before upsert (intentional omit).
     const { createdAt: _createdAt, updatedAt: _updatedAt, ...payload } = rules;
-    return this.accountsApi.upsertBillingRules(partyId, payload as UpsertBillingRulesRequest) as unknown as Observable<BillingRules>;
+    return this.accountsApi.upsertPartyBillingRules(partyId, payload as UpsertBillingRulesRequest) as unknown as Observable<BillingRules>;
   }
 }

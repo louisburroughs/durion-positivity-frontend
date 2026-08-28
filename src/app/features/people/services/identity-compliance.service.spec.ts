@@ -11,7 +11,7 @@ describe('IdentityComplianceService', () => {
   let service: IdentityComplianceService;
 
   const complianceSdkStub = {
-    findActiveUsersForInactivePersons: vi.fn(),
+    listInactivePersonActiveUsers: vi.fn(),
   };
 
   const finding: IdentityComplianceFinding = {
@@ -37,17 +37,17 @@ describe('IdentityComplianceService', () => {
   });
 
   it('calls the SDK compliance endpoint', () => {
-    complianceSdkStub.findActiveUsersForInactivePersons.mockReturnValue(of([finding]));
+    complianceSdkStub.listInactivePersonActiveUsers.mockReturnValue(of([finding]));
 
     service.findActiveUsersForInactivePersons().subscribe(res => {
       expect(res).toEqual([finding]);
     });
 
-    expect(complianceSdkStub.findActiveUsersForInactivePersons).toHaveBeenCalledTimes(1);
+    expect(complianceSdkStub.listInactivePersonActiveUsers).toHaveBeenCalledTimes(1);
   });
 
   it('passes through an empty (compliant) result', () => {
-    complianceSdkStub.findActiveUsersForInactivePersons.mockReturnValue(of([]));
+    complianceSdkStub.listInactivePersonActiveUsers.mockReturnValue(of([]));
 
     service.findActiveUsersForInactivePersons().subscribe(res => {
       expect(res).toEqual([]);

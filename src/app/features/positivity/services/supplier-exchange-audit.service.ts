@@ -94,7 +94,7 @@ export class SupplierExchangeAuditService {
     size = EXCHANGE_AUDIT_PAGE_SIZE,
   ): Observable<ExchangeAuditPage> {
     return this.auditSdk
-      .listExchanges(
+      .listSupplierExchanges(
         filter.vendorProfileId,
         startOfLocalDayIso(filter.dateFrom),
         startOfNextLocalDayIso(filter.dateTo),
@@ -107,7 +107,7 @@ export class SupplierExchangeAuditService {
 
   getExchange(exchangeAuditId: string): Observable<ExchangeAuditRecord> {
     return this.auditSdk
-      .getExchange(exchangeAuditId)
+      .getSupplierExchange(exchangeAuditId)
       .pipe(map(summary => this.toRecord(summary)));
   }
 
@@ -119,7 +119,7 @@ export class SupplierExchangeAuditService {
    */
   getExchangePayload(exchangeAuditId: string): Observable<ExchangePayloadView> {
     return this.auditSdk
-      .readPayload(exchangeAuditId)
+      .readSupplierExchangePayload(exchangeAuditId)
       .pipe(map(view => this.toPayloadView(view)));
   }
 
@@ -134,7 +134,7 @@ export class SupplierExchangeAuditService {
     size = EXCHANGE_AUDIT_PAGE_SIZE,
   ): Observable<ExchangeAuditPage> {
     return this.auditSdk
-      .traceCorrelation(correlationId, page, size)
+      .traceSupplierCorrelation(correlationId, page, size)
       .pipe(map(response => this.toPage(response)));
   }
 

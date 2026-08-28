@@ -56,10 +56,6 @@
       (click)="activeTab.set('uom')">
       {{ 'PRODUCT.CATALOG.DETAIL.TABS.UOM' | translate }}
     </button>
-    <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'costs'"
-      (click)="activeTab.set('costs')">
-      {{ 'PRODUCT.CATALOG.DETAIL.TABS.COST_TIERS' | translate }}
-    </button>
     <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'standard-cost'"
       (click)="activeTab.set('standard-cost')">
       {{ 'PRODUCT.CATALOG.DETAIL.TABS.STANDARD_COST' | translate }}
@@ -214,50 +210,6 @@
   </section>
   }
 
-  @if (activeTab() === 'costs') {
-  <section class="card panel">
-    <h2>{{ 'PRODUCT.CATALOG.DETAIL.COST_TIERS.TITLE' | translate }}</h2>
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>{{ 'PRODUCT.CATALOG.DETAIL.COST_TIERS.SUPPLIER' | translate }}</th>
-            <th>{{ 'PRODUCT.CATALOG.DETAIL.COST_TIERS.UNIT_COST' | translate }}</th>
-            <th>{{ 'PRODUCT.CATALOG.DETAIL.COST_TIERS.MIN_QTY' | translate }}</th>
-            <th>{{ 'PRODUCT.CATALOG.DETAIL.COST_TIERS.MAX_QTY' | translate }}</th>
-            <th>{{ 'COMMON.ACTIONS' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (tier of costStructure()?.tiers ?? []; track tier.id) {
-          <tr>
-            <td>{{ costStructure()?.supplierName }}</td>
-            <td>{{ tier.unitCost | currency:tier.currency:'symbol':'1.2-2' }}</td>
-            <td>{{ tier.minQty }}</td>
-            <td>{{ tier.maxQty }}</td>
-            <td>
-              <button class="btn-secondary" type="button" disabled>
-                {{ 'COMMON.DELETE' | translate }}
-              </button>
-            </td>
-          </tr>
-          }
-          <tr>
-            <td><input #tierSupplier class="input-underline" type="text" /></td>
-            <td><input #tierUnitCost class="input-underline" type="number" step="0.01" min="0" /></td>
-            <td><input #tierMinQty class="input-underline" type="number" min="0" /></td>
-            <td><input #tierMaxQty class="input-underline" type="number" min="0" /></td>
-            <td>
-              <button class="btn-primary" type="button" disabled>
-                {{ 'COMMON.ADD' | translate }}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-  }
 
   @if (activeTab() === 'standard-cost') {
   <section class="card panel">

@@ -7,7 +7,6 @@ import {
   LocationRef as SdkLocationRef,
   LocationResponseDTO,
   LocationValidationResponseDTO,
-  Pageable,
 } from '@durion-sdk/location';
 import {
   LocationRef,
@@ -22,8 +21,7 @@ export class ProductLocationService {
   private readonly locationSdk = inject(LocationAPIService);
 
   getRoster(filter?: { status?: string }): Observable<LocationRosterEntry[]> {
-    const pageable: Pageable = {};
-    return this.locationSdk.getRoster(pageable, filter?.status).pipe(
+    return this.locationSdk.getLocationRoster(filter?.status).pipe(
       map((page: PageLocationRef) =>
         (page.content ?? []).map(ref => this.toLocationRosterEntry(ref)),
       ),
@@ -31,7 +29,7 @@ export class ProductLocationService {
   }
 
   getAllLocations(): Observable<LocationRef[]> {
-    return this.locationSdk.getAllLocations().pipe(
+    return this.locationSdk.listLocations().pipe(
       map((items: Array<LocationResponseDTO>) => items.map(dto => this.toLocationRef(dto))),
     );
   }

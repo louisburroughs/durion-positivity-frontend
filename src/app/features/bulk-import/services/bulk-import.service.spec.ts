@@ -29,9 +29,9 @@ describe('BulkImportService', () => {
   let authServiceClass: typeof import('../../../core/services/auth.service').AuthService;
   const apiStub = { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() };
   const authStub = { accessToken: vi.fn<() => string | null>(() => 'test-jwt') };
-  const bulkLoadJobsStub = { createJob: vi.fn(), getJob: vi.fn(), listJobs: vi.fn(), cancelJob: vi.fn(), retryJob: vi.fn() };
-  const columnMappingStub = { getMappings: vi.fn(), approveMappings: vi.fn() };
-  const reviewQueueStub = { getAuditRecords: vi.fn(), downloadErrorReport: vi.fn(), submitCorrections: vi.fn() };
+  const bulkLoadJobsStub = { createBulkLoadJob: vi.fn(), getBulkLoadJob: vi.fn(), listBulkLoadJobs: vi.fn(), cancelBulkLoadJob: vi.fn(), retryBulkLoadJob: vi.fn() };
+  const columnMappingStub = { getColumnMappings: vi.fn(), approveColumnMappings: vi.fn() };
+  const reviewQueueStub = { listAuditRecords: vi.fn(), downloadErrorReport: vi.fn(), submitCorrections: vi.fn() };
 
   beforeEach(async () => {
     tusState.instances.length = 0;
@@ -103,7 +103,7 @@ describe('BulkImportService', () => {
         fileName: 'test.csv',
         fileSize: 1024,
       };
-      bulkLoadJobsStub.createJob.mockReturnValue(of({
+      bulkLoadJobsStub.createBulkLoadJob.mockReturnValue(of({
         id: 'job-001',
         domainType: 'INVENTORY_STOCK_COUNT',
         status: 'CREATED',
@@ -115,7 +115,7 @@ describe('BulkImportService', () => {
         response = value;
       });
 
-      expect(bulkLoadJobsStub.createJob).toHaveBeenCalledWith({
+      expect(bulkLoadJobsStub.createBulkLoadJob).toHaveBeenCalledWith({
         domainType: 'INVENTORY_STOCK_COUNT',
         fileName: 'test.csv',
       });
@@ -128,7 +128,7 @@ describe('BulkImportService', () => {
 
   describe('getJob()', () => {
     it('calls bulkLoadJobsService.getJob with the jobId', () => {
-      bulkLoadJobsStub.getJob.mockReturnValue(of({
+      bulkLoadJobsStub.getBulkLoadJob.mockReturnValue(of({
         id: 'job-001',
         domainType: 'INVENTORY_STOCK_COUNT',
         status: 'CREATED',
@@ -137,13 +137,13 @@ describe('BulkImportService', () => {
 
       service.getJob('job-001').subscribe();
 
-      expect(bulkLoadJobsStub.getJob).toHaveBeenCalledWith('job-001');
+      expect(bulkLoadJobsStub.getBulkLoadJob).toHaveBeenCalledWith('job-001');
     });
   });
 
   describe('getActiveJobForDomain()', () => {
     it('selects the matching active job from the backend jobs page', () => {
-      bulkLoadJobsStub.listJobs.mockReturnValue(of({
+      bulkLoadJobsStub.listBulkLoadJobs.mockReturnValue(of({
         content: [{
           id: 'job-001',
           domainType: 'INVENTORY_STOCK_COUNT',
@@ -157,7 +157,7 @@ describe('BulkImportService', () => {
         response = value;
       });
 
-      expect(bulkLoadJobsStub.listJobs).toHaveBeenCalled();
+      expect(bulkLoadJobsStub.listBulkLoadJobs).toHaveBeenCalled();
       expect(response).toEqual(mockJob);
     });
   });
@@ -173,21 +173,21 @@ describe('BulkImportService', () => {
     };
 
     it('calls bulkLoadJobsService.listJobs and maps the backend page shape', () => {
-      bulkLoadJobsStub.listJobs.mockReturnValue(of(jobPageStub));
+      bulkLoadJobsStub.listBulkLoadJobs.mockReturnValue(of(jobPageStub));
 
       service.listJobs().subscribe();
 
-      expect(bulkLoadJobsStub.listJobs).toHaveBeenCalledWith({ size: 20 });
+      expect(bulkLoadJobsStub.listBulkLoadJobs).toHaveBeenCalledWith(0, 20);
     });
 
     it('applies domainType filter on the frontend when backend ignores it', () => {
-      bulkLoadJobsStub.listJobs.mockReturnValue(of(jobPageStub));
+      bulkLoadJobsStub.listBulkLoadJobs.mockReturnValue(of(jobPageStub));
 
       let response: import('../models/bulk-import.models').JobListResponse | undefined;
       service.listJobs({ domainType: 'INVENTORY' }).subscribe();
 
       // SDK only receives size, domainType is not passed to backend
-      expect(bulkLoadJobsStub.listJobs).toHaveBeenCalledWith({ size: 20 });
+      expect(bulkLoadJobsStub.listBulkLoadJobs).toHaveBeenCalledWith(0, 20);
 
       service.listJobs({ domainType: 'INVENTORY' }).subscribe(value => {
         response = value;
@@ -197,13 +197,13 @@ describe('BulkImportService', () => {
     });
 
     it('applies status filter on the frontend when backend ignores it', () => {
-      bulkLoadJobsStub.listJobs.mockReturnValue(of(jobPageStub));
+      bulkLoadJobsStub.listBulkLoadJobs.mockReturnValue(of(jobPageStub));
 
       let response: import('../models/bulk-import.models').JobListResponse | undefined;
       service.listJobs({ status: 'PROCESSING' }).subscribe();
 
       // SDK only receives size, status is not passed to backend
-      expect(bulkLoadJobsStub.listJobs).toHaveBeenCalledWith({ size: 20 });
+      expect(bulkLoadJobsStub.listBulkLoadJobs).toHaveBeenCalledWith(0, 20);
 
       service.listJobs({ status: 'PROCESSING' }).subscribe(value => {
         response = value;
@@ -212,21 +212,21 @@ describe('BulkImportService', () => {
     });
 
     it('passes pageSize as the size parameter to the SDK', () => {
-      bulkLoadJobsStub.listJobs.mockReturnValue(of(jobPageStub));
+      bulkLoadJobsStub.listBulkLoadJobs.mockReturnValue(of(jobPageStub));
 
       service.listJobs({ pageSize: 10 }).subscribe();
 
-      expect(bulkLoadJobsStub.listJobs).toHaveBeenCalledWith({ size: 10 });
+      expect(bulkLoadJobsStub.listBulkLoadJobs).toHaveBeenCalledWith(0, 10);
     });
 
     it('applies multiple frontend filters simultaneously', () => {
-      bulkLoadJobsStub.listJobs.mockReturnValue(of(jobPageStub));
+      bulkLoadJobsStub.listBulkLoadJobs.mockReturnValue(of(jobPageStub));
 
       let response: import('../models/bulk-import.models').JobListResponse | undefined;
       service.listJobs({ domainType: 'INVENTORY', status: 'PROCESSING', pageSize: 10 }).subscribe();
 
       // SDK only receives size; domainType and status are not passed to backend
-      expect(bulkLoadJobsStub.listJobs).toHaveBeenCalledWith({ size: 10 });
+      expect(bulkLoadJobsStub.listBulkLoadJobs).toHaveBeenCalledWith(0, 10);
 
       service.listJobs({ domainType: 'INVENTORY', status: 'PROCESSING', pageSize: 10 }).subscribe(value => {
         response = value;
@@ -237,7 +237,7 @@ describe('BulkImportService', () => {
 
   describe('getActiveJobDomains()', () => {
     it('returns only domains that currently have active jobs', () => {
-      bulkLoadJobsStub.listJobs.mockReturnValue(of({
+      bulkLoadJobsStub.listBulkLoadJobs.mockReturnValue(of({
         content: [
           {
             id: 'job-001',
@@ -266,7 +266,7 @@ describe('BulkImportService', () => {
 
   describe('getColumnMappings()', () => {
     it('calls columnMappingService.getMappings with the jobId', () => {
-      columnMappingStub.getMappings.mockReturnValue(of([{
+      columnMappingStub.getColumnMappings.mockReturnValue(of([{
         id: 'map-001',
         jobId: 'job-001',
         sourceColumn: 'SKU',
@@ -277,7 +277,7 @@ describe('BulkImportService', () => {
 
       service.getColumnMappings('job-001').subscribe();
 
-      expect(columnMappingStub.getMappings).toHaveBeenCalledWith('job-001');
+      expect(columnMappingStub.getColumnMappings).toHaveBeenCalledWith('job-001');
     });
   });
 
@@ -286,11 +286,11 @@ describe('BulkImportService', () => {
       const req: ApproveColumnMappingsRequest = {
         overrides: [{ mappingId: 'map-001', sourceColumn: 'SKU', targetField: 'sku' }],
       };
-      columnMappingStub.approveMappings.mockReturnValue(of(undefined));
+      columnMappingStub.approveColumnMappings.mockReturnValue(of(undefined));
 
       service.approveColumnMappings('job-001', req).subscribe();
 
-      expect(columnMappingStub.approveMappings).toHaveBeenCalledWith('job-001', {
+      expect(columnMappingStub.approveColumnMappings).toHaveBeenCalledWith('job-001', {
         mappings: [{ mappingId: 'map-001', sourceColumn: 'SKU', targetField: 'sku' }],
       });
     });
@@ -298,22 +298,22 @@ describe('BulkImportService', () => {
 
   describe('cancelJob()', () => {
     it('calls bulkLoadJobsService.cancelJob with the jobId', () => {
-      bulkLoadJobsStub.cancelJob.mockReturnValue(of(undefined));
+      bulkLoadJobsStub.cancelBulkLoadJob.mockReturnValue(of(undefined));
 
       service.cancelJob('job-001').subscribe();
 
-      expect(bulkLoadJobsStub.cancelJob).toHaveBeenCalledWith('job-001');
+      expect(bulkLoadJobsStub.cancelBulkLoadJob).toHaveBeenCalledWith('job-001');
     });
   });
 
   describe('retryJob()', () => {
     it('delegates to BulkLoadJobsAPIService.retryJob and returns void', () => {
-      bulkLoadJobsStub.retryJob.mockReturnValue(of({ id: 'job-001', status: 'PENDING' }));
+      bulkLoadJobsStub.retryBulkLoadJob.mockReturnValue(of({ id: 'job-001', status: 'PENDING' }));
 
       let completed = false;
       service.retryJob('job-001').subscribe({ complete: () => { completed = true; } });
 
-      expect(bulkLoadJobsStub.retryJob).toHaveBeenCalledWith('job-001');
+      expect(bulkLoadJobsStub.retryBulkLoadJob).toHaveBeenCalledWith('job-001');
       expect(completed).toBe(true);
     });
   });
@@ -330,23 +330,23 @@ describe('BulkImportService', () => {
     }];
 
     it('delegates to ReviewQueueAPIService.getAuditRecords and maps SDK audit records', () => {
-      reviewQueueStub.getAuditRecords.mockReturnValue(of(auditResStub));
+      reviewQueueStub.listAuditRecords.mockReturnValue(of(auditResStub));
 
       let response: AuditRecordListResponse | undefined;
       service.listAuditRecords('job-001').subscribe(value => {
         response = value;
       });
 
-      expect(reviewQueueStub.getAuditRecords).toHaveBeenCalledWith('job-001');
+      expect(reviewQueueStub.listAuditRecords).toHaveBeenCalledWith('job-001');
       expect(response).toEqual({ items: [mockAuditRecord], nextPageToken: null });
     });
 
     it('ignores filters (SDK does not support server-side filtering)', () => {
-      reviewQueueStub.getAuditRecords.mockReturnValue(of(auditResStub));
+      reviewQueueStub.listAuditRecords.mockReturnValue(of(auditResStub));
 
       service.listAuditRecords('job-001', { reviewStatus: 'PENDING', pageSize: 5 }).subscribe();
 
-      expect(reviewQueueStub.getAuditRecords).toHaveBeenCalledWith('job-001');
+      expect(reviewQueueStub.listAuditRecords).toHaveBeenCalledWith('job-001');
     });
   });
 

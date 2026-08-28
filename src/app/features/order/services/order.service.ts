@@ -30,11 +30,11 @@ export class OrderService {
   }
 
   addItem(orderId: string, request: AddItemRequest): Observable<SalesOrderLineResponse> {
-    return this.salesOrdersApi.addItem(orderId, request);
+    return this.salesOrdersApi.addCartItem(orderId, request);
   }
 
   removeItem(orderId: string, lineId: string): Observable<SalesOrderLineResponse> {
-    return this.salesOrdersApi.removeItem(orderId, lineId);
+    return this.salesOrdersApi.removeCartItem(orderId, lineId);
   }
 
   cancelOrder(orderId: string, request: CancelOrderRequest): Observable<CancellationResponse> {
@@ -42,7 +42,7 @@ export class OrderService {
   }
 
   getOverridesByOrder(orderId: string): Observable<PriceOverrideDetail[]> {
-    return this.priceOverridesApi.getOverridesByOrder(orderId);
+    return this.priceOverridesApi.searchPriceOverrides(orderId);
   }
 
   applyPriceOverride(request: ApplyPriceOverrideRequest): Observable<PriceOverrideResult> {

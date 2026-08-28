@@ -56,7 +56,7 @@ export class SupplierDeliveryLocationService {
 
   /** Active pos-locations offered as delivery contexts. */
   listActiveLocations(): Observable<SupplierDeliveryLocation[]> {
-    return this.locationSdk.getAllLocations().pipe(
+    return this.locationSdk.listLocations().pipe(
       map((items: LocationResponseDTO[]) =>
         (items ?? [])
           .filter(location => location.active === true)

@@ -28,7 +28,6 @@ import {
   CreateCreditMemoRequest,
   ExecuteAPPaymentRequest,
   ExportJobRequest,
-  type Pageable,
   type PageCreditMemoResponse,
   type LaborOverheadCostReport,
 } from '@durion-sdk/accounting';
@@ -95,10 +94,8 @@ export class AccountingService {
     page = 0,
     size = 20,
   ): Observable<PagedResponse<AccountingEventListItem>> {
-    const pageable: Pageable = { page, size };
     return this.accountingEventsService
       .listAccountingEvents(
-        pageable,
         filters.organizationId,
         filters.eventType,
         filters.idempotencyOutcome,
@@ -109,6 +106,8 @@ export class AccountingService {
         filters.domainKeyId,
         filters.invoiceId,
         filters.processingStatus,
+        page,
+        size,
       )
       .pipe(
         map(resp => {
@@ -129,7 +128,7 @@ export class AccountingService {
 
   getEvent(eventId: string): Observable<AccountingEventDetail> {
     return this.accountingEventsService
-      .getEvent(eventId)
+      .getAccountingEvent(eventId)
       .pipe(map(dto => this.toAccountingEventDetail(dto)));
   }
 
@@ -145,13 +144,13 @@ export class AccountingService {
 
   submitEvent(request: AccountingEventSubmitRequest): Observable<IngestionSubmitOutcome> {
     return this.accountingEventsService
-      .submitEvent(this.toSdkAccountingEventSubmitRequest(request))
+      .submitAccountingEvent(this.toSdkAccountingEventSubmitRequest(request))
       .pipe(map(dto => this.toIngestionSubmitOutcome(dto)));
   }
 
   retryEvent(eventId: string, req: ReprocessRequest): Observable<{ jobId: string }> {
     return this.accountingEventsService
-      .retryEventProcessing(eventId, req)
+      .retryAccountingEvent(eventId, req)
       .pipe(map(dto => this.toJobIdResponse(dto)));
   }
 
@@ -163,7 +162,7 @@ export class AccountingService {
 
   getReprocessingHistory(eventId: string): Observable<ReprocessingAttemptHistory[]> {
     return this.accountingEventsService
-      .getReprocessingHistory(eventId)
+      .getEventReprocessingHistory(eventId)
       .pipe(map(dtos => dtos.map(dto => this.toReprocessingAttemptHistory(dto))));
   }
 
@@ -227,8 +226,7 @@ export class AccountingService {
   // Credit memo
 
   listCreditMemos(page: number, size: number): Observable<PagedResponse<CreditMemoListItem>> {
-    const pageable: Pageable = { page, size };
-    return this.creditMemosService.listCreditMemos(pageable).pipe(
+    return this.creditMemosService.listCreditMemos(undefined, undefined, undefined, page, size).pipe(
       map((sdkPage: PageCreditMemoResponse) => ({
         items: (sdkPage.content ?? []).map(dto => this.toCreditMemoListItem(dto)),
         content: (sdkPage.content ?? []).map(dto => this.toCreditMemoListItem(dto)),
@@ -256,7 +254,7 @@ export class AccountingService {
   // Vendor payment
 
   listBills(page: number, size: number): Observable<PagedResponse<VendorBill>> {
-    return this.apPaymentsService.listApBills({ page, size }).pipe(
+    return this.apPaymentsService.listApBills(undefined, page, size).pipe(
       map(p => ({
         items: (p.content ?? []).map(dto => this.toVendorBill(dto)),
         content: (p.content ?? []).map(dto => this.toVendorBill(dto)),
@@ -278,7 +276,7 @@ export class AccountingService {
    */
   listBillsByVendor(vendorId: string, page = 0, size = 100): Observable<VendorBill[]> {
     return this.apPaymentsService
-      .listApBills({ page, size }, vendorId)
+      .listApBills(vendorId, page, size)
       .pipe(map(p => (p.content ?? []).map(dto => this.toVendorBill(dto))));
   }
 
@@ -310,19 +308,19 @@ export class AccountingService {
 
   executePayment(req: VendorPaymentRequest): Observable<VendorPaymentResult> {
     return this.apPaymentsService
-      .executePayment(this.toSdkExecuteAPPaymentRequest(req))
+      .executeApPayment(this.toSdkExecuteAPPaymentRequest(req))
       .pipe(map(dto => this.toVendorPaymentResult(dto)));
   }
 
   getPayment(paymentId: string): Observable<VendorPaymentDetail> {
     return this.apPaymentsService
-      .getPayment(paymentId)
+      .getApPayment(paymentId)
       .pipe(map(dto => this.toVendorPaymentResult(dto)));
   }
 
   getPaymentByRef(paymentRef: string): Observable<VendorPaymentDetail> {
     return this.apPaymentsService
-      .getPaymentByRef(paymentRef)
+      .getApPaymentByRef(paymentRef)
       .pipe(map(dto => this.toVendorPaymentResult(dto)));
   }
 
@@ -351,7 +349,7 @@ export class AccountingService {
         locationIds: body.locationIds,
       },
     };
-    return this.accountingExportsService.requestExport1(sdkRequest).pipe(
+    return this.accountingExportsService.requestExport(sdkRequest).pipe(
       map(r => ({ exportId: r.jobId ?? '', status: r.status ?? '' })),
     );
   }
@@ -366,7 +364,7 @@ export class AccountingService {
     errorCode?: string;
     message?: string;
   }> {
-    return this.accountingExportsService.getExportStatus1(exportId).pipe(
+    return this.accountingExportsService.getExportStatus(exportId).pipe(
       map(r => ({
         exportId: r.jobId ?? exportId,
         status: r.status ?? '',
@@ -384,11 +382,9 @@ export class AccountingService {
   }
 
   getExportHistory(params?: { pageIndex?: number; pageSize?: number }): Observable<unknown[]> {
-    const pageable: Pageable = {
-      page: params?.pageIndex ?? 0,
-      size: params?.pageSize ?? 20,
-    };
-    return this.accountingExportsService.listExportHistory(pageable).pipe(
+    return this.accountingExportsService
+      .listExportHistory(params?.pageIndex ?? 0, params?.pageSize ?? 20)
+      .pipe(
       map(p => p.content ?? []),
     );
   }

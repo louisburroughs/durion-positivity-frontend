@@ -6,7 +6,6 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import {
   CostAuditEntry,
-  CostStructure,
   ItemCost,
   StandardCostUpdate,
 } from '../../../models/cost.models';
@@ -52,14 +51,13 @@ export class ProductDetailComponent {
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
   readonly productId = signal<string | null>(null);
-  readonly activeTab = signal<'lifecycle' | 'uom' | 'costs' | 'standard-cost'>('lifecycle');
+  readonly activeTab = signal<'lifecycle' | 'uom' | 'standard-cost'>('lifecycle');
 
   readonly product = signal<Product | null>(null);
   readonly lifecycle = signal<ProductLifecycle | null>(null);
   readonly replacements = signal<ReplacementProduct[]>([]);
   readonly uomConversions = signal<UomConversion[]>([]);
   readonly itemCost = signal<ItemCost | null>(null);
-  readonly costStructure = signal<CostStructure | null>(null);
   readonly auditHistory = signal<CostAuditEntry[]>([]);
 
   constructor() {
@@ -214,7 +212,6 @@ export class ProductDetailComponent {
       replacements: this.productCatalog.getReplacements(productId),
       uomConversions: this.productCatalog.listUomConversions(productId),
       itemCost: this.productCatalog.getItemCosts(productId),
-      costStructures: this.productCatalog.listCostStructures(productId),
       auditHistory: this.productCatalog.getAuditHistory(productId),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -225,7 +222,6 @@ export class ProductDetailComponent {
           this.replacements.set(result.replacements);
           this.uomConversions.set(result.uomConversions);
           this.itemCost.set(result.itemCost);
-          this.costStructure.set(result.costStructures[0] ?? null);
           this.auditHistory.set(result.auditHistory);
 
           this.state.set(result.product ? 'ready' : 'empty');

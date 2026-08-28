@@ -3,12 +3,11 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
   PurchaseOrdersService,
-  ListPurchaseOrdersRequest,
   PurchaseOrderResponse,
   PagePurchaseOrderResponse,
   CreatePurchaseOrderRequest as SdkCreatePurchaseOrderRequest,
   RevisePurchaseOrderRequest as SdkRevisePurchaseOrderRequest,
-} from '@durion-sdk/inventory';
+} from '@durion-sdk/order';
 import {
   CreatePurchaseOrderRequest,
   PurchaseOrderDetail,
@@ -22,8 +21,7 @@ export class InventoryPurchaseOrderService {
   private readonly poSdk = inject(PurchaseOrdersService);
 
   queryPurchaseOrders(filter: PurchaseOrderFilter = {}): Observable<PurchaseOrderPageResponse> {
-    const sdkFilter = this.toLegacyCompatibleSdkFilter(filter);
-    return this.poSdk.listPurchaseOrders(sdkFilter as ListPurchaseOrdersRequest, {}).pipe(
+    return this.poSdk.listPurchaseOrders(filter.supplierId).pipe(
       map((response: PagePurchaseOrderResponse | PurchaseOrderPageResponse) => {
         const page = this.isPurchaseOrderPageResponse(response)
           ? response
@@ -59,31 +57,7 @@ export class InventoryPurchaseOrderService {
     );
   }
 
-  private toListPurchaseOrdersRequest(filter: PurchaseOrderFilter): ListPurchaseOrdersRequest {
-    return {
-      vendorId: filter.supplierId,
-    };
-  }
 
-  private toLegacyCompatibleSdkFilter(filter: PurchaseOrderFilter): Record<string, unknown> {
-    const sdkFilter = this.toListPurchaseOrdersRequest(filter) as Record<string, unknown>;
-    if (filter.supplierId != null) {
-      sdkFilter['supplierId'] = filter.supplierId;
-    }
-    if (filter.dateFrom != null) {
-      sdkFilter['dateFrom'] = filter.dateFrom;
-    }
-    if (filter.dateTo != null) {
-      sdkFilter['dateTo'] = filter.dateTo;
-    }
-    if (filter.pageToken != null) {
-      sdkFilter['pageToken'] = filter.pageToken;
-    }
-    if (filter.statuses != null) {
-      sdkFilter['statuses'] = filter.statuses;
-    }
-    return sdkFilter;
-  }
 
   private toSdkCreatePurchaseOrderRequest(request: CreatePurchaseOrderRequest): SdkCreatePurchaseOrderRequest {
     return {

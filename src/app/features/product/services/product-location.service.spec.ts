@@ -7,8 +7,8 @@ describe('ProductLocationService', () => {
   let service: ProductLocationService;
 
   const locationSdkStub = {
-    getRoster: vi.fn(),
-    getAllLocations: vi.fn(),
+    getLocationRoster: vi.fn(),
+    listLocations: vi.fn(),
     validateLocation: vi.fn(),
   };
 
@@ -30,35 +30,35 @@ describe('ProductLocationService', () => {
 
   describe('getRoster()', () => {
     it('calls locationSdk.getRoster with no status when no filter provided', () => {
-      locationSdkStub.getRoster.mockReturnValueOnce(of([]));
+      locationSdkStub.getLocationRoster.mockReturnValueOnce(of([]));
 
       service.getRoster().subscribe();
 
-      expect(locationSdkStub.getRoster).toHaveBeenCalledWith({}, undefined);
+      expect(locationSdkStub.getLocationRoster).toHaveBeenCalledWith(undefined);
     });
 
     it('passes status to locationSdk.getRoster when filter is provided', () => {
-      locationSdkStub.getRoster.mockReturnValueOnce(of([]));
+      locationSdkStub.getLocationRoster.mockReturnValueOnce(of([]));
 
       service.getRoster({ status: 'ACTIVE' }).subscribe();
 
-      expect(locationSdkStub.getRoster).toHaveBeenCalledWith({}, 'ACTIVE');
+      expect(locationSdkStub.getLocationRoster).toHaveBeenCalledWith('ACTIVE');
     });
 
     it('passes undefined status when filter is provided with no status', () => {
-      locationSdkStub.getRoster.mockReturnValueOnce(of([]));
+      locationSdkStub.getLocationRoster.mockReturnValueOnce(of([]));
 
       service.getRoster().subscribe();
 
-      expect(locationSdkStub.getRoster).toHaveBeenCalledWith({}, undefined);
+      expect(locationSdkStub.getLocationRoster).toHaveBeenCalledWith(undefined);
     });
 
     it('passes undefined status when filter object has no status property', () => {
-      locationSdkStub.getRoster.mockReturnValueOnce(of([]));
+      locationSdkStub.getLocationRoster.mockReturnValueOnce(of([]));
 
       service.getRoster({}).subscribe();
 
-      expect(locationSdkStub.getRoster).toHaveBeenCalledWith({}, undefined);
+      expect(locationSdkStub.getLocationRoster).toHaveBeenCalledWith(undefined);
     });
   });
 
@@ -102,11 +102,11 @@ describe('ProductLocationService', () => {
 
   describe('getAllLocations()', () => {
     it('calls locationSdk.getAllLocations', () => {
-      locationSdkStub.getAllLocations.mockReturnValueOnce(of([]));
+      locationSdkStub.listLocations.mockReturnValueOnce(of([]));
 
       service.getAllLocations().subscribe();
 
-      expect(locationSdkStub.getAllLocations).toHaveBeenCalled();
+      expect(locationSdkStub.listLocations).toHaveBeenCalled();
     });
   });
 });

@@ -1,7 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
-import { CycleCountAPIService, CycleCountAdjustmentsService, CycleCountPlansService } from '@durion-sdk/inventory';
+import {
+  CycleCountAPIService,
+  CycleCountAdjustmentsService,
+  CycleCountPlanResponse,
+  CycleCountPlansService,
+} from '@durion-sdk/inventory';
 import { InventoryCycleCountService } from './inventory-cycle-count.service';
 import {
   AdjustmentDetail,
@@ -25,9 +30,9 @@ describe('InventoryCycleCountService', () => {
     delete: vi.fn(),
   };
 
-  const cycleCountSdkStub = { getTask: vi.fn(), submitCount: vi.fn() };
-  const adjustmentsSdkStub = { listAdjustments: vi.fn(), getAdjustment: vi.fn(), approveAdjustment: vi.fn(), rejectAdjustment: vi.fn() };
-  const plansSdkStub = { createPlan: vi.fn() };
+  const cycleCountSdkStub = { getCycleCountTask: vi.fn(), submitCycleCount: vi.fn() };
+  const adjustmentsSdkStub = { listCycleCountAdjustments: vi.fn(), getCycleCountAdjustment: vi.fn(), approveCycleCountAdjustment: vi.fn(), rejectCycleCountAdjustment: vi.fn() };
+  const plansSdkStub = { createCycleCountPlan: vi.fn(), listCycleCountPlans: vi.fn() };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -58,23 +63,23 @@ describe('InventoryCycleCountService', () => {
     };
 
     it('calls cycleCountSdk.getTask with the taskId', () => {
-      cycleCountSdkStub.getTask.mockReturnValueOnce(of(sdkTask));
+      cycleCountSdkStub.getCycleCountTask.mockReturnValueOnce(of(sdkTask));
 
       service.getCycleCountTask('task-001').subscribe();
 
-      expect(cycleCountSdkStub.getTask).toHaveBeenCalledWith('task-001');
+      expect(cycleCountSdkStub.getCycleCountTask).toHaveBeenCalledWith('task-001');
     });
 
     it('passes the taskId as-is to the SDK', () => {
-      cycleCountSdkStub.getTask.mockReturnValueOnce(of(sdkTask));
+      cycleCountSdkStub.getCycleCountTask.mockReturnValueOnce(of(sdkTask));
 
       service.getCycleCountTask('task/001').subscribe();
 
-      expect(cycleCountSdkStub.getTask).toHaveBeenCalledWith('task/001');
+      expect(cycleCountSdkStub.getCycleCountTask).toHaveBeenCalledWith('task/001');
     });
 
     it('returns the CycleCountTask emitted by the SDK', () => {
-      cycleCountSdkStub.getTask.mockReturnValueOnce(of(sdkTask));
+      cycleCountSdkStub.getCycleCountTask.mockReturnValueOnce(of(sdkTask));
 
       let result: CycleCountTask | undefined;
       service.getCycleCountTask('task-001').subscribe(r => (result = r));
@@ -103,11 +108,11 @@ describe('InventoryCycleCountService', () => {
     };
 
     it('calls cycleCountSdk.submitCount with taskId merged into request', () => {
-      cycleCountSdkStub.submitCount.mockReturnValueOnce(of(sdkResponse));
+      cycleCountSdkStub.submitCycleCount.mockReturnValueOnce(of(sdkResponse));
 
       service.submitCount('task-001', mockRequest).subscribe();
 
-      expect(cycleCountSdkStub.submitCount).toHaveBeenCalledWith({
+      expect(cycleCountSdkStub.submitCycleCount).toHaveBeenCalledWith({
         taskId: 'task-001',
         auditorId: '',
         actualQuantity: 95,
@@ -115,11 +120,11 @@ describe('InventoryCycleCountService', () => {
     });
 
     it('passes the taskId as-is to the SDK', () => {
-      cycleCountSdkStub.submitCount.mockReturnValueOnce(of(sdkResponse));
+      cycleCountSdkStub.submitCycleCount.mockReturnValueOnce(of(sdkResponse));
 
       service.submitCount('task/001', mockRequest).subscribe();
 
-      expect(cycleCountSdkStub.submitCount).toHaveBeenCalledWith({
+      expect(cycleCountSdkStub.submitCycleCount).toHaveBeenCalledWith({
         taskId: 'task/001',
         auditorId: '',
         actualQuantity: 95,
@@ -127,7 +132,7 @@ describe('InventoryCycleCountService', () => {
     });
 
     it('returns the CountSubmitResponse emitted by the SDK', () => {
-      cycleCountSdkStub.submitCount.mockReturnValueOnce(of(sdkResponse));
+      cycleCountSdkStub.submitCycleCount.mockReturnValueOnce(of(sdkResponse));
 
       let result: CountSubmitResponse | undefined;
       service.submitCount('task-001', mockRequest).subscribe(r => (result = r));
@@ -149,32 +154,32 @@ describe('InventoryCycleCountService', () => {
     };
 
     it('calls adjustmentsSdk.listAdjustments with the SDK-supported filter status', () => {
-      adjustmentsSdkStub.listAdjustments.mockReturnValueOnce(of(mockPage));
+      adjustmentsSdkStub.listCycleCountAdjustments.mockReturnValueOnce(of(mockPage));
 
       const filter: ApprovalQueueFilter = { locationId: 'loc-01', status: 'PENDING_APPROVAL' };
       service.queryAdjustments(filter).subscribe();
 
-      expect(adjustmentsSdkStub.listAdjustments).toHaveBeenCalledWith('PENDING_APPROVAL');
+      expect(adjustmentsSdkStub.listCycleCountAdjustments).toHaveBeenCalledWith('PENDING_APPROVAL');
     });
 
     it('drops unsupported legacy statuses instead of passing them through to the SDK', () => {
-      adjustmentsSdkStub.listAdjustments.mockReturnValueOnce(of(mockPage));
+      adjustmentsSdkStub.listCycleCountAdjustments.mockReturnValueOnce(of(mockPage));
 
       service.queryAdjustments({ status: 'PENDING' }).subscribe();
 
-      expect(adjustmentsSdkStub.listAdjustments).toHaveBeenCalledWith(undefined);
+      expect(adjustmentsSdkStub.listCycleCountAdjustments).toHaveBeenCalledWith(undefined);
     });
 
     it('passes undefined status when filter has no status', () => {
-      adjustmentsSdkStub.listAdjustments.mockReturnValueOnce(of(mockPage));
+      adjustmentsSdkStub.listCycleCountAdjustments.mockReturnValueOnce(of(mockPage));
 
       service.queryAdjustments({}).subscribe();
 
-      expect(adjustmentsSdkStub.listAdjustments).toHaveBeenCalledWith(undefined);
+      expect(adjustmentsSdkStub.listCycleCountAdjustments).toHaveBeenCalledWith(undefined);
     });
 
     it('returns the AdjustmentPageResponse emitted by the SDK', () => {
-      adjustmentsSdkStub.listAdjustments.mockReturnValueOnce(of(mockPage));
+      adjustmentsSdkStub.listCycleCountAdjustments.mockReturnValueOnce(of(mockPage));
 
       let result: AdjustmentPageResponse | undefined;
       service.queryAdjustments({}).subscribe(r => (result = r));
@@ -210,7 +215,7 @@ describe('InventoryCycleCountService', () => {
         ],
         nextPageToken: 'next-adjustments',
       };
-      adjustmentsSdkStub.listAdjustments.mockReturnValueOnce(of(page));
+      adjustmentsSdkStub.listCycleCountAdjustments.mockReturnValueOnce(of(page));
 
       let result: AdjustmentPageResponse | undefined;
       service.queryAdjustments({
@@ -223,7 +228,7 @@ describe('InventoryCycleCountService', () => {
         pageToken: 'current-adjustments',
       }).subscribe(r => (result = r));
 
-      expect(adjustmentsSdkStub.listAdjustments).toHaveBeenCalledWith('PENDING_APPROVAL');
+      expect(adjustmentsSdkStub.listCycleCountAdjustments).toHaveBeenCalledWith('PENDING_APPROVAL');
       expect(result).toEqual({
         items: [page.items[0]],
         nextPageToken: 'next-adjustments',
@@ -244,23 +249,23 @@ describe('InventoryCycleCountService', () => {
     };
 
     it('calls adjustmentsSdk.getAdjustment with the adjustmentId', () => {
-      adjustmentsSdkStub.getAdjustment.mockReturnValueOnce(of(sdkAdjustment));
+      adjustmentsSdkStub.getCycleCountAdjustment.mockReturnValueOnce(of(sdkAdjustment));
 
       service.getAdjustmentDetail('adj-001').subscribe();
 
-      expect(adjustmentsSdkStub.getAdjustment).toHaveBeenCalledWith('adj-001');
+      expect(adjustmentsSdkStub.getCycleCountAdjustment).toHaveBeenCalledWith('adj-001');
     });
 
     it('passes the adjustmentId as-is to the SDK', () => {
-      adjustmentsSdkStub.getAdjustment.mockReturnValueOnce(of(sdkAdjustment));
+      adjustmentsSdkStub.getCycleCountAdjustment.mockReturnValueOnce(of(sdkAdjustment));
 
       service.getAdjustmentDetail('adj/001').subscribe();
 
-      expect(adjustmentsSdkStub.getAdjustment).toHaveBeenCalledWith('adj/001');
+      expect(adjustmentsSdkStub.getCycleCountAdjustment).toHaveBeenCalledWith('adj/001');
     });
 
     it('returns the AdjustmentDetail emitted by the SDK', () => {
-      adjustmentsSdkStub.getAdjustment.mockReturnValueOnce(of(sdkAdjustment));
+      adjustmentsSdkStub.getCycleCountAdjustment.mockReturnValueOnce(of(sdkAdjustment));
 
       let result: AdjustmentDetail | undefined;
       service.getAdjustmentDetail('adj-001').subscribe(r => (result = r));
@@ -298,19 +303,19 @@ describe('InventoryCycleCountService', () => {
     };
 
     it('calls adjustmentsSdk.approveAdjustment with the adjustmentId and empty body', () => {
-      adjustmentsSdkStub.approveAdjustment.mockReturnValueOnce(of(sdkAdjustment));
+      adjustmentsSdkStub.approveCycleCountAdjustment.mockReturnValueOnce(of(sdkAdjustment));
 
       service.approveAdjustment('adj-001').subscribe();
 
-      expect(adjustmentsSdkStub.approveAdjustment).toHaveBeenCalledWith('adj-001', {});
+      expect(adjustmentsSdkStub.approveCycleCountAdjustment).toHaveBeenCalledWith('adj-001', {});
     });
 
     it('passes the adjustmentId as-is to the SDK', () => {
-      adjustmentsSdkStub.approveAdjustment.mockReturnValueOnce(of(sdkAdjustment));
+      adjustmentsSdkStub.approveCycleCountAdjustment.mockReturnValueOnce(of(sdkAdjustment));
 
       service.approveAdjustment('adj/001').subscribe();
 
-      expect(adjustmentsSdkStub.approveAdjustment).toHaveBeenCalledWith('adj/001', {});
+      expect(adjustmentsSdkStub.approveCycleCountAdjustment).toHaveBeenCalledWith('adj/001', {});
     });
   });
 
@@ -318,7 +323,7 @@ describe('InventoryCycleCountService', () => {
 
   describe('rejectAdjustment()', () => {
     it('calls adjustmentsSdk.rejectAdjustment with the adjustmentId and rejection reason', () => {
-      adjustmentsSdkStub.rejectAdjustment.mockReturnValueOnce(of({
+      adjustmentsSdkStub.rejectCycleCountAdjustment.mockReturnValueOnce(of({
         adjustmentId: 'adj-001',
         stockItemId: 'SKU-001',
         countedQuantity: 97,
@@ -329,11 +334,11 @@ describe('InventoryCycleCountService', () => {
 
       service.rejectAdjustment('adj-001', 'Count error').subscribe();
 
-      expect(adjustmentsSdkStub.rejectAdjustment).toHaveBeenCalledWith('adj-001', { rejectorUserId: '', rejectionReason: 'Count error' });
+      expect(adjustmentsSdkStub.rejectCycleCountAdjustment).toHaveBeenCalledWith('adj-001', { rejectorUserId: '', rejectionReason: 'Count error' });
     });
 
     it('passes the adjustmentId as-is to the SDK', () => {
-      adjustmentsSdkStub.rejectAdjustment.mockReturnValueOnce(of({
+      adjustmentsSdkStub.rejectCycleCountAdjustment.mockReturnValueOnce(of({
         adjustmentId: 'adj-001',
         stockItemId: 'SKU-001',
         countedQuantity: 97,
@@ -344,11 +349,11 @@ describe('InventoryCycleCountService', () => {
 
       service.rejectAdjustment('adj/001', 'reason').subscribe();
 
-      expect(adjustmentsSdkStub.rejectAdjustment).toHaveBeenCalledWith('adj/001', { rejectorUserId: '', rejectionReason: 'reason' });
+      expect(adjustmentsSdkStub.rejectCycleCountAdjustment).toHaveBeenCalledWith('adj/001', { rejectorUserId: '', rejectionReason: 'reason' });
     });
 
     it('sends the rejection reason in the SDK payload', () => {
-      adjustmentsSdkStub.rejectAdjustment.mockReturnValueOnce(of({
+      adjustmentsSdkStub.rejectCycleCountAdjustment.mockReturnValueOnce(of({
         adjustmentId: 'adj-001',
         stockItemId: 'SKU-001',
         countedQuantity: 97,
@@ -359,7 +364,7 @@ describe('InventoryCycleCountService', () => {
 
       service.rejectAdjustment('adj-001', 'Inaccurate count').subscribe();
 
-      const [, body] = adjustmentsSdkStub.rejectAdjustment.mock.calls[0];
+      const [, body] = adjustmentsSdkStub.rejectCycleCountAdjustment.mock.calls[0];
       expect((body as { rejectionReason: string }).rejectionReason).toBe('Inaccurate count');
     });
   });
@@ -367,51 +372,64 @@ describe('InventoryCycleCountService', () => {
   // ── getCycleCountPlans() ───────────────────────────────────────────────
 
   describe('getCycleCountPlans()', () => {
-    const mockPlans: CycleCountPlan[] = [
+    // ADR-0032: the mock value must match the mocked SDK method's return type,
+    // so this is the SDK DTO, not the domain model the service maps it to.
+    const mockPlans: CycleCountPlanResponse[] = [
       {
         planId: 'plan-001',
         locationId: 'loc-01',
         zoneIds: ['zone-1', 'zone-2'],
+        planName: 'May cycle count',
         scheduledDate: '2026-05-01',
-        status: 'PENDING',
+        status: 'PLANNED',
+        createdBy: 'user-001',
+        createdAt: '2026-04-01T00:00:00Z',
+        updatedAt: '2026-04-02T00:00:00Z',
+      },
+    ];
+    const expectedPlans: CycleCountPlan[] = [
+      {
+        planId: 'plan-001',
+        locationId: 'loc-01',
+        zoneIds: ['zone-1', 'zone-2'],
+        planName: 'May cycle count',
+        scheduledDate: '2026-05-01',
+        status: 'PLANNED',
+        createdAt: '2026-04-01T00:00:00Z',
       },
     ];
 
-    it('calls GET /inventory/v1/inventory/cycleCountPlans', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPlans));
+    it('calls plansSdk.listCycleCountPlans', () => {
+      plansSdkStub.listCycleCountPlans.mockReturnValueOnce(of(mockPlans));
 
       service.getCycleCountPlans().subscribe();
 
-      expect(apiStub.get).toHaveBeenCalledOnce();
-      const [path] = apiStub.get.mock.calls[0];
-      expect(path).toBe('/inventory/v1/inventory/cycleCountPlans');
+      expect(plansSdkStub.listCycleCountPlans).toHaveBeenCalledOnce();
     });
 
-    it('includes locationId param when provided', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPlans));
+    it('passes locationId to the SDK when provided', () => {
+      plansSdkStub.listCycleCountPlans.mockReturnValueOnce(of(mockPlans));
 
       service.getCycleCountPlans('loc-01').subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0];
-      expect(params.get('locationId')).toBe('loc-01');
+      expect(plansSdkStub.listCycleCountPlans).toHaveBeenCalledWith('loc-01');
     });
 
-    it('omits locationId param when not provided', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPlans));
+    it('passes undefined locationId when not provided', () => {
+      plansSdkStub.listCycleCountPlans.mockReturnValueOnce(of(mockPlans));
 
       service.getCycleCountPlans().subscribe();
 
-      const [, params] = apiStub.get.mock.calls[0];
-      expect(params.has('locationId')).toBe(false);
+      expect(plansSdkStub.listCycleCountPlans).toHaveBeenCalledWith(undefined);
     });
 
-    it('returns the CycleCountPlan array emitted by the API', () => {
-      apiStub.get.mockReturnValueOnce(of(mockPlans));
+    it('maps the SDK response to CycleCountPlan[]', () => {
+      plansSdkStub.listCycleCountPlans.mockReturnValueOnce(of(mockPlans));
 
       let result: CycleCountPlan[] | undefined;
       service.getCycleCountPlans().subscribe(r => (result = r));
 
-      expect(result).toEqual(mockPlans);
+      expect(result).toEqual(expectedPlans);
     });
   });
 
@@ -433,15 +451,15 @@ describe('InventoryCycleCountService', () => {
     };
 
     it('calls plansSdk.createPlan with the request', () => {
-      plansSdkStub.createPlan.mockReturnValueOnce(of(mockPlan));
+      plansSdkStub.createCycleCountPlan.mockReturnValueOnce(of(mockPlan));
 
       service.createCycleCountPlan(mockRequest).subscribe();
 
-      expect(plansSdkStub.createPlan).toHaveBeenCalledWith(mockRequest);
+      expect(plansSdkStub.createCycleCountPlan).toHaveBeenCalledWith(mockRequest);
     });
 
     it('returns the created CycleCountPlan emitted by the SDK', () => {
-      plansSdkStub.createPlan.mockReturnValueOnce(of(mockPlan));
+      plansSdkStub.createCycleCountPlan.mockReturnValueOnce(of(mockPlan));
 
       let result: CycleCountPlan | undefined;
       service.createCycleCountPlan(mockRequest).subscribe(r => (result = r));

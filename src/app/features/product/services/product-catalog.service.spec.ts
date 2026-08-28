@@ -5,8 +5,6 @@ import {
   ItemCostAPIService,
   PriceBookAPIService,
   UOMConversionAPIService,
-  SupplierItemCostAPIService,
-  SupplierItemCostListAPIService,
   ProductMSRPAPIService,
   ProductSummaryLifecycleStateEnum,
 } from '@durion-sdk/catalog';
@@ -19,26 +17,24 @@ describe('ProductCatalogService', () => {
   let service: ProductCatalogService;
 
   const productsSdkStub = {
-    searchProducts: vi.fn(),
+    searchCatalogProducts: vi.fn(),
     createProduct: vi.fn(),
     getProductById: vi.fn(),
     updateProduct: vi.fn(),
     getProductLifecycle: vi.fn(),
-    setLifecycleState: vi.fn(),
-    getReplacements: vi.fn(),
-    addReplacementProduct: vi.fn(),
+    updateProductLifecycle: vi.fn(),
+    listProductReplacements: vi.fn(),
+    addProductReplacement: vi.fn(),
     createLocationPriceOverride: vi.fn(),
     getEffectiveLocationPrice: vi.fn(),
     approveLocationPriceOverride: vi.fn(),
     rejectLocationPriceOverride: vi.fn(),
     upsertLocationGuardrailPolicy: vi.fn(),
   };
-  const itemCostSdkStub = { getItemCosts: vi.fn(), updateStandardCost: vi.fn(), getAuditHistory: vi.fn() };
-  const priceBookSdkStub = { createPriceBook: vi.fn(), getPriceBook: vi.fn(), updatePriceBook: vi.fn(), listRules: vi.fn(), createRule: vi.fn(), updateRule: vi.fn(), deactivateRule: vi.fn() };
+  const itemCostSdkStub = { getItemCosts: vi.fn(), updateStandardItemCost: vi.fn(), getItemCostAuditHistory: vi.fn() };
+  const priceBookSdkStub = { createPriceBook: vi.fn(), getPriceBook: vi.fn(), updatePriceBook: vi.fn(), listPriceBookRules: vi.fn(), createPriceBookRule: vi.fn(), updatePriceBookRule: vi.fn(), deactivatePriceBookRule: vi.fn() };
   const uomSdkStub = { listUomConversions: vi.fn(), createUomConversion: vi.fn(), updateUomConversion: vi.fn(), deactivateUomConversion: vi.fn() };
-  const supplierCostSdkStub = { getCostStructure: vi.fn(), createCostStructure: vi.fn(), updateCostStructure: vi.fn(), deleteCostStructure: vi.fn() };
-  const supplierCostListSdkStub = { listCostStructures: vi.fn() };
-  const msrpSdkStub = { listMsrp: vi.fn(), createMsrp: vi.fn(), updateMsrp: vi.fn(), getActiveMsrp: vi.fn() };
+  const msrpSdkStub = { listProductMsrpHistory: vi.fn(), createProductMsrp: vi.fn(), updateProductMsrp: vi.fn(), getActiveProductMsrp: vi.fn() };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -48,8 +44,6 @@ describe('ProductCatalogService', () => {
         { provide: ItemCostAPIService, useValue: itemCostSdkStub },
         { provide: PriceBookAPIService, useValue: priceBookSdkStub },
         { provide: UOMConversionAPIService, useValue: uomSdkStub },
-        { provide: SupplierItemCostAPIService, useValue: supplierCostSdkStub },
-        { provide: SupplierItemCostListAPIService, useValue: supplierCostListSdkStub },
         { provide: ProductMSRPAPIService, useValue: msrpSdkStub },
       ],
     });
@@ -64,16 +58,16 @@ describe('ProductCatalogService', () => {
 
   describe('searchProducts()', () => {
     it('calls productsSdk.searchProducts with the query string', () => {
-      productsSdkStub.searchProducts.mockReturnValueOnce(of([]));
+      productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of([]));
 
       service.searchProducts('widget').subscribe();
 
-      expect(productsSdkStub.searchProducts).toHaveBeenCalledWith('widget');
+      expect(productsSdkStub.searchCatalogProducts).toHaveBeenCalledWith('widget');
     });
 
     it('returns the products array as an Observable', () => {
       const sdkItem = { id: 'p1', sku: 'SKU-001', name: 'Widget' };
-      productsSdkStub.searchProducts.mockReturnValueOnce(of({ data: [sdkItem] }));
+      productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of({ data: [sdkItem] }));
 
       let result: ProductSummary[] | undefined;
       service.searchProducts('widget').subscribe(r => (result = r));
@@ -101,18 +95,18 @@ describe('ProductCatalogService', () => {
         ],
         limit: 20,
       };
-      productsSdkStub.searchProducts.mockReturnValueOnce(of(searchResult));
+      productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of(searchResult));
 
       let result: ProductSummary[] | undefined;
       service.searchProductsDetailed('widget').subscribe(r => (result = r));
 
       // detailed flag is the 7th positional arg of the SDK searchProducts signature
-      expect(productsSdkStub.searchProducts).toHaveBeenCalledWith(
+      expect(productsSdkStub.searchCatalogProducts).toHaveBeenCalledWith(
         'widget', undefined, undefined, undefined, undefined, undefined, true,
       );
       // no per-row enrichment fan-out
       expect(productsSdkStub.getProductById).not.toHaveBeenCalled();
-      expect(msrpSdkStub.getActiveMsrp).not.toHaveBeenCalled();
+      expect(msrpSdkStub.getActiveProductMsrp).not.toHaveBeenCalled();
       expect(result?.[0]).toMatchObject({
         id: 'p1',
         lifecycleState: 'ACTIVE',
@@ -135,7 +129,7 @@ describe('ProductCatalogService', () => {
         ],
         limit: 20,
       };
-      productsSdkStub.searchProducts.mockReturnValueOnce(of(searchResult));
+      productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of(searchResult));
 
       let result: ProductSummary[] | undefined;
       service.searchProductsDetailed('widget').subscribe(r => (result = r));
@@ -150,7 +144,7 @@ describe('ProductCatalogService', () => {
         ],
         limit: 20,
       };
-      productsSdkStub.searchProducts.mockReturnValueOnce(of(searchResult));
+      productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of(searchResult));
 
       let result: ProductSummary[] | undefined;
       service.searchProductsDetailed('widget').subscribe(r => (result = r));
@@ -160,7 +154,7 @@ describe('ProductCatalogService', () => {
 
     it('returns an empty array when search yields nothing', () => {
       const emptySearch: CatalogSearchResultDto = { data: [], limit: 20 };
-      productsSdkStub.searchProducts.mockReturnValueOnce(of(emptySearch));
+      productsSdkStub.searchCatalogProducts.mockReturnValueOnce(of(emptySearch));
 
       let result: ProductSummary[] | undefined;
       service.searchProductsDetailed('widget').subscribe(r => (result = r));
@@ -213,11 +207,11 @@ describe('ProductCatalogService', () => {
   describe('setLifecycleState()', () => {
     it('calls productsSdk.setLifecycleState with productId and transition', () => {
       const transition: LifecycleStateTransition = { targetState: 'INACTIVE', effectiveAt: '2026-03-01T00:00:00Z' };
-      productsSdkStub.setLifecycleState.mockReturnValueOnce(of({ productId: 'prod-123', currentState: 'INACTIVE' }));
+      productsSdkStub.updateProductLifecycle.mockReturnValueOnce(of({ productId: 'prod-123', currentState: 'INACTIVE' }));
 
       service.setLifecycleState('prod-123', transition).subscribe();
 
-      expect(productsSdkStub.setLifecycleState).toHaveBeenCalledWith('prod-123', {
+      expect(productsSdkStub.updateProductLifecycle).toHaveBeenCalledWith('prod-123', {
         lifecycleState: 'INACTIVE',
         effectiveAt: '2026-03-01T00:00:00Z',
         overrideReason: undefined,
@@ -237,26 +231,15 @@ describe('ProductCatalogService', () => {
     });
   });
 
-  it('listCostStructures calls supplierCostListSdk.listCostStructures with pageable and itemId', () => {
-    supplierCostListSdkStub.listCostStructures.mockReturnValue(of({ content: [] }));
-
-    service.listCostStructures('item-1').subscribe();
-
-    expect(supplierCostListSdkStub.listCostStructures).toHaveBeenCalledWith(
-      { page: 0, size: 50 },
-      'item-1',
-    );
-  });
-
   // ── listMsrp() ───────────────────────────────────────────────────────────────
 
   describe('listMsrp()', () => {
     it('calls msrpSdk.listMsrp with the productSku', () => {
-      msrpSdkStub.listMsrp.mockReturnValueOnce(of([]));
+      msrpSdkStub.listProductMsrpHistory.mockReturnValueOnce(of([]));
 
       service.listMsrp('SKU-001').subscribe();
 
-      expect(msrpSdkStub.listMsrp).toHaveBeenCalledWith('SKU-001');
+      expect(msrpSdkStub.listProductMsrpHistory).toHaveBeenCalledWith('SKU-001');
     });
   });
 

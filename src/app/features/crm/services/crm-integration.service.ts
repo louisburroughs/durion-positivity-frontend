@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AccountingEventsService, EventProcessingLogEntry, Pageable } from '@durion-sdk/accounting';
+import { AccountingEventsService, EventProcessingLogEntry } from '@durion-sdk/accounting';
 import {
   AccountingEventListResponse,
   AccountingEventListItem,
@@ -19,9 +19,7 @@ export class CrmIntegrationService {
     page?: number;
     size?: number;
   }): Observable<AccountingEventListResponse> {
-    const pageable: Pageable = { page: params?.page ?? 0, size: params?.size ?? 20 };
     return this.eventsApi.listAccountingEvents(
-      pageable,
       params?.organizationId,
       undefined,
       undefined,
@@ -32,6 +30,8 @@ export class CrmIntegrationService {
       undefined,
       undefined,
       params?.status,
+      params?.page ?? 0,
+      params?.size ?? 20,
     ).pipe(
       map(p => ({
         items: (p.content ?? []).map(e => ({
@@ -47,11 +47,11 @@ export class CrmIntegrationService {
   }
 
   getEvent(eventId: string): Observable<AccountingEventResponse> {
-    return this.eventsApi.getEvent(eventId) as unknown as Observable<AccountingEventResponse>;
+    return this.eventsApi.getAccountingEvent(eventId) as unknown as Observable<AccountingEventResponse>;
   }
 
   getReprocessingHistory(eventId: string): Observable<ReprocessingAttemptHistoryResponse[]> {
-    return this.eventsApi.getReprocessingHistory(eventId) as Observable<ReprocessingAttemptHistoryResponse[]>;
+    return this.eventsApi.getEventReprocessingHistory(eventId) as Observable<ReprocessingAttemptHistoryResponse[]>;
   }
 
   getEventProcessingLog(eventId: string): Observable<EventProcessingLogEntry[]> {

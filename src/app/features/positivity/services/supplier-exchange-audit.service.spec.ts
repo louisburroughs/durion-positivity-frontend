@@ -95,10 +95,10 @@ describe('SupplierExchangeAuditService', () => {
   let service: SupplierExchangeAuditService;
 
   const auditSdk = {
-    listExchanges: vi.fn(),
-    getExchange: vi.fn(),
-    readPayload: vi.fn(),
-    traceCorrelation: vi.fn(),
+    listSupplierExchanges: vi.fn(),
+    getSupplierExchange: vi.fn(),
+    readSupplierExchangePayload: vi.fn(),
+    traceSupplierCorrelation: vi.fn(),
   };
 
   beforeEach(() => {
@@ -114,11 +114,11 @@ describe('SupplierExchangeAuditService', () => {
   afterEach(() => vi.clearAllMocks());
 
   it('listExchanges() sends the required vendor and half-open instant window', () => {
-    auditSdk.listExchanges.mockReturnValue(of(pagedResponse));
+    auditSdk.listSupplierExchanges.mockReturnValue(of(pagedResponse));
 
     service.listExchanges(filter).subscribe();
 
-    expect(auditSdk.listExchanges).toHaveBeenCalledWith(
+    expect(auditSdk.listSupplierExchanges).toHaveBeenCalledWith(
       PROFILE_ID,
       new Date(2026, 7, 1).toISOString(),
       new Date(2026, 7, 8).toISOString(),
@@ -129,42 +129,42 @@ describe('SupplierExchangeAuditService', () => {
   });
 
   it('listExchanges() includes the whole of the selected end day', () => {
-    auditSdk.listExchanges.mockReturnValue(of(pagedResponse));
+    auditSdk.listSupplierExchanges.mockReturnValue(of(pagedResponse));
 
     service.listExchanges({ ...filter, dateFrom: '2026-08-07', dateTo: '2026-08-07' }).subscribe();
 
-    const [, from, to] = auditSdk.listExchanges.mock.calls[0] as [string, string, string];
+    const [, from, to] = auditSdk.listSupplierExchanges.mock.calls[0] as [string, string, string];
     expect(new Date(to).getTime() - new Date(from).getTime()).toBe(24 * 60 * 60 * 1000);
   });
 
   it('listExchanges() passes the capability filter through when set', () => {
-    auditSdk.listExchanges.mockReturnValue(of(pagedResponse));
+    auditSdk.listSupplierExchanges.mockReturnValue(of(pagedResponse));
 
     service.listExchanges({ ...filter, capability: 'ORDER' }).subscribe();
 
-    expect(auditSdk.listExchanges.mock.calls[0][3]).toBe('ORDER');
+    expect(auditSdk.listSupplierExchanges.mock.calls[0][3]).toBe('ORDER');
   });
 
   it('listExchanges() sends no outcome argument — the contract has no such parameter', () => {
-    auditSdk.listExchanges.mockReturnValue(of(pagedResponse));
+    auditSdk.listSupplierExchanges.mockReturnValue(of(pagedResponse));
 
     service.listExchanges(filter).subscribe();
 
-    const args = auditSdk.listExchanges.mock.calls[0] as unknown[];
+    const args = auditSdk.listSupplierExchanges.mock.calls[0] as unknown[];
     expect(args).toHaveLength(6);
     expect(args.some(arg => arg === 'SUCCESS' || arg === 'FAILURE')).toBe(false);
   });
 
   it('listExchanges() requests the given page', () => {
-    auditSdk.listExchanges.mockReturnValue(of({ ...pagedResponse, page: 2 }));
+    auditSdk.listSupplierExchanges.mockReturnValue(of({ ...pagedResponse, page: 2 }));
 
     service.listExchanges(filter, 2).subscribe();
 
-    expect(auditSdk.listExchanges.mock.calls[0][4]).toBe(2);
+    expect(auditSdk.listSupplierExchanges.mock.calls[0][4]).toBe(2);
   });
 
   it('listExchanges() maps the paged envelope onto the domain page', () => {
-    auditSdk.listExchanges.mockReturnValue(
+    auditSdk.listSupplierExchanges.mockReturnValue(
       of({ items: [summary], page: 1, size: 25, totalElements: 43, totalPages: 2 }),
     );
 
@@ -175,7 +175,7 @@ describe('SupplierExchangeAuditService', () => {
   });
 
   it('listExchanges() tolerates an empty paged envelope', () => {
-    auditSdk.listExchanges.mockReturnValue(of({} as PagedResponseExchangeAuditSummary));
+    auditSdk.listSupplierExchanges.mockReturnValue(of({} as PagedResponseExchangeAuditSummary));
 
     let result!: { items: unknown[]; totalCount: number };
     service.listExchanges(filter).subscribe(value => (result = value));
@@ -185,12 +185,12 @@ describe('SupplierExchangeAuditService', () => {
   });
 
   it('getExchange() maps a summary row', () => {
-    auditSdk.getExchange.mockReturnValue(of(summary));
+    auditSdk.getSupplierExchange.mockReturnValue(of(summary));
 
     let result!: { supplierRef: string; attempt: number; captureLevel: string };
     service.getExchange(EXCHANGE_ID).subscribe(value => (result = value));
 
-    expect(auditSdk.getExchange).toHaveBeenCalledWith(EXCHANGE_ID);
+    expect(auditSdk.getSupplierExchange).toHaveBeenCalledWith(EXCHANGE_ID);
     expect(result.supplierRef).toBe('michelin-eu');
     expect(result.attempt).toBe(1);
     expect(result.captureLevel).toBe('REDACTED');
@@ -198,7 +198,7 @@ describe('SupplierExchangeAuditService', () => {
 
   it('keeps a missing httpStatus as null — never 0', () => {
     // No response at all: connect failure, pre-header timeout, or breaker-suppressed.
-    auditSdk.getExchange.mockReturnValue(
+    auditSdk.getSupplierExchange.mockReturnValue(
       of({ ...summary, httpStatus: undefined, durationMs: undefined, outcome: 'TIMEOUT' }),
     );
 
@@ -211,7 +211,7 @@ describe('SupplierExchangeAuditService', () => {
   });
 
   it('preserves a genuine zero-ish status distinctly from absence', () => {
-    auditSdk.getExchange.mockReturnValue(of({ ...summary, httpStatus: 204 }));
+    auditSdk.getSupplierExchange.mockReturnValue(of({ ...summary, httpStatus: 204 }));
 
     let result!: { httpStatus: number | null };
     service.getExchange(EXCHANGE_ID).subscribe(value => (result = value));
@@ -220,7 +220,7 @@ describe('SupplierExchangeAuditService', () => {
   });
 
   it('surfaces the payload-presence and purge flags from the summary', () => {
-    auditSdk.getExchange.mockReturnValue(
+    auditSdk.getSupplierExchange.mockReturnValue(
       of({
         ...summary,
         requestPayloadPresent: false,
@@ -248,18 +248,18 @@ describe('SupplierExchangeAuditService', () => {
       requestPayload: '<Order/>',
       responsePayload: '<Ack/>',
     };
-    auditSdk.readPayload.mockReturnValue(of(payload));
+    auditSdk.readSupplierExchangePayload.mockReturnValue(of(payload));
 
     let result!: { redacted: boolean; requestPayload: string | null };
     service.getExchangePayload(EXCHANGE_ID).subscribe(value => (result = value));
 
-    expect(auditSdk.readPayload).toHaveBeenCalledWith(EXCHANGE_ID);
+    expect(auditSdk.readSupplierExchangePayload).toHaveBeenCalledWith(EXCHANGE_ID);
     expect(result.redacted).toBe(true);
     expect(result.requestPayload).toBe('<Order/>');
   });
 
   it('normalises absent payload documents to null, which is a normal state', () => {
-    auditSdk.readPayload.mockReturnValue(
+    auditSdk.readSupplierExchangePayload.mockReturnValue(
       of({
         exchangeAuditId: EXCHANGE_ID,
         captureLevel: ExchangeAuditPayloadViewCaptureLevelEnum.MetadataOnly,
@@ -275,15 +275,15 @@ describe('SupplierExchangeAuditService', () => {
   });
 
   it('traceCorrelation() asks for every attempt of one logical call', () => {
-    auditSdk.traceCorrelation.mockReturnValue(of(pagedResponse));
+    auditSdk.traceSupplierCorrelation.mockReturnValue(of(pagedResponse));
 
     service.traceCorrelation('corr-1').subscribe();
 
-    expect(auditSdk.traceCorrelation).toHaveBeenCalledWith('corr-1', 0, EXCHANGE_AUDIT_PAGE_SIZE);
+    expect(auditSdk.traceSupplierCorrelation).toHaveBeenCalledWith('corr-1', 0, EXCHANGE_AUDIT_PAGE_SIZE);
   });
 
   it('traceCorrelation() maps the attempts through the same row mapping', () => {
-    auditSdk.traceCorrelation.mockReturnValue(
+    auditSdk.traceSupplierCorrelation.mockReturnValue(
       of({
         items: [summary, { ...summary, exchangeAuditId: 'e2', attempt: 2, httpStatus: undefined }],
         page: 0,

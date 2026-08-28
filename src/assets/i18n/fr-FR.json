@@ -2120,7 +2120,6 @@
           "ARIA": "Onglets de détail du produit",
           "LIFECYCLE": "Cycle de vie",
           "UOM": "Unités de mesure",
-          "COST_TIERS": "Niveaux de coût",
           "STANDARD_COST": "Coût standard"
         },
         "STATE": {
@@ -2152,13 +2151,6 @@
           "TO": "À",
           "FACTOR": "Facteur",
           "ACTIVE": "Actif"
-        },
-        "COST_TIERS": {
-          "TITLE": "Niveaux de coût",
-          "SUPPLIER": "Fournisseur",
-          "MIN_QTY": "Qté min.",
-          "MAX_QTY": "Qté max.",
-          "UNIT_COST": "Coût unitaire"
         },
         "STANDARD_COST": {
           "TITLE": "Coût standard",

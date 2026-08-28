@@ -2,9 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RoleManagementService, UserAPIService, PermissionRegistryService } from '@durion-sdk/security';
-import type { RolePermissionsRequest } from '@durion-sdk/security';
+import type { CreateUserRequest as SdkCreateUserRequest, RolePermissionsRequest } from '@durion-sdk/security';
 import { ShopAuditService } from '@durion-sdk/shop-manager';
-import type { ShopAuditFilter } from '@durion-sdk/shop-manager';
 import {
   CreateRoleRequest,
   PagedResponse,
@@ -22,7 +21,7 @@ export class SecurityService {
   private readonly shopAuditSdk = inject(ShopAuditService);
 
   getAllRoles(_page = 0, _size = 20): Observable<PagedResponse<SecurityRole>> {
-    return this.roleManagement.getAllRoles().pipe(
+    return this.roleManagement.listRoles().pipe(
       map(roles => ({
         results: roles.map(role => ({
           name: role.name ?? '',
@@ -107,7 +106,7 @@ export class SecurityService {
   }
 
   createUser(body: Record<string, unknown>): Observable<unknown> {
-    return this.userApi.createUser(body as { [key: string]: unknown });
+    return this.userApi.createUser(body as unknown as SdkCreateUserRequest);
   }
 
   getUserById(userId: string): Observable<unknown> {
@@ -115,12 +114,11 @@ export class SecurityService {
   }
 
   getUserRoleAssignments(userId: string): Observable<RoleAssignment[]> {
-    return this.roleManagement.getUserRoleAssignments(userId) as unknown as Observable<RoleAssignment[]>;
+    return this.roleManagement.listUserRoleAssignments(userId) as unknown as Observable<RoleAssignment[]>;
   }
 
   searchAudit(appointmentId: string): Observable<unknown[]> {
-    const filter: ShopAuditFilter = { appointmentId };
-    const result$ = this.shopAuditSdk.searchShopAudit(filter);
+    const result$ = this.shopAuditSdk.searchShopAudit(undefined, appointmentId);
     return result$ as Observable<unknown[]>;
   }
 }

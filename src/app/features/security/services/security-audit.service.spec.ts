@@ -13,7 +13,7 @@ describe('SecurityAuditService', () => {
   let service: SecurityAuditService;
 
   const auditSdkStub = {
-    getEvent: vi.fn(),
+    getAuditEvent: vi.fn(),
     searchAuditEvents: vi.fn(),
   };
 
@@ -101,23 +101,23 @@ describe('SecurityAuditService', () => {
     };
 
     it('calls auditSdk.getEvent with the eventId', () => {
-      auditSdkStub.getEvent.mockReturnValueOnce(of(mockEvent));
+      auditSdkStub.getAuditEvent.mockReturnValueOnce(of(mockEvent));
 
       service.getAuditEvent('evt-001').subscribe();
 
-      expect(auditSdkStub.getEvent).toHaveBeenCalledWith('evt-001');
+      expect(auditSdkStub.getAuditEvent).toHaveBeenCalledWith('evt-001');
     });
 
     it('passes eventId as-is to the SDK', () => {
-      auditSdkStub.getEvent.mockReturnValueOnce(of(mockEvent));
+      auditSdkStub.getAuditEvent.mockReturnValueOnce(of(mockEvent));
 
       service.getAuditEvent('evt/001').subscribe();
 
-      expect(auditSdkStub.getEvent).toHaveBeenCalledWith('evt/001');
+      expect(auditSdkStub.getAuditEvent).toHaveBeenCalledWith('evt/001');
     });
 
     it('returns the AuditEventDetail emitted by the SDK', () => {
-      auditSdkStub.getEvent.mockReturnValueOnce(of(mockEvent));
+      auditSdkStub.getAuditEvent.mockReturnValueOnce(of(mockEvent));
 
       let result: AuditEventDetail | undefined;
       service.getAuditEvent('evt-001').subscribe((r: AuditEventDetail) => (result = r));
