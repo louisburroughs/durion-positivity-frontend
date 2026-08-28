@@ -75,7 +75,7 @@ export class InventoryReceivingService {
 
   submitCrossDockReceipt(request: CrossDockReceiveRequest): Observable<CrossDockReceiveResult> {
     const sdkRequest: CrossDockRequest = this.toCrossDockRequest(request);
-    return this.receivingSdk.crossDockLineToWorkorder(request.sessionId, request.receivingLineId, sdkRequest).pipe(
+    return this.receivingSdk.crossDockReceivingLine(request.sessionId, request.receivingLineId, sdkRequest).pipe(
       map((dto: CrossDockResponse) => this.toCrossDockReceiveResult(dto)),
     );
   }

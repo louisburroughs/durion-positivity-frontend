@@ -46,7 +46,7 @@ export class AvailabilityComponent {
       distinctUntilChanged(),
       switchMap(q => {
         if (!q.trim()) return of({ data: [] });
-        return this.productsApi.searchProducts(
+        return this.productsApi.searchCatalogProducts(
           q, undefined, undefined, undefined, undefined, MAX_SUGGESTIONS,
           undefined, 'body', false, { transferCache: false },
         ).pipe(catchError(() => of({ data: [] })));

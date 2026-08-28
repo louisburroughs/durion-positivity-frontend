@@ -26,11 +26,11 @@ function createService(): SupplierDeliveryLocationService {
 }
 
 describe('SupplierDeliveryLocationService', () => {
-  const locationSdk = { getAllLocations: vi.fn() };
+  const locationSdk = { listLocations: vi.fn() };
 
   beforeEach(() => {
     sessionStorage.clear();
-    locationSdk.getAllLocations.mockReturnValue(of(locations));
+    locationSdk.listLocations.mockReturnValue(of(locations));
 
     TestBed.configureTestingModule({
       providers: [
@@ -51,7 +51,7 @@ describe('SupplierDeliveryLocationService', () => {
       .listActiveLocations()
       .subscribe(value => (received = value));
 
-    expect(locationSdk.getAllLocations).toHaveBeenCalledTimes(1);
+    expect(locationSdk.listLocations).toHaveBeenCalledTimes(1);
     expect(received).toEqual([{ locationId: LOCATION_A, name: 'Downtown Service Center' }]);
   });
 

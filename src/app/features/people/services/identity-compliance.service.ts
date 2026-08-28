@@ -15,6 +15,6 @@ export class IdentityComplianceService {
 
   /** Empty array = compliant (no violations). */
   findActiveUsersForInactivePersons(): Observable<IdentityComplianceFinding[]> {
-    return this.complianceSdk.findActiveUsersForInactivePersons();
+    return this.complianceSdk.listInactivePersonActiveUsers();
   }
 }

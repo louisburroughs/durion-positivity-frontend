@@ -606,7 +606,7 @@ describe('WorkexecService', () => {
       let result: unknown;
       service.searchEstimates('acme').subscribe(r => (result = r));
 
-      expect(estimateSearchStub.searchEstimates).toHaveBeenCalledWith({ page: 0, size: 10 }, 'acme');
+      expect(estimateSearchStub.searchEstimates).toHaveBeenCalledWith('acme', undefined, undefined, 0, 10);
       expect(result).toEqual([{ id: 'e1', primary: 'Acme', secondary: 'EST-1 · DRAFT' }]);
     });
 
@@ -627,7 +627,7 @@ describe('WorkexecService', () => {
       let result: unknown;
       service.searchWorkorders('acme').subscribe(r => (result = r));
 
-      expect(workorderSearchStub.searchWorkorders).toHaveBeenCalledWith({ page: 0, size: 10 }, 'acme');
+      expect(workorderSearchStub.searchWorkorders).toHaveBeenCalledWith('acme', undefined, undefined, 0, 10);
       expect(result).toEqual([{ id: 'w1234567', primary: 'Acme', secondary: 'w1234567 · OPEN' }]);
     });
 

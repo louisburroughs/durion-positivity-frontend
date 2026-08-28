@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import {
+  AvailabilityView,
   InventoryAvailabilityService,
   LocationAvailabilityDto,
 } from '@durion-sdk/inventory';
@@ -21,8 +22,8 @@ export class ProductInventoryService {
   private readonly availSdk = inject(InventoryAvailabilityService);
 
   queryInventoryAvailability(sku: string, locationId?: string): Observable<InventoryAvailability> {
-    return this.availSdk.getInventoryAvailability(sku).pipe(
-      map((items: Array<LocationAvailabilityDto> | InventoryAvailability) =>
+    return this.availSdk.listAvailabilityBySku(sku).pipe(
+      map((items: Array<LocationAvailabilityDto | AvailabilityView> | InventoryAvailability) =>
         this.toInventoryAvailabilityResponse(sku, items, locationId),
       ),
     );
@@ -50,10 +51,12 @@ export class ProductInventoryService {
   // Private adapters
   // =========================================================================
 
-  private toLocationInventory(dto: LocationAvailabilityDto): LocationInventory {
+  private toLocationInventory(dto: LocationAvailabilityDto | AvailabilityView): LocationInventory {
     return {
       locationId: dto.locationId ?? '',
-      locationName: dto.locationName ?? '',
+      // listAvailabilityBySku returns AvailabilityView, which carries no
+      // locationName; callers resolve the display name from the location list.
+      locationName: 'locationName' in dto ? dto.locationName ?? '' : '',
       onHand: dto.onHandQuantity ?? 0,
       reserved: 0,
       atp: dto.availableToPromiseQuantity ?? 0,
@@ -62,7 +65,7 @@ export class ProductInventoryService {
 
   private toInventoryAvailability(
     sku: string,
-    items: Array<LocationAvailabilityDto>,
+    items: Array<LocationAvailabilityDto | AvailabilityView>,
     locationId?: string,
   ): InventoryAvailability {
     const normalizedLocationId = locationId?.trim();
@@ -81,7 +84,7 @@ export class ProductInventoryService {
 
   private toInventoryAvailabilityResponse(
     sku: string,
-    response: Array<LocationAvailabilityDto> | InventoryAvailability,
+    response: Array<LocationAvailabilityDto | AvailabilityView> | InventoryAvailability,
     locationId?: string,
   ): InventoryAvailability {
     if (Array.isArray(response)) {

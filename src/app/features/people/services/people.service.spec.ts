@@ -39,15 +39,15 @@ describe('PeopleService', () => {
     getAttendanceDiscrepancyReport: vi.fn(),
   };
   const staffingApiStub = {
-    getAssignments: vi.fn(),
-    createAssignment: vi.fn(),
-    endAssignment: vi.fn(),
+    listStaffingAssignments: vi.fn(),
+    createStaffingAssignment: vi.fn(),
+    endStaffingAssignment: vi.fn(),
   };
   const accessControlApiStub = {
-    getAssignments: vi.fn(),
-    getRoles: vi.fn(),
-    createAssignment: vi.fn(),
-    revokeAssignment: vi.fn(),
+    listRoleAssignments: vi.fn(),
+    listAssignableRoles: vi.fn(),
+    assignRoleToPerson: vi.fn(),
+    revokePersonRoleAssignment: vi.fn(),
   };
   const workSessionsApiStub = {
     startWorkSession: vi.fn(),
@@ -186,11 +186,11 @@ describe('PeopleService', () => {
       effectiveFrom: '2026-05-01',
       isPrimary: true,
     }];
-    staffingApiStub.getAssignments.mockReturnValue(of(response));
+    staffingApiStub.listStaffingAssignments.mockReturnValue(of(response));
 
     service.getLocationAssignments('p-1').subscribe(result => expect(result).toEqual(response));
 
-    expect(staffingApiStub.getAssignments).toHaveBeenCalledWith('p-1');
+    expect(staffingApiStub.listStaffingAssignments).toHaveBeenCalledWith('p-1');
   });
 
   it('createLocationAssignment() delegates to PeopleStaffingAssignmentsService.createAssignment', () => {
@@ -210,55 +210,55 @@ describe('PeopleService', () => {
       effectiveFrom: '2026-05-01',
       isPrimary: true,
     };
-    staffingApiStub.createAssignment.mockReturnValue(of(response));
+    staffingApiStub.createStaffingAssignment.mockReturnValue(of(response));
 
     service.createLocationAssignment(request).subscribe(result => expect(result).toEqual(response));
 
-    expect(staffingApiStub.createAssignment).toHaveBeenCalledWith(request);
+    expect(staffingApiStub.createStaffingAssignment).toHaveBeenCalledWith(request);
   });
 
   it('endLocationAssignment() delegates to PeopleStaffingAssignmentsService.endAssignment', () => {
-    staffingApiStub.endAssignment.mockReturnValue(of(void 0));
+    staffingApiStub.endStaffingAssignment.mockReturnValue(of(void 0));
 
     service.endLocationAssignment('a-1').subscribe();
 
-    expect(staffingApiStub.endAssignment).toHaveBeenCalledWith('a-1');
+    expect(staffingApiStub.endStaffingAssignment).toHaveBeenCalledWith('a-1');
   });
 
   it('getRoleAssignments() delegates to PeopleAccessControlService.getAssignments', () => {
     const response: UserRoleDto[] = [{ userId: 'p-1', roleCode: 'ROLE_ADMIN' }];
-    accessControlApiStub.getAssignments.mockReturnValue(of(response));
+    accessControlApiStub.listRoleAssignments.mockReturnValue(of(response));
 
     service.getRoleAssignments('p-1', true).subscribe(result => expect(result).toEqual(response));
 
-    expect(accessControlApiStub.getAssignments).toHaveBeenCalledWith('p-1', true);
+    expect(accessControlApiStub.listRoleAssignments).toHaveBeenCalledWith('p-1', true);
   });
 
   it('getAvailableRoles() delegates to PeopleAccessControlService.getRoles', () => {
     const response: RoleDto[] = [{ code: 'ROLE_ADMIN', name: 'Admin' }];
-    accessControlApiStub.getRoles.mockReturnValue(of(response));
+    accessControlApiStub.listAssignableRoles.mockReturnValue(of(response));
 
     service.getAvailableRoles('p-1').subscribe(result => expect(result).toEqual(response));
 
-    expect(accessControlApiStub.getRoles).toHaveBeenCalledWith('p-1');
+    expect(accessControlApiStub.listAssignableRoles).toHaveBeenCalledWith('p-1');
   });
 
   it('createRoleAssignment() delegates to PeopleAccessControlService.createAssignment', () => {
     const request: PersonRoleAssignmentRequest = { roleCode: 'ROLE_ADMIN', startDate: '2026-05-01' };
     const response: UserRoleDto = { userId: 'p-1', roleCode: 'ROLE_ADMIN' };
-    accessControlApiStub.createAssignment.mockReturnValue(of(response));
+    accessControlApiStub.assignRoleToPerson.mockReturnValue(of(response));
 
     service.createRoleAssignment('p-1', request).subscribe(result => expect(result).toEqual(response));
 
-    expect(accessControlApiStub.createAssignment).toHaveBeenCalledWith('p-1', request);
+    expect(accessControlApiStub.assignRoleToPerson).toHaveBeenCalledWith('p-1', request);
   });
 
   it('revokeRoleAssignment() delegates to PeopleAccessControlService.revokeAssignment', () => {
-    accessControlApiStub.revokeAssignment.mockReturnValue(of(void 0));
+    accessControlApiStub.revokePersonRoleAssignment.mockReturnValue(of(void 0));
 
     service.revokeRoleAssignment('p-1', 'ROLE_ADMIN').subscribe();
 
-    expect(accessControlApiStub.revokeAssignment).toHaveBeenCalledWith('p-1', 'ROLE_ADMIN');
+    expect(accessControlApiStub.revokePersonRoleAssignment).toHaveBeenCalledWith('p-1', 'ROLE_ADMIN');
   });
 
   it('listApprovalPeople() calls the approval people endpoint', () => {

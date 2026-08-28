@@ -74,31 +74,31 @@ export class PeopleService {
   }
 
   getLocationAssignments(personId: string): Observable<StaffingAssignmentResponse[]> {
-    return this.staffingApi.getAssignments(personId);
+    return this.staffingApi.listStaffingAssignments(personId);
   }
 
   createLocationAssignment(request: CreateStaffingAssignmentRequest): Observable<StaffingAssignmentResponse> {
-    return this.staffingApi.createAssignment(request);
+    return this.staffingApi.createStaffingAssignment(request);
   }
 
   endLocationAssignment(assignmentId: string): Observable<void> {
-    return this.staffingApi.endAssignment(assignmentId);
+    return this.staffingApi.endStaffingAssignment(assignmentId);
   }
 
   getRoleAssignments(personUuid: string, includeHistory: boolean): Observable<UserRoleDto[]> {
-    return this.accessControlApi.getAssignments(personUuid, includeHistory);
+    return this.accessControlApi.listRoleAssignments(personUuid, includeHistory);
   }
 
   getAvailableRoles(personUuid: string): Observable<RoleDto[]> {
-    return this.accessControlApi.getRoles(personUuid);
+    return this.accessControlApi.listAssignableRoles(personUuid);
   }
 
   createRoleAssignment(personUuid: string, request: PersonRoleAssignmentRequest): Observable<UserRoleDto> {
-    return this.accessControlApi.createAssignment(personUuid, request);
+    return this.accessControlApi.assignRoleToPerson(personUuid, request);
   }
 
   revokeRoleAssignment(personUuid: string, roleCode: string): Observable<void> {
-    return this.accessControlApi.revokeAssignment(personUuid, roleCode);
+    return this.accessControlApi.revokePersonRoleAssignment(personUuid, roleCode);
   }
 
   listApprovalPeople(): Observable<unknown[]> {

@@ -9,7 +9,7 @@ import { PeopleLandingPageComponent } from './people-landing-page.component';
 describe('PeopleLandingPageComponent', () => {
   let component: PeopleLandingPageComponent;
   const peopleApi = {
-    getAllPeople: vi.fn().mockReturnValue(
+    listPeople: vi.fn().mockReturnValue(
       of([{ id: 'PER-1', firstName: 'Ada', lastName: 'Lovelace', primaryEmail: 'ada@x.io' }]),
     ),
   };
@@ -38,12 +38,12 @@ describe('PeopleLandingPageComponent', () => {
   it('searches employees scoped to EMPLOYEE and adapts to finder hits', () => {
     let hits: ReadonlyArray<{ id: string; primary: string; secondary?: string }> = [];
     component.searchFns.employee!('ada').subscribe(r => (hits = r));
-    expect(peopleApi.getAllPeople).toHaveBeenCalledWith('ada');
+    expect(peopleApi.listPeople).toHaveBeenCalledWith('ada');
     expect(hits[0]).toEqual({ id: 'PER-1', primary: 'Ada Lovelace', secondary: 'ada@x.io' });
   });
 
   it('searches all persons via the identity directory', () => {
     component.searchFns.person!('ada').subscribe();
-    expect(peopleApi.getAllPeople).toHaveBeenCalledWith('ada');
+    expect(peopleApi.listPeople).toHaveBeenCalledWith('ada');
   });
 });

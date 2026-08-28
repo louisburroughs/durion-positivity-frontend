@@ -11,16 +11,16 @@ export class DispatchBoardService {
 
   getDashboard(locationId: string, date: string): Observable<DashboardResponse> {
     const normalizedDate = this.toIsoDate(date);
-    return this.dispatchDashboard.getDashboard(locationId.trim(), normalizedDate) as Observable<DashboardResponse>;
+    return this.dispatchDashboard.getDispatchDashboard(locationId.trim(), normalizedDate) as Observable<DashboardResponse>;
   }
 
   getPrimaryLocation(): Observable<PrimaryLocationResponse> {
-    return this.peopleAvailabilityApi.getCurrentUserPrimaryLocation();
+    return this.peopleAvailabilityApi.getMyPrimaryLocation();
   }
 
   getAvailability(locationId: string, date: string): Observable<PeopleAvailabilityResponse[]> {
     const normalizedDate = this.toIsoDate(date);
-    return this.peopleAvailabilityApi.getPeopleAvailability(locationId.trim(), normalizedDate);
+    return this.peopleAvailabilityApi.listPeopleAvailability(locationId.trim(), normalizedDate);
   }
 
   private toIsoDate(value: string): string {

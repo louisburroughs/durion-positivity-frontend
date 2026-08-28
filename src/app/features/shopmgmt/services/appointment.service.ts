@@ -16,7 +16,6 @@ import type {
   CreateAssignmentRequest,
   MechanicAssignmentItem,
   RescheduleAppointmentRequest,
-  ShopAuditFilter,
 } from '@durion-sdk/shop-manager';
 import type {
   AppointmentDetail,
@@ -34,7 +33,7 @@ export class AppointmentService {
   private readonly shopAudit = inject(ShopAuditService);
 
   getAppointment(appointmentId: string): Observable<AppointmentDetail> {
-    return this.appointments.getAppointment(appointmentId) as unknown as Observable<AppointmentDetail>;
+    return this.appointments.getAppointmentById(appointmentId) as unknown as Observable<AppointmentDetail>;
   }
 
   listAssignments(appointmentId: string): Observable<AssignmentDetail[]> {
@@ -74,8 +73,7 @@ export class AppointmentService {
   }
 
   searchAudit(appointmentId: string): Observable<unknown[]> {
-    const filter: ShopAuditFilter = { appointmentId };
-    return this.shopAudit.searchShopAudit(filter);
+    return this.shopAudit.searchShopAudit(undefined, appointmentId);
   }
 
   createAppointment(body: CreateAppointmentPayload, idempotencyKey: string): Observable<AppointmentDetail> {
@@ -100,7 +98,7 @@ export class AppointmentService {
       appointmentId,
       overrideReason: body.overrideReason,
     };
-    return this.conflictOverride.executeOverride(appointmentId, sdkRequest) as unknown as Observable<AppointmentDetail>;
+    return this.conflictOverride.executeConflictOverride(appointmentId, sdkRequest) as unknown as Observable<AppointmentDetail>;
   }
 
   cancelAppointment(appointmentId: string, body: { cancellationReason: string; notes?: string }): Observable<AppointmentDetail> {

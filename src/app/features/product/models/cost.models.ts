@@ -1,20 +1,3 @@
-export interface CostTier {
-  id: string;
-  minQty: number;
-  maxQty: number;
-  unitCost: number;
-  currency: string;
-}
-
-export interface CostStructure {
-  id: string;
-  itemId: string;
-  supplierId: string;
-  supplierName: string;
-  costType: string;
-  tiers: CostTier[];
-}
-
 export interface ItemCost {
   itemId: string;
   standardCost: number;

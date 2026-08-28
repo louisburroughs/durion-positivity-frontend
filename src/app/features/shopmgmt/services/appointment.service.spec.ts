@@ -48,13 +48,13 @@ const STUB_CREATE_PAYLOAD = {
 // ---------------------------------------------------------------------------
 
 const appointmentsStub = {
-  getAppointment: vi.fn(),
+  getAppointmentById: vi.fn(),
   rescheduleAppointment: vi.fn(),
   createAppointment: vi.fn(),
   cancelAppointment: vi.fn(),
 };
 const assignmentStub = { listAssignments: vi.fn(), createAssignment: vi.fn() };
-const conflictOverrideStub = { executeOverride: vi.fn() };
+const conflictOverrideStub = { executeConflictOverride: vi.fn() };
 const scheduleStub = { viewSchedule: vi.fn() };
 const shopAuditStub = { searchShopAudit: vi.fn() };
 
@@ -67,12 +67,12 @@ describe('AppointmentService [CAP-249]', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    appointmentsStub.getAppointment.mockReturnValue(of(STUB_APPOINTMENT));
+    appointmentsStub.getAppointmentById.mockReturnValue(of(STUB_APPOINTMENT));
     appointmentsStub.createAppointment.mockReturnValue(of(STUB_APPOINTMENT));
     appointmentsStub.rescheduleAppointment.mockReturnValue(of(STUB_APPOINTMENT));
     assignmentStub.listAssignments.mockReturnValue(of([]));
     assignmentStub.createAssignment.mockReturnValue(of({}));
-    conflictOverrideStub.executeOverride.mockReturnValue(of({}));
+    conflictOverrideStub.executeConflictOverride.mockReturnValue(of({}));
     scheduleStub.viewSchedule.mockReturnValue(of({}));
     shopAuditStub.searchShopAudit.mockReturnValue(of([]));
 
@@ -100,7 +100,7 @@ describe('AppointmentService [CAP-249]', () => {
     it('calls appointmentsSdk.getAppointment with the id', () => {
       service.getAppointment('appt-1').subscribe();
 
-      expect(appointmentsStub.getAppointment).toHaveBeenCalledWith('appt-1');
+      expect(appointmentsStub.getAppointmentById).toHaveBeenCalledWith('appt-1');
     });
 
     it('returns an Observable that emits the SDK response', () => {
@@ -193,18 +193,18 @@ describe('AppointmentService [CAP-249]', () => {
   // ── searchAudit ───────────────────────────────────────────────────────────
 
   describe('searchAudit', () => {
-    it('calls shopAuditSdk.searchShopAudit with appointmentId in filter object', () => {
+    it('calls shopAuditSdk.searchShopAudit with the appointmentId query parameter', () => {
       shopAuditStub.searchShopAudit.mockReturnValue(of([]));
       service.searchAudit('appt-1').subscribe();
 
-      expect(shopAuditStub.searchShopAudit).toHaveBeenCalledWith({ appointmentId: 'appt-1' });
+      expect(shopAuditStub.searchShopAudit).toHaveBeenCalledWith(undefined, 'appt-1');
     });
 
     it('forwards the appointmentId to the SDK filter', () => {
       shopAuditStub.searchShopAudit.mockReturnValue(of([]));
       service.searchAudit('appt-1').subscribe();
 
-      expect(shopAuditStub.searchShopAudit).toHaveBeenCalledWith(expect.objectContaining({ appointmentId: 'appt-1' }));
+      expect(shopAuditStub.searchShopAudit).toHaveBeenCalledWith(undefined, 'appt-1');
     });
   });
 
@@ -256,7 +256,7 @@ describe('AppointmentService [CAP-249]', () => {
       const body = { overrideReason: 'Manager approved' };
       service.executeOverride('appt-1', body).subscribe();
 
-      expect(conflictOverrideStub.executeOverride).toHaveBeenCalledWith('appt-1', {
+      expect(conflictOverrideStub.executeConflictOverride).toHaveBeenCalledWith('appt-1', {
         appointmentId: 'appt-1',
         overrideReason: 'Manager approved',
       });
@@ -266,7 +266,7 @@ describe('AppointmentService [CAP-249]', () => {
       const body = { overrideReason: 'Emergency' };
       service.executeOverride('appt-1', body).subscribe();
 
-      expect(conflictOverrideStub.executeOverride).toHaveBeenCalledWith(
+      expect(conflictOverrideStub.executeConflictOverride).toHaveBeenCalledWith(
         'appt-1',
         expect.objectContaining({ overrideReason: 'Emergency' }),
       );

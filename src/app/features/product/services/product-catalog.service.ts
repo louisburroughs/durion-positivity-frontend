@@ -6,8 +6,6 @@ import {
   ItemCostAPIService,
   PriceBookAPIService,
   UOMConversionAPIService,
-  SupplierItemCostAPIService,
-  SupplierItemCostListAPIService,
   ProductMSRPAPIService,
   CatalogSearchResultDto,
   ServiceDto,
@@ -21,10 +19,6 @@ import {
   ItemCostsDto,
   ItemCostAuditDto,
   UpdateStandardCostRequestDto,
-  SupplierItemCostDto,
-  SupplierItemCostCreateRequestDto,
-  SupplierItemCostUpdateRequestDto,
-  CostTierDto,
   PriceBookDto,
   PriceBookRuleDto,
   PriceBookCreateRequestDto,
@@ -38,7 +32,6 @@ import {
   EffectiveLocationPriceResponseDto,
   GuardrailPolicyUpsertRequestDto,
   UomConversionDto,
-  Page,
   UomConversionCreateRequestDto,
   UomConversionUpdateRequestDto,
   ProductSummary as SdkProductSummary,
@@ -58,8 +51,6 @@ import {
 } from '../models/product.models';
 import {
   CostAuditEntry,
-  CostStructure,
-  CostTier,
   ItemCost,
   StandardCostUpdate,
 } from '../models/cost.models';
@@ -81,8 +72,6 @@ export class ProductCatalogService {
   private readonly itemCostSdk = inject(ItemCostAPIService);
   private readonly priceBookSdk = inject(PriceBookAPIService);
   private readonly uomSdk = inject(UOMConversionAPIService);
-  private readonly supplierCostSdk = inject(SupplierItemCostAPIService);
-  private readonly supplierCostListSdk = inject(SupplierItemCostListAPIService);
   private readonly msrpSdk = inject(ProductMSRPAPIService);
 
   // -------------------------------------------------------------------------
@@ -90,7 +79,7 @@ export class ProductCatalogService {
   // -------------------------------------------------------------------------
 
   searchProducts(query: string): Observable<ProductSummary[]> {
-    return this.productsSdk.searchProducts(query).pipe(
+    return this.productsSdk.searchCatalogProducts(query).pipe(
       map((result: CatalogSearchResultDto) => (result.data ?? []).map(s => this.toProductSummary(s))),
     );
   }
@@ -102,7 +91,7 @@ export class ProductCatalogService {
    */
   searchProductsDetailed(query: string): Observable<ProductSummary[]> {
     return this.productsSdk
-      .searchProducts(query, undefined, undefined, undefined, undefined, undefined, true)
+      .searchCatalogProducts(query, undefined, undefined, undefined, undefined, undefined, true)
       .pipe(
         map((result: CatalogSearchResultDto) =>
           (result.data ?? []).map(s => this.toProductSummary(s)),
@@ -111,7 +100,7 @@ export class ProductCatalogService {
   }
 
   searchServices(query: string): Observable<ServiceSummary[]> {
-    return this.productsSdk.searchServices(query).pipe(
+    return this.productsSdk.searchCatalogServices(query).pipe(
       map((services: Array<ServiceDto>) => services.map(s => this.toServiceSummary(s))),
     );
   }
@@ -148,13 +137,13 @@ export class ProductCatalogService {
     productId: string,
     transition: LifecycleStateTransition,
   ): Observable<ProductLifecycle> {
-    return this.productsSdk.setLifecycleState(productId, this.toLifecycleUpdateRequest(transition)).pipe(
+    return this.productsSdk.updateProductLifecycle(productId, this.toLifecycleUpdateRequest(transition)).pipe(
       map((dto: ProductLifecycleResponse) => this.toProductLifecycle(dto)),
     );
   }
 
   getReplacements(productId: string): Observable<ReplacementProduct[]> {
-    return this.productsSdk.getReplacements(productId).pipe(
+    return this.productsSdk.listProductReplacements(productId).pipe(
       map((items: Array<ReplacementOption>) => items.map(r => this.toReplacementProduct(r))),
     );
   }
@@ -163,7 +152,7 @@ export class ProductCatalogService {
     productId: string,
     replacement: Partial<ReplacementProduct>,
   ): Observable<ReplacementProduct> {
-    return this.productsSdk.addReplacementProduct(productId, this.toReplacementRequest(replacement)).pipe(
+    return this.productsSdk.addProductReplacement(productId, this.toReplacementRequest(replacement)).pipe(
       map((dto: ReplacementOption) => this.toReplacementProduct(dto)),
     );
   }
@@ -216,55 +205,20 @@ export class ProductCatalogService {
     );
   }
 
-  listCostStructures(itemId: string): Observable<CostStructure[]> {
-    return this.supplierCostListSdk.listCostStructures({ page: 0, size: 50 }, itemId).pipe(
-      map((page: Page) =>
-        ((page.content ?? []) as SupplierItemCostDto[]).map(dto => this.toCostStructure(dto)),
-      ),
-    );
-  }
-
-  getCostStructure(costStructureId: string): Observable<CostStructure> {
-    return this.supplierCostSdk.getCostStructure(costStructureId).pipe(
-      map((dto: SupplierItemCostDto) => this.toCostStructure(dto)),
-    );
-  }
-
-  createCostStructure(itemId: string, structure: Partial<CostStructure>): Observable<CostStructure> {
-    return this.supplierCostSdk.createCostStructure(this.toSupplierCostCreateRequest(itemId, structure)).pipe(
-      map((dto: SupplierItemCostDto) => this.toCostStructure(dto)),
-    );
-  }
-
-  updateCostStructure(
-    _itemId: string,
-    structureId: string,
-    update: Partial<CostStructure>,
-  ): Observable<CostStructure> {
-    return this.supplierCostSdk.updateCostStructure(structureId, this.toSupplierCostUpdateRequest(update)).pipe(
-      map((dto: SupplierItemCostDto) => this.toCostStructure(dto)),
-    );
-  }
-
-  deleteCostStructure(_itemId: string, structureId: string): Observable<void> {
-    return this.supplierCostSdk.deleteCostStructure(structureId).pipe(
-      map(() => undefined),
-    );
-  }
 
   updateStandardCost(itemId: string, update: StandardCostUpdate): Observable<ItemCost> {
     const req: UpdateStandardCostRequestDto = {
       newCost: update.standardCost,
       reasonCode: update.reasonCode,
     };
-    return this.itemCostSdk.updateStandardCost(itemId, req).pipe(
+    return this.itemCostSdk.updateStandardItemCost(itemId, req).pipe(
       map((dto: ItemCostsDto) => this.toItemCost(dto)),
     );
   }
 
   getAuditHistory(itemId: string, _page?: number): Observable<CostAuditEntry[]> {
     // SDK returns a single ItemCostAuditDto (not an array); wrap in array
-    return this.itemCostSdk.getAuditHistory(itemId).pipe(
+    return this.itemCostSdk.getItemCostAuditHistory(itemId).pipe(
       map((dto: ItemCostAuditDto) => [this.toCostAuditEntry(dto)]),
     );
   }
@@ -293,52 +247,52 @@ export class ProductCatalogService {
 
   listRules(priceBookId: string): Observable<PriceRule[]> {
     // SDK returns a single PriceBookRuleDto; wrap in array
-    return this.priceBookSdk.listRules(priceBookId).pipe(
+    return this.priceBookSdk.listPriceBookRules(priceBookId).pipe(
       map((dto: PriceBookRuleDto) => [this.toPriceRule(dto)]),
     );
   }
 
   createRule(priceBookId: string, rule: Partial<PriceRule>): Observable<PriceRule> {
-    return this.priceBookSdk.createRule(priceBookId, this.toPriceRuleCreateRequest(rule)).pipe(
+    return this.priceBookSdk.createPriceBookRule(priceBookId, this.toPriceRuleCreateRequest(rule)).pipe(
       map((dto: PriceBookRuleDto) => this.toPriceRule(dto)),
     );
   }
 
   updateRule(priceBookId: string, ruleId: string, update: Partial<PriceRule>): Observable<PriceRule> {
-    return this.priceBookSdk.updateRule(priceBookId, ruleId, this.toPriceRuleCreateRequest(update)).pipe(
+    return this.priceBookSdk.updatePriceBookRule(priceBookId, ruleId, this.toPriceRuleCreateRequest(update)).pipe(
       map((dto: PriceBookRuleDto) => this.toPriceRule(dto)),
     );
   }
 
   deactivateRule(priceBookId: string, ruleId: string): Observable<void> {
-    return this.priceBookSdk.deactivateRule(priceBookId, ruleId).pipe(
+    return this.priceBookSdk.deactivatePriceBookRule(priceBookId, ruleId).pipe(
       map(() => undefined),
     );
   }
 
   listMsrp(productSku: string): Observable<Msrp[]> {
     // SDK returns a single ProductMsrpDto; wrap in array
-    return this.msrpSdk.listMsrp(productSku).pipe(
+    return this.msrpSdk.listProductMsrpHistory(productSku).pipe(
       map((dto: ProductMsrpDto) => [this.toMsrp(dto)]),
     );
   }
 
   createMsrp(msrp: Partial<Msrp>): Observable<Msrp> {
     const productId = msrp.productSku ?? '';
-    return this.msrpSdk.createMsrp(productId, this.toCreateMsrpRequest(msrp)).pipe(
+    return this.msrpSdk.createProductMsrp(productId, this.toCreateMsrpRequest(msrp)).pipe(
       map((dto: ProductMsrpDto) => this.toMsrp(dto)),
     );
   }
 
   updateMsrp(msrpId: string, update: Partial<Msrp>): Observable<Msrp> {
     const productId = update.productSku ?? '';
-    return this.msrpSdk.updateMsrp(productId, msrpId, this.toUpdateMsrpRequest(update)).pipe(
+    return this.msrpSdk.updateProductMsrp(productId, msrpId, this.toUpdateMsrpRequest(update)).pipe(
       map((dto: ProductMsrpDto) => this.toMsrp(dto)),
     );
   }
 
   getActiveMsrp(productSku: string): Observable<ActiveMsrp | null> {
-    return this.msrpSdk.getActiveMsrp(productSku).pipe(
+    return this.msrpSdk.getActiveProductMsrp(productSku).pipe(
       map((dto: ProductMsrpDto) => {
         const base = this.toMsrp(dto);
         const active: ActiveMsrp = { ...base, active: true };
@@ -474,26 +428,7 @@ export class ProductCatalogService {
     };
   }
 
-  private toCostTier(dto: CostTierDto): CostTier {
-    return {
-      id: '',
-      minQty: dto.minQuantity,
-      maxQty: dto.maxQuantity ?? 0,
-      unitCost: dto.unitCost,
-      currency: '',
-    };
-  }
 
-  private toCostStructure(dto: SupplierItemCostDto): CostStructure {
-    return {
-      id: dto.id ?? '',
-      itemId: dto.itemId ?? '',
-      supplierId: dto.supplierId ?? '',
-      supplierName: '',
-      costType: '',
-      tiers: (dto.tiers ?? []).map(t => this.toCostTier(t)),
-    };
-  }
 
   private toCostAuditEntry(dto: ItemCostAuditDto): CostAuditEntry {
     return {
@@ -630,34 +565,8 @@ export class ProductCatalogService {
     };
   }
 
-  private toSupplierCostCreateRequest(
-    itemId: string,
-    structure: Partial<CostStructure>,
-  ): SupplierItemCostCreateRequestDto {
-    return {
-      supplierId: structure.supplierId ?? '',
-      itemId,
-      currencyCode: '',
-      tiers: (structure.tiers ?? []).map(t => this.toCostTierDto(t)),
-    };
-  }
 
-  private toSupplierCostUpdateRequest(update: Partial<CostStructure>): SupplierItemCostUpdateRequestDto {
-    return {
-      supplierId: update.supplierId ?? '',
-      itemId: update.itemId ?? '',
-      currencyCode: '',
-      tiers: (update.tiers ?? []).map(t => this.toCostTierDto(t)),
-    };
-  }
 
-  private toCostTierDto(tier: CostTier): CostTierDto {
-    return {
-      minQuantity: tier.minQty,
-      maxQuantity: tier.maxQty || null,
-      unitCost: tier.unitCost,
-    };
-  }
 
   private toPriceBookCreateRequest(priceBook: Partial<PriceBook>): PriceBookCreateRequestDto {
     let scope: PriceBookCreateRequestDtoScopeEnum = PriceBookCreateRequestDtoScopeEnum.CompanyDefault;

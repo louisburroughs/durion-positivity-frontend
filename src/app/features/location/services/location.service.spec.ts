@@ -14,7 +14,7 @@ describe('LocationService', () => {
 
   const locationApiStub = {
     createLocation: vi.fn(),
-    getAllLocations: vi.fn(),
+    listLocations: vi.fn(),
     getLocationById: vi.fn(),
     patchLocation: vi.fn(),
     updateLocation: vi.fn(),
@@ -31,11 +31,11 @@ describe('LocationService', () => {
     replaceCoverageRules: vi.fn(),
   };
   const siteDefaultsApiStub = {
-    getDefaults: vi.fn(),
-    configureDefaults: vi.fn(),
+    getSiteDefaults: vi.fn(),
+    configureSiteDefaults: vi.fn(),
   };
   const storageLocationApiStub = {
-    list2: vi.fn(),
+    listStorageLocations: vi.fn(),
   };
 
   beforeEach(() => {

@@ -67,7 +67,7 @@ export class InventoryDomainService {
   }
 
   getLocations(): Observable<LocationRef[]> {
-    return (this.refDataSdk.listInventoryLocations({ size: 200 }) as Observable<unknown>).pipe(
+    return (this.refDataSdk.listInventoryLocations(undefined, undefined, 200) as Observable<unknown>).pipe(
       map(page => pageContent<InventoryLocationDto>(page).map(dto => ({
         locationId: dto.locationId ?? '',
         name: dto.name ?? '',
@@ -77,7 +77,7 @@ export class InventoryDomainService {
   }
 
   getStorageLocations(locationId: string): Observable<StorageLocation[]> {
-    return (this.refDataSdk.listInventoryStorageLocations({ size: 500 }, locationId) as Observable<unknown>).pipe(
+    return (this.refDataSdk.listInventoryStorageLocations(locationId, undefined, 500) as Observable<unknown>).pipe(
       map(page => pageContent<InventoryStorageLocationDto>(page).map(dto => ({
         storageLocationId: dto.storageLocationId ?? '',
         locationId: dto.locationId ?? '',
@@ -89,7 +89,7 @@ export class InventoryDomainService {
   }
 
   getLocationZones(locationId: string): Observable<LocationZone[]> {
-    return (this.refDataSdk.listInventoryLocationZones({ size: 500 }, locationId) as Observable<unknown>).pipe(
+    return (this.refDataSdk.listInventoryLocationZones(locationId, undefined, 500) as Observable<unknown>).pipe(
       map(page => pageContent<InventoryLocationZoneDto>(page).map(dto => ({
         zoneId: dto.zoneId ?? '',
         zoneName: dto.zoneName ?? '',

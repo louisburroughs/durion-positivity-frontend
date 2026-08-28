@@ -24,12 +24,12 @@ describe('SecurityService', () => {
   };
 
   const roleManagementStub = {
-    getAllRoles: vi.fn(),
+    listRoles: vi.fn(),
     createRole: vi.fn(),
     getRoleByName: vi.fn(),
     updateRolePermissions: vi.fn(),
     revokeRoleAssignment: vi.fn(),
-    getUserRoleAssignments: vi.fn(),
+    listUserRoleAssignments: vi.fn(),
   };
   const userApiStub = { getUserById: vi.fn(), createUser: vi.fn() };
   const permissionRegistryStub = { listPermissions: vi.fn(), getAllPermissions1: vi.fn() };
@@ -60,7 +60,7 @@ describe('SecurityService', () => {
         pageSize: 20,
         totalPages: 1,
       };
-      roleManagementStub.getAllRoles.mockReturnValueOnce(of([
+      roleManagementStub.listRoles.mockReturnValueOnce(of([
         {
           name: 'ROLE_ADMIN',
           description: 'Admin role',
@@ -70,15 +70,15 @@ describe('SecurityService', () => {
       let result: PagedResponse<SecurityRole> | undefined;
       service.getAllRoles(0, 20).subscribe(r => (result = r));
 
-      expect(roleManagementStub.getAllRoles).toHaveBeenCalledWith();
+      expect(roleManagementStub.listRoles).toHaveBeenCalledWith();
       expect(result).toEqual(pagedResp);
     });
 
     it('calls roleManagementSdk.getAllRoles() regardless of page/size args', () => {
-      roleManagementStub.getAllRoles.mockReturnValueOnce(of([]));
+      roleManagementStub.listRoles.mockReturnValueOnce(of([]));
       service.getAllRoles(2, 5).subscribe();
 
-      expect(roleManagementStub.getAllRoles).toHaveBeenCalledWith();
+      expect(roleManagementStub.listRoles).toHaveBeenCalledWith();
     });
   });
 
@@ -194,20 +194,20 @@ describe('SecurityService', () => {
       const assignments: RoleAssignment[] = [
         { id: 'a1', userId: 'u1', roleName: 'ROLE_ADMIN', scopeType: 'GLOBAL' },
       ];
-      roleManagementStub.getUserRoleAssignments.mockReturnValueOnce(of(assignments));
+      roleManagementStub.listUserRoleAssignments.mockReturnValueOnce(of(assignments));
 
       let result: RoleAssignment[] | undefined;
       service.getUserRoleAssignments('u1').subscribe(r => (result = r));
 
-      expect(roleManagementStub.getUserRoleAssignments).toHaveBeenCalledWith('u1');
+      expect(roleManagementStub.listUserRoleAssignments).toHaveBeenCalledWith('u1');
       expect(result).toEqual(assignments);
     });
 
     it('passes userId as-is to the SDK', () => {
-      roleManagementStub.getUserRoleAssignments.mockReturnValueOnce(of([]));
+      roleManagementStub.listUserRoleAssignments.mockReturnValueOnce(of([]));
       service.getUserRoleAssignments('user@domain.com').subscribe();
 
-      expect(roleManagementStub.getUserRoleAssignments).toHaveBeenCalledWith('user@domain.com');
+      expect(roleManagementStub.listUserRoleAssignments).toHaveBeenCalledWith('user@domain.com');
     });
   });
 });

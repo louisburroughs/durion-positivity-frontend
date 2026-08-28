@@ -32,7 +32,7 @@ export class InventoryService {
   }
 
   listInventoryLocations(params?: { pageIndex?: number; pageSize?: number }): Observable<LocationDto[]> {
-    return (this.refDataSdk.listInventoryLocations(this.toPageable(params)) as Observable<unknown>).pipe(
+    return (this.refDataSdk.listInventoryLocations(undefined, params?.pageIndex, params?.pageSize) as Observable<unknown>).pipe(
       map(page => pageContent<LocationDto>(page)),
     );
   }
@@ -42,7 +42,7 @@ export class InventoryService {
     params?: { pageIndex?: number; pageSize?: number },
   ): Observable<StorageLocationDto[]> {
     return (
-      this.refDataSdk.listInventoryStorageLocations(this.toPageable(params), locationId) as Observable<unknown>
+      this.refDataSdk.listInventoryStorageLocations(locationId, params?.pageIndex, params?.pageSize) as Observable<unknown>
     ).pipe(map(page => pageContent<StorageLocationDto>(page)));
   }
 

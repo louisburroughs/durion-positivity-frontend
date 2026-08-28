@@ -76,7 +76,7 @@ export class AuthService {
       this.storeTokens(MOCK_RESPONSE.accessToken!, MOCK_RESPONSE.refreshToken!);
       return of(MOCK_RESPONSE);
     }
-    return this.authApiService.login(credentials).pipe(
+    return this.authApiService.loginUser(credentials).pipe(
       tap(resp => this.storeTokens(resp.accessToken!, resp.refreshToken!)),
     );
   }
@@ -116,7 +116,7 @@ export class AuthService {
       return this.refreshRequest$;
     }
 
-    this.refreshRequest$ = this.jwtApiService.refreshAccessToken({ refreshToken }).pipe(
+    this.refreshRequest$ = this.jwtApiService.refreshTokenPair({ refreshToken }).pipe(
       tap(resp => this.storeTokens(resp.accessToken!, resp.refreshToken!)),
       finalize(() => {
         this.refreshRequest$ = null;

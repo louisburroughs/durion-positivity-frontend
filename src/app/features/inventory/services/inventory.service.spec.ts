@@ -117,7 +117,7 @@ describe('InventoryDomainService', () => {
 
       service.getLocations().subscribe();
 
-      expect(refDataStub.listInventoryLocations).toHaveBeenCalledWith({ size: 200 });
+      expect(refDataStub.listInventoryLocations).toHaveBeenCalledWith(undefined, undefined, 200);
     });
 
     it('maps SDK location DTOs to LocationRef (active -> ACTIVE)', () => {
@@ -146,7 +146,7 @@ describe('InventoryDomainService', () => {
 
       service.getStorageLocations('loc-01').subscribe();
 
-      expect(refDataStub.listInventoryStorageLocations).toHaveBeenCalledWith({ size: 500 }, 'loc-01');
+      expect(refDataStub.listInventoryStorageLocations).toHaveBeenCalledWith('loc-01', undefined, 500);
     });
 
     it('maps SDK storage DTOs to StorageLocation', () => {
@@ -405,7 +405,7 @@ describe('InventoryDomainService', () => {
 
       service.getLocationZones('loc-01').subscribe();
 
-      expect(refDataStub.listInventoryLocationZones).toHaveBeenCalledWith({ size: 500 }, 'loc-01');
+      expect(refDataStub.listInventoryLocationZones).toHaveBeenCalledWith('loc-01', undefined, 500);
     });
 
     it('maps SDK zone DTOs to LocationZone', () => {

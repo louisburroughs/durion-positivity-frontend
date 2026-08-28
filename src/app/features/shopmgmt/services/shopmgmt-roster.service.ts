@@ -13,7 +13,7 @@ export class ShopmgmtRosterService {
   private readonly peopleApi = inject(PeopleAPIService);
 
   getAllPeople(): Observable<Person[]> {
-    return this.peopleApi.getAllPeople();
+    return this.peopleApi.listPeople();
   }
 
   // NOTE: The original page posted to /v1/people/employees with {firstName, lastName, email, role}.

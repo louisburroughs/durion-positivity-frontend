@@ -387,7 +387,7 @@ describe('BillingTransportService', () => {
       result = value;
     });
 
-    expect(invoiceSearchServiceStub.searchInvoices).toHaveBeenCalledWith({ page: 0, size: 10 }, 'Acme');
+    expect(invoiceSearchServiceStub.searchInvoices).toHaveBeenCalledWith('Acme', 0, 10);
     expect(result).toEqual([
       {
         id: 'inv-001',

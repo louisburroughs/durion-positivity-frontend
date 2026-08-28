@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { PurchaseOrdersService } from '@durion-sdk/inventory';
+import { PurchaseOrdersService } from '@durion-sdk/order';
 import { InventoryPurchaseOrderService } from './inventory-purchase-order.service';
 import {
   CreatePurchaseOrderRequest,
@@ -42,29 +42,25 @@ describe('InventoryPurchaseOrderService', () => {
       nextPageToken: null,
     };
 
-    it('calls poSdk.listPurchaseOrders with empty filter when no filter provided', () => {
+    it('calls poSdk.listPurchaseOrders with no vendor when no filter provided', () => {
       poSdkStub.listPurchaseOrders.mockReturnValueOnce(of(mockPage));
 
       service.queryPurchaseOrders().subscribe();
 
-      expect(poSdkStub.listPurchaseOrders).toHaveBeenCalledWith(
-        expect.objectContaining({ vendorId: undefined }),
-        {},
-      );
+      expect(poSdkStub.listPurchaseOrders).toHaveBeenCalledWith(undefined);
     });
 
-    it('passes supplierId in filter when provided', () => {
+    it('passes supplierId as the vendorId query parameter when provided', () => {
       poSdkStub.listPurchaseOrders.mockReturnValueOnce(of(mockPage));
 
       service.queryPurchaseOrders({ supplierId: 'sup-01' }).subscribe();
 
-      expect(poSdkStub.listPurchaseOrders).toHaveBeenCalledWith(
-        expect.objectContaining({ vendorId: 'sup-01', supplierId: 'sup-01' }),
-        {},
-      );
+      expect(poSdkStub.listPurchaseOrders).toHaveBeenCalledWith('sup-01');
     });
 
-    it('preserves purchase-order filter and pagination fields in the SDK request shape', () => {
+    it('does not forward date, page-token or status filters to the SDK', () => {
+      // The migrated endpoint only accepts vendorId; the remaining filter
+      // fields are applied client-side by filterPurchaseOrderPageResponse.
       poSdkStub.listPurchaseOrders.mockReturnValueOnce(of(mockPage));
 
       service.queryPurchaseOrders({
@@ -75,17 +71,7 @@ describe('InventoryPurchaseOrderService', () => {
         statuses: ['APPROVED'],
       }).subscribe();
 
-      expect(poSdkStub.listPurchaseOrders).toHaveBeenCalledWith(
-        expect.objectContaining({
-          vendorId: 'sup-01',
-          supplierId: 'sup-01',
-          dateFrom: '2026-01-01',
-          dateTo: '2026-03-31',
-          pageToken: 'page-2',
-          statuses: ['APPROVED'],
-        }),
-        {},
-      );
+      expect(poSdkStub.listPurchaseOrders).toHaveBeenCalledWith('sup-01');
     });
 
     it('returns the PurchaseOrderPageResponse emitted by the SDK', () => {

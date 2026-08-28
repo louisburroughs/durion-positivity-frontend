@@ -39,11 +39,11 @@ describe('AccountingService', () => {
   };
 
   const accountingEventsStub = {
-    getEvent: vi.fn(),
-    submitEvent: vi.fn(),
-    retryEventProcessing: vi.fn(),
+    getAccountingEvent: vi.fn(),
+    submitAccountingEvent: vi.fn(),
+    retryAccountingEvent: vi.fn(),
     reprocessSuspendedEvent: vi.fn(),
-    getReprocessingHistory: vi.fn(),
+    getEventReprocessingHistory: vi.fn(),
     listAccountingEvents: vi.fn(),
     getEventProcessingLog: vi.fn(),
   };
@@ -53,8 +53,8 @@ describe('AccountingService', () => {
   };
 
   const accountingExportsStub = {
-    requestExport1: vi.fn(),
-    getExportStatus1: vi.fn(),
+    requestExport: vi.fn(),
+    getExportStatus: vi.fn(),
     listExportHistory: vi.fn(),
   };
 
@@ -194,12 +194,12 @@ describe('AccountingService', () => {
         receivedAt: '2025-01-01T10:00:00Z',
         payload: { invoiceId: 'inv-001' },
       };
-      accountingEventsStub.getEvent.mockReturnValueOnce(of(sdkFixture));
+      accountingEventsStub.getAccountingEvent.mockReturnValueOnce(of(sdkFixture));
 
       let result: AccountingEventDetail | undefined;
       service.getEvent('evt-001').subscribe(r => (result = r));
 
-      expect(accountingEventsStub.getEvent).toHaveBeenCalledWith('evt-001');
+      expect(accountingEventsStub.getAccountingEvent).toHaveBeenCalledWith('evt-001');
       expect(result).toEqual({
         eventId: 'evt-001',
         eventType: 'InvoiceIssued',
@@ -226,8 +226,8 @@ describe('AccountingService', () => {
       service.listEvents(filters, 0, 20).subscribe();
 
       const args = accountingEventsStub.listAccountingEvents.mock.calls[0];
-      // invoiceId is positional arg index 9 (pageable,orgId,eventType,idempotencyOutcome,receivedAtFrom,receivedAtTo,eventId,ingestionId,domainKeyId,invoiceId,status)
-      expect(args[9]).toBe('inv-abc-123');
+      // invoiceId is positional arg index 8 (orgId,eventType,idempotencyOutcome,receivedAtFrom,receivedAtTo,eventId,ingestionId,domainKeyId,invoiceId,status,page,size)
+      expect(args[8]).toBe('inv-abc-123');
     });
   });
 
@@ -267,7 +267,7 @@ describe('AccountingService', () => {
       let result: PagedResponse<unknown> | undefined;
       service.listBills(0, 10).subscribe(r => (result = r));
 
-      expect(apPaymentsStub.listApBills).toHaveBeenCalledWith({ page: 0, size: 10 });
+      expect(apPaymentsStub.listApBills).toHaveBeenCalledWith(undefined, 0, 10);
       expect(result?.items).toHaveLength(1);
       expect((result?.items as { vendorBillId: string }[])[0].vendorBillId).toBe('bill-1');
       expect(result?.totalCount).toBe(1);
@@ -289,7 +289,7 @@ describe('AccountingService', () => {
       let result: VendorBill[] | undefined;
       service.listBillsByVendor('v-001').subscribe(r => (result = r));
 
-      expect(apPaymentsStub.listApBills).toHaveBeenCalledWith({ page: 0, size: 100 }, 'v-001');
+      expect(apPaymentsStub.listApBills).toHaveBeenCalledWith('v-001', 0, 100);
       expect(result).toEqual([vendorBillFixture]);
       expect(result?.[0].vendorBillId).toBe('bill-1');
     });
@@ -338,14 +338,14 @@ describe('AccountingService', () => {
 
   describe('requestExport()', () => {
     it('should call accountingExportsService.requestExport1 with an ExportJobRequest and map the response', () => {
-      accountingExportsStub.requestExport1.mockReturnValueOnce(of({ jobId: 'job-1', status: 'PENDING' }));
+      accountingExportsStub.requestExport.mockReturnValueOnce(of({ jobId: 'job-1', status: 'PENDING' }));
 
       let result: { exportId: string; status: string } | undefined;
       service
         .requestExport({ startDate: '2025-01-01', endDate: '2025-01-31', locationIds: ['loc-1'], format: 'CSV' })
         .subscribe(r => (result = r));
 
-      expect(accountingExportsStub.requestExport1).toHaveBeenCalledWith({
+      expect(accountingExportsStub.requestExport).toHaveBeenCalledWith({
         exportType: 'TIMEKEEPING',
         format: 'CSV',
         filters: { startDate: '2025-01-01', endDate: '2025-01-31', locationIds: ['loc-1'] },
@@ -356,14 +356,14 @@ describe('AccountingService', () => {
 
   describe('getExportStatus()', () => {
     it('should call accountingExportsService.getExportStatus1(exportId) and map the response', () => {
-      accountingExportsStub.getExportStatus1.mockReturnValueOnce(
+      accountingExportsStub.getExportStatus.mockReturnValueOnce(
         of({ jobId: 'job-1', status: 'COMPLETE', requestedAt: '2025-01-01T10:00:00Z', completedAt: '2025-01-01T10:05:00Z' }),
       );
 
       let result: { exportId: string; status: string; completedAt?: string } | undefined;
       service.getExportStatus('job-1').subscribe(r => (result = r));
 
-      expect(accountingExportsStub.getExportStatus1).toHaveBeenCalledWith('job-1');
+      expect(accountingExportsStub.getExportStatus).toHaveBeenCalledWith('job-1');
       expect(result?.exportId).toBe('job-1');
       expect(result?.status).toBe('COMPLETE');
       expect(result?.completedAt).toBe('2025-01-01T10:05:00Z');
@@ -378,7 +378,7 @@ describe('AccountingService', () => {
       let result: unknown[] | undefined;
       service.getExportHistory({ pageIndex: 1, pageSize: 5 }).subscribe(r => (result = r));
 
-      expect(accountingExportsStub.listExportHistory).toHaveBeenCalledWith({ page: 1, size: 5 });
+      expect(accountingExportsStub.listExportHistory).toHaveBeenCalledWith(1, 5);
       expect(result).toEqual([historyItem]);
     });
   });

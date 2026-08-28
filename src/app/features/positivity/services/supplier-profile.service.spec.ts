@@ -106,11 +106,11 @@ describe('SupplierProfileService', () => {
   let service: SupplierProfileService;
 
   const profilesSdk = {
-    listProfiles: vi.fn(),
-    getProfile: vi.fn(),
-    createProfile: vi.fn(),
-    updateProfile: vi.fn(),
-    deleteProfile: vi.fn(),
+    listVendorProfiles: vi.fn(),
+    getVendorProfile: vi.fn(),
+    createVendorProfile: vi.fn(),
+    updateVendorProfile: vi.fn(),
+    deleteVendorProfile: vi.fn(),
   };
   const authConfigsSdk = {
     listAuthConfigs: vi.fn(),
@@ -119,18 +119,18 @@ describe('SupplierProfileService', () => {
     deleteAuthConfig: vi.fn(),
   };
   const accountsSdk = {
-    listAccounts: vi.fn(),
-    createAccount: vi.fn(),
-    updateAccount: vi.fn(),
-    deleteAccount: vi.fn(),
+    listCommercialAccounts: vi.fn(),
+    createCommercialAccount: vi.fn(),
+    updateCommercialAccount: vi.fn(),
+    deleteCommercialAccount: vi.fn(),
   };
   const bindingsSdk = {
-    listBindings: vi.fn(),
-    createBinding: vi.fn(),
-    updateBinding: vi.fn(),
-    deleteBinding: vi.fn(),
+    listEndpointBindings: vi.fn(),
+    createEndpointBinding: vi.fn(),
+    updateEndpointBinding: vi.fn(),
+    deleteEndpointBinding: vi.fn(),
   };
-  const locationSdk = { getAllLocations: vi.fn() };
+  const locationSdk = { listLocations: vi.fn() };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -151,12 +151,12 @@ describe('SupplierProfileService', () => {
   // ── Profiles ───────────────────────────────────────────────────────────────
 
   it('listProfiles() maps the SDK view to profile summaries', () => {
-    profilesSdk.listProfiles.mockReturnValue(of([profileView]));
+    profilesSdk.listVendorProfiles.mockReturnValue(of([profileView]));
 
     let result: unknown;
     service.listProfiles().subscribe(value => (result = value));
 
-    expect(profilesSdk.listProfiles).toHaveBeenCalled();
+    expect(profilesSdk.listVendorProfiles).toHaveBeenCalled();
     expect(result).toEqual([
       {
         vendorProfileId: PROFILE_ID,
@@ -170,7 +170,7 @@ describe('SupplierProfileService', () => {
   });
 
   it('listProfiles() resolves the SDK’s optional fields at the boundary', () => {
-    profilesSdk.listProfiles.mockReturnValue(of([{} as VendorProfileView]));
+    profilesSdk.listVendorProfiles.mockReturnValue(of([{} as VendorProfileView]));
 
     let result: { supplierRef: string; enabled: boolean }[] = [];
     service.listProfiles().subscribe(value => (result = value));
@@ -180,22 +180,22 @@ describe('SupplierProfileService', () => {
   });
 
   it('getProfile() carries the contract-named timeout fields through', () => {
-    profilesSdk.getProfile.mockReturnValue(of(profileView));
+    profilesSdk.getVendorProfile.mockReturnValue(of(profileView));
 
     let result: { connectTimeoutMillis?: number; readTimeoutMillis?: number } = {};
     service.getProfile(PROFILE_ID).subscribe(value => (result = value));
 
-    expect(profilesSdk.getProfile).toHaveBeenCalledWith(PROFILE_ID);
+    expect(profilesSdk.getVendorProfile).toHaveBeenCalledWith(PROFILE_ID);
     expect(result.connectTimeoutMillis).toBe(5000);
     expect(result.readTimeoutMillis).toBe(20000);
   });
 
   it('createProfile() sends the request without server-generated fields', () => {
-    profilesSdk.createProfile.mockReturnValue(of(profileView));
+    profilesSdk.createVendorProfile.mockReturnValue(of(profileView));
 
     service.createProfile(profileRequest).subscribe();
 
-    const body = profilesSdk.createProfile.mock.calls[0][0] as Record<string, unknown>;
+    const body = profilesSdk.createVendorProfile.mock.calls[0][0] as Record<string, unknown>;
     expect(body).not.toHaveProperty('vendorProfileId');
     expect(body).not.toHaveProperty('sourceOfTruth');
     expect(body['connectTimeoutMillis']).toBe(5000);
@@ -203,20 +203,20 @@ describe('SupplierProfileService', () => {
   });
 
   it('updateProfile() targets the profile id', () => {
-    profilesSdk.updateProfile.mockReturnValue(of(profileView));
+    profilesSdk.updateVendorProfile.mockReturnValue(of(profileView));
 
     service.updateProfile(PROFILE_ID, profileRequest).subscribe();
 
-    expect(profilesSdk.updateProfile).toHaveBeenCalledWith(PROFILE_ID, expect.any(Object));
+    expect(profilesSdk.updateVendorProfile).toHaveBeenCalledWith(PROFILE_ID, expect.any(Object));
   });
 
   it('deleteProfile() completes with no value', () => {
-    profilesSdk.deleteProfile.mockReturnValue(of(null));
+    profilesSdk.deleteVendorProfile.mockReturnValue(of(null));
 
     let emitted: unknown = 'unset';
     service.deleteProfile(PROFILE_ID).subscribe(value => (emitted = value));
 
-    expect(profilesSdk.deleteProfile).toHaveBeenCalledWith(PROFILE_ID);
+    expect(profilesSdk.deleteVendorProfile).toHaveBeenCalledWith(PROFILE_ID);
     expect(emitted).toBeUndefined();
   });
 
@@ -304,8 +304,8 @@ describe('SupplierProfileService', () => {
   // ── Accounts + the delivery-gap composition ────────────────────────────────
 
   it('getAccounts() splits billing from delivery and names the mapped locations', () => {
-    accountsSdk.listAccounts.mockReturnValue(of([billingView, deliveryView]));
-    locationSdk.getAllLocations.mockReturnValue(of([activeLocation, secondActiveLocation]));
+    accountsSdk.listCommercialAccounts.mockReturnValue(of([billingView, deliveryView]));
+    locationSdk.listLocations.mockReturnValue(of([activeLocation, secondActiveLocation]));
 
     let result!: SupplierAccounts;
     service.getAccounts(PROFILE_ID).subscribe(value => (result = value));
@@ -318,8 +318,8 @@ describe('SupplierProfileService', () => {
   });
 
   it('getAccounts() lists only active locations for the gap check', () => {
-    accountsSdk.listAccounts.mockReturnValue(of([deliveryView]));
-    locationSdk.getAllLocations.mockReturnValue(
+    accountsSdk.listCommercialAccounts.mockReturnValue(of([deliveryView]));
+    locationSdk.listLocations.mockReturnValue(
       of([activeLocation, secondActiveLocation, inactiveLocation]),
     );
 
@@ -333,8 +333,8 @@ describe('SupplierProfileService', () => {
   });
 
   it('getAccounts() still returns the mappings when the location roster fails', () => {
-    accountsSdk.listAccounts.mockReturnValue(of([billingView, deliveryView]));
-    locationSdk.getAllLocations.mockReturnValue(
+    accountsSdk.listCommercialAccounts.mockReturnValue(of([billingView, deliveryView]));
+    locationSdk.listLocations.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 500, statusText: 'x' })),
     );
 
@@ -355,8 +355,8 @@ describe('SupplierProfileService', () => {
   });
 
   it('getAccounts() reports no billing account when the profile has none', () => {
-    accountsSdk.listAccounts.mockReturnValue(of([deliveryView]));
-    locationSdk.getAllLocations.mockReturnValue(of([activeLocation]));
+    accountsSdk.listCommercialAccounts.mockReturnValue(of([deliveryView]));
+    locationSdk.listLocations.mockReturnValue(of([activeLocation]));
 
     let billing: unknown = 'unset';
     service.getAccounts(PROFILE_ID).subscribe(value => (billing = value.billing));
@@ -365,12 +365,12 @@ describe('SupplierProfileService', () => {
   });
 
   it('saveBillingAccount() creates with the BILLING role when there is no account id', () => {
-    accountsSdk.createAccount.mockReturnValue(of(billingView));
+    accountsSdk.createCommercialAccount.mockReturnValue(of(billingView));
 
     service.saveBillingAccount(PROFILE_ID, { accountNumber: '4711', agencyCode: 'A1' }).subscribe();
 
-    expect(accountsSdk.updateAccount).not.toHaveBeenCalled();
-    expect(accountsSdk.createAccount).toHaveBeenCalledWith(PROFILE_ID, {
+    expect(accountsSdk.updateCommercialAccount).not.toHaveBeenCalled();
+    expect(accountsSdk.createCommercialAccount).toHaveBeenCalledWith(PROFILE_ID, {
       role: CommercialAccountRequestRoleEnum.Billing,
       accountNumber: '4711',
       agencyCode: 'A1',
@@ -378,14 +378,14 @@ describe('SupplierProfileService', () => {
   });
 
   it('saveBillingAccount() updates in place when the account id is known', () => {
-    accountsSdk.updateAccount.mockReturnValue(of(billingView));
+    accountsSdk.updateCommercialAccount.mockReturnValue(of(billingView));
 
     service
       .saveBillingAccount(PROFILE_ID, { accountId: 'acct-billing', accountNumber: '4712' })
       .subscribe();
 
-    expect(accountsSdk.createAccount).not.toHaveBeenCalled();
-    expect(accountsSdk.updateAccount).toHaveBeenCalledWith(
+    expect(accountsSdk.createCommercialAccount).not.toHaveBeenCalled();
+    expect(accountsSdk.updateCommercialAccount).toHaveBeenCalledWith(
       PROFILE_ID,
       'acct-billing',
       expect.objectContaining({ role: CommercialAccountRequestRoleEnum.Billing }),
@@ -393,13 +393,13 @@ describe('SupplierProfileService', () => {
   });
 
   it('saveDeliveryAccount() sends the location as deliveryLocationId with the DELIVERY role', () => {
-    accountsSdk.createAccount.mockReturnValue(of(deliveryView));
+    accountsSdk.createCommercialAccount.mockReturnValue(of(deliveryView));
 
     service
       .saveDeliveryAccount(PROFILE_ID, { locationId: LOCATION_A, accountNumber: '4711-01' })
       .subscribe();
 
-    expect(accountsSdk.createAccount).toHaveBeenCalledWith(PROFILE_ID, {
+    expect(accountsSdk.createCommercialAccount).toHaveBeenCalledWith(PROFILE_ID, {
       role: CommercialAccountRequestRoleEnum.Delivery,
       accountNumber: '4711-01',
       agencyCode: undefined,
@@ -408,7 +408,7 @@ describe('SupplierProfileService', () => {
   });
 
   it('saveDeliveryAccount() updates in place when the account id is known', () => {
-    accountsSdk.updateAccount.mockReturnValue(of(deliveryView));
+    accountsSdk.updateCommercialAccount.mockReturnValue(of(deliveryView));
 
     service
       .saveDeliveryAccount(PROFILE_ID, {
@@ -418,7 +418,7 @@ describe('SupplierProfileService', () => {
       })
       .subscribe();
 
-    expect(accountsSdk.updateAccount).toHaveBeenCalledWith(
+    expect(accountsSdk.updateCommercialAccount).toHaveBeenCalledWith(
       PROFILE_ID,
       'acct-delivery',
       expect.objectContaining({ deliveryLocationId: LOCATION_A }),
@@ -426,17 +426,17 @@ describe('SupplierProfileService', () => {
   });
 
   it('deleteAccount() targets the account id', () => {
-    accountsSdk.deleteAccount.mockReturnValue(of(null));
+    accountsSdk.deleteCommercialAccount.mockReturnValue(of(null));
 
     service.deleteAccount(PROFILE_ID, 'acct-delivery').subscribe();
 
-    expect(accountsSdk.deleteAccount).toHaveBeenCalledWith(PROFILE_ID, 'acct-delivery');
+    expect(accountsSdk.deleteCommercialAccount).toHaveBeenCalledWith(PROFILE_ID, 'acct-delivery');
   });
 
   // ── Bindings ───────────────────────────────────────────────────────────────
 
   it('listBindings() maps the contract field names onto the domain model', () => {
-    bindingsSdk.listBindings.mockReturnValue(of([bindingView]));
+    bindingsSdk.listEndpointBindings.mockReturnValue(of([bindingView]));
 
     let result: {
       protocolVersion: string;
@@ -453,7 +453,7 @@ describe('SupplierProfileService', () => {
   });
 
   it('createBinding() sends version/authConfigName/schedule under the contract names', () => {
-    bindingsSdk.createBinding.mockReturnValue(of(bindingView));
+    bindingsSdk.createEndpointBinding.mockReturnValue(of(bindingView));
     const request: SupplierBindingRequest = {
       capability: 'PRICE_CATALOG',
       protocolFamily: 'EDIWHEEL_B',
@@ -468,7 +468,7 @@ describe('SupplierProfileService', () => {
 
     service.createBinding(PROFILE_ID, request).subscribe();
 
-    const body = bindingsSdk.createBinding.mock.calls[0][1] as Record<string, unknown>;
+    const body = bindingsSdk.createEndpointBinding.mock.calls[0][1] as Record<string, unknown>;
     expect(body['version']).toBe('B4_0');
     expect(body['authConfigName']).toBe('michelin-prod');
     expect(body['schedule']).toBe('0 0 3 * * *');
@@ -477,7 +477,7 @@ describe('SupplierProfileService', () => {
   });
 
   it('createBinding() omits the schedule entirely for an on-demand capability', () => {
-    bindingsSdk.createBinding.mockReturnValue(of(bindingView));
+    bindingsSdk.createEndpointBinding.mockReturnValue(of(bindingView));
 
     service
       .createBinding(PROFILE_ID, {
@@ -492,12 +492,12 @@ describe('SupplierProfileService', () => {
       })
       .subscribe();
 
-    const body = bindingsSdk.createBinding.mock.calls[0][1] as Record<string, unknown>;
+    const body = bindingsSdk.createEndpointBinding.mock.calls[0][1] as Record<string, unknown>;
     expect(body['schedule']).toBeUndefined();
   });
 
   it('createBinding() accepts a capability key this UI has never heard of', () => {
-    bindingsSdk.createBinding.mockReturnValue(of(bindingView));
+    bindingsSdk.createEndpointBinding.mockReturnValue(of(bindingView));
 
     service
       .createBinding(PROFILE_ID, {
@@ -511,14 +511,14 @@ describe('SupplierProfileService', () => {
       })
       .subscribe();
 
-    const body = bindingsSdk.createBinding.mock.calls[0][1] as Record<string, unknown>;
+    const body = bindingsSdk.createEndpointBinding.mock.calls[0][1] as Record<string, unknown>;
     expect(body['capability']).toBe('SOME_NEW_CAPABILITY');
     expect(body['protocolFamily']).toBe('BRAND_NEW_FAMILY');
     expect(body['version']).toBe('Z9_9');
   });
 
   it('updateBinding() targets the binding id', () => {
-    bindingsSdk.updateBinding.mockReturnValue(of(bindingView));
+    bindingsSdk.updateEndpointBinding.mockReturnValue(of(bindingView));
 
     service
       .updateBinding(PROFILE_ID, 'bind-1', {
@@ -532,14 +532,14 @@ describe('SupplierProfileService', () => {
       })
       .subscribe();
 
-    expect(bindingsSdk.updateBinding).toHaveBeenCalledWith(PROFILE_ID, 'bind-1', expect.any(Object));
+    expect(bindingsSdk.updateEndpointBinding).toHaveBeenCalledWith(PROFILE_ID, 'bind-1', expect.any(Object));
   });
 
   it('deleteBinding() targets the binding id', () => {
-    bindingsSdk.deleteBinding.mockReturnValue(of(null));
+    bindingsSdk.deleteEndpointBinding.mockReturnValue(of(null));
 
     service.deleteBinding(PROFILE_ID, 'bind-1').subscribe();
 
-    expect(bindingsSdk.deleteBinding).toHaveBeenCalledWith(PROFILE_ID, 'bind-1');
+    expect(bindingsSdk.deleteEndpointBinding).toHaveBeenCalledWith(PROFILE_ID, 'bind-1');
   });
 });

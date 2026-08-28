@@ -22,14 +22,14 @@ describe('OrderService', () => {
   const salesOrdersApiStub = {
     getOrder: vi.fn(),
     createCart: vi.fn(),
-    addItem: vi.fn(),
-    removeItem: vi.fn(),
+    addCartItem: vi.fn(),
+    removeCartItem: vi.fn(),
   };
   const orderCancellationApiStub = {
     cancelOrder: vi.fn(),
   };
   const priceOverridesApiStub = {
-    getOverridesByOrder: vi.fn(),
+    searchPriceOverrides: vi.fn(),
     applyPriceOverride: vi.fn(),
   };
 
@@ -70,20 +70,20 @@ describe('OrderService', () => {
   it('addItem() delegates to SalesOrdersService.addItem', () => {
     const request: AddItemRequest = { itemSku: 'SKU-1', quantity: 2 };
     const response: SalesOrderLineResponse = { orderLineId: 'line-1', itemSku: 'SKU-1', quantity: 2 };
-    salesOrdersApiStub.addItem.mockReturnValue(of(response));
+    salesOrdersApiStub.addCartItem.mockReturnValue(of(response));
 
     service.addItem('ord-1', request).subscribe(result => expect(result).toEqual(response));
 
-    expect(salesOrdersApiStub.addItem).toHaveBeenCalledWith('ord-1', request);
+    expect(salesOrdersApiStub.addCartItem).toHaveBeenCalledWith('ord-1', request);
   });
 
   it('removeItem() delegates to SalesOrdersService.removeItem', () => {
     const response: SalesOrderLineResponse = { orderLineId: 'line-1', itemSku: 'SKU-1', quantity: 2 };
-    salesOrdersApiStub.removeItem.mockReturnValue(of(response));
+    salesOrdersApiStub.removeCartItem.mockReturnValue(of(response));
 
     service.removeItem('ord-1', 'line-1').subscribe(result => expect(result).toEqual(response));
 
-    expect(salesOrdersApiStub.removeItem).toHaveBeenCalledWith('ord-1', 'line-1');
+    expect(salesOrdersApiStub.removeCartItem).toHaveBeenCalledWith('ord-1', 'line-1');
   });
 
   it('cancelOrder() delegates to OrderCancellationService.cancelOrder', () => {
@@ -98,11 +98,11 @@ describe('OrderService', () => {
 
   it('getOverridesByOrder() delegates to PriceOverridesService.getOverridesByOrder', () => {
     const response: PriceOverrideDetail[] = [{ overrideId: 'ov-1', orderId: 'ord-1', orderLineId: 'line-1', productId: 'SKU-1', originalPrice: 100, overridePrice: 90, reasonCode: 'PRICE_MATCH', discountAmount: 10, discountPercentage: 10, status: 'PENDING', requiresApproval: true, affectsCommission: false, requestedByUserId: 'user-1', createdAt: '2026-05-01T00:00:00Z' }];
-    priceOverridesApiStub.getOverridesByOrder.mockReturnValue(of(response));
+    priceOverridesApiStub.searchPriceOverrides.mockReturnValue(of(response));
 
     service.getOverridesByOrder('ord-1').subscribe(result => expect(result).toEqual(response));
 
-    expect(priceOverridesApiStub.getOverridesByOrder).toHaveBeenCalledWith('ord-1');
+    expect(priceOverridesApiStub.searchPriceOverrides).toHaveBeenCalledWith('ord-1');
   });
 
   it('applyPriceOverride() delegates to PriceOverridesService.applyPriceOverride', () => {

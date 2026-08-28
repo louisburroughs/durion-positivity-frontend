@@ -91,7 +91,7 @@ describe('InventoryService', () => {
     it('delegates to the SDK with a pageable derived from pageIndex/pageSize', () => {
       service.listInventoryLocations({ pageIndex: 2, pageSize: 50 }).subscribe();
 
-      expect(refDataMock.listInventoryLocations).toHaveBeenCalledWith({ page: 2, size: 50 });
+      expect(refDataMock.listInventoryLocations).toHaveBeenCalledWith(undefined, 2, 50);
     });
 
     it('unwraps the Spring Page content into a typed array', () => {
@@ -120,7 +120,7 @@ describe('InventoryService', () => {
     it('delegates to the SDK with pageable and locationId', () => {
       service.listStorageLocations('loc-abc', { pageSize: 25 }).subscribe();
 
-      expect(refDataMock.listInventoryStorageLocations).toHaveBeenCalledWith({ size: 25 }, 'loc-abc');
+      expect(refDataMock.listInventoryStorageLocations).toHaveBeenCalledWith('loc-abc', undefined, 25);
     });
 
     it('unwraps the Spring Page content into a typed array', () => {

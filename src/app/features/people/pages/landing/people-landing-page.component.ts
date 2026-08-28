@@ -20,11 +20,11 @@ export class PeopleLandingPageComponent {
 
   /** Directory search scoped to employees (excludes non-employee persons). */
   private readonly employeeSearch = (q: string): Observable<RecordHit[]> =>
-    this.peopleApi.getAllPeople(q).pipe(map(people => this.toHits(people)));
+    this.peopleApi.listPeople(q).pipe(map(people => this.toHits(people)));
 
   /** Directory search across all persons (RBAC + location assignments by person UUID). */
   private readonly personSearch = (q: string): Observable<RecordHit[]> =>
-    this.peopleApi.getAllPeople(q).pipe(map(people => this.toHits(people)));
+    this.peopleApi.listPeople(q).pipe(map(people => this.toHits(people)));
 
   readonly searchFns: RecordSearchMap = {
     employee: this.employeeSearch,

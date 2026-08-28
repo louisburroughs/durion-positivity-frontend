@@ -194,7 +194,7 @@ export class EstimateDetailPageComponent implements OnInit {
         .subscribe(party => this.customerLabel.set(party ? partyLabel(party) : null));
 
       if (vehicleId) {
-        this.vehiclesApi.getVehiclesForCustomer(partyId, vehicleId, 'body', false, { transferCache: false })
+        this.vehiclesApi.getVehicleForCustomer(partyId, vehicleId, 'body', false, { transferCache: false })
           .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
           .subscribe(vehicle => {
             this.vehicleLabel.set(vehicle ? vehicleLabel(vehicle) : null);

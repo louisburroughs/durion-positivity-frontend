@@ -32,7 +32,7 @@ describe('InventoryReceivingService', () => {
     getReceivingSession: vi.fn(),
     receiveItemsIntoStaging: vi.fn(),
     createReceivingSession: vi.fn(),
-    crossDockLineToWorkorder: vi.fn(),
+    crossDockReceivingLine: vi.fn(),
   };
 
   beforeEach(() => {
@@ -318,15 +318,15 @@ describe('InventoryReceivingService', () => {
     };
 
     it('calls receivingSdk.crossDockLineToWorkorder with sessionId, receivingLineId, and request', () => {
-      receivingSdkStub.crossDockLineToWorkorder.mockReturnValueOnce(of(sdkResponse));
+      receivingSdkStub.crossDockReceivingLine.mockReturnValueOnce(of(sdkResponse));
 
       service.submitCrossDockReceipt(mockRequest).subscribe();
 
-      expect(receivingSdkStub.crossDockLineToWorkorder).toHaveBeenCalledWith('sess-001', 'rl-001', expectedSdkRequest);
+      expect(receivingSdkStub.crossDockReceivingLine).toHaveBeenCalledWith('sess-001', 'rl-001', expectedSdkRequest);
     });
 
     it('returns the CrossDockReceiveResult emitted by the SDK', () => {
-      receivingSdkStub.crossDockLineToWorkorder.mockReturnValueOnce(of(sdkResponse));
+      receivingSdkStub.crossDockReceivingLine.mockReturnValueOnce(of(sdkResponse));
 
       let result: CrossDockReceiveResult | undefined;
       service.submitCrossDockReceipt(mockRequest).subscribe(r => (result = r));

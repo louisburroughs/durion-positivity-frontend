@@ -440,7 +440,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
 
   private loadParentLocations(): void {
     this.locationSdk
-      .getRoster({ page: 0, size: 500 })
+      .getLocationRoster(undefined, undefined, 0, 500)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (page) => {
@@ -476,7 +476,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
         switchMap(q => {
           if (!q.trim()) return of({ data: [] as ProductSummary[] });
           return this.productsApi
-            .searchProducts(
+            .searchCatalogProducts(
               q,
               undefined,
               undefined,
