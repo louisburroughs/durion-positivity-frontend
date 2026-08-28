@@ -54,8 +54,11 @@ export class ProductInventoryService {
   private toLocationInventory(dto: LocationAvailabilityDto | AvailabilityView): LocationInventory {
     return {
       locationId: dto.locationId ?? '',
-      // listAvailabilityBySku returns AvailabilityView, which carries no
-      // locationName; callers resolve the display name from the location list.
+      // KNOWN GAP: listAvailabilityBySku returns AvailabilityView, which has no
+      // locationName, and nothing downstream resolves it -- the location column
+      // on the availability page renders blank. Needs either a join against the
+      // location list or a switch to getAvailabilityByProduct (which does carry
+      // locationName but is keyed by productId, not sku).
       locationName: 'locationName' in dto ? dto.locationName ?? '' : '',
       onHand: dto.onHandQuantity ?? 0,
       reserved: 0,

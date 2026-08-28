@@ -2162,7 +2162,6 @@
           "ARIA": "Product detail tabs",
           "LIFECYCLE": "Lifecycle",
           "UOM": "Units of Measure",
-          "COST_TIERS": "Cost Tiers",
           "STANDARD_COST": "Standard Cost"
         },
         "STATE": {
@@ -2194,13 +2193,6 @@
           "TO": "To",
           "FACTOR": "Factor",
           "ACTIVE": "Active"
-        },
-        "COST_TIERS": {
-          "TITLE": "Cost Tiers",
-          "SUPPLIER": "Supplier",
-          "MIN_QTY": "Min qty",
-          "MAX_QTY": "Max qty",
-          "UNIT_COST": "Unit cost"
         },
         "STANDARD_COST": {
           "TITLE": "Standard Cost",

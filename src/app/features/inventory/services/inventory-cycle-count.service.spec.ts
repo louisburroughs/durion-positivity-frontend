@@ -1,7 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
-import { CycleCountAPIService, CycleCountAdjustmentsService, CycleCountPlansService } from '@durion-sdk/inventory';
+import {
+  CycleCountAPIService,
+  CycleCountAdjustmentsService,
+  CycleCountPlanResponse,
+  CycleCountPlansService,
+} from '@durion-sdk/inventory';
 import { InventoryCycleCountService } from './inventory-cycle-count.service';
 import {
   AdjustmentDetail,
@@ -367,13 +372,30 @@ describe('InventoryCycleCountService', () => {
   // ── getCycleCountPlans() ───────────────────────────────────────────────
 
   describe('getCycleCountPlans()', () => {
-    const mockPlans: CycleCountPlan[] = [
+    // ADR-0032: the mock value must match the mocked SDK method's return type,
+    // so this is the SDK DTO, not the domain model the service maps it to.
+    const mockPlans: CycleCountPlanResponse[] = [
       {
         planId: 'plan-001',
         locationId: 'loc-01',
         zoneIds: ['zone-1', 'zone-2'],
+        planName: 'May cycle count',
         scheduledDate: '2026-05-01',
-        status: 'PENDING',
+        status: 'PLANNED',
+        createdBy: 'user-001',
+        createdAt: '2026-04-01T00:00:00Z',
+        updatedAt: '2026-04-02T00:00:00Z',
+      },
+    ];
+    const expectedPlans: CycleCountPlan[] = [
+      {
+        planId: 'plan-001',
+        locationId: 'loc-01',
+        zoneIds: ['zone-1', 'zone-2'],
+        planName: 'May cycle count',
+        scheduledDate: '2026-05-01',
+        status: 'PLANNED',
+        createdAt: '2026-04-01T00:00:00Z',
       },
     ];
 
@@ -407,7 +429,7 @@ describe('InventoryCycleCountService', () => {
       let result: CycleCountPlan[] | undefined;
       service.getCycleCountPlans().subscribe(r => (result = r));
 
-      expect(result).toEqual(mockPlans);
+      expect(result).toEqual(expectedPlans);
     });
   });
 

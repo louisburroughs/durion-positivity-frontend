@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { PermissionRegistryService, RoleManagementService, UserAPIService } from '@durion-sdk/security';
+import { ShopAuditService } from '@durion-sdk/shop-manager';
 import {
   CreateRoleRequest,
   PagedResponse,
@@ -33,6 +34,7 @@ describe('SecurityService', () => {
   };
   const userApiStub = { getUserById: vi.fn(), createUser: vi.fn() };
   const permissionRegistryStub = { listPermissions: vi.fn(), getAllPermissions1: vi.fn() };
+  const shopAuditStub = { searchShopAudit: vi.fn() };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -42,6 +44,7 @@ describe('SecurityService', () => {
         { provide: RoleManagementService, useValue: roleManagementStub },
         { provide: UserAPIService, useValue: userApiStub },
         { provide: PermissionRegistryService, useValue: permissionRegistryStub },
+        { provide: ShopAuditService, useValue: shopAuditStub },
       ],
     });
     service = TestBed.inject(SecurityService);
@@ -208,6 +211,43 @@ describe('SecurityService', () => {
       service.getUserRoleAssignments('user@domain.com').subscribe();
 
       expect(roleManagementStub.listUserRoleAssignments).toHaveBeenCalledWith('user@domain.com');
+    });
+  });
+  // ── SDK delegation (ADR-0035 minimum coverage for migrated methods) ────────
+
+  describe('createUser()', () => {
+    it('forwards the body to UserAPIService.createUser', () => {
+      userApiStub.createUser.mockReturnValueOnce(of({ id: 'u-1' }));
+
+      let result: unknown;
+      service.createUser({ username: 'alex', password: 'pw', roles: ['ADMIN'] }).subscribe(r => (result = r));
+
+      expect(userApiStub.createUser).toHaveBeenCalledWith({
+        username: 'alex',
+        password: 'pw',
+        roles: ['ADMIN'],
+      });
+      expect(result).toEqual({ id: 'u-1' });
+    });
+  });
+
+  describe('searchAudit()', () => {
+    it('passes the appointmentId as the second positional SDK parameter', () => {
+      shopAuditStub.searchShopAudit.mockReturnValueOnce(of([]));
+
+      service.searchAudit('appt-1').subscribe();
+
+      expect(shopAuditStub.searchShopAudit).toHaveBeenCalledWith(undefined, 'appt-1');
+    });
+
+    it('emits the audit entries returned by the SDK', () => {
+      const entries = [{ auditId: 'a-1', appointmentId: 'appt-1' }];
+      shopAuditStub.searchShopAudit.mockReturnValueOnce(of(entries));
+
+      let result: unknown[] | undefined;
+      service.searchAudit('appt-1').subscribe(r => (result = r));
+
+      expect(result).toEqual(entries);
     });
   });
 });
