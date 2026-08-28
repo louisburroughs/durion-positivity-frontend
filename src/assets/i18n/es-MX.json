@@ -599,7 +599,7 @@
         },
         "PARTY": {
           "TITLE": "Detalles de party",
-          "DESCRIPTION": "Consulta perfiles de party, agrega vehículos, gestiona contactos y configura reglas de facturación para un client específico."
+          "DESCRIPTION": "Consulta perfiles de party, agrega vehículos, gestiona contactos y configura reglas de facturación para un cliente específico."
         },
         "INSIGHTS": {
           "TITLE": "Información e integración",
@@ -1083,7 +1083,7 @@
       "CARD": {
         "LOCATIONS": {
           "TITLE": "Ubicaciones",
-          "DESCRIPTION": "Explora todos los registros de ubicaciones and administra tipos en tiendas, almacenes y unidades móviles."
+          "DESCRIPTION": "Explora todos los registros de ubicaciones y administra tipos en tiendas, almacenes y unidades móviles."
         },
         "LOCATION_NEW": {
           "TITLE": "Crear ubicación",
@@ -1343,7 +1343,7 @@
         },
         "APPOINTMENTS": {
           "TITLE": "Citas",
-          "DESCRIPTION": "Cree y gesticne citas de clientes, asignaciones, reprogramaciones y resolución de conflictos."
+          "DESCRIPTION": "Cree y gestione citas de clientes, asignaciones, reprogramaciones y resolución de conflictos."
         },
         "MECHANICS": {
           "TITLE": "Mecánicos",
@@ -1494,7 +1494,7 @@
     },
     "EVENT_ENVELOPE_CONTRACT": {
       "OVERLINE": "Contract",
-      "TITLE": "Contrat de sobre de evento",
+      "TITLE": "Contrato de sobre de evento",
       "TABS_ARIA": "Pestañas del contrato de evento",
       "TAB_FIELDS": "Fields",
       "TAB_TRACEABILITY": "ID de trazabilidad",
@@ -1654,7 +1654,7 @@
         "TABLE_CAPTION": "Registros de ingestión contable para esta factura",
         "COL_RECEIVED_AT": "Recibido el",
         "COL_STATUS": "Estado",
-        "COL_TYPE": "Type de evento",
+        "COL_TYPE": "Tipo de evento",
         "COL_ERROR": "Error"
       },
       "ERROR": {
@@ -1764,7 +1764,7 @@
         },
         "EVENTS_CONTRACT": {
           "TITLE": "Contrato de sobre de evento",
-          "DESCRIPTION": "Reviaa el contrato técnico y las definiciones de campos para los sobres de eventos contables."
+          "DESCRIPTION": "Revisa el contrato técnico y las definiciones de campos para los sobres de eventos contables."
         },
         "EVENTS_SUBMIT": {
           "TITLE": "Enviar evento",
@@ -1984,7 +1984,7 @@
           "DEFINITION": "Reclutamiento/publicidad para el personal de la planta."
         },
         "2_4": {
-          "LABEL": "Gastos de vehículos (remorque de polvo de caucho, camión del taller)",
+          "LABEL": "Gastos de vehículos (remolque de polvo de caucho, camión del taller)",
           "DEFINITION": "Incl.: vehículos solo para uso de la planta de recauchutado; tarifas del remolque de polvo de caucho. Excl.: vehículos de ventas/distribución/almacenamiento; seguro de vehículos (use 2.7.3); montacargas (use 2.11.5)."
         },
         "2_4_1": {
@@ -2977,7 +2977,7 @@
       "TAX_REQUIRED_TITLE": "Se requiere configuración de impuestos antes de enviar",
       "PARTIAL_SCOPE_ARIA": "Alcance de aprobación parcial",
       "PARTIAL_APPROVAL": "Aprobación parcial",
-      "PARTIAL_BODY": "{{approved}} article(s) approuvé(s) pour la promotion. {{declined}} article(s) ont été refusés et ne seront pas inclus dans l'ordre de travail.",
+      "PARTIAL_BODY": "{{approved}} elemento(s) aprobado(s) para promoción. {{declined}} elemento(s) fueron rechazados y no se incluirán en la orden de trabajo.",
       "SHOW_EXCLUDED": "Mostrar elementos excluidos",
       "EXCLUDED_ITEM": "— {{desc}} ({{type}})",
       "WO_EXISTS": "Ya existe una orden de trabajo para este presupuesto.",
@@ -2985,8 +2985,8 @@
       "DISMISS": "Descartar",
       "TRY_AGAIN": "Intentar de nuevo",
       "CREATING_WO": "Creando orden de trabajo…",
-      "PROMOTE_WO": "Promouvoir en ordre de travail",
-      "PROMOTION_REQUIRES": "La promotion nécessite l'approbation du client. Statut actuel : {{status}}."
+      "PROMOTE_WO": "Promover a orden de trabajo",
+      "PROMOTION_REQUIRES": "La promoción requiere la aprobación del cliente. Estado actual: {{status}}."
     },
     "ESTIMATE_LABOR": {
       "TITLE_WITH_NUM": "Mano de obra — {{num}}",
@@ -3088,8 +3088,8 @@
       "SUCCESS": "Presupuesto creado."
     },
     "WORKORDER_COMMON": {
-      "WORK_ORDER": "Bon de travail",
-      "WO_OVERLINE": "Bon de travail {{id}}",
+      "WORK_ORDER": "Orden de trabajo",
+      "WO_OVERLINE": "Orden de trabajo {{id}}",
       "BACK": "← Volver a la orden de trabajo",
       "BACK_SHORT": "← Orden de trabajo",
       "LOADING": "Cargando…",
@@ -3104,7 +3104,7 @@
       "OPTIONAL_PAREN": "(opcional)",
       "STATUS_APPROVED": "APROBADO",
       "STATUS_IN_PROGRESS": "EN CURSO",
-      "STATUS_COMPLETED": "TERMINÉ",
+      "STATUS_COMPLETED": "COMPLETADO",
       "COL_ID": "ID",
       "COL_STATUS": "Estado",
       "COL_BY": "Por",
@@ -3272,7 +3272,7 @@
       "STOPPING": "Deteniendo…",
       "STOP": "Detener sesión",
       "SELECT_SERVICE": "— Seleccionar línea de servicio —",
-      "SELECT_SERVICE_ARIA": "Sélectionner une ligne de service",
+      "SELECT_SERVICE_ARIA": "Seleccionar línea de servicio",
       "STARTING": "Iniciando…",
       "START": "Iniciar sesión",
       "MANUAL": "Entrada manual",
@@ -3366,7 +3366,7 @@
       "TITLE": "Contexto operativo",
       "EMPTY": "No se cargó ningún contexto.",
       "OVERRIDE": "Anular contexto",
-      "CONTEXT_KEY": "Clve de contexto",
+      "CONTEXT_KEY": "Clave de contexto",
       "CONTEXT_VALUE": "Valor de contexto",
       "REASON": "Motivo",
       "SUBMIT": "Enviar anulación",
@@ -3509,7 +3509,7 @@
           "DESCRIPTION": "Resolver la escasez de artículos de una orden de trabajo."
         },
         "SECURITY_PERMISSIONS": {
-          "TITLE": "Permissions",
+          "TITLE": "Permisos",
           "DESCRIPTION": "Gestionar acceso y configuración de permisos de inventario."
         },
         "IMPORT_STOCK": {
@@ -3734,7 +3734,7 @@
         }
       },
       "LINES": {
-        "TITLE": "Lignes",
+        "TITLE": "Líneas",
         "TABLE": {
           "ARIA": "Líneas de recepción",
           "HEADER": {
@@ -4213,7 +4213,7 @@
         "TITLE": "Ejecución de Surtido del Mecánico",
         "STATE": {
           "LOADING": "Cargando datos de ejecución de surtido...",
-          "AWAITING_SCAN": "Escanee un artículo para comenzar la confirmation.",
+          "AWAITING_SCAN": "Escanee un artículo para comenzar la confirmación.",
           "SCAN_NO_MATCH": "Ninguna línea coincide con ese escaneo."
         },
         "SECTION": {
@@ -4338,7 +4338,7 @@
       "SKU_FILTER": {
         "LABEL": "SKU",
         "PLACEHOLDER": "ej. SKU-001",
-        "ARIA_LABEL": "Filtrer por SKU",
+        "ARIA_LABEL": "Filtrar por SKU",
         "CLEAR_ARIA_LABEL": "Borrar filtro de SKU"
       },
       "PRODUCT_FILTER": {
@@ -4636,7 +4636,7 @@
         "PRINT_RECEIPT": "Imprimir recibo"
       },
       "MODE": {
-        "LABEL": "Sélectionner l'action de paiement"
+        "LABEL": "Seleccionar acción de pago"
       },
       "SUBMITTING": "Procesando...",
       "IDLE": "Seleccione un metodo de pago para comenzar.",
@@ -4741,7 +4741,7 @@
         "QTY": "Cant.",
         "UNIT_PRICE": "Precio unitario",
         "TOTAL": "Total",
-        "ACTIONS": "Actions"
+        "ACTIONS": "Acciones"
       }
     },
     "OVERRIDE": {
@@ -4946,7 +4946,7 @@
     },
     "JOBS": {
       "TITLE": "Trabajos de importacion",
-      "SUBTITLE": "Realice seguimiento y gestionar todos los trabajos de importacion masiva.",
+      "SUBTITLE": "Realice seguimiento y gestione todos los trabajos de importacion masiva.",
       "LOADING": "Cargando trabajos…",
       "EMPTY": "No se encontraron trabajos de importacion.",
       "REFRESH": "Actualizar",
@@ -5016,7 +5016,7 @@
         "SUBTITLE": "Cargue un archivo CSV o XLSX para importar masivamente los registros del catalogo de productos."
       },
       "PRICE": {
-        "TITLE": "Importar la tarification",
+        "TITLE": "Importar precios",
         "SUBTITLE": "Cargue un archivo CSV o XLSX para importar masivamente datos de precios."
       },
       "CUSTOMER": {
@@ -5074,12 +5074,12 @@
       }
     },
     "FILE_DROP": {
-      "ARIA_LABEL": "Zona de depot de fichiers",
-      "INSTRUCTION": "Glissez-deposez un fichier ici, ou cliquez pour parcourir",
-      "FORMATS": "Formats acceptes : .csv, .xlsx (max. 100 Mo)",
-      "BROWSE_LABEL": "Choisir un fichier",
-      "BROWSE_BTN": "Parcourir les fichiers",
-      "INPUT_ARIA": "Selectionner le fichier a importer",
+      "ARIA_LABEL": "Zona para soltar archivos",
+      "INSTRUCTION": "Arrastre y suelte un archivo aquí, o haga clic para buscar",
+      "FORMATS": "Formatos aceptados: .csv, .xlsx (máx. 100 MB)",
+      "BROWSE_LABEL": "Elegir archivo",
+      "BROWSE_BTN": "Buscar archivos",
+      "INPUT_ARIA": "Seleccionar archivo para importar",
       "ERROR": {
         "INVALID_FORMAT": "Formato de archivo inválido. Por favor cargue un archivo .csv o .xlsx.",
         "TOO_LARGE": "El archivo es demasiado grande. El tamaño máximo permitido es de 100 MB."

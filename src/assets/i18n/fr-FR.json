@@ -21,7 +21,7 @@
     "FEATURE_FINANCES_TITLE": "Gardez le contrôle de vos finances",
     "FEATURE_FINANCES_DESC": "Voyez exactement où va votre argent avec des résumés clairs en temps réel. Aucun diplôme en comptabilité requis.",
     "FEATURE_TEAM_TITLE": "Votre équipe, bien organisée",
-    "FEATURE_TEAM_DESC": "Suivez les heures, gerez les horaires et maintenez votre personnel opérationnel — que vous ayez deux personnes ou vingt.",
+    "FEATURE_TEAM_DESC": "Suivez les heures, gérez les horaires et maintenez votre personnel opérationnel — que vous ayez deux personnes ou vingt.",
     "FEATURE_LOCATIONS_TITLE": "Grandissez sans limites",
     "FEATURE_LOCATIONS_DESC": "Vous gérez plusieurs succursales? Administrez tout depuis une seule vue sans perdre la vue d'ensemble.",
     "FEATURE_REPORTS_TITLE": "Des données en un coup d'œil",
@@ -1031,7 +1031,7 @@
       "PROMPT": "Sélectionnez un emplacement pour afficher et modifier ses baies."
     },
     "MOBILE_UNITS": {
-      "TITLE": "Unites mobiles",
+      "TITLE": "Unités mobiles",
       "CREATE_MOBILE_UNIT": "Créer une unité mobile",
       "COVERAGE_RULES": "Règles de couverture",
       "NAME": "Nom",
@@ -1069,7 +1069,7 @@
       "SECTION": {
         "LOCATIONS": {
           "TITLE": "Emplacements",
-          "DESCRIPTION": "Créez et gerez les enregistrements d'emplacements pour les magasins, entrepôts et unités mobiles."
+          "DESCRIPTION": "Créez et gérez les enregistrements d'emplacements pour les magasins, entrepôts et unités mobiles."
         },
         "RESOURCES": {
           "TITLE": "Ressources des installations",
@@ -3709,7 +3709,7 @@
           "CONFIRM": "Confirmer le Cross-Dock"
         },
         "SUCCESS": {
-          "TITLE": "Cross-Dock confirmed",
+          "TITLE": "Cross-Dock confirmé",
           "REFERENCE": "Référence d'émission",
           "MODE": "Mode d'émission"
         },
