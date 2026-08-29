@@ -217,9 +217,8 @@ export class ProductCatalogService {
   }
 
   getAuditHistory(itemId: string, _page?: number): Observable<CostAuditEntry[]> {
-    // SDK returns a single ItemCostAuditDto (not an array); wrap in array
     return this.itemCostSdk.getItemCostAuditHistory(itemId).pipe(
-      map((dto: ItemCostAuditDto) => [this.toCostAuditEntry(dto)]),
+      map((dtos: ItemCostAuditDto[]) => dtos.map((dto) => this.toCostAuditEntry(dto))),
     );
   }
 
@@ -246,9 +245,8 @@ export class ProductCatalogService {
   }
 
   listRules(priceBookId: string): Observable<PriceRule[]> {
-    // SDK returns a single PriceBookRuleDto; wrap in array
     return this.priceBookSdk.listPriceBookRules(priceBookId).pipe(
-      map((dto: PriceBookRuleDto) => [this.toPriceRule(dto)]),
+      map((dtos: PriceBookRuleDto[]) => dtos.map((dto) => this.toPriceRule(dto))),
     );
   }
 
@@ -271,9 +269,8 @@ export class ProductCatalogService {
   }
 
   listMsrp(productSku: string): Observable<Msrp[]> {
-    // SDK returns a single ProductMsrpDto; wrap in array
     return this.msrpSdk.listProductMsrpHistory(productSku).pipe(
-      map((dto: ProductMsrpDto) => [this.toMsrp(dto)]),
+      map((dtos: ProductMsrpDto[]) => dtos.map((dto) => this.toMsrp(dto))),
     );
   }
 
