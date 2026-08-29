@@ -5,7 +5,17 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./out-tsc/spec",
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
+    /*
+     * Mirrors the `resolve.alias` entries in vitest.config.ts so specs type-check
+     * against the same modules they run against. Without this, `tus-js-client`
+     * types resolve to the real package while the code under test receives the
+     * shim, and importing the shim by relative path yields a second module
+     * instance whose state the code under test never sees.
+     */
+    "paths": {
+      "tus-js-client": ["./src/test-shims/tus-js-client"]
+    }
   },
   "include": [
     "src/**/*.d.ts",

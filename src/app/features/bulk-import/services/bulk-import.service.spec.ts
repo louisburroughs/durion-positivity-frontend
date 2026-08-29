@@ -11,10 +11,15 @@ import {
   SubmitCorrectionRequest,
 } from '../models/bulk-import.models';
 
+// `vitest.config.ts` aliases `tus-js-client` to `src/test-shims/tus-js-client`,
+// so `vi.doMock('tus-js-client')` would never be reached: the alias rewrites the
+// specifier before the mock registry is consulted. The shim's `tusTestState` is
+// the seam instead. It has to be re-imported after `vi.resetModules()` below so
+// the spec and the service share one instance.
 const tusState = {
-  instances: [] as Array<{ file: File; options: Record<string, unknown> }>,
+  instances: [] as Array<import('tus-js-client').TusUploadRecord>,
   start: vi.fn(),
-  abort: vi.fn().mockResolvedValue(undefined),
+  abort: vi.fn<(retry?: boolean) => Promise<void>>().mockResolvedValue(undefined),
   findPreviousUploads: vi.fn(() => Promise.resolve([] as Array<{ uploadUrl: string }>)),
   resumeFromPreviousUpload: vi.fn(),
 };
@@ -40,20 +45,17 @@ describe('BulkImportService', () => {
     tusState.findPreviousUploads.mockReset().mockResolvedValue([] as Array<{ uploadUrl: string }>);
     tusState.resumeFromPreviousUpload.mockReset();
     vi.resetModules();
-    vi.doMock('tus-js-client', () => ({
-      Upload: function MockUpload(this: {
-        start: typeof tusState.start;
-        abort: typeof tusState.abort;
-        findPreviousUploads: typeof tusState.findPreviousUploads;
-        resumeFromPreviousUpload: typeof tusState.resumeFromPreviousUpload;
-      }, file: File, options: Record<string, unknown>) {
-        tusState.instances.push({ file, options });
-        this.start = tusState.start;
-        this.abort = tusState.abort;
-        this.findPreviousUploads = tusState.findPreviousUploads;
-        this.resumeFromPreviousUpload = tusState.resumeFromPreviousUpload;
-      },
-    }));
+
+    // Imported by the same specifier the service uses, after resetModules, so
+    // this is the one module instance both sides share. A relative path to the
+    // shim would resolve to a second, separate instance.
+    const tusShim = await import('tus-js-client');
+    tusShim.tusTestState.reset();
+    tusShim.tusTestState.instances = tusState.instances;
+    tusShim.tusTestState.start = tusState.start;
+    tusShim.tusTestState.abort = tusState.abort;
+    tusShim.tusTestState.findPreviousUploads = tusState.findPreviousUploads;
+    tusShim.tusTestState.resumeFromPreviousUpload = tusState.resumeFromPreviousUpload;
 
     authStub.accessToken.mockReset().mockReturnValue('test-jwt');
 
@@ -81,7 +83,6 @@ describe('BulkImportService', () => {
 
   afterEach(() => {
     tusState.instances.length = 0;
-    vi.doUnmock('tus-js-client');
     vi.clearAllMocks();
   });
 
