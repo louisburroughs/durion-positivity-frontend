@@ -4,7 +4,17 @@ import path from 'node:path';
 const repoRoot = process.cwd();
 const i18nDir = path.join(repoRoot, 'src', 'assets', 'i18n');
 const baseLocale = 'en-US.json';
-const releaseLocales = ['es-US.json', 'fr-CA.json'];
+// qps-ploc is generated from en-US and validated by generate-pseudo-locale.mjs --check.
+const generatedLocales = new Set(['qps-ploc.json']);
+
+// Derived from disk rather than hardcoded: every shipped locale file is a release
+// locale, so adding a new one to src/assets/i18n automatically puts it under this
+// check. A hardcoded list previously let es-MX and fr-FR ship 412 keys short.
+const releaseLocales = fs
+  .readdirSync(i18nDir)
+  .filter((file) => file.endsWith('.json'))
+  .filter((file) => file !== baseLocale && !generatedLocales.has(file))
+  .sort();
 
 function loadJson(filePath) {
   try {

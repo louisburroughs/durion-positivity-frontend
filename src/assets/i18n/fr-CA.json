@@ -522,12 +522,6 @@
     "DIRECTORY": {
       "TITLE": "Répertoire des personnes",
       "SEARCH_PLACEHOLDER": "Rechercher par nom, courriel ou nom d’utilisateur…",
-      "FILTER": {
-        "ALL": "Tous",
-        "EMPLOYEE": "Employés",
-        "ACTIVE": "Actifs",
-        "INACTIVE": "Inactifs"
-      },
       "COL": {
         "NAME": "Nom",
         "USERNAME": "Nom d’utilisateur",

@@ -335,7 +335,7 @@
           "DESCRIPTION": "Abre páginas de roles y asignaciones de ubicación con los identificadores necesarios."
         },
         "DATA_IMPORT": {
-          "TITLE": "Importacion de datos",
+          "TITLE": "Importación de datos",
           "DESCRIPTION": "Importe masivamente datos de personal y RR.HH."
         },
         "DIRECTORY": {
@@ -522,12 +522,6 @@
     "DIRECTORY": {
       "TITLE": "Directorio de personas",
       "SEARCH_PLACEHOLDER": "Buscar por nombre, correo o usuario…",
-      "FILTER": {
-        "ALL": "Todos",
-        "EMPLOYEE": "Empleados",
-        "ACTIVE": "Activos",
-        "INACTIVE": "Inactivos"
-      },
       "COL": {
         "NAME": "Nombre",
         "USERNAME": "Usuario",
@@ -612,7 +606,7 @@
           "DESCRIPTION": "Accede al snapshot de CRM para obtener contexto del cliente de un vistazo y revisa eventos de integración para diagnósticos."
         },
         "DATA_IMPORT": {
-          "TITLE": "Importacion de datos",
+          "TITLE": "Importación de datos",
           "DESCRIPTION": "Importe masivamente datos de CRM."
         }
       },
@@ -666,12 +660,12 @@
           "DESCRIPTION": "Importe masivamente registros de clientes desde un archivo CSV o XLSX."
         },
         "IMPORT_VEHICLE_INVENTORY": {
-          "TITLE": "Importar inventario de vehiculos",
-          "DESCRIPTION": "Importe masivamente registros de inventario de vehiculos desde un archivo CSV o XLSX."
+          "TITLE": "Importar inventario de vehículos",
+          "DESCRIPTION": "Importe masivamente registros de inventario de vehículos desde un archivo CSV o XLSX."
         },
         "IMPORT_VEHICLE_FITMENT": {
-          "TITLE": "Importar adaptacion de vehiculos",
-          "DESCRIPTION": "Importe masivamente registros de adaptacion de vehiculos desde un archivo CSV o XLSX."
+          "TITLE": "Importar adaptación de vehículos",
+          "DESCRIPTION": "Importe masivamente registros de adaptación de vehículos desde un archivo CSV o XLSX."
         }
       },
       "FIELD": {
@@ -797,7 +791,7 @@
       "LOADING": "Cargando roles...",
       "EMPTY_TITLE": "No se encontraron roles",
       "EMPTY_MESSAGE": "Intenta ajustar la búsqueda o crear un nuevo rol.",
-      "NO_DESCRIPTION": "No se proporcionó descripción.",
+      "NO_DESCRIPTION": "No se proporciónó descripción.",
       "VIEW_DETAIL": "Ver detalle",
       "VIEW_DETAIL_ARIA": "Ver detalles del rol {{name}}",
       "PREVIOUS": "Anterior",
@@ -855,7 +849,7 @@
       "BACK_TO_ROLES": "Roles /",
       "TITLE": "Roles / {{name}}",
       "LOADING": "Cargando detalles del rol...",
-      "NO_DESCRIPTION": "No se proporcionó descripción.",
+      "NO_DESCRIPTION": "No se proporciónó descripción.",
       "NO_DESCRIPTION_AVAILABLE": "No hay descripción disponible.",
       "CREATED": "Creado",
       "UPDATED": "Actualizado",
@@ -892,7 +886,7 @@
         "SELECTION_LIST": "Lista de selección de permisos"
       },
       "ERROR": {
-        "MISSING_ROLE_NAME": "No se proporcionó el nombre del rol.",
+        "MISSING_ROLE_NAME": "No se proporciónó el nombre del rol.",
         "LOAD_ROLE": "No se pudieron cargar los detalles del rol.",
         "LOAD_PERMISSIONS": "No se pudieron cargar los permisos.",
         "UPDATE_PERMISSIONS": "No se pudieron actualizar los permisos del rol.",
@@ -1082,7 +1076,7 @@
           "DESCRIPTION": "Accede a bahías, unidades móviles, ubicaciones de almacenamiento y herramientas de sincronización."
         },
         "DATA_IMPORT": {
-          "TITLE": "Importacion de datos",
+          "TITLE": "Importación de datos",
           "DESCRIPTION": "Importe masivamente datos de ubicaciones."
         }
       },
@@ -1540,7 +1534,7 @@
       "TABLE_CAPTION": "Conjuntos de reglas de contabilización",
       "COL_NAME": "Name",
       "COL_EVENT_TYPE": "Tipo de evento",
-      "COL_VERSION": "Version",
+      "COL_VERSION": "Versión",
       "COL_STATUS": "Status",
       "STATUS": {
         "DRAFT": "Draft",
@@ -1666,7 +1660,7 @@
       "ERROR": {
         "LOAD": "No se puede cargar el estado de pago. Intenta de nuevo.",
         "ACCESS_DENIED": "No tienes permiso para ver esta página.",
-        "MISSING_ID": "No se proporcionó ID de factura."
+        "MISSING_ID": "No se proporciónó ID de factura."
       }
     },
     "VENDOR_LOOKUP": {
@@ -2214,7 +2208,7 @@
       },
       "ERROR": {
         "LOAD": "Error al cargar los detalles del producto.",
-        "MISSING_PRODUCT_ID": "No se proporcionó el ID del producto."
+        "MISSING_PRODUCT_ID": "No se proporciónó el ID del producto."
       },
       "LIFECYCLE": {
         "ERROR": {
@@ -2424,16 +2418,16 @@
       }
     },
     "LANDING": {
-      "EYEBROW": "Producto y catalogo",
-      "TITLE": "Gestion de productos",
-      "SUBTITLE": "Administre su catalogo de productos, precios, fuentes de inventario e importaciones masivas.",
+      "EYEBROW": "Producto y catálogo",
+      "TITLE": "Gestión de productos",
+      "SUBTITLE": "Administre su catálogo de productos, precios, fuentes de inventario e importaciones masivas.",
       "HERO": {
-        "OPEN_CATALOG": "Abrir catalogo",
+        "OPEN_CATALOG": "Abrir catálogo",
         "OPEN_PRICE_BOOKS": "Abrir listas de precios"
       },
       "STAT": {
-        "ARIA": "Estadisticas de gestion de productos",
-        "PAGES": "Paginas totales",
+        "ARIA": "Estadísticas de gestión de productos",
+        "PAGES": "Páginas totales",
         "DIRECT_LINKS": "Accesos directos",
         "GUIDED_LAUNCHES": "Accesos guiados"
       },
@@ -2444,26 +2438,26 @@
       },
       "SECTION": {
         "CATALOG": {
-          "TITLE": "Catalogo",
+          "TITLE": "Catálogo",
           "DESCRIPTION": "Explore y administre registros de productos."
         },
         "PRICING": {
           "TITLE": "Precios",
-          "DESCRIPTION": "Administre listas de precios, MSRP y anulaciones por ubicacion."
+          "DESCRIPTION": "Administre listas de precios, MSRP y anulaciones por ubicación."
         },
         "INVENTORY": {
           "TITLE": "Inventario",
           "DESCRIPTION": "Supervise disponibilidad y administre fuentes de inventario."
         },
         "DATA_IMPORT": {
-          "TITLE": "Importacion de datos",
-          "DESCRIPTION": "Importe masivamente datos de catalogo y precios de productos."
+          "TITLE": "Importación de datos",
+          "DESCRIPTION": "Importe masivamente datos de catálogo y precios de productos."
         }
       },
       "CARD": {
         "CATALOG_LIST": {
           "TITLE": "Lista de productos",
-          "DESCRIPTION": "Vea y administre todos los productos del catalogo."
+          "DESCRIPTION": "Vea y administre todos los productos del catálogo."
         },
         "PRICE_BOOKS": {
           "TITLE": "Listas de precios",
@@ -2474,8 +2468,8 @@
           "DESCRIPTION": "Defina y administre precios minoristas sugeridos por el fabricante."
         },
         "LOCATION_OVERRIDES": {
-          "TITLE": "Anulaciones por ubicacion",
-          "DESCRIPTION": "Administre anulaciones de precios especificas por ubicacion."
+          "TITLE": "Anulaciones por ubicación",
+          "DESCRIPTION": "Administre anulaciones de precios especificas por ubicación."
         },
         "AVAILABILITY": {
           "TITLE": "Disponibilidad",
@@ -2486,8 +2480,8 @@
           "DESCRIPTION": "Administre fuentes automatizadas de datos de inventario."
         },
         "IMPORT_CATALOG": {
-          "TITLE": "Importar catalogo",
-          "DESCRIPTION": "Importe masivamente registros del catalogo de productos desde un archivo CSV o XLSX."
+          "TITLE": "Importar catálogo",
+          "DESCRIPTION": "Importe masivamente registros del catálogo de productos desde un archivo CSV o XLSX."
         },
         "IMPORT_PRICE": {
           "TITLE": "Importar precios",
@@ -2502,29 +2496,29 @@
       "ARIA": {
         "SECTION": "Lista de estimados"
       },
-      "IDLE": "Seleccione un cliente o un vehiculo para ver estimados.",
+      "IDLE": "Seleccione un cliente o un vehículo para ver estimados.",
       "EMPTY": "No se encontraron estimados.",
       "ERROR": {
         "LOAD": "No se pudieron cargar los estimados. Intente de nuevo."
       },
       "CARD": {
         "ARIA_LABEL": "Estimado para cliente",
-        "LAST_UPDATED": "Ultima actualizacion",
+        "LAST_UPDATED": "Última actualización",
         "TOTAL": "Total"
       },
       "CUSTOMER_SEARCH": {
         "LABEL": "Buscar por cliente",
-        "PLACEHOLDER": "Buscar por nombre o numero de cliente…"
+        "PLACEHOLDER": "Buscar por nombre o número de cliente…"
       }
     },
     "ESTIMATE_STATUS": {
       "DRAFT": "Borrador",
-      "PENDING_REVIEW": "Pendiente de revision",
+      "PENDING_REVIEW": "Pendiente de revisión",
       "APPROVED": "Aprobado",
       "REJECTED": "Rechazado",
       "REVISED": "Revisado",
       "EXPIRED": "Vencido",
-      "PENDING_APPROVAL": "Pendiente de aprobacion",
+      "PENDING_APPROVAL": "Pendiente de aprobación",
       "OPEN": "Abierto",
       "PENDING_CUSTOMER": "Pendiente del cliente",
       "DECLINED": "Declinado",
@@ -2550,24 +2544,24 @@
       "TITLE": "Trabajo En Progreso",
       "ARIA": {
         "SECTION": "Tablero de trabajo en progreso",
-        "TABLE": "Ordenes de trabajo activas"
+        "TABLE": "Órdenes de trabajo activas"
       },
       "EMPTY": "No hay workorders activas.",
       "ERROR": {
         "LOAD": "No se pudo cargar el estado WIP."
       },
       "LOCATION": {
-        "LABEL": "Ubicacion",
-        "PLACEHOLDER": "Ingrese un ID de ubicacion",
+        "LABEL": "Ubicación",
+        "PLACEHOLDER": "Ingrese un ID de ubicación",
         "LOAD": "Cargar",
-        "HINT": "Ingrese un ID de ubicacion para ver el trabajo en progreso."
+        "HINT": "Ingrese un ID de ubicación para ver el trabajo en progreso."
       },
       "COLUMN": {
         "WORKORDER": "Orden de trabajo",
         "STATUS": "Estado",
-        "TECHNICIAN": "Tecnico",
+        "TECHNICIAN": "Técnico",
         "CUSTOMER": "Cliente",
-        "VEHICLE": "Vehiculo"
+        "VEHICLE": "Vehículo"
       }
     },
     "WIP_STATUS": {
@@ -2576,24 +2570,24 @@
       "ASSIGNED": "Asignado",
       "WORK_IN_PROGRESS": "En progreso",
       "AWAITING_PARTS": "Esperando partes",
-      "AWAITING_APPROVAL": "Esperando aprobacion",
+      "AWAITING_APPROVAL": "Esperando aprobación",
       "READY_FOR_PICKUP": "Listo para recoger",
       "COMPLETED": "Completado",
       "CANCELLED": "Cancelado"
     },
     "INVOICE_FINALIZATION": {
-      "TITLE": "Finalizacion de Factura",
+      "TITLE": "Finalización de Factura",
       "ARIA": {
-        "SECTION": "Formulario de finalizacion de factura",
-        "ITEMS_TABLE": "Lineas de factura"
+        "SECTION": "Formulario de finalización de factura",
+        "ITEMS_TABLE": "Líneas de factura"
       },
       "ERROR": {
         "LOAD": "No se pudo cargar la factura.",
-        "MISSING_WORKORDER_ID": "No se proporcionó ID de workorder.",
-        "SUBMIT": "No se pudo solicitar la finalizacion. Intente de nuevo."
+        "MISSING_WORKORDER_ID": "No se proporciónó ID de workorder.",
+        "SUBMIT": "No se pudo solicitar la finalización. Intente de nuevo."
       },
       "COLUMN": {
-        "DESCRIPTION": "Descripcion",
+        "DESCRIPTION": "Descripción",
         "QTY": "Cant.",
         "UNIT_PRICE": "Precio unitario",
         "LINE_TOTAL": "Total",
@@ -2606,17 +2600,17 @@
       },
       "FORM": {
         "REASON_LABEL": "Motivo (opcional)",
-        "REASON_PLACEHOLDER": "Ingrese el motivo de finalizacion"
+        "REASON_PLACEHOLDER": "Ingrese el motivo de finalización"
       },
       "ACTION": {
-        "REQUEST_FINALIZATION": "Solicitar finalizacion",
+        "REQUEST_FINALIZATION": "Solicitar finalización",
         "SUBMITTING": "Enviando..."
       }
     },
     "OPERATIONAL_COST": {
       "OVERLINE": "Costos de Orden de Trabajo",
       "TITLE": "Resumen de Costos Operacionales",
-      "EMPTY": "No se proporcionó el ID de la orden de trabajo.",
+      "EMPTY": "No se proporciónó el ID de la orden de trabajo.",
       "DEBIT_TOTAL": "Total de Débitos",
       "CREDIT_TOTAL": "Total de Créditos",
       "NET": "Total Neto"
@@ -3421,7 +3415,7 @@
           "DESCRIPTION": "Gestionar permisos y configuración del inventario."
         },
         "DATA_IMPORT": {
-          "TITLE": "Importacion de datos",
+          "TITLE": "Importación de datos",
           "DESCRIPTION": "Importe masivamente datos de inventario de stock."
         }
       },
@@ -4564,12 +4558,12 @@
       },
       "FIELD": {
         "WORKORDER": "Workorder",
-        "PO_NUMBER": "Numero de PO",
+        "PO_NUMBER": "Número de PO",
         "CREATED": "Creada",
         "ISSUED": "Emitida"
       },
       "LINE_ITEM": {
-        "DESCRIPTION": "Descripcion",
+        "DESCRIPTION": "Descripción",
         "TYPE": "Tipo",
         "QTY": "Cant.",
         "UNIT": "Unidad",
@@ -4582,17 +4576,17 @@
         "GRAND_TOTAL": "Total general"
       },
       "TRACEABILITY": {
-        "SNAPSHOT": "Instantanea",
+        "SNAPSHOT": "Instantánea",
         "CAPTURED": "Capturada",
         "WORKORDER_COMPLETED": "Workorder completada",
-        "SNAPSHOT_VERSION": "Version de instantanea",
+        "SNAPSHOT_VERSION": "Versión de instantánea",
         "GENERATED_BY": "Generada por"
       },
       "ADJUSTMENT": {
         "META": "{{timestamp}} - por {{user}}"
       },
       "ARIA": {
-        "LINE_ITEMS": "Lineas de factura",
+        "LINE_ITEMS": "Líneas de factura",
         "TOTALS": "Totales de factura"
       },
       "ACTION": {
@@ -4606,38 +4600,38 @@
       },
       "ERROR": {
         "NOT_FOUND": "Factura no encontrada.",
-        "LOAD": "No se pudo cargar la factura. Intentelo de nuevo.",
+        "LOAD": "No se pudo cargar la factura. Inténtelo de nuevo.",
         "ALREADY_ISSUED": "La factura ya fue emitida.",
-        "ISSUE": "No se pudo emitir la factura. Intentelo de nuevo."
+        "ISSUE": "No se pudo emitir la factura. Inténtelo de nuevo."
       },
       "ELEVATION": {
-        "ARIA_LABEL": "Se requiere elevacion de gerente",
-        "TITLE": "Se requiere autorizacion de gerente",
-        "DESCRIPTION": "Emitir esta factura requiere autorizacion de nivel gerente. Ingrese el numero de empleado de un gerente autorizado para continuar.",
-        "MANAGER_NUMBER_LABEL": "Numero de empleado del gerente",
-        "MANAGER_NUMBER_PLACEHOLDER": "Ingrese el numero de empleado del gerente",
+        "ARIA_LABEL": "Se requiere elevación de gerente",
+        "TITLE": "Se requiere autorización de gerente",
+        "DESCRIPTION": "Emitir esta factura requiere autorización de nivel gerente. Ingrese el número de empleado de un gerente autorizado para continuar.",
+        "MANAGER_NUMBER_LABEL": "Número de empleado del gerente",
+        "MANAGER_NUMBER_PLACEHOLDER": "Ingrese el número de empleado del gerente",
         "AUTHORIZE": "Autorizar",
         "VERIFYING": "Verificando...",
         "ERROR": {
-          "EMPLOYEE_REQUIRED": "Se requiere el numero de empleado del gerente.",
-          "NOT_AUTHORIZED": "Ese numero de empleado no es un gerente autorizado. Intentelo de nuevo.",
-          "GENERIC": "La elevacion fallo. Contacte a su gerente."
+          "EMPLOYEE_REQUIRED": "Se requiere el número de empleado del gerente.",
+          "NOT_AUTHORIZED": "Ese número de empleado no es un gerente autorizado. Inténtelo de nuevo.",
+          "GENERIC": "La elevación falló. Contacte a su gerente."
         }
       }
     },
     "PAYMENT": {
       "TITLE": "Pago",
       "METHOD": {
-        "LABEL": "Metodo de pago",
-        "CARD": "Tarjeta de credito/debito",
+        "LABEL": "Método de pago",
+        "CARD": "Tarjeta de crédito/debito",
         "CASH": "Efectivo",
         "CHECK": "Cheque",
-        "CREDIT_ACCOUNT": "Cuenta de credito"
+        "CREDIT_ACCOUNT": "Cuenta de crédito"
       },
       "AMOUNT_LABEL": "Importe",
       "ACTION": {
         "CAPTURE": "Autorizar y capturar",
-        "VOID": "Anular autorizacion",
+        "VOID": "Anular autorización",
         "REFUND": "Procesar reembolso",
         "PRINT_RECEIPT": "Imprimir recibo"
       },
@@ -4645,36 +4639,36 @@
         "LABEL": "Seleccionar acción de pago"
       },
       "SUBMITTING": "Procesando...",
-      "IDLE": "Seleccione un metodo de pago para comenzar.",
+      "IDLE": "Seleccione un método de pago para comenzar.",
       "FIELD": {
-        "TRANSACTION_ID": "Id de transaccion",
-        "AUTH_CODE": "Codigo de autorizacion",
+        "TRANSACTION_ID": "Id de transacción",
+        "AUTH_CODE": "Código de autorización",
         "STATUS": "Estado",
         "AMOUNT": "Importe",
         "CAPTURED_AT": "Capturado el"
       },
       "VOID": {
-        "TITLE": "Anular autorizacion",
+        "TITLE": "Anular autorización",
         "REASON_LABEL": "Motivo",
-        "AUTHORITY_LABEL": "Codigo de autorizacion"
+        "AUTHORITY_LABEL": "Código de autorización"
       },
       "REFUND": {
         "TITLE": "Reembolsar pago",
         "REASON_LABEL": "Motivo",
-        "AUTHORITY_LABEL": "Codigo de autorizacion",
+        "AUTHORITY_LABEL": "Código de autorización",
         "AMOUNT_LABEL": "Importe del reembolso (deje en blanco para reembolso completo)"
       },
       "ERROR": {
-        "CAPTURE": "No se pudo procesar el pago. Intentelo de nuevo.",
-        "VOID": "No se pudo anular la autorizacion. Intentelo de nuevo.",
-        "REFUND": "No se pudo procesar el reembolso. Intentelo de nuevo.",
+        "CAPTURE": "No se pudo procesar el pago. Inténtelo de nuevo.",
+        "VOID": "No se pudo anular la autorización. Inténtelo de nuevo.",
+        "REFUND": "No se pudo procesar el reembolso. Inténtelo de nuevo.",
         "MISSING_IDS": "Referencia de pago o factura no válida."
       }
     },
     "RECEIPT": {
       "TITLE": "Recibo",
       "FIELD": {
-        "RECEIPT_NUMBER": "Numero de recibo",
+        "RECEIPT_NUMBER": "Número de recibo",
         "INVOICE_REF": "Referencia de factura",
         "GENERATED_AT": "Generado",
         "EMAILED_TO": "Enviado por correo a"
@@ -4685,18 +4679,18 @@
         "VIEW_PDF": "Ver recibo PDF"
       },
       "DELIVERY": {
-        "LABEL": "Metodo de entrega",
+        "LABEL": "Método de entrega",
         "PRINT": "Imprimir",
-        "EMAIL": "Correo electronico",
+        "EMAIL": "Correo electrónico",
         "NONE": "Sin entrega"
       },
-      "EMAIL_LABEL": "Direccion de correo electronico",
-      "IDLE": "Aun no se ha generado ningun recibo.",
+      "EMAIL_LABEL": "Dirección de correo electrónico",
+      "IDLE": "Aún no se ha generado ningún recibo.",
       "ERROR": {
         "LOAD": "No se pudo cargar el recibo.",
-        "GENERATE": "No se pudo generar el recibo. Intentelo de nuevo.",
-        "REPRINT": "No se pudo reimprimir el recibo. Intentelo de nuevo.",
-        "MISSING_INVOICE": "No se proporcionó ID de factura."
+        "GENERATE": "No se pudo generar el recibo. Inténtelo de nuevo.",
+        "REPRINT": "No se pudo reimprimir el recibo. Inténtelo de nuevo.",
+        "MISSING_INVOICE": "No se proporciónó ID de factura."
       }
     },
     "INVOICE_STATUS": {
@@ -4710,29 +4704,29 @@
     "CART": {
       "TITLE": "Carrito de orden",
       "ARIA": {
-        "ITEMS_TABLE": "Lineas de la orden",
+        "ITEMS_TABLE": "Líneas de la orden",
         "SUMMARY": "Resumen de la orden"
       },
       "IDLE": "Ingresa datos del cliente para iniciar un carrito.",
-      "EMPTY": "No hay articulos en el carrito.",
+      "EMPTY": "No hay artículos en el carrito.",
       "ERROR": {
         "LOAD": "No se pudo cargar la orden.",
         "CREATE": "No se pudo crear el carrito.",
-        "ADD_ITEM": "No se pudo agregar el articulo.",
-        "REMOVE_ITEM": "No se pudo eliminar el articulo."
+        "ADD_ITEM": "No se pudo agregar el artículo.",
+        "REMOVE_ITEM": "No se pudo eliminar el artículo."
       },
       "FIELD": {
         "CUSTOMER_ID": "ID del cliente",
-        "VEHICLE_ID": "ID del vehiculo (opcional)",
-        "SKU": "SKU / Codigo de servicio",
+        "VEHICLE_ID": "ID del vehículo (opcional)",
+        "SKU": "SKU / Código de servicio",
         "QTY": "Cant.",
         "UNIT_PRICE": "Precio unitario",
         "LINE_TOTAL": "Total",
-        "DESCRIPTION": "Descripcion"
+        "DESCRIPTION": "Descripción"
       },
       "ACTION": {
         "START_CART": "Iniciar carrito",
-        "ADD_ITEM": "Agregar articulo",
+        "ADD_ITEM": "Agregar artículo",
         "REMOVE_ITEM": "Eliminar",
         "ADDING": "Agregando..."
       },
@@ -4742,7 +4736,7 @@
         "TOTAL": "Total"
       },
       "COLUMN": {
-        "DESCRIPTION": "Descripcion",
+        "DESCRIPTION": "Descripción",
         "SKU": "SKU",
         "QTY": "Cant.",
         "UNIT_PRICE": "Precio unitario",
@@ -4751,28 +4745,28 @@
       }
     },
     "OVERRIDE": {
-      "TITLE": "Anulacion de precio",
+      "TITLE": "Anulación de precio",
       "ARIA": {
-        "SECTION": "Formulario de anulacion de precio"
+        "SECTION": "Formulario de anulación de precio"
       },
-      "REQUIRES_APPROVAL": "Requiere aprobacion del gerente.",
+      "REQUIRES_APPROVAL": "Requiere aprobación del gerente.",
       "ERROR": {
         "LOAD": "No se pudieron cargar las anulaciones de precio.",
-        "APPLY": "No se pudo aplicar la anulacion de precio."
+        "APPLY": "No se pudo aplicar la anulación de precio."
       },
       "FIELD": {
         "OVERRIDE_PRICE": "Precio anulado",
-        "REASON_CODE": "Codigo de motivo",
-        "AUTHORITY_CODE": "Codigo de autoridad"
+        "REASON_CODE": "Código de motivo",
+        "AUTHORITY_CODE": "Código de autoridad"
       },
       "REASON": {
         "PRICE_MATCH": "Igualar precio",
         "MANAGER_DISCOUNT": "Descuento del gerente",
-        "DEFECTIVE": "Articulo defectuoso",
+        "DEFECTIVE": "Artículo defectuoso",
         "CUSTOMER_SERVICE": "Servicio al cliente"
       },
       "ACTION": {
-        "APPLY": "Aplicar anulacion"
+        "APPLY": "Aplicar anulación"
       },
       "HISTORY_TITLE": "Historial de anulaciones"
     },
@@ -4781,15 +4775,15 @@
       "ARIA": {
         "SECTION": "Formulario para cancelar orden"
       },
-      "WARNING": "Esta accion no se puede deshacer.",
+      "WARNING": "Esta acción no se puede deshacer.",
       "ERROR": {
         "LOAD": "No se pudieron cargar los detalles de la orden.",
-        "SUBMIT": "No se pudo cancelar la orden. Intentelo de nuevo."
+        "SUBMIT": "No se pudo cancelar la orden. Inténtelo de nuevo."
       },
       "FIELD": {
         "STATUS": "Estado",
-        "REASON": "Motivo de cancelacion",
-        "AUTHORITY_CODE": "Codigo de autoridad"
+        "REASON": "Motivo de cancelación",
+        "AUTHORITY_CODE": "Código de autoridad"
       },
       "ACTION": {
         "CANCEL_ORDER": "Cancelar orden",
@@ -4907,8 +4901,8 @@
           "DESCRIPTION": "Explore y exporte el registro completo de eventos de auditoría con filtros de actor y fecha."
         },
         "IMPORT_JOBS": {
-          "TITLE": "Trabajos de importacion",
-          "DESCRIPTION": "Vea y gestione todos los trabajos de importacion masiva de datos en todos los dominios."
+          "TITLE": "Trabajos de importación",
+          "DESCRIPTION": "Vea y gestione todos los trabajos de importación masiva de datos en todos los dominios."
         }
       },
       "FIELD": {
@@ -4930,31 +4924,31 @@
   },
   "BULK_IMPORT": {
     "DOMAIN": {
-      "CATALOG": "Catalogo de productos",
+      "CATALOG": "Catálogo de productos",
       "INVENTORY": "Inventario",
-      "LOCATION": "Ubicacion",
+      "LOCATION": "Ubicación",
       "CUSTOMER": "Cliente",
       "PEOPLE": "Personal / RR.HH.",
       "PRICE": "Precios",
-      "VEHICLE_INVENTORY": "Inventario de vehiculos",
-      "VEHICLE_FITMENT": "Adaptacion de vehiculos"
+      "VEHICLE_INVENTORY": "Inventario de vehículos",
+      "VEHICLE_FITMENT": "Adaptación de vehículos"
     },
     "STATUS": {
       "CREATED": "Creado",
       "UPLOADING": "Cargando",
       "DETECTING": "Detectando",
-      "MAPPING_REVIEW": "Revision de mapeo",
-      "DEDUP": "Deduplicacion",
+      "MAPPING_REVIEW": "Revisión de mapeo",
+      "DEDUP": "Deduplicación",
       "PROCESSING": "Procesando",
       "COMPLETED": "Completado",
       "FAILED": "Fallido",
       "CANCELLED": "Cancelado"
     },
     "JOBS": {
-      "TITLE": "Trabajos de importacion",
-      "SUBTITLE": "Realice seguimiento y gestione todos los trabajos de importacion masiva.",
+      "TITLE": "Trabajos de importación",
+      "SUBTITLE": "Realice seguimiento y gestione todos los trabajos de importación masiva.",
       "LOADING": "Cargando trabajos…",
-      "EMPTY": "No se encontraron trabajos de importacion.",
+      "EMPTY": "No se encontraron trabajos de importación.",
       "REFRESH": "Actualizar",
       "ERROR": {
         "LOAD": "No se pueden cargar los trabajos. Intente nuevamente."
@@ -4967,7 +4961,7 @@
         "ALL_STATUSES": "Todos los estados"
       },
       "TABLE": {
-        "CAPTION": "Lista de trabajos de importacion",
+        "CAPTION": "Lista de trabajos de importación",
         "DOMAIN": "Dominio",
         "FILE": "Archivo",
         "STATUS": "Estado",
@@ -4990,7 +4984,7 @@
         "LOAD_AUDIT": "No se pueden cargar los registros de errores.",
         "CANCEL": "No se puede cancelar el trabajo.",
         "RETRY": "No se puede reintentar el trabajo.",
-        "CORRECTION": "No se pudo enviar la correccion. Intente nuevamente."
+        "CORRECTION": "No se pudo enviar la corrección. Intente nuevamente."
       },
       "META": {
         "ARIA_LABEL": "Metadatos del trabajo",
@@ -5008,7 +5002,7 @@
     },
     "WIZARD": {
       "LOADING": "Cargando…",
-      "BACK": "Atras",
+      "BACK": "Atrás",
       "INVENTORY": {
         "TITLE": "Importar inventario de stock",
         "SUBTITLE": "Cargue un archivo CSV o XLSX para importar masivamente registros de inventario."
@@ -5018,8 +5012,8 @@
         "SUBTITLE": "Cargue un archivo CSV o XLSX para importar masivamente datos de ubicaciones."
       },
       "CATALOG": {
-        "TITLE": "Importar catalogo de productos",
-        "SUBTITLE": "Cargue un archivo CSV o XLSX para importar masivamente registros del catalogo."
+        "TITLE": "Importar catálogo de productos",
+        "SUBTITLE": "Cargue un archivo CSV o XLSX para importar masivamente registros del catálogo."
       },
       "PRICE": {
         "TITLE": "Importar precios",
@@ -5034,25 +5028,25 @@
         "SUBTITLE": "Cargue un archivo CSV o XLSX para importar masivamente registros de personal y RR.HH."
       },
       "VEHICLE_INVENTORY": {
-        "TITLE": "Importar inventario de vehiculos",
-        "SUBTITLE": "Cargue un archivo CSV o XLSX para importar masivamente datos de inventario de vehiculos."
+        "TITLE": "Importar inventario de vehículos",
+        "SUBTITLE": "Cargue un archivo CSV o XLSX para importar masivamente datos de inventario de vehículos."
       },
       "VEHICLE_FITMENT": {
-        "TITLE": "Importar adaptacion de vehiculos",
-        "SUBTITLE": "Cargue un archivo CSV o XLSX para importar masivamente datos de adaptacion de vehiculos."
+        "TITLE": "Importar adaptación de vehículos",
+        "SUBTITLE": "Cargue un archivo CSV o XLSX para importar masivamente datos de adaptación de vehículos."
       },
       "ERROR": {
         "LOAD": "No se puede verificar el estado del trabajo activo.",
-        "UPLOAD": "La carga del archivo fallo. Intente nuevamente.",
-        "CREATE_SESSION": "No se puede iniciar la sesion de importacion.",
+        "UPLOAD": "La carga del archivo falló. Intente nuevamente.",
+        "CREATE_SESSION": "No se puede iniciar la sesión de importación.",
         "LOAD_MAPPINGS": "No se pueden cargar los mapeos de columnas.",
         "APPROVE_MAPPINGS": "No se pueden aprobar los mapeos de columnas.",
         "RETRY": "No se puede reintentar el trabajo.",
-        "POLL": "No se pudo obtener el estado de importacion. Actualice la pagina."
+        "POLL": "No se pudo obtener el estado de importación. Actualice la página."
       },
       "CONFLICT": {
-        "TITLE": "Importacion activa en progreso",
-        "MESSAGE": "Hay un trabajo de importacion activo para otro dominio. Espere a que finalice antes de iniciar una nueva importacion.",
+        "TITLE": "Importación activa en progreso",
+        "MESSAGE": "Hay un trabajo de importación activo para otro dominio. Espere a que finalice antes de iniciar una nueva importación.",
         "VIEW_JOB": "Ver trabajo activo"
       },
       "STEP": {
@@ -5065,30 +5059,30 @@
           "TITLE": "Cargando archivo"
         },
         "MAPPING": {
-          "ARIA_LABEL": "Revision de mapeo de columnas",
+          "ARIA_LABEL": "Revisión de mapeo de columnas",
           "TITLE": "Revisar mapeos de columnas"
         },
         "PROGRESS": {
-          "ARIA_LABEL": "Progreso del procesamiento de importacion",
-          "TITLE": "Procesando importacion",
+          "ARIA_LABEL": "Progreso del procesamiento de importación",
+          "TITLE": "Procesando importación",
           "PROCESSED": "Filas procesadas",
           "CANCEL": "Cancelar"
         },
         "RESULTS": {
-          "ARIA_LABEL": "Resultados de importacion"
+          "ARIA_LABEL": "Resultados de importación"
         }
       }
     },
     "FILE_DROP": {
       "ARIA_LABEL": "Zona para soltar archivos",
-      "INSTRUCTION": "Arrastre y suelte un archivo aqui, o haga clic para buscar",
-      "FORMATS": "Formatos aceptados: .csv, .xlsx (max. 100 MB)",
+      "INSTRUCTION": "Arrastre y suelte un archivo aquí, o haga clic para buscar",
+      "FORMATS": "Formatos aceptados: .csv, .xlsx (máx. 100 MB)",
       "BROWSE_LABEL": "Elegir archivo",
       "BROWSE_BTN": "Buscar archivos",
       "INPUT_ARIA": "Seleccionar archivo para importar",
       "ERROR": {
-        "INVALID_FORMAT": "Formato de archivo invalido. Cargue un archivo .csv o .xlsx.",
-        "TOO_LARGE": "El archivo es demasiado grande. El tamano maximo permitido es 100 MB."
+        "INVALID_FORMAT": "Formato de archivo inválido. Cargue un archivo .csv o .xlsx.",
+        "TOO_LARGE": "El archivo es demasiado grande. El tamaño máximo permitido es 100 MB."
       }
     },
     "UPLOAD_PROGRESS": {
@@ -5117,24 +5111,24 @@
       }
     },
     "LANDING": {
-      "ACTIVE_IMPORT": "Importacion activa"
+      "ACTIVE_IMPORT": "Importación activa"
     },
     "PROGRESS": {
       "STEPPER": {
-        "ARIA_LABEL": "Pasos de progreso de importacion"
+        "ARIA_LABEL": "Pasos de progreso de importación"
       },
       "STEP": {
         "UPLOAD": "Cargar",
         "DETECT": "Detectar",
         "MAPPING": "Mapeo",
-        "DEDUP": "Deduplicacion",
+        "DEDUP": "Deduplicación",
         "PROCESS": "Procesar",
         "DONE": "Finalizado"
       }
     },
     "RESULTS": {
-      "ARIA_LABEL": "Resumen de resultados de importacion",
-      "TITLE": "Importacion completada",
+      "ARIA_LABEL": "Resumen de resultados de importación",
+      "TITLE": "Importación completada",
       "TOTAL": "Filas totales",
       "SUCCESS": "Exitosas",
       "FAILURES": "Fallidas",
@@ -5144,10 +5138,10 @@
     "ERROR_RECORDS": {
       "ARIA_LABEL": "Registros de errores",
       "EMPTY": "No hay registros de errores para mostrar.",
-      "SUBMIT": "Enviar correccion",
+      "SUBMIT": "Enviar corrección",
       "SUBMITTING": "Guardando…",
       "TABLE": {
-        "CAPTION": "Registros de errores que requieren revision"
+        "CAPTION": "Registros de errores que requieren revisión"
       },
       "COL": {
         "ROW": "Fila",
@@ -5756,7 +5750,7 @@
       "STATE_LABEL": "Estado de la transmisión:",
       "VENDOR": "Proveedor",
       "VENDOR_ORDER_NUMBER": "Número de pedido del proveedor",
-      "NO_VENDOR_ORDER_NUMBER": "El proveedor no lo proporcionó",
+      "NO_VENDOR_ORDER_NUMBER": "El proveedor no lo proporciónó",
       "DOCUMENT_ID": "Referencia del documento",
       "NO_DOCUMENT_ID": "Sin referencia de documento",
       "REFERENCE_NOTE": "Las referencias del proveedor se muestran para su correspondencia con él. Los enlaces dentro de esta aplicación siempre usan el identificador propio del pedido.",
