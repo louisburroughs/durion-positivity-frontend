@@ -2,7 +2,7 @@
 
 Triage of the `failed-api-request` / `console-error` findings from the
 durionpos.org site audit (see `frontend-audit-test-plan.md`,
-`artifacts/audit/error-pages.md`).
+`artifacts/audit/<persona>/error-pages.md`, e.g. `artifacts/audit/admin/error-pages.md`).
 
 ## Post-#820 re-run (2026-07-07, full authenticated crawl): 4 High / 2 problem pages — all 500s cleared
 

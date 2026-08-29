@@ -57,10 +57,43 @@ npm run audit:site
 
 Public-pages-only run (no credentials): `npm run audit:site:public`
 
+### Personas
+
+Route access is role-gated, so a crawl only covers what its account can reach — an
+admin sees `/app/admin`, a technician gets redirected to `/forbidden`. The suite runs
+one login + crawl per persona, each with its own storage state and report directory.
+
+| Persona | Env prefix | Credentials read from |
+|---|---|---|
+| `admin` | *(none)* | `AUDIT_USERNAME` / `AUDIT_PASSWORD` |
+| `advisor` | `ADVISOR_` | `AUDIT_ADVISOR_USERNAME` / `AUDIT_ADVISOR_PASSWORD` |
+| `tech` | `TECH_` | `AUDIT_TECH_USERNAME` / `AUDIT_TECH_PASSWORD` |
+| `manager` | `MANAGER_` | `AUDIT_MANAGER_USERNAME` / `AUDIT_MANAGER_PASSWORD` |
+| `acct` | `ACCT_` | `AUDIT_ACCT_USERNAME` / `AUDIT_ACCT_PASSWORD` |
+| `parts` | `PARTS_` | `AUDIT_PARTS_USERNAME` / `AUDIT_PARTS_PASSWORD` |
+| `controller` | `CONTROLLER_` | `AUDIT_CONTROLLER_USERNAME` / `AUDIT_CONTROLLER_PASSWORD` |
+
+Each name falls back to the matching `ITEST_*` variable, so an existing integration-test
+env file can be sourced as-is without remapping:
+
+```bash
+set -a; . ~/IdeaProjects/durion-positivity-sdk/.env.itest; set +a
+AUDIT_PERSONAS=all npm run audit:site        # every persona with credentials
+AUDIT_PERSONAS=manager,tech npm run audit:site
+npm run audit:site -- --project=audit:manager  # one persona; its setup runs as a dependency
+```
+
+`AUDIT_PERSONAS` defaults to `admin`, so a run with only `AUDIT_USERNAME`/`AUDIT_PASSWORD`
+set behaves exactly as it did before personas existed.
+
+Personas are crawled sequentially (`workers: 1`), so `AUDIT_PERSONAS=all` takes roughly
+seven times a single run — scope it with `AUDIT_MAX_PAGES` when iterating.
+
 | Env var | Default | Purpose |
 |---|---|---|
 | `AUDIT_BASE_URL` | `https://durionpos.org` | Target origin |
-| `AUDIT_USERNAME` / `AUDIT_PASSWORD` | — | Audit account for `/app` (omit → public-only + warning) |
+| `AUDIT_USERNAME` / `AUDIT_PASSWORD` | — | `admin` persona account for `/app` (omit → public-only + warning) |
+| `AUDIT_PERSONAS` | `admin` | Personas to crawl: comma-separated ids, or `all` for every configured one |
 | `AUDIT_SKIP_AUTH` | — | `1` = public pages only |
 | `AUDIT_MAX_PAGES` | `200` | Total crawl cap |
 | `AUDIT_MAX_PER_PATTERN` | `2` | Concrete instances sampled per parameterized route (e.g. two invoices) |
@@ -126,7 +159,11 @@ it to Chromium at launch (Chromium does not read it from the environment on its 
 axe impact mapping: `critical→High`, `serious→Medium`, `moderate→Low`, `minor→Info`.
 (Severity `Critical` is reserved for pages that are actually broken for users.)
 
-## 6. Outputs (`artifacts/audit/`)
+## 6. Outputs (`artifacts/audit/<persona>/`)
+
+Each persona writes its own set, e.g. `artifacts/audit/admin/summary.md` and
+`artifacts/audit/tech/summary.md`, so one persona's crawl never overwrites another's.
+`summary.md`, `sitemap.md` and `findings.md` each name the persona in their header.
 
 | File | Contents |
 |---|---|
@@ -181,8 +218,11 @@ Nightly job against durionpos.org:
 - run: npm run audit:site
   env:
     AUDIT_BASE_URL: https://durionpos.org
+    AUDIT_PERSONAS: all
     AUDIT_USERNAME: ${{ secrets.AUDIT_USERNAME }}
     AUDIT_PASSWORD: ${{ secrets.AUDIT_PASSWORD }}
+    AUDIT_MANAGER_USERNAME: ${{ secrets.AUDIT_MANAGER_USERNAME }}
+    AUDIT_MANAGER_PASSWORD: ${{ secrets.AUDIT_MANAGER_PASSWORD }}
 - uses: actions/upload-artifact@v4
   with: { name: site-audit, path: artifacts/audit }
 ```

@@ -67,6 +67,8 @@ export interface PageRecord {
 
 export interface AuditReport {
   baseUrl: string;
+  /** Which role the crawl authenticated as — coverage is role-gated. */
+  persona: { id: string; label: string };
   startedAt: string;
   finishedAt: string;
   authenticated: boolean;

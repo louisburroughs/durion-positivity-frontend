@@ -23,6 +23,7 @@
     "serve:ssr:durion-positivity-frontend": "npm run sdk:install && node dist/durion-positivity-frontend/server/server.mjs",
     "audit:site": "playwright test --config playwright.config.ts",
     "audit:site:public": "AUDIT_SKIP_AUTH=1 playwright test --config playwright.config.ts",
+    "audit:site:personas": "AUDIT_PERSONAS=all playwright test --config playwright.config.ts",
     "lint": "ng lint",
     "lint:fix": "ng lint --fix",
     "lint:css": "stylelint \"src/**/*.css\"",

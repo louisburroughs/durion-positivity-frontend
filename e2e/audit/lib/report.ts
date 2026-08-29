@@ -25,6 +25,7 @@ function sitemapMarkdown(report: AuditReport): string {
     '# Site Map — audit crawl',
     '',
     `- **Target:** ${report.baseUrl}`,
+    `- **Persona:** ${report.persona.label} (\`${report.persona.id}\`)`,
     `- **Crawled:** ${report.startedAt} → ${report.finishedAt}`,
     `- **Authenticated:** ${report.authenticated ? 'yes' : 'no (public pages only)'}`,
     `- **Pages visited:** ${report.pagesVisited}`,
@@ -77,7 +78,8 @@ function findingsMarkdown(report: AuditReport): string {
   const lines: string[] = [
     '# Recommended Changes — by severity',
     '',
-    `Target: ${report.baseUrl} · ${report.findings.length} findings across ${report.pagesVisited} pages.`,
+    `Target: ${report.baseUrl} · persona ${report.persona.label} (\`${report.persona.id}\`) · ` +
+      `${report.findings.length} findings across ${report.pagesVisited} pages.`,
     '',
   ];
 
@@ -155,6 +157,7 @@ function summaryMarkdown(report: AuditReport): string {
     '# Frontend Audit Summary',
     '',
     `- **Target:** ${report.baseUrl}`,
+    `- **Persona:** ${report.persona.label} (\`${report.persona.id}\`)`,
     `- **Run:** ${report.startedAt} → ${report.finishedAt}`,
     `- **Pages visited:** ${report.pagesVisited} (authenticated: ${report.authenticated ? 'yes' : 'no'})`,
     `- **Detail-route templates covered:** ${coveredTemplates}/${report.templateCoverage.length} (see sitemap.md)`,
@@ -174,8 +177,8 @@ function summaryMarkdown(report: AuditReport): string {
   ].join('\n');
 }
 
-export function writeReports(report: AuditReport): string {
-  const outDir = path.resolve(AUDIT_CONFIG.outDir);
+export function writeReports(report: AuditReport, targetDir?: string): string {
+  const outDir = path.resolve(targetDir ?? AUDIT_CONFIG.outDir);
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, 'report.json'), JSON.stringify(report, null, 2));
   fs.writeFileSync(path.join(outDir, 'sitemap.md'), sitemapMarkdown(report));

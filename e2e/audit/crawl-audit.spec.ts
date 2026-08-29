@@ -1,6 +1,6 @@
 import fs from 'node:fs';
-import { test } from '@playwright/test';
-import { AUDIT_CONFIG, AUTH_MODE_PATH } from './lib/config';
+import { AUDIT_CONFIG, authModePath, personaOutDir } from './lib/config';
+import { test } from './lib/persona-fixture';
 import { attachMonitors, routePattern, visit } from './lib/crawler';
 import { monitorFindings, runPageChecks } from './lib/checks';
 import { attachIdHarvester, fillTemplates, templateCoverage, templateFields } from './lib/id-harvest';
@@ -13,9 +13,9 @@ import type { AuditReport, Finding, PageRecord } from './lib/types';
 // bound each step, and AUDIT_MAX_PAGES bounds the total.
 test.describe.configure({ timeout: 0 });
 
-test('crawl site and audit every page', async ({ page }) => {
+test('crawl site and audit every page', async ({ page, persona }) => {
   const authenticated: boolean = JSON.parse(
-    fs.readFileSync(AUTH_MODE_PATH, 'utf8'),
+    fs.readFileSync(authModePath(persona.id), 'utf8'),
   ).authenticated;
 
   const seeds = authenticated ? [...PUBLIC_SEEDS, ...APP_SEEDS] : [...PUBLIC_SEEDS];
@@ -72,7 +72,7 @@ test('crawl site and audit every page', async ({ page }) => {
 
     const result = await visit(page, monitors, target);
     console.log(
-      `[${pages.length + 1}/${AUDIT_CONFIG.maxPages}] ${target} → ${result.outcome}` +
+      `[${persona.id}] [${pages.length + 1}/${AUDIT_CONFIG.maxPages}] ${target} → ${result.outcome}` +
         (result.finalPath !== target ? ` (landed on ${result.finalPath})` : ''),
     );
 
@@ -128,6 +128,7 @@ test('crawl site and audit every page', async ({ page }) => {
 
   const report: AuditReport = {
     baseUrl: AUDIT_CONFIG.baseUrl,
+    persona: { id: persona.id, label: persona.label },
     startedAt,
     finishedAt: new Date().toISOString(),
     authenticated,
@@ -142,7 +143,9 @@ test('crawl site and audit every page', async ({ page }) => {
     ),
   };
 
-  const outDir = writeReports(report);
-  console.log(`\nAudit complete: ${pages.length} pages, ${findings.length} findings.`);
+  const outDir = writeReports(report, personaOutDir(persona.id));
+  console.log(
+    `\n[${persona.id}] Audit complete: ${pages.length} pages, ${findings.length} findings.`,
+  );
   console.log(`Reports written to ${outDir}`);
 });
