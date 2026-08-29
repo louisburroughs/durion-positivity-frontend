@@ -94,6 +94,75 @@ function allPackagesInstalled() {
   return PACKAGE_NAMES.every(packageName => existsSync(installedPackagePath(packageName)));
 }
 
+function installedVersion(packageName) {
+  const manifest = installedPackagePath(packageName);
+  if (!existsSync(manifest)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(readFileSync(manifest, 'utf8')).version ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Versions the SDK source would install, read straight from the built dist
+// manifests that get packed.
+function versionsFromSdkRoot(sdkRoot) {
+  const versions = {};
+
+  for (const packageName of PACKAGE_NAMES) {
+    const distManifest = path.join(
+      sdkRoot,
+      'packages',
+      packageDirName(packageName),
+      'dist',
+      'package.json',
+    );
+
+    try {
+      versions[packageName] = JSON.parse(readFileSync(distManifest, 'utf8')).version ?? null;
+    } catch {
+      versions[packageName] = null;
+    }
+  }
+
+  return versions;
+}
+
+// npm names a tarball `<package name, scope flattened>-<version>.tgz`, so the
+// version is what is left after the known prefix and the extension.
+function versionFromTarballName(packageName, tarballName) {
+  const prefix = `${packageName.replace('@', '').replace('/', '-')}-`;
+  if (!tarballName.startsWith(prefix) || !tarballName.endsWith('.tgz')) {
+    return null;
+  }
+
+  return tarballName.slice(prefix.length, -'.tgz'.length) || null;
+}
+
+function versionsFromManifest(manifest) {
+  const versions = {};
+
+  for (const packageName of PACKAGE_NAMES) {
+    versions[packageName] = versionFromTarballName(packageName, manifest.packages[packageName]);
+  }
+
+  return versions;
+}
+
+// The fingerprint only describes the SDK *source*; it says nothing about what
+// is sitting in node_modules. Anything can leave those out of step — a manual
+// `npm install` of older tarballs, a branch switch, a partially failed install
+// — so the versions have to be compared before the install is skipped.
+function installedVersionsMatch(expectedVersions) {
+  return PACKAGE_NAMES.every(packageName => {
+    const expected = expectedVersions[packageName];
+    return typeof expected === 'string' && installedVersion(packageName) === expected;
+  });
+}
+
 function hashDirectoryContents(hash, dir, baseDir = dir) {
   const entries = readdirSync(dir, { withFileTypes: true })
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -213,11 +282,12 @@ function writeInstallState(state) {
   writeFileSync(installStatePath, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
 }
 
-function installedPackagesMatchState(state, fingerprint) {
+function installedPackagesMatchState(state, fingerprint, expectedVersions) {
   return allPackagesInstalled() &&
     state &&
     typeof state === 'object' &&
-    state.fingerprint === fingerprint;
+    state.fingerprint === fingerprint &&
+    installedVersionsMatch(expectedVersions);
 }
 
 function packSdkPackages(sdkRoot) {
@@ -266,6 +336,23 @@ function installFromManifest(manifest) {
   run('npm', ['install', '--no-save', '--no-package-lock', ...tarballs]);
 }
 
+// A build against a stale SDK fails in confusing ways much later, so confirm
+// the install actually landed rather than trusting npm's exit code.
+function verifyInstalledVersions(expectedVersions) {
+  const mismatched = PACKAGE_NAMES
+    .filter(packageName => installedVersion(packageName) !== expectedVersions[packageName])
+    .map(packageName =>
+      `  ${packageName}: expected ${expectedVersions[packageName] ?? '(unknown)'}, found ${installedVersion(packageName) ?? '(not installed)'}`,
+    );
+
+  if (mismatched.length > 0) {
+    fail(`SDK install did not produce the expected versions:\n${mismatched.join('\n')}`);
+  }
+
+  const versions = new Set(PACKAGE_NAMES.map(packageName => expectedVersions[packageName]));
+  log(`Installed SDK packages at version ${[...versions].join(', ')}.`);
+}
+
 function main() {
   const sdkRoot = detectSdkRoot();
   const installState = readInstallState();
@@ -274,7 +361,8 @@ function main() {
     ensureSdkBuild(sdkRoot);
 
     const fingerprint = createSdkFingerprint(sdkRoot);
-    if (installedPackagesMatchState(installState, fingerprint)) {
+    const expectedVersions = versionsFromSdkRoot(sdkRoot);
+    if (installedPackagesMatchState(installState, fingerprint, expectedVersions)) {
       log(`Required SDK packages already installed for current SDK source at ${sdkRoot}.`);
       return;
     }
@@ -288,13 +376,15 @@ function main() {
       generatedAt: manifest.generatedAt,
       packages: manifest.packages,
     });
+    verifyInstalledVersions(versionsFromManifest(manifest));
     return;
   }
 
   const manifest = readManifest();
   if (manifestIsUsable(manifest)) {
     const fingerprint = createManifestFingerprint(manifest);
-    if (installedPackagesMatchState(installState, fingerprint)) {
+    const expectedVersions = versionsFromManifest(manifest);
+    if (installedPackagesMatchState(installState, fingerprint, expectedVersions)) {
       log(`Required SDK packages already installed from cached tarballs in ${packDir}.`);
       return;
     }
@@ -306,6 +396,7 @@ function main() {
       generatedAt: manifest.generatedAt,
       packages: manifest.packages,
     });
+    verifyInstalledVersions(expectedVersions);
     return;
   }
 
