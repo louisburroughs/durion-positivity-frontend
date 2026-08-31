@@ -41,7 +41,7 @@ export class SecurityService {
   }
 
   createRole(req: CreateRoleRequest): Observable<SecurityRole> {
-    return this.roleManagement.createRole(req as unknown as { [key: string]: string }).pipe(
+    return this.roleManagement.createRole(req).pipe(
       map(dto => ({
         name: dto.name ?? '',
         description: dto.description,
