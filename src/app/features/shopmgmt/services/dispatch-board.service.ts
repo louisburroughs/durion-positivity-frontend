@@ -1,8 +1,18 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { DailyDispatchBoardDashboardService } from '@durion-sdk/workorder';
 import { PeopleAvailabilityAPIService, PeopleAvailabilityResponse, PrimaryLocationResponse } from '@durion-sdk/people';
 import { DashboardResponse } from '../models/dispatch-board.models';
+
+/**
+ * The SDK's `PrimaryLocationResponse` always carries a location; a persona
+ * with no primary assignment is answered with 404 instead. The pages treat a
+ * blank `locationId` as their location-required state, so 404 is surfaced as
+ * that blank rather than as an error (#201).
+ */
+export type PrimaryLocation = Partial<PrimaryLocationResponse>;
 
 @Injectable({ providedIn: 'root' })
 export class DispatchBoardService {
@@ -14,8 +24,17 @@ export class DispatchBoardService {
     return this.dispatchDashboard.getDispatchDashboard(locationId.trim(), normalizedDate) as Observable<DashboardResponse>;
   }
 
-  getPrimaryLocation(): Observable<PrimaryLocationResponse> {
-    return this.peopleAvailabilityApi.getMyPrimaryLocation();
+  getPrimaryLocation(): Observable<PrimaryLocation> {
+    return this.peopleAvailabilityApi.getMyPrimaryLocation().pipe(
+      catchError((error: unknown) => {
+        if (error instanceof HttpErrorResponse && error.status === 404) {
+          // Expected data absence, not a failure: no primary location assigned.
+          return of({ locationId: undefined });
+        }
+        // Authentication, authorization and server errors stay visible.
+        return throwError(() => error);
+      }),
+    );
   }
 
   getAvailability(locationId: string, date: string): Observable<PeopleAvailabilityResponse[]> {

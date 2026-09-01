@@ -98,6 +98,18 @@ describe('DispatchBoardPageComponent', () => {
       expect(dispatchBoardServiceStub.getDashboard).not.toHaveBeenCalled();
       expect(component.error()).toBe('SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED');
     });
+
+    // #201: a persona with no primary assignment answers 404 upstream; the
+    // service turns that into `{ locationId: undefined }`, which this page must
+    // render as its location-required state, not as a broken page.
+    it('treats the empty primary-location response as location-required without loading the dashboard', () => {
+      dispatchBoardServiceStub.getPrimaryLocation.mockReturnValueOnce(of({ locationId: undefined }));
+      fixture.detectChanges();
+
+      expect(dispatchBoardServiceStub.getDashboard).not.toHaveBeenCalled();
+      expect(component.error()).toBe('SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED');
+      expect(component.selectedLocationId()).toBe('');
+    });
   });
 
   // -------------------------------------------------------------------------

@@ -65,6 +65,7 @@ export const APP_SEEDS: readonly string[] = [
   '/app/people/timekeeping/export',
   '/app/people/timekeeping/discrepancy',
   '/app/people/bulk-import/people',
+  '/app/people/identity-compliance',
 
   // Location
   '/app/location',
@@ -113,7 +114,6 @@ export const APP_SEEDS: readonly string[] = [
   '/app/security',
   '/app/security/permissions',
   '/app/security/audit',
-  '/app/security/identity-compliance',
   '/app/security/audit-logs',
   '/app/security/users/provision',
 
@@ -143,62 +143,65 @@ export const APP_SEEDS: readonly string[] = [
  * pick-execute/consume-items/return-to-stock/shortage-resolution.
  */
 export const PARAM_TEMPLATES: readonly ParamRouteTemplate[] = [
-  // Accounting
-  { template: '/app/accounting/events/:eventId', params: { eventId: ['eventId', 'accountingEventId'] } },
-  { template: '/app/accounting/posting-rules/:ruleSetId', params: { ruleSetId: ['ruleSetId', 'postingRuleSetId'] } },
-  { template: '/app/accounting/credit-memos/:memoId', params: { memoId: ['memoId', 'creditMemoId'] } },
-  { template: '/app/accounting/vendor-payments/:paymentId', params: { paymentId: ['paymentId', 'vendorPaymentId'] } },
-  { template: '/app/accounting/invoices/:invoiceId/payment-status', params: { invoiceId: ['invoiceId'] } },
+  // Every candidate is `<field>@<gateway service>` (see id-harvest.ts). A
+  // route family only accepts ids from the service that owns the entity, so a
+  // valid detail page is never visited with an id harvested elsewhere (#201).
+  // No bare fallbacks: coverage numbers must not be bought with wrong ids.
 
-  // Billing
-  { template: '/app/billing/invoices/:invoiceId', params: { invoiceId: ['invoiceId'] } },
-  { template: '/app/billing/invoices/:invoiceId/receipts', params: { invoiceId: ['invoiceId'] } },
+  // Accounting
+  { template: '/app/accounting/events/:eventId', params: { eventId: ['eventId@accounting', 'accountingEventId@accounting'] } },
+  { template: '/app/accounting/posting-rules/:ruleSetId', params: { ruleSetId: ['ruleSetId@accounting', 'postingRuleSetId@accounting'] } },
+  { template: '/app/accounting/credit-memos/:memoId', params: { memoId: ['memoId@accounting', 'creditMemoId@accounting'] } },
+  { template: '/app/accounting/vendor-payments/:paymentId', params: { paymentId: ['paymentId@accounting', 'vendorPaymentId@accounting'] } },
+  { template: '/app/accounting/invoices/:invoiceId/payment-status', params: { invoiceId: ['invoiceId@invoice', 'invoiceId@accounting'] } },
+
+  // Billing — invoice views take ids from the invoice service only.
+  { template: '/app/billing/invoices/:invoiceId', params: { invoiceId: ['invoiceId@invoice'] } },
+  { template: '/app/billing/invoices/:invoiceId/receipts', params: { invoiceId: ['invoiceId@invoice'] } },
 
   // Bulk import
-  { template: '/app/bulk-import/jobs/:jobId', params: { jobId: ['jobId', 'importJobId'] } },
+  { template: '/app/bulk-import/jobs/:jobId', params: { jobId: ['jobId@bulk-loader', 'importJobId@bulk-loader'] } },
 
   // CRM
-  { template: '/app/crm/party/:partyId', params: { partyId: ['partyId'] } },
-  { template: '/app/crm/party/:partyId/contacts', params: { partyId: ['partyId'] } },
-  { template: '/app/crm/party/:partyId/billing-rules', params: { partyId: ['partyId'] } },
-  { template: '/app/crm/crm-snapshot/:partyId', params: { partyId: ['partyId'] } },
+  { template: '/app/crm/party/:partyId', params: { partyId: ['partyId@customer'] } },
+  { template: '/app/crm/party/:partyId/contacts', params: { partyId: ['partyId@customer'] } },
+  { template: '/app/crm/party/:partyId/billing-rules', params: { partyId: ['partyId@customer'] } },
+  { template: '/app/crm/crm-snapshot/:partyId', params: { partyId: ['partyId@customer'] } },
 
   // Inventory
-  { template: '/app/inventory/by-location/site/:siteId', params: { siteId: ['siteId'] } },
-  { template: '/app/inventory/by-location/:locationId', params: { locationId: ['locationId'] } },
-  { template: '/app/inventory/ledger/:ledgerEntryId', params: { ledgerEntryId: ['ledgerEntryId', 'entryId'] } },
-  { template: '/app/inventory/putaway/tasks/:taskId', params: { taskId: ['taskId', 'putawayTaskId'] } },
-  { template: '/app/inventory/purchase-orders/:poId', params: { poId: ['poId', 'purchaseOrderId'] } },
-  { template: '/app/inventory/fulfillment/workorders/:workorderId/pick-list', params: { workorderId: ['workorderId', 'workOrderId'] } },
+  { template: '/app/inventory/by-location/site/:siteId', params: { siteId: ['siteId@inventory'] } },
+  { template: '/app/inventory/by-location/:locationId', params: { locationId: ['locationId@inventory'] } },
+  { template: '/app/inventory/ledger/:ledgerEntryId', params: { ledgerEntryId: ['ledgerEntryId@inventory', 'entryId@inventory'] } },
+  { template: '/app/inventory/putaway/tasks/:taskId', params: { taskId: ['taskId@inventory', 'putawayTaskId@inventory'] } },
+  { template: '/app/inventory/purchase-orders/:poId', params: { poId: ['poId@inventory', 'purchaseOrderId@inventory'] } },
+  { template: '/app/inventory/fulfillment/workorders/:workorderId/pick-list', params: { workorderId: ['workorderId@workorder', 'workOrderId@workorder'] } },
 
-  // Location — the location SDK's LocationResponseDTO keys by bare `id`, which
-  // the harvester scopes to the API resource ('id@locations'); 'locationId'
-  // still matches other domains' FK fields.
-  { template: '/app/location/locations/:id', params: { id: ['locationId', 'id@locations'] } },
-  { template: '/app/location/locations/:locationId/defaults', params: { locationId: ['locationId', 'id@locations'] } },
+  // Location — the location SDK's LocationResponseDTO keys by bare `id`.
+  { template: '/app/location/locations/:id', params: { id: ['locationId@location', 'id@location'] } },
+  { template: '/app/location/locations/:locationId/defaults', params: { locationId: ['locationId@location', 'id@location'] } },
 
   // Order
-  { template: '/app/order/cart/:orderId', params: { orderId: ['orderId'] } },
+  { template: '/app/order/cart/:orderId', params: { orderId: ['orderId@order'] } },
 
   // People
-  { template: '/app/people/employees/:id', params: { id: ['personId', 'employeeId'] } },
-  { template: '/app/people/rbac/:personUuid', params: { personUuid: ['personUuid', 'personId'] } },
-  { template: '/app/people/person/:personId/locations', params: { personId: ['personId'] } },
+  { template: '/app/people/employees/:id', params: { id: ['personId@people', 'employeeId@people'] } },
+  { template: '/app/people/rbac/:personUuid', params: { personUuid: ['personUuid@people', 'personId@people'] } },
+  { template: '/app/people/person/:personId/locations', params: { personId: ['personId@people'] } },
 
   // Product
-  { template: '/app/product/catalog/:productId', params: { productId: ['productId'] } },
+  { template: '/app/product/catalog/:productId', params: { productId: ['productId@catalog', 'id@catalog'] } },
 
   // Shop management
-  { template: '/app/shopmgmt/appointments/:id/edit', params: { id: ['appointmentId'] } },
-  { template: '/app/shopmgmt/appointments/:id/assignments', params: { id: ['appointmentId'] } },
+  { template: '/app/shopmgmt/appointments/:id/edit', params: { id: ['appointmentId@shop-manager'] } },
+  { template: '/app/shopmgmt/appointments/:id/assignments', params: { id: ['appointmentId@shop-manager'] } },
 
   // Work execution
-  { template: '/app/workexec/estimates/:estimateId', params: { estimateId: ['estimateId'] } },
-  { template: '/app/workexec/estimates/:estimateId/parts', params: { estimateId: ['estimateId'] } },
-  { template: '/app/workexec/estimates/:estimateId/labor', params: { estimateId: ['estimateId'] } },
-  { template: '/app/workexec/estimates/:estimateId/summary', params: { estimateId: ['estimateId'] } },
-  { template: '/app/workexec/workorders/:workorderId', params: { workorderId: ['workorderId', 'workOrderId'] } },
-  { template: '/app/workexec/workorders/:workorderId/labor', params: { workorderId: ['workorderId', 'workOrderId'] } },
-  { template: '/app/workexec/workorders/:workorderId/parts', params: { workorderId: ['workorderId', 'workOrderId'] } },
-  { template: '/app/workexec/workorders/:id/operational-context', params: { id: ['workorderId', 'workOrderId'] } },
+  { template: '/app/workexec/estimates/:estimateId', params: { estimateId: ['estimateId@workorder'] } },
+  { template: '/app/workexec/estimates/:estimateId/parts', params: { estimateId: ['estimateId@workorder'] } },
+  { template: '/app/workexec/estimates/:estimateId/labor', params: { estimateId: ['estimateId@workorder'] } },
+  { template: '/app/workexec/estimates/:estimateId/summary', params: { estimateId: ['estimateId@workorder'] } },
+  { template: '/app/workexec/workorders/:workorderId', params: { workorderId: ['workorderId@workorder', 'workOrderId@workorder'] } },
+  { template: '/app/workexec/workorders/:workorderId/labor', params: { workorderId: ['workorderId@workorder', 'workOrderId@workorder'] } },
+  { template: '/app/workexec/workorders/:workorderId/parts', params: { workorderId: ['workorderId@workorder', 'workOrderId@workorder'] } },
+  { template: '/app/workexec/workorders/:id/operational-context', params: { id: ['workorderId@workorder', 'workOrderId@workorder'] } },
 ];

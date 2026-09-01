@@ -22,5 +22,10 @@
     "src/**/*.spec.ts",
     "src/test-proxy-zone.setup.ts",
     "src/test-shims/**/*.ts"
-  ]
+  ],
+  /*
+   * The supplier contract guard reads service sources from disk and runs under
+   * plain `vitest` (node), not the browser-built `ng test` program.
+   */
+  "exclude": ["src/app/features/positivity/services/supplier-contract-coverage.spec.ts"]
 }

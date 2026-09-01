@@ -7,9 +7,7 @@ import { PoDetailComponent } from './po-detail.component';
 import { InventoryPurchaseOrderService } from '../../../services/inventory-purchase-order.service';
 import { PurchaseOrderDetail } from '../../../models/inventory.models';
 import { SupplierOrderTransmissionService } from '../../../../positivity/services/supplier-order-transmission.service';
-import { SupplierShipmentService } from '../../../../positivity/services/supplier-shipment.service';
-import { SupplierOrderStatusHistory, SupplierOrderTransmission } from '../../../../positivity/models/supplier-order-transmission.models';
-import { SupplierShipmentTimeline } from '../../../../positivity/models/supplier-shipment.models';
+import { SupplierOrderTransmission } from '../../../../positivity/models/supplier-order-transmission.models';
 
 const mockPoService = {
   getPurchaseOrder: vi.fn(),
@@ -17,54 +15,27 @@ const mockPoService = {
 };
 
 const mockTransmissionService = {
-  getTransmission: vi.fn(),
-  getStatusHistory: vi.fn(),
-  listManualReview: vi.fn(),
-  getManualReviewItem: vi.fn(),
-  resolveManualReview: vi.fn(),
-};
-
-const mockShipmentService = {
-  getShipmentTimeline: vi.fn(),
-  listUnlinkedEvents: vi.fn(),
+  listForPurchaseOrder: vi.fn(),
 };
 
 const transmissionFixture: SupplierOrderTransmission = {
+  transmissionIntentId: 'ti-1',
   purchaseOrderId: 'po-001',
-  vendorProfileId: 'vp-1',
-  vendorDisplayName: 'Michelin EU',
+  purchaseOrderNumber: 'PO-001',
+  supplierRef: 'michelin-eu',
   state: 'MANUAL_REVIEW',
-  vendorOrderNumber: null,
-  vendorDocumentId: null,
-  lines: [],
-  manualReviewReason: 'No vendor acknowledgement.',
-  resolutionActions: [{ action: 'CONFIRM_MATCHED' }, { action: 'MARK_REJECTED' }],
-  asOf: '2026-08-12T11:00:00Z',
-  fetchedAt: '2026-08-12T12:00:00Z',
-  stalenessThresholdMinutes: 120,
-};
-
-const historyFixture: SupplierOrderStatusHistory = {
-  purchaseOrderId: 'po-001',
-  events: [
-    { statusEventId: 'ev-1', occurredAt: '2026-08-12T09:00:00Z', state: 'SENT' },
-  ],
-  fetchedAt: '2026-08-12T12:00:00Z',
-};
-
-const shipmentFixture: SupplierShipmentTimeline = {
-  purchaseOrderId: 'po-001',
-  events: [
-    {
-      shipmentEventId: 'se-1',
-      purchaseOrderId: 'po-001',
-      eventCode: 'SHIPPED',
-      carrierCode: 'DHL',
-      occurredAt: '2026-08-11T08:00:00Z',
-      receivedAt: '2026-08-11T08:05:00Z',
-    },
-  ],
-  fetchedAt: '2026-08-12T12:00:00Z',
+  supplierOrderNumber: null,
+  documentId: null,
+  latestScheduledDeliveryDate: null,
+  vendorReason: 'No vendor acknowledgement.',
+  vendorErrorCode: null,
+  failureDetail: null,
+  lastStatusAt: '2026-08-12T11:00:00Z',
+  lastTransitionAt: null,
+  dispatchAttempts: 2,
+  resolutionAction: null,
+  resolvedAt: null,
+  resolvedBy: null,
 };
 
 const mockRoute = {
@@ -85,9 +56,7 @@ const poFixture: PurchaseOrderDetail = {
 describe('PoDetailComponent', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
-    mockTransmissionService.getTransmission.mockReturnValue(of(transmissionFixture));
-    mockTransmissionService.getStatusHistory.mockReturnValue(of(historyFixture));
-    mockShipmentService.getShipmentTimeline.mockReturnValue(of(shipmentFixture));
+    mockTransmissionService.listForPurchaseOrder.mockReturnValue(of([transmissionFixture]));
 
     await TestBed.configureTestingModule({
       imports: [PoDetailComponent, TranslateModule.forRoot()],
@@ -96,7 +65,6 @@ describe('PoDetailComponent', () => {
         { provide: InventoryPurchaseOrderService, useValue: mockPoService },
         { provide: ActivatedRoute, useValue: mockRoute },
         { provide: SupplierOrderTransmissionService, useValue: mockTransmissionService },
-        { provide: SupplierShipmentService, useValue: mockShipmentService },
       ],
     }).compileComponents();
   });
@@ -141,17 +109,16 @@ describe('PoDetailComponent', () => {
     expect(keyIdx).toBeGreaterThan(errIdx);
   });
 
-  describe('supplier connectivity sections (#191, #193)', () => {
-    it('hosts the transmission panel and the shipment timeline, keyed by the PO UUID', () => {
+  describe('supplier connectivity section (#191, #201)', () => {
+    it('hosts the transmission panel keyed by the PO UUID and no shipment timeline', () => {
       mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
       const fixture = TestBed.createComponent(PoDetailComponent);
       fixture.detectChanges();
       const el = fixture.nativeElement as HTMLElement;
 
       expect(el.querySelector('app-supplier-transmission-panel')).not.toBeNull();
-      expect(el.querySelector('app-supplier-shipment-panel')).not.toBeNull();
-      expect(mockTransmissionService.getTransmission).toHaveBeenCalledWith('po-001');
-      expect(mockShipmentService.getShipmentTimeline).toHaveBeenCalledWith('po-001');
+      expect(el.querySelector('app-supplier-shipment-panel')).toBeNull();
+      expect(mockTransmissionService.listForPurchaseOrder).toHaveBeenCalledWith('po-001');
     });
 
     it('exposes no path anywhere on the page that re-transmits the order', () => {
@@ -166,22 +133,14 @@ describe('PoDetailComponent', () => {
         .toLowerCase();
 
       expect(controlText).not.toMatch(/resend|re-send|retransmit|re-transmit|send.?again|transmit/);
-      // The transmission panel is rendering MANUAL_REVIEW and the backend
-      // offered resolution actions, but this route carries no role guard while
-      // the administrator queue does (#191). So the page offers no resolution
-      // control at all, and never reaches the resolution endpoint.
-      expect(el.querySelectorAll('.review-actions__trigger')).toHaveLength(0);
+      // MANUAL_REVIEW is reported, never resolved, from this page.
       expect(el.querySelector('app-supplier-manual-review-actions')).toBeNull();
-      expect(mockTransmissionService.resolveManualReview).not.toHaveBeenCalled();
     });
 
-    it('keeps rendering the order when the supplier services fail', () => {
+    it('keeps rendering the order when the supplier read fails', () => {
       mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
-      mockTransmissionService.getTransmission.mockReturnValue(
+      mockTransmissionService.listForPurchaseOrder.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 503, statusText: 'Unavailable' })),
-      );
-      mockShipmentService.getShipmentTimeline.mockReturnValue(
-        throwError(() => new HttpErrorResponse({ status: 403, statusText: 'Forbidden' })),
       );
 
       const fixture = TestBed.createComponent(PoDetailComponent);

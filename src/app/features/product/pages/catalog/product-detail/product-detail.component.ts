@@ -17,29 +17,19 @@ import {
   UomConversion,
 } from '../../../models/product.models';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
-import { SupplierAvailabilityPanelComponent } from '../../../../positivity/components/supplier-availability-panel/supplier-availability-panel.component';
-import { SupplierEnrichmentPanelComponent } from '../../../../positivity/components/supplier-enrichment-panel/supplier-enrichment-panel.component';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 /**
- * Supplier availability (#190) and manufacturer enrichment (#195) appear on this
- * page as imported positivity components only. This component holds no supplier
- * model, no supplier service and no supplier state: both sections load their own
- * data and keep their own `state`/`errorKey`, which is what guarantees that a
- * vendor timeout or a 403 from the supplier API cannot flip this page's `state`
- * to `error` (DECISION-POSITIVITY-004). See the isolation tests in this
- * component's spec.
+ * The supplier availability (#190) and manufacturer enrichment (#195) sections
+ * were retired in #201: the generated supplier client publishes no read the
+ * panels could be mapped onto, so this page holds no supplier component,
+ * model, service or state.
  */
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [
-    CommonModule,
-    TranslatePipe,
-    SupplierAvailabilityPanelComponent,
-    SupplierEnrichmentPanelComponent,
-  ],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './product-detail.component.html',
   styleUrl: './product-detail.component.css',
 })

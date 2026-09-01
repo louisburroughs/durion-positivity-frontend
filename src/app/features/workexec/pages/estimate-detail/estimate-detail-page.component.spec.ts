@@ -4,13 +4,9 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
-import { HttpErrorResponse } from '@angular/common/http';
-import { of, throwError } from 'rxjs';
 import { EstimateDetailPageComponent } from './estimate-detail-page.component';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { environment } from '../../../../../environments/environment';
-import { SupplierFleetService } from '../../../positivity/services/supplier-fleet.service';
-import { SupplierFleetVehicleLookup } from '../../../positivity/models/supplier-fleet.models';
 
 const BASE = environment.apiBaseUrl;
 const mockRoute = { snapshot: { paramMap: { get: (k: string) => k === 'estimateId' ? 'est-123' : null } } };
@@ -28,36 +24,13 @@ const translations = {
   },
 };
 
-/**
- * Fleet lookup answer used by the hosted panel (#194). Mocked at the service so
- * the panel never reaches HttpTestingController — the point of these tests is
- * the host, and the panel has its own suite.
- */
-const fleetLookup: SupplierFleetVehicleLookup = {
-  outcome: 'FOUND',
-  vehicleIdentifier: '1FTEST',
-  vendorProfileId: 'vp-fleet-1',
-  vendorDisplayName: 'Michelin Fleet Services',
-  vehicle: { vehicleIdentifier: '1FTEST', vin: '1FTEST', plate: null, description: null },
-  contracts: [],
-  notFoundReason: null,
-  asOf: '2026-08-12T11:40:00Z',
-  fetchedAt: '2026-08-12T11:59:00Z',
-  stalenessThresholdMinutes: 60,
-};
-
 describe('EstimateDetailPageComponent [Story 236]', () => {
   let fixture: ComponentFixture<EstimateDetailPageComponent>;
   let component: EstimateDetailPageComponent;
   let http: HttpTestingController;
-  let fleetService: { lookupVehicle: ReturnType<typeof vi.fn>; getWorkorderAuthorization: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     vi.useFakeTimers();
-    fleetService = {
-      lookupVehicle: vi.fn().mockReturnValue(of(fleetLookup)),
-      getWorkorderAuthorization: vi.fn(),
-    };
     await TestBed.configureTestingModule({
       imports: [EstimateDetailPageComponent, TranslateModule.forRoot()],
       providers: [
@@ -66,7 +39,6 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: mockRoute },
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
-        { provide: SupplierFleetService, useValue: fleetService },
       ],
     }).compileComponents();
     const translate = TestBed.inject(TranslateService);
@@ -232,7 +204,7 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
       expect(crmRefBlock?.textContent ?? '').toContain('Unavailable');
     });
 
-    it('seeds the fleet lookup with the vehicle VIN, not the platform vehicle id', async () => {
+    it('keeps the vehicle VIN separately from the display label', async () => {
       fixture.detectChanges();
       drainPipeline({
         ...STUB_ESTIMATE,
@@ -241,11 +213,7 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
       });
       fixture.detectChanges();
 
-      // A fleet manager knows the vehicle by VIN or plate; it has never heard
-      // of this platform's crm-vehicle-456.
       expect(component.vehicleVin()).toBe('1FTEST');
-      expect(fleetService.lookupVehicle).toHaveBeenCalledWith('1FTEST', undefined);
-      expect(fleetService.lookupVehicle).not.toHaveBeenCalledWith('crm-vehicle-456', undefined);
     });
 
     it('shows "Not set" when estimate has no crmPartyId', async () => {
@@ -264,79 +232,16 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
     });
   });
 
-  /**
-   * Fleet lookup panel isolation (#194, DECISION-POSITIVITY-004).
-   *
-   * A fleet manager being down, slow or refusing this caller must never take
-   * the estimate screen with it: the advisor is standing at a counter with a
-   * customer, and the estimate is what they are there to write.
-   */
-  describe('fleet lookup panel [#194]', () => {
-    function loadWithVehicle(): void {
+  // #201: the fleet lookup panel is no longer hosted here — the generated
+  // fleet read needs a supplier reference this page cannot supply.
+  describe('retired fleet lookup panel [#201]', () => {
+    it('renders no fleet lookup panel and injects no supplier service', () => {
       fixture.detectChanges();
-      drainPipeline({
-        ...STUB_ESTIMATE,
-        crmPartyId: 'crm-party-123',
-        crmVehicleId: 'crm-vehicle-456',
-      });
-      fixture.detectChanges();
-    }
-
-    it('hosts the panel on the estimate workspace', () => {
-      loadWithVehicle();
-
-      expect(fixture.nativeElement.querySelector('app-supplier-fleet-lookup-panel')).toBeTruthy();
-    });
-
-    for (const [label, status] of [
-      ['a 500', 500],
-      ['a 503 vendor outage', 503],
-      ['a 403 denial', 403],
-    ] as ReadonlyArray<readonly [string, number]>) {
-      it(`keeps the estimate intact through ${label} from the fleet manager`, () => {
-        fleetService.lookupVehicle.mockReturnValue(
-          throwError(() => new HttpErrorResponse({ status, statusText: 'x' })),
-        );
-        loadWithVehicle();
-
-        expect(component.pageState()).toBe('ready');
-        expect(component.errorMessage()).toBeNull();
-        // The ledger, the totals and the submit CTA are all still rendered.
-        expect(fixture.nativeElement.querySelector('.estimate-workspace')).toBeTruthy();
-        expect(fixture.nativeElement.querySelector('.workspace-sidebar')).toBeTruthy();
-        expect(component.canSubmitForApproval()).toBe(true);
-      });
-    }
-
-    // #194 §7, ruled advisory-only in v1: a NOT_FOUND vehicle does not stop the
-    // advisor writing up work. Blocking at the counter — possibly on a lookup
-    // that is simply down — is the more damaging way to be wrong.
-    it('does not block promotion when the fleet manager does not know the vehicle', () => {
-      fleetService.lookupVehicle.mockReturnValue(
-        of({ ...fleetLookup, outcome: 'NOT_FOUND' as const, vehicle: null, contracts: [] }),
-      );
-      fixture.detectChanges();
-      // An APPROVED estimate has frozen totals, so no /calculate is issued.
-      http.expectOne(`${BASE}/v1/workorders/estimates/est-123`).flush({
-        ...STUB_ESTIMATE,
-        status: 'APPROVED',
-        subtotal: 100,
-        taxAmount: 8,
-        total: 108,
-      });
-      vi.advanceTimersByTime(350);
+      drainPipeline({ ...STUB_ESTIMATE, crmPartyId: 'crm-party-123', crmVehicleId: 'crm-vehicle-456' });
       fixture.detectChanges();
 
-      expect(component.canPromote()).toBe(true);
-      const promote = fixture.nativeElement.querySelector('.btn--promote') as HTMLButtonElement;
-      expect(promote).toBeTruthy();
-      expect(promote.disabled).toBe(false);
-    });
-
-    it('injects no supplier service into the host page itself', () => {
-      loadWithVehicle();
+      expect(fixture.nativeElement.querySelector('app-supplier-fleet-lookup-panel')).toBeNull();
       const own = Object.keys(component as unknown as Record<string, unknown>);
-
       expect(own.some(key => /supplier|fleet|authoriz|vendorProfile/i.test(key))).toBe(false);
     });
   });

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { EmployeeAPIService, PeopleAvailabilityAPIService, PeopleAvailabilityResponse } from '@durion-sdk/people';
 import { ApiBaseService } from '../../../core/services/api-base.service';
@@ -1124,8 +1124,34 @@ export class WorkexecService {
     return this.workorderParts.getPartsUsageHistory(workorderId) as unknown as Observable<PartUsageResponse[]>;
   }
 
+  /**
+   * The SDK splits the pick list into a header read and a task read; the page
+   * model composes both. `EA` is the local default because the generated task
+   * carries no unit of measure — a different UOM needs a backend contract
+   * addition, never a derivation from SKU text.
+   */
   getWorkorderPickList(workorderId: string): Observable<PickListView> {
-    return this.workorderPickFacade.getWorkorderPickList(workorderId) as unknown as Observable<PickListView>;
+    return forkJoin({
+      header: this.workorderPickFacade.getWorkorderPickList(workorderId),
+      tasks: this.workorderPickFacade.getPickTasks(workorderId),
+    }).pipe(
+      map(({ header, tasks }) => ({
+        workorderId: header.workorderId,
+        pickListId: header.pickListId,
+        status: header.status,
+        createdAt: header.createdAt,
+        tasks: tasks.map(task => ({
+          pickTaskId: task.pickTaskId,
+          productSku: task.skuId,
+          requestedQty: task.requiredQty,
+          pickedQty: task.pickedQty,
+          uom: 'EA',
+          storageLocationId: task.locationId,
+          status: task.status,
+          sortOrder: task.sortOrder,
+        })),
+      })),
+    );
   }
 
   getPickedItems(workorderId: string): Observable<PickedItemLine[]> {

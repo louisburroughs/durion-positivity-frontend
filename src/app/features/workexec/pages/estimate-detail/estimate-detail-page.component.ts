@@ -19,7 +19,6 @@ import {
   TotalsState,
   WorkorderResponse,
 } from '../../models/workexec.models';
-import { SupplierFleetLookupPanelComponent } from '../../../positivity/components/supplier-fleet-lookup-panel/supplier-fleet-lookup-panel.component';
 
 /**
  * EstimateDetailPageComponent — Story 236 (CAP-002)
@@ -34,18 +33,13 @@ import { SupplierFleetLookupPanelComponent } from '../../../positivity/component
  *   Story 227 — Handle Partial Approval Promotion: display approved vs declined scope
  *               before promotion confirm, show partialApproval summary post-promote.
  *
- * CAP-323 addition (issue #194):
- *   The fleet lookup panel is hosted here. This page gains an import, one CRM
- *   field (the vehicle VIN it was already fetching and discarding) and markup —
- *   no supplier HTTP call and no supplier model enters workexec (ADR-0010).
- *   The panel owns its own state, so a fleet-manager outage degrades the panel
- *   and leaves `pageState()`/`errorMessage()` untouched; and per the #194 §7
- *   ruling it is advisory only, so nothing below gates promotion on it.
+ * The fleet lookup panel (#194) is no longer hosted here (#201): the generated
+ * fleet read requires a supplier reference the estimate DTO does not carry.
  */
 @Component({
   selector: 'app-estimate-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslatePipe, SupplierFleetLookupPanelComponent],
+  imports: [CommonModule, RouterLink, TranslatePipe],
   templateUrl: './estimate-detail-page.component.html',
   styleUrl: './estimate-detail-page.component.css',
 })
@@ -60,13 +54,7 @@ export class EstimateDetailPageComponent implements OnInit {
   /** Human-readable CRM labels resolved from the estimate's crmPartyId / crmVehicleId. */
   readonly customerLabel = signal<string | null>(null);
   readonly vehicleLabel  = signal<string | null>(null);
-  /**
-   * The vehicle's VIN, kept separately from the display label.
-   *
-   * A fleet manager knows a vehicle by its VIN or plate, never by this
-   * platform's `crmVehicleId`, so the VIN is what the fleet lookup panel is
-   * seeded with. It was already being fetched and thrown away.
-   */
+  /** The vehicle's VIN, kept separately from the display label. */
   readonly vehicleVin    = signal<string | null>(null);
 
   readonly pageState    = signal<PageState>('loading');

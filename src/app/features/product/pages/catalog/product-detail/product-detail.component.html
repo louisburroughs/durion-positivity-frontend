@@ -38,15 +38,6 @@
     </div>
   </header>
 
-  <!--
-    Supplier availability and manufacturer enrichment (issues #190 / #195).
-    Both are self-contained positivity components: they own their own state and
-    services, so a vendor outage cannot reach this page's state machine. Nothing
-    below is passed back into the product load.
-  -->
-  <app-supplier-availability-panel [productId]="productId()" />
-  <app-supplier-enrichment-panel [productId]="productId()" />
-
   <section class="card tabs" aria-label="{{ 'PRODUCT.CATALOG.DETAIL.TABS.ARIA' | translate }}">
     <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'lifecycle'"
       (click)="activeTab.set('lifecycle')">

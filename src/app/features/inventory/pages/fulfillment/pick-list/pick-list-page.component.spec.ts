@@ -66,6 +66,19 @@ describe('PickListPageComponent', () => {
     expect(component.state()).toBe('empty');
   });
 
+  // Regression for #201: the adapter contract is that `tasks` is always an
+  // array. A header-only response must never reach this page, so the page
+  // relies on the array without guarding, and an empty one is the empty state.
+  it('always receives tasks as an array from the adapter contract', async () => {
+    const emptyList: PickListView = { ...pickListFixture, tasks: [] };
+    mockWorkexecService.getWorkorderPickList.mockReturnValue(of(emptyList));
+    const component = await setupPickList();
+
+    expect(Array.isArray(component.pickList()?.tasks)).toBe(true);
+    expect(component.pickList()?.tasks).toHaveLength(0);
+    expect(component.state()).toBe('empty');
+  });
+
   it('reload() re-fetches pick list and sets state to ready', async () => {
     mockWorkexecService.getWorkorderPickList
       .mockReturnValueOnce(throwError(() => new Error('initial fail')))

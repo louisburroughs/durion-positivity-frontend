@@ -27,10 +27,6 @@ const ROUTES = [
   // they are the ones worth scanning as the domain grows.
   '/app/positivity',
   '/app/positivity/exchanges',
-  '/app/positivity/orders/manual-review',
-  '/app/positivity/stock-snapshots',
-  '/app/positivity/enrichment/unmatched',
-  '/app/accounting/payables/vendor-invoices',
 ];
 
 const IMPACT_RANK = {

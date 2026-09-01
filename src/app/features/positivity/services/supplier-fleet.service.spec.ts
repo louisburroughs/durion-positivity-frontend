@@ -1,257 +1,166 @@
 /**
- * SupplierFleetService contract tests (issue #194).
- *
- * ADR-0035: every public method asserts verb + URL.
- * ADR-0032: fixtures typed as their exact domain interfaces.
+ * SupplierFleetService — generated-client adapter tests (#194, #201).
  */
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ApiBaseService } from '../../../core/services/api-base.service';
-import { environment } from '../../../../environments/environment';
+import { of } from 'rxjs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  FleetAuthorizationResponse,
+  FleetVehicle,
+  SupplierFleetAuthorizationService as SupplierFleetAuthorizationApi,
+} from '@durion-sdk/supplier';
 import { SupplierFleetService } from './supplier-fleet.service';
 import {
   SupplierFleetAuthorization,
   SupplierFleetVehicleLookup,
 } from '../models/supplier-fleet.models';
 
-const BASE = environment.apiBaseUrl;
-const LOOKUP_URL = `${BASE}/supplier/v1/fleet/vehicle-lookup`;
+const SUPPLIER_REF = 'michelin-fleet';
 const WORKORDER_ID = 'cc33dd44-0000-7000-8000-000000000001';
-const AUTH_URL = `${BASE}/supplier/v1/fleet/workorders/${WORKORDER_ID}/authorization`;
 
-const foundFixture: SupplierFleetVehicleLookup = {
-  outcome: 'FOUND',
-  vehicleIdentifier: 'VF1RFA00567123456',
-  vendorProfileId: 'vp-fleet-1',
-  vendorDisplayName: 'Michelin Fleet Services',
-  vehicle: {
-    vehicleIdentifier: 'VF1RFA00567123456',
-    vin: 'VF1RFA00567123456',
-    plate: 'AB-123-CD',
-    description: 'Renault Master 2.3 dCi — fleet unit 4471',
-  },
-  contracts: [
-    {
-      contractId: 'ct-1',
-      contractNumber: 'MFS-2026-0044',
-      fleetManagerName: 'Michelin Fleet Services',
-      status: 'ACTIVE',
-      effectiveFrom: '2026-01-01',
-      effectiveTo: '2026-12-31',
-      policies: [
-        {
-          policyId: 'pol-1',
-          description: 'Tyres and alignment, all axles',
-          coverageNote: 'Excludes cosmetic wheel refinishing.',
-        },
-      ],
-    },
-  ],
-  notFoundReason: null,
-  asOf: '2026-08-12T11:40:00Z',
-  fetchedAt: '2026-08-12T12:00:00Z',
-  stalenessThresholdMinutes: 60,
+const vehicleDto: FleetVehicle = {
+  brand: 'Renault',
+  fleetNumber: '4471',
+  identifiable: true,
+  licensePlate: 'AB-123-CD',
+  model: 'Master 2.3 dCi',
+  modelYear: 2024,
+  odometerValue: '81234',
+  vendorVehicleId: 'MFS-V-9981',
+  vin: 'VF1RFA00567123456',
 };
 
-const notFoundFixture: SupplierFleetVehicleLookup = {
-  outcome: 'NOT_FOUND',
-  vehicleIdentifier: 'UNKNOWN-PLATE-9',
-  vendorProfileId: 'vp-fleet-1',
-  vendorDisplayName: 'Michelin Fleet Services',
-  vehicle: null,
-  contracts: [],
-  notFoundReason: 'No vehicle registered under this identifier.',
-  asOf: '2026-08-12T11:40:00Z',
-  fetchedAt: '2026-08-12T12:00:00Z',
-  stalenessThresholdMinutes: 60,
-};
-
-const authorizationFixture: SupplierFleetAuthorization = {
-  workorderId: WORKORDER_ID,
-  state: 'GRANTED',
-  authorizationReference: 'AUTH-88421',
-  vendorProfileId: 'vp-fleet-1',
-  vendorDisplayName: 'Michelin Fleet Services',
-  contract: {
-    contractId: 'ct-1',
-    contractNumber: 'MFS-2026-0044',
-    fleetManagerName: 'Michelin Fleet Services',
-    status: 'ACTIVE',
-    effectiveFrom: '2026-01-01',
-    effectiveTo: '2026-12-31',
-    policies: [],
-  },
-  vendorReason: null,
-  authorizedAmount: '840.00',
+const authorizationDto: FleetAuthorizationResponse = {
+  approvalStatus: 'MANUAL_REVIEW',
+  authorizedAmount: 840,
+  contractReference: 'MFS-2026-0044',
   currency: 'EUR',
-  requestedAt: '2026-08-12T09:00:00Z',
   decidedAt: '2026-08-12T09:04:00Z',
-  completionApproval: null,
-  asOf: '2026-08-12T09:04:00Z',
-  fetchedAt: '2026-08-12T12:00:00Z',
-  stalenessThresholdMinutes: 60,
-};
-
-const pendingFixture: SupplierFleetAuthorization = {
-  ...authorizationFixture,
-  state: 'PENDING',
-  authorizationReference: null,
-  decidedAt: null,
-  authorizedAmount: null,
-  currency: null,
+  reasonCode: undefined,
+  reasonText: undefined,
+  requestedAt: '2026-08-12T09:00:00Z',
+  reviewReason: 'Approval endpoint rejected the completion payload three times.',
+  status: 'GRANTED',
+  supplierRef: SUPPLIER_REF,
+  vendorAuthorizationId: 'AUTH-88421',
+  workorderId: WORKORDER_ID,
 };
 
 describe('SupplierFleetService', () => {
   let service: SupplierFleetService;
-  let http: HttpTestingController;
+  let api: {
+    lookupFleetVehicle: ReturnType<typeof vi.fn>;
+    getFleetWorkorderAuthorization: ReturnType<typeof vi.fn>;
+    requestFleetWorkorderAuthorization: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
+    api = {
+      lookupFleetVehicle: vi.fn().mockReturnValue(of(vehicleDto)),
+      getFleetWorkorderAuthorization: vi.fn().mockReturnValue(of(authorizationDto)),
+      requestFleetWorkorderAuthorization: vi.fn(),
+    };
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [SupplierFleetService, ApiBaseService],
+      providers: [SupplierFleetService, { provide: SupplierFleetAuthorizationApi, useValue: api }],
     });
     service = TestBed.inject(SupplierFleetService);
-    http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  it('lookupVehicle() — calls the generated read with supplierRef first, then the identifier', () => {
+    service.lookupVehicle('supplier-a', 'VIN-1').subscribe();
 
-  it('lookupVehicle() — GET /supplier/v1/fleet/vehicle-lookup with the identifier as a query param', () => {
-    let received: SupplierFleetVehicleLookup | undefined;
-    service.lookupVehicle('VF1RFA00567123456').subscribe(v => (received = v));
-
-    const req = http.expectOne(r => r.url === LOOKUP_URL);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('vehicleIdentifier')).toBe('VF1RFA00567123456');
-    expect(req.request.params.has('vendorProfileId')).toBe(false);
-    req.flush(foundFixture);
-
-    expect(received?.outcome).toBe('FOUND');
-    expect(received?.contracts).toHaveLength(1);
+    expect(api.lookupFleetVehicle).toHaveBeenCalledTimes(1);
+    expect(api.lookupFleetVehicle).toHaveBeenCalledWith('supplier-a', 'VIN-1');
   });
 
-  it('lookupVehicle() — forwards an explicit vendor profile when the caller supplies one', () => {
-    service.lookupVehicle('AB-123-CD', 'vp-fleet-1').subscribe();
+  it('lookupVehicle() — maps FleetVehicle field by field into a FOUND lookup', () => {
+    let result: SupplierFleetVehicleLookup | undefined;
+    service.lookupVehicle(SUPPLIER_REF, 'VF1RFA00567123456').subscribe(value => (result = value));
 
-    const req = http.expectOne(r => r.url === LOOKUP_URL);
-    expect(req.request.params.get('vehicleIdentifier')).toBe('AB-123-CD');
-    expect(req.request.params.get('vendorProfileId')).toBe('vp-fleet-1');
-    req.flush(foundFixture);
-  });
-
-  it('lookupVehicle() — keeps a plate with slashes intact instead of splitting the path', () => {
-    service.lookupVehicle('FLEET/4471').subscribe();
-
-    const req = http.expectOne(r => r.url === LOOKUP_URL);
-    expect(req.request.params.get('vehicleIdentifier')).toBe('FLEET/4471');
-    req.flush(notFoundFixture);
-  });
-
-  it('lookupVehicle() — returns NOT_FOUND as a value, never as an error', () => {
-    let received: SupplierFleetVehicleLookup | undefined;
-    let errored = false;
-    service.lookupVehicle('UNKNOWN-PLATE-9').subscribe({
-      next: v => (received = v),
-      error: () => (errored = true),
+    expect(result).toEqual({
+      outcome: 'FOUND',
+      supplierRef: SUPPLIER_REF,
+      vehicleIdentifier: 'VF1RFA00567123456',
+      vehicle: {
+        vin: 'VF1RFA00567123456',
+        plate: 'AB-123-CD',
+        brand: 'Renault',
+        model: 'Master 2.3 dCi',
+        modelYear: 2024,
+        fleetNumber: '4471',
+        vendorVehicleId: 'MFS-V-9981',
+        odometer: '81234',
+        identifiable: true,
+      },
     });
-
-    http.expectOne(r => r.url === LOOKUP_URL).flush(notFoundFixture);
-
-    expect(errored).toBe(false);
-    expect(received?.outcome).toBe('NOT_FOUND');
-    expect(received?.notFoundReason).toBe('No vehicle registered under this identifier.');
   });
 
-  it('getWorkorderAuthorization() — GET the workorder authorization by platform UUID', () => {
-    let received: SupplierFleetAuthorization | undefined;
-    service.getWorkorderAuthorization(WORKORDER_ID).subscribe(v => (received = v));
+  it('lookupVehicle() — an unidentifiable vehicle is a NOT_FOUND answer on a 200, never an error', () => {
+    api.lookupFleetVehicle.mockReturnValue(of({ identifiable: false } as FleetVehicle));
+    let result: SupplierFleetVehicleLookup | undefined;
+    const error = vi.fn();
+    service.lookupVehicle(SUPPLIER_REF, 'UNKNOWN-9').subscribe({ next: value => (result = value), error });
 
-    const req = http.expectOne(r => r.url === AUTH_URL);
-    expect(req.request.method).toBe('GET');
-    req.flush(authorizationFixture);
-
-    expect(received?.state).toBe('GRANTED');
-    expect(received?.authorizationReference).toBe('AUTH-88421');
+    expect(error).not.toHaveBeenCalled();
+    expect(result?.outcome).toBe('NOT_FOUND');
+    expect(result?.vehicle).toBeNull();
+    expect(result?.vehicleIdentifier).toBe('UNKNOWN-9');
   });
 
-  it('getWorkorderAuthorization() — surfaces a 202-backed PENDING from the body', () => {
-    let received: SupplierFleetAuthorization | undefined;
-    service.getWorkorderAuthorization(WORKORDER_ID).subscribe(v => (received = v));
+  it('getWorkorderAuthorization() — calls the generated read with supplierRef first, then the workorder', () => {
+    service.getWorkorderAuthorization('supplier-a', 'wo-1').subscribe();
 
-    http
-      .expectOne(r => r.url === AUTH_URL)
-      .flush(pendingFixture, { status: 202, statusText: 'Accepted' });
-
-    expect(received?.state).toBe('PENDING');
-    expect(received?.decidedAt).toBeNull();
+    expect(api.getFleetWorkorderAuthorization).toHaveBeenCalledTimes(1);
+    expect(api.getFleetWorkorderAuthorization).toHaveBeenCalledWith('supplier-a', 'wo-1');
   });
 
-  it('getWorkorderAuthorization() — propagates a 404 so the caller can say "not a fleet workorder"', () => {
-    let status = 0;
-    service.getWorkorderAuthorization(WORKORDER_ID).subscribe({
-      error: (err: { status: number }) => (status = err.status),
+  it('getWorkorderAuthorization() — maps FleetAuthorizationResponse field by field', () => {
+    let result: SupplierFleetAuthorization | undefined;
+    service.getWorkorderAuthorization(SUPPLIER_REF, WORKORDER_ID).subscribe(value => (result = value));
+
+    expect(result).toEqual({
+      workorderId: WORKORDER_ID,
+      supplierRef: SUPPLIER_REF,
+      state: 'GRANTED',
+      vendorAuthorizationId: 'AUTH-88421',
+      contractReference: 'MFS-2026-0044',
+      vendorReason: null,
+      vendorReasonCode: null,
+      reviewReason: 'Approval endpoint rejected the completion payload three times.',
+      authorizedAmount: 840,
+      currency: 'EUR',
+      requestedAt: '2026-08-12T09:00:00Z',
+      decidedAt: '2026-08-12T09:04:00Z',
+      completionApproval: 'MANUAL_REVIEW',
     });
-
-    http
-      .expectOne(r => r.url === AUTH_URL)
-      .flush({ message: 'not fleet' }, { status: 404, statusText: 'Not Found' });
-
-    expect(status).toBe(404);
   });
 
-  it('propagates a 403 rather than masking it as an absent authorization', () => {
-    let status = 0;
-    service.getWorkorderAuthorization(WORKORDER_ID).subscribe({
-      error: (err: { status: number }) => (status = err.status),
-    });
+  it('getWorkorderAuthorization() — keeps the vendor refusal text and code verbatim on DENIED', () => {
+    api.getFleetWorkorderAuthorization.mockReturnValue(
+      of({ ...authorizationDto, status: 'DENIED', reasonCode: 'NOT_COVERED', reasonText: 'Vehicle no longer covered.' }),
+    );
+    let result: SupplierFleetAuthorization | undefined;
+    service.getWorkorderAuthorization(SUPPLIER_REF, WORKORDER_ID).subscribe(value => (result = value));
 
-    http
-      .expectOne(r => r.url === AUTH_URL)
-      .flush({ message: 'nope' }, { status: 403, statusText: 'Forbidden' });
-
-    expect(status).toBe(403);
+    expect(result?.state).toBe('DENIED');
+    expect(result?.vendorReason).toBe('Vehicle no longer covered.');
+    expect(result?.vendorReasonCode).toBe('NOT_COVERED');
   });
 
-  it('passes an authorized amount through as delivered decimal text', () => {
-    let received: SupplierFleetAuthorization | undefined;
-    service.getWorkorderAuthorization(WORKORDER_ID).subscribe(v => (received = v));
-    http.expectOne(r => r.url === AUTH_URL).flush(authorizationFixture);
+  it('getWorkorderAuthorization() — an unknown status token maps to null rather than a guessed state', () => {
+    api.getFleetWorkorderAuthorization.mockReturnValue(of({ ...authorizationDto, status: 'SOMETHING_NEW' }));
+    let result: SupplierFleetAuthorization | undefined;
+    service.getWorkorderAuthorization(SUPPLIER_REF, WORKORDER_ID).subscribe(value => (result = value));
 
-    expect(received?.authorizedAmount).toBe('840.00');
-    expect(typeof received?.authorizedAmount).toBe('string');
-    expect(received?.currency).toBe('EUR');
+    expect(result?.state).toBeNull();
   });
 
-  // #194 §6 — "No frontend path mutates authorization state." Asserted rather
-  // than merely intended: a client that could write this could tell an advisor
-  // work is covered when nobody has agreed to cover it.
-  it('exposes no operation that requests, grants, denies or advances authorization', () => {
-    const methodNames = Object.getOwnPropertyNames(Object.getPrototypeOf(service)).filter(
+  it('exposes no request, grant, deny, override or escalate operation (#194 §6)', () => {
+    const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(service)).filter(
       name => name !== 'constructor',
     );
 
-    expect(
-      methodNames.filter(name =>
-        /create|update|delete|remove|post|put|patch|save|submit|request|authorize|authorise|grant|deny|decline|approve|reject|override|escalate|cancel|retry|resend/i.test(
-          name,
-        ),
-      ),
-    ).toEqual([]);
-    expect(methodNames.every(name => /^(get|list|lookup)/.test(name))).toBe(true);
-  });
-
-  it('issues only GET requests across its whole surface', () => {
-    service.lookupVehicle('VF1RFA00567123456').subscribe();
-    service.getWorkorderAuthorization(WORKORDER_ID).subscribe();
-
-    const requests = [
-      ...http.match(r => r.url === LOOKUP_URL),
-      ...http.match(r => r.url === AUTH_URL),
-    ];
-    expect(requests).toHaveLength(2);
-    expect(requests.every(r => r.request.method === 'GET')).toBe(true);
-    requests[0].flush(foundFixture);
-    requests[1].flush(authorizationFixture);
+    expect(methods).toEqual(['lookupVehicle', 'getWorkorderAuthorization']);
+    expect(api.requestFleetWorkorderAuthorization).not.toHaveBeenCalled();
   });
 });
