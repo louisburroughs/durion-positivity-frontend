@@ -22,9 +22,12 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 /**
  * The supplier availability (#190) and manufacturer enrichment (#195) sections
- * were retired in #201: the generated supplier client publishes no read the
- * panels could be mapped onto, so this page holds no supplier component,
- * model, service or state.
+ * were retired in #201: the generated supplier client publishes no read whose
+ * request and response cover what those panels required (`inquireSupplierStock`
+ * needs a `vendorProfileId` plus an article EAN and returns no vendor display
+ * name or UOM; there is no enrichment read at all). The gaps are recorded on
+ * #201 and PR #202, so this page holds no supplier component, model, service
+ * or state.
  */
 @Component({
   selector: 'app-product-detail',

@@ -72,6 +72,11 @@ const APPROVAL_ICONS: Readonly<Record<SupplierFleetCompletionApprovalState, stri
  * `vendorProfileId`. The workorder screen does not carry a verified
  * `supplierRef`, so it no longer hosts this panel (#201).
  *
+ * ── Not hosted today ────────────────────────────────────────────────────────
+ * No page hosts this panel at present. It becomes hostable only from a page
+ * that holds a verified `supplierRef` (the vendor profile alias), never from
+ * one that only knows a `vendorProfileId`.
+ *
  * ── `DENIED` shows the fleet manager's own words ─────────────────────────────
  * A translated label plus the vendor's text, verbatim (#194 §4, ADR-0030).
  *
@@ -196,6 +201,15 @@ export class SupplierFleetAuthorizationPanelComponent {
             if (err instanceof HttpErrorResponse && err.status === 404) {
               this.state.set('empty');
               this.errorKey.set(null);
+              return;
+            }
+            if (err instanceof HttpErrorResponse && err.status === 422) {
+              // The SDK documents 422 on the fleet operations as "the vendor
+              // could not be reached or answered unreadably". That is the
+              // unreachable state, and the only one worth trying again.
+              // ADR-0031: state first, then the key.
+              this.state.set('unreachable');
+              this.errorKey.set('POSITIVITY.FLEET.AUTHORIZATION.ERROR.LOAD');
               return;
             }
             const outcome = mapSupplierError(err, 'POSITIVITY.FLEET.AUTHORIZATION.ERROR.LOAD');

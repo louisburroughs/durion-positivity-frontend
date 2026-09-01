@@ -5554,10 +5554,7 @@
       "NO_RESEND_NOTE": "Cette commande n'est pas renvoyée d'ici. Le fournisseur la détient peut-être déjà, un renvoi risquerait donc une commande physique en double.",
       "NOT_TRANSMITTED": "Cette commande n'a pas été transmise au fournisseur par voie électronique; il n'y a donc aucun état de transmission à afficher.",
       "STATE": {
-        "QUEUED": "En file d'attente pour le fournisseur",
-        "SENT": "Transmise au fournisseur",
         "CONFIRMED": "Confirmée par le fournisseur",
-        "PARTIALLY_CONFIRMED": "Partiellement confirmée",
         "REJECTED": "Refusée par le fournisseur",
         "MANUAL_REVIEW": "Révision manuelle requise",
         "UNKNOWN": "État inconnu",
@@ -5688,7 +5685,6 @@
         "STATE": {
           "PENDING": "Pas encore transmise",
           "APPROVED": "Approuvée",
-          "RETRYING": "Nouvelle tentative en cours",
           "MANUAL_REVIEW": "Révision manuelle requise",
           "UNKNOWN": "Inconnu",
           "NOT_REQUESTED": "Non demandée"

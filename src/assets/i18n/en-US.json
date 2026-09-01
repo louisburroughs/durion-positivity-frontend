@@ -5554,10 +5554,7 @@
       "NO_RESEND_NOTE": "This order is not re-sent from here. The vendor may already hold it, so re-sending would risk a duplicate physical order.",
       "NOT_TRANSMITTED": "This order was not sent to the vendor electronically, so there is no transmission state to show.",
       "STATE": {
-        "QUEUED": "Queued for the vendor",
-        "SENT": "Sent to the vendor",
         "CONFIRMED": "Confirmed by the vendor",
-        "PARTIALLY_CONFIRMED": "Partially confirmed",
         "REJECTED": "Rejected by the vendor",
         "MANUAL_REVIEW": "Needs manual review",
         "UNKNOWN": "Unknown state",
@@ -5688,7 +5685,6 @@
         "STATE": {
           "PENDING": "Not sent yet",
           "APPROVED": "Approved",
-          "RETRYING": "Retrying",
           "MANUAL_REVIEW": "Needs manual review",
           "UNKNOWN": "Unknown",
           "NOT_REQUESTED": "Not requested"

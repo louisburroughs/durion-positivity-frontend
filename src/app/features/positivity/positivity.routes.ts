@@ -19,8 +19,11 @@ import { Routes } from '@angular/router';
  *
  * The enrichment worklist, manual-review queue, unlinked shipments, stock
  * snapshot and PRICAT worklist routes were retired in #201: the generated
- * `@durion-sdk/supplier` client publishes no read operation for them, and a
- * route that can only 404 is not a feature.
+ * `@durion-sdk/supplier` client publishes no read whose request and response
+ * cover what those pages required (the PRICAT and stock reads that do exist
+ * take page/size or a vendorProfileId plus article EAN, and return neither the
+ * freshness, filters, vendor display nor UOM the pages showed). The gaps are
+ * recorded on #201 and PR #202; a route that can only 404 is not a feature.
  */
 export const POSITIVITY_ROUTES: Routes = [
   {

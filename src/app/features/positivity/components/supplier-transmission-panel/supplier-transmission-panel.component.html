@@ -51,7 +51,7 @@
     }
 
     <ul class="transmission__list">
-      @for (item of transmissions(); track item.transmissionIntentId) {
+      @for (item of transmissions(); track item.transmissionIntentId || $index) {
         <li class="transmission__item">
           <div class="transmission__item-head">
             <app-supplier-status-chip

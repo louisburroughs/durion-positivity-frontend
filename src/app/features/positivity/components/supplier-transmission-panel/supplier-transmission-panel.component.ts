@@ -92,15 +92,24 @@ export class SupplierTransmissionPanelComponent {
 
   private readonly reloadToken = signal(0);
 
-  /** The most recently updated transmission; what the header chip summarises. */
+  /**
+   * The most recently updated transmission; what the header chip summarises.
+   *
+   * A missing or unparseable `lastStatusAt` sorts last, and ties keep the
+   * order the service returned, so the pick is deterministic.
+   */
   readonly latest = computed<SupplierOrderTransmission | null>(() => {
     const list = this.transmissions();
     if (list.length === 0) {
       return null;
     }
+    const statusTime = (item: SupplierOrderTransmission): number => {
+      const parsed = item.lastStatusAt ? Date.parse(item.lastStatusAt) : Number.NaN;
+      return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
+    };
     return list
-      .slice()
-      .sort((a, b) => Date.parse(b.lastStatusAt ?? '') - Date.parse(a.lastStatusAt ?? ''))[0];
+      .map((item, index) => ({ item, index, time: statusTime(item) }))
+      .sort((a, b) => (b.time - a.time) || (a.index - b.index))[0].item;
   });
 
   readonly needsManualReview = computed(() =>

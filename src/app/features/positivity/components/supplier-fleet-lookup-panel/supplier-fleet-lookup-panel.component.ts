@@ -49,6 +49,11 @@ type PanelState =
  * `vendorProfileId`, which is a different identifier. The estimate screen does
  * not carry a verified `supplierRef`, so it no longer hosts this panel (#201).
  *
+ * ── Not hosted today ────────────────────────────────────────────────────────
+ * No page hosts this panel at present. It becomes hostable only from a page
+ * that holds a verified `supplierRef` (the vendor profile alias), never from
+ * one that only knows a `vendorProfileId`.
+ *
  * ── Advisory only — open question #194 §7, ruled ────────────────────────────
  * The panel renders no disabled state, sets no output, and touches nothing a
  * host uses to decide whether work can be promoted.
@@ -180,6 +185,15 @@ export class SupplierFleetLookupPanelComponent {
             // An unknown vehicle answered as a 404. Same fact, same rendering.
             this.state.set('not-found');
             this.errorKey.set(null);
+            return;
+          }
+          if (err instanceof HttpErrorResponse && err.status === 422) {
+            // The SDK documents 422 on the fleet operations as "the vendor
+            // could not be reached or answered unreadably". That is the
+            // unreachable state, and the only one worth trying again.
+            // ADR-0031: state first, then the key.
+            this.state.set('unreachable');
+            this.errorKey.set('POSITIVITY.FLEET.LOOKUP.ERROR.LOAD');
             return;
           }
           const outcome = mapSupplierError(err, 'POSITIVITY.FLEET.LOOKUP.ERROR.LOAD');

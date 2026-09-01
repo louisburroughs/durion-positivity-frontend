@@ -204,18 +204,6 @@ describe('EstimateDetailPageComponent [Story 236]', () => {
       expect(crmRefBlock?.textContent ?? '').toContain('Unavailable');
     });
 
-    it('keeps the vehicle VIN separately from the display label', async () => {
-      fixture.detectChanges();
-      drainPipeline({
-        ...STUB_ESTIMATE,
-        crmPartyId: 'crm-party-123',
-        crmVehicleId: 'crm-vehicle-456',
-      });
-      fixture.detectChanges();
-
-      expect(component.vehicleVin()).toBe('1FTEST');
-    });
-
     it('shows "Not set" when estimate has no crmPartyId', async () => {
       fixture.detectChanges();
       drainPipeline({

@@ -54,8 +54,6 @@ export class EstimateDetailPageComponent implements OnInit {
   /** Human-readable CRM labels resolved from the estimate's crmPartyId / crmVehicleId. */
   readonly customerLabel = signal<string | null>(null);
   readonly vehicleLabel  = signal<string | null>(null);
-  /** The vehicle's VIN, kept separately from the display label. */
-  readonly vehicleVin    = signal<string | null>(null);
 
   readonly pageState    = signal<PageState>('loading');
   readonly totalsState  = signal<TotalsState>('idle');
@@ -174,7 +172,6 @@ export class EstimateDetailPageComponent implements OnInit {
     const vehicleId = est.crmVehicleId;
     this.customerLabel.set(null);
     this.vehicleLabel.set(null);
-    this.vehicleVin.set(null);
 
     if (partyId) {
       this.crm.getParty(partyId)
@@ -184,10 +181,7 @@ export class EstimateDetailPageComponent implements OnInit {
       if (vehicleId) {
         this.vehiclesApi.getVehicleForCustomer(partyId, vehicleId, 'body', false, { transferCache: false })
           .pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
-          .subscribe(vehicle => {
-            this.vehicleLabel.set(vehicle ? vehicleLabel(vehicle) : null);
-            this.vehicleVin.set(vehicle?.vin ?? null);
-          });
+          .subscribe(vehicle => this.vehicleLabel.set(vehicle ? vehicleLabel(vehicle) : null));
       }
     }
   }

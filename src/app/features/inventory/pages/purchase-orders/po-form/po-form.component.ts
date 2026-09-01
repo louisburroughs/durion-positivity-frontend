@@ -19,7 +19,10 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
  * This is the screen that owns purchase-order **line editing** (`addLine`,
  * `removeLine`, `updateLine`). The per-line supplier availability check that
  * used to sit here (#190) was retired in #201: the generated supplier client
- * exposes no availability read the check could be mapped onto.
+ * publishes no availability read whose request and response cover what the
+ * check required (`inquireSupplierStock` needs a `vendorProfileId` plus an
+ * article EAN and returns no vendor display name or UOM). The gap is recorded
+ * on #201 and PR #202.
  */
 @Component({
   selector: 'app-po-form',

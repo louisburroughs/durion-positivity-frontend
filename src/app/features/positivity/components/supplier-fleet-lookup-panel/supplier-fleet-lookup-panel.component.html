@@ -29,8 +29,11 @@
           type="text"
           autocomplete="off"
           formControlName="vehicleIdentifier"
+          aria-describedby="fleet-lookup-identifier-hint"
         />
-        <p class="pos-field__hint">{{ 'POSITIVITY.FLEET.LOOKUP.IDENTIFIER_HINT' | translate }}</p>
+        <p class="pos-field__hint" id="fleet-lookup-identifier-hint">
+          {{ 'POSITIVITY.FLEET.LOOKUP.IDENTIFIER_HINT' | translate }}
+        </p>
       </div>
       <button class="pos-btn pos-btn--primary fleet-lookup__submit" type="submit">
         {{ 'POSITIVITY.FLEET.LOOKUP.CHECK' | translate }}

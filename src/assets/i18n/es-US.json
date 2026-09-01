@@ -5554,10 +5554,7 @@
       "NO_RESEND_NOTE": "Este pedido no se reenvía desde aquí. Es posible que el proveedor ya lo tenga, así que reenviarlo arriesgaría un pedido físico duplicado.",
       "NOT_TRANSMITTED": "Este pedido no se envió al proveedor de forma electrónica, por lo que no hay estado de transmisión que mostrar.",
       "STATE": {
-        "QUEUED": "En cola para el proveedor",
-        "SENT": "Enviado al proveedor",
         "CONFIRMED": "Confirmado por el proveedor",
-        "PARTIALLY_CONFIRMED": "Confirmado parcialmente",
         "REJECTED": "Rechazado por el proveedor",
         "MANUAL_REVIEW": "Requiere revisión manual",
         "UNKNOWN": "Estado desconocido",
@@ -5688,7 +5685,6 @@
         "STATE": {
           "PENDING": "Todavía sin enviar",
           "APPROVED": "Aprobada",
-          "RETRYING": "Reintentando",
           "MANUAL_REVIEW": "Requiere revisión manual",
           "UNKNOWN": "Desconocido",
           "NOT_REQUESTED": "No solicitada"
