@@ -66,9 +66,10 @@ describe('PickListPageComponent', () => {
     expect(component.state()).toBe('empty');
   });
 
-  // Regression for #201: the adapter contract is that `tasks` is always an
-  // array. A header-only response must never reach this page, so the page
-  // relies on the array without guarding, and an empty one is the empty state.
+  // The adapter contract (#201) is that `tasks` is always an array, so this
+  // page relies on it without guarding and treats an empty array as the empty
+  // state. The service is mocked here; the header-only-cast regression itself
+  // is covered in workexec.service.spec.ts.
   it('always receives tasks as an array from the adapter contract', async () => {
     const emptyList: PickListView = { ...pickListFixture, tasks: [] };
     mockWorkexecService.getWorkorderPickList.mockReturnValue(of(emptyList));

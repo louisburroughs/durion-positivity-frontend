@@ -149,6 +149,18 @@ describe('SupplierFleetAuthorizationPanelComponent', () => {
     expect(component.errorKey()).toBeNull();
   });
 
+  it('renders a 422 (vendor did not answer) as unreachable with a refresh and the LOAD key', () => {
+    service.getWorkorderAuthorization.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 422, statusText: 'Unprocessable Entity' })),
+    );
+    const el = render(SUPPLIER_REF);
+
+    expect(component.state()).toBe('unreachable');
+    expect(component.errorKey()).toBe('POSITIVITY.FLEET.AUTHORIZATION.ERROR.LOAD');
+    expect(el.querySelector('.pos-banner--warning button')).not.toBeNull();
+    expect(el.querySelector('[role="alert"]')).toBeNull();
+  });
+
   it('renders a 403 as a restricted state and a 503 as unreachable', () => {
     service.getWorkorderAuthorization.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 403, statusText: 'Forbidden' })),

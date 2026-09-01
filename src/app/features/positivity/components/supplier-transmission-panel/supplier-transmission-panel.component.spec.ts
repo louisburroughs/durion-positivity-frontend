@@ -118,6 +118,44 @@ describe('SupplierTransmissionPanelComponent', () => {
     expect(component.latest()?.transmissionIntentId).toBe('ti-2');
   });
 
+  it('picks the timestamped transmission as latest when others have no lastStatusAt', () => {
+    const untimed1: SupplierOrderTransmission = { ...confirmed, transmissionIntentId: 'ti-a', lastStatusAt: null };
+    const untimed2: SupplierOrderTransmission = { ...confirmed, transmissionIntentId: 'ti-b', lastStatusAt: null };
+    const timed: SupplierOrderTransmission = {
+      ...confirmed,
+      transmissionIntentId: 'ti-c',
+      lastStatusAt: '2026-08-01T00:00:00Z',
+    };
+    service.listForPurchaseOrder.mockReturnValue(of([untimed1, untimed2, timed]));
+    render();
+
+    expect(component.latest()?.transmissionIntentId).toBe('ti-c');
+  });
+
+  it('falls back to the first transmission in backend order when none has lastStatusAt', () => {
+    const rows: SupplierOrderTransmission[] = [
+      { ...confirmed, transmissionIntentId: 'ti-first', lastStatusAt: null },
+      { ...manualReview, transmissionIntentId: 'ti-second', lastStatusAt: null },
+      { ...confirmed, transmissionIntentId: 'ti-third', lastStatusAt: null },
+    ];
+    service.listForPurchaseOrder.mockReturnValue(of(rows));
+    render();
+
+    expect(component.latest()?.transmissionIntentId).toBe('ti-first');
+  });
+
+  it('renders every row even when transmissionIntentId is empty (index track fallback)', () => {
+    const rows: SupplierOrderTransmission[] = [
+      { ...confirmed, transmissionIntentId: '' },
+      { ...manualReview, transmissionIntentId: '' },
+    ];
+    service.listForPurchaseOrder.mockReturnValue(of(rows));
+    const el = render();
+
+    expect(component.state()).toBe('ready');
+    expect(el.querySelectorAll('.transmission__item')).toHaveLength(2);
+  });
+
   it('shows vendor reason and error code verbatim — never normalised or re-labelled', () => {
     service.listForPurchaseOrder.mockReturnValue(of([manualReview]));
     const el = render();

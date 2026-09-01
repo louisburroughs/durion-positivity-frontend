@@ -139,6 +139,18 @@ describe('SupplierFleetLookupPanelComponent', () => {
     expect(el.querySelector('.pos-banner--warning button')).not.toBeNull();
   });
 
+  it('renders a 422 (vendor did not answer) as unreachable with a retry and the LOAD key', () => {
+    service.lookupVehicle.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 422, statusText: 'Unprocessable Entity' })),
+    );
+    const el = render(SUPPLIER_REF);
+
+    expect(component.state()).toBe('unreachable');
+    expect(component.errorKey()).toBe('POSITIVITY.FLEET.LOOKUP.ERROR.LOAD');
+    expect(el.querySelector('.pos-banner--warning button')).not.toBeNull();
+    expect(el.querySelector('[role="alert"]')).toBeNull();
+  });
+
   it('renders a 403 as a restricted state', () => {
     service.lookupVehicle.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 403, statusText: 'Forbidden' })),
@@ -146,6 +158,16 @@ describe('SupplierFleetLookupPanelComponent', () => {
     render(SUPPLIER_REF);
 
     expect(component.state()).toBe('forbidden');
+  });
+
+  it('associates the identifier input with its hint via aria-describedby', () => {
+    const el = render(SUPPLIER_REF);
+    const input = el.querySelector('input[aria-describedby="fleet-lookup-identifier-hint"]');
+    const hint = el.querySelector('#fleet-lookup-identifier-hint');
+
+    expect(input).not.toBeNull();
+    expect(hint).not.toBeNull();
+    expect(hint?.textContent).toContain('POSITIVITY.FLEET.LOOKUP.IDENTIFIER_HINT');
   });
 
   it('re-queries the same fleet manager for an operator-entered identifier', () => {
