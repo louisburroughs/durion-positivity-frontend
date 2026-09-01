@@ -387,7 +387,15 @@ describe('BillingTransportService', () => {
       result = value;
     });
 
-    expect(invoiceSearchServiceStub.searchInvoices).toHaveBeenCalledWith('Acme', 0, 10);
+    expect(invoiceSearchServiceStub.searchInvoices).toHaveBeenCalledWith(
+      'Acme',
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      0,
+      10,
+    );
     expect(result).toEqual([
       {
         id: 'inv-001',

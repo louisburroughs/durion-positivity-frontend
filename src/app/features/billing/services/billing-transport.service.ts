@@ -62,9 +62,9 @@ export class BillingTransportService {
   }
 
   searchInvoices(q: string): Observable<InvoiceFinderItem[]> {
-    return this.invoiceSearchService.searchInvoices(q, 0, 10).pipe(
-      map(page => (page.content ?? []).map(result => this.toInvoiceFinderItem(result))),
-    );
+    return this.invoiceSearchService
+      .searchInvoices(q, undefined, undefined, undefined, undefined, 0, 10)
+      .pipe(map(page => (page.content ?? []).map(result => this.toInvoiceFinderItem(result))));
   }
 
   loadInvoiceArtifacts(invoiceId: string): Observable<InvoiceArtifact[]> {

@@ -627,7 +627,17 @@ describe('WorkexecService', () => {
       let result: unknown;
       service.searchWorkorders('acme').subscribe(r => (result = r));
 
-      expect(workorderSearchStub.searchWorkorders).toHaveBeenCalledWith('acme', undefined, undefined, 0, 10);
+      expect(workorderSearchStub.searchWorkorders).toHaveBeenCalledWith(
+        'acme',
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        0,
+        10,
+      );
       expect(result).toEqual([{ id: 'w1234567', primary: 'Acme', secondary: 'w1234567 · OPEN' }]);
     });
 

@@ -652,14 +652,16 @@ export class WorkexecService {
    * Free-text search matching workorder number, customer name, or workorder id.
    */
   searchWorkorders(q: string): Observable<SearchResultItem[]> {
-    return this.workorderSearchApi.searchWorkorders(q, undefined, undefined, 0, 10).pipe(
-      map(page => (page.content ?? []).map(w => ({
-        id: w.workorderId ?? '',
-        primary: w.customerName ?? '',
-        secondary: [w.workorderNumber ?? w.workorderId?.slice(0, 8), w.status].filter(Boolean).join(' · '),
-        tertiary: this.vehicleTertiary(w.vehicleLabel, w.vin),
-      }))),
-    );
+    return this.workorderSearchApi
+      .searchWorkorders(q, undefined, undefined, undefined, undefined, undefined, undefined, 0, 10)
+      .pipe(
+        map(page => (page.content ?? []).map(w => ({
+          id: w.workorderId ?? '',
+          primary: w.customerName ?? '',
+          secondary: [w.workorderNumber ?? w.workorderId?.slice(0, 8), w.status].filter(Boolean).join(' · '),
+          tertiary: this.vehicleTertiary(w.vehicleLabel, w.vin),
+        }))),
+      );
   }
 
   /**
