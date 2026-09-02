@@ -287,12 +287,20 @@ describe('ShopDashboardPageComponent', () => {
     expect(serviceStub.listRepairLocations).toHaveBeenCalled();
   });
 
-  it('defaults the date to the local calendar day, not the UTC day', async () => {
-    await setup();
-
-    const now = new Date();
-    const expected = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    expect(component.todayIso).toBe(expected);
+  it('defaults the date to the local calendar day', async () => {
+    // Frozen: `todayIso` is computed at construction, so an unfrozen clock could
+    // cross local midnight before the assertion and flake.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 2, 18, 0, 0));
+    try {
+      await setup();
+      expect(component.todayIso).toBe('2026-09-02');
+    } finally {
+      vi.useRealTimers();
+    }
+    // NOTE: CI runs in UTC, where the local and UTC dates coincide, so this
+    // cannot distinguish local getters from `toISOString()`. The discriminating
+    // coverage for ADR-0038 lives in models/shop-dashboard.models.spec.ts.
   });
 
   it('surfaces the data-quality warning from the view', async () => {

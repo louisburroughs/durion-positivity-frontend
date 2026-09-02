@@ -326,15 +326,21 @@ describe('ShopDashboardService', () => {
       expect(dispatchStub.getDispatchDashboard).toHaveBeenCalledWith('loc-1', '2026-09-02');
     });
 
-    it('falls back to the local calendar date when the value cannot be parsed', async () => {
-      await firstValueFrom(service.getDashboard('loc-1', 'not-a-date'));
+    it('falls back to the current calendar date when the value cannot be parsed', async () => {
+      // Frozen so the expectation cannot straddle local midnight.
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 8, 2, 18, 0, 0));
+      try {
+        await firstValueFrom(service.getDashboard('loc-1', 'not-a-date'));
 
-      // Built from local getters, per ADR-0038 — a shape assertion would pass
-      // for any string, including the wrong day.
-      const now = new Date();
-      const expected = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      const [, passedDate] = dispatchStub.getDispatchDashboard.mock.calls[0];
-      expect(passedDate).toBe(expected);
+        const [, passedDate] = dispatchStub.getDispatchDashboard.mock.calls[0];
+        expect(passedDate).toBe('2026-09-02');
+      } finally {
+        vi.useRealTimers();
+      }
+      // As above: under a UTC CI clock this cannot tell local getters from
+      // `toISOString()`. See models/shop-dashboard.models.spec.ts for the test
+      // that actually enforces ADR-0038.
     });
 
     it('spends the vehicle-lookup budget on unit-assigned workorders first', async () => {
