@@ -64,10 +64,11 @@ describe('ShopDashboardService', () => {
       locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Northgate', active: true }]));
       bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-1', name: 'Bay 1' }] }));
 
-      const options = await firstValueFrom(service.listRepairLocations());
+      const { options, degraded } = await firstValueFrom(service.listRepairLocations());
 
       expect(options).toHaveLength(1);
       expect(options[0]).toMatchObject({ locationId: 'loc-1', bayCount: 1, mobileUnitCount: 0 });
+      expect(degraded).toBe(false);
     });
 
     it('keeps a location that has mobile units only', async () => {
@@ -76,7 +77,7 @@ describe('ShopDashboardService', () => {
         of({ content: [{ id: 'unit-1', name: 'Van 4', baseLocationId: 'loc-1' }] }),
       );
 
-      const options = await firstValueFrom(service.listRepairLocations());
+      const { options } = await firstValueFrom(service.listRepairLocations());
 
       expect(options).toHaveLength(1);
       expect(options[0]).toMatchObject({ bayCount: 0, mobileUnitCount: 1 });
@@ -85,14 +86,14 @@ describe('ShopDashboardService', () => {
     it('drops a location with neither bays nor mobile units', async () => {
       locationStub.listLocations.mockReturnValue(of([{ id: 'loc-office', name: 'HQ', active: true }]));
 
-      expect(await firstValueFrom(service.listRepairLocations())).toEqual([]);
+      expect((await firstValueFrom(service.listRepairLocations())).options).toEqual([]);
     });
 
     it('drops an inactive location even when it has bays', async () => {
       locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Closed', active: false }]));
       bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-1' }] }));
 
-      expect(await firstValueFrom(service.listRepairLocations())).toEqual([]);
+      expect((await firstValueFrom(service.listRepairLocations())).options).toEqual([]);
     });
 
     it('still offers a location with mobile units when its bays call fails', async () => {
@@ -102,10 +103,52 @@ describe('ShopDashboardService', () => {
         of({ content: [{ id: 'unit-1', baseLocationId: 'loc-1' }] }),
       );
 
-      const options = await firstValueFrom(service.listRepairLocations());
+      const { options, degraded } = await firstValueFrom(service.listRepairLocations());
 
       expect(options).toHaveLength(1);
       expect(options[0].bayCount).toBe(0);
+      // The page can only warn about a partial list if the service says so —
+      // every inner call is caught, so this never surfaces as an error.
+      expect(degraded).toBe(true);
+    });
+
+    it('reports degraded when the locations call itself fails', async () => {
+      locationStub.listLocations.mockReturnValue(throwError(() => new Error('locations down')));
+
+      const { options, degraded } = await firstValueFrom(service.listRepairLocations());
+
+      expect(options).toEqual([]);
+      expect(degraded).toBe(true);
+    });
+
+    it('reports degraded when the mobile-units call fails', async () => {
+      locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Northgate', active: true }]));
+      bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-1' }] }));
+      mobileUnitStub.listMobileUnits.mockReturnValue(throwError(() => new Error('units down')));
+
+      expect((await firstValueFrom(service.listRepairLocations())).degraded).toBe(true);
+    });
+
+    it('re-derives the list after invalidation so a newly created bay appears', async () => {
+      locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Northgate', active: true }]));
+      bayStub.listBays.mockReturnValue(of({ content: [] }));
+
+      expect((await firstValueFrom(service.listRepairLocations())).options).toEqual([]);
+
+      bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-new' }] }));
+      service.invalidateRepairLocations();
+
+      expect((await firstValueFrom(service.listRepairLocations())).options).toHaveLength(1);
+    });
+
+    it('requests an explicit page size so a large estate is not silently truncated', async () => {
+      locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Northgate', active: true }]));
+
+      await firstValueFrom(service.listRepairLocations());
+
+      expect(mobileUnitStub.listMobileUnits).toHaveBeenCalledWith(0, expect.any(Number));
+      const [, , , , size] = bayStub.listBays.mock.calls[0];
+      expect(size).toBeGreaterThan(100);
     });
 
     it('caches the derived list so switching location does not re-fan-out', async () => {
@@ -266,17 +309,58 @@ describe('ShopDashboardService', () => {
       await expect(firstValueFrom(service.getDashboard('loc-1', DATE))).rejects.toThrow('boom');
     });
 
-    it('normalises a non-ISO date without shifting the day', async () => {
-      await firstValueFrom(service.getDashboard('loc-1', '2026-09-02T23:30:00Z'));
+    it('resolves a timestamp to its LOCAL calendar date, not the UTC day', async () => {
+      // 18:00 local on 2 Sep. `toISOString()` would give 2026-09-03 for any UTC-N
+      // zone — the exact pattern ADR-0038 rejects — and would ask the dispatch
+      // board for tomorrow's shift every evening.
+      const localEvening = new Date(2026, 8, 2, 18, 0, 0);
+
+      await firstValueFrom(service.getDashboard('loc-1', localEvening.toISOString()));
 
       expect(dispatchStub.getDispatchDashboard).toHaveBeenCalledWith('loc-1', '2026-09-02');
     });
 
-    it('falls back to today when the date cannot be parsed', async () => {
+    it('passes an already-correct date-only string through untouched', async () => {
+      await firstValueFrom(service.getDashboard('loc-1', '2026-09-02'));
+
+      expect(dispatchStub.getDispatchDashboard).toHaveBeenCalledWith('loc-1', '2026-09-02');
+    });
+
+    it('falls back to the local calendar date when the value cannot be parsed', async () => {
       await firstValueFrom(service.getDashboard('loc-1', 'not-a-date'));
 
+      // Built from local getters, per ADR-0038 — a shape assertion would pass
+      // for any string, including the wrong day.
+      const now = new Date();
+      const expected = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const [, passedDate] = dispatchStub.getDispatchDashboard.mock.calls[0];
-      expect(passedDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(passedDate).toBe(expected);
+    });
+
+    it('spends the vehicle-lookup budget on unit-assigned workorders first', async () => {
+      // 45 open workorders, roster-only ones listed first; only the last is on a bay.
+      const workorders = Array.from({ length: 45 }, (_, i) => ({
+        workorderId: `wo-${i}`,
+        status: 'ASSIGNED',
+      }));
+      dispatchStub.getDispatchDashboard.mockReturnValue(
+        of(
+          dashboard({
+            workorders,
+            bays: [
+              { bayId: 'bay-1', bayName: 'Bay 1', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-44' },
+            ],
+          }),
+        ),
+      );
+
+      await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+      const looked = workorderDetailStub.getWorkorderDetail.mock.calls.map(call => call[0]);
+      // The cap is real...
+      expect(looked).toHaveLength(40);
+      // ...and the bay's workorder is not the one starved by it.
+      expect(looked).toContain('wo-44');
     });
   });
 });

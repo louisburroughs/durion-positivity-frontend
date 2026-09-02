@@ -19,28 +19,27 @@
         <tbody>
           @for (row of rows(); track row.workorderId) {
             <tr [class.row-unassigned]="!row.unitId">
-              <th scope="row" class="cell-vehicle"
-                [attr.data-label]="'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.VEHICLE' | translate">
+              <th scope="row" class="cell-vehicle">
                 @if (vehicleLabelFor(row)) {
                   {{ vehicleLabelFor(row) }}
                 } @else {
                   <span class="cell-muted">{{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.VEHICLE_UNKNOWN' | translate }}</span>
                 }
               </th>
-              <td class="cell-vin" [attr.data-label]="'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.VIN' | translate">
+              <td class="cell-vin">
                 @if (row.vehicle?.vin; as vin) {
                   <span class="vin-value">{{ vin }}</span>
                 } @else {
                   <span class="cell-muted">&mdash;</span>
                 }
               </td>
-              <td [attr.data-label]="'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.WORKORDER' | translate">
+              <td>
                 <a class="workorder-link" [routerLink]="workorderLink(row)"
                   [attr.aria-label]="'SHOPMGMT.SHOP_DASHBOARD.CARD.OPEN_WORKORDER_ARIA' | translate: { number: workorderLabel(row) }">
                   {{ workorderLabel(row) }}
                 </a>
               </td>
-              <td [attr.data-label]="'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.STATUS' | translate">
+              <td>
                 <span class="status-chip" [class]="'band-' + band(row)">
                   <span class="band-icon" aria-hidden="true"></span>
                   @if (statusKeyFor(row); as key) {
@@ -50,12 +49,18 @@
                   }
                 </span>
               </td>
-              <td [attr.data-label]="'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.UNIT' | translate">
+              <td>
                 @if (row.unitId) {
-                  {{ row.unitName || row.unitId }}
+                  @if (row.unitName) {
+                    {{ row.unitName }}
+                  } @else {
+                    <span class="cell-muted">{{ 'SHOPMGMT.SHOP_DASHBOARD.ROSTER.UNKNOWN_UNIT' | translate }}</span>
+                  }
                 } @else {
-                  <span class="cell-muted"
-                    [attr.aria-label]="'SHOPMGMT.SHOP_DASHBOARD.ROSTER.NO_UNIT' | translate">&mdash;</span>
+                  <span class="cell-muted">
+                    <span class="visually-hidden">{{ 'SHOPMGMT.SHOP_DASHBOARD.ROSTER.NO_UNIT' | translate }}</span>
+                    <span aria-hidden="true">&mdash;</span>
+                  </span>
                 }
               </td>
             </tr>
