@@ -13,7 +13,7 @@ function fontStub(opts: { check: boolean; load: Promise<unknown>; ready?: Promis
 
 function setup(platform: string, fonts: unknown): IconFontService {
   if (fonts === undefined) {
-    delete (document as unknown as { fonts?: unknown }).fonts;
+    Object.defineProperty(document, 'fonts', { value: undefined, configurable: true });
   } else {
     Object.defineProperty(document, 'fonts', { value: fonts, configurable: true });
   }
