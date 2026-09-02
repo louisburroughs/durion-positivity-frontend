@@ -1197,18 +1197,32 @@
     },
     "MECHANIC_ROSTER": {
       "TITLE": "Lista de mecánicos",
-      "CREATE_EMPLOYEE": "Crear empleado",
-      "EMPLOYEE_CREATED": "Empleado creado.",
-      "EMPTY": "No se encontraron personas.",
-      "FIRST_NAME": "Nombre",
-      "LAST_NAME": "Apellido",
-      "EMAIL": "Correo electrónico",
-      "ROLE": "Rol",
-      "SAVE": "Guardar",
-      "CLOSE": "Cerrar",
+      "LOADING": "Cargando la lista de mecánicos...",
+      "RETRY": "Reintentar",
+      "EMPTY": "No se encontraron mecánicos con este estado.",
+      "NOT_AVAILABLE": "No disponible",
+      "FILTER": {
+        "STATUS_LABEL": "Filtrar por estado",
+        "STATUS_ACTIVE": "Activo",
+        "STATUS_INACTIVE": "Inactivo",
+        "STATUS_ON_LEAVE": "Con permiso"
+      },
+      "TABLE": {
+        "NAME": "Nombre",
+        "STATUS": "Estado",
+        "SKILLS": "Códigos de habilidad",
+        "SKILLS_ARIA": "Códigos de habilidad del mecánico",
+        "LAST_SYNCED": "Última sincronización",
+        "ARIA_LABEL": "Lista de mecánicos"
+      },
+      "PAGINATION": {
+        "ARIA_LABEL": "Paginación de la lista de mecánicos",
+        "PREVIOUS": "Página anterior",
+        "NEXT": "Página siguiente",
+        "SUMMARY": "Página {{page}} de {{pages}} - {{total}} mecánicos"
+      },
       "ERROR": {
-        "LOAD_PEOPLE": "No se pudieron cargar las personas.",
-        "CREATE_EMPLOYEE": "No se pudo crear el empleado."
+        "LOAD_MECHANICS": "No se pudo cargar la lista de mecánicos."
       }
     },
     "DISPATCH_BOARD": {

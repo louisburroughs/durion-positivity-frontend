@@ -1197,18 +1197,32 @@
     },
     "MECHANIC_ROSTER": {
       "TITLE": "Liste des mécaniciens",
-      "CREATE_EMPLOYEE": "Créer un employé",
-      "EMPLOYEE_CREATED": "Employé créé.",
-      "EMPTY": "Aucune personne trouvée.",
-      "FIRST_NAME": "Prénom",
-      "LAST_NAME": "Nom",
-      "EMAIL": "Courriel",
-      "ROLE": "Rôle",
-      "SAVE": "Enregistrer",
-      "CLOSE": "Fermer",
+      "LOADING": "Chargement de la liste des mécaniciens...",
+      "RETRY": "Réessayer",
+      "EMPTY": "Aucun mécanicien trouvé pour ce statut.",
+      "NOT_AVAILABLE": "Non disponible",
+      "FILTER": {
+        "STATUS_LABEL": "Filtrer par statut",
+        "STATUS_ACTIVE": "Actif",
+        "STATUS_INACTIVE": "Inactif",
+        "STATUS_ON_LEAVE": "En congé"
+      },
+      "TABLE": {
+        "NAME": "Nom",
+        "STATUS": "Statut",
+        "SKILLS": "Codes de compétence",
+        "SKILLS_ARIA": "Codes de compétence du mécanicien",
+        "LAST_SYNCED": "Dernière synchronisation",
+        "ARIA_LABEL": "Liste des mécaniciens"
+      },
+      "PAGINATION": {
+        "ARIA_LABEL": "Pagination de la liste des mécaniciens",
+        "PREVIOUS": "Page précédente",
+        "NEXT": "Page suivante",
+        "SUMMARY": "Page {{page}} sur {{pages}} - {{total}} mécaniciens"
+      },
       "ERROR": {
-        "LOAD_PEOPLE": "Impossible de charger les personnes.",
-        "CREATE_EMPLOYEE": "Impossible de créer l'employé."
+        "LOAD_MECHANICS": "Impossible de charger la liste des mécaniciens."
       }
     },
     "DISPATCH_BOARD": {

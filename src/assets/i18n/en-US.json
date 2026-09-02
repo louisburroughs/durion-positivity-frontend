@@ -1197,18 +1197,32 @@
     },
     "MECHANIC_ROSTER": {
       "TITLE": "Mechanic Roster",
-      "CREATE_EMPLOYEE": "Create employee",
-      "EMPLOYEE_CREATED": "Employee created.",
-      "EMPTY": "No people found.",
-      "FIRST_NAME": "First name",
-      "LAST_NAME": "Last name",
-      "EMAIL": "Email",
-      "ROLE": "Role",
-      "SAVE": "Save",
-      "CLOSE": "Close",
+      "LOADING": "Loading mechanic roster...",
+      "RETRY": "Retry",
+      "EMPTY": "No mechanics found for this status.",
+      "NOT_AVAILABLE": "Not available",
+      "FILTER": {
+        "STATUS_LABEL": "Filter by status",
+        "STATUS_ACTIVE": "Active",
+        "STATUS_INACTIVE": "Inactive",
+        "STATUS_ON_LEAVE": "On leave"
+      },
+      "TABLE": {
+        "NAME": "Name",
+        "STATUS": "Status",
+        "SKILLS": "Skill codes",
+        "SKILLS_ARIA": "Mechanic skill codes",
+        "LAST_SYNCED": "Last synchronized",
+        "ARIA_LABEL": "Mechanic roster"
+      },
+      "PAGINATION": {
+        "ARIA_LABEL": "Mechanic roster pagination",
+        "PREVIOUS": "Previous page",
+        "NEXT": "Next page",
+        "SUMMARY": "Page {{page}} of {{pages}} - {{total}} mechanics"
+      },
       "ERROR": {
-        "LOAD_PEOPLE": "Failed to load people.",
-        "CREATE_EMPLOYEE": "Failed to create employee."
+        "LOAD_MECHANICS": "Failed to load the mechanic roster."
       }
     },
     "DISPATCH_BOARD": {
