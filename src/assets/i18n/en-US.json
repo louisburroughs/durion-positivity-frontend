@@ -1339,7 +1339,6 @@
       "TITLE": "Shop Management",
       "SUBTITLE": "Manage the dispatch board, schedule, appointments, and mechanic availability from one place.",
       "HERO_CTA_DISPATCH": "Dispatch Board",
-      "HERO_CTA_SCHEDULE": "View Schedule",
       "STAT": {
         "TOTAL_PAGES": "Total Pages",
         "DIRECT_PAGES": "Direct Pages",
@@ -1408,6 +1407,10 @@
         "MECHANIC_ROSTER": {
           "TITLE": "Mechanic Roster",
           "DESCRIPTION": "Browse the full roster of mechanics and their current assignments."
+        },
+        "SHOP_DASHBOARD": {
+          "TITLE": "Shop Manager Dashboard",
+          "DESCRIPTION": "Live status of every bay and mobile unit, with the vehicle and mechanic on each."
         }
       },
       "FIELD": {
@@ -1427,7 +1430,79 @@
       "ERROR": {
         "REQUIRED_IDENTIFIER": "An appointment ID is required to open this page.",
         "NAVIGATE": "Navigation failed. Please check the ID and try again."
-      }
+      },
+      "HERO_CTA_SHOP_DASHBOARD": "Open Shop Dashboard"
+    },
+    "SHOP_DASHBOARD": {
+      "SECTION_LABEL": "Shop Management",
+      "TITLE": "Shop Manager Dashboard",
+      "PANEL_ARIA": "Repair unit status by location",
+      "LOCATION": "Location",
+      "LOCATION_PLACEHOLDER": "Select a location",
+      "LOCATION_HINT": "Only locations with bays or mobile units",
+      "LOCATION_REQUIRED": "Select a location to view its repair units.",
+      "DATE": "Date",
+      "REFRESH": "Refresh",
+      "REFRESH_ARIA": "Refresh shop dashboard",
+      "LAST_UPDATED": "Last updated",
+      "LOADING": "Loading repair units...",
+      "DATA_QUALITY_WARNING": "Some data sources were unavailable; this view may be incomplete.",
+      "SECTION": {
+        "BAYS": "Bays",
+        "MOBILE_UNITS": "Mobile Units"
+      },
+      "SUMMARY": {
+        "UNITS": "{{count}} units",
+        "ACTIVE": "active",
+        "BLOCKED": "blocked",
+        "READY": "ready",
+        "IDLE": "idle"
+      },
+      "CARD": {
+        "WORKORDER": "Workorder",
+        "VEHICLE": "Vehicle",
+        "MECHANIC": "Mechanic",
+        "VIN": "VIN",
+        "NO_WORKORDER": "No workorder assigned",
+        "UNIT_AVAILABLE": "Available",
+        "NO_MECHANIC": "Unassigned",
+        "VEHICLE_UNKNOWN": "Vehicle details unavailable",
+        "OPEN_WORKORDER_ARIA": "Open workorder {{number}}"
+      },
+      "STATUS": {
+        "IDLE": "Idle",
+        "DRAFT": "Draft",
+        "APPROVED": "Approved",
+        "ASSIGNED": "Assigned",
+        "WORK_IN_PROGRESS": "Work in progress",
+        "AWAITING_PARTS": "Awaiting parts",
+        "AWAITING_APPROVAL": "Awaiting approval",
+        "READY_FOR_PICKUP": "Ready for pickup",
+        "COMPLETED": "Completed",
+        "CANCELLED": "Cancelled"
+      },
+      "ROSTER": {
+        "TITLE": "Vehicles with open workorders",
+        "CAPTION": "Vehicles with open workorders ({{count}})",
+        "COL": {
+          "VEHICLE": "Vehicle",
+          "VIN": "VIN",
+          "WORKORDER": "Workorder",
+          "STATUS": "Status",
+          "UNIT": "Unit"
+        },
+        "NO_UNIT": "Not assigned to a unit",
+        "EMPTY": "No open workorders at this location.",
+        "TRUNCATED": "Showing the first {{count}} open workorders."
+      },
+      "EMPTY_TITLE": "No repair units configured",
+      "EMPTY_DESC": "This location has no bays or mobile units yet.",
+      "ERROR_LOAD": "Unable to load the shop dashboard.",
+      "ERROR_FORBIDDEN": "You do not have permission to view this dashboard.",
+      "ERROR_NOT_FOUND": "That location no longer exists.",
+      "ERROR_LOCATIONS_LOAD": "Some locations could not be checked; the list may be incomplete.",
+      "RETRY": "Retry",
+      "RETRY_ARIA": "Retry loading the shop dashboard"
     }
   },
   "ACCOUNTING": {

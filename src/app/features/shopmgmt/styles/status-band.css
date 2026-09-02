@@ -1,0 +1,57 @@
+/*
+ * Workorder status colour bands, shared by the Shop Manager Dashboard's repair
+ * unit cards and its open-workorder roster so a status colour is defined once.
+ *
+ * ADR-0039: colour never carries meaning alone. Every band pairs its colour with
+ * a decorative glyph AND the translated status text rendered by the template.
+ * Token pairs are chosen to clear 4.5:1 in both themes (small text).
+ */
+
+.band-idle {
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+.band-queued {
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+}
+
+.band-active {
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+.band-blocked {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.band-ready {
+  background: var(--status-ready-bg);
+  color: var(--status-ready-fg);
+}
+
+.band-closed {
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+.band-cancelled {
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+/* Decorative glyph — the adjacent status text is the accessible signal. */
+.band-icon::before {
+  font-style: normal;
+  line-height: 1;
+}
+
+.band-idle .band-icon::before { content: "\25CB"; }       /* ○ */
+.band-queued .band-icon::before { content: "\25D4"; }     /* ◔ */
+.band-active .band-icon::before { content: "\25CF"; }     /* ● */
+.band-blocked .band-icon::before { content: "\25B2"; }    /* ▲ */
+.band-ready .band-icon::before { content: "\25C6"; }      /* ◆ */
+.band-closed .band-icon::before { content: "\2713"; }     /* ✓ */
+.band-cancelled .band-icon::before { content: "\2715"; }  /* ✕ */

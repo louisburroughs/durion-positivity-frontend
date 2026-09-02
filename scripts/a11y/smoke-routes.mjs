@@ -22,6 +22,9 @@ const ROUTES = [
   '/app/accounting/vendor-payments',
   '/app/people/employees/EMP-123',
   '/app/location/locations',
+  // Shop Manager Dashboard: status-coloured card grid plus a data table, so it
+  // exercises both the band contrast pairs and table semantics.
+  '/app/shopmgmt/shop-dashboard',
   // Supplier connectivity (positivity domain, issues #188-#195). These pages are
   // data-dense — filter forms, tabbed detail, worklist tables and timelines — so
   // they are the ones worth scanning as the domain grows.

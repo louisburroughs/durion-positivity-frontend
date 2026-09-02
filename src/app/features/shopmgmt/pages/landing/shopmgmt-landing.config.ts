@@ -13,19 +13,27 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
   titleKey: 'SHOPMGMT.LANDING.TITLE',
   descriptionKey: 'SHOPMGMT.LANDING.SUBTITLE',
   primaryCta: {
-    labelKey: 'SHOPMGMT.LANDING.HERO_CTA_DISPATCH',
-    icon: 'dashboard',
-    route: '/app/shopmgmt/dispatch-board',
+    labelKey: 'SHOPMGMT.LANDING.HERO_CTA_SHOP_DASHBOARD',
+    icon: 'factory',
+    route: '/app/shopmgmt/shop-dashboard',
   },
   secondaryCta: {
-    labelKey: 'SHOPMGMT.LANDING.HERO_CTA_SCHEDULE',
-    route: '/app/shopmgmt/schedule',
+    labelKey: 'SHOPMGMT.LANDING.HERO_CTA_DISPATCH',
+    route: '/app/shopmgmt/dispatch-board',
   },
   sections: [
     {
       titleKey: 'SHOPMGMT.LANDING.SECTION.DISPATCH.TITLE',
       descriptionKey: 'SHOPMGMT.LANDING.SECTION.DISPATCH.DESCRIPTION',
       cards: [
+        {
+          kind: 'direct',
+          icon: 'factory',
+          titleKey: 'SHOPMGMT.LANDING.CARD.SHOP_DASHBOARD.TITLE',
+          descriptionKey: 'SHOPMGMT.LANDING.CARD.SHOP_DASHBOARD.DESCRIPTION',
+          ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/shopmgmt/shop-dashboard',
+        },
         {
           kind: 'direct',
           icon: 'dashboard',

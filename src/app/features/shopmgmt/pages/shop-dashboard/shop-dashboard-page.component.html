@@ -1,0 +1,148 @@
+<section class="shop-dashboard-page" aria-labelledby="shop-dashboard-title">
+  <header class="page-header">
+    <div class="heading-group">
+      <p class="section-label">{{ 'SHOPMGMT.SHOP_DASHBOARD.SECTION_LABEL' | translate }}</p>
+      <h1 id="shop-dashboard-title">{{ 'SHOPMGMT.SHOP_DASHBOARD.TITLE' | translate }}</h1>
+    </div>
+    @if (view().generatedAt) {
+      <p class="last-updated">
+        {{ 'SHOPMGMT.SHOP_DASHBOARD.LAST_UPDATED' | translate }}: {{ view().generatedAt | date: 'short' }}
+      </p>
+    }
+  </header>
+
+  <section class="board-panel dur-elevation-2" [attr.aria-label]="'SHOPMGMT.SHOP_DASHBOARD.PANEL_ARIA' | translate">
+    <div class="panel-accent" aria-hidden="true"></div>
+
+    <div class="filter-bar">
+      <div class="field-group">
+        <label class="field-label" for="shop-dashboard-location">
+          {{ 'SHOPMGMT.SHOP_DASHBOARD.LOCATION' | translate }}
+        </label>
+        <select id="shop-dashboard-location"
+          [value]="selectedLocationId()"
+          (change)="onLocationChange($any($event.target).value)"
+          [attr.aria-describedby]="'shop-dashboard-location-hint'">
+          <option value="">{{ 'SHOPMGMT.SHOP_DASHBOARD.LOCATION_PLACEHOLDER' | translate }}</option>
+          @for (location of locations(); track location.locationId) {
+            <option [value]="location.locationId">{{ location.name }}</option>
+          }
+        </select>
+        <p class="field-hint" id="shop-dashboard-location-hint">
+          {{ 'SHOPMGMT.SHOP_DASHBOARD.LOCATION_HINT' | translate }}
+        </p>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="shop-dashboard-date">
+          {{ 'SHOPMGMT.SHOP_DASHBOARD.DATE' | translate }}
+        </label>
+        <input id="shop-dashboard-date" type="date"
+          [value]="selectedDate()"
+          (change)="onDateChange($any($event.target).value)" />
+      </div>
+
+      <button type="button" class="btn-primary" (click)="refresh()"
+        [disabled]="!selectedLocationId()"
+        [attr.aria-label]="'SHOPMGMT.SHOP_DASHBOARD.REFRESH_ARIA' | translate">
+        {{ 'SHOPMGMT.SHOP_DASHBOARD.REFRESH' | translate }}
+      </button>
+    </div>
+
+    @if (locationsError()) {
+      <output class="alert alert-warning" aria-live="polite">
+        {{ 'SHOPMGMT.SHOP_DASHBOARD.ERROR_LOCATIONS_LOAD' | translate }}
+      </output>
+    }
+
+    @if (view().dataQualityWarning) {
+      <output class="alert alert-warning" aria-live="polite">
+        {{ 'SHOPMGMT.SHOP_DASHBOARD.DATA_QUALITY_WARNING' | translate }}
+      </output>
+    }
+
+    @if (state() === 'idle') {
+      <p class="location-required" aria-live="polite">
+        {{ 'SHOPMGMT.SHOP_DASHBOARD.LOCATION_REQUIRED' | translate }}
+      </p>
+    }
+
+    @if (state() === 'loading') {
+      <div class="unit-grid" aria-busy="true">
+        <p class="visually-hidden" aria-live="polite">{{ 'SHOPMGMT.SHOP_DASHBOARD.LOADING' | translate }}</p>
+        @for (placeholder of skeletons; track placeholder) {
+          <div class="skeleton-card" aria-hidden="true"></div>
+        }
+      </div>
+    }
+
+    @if (state() === 'error') {
+      <div class="state-panel" role="alert">
+        <p>{{ errorKey() | translate }}</p>
+        <button type="button" class="btn-text" (click)="refresh()"
+          [attr.aria-label]="'SHOPMGMT.SHOP_DASHBOARD.RETRY_ARIA' | translate">
+          {{ 'SHOPMGMT.SHOP_DASHBOARD.RETRY' | translate }}
+        </button>
+      </div>
+    }
+
+    @if (state() === 'ready') {
+      <p class="summary-counts" aria-live="polite">
+        <span class="summary-total">
+          {{ 'SHOPMGMT.SHOP_DASHBOARD.SUMMARY.UNITS' | translate: { count: counts().total } }}
+        </span>
+        <span class="summary-chip band-active">
+          <span class="band-icon" aria-hidden="true"></span>
+          {{ counts().active }} {{ 'SHOPMGMT.SHOP_DASHBOARD.SUMMARY.ACTIVE' | translate }}
+        </span>
+        <span class="summary-chip band-blocked">
+          <span class="band-icon" aria-hidden="true"></span>
+          {{ counts().blocked }} {{ 'SHOPMGMT.SHOP_DASHBOARD.SUMMARY.BLOCKED' | translate }}
+        </span>
+        <span class="summary-chip band-ready">
+          <span class="band-icon" aria-hidden="true"></span>
+          {{ counts().ready }} {{ 'SHOPMGMT.SHOP_DASHBOARD.SUMMARY.READY' | translate }}
+        </span>
+        <span class="summary-chip band-idle">
+          <span class="band-icon" aria-hidden="true"></span>
+          {{ counts().idle }} {{ 'SHOPMGMT.SHOP_DASHBOARD.SUMMARY.IDLE' | translate }}
+        </span>
+      </p>
+
+      @if (!hasUnits()) {
+        <div class="empty-state">
+          <h2>{{ 'SHOPMGMT.SHOP_DASHBOARD.EMPTY_TITLE' | translate }}</h2>
+          <p>{{ 'SHOPMGMT.SHOP_DASHBOARD.EMPTY_DESC' | translate }}</p>
+        </div>
+      }
+
+      @if (bays().length > 0) {
+        <section class="unit-section" aria-labelledby="shop-dashboard-bays-title">
+          <h2 id="shop-dashboard-bays-title">{{ 'SHOPMGMT.SHOP_DASHBOARD.SECTION.BAYS' | translate }}</h2>
+          <div class="unit-grid">
+            @for (unit of bays(); track unit.unitId) {
+              <app-repair-unit-card [unit]="unit" />
+            }
+          </div>
+        </section>
+      }
+
+      @if (mobileUnits().length > 0) {
+        <section class="unit-section" aria-labelledby="shop-dashboard-mobile-units-title">
+          <h2 id="shop-dashboard-mobile-units-title">
+            {{ 'SHOPMGMT.SHOP_DASHBOARD.SECTION.MOBILE_UNITS' | translate }}
+          </h2>
+          <div class="unit-grid">
+            @for (unit of mobileUnits(); track unit.unitId) {
+              <app-repair-unit-card [unit]="unit" />
+            }
+          </div>
+        </section>
+      }
+
+      <app-open-workorder-roster
+        [rows]="view().openWorkorders"
+        [truncated]="view().openWorkordersTruncated" />
+    }
+  </section>
+</section>

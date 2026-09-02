@@ -146,6 +146,10 @@
   --status-success-fg: #1b5e20;
   --status-info-bg: #e8eef6;
   --status-info-fg: #355d92;
+  --status-ready-bg: #e4f2f1;
+  --status-ready-fg: #17605c;
+  --status-neutral-bg: #eceff1;
+  --status-neutral-fg: #37474f;
 }
 
 /* ── DARK THEME ──────────────────────────────────────────────────────────── */
@@ -192,6 +196,10 @@
   --status-success-fg: #a5d6a7;
   --status-info-bg: #233246;
   --status-info-fg: #aac4e4;
+  --status-ready-bg: #1e3937;
+  --status-ready-fg: #7fd8d1;
+  --status-neutral-bg: #2c3236;
+  --status-neutral-fg: #c3ccd1;
 }
 
 /* ── Box-sizing & Reset ──────────────────────────────────────────────────── */
