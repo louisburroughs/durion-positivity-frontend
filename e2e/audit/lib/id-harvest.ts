@@ -169,7 +169,8 @@ function collect(
         if (values.size < MAX_VALUES_PER_FIELD) values.add(str);
       }
     } else {
-      collect(value, harvest, fields, service, depth + 1, !Array.isArray(value));
+      const isEmbeddedObject = typeof value === 'object' && value !== null && !Array.isArray(value);
+      collect(value, harvest, fields, service, depth + 1, isEmbeddedObject);
     }
   }
 }
