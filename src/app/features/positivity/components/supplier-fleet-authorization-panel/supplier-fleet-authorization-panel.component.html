@@ -16,6 +16,10 @@
 
   <p class="fleet-auth__read-only">{{ 'POSITIVITY.FLEET.AUTHORIZATION.READ_ONLY_NOTE' | translate }}</p>
 
+  @if (!hasSupplierRef()) {
+    <p class="fleet-auth__empty">{{ 'POSITIVITY.FLEET.AUTHORIZATION.NO_SUPPLIER_REF' | translate }}</p>
+  }
+
   @if (state() === 'loading') {
     <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
   }
@@ -30,8 +34,7 @@
     </div>
   }
 
-  <!-- Vendor unreachable: degraded on this panel only; the workorder screen
-       behind it keeps every control it had. -->
+  <!-- Vendor unreachable: degraded on this panel only. -->
   @if (state() === 'unreachable') {
     <div class="pos-banner pos-banner--warning" role="status">
       <span>{{ 'POSITIVITY.FLEET.AUTHORIZATION.UNREACHABLE_NOTE' | translate }}</span>
@@ -54,13 +57,13 @@
     <dl class="fleet-auth__facts">
       <div class="fleet-auth__fact">
         <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.FLEET_MANAGER' | translate }}</dt>
-        <dd class="fleet-auth__value">{{ data.vendorDisplayName }}</dd>
+        <dd class="fleet-auth__value">{{ data.supplierRef }}</dd>
       </div>
       <div class="fleet-auth__fact">
         <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.REFERENCE' | translate }}</dt>
         <dd class="fleet-auth__value">
-          @if (data.authorizationReference) {
-            <code class="fleet-auth__ref">{{ data.authorizationReference }}</code>
+          @if (data.vendorAuthorizationId) {
+            <code class="fleet-auth__ref">{{ data.vendorAuthorizationId }}</code>
           } @else {
             {{ 'POSITIVITY.FLEET.AUTHORIZATION.NO_REFERENCE' | translate }}
           }
@@ -86,7 +89,7 @@
           }
         </dd>
       </div>
-      @if (data.authorizedAmount) {
+      @if (data.authorizedAmount !== null) {
         <div class="fleet-auth__fact">
           <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.AUTHORIZED_AMOUNT' | translate }}</dt>
           <dd class="fleet-auth__value fleet-auth__amount">
@@ -99,28 +102,10 @@
       }
     </dl>
 
-    @if (contract(); as fleetContract) {
+    @if (data.contractReference) {
       <p class="fleet-auth__contract">
         <span class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.CONTRACT' | translate }}</span>
-        <span class="fleet-auth__contract-value">
-          {{ fleetContract.fleetManagerName }}
-          @if (fleetContract.contractNumber) {
-            <code class="fleet-auth__ref">{{ fleetContract.contractNumber }}</code>
-          }
-        </span>
-        <span class="fleet-auth__contract-dates">
-          @if (effectiveDateFor(fleetContract.effectiveFrom); as from) {
-            {{ from | date: 'mediumDate' }}
-          } @else {
-            —
-          }
-          –
-          @if (effectiveDateFor(fleetContract.effectiveTo); as to) {
-            {{ to | date: 'mediumDate' }}
-          } @else {
-            —
-          }
-        </span>
+        <code class="fleet-auth__ref">{{ data.contractReference }}</code>
       </p>
     }
 
@@ -153,6 +138,12 @@
             </span>
           }
         </p>
+        @if (data.vendorReasonCode) {
+          <p class="fleet-auth__vendor-reason">
+            <span class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.VENDOR_REASON_CODE' | translate }}</span>
+            <code class="fleet-auth__ref">{{ data.vendorReasonCode }}</code>
+          </p>
+        }
         <p class="fleet-auth__denied-next">
           {{ 'POSITIVITY.FLEET.AUTHORIZATION.DENIED_NEXT' | translate }}
         </p>
@@ -164,6 +155,12 @@
         <p class="fleet-auth__review-title">
           {{ 'POSITIVITY.FLEET.AUTHORIZATION.MANUAL_REVIEW_TITLE' | translate }}
         </p>
+        @if (data.reviewReason) {
+          <p class="fleet-auth__vendor-reason">
+            <span class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.REVIEW_REASON' | translate }}</span>
+            <span class="fleet-auth__vendor-text">{{ data.reviewReason }}</span>
+          </p>
+        }
         @if (data.vendorReason) {
           <p class="fleet-auth__vendor-reason">
             <span class="fleet-auth__term">{{ 'POSITIVITY.FLEET.VENDOR_REASON' | translate }}</span>
@@ -176,7 +173,7 @@
       </div>
     }
 
-    @if (hasCompletionApproval() && completionApproval(); as approval) {
+    @if (hasCompletionApproval()) {
       <section class="fleet-auth__completion" aria-labelledby="fleet-auth-completion-title">
         <header class="fleet-auth__completion-header">
           <h3 class="fleet-auth__subtitle" id="fleet-auth-completion-title">
@@ -193,62 +190,18 @@
 
         <p class="fleet-auth__completion-note">{{ 'POSITIVITY.FLEET.COMPLETION.BACKEND_DRIVEN' | translate }}</p>
 
-        <dl class="fleet-auth__facts">
-          <div class="fleet-auth__fact">
-            <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.COMPLETION.ATTEMPTS' | translate }}</dt>
-            <dd class="fleet-auth__value">
-              @if (approval.attemptCount !== null && approval.attemptCount !== undefined) {
-                {{ approval.attemptCount }}
-              } @else {
-                —
-              }
-            </dd>
-          </div>
-          <div class="fleet-auth__fact">
-            <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.COMPLETION.LAST_ATTEMPT' | translate }}</dt>
-            <dd class="fleet-auth__value">
-              @if (approval.lastAttemptAt) {
-                <time [attr.datetime]="approval.lastAttemptAt">{{ approval.lastAttemptAt | date: 'medium' }}</time>
-              } @else {
-                —
-              }
-            </dd>
-          </div>
-          <div class="fleet-auth__fact">
-            <dt class="fleet-auth__term">{{ 'POSITIVITY.FLEET.COMPLETION.NEXT_ATTEMPT' | translate }}</dt>
-            <dd class="fleet-auth__value">
-              @if (approval.nextAttemptAt) {
-                <time [attr.datetime]="approval.nextAttemptAt">{{ approval.nextAttemptAt | date: 'medium' }}</time>
-              } @else {
-                —
-              }
-            </dd>
-          </div>
-        </dl>
-
-        @if (approval.vendorReason) {
-          <p class="fleet-auth__vendor-reason">
-            <span class="fleet-auth__term">{{ 'POSITIVITY.FLEET.VENDOR_REASON' | translate }}</span>
-            <span class="fleet-auth__vendor-text fleet-auth__completion-reason">{{ approval.vendorReason }}</span>
-          </p>
-        }
-
         @if (approvalNeedsManualReview()) {
+          @if (data.reviewReason) {
+            <p class="fleet-auth__vendor-reason">
+              <span class="fleet-auth__term">{{ 'POSITIVITY.FLEET.AUTHORIZATION.REVIEW_REASON' | translate }}</span>
+              <span class="fleet-auth__vendor-text fleet-auth__completion-reason">{{ data.reviewReason }}</span>
+            </p>
+          }
           <p class="fleet-auth__completion-review">
             {{ 'POSITIVITY.FLEET.COMPLETION.MANUAL_REVIEW_NEXT' | translate }}
           </p>
         }
       </section>
     }
-
-    <app-staleness-indicator
-      class="fleet-auth__freshness"
-      [asOf]="data.asOf"
-      asOfLabelKey="POSITIVITY.FLEET.AS_OF"
-      [fetchedAt]="data.fetchedAt"
-      fetchedAtLabelKey="POSITIVITY.FLEET.FETCHED_AT"
-      [thresholdMinutes]="data.stalenessThresholdMinutes"
-      [nowMs]="nowMs()"
-    />
   }
 </section>

@@ -3,11 +3,11 @@
     <h2 class="transmission__title" id="transmission-title">
       {{ 'POSITIVITY.TRANSMISSION.TITLE' | translate }}
     </h2>
-    @if (state() === 'ready' && transmission()) {
+    @if (state() === 'ready' && latest(); as current) {
       <app-supplier-status-chip
-        [labelKey]="stateLabelKey()"
-        [tone]="stateTone()"
-        [icon]="stateIcon()"
+        [labelKey]="stateLabelKey(current)"
+        [tone]="stateTone(current)"
+        [icon]="stateIcon(current)"
         descriptionKey="POSITIVITY.TRANSMISSION.STATE_LABEL"
       />
     }
@@ -36,58 +36,13 @@
     </div>
   }
 
-  @if (state() === 'ready' && transmission(); as data) {
-    <dl class="transmission__facts">
-      <div class="transmission__fact">
-        <dt class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.VENDOR' | translate }}</dt>
-        <dd class="transmission__value">{{ data.vendorDisplayName }}</dd>
-      </div>
-      <div class="transmission__fact">
-        <dt class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.VENDOR_ORDER_NUMBER' | translate }}</dt>
-        <dd class="transmission__value">
-          @if (data.vendorOrderNumber) {
-            <code class="transmission__ref">{{ data.vendorOrderNumber }}</code>
-          } @else {
-            {{ 'POSITIVITY.TRANSMISSION.NO_VENDOR_ORDER_NUMBER' | translate }}
-          }
-        </dd>
-      </div>
-      <div class="transmission__fact">
-        <dt class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.DOCUMENT_ID' | translate }}</dt>
-        <dd class="transmission__value">
-          @if (data.vendorDocumentId) {
-            <code class="transmission__ref">{{ data.vendorDocumentId }}</code>
-          } @else {
-            {{ 'POSITIVITY.TRANSMISSION.NO_DOCUMENT_ID' | translate }}
-          }
-        </dd>
-      </div>
-    </dl>
-
+  @if (state() === 'ready') {
     <p class="transmission__reference-note">
       {{ 'POSITIVITY.TRANSMISSION.REFERENCE_NOTE' | translate }}
     </p>
 
-    <app-staleness-indicator
-      class="transmission__freshness"
-      [asOf]="data.asOf"
-      asOfLabelKey="POSITIVITY.TRANSMISSION.AS_OF"
-      [fetchedAt]="data.fetchedAt"
-      fetchedAtLabelKey="POSITIVITY.TRANSMISSION.FETCHED_AT"
-      [thresholdMinutes]="data.stalenessThresholdMinutes"
-      [nowMs]="nowMs()"
-    />
-
     @if (needsManualReview()) {
       <div class="transmission__review">
-        <p class="transmission__review-reason">
-          <span class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.MANUAL_REVIEW_REASON' | translate }}</span>
-          @if (data.manualReviewReason) {
-            <span>{{ data.manualReviewReason }}</span>
-          } @else {
-            <span>{{ 'POSITIVITY.MANUAL_REVIEW.REASON_UNKNOWN' | translate }}</span>
-          }
-        </p>
         <p class="transmission__no-resend">{{ 'POSITIVITY.TRANSMISSION.NO_RESEND_NOTE' | translate }}</p>
         <p class="transmission__review-routing">
           {{ 'POSITIVITY.TRANSMISSION.MANUAL_REVIEW_ADMIN_ONLY' | translate }}
@@ -95,74 +50,113 @@
       </div>
     }
 
-    <h3 class="transmission__subtitle">{{ 'POSITIVITY.TRANSMISSION.LINES.TITLE' | translate }}</h3>
-    @if (hasLines()) {
-      <div class="pos-table-wrap">
-        <table class="pos-table">
-          <caption class="sr-only">{{ 'POSITIVITY.TRANSMISSION.LINES.CAPTION' | translate }}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{{ 'POSITIVITY.TRANSMISSION.LINES.SKU' | translate }}</th>
-              <th scope="col">{{ 'POSITIVITY.TRANSMISSION.LINES.PRODUCT' | translate }}</th>
-              <th scope="col">{{ 'POSITIVITY.TRANSMISSION.LINES.ORDERED' | translate }}</th>
-              <th scope="col">{{ 'POSITIVITY.TRANSMISSION.LINES.CONFIRMED' | translate }}</th>
-              <th scope="col">{{ 'POSITIVITY.TRANSMISSION.LINES.OUTCOME' | translate }}</th>
-              <th scope="col">{{ 'POSITIVITY.TRANSMISSION.LINES.EXPECTED_SHIP' | translate }}</th>
-              <th scope="col">{{ 'POSITIVITY.TRANSMISSION.LINES.VENDOR_REASON' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (line of lines(); track line.poLineId) {
-              <tr>
-                <th scope="row" class="transmission__sku">{{ line.sku || '—' }}</th>
-                <td>{{ line.productName || '—' }}</td>
-                <td class="transmission__qty">{{ line.orderedQuantity }}</td>
-                <td class="transmission__qty">
-                  @if (line.confirmedQuantity !== null) {
-                    {{ line.confirmedQuantity }}
-                  } @else {
-                    <span class="transmission__unanswered">
-                      {{ 'POSITIVITY.TRANSMISSION.LINES.NOT_ANSWERED' | translate }}
-                    </span>
-                  }
-                </td>
-                <td>
-                  <app-supplier-status-chip
-                    [labelKey]="outcomeLabelKey(line.outcome)"
-                    [tone]="outcomeTone(line.outcome)"
-                    [icon]="outcomeIcon(line.outcome)"
-                    descriptionKey="POSITIVITY.TRANSMISSION.LINES.OUTCOME"
-                  />
-                </td>
-                <td>
-                  @if (shipDateFor(line.expectedShipDate); as ship) {
-                    {{ ship | date: 'mediumDate' }}
-                  } @else {
-                    —
-                  }
-                </td>
-                <td class="transmission__reason">
-                  @if (line.vendorReason) {
-                    {{ line.vendorReason }}
-                  } @else {
-                    —
-                  }
-                </td>
-              </tr>
+    <ul class="transmission__list">
+      @for (item of transmissions(); track item.transmissionIntentId || $index) {
+        <li class="transmission__item">
+          <div class="transmission__item-head">
+            <app-supplier-status-chip
+              [labelKey]="stateLabelKey(item)"
+              [tone]="stateTone(item)"
+              [icon]="stateIcon(item)"
+              descriptionKey="POSITIVITY.TRANSMISSION.STATE_LABEL"
+            />
+            @if (item.lastStatusAt) {
+              <span class="transmission__last-status">
+                <span class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.LAST_STATUS_AT' | translate }}</span>
+                <time [attr.datetime]="item.lastStatusAt">{{ item.lastStatusAt | date: 'medium' }}</time>
+              </span>
             }
-          </tbody>
-        </table>
-      </div>
-    } @else {
-      <p class="transmission__empty">{{ 'POSITIVITY.TRANSMISSION.LINES.EMPTY' | translate }}</p>
-    }
+          </div>
 
-    <h3 class="transmission__subtitle">{{ 'POSITIVITY.TRANSMISSION.HISTORY.TITLE' | translate }}</h3>
-    <p class="transmission__append-only">{{ 'POSITIVITY.TRANSMISSION.HISTORY.APPEND_ONLY' | translate }}</p>
-    <app-supplier-event-timeline
-      [entries]="timelineEntries()"
-      ariaLabelKey="POSITIVITY.TRANSMISSION.HISTORY.ARIA_LABEL"
-      emptyKey="POSITIVITY.TRANSMISSION.HISTORY.EMPTY"
-    />
+          <dl class="transmission__facts">
+            <div class="transmission__fact">
+              <dt class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.VENDOR' | translate }}</dt>
+              <dd class="transmission__value">{{ item.supplierRef || '—' }}</dd>
+            </div>
+            <div class="transmission__fact">
+              <dt class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.VENDOR_ORDER_NUMBER' | translate }}</dt>
+              <dd class="transmission__value">
+                @if (item.supplierOrderNumber) {
+                  <code class="transmission__ref">{{ item.supplierOrderNumber }}</code>
+                } @else {
+                  {{ 'POSITIVITY.TRANSMISSION.NO_VENDOR_ORDER_NUMBER' | translate }}
+                }
+              </dd>
+            </div>
+            <div class="transmission__fact">
+              <dt class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.DOCUMENT_ID' | translate }}</dt>
+              <dd class="transmission__value">
+                @if (item.documentId) {
+                  <code class="transmission__ref">{{ item.documentId }}</code>
+                } @else {
+                  {{ 'POSITIVITY.TRANSMISSION.NO_DOCUMENT_ID' | translate }}
+                }
+              </dd>
+            </div>
+            <div class="transmission__fact">
+              <dt class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.SCHEDULED_DELIVERY' | translate }}</dt>
+              <dd class="transmission__value">
+                @if (deliveryDateFor(item.latestScheduledDeliveryDate); as delivery) {
+                  {{ delivery | date: 'mediumDate' }}
+                } @else {
+                  {{ 'POSITIVITY.TRANSMISSION.NO_SCHEDULED_DELIVERY' | translate }}
+                }
+              </dd>
+            </div>
+            <div class="transmission__fact">
+              <dt class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.DISPATCH_ATTEMPTS' | translate }}</dt>
+              <dd class="transmission__value">
+                @if (item.dispatchAttempts !== null) {
+                  {{ item.dispatchAttempts }}
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            @if (item.lastTransitionAt) {
+              <div class="transmission__fact">
+                <dt class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.LAST_TRANSITION_AT' | translate }}</dt>
+                <dd class="transmission__value">
+                  <time [attr.datetime]="item.lastTransitionAt">{{ item.lastTransitionAt | date: 'medium' }}</time>
+                </dd>
+              </div>
+            }
+          </dl>
+
+          @if (item.vendorReason || item.vendorErrorCode || item.failureDetail) {
+            <dl class="transmission__facts transmission__vendor-words">
+              @if (item.vendorReason) {
+                <div class="transmission__fact">
+                  <dt class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.VENDOR_REASON' | translate }}</dt>
+                  <dd class="transmission__value transmission__reason">{{ item.vendorReason }}</dd>
+                </div>
+              }
+              @if (item.vendorErrorCode) {
+                <div class="transmission__fact">
+                  <dt class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.VENDOR_ERROR_CODE' | translate }}</dt>
+                  <dd class="transmission__value"><code class="transmission__ref">{{ item.vendorErrorCode }}</code></dd>
+                </div>
+              }
+              @if (item.failureDetail) {
+                <div class="transmission__fact">
+                  <dt class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.FAILURE_DETAIL' | translate }}</dt>
+                  <dd class="transmission__value transmission__reason">{{ item.failureDetail }}</dd>
+                </div>
+              }
+            </dl>
+          }
+
+          @if (item.resolutionAction) {
+            <p class="transmission__resolution">
+              <span class="transmission__term">{{ 'POSITIVITY.TRANSMISSION.RESOLUTION' | translate }}</span>
+              <code class="transmission__ref">{{ item.resolutionAction }}</code>
+              @if (item.resolvedAt) {
+                <time [attr.datetime]="item.resolvedAt">{{ item.resolvedAt | date: 'medium' }}</time>
+              }
+            </p>
+          }
+        </li>
+      }
+    </ul>
   }
 </section>

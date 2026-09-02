@@ -187,10 +187,8 @@
     </div>
   </section>
 
-  <!-- Supplier connectivity sections (#191, #193). Own state, own HTTP, no
-       supplier logic in this domain — inputs only. -->
+  <!-- Supplier connectivity section (#191). Own state, own generated client,
+       no supplier logic in this domain — inputs only. -->
   <app-supplier-transmission-panel [purchaseOrderId]="order()!.poId" [poNumber]="order()!.poNumber" />
-
-  <app-supplier-shipment-panel [purchaseOrderId]="order()!.poId" />
   }
 </main>

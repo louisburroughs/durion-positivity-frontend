@@ -1,9 +1,5 @@
 /**
- * Fleet vehicle/contract lookup panel (issue #194).
- *
- * ADR-0031: error tests assert both `state()` and `errorKey()`.
- * ADR-0032: fixtures typed as their exact domain interfaces.
- * ADR-0033: the load effect cancels in-flight work via `onCleanup`.
+ * SupplierFleetLookupPanelComponent tests (#194, #201).
  */
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -14,254 +10,182 @@ import { SupplierFleetLookupPanelComponent } from './supplier-fleet-lookup-panel
 import { SupplierFleetService } from '../../services/supplier-fleet.service';
 import { SupplierFleetVehicleLookup } from '../../models/supplier-fleet.models';
 
-const NOW = Date.parse('2026-08-12T12:00:00Z');
+const SUPPLIER_REF = 'michelin-fleet';
 const VIN = 'VF1RFA00567123456';
 
 const found: SupplierFleetVehicleLookup = {
   outcome: 'FOUND',
+  supplierRef: SUPPLIER_REF,
   vehicleIdentifier: VIN,
-  vendorProfileId: 'vp-fleet-1',
-  vendorDisplayName: 'Michelin Fleet Services',
   vehicle: {
-    vehicleIdentifier: VIN,
     vin: VIN,
     plate: 'AB-123-CD',
-    description: 'Renault Master 2.3 dCi — fleet unit 4471',
+    brand: 'Renault',
+    model: 'Master 2.3 dCi',
+    modelYear: 2024,
+    fleetNumber: '4471',
+    vendorVehicleId: 'MFS-V-9981',
+    odometer: '81234',
+    identifiable: true,
   },
-  contracts: [
-    {
-      contractId: 'ct-1',
-      contractNumber: 'MFS-2026-0044',
-      fleetManagerName: 'Michelin Fleet Services',
-      status: 'ACTIVE',
-      effectiveFrom: '2026-01-01',
-      effectiveTo: '2026-12-31',
-      policies: [
-        {
-          policyId: 'pol-1',
-          description: 'Pneumatiques et géométrie, tous essieux',
-          coverageNote: 'Hors rénovation esthétique des jantes.',
-        },
-      ],
-    },
-  ],
-  notFoundReason: null,
-  asOf: '2026-08-12T11:40:00Z',
-  fetchedAt: '2026-08-12T11:59:00Z',
-  stalenessThresholdMinutes: 60,
 };
 
 const notFound: SupplierFleetVehicleLookup = {
   outcome: 'NOT_FOUND',
-  vehicleIdentifier: VIN,
-  vendorProfileId: 'vp-fleet-1',
-  vendorDisplayName: 'Michelin Fleet Services',
+  supplierRef: SUPPLIER_REF,
+  vehicleIdentifier: 'UNKNOWN-PLATE-9',
   vehicle: null,
-  contracts: [],
-  notFoundReason: 'Véhicule non enregistré sous cet identifiant.',
-  asOf: '2026-08-12T11:40:00Z',
-  fetchedAt: '2026-08-12T11:59:00Z',
-  stalenessThresholdMinutes: 60,
 };
 
 describe('SupplierFleetLookupPanelComponent', () => {
   let fixture: ComponentFixture<SupplierFleetLookupPanelComponent>;
-
-  const service = {
-    lookupVehicle: vi.fn(),
-    getWorkorderAuthorization: vi.fn(),
-  };
+  let component: SupplierFleetLookupPanelComponent;
+  let service: { lookupVehicle: ReturnType<typeof vi.fn>; getWorkorderAuthorization: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    service.lookupVehicle.mockReturnValue(of(found));
-
+    service = {
+      lookupVehicle: vi.fn().mockReturnValue(of(found)),
+      getWorkorderAuthorization: vi.fn(),
+    };
     await TestBed.configureTestingModule({
       imports: [SupplierFleetLookupPanelComponent, TranslateModule.forRoot()],
       providers: [{ provide: SupplierFleetService, useValue: service }],
     }).compileComponents();
-
     fixture = TestBed.createComponent(SupplierFleetLookupPanelComponent);
+    component = fixture.componentInstance;
   });
 
   afterEach(() => vi.clearAllMocks());
 
-  function render(inputs: Record<string, unknown> = {}): HTMLElement {
-    fixture.componentRef.setInput('vehicleIdentifier', VIN);
-    fixture.componentRef.setInput('nowMs', NOW);
-    for (const [key, value] of Object.entries(inputs)) {
-      fixture.componentRef.setInput(key, value);
-    }
+  function render(supplierRef: string | null, vehicleIdentifier: string | null = VIN): HTMLElement {
+    fixture.componentRef.setInput('supplierRef', supplierRef);
+    fixture.componentRef.setInput('vehicleIdentifier', vehicleIdentifier);
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('looks the host-supplied vehicle up and renders FOUND with its contracts', () => {
-    const el = render();
+  it('makes no SDK call and stays idle when the supplier reference is empty', () => {
+    const el = render('');
 
-    expect(service.lookupVehicle).toHaveBeenCalledWith(VIN, undefined);
-    expect(fixture.componentInstance.state()).toBe('found');
-    expect(el.querySelector('.supplier-chip__label')?.textContent?.trim()).toBe(
-      'POSITIVITY.FLEET.LOOKUP.OUTCOME.FOUND',
-    );
-    expect(el.querySelectorAll('.fleet-lookup__contract')).toHaveLength(1);
+    expect(service.lookupVehicle).not.toHaveBeenCalled();
+    expect(component.state()).toBe('idle');
+    expect(el.textContent).toContain('POSITIVITY.FLEET.LOOKUP.NO_SUPPLIER_REF');
+    expect(el.querySelector('form')).toBeNull();
   });
 
-  it('scopes the lookup to a vendor profile when the host supplies one', () => {
-    render({ vendorProfileId: 'vp-fleet-1' });
+  it('makes no SDK call when the supplier reference is null', () => {
+    render(null);
 
-    expect(service.lookupVehicle).toHaveBeenCalledWith(VIN, 'vp-fleet-1');
+    expect(service.lookupVehicle).not.toHaveBeenCalled();
+    expect(component.state()).toBe('idle');
   });
 
-  it('asks nothing until an identifier exists', () => {
-    fixture.componentRef.setInput('vehicleIdentifier', null);
+  it('makes no SDK call from a manual submit without a supplier reference', () => {
+    render(null, null);
+    component.lookupForm.controls.vehicleIdentifier.setValue('ANY-PLATE');
+    component.submitLookup();
     fixture.detectChanges();
 
     expect(service.lookupVehicle).not.toHaveBeenCalled();
-    expect(fixture.componentInstance.state()).toBe('idle');
   });
 
-  it('renders the fleet manager policy text verbatim', () => {
-    const el = render();
+  it('asks the named fleet manager about the host-supplied identifier, supplierRef first', () => {
+    render(SUPPLIER_REF);
 
-    const policyText = el.querySelector('.fleet-lookup__policy-text')?.textContent?.trim();
-    expect(policyText).toBe('Pneumatiques et géométrie, tous essieux');
-    expect(el.querySelector('.fleet-lookup__policy-note')?.textContent?.trim()).toBe(
-      'Hors rénovation esthétique des jantes.',
-    );
+    expect(service.lookupVehicle).toHaveBeenCalledTimes(1);
+    expect(service.lookupVehicle).toHaveBeenCalledWith(SUPPLIER_REF, VIN);
+    expect(component.state()).toBe('found');
   });
 
-  // #194 §4 — NOT_FOUND is a distinct, non-error state at estimate time.
-  it('renders NOT_FOUND as a plain answer: no errorKey, no alert, no error styling', () => {
+  it('renders the vehicle as the fleet manager describes it', () => {
+    const el = render(SUPPLIER_REF);
+
+    expect(el.textContent).toContain('Renault');
+    expect(el.textContent).toContain('Master 2.3 dCi');
+    expect(el.textContent).toContain('2024');
+    expect(el.textContent).toContain('AB-123-CD');
+    expect(el.textContent).toContain('4471');
+    expect(el.textContent).toContain('MFS-V-9981');
+    expect(el.textContent).toContain('POSITIVITY.FLEET.LOOKUP.OUTCOME.FOUND');
+  });
+
+  it('renders NOT_FOUND as an answer: status, no alert, no errorKey', () => {
     service.lookupVehicle.mockReturnValue(of(notFound));
-    const el = render();
+    const el = render(SUPPLIER_REF, 'UNKNOWN-PLATE-9');
 
-    expect(fixture.componentInstance.state()).toBe('not-found');
-    expect(fixture.componentInstance.errorKey()).toBeNull();
-
-    const block = el.querySelector('.fleet-lookup__not-found');
-    expect(block).not.toBeNull();
-    expect(block?.getAttribute('role')).toBe('status');
+    expect(component.state()).toBe('not-found');
+    expect(component.errorKey()).toBeNull();
     expect(el.querySelector('[role="alert"]')).toBeNull();
-    expect(el.querySelector('.pos-banner--error')).toBeNull();
-    expect(el.querySelector('.fleet-lookup__not-found-title')?.textContent?.trim()).toBe(
-      'POSITIVITY.FLEET.LOOKUP.NOT_FOUND_TITLE',
-    );
+    expect(el.querySelector('.fleet-lookup__not-found')?.getAttribute('role')).toBe('status');
   });
 
-  it('gives NOT_FOUND a neutral chip, never a danger tone', () => {
-    service.lookupVehicle.mockReturnValue(of(notFound));
-    const el = render();
-
-    expect(fixture.componentInstance.outcomeTone()).toBe('neutral');
-    expect(el.querySelector('.supplier-chip--danger')).toBeNull();
-    expect(el.querySelector('.supplier-chip__label')?.textContent?.trim()).toBe(
-      'POSITIVITY.FLEET.LOOKUP.OUTCOME.NOT_FOUND',
-    );
-  });
-
-  it('shows the fleet manager reason for NOT_FOUND verbatim beside a translated label', () => {
-    service.lookupVehicle.mockReturnValue(of(notFound));
-    const el = render();
-
-    expect(el.querySelector('.fleet-lookup__vendor-text')?.textContent?.trim()).toBe(
-      'Véhicule non enregistré sous cet identifiant.',
-    );
-    expect(el.querySelector('.fleet-lookup__term')?.textContent?.trim()).toBe(
-      'POSITIVITY.FLEET.VENDOR_REASON',
-    );
-  });
-
-  it('treats a 404 as the same "unknown to the fleet manager" answer', () => {
+  it('renders a 404 as NOT_FOUND too', () => {
     service.lookupVehicle.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 404, statusText: 'Not Found' })),
     );
-    render();
+    render(SUPPLIER_REF);
 
-    expect(fixture.componentInstance.state()).toBe('not-found');
-    expect(fixture.componentInstance.errorKey()).toBeNull();
+    expect(component.state()).toBe('not-found');
+    expect(component.errorKey()).toBeNull();
   });
 
-  it('renders a vendor outage as a degraded, retryable state — not as NOT_FOUND', () => {
+  it('renders a vendor outage as unreachable with a retry', () => {
     service.lookupVehicle.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 503, statusText: 'Unavailable' })),
     );
-    const el = render();
+    const el = render(SUPPLIER_REF);
 
-    expect(fixture.componentInstance.state()).toBe('unreachable');
-    expect(fixture.componentInstance.errorKey()).toBe('POSITIVITY.ERROR.RETRYABLE');
-    expect(el.querySelector('.fleet-lookup__not-found')).toBeNull();
+    expect(component.state()).toBe('unreachable');
     expect(el.querySelector('.pos-banner--warning button')).not.toBeNull();
   });
 
-  it('renders a 403 as a restricted state (ADR-0031)', () => {
+  it('renders a 422 (vendor did not answer) as unreachable with a retry and the LOAD key', () => {
+    service.lookupVehicle.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 422, statusText: 'Unprocessable Entity' })),
+    );
+    const el = render(SUPPLIER_REF);
+
+    expect(component.state()).toBe('unreachable');
+    expect(component.errorKey()).toBe('POSITIVITY.FLEET.LOOKUP.ERROR.LOAD');
+    expect(el.querySelector('.pos-banner--warning button')).not.toBeNull();
+    expect(el.querySelector('[role="alert"]')).toBeNull();
+  });
+
+  it('renders a 403 as a restricted state', () => {
     service.lookupVehicle.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 403, statusText: 'Forbidden' })),
     );
-    const el = render();
+    render(SUPPLIER_REF);
 
-    expect(fixture.componentInstance.state()).toBe('forbidden');
-    expect(fixture.componentInstance.errorKey()).toBe('POSITIVITY.ERROR.FORBIDDEN');
-    expect(el.querySelector('[role="alert"]')).not.toBeNull();
+    expect(component.state()).toBe('forbidden');
   });
 
-  it('re-queries when the operator asks about a different identifier', () => {
-    render();
-    fixture.componentInstance.lookupForm.controls.vehicleIdentifier.setValue('  AB-123-CD  ');
-    fixture.componentInstance.submitLookup();
+  it('associates the identifier input with its hint via aria-describedby', () => {
+    const el = render(SUPPLIER_REF);
+    const input = el.querySelector('input[aria-describedby="fleet-lookup-identifier-hint"]');
+    const hint = el.querySelector('#fleet-lookup-identifier-hint');
+
+    expect(input).not.toBeNull();
+    expect(hint).not.toBeNull();
+    expect(hint?.textContent).toContain('POSITIVITY.FLEET.LOOKUP.IDENTIFIER_HINT');
+  });
+
+  it('re-queries the same fleet manager for an operator-entered identifier', () => {
+    render(SUPPLIER_REF);
+    component.lookupForm.controls.vehicleIdentifier.setValue('AB-123-CD');
+    component.submitLookup();
     fixture.detectChanges();
 
-    expect(service.lookupVehicle).toHaveBeenLastCalledWith('AB-123-CD', undefined);
+    expect(service.lookupVehicle).toHaveBeenLastCalledWith(SUPPLIER_REF, 'AB-123-CD');
   });
 
-  it('does nothing when the identifier field is blank', () => {
-    fixture.componentRef.setInput('vehicleIdentifier', null);
-    fixture.detectChanges();
-    fixture.componentInstance.lookupForm.controls.vehicleIdentifier.setValue('   ');
-    fixture.componentInstance.submitLookup();
-
-    expect(service.lookupVehicle).not.toHaveBeenCalled();
-  });
-
-  // #194 §7, ruled advisory-only in v1: the panel informs, it never blocks.
-  it('is advisory only — it exposes no output and no blocking affordance', () => {
-    service.lookupVehicle.mockReturnValue(of(notFound));
-    const el = render();
-
-    const controlText = Array.from(el.querySelectorAll('button, a, input, select'))
-      .map(n => `${n.textContent ?? ''} ${n.className} ${n.getAttribute('type') ?? ''}`)
+  it('exposes no control that requests, grants or advances an authorization', () => {
+    const el = render(SUPPLIER_REF);
+    const controlText = Array.from(el.querySelectorAll('button, a, input[type="submit"]'))
+      .map(n => `${n.textContent ?? ''} ${n.className}`)
       .join(' ')
       .toLowerCase();
-    expect(controlText).not.toMatch(/block|prevent|authorize|authorise|grant|deny|override/);
 
-    // No disabled control is produced by a NOT_FOUND answer, on this panel or
-    // through any output it could hand the host.
-    expect(el.querySelectorAll('[disabled]')).toHaveLength(0);
-    const outputs = Object.entries(fixture.componentInstance as unknown as Record<string, unknown>)
-      .filter(([, value]) => typeof value === 'object' && value !== null && 'emit' in value);
-    expect(outputs).toHaveLength(0);
-  });
-
-  it('gives the identifier input a real label (ADR-0029)', () => {
-    const el = render();
-
-    const input = el.querySelector('#fleet-lookup-identifier');
-    expect(input).not.toBeNull();
-    expect(el.querySelector('label[for="fleet-lookup-identifier"]')).not.toBeNull();
-  });
-
-  it('keeps the vendor as-of time and the platform fetch time as separate facts', () => {
-    const el = render();
-
-    const terms = Array.from(el.querySelectorAll('.staleness__term')).map(n =>
-      n.textContent?.trim(),
-    );
-    expect(terms).toEqual(['POSITIVITY.FLEET.AS_OF', 'POSITIVITY.FLEET.FETCHED_AT']);
-  });
-
-  it('formats date-only contract dates without shifting them a day (ADR-0038)', () => {
-    render();
-
-    expect(fixture.componentInstance.effectiveDateFor('2026-01-01')).toBe('2026-01-01T00:00:00');
-    expect(fixture.componentInstance.effectiveDateFor(null)).toBeNull();
+    expect(controlText).not.toMatch(/authorize|authorise|grant|deny|override|escalate|request.?auth/);
   });
 });

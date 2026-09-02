@@ -1821,18 +1821,6 @@
         "LABOR_OVERHEAD": {
           "TITLE": "Rapport des coûts de main-d’œuvre et frais généraux",
           "DESCRIPTION": "Coûts mensuels et cumulatifs annuels de main-d’œuvre et frais généraux par emplacement et exercice, à partir des données comptabilisées du grand livre."
-        },
-        "VENDOR_INVOICES": {
-          "TITLE": "Factures fournisseurs",
-          "DESCRIPTION": "Tout ce que les fournisseurs ont transmis électroniquement, montants et devise exactement tels que reçus."
-        },
-        "VENDOR_INVOICE_EXCEPTIONS": {
-          "TITLE": "Exceptions de factures fournisseurs",
-          "DESCRIPTION": "Factures non appariées et factures réémises dont les montants ont changé."
-        },
-        "VENDOR_INVOICE_DETAIL": {
-          "TITLE": "Ouvrir une facture fournisseur",
-          "DESCRIPTION": "Lignes, lien vers le bon de commande et chaque version reçue d'une facture."
         }
       },
       "FIELD": {
@@ -1856,8 +1844,7 @@
         "OPEN_CREDIT_MEMO": "Ouvrir l'avoir",
         "OPEN_VENDOR_PAYMENT": "Ouvrir le paiement fournisseur",
         "OPEN_INVOICE_STATUS": "Voir le statut",
-        "OPENING_PAGE": "Ouverture...",
-        "OPEN_VENDOR_INVOICE": "Ouvrir la facture fournisseur"
+        "OPENING_PAGE": "Ouverture..."
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Un ID est requis.",
@@ -5248,18 +5235,6 @@
       },
       "CONFLICT_YAML": "Ce profil est géré par la configuration de déploiement (YAML) ; le service a donc refusé la modification. Mettez-le à jour au moyen de votre pipeline de configuration."
     },
-    "FRESHNESS": {
-      "ARIA_LABEL": "Fraîcheur des données",
-      "AS_OF": "Données en date du",
-      "FETCHED_AT": "Dernière récupération",
-      "CURRENT": "À jour",
-      "STALE": "Périmé",
-      "UNKNOWN": "Inconnu",
-      "CHIP_DESCRIPTION": "Fraîcheur :",
-      "NO_VENDOR_TIMESTAMP": "Aucune date du fournisseur",
-      "NEVER_FETCHED": "Jamais récupéré",
-      "STALE_NOTE": "Ces données sont plus anciennes que le seuil configuré. L’heure de récupération indique notre dernière consultation, pas l’actualité des données."
-    },
     "CAPABILITY": {
       "ORDER": "Commande",
       "ORDER_STATUS": "Statut de commande",
@@ -5563,188 +5538,6 @@
         "UNAVAILABLE": "Les autres tentatives de cet appel n’ont pas pu être chargées. La tentative ci-dessus n’est pas concernée."
       }
     },
-    "PRICAT": {
-      "TITLE": "Synchronisation PRICAT",
-      "EMPTY": "Aucune exécution PRICAT n’a encore été enregistrée pour ce fournisseur.",
-      "NOT_BOUND": "La capacité catalogue de prix n’est pas configurée pour ce fournisseur ; aucune exécution ne peut être planifiée ni lancée.",
-      "RUN_NOW": "Exécuter maintenant",
-      "RUN_ACCEPTED": "L’exécution a été acceptée et apparaîtra ci-dessous au fur et à mesure.",
-      "IN_PROGRESS": "En cours",
-      "UNMATCHED_LINK": "Lignes non appariées",
-      "UNMATCHED_BADGE_SR": "lignes de catalogue non appariées à traiter",
-      "PREVIOUS_DATA_AUTHORITATIVE": "Aucune donnée nouvelle n’a été reçue. Les prix fournisseur reçus précédemment font toujours foi.",
-      "OUTCOME": {
-        "RUNNING": "En cours",
-        "SUCCESS": "Réussie",
-        "PARTIAL": "Partielle",
-        "EMPTY": "Aucune donnée reçue",
-        "FAILED": "Échouée"
-      },
-      "FRESHNESS": {
-        "EFFECTIVE_DATE": "Date d’effet du fournisseur",
-        "LAST_FETCH": "Dernière récupération auprès du fournisseur"
-      },
-      "TABLE": {
-        "CAPTION": "Historique des exécutions PRICAT pour ce fournisseur",
-        "STARTED": "Débutée",
-        "FINISHED": "Terminée",
-        "WINDOW": "Intervalle",
-        "OUTCOME": "Résultat",
-        "FETCHED": "Lignes récupérées",
-        "STORED": "Lignes enregistrées",
-        "UNMATCHED": "Non appariées",
-        "DUPLICATES": "Doublons",
-        "CHECKPOINT": "Point de reprise"
-      },
-      "ERROR": {
-        "LOAD": "L’historique des exécutions PRICAT n’a pas pu être chargé.",
-        "TRIGGER": "L’exécution n’a pas pu être lancée.",
-        "TRIGGER_FORBIDDEN": "Vous n’avez pas la permission de lancer une exécution PRICAT."
-      }
-    },
-    "UNMATCHED": {
-      "TITLE": "Lignes de catalogue non appariées",
-      "SUBTITLE": "Lignes du catalogue fournisseur qui n’ont pas pu être associées à un produit.",
-      "BACK_TO_PROFILE": "Profil fournisseur",
-      "EXPORT_CSV": "Exporter en CSV",
-      "EMPTY": "Aucune ligne non appariée. Toutes les lignes reçues ont été associées à un produit.",
-      "COUNT": "{{count}} lignes non appariées",
-      "WORKLIST_NOTICE": "Ces lignes restent listées jusqu’à ce qu’une correction du catalogue permette de les apparier. Elles ne peuvent pas être écartées depuis cet écran.",
-      "FILTER": {
-        "REASON": "Motif",
-        "SEARCH": "Rechercher",
-        "DATE_FROM": "Première occurrence depuis",
-        "DATE_TO": "Dernière occurrence jusqu’au",
-        "ALL_REASONS": "Tous les motifs"
-      },
-      "REASON": {
-        "NO_EAN_MATCH": "Aucune correspondance EAN",
-        "NO_UPC_MATCH": "Aucune correspondance UPC",
-        "NO_MPN_MATCH": "Aucune correspondance de référence fabricant",
-        "AMBIGUOUS_MATCH": "Correspondance ambiguë",
-        "MISSING_IDENTIFIERS": "Aucun identifiant exploitable"
-      },
-      "TABLE": {
-        "CAPTION": "Lignes du catalogue fournisseur en attente d’appariement",
-        "EAN": "EAN",
-        "GTIN": "GTIN",
-        "MPN": "Référence fabricant",
-        "DESCRIPTION": "Description",
-        "REASON": "Motif",
-        "FIRST_SEEN": "Première occurrence",
-        "LAST_SEEN": "Dernière occurrence",
-        "OCCURRENCES": "Occurrences"
-      },
-      "ERROR": {
-        "LOAD": "Les lignes non appariées n’ont pas pu être chargées."
-      }
-    },
-    "AVAILABILITY": {
-      "TITLE": "Disponibilité fournisseur",
-      "SUBTITLE": "Stock en direct déclaré par chaque fournisseur configuré pour le lieu de livraison que vous choisissez.",
-      "PROMPT_LOCATION": "Choisissez un lieu de livraison pour vérifier la disponibilité fournisseur.",
-      "LOADING": "Vérification de la disponibilité fournisseur…",
-      "NO_VENDORS": "Aucun fournisseur n’est configuré pour déclarer du stock pour ce lieu.",
-      "QUANTITY": "Disponible",
-      "WAREHOUSE": "Entrepôt",
-      "EARLIEST_DELIVERY": "Livraison au plus tôt",
-      "LEAD_TIME": "Délai",
-      "LEAD_TIME_DAYS": "{{count}} jours",
-      "CUTOFF": "Commander avant",
-      "VENDOR_CODE": "Code fournisseur",
-      "AS_OF": "Données fournisseur au",
-      "CHECKED_AT": "Vérifié le",
-      "STATUS_LABEL": "État du fournisseur :",
-      "STATUS": {
-        "OK": "Disponible",
-        "SUPPLIER_UNAVAILABLE": "Fournisseur injoignable",
-        "NOT_LISTED": "Non distribué",
-        "CAPABILITY_NOT_CONFIGURED": "Non activé"
-      },
-      "STATUS_DETAIL": {
-        "OK": "Le fournisseur a déclaré du stock pour ce lieu.",
-        "SUPPLIER_UNAVAILABLE": "Le fournisseur n’a pas répondu; aucune quantité n’est connue. Réessayez.",
-        "NOT_LISTED": "Ce fournisseur ne distribue pas ce produit.",
-        "CAPABILITY_NOT_CONFIGURED": "La déclaration de stock n’est pas activée pour ce fournisseur."
-      },
-      "LOCATION": {
-        "LABEL": "Lieu de livraison",
-        "PROCUREMENT_LABEL": "Lieu de livraison pour les vérifications de disponibilité",
-        "PLACEHOLDER": "Choisissez un lieu de livraison",
-        "HINT": "Mémorisé pour cette session seulement. Aucun fournisseur n’est interrogé tant que vous n’en avez pas choisi un.",
-        "LOADING": "Chargement des lieux…",
-        "EMPTY": "Aucun lieu actif n’est disponible pour la livraison.",
-        "ERROR": {
-          "LOAD": "La liste des lieux n’a pas pu être chargée; la disponibilité ne peut donc pas être vérifiée."
-        }
-      },
-      "CHECK": {
-        "ACTION": "Vérifier la disponibilité",
-        "COLUMN": "Disponibilité fournisseur",
-        "NEEDS_LOCATION": "Choisissez un lieu de livraison pour vérifier cette ligne.",
-        "LINE_CHANGED": "Cette ligne a changé après la vérification. Vérifiez-la de nouveau."
-      },
-      "ERROR": {
-        "LOAD": "La disponibilité fournisseur n’a pas pu être chargée. Le reste de cette page n’est pas touché.",
-        "CHECK": "Cette ligne n’a pas pu être vérifiée auprès du fournisseur."
-      }
-    },
-    "ENRICHMENT": {
-      "TITLE": "Contenu du fabricant",
-      "PROVENANCE": "Fourni par {{manufacturer}}. Contenu marketing du fabricant, et non données de catalogue.",
-      "LOCALE_FALLBACK": "Le fabricant n’a pas publié ce texte dans votre langue; une autre langue est donc affichée.",
-      "GALLERY": "Images du fabricant",
-      "PUBLISHED_AT": "Publié par le fabricant",
-      "FETCHED_AT": "Dernière récupération",
-      "ERROR": {
-        "LOAD": "Le contenu du fabricant n’a pas pu être chargé."
-      },
-      "UNMATCHED": {
-        "TITLE": "Contenu du fabricant non apparié",
-        "SUBTITLE": "Contenu du fabricant reçu pour des produits que le catalogue ne reconnaît pas.",
-        "WORKLIST_NOTICE": "Ces enregistrements restent listés jusqu’à ce qu’une correction du catalogue permette de les apparier. Ils ne peuvent être ni appariés ni écartés depuis cet écran.",
-        "EMPTY": "Aucun contenu du fabricant non apparié. Tout ce qui a été reçu a été associé à un produit.",
-        "COUNT": "{{count}} enregistrements non appariés",
-        "NO_PREVIEW": "Aucun aperçu publié",
-        "FILTER": {
-          "VENDOR": "Fournisseur",
-          "ALL_VENDORS": "Tous les fournisseurs",
-          "REASON": "Motif",
-          "ALL_REASONS": "Tous les motifs",
-          "SEARCH": "Rechercher",
-          "DATE_FROM": "Première occurrence depuis",
-          "DATE_TO": "Dernière occurrence jusqu’au"
-        },
-        "REASON": {
-          "NO_EAN_MATCH": "Aucune correspondance EAN",
-          "NO_GTIN_MATCH": "Aucune correspondance GTIN",
-          "NO_MPN_MATCH": "Aucune correspondance de référence fabricant",
-          "AMBIGUOUS_MATCH": "Correspondance ambiguë",
-          "MISSING_IDENTIFIERS": "Aucun identifiant exploitable"
-        },
-        "TABLE": {
-          "CAPTION": "Contenu du fabricant en attente d’appariement",
-          "EAN": "EAN",
-          "GTIN": "GTIN",
-          "MPN": "Référence fabricant",
-          "MANUFACTURER": "Fabricant",
-          "VENDOR": "Fournisseur",
-          "PREVIEW": "Aperçu du contenu",
-          "IMAGES": "Images",
-          "REASON": "Motif",
-          "FIRST_SEEN": "Première occurrence",
-          "LAST_SEEN": "Dernière occurrence",
-          "OCCURRENCES": "Occurrences"
-        },
-        "ERROR": {
-          "LOAD": "Le contenu du fabricant non apparié n’a pas pu être chargé."
-        }
-      }
-    },
-    "TIMELINE": {
-      "ARIA_LABEL": "Historique des événements",
-      "EMPTY": "Rien n'a encore été signalé."
-    },
     "TRANSMISSION": {
       "TITLE": "Transmission au fournisseur",
       "STATE_LABEL": "État de la transmission :",
@@ -5757,17 +5550,19 @@
       "AS_OF": "État du fournisseur au",
       "FETCHED_AT": "Dernière récupération",
       "MANUAL_REVIEW_REASON": "Pourquoi une révision est requise",
-      "MANUAL_REVIEW_ADMIN_ONLY": "Un administrateur la traite depuis la file de révision manuelle des fournisseurs.",
+      "MANUAL_REVIEW_ADMIN_ONLY": "Un administrateur rapproche cette transmission avec le fournisseur.",
       "NO_RESEND_NOTE": "Cette commande n'est pas renvoyée d'ici. Le fournisseur la détient peut-être déjà, un renvoi risquerait donc une commande physique en double.",
       "NOT_TRANSMITTED": "Cette commande n'a pas été transmise au fournisseur par voie électronique; il n'y a donc aucun état de transmission à afficher.",
       "STATE": {
-        "QUEUED": "En file d'attente pour le fournisseur",
-        "SENT": "Transmise au fournisseur",
         "CONFIRMED": "Confirmée par le fournisseur",
-        "PARTIALLY_CONFIRMED": "Partiellement confirmée",
         "REJECTED": "Refusée par le fournisseur",
         "MANUAL_REVIEW": "Révision manuelle requise",
-        "UNKNOWN": "État inconnu"
+        "UNKNOWN": "État inconnu",
+        "PENDING": "Envoi en attente",
+        "DISPATCHING": "Envoi au fournisseur",
+        "SENT_AWAITING_RESULT": "Envoyé, en attente du fournisseur",
+        "FAILED": "Envoi échoué",
+        "CANCELLED": "Annulé"
       },
       "OUTCOME": {
         "ACCEPTED": "Acceptée",
@@ -5799,245 +5594,16 @@
       },
       "ERROR": {
         "LOAD": "L'état de transmission au fournisseur n'a pas pu être chargé. Le reste de cette commande n'est pas touché."
-      }
-    },
-    "MANUAL_REVIEW": {
-      "TITLE": "Commandes à réviser",
-      "SUBTITLE": "Transmissions pour lesquelles la plateforme ne peut pas déterminer si le fournisseur a reçu la commande.",
-      "NO_RESEND_NOTICE": "Rien sur cet écran ne renvoie une commande. Un fournisseur détient peut-être déjà une commande listée ici; un renvoi risquerait une livraison physique en double. Résolvez chaque ligne avec les actions offertes par le service.",
-      "ACTIONS_NOTICE": "Actions de résolution offertes par le service pour cette commande.",
-      "EMPTY": "Aucune transmission à réviser.",
-      "COUNT": "{{count}} transmissions à réviser",
-      "REASON_UNKNOWN": "Le service n'a donné aucun motif.",
-      "ACTION": {
-        "CONFIRM_MATCHED": "Confirmer que le fournisseur a cette commande",
-        "MARK_REJECTED": "Marquer comme refusée par le fournisseur"
       },
-      "CONFIRM": {
-        "TITLE": "Confirmez cette résolution",
-        "CONTEXT": "Bon de commande",
-        "ACTION": "Action",
-        "ACCEPT": "Oui, appliquer cette résolution",
-        "NO_RESEND": "Cette action n'envoie rien au fournisseur. Elle consigne ce que vous croyez déjà arrivé.",
-        "RISK_CONFIRM_MATCHED": "Ne confirmez que si vous avez vérifié auprès du fournisseur qu'il détient cette commande. Confirmer une commande que le fournisseur n'a jamais reçue signifie que les pièces n'arriveront jamais, et la recommander plus tard peut créer une commande physique en double.",
-        "RISK_MARK_REJECTED": "Ne marquez comme refusée que si vous avez vérifié auprès du fournisseur qu'il ne l'exécutera pas. Si le fournisseur détient bien la commande, une livraison réelle arrivera contre une commande consignée comme refusée.",
-        "RISK_GENERIC": "N'appliquez ceci que si vous avez vérifié le résultat auprès du fournisseur. Consigner le mauvais résultat sur une transmission ambiguë peut entraîner une livraison manquante ou une commande physique en double."
-      },
-      "FILTER": {
-        "VENDOR": "Fournisseur",
-        "ALL_VENDORS": "Tous les fournisseurs",
-        "SEARCH": "Commande ou référence du fournisseur",
-        "DATE_FROM": "Détecté à partir du",
-        "DATE_TO": "Détecté jusqu'au"
-      },
-      "TABLE": {
-        "CAPTION": "Transmissions en attente de rapprochement humain",
-        "PO": "Bon de commande",
-        "VENDOR": "Fournisseur",
-        "VENDOR_ORDER_NUMBER": "Numéro de commande du fournisseur",
-        "STATE": "État",
-        "REASON": "Motif",
-        "DETECTED_AT": "Détecté",
-        "OPEN_ORDER": "Ouvrir la commande"
-      },
-      "NOTICE": {
-        "RESOLVED": "Résolution consignée.",
-        "RACED_BY_VENDOR": "Le fournisseur a mis à jour cette commande en premier. La ligne affiche maintenant l'état le plus récent."
-      },
-      "ERROR": {
-        "LOAD": "La file de révision n'a pas pu être chargée.",
-        "RESOLVE": "La résolution n'a pas pu être appliquée. Rien n'a été envoyé au fournisseur."
-      }
-    },
-    "SHIPMENT": {
-      "TITLE": "Événements d'expédition",
-      "APPEND_ONLY": "Événements signalés par le fournisseur et le transporteur, du plus ancien au plus récent. Les entrées ne sont jamais modifiées ni supprimées.",
-      "ARIA_LABEL": "Historique des événements d'expédition",
-      "EMPTY": "Aucun événement d'expédition n'a été signalé pour cette commande.",
-      "DESCRIPTION": "Description du transporteur",
-      "CARRIER": "Transporteur",
-      "TRACKING": "Référence de suivi",
-      "PACKAGES": "Colis",
-      "RECEIVED_AT": "Reçu par cette plateforme",
-      "EVENT": {
-        "PICKED_UP": "Ramassé chez le fournisseur",
-        "SHIPPED": "Expédié",
-        "IN_TRANSIT": "En transit",
-        "OUT_FOR_DELIVERY": "En cours de livraison",
-        "DELIVERED": "Livré",
-        "EXCEPTION": "Incident du transporteur",
-        "RETURNED": "Retourné"
-      },
-      "ERROR": {
-        "LOAD": "Les événements d'expédition n'ont pas pu être chargés. Le reste de cette commande n'est pas touché."
-      },
-      "UNLINKED": {
-        "TITLE": "Événements d'expédition non rattachés",
-        "SUBTITLE": "Événements d'expédition qui ne correspondent à aucun bon de commande.",
-        "WORKLIST_NOTICE": "Ces événements sont de véritables expéditions que la plateforme n'a pas pu rattacher à une commande. Les lignes disparaissent lorsqu'une commande correspondante apparaît ou que le fournisseur corrige sa référence. Aucun rejet n'est possible : masquer un événement masque une livraison à venir.",
-        "EMPTY": "Tous les événements d'expédition sont rattachés à une commande.",
-        "COUNT": "{{count}} événements non rattachés",
-        "FILTER": {
-          "VENDOR": "Fournisseur",
-          "ALL_VENDORS": "Tous les fournisseurs",
-          "SEARCH": "Commande fournisseur, suivi ou transporteur",
-          "DATE_FROM": "Événement à partir du",
-          "DATE_TO": "Événement jusqu'au"
-        },
-        "TABLE": {
-          "CAPTION": "Événements d'expédition ne correspondant à aucun bon de commande",
-          "EVENT": "Événement",
-          "VENDOR": "Fournisseur",
-          "VENDOR_ORDER_NUMBER": "Numéro de commande du fournisseur",
-          "CARRIER": "Transporteur",
-          "TRACKING": "Référence de suivi",
-          "OCCURRED_AT": "Signalé par le transporteur",
-          "RECEIVED_AT": "Reçu par cette plateforme",
-          "REASON": "Pourquoi il n'est pas rattaché"
-        },
-        "ERROR": {
-          "LOAD": "Les événements d'expédition non rattachés n'ont pas pu être chargés."
-        }
-      }
-    },
-    "STOCK_SNAPSHOT": {
-      "TITLE": "Instantané de stock fournisseur",
-      "SUBTITLE": "Le dernier stock qu'un fournisseur a publié pour un pays ou une agence.",
-      "SUPPLIER_STOCK_NOTICE": "Ces quantités sont du stock fournisseur, déclaré par le fournisseur à des fins de planification. Ce n'est pas votre stock en main et cela ne doit jamais y être additionné.",
-      "META_TITLE": "Détails de l'instantané",
-      "VENDOR": "Fournisseur",
-      "SCOPE_LABEL": "Portée",
-      "LINE_COUNT": "Produits dans l'instantané",
-      "AS_OF": "Instantané du fournisseur pris le",
-      "FETCHED_AT": "Dernière récupération",
-      "NOT_REPORTED": "Non déclaré",
-      "SEARCH_NOT_REPORTED": "Ce fournisseur n'a pas déclaré « {{search}} » dans cet instantané. Ce n'est pas la même chose que déclarer un stock nul.",
-      "LEGEND": "« Non déclaré » signifie que l'instantané du fournisseur ne disait rien sur ce produit. Une quantité de 0 signifie que le fournisseur a déclaré n'en avoir aucun.",
-      "CHOOSE_VENDOR_PROMPT": "Choisissez un fournisseur pour voir son dernier instantané de stock.",
-      "NO_SNAPSHOT": "Ce fournisseur n'a encore publié aucun instantané de stock. Ce n'est pas la même chose que déclarer un stock nul.",
-      "SCOPE": {
-        "COUNTRY": "Pays",
-        "AGENCY": "Agence",
-        "WAREHOUSE": "Entrepôt"
-      },
-      "FILTER": {
-        "VENDOR": "Fournisseur",
-        "CHOOSE_VENDOR": "Choisissez un fournisseur",
-        "NO_VENDORS": "Aucun profil fournisseur n'a pu être chargé; aucun instantané ne peut donc être demandé.",
-        "SCOPE_CODE": "Code de portée",
-        "SCOPE_CODE_HINT": "Code de pays ou d'agence publié par le fournisseur, par exemple FR.",
-        "SEARCH": "UGS, EAN ou produit"
-      },
-      "TABLE": {
-        "CAPTION": "Produits dans le dernier instantané de stock du fournisseur",
-        "SKU": "UGS",
-        "PRODUCT": "Produit",
-        "EAN": "EAN",
-        "WAREHOUSE": "Entrepôt du fournisseur",
-        "SUPPLIER_QUANTITY": "Stock fournisseur",
-        "SUPPLIER_QUANTITY_NOTE": "Déclaré par le fournisseur, à titre informatif",
-        "UOM": "Unité"
-      },
-      "ERROR": {
-        "LOAD": "L'instantané de stock n'a pas pu être chargé."
-      }
-    },
-    "INVOICE": {
-      "PAYABLES": "Comptes fournisseurs",
-      "SOURCE_NOTE": "Les montants, la devise et les dates sont affichés exactement comme le fournisseur les a transmis. Rien sur cet écran ne convertit ni ne recalcule un chiffre.",
-      "BREADCRUMB": {
-        "ACCOUNTING": "Comptabilité"
-      },
-      "LIST": {
-        "TITLE": "Factures fournisseurs",
-        "SUBTITLE": "Factures et notes de crédit reçues électroniquement des fournisseurs, avec leur lien vers la pièce comptable.",
-        "EMPTY": "Aucune facture fournisseur n'a encore été reçue.",
-        "COUNT": "{{count}} factures fournisseurs",
-        "OPEN_EXCEPTIONS": "Ouvrir la liste des exceptions"
-      },
-      "EXCEPTIONS": {
-        "TITLE": "Exceptions de factures fournisseurs",
-        "SUBTITLE": "Factures signalées comme non appariées ou présentant un écart, à examiner avant un cycle de paiement.",
-        "EMPTY": "Aucune facture fournisseur n'est signalée pour le moment.",
-        "WORKLIST_NOTICE": "Les lignes restent dans cette liste jusqu'à ce que le service lève le signalement. On ne peut pas les écarter ici, car les écarter ne changerait pas le montant sur le point d'être payé."
-      },
-      "FILTER": {
-        "VENDOR": "Fournisseur",
-        "ALL_VENDORS": "Tous les fournisseurs",
-        "SEARCH": "Rechercher",
-        "SEARCH_HINT": "Correspond au numéro de facture, à la référence de pièce et au numéro de bon de commande.",
-        "TYPE": "Type de document",
-        "ALL_TYPES": "Tous les types",
-        "FLAG": "Exception",
-        "ALL_FLAGS": "Toutes les factures",
-        "DATE_FROM": "Émises à partir du",
-        "DATE_TO": "Émises jusqu'au"
-      },
-      "TABLE": {
-        "CAPTION": "Factures fournisseurs reçues avec type, montant, lien vers la pièce comptable et signalements d'exception",
-        "INVOICE_NUMBER": "Numéro de facture",
-        "VENDOR": "Fournisseur",
-        "TYPE": "Type",
-        "ISSUE_DATE": "Date d'émission",
-        "AMOUNT": "Montant",
-        "VOUCHER": "Pièce comptable",
-        "FLAGS": "Exceptions",
-        "FETCHED_AT": "Reçue"
-      },
-      "TYPE": {
-        "INVOICE": "Facture",
-        "CREDIT_NOTE": "Note de crédit"
-      },
-      "FLAG": {
-        "UNMATCHED": "Non appariée",
-        "DISCREPANCY": "Écart",
-        "NONE": "Aucune",
-        "BACKEND_OWNED_NOTE": "Ce signalement est posé et levé par le service. Il disparaît de la liste dès que le service déclare l'exception résolue."
-      },
-      "VOUCHER": {
-        "PENDING": "Pièce comptable en attente",
-        "PENDING_NOTE": "Le service n'a pas encore créé de pièce comptable pour cette facture. Aucune action n'est attendue de votre part ici.",
-        "REFERENCE_NOTE": "Référence de pièce comptable pour votre système comptable de référence."
-      },
-      "AMOUNT": {
-        "CREDIT_SR": "Crédit, montant négatif :"
-      },
-      "ERROR": {
-        "LOAD": "Les factures fournisseurs n'ont pas pu être chargées.",
-        "LOAD_DETAIL": "Cette facture fournisseur n'a pas pu être chargée."
-      },
-      "DETAIL": {
-        "TITLE": "Facture fournisseur",
-        "SUMMARY": "Document",
-        "AS_DELIVERED": "Tous les chiffres ci-dessous sont affichés tels que le fournisseur les a transmis.",
-        "AS_OF": "Heure effective du fournisseur",
-        "FETCHED_AT": "Reçue par la plateforme",
-        "LINKAGE": "Liens",
-        "PURCHASE_ORDER": "Bon de commande",
-        "PO_UNMATCHED": "Aucun bon de commande n'a été apparié à cette facture.",
-        "EXCEPTION_DETAIL": "Détail fourni par le service",
-        "VERSIONS": "Versions reçues",
-        "VERSIONS_NOTE": "Les deux versions sont affichées telles que reçues. Aucune n'est fusionnée dans l'autre et aucun écart n'est calculé ici.",
-        "VERSIONS_CAPTION": "Chaque version reçue de cette facture, avec sa propre référence, sa date d'émission et son montant",
-        "LINES": "Lignes",
-        "LINES_CAPTION": "Lignes de la facture telles que transmises par le fournisseur",
-        "LINES_EMPTY": "Le fournisseur n'a transmis aucun détail de ligne avec cette facture.",
-        "NO_CLIENT_TOTAL": "Aucun total n'est calculé ici : le total du document ci-dessus est celui du fournisseur."
-      },
-      "VERSION": {
-        "REFERENCE": "Version",
-        "RECEIVED_AT": "Reçue",
-        "STANDING": "Statut",
-        "CURRENT": "En vigueur",
-        "SUPERSEDED": "Remplacée"
-      },
-      "LINE": {
-        "SKU": "Numéro de pièce",
-        "DESCRIPTION": "Description",
-        "QUANTITY": "Quantité",
-        "UNIT_AMOUNT": "Montant unitaire",
-        "LINE_AMOUNT": "Montant de la ligne"
-      }
+      "SCHEDULED_DELIVERY": "Dernière livraison prévue",
+      "NO_SCHEDULED_DELIVERY": "Aucune date de livraison du fournisseur",
+      "LAST_STATUS_AT": "Dernier statut du fournisseur",
+      "LAST_TRANSITION_AT": "Dernier changement d’état",
+      "DISPATCH_ATTEMPTS": "Tentatives d’envoi",
+      "VENDOR_REASON": "Motif du fournisseur",
+      "VENDOR_ERROR_CODE": "Code d’erreur du fournisseur",
+      "FAILURE_DETAIL": "Détail de l’échec",
+      "RESOLUTION": "Résolution"
     },
     "FLEET": {
       "AS_OF": "Heure effective du gestionnaire de flotte",
@@ -6072,7 +5638,12 @@
         "NO_CONTRACTS": "Le gestionnaire de flotte connaît ce véhicule mais n'indique aucun contrat applicable.",
         "ERROR": {
           "LOAD": "La vérification du contrat de flotte n'a pas pu aboutir."
-        }
+        },
+        "NO_SUPPLIER_REF": "Aucun gestionnaire de flotte n’est lié ici; il n’y a donc rien contre quoi vérifier le véhicule.",
+        "MODEL_YEAR": "Année du modèle",
+        "FLEET_NUMBER": "Numéro de flotte",
+        "VENDOR_VEHICLE_ID": "Id du véhicule chez le gestionnaire de flotte",
+        "ODOMETER": "Odomètre"
       },
       "AUTHORIZATION": {
         "TITLE": "Autorisation de flotte",
@@ -6083,7 +5654,8 @@
           "GRANTED": "Autorisé",
           "DENIED": "Refusé",
           "MANUAL_REVIEW": "Révision manuelle requise",
-          "UNKNOWN": "Inconnu"
+          "UNKNOWN": "Inconnu",
+          "NOT_FOUND": "Pas un bon de travail de flotte"
         },
         "NOT_FLEET": "Ce bon de travail n'est pas couvert par un contrat de flotte.",
         "UNREACHABLE_NOTE": "Le gestionnaire de flotte n'a pas pu être joint : le statut d'autorisation affiché peut ne plus être à jour. Le reste de ce bon de travail n'est pas affecté.",
@@ -6102,7 +5674,10 @@
         "MANUAL_REVIEW_NEXT": "Le service n'a pas pu obtenir de décision. Communiquez directement avec le gestionnaire de flotte.",
         "ERROR": {
           "LOAD": "L'autorisation de flotte n'a pas pu être chargée."
-        }
+        },
+        "NO_SUPPLIER_REF": "Aucun gestionnaire de flotte n’est lié à ce bon de travail; il n’y a donc aucune autorisation à afficher.",
+        "REVIEW_REASON": "Pourquoi une révision est nécessaire",
+        "VENDOR_REASON_CODE": "Code de motif du gestionnaire de flotte"
       },
       "COMPLETION": {
         "TITLE": "Approbation de fin de travaux",
@@ -6110,9 +5685,9 @@
         "STATE": {
           "PENDING": "Pas encore transmise",
           "APPROVED": "Approuvée",
-          "RETRYING": "Nouvelle tentative en cours",
           "MANUAL_REVIEW": "Révision manuelle requise",
-          "UNKNOWN": "Inconnu"
+          "UNKNOWN": "Inconnu",
+          "NOT_REQUESTED": "Non demandée"
         },
         "BACKEND_DRIVEN": "Le service transmet la fin des travaux au gestionnaire de flotte et réessaie selon son propre calendrier.",
         "ATTEMPTS": "Tentatives",

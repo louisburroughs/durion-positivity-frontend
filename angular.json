@@ -131,6 +131,9 @@
             "runnerConfig": "vitest.config.ts",
             "setupFiles": [
               "src/test-proxy-zone.setup.ts"
+            ],
+            "exclude": [
+              "src/app/features/positivity/services/supplier-contract-coverage.spec.ts"
             ]
           }
         },

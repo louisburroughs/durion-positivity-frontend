@@ -10,103 +10,69 @@ import {
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Subscription, forkJoin } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { SupplierOrderTransmissionService } from '../../services/supplier-order-transmission.service';
 import {
-  SupplierLineConfirmationOutcome,
-  SupplierOrderStatusEvent,
   SupplierOrderTransmission,
   SupplierTransmissionState,
 } from '../../models/supplier-order-transmission.models';
 import { mapSupplierError } from '../../utils/supplier-error.util';
 import { toDatePipeInput } from '../../utils/supplier-freshness.util';
-import { StalenessIndicatorComponent } from '../staleness-indicator/staleness-indicator.component';
-import {
-  SupplierEventTimelineComponent,
-  SupplierTimelineEntry,
-} from '../supplier-event-timeline/supplier-event-timeline.component';
 import { SupplierStatusChipComponent, SupplierStatusTone } from '../supplier-status-chip/supplier-status-chip.component';
 
 type PanelState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden';
 
 /** Tone + glyph per transmission state. Colour is redundant with the text label. */
 const STATE_TONES: Readonly<Record<SupplierTransmissionState, SupplierStatusTone>> = {
-  QUEUED: 'neutral',
-  SENT: 'info',
+  PENDING: 'info',
+  DISPATCHING: 'info',
+  SENT_AWAITING_RESULT: 'info',
   CONFIRMED: 'success',
-  PARTIALLY_CONFIRMED: 'warning',
   REJECTED: 'danger',
   MANUAL_REVIEW: 'warning',
+  FAILED: 'danger',
+  CANCELLED: 'neutral',
 };
 
 const STATE_ICONS: Readonly<Record<SupplierTransmissionState, string>> = {
-  QUEUED: 'schedule',
-  SENT: 'send',
+  PENDING: 'schedule',
+  DISPATCHING: 'outbox',
+  SENT_AWAITING_RESULT: 'send',
   CONFIRMED: 'check_circle',
-  PARTIALLY_CONFIRMED: 'rule',
   REJECTED: 'cancel',
-  MANUAL_REVIEW: 'fact_check',
-};
-
-const OUTCOME_TONES: Readonly<Record<SupplierLineConfirmationOutcome, SupplierStatusTone>> = {
-  ACCEPTED: 'success',
-  REJECTED: 'danger',
-  BACKORDERED: 'warning',
-  PENDING: 'neutral',
-};
-
-const OUTCOME_ICONS: Readonly<Record<SupplierLineConfirmationOutcome, string>> = {
-  ACCEPTED: 'check_circle',
-  REJECTED: 'cancel',
-  BACKORDERED: 'schedule',
-  PENDING: 'hourglass_empty',
+  MANUAL_REVIEW: 'rule',
+  FAILED: 'error',
+  CANCELLED: 'block',
 };
 
 /**
- * Vendor transmission panel for a committed purchase order (issue #191).
+ * Vendor transmission panel for a committed purchase order (issue #191; #201).
  *
  * ── Open question #191 §8, ruled: po-detail hosts this ──────────────────────
  * `po-detail` renders an order that has already been committed, read-only; it is
  * the screen a procurement user opens to ask "what is happening with this
- * order?". `po-form` edits lines before commitment — a transmission state cannot
- * exist there — and receiving is about goods that have physically arrived, which
- * is downstream of the question this panel answers. So the panel lives on
- * `po-detail`, and the inventory host gains imports and markup only: no supplier
- * HTTP call and no supplier model crosses into the inventory domain (ADR-0010).
+ * order?". The inventory host gains imports and markup only: no supplier HTTP
+ * call and no supplier model crosses into the inventory domain (ADR-0010).
  *
  * ── This panel can never damage its host ────────────────────────────────────
- * It owns its own `state`/`errorKey` signals and injects its own service, like
- * the availability panel from wave B. A vendor outage or a `403` lands here and
- * nowhere else: the purchase order keeps rendering its lines, receipts and
- * totals exactly as before.
+ * It owns its own `state`/`errorKey` signals and injects its own service. A
+ * vendor outage or a `403` lands here and nowhere else.
  *
  * ── No re-send path exists, deliberately ────────────────────────────────────
  * There is no control on this panel that re-transmits an order, and the service
  * behind it has no such method. A `MANUAL_REVIEW` order is ambiguous *because*
  * the vendor may already hold it; a retry button would convert that ambiguity
- * into a duplicate physical delivery.
- * `supplier-transmission-panel.component.spec.ts` asserts the absence of any
- * re-send affordance, and so does `po-detail.component.spec.ts`.
+ * into a duplicate physical delivery. The spec asserts the absence.
  *
- * ── This panel is read-only; resolution lives in the admin queue ────────────
- * Issue #191 scopes the manual-review queue to administrators and lists this
- * panel's contents as status only. Resolving an ambiguous transmission risks a
- * duplicate physical order, and this panel's host route (`po-detail`) carries
- * no role guard, whereas the queue sits behind `ROLE_ADMIN` routing. Rendering
- * resolution controls here would put an admin-scoped, operationally risky
- * action on an unguarded route with backend gating as the only barrier, so the
- * panel reports `MANUAL_REVIEW` and points at the queue instead of acting.
+ * ── What is shown is what the backend publishes ─────────────────────────────
+ * The generated client exposes one read: every transmission recorded for the
+ * order, each with its current state and last status time. There is no
+ * status-history or per-line confirmation read, so none is rendered (#201).
  */
 @Component({
   selector: 'app-supplier-transmission-panel',
   standalone: true,
-  imports: [
-    DatePipe,
-    TranslatePipe,
-    StalenessIndicatorComponent,
-    SupplierEventTimelineComponent,
-    SupplierStatusChipComponent,
-  ],
+  imports: [DatePipe, TranslatePipe, SupplierStatusChipComponent],
   templateUrl: './supplier-transmission-panel.component.html',
   styleUrls: ['../../positivity-shared.css', './supplier-transmission-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -120,56 +86,35 @@ export class SupplierTransmissionPanelComponent {
   /** Human PO number. Display only — never a navigation key. */
   readonly poNumber = input<string | null>(null);
 
-  /** Test seam for "now", forwarded to the freshness indicator. */
-  readonly nowMs = input<number | null>(null);
-
   readonly state = signal<PanelState>('idle');
   readonly errorKey = signal<string | null>(null);
-  readonly transmission = signal<SupplierOrderTransmission | null>(null);
-  readonly history = signal<SupplierOrderStatusEvent[]>([]);
+  readonly transmissions = signal<SupplierOrderTransmission[]>([]);
 
   private readonly reloadToken = signal(0);
 
-  readonly transmissionState = computed(() => this.transmission()?.state ?? null);
-
-  readonly lines = computed(() => this.transmission()?.lines ?? []);
-
-  readonly hasLines = computed(() => this.lines().length > 0);
-
-  readonly needsManualReview = computed(() => this.transmissionState() === 'MANUAL_REVIEW');
-
-  readonly stateLabelKey = computed(() => {
-    const state = this.transmissionState();
-    return state ? `POSITIVITY.TRANSMISSION.STATE.${state}` : 'POSITIVITY.TRANSMISSION.STATE.UNKNOWN';
-  });
-
-  readonly stateTone = computed<SupplierStatusTone>(() => {
-    const state = this.transmissionState();
-    return state ? STATE_TONES[state] : 'neutral';
-  });
-
-  readonly stateIcon = computed(() => {
-    const state = this.transmissionState();
-    return state ? STATE_ICONS[state] : 'help';
-  });
-
   /**
-   * Status history oldest-first.
+   * The most recently updated transmission; what the header chip summarises.
    *
-   * A copy is sorted, never the source array: the backend list is the record and
-   * this component only chooses a reading order for it.
+   * A missing or unparseable `lastStatusAt` sorts last, and ties keep the
+   * order the service returned, so the pick is deterministic.
    */
-  readonly timelineEntries = computed<SupplierTimelineEntry[]>(() =>
-    this.history()
-      .slice()
-      .sort((a, b) => Date.parse(a.occurredAt) - Date.parse(b.occurredAt))
-      .map(event => this.toTimelineEntry(event)),
-  );
+  readonly latest = computed<SupplierOrderTransmission | null>(() => {
+    const list = this.transmissions();
+    if (list.length === 0) {
+      return null;
+    }
+    const statusTime = (item: SupplierOrderTransmission): number => {
+      const parsed = item.lastStatusAt ? Date.parse(item.lastStatusAt) : Number.NaN;
+      return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
+    };
+    return list
+      .map((item, index) => ({ item, index, time: statusTime(item) }))
+      .sort((a, b) => (b.time - a.time) || (a.index - b.index))[0].item;
+  });
 
-  /** Read at access time, not at class-field-init time (bundler hazard). */
-  get outcomeIcons(): Readonly<Record<SupplierLineConfirmationOutcome, string>> {
-    return OUTCOME_ICONS;
-  }
+  readonly needsManualReview = computed(() =>
+    this.transmissions().some(t => t.state === 'MANUAL_REVIEW'),
+  );
 
   constructor() {
     effect(onCleanup => {
@@ -179,26 +124,20 @@ export class SupplierTransmissionPanelComponent {
       if (!purchaseOrderId) {
         this.state.set('idle');
         this.errorKey.set(null);
-        this.transmission.set(null);
-        this.history.set([]);
+        this.transmissions.set([]);
         return;
       }
 
       this.state.set('loading');
       this.errorKey.set(null);
 
-      const sub: Subscription = forkJoin({
-        transmission: this.service.getTransmission(purchaseOrderId),
-        history: this.service.getStatusHistory(purchaseOrderId),
-      }).subscribe({
-        next: result => {
-          this.transmission.set(result.transmission);
-          this.history.set(result.history.events);
-          this.state.set('ready');
+      const sub: Subscription = this.service.listForPurchaseOrder(purchaseOrderId).subscribe({
+        next: list => {
+          this.transmissions.set(list);
+          this.state.set(list.length === 0 ? 'empty' : 'ready');
         },
         error: (err: unknown) => {
-          this.transmission.set(null);
-          this.history.set([]);
+          this.transmissions.set([]);
           if (err instanceof HttpErrorResponse && err.status === 404) {
             // Not every purchase order goes out electronically. That is a fact
             // about the order, not a failure of this panel.
@@ -217,68 +156,28 @@ export class SupplierTransmissionPanelComponent {
     });
   }
 
-  /** Vendor-quoted ship date prepared for `DatePipe` (ADR-0038). */
-  shipDateFor(value: string | null | undefined): string | null {
+  stateLabelKey(transmission: SupplierOrderTransmission | null): string {
+    const state = transmission?.state;
+    return state ? `POSITIVITY.TRANSMISSION.STATE.${state}` : 'POSITIVITY.TRANSMISSION.STATE.UNKNOWN';
+  }
+
+  stateTone(transmission: SupplierOrderTransmission | null): SupplierStatusTone {
+    const state = transmission?.state;
+    return state ? STATE_TONES[state] : 'neutral';
+  }
+
+  stateIcon(transmission: SupplierOrderTransmission | null): string {
+    const state = transmission?.state;
+    return state ? STATE_ICONS[state] : 'help';
+  }
+
+  /** Vendor-quoted delivery date prepared for `DatePipe` (ADR-0038). */
+  deliveryDateFor(value: string | null | undefined): string | null {
     return toDatePipeInput(value);
   }
 
-  outcomeLabelKey(outcome: SupplierLineConfirmationOutcome): string {
-    return `POSITIVITY.TRANSMISSION.OUTCOME.${outcome}`;
-  }
-
-  outcomeTone(outcome: SupplierLineConfirmationOutcome): SupplierStatusTone {
-    return OUTCOME_TONES[outcome] ?? 'neutral';
-  }
-
-  outcomeIcon(outcome: SupplierLineConfirmationOutcome): string {
-    return OUTCOME_ICONS[outcome] ?? 'help';
-  }
-
-  /** Re-read state and history. Re-runs the effect, cancelling anything in flight. */
+  /** Re-read the transmissions. Re-runs the effect, cancelling anything in flight. */
   reload(): void {
     this.reloadToken.update(value => value + 1);
-  }
-
-  private toTimelineEntry(event: SupplierOrderStatusEvent): SupplierTimelineEntry {
-    const details: SupplierTimelineEntry['details'] = [];
-    if (event.state && event.vendorStatus) {
-      details.push({
-        termKey: 'POSITIVITY.TRANSMISSION.HISTORY.VENDOR_STATUS',
-        value: event.vendorStatus,
-      });
-    }
-    if (event.note) {
-      details.push({ termKey: 'POSITIVITY.TRANSMISSION.HISTORY.NOTE', value: event.note });
-    }
-
-    if (event.state) {
-      return {
-        id: event.statusEventId,
-        occurredAt: event.occurredAt,
-        labelKey: `POSITIVITY.TRANSMISSION.STATE.${event.state}`,
-        icon: STATE_ICONS[event.state],
-        details,
-      };
-    }
-
-    if (event.vendorStatus) {
-      // Unrecognised vendor token: shown verbatim so a new vendor status
-      // appears on the timeline instead of silently vanishing from the record.
-      return {
-        id: event.statusEventId,
-        occurredAt: event.occurredAt,
-        labelText: event.vendorStatus,
-        icon: 'help',
-        details,
-      };
-    }
-
-    return {
-      id: event.statusEventId,
-      occurredAt: event.occurredAt,
-      labelKey: 'POSITIVITY.TRANSMISSION.HISTORY.UNKNOWN_STATUS',
-      icon: 'help',
-      details,
-    };
   }
 }

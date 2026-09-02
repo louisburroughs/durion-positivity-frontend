@@ -19,7 +19,6 @@ import {
 } from '../../models/workexec.models';
 import { WorkexecService } from '../../services/workexec.service';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
-import { SupplierFleetAuthorizationPanelComponent } from '../../../positivity/components/supplier-fleet-authorization-panel/supplier-fleet-authorization-panel.component';
 
 type PageState = 'loading' | 'ready' | 'error';
 type WorkorderTab = 'items' | 'labor' | 'parts' | 'change-requests' | 'audit';
@@ -32,11 +31,9 @@ type ModalState = 'idle' | 'confirming' | 'loading' | 'success' | 'error';
  *
  * Route: /app/workexec/workorders/:workorderId
  *
- * CAP-323 addition (issue #194):
- *   The fleet authorization panel is hosted here. This page gains an import and
- *   markup only — no supplier HTTP call and no supplier model enters workexec
- *   (ADR-0010). Authorization is informational state: nothing on this page
- *   reads it to decide what a user may do, and nothing here can change it.
+ * The fleet authorization panel (#194) is no longer hosted here (#201): the
+ * generated fleet read requires a supplier reference the workorder DTO does
+ * not carry.
  */
 @Component({
   selector: 'app-workorder-detail-page',
@@ -47,7 +44,6 @@ type ModalState = 'idle' | 'confirming' | 'loading' | 'success' | 'error';
     RouterLink,
     TranslatePipe,
     ModalDialogDirective,
-    SupplierFleetAuthorizationPanelComponent,
   ],
   templateUrl: './workorder-detail-page.component.html',
   styleUrl: './workorder-detail-page.component.css',

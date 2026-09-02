@@ -193,36 +193,6 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
       recordKind: 'invoice',
       idMode: true,
       cards: [
-        {
-          kind: 'direct',
-          icon: 'receipt_long',
-          titleKey: 'ACCOUNTING.LANDING.CARD.VENDOR_INVOICES.TITLE',
-          descriptionKey: 'ACCOUNTING.LANDING.CARD.VENDOR_INVOICES.DESCRIPTION',
-          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
-          route: '/app/accounting/payables/vendor-invoices',
-        },
-        {
-          kind: 'direct',
-          icon: 'link_off',
-          titleKey: 'ACCOUNTING.LANDING.CARD.VENDOR_INVOICE_EXCEPTIONS.TITLE',
-          descriptionKey: 'ACCOUNTING.LANDING.CARD.VENDOR_INVOICE_EXCEPTIONS.DESCRIPTION',
-          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
-          route: '/app/accounting/payables/vendor-invoices/exceptions',
-        },
-        {
-          kind: 'guided',
-          icon: 'description',
-          titleKey: 'ACCOUNTING.LANDING.CARD.VENDOR_INVOICE_DETAIL.TITLE',
-          descriptionKey: 'ACCOUNTING.LANDING.CARD.VENDOR_INVOICE_DETAIL.DESCRIPTION',
-          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_VENDOR_INVOICE',
-          buildCommands: (id: string) => [
-            '/app',
-            'accounting',
-            'payables',
-            'vendor-invoices',
-            id,
-          ],
-        },
       ],
     },
     {

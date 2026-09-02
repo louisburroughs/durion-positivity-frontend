@@ -8,27 +8,6 @@
       <a class="pos-btn pos-btn--secondary" [routerLink]="['/app', 'positivity', 'exchanges']">
         {{ 'POSITIVITY.AUDIT.TITLE' | translate }}
       </a>
-      <a
-        class="pos-btn pos-btn--secondary"
-        [routerLink]="['/app', 'positivity', 'enrichment', 'unmatched']"
-      >
-        {{ 'POSITIVITY.ENRICHMENT.UNMATCHED.TITLE' | translate }}
-      </a>
-      <a
-        class="pos-btn pos-btn--secondary"
-        [routerLink]="['/app', 'positivity', 'orders', 'manual-review']"
-      >
-        {{ 'POSITIVITY.MANUAL_REVIEW.TITLE' | translate }}
-      </a>
-      <a
-        class="pos-btn pos-btn--secondary"
-        [routerLink]="['/app', 'positivity', 'shipments', 'unlinked']"
-      >
-        {{ 'POSITIVITY.SHIPMENT.UNLINKED.TITLE' | translate }}
-      </a>
-      <a class="pos-btn pos-btn--secondary" [routerLink]="['/app', 'positivity', 'stock-snapshots']">
-        {{ 'POSITIVITY.STOCK_SNAPSHOT.TITLE' | translate }}
-      </a>
       <button class="pos-btn pos-btn--primary" type="button" (click)="openCreate()">
         {{ 'POSITIVITY.PROFILES.CREATE' | translate }}
       </button>

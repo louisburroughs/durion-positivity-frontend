@@ -9,7 +9,6 @@ import {
   SupplierProfileDetailPageComponent,
 } from './supplier-profile-detail-page.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
-import { SupplierPricatService } from '../../services/supplier-pricat.service';
 import { VendorProfile } from '../../models/supplier-profile.models';
 
 const PROFILE_ID = 'profile-1';
@@ -58,22 +57,6 @@ describe('SupplierProfileDetailPageComponent', () => {
       imports: [SupplierProfileDetailPageComponent, TranslateModule.forRoot()],
       providers: [
         { provide: SupplierProfileService, useValue: service },
-        {
-          provide: SupplierPricatService,
-          useValue: {
-            listRuns: vi.fn().mockReturnValue(of([])),
-            getFreshness: vi.fn().mockReturnValue(
-              of({
-                vendorProfileId: PROFILE_ID,
-                latestEffectiveDate: null,
-                lastFetchedAt: null,
-                stalenessThresholdMinutes: 0,
-                unmatchedLineCount: 0,
-              }),
-            ),
-            triggerRun: vi.fn(),
-          },
-        },
         provideRouter([]),
         {
           provide: ActivatedRoute,
@@ -121,14 +104,14 @@ describe('SupplierProfileDetailPageComponent', () => {
 
   // ── Tabs ───────────────────────────────────────────────────────────────────
 
-  it('exposes the Auth, Accounts, Bindings, Health and PRICAT tabs in order', async () => {
+  it('exposes the Auth, Accounts, Bindings and Health tabs in order', async () => {
     await setup();
 
-    expect([...PROFILE_TABS]).toEqual(['auth', 'accounts', 'bindings', 'health', 'pricat']);
+    expect([...PROFILE_TABS]).toEqual(['auth', 'accounts', 'bindings', 'health']);
     const tabs = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll('[role="tab"]'),
     );
-    expect(tabs).toHaveLength(5);
+    expect(tabs).toHaveLength(4);
   });
 
   it('starts on the Auth tab and renders only that panel', async () => {
@@ -172,16 +155,16 @@ describe('SupplierProfileDetailPageComponent', () => {
     expect(component.activeTab()).toBe('auth');
 
     component.onTabKeydown(new KeyboardEvent('keydown', { key: 'ArrowLeft' }), 'auth');
-    expect(component.activeTab()).toBe('pricat');
+    expect(component.activeTab()).toBe('health');
   });
 
   it('jumps to the first and last tab with Home and End', async () => {
     await setup();
 
     component.onTabKeydown(new KeyboardEvent('keydown', { key: 'End' }), 'auth');
-    expect(component.activeTab()).toBe('pricat');
+    expect(component.activeTab()).toBe('health');
 
-    component.onTabKeydown(new KeyboardEvent('keydown', { key: 'Home' }), 'pricat');
+    component.onTabKeydown(new KeyboardEvent('keydown', { key: 'Home' }), 'health');
     expect(component.activeTab()).toBe('auth');
   });
 

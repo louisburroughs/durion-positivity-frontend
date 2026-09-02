@@ -7,19 +7,13 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { SupplierFleetService } from '../../services/supplier-fleet.service';
-import {
-  SupplierFleetContract,
-  SupplierFleetVehicleLookup,
-} from '../../models/supplier-fleet.models';
+import { SupplierFleetVehicleLookup } from '../../models/supplier-fleet.models';
 import { mapSupplierError } from '../../utils/supplier-error.util';
-import { toDatePipeInput } from '../../utils/supplier-freshness.util';
-import { StalenessIndicatorComponent } from '../staleness-indicator/staleness-indicator.component';
 import {
   SupplierStatusChipComponent,
   SupplierStatusTone,
@@ -38,36 +32,31 @@ type PanelState =
   | 'found'
   | 'not-found'
   | 'unreachable'
-  | 'forbidden'
-  | 'error';
+  | 'error'
+  | 'forbidden';
 
 /**
- * Fleet vehicle/contract lookup panel for the estimate screen (issue #194).
+ * Fleet vehicle lookup panel (issue #194; #201).
  *
  * ── `NOT_FOUND` is an answer, and is rendered like one ──────────────────────
  * "The fleet manager does not know this vehicle" is a complete reply. It gets
  * its own state, plain informational styling, **no** `role="alert"`, and
- * `errorKey` stays null (#194 §4). Dressing it as an error would push the
- * advisor into retrying a question that has already been answered, and would
- * put a red banner on the perfectly ordinary case of a walk-in customer whose
- * van is simply not on a fleet contract.
+ * `errorKey` stays null (#194 §4).
+ *
+ * ── A supplier reference is required ────────────────────────────────────────
+ * The generated read is keyed by `supplierRef`. Without one the panel asks
+ * nothing and stays idle — it never guesses a vendor and never falls back to
+ * `vendorProfileId`, which is a different identifier. The estimate screen does
+ * not carry a verified `supplierRef`, so it no longer hosts this panel (#201).
+ *
+ * ── Not hosted today ────────────────────────────────────────────────────────
+ * No page hosts this panel at present. It becomes hostable only from a page
+ * that holds a verified `supplierRef` (the vendor profile alias), never from
+ * one that only knows a `vendorProfileId`.
  *
  * ── Advisory only — open question #194 §7, ruled ────────────────────────────
- * Estimating is **not** blocked on a granted authorization in v1. The panel
- * surfaces the fleet position prominently and stops there: it renders no
- * disabled state, sets no output, and touches nothing the estimate screen uses
- * to decide whether work can be promoted. A per-deployment blocking policy
- * needs the workexec domain agreement the story itself defers to (#194 §3), and
- * of the two ways to be wrong, silently refusing to write up work at the
- * counter — for a customer standing there, on a vendor lookup that may simply
- * be down — is the more damaging one. A visible advisory that an advisor can
- * act on beats a hard stop nobody at the counter can override.
- *
- * ── A vendor outage degrades this panel and nothing else ────────────────────
- * The panel owns its own `state`/`errorKey` and injects its own service. A 500,
- * a 503 or a 403 lands here; the estimate keeps rendering its lines, totals and
- * promotion controls exactly as before. `estimate-detail-page.component.spec.ts`
- * asserts the host's `pageState()` and `errorMessage()` across all three.
+ * The panel renders no disabled state, sets no output, and touches nothing a
+ * host uses to decide whether work can be promoted.
  *
  * ── Read-only ───────────────────────────────────────────────────────────────
  * The only control here is "look up again", which is a GET. There is nothing on
@@ -77,13 +66,7 @@ type PanelState =
 @Component({
   selector: 'app-supplier-fleet-lookup-panel',
   standalone: true,
-  imports: [
-    DatePipe,
-    ReactiveFormsModule,
-    TranslatePipe,
-    StalenessIndicatorComponent,
-    SupplierStatusChipComponent,
-  ],
+  imports: [ReactiveFormsModule, TranslatePipe, SupplierStatusChipComponent],
   templateUrl: './supplier-fleet-lookup-panel.component.html',
   styleUrls: ['../../positivity-shared.css', './supplier-fleet-lookup-panel.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -92,18 +75,18 @@ export class SupplierFleetLookupPanelComponent {
   private readonly service = inject(SupplierFleetService);
 
   /**
+   * Vendor profile alias of the fleet manager to ask. Required-or-empty: an
+   * empty reference means no request is ever made.
+   */
+  readonly supplierRef = input<string | null>(null);
+
+  /**
    * Vehicle identifier the host already knows (VIN, plate or fleet number).
    *
    * Null while the host resolves its own data — the panel then simply waits and
    * offers the manual lookup, rather than asking the vendor about nothing.
    */
   readonly vehicleIdentifier = input<string | null>(null);
-
-  /** Optional vendor profile to scope the lookup to one fleet manager. */
-  readonly vendorProfileId = input<string | null>(null);
-
-  /** Test seam for "now", forwarded to the freshness indicator. */
-  readonly nowMs = input<number | null>(null);
 
   readonly state = signal<PanelState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -116,11 +99,11 @@ export class SupplierFleetLookupPanelComponent {
     vehicleIdentifier: new FormControl('', { nonNullable: true }),
   });
 
-  readonly contracts = computed<SupplierFleetContract[]>(() => this.lookup()?.contracts ?? []);
-
-  readonly hasContracts = computed(() => this.contracts().length > 0);
+  readonly hasSupplierRef = computed(() => (this.supplierRef() ?? '').trim().length > 0);
 
   readonly isNotFound = computed(() => this.state() === 'not-found');
+
+  readonly vehicle = computed(() => this.lookup()?.vehicle ?? null);
 
   readonly outcomeLabelKey = computed(() => {
     switch (this.state()) {
@@ -176,9 +159,9 @@ export class SupplierFleetLookupPanelComponent {
 
     effect(onCleanup => {
       const identifier = this.requestedIdentifier();
-      const vendorProfileId = this.vendorProfileId();
+      const supplierRef = (this.supplierRef() ?? '').trim();
 
-      if (!identifier) {
+      if (!identifier || !supplierRef) {
         this.state.set('idle');
         this.errorKey.set(null);
         this.lookup.set(null);
@@ -188,37 +171,43 @@ export class SupplierFleetLookupPanelComponent {
       this.state.set('loading');
       this.errorKey.set(null);
 
-      const sub: Subscription = this.service
-        .lookupVehicle(identifier, vendorProfileId ?? undefined)
-        .subscribe({
-          next: result => {
-            this.lookup.set(result);
-            // A `NOT_FOUND` outcome is a successful answer: no errorKey, no
-            // alert styling, nothing for the advisor to retry.
-            this.state.set(result.outcome === 'NOT_FOUND' ? 'not-found' : 'found');
+      const sub: Subscription = this.service.lookupVehicle(supplierRef, identifier).subscribe({
+        next: result => {
+          this.lookup.set(result);
+          // A `NOT_FOUND` outcome is a successful answer: no errorKey, no
+          // alert styling, nothing for the advisor to retry.
+          this.state.set(result.outcome === 'NOT_FOUND' ? 'not-found' : 'found');
+          this.errorKey.set(null);
+        },
+        error: (err: unknown) => {
+          this.lookup.set(null);
+          if (err instanceof HttpErrorResponse && err.status === 404) {
+            // An unknown vehicle answered as a 404. Same fact, same rendering.
+            this.state.set('not-found');
             this.errorKey.set(null);
-          },
-          error: (err: unknown) => {
-            this.lookup.set(null);
-            if (err instanceof HttpErrorResponse && err.status === 404) {
-              // Some deployments answer an unknown vehicle with a 404 rather
-              // than a NOT_FOUND body. Same fact, same rendering.
-              this.state.set('not-found');
-              this.errorKey.set(null);
-              return;
-            }
-            const outcome = mapSupplierError(err, 'POSITIVITY.FLEET.LOOKUP.ERROR.LOAD');
+            return;
+          }
+          if (err instanceof HttpErrorResponse && err.status === 422) {
+            // The SDK documents 422 on the fleet operations as "the vendor
+            // could not be reached or answered unreadably". That is the
+            // unreachable state, and the only one worth trying again.
             // ADR-0031: state first, then the key.
-            if (outcome.kind === 'forbidden') {
-              this.state.set('forbidden');
-            } else if (outcome.kind === 'retryable') {
-              this.state.set('unreachable');
-            } else {
-              this.state.set('error');
-            }
-            this.errorKey.set(outcome.errorKey);
-          },
-        });
+            this.state.set('unreachable');
+            this.errorKey.set('POSITIVITY.FLEET.LOOKUP.ERROR.LOAD');
+            return;
+          }
+          const outcome = mapSupplierError(err, 'POSITIVITY.FLEET.LOOKUP.ERROR.LOAD');
+          // ADR-0031: state first, then the key.
+          if (outcome.kind === 'forbidden') {
+            this.state.set('forbidden');
+          } else if (outcome.kind === 'retryable') {
+            this.state.set('unreachable');
+          } else {
+            this.state.set('error');
+          }
+          this.errorKey.set(outcome.errorKey);
+        },
+      });
 
       onCleanup(() => sub.unsubscribe());
     });
@@ -239,10 +228,5 @@ export class SupplierFleetLookupPanelComponent {
   /** Re-run the current lookup — the retry offered on an unreachable vendor. */
   reload(): void {
     this.submitLookup();
-  }
-
-  /** Contract effective date prepared for `DatePipe` (ADR-0038). */
-  effectiveDateFor(value: string | null | undefined): string | null {
-    return toDatePipeInput(value);
   }
 }

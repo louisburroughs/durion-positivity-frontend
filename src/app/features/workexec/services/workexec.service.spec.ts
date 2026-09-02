@@ -38,7 +38,6 @@ import {
   PickConfirmRequest,
   PickExecuteLine,
   PickListView,
-  PickTaskLine,
   PickedItemLine,
   ScanResolveRequest,
   SubstituteLinkResponse,
@@ -471,30 +470,79 @@ describe('WorkexecService', () => {
   // ── CAP-218: Pick List & Picking Stories 92, 243, 244 ────────────────────
 
   describe('CAP-218 pick service methods', () => {
-    const pickTaskLine: PickTaskLine = {
-      pickTaskId: 'task-001',
-      productSku: 'SKU-001',
-      requestedQty: 5,
-      pickedQty: 0,
-      uom: 'EA',
-      status: 'PENDING',
-    };
+    it('getWorkorderPickList — composes the SDK header and task reads into one PickListView', () => {
+      // The header endpoint carries no tasks; the tasks endpoint carries no
+      // header. Neither fixture is shaped like the local model on purpose.
+      const header = {
+        workorderId: 'wo-001',
+        pickListId: 'pl-001',
+        status: 'READY_TO_PICK',
+        createdAt: '2026-09-01T12:00:00Z',
+        dueAt: '2026-09-02T12:00:00Z',
+        priority: 1,
+        updatedAt: '2026-09-01T12:00:00Z',
+      };
+      const tasks = [
+        {
+          locationId: 'bin-001',
+          pickListId: 'pl-001',
+          pickTaskId: 'task-001',
+          pickedQty: 0,
+          remainingQty: 5,
+          requiredQty: 5,
+          skuId: 'SKU-001',
+          sortOrder: 1,
+          status: 'PENDING',
+          version: 0,
+        },
+      ];
 
-    const pickListFixture: PickListView = {
-      workorderId: 'wo-001',
-      pickListId: 'pl-001',
-      status: 'OPEN',
-      tasks: [pickTaskLine],
-    };
+      let result: PickListView | undefined;
+      service.getWorkorderPickList('wo-001').subscribe(value => (result = value));
 
-    it('getWorkorderPickList — GET /v1/workorders/{workorderId}/pick-list', () => {
-      service.getWorkorderPickList('wo-001').subscribe(result => {
-        expect(result).toEqual(pickListFixture);
+      const headerReq = http.expectOne(`${BASE}/v1/workorders/wo-001/pick-list`);
+      expect(headerReq.request.method).toBe('GET');
+      const tasksReq = http.expectOne(`${BASE}/v1/workorders/wo-001/pick-list/tasks`);
+      expect(tasksReq.request.method).toBe('GET');
+      headerReq.flush(header);
+      tasksReq.flush(tasks);
+
+      expect(result).toEqual({
+        workorderId: 'wo-001',
+        pickListId: 'pl-001',
+        status: 'READY_TO_PICK',
+        createdAt: '2026-09-01T12:00:00Z',
+        tasks: [
+          {
+            pickTaskId: 'task-001',
+            productSku: 'SKU-001',
+            requestedQty: 5,
+            pickedQty: 0,
+            uom: 'EA',
+            storageLocationId: 'bin-001',
+            status: 'PENDING',
+            sortOrder: 1,
+          },
+        ],
       });
+    });
 
-      const req = http.expectOne(`${BASE}/v1/workorders/wo-001/pick-list`);
-      expect(req.request.method).toBe('GET');
-      req.flush(pickListFixture);
+    it('getWorkorderPickList — an empty task read yields an empty tasks array, never undefined', () => {
+      let result: PickListView | undefined;
+      service.getWorkorderPickList('wo-001').subscribe(value => (result = value));
+
+      http.expectOne(`${BASE}/v1/workorders/wo-001/pick-list`).flush({
+        workorderId: 'wo-001',
+        pickListId: 'pl-001',
+        status: 'READY_TO_PICK',
+        createdAt: '2026-09-01T12:00:00Z',
+        dueAt: '2026-09-02T12:00:00Z',
+        priority: 1,
+        updatedAt: '2026-09-01T12:00:00Z',
+      });
+      http.expectOne(`${BASE}/v1/workorders/wo-001/pick-list/tasks`).flush([]);
+
+      expect(result?.tasks).toEqual([]);
     });
 
     it('getPickedItems — GET /workexec/v1/workorders/{workorderId}/picked-items', () => {

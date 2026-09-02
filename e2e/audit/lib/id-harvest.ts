@@ -50,12 +50,14 @@ export interface IdHarvester {
 }
 
 /**
- * `fields` is the exact set of response field names the route templates
- * consume (see PARAM_TEMPLATES) — everything else is skipped unparsed.
- * Bare `id` fields are ambiguous across entities, so they are harvested under
- * a scoped key `id@<resource>` derived from the API path's last static
- * segment (e.g. `/api/inventory/v1/inventory/locations` → `id@locations`);
- * templates opt in with that scoped name.
+ * `fields` is the exact set of harvest keys the route templates consume (see
+ * PARAM_TEMPLATES) — everything else is skipped unparsed.
+ *
+ * Every harvested field is scoped to the gateway service that answered:
+ * `invoiceId` seen on `/api/accounting/...` is stored as `invoiceId@accounting`
+ * and never under bare `invoiceId`. Named ids collide across services (an
+ * accounting event's `invoiceId` is not a billing invoice), and an unscoped
+ * harvest fed valid detail routes ids from unrelated services (#201).
  */
 export function attachIdHarvester(page: Page, fields: ReadonlySet<string>): IdHarvester {
   const harvest: IdHarvest = new Map();
@@ -72,7 +74,7 @@ export function attachIdHarvester(page: Page, fields: ReadonlySet<string>): IdHa
     const declaredLength = Number(headers['content-length']);
     if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) return;
 
-    const idScope = `id@${apiResource(res.url())}`;
+    const url = res.url();
     const task = res
       .text()
       .then(body => {
@@ -83,7 +85,7 @@ export function attachIdHarvester(page: Page, fields: ReadonlySet<string>): IdHa
         } catch {
           return;
         }
-        collect(json, harvest, fields, idScope, 0);
+        collectResponseIds(json, url, fields, harvest);
       })
       // Bodies of responses that raced a navigation are gone; that's fine.
       .catch(() => undefined)
@@ -97,32 +99,54 @@ export function attachIdHarvester(page: Page, fields: ReadonlySet<string>): IdHa
   };
 }
 
-/** Last path segment of an API URL that isn't itself an id (e.g. "locations"). */
-function apiResource(url: string): string {
-  const segments = new URL(url).pathname.split('/').filter(Boolean);
-  for (let i = segments.length - 1; i >= 0; i--) {
-    if (!isIdShaped(segments[i])) return segments[i];
+/**
+ * Harvest id-shaped values from one parsed JSON response body.
+ *
+ * Every allowed field is stored as `${field}@${apiService(url)}`; bare `id`
+ * follows the same rule. A response whose URL yields no service segment is
+ * skipped entirely rather than stored unscoped.
+ */
+export function collectResponseIds(
+  json: unknown,
+  url: string,
+  fields: ReadonlySet<string>,
+  harvest: IdHarvest,
+): void {
+  const service = apiService(url);
+  if (!service) return;
+  collect(json, harvest, fields, service, 0);
+}
+
+/** First path segment after `/api/` (e.g. `/api/inventory/v1/...` → "inventory"). */
+export function apiService(url: string): string {
+  let pathname: string;
+  try {
+    pathname = new URL(url).pathname;
+  } catch {
+    return '';
   }
-  return '';
+  const segments = pathname.split('/').filter(Boolean);
+  const apiIndex = segments.indexOf('api');
+  return apiIndex >= 0 ? (segments[apiIndex + 1] ?? '') : '';
 }
 
 function collect(
   node: unknown,
   harvest: IdHarvest,
   fields: ReadonlySet<string>,
-  idScope: string,
+  service: string,
   depth: number,
 ): void {
   if (depth > MAX_DEPTH || node === null || typeof node !== 'object') return;
   if (Array.isArray(node)) {
     for (const item of node.slice(0, MAX_ARRAY_ITEMS)) {
-      collect(item, harvest, fields, idScope, depth + 1);
+      collect(item, harvest, fields, service, depth + 1);
     }
     return;
   }
   for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
     if (typeof value === 'string' || typeof value === 'number') {
-      const harvestKey = key === 'id' ? idScope : key;
+      const harvestKey = `${key}@${service}`;
       if (!fields.has(harvestKey)) continue;
       const str = String(value);
       if (str.length === 0 || str.length > 64) continue;
@@ -134,7 +158,7 @@ function collect(
         if (values.size < MAX_VALUES_PER_FIELD) values.add(str);
       }
     } else {
-      collect(value, harvest, fields, idScope, depth + 1);
+      collect(value, harvest, fields, service, depth + 1);
     }
   }
 }

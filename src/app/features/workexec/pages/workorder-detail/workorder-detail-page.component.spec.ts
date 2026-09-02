@@ -4,14 +4,10 @@ import { provideRouter, ActivatedRoute, Router } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
-import { HttpErrorResponse } from '@angular/common/http';
-import { of, throwError } from 'rxjs';
 import { WorkorderDetailPageComponent } from './workorder-detail-page.component';
 import { BASE_PATH } from '@durion-sdk/workorder';
 import { Configuration as PeopleConfiguration } from '@durion-sdk/people';
 import { environment } from '../../../../../environments/environment';
-import { SupplierFleetService } from '../../../positivity/services/supplier-fleet.service';
-import { SupplierFleetAuthorization } from '../../../positivity/models/supplier-fleet.models';
 
 const BASE = environment.apiBaseUrl;
 const WO_ID = 'wo-001';
@@ -45,50 +41,13 @@ function drainInit(http: HttpTestingController, workorderOverride?: object): voi
   http.expectOne(`${BASE}/v1/workorders/${WO_ID}/changeRequests`).flush([]);
 }
 
-/**
- * Fleet authorization payload for the hosted panel (#194). Mocked at the
- * service so the panel never reaches HttpTestingController — the point of
- * these tests is the host, and the panel has its own suite.
- */
-const fleetAuthorization: SupplierFleetAuthorization = {
-  workorderId: WO_ID,
-  state: 'GRANTED',
-  authorizationReference: 'AUTH-88421',
-  vendorProfileId: 'vp-fleet-1',
-  vendorDisplayName: 'Michelin Fleet Services',
-  contract: null,
-  vendorReason: null,
-  authorizedAmount: '840.00',
-  currency: 'EUR',
-  requestedAt: '2026-08-12T09:00:00Z',
-  decidedAt: '2026-08-12T09:04:00Z',
-  completionApproval: {
-    state: 'MANUAL_REVIEW',
-    vendorReason: 'Approval endpoint rejected the completion payload three times.',
-    attemptCount: 3,
-    lastAttemptAt: '2026-08-12T11:30:00Z',
-    nextAttemptAt: null,
-  },
-  asOf: '2026-08-12T11:40:00Z',
-  fetchedAt: '2026-08-12T11:59:00Z',
-  stalenessThresholdMinutes: 60,
-};
-
 describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
   let fixture: ComponentFixture<WorkorderDetailPageComponent>;
   let component: WorkorderDetailPageComponent;
   let http: HttpTestingController;
   let router: Router;
-  let fleetService: {
-    lookupVehicle: ReturnType<typeof vi.fn>;
-    getWorkorderAuthorization: ReturnType<typeof vi.fn>;
-  };
 
   beforeEach(async () => {
-    fleetService = {
-      lookupVehicle: vi.fn(),
-      getWorkorderAuthorization: vi.fn().mockReturnValue(of(fleetAuthorization)),
-    };
     await TestBed.configureTestingModule({
       imports: [WorkorderDetailPageComponent, TranslateModule.forRoot()],
       providers: [
@@ -98,7 +57,6 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
         { provide: ActivatedRoute, useValue: mockRoute },
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
         { provide: PeopleConfiguration, useValue: new PeopleConfiguration({ basePath: environment.apiBaseUrl }) },
-        { provide: SupplierFleetService, useValue: fleetService },
       ],
     }).compileComponents();
     const translate = TestBed.inject(TranslateService);
@@ -462,92 +420,16 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
     });
   });
 
-  /**
-   * Fleet authorization panel isolation and read-only guarantees (#194,
-   * DECISION-POSITIVITY-004).
-   *
-   * A fleet manager being down, slow or refusing this caller must never take
-   * the workorder screen with it: the technician's items, labor and every
-   * transition control are what the shop runs on.
-   */
-  describe('fleet authorization panel [#194]', () => {
-    it('hosts the panel keyed by the platform workorder UUID', () => {
+  // #201: the fleet authorization panel is no longer hosted here — the
+  // generated fleet read needs a supplier reference this page cannot supply.
+  describe('retired fleet authorization panel [#201]', () => {
+    it('renders no fleet authorization panel and injects no supplier service', () => {
       fixture.detectChanges();
       drainInit(http);
       fixture.detectChanges();
 
-      expect(
-        fixture.nativeElement.querySelector('app-supplier-fleet-authorization-panel'),
-      ).toBeTruthy();
-      expect(fleetService.getWorkorderAuthorization).toHaveBeenCalledWith(WO_ID);
-    });
-
-    for (const [label, status] of [
-      ['a 500', 500],
-      ['a 503 vendor outage', 503],
-      ['a 403 denial', 403],
-    ] as ReadonlyArray<readonly [string, number]>) {
-      it(`keeps the workorder intact through ${label} from the fleet manager`, () => {
-        fleetService.getWorkorderAuthorization.mockReturnValue(
-          throwError(() => new HttpErrorResponse({ status, statusText: 'x' })),
-        );
-        fixture.detectChanges();
-        drainInit(http);
-        fixture.detectChanges();
-
-        expect(component.pageState()).toBe('ready');
-        expect(component.errorMessage()).toBeNull();
-        // Tabs and the completed-workorder actions are all still rendered.
-        expect(fixture.nativeElement.querySelectorAll('.wo-tab').length).toBeGreaterThan(0);
-        expect(component.canReopen()).toBe(true);
-        expect(component.canCreateInvoice()).toBe(true);
-      });
-    }
-
-    // #194 §6 — completion approval state, including MANUAL_REVIEW, is visible
-    // on a completed fleet workorder.
-    it('surfaces a MANUAL_REVIEW completion approval on the completed workorder', () => {
-      fixture.detectChanges();
-      drainInit(http);
-      fixture.detectChanges();
-      const el = fixture.nativeElement as HTMLElement;
-
-      expect(el.querySelector('.fleet-auth__completion')).toBeTruthy();
-      expect(el.querySelector('.fleet-auth__completion-reason')?.textContent?.trim()).toBe(
-        'Approval endpoint rejected the completion payload three times.',
-      );
-    });
-
-    // #194 §6 — "No frontend path mutates authorization state." Asserted at the
-    // host too, so a future control added anywhere on this page trips a test.
-    it('exposes no control anywhere on the page that changes authorization state', () => {
-      fleetService.getWorkorderAuthorization.mockReturnValue(
-        of({
-          ...fleetAuthorization,
-          state: 'DENIED' as const,
-          vendorReason: 'Vehicle no longer covered.',
-        }),
-      );
-      fixture.detectChanges();
-      drainInit(http);
-      fixture.detectChanges();
-      const el = fixture.nativeElement as HTMLElement;
-
-      const controlText = Array.from(el.querySelectorAll('button, a, input[type="submit"]'))
-        .map(n => `${n.textContent ?? ''} ${n.className}`)
-        .join(' ')
-        .toLowerCase();
-
-      expect(controlText).not.toMatch(
-        /authorize|authorise|grant|deny|decline|override|escalate|request.?auth/,
-      );
-    });
-
-    it('injects no supplier service into the host page itself', () => {
-      fixture.detectChanges();
-      drainInit(http);
+      expect(fixture.nativeElement.querySelector('app-supplier-fleet-authorization-panel')).toBeNull();
       const own = Object.keys(component as unknown as Record<string, unknown>);
-
       expect(own.some(key => /supplier|fleet|authoriz|vendor/i.test(key))).toBe(false);
     });
   });

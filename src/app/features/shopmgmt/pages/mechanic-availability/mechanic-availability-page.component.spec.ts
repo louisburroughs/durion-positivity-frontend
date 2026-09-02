@@ -79,6 +79,29 @@ describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
     expect(banner).toBeTruthy();
   });
 
+  // #201: the service maps a 404 (no primary assignment) to an empty response.
+  it('treats the empty primary-location response as location-required without calling availability', async () => {
+    vi.clearAllMocks();
+    const emptyLocationService = {
+      getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: undefined })),
+      getAvailability: vi.fn().mockReturnValue(of([])),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [MechanicAvailabilityPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: DispatchBoardService, useValue: emptyLocationService },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(MechanicAvailabilityPageComponent);
+    fixture.detectChanges();
+
+    expect(emptyLocationService.getAvailability).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.error()).toBe('SHOPMGMT.MECHANIC_AVAILABILITY.ERROR.LOCATION_REQUIRED');
+  });
+
   it('prompts for a location when the primary location is blank', async () => {
     vi.clearAllMocks();
     const blankLocationService = {

@@ -352,10 +352,3 @@
   gap: var(--space-3);
   justify-content: flex-end;
 }
-
-/* CAP-323 (#194): slot for the fleet authorization panel. Spacing only — the
-   panel brings its own surface, and this host contributes no supplier styling. */
-.fleet-auth-slot {
-  display: block;
-  margin-top: var(--space-4);
-}

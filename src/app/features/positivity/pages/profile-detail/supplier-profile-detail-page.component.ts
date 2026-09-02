@@ -16,7 +16,6 @@ import { SupplierAccountsPanelComponent } from '../../components/supplier-accoun
 import { SupplierAuthPanelComponent } from '../../components/supplier-auth-panel/supplier-auth-panel.component';
 import { SupplierBindingsPanelComponent } from '../../components/supplier-bindings-panel/supplier-bindings-panel.component';
 import { SupplierHealthPanelComponent } from '../../components/supplier-health-panel/supplier-health-panel.component';
-import { SupplierPricatPanelComponent } from '../../components/supplier-pricat-panel/supplier-pricat-panel.component';
 import { SupplierStatusChipComponent } from '../../components/supplier-status-chip/supplier-status-chip.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
 import {
@@ -30,11 +29,11 @@ import { SUPPLIER_RETRY_BACKOFFS } from '../../utils/supplier-capability-keys';
 type PageState = 'idle' | 'loading' | 'ready' | 'error' | 'forbidden';
 
 /** Tab identifiers, in presentation order. */
-export const PROFILE_TABS = ['auth', 'accounts', 'bindings', 'health', 'pricat'] as const;
+export const PROFILE_TABS = ['auth', 'accounts', 'bindings', 'health'] as const;
 export type ProfileTab = (typeof PROFILE_TABS)[number];
 
 /**
- * Vendor-profile detail screen: the Auth, Accounts, Bindings, Health and PRICAT
+ * Vendor-profile detail screen: the Auth, Accounts, Bindings and Health
  * tabs from issues #188 and #189.
  *
  * The page owns the profile header and the tab shell only; each tab is a
@@ -68,7 +67,6 @@ export type ProfileTab = (typeof PROFILE_TABS)[number];
     SupplierAccountsPanelComponent,
     SupplierBindingsPanelComponent,
     SupplierHealthPanelComponent,
-    SupplierPricatPanelComponent,
   ],
   templateUrl: './supplier-profile-detail-page.component.html',
   styleUrls: ['../../positivity-shared.css', './supplier-profile-detail-page.component.css'],

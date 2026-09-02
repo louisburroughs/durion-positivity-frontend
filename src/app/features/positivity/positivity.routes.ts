@@ -15,18 +15,15 @@ import { Routes } from '@angular/router';
  *   /app/positivity                                        profile list
  *   /app/positivity/exchanges                              exchange audit list
  *   /app/positivity/exchanges/:exchangeId                  exchange audit detail
- *   /app/positivity/enrichment/unmatched                   MKCAT enrichment worklist
- *   /app/positivity/orders/manual-review                   ambiguous transmission queue
- *   /app/positivity/shipments/unlinked                     unlinked shipment events
- *   /app/positivity/stock-snapshots                        vendor stock snapshot view
  *   /app/positivity/profiles/:vendorProfileId              profile detail (tabs)
- *   /app/positivity/profiles/:vendorProfileId/unmatched-lines   PRICAT worklist
  *
- * ── Open question #193 §7, ruled ────────────────────────────────────────────
- * The stock snapshot lives here rather than under Inventory. It is vendor-
- * reported informational data — what a supplier claims it holds — and Inventory
- * answers a different question: what this business owns. Filing the two under
- * one menu invites the one arithmetic that must never happen (#193 §4).
+ * The enrichment worklist, manual-review queue, unlinked shipments, stock
+ * snapshot and PRICAT worklist routes were retired in #201: the generated
+ * `@durion-sdk/supplier` client publishes no read whose request and response
+ * cover what those pages required (the PRICAT and stock reads that do exist
+ * take page/size or a vendorProfileId plus article EAN, and return neither the
+ * freshness, filters, vendor display nor UOM the pages showed). The gaps are
+ * recorded on #201 and PR #202; a route that can only 404 is not a feature.
  */
 export const POSITIVITY_ROUTES: Routes = [
   {
@@ -50,45 +47,6 @@ export const POSITIVITY_ROUTES: Routes = [
     loadComponent: () =>
       import('./pages/exchange-audit-detail/exchange-audit-detail-page.component').then(
         m => m.ExchangeAuditDetailPageComponent,
-      ),
-  },
-  {
-    path: 'enrichment/unmatched',
-    pathMatch: 'full',
-    loadComponent: () =>
-      import('./pages/enrichment-unmatched/enrichment-unmatched-page.component').then(
-        m => m.EnrichmentUnmatchedPageComponent,
-      ),
-  },
-  {
-    path: 'orders/manual-review',
-    pathMatch: 'full',
-    loadComponent: () =>
-      import('./pages/manual-review-queue/manual-review-queue-page.component').then(
-        m => m.ManualReviewQueuePageComponent,
-      ),
-  },
-  {
-    path: 'shipments/unlinked',
-    pathMatch: 'full',
-    loadComponent: () =>
-      import('./pages/shipment-events-unlinked/shipment-events-unlinked-page.component').then(
-        m => m.ShipmentEventsUnlinkedPageComponent,
-      ),
-  },
-  {
-    path: 'stock-snapshots',
-    pathMatch: 'full',
-    loadComponent: () =>
-      import('./pages/stock-snapshot/stock-snapshot-page.component').then(
-        m => m.StockSnapshotPageComponent,
-      ),
-  },
-  {
-    path: 'profiles/:vendorProfileId/unmatched-lines',
-    loadComponent: () =>
-      import('./pages/pricat-unmatched-lines/pricat-unmatched-lines-page.component').then(
-        m => m.PricatUnmatchedLinesPageComponent,
       ),
   },
   {
