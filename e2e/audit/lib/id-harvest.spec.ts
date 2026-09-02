@@ -114,6 +114,41 @@ describe('collectResponseIds', () => {
     }
   });
 
+  // A location response embeds its type as `type: { id, name }`. That id is
+  // the location-type seed id, and reading it as a location 404s. Only entity
+  // roots may supply a bare `id`.
+  it('never harvests a bare id from an embedded object', () => {
+    const harvest: IdHarvest = new Map();
+    const TYPE_ID = '01960001-0000-7000-8000-000000000005';
+    collectResponseIds(
+      { id: LOCATION_LOCATION, name: 'Bay 1', type: { id: TYPE_ID, name: 'Mobile Unit Base' } },
+      'https://durionpos.org/api/location/v1/locations/x',
+      fields,
+      harvest,
+    );
+    collectResponseIds(
+      { content: [{ id: INVENTORY_LOCATION, type: { id: TYPE_ID } }], page: 0 },
+      'https://durionpos.org/api/location/v1/locations',
+      fields,
+      harvest,
+    );
+
+    expect([...harvest.get('id@location')!]).toEqual([LOCATION_LOCATION, INVENTORY_LOCATION]);
+    expect([...harvest.get('id@location')!]).not.toContain(TYPE_ID);
+  });
+
+  it('still harvests named id fields from embedded objects', () => {
+    const harvest: IdHarvest = new Map();
+    collectResponseIds(
+      { bay: { locationId: LOCATION_LOCATION } },
+      'https://durionpos.org/api/location/v1/bays',
+      fields,
+      harvest,
+    );
+
+    expect([...harvest.get('locationId@location')!]).toEqual([LOCATION_LOCATION]);
+  });
+
   it('skips a response whose URL yields no service segment', () => {
     const harvest: IdHarvest = new Map();
     collectResponseIds({ invoiceId: BILLING_INVOICE }, 'https://durionpos.org/invoices', fields, harvest);

@@ -114,7 +114,7 @@ export function collectResponseIds(
 ): void {
   const service = apiService(url);
   if (!service) return;
-  collect(json, harvest, fields, service, 0);
+  collect(json, harvest, fields, service, 0, false);
 }
 
 /** First path segment after `/api/` (e.g. `/api/inventory/v1/...` → "inventory"). */
@@ -130,22 +130,33 @@ export function apiService(url: string): string {
   return apiIndex >= 0 ? (segments[apiIndex + 1] ?? '') : '';
 }
 
+/**
+ * `embedded` is true when `node` was reached through an object-valued key
+ * (e.g. a location's `type: { id, name }`). A bare `id` there identifies a
+ * different entity of unknown kind — the location-type seed id, not a
+ * location — so it is never harvested; only entity roots (the top-level
+ * object, or elements of an array such as a page's `content`) may supply a
+ * bare `id`. Named fields (`locationId`, `partyId`, …) say what they are and
+ * are harvested at any depth.
+ */
 function collect(
   node: unknown,
   harvest: IdHarvest,
   fields: ReadonlySet<string>,
   service: string,
   depth: number,
+  embedded: boolean,
 ): void {
   if (depth > MAX_DEPTH || node === null || typeof node !== 'object') return;
   if (Array.isArray(node)) {
     for (const item of node.slice(0, MAX_ARRAY_ITEMS)) {
-      collect(item, harvest, fields, service, depth + 1);
+      collect(item, harvest, fields, service, depth + 1, false);
     }
     return;
   }
   for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
     if (typeof value === 'string' || typeof value === 'number') {
+      if (key === 'id' && embedded) continue;
       const harvestKey = `${key}@${service}`;
       if (!fields.has(harvestKey)) continue;
       const str = String(value);
@@ -158,7 +169,8 @@ function collect(
         if (values.size < MAX_VALUES_PER_FIELD) values.add(str);
       }
     } else {
-      collect(value, harvest, fields, service, depth + 1);
+      const isEmbeddedObject = typeof value === 'object' && value !== null && !Array.isArray(value);
+      collect(value, harvest, fields, service, depth + 1, isEmbeddedObject);
     }
   }
 }
