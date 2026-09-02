@@ -1325,7 +1325,6 @@
       "TITLE": "Gestión del Taller",
       "SUBTITLE": "Gestione el tablero de despacho, el horario, las citas y la disponibilidad de mecánicos desde un solo lugar.",
       "HERO_CTA_DISPATCH": "Tablero de Despacho",
-      "HERO_CTA_SCHEDULE": "Ver Horario",
       "STAT": {
         "TOTAL_PAGES": "Total de Páginas",
         "DIRECT_PAGES": "Páginas Directas",
@@ -1394,6 +1393,10 @@
         "MECHANIC_ROSTER": {
           "TITLE": "Nómina de Mecánicos",
           "DESCRIPTION": "Explore la nómina completa de mecánicos y sus asignaciones actuales."
+        },
+        "SHOP_DASHBOARD": {
+          "TITLE": "Panel del gerente de taller",
+          "DESCRIPTION": "Estado en vivo de cada bahia y unidad movil, con el vehiculo y el mecanico de cada una."
         }
       },
       "FIELD": {
@@ -1413,7 +1416,79 @@
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Se requiere un ID de cita para abrir esta página.",
         "NAVIGATE": "Error de navegación. Verifique el ID e intente de nuevo."
-      }
+      },
+      "HERO_CTA_SHOP_DASHBOARD": "Abrir el panel del taller"
+    },
+    "SHOP_DASHBOARD": {
+      "SECTION_LABEL": "Gestion del taller",
+      "TITLE": "Panel del gerente de taller",
+      "PANEL_ARIA": "Estado de las unidades de reparacion por ubicacion",
+      "LOCATION": "Ubicacion",
+      "LOCATION_PLACEHOLDER": "Seleccione una ubicacion",
+      "LOCATION_HINT": "Solo ubicaciones con bahias o unidades moviles",
+      "LOCATION_REQUIRED": "Seleccione una ubicacion para ver sus unidades de reparacion.",
+      "DATE": "Fecha",
+      "REFRESH": "Actualizar",
+      "REFRESH_ARIA": "Actualizar el panel del taller",
+      "LAST_UPDATED": "Ultima actualizacion",
+      "LOADING": "Cargando unidades de reparacion...",
+      "DATA_QUALITY_WARNING": "Algunas fuentes de datos no estaban disponibles; esta vista puede estar incompleta.",
+      "SECTION": {
+        "BAYS": "Bahias",
+        "MOBILE_UNITS": "Unidades moviles"
+      },
+      "SUMMARY": {
+        "UNITS": "{{count}} unidades",
+        "ACTIVE": "activas",
+        "BLOCKED": "bloqueadas",
+        "READY": "listas",
+        "IDLE": "inactivas"
+      },
+      "CARD": {
+        "WORKORDER": "Orden de trabajo",
+        "VEHICLE": "Vehiculo",
+        "MECHANIC": "Mecanico",
+        "VIN": "VIN",
+        "NO_WORKORDER": "Sin orden de trabajo asignada",
+        "UNIT_AVAILABLE": "Disponible",
+        "NO_MECHANIC": "Sin asignar",
+        "VEHICLE_UNKNOWN": "Detalles del vehiculo no disponibles",
+        "OPEN_WORKORDER_ARIA": "Abrir orden de trabajo {{number}}"
+      },
+      "STATUS": {
+        "IDLE": "Inactiva",
+        "DRAFT": "Borrador",
+        "APPROVED": "Aprobada",
+        "ASSIGNED": "Asignada",
+        "WORK_IN_PROGRESS": "Trabajo en curso",
+        "AWAITING_PARTS": "Esperando piezas",
+        "AWAITING_APPROVAL": "Esperando aprobacion",
+        "READY_FOR_PICKUP": "Lista para recoger",
+        "COMPLETED": "Completada",
+        "CANCELLED": "Cancelada"
+      },
+      "ROSTER": {
+        "TITLE": "Vehiculos con ordenes de trabajo abiertas",
+        "CAPTION": "Vehiculos con ordenes de trabajo abiertas ({{count}})",
+        "COL": {
+          "VEHICLE": "Vehiculo",
+          "VIN": "VIN",
+          "WORKORDER": "Orden de trabajo",
+          "STATUS": "Estado",
+          "UNIT": "Unidad"
+        },
+        "NO_UNIT": "No asignada a una unidad",
+        "EMPTY": "No hay ordenes de trabajo abiertas en esta ubicacion.",
+        "TRUNCATED": "Mostrando las primeras {{count}} ordenes de trabajo abiertas."
+      },
+      "EMPTY_TITLE": "No hay unidades de reparacion configuradas",
+      "EMPTY_DESC": "Esta ubicacion aun no tiene bahias ni unidades moviles.",
+      "ERROR_LOAD": "No se pudo cargar el panel del taller.",
+      "ERROR_FORBIDDEN": "No tiene permiso para ver este panel.",
+      "ERROR_NOT_FOUND": "Esa ubicacion ya no existe.",
+      "ERROR_LOCATIONS_LOAD": "No se pudieron verificar algunas ubicaciones; la lista puede estar incompleta.",
+      "RETRY": "Reintentar",
+      "RETRY_ARIA": "Reintentar la carga del panel del taller"
     }
   },
   "ACCOUNTING": {

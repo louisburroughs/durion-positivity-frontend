@@ -1,0 +1,73 @@
+<section class="roster" aria-labelledby="open-workorder-roster-title">
+  <h2 id="open-workorder-roster-title">{{ 'SHOPMGMT.SHOP_DASHBOARD.ROSTER.TITLE' | translate }}</h2>
+
+  @if (rows().length === 0) {
+    <p class="roster-empty">{{ 'SHOPMGMT.SHOP_DASHBOARD.ROSTER.EMPTY' | translate }}</p>
+  } @else {
+    <div class="roster-scroll">
+      <table class="roster-table">
+        <caption>{{ 'SHOPMGMT.SHOP_DASHBOARD.ROSTER.CAPTION' | translate: { count: rows().length } }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.VEHICLE' | translate }}</th>
+            <th scope="col">{{ 'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.VIN' | translate }}</th>
+            <th scope="col">{{ 'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.WORKORDER' | translate }}</th>
+            <th scope="col">{{ 'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.STATUS' | translate }}</th>
+            <th scope="col">{{ 'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.UNIT' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.workorderId) {
+            <tr [class.row-unassigned]="!row.unitId">
+              <th scope="row" class="cell-vehicle"
+                [attr.data-label]="'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.VEHICLE' | translate">
+                @if (vehicleLabelFor(row)) {
+                  {{ vehicleLabelFor(row) }}
+                } @else {
+                  <span class="cell-muted">{{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.VEHICLE_UNKNOWN' | translate }}</span>
+                }
+              </th>
+              <td class="cell-vin" [attr.data-label]="'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.VIN' | translate">
+                @if (row.vehicle?.vin; as vin) {
+                  <span class="vin-value">{{ vin }}</span>
+                } @else {
+                  <span class="cell-muted">&mdash;</span>
+                }
+              </td>
+              <td [attr.data-label]="'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.WORKORDER' | translate">
+                <a class="workorder-link" [routerLink]="workorderLink(row)"
+                  [attr.aria-label]="'SHOPMGMT.SHOP_DASHBOARD.CARD.OPEN_WORKORDER_ARIA' | translate: { number: workorderLabel(row) }">
+                  {{ workorderLabel(row) }}
+                </a>
+              </td>
+              <td [attr.data-label]="'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.STATUS' | translate">
+                <span class="status-chip" [class]="'band-' + band(row)">
+                  <span class="band-icon" aria-hidden="true"></span>
+                  @if (statusKeyFor(row); as key) {
+                    {{ key | translate }}
+                  } @else {
+                    {{ row.status }}
+                  }
+                </span>
+              </td>
+              <td [attr.data-label]="'SHOPMGMT.SHOP_DASHBOARD.ROSTER.COL.UNIT' | translate">
+                @if (row.unitId) {
+                  {{ row.unitName || row.unitId }}
+                } @else {
+                  <span class="cell-muted"
+                    [attr.aria-label]="'SHOPMGMT.SHOP_DASHBOARD.ROSTER.NO_UNIT' | translate">&mdash;</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (truncated()) {
+      <p class="roster-truncated">
+        {{ 'SHOPMGMT.SHOP_DASHBOARD.ROSTER.TRUNCATED' | translate: { count: rows().length } }}
+      </p>
+    }
+  }
+</section>

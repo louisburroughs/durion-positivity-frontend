@@ -1,0 +1,63 @@
+<article class="repair-unit-card" [attr.aria-labelledby]="headerId()">
+  <header class="card-header" [class]="'band-' + band()">
+    <p class="status-line">
+      <span class="band-icon" aria-hidden="true"></span>
+      @if (statusKey(); as key) {
+        <span class="status-text">{{ key | translate }}</span>
+      } @else if (rawStatus()) {
+        <span class="status-text">{{ rawStatus() }}</span>
+      } @else {
+        <span class="status-text">{{ 'SHOPMGMT.SHOP_DASHBOARD.STATUS.IDLE' | translate }}</span>
+      }
+    </p>
+    <h3 class="unit-name" [id]="headerId()">
+      {{ unit().unitName }}
+      @if (unit().unitSubtitle) {
+        <span class="unit-subtitle">· {{ unit().unitSubtitle }}</span>
+      }
+    </h3>
+  </header>
+
+  <div class="card-body">
+    @if (unit().workorder; as workorder) {
+      <div class="field">
+        <span class="field-label">{{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.WORKORDER' | translate }}</span>
+        @if (workorderLink(); as link) {
+          <a class="workorder-link" [routerLink]="link"
+            [attr.aria-label]="'SHOPMGMT.SHOP_DASHBOARD.CARD.OPEN_WORKORDER_ARIA' | translate: { number: workorderLabel() }">
+            {{ workorderLabel() }}
+          </a>
+        }
+      </div>
+
+      <div class="field">
+        <span class="field-label">{{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.VEHICLE' | translate }}</span>
+        @if (vehicleLabel()) {
+          <span class="vehicle-name">{{ vehicleLabel() }}</span>
+        } @else {
+          <span class="field-muted">{{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.VEHICLE_UNKNOWN' | translate }}</span>
+        }
+        @if (vin()) {
+          <span class="vin">
+            <span class="vin-label">{{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.VIN' | translate }}</span>
+            <span class="vin-value">{{ vin() }}</span>
+          </span>
+        }
+      </div>
+
+      <div class="field">
+        <span class="field-label">{{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.MECHANIC' | translate }}</span>
+        @if (workorder.mechanic; as mechanic) {
+          <span class="mechanic-name">{{ mechanic.displayName }}</span>
+        } @else {
+          <span class="field-muted">{{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.NO_MECHANIC' | translate }}</span>
+        }
+      </div>
+    } @else {
+      <div class="idle-body">
+        <p class="idle-primary">{{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.NO_WORKORDER' | translate }}</p>
+        <p class="idle-secondary">{{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.UNIT_AVAILABLE' | translate }}</p>
+      </div>
+    }
+  </div>
+</article>

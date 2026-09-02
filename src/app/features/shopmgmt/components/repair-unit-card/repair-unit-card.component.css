@@ -1,0 +1,128 @@
+.repair-unit-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  overflow: hidden;
+}
+
+.card-header {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+}
+
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Status text wraps rather than clipping: fr-CA and es-US labels run longer. */
+.status-text {
+  overflow-wrap: anywhere;
+}
+
+.unit-name {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.unit-subtitle {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.card-body {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  flex: 1;
+}
+
+.field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.field-label {
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-secondary);
+}
+
+.field-muted {
+  color: var(--handleColor);
+}
+
+.workorder-link {
+  color: var(--brand-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.workorder-link:hover,
+.workorder-link:focus-visible {
+  text-decoration: underline;
+}
+
+.workorder-link:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.vehicle-name,
+.mechanic-name {
+  color: var(--currentTextColor);
+}
+
+.vin {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+}
+
+.vin-label {
+  color: var(--brand-secondary);
+}
+
+/*
+ * The full 17-character VIN is always in the DOM and selectable; only its
+ * visual width is constrained, so copy/paste and screen readers get all of it.
+ */
+.vin-value {
+  font-family: var(--font-mono);
+  color: var(--currentTextColor);
+  user-select: text;
+  overflow-wrap: anywhere;
+}
+
+.idle-body {
+  display: grid;
+  gap: var(--space-1);
+  place-content: center;
+  text-align: center;
+  min-height: 6rem;
+  color: var(--handleColor);
+}
+
+.idle-primary,
+.idle-secondary {
+  margin: 0;
+}
+
+.idle-secondary {
+  font-size: 0.8125rem;
+}

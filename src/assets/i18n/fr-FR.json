@@ -1325,7 +1325,6 @@
       "TITLE": "Gestion de l'atelier",
       "SUBTITLE": "Gérez le tableau d'expédition, l'horaire, les rendez-vous et la disponibilité des mécaniciens depuis un seul endroit.",
       "HERO_CTA_DISPATCH": "Tableau d'expédition",
-      "HERO_CTA_SCHEDULE": "Voir l'horaire",
       "STAT": {
         "TOTAL_PAGES": "Pages totales",
         "DIRECT_PAGES": "Pages directes",
@@ -1394,6 +1393,10 @@
         "MECHANIC_ROSTER": {
           "TITLE": "Liste des mécaniciens",
           "DESCRIPTION": "Parcourez la liste complète des mécaniciens et leurs assignations actuelles."
+        },
+        "SHOP_DASHBOARD": {
+          "TITLE": "Tableau de bord du gerant d'atelier",
+          "DESCRIPTION": "Etat en direct de chaque baie et unite mobile, avec le vehicule et le mecanicien de chacune."
         }
       },
       "FIELD": {
@@ -1413,7 +1416,79 @@
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Un identifiant de rendez-vous est requis pour ouvrir cette page.",
         "NAVIGATE": "Échec de la navigation. Vérifiez l'identifiant et réessayez."
-      }
+      },
+      "HERO_CTA_SHOP_DASHBOARD": "Ouvrir le tableau de bord"
+    },
+    "SHOP_DASHBOARD": {
+      "SECTION_LABEL": "Gestion de l'atelier",
+      "TITLE": "Tableau de bord du gerant d'atelier",
+      "PANEL_ARIA": "Etat des unites de reparation par emplacement",
+      "LOCATION": "Emplacement",
+      "LOCATION_PLACEHOLDER": "Selectionner un emplacement",
+      "LOCATION_HINT": "Seuls les emplacements avec baies ou unites mobiles",
+      "LOCATION_REQUIRED": "Selectionnez un emplacement pour voir ses unites de reparation.",
+      "DATE": "Date",
+      "REFRESH": "Actualiser",
+      "REFRESH_ARIA": "Actualiser le tableau de bord de l'atelier",
+      "LAST_UPDATED": "Derniere mise a jour",
+      "LOADING": "Chargement des unites de reparation...",
+      "DATA_QUALITY_WARNING": "Certaines sources de donnees etaient indisponibles; cette vue peut etre incomplete.",
+      "SECTION": {
+        "BAYS": "Baies",
+        "MOBILE_UNITS": "Unites mobiles"
+      },
+      "SUMMARY": {
+        "UNITS": "{{count}} unites",
+        "ACTIVE": "actives",
+        "BLOCKED": "bloquees",
+        "READY": "pretes",
+        "IDLE": "inactives"
+      },
+      "CARD": {
+        "WORKORDER": "Ordre de travail",
+        "VEHICLE": "Vehicule",
+        "MECHANIC": "Mecanicien",
+        "VIN": "NIV",
+        "NO_WORKORDER": "Aucun ordre de travail assigne",
+        "UNIT_AVAILABLE": "Disponible",
+        "NO_MECHANIC": "Non assigne",
+        "VEHICLE_UNKNOWN": "Details du vehicule indisponibles",
+        "OPEN_WORKORDER_ARIA": "Ouvrir l'ordre de travail {{number}}"
+      },
+      "STATUS": {
+        "IDLE": "Inactive",
+        "DRAFT": "Brouillon",
+        "APPROVED": "Approuve",
+        "ASSIGNED": "Assigne",
+        "WORK_IN_PROGRESS": "Travail en cours",
+        "AWAITING_PARTS": "En attente de pieces",
+        "AWAITING_APPROVAL": "En attente d'approbation",
+        "READY_FOR_PICKUP": "Pret pour l'enlevement",
+        "COMPLETED": "Termine",
+        "CANCELLED": "Annule"
+      },
+      "ROSTER": {
+        "TITLE": "Vehicules avec ordres de travail ouverts",
+        "CAPTION": "Vehicules avec ordres de travail ouverts ({{count}})",
+        "COL": {
+          "VEHICLE": "Vehicule",
+          "VIN": "NIV",
+          "WORKORDER": "Ordre de travail",
+          "STATUS": "Statut",
+          "UNIT": "Unite"
+        },
+        "NO_UNIT": "Non assigne a une unite",
+        "EMPTY": "Aucun ordre de travail ouvert a cet emplacement.",
+        "TRUNCATED": "Affichage des {{count}} premiers ordres de travail ouverts."
+      },
+      "EMPTY_TITLE": "Aucune unite de reparation configuree",
+      "EMPTY_DESC": "Cet emplacement n'a pas encore de baies ni d'unites mobiles.",
+      "ERROR_LOAD": "Impossible de charger le tableau de bord de l'atelier.",
+      "ERROR_FORBIDDEN": "Vous n'avez pas la permission de consulter ce tableau de bord.",
+      "ERROR_NOT_FOUND": "Cet emplacement n'existe plus.",
+      "ERROR_LOCATIONS_LOAD": "Certains emplacements n'ont pas pu etre verifies; la liste peut etre incomplete.",
+      "RETRY": "Reessayer",
+      "RETRY_ARIA": "Reessayer le chargement du tableau de bord de l'atelier"
     }
   },
   "ACCOUNTING": {

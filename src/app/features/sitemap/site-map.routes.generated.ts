@@ -136,6 +136,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/shopmgmt/mechanics/availability', label: "Availability", dynamic: false },
   { route: '/app/shopmgmt/mechanics/roster', label: "Roster", dynamic: false },
   { route: '/app/shopmgmt/schedule', label: "Schedule", dynamic: false },
+  { route: '/app/shopmgmt/shop-dashboard', label: "Shop Dashboard", dynamic: false },
   { route: '/app/sitemap', label: "", dynamic: false },
   { route: '/app/workexec', label: "", dynamic: false },
   { route: '/app/workexec/estimate-list', label: "Estimate List", dynamic: false },

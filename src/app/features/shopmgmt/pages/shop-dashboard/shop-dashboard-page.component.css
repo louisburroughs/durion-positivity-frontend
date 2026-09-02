@@ -1,0 +1,243 @@
+.shop-dashboard-page {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.heading-group {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.section-label {
+  margin: 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-secondary);
+}
+
+.heading-group h1 {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.625rem;
+  line-height: 1.2;
+}
+
+.last-updated {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--handleColor);
+}
+
+.board-panel {
+  position: relative;
+  background: var(--cardBackground);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.panel-accent {
+  position: absolute;
+  left: 0;
+  top: var(--space-6);
+  bottom: var(--space-6);
+  width: 2px;
+  background: var(--brand-accent);
+}
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(14rem, 1fr) minmax(10rem, 12rem) auto;
+  align-items: start;
+  gap: var(--space-3);
+  background: color-mix(in srgb, var(--durion-graphite-100) 58%, var(--cardBackground));
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.field-group {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.field-label {
+  font-size: 0.875rem;
+  color: var(--brand-secondary);
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--handleColor);
+}
+
+.filter-bar select,
+.filter-bar input {
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  border: none;
+  border-bottom: 2px solid var(--input-border);
+  border-radius: 0;
+  min-height: 2.75rem;
+  padding: var(--space-2);
+}
+
+.btn-primary {
+  align-self: start;
+  background: var(--brand-primary);
+  color: var(--contrastTextColor);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  min-height: 2.75rem;
+  font-weight: 600;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+}
+
+.btn-text {
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--brand-primary);
+  padding: var(--space-2) var(--space-3);
+  min-height: 2.75rem;
+  font-weight: 600;
+}
+
+.btn-primary:focus-visible,
+.btn-text:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.location-required {
+  margin: 0;
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--handleColor);
+}
+
+.summary-counts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.summary-total {
+  font-weight: 600;
+}
+
+.summary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: 999px;
+  padding: 0.125rem var(--space-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.unit-section {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.unit-section h2 {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.125rem;
+}
+
+.unit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  align-items: stretch;
+  gap: var(--space-4);
+}
+
+.skeleton-card {
+  min-height: 12rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--durion-graphite-100) 60%, var(--cardBackground));
+}
+
+.state-panel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--functional-error-red) 35%, transparent);
+  background: var(--status-error-bg);
+}
+
+.state-panel p {
+  margin: 0;
+  color: var(--functional-error-red);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-8);
+  display: grid;
+  gap: var(--space-2);
+  color: var(--handleColor);
+}
+
+.empty-state h2 {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+  color: var(--currentTextColor);
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 64rem) {
+  .shop-dashboard-page {
+    padding: var(--space-4);
+  }
+
+  .board-panel {
+    padding: var(--space-4);
+  }
+
+  .panel-accent {
+    top: var(--space-4);
+    bottom: var(--space-4);
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+}

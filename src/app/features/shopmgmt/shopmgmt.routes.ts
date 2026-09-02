@@ -17,6 +17,13 @@ export const SHOPMGMT_ROUTES: Routes = [
       },
 
       {
+        path: 'shop-dashboard',
+        loadComponent: () =>
+          import('./pages/shop-dashboard/shop-dashboard-page.component').then(
+            m => m.ShopDashboardPageComponent,
+          ),
+      },
+      {
         path: 'dispatch-board',
         loadComponent: () =>
           import('./pages/dispatch-board/dispatch-board-page.component').then(

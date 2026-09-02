@@ -1,0 +1,139 @@
+.roster {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border-color);
+}
+
+.roster h2 {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.125rem;
+}
+
+.roster-empty {
+  margin: 0;
+  color: var(--handleColor);
+}
+
+.roster-scroll {
+  overflow-x: auto;
+}
+
+.roster-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.roster-table caption {
+  text-align: left;
+  padding-bottom: var(--space-2);
+  color: var(--brand-secondary);
+  font-size: 0.8125rem;
+}
+
+.roster-table th,
+.roster-table td {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.roster-table thead th {
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-secondary);
+  white-space: nowrap;
+}
+
+.cell-vehicle {
+  font-weight: 600;
+}
+
+.cell-muted {
+  color: var(--handleColor);
+}
+
+/* Full VIN always present and selectable. */
+.vin-value {
+  font-family: var(--font-mono);
+  user-select: text;
+  overflow-wrap: anywhere;
+}
+
+/* Open work with no unit behind it — the rows a manager must act on. */
+.row-unassigned {
+  background: color-mix(in srgb, var(--status-warning-bg) 30%, transparent);
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: 999px;
+  padding: 0.125rem var(--space-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.workorder-link {
+  color: var(--brand-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.workorder-link:hover,
+.workorder-link:focus-visible {
+  text-decoration: underline;
+}
+
+.workorder-link:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.roster-truncated {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--handleColor);
+}
+
+/*
+ * Narrow viewports: each row becomes a stacked card. Purely visual — the table
+ * semantics, DOM order and header associations are unchanged for assistive tech.
+ */
+@media (max-width: 48rem) {
+  .roster-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .roster-table tr {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .roster-table th,
+  .roster-table td {
+    border-bottom: none;
+    padding: 0 var(--space-2);
+  }
+
+  .roster-table td::before {
+    content: attr(data-label) ": ";
+    color: var(--brand-secondary);
+    font-size: 0.75rem;
+  }
+}
