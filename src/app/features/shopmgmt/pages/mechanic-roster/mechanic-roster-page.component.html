@@ -1,49 +1,173 @@
-<section>
+<section class="mechanic-roster">
   <header class="page-header">
     <h1>{{ 'SHOPMGMT.MECHANIC_ROSTER.TITLE' | translate }}</h1>
   </header>
 
   <div class="roster-controls">
-    <button class="open-create-btn" type="button" (click)="openCreateModal()">{{ 'SHOPMGMT.MECHANIC_ROSTER.CREATE_EMPLOYEE' | translate }}</button>
+    <label for="mechanic-status-filter">
+      {{ 'SHOPMGMT.MECHANIC_ROSTER.FILTER.STATUS_LABEL' | translate }}
+    </label>
+    <select
+      id="mechanic-status-filter"
+      [value]="statusFilter()"
+      (change)="onStatusChange($event)"
+    >
+      <option [value]="statusEnum.Active">
+        {{ 'SHOPMGMT.MECHANIC_ROSTER.FILTER.STATUS_ACTIVE' | translate }}
+      </option>
+      <option [value]="statusEnum.Inactive">
+        {{ 'SHOPMGMT.MECHANIC_ROSTER.FILTER.STATUS_INACTIVE' | translate }}
+      </option>
+      <option [value]="statusEnum.OnLeave">
+        {{ 'SHOPMGMT.MECHANIC_ROSTER.FILTER.STATUS_ON_LEAVE' | translate }}
+      </option>
+    </select>
   </div>
 
-  @if (createSuccess()) {
-    <p class="success-banner">{{ 'SHOPMGMT.MECHANIC_ROSTER.EMPLOYEE_CREATED' | translate }}</p>
-  }
-  @if (error() || createError()) {
-    <p class="error-banner">{{ (error() || createError())! | translate }}</p>
-  }
-
-  @if (!loading() && people().length > 0) {
-    <div class="roster-table">
-      @for (person of people(); track person) {
-        <div class="roster-row">{{ getDisplayName(person) }}</div>
-      }
+  @if (state() === 'loading') {
+    <div class="roster-state" role="status" aria-live="polite" data-testid="roster-loading">
+      <span class="material-symbols-rounded roster-state__icon" aria-hidden="true">
+        {{ 'progress_activity' | msIcon }}
+      </span>
+      <p>{{ 'SHOPMGMT.MECHANIC_ROSTER.LOADING' | translate }}</p>
     </div>
   }
 
-  @if (!loading() && !error() && people().length === 0) {
-    <p class="empty-state">{{ 'SHOPMGMT.MECHANIC_ROSTER.EMPTY' | translate }}</p>
+  @if (state() === 'error') {
+    <div class="roster-state roster-state--error" role="alert" data-testid="roster-error">
+      <span class="material-symbols-rounded roster-state__icon" aria-hidden="true">
+        {{ 'error' | msIcon }}
+      </span>
+      <p>{{ errorKey()! | translate }}</p>
+      <button
+        class="roster-retry"
+        type="button"
+        (click)="retry()"
+        [attr.aria-label]="'SHOPMGMT.MECHANIC_ROSTER.RETRY' | translate"
+        [attr.title]="'SHOPMGMT.MECHANIC_ROSTER.RETRY' | translate"
+        data-testid="roster-retry"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">{{ 'refresh' | msIcon }}</span>
+        {{ 'SHOPMGMT.MECHANIC_ROSTER.RETRY' | translate }}
+      </button>
+    </div>
   }
 
-  @if (showCreateModal()) {
-    <div class="create-modal-overlay">
-      <form [formGroup]="createForm" (ngSubmit)="submitCreateEmployee()">
-        <div class="form-group">
-          <label>{{ 'SHOPMGMT.MECHANIC_ROSTER.FIRST_NAME' | translate }} <input type="text" formControlName="firstName" /></label>
-        </div>
-        <div class="form-group">
-          <label>{{ 'SHOPMGMT.MECHANIC_ROSTER.LAST_NAME' | translate }} <input type="text" formControlName="lastName" /></label>
-        </div>
-        <div class="form-group">
-          <label>{{ 'SHOPMGMT.MECHANIC_ROSTER.EMAIL' | translate }} <input type="email" formControlName="email" /></label>
-        </div>
-        <div class="form-group">
-          <label>{{ 'SHOPMGMT.MECHANIC_ROSTER.ROLE' | translate }} <input type="text" formControlName="role" /></label>
-        </div>
-        <button class="submit-create-btn" type="submit">{{ 'SHOPMGMT.MECHANIC_ROSTER.SAVE' | translate }}</button>
-        <button type="button" (click)="closeCreateModal()">{{ 'SHOPMGMT.MECHANIC_ROSTER.CLOSE' | translate }}</button>
-      </form>
-    </div>
+  @if (state() === 'ready') {
+    @if (mechanics().length === 0) {
+      <div class="roster-state" role="status" data-testid="roster-empty">
+        <span class="material-symbols-rounded roster-state__icon" aria-hidden="true">
+          {{ 'person_off' | msIcon }}
+        </span>
+        <p>{{ 'SHOPMGMT.MECHANIC_ROSTER.EMPTY' | translate }}</p>
+      </div>
+    } @else {
+      <div class="roster-table-wrap">
+        <table>
+          <caption class="sr-only">
+            {{ 'SHOPMGMT.MECHANIC_ROSTER.TABLE.ARIA_LABEL' | translate }}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'SHOPMGMT.MECHANIC_ROSTER.TABLE.NAME' | translate }}</th>
+              <th scope="col">{{ 'SHOPMGMT.MECHANIC_ROSTER.TABLE.STATUS' | translate }}</th>
+              <th scope="col">{{ 'SHOPMGMT.MECHANIC_ROSTER.TABLE.SKILLS' | translate }}</th>
+              <th scope="col">{{ 'SHOPMGMT.MECHANIC_ROSTER.TABLE.LAST_SYNCED' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (mechanic of mechanics(); track mechanic.mechanicId ?? mechanic.personId ?? $index) {
+              <tr data-testid="mechanic-row">
+                <td [attr.data-label]="'SHOPMGMT.MECHANIC_ROSTER.TABLE.NAME' | translate">
+                  @if (getDisplayName(mechanic); as displayName) {
+                    <strong>{{ displayName }}</strong>
+                  } @else {
+                    {{ 'SHOPMGMT.MECHANIC_ROSTER.NOT_AVAILABLE' | translate }}
+                  }
+                </td>
+                <td [attr.data-label]="'SHOPMGMT.MECHANIC_ROSTER.TABLE.STATUS' | translate">
+                  @switch (mechanic.status) {
+                    @case (statusEnum.Active) {
+                      <span class="roster-status roster-status--active">
+                        {{ 'SHOPMGMT.MECHANIC_ROSTER.FILTER.STATUS_ACTIVE' | translate }}
+                      </span>
+                    }
+                    @case (statusEnum.Inactive) {
+                      <span class="roster-status roster-status--inactive">
+                        {{ 'SHOPMGMT.MECHANIC_ROSTER.FILTER.STATUS_INACTIVE' | translate }}
+                      </span>
+                    }
+                    @case (statusEnum.OnLeave) {
+                      <span class="roster-status roster-status--leave">
+                        {{ 'SHOPMGMT.MECHANIC_ROSTER.FILTER.STATUS_ON_LEAVE' | translate }}
+                      </span>
+                    }
+                    @default {
+                      {{ 'SHOPMGMT.MECHANIC_ROSTER.NOT_AVAILABLE' | translate }}
+                    }
+                  }
+                </td>
+                <td [attr.data-label]="'SHOPMGMT.MECHANIC_ROSTER.TABLE.SKILLS' | translate">
+                  @if (mechanic.skills?.length) {
+                    <div
+                      class="skill-list"
+                      [attr.aria-label]="'SHOPMGMT.MECHANIC_ROSTER.TABLE.SKILLS_ARIA' | translate"
+                    >
+                      @for (skill of mechanic.skills; track skill) {
+                        <span class="skill-code">{{ skill }}</span>
+                      }
+                    </div>
+                  } @else {
+                    {{ 'SHOPMGMT.MECHANIC_ROSTER.NOT_AVAILABLE' | translate }}
+                  }
+                </td>
+                <td [attr.data-label]="'SHOPMGMT.MECHANIC_ROSTER.TABLE.LAST_SYNCED' | translate">
+                  @if (mechanic.lastSyncedAt) {
+                    <time [attr.datetime]="mechanic.lastSyncedAt">
+                      {{ mechanic.lastSyncedAt | date: 'medium' }}
+                    </time>
+                  } @else {
+                    {{ 'SHOPMGMT.MECHANIC_ROSTER.NOT_AVAILABLE' | translate }}
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <nav
+      class="roster-pagination"
+      [attr.aria-label]="'SHOPMGMT.MECHANIC_ROSTER.PAGINATION.ARIA_LABEL' | translate"
+    >
+      <button
+        class="pagination-button"
+        type="button"
+        [disabled]="!hasPreviousPage()"
+        (click)="previousPage()"
+        [attr.aria-label]="'SHOPMGMT.MECHANIC_ROSTER.PAGINATION.PREVIOUS' | translate"
+        [attr.title]="'SHOPMGMT.MECHANIC_ROSTER.PAGINATION.PREVIOUS' | translate"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">{{ 'chevron_left' | msIcon }}</span>
+      </button>
+      <p aria-live="polite">
+        {{
+          'SHOPMGMT.MECHANIC_ROSTER.PAGINATION.SUMMARY'
+            | translate
+              : { page: displayedPage(), pages: totalPages(), total: totalElements() }
+        }}
+      </p>
+      <button
+        class="pagination-button"
+        type="button"
+        [disabled]="!hasNextPage()"
+        (click)="nextPage()"
+        [attr.aria-label]="'SHOPMGMT.MECHANIC_ROSTER.PAGINATION.NEXT' | translate"
+        [attr.title]="'SHOPMGMT.MECHANIC_ROSTER.PAGINATION.NEXT' | translate"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">{{ 'chevron_right' | msIcon }}</span>
+      </button>
+    </nav>
   }
 </section>
