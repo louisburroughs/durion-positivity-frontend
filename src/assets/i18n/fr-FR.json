@@ -1395,8 +1395,8 @@
           "DESCRIPTION": "Parcourez la liste complète des mécaniciens et leurs assignations actuelles."
         },
         "SHOP_DASHBOARD": {
-          "TITLE": "Tableau de bord du gerant d'atelier",
-          "DESCRIPTION": "Etat en direct de chaque baie et unite mobile, avec le vehicule et le mecanicien de chacune."
+          "TITLE": "Tableau de bord du gérant d'atelier",
+          "DESCRIPTION": "État en direct de chaque baie et unité mobile, avec le véhicule et le mécanicien de chacune."
         }
       },
       "FIELD": {
@@ -1421,74 +1421,74 @@
     },
     "SHOP_DASHBOARD": {
       "SECTION_LABEL": "Gestion de l'atelier",
-      "TITLE": "Tableau de bord du gerant d'atelier",
-      "PANEL_ARIA": "Etat des unites de reparation par emplacement",
+      "TITLE": "Tableau de bord du gérant d'atelier",
+      "PANEL_ARIA": "État des unités de réparation par emplacement",
       "LOCATION": "Emplacement",
-      "LOCATION_PLACEHOLDER": "Selectionner un emplacement",
-      "LOCATION_HINT": "Seuls les emplacements avec baies ou unites mobiles",
-      "LOCATION_REQUIRED": "Selectionnez un emplacement pour voir ses unites de reparation.",
+      "LOCATION_PLACEHOLDER": "Sélectionner un emplacement",
+      "LOCATION_HINT": "Seuls les emplacements avec baies ou unités mobiles",
+      "LOCATION_REQUIRED": "Sélectionnez un emplacement pour voir ses unités de réparation.",
       "DATE": "Date",
       "REFRESH": "Actualiser",
       "REFRESH_ARIA": "Actualiser le tableau de bord de l'atelier",
-      "LAST_UPDATED": "Derniere mise a jour",
-      "LOADING": "Chargement des unites de reparation...",
-      "DATA_QUALITY_WARNING": "Certaines sources de donnees etaient indisponibles; cette vue peut etre incomplete.",
+      "LAST_UPDATED": "Dernière mise à jour",
+      "LOADING": "Chargement des unités de réparation...",
+      "DATA_QUALITY_WARNING": "Certaines sources de données étaient indisponibles; cette vue peut être incomplète.",
       "SECTION": {
         "BAYS": "Baies",
-        "MOBILE_UNITS": "Unites mobiles"
+        "MOBILE_UNITS": "Unités mobiles"
       },
       "SUMMARY": {
-        "UNITS": "{{count}} unites",
+        "UNITS": "{{count}} unités",
         "ACTIVE": "actives",
-        "BLOCKED": "bloquees",
-        "READY": "pretes",
+        "BLOCKED": "bloquées",
+        "READY": "prêtes",
         "IDLE": "inactives"
       },
       "CARD": {
         "WORKORDER": "Ordre de travail",
-        "VEHICLE": "Vehicule",
-        "MECHANIC": "Mecanicien",
+        "VEHICLE": "Véhicule",
+        "MECHANIC": "Mécanicien",
         "VIN": "NIV",
-        "NO_WORKORDER": "Aucun ordre de travail assigne",
+        "NO_WORKORDER": "Aucun ordre de travail assigné",
         "UNIT_AVAILABLE": "Disponible",
-        "NO_MECHANIC": "Non assigne",
-        "VEHICLE_UNKNOWN": "Details du vehicule indisponibles",
+        "NO_MECHANIC": "Non assigné",
+        "VEHICLE_UNKNOWN": "Détails du véhicule indisponibles",
         "OPEN_WORKORDER_ARIA": "Ouvrir l'ordre de travail {{number}}"
       },
       "STATUS": {
         "IDLE": "Inactive",
         "DRAFT": "Brouillon",
-        "APPROVED": "Approuve",
-        "ASSIGNED": "Assigne",
+        "APPROVED": "Approuvé",
+        "ASSIGNED": "Assigné",
         "WORK_IN_PROGRESS": "Travail en cours",
-        "AWAITING_PARTS": "En attente de pieces",
+        "AWAITING_PARTS": "En attente de pièces",
         "AWAITING_APPROVAL": "En attente d'approbation",
-        "READY_FOR_PICKUP": "Pret pour l'enlevement",
-        "COMPLETED": "Termine",
-        "CANCELLED": "Annule"
+        "READY_FOR_PICKUP": "Prêt pour l'enlèvement",
+        "COMPLETED": "Terminé",
+        "CANCELLED": "Annulé"
       },
       "ROSTER": {
-        "TITLE": "Vehicules avec ordres de travail ouverts",
-        "CAPTION": "Vehicules avec ordres de travail ouverts ({{count}})",
+        "TITLE": "Véhicules avec ordres de travail ouverts",
+        "CAPTION": "Véhicules avec ordres de travail ouverts ({{count}})",
         "COL": {
-          "VEHICLE": "Vehicule",
+          "VEHICLE": "Véhicule",
           "VIN": "NIV",
           "WORKORDER": "Ordre de travail",
           "STATUS": "Statut",
-          "UNIT": "Unite"
+          "UNIT": "Unité"
         },
-        "NO_UNIT": "Non assigne a une unite",
-        "EMPTY": "Aucun ordre de travail ouvert a cet emplacement.",
+        "NO_UNIT": "Non assigné à une unité",
+        "EMPTY": "Aucun ordre de travail ouvert à cet emplacement.",
         "TRUNCATED": "Affichage des {{count}} premiers ordres de travail ouverts."
       },
-      "EMPTY_TITLE": "Aucune unite de reparation configuree",
-      "EMPTY_DESC": "Cet emplacement n'a pas encore de baies ni d'unites mobiles.",
+      "EMPTY_TITLE": "Aucune unité de réparation configurée",
+      "EMPTY_DESC": "Cet emplacement n'a pas encore de baies ni d'unités mobiles.",
       "ERROR_LOAD": "Impossible de charger le tableau de bord de l'atelier.",
       "ERROR_FORBIDDEN": "Vous n'avez pas la permission de consulter ce tableau de bord.",
       "ERROR_NOT_FOUND": "Cet emplacement n'existe plus.",
-      "ERROR_LOCATIONS_LOAD": "Certains emplacements n'ont pas pu etre verifies; la liste peut etre incomplete.",
-      "RETRY": "Reessayer",
-      "RETRY_ARIA": "Reessayer le chargement du tableau de bord de l'atelier"
+      "ERROR_LOCATIONS_LOAD": "Certains emplacements n'ont pas pu être vérifiés; la liste peut être incomplète.",
+      "RETRY": "Réessayer",
+      "RETRY_ARIA": "Réessayer le chargement du tableau de bord de l'atelier"
     }
   },
   "ACCOUNTING": {
