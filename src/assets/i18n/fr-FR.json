@@ -4077,6 +4077,7 @@
       }
     },
     "PURCHASE_ORDERS": {
+      "SUPPLIER_UNKNOWN": "Fournisseur inconnu",
       "LIST": {
         "TITLE": "Bons de commande",
         "EMPTY": "Aucun bon de commande trouvé.",

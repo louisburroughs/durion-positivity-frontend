@@ -13,3 +13,14 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
 }
+
+/* Explicit, higher-contrast color: the footer text's 0.5-alpha white sits too
+   close to the WCAG 4.5:1 threshold against --navBackground (ADR-0039). */
+.shell-footer__link {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.shell-footer__link:hover,
+.shell-footer__link:focus-visible {
+  color: #fff;
+}

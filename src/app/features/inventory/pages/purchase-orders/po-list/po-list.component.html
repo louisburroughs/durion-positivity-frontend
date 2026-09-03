@@ -63,7 +63,7 @@
             (keydown.enter)="selectOrder(po.poId)"
             [attr.aria-label]="('INVENTORY.PURCHASE_ORDERS.LIST.ROW.ARIA' | translate) + ': ' + po.poNumber">
             <td>{{ po.poNumber }}</td>
-            <td>{{ po.supplierName ?? po.supplierId }}</td>
+            <td>{{ po.supplierName ?? ('INVENTORY.PURCHASE_ORDERS.SUPPLIER_UNKNOWN' | translate) }}</td>
             <td class="badge-cell">
               @switch (po.status) {
               @case ('DRAFT') {

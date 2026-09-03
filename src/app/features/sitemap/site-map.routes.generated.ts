@@ -15,7 +15,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/accounting/events', label: "Events", dynamic: false },
   { route: '/app/accounting/events/:eventId', label: "Events", dynamic: true },
   { route: '/app/accounting/events/contract', label: "Contract", dynamic: false },
-  { route: '/app/accounting/events/submit', label: "Submit", dynamic: false },
+  { route: '/app/accounting/events/submit', label: "Event Submission", dynamic: false },
   { route: '/app/accounting/invoices/:invoiceId/payment-status', label: "Payment Status", dynamic: true },
   { route: '/app/accounting/payments/apply', label: "Apply", dynamic: false },
   { route: '/app/accounting/posting-rules', label: "Posting Rules", dynamic: false },

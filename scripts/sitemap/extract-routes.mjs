@@ -113,11 +113,23 @@ function paramsOf(route) {
 }
 
 /**
+ * Explicit overrides for routes whose last path segment title-cases into a
+ * bare imperative verb (e.g. `submit` → "Submit"). Those labels read as page
+ * actions rather than page names, which trips the audit's anchor-as-action
+ * check (ADR-0037) on the sitemap page and are poor UX regardless — a link
+ * just called "Submit" doesn't say what it submits.
+ */
+const LABEL_OVERRIDES = {
+  '/app/accounting/events/submit': 'Event Submission',
+};
+
+/**
  * Derive a human label from a route's last static segment (title-cased).
  * Returns '' for a bare section root (e.g. `/app`, `/app/crm`) — callers use the
  * curated section title in that case.
  */
 export function deriveLabel(route) {
+  if (LABEL_OVERRIDES[route]) return LABEL_OVERRIDES[route];
   const segments = route
     .replace(/^\/app\/?/, '')
     .split('/')

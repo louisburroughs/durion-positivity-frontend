@@ -4077,6 +4077,7 @@
       }
     },
     "PURCHASE_ORDERS": {
+      "SUPPLIER_UNKNOWN": "Unknown supplier",
       "LIST": {
         "TITLE": "Purchase Orders",
         "EMPTY": "No purchase orders found.",
