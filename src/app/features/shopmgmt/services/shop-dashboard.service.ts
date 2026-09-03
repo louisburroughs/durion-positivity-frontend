@@ -55,18 +55,21 @@ const VEHICLE_LOOKUP_LIMIT = 40;
  *   workorder detail    → vehicleId for an assigned workorder
  *   vehicle registry    → structured year/make/model/VIN
  *
- * Two gaps are tracked as backend stories and are visible in the output:
+ * One remaining gap is tracked as a backend story and is visible in the output:
  *
  *   louisburroughs/durion#416 — SDK 0.11 added `DashboardResponse.mobileUnits`,
  *     but it is fed by the bay/mobile-unit lifecycle events that backend #1668
  *     has not published yet, so mobile-unit cards still come from the location
  *     inventory. What a unit is working on is read from the workorder side
  *     (`assignedResourceId` + `resourceType`), which is populated today.
- *   louisburroughs/durion#417 — no repair-capability projection on Location, so
- *     {@link listRepairLocations} fans out over the bays endpoint.
  *
- * When the aggregate endpoint lands, both public methods become thin SDK calls
- * and every consumer stays unchanged.
+ * louisburroughs/durion#417 (backend #1657) shipped the repair-capability
+ * projection on `LocationResponseDTO`, so {@link listRepairLocations} reads
+ * `hasRepairCapability`/`activeBayCount`/`activeMobileUnitCount` directly
+ * instead of fanning out over the bays endpoint (durion-positivity-frontend#209).
+ *
+ * When the aggregate endpoint lands, {@link getDashboard} also becomes a thin
+ * SDK call and every consumer stays unchanged.
  */
 @Injectable({ providedIn: 'root' })
 export class ShopDashboardService {
@@ -86,56 +89,29 @@ export class ShopDashboardService {
   private repairLocations$?: Observable<RepairLocationsResult>;
 
   /**
-   * Locations with at least one bay or at least one mobile unit based there.
-   *
-   * Interim derivation (design spec §5.2): one locations call, one mobile-units
-   * call, and one bays call per active location. A location whose bays call
-   * fails is still offered when it has mobile units, so one failing site cannot
-   * empty the picker.
+   * Locations with at least one active bay or at least one active mobile unit
+   * based there, read straight from `LocationResponseDTO.hasRepairCapability`
+   * (backend #417/#1657) — a single `listLocations()` call, no per-location
+   * bays fan-out. The backend already zeroes the counts and the flag for an
+   * inactive location, so no separate active-status filter is needed here.
    */
   listRepairLocations(): Observable<RepairLocationsResult> {
-    this.repairLocations$ ??= forkJoin({
-      locations: this.locationApi.listLocations().pipe(
-        map(rows => ({ rows, failed: false })),
-        catchError(() => of({ rows: [] as LocationResponseDTO[], failed: true })),
-      ),
-      mobileUnits: this.listAllMobileUnitsResult(),
-    }).pipe(
-      switchMap(({ locations, mobileUnits }) => {
-        const upstreamDegraded = locations.failed || mobileUnits.failed;
-        const active = locations.rows.filter(location => location.active !== false && !!location.id);
-        if (active.length === 0) {
-          return of({ options: [] as RepairLocationOption[], degraded: upstreamDegraded });
-        }
-
-        const mobileUnitCounts = this.countByBaseLocation(mobileUnits.rows);
-
-        return forkJoin(
-          active.map(location =>
-            this.listBaysResult(location.id).pipe(
-              map(bays => ({
-                option: {
-                  locationId: location.id,
-                  name: location.name || location.code || location.id,
-                  bayCount: bays.rows.length,
-                  mobileUnitCount: mobileUnitCounts.get(location.id) ?? 0,
-                },
-                failed: bays.failed,
-              })),
-            ),
-          ),
-        ).pipe(
-          map(entries => ({
-            options: entries
-              .map(entry => entry.option)
-              .filter(option => option.bayCount > 0 || option.mobileUnitCount > 0)
-              .sort((a, b) => a.name.localeCompare(b.name)),
-            // A location whose bays call failed may be missing from the list
-            // entirely, so the page must be able to say the list is partial.
-            degraded: upstreamDegraded || entries.some(entry => entry.failed),
-          })),
-        );
-      }),
+    this.repairLocations$ ??= this.locationApi.listLocations().pipe(
+      map(rows => ({
+        options: rows
+          .filter((location): location is LocationResponseDTO & { id: string } =>
+            !!location.id && location.hasRepairCapability,
+          )
+          .map(location => ({
+            locationId: location.id,
+            name: location.name || location.code || location.id,
+            bayCount: location.activeBayCount,
+            mobileUnitCount: location.activeMobileUnitCount,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+        degraded: false,
+      })),
+      catchError(() => of({ options: [] as RepairLocationOption[], degraded: true })),
       shareReplay({ bufferSize: 1, refCount: false }),
     );
 
@@ -560,16 +536,6 @@ export class ShopDashboardService {
       map(page => ({ rows: page?.content ?? [], failed: false })),
       catchError(() => of({ rows: [] as MobileUnitResponse[], failed: true })),
     );
-  }
-
-  private countByBaseLocation(mobileUnits: MobileUnitResponse[]): Map<string, number> {
-    const counts = new Map<string, number>();
-    for (const unit of mobileUnits) {
-      if (unit.baseLocationId) {
-        counts.set(unit.baseLocationId, (counts.get(unit.baseLocationId) ?? 0) + 1);
-      }
-    }
-    return counts;
   }
 
   /**

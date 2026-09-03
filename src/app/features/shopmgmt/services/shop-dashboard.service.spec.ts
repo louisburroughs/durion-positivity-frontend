@@ -60,9 +60,22 @@ describe('ShopDashboardService', () => {
   // ── listRepairLocations ──────────────────────────────────────────────────
 
   describe('listRepairLocations', () => {
+    function location(overrides: Record<string, unknown> = {}) {
+      return {
+        id: 'loc-1',
+        name: 'Northgate',
+        active: true,
+        hasRepairCapability: false,
+        activeBayCount: 0,
+        activeMobileUnitCount: 0,
+        ...overrides,
+      };
+    }
+
     it('keeps a location that has bays only', async () => {
-      locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Northgate', active: true }]));
-      bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-1', name: 'Bay 1' }] }));
+      locationStub.listLocations.mockReturnValue(
+        of([location({ hasRepairCapability: true, activeBayCount: 1 })]),
+      );
 
       const { options, degraded } = await firstValueFrom(service.listRepairLocations());
 
@@ -72,9 +85,8 @@ describe('ShopDashboardService', () => {
     });
 
     it('keeps a location that has mobile units only', async () => {
-      locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Northgate', active: true }]));
-      mobileUnitStub.listMobileUnits.mockReturnValue(
-        of({ content: [{ id: 'unit-1', name: 'Van 4', baseLocationId: 'loc-1' }] }),
+      locationStub.listLocations.mockReturnValue(
+        of([location({ hasRepairCapability: true, activeMobileUnitCount: 1 })]),
       );
 
       const { options } = await firstValueFrom(service.listRepairLocations());
@@ -84,35 +96,23 @@ describe('ShopDashboardService', () => {
     });
 
     it('drops a location with neither bays nor mobile units', async () => {
-      locationStub.listLocations.mockReturnValue(of([{ id: 'loc-office', name: 'HQ', active: true }]));
+      locationStub.listLocations.mockReturnValue(of([location({ id: 'loc-office', name: 'HQ' })]));
 
       expect((await firstValueFrom(service.listRepairLocations())).options).toEqual([]);
     });
 
-    it('drops an inactive location even when it has bays', async () => {
-      locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Closed', active: false }]));
-      bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-1' }] }));
-
-      expect((await firstValueFrom(service.listRepairLocations())).options).toEqual([]);
-    });
-
-    it('still offers a location with mobile units when its bays call fails', async () => {
-      locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Northgate', active: true }]));
-      bayStub.listBays.mockReturnValue(throwError(() => new Error('bays down')));
-      mobileUnitStub.listMobileUnits.mockReturnValue(
-        of({ content: [{ id: 'unit-1', baseLocationId: 'loc-1' }] }),
+    it('drops an inactive location even when the backend reports counts', async () => {
+      // The projection already zeroes hasRepairCapability/counts for an
+      // inactive location; this guards against a future backend regression
+      // rather than re-deriving the filter client-side.
+      locationStub.listLocations.mockReturnValue(
+        of([location({ name: 'Closed', active: false, hasRepairCapability: false, activeBayCount: 1 })]),
       );
 
-      const { options, degraded } = await firstValueFrom(service.listRepairLocations());
-
-      expect(options).toHaveLength(1);
-      expect(options[0].bayCount).toBe(0);
-      // The page can only warn about a partial list if the service says so —
-      // every inner call is caught, so this never surfaces as an error.
-      expect(degraded).toBe(true);
+      expect((await firstValueFrom(service.listRepairLocations())).options).toEqual([]);
     });
 
-    it('reports degraded when the locations call itself fails', async () => {
+    it('reports degraded when the locations call fails', async () => {
       locationStub.listLocations.mockReturnValue(throwError(() => new Error('locations down')));
 
       const { options, degraded } = await firstValueFrom(service.listRepairLocations());
@@ -121,39 +121,23 @@ describe('ShopDashboardService', () => {
       expect(degraded).toBe(true);
     });
 
-    it('reports degraded when the mobile-units call fails', async () => {
-      locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Northgate', active: true }]));
-      bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-1' }] }));
-      mobileUnitStub.listMobileUnits.mockReturnValue(throwError(() => new Error('units down')));
-
-      expect((await firstValueFrom(service.listRepairLocations())).degraded).toBe(true);
-    });
-
-    it('re-derives the list after invalidation so a newly created bay appears', async () => {
-      locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Northgate', active: true }]));
-      bayStub.listBays.mockReturnValue(of({ content: [] }));
+    it('re-derives the list after invalidation so a newly capable location appears', async () => {
+      locationStub.listLocations.mockReturnValue(of([location()]));
 
       expect((await firstValueFrom(service.listRepairLocations())).options).toEqual([]);
 
-      bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-new' }] }));
+      locationStub.listLocations.mockReturnValue(
+        of([location({ hasRepairCapability: true, activeBayCount: 1 })]),
+      );
       service.invalidateRepairLocations();
 
       expect((await firstValueFrom(service.listRepairLocations())).options).toHaveLength(1);
     });
 
-    it('requests an explicit page size so a large estate is not silently truncated', async () => {
-      locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Northgate', active: true }]));
-
-      await firstValueFrom(service.listRepairLocations());
-
-      expect(mobileUnitStub.listMobileUnits).toHaveBeenCalledWith(0, expect.any(Number));
-      const [, , , , size] = bayStub.listBays.mock.calls[0];
-      expect(size).toBeGreaterThan(100);
-    });
-
     it('caches the derived list so switching location does not re-fan-out', async () => {
-      locationStub.listLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Northgate', active: true }]));
-      bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-1' }] }));
+      locationStub.listLocations.mockReturnValue(
+        of([location({ hasRepairCapability: true, activeBayCount: 1 })]),
+      );
 
       await firstValueFrom(service.listRepairLocations());
       await firstValueFrom(service.listRepairLocations());
@@ -169,6 +153,14 @@ describe('ShopDashboardService', () => {
       await firstValueFrom(service.getDashboard('  loc-1  ', DATE));
 
       expect(dispatchStub.getDispatchDashboard).toHaveBeenCalledWith('loc-1', DATE);
+    });
+
+    it('requests an explicit page size for bays and mobile units so a large estate is not silently truncated', async () => {
+      await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+      expect(mobileUnitStub.listMobileUnits).toHaveBeenCalledWith(0, expect.any(Number));
+      const [, , , , size] = bayStub.listBays.mock.calls[0];
+      expect(size).toBeGreaterThan(100);
     });
 
     it('builds a bay card with workorder, vehicle and mechanic', async () => {
