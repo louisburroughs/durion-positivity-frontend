@@ -830,9 +830,18 @@ describe('WorkexecService', () => {
         resourceType: 'LIFT',
       });
 
-      expect(sent['assignedResources']).toEqual(['res-1']);
-      // Omitted rather than forwarded: the server reads an absent type as BAY,
-      // and echoing an unknown value would fail validation on the whole request.
+      // The whole assignment is dropped, not just the type: an absent
+      // resourceType is read as BAY server-side, so forwarding
+      // assignedResources without the (unrecognized) type would silently
+      // reinterpret it as a BAY assignment the caller never asked for.
+      expect(sent).not.toHaveProperty('assignedResources');
+      expect(sent).not.toHaveProperty('resourceType');
+    });
+
+    it('fabricates no assignment for an unrecognized resourceType with no assignedResources', () => {
+      const sent = override({ locationId: 'loc-1', resourceType: 'LIFT' });
+
+      expect(sent).not.toHaveProperty('assignedResources');
       expect(sent).not.toHaveProperty('resourceType');
     });
 

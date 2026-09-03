@@ -197,7 +197,21 @@ export class ShopDashboardService {
     // which stays incomplete until backend #1668 (see the class comment). The
     // work on a unit is read from the workorder side instead — a summary
     // naming this unit as its assigned resource.
-    const workorderByMobileUnit = this.indexMobileUnitAssignments(dashboard.workorders ?? []);
+    //
+    // `BayStatus.assignedWorkorderId` (bayCards, above) and
+    // `WorkorderSummary.assignedResourceId`/`resourceType` are independent,
+    // optional fields on two different projections with no consistency
+    // guarantee. If they ever name the same workorder for two different
+    // units, the bay's own live feed wins — a mobile-unit card must never
+    // claim a workorder a bay card already claims, or the dashboard would
+    // render one workorder "in progress" on two units at once.
+    const claimedByBay = new Set(
+      bayCards.map(card => card.workorder?.workorderId).filter((id): id is string => !!id),
+    );
+    const workorderByMobileUnit = this.indexMobileUnitAssignments(
+      dashboard.workorders ?? [],
+      claimedByBay,
+    );
     const mobileUnitCards: RepairUnitCard[] = mobileUnits
       .filter(unit => unit.baseLocationId === locationId)
       .map(unit => ({
@@ -220,7 +234,12 @@ export class ShopDashboardService {
     // the grid above it. The card join wins; the summary only fills gaps.
     const unitByWorkorder = new Map<string, { unitId: string; unitName: string }>();
     for (const card of [...bayCards, ...mobileUnitCards]) {
-      if (card.workorder) {
+      // First writer wins: bayCards is spread first, so a bay's claim on a
+      // workorder is never overwritten by a later mobile-unit card. This
+      // mirrors the `.has()` guard in the loop below and enforces the
+      // invariant in code rather than relying solely on `claimedByBay`
+      // upstream already having excluded the conflict.
+      if (card.workorder && !unitByWorkorder.has(card.workorder.workorderId)) {
         unitByWorkorder.set(card.workorder.workorderId, {
           unitId: card.unitId,
           unitName: card.unitName,
@@ -291,15 +310,25 @@ export class ShopDashboardService {
    * The projection carries no uniqueness guarantee, so the first row wins:
    * two workorders claiming one unit must not make the card flip between them
    * on refresh.
+   *
+   * `claimedByBay` excludes any workorder a `BayStatus` row has already
+   * claimed: bay status is the bay's own live operational feed, whereas this
+   * reads the workorder's side of an independent, optionally-inconsistent
+   * field, so on conflict the bay wins and this method must not also hand
+   * the same workorder to a mobile unit.
    */
-  private indexMobileUnitAssignments(workorders: WorkorderSummary[]): Map<string, string> {
+  private indexMobileUnitAssignments(
+    workorders: WorkorderSummary[],
+    claimedByBay: ReadonlySet<string>,
+  ): Map<string, string> {
     const byUnit = new Map<string, string>();
     for (const summary of workorders) {
       const resourceId = summary.assignedResourceId;
       if (
         !resourceId ||
         summary.resourceType !== WorkorderSummaryResourceTypeEnum.MobileUnit ||
-        byUnit.has(resourceId)
+        byUnit.has(resourceId) ||
+        claimedByBay.has(summary.workorderId)
       ) {
         continue;
       }
