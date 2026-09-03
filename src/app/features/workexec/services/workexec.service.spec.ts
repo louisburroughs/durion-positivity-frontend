@@ -770,6 +770,81 @@ describe('WorkexecService', () => {
     });
   });
 
+  // ── CAP-142: resource-generic operational context (#207) ──────────────────
+
+  describe('overrideOperationalContext resource assignment', () => {
+    const URL = `${BASE}/v1/workorders/wo-1/operationalContext/override`;
+
+    /**
+     * Returns the request body as it goes over the wire. Serialising matters:
+     * a key held as `undefined` is absent from the JSON the server sees, and
+     * asserting on the raw literal would not distinguish the two.
+     */
+    function override(body: Record<string, unknown>): Record<string, unknown> {
+      service.overrideOperationalContext('wo-1', body).subscribe();
+      const r = http.expectOne(URL);
+      expect(r.request.method).toBe('POST');
+      const sent = JSON.parse(JSON.stringify(r.request.body)) as Record<string, unknown>;
+      r.flush({ locationId: 'loc-1', locked: false });
+      return sent;
+    }
+
+    it('sends assignedResources with the supplied resourceType', () => {
+      const sent = override({
+        locationId: 'loc-1',
+        assignedResources: ['unit-9'],
+        resourceType: 'MOBILE_UNIT',
+      });
+
+      expect(sent['assignedResources']).toEqual(['unit-9']);
+      expect(sent['resourceType']).toBe('MOBILE_UNIT');
+      // SDK 0.11 removed the field outright; sending it would be rejected.
+      expect(sent).not.toHaveProperty('bayId');
+    });
+
+    it('folds a legacy bayId into assignedResources rather than discarding it', () => {
+      // The adapter body is untyped, so a caller still on the 0.10 vocabulary
+      // compiles. Dropping bayId would re-slot the workorder to no resource.
+      const sent = override({ locationId: 'loc-1', bayId: 'bay-3' });
+
+      expect(sent['assignedResources']).toEqual(['bay-3']);
+      expect(sent['resourceType']).toBe('BAY');
+    });
+
+    it('prefers an explicit assignedResources list over a legacy bayId', () => {
+      const sent = override({
+        locationId: 'loc-1',
+        assignedResources: ['unit-9'],
+        resourceType: 'MOBILE_UNIT',
+        bayId: 'bay-3',
+      });
+
+      expect(sent['assignedResources']).toEqual(['unit-9']);
+      expect(sent['resourceType']).toBe('MOBILE_UNIT');
+    });
+
+    it('ignores a resourceType the contract does not define', () => {
+      const sent = override({
+        locationId: 'loc-1',
+        assignedResources: ['res-1'],
+        resourceType: 'LIFT',
+      });
+
+      expect(sent['assignedResources']).toEqual(['res-1']);
+      // Omitted rather than forwarded: the server reads an absent type as BAY,
+      // and echoing an unknown value would fail validation on the whole request.
+      expect(sent).not.toHaveProperty('resourceType');
+    });
+
+    it('sends no assignment when the body carries none', () => {
+      const sent = override({ locationId: 'loc-1', assignedMechanics: ['p-1'] });
+
+      expect(sent).not.toHaveProperty('assignedResources');
+      expect(sent).not.toHaveProperty('resourceType');
+      expect(sent['assignedMechanics']).toEqual(['p-1']);
+    });
+  });
+
   describe('getTechnicianProfile', () => {
     it('gets /v1/people/employees/{id} and returns the name and employee number', () => {
       let result: { name: string | null; employeeNumber: string | null } | undefined;

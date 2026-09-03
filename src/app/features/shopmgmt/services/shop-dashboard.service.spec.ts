@@ -236,8 +236,112 @@ describe('ShopDashboardService', () => {
 
       expect(mobile).toHaveLength(1);
       expect(mobile[0]).toMatchObject({ unitId: 'unit-1', unitName: 'Van 4' });
-      // Backend gap louisburroughs/durion#416 — no assignment feed for mobile units.
       expect(mobile[0].workorder).toBeUndefined();
+    });
+
+    it('puts a MOBILE_UNIT-assigned workorder on its mobile-unit card', async () => {
+      mobileUnitStub.listMobileUnits.mockReturnValue(
+        of({ content: [{ id: 'unit-1', name: 'Van 4', baseLocationId: 'loc-1', status: 'ACTIVE' }] }),
+      );
+      dispatchStub.getDispatchDashboard.mockReturnValue(
+        of(
+          dashboard({
+            workorders: [
+              {
+                workorderId: 'wo-mobile',
+                workorderNumber: 'WO-77',
+                status: 'WORK_IN_PROGRESS',
+                assignedResourceId: 'unit-1',
+                resourceType: 'MOBILE_UNIT',
+              },
+            ],
+            mechanics: [{ personId: 'p-2', firstName: 'R.', lastName: 'Okafor', assignedWorkorderId: 'wo-mobile' }],
+          }),
+        ),
+      );
+
+      const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+      const mobile = view.units.find(unit => unit.unitType === 'MOBILE_UNIT');
+
+      expect(mobile?.workorder).toMatchObject({ workorderId: 'wo-mobile', workorderNumber: 'WO-77' });
+      expect(mobile?.workorder?.mechanic).toEqual({ personId: 'p-2', displayName: 'R. Okafor' });
+      // The roster must agree with the card above it.
+      expect(view.openWorkorders[0]).toMatchObject({ unitId: 'unit-1', unitName: 'Van 4' });
+    });
+
+    it('does not put a BAY-assigned workorder on a mobile unit that shares its id', async () => {
+      // The identifier alone says nothing about the kind of unit; only
+      // resourceType does. Reading it as a bay is the 0.10 assumption.
+      mobileUnitStub.listMobileUnits.mockReturnValue(
+        of({ content: [{ id: 'res-1', name: 'Van 4', baseLocationId: 'loc-1', status: 'ACTIVE' }] }),
+      );
+      dispatchStub.getDispatchDashboard.mockReturnValue(
+        of(
+          dashboard({
+            workorders: [
+              {
+                workorderId: 'wo-bay',
+                status: 'ASSIGNED',
+                assignedResourceId: 'res-1',
+                resourceType: 'BAY',
+              },
+            ],
+          }),
+        ),
+      );
+
+      const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+      expect(view.units.find(unit => unit.unitType === 'MOBILE_UNIT')?.workorder).toBeUndefined();
+    });
+
+    it('names a mobile-unit assignment from the mobile-unit inventory, not the bays', async () => {
+      // Only reached when the unit is not based at the rendered location, so no
+      // card carries the join — the roster still must not show a raw UUID.
+      mobileUnitStub.listMobileUnits.mockReturnValue(
+        of({ content: [{ id: 'unit-9', name: 'Van 9', baseLocationId: 'loc-2', status: 'ACTIVE' }] }),
+      );
+      dispatchStub.getDispatchDashboard.mockReturnValue(
+        of(
+          dashboard({
+            workorders: [
+              {
+                workorderId: 'wo-away',
+                status: 'ASSIGNED',
+                assignedResourceId: 'unit-9',
+                resourceType: 'MOBILE_UNIT',
+              },
+            ],
+          }),
+        ),
+      );
+
+      const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+      expect(view.openWorkorders[0]).toMatchObject({ unitId: 'unit-9', unitName: 'Van 9' });
+    });
+
+    it('leaves the unit name blank when the assigned resource cannot be resolved', async () => {
+      dispatchStub.getDispatchDashboard.mockReturnValue(
+        of(
+          dashboard({
+            workorders: [
+              {
+                workorderId: 'wo-1',
+                status: 'ASSIGNED',
+                assignedResourceId: 'bay-ghost',
+                resourceType: 'BAY',
+              },
+            ],
+          }),
+        ),
+      );
+
+      const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+      expect(view.openWorkorders[0].unitId).toBe('bay-ghost');
+      // Never a raw UUID: the page renders its own "unknown unit" copy instead.
+      expect(view.openWorkorders[0].unitName).toBeUndefined();
     });
 
     it('builds the roster from open workorders and excludes closed ones', async () => {
@@ -264,7 +368,13 @@ describe('ShopDashboardService', () => {
           dashboard({
             bays: [{ bayId: 'bay-1', bayName: 'Bay 1', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-on-bay' }],
             workorders: [
-              { workorderId: 'wo-on-bay', workorderNumber: 'WO-1', status: 'WORK_IN_PROGRESS', assignedBayId: 'bay-1' },
+              {
+                workorderId: 'wo-on-bay',
+                workorderNumber: 'WO-1',
+                status: 'WORK_IN_PROGRESS',
+                assignedResourceId: 'bay-1',
+                resourceType: 'BAY',
+              },
               { workorderId: 'wo-loose', workorderNumber: 'WO-2', status: 'ASSIGNED' },
             ],
           }),

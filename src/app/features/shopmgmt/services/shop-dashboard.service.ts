@@ -3,7 +3,11 @@ import { Observable, forkJoin, from, map, mergeMap, of, shareReplay, switchMap, 
 import { catchError } from 'rxjs/operators';
 import { BayAPIService, LocationAPIService, MobileUnitAPIService } from '@durion-sdk/location';
 import type { BayResponse, LocationResponseDTO, MobileUnitResponse } from '@durion-sdk/location';
-import { DailyDispatchBoardDashboardService, WorkorderDetailService } from '@durion-sdk/workorder';
+import {
+  DailyDispatchBoardDashboardService,
+  WorkorderDetailService,
+  WorkorderSummaryResourceTypeEnum,
+} from '@durion-sdk/workorder';
 import type { BayStatus, DashboardResponse, MechanicStatus, WorkorderSummary } from '@durion-sdk/workorder';
 import { VehicleRegistryAPIService } from '@durion-sdk/vehicle-inventory';
 import type { WorkorderStatus } from '../../workexec/models/workexec.models';
@@ -53,9 +57,11 @@ const VEHICLE_LOOKUP_LIMIT = 40;
  *
  * Two gaps are tracked as backend stories and are visible in the output:
  *
- *   louisburroughs/durion#416 — the dispatch read model is bay-shaped, so no
- *     workorder can be resolved to a mobile unit. Mobile-unit cards therefore
- *     always render idle here; that is the backend gap, not a bug in this file.
+ *   louisburroughs/durion#416 — SDK 0.11 added `DashboardResponse.mobileUnits`,
+ *     but it is fed by the bay/mobile-unit lifecycle events that backend #1668
+ *     has not published yet, so mobile-unit cards still come from the location
+ *     inventory. What a unit is working on is read from the workorder side
+ *     (`assignedResourceId` + `resourceType`), which is populated today.
  *   louisburroughs/durion#417 — no repair-capability projection on Location, so
  *     {@link listRepairLocations} fans out over the bays endpoint.
  *
@@ -179,13 +185,19 @@ export class ShopDashboardService {
     );
     const mechanicsByWorkorder = this.indexMechanics(dashboard.mechanics ?? []);
     const bayDetail = new Map<string, BayResponse>(bays.map(bay => [bay.id, bay]));
+    const mobileUnitDetail = new Map<string, MobileUnitResponse>(
+      mobileUnits.map(unit => [unit.id, unit]),
+    );
 
     const bayCards = (dashboard.bays ?? []).map(bayStatus =>
       this.toBayCard(bayStatus, bayDetail, summaries, mechanicsByWorkorder, vehicles),
     );
 
-    // #416: no read path resolves a workorder to a mobile unit, so these are
-    // rendered from the location inventory alone and always read as idle.
+    // Cards come from the location inventory, not `dashboard.mobileUnits`,
+    // which stays incomplete until backend #1668 (see the class comment). The
+    // work on a unit is read from the workorder side instead — a summary
+    // naming this unit as its assigned resource.
+    const workorderByMobileUnit = this.indexMobileUnitAssignments(dashboard.workorders ?? []);
     const mobileUnitCards: RepairUnitCard[] = mobileUnits
       .filter(unit => unit.baseLocationId === locationId)
       .map(unit => ({
@@ -193,11 +205,17 @@ export class ShopDashboardService {
         unitType: 'MOBILE_UNIT' as const,
         unitName: unit.name || unit.id,
         unitStatus: unit.status,
+        workorder: this.toWorkorder(
+          workorderByMobileUnit.get(unit.id),
+          summaries,
+          mechanicsByWorkorder,
+          vehicles,
+        ),
       }));
 
     // Single source of truth for "which unit is this workorder on".
-    // `WorkorderSummary.assignedBayId` and `BayStatus.assignedWorkorderId` are
-    // two independent optional fields of the same projection with no
+    // `WorkorderSummary.assignedResourceId` and `BayStatus.assignedWorkorderId`
+    // are two independent optional fields of the same projection with no
     // consistency guarantee, so reading each separately let the roster contradict
     // the grid above it. The card join wins; the summary only fills gaps.
     const unitByWorkorder = new Map<string, { unitId: string; unitName: string }>();
@@ -210,14 +228,15 @@ export class ShopDashboardService {
       }
     }
     for (const summary of dashboard.workorders ?? []) {
-      if (!summary.assignedBayId || unitByWorkorder.has(summary.workorderId)) {
+      const resourceId = summary.assignedResourceId;
+      if (!resourceId || unitByWorkorder.has(summary.workorderId)) {
         continue;
       }
-      const named = bayDetail.get(summary.assignedBayId);
       unitByWorkorder.set(summary.workorderId, {
-        unitId: summary.assignedBayId,
-        // Never surface a raw UUID: an unresolvable bay reads as "unknown unit".
-        unitName: named?.name ?? '',
+        unitId: resourceId,
+        // Never surface a raw UUID: an unresolvable resource reads as
+        // "unknown unit".
+        unitName: this.resourceName(resourceId, summary.resourceType, bayDetail, mobileUnitDetail),
       });
     }
 
@@ -261,6 +280,53 @@ export class ShopDashboardService {
         vehicles,
       ),
     };
+  }
+
+  /**
+   * Workorders that name a mobile unit as their assigned resource, keyed by
+   * unit. A workorder's assignment is `assignedResourceId` plus `resourceType`
+   * in SDK 0.11, so the identifier alone does not say which kind of unit it
+   * points at — only rows typed `MOBILE_UNIT` belong here.
+   *
+   * The projection carries no uniqueness guarantee, so the first row wins:
+   * two workorders claiming one unit must not make the card flip between them
+   * on refresh.
+   */
+  private indexMobileUnitAssignments(workorders: WorkorderSummary[]): Map<string, string> {
+    const byUnit = new Map<string, string>();
+    for (const summary of workorders) {
+      const resourceId = summary.assignedResourceId;
+      if (
+        !resourceId ||
+        summary.resourceType !== WorkorderSummaryResourceTypeEnum.MobileUnit ||
+        byUnit.has(resourceId)
+      ) {
+        continue;
+      }
+      byUnit.set(resourceId, summary.workorderId);
+    }
+    return byUnit;
+  }
+
+  /**
+   * Display name for an assigned resource. `resourceType` picks the inventory
+   * to read; an untyped identifier is looked up in both rather than assumed to
+   * be a bay, since a mobile unit's id would otherwise resolve to '' and read
+   * as an unknown unit.
+   */
+  private resourceName(
+    resourceId: string,
+    resourceType: WorkorderSummaryResourceTypeEnum | undefined,
+    bays: ReadonlyMap<string, BayResponse>,
+    mobileUnits: ReadonlyMap<string, MobileUnitResponse>,
+  ): string {
+    if (resourceType === WorkorderSummaryResourceTypeEnum.Bay) {
+      return bays.get(resourceId)?.name ?? '';
+    }
+    if (resourceType === WorkorderSummaryResourceTypeEnum.MobileUnit) {
+      return mobileUnits.get(resourceId)?.name ?? '';
+    }
+    return bays.get(resourceId)?.name ?? mobileUnits.get(resourceId)?.name ?? '';
   }
 
   /**
@@ -382,9 +448,14 @@ export class ShopDashboardService {
     // budget before roster-only rows. Without this ordering a busy site can
     // spend all 40 lookups on the roster and leave every bay card showing
     // "vehicle details unavailable" — the one thing the page exists to show.
-    const onUnit = new Set(
-      bays.map(bay => bay.assignedWorkorderId).filter((id): id is string => !!id),
-    );
+    // Mobile-unit cards count as units too, so their work is read from the
+    // workorder's own assignment rather than from the bay-shaped status rows.
+    const onUnit = new Set([
+      ...bays.map(bay => bay.assignedWorkorderId).filter((id): id is string => !!id),
+      ...workorders
+        .filter(summary => summary.resourceType === WorkorderSummaryResourceTypeEnum.MobileUnit)
+        .map(summary => summary.workorderId),
+    ]);
     const ids = [
       ...open.filter(summary => onUnit.has(summary.workorderId)),
       ...open.filter(summary => !onUnit.has(summary.workorderId)),

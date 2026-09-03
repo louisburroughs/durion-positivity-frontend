@@ -11,6 +11,7 @@ import {
   WorkorderSearchService,
   EstimatesFromAppointmentsService,
   OperationalContextService,
+  OperationalContextOverrideRequestResourceTypeEnum,
   SubstituteLinkAPIService,
   TechnicianAssignmentAPIService,
   TravelSegmentAPIService,
@@ -1315,14 +1316,56 @@ export class WorkexecService {
     body: Record<string, unknown>,
     _idempotencyKey?: string,
   ): Observable<OperationalContextResponse> {
+    const assignment = this.toResourceAssignment(body);
     const sdkRequest: import('@durion-sdk/workorder').OperationalContextOverrideRequest = {
       locationId: typeof body['locationId'] === 'string' ? body['locationId'] : '',
-      bayId: typeof body['bayId'] === 'string' ? body['bayId'] : undefined,
       assignedMechanics: Array.isArray(body['assignedMechanics']) ? (body['assignedMechanics'] as string[]) : undefined,
-      assignedResources: Array.isArray(body['assignedResources']) ? (body['assignedResources'] as string[]) : undefined,
+      assignedResources: assignment.assignedResources,
+      resourceType: assignment.resourceType,
       constraints: Array.isArray(body['constraints']) ? (body['constraints'] as string[]) : undefined,
     };
     return this.operationalContext.overrideOperationalContext(workorderId, sdkRequest) as Observable<OperationalContextResponse>;
+  }
+
+  /**
+   * SDK 0.11 removed `OperationalContextOverrideRequest.bayId`: a resource
+   * assignment is now the `assignedResources` list plus `resourceType`, so a
+   * bay and a mobile unit are carried by the same field.
+   *
+   * This adapter takes an untyped body, so a caller still supplying the old
+   * `bayId` key cannot be caught by the compiler. It is folded into the list
+   * rather than dropped: silently discarding it would re-slot the workorder
+   * to no resource at all, which is not what the request asked for.
+   */
+  private toResourceAssignment(body: Record<string, unknown>): {
+    assignedResources?: string[];
+    resourceType?: OperationalContextOverrideRequestResourceTypeEnum;
+  } {
+    const explicitType = body['resourceType'];
+    const resourceType =
+      explicitType === OperationalContextOverrideRequestResourceTypeEnum.Bay ||
+      explicitType === OperationalContextOverrideRequestResourceTypeEnum.MobileUnit
+        ? (explicitType as OperationalContextOverrideRequestResourceTypeEnum)
+        : undefined;
+
+    if (Array.isArray(body['assignedResources'])) {
+      const assignedResources = (body['assignedResources'] as unknown[]).filter(
+        (id): id is string => typeof id === 'string' && id.length > 0,
+      );
+      return assignedResources.length > 0 ? { assignedResources, resourceType } : {};
+    }
+
+    const bayId = body['bayId'];
+    if (typeof bayId === 'string' && bayId.length > 0) {
+      return {
+        assignedResources: [bayId],
+        // An absent resourceType is read as BAY server-side; stating it keeps
+        // the request self-describing.
+        resourceType: OperationalContextOverrideRequestResourceTypeEnum.Bay,
+      };
+    }
+
+    return {};
   }
 
   // ── CAP-140: Estimate from Appointment ─────────────────────────────────

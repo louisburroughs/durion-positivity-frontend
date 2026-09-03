@@ -87,9 +87,33 @@ const bindingView: EndpointBindingView = {
   captureLevel: EndpointBindingViewCaptureLevelEnum.Redacted,
 };
 
-const activeLocation: LocationResponseDTO = { id: LOCATION_A, name: 'Springfield Main', active: true };
-const secondActiveLocation: LocationResponseDTO = { id: LOCATION_B, name: 'Shelbyville', active: true };
-const inactiveLocation: LocationResponseDTO = { id: 'loc-dead', name: 'Closed Depot', active: false };
+// SDK 0.11 made the repair-capability counts required on LocationResponseDTO.
+// Supplier profiles care only about id/name/active, so the fixtures state the
+// contract's own rule: an inactive location always reports zero and no capability.
+const activeLocation: LocationResponseDTO = {
+  id: LOCATION_A,
+  name: 'Springfield Main',
+  active: true,
+  activeBayCount: 2,
+  activeMobileUnitCount: 0,
+  hasRepairCapability: true,
+};
+const secondActiveLocation: LocationResponseDTO = {
+  id: LOCATION_B,
+  name: 'Shelbyville',
+  active: true,
+  activeBayCount: 1,
+  activeMobileUnitCount: 1,
+  hasRepairCapability: true,
+};
+const inactiveLocation: LocationResponseDTO = {
+  id: 'loc-dead',
+  name: 'Closed Depot',
+  active: false,
+  activeBayCount: 0,
+  activeMobileUnitCount: 0,
+  hasRepairCapability: false,
+};
 
 const profileRequest: VendorProfileRequest = {
   supplierRef: 'michelin-eu',
