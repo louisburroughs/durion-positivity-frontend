@@ -61,10 +61,27 @@ describe('ShopmgmtRosterService', () => {
         result = page;
       });
 
+    // SDK 0.11 signature: listMechanics(status, skillCode, page, size, sort).
+    // Argument order is the whole contract here — a page number landing in the
+    // skillCode slot would silently return the unfiltered first page.
     expect(mechanicRosterApiStub.listMechanics).toHaveBeenCalledWith(
-      { page: 2, size: 40 },
       MechanicRosterEntryResponseStatusEnum.Inactive,
+      undefined,
+      2,
+      40,
     );
     expect(result).toBe(samplePage);
+  });
+
+  it('forwards each roster status unchanged', () => {
+    for (const status of [
+      MechanicRosterEntryResponseStatusEnum.Active,
+      MechanicRosterEntryResponseStatusEnum.Inactive,
+      MechanicRosterEntryResponseStatusEnum.OnLeave,
+    ]) {
+      service.listMechanics({ status, page: 0, size: 20 }).subscribe();
+
+      expect(mechanicRosterApiStub.listMechanics).toHaveBeenLastCalledWith(status, undefined, 0, 20);
+    }
   });
 });
