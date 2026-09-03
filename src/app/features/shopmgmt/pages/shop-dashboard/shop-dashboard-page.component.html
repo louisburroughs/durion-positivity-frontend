@@ -19,13 +19,21 @@
         <label class="field-label" for="shop-dashboard-location">
           {{ 'SHOPMGMT.SHOP_DASHBOARD.LOCATION' | translate }}
         </label>
+        <!--
+          Selection is bound on the options, not on the <select>. A [value]
+          binding on the select is written before the @for creates the options,
+          so a deep-linked ?locationId= was silently discarded and the control
+          showed the placeholder while the page rendered that location's data.
+        -->
         <select id="shop-dashboard-location"
-          [value]="selectedLocationId()"
           (change)="onLocationChange($any($event.target).value)"
           [attr.aria-describedby]="'shop-dashboard-location-hint'">
-          <option value="">{{ 'SHOPMGMT.SHOP_DASHBOARD.LOCATION_PLACEHOLDER' | translate }}</option>
+          <option value="" [selected]="!selectedLocationId()">
+            {{ 'SHOPMGMT.SHOP_DASHBOARD.LOCATION_PLACEHOLDER' | translate }}
+          </option>
           @for (location of locations(); track location.locationId) {
-            <option [value]="location.locationId">{{ location.name }}</option>
+            <option [value]="location.locationId"
+              [selected]="location.locationId === selectedLocationId()">{{ location.name }}</option>
           }
         </select>
         <p class="field-hint" id="shop-dashboard-location-hint">

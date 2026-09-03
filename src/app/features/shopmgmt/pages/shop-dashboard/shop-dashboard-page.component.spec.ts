@@ -51,6 +51,7 @@ describe('ShopDashboardPageComponent', () => {
   const serviceStub = {
     listRepairLocations: vi.fn(),
     getDashboard: vi.fn(),
+    invalidateRepairLocations: vi.fn(),
   };
 
   async function setup(params: Record<string, string> = {}): Promise<void> {
@@ -73,7 +74,7 @@ describe('ShopDashboardPageComponent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     TestBed.resetTestingModule();
-    serviceStub.listRepairLocations.mockReturnValue(of(LOCATIONS));
+    serviceStub.listRepairLocations.mockReturnValue(of({ options: LOCATIONS, degraded: false }));
     serviceStub.getDashboard.mockReturnValue(of(LOADED_VIEW));
   });
 
@@ -83,6 +84,28 @@ describe('ShopDashboardPageComponent', () => {
     expect(component.state()).toBe('idle');
     expect(serviceStub.getDashboard).not.toHaveBeenCalled();
     expect((fixture.nativeElement as HTMLElement).querySelector('.location-required')).not.toBeNull();
+  });
+
+  it('reflects a deep-linked ?locationId= in the select value', async () => {
+    await setup({ locationId: 'loc-1' });
+    const select = (fixture.nativeElement as HTMLElement).querySelector(
+      '#shop-dashboard-location',
+    ) as HTMLSelectElement;
+
+    // A [value] binding on the <select> is applied before @for creates the
+    // options and is never re-applied, so the control silently showed the
+    // placeholder while the page rendered that location's data.
+    expect(select.value).toBe('loc-1');
+    expect(select.selectedOptions[0]?.textContent).toContain('Northgate');
+  });
+
+  it('shows the placeholder when no location is selected', async () => {
+    await setup();
+    const select = (fixture.nativeElement as HTMLElement).querySelector(
+      '#shop-dashboard-location',
+    ) as HTMLSelectElement;
+
+    expect(select.value).toBe('');
   });
 
   it('offers only the repair-capable locations from the service', async () => {
@@ -236,12 +259,48 @@ describe('ShopDashboardPageComponent', () => {
     );
   });
 
-  it('warns when the location list could not be fully derived', async () => {
-    serviceStub.listRepairLocations.mockReturnValue(throwError(() => new Error('down')));
+  it('warns when the derived location list is degraded', async () => {
+    // The real service catches every inner call, so a partial derivation
+    // arrives as `degraded: true`, never as an observable error. The previous
+    // version of this test stubbed a throw the service cannot produce.
+    serviceStub.listRepairLocations.mockReturnValue(of({ options: LOCATIONS, degraded: true }));
     await setup();
 
     expect(component.locationsError()).toBe(true);
     expect((fixture.nativeElement as HTMLElement).querySelector('.alert-warning')).not.toBeNull();
+  });
+
+  it('does not warn when the list is complete', async () => {
+    await setup();
+
+    expect(component.locationsError()).toBe(false);
+  });
+
+  it('re-derives the location list on refresh so a bay created elsewhere appears', async () => {
+    await setup({ locationId: 'loc-1' });
+    serviceStub.listRepairLocations.mockClear();
+
+    component.refresh();
+    fixture.detectChanges();
+
+    expect(serviceStub.invalidateRepairLocations).toHaveBeenCalled();
+    expect(serviceStub.listRepairLocations).toHaveBeenCalled();
+  });
+
+  it('defaults the date to the local calendar day', async () => {
+    // Frozen: `todayIso` is computed at construction, so an unfrozen clock could
+    // cross local midnight before the assertion and flake.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 2, 18, 0, 0));
+    try {
+      await setup();
+      expect(component.todayIso).toBe('2026-09-02');
+    } finally {
+      vi.useRealTimers();
+    }
+    // NOTE: CI runs in UTC, where the local and UTC dates coincide, so this
+    // cannot distinguish local getters from `toISOString()`. The discriminating
+    // coverage for ADR-0038 lives in models/shop-dashboard.models.spec.ts.
   });
 
   it('surfaces the data-quality warning from the view', async () => {

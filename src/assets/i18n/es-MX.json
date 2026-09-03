@@ -1492,6 +1492,7 @@
           "UNIT": "Unidad"
         },
         "NO_UNIT": "No asignada a una unidad",
+        "UNKNOWN_UNIT": "Unidad desconocida",
         "EMPTY": "No hay órdenes de trabajo abiertas en esta ubicación.",
         "TRUNCATED": "Mostrando las primeras {{count}} órdenes de trabajo abiertas."
       },

@@ -22,8 +22,13 @@ const ROUTES = [
   '/app/accounting/vendor-payments',
   '/app/people/employees/EMP-123',
   '/app/location/locations',
-  // Shop Manager Dashboard: status-coloured card grid plus a data table, so it
-  // exercises both the band contrast pairs and table semantics.
+  // NOTE: this harness builds its JSDOM with `runScripts: 'outside-only'`, so the
+  // Angular bundle never executes and axe only ever sees the un-hydrated index
+  // shell — which is why every route here reports an identical pass/inapplicable
+  // count. It is a useful shell-level check, but it is NOT evidence about any
+  // component's rendered markup. Component-level axe coverage for the shop
+  // dashboard lives in
+  // src/app/features/shopmgmt/components/open-workorder-roster/open-workorder-roster.a11y.spec.ts
   '/app/shopmgmt/shop-dashboard',
   // Supplier connectivity (positivity domain, issues #188-#195). These pages are
   // data-dense — filter forms, tabbed detail, worklist tables and timelines — so

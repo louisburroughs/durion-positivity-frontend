@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenWorkorderRosterComponent } from './open-workorder-roster.component';
 import { OpenWorkorderRow } from '../../models/shop-dashboard.models';
@@ -23,6 +23,27 @@ const UNASSIGNED: OpenWorkorderRow = {
   vehicle: { vehicleId: 'veh-2', vin: '2HGFC2F59JH512260', year: 2018, make: 'Honda', model: 'Civic' },
 };
 
+/** Mirrors the shipped en-US subtree for the keys this component renders. */
+const EN_US = {
+  SHOPMGMT: {
+    SHOP_DASHBOARD: {
+      CARD: { VEHICLE_UNKNOWN: 'Vehicle details unavailable', OPEN_WORKORDER_ARIA: 'Open workorder {{number}}' },
+      STATUS: {
+        DRAFT: 'Draft', APPROVED: 'Approved', ASSIGNED: 'Assigned',
+        WORK_IN_PROGRESS: 'Work in progress', AWAITING_PARTS: 'Awaiting parts',
+        AWAITING_APPROVAL: 'Awaiting approval', READY_FOR_PICKUP: 'Ready for pickup',
+      },
+      ROSTER: {
+        TITLE: 'Vehicles with open workorders', CAPTION: 'Vehicles with open workorders ({{count}})',
+        COL: { VEHICLE: 'Vehicle', VIN: 'VIN', WORKORDER: 'Workorder', STATUS: 'Status', UNIT: 'Unit' },
+        NO_UNIT: 'Not assigned to a unit', UNKNOWN_UNIT: 'Unknown unit',
+        EMPTY: 'No open workorders at this location.',
+        TRUNCATED: 'Showing the first {{count}} open workorders.',
+      },
+    },
+  },
+};
+
 describe('OpenWorkorderRosterComponent', () => {
   let fixture: ComponentFixture<OpenWorkorderRosterComponent>;
 
@@ -31,6 +52,12 @@ describe('OpenWorkorderRosterComponent', () => {
       imports: [OpenWorkorderRosterComponent, TranslateModule.forRoot()],
       providers: [provideRouter([])],
     }).compileComponents();
+
+    // Real strings, so the assertions below test rendered copy rather than
+    // echoed translation keys.
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', EN_US);
+    translate.use('en-US');
 
     fixture = TestBed.createComponent(OpenWorkorderRosterComponent);
   });
@@ -57,30 +84,45 @@ describe('OpenWorkorderRosterComponent', () => {
     expect(el.querySelector('tbody tr')?.textContent).toContain('Bay 1');
   });
 
-  it('marks a row with no unit and gives the dash an accessible label', () => {
+  it('marks a row with no unit and exposes the label as real text, not aria-label on a span', () => {
     const el = render([UNASSIGNED]);
     const row = el.querySelector('tbody tr');
 
     expect(row?.classList.contains('row-unassigned')).toBe(true);
-    expect(row?.querySelector('.cell-muted[aria-label]')).not.toBeNull();
+    // aria-label on a generic <span> is not reliably exposed; visually-hidden text is.
+    // Scope to the Unit cell: the status chip also carries an aria-hidden glyph.
+    const unitCell = row?.querySelectorAll('td')[3];
+    expect(unitCell?.querySelector('.visually-hidden')?.textContent?.trim()).toBe('Not assigned to a unit');
+    expect(unitCell?.querySelector('[aria-hidden="true"]')?.textContent).toContain('\u2014');
   });
 
-  const openStatuses: WorkorderStatus[] = [
-    'DRAFT',
-    'APPROVED',
-    'ASSIGNED',
-    'WORK_IN_PROGRESS',
-    'AWAITING_PARTS',
-    'AWAITING_APPROVAL',
-    'READY_FOR_PICKUP',
+  it('never prints a raw unit id when the unit name could not be resolved', () => {
+    const el = render([{ ...UNASSIGNED, unitId: 'bay-uuid-1234', unitName: undefined }]);
+    const unitCell = el.querySelectorAll('tbody td')[3];
+
+    expect(unitCell?.textContent).not.toContain('bay-uuid-1234');
+    expect(unitCell?.textContent?.trim()).toBe('Unknown unit');
+  });
+
+  // Each status must map to ITS band and render ITS translated text. The
+  // previous version accepted any of four bands for any status, so it passed
+  // even if statusBand() returned a constant.
+  const openStatuses: ReadonlyArray<[WorkorderStatus, string, string]> = [
+    ['DRAFT', 'queued', 'Draft'],
+    ['APPROVED', 'queued', 'Approved'],
+    ['ASSIGNED', 'queued', 'Assigned'],
+    ['WORK_IN_PROGRESS', 'active', 'Work in progress'],
+    ['AWAITING_PARTS', 'blocked', 'Awaiting parts'],
+    ['AWAITING_APPROVAL', 'blocked', 'Awaiting approval'],
+    ['READY_FOR_PICKUP', 'ready', 'Ready for pickup'],
   ];
 
-  it.each(openStatuses)('renders a banded chip with text for %s', status => {
+  it.each(openStatuses)('renders %s in the %s band with the text "%s"', (status, band, text) => {
     const el = render([{ ...UNASSIGNED, status }]);
     const chip = el.querySelector('.status-chip');
 
-    expect(chip?.className).toMatch(/band-(queued|active|blocked|ready)/);
-    expect(chip?.textContent?.trim().length).toBeGreaterThan(0);
+    expect(chip?.classList.contains(`band-${band}`)).toBe(true);
+    expect(chip?.textContent?.trim()).toContain(text);
   });
 
   it('renders the empty message rather than omitting the section', () => {

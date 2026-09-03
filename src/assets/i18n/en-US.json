@@ -1492,6 +1492,7 @@
           "UNIT": "Unit"
         },
         "NO_UNIT": "Not assigned to a unit",
+        "UNKNOWN_UNIT": "Unknown unit",
         "EMPTY": "No open workorders at this location.",
         "TRUNCATED": "Showing the first {{count}} open workorders."
       },

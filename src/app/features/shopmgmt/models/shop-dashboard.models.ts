@@ -87,6 +87,16 @@ export interface ShopDashboardView {
   readonly dataQualityWarning: boolean;
 }
 
+/**
+ * Result of deriving the repair-location filter. `degraded` is true when one or
+ * more upstream calls failed, so the page can say the list may be incomplete
+ * instead of presenting a short list as if it were the whole estate.
+ */
+export interface RepairLocationsResult {
+  readonly options: readonly RepairLocationOption[];
+  readonly degraded: boolean;
+}
+
 /** A location offered by the dashboard's location filter. */
 export interface RepairLocationOption {
   readonly locationId: string;
@@ -147,6 +157,21 @@ export function vehicleLabel(vehicle?: DashboardVehicle | null): string {
     .join(' ');
 
   return structured || (vehicle.description ?? '').trim();
+}
+
+/**
+ * Today's date as a local-calendar `YYYY-MM-DD` string.
+ *
+ * ADR-0038 rejects `toISOString().slice(0, 10)` by name: `toISOString()` is UTC,
+ * so in any UTC-N zone it returns tomorrow's date for the last hours of the local
+ * day — which on this page would ask the dispatch board for the wrong shift.
+ * Local getters are the required pattern.
+ */
+export function todayIsoLocal(now: Date = new Date()): string {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 /** i18n key for a status, or undefined when the value is not a known enum member. */

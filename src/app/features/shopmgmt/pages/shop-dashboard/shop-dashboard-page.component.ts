@@ -12,6 +12,7 @@ import {
   RepairUnitCard,
   ShopDashboardView,
   statusBand,
+  todayIsoLocal,
 } from '../../models/shop-dashboard.models';
 import { ShopDashboardService } from '../../services/shop-dashboard.service';
 
@@ -46,7 +47,7 @@ export class ShopDashboardPageComponent {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly todayIso = new Date().toISOString().slice(0, 10);
+  readonly todayIso = todayIsoLocal();
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -91,19 +92,7 @@ export class ShopDashboardPageComponent {
   readonly skeletons = [0, 1, 2, 3, 4, 5];
 
   constructor() {
-    this.service
-      .listRepairLocations()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: options => {
-          this.locations.set(options);
-          this.locationsLoaded.set(true);
-        },
-        error: () => {
-          this.locationsError.set(true);
-          this.locationsLoaded.set(true);
-        },
-      });
+    this.loadRepairLocations();
 
     this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       const locationId = String(params['locationId'] ?? '');
@@ -170,7 +159,31 @@ export class ShopDashboardPageComponent {
   }
 
   refresh(): void {
+    // The filter list is memoised beyond this page's lifetime, so a bay created
+    // elsewhere would never appear without an explicit invalidation here.
+    this.service.invalidateRepairLocations();
+    this.loadRepairLocations();
     this.refreshToken.update(token => token + 1);
+  }
+
+  private loadRepairLocations(): void {
+    this.service
+      .listRepairLocations()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: result => {
+          this.locations.set(result.options);
+          // `degraded` is how a partial derivation reaches the user: the inner
+          // calls are caught so the list still renders, which means this never
+          // arrives as an observable error.
+          this.locationsError.set(result.degraded);
+          this.locationsLoaded.set(true);
+        },
+        error: () => {
+          this.locationsError.set(true);
+          this.locationsLoaded.set(true);
+        },
+      });
   }
 
   trackUnit(_index: number, unit: RepairUnitCard): string {

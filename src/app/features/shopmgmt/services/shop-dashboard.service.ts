@@ -14,8 +14,10 @@ import {
   OpenWorkorderRow,
   RepairLocationOption,
   RepairUnitCard,
+  RepairLocationsResult,
   ShopDashboardView,
   isOpenStatus,
+  todayIsoLocal,
 } from '../models/shop-dashboard.models';
 
 /** Roster cap; mirrors the aggregate endpoint's own cap (design spec §5.1). */
@@ -27,6 +29,13 @@ const OPEN_WORKORDER_LIMIT = 200;
  * unstructured `vehicleDescription` the dispatch projection already carries.
  */
 const VEHICLE_LOOKUP_CONCURRENCY = 6;
+
+/**
+ * Both bay and mobile-unit endpoints are Spring pages whose default size is 20.
+ * A site with more units than that would silently lose cards, so an explicit
+ * size is requested. Real pagination belongs with the aggregate endpoint (#419).
+ */
+const PAGE_SIZE = 500;
 const VEHICLE_LOOKUP_LIMIT = 40;
 
 /**
@@ -62,8 +71,13 @@ export class ShopDashboardService {
   private readonly workorderDetail = inject(WorkorderDetailService);
   private readonly vehicleRegistry = inject(VehicleRegistryAPIService);
 
-  /** Cached for the page's lifetime so switching location does not re-fan-out. */
-  private repairLocations$?: Observable<RepairLocationOption[]>;
+  /**
+   * Memoised so switching location does not re-fan-out. Invalidated by
+   * {@link invalidateRepairLocations} — the cache outlives the page (this
+   * service is root-provided), so a bay created elsewhere would otherwise never
+   * appear until a full browser reload.
+   */
+  private repairLocations$?: Observable<RepairLocationsResult>;
 
   /**
    * Locations with at least one bay or at least one mobile unit based there.
@@ -73,42 +87,58 @@ export class ShopDashboardService {
    * fails is still offered when it has mobile units, so one failing site cannot
    * empty the picker.
    */
-  listRepairLocations(): Observable<RepairLocationOption[]> {
+  listRepairLocations(): Observable<RepairLocationsResult> {
     this.repairLocations$ ??= forkJoin({
-      locations: this.locationApi.listLocations().pipe(catchError(() => of([] as LocationResponseDTO[]))),
-      mobileUnits: this.listAllMobileUnits(),
+      locations: this.locationApi.listLocations().pipe(
+        map(rows => ({ rows, failed: false })),
+        catchError(() => of({ rows: [] as LocationResponseDTO[], failed: true })),
+      ),
+      mobileUnits: this.listAllMobileUnitsResult(),
     }).pipe(
       switchMap(({ locations, mobileUnits }) => {
-        const active = locations.filter(location => location.active !== false && !!location.id);
+        const upstreamDegraded = locations.failed || mobileUnits.failed;
+        const active = locations.rows.filter(location => location.active !== false && !!location.id);
         if (active.length === 0) {
-          return of([] as RepairLocationOption[]);
+          return of({ options: [] as RepairLocationOption[], degraded: upstreamDegraded });
         }
 
-        const mobileUnitCounts = this.countByBaseLocation(mobileUnits);
+        const mobileUnitCounts = this.countByBaseLocation(mobileUnits.rows);
 
         return forkJoin(
           active.map(location =>
-            this.countBays(location.id).pipe(
-              map(bayCount => ({
-                locationId: location.id,
-                name: location.name || location.code || location.id,
-                bayCount,
-                mobileUnitCount: mobileUnitCounts.get(location.id) ?? 0,
+            this.listBaysResult(location.id).pipe(
+              map(bays => ({
+                option: {
+                  locationId: location.id,
+                  name: location.name || location.code || location.id,
+                  bayCount: bays.rows.length,
+                  mobileUnitCount: mobileUnitCounts.get(location.id) ?? 0,
+                },
+                failed: bays.failed,
               })),
             ),
           ),
         ).pipe(
-          map(options =>
-            options
+          map(entries => ({
+            options: entries
+              .map(entry => entry.option)
               .filter(option => option.bayCount > 0 || option.mobileUnitCount > 0)
               .sort((a, b) => a.name.localeCompare(b.name)),
-          ),
+            // A location whose bays call failed may be missing from the list
+            // entirely, so the page must be able to say the list is partial.
+            degraded: upstreamDegraded || entries.some(entry => entry.failed),
+          })),
         );
       }),
       shareReplay({ bufferSize: 1, refCount: false }),
     );
 
     return this.repairLocations$;
+  }
+
+  /** Drops the memoised filter list so the next call re-derives it. */
+  invalidateRepairLocations(): void {
+    this.repairLocations$ = undefined;
   }
 
   /**
@@ -125,7 +155,7 @@ export class ShopDashboardService {
       bays: this.listBays(trimmedLocationId),
     }).pipe(
       switchMap(({ dashboard, mobileUnits, bays }) =>
-        this.resolveVehicles(dashboard.workorders ?? []).pipe(
+        this.resolveVehicles(dashboard.workorders ?? [], dashboard.bays ?? []).pipe(
           map(vehicles =>
             this.toView(trimmedLocationId, normalizedDate, dashboard, mobileUnits, bays, vehicles),
           ),
@@ -165,11 +195,30 @@ export class ShopDashboardService {
         unitStatus: unit.status,
       }));
 
-    const unitNamesByWorkorder = new Map<string, string>();
-    for (const card of bayCards) {
+    // Single source of truth for "which unit is this workorder on".
+    // `WorkorderSummary.assignedBayId` and `BayStatus.assignedWorkorderId` are
+    // two independent optional fields of the same projection with no
+    // consistency guarantee, so reading each separately let the roster contradict
+    // the grid above it. The card join wins; the summary only fills gaps.
+    const unitByWorkorder = new Map<string, { unitId: string; unitName: string }>();
+    for (const card of [...bayCards, ...mobileUnitCards]) {
       if (card.workorder) {
-        unitNamesByWorkorder.set(card.workorder.workorderId, card.unitName);
+        unitByWorkorder.set(card.workorder.workorderId, {
+          unitId: card.unitId,
+          unitName: card.unitName,
+        });
       }
+    }
+    for (const summary of dashboard.workorders ?? []) {
+      if (!summary.assignedBayId || unitByWorkorder.has(summary.workorderId)) {
+        continue;
+      }
+      const named = bayDetail.get(summary.assignedBayId);
+      unitByWorkorder.set(summary.workorderId, {
+        unitId: summary.assignedBayId,
+        // Never surface a raw UUID: an unresolvable bay reads as "unknown unit".
+        unitName: named?.name ?? '',
+      });
     }
 
     return {
@@ -183,7 +232,7 @@ export class ShopDashboardService {
         dashboard.workorders ?? [],
         mechanicsByWorkorder,
         vehicles,
-        unitNamesByWorkorder,
+        unitByWorkorder,
       ),
       openWorkordersTruncated: (dashboard.workorders ?? []).filter(w => isOpenStatus(w.status)).length
         > OPEN_WORKORDER_LIMIT,
@@ -245,19 +294,22 @@ export class ShopDashboardService {
     workorders: WorkorderSummary[],
     mechanicsByWorkorder: ReadonlyMap<string, DashboardMechanic>,
     vehicles: ReadonlyMap<string, DashboardVehicle>,
-    unitNamesByWorkorder: ReadonlyMap<string, string>,
+    unitByWorkorder: ReadonlyMap<string, { unitId: string; unitName: string }>,
   ): OpenWorkorderRow[] {
     return workorders
       .filter(summary => isOpenStatus(summary.status))
-      .map(summary => ({
-        workorderId: summary.workorderId,
-        workorderNumber: summary.workorderNumber,
-        status: summary.status as WorkorderStatus,
-        vehicle: this.vehicleFor(summary.workorderId, summary, vehicles),
-        mechanic: mechanicsByWorkorder.get(summary.workorderId),
-        unitId: summary.assignedBayId,
-        unitName: unitNamesByWorkorder.get(summary.workorderId),
-      }))
+      .map(summary => {
+        const unit = unitByWorkorder.get(summary.workorderId);
+        return {
+          workorderId: summary.workorderId,
+          workorderNumber: summary.workorderNumber,
+          status: summary.status as WorkorderStatus,
+          vehicle: this.vehicleFor(summary.workorderId, summary, vehicles),
+          mechanic: mechanicsByWorkorder.get(summary.workorderId),
+          unitId: unit?.unitId,
+          unitName: unit?.unitName || undefined,
+        };
+      })
       .sort((a, b) => this.compareRosterRows(a, b))
       .slice(0, OPEN_WORKORDER_LIMIT);
   }
@@ -278,10 +330,20 @@ export class ShopDashboardService {
     vehicles: ReadonlyMap<string, DashboardVehicle>,
   ): DashboardVehicle | undefined {
     const resolved = vehicles.get(workorderId);
-    if (resolved) {
-      return resolved;
-    }
     const description = summary?.vehicleDescription?.trim();
+
+    if (resolved) {
+      // The registry stores `description` as '' when omitted and year/make/model
+      // are all optional, so a VIN-only record can resolve to nothing display-able.
+      // Fall back to the projection's description rather than showing "unavailable"
+      // next to a VIN we do have.
+      const hasStructured = !!(resolved.year || resolved.make || resolved.model);
+      if (hasStructured || resolved.description?.trim()) {
+        return resolved;
+      }
+      return description ? { ...resolved, description } : resolved;
+    }
+
     return description ? { vehicleId: '', description } : undefined;
   }
 
@@ -312,9 +374,21 @@ export class ShopDashboardService {
    */
   private resolveVehicles(
     workorders: WorkorderSummary[],
+    bays: BayStatus[],
   ): Observable<ReadonlyMap<string, DashboardVehicle>> {
-    const ids = workorders
-      .filter(summary => isOpenStatus(summary.status))
+    const open = workorders.filter(summary => isOpenStatus(summary.status));
+
+    // The cards are the primary content, so work sitting on a unit claims the
+    // budget before roster-only rows. Without this ordering a busy site can
+    // spend all 40 lookups on the roster and leave every bay card showing
+    // "vehicle details unavailable" — the one thing the page exists to show.
+    const onUnit = new Set(
+      bays.map(bay => bay.assignedWorkorderId).filter((id): id is string => !!id),
+    );
+    const ids = [
+      ...open.filter(summary => onUnit.has(summary.workorderId)),
+      ...open.filter(summary => !onUnit.has(summary.workorderId)),
+    ]
       .map(summary => summary.workorderId)
       .slice(0, VEHICLE_LOOKUP_LIMIT);
 
@@ -367,20 +441,24 @@ export class ShopDashboardService {
   // ── Location-domain helpers ────────────────────────────────────────────────
 
   private listBays(locationId: string): Observable<BayResponse[]> {
-    return this.bayApi.listBays(locationId).pipe(
-      map(page => page?.content ?? []),
-      catchError(() => of([] as BayResponse[])),
+    return this.listBaysResult(locationId).pipe(map(result => result.rows));
+  }
+
+  private listBaysResult(locationId: string): Observable<{ rows: BayResponse[]; failed: boolean }> {
+    return this.bayApi.listBays(locationId, undefined, undefined, 0, PAGE_SIZE).pipe(
+      map(page => ({ rows: page?.content ?? [], failed: false })),
+      catchError(() => of({ rows: [] as BayResponse[], failed: true })),
     );
   }
 
-  private countBays(locationId: string): Observable<number> {
-    return this.listBays(locationId).pipe(map(bays => bays.length));
+  private listAllMobileUnits(): Observable<MobileUnitResponse[]> {
+    return this.listAllMobileUnitsResult().pipe(map(result => result.rows));
   }
 
-  private listAllMobileUnits(): Observable<MobileUnitResponse[]> {
-    return this.mobileUnitApi.listMobileUnits().pipe(
-      map(page => page?.content ?? []),
-      catchError(() => of([] as MobileUnitResponse[])),
+  private listAllMobileUnitsResult(): Observable<{ rows: MobileUnitResponse[]; failed: boolean }> {
+    return this.mobileUnitApi.listMobileUnits(0, PAGE_SIZE).pipe(
+      map(page => ({ rows: page?.content ?? [], failed: false })),
+      catchError(() => of({ rows: [] as MobileUnitResponse[], failed: true })),
     );
   }
 
@@ -394,15 +472,19 @@ export class ShopDashboardService {
     return counts;
   }
 
-  /** Accepts an already-correct date string to avoid timezone drift (ADR-0038). */
+  /**
+   * Accepts an already-correct date-only string unchanged; otherwise resolves to
+   * the value's LOCAL calendar date. ADR-0038 forbids `toISOString().slice(0,10)`
+   * here — it would report the UTC day and shift the board for UTC-N users.
+   */
   private toIsoDate(value: string): string {
     if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
       return value;
     }
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) {
-      return new Date().toISOString().slice(0, 10);
+      return todayIsoLocal();
     }
-    return parsed.toISOString().slice(0, 10);
+    return todayIsoLocal(parsed);
   }
 }
