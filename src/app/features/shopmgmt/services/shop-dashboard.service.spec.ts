@@ -134,7 +134,7 @@ describe('ShopDashboardService', () => {
       expect((await firstValueFrom(service.listRepairLocations())).options).toHaveLength(1);
     });
 
-    it('caches the derived list so switching location does not re-fan-out', async () => {
+    it('caches the derived list so switching location does not re-call listLocations', async () => {
       locationStub.listLocations.mockReturnValue(
         of([location({ hasRepairCapability: true, activeBayCount: 1 })]),
       );
