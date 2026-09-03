@@ -1347,8 +1347,19 @@ export class WorkexecService {
       explicitType === OperationalContextOverrideRequestResourceTypeEnum.MobileUnit
         ? (explicitType as OperationalContextOverrideRequestResourceTypeEnum)
         : undefined;
+    // An absent resourceType is the server's own BAY default (see the SDK doc
+    // comment), so omitting it here is safe. A resourceType that IS present
+    // but matches neither known enum value is a different case — a typo or a
+    // resource kind this adapter does not know about — and must not be
+    // silently reinterpreted as BAY. Forwarding assignedResources under that
+    // guess could misassign the resource to a kind the caller never asked
+    // for, so the whole assignment is dropped instead.
+    const hasUnknownExplicitType = explicitType !== undefined && resourceType === undefined;
 
     if (Array.isArray(body['assignedResources'])) {
+      if (hasUnknownExplicitType) {
+        return {};
+      }
       const assignedResources = (body['assignedResources'] as unknown[]).filter(
         (id): id is string => typeof id === 'string' && id.length > 0,
       );

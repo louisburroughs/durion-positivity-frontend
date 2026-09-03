@@ -269,6 +269,43 @@ describe('ShopDashboardService', () => {
       expect(view.openWorkorders[0]).toMatchObject({ unitId: 'unit-1', unitName: 'Van 4' });
     });
 
+    it('lets the bay card win when a bay and a mobile-unit assignment name the same workorder', async () => {
+      // BayStatus.assignedWorkorderId and WorkorderSummary.assignedResourceId/
+      // resourceType are independent, optional fields with no consistency
+      // guarantee. When they disagree about which unit holds this work, the
+      // bay's own live feed must win: the mobile-unit card must render idle,
+      // and the roster must agree with the bay card, not the mobile-unit card.
+      mobileUnitStub.listMobileUnits.mockReturnValue(
+        of({ content: [{ id: 'unit-1', name: 'Van 4', baseLocationId: 'loc-1', status: 'ACTIVE' }] }),
+      );
+      dispatchStub.getDispatchDashboard.mockReturnValue(
+        of(
+          dashboard({
+            bays: [
+              { bayId: 'bay-1', bayName: 'Bay 1', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-conflict' },
+            ],
+            workorders: [
+              {
+                workorderId: 'wo-conflict',
+                workorderNumber: 'WO-9',
+                status: 'WORK_IN_PROGRESS',
+                assignedResourceId: 'unit-1',
+                resourceType: 'MOBILE_UNIT',
+              },
+            ],
+          }),
+        ),
+      );
+
+      const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+      const bayCard = view.units.find(unit => unit.unitId === 'bay-1');
+      const mobileCard = view.units.find(unit => unit.unitId === 'unit-1');
+
+      expect(bayCard?.workorder).toMatchObject({ workorderId: 'wo-conflict', workorderNumber: 'WO-9' });
+      expect(mobileCard?.workorder).toBeUndefined();
+      expect(view.openWorkorders[0]).toMatchObject({ unitId: 'bay-1', unitName: 'Bay 1' });
+    });
+
     it('does not put a BAY-assigned workorder on a mobile unit that shares its id', async () => {
       // The identifier alone says nothing about the kind of unit; only
       // resourceType does. Reading it as a bay is the 0.10 assumption.
