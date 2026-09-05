@@ -1,11 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AccountingEventsService, EventProcessingLogEntry } from '@durion-sdk/accounting';
+import {
+  AccountingEventResponse as SdkAccountingEventResponse,
+  AccountingEventsService,
+  EventProcessingLogEntry,
+} from '@durion-sdk/accounting';
 import {
   AccountingEventListResponse,
   AccountingEventListItem,
   AccountingEventResponse,
+  AccountingEventStatus,
   ReprocessingAttemptHistoryResponse,
 } from '../models/crm-integration.models';
 
@@ -34,20 +39,14 @@ export class CrmIntegrationService {
       params?.size ?? 20,
     ).pipe(
       map(p => ({
-        items: (p.content ?? []).map(e => ({
-          eventId: (e as unknown as AccountingEventListItem).eventId ?? '',
-          eventType: (e as unknown as AccountingEventListItem).eventType ?? '',
-          processingStatus: (e as unknown as AccountingEventListItem).processingStatus ?? 'PENDING',
-          receivedAt: (e as unknown as AccountingEventListItem).receivedAt ?? '',
-          organizationId: (e as unknown as AccountingEventListItem).organizationId,
-        } satisfies AccountingEventListItem)),
+        items: (p.content ?? []).map(e => this.toListItem(e)),
         totalCount: p.totalElements ?? 0,
       } satisfies AccountingEventListResponse)),
     );
   }
 
   getEvent(eventId: string): Observable<AccountingEventResponse> {
-    return this.eventsApi.getAccountingEvent(eventId) as unknown as Observable<AccountingEventResponse>;
+    return this.eventsApi.getAccountingEvent(eventId).pipe(map(event => this.toEvent(event)));
   }
 
   getReprocessingHistory(eventId: string): Observable<ReprocessingAttemptHistoryResponse[]> {
@@ -56,5 +55,25 @@ export class CrmIntegrationService {
 
   getEventProcessingLog(eventId: string): Observable<EventProcessingLogEntry[]> {
     return this.eventsApi.getEventProcessingLog(eventId);
+  }
+
+  private toListItem(event: SdkAccountingEventResponse): AccountingEventListItem {
+    return {
+      eventId: event.eventId,
+      eventReference: event.eventReference ?? undefined,
+      eventType: event.eventType,
+      processingStatus: event.status as AccountingEventStatus,
+      receivedAt: event.receivedAt,
+      organizationId: event.organizationId,
+    };
+  }
+
+  private toEvent(event: SdkAccountingEventResponse): AccountingEventResponse {
+    return {
+      ...this.toListItem(event),
+      payload: event.payload && !Array.isArray(event.payload)
+        ? event.payload as Record<string, unknown>
+        : undefined,
+    };
   }
 }

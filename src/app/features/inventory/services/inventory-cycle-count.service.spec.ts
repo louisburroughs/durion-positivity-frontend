@@ -378,6 +378,7 @@ describe('InventoryCycleCountService', () => {
       {
         planId: 'plan-001',
         locationId: 'loc-01',
+        locationName: 'Downtown Service Center',
         zoneIds: ['zone-1', 'zone-2'],
         planName: 'May cycle count',
         scheduledDate: '2026-05-01',
@@ -391,6 +392,7 @@ describe('InventoryCycleCountService', () => {
       {
         planId: 'plan-001',
         locationId: 'loc-01',
+        locationName: 'Downtown Service Center',
         zoneIds: ['zone-1', 'zone-2'],
         planName: 'May cycle count',
         scheduledDate: '2026-05-01',

@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
-import { PeopleAvailabilityResponse } from '@durion-sdk/people';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import {
+  PeopleAvailabilityResponse,
+  PeopleAvailabilityResponseAssignmentStatusEnum,
+} from '@durion-sdk/people';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
 
 @Component({
@@ -14,10 +17,12 @@ import { DispatchBoardService } from '../../services/dispatch-board.service';
 })
 export class MechanicAvailabilityPageComponent implements OnInit {
   private readonly dispatchBoardService = inject(DispatchBoardService);
+  private readonly translate = inject(TranslateService);
 
   readonly loading = signal(false);
   readonly availabilityData = signal<PeopleAvailabilityResponse[]>([]);
   readonly locationId = signal('');
+  readonly locationName = signal('');
   readonly selectedDate = signal(this.todayIso());
   readonly error = signal<string | null>(null);
 
@@ -34,7 +39,9 @@ export class MechanicAvailabilityPageComponent implements OnInit {
     this.dispatchBoardService.getPrimaryLocation().subscribe({
       next: (location) => {
         const id = String(location.locationId ?? '').trim();
+        const name = String(location.locationName ?? '').trim();
         this.locationId.set(id);
+        this.locationName.set(name);
         this.filterForm.controls.locationId.setValue(id);
         // loadAvailability guards empty ids itself and prompts for a location,
         // which is also the right outcome when the primary location is blank.
@@ -73,14 +80,16 @@ export class MechanicAvailabilityPageComponent implements OnInit {
     });
   }
 
-  getMechanicName(entry: unknown): string {
-    const candidate = entry as Record<string, unknown>;
-    return String(candidate['mechanicName'] ?? candidate['name'] ?? candidate['personId'] ?? 'Unknown');
+  getMechanicName(entry: PeopleAvailabilityResponse): string {
+    const name = [entry.firstName, entry.lastName]
+      .map(part => String(part ?? '').trim())
+      .filter(Boolean)
+      .join(' ');
+    return name || this.translate.instant('COMMON.NOT_AVAILABLE');
   }
 
-  isAvailable(entry: unknown): boolean {
-    const candidate = entry as Record<string, unknown>;
-    return Boolean(candidate['available'] ?? candidate['isAvailable']);
+  isAvailable(entry: PeopleAvailabilityResponse): boolean {
+    return entry.assignmentStatus === PeopleAvailabilityResponseAssignmentStatusEnum.Active;
   }
 
   private todayIso(): string {

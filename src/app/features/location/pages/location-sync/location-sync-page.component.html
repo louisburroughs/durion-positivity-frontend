@@ -27,7 +27,6 @@
     <table data-testid="inventory-locations-table">
       <thead>
         <tr>
-          <th>{{ 'LOCATION.SYNC.COL_ID' | translate }}</th>
           <th>{{ 'LOCATION.SYNC.COL_NAME' | translate }}</th>
           <th>{{ 'LOCATION.SYNC.COL_TYPE' | translate }}</th>
           <th>{{ 'LOCATION.SYNC.COL_ACTIVE' | translate }}</th>
@@ -36,7 +35,6 @@
       <tbody>
         @for (loc of inventoryLocations(); track loc.locationId) {
         <tr [attr.data-testid]="'inventory-location-row-' + $index">
-          <td>{{ loc.locationId }}</td>
           <td>{{ loc.name }}</td>
           <td>{{ loc.type }}</td>
           <td>{{ (loc.active ? 'LOCATION.SYNC.ACTIVE' : 'LOCATION.SYNC.INACTIVE') | translate }}</td>
@@ -44,7 +42,7 @@
         }
         @empty {
         <tr>
-          <td colspan="4" data-testid="locations-empty">{{ 'LOCATION.SYNC.NO_LOCATIONS' | translate }}</td>
+          <td colspan="3" data-testid="locations-empty">{{ 'LOCATION.SYNC.NO_LOCATIONS' | translate }}</td>
         </tr>
         }
       </tbody>

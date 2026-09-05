@@ -53,7 +53,8 @@ describe('IngestionMonitorListPageComponent', () => {
       of({
         items: [
           {
-            eventId: 'e-1',
+            eventId: '123e4567-e89b-12d3-a456-426614174000',
+            eventReference: 'AE-202609-15',
             eventType: 'InvoiceIssued',
             processingStatus: 'PROCESSED',
           },
@@ -65,6 +66,26 @@ describe('IngestionMonitorListPageComponent', () => {
     fixture.detectChanges();
     const rows = fixture.nativeElement.querySelectorAll('[data-testid="event-row"]');
     expect(rows.length).toBe(1);
+    expect(rows[0].textContent).toContain('AE-202609-15');
+    expect(rows[0].textContent).not.toContain('123e4567-e89b-12d3-a456-426614174000');
+  });
+
+  it('renders unavailable instead of the UUID when the event reference is missing', () => {
+    accountingServiceStub.listEvents.mockReturnValueOnce(
+      of({
+        items: [{
+          eventId: '123e4567-e89b-12d3-a456-426614174000',
+          eventType: 'InvoiceIssued',
+          processingStatus: 'PROCESSED',
+        }],
+        totalCount: 1,
+      }),
+    );
+
+    fixture.detectChanges();
+    const row = fixture.nativeElement.querySelector('[data-testid="event-row"]');
+    expect(row.textContent).toContain('COMMON.NOT_AVAILABLE');
+    expect(row.textContent).not.toContain('123e4567-e89b-12d3-a456-426614174000');
   });
 
   it('renders error state when service errors', () => {

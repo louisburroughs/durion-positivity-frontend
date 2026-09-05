@@ -49,7 +49,7 @@
       <caption>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.TABLE_CAPTION' | translate }}</caption>
       <thead>
         <tr>
-          <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_EVENT_ID' | translate }}</th>
+          <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_EVENT_REFERENCE' | translate }}</th>
           <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_EVENT_TYPE' | translate }}</th>
           <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_STATUS' | translate }}</th>
           <th>{{ 'ACCOUNTING.INGESTION_MONITOR_LIST.COL_RECEIVED_AT' | translate }}</th>
@@ -59,7 +59,7 @@
         @for (row of events(); track row.eventId) {
         <tr tabindex="0" data-testid="event-row" (click)="goToDetail(row)" (keydown.enter)="goToDetail(row)"
           (keydown.space)="goToDetail(row)">
-          <td>{{ row.eventId }}</td>
+          <td>{{ row.eventReference || ('COMMON.NOT_AVAILABLE' | translate) }}</td>
           <td>{{ row.eventType }}</td>
           <td>
             <output class="status-badge"

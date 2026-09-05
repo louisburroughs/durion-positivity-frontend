@@ -405,6 +405,7 @@ export class AccountingService {
   private toAccountingEventDetail(dto: AccountingEventResponse): AccountingEventDetail {
     return {
       eventId: dto.eventId ?? '',
+      eventReference: dto.eventReference ?? undefined,
       eventType: dto.eventType ?? '',
       processingStatus: (dto.status as string as IngestionProcessingStatus) ?? IngestionProcessingStatus.Received,
       receivedAt: dto.receivedAt,
@@ -686,6 +687,7 @@ export class AccountingService {
   private toListItem(item: AccountingEventDetail): AccountingEventListItem {
     return {
       eventId: item.eventId,
+      eventReference: item.eventReference,
       eventType: item.eventType,
       processingStatus: item.processingStatus,
       idempotencyOutcome: item.idempotencyOutcome,

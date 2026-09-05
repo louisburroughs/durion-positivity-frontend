@@ -574,6 +574,9 @@
     }
   },
   "CRM": {
+    "INTEGRATION_EVENTS": {
+      "EVENT_REFERENCE": "Referencia del evento"
+    },
     "PARTY_DETAIL": {
       "FALLBACK_TITLE": "Detalles de la cuenta"
     },
@@ -1534,7 +1537,7 @@
       "TABLE_ARIA": "Tabla de eventos de ingestión",
       "TABLE_CAPTION": "Eventos de ingestión",
       "STATUS_ARIA": "Estado de ingestión",
-      "COL_EVENT_ID": "ID de evento",
+      "COL_EVENT_REFERENCE": "Referencia del evento",
       "COL_EVENT_TYPE": "Tipo de evento",
       "COL_STATUS": "Status",
       "COL_RECEIVED_AT": "Recibido el",
@@ -1552,7 +1555,7 @@
       "OVERLINE": "Monitor de ingestión",
       "TITLE": "Detalle del evento de ingestión",
       "ERROR": "No se pudo cargar el detalle del evento.",
-      "FIELD_EVENT_ID": "ID de evento",
+      "FIELD_EVENT_REFERENCE": "Referencia del evento",
       "FIELD_EVENT_TYPE": "Tipo de evento",
       "FIELD_STATUS": "Status",
       "FIELD_RECEIVED_AT": "Recibido el",

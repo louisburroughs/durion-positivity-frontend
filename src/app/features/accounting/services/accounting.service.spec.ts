@@ -189,6 +189,7 @@ describe('AccountingService', () => {
     it('should call accountingEventsService.getEvent(eventId) and return AccountingEventDetail', () => {
       const sdkFixture = {
         eventId: 'evt-001',
+        eventReference: 'AE-202609-15',
         eventType: 'InvoiceIssued',
         status: IngestionProcessingStatus.Received,
         receivedAt: '2025-01-01T10:00:00Z',
@@ -202,6 +203,7 @@ describe('AccountingService', () => {
       expect(accountingEventsStub.getAccountingEvent).toHaveBeenCalledWith('evt-001');
       expect(result).toEqual({
         eventId: 'evt-001',
+        eventReference: 'AE-202609-15',
         eventType: 'InvoiceIssued',
         processingStatus: IngestionProcessingStatus.Received,
         receivedAt: '2025-01-01T10:00:00Z',

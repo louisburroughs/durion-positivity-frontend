@@ -17,9 +17,10 @@ describe('IntegrationEventsPageComponent', () => {
   };
 
   const sampleEvent = {
-    eventId: 'ev-001',
+    eventId: '123e4567-e89b-12d3-a456-426614174000',
+    eventReference: 'AE-202609-15',
     eventType: 'InvoiceIssued',
-    processingStatus: 'PENDING' as const,
+    processingStatus: 'PROCESSING' as const,
     receivedAt: '2026-01-01T00:00:00Z',
     organizationId: 'org-abc',
   };
@@ -73,6 +74,27 @@ describe('IntegrationEventsPageComponent', () => {
     fixture.detectChanges();
     const rows = fixture.nativeElement.querySelectorAll('[data-testid="event-row"]');
     expect(rows.length).toBe(2);
+    expect(rows[0].textContent).toContain('AE-202609-15');
+    expect(rows[0].textContent).not.toContain('123e4567-e89b-12d3-a456-426614174000');
+  });
+
+  it('renders unavailable instead of the UUID when an event reference is missing', () => {
+    const missingReferenceEvent = { ...sampleEvent, eventReference: undefined };
+    crmIntegrationServiceStub.listEvents.mockReturnValueOnce(
+      of({ items: [missingReferenceEvent], totalCount: 1 }),
+    );
+    crmIntegrationServiceStub.getEvent.mockReturnValueOnce(of(missingReferenceEvent));
+    fixture.detectChanges();
+
+    const row = fixture.nativeElement.querySelector('[data-testid="event-row"]');
+    expect(row.textContent).toContain('COMMON.NOT_AVAILABLE');
+    expect(row.textContent).not.toContain('123e4567-e89b-12d3-a456-426614174000');
+
+    row.click();
+    fixture.detectChanges();
+    const detail = fixture.nativeElement.querySelector('.event-detail');
+    expect(detail.textContent).toContain('COMMON.NOT_AVAILABLE');
+    expect(detail.textContent).not.toContain('123e4567-e89b-12d3-a456-426614174000');
   });
 
   it('renders empty state when service returns no events', () => {
@@ -101,6 +123,8 @@ describe('IntegrationEventsPageComponent', () => {
 
     const detail = fixture.nativeElement.querySelector('.event-detail');
     expect(detail).toBeTruthy();
+    expect(detail.textContent).toContain('AE-202609-15');
+    expect(detail.textContent).not.toContain('123e4567-e89b-12d3-a456-426614174000');
   });
 
   // ── Error states ─────────────────────────────────────────────────────────────

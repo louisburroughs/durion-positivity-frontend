@@ -243,6 +243,7 @@ export class InventoryCycleCountService {
     return {
       planId: dto.planId ?? '',
       locationId: dto.locationId ?? '',
+      locationName: dto.locationName ?? undefined,
       zoneIds: dto.zoneIds ?? [],
       planName: dto.planName,
       scheduledDate: dto.scheduledDate ?? '',

@@ -27,8 +27,8 @@
   @if (pageState() === 'ready' && event(); as value) {
   <section class="detail-grid" data-testid="event-detail">
     <div>
-      <label for="event-id">{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.FIELD_EVENT_ID' | translate }}</label>
-      <input id="event-id" [value]="value.eventId" readonly />
+      <label for="event-reference">{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.FIELD_EVENT_REFERENCE' | translate }}</label>
+      <input id="event-reference" [value]="value.eventReference || ('COMMON.NOT_AVAILABLE' | translate)" readonly />
     </div>
     <div>
       <label for="event-type">{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.FIELD_EVENT_TYPE' | translate }}</label>

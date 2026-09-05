@@ -6,7 +6,8 @@
   <form class="filter-form" [formGroup]="filterForm" (ngSubmit)="loadAvailability()">
     <label>
       {{ 'SHOPMGMT.MECHANIC_AVAILABILITY.LOCATION' | translate }}
-      <input type="text" formControlName="locationId" />
+      <input type="text" data-testid="location-name"
+        [value]="locationName() || ('COMMON.NOT_AVAILABLE' | translate)" readonly />
     </label>
     <label>
       {{ 'SHOPMGMT.MECHANIC_AVAILABILITY.DATE' | translate }}

@@ -11,7 +11,8 @@ describe('IngestionMonitorDetailPageComponent', () => {
   const accountingServiceStub = {
     getEvent: vi.fn().mockReturnValue(
       of({
-        eventId: 'event-1',
+        eventId: '123e4567-e89b-12d3-a456-426614174000',
+        eventReference: 'AE-202609-15',
         eventType: 'InvoiceIssued',
         processingStatus: 'PROCESSED',
       }),
@@ -45,6 +46,23 @@ describe('IngestionMonitorDetailPageComponent', () => {
   it('renders event detail when loaded', () => {
     const detail = fixture.nativeElement.querySelector('[data-testid="event-detail"]');
     expect(detail).toBeTruthy();
+    expect(detail.querySelector('#event-reference').value).toBe('AE-202609-15');
+  });
+
+  it('renders unavailable instead of the UUID when the event reference is missing', () => {
+    accountingServiceStub.getEvent.mockReturnValueOnce(
+      of({
+        eventId: '123e4567-e89b-12d3-a456-426614174000',
+        eventType: 'InvoiceIssued',
+        processingStatus: 'PROCESSED',
+      }),
+    );
+    const missingReferenceFixture = TestBed.createComponent(IngestionMonitorDetailPageComponent);
+    missingReferenceFixture.detectChanges();
+
+    const detail = missingReferenceFixture.nativeElement.querySelector('[data-testid="event-detail"]');
+    expect(detail.querySelector('#event-reference').value).toBe('COMMON.NOT_AVAILABLE');
+    expect(detail.textContent).not.toContain('123e4567-e89b-12d3-a456-426614174000');
   });
 
   it('shows payload section when page is ready', () => {

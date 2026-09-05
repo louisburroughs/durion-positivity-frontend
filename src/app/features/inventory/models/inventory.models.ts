@@ -233,6 +233,7 @@ export interface ApprovalQueueFilter {
 export interface CycleCountPlan {
   planId: string;
   locationId: string;
+  locationName?: string;
   zoneIds: string[];
   planName?: string;
   scheduledDate: string;

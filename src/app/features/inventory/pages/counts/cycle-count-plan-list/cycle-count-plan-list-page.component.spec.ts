@@ -13,7 +13,8 @@ const mockCycleCountService = {
 const planFixture: CycleCountPlan[] = [
   {
     planId: 'plan-001',
-    locationId: 'loc-01',
+    locationId: '123e4567-e89b-12d3-a456-426614174000',
+    locationName: 'Downtown Service Center',
     zoneIds: ['zone-1', 'zone-2'],
     scheduledDate: '2026-05-01',
     status: 'PENDING',
@@ -39,6 +40,28 @@ describe('CycleCountPlanListPageComponent', () => {
 
     expect(component.state()).toBe('ready');
     expect(component.plans()).toEqual(planFixture);
+  });
+
+  it('renders the location name without exposing its UUID', () => {
+    mockCycleCountService.getCycleCountPlans.mockReturnValue(of(planFixture));
+    const fixture = TestBed.createComponent(CycleCountPlanListPageComponent);
+    fixture.detectChanges();
+
+    const table = fixture.nativeElement.querySelector('.data-table');
+    expect(table.textContent).toContain('Downtown Service Center');
+    expect(table.textContent).not.toContain('123e4567-e89b-12d3-a456-426614174000');
+  });
+
+  it('renders unavailable instead of the UUID when the location name is missing', () => {
+    mockCycleCountService.getCycleCountPlans.mockReturnValue(
+      of([{ ...planFixture[0], locationName: undefined }]),
+    );
+    const fixture = TestBed.createComponent(CycleCountPlanListPageComponent);
+    fixture.detectChanges();
+
+    const table = fixture.nativeElement.querySelector('.data-table');
+    expect(table.textContent).toContain('COMMON.NOT_AVAILABLE');
+    expect(table.textContent).not.toContain('123e4567-e89b-12d3-a456-426614174000');
   });
 
   it('sets state to empty when plans array is empty', () => {

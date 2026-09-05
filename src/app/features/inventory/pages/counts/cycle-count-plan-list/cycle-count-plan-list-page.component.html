@@ -58,7 +58,7 @@
           @for (plan of plans(); track plan.planId) {
           <tr>
             <td>{{ plan.planName || ('INVENTORY.COUNTS.PLANS.LIST.TABLE.DEFAULT_PLAN_NAME' | translate) }}</td>
-            <td>{{ plan.locationId }}</td>
+            <td>{{ plan.locationName || ('COMMON.NOT_AVAILABLE' | translate) }}</td>
             <td>{{ plan.zoneIds.length }}</td>
             <td>{{ (plan.scheduledDate + 'T00:00:00') | date: 'mediumDate' }}</td>
             <td>

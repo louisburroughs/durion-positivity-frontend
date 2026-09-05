@@ -57,8 +57,9 @@ describe('CrmIntegrationService', () => {
         content: [
           {
             eventId: 'ev-001',
+            eventReference: 'AE-202609-15',
             eventType: 'InvoiceIssued',
-            processingStatus: 'PENDING',
+            status: 'SUSPENDED',
             receivedAt: '2026-01-01T00:00:00Z',
             organizationId: 'org-abc',
           },
@@ -80,6 +81,8 @@ describe('CrmIntegrationService', () => {
       expect(args[11]).toBe(20); // size
       expect(result.items).toHaveLength(1);
       expect(result.items[0].eventId).toBe('ev-001');
+      expect(result.items[0]).toMatchObject({ eventReference: 'AE-202609-15' });
+      expect(result.items[0].processingStatus).toBe('SUSPENDED');
     });
   });
 
@@ -87,11 +90,13 @@ describe('CrmIntegrationService', () => {
 
   describe('getEvent()', () => {
     it('calls eventsApi.getEvent with the given eventId', () => {
-      const response: AccountingEventResponse = {
+      const response = {
         eventId: 'ev-002',
+        eventReference: 'AE-202609-16',
         eventType: 'PaymentReceived',
-        processingStatus: 'PROCESSED',
+        status: 'PROCESSED',
         receivedAt: '2026-01-02T00:00:00Z',
+        organizationId: 'org-abc',
       };
       accountingEventsStub.getAccountingEvent.mockReturnValueOnce(of(response));
 
@@ -100,6 +105,7 @@ describe('CrmIntegrationService', () => {
 
       expect(accountingEventsStub.getAccountingEvent).toHaveBeenCalledWith('ev-002');
       expect(result.eventId).toBe('ev-002');
+      expect(result.eventReference).toBe('AE-202609-16');
       expect(result.processingStatus).toBe('PROCESSED');
     });
   });

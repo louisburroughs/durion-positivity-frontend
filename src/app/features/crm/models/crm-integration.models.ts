@@ -3,10 +3,11 @@
  * Source of truth: durion-positivity-backend/pos-accounting/openapi.yaml
  */
 
-export type AccountingEventStatus = 'PENDING' | 'PROCESSED' | 'SUSPENDED' | 'FAILED';
+export type AccountingEventStatus = 'RECEIVED' | 'PROCESSING' | 'PROCESSED' | 'SUSPENDED' | 'FAILED';
 
 export interface AccountingEventListItem {
   eventId: string;
+  eventReference?: string;
   eventType: string;
   processingStatus: AccountingEventStatus;
   receivedAt: string;
@@ -20,6 +21,7 @@ export interface AccountingEventListResponse {
 
 export interface AccountingEventResponse {
   eventId: string;
+  eventReference?: string;
   eventType: string;
   processingStatus: AccountingEventStatus;
   receivedAt: string;

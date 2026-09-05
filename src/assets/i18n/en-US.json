@@ -574,6 +574,9 @@
     }
   },
   "CRM": {
+    "INTEGRATION_EVENTS": {
+      "EVENT_REFERENCE": "Event reference"
+    },
     "PARTY_DETAIL": {
       "FALLBACK_TITLE": "Account Details"
     },
@@ -1534,7 +1537,7 @@
       "TABLE_ARIA": "Ingestion events table",
       "TABLE_CAPTION": "Ingestion events",
       "STATUS_ARIA": "Ingestion status",
-      "COL_EVENT_ID": "Event ID",
+      "COL_EVENT_REFERENCE": "Event reference",
       "COL_EVENT_TYPE": "Event type",
       "COL_STATUS": "Status",
       "COL_RECEIVED_AT": "Received at",
@@ -1552,7 +1555,7 @@
       "OVERLINE": "Ingestion Monitor",
       "TITLE": "Ingestion Event Detail",
       "ERROR": "Failed to load event detail.",
-      "FIELD_EVENT_ID": "Event ID",
+      "FIELD_EVENT_REFERENCE": "Event reference",
       "FIELD_EVENT_TYPE": "Event type",
       "FIELD_STATUS": "Status",
       "FIELD_RECEIVED_AT": "Received at",

@@ -9,7 +9,7 @@ import { InventoryService } from '../../services/inventory.service';
 import { LocationDto, LocationSyncRunResponse, SyncLogResponse } from '../../models/location-sync.models';
 
 const INVENTORY_LOCATIONS: LocationDto[] = [
-  { locationId: 'L-1', name: 'Main', type: 'WAREHOUSE', active: true },
+  { locationId: '123e4567-e89b-12d3-a456-426614174000', name: 'Main', type: 'WAREHOUSE', active: true },
 ];
 
 const SYNC_LOGS: SyncLogResponse[] = [
@@ -91,7 +91,7 @@ describe('LocationSyncPageComponent [CAP-214 #104]', () => {
     await setup();
     expect(stubInventoryService.listInventoryLocations).toHaveBeenCalledWith({ pageSize: 50 });
     expect(component.inventoryLocations()).toHaveLength(1);
-    expect(component.inventoryLocations()[0].locationId).toBe('L-1');
+    expect(component.inventoryLocations()[0].locationId).toBe('123e4567-e89b-12d3-a456-426614174000');
   });
 
   it('should render locations table with row data', async () => {
@@ -100,7 +100,7 @@ describe('LocationSyncPageComponent [CAP-214 #104]', () => {
     expect(table).toBeTruthy();
     const rows = fixture.debugElement.queryAll(By.css('[data-testid^="inventory-location-row-"]'));
     expect(rows.length).toBe(1);
-    expect(rows[0].nativeElement.textContent).toContain('L-1');
+    expect(rows[0].nativeElement.textContent).not.toContain('123e4567-e89b-12d3-a456-426614174000');
     expect(rows[0].nativeElement.textContent).toContain('Main');
     expect(rows[0].nativeElement.textContent).toContain('WAREHOUSE');
     expect(rows[0].nativeElement.textContent).toContain('Active');

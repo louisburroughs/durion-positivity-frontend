@@ -63,6 +63,7 @@ export enum IngestionIdempotencyOutcome {
 
 export interface AccountingEventListItem {
   eventId: string;
+  eventReference?: string;
   eventType: string;
   processingStatus: IngestionProcessingStatus;
   idempotencyOutcome?: IngestionIdempotencyOutcome;

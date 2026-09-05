@@ -3,13 +3,29 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import {
+  PeopleAvailabilityResponse,
+  PeopleAvailabilityResponseAssignmentStatusEnum,
+} from '@durion-sdk/people';
 import { MechanicAvailabilityPageComponent } from './mechanic-availability-page.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
 
+const availabilityFixture: PeopleAvailabilityResponse = {
+  personId: '123e4567-e89b-12d3-a456-426614174001',
+  firstName: 'Alex',
+  lastName: 'Johnson',
+  assignmentStatus: PeopleAvailabilityResponseAssignmentStatusEnum.Active,
+  locationId: '123e4567-e89b-12d3-a456-426614174000',
+  primary: true,
+};
+
 const dispatchBoardServiceStub = {
-  getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: 'loc-1' })),
-  getAvailability: vi.fn().mockReturnValue(of([{ mechanicName: 'Alex', available: true }])),
+  getPrimaryLocation: vi.fn().mockReturnValue(of({
+    locationId: '123e4567-e89b-12d3-a456-426614174000',
+    locationName: 'Downtown Service Center',
+  })),
+  getAvailability: vi.fn().mockReturnValue(of([availabilityFixture])),
 };
 
 describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
@@ -54,6 +70,48 @@ describe('MechanicAvailabilityPageComponent [CAP-138]', () => {
     await setup();
     const grid = fixture.debugElement.query(By.css('.availability-grid'));
     expect(grid).toBeTruthy();
+    expect(grid.nativeElement.textContent).toContain('Alex Johnson');
+    expect(grid.nativeElement.textContent).not.toContain('123e4567-e89b-12d3-a456-426614174001');
+    expect(fixture.componentInstance.isAvailable(fixture.componentInstance.availabilityData()[0])).toBe(true);
+  });
+
+  it('displays the primary location name without exposing its UUID', async () => {
+    await setup();
+    const location = fixture.debugElement.query(By.css('[data-testid="location-name"]'));
+
+    expect(location.nativeElement.value).toBe('Downtown Service Center');
+    expect(fixture.nativeElement.textContent).not.toContain('123e4567-e89b-12d3-a456-426614174000');
+  });
+
+  it('uses the translated unavailable value when a mechanic name is missing', async () => {
+    await setup();
+
+    expect(fixture.componentInstance.getMechanicName({
+      ...availabilityFixture,
+      personId: '123e4567-e89b-12d3-a456-426614174002',
+      firstName: undefined,
+      lastName: undefined,
+    })).toBe('COMMON.NOT_AVAILABLE');
+  });
+
+  it('treats ended assignments as unavailable', async () => {
+    await setup();
+
+    expect(fixture.componentInstance.isAvailable({
+      ...availabilityFixture,
+      assignmentStatus: PeopleAvailabilityResponseAssignmentStatusEnum.Ended,
+    })).toBe(false);
+  });
+
+  it('renders unavailable instead of the UUID when the primary location name is missing', async () => {
+    dispatchBoardServiceStub.getPrimaryLocation.mockReturnValueOnce(of({
+      locationId: '123e4567-e89b-12d3-a456-426614174000',
+    }));
+    await setup();
+
+    const location = fixture.debugElement.query(By.css('[data-testid="location-name"]'));
+    expect(location.nativeElement.value).toBe('COMMON.NOT_AVAILABLE');
+    expect(fixture.nativeElement.textContent).not.toContain('123e4567-e89b-12d3-a456-426614174000');
   });
 
   it('does not call getAvailability when primary location lookup fails', async () => {
