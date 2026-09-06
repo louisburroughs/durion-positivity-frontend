@@ -81,6 +81,16 @@ describe('VendorInvoiceDetailPageComponent', () => {
     expect(component.errorKey()).toBe('ACCOUNTING.PAYABLES.DETAIL.ERROR.LOAD');
   });
 
+  it('renders a bare due-date on the correct calendar day regardless of host timezone (ADR-0038)', async () => {
+    mockService.getBillById.mockReturnValueOnce(of({ ...billFixture, dueDate: '2026-08-20' }));
+
+    const { component } = await setup('b1');
+
+    const prepared = component.dateOnlyFor(component.bill()!.dueDate);
+    expect(prepared).toBe('2026-08-20T00:00:00');
+    expect(new Date(prepared!).getDate()).toBe(20);
+  });
+
   describe('resolveException()', () => {
     it('does not submit without a reason', async () => {
       mockService.getBillById.mockReturnValueOnce(of(billFixture));
@@ -116,6 +126,17 @@ describe('VendorInvoiceDetailPageComponent', () => {
 
       component.resolveException('VOID', 'Duplicate');
 
+      expect(component.resolveErrorKey()).toBe('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.SUBMIT');
+    });
+
+    it('clears resolving and sets resolveErrorKey when the service errors on a missing operator claim (ADR-0031), without throwing synchronously', async () => {
+      mockService.getBillById.mockReturnValueOnce(of(billFixture));
+      const { component } = await setup('b1');
+      mockService.resolveException.mockReturnValueOnce(throwError(() => new Error('no operator')));
+
+      expect(() => component.resolveException('VOID', 'Duplicate')).not.toThrow();
+
+      expect(component.resolving()).toBe(false);
       expect(component.resolveErrorKey()).toBe('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.SUBMIT');
     });
   });

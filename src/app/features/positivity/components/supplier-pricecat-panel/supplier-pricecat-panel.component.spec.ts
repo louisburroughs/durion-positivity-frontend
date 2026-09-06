@@ -7,7 +7,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TranslateModule } from '@ngx-translate/core';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SupplierPriceCatalogPanelComponent } from './supplier-pricecat-panel.component';
 import { SupplierPriceCatalogService } from '../../services/supplier-price-catalog.service';
@@ -205,6 +205,45 @@ describe('SupplierPriceCatalogPanelComponent', () => {
     expect(service.listUnmatchedLines).toHaveBeenCalledTimes(1);
   });
 
+  it('cancels a stale in-flight imports request when vendorProfileId changes twice before it resolves (ADR-0033)', () => {
+    const first = new Subject<PriceCatalogImportPage>();
+    const second = new Subject<PriceCatalogImportPage>();
+    service.listImports.mockReturnValueOnce(first.asObservable()).mockReturnValue(second.asObservable());
+
+    render(VENDOR_ID);
+    fixture.componentRef.setInput('vendorProfileId', 'vp-0000-0002');
+    fixture.detectChanges();
+    fixture.componentRef.setInput('vendorProfileId', 'vp-0000-0003');
+    fixture.detectChanges();
+
+    // Three subscribe attempts (initial + two vendorProfileId changes); only
+    // the last one is still live.
+    expect(service.listImports).toHaveBeenCalledTimes(3);
+    expect(first.observed).toBe(false);
+
+    // The first (now-stale) request resolving must never land.
+    first.next({
+      items: [{ ...importsPageFixture.items[0], importManifestId: 'stale-import' }],
+      page: 0,
+      size: 25,
+      totalCount: 1,
+      totalPages: 1,
+    });
+    expect(component.imports()).toEqual([]);
+    expect(component.importsState()).toBe('loading');
+
+    // The latest in-flight request resolving lands normally.
+    second.next({
+      items: [{ ...importsPageFixture.items[0], importManifestId: 'fresh-import' }],
+      page: 0,
+      size: 25,
+      totalCount: 1,
+      totalPages: 1,
+    });
+    expect(component.imports().map(item => item.importManifestId)).toEqual(['fresh-import']);
+    expect(component.importsState()).toBe('ready');
+  });
+
   // ── Unmatched lines ────────────────────────────────────────────────────
 
   it('sends unmatched-line filters (reason/search/dates/resolved) as real query parameters', () => {
@@ -262,6 +301,47 @@ describe('SupplierPriceCatalogPanelComponent', () => {
     expect(component.unmatchedState()).toBe('forbidden');
     expect(component.freshnessState()).toBe('ready');
     expect(component.importsState()).toBe('ready');
+  });
+
+  it('cancels a stale in-flight unmatched-lines request when vendorProfileId changes twice before it resolves (ADR-0033)', () => {
+    const first = new Subject<UnmatchedLinePage>();
+    const second = new Subject<UnmatchedLinePage>();
+    service.listUnmatchedLines
+      .mockReturnValueOnce(first.asObservable())
+      .mockReturnValue(second.asObservable());
+
+    render(VENDOR_ID);
+    fixture.componentRef.setInput('vendorProfileId', 'vp-0000-0002');
+    fixture.detectChanges();
+    fixture.componentRef.setInput('vendorProfileId', 'vp-0000-0003');
+    fixture.detectChanges();
+
+    // Three subscribe attempts (initial + two vendorProfileId changes); only
+    // the last one is still live.
+    expect(service.listUnmatchedLines).toHaveBeenCalledTimes(3);
+    expect(first.observed).toBe(false);
+
+    // The first (now-stale) request resolving must never land.
+    first.next({
+      items: [{ ...unmatchedPageFixture.items[0], unmatchedLineId: 'stale-line' }],
+      page: 0,
+      size: 25,
+      totalCount: 1,
+      totalPages: 1,
+    });
+    expect(component.unmatchedLines()).toEqual([]);
+    expect(component.unmatchedState()).toBe('loading');
+
+    // The latest in-flight request resolving lands normally.
+    second.next({
+      items: [{ ...unmatchedPageFixture.items[0], unmatchedLineId: 'fresh-line' }],
+      page: 0,
+      size: 25,
+      totalCount: 1,
+      totalPages: 1,
+    });
+    expect(component.unmatchedLines().map(line => line.unmatchedLineId)).toEqual(['fresh-line']);
+    expect(component.unmatchedState()).toBe('ready');
   });
 
   it('labels every filter control (ADR-0029)', () => {

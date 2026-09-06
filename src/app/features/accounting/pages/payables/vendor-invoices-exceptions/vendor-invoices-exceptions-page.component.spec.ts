@@ -87,6 +87,26 @@ describe('VendorInvoicesExceptionsPageComponent', () => {
     expect(component.errorKey()).toBe('ACCOUNTING.PAYABLES.EXCEPTIONS.ERROR.LOAD');
   });
 
+  it('renders a bare due-date on the correct calendar day regardless of host timezone (ADR-0038)', async () => {
+    mockService.listBills.mockReturnValueOnce(
+      of({
+        items: [
+          { billId: 'b1', vendorId: 'v1', amount: 50, dueDate: '2026-08-20', status: 'MATCH_EXCEPTION' },
+        ],
+        page: 0,
+        size: 25,
+        totalElements: 1,
+        totalPages: 1,
+      }),
+    );
+
+    await setup();
+
+    const prepared = component.dateOnlyFor(component.items()[0].dueDate);
+    expect(prepared).toBe('2026-08-20T00:00:00');
+    expect(new Date(prepared!).getDate()).toBe(20);
+  });
+
   describe('resolveException()', () => {
     beforeEach(async () => {
       mockService.listBills.mockReturnValueOnce(
@@ -132,6 +152,15 @@ describe('VendorInvoicesExceptionsPageComponent', () => {
 
       expect(component.resolveErrorKey()).toBe('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.SUBMIT');
       expect(component.items()).toHaveLength(1);
+    });
+
+    it('clears resolvingBillId and sets resolveErrorKey when the service errors on a missing operator claim (ADR-0031), without throwing synchronously', () => {
+      mockService.resolveException.mockReturnValueOnce(throwError(() => new Error('no operator')));
+
+      expect(() => component.resolveException('b1', 'ACCEPT', 'Confirmed')).not.toThrow();
+
+      expect(component.resolvingBillId()).toBeNull();
+      expect(component.resolveErrorKey()).toBe('ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ERROR.SUBMIT');
     });
   });
 
@@ -233,6 +262,15 @@ describe('VendorInvoicesExceptionsPageComponent', () => {
 
       expect(component.selectErrorKey()).toBe('ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.ERROR.SELECT');
       expect(component.candidates()[0].resolved).toBe(false);
+    });
+
+    it('clears selectingCandidateId and sets selectErrorKey when the service errors on a missing operator claim (ADR-0031), without throwing synchronously', () => {
+      mockService.selectMatchCandidate.mockReturnValueOnce(throwError(() => new Error('no operator')));
+
+      expect(() => component.selectCandidate('c1')).not.toThrow();
+
+      expect(component.selectingCandidateId()).toBeNull();
+      expect(component.selectErrorKey()).toBe('ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.ERROR.SELECT');
     });
   });
 });

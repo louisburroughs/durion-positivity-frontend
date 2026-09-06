@@ -177,4 +177,43 @@ describe('SupplierStockSnapshotPanelComponent', () => {
     expect(input).not.toBeNull();
     expect(el.querySelector('label[for="stock-snapshot-search"]')).not.toBeNull();
   });
+
+  it('cancels a stale in-flight lines request when vendorProfileId changes twice before it resolves (ADR-0033)', () => {
+    const first = new Subject<StockSnapshotLinePage>();
+    const second = new Subject<StockSnapshotLinePage>();
+    service.listLines.mockReturnValueOnce(first.asObservable()).mockReturnValue(second.asObservable());
+
+    render(VENDOR_ID);
+    fixture.componentRef.setInput('vendorProfileId', 'vp-0000-0002');
+    fixture.detectChanges();
+    fixture.componentRef.setInput('vendorProfileId', 'vp-0000-0003');
+    fixture.detectChanges();
+
+    // Three subscribe attempts (initial + two vendorProfileId changes); only
+    // the last one is still live.
+    expect(service.listLines).toHaveBeenCalledTimes(3);
+    expect(first.observed).toBe(false);
+
+    // The first (now-stale) request resolving must never land.
+    first.next({
+      items: [{ ...linesPageFixture.items[0], lineId: 'stale-line' }],
+      page: 0,
+      size: 25,
+      totalCount: 1,
+      totalPages: 1,
+    });
+    expect(component.lines()).toEqual([]);
+    expect(component.linesState()).toBe('loading');
+
+    // The latest in-flight request resolving lands normally.
+    second.next({
+      items: [{ ...linesPageFixture.items[0], lineId: 'fresh-line' }],
+      page: 0,
+      size: 25,
+      totalCount: 1,
+      totalPages: 1,
+    });
+    expect(component.lines().map(line => line.lineId)).toEqual(['fresh-line']);
+    expect(component.linesState()).toBe('ready');
+  });
 });

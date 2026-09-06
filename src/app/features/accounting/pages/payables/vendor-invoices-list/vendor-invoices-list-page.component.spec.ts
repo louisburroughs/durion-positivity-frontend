@@ -127,6 +127,24 @@ describe('VendorInvoicesListPageComponent', () => {
     );
   });
 
+  it('renders a bare due-date on the correct calendar day regardless of host timezone (ADR-0038)', async () => {
+    mockService.listBills.mockReturnValueOnce(
+      of({
+        items: [{ billId: 'b1', vendorId: 'v1', amount: 100, dueDate: '2026-08-20', status: 'APPROVED' }],
+        page: 0,
+        size: 25,
+        totalElements: 1,
+        totalPages: 1,
+      }),
+    );
+
+    await setup();
+
+    const prepared = component.dateOnlyFor(component.items()[0].dueDate);
+    expect(prepared).toBe('2026-08-20T00:00:00');
+    expect(new Date(prepared!).getDate()).toBe(20);
+  });
+
   it('openBill() navigates to the detail route', async () => {
     mockService.listBills.mockReturnValueOnce(
       of({ items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
