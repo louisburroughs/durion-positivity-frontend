@@ -93,9 +93,18 @@ export class PoFormComponent {
 
   removeLine(idx: number): void {
     this.lines.update(lines => lines.filter((_, i) => i !== idx));
-    if (this.availabilityCheckLineIndex() === idx) {
-      this.availabilityCheckLineIndex.set(null);
+    const openIdx = this.availabilityCheckLineIndex();
+    if (openIdx === null) {
+      return;
     }
+    if (openIdx === idx) {
+      // The removed line owned the open panel: nothing left to point at.
+      this.availabilityCheckLineIndex.set(null);
+    } else if (idx < openIdx) {
+      // A line before the open one was removed: every later index shifts down one.
+      this.availabilityCheckLineIndex.set(openIdx - 1);
+    }
+    // idx > openIdx: removal happened after the open line, its index is unaffected.
   }
 
   /** Expand or collapse the availability-check panel for one line (#212). */

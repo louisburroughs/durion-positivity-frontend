@@ -123,6 +123,33 @@ describe('PoFormComponent — create mode', () => {
 
     expect(component.availabilityCheckLineIndex()).toBeNull();
   });
+
+  it('removeLine() decrements the open panel index when a line before it is removed', () => {
+    const fixture = TestBed.createComponent(PoFormComponent);
+    const component = fixture.componentInstance;
+    component.addLine();
+    component.addLine();
+    component.addLine();
+    component.toggleAvailabilityCheck(2);
+
+    component.removeLine(0);
+
+    // Line 2's panel is still open, but line 2 is now at index 1.
+    expect(component.availabilityCheckLineIndex()).toBe(1);
+  });
+
+  it('removeLine() leaves the open panel index unchanged when a line after it is removed', () => {
+    const fixture = TestBed.createComponent(PoFormComponent);
+    const component = fixture.componentInstance;
+    component.addLine();
+    component.addLine();
+    component.addLine();
+    component.toggleAvailabilityCheck(0);
+
+    component.removeLine(2);
+
+    expect(component.availabilityCheckLineIndex()).toBe(0);
+  });
 });
 
 describe('PoFormComponent — edit mode', () => {

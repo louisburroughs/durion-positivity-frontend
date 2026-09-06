@@ -11,8 +11,18 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 const PAGE_SIZE = 25;
 
-function toIsoDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
+/**
+ * Local-calendar `YYYY-MM-DD`, built from local getters rather than
+ * `toISOString().slice(0, 10)` (ADR-0038 rejects that pattern by name):
+ * `toISOString()` is UTC, so in a UTC-N zone it rolls into tomorrow's date
+ * for the evening hours of today, which would silently shift this due-date
+ * filter's window for operators west of UTC.
+ */
+export function toIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 /**

@@ -1,8 +1,31 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
-import { VendorInvoicesExceptionsPageComponent } from './vendor-invoices-exceptions-page.component';
+import { toIsoDate, VendorInvoicesExceptionsPageComponent } from './vendor-invoices-exceptions-page.component';
 import { PayablesService } from '../../../services/payables.service';
+
+describe('toIsoDate', () => {
+  /**
+   * ADR-0038 rejects `toISOString().slice(0, 10)`: it reads the UTC date, which
+   * disagrees with the local calendar date for the evening hours in any UTC-N
+   * zone. A Date-like whose local getters and `toISOString()` deliberately
+   * disagree makes the distinction observable regardless of the machine's TZ.
+   */
+  it('reads the local calendar date, not the UTC date, for 23:30 local in a UTC-7 zone', () => {
+    const lateEveningLocal = {
+      getFullYear: () => 2026,
+      getMonth: () => 8, // September (0-indexed)
+      getDate: () => 5,
+      toISOString: () => '2026-09-06T06:30:00.000Z', // 23:30 local Sep 5 == 06:30 UTC Sep 6
+    } as unknown as Date;
+
+    expect(toIsoDate(lateEveningLocal)).toBe('2026-09-05');
+  });
+
+  it('zero-pads month and day', () => {
+    expect(toIsoDate(new Date(2026, 0, 5, 12, 0, 0))).toBe('2026-01-05');
+  });
+});
 
 describe('VendorInvoicesExceptionsPageComponent', () => {
   let fixture: ComponentFixture<VendorInvoicesExceptionsPageComponent>;
