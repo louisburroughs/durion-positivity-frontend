@@ -27,7 +27,10 @@ type CandidatesState = 'loading' | 'ready' | 'empty' | 'error';
  * second one. The backend re-enforces the authority regardless — this is a
  * UX gate only, same as `invoice-detail-page.component.ts`.
  */
-const RESOLVE_ROLES: readonly string[] = ['ROLE_ADMIN', 'ROLE_CATALOG_MANAGER'];
+// Only ADMIN holds catalog:tread_design:resolve in the security seed (backend PR #1846,
+// permission catalog v75); widen this list only when the backend grants the permission to
+// another role, so the UX gate never promises what the API will refuse.
+const RESOLVE_ROLES: readonly string[] = ['ROLE_ADMIN'];
 
 /**
  * Tread-design review detail (#218 phase 2, backend #1645, ADR-0060).

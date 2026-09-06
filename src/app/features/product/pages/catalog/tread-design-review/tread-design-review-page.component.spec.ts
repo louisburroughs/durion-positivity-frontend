@@ -112,14 +112,14 @@ describe('TreadDesignReviewPageComponent', () => {
   });
 
   describe('permission gating (catalog:tread_design:resolve)', () => {
-    it('canResolve is false without ROLE_ADMIN/ROLE_CATALOG_MANAGER', async () => {
+    it('canResolve is false without ROLE_ADMIN', async () => {
       authServiceStub.hasAnyRole.mockReturnValue(false);
       treadDesignServiceStub.listCandidates.mockReturnValueOnce(of([]));
 
       await setup();
 
       expect(component.canResolve()).toBe(false);
-      expect(authServiceStub.hasAnyRole).toHaveBeenCalledWith(['ROLE_ADMIN', 'ROLE_CATALOG_MANAGER']);
+      expect(authServiceStub.hasAnyRole).toHaveBeenCalledWith(['ROLE_ADMIN']);
     });
 
     it('canResolve is true with an allowed role', async () => {
