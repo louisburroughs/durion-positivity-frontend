@@ -2322,6 +2322,20 @@
           },
           "STALE": "Desactualizado",
           "FRESH": "Actualizado"
+        },
+        "ENRICHMENT": {
+          "TITLE": "Diseño de banda de rodadura",
+          "PROVENANCE": "Provisto por el fabricante",
+          "HINT": "Este contenido proviene del feed de marketing del proveedor, no del registro del catálogo; nunca cambia lo que es este producto.",
+          "FIELD": {
+            "BRAND": "Marca",
+            "TREAD_DESIGN": "Diseño de banda de rodadura",
+            "VEHICLE_TYPE": "Tipo de vehículo",
+            "SEASONALITY": "Estacionalidad",
+            "VENDOR": "Proveedor",
+            "UPDATED_AT": "Enriquecimiento actualizado"
+          },
+          "ARTWORK_PENDING": "Arte pendiente"
         }
       },
       "ERROR": {
@@ -2348,6 +2362,31 @@
       "STANDARD_COST": {
         "ERROR": {
           "UPDATE": "Error al actualizar el costo estándar."
+        }
+      },
+      "ENRICHMENT": {
+        "UNMATCHED": {
+          "TITLE": "Diseños de banda de rodadura sin coincidencia",
+          "SUBTITLE": "Diseños de banda de rodadura del proveedor que la coincidencia difusa no pudo conectar con ningún producto del catálogo.",
+          "EMPTY": "Todos los diseños de banda de rodadura aplicados coinciden con al menos un producto.",
+          "ERROR": {
+            "LOAD": "No se pudieron cargar los diseños de banda de rodadura sin coincidencia."
+          },
+          "TABLE": {
+            "ARIA": "Diseños de banda de rodadura sin coincidencia",
+            "BRAND": "Marca",
+            "TREAD_DESIGN": "Diseño de banda de rodadura",
+            "VENDOR": "Proveedor",
+            "ARTWORK": "Arte",
+            "UPDATED_AT": "Actualizado"
+          },
+          "ARTWORK_PENDING": "Arte pendiente",
+          "PAGINATION": {
+            "ARIA": "Páginas de diseños sin coincidencia",
+            "PREVIOUS": "Anterior",
+            "NEXT": "Siguiente",
+            "STATUS": "Página {{page}} de {{totalPages}} ({{totalElements}} en total)"
+          }
         }
       }
     },
@@ -2604,6 +2643,10 @@
         "IMPORT_PRICE": {
           "TITLE": "Importar precios",
           "DESCRIPTION": "Importe masivamente datos de precios desde un archivo CSV o XLSX."
+        },
+        "ENRICHMENT_UNMATCHED": {
+          "TITLE": "Diseños de banda de rodadura sin coincidencia",
+          "DESCRIPTION": "Revise los diseños de banda de rodadura del proveedor que no se pudieron vincular a un producto del catálogo."
         }
       }
     }

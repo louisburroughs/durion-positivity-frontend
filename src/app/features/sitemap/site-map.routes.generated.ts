@@ -113,6 +113,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/product/bulk-import/price', label: "Price", dynamic: false },
   { route: '/app/product/catalog', label: "Catalog", dynamic: false },
   { route: '/app/product/catalog/:productId', label: "Catalog", dynamic: true },
+  { route: '/app/product/catalog/enrichment/unmatched', label: "Unmatched", dynamic: false },
   { route: '/app/product/inventory/availability', label: "Availability", dynamic: false },
   { route: '/app/product/inventory/feeds', label: "Feeds", dynamic: false },
   { route: '/app/product/location/locations-roster', label: "Locations Roster", dynamic: false },

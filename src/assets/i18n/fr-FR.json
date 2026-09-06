@@ -2322,6 +2322,20 @@
           },
           "STALE": "Obsolète",
           "FRESH": "À jour"
+        },
+        "ENRICHMENT": {
+          "TITLE": "Dessin de bande de roulement",
+          "PROVENANCE": "Fourni par le fabricant",
+          "HINT": "Ce contenu provient du flux marketing du fournisseur, pas de la fiche catalogue — il ne change jamais ce qu'est ce produit.",
+          "FIELD": {
+            "BRAND": "Marque",
+            "TREAD_DESIGN": "Dessin de bande de roulement",
+            "VEHICLE_TYPE": "Type de véhicule",
+            "SEASONALITY": "Saisonnalité",
+            "VENDOR": "Fournisseur",
+            "UPDATED_AT": "Enrichissement mis à jour"
+          },
+          "ARTWORK_PENDING": "Visuel en attente"
         }
       },
       "ERROR": {
@@ -2348,6 +2362,31 @@
       "STANDARD_COST": {
         "ERROR": {
           "UPDATE": "Échec de la mise à jour du coût standard."
+        }
+      },
+      "ENRICHMENT": {
+        "UNMATCHED": {
+          "TITLE": "Dessins de bande de roulement non appariés",
+          "SUBTITLE": "Dessins de bande de roulement fournis par le fournisseur que la correspondance approximative n'a pas pu relier à un produit du catalogue.",
+          "EMPTY": "Chaque dessin de bande de roulement appliqué correspond à au moins un produit.",
+          "ERROR": {
+            "LOAD": "Impossible de charger les dessins de bande de roulement non appariés."
+          },
+          "TABLE": {
+            "ARIA": "Dessins de bande de roulement non appariés",
+            "BRAND": "Marque",
+            "TREAD_DESIGN": "Dessin de bande de roulement",
+            "VENDOR": "Fournisseur",
+            "ARTWORK": "Visuel",
+            "UPDATED_AT": "Mis à jour"
+          },
+          "ARTWORK_PENDING": "Visuel en attente",
+          "PAGINATION": {
+            "ARIA": "Pages des dessins non appariés",
+            "PREVIOUS": "Précédent",
+            "NEXT": "Suivant",
+            "STATUS": "Page {{page}} sur {{totalPages}} ({{totalElements}} au total)"
+          }
         }
       }
     },
@@ -2604,6 +2643,10 @@
         "IMPORT_PRICE": {
           "TITLE": "Importer la tarification",
           "DESCRIPTION": "Importer en masse les donnees de tarification depuis un fichier CSV ou XLSX."
+        },
+        "ENRICHMENT_UNMATCHED": {
+          "TITLE": "Dessins de bande de roulement non appariés",
+          "DESCRIPTION": "Passez en revue les dessins de bande de roulement du fournisseur qui n'ont pas pu être associés à un produit du catalogue."
         }
       }
     }

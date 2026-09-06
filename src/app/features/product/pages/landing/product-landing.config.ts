@@ -20,6 +20,14 @@ export const PRODUCT_LANDING_CONFIG: LandingPageConfig = {
           ctaKey: 'PRODUCT.LANDING.ACTION.OPEN_PAGE',
           route: '/app/product/catalog',
         },
+        {
+          kind: 'direct',
+          icon: 'design_services',
+          titleKey: 'PRODUCT.LANDING.CARD.ENRICHMENT_UNMATCHED.TITLE',
+          descriptionKey: 'PRODUCT.LANDING.CARD.ENRICHMENT_UNMATCHED.DESCRIPTION',
+          ctaKey: 'PRODUCT.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/product/catalog/enrichment/unmatched',
+        },
       ],
     },
     {

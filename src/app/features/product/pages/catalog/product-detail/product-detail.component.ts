@@ -18,6 +18,7 @@ import {
 } from '../../../models/product.models';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
 import { SupplierAvailabilityPanelComponent } from '../../../components/supplier-availability-panel/supplier-availability-panel.component';
+import { TreadDesignEnrichmentPanelComponent } from '../../../components/tread-design-enrichment-panel/tread-design-enrichment-panel.component';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
@@ -29,12 +30,21 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
  * delivery location, since availability is consignee-specific and this page
  * carries no location context of its own.
  *
- * The manufacturer enrichment panel (#195) remains a separate gap; see #218.
+ * The manufacturer enrichment panel (#195; restored #218) renders vendor-
+ * supplied tread-design marketing content via
+ * `TreadDesignEnrichmentPanelComponent`. It loads on its own and never
+ * surfaces a failure to this page's `state`/`errorKey` — an enrichment fetch
+ * failure degrades only that panel (DECISION-POSITIVITY-004).
  */
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, SupplierAvailabilityPanelComponent],
+  imports: [
+    CommonModule,
+    TranslatePipe,
+    SupplierAvailabilityPanelComponent,
+    TreadDesignEnrichmentPanelComponent,
+  ],
   templateUrl: './product-detail.component.html',
   styleUrl: './product-detail.component.css',
 })

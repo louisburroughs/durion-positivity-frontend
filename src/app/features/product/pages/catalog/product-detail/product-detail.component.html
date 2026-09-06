@@ -38,6 +38,8 @@
     </div>
   </header>
 
+  <app-tread-design-enrichment-panel [productId]="productId()!" />
+
   <section class="card tabs" aria-label="{{ 'PRODUCT.CATALOG.DETAIL.TABS.ARIA' | translate }}">
     <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'lifecycle'"
       (click)="activeTab.set('lifecycle')">

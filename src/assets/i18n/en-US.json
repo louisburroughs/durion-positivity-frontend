@@ -2322,6 +2322,20 @@
           },
           "STALE": "Stale",
           "FRESH": "Fresh"
+        },
+        "ENRICHMENT": {
+          "TITLE": "Tread Design",
+          "PROVENANCE": "Manufacturer-Supplied",
+          "HINT": "This content comes from the vendor's own marketing feed, not the catalog record — it never changes what this product is.",
+          "FIELD": {
+            "BRAND": "Brand",
+            "TREAD_DESIGN": "Tread Design",
+            "VEHICLE_TYPE": "Vehicle Type",
+            "SEASONALITY": "Seasonality",
+            "VENDOR": "Vendor",
+            "UPDATED_AT": "Enrichment Updated"
+          },
+          "ARTWORK_PENDING": "Artwork pending"
         }
       },
       "ERROR": {
@@ -2348,6 +2362,31 @@
       "STANDARD_COST": {
         "ERROR": {
           "UPDATE": "Failed to update standard cost."
+        }
+      },
+      "ENRICHMENT": {
+        "UNMATCHED": {
+          "TITLE": "Unmatched Tread Designs",
+          "SUBTITLE": "Vendor-supplied tread designs that fuzzy matching could not connect to any catalog product.",
+          "EMPTY": "Every applied tread design has matched at least one product.",
+          "ERROR": {
+            "LOAD": "Unable to load unmatched tread designs."
+          },
+          "TABLE": {
+            "ARIA": "Unmatched tread designs",
+            "BRAND": "Brand",
+            "TREAD_DESIGN": "Tread Design",
+            "VENDOR": "Vendor",
+            "ARTWORK": "Artwork",
+            "UPDATED_AT": "Updated"
+          },
+          "ARTWORK_PENDING": "Artwork pending",
+          "PAGINATION": {
+            "ARIA": "Unmatched tread design pages",
+            "PREVIOUS": "Previous",
+            "NEXT": "Next",
+            "STATUS": "Page {{page}} of {{totalPages}} ({{totalElements}} total)"
+          }
         }
       }
     },
@@ -2604,6 +2643,10 @@
         "IMPORT_PRICE": {
           "TITLE": "Import Pricing",
           "DESCRIPTION": "Bulk import pricing data from a CSV or XLSX file."
+        },
+        "ENRICHMENT_UNMATCHED": {
+          "TITLE": "Unmatched Tread Designs",
+          "DESCRIPTION": "Review vendor tread designs that could not be matched to a catalog product."
         }
       }
     }

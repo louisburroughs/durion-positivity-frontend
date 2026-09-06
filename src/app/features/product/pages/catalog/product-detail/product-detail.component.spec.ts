@@ -4,6 +4,7 @@ import { of, throwError } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { ProductDetailComponent } from './product-detail.component';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
+import { ProductTreadDesignService } from '../../../services/product-tread-design.service';
 
 describe('ProductDetailComponent', () => {
   let fixture: ComponentFixture<ProductDetailComponent>;
@@ -158,11 +159,14 @@ describe('ProductDetailComponent', () => {
   });
 });
 
-// ── Manufacturer enrichment panel (#195) — still a gap, tracked on #218 ────────
+// ── Manufacturer enrichment panel (#195; restored #218) ─────────────────────
 //
-// The enrichment panel had no generated read contract behind it. It is gone,
-// and this page must not quietly grow it back ahead of #218.
-describe('ProductDetailComponent — enrichment panel not yet restored (#218 pending)', () => {
+// The enrichment panel now renders via TreadDesignEnrichmentPanelComponent,
+// which owns its own fetch and never raises to this page — see that
+// component's spec for its isolation and "absence renders nothing" coverage.
+// These tests only confirm ProductDetailComponent hosts it and never gates
+// its own state on it.
+describe('ProductDetailComponent — enrichment panel hosting (#218)', () => {
   const mockCatalog = {
     getProductById: vi.fn().mockReturnValue(
       of({ id: 'prod-123', sku: 'SKU-001', name: 'Test Product', category: 'Parts', description: 'x', status: 'ACTIVE', msrp: null }),
@@ -182,7 +186,9 @@ describe('ProductDetailComponent — enrichment panel not yet restored (#218 pen
     updateStandardCost: vi.fn(),
   };
 
-  async function setup(): Promise<ComponentFixture<ProductDetailComponent>> {
+  async function setup(
+    treadDesignService: { getEnrichmentForProduct: ReturnType<typeof vi.fn> },
+  ): Promise<ComponentFixture<ProductDetailComponent>> {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [ProductDetailComponent, TranslateModule.forRoot()],
@@ -192,6 +198,7 @@ describe('ProductDetailComponent — enrichment panel not yet restored (#218 pen
           useValue: { paramMap: of(convertToParamMap({ productId: 'prod-123' })) },
         },
         { provide: ProductCatalogService, useValue: mockCatalog },
+        { provide: ProductTreadDesignService, useValue: treadDesignService },
       ],
     }).compileComponents();
 
@@ -200,12 +207,43 @@ describe('ProductDetailComponent — enrichment panel not yet restored (#218 pen
     return created;
   }
 
-  it('renders no enrichment panel', async () => {
-    const isolated = await setup();
+  it('hosts the enrichment panel and stays ready even when there is no match', async () => {
+    const treadDesignService = { getEnrichmentForProduct: vi.fn().mockReturnValue(of(null)) };
+    const isolated = await setup(treadDesignService);
     const el = isolated.nativeElement as HTMLElement;
 
-    expect(el.querySelector('app-supplier-enrichment-panel')).toBeNull();
+    expect(el.querySelector('app-tread-design-enrichment-panel')).not.toBeNull();
+    expect(el.querySelector('.enrichment-panel')).toBeNull();
     expect(isolated.componentInstance.state()).toBe('ready');
+  });
+
+  it('hosts the enrichment panel with content and never gates page state on it', async () => {
+    const treadDesignService = {
+      getEnrichmentForProduct: vi.fn().mockReturnValue(
+        of({
+          id: 'td-1',
+          brand: 'Acme',
+          treadDesign: null,
+          treadDesign2: null,
+          productName: null,
+          vehicleType: null,
+          seasonality: null,
+          supplierRef: null,
+          vendorProfileId: null,
+          vendorVariantId: null,
+          updatedAt: null,
+          hasUnresolvedImages: false,
+          images: [],
+          texts: [],
+        }),
+      ),
+    };
+    const isolated = await setup(treadDesignService);
+    const el = isolated.nativeElement as HTMLElement;
+
+    expect(el.querySelector('.enrichment-panel')).not.toBeNull();
+    expect(isolated.componentInstance.state()).toBe('ready');
+    expect(isolated.componentInstance.errorKey()).toBeNull();
   });
 });
 
