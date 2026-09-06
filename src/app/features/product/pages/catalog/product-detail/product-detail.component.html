@@ -51,6 +51,10 @@
       (click)="activeTab.set('standard-cost')">
       {{ 'PRODUCT.CATALOG.DETAIL.TABS.STANDARD_COST' | translate }}
     </button>
+    <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'availability'"
+      (click)="activeTab.set('availability')">
+      {{ 'PRODUCT.CATALOG.DETAIL.TABS.AVAILABILITY' | translate }}
+    </button>
   </section>
 
   @if (activeTab() === 'lifecycle') {
@@ -256,6 +260,12 @@
       </ol>
       }
     </section>
+  </section>
+  }
+
+  @if (activeTab() === 'availability') {
+  <section class="card panel">
+    <app-supplier-availability-panel [productId]="productId()!" />
   </section>
   }
   }

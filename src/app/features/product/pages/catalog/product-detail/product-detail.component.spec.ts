@@ -158,11 +158,11 @@ describe('ProductDetailComponent', () => {
   });
 });
 
-// ── Retired supplier sections (#201) ────────────────────────────────────────────
+// ── Manufacturer enrichment panel (#195) — still a gap, tracked on #218 ────────
 //
-// The availability and enrichment panels had no generated read contract behind
-// them. They are gone, and this page must not quietly grow them back.
-describe('ProductDetailComponent — retired supplier sections (#201)', () => {
+// The enrichment panel had no generated read contract behind it. It is gone,
+// and this page must not quietly grow it back ahead of #218.
+describe('ProductDetailComponent — enrichment panel not yet restored (#218 pending)', () => {
   const mockCatalog = {
     getProductById: vi.fn().mockReturnValue(
       of({ id: 'prod-123', sku: 'SKU-001', name: 'Test Product', category: 'Parts', description: 'x', status: 'ACTIVE', msrp: null }),
@@ -200,19 +200,78 @@ describe('ProductDetailComponent — retired supplier sections (#201)', () => {
     return created;
   }
 
-  it('renders neither the availability nor the enrichment panel', async () => {
+  it('renders no enrichment panel', async () => {
     const isolated = await setup();
     const el = isolated.nativeElement as HTMLElement;
 
-    expect(el.querySelector('app-supplier-availability-panel')).toBeNull();
     expect(el.querySelector('app-supplier-enrichment-panel')).toBeNull();
     expect(isolated.componentInstance.state()).toBe('ready');
   });
+});
 
-  it('holds no supplier state of its own', async () => {
+// ── Supplier availability panel (#212) ──────────────────────────────────────────
+
+describe('ProductDetailComponent — availability tab (#212)', () => {
+  const availabilityMockProduct = {
+    id: 'prod-123',
+    sku: 'SKU-001',
+    name: 'Test Product',
+    category: 'Parts',
+    description: 'A test product',
+    status: 'ACTIVE',
+    msrp: null,
+  };
+
+  const availabilityMockLifecycle = {
+    productId: 'prod-123',
+    currentState: 'ACTIVE' as const,
+    effectiveAt: '2026-01-01T00:00:00Z',
+    lastChangedBy: 'system',
+    lastChangedAt: '2026-01-01T00:00:00Z',
+  };
+
+  const mockCatalog = {
+    getProductById: vi.fn().mockReturnValue(of(availabilityMockProduct)),
+    getProductLifecycle: vi.fn().mockReturnValue(of(availabilityMockLifecycle)),
+    getReplacements: vi.fn().mockReturnValue(of([])),
+    listUomConversions: vi.fn().mockReturnValue(of([])),
+    getItemCosts: vi.fn().mockReturnValue(
+      of({ id: 'ic-1', itemId: 'prod-123', standardCost: 10, costStructures: [] }),
+    ),
+    getAuditHistory: vi.fn().mockReturnValue(of([])),
+  };
+
+  async function setup(): Promise<ComponentFixture<ProductDetailComponent>> {
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [ProductDetailComponent, TranslateModule.forRoot()],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: { paramMap: of(convertToParamMap({ productId: 'prod-123' })) },
+        },
+        { provide: ProductCatalogService, useValue: mockCatalog },
+      ],
+    }).compileComponents();
+
+    const created = TestBed.createComponent(ProductDetailComponent);
+    created.detectChanges();
+    return created;
+  }
+
+  it('renders the availability panel once the availability tab is active', async () => {
     const isolated = await setup();
-    const keys = Object.keys(isolated.componentInstance as unknown as Record<string, unknown>);
+    isolated.componentInstance.activeTab.set('availability');
+    isolated.detectChanges();
 
-    expect(keys.some(key => /supplier|availability|enrichment|vendor/i.test(key))).toBe(false);
+    const el = isolated.nativeElement as HTMLElement;
+    expect(el.querySelector('app-supplier-availability-panel')).not.toBeNull();
+  });
+
+  it('does not render the availability panel on other tabs', async () => {
+    const isolated = await setup();
+
+    const el = isolated.nativeElement as HTMLElement;
+    expect(el.querySelector('app-supplier-availability-panel')).toBeNull();
   });
 });

@@ -17,22 +17,24 @@ import {
   UomConversion,
 } from '../../../models/product.models';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
+import { SupplierAvailabilityPanelComponent } from '../../../components/supplier-availability-panel/supplier-availability-panel.component';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 /**
- * The supplier availability (#190) and manufacturer enrichment (#195) sections
- * were retired in #201: the generated supplier client publishes no read whose
- * request and response cover what those panels required (`inquireSupplierStock`
- * needs a `vendorProfileId` plus an article EAN and returns no vendor display
- * name or UOM; there is no enrichment read at all). The gaps are recorded on
- * #201 and PR #202, so this page holds no supplier component, model, service
- * or state.
+ * The supplier availability panel (#190; restored #212) checks live per-vendor
+ * stock against the generated `@durion-sdk/supplier` fan-out read
+ * (`getSupplierStockAvailability`) — see
+ * `SupplierAvailabilityPanelComponent`. It is read-only and asks for its own
+ * delivery location, since availability is consignee-specific and this page
+ * carries no location context of its own.
+ *
+ * The manufacturer enrichment panel (#195) remains a separate gap; see #218.
  */
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, SupplierAvailabilityPanelComponent],
   templateUrl: './product-detail.component.html',
   styleUrl: './product-detail.component.css',
 })
@@ -44,7 +46,7 @@ export class ProductDetailComponent {
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
   readonly productId = signal<string | null>(null);
-  readonly activeTab = signal<'lifecycle' | 'uom' | 'standard-cost'>('lifecycle');
+  readonly activeTab = signal<'lifecycle' | 'uom' | 'standard-cost' | 'availability'>('lifecycle');
 
   readonly product = signal<Product | null>(null);
   readonly lifecycle = signal<ProductLifecycle | null>(null);

@@ -1,0 +1,102 @@
+<section class="availability-panel" aria-labelledby="po-availability-panel-title">
+  <h3 id="po-availability-panel-title">
+    {{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.TITLE' | translate }} — {{ sku() }}
+  </h3>
+
+  @if (!hasSku()) {
+  <p class="empty-hint">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.NO_SKU' | translate }}</p>
+  } @else {
+  <form class="inline-form" [formGroup]="form" (ngSubmit)="checkAvailability()">
+    <div class="form-grid">
+      <label>
+        {{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.FIELD.DELIVERY_LOCATION' | translate }}
+        <input
+          class="input-underline"
+          type="text"
+          formControlName="deliveryLocationId"
+          [attr.placeholder]="'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.FIELD.DELIVERY_LOCATION_PLACEHOLDER' | translate"
+          [attr.aria-invalid]="form.controls.deliveryLocationId.invalid && form.controls.deliveryLocationId.touched"
+        />
+      </label>
+      <label>
+        {{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.FIELD.QUANTITY' | translate }}
+        <input class="input-underline" type="number" min="1" formControlName="quantity" />
+      </label>
+    </div>
+    @if (form.controls.deliveryLocationId.invalid && form.controls.deliveryLocationId.touched) {
+    <p class="field-error" role="alert">
+      {{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.ERROR.LOCATION_REQUIRED' | translate }}
+    </p>
+    }
+    <button class="btn-secondary" type="submit" [disabled]="state() === 'loading'">
+      {{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.ACTION.CHECK' | translate }}
+    </button>
+  </form>
+
+  @if (state() === 'loading') {
+  <div class="skeleton-row" aria-hidden="true"></div>
+  <p class="sr-only" role="status">{{ 'COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'error') {
+  <p class="error-banner" role="alert">{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</p>
+  }
+
+  @if (state() === 'ready') {
+  @if (vendors().length === 0) {
+  <p class="empty-hint">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.EMPTY' | translate }}</p>
+  } @else {
+  <div class="table-wrap">
+    <table class="data-table" aria-label="{{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.TABLE.ARIA' | translate }}">
+      <thead>
+        <tr>
+          <th scope="col">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.TABLE.VENDOR' | translate }}</th>
+          <th scope="col">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.TABLE.STATUS' | translate }}</th>
+          <th scope="col">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.TABLE.QUANTITY' | translate }}</th>
+          <th scope="col">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.TABLE.UNIT_PRICE' | translate }}</th>
+          <th scope="col">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.TABLE.EARLIEST_DELIVERY' | translate }}</th>
+          <th scope="col">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.TABLE.FRESHNESS' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (vendor of vendors(); track vendor.vendorProfileId) {
+        <tr>
+          <td>{{ vendor.vendorDisplayName || vendor.vendorProfileId }}</td>
+          <td>
+            <span
+              class="badge"
+              [class.badge--success]="vendor.status === 'OK'"
+              [class.badge--neutral]="vendor.status === 'NOT_LISTED'"
+              [class.badge--warning]="vendor.status === 'SUPPLIER_UNAVAILABLE'"
+              [class.badge--error]="vendor.status === 'CAPABILITY_NOT_CONFIGURED' || vendor.status === 'CONFIGURATION_ERROR'"
+            >
+              {{ vendor.status ? ('INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.VENDOR_STATUS.' + vendor.status | translate) : ('COMMON.NOT_AVAILABLE' | translate) }}
+            </span>
+          </td>
+          <td>{{ firstLine(vendor)?.availableQuantity ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+          <td>
+            @if (firstLine(vendor)?.quotedUnitPrice !== null && firstLine(vendor)?.quotedUnitPrice !== undefined) {
+            {{ firstLine(vendor)!.quotedUnitPrice | currency:(firstLine(vendor)?.currency ?? 'USD'):'symbol':'1.2-2' }}
+            } @else {
+            {{ 'COMMON.NOT_AVAILABLE' | translate }}
+            }
+          </td>
+          <td>{{ firstLine(vendor)?.earliestDeliveryDate ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+          <td>
+            @if (vendor.stale === true) {
+            <span class="badge badge--warning">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.STALE' | translate }}</span>
+            } @else if (vendor.stale === false) {
+            <span class="badge badge--success">{{ 'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.FRESH' | translate }}</span>
+            } @else {
+            {{ 'COMMON.NOT_AVAILABLE' | translate }}
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+  }
+  }
+</section>

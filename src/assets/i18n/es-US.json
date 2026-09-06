@@ -2242,7 +2242,8 @@
           "ARIA": "Pestañas de detalle del producto",
           "LIFECYCLE": "Ciclo de vida",
           "UOM": "Unidades de medida",
-          "STANDARD_COST": "Costo estándar"
+          "STANDARD_COST": "Costo estándar",
+          "AVAILABILITY": "Disponibilidad"
         },
         "STATE": {
           "EMPTY": "No hay detalles disponibles del producto."
@@ -2284,6 +2285,43 @@
           "AUDIT_HISTORY": "Historial de auditoría",
           "AUDIT_EMPTY": "Sin historial de auditoría.",
           "AUDIT_CHANGED": "Cambiado"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Disponibilidad del proveedor",
+          "HINT": "Consulte el stock en tiempo real en todos los proveedores habilitados para este producto en una ubicación de entrega.",
+          "FIELD": {
+            "DELIVERY_LOCATION": "Ubicación de entrega",
+            "DELIVERY_LOCATION_PLACEHOLDER": "Ingrese el ID de la ubicación de entrega",
+            "QUANTITY": "Cantidad (opcional)"
+          },
+          "ERROR": {
+            "LOCATION_REQUIRED": "La ubicación de entrega es obligatoria.",
+            "LOAD": "No se pudo verificar la disponibilidad del proveedor."
+          },
+          "ACTION": {
+            "CHECK": "Verificar disponibilidad"
+          },
+          "EMPTY": "No hay proveedores de consulta de stock configurados.",
+          "TABLE": {
+            "ARIA": "Disponibilidad por proveedor",
+            "VENDOR": "Proveedor",
+            "STATUS": "Estado",
+            "QUANTITY": "Cantidad disponible",
+            "UNIT_PRICE": "Precio unitario",
+            "EARLIEST_DELIVERY": "Entrega más temprana",
+            "FETCHED_AT": "Obtenido el",
+            "VENDOR_AS_OF": "Vigente al (proveedor)",
+            "FRESHNESS": "Actualidad"
+          },
+          "VENDOR_STATUS": {
+            "OK": "Respondió",
+            "SUPPLIER_UNAVAILABLE": "No disponible",
+            "NOT_LISTED": "No listado",
+            "CAPABILITY_NOT_CONFIGURED": "No configurado",
+            "CONFIGURATION_ERROR": "Error de configuración"
+          },
+          "STALE": "Desactualizado",
+          "FRESH": "Actualizado"
         }
       },
       "ERROR": {
@@ -4184,6 +4222,44 @@
         },
         "ACTION": {
           "SUBMIT": "Enviar pedido"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Disponibilidad del proveedor",
+          "HINT": "Consulte el stock en tiempo real en todos los proveedores habilitados para este producto en una ubicación de entrega.",
+          "FIELD": {
+            "DELIVERY_LOCATION": "Ubicación de entrega",
+            "DELIVERY_LOCATION_PLACEHOLDER": "Ingrese el ID de la ubicación de entrega",
+            "QUANTITY": "Cantidad (opcional)"
+          },
+          "ERROR": {
+            "LOCATION_REQUIRED": "La ubicación de entrega es obligatoria.",
+            "LOAD": "No se pudo verificar la disponibilidad del proveedor."
+          },
+          "ACTION": {
+            "CHECK": "Verificar disponibilidad"
+          },
+          "EMPTY": "No hay proveedores de consulta de stock configurados.",
+          "TABLE": {
+            "ARIA": "Disponibilidad por proveedor",
+            "VENDOR": "Proveedor",
+            "STATUS": "Estado",
+            "QUANTITY": "Cantidad disponible",
+            "UNIT_PRICE": "Precio unitario",
+            "EARLIEST_DELIVERY": "Entrega más temprana",
+            "FETCHED_AT": "Obtenido el",
+            "VENDOR_AS_OF": "Vigente al (proveedor)",
+            "FRESHNESS": "Actualidad"
+          },
+          "VENDOR_STATUS": {
+            "OK": "Respondió",
+            "SUPPLIER_UNAVAILABLE": "No disponible",
+            "NOT_LISTED": "No listado",
+            "CAPABILITY_NOT_CONFIGURED": "No configurado",
+            "CONFIGURATION_ERROR": "Error de configuración"
+          },
+          "STALE": "Desactualizado",
+          "FRESH": "Actualizado",
+          "NO_SKU": "Ingrese un SKU en esta línea antes de verificar la disponibilidad."
         }
       }
     },

@@ -2242,7 +2242,8 @@
           "ARIA": "Product detail tabs",
           "LIFECYCLE": "Lifecycle",
           "UOM": "Units of Measure",
-          "STANDARD_COST": "Standard Cost"
+          "STANDARD_COST": "Standard Cost",
+          "AVAILABILITY": "Availability"
         },
         "STATE": {
           "EMPTY": "No product detail available."
@@ -2284,6 +2285,43 @@
           "AUDIT_HISTORY": "Audit history",
           "AUDIT_EMPTY": "No audit history.",
           "AUDIT_CHANGED": "Changed"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Supplier Availability",
+          "HINT": "Check live stock across every enabled vendor for this product at a delivery location.",
+          "FIELD": {
+            "DELIVERY_LOCATION": "Delivery Location",
+            "DELIVERY_LOCATION_PLACEHOLDER": "Enter delivery location ID",
+            "QUANTITY": "Quantity (optional)"
+          },
+          "ERROR": {
+            "LOCATION_REQUIRED": "Delivery location is required.",
+            "LOAD": "Unable to check supplier availability."
+          },
+          "ACTION": {
+            "CHECK": "Check Availability"
+          },
+          "EMPTY": "No stock-inquiry vendors are configured.",
+          "TABLE": {
+            "ARIA": "Supplier availability by vendor",
+            "VENDOR": "Vendor",
+            "STATUS": "Status",
+            "QUANTITY": "Available Qty",
+            "UNIT_PRICE": "Unit Price",
+            "EARLIEST_DELIVERY": "Earliest Delivery",
+            "FETCHED_AT": "Fetched At",
+            "VENDOR_AS_OF": "Vendor As Of",
+            "FRESHNESS": "Freshness"
+          },
+          "VENDOR_STATUS": {
+            "OK": "Answered",
+            "SUPPLIER_UNAVAILABLE": "Unavailable",
+            "NOT_LISTED": "Not Listed",
+            "CAPABILITY_NOT_CONFIGURED": "Not Configured",
+            "CONFIGURATION_ERROR": "Configuration Error"
+          },
+          "STALE": "Stale",
+          "FRESH": "Fresh"
         }
       },
       "ERROR": {
@@ -4184,6 +4222,44 @@
         },
         "ACTION": {
           "SUBMIT": "Submit Order"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Supplier Availability",
+          "HINT": "Check live stock across every enabled vendor for this product at a delivery location.",
+          "FIELD": {
+            "DELIVERY_LOCATION": "Delivery Location",
+            "DELIVERY_LOCATION_PLACEHOLDER": "Enter delivery location ID",
+            "QUANTITY": "Quantity (optional)"
+          },
+          "ERROR": {
+            "LOCATION_REQUIRED": "Delivery location is required.",
+            "LOAD": "Unable to check supplier availability."
+          },
+          "ACTION": {
+            "CHECK": "Check Availability"
+          },
+          "EMPTY": "No stock-inquiry vendors are configured.",
+          "TABLE": {
+            "ARIA": "Supplier availability by vendor",
+            "VENDOR": "Vendor",
+            "STATUS": "Status",
+            "QUANTITY": "Available Qty",
+            "UNIT_PRICE": "Unit Price",
+            "EARLIEST_DELIVERY": "Earliest Delivery",
+            "FETCHED_AT": "Fetched At",
+            "VENDOR_AS_OF": "Vendor As Of",
+            "FRESHNESS": "Freshness"
+          },
+          "VENDOR_STATUS": {
+            "OK": "Answered",
+            "SUPPLIER_UNAVAILABLE": "Unavailable",
+            "NOT_LISTED": "Not Listed",
+            "CAPABILITY_NOT_CONFIGURED": "Not Configured",
+            "CONFIGURATION_ERROR": "Configuration Error"
+          },
+          "STALE": "Stale",
+          "FRESH": "Fresh",
+          "NO_SKU": "Enter a SKU on this line before checking availability."
         }
       }
     },

@@ -91,6 +91,38 @@ describe('PoFormComponent — create mode', () => {
     component.updateLine(0, 'unitPrice', -50);
     expect(component.lines()[0].unitPrice).toBe(0);
   });
+
+  // ── toggleAvailabilityCheck() (#212) ────────────────────────────────────────
+
+  it('toggleAvailabilityCheck() expands the panel for a line index', () => {
+    const fixture = TestBed.createComponent(PoFormComponent);
+    const component = fixture.componentInstance;
+
+    component.toggleAvailabilityCheck(0);
+
+    expect(component.availabilityCheckLineIndex()).toBe(0);
+  });
+
+  it('toggleAvailabilityCheck() collapses an already-expanded line', () => {
+    const fixture = TestBed.createComponent(PoFormComponent);
+    const component = fixture.componentInstance;
+
+    component.toggleAvailabilityCheck(0);
+    component.toggleAvailabilityCheck(0);
+
+    expect(component.availabilityCheckLineIndex()).toBeNull();
+  });
+
+  it('removeLine() collapses the availability panel when its line is removed', () => {
+    const fixture = TestBed.createComponent(PoFormComponent);
+    const component = fixture.componentInstance;
+    component.addLine();
+    component.toggleAvailabilityCheck(0);
+
+    component.removeLine(0);
+
+    expect(component.availabilityCheckLineIndex()).toBeNull();
+  });
 });
 
 describe('PoFormComponent — edit mode', () => {

@@ -2242,7 +2242,8 @@
           "ARIA": "Onglets de détail du produit",
           "LIFECYCLE": "Cycle de vie",
           "UOM": "Unités de mesure",
-          "STANDARD_COST": "Coût standard"
+          "STANDARD_COST": "Coût standard",
+          "AVAILABILITY": "Disponibilité"
         },
         "STATE": {
           "EMPTY": "Aucun détail disponible pour ce produit."
@@ -2284,6 +2285,43 @@
           "AUDIT_HISTORY": "Historique d'audit",
           "AUDIT_EMPTY": "Aucun historique d'audit.",
           "AUDIT_CHANGED": "Modifié"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Disponibilité du fournisseur",
+          "HINT": "Vérifiez le stock en direct chez tous les fournisseurs activés pour ce produit à un lieu de livraison.",
+          "FIELD": {
+            "DELIVERY_LOCATION": "Lieu de livraison",
+            "DELIVERY_LOCATION_PLACEHOLDER": "Entrez l'ID du lieu de livraison",
+            "QUANTITY": "Quantité (facultatif)"
+          },
+          "ERROR": {
+            "LOCATION_REQUIRED": "Le lieu de livraison est requis.",
+            "LOAD": "Impossible de vérifier la disponibilité du fournisseur."
+          },
+          "ACTION": {
+            "CHECK": "Vérifier la disponibilité"
+          },
+          "EMPTY": "Aucun fournisseur de consultation de stock n'est configuré.",
+          "TABLE": {
+            "ARIA": "Disponibilité par fournisseur",
+            "VENDOR": "Fournisseur",
+            "STATUS": "Statut",
+            "QUANTITY": "Qté disponible",
+            "UNIT_PRICE": "Prix unitaire",
+            "EARLIEST_DELIVERY": "Livraison la plus rapide",
+            "FETCHED_AT": "Récupéré le",
+            "VENDOR_AS_OF": "En vigueur au (fournisseur)",
+            "FRESHNESS": "Fraîcheur"
+          },
+          "VENDOR_STATUS": {
+            "OK": "A répondu",
+            "SUPPLIER_UNAVAILABLE": "Indisponible",
+            "NOT_LISTED": "Non répertorié",
+            "CAPABILITY_NOT_CONFIGURED": "Non configuré",
+            "CONFIGURATION_ERROR": "Erreur de configuration"
+          },
+          "STALE": "Obsolète",
+          "FRESH": "À jour"
         }
       },
       "ERROR": {
@@ -4184,6 +4222,44 @@
         },
         "ACTION": {
           "SUBMIT": "Soumettre la commande"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Disponibilité du fournisseur",
+          "HINT": "Vérifiez le stock en direct chez tous les fournisseurs activés pour ce produit à un lieu de livraison.",
+          "FIELD": {
+            "DELIVERY_LOCATION": "Lieu de livraison",
+            "DELIVERY_LOCATION_PLACEHOLDER": "Entrez l'ID du lieu de livraison",
+            "QUANTITY": "Quantité (facultatif)"
+          },
+          "ERROR": {
+            "LOCATION_REQUIRED": "Le lieu de livraison est requis.",
+            "LOAD": "Impossible de vérifier la disponibilité du fournisseur."
+          },
+          "ACTION": {
+            "CHECK": "Vérifier la disponibilité"
+          },
+          "EMPTY": "Aucun fournisseur de consultation de stock n'est configuré.",
+          "TABLE": {
+            "ARIA": "Disponibilité par fournisseur",
+            "VENDOR": "Fournisseur",
+            "STATUS": "Statut",
+            "QUANTITY": "Qté disponible",
+            "UNIT_PRICE": "Prix unitaire",
+            "EARLIEST_DELIVERY": "Livraison la plus rapide",
+            "FETCHED_AT": "Récupéré le",
+            "VENDOR_AS_OF": "En vigueur au (fournisseur)",
+            "FRESHNESS": "Fraîcheur"
+          },
+          "VENDOR_STATUS": {
+            "OK": "A répondu",
+            "SUPPLIER_UNAVAILABLE": "Indisponible",
+            "NOT_LISTED": "Non répertorié",
+            "CAPABILITY_NOT_CONFIGURED": "Non configuré",
+            "CONFIGURATION_ERROR": "Erreur de configuration"
+          },
+          "STALE": "Obsolète",
+          "FRESH": "À jour",
+          "NO_SKU": "Saisissez un UGS pour cette ligne avant de vérifier la disponibilité."
         }
       }
     },
