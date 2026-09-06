@@ -6,6 +6,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { PurchaseOrderDetail } from '../../../models/inventory.models';
 import { InventoryPurchaseOrderService } from '../../../services/inventory-purchase-order.service';
 import { SupplierTransmissionPanelComponent } from '../../../../positivity/components/supplier-transmission-panel/supplier-transmission-panel.component';
+import { PurchaseOrderTransmissionTimelinePanelComponent } from '../../../../positivity/components/purchase-order-transmission-timeline-panel/purchase-order-transmission-timeline-panel.component';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
@@ -14,19 +15,27 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
  *
  * The vendor transmission panel (#191) is hosted here because this is the
  * screen that answers "what is happening with this order?": `po-form` edits
- * lines before commitment, where no transmission state can exist. The
- * shipment-event timeline (#193) was retired in #201 — the generated supplier
- * client has no shipment-event read.
+ * lines before commitment, where no transmission state can exist.
  *
- * The panel is a supplier-domain component that owns its own state and its
- * own generated client (ADR-0010). This page passes a purchase-order id and
- * nothing else — no supplier service is injected here and no supplier model
- * is imported, so a vendor outage degrades that section only.
+ * The vendor transmission timeline (#215) is hosted alongside it: one read
+ * (`listPurchaseOrderTransmissionEvents`, `@durion-sdk/order`) now replaces
+ * both the shipment-event timeline and the transmission-status history that
+ * were retired in #201.
+ *
+ * Both panels are self-contained domain components that own their own state
+ * and their own generated client (ADR-0010). This page passes a purchase-order
+ * id and nothing else — no supplier/order service is injected here and no
+ * supplier/order model is imported, so a vendor outage degrades one section
+ * only.
  */
 @Component({
   selector: 'app-po-detail',
   standalone: true,
-  imports: [TranslatePipe, SupplierTransmissionPanelComponent],
+  imports: [
+    TranslatePipe,
+    SupplierTransmissionPanelComponent,
+    PurchaseOrderTransmissionTimelinePanelComponent,
+  ],
   templateUrl: './po-detail.component.html',
   styleUrl: './po-detail.component.css',
 })

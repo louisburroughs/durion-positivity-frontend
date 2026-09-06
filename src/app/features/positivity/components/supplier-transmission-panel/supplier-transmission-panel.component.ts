@@ -65,9 +65,17 @@ const STATE_ICONS: Readonly<Record<SupplierTransmissionState, string>> = {
  * into a duplicate physical delivery. The spec asserts the absence.
  *
  * ── What is shown is what the backend publishes ─────────────────────────────
- * The generated client exposes one read: every transmission recorded for the
- * order, each with its current state and last status time. There is no
- * status-history or per-line confirmation read, so none is rendered (#201).
+ * The generated client exposes one read here: every transmission recorded for
+ * the order, each with its current state and last status time. There is still
+ * no per-line confirmation read, so none is rendered.
+ *
+ * ── History is now available, one panel over ────────────────────────────────
+ * This panel shows current per-transmission state only. The append-only
+ * vendor-observation history that PR #202 retired (leaving this panel with a
+ * "no history read" caveat) is restored in #215 as
+ * `app-purchase-order-transmission-timeline-panel`, hosted alongside this one
+ * on `po-detail`. That panel is the sole timeline source; nothing here
+ * duplicates it.
  */
 @Component({
   selector: 'app-supplier-transmission-panel',

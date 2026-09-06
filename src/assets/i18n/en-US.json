@@ -5697,7 +5697,8 @@
       "VENDOR_REASON": "Vendor reason",
       "VENDOR_ERROR_CODE": "Vendor error code",
       "FAILURE_DETAIL": "Failure detail",
-      "RESOLUTION": "Resolution"
+      "RESOLUTION": "Resolution",
+      "HISTORY_NOTE": "The full vendor transmission history for this order is shown in the timeline below."
     },
     "FLEET": {
       "AS_OF": "Fleet manager effective time",
@@ -5874,6 +5875,25 @@
         "LOAD_FRESHNESS": "The price-catalog freshness summary could not be loaded.",
         "LOAD_IMPORTS": "The import history could not be loaded.",
         "LOAD_UNMATCHED": "The unmatched-lines worklist could not be loaded."
+      }
+    },
+    "TRANSMISSION_TIMELINE": {
+      "TITLE": "Vendor transmission timeline",
+      "EMPTY": "This order has no vendor transmission history yet.",
+      "OBSERVED_AT": "Vendor observed at",
+      "RECORDED_AT": "Recorded by this platform at",
+      "DESPATCH_DATE": "Despatch date",
+      "EVENT_TYPE": {
+        "CONFIRMED": "Confirmed",
+        "REJECTED": "Rejected",
+        "STATUS_CHANGED": "Status changed",
+        "REVIEW_REQUIRED": "Needs manual review"
+      },
+      "PAGINATION": {
+        "ARIA_LABEL": "Transmission timeline pagination"
+      },
+      "ERROR": {
+        "LOAD": "The vendor transmission timeline could not be loaded."
       }
     }
   }

@@ -5697,7 +5697,8 @@
       "VENDOR_REASON": "Motif du fournisseur",
       "VENDOR_ERROR_CODE": "Code d’erreur du fournisseur",
       "FAILURE_DETAIL": "Détail de l’échec",
-      "RESOLUTION": "Résolution"
+      "RESOLUTION": "Résolution",
+      "HISTORY_NOTE": "L'historique complet de transmission avec le fournisseur pour cette commande est affiché dans la chronologie ci-dessous."
     },
     "FLEET": {
       "AS_OF": "Heure effective du gestionnaire de flotte",
@@ -5874,6 +5875,25 @@
         "LOAD_FRESHNESS": "Le résumé d'actualité du catalogue de prix n'a pas pu être chargé.",
         "LOAD_IMPORTS": "L'historique des importations n'a pas pu être chargé.",
         "LOAD_UNMATCHED": "La liste des lignes non rapprochées n'a pas pu être chargée."
+      }
+    },
+    "TRANSMISSION_TIMELINE": {
+      "TITLE": "Chronologie de transmission du fournisseur",
+      "EMPTY": "Cette commande n'a pas encore d'historique de transmission avec le fournisseur.",
+      "OBSERVED_AT": "Observé par le fournisseur le",
+      "RECORDED_AT": "Enregistré par cette plateforme le",
+      "DESPATCH_DATE": "Date d'expédition",
+      "EVENT_TYPE": {
+        "CONFIRMED": "Confirmé",
+        "REJECTED": "Rejeté",
+        "STATUS_CHANGED": "Statut modifié",
+        "REVIEW_REQUIRED": "Nécessite une révision manuelle"
+      },
+      "PAGINATION": {
+        "ARIA_LABEL": "Pagination de la chronologie de transmission"
+      },
+      "ERROR": {
+        "LOAD": "La chronologie de transmission du fournisseur n'a pas pu être chargée."
       }
     }
   }
