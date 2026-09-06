@@ -17,6 +17,7 @@ import { SupplierAuthPanelComponent } from '../../components/supplier-auth-panel
 import { SupplierBindingsPanelComponent } from '../../components/supplier-bindings-panel/supplier-bindings-panel.component';
 import { SupplierHealthPanelComponent } from '../../components/supplier-health-panel/supplier-health-panel.component';
 import { SupplierPriceCatalogPanelComponent } from '../../components/supplier-pricecat-panel/supplier-pricecat-panel.component';
+import { SupplierStockSnapshotPanelComponent } from '../../components/supplier-stock-snapshot-panel/supplier-stock-snapshot-panel.component';
 import { SupplierStatusChipComponent } from '../../components/supplier-status-chip/supplier-status-chip.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
 import {
@@ -30,13 +31,14 @@ import { SUPPLIER_RETRY_BACKOFFS } from '../../utils/supplier-capability-keys';
 type PageState = 'idle' | 'loading' | 'ready' | 'error' | 'forbidden';
 
 /** Tab identifiers, in presentation order. */
-export const PROFILE_TABS = ['auth', 'accounts', 'bindings', 'health', 'pricat'] as const;
+export const PROFILE_TABS = ['auth', 'accounts', 'bindings', 'health', 'pricat', 'stock'] as const;
 export type ProfileTab = (typeof PROFILE_TABS)[number];
 
 /**
  * Vendor-profile detail screen: the Auth, Accounts, Bindings and Health
- * tabs from issues #188 and #189, plus PRICAT (#213), restored once backend
- * PR #1644 shipped a real freshness read for it.
+ * tabs from issues #188 and #189, plus PRICAT (#213) and the latest stock
+ * snapshot (#217), both restored once backend PR #1644 shipped real reads for
+ * them.
  *
  * The page owns the profile header and the tab shell only; each tab is a
  * self-contained panel that loads and mutates its own slice. That keeps a
@@ -70,6 +72,7 @@ export type ProfileTab = (typeof PROFILE_TABS)[number];
     SupplierBindingsPanelComponent,
     SupplierHealthPanelComponent,
     SupplierPriceCatalogPanelComponent,
+    SupplierStockSnapshotPanelComponent,
   ],
   templateUrl: './supplier-profile-detail-page.component.html',
   styleUrls: ['../../positivity-shared.css', './supplier-profile-detail-page.component.css'],

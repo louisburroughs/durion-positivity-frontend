@@ -5940,6 +5940,49 @@
         "LOAD": "La file de révision manuelle n'a pas pu être chargée.",
         "RESOLVE": "Cette transmission n'a pas pu être résolue."
       }
+    },
+    "STOCK_SNAPSHOT": {
+      "SUMMARY": {
+        "TITLE": "Dernière photo des stocks",
+        "NONE": "Ce profil fournisseur n'a pas encore de photo des stocks.",
+        "SNAPSHOT_AS_OF": "Déclaré par le fournisseur au",
+        "FETCHED_AT": "Récupéré par cette plateforme le",
+        "UNSTATED": "Non déclaré",
+        "SCOPE": "Portée",
+        "COMPLETENESS": "Complétude",
+        "LINES_REPORTED": "{{count}} lignes signalées",
+        "LINES_REJECTED": "{{count}} lignes rejetées",
+        "STATUS": "Statut",
+        "STATUS_VALUE": {
+          "COMPLETED": "Terminée",
+          "EMPTY": "Vide",
+          "REJECTED": "Rejetée",
+          "FAILED": "Échouée"
+        }
+      },
+      "LINES": {
+        "TITLE": "Lignes de la photo",
+        "EMPTY": "Aucune ligne ne correspond à cette recherche.",
+        "QUANTITY_UNSTATED": "Non déclarée",
+        "FILTER": {
+          "SEARCH": "Rechercher",
+          "SEARCH_HINT": "Correspond à l'EAN de l'article, au code d'article du fournisseur ou à la description."
+        },
+        "TABLE": {
+          "CAPTION": "Lignes de la photo des stocks",
+          "EAN": "EAN",
+          "VENDOR_ARTICLE_CODE": "Code d'article du fournisseur",
+          "DESCRIPTION": "Description",
+          "AVAILABLE_QUANTITY": "Quantité disponible"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Pagination des lignes de la photo"
+        }
+      },
+      "ERROR": {
+        "LOAD_SUMMARY": "Le résumé de la dernière photo des stocks n'a pas pu être chargé.",
+        "LOAD_LINES": "Les lignes de la photo des stocks n'ont pas pu être chargées."
+      }
     }
   }
 }

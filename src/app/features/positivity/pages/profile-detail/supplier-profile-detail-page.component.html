@@ -374,6 +374,11 @@
             <app-supplier-pricecat-panel [vendorProfileId]="profileId" />
           </div>
         }
+        @if (activeTab() === 'stock') {
+          <div role="tabpanel" [id]="panelId('stock')" [attr.aria-labelledby]="tabId('stock')" tabindex="0">
+            <app-supplier-stock-snapshot-panel [vendorProfileId]="profileId" />
+          </div>
+        }
       </div>
     }
   }

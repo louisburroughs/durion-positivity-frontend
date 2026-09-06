@@ -5940,6 +5940,49 @@
         "LOAD": "No se pudo cargar la cola de revisión manual.",
         "RESOLVE": "No se pudo resolver esta transmisión."
       }
+    },
+    "STOCK_SNAPSHOT": {
+      "SUMMARY": {
+        "TITLE": "Última instantánea de existencias",
+        "NONE": "Este perfil de proveedor aún no tiene una instantánea de existencias.",
+        "SNAPSHOT_AS_OF": "Declarado por el proveedor al",
+        "FETCHED_AT": "Obtenido por esta plataforma el",
+        "UNSTATED": "No declarado",
+        "SCOPE": "Ámbito",
+        "COMPLETENESS": "Integridad",
+        "LINES_REPORTED": "{{count}} líneas informadas",
+        "LINES_REJECTED": "{{count}} líneas rechazadas",
+        "STATUS": "Estado",
+        "STATUS_VALUE": {
+          "COMPLETED": "Completado",
+          "EMPTY": "Vacío",
+          "REJECTED": "Rechazado",
+          "FAILED": "Fallido"
+        }
+      },
+      "LINES": {
+        "TITLE": "Líneas de la instantánea",
+        "EMPTY": "Ninguna línea coincide con esta búsqueda.",
+        "QUANTITY_UNSTATED": "No declarada",
+        "FILTER": {
+          "SEARCH": "Buscar",
+          "SEARCH_HINT": "Coincide con el EAN del artículo, el código de artículo del proveedor o la descripción."
+        },
+        "TABLE": {
+          "CAPTION": "Líneas de la instantánea de existencias",
+          "EAN": "EAN",
+          "VENDOR_ARTICLE_CODE": "Código de artículo del proveedor",
+          "DESCRIPTION": "Descripción",
+          "AVAILABLE_QUANTITY": "Cantidad disponible"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Paginación de las líneas de la instantánea"
+        }
+      },
+      "ERROR": {
+        "LOAD_SUMMARY": "No se pudo cargar el resumen de la última instantánea de existencias.",
+        "LOAD_LINES": "No se pudieron cargar las líneas de la instantánea de existencias."
+      }
     }
   }
 }

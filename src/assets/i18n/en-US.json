@@ -5940,6 +5940,49 @@
         "LOAD": "The manual-review queue could not be loaded.",
         "RESOLVE": "This transmission could not be resolved."
       }
+    },
+    "STOCK_SNAPSHOT": {
+      "SUMMARY": {
+        "TITLE": "Latest stock snapshot",
+        "NONE": "This vendor profile has no stock snapshot yet.",
+        "SNAPSHOT_AS_OF": "Vendor-stated as of",
+        "FETCHED_AT": "Fetched by this platform at",
+        "UNSTATED": "Not stated",
+        "SCOPE": "Scope",
+        "COMPLETENESS": "Completeness",
+        "LINES_REPORTED": "{{count}} lines reported",
+        "LINES_REJECTED": "{{count}} lines rejected",
+        "STATUS": "Status",
+        "STATUS_VALUE": {
+          "COMPLETED": "Completed",
+          "EMPTY": "Empty",
+          "REJECTED": "Rejected",
+          "FAILED": "Failed"
+        }
+      },
+      "LINES": {
+        "TITLE": "Snapshot lines",
+        "EMPTY": "No lines match this search.",
+        "QUANTITY_UNSTATED": "Not stated",
+        "FILTER": {
+          "SEARCH": "Search",
+          "SEARCH_HINT": "Matches the article EAN, vendor article code or description."
+        },
+        "TABLE": {
+          "CAPTION": "Stock-snapshot lines",
+          "EAN": "EAN",
+          "VENDOR_ARTICLE_CODE": "Vendor article code",
+          "DESCRIPTION": "Description",
+          "AVAILABLE_QUANTITY": "Available quantity"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Snapshot lines pagination"
+        }
+      },
+      "ERROR": {
+        "LOAD_SUMMARY": "The latest stock-snapshot summary could not be loaded.",
+        "LOAD_LINES": "The stock-snapshot lines could not be loaded."
+      }
     }
   }
 }
