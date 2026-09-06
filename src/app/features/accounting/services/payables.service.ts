@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, defer } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
   CandidateSelectionRequest,
@@ -66,21 +66,26 @@ export class PayablesService {
   }
 
   resolveException(billId: string, resolution: ExceptionResolution): Observable<PayableBillDetail> {
-    const request: ExceptionResolutionRequest = {
-      resolutionAction: resolution.resolutionAction as ExceptionResolutionRequestResolutionActionEnum,
-      reason: resolution.reason,
-      operatorId: this.requireOperatorId(),
-    };
-    return this.vendorBillSdk
-      .resolveVendorBillMatchException(billId, request)
-      .pipe(map(view => this.toBillDetail(view)));
+    // `requireOperatorId()` runs inside `defer` so a missing operator claim
+    // surfaces as an Observable error (caught by the caller's `subscribe`
+    // error handler) rather than a synchronous throw that would escape the
+    // click handler before any subscription exists (ADR-0031).
+    return defer(() => {
+      const request: ExceptionResolutionRequest = {
+        resolutionAction: resolution.resolutionAction as ExceptionResolutionRequestResolutionActionEnum,
+        reason: resolution.reason,
+        operatorId: this.requireOperatorId(),
+      };
+      return this.vendorBillSdk.resolveVendorBillMatchException(billId, request);
+    }).pipe(map(view => this.toBillDetail(view)));
   }
 
   selectMatchCandidate(candidateId: string): Observable<PayableBillDetail> {
-    const request: CandidateSelectionRequest = { operatorId: this.requireOperatorId() };
-    return this.vendorBillSdk
-      .selectVendorBillMatchCandidate(candidateId, request)
-      .pipe(map(view => this.toBillDetail(view)));
+    // Same defer-wrapped operator resolution as `resolveException` above.
+    return defer(() => {
+      const request: CandidateSelectionRequest = { operatorId: this.requireOperatorId() };
+      return this.vendorBillSdk.selectVendorBillMatchCandidate(candidateId, request);
+    }).pipe(map(view => this.toBillDetail(view)));
   }
 
   // ── Mapping (SDK view ⇄ domain model) ────────────────────────────────────

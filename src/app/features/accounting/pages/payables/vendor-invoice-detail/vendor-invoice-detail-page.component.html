@@ -46,11 +46,11 @@
       </div>
       <div>
         <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.BILL_DATE' | translate }}</dt>
-        <dd>{{ bill()!.billDate ? (bill()!.billDate | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+        <dd>{{ bill()!.billDate ? (dateOnlyFor(bill()!.billDate) | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
       </div>
       <div>
         <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.DUE_DATE' | translate }}</dt>
-        <dd>{{ bill()!.dueDate ? (bill()!.dueDate | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+        <dd>{{ bill()!.dueDate ? (dateOnlyFor(bill()!.dueDate) | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
       </div>
       @if (bill()!.approvalJustification) {
       <div>

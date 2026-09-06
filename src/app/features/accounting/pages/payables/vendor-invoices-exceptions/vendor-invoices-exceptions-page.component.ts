@@ -9,6 +9,7 @@ import {
   PayableMatchCandidate,
 } from '../../../models/payables.models';
 import { PayablesService } from '../../../services/payables.service';
+import { toDatePipeInput } from '../../../utils/date-only.util';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 type CandidatesState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
@@ -112,6 +113,11 @@ export class VendorInvoicesExceptionsPageComponent {
     if (this.page() > 0) {
       this.load(this.page() - 1);
     }
+  }
+
+  /** Date-only `dueDate` prepared for `DatePipe` (ADR-0038). */
+  dateOnlyFor(value: string | null): string | null {
+    return toDatePipeInput(value);
   }
 
   resolveException(billId: string, resolutionAction: ExceptionResolutionAction, reason: string): void {

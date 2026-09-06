@@ -177,12 +177,21 @@ describe('PayablesService', () => {
       });
     });
 
-    it('throws when no authenticated operator is available, rather than sending a blank operatorId', () => {
+    it('errors through the Observable, rather than sending a blank operatorId or throwing synchronously', () => {
       authServiceStub.currentUserClaims.mockReturnValueOnce(null);
 
-      expect(() =>
-        service.resolveException('b1', { resolutionAction: 'VOID', reason: 'Duplicate' }),
-      ).toThrow();
+      // Building the Observable must not throw synchronously (ADR-0031) —
+      // a missing operator claim can only surface once subscribed, so a
+      // caller's `subscribe({ error })` handler always runs.
+      let observable!: ReturnType<typeof service.resolveException>;
+      expect(() => {
+        observable = service.resolveException('b1', { resolutionAction: 'VOID', reason: 'Duplicate' });
+      }).not.toThrow();
+
+      let caught: unknown;
+      observable.subscribe({ error: err => (caught = err) });
+
+      expect(caught).toBeInstanceOf(Error);
       expect(vendorBillSdkStub.resolveVendorBillMatchException).not.toHaveBeenCalled();
     });
   });

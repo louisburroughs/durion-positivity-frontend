@@ -38,7 +38,7 @@
           <span class="exception-bill-id">{{ row.billId }}</span>
           <span class="exception-vendor">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.TABLE.VENDOR' | translate }}: {{ row.vendorId }}</span>
           <span class="exception-amount">{{ row.amount | currency:'USD':'symbol':'1.2-2' }}</span>
-          <span>{{ row.dueDate ? (row.dueDate | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+          <span>{{ row.dueDate ? (dateOnlyFor(row.dueDate) | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</span>
         </div>
 
         <form

@@ -5,6 +5,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ExceptionResolutionAction, PayableBillDetail } from '../../../models/payables.models';
 import { PayablesService } from '../../../services/payables.service';
+import { toDatePipeInput } from '../../../utils/date-only.util';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -94,5 +95,10 @@ export class VendorInvoiceDetailPageComponent {
 
   goBack(): void {
     this.router.navigate(['/app/accounting/payables/vendor-invoices']);
+  }
+
+  /** Date-only `billDate`/`dueDate` prepared for `DatePipe` (ADR-0038). */
+  dateOnlyFor(value: string | null): string | null {
+    return toDatePipeInput(value);
   }
 }

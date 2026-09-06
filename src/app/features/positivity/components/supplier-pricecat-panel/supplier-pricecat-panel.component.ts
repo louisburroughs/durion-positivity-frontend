@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   effect,
   inject,
   input,
@@ -9,7 +8,6 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { SupplierPriceCatalogService } from '../../services/supplier-price-catalog.service';
@@ -70,7 +68,10 @@ const UNMATCHED_LINE_REASONS: readonly UnmatchedLineReason[] = [
 })
 export class SupplierPriceCatalogPanelComponent {
   private readonly service = inject(SupplierPriceCatalogService);
-  private readonly destroyRef = inject(DestroyRef);
+
+  /** In-flight requests, if any — cancelled before every re-subscribe (ADR-0033). */
+  private importsSub: Subscription | undefined;
+  private unmatchedSub: Subscription | undefined;
 
   readonly vendorProfileId = input.required<string>();
 
@@ -140,16 +141,20 @@ export class SupplierPriceCatalogPanelComponent {
       onCleanup(() => sub.unsubscribe());
     });
 
-    effect(() => {
+    effect(onCleanup => {
       if (this.vendorProfileId()) {
         this.loadImports(0);
       }
+      // Cancels the in-flight request on every re-run so a stale response
+      // can never overwrite a newer one (ADR-0033).
+      onCleanup(() => this.importsSub?.unsubscribe());
     });
 
-    effect(() => {
+    effect(onCleanup => {
       if (this.vendorProfileId()) {
         this.loadUnmatchedLines(0);
       }
+      onCleanup(() => this.unmatchedSub?.unsubscribe());
     });
   }
 
@@ -178,12 +183,17 @@ export class SupplierPriceCatalogPanelComponent {
       return;
     }
 
+    // Cancel any request already in flight before starting a new one — this
+    // method is invoked both from the imports-trigger effect above and from
+    // the pagination/filter handlers below, and both paths must cancel a
+    // stale in-flight request rather than let it race the new one (ADR-0033).
+    this.importsSub?.unsubscribe();
+
     this.importsState.set('loading');
     this.importsErrorKey.set(null);
 
-    this.service
+    this.importsSub = this.service
       .listImports(vendorProfileId, this.currentImportFilter(), page)
-      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: result => {
           this.imports.set(result.items);
@@ -250,12 +260,18 @@ export class SupplierPriceCatalogPanelComponent {
       return;
     }
 
+    // Cancel any request already in flight before starting a new one — this
+    // method is invoked both from the unmatched-lines-trigger effect above
+    // and from the pagination/filter handlers below, and both paths must
+    // cancel a stale in-flight request rather than let it race the new one
+    // (ADR-0033).
+    this.unmatchedSub?.unsubscribe();
+
     this.unmatchedState.set('loading');
     this.unmatchedErrorKey.set(null);
 
-    this.service
+    this.unmatchedSub = this.service
       .listUnmatchedLines(vendorProfileId, this.currentUnmatchedFilter(), page)
-      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: result => {
           this.unmatchedLines.set(result.items);

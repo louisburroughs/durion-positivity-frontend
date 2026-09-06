@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   computed,
   effect,
   inject,
@@ -11,7 +10,6 @@ import {
 import { DatePipe } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { SupplierStockSnapshotService } from '../../services/supplier-stock-snapshot.service';
@@ -52,7 +50,9 @@ type LinesState = 'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'forbidden'
 })
 export class SupplierStockSnapshotPanelComponent {
   private readonly service = inject(SupplierStockSnapshotService);
-  private readonly destroyRef = inject(DestroyRef);
+
+  /** In-flight lines request, if any — cancelled before every re-subscribe (ADR-0033). */
+  private linesSub: Subscription | undefined;
 
   readonly vendorProfileId = input.required<string>();
 
@@ -110,15 +110,21 @@ export class SupplierStockSnapshotPanelComponent {
 
     // Lines page only once the metadata call has resolved a snapshotId —
     // never against a re-derived or guessed one.
-    effect(() => {
+    effect(onCleanup => {
       const vendorProfileId = this.vendorProfileId();
       const snapshotId = this.snapshotId();
       if (vendorProfileId && snapshotId) {
         this.loadLines(vendorProfileId, snapshotId, 0);
       } else {
+        this.linesSub?.unsubscribe();
         this.linesState.set('idle');
         this.lines.set([]);
       }
+
+      // Cancels the in-flight request on every re-run (e.g. vendorProfileId
+      // changing twice in quick succession) so a stale response can never
+      // overwrite a newer one (ADR-0033).
+      onCleanup(() => this.linesSub?.unsubscribe());
     });
   }
 
@@ -127,12 +133,17 @@ export class SupplierStockSnapshotPanelComponent {
   }
 
   private loadLines(vendorProfileId: string, snapshotId: string, page: number): void {
+    // Cancel any request already in flight before starting a new one — this
+    // method is invoked both from the lines-trigger effect above and from
+    // the pagination/search handlers below, and both paths must cancel a
+    // stale in-flight request rather than let it race the new one (ADR-0033).
+    this.linesSub?.unsubscribe();
+
     this.linesState.set('loading');
     this.linesErrorKey.set(null);
 
-    this.service
+    this.linesSub = this.service
       .listLines(vendorProfileId, snapshotId, this.searchForm.getRawValue().search.trim(), page)
-      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: result => {
           this.lines.set(result.items);
