@@ -190,5 +190,9 @@
   <!-- Supplier connectivity section (#191). Own state, own generated client,
        no supplier logic in this domain — inputs only. -->
   <app-supplier-transmission-panel [purchaseOrderId]="order()!.poId" [poNumber]="order()!.poNumber" />
+
+  <!-- Vendor transmission timeline (#215). Own state, own generated
+       @durion-sdk/order client — inputs only, same isolation as above. -->
+  <app-purchase-order-transmission-timeline-panel [purchaseOrderId]="order()!.poId" />
   }
 </main>

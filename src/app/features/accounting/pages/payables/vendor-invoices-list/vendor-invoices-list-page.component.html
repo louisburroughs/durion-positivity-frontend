@@ -1,0 +1,110 @@
+<main class="page" aria-labelledby="payables-list-title">
+  <header class="page-header">
+    <h1 id="payables-list-title" class="page-title">{{ 'ACCOUNTING.PAYABLES.LIST.TITLE' | translate }}</h1>
+    <p class="page-subtitle">{{ 'ACCOUNTING.PAYABLES.LIST.SUBTITLE' | translate }}</p>
+  </header>
+
+  <section class="card filters" aria-label="{{ 'ACCOUNTING.PAYABLES.LIST.FILTERS.ARIA' | translate }}">
+    <div class="form-grid">
+      <label>
+        {{ 'ACCOUNTING.PAYABLES.LIST.FILTERS.DUE_FROM' | translate }}
+        <input class="input-underline" type="date" [ngModel]="dueFrom()" (ngModelChange)="dueFrom.set($event)" />
+      </label>
+      <label>
+        {{ 'ACCOUNTING.PAYABLES.LIST.FILTERS.DUE_TO' | translate }}
+        <input class="input-underline" type="date" [ngModel]="dueTo()" (ngModelChange)="dueTo.set($event)" />
+      </label>
+      <label>
+        {{ 'ACCOUNTING.PAYABLES.LIST.FILTERS.STATUS' | translate }}
+        <select class="input-underline" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+          <option value="">{{ 'ACCOUNTING.PAYABLES.LIST.FILTERS.STATUS_ALL' | translate }}</option>
+          <option value="PENDING_RECEIPT_MATCH">{{ 'ACCOUNTING.PAYABLES.STATUS.PENDING_RECEIPT_MATCH' | translate }}</option>
+          <option value="MATCH_EXCEPTION">{{ 'ACCOUNTING.PAYABLES.STATUS.MATCH_EXCEPTION' | translate }}</option>
+          <option value="APPROVED">{{ 'ACCOUNTING.PAYABLES.STATUS.APPROVED' | translate }}</option>
+          <option value="REJECTED">{{ 'ACCOUNTING.PAYABLES.STATUS.REJECTED' | translate }}</option>
+          <option value="PAID">{{ 'ACCOUNTING.PAYABLES.STATUS.PAID' | translate }}</option>
+          <option value="VOIDED">{{ 'ACCOUNTING.PAYABLES.STATUS.VOIDED' | translate }}</option>
+        </select>
+      </label>
+    </div>
+    <button class="btn-primary" type="button" (click)="applyFilters()">
+      {{ 'ACCOUNTING.PAYABLES.LIST.FILTERS.APPLY' | translate }}
+    </button>
+  </section>
+
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true">
+    <p class="sr-only" role="status">{{ 'COMMON.LOADING' | translate }}</p>
+    @for (_row of [1, 2, 3, 4]; track $index) {
+    <div class="skeleton-row"></div>
+    }
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="error-banner" role="alert">
+    <span class="error-icon" aria-hidden="true">!</span>
+    <span>{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</span>
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="card state-card">
+    <p>{{ 'ACCOUNTING.PAYABLES.LIST.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'ready') {
+  <section class="card">
+    <div class="table-wrap">
+      <table class="data-table" aria-label="{{ 'ACCOUNTING.PAYABLES.LIST.TABLE.ARIA' | translate }}">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'ACCOUNTING.PAYABLES.LIST.TABLE.BILL_ID' | translate }}</th>
+            <th scope="col">{{ 'ACCOUNTING.PAYABLES.LIST.TABLE.VENDOR' | translate }}</th>
+            <th scope="col">{{ 'ACCOUNTING.PAYABLES.LIST.TABLE.AMOUNT' | translate }}</th>
+            <th scope="col">{{ 'ACCOUNTING.PAYABLES.LIST.TABLE.DUE_DATE' | translate }}</th>
+            <th scope="col">{{ 'ACCOUNTING.PAYABLES.LIST.TABLE.STATUS' | translate }}</th>
+            <th scope="col"><span class="sr-only">{{ 'COMMON.ACTIONS' | translate }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of items(); track row.billId) {
+          <tr>
+            <td>{{ row.billId }}</td>
+            <td>{{ row.vendorId }}</td>
+            <td>{{ row.amount | currency:'USD':'symbol':'1.2-2' }}</td>
+            <td>{{ row.dueDate ? (dateOnlyFor(row.dueDate) | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+            <td>
+              <span class="badge"
+                [class.badge--success]="row.status === 'APPROVED' || row.status === 'PAID'"
+                [class.badge--warning]="row.status === 'MATCH_EXCEPTION' || row.status === 'PENDING_RECEIPT_MATCH'"
+                [class.badge--error]="row.status === 'REJECTED' || row.status === 'VOIDED'">
+                {{ 'ACCOUNTING.PAYABLES.STATUS.' + row.status | translate }}
+              </span>
+            </td>
+            <td>
+              <button class="btn-secondary" type="button" (click)="openBill(row)">
+                {{ 'COMMON.ACTIONS' | translate }}
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <nav class="pagination" aria-label="{{ 'ACCOUNTING.PAYABLES.LIST.PAGINATION.ARIA' | translate }}">
+      <button class="btn-secondary" type="button" [disabled]="page() === 0" (click)="previousPage()">
+        {{ 'ACCOUNTING.PAYABLES.LIST.PAGINATION.PREVIOUS' | translate }}
+      </button>
+      <span class="pagination-status">
+        {{ 'ACCOUNTING.PAYABLES.LIST.PAGINATION.STATUS' | translate:{ page: page() + 1, totalPages: totalPages(), totalElements: totalElements() } }}
+      </span>
+      <button class="btn-secondary" type="button" [disabled]="page() + 1 >= totalPages()" (click)="nextPage()">
+        {{ 'ACCOUNTING.PAYABLES.LIST.PAGINATION.NEXT' | translate }}
+      </button>
+    </nav>
+  </section>
+  }
+</main>

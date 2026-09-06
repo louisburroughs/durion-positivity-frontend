@@ -1,0 +1,69 @@
+@if (visible()) {
+<section class="enrichment-panel" aria-labelledby="enrichment-panel-title">
+  <div class="provenance-header">
+    <h2 id="enrichment-panel-title">{{ 'PRODUCT.CATALOG.DETAIL.ENRICHMENT.TITLE' | translate }}</h2>
+    <span class="provenance-badge">{{ 'PRODUCT.CATALOG.DETAIL.ENRICHMENT.PROVENANCE' | translate }}</span>
+  </div>
+  <p class="provenance-hint">{{ 'PRODUCT.CATALOG.DETAIL.ENRICHMENT.HINT' | translate }}</p>
+
+  <dl class="enrichment-grid">
+    @if (enrichment()?.brand) {
+    <div>
+      <dt>{{ 'PRODUCT.CATALOG.DETAIL.ENRICHMENT.FIELD.BRAND' | translate }}</dt>
+      <dd>{{ enrichment()?.brand }}</dd>
+    </div>
+    }
+    @if (enrichment()?.treadDesign) {
+    <div>
+      <dt>{{ 'PRODUCT.CATALOG.DETAIL.ENRICHMENT.FIELD.TREAD_DESIGN' | translate }}</dt>
+      <dd>{{ enrichment()?.treadDesign }}@if (enrichment()?.treadDesign2) { / {{ enrichment()?.treadDesign2 }} }</dd>
+    </div>
+    }
+    @if (enrichment()?.vehicleType) {
+    <div>
+      <dt>{{ 'PRODUCT.CATALOG.DETAIL.ENRICHMENT.FIELD.VEHICLE_TYPE' | translate }}</dt>
+      <dd>{{ enrichment()?.vehicleType }}</dd>
+    </div>
+    }
+    @if (enrichment()?.seasonality) {
+    <div>
+      <dt>{{ 'PRODUCT.CATALOG.DETAIL.ENRICHMENT.FIELD.SEASONALITY' | translate }}</dt>
+      <dd>{{ enrichment()?.seasonality }}</dd>
+    </div>
+    }
+    @if (enrichment()?.supplierRef) {
+    <div>
+      <dt>{{ 'PRODUCT.CATALOG.DETAIL.ENRICHMENT.FIELD.VENDOR' | translate }}</dt>
+      <dd>{{ enrichment()?.supplierRef }}</dd>
+    </div>
+    }
+    @if (enrichment()?.updatedAt) {
+    <div>
+      <dt>{{ 'PRODUCT.CATALOG.DETAIL.ENRICHMENT.FIELD.UPDATED_AT' | translate }}</dt>
+      <dd>{{ enrichment()!.updatedAt | date:'medium' }}</dd>
+    </div>
+    }
+  </dl>
+
+  @if (primaryText()) {
+  <div class="marketing-copy">
+    @if (primaryText()?.name) {
+    <h3>{{ primaryText()?.name }}</h3>
+    }
+    @if (primaryText()?.description) {
+    <p>{{ primaryText()?.description }}</p>
+    }
+    @if (primaryText()?.footNotes) {
+    <p class="foot-notes">{{ primaryText()?.footNotes }}</p>
+    }
+  </div>
+  }
+
+  @if (enrichment()?.hasUnresolvedImages) {
+  <p class="artwork-pending" role="status">
+    <span class="material-symbols-outlined" aria-hidden="true">hourglass_empty</span>
+    {{ 'PRODUCT.CATALOG.DETAIL.ENRICHMENT.ARTWORK_PENDING' | translate }}
+  </p>
+  }
+</section>
+}

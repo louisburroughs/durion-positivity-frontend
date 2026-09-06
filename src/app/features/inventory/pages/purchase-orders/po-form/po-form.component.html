@@ -120,13 +120,25 @@
                 [value]="line.unitPrice" min="0" step="0.01"
                 (input)="updateLine($index, 'unitPrice', +$any($event.target).value)" />
             </td>
-            <td>
+            <td class="line-actions">
+              <button class="btn-secondary" type="button" (click)="toggleAvailabilityCheck($index)"
+                [attr.aria-expanded]="availabilityCheckLineIndex() === $index"
+                [attr.aria-label]="('INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.ACTION.CHECK' | translate) + ' ' + ($index + 1)">
+                <span class="material-symbols-outlined" aria-hidden="true">inventory</span>
+              </button>
               <button class="btn-destructive" type="button" (click)="removeLine($index)"
                 [attr.aria-label]="('INVENTORY.PURCHASE_ORDERS.FORM.LINES.ACTION.REMOVE_ARIA' | translate) + ' ' + ($index + 1)">
                 <span class="material-symbols-outlined" aria-hidden="true">delete</span>
               </button>
             </td>
           </tr>
+          @if (availabilityCheckLineIndex() === $index) {
+          <tr role="row">
+            <td colspan="4">
+              <app-po-supplier-availability-panel [sku]="line.productSku" />
+            </td>
+          </tr>
+          }
           }
         </tbody>
       </table>

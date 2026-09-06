@@ -10,6 +10,7 @@ import {
   CreatePurchaseOrderRequest,
 } from '../../../models/inventory.models';
 import { InventoryPurchaseOrderService } from '../../../services/inventory-purchase-order.service';
+import { PoSupplierAvailabilityPanelComponent } from '../../../components/po-supplier-availability-panel/po-supplier-availability-panel.component';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
@@ -18,16 +19,15 @@ type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
  *
  * This is the screen that owns purchase-order **line editing** (`addLine`,
  * `removeLine`, `updateLine`). The per-line supplier availability check that
- * used to sit here (#190) was retired in #201: the generated supplier client
- * publishes no availability read whose request and response cover what the
- * check required (`inquireSupplierStock` needs a `vendorProfileId` plus an
- * article EAN and returns no vendor display name or UOM). The gap is recorded
- * on #201 and PR #202.
+ * used to sit here (#190) was restored in #212 against the generated fan-out
+ * read (`getSupplierStockAvailability`); see `PoSupplierAvailabilityPanelComponent`
+ * and `InventorySupplierAvailabilityService` for why that read was chosen
+ * over `getPurchaseOrderSupplierAvailability`.
  */
 @Component({
   selector: 'app-po-form',
   standalone: true,
-  imports: [TranslatePipe, FormsModule],
+  imports: [TranslatePipe, FormsModule, PoSupplierAvailabilityPanelComponent],
   templateUrl: './po-form.component.html',
   styleUrl: './po-form.component.css',
 })
@@ -45,6 +45,9 @@ export class PoFormComponent {
   readonly lines = signal<CreatePurchaseOrderLine[]>([]);
   readonly submitting = signal(false);
   readonly editingPoId = signal<string | null>(null);
+
+  /** Index of the line whose availability-check panel is expanded, if any. */
+  readonly availabilityCheckLineIndex = signal<number | null>(null);
 
   constructor() {
     const poId = this.route.snapshot.paramMap.get('poId');
@@ -90,6 +93,23 @@ export class PoFormComponent {
 
   removeLine(idx: number): void {
     this.lines.update(lines => lines.filter((_, i) => i !== idx));
+    const openIdx = this.availabilityCheckLineIndex();
+    if (openIdx === null) {
+      return;
+    }
+    if (openIdx === idx) {
+      // The removed line owned the open panel: nothing left to point at.
+      this.availabilityCheckLineIndex.set(null);
+    } else if (idx < openIdx) {
+      // A line before the open one was removed: every later index shifts down one.
+      this.availabilityCheckLineIndex.set(openIdx - 1);
+    }
+    // idx > openIdx: removal happened after the open line, its index is unaffected.
+  }
+
+  /** Expand or collapse the availability-check panel for one line (#212). */
+  toggleAvailabilityCheck(idx: number): void {
+    this.availabilityCheckLineIndex.set(this.availabilityCheckLineIndex() === idx ? null : idx);
   }
 
   updateLine(idx: number, field: keyof CreatePurchaseOrderLine, val: string | number): void {

@@ -177,14 +177,13 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
       ],
     },
     /**
-     * Payables — electronically ingested vendor invoices (issue #192).
-     *
-     * The screens behind these cards are implemented in the positivity domain
-     * and lazy-loaded by the accounting route tree; this section is only the
-     * entry point the story asks for ("Accounting → Payables → Vendor
-     * invoices"). `idMode` keeps the guided card a plain identifier input: the
-     * `invoice` kind's typeahead searches billing invoices, which are a
-     * different record from an ingested vendor invoice and would return
+     * Payables — vendor bills read end to end through pos-accounting's
+     * vendor-bills API (#214). PR #202 retired the prior supplier-backed
+     * surface because pos-supplier has no raw-invoice read
+     * (#1637/#1638 owner decision); this is a move to the real contract, not
+     * a restoration of the old one. `idMode` keeps the guided card a plain
+     * identifier input: the `invoice` kind's typeahead searches billing
+     * invoices, a different record from a vendor bill, and would return
      * confidently wrong matches.
      */
     {
@@ -193,6 +192,30 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
       recordKind: 'invoice',
       idMode: true,
       cards: [
+        {
+          kind: 'direct',
+          icon: 'receipt_long',
+          titleKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_LIST.TITLE',
+          descriptionKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_LIST.DESCRIPTION',
+          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/accounting/payables/vendor-invoices',
+        },
+        {
+          kind: 'direct',
+          icon: 'report_problem',
+          titleKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_EXCEPTIONS.TITLE',
+          descriptionKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_EXCEPTIONS.DESCRIPTION',
+          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
+          route: '/app/accounting/payables/vendor-invoices/exceptions',
+        },
+        {
+          kind: 'guided',
+          icon: 'find_in_page',
+          titleKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_DETAIL.TITLE',
+          descriptionKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_DETAIL.DESCRIPTION',
+          ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_VENDOR_BILL',
+          buildCommands: (id: string) => ['/app', 'accounting', 'payables', 'vendor-invoices', id],
+        },
       ],
     },
     {

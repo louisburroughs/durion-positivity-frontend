@@ -1,0 +1,113 @@
+<section class="availability-panel" aria-labelledby="availability-panel-title">
+  <h2 id="availability-panel-title">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.TITLE' | translate }}</h2>
+  <p class="hint">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.HINT' | translate }}</p>
+
+  <form class="inline-form" [formGroup]="form" (ngSubmit)="checkAvailability()">
+    <div class="form-grid">
+      <label>
+        {{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.FIELD.DELIVERY_LOCATION' | translate }}
+        <input
+          class="input-underline"
+          type="text"
+          formControlName="deliveryLocationId"
+          [attr.placeholder]="'PRODUCT.CATALOG.DETAIL.AVAILABILITY.FIELD.DELIVERY_LOCATION_PLACEHOLDER' | translate"
+          [attr.aria-invalid]="form.controls.deliveryLocationId.invalid && form.controls.deliveryLocationId.touched"
+        />
+      </label>
+      <label>
+        {{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.FIELD.QUANTITY' | translate }}
+        <input
+          class="input-underline"
+          type="number"
+          min="1"
+          step="1"
+          formControlName="quantity"
+          [attr.aria-invalid]="form.controls.quantity.invalid && form.controls.quantity.touched"
+        />
+      </label>
+    </div>
+    @if (form.controls.deliveryLocationId.invalid && form.controls.deliveryLocationId.touched) {
+    <p class="field-error" role="alert">
+      {{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.ERROR.LOCATION_REQUIRED' | translate }}
+    </p>
+    }
+    @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
+    <p class="field-error" role="alert">
+      {{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.ERROR.QUANTITY_MIN' | translate }}
+    </p>
+    }
+    <button class="btn-primary" type="submit" [disabled]="state() === 'loading'">
+      {{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.ACTION.CHECK' | translate }}
+    </button>
+  </form>
+
+  @if (state() === 'loading') {
+  <div class="skeleton-row" aria-hidden="true"></div>
+  <p class="sr-only" role="status">{{ 'COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'error') {
+  <p class="error-banner" role="alert">{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</p>
+  }
+
+  @if (state() === 'ready') {
+  @if (vendors().length === 0) {
+  <p class="empty-hint">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.EMPTY' | translate }}</p>
+  } @else {
+  <div class="table-wrap">
+    <table class="data-table" aria-label="{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.TABLE.ARIA' | translate }}">
+      <thead>
+        <tr>
+          <th scope="col">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.TABLE.VENDOR' | translate }}</th>
+          <th scope="col">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.TABLE.STATUS' | translate }}</th>
+          <th scope="col">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.TABLE.QUANTITY' | translate }}</th>
+          <th scope="col">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.TABLE.UNIT_PRICE' | translate }}</th>
+          <th scope="col">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.TABLE.EARLIEST_DELIVERY' | translate }}</th>
+          <th scope="col">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.TABLE.FETCHED_AT' | translate }}</th>
+          <th scope="col">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.TABLE.VENDOR_AS_OF' | translate }}</th>
+          <th scope="col">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.TABLE.FRESHNESS' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (vendor of vendors(); track vendor.vendorProfileId) {
+        <tr>
+          <td>{{ vendor.vendorDisplayName || vendor.vendorProfileId }}</td>
+          <td>
+            <span
+              class="badge"
+              [class.badge--success]="vendor.status === 'OK'"
+              [class.badge--neutral]="vendor.status === 'NOT_LISTED' || !vendor.status"
+              [class.badge--warning]="vendor.status === 'SUPPLIER_UNAVAILABLE'"
+              [class.badge--error]="vendor.status === 'CAPABILITY_NOT_CONFIGURED' || vendor.status === 'CONFIGURATION_ERROR'"
+            >
+              {{ vendor.status ? ('PRODUCT.CATALOG.DETAIL.AVAILABILITY.VENDOR_STATUS.' + vendor.status | translate) : ('PRODUCT.CATALOG.DETAIL.AVAILABILITY.VENDOR_STATUS.UNKNOWN' | translate) }}
+            </span>
+          </td>
+          <td>{{ firstLine(vendor)?.availableQuantity ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+          <td>
+            @if (firstLine(vendor)?.quotedUnitPrice !== null && firstLine(vendor)?.quotedUnitPrice !== undefined) {
+            {{ firstLine(vendor)!.quotedUnitPrice | currency:(firstLine(vendor)?.currency ?? 'USD'):'symbol':'1.2-2' }}
+            } @else {
+            {{ 'COMMON.NOT_AVAILABLE' | translate }}
+            }
+          </td>
+          <td>{{ firstLine(vendor)?.earliestDeliveryDate ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+          <td>{{ vendor.fetchedAt ? (vendor.fetchedAt | date:'medium') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+          <td>{{ vendor.asOf ? (vendor.asOf | date:'medium') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+          <td>
+            @if (vendor.stale === true) {
+            <span class="badge badge--warning">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.STALE' | translate }}</span>
+            } @else if (vendor.stale === false) {
+            <span class="badge badge--success">{{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.FRESH' | translate }}</span>
+            } @else {
+            {{ 'COMMON.NOT_AVAILABLE' | translate }}
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+  }
+</section>

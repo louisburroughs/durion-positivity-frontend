@@ -1,0 +1,68 @@
+.pricat {
+	display: grid;
+	gap: var(--space-5);
+}
+
+.pricat__section h3 {
+	margin: 0 0 var(--space-3);
+	font-size: 1.0625rem;
+}
+
+.pricat__facts {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+	gap: var(--space-3);
+	margin: 0 0 var(--space-3);
+}
+
+.pricat__fact dt {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+}
+
+.pricat__fact dd {
+	margin: 0;
+}
+
+.pricat__filters {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+	gap: var(--space-3);
+	align-items: end;
+	margin-bottom: var(--space-3);
+}
+
+.pricat__toggle {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin-bottom: 0;
+}
+
+.pricat__filters-actions {
+	display: flex;
+	gap: var(--space-2);
+}
+
+.pricat__empty {
+	color: var(--text-muted);
+}
+
+.pricat__failure-detail {
+	font-style: italic;
+	color: var(--text-muted);
+}
+
+.pricat__pagination {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-4);
+	margin-top: var(--space-3);
+}
+
+.pricat__page-status {
+	margin: 0;
+}

@@ -38,6 +38,8 @@
     </div>
   </header>
 
+  <app-tread-design-enrichment-panel [productId]="productId()!" />
+
   <section class="card tabs" aria-label="{{ 'PRODUCT.CATALOG.DETAIL.TABS.ARIA' | translate }}">
     <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'lifecycle'"
       (click)="activeTab.set('lifecycle')">
@@ -50,6 +52,10 @@
     <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'standard-cost'"
       (click)="activeTab.set('standard-cost')">
       {{ 'PRODUCT.CATALOG.DETAIL.TABS.STANDARD_COST' | translate }}
+    </button>
+    <button class="tab-btn" type="button" [class.tab-btn--active]="activeTab() === 'availability'"
+      (click)="activeTab.set('availability')">
+      {{ 'PRODUCT.CATALOG.DETAIL.TABS.AVAILABILITY' | translate }}
     </button>
   </section>
 
@@ -256,6 +262,12 @@
       </ol>
       }
     </section>
+  </section>
+  }
+
+  @if (activeTab() === 'availability') {
+  <section class="card panel">
+    <app-supplier-availability-panel [productId]="productId()!" />
   </section>
   }
   }

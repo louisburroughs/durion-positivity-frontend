@@ -1914,6 +1914,18 @@
         "LABOR_OVERHEAD": {
           "TITLE": "Rapport des coûts de main-d’œuvre et frais généraux",
           "DESCRIPTION": "Coûts mensuels et cumulatifs annuels de main-d’œuvre et frais généraux par emplacement et exercice, à partir des données comptabilisées du grand livre."
+        },
+        "PAYABLES_LIST": {
+          "TITLE": "Factures fournisseurs",
+          "DESCRIPTION": "Parcourez les factures fournisseurs par date d'échéance et par statut."
+        },
+        "PAYABLES_EXCEPTIONS": {
+          "TITLE": "Exceptions de factures fournisseurs",
+          "DESCRIPTION": "Résolvez les factures mises en attente par un écart de rapprochement ou un rapprochement de facture ambigu."
+        },
+        "PAYABLES_DETAIL": {
+          "TITLE": "Détail de facture fournisseur",
+          "DESCRIPTION": "Ouvrez une facture fournisseur par son identifiant."
         }
       },
       "FIELD": {
@@ -1937,7 +1949,8 @@
         "OPEN_CREDIT_MEMO": "Ouvrir l'avoir",
         "OPEN_VENDOR_PAYMENT": "Ouvrir le paiement fournisseur",
         "OPEN_INVOICE_STATUS": "Voir le statut",
-        "OPENING_PAGE": "Ouverture..."
+        "OPENING_PAGE": "Ouverture...",
+        "OPEN_VENDOR_BILL": "Ouvrir la facture fournisseur"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Un ID est requis.",
@@ -2200,6 +2213,120 @@
           "DEFINITION": "Total général : Total de la main-d'œuvre + Total des frais généraux."
         }
       }
+    },
+    "PAYABLES": {
+      "LIST": {
+        "TITLE": "Factures fournisseurs",
+        "SUBTITLE": "Factures fournisseurs rapprochées de la marchandise reçue, tous statuts de cycle de vie confondus.",
+        "FILTERS": {
+          "ARIA": "Filtres des factures fournisseurs",
+          "DUE_FROM": "Échéance à partir de",
+          "DUE_TO": "Échéance jusqu'à",
+          "STATUS": "Statut",
+          "STATUS_ALL": "Tous les statuts",
+          "APPLY": "Appliquer les filtres"
+        },
+        "EMPTY": "Aucune facture fournisseur n'échoit dans cette période.",
+        "ERROR": {
+          "LOAD": "Impossible de charger les factures fournisseurs."
+        },
+        "TABLE": {
+          "ARIA": "Factures fournisseurs",
+          "BILL_ID": "Facture",
+          "VENDOR": "Fournisseur",
+          "AMOUNT": "Montant",
+          "DUE_DATE": "Date d'échéance",
+          "STATUS": "Statut"
+        },
+        "PAGINATION": {
+          "ARIA": "Pages des factures fournisseurs",
+          "PREVIOUS": "Précédent",
+          "NEXT": "Suivant",
+          "STATUS": "Page {{page}} sur {{totalPages}} ({{totalElements}} au total)"
+        }
+      },
+      "STATUS": {
+        "PENDING_RECEIPT_MATCH": "En attente de rapprochement de réception",
+        "MATCH_EXCEPTION": "Exception de rapprochement",
+        "APPROVED": "Approuvée",
+        "REJECTED": "Rejetée",
+        "PAID": "Payée",
+        "VOIDED": "Annulée"
+      },
+      "EXCEPTIONS": {
+        "TITLE": "Exceptions de factures fournisseurs",
+        "SUBTITLE": "Factures mises en attente par le rapprochement à trois voies : un écart de quantité ou de prix, un score de confiance moyen, ou un rapprochement ambigu.",
+        "EMPTY": "Aucune facture fournisseur n'est actuellement en exception de rapprochement.",
+        "ERROR": {
+          "LOAD": "Impossible de charger les exceptions de factures fournisseurs."
+        },
+        "TABLE": {
+          "ARIA": "Exceptions de factures fournisseurs",
+          "VENDOR": "Fournisseur"
+        },
+        "PAGINATION": {
+          "ARIA": "Pages des factures fournisseurs",
+          "PREVIOUS": "Précédent",
+          "NEXT": "Suivant",
+          "STATUS": "Page {{page}} sur {{totalPages}} ({{totalElements}} au total)"
+        },
+        "RESOLVE": {
+          "TITLE": "Résoudre l'exception",
+          "FIELD": {
+            "ACTION": "Résolution",
+            "REASON": "Motif",
+            "REASON_PLACEHOLDER": "Expliquez la résolution pour la piste d'audit"
+          },
+          "ACTION": {
+            "ACCEPT": "Accepter malgré l'écart",
+            "VOID": "Annuler",
+            "CORRECT": "Retourner pour correction",
+            "SUBMIT": "Résoudre"
+          },
+          "ERROR": {
+            "REASON_REQUIRED": "Un motif est requis pour résoudre cette exception.",
+            "SUBMIT": "Impossible de résoudre cette exception."
+          }
+        },
+        "CANDIDATES": {
+          "TITLE": "Candidats de rapprochement ambigu",
+          "HINT": "Un rapprochement de facture ambigu met en attente plusieurs factures candidates notées pour un événement de facture déclencheur. Recherchez-les par l'ID de cet événement.",
+          "FIELD": {
+            "INVOICE_EVENT_ID": "ID de l'événement de facture",
+            "INVOICE_EVENT_ID_PLACEHOLDER": "Entrez l'ID de l'événement de facture"
+          },
+          "ACTION": {
+            "LOOKUP": "Rechercher les candidats",
+            "SELECT": "Sélectionner cette facture"
+          },
+          "EMPTY": "Aucun candidat non résolu n'existe pour cet événement de facture.",
+          "ERROR": {
+            "LOAD": "Impossible de charger les candidats de rapprochement.",
+            "SELECT": "Impossible de sélectionner ce candidat."
+          },
+          "SCORE": "Score de correspondance",
+          "RESOLVED": "Résolu"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Facture fournisseur",
+        "ERROR": {
+          "MISSING_BILL_ID": "Aucune facture n'a été spécifiée.",
+          "LOAD": "Impossible de charger cette facture fournisseur."
+        },
+        "FIELD": {
+          "VENDOR": "Fournisseur",
+          "AMOUNT": "Montant",
+          "BILL_DATE": "Date de facture",
+          "DUE_DATE": "Date d'échéance",
+          "APPROVAL_JUSTIFICATION": "Justification d'approbation",
+          "REJECTION_REASON": "Motif de rejet",
+          "JOURNAL_ENTRY": "Écriture de journal",
+          "PAYMENT_TRANSACTION": "Transaction de paiement",
+          "ORIGIN_EVENT": "Événement d'origine",
+          "CREATED_AT": "Créée"
+        }
+      }
     }
   },
   "PRODUCT": {
@@ -2242,7 +2369,8 @@
           "ARIA": "Onglets de détail du produit",
           "LIFECYCLE": "Cycle de vie",
           "UOM": "Unités de mesure",
-          "STANDARD_COST": "Coût standard"
+          "STANDARD_COST": "Coût standard",
+          "AVAILABILITY": "Disponibilité"
         },
         "STATE": {
           "EMPTY": "Aucun détail disponible pour ce produit."
@@ -2284,6 +2412,59 @@
           "AUDIT_HISTORY": "Historique d'audit",
           "AUDIT_EMPTY": "Aucun historique d'audit.",
           "AUDIT_CHANGED": "Modifié"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Disponibilité du fournisseur",
+          "HINT": "Vérifiez le stock en direct chez tous les fournisseurs activés pour ce produit à un lieu de livraison.",
+          "FIELD": {
+            "DELIVERY_LOCATION": "Lieu de livraison",
+            "DELIVERY_LOCATION_PLACEHOLDER": "Entrez l'ID du lieu de livraison",
+            "QUANTITY": "Quantité (facultatif)"
+          },
+          "ERROR": {
+            "LOCATION_REQUIRED": "Le lieu de livraison est requis.",
+            "LOAD": "Impossible de vérifier la disponibilité du fournisseur.",
+            "QUANTITY_MIN": "La quantité doit être d'au moins 1."
+          },
+          "ACTION": {
+            "CHECK": "Vérifier la disponibilité"
+          },
+          "EMPTY": "Aucun fournisseur de consultation de stock n'est configuré.",
+          "TABLE": {
+            "ARIA": "Disponibilité par fournisseur",
+            "VENDOR": "Fournisseur",
+            "STATUS": "Statut",
+            "QUANTITY": "Qté disponible",
+            "UNIT_PRICE": "Prix unitaire",
+            "EARLIEST_DELIVERY": "Livraison la plus rapide",
+            "FETCHED_AT": "Récupéré le",
+            "VENDOR_AS_OF": "En vigueur au (fournisseur)",
+            "FRESHNESS": "Fraîcheur"
+          },
+          "VENDOR_STATUS": {
+            "OK": "A répondu",
+            "SUPPLIER_UNAVAILABLE": "Indisponible",
+            "NOT_LISTED": "Non répertorié",
+            "CAPABILITY_NOT_CONFIGURED": "Non configuré",
+            "CONFIGURATION_ERROR": "Erreur de configuration",
+            "UNKNOWN": "Inconnu"
+          },
+          "STALE": "Obsolète",
+          "FRESH": "À jour"
+        },
+        "ENRICHMENT": {
+          "TITLE": "Dessin de bande de roulement",
+          "PROVENANCE": "Fourni par le fabricant",
+          "HINT": "Ce contenu provient du flux marketing du fournisseur, pas de la fiche catalogue — il ne change jamais ce qu'est ce produit.",
+          "FIELD": {
+            "BRAND": "Marque",
+            "TREAD_DESIGN": "Dessin de bande de roulement",
+            "VEHICLE_TYPE": "Type de véhicule",
+            "SEASONALITY": "Saisonnalité",
+            "VENDOR": "Fournisseur",
+            "UPDATED_AT": "Enrichissement mis à jour"
+          },
+          "ARTWORK_PENDING": "Visuel en attente"
         }
       },
       "ERROR": {
@@ -2310,6 +2491,31 @@
       "STANDARD_COST": {
         "ERROR": {
           "UPDATE": "Échec de la mise à jour du coût standard."
+        }
+      },
+      "ENRICHMENT": {
+        "UNMATCHED": {
+          "TITLE": "Dessins de bande de roulement non appariés",
+          "SUBTITLE": "Dessins de bande de roulement fournis par le fournisseur que la correspondance approximative n'a pas pu relier à un produit du catalogue.",
+          "EMPTY": "Chaque dessin de bande de roulement appliqué correspond à au moins un produit.",
+          "ERROR": {
+            "LOAD": "Impossible de charger les dessins de bande de roulement non appariés."
+          },
+          "TABLE": {
+            "ARIA": "Dessins de bande de roulement non appariés",
+            "BRAND": "Marque",
+            "TREAD_DESIGN": "Dessin de bande de roulement",
+            "VENDOR": "Fournisseur",
+            "ARTWORK": "Visuel",
+            "UPDATED_AT": "Mis à jour"
+          },
+          "ARTWORK_PENDING": "Visuel en attente",
+          "PAGINATION": {
+            "ARIA": "Pages des dessins non appariés",
+            "PREVIOUS": "Précédent",
+            "NEXT": "Suivant",
+            "STATUS": "Page {{page}} sur {{totalPages}} ({{totalElements}} au total)"
+          }
         }
       }
     },
@@ -2566,6 +2772,10 @@
         "IMPORT_PRICE": {
           "TITLE": "Importer la tarification",
           "DESCRIPTION": "Importer en masse les donnees de tarification depuis un fichier CSV ou XLSX."
+        },
+        "ENRICHMENT_UNMATCHED": {
+          "TITLE": "Dessins de bande de roulement non appariés",
+          "DESCRIPTION": "Passez en revue les dessins de bande de roulement du fournisseur qui n'ont pas pu être associés à un produit du catalogue."
         }
       }
     }
@@ -4184,6 +4394,46 @@
         },
         "ACTION": {
           "SUBMIT": "Soumettre la commande"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Disponibilité du fournisseur",
+          "HINT": "Vérifiez le stock en direct chez tous les fournisseurs activés pour ce produit à un lieu de livraison.",
+          "FIELD": {
+            "DELIVERY_LOCATION": "Lieu de livraison",
+            "DELIVERY_LOCATION_PLACEHOLDER": "Entrez l'ID du lieu de livraison",
+            "QUANTITY": "Quantité (facultatif)"
+          },
+          "ERROR": {
+            "LOCATION_REQUIRED": "Le lieu de livraison est requis.",
+            "LOAD": "Impossible de vérifier la disponibilité du fournisseur.",
+            "QUANTITY_MIN": "La quantité doit être d'au moins 1."
+          },
+          "ACTION": {
+            "CHECK": "Vérifier la disponibilité"
+          },
+          "EMPTY": "Aucun fournisseur de consultation de stock n'est configuré.",
+          "TABLE": {
+            "ARIA": "Disponibilité par fournisseur",
+            "VENDOR": "Fournisseur",
+            "STATUS": "Statut",
+            "QUANTITY": "Qté disponible",
+            "UNIT_PRICE": "Prix unitaire",
+            "EARLIEST_DELIVERY": "Livraison la plus rapide",
+            "FETCHED_AT": "Récupéré le",
+            "VENDOR_AS_OF": "En vigueur au (fournisseur)",
+            "FRESHNESS": "Fraîcheur"
+          },
+          "VENDOR_STATUS": {
+            "OK": "A répondu",
+            "SUPPLIER_UNAVAILABLE": "Indisponible",
+            "NOT_LISTED": "Non répertorié",
+            "CAPABILITY_NOT_CONFIGURED": "Non configuré",
+            "CONFIGURATION_ERROR": "Erreur de configuration",
+            "UNKNOWN": "Inconnu"
+          },
+          "STALE": "Obsolète",
+          "FRESH": "À jour",
+          "NO_SKU": "Saisissez un UGS pour cette ligne avant de vérifier la disponibilité."
         }
       }
     },
@@ -4891,7 +5141,9 @@
       "REFRESH": "Actualiser"
     },
     "CLOSE": "Fermer",
-    "EMPTY_VALUE": "—"
+    "EMPTY_VALUE": "—",
+    "NOT_AVAILABLE": "Non disponible",
+    "ERROR": "Une erreur est survenue"
   },
   "STATUS": {
     "INITIATED": "Initié",
@@ -5697,7 +5949,8 @@
       "VENDOR_REASON": "Motif du fournisseur",
       "VENDOR_ERROR_CODE": "Code d’erreur du fournisseur",
       "FAILURE_DETAIL": "Détail de l’échec",
-      "RESOLUTION": "Résolution"
+      "RESOLUTION": "Résolution",
+      "HISTORY_NOTE": "L'historique complet de transmission avec le fournisseur pour cette commande est affiché dans la chronologie ci-dessous."
     },
     "FLEET": {
       "AS_OF": "Heure effective du gestionnaire de flotte",
@@ -5788,6 +6041,200 @@
         "LAST_ATTEMPT": "Dernière tentative",
         "NEXT_ATTEMPT": "Prochaine tentative",
         "MANUAL_REVIEW_NEXT": "Le service a cessé de réessayer. Communiquez avec le gestionnaire de flotte pour confirmer la fin des travaux."
+      }
+    },
+    "PRICAT": {
+      "FRESHNESS": {
+        "TITLE": "Actualité",
+        "STALE": "Le catalogue de prix de ce fournisseur est périmé.",
+        "FRESH": "Le catalogue de prix de ce fournisseur est à jour.",
+        "LATEST_EFFECTIVE_DATE": "Dernière date de catalogue déclarée par le fournisseur",
+        "LAST_FETCHED_AT": "Dernière récupération",
+        "LAST_COMPLETED_AT": "Dernière importation terminée",
+        "STALENESS_THRESHOLD": "Seuil de péremption",
+        "UNRESOLVED_COUNT": "Lignes en quarantaine ouvertes",
+        "BINDINGS_CAPTION": "Liaisons PRICE_CATALOG de ce profil",
+        "BINDING": "Liaison",
+        "SCHEDULE": "Horaire",
+        "LAST_RUN": "Dernière exécution planifiée",
+        "ON_DEMAND": "Sur demande seulement",
+        "NEVER_SCHEDULED": "Jamais exécutée selon l'horaire",
+        "NEVER_IMPORTED": "Jamais importé",
+        "NEVER_FETCHED": "Jamais récupéré"
+      },
+      "IMPORTS": {
+        "TITLE": "Historique des importations",
+        "EMPTY": "Aucune exécution d'importation ne correspond à ces filtres.",
+        "FILTER": {
+          "BINDING": "Liaison",
+          "STATUS": "Statut",
+          "ALL_STATUSES": "Tous les statuts",
+          "DATE_FROM": "Du",
+          "DATE_TO": "Au"
+        },
+        "STATUS": {
+          "IN_PROGRESS": "En cours",
+          "COMPLETED": "Terminée",
+          "EMPTY": "Vide",
+          "FAILED": "Échouée"
+        },
+        "TABLE": {
+          "CAPTION": "Exécutions d'importation PRICAT",
+          "FETCHED_AT": "Récupérée le",
+          "STATUS": "Statut",
+          "FETCHED": "Récupérées",
+          "MATCHED": "Rapprochées",
+          "UNMATCHED": "Non rapprochées",
+          "SOURCE_DOCUMENT": "Document source"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Pagination de l'historique des importations"
+        }
+      },
+      "UNMATCHED": {
+        "TITLE": "Liste des lignes non rapprochées",
+        "EMPTY": "Aucune ligne en quarantaine ne correspond à ces filtres.",
+        "STILL_OPEN": "Toujours ouverte",
+        "NO_EAN": "Aucun EAN déclaré",
+        "FILTER": {
+          "REASON": "Motif",
+          "ALL_REASONS": "Tous les motifs",
+          "SEARCH": "Rechercher",
+          "SEARCH_HINT": "Correspond à l'EAN de la ligne, au code d'article du fournisseur ou au code de référence croisée.",
+          "RESOLVED": "Afficher les lignes résolues plutôt que les lignes ouvertes"
+        },
+        "REASON": {
+          "NO_IDENTIFIER": "Aucun identifiant",
+          "NO_CATALOG_MATCH": "Aucune correspondance au catalogue",
+          "AMBIGUOUS_CATALOG_MATCH": "Correspondance au catalogue ambiguë",
+          "CATALOG_UNAVAILABLE": "Catalogue indisponible",
+          "DUPLICATE_LINE": "Ligne en double",
+          "MALFORMED_LINE": "Ligne malformée"
+        },
+        "TABLE": {
+          "CAPTION": "Lignes PRICAT en quarantaine",
+          "EAN": "EAN",
+          "VENDOR_ARTICLE_CODE": "Code d'article du fournisseur",
+          "REASON": "Motif",
+          "FETCHED_AT": "Récupérée le",
+          "RESOLVED_AT": "Résolue le"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Pagination de la liste des lignes non rapprochées"
+        }
+      },
+      "ERROR": {
+        "LOAD_FRESHNESS": "Le résumé d'actualité du catalogue de prix n'a pas pu être chargé.",
+        "LOAD_IMPORTS": "L'historique des importations n'a pas pu être chargé.",
+        "LOAD_UNMATCHED": "La liste des lignes non rapprochées n'a pas pu être chargée."
+      }
+    },
+    "TRANSMISSION_TIMELINE": {
+      "TITLE": "Chronologie de transmission du fournisseur",
+      "EMPTY": "Cette commande n'a pas encore d'historique de transmission avec le fournisseur.",
+      "OBSERVED_AT": "Observé par le fournisseur le",
+      "RECORDED_AT": "Enregistré par cette plateforme le",
+      "NOT_AVAILABLE": "Non disponible",
+      "DESPATCH_DATE": "Date d'expédition",
+      "EVENT_TYPE": {
+        "CONFIRMED": "Confirmé",
+        "REJECTED": "Rejeté",
+        "STATUS_CHANGED": "Statut modifié",
+        "REVIEW_REQUIRED": "Nécessite une révision manuelle"
+      },
+      "PAGINATION": {
+        "ARIA_LABEL": "Pagination de la chronologie de transmission"
+      },
+      "ERROR": {
+        "LOAD": "La chronologie de transmission du fournisseur n'a pas pu être chargée."
+      }
+    },
+    "MANUAL_REVIEW": {
+      "TITLE": "File de révision manuelle",
+      "SUBTITLE": "Transmissions que la plateforme n'a pas pu résoudre automatiquement, pour tous les bons de commande.",
+      "NO_RESEND_NOTE": "Cette file ne renvoie jamais une commande. Résoudre une ligne enregistre ce que vous avez établi avec le fournisseur; elle ne contacte jamais le fournisseur.",
+      "FILTER": {
+        "VENDOR": "Fournisseur",
+        "ALL_VENDORS": "Tous les fournisseurs",
+        "SEARCH": "Rechercher",
+        "SEARCH_HINT": "Correspond au numéro de bon de commande ou au numéro de commande propre du fournisseur.",
+        "DATE_FROM": "Du",
+        "DATE_TO": "Au"
+      },
+      "EMPTY": "La file de révision manuelle est vide.",
+      "COUNT": "{{count}} transmissions nécessitent une révision",
+      "TABLE": {
+        "CAPTION": "Transmissions en attente de révision manuelle",
+        "PURCHASE_ORDER": "Bon de commande",
+        "VENDOR": "Fournisseur",
+        "STATUS": "Statut",
+        "CLOSE": "Fermer",
+        "REVIEW": "Réviser"
+      },
+      "DETAIL": {
+        "ARIA_LABEL": "Résoudre cette transmission",
+        "WHY": "La plateforme n'a pas pu établir si le fournisseur a reçu cette commande.",
+        "RESOLVE_TITLE": "Enregistrer le résultat",
+        "ACTION": "Résultat",
+        "VENDOR_ORDER_NUMBER": "Numéro de commande du fournisseur",
+        "EVIDENCE": "Preuve",
+        "EVIDENCE_HINT": "Décrivez comment vous avez établi cela avec le fournisseur. Ceci est enregistré et publié dans l'événement résultant.",
+        "SUBMIT": "Résoudre"
+      },
+      "ACTION": {
+        "CONFIRM_WITH_VENDOR_REFERENCE": "Confirmé — le fournisseur l'a acceptée",
+        "MARK_NOT_RECEIVED": "Le fournisseur ne l'a jamais reçue",
+        "CANCEL": "Annuler la transmission"
+      },
+      "PAGINATION": {
+        "ARIA_LABEL": "Pagination de la file de révision manuelle"
+      },
+      "ERROR": {
+        "LOAD": "La file de révision manuelle n'a pas pu être chargée.",
+        "RESOLVE": "Cette transmission n'a pas pu être résolue."
+      }
+    },
+    "STOCK_SNAPSHOT": {
+      "SUMMARY": {
+        "TITLE": "Dernière photo des stocks",
+        "NONE": "Ce profil fournisseur n'a pas encore de photo des stocks.",
+        "SNAPSHOT_AS_OF": "Déclaré par le fournisseur au",
+        "FETCHED_AT": "Récupéré par cette plateforme le",
+        "UNSTATED": "Non déclaré",
+        "SCOPE": "Portée",
+        "COMPLETENESS": "Complétude",
+        "LINES_REPORTED": "{{count}} lignes signalées",
+        "LINES_REJECTED": "{{count}} lignes rejetées",
+        "STATUS": "Statut",
+        "STATUS_VALUE": {
+          "COMPLETED": "Terminée",
+          "EMPTY": "Vide",
+          "REJECTED": "Rejetée",
+          "FAILED": "Échouée"
+        }
+      },
+      "LINES": {
+        "TITLE": "Lignes de la photo",
+        "EMPTY": "Aucune ligne ne correspond à cette recherche.",
+        "QUANTITY_UNSTATED": "Non déclarée",
+        "FILTER": {
+          "SEARCH": "Rechercher",
+          "SEARCH_HINT": "Correspond à l'EAN de l'article, au code d'article du fournisseur ou à la description."
+        },
+        "TABLE": {
+          "CAPTION": "Lignes de la photo des stocks",
+          "EAN": "EAN",
+          "VENDOR_ARTICLE_CODE": "Code d'article du fournisseur",
+          "DESCRIPTION": "Description",
+          "AVAILABLE_QUANTITY": "Quantité disponible"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Pagination des lignes de la photo"
+        }
+      },
+      "ERROR": {
+        "LOAD_SUMMARY": "Le résumé de la dernière photo des stocks n'a pas pu être chargé.",
+        "LOAD_LINES": "Les lignes de la photo des stocks n'ont pas pu être chargées."
       }
     }
   }

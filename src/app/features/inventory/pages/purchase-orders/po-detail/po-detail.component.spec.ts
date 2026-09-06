@@ -8,6 +8,8 @@ import { InventoryPurchaseOrderService } from '../../../services/inventory-purch
 import { PurchaseOrderDetail } from '../../../models/inventory.models';
 import { SupplierOrderTransmissionService } from '../../../../positivity/services/supplier-order-transmission.service';
 import { SupplierOrderTransmission } from '../../../../positivity/models/supplier-order-transmission.models';
+import { PurchaseOrderTransmissionTimelineService } from '../../../../positivity/services/purchase-order-transmission-timeline.service';
+import { PurchaseOrderTransmissionTimelinePage } from '../../../../positivity/models/purchase-order-transmission-timeline.models';
 
 const mockPoService = {
   getPurchaseOrder: vi.fn(),
@@ -16,6 +18,18 @@ const mockPoService = {
 
 const mockTransmissionService = {
   listForPurchaseOrder: vi.fn(),
+};
+
+const mockTimelineService = {
+  listForPurchaseOrder: vi.fn(),
+};
+
+const timelinePageFixture: PurchaseOrderTransmissionTimelinePage = {
+  items: [],
+  page: 0,
+  size: 25,
+  totalCount: 0,
+  totalPages: 0,
 };
 
 const transmissionFixture: SupplierOrderTransmission = {
@@ -57,6 +71,7 @@ describe('PoDetailComponent', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     mockTransmissionService.listForPurchaseOrder.mockReturnValue(of([transmissionFixture]));
+    mockTimelineService.listForPurchaseOrder.mockReturnValue(of(timelinePageFixture));
 
     await TestBed.configureTestingModule({
       imports: [PoDetailComponent, TranslateModule.forRoot()],
@@ -65,6 +80,7 @@ describe('PoDetailComponent', () => {
         { provide: InventoryPurchaseOrderService, useValue: mockPoService },
         { provide: ActivatedRoute, useValue: mockRoute },
         { provide: SupplierOrderTransmissionService, useValue: mockTransmissionService },
+        { provide: PurchaseOrderTransmissionTimelineService, useValue: mockTimelineService },
       ],
     }).compileComponents();
   });
@@ -109,16 +125,18 @@ describe('PoDetailComponent', () => {
     expect(keyIdx).toBeGreaterThan(errIdx);
   });
 
-  describe('supplier connectivity section (#191, #201)', () => {
-    it('hosts the transmission panel keyed by the PO UUID and no shipment timeline', () => {
+  describe('supplier connectivity section (#191, #201, #215)', () => {
+    it('hosts the transmission panel and the transmission timeline, keyed by the PO UUID, and no shipment timeline', () => {
       mockPoService.getPurchaseOrder.mockReturnValue(of(poFixture));
       const fixture = TestBed.createComponent(PoDetailComponent);
       fixture.detectChanges();
       const el = fixture.nativeElement as HTMLElement;
 
       expect(el.querySelector('app-supplier-transmission-panel')).not.toBeNull();
+      expect(el.querySelector('app-purchase-order-transmission-timeline-panel')).not.toBeNull();
       expect(el.querySelector('app-supplier-shipment-panel')).toBeNull();
       expect(mockTransmissionService.listForPurchaseOrder).toHaveBeenCalledWith('po-001');
+      expect(mockTimelineService.listForPurchaseOrder).toHaveBeenCalledWith('po-001', 0);
     });
 
     it('exposes no path anywhere on the page that re-transmits the order', () => {

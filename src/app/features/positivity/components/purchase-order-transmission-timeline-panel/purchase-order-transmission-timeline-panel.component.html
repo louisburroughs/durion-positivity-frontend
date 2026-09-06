@@ -1,0 +1,130 @@
+<section class="timeline" aria-labelledby="timeline-title">
+  <header class="timeline__header">
+    <h2 class="timeline__title" id="timeline-title">
+      {{ 'POSITIVITY.TRANSMISSION_TIMELINE.TITLE' | translate }}
+    </h2>
+  </header>
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'empty') {
+    <p class="timeline__empty">{{ 'POSITIVITY.TRANSMISSION_TIMELINE.EMPTY' | translate }}</p>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      <span>{{ errorKey()! | translate }}</span>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="reload()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'ready') {
+    <ol class="timeline__list">
+      @for (event of events(); track event.transmissionEventId) {
+        <li class="timeline__item">
+          <div class="timeline__item-head">
+            @if (eventTypeLabelKey(event); as key) {
+              <span class="timeline__event-type">{{ key | translate }}</span>
+            } @else {
+              <code class="timeline__event-type">{{ event.eventType }}</code>
+            }
+            @if (event.status) {
+              <code class="timeline__status">{{ event.status }}</code>
+            }
+          </div>
+
+          <dl class="timeline__facts">
+            <div class="timeline__fact">
+              <dt>{{ 'POSITIVITY.TRANSMISSION_TIMELINE.OBSERVED_AT' | translate }}</dt>
+              <dd>
+                @if (event.observedAt) {
+                  <time [attr.datetime]="event.observedAt">{{ event.observedAt | date: 'medium' }}</time>
+                } @else {
+                  {{ 'POSITIVITY.TRANSMISSION_TIMELINE.NOT_AVAILABLE' | translate }}
+                }
+              </dd>
+            </div>
+            <div class="timeline__fact">
+              <dt>{{ 'POSITIVITY.TRANSMISSION_TIMELINE.RECORDED_AT' | translate }}</dt>
+              <dd>
+                @if (event.recordedAt) {
+                  <time [attr.datetime]="event.recordedAt">{{ event.recordedAt | date: 'medium' }}</time>
+                } @else {
+                  {{ 'POSITIVITY.TRANSMISSION_TIMELINE.NOT_AVAILABLE' | translate }}
+                }
+              </dd>
+            </div>
+            @if (event.supplierOrderNumber) {
+              <div class="timeline__fact">
+                <dt>{{ 'POSITIVITY.TRANSMISSION.VENDOR_ORDER_NUMBER' | translate }}</dt>
+                <dd><code>{{ event.supplierOrderNumber }}</code></dd>
+              </div>
+            }
+            @if (event.vendorDocumentId) {
+              <div class="timeline__fact">
+                <dt>{{ 'POSITIVITY.TRANSMISSION.DOCUMENT_ID' | translate }}</dt>
+                <dd><code>{{ event.vendorDocumentId }}</code></dd>
+              </div>
+            }
+            @if (dateOnlyFor(event.despatchDate); as despatch) {
+              <div class="timeline__fact">
+                <dt>{{ 'POSITIVITY.TRANSMISSION_TIMELINE.DESPATCH_DATE' | translate }}</dt>
+                <dd>{{ despatch | date: 'mediumDate' }}</dd>
+              </div>
+            }
+            @if (dateOnlyFor(event.estimatedDeliveryDate); as delivery) {
+              <div class="timeline__fact">
+                <dt>{{ 'POSITIVITY.TRANSMISSION.SCHEDULED_DELIVERY' | translate }}</dt>
+                <dd>{{ delivery | date: 'mediumDate' }}</dd>
+              </div>
+            }
+          </dl>
+
+          @if (event.vendorReason) {
+            <p class="timeline__reason">
+              <span class="timeline__term">{{ 'POSITIVITY.TRANSMISSION.VENDOR_REASON' | translate }}</span>
+              {{ event.vendorReason }}
+            </p>
+          }
+        </li>
+      }
+    </ol>
+
+    @if (totalPages() > 1) {
+      <nav
+        class="timeline__pagination"
+        [attr.aria-label]="'POSITIVITY.TRANSMISSION_TIMELINE.PAGINATION.ARIA_LABEL' | translate"
+      >
+        <button
+          class="pos-btn pos-btn--secondary"
+          type="button"
+          [disabled]="!hasPreviousPage()"
+          (click)="previousPage()"
+        >
+          {{ 'POSITIVITY.AUDIT.PAGINATION.PREVIOUS' | translate }}
+        </button>
+        <p class="timeline__page-status" aria-live="polite">
+          {{ 'POSITIVITY.AUDIT.PAGINATION.STATUS' | translate: { page: pageNumber(), total: totalPages() } }}
+        </p>
+        <button
+          class="pos-btn pos-btn--secondary"
+          type="button"
+          [disabled]="!hasNextPage()"
+          (click)="nextPage()"
+        >
+          {{ 'POSITIVITY.AUDIT.PAGINATION.NEXT' | translate }}
+        </button>
+      </nav>
+    }
+  }
+</section>

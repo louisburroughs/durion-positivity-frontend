@@ -1,0 +1,178 @@
+<div class="stock-snapshot">
+  <!-- ── Snapshot metadata ────────────────────────────────────────────── -->
+  <section class="stock-snapshot__section" aria-labelledby="stock-snapshot-summary-title">
+    <h3 id="stock-snapshot-summary-title">{{ 'POSITIVITY.STOCK_SNAPSHOT.SUMMARY.TITLE' | translate }}</h3>
+
+    @if (summaryState() === 'loading') {
+      <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+    }
+
+    @if (summaryState() === 'forbidden') {
+      <div class="pos-banner pos-banner--error" role="alert">
+        {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+      </div>
+    }
+
+    @if (summaryState() === 'error') {
+      <div class="pos-banner pos-banner--error" role="alert">
+        <span>{{ summaryErrorKey()! | translate }}</span>
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="reloadSummary()">
+          {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+        </button>
+      </div>
+    }
+
+    @if (summaryState() === 'empty') {
+      <p class="stock-snapshot__empty">{{ 'POSITIVITY.STOCK_SNAPSHOT.SUMMARY.NONE' | translate }}</p>
+    }
+
+    @if (summaryState() === 'ready' && summary(); as snap) {
+      <dl class="stock-snapshot__facts">
+        <div class="stock-snapshot__fact">
+          <dt>{{ 'POSITIVITY.STOCK_SNAPSHOT.SUMMARY.SNAPSHOT_AS_OF' | translate }}</dt>
+          <dd>
+            @if (snap.snapshotAsOf) {
+              <time [attr.datetime]="snap.snapshotAsOf">{{ snap.snapshotAsOf | date: 'medium' }}</time>
+            } @else {
+              {{ 'POSITIVITY.STOCK_SNAPSHOT.SUMMARY.UNSTATED' | translate }}
+            }
+          </dd>
+        </div>
+        <div class="stock-snapshot__fact">
+          <dt>{{ 'POSITIVITY.STOCK_SNAPSHOT.SUMMARY.FETCHED_AT' | translate }}</dt>
+          <dd>
+            @if (snap.fetchedAt) {
+              <time [attr.datetime]="snap.fetchedAt">{{ snap.fetchedAt | date: 'medium' }}</time>
+            } @else {
+              {{ 'POSITIVITY.STOCK_SNAPSHOT.SUMMARY.UNSTATED' | translate }}
+            }
+          </dd>
+        </div>
+        <div class="stock-snapshot__fact">
+          <dt>{{ 'POSITIVITY.STOCK_SNAPSHOT.SUMMARY.SCOPE' | translate }}</dt>
+          <dd>
+            {{ snap.buyerAccountNumber || '—' }}
+            @if (snap.countryCode) { <span>· {{ snap.countryCode }}</span> }
+          </dd>
+        </div>
+        <div class="stock-snapshot__fact">
+          <dt>{{ 'POSITIVITY.STOCK_SNAPSHOT.SUMMARY.COMPLETENESS' | translate }}</dt>
+          <dd>
+            {{ 'POSITIVITY.STOCK_SNAPSHOT.SUMMARY.LINES_REPORTED' | translate: { count: snap.linesReported ?? 0 } }}
+            @if (snap.linesRejected) {
+              <span class="stock-snapshot__rejected">
+                {{ 'POSITIVITY.STOCK_SNAPSHOT.SUMMARY.LINES_REJECTED' | translate: { count: snap.linesRejected } }}
+              </span>
+            }
+          </dd>
+        </div>
+        <div class="stock-snapshot__fact">
+          <dt>{{ 'POSITIVITY.STOCK_SNAPSHOT.SUMMARY.STATUS' | translate }}</dt>
+          <dd>
+            @if (snap.status) {
+              {{ 'POSITIVITY.STOCK_SNAPSHOT.SUMMARY.STATUS_VALUE.' + snap.status | translate }}
+            } @else { — }
+          </dd>
+        </div>
+      </dl>
+    }
+  </section>
+
+  <!-- ── Snapshot lines, paged by the immutable snapshotId ───────────── -->
+  @if (snapshotId()) {
+    <section class="stock-snapshot__section" aria-labelledby="stock-snapshot-lines-title">
+      <h3 id="stock-snapshot-lines-title">{{ 'POSITIVITY.STOCK_SNAPSHOT.LINES.TITLE' | translate }}</h3>
+
+      <form class="stock-snapshot__filters" [formGroup]="searchForm" (ngSubmit)="applySearch()">
+        <div class="pos-field">
+          <label class="pos-field__label" for="stock-snapshot-search">
+            {{ 'POSITIVITY.STOCK_SNAPSHOT.LINES.FILTER.SEARCH' | translate }}
+          </label>
+          <input
+            id="stock-snapshot-search"
+            class="pos-field__input"
+            type="text"
+            formControlName="search"
+            aria-describedby="stock-snapshot-search-hint"
+          />
+          <p class="pos-field__hint" id="stock-snapshot-search-hint">
+            {{ 'POSITIVITY.STOCK_SNAPSHOT.LINES.FILTER.SEARCH_HINT' | translate }}
+          </p>
+        </div>
+        <div class="stock-snapshot__filters-actions">
+          <button class="pos-btn pos-btn--primary" type="submit">{{ 'POSITIVITY.COMMON.APPLY_FILTER' | translate }}</button>
+          <button class="pos-btn pos-btn--secondary" type="button" (click)="clearSearch()">
+            {{ 'POSITIVITY.COMMON.CLEAR_FILTER' | translate }}
+          </button>
+        </div>
+      </form>
+
+      @if (linesState() === 'loading') {
+        <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+      }
+      @if (linesState() === 'forbidden') {
+        <div class="pos-banner pos-banner--error" role="alert">{{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}</div>
+      }
+      @if (linesState() === 'error') {
+        <div class="pos-banner pos-banner--error" role="alert">
+          <span>{{ linesErrorKey()! | translate }}</span>
+          <button class="pos-btn pos-btn--secondary" type="button" (click)="retryLines()">
+            {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+          </button>
+        </div>
+      }
+      @if (linesState() === 'empty') {
+        <p class="stock-snapshot__empty">{{ 'POSITIVITY.STOCK_SNAPSHOT.LINES.EMPTY' | translate }}</p>
+      }
+
+      @if (linesState() === 'ready') {
+        <div class="pos-table-wrap">
+          <table class="pos-table">
+            <caption class="sr-only">{{ 'POSITIVITY.STOCK_SNAPSHOT.LINES.TABLE.CAPTION' | translate }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'POSITIVITY.STOCK_SNAPSHOT.LINES.TABLE.EAN' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.STOCK_SNAPSHOT.LINES.TABLE.VENDOR_ARTICLE_CODE' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.STOCK_SNAPSHOT.LINES.TABLE.DESCRIPTION' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.STOCK_SNAPSHOT.LINES.TABLE.AVAILABLE_QUANTITY' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of lines(); track line.lineId) {
+                <tr>
+                  <td>{{ line.articleEan || '—' }}</td>
+                  <td>{{ line.supplierArticleCode || '—' }}</td>
+                  <td>{{ line.description || '—' }}</td>
+                  <td>
+                    @if (line.availableQuantity !== null) {
+                      {{ line.availableQuantity }}
+                    } @else {
+                      <span class="stock-snapshot__unstated">
+                        {{ 'POSITIVITY.STOCK_SNAPSHOT.LINES.QUANTITY_UNSTATED' | translate }}
+                      </span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <nav
+          class="stock-snapshot__pagination"
+          [attr.aria-label]="'POSITIVITY.STOCK_SNAPSHOT.LINES.PAGINATION.ARIA_LABEL' | translate"
+        >
+          <button class="pos-btn pos-btn--secondary" type="button" [disabled]="!hasPreviousPage()" (click)="previousPage()">
+            {{ 'POSITIVITY.AUDIT.PAGINATION.PREVIOUS' | translate }}
+          </button>
+          <p class="stock-snapshot__page-status" aria-live="polite">
+            {{ 'POSITIVITY.AUDIT.PAGINATION.STATUS' | translate: { page: pageNumber(), total: linesTotalPages() } }}
+          </p>
+          <button class="pos-btn pos-btn--secondary" type="button" [disabled]="!hasNextPage()" (click)="nextPage()">
+            {{ 'POSITIVITY.AUDIT.PAGINATION.NEXT' | translate }}
+          </button>
+        </nav>
+      }
+    </section>
+  }
+</div>

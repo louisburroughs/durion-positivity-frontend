@@ -1914,6 +1914,18 @@
         "LABOR_OVERHEAD": {
           "TITLE": "Labor & Overhead Cost Report",
           "DESCRIPTION": "Monthly + YTD labor and overhead costs by location and fiscal year, from posted GL data."
+        },
+        "PAYABLES_LIST": {
+          "TITLE": "Vendor Invoices",
+          "DESCRIPTION": "Browse vendor bills by due date and status."
+        },
+        "PAYABLES_EXCEPTIONS": {
+          "TITLE": "Vendor Invoice Exceptions",
+          "DESCRIPTION": "Resolve bills parked by a match discrepancy or an ambiguous invoice match."
+        },
+        "PAYABLES_DETAIL": {
+          "TITLE": "Vendor Bill Detail",
+          "DESCRIPTION": "Open one vendor bill by its identifier."
         }
       },
       "FIELD": {
@@ -1937,7 +1949,8 @@
         "OPEN_CREDIT_MEMO": "Open Credit Memo",
         "OPEN_VENDOR_PAYMENT": "Open Vendor Payment",
         "OPEN_INVOICE_STATUS": "View Status",
-        "OPENING_PAGE": "Opening..."
+        "OPENING_PAGE": "Opening...",
+        "OPEN_VENDOR_BILL": "Open Vendor Bill"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "An ID is required.",
@@ -2200,6 +2213,120 @@
           "DEFINITION": "Grand total: Total Labor + Total Overhead."
         }
       }
+    },
+    "PAYABLES": {
+      "LIST": {
+        "TITLE": "Vendor Invoices",
+        "SUBTITLE": "Vendor bills matched against goods received, across every lifecycle status.",
+        "FILTERS": {
+          "ARIA": "Vendor invoice filters",
+          "DUE_FROM": "Due From",
+          "DUE_TO": "Due To",
+          "STATUS": "Status",
+          "STATUS_ALL": "All Statuses",
+          "APPLY": "Apply Filters"
+        },
+        "EMPTY": "No vendor bills are due in this window.",
+        "ERROR": {
+          "LOAD": "Unable to load vendor invoices."
+        },
+        "TABLE": {
+          "ARIA": "Vendor invoices",
+          "BILL_ID": "Bill",
+          "VENDOR": "Vendor",
+          "AMOUNT": "Amount",
+          "DUE_DATE": "Due Date",
+          "STATUS": "Status"
+        },
+        "PAGINATION": {
+          "ARIA": "Vendor invoice pages",
+          "PREVIOUS": "Previous",
+          "NEXT": "Next",
+          "STATUS": "Page {{page}} of {{totalPages}} ({{totalElements}} total)"
+        }
+      },
+      "STATUS": {
+        "PENDING_RECEIPT_MATCH": "Pending Receipt Match",
+        "MATCH_EXCEPTION": "Match Exception",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "PAID": "Paid",
+        "VOIDED": "Voided"
+      },
+      "EXCEPTIONS": {
+        "TITLE": "Vendor Invoice Exceptions",
+        "SUBTITLE": "Bills parked by the three-way match: a quantity or price discrepancy, a medium-confidence score, or an ambiguous match.",
+        "EMPTY": "No vendor bills are currently in a match exception.",
+        "ERROR": {
+          "LOAD": "Unable to load vendor invoice exceptions."
+        },
+        "TABLE": {
+          "ARIA": "Vendor invoice exceptions",
+          "VENDOR": "Vendor"
+        },
+        "PAGINATION": {
+          "ARIA": "Vendor invoice pages",
+          "PREVIOUS": "Previous",
+          "NEXT": "Next",
+          "STATUS": "Page {{page}} of {{totalPages}} ({{totalElements}} total)"
+        },
+        "RESOLVE": {
+          "TITLE": "Resolve Exception",
+          "FIELD": {
+            "ACTION": "Resolution",
+            "REASON": "Reason",
+            "REASON_PLACEHOLDER": "Explain the resolution for the audit trail"
+          },
+          "ACTION": {
+            "ACCEPT": "Accept Despite Discrepancy",
+            "VOID": "Void",
+            "CORRECT": "Send Back for Correction",
+            "SUBMIT": "Resolve"
+          },
+          "ERROR": {
+            "REASON_REQUIRED": "A reason is required to resolve this exception.",
+            "SUBMIT": "Unable to resolve this exception."
+          }
+        },
+        "CANDIDATES": {
+          "TITLE": "Ambiguous Match Candidates",
+          "HINT": "An ambiguous invoice match parks several scored candidate bills for one triggering invoice event. Look them up by that event's id.",
+          "FIELD": {
+            "INVOICE_EVENT_ID": "Invoice Event ID",
+            "INVOICE_EVENT_ID_PLACEHOLDER": "Enter the invoice event ID"
+          },
+          "ACTION": {
+            "LOOKUP": "Look Up Candidates",
+            "SELECT": "Select This Bill"
+          },
+          "EMPTY": "No unresolved candidates exist for that invoice event.",
+          "ERROR": {
+            "LOAD": "Unable to load match candidates.",
+            "SELECT": "Unable to select this candidate."
+          },
+          "SCORE": "Match Score",
+          "RESOLVED": "Resolved"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Vendor Bill",
+        "ERROR": {
+          "MISSING_BILL_ID": "No bill was specified.",
+          "LOAD": "Unable to load this vendor bill."
+        },
+        "FIELD": {
+          "VENDOR": "Vendor",
+          "AMOUNT": "Amount",
+          "BILL_DATE": "Bill Date",
+          "DUE_DATE": "Due Date",
+          "APPROVAL_JUSTIFICATION": "Approval Justification",
+          "REJECTION_REASON": "Rejection Reason",
+          "JOURNAL_ENTRY": "Journal Entry",
+          "PAYMENT_TRANSACTION": "Payment Transaction",
+          "ORIGIN_EVENT": "Origin Event",
+          "CREATED_AT": "Created"
+        }
+      }
     }
   },
   "PRODUCT": {
@@ -2242,7 +2369,8 @@
           "ARIA": "Product detail tabs",
           "LIFECYCLE": "Lifecycle",
           "UOM": "Units of Measure",
-          "STANDARD_COST": "Standard Cost"
+          "STANDARD_COST": "Standard Cost",
+          "AVAILABILITY": "Availability"
         },
         "STATE": {
           "EMPTY": "No product detail available."
@@ -2284,6 +2412,59 @@
           "AUDIT_HISTORY": "Audit history",
           "AUDIT_EMPTY": "No audit history.",
           "AUDIT_CHANGED": "Changed"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Supplier Availability",
+          "HINT": "Check live stock across every enabled vendor for this product at a delivery location.",
+          "FIELD": {
+            "DELIVERY_LOCATION": "Delivery Location",
+            "DELIVERY_LOCATION_PLACEHOLDER": "Enter delivery location ID",
+            "QUANTITY": "Quantity (optional)"
+          },
+          "ERROR": {
+            "LOCATION_REQUIRED": "Delivery location is required.",
+            "LOAD": "Unable to check supplier availability.",
+            "QUANTITY_MIN": "Quantity must be at least 1."
+          },
+          "ACTION": {
+            "CHECK": "Check Availability"
+          },
+          "EMPTY": "No stock-inquiry vendors are configured.",
+          "TABLE": {
+            "ARIA": "Supplier availability by vendor",
+            "VENDOR": "Vendor",
+            "STATUS": "Status",
+            "QUANTITY": "Available Qty",
+            "UNIT_PRICE": "Unit Price",
+            "EARLIEST_DELIVERY": "Earliest Delivery",
+            "FETCHED_AT": "Fetched At",
+            "VENDOR_AS_OF": "Vendor As Of",
+            "FRESHNESS": "Freshness"
+          },
+          "VENDOR_STATUS": {
+            "OK": "Answered",
+            "SUPPLIER_UNAVAILABLE": "Unavailable",
+            "NOT_LISTED": "Not Listed",
+            "CAPABILITY_NOT_CONFIGURED": "Not Configured",
+            "CONFIGURATION_ERROR": "Configuration Error",
+            "UNKNOWN": "Unknown"
+          },
+          "STALE": "Stale",
+          "FRESH": "Fresh"
+        },
+        "ENRICHMENT": {
+          "TITLE": "Tread Design",
+          "PROVENANCE": "Manufacturer-Supplied",
+          "HINT": "This content comes from the vendor's own marketing feed, not the catalog record — it never changes what this product is.",
+          "FIELD": {
+            "BRAND": "Brand",
+            "TREAD_DESIGN": "Tread Design",
+            "VEHICLE_TYPE": "Vehicle Type",
+            "SEASONALITY": "Seasonality",
+            "VENDOR": "Vendor",
+            "UPDATED_AT": "Enrichment Updated"
+          },
+          "ARTWORK_PENDING": "Artwork pending"
         }
       },
       "ERROR": {
@@ -2310,6 +2491,31 @@
       "STANDARD_COST": {
         "ERROR": {
           "UPDATE": "Failed to update standard cost."
+        }
+      },
+      "ENRICHMENT": {
+        "UNMATCHED": {
+          "TITLE": "Unmatched Tread Designs",
+          "SUBTITLE": "Vendor-supplied tread designs that fuzzy matching could not connect to any catalog product.",
+          "EMPTY": "Every applied tread design has matched at least one product.",
+          "ERROR": {
+            "LOAD": "Unable to load unmatched tread designs."
+          },
+          "TABLE": {
+            "ARIA": "Unmatched tread designs",
+            "BRAND": "Brand",
+            "TREAD_DESIGN": "Tread Design",
+            "VENDOR": "Vendor",
+            "ARTWORK": "Artwork",
+            "UPDATED_AT": "Updated"
+          },
+          "ARTWORK_PENDING": "Artwork pending",
+          "PAGINATION": {
+            "ARIA": "Unmatched tread design pages",
+            "PREVIOUS": "Previous",
+            "NEXT": "Next",
+            "STATUS": "Page {{page}} of {{totalPages}} ({{totalElements}} total)"
+          }
         }
       }
     },
@@ -2566,6 +2772,10 @@
         "IMPORT_PRICE": {
           "TITLE": "Import Pricing",
           "DESCRIPTION": "Bulk import pricing data from a CSV or XLSX file."
+        },
+        "ENRICHMENT_UNMATCHED": {
+          "TITLE": "Unmatched Tread Designs",
+          "DESCRIPTION": "Review vendor tread designs that could not be matched to a catalog product."
         }
       }
     }
@@ -4184,6 +4394,46 @@
         },
         "ACTION": {
           "SUBMIT": "Submit Order"
+        },
+        "AVAILABILITY": {
+          "TITLE": "Supplier Availability",
+          "HINT": "Check live stock across every enabled vendor for this product at a delivery location.",
+          "FIELD": {
+            "DELIVERY_LOCATION": "Delivery Location",
+            "DELIVERY_LOCATION_PLACEHOLDER": "Enter delivery location ID",
+            "QUANTITY": "Quantity (optional)"
+          },
+          "ERROR": {
+            "LOCATION_REQUIRED": "Delivery location is required.",
+            "LOAD": "Unable to check supplier availability.",
+            "QUANTITY_MIN": "Quantity must be at least 1."
+          },
+          "ACTION": {
+            "CHECK": "Check Availability"
+          },
+          "EMPTY": "No stock-inquiry vendors are configured.",
+          "TABLE": {
+            "ARIA": "Supplier availability by vendor",
+            "VENDOR": "Vendor",
+            "STATUS": "Status",
+            "QUANTITY": "Available Qty",
+            "UNIT_PRICE": "Unit Price",
+            "EARLIEST_DELIVERY": "Earliest Delivery",
+            "FETCHED_AT": "Fetched At",
+            "VENDOR_AS_OF": "Vendor As Of",
+            "FRESHNESS": "Freshness"
+          },
+          "VENDOR_STATUS": {
+            "OK": "Answered",
+            "SUPPLIER_UNAVAILABLE": "Unavailable",
+            "NOT_LISTED": "Not Listed",
+            "CAPABILITY_NOT_CONFIGURED": "Not Configured",
+            "CONFIGURATION_ERROR": "Configuration Error",
+            "UNKNOWN": "Unknown"
+          },
+          "STALE": "Stale",
+          "FRESH": "Fresh",
+          "NO_SKU": "Enter a SKU on this line before checking availability."
         }
       }
     },
@@ -4891,7 +5141,9 @@
       "REFRESH": "Refresh"
     },
     "CLOSE": "Close",
-    "EMPTY_VALUE": "—"
+    "EMPTY_VALUE": "—",
+    "NOT_AVAILABLE": "Not available",
+    "ERROR": "Something went wrong"
   },
   "STATUS": {
     "INITIATED": "Initiated",
@@ -5697,7 +5949,8 @@
       "VENDOR_REASON": "Vendor reason",
       "VENDOR_ERROR_CODE": "Vendor error code",
       "FAILURE_DETAIL": "Failure detail",
-      "RESOLUTION": "Resolution"
+      "RESOLUTION": "Resolution",
+      "HISTORY_NOTE": "The full vendor transmission history for this order is shown in the timeline below."
     },
     "FLEET": {
       "AS_OF": "Fleet manager effective time",
@@ -5788,6 +6041,200 @@
         "LAST_ATTEMPT": "Last attempt",
         "NEXT_ATTEMPT": "Next attempt",
         "MANUAL_REVIEW_NEXT": "The service has stopped retrying. Contact the fleet manager to confirm the completion."
+      }
+    },
+    "PRICAT": {
+      "FRESHNESS": {
+        "TITLE": "Freshness",
+        "STALE": "This vendor's price catalog is stale.",
+        "FRESH": "This vendor's price catalog is up to date.",
+        "LATEST_EFFECTIVE_DATE": "Latest vendor-stated catalog date",
+        "LAST_FETCHED_AT": "Last fetched",
+        "LAST_COMPLETED_AT": "Last completed import",
+        "STALENESS_THRESHOLD": "Staleness threshold",
+        "UNRESOLVED_COUNT": "Open quarantined lines",
+        "BINDINGS_CAPTION": "PRICE_CATALOG bindings for this profile",
+        "BINDING": "Binding",
+        "SCHEDULE": "Schedule",
+        "LAST_RUN": "Last scheduled run",
+        "ON_DEMAND": "On demand only",
+        "NEVER_SCHEDULED": "Never run on schedule",
+        "NEVER_IMPORTED": "Never imported",
+        "NEVER_FETCHED": "Never fetched"
+      },
+      "IMPORTS": {
+        "TITLE": "Import history",
+        "EMPTY": "No import runs match these filters.",
+        "FILTER": {
+          "BINDING": "Binding",
+          "STATUS": "Status",
+          "ALL_STATUSES": "All statuses",
+          "DATE_FROM": "From",
+          "DATE_TO": "To"
+        },
+        "STATUS": {
+          "IN_PROGRESS": "In progress",
+          "COMPLETED": "Completed",
+          "EMPTY": "Empty",
+          "FAILED": "Failed"
+        },
+        "TABLE": {
+          "CAPTION": "PRICAT import runs",
+          "FETCHED_AT": "Fetched at",
+          "STATUS": "Status",
+          "FETCHED": "Fetched",
+          "MATCHED": "Matched",
+          "UNMATCHED": "Unmatched",
+          "SOURCE_DOCUMENT": "Source document"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Import history pagination"
+        }
+      },
+      "UNMATCHED": {
+        "TITLE": "Unmatched-lines worklist",
+        "EMPTY": "No quarantined lines match these filters.",
+        "STILL_OPEN": "Still open",
+        "NO_EAN": "No EAN stated",
+        "FILTER": {
+          "REASON": "Reason",
+          "ALL_REASONS": "All reasons",
+          "SEARCH": "Search",
+          "SEARCH_HINT": "Matches the line's EAN, vendor article code or cross-reference code.",
+          "RESOLVED": "Show resolved lines instead of open ones"
+        },
+        "REASON": {
+          "NO_IDENTIFIER": "No identifier",
+          "NO_CATALOG_MATCH": "No catalog match",
+          "AMBIGUOUS_CATALOG_MATCH": "Ambiguous catalog match",
+          "CATALOG_UNAVAILABLE": "Catalog unavailable",
+          "DUPLICATE_LINE": "Duplicate line",
+          "MALFORMED_LINE": "Malformed line"
+        },
+        "TABLE": {
+          "CAPTION": "Quarantined PRICAT lines",
+          "EAN": "EAN",
+          "VENDOR_ARTICLE_CODE": "Vendor article code",
+          "REASON": "Reason",
+          "FETCHED_AT": "Fetched at",
+          "RESOLVED_AT": "Resolved at"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Unmatched-lines worklist pagination"
+        }
+      },
+      "ERROR": {
+        "LOAD_FRESHNESS": "The price-catalog freshness summary could not be loaded.",
+        "LOAD_IMPORTS": "The import history could not be loaded.",
+        "LOAD_UNMATCHED": "The unmatched-lines worklist could not be loaded."
+      }
+    },
+    "TRANSMISSION_TIMELINE": {
+      "TITLE": "Vendor transmission timeline",
+      "EMPTY": "This order has no vendor transmission history yet.",
+      "OBSERVED_AT": "Vendor observed at",
+      "RECORDED_AT": "Recorded by this platform at",
+      "NOT_AVAILABLE": "Not available",
+      "DESPATCH_DATE": "Despatch date",
+      "EVENT_TYPE": {
+        "CONFIRMED": "Confirmed",
+        "REJECTED": "Rejected",
+        "STATUS_CHANGED": "Status changed",
+        "REVIEW_REQUIRED": "Needs manual review"
+      },
+      "PAGINATION": {
+        "ARIA_LABEL": "Transmission timeline pagination"
+      },
+      "ERROR": {
+        "LOAD": "The vendor transmission timeline could not be loaded."
+      }
+    },
+    "MANUAL_REVIEW": {
+      "TITLE": "Manual-review queue",
+      "SUBTITLE": "Transmissions the platform could not resolve automatically, across every purchase order.",
+      "NO_RESEND_NOTE": "This queue never re-sends an order. Resolving a row records what you established with the vendor; it never contacts the vendor.",
+      "FILTER": {
+        "VENDOR": "Vendor",
+        "ALL_VENDORS": "All vendors",
+        "SEARCH": "Search",
+        "SEARCH_HINT": "Matches the purchase-order number or the vendor's own order number.",
+        "DATE_FROM": "From",
+        "DATE_TO": "To"
+      },
+      "EMPTY": "The manual-review queue is clear.",
+      "COUNT": "{{count}} transmissions need review",
+      "TABLE": {
+        "CAPTION": "Transmissions awaiting manual review",
+        "PURCHASE_ORDER": "Purchase order",
+        "VENDOR": "Vendor",
+        "STATUS": "Status",
+        "CLOSE": "Close",
+        "REVIEW": "Review"
+      },
+      "DETAIL": {
+        "ARIA_LABEL": "Resolve this transmission",
+        "WHY": "The platform could not establish whether the vendor received this order.",
+        "RESOLVE_TITLE": "Record the outcome",
+        "ACTION": "Outcome",
+        "VENDOR_ORDER_NUMBER": "Vendor order number",
+        "EVIDENCE": "Evidence",
+        "EVIDENCE_HINT": "Describe how you established this with the vendor. This is stored and published on the resulting event.",
+        "SUBMIT": "Resolve"
+      },
+      "ACTION": {
+        "CONFIRM_WITH_VENDOR_REFERENCE": "Confirmed — vendor accepted it",
+        "MARK_NOT_RECEIVED": "Vendor never received it",
+        "CANCEL": "Cancel the transmission"
+      },
+      "PAGINATION": {
+        "ARIA_LABEL": "Manual-review queue pagination"
+      },
+      "ERROR": {
+        "LOAD": "The manual-review queue could not be loaded.",
+        "RESOLVE": "This transmission could not be resolved."
+      }
+    },
+    "STOCK_SNAPSHOT": {
+      "SUMMARY": {
+        "TITLE": "Latest stock snapshot",
+        "NONE": "This vendor profile has no stock snapshot yet.",
+        "SNAPSHOT_AS_OF": "Vendor-stated as of",
+        "FETCHED_AT": "Fetched by this platform at",
+        "UNSTATED": "Not stated",
+        "SCOPE": "Scope",
+        "COMPLETENESS": "Completeness",
+        "LINES_REPORTED": "{{count}} lines reported",
+        "LINES_REJECTED": "{{count}} lines rejected",
+        "STATUS": "Status",
+        "STATUS_VALUE": {
+          "COMPLETED": "Completed",
+          "EMPTY": "Empty",
+          "REJECTED": "Rejected",
+          "FAILED": "Failed"
+        }
+      },
+      "LINES": {
+        "TITLE": "Snapshot lines",
+        "EMPTY": "No lines match this search.",
+        "QUANTITY_UNSTATED": "Not stated",
+        "FILTER": {
+          "SEARCH": "Search",
+          "SEARCH_HINT": "Matches the article EAN, vendor article code or description."
+        },
+        "TABLE": {
+          "CAPTION": "Stock-snapshot lines",
+          "EAN": "EAN",
+          "VENDOR_ARTICLE_CODE": "Vendor article code",
+          "DESCRIPTION": "Description",
+          "AVAILABLE_QUANTITY": "Available quantity"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Snapshot lines pagination"
+        }
+      },
+      "ERROR": {
+        "LOAD_SUMMARY": "The latest stock-snapshot summary could not be loaded.",
+        "LOAD_LINES": "The stock-snapshot lines could not be loaded."
       }
     }
   }

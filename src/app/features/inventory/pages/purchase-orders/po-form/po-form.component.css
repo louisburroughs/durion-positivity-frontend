@@ -59,6 +59,11 @@
   min-width: 5rem;
 }
 
+.line-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
 .no-lines-hint {
   /* --text-muted (graphite-600) is AA on the card surface; opacity dimming
      dropped this below the WCAG AA threshold (ADR-0039). */

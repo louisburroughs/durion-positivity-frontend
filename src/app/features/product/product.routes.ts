@@ -29,6 +29,13 @@ export const PRODUCT_ROUTES: Routes = [
           ),
       },
       {
+        path: 'catalog/enrichment/unmatched',
+        loadComponent: () =>
+          import('./pages/catalog/tread-design-unmatched/tread-design-unmatched-page.component').then(
+            m => m.TreadDesignUnmatchedPageComponent,
+          ),
+      },
+      {
         path: 'pricing/price-books',
         loadComponent: () =>
           import('./pages/pricing/price-books/price-books.component').then(

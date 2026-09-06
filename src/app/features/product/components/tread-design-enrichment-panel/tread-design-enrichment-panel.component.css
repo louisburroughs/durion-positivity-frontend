@@ -1,0 +1,88 @@
+:host {
+  display: block;
+}
+
+.enrichment-panel {
+  background: var(--cardBackground);
+  border-radius: 0.9rem;
+  border: 1px dashed var(--border-color);
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+.provenance-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.provenance-header h2 {
+  font-family: var(--font-primary);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.provenance-badge {
+  background: color-mix(in srgb, var(--brand-primary-soft) 80%, transparent);
+  border-radius: 999px;
+  color: var(--brand-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 0.25rem 0.55rem;
+  text-transform: uppercase;
+}
+
+.provenance-hint {
+  font-size: 0.85rem;
+  margin: 0 0 0.9rem;
+  opacity: 0.75;
+}
+
+.enrichment-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  margin: 0 0 0.9rem;
+}
+
+.enrichment-grid dt {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.enrichment-grid dd {
+  margin: 0.15rem 0 0;
+}
+
+.marketing-copy {
+  background: color-mix(in srgb, var(--cardBackground) 72%, var(--themeBackground));
+  border-radius: 0.75rem;
+  padding: 0.8rem 0.9rem;
+}
+
+.marketing-copy h3 {
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  margin: 0 0 0.4rem;
+}
+
+.marketing-copy p {
+  margin: 0 0 0.4rem;
+}
+
+.foot-notes {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+.artwork-pending {
+  align-items: center;
+  color: var(--status-warning-fg);
+  display: flex;
+  font-size: 0.85rem;
+  gap: 0.4rem;
+  margin: 0.8rem 0 0;
+}

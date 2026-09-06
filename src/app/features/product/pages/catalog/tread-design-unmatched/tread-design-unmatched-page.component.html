@@ -1,0 +1,77 @@
+<main class="page" aria-labelledby="unmatched-title">
+  <header class="page-header">
+    <h1 id="unmatched-title" class="page-title">
+      {{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TITLE' | translate }}
+    </h1>
+    <p class="page-subtitle">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.SUBTITLE' | translate }}</p>
+  </header>
+
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true">
+    <p class="sr-only" role="status">{{ 'COMMON.LOADING' | translate }}</p>
+    @for (_row of [1, 2, 3, 4, 5]; track $index) {
+    <div class="skeleton-row"></div>
+    }
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="error-banner" role="alert">
+    <span class="error-icon" aria-hidden="true">!</span>
+    <span>{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</span>
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="card state-card">
+    <p>{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'ready') {
+  <section class="card">
+    <div class="table-wrap">
+      <table class="data-table" aria-label="{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.ARIA' | translate }}">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.BRAND' | translate }}</th>
+            <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.TREAD_DESIGN' | translate }}</th>
+            <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.VENDOR' | translate }}</th>
+            <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.ARTWORK' | translate }}</th>
+            <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.UPDATED_AT' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+          <tr>
+            <td>{{ item.brand ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+            <td>{{ item.treadDesign ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+            <td>{{ item.supplierRef ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+            <td>
+              @if (item.hasUnresolvedImages) {
+              <span class="badge badge--warning">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.ARTWORK_PENDING' | translate }}</span>
+              } @else {
+              {{ 'COMMON.NOT_AVAILABLE' | translate }}
+              }
+            </td>
+            <td>{{ item.updatedAt ? (item.updatedAt | date:'medium') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <nav class="pagination" aria-label="{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.PAGINATION.ARIA' | translate }}">
+      <button class="btn-secondary" type="button" [disabled]="page() === 0" (click)="previousPage()">
+        {{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.PAGINATION.PREVIOUS' | translate }}
+      </button>
+      <span class="pagination-status">
+        {{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.PAGINATION.STATUS' | translate:{ page: page() + 1, totalPages: totalPages(), totalElements: totalElements() } }}
+      </span>
+      <button class="btn-secondary" type="button" [disabled]="page() + 1 >= totalPages()" (click)="nextPage()">
+        {{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.PAGINATION.NEXT' | translate }}
+      </button>
+    </nav>
+  </section>
+  }
+</main>

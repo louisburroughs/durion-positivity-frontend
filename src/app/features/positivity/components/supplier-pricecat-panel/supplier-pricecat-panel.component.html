@@ -1,0 +1,366 @@
+<div class="pricat">
+  <!-- ── Freshness ─────────────────────────────────────────────────────── -->
+  <section class="pricat__section" aria-labelledby="pricat-freshness-title">
+    <h3 id="pricat-freshness-title">{{ 'POSITIVITY.PRICAT.FRESHNESS.TITLE' | translate }}</h3>
+
+    @if (freshnessState() === 'loading') {
+      <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+    }
+
+    @if (freshnessState() === 'forbidden') {
+      <div class="pos-banner pos-banner--error" role="alert">
+        {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+      </div>
+    }
+
+    @if (freshnessState() === 'error') {
+      <div class="pos-banner pos-banner--error" role="alert">
+        <span>{{ freshnessErrorKey()! | translate }}</span>
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="reloadFreshness()">
+          {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+        </button>
+      </div>
+    }
+
+    @if (freshnessState() === 'ready' && freshness(); as fresh) {
+      @if (fresh.stale) {
+        <p class="pos-banner pos-banner--warning" role="status">
+          {{ 'POSITIVITY.PRICAT.FRESHNESS.STALE' | translate }}
+        </p>
+      } @else {
+        <p class="pos-banner pos-banner--info" role="status">
+          {{ 'POSITIVITY.PRICAT.FRESHNESS.FRESH' | translate }}
+        </p>
+      }
+
+      <dl class="pricat__facts">
+        <div class="pricat__fact">
+          <dt>{{ 'POSITIVITY.PRICAT.FRESHNESS.LATEST_EFFECTIVE_DATE' | translate }}</dt>
+          <dd>
+            @if (dateOnlyFor(fresh.latestEffectiveDate); as effective) {
+              {{ effective | date: 'mediumDate' }}
+            } @else {
+              {{ 'POSITIVITY.PRICAT.FRESHNESS.NEVER_IMPORTED' | translate }}
+            }
+          </dd>
+        </div>
+        <div class="pricat__fact">
+          <dt>{{ 'POSITIVITY.PRICAT.FRESHNESS.LAST_FETCHED_AT' | translate }}</dt>
+          <dd>
+            @if (fresh.lastFetchedAt) {
+              <time [attr.datetime]="fresh.lastFetchedAt">{{ fresh.lastFetchedAt | date: 'medium' }}</time>
+            } @else {
+              {{ 'POSITIVITY.PRICAT.FRESHNESS.NEVER_FETCHED' | translate }}
+            }
+          </dd>
+        </div>
+        <div class="pricat__fact">
+          <dt>{{ 'POSITIVITY.PRICAT.FRESHNESS.LAST_COMPLETED_AT' | translate }}</dt>
+          <dd>
+            @if (fresh.lastCompletedAt) {
+              <time [attr.datetime]="fresh.lastCompletedAt">{{ fresh.lastCompletedAt | date: 'medium' }}</time>
+            } @else {
+              {{ 'POSITIVITY.PRICAT.FRESHNESS.NEVER_IMPORTED' | translate }}
+            }
+          </dd>
+        </div>
+        <div class="pricat__fact">
+          <dt>{{ 'POSITIVITY.PRICAT.FRESHNESS.STALENESS_THRESHOLD' | translate }}</dt>
+          <dd>
+            @if (fresh.stalenessThreshold) {
+              <code>{{ fresh.stalenessThreshold }}</code>
+            } @else {
+              —
+            }
+          </dd>
+        </div>
+        <div class="pricat__fact">
+          <dt>{{ 'POSITIVITY.PRICAT.FRESHNESS.UNRESOLVED_COUNT' | translate }}</dt>
+          <dd>{{ fresh.unresolvedUnmatchedCount }}</dd>
+        </div>
+      </dl>
+
+      @if (fresh.bindings.length > 0) {
+        <div class="pos-table-wrap">
+          <table class="pos-table">
+            <caption class="sr-only">{{ 'POSITIVITY.PRICAT.FRESHNESS.BINDINGS_CAPTION' | translate }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'POSITIVITY.PRICAT.FRESHNESS.BINDING' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.BINDINGS.STATUS.ENABLED' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.PRICAT.FRESHNESS.SCHEDULE' | translate }}</th>
+                <th scope="col">{{ 'POSITIVITY.PRICAT.FRESHNESS.LAST_RUN' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (binding of fresh.bindings; track binding.bindingId) {
+                <tr>
+                  <th scope="row"><code>{{ binding.bindingId }}</code></th>
+                  <td>{{ (binding.enabled ? 'POSITIVITY.BINDINGS.STATUS.ENABLED' : 'POSITIVITY.BINDINGS.STATUS.DISABLED') | translate }}</td>
+                  <td>{{ binding.scheduleCron || ('POSITIVITY.PRICAT.FRESHNESS.ON_DEMAND' | translate) }}</td>
+                  <td>
+                    @if (binding.lastRunStartedAt) {
+                      {{ binding.lastRunOutcome || '—' }}
+                      <time [attr.datetime]="binding.lastRunStartedAt">{{ binding.lastRunStartedAt | date: 'short' }}</time>
+                    } @else {
+                      {{ 'POSITIVITY.PRICAT.FRESHNESS.NEVER_SCHEDULED' | translate }}
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  </section>
+
+  <!-- ── Imports ───────────────────────────────────────────────────────── -->
+  <section class="pricat__section" aria-labelledby="pricat-imports-title">
+    <h3 id="pricat-imports-title">{{ 'POSITIVITY.PRICAT.IMPORTS.TITLE' | translate }}</h3>
+
+    <form class="pricat__filters" [formGroup]="importFilterForm" (ngSubmit)="applyImportFilter()">
+      <div class="pos-field">
+        <label class="pos-field__label" for="pricat-import-binding">
+          {{ 'POSITIVITY.PRICAT.IMPORTS.FILTER.BINDING' | translate }}
+        </label>
+        <input id="pricat-import-binding" class="pos-field__input" type="text" formControlName="bindingId" />
+      </div>
+      <div class="pos-field">
+        <label class="pos-field__label" for="pricat-import-status">
+          {{ 'POSITIVITY.PRICAT.IMPORTS.FILTER.STATUS' | translate }}
+        </label>
+        <select id="pricat-import-status" class="pos-field__input" formControlName="status">
+          <option value="">{{ 'POSITIVITY.PRICAT.IMPORTS.FILTER.ALL_STATUSES' | translate }}</option>
+          @for (status of importStatuses; track status) {
+            <option [value]="status">{{ 'POSITIVITY.PRICAT.IMPORTS.STATUS.' + status | translate }}</option>
+          }
+        </select>
+      </div>
+      <div class="pos-field">
+        <label class="pos-field__label" for="pricat-import-date-from">
+          {{ 'POSITIVITY.PRICAT.IMPORTS.FILTER.DATE_FROM' | translate }}
+        </label>
+        <input id="pricat-import-date-from" class="pos-field__input" type="date" formControlName="dateFrom" />
+      </div>
+      <div class="pos-field">
+        <label class="pos-field__label" for="pricat-import-date-to">
+          {{ 'POSITIVITY.PRICAT.IMPORTS.FILTER.DATE_TO' | translate }}
+        </label>
+        <input id="pricat-import-date-to" class="pos-field__input" type="date" formControlName="dateTo" />
+      </div>
+      <div class="pricat__filters-actions">
+        <button class="pos-btn pos-btn--primary" type="submit">{{ 'POSITIVITY.COMMON.APPLY_FILTER' | translate }}</button>
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="clearImportFilter()">
+          {{ 'POSITIVITY.COMMON.CLEAR_FILTER' | translate }}
+        </button>
+      </div>
+    </form>
+
+    @if (importsState() === 'loading') {
+      <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+    }
+    @if (importsState() === 'forbidden') {
+      <div class="pos-banner pos-banner--error" role="alert">{{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}</div>
+    }
+    @if (importsState() === 'error') {
+      <div class="pos-banner pos-banner--error" role="alert">
+        <span>{{ importsErrorKey()! | translate }}</span>
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="loadImports()">
+          {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+        </button>
+      </div>
+    }
+    @if (importsState() === 'empty') {
+      <p class="pricat__empty">{{ 'POSITIVITY.PRICAT.IMPORTS.EMPTY' | translate }}</p>
+    }
+
+    @if (importsState() === 'ready') {
+      <div class="pos-table-wrap">
+        <table class="pos-table">
+          <caption class="sr-only">{{ 'POSITIVITY.PRICAT.IMPORTS.TABLE.CAPTION' | translate }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'POSITIVITY.PRICAT.IMPORTS.TABLE.FETCHED_AT' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.PRICAT.IMPORTS.TABLE.STATUS' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.PRICAT.IMPORTS.TABLE.FETCHED' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.PRICAT.IMPORTS.TABLE.MATCHED' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.PRICAT.IMPORTS.TABLE.UNMATCHED' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.PRICAT.IMPORTS.TABLE.SOURCE_DOCUMENT' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of imports(); track item.importManifestId) {
+              <tr>
+                <td>
+                  @if (item.fetchedAt) {
+                    <time [attr.datetime]="item.fetchedAt">{{ item.fetchedAt | date: 'medium' }}</time>
+                  } @else { — }
+                </td>
+                <td>{{ ('POSITIVITY.PRICAT.IMPORTS.STATUS.' + item.status) | translate }}</td>
+                <td>{{ item.linesFetched ?? '—' }}</td>
+                <td>{{ item.linesMatched ?? '—' }}</td>
+                <td>{{ item.linesUnmatched ?? '—' }}</td>
+                <td>
+                  @if (item.sourceDocumentId) {
+                    <code>{{ item.sourceDocumentId }}</code>
+                  } @else { — }
+                </td>
+              </tr>
+              @if (item.status === 'FAILED' && item.failureDetail) {
+                <tr>
+                  <td colspan="6" class="pricat__failure-detail">{{ item.failureDetail }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="pricat__pagination" [attr.aria-label]="'POSITIVITY.PRICAT.IMPORTS.PAGINATION.ARIA_LABEL' | translate">
+        <button class="pos-btn pos-btn--secondary" type="button" [disabled]="!importsHasPreviousPage()" (click)="importsPreviousPage()">
+          {{ 'POSITIVITY.AUDIT.PAGINATION.PREVIOUS' | translate }}
+        </button>
+        <p class="pricat__page-status" aria-live="polite">
+          {{ 'POSITIVITY.AUDIT.PAGINATION.STATUS' | translate: { page: importsPageNumber(), total: importsTotalPages() } }}
+        </p>
+        <button class="pos-btn pos-btn--secondary" type="button" [disabled]="!importsHasNextPage()" (click)="importsNextPage()">
+          {{ 'POSITIVITY.AUDIT.PAGINATION.NEXT' | translate }}
+        </button>
+      </nav>
+    }
+  </section>
+
+  <!-- ── Unmatched lines worklist ─────────────────────────────────────── -->
+  <section class="pricat__section" aria-labelledby="pricat-unmatched-title">
+    <h3 id="pricat-unmatched-title">{{ 'POSITIVITY.PRICAT.UNMATCHED.TITLE' | translate }}</h3>
+
+    <form class="pricat__filters" [formGroup]="unmatchedFilterForm" (ngSubmit)="applyUnmatchedFilter()">
+      <div class="pos-field">
+        <label class="pos-field__label" for="pricat-unmatched-reason">
+          {{ 'POSITIVITY.PRICAT.UNMATCHED.FILTER.REASON' | translate }}
+        </label>
+        <select id="pricat-unmatched-reason" class="pos-field__input" formControlName="reason">
+          <option value="">{{ 'POSITIVITY.PRICAT.UNMATCHED.FILTER.ALL_REASONS' | translate }}</option>
+          @for (reason of unmatchedLineReasons; track reason) {
+            <option [value]="reason">{{ 'POSITIVITY.PRICAT.UNMATCHED.REASON.' + reason | translate }}</option>
+          }
+        </select>
+      </div>
+      <div class="pos-field">
+        <label class="pos-field__label" for="pricat-unmatched-search">
+          {{ 'POSITIVITY.PRICAT.UNMATCHED.FILTER.SEARCH' | translate }}
+        </label>
+        <input
+          id="pricat-unmatched-search"
+          class="pos-field__input"
+          type="text"
+          formControlName="search"
+          aria-describedby="pricat-unmatched-search-hint"
+        />
+        <p class="pos-field__hint" id="pricat-unmatched-search-hint">
+          {{ 'POSITIVITY.PRICAT.UNMATCHED.FILTER.SEARCH_HINT' | translate }}
+        </p>
+      </div>
+      <div class="pos-field">
+        <label class="pos-field__label" for="pricat-unmatched-date-from">
+          {{ 'POSITIVITY.PRICAT.IMPORTS.FILTER.DATE_FROM' | translate }}
+        </label>
+        <input id="pricat-unmatched-date-from" class="pos-field__input" type="date" formControlName="dateFrom" />
+      </div>
+      <div class="pos-field">
+        <label class="pos-field__label" for="pricat-unmatched-date-to">
+          {{ 'POSITIVITY.PRICAT.IMPORTS.FILTER.DATE_TO' | translate }}
+        </label>
+        <input id="pricat-unmatched-date-to" class="pos-field__input" type="date" formControlName="dateTo" />
+      </div>
+      <div class="pos-field pricat__toggle">
+        <input id="pricat-unmatched-resolved" type="checkbox" formControlName="resolved" />
+        <label class="pos-field__label" for="pricat-unmatched-resolved">
+          {{ 'POSITIVITY.PRICAT.UNMATCHED.FILTER.RESOLVED' | translate }}
+        </label>
+      </div>
+      <div class="pricat__filters-actions">
+        <button class="pos-btn pos-btn--primary" type="submit">{{ 'POSITIVITY.COMMON.APPLY_FILTER' | translate }}</button>
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="clearUnmatchedFilter()">
+          {{ 'POSITIVITY.COMMON.CLEAR_FILTER' | translate }}
+        </button>
+      </div>
+    </form>
+
+    @if (unmatchedState() === 'loading') {
+      <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+    }
+    @if (unmatchedState() === 'forbidden') {
+      <div class="pos-banner pos-banner--error" role="alert">{{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}</div>
+    }
+    @if (unmatchedState() === 'error') {
+      <div class="pos-banner pos-banner--error" role="alert">
+        <span>{{ unmatchedErrorKey()! | translate }}</span>
+        <button class="pos-btn pos-btn--secondary" type="button" (click)="loadUnmatchedLines()">
+          {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+        </button>
+      </div>
+    }
+    @if (unmatchedState() === 'empty') {
+      <p class="pricat__empty">{{ 'POSITIVITY.PRICAT.UNMATCHED.EMPTY' | translate }}</p>
+    }
+
+    @if (unmatchedState() === 'ready') {
+      <div class="pos-table-wrap">
+        <table class="pos-table">
+          <caption class="sr-only">{{ 'POSITIVITY.PRICAT.UNMATCHED.TABLE.CAPTION' | translate }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ 'POSITIVITY.PRICAT.UNMATCHED.TABLE.EAN' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.PRICAT.UNMATCHED.TABLE.VENDOR_ARTICLE_CODE' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.PRICAT.UNMATCHED.TABLE.REASON' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.PRICAT.UNMATCHED.TABLE.FETCHED_AT' | translate }}</th>
+              <th scope="col">{{ 'POSITIVITY.PRICAT.UNMATCHED.TABLE.RESOLVED_AT' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of unmatchedLines(); track line.unmatchedLineId) {
+              <tr>
+                <td>{{ line.articleEan || ('POSITIVITY.PRICAT.UNMATCHED.NO_EAN' | translate) }}</td>
+                <td>{{ line.supplierArticleCode || '—' }}</td>
+                <td>
+                  @if (line.reason) {
+                    {{ 'POSITIVITY.PRICAT.UNMATCHED.REASON.' + line.reason | translate }}
+                  } @else { — }
+                </td>
+                <td>
+                  <time [attr.datetime]="line.fetchedAt">{{ line.fetchedAt | date: 'medium' }}</time>
+                </td>
+                <td>
+                  @if (line.resolvedAt) {
+                    <time [attr.datetime]="line.resolvedAt">{{ line.resolvedAt | date: 'medium' }}</time>
+                  } @else {
+                    {{ 'POSITIVITY.PRICAT.UNMATCHED.STILL_OPEN' | translate }}
+                  }
+                </td>
+              </tr>
+              @if (line.reasonDetail) {
+                <tr>
+                  <td colspan="5" class="pricat__failure-detail">{{ line.reasonDetail }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="pricat__pagination" [attr.aria-label]="'POSITIVITY.PRICAT.UNMATCHED.PAGINATION.ARIA_LABEL' | translate">
+        <button class="pos-btn pos-btn--secondary" type="button" [disabled]="!unmatchedHasPreviousPage()" (click)="unmatchedPreviousPage()">
+          {{ 'POSITIVITY.AUDIT.PAGINATION.PREVIOUS' | translate }}
+        </button>
+        <p class="pricat__page-status" aria-live="polite">
+          {{ 'POSITIVITY.AUDIT.PAGINATION.STATUS' | translate: { page: unmatchedPageNumber(), total: unmatchedTotalPages() } }}
+        </p>
+        <button class="pos-btn pos-btn--secondary" type="button" [disabled]="!unmatchedHasNextPage()" (click)="unmatchedNextPage()">
+          {{ 'POSITIVITY.AUDIT.PAGINATION.NEXT' | translate }}
+        </button>
+      </nav>
+    }
+  </section>
+</div>

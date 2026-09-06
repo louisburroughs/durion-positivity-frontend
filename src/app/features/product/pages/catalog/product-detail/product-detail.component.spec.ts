@@ -4,6 +4,7 @@ import { of, throwError } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { ProductDetailComponent } from './product-detail.component';
 import { ProductCatalogService } from '../../../services/product-catalog.service';
+import { ProductTreadDesignService } from '../../../services/product-tread-design.service';
 
 describe('ProductDetailComponent', () => {
   let fixture: ComponentFixture<ProductDetailComponent>;
@@ -158,11 +159,14 @@ describe('ProductDetailComponent', () => {
   });
 });
 
-// ── Retired supplier sections (#201) ────────────────────────────────────────────
+// ── Manufacturer enrichment panel (#195; restored #218) ─────────────────────
 //
-// The availability and enrichment panels had no generated read contract behind
-// them. They are gone, and this page must not quietly grow them back.
-describe('ProductDetailComponent — retired supplier sections (#201)', () => {
+// The enrichment panel now renders via TreadDesignEnrichmentPanelComponent,
+// which owns its own fetch and never raises to this page — see that
+// component's spec for its isolation and "absence renders nothing" coverage.
+// These tests only confirm ProductDetailComponent hosts it and never gates
+// its own state on it.
+describe('ProductDetailComponent — enrichment panel hosting (#218)', () => {
   const mockCatalog = {
     getProductById: vi.fn().mockReturnValue(
       of({ id: 'prod-123', sku: 'SKU-001', name: 'Test Product', category: 'Parts', description: 'x', status: 'ACTIVE', msrp: null }),
@@ -180,6 +184,99 @@ describe('ProductDetailComponent — retired supplier sections (#201)', () => {
     updateUomConversion: vi.fn(),
     deactivateUomConversion: vi.fn(),
     updateStandardCost: vi.fn(),
+  };
+
+  async function setup(
+    treadDesignService: { getEnrichmentForProduct: ReturnType<typeof vi.fn> },
+  ): Promise<ComponentFixture<ProductDetailComponent>> {
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [ProductDetailComponent, TranslateModule.forRoot()],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: { paramMap: of(convertToParamMap({ productId: 'prod-123' })) },
+        },
+        { provide: ProductCatalogService, useValue: mockCatalog },
+        { provide: ProductTreadDesignService, useValue: treadDesignService },
+      ],
+    }).compileComponents();
+
+    const created = TestBed.createComponent(ProductDetailComponent);
+    created.detectChanges();
+    return created;
+  }
+
+  it('hosts the enrichment panel and stays ready even when there is no match', async () => {
+    const treadDesignService = { getEnrichmentForProduct: vi.fn().mockReturnValue(of(null)) };
+    const isolated = await setup(treadDesignService);
+    const el = isolated.nativeElement as HTMLElement;
+
+    expect(el.querySelector('app-tread-design-enrichment-panel')).not.toBeNull();
+    expect(el.querySelector('.enrichment-panel')).toBeNull();
+    expect(isolated.componentInstance.state()).toBe('ready');
+  });
+
+  it('hosts the enrichment panel with content and never gates page state on it', async () => {
+    const treadDesignService = {
+      getEnrichmentForProduct: vi.fn().mockReturnValue(
+        of({
+          id: 'td-1',
+          brand: 'Acme',
+          treadDesign: null,
+          treadDesign2: null,
+          productName: null,
+          vehicleType: null,
+          seasonality: null,
+          supplierRef: null,
+          vendorProfileId: null,
+          vendorVariantId: null,
+          updatedAt: null,
+          hasUnresolvedImages: false,
+          images: [],
+          texts: [],
+        }),
+      ),
+    };
+    const isolated = await setup(treadDesignService);
+    const el = isolated.nativeElement as HTMLElement;
+
+    expect(el.querySelector('.enrichment-panel')).not.toBeNull();
+    expect(isolated.componentInstance.state()).toBe('ready');
+    expect(isolated.componentInstance.errorKey()).toBeNull();
+  });
+});
+
+// ── Supplier availability panel (#212) ──────────────────────────────────────────
+
+describe('ProductDetailComponent — availability tab (#212)', () => {
+  const availabilityMockProduct = {
+    id: 'prod-123',
+    sku: 'SKU-001',
+    name: 'Test Product',
+    category: 'Parts',
+    description: 'A test product',
+    status: 'ACTIVE',
+    msrp: null,
+  };
+
+  const availabilityMockLifecycle = {
+    productId: 'prod-123',
+    currentState: 'ACTIVE' as const,
+    effectiveAt: '2026-01-01T00:00:00Z',
+    lastChangedBy: 'system',
+    lastChangedAt: '2026-01-01T00:00:00Z',
+  };
+
+  const mockCatalog = {
+    getProductById: vi.fn().mockReturnValue(of(availabilityMockProduct)),
+    getProductLifecycle: vi.fn().mockReturnValue(of(availabilityMockLifecycle)),
+    getReplacements: vi.fn().mockReturnValue(of([])),
+    listUomConversions: vi.fn().mockReturnValue(of([])),
+    getItemCosts: vi.fn().mockReturnValue(
+      of({ id: 'ic-1', itemId: 'prod-123', standardCost: 10, costStructures: [] }),
+    ),
+    getAuditHistory: vi.fn().mockReturnValue(of([])),
   };
 
   async function setup(): Promise<ComponentFixture<ProductDetailComponent>> {
@@ -200,19 +297,19 @@ describe('ProductDetailComponent — retired supplier sections (#201)', () => {
     return created;
   }
 
-  it('renders neither the availability nor the enrichment panel', async () => {
+  it('renders the availability panel once the availability tab is active', async () => {
     const isolated = await setup();
-    const el = isolated.nativeElement as HTMLElement;
+    isolated.componentInstance.activeTab.set('availability');
+    isolated.detectChanges();
 
-    expect(el.querySelector('app-supplier-availability-panel')).toBeNull();
-    expect(el.querySelector('app-supplier-enrichment-panel')).toBeNull();
-    expect(isolated.componentInstance.state()).toBe('ready');
+    const el = isolated.nativeElement as HTMLElement;
+    expect(el.querySelector('app-supplier-availability-panel')).not.toBeNull();
   });
 
-  it('holds no supplier state of its own', async () => {
+  it('does not render the availability panel on other tabs', async () => {
     const isolated = await setup();
-    const keys = Object.keys(isolated.componentInstance as unknown as Record<string, unknown>);
 
-    expect(keys.some(key => /supplier|availability|enrichment|vendor/i.test(key))).toBe(false);
+    const el = isolated.nativeElement as HTMLElement;
+    expect(el.querySelector('app-supplier-availability-panel')).toBeNull();
   });
 });
