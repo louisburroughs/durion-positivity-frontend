@@ -5141,7 +5141,9 @@
       "REFRESH": "Refresh"
     },
     "CLOSE": "Close",
-    "EMPTY_VALUE": "—"
+    "EMPTY_VALUE": "—",
+    "NOT_AVAILABLE": "Not available",
+    "ERROR": "Something went wrong"
   },
   "STATUS": {
     "INITIATED": "Initiated",

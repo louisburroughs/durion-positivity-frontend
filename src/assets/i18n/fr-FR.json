@@ -5141,7 +5141,9 @@
       "REFRESH": "Actualiser"
     },
     "CLOSE": "Fermer",
-    "EMPTY_VALUE": "—"
+    "EMPTY_VALUE": "—",
+    "NOT_AVAILABLE": "Non disponible",
+    "ERROR": "Une erreur est survenue"
   },
   "STATUS": {
     "INITIATED": "Initié",
