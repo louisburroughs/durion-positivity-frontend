@@ -2423,7 +2423,8 @@
           },
           "ERROR": {
             "LOCATION_REQUIRED": "Delivery location is required.",
-            "LOAD": "Unable to check supplier availability."
+            "LOAD": "Unable to check supplier availability.",
+            "QUANTITY_MIN": "Quantity must be at least 1."
           },
           "ACTION": {
             "CHECK": "Check Availability"
@@ -2445,7 +2446,8 @@
             "SUPPLIER_UNAVAILABLE": "Unavailable",
             "NOT_LISTED": "Not Listed",
             "CAPABILITY_NOT_CONFIGURED": "Not Configured",
-            "CONFIGURATION_ERROR": "Configuration Error"
+            "CONFIGURATION_ERROR": "Configuration Error",
+            "UNKNOWN": "Unknown"
           },
           "STALE": "Stale",
           "FRESH": "Fresh"
@@ -4403,7 +4405,8 @@
           },
           "ERROR": {
             "LOCATION_REQUIRED": "Delivery location is required.",
-            "LOAD": "Unable to check supplier availability."
+            "LOAD": "Unable to check supplier availability.",
+            "QUANTITY_MIN": "Quantity must be at least 1."
           },
           "ACTION": {
             "CHECK": "Check Availability"
@@ -4425,7 +4428,8 @@
             "SUPPLIER_UNAVAILABLE": "Unavailable",
             "NOT_LISTED": "Not Listed",
             "CAPABILITY_NOT_CONFIGURED": "Not Configured",
-            "CONFIGURATION_ERROR": "Configuration Error"
+            "CONFIGURATION_ERROR": "Configuration Error",
+            "UNKNOWN": "Unknown"
           },
           "STALE": "Stale",
           "FRESH": "Fresh",
@@ -6128,6 +6132,7 @@
       "EMPTY": "This order has no vendor transmission history yet.",
       "OBSERVED_AT": "Vendor observed at",
       "RECORDED_AT": "Recorded by this platform at",
+      "NOT_AVAILABLE": "Not available",
       "DESPATCH_DATE": "Despatch date",
       "EVENT_TYPE": {
         "CONFIRMED": "Confirmed",

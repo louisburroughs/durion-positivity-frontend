@@ -16,12 +16,24 @@
       </label>
       <label>
         {{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.FIELD.QUANTITY' | translate }}
-        <input class="input-underline" type="number" min="1" formControlName="quantity" />
+        <input
+          class="input-underline"
+          type="number"
+          min="1"
+          step="1"
+          formControlName="quantity"
+          [attr.aria-invalid]="form.controls.quantity.invalid && form.controls.quantity.touched"
+        />
       </label>
     </div>
     @if (form.controls.deliveryLocationId.invalid && form.controls.deliveryLocationId.touched) {
     <p class="field-error" role="alert">
       {{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.ERROR.LOCATION_REQUIRED' | translate }}
+    </p>
+    }
+    @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
+    <p class="field-error" role="alert">
+      {{ 'PRODUCT.CATALOG.DETAIL.AVAILABILITY.ERROR.QUANTITY_MIN' | translate }}
     </p>
     }
     <button class="btn-primary" type="submit" [disabled]="state() === 'loading'">
@@ -64,11 +76,11 @@
             <span
               class="badge"
               [class.badge--success]="vendor.status === 'OK'"
-              [class.badge--neutral]="vendor.status === 'NOT_LISTED'"
+              [class.badge--neutral]="vendor.status === 'NOT_LISTED' || !vendor.status"
               [class.badge--warning]="vendor.status === 'SUPPLIER_UNAVAILABLE'"
               [class.badge--error]="vendor.status === 'CAPABILITY_NOT_CONFIGURED' || vendor.status === 'CONFIGURATION_ERROR'"
             >
-              {{ vendor.status ? ('PRODUCT.CATALOG.DETAIL.AVAILABILITY.VENDOR_STATUS.' + vendor.status | translate) : ('COMMON.NOT_AVAILABLE' | translate) }}
+              {{ vendor.status ? ('PRODUCT.CATALOG.DETAIL.AVAILABILITY.VENDOR_STATUS.' + vendor.status | translate) : ('PRODUCT.CATALOG.DETAIL.AVAILABILITY.VENDOR_STATUS.UNKNOWN' | translate) }}
             </span>
           </td>
           <td>{{ firstLine(vendor)?.availableQuantity ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>

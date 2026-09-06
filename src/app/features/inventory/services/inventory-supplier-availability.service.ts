@@ -17,6 +17,37 @@ import {
 } from '../models/supplier-availability.models';
 
 /**
+ * Known vendor-status tokens (`SupplierStockAvailabilityVendorStatusEnum` in
+ * `@durion-sdk/supplier`). Anything else maps to `null` rather than being
+ * cast through — mirrors `SupplierOrderTransmissionService.toState`.
+ */
+const KNOWN_VENDOR_STATUSES: ReadonlySet<string> = new Set<SupplierAvailabilityVendorStatus>([
+  'OK',
+  'SUPPLIER_UNAVAILABLE',
+  'NOT_LISTED',
+  'CAPABILITY_NOT_CONFIGURED',
+  'CONFIGURATION_ERROR',
+]);
+
+function toVendorStatus(value: string | undefined): SupplierAvailabilityVendorStatus | null {
+  return value && KNOWN_VENDOR_STATUSES.has(value)
+    ? (value as SupplierAvailabilityVendorStatus)
+    : null;
+}
+
+/** Known line-status tokens (`SupplierStockAvailabilityLineStatusEnum`). */
+const KNOWN_LINE_STATUSES: ReadonlySet<string> = new Set<SupplierAvailabilityLineStatus>([
+  'AVAILABLE',
+  'UNAVAILABLE',
+  'NOT_LISTED',
+  'NOT_ANSWERED',
+]);
+
+function toLineStatus(value: string | undefined): SupplierAvailabilityLineStatus | null {
+  return value && KNOWN_LINE_STATUSES.has(value) ? (value as SupplierAvailabilityLineStatus) : null;
+}
+
+/**
  * Live per-vendor stock-availability check for a purchase-order line (#212).
  *
  * ── Transport ────────────────────────────────────────────────────────────
@@ -71,7 +102,7 @@ export class InventorySupplierAvailabilityService {
     return {
       vendorProfileId: vendor.vendorProfileId ?? '',
       vendorDisplayName: vendor.vendorDisplayName ?? '',
-      status: (vendor.status as unknown as SupplierAvailabilityVendorStatus) ?? null,
+      status: toVendorStatus(vendor.status),
       fetchedAt: vendor.fetchedAt ?? null,
       asOf: vendor.asOf ?? null,
       stale: vendor.stale ?? null,
@@ -81,7 +112,7 @@ export class InventorySupplierAvailabilityService {
 
   private toLine(line: SupplierStockAvailabilityLine): SupplierAvailabilityLine {
     return {
-      status: (line.status as unknown as SupplierAvailabilityLineStatus) ?? null,
+      status: toLineStatus(line.status),
       availableQuantity: line.availableQuantity ?? null,
       currency: line.currency ?? null,
       earliestDeliveryDate: line.earliestDeliveryDate ?? null,

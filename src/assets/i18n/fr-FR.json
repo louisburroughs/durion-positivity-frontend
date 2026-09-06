@@ -2423,7 +2423,8 @@
           },
           "ERROR": {
             "LOCATION_REQUIRED": "Le lieu de livraison est requis.",
-            "LOAD": "Impossible de vérifier la disponibilité du fournisseur."
+            "LOAD": "Impossible de vérifier la disponibilité du fournisseur.",
+            "QUANTITY_MIN": "La quantité doit être d'au moins 1."
           },
           "ACTION": {
             "CHECK": "Vérifier la disponibilité"
@@ -2445,7 +2446,8 @@
             "SUPPLIER_UNAVAILABLE": "Indisponible",
             "NOT_LISTED": "Non répertorié",
             "CAPABILITY_NOT_CONFIGURED": "Non configuré",
-            "CONFIGURATION_ERROR": "Erreur de configuration"
+            "CONFIGURATION_ERROR": "Erreur de configuration",
+            "UNKNOWN": "Inconnu"
           },
           "STALE": "Obsolète",
           "FRESH": "À jour"
@@ -4403,7 +4405,8 @@
           },
           "ERROR": {
             "LOCATION_REQUIRED": "Le lieu de livraison est requis.",
-            "LOAD": "Impossible de vérifier la disponibilité du fournisseur."
+            "LOAD": "Impossible de vérifier la disponibilité du fournisseur.",
+            "QUANTITY_MIN": "La quantité doit être d'au moins 1."
           },
           "ACTION": {
             "CHECK": "Vérifier la disponibilité"
@@ -4425,7 +4428,8 @@
             "SUPPLIER_UNAVAILABLE": "Indisponible",
             "NOT_LISTED": "Non répertorié",
             "CAPABILITY_NOT_CONFIGURED": "Non configuré",
-            "CONFIGURATION_ERROR": "Erreur de configuration"
+            "CONFIGURATION_ERROR": "Erreur de configuration",
+            "UNKNOWN": "Inconnu"
           },
           "STALE": "Obsolète",
           "FRESH": "À jour",
@@ -6128,6 +6132,7 @@
       "EMPTY": "Cette commande n'a pas encore d'historique de transmission avec le fournisseur.",
       "OBSERVED_AT": "Observé par le fournisseur le",
       "RECORDED_AT": "Enregistré par cette plateforme le",
+      "NOT_AVAILABLE": "Non disponible",
       "DESPATCH_DATE": "Date d'expédition",
       "EVENT_TYPE": {
         "CONFIRMED": "Confirmé",

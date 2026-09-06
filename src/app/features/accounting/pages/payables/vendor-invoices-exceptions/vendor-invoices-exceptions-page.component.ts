@@ -10,25 +10,15 @@ import {
 } from '../../../models/payables.models';
 import { PayablesService } from '../../../services/payables.service';
 import { toDatePipeInput } from '../../../utils/date-only.util';
+import { addCalendarDays, toIsoDate } from '../../../utils/date-window.util';
+
+/** Re-exported for existing callers/specs of this module's `toIsoDate`. */
+export { toIsoDate };
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 type CandidatesState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 const PAGE_SIZE = 25;
-
-/**
- * Local-calendar `YYYY-MM-DD`, built from local getters rather than
- * `toISOString().slice(0, 10)` (ADR-0038 rejects that pattern by name):
- * `toISOString()` is UTC, so in a UTC-N zone it rolls into tomorrow's date
- * for the evening hours of today, which would silently shift this due-date
- * filter's window for operators west of UTC.
- */
-export function toIsoDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 /**
  * Payables — vendor invoice exceptions worklist (#214).
@@ -63,8 +53,8 @@ export class VendorInvoicesExceptionsPageComponent {
   readonly totalPages = signal(0);
   readonly totalElements = signal(0);
 
-  readonly dueFrom = signal(toIsoDate(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)));
-  readonly dueTo = signal(toIsoDate(new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)));
+  readonly dueFrom = signal(toIsoDate(addCalendarDays(new Date(), -90)));
+  readonly dueTo = signal(toIsoDate(addCalendarDays(new Date(), 90)));
 
   readonly resolvingBillId = signal<string | null>(null);
   readonly resolveErrorKey = signal<string | null>(null);

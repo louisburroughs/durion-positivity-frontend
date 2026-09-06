@@ -2423,7 +2423,8 @@
           },
           "ERROR": {
             "LOCATION_REQUIRED": "La ubicación de entrega es obligatoria.",
-            "LOAD": "No se pudo verificar la disponibilidad del proveedor."
+            "LOAD": "No se pudo verificar la disponibilidad del proveedor.",
+            "QUANTITY_MIN": "La cantidad debe ser de al menos 1."
           },
           "ACTION": {
             "CHECK": "Verificar disponibilidad"
@@ -2445,7 +2446,8 @@
             "SUPPLIER_UNAVAILABLE": "No disponible",
             "NOT_LISTED": "No listado",
             "CAPABILITY_NOT_CONFIGURED": "No configurado",
-            "CONFIGURATION_ERROR": "Error de configuración"
+            "CONFIGURATION_ERROR": "Error de configuración",
+            "UNKNOWN": "Desconocido"
           },
           "STALE": "Desactualizado",
           "FRESH": "Actualizado"
@@ -4403,7 +4405,8 @@
           },
           "ERROR": {
             "LOCATION_REQUIRED": "La ubicación de entrega es obligatoria.",
-            "LOAD": "No se pudo verificar la disponibilidad del proveedor."
+            "LOAD": "No se pudo verificar la disponibilidad del proveedor.",
+            "QUANTITY_MIN": "La cantidad debe ser de al menos 1."
           },
           "ACTION": {
             "CHECK": "Verificar disponibilidad"
@@ -4425,7 +4428,8 @@
             "SUPPLIER_UNAVAILABLE": "No disponible",
             "NOT_LISTED": "No listado",
             "CAPABILITY_NOT_CONFIGURED": "No configurado",
-            "CONFIGURATION_ERROR": "Error de configuración"
+            "CONFIGURATION_ERROR": "Error de configuración",
+            "UNKNOWN": "Desconocido"
           },
           "STALE": "Desactualizado",
           "FRESH": "Actualizado",
@@ -6128,6 +6132,7 @@
       "EMPTY": "Este pedido aún no tiene historial de transmisión con el proveedor.",
       "OBSERVED_AT": "Observado por el proveedor el",
       "RECORDED_AT": "Registrado por esta plataforma el",
+      "NOT_AVAILABLE": "No disponible",
       "DESPATCH_DATE": "Fecha de despacho",
       "EVENT_TYPE": {
         "CONFIRMED": "Confirmado",

@@ -47,13 +47,21 @@
             <div class="timeline__fact">
               <dt>{{ 'POSITIVITY.TRANSMISSION_TIMELINE.OBSERVED_AT' | translate }}</dt>
               <dd>
-                <time [attr.datetime]="event.observedAt">{{ event.observedAt | date: 'medium' }}</time>
+                @if (event.observedAt) {
+                  <time [attr.datetime]="event.observedAt">{{ event.observedAt | date: 'medium' }}</time>
+                } @else {
+                  {{ 'POSITIVITY.TRANSMISSION_TIMELINE.NOT_AVAILABLE' | translate }}
+                }
               </dd>
             </div>
             <div class="timeline__fact">
               <dt>{{ 'POSITIVITY.TRANSMISSION_TIMELINE.RECORDED_AT' | translate }}</dt>
               <dd>
-                <time [attr.datetime]="event.recordedAt">{{ event.recordedAt | date: 'medium' }}</time>
+                @if (event.recordedAt) {
+                  <time [attr.datetime]="event.recordedAt">{{ event.recordedAt | date: 'medium' }}</time>
+                } @else {
+                  {{ 'POSITIVITY.TRANSMISSION_TIMELINE.NOT_AVAILABLE' | translate }}
+                }
               </dd>
             </div>
             @if (event.supplierOrderNumber) {

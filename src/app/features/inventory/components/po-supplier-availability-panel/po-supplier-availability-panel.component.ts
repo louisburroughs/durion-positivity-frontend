@@ -11,6 +11,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CurrencyPipe } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { integerAtLeast, notBlank } from '../../../../core/util/form-validators';
 import {
   SupplierAvailability,
   SupplierAvailabilityLine,
@@ -54,8 +55,11 @@ export class PoSupplierAvailabilityPanelComponent {
   readonly result = signal<SupplierAvailability | null>(null);
 
   readonly form = new FormGroup({
-    deliveryLocationId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    quantity: new FormControl<number | null>(null),
+    deliveryLocationId: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, notBlank],
+    }),
+    quantity: new FormControl<number | null>(null, { validators: [integerAtLeast(1)] }),
   });
 
   readonly vendors = computed<readonly SupplierAvailabilityVendor[]>(() => this.result()?.vendors ?? []);

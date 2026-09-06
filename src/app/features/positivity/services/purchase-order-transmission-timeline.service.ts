@@ -46,8 +46,8 @@ function toTimelineEvent(dto: SdkPurchaseOrderTransmissionEvent): PurchaseOrderT
     vendorReason: dto.vendorReason ?? null,
     despatchDate: dto.despatchDate ?? null,
     estimatedDeliveryDate: dto.estimatedDeliveryDate ?? null,
-    observedAt: dto.observedAt ?? '',
-    recordedAt: dto.recordedAt ?? '',
+    observedAt: dto.observedAt ?? null,
+    recordedAt: dto.recordedAt ?? null,
   };
 }
 

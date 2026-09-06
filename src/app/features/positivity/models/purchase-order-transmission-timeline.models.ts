@@ -37,10 +37,14 @@ export interface PurchaseOrderTransmissionEvent {
   despatchDate: string | null;
   /** Date-only `YYYY-MM-DD` (ADR-0038). */
   estimatedDeliveryDate: string | null;
-  /** The vendor's clock: when it says this happened. Orders the timeline. */
-  readonly observedAt: string;
-  /** This platform's clock: when the observation was heard. */
-  readonly recordedAt: string;
+  /**
+   * The vendor's clock: when it says this happened. Orders the timeline.
+   * Null when the backend did not supply one — never coerced to `''`, which
+   * `DatePipe`/`Date` would otherwise render as "Invalid Date".
+   */
+  readonly observedAt: string | null;
+  /** This platform's clock: when the observation was heard. Null when absent. */
+  readonly recordedAt: string | null;
 }
 
 /** Paged timeline result, in the server's own order — never re-sorted client-side. */
