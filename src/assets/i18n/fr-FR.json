@@ -2462,7 +2462,8 @@
             "VEHICLE_TYPE": "Type de véhicule",
             "SEASONALITY": "Saisonnalité",
             "VENDOR": "Fournisseur",
-            "UPDATED_AT": "Enrichissement mis à jour"
+            "UPDATED_AT": "Enrichissement mis à jour",
+            "MATCH_STATE": "État de correspondance"
           },
           "ARTWORK_PENDING": "Visuel en attente"
         }
@@ -2507,7 +2508,10 @@
             "TREAD_DESIGN": "Dessin de bande de roulement",
             "VENDOR": "Fournisseur",
             "ARTWORK": "Visuel",
-            "UPDATED_AT": "Mis à jour"
+            "UPDATED_AT": "Mis à jour",
+            "STATE": "État",
+            "AGED_SINCE": "En attente depuis",
+            "ACTIONS": "Actions"
           },
           "ARTWORK_PENDING": "Visuel en attente",
           "PAGINATION": {
@@ -2515,6 +2519,74 @@
             "PREVIOUS": "Précédent",
             "NEXT": "Suivant",
             "STATUS": "Page {{page}} sur {{totalPages}} ({{totalElements}} au total)"
+          },
+          "ROW_ACTION": {
+            "REVIEW": "Examiner"
+          },
+          "FILTER": {
+            "MATCH_STATE_LEGEND": "État de correspondance",
+            "VENDOR_PROFILE_ID_LABEL": "ID de profil fournisseur",
+            "APPLY": "Appliquer les filtres",
+            "CLEAR": "Effacer les filtres"
+          }
+        },
+        "MATCH_STATE": {
+          "UNMATCHED": "Non apparié",
+          "REVIEW": "En révision",
+          "MATCHED": "Apparié",
+          "REJECTED": "Rejeté",
+          "DEFERRED": "Reporté"
+        },
+        "REVIEW": {
+          "TITLE": "Examiner le dessin de bande de roulement",
+          "BACK_TO_WORKLIST": "Retour à la liste de travail",
+          "DESIGN": {
+            "TITLE": "Détails du dessin",
+            "UNAVAILABLE": "Les détails de ce dessin ne sont disponibles que lorsqu'il est ouvert depuis la liste de travail. Les actions ci-dessous s'appliquent tout de même à ce dessin.",
+            "FIELD": {
+              "BRAND": "Marque",
+              "TREAD_DESIGN": "Dessin de bande de roulement",
+              "PRODUCT_NAME": "Nom du produit du fournisseur",
+              "VEHICLE_TYPE": "Type de véhicule",
+              "SEASONALITY": "Saisonnalité",
+              "MATCH_STATE": "État de correspondance",
+              "MATCH_STATE_AT": "Depuis"
+            },
+            "ARTWORK_PENDING": "Visuel en attente"
+          },
+          "CANDIDATES": {
+            "TITLE": "Candidats",
+            "ARIA": "Produits candidats notés",
+            "EMPTY": "Rien n'a dépassé le seuil de révision pour ce dessin.",
+            "ERROR": {
+              "LOAD": "Impossible de charger les candidats de ce dessin."
+            },
+            "TABLE": {
+              "SELECT": "Sélectionner",
+              "PRODUCT_ID": "Produit",
+              "SCORE": "Score",
+              "TIER": "Niveau"
+            },
+            "TIER": {
+              "AUTO": "Automatique",
+              "REVIEW": "Révision",
+              "NONE": "Aucun"
+            }
+          },
+          "RESOLVE": {
+            "TITLE": "Résoudre",
+            "RESTRICTED": "Vous n'avez pas la permission de résoudre les dessins de bande de roulement.",
+            "NOTE_LABEL": "Note (facultatif)",
+            "DEFER_UNTIL_LABEL": "Revenir le (facultatif)",
+            "ATTACH": "Joindre la sélection",
+            "REJECT": "Rejeter",
+            "DEFER": "Reporter",
+            "ERROR": {
+              "CONFLICT": "L'un des produits sélectionnés est déjà associé à un autre dessin par un réviseur.",
+              "INVALID": "Cette action n'est pas valide pour ce dessin.",
+              "NOT_FOUND": "Ce dessin ou l'un des produits sélectionnés est introuvable.",
+              "SUBMIT": "Impossible d'envoyer cette décision. Réessayez."
+            }
           }
         }
       }
@@ -2775,7 +2847,7 @@
         },
         "ENRICHMENT_UNMATCHED": {
           "TITLE": "Dessins de bande de roulement non appariés",
-          "DESCRIPTION": "Passez en revue les dessins de bande de roulement du fournisseur qui n'ont pas pu être associés à un produit du catalogue."
+          "DESCRIPTION": "Filtrez, examinez et résolvez les dessins de bande de roulement du fournisseur que le système de correspondance n'a pas pu associer avec certitude."
         }
       }
     }
