@@ -1,0 +1,154 @@
+<main class="page" aria-labelledby="payables-exceptions-title">
+  <header class="page-header">
+    <h1 id="payables-exceptions-title" class="page-title">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.TITLE' | translate }}</h1>
+    <p class="page-subtitle">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.SUBTITLE' | translate }}</p>
+  </header>
+
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true">
+    <p class="sr-only" role="status">{{ 'COMMON.LOADING' | translate }}</p>
+    @for (_row of [1, 2, 3]; track $index) {
+    <div class="skeleton-row"></div>
+    }
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="error-banner" role="alert">
+    <span class="error-icon" aria-hidden="true">!</span>
+    <span>{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</span>
+  </section>
+  }
+
+  @if (state() === 'empty') {
+  <section class="card state-card">
+    <p>{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.EMPTY' | translate }}</p>
+  </section>
+  }
+
+  @if (state() === 'ready') {
+  <section class="card" aria-label="{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.TABLE.ARIA' | translate }}">
+    @if (resolveErrorKey()) {
+    <p class="error-banner" role="alert">{{ resolveErrorKey()! | translate }}</p>
+    }
+    <ul class="exception-list">
+      @for (row of items(); track row.billId) {
+      <li class="exception-row">
+        <div class="exception-summary">
+          <span class="exception-bill-id">{{ row.billId }}</span>
+          <span class="exception-vendor">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.TABLE.VENDOR' | translate }}: {{ row.vendorId }}</span>
+          <span class="exception-amount">{{ row.amount | currency:'USD':'symbol':'1.2-2' }}</span>
+          <span>{{ row.dueDate ? (row.dueDate | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+        </div>
+
+        <form
+          class="resolve-form"
+          #resolveForm="ngForm"
+          (ngSubmit)="resolveException(row.billId, resolveForm.value.action, resolveForm.value.reason)"
+        >
+          <label class="sr-only" for="action-{{ row.billId }}">
+            {{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.FIELD.ACTION' | translate }}
+          </label>
+          <select id="action-{{ row.billId }}" name="action" class="input-underline" ngModel required>
+            <option value="ACCEPT">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ACTION.ACCEPT' | translate }}</option>
+            <option value="VOID">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ACTION.VOID' | translate }}</option>
+            <option value="CORRECT">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ACTION.CORRECT' | translate }}</option>
+          </select>
+          <label class="sr-only" for="reason-{{ row.billId }}">
+            {{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.FIELD.REASON' | translate }}
+          </label>
+          <input
+            id="reason-{{ row.billId }}"
+            name="reason"
+            class="input-underline"
+            type="text"
+            ngModel
+            required
+            [attr.placeholder]="'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.FIELD.REASON_PLACEHOLDER' | translate"
+          />
+          <button class="btn-secondary" type="submit" [disabled]="resolvingBillId() === row.billId">
+            {{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ACTION.SUBMIT' | translate }}
+          </button>
+        </form>
+      </li>
+      }
+    </ul>
+
+    <nav class="pagination" aria-label="{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.PAGINATION.ARIA' | translate }}">
+      <button class="btn-secondary" type="button" [disabled]="page() === 0" (click)="previousPage()">
+        {{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.PAGINATION.PREVIOUS' | translate }}
+      </button>
+      <span class="pagination-status">
+        {{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.PAGINATION.STATUS' | translate:{ page: page() + 1, totalPages: totalPages(), totalElements: totalElements() } }}
+      </span>
+      <button class="btn-secondary" type="button" [disabled]="page() + 1 >= totalPages()" (click)="nextPage()">
+        {{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.PAGINATION.NEXT' | translate }}
+      </button>
+    </nav>
+  </section>
+  }
+
+  <section class="card candidates-panel" aria-labelledby="candidates-title">
+    <h2 id="candidates-title">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.TITLE' | translate }}</h2>
+    <p class="hint">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.HINT' | translate }}</p>
+
+    <form class="lookup-form" #lookupForm="ngForm" (ngSubmit)="lookupCandidates(lookupForm.value.invoiceEventId)">
+      <label>
+        {{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.FIELD.INVOICE_EVENT_ID' | translate }}
+        <input
+          name="invoiceEventId"
+          class="input-underline"
+          type="text"
+          ngModel
+          required
+          [attr.placeholder]="'ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.FIELD.INVOICE_EVENT_ID_PLACEHOLDER' | translate"
+        />
+      </label>
+      <button class="btn-primary" type="submit" [disabled]="candidatesState() === 'loading'">
+        {{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.ACTION.LOOKUP' | translate }}
+      </button>
+    </form>
+
+    @if (candidatesState() === 'loading') {
+    <div class="skeleton-row" aria-hidden="true"></div>
+    }
+
+    @if (candidatesState() === 'error') {
+    <p class="error-banner" role="alert">
+      {{ candidatesErrorKey() ? (candidatesErrorKey()! | translate) : ('COMMON.ERROR' | translate) }}
+    </p>
+    }
+
+    @if (candidatesState() === 'empty') {
+    <p class="empty-hint">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.EMPTY' | translate }}</p>
+    }
+
+    @if (selectErrorKey()) {
+    <p class="error-banner" role="alert">{{ selectErrorKey()! | translate }}</p>
+    }
+
+    @if (candidatesState() === 'ready') {
+    <ul class="candidate-list">
+      @for (candidate of candidates(); track candidate.candidateId) {
+      <li class="candidate-row">
+        <span>{{ candidate.billNumber ?? candidate.vendorBillId }}</span>
+        <span>{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.SCORE' | translate }}: {{ candidate.matchScore ?? ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+        <span>{{ candidate.billTotalAmount !== null && candidate.billTotalAmount !== undefined ? (candidate.billTotalAmount | currency:'USD':'symbol':'1.2-2') : ('COMMON.NOT_AVAILABLE' | translate) }}</span>
+        @if (candidate.resolved) {
+        <span class="badge badge--success">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.RESOLVED' | translate }}</span>
+        } @else {
+        <button
+          class="btn-secondary"
+          type="button"
+          [disabled]="selectingCandidateId() === candidate.candidateId"
+          (click)="selectCandidate(candidate.candidateId)"
+        >
+          {{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.CANDIDATES.ACTION.SELECT' | translate }}
+        </button>
+        }
+      </li>
+      }
+    </ul>
+    }
+  </section>
+</main>

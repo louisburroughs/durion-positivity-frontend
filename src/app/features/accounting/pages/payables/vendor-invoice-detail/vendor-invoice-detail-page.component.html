@@ -1,0 +1,122 @@
+<main class="page" aria-labelledby="payables-detail-title">
+  <div class="back-row">
+    <button class="btn-secondary" type="button" (click)="goBack()">
+      {{ 'COMMON.BACK' | translate }}
+    </button>
+  </div>
+
+  @if (state() === 'loading') {
+  <section class="card" aria-busy="true">
+    <p class="sr-only" role="status">{{ 'COMMON.LOADING' | translate }}</p>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+  </section>
+  }
+
+  @if (state() === 'error') {
+  <section class="error-banner" role="alert">
+    <span class="error-icon" aria-hidden="true">!</span>
+    <span>{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</span>
+  </section>
+  }
+
+  @if (state() === 'ready' && bill()) {
+  <header class="page-header">
+    <h1 id="payables-detail-title" class="page-title">
+      {{ 'ACCOUNTING.PAYABLES.DETAIL.TITLE' | translate }} — {{ bill()!.billNumber }}
+    </h1>
+    <span class="badge"
+      [class.badge--success]="bill()!.status === 'APPROVED' || bill()!.status === 'PAID'"
+      [class.badge--warning]="bill()!.status === 'MATCH_EXCEPTION' || bill()!.status === 'PENDING_RECEIPT_MATCH'"
+      [class.badge--error]="bill()!.status === 'REJECTED' || bill()!.status === 'VOIDED'">
+      {{ 'ACCOUNTING.PAYABLES.STATUS.' + bill()!.status | translate }}
+    </span>
+  </header>
+
+  <section class="card">
+    <dl class="detail-grid">
+      <div>
+        <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.VENDOR' | translate }}</dt>
+        <dd>{{ bill()!.vendorName ?? bill()!.vendorId }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.AMOUNT' | translate }}</dt>
+        <dd>{{ bill()!.totalAmount | currency:'USD':'symbol':'1.2-2' }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.BILL_DATE' | translate }}</dt>
+        <dd>{{ bill()!.billDate ? (bill()!.billDate | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.DUE_DATE' | translate }}</dt>
+        <dd>{{ bill()!.dueDate ? (bill()!.dueDate | date:'mediumDate') : ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+      </div>
+      @if (bill()!.approvalJustification) {
+      <div>
+        <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.APPROVAL_JUSTIFICATION' | translate }}</dt>
+        <dd>{{ bill()!.approvalJustification }}</dd>
+      </div>
+      }
+      @if (bill()!.rejectionReason) {
+      <div>
+        <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.REJECTION_REASON' | translate }}</dt>
+        <dd>{{ bill()!.rejectionReason }}</dd>
+      </div>
+      }
+      @if (bill()!.journalEntryId) {
+      <div>
+        <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.JOURNAL_ENTRY' | translate }}</dt>
+        <dd>{{ bill()!.journalEntryId }}</dd>
+      </div>
+      }
+      @if (bill()!.paymentTransactionId) {
+      <div>
+        <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.PAYMENT_TRANSACTION' | translate }}</dt>
+        <dd>{{ bill()!.paymentTransactionId }}</dd>
+      </div>
+      }
+      @if (bill()!.originEventId) {
+      <div>
+        <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.ORIGIN_EVENT' | translate }}</dt>
+        <dd>{{ bill()!.originEventId }} ({{ bill()!.originEventType }})</dd>
+      </div>
+      }
+      <div>
+        <dt>{{ 'ACCOUNTING.PAYABLES.DETAIL.FIELD.CREATED_AT' | translate }}</dt>
+        <dd>{{ bill()!.createdAt | date:'medium' }} — {{ bill()!.createdBy ?? ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  @if (bill()!.status === 'MATCH_EXCEPTION') {
+  <section class="card" aria-labelledby="resolve-title">
+    <h2 id="resolve-title">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.TITLE' | translate }}</h2>
+
+    @if (resolveErrorKey()) {
+    <p class="error-banner" role="alert">{{ resolveErrorKey()! | translate }}</p>
+    }
+
+    <form class="resolve-form"
+      (submit)="resolveException($any(action.value), reason.value); $event.preventDefault()">
+      <label>
+        {{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.FIELD.ACTION' | translate }}
+        <select #action class="input-underline">
+          <option value="ACCEPT">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ACTION.ACCEPT' | translate }}</option>
+          <option value="VOID">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ACTION.VOID' | translate }}</option>
+          <option value="CORRECT">{{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ACTION.CORRECT' | translate }}</option>
+        </select>
+      </label>
+      <label>
+        {{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.FIELD.REASON' | translate }}
+        <input #reason class="input-underline" type="text" required
+          [attr.placeholder]="'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.FIELD.REASON_PLACEHOLDER' | translate" />
+      </label>
+      <button class="btn-primary" type="submit" [disabled]="resolving()">
+        {{ 'ACCOUNTING.PAYABLES.EXCEPTIONS.RESOLVE.ACTION.SUBMIT' | translate }}
+      </button>
+    </form>
+  </section>
+  }
+  }
+</main>

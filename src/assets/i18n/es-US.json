@@ -1914,6 +1914,18 @@
         "LABOR_OVERHEAD": {
           "TITLE": "Informe de costos de mano de obra y gastos generales",
           "DESCRIPTION": "Costos mensuales y acumulados del año de mano de obra y gastos generales por ubicación y año fiscal, a partir de los datos contabilizados del libro mayor."
+        },
+        "PAYABLES_LIST": {
+          "TITLE": "Facturas de proveedores",
+          "DESCRIPTION": "Explore las facturas de proveedor por fecha de vencimiento y estado."
+        },
+        "PAYABLES_EXCEPTIONS": {
+          "TITLE": "Excepciones de facturas de proveedores",
+          "DESCRIPTION": "Resuelva facturas detenidas por una discrepancia de cotejo o un cotejo de factura ambiguo."
+        },
+        "PAYABLES_DETAIL": {
+          "TITLE": "Detalle de factura de proveedor",
+          "DESCRIPTION": "Abra una factura de proveedor por su identificador."
         }
       },
       "FIELD": {
@@ -1937,7 +1949,8 @@
         "OPEN_CREDIT_MEMO": "Abrir nota de crédito",
         "OPEN_VENDOR_PAYMENT": "Abrir pago a proveedor",
         "OPEN_INVOICE_STATUS": "Ver estado",
-        "OPENING_PAGE": "Abriendo..."
+        "OPENING_PAGE": "Abriendo...",
+        "OPEN_VENDOR_BILL": "Abrir factura de proveedor"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Se requiere un ID.",
@@ -2198,6 +2211,120 @@
         "TOTAL_LABOR_OVERHEAD": {
           "LABEL": "Total de mano de obra y gastos generales",
           "DEFINITION": "Total general: Total de mano de obra + Total de gastos generales."
+        }
+      }
+    },
+    "PAYABLES": {
+      "LIST": {
+        "TITLE": "Facturas de proveedores",
+        "SUBTITLE": "Facturas de proveedor cotejadas con la mercancía recibida, en todos los estados del ciclo de vida.",
+        "FILTERS": {
+          "ARIA": "Filtros de facturas de proveedores",
+          "DUE_FROM": "Vencimiento desde",
+          "DUE_TO": "Vencimiento hasta",
+          "STATUS": "Estado",
+          "STATUS_ALL": "Todos los estados",
+          "APPLY": "Aplicar filtros"
+        },
+        "EMPTY": "No hay facturas de proveedor que vencan en este período.",
+        "ERROR": {
+          "LOAD": "No se pudieron cargar las facturas de proveedores."
+        },
+        "TABLE": {
+          "ARIA": "Facturas de proveedores",
+          "BILL_ID": "Factura",
+          "VENDOR": "Proveedor",
+          "AMOUNT": "Monto",
+          "DUE_DATE": "Fecha de vencimiento",
+          "STATUS": "Estado"
+        },
+        "PAGINATION": {
+          "ARIA": "Páginas de facturas de proveedores",
+          "PREVIOUS": "Anterior",
+          "NEXT": "Siguiente",
+          "STATUS": "Página {{page}} de {{totalPages}} ({{totalElements}} en total)"
+        }
+      },
+      "STATUS": {
+        "PENDING_RECEIPT_MATCH": "Pendiente de cotejo de recepción",
+        "MATCH_EXCEPTION": "Excepción de cotejo",
+        "APPROVED": "Aprobada",
+        "REJECTED": "Rechazada",
+        "PAID": "Pagada",
+        "VOIDED": "Anulada"
+      },
+      "EXCEPTIONS": {
+        "TITLE": "Excepciones de facturas de proveedores",
+        "SUBTITLE": "Facturas detenidas por el cotejo de tres vías: una discrepancia de cantidad o precio, una puntuación de confianza media, o un cotejo ambiguo.",
+        "EMPTY": "Actualmente no hay facturas de proveedor en excepción de cotejo.",
+        "ERROR": {
+          "LOAD": "No se pudieron cargar las excepciones de facturas de proveedores."
+        },
+        "TABLE": {
+          "ARIA": "Excepciones de facturas de proveedores",
+          "VENDOR": "Proveedor"
+        },
+        "PAGINATION": {
+          "ARIA": "Páginas de facturas de proveedores",
+          "PREVIOUS": "Anterior",
+          "NEXT": "Siguiente",
+          "STATUS": "Página {{page}} de {{totalPages}} ({{totalElements}} en total)"
+        },
+        "RESOLVE": {
+          "TITLE": "Resolver excepción",
+          "FIELD": {
+            "ACTION": "Resolución",
+            "REASON": "Motivo",
+            "REASON_PLACEHOLDER": "Explique la resolución para el registro de auditoría"
+          },
+          "ACTION": {
+            "ACCEPT": "Aceptar a pesar de la discrepancia",
+            "VOID": "Anular",
+            "CORRECT": "Devolver para corrección",
+            "SUBMIT": "Resolver"
+          },
+          "ERROR": {
+            "REASON_REQUIRED": "Se requiere un motivo para resolver esta excepción.",
+            "SUBMIT": "No se pudo resolver esta excepción."
+          }
+        },
+        "CANDIDATES": {
+          "TITLE": "Candidatos de cotejo ambiguo",
+          "HINT": "Un cotejo de factura ambiguo detiene varias facturas candidatas puntuadas para un evento de factura desencadenante. Búsquelas por el ID de ese evento.",
+          "FIELD": {
+            "INVOICE_EVENT_ID": "ID del evento de factura",
+            "INVOICE_EVENT_ID_PLACEHOLDER": "Ingrese el ID del evento de factura"
+          },
+          "ACTION": {
+            "LOOKUP": "Buscar candidatos",
+            "SELECT": "Seleccionar esta factura"
+          },
+          "EMPTY": "No existen candidatos sin resolver para ese evento de factura.",
+          "ERROR": {
+            "LOAD": "No se pudieron cargar los candidatos de cotejo.",
+            "SELECT": "No se pudo seleccionar este candidato."
+          },
+          "SCORE": "Puntuación de coincidencia",
+          "RESOLVED": "Resuelto"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Factura de proveedor",
+        "ERROR": {
+          "MISSING_BILL_ID": "No se especificó ninguna factura.",
+          "LOAD": "No se pudo cargar esta factura de proveedor."
+        },
+        "FIELD": {
+          "VENDOR": "Proveedor",
+          "AMOUNT": "Monto",
+          "BILL_DATE": "Fecha de factura",
+          "DUE_DATE": "Fecha de vencimiento",
+          "APPROVAL_JUSTIFICATION": "Justificación de aprobación",
+          "REJECTION_REASON": "Motivo de rechazo",
+          "JOURNAL_ENTRY": "Asiento contable",
+          "PAYMENT_TRANSACTION": "Transacción de pago",
+          "ORIGIN_EVENT": "Evento de origen",
+          "CREATED_AT": "Creada"
         }
       }
     }

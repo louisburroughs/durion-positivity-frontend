@@ -1914,6 +1914,18 @@
         "LABOR_OVERHEAD": {
           "TITLE": "Labor & Overhead Cost Report",
           "DESCRIPTION": "Monthly + YTD labor and overhead costs by location and fiscal year, from posted GL data."
+        },
+        "PAYABLES_LIST": {
+          "TITLE": "Vendor Invoices",
+          "DESCRIPTION": "Browse vendor bills by due date and status."
+        },
+        "PAYABLES_EXCEPTIONS": {
+          "TITLE": "Vendor Invoice Exceptions",
+          "DESCRIPTION": "Resolve bills parked by a match discrepancy or an ambiguous invoice match."
+        },
+        "PAYABLES_DETAIL": {
+          "TITLE": "Vendor Bill Detail",
+          "DESCRIPTION": "Open one vendor bill by its identifier."
         }
       },
       "FIELD": {
@@ -1937,7 +1949,8 @@
         "OPEN_CREDIT_MEMO": "Open Credit Memo",
         "OPEN_VENDOR_PAYMENT": "Open Vendor Payment",
         "OPEN_INVOICE_STATUS": "View Status",
-        "OPENING_PAGE": "Opening..."
+        "OPENING_PAGE": "Opening...",
+        "OPEN_VENDOR_BILL": "Open Vendor Bill"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "An ID is required.",
@@ -2198,6 +2211,120 @@
         "TOTAL_LABOR_OVERHEAD": {
           "LABEL": "Total Labor & Overhead",
           "DEFINITION": "Grand total: Total Labor + Total Overhead."
+        }
+      }
+    },
+    "PAYABLES": {
+      "LIST": {
+        "TITLE": "Vendor Invoices",
+        "SUBTITLE": "Vendor bills matched against goods received, across every lifecycle status.",
+        "FILTERS": {
+          "ARIA": "Vendor invoice filters",
+          "DUE_FROM": "Due From",
+          "DUE_TO": "Due To",
+          "STATUS": "Status",
+          "STATUS_ALL": "All Statuses",
+          "APPLY": "Apply Filters"
+        },
+        "EMPTY": "No vendor bills are due in this window.",
+        "ERROR": {
+          "LOAD": "Unable to load vendor invoices."
+        },
+        "TABLE": {
+          "ARIA": "Vendor invoices",
+          "BILL_ID": "Bill",
+          "VENDOR": "Vendor",
+          "AMOUNT": "Amount",
+          "DUE_DATE": "Due Date",
+          "STATUS": "Status"
+        },
+        "PAGINATION": {
+          "ARIA": "Vendor invoice pages",
+          "PREVIOUS": "Previous",
+          "NEXT": "Next",
+          "STATUS": "Page {{page}} of {{totalPages}} ({{totalElements}} total)"
+        }
+      },
+      "STATUS": {
+        "PENDING_RECEIPT_MATCH": "Pending Receipt Match",
+        "MATCH_EXCEPTION": "Match Exception",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "PAID": "Paid",
+        "VOIDED": "Voided"
+      },
+      "EXCEPTIONS": {
+        "TITLE": "Vendor Invoice Exceptions",
+        "SUBTITLE": "Bills parked by the three-way match: a quantity or price discrepancy, a medium-confidence score, or an ambiguous match.",
+        "EMPTY": "No vendor bills are currently in a match exception.",
+        "ERROR": {
+          "LOAD": "Unable to load vendor invoice exceptions."
+        },
+        "TABLE": {
+          "ARIA": "Vendor invoice exceptions",
+          "VENDOR": "Vendor"
+        },
+        "PAGINATION": {
+          "ARIA": "Vendor invoice pages",
+          "PREVIOUS": "Previous",
+          "NEXT": "Next",
+          "STATUS": "Page {{page}} of {{totalPages}} ({{totalElements}} total)"
+        },
+        "RESOLVE": {
+          "TITLE": "Resolve Exception",
+          "FIELD": {
+            "ACTION": "Resolution",
+            "REASON": "Reason",
+            "REASON_PLACEHOLDER": "Explain the resolution for the audit trail"
+          },
+          "ACTION": {
+            "ACCEPT": "Accept Despite Discrepancy",
+            "VOID": "Void",
+            "CORRECT": "Send Back for Correction",
+            "SUBMIT": "Resolve"
+          },
+          "ERROR": {
+            "REASON_REQUIRED": "A reason is required to resolve this exception.",
+            "SUBMIT": "Unable to resolve this exception."
+          }
+        },
+        "CANDIDATES": {
+          "TITLE": "Ambiguous Match Candidates",
+          "HINT": "An ambiguous invoice match parks several scored candidate bills for one triggering invoice event. Look them up by that event's id.",
+          "FIELD": {
+            "INVOICE_EVENT_ID": "Invoice Event ID",
+            "INVOICE_EVENT_ID_PLACEHOLDER": "Enter the invoice event ID"
+          },
+          "ACTION": {
+            "LOOKUP": "Look Up Candidates",
+            "SELECT": "Select This Bill"
+          },
+          "EMPTY": "No unresolved candidates exist for that invoice event.",
+          "ERROR": {
+            "LOAD": "Unable to load match candidates.",
+            "SELECT": "Unable to select this candidate."
+          },
+          "SCORE": "Match Score",
+          "RESOLVED": "Resolved"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Vendor Bill",
+        "ERROR": {
+          "MISSING_BILL_ID": "No bill was specified.",
+          "LOAD": "Unable to load this vendor bill."
+        },
+        "FIELD": {
+          "VENDOR": "Vendor",
+          "AMOUNT": "Amount",
+          "BILL_DATE": "Bill Date",
+          "DUE_DATE": "Due Date",
+          "APPROVAL_JUSTIFICATION": "Approval Justification",
+          "REJECTION_REASON": "Rejection Reason",
+          "JOURNAL_ENTRY": "Journal Entry",
+          "PAYMENT_TRANSACTION": "Payment Transaction",
+          "ORIGIN_EVENT": "Origin Event",
+          "CREATED_AT": "Created"
         }
       }
     }

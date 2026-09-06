@@ -1914,6 +1914,18 @@
         "LABOR_OVERHEAD": {
           "TITLE": "Rapport des coûts de main-d’œuvre et frais généraux",
           "DESCRIPTION": "Coûts mensuels et cumulatifs annuels de main-d’œuvre et frais généraux par emplacement et exercice, à partir des données comptabilisées du grand livre."
+        },
+        "PAYABLES_LIST": {
+          "TITLE": "Factures fournisseurs",
+          "DESCRIPTION": "Parcourez les factures fournisseurs par date d'échéance et par statut."
+        },
+        "PAYABLES_EXCEPTIONS": {
+          "TITLE": "Exceptions de factures fournisseurs",
+          "DESCRIPTION": "Résolvez les factures mises en attente par un écart de rapprochement ou un rapprochement de facture ambigu."
+        },
+        "PAYABLES_DETAIL": {
+          "TITLE": "Détail de facture fournisseur",
+          "DESCRIPTION": "Ouvrez une facture fournisseur par son identifiant."
         }
       },
       "FIELD": {
@@ -1937,7 +1949,8 @@
         "OPEN_CREDIT_MEMO": "Ouvrir l'avoir",
         "OPEN_VENDOR_PAYMENT": "Ouvrir le paiement fournisseur",
         "OPEN_INVOICE_STATUS": "Voir le statut",
-        "OPENING_PAGE": "Ouverture..."
+        "OPENING_PAGE": "Ouverture...",
+        "OPEN_VENDOR_BILL": "Ouvrir la facture fournisseur"
       },
       "ERROR": {
         "REQUIRED_IDENTIFIER": "Un ID est requis.",
@@ -2198,6 +2211,120 @@
         "TOTAL_LABOR_OVERHEAD": {
           "LABEL": "Total de la main-d'œuvre et des frais généraux",
           "DEFINITION": "Total général : Total de la main-d'œuvre + Total des frais généraux."
+        }
+      }
+    },
+    "PAYABLES": {
+      "LIST": {
+        "TITLE": "Factures fournisseurs",
+        "SUBTITLE": "Factures fournisseurs rapprochées de la marchandise reçue, tous statuts de cycle de vie confondus.",
+        "FILTERS": {
+          "ARIA": "Filtres des factures fournisseurs",
+          "DUE_FROM": "Échéance à partir de",
+          "DUE_TO": "Échéance jusqu'à",
+          "STATUS": "Statut",
+          "STATUS_ALL": "Tous les statuts",
+          "APPLY": "Appliquer les filtres"
+        },
+        "EMPTY": "Aucune facture fournisseur n'échoit dans cette période.",
+        "ERROR": {
+          "LOAD": "Impossible de charger les factures fournisseurs."
+        },
+        "TABLE": {
+          "ARIA": "Factures fournisseurs",
+          "BILL_ID": "Facture",
+          "VENDOR": "Fournisseur",
+          "AMOUNT": "Montant",
+          "DUE_DATE": "Date d'échéance",
+          "STATUS": "Statut"
+        },
+        "PAGINATION": {
+          "ARIA": "Pages des factures fournisseurs",
+          "PREVIOUS": "Précédent",
+          "NEXT": "Suivant",
+          "STATUS": "Page {{page}} sur {{totalPages}} ({{totalElements}} au total)"
+        }
+      },
+      "STATUS": {
+        "PENDING_RECEIPT_MATCH": "En attente de rapprochement de réception",
+        "MATCH_EXCEPTION": "Exception de rapprochement",
+        "APPROVED": "Approuvée",
+        "REJECTED": "Rejetée",
+        "PAID": "Payée",
+        "VOIDED": "Annulée"
+      },
+      "EXCEPTIONS": {
+        "TITLE": "Exceptions de factures fournisseurs",
+        "SUBTITLE": "Factures mises en attente par le rapprochement à trois voies : un écart de quantité ou de prix, un score de confiance moyen, ou un rapprochement ambigu.",
+        "EMPTY": "Aucune facture fournisseur n'est actuellement en exception de rapprochement.",
+        "ERROR": {
+          "LOAD": "Impossible de charger les exceptions de factures fournisseurs."
+        },
+        "TABLE": {
+          "ARIA": "Exceptions de factures fournisseurs",
+          "VENDOR": "Fournisseur"
+        },
+        "PAGINATION": {
+          "ARIA": "Pages des factures fournisseurs",
+          "PREVIOUS": "Précédent",
+          "NEXT": "Suivant",
+          "STATUS": "Page {{page}} sur {{totalPages}} ({{totalElements}} au total)"
+        },
+        "RESOLVE": {
+          "TITLE": "Résoudre l'exception",
+          "FIELD": {
+            "ACTION": "Résolution",
+            "REASON": "Motif",
+            "REASON_PLACEHOLDER": "Expliquez la résolution pour la piste d'audit"
+          },
+          "ACTION": {
+            "ACCEPT": "Accepter malgré l'écart",
+            "VOID": "Annuler",
+            "CORRECT": "Retourner pour correction",
+            "SUBMIT": "Résoudre"
+          },
+          "ERROR": {
+            "REASON_REQUIRED": "Un motif est requis pour résoudre cette exception.",
+            "SUBMIT": "Impossible de résoudre cette exception."
+          }
+        },
+        "CANDIDATES": {
+          "TITLE": "Candidats de rapprochement ambigu",
+          "HINT": "Un rapprochement de facture ambigu met en attente plusieurs factures candidates notées pour un événement de facture déclencheur. Recherchez-les par l'ID de cet événement.",
+          "FIELD": {
+            "INVOICE_EVENT_ID": "ID de l'événement de facture",
+            "INVOICE_EVENT_ID_PLACEHOLDER": "Entrez l'ID de l'événement de facture"
+          },
+          "ACTION": {
+            "LOOKUP": "Rechercher les candidats",
+            "SELECT": "Sélectionner cette facture"
+          },
+          "EMPTY": "Aucun candidat non résolu n'existe pour cet événement de facture.",
+          "ERROR": {
+            "LOAD": "Impossible de charger les candidats de rapprochement.",
+            "SELECT": "Impossible de sélectionner ce candidat."
+          },
+          "SCORE": "Score de correspondance",
+          "RESOLVED": "Résolu"
+        }
+      },
+      "DETAIL": {
+        "TITLE": "Facture fournisseur",
+        "ERROR": {
+          "MISSING_BILL_ID": "Aucune facture n'a été spécifiée.",
+          "LOAD": "Impossible de charger cette facture fournisseur."
+        },
+        "FIELD": {
+          "VENDOR": "Fournisseur",
+          "AMOUNT": "Montant",
+          "BILL_DATE": "Date de facture",
+          "DUE_DATE": "Date d'échéance",
+          "APPROVAL_JUSTIFICATION": "Justification d'approbation",
+          "REJECTION_REASON": "Motif de rejet",
+          "JOURNAL_ENTRY": "Écriture de journal",
+          "PAYMENT_TRANSACTION": "Transaction de paiement",
+          "ORIGIN_EVENT": "Événement d'origine",
+          "CREATED_AT": "Créée"
         }
       }
     }

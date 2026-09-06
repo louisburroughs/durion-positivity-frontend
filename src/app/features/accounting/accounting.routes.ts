@@ -122,6 +122,27 @@ export const ACCOUNTING_ROUTES: Routes = [
           ),
       },
       {
+        path: 'payables/vendor-invoices',
+        loadComponent: () =>
+          import('./pages/payables/vendor-invoices-list/vendor-invoices-list-page.component').then(
+            m => m.VendorInvoicesListPageComponent,
+          ),
+      },
+      {
+        path: 'payables/vendor-invoices/exceptions',
+        loadComponent: () =>
+          import(
+            './pages/payables/vendor-invoices-exceptions/vendor-invoices-exceptions-page.component'
+          ).then(m => m.VendorInvoicesExceptionsPageComponent),
+      },
+      {
+        path: 'payables/vendor-invoices/:billId',
+        loadComponent: () =>
+          import('./pages/payables/vendor-invoice-detail/vendor-invoice-detail-page.component').then(
+            m => m.VendorInvoiceDetailPageComponent,
+          ),
+      },
+      {
         path: 'reports/labor-overhead',
         loadComponent: () =>
           import('./pages/reports/labor-overhead/labor-overhead-report-page.component').then(
