@@ -1,0 +1,292 @@
+<main class="review-page" aria-labelledby="review-page-title">
+  <nav class="review-page__breadcrumb" [attr.aria-label]="'POSITIVITY.COMMON.BREADCRUMB' | translate">
+    <a [routerLink]="['/app', 'positivity']">{{ 'POSITIVITY.PROFILES.TITLE' | translate }}</a>
+  </nav>
+
+  <header class="review-page__header">
+    <div>
+      <h1 id="review-page-title">{{ 'POSITIVITY.MANUAL_REVIEW.TITLE' | translate }}</h1>
+      <p class="review-page__subtitle">{{ 'POSITIVITY.MANUAL_REVIEW.SUBTITLE' | translate }}</p>
+    </div>
+  </header>
+
+  <p class="pos-banner pos-banner--info">{{ 'POSITIVITY.MANUAL_REVIEW.NO_RESEND_NOTE' | translate }}</p>
+
+  <form class="review-filters" [formGroup]="filterForm" (ngSubmit)="applyFilter()">
+    <div class="pos-field">
+      <label class="pos-field__label" for="review-vendor">
+        {{ 'POSITIVITY.MANUAL_REVIEW.FILTER.VENDOR' | translate }}
+      </label>
+      <select id="review-vendor" class="pos-field__input" formControlName="vendorProfileId">
+        <option value="">{{ 'POSITIVITY.MANUAL_REVIEW.FILTER.ALL_VENDORS' | translate }}</option>
+        @for (profile of profiles(); track profile.vendorProfileId) {
+          <option [value]="profile.vendorProfileId">{{ profile.displayName }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="review-search">
+        {{ 'POSITIVITY.MANUAL_REVIEW.FILTER.SEARCH' | translate }}
+      </label>
+      <input
+        id="review-search"
+        class="pos-field__input"
+        type="text"
+        formControlName="search"
+        aria-describedby="review-search-hint"
+      />
+      <p class="pos-field__hint" id="review-search-hint">
+        {{ 'POSITIVITY.MANUAL_REVIEW.FILTER.SEARCH_HINT' | translate }}
+      </p>
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="review-date-from">
+        {{ 'POSITIVITY.MANUAL_REVIEW.FILTER.DATE_FROM' | translate }}
+      </label>
+      <input id="review-date-from" class="pos-field__input" type="date" formControlName="dateFrom" />
+    </div>
+
+    <div class="pos-field">
+      <label class="pos-field__label" for="review-date-to">
+        {{ 'POSITIVITY.MANUAL_REVIEW.FILTER.DATE_TO' | translate }}
+      </label>
+      <input id="review-date-to" class="pos-field__input" type="date" formControlName="dateTo" />
+    </div>
+
+    <div class="review-filters__actions">
+      <button class="pos-btn pos-btn--primary" type="submit">
+        {{ 'POSITIVITY.COMMON.APPLY_FILTER' | translate }}
+      </button>
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="clearFilter()">
+        {{ 'POSITIVITY.COMMON.CLEAR_FILTER' | translate }}
+      </button>
+    </div>
+  </form>
+
+  @if (state() === 'error') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      <button class="pos-btn pos-btn--secondary" type="button" (click)="load()">
+        {{ 'POSITIVITY.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="pos-banner pos-banner--error" role="alert">
+      {{ 'POSITIVITY.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <p class="pos-banner" aria-live="polite">{{ 'POSITIVITY.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'empty') {
+    <p class="review-page__empty">{{ 'POSITIVITY.MANUAL_REVIEW.EMPTY' | translate }}</p>
+  }
+
+  @if (state() === 'ready') {
+    <p class="review-page__count" aria-live="polite">
+      {{ 'POSITIVITY.MANUAL_REVIEW.COUNT' | translate: { count: totalCount() } }}
+    </p>
+
+    <div class="pos-table-wrap">
+      <table class="pos-table">
+        <caption class="sr-only">{{ 'POSITIVITY.MANUAL_REVIEW.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'POSITIVITY.MANUAL_REVIEW.TABLE.PURCHASE_ORDER' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.MANUAL_REVIEW.TABLE.VENDOR' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.MANUAL_REVIEW.TABLE.STATUS' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.TRANSMISSION.LAST_STATUS_AT' | translate }}</th>
+            <th scope="col">{{ 'POSITIVITY.TRANSMISSION.DISPATCH_ATTEMPTS' | translate }}</th>
+            <th scope="col">
+              <span class="sr-only">{{ 'POSITIVITY.COMMON.ACTIONS' | translate }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (transmission of items(); track transmission.transmissionIntentId) {
+            <tr>
+              <th scope="row">{{ transmission.purchaseOrderNumber || '—' }}</th>
+              <td>{{ vendorLabel(transmission) }}</td>
+              <td>
+                <app-supplier-status-chip
+                  labelKey="POSITIVITY.TRANSMISSION.STATE.MANUAL_REVIEW"
+                  [tone]="stateTone"
+                  icon="rule"
+                  descriptionKey="POSITIVITY.TRANSMISSION.STATE_LABEL"
+                />
+              </td>
+              <td>
+                @if (transmission.lastStatusAt) {
+                  <time [attr.datetime]="transmission.lastStatusAt">
+                    {{ transmission.lastStatusAt | date: 'medium' }}
+                  </time>
+                } @else {
+                  —
+                }
+              </td>
+              <td>{{ transmission.dispatchAttempts ?? '—' }}</td>
+              <td>
+                <button
+                  class="pos-btn pos-btn--secondary"
+                  type="button"
+                  [attr.aria-expanded]="isExpanded(transmission)"
+                  [attr.aria-controls]="'review-detail-' + transmission.transmissionIntentId"
+                  (click)="toggleRow(transmission)"
+                >
+                  {{
+                    (isExpanded(transmission)
+                      ? 'POSITIVITY.MANUAL_REVIEW.TABLE.CLOSE'
+                      : 'POSITIVITY.MANUAL_REVIEW.TABLE.REVIEW'
+                    ) | translate
+                  }}
+                </button>
+              </td>
+            </tr>
+            @if (isExpanded(transmission)) {
+              <tr>
+                <td colspan="6">
+                  <section
+                    class="review-detail"
+                    [id]="'review-detail-' + transmission.transmissionIntentId"
+                    [attr.aria-label]="'POSITIVITY.MANUAL_REVIEW.DETAIL.ARIA_LABEL' | translate"
+                  >
+                    <dl class="review-detail__facts">
+                      <div class="review-detail__fact">
+                        <dt>{{ 'POSITIVITY.TRANSMISSION.VENDOR_ORDER_NUMBER' | translate }}</dt>
+                        <dd>{{ transmission.supplierOrderNumber || ('POSITIVITY.TRANSMISSION.NO_VENDOR_ORDER_NUMBER' | translate) }}</dd>
+                      </div>
+                      <div class="review-detail__fact">
+                        <dt>{{ 'POSITIVITY.TRANSMISSION.DOCUMENT_ID' | translate }}</dt>
+                        <dd>{{ transmission.documentId || ('POSITIVITY.TRANSMISSION.NO_DOCUMENT_ID' | translate) }}</dd>
+                      </div>
+                      <div class="review-detail__fact">
+                        <dt>{{ 'POSITIVITY.TRANSMISSION.SCHEDULED_DELIVERY' | translate }}</dt>
+                        <dd>
+                          @if (deliveryDateFor(transmission.latestScheduledDeliveryDate); as delivery) {
+                            {{ delivery | date: 'mediumDate' }}
+                          } @else {
+                            {{ 'POSITIVITY.TRANSMISSION.NO_SCHEDULED_DELIVERY' | translate }}
+                          }
+                        </dd>
+                      </div>
+                      @if (transmission.vendorReason) {
+                        <div class="review-detail__fact">
+                          <dt>{{ 'POSITIVITY.TRANSMISSION.VENDOR_REASON' | translate }}</dt>
+                          <dd>{{ transmission.vendorReason }}</dd>
+                        </div>
+                      }
+                    </dl>
+
+                    <p class="review-detail__reason">
+                      {{ 'POSITIVITY.MANUAL_REVIEW.DETAIL.WHY' | translate }}
+                    </p>
+
+                    <form class="review-resolve" [formGroup]="resolveForm" (ngSubmit)="submitResolution()">
+                      <h3 class="review-resolve__title">
+                        {{ 'POSITIVITY.MANUAL_REVIEW.DETAIL.RESOLVE_TITLE' | translate }}
+                      </h3>
+
+                      <div class="pos-field">
+                        <label class="pos-field__label" [for]="'resolve-action-' + transmission.transmissionIntentId">
+                          {{ 'POSITIVITY.MANUAL_REVIEW.DETAIL.ACTION' | translate }}
+                        </label>
+                        <select
+                          [id]="'resolve-action-' + transmission.transmissionIntentId"
+                          class="pos-field__input"
+                          formControlName="action"
+                        >
+                          @for (action of resolutionActions; track action) {
+                            <option [value]="action">
+                              {{ 'POSITIVITY.MANUAL_REVIEW.ACTION.' + action | translate }}
+                            </option>
+                          }
+                        </select>
+                      </div>
+
+                      @if (requiresVendorReference()) {
+                        <div class="pos-field">
+                          <label
+                            class="pos-field__label"
+                            [for]="'resolve-vendor-ref-' + transmission.transmissionIntentId"
+                          >
+                            {{ 'POSITIVITY.MANUAL_REVIEW.DETAIL.VENDOR_ORDER_NUMBER' | translate }}
+                          </label>
+                          <input
+                            [id]="'resolve-vendor-ref-' + transmission.transmissionIntentId"
+                            class="pos-field__input"
+                            type="text"
+                            formControlName="supplierOrderNumber"
+                          />
+                        </div>
+                      }
+
+                      <div class="pos-field">
+                        <label
+                          class="pos-field__label"
+                          [for]="'resolve-evidence-' + transmission.transmissionIntentId"
+                        >
+                          {{ 'POSITIVITY.MANUAL_REVIEW.DETAIL.EVIDENCE' | translate }}
+                        </label>
+                        <textarea
+                          [id]="'resolve-evidence-' + transmission.transmissionIntentId"
+                          class="pos-field__input"
+                          rows="3"
+                          formControlName="evidence"
+                          aria-describedby="resolve-evidence-hint"
+                        ></textarea>
+                        <p class="pos-field__hint" id="resolve-evidence-hint">
+                          {{ 'POSITIVITY.MANUAL_REVIEW.DETAIL.EVIDENCE_HINT' | translate }}
+                        </p>
+                      </div>
+
+                      @if (resolveErrorKey(); as key) {
+                        <p class="pos-field__error" role="alert">{{ key | translate }}</p>
+                      }
+
+                      <div class="review-resolve__actions">
+                        <button class="pos-btn pos-btn--primary" type="submit" [disabled]="resolving()">
+                          {{ 'POSITIVITY.MANUAL_REVIEW.DETAIL.SUBMIT' | translate }}
+                        </button>
+                        <button class="pos-btn pos-btn--secondary" type="button" (click)="toggleRow(transmission)">
+                          {{ 'POSITIVITY.COMMON.CANCEL' | translate }}
+                        </button>
+                      </div>
+                    </form>
+                  </section>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <nav class="review-page__pagination" [attr.aria-label]="'POSITIVITY.MANUAL_REVIEW.PAGINATION.ARIA_LABEL' | translate">
+      <button
+        class="pos-btn pos-btn--secondary"
+        type="button"
+        [disabled]="!hasPreviousPage()"
+        (click)="previousPage()"
+      >
+        {{ 'POSITIVITY.AUDIT.PAGINATION.PREVIOUS' | translate }}
+      </button>
+      <p class="review-page__page-status" aria-live="polite">
+        {{ 'POSITIVITY.AUDIT.PAGINATION.STATUS' | translate: { page: pageNumber(), total: totalPages() } }}
+      </p>
+      <button
+        class="pos-btn pos-btn--secondary"
+        type="button"
+        [disabled]="!hasNextPage()"
+        (click)="nextPage()"
+      >
+        {{ 'POSITIVITY.AUDIT.PAGINATION.NEXT' | translate }}
+      </button>
+    </nav>
+  }
+</main>

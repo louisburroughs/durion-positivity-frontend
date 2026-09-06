@@ -106,6 +106,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/positivity', label: "", dynamic: false, roles: ['ROLE_ADMIN'] },
   { route: '/app/positivity/exchanges', label: "Exchanges", dynamic: false, roles: ['ROLE_ADMIN'] },
   { route: '/app/positivity/exchanges/:exchangeId', label: "Exchanges", dynamic: true, roles: ['ROLE_ADMIN'] },
+  { route: '/app/positivity/manual-review', label: "Manual Review", dynamic: false, roles: ['ROLE_ADMIN'] },
   { route: '/app/positivity/profiles/:vendorProfileId', label: "Profiles", dynamic: true, roles: ['ROLE_ADMIN'] },
   { route: '/app/product', label: "", dynamic: false },
   { route: '/app/product/bulk-import/catalog', label: "Catalog", dynamic: false },

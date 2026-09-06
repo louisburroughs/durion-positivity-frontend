@@ -5895,6 +5895,51 @@
       "ERROR": {
         "LOAD": "The vendor transmission timeline could not be loaded."
       }
+    },
+    "MANUAL_REVIEW": {
+      "TITLE": "Manual-review queue",
+      "SUBTITLE": "Transmissions the platform could not resolve automatically, across every purchase order.",
+      "NO_RESEND_NOTE": "This queue never re-sends an order. Resolving a row records what you established with the vendor; it never contacts the vendor.",
+      "FILTER": {
+        "VENDOR": "Vendor",
+        "ALL_VENDORS": "All vendors",
+        "SEARCH": "Search",
+        "SEARCH_HINT": "Matches the purchase-order number or the vendor's own order number.",
+        "DATE_FROM": "From",
+        "DATE_TO": "To"
+      },
+      "EMPTY": "The manual-review queue is clear.",
+      "COUNT": "{{count}} transmissions need review",
+      "TABLE": {
+        "CAPTION": "Transmissions awaiting manual review",
+        "PURCHASE_ORDER": "Purchase order",
+        "VENDOR": "Vendor",
+        "STATUS": "Status",
+        "CLOSE": "Close",
+        "REVIEW": "Review"
+      },
+      "DETAIL": {
+        "ARIA_LABEL": "Resolve this transmission",
+        "WHY": "The platform could not establish whether the vendor received this order.",
+        "RESOLVE_TITLE": "Record the outcome",
+        "ACTION": "Outcome",
+        "VENDOR_ORDER_NUMBER": "Vendor order number",
+        "EVIDENCE": "Evidence",
+        "EVIDENCE_HINT": "Describe how you established this with the vendor. This is stored and published on the resulting event.",
+        "SUBMIT": "Resolve"
+      },
+      "ACTION": {
+        "CONFIRM_WITH_VENDOR_REFERENCE": "Confirmed — vendor accepted it",
+        "MARK_NOT_RECEIVED": "Vendor never received it",
+        "CANCEL": "Cancel the transmission"
+      },
+      "PAGINATION": {
+        "ARIA_LABEL": "Manual-review queue pagination"
+      },
+      "ERROR": {
+        "LOAD": "The manual-review queue could not be loaded.",
+        "RESOLVE": "This transmission could not be resolved."
+      }
     }
   }
 }

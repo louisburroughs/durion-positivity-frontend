@@ -69,3 +69,51 @@ export interface SupplierOrderTransmission {
   readonly resolvedAt: string | null;
   resolvedBy: string | null;
 }
+
+/**
+ * Manual-review worklist filter (issue #216; #1638 decision 6).
+ *
+ * `attemptState=MANUAL_REVIEW` is fixed by the service, not exposed here — this
+ * screen has exactly one purpose. Dates are date-only `YYYY-MM-DD` (ADR-0038);
+ * the conversion to the contract's half-open instant window happens at the
+ * service boundary, mirroring `SupplierExchangeAuditService`.
+ */
+export interface SupplierTransmissionSearchFilter {
+  vendorProfileId?: string;
+  search?: string;
+  /** Inclusive first day, `YYYY-MM-DD`. */
+  dateFrom?: string;
+  /** Inclusive last day, `YYYY-MM-DD`. Converted to an exclusive instant downstream. */
+  dateTo?: string;
+}
+
+/** Paged manual-review search result. */
+export interface SupplierTransmissionPage {
+  items: SupplierOrderTransmission[];
+  page: number;
+  size: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+/**
+ * ADR-0052 §4 resolution actions. `CONFIRM_WITH_VENDOR_REFERENCE` is the only
+ * one that additionally requires `supplierOrderNumber`.
+ *
+ * There is no re-send/retry action here or anywhere in this file — a blind
+ * re-send is how one purchase order becomes two deliveries. That absence is a
+ * safety property, not a gap.
+ */
+export type TransmissionResolutionAction =
+  | 'CONFIRM_WITH_VENDOR_REFERENCE'
+  | 'MARK_NOT_RECEIVED'
+  | 'CANCEL';
+
+/** Resolution payload for a `MANUAL_REVIEW` transmission (ADR-0052 §4). */
+export interface TransmissionResolutionRequest {
+  action: TransmissionResolutionAction;
+  /** Free-text evidence for why the operator believes this outcome. Stored and published. */
+  evidence: string;
+  /** Required only when `action` is `CONFIRM_WITH_VENDOR_REFERENCE`. */
+  supplierOrderNumber?: string;
+}

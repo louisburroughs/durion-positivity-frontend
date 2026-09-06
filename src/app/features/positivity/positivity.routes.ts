@@ -15,15 +15,15 @@ import { Routes } from '@angular/router';
  *   /app/positivity                                        profile list
  *   /app/positivity/exchanges                              exchange audit list
  *   /app/positivity/exchanges/:exchangeId                  exchange audit detail
- *   /app/positivity/profiles/:vendorProfileId              profile detail (tabs)
+ *   /app/positivity/manual-review                          manual-review worklist (#216)
+ *   /app/positivity/profiles/:vendorProfileId              profile detail (tabs, incl. PRICAT #213 and stock #217)
  *
- * The enrichment worklist, manual-review queue, unlinked shipments, stock
- * snapshot and PRICAT worklist routes were retired in #201: the generated
- * `@durion-sdk/supplier` client publishes no read whose request and response
- * cover what those pages required (the PRICAT and stock reads that do exist
- * take page/size or a vendorProfileId plus article EAN, and return neither the
- * freshness, filters, vendor display nor UOM the pages showed). The gaps are
- * recorded on #201 and PR #202; a route that can only 404 is not a feature.
+ * The unlinked-shipments worklist stays retired **by decision** (#201, #215):
+ * `listPurchaseOrderTransmissionEvents` now covers what a shipment-event
+ * timeline would have shown, and no endpoint exists for an unlinked-events
+ * surface. The PRICAT worklist, manual-review queue and stock-snapshot view
+ * were restored in #213/#216/#217 once backend PR #1644 shipped real reads for
+ * them; see each page/panel's own doc comment for the operations used.
  */
 export const POSITIVITY_ROUTES: Routes = [
   {
@@ -47,6 +47,14 @@ export const POSITIVITY_ROUTES: Routes = [
     loadComponent: () =>
       import('./pages/exchange-audit-detail/exchange-audit-detail-page.component').then(
         m => m.ExchangeAuditDetailPageComponent,
+      ),
+  },
+  {
+    path: 'manual-review',
+    pathMatch: 'full',
+    loadComponent: () =>
+      import('./pages/manual-review-queue/manual-review-queue-page.component').then(
+        m => m.ManualReviewQueuePageComponent,
       ),
   },
   {

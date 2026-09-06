@@ -5895,6 +5895,51 @@
       "ERROR": {
         "LOAD": "La chronologie de transmission du fournisseur n'a pas pu être chargée."
       }
+    },
+    "MANUAL_REVIEW": {
+      "TITLE": "File de révision manuelle",
+      "SUBTITLE": "Transmissions que la plateforme n'a pas pu résoudre automatiquement, pour tous les bons de commande.",
+      "NO_RESEND_NOTE": "Cette file ne renvoie jamais une commande. Résoudre une ligne enregistre ce que vous avez établi avec le fournisseur; elle ne contacte jamais le fournisseur.",
+      "FILTER": {
+        "VENDOR": "Fournisseur",
+        "ALL_VENDORS": "Tous les fournisseurs",
+        "SEARCH": "Rechercher",
+        "SEARCH_HINT": "Correspond au numéro de bon de commande ou au numéro de commande propre du fournisseur.",
+        "DATE_FROM": "Du",
+        "DATE_TO": "Au"
+      },
+      "EMPTY": "La file de révision manuelle est vide.",
+      "COUNT": "{{count}} transmissions nécessitent une révision",
+      "TABLE": {
+        "CAPTION": "Transmissions en attente de révision manuelle",
+        "PURCHASE_ORDER": "Bon de commande",
+        "VENDOR": "Fournisseur",
+        "STATUS": "Statut",
+        "CLOSE": "Fermer",
+        "REVIEW": "Réviser"
+      },
+      "DETAIL": {
+        "ARIA_LABEL": "Résoudre cette transmission",
+        "WHY": "La plateforme n'a pas pu établir si le fournisseur a reçu cette commande.",
+        "RESOLVE_TITLE": "Enregistrer le résultat",
+        "ACTION": "Résultat",
+        "VENDOR_ORDER_NUMBER": "Numéro de commande du fournisseur",
+        "EVIDENCE": "Preuve",
+        "EVIDENCE_HINT": "Décrivez comment vous avez établi cela avec le fournisseur. Ceci est enregistré et publié dans l'événement résultant.",
+        "SUBMIT": "Résoudre"
+      },
+      "ACTION": {
+        "CONFIRM_WITH_VENDOR_REFERENCE": "Confirmé — le fournisseur l'a acceptée",
+        "MARK_NOT_RECEIVED": "Le fournisseur ne l'a jamais reçue",
+        "CANCEL": "Annuler la transmission"
+      },
+      "PAGINATION": {
+        "ARIA_LABEL": "Pagination de la file de révision manuelle"
+      },
+      "ERROR": {
+        "LOAD": "La file de révision manuelle n'a pas pu être chargée.",
+        "RESOLVE": "Cette transmission n'a pas pu être résolue."
+      }
     }
   }
 }

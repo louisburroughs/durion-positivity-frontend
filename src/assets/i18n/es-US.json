@@ -5895,6 +5895,51 @@
       "ERROR": {
         "LOAD": "No se pudo cargar la cronología de transmisión del proveedor."
       }
+    },
+    "MANUAL_REVIEW": {
+      "TITLE": "Cola de revisión manual",
+      "SUBTITLE": "Transmisiones que la plataforma no pudo resolver automáticamente, en todas las órdenes de compra.",
+      "NO_RESEND_NOTE": "Esta cola nunca reenvía un pedido. Resolver una fila registra lo que usted determinó con el proveedor; nunca contacta al proveedor.",
+      "FILTER": {
+        "VENDOR": "Proveedor",
+        "ALL_VENDORS": "Todos los proveedores",
+        "SEARCH": "Buscar",
+        "SEARCH_HINT": "Coincide con el número de orden de compra o el número de pedido propio del proveedor.",
+        "DATE_FROM": "Desde",
+        "DATE_TO": "Hasta"
+      },
+      "EMPTY": "La cola de revisión manual está despejada.",
+      "COUNT": "{{count}} transmisiones necesitan revisión",
+      "TABLE": {
+        "CAPTION": "Transmisiones en espera de revisión manual",
+        "PURCHASE_ORDER": "Orden de compra",
+        "VENDOR": "Proveedor",
+        "STATUS": "Estado",
+        "CLOSE": "Cerrar",
+        "REVIEW": "Revisar"
+      },
+      "DETAIL": {
+        "ARIA_LABEL": "Resolver esta transmisión",
+        "WHY": "La plataforma no pudo determinar si el proveedor recibió este pedido.",
+        "RESOLVE_TITLE": "Registrar el resultado",
+        "ACTION": "Resultado",
+        "VENDOR_ORDER_NUMBER": "Número de pedido del proveedor",
+        "EVIDENCE": "Evidencia",
+        "EVIDENCE_HINT": "Describa cómo determinó esto con el proveedor. Se almacena y se publica en el evento resultante.",
+        "SUBMIT": "Resolver"
+      },
+      "ACTION": {
+        "CONFIRM_WITH_VENDOR_REFERENCE": "Confirmado: el proveedor lo aceptó",
+        "MARK_NOT_RECEIVED": "El proveedor nunca lo recibió",
+        "CANCEL": "Cancelar la transmisión"
+      },
+      "PAGINATION": {
+        "ARIA_LABEL": "Paginación de la cola de revisión manual"
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la cola de revisión manual.",
+        "RESOLVE": "No se pudo resolver esta transmisión."
+      }
     }
   }
 }
