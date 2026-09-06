@@ -4,6 +4,46 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { TreadDesignUnmatchedPageComponent } from './tread-design-unmatched-page.component';
 import { ProductTreadDesignService } from '../../../services/product-tread-design.service';
+import type {
+  UnmatchedTreadDesign,
+  UnmatchedTreadDesignPage,
+} from '../../../models/tread-design-enrichment.models';
+
+/** A fully populated `UnmatchedTreadDesign` row; override only the fields a case cares about. */
+function buildUnmatchedTreadDesign(overrides: Partial<UnmatchedTreadDesign> = {}): UnmatchedTreadDesign {
+  return {
+    id: 'td-1',
+    brand: null,
+    treadDesign: null,
+    treadDesign2: null,
+    productName: null,
+    vehicleType: null,
+    seasonality: null,
+    supplierRef: null,
+    vendorProfileId: null,
+    vendorVariantId: null,
+    updatedAt: null,
+    hasUnresolvedImages: false,
+    images: [],
+    texts: [],
+    matchState: null,
+    matchStateAt: null,
+    candidates: [],
+    ...overrides,
+  };
+}
+
+/** A worklist page fixture; override only the fields a case cares about. */
+function buildUnmatchedPage(overrides: Partial<UnmatchedTreadDesignPage> = {}): UnmatchedTreadDesignPage {
+  return {
+    items: [],
+    page: 0,
+    size: 25,
+    totalElements: 0,
+    totalPages: 0,
+    ...overrides,
+  };
+}
 
 describe('TreadDesignUnmatchedPageComponent', () => {
   let fixture: ComponentFixture<TreadDesignUnmatchedPageComponent>;
@@ -31,9 +71,7 @@ describe('TreadDesignUnmatchedPageComponent', () => {
   });
 
   it('loads page 0 with the default UNMATCHED+REVIEW filter on construction', async () => {
-    mockService.listUnmatched.mockReturnValueOnce(
-      of({ items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
-    );
+    mockService.listUnmatched.mockReturnValueOnce(of(buildUnmatchedPage()));
 
     await setup();
 
@@ -46,9 +84,7 @@ describe('TreadDesignUnmatchedPageComponent', () => {
   });
 
   it('transitions to empty when the page has no items — an ordinary outcome, not an error', async () => {
-    mockService.listUnmatched.mockReturnValueOnce(
-      of({ items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
-    );
+    mockService.listUnmatched.mockReturnValueOnce(of(buildUnmatchedPage()));
 
     await setup();
 
@@ -56,7 +92,7 @@ describe('TreadDesignUnmatchedPageComponent', () => {
   });
 
   it('transitions to ready with items when the page has results', async () => {
-    const item = {
+    const item: UnmatchedTreadDesign = {
       id: 'td-1',
       brand: 'Acme',
       treadDesign: 'Sierra',
@@ -76,7 +112,7 @@ describe('TreadDesignUnmatchedPageComponent', () => {
       candidates: [],
     };
     mockService.listUnmatched.mockReturnValueOnce(
-      of({ items: [item], page: 0, size: 25, totalElements: 1, totalPages: 1 }),
+      of(buildUnmatchedPage({ items: [item], totalElements: 1, totalPages: 1 })),
     );
 
     await setup();
@@ -96,11 +132,20 @@ describe('TreadDesignUnmatchedPageComponent', () => {
 
   it('nextPage() loads the following page when more pages exist, keeping the current filter', async () => {
     mockService.listUnmatched.mockReturnValueOnce(
-      of({ items: [{ id: 'td-1' }], page: 0, size: 25, totalElements: 30, totalPages: 2 }),
+      of(buildUnmatchedPage({
+        items: [buildUnmatchedTreadDesign({ id: 'td-1' })],
+        totalElements: 30,
+        totalPages: 2,
+      })),
     );
     await setup();
     mockService.listUnmatched.mockReturnValueOnce(
-      of({ items: [{ id: 'td-2' }], page: 1, size: 25, totalElements: 30, totalPages: 2 }),
+      of(buildUnmatchedPage({
+        items: [buildUnmatchedTreadDesign({ id: 'td-2' })],
+        page: 1,
+        totalElements: 30,
+        totalPages: 2,
+      })),
     );
 
     component.nextPage();
@@ -110,7 +155,11 @@ describe('TreadDesignUnmatchedPageComponent', () => {
 
   it('nextPage() does nothing on the last page', async () => {
     mockService.listUnmatched.mockReturnValueOnce(
-      of({ items: [{ id: 'td-1' }], page: 0, size: 25, totalElements: 1, totalPages: 1 }),
+      of(buildUnmatchedPage({
+        items: [buildUnmatchedTreadDesign({ id: 'td-1' })],
+        totalElements: 1,
+        totalPages: 1,
+      })),
     );
     await setup();
     vi.clearAllMocks();
@@ -122,7 +171,11 @@ describe('TreadDesignUnmatchedPageComponent', () => {
 
   it('previousPage() does nothing on the first page', async () => {
     mockService.listUnmatched.mockReturnValueOnce(
-      of({ items: [{ id: 'td-1' }], page: 0, size: 25, totalElements: 1, totalPages: 1 }),
+      of(buildUnmatchedPage({
+        items: [buildUnmatchedTreadDesign({ id: 'td-1' })],
+        totalElements: 1,
+        totalPages: 1,
+      })),
     );
     await setup();
     vi.clearAllMocks();
@@ -134,9 +187,7 @@ describe('TreadDesignUnmatchedPageComponent', () => {
 
   describe('filtering', () => {
     beforeEach(async () => {
-      mockService.listUnmatched.mockReturnValueOnce(
-        of({ items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
-      );
+      mockService.listUnmatched.mockReturnValueOnce(of(buildUnmatchedPage()));
       await setup();
       vi.clearAllMocks();
     });
@@ -158,9 +209,7 @@ describe('TreadDesignUnmatchedPageComponent', () => {
     it('applyFilters() reloads page 0 with the current matchState and vendorProfileId selection', () => {
       component.toggleMatchState('MATCHED', true);
       component.setVendorProfileIdFilter('  vendor-9  ');
-      mockService.listUnmatched.mockReturnValueOnce(
-        of({ items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
-      );
+      mockService.listUnmatched.mockReturnValueOnce(of(buildUnmatchedPage()));
 
       component.applyFilters();
 
@@ -175,9 +224,7 @@ describe('TreadDesignUnmatchedPageComponent', () => {
     it('clearFilters() resets to the default selection and reloads page 0', () => {
       component.toggleMatchState('MATCHED', true);
       component.setVendorProfileIdFilter('vendor-9');
-      mockService.listUnmatched.mockReturnValueOnce(
-        of({ items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
-      );
+      mockService.listUnmatched.mockReturnValueOnce(of(buildUnmatchedPage()));
 
       component.clearFilters();
 

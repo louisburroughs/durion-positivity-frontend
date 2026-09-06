@@ -1,7 +1,59 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import { TreadDesignEnrichmentService } from '@durion-sdk/catalog';
+import {
+  TreadDesignCandidateDtoTierEnum,
+  TreadDesignDtoMatchStateEnum,
+  TreadDesignEnrichmentService,
+  TreadDesignResolveRequestActionEnum,
+} from '@durion-sdk/catalog';
+import type {
+  Page,
+  TreadDesignCandidateDto,
+  TreadDesignDto,
+  TreadDesignResolveRequest as SdkTreadDesignResolveRequest,
+} from '@durion-sdk/catalog';
 import { ProductTreadDesignService } from './product-tread-design.service';
+import type {
+  TreadDesignCandidate,
+  TreadDesignEnrichment,
+  UnmatchedTreadDesignPage,
+} from '../models/tread-design-enrichment.models';
+
+/** A fully populated `TreadDesignDto` fixture; override only the fields a case cares about. */
+function buildTreadDesignDto(overrides: Partial<TreadDesignDto> = {}): TreadDesignDto {
+  return {
+    id: 'td-1',
+    brand: 'Acme',
+    treadDesign: 'Sierra',
+    treadDesign2: undefined,
+    productName: 'Sierra AT',
+    vehicleType: 'LT',
+    seasonality: 'ALL_SEASON',
+    supplierRef: 'acme-inc',
+    vendorProfileId: 'vp-1',
+    vendorVariantId: 'var-1',
+    updatedAt: '2026-08-01T00:00:00Z',
+    hasUnresolvedImages: true,
+    images: [{ imageId: 5, imageType: 'HERO', unresolved: true }],
+    texts: [{ languageCode: 'en', name: 'Sierra AT', description: 'Rugged', footNotes: undefined }],
+    matchState: TreadDesignDtoMatchStateEnum.Matched,
+    matchStateAt: '2026-08-01T00:00:00Z',
+    candidates: [],
+    ...overrides,
+  };
+}
+
+/** A `Page` fixture wrapping tread-design content; override per case. */
+function buildTreadDesignPage(overrides: Partial<Page> = {}): Page {
+  return {
+    content: [],
+    number: 0,
+    size: 50,
+    totalElements: 0,
+    totalPages: 0,
+    ...overrides,
+  };
+}
 
 describe('ProductTreadDesignService', () => {
   let service: ProductTreadDesignService;
@@ -29,33 +81,13 @@ describe('ProductTreadDesignService', () => {
 
   describe('getEnrichmentForProduct()', () => {
     it('maps a full SDK response into the domain shape', () => {
-      treadDesignSdkStub.getTreadDesignForProduct.mockReturnValueOnce(
-        of({
-          id: 'td-1',
-          brand: 'Acme',
-          treadDesign: 'Sierra',
-          treadDesign2: null,
-          productName: 'Sierra AT',
-          vehicleType: 'LT',
-          seasonality: 'ALL_SEASON',
-          supplierRef: 'acme-inc',
-          vendorProfileId: 'vp-1',
-          vendorVariantId: 'var-1',
-          updatedAt: '2026-08-01T00:00:00Z',
-          hasUnresolvedImages: true,
-          images: [{ imageId: 5, imageType: 'HERO', unresolved: true }],
-          texts: [{ languageCode: 'en', name: 'Sierra AT', description: 'Rugged', footNotes: undefined }],
-          matchState: 'MATCHED',
-          matchStateAt: '2026-08-01T00:00:00Z',
-          candidates: [],
-        }),
-      );
+      treadDesignSdkStub.getTreadDesignForProduct.mockReturnValueOnce(of(buildTreadDesignDto()));
 
-      let result: unknown;
+      let result: TreadDesignEnrichment | null | undefined;
       service.getEnrichmentForProduct('prod-1').subscribe(value => (result = value));
 
       expect(treadDesignSdkStub.getTreadDesignForProduct).toHaveBeenCalledWith('prod-1');
-      expect(result).toEqual({
+      const expected: TreadDesignEnrichment = {
         id: 'td-1',
         brand: 'Acme',
         treadDesign: 'Sierra',
@@ -73,14 +105,16 @@ describe('ProductTreadDesignService', () => {
         matchState: 'MATCHED',
         matchStateAt: '2026-08-01T00:00:00Z',
         candidates: [],
-      });
+      };
+      expect(result).toEqual(expected);
     });
 
     it('defaults matchState/matchStateAt/candidates when the DTO omits them', () => {
-      treadDesignSdkStub.getTreadDesignForProduct.mockReturnValueOnce(of({ id: 'td-1' }));
+      const dto: TreadDesignDto = { id: 'td-1' };
+      treadDesignSdkStub.getTreadDesignForProduct.mockReturnValueOnce(of(dto));
 
-      let result: { matchState: unknown; matchStateAt: unknown; candidates: unknown } | undefined;
-      service.getEnrichmentForProduct('prod-1').subscribe(value => (result = value as never));
+      let result: TreadDesignEnrichment | null | undefined;
+      service.getEnrichmentForProduct('prod-1').subscribe(value => (result = value));
 
       expect(result?.matchState).toBeNull();
       expect(result?.matchStateAt).toBeNull();
@@ -134,7 +168,7 @@ describe('ProductTreadDesignService', () => {
   describe('listUnmatched()', () => {
     it('calls the SDK with matchState, vendorProfileId, page and size', () => {
       treadDesignSdkStub.listUnmatchedTreadDesigns.mockReturnValueOnce(
-        of({ content: [], number: 0, size: 25, totalElements: 0, totalPages: 0 }),
+        of(buildTreadDesignPage({ size: 25 })),
       );
 
       service.listUnmatched(['UNMATCHED', 'REVIEW'], 'vendor-9', 2, 25).subscribe();
@@ -149,7 +183,7 @@ describe('ProductTreadDesignService', () => {
 
     it('passes an empty matchState selection through as undefined rather than an empty array', () => {
       treadDesignSdkStub.listUnmatchedTreadDesigns.mockReturnValueOnce(
-        of({ content: [], number: 0, size: 25, totalElements: 0, totalPages: 0 }),
+        of(buildTreadDesignPage({ size: 25 })),
       );
 
       service.listUnmatched([], undefined, 0, 25).subscribe();
@@ -164,7 +198,7 @@ describe('ProductTreadDesignService', () => {
 
     it('blanks a whitespace-only vendorProfileId to undefined', () => {
       treadDesignSdkStub.listUnmatchedTreadDesigns.mockReturnValueOnce(
-        of({ content: [], number: 0, size: 25, totalElements: 0, totalPages: 0 }),
+        of(buildTreadDesignPage({ size: 25 })),
       );
 
       service.listUnmatched(undefined, '', 0, 25).subscribe();
@@ -178,27 +212,25 @@ describe('ProductTreadDesignService', () => {
     });
 
     it('maps a page of results, including embedded candidates, into the domain shape', () => {
+      const candidate: TreadDesignCandidateDto = {
+        productId: 'prod-1',
+        score: 0.62,
+        tier: TreadDesignCandidateDtoTierEnum.Review,
+      };
+      const item: TreadDesignDto = {
+        id: 'td-9',
+        brand: 'Vendor X',
+        hasUnresolvedImages: false,
+        matchState: TreadDesignDtoMatchStateEnum.Review,
+        matchStateAt: '2026-09-01T00:00:00Z',
+        candidates: [candidate],
+      };
       treadDesignSdkStub.listUnmatchedTreadDesigns.mockReturnValueOnce(
-        of({
-          content: [
-            {
-              id: 'td-9',
-              brand: 'Vendor X',
-              hasUnresolvedImages: false,
-              matchState: 'REVIEW',
-              matchStateAt: '2026-09-01T00:00:00Z',
-              candidates: [{ productId: 'prod-1', score: 0.62, tier: 'REVIEW' }],
-            },
-          ],
-          number: 0,
-          size: 50,
-          totalElements: 1,
-          totalPages: 1,
-        }),
+        of(buildTreadDesignPage({ content: [item], totalElements: 1, totalPages: 1 })),
       );
 
-      let result: { items: readonly { id: string; matchState: unknown; candidates: unknown }[] } | undefined;
-      service.listUnmatched().subscribe(value => (result = value as never));
+      let result: UnmatchedTreadDesignPage | undefined;
+      service.listUnmatched().subscribe(value => (result = value));
 
       expect(result?.items).toHaveLength(1);
       expect(result?.items[0].id).toBe('td-9');
@@ -207,11 +239,10 @@ describe('ProductTreadDesignService', () => {
     });
 
     it('defaults an empty content array without throwing', () => {
-      treadDesignSdkStub.listUnmatchedTreadDesigns.mockReturnValueOnce(
-        of({ number: 0, size: 50, totalElements: 0, totalPages: 0 }),
-      );
+      const page: Page = { number: 0, size: 50, totalElements: 0, totalPages: 0 };
+      treadDesignSdkStub.listUnmatchedTreadDesigns.mockReturnValueOnce(of(page));
 
-      let result: { items: readonly unknown[] } | undefined;
+      let result: UnmatchedTreadDesignPage | undefined;
       service.listUnmatched().subscribe(value => (result = value));
 
       expect(result?.items).toEqual([]);
@@ -220,27 +251,27 @@ describe('ProductTreadDesignService', () => {
 
   describe('listCandidates()', () => {
     it('calls the SDK with the tread design id and maps every candidate', () => {
-      treadDesignSdkStub.listTreadDesignCandidates.mockReturnValueOnce(
-        of([
-          { productId: 'prod-1', score: 0.91, tier: 'AUTO' },
-          { productId: 'prod-2', score: 0.55, tier: 'REVIEW' },
-        ]),
-      );
+      const candidates: TreadDesignCandidateDto[] = [
+        { productId: 'prod-1', score: 0.91, tier: TreadDesignCandidateDtoTierEnum.Auto },
+        { productId: 'prod-2', score: 0.55, tier: TreadDesignCandidateDtoTierEnum.Review },
+      ];
+      treadDesignSdkStub.listTreadDesignCandidates.mockReturnValueOnce(of(candidates));
 
-      let result: unknown;
+      let result: readonly TreadDesignCandidate[] | undefined;
       service.listCandidates('td-1').subscribe(value => (result = value));
 
       expect(treadDesignSdkStub.listTreadDesignCandidates).toHaveBeenCalledWith('td-1');
-      expect(result).toEqual([
+      const expected: TreadDesignCandidate[] = [
         { productId: 'prod-1', score: 0.91, tier: 'AUTO' },
         { productId: 'prod-2', score: 0.55, tier: 'REVIEW' },
-      ]);
+      ];
+      expect(result).toEqual(expected);
     });
 
     it('defaults a missing candidates array to empty without throwing', () => {
       treadDesignSdkStub.listTreadDesignCandidates.mockReturnValueOnce(of(undefined));
 
-      let result: unknown;
+      let result: readonly TreadDesignCandidate[] | undefined;
       service.listCandidates('td-2').subscribe(value => (result = value));
 
       expect(result).toEqual([]);
@@ -271,57 +302,60 @@ describe('ProductTreadDesignService', () => {
 
   describe('resolve()', () => {
     it('sends an ATTACH request with the selected product ids', () => {
-      treadDesignSdkStub.resolveTreadDesign.mockReturnValueOnce(
-        of({ id: 'td-1', matchState: 'MATCHED' }),
-      );
+      const dto: TreadDesignDto = { id: 'td-1', matchState: TreadDesignDtoMatchStateEnum.Matched };
+      treadDesignSdkStub.resolveTreadDesign.mockReturnValueOnce(of(dto));
 
       service.resolve('td-1', { action: 'ATTACH', productIds: ['prod-1', 'prod-2'], note: 'Confirmed' }).subscribe();
 
-      expect(treadDesignSdkStub.resolveTreadDesign).toHaveBeenCalledWith('td-1', {
-        action: 'ATTACH',
+      const expectedBody: SdkTreadDesignResolveRequest = {
+        action: TreadDesignResolveRequestActionEnum.Attach,
         productIds: ['prod-1', 'prod-2'],
         note: 'Confirmed',
         deferUntil: undefined,
-      });
+      };
+      expect(treadDesignSdkStub.resolveTreadDesign).toHaveBeenCalledWith('td-1', expectedBody);
     });
 
     it('sends a REJECT request with no productIds', () => {
-      treadDesignSdkStub.resolveTreadDesign.mockReturnValueOnce(
-        of({ id: 'td-1', matchState: 'REJECTED' }),
-      );
+      const dto: TreadDesignDto = { id: 'td-1', matchState: TreadDesignDtoMatchStateEnum.Rejected };
+      treadDesignSdkStub.resolveTreadDesign.mockReturnValueOnce(of(dto));
 
       service.resolve('td-1', { action: 'REJECT' }).subscribe();
 
-      expect(treadDesignSdkStub.resolveTreadDesign).toHaveBeenCalledWith('td-1', {
-        action: 'REJECT',
+      const expectedBody: SdkTreadDesignResolveRequest = {
+        action: TreadDesignResolveRequestActionEnum.Reject,
         productIds: undefined,
         note: undefined,
         deferUntil: undefined,
-      });
+      };
+      expect(treadDesignSdkStub.resolveTreadDesign).toHaveBeenCalledWith('td-1', expectedBody);
     });
 
     it('sends a DEFER request with the given deferUntil instant', () => {
-      treadDesignSdkStub.resolveTreadDesign.mockReturnValueOnce(
-        of({ id: 'td-1', matchState: 'DEFERRED' }),
-      );
+      const dto: TreadDesignDto = { id: 'td-1', matchState: TreadDesignDtoMatchStateEnum.Deferred };
+      treadDesignSdkStub.resolveTreadDesign.mockReturnValueOnce(of(dto));
 
       service.resolve('td-1', { action: 'DEFER', deferUntil: '2026-09-20T00:00:00.000Z' }).subscribe();
 
-      expect(treadDesignSdkStub.resolveTreadDesign).toHaveBeenCalledWith('td-1', {
-        action: 'DEFER',
+      const expectedBody: SdkTreadDesignResolveRequest = {
+        action: TreadDesignResolveRequestActionEnum.Defer,
         productIds: undefined,
         note: undefined,
         deferUntil: '2026-09-20T00:00:00.000Z',
-      });
+      };
+      expect(treadDesignSdkStub.resolveTreadDesign).toHaveBeenCalledWith('td-1', expectedBody);
     });
 
     it('maps the response back into the domain shape', () => {
-      treadDesignSdkStub.resolveTreadDesign.mockReturnValueOnce(
-        of({ id: 'td-1', matchState: 'MATCHED', matchStateAt: '2026-09-06T00:00:00Z' }),
-      );
+      const dto: TreadDesignDto = {
+        id: 'td-1',
+        matchState: TreadDesignDtoMatchStateEnum.Matched,
+        matchStateAt: '2026-09-06T00:00:00Z',
+      };
+      treadDesignSdkStub.resolveTreadDesign.mockReturnValueOnce(of(dto));
 
-      let result: { matchState: unknown } | undefined;
-      service.resolve('td-1', { action: 'ATTACH', productIds: ['prod-1'] }).subscribe(value => (result = value as never));
+      let result: TreadDesignEnrichment | undefined;
+      service.resolve('td-1', { action: 'ATTACH', productIds: ['prod-1'] }).subscribe(value => (result = value));
 
       expect(result?.matchState).toBe('MATCHED');
     });

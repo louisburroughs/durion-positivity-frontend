@@ -5,9 +5,40 @@ import { NEVER, of, throwError } from 'rxjs';
 import { TreadDesignReviewPageComponent } from './tread-design-review-page.component';
 import { ProductTreadDesignService } from '../../../services/product-tread-design.service';
 import { AuthService } from '../../../../../core/services/auth.service';
-import { TreadDesignCandidate } from '../../../models/tread-design-enrichment.models';
+import type {
+  TreadDesignCandidate,
+  TreadDesignEnrichment,
+  TreadDesignResolveRequest,
+  UnmatchedTreadDesign,
+} from '../../../models/tread-design-enrichment.models';
 
 const TREAD_DESIGN_ID = 'td-1';
+
+/** A fully populated `TreadDesignEnrichment`/`UnmatchedTreadDesign` fixture; override per case. */
+function buildTreadDesignEnrichment(overrides: Partial<TreadDesignEnrichment> = {}): TreadDesignEnrichment {
+  return {
+    id: TREAD_DESIGN_ID,
+    brand: null,
+    treadDesign: null,
+    treadDesign2: null,
+    productName: null,
+    vehicleType: null,
+    seasonality: null,
+    supplierRef: null,
+    vendorProfileId: null,
+    vendorVariantId: null,
+    updatedAt: null,
+    hasUnresolvedImages: false,
+    images: [],
+    texts: [],
+    matchState: null,
+    matchStateAt: null,
+    candidates: [],
+    ...overrides,
+  };
+}
+
+const AUTO_CANDIDATE: readonly TreadDesignCandidate[] = [{ productId: 'prod-1', score: 0.91, tier: 'AUTO' }];
 
 const treadDesignServiceStub = {
   listCandidates: vi.fn(),
@@ -55,14 +86,15 @@ describe('TreadDesignReviewPageComponent', () => {
 
   describe('design metadata (router state)', () => {
     it('shows the design carried via router navigation state', async () => {
+      const treadDesign: UnmatchedTreadDesign = buildTreadDesignEnrichment({ brand: 'Acme', matchState: 'REVIEW' });
       routerStub.getCurrentNavigation.mockReturnValue({
-        extras: { state: { treadDesign: { id: TREAD_DESIGN_ID, brand: 'Acme', matchState: 'REVIEW' } } },
+        extras: { state: { treadDesign } },
       });
       treadDesignServiceStub.listCandidates.mockReturnValueOnce(of([]));
 
       await setup();
 
-      expect(component.design()).toEqual({ id: TREAD_DESIGN_ID, brand: 'Acme', matchState: 'REVIEW' });
+      expect(component.design()).toEqual(treadDesign);
     });
 
     it('degrades to null (design fields unavailable) on a direct navigation with no state', async () => {
@@ -92,14 +124,12 @@ describe('TreadDesignReviewPageComponent', () => {
     });
 
     it('transitions to ready with the mapped candidates', async () => {
-      treadDesignServiceStub.listCandidates.mockReturnValueOnce(
-        of([{ productId: 'prod-1', score: 0.91, tier: 'AUTO' }]),
-      );
+      treadDesignServiceStub.listCandidates.mockReturnValueOnce(of(AUTO_CANDIDATE));
 
       await setup();
 
       expect(component.state()).toBe('ready');
-      expect(component.candidates()).toEqual([{ productId: 'prod-1', score: 0.91, tier: 'AUTO' }]);
+      expect(component.candidates()).toEqual(AUTO_CANDIDATE);
     });
 
     it('sets state to error before errorKey on failure (ADR-0031)', async () => {
@@ -200,9 +230,7 @@ describe('TreadDesignReviewPageComponent', () => {
     });
 
     it('is disabled (canAttach false) until at least one candidate is selected', async () => {
-      treadDesignServiceStub.listCandidates.mockReturnValueOnce(
-        of([{ productId: 'prod-1', score: 0.91, tier: 'AUTO' }]),
-      );
+      treadDesignServiceStub.listCandidates.mockReturnValueOnce(of(AUTO_CANDIDATE));
       await setup();
 
       expect(component.canAttach()).toBe(false);
@@ -213,21 +241,22 @@ describe('TreadDesignReviewPageComponent', () => {
     });
 
     it('calls resolve with ATTACH and the selected product ids', async () => {
-      treadDesignServiceStub.listCandidates.mockReturnValueOnce(
-        of([{ productId: 'prod-1', score: 0.91, tier: 'AUTO' }]),
+      treadDesignServiceStub.listCandidates.mockReturnValueOnce(of(AUTO_CANDIDATE));
+      treadDesignServiceStub.resolve.mockReturnValueOnce(
+        of(buildTreadDesignEnrichment({ matchState: 'MATCHED' })),
       );
-      treadDesignServiceStub.resolve.mockReturnValueOnce(of({ id: TREAD_DESIGN_ID, matchState: 'MATCHED' }));
       await setup();
       component.toggleCandidate('prod-1', true);
       component.noteControl.setValue('Confirmed by phone');
 
       component.attach();
 
-      expect(treadDesignServiceStub.resolve).toHaveBeenCalledWith(TREAD_DESIGN_ID, {
+      const expectedRequest: TreadDesignResolveRequest = {
         action: 'ATTACH',
         productIds: ['prod-1'],
         note: 'Confirmed by phone',
-      });
+      };
+      expect(treadDesignServiceStub.resolve).toHaveBeenCalledWith(TREAD_DESIGN_ID, expectedRequest);
     });
 
     it('does nothing when no candidate is selected', async () => {
@@ -240,10 +269,8 @@ describe('TreadDesignReviewPageComponent', () => {
     });
 
     it('navigates back to the worklist on success', async () => {
-      treadDesignServiceStub.listCandidates.mockReturnValueOnce(
-        of([{ productId: 'prod-1', score: 0.91, tier: 'AUTO' }]),
-      );
-      treadDesignServiceStub.resolve.mockReturnValueOnce(of({ id: TREAD_DESIGN_ID }));
+      treadDesignServiceStub.listCandidates.mockReturnValueOnce(of(AUTO_CANDIDATE));
+      treadDesignServiceStub.resolve.mockReturnValueOnce(of(buildTreadDesignEnrichment()));
       await setup();
       component.toggleCandidate('prod-1', true);
 
@@ -254,9 +281,7 @@ describe('TreadDesignReviewPageComponent', () => {
     });
 
     it('sets busyAction to ATTACH while the request is in flight', async () => {
-      treadDesignServiceStub.listCandidates.mockReturnValueOnce(
-        of([{ productId: 'prod-1', score: 0.91, tier: 'AUTO' }]),
-      );
+      treadDesignServiceStub.listCandidates.mockReturnValueOnce(of(AUTO_CANDIDATE));
       // Never emits/completes — used to observe the in-flight state.
       treadDesignServiceStub.resolve.mockReturnValueOnce(NEVER);
       await setup();
@@ -275,15 +300,18 @@ describe('TreadDesignReviewPageComponent', () => {
 
     it('calls resolve with REJECT and no productIds, needing no selection', async () => {
       treadDesignServiceStub.listCandidates.mockReturnValueOnce(of([]));
-      treadDesignServiceStub.resolve.mockReturnValueOnce(of({ id: TREAD_DESIGN_ID, matchState: 'REJECTED' }));
+      treadDesignServiceStub.resolve.mockReturnValueOnce(
+        of(buildTreadDesignEnrichment({ matchState: 'REJECTED' })),
+      );
       await setup();
 
       component.reject();
 
-      expect(treadDesignServiceStub.resolve).toHaveBeenCalledWith(TREAD_DESIGN_ID, {
+      const expectedRequest: TreadDesignResolveRequest = {
         action: 'REJECT',
         note: undefined,
-      });
+      };
+      expect(treadDesignServiceStub.resolve).toHaveBeenCalledWith(TREAD_DESIGN_ID, expectedRequest);
     });
   });
 
@@ -294,31 +322,37 @@ describe('TreadDesignReviewPageComponent', () => {
 
     it('calls resolve with DEFER and the picked date converted to a local-midnight instant (ADR-0038)', async () => {
       treadDesignServiceStub.listCandidates.mockReturnValueOnce(of([]));
-      treadDesignServiceStub.resolve.mockReturnValueOnce(of({ id: TREAD_DESIGN_ID, matchState: 'DEFERRED' }));
+      treadDesignServiceStub.resolve.mockReturnValueOnce(
+        of(buildTreadDesignEnrichment({ matchState: 'DEFERRED' })),
+      );
       await setup();
       component.deferUntilControl.setValue('2026-09-20');
 
       component.defer();
 
-      expect(treadDesignServiceStub.resolve).toHaveBeenCalledWith(TREAD_DESIGN_ID, {
+      const expectedRequest: TreadDesignResolveRequest = {
         action: 'DEFER',
         note: undefined,
         deferUntil: new Date(2026, 8, 20).toISOString(),
-      });
+      };
+      expect(treadDesignServiceStub.resolve).toHaveBeenCalledWith(TREAD_DESIGN_ID, expectedRequest);
     });
 
     it('omits deferUntil when no date was picked', async () => {
       treadDesignServiceStub.listCandidates.mockReturnValueOnce(of([]));
-      treadDesignServiceStub.resolve.mockReturnValueOnce(of({ id: TREAD_DESIGN_ID, matchState: 'DEFERRED' }));
+      treadDesignServiceStub.resolve.mockReturnValueOnce(
+        of(buildTreadDesignEnrichment({ matchState: 'DEFERRED' })),
+      );
       await setup();
 
       component.defer();
 
-      expect(treadDesignServiceStub.resolve).toHaveBeenCalledWith(TREAD_DESIGN_ID, {
+      const expectedRequest: TreadDesignResolveRequest = {
         action: 'DEFER',
         note: undefined,
         deferUntil: undefined,
-      });
+      };
+      expect(treadDesignServiceStub.resolve).toHaveBeenCalledWith(TREAD_DESIGN_ID, expectedRequest);
     });
   });
 
