@@ -4,6 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { toIsoDate, VendorInvoicesListPageComponent } from './vendor-invoices-list-page.component';
 import { PayablesService } from '../../../services/payables.service';
+import { addCalendarDays } from '../../../utils/date-window.util';
 
 describe('toIsoDate', () => {
   /**
@@ -68,6 +69,18 @@ describe('VendorInvoicesListPageComponent', () => {
       0,
       25,
     );
+  });
+
+  it('defaults dueFrom/dueTo to a -30/+60 calendar-day window computed with the shared date-window helper', async () => {
+    mockService.listBills.mockReturnValueOnce(
+      of({ items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
+    );
+
+    await setup();
+
+    const today = new Date();
+    expect(component.dueFrom()).toBe(toIsoDate(addCalendarDays(today, -30)));
+    expect(component.dueTo()).toBe(toIsoDate(addCalendarDays(today, 60)));
   });
 
   it('transitions to empty when no bills are in the window', async () => {

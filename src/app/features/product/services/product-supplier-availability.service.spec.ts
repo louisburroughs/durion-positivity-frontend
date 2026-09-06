@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SupplierStockAvailabilityService } from '@durion-sdk/supplier';
 import { ProductSupplierAvailabilityService } from './product-supplier-availability.service';
 
@@ -148,6 +149,95 @@ describe('ProductSupplierAvailabilityService', () => {
       expect(result?.vendors[0].fetchedAt).toBeNull();
       expect(result?.vendors[0].stale).toBeNull();
       expect(result?.vendors[0].lines).toEqual([]);
+    });
+  });
+
+  /**
+   * Whitelisting (#212): the mapper checks every SDK status token against a
+   * known set rather than casting it straight through, so a status the SDK
+   * enum grows later — and any typo/garbage token — becomes `null` instead
+   * of silently flowing into a template that switches on it by string.
+   */
+  describe('vendor and line status whitelisting', () => {
+    const KNOWN_VENDOR_STATUSES = [
+      'OK',
+      'SUPPLIER_UNAVAILABLE',
+      'NOT_LISTED',
+      'CAPABILITY_NOT_CONFIGURED',
+      'CONFIGURATION_ERROR',
+    ] as const;
+
+    const KNOWN_LINE_STATUSES = ['AVAILABLE', 'UNAVAILABLE', 'NOT_LISTED', 'NOT_ANSWERED'] as const;
+
+    function responseWithVendorStatus(status: string) {
+      return of({
+        productId: 'prod-1',
+        deliveryLocationId: 'loc-1',
+        vendors: [{ vendorProfileId: 'vp-1', vendorDisplayName: 'Acme Tires', status, lines: [] }],
+      });
+    }
+
+    function responseWithLineStatus(status: string) {
+      return of({
+        productId: 'prod-1',
+        deliveryLocationId: 'loc-1',
+        vendors: [
+          {
+            vendorProfileId: 'vp-1',
+            vendorDisplayName: 'Acme Tires',
+            status: 'OK',
+            lines: [{ status }],
+          },
+        ],
+      });
+    }
+
+    it.each(KNOWN_VENDOR_STATUSES)('maps known vendor status %s to itself', status => {
+      stockSdkStub.getSupplierStockAvailability.mockReturnValueOnce(responseWithVendorStatus(status));
+
+      let result: { vendors: ReadonlyArray<{ status: unknown }> } | undefined;
+      service
+        .checkAvailability({ productId: 'prod-1', deliveryLocationId: 'loc-1' })
+        .subscribe(value => (result = value));
+
+      expect(result?.vendors[0].status).toBe(status);
+    });
+
+    it('maps an unknown vendor status token to null rather than casting it through', () => {
+      stockSdkStub.getSupplierStockAvailability.mockReturnValueOnce(
+        responseWithVendorStatus('VENDOR_STATUS_NOT_IN_SDK_ENUM'),
+      );
+
+      let result: { vendors: ReadonlyArray<{ status: unknown }> } | undefined;
+      service
+        .checkAvailability({ productId: 'prod-1', deliveryLocationId: 'loc-1' })
+        .subscribe(value => (result = value));
+
+      expect(result?.vendors[0].status).toBeNull();
+    });
+
+    it.each(KNOWN_LINE_STATUSES)('maps known line status %s to itself', status => {
+      stockSdkStub.getSupplierStockAvailability.mockReturnValueOnce(responseWithLineStatus(status));
+
+      let result: { vendors: ReadonlyArray<{ lines: ReadonlyArray<{ status: unknown }> }> } | undefined;
+      service
+        .checkAvailability({ productId: 'prod-1', deliveryLocationId: 'loc-1' })
+        .subscribe(value => (result = value));
+
+      expect(result?.vendors[0].lines[0].status).toBe(status);
+    });
+
+    it('maps an unknown line status token to null rather than casting it through', () => {
+      stockSdkStub.getSupplierStockAvailability.mockReturnValueOnce(
+        responseWithLineStatus('LINE_STATUS_NOT_IN_SDK_ENUM'),
+      );
+
+      let result: { vendors: ReadonlyArray<{ lines: ReadonlyArray<{ status: unknown }> }> } | undefined;
+      service
+        .checkAvailability({ productId: 'prod-1', deliveryLocationId: 'loc-1' })
+        .subscribe(value => (result = value));
+
+      expect(result?.vendors[0].lines[0].status).toBeNull();
     });
   });
 });

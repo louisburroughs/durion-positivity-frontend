@@ -102,4 +102,35 @@ describe('PurchaseOrderTransmissionTimelineService', () => {
 
     expect(result?.items.map(i => i.transmissionEventId)).toEqual(['evt-2', 'evt-1']);
   });
+
+  /**
+   * `dto.observedAt ?? ''`/`dto.recordedAt ?? ''` would coerce a missing
+   * timestamp into `''`, which `DatePipe`/`Date` renders as "Invalid Date"
+   * rather than a clean "not available" state. Guarded to `null` instead.
+   */
+  it('maps a missing observedAt to null, not an empty string', () => {
+    const dtoWithoutObservedAt: SdkPurchaseOrderTransmissionEvent = { ...eventDto, observedAt: undefined };
+    api.listPurchaseOrderTransmissionEvents.mockReturnValue(
+      of({ ...pageDto, content: [dtoWithoutObservedAt] }),
+    );
+
+    let result: PurchaseOrderTransmissionTimelinePage | undefined;
+    service.listForPurchaseOrder(PO_ID).subscribe(value => (result = value));
+
+    expect(result?.items[0].observedAt).toBeNull();
+    expect(result?.items[0].observedAt).not.toBe('');
+  });
+
+  it('maps a missing recordedAt to null, not an empty string', () => {
+    const dtoWithoutRecordedAt: SdkPurchaseOrderTransmissionEvent = { ...eventDto, recordedAt: undefined };
+    api.listPurchaseOrderTransmissionEvents.mockReturnValue(
+      of({ ...pageDto, content: [dtoWithoutRecordedAt] }),
+    );
+
+    let result: PurchaseOrderTransmissionTimelinePage | undefined;
+    service.listForPurchaseOrder(PO_ID).subscribe(value => (result = value));
+
+    expect(result?.items[0].recordedAt).toBeNull();
+    expect(result?.items[0].recordedAt).not.toBe('');
+  });
 });

@@ -39,6 +39,25 @@ describe('SupplierAvailabilityPanelComponent', () => {
     expect(component.form.controls.deliveryLocationId.touched).toBe(true);
   });
 
+  it('does not submit when the delivery location is whitespace-only (notBlank)', () => {
+    component.form.controls.deliveryLocationId.setValue('   ');
+
+    component.checkAvailability();
+
+    expect(component.form.invalid).toBe(true);
+    expect(mockService.checkAvailability).not.toHaveBeenCalled();
+  });
+
+  it('does not submit when quantity is 0 (integerAtLeast(1))', () => {
+    component.form.controls.deliveryLocationId.setValue('loc-1');
+    component.form.controls.quantity.setValue(0);
+
+    component.checkAvailability();
+
+    expect(component.form.invalid).toBe(true);
+    expect(mockService.checkAvailability).not.toHaveBeenCalled();
+  });
+
   it('checks availability with productId, the entered location and quantity', () => {
     mockService.checkAvailability.mockReturnValueOnce(of({ vendors: [] }));
     component.form.controls.deliveryLocationId.setValue('loc-1');
@@ -50,6 +69,20 @@ describe('SupplierAvailabilityPanelComponent', () => {
       productId: 'prod-123',
       deliveryLocationId: 'loc-1',
       quantity: 4,
+    });
+  });
+
+  it('trims surrounding whitespace from a valid delivery location before submitting', () => {
+    mockService.checkAvailability.mockReturnValueOnce(of({ vendors: [] }));
+    component.form.controls.deliveryLocationId.setValue('  loc-1  ');
+
+    component.checkAvailability();
+
+    expect(component.form.valid).toBe(true);
+    expect(mockService.checkAvailability).toHaveBeenCalledWith({
+      productId: 'prod-123',
+      deliveryLocationId: 'loc-1',
+      quantity: undefined,
     });
   });
 
@@ -119,5 +152,40 @@ describe('SupplierAvailabilityPanelComponent', () => {
     };
 
     expect(component.firstLine(vendor)).toBeNull();
+  });
+
+  it('renders the translated UNKNOWN label with the neutral badge, never a raw key, for a null vendor status', () => {
+    const availability = {
+      productId: 'prod-123',
+      deliveryLocationId: 'loc-1',
+      requestedQuantity: null,
+      stalenessThreshold: null,
+      vendors: [
+        {
+          vendorProfileId: 'vp-unknown',
+          vendorDisplayName: 'Mystery Vendor',
+          status: null,
+          fetchedAt: null,
+          asOf: null,
+          stale: null,
+          lines: [],
+        },
+      ],
+    };
+    mockService.checkAvailability.mockReturnValueOnce(of(availability));
+    component.form.controls.deliveryLocationId.setValue('loc-1');
+
+    component.checkAvailability();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const statusBadge = el.querySelector('.badge');
+
+    expect(statusBadge).not.toBeNull();
+    expect(statusBadge?.classList.contains('badge--neutral')).toBe(true);
+    expect(statusBadge?.textContent).toContain(
+      'PRODUCT.CATALOG.DETAIL.AVAILABILITY.VENDOR_STATUS.UNKNOWN',
+    );
+    expect(statusBadge?.textContent).not.toMatch(/VENDOR_STATUS\.null/);
   });
 });

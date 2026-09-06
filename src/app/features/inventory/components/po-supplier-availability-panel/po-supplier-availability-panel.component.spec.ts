@@ -48,6 +48,25 @@ describe('PoSupplierAvailabilityPanelComponent', () => {
     expect(component.form.controls.deliveryLocationId.touched).toBe(true);
   });
 
+  it('does not submit when the delivery location is whitespace-only (notBlank)', () => {
+    component.form.controls.deliveryLocationId.setValue('   ');
+
+    component.checkAvailability();
+
+    expect(component.form.invalid).toBe(true);
+    expect(mockService.checkAvailability).not.toHaveBeenCalled();
+  });
+
+  it('does not submit when quantity is 0 (integerAtLeast(1))', () => {
+    component.form.controls.deliveryLocationId.setValue('loc-1');
+    component.form.controls.quantity.setValue(0);
+
+    component.checkAvailability();
+
+    expect(component.form.invalid).toBe(true);
+    expect(mockService.checkAvailability).not.toHaveBeenCalled();
+  });
+
   it('checks availability with the sku, entered location and quantity', () => {
     mockService.checkAvailability.mockReturnValueOnce(of({ vendors: [] }));
     component.form.controls.deliveryLocationId.setValue('loc-1');
@@ -59,6 +78,20 @@ describe('PoSupplierAvailabilityPanelComponent', () => {
       sku: 'SKU-42',
       deliveryLocationId: 'loc-1',
       quantity: 7,
+    });
+  });
+
+  it('trims surrounding whitespace from a valid delivery location before submitting', () => {
+    mockService.checkAvailability.mockReturnValueOnce(of({ vendors: [] }));
+    component.form.controls.deliveryLocationId.setValue('  loc-1  ');
+
+    component.checkAvailability();
+
+    expect(component.form.valid).toBe(true);
+    expect(mockService.checkAvailability).toHaveBeenCalledWith({
+      sku: 'SKU-42',
+      deliveryLocationId: 'loc-1',
+      quantity: undefined,
     });
   });
 
@@ -113,5 +146,40 @@ describe('PoSupplierAvailabilityPanelComponent', () => {
     const keyIdx = calls.findIndex(c => c.startsWith('errorKey:'));
     expect(stateIdx).toBeGreaterThanOrEqual(0);
     expect(keyIdx).toBeGreaterThan(stateIdx);
+  });
+
+  it('renders the translated UNKNOWN label with the neutral badge, never a raw key, for a null vendor status', () => {
+    const availability = {
+      productId: 'prod-9',
+      deliveryLocationId: 'loc-1',
+      requestedQuantity: null,
+      stalenessThreshold: null,
+      vendors: [
+        {
+          vendorProfileId: 'vp-unknown',
+          vendorDisplayName: 'Mystery Vendor',
+          status: null,
+          fetchedAt: null,
+          asOf: null,
+          stale: null,
+          lines: [],
+        },
+      ],
+    };
+    mockService.checkAvailability.mockReturnValueOnce(of(availability));
+    component.form.controls.deliveryLocationId.setValue('loc-1');
+
+    component.checkAvailability();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const statusBadge = el.querySelector('.badge');
+
+    expect(statusBadge).not.toBeNull();
+    expect(statusBadge?.classList.contains('badge--neutral')).toBe(true);
+    expect(statusBadge?.textContent).toContain(
+      'INVENTORY.PURCHASE_ORDERS.FORM.AVAILABILITY.VENDOR_STATUS.UNKNOWN',
+    );
+    expect(statusBadge?.textContent).not.toMatch(/VENDOR_STATUS\.null/);
   });
 });

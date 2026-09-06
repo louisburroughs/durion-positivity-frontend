@@ -183,4 +183,48 @@ describe('PurchaseOrderTransmissionTimelinePanelComponent', () => {
 
     expect(service.listForPurchaseOrder).toHaveBeenCalledTimes(2);
   });
+
+  describe('null timestamp guards', () => {
+    const noTimestamps: PurchaseOrderTransmissionTimelinePage['items'][number] = {
+      ...statusChanged,
+      transmissionEventId: 'evt-3',
+      observedAt: null,
+      recordedAt: null,
+    };
+
+    it('renders the NOT_AVAILABLE label and no <time> element for a row with null observedAt/recordedAt', () => {
+      service.listForPurchaseOrder.mockReturnValue(
+        of({ items: [noTimestamps], page: 0, size: 25, totalCount: 1, totalPages: 1 }),
+      );
+      const el = render();
+      const item = el.querySelector('.timeline__item')!;
+
+      expect(item.querySelectorAll('time')).toHaveLength(0);
+      const facts = Array.from(item.querySelectorAll('.timeline__fact')).map(f => f.textContent ?? '');
+      expect(facts.some(f => f.includes('POSITIVITY.TRANSMISSION_TIMELINE.NOT_AVAILABLE'))).toBe(true);
+    });
+
+    it('never renders an empty datetime attribute for a row with null timestamps', () => {
+      service.listForPurchaseOrder.mockReturnValue(
+        of({ items: [noTimestamps], page: 0, size: 25, totalCount: 1, totalPages: 1 }),
+      );
+      const el = render();
+      const item = el.querySelector('.timeline__item')!;
+
+      const emptyDatetimes = Array.from(item.querySelectorAll('[datetime]')).filter(
+        node => node.getAttribute('datetime') === '',
+      );
+      expect(emptyDatetimes).toHaveLength(0);
+    });
+
+    it('renders <time datetime="..."> for a row with observedAt/recordedAt values', () => {
+      const el = render();
+      const item = el.querySelectorAll('.timeline__item')[0];
+      const times = Array.from(item.querySelectorAll('time'));
+
+      expect(times).toHaveLength(2);
+      expect(times[0].getAttribute('datetime')).toBe(statusChanged.observedAt);
+      expect(times[1].getAttribute('datetime')).toBe(statusChanged.recordedAt);
+    });
+  });
 });
