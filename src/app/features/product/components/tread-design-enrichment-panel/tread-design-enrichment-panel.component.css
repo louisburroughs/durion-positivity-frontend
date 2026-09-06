@@ -86,3 +86,37 @@
   gap: 0.4rem;
   margin: 0.8rem 0 0;
 }
+
+.match-state-badge {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.3rem 0.6rem;
+}
+
+.match-state-badge--unmatched {
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+.match-state-badge--review {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.match-state-badge--matched {
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+.match-state-badge--rejected {
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+.match-state-badge--deferred {
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+}

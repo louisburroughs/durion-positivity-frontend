@@ -104,6 +104,63 @@ describe('TreadDesignEnrichmentPanelComponent', () => {
     expect(el.querySelector('.artwork-pending')).not.toBeNull();
   });
 
+  it('shows the match state when present (phase 2, backend #1645)', () => {
+    mockService.getEnrichmentForProduct.mockReturnValueOnce(
+      of({
+        id: 'td-3',
+        brand: 'Acme',
+        treadDesign: 'Sierra',
+        treadDesign2: null,
+        productName: null,
+        vehicleType: null,
+        seasonality: null,
+        supplierRef: null,
+        vendorProfileId: null,
+        vendorVariantId: null,
+        updatedAt: null,
+        hasUnresolvedImages: false,
+        images: [],
+        texts: [],
+        matchState: 'MATCHED',
+        matchStateAt: null,
+        candidates: [],
+      }),
+    );
+    createFixture();
+    fixture.componentRef.setInput('productId', 'prod-3');
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.match-state-badge--matched')).not.toBeNull();
+  });
+
+  it('omits the match-state row entirely when matchState is absent', () => {
+    mockService.getEnrichmentForProduct.mockReturnValueOnce(
+      of({
+        id: 'td-4',
+        brand: 'Acme',
+        treadDesign: null,
+        treadDesign2: null,
+        productName: null,
+        vehicleType: null,
+        seasonality: null,
+        supplierRef: null,
+        vendorProfileId: null,
+        vendorVariantId: null,
+        updatedAt: null,
+        hasUnresolvedImages: false,
+        images: [],
+        texts: [],
+      }),
+    );
+    createFixture();
+    fixture.componentRef.setInput('productId', 'prod-4');
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.match-state-badge')).toBeNull();
+  });
+
   it('re-fetches when productId changes', () => {
     mockService.getEnrichmentForProduct.mockReturnValueOnce(of(null));
     createFixture();

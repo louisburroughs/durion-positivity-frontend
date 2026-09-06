@@ -43,6 +43,16 @@
       <dd>{{ enrichment()!.updatedAt | date:'medium' }}</dd>
     </div>
     }
+    @if (enrichment()?.matchState) {
+    <div>
+      <dt>{{ 'PRODUCT.CATALOG.DETAIL.ENRICHMENT.FIELD.MATCH_STATE' | translate }}</dt>
+      <dd>
+        <span class="match-state-badge match-state-badge--{{ enrichment()!.matchState! | lowercase }}">
+          {{ 'PRODUCT.CATALOG.ENRICHMENT.MATCH_STATE.' + enrichment()!.matchState! | translate }}
+        </span>
+      </dd>
+    </div>
+    }
   </dl>
 
   @if (primaryText()) {

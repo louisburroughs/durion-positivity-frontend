@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, LowerCasePipe } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { TreadDesignEnrichment } from '../../models/tread-design-enrichment.models';
@@ -25,11 +25,19 @@ import { ProductTreadDesignService } from '../../services/product-tread-design.s
  * Every field here is vendor-supplied marketing content, labelled as such
  * throughout the template so it is never mistaken for catalog-owned product
  * data.
+ *
+ * ── Phase 2 (backend #1645 / ADR-0060): match state, not manual-source label ─
+ * `matchState` is shown when present. `TreadDesignDto` carries no
+ * `treadDesignSource`/`MANUAL` field on either this read or the product DTO,
+ * so a "manually attached" label is not built here — there is nothing in the
+ * generated contract to source it from. Labelling manual attachments is
+ * deferred until the contract actually exposes that fact, per the platform
+ * rule against guessing at data a read doesn't carry.
  */
 @Component({
   selector: 'app-tread-design-enrichment-panel',
   standalone: true,
-  imports: [TranslatePipe, DatePipe],
+  imports: [TranslatePipe, DatePipe, LowerCasePipe],
   templateUrl: './tread-design-enrichment-panel.component.html',
   styleUrl: './tread-design-enrichment-panel.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
