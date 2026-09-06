@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule } from '@ngx-translate/core';
+import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { TreadDesignUnmatchedPageComponent } from './tread-design-unmatched-page.component';
 import { ProductTreadDesignService } from '../../../services/product-tread-design.service';
@@ -15,7 +16,10 @@ describe('TreadDesignUnmatchedPageComponent', () => {
   async function setup(): Promise<void> {
     await TestBed.configureTestingModule({
       imports: [TreadDesignUnmatchedPageComponent, TranslateModule.forRoot()],
-      providers: [{ provide: ProductTreadDesignService, useValue: mockService }],
+      providers: [
+        provideRouter([]),
+        { provide: ProductTreadDesignService, useValue: mockService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TreadDesignUnmatchedPageComponent);
@@ -26,14 +30,19 @@ describe('TreadDesignUnmatchedPageComponent', () => {
     vi.clearAllMocks();
   });
 
-  it('loads page 0 on construction', async () => {
+  it('loads page 0 with the default UNMATCHED+REVIEW filter on construction', async () => {
     mockService.listUnmatched.mockReturnValueOnce(
       of({ items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
     );
 
     await setup();
 
-    expect(mockService.listUnmatched).toHaveBeenCalledWith(0, 25);
+    expect(mockService.listUnmatched).toHaveBeenCalledWith(
+      ['UNMATCHED', 'REVIEW'],
+      undefined,
+      0,
+      25,
+    );
   });
 
   it('transitions to empty when the page has no items — an ordinary outcome, not an error', async () => {
@@ -62,6 +71,9 @@ describe('TreadDesignUnmatchedPageComponent', () => {
       hasUnresolvedImages: false,
       images: [],
       texts: [],
+      matchState: 'REVIEW',
+      matchStateAt: '2026-09-01T00:00:00Z',
+      candidates: [],
     };
     mockService.listUnmatched.mockReturnValueOnce(
       of({ items: [item], page: 0, size: 25, totalElements: 1, totalPages: 1 }),
@@ -82,7 +94,7 @@ describe('TreadDesignUnmatchedPageComponent', () => {
     expect(component.errorKey()).toBe('PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.ERROR.LOAD');
   });
 
-  it('nextPage() loads the following page when more pages exist', async () => {
+  it('nextPage() loads the following page when more pages exist, keeping the current filter', async () => {
     mockService.listUnmatched.mockReturnValueOnce(
       of({ items: [{ id: 'td-1' }], page: 0, size: 25, totalElements: 30, totalPages: 2 }),
     );
@@ -93,7 +105,7 @@ describe('TreadDesignUnmatchedPageComponent', () => {
 
     component.nextPage();
 
-    expect(mockService.listUnmatched).toHaveBeenLastCalledWith(1, 25);
+    expect(mockService.listUnmatched).toHaveBeenLastCalledWith(['UNMATCHED', 'REVIEW'], undefined, 1, 25);
   });
 
   it('nextPage() does nothing on the last page', async () => {
@@ -118,5 +130,60 @@ describe('TreadDesignUnmatchedPageComponent', () => {
     component.previousPage();
 
     expect(mockService.listUnmatched).not.toHaveBeenCalled();
+  });
+
+  describe('filtering', () => {
+    beforeEach(async () => {
+      mockService.listUnmatched.mockReturnValueOnce(
+        of({ items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
+      );
+      await setup();
+      vi.clearAllMocks();
+    });
+
+    it('toggleMatchState adds a state to the selection', () => {
+      component.toggleMatchState('MATCHED', true);
+
+      expect(component.isMatchStateSelected('MATCHED')).toBe(true);
+      expect(component.selectedMatchStates()).toEqual(['UNMATCHED', 'REVIEW', 'MATCHED']);
+    });
+
+    it('toggleMatchState removes a state from the selection', () => {
+      component.toggleMatchState('REVIEW', false);
+
+      expect(component.isMatchStateSelected('REVIEW')).toBe(false);
+      expect(component.selectedMatchStates()).toEqual(['UNMATCHED']);
+    });
+
+    it('applyFilters() reloads page 0 with the current matchState and vendorProfileId selection', () => {
+      component.toggleMatchState('MATCHED', true);
+      component.setVendorProfileIdFilter('  vendor-9  ');
+      mockService.listUnmatched.mockReturnValueOnce(
+        of({ items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
+      );
+
+      component.applyFilters();
+
+      expect(mockService.listUnmatched).toHaveBeenCalledWith(
+        ['UNMATCHED', 'REVIEW', 'MATCHED'],
+        'vendor-9',
+        0,
+        25,
+      );
+    });
+
+    it('clearFilters() resets to the default selection and reloads page 0', () => {
+      component.toggleMatchState('MATCHED', true);
+      component.setVendorProfileIdFilter('vendor-9');
+      mockService.listUnmatched.mockReturnValueOnce(
+        of({ items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
+      );
+
+      component.clearFilters();
+
+      expect(component.selectedMatchStates()).toEqual(['UNMATCHED', 'REVIEW']);
+      expect(component.vendorProfileIdFilter()).toBe('');
+      expect(mockService.listUnmatched).toHaveBeenCalledWith(['UNMATCHED', 'REVIEW'], undefined, 0, 25);
+    });
   });
 });

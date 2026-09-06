@@ -6,6 +6,49 @@
     <p class="page-subtitle">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.SUBTITLE' | translate }}</p>
   </header>
 
+  <section class="card filter-card" aria-labelledby="unmatched-filter-legend">
+    <form (submit)="$event.preventDefault(); applyFilters()">
+      <fieldset class="filter-fieldset">
+        <legend id="unmatched-filter-legend">
+          {{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.FILTER.MATCH_STATE_LEGEND' | translate }}
+        </legend>
+        <div class="match-state-options">
+          @for (matchState of allMatchStates; track matchState) {
+          <label class="match-state-option">
+            <input
+              type="checkbox"
+              [checked]="isMatchStateSelected(matchState)"
+              (change)="toggleMatchState(matchState, $any($event.target).checked)"
+            />
+            {{ 'PRODUCT.CATALOG.ENRICHMENT.MATCH_STATE.' + matchState | translate }}
+          </label>
+          }
+        </div>
+      </fieldset>
+
+      <div class="vendor-filter">
+        <label for="unmatched-vendor-filter">
+          {{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.FILTER.VENDOR_PROFILE_ID_LABEL' | translate }}
+        </label>
+        <input
+          id="unmatched-vendor-filter"
+          type="text"
+          [value]="vendorProfileIdFilter()"
+          (input)="setVendorProfileIdFilter($any($event.target).value)"
+        />
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-primary" type="submit">
+          {{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.FILTER.APPLY' | translate }}
+        </button>
+        <button class="btn-secondary" type="button" (click)="clearFilters()">
+          {{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.FILTER.CLEAR' | translate }}
+        </button>
+      </div>
+    </form>
+  </section>
+
   @if (state() === 'loading') {
   <section class="card" aria-busy="true">
     <p class="sr-only" role="status">{{ 'COMMON.LOADING' | translate }}</p>
@@ -37,8 +80,11 @@
             <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.BRAND' | translate }}</th>
             <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.TREAD_DESIGN' | translate }}</th>
             <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.VENDOR' | translate }}</th>
+            <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.STATE' | translate }}</th>
+            <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.AGED_SINCE' | translate }}</th>
             <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.ARTWORK' | translate }}</th>
             <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.UPDATED_AT' | translate }}</th>
+            <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.TABLE.ACTIONS' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -48,6 +94,16 @@
             <td>{{ item.treadDesign ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
             <td>{{ item.supplierRef ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
             <td>
+              @if (item.matchState) {
+              <span class="match-state-badge match-state-badge--{{ item.matchState | lowercase }}">
+                {{ 'PRODUCT.CATALOG.ENRICHMENT.MATCH_STATE.' + item.matchState | translate }}
+              </span>
+              } @else {
+              {{ 'COMMON.NOT_AVAILABLE' | translate }}
+              }
+            </td>
+            <td>{{ item.matchStateAt ? (item.matchStateAt | date:'medium') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+            <td>
               @if (item.hasUnresolvedImages) {
               <span class="badge badge--warning">{{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.ARTWORK_PENDING' | translate }}</span>
               } @else {
@@ -55,6 +111,15 @@
               }
             </td>
             <td>{{ item.updatedAt ? (item.updatedAt | date:'medium') : ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+            <td>
+              <a
+                class="btn-secondary"
+                [routerLink]="['/app/product/catalog/enrichment/review', item.id]"
+                [state]="{ treadDesign: item }"
+              >
+                {{ 'PRODUCT.CATALOG.ENRICHMENT.UNMATCHED.ROW_ACTION.REVIEW' | translate }}
+              </a>
+            </td>
           </tr>
           }
         </tbody>

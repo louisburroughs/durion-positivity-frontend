@@ -33,6 +33,77 @@
   padding: 1rem;
 }
 
+.filter-card form {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+
+.filter-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.filter-fieldset legend {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  opacity: 0.8;
+  padding: 0;
+}
+
+.match-state-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.match-state-option {
+  align-items: center;
+  display: inline-flex;
+  font-size: 0.85rem;
+  gap: 0.3rem;
+}
+
+.vendor-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.vendor-filter label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.vendor-filter input {
+  background: var(--themeBackground);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  color: var(--currentTextColor);
+  font: inherit;
+  padding: 0.45rem 0.6rem;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.btn-primary {
+  background: var(--brand-primary);
+  border: none;
+  border-radius: 0.65rem;
+  color: var(--contrastTextColor);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.55rem 0.9rem;
+}
+
 .state-card {
   text-align: center;
 }
@@ -69,6 +140,40 @@
 .badge--warning {
   background: var(--status-warning-bg);
   color: var(--status-warning-fg);
+}
+
+.match-state-badge {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.3rem 0.6rem;
+}
+
+.match-state-badge--unmatched {
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+.match-state-badge--review {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.match-state-badge--matched {
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+.match-state-badge--rejected {
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+.match-state-badge--deferred {
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
 }
 
 .pagination {
