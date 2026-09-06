@@ -2581,6 +2581,7 @@
             "ATTACH": "Adjuntar seleccionados",
             "REJECT": "Rechazar",
             "DEFER": "Aplazar",
+            "SUBMITTING": "Enviando…",
             "ERROR": {
               "CONFLICT": "Uno de los productos seleccionados ya está adjunto a otro diseño por un revisor.",
               "INVALID": "Esa acción no es válida para este diseño.",

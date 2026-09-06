@@ -10,6 +10,7 @@ import {
 } from '@durion-sdk/catalog';
 import {
   TreadDesignCandidate,
+  TreadDesignCandidateTier,
   TreadDesignEnrichment,
   TreadDesignEnrichmentImage,
   TreadDesignEnrichmentText,
@@ -17,6 +18,20 @@ import {
   TreadDesignResolveRequest,
   UnmatchedTreadDesignPage,
 } from '../models/tread-design-enrichment.models';
+
+/** Known match-state tokens (`TreadDesignDtoMatchStateEnum` in `@durion-sdk/catalog`). */
+const MATCH_STATES: readonly TreadDesignMatchState[] = ['UNMATCHED', 'REVIEW', 'MATCHED', 'REJECTED', 'DEFERRED'];
+
+function isMatchState(value: string): value is TreadDesignMatchState {
+  return MATCH_STATES.some(state => state === value);
+}
+
+/** Known candidate-tier tokens (`TreadDesignCandidateDtoTierEnum`). */
+const CANDIDATE_TIERS: readonly TreadDesignCandidateTier[] = ['AUTO', 'REVIEW', 'NONE'];
+
+function isCandidateTier(value: string): value is TreadDesignCandidateTier {
+  return CANDIDATE_TIERS.some(tier => tier === value);
+}
 
 /**
  * Vendor-supplied tread-design enrichment reads, and (phase 2, #218 / backend
@@ -125,7 +140,7 @@ export class ProductTreadDesignService {
       hasUnresolvedImages: dto.hasUnresolvedImages ?? false,
       images: (dto.images ?? []).map(image => this.toImage(image)),
       texts: (dto.texts ?? []).map(text => this.toText(text)),
-      matchState: (dto.matchState as TreadDesignMatchState | undefined) ?? null,
+      matchState: this.toMatchState(dto.matchState),
       matchStateAt: dto.matchStateAt ?? null,
       candidates: (dto.candidates ?? []).map(candidate => this.toCandidate(candidate)),
     };
@@ -161,8 +176,18 @@ export class ProductTreadDesignService {
     return {
       productId: candidate.productId ?? null,
       score: candidate.score ?? null,
-      tier: (candidate.tier as TreadDesignCandidate['tier']) ?? null,
+      tier: this.toTier(candidate.tier),
     };
+  }
+
+  /** Returns `value` only when it is one of the known match-state tokens, otherwise `null`. */
+  private toMatchState(value: string | undefined): TreadDesignMatchState | null {
+    return value !== undefined && isMatchState(value) ? value : null;
+  }
+
+  /** Returns `value` only when it is one of the known candidate-tier tokens, otherwise `null`. */
+  private toTier(value: string | undefined): TreadDesignCandidateTier | null {
+    return value !== undefined && isCandidateTier(value) ? value : null;
   }
 
   private toUnmatchedPage(response: Page): UnmatchedTreadDesignPage {

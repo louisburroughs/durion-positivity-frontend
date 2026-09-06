@@ -5,6 +5,7 @@ import { NEVER, of, throwError } from 'rxjs';
 import { TreadDesignReviewPageComponent } from './tread-design-review-page.component';
 import { ProductTreadDesignService } from '../../../services/product-tread-design.service';
 import { AuthService } from '../../../../../core/services/auth.service';
+import { TreadDesignCandidate } from '../../../models/tread-design-enrichment.models';
 
 const TREAD_DESIGN_ID = 'td-1';
 
@@ -111,6 +112,32 @@ describe('TreadDesignReviewPageComponent', () => {
     });
   });
 
+  describe('candidates table checkbox ids (null productId)', () => {
+    beforeEach(() => {
+      authServiceStub.hasAnyRole.mockReturnValue(true);
+    });
+
+    it('renders unique ids and no checkbox for candidates with a null productId', async () => {
+      const candidates: readonly TreadDesignCandidate[] = [
+        { productId: null, score: 0.2, tier: 'NONE' },
+        { productId: null, score: 0.1, tier: 'NONE' },
+        { productId: 'prod-1', score: 0.91, tier: 'AUTO' },
+      ];
+      treadDesignServiceStub.listCandidates.mockReturnValueOnce(of(candidates));
+
+      await setup();
+
+      const checkboxes = fixture.nativeElement.querySelectorAll('input[type="checkbox"]');
+      expect(checkboxes.length).toBe(1);
+      expect((checkboxes[0] as HTMLInputElement).id).toBe('candidate-prod-1');
+
+      const ids = Array.from(fixture.nativeElement.querySelectorAll('[id^="candidate-"]')).map(
+        el => (el as HTMLElement).id,
+      );
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+  });
+
   describe('permission gating (catalog:tread_design:resolve)', () => {
     it('canResolve is false without ROLE_ADMIN', async () => {
       authServiceStub.hasAnyRole.mockReturnValue(false);
@@ -129,6 +156,28 @@ describe('TreadDesignReviewPageComponent', () => {
       await setup();
 
       expect(component.canResolve()).toBe(true);
+    });
+
+    it('disables noteControl/deferUntilControl for a non-admin', async () => {
+      authServiceStub.hasAnyRole.mockReturnValue(false);
+      treadDesignServiceStub.listCandidates.mockReturnValueOnce(of([]));
+
+      await setup();
+      fixture.detectChanges();
+
+      expect(component.noteControl.disabled).toBe(true);
+      expect(component.deferUntilControl.disabled).toBe(true);
+    });
+
+    it('enables noteControl/deferUntilControl for ROLE_ADMIN', async () => {
+      authServiceStub.hasAnyRole.mockReturnValue(true);
+      treadDesignServiceStub.listCandidates.mockReturnValueOnce(of([]));
+
+      await setup();
+      fixture.detectChanges();
+
+      expect(component.noteControl.disabled).toBe(false);
+      expect(component.deferUntilControl.disabled).toBe(false);
     });
 
     it('attach()/reject()/defer() are no-ops without the resolve permission', async () => {

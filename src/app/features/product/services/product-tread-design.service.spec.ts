@@ -87,6 +87,17 @@ describe('ProductTreadDesignService', () => {
       expect(result?.candidates).toEqual([]);
     });
 
+    it('maps an unknown matchState token to null rather than passing it through', () => {
+      treadDesignSdkStub.getTreadDesignForProduct.mockReturnValueOnce(
+        of({ id: 'td-1', matchState: 'SOME_FUTURE_STATE' }),
+      );
+
+      let result: { matchState: unknown } | undefined;
+      service.getEnrichmentForProduct('prod-1').subscribe(value => (result = value as never));
+
+      expect(result?.matchState).toBeNull();
+    });
+
     it('maps a 404 (no match) to null rather than an error — an ordinary outcome', () => {
       treadDesignSdkStub.getTreadDesignForProduct.mockReturnValueOnce(
         throwError(() => ({ status: 404 })),
@@ -233,6 +244,17 @@ describe('ProductTreadDesignService', () => {
       service.listCandidates('td-2').subscribe(value => (result = value));
 
       expect(result).toEqual([]);
+    });
+
+    it('maps an unknown tier token to null rather than passing it through', () => {
+      treadDesignSdkStub.listTreadDesignCandidates.mockReturnValueOnce(
+        of([{ productId: 'prod-1', score: 0.4, tier: 'SOME_FUTURE_TIER' }]),
+      );
+
+      let result: readonly { tier: unknown }[] | undefined;
+      service.listCandidates('td-1').subscribe(value => (result = value as never));
+
+      expect(result?.[0].tier).toBeNull();
     });
 
     it('propagates a load failure (e.g. 404 unknown design) rather than swallowing it', () => {

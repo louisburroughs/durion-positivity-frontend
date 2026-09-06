@@ -2581,6 +2581,7 @@
             "ATTACH": "Joindre la sélection",
             "REJECT": "Rejeter",
             "DEFER": "Reporter",
+            "SUBMITTING": "Envoi en cours…",
             "ERROR": {
               "CONFLICT": "L'un des produits sélectionnés est déjà associé à un autre dessin par un réviseur.",
               "INVALID": "Cette action n'est pas valide pour ce dessin.",

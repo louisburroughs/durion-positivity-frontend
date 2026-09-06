@@ -2581,6 +2581,7 @@
             "ATTACH": "Attach selected",
             "REJECT": "Reject",
             "DEFER": "Defer",
+            "SUBMITTING": "Submitting…",
             "ERROR": {
               "CONFLICT": "One of the selected products is already attached to a different design by a reviewer.",
               "INVALID": "That action isn't valid for this design.",

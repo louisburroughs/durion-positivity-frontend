@@ -120,10 +120,11 @@
           </tr>
         </thead>
         <tbody>
-          @for (candidate of candidates(); track candidate.productId) {
+          @for (candidate of candidates(); track candidate.productId ?? $index) {
           <tr>
             @if (canResolve()) {
             <td>
+              @if (candidate.productId) {
               <label class="sr-only" [attr.for]="'candidate-' + candidate.productId">
                 {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.CANDIDATES.TABLE.SELECT' | translate }}
               </label>
@@ -133,10 +134,17 @@
                 [checked]="isSelected(candidate.productId)"
                 (change)="toggleCandidate(candidate.productId, $any($event.target).checked)"
               />
+              }
             </td>
             }
             <td>{{ candidate.productId ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
-            <td>{{ candidate.score ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+            <td>
+              @if (candidate.score !== null) {
+              {{ candidate.score | number:'1.2-2' }}
+              } @else {
+              {{ 'COMMON.NOT_AVAILABLE' | translate }}
+              }
+            </td>
             <td>
               @if (candidate.tier) {
               <span class="tier-badge tier-badge--{{ candidate.tier | lowercase }}">
@@ -165,18 +173,24 @@
 
     <div class="resolve-form" [class.resolve-form--disabled]="!canResolve()">
       <label for="review-note">{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.RESOLVE.NOTE_LABEL' | translate }}</label>
-      <textarea id="review-note" rows="3" [formControl]="noteControl" [disabled]="!canResolve()"></textarea>
+      <textarea id="review-note" rows="3" [formControl]="noteControl"></textarea>
 
       <label for="review-defer-until">
         {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.RESOLVE.DEFER_UNTIL_LABEL' | translate }}
       </label>
-      <input id="review-defer-until" type="date" [formControl]="deferUntilControl" [disabled]="!canResolve()" />
+      <input id="review-defer-until" type="date" [formControl]="deferUntilControl" />
 
       @if (resolveErrorKey()) {
       <div class="error-banner" role="alert">
         <span class="error-icon" aria-hidden="true">!</span>
         <span>{{ resolveErrorKey()! | translate }}</span>
       </div>
+      }
+
+      @if (busyAction() !== null) {
+      <p class="submitting-status" role="status" aria-live="polite">
+        {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.RESOLVE.SUBMITTING' | translate }}
+      </p>
       }
 
       <div class="resolve-actions">

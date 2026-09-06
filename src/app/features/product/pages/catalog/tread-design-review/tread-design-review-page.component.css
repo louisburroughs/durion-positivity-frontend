@@ -240,6 +240,12 @@
   opacity: 0.5;
 }
 
+.submitting-status {
+  color: var(--status-info-fg);
+  font-size: 0.85rem;
+  margin: 0.6rem 0 0;
+}
+
 .error-banner {
   align-items: center;
   background: var(--status-error-bg);

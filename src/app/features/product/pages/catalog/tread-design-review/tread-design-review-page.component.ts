@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { DatePipe, LowerCasePipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { DatePipe, DecimalPipe, LowerCasePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -64,7 +64,7 @@ const RESOLVE_ROLES: readonly string[] = ['ROLE_ADMIN'];
 @Component({
   selector: 'app-tread-design-review-page',
   standalone: true,
-  imports: [DatePipe, LowerCasePipe, ReactiveFormsModule, RouterLink, TranslatePipe],
+  imports: [DatePipe, DecimalPipe, LowerCasePipe, ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './tread-design-review-page.component.html',
   styleUrl: './tread-design-review-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -101,6 +101,19 @@ export class TreadDesignReviewPageComponent {
 
   constructor() {
     this.loadCandidates();
+
+    // Native [disabled] can't share an element with [formControl] (Angular warns,
+    // and the control's own `disabled` state never updates) — drive it from the
+    // FormControl API instead, keyed off the same `canResolve` gate.
+    effect(() => {
+      if (this.canResolve()) {
+        this.noteControl.enable({ emitEvent: false });
+        this.deferUntilControl.enable({ emitEvent: false });
+      } else {
+        this.noteControl.disable({ emitEvent: false });
+        this.deferUntilControl.disable({ emitEvent: false });
+      }
+    });
   }
 
   isSelected(productId: string | null): boolean {
