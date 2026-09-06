@@ -9,6 +9,7 @@ import {
   SupplierProfileDetailPageComponent,
 } from './supplier-profile-detail-page.component';
 import { SupplierProfileService } from '../../services/supplier-profile.service';
+import { SupplierPriceCatalogService } from '../../services/supplier-price-catalog.service';
 import { VendorProfile } from '../../models/supplier-profile.models';
 
 const PROFILE_ID = 'profile-1';
@@ -52,11 +53,32 @@ describe('SupplierProfileDetailPageComponent', () => {
         .mockReturnValue(of({ billing: null, delivery: [], activeLocations: [] })),
       listBindings: vi.fn().mockReturnValue(of([])),
     };
+    const priceCatalogService = {
+      getFreshness: vi.fn().mockReturnValue(
+        of({
+          vendorProfileId: PROFILE_ID,
+          latestEffectiveDate: null,
+          lastFetchedAt: null,
+          lastCompletedAt: null,
+          unresolvedUnmatchedCount: 0,
+          stalenessThreshold: null,
+          stale: true,
+          bindings: [],
+        }),
+      ),
+      listImports: vi.fn().mockReturnValue(
+        of({ items: [], page: 0, size: 25, totalCount: 0, totalPages: 0 }),
+      ),
+      listUnmatchedLines: vi.fn().mockReturnValue(
+        of({ items: [], page: 0, size: 25, totalCount: 0, totalPages: 0 }),
+      ),
+    };
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [SupplierProfileDetailPageComponent, TranslateModule.forRoot()],
       providers: [
         { provide: SupplierProfileService, useValue: service },
+        { provide: SupplierPriceCatalogService, useValue: priceCatalogService },
         provideRouter([]),
         {
           provide: ActivatedRoute,
@@ -104,14 +126,14 @@ describe('SupplierProfileDetailPageComponent', () => {
 
   // ── Tabs ───────────────────────────────────────────────────────────────────
 
-  it('exposes the Auth, Accounts, Bindings and Health tabs in order', async () => {
+  it('exposes the Auth, Accounts, Bindings, Health and PRICAT tabs in order', async () => {
     await setup();
 
-    expect([...PROFILE_TABS]).toEqual(['auth', 'accounts', 'bindings', 'health']);
+    expect([...PROFILE_TABS]).toEqual(['auth', 'accounts', 'bindings', 'health', 'pricat']);
     const tabs = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll('[role="tab"]'),
     );
-    expect(tabs).toHaveLength(4);
+    expect(tabs).toHaveLength(5);
   });
 
   it('starts on the Auth tab and renders only that panel', async () => {
@@ -155,16 +177,16 @@ describe('SupplierProfileDetailPageComponent', () => {
     expect(component.activeTab()).toBe('auth');
 
     component.onTabKeydown(new KeyboardEvent('keydown', { key: 'ArrowLeft' }), 'auth');
-    expect(component.activeTab()).toBe('health');
+    expect(component.activeTab()).toBe('pricat');
   });
 
   it('jumps to the first and last tab with Home and End', async () => {
     await setup();
 
     component.onTabKeydown(new KeyboardEvent('keydown', { key: 'End' }), 'auth');
-    expect(component.activeTab()).toBe('health');
+    expect(component.activeTab()).toBe('pricat');
 
-    component.onTabKeydown(new KeyboardEvent('keydown', { key: 'Home' }), 'health');
+    component.onTabKeydown(new KeyboardEvent('keydown', { key: 'Home' }), 'pricat');
     expect(component.activeTab()).toBe('auth');
   });
 

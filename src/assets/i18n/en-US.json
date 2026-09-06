@@ -5789,6 +5789,92 @@
         "NEXT_ATTEMPT": "Next attempt",
         "MANUAL_REVIEW_NEXT": "The service has stopped retrying. Contact the fleet manager to confirm the completion."
       }
+    },
+    "PRICAT": {
+      "FRESHNESS": {
+        "TITLE": "Freshness",
+        "STALE": "This vendor's price catalog is stale.",
+        "FRESH": "This vendor's price catalog is up to date.",
+        "LATEST_EFFECTIVE_DATE": "Latest vendor-stated catalog date",
+        "LAST_FETCHED_AT": "Last fetched",
+        "LAST_COMPLETED_AT": "Last completed import",
+        "STALENESS_THRESHOLD": "Staleness threshold",
+        "UNRESOLVED_COUNT": "Open quarantined lines",
+        "BINDINGS_CAPTION": "PRICE_CATALOG bindings for this profile",
+        "BINDING": "Binding",
+        "SCHEDULE": "Schedule",
+        "LAST_RUN": "Last scheduled run",
+        "ON_DEMAND": "On demand only",
+        "NEVER_SCHEDULED": "Never run on schedule",
+        "NEVER_IMPORTED": "Never imported",
+        "NEVER_FETCHED": "Never fetched"
+      },
+      "IMPORTS": {
+        "TITLE": "Import history",
+        "EMPTY": "No import runs match these filters.",
+        "FILTER": {
+          "BINDING": "Binding",
+          "STATUS": "Status",
+          "ALL_STATUSES": "All statuses",
+          "DATE_FROM": "From",
+          "DATE_TO": "To"
+        },
+        "STATUS": {
+          "IN_PROGRESS": "In progress",
+          "COMPLETED": "Completed",
+          "EMPTY": "Empty",
+          "FAILED": "Failed"
+        },
+        "TABLE": {
+          "CAPTION": "PRICAT import runs",
+          "FETCHED_AT": "Fetched at",
+          "STATUS": "Status",
+          "FETCHED": "Fetched",
+          "MATCHED": "Matched",
+          "UNMATCHED": "Unmatched",
+          "SOURCE_DOCUMENT": "Source document"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Import history pagination"
+        }
+      },
+      "UNMATCHED": {
+        "TITLE": "Unmatched-lines worklist",
+        "EMPTY": "No quarantined lines match these filters.",
+        "STILL_OPEN": "Still open",
+        "NO_EAN": "No EAN stated",
+        "FILTER": {
+          "REASON": "Reason",
+          "ALL_REASONS": "All reasons",
+          "SEARCH": "Search",
+          "SEARCH_HINT": "Matches the line's EAN, vendor article code or cross-reference code.",
+          "RESOLVED": "Show resolved lines instead of open ones"
+        },
+        "REASON": {
+          "NO_IDENTIFIER": "No identifier",
+          "NO_CATALOG_MATCH": "No catalog match",
+          "AMBIGUOUS_CATALOG_MATCH": "Ambiguous catalog match",
+          "CATALOG_UNAVAILABLE": "Catalog unavailable",
+          "DUPLICATE_LINE": "Duplicate line",
+          "MALFORMED_LINE": "Malformed line"
+        },
+        "TABLE": {
+          "CAPTION": "Quarantined PRICAT lines",
+          "EAN": "EAN",
+          "VENDOR_ARTICLE_CODE": "Vendor article code",
+          "REASON": "Reason",
+          "FETCHED_AT": "Fetched at",
+          "RESOLVED_AT": "Resolved at"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Unmatched-lines worklist pagination"
+        }
+      },
+      "ERROR": {
+        "LOAD_FRESHNESS": "The price-catalog freshness summary could not be loaded.",
+        "LOAD_IMPORTS": "The import history could not be loaded.",
+        "LOAD_UNMATCHED": "The unmatched-lines worklist could not be loaded."
+      }
     }
   }
 }

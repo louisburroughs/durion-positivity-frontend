@@ -5789,6 +5789,92 @@
         "NEXT_ATTEMPT": "Prochaine tentative",
         "MANUAL_REVIEW_NEXT": "Le service a cessé de réessayer. Communiquez avec le gestionnaire de flotte pour confirmer la fin des travaux."
       }
+    },
+    "PRICAT": {
+      "FRESHNESS": {
+        "TITLE": "Actualité",
+        "STALE": "Le catalogue de prix de ce fournisseur est périmé.",
+        "FRESH": "Le catalogue de prix de ce fournisseur est à jour.",
+        "LATEST_EFFECTIVE_DATE": "Dernière date de catalogue déclarée par le fournisseur",
+        "LAST_FETCHED_AT": "Dernière récupération",
+        "LAST_COMPLETED_AT": "Dernière importation terminée",
+        "STALENESS_THRESHOLD": "Seuil de péremption",
+        "UNRESOLVED_COUNT": "Lignes en quarantaine ouvertes",
+        "BINDINGS_CAPTION": "Liaisons PRICE_CATALOG de ce profil",
+        "BINDING": "Liaison",
+        "SCHEDULE": "Horaire",
+        "LAST_RUN": "Dernière exécution planifiée",
+        "ON_DEMAND": "Sur demande seulement",
+        "NEVER_SCHEDULED": "Jamais exécutée selon l'horaire",
+        "NEVER_IMPORTED": "Jamais importé",
+        "NEVER_FETCHED": "Jamais récupéré"
+      },
+      "IMPORTS": {
+        "TITLE": "Historique des importations",
+        "EMPTY": "Aucune exécution d'importation ne correspond à ces filtres.",
+        "FILTER": {
+          "BINDING": "Liaison",
+          "STATUS": "Statut",
+          "ALL_STATUSES": "Tous les statuts",
+          "DATE_FROM": "Du",
+          "DATE_TO": "Au"
+        },
+        "STATUS": {
+          "IN_PROGRESS": "En cours",
+          "COMPLETED": "Terminée",
+          "EMPTY": "Vide",
+          "FAILED": "Échouée"
+        },
+        "TABLE": {
+          "CAPTION": "Exécutions d'importation PRICAT",
+          "FETCHED_AT": "Récupérée le",
+          "STATUS": "Statut",
+          "FETCHED": "Récupérées",
+          "MATCHED": "Rapprochées",
+          "UNMATCHED": "Non rapprochées",
+          "SOURCE_DOCUMENT": "Document source"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Pagination de l'historique des importations"
+        }
+      },
+      "UNMATCHED": {
+        "TITLE": "Liste des lignes non rapprochées",
+        "EMPTY": "Aucune ligne en quarantaine ne correspond à ces filtres.",
+        "STILL_OPEN": "Toujours ouverte",
+        "NO_EAN": "Aucun EAN déclaré",
+        "FILTER": {
+          "REASON": "Motif",
+          "ALL_REASONS": "Tous les motifs",
+          "SEARCH": "Rechercher",
+          "SEARCH_HINT": "Correspond à l'EAN de la ligne, au code d'article du fournisseur ou au code de référence croisée.",
+          "RESOLVED": "Afficher les lignes résolues plutôt que les lignes ouvertes"
+        },
+        "REASON": {
+          "NO_IDENTIFIER": "Aucun identifiant",
+          "NO_CATALOG_MATCH": "Aucune correspondance au catalogue",
+          "AMBIGUOUS_CATALOG_MATCH": "Correspondance au catalogue ambiguë",
+          "CATALOG_UNAVAILABLE": "Catalogue indisponible",
+          "DUPLICATE_LINE": "Ligne en double",
+          "MALFORMED_LINE": "Ligne malformée"
+        },
+        "TABLE": {
+          "CAPTION": "Lignes PRICAT en quarantaine",
+          "EAN": "EAN",
+          "VENDOR_ARTICLE_CODE": "Code d'article du fournisseur",
+          "REASON": "Motif",
+          "FETCHED_AT": "Récupérée le",
+          "RESOLVED_AT": "Résolue le"
+        },
+        "PAGINATION": {
+          "ARIA_LABEL": "Pagination de la liste des lignes non rapprochées"
+        }
+      },
+      "ERROR": {
+        "LOAD_FRESHNESS": "Le résumé d'actualité du catalogue de prix n'a pas pu être chargé.",
+        "LOAD_IMPORTS": "L'historique des importations n'a pas pu être chargé.",
+        "LOAD_UNMATCHED": "La liste des lignes non rapprochées n'a pas pu être chargée."
+      }
     }
   }
 }
