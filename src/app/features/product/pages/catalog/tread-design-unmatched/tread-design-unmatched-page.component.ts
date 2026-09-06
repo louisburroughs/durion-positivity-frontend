@@ -1,36 +1,56 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
-import { DatePipe } from '@angular/common';
-import { UnmatchedTreadDesign } from '../../../models/tread-design-enrichment.models';
+import { DatePipe, LowerCasePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { TreadDesignMatchState, UnmatchedTreadDesign } from '../../../models/tread-design-enrichment.models';
 import { ProductTreadDesignService } from '../../../services/product-tread-design.service';
 
 type PageState = 'idle' | 'loading' | 'empty' | 'ready' | 'error';
 
 const PAGE_SIZE = 25;
 
+/** Every match state the worklist can be filtered to, in the order offered to the operator. */
+export const ALL_MATCH_STATES: readonly TreadDesignMatchState[] = [
+  'UNMATCHED',
+  'REVIEW',
+  'MATCHED',
+  'REJECTED',
+  'DEFERRED',
+];
+
+/** States actually awaiting a decision — the worklist's default filter (ADR-0060 §7). */
+const DEFAULT_MATCH_STATES: readonly TreadDesignMatchState[] = ['UNMATCHED', 'REVIEW'];
+
 /**
- * Unmatched vendor tread-design enrichment review worklist (#218), read-only.
+ * Unmatched vendor tread-design enrichment review worklist (#218 phase 1;
+ * phase 2 — backend #1645, ADR-0060 — adds the `matchState`/`vendorProfileId`
+ * filters, the state/aged-since columns, and the row action into the review
+ * detail page).
  *
- * Lists tread designs that fuzzy matching could not resolve to any catalog
- * product. A design matching nothing is an ordinary outcome (per the
- * generated read's own docs), so an empty page renders the empty state, not
- * an error.
+ * A design matching nothing is an ordinary outcome (per the generated read's
+ * own docs), so an empty page renders the empty state, not an error.
  *
- * No resolve/attach/reject/defer action exists here — that is a later phase
- * gated on backend #1645 (`matchState` filter, `listTreadDesignCandidates`,
- * `resolveTreadDesign`). This page only reads.
+ * This page itself still performs no mutation — resolving a row (ATTACH /
+ * REJECT / DEFER) happens on `TreadDesignReviewPageComponent`, reached via the
+ * row action. This page's own permission surface is `catalog:tread_design:view`
+ * only, gated identically for every viewer of this route; the resolve
+ * permission is checked on the review page, the same
+ * `AuthService.hasAnyRole` mechanism used elsewhere in this domain
+ * (`location-overrides.component.ts`).
  */
 @Component({
   selector: 'app-tread-design-unmatched-page',
   standalone: true,
-  imports: [TranslatePipe, DatePipe],
+  imports: [TranslatePipe, DatePipe, LowerCasePipe, RouterLink],
   templateUrl: './tread-design-unmatched-page.component.html',
   styleUrl: './tread-design-unmatched-page.component.css',
 })
 export class TreadDesignUnmatchedPageComponent {
   private readonly treadDesignService = inject(ProductTreadDesignService);
   private readonly destroyRef = inject(DestroyRef);
+
+  readonly allMatchStates = ALL_MATCH_STATES;
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -39,7 +59,35 @@ export class TreadDesignUnmatchedPageComponent {
   readonly totalPages = signal(0);
   readonly totalElements = signal(0);
 
+  /** Defaults to the states actually awaiting a decision (ADR-0060 §7). */
+  readonly selectedMatchStates = signal<readonly TreadDesignMatchState[]>(DEFAULT_MATCH_STATES);
+  readonly vendorProfileIdFilter = signal('');
+
   constructor() {
+    this.load(0);
+  }
+
+  isMatchStateSelected(matchState: TreadDesignMatchState): boolean {
+    return this.selectedMatchStates().includes(matchState);
+  }
+
+  toggleMatchState(matchState: TreadDesignMatchState, checked: boolean): void {
+    this.selectedMatchStates.update(current =>
+      checked ? [...current, matchState] : current.filter(value => value !== matchState),
+    );
+  }
+
+  setVendorProfileIdFilter(value: string): void {
+    this.vendorProfileIdFilter.set(value);
+  }
+
+  applyFilters(): void {
+    this.load(0);
+  }
+
+  clearFilters(): void {
+    this.selectedMatchStates.set(DEFAULT_MATCH_STATES);
+    this.vendorProfileIdFilter.set('');
     this.load(0);
   }
 
@@ -48,7 +96,7 @@ export class TreadDesignUnmatchedPageComponent {
     this.errorKey.set(null);
 
     this.treadDesignService
-      .listUnmatched(page, PAGE_SIZE)
+      .listUnmatched(this.selectedMatchStates(), this.vendorProfileIdFilter().trim() || undefined, page, PAGE_SIZE)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: result => {

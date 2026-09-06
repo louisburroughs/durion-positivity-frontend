@@ -2462,7 +2462,8 @@
             "VEHICLE_TYPE": "Tipo de vehículo",
             "SEASONALITY": "Estacionalidad",
             "VENDOR": "Proveedor",
-            "UPDATED_AT": "Enriquecimiento actualizado"
+            "UPDATED_AT": "Enriquecimiento actualizado",
+            "MATCH_STATE": "Estado de coincidencia"
           },
           "ARTWORK_PENDING": "Arte pendiente"
         }
@@ -2507,7 +2508,10 @@
             "TREAD_DESIGN": "Diseño de banda de rodadura",
             "VENDOR": "Proveedor",
             "ARTWORK": "Arte",
-            "UPDATED_AT": "Actualizado"
+            "UPDATED_AT": "Actualizado",
+            "STATE": "Estado",
+            "AGED_SINCE": "En espera desde",
+            "ACTIONS": "Acciones"
           },
           "ARTWORK_PENDING": "Arte pendiente",
           "PAGINATION": {
@@ -2515,6 +2519,75 @@
             "PREVIOUS": "Anterior",
             "NEXT": "Siguiente",
             "STATUS": "Página {{page}} de {{totalPages}} ({{totalElements}} en total)"
+          },
+          "ROW_ACTION": {
+            "REVIEW": "Revisar"
+          },
+          "FILTER": {
+            "MATCH_STATE_LEGEND": "Estado de coincidencia",
+            "VENDOR_PROFILE_ID_LABEL": "ID de perfil de proveedor",
+            "APPLY": "Aplicar filtros",
+            "CLEAR": "Borrar filtros"
+          }
+        },
+        "MATCH_STATE": {
+          "UNMATCHED": "Sin coincidencia",
+          "REVIEW": "En revisión",
+          "MATCHED": "Coincide",
+          "REJECTED": "Rechazado",
+          "DEFERRED": "Aplazado"
+        },
+        "REVIEW": {
+          "TITLE": "Revisar diseño de banda de rodadura",
+          "BACK_TO_WORKLIST": "Volver a la lista de trabajo",
+          "DESIGN": {
+            "TITLE": "Detalles del diseño",
+            "UNAVAILABLE": "Los detalles de este diseño solo están disponibles al abrirlo desde la lista de trabajo. Las acciones a continuación siguen aplicándose a este diseño.",
+            "FIELD": {
+              "BRAND": "Marca",
+              "TREAD_DESIGN": "Diseño de banda de rodadura",
+              "PRODUCT_NAME": "Nombre del producto del proveedor",
+              "VEHICLE_TYPE": "Tipo de vehículo",
+              "SEASONALITY": "Estacionalidad",
+              "MATCH_STATE": "Estado de coincidencia",
+              "MATCH_STATE_AT": "Desde"
+            },
+            "ARTWORK_PENDING": "Arte pendiente"
+          },
+          "CANDIDATES": {
+            "TITLE": "Candidatos",
+            "ARIA": "Productos candidatos puntuados",
+            "EMPTY": "Nada superó el umbral de revisión para este diseño.",
+            "ERROR": {
+              "LOAD": "No se pudieron cargar los candidatos de este diseño."
+            },
+            "TABLE": {
+              "SELECT": "Seleccionar",
+              "PRODUCT_ID": "Producto",
+              "SCORE": "Puntuación",
+              "TIER": "Nivel"
+            },
+            "TIER": {
+              "AUTO": "Automático",
+              "REVIEW": "Revisión",
+              "NONE": "Ninguno"
+            }
+          },
+          "RESOLVE": {
+            "TITLE": "Resolver",
+            "RESTRICTED": "No tiene permiso para resolver diseños de banda de rodadura.",
+            "NOTE_LABEL": "Nota (opcional)",
+            "DEFER_UNTIL_LABEL": "Volver el (opcional)",
+            "ATTACH": "Adjuntar seleccionados",
+            "REJECT": "Rechazar",
+            "DEFER": "Aplazar",
+            "SUBMITTING": "Enviando…",
+            "ERROR": {
+              "CONFLICT": "Uno de los productos seleccionados ya está adjunto a otro diseño por un revisor.",
+              "INVALID": "Esa acción no es válida para este diseño.",
+              "NOT_FOUND": "No se encontró este diseño o uno de los productos seleccionados.",
+              "SUBMIT": "No se pudo enviar esta decisión. Inténtelo de nuevo."
+            }
           }
         }
       }
@@ -2775,7 +2848,7 @@
         },
         "ENRICHMENT_UNMATCHED": {
           "TITLE": "Diseños de banda de rodadura sin coincidencia",
-          "DESCRIPTION": "Revise los diseños de banda de rodadura del proveedor que no se pudieron vincular a un producto del catálogo."
+          "DESCRIPTION": "Filtre, revise y resuelva los diseños de banda de rodadura del proveedor que el comparador no pudo vincular con confianza."
         }
       }
     }

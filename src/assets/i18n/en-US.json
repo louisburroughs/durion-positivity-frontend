@@ -2462,7 +2462,8 @@
             "VEHICLE_TYPE": "Vehicle Type",
             "SEASONALITY": "Seasonality",
             "VENDOR": "Vendor",
-            "UPDATED_AT": "Enrichment Updated"
+            "UPDATED_AT": "Enrichment Updated",
+            "MATCH_STATE": "Match State"
           },
           "ARTWORK_PENDING": "Artwork pending"
         }
@@ -2507,7 +2508,10 @@
             "TREAD_DESIGN": "Tread Design",
             "VENDOR": "Vendor",
             "ARTWORK": "Artwork",
-            "UPDATED_AT": "Updated"
+            "UPDATED_AT": "Updated",
+            "STATE": "State",
+            "AGED_SINCE": "Aged Since",
+            "ACTIONS": "Actions"
           },
           "ARTWORK_PENDING": "Artwork pending",
           "PAGINATION": {
@@ -2515,6 +2519,75 @@
             "PREVIOUS": "Previous",
             "NEXT": "Next",
             "STATUS": "Page {{page}} of {{totalPages}} ({{totalElements}} total)"
+          },
+          "ROW_ACTION": {
+            "REVIEW": "Review"
+          },
+          "FILTER": {
+            "MATCH_STATE_LEGEND": "Match state",
+            "VENDOR_PROFILE_ID_LABEL": "Vendor profile ID",
+            "APPLY": "Apply filters",
+            "CLEAR": "Clear filters"
+          }
+        },
+        "MATCH_STATE": {
+          "UNMATCHED": "Unmatched",
+          "REVIEW": "In Review",
+          "MATCHED": "Matched",
+          "REJECTED": "Rejected",
+          "DEFERRED": "Deferred"
+        },
+        "REVIEW": {
+          "TITLE": "Review Tread Design",
+          "BACK_TO_WORKLIST": "Back to worklist",
+          "DESIGN": {
+            "TITLE": "Design details",
+            "UNAVAILABLE": "This design's details are only available when opened from the worklist. The actions below still apply to this design.",
+            "FIELD": {
+              "BRAND": "Brand",
+              "TREAD_DESIGN": "Tread Design",
+              "PRODUCT_NAME": "Vendor Product Name",
+              "VEHICLE_TYPE": "Vehicle Type",
+              "SEASONALITY": "Seasonality",
+              "MATCH_STATE": "Match State",
+              "MATCH_STATE_AT": "Since"
+            },
+            "ARTWORK_PENDING": "Artwork pending"
+          },
+          "CANDIDATES": {
+            "TITLE": "Candidates",
+            "ARIA": "Scored candidate products",
+            "EMPTY": "Nothing scored above the review floor for this design.",
+            "ERROR": {
+              "LOAD": "Unable to load candidates for this design."
+            },
+            "TABLE": {
+              "SELECT": "Select",
+              "PRODUCT_ID": "Product",
+              "SCORE": "Score",
+              "TIER": "Tier"
+            },
+            "TIER": {
+              "AUTO": "Auto",
+              "REVIEW": "Review",
+              "NONE": "None"
+            }
+          },
+          "RESOLVE": {
+            "TITLE": "Resolve",
+            "RESTRICTED": "You do not have permission to resolve tread designs.",
+            "NOTE_LABEL": "Note (optional)",
+            "DEFER_UNTIL_LABEL": "Come back on (optional)",
+            "ATTACH": "Attach selected",
+            "REJECT": "Reject",
+            "DEFER": "Defer",
+            "SUBMITTING": "Submitting…",
+            "ERROR": {
+              "CONFLICT": "One of the selected products is already attached to a different design by a reviewer.",
+              "INVALID": "That action isn't valid for this design.",
+              "NOT_FOUND": "This design or one of the selected products could not be found.",
+              "SUBMIT": "Unable to submit this decision. Try again."
+            }
           }
         }
       }
@@ -2775,7 +2848,7 @@
         },
         "ENRICHMENT_UNMATCHED": {
           "TITLE": "Unmatched Tread Designs",
-          "DESCRIPTION": "Review vendor tread designs that could not be matched to a catalog product."
+          "DESCRIPTION": "Filter, review, and resolve vendor tread designs the matcher couldn't confidently attach."
         }
       }
     }

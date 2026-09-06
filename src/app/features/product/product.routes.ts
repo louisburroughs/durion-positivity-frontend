@@ -36,6 +36,13 @@ export const PRODUCT_ROUTES: Routes = [
           ),
       },
       {
+        path: 'catalog/enrichment/review/:treadDesignId',
+        loadComponent: () =>
+          import('./pages/catalog/tread-design-review/tread-design-review-page.component').then(
+            m => m.TreadDesignReviewPageComponent,
+          ),
+      },
+      {
         path: 'pricing/price-books',
         loadComponent: () =>
           import('./pages/pricing/price-books/price-books.component').then(

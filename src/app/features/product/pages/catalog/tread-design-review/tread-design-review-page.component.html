@@ -1,0 +1,227 @@
+<main class="page" aria-labelledby="review-title">
+  <header class="page-header">
+    <h1 id="review-title" class="page-title">{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.TITLE' | translate }}</h1>
+    <a class="back-link" routerLink="/app/product/catalog/enrichment/unmatched">
+      {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.BACK_TO_WORKLIST' | translate }}
+    </a>
+  </header>
+
+  <section class="card" aria-labelledby="review-design-title">
+    <h2 id="review-design-title" class="sr-only">{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.DESIGN.TITLE' | translate }}</h2>
+
+    @if (design(); as item) {
+    <dl class="design-grid">
+      @if (item.brand) {
+      <div>
+        <dt>{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.DESIGN.FIELD.BRAND' | translate }}</dt>
+        <dd>{{ item.brand }}</dd>
+      </div>
+      }
+      @if (item.treadDesign) {
+      <div>
+        <dt>{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.DESIGN.FIELD.TREAD_DESIGN' | translate }}</dt>
+        <dd>{{ item.treadDesign }}@if (item.treadDesign2) { / {{ item.treadDesign2 }} }</dd>
+      </div>
+      }
+      @if (item.productName) {
+      <div>
+        <dt>{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.DESIGN.FIELD.PRODUCT_NAME' | translate }}</dt>
+        <dd>{{ item.productName }}</dd>
+      </div>
+      }
+      @if (item.vehicleType) {
+      <div>
+        <dt>{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.DESIGN.FIELD.VEHICLE_TYPE' | translate }}</dt>
+        <dd>{{ item.vehicleType }}</dd>
+      </div>
+      }
+      @if (item.seasonality) {
+      <div>
+        <dt>{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.DESIGN.FIELD.SEASONALITY' | translate }}</dt>
+        <dd>{{ item.seasonality }}</dd>
+      </div>
+      }
+      @if (item.matchState) {
+      <div>
+        <dt>{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.DESIGN.FIELD.MATCH_STATE' | translate }}</dt>
+        <dd>
+          <span class="match-state-badge match-state-badge--{{ item.matchState | lowercase }}">
+            {{ 'PRODUCT.CATALOG.ENRICHMENT.MATCH_STATE.' + item.matchState | translate }}
+          </span>
+        </dd>
+      </div>
+      }
+      @if (item.matchStateAt) {
+      <div>
+        <dt>{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.DESIGN.FIELD.MATCH_STATE_AT' | translate }}</dt>
+        <dd>{{ item.matchStateAt | date:'medium' }}</dd>
+      </div>
+      }
+    </dl>
+
+    @for (text of item.texts; track text.languageCode) {
+    <div class="marketing-copy">
+      @if (text.name) {
+      <h3>{{ text.name }}</h3>
+      }
+      @if (text.description) {
+      <p>{{ text.description }}</p>
+      }
+      @if (text.footNotes) {
+      <p class="foot-notes">{{ text.footNotes }}</p>
+      }
+    </div>
+    }
+
+    @if (item.hasUnresolvedImages) {
+    <p class="artwork-pending" role="status">
+      {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.DESIGN.ARTWORK_PENDING' | translate }}
+    </p>
+    }
+    } @else {
+    <p class="design-unavailable" role="status">
+      {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.DESIGN.UNAVAILABLE' | translate }}
+    </p>
+    }
+  </section>
+
+  <section class="card" aria-labelledby="review-candidates-title">
+    <h2 id="review-candidates-title">{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.CANDIDATES.TITLE' | translate }}</h2>
+
+    @if (state() === 'loading') {
+    <p class="sr-only" role="status">{{ 'COMMON.LOADING' | translate }}</p>
+    @for (_row of [1, 2, 3]; track $index) {
+    <div class="skeleton-row"></div>
+    }
+    }
+
+    @if (state() === 'error') {
+    <div class="error-banner" role="alert">
+      <span class="error-icon" aria-hidden="true">!</span>
+      <span>{{ errorKey() ? (errorKey()! | translate) : ('COMMON.ERROR' | translate) }}</span>
+    </div>
+    }
+
+    @if (state() === 'empty') {
+    <p>{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.CANDIDATES.EMPTY' | translate }}</p>
+    }
+
+    @if (state() === 'ready') {
+    <div class="table-wrap">
+      <table class="data-table" aria-label="{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.CANDIDATES.ARIA' | translate }}">
+        <thead>
+          <tr>
+            @if (canResolve()) {
+            <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.CANDIDATES.TABLE.SELECT' | translate }}</th>
+            }
+            <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.CANDIDATES.TABLE.PRODUCT_ID' | translate }}</th>
+            <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.CANDIDATES.TABLE.SCORE' | translate }}</th>
+            <th scope="col">{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.CANDIDATES.TABLE.TIER' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (candidate of candidates(); track candidate.productId ?? $index) {
+          <tr>
+            @if (canResolve()) {
+            <td>
+              @if (candidate.productId) {
+              <label class="sr-only" [attr.for]="'candidate-' + candidate.productId">
+                {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.CANDIDATES.TABLE.SELECT' | translate }}
+              </label>
+              <input
+                [id]="'candidate-' + candidate.productId"
+                type="checkbox"
+                [checked]="isSelected(candidate.productId)"
+                (change)="toggleCandidate(candidate.productId, $any($event.target).checked)"
+              />
+              }
+            </td>
+            }
+            <td>{{ candidate.productId ?? ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+            <td>
+              @if (candidate.score !== null) {
+              {{ candidate.score | number:'1.2-2' }}
+              } @else {
+              {{ 'COMMON.NOT_AVAILABLE' | translate }}
+              }
+            </td>
+            <td>
+              @if (candidate.tier) {
+              <span class="tier-badge tier-badge--{{ candidate.tier | lowercase }}">
+                {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.CANDIDATES.TIER.' + candidate.tier | translate }}
+              </span>
+              } @else {
+              {{ 'COMMON.NOT_AVAILABLE' | translate }}
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </section>
+
+  <section class="card" aria-labelledby="review-resolve-title">
+    <h2 id="review-resolve-title">{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.RESOLVE.TITLE' | translate }}</h2>
+
+    @if (!canResolve()) {
+    <p class="restricted-notice" role="status">
+      {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.RESOLVE.RESTRICTED' | translate }}
+    </p>
+    }
+
+    <div class="resolve-form" [class.resolve-form--disabled]="!canResolve()">
+      <label for="review-note">{{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.RESOLVE.NOTE_LABEL' | translate }}</label>
+      <textarea id="review-note" rows="3" [formControl]="noteControl"></textarea>
+
+      <label for="review-defer-until">
+        {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.RESOLVE.DEFER_UNTIL_LABEL' | translate }}
+      </label>
+      <input id="review-defer-until" type="date" [formControl]="deferUntilControl" />
+
+      @if (resolveErrorKey()) {
+      <div class="error-banner" role="alert">
+        <span class="error-icon" aria-hidden="true">!</span>
+        <span>{{ resolveErrorKey()! | translate }}</span>
+      </div>
+      }
+
+      @if (busyAction() !== null) {
+      <p class="submitting-status" role="status" aria-live="polite">
+        {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.RESOLVE.SUBMITTING' | translate }}
+      </p>
+      }
+
+      <div class="resolve-actions">
+        <button
+          class="btn-primary"
+          type="button"
+          [disabled]="!canResolve() || !canAttach() || busyAction() !== null"
+          [attr.aria-busy]="busyAction() === 'ATTACH'"
+          (click)="attach()"
+        >
+          {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.RESOLVE.ATTACH' | translate }}
+        </button>
+        <button
+          class="btn-secondary"
+          type="button"
+          [disabled]="!canResolve() || busyAction() !== null"
+          [attr.aria-busy]="busyAction() === 'REJECT'"
+          (click)="reject()"
+        >
+          {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.RESOLVE.REJECT' | translate }}
+        </button>
+        <button
+          class="btn-secondary"
+          type="button"
+          [disabled]="!canResolve() || busyAction() !== null"
+          [attr.aria-busy]="busyAction() === 'DEFER'"
+          (click)="defer()"
+        >
+          {{ 'PRODUCT.CATALOG.ENRICHMENT.REVIEW.RESOLVE.DEFER' | translate }}
+        </button>
+      </div>
+    </div>
+  </section>
+</main>
