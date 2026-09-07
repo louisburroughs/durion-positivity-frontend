@@ -508,7 +508,7 @@ describe('ShopDashboardService', () => {
       expect(looked).toContain('wo-44');
     });
 
-    // ── Bay roster sourcing (durion-positivity-frontend#221) ───────────────
+    // ── Bay roster sourcing ────────────────────────────────────────────────
     //
     // pos-workorder serves `DashboardResponse.bays` from its own event-fed
     // replica of the location domain and omits a bay whose replica row has not

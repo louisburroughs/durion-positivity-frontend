@@ -77,8 +77,8 @@ function compareUnitNames(a: string, b: string): number {
  *     is every unit at every site until the owner runs the fact backfill — has
  *     no replica row, and a unit with no replica row is omitted from those
  *     arrays entirely. Sourcing the cards from them therefore rendered whole
- *     sites as unit-less, which is what durion-positivity-frontend#221 reported
- *     for bays. Both card sets come from the location inventory instead, which
+ *     sites as unit-less — the reported defect: no bays on any location.
+ *     Both card sets come from the location inventory instead, which
  *     owns the units and is complete today; what a unit is working on is read
  *     from the workorder side (`assignedResourceId` + `resourceType`), which is
  *     populated today, with the dispatch projection's own `BayStatus` row
@@ -315,8 +315,8 @@ export class ShopDashboardService {
    * pos-workorder serves bay identity from its own event-fed replica and omits
    * a bay whose replica row has not arrived, so on a site whose bays predate
    * the `location.bay.*` facts (backend#1668) that array is empty and the grid
-   * rendered no bays at all — durion-positivity-frontend#221. The inventory
-   * endpoint reads the owning aggregate and is complete today.
+   * rendered no bays at all, at any location. The inventory endpoint reads the
+   * owning aggregate and is complete today.
    *
    * A bay the replica does know but the inventory did not return is still
    * carried, so a failed or paged-out bays call cannot lose a card either.
