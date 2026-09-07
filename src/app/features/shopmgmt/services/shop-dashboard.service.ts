@@ -42,6 +42,18 @@ const VEHICLE_LOOKUP_CONCURRENCY = 6;
 const PAGE_SIZE = 500;
 const VEHICLE_LOOKUP_LIMIT = 40;
 
+/** The one bay status that takes a bay out of the grid; see {@link ShopDashboardService.toBayCards}. */
+const BAY_STATUS_OUT_OF_SERVICE = 'OUT_OF_SERVICE';
+
+/**
+ * Orders unit cards by name. `numeric` so "Bay 10" sorts after "Bay 9" rather
+ * than after "Bay 1" — the grid is read as a floor plan, and neither source
+ * (a Spring page, an event-fed replica) promises an order of its own.
+ */
+function compareUnitNames(a: string, b: string): number {
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
 /**
  * Backs the Shop Manager Dashboard
  * (docs/design/shopmgmt-shop-manager-dashboard.md in the durion repo).
@@ -50,18 +62,27 @@ const VEHICLE_LOOKUP_LIMIT = 40;
  * `GET /v1/shopmgmt/shop-dashboard` (§5.1), which does not exist yet. Until it
  * does, this service composes the same view model from the endpoints that do:
  *
- *   dispatch dashboard  → bays, their assigned workorder, mechanics, statuses
- *   mobile units        → mobile-unit cards (always idle — see below)
+ *   bays                → bay cards (the roster of record — see below)
+ *   mobile units        → mobile-unit cards
+ *   dispatch dashboard  → assigned workorder, mechanics, live bay status
  *   workorder detail    → vehicleId for an assigned workorder
  *   vehicle registry    → structured year/make/model/VIN
  *
  * One remaining gap is tracked as a backend story and is visible in the output:
  *
- *   louisburroughs/durion#416 — SDK 0.11 added `DashboardResponse.mobileUnits`,
- *     but it is fed by the bay/mobile-unit lifecycle events that backend #1668
- *     has not published yet, so mobile-unit cards still come from the location
- *     inventory. What a unit is working on is read from the workorder side
- *     (`assignedResourceId` + `resourceType`), which is populated today.
+ *   louisburroughs/durion#416 — `DashboardResponse.bays`/`.mobileUnits` are
+ *     served from pos-workorder's own replicas of the location domain, fed by
+ *     the `location.bay.*` / `location.mobile-unit.*` facts that pos-location
+ *     only began publishing in backend#1668. A unit created before that — which
+ *     is every unit at every site until the owner runs the fact backfill — has
+ *     no replica row, and a unit with no replica row is omitted from those
+ *     arrays entirely. Sourcing the cards from them therefore rendered whole
+ *     sites as unit-less, which is what durion-positivity-frontend#221 reported
+ *     for bays. Both card sets come from the location inventory instead, which
+ *     owns the units and is complete today; what a unit is working on is read
+ *     from the workorder side (`assignedResourceId` + `resourceType`), which is
+ *     populated today, with the dispatch projection's own `BayStatus` row
+ *     preferred whenever the replica does carry the bay.
  *
  * louisburroughs/durion#417 (backend #1657) shipped the repair-capability
  * projection on `LocationResponseDTO`, so {@link listRepairLocations} reads
@@ -165,14 +186,42 @@ export class ShopDashboardService {
       mobileUnits.map(unit => [unit.id, unit]),
     );
 
-    const bayCards = (dashboard.bays ?? []).map(bayStatus =>
-      this.toBayCard(bayStatus, bayDetail, summaries, mechanicsByWorkorder, vehicles),
+    const bayStatusById = new Map<string, BayStatus>(
+      (dashboard.bays ?? []).map(bayStatus => [bayStatus.bayId, bayStatus]),
+    );
+
+    // A bay's own `BayStatus` row is the dispatch board's live operational feed
+    // for that bay, so the workorder it names outranks any workorder-side claim.
+    // Reserving those ids first keeps the fallback index below from handing the
+    // same workorder to a second unit.
+    const claimedByBayStatus = new Set(
+      [...bayStatusById.values()]
+        .map(bayStatus => bayStatus.assignedWorkorderId)
+        .filter((id): id is string => !!id),
+    );
+
+    // Bays the dispatch replica has never heard of still have to show their
+    // work, so it is read from the workorder's own assignment — the same
+    // source the mobile-unit cards use.
+    const workorderByBay = this.indexUnitAssignments(
+      dashboard.workorders ?? [],
+      WorkorderSummaryResourceTypeEnum.Bay,
+      claimedByBayStatus,
+    );
+
+    const bayCards = this.toBayCards(
+      bays,
+      bayStatusById,
+      workorderByBay,
+      summaries,
+      mechanicsByWorkorder,
+      vehicles,
     );
 
     // Cards come from the location inventory, not `dashboard.mobileUnits`,
-    // which stays incomplete until backend #1668 (see the class comment). The
-    // work on a unit is read from the workorder side instead — a summary
-    // naming this unit as its assigned resource.
+    // which stays incomplete until the backend#1668 backfill (see the class
+    // comment). The work on a unit is read from the workorder side instead — a
+    // summary naming this unit as its assigned resource.
     //
     // `BayStatus.assignedWorkorderId` (bayCards, above) and
     // `WorkorderSummary.assignedResourceId`/`resourceType` are independent,
@@ -181,11 +230,15 @@ export class ShopDashboardService {
     // units, the bay's own live feed wins — a mobile-unit card must never
     // claim a workorder a bay card already claims, or the dashboard would
     // render one workorder "in progress" on two units at once.
-    const claimedByBay = new Set(
-      bayCards.map(card => card.workorder?.workorderId).filter((id): id is string => !!id),
-    );
-    const workorderByMobileUnit = this.indexMobileUnitAssignments(
+    const claimedByBay = new Set([
+      ...bayCards.map(card => card.workorder?.workorderId).filter((id): id is string => !!id),
+      // A bay's live claim outranks a mobile unit's even when that bay renders
+      // no card — an out-of-service bay is still holding the vehicle.
+      ...claimedByBayStatus,
+    ]);
+    const workorderByMobileUnit = this.indexUnitAssignments(
       dashboard.workorders ?? [],
+      WorkorderSummaryResourceTypeEnum.MobileUnit,
       claimedByBay,
     );
     const mobileUnitCards: RepairUnitCard[] = mobileUnits
@@ -201,7 +254,8 @@ export class ShopDashboardService {
           mechanicsByWorkorder,
           vehicles,
         ),
-      }));
+      }))
+      .sort((a, b) => compareUnitNames(a.unitName, b.unitName));
 
     // Single source of truth for "which unit is this workorder on".
     // `WorkorderSummary.assignedResourceId` and `BayStatus.assignedWorkorderId`
@@ -254,57 +308,89 @@ export class ShopDashboardService {
     };
   }
 
-  private toBayCard(
-    bayStatus: BayStatus,
-    bayDetail: ReadonlyMap<string, BayResponse>,
+  /**
+   * One card per bay at the location.
+   *
+   * The **location inventory is the roster of record**, not `dashboard.bays`.
+   * pos-workorder serves bay identity from its own event-fed replica and omits
+   * a bay whose replica row has not arrived, so on a site whose bays predate
+   * the `location.bay.*` facts (backend#1668) that array is empty and the grid
+   * rendered no bays at all — durion-positivity-frontend#221. The inventory
+   * endpoint reads the owning aggregate and is complete today.
+   *
+   * A bay the replica does know but the inventory did not return is still
+   * carried, so a failed or paged-out bays call cannot lose a card either.
+   * An `OUT_OF_SERVICE` bay is dropped: it is not capacity, and counting it as
+   * an idle unit would overstate what the shop can take on. The test is an
+   * explicit match on that one value — an unknown or absent status renders,
+   * because omitting a bay is the failure mode this method exists to fix.
+   */
+  private toBayCards(
+    bays: BayResponse[],
+    bayStatusById: ReadonlyMap<string, BayStatus>,
+    workorderByBay: ReadonlyMap<string, string>,
     summaries: ReadonlyMap<string, WorkorderSummary>,
     mechanicsByWorkorder: ReadonlyMap<string, DashboardMechanic>,
     vehicles: ReadonlyMap<string, DashboardVehicle>,
-  ): RepairUnitCard {
-    const detail = bayDetail.get(bayStatus.bayId);
-    return {
-      unitId: bayStatus.bayId,
-      unitType: 'BAY',
-      unitName: bayStatus.bayName || detail?.name || bayStatus.bayId,
-      unitSubtitle: detail?.bayType,
-      unitStatus: bayStatus.status,
-      workorder: this.toWorkorder(
-        bayStatus.assignedWorkorderId,
-        summaries,
-        mechanicsByWorkorder,
-        vehicles,
-      ),
-    };
+  ): RepairUnitCard[] {
+    const bayDetail = new Map<string, BayResponse>(bays.map(bay => [bay.id, bay]));
+    const bayIds = [
+      ...bays.filter(bay => bay.status !== BAY_STATUS_OUT_OF_SERVICE).map(bay => bay.id),
+      ...[...bayStatusById.keys()].filter(bayId => !bayDetail.has(bayId)),
+    ];
+
+    return bayIds
+      .map(bayId => {
+        const detail = bayDetail.get(bayId);
+        const bayStatus = bayStatusById.get(bayId);
+        // The live feed wins when the replica carries this bay; otherwise the
+        // workorder's own assignment is all there is.
+        const workorderId = bayStatus
+          ? bayStatus.assignedWorkorderId
+          : workorderByBay.get(bayId);
+
+        return {
+          unitId: bayId,
+          unitType: 'BAY' as const,
+          unitName: bayStatus?.bayName || detail?.name || bayId,
+          unitSubtitle: detail?.bayType,
+          unitStatus: bayStatus?.status ?? detail?.status,
+          workorder: this.toWorkorder(workorderId, summaries, mechanicsByWorkorder, vehicles),
+        };
+      })
+      .sort((a, b) => compareUnitNames(a.unitName, b.unitName));
   }
 
   /**
-   * Workorders that name a mobile unit as their assigned resource, keyed by
-   * unit. A workorder's assignment is `assignedResourceId` plus `resourceType`
-   * in SDK 0.11, so the identifier alone does not say which kind of unit it
-   * points at — only rows typed `MOBILE_UNIT` belong here.
+   * Workorders that name a unit of the given kind as their assigned resource,
+   * keyed by unit. A workorder's assignment is `assignedResourceId` plus
+   * `resourceType`, so the identifier alone does not say which kind of unit it
+   * points at — only rows of the requested type belong here.
    *
    * The projection carries no uniqueness guarantee, so the first row wins:
    * two workorders claiming one unit must not make the card flip between them
    * on refresh.
    *
-   * `claimedByBay` excludes any workorder a `BayStatus` row has already
-   * claimed: bay status is the bay's own live operational feed, whereas this
-   * reads the workorder's side of an independent, optionally-inconsistent
-   * field, so on conflict the bay wins and this method must not also hand
-   * the same workorder to a mobile unit.
+   * `claimed` excludes workorders a higher-precedence source has already placed
+   * on a unit — a `BayStatus` row for the bay index, and every bay card for the
+   * mobile-unit index. Bay status is the bay's own live operational feed,
+   * whereas this reads the workorder's side of an independent,
+   * optionally-inconsistent field, so on conflict the bay wins and this method
+   * must not hand the same workorder to a second unit.
    */
-  private indexMobileUnitAssignments(
+  private indexUnitAssignments(
     workorders: WorkorderSummary[],
-    claimedByBay: ReadonlySet<string>,
+    resourceType: WorkorderSummaryResourceTypeEnum,
+    claimed: ReadonlySet<string>,
   ): Map<string, string> {
     const byUnit = new Map<string, string>();
     for (const summary of workorders) {
       const resourceId = summary.assignedResourceId;
       if (
         !resourceId ||
-        summary.resourceType !== WorkorderSummaryResourceTypeEnum.MobileUnit ||
+        summary.resourceType !== resourceType ||
         byUnit.has(resourceId) ||
-        claimedByBay.has(summary.workorderId)
+        claimed.has(summary.workorderId)
       ) {
         continue;
       }
@@ -453,12 +539,19 @@ export class ShopDashboardService {
     // budget before roster-only rows. Without this ordering a busy site can
     // spend all 40 lookups on the roster and leave every bay card showing
     // "vehicle details unavailable" — the one thing the page exists to show.
-    // Mobile-unit cards count as units too, so their work is read from the
-    // workorder's own assignment rather than from the bay-shaped status rows.
+    // The workorder's own `resourceType` is what makes a row unit-work here:
+    // the bay-shaped status rows cover only the bays the dispatch replica
+    // happens to hold, which on a site awaiting the backend#1668 backfill is
+    // none of them — and starving every bay card of its vehicle is the same
+    // class of bug as dropping the cards outright.
     const onUnit = new Set([
       ...bays.map(bay => bay.assignedWorkorderId).filter((id): id is string => !!id),
       ...workorders
-        .filter(summary => summary.resourceType === WorkorderSummaryResourceTypeEnum.MobileUnit)
+        .filter(
+          summary =>
+            summary.resourceType === WorkorderSummaryResourceTypeEnum.MobileUnit ||
+            summary.resourceType === WorkorderSummaryResourceTypeEnum.Bay,
+        )
         .map(summary => summary.workorderId),
     ]);
     const ids = [
