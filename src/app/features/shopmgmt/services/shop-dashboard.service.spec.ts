@@ -749,6 +749,73 @@ describe('ShopDashboardService', () => {
 
         expect(view.units.map(unit => unit.unitType)).toEqual(['MOBILE_UNIT']);
       });
+
+      it('carries the location inventory lifecycle status, not the dispatch occupancy verdict', async () => {
+        // `BayResponse.status` is ACTIVE / OUT_OF_SERVICE, owned by pos-location.
+        // `BayStatus.status` is pos-workorder's OCCUPIED / AVAILABLE occupancy
+        // verdict (DashboardServiceImpl builds it as `occupant != null ?
+        // "OCCUPIED" : "AVAILABLE"`). The design contract defines unitStatus as
+        // the unit's own operational status, so only the first belongs here —
+        // occupancy is already carried by whether `workorder` is set.
+        bayStub.listBays.mockReturnValue(
+          of({ content: [{ id: 'bay-1', name: 'Bay 1', status: 'ACTIVE' }] }),
+        );
+        dispatchStub.getDispatchDashboard.mockReturnValue(
+          of(
+            dashboard({
+              bays: [
+                {
+                  bayId: 'bay-1',
+                  bayName: 'Bay 1',
+                  available: false,
+                  status: 'OCCUPIED',
+                  assignedWorkorderId: 'wo-1',
+                },
+              ],
+              workorders: [{ workorderId: 'wo-1', status: 'WORK_IN_PROGRESS' }],
+            }),
+          ),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units[0].unitStatus).toBe('ACTIVE');
+        expect(view.units[0].workorder?.workorderId).toBe('wo-1');
+      });
+
+      it('renders a dispatch-only bay that is holding open work', async () => {
+        // pos-workorder emits a bay row outside its active set when open work is
+        // on it — a bay decommissioned mid-job, or a replica row that has not
+        // landed. It renders that row deliberately rather than let live work go
+        // invisible; dropping it here would reintroduce the same blindness.
+        // Its `status` is an occupancy verdict, never OUT_OF_SERVICE, so no
+        // lifecycle filter applies.
+        bayStub.listBays.mockReturnValue(of({ content: [] }));
+        dispatchStub.getDispatchDashboard.mockReturnValue(
+          of(
+            dashboard({
+              bays: [
+                {
+                  bayId: 'bay-gone',
+                  bayName: 'Bay 9',
+                  available: false,
+                  status: 'OCCUPIED',
+                  assignedWorkorderId: 'wo-1',
+                },
+              ],
+              workorders: [{ workorderId: 'wo-1', workorderNumber: 'WO-1', status: 'WORK_IN_PROGRESS' }],
+            }),
+          ),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units.map(unit => unit.unitId)).toEqual(['bay-gone']);
+        expect(view.units[0].workorder?.workorderNumber).toBe('WO-1');
+        // No inventory row, so no lifecycle status is known — never the
+        // occupancy value.
+        expect(view.units[0].unitStatus).toBeUndefined();
+      });
     });
   });
 });

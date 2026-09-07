@@ -324,6 +324,9 @@ export class ShopDashboardService {
    * an idle unit would overstate what the shop can take on. The test is an
    * explicit match on that one value — an unknown or absent status renders,
    * because omitting a bay is the failure mode this method exists to fix.
+   *
+   * Note the two `status` fields are different vocabularies and only the
+   * inventory's is a lifecycle status; see the two call sites below.
    */
   private toBayCards(
     bays: BayResponse[],
@@ -336,6 +339,13 @@ export class ShopDashboardService {
     const bayDetail = new Map<string, BayResponse>(bays.map(bay => [bay.id, bay]));
     const bayIds = [
       ...bays.filter(bay => bay.status !== BAY_STATUS_OUT_OF_SERVICE).map(bay => bay.id),
+      // A bay the inventory does not carry has no lifecycle status to test, and
+      // `BayStatus.status` is not one: pos-workorder builds it as OCCUPIED /
+      // AVAILABLE occupancy, and its replica query already selects active bays.
+      // Such a row exists because open work sits on a bay the active set does not
+      // name — a bay decommissioned mid-job, or a replica that has not landed.
+      // pos-workorder renders those deliberately rather than let live work go
+      // invisible on the board, and so does this.
       ...[...bayStatusById.keys()].filter(bayId => !bayDetail.has(bayId)),
     ];
 
@@ -354,7 +364,14 @@ export class ShopDashboardService {
           unitType: 'BAY' as const,
           unitName: bayStatus?.bayName || detail?.name || bayId,
           unitSubtitle: detail?.bayType,
-          unitStatus: bayStatus?.status ?? detail?.status,
+          // The bay's own operational status, which pos-location owns
+          // (ACTIVE / OUT_OF_SERVICE) — the vocabulary the design contract names
+          // for this field and the one the mobile-unit cards already carry.
+          // Deliberately NOT `BayStatus.status`, which is pos-workorder's
+          // OCCUPIED / AVAILABLE occupancy verdict: occupancy is already carried
+          // by whether `workorder` is set, and mixing two vocabularies into one
+          // field hands a future renderer two different meanings for one value.
+          unitStatus: detail?.status,
           workorder: this.toWorkorder(workorderId, summaries, mechanicsByWorkorder, vehicles),
         };
       })
