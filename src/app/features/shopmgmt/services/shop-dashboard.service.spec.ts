@@ -507,5 +507,315 @@ describe('ShopDashboardService', () => {
       // ...and the bay's workorder is not the one starved by it.
       expect(looked).toContain('wo-44');
     });
+
+    // ── Bay roster sourcing ────────────────────────────────────────────────
+    //
+    // pos-workorder serves `DashboardResponse.bays` from its own event-fed
+    // replica of the location domain and omits a bay whose replica row has not
+    // arrived. Every bay created before backend#1668 began publishing
+    // `location.bay.*` has no such row, so on a real site that array comes back
+    // empty and sourcing the cards from it rendered the grid with no bays at
+    // all. The location inventory owns bays and is complete today, so it is the
+    // roster of record.
+
+    describe('bay roster', () => {
+      it('renders bay cards from the location inventory when the dispatch projection reports no bays', async () => {
+        bayStub.listBays.mockReturnValue(
+          of({
+            content: [
+              { id: 'bay-1', name: 'Bay 1', bayType: 'Alignment', status: 'ACTIVE' },
+              { id: 'bay-2', name: 'Bay 2', bayType: 'General', status: 'ACTIVE' },
+            ],
+          }),
+        );
+        dispatchStub.getDispatchDashboard.mockReturnValue(of(dashboard({ bays: [] })));
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units.map(unit => unit.unitId)).toEqual(['bay-1', 'bay-2']);
+        expect(view.units[0]).toMatchObject({
+          unitType: 'BAY',
+          unitName: 'Bay 1',
+          unitSubtitle: 'Alignment',
+          unitStatus: 'ACTIVE',
+        });
+        expect(view.units[0].workorder).toBeUndefined();
+      });
+
+      it('puts a BAY-assigned workorder on an inventory-only bay card, and the roster agrees', async () => {
+        bayStub.listBays.mockReturnValue(
+          of({ content: [{ id: 'bay-1', name: 'Bay 1', status: 'ACTIVE' }] }),
+        );
+        dispatchStub.getDispatchDashboard.mockReturnValue(
+          of(
+            dashboard({
+              bays: [],
+              workorders: [
+                {
+                  workorderId: 'wo-1',
+                  workorderNumber: 'WO-10428',
+                  status: 'WORK_IN_PROGRESS',
+                  assignedResourceId: 'bay-1',
+                  resourceType: 'BAY',
+                },
+              ],
+              mechanics: [
+                { personId: 'p-1', firstName: 'M.', lastName: 'Alvarez', assignedWorkorderId: 'wo-1' },
+              ],
+            }),
+          ),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units[0].workorder).toMatchObject({
+          workorderId: 'wo-1',
+          workorderNumber: 'WO-10428',
+          status: 'WORK_IN_PROGRESS',
+        });
+        expect(view.units[0].workorder?.mechanic).toEqual({
+          personId: 'p-1',
+          displayName: 'M. Alvarez',
+        });
+        expect(view.openWorkorders[0]).toMatchObject({ unitId: 'bay-1', unitName: 'Bay 1' });
+      });
+
+      it('resolves the vehicle for a BAY-assigned workorder that no dispatch bay row carries', async () => {
+        // The lookup budget is prioritised by "is this work on a unit?". Reading
+        // that only from the bay status rows starved every bay card of its
+        // vehicle on exactly the sites this fix exists for.
+        bayStub.listBays.mockReturnValue(
+          of({ content: [{ id: 'bay-1', name: 'Bay 1', status: 'ACTIVE' }] }),
+        );
+        dispatchStub.getDispatchDashboard.mockReturnValue(
+          of(
+            dashboard({
+              bays: [],
+              workorders: [
+                ...Array.from({ length: 44 }, (_, i) => ({
+                  workorderId: `wo-loose-${i}`,
+                  status: 'ASSIGNED',
+                })),
+                {
+                  workorderId: 'wo-on-bay',
+                  status: 'WORK_IN_PROGRESS',
+                  assignedResourceId: 'bay-1',
+                  resourceType: 'BAY',
+                },
+              ],
+            }),
+          ),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(workorderDetailStub.getWorkorderDetail.mock.calls.map(call => call[0])).toContain(
+          'wo-on-bay',
+        );
+        expect(view.units[0].workorder?.vehicle).toMatchObject({ make: 'Ford', model: 'F-150' });
+      });
+
+      it('keeps a bay the dispatch projection knows but the bays call did not return', async () => {
+        // The inventory call is caught, not propagated, so a failure there must
+        // degrade to whatever the dispatch projection holds rather than blank
+        // the grid.
+        bayStub.listBays.mockReturnValue(throwError(() => new Error('bays down')));
+        dispatchStub.getDispatchDashboard.mockReturnValue(
+          of(
+            dashboard({
+              bays: [
+                { bayId: 'bay-1', bayName: 'Bay 1', available: true, status: 'ACTIVE' },
+              ],
+            }),
+          ),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units.map(unit => unit.unitId)).toEqual(['bay-1']);
+        expect(view.units[0].unitName).toBe('Bay 1');
+      });
+
+      it('lists a bay once when both sources carry it', async () => {
+        bayStub.listBays.mockReturnValue(
+          of({ content: [{ id: 'bay-1', name: 'Bay 1', bayType: 'Alignment', status: 'ACTIVE' }] }),
+        );
+        dispatchStub.getDispatchDashboard.mockReturnValue(
+          of(
+            dashboard({
+              bays: [{ bayId: 'bay-1', bayName: 'Bay 1', available: true, status: 'ACTIVE' }],
+            }),
+          ),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units).toHaveLength(1);
+        expect(view.units[0].unitSubtitle).toBe('Alignment');
+      });
+
+      it("prefers the bay's own live assignment over a workorder-side claim on the same bay", async () => {
+        bayStub.listBays.mockReturnValue(
+          of({ content: [{ id: 'bay-1', name: 'Bay 1', status: 'ACTIVE' }] }),
+        );
+        dispatchStub.getDispatchDashboard.mockReturnValue(
+          of(
+            dashboard({
+              bays: [
+                {
+                  bayId: 'bay-1',
+                  bayName: 'Bay 1',
+                  available: false,
+                  status: 'ACTIVE',
+                  assignedWorkorderId: 'wo-live',
+                },
+              ],
+              workorders: [
+                { workorderId: 'wo-live', workorderNumber: 'WO-1', status: 'WORK_IN_PROGRESS' },
+                {
+                  workorderId: 'wo-stale',
+                  workorderNumber: 'WO-2',
+                  status: 'ASSIGNED',
+                  assignedResourceId: 'bay-1',
+                  resourceType: 'BAY',
+                },
+              ],
+            }),
+          ),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units[0].workorder?.workorderId).toBe('wo-live');
+      });
+
+      it('drops an out-of-service bay so it is not counted as available capacity', async () => {
+        bayStub.listBays.mockReturnValue(
+          of({
+            content: [
+              { id: 'bay-1', name: 'Bay 1', status: 'ACTIVE' },
+              { id: 'bay-2', name: 'Bay 2', status: 'OUT_OF_SERVICE' },
+            ],
+          }),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units.map(unit => unit.unitId)).toEqual(['bay-1']);
+      });
+
+      it('renders a bay whose status is absent or unrecognised', async () => {
+        // Dropping a bay is the failure this whole path exists to prevent, so
+        // only the one known out-of-service value removes a card.
+        bayStub.listBays.mockReturnValue(
+          of({
+            content: [
+              { id: 'bay-1', name: 'Bay 1' },
+              { id: 'bay-2', name: 'Bay 2', status: 'RESERVED' },
+            ],
+          }),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units.map(unit => unit.unitId)).toEqual(['bay-1', 'bay-2']);
+      });
+
+      it('orders bay cards by name, reading numbers as numbers', async () => {
+        bayStub.listBays.mockReturnValue(
+          of({
+            content: [
+              { id: 'bay-10', name: 'Bay 10', status: 'ACTIVE' },
+              { id: 'bay-2', name: 'Bay 2', status: 'ACTIVE' },
+              { id: 'bay-1', name: 'Bay 1', status: 'ACTIVE' },
+            ],
+          }),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units.map(unit => unit.unitName)).toEqual(['Bay 1', 'Bay 2', 'Bay 10']);
+      });
+
+      it('renders no bay cards for a mobile-only site', async () => {
+        // The mobile hub has no fixed bays; the grid must show its vans and
+        // nothing else.
+        bayStub.listBays.mockReturnValue(of({ content: [] }));
+        mobileUnitStub.listMobileUnits.mockReturnValue(
+          of({ content: [{ id: 'unit-1', name: 'Van 4', baseLocationId: 'loc-1', status: 'ACTIVE' }] }),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units.map(unit => unit.unitType)).toEqual(['MOBILE_UNIT']);
+      });
+
+      it('carries the location inventory lifecycle status, not the dispatch occupancy verdict', async () => {
+        // `BayResponse.status` is ACTIVE / OUT_OF_SERVICE, owned by pos-location.
+        // `BayStatus.status` is pos-workorder's OCCUPIED / AVAILABLE occupancy
+        // verdict (DashboardServiceImpl builds it as `occupant != null ?
+        // "OCCUPIED" : "AVAILABLE"`). The design contract defines unitStatus as
+        // the unit's own operational status, so only the first belongs here —
+        // occupancy is already carried by whether `workorder` is set.
+        bayStub.listBays.mockReturnValue(
+          of({ content: [{ id: 'bay-1', name: 'Bay 1', status: 'ACTIVE' }] }),
+        );
+        dispatchStub.getDispatchDashboard.mockReturnValue(
+          of(
+            dashboard({
+              bays: [
+                {
+                  bayId: 'bay-1',
+                  bayName: 'Bay 1',
+                  available: false,
+                  status: 'OCCUPIED',
+                  assignedWorkorderId: 'wo-1',
+                },
+              ],
+              workorders: [{ workorderId: 'wo-1', status: 'WORK_IN_PROGRESS' }],
+            }),
+          ),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units[0].unitStatus).toBe('ACTIVE');
+        expect(view.units[0].workorder?.workorderId).toBe('wo-1');
+      });
+
+      it('renders a dispatch-only bay that is holding open work', async () => {
+        // pos-workorder emits a bay row outside its active set when open work is
+        // on it — a bay decommissioned mid-job, or a replica row that has not
+        // landed. It renders that row deliberately rather than let live work go
+        // invisible; dropping it here would reintroduce the same blindness.
+        // Its `status` is an occupancy verdict, never OUT_OF_SERVICE, so no
+        // lifecycle filter applies.
+        bayStub.listBays.mockReturnValue(of({ content: [] }));
+        dispatchStub.getDispatchDashboard.mockReturnValue(
+          of(
+            dashboard({
+              bays: [
+                {
+                  bayId: 'bay-gone',
+                  bayName: 'Bay 9',
+                  available: false,
+                  status: 'OCCUPIED',
+                  assignedWorkorderId: 'wo-1',
+                },
+              ],
+              workorders: [{ workorderId: 'wo-1', workorderNumber: 'WO-1', status: 'WORK_IN_PROGRESS' }],
+            }),
+          ),
+        );
+
+        const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+        expect(view.units.map(unit => unit.unitId)).toEqual(['bay-gone']);
+        expect(view.units[0].workorder?.workorderNumber).toBe('WO-1');
+        // No inventory row, so no lifecycle status is known — never the
+        // occupancy value.
+        expect(view.units[0].unitStatus).toBeUndefined();
+      });
+    });
   });
 });
