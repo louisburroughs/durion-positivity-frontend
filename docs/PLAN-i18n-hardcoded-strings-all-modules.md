@@ -60,15 +60,14 @@ The hatch is deliberately noisy so it cannot quietly absorb the backlog:
 Use it only for proper nouns. Anything a translator could legitimately render
 differently belongs in `src/assets/i18n/*.json`.
 
-## Backlog — 446 literals across 17 templates in 2 modules
+## Backlog — 262 literals across 9 templates in 1 module
 
 | Module | Literals | Templates |
 | --- | ---: | ---: |
 | crm | 262 | 9 |
-| people | 184 | 8 |
 
 Clean today (no findings): `workexec` (25 templates), `inventory` (26),
-`landing`, `shell`, `auth`, `accounting`, `security` (7), `location` (9),
+`landing`, `shell`, `auth`, `accounting`, `security` (7), `location` (9), `people` (16),
 `positivity` (16), `product` (14), `shopmgmt` (14), `bulk-import` (9),
 `billing` (4), `order` (3), `shared` (2), `sitemap` (1). `admin`, `system` and
 `core` have no external templates to scan.
@@ -81,10 +80,7 @@ Clean today (no findings): `workexec` (25 templates), `inventory` (26),
 | 43 | `crm/pages/merge-parties/merge-parties.component.html` |
 | 41 | `crm/pages/create-commercial-account/create-commercial-account.component.html` |
 | 35 | `crm/pages/customer-list/customer-list.component.html` |
-| 34 | `people/pages/time-approval/time-approval-page.component.html` |
 | 34 | `crm/pages/party-detail/party-detail.component.html` |
-| 32 | `people/pages/time-export/time-export-page.component.html` |
-| 30 | `people/pages/person-location-assignments/person-location-assignments-page.component.html` |
 
 ## Suggested phasing
 
@@ -96,7 +92,7 @@ settled before the large domains:
 1. ~~`auth`, `shell`, `landing`, `accounting` (11 literals)~~ ✅ done
 2. ~~`security` (11)~~ ✅ done
 3. ~~`location` (77)~~ ✅ done
-4. `people` (184)
+4. ~~`people` (184)~~ ✅ done
 5. `crm` (262)
 
 ### Phase 1 notes
@@ -176,6 +172,42 @@ already had it and gained a `setTranslation` fixture so its `No storage location
 found.` and `Page 1 of 3` assertions keep testing rendered output. The
 `Load failed` assertion still passes unchanged — it exercises the server-message
 passthrough, which is the point of that branch.
+
+### Phase 4 notes — `people`
+
+The largest phase: 184 flagged literals across 8 templates, plus 25 English
+strings in 7 `.ts` files. Five new key trees (`WORK_SESSION_SUBMIT`, `OFFBOARD`,
+`DISCREPANCY`, `EMPLOYEE_PROFILE`, `LOCATION_ASSIGNMENTS`) and extensions to
+three existing ones (`TIME_APPROVAL`, `TIME_EXPORT`, `DIRECTORY.PAGINATION`).
+
+The same two error shapes as phase 3 apply — `errorKey` + `| translate` where
+the signal only ever holds a key (`employee-offboard`, `employee-profile`,
+`person-location-assignments`), `translate.instant` where a server message can
+replace it (`time-approval`, `time-export`, `discrepancy-report`, and
+`work-session-submit`'s `toUserError` code mapping).
+
+Conversions worth noting:
+
+- **Label + `<code>` pairs.** `Session ID: <code>{{ sessionId() }}</code>` keeps
+  the label as its own key rather than folding the id into a param, because the
+  id is marked up separately.
+- **`{{ status }} - {{ start }} to {{ end }}`** in the pay-period `<option>` had
+  untranslatable glue between three interpolations; it is now one
+  `PERIOD_OPTION` key with three params.
+- **Sort-header text** (`Technician {{ sortIndicator(…) }}`) keeps the indicator
+  outside the key, so translators get the word alone.
+- **Boolean cells** (`{{ x ? 'Yes' : 'No' }}`) became key ternaries.
+
+Pre-existing dead keys: `PEOPLE.TIME_APPROVAL` and `PEOPLE.TIME_EXPORT` already
+held a handful of keys (`APPROVE`, `EMPTY`, `LOAD_EXPORT`, …) that **no template
+references** — leftovers from earlier versions of those pages. The new keys were
+added alongside them rather than reusing them, because their en-US wording does
+not match what the current templates render. Worth deleting separately.
+
+Specs: seven needed `TranslateModule.forRoot()`; four also needed a
+`setTranslation` fixture for assertions that read rendered English back
+(`Technician`, `Unavailable`, `Submit Job Time`, and the two offboard error
+messages).
 
 ## Removed: `src/app/app.html`
 

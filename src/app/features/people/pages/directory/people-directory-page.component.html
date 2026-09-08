@@ -131,12 +131,13 @@
     </div>
 
     @if (totalPages() > 1) {
-      <div class="directory-pagination" role="navigation" aria-label="Pagination">
+      <div class="directory-pagination" role="navigation"
+        [attr.aria-label]="'PEOPLE.DIRECTORY.PAGINATION.ARIA' | translate">
         <button
           class="pagination-btn"
           [disabled]="pageIndex() === 0"
           (click)="prevPage()"
-          aria-label="Previous page"
+          [attr.aria-label]="'PEOPLE.DIRECTORY.PAGINATION.PREVIOUS' | translate"
         >
           ‹
         </button>
@@ -147,7 +148,7 @@
           class="pagination-btn"
           [disabled]="pageIndex() >= totalPages() - 1"
           (click)="nextPage()"
-          aria-label="Next page"
+          [attr.aria-label]="'PEOPLE.DIRECTORY.PAGINATION.NEXT' | translate"
         >
           ›
         </button>

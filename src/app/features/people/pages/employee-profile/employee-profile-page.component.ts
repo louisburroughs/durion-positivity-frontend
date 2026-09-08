@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { EmployeeProfileDto, CreateEmployeeRequestStatusEnum, UpdateEmployeeRequestStatusEnum, EmployeeProfileDtoStatusEnum } from '@durion-sdk/people';
 import { PeopleService } from '../../services/people.service';
 
@@ -10,7 +11,7 @@ import { PeopleService } from '../../services/people.service';
   selector: 'app-employee-profile-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, DatePipe, TranslatePipe],
   templateUrl: './employee-profile-page.component.html',
   styleUrl: './employee-profile-page.component.css',
 })
@@ -19,6 +20,7 @@ export class EmployeeProfilePageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly translate = inject(TranslateService);
 
   readonly employmentStatusValues = Object.values(CreateEmployeeRequestStatusEnum);
 
@@ -27,7 +29,7 @@ export class EmployeeProfilePageComponent implements OnInit {
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly employee = signal<EmployeeProfileDto | null>(null);
-  readonly error = signal<string | null>(null);
+  readonly errorKey = signal<string | null>(null);
   readonly conflictError = signal<string | null>(null);
   readonly fieldErrors = signal<Record<string, string>>({});
   /** Non-fatal warnings returned by the backend while resolving the profile. */
@@ -64,7 +66,7 @@ export class EmployeeProfilePageComponent implements OnInit {
     }
 
     this.loading.set(true);
-    this.error.set(null);
+    this.errorKey.set(null);
     this.peopleService.getEmployee(this.employeeId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -82,7 +84,7 @@ export class EmployeeProfilePageComponent implements OnInit {
           this.loading.set(false);
         },
         error: () => {
-          this.error.set('Failed to load employee.');
+          this.errorKey.set('PEOPLE.EMPLOYEE_PROFILE.ERROR.LOAD');
           this.loading.set(false);
         },
       });
@@ -93,7 +95,7 @@ export class EmployeeProfilePageComponent implements OnInit {
     if (this.form.invalid) {
       return;
     }
-    this.error.set(null);
+    this.errorKey.set(null);
     this.saveSuccess.set(false);
     this.conflictError.set(null);
     this.fieldErrors.set({});
@@ -109,7 +111,7 @@ export class EmployeeProfilePageComponent implements OnInit {
       const employeeId = this.employeeId;
       if (!employeeId) {
         this.saving.set(false);
-        this.error.set('Failed to save employee.');
+        this.errorKey.set('PEOPLE.EMPLOYEE_PROFILE.ERROR.SAVE');
         return;
       }
 
@@ -197,6 +199,6 @@ export class EmployeeProfilePageComponent implements OnInit {
       }
     }
 
-    this.error.set('Failed to save employee.');
+    this.errorKey.set('PEOPLE.EMPLOYEE_PROFILE.ERROR.SAVE');
   }
 }

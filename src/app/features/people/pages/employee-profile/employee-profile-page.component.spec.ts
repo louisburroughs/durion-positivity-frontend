@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 
 import { EmployeeProfilePageComponent } from './employee-profile-page.component';
@@ -34,7 +35,7 @@ async function setupNew(): Promise<{ fixture: ComponentFixture<EmployeeProfilePa
   vi.clearAllMocks();
 
   await TestBed.configureTestingModule({
-    imports: [EmployeeProfilePageComponent],
+    imports: [EmployeeProfilePageComponent, TranslateModule.forRoot()],
     providers: [
       provideRouter([]),
       { provide: PeopleService, useValue: stubPeopleService },
@@ -44,6 +45,10 @@ async function setupNew(): Promise<{ fixture: ComponentFixture<EmployeeProfilePa
       },
     ],
   }).compileComponents();
+
+  const translate = TestBed.inject(TranslateService);
+  translate.setTranslation('en-US', TRANSLATIONS);
+  translate.use('en-US');
 
   const fixture = TestBed.createComponent(EmployeeProfilePageComponent);
   const component = fixture.componentInstance;
@@ -56,7 +61,7 @@ async function setupEdit(employeeId = 'emp-1'): Promise<{ fixture: ComponentFixt
   stubPeopleService.getEmployee.mockReturnValue(of(STUB_EMPLOYEE));
 
   await TestBed.configureTestingModule({
-    imports: [EmployeeProfilePageComponent],
+    imports: [EmployeeProfilePageComponent, TranslateModule.forRoot()],
     providers: [
       provideRouter([]),
       { provide: PeopleService, useValue: stubPeopleService },
@@ -67,6 +72,10 @@ async function setupEdit(employeeId = 'emp-1'): Promise<{ fixture: ComponentFixt
     ],
   }).compileComponents();
 
+  const translate = TestBed.inject(TranslateService);
+  translate.setTranslation('en-US', TRANSLATIONS);
+  translate.use('en-US');
+
   const fixture = TestBed.createComponent(EmployeeProfilePageComponent);
   const component = fixture.componentInstance;
   fixture.detectChanges();
@@ -74,6 +83,13 @@ async function setupEdit(employeeId = 'emp-1'): Promise<{ fixture: ComponentFixt
 }
 
 // ── Test Suite ────────────────────────────────────────────────────────────
+
+// Mirrors the PEOPLE.EMPLOYEE_PROFILE keys these assertions read back.
+const TRANSLATIONS = {
+  PEOPLE: {
+    EMPLOYEE_PROFILE: { UNAVAILABLE: 'Unavailable' },
+  },
+};
 
 describe('EmployeeProfilePageComponent [Story #152]', () => {
   afterEach(() => {
@@ -117,7 +133,7 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     );
 
     await TestBed.configureTestingModule({
-      imports: [EmployeeProfilePageComponent],
+      imports: [EmployeeProfilePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: PeopleService, useValue: stubPeopleService },
@@ -127,6 +143,10 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
         },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
 
     const fixture = TestBed.createComponent(EmployeeProfilePageComponent);
     fixture.detectChanges();
@@ -149,7 +169,7 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     stubPeopleService.getEmployee.mockReturnValue(new (await import('rxjs')).Subject());
 
     await TestBed.configureTestingModule({
-      imports: [EmployeeProfilePageComponent],
+      imports: [EmployeeProfilePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: PeopleService, useValue: stubPeopleService },
@@ -159,6 +179,10 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
         },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
 
     const fixture = TestBed.createComponent(EmployeeProfilePageComponent);
     fixture.detectChanges();
@@ -263,7 +287,7 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     );
 
     await TestBed.configureTestingModule({
-      imports: [EmployeeProfilePageComponent],
+      imports: [EmployeeProfilePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: PeopleService, useValue: stubPeopleService },
@@ -273,6 +297,10 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
         },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
 
     const fixture = TestBed.createComponent(EmployeeProfilePageComponent);
     fixture.detectChanges();
@@ -308,7 +336,7 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
     stubPeopleService.createEmployee.mockReturnValue(new Subject());
 
     await TestBed.configureTestingModule({
-      imports: [EmployeeProfilePageComponent],
+      imports: [EmployeeProfilePageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: PeopleService, useValue: stubPeopleService },
@@ -318,6 +346,10 @@ describe('EmployeeProfilePageComponent [Story #152]', () => {
         },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
 
     const fixture = TestBed.createComponent(EmployeeProfilePageComponent);
     const component = fixture.componentInstance;

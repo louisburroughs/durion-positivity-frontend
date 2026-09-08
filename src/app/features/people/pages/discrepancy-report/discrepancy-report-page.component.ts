@@ -8,6 +8,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { PeopleService } from '../../services/people.service';
 
 type SortField = 'technicianName' | 'locationId' | 'reportDate' | 'totalAttendanceHours' | 'totalJobHours' | 'discrepancyHours';
@@ -16,7 +17,7 @@ type SortDir = 'asc' | 'desc';
 @Component({
   selector: 'app-discrepancy-report-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './discrepancy-report-page.component.html',
   styleUrl: './discrepancy-report-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,6 +25,7 @@ type SortDir = 'asc' | 'desc';
 export class DiscrepancyReportPageComponent {
   private readonly peopleService = inject(PeopleService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly translate = inject(TranslateService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -94,7 +96,7 @@ export class DiscrepancyReportPageComponent {
         error: (err) => {
           // Preserve prior rows on error, re-applying the active filter
           this.rows.set(this.sortRows(this.applyFilters(this.priorRows(), flaggedOnly)));
-          this.error.set(err?.error?.message ?? 'Failed to load discrepancy report.');
+          this.error.set(err?.error?.message ?? this.translate.instant('PEOPLE.DISCREPANCY.ERROR.LOAD'));
           this.loading.set(false);
         },
       });

@@ -1,18 +1,18 @@
 <main class="people-page person-location-assignments-layout" aria-labelledby="person-location-assignments-heading">
   <header class="page-header">
-    <p class="page-overline">People Management</p>
-    <h1 id="person-location-assignments-heading">Person Location Assignments</h1>
+    <p class="page-overline">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.OVERLINE' | translate }}</p>
+    <h1 id="person-location-assignments-heading">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.TITLE' | translate }}</h1>
   </header>
 
   @if (loading()) {
   <section class="state-panel" data-testid="loading-indicator" aria-live="polite" aria-busy="true">
-    Loading location assignments...
+    {{ 'PEOPLE.LOCATION_ASSIGNMENTS.LOADING' | translate }}
   </section>
   }
 
-  @if (error()) {
+  @if (errorKey()) {
   <section class="state-panel state-panel--error" role="alert" data-testid="error-state">
-    {{ error() }}
+    {{ errorKey()! | translate }}
   </section>
   }
 
@@ -20,37 +20,37 @@
   <section class="assignment-content">
     <div class="form-footer">
       <button type="button" class="btn btn--primary" data-testid="add-assignment-btn" (click)="openCreateDialog()">
-        Add Assignment
+        {{ 'PEOPLE.LOCATION_ASSIGNMENTS.ADD' | translate }}
       </button>
     </div>
 
     @if (assignments().length === 0) {
     <section class="state-panel" data-testid="empty-state" aria-live="polite">
-      No location assignments are currently active for this person.
+      {{ 'PEOPLE.LOCATION_ASSIGNMENTS.EMPTY' | translate }}
     </section>
     } @else {
     <div class="assignment-list-wrap" data-testid="assignment-list">
-      <table class="assignment-table" aria-label="Person location assignments">
+      <table class="assignment-table" [attr.aria-label]="'PEOPLE.LOCATION_ASSIGNMENTS.TABLE_ARIA' | translate">
         <thead>
           <tr>
-            <th scope="col">Location</th>
-            <th scope="col">Primary</th>
-            <th scope="col">Start Date</th>
-            <th scope="col">End Date</th>
-            <th scope="col">Actions</th>
+            <th scope="col">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.COL.LOCATION' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.COL.PRIMARY' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.COL.START_DATE' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.COL.END_DATE' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.COL.ACTIONS' | translate }}</th>
           </tr>
         </thead>
         <tbody>
           @for (assignment of assignments(); track $index) {
           <tr data-testid="assignment-item">
             <td>{{ getLocationName(assignment) }}</td>
-            <td>{{ assignment.isPrimary ? 'Yes' : 'No' }}</td>
+            <td>{{ (assignment.isPrimary ? 'PEOPLE.LOCATION_ASSIGNMENTS.YES' : 'PEOPLE.LOCATION_ASSIGNMENTS.NO') | translate }}</td>
             <td>{{ getEffectiveStart(assignment) }}</td>
             <td>{{ getEffectiveEnd(assignment) }}</td>
             <td>
               <button type="button" class="btn btn--danger" data-testid="end-assignment-btn" [disabled]="submitting()"
                 (click)="openEndDialog(getAssignmentId(assignment))">
-                End
+                {{ 'PEOPLE.LOCATION_ASSIGNMENTS.END' | translate }}
               </button>
             </td>
           </tr>
@@ -67,9 +67,9 @@
     aria-describedby="create-assignment-description" data-testid="create-dialog" open tabindex="0"
     (keydown.escape)="closeCreateDialog()">
     <div class="modal-panel">
-      <h2 id="create-assignment-title">Create Location Assignment</h2>
+      <h2 id="create-assignment-title">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.CREATE_TITLE' | translate }}</h2>
       <p id="create-assignment-description">
-        Choose the location and effective dates for this assignment.
+        {{ 'PEOPLE.LOCATION_ASSIGNMENTS.CREATE_DESC' | translate }}
       </p>
 
       @if (conflictError()) {
@@ -80,12 +80,12 @@
 
       <form [formGroup]="createForm" (ngSubmit)="submitCreate()" novalidate>
         <fieldset class="form-section">
-          <legend>Assignment Details</legend>
+          <legend>{{ 'PEOPLE.LOCATION_ASSIGNMENTS.DETAILS_LEGEND' | translate }}</legend>
 
           <div class="field-row">
-            <label for="location-select">Location</label>
+            <label for="location-select">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.FIELD_LOCATION' | translate }}</label>
             <select id="location-select" formControlName="locationId" data-testid="location-select">
-              <option value="" disabled>Select location</option>
+              <option value="" disabled>{{ 'PEOPLE.LOCATION_ASSIGNMENTS.SELECT_LOCATION' | translate }}</option>
               @for (location of availableLocations(); track $index) {
               <option [value]="getLocationId(location)">{{ $any(location).name || getLocationId(location) }}
               </option>
@@ -94,19 +94,19 @@
           </div>
 
           <div class="field-row">
-            <label for="role-input">Role</label>
+            <label for="role-input">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.FIELD_ROLE' | translate }}</label>
             <input id="role-input" type="text" formControlName="role" data-testid="role-input"
-              placeholder="e.g. TECHNICIAN" />
+              [placeholder]="'PEOPLE.LOCATION_ASSIGNMENTS.ROLE_PLACEHOLDER' | translate" />
           </div>
 
           <div class="field-row">
-            <label for="effective-start-input">Effective Start</label>
+            <label for="effective-start-input">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.FIELD_EFFECTIVE_START' | translate }}</label>
             <input id="effective-start-input" type="date" formControlName="effectiveStartAt"
               data-testid="effective-start-input" />
           </div>
 
           <div class="field-row">
-            <label for="effective-end-input">Effective End (Optional)</label>
+            <label for="effective-end-input">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.FIELD_EFFECTIVE_END' | translate }}</label>
             <input id="effective-end-input" type="date" formControlName="effectiveEndAt"
               data-testid="effective-end-input" />
           </div>
@@ -114,7 +114,7 @@
           <div class="field-row">
             <label for="primary-checkbox">
               <input id="primary-checkbox" type="checkbox" formControlName="primary" data-testid="primary-checkbox" />
-              Primary Assignment
+              {{ 'PEOPLE.LOCATION_ASSIGNMENTS.FIELD_PRIMARY' | translate }}
             </label>
           </div>
         </fieldset>
@@ -122,14 +122,10 @@
         <footer class="form-footer">
           <button type="button" class="btn btn--ghost" data-testid="cancel-create-btn" [disabled]="submitting()"
             (click)="closeCreateDialog()">
-            Cancel
+            {{ 'PEOPLE.LOCATION_ASSIGNMENTS.CANCEL' | translate }}
           </button>
           <button type="submit" class="btn btn--primary" data-testid="submit-create-btn" [disabled]="submitting()">
-            @if (submitting()) {
-            Creating...
-            } @else {
-            Create Assignment
-            }
+            {{ (submitting() ? 'PEOPLE.LOCATION_ASSIGNMENTS.CREATING' : 'PEOPLE.LOCATION_ASSIGNMENTS.CREATE') | translate }}
           </button>
         </footer>
       </form>
@@ -141,9 +137,9 @@
   <div class="modal-backdrop" role="alertdialog" aria-modal="true" aria-labelledby="end-assignment-title"
     aria-describedby="end-assignment-description" data-testid="end-confirm-dialog" (keydown.escape)="closeEndDialog()">
     <div class="modal-panel modal-panel--destructive">
-      <h2 id="end-assignment-title">End Assignment</h2>
+      <h2 id="end-assignment-title">{{ 'PEOPLE.LOCATION_ASSIGNMENTS.END_TITLE' | translate }}</h2>
       <p id="end-assignment-description">
-        This will end the selected assignment for this person.
+        {{ 'PEOPLE.LOCATION_ASSIGNMENTS.END_DESC' | translate }}
       </p>
       <footer class="form-footer">
         <!-- autofocus moves focus into this non-native role="alertdialog" on open (Cancel is the
@@ -152,16 +148,12 @@
         <!-- eslint-disable @angular-eslint/template/no-autofocus -->
         <button type="button" class="btn btn--ghost" data-testid="cancel-end-btn" [disabled]="submitting()"
           (click)="closeEndDialog()" autofocus>
-          Cancel
+          {{ 'PEOPLE.LOCATION_ASSIGNMENTS.CANCEL' | translate }}
         </button>
         <!-- eslint-enable @angular-eslint/template/no-autofocus -->
         <button type="button" class="btn btn--danger" data-testid="confirm-end-btn" [disabled]="submitting()"
           (click)="confirmEnd()">
-          @if (submitting()) {
-          Ending...
-          } @else {
-          Confirm End
-          }
+          {{ (submitting() ? 'PEOPLE.LOCATION_ASSIGNMENTS.ENDING' : 'PEOPLE.LOCATION_ASSIGNMENTS.CONFIRM_END') | translate }}
         </button>
       </footer>
     </div>

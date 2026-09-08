@@ -8,6 +8,7 @@ import {
 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { v4 as uuidv4 } from 'uuid';
 import { AccountingService } from '../../../accounting/services/accounting.service';
 import { LocationService } from '../../../location/services/location.service';
@@ -17,7 +18,7 @@ type ExportState = 'IDLE' | 'REQUESTING' | 'QUEUED' | 'PROCESSING' | 'READY' | '
 @Component({
   selector: 'app-time-export-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './time-export-page.component.html',
   styleUrl: './time-export-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,6 +27,7 @@ export class TimeExportPageComponent {
   private readonly accountingService = inject(AccountingService);
   private readonly locationService = inject(LocationService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly translate = inject(TranslateService);
 
   // Locations for multi-select
   readonly locations = signal<unknown[]>([]);
@@ -75,7 +77,7 @@ export class TimeExportPageComponent {
           this.locationsLoading.set(false);
         },
         error: () => {
-          this.locationsError.set('Failed to load locations.');
+          this.locationsError.set(this.translate.instant('PEOPLE.TIME_EXPORT.ERROR.LOAD_LOCATIONS'));
           this.locationsLoading.set(false);
         },
       });
@@ -89,12 +91,12 @@ export class TimeExportPageComponent {
 
     // Validate endDate >= startDate
     if (endDate < startDate) {
-      this.exportError.set('End date must be on or after start date.');
+      this.exportError.set(this.translate.instant('PEOPLE.TIME_EXPORT.ERROR.DATE_ORDER'));
       return;
     }
 
     if (!locationIds || locationIds.length === 0) {
-      this.exportError.set('At least one location must be selected.');
+      this.exportError.set(this.translate.instant('PEOPLE.TIME_EXPORT.ERROR.LOCATION_REQUIRED_SUBMIT'));
       return;
     }
 
@@ -113,7 +115,7 @@ export class TimeExportPageComponent {
           this.exportState.set((resp.status as ExportState) ?? 'QUEUED');
         },
         error: (err) => {
-          const msg = err?.error?.message ?? 'Failed to request export.';
+          const msg = err?.error?.message ?? this.translate.instant('PEOPLE.TIME_EXPORT.ERROR.REQUEST');
           this.exportError.set(msg);
           this.exportState.set('IDLE');
         },
@@ -135,10 +137,10 @@ export class TimeExportPageComponent {
           if (resp.recordsSkippedCount !== undefined) this.recordsSkippedCount.set(resp.recordsSkippedCount);
           if (resp.requestedAt) this.requestedAt.set(resp.requestedAt);
           if (resp.completedAt) this.completedAt.set(resp.completedAt);
-          if (resp.status === 'FAILED') this.exportError.set(resp.message ?? resp.errorCode ?? 'Export failed.');
+          if (resp.status === 'FAILED') this.exportError.set(resp.message ?? resp.errorCode ?? this.translate.instant('PEOPLE.TIME_EXPORT.ERROR.EXPORT_FAILED'));
         },
         error: (err) => {
-          const msg = err?.error?.message ?? 'Failed to refresh status.';
+          const msg = err?.error?.message ?? this.translate.instant('PEOPLE.TIME_EXPORT.ERROR.REFRESH_STATUS');
           this.exportError.set(msg);
         },
       });
@@ -162,7 +164,7 @@ export class TimeExportPageComponent {
           this.historyLoading.set(false);
         },
         error: () => {
-          this.historyError.set('Failed to load export history.');
+          this.historyError.set(this.translate.instant('PEOPLE.TIME_EXPORT.ERROR.LOAD_HISTORY'));
           this.historyLoading.set(false);
         },
       });

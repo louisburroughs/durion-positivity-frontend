@@ -1,42 +1,43 @@
 <main>
   <header class="page-header">
-    <h1>Time Approval</h1>
+    <h1>{{ 'PEOPLE.TIME_APPROVAL.TITLE' | translate }}</h1>
   </header>
 
   <section class="panel">
-    <h2>Select Employee and Pay Period</h2>
+    <h2>{{ 'PEOPLE.TIME_APPROVAL.SELECTION_TITLE' | translate }}</h2>
 
-    <form class="form-grid" [formGroup]="selectionForm" aria-label="Time approval selection form">
+    <form class="form-grid" [formGroup]="selectionForm" [attr.aria-label]="'PEOPLE.TIME_APPROVAL.FORM_ARIA' | translate">
       <div class="field">
-        <label for="person-select">Employee</label>
+        <label for="person-select">{{ 'PEOPLE.TIME_APPROVAL.FIELD_EMPLOYEE' | translate }}</label>
         <select id="person-select" formControlName="personId" data-testid="person-select"
           aria-describedby="person-help">
-          <option value="">Select employee</option>
+          <option value="">{{ 'PEOPLE.TIME_APPROVAL.SELECT_EMPLOYEE' | translate }}</option>
           @for (person of people(); track $index) {
           <option [value]="$any(person).personId">{{ $any(person).displayName }} ({{ $any(person).employeeNumber }})
           </option>
           }
         </select>
-        <span id="person-help" class="help-text">Select the employee to review.</span>
+        <span id="person-help" class="help-text">{{ 'PEOPLE.TIME_APPROVAL.EMPLOYEE_HELP' | translate }}</span>
       </div>
 
       <div class="field">
-        <label for="period-select">Pay Period</label>
+        <label for="period-select">{{ 'PEOPLE.TIME_APPROVAL.FIELD_PERIOD' | translate }}</label>
         <select id="period-select" formControlName="timePeriodId" data-testid="period-select"
           aria-describedby="period-help">
-          <option value="">Select pay period</option>
+          <option value="">{{ 'PEOPLE.TIME_APPROVAL.SELECT_PERIOD' | translate }}</option>
           @for (period of periods(); track $index) {
           <option [value]="$any(period).timePeriodId">
-            {{ $any(period).status }} - {{ $any(period).startDate }} to {{ $any(period).endDate }}
+            {{ 'PEOPLE.TIME_APPROVAL.PERIOD_OPTION' | translate: {
+              status: $any(period).status, start: $any(period).startDate, end: $any(period).endDate } }}
           </option>
           }
         </select>
-        <span id="period-help" class="help-text">Choose an eligible period for decision.</span>
+        <span id="period-help" class="help-text">{{ 'PEOPLE.TIME_APPROVAL.PERIOD_HELP' | translate }}</span>
       </div>
     </form>
 
     @if (peopleLoading()) {
-    <p aria-live="polite">Loading employees...</p>
+    <p aria-live="polite">{{ 'PEOPLE.TIME_APPROVAL.LOADING_EMPLOYEES' | translate }}</p>
     }
 
     @if (peopleError()) {
@@ -44,7 +45,7 @@
     }
 
     @if (periodsLoading()) {
-    <p aria-live="polite">Loading periods...</p>
+    <p aria-live="polite">{{ 'PEOPLE.TIME_APPROVAL.LOADING_PERIODS' | translate }}</p>
     }
 
     @if (periodsError()) {
@@ -59,12 +60,12 @@
   @if (selectionForm.controls.personId.value && selectionForm.controls.timePeriodId.value) {
   <section class="panel">
     <div class="section-header-row">
-      <h2>Time Entries</h2>
-      <button type="button" (click)="refreshDetail()">Refresh Detail</button>
+      <h2>{{ 'PEOPLE.TIME_APPROVAL.ENTRIES_TITLE' | translate }}</h2>
+      <button type="button" (click)="refreshDetail()">{{ 'PEOPLE.TIME_APPROVAL.REFRESH_DETAIL' | translate }}</button>
     </div>
 
     @if (detailLoading()) {
-    <p data-testid="detail-loading" aria-live="polite">Loading detail...</p>
+    <p data-testid="detail-loading" aria-live="polite">{{ 'PEOPLE.TIME_APPROVAL.LOADING_DETAIL' | translate }}</p>
     }
 
     @if (detailError()) {
@@ -72,7 +73,7 @@
     }
 
     @if (!detailLoading() && entries().length === 0) {
-    <p data-testid="entries-empty">No timekeeping entries found for this selection.</p>
+    <p data-testid="entries-empty">{{ 'PEOPLE.TIME_APPROVAL.ENTRIES_EMPTY' | translate }}</p>
     }
 
     @if (!detailLoading() && entries().length > 0) {
@@ -80,11 +81,11 @@
       <table data-testid="entries-table">
         <thead>
           <tr>
-            <th scope="col">ID</th>
-            <th scope="col">Status</th>
-            <th scope="col">Clock In</th>
-            <th scope="col">Clock Out</th>
-            <th scope="col">Location</th>
+            <th scope="col">{{ 'PEOPLE.TIME_APPROVAL.COL.ID' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_APPROVAL.COL.STATUS' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_APPROVAL.COL.CLOCK_IN' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_APPROVAL.COL.CLOCK_OUT' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_APPROVAL.COL.LOCATION' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -105,11 +106,11 @@
     <div class="actions-row">
       <button type="button" (click)="approvePeriod()" [disabled]="!canDecide() || actionInFlight()"
         data-testid="approve-btn">
-        Approve Period
+        {{ 'PEOPLE.TIME_APPROVAL.APPROVE_PERIOD' | translate }}
       </button>
       <button type="button" (click)="openRejectDialog()" [disabled]="!canDecide() || actionInFlight()"
         data-testid="reject-btn">
-        Reject Period
+        {{ 'PEOPLE.TIME_APPROVAL.REJECT_PERIOD' | translate }}
       </button>
     </div>
 
@@ -123,14 +124,14 @@
   </section>
 
   <section class="panel">
-    <h2>Approval History</h2>
+    <h2>{{ 'PEOPLE.TIME_APPROVAL.HISTORY_TITLE' | translate }}</h2>
 
     @if (historyLoading()) {
-    <p aria-live="polite">Loading history...</p>
+    <p aria-live="polite">{{ 'PEOPLE.TIME_APPROVAL.LOADING_HISTORY' | translate }}</p>
     }
 
     @if (!historyLoading() && approvalHistory().length === 0) {
-    <p data-testid="history-empty">No approval history found.</p>
+    <p data-testid="history-empty">{{ 'PEOPLE.TIME_APPROVAL.HISTORY_EMPTY' | translate }}</p>
     }
 
     @if (!historyLoading() && approvalHistory().length > 0) {
@@ -138,11 +139,11 @@
       <table data-testid="history-table">
         <thead>
           <tr>
-            <th scope="col">Overall Status</th>
-            <th scope="col">Total</th>
-            <th scope="col">Pending</th>
-            <th scope="col">Approved</th>
-            <th scope="col">Rejected</th>
+            <th scope="col">{{ 'PEOPLE.TIME_APPROVAL.COL.OVERALL_STATUS' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_APPROVAL.COL.TOTAL' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_APPROVAL.COL.PENDING' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_APPROVAL.COL.APPROVED' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_APPROVAL.COL.REJECTED' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -166,9 +167,9 @@
   <div class="modal-overlay" tabindex="0" (keydown.escape)="closeRejectDialog()">
     <section class="modal-panel" role="alertdialog" aria-modal="true" aria-labelledby="reject-dialog-title"
       data-testid="reject-dialog">
-      <h2 id="reject-dialog-title">Reject Period</h2>
+      <h2 id="reject-dialog-title">{{ 'PEOPLE.TIME_APPROVAL.REJECT_DIALOG_TITLE' | translate }}</h2>
       <div class="field" [formGroup]="rejectForm">
-        <label for="reject-comments">Comments</label>
+        <label for="reject-comments">{{ 'PEOPLE.TIME_APPROVAL.FIELD_COMMENTS' | translate }}</label>
         <textarea id="reject-comments" formControlName="comments" data-testid="reject-comments-input"
           rows="4"></textarea>
       </div>
@@ -178,11 +179,11 @@
              mechanism placing keyboard/SR users inside the modal. ADR-0029 keyboard-flow. -->
         <!-- eslint-disable @angular-eslint/template/no-autofocus -->
         <button type="button" (click)="closeRejectDialog()" data-testid="cancel-reject-btn" autofocus>
-          Cancel
+          {{ 'PEOPLE.TIME_APPROVAL.CANCEL' | translate }}
         </button>
         <!-- eslint-enable @angular-eslint/template/no-autofocus -->
         <button type="button" (click)="submitReject()" data-testid="submit-reject-btn" [disabled]="actionInFlight()">
-          Submit Reject
+          {{ 'PEOPLE.TIME_APPROVAL.SUBMIT_REJECT_BTN' | translate }}
         </button>
       </div>
     </section>

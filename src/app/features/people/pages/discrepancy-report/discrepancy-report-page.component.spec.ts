@@ -1,8 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { DiscrepancyReportPageComponent } from './discrepancy-report-page.component';
 import { PeopleService } from '../../services/people.service';
+
+// Mirrors the PEOPLE.DISCREPANCY keys these assertions read back.
+const TRANSLATIONS = {
+  PEOPLE: {
+    DISCREPANCY: {
+      TITLE: 'Attendance vs Job Time Discrepancy Report',
+      COL: { TECHNICIAN: 'Technician' },
+    },
+  },
+};
 
 describe('DiscrepancyReportPageComponent', () => {
   let fixture: ComponentFixture<DiscrepancyReportPageComponent>;
@@ -23,13 +34,17 @@ describe('DiscrepancyReportPageComponent', () => {
     routerMock = { navigate: vi.fn().mockResolvedValue(true) };
 
     await TestBed.configureTestingModule({
-      imports: [DiscrepancyReportPageComponent],
+      imports: [DiscrepancyReportPageComponent, TranslateModule.forRoot()],
       providers: [
         { provide: PeopleService, useValue: peopleService },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParams: {} } } },
         { provide: Router, useValue: routerMock },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
 
     fixture = TestBed.createComponent(DiscrepancyReportPageComponent);
     component = fixture.componentInstance;
