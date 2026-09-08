@@ -464,7 +464,7 @@
       }
     },
     "ROLE_ASSIGNMENT": {
-      "TITLE": "Asignar rol y alcance",
+      "TITLE": "Asignar rol",
       "PAGE_TITLE": "Asignaciones de roles",
       "ASSIGNED_ROLES": "Roles asignados",
       "INCLUDE_HISTORY": "Incluir historial",
@@ -472,10 +472,7 @@
       "DETAILS": "Detalles de asignación de rol",
       "ROLE": "Rol",
       "SELECT_ROLE": "Selecciona un rol",
-      "SCOPE_TYPE": "Tipo de alcance",
-      "SCOPE_GLOBAL": "GLOBAL",
-      "SCOPE_LOCATION": "LOCATION",
-      "LOCATION_ID": "ID de ubicación",
+      "LOCATION_SOURCE_HINT": "La ubicación proviene de la asignación de personal de la persona, no de esta asignación de rol.",
       "EFFECTIVE_START": "Inicio efectivo",
       "EFFECTIVE_END": "Fin efectivo (opcional)",
       "SUBMIT": "Asignar rol",

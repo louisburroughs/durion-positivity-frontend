@@ -26,7 +26,6 @@ export interface RoleAssignment {
   id: string;
   userId: string;
   roleName: string;
-  scopeType: 'GLOBAL' | 'LOCATION';
   createdAt?: string;
 }
 

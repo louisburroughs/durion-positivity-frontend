@@ -464,7 +464,7 @@
       }
     },
     "ROLE_ASSIGNMENT": {
-      "TITLE": "Attribuer un rôle et une portée",
+      "TITLE": "Attribuer un rôle",
       "PAGE_TITLE": "Attributions de rôles",
       "ASSIGNED_ROLES": "Rôles attribués",
       "INCLUDE_HISTORY": "Inclure l'historique",
@@ -472,10 +472,7 @@
       "DETAILS": "Détails de l'attribution du rôle",
       "ROLE": "Rôle",
       "SELECT_ROLE": "Sélectionner un rôle",
-      "SCOPE_TYPE": "Type de portée",
-      "SCOPE_GLOBAL": "GLOBAL",
-      "SCOPE_LOCATION": "LOCATION",
-      "LOCATION_ID": "ID d'emplacement",
+      "LOCATION_SOURCE_HINT": "L'emplacement provient de l'affectation de personnel de la personne, et non de cette attribution de rôle.",
       "EFFECTIVE_START": "Début d'effet",
       "EFFECTIVE_END": "Fin d'effet (facultatif)",
       "SUBMIT": "Attribuer le rôle",

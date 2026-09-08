@@ -21,8 +21,6 @@ export class RoleAssignmentPageComponent implements OnInit {
   assignments = signal<UserRoleDto[]>([]);
   roles = signal<RoleDto[]>([]);
   loading = signal(false);
-  scopeType = signal<'GLOBAL' | 'LOCATION'>('GLOBAL');
-  locationId = signal('');
   selectedRoleCode = signal('');
   effectiveStartAt = signal('');
   effectiveEndAt = signal('');
@@ -30,11 +28,7 @@ export class RoleAssignmentPageComponent implements OnInit {
   errorMessage = signal<string | null>(null);
   confirmingAssignmentId = signal<string | null>(null);
 
-  canSubmit = computed(() =>
-    !!this.effectiveStartAt() &&
-    !!this.selectedRoleCode() &&
-    (this.scopeType() === 'GLOBAL' || !!this.locationId()),
-  );
+  canSubmit = computed(() => !!this.effectiveStartAt() && !!this.selectedRoleCode());
 
   ngOnInit(): void {
     this.route.params.pipe(
@@ -84,10 +78,6 @@ export class RoleAssignmentPageComponent implements OnInit {
       startDate: this.effectiveStartAt() || undefined,
     };
 
-    if (this.scopeType() === 'LOCATION' && this.locationId()) {
-      body.locationId = this.locationId();
-    }
-
     if (this.effectiveEndAt()) {
       body.endDate = this.effectiveEndAt();
     }
@@ -103,7 +93,6 @@ export class RoleAssignmentPageComponent implements OnInit {
   getAssignmentKey(assignment: UserRoleDto): string {
     return [
       assignment.roleCode ?? '',
-      assignment.locationId ?? '',
       assignment.startDate ?? '',
       assignment.endDate ?? '',
       assignment.userId ?? '',

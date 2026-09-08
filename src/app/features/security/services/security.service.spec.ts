@@ -195,7 +195,7 @@ describe('SecurityService', () => {
   describe('getUserRoleAssignments()', () => {
     it('calls roleManagementSdk.getUserRoleAssignments with the userId', () => {
       const assignments: RoleAssignment[] = [
-        { id: 'a1', userId: 'u1', roleName: 'ROLE_ADMIN', scopeType: 'GLOBAL' },
+        { id: 'a1', userId: 'u1', roleName: 'ROLE_ADMIN' },
       ];
       roleManagementStub.listUserRoleAssignments.mockReturnValueOnce(of(assignments));
 
