@@ -35,6 +35,8 @@ import { ApiBaseService } from '../../../core/services/api-base.service';
 import { environment } from '../../../../environments/environment';
 import {
   AccountingEventDetail,
+  EVENT_PAYLOAD_REFERENCE_TYPES,
+  EventPayloadReferenceType,
   AccountingEventListItem,
   AccountingEventSubmitRequest,
   CreditMemo,
@@ -416,7 +418,27 @@ export class AccountingService {
       sourceSystem: dto.sourceSystem,
       transactionDate: dto.transactionDate,
       payload: this.toRecord(dto.payload),
+      payloadReferences: (dto.payloadReferences ?? []).map(ref => ({
+        path: ref.path,
+        rawValue: ref.rawValue,
+        id: ref.id ?? null,
+        referenceType: this.toEventPayloadReferenceType(ref.referenceType),
+        displayReference: ref.displayReference ?? null,
+        displayName: ref.displayName ?? null,
+      })),
     };
+  }
+
+  /**
+   * The reference-type label is looked up as an i18n key, so an unrecognized
+   * value would render the raw key on screen (ADR-0030). The SDK enum can grow
+   * ahead of this build, so normalize anything unknown to 'UNKNOWN' rather than
+   * asserting the cast.
+   */
+  private toEventPayloadReferenceType(value: unknown): EventPayloadReferenceType {
+    return EVENT_PAYLOAD_REFERENCE_TYPES.includes(value as EventPayloadReferenceType)
+      ? (value as EventPayloadReferenceType)
+      : 'UNKNOWN';
   }
 
   private toInvoicePaymentStatus(dto: InvoiceStatusResponse): InvoicePaymentStatus {
@@ -525,8 +547,12 @@ export class AccountingService {
   private toCreditMemoListItem(dto: CreditMemoResponse): CreditMemoListItem {
     return {
       creditMemoId: dto.creditMemoId,
+      creditMemoReference: dto.creditMemoReference ?? null,
       originalInvoiceId: dto.originalInvoiceId,
+      originalInvoiceReference: dto.originalInvoiceReference ?? null,
       customerId: dto.customerId,
+      customerDisplayName: dto.customerDisplayName ?? null,
+      customerReference: dto.customerReference ?? null,
       creditAmount: dto.creditAmount,
       totalAmount: dto.totalAmount,
       status: dto.status as CreditMemoListItem['status'],
@@ -537,8 +563,12 @@ export class AccountingService {
   private toCreditMemo(dto: CreditMemoResponse): CreditMemo {
     return {
       creditMemoId: dto.creditMemoId,
+      creditMemoReference: dto.creditMemoReference ?? null,
       originalInvoiceId: dto.originalInvoiceId,
+      originalInvoiceReference: dto.originalInvoiceReference ?? null,
       customerId: dto.customerId,
+      customerDisplayName: dto.customerDisplayName ?? null,
+      customerReference: dto.customerReference ?? null,
       creditAmount: dto.creditAmount,
       taxAmountReversed: dto.taxAmountReversed,
       totalAmount: dto.totalAmount,
