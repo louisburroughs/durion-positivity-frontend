@@ -4,16 +4,16 @@
   @if (isAccessDenied) {
     <section class="state-panel state-panel--denied" aria-live="assertive">
       <span class="state-icon" aria-hidden="true">🔒</span>
-      <h2 id="denied-heading">Access Denied</h2>
-      <p>You do not have permission to create individual person records.</p>
+      <h2 id="denied-heading">{{ 'CRM.CREATE_PERSON.DENIED_TITLE' | translate }}</h2>
+      <p>{{ 'CRM.CREATE_PERSON.DENIED_BODY' | translate }}</p>
     </section>
   }
 
   <!-- ── Main form ────────────────────────────────────────────────────── -->
   @if (!isAccessDenied && !isSuccess) {
     <header class="page-header">
-      <h1 id="page-heading">Create Individual Person</h1>
-      <p class="page-subtitle">Register a new individual in the CRM.</p>
+      <h1 id="page-heading">{{ 'CRM.CREATE_PERSON.TITLE' | translate }}</h1>
+      <p class="page-subtitle">{{ 'CRM.CREATE_PERSON.SUBTITLE' | translate }}</p>
     </header>
 
     @if (isError && serverError()) {
@@ -26,73 +26,73 @@
     <form
       [formGroup]="form"
       class="crm-form"
-      aria-label="Create individual person form"
+      [attr.aria-label]="'CRM.CREATE_PERSON.FORM_ARIA' | translate"
       (ngSubmit)="submit()"
       novalidate
     >
       <fieldset class="form-section" [disabled]="isSubmitting">
-        <legend class="form-section__legend">Person Details</legend>
+        <legend class="form-section__legend">{{ 'CRM.CREATE_PERSON.DETAILS_LEGEND' | translate }}</legend>
 
         <div class="field-row">
           <div class="field">
             <label for="firstName" class="field__label">
-              First Name <span class="required-mark" aria-hidden="true">*</span>
+              {{ 'CRM.CREATE_PERSON.FIELD_FIRST_NAME' | translate }} <span class="required-mark" aria-hidden="true">*</span>
             </label>
             <input
               id="firstName"
               type="text"
               formControlName="firstName"
               class="field__input"
-              placeholder="First name"
+              [placeholder]="'CRM.CREATE_PERSON.FIRST_NAME_PLACEHOLDER' | translate"
               autocomplete="given-name"
               [attr.aria-invalid]="firstNameCtrl.invalid && firstNameCtrl.touched ? 'true' : null"
               aria-describedby="firstName-err"
             />
             @if (firstNameCtrl.invalid && firstNameCtrl.touched) {
-              <span id="firstName-err" class="field__error" role="alert">First name is required.</span>
+              <span id="firstName-err" class="field__error" role="alert">{{ 'CRM.CREATE_PERSON.ERROR.FIRST_NAME_REQUIRED' | translate }}</span>
             }
           </div>
 
           <div class="field">
             <label for="lastName" class="field__label">
-              Last Name <span class="required-mark" aria-hidden="true">*</span>
+              {{ 'CRM.CREATE_PERSON.FIELD_LAST_NAME' | translate }} <span class="required-mark" aria-hidden="true">*</span>
             </label>
             <input
               id="lastName"
               type="text"
               formControlName="lastName"
               class="field__input"
-              placeholder="Last name"
+              [placeholder]="'CRM.CREATE_PERSON.LAST_NAME_PLACEHOLDER' | translate"
               autocomplete="family-name"
               [attr.aria-invalid]="lastNameCtrl.invalid && lastNameCtrl.touched ? 'true' : null"
               aria-describedby="lastName-err"
             />
             @if (lastNameCtrl.invalid && lastNameCtrl.touched) {
-              <span id="lastName-err" class="field__error" role="alert">Last name is required.</span>
+              <span id="lastName-err" class="field__error" role="alert">{{ 'CRM.CREATE_PERSON.ERROR.LAST_NAME_REQUIRED' | translate }}</span>
             }
           </div>
         </div>
 
         <div class="field">
-          <label for="email" class="field__label">Email Address</label>
+          <label for="email" class="field__label">{{ 'CRM.CREATE_PERSON.FIELD_EMAIL' | translate }}</label>
           <input
             id="email"
             type="email"
             formControlName="email"
             class="field__input"
-            placeholder="Optional email"
+            [placeholder]="'CRM.CREATE_PERSON.EMAIL_PLACEHOLDER' | translate"
             autocomplete="email"
           />
         </div>
 
         <div class="field">
-          <label for="phone" class="field__label">Phone Number</label>
+          <label for="phone" class="field__label">{{ 'CRM.CREATE_PERSON.FIELD_PHONE' | translate }}</label>
           <input
             id="phone"
             type="tel"
             formControlName="phone"
             class="field__input"
-            placeholder="Optional phone number"
+            [placeholder]="'CRM.CREATE_PERSON.PHONE_PLACEHOLDER' | translate"
             autocomplete="tel"
           />
         </div>
@@ -105,7 +105,7 @@
           [disabled]="isSubmitting || form.invalid"
           [attr.aria-busy]="isSubmitting"
         >
-          @if (isSubmitting) { Creating… } @else { Create Person }
+          {{ (isSubmitting ? 'CRM.CREATE_PERSON.SUBMITTING' : 'CRM.CREATE_PERSON.SUBMIT') | translate }}
         </button>
       </div>
     </form>
@@ -115,27 +115,27 @@
   @if (isSuccess) {
     <section class="state-panel state-panel--success" aria-live="polite" aria-labelledby="success-heading">
       <span class="state-icon state-icon--success" aria-hidden="true">✓</span>
-      <h2 id="success-heading">Person Record Created</h2>
+      <h2 id="success-heading">{{ 'CRM.CREATE_PERSON.SUCCESS_TITLE' | translate }}</h2>
 
-      <div class="success-id-block" aria-label="New person ID">
-        <span class="success-id-label">Person ID</span>
+      <div class="success-id-block" [attr.aria-label]="'CRM.CREATE_PERSON.SUCCESS_ID_ARIA' | translate">
+        <span class="success-id-label">{{ 'CRM.CREATE_PERSON.SUCCESS_ID_LABEL' | translate }}</span>
         <code class="success-id-value">{{ createdPersonId() }}</code>
         <button
           class="btn btn--icon"
           type="button"
           (click)="copyPersonId()"
-          [attr.aria-label]="copied() ? 'Copied' : 'Copy person ID'"
+          [attr.aria-label]="(copied() ? 'CRM.CREATE_PERSON.COPIED_ARIA' : 'CRM.CREATE_PERSON.COPY_ARIA') | translate"
         >
-          {{ copied() ? '✓ Copied' : 'Copy' }}
+          {{ (copied() ? 'CRM.CREATE_PERSON.COPIED' : 'CRM.CREATE_PERSON.COPY') | translate }}
         </button>
       </div>
 
       <div class="form-actions form-actions--success">
         <button class="btn btn--primary" type="button" (click)="viewPerson()">
-          View Person Record
+          {{ 'CRM.CREATE_PERSON.VIEW_RECORD' | translate }}
         </button>
         <button class="btn btn--secondary" type="button" (click)="createAnother()">
-          Create Another
+          {{ 'CRM.CREATE_PERSON.CREATE_ANOTHER' | translate }}
         </button>
       </div>
     </section>

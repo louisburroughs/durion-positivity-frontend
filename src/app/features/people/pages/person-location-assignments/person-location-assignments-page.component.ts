@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { CreateStaffingAssignmentRequest, StaffingAssignmentResponse } from '@durion-sdk/people';
 import { LocationService } from '../../../location/services/location.service';
 import { PeopleService } from '../../services/people.service';
@@ -10,7 +11,7 @@ import { PeopleService } from '../../services/people.service';
   selector: 'app-person-location-assignments-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './person-location-assignments-page.component.html',
   styleUrl: './person-location-assignments-page.component.css',
 })
@@ -19,12 +20,13 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
   private readonly locationService = inject(LocationService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly translate = inject(TranslateService);
 
   readonly personId = signal('');
   readonly loading = signal(false);
   readonly assignments = signal<StaffingAssignmentResponse[]>([]);
   readonly availableLocations = signal<unknown[]>([]);
-  readonly error = signal<string | null>(null);
+  readonly errorKey = signal<string | null>(null);
   readonly showCreateDialog = signal(false);
   readonly showEndDialog = signal(false);
   readonly submitting = signal(false);
@@ -50,7 +52,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
 
   loadAssignments(): void {
     this.loading.set(true);
-    this.error.set(null);
+    this.errorKey.set(null);
     this.peopleService.getLocationAssignments(this.personId())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -59,7 +61,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
           this.loading.set(false);
         },
         error: () => {
-          this.error.set('Failed to load location assignments.');
+          this.errorKey.set('PEOPLE.LOCATION_ASSIGNMENTS.ERROR.LOAD');
           this.loading.set(false);
         },
       });
@@ -115,9 +117,9 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
         error: (err) => {
           this.submitting.set(false);
           if (err?.status === 409) {
-            this.conflictError.set(err?.error?.message ?? 'An overlapping assignment exists.');
+            this.conflictError.set(err?.error?.message ?? this.translate.instant('PEOPLE.LOCATION_ASSIGNMENTS.ERROR.OVERLAP'));
           } else {
-            this.error.set('Failed to create assignment.');
+            this.errorKey.set('PEOPLE.LOCATION_ASSIGNMENTS.ERROR.CREATE');
           }
         },
       });
@@ -150,7 +152,7 @@ export class PersonLocationAssignmentsPageComponent implements OnInit {
         },
         error: () => {
           this.submitting.set(false);
-          this.error.set('Failed to end assignment.');
+          this.errorKey.set('PEOPLE.LOCATION_ASSIGNMENTS.ERROR.END');
           this.showEndDialog.set(false);
         },
       });

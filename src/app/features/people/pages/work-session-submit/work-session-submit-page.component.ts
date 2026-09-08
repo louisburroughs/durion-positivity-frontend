@@ -9,6 +9,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { PeopleService } from '../../services/people.service';
 
 type SubmitState = 'NOT_SUBMITTED' | 'SUBMITTING' | 'SUBMITTED' | 'FAILED';
@@ -16,7 +17,7 @@ type SubmitState = 'NOT_SUBMITTED' | 'SUBMITTING' | 'SUBMITTED' | 'FAILED';
 @Component({
   selector: 'app-work-session-submit-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './work-session-submit-page.component.html',
   styleUrl: './work-session-submit-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +26,7 @@ export class WorkSessionSubmitPageComponent {
   private readonly peopleService = inject(PeopleService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly translate = inject(TranslateService);
 
   readonly sessionId = signal('');
   readonly submitState = signal<SubmitState>('NOT_SUBMITTED');
@@ -71,7 +73,7 @@ export class WorkSessionSubmitPageComponent {
     }
 
     if (!this.sessionId()) {
-      this.submitError.set('No session ID in route params');
+      this.submitError.set(this.translate.instant('PEOPLE.WORK_SESSION_SUBMIT.ERROR.NO_SESSION_ID'));
       return;
     }
 
@@ -120,16 +122,20 @@ export class WorkSessionSubmitPageComponent {
     return { code, message, correlationId };
   }
 
+  /**
+   * Prefers the server's own message (already localized by the API, and there is
+   * no key to map it to); otherwise renders a key for the known error codes.
+   */
   private toUserError(code: string | null, message: string | null): string {
     if (message) {
       return message;
     }
     if (code === 'INVALID_STATE') {
-      return 'Session cannot be submitted in its current state.';
+      return this.translate.instant('PEOPLE.WORK_SESSION_SUBMIT.ERROR.INVALID_STATE');
     }
     if (code === 'VALIDATION_ERROR') {
-      return 'Please correct the form values and try again.';
+      return this.translate.instant('PEOPLE.WORK_SESSION_SUBMIT.ERROR.VALIDATION');
     }
-    return 'Failed to submit work session.';
+    return this.translate.instant('PEOPLE.WORK_SESSION_SUBMIT.ERROR.SUBMIT');
   }
 }

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CustomerListComponent } from './customer-list.component';
@@ -19,6 +20,15 @@ const partyPage = (parties: ReturnType<typeof party>[], totalCount: number) => (
   pageSize: 25,
 });
 
+// Mirrors the CRM.CUSTOMER_LIST column keys the header assertion reads back.
+const TRANSLATIONS = {
+  CRM: {
+    CUSTOMER_LIST: {
+      COL: { CUSTOMER_NUMBER: 'Customer #', PHONE: 'Phone', STATUS: 'Status' },
+    },
+  },
+};
+
 describe('CustomerListComponent', () => {
   let fixture: ComponentFixture<CustomerListComponent>;
   let component: CustomerListComponent;
@@ -28,12 +38,16 @@ describe('CustomerListComponent', () => {
     crmServiceStub.browseParties.mockReturnValue(of(partyPage([], 0)));
 
     await TestBed.configureTestingModule({
-      imports: [CustomerListComponent],
+      imports: [CustomerListComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: CrmService, useValue: crmServiceStub },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
 
     fixture = TestBed.createComponent(CustomerListComponent);
     component = fixture.componentInstance;

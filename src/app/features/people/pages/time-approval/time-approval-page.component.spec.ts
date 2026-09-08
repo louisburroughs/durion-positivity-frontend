@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { TimeApprovalPageComponent } from './time-approval-page.component';
 import { PeopleService } from '../../services/people.service';
@@ -29,12 +30,14 @@ describe('TimeApprovalPageComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [TimeApprovalPageComponent],
+      imports: [TimeApprovalPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: PeopleService, useValue: peopleService },
       ],
     }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en-US');
 
     fixture = TestBed.createComponent(TimeApprovalPageComponent);
     component = fixture.componentInstance;

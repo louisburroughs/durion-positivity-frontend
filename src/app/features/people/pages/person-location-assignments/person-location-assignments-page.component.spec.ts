@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError, NEVER } from 'rxjs';
 
 import { PersonLocationAssignmentsPageComponent } from './person-location-assignments-page.component';
@@ -55,7 +56,7 @@ const PERSON_ROUTE = {
 
 async function setup(): Promise<ComponentFixture<PersonLocationAssignmentsPageComponent>> {
   await TestBed.configureTestingModule({
-    imports: [PersonLocationAssignmentsPageComponent],
+    imports: [PersonLocationAssignmentsPageComponent, TranslateModule.forRoot()],
     providers: [
       provideRouter([]),
       { provide: PeopleService, useValue: stubStaffingService },
@@ -63,6 +64,8 @@ async function setup(): Promise<ComponentFixture<PersonLocationAssignmentsPageCo
       { provide: ActivatedRoute, useValue: PERSON_ROUTE },
     ],
   }).compileComponents();
+
+  TestBed.inject(TranslateService).use('en-US');
 
   return TestBed.createComponent(PersonLocationAssignmentsPageComponent);
 }

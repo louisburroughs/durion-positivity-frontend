@@ -9,6 +9,7 @@ import {
 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { PeopleService } from '../../services/people.service';
 
 type PeriodStatus = 'OPEN' | 'SUBMISSION_CLOSED' | 'PAYROLL_CLOSED';
@@ -16,7 +17,7 @@ type PeriodStatus = 'OPEN' | 'SUBMISSION_CLOSED' | 'PAYROLL_CLOSED';
 @Component({
   selector: 'app-time-approval-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './time-approval-page.component.html',
   styleUrl: './time-approval-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,6 +25,7 @@ type PeriodStatus = 'OPEN' | 'SUBMISSION_CLOSED' | 'PAYROLL_CLOSED';
 export class TimeApprovalPageComponent {
   private readonly peopleService = inject(PeopleService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly translate = inject(TranslateService);
 
   readonly people = signal<unknown[]>([]);
   readonly peopleLoading = signal(false);
@@ -89,7 +91,7 @@ export class TimeApprovalPageComponent {
           this.peopleLoading.set(false);
         },
         error: () => {
-          this.peopleError.set('Failed to load employees.');
+          this.peopleError.set(this.translate.instant('PEOPLE.TIME_APPROVAL.ERROR.LOAD_EMPLOYEES'));
           this.peopleLoading.set(false);
         },
       });
@@ -105,7 +107,7 @@ export class TimeApprovalPageComponent {
           this.periodsLoading.set(false);
         },
         error: () => {
-          this.periodsError.set('Failed to load time periods.');
+          this.periodsError.set(this.translate.instant('PEOPLE.TIME_APPROVAL.ERROR.LOAD_PERIODS'));
           this.periodsLoading.set(false);
         },
       });
@@ -133,7 +135,7 @@ export class TimeApprovalPageComponent {
           this.detailLoading.set(false);
         },
         error: () => {
-          this.detailError.set('Failed to load timekeeping entries.');
+          this.detailError.set(this.translate.instant('PEOPLE.TIME_APPROVAL.ERROR.LOAD_ENTRIES'));
           this.detailLoading.set(false);
         },
       });
@@ -160,12 +162,12 @@ export class TimeApprovalPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.actionSuccess.set('Period approved successfully.');
+          this.actionSuccess.set(this.translate.instant('PEOPLE.TIME_APPROVAL.APPROVE_SUCCESS'));
           this.actionInFlight.set(false);
           this.loadDetail(personId, timePeriodId);
         },
         error: (err) => {
-          const msg = err?.error?.message ?? 'Failed to approve period.';
+          const msg = err?.error?.message ?? this.translate.instant('PEOPLE.TIME_APPROVAL.ERROR.APPROVE_PERIOD');
           this.actionError.set(msg);
           this.actionInFlight.set(false);
         },
@@ -195,13 +197,13 @@ export class TimeApprovalPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.actionSuccess.set('Period rejected successfully.');
+          this.actionSuccess.set(this.translate.instant('PEOPLE.TIME_APPROVAL.REJECT_SUCCESS'));
           this.actionInFlight.set(false);
           this.showRejectDialog.set(false);
           this.loadDetail(personId, timePeriodId);
         },
         error: (err) => {
-          const msg = err?.error?.message ?? 'Failed to reject period.';
+          const msg = err?.error?.message ?? this.translate.instant('PEOPLE.TIME_APPROVAL.ERROR.REJECT_PERIOD');
           this.actionError.set(msg);
           this.actionInFlight.set(false);
         },
@@ -215,8 +217,8 @@ export class TimeApprovalPageComponent {
 
   periodStatusMessage(): string | null {
     const status = this.selectedPeriodStatus();
-    if (status === 'OPEN') return 'Approval available after submission closes.';
-    if (status === 'PAYROLL_CLOSED') return 'Payroll is closed for this period.';
+    if (status === 'OPEN') return this.translate.instant('PEOPLE.TIME_APPROVAL.STATUS_OPEN');
+    if (status === 'PAYROLL_CLOSED') return this.translate.instant('PEOPLE.TIME_APPROVAL.STATUS_PAYROLL_CLOSED');
     return null;
   }
 }

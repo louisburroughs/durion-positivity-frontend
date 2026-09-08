@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { EmployeeProfileDto } from '@durion-sdk/people';
 import { PeopleService } from '../../services/people.service';
 
@@ -9,7 +10,7 @@ import { PeopleService } from '../../services/people.service';
   selector: 'app-employee-offboard-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './employee-offboard-page.component.html',
   styleUrl: './employee-offboard-page.component.css',
 })
@@ -23,7 +24,7 @@ export class EmployeeOffboardPageComponent implements OnInit {
 
   readonly loading = signal(false);
   readonly employee = signal<EmployeeProfileDto | null>(null);
-  readonly error = signal<string | null>(null);
+  readonly errorKey = signal<string | null>(null);
   readonly showConfirmDialog = signal(false);
   readonly submitting = signal(false);
   readonly offboardSuccess = signal(false);
@@ -50,14 +51,14 @@ export class EmployeeOffboardPageComponent implements OnInit {
           this.loading.set(false);
         },
         error: () => {
-          this.error.set('Failed to load employee.');
+          this.errorKey.set('PEOPLE.OFFBOARD.ERROR.LOAD');
           this.loading.set(false);
         },
       });
   }
 
   openConfirmDialog(): void {
-    this.error.set(null);
+    this.errorKey.set(null);
     this.showConfirmDialog.set(true);
   }
 
@@ -84,7 +85,7 @@ export class EmployeeOffboardPageComponent implements OnInit {
         },
         error: () => {
           this.showConfirmDialog.set(false);
-          this.error.set('Failed to disable employee. Please try again.');
+          this.errorKey.set('PEOPLE.OFFBOARD.ERROR.DISABLE');
           this.submitting.set(false);
         },
       });

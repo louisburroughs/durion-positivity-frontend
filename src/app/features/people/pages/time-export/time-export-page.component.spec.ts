@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { TimeExportPageComponent } from './time-export-page.component';
 import { AccountingService } from '../../../accounting/services/accounting.service';
@@ -32,13 +33,15 @@ describe('TimeExportPageComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [TimeExportPageComponent],
+      imports: [TimeExportPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: AccountingService, useValue: accountingService },
         { provide: LocationService, useValue: locationService },
       ],
     }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en-US');
 
     fixture = TestBed.createComponent(TimeExportPageComponent);
     component = fixture.componentInstance;

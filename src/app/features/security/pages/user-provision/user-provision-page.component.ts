@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { SecurityRole } from '../../models/security.models';
 import { SecurityService } from '../../services/security.service';
 
@@ -9,7 +10,7 @@ import { SecurityService } from '../../services/security.service';
   selector: 'app-user-provision-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './user-provision-page.component.html',
   styleUrl: './user-provision-page.component.css',
 })
@@ -22,7 +23,7 @@ export class UserProvisionPageComponent implements OnInit {
   readonly roles = signal<SecurityRole[]>([]);
   readonly loading = signal(false);
   readonly submitting = signal(false);
-  readonly error = signal<string | null>(null);
+  readonly errorKey = signal<string | null>(null);
   readonly fieldErrors = signal<Record<string, string>>({});
   readonly provisionedUserId = signal<string | null>(null);
 
@@ -47,7 +48,7 @@ export class UserProvisionPageComponent implements OnInit {
           this.loading.set(false);
         },
         error: () => {
-          this.error.set('Failed to load roles.');
+          this.errorKey.set('SECURITY.USER_PROVISION.ERROR.LOAD_ROLES');
           this.loading.set(false);
         },
       });
@@ -60,7 +61,7 @@ export class UserProvisionPageComponent implements OnInit {
     }
 
     this.submitting.set(true);
-    this.error.set(null);
+    this.errorKey.set(null);
     this.fieldErrors.set({});
 
     const { username, roleName } = this.form.getRawValue();
@@ -83,7 +84,7 @@ export class UserProvisionPageComponent implements OnInit {
           if (err?.error?.fieldErrors) {
             this.fieldErrors.set(err.error.fieldErrors);
           } else {
-            this.error.set('Failed to provision user.');
+            this.errorKey.set('SECURITY.USER_PROVISION.ERROR.PROVISION');
           }
         },
       });

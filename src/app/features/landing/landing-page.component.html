@@ -3,12 +3,14 @@
   <!-- ── Sticky header ─────────────────────────────────────────────────── -->
   <header class="landing-header" role="banner">
     <div class="landing-header-inner">
+      <!-- i18n-ignore-start: "Positivity" is a proper product name -->
       <span class="landing-brand" aria-label="Positivity">
         <img src="assets/Durion Support Services(LO)_AZ_Rev3_Icon_Only-01x3642.jpg" class="landing-brand-mark" alt="" aria-hidden="true">
         <span class="landing-brand-name">Positivity</span>
       </span>
+      <!-- i18n-ignore-end -->
 
-      <nav class="landing-nav" aria-label="Landing page navigation">
+      <nav class="landing-nav" [attr.aria-label]="'LANDING.NAV_ARIA' | translate">
         <!-- Language selector -->
         <label class="sr-only" for="landing-locale-select">{{ 'LANDING.NAV_LOCALE_ARIA' | translate }}</label>
         <select id="landing-locale-select" class="landing-locale-select" [value]="localeService.currentLocale()"
@@ -51,7 +53,7 @@
   </section>
 
   <!-- ── Features grid ────────────────────────────────────────────────── -->
-  <section class="features-grid-section" aria-label="Platform features">
+  <section class="features-grid-section" [attr.aria-label]="'LANDING.FEATURES_GRID_ARIA' | translate">
     <div class="section-inner">
       <ul class="features-grid">
         @for (feature of features; track feature.titleKey; let i = $index) {

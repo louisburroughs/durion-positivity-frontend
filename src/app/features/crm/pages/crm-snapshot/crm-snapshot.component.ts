@@ -4,7 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Observable, Subject, Subscription, forkJoin, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
@@ -23,6 +23,7 @@ const MAX_SUGGESTIONS = 8;
   styleUrl: './crm-snapshot.component.css',
 })
 export class CrmSnapshotPageComponent {
+  private readonly translate = inject(TranslateService);
   private readonly crm = inject(CrmService);
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
@@ -174,7 +175,7 @@ export class CrmSnapshotPageComponent {
       this.state.set('error');
       this.errorKey.set('CRM.SNAPSHOT.ERROR.LOAD');
       this.errorType.set('validation');
-      this.errorMessage.set('Enter a Party ID or Vehicle ID');
+      this.errorMessage.set(this.translate.instant('CRM.SNAPSHOT.ERROR.IDENTIFIER_REQUIRED'));
       return;
     }
 
@@ -285,22 +286,22 @@ export class CrmSnapshotPageComponent {
 
     if (status === 403) {
       this.errorType.set('forbidden');
-      this.errorMessage.set('You do not have access to this snapshot.');
+      this.errorMessage.set(this.translate.instant('CRM.SNAPSHOT.ERROR.FORBIDDEN'));
       return;
     }
     if (status === 404) {
       this.errorType.set('not-found');
-      this.errorMessage.set('No snapshot found for the provided identifier.');
+      this.errorMessage.set(this.translate.instant('CRM.SNAPSHOT.ERROR.NOT_FOUND'));
       return;
     }
     if (status === 400) {
       this.errorType.set('validation');
-      this.errorMessage.set('Invalid request. Verify Party ID or Vehicle ID.');
+      this.errorMessage.set(this.translate.instant('CRM.SNAPSHOT.ERROR.INVALID_REQUEST'));
       return;
     }
 
     this.errorType.set('generic');
-    this.errorMessage.set(err?.error?.message ?? 'Failed to load CRM snapshot.');
+    this.errorMessage.set(err?.error?.message ?? this.translate.instant('CRM.SNAPSHOT.ERROR.LOAD'));
   }
 }
 

@@ -3,7 +3,7 @@ import { provideRouter, Router, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { HttpErrorResponse } from '@angular/common/http';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { StorageLocationsPageComponent } from './storage-locations-page.component';
 import { LocationService } from '../../services/location.service';
 import { InventoryLocationsService } from '@durion-sdk/inventory';
@@ -40,6 +40,17 @@ function resetLocationStub() {
   inventoryServiceStub.listLocationInventoryItems.mockReturnValue(of({ items: [] }));
 }
 
+// Mirrors the LOCATION.STORAGE keys the assertions below read back, so the
+// pagination test still proves the {{page}}/{{total}}/{{count}} params are wired.
+const TRANSLATIONS = {
+  LOCATION: {
+    STORAGE: {
+      EMPTY: 'No storage locations found.',
+      PAGE_STATUS: 'Page {{page}} of {{total}} ({{count}} total)',
+    },
+  },
+};
+
 describe('StorageLocationsPageComponent', () => {
   let fixture: ComponentFixture<StorageLocationsPageComponent>;
   let component: StorageLocationsPageComponent;
@@ -56,6 +67,10 @@ describe('StorageLocationsPageComponent', () => {
         { provide: InventoryLocationsService, useValue: inventoryServiceStub },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
 
     fixture = TestBed.createComponent(StorageLocationsPageComponent);
     component = fixture.componentInstance;
@@ -139,6 +154,10 @@ describe('StorageLocationsPageComponent [CAP-214 #103] (location selected)', () 
         },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
 
     fixture = TestBed.createComponent(StorageLocationsPageComponent);
     component = fixture.componentInstance;

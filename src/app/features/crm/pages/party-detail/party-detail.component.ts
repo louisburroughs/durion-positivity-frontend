@@ -1,5 +1,5 @@
 import { Component, DestroyRef, inject, signal, OnInit } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -25,6 +25,7 @@ type EditState    = 'view' | 'editing' | 'saving';
 export class PartyDetailComponent implements OnInit {
   private readonly crm    = inject(CrmService);
   private readonly route  = inject(ActivatedRoute);
+  private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
   private readonly fb     = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
@@ -177,16 +178,10 @@ export class PartyDetailComponent implements OnInit {
     this.router.navigate(['/app/crm/party', this.partyId, 'billing-rules']);
   }
 
+  /** Known roles render a localized label; an unrecognized role falls back to its raw value. */
   roleLabel(role: ContactRole): string {
-    const labels: Record<string, string> = {
-      PRIMARY: 'Primary',
-      PRIMARY_CONTACT: 'Primary Contact',
-      BILLING: 'Billing',
-      APPROVER: 'Approver',
-      DRIVER: 'Driver',
-      TECHNICAL: 'Technical',
-    };
-    return labels[role] ?? role;
+    const known = ['PRIMARY', 'PRIMARY_CONTACT', 'BILLING', 'APPROVER', 'DRIVER', 'TECHNICAL'];
+    return known.includes(role) ? this.translate.instant(`CRM.PARTY_DETAIL.ROLE.${role}`) : role;
   }
 
   get isPrefsEditing() { return this.prefsEdit() === 'editing'; }

@@ -1,6 +1,6 @@
 <main>
   <header class="page-header">
-    <h1>Storage Locations</h1>
+    <h1>{{ 'LOCATION.STORAGE.TITLE' | translate }}</h1>
   </header>
 
   <app-location-picker
@@ -22,11 +22,11 @@
 
   @if (locationId()) {
   <section class="page-actions">
-    <button type="button" (click)="openCreateForm()" data-testid="open-create-btn">Add Storage Location</button>
+    <button type="button" (click)="openCreateForm()" data-testid="open-create-btn">{{ 'LOCATION.STORAGE.ADD' | translate }}</button>
   </section>
 
   @if (loading()) {
-  <p aria-live="polite" data-testid="loading">Loading...</p>
+  <p aria-live="polite" data-testid="loading">{{ 'LOCATION.STORAGE.LOADING' | translate }}</p>
   }
   @if (storageLocationsError()) {
   <p role="alert" aria-live="polite" data-testid="storage-locations-error">{{ storageLocationsError() }}</p>
@@ -35,7 +35,7 @@
   <p role="alert" aria-live="polite" data-testid="storage-types-error">{{ storageTypesError() }}</p>
   }
   @if (createSuccess()) {
-  <output aria-live="polite" data-testid="create-success">Storage location created.</output>
+  <output aria-live="polite" data-testid="create-success">{{ 'LOCATION.STORAGE.CREATE_SUCCESS' | translate }}</output>
   }
 
   @if (!loading()) {
@@ -43,12 +43,12 @@
     <table data-testid="storage-locations-table">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Barcode</th>
-          <th>Status</th>
-          <th>Inventory</th>
-          <th>Actions</th>
+          <th>{{ 'LOCATION.STORAGE.COL.NAME' | translate }}</th>
+          <th>{{ 'LOCATION.STORAGE.COL.TYPE' | translate }}</th>
+          <th>{{ 'LOCATION.STORAGE.COL.BARCODE' | translate }}</th>
+          <th>{{ 'LOCATION.STORAGE.COL.STATUS' | translate }}</th>
+          <th>{{ 'LOCATION.STORAGE.COL.INVENTORY' | translate }}</th>
+          <th>{{ 'LOCATION.STORAGE.COL.ACTIONS' | translate }}</th>
         </tr>
       </thead>
       <tbody>
@@ -62,7 +62,8 @@
             @if (inventoryCount($any(loc).id) > 0) {
             <button type="button" class="inventory-toggle"
               [attr.aria-expanded]="isExpanded($any(loc).id)"
-              [attr.aria-label]="(isExpanded($any(loc).id) ? 'Hide contents, ' : 'Show contents, ') + inventoryCount($any(loc).id) + ' on hand'"
+              [attr.aria-label]="(isExpanded($any(loc).id) ? 'LOCATION.STORAGE.ARIA.HIDE_CONTENTS' : 'LOCATION.STORAGE.ARIA.SHOW_CONTENTS')
+                | translate: { count: inventoryCount($any(loc).id) }"
               (click)="toggleExpand($any(loc).id)"
               [attr.data-testid]="'inventory-toggle-' + $index">
               {{ inventoryCount($any(loc).id) }} {{ isExpanded($any(loc).id) ? '▾' : '▸' }}
@@ -74,7 +75,7 @@
           <td>
             @if ($any(loc).status === 'ACTIVE') {
             <button type="button" (click)="openDeactivateDialog(loc)" [attr.data-testid]="'deactivate-btn-' + $index">
-              Deactivate
+              {{ 'LOCATION.STORAGE.DEACTIVATE' | translate }}
             </button>
             }
           </td>
@@ -84,7 +85,7 @@
           <td colspan="6">
             <table class="inventory-contents">
               <thead>
-                <tr><th>SKU</th><th>On hand</th></tr>
+                <tr><th>{{ 'LOCATION.STORAGE.COL.SKU' | translate }}</th><th>{{ 'LOCATION.STORAGE.COL.ON_HAND' | translate }}</th></tr>
               </thead>
               <tbody>
                 @for (item of inventoryItems($any(loc).id); track item.stockItemId) {
@@ -101,22 +102,23 @@
         }
         @empty {
         <tr>
-          <td colspan="6" data-testid="empty-state">No storage locations found.</td>
+          <td colspan="6" data-testid="empty-state">{{ 'LOCATION.STORAGE.EMPTY' | translate }}</td>
         </tr>
         }
       </tbody>
     </table>
 
     @if (totalPages() > 1) {
-    <nav class="pagination" aria-label="Storage locations pagination" data-testid="storage-pagination">
+    <nav class="pagination" [attr.aria-label]="'LOCATION.STORAGE.ARIA.PAGINATION' | translate"
+      data-testid="storage-pagination">
       <button type="button" (click)="prevPage()" [disabled]="!canPrevPage()" data-testid="page-prev">
-        Previous
+        {{ 'LOCATION.STORAGE.PREVIOUS' | translate }}
       </button>
       <span aria-live="polite" data-testid="page-status">
-        Page {{ pageIndex() + 1 }} of {{ totalPages() }} ({{ totalElements() }} total)
+        {{ 'LOCATION.STORAGE.PAGE_STATUS' | translate: { page: pageIndex() + 1, total: totalPages(), count: totalElements() } }}
       </span>
       <button type="button" (click)="nextPage()" [disabled]="!canNextPage()" data-testid="page-next">
-        Next
+        {{ 'LOCATION.STORAGE.NEXT' | translate }}
       </button>
     </nav>
     }
@@ -125,37 +127,37 @@
 
   @if (showCreateForm()) {
   <section data-testid="create-form-section">
-    <h2>New Storage Location</h2>
+    <h2>{{ 'LOCATION.STORAGE.CREATE_TITLE' | translate }}</h2>
     <form class="form-grid" [formGroup]="createForm" (ngSubmit)="createStorageLocation()">
       <div class="field">
-        <label for="create-name">Name (required)</label>
+        <label for="create-name">{{ 'LOCATION.STORAGE.FIELD_NAME' | translate }}</label>
         <input id="create-name" type="text" formControlName="name" aria-describedby="field-error-name"
           data-testid="create-name-input" />
         <span id="field-error-name" role="alert" aria-live="polite" data-testid="field-error-name">
           @if (createForm.controls.name.touched && createForm.controls.name.invalid) {
-          Name is required.
+          {{ 'LOCATION.STORAGE.ERROR.NAME_REQUIRED' | translate }}
           }
         </span>
       </div>
 
       <div class="field">
-        <label for="create-storage-type">Storage Type (required)</label>
+        <label for="create-storage-type">{{ 'LOCATION.STORAGE.FIELD_STORAGE_TYPE' | translate }}</label>
         <select id="create-storage-type" formControlName="storageType" aria-describedby="field-error-storage-type"
           data-testid="create-storage-type-select">
-          <option value="">Select a storage type</option>
+          <option value="">{{ 'LOCATION.STORAGE.SELECT_TYPE' | translate }}</option>
           @for (type of storageTypes(); track $index) {
           <option [value]="$any(type).value">{{ $any(type).label }}</option>
           }
         </select>
         <span id="field-error-storage-type" role="alert" aria-live="polite" data-testid="field-error-storage-type">
           @if (createForm.controls.storageType.touched && createForm.controls.storageType.invalid) {
-          Storage type is required.
+          {{ 'LOCATION.STORAGE.ERROR.TYPE_REQUIRED' | translate }}
           }
         </span>
       </div>
 
       <div class="field">
-        <label for="create-parent-storage-location-id">Parent Storage Location ID (optional)</label>
+        <label for="create-parent-storage-location-id">{{ 'LOCATION.STORAGE.FIELD_PARENT' | translate }}</label>
         <input id="create-parent-storage-location-id" type="text" formControlName="parentStorageLocationId"
           aria-describedby="field-error-parent-storage-location-id"
           data-testid="create-parent-storage-location-input" />
@@ -164,7 +166,7 @@
       </div>
 
       <div class="field">
-        <label for="create-barcode">Barcode (optional)</label>
+        <label for="create-barcode">{{ 'LOCATION.STORAGE.FIELD_BARCODE' | translate }}</label>
         <input id="create-barcode" type="text" formControlName="barcode" aria-describedby="field-error-barcode"
           data-testid="create-barcode-input" />
         <span id="field-error-barcode" role="alert" aria-live="polite" data-testid="field-error-barcode"></span>
@@ -172,10 +174,10 @@
 
       <div class="dialog-actions">
         <button type="button" (click)="cancelCreate()" [disabled]="creating()" data-testid="cancel-create-btn">
-          Cancel
+          {{ 'LOCATION.STORAGE.CANCEL' | translate }}
         </button>
         <button type="submit" [disabled]="creating()" data-testid="submit-create-btn">
-          {{ creating() ? 'Creating...' : 'Create Storage Location' }}
+          {{ (creating() ? 'LOCATION.STORAGE.CREATING' : 'LOCATION.STORAGE.CREATE') | translate }}
         </button>
       </div>
     </form>
@@ -191,18 +193,19 @@
   <dialog class="modal-backdrop" open tabindex="-1" (keydown.escape)="cancelDeactivate()" aria-modal="true"
     aria-labelledby="deactivate-dialog-title" data-testid="deactivate-dialog">
     <div class="modal-panel">
-      <h2 id="deactivate-dialog-title">Deactivate Storage Location</h2>
-      <p>Deactivate: <strong>{{ $any(deactivateTarget())?.['name'] }}</strong></p>
+      <h2 id="deactivate-dialog-title">{{ 'LOCATION.STORAGE.DEACTIVATE_TITLE' | translate }}</h2>
+      <p>{{ 'LOCATION.STORAGE.DEACTIVATE_PROMPT' | translate }} <strong>{{
+        $any(deactivateTarget())?.['name'] }}</strong></p>
 
       @if (requiresDestination()) {
       <div class="field">
-        <label for="destination-input">Destination Storage Location ID (required)</label>
+        <label for="destination-input">{{ 'LOCATION.STORAGE.FIELD_DESTINATION' | translate }}</label>
         <input id="destination-input" type="text" [value]="deactivateDestinationId()"
           (input)="deactivateDestinationId.set($any($event.target).value)" aria-describedby="destination-error"
           data-testid="destination-input" />
         <span id="destination-error" role="alert" aria-live="polite" data-testid="field-error-destination">
           @if (requiresDestination() && !deactivateDestinationId()) {
-          Destination required for non-empty storage locations.
+          {{ 'LOCATION.STORAGE.ERROR.DESTINATION_REQUIRED_HINT' | translate }}
           }
         </span>
       </div>
@@ -215,11 +218,11 @@
       <div class="dialog-actions">
         <button type="button" autofocus (click)="cancelDeactivate()" [disabled]="deactivating()"
           data-testid="cancel-deactivate-btn">
-          Cancel
+          {{ 'LOCATION.STORAGE.CANCEL' | translate }}
         </button>
         <button type="button" [disabled]="deactivating()" (click)="confirmDeactivate()"
           data-testid="confirm-deactivate-btn">
-          {{ deactivating() ? 'Deactivating...' : 'Confirm Deactivate' }}
+          {{ (deactivating() ? 'LOCATION.STORAGE.DEACTIVATING' : 'LOCATION.STORAGE.CONFIRM_DEACTIVATE') | translate }}
         </button>
       </div>
     </div>

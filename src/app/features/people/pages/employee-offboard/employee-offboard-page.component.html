@@ -1,35 +1,35 @@
 <main class="people-page employee-offboard-layout" aria-labelledby="offboard-heading">
   <header class="page-header">
-    <p class="page-overline">People Management</p>
-    <h1 id="offboard-heading">Employee Offboarding</h1>
+    <p class="page-overline">{{ 'PEOPLE.OFFBOARD.OVERLINE' | translate }}</p>
+    <h1 id="offboard-heading">{{ 'PEOPLE.OFFBOARD.TITLE' | translate }}</h1>
   </header>
 
   @if (loading()) {
   <section class="state-panel" data-testid="loading-indicator" aria-live="polite" aria-busy="true">
-    Loading employee offboarding details...
+    {{ 'PEOPLE.OFFBOARD.LOADING' | translate }}
   </section>
   }
 
   @if (offboardSuccess()) {
   <section class="state-panel state-panel--success" data-testid="offboard-success-state" aria-live="polite">
-    Employee has been successfully offboarded. Redirecting...
+    {{ 'PEOPLE.OFFBOARD.SUCCESS' | translate }}
   </section>
   }
 
   @if (!loading() && !offboardSuccess()) {
-  @if (error()) {
+  @if (errorKey()) {
   <section class="state-panel state-panel--error" role="alert">
-    {{ error() }}
+    {{ errorKey()! | translate }}
   </section>
   }
 
   @if (employee()) {
-  <section class="employee-context" data-testid="employee-context" aria-label="Employee context">
-    <h2>Employee context</h2>
+  <section class="employee-context" data-testid="employee-context" [attr.aria-label]="'PEOPLE.OFFBOARD.CONTEXT_ARIA' | translate">
+    <h2>{{ 'PEOPLE.OFFBOARD.CONTEXT_TITLE' | translate }}</h2>
     <dl>
-      <dt>Name</dt>
+      <dt>{{ 'PEOPLE.OFFBOARD.FIELD_NAME' | translate }}</dt>
       <dd>{{ employee()?.firstName }} {{ employee()?.lastName }}</dd>
-      <dt>Status</dt>
+      <dt>{{ 'PEOPLE.OFFBOARD.FIELD_STATUS' | translate }}</dt>
       <dd>
         <span class="status-badge" [class.status-badge--active]="employee()?.status === 'ACTIVE'"
           [class.status-badge--neutral]="employee()?.status === 'ON_LEAVE' || employee()?.status === 'SUSPENDED'"
@@ -42,21 +42,20 @@
   }
 
   <div class="alert alert--warning" data-testid="consequences-warning" role="alert">
-    Offboarding immediately deactivates access and impacts downstream payroll, scheduling, and security workflows.
-    Confirm the date before proceeding.
+    {{ 'PEOPLE.OFFBOARD.WARNING' | translate }}
   </div>
 
   <div class="field-row" [class.field-error--visible]="offboardDateControl.invalid && offboardDateControl.touched">
-    <label for="offboard-date">Offboard Date</label>
+    <label for="offboard-date">{{ 'PEOPLE.OFFBOARD.FIELD_DATE' | translate }}</label>
     <input id="offboard-date" type="date" [formControl]="offboardDateControl" data-testid="offboard-date-input" />
     @if (offboardDateControl.invalid && offboardDateControl.touched) {
-    <span class="field-error" role="alert">Offboard date is required.</span>
+    <span class="field-error" role="alert">{{ 'PEOPLE.OFFBOARD.ERROR.DATE_REQUIRED' | translate }}</span>
     }
   </div>
 
   <button type="button" class="btn btn--danger" data-testid="offboard-trigger-btn"
     [disabled]="submitting() || offboardDateControl.invalid" (click)="openConfirmDialog()">
-    Confirm Offboarding
+    {{ 'PEOPLE.OFFBOARD.TRIGGER' | translate }}
   </button>
 
   @if (showConfirmDialog()) {
@@ -64,9 +63,9 @@
     aria-describedby="offboard-dialog-desc" class="modal-backdrop" data-testid="offboard-confirm-dialog"
     (keydown.escape)="cancelConfirmDialog()">
     <div class="modal-panel modal-panel--destructive">
-      <h2 id="offboard-dialog-title">Confirm Employee Offboarding</h2>
+      <h2 id="offboard-dialog-title">{{ 'PEOPLE.OFFBOARD.DIALOG_TITLE' | translate }}</h2>
       <p id="offboard-dialog-desc" data-testid="offboard-dialog-desc">
-        This action is destructive and cannot be undone from this screen.
+        {{ 'PEOPLE.OFFBOARD.DIALOG_DESC' | translate }}
       </p>
       <footer class="modal-footer">
         <!-- autofocus moves focus into this non-native role="alertdialog" on open (Cancel is the
@@ -75,16 +74,12 @@
         <!-- eslint-disable @angular-eslint/template/no-autofocus -->
         <button type="button" class="btn btn--ghost" data-testid="offboard-cancel-btn" [disabled]="submitting()"
           (click)="cancelConfirmDialog()" autofocus>
-          Cancel
+          {{ 'PEOPLE.OFFBOARD.CANCEL' | translate }}
         </button>
         <!-- eslint-enable @angular-eslint/template/no-autofocus -->
         <button type="button" class="btn btn--danger" data-testid="offboard-confirm-btn" [disabled]="submitting()"
           (click)="confirmOffboard()">
-          @if (submitting()) {
-          Offboarding...
-          } @else {
-          Confirm
-          }
+          {{ (submitting() ? 'PEOPLE.OFFBOARD.SUBMITTING' : 'PEOPLE.OFFBOARD.CONFIRM') | translate }}
         </button>
       </footer>
     </div>

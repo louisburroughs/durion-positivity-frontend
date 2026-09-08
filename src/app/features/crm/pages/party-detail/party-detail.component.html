@@ -1,8 +1,8 @@
 <article class="crm-page party-detail" aria-labelledby="party-heading">
 
   <!-- ── Back nav ──────────────────────────────────────────────────────── -->
-  <nav class="breadcrumb" aria-label="Breadcrumb">
-    <button class="btn btn--ghost btn--sm" type="button" (click)="back()">← Accounts</button>
+  <nav class="breadcrumb" [attr.aria-label]="'CRM.PARTY_DETAIL.BREADCRUMB_ARIA' | translate">
+    <button class="btn btn--ghost btn--sm" type="button" (click)="back()">{{ 'CRM.PARTY_DETAIL.BACK' | translate }}</button>
   </nav>
 
   <!-- ── Party header ─────────────────────────────────────────────────── -->
@@ -11,34 +11,34 @@
          state keeps its landmark heading (ADR-0029). -->
     <h1 id="party-heading">{{ party()?.legalName || ('CRM.PARTY_DETAIL.FALLBACK_TITLE' | translate) }}</h1>
     @if (partyState() === 'loading') {
-      <div class="skeleton-header" aria-busy="true" aria-label="Loading party details"></div>
+      <div class="skeleton-header" aria-busy="true" [attr.aria-label]="'CRM.PARTY_DETAIL.LOADING_ARIA' | translate"></div>
     }
     @if (partyState() === 'access-denied') {
       <div class="state-panel state-panel--denied" role="alert">
         <span class="state-icon" aria-hidden="true">🔒</span>
-        <p>You do not have permission to view this party.</p>
+        <p>{{ 'CRM.PARTY_DETAIL.FORBIDDEN' | translate }}</p>
       </div>
     }
     @if (partyState() === 'error') {
       <div class="state-panel state-panel--error" role="alert">
-        <p>Could not load party details.</p>
-        <button class="btn btn--secondary" type="button" (click)="loadParty()">Retry</button>
+        <p>{{ 'CRM.PARTY_DETAIL.ERROR.LOAD_PARTY' | translate }}</p>
+        <button class="btn btn--secondary" type="button" (click)="loadParty()">{{ 'CRM.PARTY_DETAIL.RETRY' | translate }}</button>
       </div>
     }
     @if (partyState() === 'ready' && party()) {
       <div class="party-header-actions">
-        <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToBillingRules()">Billing Rules →</button>
+        <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToBillingRules()">{{ 'CRM.PARTY_DETAIL.BILLING_RULES' | translate }}</button>
       </div>
       @if (party()!.dba) {
-        <p class="party-dba">DBA: {{ party()!.dba }}</p>
+        <p class="party-dba">{{ 'CRM.PARTY_DETAIL.DBA' | translate: { dba: party()!.dba } }}</p>
       }
       <dl class="party-meta">
         @if (customerNumber(); as customerNo) {
-          <dt>Customer #</dt>
+          <dt>{{ 'CRM.PARTY_DETAIL.CUSTOMER_NUMBER' | translate }}</dt>
           <dd data-testid="customer-number">{{ customerNo }}</dd>
         }
         @if (party()!.taxId) {
-          <dt>Tax ID</dt>
+          <dt>{{ 'CRM.PARTY_DETAIL.TAX_ID' | translate }}</dt>
           <dd>{{ party()!.taxId }}</dd>
         }
       </dl>
@@ -48,31 +48,31 @@
   <!-- ── Contacts section ─────────────────────────────────────────────── -->
   <section class="detail-section" aria-labelledby="contacts-heading">
     <div class="section-heading-row">
-      <h2 id="contacts-heading" class="section-heading">Contacts</h2>
-      <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToContacts()">Manage Contacts &amp; Roles →</button>
+      <h2 id="contacts-heading" class="section-heading">{{ 'CRM.PARTY_DETAIL.CONTACTS_TITLE' | translate }}</h2>
+      <button class="btn btn--ghost btn--sm" type="button" (click)="navigateToContacts()">{{ 'CRM.PARTY_DETAIL.MANAGE_CONTACTS' | translate }}</button>
     </div>
 
     @if (contactsState() === 'loading') {
-      <p class="loading-hint" aria-busy="true">Loading contacts…</p>
+      <p class="loading-hint" aria-busy="true">{{ 'CRM.PARTY_DETAIL.LOADING_CONTACTS' | translate }}</p>
     }
     @if (contactsState() === 'access-denied') {
-      <p class="hint-text hint-text--warn">Not authorized to view contacts.</p>
+      <p class="hint-text hint-text--warn">{{ 'CRM.PARTY_DETAIL.CONTACTS_FORBIDDEN' | translate }}</p>
     }
     @if (contactsState() === 'error') {
       <div class="inline-error" role="alert">
-        Could not load contacts.
-        <button class="btn btn--ghost btn--sm" type="button" (click)="loadContacts()">Retry</button>
+        {{ 'CRM.PARTY_DETAIL.ERROR.LOAD_CONTACTS' | translate }}
+        <button class="btn btn--ghost btn--sm" type="button" (click)="loadContacts()">{{ 'CRM.PARTY_DETAIL.RETRY' | translate }}</button>
       </div>
     }
     @if (contactsState() === 'ready') {
       @if (!contacts().length) {
-        <p class="hint-text">No contacts on file for this account.</p>
+        <p class="hint-text">{{ 'CRM.PARTY_DETAIL.CONTACTS_EMPTY' | translate }}</p>
       } @else {
-        <table class="contacts-table" aria-label="Account contacts">
+        <table class="contacts-table" [attr.aria-label]="'CRM.PARTY_DETAIL.CONTACTS_TABLE_ARIA' | translate">
           <thead>
             <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Roles</th>
+              <th scope="col">{{ 'CRM.PARTY_DETAIL.COL.NAME' | translate }}</th>
+              <th scope="col">{{ 'CRM.PARTY_DETAIL.COL.ROLES' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -93,22 +93,22 @@
   <!-- ── Communication Preferences section ────────────────────────────── -->
   <section class="detail-section" aria-labelledby="prefs-heading">
     <div class="section-heading-row">
-      <h2 id="prefs-heading" class="section-heading">Communication Preferences</h2>
+      <h2 id="prefs-heading" class="section-heading">{{ 'CRM.PARTY_DETAIL.PREFS_TITLE' | translate }}</h2>
       @if (prefsState() === 'ready' && !isPrefsEditing && !isPrefsSaving) {
-        <button class="btn btn--secondary btn--sm" type="button" (click)="startEditPrefs()">Edit</button>
+        <button class="btn btn--secondary btn--sm" type="button" (click)="startEditPrefs()">{{ 'CRM.PARTY_DETAIL.EDIT' | translate }}</button>
       }
     </div>
 
     @if (prefsState() === 'loading') {
-      <p class="loading-hint" aria-busy="true">Loading preferences…</p>
+      <p class="loading-hint" aria-busy="true">{{ 'CRM.PARTY_DETAIL.LOADING_PREFS' | translate }}</p>
     }
     @if (prefsState() === 'access-denied') {
-      <p class="hint-text hint-text--warn">Not authorized to view communication preferences.</p>
+      <p class="hint-text hint-text--warn">{{ 'CRM.PARTY_DETAIL.PREFS_FORBIDDEN' | translate }}</p>
     }
     @if (prefsState() === 'error') {
       <div class="inline-error" role="alert">
-        Could not load preferences.
-        <button class="btn btn--ghost btn--sm" type="button" (click)="loadPrefs()">Retry</button>
+        {{ 'CRM.PARTY_DETAIL.ERROR.LOAD_PREFS' | translate }}
+        <button class="btn btn--ghost btn--sm" type="button" (click)="loadPrefs()">{{ 'CRM.PARTY_DETAIL.RETRY' | translate }}</button>
       </div>
     }
 
@@ -116,39 +116,40 @@
       <!-- View mode -->
       @if (!isPrefsEditing && !isPrefsSaving) {
         @if (!prefs()) {
-          <p class="hint-text">No communication preferences set yet.</p>
+          <p class="hint-text">{{ 'CRM.PARTY_DETAIL.PREFS_EMPTY' | translate }}</p>
         } @else {
           <dl class="prefs-summary">
-            <dt>Email Marketing</dt>
-            <dd>{{ prefs()!.emailEnabled ? 'Opted in' : 'Opted out' }}</dd>
-            <dt>SMS Notifications</dt>
-            <dd>{{ prefs()!.smsEnabled ? 'Opted in' : 'Opted out' }}</dd>
+            <dt>{{ 'CRM.PARTY_DETAIL.FIELD_EMAIL_MARKETING' | translate }}</dt>
+            <dd>{{ (prefs()!.emailEnabled ? 'CRM.PARTY_DETAIL.OPTED_IN' : 'CRM.PARTY_DETAIL.OPTED_OUT') | translate }}</dd>
+            <dt>{{ 'CRM.PARTY_DETAIL.FIELD_SMS' | translate }}</dt>
+            <dd>{{ (prefs()!.smsEnabled ? 'CRM.PARTY_DETAIL.OPTED_IN' : 'CRM.PARTY_DETAIL.OPTED_OUT') | translate }}</dd>
           </dl>
         }
       }
 
       <!-- Edit mode -->
       @if (isPrefsEditing || isPrefsSaving) {
-        <form [formGroup]="prefsForm" class="prefs-form" aria-label="Edit communication preferences" novalidate>
+        <form [formGroup]="prefsForm" class="prefs-form" novalidate
+          [attr.aria-label]="'CRM.PARTY_DETAIL.PREFS_FORM_ARIA' | translate">
           @if (prefsError()) {
             <div class="inline-error" role="alert">{{ prefsError() }}</div>
           }
 
           <div class="field field--inline">
-            <label class="field__label" for="emailEnabled">Email Marketing</label>
+            <label class="field__label" for="emailEnabled">{{ 'CRM.PARTY_DETAIL.FIELD_EMAIL_MARKETING' | translate }}</label>
             <label class="toggle-label">
               <input id="emailEnabled" type="checkbox" formControlName="emailEnabled" class="toggle-input" />
               <span class="toggle-track" aria-hidden="true"></span>
-              <span class="toggle-text">{{ prefsForm.controls.emailEnabled.value ? 'Opted in' : 'Opted out' }}</span>
+              <span class="toggle-text">{{ (prefsForm.controls.emailEnabled.value ? 'CRM.PARTY_DETAIL.OPTED_IN' : 'CRM.PARTY_DETAIL.OPTED_OUT') | translate }}</span>
             </label>
           </div>
 
           <div class="field field--inline">
-            <label class="field__label" for="smsEnabled">SMS Notifications</label>
+            <label class="field__label" for="smsEnabled">{{ 'CRM.PARTY_DETAIL.FIELD_SMS' | translate }}</label>
             <label class="toggle-label">
               <input id="smsEnabled" type="checkbox" formControlName="smsEnabled" class="toggle-input" />
               <span class="toggle-track" aria-hidden="true"></span>
-              <span class="toggle-text">{{ prefsForm.controls.smsEnabled.value ? 'Opted in' : 'Opted out' }}</span>
+              <span class="toggle-text">{{ (prefsForm.controls.smsEnabled.value ? 'CRM.PARTY_DETAIL.OPTED_IN' : 'CRM.PARTY_DETAIL.OPTED_OUT') | translate }}</span>
             </label>
           </div>
 
@@ -160,10 +161,10 @@
               [attr.aria-busy]="isPrefsSaving"
               (click)="savePrefs()"
             >
-              @if (isPrefsSaving) { Saving… } @else { Save Preferences }
+              {{ (isPrefsSaving ? 'CRM.PARTY_DETAIL.SAVING' : 'CRM.PARTY_DETAIL.SAVE_PREFS') | translate }}
             </button>
             <button class="btn btn--ghost" type="button" [disabled]="isPrefsSaving" (click)="cancelEditPrefs()">
-              Cancel
+              {{ 'CRM.PARTY_DETAIL.CANCEL' | translate }}
             </button>
           </div>
         </form>

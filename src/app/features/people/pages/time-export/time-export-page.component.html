@@ -1,32 +1,32 @@
 <main>
   <header class="page-header">
-    <h1>Export Approved Time</h1>
+    <h1>{{ 'PEOPLE.TIME_EXPORT.PAGE_TITLE' | translate }}</h1>
   </header>
 
   <section class="panel">
-    <h2>Request Export</h2>
+    <h2>{{ 'PEOPLE.TIME_EXPORT.REQUEST_TITLE' | translate }}</h2>
 
     <form class="form-grid" [formGroup]="form" (ngSubmit)="requestExport()">
       <div class="field">
-        <label for="start-date">Start Date</label>
+        <label for="start-date">{{ 'PEOPLE.TIME_EXPORT.FIELD_START_DATE' | translate }}</label>
         <input id="start-date" type="date" formControlName="startDate" data-testid="start-date-input"
           aria-describedby="start-date-error" />
         @if (form.controls.startDate.touched && form.controls.startDate.invalid) {
-        <span id="start-date-error" class="error-text" role="alert">Start date is required.</span>
+        <span id="start-date-error" class="error-text" role="alert">{{ 'PEOPLE.TIME_EXPORT.ERROR.START_REQUIRED' | translate }}</span>
         }
       </div>
 
       <div class="field">
-        <label for="end-date">End Date</label>
+        <label for="end-date">{{ 'PEOPLE.TIME_EXPORT.FIELD_END_DATE' | translate }}</label>
         <input id="end-date" type="date" formControlName="endDate" data-testid="end-date-input"
           aria-describedby="end-date-error" />
         @if (form.controls.endDate.touched && form.controls.endDate.invalid) {
-        <span id="end-date-error" class="error-text" role="alert">End date is required.</span>
+        <span id="end-date-error" class="error-text" role="alert">{{ 'PEOPLE.TIME_EXPORT.ERROR.END_REQUIRED' | translate }}</span>
         }
       </div>
 
       <fieldset class="field">
-        <legend id="format-legend">Format</legend>
+        <legend id="format-legend">{{ 'PEOPLE.TIME_EXPORT.FIELD_FORMAT' | translate }}</legend>
         <select id="format" formControlName="format" data-testid="format-select"
           aria-labelledby="format-legend">
           <option value="CSV">CSV</option>
@@ -35,9 +35,9 @@
       </fieldset>
 
       <fieldset class="field">
-        <legend>Locations</legend>
+        <legend>{{ 'PEOPLE.TIME_EXPORT.FIELD_LOCATIONS' | translate }}</legend>
         @if (locationsLoading()) {
-        <p aria-live="polite">Loading locations...</p>
+        <p aria-live="polite">{{ 'PEOPLE.TIME_EXPORT.LOADING_LOCATIONS' | translate }}</p>
         }
 
         @if (locationsError()) {
@@ -62,54 +62,54 @@
         }
 
         @if (form.controls.locationIds.touched && form.controls.locationIds.invalid) {
-        <span id="locations-error" class="error-text" aria-live="polite">Select at least one location.</span>
+        <span id="locations-error" class="error-text" aria-live="polite">{{ 'PEOPLE.TIME_EXPORT.ERROR.LOCATION_REQUIRED' | translate }}</span>
         }
       </fieldset>
 
-      <p class="note-text">Dates interpreted in selected location timezone(s).</p>
+      <p class="note-text">{{ 'PEOPLE.TIME_EXPORT.TIMEZONE_NOTE' | translate }}</p>
 
       <div class="actions-row">
-        <button type="submit" [disabled]="isFormBusy" data-testid="request-export-btn">Request Export</button>
+        <button type="submit" [disabled]="isFormBusy" data-testid="request-export-btn">{{ 'PEOPLE.TIME_EXPORT.REQUEST_EXPORT' | translate }}</button>
       </div>
     </form>
   </section>
 
   @if (exportId(); as exportIdentifier) {
   <section class="panel" data-testid="status-panel">
-    <h2>Current Export Status</h2>
+    <h2>{{ 'PEOPLE.TIME_EXPORT.STATUS_TITLE' | translate }}</h2>
     <dl class="status-grid">
       <div>
-        <dt>Export ID</dt>
+        <dt>{{ 'PEOPLE.TIME_EXPORT.FIELD_EXPORT_ID' | translate }}</dt>
         <dd data-testid="export-id-display">{{ exportIdentifier }}</dd>
       </div>
       <div>
-        <dt>Status</dt>
+        <dt>{{ 'PEOPLE.TIME_EXPORT.FIELD_STATUS' | translate }}</dt>
         <dd class="status-badge" data-testid="export-status">{{ exportStatus() ?? exportState() }}</dd>
       </div>
       <div>
-        <dt>Records Exported</dt>
+        <dt>{{ 'PEOPLE.TIME_EXPORT.FIELD_RECORDS_EXPORTED' | translate }}</dt>
         <dd data-testid="records-exported">{{ recordsExportedCount() ?? '-' }}</dd>
       </div>
       <div>
-        <dt>Records Skipped</dt>
+        <dt>{{ 'PEOPLE.TIME_EXPORT.FIELD_RECORDS_SKIPPED' | translate }}</dt>
         <dd data-testid="records-skipped">{{ recordsSkippedCount() ?? '-' }}</dd>
       </div>
       <div>
-        <dt>Requested At</dt>
+        <dt>{{ 'PEOPLE.TIME_EXPORT.FIELD_REQUESTED_AT' | translate }}</dt>
         <dd data-testid="requested-at">{{ requestedAt() ?? '-' }}</dd>
       </div>
       <div>
-        <dt>Completed At</dt>
+        <dt>{{ 'PEOPLE.TIME_EXPORT.FIELD_COMPLETED_AT' | translate }}</dt>
         <dd data-testid="completed-at">{{ completedAt() ?? '-' }}</dd>
       </div>
     </dl>
 
     <div class="actions-row">
       <button type="button" (click)="refreshStatus()" [disabled]="!canRefresh" data-testid="refresh-status-btn">
-        Refresh Status
+        {{ 'PEOPLE.TIME_EXPORT.REFRESH_STATUS' | translate }}
       </button>
       <button type="button" (click)="downloadExport()" [disabled]="!canDownload" data-testid="download-btn">
-        Download
+        {{ 'PEOPLE.TIME_EXPORT.DOWNLOAD' | translate }}
       </button>
     </div>
   </section>
@@ -123,12 +123,12 @@
 
   <section class="panel">
     <div class="section-header-row">
-      <h2>Export History</h2>
-      <button type="button" (click)="loadHistory()">Refresh History</button>
+      <h2>{{ 'PEOPLE.TIME_EXPORT.HISTORY_TITLE' | translate }}</h2>
+      <button type="button" (click)="loadHistory()">{{ 'PEOPLE.TIME_EXPORT.REFRESH_HISTORY' | translate }}</button>
     </div>
 
     @if (historyLoading()) {
-    <p aria-live="polite">Loading history...</p>
+    <p aria-live="polite">{{ 'PEOPLE.TIME_EXPORT.LOADING_HISTORY' | translate }}</p>
     }
 
     @if (historyError()) {
@@ -136,7 +136,7 @@
     }
 
     @if (!historyLoading() && !historyError() && historyItems().length === 0) {
-    <p data-testid="history-empty">No export history available.</p>
+    <p data-testid="history-empty">{{ 'PEOPLE.TIME_EXPORT.HISTORY_EMPTY' | translate }}</p>
     }
 
     @if (!historyLoading() && historyItems().length > 0) {
@@ -144,13 +144,13 @@
       <table data-testid="history-table">
         <thead>
           <tr>
-            <th scope="col">Export ID</th>
-            <th scope="col">Status</th>
-            <th scope="col">Start Date</th>
-            <th scope="col">End Date</th>
-            <th scope="col">Format</th>
-            <th scope="col">Exported Count</th>
-            <th scope="col">Requested At</th>
+            <th scope="col">{{ 'PEOPLE.TIME_EXPORT.COL.EXPORT_ID' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_EXPORT.COL.STATUS' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_EXPORT.COL.START_DATE' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_EXPORT.COL.END_DATE' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_EXPORT.COL.FORMAT' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_EXPORT.COL.EXPORTED_COUNT' | translate }}</th>
+            <th scope="col">{{ 'PEOPLE.TIME_EXPORT.COL.REQUESTED_AT' | translate }}</th>
           </tr>
         </thead>
         <tbody>

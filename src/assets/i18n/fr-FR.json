@@ -2,6 +2,7 @@
   "GREETING": "Bonjour",
   "LANDING": {
     "NAV_SIGN_IN": "Se connecter",
+    "NAV_ARIA": "Navigation de la page d'accueil",
     "NAV_LOCALE_ARIA": "Sélectionner la langue",
     "NAV_THEME_TO_DARK": "Passer en mode sombre",
     "NAV_THEME_TO_LIGHT": "Passer en mode clair",
@@ -10,6 +11,7 @@
     "HERO_CTA": "Se connecter à votre compte",
     "FEATURES_TITLE": "Tout ce qu'il vous faut, rien de superflu",
     "FEATURES_SUBTITLE": "Conçu pour les entreprises de services qui souhaitent travailler plus efficacement.",
+    "FEATURES_GRID_ARIA": "Fonctionnalités de la plateforme",
     "FEATURE_CUSTOMERS_TITLE": "Connaissez vos clients",
     "FEATURE_CUSTOMERS_DESC": "Gardez une vue complète de chaque client — son historique, ses préférences et ses prochains rendez-vous — tout au même endroit.",
     "FEATURE_WORKORDERS_TITLE": "Accomplissez le travail",
@@ -490,30 +492,98 @@
       }
     },
     "TIME_EXPORT": {
-      "TITLE": "Exportation du temps",
-      "LOCATION_ID": "ID d'emplacement",
-      "LOAD_EXPORT": "Charger l'exportation",
-      "LOAD_DISCREPANCIES": "Charger les écarts",
-      "EMPTY": "Aucune donnée d'exportation trouvée.",
       "ERROR": {
-        "LOAD_EXPORT": "Impossible de charger les données d'exportation.",
-        "LOAD_DISCREPANCIES": "Impossible de charger les écarts."
+        "START_REQUIRED": "La date de début est requise.",
+        "END_REQUIRED": "La date de fin est requise.",
+        "LOCATION_REQUIRED": "Sélectionnez au moins un emplacement.",
+        "LOAD_LOCATIONS": "Impossible de charger les emplacements.",
+        "DATE_ORDER": "La date de fin doit être égale ou postérieure à la date de début.",
+        "LOCATION_REQUIRED_SUBMIT": "Au moins un emplacement doit être sélectionné.",
+        "REQUEST": "Impossible de demander l'exportation.",
+        "EXPORT_FAILED": "L'exportation a échoué.",
+        "REFRESH_STATUS": "Impossible d'actualiser l'état.",
+        "LOAD_HISTORY": "Impossible de charger l'historique des exportations."
+      },
+      "PAGE_TITLE": "Exporter le temps approuvé",
+      "REQUEST_TITLE": "Demander une exportation",
+      "FIELD_START_DATE": "Date de début",
+      "FIELD_END_DATE": "Date de fin",
+      "FIELD_FORMAT": "Format",
+      "FIELD_LOCATIONS": "Emplacements",
+      "LOADING_LOCATIONS": "Chargement des emplacements...",
+      "TIMEZONE_NOTE": "Les dates sont interprétées dans le fuseau horaire des emplacements sélectionnés.",
+      "REQUEST_EXPORT": "Demander l'exportation",
+      "STATUS_TITLE": "État actuel de l'exportation",
+      "FIELD_EXPORT_ID": "Identifiant d'exportation",
+      "FIELD_STATUS": "Statut",
+      "FIELD_RECORDS_EXPORTED": "Enregistrements exportés",
+      "FIELD_RECORDS_SKIPPED": "Enregistrements ignorés",
+      "FIELD_REQUESTED_AT": "Demandé le",
+      "FIELD_COMPLETED_AT": "Terminé le",
+      "REFRESH_STATUS": "Actualiser l'état",
+      "DOWNLOAD": "Télécharger",
+      "HISTORY_TITLE": "Historique des exportations",
+      "REFRESH_HISTORY": "Actualiser l'historique",
+      "LOADING_HISTORY": "Chargement de l'historique...",
+      "HISTORY_EMPTY": "Aucun historique d'exportation disponible.",
+      "COL": {
+        "EXPORT_ID": "Identifiant d'exportation",
+        "STATUS": "Statut",
+        "START_DATE": "Date de début",
+        "END_DATE": "Date de fin",
+        "FORMAT": "Format",
+        "EXPORTED_COUNT": "Nombre exporté",
+        "REQUESTED_AT": "Demandé le"
       }
     },
     "TIME_APPROVAL": {
       "TITLE": "Approbation du temps",
-      "APPROVE": "Approuver",
-      "REJECT": "Rejeter",
-      "ACTION_COMPLETED": "Action terminée.",
-      "EMPTY": "Aucune entrée trouvée.",
-      "REASON": "Motif",
-      "SUBMIT_REJECT": "Soumettre le rejet",
-      "CLOSE": "Fermer",
       "ERROR": {
-        "LOAD": "Impossible de charger les entrées de temps.",
-        "APPROVE": "Impossible d'approuver les entrées.",
-        "REJECT": "Impossible de rejeter les entrées.",
-        "ADJUSTMENT": "Impossible de créer l'ajustement."
+        "LOAD_EMPLOYEES": "Impossible de charger les employés.",
+        "LOAD_PERIODS": "Impossible de charger les périodes de temps.",
+        "LOAD_ENTRIES": "Impossible de charger les entrées de temps.",
+        "APPROVE_PERIOD": "Impossible d'approuver la période.",
+        "REJECT_PERIOD": "Impossible de rejeter la période."
+      },
+      "SELECTION_TITLE": "Sélectionner l'employé et la période de paie",
+      "FORM_ARIA": "Formulaire de sélection pour l'approbation du temps",
+      "FIELD_EMPLOYEE": "Employé",
+      "SELECT_EMPLOYEE": "Sélectionner un employé",
+      "EMPLOYEE_HELP": "Sélectionnez l'employé à examiner.",
+      "FIELD_PERIOD": "Période de paie",
+      "SELECT_PERIOD": "Sélectionner une période de paie",
+      "PERIOD_HELP": "Choisissez une période admissible pour la décision.",
+      "PERIOD_OPTION": "{{status}} - {{start}} à {{end}}",
+      "LOADING_EMPLOYEES": "Chargement des employés...",
+      "LOADING_PERIODS": "Chargement des périodes...",
+      "STATUS_OPEN": "L'approbation sera possible après la fermeture des soumissions.",
+      "STATUS_PAYROLL_CLOSED": "La paie est fermée pour cette période.",
+      "ENTRIES_TITLE": "Entrées de temps",
+      "REFRESH_DETAIL": "Actualiser le détail",
+      "LOADING_DETAIL": "Chargement du détail...",
+      "ENTRIES_EMPTY": "Aucune entrée de temps trouvée pour cette sélection.",
+      "APPROVE_PERIOD": "Approuver la période",
+      "REJECT_PERIOD": "Rejeter la période",
+      "APPROVE_SUCCESS": "La période a été approuvée avec succès.",
+      "REJECT_SUCCESS": "La période a été rejetée avec succès.",
+      "HISTORY_TITLE": "Historique des approbations",
+      "LOADING_HISTORY": "Chargement de l'historique...",
+      "HISTORY_EMPTY": "Aucun historique d'approbation trouvé.",
+      "REJECT_DIALOG_TITLE": "Rejeter la période",
+      "FIELD_COMMENTS": "Commentaires",
+      "CANCEL": "Annuler",
+      "SUBMIT_REJECT_BTN": "Soumettre le rejet",
+      "COL": {
+        "ID": "ID",
+        "STATUS": "Statut",
+        "CLOCK_IN": "Arrivée",
+        "CLOCK_OUT": "Départ",
+        "LOCATION": "Emplacement",
+        "OVERALL_STATUS": "Statut global",
+        "TOTAL": "Total",
+        "PENDING": "En attente",
+        "APPROVED": "Approuvées",
+        "REJECTED": "Rejetées"
       }
     },
     "DIRECTORY": {
@@ -533,7 +603,10 @@
       "EMPTY": "Aucune personne ne correspond à votre recherche.",
       "CLEAR_SEARCH": "Effacer la recherche",
       "PAGINATION": {
-        "PAGE_OF": "Page {{current}} sur {{total}}"
+        "PAGE_OF": "Page {{current}} sur {{total}}",
+        "ARIA": "Pagination",
+        "PREVIOUS": "Page précédente",
+        "NEXT": "Page suivante"
       },
       "ERROR": {
         "LOAD": "Échec du chargement des personnes."
@@ -568,14 +641,232 @@
       "ERROR": {
         "LOAD": "Échec du chargement des constats de conformité des identités."
       }
+    },
+    "WORK_SESSION_SUBMIT": {
+      "TITLE": "Soumettre le temps de travail",
+      "SESSION_ID": "Identifiant de session :",
+      "DETAILS_TITLE": "Détails de la soumission",
+      "FIELD_BILLABLE": "Minutes facturables",
+      "FIELD_BREAK": "Minutes de pause",
+      "FIELD_SUBMITTED_AT": "Soumis le",
+      "SUBMIT": "Soumettre le temps de travail",
+      "RETRY": "Réessayer",
+      "SUBMITTING": "Soumission…",
+      "SUCCESS": "Le temps de travail a été soumis avec succès.",
+      "CORRELATION_ID": "Identifiant de corrélation :",
+      "FAILED": "Échec de la soumission.",
+      "CODE": "Code :",
+      "REFERENCE": "Référence :",
+      "ERROR": {
+        "BILLABLE_MIN": "Les minutes facturables doivent être d'au moins 1.",
+        "BREAK_MIN": "Les minutes de pause doivent être de 0 ou plus.",
+        "SUBMITTED_AT_REQUIRED": "L'heure de soumission est requise.",
+        "NO_SESSION_ID": "Aucun identifiant de session dans les paramètres de route",
+        "INVALID_STATE": "La session ne peut pas être soumise dans son état actuel.",
+        "VALIDATION": "Veuillez corriger les valeurs du formulaire et réessayer.",
+        "SUBMIT": "Impossible de soumettre la session de travail."
+      }
+    },
+    "OFFBOARD": {
+      "OVERLINE": "Gestion du personnel",
+      "TITLE": "Départ d'un employé",
+      "LOADING": "Chargement des détails du départ de l'employé...",
+      "SUCCESS": "Le départ de l'employé a été effectué avec succès. Redirection...",
+      "CONTEXT_ARIA": "Contexte de l'employé",
+      "CONTEXT_TITLE": "Contexte de l'employé",
+      "FIELD_NAME": "Nom",
+      "FIELD_STATUS": "Statut",
+      "WARNING": "Le départ désactive immédiatement l'accès et touche les flux de paie, de planification et de sécurité en aval. Confirmez la date avant de continuer.",
+      "FIELD_DATE": "Date de départ",
+      "TRIGGER": "Confirmer le départ",
+      "DIALOG_TITLE": "Confirmer le départ de l'employé",
+      "DIALOG_DESC": "Cette action est destructive et ne peut pas être annulée depuis cet écran.",
+      "CANCEL": "Annuler",
+      "CONFIRM": "Confirmer",
+      "SUBMITTING": "Traitement du départ...",
+      "ERROR": {
+        "DATE_REQUIRED": "La date de départ est requise.",
+        "LOAD": "Impossible de charger l'employé.",
+        "DISABLE": "Impossible de désactiver l'employé. Veuillez réessayer."
+      }
+    },
+    "DISCREPANCY": {
+      "TITLE": "Rapport d'écarts entre présence et temps de travail",
+      "FILTERS_TITLE": "Filtres",
+      "FIELD_START_DATE": "Date de début",
+      "FIELD_END_DATE": "Date de fin",
+      "FIELD_TIMEZONE": "Fuseau horaire",
+      "TIMEZONE_HELP": "Chaîne de fuseau horaire IANA (par exemple, UTC).",
+      "FIELD_LOCATION_ID": "Identifiant d'emplacement",
+      "FIELD_TECHNICIAN_IDS": "Identifiants de techniciens",
+      "TECHNICIAN_IDS_PLACEHOLDER": "Identifiants séparés par des virgules",
+      "FIELD_FLAGGED_ONLY": "Signalés seulement",
+      "RUN": "Exécuter le rapport",
+      "RESULTS_TITLE": "Résultats",
+      "LOADING": "Chargement du rapport...",
+      "EMPTY": "Aucun écart trouvé pour les filtres sélectionnés.",
+      "THRESHOLD_APPLIED": "Seuil appliqué : {{value}}",
+      "YES": "Oui",
+      "NO": "Non",
+      "COL": {
+        "TECHNICIAN": "Technicien",
+        "LOCATION": "Emplacement",
+        "REPORT_DATE": "Date du rapport",
+        "ATTENDANCE_HOURS": "Heures de présence",
+        "JOB_HOURS": "Heures de travail",
+        "DISCREPANCY": "Écart",
+        "FLAGGED": "Signalé"
+      },
+      "ERROR": {
+        "START_REQUIRED": "La date de début est requise.",
+        "END_REQUIRED": "La date de fin est requise.",
+        "LOAD": "Impossible de charger le rapport d'écarts."
+      }
+    },
+    "EMPLOYEE_PROFILE": {
+      "OVERLINE": "Gestion du personnel",
+      "TITLE": "Profil de l'employé",
+      "LOADING": "Chargement du profil de l'employé...",
+      "WARNINGS_TITLE": "Certains détails du profil n'ont pas pu être entièrement résolus :",
+      "PERSONAL_LEGEND": "Renseignements personnels",
+      "FIELD_FIRST_NAME": "Prénom",
+      "FIELD_LAST_NAME": "Nom",
+      "FIELD_EMPLOYEE_NUMBER": "Numéro d'employé",
+      "FIELD_EMAIL": "Courriel",
+      "FIELD_PHONE": "Téléphone",
+      "EMPLOYMENT_LEGEND": "Renseignements d'emploi",
+      "FIELD_HIRE_DATE": "Date d'embauche",
+      "STATUS_LEGEND": "Statut",
+      "FIELD_STATUS": "Statut d'emploi",
+      "SELECT_STATUS": "Sélectionner un statut",
+      "SAVING": "Enregistrement...",
+      "SAVE": "Enregistrer l'employé",
+      "AUDIT_ARIA": "Métadonnées d'audit",
+      "AUDIT_TITLE": "Détails d'audit",
+      "AUDIT_CREATED": "Créé",
+      "AUDIT_UPDATED": "Dernière mise à jour",
+      "UNAVAILABLE": "Non disponible",
+      "ERROR": {
+        "FIRST_NAME_REQUIRED": "Le prénom est requis.",
+        "LAST_NAME_REQUIRED": "Le nom est requis.",
+        "EMPLOYEE_NUMBER_REQUIRED": "Le numéro d'employé est requis.",
+        "HIRE_DATE_REQUIRED": "La date d'embauche est requise.",
+        "STATUS_REQUIRED": "Le statut d'emploi est requis.",
+        "LOAD": "Impossible de charger l'employé.",
+        "SAVE": "Impossible d'enregistrer l'employé."
+      }
+    },
+    "LOCATION_ASSIGNMENTS": {
+      "OVERLINE": "Gestion du personnel",
+      "TITLE": "Affectations d'emplacement de la personne",
+      "LOADING": "Chargement des affectations d'emplacement...",
+      "ADD": "Ajouter une affectation",
+      "EMPTY": "Aucune affectation d'emplacement n'est active pour cette personne.",
+      "TABLE_ARIA": "Affectations d'emplacement de la personne",
+      "YES": "Oui",
+      "NO": "Non",
+      "END": "Terminer",
+      "CREATE_TITLE": "Créer une affectation d'emplacement",
+      "CREATE_DESC": "Choisissez l'emplacement et les dates de vigueur de cette affectation.",
+      "DETAILS_LEGEND": "Détails de l'affectation",
+      "FIELD_LOCATION": "Emplacement",
+      "SELECT_LOCATION": "Sélectionner un emplacement",
+      "FIELD_ROLE": "Rôle",
+      "ROLE_PLACEHOLDER": "p. ex. TECHNICIAN",
+      "FIELD_EFFECTIVE_START": "Début de vigueur",
+      "FIELD_EFFECTIVE_END": "Fin de vigueur (facultatif)",
+      "FIELD_PRIMARY": "Affectation principale",
+      "CANCEL": "Annuler",
+      "CREATING": "Création...",
+      "CREATE": "Créer l'affectation",
+      "END_TITLE": "Terminer l'affectation",
+      "END_DESC": "Cela mettra fin à l'affectation sélectionnée pour cette personne.",
+      "ENDING": "Fin en cours...",
+      "CONFIRM_END": "Confirmer la fin",
+      "COL": {
+        "LOCATION": "Emplacement",
+        "PRIMARY": "Principale",
+        "START_DATE": "Date de début",
+        "END_DATE": "Date de fin",
+        "ACTIONS": "Actions"
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger les affectations d'emplacement.",
+        "CREATE": "Impossible de créer l'affectation.",
+        "END": "Impossible de terminer l'affectation.",
+        "OVERLAP": "Une affectation qui se chevauche existe déjà."
+      }
     }
   },
   "CRM": {
     "INTEGRATION_EVENTS": {
-      "EVENT_REFERENCE": "Référence d’événement"
+      "EVENT_REFERENCE": "Référence d’événement",
+      "TITLE": "Événements d'intégration",
+      "LOADING": "Chargement des événements...",
+      "FORBIDDEN": "Vous n'avez pas la permission de consulter les événements d'intégration.",
+      "LIST_ARIA": "Liste des événements",
+      "EMPTY": "Aucun événement trouvé.",
+      "STATUS_SR": "Statut :",
+      "DETAIL_ARIA": "Détail de l'événement",
+      "DETAIL_TITLE": "Détail de l'événement",
+      "FIELD_TYPE": "Type",
+      "FIELD_STATUS": "Statut",
+      "FIELD_RECEIVED": "Reçu",
+      "PROCESSING_LOG": "Journal de traitement",
+      "LOG_EMPTY": "Aucune entrée de journal disponible.",
+      "REPROCESSING_HISTORY": "Historique de retraitement",
+      "ERROR": {
+        "LOAD": "Une erreur s'est produite lors du chargement des événements. Veuillez réessayer.",
+        "LOAD_DETAIL": "Impossible de charger les détails de l'événement. Veuillez réessayer."
+      }
     },
     "PARTY_DETAIL": {
-      "FALLBACK_TITLE": "Détails du compte"
+      "FALLBACK_TITLE": "Détails du compte",
+      "BREADCRUMB_ARIA": "Fil d'Ariane",
+      "BACK": "← Comptes",
+      "LOADING_ARIA": "Chargement des détails de la partie",
+      "FORBIDDEN": "Vous n'avez pas la permission de consulter cette partie.",
+      "RETRY": "Réessayer",
+      "BILLING_RULES": "Règles de facturation →",
+      "DBA": "Nom commercial : {{dba}}",
+      "CUSTOMER_NUMBER": "N° de client",
+      "TAX_ID": "Numéro fiscal",
+      "CONTACTS_TITLE": "Contacts",
+      "MANAGE_CONTACTS": "Gérer les contacts et les rôles →",
+      "LOADING_CONTACTS": "Chargement des contacts…",
+      "CONTACTS_FORBIDDEN": "Non autorisé à consulter les contacts.",
+      "CONTACTS_EMPTY": "Aucun contact enregistré pour ce compte.",
+      "CONTACTS_TABLE_ARIA": "Contacts du compte",
+      "PREFS_TITLE": "Préférences de communication",
+      "EDIT": "Modifier",
+      "LOADING_PREFS": "Chargement des préférences…",
+      "PREFS_FORBIDDEN": "Non autorisé à consulter les préférences de communication.",
+      "PREFS_EMPTY": "Aucune préférence de communication définie pour le moment.",
+      "PREFS_FORM_ARIA": "Modifier les préférences de communication",
+      "FIELD_EMAIL_MARKETING": "Marketing par courriel",
+      "FIELD_SMS": "Notifications par SMS",
+      "OPTED_IN": "Inscrit",
+      "OPTED_OUT": "Désinscrit",
+      "SAVING": "Enregistrement…",
+      "SAVE_PREFS": "Enregistrer les préférences",
+      "CANCEL": "Annuler",
+      "COL": {
+        "NAME": "Nom",
+        "ROLES": "Rôles"
+      },
+      "ROLE": {
+        "PRIMARY": "Principal",
+        "PRIMARY_CONTACT": "Contact principal",
+        "BILLING": "Facturation",
+        "APPROVER": "Approbateur",
+        "DRIVER": "Conducteur",
+        "TECHNICAL": "Technique"
+      },
+      "ERROR": {
+        "LOAD_PARTY": "Impossible de charger les détails de la partie.",
+        "LOAD_CONTACTS": "Impossible de charger les contacts.",
+        "LOAD_PREFS": "Impossible de charger les préférences."
+      }
     },
     "LANDING": {
       "TITLE": "Clients",
@@ -733,10 +1024,13 @@
       "EMPTY": "Aucun contexte client chargé.",
       "EMPTY_VEHICLES": "Aucun véhicule disponible.",
       "ERROR": {
-        "LOAD": "Impossible de charger le contexte client. Veuillez réessayer.",
+        "LOAD": "Impossible de charger l'instantané du CRM.",
         "UUID": "Doit être un UUID valide.",
         "VALIDATION": "Entrez un ID party ou un ID véhicule.",
-        "FORBIDDEN": "Vous n'avez pas accès à ce contexte client."
+        "FORBIDDEN": "Vous n'avez pas accès à cet instantané.",
+        "IDENTIFIER_REQUIRED": "Saisissez un identifiant de partie ou de véhicule",
+        "NOT_FOUND": "Aucun instantané trouvé pour l'identifiant fourni.",
+        "INVALID_REQUEST": "Requête invalide. Vérifiez l'identifiant de partie ou de véhicule."
       }
     },
     "BILLING_RULES": {
@@ -765,6 +1059,289 @@
         "LOAD": "Impossible de charger les règles de facturation.",
         "SAVE": "Impossible d'enregistrer les règles de facturation. Veuillez réessayer.",
         "FORBIDDEN": "Vous n'avez pas l'autorisation de voir les règles de facturation pour ce compte."
+      }
+    },
+    "CUSTOMER_LOOKUP": {
+      "SEARCHING": "Recherche…"
+    },
+    "CREATE_PERSON": {
+      "DENIED_TITLE": "Accès refusé",
+      "DENIED_BODY": "Vous n'avez pas la permission de créer des dossiers de personnes physiques.",
+      "TITLE": "Créer une personne physique",
+      "SUBTITLE": "Enregistrez une nouvelle personne dans le CRM.",
+      "FORM_ARIA": "Formulaire de création d'une personne physique",
+      "DETAILS_LEGEND": "Détails de la personne",
+      "FIELD_FIRST_NAME": "Prénom",
+      "FIRST_NAME_PLACEHOLDER": "Prénom",
+      "FIELD_LAST_NAME": "Nom",
+      "LAST_NAME_PLACEHOLDER": "Nom",
+      "FIELD_EMAIL": "Adresse courriel",
+      "EMAIL_PLACEHOLDER": "Courriel (facultatif)",
+      "FIELD_PHONE": "Numéro de téléphone",
+      "PHONE_PLACEHOLDER": "Téléphone (facultatif)",
+      "SUBMITTING": "Création…",
+      "SUBMIT": "Créer la personne",
+      "SUCCESS_TITLE": "Dossier de personne créé",
+      "SUCCESS_ID_ARIA": "Identifiant de la nouvelle personne",
+      "SUCCESS_ID_LABEL": "Identifiant de personne",
+      "COPY": "Copier",
+      "COPIED": "✓ Copié",
+      "COPY_ARIA": "Copier l'identifiant de la personne",
+      "COPIED_ARIA": "Copié",
+      "VIEW_RECORD": "Voir le dossier de la personne",
+      "CREATE_ANOTHER": "En créer un autre",
+      "ERROR": {
+        "FIRST_NAME_REQUIRED": "Le prénom est requis.",
+        "LAST_NAME_REQUIRED": "Le nom est requis.",
+        "CLIPBOARD_UNSUPPORTED": "Le presse-papiers n'est pas disponible. Copiez l'identifiant manuellement.",
+        "CLIPBOARD_FAILED": "Impossible de copier l'identifiant dans le presse-papiers. Copiez-le manuellement."
+      }
+    },
+    "CREATE_VEHICLE": {
+      "DENIED_TITLE": "Accès refusé",
+      "DENIED_BODY": "Vous n'avez pas la permission d'ajouter des véhicules à cette partie.",
+      "BACK_TO_PARTY": "Retour à la partie",
+      "BACK_TO_PARTY_ARROW": "← Retour à la partie",
+      "TITLE": "Ajouter un véhicule",
+      "SUBTITLE": "Associez un véhicule à la partie",
+      "FORM_ARIA": "Formulaire d'ajout de véhicule",
+      "DETAILS_LEGEND": "Détails du véhicule",
+      "FIELD_VIN": "NIV",
+      "VIN_PLACEHOLDER": "Numéro d'identification du véhicule à 17 caractères",
+      "FIELD_YEAR": "Année",
+      "YEAR_PLACEHOLDER": "p. ex. 2022",
+      "FIELD_MAKE": "Marque",
+      "MAKE_PLACEHOLDER": "p. ex. Ford",
+      "FIELD_MODEL": "Modèle",
+      "MODEL_PLACEHOLDER": "p. ex. F-150",
+      "FIELD_UNIT_NUMBER": "Numéro d'unité",
+      "UNIT_NUMBER_PLACEHOLDER": "Numéro d'unité de flotte interne (facultatif)",
+      "SUBMITTING": "Ajout du véhicule…",
+      "SUBMIT": "Ajouter le véhicule",
+      "CANCEL": "Annuler",
+      "SUCCESS_TITLE": "Véhicule ajouté",
+      "SUCCESS_ID_LABEL": "Identifiant du véhicule :",
+      "ADD_ANOTHER": "En ajouter un autre",
+      "ERROR": {
+        "VIN_REQUIRED": "Le NIV est requis."
+      }
+    },
+    "CUSTOMER_LIST": {
+      "TITLE": "Comptes et parties",
+      "NEW_COMMERCIAL": "+ Compte commercial",
+      "NEW_INDIVIDUAL": "+ Personne physique",
+      "MERGE_DUPLICATES": "Fusionner les parties en double",
+      "FILTERS_ARIA": "Filtrer les parties",
+      "FILTER_NAME_LABEL": "Rechercher par nom",
+      "FILTER_NAME_PLACEHOLDER": "Rechercher par nom…",
+      "FILTER_CUSTOMER_NUMBER_LABEL": "Numéro de client",
+      "FILTER_CUSTOMER_NUMBER_PLACEHOLDER": "N° de client…",
+      "FILTER_STATUS_LABEL": "Statut",
+      "FILTER_PARTY_TYPE_LABEL": "Type de partie",
+      "CLEAR": "Effacer",
+      "LOADING": "Chargement…",
+      "EMPTY": "Aucun compte ne correspond à vos filtres.",
+      "FORBIDDEN": "Vous n'avez pas la permission de consulter les comptes.",
+      "TABLE_ARIA": "Répertoire des clients",
+      "ROW_ARIA": "Ouvrir le dossier de la partie {{name}}",
+      "DBA": "Nom commercial : {{dba}}",
+      "PAGINATION_ARIA": "Pagination du répertoire des clients",
+      "PREVIOUS": "Précédent",
+      "NEXT": "Suivant",
+      "PAGE_STATUS": "Page {{page}} sur {{total}} ({{count}} au total)",
+      "STATUS": {
+        "ALL": "Tous les statuts",
+        "ACTIVE": "Actif",
+        "PENDING": "En attente",
+        "SUSPENDED": "Suspendu",
+        "INACTIVE": "Inactif"
+      },
+      "PARTY_TYPE": {
+        "ALL": "Tous les types",
+        "COMMERCIAL": "Commercial",
+        "PERSON": "Particulier"
+      },
+      "COL": {
+        "NAME": "Nom",
+        "CUSTOMER_NUMBER": "N° de client",
+        "PRIMARY_CONTACT": "Contact principal",
+        "PHONE": "Téléphone",
+        "STATUS": "Statut",
+        "VEHICLES": "Véhicules"
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger les clients."
+      }
+    },
+    "CREATE_COMMERCIAL": {
+      "DENIED_TITLE": "Accès refusé",
+      "DENIED_BODY": "Vous n'avez pas la permission de créer des comptes commerciaux.",
+      "DENIED_HINT": "Communiquez avec votre administrateur pour demander l'accès.",
+      "TITLE": "Créer un compte commercial",
+      "SUBTITLE": "Enregistrez une nouvelle partie commerciale dans le CRM.",
+      "LOADING_TERMS": "Chargement des conditions de facturation…",
+      "RETRY": "Réessayer",
+      "DUPLICATES_TITLE": "Comptes en double possibles trouvés",
+      "DUPLICATES_INTRO": "Les comptes existants suivants pourraient correspondre au nom saisi. Examinez-les avant de continuer.",
+      "DUPLICATES_ARIA": "Candidats en double",
+      "DBA": "Nom commercial : {{dba}}",
+      "TAX_ID": "Numéro fiscal : {{taxId}}",
+      "MATCHED_ON": "Correspondance sur : {{reasons}}",
+      "OVERRIDE_FORM_ARIA": "Passer outre le doublon",
+      "FIELD_JUSTIFICATION": "Justification de la création d'un nouveau compte",
+      "JUSTIFICATION_PLACEHOLDER": "Expliquez pourquoi il s'agit d'un compte distinct…",
+      "OVERRIDE_SUBMIT_ARIA": "Poursuivre et créer le compte malgré les doublons",
+      "SUBMITTING": "Création…",
+      "CREATE_ANYWAY": "Créer quand même",
+      "GO_BACK": "Retour",
+      "FORM_ARIA": "Formulaire de création d'un compte commercial",
+      "DETAILS_LEGEND": "Détails du compte",
+      "FIELD_LEGAL_NAME": "Dénomination sociale",
+      "LEGAL_NAME_PLACEHOLDER": "Nom de l'entité juridique enregistrée",
+      "FIELD_DBA": "Nom commercial (DBA)",
+      "DBA_PLACEHOLDER": "Nom commercial (facultatif)",
+      "FIELD_TAX_ID": "Numéro fiscal / EIN",
+      "TAX_ID_PLACEHOLDER": "p. ex. 12-3456789",
+      "FIELD_BILLING_TERMS": "Conditions de facturation par défaut",
+      "SELECT_BILLING_TERMS": "Sélectionner les conditions de facturation…",
+      "CHECKING": "Recherche de doublons…",
+      "CREATING": "Création du compte…",
+      "SUBMIT": "Créer le compte",
+      "SUCCESS_TITLE": "Compte commercial créé",
+      "SUCCESS_ID_ARIA": "Identifiant de la nouvelle partie",
+      "SUCCESS_ID_LABEL": "Identifiant de partie",
+      "COPY": "Copier",
+      "COPIED": "✓ Copié",
+      "COPY_ARIA": "Copier l'identifiant de la partie dans le presse-papiers",
+      "COPIED_ARIA": "Copié",
+      "VIEW_RECORD": "Voir le dossier de la partie",
+      "CREATE_ANOTHER": "En créer un autre",
+      "ERROR": {
+        "LOAD_TERMS": "Impossible de charger les conditions de facturation. Veuillez réessayer.",
+        "JUSTIFICATION_REQUIRED": "La justification est requise.",
+        "LEGAL_NAME_REQUIRED": "La dénomination sociale est requise.",
+        "BILLING_TERMS_REQUIRED": "Les conditions de facturation sont requises.",
+        "CLIPBOARD_UNSUPPORTED": "La copie dans le presse-papiers n'est pas prise en charge dans cet environnement. Copiez l'identifiant manuellement.",
+        "CLIPBOARD_FAILED": "Impossible de copier l'identifiant de la partie dans le presse-papiers. Copiez-le manuellement."
+      }
+    },
+    "MERGE_PARTIES": {
+      "TITLE": "Fusionner les parties en double",
+      "BACK": "← Retour au CRM",
+      "SUBTITLE": "Trouvez deux dossiers et fusionnez-les en une seule partie survivante.",
+      "STEP_SEARCH": "Étape 1 : Recherche",
+      "SEARCH_HINT": "Sélectionnez exactement deux parties à fusionner.",
+      "FIELD_NAME": "Nom",
+      "FIELD_EMAIL": "Courriel",
+      "FIELD_PHONE": "Téléphone",
+      "SEARCH": "Rechercher",
+      "CLEAR": "Effacer",
+      "SEARCHING": "Recherche des parties...",
+      "SEARCHING_ARIA": "Recherche des parties",
+      "EMPTY": "Aucun résultat trouvé. Essayez d'autres critères de recherche.",
+      "FORBIDDEN": "Vous n'avez pas la permission de rechercher des parties.",
+      "RESULTS_TABLE_ARIA": "Résultats de recherche pour la fusion",
+      "SELECT_ROW": "Sélectionner {{name}}",
+      "MERGED_BADGE": "Fusionnée",
+      "SELECTION_COUNT": "{{count}} sur 2 sélectionnées",
+      "CONTINUE": "Continuer vers la fusion",
+      "STEP_CONFIRM": "Confirmer la fusion",
+      "SURVIVOR_GROUP_ARIA": "Choisir la partie survivante",
+      "KEEP_SURVIVOR": "Conserver comme survivante",
+      "FIELD_JUSTIFICATION": "Motif de la fusion *",
+      "ACKNOWLEDGE": "Je comprends que cette fusion est irréversible.",
+      "BACK_STEP": "Retour",
+      "MERGE": "Fusionner les parties",
+      "SUCCESS_TITLE": "Les parties ont été fusionnées avec succès.",
+      "SURVIVOR_ID": "Identifiant de la partie survivante :",
+      "SOURCE_ID": "Identifiant de la partie source :",
+      "VIEW_SURVIVOR": "Voir la partie survivante",
+      "START_NEW": "Démarrer une nouvelle fusion",
+      "TYPE": {
+        "COMMERCIAL": "COMMERCIAL",
+        "INDIVIDUAL": "PARTICULIER"
+      },
+      "COL": {
+        "SELECT": "Sélectionner",
+        "DISPLAY_NAME": "Nom affiché",
+        "PARTY_ID": "Identifiant de partie",
+        "PARTY_TYPE": "Type de partie",
+        "EMAIL": "Courriel",
+        "PHONE": "Téléphone"
+      },
+      "CARD": {
+        "PARTY_ID": "Identifiant de partie :",
+        "TYPE": "Type :",
+        "EMAIL": "Courriel :",
+        "PHONE": "Téléphone :"
+      },
+      "ERROR": {
+        "SEARCH": "La recherche a échoué. Veuillez réessayer.",
+        "SEARCH_FIELD_REQUIRED": "Saisissez au moins un champ de recherche.",
+        "NO_LOSING_PARTY": "Impossible d'identifier la partie fusionnée.",
+        "MERGE": "La fusion a échoué."
+      }
+    },
+    "PARTY_CONTACTS": {
+      "BACK": "← Retour à la partie",
+      "TITLE": "Contacts et rôles",
+      "PARTY_FORBIDDEN": "Vous n'avez pas la permission de consulter l'en-tête de ce compte.",
+      "TOOLBAR_ARIA": "Filtres et actions des contacts",
+      "FILTER_STATUS": "Statut",
+      "FILTER_ROLE": "Rôle",
+      "ROLE_ALL": "Tous",
+      "SEARCH_LABEL": "Rechercher des contacts",
+      "SEARCH_PLACEHOLDER": "Rechercher des contacts...",
+      "ADD_CONTACT": "Ajouter un contact",
+      "LOADING_ARIA": "Chargement des contacts...",
+      "RETRY": "Réessayer",
+      "FORBIDDEN": "Vous n'avez pas la permission de consulter les contacts de ce compte.",
+      "EMPTY_TITLE": "Aucun contact trouvé",
+      "EMPTY_BODY": "Essayez de modifier les filtres ou ajoutez une nouvelle relation de contact.",
+      "TABLE_ARIA": "Contacts et rôles",
+      "NO_EMAIL": "Aucun courriel",
+      "PRIMARY_BILLING_SR": "Contact principal de facturation",
+      "NO": "Non",
+      "SET_PRIMARY": "Définir comme principal",
+      "DEACTIVATE": "Désactiver",
+      "PAGINATION_ARIA": "Pagination des contacts",
+      "SHOWING_RANGE": "Affichage de {{from}}-{{to}} sur {{total}}",
+      "PREV": "Précédent",
+      "NEXT": "Suivant",
+      "MODAL_TITLE": "Ajouter un contact",
+      "FIELD_PERSON": "Personne",
+      "PERSON_PLACEHOLDER": "Rechercher des personnes par nom…",
+      "SEARCHING": "Recherche…",
+      "NO_MATCHES": "Aucune personne correspondante",
+      "FIELD_ROLE": "Rôle",
+      "FIELD_EFFECTIVE_FROM": "En vigueur à partir du",
+      "FIELD_PRIMARY_BILLING": "Contact principal de facturation",
+      "SAVE": "Enregistrer",
+      "CANCEL": "Annuler",
+      "STATUS": {
+        "ACTIVE": "Actif",
+        "INACTIVE": "Inactif",
+        "ALL": "Tous"
+      },
+      "COL": {
+        "PERSON": "Personne",
+        "ROLE": "Rôle",
+        "EFFECTIVE_FROM": "En vigueur à partir du",
+        "EFFECTIVE_THRU": "En vigueur jusqu'au",
+        "PRIMARY_BILLING": "Facturation principale",
+        "ACTIONS": "Actions"
+      },
+      "TOAST": {
+        "ADDED": "Relation de contact ajoutée.",
+        "PRIMARY_SET": "Contact principal de facturation mis à jour.",
+        "DEACTIVATED": "Relation désactivée."
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger les contacts et les rôles.",
+        "PERSON_REQUIRED": "Sélectionnez une personne dans la liste.",
+        "SAVE": "Impossible d'enregistrer la relation de contact.",
+        "SET_PRIMARY": "Impossible de définir le contact principal de facturation.",
+        "DEACTIVATE": "Impossible de désactiver la relation."
       }
     }
   },
@@ -960,6 +1537,27 @@
           "LOCATION": "Emplacement"
         }
       }
+    },
+    "USER_PROVISION": {
+      "OVERLINE": "Administration de la sécurité",
+      "TITLE": "Provisionner un utilisateur",
+      "LINKED_PERSON": "Provisionnement du compte pour la personne : {{personId}}",
+      "LOADING": "Chargement des rôles...",
+      "SUCCESS": "Utilisateur provisionné. Identifiant d'utilisateur : {{userId}}",
+      "ACCOUNT_DETAILS": "Détails du compte",
+      "SUBMITTING": "Provisionnement...",
+      "SUBMIT": "Provisionner l'utilisateur",
+      "FIELD": {
+        "USERNAME": "Nom d'utilisateur",
+        "ROLE": "Rôle",
+        "ROLE_PLACEHOLDER": "Sélectionner un rôle"
+      },
+      "ERROR": {
+        "USERNAME_INVALID": "Une adresse e-mail d'utilisateur valide est requise.",
+        "ROLE_REQUIRED": "Le rôle est obligatoire.",
+        "LOAD_ROLES": "Impossible de charger les rôles.",
+        "PROVISION": "Impossible de provisionner l'utilisateur."
+      }
     }
   },
   "LOCATION": {
@@ -984,7 +1582,12 @@
       "COL_CREATED_AT": "Créé le",
       "COL_CORRELATION_ID": "ID de corrélation",
       "ACTIVE": "Actif",
-      "INACTIVE": "Inactif"
+      "INACTIVE": "Inactif",
+      "ERROR": {
+        "LOAD_LOCATIONS": "Impossible de charger les emplacements d'inventaire.",
+        "LOAD_LOGS": "Impossible de charger les journaux de synchronisation.",
+        "TRIGGER": "Impossible de déclencher la synchronisation des emplacements."
+      }
     },
     "LOCATIONS": {
       "TITLE": "Emplacements",
@@ -1147,7 +1750,121 @@
     },
     "STORAGE": {
       "LABEL": "Emplacement",
-      "PROMPT": "Sélectionnez un emplacement pour afficher et modifier ses emplacements de stockage."
+      "PROMPT": "Sélectionnez un emplacement pour afficher et modifier ses emplacements de stockage.",
+      "TITLE": "Emplacements de stockage",
+      "ADD": "Ajouter un emplacement de stockage",
+      "LOADING": "Chargement...",
+      "CREATE_SUCCESS": "Emplacement de stockage créé.",
+      "EMPTY": "Aucun emplacement de stockage trouvé.",
+      "DEACTIVATE": "Désactiver",
+      "PREVIOUS": "Précédent",
+      "NEXT": "Suivant",
+      "PAGE_STATUS": "Page {{page}} sur {{total}} ({{count}} au total)",
+      "CREATE_TITLE": "Nouvel emplacement de stockage",
+      "FIELD_NAME": "Nom (requis)",
+      "FIELD_STORAGE_TYPE": "Type de stockage (requis)",
+      "SELECT_TYPE": "Sélectionner un type de stockage",
+      "FIELD_PARENT": "Identifiant de l'emplacement de stockage parent (facultatif)",
+      "FIELD_BARCODE": "Code-barres (facultatif)",
+      "FIELD_DESTINATION": "Identifiant de l'emplacement de stockage de destination (requis)",
+      "CANCEL": "Annuler",
+      "CREATE": "Créer un emplacement de stockage",
+      "CREATING": "Création...",
+      "DEACTIVATE_TITLE": "Désactiver l'emplacement de stockage",
+      "DEACTIVATE_PROMPT": "Désactiver :",
+      "CONFIRM_DEACTIVATE": "Confirmer la désactivation",
+      "DEACTIVATING": "Désactivation...",
+      "COL": {
+        "NAME": "Nom",
+        "TYPE": "Type",
+        "BARCODE": "Code-barres",
+        "STATUS": "Statut",
+        "INVENTORY": "Inventaire",
+        "ACTIONS": "Actions",
+        "SKU": "UGS",
+        "ON_HAND": "En stock"
+      },
+      "ARIA": {
+        "PAGINATION": "Pagination des emplacements de stockage",
+        "SHOW_CONTENTS": "Afficher le contenu, {{count}} en stock",
+        "HIDE_CONTENTS": "Masquer le contenu, {{count}} en stock"
+      },
+      "ERROR": {
+        "NAME_REQUIRED": "Le nom est requis.",
+        "TYPE_REQUIRED": "Le type de stockage est requis.",
+        "DESTINATION_REQUIRED_HINT": "Une destination est requise pour les emplacements de stockage non vides.",
+        "DESTINATION_REQUIRED": "Destination requise.",
+        "ID_REQUIRED": "L'identifiant de l'emplacement de stockage est requis.",
+        "LOAD": "Impossible de charger les emplacements de stockage.",
+        "CREATE": "Impossible de créer l'emplacement de stockage.",
+        "DEACTIVATE": "Impossible de désactiver l'emplacement de stockage."
+      }
+    },
+    "DEFAULTS": {
+      "TITLE": "Emplacements par défaut du site",
+      "LOADING": "Chargement...",
+      "RELOAD": "Recharger",
+      "CURRENT_TITLE": "Valeurs par défaut actuelles",
+      "STAGING": "Préparation",
+      "QUARANTINE": "Quarantaine",
+      "NOT_CONFIGURED": "Non configuré",
+      "VERSION": "Version",
+      "UPDATE_TITLE": "Mettre à jour les valeurs par défaut",
+      "STORAGE_LOADING": "Chargement des emplacements de stockage...",
+      "FIELD_STAGING": "Emplacement de préparation par défaut",
+      "FIELD_QUARANTINE": "Emplacement de quarantaine par défaut",
+      "SELECT_PLACEHOLDER": "Sélectionner un emplacement de stockage",
+      "SAVING": "Enregistrement...",
+      "SAVE": "Enregistrer les valeurs par défaut",
+      "SAVE_SUCCESS": "Emplacements par défaut enregistrés.",
+      "ERROR": {
+        "STAGING_REQUIRED": "L'emplacement de préparation est requis.",
+        "QUARANTINE_REQUIRED": "L'emplacement de quarantaine est requis.",
+        "SAME_LOCATION": "Les emplacements de préparation et de quarantaine doivent être différents.",
+        "LOCATION_ID_REQUIRED": "L'identifiant d'emplacement est requis.",
+        "LOAD_DEFAULTS": "Impossible de charger les emplacements par défaut.",
+        "LOAD_STORAGE": "Impossible de charger les emplacements de stockage.",
+        "SAVE": "Impossible d'enregistrer les emplacements par défaut.",
+        "ROLE_CONFLICT": "Les emplacements par défaut doivent être distincts.",
+        "CONFLICT": "Un autre utilisateur a mis à jour cette configuration. Veuillez recharger.",
+        "FORBIDDEN": "Non autorisé."
+      }
+    },
+    "EDIT": {
+      "OVERLINE": "Gestion des emplacements",
+      "TITLE_EDIT": "Modifier l'emplacement",
+      "TITLE_CREATE": "Créer un emplacement",
+      "LOADING": "Chargement des détails de l'emplacement...",
+      "SAVE_SUCCESS": "Emplacement enregistré avec succès.",
+      "DETAILS_LEGEND": "Détails de l'emplacement",
+      "FIELD_NAME": "Nom",
+      "FIELD_CODE": "Code",
+      "FIELD_TIMEZONE": "Fuseau horaire",
+      "FIELD_TYPE": "Type",
+      "HIERARCHY_LEGEND": "Hiérarchie et statut",
+      "FIELD_PARENT": "Identifiant de l'emplacement parent",
+      "FIELD_STATUS": "Statut",
+      "SAVING": "Enregistrement...",
+      "SAVE": "Enregistrer l'emplacement",
+      "TYPE": {
+        "STORE": "Magasin",
+        "WAREHOUSE": "Entrepôt",
+        "OFFICE": "Bureau",
+        "SERVICE_CENTER": "Centre de service"
+      },
+      "STATUS": {
+        "ACTIVE": "Actif",
+        "INACTIVE": "Inactif",
+        "SUSPENDED": "Suspendu"
+      },
+      "ERROR": {
+        "NAME_REQUIRED": "Le nom est requis.",
+        "CODE_REQUIRED": "Le code est requis.",
+        "TIMEZONE_REQUIRED": "Le fuseau horaire est requis.",
+        "LOAD": "Impossible de charger l'emplacement.",
+        "SAVE": "Impossible d'enregistrer l'emplacement.",
+        "DUPLICATE": "Un emplacement avec ce code ou ce nom existe déjà."
+      }
     }
   },
   "SHOPMGMT": {
@@ -1788,6 +2505,13 @@
       "FIELD_GROSS_AMOUNT": "Montant brut",
       "FIELD_CURRENCY": "Currency",
       "FIELD_PAYMENT_METHOD": "Mode de paiement",
+      "PAYMENT_METHOD": {
+        "ACH": "ACH",
+        "CHECK": "Chèque",
+        "WIRE": "Virement bancaire",
+        "CREDIT_CARD": "Carte de crédit",
+        "OTHER": "Autre"
+      },
       "FIELD_PAYMENT_REF": "Référence de paiement",
       "FIELD_ALLOCATIONS": "JSON des allocations",
       "SUBMIT": "Soumettre le paiement",
@@ -5041,29 +5765,29 @@
       "TITLE": "Paiement",
       "METHOD": {
         "LABEL": "Mode de paiement",
-        "CARD": "Carte de credit/debit",
-        "CASH": "Especes",
-        "CHECK": "Cheque",
-        "CREDIT_ACCOUNT": "Compte de credit"
+        "CARD": "Carte de crédit/débit",
+        "CASH": "Espèces",
+        "CHECK": "Chèque",
+        "CREDIT_ACCOUNT": "Compte de crédit"
       },
       "AMOUNT_LABEL": "Montant",
       "ACTION": {
         "CAPTURE": "Autoriser et capturer",
         "VOID": "Annuler l'autorisation",
         "REFUND": "Traiter le remboursement",
-        "PRINT_RECEIPT": "Imprimer le recu"
+        "PRINT_RECEIPT": "Imprimer le reçu"
       },
       "MODE": {
         "LABEL": "Sélectionner l'action de paiement"
       },
       "SUBMITTING": "Traitement en cours...",
-      "IDLE": "Selectionnez un mode de paiement pour commencer.",
+      "IDLE": "Sélectionnez un mode de paiement pour commencer.",
       "FIELD": {
         "TRANSACTION_ID": "ID de transaction",
         "AUTH_CODE": "Code d'autorisation",
         "STATUS": "Statut",
         "AMOUNT": "Montant",
-        "CAPTURED_AT": "Capture le"
+        "CAPTURED_AT": "Capturé le"
       },
       "VOID": {
         "TITLE": "Annuler l'autorisation",
@@ -5077,9 +5801,9 @@
         "AMOUNT_LABEL": "Montant du remboursement (laisser vide pour un remboursement complet)"
       },
       "ERROR": {
-        "CAPTURE": "Impossible de traiter le paiement. Veuillez reessayer.",
-        "VOID": "Impossible d'annuler l'autorisation. Veuillez reessayer.",
-        "REFUND": "Impossible de traiter le remboursement. Veuillez reessayer.",
+        "CAPTURE": "Impossible de traiter le paiement. Veuillez réessayer.",
+        "VOID": "Impossible d'annuler l'autorisation. Veuillez réessayer.",
+        "REFUND": "Impossible de traiter le remboursement. Veuillez réessayer.",
         "MISSING_IDS": "Référence de paiement ou de facture invalide."
       }
     },

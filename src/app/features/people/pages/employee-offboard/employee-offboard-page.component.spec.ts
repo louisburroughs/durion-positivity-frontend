@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NEVER, Observable, of, throwError } from 'rxjs';
 
 import { EmployeeOffboardPageComponent } from './employee-offboard-page.component';
@@ -43,7 +44,7 @@ async function setup(opts: {
   stubPeopleService.disableEmployee.mockReturnValue(disableEmployeeReturn);
 
   await TestBed.configureTestingModule({
-    imports: [EmployeeOffboardPageComponent],
+    imports: [EmployeeOffboardPageComponent, TranslateModule.forRoot()],
     providers: [
       provideRouter([]),
       { provide: PeopleService, useValue: stubPeopleService },
@@ -54,12 +55,28 @@ async function setup(opts: {
     ],
   }).compileComponents();
 
+  const translate = TestBed.inject(TranslateService);
+  translate.setTranslation('en-US', TRANSLATIONS);
+  translate.use('en-US');
+
   const fixture = TestBed.createComponent(EmployeeOffboardPageComponent);
   const component = fixture.componentInstance;
   return { fixture, component };
 }
 
 // ── Test Suite ────────────────────────────────────────────────────────────
+
+// Mirrors the PEOPLE.OFFBOARD keys these assertions read back.
+const TRANSLATIONS = {
+  PEOPLE: {
+    OFFBOARD: {
+      ERROR: {
+        LOAD: 'Failed to load employee.',
+        DISABLE: 'Failed to disable employee. Please try again.',
+      },
+    },
+  },
+};
 
 describe('EmployeeOffboardPageComponent', () => {
   afterEach(() => {

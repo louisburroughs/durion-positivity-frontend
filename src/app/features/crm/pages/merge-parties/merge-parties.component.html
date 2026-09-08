@@ -1,24 +1,24 @@
-<article class="crm-page merge-parties" aria-label="Merge Duplicate Parties">
-  <button class="btn-ghost back-btn" type="button" (click)="back()">← Back to CRM</button>
+<article class="crm-page merge-parties" [attr.aria-label]="'CRM.MERGE_PARTIES.TITLE' | translate">
+  <button class="btn-ghost back-btn" type="button" (click)="back()">{{ 'CRM.MERGE_PARTIES.BACK' | translate }}</button>
 
   <header class="page-head">
-    <h1>Merge Duplicate Parties</h1>
-    <p class="page-subtitle">Find two records and merge them into a single survivor party.</p>
+    <h1>{{ 'CRM.MERGE_PARTIES.TITLE' | translate }}</h1>
+    <p class="page-subtitle">{{ 'CRM.MERGE_PARTIES.SUBTITLE' | translate }}</p>
   </header>
 
   @if (step() === 'search') {
     <section class="step-panel" aria-labelledby="search-step-heading">
-      <h2 id="search-step-heading">Step 1: Search</h2>
-      <p>Select exactly two parties to merge.</p>
+      <h2 id="search-step-heading">{{ 'CRM.MERGE_PARTIES.STEP_SEARCH' | translate }}</h2>
+      <p>{{ 'CRM.MERGE_PARTIES.SEARCH_HINT' | translate }}</p>
 
       <form [formGroup]="searchForm" class="search-form" novalidate>
-        <label class="field-label" for="searchName">Name</label>
+        <label class="field-label" for="searchName">{{ 'CRM.MERGE_PARTIES.FIELD_NAME' | translate }}</label>
         <input id="searchName" class="field-input" type="text" formControlName="name" />
 
-        <label class="field-label" for="searchEmail">Email</label>
+        <label class="field-label" for="searchEmail">{{ 'CRM.MERGE_PARTIES.FIELD_EMAIL' | translate }}</label>
         <input id="searchEmail" class="field-input" type="email" formControlName="email" />
 
-        <label class="field-label" for="searchPhone">Phone</label>
+        <label class="field-label" for="searchPhone">{{ 'CRM.MERGE_PARTIES.FIELD_PHONE' | translate }}</label>
         <input id="searchPhone" class="field-input" type="text" formControlName="phone" />
 
         @if (searchError()) {
@@ -26,45 +26,47 @@
         }
 
         <div class="actions-row">
-          <button type="button" class="btn-primary" (click)="search()">Search</button>
-          <button type="button" class="btn-ghost" (click)="startNewMerge()">Clear</button>
+          <button type="button" class="btn-primary" (click)="search()">{{ 'CRM.MERGE_PARTIES.SEARCH' | translate }}</button>
+          <button type="button" class="btn-ghost" (click)="startNewMerge()">{{ 'CRM.MERGE_PARTIES.CLEAR' | translate }}</button>
         </div>
       </form>
 
       @if (searchState() === 'loading') {
-        <div class="loading-state" role="status" aria-label="Searching for parties" aria-busy="true">Searching parties...</div>
+        <div class="loading-state" role="status" aria-busy="true"
+          [attr.aria-label]="'CRM.MERGE_PARTIES.SEARCHING_ARIA' | translate">{{ 'CRM.MERGE_PARTIES.SEARCHING' | translate }}</div>
       }
 
       @if (searchState() === 'empty') {
-        <div class="empty-state">No results found. Try different search criteria.</div>
+        <div class="empty-state">{{ 'CRM.MERGE_PARTIES.EMPTY' | translate }}</div>
       }
 
       @if (searchState() === 'error') {
-        <div class="error-state" role="alert">Search failed. Please try again.</div>
+        <div class="error-state" role="alert">{{ 'CRM.MERGE_PARTIES.ERROR.SEARCH' | translate }}</div>
       }
 
       @if (searchState() === 'access-denied') {
-        <div class="error-state" role="alert">You don't have permission to search parties.</div>
+        <div class="error-state" role="alert">{{ 'CRM.MERGE_PARTIES.FORBIDDEN' | translate }}</div>
       }
 
       @if (searchState() === 'ready' && searchResults().length > 0) {
         <div class="table-wrap">
-          <table class="data-blueprint-table" aria-label="Merge search results">
+          <table class="data-blueprint-table" [attr.aria-label]="'CRM.MERGE_PARTIES.RESULTS_TABLE_ARIA' | translate">
             <thead>
               <tr>
-                <th scope="col">Select</th>
-                <th scope="col">Display Name</th>
-                <th scope="col">Party ID</th>
-                <th scope="col">Party Type</th>
-                <th scope="col">Email</th>
-                <th scope="col">Phone</th>
+                <th scope="col">{{ 'CRM.MERGE_PARTIES.COL.SELECT' | translate }}</th>
+                <th scope="col">{{ 'CRM.MERGE_PARTIES.COL.DISPLAY_NAME' | translate }}</th>
+                <th scope="col">{{ 'CRM.MERGE_PARTIES.COL.PARTY_ID' | translate }}</th>
+                <th scope="col">{{ 'CRM.MERGE_PARTIES.COL.PARTY_TYPE' | translate }}</th>
+                <th scope="col">{{ 'CRM.MERGE_PARTIES.COL.EMAIL' | translate }}</th>
+                <th scope="col">{{ 'CRM.MERGE_PARTIES.COL.PHONE' | translate }}</th>
               </tr>
             </thead>
             <tbody>
               @for (party of searchResults(); track party.partyId) {
                 <tr>
                   <td>
-                    <label class="sr-only" [for]="'select-' + party.partyId">Select {{ party.legalName }}</label>
+                    <label class="sr-only" [for]="'select-' + party.partyId">{{
+                      'CRM.MERGE_PARTIES.SELECT_ROW' | translate: { name: party.legalName } }}</label>
                     <input
                       [id]="'select-' + party.partyId"
                       type="checkbox"
@@ -76,11 +78,11 @@
                   <td>
                     {{ party.legalName }}
                     @if (party.mergedIntoPartyId) {
-                      <span class="badge-muted">Merged</span>
+                      <span class="badge-muted">{{ 'CRM.MERGE_PARTIES.MERGED_BADGE' | translate }}</span>
                     }
                   </td>
                   <td>{{ party.partyId }}</td>
-                  <td>{{ party.taxId ? 'COMMERCIAL' : 'INDIVIDUAL' }}</td>
+                  <td>{{ (party.taxId ? 'CRM.MERGE_PARTIES.TYPE.COMMERCIAL' : 'CRM.MERGE_PARTIES.TYPE.INDIVIDUAL') | translate }}</td>
                   <td>{{ party.contacts?.[0]?.email || '—' }}</td>
                   <td>{{ party.contacts?.[0]?.phone || '—' }}</td>
                 </tr>
@@ -92,9 +94,9 @@
 
       @if (selectedParties().length > 0) {
         <footer class="selection-bar" aria-live="polite">
-          <span>{{ selectedParties().length }} of 2 selected</span>
+          <span>{{ 'CRM.MERGE_PARTIES.SELECTION_COUNT' | translate: { count: selectedParties().length } }}</span>
           <button type="button" class="btn-primary" [disabled]="!canContinue()" (click)="continueToConfirm()">
-            Continue to Merge
+            {{ 'CRM.MERGE_PARTIES.CONTINUE' | translate }}
           </button>
         </footer>
       }
@@ -103,16 +105,16 @@
 
   @if (step() === 'confirm') {
     <section class="step-panel" aria-labelledby="confirm-step-heading">
-      <h2 id="confirm-step-heading">Confirm Merge</h2>
+      <h2 id="confirm-step-heading">{{ 'CRM.MERGE_PARTIES.STEP_CONFIRM' | translate }}</h2>
 
-      <div class="party-cards" role="radiogroup" aria-label="Choose survivor party">
+      <div class="party-cards" role="radiogroup" [attr.aria-label]="'CRM.MERGE_PARTIES.SURVIVOR_GROUP_ARIA' | translate">
         @for (party of selectedParties(); track party.partyId) {
           <article class="party-card">
             <h3>{{ party.legalName }}</h3>
-            <p><strong>Party ID:</strong> {{ party.partyId }}</p>
-            <p><strong>Type:</strong> {{ party.taxId ? 'COMMERCIAL' : 'INDIVIDUAL' }}</p>
-            <p><strong>Email:</strong> {{ party.contacts?.[0]?.email || '—' }}</p>
-            <p><strong>Phone:</strong> {{ party.contacts?.[0]?.phone || '—' }}</p>
+            <p><strong>{{ 'CRM.MERGE_PARTIES.CARD.PARTY_ID' | translate }}</strong> {{ party.partyId }}</p>
+            <p><strong>{{ 'CRM.MERGE_PARTIES.CARD.TYPE' | translate }}</strong> {{ (party.taxId ? 'CRM.MERGE_PARTIES.TYPE.COMMERCIAL' : 'CRM.MERGE_PARTIES.TYPE.INDIVIDUAL') | translate }}</p>
+            <p><strong>{{ 'CRM.MERGE_PARTIES.CARD.EMAIL' | translate }}</strong> {{ party.contacts?.[0]?.email || '—' }}</p>
+            <p><strong>{{ 'CRM.MERGE_PARTIES.CARD.PHONE' | translate }}</strong> {{ party.contacts?.[0]?.phone || '—' }}</p>
             <label class="survivor-choice">
               <input
                 type="radio"
@@ -120,19 +122,19 @@
                 [checked]="survivorPartyId() === party.partyId"
                 (change)="setSurvivor(party.partyId)"
               />
-              <span>Keep as survivor</span>
+              <span>{{ 'CRM.MERGE_PARTIES.KEEP_SURVIVOR' | translate }}</span>
             </label>
           </article>
         }
       </div>
 
       <form [formGroup]="confirmForm" class="confirm-form" novalidate>
-        <label class="field-label" for="justification">Reason for merge *</label>
+        <label class="field-label" for="justification">{{ 'CRM.MERGE_PARTIES.FIELD_JUSTIFICATION' | translate }}</label>
         <textarea id="justification" class="field-input" formControlName="justification" rows="4"></textarea>
 
         <label class="ack-row" for="acknowledged">
           <input id="acknowledged" type="checkbox" formControlName="acknowledged" />
-          <span>I understand this merge is irreversible.</span>
+          <span>{{ 'CRM.MERGE_PARTIES.ACKNOWLEDGE' | translate }}</span>
         </label>
       </form>
 
@@ -141,14 +143,14 @@
       }
 
       <div class="actions-row">
-        <button type="button" class="btn-ghost" (click)="backToSearch()">Back</button>
+        <button type="button" class="btn-ghost" (click)="backToSearch()">{{ 'CRM.MERGE_PARTIES.BACK_STEP' | translate }}</button>
         <button
           type="button"
           class="btn-primary"
           [disabled]="!canMerge() || confirmPending()"
           (click)="submitMerge()"
         >
-          Merge Parties
+          {{ 'CRM.MERGE_PARTIES.MERGE' | translate }}
         </button>
       </div>
     </section>
@@ -156,12 +158,12 @@
 
   @if (step() === 'success') {
     <section class="step-panel success-panel" aria-live="polite">
-      <h2>Parties merged successfully.</h2>
-      <p><strong>Survivor Party ID:</strong> {{ mergeResult()?.survivorPartyId }}</p>
-      <p><strong>Source Party ID:</strong> {{ mergeResult()?.losingPartyId }}</p>
+      <h2>{{ 'CRM.MERGE_PARTIES.SUCCESS_TITLE' | translate }}</h2>
+      <p><strong>{{ 'CRM.MERGE_PARTIES.SURVIVOR_ID' | translate }}</strong> {{ mergeResult()?.survivorPartyId }}</p>
+      <p><strong>{{ 'CRM.MERGE_PARTIES.SOURCE_ID' | translate }}</strong> {{ mergeResult()?.losingPartyId }}</p>
       <div class="actions-row">
-        <button type="button" class="btn-primary" (click)="viewSurvivor()">View Survivor Party</button>
-        <button type="button" class="btn-ghost" (click)="startNewMerge()">Start New Merge</button>
+        <button type="button" class="btn-primary" (click)="viewSurvivor()">{{ 'CRM.MERGE_PARTIES.VIEW_SURVIVOR' | translate }}</button>
+        <button type="button" class="btn-ghost" (click)="startNewMerge()">{{ 'CRM.MERGE_PARTIES.START_NEW' | translate }}</button>
       </div>
     </section>
   }

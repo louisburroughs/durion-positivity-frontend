@@ -1,5 +1,6 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -47,13 +48,15 @@ describe('LocationDefaultsPageComponent [CAP-214 #102]', () => {
     stubLocationService.configureLocationDefaults.mockReturnValue(of({ ...DEFAULTS, version: 2 }));
 
     await TestBed.configureTestingModule({
-      imports: [LocationDefaultsPageComponent],
+      imports: [LocationDefaultsPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: LocationService, useValue: stubLocationService },
         { provide: ActivatedRoute, useValue: { params: of({ locationId: 'LOC-001' }) } },
       ],
     }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en-US');
 
     fixture = TestBed.createComponent(LocationDefaultsPageComponent);
     component = fixture.componentInstance;

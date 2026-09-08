@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { CrmService } from '../../services/crm.service';
 
@@ -9,11 +10,12 @@ type PageState = 'idle' | 'submitting' | 'success' | 'error' | 'access-denied';
 @Component({
   selector: 'app-create-individual-person',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './create-individual-person.component.html',
   styleUrl: './create-individual-person.component.css',
 })
 export class CreateIndividualPersonComponent {
+  private readonly translate = inject(TranslateService);
   private readonly fb     = inject(FormBuilder);
   private readonly crm    = inject(CrmService);
   private readonly router = inject(Router);
@@ -64,7 +66,7 @@ export class CreateIndividualPersonComponent {
     if (!id) return;
 
     if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
-      this.serverError.set('Clipboard is not available. Please copy the ID manually.');
+      this.serverError.set(this.translate.instant('CRM.CREATE_PERSON.ERROR.CLIPBOARD_UNSUPPORTED'));
       return;
     }
 
@@ -72,7 +74,7 @@ export class CreateIndividualPersonComponent {
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 2000);
     }).catch(() => {
-      this.serverError.set('Unable to copy ID to clipboard. Please copy it manually.');
+      this.serverError.set(this.translate.instant('CRM.CREATE_PERSON.ERROR.CLIPBOARD_FAILED'));
     });
   }
 

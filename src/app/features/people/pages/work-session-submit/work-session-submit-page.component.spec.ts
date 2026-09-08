@@ -1,8 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError, NEVER } from 'rxjs';
 import { WorkSessionSubmitPageComponent } from './work-session-submit-page.component';
 import { PeopleService } from '../../services/people.service';
+
+// Mirrors the PEOPLE.WORK_SESSION_SUBMIT keys these assertions read back.
+const TRANSLATIONS = {
+  PEOPLE: {
+    WORK_SESSION_SUBMIT: { TITLE: 'Submit Job Time' },
+  },
+};
 
 describe('WorkSessionSubmitPageComponent', () => {
   let fixture: ComponentFixture<WorkSessionSubmitPageComponent>;
@@ -17,12 +25,16 @@ describe('WorkSessionSubmitPageComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [WorkSessionSubmitPageComponent],
+      imports: [WorkSessionSubmitPageComponent, TranslateModule.forRoot()],
       providers: [
         { provide: PeopleService, useValue: peopleService },
         { provide: ActivatedRoute, useValue: { params: of({ sessionId: 'SESSION-1' }) } },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
 
     fixture = TestBed.createComponent(WorkSessionSubmitPageComponent);
     component = fixture.componentInstance;

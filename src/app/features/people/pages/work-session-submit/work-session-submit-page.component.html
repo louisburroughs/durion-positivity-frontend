@@ -1,53 +1,53 @@
 <main>
   <header class="page-header">
-    <h1>Submit Job Time</h1>
+    <h1>{{ 'PEOPLE.WORK_SESSION_SUBMIT.TITLE' | translate }}</h1>
   </header>
 
   <section class="card" data-testid="session-info">
-    <p>Session ID: <code data-testid="session-id-display">{{ sessionId() }}</code></p>
+    <p>{{ 'PEOPLE.WORK_SESSION_SUBMIT.SESSION_ID' | translate }} <code data-testid="session-id-display">{{ sessionId() }}</code></p>
   </section>
 
   @if (submitState() !== 'SUBMITTED') {
   <section class="card">
-    <h2>Submission Details</h2>
+    <h2>{{ 'PEOPLE.WORK_SESSION_SUBMIT.DETAILS_TITLE' | translate }}</h2>
     <form class="form-grid" [formGroup]="submitForm" (ngSubmit)="submitJobTime()">
       <div class="field">
-        <label for="billable-minutes">Billable Minutes</label>
+        <label for="billable-minutes">{{ 'PEOPLE.WORK_SESSION_SUBMIT.FIELD_BILLABLE' | translate }}</label>
         <input id="billable-minutes" type="number" formControlName="billableMinutes"
           aria-describedby="field-error-billable-minutes" />
         <span id="field-error-billable-minutes" aria-live="polite" role="alert">
           @if (submitForm.controls.billableMinutes.touched && submitForm.controls.billableMinutes.invalid) {
-          Billable minutes must be at least 1.
+          {{ 'PEOPLE.WORK_SESSION_SUBMIT.ERROR.BILLABLE_MIN' | translate }}
           }
         </span>
       </div>
 
       <div class="field">
-        <label for="break-minutes">Break Minutes</label>
+        <label for="break-minutes">{{ 'PEOPLE.WORK_SESSION_SUBMIT.FIELD_BREAK' | translate }}</label>
         <input id="break-minutes" type="number" formControlName="breakMinutes"
           aria-describedby="field-error-break-minutes" />
         <span id="field-error-break-minutes" aria-live="polite" role="alert">
           @if (submitForm.controls.breakMinutes.touched && submitForm.controls.breakMinutes.invalid) {
-          Break minutes must be 0 or greater.
+          {{ 'PEOPLE.WORK_SESSION_SUBMIT.ERROR.BREAK_MIN' | translate }}
           }
         </span>
       </div>
 
       <div class="field">
-        <label for="submitted-at">Submitted At</label>
+        <label for="submitted-at">{{ 'PEOPLE.WORK_SESSION_SUBMIT.FIELD_SUBMITTED_AT' | translate }}</label>
         <input id="submitted-at" type="datetime-local" formControlName="submittedAt"
           aria-describedby="field-error-submitted-at" />
         <span id="field-error-submitted-at" aria-live="polite" role="alert">
           @if (submitForm.controls.submittedAt.touched && submitForm.controls.submittedAt.invalid) {
-          Submitted time is required.
+          {{ 'PEOPLE.WORK_SESSION_SUBMIT.ERROR.SUBMITTED_AT_REQUIRED' | translate }}
           }
         </span>
       </div>
 
       <div class="button-row">
-        <button type="submit" [disabled]="!canSubmit()" data-testid="submit-btn">Submit Job Time</button>
+        <button type="submit" [disabled]="!canSubmit()" data-testid="submit-btn">{{ 'PEOPLE.WORK_SESSION_SUBMIT.SUBMIT' | translate }}</button>
         @if (submitState() === 'FAILED') {
-        <button type="button" (click)="retrySubmit()" data-testid="retry-btn">Retry</button>
+        <button type="button" (click)="retrySubmit()" data-testid="retry-btn">{{ 'PEOPLE.WORK_SESSION_SUBMIT.RETRY' | translate }}</button>
         }
       </div>
     </form>
@@ -55,22 +55,22 @@
   }
 
   @if (isSubmitting()) {
-  <p aria-live="polite" data-testid="submitting-indicator">Submitting…</p>
+  <p aria-live="polite" data-testid="submitting-indicator">{{ 'PEOPLE.WORK_SESSION_SUBMIT.SUBMITTING' | translate }}</p>
   }
 
   @if (submitState() !== 'NOT_SUBMITTED') {
   <output aria-live="polite" class="card" data-testid="result-panel">
     @if (submitState() === 'SUBMITTED') {
-    <p class="success-msg">Job time submitted successfully.</p>
+    <p class="success-msg">{{ 'PEOPLE.WORK_SESSION_SUBMIT.SUCCESS' | translate }}</p>
     @if (correlationId()) {
-    <p>Correlation ID: <code data-testid="correlation-id">{{ correlationId() }}</code></p>
+    <p>{{ 'PEOPLE.WORK_SESSION_SUBMIT.CORRELATION_ID' | translate }} <code data-testid="correlation-id">{{ correlationId() }}</code></p>
     }
     }
     @if (submitState() === 'FAILED') {
     <div role="alert" aria-live="polite" data-testid="error-panel">
-      <p>Submission failed.</p>
+      <p>{{ 'PEOPLE.WORK_SESSION_SUBMIT.FAILED' | translate }}</p>
       @if (errorCode()) {
-      <p>Code: <code data-testid="error-code">{{ errorCode() }}</code></p>
+      <p>{{ 'PEOPLE.WORK_SESSION_SUBMIT.CODE' | translate }} <code data-testid="error-code">{{ errorCode() }}</code></p>
       }
       @if (errorMessage()) {
       <p data-testid="error-message">{{ errorMessage() }}</p>
@@ -79,7 +79,7 @@
       <p data-testid="error-message-fallback">{{ submitError() }}</p>
       }
       @if (correlationId()) {
-      <p>Reference: <code data-testid="error-correlation-id">{{ correlationId() }}</code></p>
+      <p>{{ 'PEOPLE.WORK_SESSION_SUBMIT.REFERENCE' | translate }} <code data-testid="error-correlation-id">{{ correlationId() }}</code></p>
       }
     </div>
     }

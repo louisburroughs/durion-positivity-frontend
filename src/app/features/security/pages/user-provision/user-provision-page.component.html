@@ -1,63 +1,63 @@
 <main class="security-page user-provision-layout" aria-labelledby="provision-heading">
   <header class="page-header">
-    <p class="page-overline">Security Administration</p>
-    <h1 id="provision-heading">Provision User</h1>
+    <p class="page-overline">{{ 'SECURITY.USER_PROVISION.OVERLINE' | translate }}</p>
+    <h1 id="provision-heading">{{ 'SECURITY.USER_PROVISION.TITLE' | translate }}</h1>
   </header>
 
   @if (personId()) {
   <div class="alert alert--info" role="note" data-testid="linked-person-banner">
-    Provisioning account for person: {{ personId() }}
+    {{ 'SECURITY.USER_PROVISION.LINKED_PERSON' | translate: { personId: personId() } }}
   </div>
   <input type="hidden" data-testid="person-id-hidden" [value]="personId()" />
   }
 
   @if (loading()) {
   <section class="state-panel" aria-live="polite" aria-busy="true" data-testid="loading-indicator">
-    Loading roles...
+    {{ 'SECURITY.USER_PROVISION.LOADING' | translate }}
   </section>
   }
 
-  @if (error()) {
+  @if (errorKey()) {
   <section class="state-panel state-panel--error" role="alert">
-    {{ error() }}
+    {{ errorKey()! | translate }}
   </section>
   }
 
   @if (provisionedUserId()) {
   <section class="state-panel state-panel--success" data-testid="provision-success-state" aria-live="polite">
-    User provisioned. User ID: {{ provisionedUserId() }}
+    {{ 'SECURITY.USER_PROVISION.SUCCESS' | translate: { userId: provisionedUserId() } }}
   </section>
   }
 
   @if (!provisionedUserId()) {
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="provision-form">
     <fieldset class="form-section">
-      <legend>Account Details</legend>
+      <legend>{{ 'SECURITY.USER_PROVISION.ACCOUNT_DETAILS' | translate }}</legend>
 
       <div class="field-row"
         [class.field-error--visible]="form.get('username')?.invalid && form.get('username')?.touched">
-        <label for="provision-username">Username</label>
+        <label for="provision-username">{{ 'SECURITY.USER_PROVISION.FIELD.USERNAME' | translate }}</label>
         <input id="provision-username" type="email" formControlName="username" data-testid="username-input"
           autocomplete="username" />
         @if (fieldErrors()['username'] || (form.get('username')?.touched && form.get('username')?.invalid)) {
         <span class="field-error" role="alert" data-testid="field-error-username">
-          {{ fieldErrors()['username'] || 'A valid username email is required.' }}
+          {{ fieldErrors()['username'] || ('SECURITY.USER_PROVISION.ERROR.USERNAME_INVALID' | translate) }}
         </span>
         }
       </div>
 
       <div class="field-row"
         [class.field-error--visible]="form.get('roleName')?.invalid && form.get('roleName')?.touched">
-        <label for="provision-role">Role</label>
+        <label for="provision-role">{{ 'SECURITY.USER_PROVISION.FIELD.ROLE' | translate }}</label>
         <select id="provision-role" formControlName="roleName" data-testid="role-select">
-          <option value="" disabled>Select role</option>
+          <option value="" disabled>{{ 'SECURITY.USER_PROVISION.FIELD.ROLE_PLACEHOLDER' | translate }}</option>
           @for (role of roles(); track role.name) {
           <option [value]="role.name">{{ role.name }}</option>
           }
         </select>
         @if (fieldErrors()['roleName'] || (form.get('roleName')?.touched && form.get('roleName')?.invalid)) {
         <span class="field-error" role="alert" data-testid="field-error-role">
-          {{ fieldErrors()['roleName'] || 'Role is required.' }}
+          {{ fieldErrors()['roleName'] || ('SECURITY.USER_PROVISION.ERROR.ROLE_REQUIRED' | translate) }}
         </span>
         }
       </div>
@@ -66,9 +66,9 @@
     <footer class="form-footer">
       <button type="submit" class="btn btn--primary" data-testid="provision-submit-btn" [disabled]="submitting()">
         @if (submitting()) {
-        Provisioning...
+        {{ 'SECURITY.USER_PROVISION.SUBMITTING' | translate }}
         } @else {
-        Provision User
+        {{ 'SECURITY.USER_PROVISION.SUBMIT' | translate }}
         }
       </button>
     </footer>

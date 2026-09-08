@@ -1,64 +1,64 @@
 <main>
   <header class="page-header">
-    <h1>Attendance vs Job Time Discrepancy Report</h1>
+    <h1>{{ 'PEOPLE.DISCREPANCY.TITLE' | translate }}</h1>
   </header>
 
   <section>
-    <h2>Filters</h2>
+    <h2>{{ 'PEOPLE.DISCREPANCY.FILTERS_TITLE' | translate }}</h2>
     <form class="form-grid" [formGroup]="filterForm" (ngSubmit)="runReport()">
       <div class="field">
-        <label for="start-date">Start Date</label>
+        <label for="start-date">{{ 'PEOPLE.DISCREPANCY.FIELD_START_DATE' | translate }}</label>
         <input id="start-date" type="date" formControlName="startDate" required data-testid="start-date-input"
           aria-describedby="start-date-error" />
         @if (filterForm.controls.startDate.touched && filterForm.controls.startDate.invalid) {
-        <span id="start-date-error" role="alert">Start date is required.</span>
+        <span id="start-date-error" role="alert">{{ 'PEOPLE.DISCREPANCY.ERROR.START_REQUIRED' | translate }}</span>
         }
       </div>
 
       <div class="field">
-        <label for="end-date">End Date</label>
+        <label for="end-date">{{ 'PEOPLE.DISCREPANCY.FIELD_END_DATE' | translate }}</label>
         <input id="end-date" type="date" formControlName="endDate" required data-testid="end-date-input"
           aria-describedby="end-date-error" />
         @if (filterForm.controls.endDate.touched && filterForm.controls.endDate.invalid) {
-        <span id="end-date-error" role="alert">End date is required.</span>
+        <span id="end-date-error" role="alert">{{ 'PEOPLE.DISCREPANCY.ERROR.END_REQUIRED' | translate }}</span>
         }
       </div>
 
       <div class="field">
-        <label for="timezone">Timezone</label>
+        <label for="timezone">{{ 'PEOPLE.DISCREPANCY.FIELD_TIMEZONE' | translate }}</label>
         <input id="timezone" type="text" formControlName="timezone" required data-testid="timezone-input"
           aria-describedby="timezone-help" />
-        <span id="timezone-help">IANA timezone string (for example, UTC).</span>
+        <span id="timezone-help">{{ 'PEOPLE.DISCREPANCY.TIMEZONE_HELP' | translate }}</span>
       </div>
 
       <div class="field">
-        <label for="location-id">Location ID</label>
+        <label for="location-id">{{ 'PEOPLE.DISCREPANCY.FIELD_LOCATION_ID' | translate }}</label>
         <input id="location-id" type="text" formControlName="locationId" data-testid="location-id-input" />
       </div>
 
       <div class="field">
-        <label for="technician-ids">Technician IDs</label>
-        <input id="technician-ids" type="text" formControlName="technicianIds" placeholder="Comma-separated IDs"
+        <label for="technician-ids">{{ 'PEOPLE.DISCREPANCY.FIELD_TECHNICIAN_IDS' | translate }}</label>
+        <input id="technician-ids" type="text" formControlName="technicianIds" [placeholder]="'PEOPLE.DISCREPANCY.TECHNICIAN_IDS_PLACEHOLDER' | translate"
           data-testid="technician-ids-input" />
       </div>
 
       <div class="checkbox-item">
         <input id="flagged-only" type="checkbox" formControlName="flaggedOnly" (change)="toggleFlaggedOnly()"
           data-testid="flagged-only-checkbox" />
-        <label for="flagged-only">Flagged only</label>
+        <label for="flagged-only">{{ 'PEOPLE.DISCREPANCY.FIELD_FLAGGED_ONLY' | translate }}</label>
       </div>
 
       <div class="actions-row">
-        <button type="submit" [disabled]="loading()" data-testid="run-report-btn">Run Report</button>
+        <button type="submit" [disabled]="loading()" data-testid="run-report-btn">{{ 'PEOPLE.DISCREPANCY.RUN' | translate }}</button>
       </div>
     </form>
   </section>
 
   <section>
-    <h2>Results</h2>
+    <h2>{{ 'PEOPLE.DISCREPANCY.RESULTS_TITLE' | translate }}</h2>
 
     @if (loading()) {
-    <p data-testid="loading-indicator" aria-live="polite">Loading report...</p>
+    <p data-testid="loading-indicator" aria-live="polite">{{ 'PEOPLE.DISCREPANCY.LOADING' | translate }}</p>
     }
 
     @if (error()) {
@@ -66,7 +66,7 @@
     }
 
     @if (!loading() && rows().length === 0) {
-    <p data-testid="empty-state">No discrepancy rows found for the selected filters.</p>
+    <p data-testid="empty-state">{{ 'PEOPLE.DISCREPANCY.EMPTY' | translate }}</p>
     }
 
     @if (!loading() && rows().length > 0) {
@@ -76,35 +76,35 @@
           <tr>
             <th scope="col">
               <button type="button" (click)="sortBy('technicianName')">
-                Technician {{ sortIndicator('technicianName') }}
+                {{ 'PEOPLE.DISCREPANCY.COL.TECHNICIAN' | translate }} {{ sortIndicator('technicianName') }}
               </button>
             </th>
             <th scope="col">
               <button type="button" (click)="sortBy('locationId')">
-                Location {{ sortIndicator('locationId') }}
+                {{ 'PEOPLE.DISCREPANCY.COL.LOCATION' | translate }} {{ sortIndicator('locationId') }}
               </button>
             </th>
             <th scope="col">
               <button type="button" (click)="sortBy('reportDate')">
-                Report Date {{ sortIndicator('reportDate') }}
+                {{ 'PEOPLE.DISCREPANCY.COL.REPORT_DATE' | translate }} {{ sortIndicator('reportDate') }}
               </button>
             </th>
             <th scope="col">
               <button type="button" (click)="sortBy('totalAttendanceHours')">
-                Attendance Hours {{ sortIndicator('totalAttendanceHours') }}
+                {{ 'PEOPLE.DISCREPANCY.COL.ATTENDANCE_HOURS' | translate }} {{ sortIndicator('totalAttendanceHours') }}
               </button>
             </th>
             <th scope="col">
               <button type="button" (click)="sortBy('totalJobHours')">
-                Job Hours {{ sortIndicator('totalJobHours') }}
+                {{ 'PEOPLE.DISCREPANCY.COL.JOB_HOURS' | translate }} {{ sortIndicator('totalJobHours') }}
               </button>
             </th>
             <th scope="col">
               <button type="button" (click)="sortBy('discrepancyHours')">
-                Discrepancy {{ sortIndicator('discrepancyHours') }}
+                {{ 'PEOPLE.DISCREPANCY.COL.DISCREPANCY' | translate }} {{ sortIndicator('discrepancyHours') }}
               </button>
             </th>
-            <th scope="col">Flagged</th>
+            <th scope="col">{{ 'PEOPLE.DISCREPANCY.COL.FLAGGED' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -118,10 +118,10 @@
             <td>
               <div>{{ $any(row).discrepancyHours ?? '-' }}</div>
               @if ($any(row).thresholdApplied !== null && $any(row).thresholdApplied !== undefined) {
-              <small>Threshold applied: {{ $any(row).thresholdApplied }}</small>
+              <small>{{ 'PEOPLE.DISCREPANCY.THRESHOLD_APPLIED' | translate: { value: $any(row).thresholdApplied } }}</small>
               }
             </td>
-            <td>{{ $any(row).isFlagged ? 'Yes' : 'No' }}</td>
+            <td>{{ ($any(row).isFlagged ? 'PEOPLE.DISCREPANCY.YES' : 'PEOPLE.DISCREPANCY.NO') | translate }}</td>
           </tr>
           }
         </tbody>

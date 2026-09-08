@@ -3,17 +3,17 @@
   @if (isAccessDenied) {
     <section class="state-panel state-panel--denied" aria-live="assertive">
       <span class="state-icon" aria-hidden="true">🔒</span>
-      <h2>Access Denied</h2>
-      <p>You do not have permission to add vehicles to this party.</p>
-      <button class="btn btn--secondary" type="button" (click)="backToParty()">Back to Party</button>
+      <h2>{{ 'CRM.CREATE_VEHICLE.DENIED_TITLE' | translate }}</h2>
+      <p>{{ 'CRM.CREATE_VEHICLE.DENIED_BODY' | translate }}</p>
+      <button class="btn btn--secondary" type="button" (click)="backToParty()">{{ 'CRM.CREATE_VEHICLE.BACK_TO_PARTY' | translate }}</button>
     </section>
   }
 
   @if (!isAccessDenied && !isSuccess) {
     <header class="page-header">
-      <button class="btn btn--ghost btn--sm" type="button" (click)="backToParty()">← Back to Party</button>
-      <h1 id="page-heading">Add Vehicle</h1>
-      <p class="page-subtitle">Associate a vehicle with party <code>{{ partyId }}</code>.</p>
+      <button class="btn btn--ghost btn--sm" type="button" (click)="backToParty()">{{ 'CRM.CREATE_VEHICLE.BACK_TO_PARTY_ARROW' | translate }}</button>
+      <h1 id="page-heading">{{ 'CRM.CREATE_VEHICLE.TITLE' | translate }}</h1>
+      <p class="page-subtitle">{{ 'CRM.CREATE_VEHICLE.SUBTITLE' | translate }} <code>{{ partyId }}</code></p>
     </header>
 
     @if (isError && serverError()) {
@@ -22,49 +22,50 @@
       </div>
     }
 
-    <form [formGroup]="form" class="crm-form" (ngSubmit)="submit()" novalidate aria-label="Add vehicle form">
+    <form [formGroup]="form" class="crm-form" (ngSubmit)="submit()" novalidate
+      [attr.aria-label]="'CRM.CREATE_VEHICLE.FORM_ARIA' | translate">
       <fieldset class="form-section" [disabled]="isSubmitting">
-        <legend class="form-section__legend">Vehicle Details</legend>
+        <legend class="form-section__legend">{{ 'CRM.CREATE_VEHICLE.DETAILS_LEGEND' | translate }}</legend>
 
         <div class="field">
           <label for="vin" class="field__label">
-            VIN <span class="required-mark" aria-hidden="true">*</span>
+            {{ 'CRM.CREATE_VEHICLE.FIELD_VIN' | translate }} <span class="required-mark" aria-hidden="true">*</span>
           </label>
           <input
             id="vin"
             type="text"
             formControlName="vin"
             class="field__input"
-            placeholder="17-character Vehicle Identification Number"
+            [placeholder]="'CRM.CREATE_VEHICLE.VIN_PLACEHOLDER' | translate"
             maxlength="17"
             [attr.aria-invalid]="vinCtrl.invalid && vinCtrl.touched ? 'true' : null"
             aria-describedby="vin-err"
           />
           @if (vinCtrl.invalid && vinCtrl.touched) {
-            <span id="vin-err" class="field__error" role="alert">VIN is required.</span>
+            <span id="vin-err" class="field__error" role="alert">{{ 'CRM.CREATE_VEHICLE.ERROR.VIN_REQUIRED' | translate }}</span>
           }
         </div>
 
         <div class="field-row">
           <div class="field">
-            <label for="year" class="field__label">Year</label>
+            <label for="year" class="field__label">{{ 'CRM.CREATE_VEHICLE.FIELD_YEAR' | translate }}</label>
             <input id="year" type="number" formControlName="year" class="field__input"
-                   placeholder="e.g. 2022" min="1900" max="2100" />
+                   [placeholder]="'CRM.CREATE_VEHICLE.YEAR_PLACEHOLDER' | translate" min="1900" max="2100" />
           </div>
           <div class="field">
-            <label for="make" class="field__label">Make</label>
-            <input id="make" type="text" formControlName="make" class="field__input" placeholder="e.g. Ford" />
+            <label for="make" class="field__label">{{ 'CRM.CREATE_VEHICLE.FIELD_MAKE' | translate }}</label>
+            <input id="make" type="text" formControlName="make" class="field__input" [placeholder]="'CRM.CREATE_VEHICLE.MAKE_PLACEHOLDER' | translate" />
           </div>
           <div class="field">
-            <label for="model" class="field__label">Model</label>
-            <input id="model" type="text" formControlName="model" class="field__input" placeholder="e.g. F-150" />
+            <label for="model" class="field__label">{{ 'CRM.CREATE_VEHICLE.FIELD_MODEL' | translate }}</label>
+            <input id="model" type="text" formControlName="model" class="field__input" [placeholder]="'CRM.CREATE_VEHICLE.MODEL_PLACEHOLDER' | translate" />
           </div>
         </div>
 
         <div class="field">
-          <label for="unitNumber" class="field__label">Unit Number</label>
+          <label for="unitNumber" class="field__label">{{ 'CRM.CREATE_VEHICLE.FIELD_UNIT_NUMBER' | translate }}</label>
           <input id="unitNumber" type="text" formControlName="unitNumber" class="field__input"
-                 placeholder="Internal fleet unit number (optional)" />
+                 [placeholder]="'CRM.CREATE_VEHICLE.UNIT_NUMBER_PLACEHOLDER' | translate" />
         </div>
       </fieldset>
 
@@ -75,9 +76,9 @@
           [disabled]="isSubmitting || form.invalid"
           [attr.aria-busy]="isSubmitting"
         >
-          @if (isSubmitting) { Adding Vehicle… } @else { Add Vehicle }
+          {{ (isSubmitting ? 'CRM.CREATE_VEHICLE.SUBMITTING' : 'CRM.CREATE_VEHICLE.SUBMIT') | translate }}
         </button>
-        <button class="btn btn--ghost" type="button" (click)="backToParty()">Cancel</button>
+        <button class="btn btn--ghost" type="button" (click)="backToParty()">{{ 'CRM.CREATE_VEHICLE.CANCEL' | translate }}</button>
       </div>
     </form>
   }
@@ -85,11 +86,11 @@
   @if (isSuccess) {
     <section class="state-panel state-panel--success" aria-live="polite" aria-labelledby="vehicle-success">
       <span class="state-icon state-icon--success" aria-hidden="true">✓</span>
-      <h2 id="vehicle-success">Vehicle Added</h2>
-      <p class="hint-text">Vehicle ID: <code>{{ createdVehicleId() }}</code></p>
+      <h2 id="vehicle-success">{{ 'CRM.CREATE_VEHICLE.SUCCESS_TITLE' | translate }}</h2>
+      <p class="hint-text">{{ 'CRM.CREATE_VEHICLE.SUCCESS_ID_LABEL' | translate }} <code>{{ createdVehicleId() }}</code></p>
       <div class="form-actions form-actions--center">
-        <button class="btn btn--primary" type="button" (click)="backToParty()">Back to Party</button>
-        <button class="btn btn--secondary" type="button" (click)="addAnother()">Add Another</button>
+        <button class="btn btn--primary" type="button" (click)="backToParty()">{{ 'CRM.CREATE_VEHICLE.BACK_TO_PARTY' | translate }}</button>
+        <button class="btn btn--secondary" type="button" (click)="addAnother()">{{ 'CRM.CREATE_VEHICLE.ADD_ANOTHER' | translate }}</button>
       </div>
     </section>
   }

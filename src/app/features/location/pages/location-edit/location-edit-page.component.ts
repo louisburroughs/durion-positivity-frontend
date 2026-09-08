@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LocationService } from '../../services/location.service';
 
 @Component({
   selector: 'app-location-edit-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './location-edit-page.component.html',
   styleUrl: './location-edit-page.component.css',
 })
@@ -17,13 +18,14 @@ export class LocationEditPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly translate = inject(TranslateService);
 
   private locationId: string | null = null;
 
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly location = signal<unknown>(null);
-  readonly error = signal<string | null>(null);
+  readonly errorKey = signal<string | null>(null);
   readonly saveSuccess = signal(false);
   readonly conflictError = signal<string | null>(null);
   readonly fieldErrors = signal<Record<string, string>>({});
@@ -72,7 +74,7 @@ export class LocationEditPageComponent implements OnInit {
           this.loading.set(false);
         },
         error: () => {
-          this.error.set('Failed to load location.');
+          this.errorKey.set('LOCATION.EDIT.ERROR.LOAD');
           this.loading.set(false);
         },
       });
@@ -84,7 +86,7 @@ export class LocationEditPageComponent implements OnInit {
       return;
     }
     this.saving.set(true);
-    this.error.set(null);
+    this.errorKey.set(null);
     this.conflictError.set(null);
     this.fieldErrors.set({});
     this.saveSuccess.set(false);
@@ -94,7 +96,7 @@ export class LocationEditPageComponent implements OnInit {
       const locationId = this.locationId;
       if (!locationId) {
         this.saving.set(false);
-        this.error.set('Failed to save location.');
+        this.errorKey.set('LOCATION.EDIT.ERROR.SAVE');
         return;
       }
       const { code: _code, ...updateBody } = this.form.getRawValue();
@@ -131,7 +133,9 @@ export class LocationEditPageComponent implements OnInit {
   }): void {
     this.saving.set(false);
     if (err.status === 409) {
-      this.conflictError.set(err.error?.message ?? 'A location with this code or name already exists.');
+      this.conflictError.set(
+        err.error?.message ?? this.translate.instant('LOCATION.EDIT.ERROR.DUPLICATE'),
+      );
       return;
     }
     if (err.status === 400) {
@@ -150,6 +154,6 @@ export class LocationEditPageComponent implements OnInit {
         return;
       }
     }
-    this.error.set('Failed to save location.');
+    this.errorKey.set('LOCATION.EDIT.ERROR.SAVE');
   }
 }
