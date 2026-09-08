@@ -6,13 +6,30 @@ import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { AuthAPIService, JWTAPIService, LoginRequest, TokenPairResponse } from '@durion-sdk/security';
 import { JwtClaims } from '../models/auth.models';
+import { PERMISSION_BY_BIT, PERMISSION_CATALOG_VERSION } from '../security/permission-catalog';
+import { decodePermissionBits, encodePermissionBits, isCatalogStale } from '../security/permission-bits';
 
 // Fake JWT used only when environment.mockAuth === true.
-// Payload decodes to: { sub: 'demo', roles: ['ROLE_ADMIN'], exp: 9999999999 }
-const MOCK_ACCESS_TOKEN =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
-  '.eyJzdWIiOiJkZW1vIiwicm9sZXMiOlsiUk9MRV9BRE1JTiJdLCJleHAiOjk5OTk5OTk5OTksImlhdCI6MTcwMDAwMDAwMH0' +
-  '.mock-signature-not-verified';
+// Carries every catalog permission so mock sessions exercise the same
+// perm_bits gating path as a real ROLE_ADMIN token rather than bypassing it.
+function buildMockAccessToken(): string {
+  const header = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
+  const payload = {
+    sub: 'demo',
+    roles: ['ROLE_ADMIN'],
+    exp: 9999999999,
+    iat: 1700000000,
+    perm_bits: encodePermissionBits(PERMISSION_BY_BIT),
+    perm_ver: PERMISSION_CATALOG_VERSION,
+  };
+  const encodedPayload = btoa(JSON.stringify(payload))
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replaceAll('=', '');
+  return `${header}.${encodedPayload}.mock-signature-not-verified`;
+}
+
+const MOCK_ACCESS_TOKEN = buildMockAccessToken();
 const MOCK_RESPONSE: TokenPairResponse = {
   accessToken: MOCK_ACCESS_TOKEN,
   refreshToken: 'mock-refresh-token',
@@ -63,6 +80,30 @@ export class AuthService {
   });
   readonly currentUserRoles = this._roles.asReadonly();
 
+  /**
+   * Permission codes decoded from the token's `perm_bits` claim, or null when
+   * the token carries no such claim (legacy token — permissions unknown).
+   * Distinguish that from an empty set, which is a token that genuinely grants
+   * no permissions.
+   */
+  readonly currentUserPermissions = computed<ReadonlySet<string> | null>(() => {
+    const claims = this.currentUserClaims();
+    if (!claims || claims.perm_bits === undefined) return null;
+
+    if (isCatalogStale(claims.perm_ver)) {
+      console.warn(
+        `[AuthService] Token perm_ver ${claims.perm_ver} is newer than the bundled permission ` +
+          `catalog (v${PERMISSION_CATALOG_VERSION}). Permissions added since then cannot be ` +
+          'read; regenerate with scripts/security/generate-permission-catalog.mjs.',
+      );
+    }
+
+    return decodePermissionBits(claims.perm_bits);
+  });
+
+  /** True when the session token carries a `perm_bits` claim we can gate on. */
+  readonly permissionsKnown = computed(() => this.currentUserPermissions() !== null);
+
   constructor() {
     this.reconcileSessionFromToken();
   }
@@ -104,6 +145,21 @@ export class AuthService {
   hasAnyRole(roles: readonly string[]): boolean {
     const userRoles = this._roles();
     return roles.some(role => userRoles.includes(role));
+  }
+
+  /**
+   * True when the session holds the given permission code. Returns false when
+   * the token carries no `perm_bits` claim — callers that must stay open for
+   * legacy tokens should check `permissionsKnown()` first, as `canAccess()` does.
+   */
+  hasPermission(permission: string): boolean {
+    return this.currentUserPermissions()?.has(permission) ?? false;
+  }
+
+  hasAnyPermission(permissions: readonly string[]): boolean {
+    const granted = this.currentUserPermissions();
+    if (!granted) return false;
+    return permissions.some(permission => granted.has(permission));
   }
 
   refreshTokens(): Observable<TokenPairResponse> {
