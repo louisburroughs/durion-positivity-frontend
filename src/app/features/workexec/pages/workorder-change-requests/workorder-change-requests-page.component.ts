@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -30,6 +30,7 @@ type PageState = 'loading' | 'ready' | 'error';
   styleUrl: './workorder-change-requests-page.component.css',
 })
 export class WorkorderChangeRequestsPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(WorkexecService);
@@ -70,7 +71,7 @@ export class WorkorderChangeRequestsPageComponent implements OnInit {
           this.pageState.set('ready');
         },
         error: () => {
-          this.errorMessage.set('Failed to load change requests.');
+          this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.LOAD_CHANGE_REQUESTS'));
           this.pageState.set('error');
         },
       });
@@ -103,7 +104,7 @@ export class WorkorderChangeRequestsPageComponent implements OnInit {
 
   submitCreate(): void {
     const desc = this.crDescription().trim();
-    if (!desc) { this.createError.set('Description is required.'); return; }
+    if (!desc) { this.createError.set(this.translate.instant('WORKEXEC.ERROR.DESCRIPTION_REQUIRED')); return; }
     this.createState.set('loading');
     this.createError.set(null);
     const request: CreateChangeRequestRequest = {
@@ -121,7 +122,7 @@ export class WorkorderChangeRequestsPageComponent implements OnInit {
         },
         error: (err) => {
           this.createState.set('error');
-          this.createError.set(err?.error?.message ?? 'Failed to create change request.');
+          this.createError.set(err?.error?.message ?? this.translate.instant('WORKEXEC.ERROR.CREATE_CHANGE_REQUEST'));
         },
       });
   }
@@ -141,7 +142,7 @@ export class WorkorderChangeRequestsPageComponent implements OnInit {
         },
         error: (err) => {
           this.resolveState.set('error');
-          this.resolveError.set(err?.error?.message ?? 'Failed to approve change request.');
+          this.resolveError.set(err?.error?.message ?? this.translate.instant('WORKEXEC.ERROR.APPROVE_CHANGE_REQUEST'));
         },
       });
   }
@@ -161,7 +162,7 @@ export class WorkorderChangeRequestsPageComponent implements OnInit {
         },
         error: (err) => {
           this.resolveState.set('error');
-          this.resolveError.set(err?.error?.message ?? 'Failed to decline change request.');
+          this.resolveError.set(err?.error?.message ?? this.translate.instant('WORKEXEC.ERROR.DECLINE_CHANGE_REQUEST'));
         },
       });
   }

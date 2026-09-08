@@ -30,6 +30,13 @@ const translations = {
       ASSIGN_TECH: 'Assign Technician',
       NOT_SET: 'Not set',
     },
+    ERROR: {
+      INVOICE_DRAFT_EXISTS: 'An invoice draft already exists for this work order.',
+      CREATE_INVOICE: 'Failed to create invoice. Please try again.',
+      INVOICE_QUEUED_SLOW:
+        'Invoice generation was queued but is taking longer than expected. Refresh this page shortly.',
+      CONFIRM_INVOICE: 'Failed to confirm invoice creation. Refresh this page shortly.',
+    },
   },
 };
 

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -49,6 +49,7 @@ type ModalState = 'idle' | 'confirming' | 'loading' | 'success' | 'error';
   styleUrl: './workorder-detail-page.component.css',
 })
 export class WorkorderDetailPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(WorkexecService);
@@ -223,10 +224,10 @@ export class WorkorderDetailPageComponent implements OnInit {
           const status = err?.status ?? 0;
           this.errorMessage.set(
             status === 404
-              ? 'Work order not found.'
+              ? this.translate.instant('WORKEXEC.ERROR.WORKORDER_NOT_FOUND')
               : status === 403
-                ? 'You do not have permission to view this work order.'
-                : 'Failed to load work order. Please try again.',
+                ? this.translate.instant('WORKEXEC.ERROR.VIEW_WORKORDER_FORBIDDEN')
+                : this.translate.instant('WORKEXEC.ERROR.LOAD_WORKORDER_RETRY'),
           );
           this.pageState.set('error');
         },
@@ -298,7 +299,7 @@ export class WorkorderDetailPageComponent implements OnInit {
     const id = this.workorderId();
     const customerId = this.workorder()?.customerId;
     if (!customerId) {
-      this.approveError.set('Work order has no customer; cannot approve.');
+      this.approveError.set(this.translate.instant('WORKEXEC.ERROR.WORKORDER_NO_CUSTOMER'));
       return;
     }
     this.approveModalState.set('loading');
@@ -314,7 +315,7 @@ export class WorkorderDetailPageComponent implements OnInit {
         },
         error: (err) => {
           this.approveModalState.set('error');
-          this.approveError.set(err?.error?.message ?? 'Failed to approve work order. Please try again.');
+          this.approveError.set(err?.error?.message ?? this.translate.instant('WORKEXEC.ERROR.APPROVE_WORKORDER'));
         },
       });
   }
@@ -349,8 +350,8 @@ export class WorkorderDetailPageComponent implements OnInit {
           const status = err?.status ?? 0;
           this.startWorkError.set(
             status === 409
-              ? 'Work has already been started for this work order.'
-              : 'Failed to start work. Please try again.',
+              ? this.translate.instant('WORKEXEC.ERROR.WORK_ALREADY_STARTED')
+              : this.translate.instant('WORKEXEC.ERROR.START_WORK'),
           );
         },
       });
@@ -386,7 +387,7 @@ export class WorkorderDetailPageComponent implements OnInit {
           if (res.failedChecks && res.failedChecks.length > 0) {
             this.failedChecks.set(res.failedChecks);
             this.completeModalState.set('error');
-            this.completeError.set('Completion blocked. Please resolve all issues below.');
+            this.completeError.set(this.translate.instant('WORKEXEC.ERROR.COMPLETION_BLOCKED'));
           } else {
             this.completeModalState.set('success');
             const handle = setTimeout(() => {
@@ -402,15 +403,15 @@ export class WorkorderDetailPageComponent implements OnInit {
           const apiError = err?.error;
           if (apiError?.failedChecks?.length) {
             this.failedChecks.set(apiError.failedChecks);
-            this.completeError.set('Completion blocked. Please resolve all issues below.');
+            this.completeError.set(this.translate.instant('WORKEXEC.ERROR.COMPLETION_BLOCKED'));
           } else {
             const status = err?.status ?? 0;
             this.completeError.set(
               status === 409
-                ? 'Work order cannot be completed in its current state.'
+                ? this.translate.instant('WORKEXEC.ERROR.WORKORDER_NOT_COMPLETABLE')
                 : status === 422
-                  ? apiError?.message ?? 'Completion requirements not met.'
-                  : 'Failed to complete work order. Please try again.',
+                  ? apiError?.message ?? this.translate.instant('WORKEXEC.ERROR.COMPLETION_REQUIREMENTS')
+                  : this.translate.instant('WORKEXEC.ERROR.COMPLETE_WORKORDER'),
             );
           }
         },
@@ -436,7 +437,7 @@ export class WorkorderDetailPageComponent implements OnInit {
   confirmReopen(): void {
     const reason = this.reopenReason().trim();
     if (!reason) {
-      this.reopenError.set('Reopen reason is required.');
+      this.reopenError.set(this.translate.instant('WORKEXEC.ERROR.REOPEN_REASON_REQUIRED'));
       return;
     }
     const id = this.workorderId();
@@ -461,8 +462,8 @@ export class WorkorderDetailPageComponent implements OnInit {
           const status = err?.status ?? 0;
           this.reopenError.set(
             status === 409
-              ? 'Work order cannot be reopened in its current state.'
-              : 'Failed to reopen work order. Please try again.',
+              ? this.translate.instant('WORKEXEC.ERROR.WORKORDER_NOT_REOPENABLE')
+              : this.translate.instant('WORKEXEC.ERROR.REOPEN_WORKORDER'),
           );
         },
       });
@@ -503,8 +504,8 @@ export class WorkorderDetailPageComponent implements OnInit {
           } else {
             this.invoiceError.set(
               status === 409
-                ? 'An invoice draft already exists for this work order.'
-                : 'Failed to create invoice. Please try again.',
+                ? this.translate.instant('WORKEXEC.ERROR.INVOICE_DRAFT_EXISTS')
+                : this.translate.instant('WORKEXEC.ERROR.CREATE_INVOICE'),
             );
           }
         },
@@ -539,13 +540,13 @@ export class WorkorderDetailPageComponent implements OnInit {
           ) {
             this.invoiceLoading.set(false);
             this.invoiceError.set(
-              'Invoice generation was queued but is taking longer than expected. Refresh this page shortly.',
+              this.translate.instant('WORKEXEC.ERROR.INVOICE_QUEUED_SLOW'),
             );
           }
         },
         error: () => {
           this.invoiceLoading.set(false);
-          this.invoiceError.set('Failed to confirm invoice creation. Refresh this page shortly.');
+          this.invoiceError.set(this.translate.instant('WORKEXEC.ERROR.CONFIRM_INVOICE'));
         },
       });
   }
@@ -581,8 +582,8 @@ export class WorkorderDetailPageComponent implements OnInit {
           this.completingItemId.set(null);
           this.itemError.set(
             err?.status === 400
-              ? 'Item cannot be completed in its current state.'
-              : 'Failed to complete item. Please try again.',
+              ? this.translate.instant('WORKEXEC.ERROR.ITEM_NOT_COMPLETABLE')
+              : this.translate.instant('WORKEXEC.ERROR.COMPLETE_ITEM'),
           );
         },
       });

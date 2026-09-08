@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -28,6 +28,7 @@ type PageState = 'loading' | 'ready' | 'error';
   styleUrl: './workorder-labor-page.component.css',
 })
 export class WorkorderLaborPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(WorkexecService);
@@ -78,7 +79,7 @@ export class WorkorderLaborPageComponent implements OnInit {
           this.loadHistory(id);
         },
         error: () => {
-          this.errorMessage.set('Failed to load work order.');
+          this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.LOAD_WORKORDER'));
           this.pageState.set('error');
         },
       });
@@ -101,13 +102,13 @@ export class WorkorderLaborPageComponent implements OnInit {
     const id = this.workorderId();
     const serviceId = this.selectedServiceId();
     if (!serviceId) {
-      this.sessionError.set('Select a labor service line to start a session.');
+      this.sessionError.set(this.translate.instant('WORKEXEC.ERROR.LABOR_LINE_REQUIRED'));
       return;
     }
     const technicianId =
       this.workorder()?.primaryTechnicianId ?? this.workorder()?.technician?.technicianId;
     if (!technicianId) {
-      this.sessionError.set('This work order has no assigned technician. Assign a technician before starting labor.');
+      this.sessionError.set(this.translate.instant('WORKEXEC.ERROR.NO_TECHNICIAN_ASSIGNED'));
       return;
     }
     this.sessionState.set('starting');
@@ -123,7 +124,7 @@ export class WorkorderLaborPageComponent implements OnInit {
         },
         error: (err) => {
           this.sessionState.set('error');
-          this.sessionError.set(err?.error?.message ?? 'Failed to start labor session.');
+          this.sessionError.set(err?.error?.message ?? this.translate.instant('WORKEXEC.ERROR.START_LABOR_SESSION'));
         },
       });
   }
@@ -143,7 +144,7 @@ export class WorkorderLaborPageComponent implements OnInit {
         },
         error: (err) => {
           this.sessionState.set('error');
-          this.sessionError.set(err?.error?.message ?? 'Failed to stop labor session.');
+          this.sessionError.set(err?.error?.message ?? this.translate.instant('WORKEXEC.ERROR.STOP_LABOR_SESSION'));
         },
       });
   }
@@ -151,7 +152,7 @@ export class WorkorderLaborPageComponent implements OnInit {
   submitManualEntry(): void {
     const id = this.workorderId();
     if (this.manualHours() <= 0) {
-      this.manualError.set('Hours must be greater than 0.');
+      this.manualError.set(this.translate.instant('WORKEXEC.ERROR.HOURS_POSITIVE'));
       return;
     }
     this.manualState.set('loading');
@@ -176,7 +177,7 @@ export class WorkorderLaborPageComponent implements OnInit {
         },
         error: (err) => {
           this.manualState.set('error');
-          this.manualError.set(err?.error?.message ?? 'Failed to save labor entry.');
+          this.manualError.set(err?.error?.message ?? this.translate.instant('WORKEXEC.ERROR.SAVE_LABOR_ENTRY'));
         },
       });
   }

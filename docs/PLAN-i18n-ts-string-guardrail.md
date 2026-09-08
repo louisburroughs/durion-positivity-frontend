@@ -86,13 +86,16 @@ vocabulary of the estimate and work-order flows
 retrying to avoid creating a duplicate.'`). A user switching to `es-US` sees
 every one of them in English.
 
-## Why this is not wired into `npm run i18n:check` yet
+## Wiring into `npm run i18n:check`
 
-`i18n:check` is currently green and guards against regression. Chaining a check
-with a 122-item backlog into it would make the aggregate command permanently
-red, and a permanently red gate is one people learn to ignore — which is how
-this class of drift starts. `i18n:check:ts` therefore runs on its own until the
-backlog is cleared, at which point it should join the chain.
+`i18n:check:ts` ran on its own while the backlog stood, so the aggregate
+command would not be permanently red — a permanently red gate is one people
+learn to ignore, which is how this class of drift starts. With the backlog
+cleared it has joined the chain:
+
+```
+i18n:check = check:missing && check:hardcoded && check:ts && pseudo:check
+```
 
 ## Suggested phasing
 
@@ -112,3 +115,49 @@ The conversions are the ones established in the template work:
   the signal still holds display text either way;
 - `admin.component.ts` → move the inline template to `admin.component.html`;
   `system`'s two components need only their `aria-label` bound to a key.
+
+## Remediation record — 124 → 0
+
+All three phases are complete; `i18n:check:ts` passes with 2 suppressions.
+
+| Phase | Scope | Findings | Notes |
+| --- | --- | ---: | --- |
+| 1 | `accounting`, `admin`, `location`, `people`, `shopmgmt`, `system` | 7 | `admin.component.ts` was unreferenced — `/app/admin` loads `ADMIN_ROUTES` — so it was deleted rather than split into a template. `system`'s two components got `[attr.aria-label]="'…' \| translate"`. `` `Mechanic ID: ${id}` `` became a `{{id}}` parameter. |
+| 2 | `crm` | 7 | Three `X creation failed (${status})` messages became parameterised keys. |
+| 3 | `workexec` | 110 | The whole failure vocabulary of the estimate and work-order flows, across 21 files. |
+
+101 keys were added under `WORKEXEC.ERROR.*`, `WORKEXEC.STATUS.*`, `CRM.*`,
+`SYSTEM.*`, `ACCOUNTING.*` and `SHOPMGMT.*` in all five authored locales
+(en-US, es-US, es-MX, fr-CA, fr-FR), taking the keyset to 4891.
+
+### Two things worth carrying forward
+
+**A ternary that silently dropped a sentence.** The first mechanical pass over
+`approval-detail-page.component.ts` produced
+
+```ts
+(est.expiresAt ? instant('…EXPIRED_ON', { date }) : instant('…EXPIRED')) + NO_ACTIONS
+```
+
+— except the `+ NO_ACTIONS` bound only to the `:` branch, so the expiry-dated
+message lost its second sentence. It is also a translated-fragment
+concatenation, which no translator can reorder. Fixed by folding the "No
+actions can be taken" sentence into *both* messages, so each key is one whole
+translatable sentence.
+
+**A green module check does not mean the keys exist.** Neither checker resolves
+the keys it sees; a component can pass both while calling
+`instant('WORKEXEC.ERROR.TYPO')` and rendering the key itself. Every key
+introduced here was verified to resolve in en-US as a separate step. That gap —
+nothing verifies a referenced key exists — remains open and is the natural next
+guardrail.
+
+### Spec fallout
+
+Four `workexec` specs assert English error text. They needed the fixture the
+other specs already use — a `TRANSLATIONS` object plus `setTranslation('en-US',
+…)` / `use('en-US')` after `compileComponents()`. Without it `translate.instant`
+returns the key and the assertion reads
+`expected 'WORKEXEC.ERROR.INVOICE_DRAFT_EXISTS' to be 'An invoice draft…'`.
+This is the recurring cost of the `instant` convention and is worth expecting
+on any future conversion.

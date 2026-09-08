@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs/operators';
@@ -24,6 +24,7 @@ import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive'
   styleUrl: './estimate-revise-page.component.css',
 })
 export class EstimateRevisePageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly workexec   = inject(WorkexecService);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
@@ -54,12 +55,12 @@ export class EstimateRevisePageComponent implements OnInit {
           this.estimate.set(est);
           this.pageState.set(this.canRevise(est) ? 'ready' : 'error');
           if (!this.canRevise(est)) {
-            this.errorMessage.set(`Estimates in status "${est.status}" cannot be revised.`);
+            this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.ESTIMATE_STATUS_NOT_REVISABLE', { status: est.status }));
           }
         },
         error: err => {
           this.pageState.set('error');
-          this.errorMessage.set(err.status === 404 ? 'Estimate not found.' : 'Failed to load estimate.');
+          this.errorMessage.set(err.status === 404 ? this.translate.instant('WORKEXEC.ERROR.ESTIMATE_NOT_FOUND') : this.translate.instant('WORKEXEC.ERROR.LOAD_ESTIMATE'));
         },
       });
   }
@@ -110,7 +111,7 @@ export class EstimateRevisePageComponent implements OnInit {
       },
       error: err => {
         this.reviseState.set('error');
-        this.errorMessage.set(err.error?.message ?? 'Failed to create revision.');
+        this.errorMessage.set(err.error?.message ?? this.translate.instant('WORKEXEC.ERROR.CREATE_REVISION'));
       },
     });
   }

@@ -6,7 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
 import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 /**
  * ApprovalDigitalPageComponent — Story 271 (CAP-003)
@@ -29,6 +29,8 @@ import { TranslatePipe } from '@ngx-translate/core';
 })
 export class ApprovalDigitalPageComponent implements OnInit, AfterViewInit {
   @ViewChild('signatureCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
+
+  private readonly translate = inject(TranslateService);
 
   private readonly workexec   = inject(WorkexecService);
   private readonly route      = inject(ActivatedRoute);
@@ -80,7 +82,7 @@ export class ApprovalDigitalPageComponent implements OnInit, AfterViewInit {
         },
         error: err => {
           this.pageState.set('error');
-          this.errorMessage.set(err.status === 404 ? 'Estimate not found.' : 'Failed to load estimate.');
+          this.errorMessage.set(err.status === 404 ? this.translate.instant('WORKEXEC.ERROR.ESTIMATE_NOT_FOUND') : this.translate.instant('WORKEXEC.ERROR.LOAD_ESTIMATE'));
         },
       });
   }
@@ -141,7 +143,7 @@ export class ApprovalDigitalPageComponent implements OnInit, AfterViewInit {
       return;
     }
     if (this.signatureEmpty()) {
-      this.errorMessage.set('Please provide a signature before submitting.');
+      this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.SIGNATURE_REQUIRED'));
       return;
     }
     const signatureData = this.getSignatureDataUrl();
@@ -170,14 +172,14 @@ export class ApprovalDigitalPageComponent implements OnInit, AfterViewInit {
           const body = err.error;
           if (err.status === 400 && (body?.code === 'APPROVAL_EXPIRED' || body?.message?.toLowerCase().includes('expired'))) {
             this.pageState.set('expired');
-            this.errorMessage.set('This approval has expired. Please create a new revision and resubmit.');
+            this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.APPROVAL_EXPIRED_RESUBMIT'));
           } else if (err.status === 403) {
-            this.errorMessage.set('You are not authorized to approve this estimate.');
+            this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.APPROVE_FORBIDDEN'));
           } else if (err.status === 409) {
-            this.errorMessage.set('Estimate was modified concurrently. Please reload and try again.');
+            this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.ESTIMATE_CONFLICT_RELOAD'));
             this.loadEstimate();
           } else {
-            this.errorMessage.set(body?.message ?? 'Failed to submit approval.');
+            this.errorMessage.set(body?.message ?? this.translate.instant('WORKEXEC.ERROR.SUBMIT_APPROVAL'));
           }
         },
       });

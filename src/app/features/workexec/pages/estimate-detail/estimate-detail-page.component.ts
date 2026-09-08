@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
@@ -44,6 +44,7 @@ import {
   styleUrl: './estimate-detail-page.component.css',
 })
 export class EstimateDetailPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly workexec   = inject(WorkexecService);
   private readonly crm        = inject(CrmService);
   private readonly vehiclesApi = inject(CRMVehiclesService);
@@ -135,7 +136,7 @@ export class EstimateDetailPageComponent implements OnInit {
         },
         error: err => {
           this.pageState.set('error');
-          this.errorMessage.set(err.status === 404 ? 'Estimate not found.' : 'Failed to load estimate.');
+          this.errorMessage.set(err.status === 404 ? this.translate.instant('WORKEXEC.ERROR.ESTIMATE_NOT_FOUND') : this.translate.instant('WORKEXEC.ERROR.LOAD_ESTIMATE'));
         },
       });
   }
@@ -278,12 +279,12 @@ export class EstimateDetailPageComponent implements OnInit {
           } else if (status >= 500 || status === 0) {
             // Story 228: safe-retry guidance for 5xx/network
             this.promoteError.set(
-              'This action may have already succeeded. Check your work orders list before retrying to avoid creating a duplicate.',
+              this.translate.instant('WORKEXEC.ERROR.MAY_HAVE_SUCCEEDED'),
             );
             this.promoteState.set('error');
           } else {
             this.promoteError.set(
-              err?.error?.message ?? 'Promotion failed. Please check the estimate status and try again.',
+              err?.error?.message ?? this.translate.instant('WORKEXEC.ERROR.PROMOTE_ESTIMATE'),
             );
             this.promoteState.set('error');
           }

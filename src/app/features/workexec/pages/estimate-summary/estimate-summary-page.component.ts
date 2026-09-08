@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs/operators';
@@ -24,6 +24,7 @@ import { EstimateSummaryResponse, PageState } from '../../models/workexec.models
   styleUrl: './estimate-summary-page.component.css',
 })
 export class EstimateSummaryPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly workexec   = inject(WorkexecService);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
@@ -62,7 +63,7 @@ export class EstimateSummaryPageComponent implements OnInit {
             },
             error: err2 => {
               this.pageState.set('error');
-              this.errorMessage.set(err2.status === 404 ? 'Estimate not found.' : 'Failed to load estimate summary.');
+              this.errorMessage.set(err2.status === 404 ? this.translate.instant('WORKEXEC.ERROR.ESTIMATE_NOT_FOUND') : this.translate.instant('WORKEXEC.ERROR.LOAD_ESTIMATE_SUMMARY'));
             },
           });
       },

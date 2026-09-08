@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -37,6 +37,7 @@ type PartAction = 'issue' | 'consume' | 'return';
   styleUrl: './workorder-parts-page.component.css',
 })
 export class WorkorderPartsPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(WorkexecService);
@@ -87,7 +88,7 @@ export class WorkorderPartsPageComponent implements OnInit {
           this.loadUsageHistory(id);
         },
         error: () => {
-          this.errorMessage.set('Failed to load work order.');
+          this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.LOAD_WORKORDER'));
           this.pageState.set('error');
         },
       });
@@ -123,8 +124,8 @@ export class WorkorderPartsPageComponent implements OnInit {
     const id = this.workorderId();
     const partId = this.actionPartId().trim();
     const qty = this.actionQuantity();
-    if (!partId) { this.actionError.set('Part ID is required.'); return; }
-    if (qty <= 0) { this.actionError.set('Quantity must be greater than 0.'); return; }
+    if (!partId) { this.actionError.set(this.translate.instant('WORKEXEC.ERROR.PART_ID_REQUIRED')); return; }
+    if (qty <= 0) { this.actionError.set(this.translate.instant('WORKEXEC.ERROR.QUANTITY_POSITIVE')); return; }
 
     this.actionState.set('loading');
     this.actionError.set(null);
@@ -158,7 +159,7 @@ export class WorkorderPartsPageComponent implements OnInit {
       },
       error: (err) => {
         this.actionState.set('error');
-        this.actionError.set(err?.error?.message ?? 'Action failed. Please try again.');
+        this.actionError.set(err?.error?.message ?? this.translate.instant('WORKEXEC.ERROR.ACTION_FAILED'));
       },
     });
   }
@@ -198,9 +199,9 @@ export class WorkorderPartsPageComponent implements OnInit {
 
   confirmSubstitution(): void {
     const substituteId = this.substSelectedId().trim();
-    if (!substituteId) { this.substError.set('Select a substitute part.'); return; }
+    if (!substituteId) { this.substError.set(this.translate.instant('WORKEXEC.ERROR.SUBSTITUTE_PART_REQUIRED')); return; }
     const reason = this.substReason().trim();
-    if (!reason) { this.substError.set('Reason is required.'); return; }
+    if (!reason) { this.substError.set(this.translate.instant('WORKEXEC.ERROR.REASON_REQUIRED')); return; }
     const request: SubstitutePartRequest = {
       originalPartId: this.substSourcePartId(),
       substitutePartId: substituteId,
@@ -219,7 +220,7 @@ export class WorkorderPartsPageComponent implements OnInit {
         },
         error: (err) => {
           this.substSaveState.set('error');
-          this.substError.set(err?.error?.message ?? 'Substitution failed.');
+          this.substError.set(err?.error?.message ?? this.translate.instant('WORKEXEC.ERROR.SUBSTITUTION_FAILED'));
         },
       });
   }

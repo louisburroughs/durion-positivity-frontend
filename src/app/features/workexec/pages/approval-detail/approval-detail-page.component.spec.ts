@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ComponentFixture } from '@angular/core/testing';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -21,6 +21,17 @@ const mockRoute = {
   }
 };
 
+const TRANSLATIONS = {
+  WORKEXEC: {
+    ERROR: {
+      APPROVAL_EXPIRED:
+        'This approval has expired. No actions can be taken on this approval. Create a revision to restart the approval process.',
+      APPROVAL_EXPIRED_ON:
+        'This approval has expired on {{date}}. No actions can be taken on this approval. Create a revision to restart the approval process.',
+    },
+  },
+};
+
 describe('ApprovalDetailPageComponent [Story 268]', () => {
   let fixture: ComponentFixture<ApprovalDetailPageComponent>;
   let component: ApprovalDetailPageComponent;
@@ -37,6 +48,9 @@ describe('ApprovalDetailPageComponent [Story 268]', () => {
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
       ],
     }).compileComponents();
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
     fixture = TestBed.createComponent(ApprovalDetailPageComponent);
     component = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController);
