@@ -1,7 +1,7 @@
 import { Component, inject, signal, forwardRef, Input, DestroyRef } from '@angular/core';
 
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
@@ -37,10 +37,12 @@ export class CustomerLookupComponent implements ControlValueAccessor {
   private readonly crm = inject(CrmService);
   private readonly destroyRef = inject(DestroyRef);
 
+  private readonly translate = inject(TranslateService);
+
   @Input() inputId = 'customer-lookup';
-  @Input() label = 'Customer';
+  @Input() label = this.translate.instant('CRM.CUSTOMER_LOOKUP.LABEL');
   @Input() required = false;
-  @Input() placeholder = 'Search by name or customer number…';
+  @Input() placeholder = this.translate.instant('CRM.CUSTOMER_LOOKUP.PLACEHOLDER');
 
   readonly suggestions = signal<PartyDetail[]>([]);
   readonly query        = signal('');

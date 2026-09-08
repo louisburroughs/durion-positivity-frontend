@@ -8,7 +8,7 @@ import { TranslateModule } from '@ngx-translate/core';
   standalone: true,
   imports: [RouterLink, TranslateModule],
   template: `
-    <section class="state-page" aria-label="Not found">
+    <section class="state-page" [attr.aria-label]="'SYSTEM.NOT_FOUND.ARIA' | translate">
       <h1>{{ 'SYSTEM.NOT_FOUND.TITLE' | translate }}</h1>
       <p>{{ 'SYSTEM.NOT_FOUND.MESSAGE' | translate }}</p>
       <button class="state-btn" type="button" (click)="goBack()">{{ 'SYSTEM.NOT_FOUND.BACK' | translate }}</button>

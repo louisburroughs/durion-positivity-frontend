@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { CrmService } from '../../services/crm.service';
 
@@ -15,6 +15,7 @@ type PageState = 'idle' | 'submitting' | 'success' | 'error' | 'access-denied';
   styleUrl: './create-vehicle.component.css',
 })
 export class CreateVehicleComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly fb     = inject(FormBuilder);
   private readonly crm    = inject(CrmService);
   private readonly route  = inject(ActivatedRoute);
@@ -62,7 +63,7 @@ export class CreateVehicleComponent implements OnInit {
           this.state.set('access-denied');
         } else {
           this.serverError.set(
-            err?.error?.message ?? `Vehicle creation failed (${err?.status ?? 'error'}).`,
+            err?.error?.message ?? this.translate.instant('CRM.CREATE_VEHICLE.ERROR.CREATE_FAILED', { status: err?.status ?? 'error' }),
           );
           this.state.set('error');
         }

@@ -1,7 +1,7 @@
 import { Component, inject, signal, forwardRef, Input, DestroyRef } from '@angular/core';
 
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
@@ -38,10 +38,12 @@ export class VendorLookupComponent implements ControlValueAccessor {
   private readonly accounting = inject(AccountingService);
   private readonly destroyRef = inject(DestroyRef);
 
+  private readonly translate = inject(TranslateService);
+
   @Input() inputId = 'vendor-lookup';
-  @Input() label = 'Vendor';
+  @Input() label = this.translate.instant('ACCOUNTING.VENDOR_LOOKUP.LABEL');
   @Input() required = false;
-  @Input() placeholder = 'Search by vendor name…';
+  @Input() placeholder = this.translate.instant('ACCOUNTING.VENDOR_LOOKUP.PLACEHOLDER');
 
   readonly suggestions = signal<VendorDirectoryEntry[]>([]);
   readonly query        = signal('');

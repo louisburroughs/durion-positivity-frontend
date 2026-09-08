@@ -8,7 +8,7 @@ import { TranslateModule } from '@ngx-translate/core';
   standalone: true,
   imports: [RouterLink, TranslateModule],
   template: `
-    <section class="state-page" aria-label="Access denied">
+    <section class="state-page" [attr.aria-label]="'SYSTEM.ACCESS_DENIED.ARIA' | translate">
       <h1>{{ 'SYSTEM.ACCESS_DENIED.TITLE' | translate }}</h1>
       <p>{{ 'SYSTEM.ACCESS_DENIED.MESSAGE' | translate }}</p>
       <button class="state-btn" type="button" (click)="goBack()">{{ 'SYSTEM.ACCESS_DENIED.BACK' | translate }}</button>

@@ -31,7 +31,7 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { AppointmentAssignmentPageComponent } from './appointment-assignment-page.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AppointmentService } from '../../services/appointment.service';
 
 // ---------------------------------------------------------------------------
@@ -83,6 +83,14 @@ const appointmentServiceStub = {
 // Suite
 // ---------------------------------------------------------------------------
 
+// Mirrors the SHOPMGMT key the mechanic-fallback assertion reads back, so it
+// still proves the {{id}} param is wired.
+const TRANSLATIONS = {
+  SHOPMGMT: {
+    APPOINTMENT_ASSIGNMENT: { MECHANIC_ID_FALLBACK: 'Mechanic ID: {{id}}' },
+  },
+};
+
 describe('AppointmentAssignmentPageComponent [CAP-249]', () => {
   let fixture: ComponentFixture<AppointmentAssignmentPageComponent>;
   let component: AppointmentAssignmentPageComponent;
@@ -100,6 +108,10 @@ describe('AppointmentAssignmentPageComponent [CAP-249]', () => {
         { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
 
     fixture = TestBed.createComponent(AppointmentAssignmentPageComponent);
     component = fixture.componentInstance;

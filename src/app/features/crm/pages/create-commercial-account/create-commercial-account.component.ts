@@ -114,7 +114,7 @@ export class CreateCommercialAccountComponent implements OnInit {
           this.state.set('access-denied');
         } else {
           this.serverError.set(
-            err?.error?.message ?? `Account creation failed (${err?.status ?? 'unknown'}). Please try again.`,
+            err?.error?.message ?? this.translate.instant('CRM.CREATE_COMMERCIAL.ERROR.CREATE_FAILED', { status: err?.status ?? 'unknown' }),
           );
           this.state.set('error');
         }

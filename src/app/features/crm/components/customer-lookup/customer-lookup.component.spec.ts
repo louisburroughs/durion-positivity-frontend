@@ -1,4 +1,5 @@
 import { TestBed, ComponentFixture, fakeAsync, tick } from '@angular/core/testing';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { CustomerLookupComponent } from './customer-lookup.component';
 import { CrmService } from '../../services/crm.service';
@@ -20,9 +21,11 @@ describe('CustomerLookupComponent', () => {
     getParty = vi.fn().mockReturnValue(of(PARTIES[1]));
 
     await TestBed.configureTestingModule({
-      imports: [CustomerLookupComponent],
+      imports: [CustomerLookupComponent, TranslateModule.forRoot()],
       providers: [{ provide: CrmService, useValue: { searchParties, getParty } }],
     }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en-US');
 
     fixture = TestBed.createComponent(CustomerLookupComponent);
     component = fixture.componentInstance;

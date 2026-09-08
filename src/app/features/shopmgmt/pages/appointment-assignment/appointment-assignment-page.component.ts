@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AppointmentService } from '../../services/appointment.service';
@@ -14,6 +14,7 @@ import type { AppointmentDetail, AssignmentDetail } from '../../models/appointme
   styleUrl: './appointment-assignment-page.component.css',
 })
 export class AppointmentAssignmentPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly route = inject(ActivatedRoute);
   private readonly appointmentService = inject(AppointmentService);
 
@@ -60,6 +61,8 @@ export class AppointmentAssignmentPageComponent implements OnInit {
     if (a.mechanic.displayName?.trim()) {
       return a.mechanic.displayName;
     }
-    return `Mechanic ID: ${a.mechanic.mechanicId}`;
+    return this.translate.instant('SHOPMGMT.APPOINTMENT_ASSIGNMENT.MECHANIC_ID_FALLBACK', {
+      id: a.mechanic.mechanicId,
+    });
   }
 }
