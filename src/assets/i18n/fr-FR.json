@@ -492,14 +492,7 @@
       }
     },
     "TIME_EXPORT": {
-      "TITLE": "Exportation du temps",
-      "LOCATION_ID": "ID d'emplacement",
-      "LOAD_EXPORT": "Charger l'exportation",
-      "LOAD_DISCREPANCIES": "Charger les écarts",
-      "EMPTY": "Aucune donnée d'exportation trouvée.",
       "ERROR": {
-        "LOAD_EXPORT": "Impossible de charger les données d'exportation.",
-        "LOAD_DISCREPANCIES": "Impossible de charger les écarts.",
         "START_REQUIRED": "La date de début est requise.",
         "END_REQUIRED": "La date de fin est requise.",
         "LOCATION_REQUIRED": "Sélectionnez au moins un emplacement.",
@@ -545,18 +538,7 @@
     },
     "TIME_APPROVAL": {
       "TITLE": "Approbation du temps",
-      "APPROVE": "Approuver",
-      "REJECT": "Rejeter",
-      "ACTION_COMPLETED": "Action terminée.",
-      "EMPTY": "Aucune entrée trouvée.",
-      "REASON": "Motif",
-      "SUBMIT_REJECT": "Soumettre le rejet",
-      "CLOSE": "Fermer",
       "ERROR": {
-        "LOAD": "Impossible de charger les entrées de temps.",
-        "APPROVE": "Impossible d'approuver les entrées.",
-        "REJECT": "Impossible de rejeter les entrées.",
-        "ADJUSTMENT": "Impossible de créer l'ajustement.",
         "LOAD_EMPLOYEES": "Impossible de charger les employés.",
         "LOAD_PERIODS": "Impossible de charger les périodes de temps.",
         "LOAD_ENTRIES": "Impossible de charger les entrées de temps.",
@@ -5776,19 +5758,19 @@
         "CAPTURE": "Autoriser et capturer",
         "VOID": "Annuler l'autorisation",
         "REFUND": "Traiter le remboursement",
-        "PRINT_RECEIPT": "Imprimer le recu"
+        "PRINT_RECEIPT": "Imprimer le reçu"
       },
       "MODE": {
         "LABEL": "Sélectionner l'action de paiement"
       },
       "SUBMITTING": "Traitement en cours...",
-      "IDLE": "Selectionnez un mode de paiement pour commencer.",
+      "IDLE": "Sélectionnez un mode de paiement pour commencer.",
       "FIELD": {
         "TRANSACTION_ID": "ID de transaction",
         "AUTH_CODE": "Code d'autorisation",
         "STATUS": "Statut",
         "AMOUNT": "Montant",
-        "CAPTURED_AT": "Capture le"
+        "CAPTURED_AT": "Capturé le"
       },
       "VOID": {
         "TITLE": "Annuler l'autorisation",
@@ -5802,9 +5784,9 @@
         "AMOUNT_LABEL": "Montant du remboursement (laisser vide pour un remboursement complet)"
       },
       "ERROR": {
-        "CAPTURE": "Impossible de traiter le paiement. Veuillez reessayer.",
-        "VOID": "Impossible d'annuler l'autorisation. Veuillez reessayer.",
-        "REFUND": "Impossible de traiter le remboursement. Veuillez reessayer.",
+        "CAPTURE": "Impossible de traiter le paiement. Veuillez réessayer.",
+        "VOID": "Impossible d'annuler l'autorisation. Veuillez réessayer.",
+        "REFUND": "Impossible de traiter le remboursement. Veuillez réessayer.",
         "MISSING_IDS": "Référence de paiement ou de facture invalide."
       }
     },

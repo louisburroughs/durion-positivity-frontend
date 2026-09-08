@@ -492,14 +492,7 @@
       }
     },
     "TIME_EXPORT": {
-      "TITLE": "Exportación de tiempo",
-      "LOCATION_ID": "ID de ubicación",
-      "LOAD_EXPORT": "Cargar exportación",
-      "LOAD_DISCREPANCIES": "Cargar discrepancias",
-      "EMPTY": "No se encontraron datos de exportación.",
       "ERROR": {
-        "LOAD_EXPORT": "No se pudieron cargar los datos de exportación.",
-        "LOAD_DISCREPANCIES": "No se pudieron cargar las discrepancias.",
         "START_REQUIRED": "La fecha de inicio es obligatoria.",
         "END_REQUIRED": "La fecha de fin es obligatoria.",
         "LOCATION_REQUIRED": "Seleccione al menos una ubicación.",
@@ -545,18 +538,7 @@
     },
     "TIME_APPROVAL": {
       "TITLE": "Aprobación de tiempo",
-      "APPROVE": "Aprobar",
-      "REJECT": "Rechazar",
-      "ACTION_COMPLETED": "Acción completada.",
-      "EMPTY": "No se encontraron registros.",
-      "REASON": "Motivo",
-      "SUBMIT_REJECT": "Enviar rechazo",
-      "CLOSE": "Cerrar",
       "ERROR": {
-        "LOAD": "No se pudieron cargar las entradas de tiempo.",
-        "APPROVE": "No se pudieron aprobar las entradas.",
-        "REJECT": "No se pudieron rechazar las entradas.",
-        "ADJUSTMENT": "No se pudo crear el ajuste.",
         "LOAD_EMPLOYEES": "No se pudieron cargar los empleados.",
         "LOAD_PERIODS": "No se pudieron cargar los períodos de tiempo.",
         "LOAD_ENTRIES": "No se pudieron cargar los registros de tiempo.",

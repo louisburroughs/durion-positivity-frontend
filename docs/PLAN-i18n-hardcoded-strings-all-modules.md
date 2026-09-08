@@ -62,7 +62,7 @@ differently belongs in `src/assets/i18n/*.json`.
 ## Backlog — cleared
 
 All 545 literals found when the scope was widened have been remediated across
-five phases. `npm run i18n:check` passes repo-wide: keysets aligned at 4793 keys
+five phases. `npm run i18n:check` passes repo-wide: keysets aligned at 4775 keys
 across the five authored locales, 185 templates scanned, 5 literals suppressed by
 proper-noun `i18n-ignore` markers.
 
@@ -93,10 +93,10 @@ templates.** A `.ts` string set into a signal and rendered through
   recording that decision, which the marker now makes machine-readable.
 - **es-US / es-MX / fr-CA / fr-FR values are machine-assisted and FLAGGED FOR
   NATIVE REVIEW**, per the convention in the workexec plan. The adjacent
-  `BILLING.PAYMENT.METHOD` block had unaccented French ("Cheque", "Especes",
+  `BILLING.PAYMENT` block had unaccented French ("Cheque", "Especes",
   "Carte de credit/debit"); the new keys were authored with correct accents and
-  `BILLING.PAYMENT.METHOD` has since been corrected to match. Other unaccented
-  strings remain elsewhere under `BILLING.PAYMENT` — see below.
+  all of `BILLING.PAYMENT` has since been corrected to match — see
+  "French accent corrections" below.
 
 ### Phase 2 notes — `security/user-provision`
 
@@ -189,7 +189,8 @@ Pre-existing dead keys: `PEOPLE.TIME_APPROVAL` and `PEOPLE.TIME_EXPORT` already
 held a handful of keys (`APPROVE`, `EMPTY`, `LOAD_EXPORT`, …) that **no template
 references** — leftovers from earlier versions of those pages. The new keys were
 added alongside them rather than reusing them, because their en-US wording does
-not match what the current templates render. Worth deleting separately.
+not match what the current templates render; the dead ones were removed
+afterwards — see "Unused keys removed" below.
 
 Specs: seven needed `TranslateModule.forRoot()`; four also needed a
 `setTranslation` fixture for assertions that read rendered English back
@@ -221,6 +222,39 @@ five of its error messages. Seven new key trees plus extensions to
 Specs: only `customer-list` needed work — `TranslateModule.forRoot()` plus a
 `setTranslation` fixture for its column-header assertion.
 
+
+## French accent corrections
+
+All of `BILLING.PAYMENT` has been corrected in `fr-CA` and `fr-FR`, in two
+passes: first `METHOD` ("Chèque", "Espèces", "Carte de crédit/débit", "Compte de
+crédit"), then its siblings — `ACTION.PRINT_RECEIPT` ("reçu"), `IDLE`
+("Sélectionnez"), `FIELD.CAPTURED_AT` and the three `ERROR` messages
+("réessayer"). No code or test referenced any of these values, so both passes
+were locale-file-only.
+
+`FIELD.CAPTURED_AT` was not merely cosmetic: unaccented "Capture le" reads as an
+imperative ("Capture it") rather than "Captured on".
+
+This block was found incidentally while authoring adjacent keys. **No systematic
+sweep for missing accents has been run** over the rest of the fr files, so other
+instances may remain; such a sweep needs care to avoid false positives on proper
+nouns and codes.
+
+## Unused keys removed
+
+`PEOPLE.TIME_APPROVAL` and `PEOPLE.TIME_EXPORT` carried 18 keys that no template
+or component referenced — leftovers from earlier versions of those pages, whose
+wording no longer matched what the templates render (`"No entries found."` vs
+`"No timekeeping entries found for this selection."`). They were removed from all
+five authored locales, taking the keyset from 4793 to 4775.
+
+Detecting them needs a **boundary-aware** match: a plain substring search reports
+`PEOPLE.TIME_APPROVAL.APPROVE` as used, because it is a prefix of
+`…APPROVE_PERIOD`. Dynamic keys must also be accounted for — several components
+build keys by interpolation (`` `CRM.PARTY_DETAIL.ROLE.${role}` ``), so every key
+under such a prefix is reachable even though the full path appears nowhere in
+source. Neither of these namespaces had dynamic references, but a repo-wide
+unused-key sweep would have to handle both cases.
 
 ## Removed: `src/app/app.html`
 

@@ -492,14 +492,7 @@
       }
     },
     "TIME_EXPORT": {
-      "TITLE": "Time Export",
-      "LOCATION_ID": "Location ID",
-      "LOAD_EXPORT": "Load export",
-      "LOAD_DISCREPANCIES": "Load discrepancies",
-      "EMPTY": "No export data found.",
       "ERROR": {
-        "LOAD_EXPORT": "Failed to load export data.",
-        "LOAD_DISCREPANCIES": "Failed to load discrepancies.",
         "START_REQUIRED": "Start date is required.",
         "END_REQUIRED": "End date is required.",
         "LOCATION_REQUIRED": "Select at least one location.",
@@ -545,18 +538,7 @@
     },
     "TIME_APPROVAL": {
       "TITLE": "Time Approval",
-      "APPROVE": "Approve",
-      "REJECT": "Reject",
-      "ACTION_COMPLETED": "Action completed.",
-      "EMPTY": "No entries found.",
-      "REASON": "Reason",
-      "SUBMIT_REJECT": "Submit reject",
-      "CLOSE": "Close",
       "ERROR": {
-        "LOAD": "Failed to load time entries.",
-        "APPROVE": "Failed to approve entries.",
-        "REJECT": "Failed to reject entries.",
-        "ADJUSTMENT": "Failed to create adjustment.",
         "LOAD_EMPLOYEES": "Failed to load employees.",
         "LOAD_PERIODS": "Failed to load time periods.",
         "LOAD_ENTRIES": "Failed to load timekeeping entries.",
