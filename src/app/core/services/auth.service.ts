@@ -29,11 +29,18 @@ function buildMockAccessToken(): string {
   return `${header}.${encodedPayload}.mock-signature-not-verified`;
 }
 
-const MOCK_ACCESS_TOKEN = buildMockAccessToken();
-const MOCK_RESPONSE: TokenPairResponse = {
-  accessToken: MOCK_ACCESS_TOKEN,
-  refreshToken: 'mock-refresh-token',
-};
+/**
+ * Built on first use and cached, so a production session never pays to encode
+ * the permission catalog for a token it will never issue.
+ */
+let mockResponse: TokenPairResponse | null = null;
+function mockTokenPair(): TokenPairResponse {
+  mockResponse ??= {
+    accessToken: buildMockAccessToken(),
+    refreshToken: 'mock-refresh-token',
+  };
+  return mockResponse;
+}
 
 const ACCESS_TOKEN_KEY = 'durion-access-token';
 const REFRESH_TOKEN_KEY = 'durion-refresh-token';
@@ -114,8 +121,9 @@ export class AuthService {
     if (environment.mockAuth) {
       // Mock mode: accept any credentials and return a fake session immediately.
       console.warn('[AuthService] mockAuth is enabled – using fake credentials. Disable in environment.ts before connecting a real backend.');
-      this.storeTokens(MOCK_RESPONSE.accessToken!, MOCK_RESPONSE.refreshToken!);
-      return of(MOCK_RESPONSE);
+      const mockTokens = mockTokenPair();
+      this.storeTokens(mockTokens.accessToken!, mockTokens.refreshToken!);
+      return of(mockTokens);
     }
     return this.authApiService.loginUser(credentials).pipe(
       tap(resp => this.storeTokens(resp.accessToken!, resp.refreshToken!)),
