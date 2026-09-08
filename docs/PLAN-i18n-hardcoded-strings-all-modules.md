@@ -74,11 +74,13 @@ proper-noun `i18n-ignore` markers.
 | 4 | `people` | 184 |
 | 5 | `crm` | 262 |
 
-Each phase also cleared English strings sitting in `.ts` files, which the
+Each phase also cleared English strings sitting in `.ts` files, which this
 guardrail cannot see — 25 in `people`, 20 in `crm`, 18 in `location`, 4 in
-`security`. Those remain the standing blind spot: **the checker only reads
-templates.** A `.ts` string set into a signal and rendered through
-`{{ signal() }}` will never be reported.
+`security`. **The checker only reads templates**: a `.ts` string set into a
+signal and rendered through `{{ signal() }}` is never reported. That blind spot
+is now covered by a second checker — see
+[PLAN-i18n-ts-string-guardrail.md](./PLAN-i18n-ts-string-guardrail.md), which
+found a further 122 strings, 110 of them in `workexec`.
 
 ## Phase notes
 
