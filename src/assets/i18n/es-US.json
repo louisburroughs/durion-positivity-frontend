@@ -962,6 +962,27 @@
           "LOCATION": "Ubicación"
         }
       }
+    },
+    "USER_PROVISION": {
+      "OVERLINE": "Administración de seguridad",
+      "TITLE": "Aprovisionar usuario",
+      "LINKED_PERSON": "Aprovisionando la cuenta para la persona: {{personId}}",
+      "LOADING": "Cargando roles...",
+      "SUCCESS": "Usuario aprovisionado. ID de usuario: {{userId}}",
+      "ACCOUNT_DETAILS": "Detalles de la cuenta",
+      "SUBMITTING": "Aprovisionando...",
+      "SUBMIT": "Aprovisionar usuario",
+      "FIELD": {
+        "USERNAME": "Nombre de usuario",
+        "ROLE": "Rol",
+        "ROLE_PLACEHOLDER": "Seleccione un rol"
+      },
+      "ERROR": {
+        "USERNAME_INVALID": "Se requiere un correo electrónico de usuario válido.",
+        "ROLE_REQUIRED": "El rol es obligatorio.",
+        "LOAD_ROLES": "No se pudieron cargar los roles.",
+        "PROVISION": "No se pudo aprovisionar el usuario."
+      }
     }
   },
   "LOCATION": {

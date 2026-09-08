@@ -962,6 +962,27 @@
           "LOCATION": "Location"
         }
       }
+    },
+    "USER_PROVISION": {
+      "OVERLINE": "Security Administration",
+      "TITLE": "Provision User",
+      "LINKED_PERSON": "Provisioning account for person: {{personId}}",
+      "LOADING": "Loading roles...",
+      "SUCCESS": "User provisioned. User ID: {{userId}}",
+      "ACCOUNT_DETAILS": "Account Details",
+      "SUBMITTING": "Provisioning...",
+      "SUBMIT": "Provision User",
+      "FIELD": {
+        "USERNAME": "Username",
+        "ROLE": "Role",
+        "ROLE_PLACEHOLDER": "Select role"
+      },
+      "ERROR": {
+        "USERNAME_INVALID": "A valid username email is required.",
+        "ROLE_REQUIRED": "Role is required.",
+        "LOAD_ROLES": "Failed to load roles.",
+        "PROVISION": "Failed to provision user."
+      }
     }
   },
   "LOCATION": {

@@ -60,17 +60,16 @@ The hatch is deliberately noisy so it cannot quietly absorb the backlog:
 Use it only for proper nouns. Anything a translator could legitimately render
 differently belongs in `src/assets/i18n/*.json`.
 
-## Backlog — 534 literals across 21 templates in 4 modules
+## Backlog — 523 literals across 20 templates in 3 modules
 
 | Module | Literals | Templates |
 | --- | ---: | ---: |
 | crm | 262 | 9 |
 | people | 184 | 8 |
 | location | 77 | 3 |
-| security | 11 | 1 |
 
 Clean today (no findings): `workexec` (25 templates), `inventory` (26),
-`landing`, `shell`, `auth`, `accounting`,
+`landing`, `shell`, `auth`, `accounting`, `security` (7),
 `positivity` (16), `product` (14), `shopmgmt` (14), `bulk-import` (9),
 `billing` (4), `order` (3), `shared` (2), `sitemap` (1). `admin`, `system` and
 `core` have no external templates to scan.
@@ -98,7 +97,7 @@ Mirror the workexec loop (see
 settled before the large domains:
 
 1. ~~`auth`, `shell`, `landing`, `accounting` (11 literals)~~ ✅ done
-2. `security` (11)
+2. ~~`security` (11)~~ ✅ done
 3. `location` (77)
 4. `people` (184)
 5. `crm` (262)
@@ -118,6 +117,29 @@ settled before the large domains:
   "Carte de credit/debit"); the new keys use correct accents rather than
   matching that defect, so the two blocks read inconsistently until `BILLING`
   is corrected separately.
+
+### Phase 2 notes — `security/user-provision`
+
+The one template in `security` needed more than the 11 flagged literals, because
+the guardrail cannot see inside interpolations or `.ts` files:
+
+- **4 strings the checker never reported.** Two literal fallbacks inside
+  interpolations (`{{ fieldErrors()['username'] || 'A valid username email is
+  required.' }}` and the role equivalent) and two English sentences set in the
+  component (`this.error.set('Failed to load roles.')`,
+  `'Failed to provision user.'`). All four are now keys.
+- **`error` → `errorKey`.** The page held rendered English in a signal; it now
+  holds a translation key and the template pipes it, matching the state-machine
+  convention already used by `audit-logs.component.ts` in the same module.
+- **Two messages became parameterised** rather than concatenated:
+  `LINKED_PERSON` (`{{personId}}`) and `SUCCESS` (`{{userId}}`).
+- **Spec updated** to render under `TranslateModule.forRoot()` with a
+  `setTranslation` fixture, so the existing assertions on `person-001` / `u-999`
+  now also prove the interpolation params are wired. The two error tests assert
+  the key, not the sentence.
+
+Server-supplied `fieldErrors` values stay untranslated — they arrive as text
+from the API and there is no key to map them to.
 
 ## Removed: `src/app/app.html`
 

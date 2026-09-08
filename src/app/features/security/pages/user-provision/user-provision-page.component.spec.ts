@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NEVER, of, throwError } from 'rxjs';
 import { SecurityRole } from '../../models/security.models';
 import { SecurityService } from '../../services/security.service';
@@ -9,6 +10,26 @@ const mockRoles: SecurityRole[] = [
   { name: 'MANAGER', description: 'Store manager' },
   { name: 'CASHIER', description: 'Cashier' },
 ];
+
+// Mirrors SECURITY.USER_PROVISION in src/assets/i18n/en-US.json, so the
+// assertions below also prove the {{personId}} / {{userId}} params are wired.
+const TRANSLATIONS = {
+  SECURITY: {
+    USER_PROVISION: {
+      TITLE: 'Provision User',
+      LINKED_PERSON: 'Provisioning account for person: {{personId}}',
+      LOADING: 'Loading roles...',
+      SUCCESS: 'User provisioned. User ID: {{userId}}',
+      SUBMIT: 'Provision User',
+      FIELD: { ROLE_PLACEHOLDER: 'Select role' },
+      ERROR: {
+        USERNAME_INVALID: 'A valid username email is required.',
+        LOAD_ROLES: 'Failed to load roles.',
+        PROVISION: 'Failed to provision user.',
+      },
+    },
+  },
+};
 
 const activatedRouteStub = {
   snapshot: {
@@ -32,13 +53,17 @@ describe('UserProvisionPageComponent', () => {
     securityServiceStub.createUser.mockReturnValue(of({ userId: 'u-001' }));
 
     await TestBed.configureTestingModule({
-      imports: [UserProvisionPageComponent],
+      imports: [UserProvisionPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
         { provide: SecurityService, useValue: securityServiceStub },
         { provide: ActivatedRoute, useValue: activatedRouteStub },
       ],
     }).compileComponents();
+
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
 
     fixture = TestBed.createComponent(UserProvisionPageComponent);
     component = fixture.componentInstance;
@@ -68,6 +93,7 @@ describe('UserProvisionPageComponent', () => {
     securityServiceStub.getAllRoles.mockReturnValue(throwError(() => new Error('server error')));
     fixture.detectChanges();
 
+    expect(component.errorKey()).toBe('SECURITY.USER_PROVISION.ERROR.LOAD_ROLES');
     expect(fixture.nativeElement.textContent).toContain('Failed to load roles.');
   });
 
@@ -153,7 +179,8 @@ describe('UserProvisionPageComponent', () => {
     btn.click();
     fixture.detectChanges();
 
-    expect(component.error()).toContain('Failed to provision user.');
+    expect(component.errorKey()).toBe('SECURITY.USER_PROVISION.ERROR.PROVISION');
+    expect(fixture.nativeElement.textContent).toContain('Failed to provision user.');
   });
 
   it('T10: shows field-level username error when createUser returns fieldErrors', () => {

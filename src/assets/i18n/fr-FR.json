@@ -962,6 +962,27 @@
           "LOCATION": "Emplacement"
         }
       }
+    },
+    "USER_PROVISION": {
+      "OVERLINE": "Administration de la sécurité",
+      "TITLE": "Provisionner un utilisateur",
+      "LINKED_PERSON": "Provisionnement du compte pour la personne : {{personId}}",
+      "LOADING": "Chargement des rôles...",
+      "SUCCESS": "Utilisateur provisionné. Identifiant d'utilisateur : {{userId}}",
+      "ACCOUNT_DETAILS": "Détails du compte",
+      "SUBMITTING": "Provisionnement...",
+      "SUBMIT": "Provisionner l'utilisateur",
+      "FIELD": {
+        "USERNAME": "Nom d'utilisateur",
+        "ROLE": "Rôle",
+        "ROLE_PLACEHOLDER": "Sélectionner un rôle"
+      },
+      "ERROR": {
+        "USERNAME_INVALID": "Une adresse e-mail d'utilisateur valide est requise.",
+        "ROLE_REQUIRED": "Le rôle est obligatoire.",
+        "LOAD_ROLES": "Impossible de charger les rôles.",
+        "PROVISION": "Impossible de provisionner l'utilisateur."
+      }
     }
   },
   "LOCATION": {
