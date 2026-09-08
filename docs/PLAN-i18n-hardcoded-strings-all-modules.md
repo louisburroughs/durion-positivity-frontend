@@ -35,7 +35,32 @@ not relaxations — the check still reports every real literal:
   UTF-16 regex offsets, so any template containing an emoji misaligned every
   subsequent blank. It now uses UTF-16 units throughout.
 
-## Backlog — 545 literals across 25 templates in 8 modules
+## Declaring deliberate non-translation
+
+Some literals are proper nouns that must render identically in every locale.
+Declare those in the template with a single-line marker carrying a reason:
+
+```html
+<!-- i18n-ignore-next-line: "Positivity" is a proper product name -->
+<h1 class="brand-name">Positivity</h1>
+
+<!-- i18n-ignore-start: "Positivity" is a proper product name -->
+<span class="shell-brand" aria-label="Positivity">…</span>
+<!-- i18n-ignore-end -->
+```
+
+The hatch is deliberately noisy so it cannot quietly absorb the backlog:
+
+- the reason is **mandatory** — a bare marker is itself a failure;
+- a marker that suppresses nothing is a failure, so stale markers cannot linger;
+- an `i18n-ignore-start` with no `i18n-ignore-end` is a failure, and suppresses
+  nothing in the meantime;
+- every run prints how many literals were suppressed, on pass and on fail alike.
+
+Use it only for proper nouns. Anything a translator could legitimately render
+differently belongs in `src/assets/i18n/*.json`.
+
+## Backlog — 534 literals across 21 templates in 4 modules
 
 | Module | Literals | Templates |
 | --- | ---: | ---: |
@@ -43,12 +68,9 @@ not relaxations — the check still reports every real literal:
 | people | 184 | 8 |
 | location | 77 | 3 |
 | security | 11 | 1 |
-| accounting | 4 | 1 |
-| landing | 4 | 1 |
-| shell | 2 | 1 |
-| auth | 1 | 1 |
 
 Clean today (no findings): `workexec` (25 templates), `inventory` (26),
+`landing`, `shell`, `auth`, `accounting`,
 `positivity` (16), `product` (14), `shopmgmt` (14), `bulk-import` (9),
 `billing` (4), `order` (3), `shared` (2), `sitemap` (1). `admin`, `system` and
 `core` have no external templates to scan.
@@ -75,11 +97,27 @@ Mirror the workexec loop (see
 "Per template (the loop)") — one module per PR, smallest first so the pattern is
 settled before the large domains:
 
-1. `auth`, `shell`, `landing`, `accounting` (11 literals total)
+1. ~~`auth`, `shell`, `landing`, `accounting` (11 literals)~~ ✅ done
 2. `security` (11)
 3. `location` (77)
 4. `people` (184)
 5. `crm` (262)
+
+### Phase 1 notes
+
+- New keys: `LANDING.NAV_ARIA`, `LANDING.FEATURES_GRID_ARIA` and the
+  `ACCOUNTING.VENDOR_PAYMENT_NEW.PAYMENT_METHOD.*` enum (`ACH`, `CHECK`, `WIRE`,
+  `CREDIT_CARD`, `OTHER`), authored in `en-US` and added to all five authored
+  locales.
+- The five "Positivity" occurrences (auth, shell ×2, landing ×2) are proper-noun
+  markers, not translations — the shell template already carried a comment
+  recording that decision, which the marker now makes machine-readable.
+- **es-US / es-MX / fr-CA / fr-FR values are machine-assisted and FLAGGED FOR
+  NATIVE REVIEW**, per the convention in the workexec plan. Note the adjacent
+  `BILLING.PAYMENT.METHOD` block has unaccented French ("Cheque", "Especes",
+  "Carte de credit/debit"); the new keys use correct accents rather than
+  matching that defect, so the two blocks read inconsistently until `BILLING`
+  is corrected separately.
 
 ## Removed: `src/app/app.html`
 

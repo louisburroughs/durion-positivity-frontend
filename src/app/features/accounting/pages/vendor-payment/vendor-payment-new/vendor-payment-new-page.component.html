@@ -55,11 +55,11 @@
 
     <label for="payment-method">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_PAYMENT_METHOD' | translate }}</label>
     <select id="payment-method" formControlName="paymentMethod">
-      <option value="ACH">ACH</option>
-      <option value="CHECK">Check</option>
-      <option value="WIRE">Wire</option>
-      <option value="CREDIT_CARD">Credit Card</option>
-      <option value="OTHER">Other</option>
+      <option value="ACH">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.PAYMENT_METHOD.ACH' | translate }}</option>
+      <option value="CHECK">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.PAYMENT_METHOD.CHECK' | translate }}</option>
+      <option value="WIRE">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.PAYMENT_METHOD.WIRE' | translate }}</option>
+      <option value="CREDIT_CARD">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.PAYMENT_METHOD.CREDIT_CARD' | translate }}</option>
+      <option value="OTHER">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.PAYMENT_METHOD.OTHER' | translate }}</option>
     </select>
 
     <label for="payment-ref">{{ 'ACCOUNTING.VENDOR_PAYMENT_NEW.FIELD_PAYMENT_REF' | translate }}</label>

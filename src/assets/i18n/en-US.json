@@ -2,6 +2,7 @@
   "GREETING": "Hello",
   "LANDING": {
     "NAV_SIGN_IN": "Sign In",
+    "NAV_ARIA": "Landing page navigation",
     "NAV_LOCALE_ARIA": "Select language",
     "NAV_THEME_TO_DARK": "Switch to dark mode",
     "NAV_THEME_TO_LIGHT": "Switch to light mode",
@@ -10,6 +11,7 @@
     "HERO_CTA": "Sign In to Your Account",
     "FEATURES_TITLE": "Everything you need, nothing you don't",
     "FEATURES_SUBTITLE": "Built for service businesses that want to work smarter.",
+    "FEATURES_GRID_ARIA": "Platform features",
     "FEATURE_CUSTOMERS_TITLE": "Know Your Customers",
     "FEATURE_CUSTOMERS_DESC": "Keep a complete picture of every client — their history, preferences, and upcoming appointments — all in one place.",
     "FEATURE_WORKORDERS_TITLE": "Get the Job Done",
@@ -1772,6 +1774,13 @@
       "FIELD_GROSS_AMOUNT": "Gross amount",
       "FIELD_CURRENCY": "Currency",
       "FIELD_PAYMENT_METHOD": "Payment method",
+      "PAYMENT_METHOD": {
+        "ACH": "ACH",
+        "CHECK": "Check",
+        "WIRE": "Wire",
+        "CREDIT_CARD": "Credit Card",
+        "OTHER": "Other"
+      },
       "FIELD_PAYMENT_REF": "Payment reference",
       "FIELD_ALLOCATIONS": "Allocations JSON",
       "SUBMIT": "Submit payment",

@@ -2,6 +2,7 @@
   "GREETING": "Bonjour",
   "LANDING": {
     "NAV_SIGN_IN": "Se connecter",
+    "NAV_ARIA": "Navigation de la page d'accueil",
     "NAV_LOCALE_ARIA": "Sélectionner la langue",
     "NAV_THEME_TO_DARK": "Passer en mode sombre",
     "NAV_THEME_TO_LIGHT": "Passer en mode clair",
@@ -10,6 +11,7 @@
     "HERO_CTA": "Se connecter à votre compte",
     "FEATURES_TITLE": "Tout ce qu'il vous faut, rien de superflu",
     "FEATURES_SUBTITLE": "Conçu pour les entreprises de services qui souhaitent travailler plus efficacement.",
+    "FEATURES_GRID_ARIA": "Fonctionnalités de la plateforme",
     "FEATURE_CUSTOMERS_TITLE": "Connaissez vos clients",
     "FEATURE_CUSTOMERS_DESC": "Gardez une vue complète de chaque client — son historique, ses préférences et ses prochains rendez-vous — tout au même endroit.",
     "FEATURE_WORKORDERS_TITLE": "Accomplissez le travail",
@@ -1772,6 +1774,13 @@
       "FIELD_GROSS_AMOUNT": "Montant brut",
       "FIELD_CURRENCY": "Currency",
       "FIELD_PAYMENT_METHOD": "Mode de paiement",
+      "PAYMENT_METHOD": {
+        "ACH": "ACH",
+        "CHECK": "Chèque",
+        "WIRE": "Virement bancaire",
+        "CREDIT_CARD": "Carte de crédit",
+        "OTHER": "Autre"
+      },
       "FIELD_PAYMENT_REF": "Référence de paiement",
       "FIELD_ALLOCATIONS": "JSON des allocations",
       "SUBMIT": "Soumettre le paiement",

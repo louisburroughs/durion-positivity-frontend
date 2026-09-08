@@ -21,6 +21,21 @@
  * ignored to avoid false positives. Blanked spans keep their newlines so reported
  * line numbers stay accurate.
  *
+ * Deliberate non-translation (proper nouns, brand names) is declared in the
+ * template with a single-line HTML comment carrying a reason:
+ *
+ *   <!-- i18n-ignore-next-line: "Positivity" is a proper product name -->
+ *   <span class="shell-brand-name">Positivity</span>
+ *
+ *   <!-- i18n-ignore-start: "Positivity" is a proper product name -->
+ *   ...
+ *   <!-- i18n-ignore-end -->
+ *
+ * The escape hatch is deliberately noisy so it cannot quietly absorb the
+ * backlog: the reason is mandatory, a marker that suppresses nothing is itself
+ * a failure, an unterminated block is a failure, and every run prints how many
+ * literals were suppressed.
+ *
  * Exit 1 on any finding. Run: `npm run i18n:check:hardcoded`
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
@@ -141,6 +156,49 @@ function blankControlFlow(src) {
   return chars.join('');
 }
 
+const IGNORE_NEXT_RE = /<!--\s*i18n-ignore-next-line\b\s*(?::\s*)?(.*?)\s*-->/;
+const IGNORE_START_RE = /<!--\s*i18n-ignore-start\b\s*(?::\s*)?(.*?)\s*-->/;
+const IGNORE_END_RE = /<!--\s*i18n-ignore-end\b\s*-->/;
+
+/**
+ * Collect the i18n-ignore markers in one template.
+ *
+ * Returns the line numbers each marker covers plus the marker list itself, so
+ * the caller can fail on a marker that carries no reason, suppresses nothing,
+ * or never closes. Markers must sit on a single line.
+ */
+function parseSuppressions(file, raw) {
+  const coverage = new Map();   // lineNo -> marker
+  const markers = [];
+  let open = null;
+
+  raw.split('\n').forEach((line, idx) => {
+    const lineNo = idx + 1;
+    const cover = (from, to, marker) => {
+      for (let n = from; n <= to; n++) if (!coverage.has(n)) coverage.set(n, marker);
+    };
+
+    let m;
+    if ((m = IGNORE_NEXT_RE.exec(line))) {
+      const marker = { file, lineNo, reason: m[1].trim(), kind: 'i18n-ignore-next-line', used: false };
+      markers.push(marker);
+      cover(lineNo + 1, lineNo + 1, marker);
+    } else if ((m = IGNORE_START_RE.exec(line))) {
+      if (open) markers.push({ ...open, unterminated: true });
+      open = { file, lineNo, reason: m[1].trim(), kind: 'i18n-ignore-start', used: false };
+    } else if (IGNORE_END_RE.test(line)) {
+      if (open) {
+        markers.push(open);
+        cover(open.lineNo, lineNo, open);
+        open = null;
+      }
+    }
+  });
+
+  if (open) markers.push({ ...open, unterminated: true });
+  return { coverage, markers };
+}
+
 const ATTR_RE = /\s(placeholder|aria-label|title|alt)="([^"{}]*[A-Za-z]{2,}[^"{}]*)"/g;
 
 // Text inside a Material Symbols/Icons element is a glyph ligature name
@@ -160,16 +218,20 @@ function isProse(t) {
 const targets = process.argv.slice(2);
 const files = [...new Set(targets.length ? targets.flatMap(collect) : collect(DEFAULT_ROOT))].sort();
 const findings = [];
+let suppressed = 0;
 
 for (const file of files) {
   const raw = readFileSync(file, 'utf8');
+  const { coverage, markers } = parseSuppressions(file, raw);
+  const literals = [];
 
   // 1) static localizable attributes (scan raw so we keep them in context)
   raw.split('\n').forEach((line, i) => {
+    if (IGNORE_NEXT_RE.test(line) || IGNORE_START_RE.test(line)) return;   // the marker's own reason text
     let m;
     ATTR_RE.lastIndex = 0;
     while ((m = ATTR_RE.exec(line))) {
-      findings.push({ file, lineNo: i + 1, kind: `attr ${m[1]}`, text: m[2].trim() });
+      literals.push({ file, lineNo: i + 1, kind: `attr ${m[1]}`, text: m[2].trim() });
     }
   });
 
@@ -186,12 +248,31 @@ for (const file of files) {
 
   stripped.split('\n').forEach((line, i) => {
     if (isProse(line)) {
-      findings.push({ file, lineNo: i + 1, kind: 'text', text: line.trim().replace(/\s+/g, ' ').slice(0, 80) });
+      literals.push({ file, lineNo: i + 1, kind: 'text', text: line.trim().replace(/\s+/g, ' ').slice(0, 80) });
     }
   });
+
+  // 3) apply the template's i18n-ignore markers, then audit the markers themselves.
+  for (const lit of literals) {
+    const marker = coverage.get(lit.lineNo);
+    if (marker) { marker.used = true; suppressed++; } else { findings.push(lit); }
+  }
+
+  for (const marker of markers) {
+    if (marker.unterminated) {
+      findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: 'i18n-ignore-start without a matching i18n-ignore-end' });
+    } else if (!marker.reason) {
+      findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: `${marker.kind} needs a reason: <!-- ${marker.kind}: why this stays untranslated -->` });
+    } else if (!marker.used) {
+      findings.push({ file, lineNo: marker.lineNo, kind: 'i18n-ignore', text: `${marker.kind} suppresses nothing — delete it` });
+    }
+  }
 }
 
 const scope = targets.length ? targets.join(', ') : `${DEFAULT_ROOT} (all modules)`;
+const suppressedNote = suppressed
+  ? `  (${suppressed} literal(s) suppressed by i18n-ignore markers)`
+  : '';
 
 if (findings.length) {
   const byModule = new Map();
@@ -219,9 +300,13 @@ if (findings.length) {
     }
     console.error('');
   }
+  if (suppressedNote) console.error(`${suppressedNote.trim()}\n`);
   console.error('Wrap each in the | translate pipe with a key in src/assets/i18n/*.json (ADR-0030).');
   console.error(`Remediate one module at a time: node ${relative('.', process.argv[1])} src/app/features/<module>`);
   process.exit(1);
 }
 
-console.log(`PASS hardcoded-string check: no user-visible literals in ${scope} (${files.length} files scanned).`);
+console.log(
+  `PASS hardcoded-string check: no user-visible literals in ${scope} ` +
+  `(${files.length} files scanned).${suppressedNote}`,
+);

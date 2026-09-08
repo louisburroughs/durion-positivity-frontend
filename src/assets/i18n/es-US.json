@@ -2,6 +2,7 @@
   "GREETING": "Hola",
   "LANDING": {
     "NAV_SIGN_IN": "Iniciar sesión",
+    "NAV_ARIA": "Navegación de la página de inicio",
     "NAV_LOCALE_ARIA": "Seleccionar idioma",
     "NAV_THEME_TO_DARK": "Cambiar al modo oscuro",
     "NAV_THEME_TO_LIGHT": "Cambiar al modo claro",
@@ -10,6 +11,7 @@
     "HERO_CTA": "Iniciar sesión en tu cuenta",
     "FEATURES_TITLE": "Todo lo que necesitas, nada más",
     "FEATURES_SUBTITLE": "Diseñado para empresas de servicios que quieren trabajar de manera más inteligente.",
+    "FEATURES_GRID_ARIA": "Funciones de la plataforma",
     "FEATURE_CUSTOMERS_TITLE": "Conoce a tus clientes",
     "FEATURE_CUSTOMERS_DESC": "Mantén una imagen completa de cada cliente — su historial, preferencias y próximas citas — todo en un solo lugar.",
     "FEATURE_WORKORDERS_TITLE": "Finaliza el trabajo",
@@ -1772,6 +1774,13 @@
       "FIELD_GROSS_AMOUNT": "Importe bruto",
       "FIELD_CURRENCY": "Currency",
       "FIELD_PAYMENT_METHOD": "Método de pago",
+      "PAYMENT_METHOD": {
+        "ACH": "ACH",
+        "CHECK": "Cheque",
+        "WIRE": "Transferencia bancaria",
+        "CREDIT_CARD": "Tarjeta de crédito",
+        "OTHER": "Otro"
+      },
       "FIELD_PAYMENT_REF": "Referencia de pago",
       "FIELD_ALLOCATIONS": "JSON de asignaciones",
       "SUBMIT": "Enviar pago",
