@@ -111,8 +111,13 @@ label {
   font-weight: 600;
 }
 
+.field-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
 select,
-input[type='text'],
 input[type='datetime-local'] {
   width: 100%;
   border: 0;
@@ -123,7 +128,6 @@ input[type='datetime-local'] {
 }
 
 select:focus,
-input[type='text']:focus,
 input[type='datetime-local']:focus {
   outline: 2px solid var(--brand-primary);
   outline-offset: 2px;

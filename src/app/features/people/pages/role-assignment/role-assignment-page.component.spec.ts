@@ -15,8 +15,6 @@ const translations = {
       ARIA: { LAYOUT: 'Role assignment layout' },
       ASSIGNED_ROLES: 'Assigned roles',
       INCLUDE_HISTORY: 'Include history',
-      SCOPE_GLOBAL: 'Global',
-      SCOPE_LOCATION: 'Location',
       STATUS: 'Status',
       REVOKE: 'Revoke',
       CONFIRM_REVOKE: 'Confirm revoke',
@@ -25,8 +23,7 @@ const translations = {
       DETAILS: 'Assignment details',
       ROLE: 'Role',
       SELECT_ROLE: 'Select a role',
-      SCOPE_TYPE: 'Scope type',
-      LOCATION_ID: 'Location ID',
+      LOCATION_SOURCE_HINT: 'Location comes from the staffing assignment, not this role assignment.',
       EFFECTIVE_START: 'Effective start',
       EFFECTIVE_END: 'Effective end',
       SUBMIT: 'Assign role',
@@ -57,7 +54,6 @@ const STUB_ASSIGNMENTS: UserRoleDto[] = [
   {
     userId: 'p-1',
     roleCode: 'ROLE_MANAGER',
-    locationId: 'loc-5',
     startDate: '2026-02-01',
     active: true,
   },
@@ -122,13 +118,11 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
     const headingEls = fixture.nativeElement.querySelectorAll('h2');
     const roleLabel = fixture.nativeElement.querySelector('label[for="role-select"]');
-    const scopeLabel = fixture.nativeElement.querySelector('label[for="scope-type"]');
     const submitButton = fixture.nativeElement.querySelector('[data-testid="submit-assignment-btn"]');
 
     expect(headingEls[0]?.textContent).toContain('Assigned roles');
     expect(headingEls[1]?.textContent).toContain('Assign role');
     expect(roleLabel?.textContent).toContain('Role');
-    expect(scopeLabel?.textContent).toContain('Scope type');
     expect(submitButton?.textContent).toContain('Assign role');
   });
 
@@ -160,22 +154,27 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     expect(rows.length).toBe(STUB_ASSIGNMENTS.length);
   });
 
-  // ── T4: Location picker visibility ───────────────────────────────────────
+  // ── T4: No scope/location controls (ADR-0061) ────────────────────────────
 
-  it('hides .location-picker when scopeType is GLOBAL', async () => {
+  it('renders no scope selector and no location picker', async () => {
     await setup();
-    c(component).scopeType.set('GLOBAL');
-    fixture.detectChanges();
-    const picker = fixture.debugElement.query(By.css('.location-picker'));
-    expect(picker).toBeNull();
+    expect(fixture.debugElement.query(By.css('#scope-type'))).toBeNull();
+    expect(fixture.debugElement.query(By.css('.location-picker'))).toBeNull();
+    expect(fixture.debugElement.query(By.css('#location-id'))).toBeNull();
   });
 
-  it('shows .location-picker when scopeType is LOCATION', async () => {
+  it('explains where a location actually comes from instead of asking for one', async () => {
     await setup();
-    c(component).scopeType.set('LOCATION');
-    fixture.detectChanges();
-    const picker = fixture.debugElement.query(By.css('.location-picker'));
-    expect(picker).toBeTruthy();
+    const hint = fixture.debugElement.query(By.css('[data-testid="location-source-hint"]'));
+    expect(hint).toBeTruthy();
+    expect(hint.nativeElement.textContent).toContain(
+      'Location comes from the staffing assignment, not this role assignment.',
+    );
+  });
+
+  it('does not render a location column on assignment rows', async () => {
+    await setup();
+    expect(fixture.debugElement.query(By.css('.scope-code'))).toBeNull();
   });
 
   // ── T5: Submit disabled when required fields are missing ──────────────────
@@ -184,7 +183,6 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     await setup();
     c(component).effectiveStartAt.set('');
     c(component).selectedRoleCode.set('ROLE_ADMIN');
-    c(component).scopeType.set('GLOBAL');
     fixture.detectChanges();
     const btn = fixture.debugElement.query(By.css('[data-testid="submit-assignment-btn"]'));
     expect(btn.nativeElement.disabled).toBe(true);
@@ -194,39 +192,15 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     await setup();
     c(component).effectiveStartAt.set('2026-01-01T00:00:00Z');
     c(component).selectedRoleCode.set('');
-    c(component).scopeType.set('GLOBAL');
     fixture.detectChanges();
     const btn = fixture.debugElement.query(By.css('[data-testid="submit-assignment-btn"]'));
     expect(btn.nativeElement.disabled).toBe(true);
   });
 
-  it('submit button is disabled when scopeType=LOCATION and locationId is empty', async () => {
-    await setup();
-    c(component).effectiveStartAt.set('2026-01-01T00:00:00Z');
-    c(component).selectedRoleCode.set('ROLE_ADMIN');
-    c(component).scopeType.set('LOCATION');
-    c(component).locationId.set('');
-    fixture.detectChanges();
-    const btn = fixture.debugElement.query(By.css('[data-testid="submit-assignment-btn"]'));
-    expect(btn.nativeElement.disabled).toBe(true);
-  });
-
-  it('submit button is enabled when all required GLOBAL fields are present', async () => {
+  it('submit button is enabled when role and effective start are present', async () => {
     await setup();
     c(component).effectiveStartAt.set('2026-06-01T00:00:00Z');
     c(component).selectedRoleCode.set('ROLE_ADMIN');
-    c(component).scopeType.set('GLOBAL');
-    fixture.detectChanges();
-    const btn = fixture.debugElement.query(By.css('[data-testid="submit-assignment-btn"]'));
-    expect(btn.nativeElement.disabled).toBe(false);
-  });
-
-  it('submit button is enabled when all required LOCATION fields are present', async () => {
-    await setup();
-    c(component).effectiveStartAt.set('2026-06-01T00:00:00Z');
-    c(component).selectedRoleCode.set('ROLE_ADMIN');
-    c(component).scopeType.set('LOCATION');
-    c(component).locationId.set('loc-10');
     fixture.detectChanges();
     const btn = fixture.debugElement.query(By.css('[data-testid="submit-assignment-btn"]'));
     expect(btn.nativeElement.disabled).toBe(false);
@@ -234,11 +208,9 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
   // ── T6: createAssignment called on submit ─────────────────────────────────
 
-  it('calls service.createAssignment with GLOBAL payload on submit (no locationId)', async () => {
+  it('calls service.createAssignment with a role-and-dates-only payload on submit', async () => {
     await setup('person-uuid-1');
     c(component).selectedRoleCode.set('ROLE_ADMIN');
-    c(component).scopeType.set('GLOBAL');
-    c(component).locationId.set('loc-ignored');
     c(component).effectiveStartAt.set('2026-06-01T00:00:00Z');
 
     c(component).submitAssignment();
@@ -250,31 +222,26 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
       startDate: '2026-06-01T00:00:00Z',
     });
     expect(payload).not.toHaveProperty('locationId');
+    expect(payload).not.toHaveProperty('scopeType');
   });
 
-  it('calls service.createAssignment with LOCATION payload including locationId', async () => {
+  it('never sends locationId even for a role that used to be location scoped', async () => {
     await setup('person-uuid-1');
     c(component).selectedRoleCode.set('ROLE_MANAGER');
-    c(component).scopeType.set('LOCATION');
-    c(component).locationId.set('loc-77');
     c(component).effectiveStartAt.set('2026-06-01T00:00:00Z');
 
     c(component).submitAssignment();
 
-    expect(stubPeopleService.createRoleAssignment).toHaveBeenCalledWith(
-      'person-uuid-1',
-      expect.objectContaining({
-        roleCode: 'ROLE_MANAGER',
-        locationId: 'loc-77',
-        startDate: '2026-06-01T00:00:00Z',
-      }),
-    );
+    const [, payload] = stubPeopleService.createRoleAssignment.mock.calls[0];
+    expect(payload).toEqual({
+      roleCode: 'ROLE_MANAGER',
+      startDate: '2026-06-01T00:00:00Z',
+    });
   });
 
   it('includes effectiveEndAt in payload when it is set', async () => {
     await setup('person-uuid-1');
     c(component).selectedRoleCode.set('ROLE_VIEW');
-    c(component).scopeType.set('GLOBAL');
     c(component).effectiveStartAt.set('2026-01-01T00:00:00Z');
     c(component).effectiveEndAt.set('2026-12-31T23:59:59Z');
 
@@ -287,7 +254,6 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
   it('omits effectiveEndAt from payload when it is empty', async () => {
     await setup('person-uuid-1');
     c(component).selectedRoleCode.set('ROLE_VIEW');
-    c(component).scopeType.set('GLOBAL');
     c(component).effectiveStartAt.set('2026-01-01T00:00:00Z');
     c(component).effectiveEndAt.set('');
 
@@ -315,19 +281,19 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     expect(stubPeopleService.getRoleAssignments.mock.calls.length).toBeGreaterThan(callsBefore);
   });
 
-  it('renders duplicate roleCode rows across scopes and targets revoke confirmation by stable row key', async () => {
+  it('renders duplicate roleCode rows across effective periods and targets revoke confirmation by stable row key', async () => {
     const duplicateAssignments: UserRoleDto[] = [
       {
         userId: 'p-1',
         roleCode: 'ROLE_MANAGER',
         startDate: '2026-03-01',
-        active: true,
+        endDate: '2026-05-31',
+        active: false,
       },
       {
         userId: 'p-1',
         roleCode: 'ROLE_MANAGER',
-        locationId: 'loc-5',
-        startDate: '2026-03-01',
+        startDate: '2026-06-01',
         active: true,
       },
     ];
@@ -339,8 +305,8 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
 
     const rowsBefore = Array.from(fixture.nativeElement.querySelectorAll('.assignment-item')) as HTMLElement[];
     expect(rowsBefore).toHaveLength(2);
-    expect(rowsBefore[0].textContent).toContain('Global');
-    expect(rowsBefore[1].textContent).toContain('loc-5');
+    expect(c(component).getAssignmentKey(duplicateAssignments[0]))
+      .not.toBe(c(component).getAssignmentKey(duplicateAssignments[1]));
 
     const revokeButtons = fixture.nativeElement.querySelectorAll('.assignment-item .btn--danger-outline');
     revokeButtons[1].click();
@@ -414,7 +380,6 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     await setup();
     stubPeopleService.createRoleAssignment.mockReturnValue(throwError(() => new Error('network error')));
     c(component).selectedRoleCode.set('ROLE_ADMIN');
-    c(component).scopeType.set('GLOBAL');
     c(component).effectiveStartAt.set('2026-06-01T00:00:00Z');
     c(component).errorMessage.set(null);
     c(component).submitAssignment();

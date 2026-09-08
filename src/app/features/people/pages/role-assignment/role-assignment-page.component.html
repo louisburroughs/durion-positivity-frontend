@@ -21,7 +21,6 @@
       <li class="assignment-item">
         <span class="id-cell">{{ assignment.userId }}</span>
         <span class="role-code">{{ assignment.roleCode }}</span>
-        <span class="scope-code">{{ assignment.locationId ?? ('PEOPLE.ROLE_ASSIGNMENT.SCOPE_GLOBAL' | translate) }}</span>
         <span class="status-badge" [class.status-active]="assignment.active"
           [class.status-revoked]="!assignment.active">
           <span class="sr-only">{{ 'PEOPLE.ROLE_ASSIGNMENT.STATUS' | translate }}: </span>{{ (assignment.active ? 'STATUS.ACTIVE' : 'STATUS.INACTIVE') | translate }}
@@ -66,22 +65,9 @@
           </select>
         </div>
 
-        <div class="field-row">
-          <label for="scope-type">{{ 'PEOPLE.ROLE_ASSIGNMENT.SCOPE_TYPE' | translate }}</label>
-          <select id="scope-type" name="scopeType" [value]="scopeType()"
-            (change)="scopeType.set($any($event.target).value); locationId.set('')">
-            <option value="GLOBAL">{{ 'PEOPLE.ROLE_ASSIGNMENT.SCOPE_GLOBAL' | translate }}</option>
-            <option value="LOCATION">{{ 'PEOPLE.ROLE_ASSIGNMENT.SCOPE_LOCATION' | translate }}</option>
-          </select>
-        </div>
-
-        @if (scopeType() === 'LOCATION') {
-        <div class="field-row location-picker">
-          <label for="location-id">{{ 'PEOPLE.ROLE_ASSIGNMENT.LOCATION_ID' | translate }}</label>
-          <input id="location-id" name="locationId" type="text" [value]="locationId()"
-            (input)="locationId.set($any($event.target).value)" autocomplete="off" />
-        </div>
-        }
+        <p class="field-hint" data-testid="location-source-hint">
+          {{ 'PEOPLE.ROLE_ASSIGNMENT.LOCATION_SOURCE_HINT' | translate }}
+        </p>
 
         <div class="field-row">
           <label for="effective-start">{{ 'PEOPLE.ROLE_ASSIGNMENT.EFFECTIVE_START' | translate }}</label>

@@ -464,7 +464,7 @@
       }
     },
     "ROLE_ASSIGNMENT": {
-      "TITLE": "Assign role and scope",
+      "TITLE": "Assign role",
       "PAGE_TITLE": "Role Assignments",
       "ASSIGNED_ROLES": "Assigned roles",
       "INCLUDE_HISTORY": "Include history",
@@ -472,10 +472,7 @@
       "DETAILS": "Role assignment details",
       "ROLE": "Role",
       "SELECT_ROLE": "Select a role",
-      "SCOPE_TYPE": "Scope type",
-      "SCOPE_GLOBAL": "GLOBAL",
-      "SCOPE_LOCATION": "LOCATION",
-      "LOCATION_ID": "Location ID",
+      "LOCATION_SOURCE_HINT": "Location comes from the person's staffing assignment, not from this role assignment.",
       "EFFECTIVE_START": "Effective start",
       "EFFECTIVE_END": "Effective end (optional)",
       "SUBMIT": "Assign role",
