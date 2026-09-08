@@ -1,36 +1,36 @@
 <article class="crm-page party-contacts" aria-labelledby="page-heading">
-  <button class="btn-ghost back-btn" type="button" (click)="backToParty()">← Back to Party</button>
+  <button class="btn-ghost back-btn" type="button" (click)="backToParty()">{{ 'CRM.PARTY_CONTACTS.BACK' | translate }}</button>
 
-  <h1 id="page-heading">Contacts &amp; Roles</h1>
+  <h1 id="page-heading">{{ 'CRM.PARTY_CONTACTS.TITLE' | translate }}</h1>
 
   @if (partyForbidden()) {
     <div role="alert" class="error-state">
-      <p>You don't have permission to view this account header.</p>
+      <p>{{ 'CRM.PARTY_CONTACTS.PARTY_FORBIDDEN' | translate }}</p>
     </div>
   }
 
-  <section class="toolbar" aria-label="Contact filters and actions">
+  <section class="toolbar" [attr.aria-label]="'CRM.PARTY_CONTACTS.TOOLBAR_ARIA' | translate">
     <div class="toolbar-filters">
-      <label class="field-label" for="statusFilter">Status</label>
+      <label class="field-label" for="statusFilter">{{ 'CRM.PARTY_CONTACTS.FILTER_STATUS' | translate }}</label>
       <select
         id="statusFilter"
         class="field-input"
         [value]="filterStatus()"
         (change)="onStatusFilterChange($event)"
       >
-        <option value="ACTIVE">Active</option>
-        <option value="INACTIVE">Inactive</option>
-        <option value="ALL">All</option>
+        <option value="ACTIVE">{{ 'CRM.PARTY_CONTACTS.STATUS.ACTIVE' | translate }}</option>
+        <option value="INACTIVE">{{ 'CRM.PARTY_CONTACTS.STATUS.INACTIVE' | translate }}</option>
+        <option value="ALL">{{ 'CRM.PARTY_CONTACTS.STATUS.ALL' | translate }}</option>
       </select>
 
-      <label class="field-label" for="roleFilter">Role</label>
+      <label class="field-label" for="roleFilter">{{ 'CRM.PARTY_CONTACTS.FILTER_ROLE' | translate }}</label>
       <select
         id="roleFilter"
         class="field-input"
         [value]="filterRole()"
         (change)="onRoleFilterChange($event)"
       >
-        <option value="ALL">All</option>
+        <option value="ALL">{{ 'CRM.PARTY_CONTACTS.ROLE_ALL' | translate }}</option>
         <option value="BILLING">BILLING</option>
         <option value="APPROVER">APPROVER</option>
         <option value="PRIMARY_CONTACT">PRIMARY_CONTACT</option>
@@ -38,22 +38,22 @@
         <option value="TECHNICAL">TECHNICAL</option>
       </select>
 
-      <label class="sr-only" for="contactSearch">Search contacts</label>
+      <label class="sr-only" for="contactSearch">{{ 'CRM.PARTY_CONTACTS.SEARCH_LABEL' | translate }}</label>
       <input
         id="contactSearch"
         class="field-input"
         type="text"
-        placeholder="Search contacts..."
+        [placeholder]="'CRM.PARTY_CONTACTS.SEARCH_PLACEHOLDER' | translate"
         [value]="filterSearch()"
         (input)="onSearchInput($event)"
       />
     </div>
 
-    <button class="btn-primary" type="button" (click)="openModal()">Add Contact</button>
+    <button class="btn-primary" type="button" (click)="openModal()">{{ 'CRM.PARTY_CONTACTS.ADD_CONTACT' | translate }}</button>
   </section>
 
   @if (pageState() === 'loading') {
-    <div class="loading-state" role="status" aria-label="Loading contacts..." aria-busy="true">
+    <div class="loading-state" role="status" aria-busy="true" [attr.aria-label]="'CRM.PARTY_CONTACTS.LOADING_ARIA' | translate">
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
       <div class="skeleton-row"></div>
@@ -62,37 +62,37 @@
 
   @if (pageState() === 'error') {
     <div role="alert" class="error-state">
-      <p>Unable to load contacts and roles.</p>
-      <button class="btn-primary" type="button" (click)="loadRelationships()">Retry</button>
+      <p>{{ 'CRM.PARTY_CONTACTS.ERROR.LOAD' | translate }}</p>
+      <button class="btn-primary" type="button" (click)="loadRelationships()">{{ 'CRM.PARTY_CONTACTS.RETRY' | translate }}</button>
     </div>
   }
 
   @if (pageState() === 'access-denied') {
     <div role="alert" class="error-state">
-      <p>You don't have permission to view contacts for this account.</p>
+      <p>{{ 'CRM.PARTY_CONTACTS.FORBIDDEN' | translate }}</p>
     </div>
   }
 
   @if (pageState() === 'ready') {
 		@if (paginatedRelationships().length === 0) {
 			<section class="empty-state" aria-live="polite">
-				<h2>No contacts found</h2>
-				<p>Try changing filters or add a new contact relationship.</p>
-				<button class="btn-primary" type="button" (click)="openModal()">Add Contact</button>
+				<h2>{{ 'CRM.PARTY_CONTACTS.EMPTY_TITLE' | translate }}</h2>
+				<p>{{ 'CRM.PARTY_CONTACTS.EMPTY_BODY' | translate }}</p>
+				<button class="btn-primary" type="button" (click)="openModal()">{{ 'CRM.PARTY_CONTACTS.ADD_CONTACT' | translate }}</button>
 			</section>
 		}
 
 		@if (paginatedRelationships().length > 0) {
 			<div class="table-wrap">
-				<table aria-label="Contacts and roles" class="data-blueprint-table">
+				<table [attr.aria-label]="'CRM.PARTY_CONTACTS.TABLE_ARIA' | translate" class="data-blueprint-table">
 					<thead>
 						<tr>
-							<th scope="col">Person</th>
-							<th scope="col">Role</th>
-							<th scope="col">Effective From</th>
-							<th scope="col">Effective Thru</th>
-							<th scope="col">Primary Billing</th>
-							<th scope="col">Actions</th>
+							<th scope="col">{{ 'CRM.PARTY_CONTACTS.COL.PERSON' | translate }}</th>
+							<th scope="col">{{ 'CRM.PARTY_CONTACTS.COL.ROLE' | translate }}</th>
+							<th scope="col">{{ 'CRM.PARTY_CONTACTS.COL.EFFECTIVE_FROM' | translate }}</th>
+							<th scope="col">{{ 'CRM.PARTY_CONTACTS.COL.EFFECTIVE_THRU' | translate }}</th>
+							<th scope="col">{{ 'CRM.PARTY_CONTACTS.COL.PRIMARY_BILLING' | translate }}</th>
+							<th scope="col">{{ 'CRM.PARTY_CONTACTS.COL.ACTIONS' | translate }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -101,20 +101,20 @@
 								<td>
 									<div class="person-main">{{ r.personName }}</div>
 									@if (r.email || r.phone) {
-										<div class="person-subline">{{ r.email || 'No email' }} @if (r.phone) { · {{ r.phone }} }</div>
+										<div class="person-subline">{{ r.email || ('CRM.PARTY_CONTACTS.NO_EMAIL' | translate) }} @if (r.phone) { · {{ r.phone }} }</div>
 									}
 								</td>
 								<td>
 									<span class="role-badge role-badge--{{ r.role | lowercase }}">{{ r.role }}</span>
 								</td>
 								<td>{{ r.effectiveFrom }}</td>
-								<td>{{ r.effectiveThru || 'Active' }}</td>
+								<td>{{ r.effectiveThru || ('CRM.PARTY_CONTACTS.STATUS.ACTIVE' | translate) }}</td>
 								<td>
 									@if (r.isPrimaryBilling && r.role === 'BILLING') {
 										<span class="primary-star" aria-hidden="true">★</span>
-										<span class="sr-only">Primary billing contact</span>
+										<span class="sr-only">{{ 'CRM.PARTY_CONTACTS.PRIMARY_BILLING_SR' | translate }}</span>
 									} @else {
-										<span class="muted">No</span>
+										<span class="muted">{{ 'CRM.PARTY_CONTACTS.NO' | translate }}</span>
 									}
 								</td>
 								<td>
@@ -126,7 +126,7 @@
 												[disabled]="r.role.toUpperCase() !== 'BILLING' || r.isPrimaryBilling || pendingRowId() === r.relationshipId"
 												(click)="setPrimaryBilling(r)"
 											>
-												Set Primary
+												{{ 'CRM.PARTY_CONTACTS.SET_PRIMARY' | translate }}
 											</button>
 											<button
 												type="button"
@@ -134,11 +134,11 @@
 												[disabled]="pendingRowId() === r.relationshipId"
 												(click)="deactivate(r)"
 											>
-												Deactivate
+												{{ 'CRM.PARTY_CONTACTS.DEACTIVATE' | translate }}
 											</button>
 										</div>
 									} @else {
-										<span class="muted">Inactive</span>
+										<span class="muted">{{ 'CRM.PARTY_CONTACTS.STATUS.INACTIVE' | translate }}</span>
 									}
 								</td>
 							</tr>
@@ -147,21 +147,22 @@
 				</table>
 			</div>
 
-			<footer class="pagination" aria-label="Contacts pagination">
+			<footer class="pagination" [attr.aria-label]="'CRM.PARTY_CONTACTS.PAGINATION_ARIA' | translate">
 				<span>
-					Showing {{ pageIndex() * pageSize + 1 }}-
-					{{ ((pageIndex() + 1) * pageSize) > totalCount() ? totalCount() : ((pageIndex() + 1) * pageSize) }}
-					of {{ totalCount() }}
+					{{ 'CRM.PARTY_CONTACTS.SHOWING_RANGE' | translate: {
+						from: pageIndex() * pageSize + 1,
+						to: ((pageIndex() + 1) * pageSize) > totalCount() ? totalCount() : ((pageIndex() + 1) * pageSize),
+						total: totalCount() } }}
 				</span>
 				<div class="pagination-actions">
-					<button class="btn-ghost" type="button" [disabled]="pageIndex() === 0" (click)="prevPage()">Prev</button>
+					<button class="btn-ghost" type="button" [disabled]="pageIndex() === 0" (click)="prevPage()">{{ 'CRM.PARTY_CONTACTS.PREV' | translate }}</button>
 					<button
 						class="btn-ghost"
 						type="button"
 						[disabled]="(pageIndex() + 1) * pageSize >= totalCount()"
 						(click)="nextPage()"
 					>
-						Next
+						{{ 'CRM.PARTY_CONTACTS.NEXT' | translate }}
 					</button>
 				</div>
 			</footer>
@@ -184,28 +185,28 @@
 				(click)="$event.stopPropagation()"
 				(keydown)="$event.stopPropagation()"
 			>
-				<h2 id="modal-heading">Add Contact</h2>
+				<h2 id="modal-heading">{{ 'CRM.PARTY_CONTACTS.MODAL_TITLE' | translate }}</h2>
 
 				@if (modalError()) {
 					<div class="error-state" role="alert">{{ modalError() }}</div>
 				}
 
 				<form [formGroup]="addContactForm" class="modal-form" novalidate>
-					<label class="field-label" for="personId">Person</label>
+					<label class="field-label" for="personId">{{ 'CRM.PARTY_CONTACTS.FIELD_PERSON' | translate }}</label>
 					<div class="person-typeahead">
 						<input id="personId" class="field-input" type="text"
 							role="combobox" aria-autocomplete="list" aria-controls="personId-listbox"
 							[attr.aria-expanded]="showPersonSuggestions()"
 							autocomplete="off" spellcheck="false" [value]="personQuery()"
-							placeholder="Search people by name…"
+							[placeholder]="'CRM.PARTY_CONTACTS.PERSON_PLACEHOLDER' | translate"
 							(input)="onPersonInput($any($event.target).value)"
 							(focus)="onPersonFocus()" (blur)="onPersonBlur()" />
 						@if (showPersonSuggestions()) {
 						<ul id="personId-listbox" class="person-typeahead__list" role="listbox">
 							@if (searchingPerson()) {
-							<li class="person-typeahead__hint" role="presentation">Searching…</li>
+							<li class="person-typeahead__hint" role="presentation">{{ 'CRM.PARTY_CONTACTS.SEARCHING' | translate }}</li>
 							} @else if (personSuggestions().length === 0) {
-							<li class="person-typeahead__hint" role="presentation">No matching people</li>
+							<li class="person-typeahead__hint" role="presentation">{{ 'CRM.PARTY_CONTACTS.NO_MATCHES' | translate }}</li>
 							} @else {
 							@for (person of personSuggestions(); track person.personId) {
 							<li class="person-typeahead__option" role="option"
@@ -219,10 +220,10 @@
 						}
 					</div>
 					@if (addContactForm.controls.personId.touched && addContactForm.controls.personId.errors?.['required']) {
-						<p class="field-error" role="alert">Select a person from the list.</p>
+						<p class="field-error" role="alert">{{ 'CRM.PARTY_CONTACTS.ERROR.PERSON_REQUIRED' | translate }}</p>
 					}
 
-					<label class="field-label" for="role">Role</label>
+					<label class="field-label" for="role">{{ 'CRM.PARTY_CONTACTS.FIELD_ROLE' | translate }}</label>
 					<select id="role" class="field-input" formControlName="role">
 						<option value="BILLING">BILLING</option>
 						<option value="APPROVER">APPROVER</option>
@@ -231,7 +232,7 @@
 						<option value="TECHNICAL">TECHNICAL</option>
 					</select>
 
-					<label class="field-label" for="effectiveFrom">Effective From</label>
+					<label class="field-label" for="effectiveFrom">{{ 'CRM.PARTY_CONTACTS.FIELD_EFFECTIVE_FROM' | translate }}</label>
 					<input id="effectiveFrom" class="field-input" type="date" formControlName="effectiveFrom" />
 
 					<label class="checkbox-row" for="primaryBillingContact">
@@ -241,14 +242,14 @@
 							formControlName="primaryBillingContact"
 							[disabled]="addContactForm.controls.role.value !== 'BILLING'"
 						/>
-						<span>Primary billing contact</span>
+						<span>{{ 'CRM.PARTY_CONTACTS.FIELD_PRIMARY_BILLING' | translate }}</span>
 					</label>
 
 					<div class="modal-actions">
 						<button class="btn-primary" type="button" [disabled]="addContactForm.invalid || modalState() === 'saving'" (click)="saveContact()">
-							Save
+							{{ 'CRM.PARTY_CONTACTS.SAVE' | translate }}
 						</button>
-						<button class="btn-ghost" type="button" [disabled]="modalState() === 'saving'" (click)="closeModal()">Cancel</button>
+						<button class="btn-ghost" type="button" [disabled]="modalState() === 'saving'" (click)="closeModal()">{{ 'CRM.PARTY_CONTACTS.CANCEL' | translate }}</button>
 					</div>
 				</form>
 			</section>

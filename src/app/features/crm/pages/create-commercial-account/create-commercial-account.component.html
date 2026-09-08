@@ -4,24 +4,24 @@
   @if (isAccessDenied) {
     <section class="state-panel state-panel--denied" aria-live="assertive">
       <span class="state-icon" aria-hidden="true">🔒</span>
-      <h2 id="denied-heading">Access Denied</h2>
-      <p>You do not have permission to create commercial accounts.</p>
-      <p class="state-hint">Contact your administrator to request access.</p>
+      <h2 id="denied-heading">{{ 'CRM.CREATE_COMMERCIAL.DENIED_TITLE' | translate }}</h2>
+      <p>{{ 'CRM.CREATE_COMMERCIAL.DENIED_BODY' | translate }}</p>
+      <p class="state-hint">{{ 'CRM.CREATE_COMMERCIAL.DENIED_HINT' | translate }}</p>
     </section>
   }
 
   <!-- ── Main form area ─────────────────────────────────────────────────── -->
   @if (!isAccessDenied && !isSuccess) {
     <header class="page-header">
-      <h1 id="page-heading">Create Commercial Account</h1>
-      <p class="page-subtitle">Register a new commercial party in the CRM.</p>
+      <h1 id="page-heading">{{ 'CRM.CREATE_COMMERCIAL.TITLE' | translate }}</h1>
+      <p class="page-subtitle">{{ 'CRM.CREATE_COMMERCIAL.SUBTITLE' | translate }}</p>
     </header>
 
     <!-- Loading billing terms -->
     @if (isLoadingTerms) {
       <div class="state-panel state-panel--loading" aria-live="polite" aria-busy="true">
         <span class="spinner" aria-hidden="true"></span>
-        <p>Loading billing terms…</p>
+        <p>{{ 'CRM.CREATE_COMMERCIAL.LOADING_TERMS' | translate }}</p>
       </div>
     }
 
@@ -29,9 +29,9 @@
     @if (isTermsError) {
       <div class="state-panel state-panel--error" role="alert">
         <span class="state-icon" aria-hidden="true">⚠</span>
-        <p>Could not load billing terms. Please try again.</p>
+        <p>{{ 'CRM.CREATE_COMMERCIAL.ERROR.LOAD_TERMS' | translate }}</p>
         <button class="btn btn--secondary" type="button" (click)="retryTermsLoad()">
-          Retry
+          {{ 'CRM.CREATE_COMMERCIAL.RETRY' | translate }}
         </button>
       </div>
     }
@@ -41,46 +41,46 @@
       <section class="duplicate-panel" aria-labelledby="dup-heading" aria-live="assertive">
         <h2 id="dup-heading" class="duplicate-panel__heading">
           <span class="state-icon" aria-hidden="true">⚠</span>
-          Possible Duplicate Accounts Found
+          {{ 'CRM.CREATE_COMMERCIAL.DUPLICATES_TITLE' | translate }}
         </h2>
         <p class="duplicate-panel__intro">
-          The following existing accounts may match the name you entered.
-          Review them before proceeding.
+          {{ 'CRM.CREATE_COMMERCIAL.DUPLICATES_INTRO' | translate }}
         </p>
-        <ul class="duplicate-list" aria-label="Duplicate candidates">
+        <ul class="duplicate-list" [attr.aria-label]="'CRM.CREATE_COMMERCIAL.DUPLICATES_ARIA' | translate">
           @for (dup of duplicates(); track dup.partyId) {
             <li class="duplicate-item">
               <span class="duplicate-item__name">{{ dup.legalName }}</span>
               @if (dup.dba) {
-                <span class="duplicate-item__meta">DBA: {{ dup.dba }}</span>
+                <span class="duplicate-item__meta">{{ 'CRM.CREATE_COMMERCIAL.DBA' | translate: { dba: dup.dba } }}</span>
               }
               @if (dup.taxId) {
-                <span class="duplicate-item__meta">Tax ID: {{ dup.taxId }}</span>
+                <span class="duplicate-item__meta">{{ 'CRM.CREATE_COMMERCIAL.TAX_ID' | translate: { taxId: dup.taxId } }}</span>
               }
               @if (dup.matchReasons?.length) {
                 <span class="duplicate-item__reasons">
-                  Matched on: {{ dup.matchReasons.join(', ') }}
+                  {{ 'CRM.CREATE_COMMERCIAL.MATCHED_ON' | translate: { reasons: dup.matchReasons.join(', ') } }}
                 </span>
               }
             </li>
           }
         </ul>
 
-        <form [formGroup]="overrideForm" class="override-form" aria-label="Override duplicate">
+        <form [formGroup]="overrideForm" class="override-form"
+          [attr.aria-label]="'CRM.CREATE_COMMERCIAL.OVERRIDE_FORM_ARIA' | translate">
           <div class="field">
             <label for="justification" class="field__label">
-              Justification for creating a new account <span class="required-mark" aria-hidden="true">*</span>
+              {{ 'CRM.CREATE_COMMERCIAL.FIELD_JUSTIFICATION' | translate }} <span class="required-mark" aria-hidden="true">*</span>
             </label>
             <textarea
               id="justification"
               formControlName="justification"
               class="field__input field__input--textarea"
               rows="3"
-              placeholder="Explain why this is a distinct account…"
+              [placeholder]="'CRM.CREATE_COMMERCIAL.JUSTIFICATION_PLACEHOLDER' | translate"
               [attr.aria-invalid]="justificationCtrl.invalid && justificationCtrl.touched ? 'true' : null"
             ></textarea>
             @if (justificationCtrl.invalid && justificationCtrl.touched) {
-              <span class="field__error" role="alert">Justification is required.</span>
+              <span class="field__error" role="alert">{{ 'CRM.CREATE_COMMERCIAL.ERROR.JUSTIFICATION_REQUIRED' | translate }}</span>
             }
           </div>
 
@@ -90,12 +90,12 @@
               type="button"
               [disabled]="overrideForm.invalid || isSubmitting"
               (click)="proceedWithOverride()"
-              aria-label="Proceed and create account despite duplicates"
+              [attr.aria-label]="'CRM.CREATE_COMMERCIAL.OVERRIDE_SUBMIT_ARIA' | translate"
             >
-              @if (isSubmitting) { Creating… } @else { Create Anyway }
+              {{ (isSubmitting ? 'CRM.CREATE_COMMERCIAL.SUBMITTING' : 'CRM.CREATE_COMMERCIAL.CREATE_ANYWAY') | translate }}
             </button>
             <button class="btn btn--ghost" type="button" (click)="cancelOverride()">
-              Go Back
+              {{ 'CRM.CREATE_COMMERCIAL.GO_BACK' | translate }}
             </button>
           </div>
         </form>
@@ -115,58 +115,58 @@
       <form
         [formGroup]="form"
         class="crm-form"
-        aria-label="Create commercial account form"
+        [attr.aria-label]="'CRM.CREATE_COMMERCIAL.FORM_ARIA' | translate"
         (ngSubmit)="submit()"
         novalidate
       >
         <fieldset class="form-section" [disabled]="isBusy">
-          <legend class="form-section__legend">Account Details</legend>
+          <legend class="form-section__legend">{{ 'CRM.CREATE_COMMERCIAL.DETAILS_LEGEND' | translate }}</legend>
 
           <div class="field">
             <label for="legalName" class="field__label">
-              Legal Name <span class="required-mark" aria-hidden="true">*</span>
+              {{ 'CRM.CREATE_COMMERCIAL.FIELD_LEGAL_NAME' | translate }} <span class="required-mark" aria-hidden="true">*</span>
             </label>
             <input
               id="legalName"
               type="text"
               formControlName="legalName"
               class="field__input"
-              placeholder="Registered legal entity name"
+              [placeholder]="'CRM.CREATE_COMMERCIAL.LEGAL_NAME_PLACEHOLDER' | translate"
               autocomplete="organization"
               [attr.aria-invalid]="legalNameCtrl.invalid && legalNameCtrl.touched ? 'true' : null"
               aria-describedby="legalName-err"
             />
             @if (legalNameCtrl.invalid && legalNameCtrl.touched) {
-              <span id="legalName-err" class="field__error" role="alert">Legal name is required.</span>
+              <span id="legalName-err" class="field__error" role="alert">{{ 'CRM.CREATE_COMMERCIAL.ERROR.LEGAL_NAME_REQUIRED' | translate }}</span>
             }
           </div>
 
           <div class="field">
-            <label for="dba" class="field__label">DBA (Doing Business As)</label>
+            <label for="dba" class="field__label">{{ 'CRM.CREATE_COMMERCIAL.FIELD_DBA' | translate }}</label>
             <input
               id="dba"
               type="text"
               formControlName="dba"
               class="field__input"
-              placeholder="Optional trade name"
+              [placeholder]="'CRM.CREATE_COMMERCIAL.DBA_PLACEHOLDER' | translate"
             />
           </div>
 
           <div class="field">
-            <label for="taxId" class="field__label">Tax ID / EIN</label>
+            <label for="taxId" class="field__label">{{ 'CRM.CREATE_COMMERCIAL.FIELD_TAX_ID' | translate }}</label>
             <input
               id="taxId"
               type="text"
               formControlName="taxId"
               class="field__input"
-              placeholder="e.g. 12-3456789"
+              [placeholder]="'CRM.CREATE_COMMERCIAL.TAX_ID_PLACEHOLDER' | translate"
               autocomplete="off"
             />
           </div>
 
           <div class="field">
             <label for="billingTerms" class="field__label">
-              Default Billing Terms <span class="required-mark" aria-hidden="true">*</span>
+              {{ 'CRM.CREATE_COMMERCIAL.FIELD_BILLING_TERMS' | translate }} <span class="required-mark" aria-hidden="true">*</span>
             </label>
             <select
               id="billingTerms"
@@ -175,13 +175,13 @@
               [attr.aria-invalid]="billingTermsCtrl.invalid && billingTermsCtrl.touched ? 'true' : null"
               aria-describedby="billingTerms-err"
             >
-              <option value="" disabled>Select billing terms…</option>
+              <option value="" disabled>{{ 'CRM.CREATE_COMMERCIAL.SELECT_BILLING_TERMS' | translate }}</option>
               @for (term of billingTerms(); track term.id) {
                 <option [value]="term.id">{{ term.name }}</option>
               }
             </select>
             @if (billingTermsCtrl.invalid && billingTermsCtrl.touched) {
-              <span id="billingTerms-err" class="field__error" role="alert">Billing terms are required.</span>
+              <span id="billingTerms-err" class="field__error" role="alert">{{ 'CRM.CREATE_COMMERCIAL.ERROR.BILLING_TERMS_REQUIRED' | translate }}</span>
             }
           </div>
         </fieldset>
@@ -193,9 +193,9 @@
             [disabled]="isBusy || form.invalid"
             [attr.aria-busy]="isBusy"
           >
-            @if (isChecking)   { Checking for duplicates… }
-            @else if (isSubmitting) { Creating account… }
-            @else { Create Account }
+            @if (isChecking) { {{ 'CRM.CREATE_COMMERCIAL.CHECKING' | translate }} }
+            @else if (isSubmitting) { {{ 'CRM.CREATE_COMMERCIAL.CREATING' | translate }} }
+            @else { {{ 'CRM.CREATE_COMMERCIAL.SUBMIT' | translate }} }
           </button>
         </div>
       </form>
@@ -206,27 +206,27 @@
   @if (isSuccess) {
     <section class="state-panel state-panel--success" aria-live="polite" aria-labelledby="success-heading">
       <span class="state-icon state-icon--success" aria-hidden="true">✓</span>
-      <h2 id="success-heading">Commercial Account Created</h2>
+      <h2 id="success-heading">{{ 'CRM.CREATE_COMMERCIAL.SUCCESS_TITLE' | translate }}</h2>
 
-      <div class="success-id-block" aria-label="New party ID">
-        <span class="success-id-label">Party ID</span>
+      <div class="success-id-block" [attr.aria-label]="'CRM.CREATE_COMMERCIAL.SUCCESS_ID_ARIA' | translate">
+        <span class="success-id-label">{{ 'CRM.CREATE_COMMERCIAL.SUCCESS_ID_LABEL' | translate }}</span>
         <code class="success-id-value">{{ createdPartyId() }}</code>
         <button
           class="btn btn--icon"
           type="button"
           (click)="copyPartyId()"
-          [attr.aria-label]="copied() ? 'Copied' : 'Copy party ID to clipboard'"
+          [attr.aria-label]="(copied() ? 'CRM.CREATE_COMMERCIAL.COPIED_ARIA' : 'CRM.CREATE_COMMERCIAL.COPY_ARIA') | translate"
         >
-          {{ copied() ? '✓ Copied' : 'Copy' }}
+          {{ (copied() ? 'CRM.CREATE_COMMERCIAL.COPIED' : 'CRM.CREATE_COMMERCIAL.COPY') | translate }}
         </button>
       </div>
 
       <div class="form-actions form-actions--success">
         <button class="btn btn--primary" type="button" (click)="viewParty()">
-          View Party Record
+          {{ 'CRM.CREATE_COMMERCIAL.VIEW_RECORD' | translate }}
         </button>
         <button class="btn btn--secondary" type="button" (click)="createAnother()">
-          Create Another
+          {{ 'CRM.CREATE_COMMERCIAL.CREATE_ANOTHER' | translate }}
         </button>
       </div>
     </section>

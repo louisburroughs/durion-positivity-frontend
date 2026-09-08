@@ -2,6 +2,7 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CrmService } from '../../services/crm.service';
 import {
@@ -13,11 +14,12 @@ import {
 @Component({
   selector: 'app-merge-parties',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './merge-parties.component.html',
   styleUrl: './merge-parties.component.css',
 })
 export class MergePartiesComponent {
+  private readonly translate = inject(TranslateService);
   private readonly crm = inject(CrmService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
@@ -56,7 +58,7 @@ export class MergePartiesComponent {
     if (!query) {
       this.searchState.set('idle');
       this.searchResults.set([]);
-      this.searchError.set('Enter at least one search field.');
+      this.searchError.set(this.translate.instant('CRM.MERGE_PARTIES.ERROR.SEARCH_FIELD_REQUIRED'));
       return;
     }
 
@@ -138,7 +140,7 @@ export class MergePartiesComponent {
 
     const losing = selected.find(p => p.partyId !== survivor);
     if (!losing) {
-      this.confirmError.set('Unable to identify losing party.');
+      this.confirmError.set(this.translate.instant('CRM.MERGE_PARTIES.ERROR.NO_LOSING_PARTY'));
       return;
     }
 
@@ -161,7 +163,7 @@ export class MergePartiesComponent {
           this.step.set('success');
         },
         error: err => {
-          this.confirmError.set(err?.error?.message ?? 'Merge failed.');
+          this.confirmError.set(err?.error?.message ?? this.translate.instant('CRM.MERGE_PARTIES.ERROR.MERGE'));
           this.confirmPending.set(false);
         },
       });

@@ -1,33 +1,33 @@
 <div class="integration-events-page">
   <header class="page-header">
-    <h1>Integration Events</h1>
+    <h1>{{ 'CRM.INTEGRATION_EVENTS.TITLE' | translate }}</h1>
   </header>
 
   @if (loading()) {
   <div data-testid="loading-state" class="state-loading" aria-live="polite" aria-busy="true">
-    <span class="sr-only">Loading events...</span>
+    <span class="sr-only">{{ 'CRM.INTEGRATION_EVENTS.LOADING' | translate }}</span>
     <div class="spinner" aria-hidden="true"></div>
   </div>
   }
 
   @if (errorState() === '403') {
   <div class="crm-not-authorized" role="alert">
-    <p>You do not have permission to view integration events.</p>
+    <p>{{ 'CRM.INTEGRATION_EVENTS.FORBIDDEN' | translate }}</p>
   </div>
   }
 
   @if (errorState() === 'error') {
   <div data-testid="error-state" role="alert" class="state-error">
-    <p>An error occurred while loading events. Please try again.</p>
+    <p>{{ 'CRM.INTEGRATION_EVENTS.ERROR.LOAD' | translate }}</p>
   </div>
   }
 
   @if (errorState() === 'none' && !loading()) {
   <div class="events-layout">
-    <section class="events-section" aria-label="Event list">
+    <section class="events-section" [attr.aria-label]="'CRM.INTEGRATION_EVENTS.LIST_ARIA' | translate">
       @if (events().length === 0) {
       <div data-testid="empty-state" class="state-empty">
-        <p>No events found.</p>
+        <p>{{ 'CRM.INTEGRATION_EVENTS.EMPTY' | translate }}</p>
       </div>
       } @else {
       <ul class="event-list">
@@ -45,7 +45,7 @@
               [class.status-pending]="event.processingStatus === 'PROCESSING' || event.processingStatus === 'RECEIVED'"
               [class.status-failed]="event.processingStatus === 'FAILED'"
               [class.status-suspended]="event.processingStatus === 'SUSPENDED'">
-              <span class="sr-only">Status: </span>{{ event.processingStatus }}
+              <span class="sr-only">{{ 'CRM.INTEGRATION_EVENTS.STATUS_SR' | translate }} </span>{{ event.processingStatus }}
             </span>
             <span class="event-row__time">{{ event.receivedAt }}</span>
           </button>
@@ -56,40 +56,41 @@
     </section>
 
     @if (selectedEvent() || detailErrorState()) {
-    <aside class="event-detail" aria-live="polite" aria-atomic="false" aria-label="Event detail">
+    <aside class="event-detail" aria-live="polite" aria-atomic="false"
+      [attr.aria-label]="'CRM.INTEGRATION_EVENTS.DETAIL_ARIA' | translate">
       @if (detailErrorState()) {
       <div class="alert alert--error" role="alert">{{ detailErrorState() }}</div>
       }
       @if (selectedEvent()) {
-      <h2 class="detail-heading">Event Detail</h2>
+      <h2 class="detail-heading">{{ 'CRM.INTEGRATION_EVENTS.DETAIL_TITLE' | translate }}</h2>
       <dl class="detail-grid">
         <dt>{{ 'CRM.INTEGRATION_EVENTS.EVENT_REFERENCE' | translate }}</dt>
         <dd class="mono-value">
           {{ selectedEvent()!.eventReference || ('COMMON.NOT_AVAILABLE' | translate) }}
         </dd>
-        <dt>Type</dt>
+        <dt>{{ 'CRM.INTEGRATION_EVENTS.FIELD_TYPE' | translate }}</dt>
         <dd>{{ selectedEvent()!.eventType }}</dd>
-        <dt>Status</dt>
+        <dt>{{ 'CRM.INTEGRATION_EVENTS.FIELD_STATUS' | translate }}</dt>
         <dd>{{ selectedEvent()!.processingStatus }}</dd>
-        <dt>Received</dt>
+        <dt>{{ 'CRM.INTEGRATION_EVENTS.FIELD_RECEIVED' | translate }}</dt>
         <dd>{{ selectedEvent()!.receivedAt }}</dd>
       </dl>
       }
 
       <section class="processing-log-section">
-        <h3 class="section-subheading">Processing Log</h3>
+        <h3 class="section-subheading">{{ 'CRM.INTEGRATION_EVENTS.PROCESSING_LOG' | translate }}</h3>
         <div class="processing-log-container" aria-live="polite">
           @if (processingLog()?.length) {
           <pre class="processing-log-text">{{ processingLog() | json }}</pre>
           } @else {
-          <p class="state-empty-inline">No log entries available.</p>
+          <p class="state-empty-inline">{{ 'CRM.INTEGRATION_EVENTS.LOG_EMPTY' | translate }}</p>
           }
         </div>
       </section>
 
       @if (reprocessingHistory().length > 0) {
       <section class="reprocessing-history-section">
-        <h3 class="section-subheading">Reprocessing History</h3>
+        <h3 class="section-subheading">{{ 'CRM.INTEGRATION_EVENTS.REPROCESSING_HISTORY' | translate }}</h3>
         <ul class="reprocessing-list">
           @for (attempt of reprocessingHistory(); track attempt.attemptId) {
           <li class="reprocessing-item">

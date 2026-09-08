@@ -12,9 +12,8 @@ node scripts/i18n/check-hardcoded-strings.mjs src/app/features/crm    # one modu
 The report is grouped by module, with a per-module summary first, so a domain
 can be remediated in isolation exactly like the workexec phases were.
 
-> **Heads-up:** `npm run i18n:check` (which chains this script) now **fails**
-> repo-wide until the backlog below is cleared. Scope the script to the module
-> you are working in to get a green signal for that module.
+> **Status:** the backlog is cleared — `npm run i18n:check` passes repo-wide.
+> The guardrail now protects every module against regression.
 
 ## Checker changes that came with the widening
 
@@ -60,58 +59,28 @@ The hatch is deliberately noisy so it cannot quietly absorb the backlog:
 Use it only for proper nouns. Anything a translator could legitimately render
 differently belongs in `src/assets/i18n/*.json`.
 
-## Backlog — 262 literals across 9 templates in 1 module
+## Backlog — cleared
 
-| Module | Literals | Templates |
-| --- | ---: | ---: |
-| crm | 262 | 9 |
+All 545 literals found when the scope was widened have been remediated across
+five phases. `npm run i18n:check` passes repo-wide: keysets aligned at 4793 keys
+across the five authored locales, 185 templates scanned, 5 literals suppressed by
+proper-noun `i18n-ignore` markers.
 
-Clean today (no findings): `workexec` (25 templates), `inventory` (26),
-`landing`, `shell`, `auth`, `accounting`, `security` (7), `location` (9), `people` (16),
-`positivity` (16), `product` (14), `shopmgmt` (14), `bulk-import` (9),
-`billing` (4), `order` (3), `shared` (2), `sitemap` (1). `admin`, `system` and
-`core` have no external templates to scan.
+| Phase | Module(s) | Literals |
+| --- | --- | ---: |
+| 1 | `auth`, `shell`, `landing`, `accounting` | 11 |
+| 2 | `security` | 11 |
+| 3 | `location` | 77 |
+| 4 | `people` | 184 |
+| 5 | `crm` | 262 |
 
-### Worst offenders
+Each phase also cleared English strings sitting in `.ts` files, which the
+guardrail cannot see — 25 in `people`, 20 in `crm`, 18 in `location`, 4 in
+`security`. Those remain the standing blind spot: **the checker only reads
+templates.** A `.ts` string set into a signal and rendered through
+`{{ signal() }}` will never be reported.
 
-| Literals | Template |
-| ---: | --- |
-| 48 | `crm/pages/party-contacts/party-contacts.component.html` |
-| 43 | `crm/pages/merge-parties/merge-parties.component.html` |
-| 41 | `crm/pages/create-commercial-account/create-commercial-account.component.html` |
-| 35 | `crm/pages/customer-list/customer-list.component.html` |
-| 34 | `crm/pages/party-detail/party-detail.component.html` |
-
-## Known French accent defects
-
-`BILLING.PAYMENT.METHOD` was corrected in `fr-CA` and `fr-FR` ("Chèque",
-"Espèces", "Carte de crédit/débit", "Compte de crédit"). The same defect remains
-in sibling keys under `BILLING.PAYMENT`, identical in both fr locales:
-
-| Key | Current | Should be |
-| --- | --- | --- |
-| `ACTION.PRINT_RECEIPT` | Imprimer le recu | Imprimer le re**ç**u |
-| `IDLE` | Selectionnez un mode… | S**é**lectionnez un mode… |
-| `FIELD.CAPTURED_AT` | Capture le | Captur**é** le |
-| `ERROR.CAPTURE` | …Veuillez reessayer. | …Veuillez r**é**essayer. |
-| `ERROR.VOID` | …Veuillez reessayer. | …Veuillez r**é**essayer. |
-| `ERROR.REFUND` | …Veuillez reessayer. | …Veuillez r**é**essayer. |
-
-No code or test references these values, so correcting them is a locale-file-only
-change.
-
-## Suggested phasing
-
-Mirror the workexec loop (see
-[PLAN-workexec-i18n-remediation.md](./PLAN-workexec-i18n-remediation.md),
-"Per template (the loop)") — one module per PR, smallest first so the pattern is
-settled before the large domains:
-
-1. ~~`auth`, `shell`, `landing`, `accounting` (11 literals)~~ ✅ done
-2. ~~`security` (11)~~ ✅ done
-3. ~~`location` (77)~~ ✅ done
-4. ~~`people` (184)~~ ✅ done
-5. `crm` (262)
+## Phase notes
 
 ### Phase 1 notes
 
@@ -226,6 +195,32 @@ Specs: seven needed `TranslateModule.forRoot()`; four also needed a
 `setTranslation` fixture for assertions that read rendered English back
 (`Technician`, `Unavailable`, `Submit Job Time`, and the two offboard error
 messages).
+
+### Phase 5 notes — `crm`
+
+262 flagged literals across 9 templates, plus 20 English strings in 7 `.ts`
+files — including `crm-snapshot`, which had nothing flagged but hardcoded all
+five of its error messages. Seven new key trees plus extensions to
+`INTEGRATION_EVENTS`, `PARTY_DETAIL` and `SNAPSHOT`.
+
+- **`roleLabel()` was a lookup table of English.** `party-detail` mapped
+  `ContactRole` values to labels in TypeScript. It now resolves
+  `CRM.PARTY_DETAIL.ROLE.<ROLE>` through `translate.instant`, keeping the raw
+  role as the fallback for an unrecognized value.
+- **Raw enum options left alone.** `party-contacts` renders role `<option>`s as
+  their raw enum values (`BILLING`, `APPROVER`, …) and the role badge shows
+  `{{ r.role }}` to match. The checker skips ALL_CAPS tokens, and turning them
+  into friendly labels would be a UI change, not an i18n one — left for a
+  deliberate decision.
+- **Two multi-value ranges became parameterised keys:** `party-contacts`'
+  `Showing {{from}}-{{to}} of {{total}}` (previously three text nodes wrapped
+  around two interpolations and a ternary) and `customer-list`'s `PAGE_STATUS`.
+- **`<strong>Label:</strong> {{ value }}` pairs** in `merge-parties` keep the
+  label as its own key, since the colon sits inside the bold run.
+
+Specs: only `customer-list` needed work — `TranslateModule.forRoot()` plus a
+`setTranslation` fixture for its column-header assertion.
+
 
 ## Removed: `src/app/app.html`
 

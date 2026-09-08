@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit, DestroyRef } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { Router } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CrmService } from '../../services/crm.service';
@@ -14,11 +15,12 @@ type SortDir = 'asc' | 'desc';
 @Component({
   selector: 'app-customer-list',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './customer-list.component.html',
   styleUrl: './customer-list.component.css',
 })
 export class CustomerListComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly crm = inject(CrmService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
@@ -127,7 +129,7 @@ export class CustomerListComponent implements OnInit {
 
   private handleError(err: { status?: number; error?: { message?: string } }): void {
     this.state.set(err?.status === 403 ? 'access-denied' : 'error');
-    this.error.set(err?.error?.message ?? 'Failed to load customers.');
+    this.error.set(err?.error?.message ?? this.translate.instant('CRM.CUSTOMER_LIST.ERROR.LOAD'));
   }
 
   primaryContact(party: PartyDetail): PrimaryContact | undefined {

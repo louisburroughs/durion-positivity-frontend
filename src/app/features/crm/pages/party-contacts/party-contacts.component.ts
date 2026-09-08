@@ -1,6 +1,7 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, of } from 'rxjs';
@@ -13,11 +14,12 @@ const MAX_SUGGESTIONS = 8;
 @Component({
   selector: 'app-party-contacts',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './party-contacts.component.html',
   styleUrl: './party-contacts.component.css',
 })
 export class PartyContactsComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly crm = inject(CrmService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -273,11 +275,11 @@ export class PartyContactsComponent implements OnInit {
         next: rows => {
           this.relationships.set(rows);
           this.closeModal();
-          this.showToast('success', 'Contact relationship added.');
+          this.showToast('success', this.translate.instant('CRM.PARTY_CONTACTS.TOAST.ADDED'));
         },
         error: err => {
           this.modalError.set(
-            err?.error?.message ?? 'Unable to save contact relationship.',
+            err?.error?.message ?? this.translate.instant('CRM.PARTY_CONTACTS.ERROR.SAVE'),
           );
           this.modalState.set('open');
         },
@@ -296,11 +298,11 @@ export class PartyContactsComponent implements OnInit {
         next: rows => {
           this.relationships.set(rows);
           this.pendingRowId.set(null);
-          this.showToast('success', 'Primary billing contact updated.');
+          this.showToast('success', this.translate.instant('CRM.PARTY_CONTACTS.TOAST.PRIMARY_SET'));
         },
         error: () => {
           this.pendingRowId.set(null);
-          this.showToast('error', 'Could not set primary billing contact.');
+          this.showToast('error', this.translate.instant('CRM.PARTY_CONTACTS.ERROR.SET_PRIMARY'));
         },
       });
   }
@@ -321,11 +323,11 @@ export class PartyContactsComponent implements OnInit {
             ),
           );
           this.pendingRowId.set(null);
-          this.showToast('success', 'Relationship deactivated.');
+          this.showToast('success', this.translate.instant('CRM.PARTY_CONTACTS.TOAST.DEACTIVATED'));
         },
         error: () => {
           this.pendingRowId.set(null);
-          this.showToast('error', 'Could not deactivate relationship.');
+          this.showToast('error', this.translate.instant('CRM.PARTY_CONTACTS.ERROR.DEACTIVATE'));
         },
       });
   }

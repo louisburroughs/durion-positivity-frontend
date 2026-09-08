@@ -19,7 +19,7 @@
     (keydown)="onKeydown($event)" />
 
   @if (showList() && loading() && suggestions().length === 0) {
-    <p class="customer-lookup__hint" aria-busy="true">Searching…</p>
+    <p class="customer-lookup__hint" aria-busy="true">{{ 'CRM.CUSTOMER_LOOKUP.SEARCHING' | translate }}</p>
   }
 
   @if (showList() && suggestions().length > 0) {

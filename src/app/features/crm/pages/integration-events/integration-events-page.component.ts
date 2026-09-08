@@ -1,7 +1,7 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Subject, forkJoin } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { EventProcessingLogEntry } from '@durion-sdk/accounting';
@@ -19,6 +19,7 @@ import { CrmIntegrationService } from '../../services/crm-integration.service';
   styleUrl: './integration-events-page.component.css',
 })
 export class IntegrationEventsPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly crmIntegrationService = inject(CrmIntegrationService);
   private readonly selectedEventId$ = new Subject<string>();
@@ -66,7 +67,7 @@ export class IntegrationEventsPageComponent implements OnInit {
         this.reprocessingHistory.set(reprocessingHistory);
       },
       error: () => {
-        this.detailErrorState.set('Unable to load event details. Please try again.');
+        this.detailErrorState.set(this.translate.instant('CRM.INTEGRATION_EVENTS.ERROR.LOAD_DETAIL'));
       },
     });
   }

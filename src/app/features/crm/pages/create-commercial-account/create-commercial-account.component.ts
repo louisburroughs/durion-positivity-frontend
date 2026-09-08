@@ -1,6 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { CrmService } from '../../services/crm.service';
 import {
@@ -13,11 +14,12 @@ type PageState = 'idle' | 'loading-terms' | 'terms-error' | 'checking' | 'duplic
 @Component({
   selector: 'app-create-commercial-account',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './create-commercial-account.component.html',
   styleUrl: './create-commercial-account.component.css',
 })
 export class CreateCommercialAccountComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly fb     = inject(FormBuilder);
   private readonly crm    = inject(CrmService);
   private readonly router = inject(Router);
@@ -126,7 +128,7 @@ export class CreateCommercialAccountComponent implements OnInit {
 
     // Guard for environments/browsers without clipboard support
     if (typeof navigator === 'undefined' || !navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
-      this.serverError.set('Copying to clipboard is not supported in this environment. Please copy the ID manually.');
+      this.serverError.set(this.translate.instant('CRM.CREATE_COMMERCIAL.ERROR.CLIPBOARD_UNSUPPORTED'));
       return;
     }
 
@@ -135,7 +137,7 @@ export class CreateCommercialAccountComponent implements OnInit {
       setTimeout(() => this.copied.set(false), 2000);
     }).catch(err => {
       // Handle clipboard failures (permissions, insecure context, etc.)
-      this.serverError.set('Unable to copy the party ID to the clipboard. Please copy it manually.');
+      this.serverError.set(this.translate.instant('CRM.CREATE_COMMERCIAL.ERROR.CLIPBOARD_FAILED'));
       // Optional: log for debugging without affecting UI flow
       console.error('Failed to write party ID to clipboard:', err);
     });

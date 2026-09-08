@@ -1,6 +1,7 @@
 import { Component, inject, signal, forwardRef, Input, DestroyRef } from '@angular/core';
 
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
@@ -21,7 +22,7 @@ const MAX_SUGGESTIONS = 12;
 @Component({
   selector: 'app-customer-lookup',
   standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './customer-lookup.component.html',
   styleUrl: './customer-lookup.component.css',
   providers: [
