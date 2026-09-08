@@ -35,7 +35,7 @@ not relaxations — the check still reports every real literal:
   UTF-16 regex offsets, so any template containing an emoji misaligned every
   subsequent blank. It now uses UTF-16 units throughout.
 
-## Backlog — 552 literals across 26 templates in 9 modules
+## Backlog — 545 literals across 25 templates in 8 modules
 
 | Module | Literals | Templates |
 | --- | ---: | ---: |
@@ -43,7 +43,6 @@ not relaxations — the check still reports every real literal:
 | people | 184 | 8 |
 | location | 77 | 3 |
 | security | 11 | 1 |
-| app | 7 | 1 |
 | accounting | 4 | 1 |
 | landing | 4 | 1 |
 | shell | 2 | 1 |
@@ -82,9 +81,10 @@ settled before the large domains:
 4. `people` (184)
 5. `crm` (262)
 
-## `src/app/app.html` (the `app` row)
+## Removed: `src/app/app.html`
 
-Those 7 literals ("Hello,", "Congratulations! Your app is running. 🎉",
-`aria-label="Github"` …) are the leftover `ng new` welcome page. `App` declares
-an inline `template: '<router-outlet />'`, and nothing in the repo references
-`app.html` — it is dead scaffold. **Delete the file** rather than translating it.
+Widening the scope first surfaced 7 literals ("Hello,", "Congratulations! Your
+app is running. 🎉", `aria-label="Github"` …) in `src/app/app.html` — the
+leftover `ng new` welcome page. `App` declares an inline
+`template: '<router-outlet />'` and nothing in the repo referenced the file, so
+it was deleted as dead scaffold rather than translated.
