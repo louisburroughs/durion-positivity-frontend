@@ -82,6 +82,24 @@ Clean today (no findings): `workexec` (25 templates), `inventory` (26),
 | 35 | `crm/pages/customer-list/customer-list.component.html` |
 | 34 | `crm/pages/party-detail/party-detail.component.html` |
 
+## Known French accent defects
+
+`BILLING.PAYMENT.METHOD` was corrected in `fr-CA` and `fr-FR` ("Chèque",
+"Espèces", "Carte de crédit/débit", "Compte de crédit"). The same defect remains
+in sibling keys under `BILLING.PAYMENT`, identical in both fr locales:
+
+| Key | Current | Should be |
+| --- | --- | --- |
+| `ACTION.PRINT_RECEIPT` | Imprimer le recu | Imprimer le re**ç**u |
+| `IDLE` | Selectionnez un mode… | S**é**lectionnez un mode… |
+| `FIELD.CAPTURED_AT` | Capture le | Captur**é** le |
+| `ERROR.CAPTURE` | …Veuillez reessayer. | …Veuillez r**é**essayer. |
+| `ERROR.VOID` | …Veuillez reessayer. | …Veuillez r**é**essayer. |
+| `ERROR.REFUND` | …Veuillez reessayer. | …Veuillez r**é**essayer. |
+
+No code or test references these values, so correcting them is a locale-file-only
+change.
+
 ## Suggested phasing
 
 Mirror the workexec loop (see
@@ -105,11 +123,11 @@ settled before the large domains:
   markers, not translations — the shell template already carried a comment
   recording that decision, which the marker now makes machine-readable.
 - **es-US / es-MX / fr-CA / fr-FR values are machine-assisted and FLAGGED FOR
-  NATIVE REVIEW**, per the convention in the workexec plan. Note the adjacent
-  `BILLING.PAYMENT.METHOD` block has unaccented French ("Cheque", "Especes",
-  "Carte de credit/debit"); the new keys use correct accents rather than
-  matching that defect, so the two blocks read inconsistently until `BILLING`
-  is corrected separately.
+  NATIVE REVIEW**, per the convention in the workexec plan. The adjacent
+  `BILLING.PAYMENT.METHOD` block had unaccented French ("Cheque", "Especes",
+  "Carte de credit/debit"); the new keys were authored with correct accents and
+  `BILLING.PAYMENT.METHOD` has since been corrected to match. Other unaccented
+  strings remain elsewhere under `BILLING.PAYMENT` — see below.
 
 ### Phase 2 notes — `security/user-provision`
 

@@ -5417,10 +5417,10 @@
       "TITLE": "Paiement",
       "METHOD": {
         "LABEL": "Mode de paiement",
-        "CARD": "Carte de credit/debit",
-        "CASH": "Especes",
-        "CHECK": "Cheque",
-        "CREDIT_ACCOUNT": "Compte de credit"
+        "CARD": "Carte de crédit/débit",
+        "CASH": "Espèces",
+        "CHECK": "Chèque",
+        "CREDIT_ACCOUNT": "Compte de crédit"
       },
       "AMOUNT_LABEL": "Montant",
       "ACTION": {
