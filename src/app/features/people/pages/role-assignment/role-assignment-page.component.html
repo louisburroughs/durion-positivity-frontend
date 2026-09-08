@@ -57,6 +57,7 @@
         <div class="field-row">
           <label for="role-select">{{ 'PEOPLE.ROLE_ASSIGNMENT.ROLE' | translate }}</label>
           <select id="role-select" name="roleCode" [value]="selectedRoleCode()"
+            aria-describedby="location-source-hint"
             (change)="selectedRoleCode.set($any($event.target).value)">
             <option value="" disabled>{{ 'PEOPLE.ROLE_ASSIGNMENT.SELECT_ROLE' | translate }}</option>
             @for (role of roles(); track role.code) {
@@ -65,7 +66,7 @@
           </select>
         </div>
 
-        <p class="field-hint" data-testid="location-source-hint">
+        <p id="location-source-hint" class="field-hint" data-testid="location-source-hint">
           {{ 'PEOPLE.ROLE_ASSIGNMENT.LOCATION_SOURCE_HINT' | translate }}
         </p>
 

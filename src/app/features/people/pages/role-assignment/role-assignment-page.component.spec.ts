@@ -172,6 +172,15 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     );
   });
 
+  it('associates the location hint with the role select for screen readers', async () => {
+    await setup();
+    const hint = fixture.debugElement.query(By.css('[data-testid="location-source-hint"]'));
+    const select = fixture.debugElement.query(By.css('#role-select'));
+    // Visual adjacency is not announced; the description must be wired to the control.
+    expect(hint.nativeElement.id).toBe('location-source-hint');
+    expect(select.nativeElement.getAttribute('aria-describedby')).toBe('location-source-hint');
+  });
+
   it('does not render a location column on assignment rows', async () => {
     await setup();
     expect(fixture.debugElement.query(By.css('.scope-code'))).toBeNull();
