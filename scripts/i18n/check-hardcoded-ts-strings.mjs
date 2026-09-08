@@ -96,7 +96,9 @@ const blank = (src, re) => src.replace(re, (m) => m.replace(/[^\n]/g, ' '));
  * apostrophe inside a comment is not a quote.
  */
 function stripComments(src) {
-  const out = [...src];
+  // UTF-16 units, not code points: the loop below indexes `src[i]` (UTF-16), so
+  // `[...src]` would misalign `out` from the first astral char (an emoji) on.
+  const out = src.split('');
   let i = 0;
   const n = out.length;
   while (i < n) {
@@ -159,10 +161,17 @@ function blankComponentMetadata(src) {
 function templateCopy(tpl) {
   let t = tpl.replace(/<!--[\s\S]*?-->/g, ' ');
   t = t.replace(/\{\{[\s\S]*?\}\}/g, ' ');
+  // Static localizable attributes are copy too, and dropping tags would take
+  // them with it -- an inline template whose only English is aria-label="Not
+  // found" still needs reporting. A bound `[attr.aria-label]="…"` is preceded
+  // by `.`, not whitespace, so it does not match.
+  const attrs = [...t.matchAll(/\s(?:placeholder|aria-label|title|alt)="([^"{}]*[A-Za-z]{2,}[^"{}]*)"/g)]
+    .map((m) => m[1].trim());
   t = t.replace(/<[^>]*>/g, ' ');
   t = t.replace(/@\w+\s*\([^)]*\)?/g, ' ');
   t = t.replace(/[{}]/g, ' ').replace(/\s+/g, ' ').trim();
-  return isProse(t) ? t.slice(0, 90) : null;
+  const copy = [t, ...attrs].filter(Boolean).join(' · ');
+  return isProse(copy) ? copy.slice(0, 90) : null;
 }
 
 const IGNORE_NEXT_RE = /\/\/\s*i18n-ignore-next-line\b\s*(?::\s*)?(.*?)\s*$/;
@@ -206,14 +215,17 @@ function isProse(t) {
 
 /** Yield [lineNo, text] for every string / template literal in the source. */
 function* literals(src) {
-  const lineOf = (idx) => src.slice(0, idx).split('\n').length;
   const re = /'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\[\s\S])*)`/g;
-  let m;
+  // Matches arrive in order, so the line counter advances incrementally rather
+  // than re-slicing the file per literal (which was O(n^2) over src/app).
+  let line = 1, scanned = 0, m;
   while ((m = re.exec(src))) {
+    for (let i = scanned; i < m.index; i++) if (src[i] === '\n') line++;
+    scanned = m.index;
     const body = m[1] ?? m[2] ?? m[3] ?? '';
     // a template literal's ${…} holes are code, not copy
     const text = m[3] !== undefined ? body.replace(/\$\{[^}]*\}/g, ' ') : body;
-    yield [lineOf(m.index), text];
+    yield [line, text];
   }
 }
 

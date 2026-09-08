@@ -56,12 +56,20 @@ it to a `.html` file, per the repo's four-file page convention. Gating on prose
 matters: 24 components have inline templates, but 23 are `<router-outlet />`
 shells with no copy at all.
 
-## Baseline — 122 findings
+Static localizable attributes inside an inline template count as copy: dropping
+tags to find text would take `aria-label="Not found"` with them. That is how
+`access-denied.component.ts` and `not-found.component.ts` are caught — their
+visible text is already translated and only the `aria-label` is English. A bound
+`[attr.aria-label]="'KEY' | translate"` is not matched, since the attribute name
+is preceded by `.` rather than whitespace.
+
+## Baseline — 124 findings
 
 | Module | Findings |
 | --- | ---: |
 | `workexec` | 110 |
 | `crm` | 7 |
+| `system` | 2 |
 | `accounting`, `admin`, `location`, `people`, `shopmgmt` | 1 each |
 
 One literal is suppressed by a marker: the CSS Font Loading API probe in
@@ -92,6 +100,7 @@ Same shape as the template remediation — smallest first so the pattern settles
 before the large domain:
 
 1. `accounting`, `admin`, `location`, `people`, `shopmgmt` (5 findings, one each)
+   and `system` (2 inline-template `aria-label`s)
 2. `crm` (7)
 3. `workexec` (110)
 
@@ -101,4 +110,5 @@ The conversions are the ones established in the template work:
   template, and it re-renders on locale change;
 - a fallback a server message can replace → `this.translate.instant('KEY')`, so
   the signal still holds display text either way;
-- `admin.component.ts` → move the inline template to `admin.component.html`.
+- `admin.component.ts` → move the inline template to `admin.component.html`;
+  `system`'s two components need only their `aria-label` bound to a key.
