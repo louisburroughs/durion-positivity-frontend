@@ -176,7 +176,7 @@ export class EmployeeProfilePageComponent implements OnInit {
   }): void {
     this.saving.set(false);
     if (err.status === 409) {
-      this.conflictError.set(err.error?.message ?? 'A duplicate employee record was found.');
+      this.conflictError.set(err.error?.message ?? this.translate.instant('PEOPLE.EMPLOYEE_PROFILE.ERROR.DUPLICATE'));
       return;
     }
 

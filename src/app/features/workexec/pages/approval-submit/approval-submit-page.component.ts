@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
@@ -28,6 +28,7 @@ import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive'
   styleUrl: './approval-submit-page.component.css',
 })
 export class ApprovalSubmitPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly workexec   = inject(WorkexecService);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
@@ -55,12 +56,12 @@ export class ApprovalSubmitPageComponent implements OnInit {
           this.estimate.set(est);
           this.pageState.set(est.status === 'DRAFT' ? 'ready' : 'error');
           if (est.status !== 'DRAFT') {
-            this.errorMessage.set(`Estimate is in "${est.status}" status and cannot be submitted for approval.`);
+            this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.ESTIMATE_STATUS_NOT_SUBMITTABLE', { status: est.status }));
           }
         },
         error: err => {
           this.pageState.set('error');
-          this.errorMessage.set(err.status === 404 ? 'Estimate not found.' : 'Failed to load estimate.');
+          this.errorMessage.set(err.status === 404 ? this.translate.instant('WORKEXEC.ERROR.ESTIMATE_NOT_FOUND') : this.translate.instant('WORKEXEC.ERROR.LOAD_ESTIMATE'));
         },
       });
   }
@@ -92,12 +93,12 @@ export class ApprovalSubmitPageComponent implements OnInit {
           if (body?.fieldErrors?.length) {
             this.fieldErrors.set(body.fieldErrors);
           } else if (err.status === 400) {
-            this.errorMessage.set(body?.message ?? 'Estimate is incomplete or cannot be submitted.');
+            this.errorMessage.set(body?.message ?? this.translate.instant('WORKEXEC.ERROR.ESTIMATE_INCOMPLETE'));
           } else if (err.status === 403) {
             this.pageState.set('access-denied');
-            this.errorMessage.set('You do not have permission to submit estimates for approval.');
+            this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.SUBMIT_ESTIMATE_FORBIDDEN'));
           } else {
-            this.errorMessage.set(body?.message ?? 'Failed to submit estimate for approval.');
+            this.errorMessage.set(body?.message ?? this.translate.instant('WORKEXEC.ERROR.SUBMIT_ESTIMATE'));
           }
         },
       });

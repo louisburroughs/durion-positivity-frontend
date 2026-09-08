@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { Component, DestroyRef, OnInit, inject, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -31,6 +31,7 @@ type FinalizeState = 'idle' | 'loading' | 'success' | 'error';
   styleUrl: './workorder-finalize-page.component.css',
 })
 export class WorkorderFinalizePageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(WorkexecService);
@@ -77,7 +78,7 @@ export class WorkorderFinalizePageComponent implements OnInit {
             this.snapshots.set([]);
             this.pageState.set('ready');
           } else {
-            this.errorMessage.set('Failed to load snapshot history. Please try again.');
+            this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.LOAD_SNAPSHOT_HISTORY'));
             this.pageState.set('error');
           }
         },
@@ -107,10 +108,10 @@ export class WorkorderFinalizePageComponent implements OnInit {
           const status = err?.status ?? 0;
           this.finalizeError.set(
             status === 409
-              ? 'An active billable snapshot already exists for this work order.'
+              ? this.translate.instant('WORKEXEC.ERROR.SNAPSHOT_EXISTS')
               : status === 400
-                ? err?.error?.message ?? 'Finalization requirements not met. Check for unauthorized items or missing totals.'
-                : 'Failed to finalize. Please try again.',
+                ? err?.error?.message ?? this.translate.instant('WORKEXEC.ERROR.FINALIZE_REQUIREMENTS')
+                : this.translate.instant('WORKEXEC.ERROR.FINALIZE'),
           );
         },
       });

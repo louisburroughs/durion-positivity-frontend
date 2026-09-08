@@ -39,9 +39,15 @@ export class VendorLookupComponent implements ControlValueAccessor {
   private readonly destroyRef = inject(DestroyRef);
 
   @Input() inputId = 'vendor-lookup';
-  @Input() label = 'Vendor';
+  /**
+   * Left undefined by default so the template falls back to the component's own
+   * key through `| translate`. Resolving the default here with `instant` would
+   * freeze it at construction time — before the loader has the catalogue on a
+   * cold start, and stale forever after a runtime locale switch.
+   */
+  @Input() label?: string;
   @Input() required = false;
-  @Input() placeholder = 'Search by vendor name…';
+  @Input() placeholder?: string;
 
   readonly suggestions = signal<VendorDirectoryEntry[]>([]);
   readonly query        = signal('');

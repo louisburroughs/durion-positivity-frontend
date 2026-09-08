@@ -1,4 +1,5 @@
 import { TestBed, ComponentFixture, fakeAsync, tick } from '@angular/core/testing';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { CustomerLookupComponent } from './customer-lookup.component';
 import { CrmService } from '../../services/crm.service';
@@ -20,13 +21,33 @@ describe('CustomerLookupComponent', () => {
     getParty = vi.fn().mockReturnValue(of(PARTIES[1]));
 
     await TestBed.configureTestingModule({
-      imports: [CustomerLookupComponent],
+      imports: [CustomerLookupComponent, TranslateModule.forRoot()],
       providers: [{ provide: CrmService, useValue: { searchParties, getParty } }],
     }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en-US');
 
     fixture = TestBed.createComponent(CustomerLookupComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('falls back to its own translated label and re-renders it on a locale switch', () => {
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', { CRM: { CUSTOMER_LOOKUP: { LABEL: 'Customer' } } }, true);
+    translate.setTranslation('fr-CA', { CRM: { CUSTOMER_LOOKUP: { LABEL: 'Client' } } }, true);
+    const label = () =>
+      (fixture.nativeElement as HTMLElement).querySelector('.field-label')?.textContent?.trim();
+
+    translate.use('en-US');
+    fixture.detectChanges();
+    expect(label()).toBe('Customer');
+
+    // Resolving the default with translate.instant() in a field initializer would
+    // leave this stuck on 'Customer'.
+    translate.use('fr-CA');
+    fixture.detectChanges();
+    expect(label()).toBe('Client');
   });
 
   it('searches server-side (debounced) on input', fakeAsync(() => {

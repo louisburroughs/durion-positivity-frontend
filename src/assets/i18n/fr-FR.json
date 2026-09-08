@@ -140,13 +140,15 @@
       "TITLE": "Accès refusé",
       "MESSAGE": "Vous n'avez pas l'autorisation d'afficher cet écran.",
       "BACK": "Retour",
-      "HOME": "Aller à l'accueil de l'application"
+      "HOME": "Aller à l'accueil de l'application",
+      "ARIA": "Accès refusé"
     },
     "NOT_FOUND": {
       "TITLE": "404",
       "MESSAGE": "La page demandée n'existe pas.",
       "BACK": "Retour",
-      "HOME": "Aller à l'accueil de l'application"
+      "HOME": "Aller à l'accueil de l'application",
+      "ARIA": "Non trouvé"
     }
   },
   "SHELL": {
@@ -753,7 +755,8 @@
         "HIRE_DATE_REQUIRED": "La date d'embauche est requise.",
         "STATUS_REQUIRED": "Le statut d'emploi est requis.",
         "LOAD": "Impossible de charger l'employé.",
-        "SAVE": "Impossible d'enregistrer l'employé."
+        "SAVE": "Impossible d'enregistrer l'employé.",
+        "DUPLICATE": "Un dossier d'employé en double a été trouvé."
       }
     },
     "LOCATION_ASSIGNMENTS": {
@@ -865,7 +868,9 @@
       "ERROR": {
         "LOAD_PARTY": "Impossible de charger les détails de la partie.",
         "LOAD_CONTACTS": "Impossible de charger les contacts.",
-        "LOAD_PREFS": "Impossible de charger les préférences."
+        "LOAD_PREFS": "Impossible de charger les préférences.",
+        "PREFS_FORBIDDEN": "Non autorisé à mettre à jour les préférences.",
+        "SAVE_PREFS": "Impossible d'enregistrer les préférences ({{status}})."
       }
     },
     "LANDING": {
@@ -1062,7 +1067,9 @@
       }
     },
     "CUSTOMER_LOOKUP": {
-      "SEARCHING": "Recherche…"
+      "SEARCHING": "Recherche…",
+      "LABEL": "Client",
+      "PLACEHOLDER": "Rechercher par nom ou numéro de client…"
     },
     "CREATE_PERSON": {
       "DENIED_TITLE": "Accès refusé",
@@ -1094,7 +1101,8 @@
         "FIRST_NAME_REQUIRED": "Le prénom est requis.",
         "LAST_NAME_REQUIRED": "Le nom est requis.",
         "CLIPBOARD_UNSUPPORTED": "Le presse-papiers n'est pas disponible. Copiez l'identifiant manuellement.",
-        "CLIPBOARD_FAILED": "Impossible de copier l'identifiant dans le presse-papiers. Copiez-le manuellement."
+        "CLIPBOARD_FAILED": "Impossible de copier l'identifiant dans le presse-papiers. Copiez-le manuellement.",
+        "CREATE_FAILED": "Échec de la création de la personne ({{status}}). Veuillez réessayer."
       }
     },
     "CREATE_VEHICLE": {
@@ -1123,7 +1131,8 @@
       "SUCCESS_ID_LABEL": "Identifiant du véhicule :",
       "ADD_ANOTHER": "En ajouter un autre",
       "ERROR": {
-        "VIN_REQUIRED": "Le NIV est requis."
+        "VIN_REQUIRED": "Le NIV est requis.",
+        "CREATE_FAILED": "Échec de l'ajout du véhicule ({{status}})."
       }
     },
     "CUSTOMER_LIST": {
@@ -1222,7 +1231,8 @@
         "LEGAL_NAME_REQUIRED": "La dénomination sociale est requise.",
         "BILLING_TERMS_REQUIRED": "Les conditions de facturation sont requises.",
         "CLIPBOARD_UNSUPPORTED": "La copie dans le presse-papiers n'est pas prise en charge dans cet environnement. Copiez l'identifiant manuellement.",
-        "CLIPBOARD_FAILED": "Impossible de copier l'identifiant de la partie dans le presse-papiers. Copiez-le manuellement."
+        "CLIPBOARD_FAILED": "Impossible de copier l'identifiant de la partie dans le presse-papiers. Copiez-le manuellement.",
+        "CREATE_FAILED": "Échec de la création du compte ({{status}}). Veuillez réessayer."
       }
     },
     "MERGE_PARTIES": {
@@ -1652,7 +1662,8 @@
         "UPDATE_COVERAGE": "Impossible de mettre à jour les règles de couverture."
       },
       "LABEL": "Emplacement de base",
-      "PROMPT": "Sélectionnez un emplacement de base pour afficher et modifier ses unités mobiles."
+      "PROMPT": "Sélectionnez un emplacement de base pour afficher et modifier ses unités mobiles.",
+      "UNNAMED": "Unité mobile"
     },
     "LANDING": {
       "TITLE": "Espace de travail des emplacements",
@@ -1896,7 +1907,8 @@
       "EMPTY": "Aucune affectation trouvée pour ce rendez-vous.",
       "ERROR": {
         "LOAD": "Impossible de charger les données d'affectation"
-      }
+      },
+      "MECHANIC_ID_FALLBACK": "Identifiant du mécanicien : {{id}}"
     },
     "MECHANIC_AVAILABILITY": {
       "TITLE": "Disponibilité des mécaniciens",
@@ -2487,7 +2499,9 @@
       }
     },
     "VENDOR_LOOKUP": {
-      "SEARCHING": "Recherche…"
+      "SEARCHING": "Recherche…",
+      "LABEL": "Fournisseur",
+      "PLACEHOLDER": "Rechercher par nom de fournisseur…"
     },
     "VENDOR_PAYMENT_NEW": {
       "OVERLINE": "Comptes fournisseurs",
@@ -4472,6 +4486,97 @@
       "SUBMIT": "Soumettre le remplacement",
       "CLOSE": "Fermer",
       "SAVED": "Remplacement enregistré."
+    },
+    "ERROR": {
+      "ESTIMATE_OR_APPROVAL_NOT_FOUND": "Estimation ou approbation introuvable.",
+      "LOAD_APPROVAL_DETAILS": "Impossible de charger les détails de l'approbation.",
+      "ESTIMATE_NOT_FOUND": "Estimation introuvable.",
+      "LOAD_ESTIMATE": "Impossible de charger l'estimation.",
+      "SIGNATURE_REQUIRED": "Veuillez fournir une signature avant de soumettre.",
+      "APPROVAL_EXPIRED_RESUBMIT": "Cette approbation a expiré. Veuillez créer une nouvelle révision et la soumettre de nouveau.",
+      "APPROVE_FORBIDDEN": "Vous n'êtes pas autorisé à approuver cette estimation.",
+      "ESTIMATE_CONFLICT_RELOAD": "L'estimation a été modifiée simultanément. Veuillez recharger et réessayer.",
+      "SUBMIT_APPROVAL": "Impossible de soumettre l'approbation.",
+      "ESTIMATE_CONFLICT_RELOADING": "L'estimation a été modifiée simultanément. Rechargement…",
+      "APPROVAL_WINDOW_EXPIRED_REVISE": "Le délai d'approbation a expiré. Veuillez créer une nouvelle révision.",
+      "RECORD_APPROVAL": "Impossible d'enregistrer l'approbation.",
+      "APPROVAL_WINDOW_EXPIRED": "Le délai d'approbation a expiré.",
+      "RECORD_PARTIAL_APPROVAL": "Impossible d'enregistrer l'approbation partielle.",
+      "ESTIMATE_INCOMPLETE": "L'estimation est incomplète ou ne peut pas être soumise.",
+      "SUBMIT_ESTIMATE_FORBIDDEN": "Vous n'avez pas la permission de soumettre des estimations pour approbation.",
+      "SUBMIT_ESTIMATE": "Impossible de soumettre l'estimation pour approbation.",
+      "ADD_VEHICLE": "Impossible d'ajouter le véhicule. Veuillez réessayer.",
+      "CREATE_ESTIMATE_FORBIDDEN": "Vous n'avez pas la permission de créer des estimations.",
+      "UNEXPECTED_RETRY": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+      "MAY_HAVE_SUCCEEDED": "Cette action a peut-être déjà réussi. Vérifiez votre liste de bons de travail avant de réessayer afin d'éviter de créer un doublon.",
+      "PROMOTE_ESTIMATE": "Échec de la promotion. Vérifiez l'état de l'estimation et réessayez.",
+      "CREATE_ESTIMATE_FROM_APPOINTMENT": "Impossible de créer l'estimation à partir du rendez-vous.",
+      "ESTIMATE_NOT_DRAFT": "L'estimation n'est pas à l'état DRAFT et ne peut pas être modifiée.",
+      "ADD_LABOR_ITEM": "Impossible d'ajouter la ligne de main-d'œuvre.",
+      "ADD_PART": "Impossible d'ajouter la pièce.",
+      "CREATE_REVISION": "Impossible de créer la révision.",
+      "LOAD_ESTIMATE_SUMMARY": "Impossible de charger le résumé de l'estimation.",
+      "LOAD_OPERATIONAL_CONTEXT": "Impossible de charger le contexte opérationnel.",
+      "OVERRIDE_OPERATIONAL_CONTEXT": "Impossible de remplacer le contexte opérationnel.",
+      "LOAD_ACTIVE_TIMER": "Impossible de charger le minuteur actif.",
+      "WORKORDER_ID_REQUIRED": "L'identifiant du bon de travail est requis",
+      "REQUEST_KEY": "Impossible de créer la clé de requête.",
+      "UNEXPECTED": "Erreur inattendue.",
+      "START_TRAVEL": "Impossible de démarrer le déplacement.",
+      "STOP_TRAVEL": "Impossible d'arrêter le déplacement.",
+      "SUBMIT_TRAVEL": "Impossible de soumettre les segments de déplacement.",
+      "LOAD_WORKORDER": "Impossible de charger le bon de travail.",
+      "TECHNICIAN_REQUIRED": "Sélectionnez un technicien dans la liste.",
+      "SAVE_TECHNICIAN_ASSIGNMENT": "Impossible d'enregistrer l'affectation du technicien. Veuillez réessayer.",
+      "LOAD_CHANGE_REQUESTS": "Impossible de charger les demandes de modification.",
+      "DESCRIPTION_REQUIRED": "La description est requise.",
+      "CREATE_CHANGE_REQUEST": "Impossible de créer la demande de modification.",
+      "APPROVE_CHANGE_REQUEST": "Impossible d'approuver la demande de modification.",
+      "DECLINE_CHANGE_REQUEST": "Impossible de refuser la demande de modification.",
+      "WORKORDER_NOT_FOUND": "Bon de travail introuvable.",
+      "VIEW_WORKORDER_FORBIDDEN": "Vous n'avez pas la permission de consulter ce bon de travail.",
+      "LOAD_WORKORDER_RETRY": "Impossible de charger le bon de travail. Veuillez réessayer.",
+      "WORKORDER_NO_CUSTOMER": "Le bon de travail n'a pas de client; impossible d'approuver.",
+      "APPROVE_WORKORDER": "Impossible d'approuver le bon de travail. Veuillez réessayer.",
+      "WORK_ALREADY_STARTED": "Le travail a déjà commencé pour ce bon de travail.",
+      "START_WORK": "Impossible de démarrer le travail. Veuillez réessayer.",
+      "COMPLETION_BLOCKED": "Achèvement bloqué. Veuillez résoudre tous les problèmes ci-dessous.",
+      "WORKORDER_NOT_COMPLETABLE": "Le bon de travail ne peut pas être terminé dans son état actuel.",
+      "COMPLETION_REQUIREMENTS": "Les exigences d'achèvement ne sont pas satisfaites.",
+      "COMPLETE_WORKORDER": "Impossible de terminer le bon de travail. Veuillez réessayer.",
+      "REOPEN_REASON_REQUIRED": "Le motif de réouverture est requis.",
+      "WORKORDER_NOT_REOPENABLE": "Le bon de travail ne peut pas être rouvert dans son état actuel.",
+      "REOPEN_WORKORDER": "Impossible de rouvrir le bon de travail. Veuillez réessayer.",
+      "INVOICE_DRAFT_EXISTS": "Une facture provisoire existe déjà pour ce bon de travail.",
+      "CREATE_INVOICE": "Impossible de créer la facture. Veuillez réessayer.",
+      "INVOICE_QUEUED_SLOW": "La génération de la facture a été mise en file d'attente, mais elle prend plus de temps que prévu. Actualisez cette page sous peu.",
+      "CONFIRM_INVOICE": "Impossible de confirmer la création de la facture. Actualisez cette page sous peu.",
+      "ITEM_NOT_COMPLETABLE": "L'élément ne peut pas être terminé dans son état actuel.",
+      "COMPLETE_ITEM": "Impossible de terminer l'élément. Veuillez réessayer.",
+      "LOAD_SNAPSHOT_HISTORY": "Impossible de charger l'historique des instantanés. Veuillez réessayer.",
+      "SNAPSHOT_EXISTS": "Un instantané facturable actif existe déjà pour ce bon de travail.",
+      "FINALIZE_REQUIREMENTS": "Les exigences de finalisation ne sont pas satisfaites. Vérifiez s'il y a des éléments non autorisés ou des totaux manquants.",
+      "FINALIZE": "Impossible de finaliser. Veuillez réessayer.",
+      "LABOR_LINE_REQUIRED": "Sélectionnez une ligne de service de main-d'œuvre pour démarrer une session.",
+      "NO_TECHNICIAN_ASSIGNED": "Ce bon de travail n'a aucun technicien affecté. Affectez un technicien avant de démarrer la main-d'œuvre.",
+      "START_LABOR_SESSION": "Impossible de démarrer la session de main-d'œuvre.",
+      "STOP_LABOR_SESSION": "Impossible d'arrêter la session de main-d'œuvre.",
+      "HOURS_POSITIVE": "Les heures doivent être supérieures à 0.",
+      "SAVE_LABOR_ENTRY": "Impossible d'enregistrer l'entrée de main-d'œuvre.",
+      "PART_ID_REQUIRED": "L'identifiant de la pièce est requis.",
+      "QUANTITY_POSITIVE": "La quantité doit être supérieure à 0.",
+      "ACTION_FAILED": "L'action a échoué. Veuillez réessayer.",
+      "SUBSTITUTE_PART_REQUIRED": "Sélectionnez une pièce de remplacement.",
+      "REASON_REQUIRED": "Le motif est requis.",
+      "SUBSTITUTION_FAILED": "La substitution a échoué.",
+      "APPROVAL_EXPIRED": "Cette approbation a expiré. Aucune action ne peut être effectuée sur cette approbation. Créez une révision pour relancer le processus d'approbation.",
+      "APPROVAL_EXPIRED_ON": "Cette approbation a expiré le {{date}}. Aucune action ne peut être effectuée sur cette approbation. Créez une révision pour relancer le processus d'approbation.",
+      "ESTIMATE_STATUS_NOT_SUBMITTABLE": "L'estimation est à l'état « {{status}} » et ne peut pas être soumise pour approbation.",
+      "ESTIMATE_STATUS_NOT_REVISABLE": "Les estimations à l'état « {{status}} » ne peuvent pas être révisées."
+    },
+    "STATUS": {
+      "TIMER_STARTED": "Minuteur démarré.",
+      "TIMER_STOPPED": "Minuteur arrêté."
     }
   },
   "INVENTORY": {

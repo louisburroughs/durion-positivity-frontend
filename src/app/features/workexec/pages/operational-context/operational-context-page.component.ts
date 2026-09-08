@@ -1,5 +1,5 @@
 
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -14,6 +14,7 @@ import { OperationalContextResponse } from '../../models/workexec.models';
   styleUrl: './operational-context-page.component.css',
 })
 export class OperationalContextPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly workexecService = inject(WorkexecService);
   private readonly route = inject(ActivatedRoute);
 
@@ -55,7 +56,7 @@ export class OperationalContextPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.overrideError.set('Failed to load operational context.');
+        this.overrideError.set(this.translate.instant('WORKEXEC.ERROR.LOAD_OPERATIONAL_CONTEXT'));
         this.loading.set(false);
       },
     });
@@ -88,7 +89,7 @@ export class OperationalContextPageComponent implements OnInit {
       },
       error: () => {
         this.overrideLoading.set(false);
-        this.overrideError.set('Failed to override operational context.');
+        this.overrideError.set(this.translate.instant('WORKEXEC.ERROR.OVERRIDE_OPERATIONAL_CONTEXT'));
       },
     });
   }

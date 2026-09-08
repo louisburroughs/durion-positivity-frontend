@@ -140,13 +140,15 @@
       "TITLE": "Access denied",
       "MESSAGE": "You do not have permission to view this screen.",
       "BACK": "Go back",
-      "HOME": "Go to app home"
+      "HOME": "Go to app home",
+      "ARIA": "Access denied"
     },
     "NOT_FOUND": {
       "TITLE": "404",
       "MESSAGE": "The page you requested does not exist.",
       "BACK": "Go back",
-      "HOME": "Go to app home"
+      "HOME": "Go to app home",
+      "ARIA": "Not found"
     }
   },
   "SHELL": {
@@ -753,7 +755,8 @@
         "HIRE_DATE_REQUIRED": "Hire date is required.",
         "STATUS_REQUIRED": "Employment status is required.",
         "LOAD": "Failed to load employee.",
-        "SAVE": "Failed to save employee."
+        "SAVE": "Failed to save employee.",
+        "DUPLICATE": "A duplicate employee record was found."
       }
     },
     "LOCATION_ASSIGNMENTS": {
@@ -865,7 +868,9 @@
       "ERROR": {
         "LOAD_PARTY": "Could not load party details.",
         "LOAD_CONTACTS": "Could not load contacts.",
-        "LOAD_PREFS": "Could not load preferences."
+        "LOAD_PREFS": "Could not load preferences.",
+        "PREFS_FORBIDDEN": "Not authorized to update preferences.",
+        "SAVE_PREFS": "Could not save preferences ({{status}})."
       }
     },
     "LANDING": {
@@ -1062,7 +1067,9 @@
       }
     },
     "CUSTOMER_LOOKUP": {
-      "SEARCHING": "Searching…"
+      "SEARCHING": "Searching…",
+      "LABEL": "Customer",
+      "PLACEHOLDER": "Search by name or customer number…"
     },
     "CREATE_PERSON": {
       "DENIED_TITLE": "Access Denied",
@@ -1094,7 +1101,8 @@
         "FIRST_NAME_REQUIRED": "First name is required.",
         "LAST_NAME_REQUIRED": "Last name is required.",
         "CLIPBOARD_UNSUPPORTED": "Clipboard is not available. Please copy the ID manually.",
-        "CLIPBOARD_FAILED": "Unable to copy ID to clipboard. Please copy it manually."
+        "CLIPBOARD_FAILED": "Unable to copy ID to clipboard. Please copy it manually.",
+        "CREATE_FAILED": "Person creation failed ({{status}}). Please try again."
       }
     },
     "CREATE_VEHICLE": {
@@ -1123,7 +1131,8 @@
       "SUCCESS_ID_LABEL": "Vehicle ID:",
       "ADD_ANOTHER": "Add Another",
       "ERROR": {
-        "VIN_REQUIRED": "VIN is required."
+        "VIN_REQUIRED": "VIN is required.",
+        "CREATE_FAILED": "Vehicle creation failed ({{status}})."
       }
     },
     "CUSTOMER_LIST": {
@@ -1222,7 +1231,8 @@
         "LEGAL_NAME_REQUIRED": "Legal name is required.",
         "BILLING_TERMS_REQUIRED": "Billing terms are required.",
         "CLIPBOARD_UNSUPPORTED": "Copying to clipboard is not supported in this environment. Please copy the ID manually.",
-        "CLIPBOARD_FAILED": "Unable to copy the party ID to the clipboard. Please copy it manually."
+        "CLIPBOARD_FAILED": "Unable to copy the party ID to the clipboard. Please copy it manually.",
+        "CREATE_FAILED": "Account creation failed ({{status}}). Please try again."
       }
     },
     "MERGE_PARTIES": {
@@ -1652,7 +1662,8 @@
         "UPDATE_COVERAGE": "Failed to update coverage rules."
       },
       "LABEL": "Base location",
-      "PROMPT": "Select a base location to view and edit its mobile units."
+      "PROMPT": "Select a base location to view and edit its mobile units.",
+      "UNNAMED": "Mobile Unit"
     },
     "LANDING": {
       "TITLE": "Location Workspace",
@@ -1896,7 +1907,8 @@
       "EMPTY": "No assignment found for this appointment.",
       "ERROR": {
         "LOAD": "Failed to load assignment data"
-      }
+      },
+      "MECHANIC_ID_FALLBACK": "Mechanic ID: {{id}}"
     },
     "MECHANIC_AVAILABILITY": {
       "TITLE": "Mechanic Availability",
@@ -2487,7 +2499,9 @@
       }
     },
     "VENDOR_LOOKUP": {
-      "SEARCHING": "Searching…"
+      "SEARCHING": "Searching…",
+      "LABEL": "Vendor",
+      "PLACEHOLDER": "Search by vendor name…"
     },
     "VENDOR_PAYMENT_NEW": {
       "OVERLINE": "Accounts Payable",
@@ -4472,6 +4486,97 @@
       "SUBMIT": "Submit override",
       "CLOSE": "Close",
       "SAVED": "Override saved."
+    },
+    "ERROR": {
+      "ESTIMATE_OR_APPROVAL_NOT_FOUND": "Estimate or approval not found.",
+      "LOAD_APPROVAL_DETAILS": "Failed to load approval details.",
+      "ESTIMATE_NOT_FOUND": "Estimate not found.",
+      "LOAD_ESTIMATE": "Failed to load estimate.",
+      "SIGNATURE_REQUIRED": "Please provide a signature before submitting.",
+      "APPROVAL_EXPIRED_RESUBMIT": "This approval has expired. Please create a new revision and resubmit.",
+      "APPROVE_FORBIDDEN": "You are not authorized to approve this estimate.",
+      "ESTIMATE_CONFLICT_RELOAD": "Estimate was modified concurrently. Please reload and try again.",
+      "SUBMIT_APPROVAL": "Failed to submit approval.",
+      "ESTIMATE_CONFLICT_RELOADING": "Estimate was modified concurrently. Reloading…",
+      "APPROVAL_WINDOW_EXPIRED_REVISE": "Approval window has expired. Please create a new revision.",
+      "RECORD_APPROVAL": "Failed to record approval.",
+      "APPROVAL_WINDOW_EXPIRED": "Approval window has expired.",
+      "RECORD_PARTIAL_APPROVAL": "Failed to record partial approval.",
+      "ESTIMATE_INCOMPLETE": "Estimate is incomplete or cannot be submitted.",
+      "SUBMIT_ESTIMATE_FORBIDDEN": "You do not have permission to submit estimates for approval.",
+      "SUBMIT_ESTIMATE": "Failed to submit estimate for approval.",
+      "ADD_VEHICLE": "Could not add vehicle. Please try again.",
+      "CREATE_ESTIMATE_FORBIDDEN": "You do not have permission to create estimates.",
+      "UNEXPECTED_RETRY": "An unexpected error occurred. Please try again.",
+      "MAY_HAVE_SUCCEEDED": "This action may have already succeeded. Check your work orders list before retrying to avoid creating a duplicate.",
+      "PROMOTE_ESTIMATE": "Promotion failed. Please check the estimate status and try again.",
+      "CREATE_ESTIMATE_FROM_APPOINTMENT": "Failed to create estimate from appointment.",
+      "ESTIMATE_NOT_DRAFT": "Estimate is not in DRAFT status and cannot be edited.",
+      "ADD_LABOR_ITEM": "Failed to add labor item.",
+      "ADD_PART": "Failed to add part.",
+      "CREATE_REVISION": "Failed to create revision.",
+      "LOAD_ESTIMATE_SUMMARY": "Failed to load estimate summary.",
+      "LOAD_OPERATIONAL_CONTEXT": "Failed to load operational context.",
+      "OVERRIDE_OPERATIONAL_CONTEXT": "Failed to override operational context.",
+      "LOAD_ACTIVE_TIMER": "Failed to load active timer.",
+      "WORKORDER_ID_REQUIRED": "Work order ID is required",
+      "REQUEST_KEY": "Unable to create request key.",
+      "UNEXPECTED": "Unexpected error.",
+      "START_TRAVEL": "Failed to start travel.",
+      "STOP_TRAVEL": "Failed to stop travel.",
+      "SUBMIT_TRAVEL": "Failed to submit travel segments.",
+      "LOAD_WORKORDER": "Failed to load work order.",
+      "TECHNICIAN_REQUIRED": "Select a technician from the list.",
+      "SAVE_TECHNICIAN_ASSIGNMENT": "Failed to save technician assignment. Please try again.",
+      "LOAD_CHANGE_REQUESTS": "Failed to load change requests.",
+      "DESCRIPTION_REQUIRED": "Description is required.",
+      "CREATE_CHANGE_REQUEST": "Failed to create change request.",
+      "APPROVE_CHANGE_REQUEST": "Failed to approve change request.",
+      "DECLINE_CHANGE_REQUEST": "Failed to decline change request.",
+      "WORKORDER_NOT_FOUND": "Work order not found.",
+      "VIEW_WORKORDER_FORBIDDEN": "You do not have permission to view this work order.",
+      "LOAD_WORKORDER_RETRY": "Failed to load work order. Please try again.",
+      "WORKORDER_NO_CUSTOMER": "Work order has no customer; cannot approve.",
+      "APPROVE_WORKORDER": "Failed to approve work order. Please try again.",
+      "WORK_ALREADY_STARTED": "Work has already been started for this work order.",
+      "START_WORK": "Failed to start work. Please try again.",
+      "COMPLETION_BLOCKED": "Completion blocked. Please resolve all issues below.",
+      "WORKORDER_NOT_COMPLETABLE": "Work order cannot be completed in its current state.",
+      "COMPLETION_REQUIREMENTS": "Completion requirements not met.",
+      "COMPLETE_WORKORDER": "Failed to complete work order. Please try again.",
+      "REOPEN_REASON_REQUIRED": "Reopen reason is required.",
+      "WORKORDER_NOT_REOPENABLE": "Work order cannot be reopened in its current state.",
+      "REOPEN_WORKORDER": "Failed to reopen work order. Please try again.",
+      "INVOICE_DRAFT_EXISTS": "An invoice draft already exists for this work order.",
+      "CREATE_INVOICE": "Failed to create invoice. Please try again.",
+      "INVOICE_QUEUED_SLOW": "Invoice generation was queued but is taking longer than expected. Refresh this page shortly.",
+      "CONFIRM_INVOICE": "Failed to confirm invoice creation. Refresh this page shortly.",
+      "ITEM_NOT_COMPLETABLE": "Item cannot be completed in its current state.",
+      "COMPLETE_ITEM": "Failed to complete item. Please try again.",
+      "LOAD_SNAPSHOT_HISTORY": "Failed to load snapshot history. Please try again.",
+      "SNAPSHOT_EXISTS": "An active billable snapshot already exists for this work order.",
+      "FINALIZE_REQUIREMENTS": "Finalization requirements not met. Check for unauthorized items or missing totals.",
+      "FINALIZE": "Failed to finalize. Please try again.",
+      "LABOR_LINE_REQUIRED": "Select a labor service line to start a session.",
+      "NO_TECHNICIAN_ASSIGNED": "This work order has no assigned technician. Assign a technician before starting labor.",
+      "START_LABOR_SESSION": "Failed to start labor session.",
+      "STOP_LABOR_SESSION": "Failed to stop labor session.",
+      "HOURS_POSITIVE": "Hours must be greater than 0.",
+      "SAVE_LABOR_ENTRY": "Failed to save labor entry.",
+      "PART_ID_REQUIRED": "Part ID is required.",
+      "QUANTITY_POSITIVE": "Quantity must be greater than 0.",
+      "ACTION_FAILED": "Action failed. Please try again.",
+      "SUBSTITUTE_PART_REQUIRED": "Select a substitute part.",
+      "REASON_REQUIRED": "Reason is required.",
+      "SUBSTITUTION_FAILED": "Substitution failed.",
+      "APPROVAL_EXPIRED": "This approval has expired. No actions can be taken on this approval. Create a revision to restart the approval process.",
+      "APPROVAL_EXPIRED_ON": "This approval has expired on {{date}}. No actions can be taken on this approval. Create a revision to restart the approval process.",
+      "ESTIMATE_STATUS_NOT_SUBMITTABLE": "Estimate is in \"{{status}}\" status and cannot be submitted for approval.",
+      "ESTIMATE_STATUS_NOT_REVISABLE": "Estimates in status \"{{status}}\" cannot be revised."
+    },
+    "STATUS": {
+      "TIMER_STARTED": "Timer started.",
+      "TIMER_STOPPED": "Timer stopped."
     }
   },
   "INVENTORY": {

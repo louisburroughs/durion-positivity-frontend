@@ -53,7 +53,7 @@ export class CreateIndividualPersonComponent {
           this.state.set('access-denied');
         } else {
           this.serverError.set(
-            err?.error?.message ?? `Person creation failed (${err?.status ?? 'unknown'}). Please try again.`,
+            err?.error?.message ?? this.translate.instant('CRM.CREATE_PERSON.ERROR.CREATE_FAILED', { status: err?.status ?? 'unknown' }),
           );
           this.state.set('error');
         }

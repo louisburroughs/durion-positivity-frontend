@@ -1,7 +1,7 @@
 import { ElementRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ComponentFixture } from '@angular/core/testing';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -12,6 +12,15 @@ import { environment } from '../../../../../environments/environment';
 
 const BASE = environment.apiBaseUrl;
 const mockRoute = { snapshot: { paramMap: { get: (k: string) => k === 'estimateId' ? 'est-123' : null } } };
+
+const TRANSLATIONS = {
+  WORKEXEC: {
+    ERROR: {
+      SIGNATURE_REQUIRED: 'Please provide a signature before submitting.',
+      APPROVAL_EXPIRED_RESUBMIT: 'This approval has expired. Please create a new revision and resubmit.',
+    },
+  },
+};
 
 describe('ApprovalDigitalPageComponent [Story 271]', () => {
   let fixture: ComponentFixture<ApprovalDigitalPageComponent>;
@@ -29,6 +38,9 @@ describe('ApprovalDigitalPageComponent [Story 271]', () => {
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
       ],
     }).compileComponents();
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
     fixture = TestBed.createComponent(ApprovalDigitalPageComponent);
     component = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController);

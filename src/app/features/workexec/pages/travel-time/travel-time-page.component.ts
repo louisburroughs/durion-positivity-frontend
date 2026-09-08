@@ -1,5 +1,5 @@
 
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { WorkexecService } from '../../services/workexec.service';
@@ -12,6 +12,7 @@ import { WorkexecService } from '../../services/workexec.service';
   styleUrl: './travel-time-page.component.css',
 })
 export class TravelTimePageComponent {
+  private readonly translate = inject(TranslateService);
   private readonly workexecService = inject(WorkexecService);
 
   readonly activeSegment = signal<Record<string, unknown> | null>(null);
@@ -45,7 +46,7 @@ export class TravelTimePageComponent {
         this.loading.set(false);
       },
       error: () => {
-        this.startError.set('Failed to start travel.');
+        this.startError.set(this.translate.instant('WORKEXEC.ERROR.START_TRAVEL'));
         this.loading.set(false);
       },
     });
@@ -57,7 +58,7 @@ export class TravelTimePageComponent {
         this.activeSegment.set(null);
       },
       error: () => {
-        this.stopError.set('Failed to stop travel.');
+        this.stopError.set(this.translate.instant('WORKEXEC.ERROR.STOP_TRAVEL'));
       },
     });
   }
@@ -71,7 +72,7 @@ export class TravelTimePageComponent {
         this.submitSuccess.set(true);
       },
       error: () => {
-        this.submitError.set('Failed to submit travel segments.');
+        this.submitError.set(this.translate.instant('WORKEXEC.ERROR.SUBMIT_TRAVEL'));
       },
     });
   }

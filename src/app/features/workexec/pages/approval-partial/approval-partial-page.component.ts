@@ -6,7 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateItemResponse, EstimateResponse, LineItemApprovalDto, PageState } from '../../models/workexec.models';
 import { CustomerLookupComponent } from '../../../crm/components/customer-lookup/customer-lookup.component';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 /**
  * ApprovalPartialPageComponent — Story 269 (CAP-003)
@@ -27,6 +27,7 @@ import { TranslatePipe } from '@ngx-translate/core';
   styleUrl: './approval-partial-page.component.css',
 })
 export class ApprovalPartialPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly workexec   = inject(WorkexecService);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
@@ -71,7 +72,7 @@ export class ApprovalPartialPageComponent implements OnInit {
         },
         error: err => {
           this.pageState.set('error');
-          this.errorMessage.set(err.status === 404 ? 'Estimate not found.' : 'Failed to load estimate.');
+          this.errorMessage.set(err.status === 404 ? this.translate.instant('WORKEXEC.ERROR.ESTIMATE_NOT_FOUND') : this.translate.instant('WORKEXEC.ERROR.LOAD_ESTIMATE'));
         },
       });
   }
@@ -104,6 +105,7 @@ export class ApprovalPartialPageComponent implements OnInit {
       lineItemId: item.id,
       approved: this.lineDecisions()[item.id] ?? true,
       rejectionReason: this.lineDecisions()[item.id] === false
+        // i18n-ignore-next-line: rejectionReason posted to the API, never rendered
         ? (this.rejectionReasons()[item.id] || 'Declined by customer')
         : undefined,
     }));
@@ -128,13 +130,13 @@ export class ApprovalPartialPageComponent implements OnInit {
           this.submitState.set('error');
           const body = err.error;
           if (err.status === 409) {
-            this.errorMessage.set('Estimate was modified concurrently. Reloading…');
+            this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.ESTIMATE_CONFLICT_RELOADING'));
             this.loadEstimate();
           } else if (err.status === 400 && (body?.code === 'APPROVAL_EXPIRED' || body?.message?.toLowerCase().includes('expired'))) {
             this.pageState.set('expired');
-            this.errorMessage.set('Approval window has expired.');
+            this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.APPROVAL_WINDOW_EXPIRED'));
           } else {
-            this.errorMessage.set(body?.message ?? 'Failed to record partial approval.');
+            this.errorMessage.set(body?.message ?? this.translate.instant('WORKEXEC.ERROR.RECORD_PARTIAL_APPROVAL'));
           }
         },
       });

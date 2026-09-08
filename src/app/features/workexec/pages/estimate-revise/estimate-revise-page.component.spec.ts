@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -10,6 +10,14 @@ import { environment } from '../../../../../environments/environment';
 
 const BASE = environment.apiBaseUrl;
 const mockRoute = { snapshot: { paramMap: { get: (k: string) => k === 'estimateId' ? 'est-123' : null } } };
+
+const TRANSLATIONS = {
+  WORKEXEC: {
+    ERROR: {
+      ESTIMATE_STATUS_NOT_REVISABLE: 'Estimates in status "{{status}}" cannot be revised.',
+    },
+  },
+};
 
 describe('EstimateRevisePageComponent [Story 235]', () => {
   let fixture: ComponentFixture<EstimateRevisePageComponent>;
@@ -27,6 +35,9 @@ describe('EstimateRevisePageComponent [Story 235]', () => {
         { provide: BASE_PATH, useValue: environment.apiBaseUrl },
       ],
     }).compileComponents();
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', TRANSLATIONS);
+    translate.use('en-US');
     fixture = TestBed.createComponent(EstimateRevisePageComponent);
     component = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController);

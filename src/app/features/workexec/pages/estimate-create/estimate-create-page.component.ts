@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -27,6 +27,7 @@ const ADD_VEHICLE_OPTION = '__add__';
   styleUrl: './estimate-create-page.component.css',
 })
 export class EstimateCreatePageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly workexec = inject(WorkexecService);
   private readonly router   = inject(Router);
   private readonly fb       = inject(FormBuilder);
@@ -183,7 +184,7 @@ export class EstimateCreatePageComponent implements OnInit {
         error: err => {
           this.vehicleSaving.set(false);
           const body = err.error;
-          this.vehicleSaveError.set(body?.message ?? 'Could not add vehicle. Please try again.');
+          this.vehicleSaveError.set(body?.message ?? this.translate.instant('WORKEXEC.ERROR.ADD_VEHICLE'));
         },
       });
   }
@@ -228,9 +229,9 @@ export class EstimateCreatePageComponent implements OnInit {
           this.fieldErrors.set(map);
         } else if (err.status === 403) {
           this.state.set('access-denied');
-          this.errorMessage.set('You do not have permission to create estimates.');
+          this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.CREATE_ESTIMATE_FORBIDDEN'));
         } else {
-          this.errorMessage.set(body?.message ?? 'An unexpected error occurred. Please try again.');
+          this.errorMessage.set(body?.message ?? this.translate.instant('WORKEXEC.ERROR.UNEXPECTED_RETRY'));
         }
       },
     });

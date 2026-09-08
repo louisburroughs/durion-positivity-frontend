@@ -2,7 +2,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LocationService } from '../../services/location.service';
 import { LocationPickerComponent } from '../../components/location-picker/location-picker.component';
@@ -16,6 +16,7 @@ import { LocationPickerComponent } from '../../components/location-picker/locati
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MobileUnitsPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly locationService = inject(LocationService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -157,6 +158,6 @@ export class MobileUnitsPageComponent implements OnInit {
 
   getUnitName(unit: unknown): string {
     const candidate = unit as Record<string, unknown>;
-    return String(candidate['name'] ?? candidate['unitName'] ?? candidate['mobileUnitId'] ?? 'Mobile Unit');
+    return String(candidate['name'] ?? candidate['unitName'] ?? candidate['mobileUnitId'] ?? this.translate.instant('LOCATION.MOBILE_UNITS.UNNAMED'));
   }
 }

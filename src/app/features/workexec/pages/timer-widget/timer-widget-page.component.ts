@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,6 +25,7 @@ type TimerState = 'NONE' | 'ACTIVE' | 'STARTING' | 'STOPPING' | 'ERROR';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimerWidgetPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly workexecService = inject(WorkexecService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
@@ -85,7 +86,7 @@ export class TimerWidgetPageComponent implements OnInit {
           this.timerState.set(timers.length > 0 ? 'ACTIVE' : 'NONE');
         },
         error: () => {
-          this.loadError.set('Failed to load active timer.');
+          this.loadError.set(this.translate.instant('WORKEXEC.ERROR.LOAD_ACTIVE_TIMER'));
           this.timerState.set('ERROR');
         },
       });
@@ -100,7 +101,7 @@ export class TimerWidgetPageComponent implements OnInit {
     const rawWorkOrderId = this.startForm.controls.workOrderId.value;
     const workOrderId = rawWorkOrderId.trim();
     if (!workOrderId) {
-      this.actionError.set('Work order ID is required');
+      this.actionError.set(this.translate.instant('WORKEXEC.ERROR.WORKORDER_ID_REQUIRED'));
       return;
     }
 
@@ -109,7 +110,7 @@ export class TimerWidgetPageComponent implements OnInit {
     }
     const requestKey = this.startKey();
     if (!requestKey) {
-      this.actionError.set('Unable to create request key.');
+      this.actionError.set(this.translate.instant('WORKEXEC.ERROR.REQUEST_KEY'));
       return;
     }
 
@@ -132,7 +133,7 @@ export class TimerWidgetPageComponent implements OnInit {
       .subscribe({
         next: () => {
           this.timerState.set('ACTIVE');
-          this.actionSuccess.set('Timer started.');
+          this.actionSuccess.set(this.translate.instant('WORKEXEC.STATUS.TIMER_STARTED'));
           this.startKey.set(null);
           this.loadActiveTimers();
         },
@@ -149,7 +150,7 @@ export class TimerWidgetPageComponent implements OnInit {
     }
     const requestKey = this.stopKey();
     if (!requestKey) {
-      this.actionError.set('Unable to create request key.');
+      this.actionError.set(this.translate.instant('WORKEXEC.ERROR.REQUEST_KEY'));
       return;
     }
 
@@ -167,7 +168,7 @@ export class TimerWidgetPageComponent implements OnInit {
           this.stoppedEntries.set(stopped);
           this.activeTimers.set([]);
           this.timerState.set('NONE');
-          this.actionSuccess.set('Timer stopped.');
+          this.actionSuccess.set(this.translate.instant('WORKEXEC.STATUS.TIMER_STOPPED'));
           this.stopKey.set(null);
         },
         error: (err: unknown) => {
@@ -204,6 +205,6 @@ export class TimerWidgetPageComponent implements OnInit {
     if (typeof error?.['code'] === 'string') {
       return error['code'];
     }
-    return 'Unexpected error.';
+    return this.translate.instant('WORKEXEC.ERROR.UNEXPECTED');
   }
 }

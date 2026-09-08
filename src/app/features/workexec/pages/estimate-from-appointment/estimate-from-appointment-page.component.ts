@@ -1,5 +1,5 @@
 
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -14,6 +14,7 @@ import { EstimateResponse } from '../../models/workexec.models';
   styleUrl: './estimate-from-appointment-page.component.css',
 })
 export class EstimateFromAppointmentPageComponent {
+  private readonly translate = inject(TranslateService);
   private readonly workexecService = inject(WorkexecService);
   private readonly router = inject(Router);
 
@@ -46,7 +47,7 @@ export class EstimateFromAppointmentPageComponent {
         void this.router.navigate(['/app/workexec/workorders']);
       },
       error: () => {
-        this.createError.set('Failed to create estimate from appointment.');
+        this.createError.set(this.translate.instant('WORKEXEC.ERROR.CREATE_ESTIMATE_FROM_APPOINTMENT'));
         this.loading.set(false);
       },
     });

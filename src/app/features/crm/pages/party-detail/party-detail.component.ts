@@ -160,8 +160,12 @@ export class PartyDetailComponent implements OnInit {
       },
       error: err => {
         this.prefsError.set(
-          err?.status === 403 ? 'Not authorized to update preferences.' :
-          err?.error?.message ?? `Could not save preferences (${err?.status ?? 'error'}).`,
+          err?.status === 403
+            ? this.translate.instant('CRM.PARTY_DETAIL.ERROR.PREFS_FORBIDDEN')
+            : err?.error?.message ??
+              this.translate.instant('CRM.PARTY_DETAIL.ERROR.SAVE_PREFS', {
+                status: err?.status ?? 'error',
+              }),
         );
         this.prefsEdit.set('editing');
       },

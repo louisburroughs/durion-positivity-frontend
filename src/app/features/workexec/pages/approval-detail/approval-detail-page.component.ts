@@ -2,7 +2,8 @@ import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
 
@@ -31,6 +32,8 @@ import { EstimateResponse, PageState } from '../../models/workexec.models';
   styleUrl: './approval-detail-page.component.css',
 })
 export class ApprovalDetailPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
+  private readonly locale     = inject(LocaleService);
   private readonly workexec   = inject(WorkexecService);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
@@ -59,8 +62,13 @@ export class ApprovalDetailPageComponent implements OnInit {
           if (this.isExpired(est)) {
             this.pageState.set('expired');
             this.errorMessage.set(
-              `This approval has expired${est.expiresAt ? ' on ' + new Date(est.expiresAt).toLocaleDateString() : ''}.` +
-              ' No actions can be taken on this approval. Create a revision to restart the approval process.'
+              est.expiresAt
+                ? this.translate.instant('WORKEXEC.ERROR.APPROVAL_EXPIRED_ON', {
+                    // Bare toLocaleDateString() formats in the browser's locale, which
+                    // is not the one the user picked in the app.
+                    date: new Date(est.expiresAt).toLocaleDateString(this.locale.currentLocale()),
+                  })
+                : this.translate.instant('WORKEXEC.ERROR.APPROVAL_EXPIRED'),
             );
           } else {
             this.pageState.set('ready');
@@ -68,7 +76,7 @@ export class ApprovalDetailPageComponent implements OnInit {
         },
         error: err => {
           this.pageState.set('error');
-          this.errorMessage.set(err.status === 404 ? 'Estimate or approval not found.' : 'Failed to load approval details.');
+          this.errorMessage.set(err.status === 404 ? this.translate.instant('WORKEXEC.ERROR.ESTIMATE_OR_APPROVAL_NOT_FOUND') : this.translate.instant('WORKEXEC.ERROR.LOAD_APPROVAL_DETAILS'));
         },
       });
   }

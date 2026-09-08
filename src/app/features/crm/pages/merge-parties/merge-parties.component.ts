@@ -77,7 +77,7 @@ export class MergePartiesComponent {
           this.searchResults.set([]);
           if (err?.status === 403) {
             this.searchState.set('access-denied');
-            this.searchError.set("You don't have permission to search parties.");
+            this.searchError.set(this.translate.instant('CRM.MERGE_PARTIES.FORBIDDEN'));
             return;
           }
           this.searchState.set('error');

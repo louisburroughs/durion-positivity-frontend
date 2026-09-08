@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -24,6 +24,7 @@ import { ServiceSummary } from '../../../product/models/product.models';
   styleUrl: './estimate-labor-page.component.css',
 })
 export class EstimateLaborPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly workexec   = inject(WorkexecService);
   private readonly catalog     = inject(ProductCatalogService);
   private readonly route      = inject(ActivatedRoute);
@@ -148,7 +149,7 @@ export class EstimateLaborPageComponent implements OnInit {
         },
         error: err => {
           this.state.set('error');
-          this.errorMessage.set(err.status === 404 ? 'Estimate not found.' : 'Failed to load estimate.');
+          this.errorMessage.set(err.status === 404 ? this.translate.instant('WORKEXEC.ERROR.ESTIMATE_NOT_FOUND') : this.translate.instant('WORKEXEC.ERROR.LOAD_ESTIMATE'));
         },
       });
   }
@@ -195,9 +196,9 @@ export class EstimateLaborPageComponent implements OnInit {
           for (const fe of body.fieldErrors) map[fe.field] = fe.message;
           this.fieldErrors.set(map);
         } else if (err.status === 409) {
-          this.errorMessage.set('Estimate is not in DRAFT status and cannot be edited.');
+          this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.ESTIMATE_NOT_DRAFT'));
         } else {
-          this.errorMessage.set(body?.message ?? 'Failed to add labor item.');
+          this.errorMessage.set(body?.message ?? this.translate.instant('WORKEXEC.ERROR.ADD_LABOR_ITEM'));
         }
       },
     });

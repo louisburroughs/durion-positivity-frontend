@@ -38,9 +38,15 @@ export class CustomerLookupComponent implements ControlValueAccessor {
   private readonly destroyRef = inject(DestroyRef);
 
   @Input() inputId = 'customer-lookup';
-  @Input() label = 'Customer';
+  /**
+   * Left undefined by default so the template falls back to the component's own
+   * key through `| translate`. Resolving the default here with `instant` would
+   * freeze it at construction time — before the loader has the catalogue on a
+   * cold start, and stale forever after a runtime locale switch.
+   */
+  @Input() label?: string;
   @Input() required = false;
-  @Input() placeholder = 'Search by name or customer number…';
+  @Input() placeholder?: string;
 
   readonly suggestions = signal<PartyDetail[]>([]);
   readonly query        = signal('');

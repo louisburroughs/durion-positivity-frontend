@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -30,6 +30,7 @@ type RosterState = 'idle' | 'loading' | 'ready' | 'error' | 'no-shop';
   styleUrl: './workorder-assign-page.component.css',
 })
 export class WorkorderAssignPageComponent implements OnInit {
+  private readonly translate = inject(TranslateService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(WorkexecService);
@@ -90,7 +91,7 @@ export class WorkorderAssignPageComponent implements OnInit {
           }
         },
         error: () => {
-          this.errorMessage.set('Failed to load work order.');
+          this.errorMessage.set(this.translate.instant('WORKEXEC.ERROR.LOAD_WORKORDER'));
           this.pageState.set('error');
         },
       });
@@ -183,7 +184,7 @@ export class WorkorderAssignPageComponent implements OnInit {
     const id = this.workorderId();
     const techId = this.technicianId().trim();
     if (!techId) {
-      this.saveError.set('Select a technician from the list.');
+      this.saveError.set(this.translate.instant('WORKEXEC.ERROR.TECHNICIAN_REQUIRED'));
       return;
     }
     const request: AssignTechnicianRequest = { technicianId: techId, notes: this.notes().trim() || undefined };
@@ -203,7 +204,7 @@ export class WorkorderAssignPageComponent implements OnInit {
       error: (err) => {
         this.saveState.set('error');
         this.saveError.set(
-          err?.error?.message ?? 'Failed to save technician assignment. Please try again.',
+          err?.error?.message ?? this.translate.instant('WORKEXEC.ERROR.SAVE_TECHNICIAN_ASSIGNMENT'),
         );
       },
     });
