@@ -1,6 +1,7 @@
 import { Injectable, afterNextRender, signal } from '@angular/core';
 
 /** Probe string for the CSS Font Loading API (`size family`). */
+// i18n-ignore-next-line: CSS Font Loading API shorthand, not UI copy
 const ICON_FONT = '24px "Material Symbols Rounded"';
 
 /**
