@@ -49,7 +49,39 @@
   <section class="detail-section" data-testid="payload-section"
     [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_DETAIL.PAYLOAD' | translate">
     <h2>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.PAYLOAD' | translate }}</h2>
-    <pre>{{ value.payload | json }}</pre>
+
+    @if (value.payloadReferences?.length) {
+    <table class="ledger-table" data-testid="payload-references"
+      [attr.aria-label]="'ACCOUNTING.INGESTION_MONITOR_DETAIL.REFERENCES_TABLE_ARIA' | translate">
+      <caption>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.REFERENCES_TABLE_CAPTION' | translate }}</caption>
+      <thead>
+        <tr>
+          <th>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.REFERENCES_COL_FIELD' | translate }}</th>
+          <th>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.REFERENCES_COL_TYPE' | translate }}</th>
+          <th>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.REFERENCES_COL_VALUE' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ref of value.payloadReferences; track ref.path) {
+        <tr>
+          <td>{{ ref.path }}</td>
+          <td>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.REFERENCE_TYPE.' + ref.referenceType | translate }}</td>
+          <td>{{ ref.displayReference || ref.displayName || ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    }
+
+    <!--
+      The raw payload is kept verbatim for audit, so it still contains the ids
+      the references table resolves above. It stays collapsed so those ids are
+      not published on screen; an operator who needs the audit view opts in.
+    -->
+    <details class="raw-payload" data-testid="raw-payload">
+      <summary>{{ 'ACCOUNTING.INGESTION_MONITOR_DETAIL.PAYLOAD_RAW' | translate }}</summary>
+      <pre>{{ value.payload | json }}</pre>
+    </details>
   </section>
   }
 
@@ -84,9 +116,9 @@
         </tr>
       </thead>
       <tbody>
-        @for (item of history(); track item.attemptId) {
+        @for (item of history(); track item.attemptId; let attemptIndex = $index) {
         <tr>
-          <td>{{ item.attemptId }}</td>
+          <td>{{ attemptIndex + 1 }}</td>
           <td>{{ item.attemptedAt | date:'short' }}</td>
           <td>{{ item.triggeredByUserId }}</td>
           <td>{{ ('ACCOUNTING.INGESTION_MONITOR_DETAIL.OUTCOME.' + item.outcome) | translate }}</td>

@@ -273,6 +273,16 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
     this.activeLocationIndex.set(-1);
   }
 
+  /**
+   * A selection seeded from the URL keeps `name === id` until the roster
+   * back-fills its display name. When the roster has no match — a stale or
+   * wrong deep link — that never happens, so the chip must show a placeholder
+   * rather than publishing the raw id on screen.
+   */
+  isUnresolvedLocation(l: SelectedLocation): boolean {
+    return l.name === l.id;
+  }
+
   removeLocation(id: string): void {
     const before = this.selectedLocations().length;
     this.selectedLocations.update(list => list.filter(l => l.id !== id));
