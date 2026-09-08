@@ -35,7 +35,8 @@ import { ApiBaseService } from '../../../core/services/api-base.service';
 import { environment } from '../../../../environments/environment';
 import {
   AccountingEventDetail,
-  EventPayloadReference,
+  EVENT_PAYLOAD_REFERENCE_TYPES,
+  EventPayloadReferenceType,
   AccountingEventListItem,
   AccountingEventSubmitRequest,
   CreditMemo,
@@ -421,11 +422,23 @@ export class AccountingService {
         path: ref.path,
         rawValue: ref.rawValue,
         id: ref.id ?? null,
-        referenceType: ref.referenceType as string as EventPayloadReference['referenceType'],
+        referenceType: this.toEventPayloadReferenceType(ref.referenceType),
         displayReference: ref.displayReference ?? null,
         displayName: ref.displayName ?? null,
       })),
     };
+  }
+
+  /**
+   * The reference-type label is looked up as an i18n key, so an unrecognized
+   * value would render the raw key on screen (ADR-0030). The SDK enum can grow
+   * ahead of this build, so normalize anything unknown to 'UNKNOWN' rather than
+   * asserting the cast.
+   */
+  private toEventPayloadReferenceType(value: unknown): EventPayloadReferenceType {
+    return EVENT_PAYLOAD_REFERENCE_TYPES.includes(value as EventPayloadReferenceType)
+      ? (value as EventPayloadReferenceType)
+      : 'UNKNOWN';
   }
 
   private toInvoicePaymentStatus(dto: InvoiceStatusResponse): InvoicePaymentStatus {

@@ -1594,7 +1594,8 @@
         "LOCATION": "Ubicación",
         "JOURNAL_ENTRY": "Asiento contable",
         "VENDOR": "Proveedor",
-        "VENDOR_BILL": "Factura de proveedor"
+        "VENDOR_BILL": "Factura de proveedor",
+        "UNKNOWN": "Referencia"
       }
     },
     "EVENT_ENVELOPE_CONTRACT": {

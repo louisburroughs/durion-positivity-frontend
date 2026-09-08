@@ -1594,7 +1594,8 @@
         "LOCATION": "Emplacement",
         "JOURNAL_ENTRY": "Écriture de journal",
         "VENDOR": "Fournisseur",
-        "VENDOR_BILL": "Facture fournisseur"
+        "VENDOR_BILL": "Facture fournisseur",
+        "UNKNOWN": "Référence"
       }
     },
     "EVENT_ENVELOPE_CONTRACT": {

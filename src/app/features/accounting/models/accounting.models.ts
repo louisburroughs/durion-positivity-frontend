@@ -83,7 +83,21 @@ export type EventPayloadReferenceType =
   | 'LOCATION'
   | 'JOURNAL_ENTRY'
   | 'VENDOR'
-  | 'VENDOR_BILL';
+  | 'VENDOR_BILL'
+  /** Anything the backend adds that this build does not know about yet. */
+  | 'UNKNOWN';
+
+/** The reference types this build can label; anything else maps to 'UNKNOWN'. */
+export const EVENT_PAYLOAD_REFERENCE_TYPES: readonly EventPayloadReferenceType[] = [
+  'INVOICE',
+  'CUSTOMER',
+  'ORGANIZATION',
+  'LOCATION',
+  'JOURNAL_ENTRY',
+  'VENDOR',
+  'VENDOR_BILL',
+  'UNKNOWN',
+];
 
 /**
  * Display projection of one reference value recognized inside an event payload.

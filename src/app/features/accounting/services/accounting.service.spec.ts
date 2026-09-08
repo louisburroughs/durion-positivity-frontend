@@ -266,6 +266,28 @@ describe('AccountingService', () => {
         },
       ]);
     });
+
+    it('should normalize an unrecognized referenceType to UNKNOWN', () => {
+      accountingEventsStub.getAccountingEvent.mockReturnValueOnce(
+        of({
+          eventId: 'evt-003',
+          eventType: 'INVOICE_PAYMENT',
+          status: IngestionProcessingStatus.Received,
+          payload: {},
+          payloadReferences: [
+            // A type this build does not know about yet: rendering it straight
+            // through would put a raw i18n key on screen (ADR-0030).
+            { path: 'payload.thingId', rawValue: 'x-1', referenceType: 'SOMETHING_NEW' },
+            { path: 'payload.otherId', rawValue: 'x-2' },
+          ],
+        }),
+      );
+
+      let result: AccountingEventDetail | undefined;
+      service.getEvent('evt-003').subscribe(r => (result = r));
+
+      expect(result?.payloadReferences?.map(r => r.referenceType)).toEqual(['UNKNOWN', 'UNKNOWN']);
+    });
   });
 
   describe('listEvents() — invoiceId filter (Story #69)', () => {

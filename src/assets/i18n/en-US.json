@@ -1594,7 +1594,8 @@
         "LOCATION": "Location",
         "JOURNAL_ENTRY": "Journal entry",
         "VENDOR": "Vendor",
-        "VENDOR_BILL": "Vendor bill"
+        "VENDOR_BILL": "Vendor bill",
+        "UNKNOWN": "Reference"
       }
     },
     "EVENT_ENVELOPE_CONTRACT": {
