@@ -6,6 +6,8 @@ import { provideRouter, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 import { Configuration as SecurityConfiguration, TokenPairResponse, ValidateResponse } from '@durion-sdk/security';
 import { environment } from '../../../environments/environment';
+import { encodePermissionBits } from '../security/permission-bits';
+import { PERMISSION_CATALOG_VERSION } from '../security/permission-catalog';
 
 describe('AuthService', () => {
   const VALID_ACCESS_TOKEN =
@@ -293,6 +295,94 @@ describe('AuthService', () => {
 
       expect(service.currentUserRoles()).toEqual(['ROLE_ADMIN']);
       expect(service.hasRole('ROLE_ADMIN')).toBe(true);
+    });
+  });
+  describe('perm_bits claim', () => {
+    /** Builds an unsigned JWT carrying the given claims. */
+    function tokenWith(claims: Record<string, unknown>): string {
+      const payload = btoa(JSON.stringify({ sub: 'usr', exp: 9999999999, iat: 1700000000, ...claims }))
+        .replaceAll('+', '-')
+        .replaceAll('/', '_')
+        .replaceAll('=', '');
+      return `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${payload}.sig`;
+    }
+
+    function loginWith(accessToken: string): void {
+      environment.mockAuth = false;
+      service.login({ username: 'demo', password: 'testpass' }).subscribe();
+      httpMock
+        .expectOne(r => r.url.includes('/security-service/v1/auth/login'))
+        .flush({ accessToken, refreshToken: 'rt', tokenType: 'Bearer' });
+    }
+
+    it('decodes granted permissions from the claim', () => {
+      loginWith(
+        tokenWith({
+          roles: [],
+          perm_bits: encodePermissionBits(['inventory:on_hand:view', 'crm:party:view']),
+          perm_ver: PERMISSION_CATALOG_VERSION,
+        }),
+      );
+
+      expect(service.permissionsKnown()).toBe(true);
+      expect(service.hasPermission('inventory:on_hand:view')).toBe(true);
+      expect(service.hasPermission('crm:party:view')).toBe(true);
+      expect(service.hasPermission('accounting:je:view')).toBe(false);
+      expect(service.hasAnyPermission(['accounting:je:view', 'crm:party:view'])).toBe(true);
+      expect(service.hasAnyPermission(['accounting:je:view'])).toBe(false);
+    });
+
+    it('treats an empty claim as a session that grants no permissions', () => {
+      loginWith(tokenWith({ roles: [], perm_bits: '', perm_ver: PERMISSION_CATALOG_VERSION }));
+
+      expect(service.permissionsKnown()).toBe(true);
+      expect(service.currentUserPermissions()?.size).toBe(0);
+      expect(service.hasPermission('crm:party:view')).toBe(false);
+    });
+
+    it('treats a token without the claim as permissions unknown, not permissions denied', () => {
+      loginWith(tokenWith({ roles: ['ROLE_ADMIN'] }));
+
+      expect(service.permissionsKnown()).toBe(false);
+      expect(service.currentUserPermissions()).toBeNull();
+      expect(service.hasPermission('crm:party:view')).toBe(false);
+    });
+
+    it('still decodes known bits when the token uses a newer catalog version', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      loginWith(
+        tokenWith({
+          roles: [],
+          perm_bits: encodePermissionBits(['crm:party:view']),
+          perm_ver: PERMISSION_CATALOG_VERSION + 1,
+        }),
+      );
+
+      expect(service.hasPermission('crm:party:view')).toBe(true);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    it('gives the mock-auth session the full catalog so dev mode exercises real gating', () => {
+      service.login({ username: 'demo', password: 'testpass' }).subscribe();
+
+      expect(service.permissionsKnown()).toBe(true);
+      expect(service.hasPermission('inventory:on_hand:view')).toBe(true);
+      expect(service.hasRole('ROLE_ADMIN')).toBe(true);
+    });
+
+    it('forgets permissions on logout', () => {
+      loginWith(
+        tokenWith({
+          roles: [],
+          perm_bits: encodePermissionBits(['crm:party:view']),
+          perm_ver: PERMISSION_CATALOG_VERSION,
+        }),
+      );
+      service.logout();
+
+      expect(service.currentUserPermissions()).toBeNull();
+      expect(service.hasPermission('crm:party:view')).toBe(false);
     });
   });
 });

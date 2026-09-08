@@ -7,7 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { MaterialSymbolPipe } from '../../shared/material-symbol.pipe';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { ChatApiService } from './services/chat-api.service';
-import { NavigationRegistryService } from './services/navigation-registry.service';
+import { NAV_REGISTRY } from './services/navigation-registry.service';
 
 /**
  * Guard against icon-name drift: every Material Symbol name referenced by the
@@ -30,15 +30,10 @@ describe('Material Symbol icon coverage', () => {
   }
 
   it('maps every nav-registry icon', () => {
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: AuthService, useValue: { hasAnyRole: () => true } },
-      ],
-    });
-    const registry = TestBed.inject(NavigationRegistryService);
-    const items = registry.visibleNavItems();
-    expect(items.length).toBeGreaterThan(0);
-    for (const item of items) {
+    // Walks the whole registry rather than one session's visible subset, so an
+    // unmapped icon on a permission-gated entry is still caught.
+    expect(NAV_REGISTRY.length).toBeGreaterThan(0);
+    for (const item of NAV_REGISTRY) {
       assertResolves(item.icon, `nav:${item.key}`);
     }
   });
