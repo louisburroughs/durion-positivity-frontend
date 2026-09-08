@@ -89,13 +89,15 @@
       >
         @for (l of selectedLocations(); track l.id) {
         <li class="chip">
-          <span class="chip-label">{{ l.name }}</span>
+          <span class="chip-label">{{ isUnresolvedLocation(l) ?
+            ('INVENTORY.BY_LOCATION.PICKER.UNRESOLVED' | translate) : l.name }}</span>
           <button
             type="button"
             class="chip-remove"
             (click)="removeLocation(l.id)"
             [attr.aria-label]="
-              ('INVENTORY.BY_LOCATION.PICKER.CHIP_REMOVE_ARIA' | translate) + ' ' + l.name
+              ('INVENTORY.BY_LOCATION.PICKER.CHIP_REMOVE_ARIA' | translate) + ' ' +
+              (isUnresolvedLocation(l) ? ('INVENTORY.BY_LOCATION.PICKER.UNRESOLVED' | translate) : l.name)
             "
           >×</button>
         </li>

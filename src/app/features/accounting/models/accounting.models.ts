@@ -76,6 +76,35 @@ export interface AccountingEventListItem {
   domainKeyId?: string;
 }
 
+export type EventPayloadReferenceType =
+  | 'INVOICE'
+  | 'CUSTOMER'
+  | 'ORGANIZATION'
+  | 'LOCATION'
+  | 'JOURNAL_ENTRY'
+  | 'VENDOR'
+  | 'VENDOR_BILL';
+
+/**
+ * Display projection of one reference value recognized inside an event payload.
+ * The raw payload is kept verbatim for audit, so this is what the UI renders in
+ * its place: `displayReference`/`displayName` are null when accounting cannot
+ * resolve the reference, and are never the identifier rendered as text.
+ */
+export interface EventPayloadReference {
+  /** JSON path the value was found at, e.g. "payload.invoiceId". */
+  path: string;
+  /** The value exactly as written in the payload. */
+  rawValue: string;
+  /** Set only when `rawValue` is a UUID. */
+  id?: string | null;
+  referenceType: EventPayloadReferenceType;
+  /** Human-readable number, e.g. "INV-1787955433643-01a04a72". */
+  displayReference?: string | null;
+  /** Human-readable name of the referenced entity. */
+  displayName?: string | null;
+}
+
 export interface AccountingEventDetail extends AccountingEventListItem {
   organizationId?: string;
   sourceSystem?: string;
@@ -83,6 +112,7 @@ export interface AccountingEventDetail extends AccountingEventListItem {
   transactionDate?: string;
   payloadSummary?: Record<string, unknown>;
   payload?: Record<string, unknown>;
+  payloadReferences?: EventPayloadReference[];
 }
 
 export interface EnvelopeFieldDefinition {
@@ -219,8 +249,16 @@ export interface PaymentApplication {
 
 export interface CreditMemo {
   creditMemoId?: string;
+  /** Human-readable memo number, e.g. "CM-202603-1". Shown instead of the UUID. */
+  creditMemoReference?: string | null;
   originalInvoiceId?: string;
+  /** Human-readable invoice number of the credited invoice. */
+  originalInvoiceReference?: string | null;
   customerId?: string;
+  /** Customer's display name; preferred over customerReference on screen. */
+  customerDisplayName?: string | null;
+  /** Human-readable customer number, used when no display name is available. */
+  customerReference?: string | null;
   creditAmount?: number;
   taxAmountReversed?: number;
   totalAmount?: number;
@@ -246,8 +284,16 @@ export interface CreditMemoCreateRequest {
 
 export interface CreditMemoListItem {
   creditMemoId?: string;
+  /** Human-readable memo number, e.g. "CM-202603-1". Shown instead of the UUID. */
+  creditMemoReference?: string | null;
   originalInvoiceId?: string;
+  /** Human-readable invoice number of the credited invoice. */
+  originalInvoiceReference?: string | null;
   customerId?: string;
+  /** Customer's display name; preferred over customerReference on screen. */
+  customerDisplayName?: string | null;
+  /** Human-readable customer number, used when no display name is available. */
+  customerReference?: string | null;
   creditAmount?: number;
   totalAmount?: number;
   status?: 'DRAFT' | 'POSTED' | 'APPLIED' | 'VOIDED';

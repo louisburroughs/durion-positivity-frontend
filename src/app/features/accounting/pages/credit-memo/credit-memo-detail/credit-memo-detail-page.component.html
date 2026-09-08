@@ -24,11 +24,11 @@
   <section class="detail-grid" aria-live="polite" data-testid="memo-detail">
     <dl class="detail-list">
       <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_ID' | translate }}</dt>
-      <dd>{{ value.creditMemoId }}</dd>
+      <dd>{{ value.creditMemoReference || ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
       <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_INVOICE' | translate }}</dt>
-      <dd>{{ value.originalInvoiceId }}</dd>
+      <dd>{{ value.originalInvoiceReference || ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
       <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_CUSTOMER' | translate }}</dt>
-      <dd>{{ value.customerId }}</dd>
+      <dd>{{ value.customerDisplayName || value.customerReference || ('COMMON.NOT_AVAILABLE' | translate) }}</dd>
       <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_CREDIT_AMOUNT' | translate }}</dt>
       <dd class="amount-field">{{ value.creditAmount }}</dd>
       <dt>{{ 'ACCOUNTING.CREDIT_MEMO_DETAIL.FIELD_TOTAL_AMOUNT' | translate }}</dt>

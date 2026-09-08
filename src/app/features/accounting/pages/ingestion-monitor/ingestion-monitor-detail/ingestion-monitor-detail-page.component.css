@@ -58,6 +58,18 @@ textarea:focus {
   padding: var(--space-4);
 }
 
+/* Raw audit payload: collapsed by default so the ids it carries verbatim are
+   not published on screen. The references table above is the readable view. */
+.raw-payload > summary {
+  cursor: pointer;
+  color: var(--durion-graphite-600);
+}
+
+.raw-payload > pre {
+  margin-top: var(--space-2);
+  overflow-x: auto;
+}
+
 textarea {
   border: none;
   border-bottom: 2px solid var(--durion-graphite-200);

@@ -35,6 +35,7 @@ import { ApiBaseService } from '../../../core/services/api-base.service';
 import { environment } from '../../../../environments/environment';
 import {
   AccountingEventDetail,
+  EventPayloadReference,
   AccountingEventListItem,
   AccountingEventSubmitRequest,
   CreditMemo,
@@ -416,6 +417,14 @@ export class AccountingService {
       sourceSystem: dto.sourceSystem,
       transactionDate: dto.transactionDate,
       payload: this.toRecord(dto.payload),
+      payloadReferences: (dto.payloadReferences ?? []).map(ref => ({
+        path: ref.path,
+        rawValue: ref.rawValue,
+        id: ref.id ?? null,
+        referenceType: ref.referenceType as string as EventPayloadReference['referenceType'],
+        displayReference: ref.displayReference ?? null,
+        displayName: ref.displayName ?? null,
+      })),
     };
   }
 
@@ -525,8 +534,12 @@ export class AccountingService {
   private toCreditMemoListItem(dto: CreditMemoResponse): CreditMemoListItem {
     return {
       creditMemoId: dto.creditMemoId,
+      creditMemoReference: dto.creditMemoReference ?? null,
       originalInvoiceId: dto.originalInvoiceId,
+      originalInvoiceReference: dto.originalInvoiceReference ?? null,
       customerId: dto.customerId,
+      customerDisplayName: dto.customerDisplayName ?? null,
+      customerReference: dto.customerReference ?? null,
       creditAmount: dto.creditAmount,
       totalAmount: dto.totalAmount,
       status: dto.status as CreditMemoListItem['status'],
@@ -537,8 +550,12 @@ export class AccountingService {
   private toCreditMemo(dto: CreditMemoResponse): CreditMemo {
     return {
       creditMemoId: dto.creditMemoId,
+      creditMemoReference: dto.creditMemoReference ?? null,
       originalInvoiceId: dto.originalInvoiceId,
+      originalInvoiceReference: dto.originalInvoiceReference ?? null,
       customerId: dto.customerId,
+      customerDisplayName: dto.customerDisplayName ?? null,
+      customerReference: dto.customerReference ?? null,
       creditAmount: dto.creditAmount,
       taxAmountReversed: dto.taxAmountReversed,
       totalAmount: dto.totalAmount,

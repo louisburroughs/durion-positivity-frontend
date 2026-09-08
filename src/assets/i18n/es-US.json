@@ -1580,6 +1580,21 @@
       "OUTCOME": {
         "SUCCESS": "Success",
         "FAILURE": "Failure"
+      },
+      "PAYLOAD_RAW": "Carga útil sin procesar (contiene identificadores internos)",
+      "REFERENCES_TABLE_ARIA": "Referencias de la carga útil",
+      "REFERENCES_TABLE_CAPTION": "Referencias encontradas en esta carga útil",
+      "REFERENCES_COL_FIELD": "Campo",
+      "REFERENCES_COL_TYPE": "Tipo",
+      "REFERENCES_COL_VALUE": "Referencia",
+      "REFERENCE_TYPE": {
+        "INVOICE": "Factura",
+        "CUSTOMER": "Cliente",
+        "ORGANIZATION": "Organización",
+        "LOCATION": "Ubicación",
+        "JOURNAL_ENTRY": "Asiento contable",
+        "VENDOR": "Proveedor",
+        "VENDOR_BILL": "Factura de proveedor"
       }
     },
     "EVENT_ENVELOPE_CONTRACT": {
@@ -4812,7 +4827,8 @@
         "NO_RESULTS": "No hay ubicaciones coincidentes",
         "SELECTED_ARIA": "Ubicaciones seleccionadas",
         "CHIP_REMOVE_ARIA": "Quitar",
-        "CLEAR_ALL": "Borrar todo"
+        "CLEAR_ALL": "Borrar todo",
+        "UNRESOLVED": "Ubicación desconocida"
       },
       "STATE": {
         "IDLE": "Seleccione al menos una ubicación y un producto para ver el inventario.",

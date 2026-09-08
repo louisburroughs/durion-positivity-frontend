@@ -1580,6 +1580,21 @@
       "OUTCOME": {
         "SUCCESS": "Success",
         "FAILURE": "Failure"
+      },
+      "PAYLOAD_RAW": "Charge utile brute (contient des identifiants internes)",
+      "REFERENCES_TABLE_ARIA": "Références de la charge utile",
+      "REFERENCES_TABLE_CAPTION": "Références trouvées dans cette charge utile",
+      "REFERENCES_COL_FIELD": "Champ",
+      "REFERENCES_COL_TYPE": "Type",
+      "REFERENCES_COL_VALUE": "Référence",
+      "REFERENCE_TYPE": {
+        "INVOICE": "Facture",
+        "CUSTOMER": "Client",
+        "ORGANIZATION": "Organisation",
+        "LOCATION": "Emplacement",
+        "JOURNAL_ENTRY": "Écriture de journal",
+        "VENDOR": "Fournisseur",
+        "VENDOR_BILL": "Facture fournisseur"
       }
     },
     "EVENT_ENVELOPE_CONTRACT": {
@@ -4812,7 +4827,8 @@
         "NO_RESULTS": "Aucun emplacement correspondant",
         "SELECTED_ARIA": "Emplacements sélectionnés",
         "CHIP_REMOVE_ARIA": "Retirer",
-        "CLEAR_ALL": "Tout effacer"
+        "CLEAR_ALL": "Tout effacer",
+        "UNRESOLVED": "Emplacement inconnu"
       },
       "STATE": {
         "IDLE": "Sélectionnez au moins un emplacement et un produit pour afficher l'inventaire.",

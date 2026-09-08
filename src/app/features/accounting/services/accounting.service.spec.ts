@@ -214,7 +214,57 @@ describe('AccountingService', () => {
         sourceSystem: undefined,
         transactionDate: undefined,
         payload: { invoiceId: 'inv-001' },
+        payloadReferences: [],
       });
+    });
+
+    it('should map payloadReferences so the UI can render names instead of ids', () => {
+      accountingEventsStub.getAccountingEvent.mockReturnValueOnce(
+        of({
+          eventId: 'evt-002',
+          eventType: 'INVOICE_PAYMENT',
+          status: IngestionProcessingStatus.Received,
+          payload: { invoiceId: '01a04a72-d08a-72ff-8483-cdcdb7ad894a' },
+          payloadReferences: [
+            {
+              path: 'payload.invoiceId',
+              rawValue: '01a04a72-d08a-72ff-8483-cdcdb7ad894a',
+              id: '01a04a72-d08a-72ff-8483-cdcdb7ad894a',
+              referenceType: 'INVOICE',
+              displayReference: 'INV-1787955433643-01a04a72',
+            },
+            {
+              path: 'organizationId',
+              rawValue: '01a029d2-2004-7b37-a47b-de23679c2d36',
+              id: '01a029d2-2004-7b37-a47b-de23679c2d36',
+              referenceType: 'ORGANIZATION',
+            },
+          ],
+        }),
+      );
+
+      let result: AccountingEventDetail | undefined;
+      service.getEvent('evt-002').subscribe(r => (result = r));
+
+      expect(result?.payloadReferences).toEqual([
+        {
+          path: 'payload.invoiceId',
+          rawValue: '01a04a72-d08a-72ff-8483-cdcdb7ad894a',
+          id: '01a04a72-d08a-72ff-8483-cdcdb7ad894a',
+          referenceType: 'INVOICE',
+          displayReference: 'INV-1787955433643-01a04a72',
+          displayName: null,
+        },
+        {
+          // Unresolved by accounting — the UI shows a placeholder, never the id.
+          path: 'organizationId',
+          rawValue: '01a029d2-2004-7b37-a47b-de23679c2d36',
+          id: '01a029d2-2004-7b37-a47b-de23679c2d36',
+          referenceType: 'ORGANIZATION',
+          displayReference: null,
+          displayName: null,
+        },
+      ]);
     });
   });
 
