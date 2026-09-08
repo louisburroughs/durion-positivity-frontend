@@ -43,9 +43,9 @@
         @for (memo of memos(); track memo.creditMemoId) {
         <tr class="clickable-row" tabindex="0" (click)="openDetail(memo)" (keydown.enter)="openDetail(memo)"
           (keydown.space)="$event.preventDefault(); openDetail(memo)" data-testid="memo-row">
-          <td>{{ memo.creditMemoId }}</td>
-          <td>{{ memo.originalInvoiceId }}</td>
-          <td>{{ memo.customerId }}</td>
+          <td>{{ memo.creditMemoReference || ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+          <td>{{ memo.originalInvoiceReference || ('COMMON.NOT_AVAILABLE' | translate) }}</td>
+          <td>{{ memo.customerDisplayName || memo.customerReference || ('COMMON.NOT_AVAILABLE' | translate) }}</td>
           <td class="col-amount">{{ memo.totalAmount }}</td>
           <td><span class="status-badge">{{ memo.status }}</span></td>
           <td>{{ memo.creationTimestamp }}</td>

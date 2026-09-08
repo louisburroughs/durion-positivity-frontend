@@ -119,7 +119,7 @@ export class IngestionMonitorDetailPageComponent implements OnInit {
       .subscribe({
         next: ({ event, history }) => {
           this.event.set(event);
-          this.history.set(history);
+          this.history.set(this.byAttemptOrder(history));
           this.pageState.set('ready');
         },
         error: err => {
@@ -135,5 +135,19 @@ export class IngestionMonitorDetailPageComponent implements OnInit {
           this.pageState.set('error');
         },
       });
+  }
+
+  /**
+   * Attempts are numbered in the history table rather than keyed by their raw
+   * attemptId UUID, so the ordering has to be well defined. The API does not
+   * document a sort, so order oldest-first on attemptedAt; rows with no
+   * timestamp sort last and keep their relative order (Array#sort is stable).
+   */
+  private byAttemptOrder(history: ReprocessingAttemptHistory[]): ReprocessingAttemptHistory[] {
+    return [...history].sort((a, b) => {
+      if (!a.attemptedAt) return b.attemptedAt ? 1 : 0;
+      if (!b.attemptedAt) return -1;
+      return a.attemptedAt.localeCompare(b.attemptedAt);
+    });
   }
 }

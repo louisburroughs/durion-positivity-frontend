@@ -1580,6 +1580,22 @@
       "OUTCOME": {
         "SUCCESS": "Success",
         "FAILURE": "Failure"
+      },
+      "PAYLOAD_RAW": "Raw payload (contains internal ids)",
+      "REFERENCES_TABLE_ARIA": "Payload references",
+      "REFERENCES_TABLE_CAPTION": "References found in this payload",
+      "REFERENCES_COL_FIELD": "Field",
+      "REFERENCES_COL_TYPE": "Type",
+      "REFERENCES_COL_VALUE": "Reference",
+      "REFERENCE_TYPE": {
+        "INVOICE": "Invoice",
+        "CUSTOMER": "Customer",
+        "ORGANIZATION": "Organization",
+        "LOCATION": "Location",
+        "JOURNAL_ENTRY": "Journal entry",
+        "VENDOR": "Vendor",
+        "VENDOR_BILL": "Vendor bill",
+        "UNKNOWN": "Reference"
       }
     },
     "EVENT_ENVELOPE_CONTRACT": {
@@ -4812,7 +4828,8 @@
         "NO_RESULTS": "No matching locations",
         "SELECTED_ARIA": "Selected locations",
         "CHIP_REMOVE_ARIA": "Remove",
-        "CLEAR_ALL": "Clear all"
+        "CLEAR_ALL": "Clear all",
+        "UNRESOLVED": "Unknown location"
       },
       "STATE": {
         "IDLE": "Select at least one location and one product to view inventory.",
