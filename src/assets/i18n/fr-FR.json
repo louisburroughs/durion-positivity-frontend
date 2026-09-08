@@ -1007,7 +1007,12 @@
       "COL_CREATED_AT": "Créé le",
       "COL_CORRELATION_ID": "ID de corrélation",
       "ACTIVE": "Actif",
-      "INACTIVE": "Inactif"
+      "INACTIVE": "Inactif",
+      "ERROR": {
+        "LOAD_LOCATIONS": "Impossible de charger les emplacements d'inventaire.",
+        "LOAD_LOGS": "Impossible de charger les journaux de synchronisation.",
+        "TRIGGER": "Impossible de déclencher la synchronisation des emplacements."
+      }
     },
     "LOCATIONS": {
       "TITLE": "Emplacements",
@@ -1170,7 +1175,121 @@
     },
     "STORAGE": {
       "LABEL": "Emplacement",
-      "PROMPT": "Sélectionnez un emplacement pour afficher et modifier ses emplacements de stockage."
+      "PROMPT": "Sélectionnez un emplacement pour afficher et modifier ses emplacements de stockage.",
+      "TITLE": "Emplacements de stockage",
+      "ADD": "Ajouter un emplacement de stockage",
+      "LOADING": "Chargement...",
+      "CREATE_SUCCESS": "Emplacement de stockage créé.",
+      "EMPTY": "Aucun emplacement de stockage trouvé.",
+      "DEACTIVATE": "Désactiver",
+      "PREVIOUS": "Précédent",
+      "NEXT": "Suivant",
+      "PAGE_STATUS": "Page {{page}} sur {{total}} ({{count}} au total)",
+      "CREATE_TITLE": "Nouvel emplacement de stockage",
+      "FIELD_NAME": "Nom (requis)",
+      "FIELD_STORAGE_TYPE": "Type de stockage (requis)",
+      "SELECT_TYPE": "Sélectionner un type de stockage",
+      "FIELD_PARENT": "Identifiant de l'emplacement de stockage parent (facultatif)",
+      "FIELD_BARCODE": "Code-barres (facultatif)",
+      "FIELD_DESTINATION": "Identifiant de l'emplacement de stockage de destination (requis)",
+      "CANCEL": "Annuler",
+      "CREATE": "Créer un emplacement de stockage",
+      "CREATING": "Création...",
+      "DEACTIVATE_TITLE": "Désactiver l'emplacement de stockage",
+      "DEACTIVATE_PROMPT": "Désactiver :",
+      "CONFIRM_DEACTIVATE": "Confirmer la désactivation",
+      "DEACTIVATING": "Désactivation...",
+      "COL": {
+        "NAME": "Nom",
+        "TYPE": "Type",
+        "BARCODE": "Code-barres",
+        "STATUS": "Statut",
+        "INVENTORY": "Inventaire",
+        "ACTIONS": "Actions",
+        "SKU": "UGS",
+        "ON_HAND": "En stock"
+      },
+      "ARIA": {
+        "PAGINATION": "Pagination des emplacements de stockage",
+        "SHOW_CONTENTS": "Afficher le contenu, {{count}} en stock",
+        "HIDE_CONTENTS": "Masquer le contenu, {{count}} en stock"
+      },
+      "ERROR": {
+        "NAME_REQUIRED": "Le nom est requis.",
+        "TYPE_REQUIRED": "Le type de stockage est requis.",
+        "DESTINATION_REQUIRED_HINT": "Une destination est requise pour les emplacements de stockage non vides.",
+        "DESTINATION_REQUIRED": "Destination requise.",
+        "ID_REQUIRED": "L'identifiant de l'emplacement de stockage est requis.",
+        "LOAD": "Impossible de charger les emplacements de stockage.",
+        "CREATE": "Impossible de créer l'emplacement de stockage.",
+        "DEACTIVATE": "Impossible de désactiver l'emplacement de stockage."
+      }
+    },
+    "DEFAULTS": {
+      "TITLE": "Emplacements par défaut du site",
+      "LOADING": "Chargement...",
+      "RELOAD": "Recharger",
+      "CURRENT_TITLE": "Valeurs par défaut actuelles",
+      "STAGING": "Préparation",
+      "QUARANTINE": "Quarantaine",
+      "NOT_CONFIGURED": "Non configuré",
+      "VERSION": "Version",
+      "UPDATE_TITLE": "Mettre à jour les valeurs par défaut",
+      "STORAGE_LOADING": "Chargement des emplacements de stockage...",
+      "FIELD_STAGING": "Emplacement de préparation par défaut",
+      "FIELD_QUARANTINE": "Emplacement de quarantaine par défaut",
+      "SELECT_PLACEHOLDER": "Sélectionner un emplacement de stockage",
+      "SAVING": "Enregistrement...",
+      "SAVE": "Enregistrer les valeurs par défaut",
+      "SAVE_SUCCESS": "Emplacements par défaut enregistrés.",
+      "ERROR": {
+        "STAGING_REQUIRED": "L'emplacement de préparation est requis.",
+        "QUARANTINE_REQUIRED": "L'emplacement de quarantaine est requis.",
+        "SAME_LOCATION": "Les emplacements de préparation et de quarantaine doivent être différents.",
+        "LOCATION_ID_REQUIRED": "L'identifiant d'emplacement est requis.",
+        "LOAD_DEFAULTS": "Impossible de charger les emplacements par défaut.",
+        "LOAD_STORAGE": "Impossible de charger les emplacements de stockage.",
+        "SAVE": "Impossible d'enregistrer les emplacements par défaut.",
+        "ROLE_CONFLICT": "Les emplacements par défaut doivent être distincts.",
+        "CONFLICT": "Un autre utilisateur a mis à jour cette configuration. Veuillez recharger.",
+        "FORBIDDEN": "Non autorisé."
+      }
+    },
+    "EDIT": {
+      "OVERLINE": "Gestion des emplacements",
+      "TITLE_EDIT": "Modifier l'emplacement",
+      "TITLE_CREATE": "Créer un emplacement",
+      "LOADING": "Chargement des détails de l'emplacement...",
+      "SAVE_SUCCESS": "Emplacement enregistré avec succès.",
+      "DETAILS_LEGEND": "Détails de l'emplacement",
+      "FIELD_NAME": "Nom",
+      "FIELD_CODE": "Code",
+      "FIELD_TIMEZONE": "Fuseau horaire",
+      "FIELD_TYPE": "Type",
+      "HIERARCHY_LEGEND": "Hiérarchie et statut",
+      "FIELD_PARENT": "Identifiant de l'emplacement parent",
+      "FIELD_STATUS": "Statut",
+      "SAVING": "Enregistrement...",
+      "SAVE": "Enregistrer l'emplacement",
+      "TYPE": {
+        "STORE": "Magasin",
+        "WAREHOUSE": "Entrepôt",
+        "OFFICE": "Bureau",
+        "SERVICE_CENTER": "Centre de service"
+      },
+      "STATUS": {
+        "ACTIVE": "Actif",
+        "INACTIVE": "Inactif",
+        "SUSPENDED": "Suspendu"
+      },
+      "ERROR": {
+        "NAME_REQUIRED": "Le nom est requis.",
+        "CODE_REQUIRED": "Le code est requis.",
+        "TIMEZONE_REQUIRED": "Le fuseau horaire est requis.",
+        "LOAD": "Impossible de charger l'emplacement.",
+        "SAVE": "Impossible d'enregistrer l'emplacement.",
+        "DUPLICATE": "Un emplacement avec ce code ou ce nom existe déjà."
+      }
     }
   },
   "SHOPMGMT": {

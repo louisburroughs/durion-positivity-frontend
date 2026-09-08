@@ -9,13 +9,14 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { v4 as uuidv4 } from 'uuid';
 import { LocationService } from '../../services/location.service';
 
 @Component({
   selector: 'app-location-defaults-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './location-defaults-page.component.html',
   styleUrl: './location-defaults-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,6 +24,7 @@ import { LocationService } from '../../services/location.service';
 export class LocationDefaultsPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly locationService = inject(LocationService);
+  private readonly translate = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly formStateTick = signal(0);
 
@@ -145,7 +147,7 @@ export class LocationDefaultsPageComponent {
           this.loading.set(false);
         },
         error: (err: unknown) => {
-          this.loadError.set(this.errorMessage(err, 'Failed to load default locations.'));
+          this.loadError.set(this.errorMessage(err, 'LOCATION.DEFAULTS.ERROR.LOAD_DEFAULTS'));
           this.loading.set(false);
         },
       });
@@ -168,7 +170,7 @@ export class LocationDefaultsPageComponent {
           this.storageLocationsLoading.set(false);
         },
         error: (err: unknown) => {
-          this.loadError.set(this.errorMessage(err, 'Failed to load storage locations.'));
+          this.loadError.set(this.errorMessage(err, 'LOCATION.DEFAULTS.ERROR.LOAD_STORAGE'));
           this.storageLocationsLoading.set(false);
         },
       });
@@ -180,13 +182,13 @@ export class LocationDefaultsPageComponent {
       return;
     }
     if (this.isSameLocation()) {
-      this.saveError.set('Staging and quarantine locations must be different.');
+      this.saveError.set(this.translate.instant('LOCATION.DEFAULTS.ERROR.SAME_LOCATION'));
       return;
     }
 
     const locationId = this.locationId();
     if (!locationId) {
-      this.saveError.set('Location ID is required.');
+      this.saveError.set(this.translate.instant('LOCATION.DEFAULTS.ERROR.LOCATION_ID_REQUIRED'));
       return;
     }
 
@@ -249,21 +251,27 @@ export class LocationDefaultsPageComponent {
     const code = this.toCode(err);
 
     if (code === 'DEFAULT_LOCATION_ROLE_CONFLICT') {
-      return 'Default locations must be distinct.';
+      return this.translate.instant('LOCATION.DEFAULTS.ERROR.ROLE_CONFLICT');
     }
     if (status === 409 || code === 'OPTIMISTIC_LOCK_FAILED') {
-      return 'Another user updated this config. Please reload.';
+      return this.translate.instant('LOCATION.DEFAULTS.ERROR.CONFLICT');
     }
     if (status === 403) {
-      return 'Not authorized.';
+      return this.translate.instant('LOCATION.DEFAULTS.ERROR.FORBIDDEN');
     }
-    return this.errorMessage(err, 'Failed to save default locations.');
+    return this.errorMessage(err, 'LOCATION.DEFAULTS.ERROR.SAVE');
   }
 
-  private errorMessage(err: unknown, fallback: string): string {
+  /**
+   * Prefers the server's own message (already localized by the API, and there is
+   * no key to map it to); otherwise renders `fallbackKey` in the active locale.
+   */
+  private errorMessage(err: unknown, fallbackKey: string): string {
     const payload = this.toRecord(this.toRecord(err)?.['error']);
     const message = payload?.['message'];
-    return typeof message === 'string' && message.trim().length > 0 ? message : fallback;
+    return typeof message === 'string' && message.trim().length > 0
+      ? message
+      : this.translate.instant(fallbackKey);
   }
 
   private toRecord(value: unknown): Record<string, unknown> | null {

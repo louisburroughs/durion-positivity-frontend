@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { timer } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { InventoryService } from '../../services/inventory.service';
@@ -24,6 +24,7 @@ import { LocationDto, LocationSyncRunResponse, SyncLogResponse } from '../../mod
 export class LocationSyncPageComponent {
   private readonly inventoryService = inject(InventoryService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly translate = inject(TranslateService);
 
   readonly inventoryLocations = signal<LocationDto[]>([]);
   readonly syncLogs = signal<SyncLogResponse[]>([]);
@@ -55,7 +56,7 @@ export class LocationSyncPageComponent {
           this.loading.set(false);
         },
         error: (err: unknown) => {
-          this.inventoryLocationsError.set(this.errorMessage(err, 'Failed to load inventory locations.'));
+          this.inventoryLocationsError.set(this.errorMessage(err, 'LOCATION.SYNC.ERROR.LOAD_LOCATIONS'));
           this.loading.set(false);
         },
       });
@@ -73,7 +74,7 @@ export class LocationSyncPageComponent {
           this.syncLogsLoading.set(false);
         },
         error: (err: unknown) => {
-          this.syncLogsError.set(this.errorMessage(err, 'Failed to load sync logs.'));
+          this.syncLogsError.set(this.errorMessage(err, 'LOCATION.SYNC.ERROR.LOAD_LOGS'));
           this.syncLogsLoading.set(false);
         },
       });
@@ -98,16 +99,22 @@ export class LocationSyncPageComponent {
           timer(1000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.loadSyncLogs());
         },
         error: (err: unknown) => {
-          this.triggerError.set(this.errorMessage(err, 'Failed to trigger location sync.'));
+          this.triggerError.set(this.errorMessage(err, 'LOCATION.SYNC.ERROR.TRIGGER'));
           this.triggering.set(false);
         },
       });
   }
 
-  private errorMessage(err: unknown, fallback: string): string {
+  /**
+   * Prefers the server's own message (already localized by the API, and there is
+   * no key to map it to); otherwise renders `fallbackKey` in the active locale.
+   */
+  private errorMessage(err: unknown, fallbackKey: string): string {
     const payload = this.toRecord(this.toRecord(err)?.['error']);
     const message = payload?.['message'];
-    return typeof message === 'string' && message.trim().length > 0 ? message : fallback;
+    return typeof message === 'string' && message.trim().length > 0
+      ? message
+      : this.translate.instant(fallbackKey);
   }
 
   private toRecord(value: unknown): Record<string, unknown> | null {

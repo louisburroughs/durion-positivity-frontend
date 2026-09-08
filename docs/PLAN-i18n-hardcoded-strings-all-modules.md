@@ -60,16 +60,15 @@ The hatch is deliberately noisy so it cannot quietly absorb the backlog:
 Use it only for proper nouns. Anything a translator could legitimately render
 differently belongs in `src/assets/i18n/*.json`.
 
-## Backlog — 523 literals across 20 templates in 3 modules
+## Backlog — 446 literals across 17 templates in 2 modules
 
 | Module | Literals | Templates |
 | --- | ---: | ---: |
 | crm | 262 | 9 |
 | people | 184 | 8 |
-| location | 77 | 3 |
 
 Clean today (no findings): `workexec` (25 templates), `inventory` (26),
-`landing`, `shell`, `auth`, `accounting`, `security` (7),
+`landing`, `shell`, `auth`, `accounting`, `security` (7), `location` (9),
 `positivity` (16), `product` (14), `shopmgmt` (14), `bulk-import` (9),
 `billing` (4), `order` (3), `shared` (2), `sitemap` (1). `admin`, `system` and
 `core` have no external templates to scan.
@@ -85,9 +84,7 @@ Clean today (no findings): `workexec` (25 templates), `inventory` (26),
 | 34 | `people/pages/time-approval/time-approval-page.component.html` |
 | 34 | `crm/pages/party-detail/party-detail.component.html` |
 | 32 | `people/pages/time-export/time-export-page.component.html` |
-| 31 | `location/pages/storage-locations/storage-locations-page.component.html` |
 | 30 | `people/pages/person-location-assignments/person-location-assignments-page.component.html` |
-| 28 | `location/pages/location-edit/location-edit-page.component.html` |
 
 ## Suggested phasing
 
@@ -98,7 +95,7 @@ settled before the large domains:
 
 1. ~~`auth`, `shell`, `landing`, `accounting` (11 literals)~~ ✅ done
 2. ~~`security` (11)~~ ✅ done
-3. `location` (77)
+3. ~~`location` (77)~~ ✅ done
 4. `people` (184)
 5. `crm` (262)
 
@@ -140,6 +137,45 @@ the guardrail cannot see inside interpolations or `.ts` files:
 
 Server-supplied `fieldErrors` values stay untranslated — they arrive as text
 from the API and there is no key to map them to.
+
+### Phase 3 notes — `location`
+
+Three templates carried the 77 flagged literals; the module also had 18 English
+strings in `.ts` files that the guardrail cannot see, across **four** pages —
+`location-sync` had none flagged but its error fallbacks were hardcoded too.
+
+Two shapes of error state, handled differently on purpose:
+
+- **Always a key → `errorKey` + `| translate`.** `location-edit`'s `error`
+  signal only ever held one of two English sentences, so it became `errorKey`
+  and the template pipes it. Locale changes re-render it.
+- **May hold a server message → `translate.instant`.** The `errorMessage(err,
+  fallback)` helper in `location-defaults`, `storage-locations` and
+  `location-sync` prefers the API's own message and falls back to local text.
+  That fallback is now a key resolved through `translate.instant`, so the signal
+  still holds display text either way. `location-edit`'s `conflictError` is the
+  same shape. `translate.instant` follows existing use in `shell`, `billing`
+  and `shopmgmt`.
+
+Other notable conversions:
+
+- **Concatenated aria-label → params.** `(isExpanded(…) ? 'Hide contents, ' :
+  'Show contents, ') + count + ' on hand'` became
+  `ARIA.SHOW_CONTENTS` / `ARIA.HIDE_CONTENTS` with a `{{count}}` param.
+- **Pagination sentence → one key.** `Page {{n}} of {{t}} ({{c}} total)` is now
+  `PAGE_STATUS` with three params rather than four text nodes around two
+  interpolations.
+- **Sentences split across markup lines** (`Name is` / `required.` in
+  `location-edit`) are single keys now, so translators get whole sentences.
+- Ternaries in interpolations (`{{ saving() ? 'Saving...' : 'Save' }}`) became
+  key ternaries piped once: `{{ (saving() ? 'X.SAVING' : 'X.SAVE') | translate }}`.
+
+Specs: `location-defaults` and `location-edit` needed `TranslateModule.forRoot()`
+(they were injecting `TranslateService` through the component); `storage-locations`
+already had it and gained a `setTranslation` fixture so its `No storage locations
+found.` and `Page 1 of 3` assertions keep testing rendered output. The
+`Load failed` assertion still passes unchanged — it exercises the server-message
+passthrough, which is the point of that branch.
 
 ## Removed: `src/app/app.html`
 

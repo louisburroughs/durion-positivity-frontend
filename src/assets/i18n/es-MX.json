@@ -1007,7 +1007,12 @@
       "COL_CREATED_AT": "Creado el",
       "COL_CORRELATION_ID": "ID de correlación",
       "ACTIVE": "Activa",
-      "INACTIVE": "Inactiva"
+      "INACTIVE": "Inactiva",
+      "ERROR": {
+        "LOAD_LOCATIONS": "No se pudieron cargar las ubicaciones de inventario.",
+        "LOAD_LOGS": "No se pudieron cargar los registros de sincronización.",
+        "TRIGGER": "No se pudo iniciar la sincronización de ubicaciones."
+      }
     },
     "LOCATIONS": {
       "TITLE": "Ubicaciones",
@@ -1170,7 +1175,121 @@
     },
     "STORAGE": {
       "LABEL": "Ubicación",
-      "PROMPT": "Seleccione una ubicación para ver y editar sus ubicaciones de almacenamiento."
+      "PROMPT": "Seleccione una ubicación para ver y editar sus ubicaciones de almacenamiento.",
+      "TITLE": "Ubicaciones de almacenamiento",
+      "ADD": "Agregar ubicación de almacenamiento",
+      "LOADING": "Cargando...",
+      "CREATE_SUCCESS": "Ubicación de almacenamiento creada.",
+      "EMPTY": "No se encontraron ubicaciones de almacenamiento.",
+      "DEACTIVATE": "Desactivar",
+      "PREVIOUS": "Anterior",
+      "NEXT": "Siguiente",
+      "PAGE_STATUS": "Página {{page}} de {{total}} ({{count}} en total)",
+      "CREATE_TITLE": "Nueva ubicación de almacenamiento",
+      "FIELD_NAME": "Nombre (obligatorio)",
+      "FIELD_STORAGE_TYPE": "Tipo de almacenamiento (obligatorio)",
+      "SELECT_TYPE": "Seleccione un tipo de almacenamiento",
+      "FIELD_PARENT": "ID de ubicación de almacenamiento principal (opcional)",
+      "FIELD_BARCODE": "Código de barras (opcional)",
+      "FIELD_DESTINATION": "ID de ubicación de almacenamiento de destino (obligatorio)",
+      "CANCEL": "Cancelar",
+      "CREATE": "Crear ubicación de almacenamiento",
+      "CREATING": "Creando...",
+      "DEACTIVATE_TITLE": "Desactivar ubicación de almacenamiento",
+      "DEACTIVATE_PROMPT": "Desactivar:",
+      "CONFIRM_DEACTIVATE": "Confirmar desactivación",
+      "DEACTIVATING": "Desactivando...",
+      "COL": {
+        "NAME": "Nombre",
+        "TYPE": "Tipo",
+        "BARCODE": "Código de barras",
+        "STATUS": "Estado",
+        "INVENTORY": "Inventario",
+        "ACTIONS": "Acciones",
+        "SKU": "SKU",
+        "ON_HAND": "Disponible"
+      },
+      "ARIA": {
+        "PAGINATION": "Paginación de ubicaciones de almacenamiento",
+        "SHOW_CONTENTS": "Mostrar contenido, {{count}} disponibles",
+        "HIDE_CONTENTS": "Ocultar contenido, {{count}} disponibles"
+      },
+      "ERROR": {
+        "NAME_REQUIRED": "El nombre es obligatorio.",
+        "TYPE_REQUIRED": "El tipo de almacenamiento es obligatorio.",
+        "DESTINATION_REQUIRED_HINT": "Se requiere un destino para las ubicaciones de almacenamiento no vacías.",
+        "DESTINATION_REQUIRED": "Destino obligatorio.",
+        "ID_REQUIRED": "El ID de ubicación de almacenamiento es obligatorio.",
+        "LOAD": "No se pudieron cargar las ubicaciones de almacenamiento.",
+        "CREATE": "No se pudo crear la ubicación de almacenamiento.",
+        "DEACTIVATE": "No se pudo desactivar la ubicación de almacenamiento."
+      }
+    },
+    "DEFAULTS": {
+      "TITLE": "Ubicaciones predeterminadas del sitio",
+      "LOADING": "Cargando...",
+      "RELOAD": "Recargar",
+      "CURRENT_TITLE": "Valores predeterminados actuales",
+      "STAGING": "Preparación",
+      "QUARANTINE": "Cuarentena",
+      "NOT_CONFIGURED": "Sin configurar",
+      "VERSION": "Versión",
+      "UPDATE_TITLE": "Actualizar valores predeterminados",
+      "STORAGE_LOADING": "Cargando ubicaciones de almacenamiento...",
+      "FIELD_STAGING": "Ubicación de preparación predeterminada",
+      "FIELD_QUARANTINE": "Ubicación de cuarentena predeterminada",
+      "SELECT_PLACEHOLDER": "Seleccione una ubicación de almacenamiento",
+      "SAVING": "Guardando...",
+      "SAVE": "Guardar valores predeterminados",
+      "SAVE_SUCCESS": "Ubicaciones predeterminadas guardadas.",
+      "ERROR": {
+        "STAGING_REQUIRED": "La ubicación de preparación es obligatoria.",
+        "QUARANTINE_REQUIRED": "La ubicación de cuarentena es obligatoria.",
+        "SAME_LOCATION": "Las ubicaciones de preparación y cuarentena deben ser diferentes.",
+        "LOCATION_ID_REQUIRED": "El ID de ubicación es obligatorio.",
+        "LOAD_DEFAULTS": "No se pudieron cargar las ubicaciones predeterminadas.",
+        "LOAD_STORAGE": "No se pudieron cargar las ubicaciones de almacenamiento.",
+        "SAVE": "No se pudieron guardar las ubicaciones predeterminadas.",
+        "ROLE_CONFLICT": "Las ubicaciones predeterminadas deben ser distintas.",
+        "CONFLICT": "Otro usuario actualizó esta configuración. Vuelva a cargar.",
+        "FORBIDDEN": "No autorizado."
+      }
+    },
+    "EDIT": {
+      "OVERLINE": "Gestión de ubicaciones",
+      "TITLE_EDIT": "Editar ubicación",
+      "TITLE_CREATE": "Crear ubicación",
+      "LOADING": "Cargando detalles de la ubicación...",
+      "SAVE_SUCCESS": "Ubicación guardada correctamente.",
+      "DETAILS_LEGEND": "Detalles de la ubicación",
+      "FIELD_NAME": "Nombre",
+      "FIELD_CODE": "Código",
+      "FIELD_TIMEZONE": "Zona horaria",
+      "FIELD_TYPE": "Tipo",
+      "HIERARCHY_LEGEND": "Jerarquía y estado",
+      "FIELD_PARENT": "ID de ubicación principal",
+      "FIELD_STATUS": "Estado",
+      "SAVING": "Guardando...",
+      "SAVE": "Guardar ubicación",
+      "TYPE": {
+        "STORE": "Tienda",
+        "WAREHOUSE": "Almacén",
+        "OFFICE": "Oficina",
+        "SERVICE_CENTER": "Centro de servicio"
+      },
+      "STATUS": {
+        "ACTIVE": "Activo",
+        "INACTIVE": "Inactivo",
+        "SUSPENDED": "Suspendido"
+      },
+      "ERROR": {
+        "NAME_REQUIRED": "El nombre es obligatorio.",
+        "CODE_REQUIRED": "El código es obligatorio.",
+        "TIMEZONE_REQUIRED": "La zona horaria es obligatoria.",
+        "LOAD": "No se pudo cargar la ubicación.",
+        "SAVE": "No se pudo guardar la ubicación.",
+        "DUPLICATE": "Ya existe una ubicación con este código o nombre."
+      }
     }
   },
   "SHOPMGMT": {

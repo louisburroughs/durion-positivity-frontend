@@ -1,51 +1,53 @@
 <main>
   <header class="page-header">
-    <h1>Site Default Locations</h1>
+    <h1>{{ 'LOCATION.DEFAULTS.TITLE' | translate }}</h1>
     @if (locationLabel(); as label) {
     <p data-testid="location-label">{{ label }}</p>
     }
   </header>
 
   @if (loading()) {
-  <p aria-live="polite" data-testid="loading-indicator">Loading...</p>
+  <p aria-live="polite" data-testid="loading-indicator">{{ 'LOCATION.DEFAULTS.LOADING' | translate }}</p>
   }
 
   @if (loadError()) {
   <p role="alert" aria-live="polite" data-testid="load-error">{{ loadError() }}</p>
-  <button type="button" (click)="reload()" data-testid="reload-btn">Reload</button>
+  <button type="button" (click)="reload()" data-testid="reload-btn">{{ 'LOCATION.DEFAULTS.RELOAD' | translate }}</button>
   }
 
   @if (!loading() && !loadError()) {
   <section data-testid="defaults-display">
-    <h2>Current Defaults</h2>
+    <h2>{{ 'LOCATION.DEFAULTS.CURRENT_TITLE' | translate }}</h2>
     <dl>
-      <dt>Staging</dt>
+      <dt>{{ 'LOCATION.DEFAULTS.STAGING' | translate }}</dt>
       <dd data-testid="current-staging">
-        {{ siteDefaults()?.['defaultStagingLocationId'] ?? 'Not configured' }}
+        {{ siteDefaults()?.['defaultStagingLocationId'] ?? ('LOCATION.DEFAULTS.NOT_CONFIGURED' | translate) }}
       </dd>
-      <dt>Quarantine</dt>
+      <dt>{{ 'LOCATION.DEFAULTS.QUARANTINE' | translate }}</dt>
       <dd data-testid="current-quarantine">
-        {{ siteDefaults()?.['defaultQuarantineLocationId'] ?? 'Not configured' }}
+        {{ siteDefaults()?.['defaultQuarantineLocationId'] ?? ('LOCATION.DEFAULTS.NOT_CONFIGURED' | translate) }}
       </dd>
       @if (version() !== null) {
-      <dt>Version</dt>
+      <dt>{{ 'LOCATION.DEFAULTS.VERSION' | translate }}</dt>
       <dd data-testid="version">{{ version() }}</dd>
       }
     </dl>
   </section>
 
   <section>
-    <h2>Update Defaults</h2>
+    <h2>{{ 'LOCATION.DEFAULTS.UPDATE_TITLE' | translate }}</h2>
     @if (storageLocationsLoading()) {
-    <p aria-live="polite" data-testid="storage-locations-loading">Loading storage locations...</p>
+    <p aria-live="polite" data-testid="storage-locations-loading">
+      {{ 'LOCATION.DEFAULTS.STORAGE_LOADING' | translate }}
+    </p>
     }
 
     <form class="form-grid" [formGroup]="defaultsForm" (ngSubmit)="saveDefaults()">
       <div class="field">
-        <label for="default-staging-location-id">Default Staging Location</label>
+        <label for="default-staging-location-id">{{ 'LOCATION.DEFAULTS.FIELD_STAGING' | translate }}</label>
         <select id="default-staging-location-id" formControlName="defaultStagingLocationId"
           aria-describedby="field-error-staging" data-testid="default-staging-select">
-          <option value="">Select a storage location</option>
+          <option value="">{{ 'LOCATION.DEFAULTS.SELECT_PLACEHOLDER' | translate }}</option>
           @for (loc of storageLocations(); track $any(loc).storageLocationId) {
           <option [value]="$any(loc).storageLocationId">{{ $any(loc).name }}</option>
           }
@@ -53,16 +55,16 @@
         <span id="field-error-staging" role="alert" aria-live="polite" data-testid="field-error-staging">
           @if (defaultsForm.controls.defaultStagingLocationId.touched &&
           defaultsForm.controls.defaultStagingLocationId.invalid) {
-          Staging location is required.
+          {{ 'LOCATION.DEFAULTS.ERROR.STAGING_REQUIRED' | translate }}
           }
         </span>
       </div>
 
       <div class="field">
-        <label for="default-quarantine-location-id">Default Quarantine Location</label>
+        <label for="default-quarantine-location-id">{{ 'LOCATION.DEFAULTS.FIELD_QUARANTINE' | translate }}</label>
         <select id="default-quarantine-location-id" formControlName="defaultQuarantineLocationId"
           aria-describedby="field-error-quarantine" data-testid="default-quarantine-select">
-          <option value="">Select a storage location</option>
+          <option value="">{{ 'LOCATION.DEFAULTS.SELECT_PLACEHOLDER' | translate }}</option>
           @for (loc of storageLocations(); track $any(loc).storageLocationId) {
           <option [value]="$any(loc).storageLocationId">{{ $any(loc).name }}</option>
           }
@@ -70,30 +72,32 @@
         <span id="field-error-quarantine" role="alert" aria-live="polite" data-testid="field-error-quarantine">
           @if (defaultsForm.controls.defaultQuarantineLocationId.touched &&
           defaultsForm.controls.defaultQuarantineLocationId.invalid) {
-          Quarantine location is required.
+          {{ 'LOCATION.DEFAULTS.ERROR.QUARANTINE_REQUIRED' | translate }}
           }
         </span>
       </div>
 
       <button type="submit" [disabled]="!canSave()" data-testid="save-btn">
-        {{ saving() ? 'Saving...' : 'Save Defaults' }}
+        {{ (saving() ? 'LOCATION.DEFAULTS.SAVING' : 'LOCATION.DEFAULTS.SAVE') | translate }}
       </button>
     </form>
   </section>
 
   @if (isSameLocation()) {
   <p role="alert" aria-live="polite" data-testid="same-location-error">
-    Staging and quarantine locations must be different.
+    {{ 'LOCATION.DEFAULTS.ERROR.SAME_LOCATION' | translate }}
   </p>
   }
   @if (saveError()) {
   <p role="alert" aria-live="polite" data-testid="save-error">{{ saveError() }}</p>
   @if (showReloadPrompt()) {
-  <button type="button" (click)="reload()" data-testid="save-error-reload-btn">Reload</button>
+  <button type="button" (click)="reload()" data-testid="save-error-reload-btn">
+    {{ 'LOCATION.DEFAULTS.RELOAD' | translate }}
+  </button>
   }
   }
   @if (saveSuccess()) {
-  <output aria-live="polite" data-testid="save-success">Default locations saved.</output>
+  <output aria-live="polite" data-testid="save-success">{{ 'LOCATION.DEFAULTS.SAVE_SUCCESS' | translate }}</output>
   }
   }
 </main>

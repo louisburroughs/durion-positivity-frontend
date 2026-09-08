@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError, NEVER } from 'rxjs';
 
 import { LocationEditPageComponent } from './location-edit-page.component';
@@ -38,7 +39,7 @@ const EDIT_ROUTE = {
 
 async function setupNew(): Promise<ComponentFixture<LocationEditPageComponent>> {
   await TestBed.configureTestingModule({
-    imports: [LocationEditPageComponent],
+    imports: [LocationEditPageComponent, TranslateModule.forRoot()],
     providers: [
       provideRouter([]),
       { provide: LocationService, useValue: stubLocationService },
@@ -46,18 +47,22 @@ async function setupNew(): Promise<ComponentFixture<LocationEditPageComponent>> 
     ],
   }).compileComponents();
 
+  TestBed.inject(TranslateService).use('en-US');
+
   return TestBed.createComponent(LocationEditPageComponent);
 }
 
 async function setupEdit(): Promise<ComponentFixture<LocationEditPageComponent>> {
   await TestBed.configureTestingModule({
-    imports: [LocationEditPageComponent],
+    imports: [LocationEditPageComponent, TranslateModule.forRoot()],
     providers: [
       provideRouter([]),
       { provide: LocationService, useValue: stubLocationService },
       { provide: ActivatedRoute, useValue: EDIT_ROUTE },
     ],
   }).compileComponents();
+
+  TestBed.inject(TranslateService).use('en-US');
 
   return TestBed.createComponent(LocationEditPageComponent);
 }

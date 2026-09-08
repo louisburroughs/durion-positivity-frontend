@@ -1007,7 +1007,12 @@
       "COL_CREATED_AT": "Created At",
       "COL_CORRELATION_ID": "Correlation ID",
       "ACTIVE": "Active",
-      "INACTIVE": "Inactive"
+      "INACTIVE": "Inactive",
+      "ERROR": {
+        "LOAD_LOCATIONS": "Failed to load inventory locations.",
+        "LOAD_LOGS": "Failed to load sync logs.",
+        "TRIGGER": "Failed to trigger location sync."
+      }
     },
     "LOCATIONS": {
       "TITLE": "Locations",
@@ -1170,7 +1175,121 @@
     },
     "STORAGE": {
       "LABEL": "Location",
-      "PROMPT": "Select a location to view and edit its storage locations."
+      "PROMPT": "Select a location to view and edit its storage locations.",
+      "TITLE": "Storage Locations",
+      "ADD": "Add Storage Location",
+      "LOADING": "Loading...",
+      "CREATE_SUCCESS": "Storage location created.",
+      "EMPTY": "No storage locations found.",
+      "DEACTIVATE": "Deactivate",
+      "PREVIOUS": "Previous",
+      "NEXT": "Next",
+      "PAGE_STATUS": "Page {{page}} of {{total}} ({{count}} total)",
+      "CREATE_TITLE": "New Storage Location",
+      "FIELD_NAME": "Name (required)",
+      "FIELD_STORAGE_TYPE": "Storage Type (required)",
+      "SELECT_TYPE": "Select a storage type",
+      "FIELD_PARENT": "Parent Storage Location ID (optional)",
+      "FIELD_BARCODE": "Barcode (optional)",
+      "FIELD_DESTINATION": "Destination Storage Location ID (required)",
+      "CANCEL": "Cancel",
+      "CREATE": "Create Storage Location",
+      "CREATING": "Creating...",
+      "DEACTIVATE_TITLE": "Deactivate Storage Location",
+      "DEACTIVATE_PROMPT": "Deactivate:",
+      "CONFIRM_DEACTIVATE": "Confirm Deactivate",
+      "DEACTIVATING": "Deactivating...",
+      "COL": {
+        "NAME": "Name",
+        "TYPE": "Type",
+        "BARCODE": "Barcode",
+        "STATUS": "Status",
+        "INVENTORY": "Inventory",
+        "ACTIONS": "Actions",
+        "SKU": "SKU",
+        "ON_HAND": "On hand"
+      },
+      "ARIA": {
+        "PAGINATION": "Storage locations pagination",
+        "SHOW_CONTENTS": "Show contents, {{count}} on hand",
+        "HIDE_CONTENTS": "Hide contents, {{count}} on hand"
+      },
+      "ERROR": {
+        "NAME_REQUIRED": "Name is required.",
+        "TYPE_REQUIRED": "Storage type is required.",
+        "DESTINATION_REQUIRED_HINT": "Destination required for non-empty storage locations.",
+        "DESTINATION_REQUIRED": "Destination required.",
+        "ID_REQUIRED": "Storage location ID is required.",
+        "LOAD": "Failed to load storage locations.",
+        "CREATE": "Failed to create storage location.",
+        "DEACTIVATE": "Failed to deactivate storage location."
+      }
+    },
+    "DEFAULTS": {
+      "TITLE": "Site Default Locations",
+      "LOADING": "Loading...",
+      "RELOAD": "Reload",
+      "CURRENT_TITLE": "Current Defaults",
+      "STAGING": "Staging",
+      "QUARANTINE": "Quarantine",
+      "NOT_CONFIGURED": "Not configured",
+      "VERSION": "Version",
+      "UPDATE_TITLE": "Update Defaults",
+      "STORAGE_LOADING": "Loading storage locations...",
+      "FIELD_STAGING": "Default Staging Location",
+      "FIELD_QUARANTINE": "Default Quarantine Location",
+      "SELECT_PLACEHOLDER": "Select a storage location",
+      "SAVING": "Saving...",
+      "SAVE": "Save Defaults",
+      "SAVE_SUCCESS": "Default locations saved.",
+      "ERROR": {
+        "STAGING_REQUIRED": "Staging location is required.",
+        "QUARANTINE_REQUIRED": "Quarantine location is required.",
+        "SAME_LOCATION": "Staging and quarantine locations must be different.",
+        "LOCATION_ID_REQUIRED": "Location ID is required.",
+        "LOAD_DEFAULTS": "Failed to load default locations.",
+        "LOAD_STORAGE": "Failed to load storage locations.",
+        "SAVE": "Failed to save default locations.",
+        "ROLE_CONFLICT": "Default locations must be distinct.",
+        "CONFLICT": "Another user updated this config. Please reload.",
+        "FORBIDDEN": "Not authorized."
+      }
+    },
+    "EDIT": {
+      "OVERLINE": "Location Management",
+      "TITLE_EDIT": "Edit Location",
+      "TITLE_CREATE": "Create Location",
+      "LOADING": "Loading location details...",
+      "SAVE_SUCCESS": "Location saved successfully.",
+      "DETAILS_LEGEND": "Location Details",
+      "FIELD_NAME": "Name",
+      "FIELD_CODE": "Code",
+      "FIELD_TIMEZONE": "Timezone",
+      "FIELD_TYPE": "Type",
+      "HIERARCHY_LEGEND": "Hierarchy & Status",
+      "FIELD_PARENT": "Parent Location ID",
+      "FIELD_STATUS": "Status",
+      "SAVING": "Saving...",
+      "SAVE": "Save Location",
+      "TYPE": {
+        "STORE": "Store",
+        "WAREHOUSE": "Warehouse",
+        "OFFICE": "Office",
+        "SERVICE_CENTER": "Service Center"
+      },
+      "STATUS": {
+        "ACTIVE": "Active",
+        "INACTIVE": "Inactive",
+        "SUSPENDED": "Suspended"
+      },
+      "ERROR": {
+        "NAME_REQUIRED": "Name is required.",
+        "CODE_REQUIRED": "Code is required.",
+        "TIMEZONE_REQUIRED": "Timezone is required.",
+        "LOAD": "Failed to load location.",
+        "SAVE": "Failed to save location.",
+        "DUPLICATE": "A location with this code or name already exists."
+      }
     }
   },
   "SHOPMGMT": {

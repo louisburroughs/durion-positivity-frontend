@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -36,6 +36,7 @@ export class StorageLocationsPageComponent {
   private readonly locationService = inject(LocationService);
   private readonly inventoryLocations = inject(InventoryLocationsService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly translate = inject(TranslateService);
 
   private static readonly PAGE_SIZE = 20;
 
@@ -153,7 +154,7 @@ export class StorageLocationsPageComponent {
           this.loadInventory(rows);
         },
         error: (err: unknown) => {
-          this.storageLocationsError.set(this.errorMessage(err, 'Failed to load storage locations.'));
+          this.storageLocationsError.set(this.errorMessage(err, 'LOCATION.STORAGE.ERROR.LOAD'));
           this.loading.set(false);
         },
       });
@@ -316,7 +317,7 @@ export class StorageLocationsPageComponent {
           this.loadStorageLocations();
         },
         error: (err: unknown) => {
-          this.createError.set(this.errorMessage(err, 'Failed to create storage location.'));
+          this.createError.set(this.errorMessage(err, 'LOCATION.STORAGE.ERROR.CREATE'));
           this.creating.set(false);
         },
       });
@@ -340,14 +341,14 @@ export class StorageLocationsPageComponent {
 
   confirmDeactivate(): void {
     if (this.requiresDestination() && !this.deactivateDestinationId()) {
-      this.deactivateError.set('Destination required.');
+      this.deactivateError.set(this.translate.instant('LOCATION.STORAGE.ERROR.DESTINATION_REQUIRED'));
       return;
     }
 
     const target = this.deactivateTarget();
     const id = String(target?.['storageLocationId'] ?? target?.['id'] ?? '');
     if (!id) {
-      this.deactivateError.set('Storage location ID is required.');
+      this.deactivateError.set(this.translate.instant('LOCATION.STORAGE.ERROR.ID_REQUIRED'));
       return;
     }
 
@@ -372,11 +373,11 @@ export class StorageLocationsPageComponent {
         error: (err: unknown) => {
           if (this.isDestinationRequiredError(err)) {
             this.requiresDestination.set(true);
-            this.deactivateError.set('Destination required.');
+            this.deactivateError.set(this.translate.instant('LOCATION.STORAGE.ERROR.DESTINATION_REQUIRED'));
             this.deactivating.set(false);
             return;
           }
-          this.deactivateError.set(this.errorMessage(err, 'Failed to deactivate storage location.'));
+          this.deactivateError.set(this.errorMessage(err, 'LOCATION.STORAGE.ERROR.DEACTIVATE'));
           this.deactivating.set(false);
         },
       });
@@ -400,11 +401,17 @@ export class StorageLocationsPageComponent {
     return typeof marker === 'string' && marker.includes('DESTINATION_REQUIRED');
   }
 
-  private errorMessage(err: unknown, fallback: string): string {
+  /**
+   * Prefers the server's own message (already localized by the API, and there is
+   * no key to map it to); otherwise renders `fallbackKey` in the active locale.
+   */
+  private errorMessage(err: unknown, fallbackKey: string): string {
     // ProblemDetail carries the message in `detail`; fall back to legacy `message`.
     const payload = this.toRecord(this.toRecord(err)?.['error']);
     const message = payload?.['detail'] ?? payload?.['message'];
-    return typeof message === 'string' && message.trim().length > 0 ? message : fallback;
+    return typeof message === 'string' && message.trim().length > 0
+      ? message
+      : this.translate.instant(fallbackKey);
   }
 
   private toRecord(value: unknown): Record<string, unknown> | null {
