@@ -78,7 +78,10 @@ Group the 21 files so each PR is reviewable and independently shippable.
 
 **Guardrail shipped (Phase 4):** `scripts/i18n/check-hardcoded-strings.mjs`
 (`npm run i18n:check:hardcoded`, wired into `i18n:check`) fails CI on any
-user-visible literal in `workexec/**/*.html`. es-US / fr-CA strings across all
+user-visible literal in `workexec/**/*.html`. **Its scope has since been widened
+to every module under `src/app`** — see
+[PLAN-i18n-hardcoded-strings-all-modules.md](./PLAN-i18n-hardcoded-strings-all-modules.md)
+for the resulting backlog; `workexec` itself remains clean. es-US / fr-CA strings across all
 phases are machine-assisted and FLAGGED FOR NATIVE REVIEW. Pre-existing a11y
 diagnostics tracked separately in issue #120.
 
