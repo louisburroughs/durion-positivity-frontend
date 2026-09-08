@@ -1,6 +1,9 @@
+@let labelText = label ?? ('CRM.CUSTOMER_LOOKUP.LABEL' | translate);
+@let placeholderText = placeholder ?? ('CRM.CUSTOMER_LOOKUP.PLACEHOLDER' | translate);
+
 <div class="customer-lookup">
   <label [attr.for]="inputId" class="field-label">
-    {{ label }}
+    {{ labelText }}
     @if (required) { <span class="required" aria-hidden="true">*</span> }
   </label>
 
@@ -12,7 +15,7 @@
     [attr.aria-required]="required ? 'true' : null"
     [value]="query()"
     [disabled]="disabled()"
-    [placeholder]="placeholder"
+    [placeholder]="placeholderText"
     (input)="onInput($any($event.target).value)"
     (focus)="onFocus()"
     (blur)="onBlur()"
@@ -23,7 +26,7 @@
   }
 
   @if (showList() && suggestions().length > 0) {
-    <ul [id]="inputId + '-listbox'" class="customer-lookup__list" role="listbox" [attr.aria-label]="label">
+    <ul [id]="inputId + '-listbox'" class="customer-lookup__list" role="listbox" [attr.aria-label]="labelText">
       @for (party of suggestions(); track party.partyId; let i = $index) {
         <li role="option" class="customer-lookup__option"
           [id]="inputId + '-opt-' + i"

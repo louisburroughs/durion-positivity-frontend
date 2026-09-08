@@ -1,6 +1,9 @@
+@let labelText = label ?? ('ACCOUNTING.VENDOR_LOOKUP.LABEL' | translate);
+@let placeholderText = placeholder ?? ('ACCOUNTING.VENDOR_LOOKUP.PLACEHOLDER' | translate);
+
 <div class="vendor-lookup">
   <label [attr.for]="inputId" class="field-label">
-    {{ label }}
+    {{ labelText }}
     @if (required) { <span class="required" aria-hidden="true">*</span> }
   </label>
 
@@ -12,7 +15,7 @@
     [attr.aria-required]="required ? 'true' : null"
     [value]="query()"
     [disabled]="disabled()"
-    [placeholder]="placeholder"
+    [placeholder]="placeholderText"
     (input)="onInput($any($event.target).value)"
     (focus)="onFocus()"
     (blur)="onBlur()"
@@ -23,7 +26,7 @@
   }
 
   @if (showList() && suggestions().length > 0) {
-    <ul [id]="inputId + '-listbox'" class="vendor-lookup__list" role="listbox" [attr.aria-label]="label">
+    <ul [id]="inputId + '-listbox'" class="vendor-lookup__list" role="listbox" [attr.aria-label]="labelText">
       @for (vendor of suggestions(); track vendor.vendorId; let i = $index) {
         <li role="option" class="vendor-lookup__option"
           [id]="inputId + '-opt-' + i"

@@ -32,6 +32,24 @@ describe('CustomerLookupComponent', () => {
     fixture.detectChanges();
   });
 
+  it('falls back to its own translated label and re-renders it on a locale switch', () => {
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en-US', { CRM: { CUSTOMER_LOOKUP: { LABEL: 'Customer' } } }, true);
+    translate.setTranslation('fr-CA', { CRM: { CUSTOMER_LOOKUP: { LABEL: 'Client' } } }, true);
+    const label = () =>
+      (fixture.nativeElement as HTMLElement).querySelector('.field-label')?.textContent?.trim();
+
+    translate.use('en-US');
+    fixture.detectChanges();
+    expect(label()).toBe('Customer');
+
+    // Resolving the default with translate.instant() in a field initializer would
+    // leave this stuck on 'Customer'.
+    translate.use('fr-CA');
+    fixture.detectChanges();
+    expect(label()).toBe('Client');
+  });
+
   it('searches server-side (debounced) on input', fakeAsync(() => {
     component.onInput('blue');
     expect(searchParties).not.toHaveBeenCalled(); // debounced

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { LocaleService } from '../../../../core/services/locale.service';
 import { WorkexecService } from '../../services/workexec.service';
 import { EstimateResponse, PageState } from '../../models/workexec.models';
 
@@ -32,6 +33,7 @@ import { EstimateResponse, PageState } from '../../models/workexec.models';
 })
 export class ApprovalDetailPageComponent implements OnInit {
   private readonly translate = inject(TranslateService);
+  private readonly locale     = inject(LocaleService);
   private readonly workexec   = inject(WorkexecService);
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
@@ -62,7 +64,9 @@ export class ApprovalDetailPageComponent implements OnInit {
             this.errorMessage.set(
               est.expiresAt
                 ? this.translate.instant('WORKEXEC.ERROR.APPROVAL_EXPIRED_ON', {
-                    date: new Date(est.expiresAt).toLocaleDateString(),
+                    // Bare toLocaleDateString() formats in the browser's locale, which
+                    // is not the one the user picked in the app.
+                    date: new Date(est.expiresAt).toLocaleDateString(this.locale.currentLocale()),
                   })
                 : this.translate.instant('WORKEXEC.ERROR.APPROVAL_EXPIRED'),
             );

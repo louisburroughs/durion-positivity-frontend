@@ -1,7 +1,7 @@
 import { Component, inject, signal, forwardRef, Input, DestroyRef } from '@angular/core';
 
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
@@ -37,12 +37,16 @@ export class CustomerLookupComponent implements ControlValueAccessor {
   private readonly crm = inject(CrmService);
   private readonly destroyRef = inject(DestroyRef);
 
-  private readonly translate = inject(TranslateService);
-
   @Input() inputId = 'customer-lookup';
-  @Input() label = this.translate.instant('CRM.CUSTOMER_LOOKUP.LABEL');
+  /**
+   * Left undefined by default so the template falls back to the component's own
+   * key through `| translate`. Resolving the default here with `instant` would
+   * freeze it at construction time — before the loader has the catalogue on a
+   * cold start, and stale forever after a runtime locale switch.
+   */
+  @Input() label?: string;
   @Input() required = false;
-  @Input() placeholder = this.translate.instant('CRM.CUSTOMER_LOOKUP.PLACEHOLDER');
+  @Input() placeholder?: string;
 
   readonly suggestions = signal<PartyDetail[]>([]);
   readonly query        = signal('');
