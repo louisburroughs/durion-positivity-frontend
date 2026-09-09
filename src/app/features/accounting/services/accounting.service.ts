@@ -98,7 +98,6 @@ export class AccountingService {
   ): Observable<PagedResponse<AccountingEventListItem>> {
     return this.accountingEventsService
       .listAccountingEvents(
-        filters.organizationId,
         filters.eventType,
         filters.idempotencyOutcome,
         filters.receivedAtFrom,
@@ -632,7 +631,6 @@ export class AccountingService {
     return {
       eventId: req.eventId,
       eventType: req.eventType,
-      organizationId: req.organizationId,
       sourceSystem: req.sourceSystem,
       transactionDate: req.transactionDate,
       payload: req.payload,

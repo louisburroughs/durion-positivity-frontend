@@ -49,7 +49,6 @@ describe('IngestionSubmitPageComponent', () => {
     component.form.patchValue({
       eventId: 'invalid',
       eventType: '',
-      organizationId: '',
       payload: '',
     });
     fixture.detectChanges();
@@ -62,7 +61,6 @@ describe('IngestionSubmitPageComponent', () => {
     component.form.patchValue({
       eventId: '018f5ea6-4b83-7f92-9f4c-0fa8a0a8f001',
       eventType: 'InvoiceIssued',
-      organizationId: 'org-1',
       payload: '{"invoiceId":"1"}',
     });
     component.submit();
@@ -77,7 +75,6 @@ describe('IngestionSubmitPageComponent', () => {
     component.form.patchValue({
       eventId: '018f5ea6-4b83-7f92-9f4c-0fa8a0a8f001',
       eventType: 'InvoiceIssued',
-      organizationId: 'org-1',
       payload: '{"invoiceId":"1"}',
     });
     component.submit();
@@ -91,7 +88,6 @@ describe('IngestionSubmitPageComponent', () => {
     component.form.patchValue({
       eventId: '018f5ea6-4b83-7f92-9f4c-0fa8a0a8f001',
       eventType: 'InvoiceIssued',
-      organizationId: 'org-1',
       payload: '{"invoiceId":"1"}',
     });
 

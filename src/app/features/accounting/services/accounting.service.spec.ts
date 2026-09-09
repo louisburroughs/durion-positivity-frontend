@@ -234,10 +234,10 @@ describe('AccountingService', () => {
               displayReference: 'INV-1787955433643-01a04a72',
             },
             {
-              path: 'organizationId',
+              path: 'payload.customerId',
               rawValue: '01a029d2-2004-7b37-a47b-de23679c2d36',
               id: '01a029d2-2004-7b37-a47b-de23679c2d36',
-              referenceType: 'ORGANIZATION',
+              referenceType: 'CUSTOMER',
             },
           ],
         }),
@@ -257,10 +257,10 @@ describe('AccountingService', () => {
         },
         {
           // Unresolved by accounting — the UI shows a placeholder, never the id.
-          path: 'organizationId',
+          path: 'payload.customerId',
           rawValue: '01a029d2-2004-7b37-a47b-de23679c2d36',
           id: '01a029d2-2004-7b37-a47b-de23679c2d36',
-          referenceType: 'ORGANIZATION',
+          referenceType: 'CUSTOMER',
           displayReference: null,
           displayName: null,
         },

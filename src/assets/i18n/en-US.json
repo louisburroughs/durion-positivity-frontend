@@ -2319,7 +2319,6 @@
       "REFERENCE_TYPE": {
         "INVOICE": "Invoice",
         "CUSTOMER": "Customer",
-        "ORGANIZATION": "Organization",
         "LOCATION": "Location",
         "JOURNAL_ENTRY": "Journal entry",
         "VENDOR": "Vendor",
@@ -2351,7 +2350,6 @@
       "INTERNAL_TOOL_NOTICE": "This is an internal accounting operations tool.",
       "FIELD_EVENT_ID": "Event ID",
       "FIELD_EVENT_TYPE": "Event type",
-      "FIELD_ORGANIZATION_ID": "Organization ID",
       "FIELD_SOURCE_SYSTEM": "Source system",
       "FIELD_PAYLOAD": "Payload JSON",
       "SUBMIT": "Submit event",

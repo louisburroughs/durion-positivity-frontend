@@ -19,13 +19,11 @@ export class CrmIntegrationService {
   private readonly eventsApi = inject(AccountingEventsService);
 
   listEvents(params?: {
-    organizationId?: string;
     status?: string;
     page?: number;
     size?: number;
   }): Observable<AccountingEventListResponse> {
     return this.eventsApi.listAccountingEvents(
-      params?.organizationId,
       undefined,
       undefined,
       undefined,
