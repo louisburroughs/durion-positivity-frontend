@@ -235,7 +235,9 @@ describe('PeopleService', () => {
   });
 
   it('getAvailableRoles() delegates to PeopleAccessControlService.getRoles', () => {
-    const response: RoleDto[] = [{ code: 'ROLE_ADMIN', name: 'Admin' }];
+    const response: RoleDto[] = [
+      { id: '01960011-0000-7000-8000-000000000020', code: 'ROLE_ADMIN', name: 'Admin' },
+    ];
     accessControlApiStub.listAssignableRoles.mockReturnValue(of(response));
 
     service.getAvailableRoles('p-1').subscribe(result => expect(result).toEqual(response));
