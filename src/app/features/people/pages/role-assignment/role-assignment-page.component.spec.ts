@@ -60,9 +60,9 @@ const STUB_ASSIGNMENTS: UserRoleDto[] = [
 ];
 
 const STUB_ROLES: RoleDto[] = [
-  { code: 'ROLE_ADMIN', name: 'Admin' },
-  { code: 'ROLE_MANAGER', name: 'Manager' },
-  { code: 'ROLE_VIEW', name: 'View Only' },
+  { id: '01960011-0000-7000-8000-000000000020', code: 'ROLE_ADMIN', name: 'Admin' },
+  { id: '01960011-0000-7000-8000-000000000021', code: 'ROLE_MANAGER', name: 'Manager' },
+  { id: '01960011-0000-7000-8000-000000000022', code: 'ROLE_VIEW', name: 'View Only' },
 ];
 
 const stubPeopleService = {
