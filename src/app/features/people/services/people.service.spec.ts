@@ -234,7 +234,7 @@ describe('PeopleService', () => {
     expect(accessControlApiStub.listRoleAssignments).toHaveBeenCalledWith('p-1', true);
   });
 
-  it('getAvailableRoles() delegates to PeopleAccessControlService.getRoles', () => {
+  it('getAvailableRoles() delegates to PeopleAccessControlService.listAssignableRoles', () => {
     const response: RoleDto[] = [
       { id: '01960011-0000-7000-8000-000000000020', code: 'ROLE_ADMIN', name: 'Admin' },
     ];
