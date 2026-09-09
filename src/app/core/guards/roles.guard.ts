@@ -35,6 +35,7 @@ function evaluateRoleAccess(route: ActivatedRouteSnapshot): boolean | UrlTree {
   const allowed = canAccess(auth, {
     roles: getStringArray(route, 'roles'),
     permissions: getStringArray(route, 'permissions'),
+    allPermissions: getStringArray(route, 'allPermissions'),
   });
 
   return allowed ? true : router.createUrlTree(['/forbidden']);
@@ -50,10 +51,13 @@ function evaluateRoleAccess(route: ActivatedRouteSnapshot): boolean | UrlTree {
  * as the fallback for tokens issued without a `perm_bits` claim:
  *
  *   data: { permissions: INVENTORY_PERMISSIONS }
+ *   data: { allPermissions: INVENTORY_PAGE.receivingCrossDock }
  *   data: { roles: ['ROLE_ADMIN'] }
  *
- * Both are "any of". See `core/security/route-access.ts` for the decision the
- * nav registry shares, so a gated route is never offered in the nav.
+ * `permissions` and `roles` are "any of"; `allPermissions` is "all of", for the
+ * few endpoints whose `@PreAuthorize` ANDs two authorities. See
+ * `core/security/route-access.ts` for the decision the nav registry shares, so
+ * a gated route is never offered in the nav.
  */
 export const rolesGuard: CanActivateFn = route => evaluateRoleAccess(route);
 

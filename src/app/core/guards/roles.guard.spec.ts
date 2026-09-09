@@ -33,6 +33,8 @@ describe('rolesGuard / rolesChildGuard', () => {
     hasAnyRole: (roles: readonly string[]) => roles.some(role => session.roles.includes(role)),
     hasAnyPermission: (permissions: readonly string[]) =>
       session.permissions !== null && permissions.some(p => session.permissions!.includes(p)),
+    hasPermission: (permission: string) =>
+      session.permissions !== null && session.permissions.includes(permission),
   };
 
   function evaluate(data: Data): boolean | UrlTree {
@@ -102,6 +104,43 @@ describe('rolesGuard / rolesChildGuard', () => {
     it('ignores non-string entries in the route data', () => {
       session.permissions = ['inventory:on_hand:view'];
       expect(evaluate({ permissions: [42, null, 'inventory:on_hand:view'] })).toBe(true);
+    });
+  });
+
+  /**
+   * A few endpoints AND two authorities — cross-dock needs
+   * `inventory:receiving:complete` *and* `inventory:issue:parts`. Gating those
+   * pages on "any of" would admit a session the backend still refuses.
+   */
+  describe('allPermissions gating', () => {
+    const CROSS_DOCK = ['inventory:receiving:complete', 'inventory:issue:parts'];
+
+    it('allows a user holding every required permission', () => {
+      session.permissions = [...CROSS_DOCK, 'inventory:on_hand:view'];
+      expect(evaluate({ allPermissions: CROSS_DOCK })).toBe(true);
+    });
+
+    it('sends a user holding only one of them to /forbidden', () => {
+      session.permissions = ['inventory:receiving:complete'];
+      expect(urlOf(evaluate({ allPermissions: CROSS_DOCK }))).toBe('/forbidden');
+    });
+
+    it('applies alongside an any-of list on the same route', () => {
+      session.permissions = ['inventory:on_hand:view'];
+      expect(
+        urlOf(evaluate({ permissions: ['inventory:on_hand:view'], allPermissions: CROSS_DOCK })),
+      ).toBe('/forbidden');
+
+      session.permissions = ['inventory:on_hand:view', ...CROSS_DOCK];
+      expect(evaluate({ permissions: ['inventory:on_hand:view'], allPermissions: CROSS_DOCK })).toBe(
+        true,
+      );
+    });
+
+    it('falls back to roles for a token without a perm_bits claim', () => {
+      session.permissions = null;
+      session.roles = ['ROLE_ADMIN'];
+      expect(evaluate({ allPermissions: CROSS_DOCK, roles: ['ROLE_ADMIN'] })).toBe(true);
     });
   });
 

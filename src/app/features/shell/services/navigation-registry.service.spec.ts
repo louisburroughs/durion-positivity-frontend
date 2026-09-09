@@ -5,6 +5,14 @@ import { NavigationRegistryService } from './navigation-registry.service';
 import { CRM_PERMISSIONS, INVENTORY_PERMISSIONS } from '../../../core/security/route-permissions';
 import type { NavItem } from '../models/nav-item.model';
 
+/**
+ * Group sets overlap where one group hosts another domain's page (CRM hosts the
+ * accounting integration monitor and the bulk-import console), so "a CRM
+ * permission" has to mean a `crm:`-prefixed one to isolate a single group.
+ */
+const CRM_ONLY_PERMISSION = CRM_PERMISSIONS.find(code => code.startsWith('crm:'))!;
+const INVENTORY_ONLY_PERMISSION = INVENTORY_PERMISSIONS.find(code => code.startsWith('inventory:'))!;
+
 describe('NavigationRegistryService', () => {
   let service: NavigationRegistryService;
   let roleSignal: ReturnType<typeof signal<boolean>>;
@@ -86,7 +94,7 @@ describe('NavigationRegistryService', () => {
       });
 
       it('offers a domain entry only to a session holding one of its permissions', () => {
-        permissionSignal.set([CRM_PERMISSIONS[0]]);
+        permissionSignal.set([CRM_ONLY_PERMISSION]);
 
         const keys = service.visibleNavItems().map(i => i.key);
         expect(keys).toContain('SHELL.NAV.CRM');
@@ -94,8 +102,20 @@ describe('NavigationRegistryService', () => {
         expect(keys).not.toContain('SHELL.NAV.ACCOUNTING');
       });
 
+      it('offers both groups that host a page gated on a shared permission', () => {
+        // `accounting:events:view` opens the accounting ingestion monitor *and*
+        // the CRM integration monitor, so both groups admit it by design — a
+        // group has to admit anyone its own pages are gated on (#236).
+        permissionSignal.set(['accounting:events:view']);
+
+        const keys = service.visibleNavItems().map(i => i.key);
+        expect(keys).toContain('SHELL.NAV.ACCOUNTING');
+        expect(keys).toContain('SHELL.NAV.CRM');
+        expect(keys).not.toContain('SHELL.NAV.INVENTORY');
+      });
+
       it('does not offer a role-gated entry to a permission-only session', () => {
-        permissionSignal.set([INVENTORY_PERMISSIONS[0]]);
+        permissionSignal.set([INVENTORY_ONLY_PERMISSION]);
 
         const keys = service.visibleNavItems().map(i => i.key);
         expect(keys).toContain('SHELL.NAV.INVENTORY');
@@ -107,7 +127,7 @@ describe('NavigationRegistryService', () => {
         permissionSignal.set([]);
         expect(service.visibleNavItems()).toHaveLength(1);
 
-        permissionSignal.set([INVENTORY_PERMISSIONS[0]]);
+        permissionSignal.set([INVENTORY_ONLY_PERMISSION]);
         expect(service.visibleNavItems().map(i => i.key)).toContain('SHELL.NAV.INVENTORY');
       });
     });

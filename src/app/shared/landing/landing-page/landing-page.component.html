@@ -6,9 +6,9 @@
       <h1 id="landing-title" class="landing-hero__title">{{ config.titleKey | translate }}</h1>
       <p class="landing-hero__description">{{ config.descriptionKey | translate }}</p>
 
-      @if (config.primaryCta || config.secondaryCta) {
+      @if (hasHeroActions()) {
         <div class="landing-hero__actions">
-          @if (config.primaryCta; as cta) {
+          @if (visiblePrimaryCta(); as cta) {
             <a class="landing-btn landing-btn--primary" [routerLink]="ctaRoute(cta)">
               @if (cta.icon) {
                 <span class="material-symbols-rounded" aria-hidden="true">{{ cta.icon | msIcon }}</span>
@@ -16,7 +16,7 @@
               {{ cta.labelKey | translate }}
             </a>
           }
-          @if (config.secondaryCta; as cta) {
+          @if (visibleSecondaryCta(); as cta) {
             <a class="landing-btn landing-btn--secondary" [routerLink]="ctaRoute(cta)">
               {{ cta.labelKey | translate }}
             </a>
@@ -56,7 +56,7 @@
   }
 
   <!-- SECTIONS -->
-  @for (section of config.sections; track section.titleKey; let si = $index) {
+  @for (section of visibleSections(); track section.titleKey; let si = $index) {
     <section class="landing-section" aria-labelledby="{{ section.titleKey }}-heading">
       <div class="landing-section__heading">
         <h2 id="{{ section.titleKey }}-heading" class="landing-section__title">

@@ -49,13 +49,28 @@ export interface RecordKindMeta {
   readonly nameSearch: boolean;
 }
 
-export interface LandingCta {
+/**
+ * Access requirement a landing card or CTA carries, mirroring the `data` of the
+ * route it opens. Filtered through the shared `canAccess` decision so a card is
+ * never offered to a session the route guard would bounce — the same rule the
+ * nav registry follows.
+ */
+export interface LandingAccess {
+  /** Any of these permissions admits (matches `data: { permissions }`). */
+  readonly permissions?: readonly string[];
+  /** All of these are required (matches `data: { allPermissions }`). */
+  readonly allPermissions?: readonly string[];
+  /** Any of these roles admits (matches `data: { roles }`). */
+  readonly roles?: readonly string[];
+}
+
+export interface LandingCta extends LandingAccess {
   readonly labelKey: string;
   readonly icon?: string;
   readonly route: string | readonly string[];
 }
 
-interface LandingCardBase {
+interface LandingCardBase extends LandingAccess {
   /** Material Symbols Rounded glyph name. */
   readonly icon: string;
   readonly titleKey: string;

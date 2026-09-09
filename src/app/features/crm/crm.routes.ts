@@ -1,6 +1,13 @@
 import { Routes } from '@angular/router';
+import { CRM_PAGE } from '../../core/security/route-permissions';
 import { CrmComponent } from './crm.component';
 
+/**
+ * Pages declare the permission their primary read needs (`CRM_PAGE`), on top of
+ * the group gate `/app/crm` already carries. `rolesChildGuard` runs at every
+ * level, so both must pass. See `core/security/route-permissions.ts` for how
+ * each code was traced to the backend controller that enforces it.
+ */
 export const CRM_ROUTES: Routes = [
   {
     path: '',
@@ -16,6 +23,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'customers',
+        data: { permissions: CRM_PAGE.parties },
         loadComponent: () =>
           import('./pages/customer-list/customer-list.component').then(
             m => m.CustomerListComponent,
@@ -23,6 +31,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'create-commercial-account',
+        data: { permissions: CRM_PAGE.partyCreate },
         loadComponent: () =>
           import('./pages/create-commercial-account/create-commercial-account.component').then(
             m => m.CreateCommercialAccountComponent,
@@ -30,6 +39,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'create-individual-person',
+        data: { permissions: CRM_PAGE.personCreate },
         loadComponent: () =>
           import('./pages/create-individual-person/create-individual-person.component').then(
             m => m.CreateIndividualPersonComponent,
@@ -37,6 +47,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'party/:partyId',
+        data: { permissions: CRM_PAGE.parties },
         loadComponent: () =>
           import('./pages/party-detail/party-detail.component').then(
             m => m.PartyDetailComponent,
@@ -44,6 +55,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'party/:partyId/add-vehicle',
+        data: { permissions: CRM_PAGE.vehicleCreate },
         loadComponent: () =>
           import('./pages/create-vehicle/create-vehicle.component').then(
             m => m.CreateVehicleComponent,
@@ -51,6 +63,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'party/:partyId/contacts',
+        data: { permissions: CRM_PAGE.partyContacts },
         loadComponent: () =>
           import('./pages/party-contacts/party-contacts.component').then(
             m => m.PartyContactsComponent,
@@ -58,6 +71,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'merge-parties',
+        data: { permissions: CRM_PAGE.partyMerge },
         loadComponent: () =>
           import('./pages/merge-parties/merge-parties.component').then(
             m => m.MergePartiesComponent,
@@ -65,6 +79,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'snapshot',
+        data: { permissions: CRM_PAGE.parties },
         loadComponent: () =>
           import('./pages/crm-snapshot/crm-snapshot.component').then(
             m => m.CrmSnapshotPageComponent,
@@ -72,6 +87,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'crm-snapshot/:partyId',
+        data: { permissions: CRM_PAGE.parties },
         loadComponent: () =>
           import('./pages/crm-snapshot/crm-snapshot.component').then(
             m => m.CrmSnapshotPageComponent,
@@ -79,6 +95,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'integration/events',
+        data: { permissions: CRM_PAGE.integrationEvents },
         loadComponent: () =>
           import('./pages/integration-events/integration-events-page.component').then(
             m => m.IntegrationEventsPageComponent,
@@ -86,6 +103,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'party/:partyId/billing-rules',
+        data: { permissions: CRM_PAGE.billingRules },
         loadComponent: () =>
           import('./pages/billing-rules/billing-rules.component').then(
             m => m.BillingRulesPageComponent,
@@ -93,6 +111,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'bulk-import/customer',
+        data: { permissions: CRM_PAGE.bulkImport },
         loadComponent: () =>
           import('./pages/bulk-import/customer-bulk-import-page.component').then(
             m => m.CustomerBulkImportPageComponent,
@@ -100,6 +119,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'bulk-import/vehicle-inventory',
+        data: { permissions: CRM_PAGE.bulkImport },
         loadComponent: () =>
           import('./pages/bulk-import/vehicle-inventory-bulk-import-page.component').then(
             m => m.VehicleInventoryBulkImportPageComponent,
@@ -107,6 +127,7 @@ export const CRM_ROUTES: Routes = [
       },
       {
         path: 'bulk-import/vehicle-fitment',
+        data: { permissions: CRM_PAGE.bulkImport },
         loadComponent: () =>
           import('./pages/bulk-import/vehicle-fitment-bulk-import-page.component').then(
             m => m.VehicleFitmentBulkImportPageComponent,

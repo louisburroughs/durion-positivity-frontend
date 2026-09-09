@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { RedirectFunction, Router, Routes } from '@angular/router';
+import { ACCOUNTING_PAGE } from '../../core/security/route-permissions';
 import { AccountingComponent } from './accounting.component';
 
 /**
@@ -12,6 +13,12 @@ export const redirectFailedEvents: RedirectFunction = () =>
     queryParams: { processingStatus: 'FAILED,QUARANTINED' },
   });
 
+/**
+ * Pages declare the permission their primary read needs (`ACCOUNTING_PAGE`), on
+ * top of the group gate `/app/accounting` already carries. `rolesChildGuard`
+ * runs at every level, so both must pass. See `core/security/route-permissions.ts`
+ * for how each code was traced to the backend controller that enforces it.
+ */
 export const ACCOUNTING_ROUTES: Routes = [
   {
     path: '',
@@ -27,6 +34,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'events',
+        data: { permissions: ACCOUNTING_PAGE.events },
         loadComponent: () =>
           import('./pages/ingestion-monitor/ingestion-monitor-list/ingestion-monitor-list-page.component').then(
             m => m.IngestionMonitorListPageComponent,
@@ -34,6 +42,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'events/contract',
+        data: { permissions: ACCOUNTING_PAGE.events },
         loadComponent: () =>
           import('./pages/event-envelope-contract/event-envelope-contract-page.component').then(
             m => m.EventEnvelopeContractPageComponent,
@@ -41,6 +50,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'events/submit',
+        data: { permissions: ACCOUNTING_PAGE.eventsSubmit },
         loadComponent: () =>
           import('./pages/ingestion-submit/ingestion-submit-page.component').then(
             m => m.IngestionSubmitPageComponent,
@@ -48,11 +58,13 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'events/failed',
+        data: { permissions: ACCOUNTING_PAGE.events },
         redirectTo: redirectFailedEvents,
         pathMatch: 'full',
       },
       {
         path: 'events/:eventId',
+        data: { permissions: ACCOUNTING_PAGE.events },
         loadComponent: () =>
           import('./pages/ingestion-monitor/ingestion-monitor-detail/ingestion-monitor-detail-page.component').then(
             m => m.IngestionMonitorDetailPageComponent,
@@ -60,6 +72,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'posting-rules',
+        data: { permissions: ACCOUNTING_PAGE.postingRules },
         loadComponent: () =>
           import('./pages/posting-rules/posting-rules-list/posting-rules-list-page.component').then(
             m => m.PostingRulesListPageComponent,
@@ -67,6 +80,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'posting-rules/:ruleSetId',
+        data: { permissions: ACCOUNTING_PAGE.postingRules },
         loadComponent: () =>
           import('./pages/posting-rules/posting-rules-detail/posting-rules-detail-page.component').then(
             m => m.PostingRulesDetailPageComponent,
@@ -74,6 +88,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'payments/apply',
+        data: { permissions: ACCOUNTING_PAGE.paymentApply },
         loadComponent: () =>
           import('./pages/payment-apply/payment-apply-page.component').then(
             m => m.PaymentApplyPageComponent,
@@ -81,6 +96,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'credit-memos',
+        data: { permissions: ACCOUNTING_PAGE.creditMemoView },
         loadComponent: () =>
           import('./pages/credit-memo/credit-memo-list/credit-memo-list-page.component').then(
             m => m.CreditMemoListPageComponent,
@@ -88,6 +104,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'credit-memos/new',
+        data: { permissions: ACCOUNTING_PAGE.creditMemoCreate },
         loadComponent: () =>
           import('./pages/credit-memo/credit-memo-create/credit-memo-create-page.component').then(
             m => m.CreditMemoCreatePageComponent,
@@ -95,6 +112,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'credit-memos/:memoId',
+        data: { permissions: ACCOUNTING_PAGE.creditMemoView },
         loadComponent: () =>
           import('./pages/credit-memo/credit-memo-detail/credit-memo-detail-page.component').then(
             m => m.CreditMemoDetailPageComponent,
@@ -102,6 +120,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'vendor-payments',
+        data: { permissions: ACCOUNTING_PAGE.vendorPaymentView },
         loadComponent: () =>
           import('./pages/vendor-payment/vendor-payment-list/vendor-payment-list-page.component').then(
             m => m.VendorPaymentListPageComponent,
@@ -109,6 +128,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'vendor-payments/new',
+        data: { permissions: ACCOUNTING_PAGE.vendorPaymentExecute },
         loadComponent: () =>
           import('./pages/vendor-payment/vendor-payment-new/vendor-payment-new-page.component').then(
             m => m.VendorPaymentNewPageComponent,
@@ -116,6 +136,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'vendor-payments/:paymentId',
+        data: { permissions: ACCOUNTING_PAGE.vendorPaymentView },
         loadComponent: () =>
           import('./pages/vendor-payment/vendor-payment-detail/vendor-payment-detail-page.component').then(
             m => m.VendorPaymentDetailPageComponent,
@@ -123,6 +144,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'payables/vendor-invoices',
+        data: { permissions: ACCOUNTING_PAGE.vendorInvoices },
         loadComponent: () =>
           import('./pages/payables/vendor-invoices-list/vendor-invoices-list-page.component').then(
             m => m.VendorInvoicesListPageComponent,
@@ -130,6 +152,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'payables/vendor-invoices/exceptions',
+        data: { permissions: ACCOUNTING_PAGE.vendorInvoices },
         loadComponent: () =>
           import(
             './pages/payables/vendor-invoices-exceptions/vendor-invoices-exceptions-page.component'
@@ -137,6 +160,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'payables/vendor-invoices/:billId',
+        data: { permissions: ACCOUNTING_PAGE.vendorInvoiceDetail },
         loadComponent: () =>
           import('./pages/payables/vendor-invoice-detail/vendor-invoice-detail-page.component').then(
             m => m.VendorInvoiceDetailPageComponent,
@@ -144,6 +168,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'reports/labor-overhead',
+        data: { permissions: ACCOUNTING_PAGE.laborOverheadReport },
         loadComponent: () =>
           import('./pages/reports/labor-overhead/labor-overhead-report-page.component').then(
             m => m.LaborOverheadReportPageComponent,
@@ -151,6 +176,7 @@ export const ACCOUNTING_ROUTES: Routes = [
       },
       {
         path: 'invoices/:invoiceId/payment-status',
+        data: { permissions: ACCOUNTING_PAGE.invoicePaymentStatus },
         loadComponent: () =>
           import('./pages/invoice-payment-status/invoice-payment-status-page.component').then(
             m => m.InvoicePaymentStatusPageComponent,
