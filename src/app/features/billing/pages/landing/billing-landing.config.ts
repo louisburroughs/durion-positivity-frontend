@@ -1,3 +1,4 @@
+import { BILLING_PAGE } from '../../../../core/security/route-permissions';
 import { LandingPageConfig } from '../../../../shared/landing/landing.models';
 
 const inv = (...rest: string[]) => (id: string): string[] => ['/app', 'billing', 'invoices', id, ...rest];
@@ -7,6 +8,12 @@ const inv = (...rest: string[]) => (id: string): string[] => ['/app', 'billing',
  * Every section resolves an invoice via the shared invoice finder (customer name,
  * invoice number, or workorder number). Void/Refund and Receipt Detail capture a
  * second identifier on the card.
+ */
+/**
+ * Every card carries the same access requirement as the route it opens, so the
+ * shared landing component can drop the ones this session's permissions would
+ * bounce at the guard. Keep the two in step — `core/security/page-access.spec.ts`
+ * fails the build when a card and its route disagree.
  */
 export const BILLING_LANDING_CONFIG: LandingPageConfig = {
   eyebrowKey: 'SHELL.NAV.BILLING',
@@ -25,6 +32,7 @@ export const BILLING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'BILLING.LANDING.CARD.INVOICE_DETAIL.DESCRIPTION',
           ctaKey: 'BILLING.LANDING.ACTION.OPEN_INVOICE',
           buildCommands: inv(),
+          permissions: BILLING_PAGE.invoiceView,
         },
       ],
     },

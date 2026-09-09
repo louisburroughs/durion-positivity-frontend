@@ -21,12 +21,15 @@ const entries = extractAppRoutes().map(r => ({
   label: deriveLabel(r.route),
   dynamic: r.dynamic,
   roles: r.roles ?? null,
+  permissions: r.permissions ?? null,
+  allPermissions: r.allPermissions ?? null,
 }));
 
 const lines = entries
   .map(e => {
-    const roles = e.roles ? `, roles: [${e.roles.map(r => `'${r}'`).join(', ')}]` : '';
-    return `  { route: '${e.route}', label: ${JSON.stringify(e.label)}, dynamic: ${e.dynamic}${roles} },`;
+    const list = (name, codes) => (codes ? `, ${name}: [${codes.map(c => `'${c}'`).join(', ')}]` : '');
+    const access = list('roles', e.roles) + list('permissions', e.permissions) + list('allPermissions', e.allPermissions);
+    return `  { route: '${e.route}', label: ${JSON.stringify(e.label)}, dynamic: ${e.dynamic}${access} },`;
   })
   .join('\n');
 
@@ -35,7 +38,7 @@ const content = `// GENERATED — do not edit by hand.
 // Regenerate: npm run sitemap:routes:generate
 //
 // Every reachable route under the authenticated /app shell, with derived label,
-// dynamic-param flag, and required roles. Consumed by the sitemap page.
+// dynamic-param flag, and required roles/permissions. Consumed by the sitemap page.
 import type { SiteMapRouteEntry } from './models/site-map-section.model';
 
 export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [

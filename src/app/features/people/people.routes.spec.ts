@@ -31,11 +31,13 @@ describe('PEOPLE_ROUTES', () => {
     expect(childPaths).toContain('identity-compliance');
   });
 
-  it('gates the identity-compliance report on ROLE_ADMIN', () => {
+  it('gates the identity-compliance report on the permission the backend enforces', () => {
+    // Was ROLE_ADMIN as a stand-in while the guard had no permission model; #235
+    // gave it one, so the gate is now the authority the controller names (#236).
     const complianceRoute = rootRoute?.children?.find(
       child => child.path === 'identity-compliance',
     );
 
-    expect(complianceRoute?.data?.['roles']).toEqual(['ROLE_ADMIN']);
+    expect(complianceRoute?.data?.['permissions']).toEqual(['people:compliance:view']);
   });
 });

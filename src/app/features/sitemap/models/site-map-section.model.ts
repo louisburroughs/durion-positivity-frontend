@@ -48,4 +48,8 @@ export interface SiteMapRouteEntry {
   dynamic: boolean;
   /** Roles required to reach this route; undefined = all authenticated users. */
   roles?: readonly string[];
+  /** Any one of these permissions admits; undefined = no permission constraint. */
+  permissions?: readonly string[];
+  /** All of these permissions are required; undefined = no such constraint. */
+  allPermissions?: readonly string[];
 }

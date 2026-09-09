@@ -1,9 +1,16 @@
+import { BULK_IMPORT_PAGE, SECURITY_PAGE } from '../../../../core/security/route-permissions';
 import { LandingPageConfig } from '../../../../shared/landing/landing.models';
 
 /**
  * Admin landing configuration consumed by the shared {@link LandingPageComponent}.
  * Reuses the existing ADMIN.LANDING.* i18n keys. The Roles & Permissions section
  * resolves a role record (id-only selector) for its guided Role Detail card.
+ */
+/**
+ * Every card carries the same access requirement as the route it opens, so the
+ * shared landing component can drop the ones this session's permissions would
+ * bounce at the guard. Keep the two in step — `core/security/page-access.spec.ts`
+ * fails the build when a card and its route disagree.
  */
 export const ADMIN_LANDING_CONFIG: LandingPageConfig = {
   eyebrowKey: 'SHELL.NAV.ADMIN',
@@ -13,10 +20,12 @@ export const ADMIN_LANDING_CONFIG: LandingPageConfig = {
     labelKey: 'ADMIN.LANDING.HERO.OPEN_ROLES',
     icon: 'shield',
     route: '/app/security',
+    permissions: SECURITY_PAGE.roles,
   },
   secondaryCta: {
     labelKey: 'ADMIN.LANDING.HERO.OPEN_AUDIT',
     route: '/app/security/audit-logs',
+    permissions: SECURITY_PAGE.auditLogs,
   },
   sections: [
     {
@@ -31,6 +40,7 @@ export const ADMIN_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ADMIN.LANDING.CARD.ROLES_LIST.DESCRIPTION',
           ctaKey: 'ADMIN.LANDING.ACTION.OPEN_PAGE',
           route: '/app/security',
+          permissions: SECURITY_PAGE.roles,
         },
         {
           kind: 'direct',
@@ -39,6 +49,7 @@ export const ADMIN_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ADMIN.LANDING.CARD.PERMISSIONS_LIST.DESCRIPTION',
           ctaKey: 'ADMIN.LANDING.ACTION.OPEN_PAGE',
           route: '/app/security/permissions',
+          permissions: SECURITY_PAGE.permissions,
         },
         {
           kind: 'guided',
@@ -47,6 +58,7 @@ export const ADMIN_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ADMIN.LANDING.CARD.ROLE_DETAIL.DESCRIPTION',
           ctaKey: 'ADMIN.LANDING.ACTION.OPEN_ROLE',
           buildCommands: (id: string) => ['/app', 'security', 'roles', id],
+          permissions: SECURITY_PAGE.roles,
         },
       ],
     },
@@ -61,6 +73,7 @@ export const ADMIN_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ADMIN.LANDING.CARD.USER_PROVISION.DESCRIPTION',
           ctaKey: 'ADMIN.LANDING.ACTION.OPEN_PAGE',
           route: '/app/security/users/provision',
+          permissions: SECURITY_PAGE.userProvision,
         },
       ],
     },
@@ -75,6 +88,7 @@ export const ADMIN_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ADMIN.LANDING.CARD.SECURITY_AUDIT.DESCRIPTION',
           ctaKey: 'ADMIN.LANDING.ACTION.OPEN_PAGE',
           route: '/app/security/audit',
+          permissions: SECURITY_PAGE.shopAudit,
         },
         {
           kind: 'direct',
@@ -83,6 +97,7 @@ export const ADMIN_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ADMIN.LANDING.CARD.AUDIT_LOGS.DESCRIPTION',
           ctaKey: 'ADMIN.LANDING.ACTION.OPEN_PAGE',
           route: '/app/security/audit-logs',
+          permissions: SECURITY_PAGE.auditLogs,
         },
       ],
     },
@@ -97,6 +112,7 @@ export const ADMIN_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ADMIN.LANDING.CARD.IMPORT_JOBS.DESCRIPTION',
           ctaKey: 'ADMIN.LANDING.ACTION.OPEN_PAGE',
           route: '/app/bulk-import/jobs',
+          permissions: BULK_IMPORT_PAGE.jobs,
         },
       ],
     },

@@ -57,16 +57,31 @@ export const BILLING_PERMISSIONS = permissionsInDomains(
   'accounting:customer-credit:',
 );
 
-/** `/app/people` — employees, RBAC, timekeeping, the people directory. */
+/**
+ * `/app/people` — employees, RBAC, timekeeping, the people directory.
+ * The trailing codes are what its own cross-domain pages are gated on: the two
+ * timekeeping reports (served by pos-accounting) and the people bulk import.
+ */
 export const PEOPLE_PERMISSIONS = permissionsInDomains(
   'people:',
   'people-contact:',
   'timekeeping:',
   'TimeEntry:',
+  'accounting:export:view',
+  'accounting:time:export',
+  'bulkImport:upload:execute',
 );
 
-/** `/app/location` — sites, bays, mobile units, storage locations. */
-export const LOCATION_PERMISSIONS = permissionsInDomains('location:');
+/**
+ * `/app/location` — sites, bays, mobile units, storage locations.
+ * The trailing codes are what its own cross-domain pages are gated on: the
+ * inventory location-sync console and the location bulk import.
+ */
+export const LOCATION_PERMISSIONS = permissionsInDomains(
+  'location:',
+  'inventory:location:view',
+  'bulkImport:upload:execute',
+);
 
 /**
  * `/app/inventory` — on-hand, receiving, putaway, counts, purchase orders, fulfillment.
@@ -84,14 +99,35 @@ export const INVENTORY_PERMISSIONS = permissionsInDomains(
   'security:permission:view',
 );
 
-/** `/app/product` — catalog, pricing, product lifecycle, and the availability/feed views. */
-export const PRODUCT_PERMISSIONS = permissionsInDomains('catalog:', 'pricing:', 'product:');
+/**
+ * `/app/product` — catalog, pricing, product lifecycle, and the availability/feed views.
+ * The trailing codes are what its own cross-domain pages are gated on: the
+ * inventory availability view, the location roster, and the two bulk imports.
+ */
+export const PRODUCT_PERMISSIONS = permissionsInDomains(
+  'catalog:',
+  'pricing:',
+  'product:',
+  'inventory:availability:read',
+  'location:read',
+  'bulkImport:upload:execute',
+);
 
 /** `/app/order` — carts, order lines, price overrides, returns. */
 export const ORDER_PERMISSIONS = permissionsInDomains('order:');
 
-/** `/app/shopmgmt` — shop dashboard, dispatch board, schedule, appointments, mechanics. */
-export const SHOPMGMT_PERMISSIONS = permissionsInDomains('shop:', 'appointments:');
+/**
+ * `/app/shopmgmt` — shop dashboard, dispatch board, schedule, appointments, mechanics.
+ * The trailing codes are what its own cross-domain pages are gated on: both
+ * boards render pos-workorder's dashboard, and mechanic availability is a
+ * pos-people read.
+ */
+export const SHOPMGMT_PERMISSIONS = permissionsInDomains(
+  'shop:',
+  'appointments:',
+  'workorder:dashboard:view',
+  'people:availability:view',
+);
 
 /** `/app/bulk-import` — the bulk import job console. */
 export const BULK_IMPORT_PERMISSIONS = permissionsInDomains('bulkImport:');
@@ -181,4 +217,120 @@ export const CRM_PAGE = {
   /** The CRM integration monitor reads the accounting ingestion events. */
   integrationEvents: ['accounting:events:view'],
   bulkImport: ['bulkImport:upload:execute'],
+} as const satisfies Record<string, readonly string[]>;
+
+/** `/app/workexec/*` — estimates, approvals, work orders, labor, parts. */
+export const WORKEXEC_PAGE = {
+  travelTime: ['workorder:labor:add'],
+  estimateCreate: ['workorder:estimate:create'],
+  /** `getEstimateById` fronts the detail, list, parts, labor and summary pages. */
+  estimateView: ['workorder:estimate:view'],
+  /** Revise reopens a closed estimate before copying it. */
+  estimateRevise: ['workorder:estimate:reopen'],
+  estimateSubmit: ['workorder:estimate:submit'],
+  estimateApprove: ['workorder:estimate:approve'],
+  laborView: ['workorder:labor:view'],
+  wip: ['workorder:wip:view'],
+  workorderView: ['workorder:workorder:view'],
+  workorderAssign: ['workorder:workorder:assign-technician'],
+  partsView: ['workorder:parts:view'],
+  changeRequests: ['workorder:change_request:view'],
+} as const satisfies Record<string, readonly string[]>;
+
+/** `/app/shopmgmt/*` — dispatch, schedule, appointments, mechanics. */
+export const SHOPMGMT_PAGE = {
+  /** Both boards render `getDashboard`, which pos-workorder owns. */
+  dashboard: ['workorder:dashboard:view'],
+  schedule: ['shop:schedule:view'],
+  /** `createAppointment` uses `hasAnyAuthority` over both codes. */
+  appointmentCreate: ['appointments:create', 'shop:schedule:edit'],
+  appointmentView: ['appointments:view', 'shop:schedule:view'],
+  appointmentReschedule: ['appointments:reschedule'],
+  appointmentOverride: ['shop:schedule:edit', 'appointments:reschedule'],
+  bayAssign: ['shop:bay:assign'],
+  /** Availability is a pos-people read. */
+  mechanicAvailability: ['people:availability:view'],
+  mechanicRoster: ['shop:technician:view'],
+} as const satisfies Record<string, readonly string[]>;
+
+/** `/app/product/*` — catalog, pricing, enrichment, and the views it borrows. */
+export const PRODUCT_PAGE = {
+  catalog: ['catalog:product:view'],
+  treadDesign: ['catalog:tread_design:view'],
+  priceBooks: ['catalog:price_book:read'],
+  msrp: ['catalog:msrp:read'],
+  locationOverrides: ['catalog:location_price_override:read'],
+  /** Availability and the location roster are inventory/location reads. */
+  availability: ['inventory:availability:read'],
+  locationsRoster: ['location:read'],
+  bulkImport: ['bulkImport:upload:execute'],
+} as const satisfies Record<string, readonly string[]>;
+
+/** `/app/people/*` — directory, employees, RBAC, timekeeping. */
+export const PEOPLE_PAGE = {
+  directory: ['people-contact:person:view'],
+  roleAssignment: ['people-contact:role:view'],
+  timeApproval: ['people:timekeeping:view'],
+  /** Both timekeeping reports are served by pos-accounting. */
+  timeExport: ['accounting:export:view'],
+  discrepancyReport: ['accounting:time:export'],
+  employeeCreate: ['people:employee:create'],
+  employeeOffboard: ['people:employee:deactivate'],
+  locationAssignments: ['people:employee:view'],
+  identityCompliance: ['people:compliance:view'],
+  bulkImport: ['bulkImport:upload:execute'],
+} as const satisfies Record<string, readonly string[]>;
+
+/** `/app/location/*` — sites, bays, mobile units, storage locations. */
+export const LOCATION_PAGE = {
+  locationView: ['location:read'],
+  locationCreate: ['location:write'],
+  bays: ['location:bay:read'],
+  mobileUnits: ['location:mobile-unit:read'],
+  /** The sync console reads pos-inventory's replicated location tree. */
+  sync: ['inventory:location:view'],
+  bulkImport: ['bulkImport:upload:execute'],
+} as const satisfies Record<string, readonly string[]>;
+
+/** `/app/billing/*` — only the invoice read is permissioned; see the spec's exclusions. */
+export const BILLING_PAGE = {
+  invoiceView: ['invoice:invoice:view'],
+} as const satisfies Record<string, readonly string[]>;
+
+/** `/app/order/*` — carts, lines, price overrides, cancellation. */
+export const ORDER_PAGE = {
+  cartCreate: ['order:order:create'],
+  cartView: ['order:order:view'],
+  priceOverride: ['order:price_override:view'],
+  cancel: ['order:order:cancel'],
+} as const satisfies Record<string, readonly string[]>;
+
+/**
+ * `/app/security/*` — role and permission administration. The group itself is
+ * role-gated (`ROLE_ADMIN`); these narrow it to what each page actually reads.
+ */
+export const SECURITY_PAGE = {
+  roles: ['security:role:view'],
+  permissions: ['security:permission:view'],
+  auditLogs: ['security:audit:view'],
+  userProvision: ['security:user:create'],
+  /**
+   * The "security audit" page calls pos-shop-manager's `/v1/shop/audit`, which
+   * is gated on the schedule/appointment reads rather than anything in the
+   * security domain. Gating it on `security:audit:view` would refuse the very
+   * sessions the endpoint accepts.
+   */
+  shopAudit: ['shop:schedule:view', 'appointments:view'],
+} as const satisfies Record<string, readonly string[]>;
+
+/** `/app/positivity/*` — supplier profiles, exchange audit, manual review. */
+export const POSITIVITY_PAGE = {
+  profiles: ['supplier:profile:read'],
+  exchangeAudit: ['supplier:audit:read'],
+  manualReview: ['supplier:transmission:read'],
+} as const satisfies Record<string, readonly string[]>;
+
+/** `/app/bulk-import/*` — the job console; both pages are the same status read. */
+export const BULK_IMPORT_PAGE = {
+  jobs: ['bulkImport:status:read'],
 } as const satisfies Record<string, readonly string[]>;
