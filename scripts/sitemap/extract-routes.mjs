@@ -61,6 +61,56 @@ function stringValue(node) {
   return node && ts.isStringLiteral(node) ? node.text : null;
 }
 
+/**
+ * `X_PAGE.key` → the permission codes it holds, read once from
+ * `src/app/core/security/route-permissions.ts`. Page gates reference those
+ * constants rather than inlining codes, so the route files alone cannot be read
+ * literally. Group constants (`X_PERMISSIONS`) are computed from the catalog at
+ * runtime and stay unresolved — page codes are asserted to be a subset of their
+ * group's set (`core/security/page-access.spec.ts`), so filtering on the page
+ * code alone already implies the group gate.
+ */
+let pagePermissionTables = null;
+function permissionTables() {
+  if (pagePermissionTables) return pagePermissionTables;
+  pagePermissionTables = new Map();
+  const file = parseFile(resolve(repoRoot, 'src/app/core/security/route-permissions.ts'));
+  const visit = node => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      // `export const X_PAGE = { ... } as const satisfies ...`
+      let init = node.initializer;
+      while (ts.isAsExpression(init) || ts.isSatisfiesExpression(init)) init = init.expression;
+      if (ts.isObjectLiteralExpression(init)) {
+        for (const prop of init.properties) {
+          if (!ts.isPropertyAssignment(prop) || !ts.isArrayLiteralExpression(prop.initializer)) continue;
+          const key = ts.isIdentifier(prop.name) || ts.isStringLiteral(prop.name) ? prop.name.text : null;
+          if (!key) continue;
+          const codes = prop.initializer.elements.filter(ts.isStringLiteral).map(e => e.text);
+          if (codes.length) pagePermissionTables.set(`${node.name.text}.${key}`, codes);
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return pagePermissionTables;
+}
+
+/** Read a `permissions` / `allPermissions` entry: an array literal or `X_PAGE.key`. */
+function permissionsFromData(dataNode, key) {
+  if (!dataNode || !ts.isObjectLiteralExpression(dataNode)) return null;
+  const node = getProp(dataNode, key);
+  if (!node) return null;
+  if (ts.isArrayLiteralExpression(node)) {
+    const codes = node.elements.filter(ts.isStringLiteral).map(e => e.text);
+    return codes.length ? codes : null;
+  }
+  if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && ts.isIdentifier(node.name)) {
+    return permissionTables().get(`${node.expression.text}.${node.name.text}`) ?? null;
+  }
+  return null;
+}
+
 /** Read `data: { roles: [...] }` → array of role strings, or null. */
 function rolesFromData(dataNode) {
   if (!dataNode || !ts.isObjectLiteralExpression(dataNode)) return null;
@@ -191,7 +241,15 @@ function walkRoutes(arrayLiteral, basePath, inheritedRoles, currentDir) {
     }
 
     if (getProp(el, 'loadComponent') || getProp(el, 'component')) {
-      out.push({ route: full, roles, dynamic: paramsOf(full).length > 0, params: paramsOf(full) });
+      const data = getProp(el, 'data');
+      out.push({
+        route: full,
+        roles,
+        permissions: permissionsFromData(data, 'permissions'),
+        allPermissions: permissionsFromData(data, 'allPermissions'),
+        dynamic: paramsOf(full).length > 0,
+        params: paramsOf(full),
+      });
     }
   }
   return out;

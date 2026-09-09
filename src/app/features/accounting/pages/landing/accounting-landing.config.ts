@@ -1,3 +1,4 @@
+import { ACCOUNTING_PAGE } from '../../../../core/security/route-permissions';
 import { LandingPageConfig } from '../../../../shared/landing/landing.models';
 
 /**
@@ -5,6 +6,12 @@ import { LandingPageConfig } from '../../../../shared/landing/landing.models';
  * Reuses the existing ACCOUNTING.LANDING.* i18n keys. The original "Payments"
  * section mixed two id kinds (vendor payment + invoice) and is split here so each
  * section resolves a single record kind.
+ */
+/**
+ * Every card carries the same access requirement as the route it opens, so the
+ * shared landing component can drop the ones this session's permissions would
+ * bounce at the guard. Keep the two in step — `core/security/page-access.spec.ts` fails the
+ * build when a card and its route disagree.
  */
 export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
   eyebrowKey: 'SHELL.NAV.ACCOUNTING',
@@ -14,10 +21,12 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
     labelKey: 'ACCOUNTING.LANDING.HERO.OPEN_EVENTS',
     icon: 'receipt_long',
     route: '/app/accounting/events',
+    permissions: ACCOUNTING_PAGE.events,
   },
   secondaryCta: {
     labelKey: 'ACCOUNTING.LANDING.HERO.OPEN_POSTING_RULES',
     route: '/app/accounting/posting-rules',
+    permissions: ACCOUNTING_PAGE.postingRules,
   },
   sections: [
     {
@@ -32,6 +41,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.EVENTS.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/events',
+          permissions: ACCOUNTING_PAGE.events,
         },
         {
           kind: 'direct',
@@ -40,6 +50,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.EVENTS_CONTRACT.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/events/contract',
+          permissions: ACCOUNTING_PAGE.events,
         },
         {
           kind: 'direct',
@@ -48,6 +59,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.EVENTS_SUBMIT.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/events/submit',
+          permissions: ACCOUNTING_PAGE.eventsSubmit,
         },
         {
           kind: 'direct',
@@ -56,6 +68,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.EVENTS_FAILED.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/events/failed',
+          permissions: ACCOUNTING_PAGE.events,
         },
         {
           kind: 'guided',
@@ -64,6 +77,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.EVENT_DETAIL.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_EVENT',
           buildCommands: (id: string) => ['/app', 'accounting', 'events', id],
+          permissions: ACCOUNTING_PAGE.events,
         },
       ],
     },
@@ -79,6 +93,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.POSTING_RULES_LIST.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/posting-rules',
+          permissions: ACCOUNTING_PAGE.postingRules,
         },
         {
           kind: 'guided',
@@ -87,6 +102,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.POSTING_RULES_DETAIL.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_RULE_SET',
           buildCommands: (id: string) => ['/app', 'accounting', 'posting-rules', id],
+          permissions: ACCOUNTING_PAGE.postingRules,
         },
       ],
     },
@@ -102,6 +118,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.PAYMENT_APPLY.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/payments/apply',
+          permissions: ACCOUNTING_PAGE.paymentApply,
         },
         {
           kind: 'direct',
@@ -110,6 +127,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.VENDOR_PAYMENTS.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/vendor-payments',
+          permissions: ACCOUNTING_PAGE.vendorPaymentView,
         },
         {
           kind: 'direct',
@@ -118,6 +136,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.VENDOR_PAYMENTS_NEW.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/vendor-payments/new',
+          permissions: ACCOUNTING_PAGE.vendorPaymentExecute,
         },
         {
           kind: 'guided',
@@ -126,6 +145,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.VENDOR_PAYMENT_DETAIL.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_VENDOR_PAYMENT',
           buildCommands: (id: string) => ['/app', 'accounting', 'vendor-payments', id],
+          permissions: ACCOUNTING_PAGE.vendorPaymentView,
         },
       ],
     },
@@ -142,6 +162,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.INVOICE_PAYMENT_STATUS.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_INVOICE_STATUS',
           buildCommands: (id: string) => ['/app', 'accounting', 'invoices', id, 'payment-status'],
+          permissions: ACCOUNTING_PAGE.invoicePaymentStatus,
         },
       ],
     },
@@ -157,6 +178,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.CREDIT_MEMOS_LIST.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/credit-memos',
+          permissions: ACCOUNTING_PAGE.creditMemoView,
         },
         {
           kind: 'direct',
@@ -165,6 +187,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.CREDIT_MEMOS_NEW.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/credit-memos/new',
+          permissions: ACCOUNTING_PAGE.creditMemoCreate,
         },
         {
           kind: 'guided',
@@ -173,6 +196,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.CREDIT_MEMO_DETAIL.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_CREDIT_MEMO',
           buildCommands: (id: string) => ['/app', 'accounting', 'credit-memos', id],
+          permissions: ACCOUNTING_PAGE.creditMemoView,
         },
       ],
     },
@@ -199,6 +223,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_LIST.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/payables/vendor-invoices',
+          permissions: ACCOUNTING_PAGE.vendorInvoices,
         },
         {
           kind: 'direct',
@@ -207,6 +232,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_EXCEPTIONS.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/payables/vendor-invoices/exceptions',
+          permissions: ACCOUNTING_PAGE.vendorInvoices,
         },
         {
           kind: 'guided',
@@ -215,6 +241,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.PAYABLES_DETAIL.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_VENDOR_BILL',
           buildCommands: (id: string) => ['/app', 'accounting', 'payables', 'vendor-invoices', id],
+          permissions: ACCOUNTING_PAGE.vendorInvoiceDetail,
         },
       ],
     },
@@ -229,6 +256,7 @@ export const ACCOUNTING_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'ACCOUNTING.LANDING.CARD.LABOR_OVERHEAD.DESCRIPTION',
           ctaKey: 'ACCOUNTING.LANDING.ACTION.OPEN_PAGE',
           route: '/app/accounting/reports/labor-overhead',
+          permissions: ACCOUNTING_PAGE.laborOverheadReport,
         },
       ],
     },

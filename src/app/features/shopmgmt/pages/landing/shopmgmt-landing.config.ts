@@ -1,3 +1,4 @@
+import { SHOPMGMT_PAGE } from '../../../../core/security/route-permissions';
 import { LandingPageConfig } from '../../../../shared/landing/landing.models';
 
 const A = (...rest: string[]) => (id: string): string[] => ['/app', 'shopmgmt', 'appointments', id, ...rest];
@@ -8,6 +9,12 @@ const A = (...rest: string[]) => (id: string): string[] => ['/app', 'shopmgmt', 
  * cards resolve an appointment record (id-only kind); Dispatch & Schedule and Mechanics
  * are all direct links.
  */
+/**
+ * Every card carries the same access requirement as the route it opens, so the
+ * shared landing component can drop the ones this session's permissions would
+ * bounce at the guard. Keep the two in step — `core/security/page-access.spec.ts`
+ * fails the build when a card and its route disagree.
+ */
 export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
   eyebrowKey: 'SHELL.NAV.DISPATCH',
   titleKey: 'SHOPMGMT.LANDING.TITLE',
@@ -16,10 +23,12 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
     labelKey: 'SHOPMGMT.LANDING.HERO_CTA_SHOP_DASHBOARD',
     icon: 'factory',
     route: '/app/shopmgmt/shop-dashboard',
+    permissions: SHOPMGMT_PAGE.dashboard,
   },
   secondaryCta: {
     labelKey: 'SHOPMGMT.LANDING.HERO_CTA_DISPATCH',
     route: '/app/shopmgmt/dispatch-board',
+    permissions: SHOPMGMT_PAGE.dashboard,
   },
   sections: [
     {
@@ -33,6 +42,7 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'SHOPMGMT.LANDING.CARD.SHOP_DASHBOARD.DESCRIPTION',
           ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_PAGE',
           route: '/app/shopmgmt/shop-dashboard',
+          permissions: SHOPMGMT_PAGE.dashboard,
         },
         {
           kind: 'direct',
@@ -41,6 +51,7 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'SHOPMGMT.LANDING.CARD.DISPATCH_BOARD.DESCRIPTION',
           ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_PAGE',
           route: '/app/shopmgmt/dispatch-board',
+          permissions: SHOPMGMT_PAGE.dashboard,
         },
         {
           kind: 'direct',
@@ -49,6 +60,7 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'SHOPMGMT.LANDING.CARD.SCHEDULE.DESCRIPTION',
           ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_PAGE',
           route: '/app/shopmgmt/schedule',
+          permissions: SHOPMGMT_PAGE.schedule,
         },
       ],
     },
@@ -64,6 +76,7 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'SHOPMGMT.LANDING.CARD.APPOINTMENT_NEW.DESCRIPTION',
           ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_PAGE',
           route: '/app/shopmgmt/appointments/new',
+          permissions: SHOPMGMT_PAGE.appointmentCreate,
         },
         {
           kind: 'direct',
@@ -72,6 +85,7 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'SHOPMGMT.LANDING.CARD.APPOINTMENT_NEW_CRM.DESCRIPTION',
           ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_PAGE',
           route: '/app/shopmgmt/appointments/new/crm',
+          permissions: SHOPMGMT_PAGE.appointmentCreate,
         },
         {
           kind: 'guided',
@@ -80,6 +94,7 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'SHOPMGMT.LANDING.CARD.APPOINTMENT_ASSIGNMENT.DESCRIPTION',
           ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_ASSIGNMENT',
           buildCommands: A('assignments'),
+          permissions: SHOPMGMT_PAGE.appointmentView,
         },
         {
           kind: 'guided',
@@ -88,6 +103,7 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'SHOPMGMT.LANDING.CARD.APPOINTMENT_RESCHEDULE.DESCRIPTION',
           ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_RESCHEDULE',
           buildCommands: A('reschedule'),
+          permissions: SHOPMGMT_PAGE.appointmentReschedule,
         },
         {
           kind: 'guided',
@@ -96,6 +112,7 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'SHOPMGMT.LANDING.CARD.APPOINTMENT_EDIT.DESCRIPTION',
           ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_EDIT',
           buildCommands: A('edit'),
+          permissions: SHOPMGMT_PAGE.appointmentView,
         },
         {
           kind: 'guided',
@@ -104,6 +121,7 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'SHOPMGMT.LANDING.CARD.APPOINTMENT_OVERRIDE.DESCRIPTION',
           ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_OVERRIDE',
           buildCommands: A('override-conflict'),
+          permissions: SHOPMGMT_PAGE.appointmentOverride,
         },
         {
           kind: 'guided',
@@ -112,6 +130,7 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'SHOPMGMT.LANDING.CARD.APPOINTMENT_DISPATCH_ASSIGN.DESCRIPTION',
           ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_DISPATCH_ASSIGN',
           buildCommands: A('dispatch-assign'),
+          permissions: SHOPMGMT_PAGE.bayAssign,
         },
       ],
     },
@@ -126,6 +145,7 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'SHOPMGMT.LANDING.CARD.MECHANIC_AVAILABILITY.DESCRIPTION',
           ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_PAGE',
           route: '/app/shopmgmt/mechanics/availability',
+          permissions: SHOPMGMT_PAGE.mechanicAvailability,
         },
         {
           kind: 'direct',
@@ -134,6 +154,7 @@ export const SHOPMGMT_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'SHOPMGMT.LANDING.CARD.MECHANIC_ROSTER.DESCRIPTION',
           ctaKey: 'SHOPMGMT.LANDING.ACTION.OPEN_PAGE',
           route: '/app/shopmgmt/mechanics/roster',
+          permissions: SHOPMGMT_PAGE.mechanicRoster,
         },
       ],
     },

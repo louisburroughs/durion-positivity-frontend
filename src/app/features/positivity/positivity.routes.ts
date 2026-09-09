@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { POSITIVITY_PAGE } from '../../core/security/route-permissions';
 
 /**
  * Positivity (supplier connectivity) routes, lazily mounted at `/app/positivity`.
@@ -6,10 +7,12 @@ import { Routes } from '@angular/router';
  * The mount point in `app.routes.ts` carries `data: { roles: ['ROLE_ADMIN'] }`,
  * so every route below inherits the admin gate via `rolesChildGuard`.
  *
- * Finer permission boundaries (`supplier:profile:write`, `supplier:audit:read`)
- * are **not** modelled client-side: this frontend has no fine-grained permission
- * API, and the JWT permission claim is opaque. The backend's `403` is treated as
- * the authority and rendered as a restricted state by the relevant screen.
+ * Each route also declares the permission its primary read needs
+ * (`POSITIVITY_PAGE`), decoded from the JWT `perm_bits` claim. Write boundaries
+ * (`supplier:profile:write`, `supplier:transmission:resolve`) stay unmodelled —
+ * gating a page on a secondary action would refuse readers who legitimately
+ * belong there — so the backend's `403` remains the authority for those and is
+ * rendered as a restricted state by the relevant screen.
  *
  * Route tree:
  *   /app/positivity                                        profile list
@@ -28,6 +31,7 @@ import { Routes } from '@angular/router';
 export const POSITIVITY_ROUTES: Routes = [
   {
     path: '',
+    data: { permissions: POSITIVITY_PAGE.profiles },
     pathMatch: 'full',
     loadComponent: () =>
       import('./pages/profile-list/supplier-profile-list-page.component').then(
@@ -36,6 +40,7 @@ export const POSITIVITY_ROUTES: Routes = [
   },
   {
     path: 'exchanges',
+    data: { permissions: POSITIVITY_PAGE.exchangeAudit },
     pathMatch: 'full',
     loadComponent: () =>
       import('./pages/exchange-audit-list/exchange-audit-list-page.component').then(
@@ -44,6 +49,7 @@ export const POSITIVITY_ROUTES: Routes = [
   },
   {
     path: 'exchanges/:exchangeId',
+    data: { permissions: POSITIVITY_PAGE.exchangeAudit },
     loadComponent: () =>
       import('./pages/exchange-audit-detail/exchange-audit-detail-page.component').then(
         m => m.ExchangeAuditDetailPageComponent,
@@ -51,6 +57,7 @@ export const POSITIVITY_ROUTES: Routes = [
   },
   {
     path: 'manual-review',
+    data: { permissions: POSITIVITY_PAGE.manualReview },
     pathMatch: 'full',
     loadComponent: () =>
       import('./pages/manual-review-queue/manual-review-queue-page.component').then(
@@ -59,6 +66,7 @@ export const POSITIVITY_ROUTES: Routes = [
   },
   {
     path: 'profiles/:vendorProfileId',
+    data: { permissions: POSITIVITY_PAGE.profiles },
     loadComponent: () =>
       import('./pages/profile-detail/supplier-profile-detail-page.component').then(
         m => m.SupplierProfileDetailPageComponent,

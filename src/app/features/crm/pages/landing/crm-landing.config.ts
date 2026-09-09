@@ -1,3 +1,4 @@
+import { CRM_PAGE } from '../../../../core/security/route-permissions';
 import { LandingPageConfig } from '../../../../shared/landing/landing.models';
 
 const party = (...rest: string[]) => (id: string): string[] => ['/app', 'crm', 'party', id, ...rest];
@@ -7,6 +8,12 @@ const party = (...rest: string[]) => (id: string): string[] => ['/app', 'crm', '
  * The Party and Insights sections resolve a customer via the shared customer
  * finder (unified commercial + individual name search), keyed by party UUID.
  */
+/**
+ * Every card carries the same access requirement as the route it opens, so the
+ * shared landing component can drop the ones this session's permissions would
+ * bounce at the guard. Keep the two in step — `core/security/page-access.spec.ts` fails the
+ * build when a card and its route disagree.
+ */
 export const CRM_LANDING_CONFIG: LandingPageConfig = {
   eyebrowKey: 'SHELL.NAV.CRM',
   titleKey: 'CRM.LANDING.TITLE',
@@ -15,10 +22,12 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
     labelKey: 'CRM.LANDING.HERO.OPEN_CUSTOMERS',
     icon: 'groups',
     route: '/app/crm/customers',
+    permissions: CRM_PAGE.parties,
   },
   secondaryCta: {
     labelKey: 'CRM.LANDING.HERO.CREATE_ACCOUNT',
     route: '/app/crm/create-commercial-account',
+    permissions: CRM_PAGE.partyCreate,
   },
   sections: [
     {
@@ -32,6 +41,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'CRM.LANDING.CARD.CUSTOMER_LIST.DESCRIPTION',
           ctaKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
           route: '/app/crm/customers',
+          permissions: CRM_PAGE.parties,
         },
         {
           kind: 'direct',
@@ -40,6 +50,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'CRM.LANDING.CARD.CREATE_COMMERCIAL.DESCRIPTION',
           ctaKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
           route: '/app/crm/create-commercial-account',
+          permissions: CRM_PAGE.partyCreate,
         },
         {
           kind: 'direct',
@@ -48,6 +59,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'CRM.LANDING.CARD.CREATE_INDIVIDUAL.DESCRIPTION',
           ctaKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
           route: '/app/crm/create-individual-person',
+          permissions: CRM_PAGE.personCreate,
         },
         {
           kind: 'direct',
@@ -56,6 +68,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'CRM.LANDING.CARD.MERGE_PARTIES.DESCRIPTION',
           ctaKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
           route: '/app/crm/merge-parties',
+          permissions: CRM_PAGE.partyMerge,
         },
       ],
     },
@@ -71,6 +84,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'CRM.LANDING.CARD.PARTY_DETAIL.DESCRIPTION',
           ctaKey: 'CRM.LANDING.ACTION.OPEN_PARTY',
           buildCommands: party(),
+          permissions: CRM_PAGE.parties,
         },
         {
           kind: 'guided',
@@ -79,6 +93,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'CRM.LANDING.CARD.ADD_VEHICLE.DESCRIPTION',
           ctaKey: 'CRM.LANDING.ACTION.OPEN_VEHICLE_FORM',
           buildCommands: party('add-vehicle'),
+          permissions: CRM_PAGE.vehicleCreate,
         },
         {
           kind: 'guided',
@@ -87,6 +102,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'CRM.LANDING.CARD.PARTY_CONTACTS.DESCRIPTION',
           ctaKey: 'CRM.LANDING.ACTION.OPEN_CONTACTS',
           buildCommands: party('contacts'),
+          permissions: CRM_PAGE.partyContacts,
         },
         {
           kind: 'guided',
@@ -95,6 +111,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'CRM.LANDING.CARD.BILLING_RULES.DESCRIPTION',
           ctaKey: 'CRM.LANDING.ACTION.OPEN_BILLING_RULES',
           buildCommands: party('billing-rules'),
+          permissions: CRM_PAGE.billingRules,
         },
       ],
     },
@@ -110,6 +127,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'CRM.LANDING.CARD.CRM_SNAPSHOT.DESCRIPTION',
           ctaKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
           route: '/app/crm/snapshot',
+          permissions: CRM_PAGE.parties,
         },
         {
           kind: 'guided',
@@ -118,6 +136,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'CRM.LANDING.CARD.CRM_SNAPSHOT_PARTY.DESCRIPTION',
           ctaKey: 'CRM.LANDING.ACTION.OPEN_SNAPSHOT',
           buildCommands: id => ['/app', 'crm', 'crm-snapshot', id],
+          permissions: CRM_PAGE.parties,
         },
         {
           kind: 'direct',
@@ -126,6 +145,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'CRM.LANDING.CARD.INTEGRATION_EVENTS.DESCRIPTION',
           ctaKey: 'CRM.LANDING.ACTION.OPEN_PAGE',
           route: '/app/crm/integration/events',
+          permissions: CRM_PAGE.integrationEvents,
         },
       ],
     },
@@ -141,6 +161,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           ctaKey: 'CRM.LANDING.ACTION.IMPORT_DATA',
           ctaIcon: 'upload',
           route: '/app/crm/bulk-import/customer',
+          permissions: CRM_PAGE.bulkImport,
         },
         {
           kind: 'direct',
@@ -150,6 +171,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           ctaKey: 'CRM.LANDING.ACTION.IMPORT_DATA',
           ctaIcon: 'upload',
           route: '/app/crm/bulk-import/vehicle-inventory',
+          permissions: CRM_PAGE.bulkImport,
         },
         {
           kind: 'direct',
@@ -159,6 +181,7 @@ export const CRM_LANDING_CONFIG: LandingPageConfig = {
           ctaKey: 'CRM.LANDING.ACTION.IMPORT_DATA',
           ctaIcon: 'upload',
           route: '/app/crm/bulk-import/vehicle-fitment',
+          permissions: CRM_PAGE.bulkImport,
         },
       ],
     },

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { WORKEXEC_PAGE } from '../../core/security/route-permissions';
 import { WorkexecComponent } from './workexec.component';
 
 /**
@@ -9,6 +10,12 @@ import { WorkexecComponent } from './workexec.component';
  * Wave B — stories 239, 238, 237, 236, 235, 234, 233, 271, 270, 269, 268,
  *           231, 230, 229, 228, 227, 226 (CAP-004), 225, 224, 223, 222, 221, 220, 219 (CAP-005)
  * Wave C — stories 218, 217, 216, 215, 214 (CAP-006)
+ */
+/**
+ * Pages declare the permission their primary read needs (`WORKEXEC_PAGE`), on top of
+ * the group gate `/app/workexec` already carries. `rolesChildGuard` runs at every
+ * level, so both must pass. See `core/security/route-permissions.ts` for how
+ * each code was traced to the backend controller that enforces it.
  */
 export const WORKEXEC_ROUTES: Routes = [
   {
@@ -29,6 +36,7 @@ export const WORKEXEC_ROUTES: Routes = [
 
       {
         path: 'travel-time',
+        data: { permissions: WORKEXEC_PAGE.travelTime },
         loadComponent: () =>
           import('./pages/travel-time/travel-time-page.component').then(
             m => m.TravelTimePageComponent,
@@ -37,6 +45,7 @@ export const WORKEXEC_ROUTES: Routes = [
 
       {
         path: 'workorders/from-appointment',
+        data: { permissions: WORKEXEC_PAGE.estimateCreate },
         loadComponent: () =>
           import('./pages/estimate-from-appointment/estimate-from-appointment-page.component').then(
             m => m.EstimateFromAppointmentPageComponent,
@@ -54,6 +63,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 239: Create Draft Estimate */
       {
         path: 'estimates/new',
+        data: { permissions: WORKEXEC_PAGE.estimateCreate },
         loadComponent: () =>
           import('./pages/estimate-create/estimate-create-page.component').then(
             m => m.EstimateCreatePageComponent,
@@ -63,6 +73,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 236: Estimate workspace (taxes + totals inline) */
       {
         path: 'estimates/:estimateId',
+        data: { permissions: WORKEXEC_PAGE.estimateView },
         loadComponent: () =>
           import('./pages/estimate-detail/estimate-detail-page.component').then(
             m => m.EstimateDetailPageComponent,
@@ -72,6 +83,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 259: Retrieve and display estimate list for customer/vehicle */
       {
         path: 'estimate-list',
+        data: { permissions: WORKEXEC_PAGE.estimateView },
         loadComponent: () =>
           import('./pages/estimate-list/estimate-list-page.component').then(
             m => m.EstimateListPageComponent,
@@ -81,6 +93,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 238: Add Parts to Estimate */
       {
         path: 'estimates/:estimateId/parts',
+        data: { permissions: WORKEXEC_PAGE.estimateView },
         loadComponent: () =>
           import('./pages/estimate-parts/estimate-parts-page.component').then(
             m => m.EstimatePartsPageComponent,
@@ -90,6 +103,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 237: Add Labor to Estimate */
       {
         path: 'estimates/:estimateId/labor',
+        data: { permissions: WORKEXEC_PAGE.estimateView },
         loadComponent: () =>
           import('./pages/estimate-labor/estimate-labor-page.component').then(
             m => m.EstimateLaborPageComponent,
@@ -99,6 +113,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 235: Revise Estimate */
       {
         path: 'estimates/:estimateId/revise',
+        data: { permissions: WORKEXEC_PAGE.estimateRevise },
         loadComponent: () =>
           import('./pages/estimate-revise/estimate-revise-page.component').then(
             m => m.EstimateRevisePageComponent,
@@ -108,6 +123,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 234: Customer-Facing Estimate Summary */
       {
         path: 'estimates/:estimateId/summary',
+        data: { permissions: WORKEXEC_PAGE.estimateView },
         loadComponent: () =>
           import('./pages/estimate-summary/estimate-summary-page.component').then(
             m => m.EstimateSummaryPageComponent,
@@ -119,6 +135,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 233: Submit Estimate for Customer Approval */
       {
         path: 'estimates/:estimateId/approval/submit',
+        data: { permissions: WORKEXEC_PAGE.estimateSubmit },
         loadComponent: () =>
           import('./pages/approval-submit/approval-submit-page.component').then(
             m => m.ApprovalSubmitPageComponent,
@@ -128,6 +145,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 271: Capture Digital Customer Approval */
       {
         path: 'estimates/:estimateId/approval/digital',
+        data: { permissions: WORKEXEC_PAGE.estimateApprove },
         loadComponent: () =>
           import('./pages/approval-digital/approval-digital-page.component').then(
             m => m.ApprovalDigitalPageComponent,
@@ -137,6 +155,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 270: Capture In-Person Customer Approval */
       {
         path: 'estimates/:estimateId/approval/in-person',
+        data: { permissions: WORKEXEC_PAGE.estimateApprove },
         loadComponent: () =>
           import('./pages/approval-in-person/approval-in-person-page.component').then(
             m => m.ApprovalInPersonPageComponent,
@@ -146,6 +165,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 269: Record Partial Approval */
       {
         path: 'estimates/:estimateId/approval/partial',
+        data: { permissions: WORKEXEC_PAGE.estimateApprove },
         loadComponent: () =>
           import('./pages/approval-partial/approval-partial-page.component').then(
             m => m.ApprovalPartialPageComponent,
@@ -155,6 +175,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 268: Handle Approval Expiration */
       {
         path: 'estimates/:estimateId/approval/:approvalId',
+        data: { permissions: WORKEXEC_PAGE.estimateView },
         loadComponent: () =>
           import('./pages/approval-detail/approval-detail-page.component').then(
             m => m.ApprovalDetailPageComponent,
@@ -165,6 +186,7 @@ export const WORKEXEC_ROUTES: Routes = [
 
       {
         path: 'timer',
+        data: { permissions: WORKEXEC_PAGE.laborView },
         loadComponent: () =>
           import('./pages/timer-widget/timer-widget-page.component').then(
             m => m.TimerWidgetPageComponent,
@@ -183,6 +205,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 260: Display WIP status for active workorders */
       {
         path: 'wip-status',
+        data: { permissions: WORKEXEC_PAGE.wip },
         loadComponent: () =>
           import('./pages/wip-status/wip-status-page.component').then(
             m => m.WipStatusPageComponent,
@@ -203,6 +226,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 225: Assign/Reassign Technician */
       {
         path: 'workorders/:workorderId/assign',
+        data: { permissions: WORKEXEC_PAGE.workorderAssign },
         loadComponent: () =>
           import('./pages/workorder-assign/workorder-assign-page.component').then(
             m => m.WorkorderAssignPageComponent,
@@ -212,6 +236,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 223: Record Labor (sessions + manual entries) */
       {
         path: 'workorders/:workorderId/labor',
+        data: { permissions: WORKEXEC_PAGE.laborView },
         loadComponent: () =>
           import('./pages/workorder-labor/workorder-labor-page.component').then(
             m => m.WorkorderLaborPageComponent,
@@ -221,6 +246,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Stories 222 + 221: Issue/Consume/Return Parts + Substitutions */
       {
         path: 'workorders/:workorderId/parts',
+        data: { permissions: WORKEXEC_PAGE.partsView },
         loadComponent: () =>
           import('./pages/workorder-parts/workorder-parts-page.component').then(
             m => m.WorkorderPartsPageComponent,
@@ -230,6 +256,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 220: Change Requests (create, approve, decline) */
       {
         path: 'workorders/:workorderId/change-requests',
+        data: { permissions: WORKEXEC_PAGE.changeRequests },
         loadComponent: () =>
           import('./pages/workorder-change-requests/workorder-change-requests-page.component').then(
             m => m.WorkorderChangeRequestsPageComponent,
@@ -239,6 +266,7 @@ export const WORKEXEC_ROUTES: Routes = [
       /** Story 216 (CAP-006): Finalize Billable Scope Snapshot */
       {
         path: 'workorders/:workorderId/finalize',
+        data: { permissions: WORKEXEC_PAGE.workorderView },
         loadComponent: () =>
           import('./pages/workorder-finalize/workorder-finalize-page.component').then(
             m => m.WorkorderFinalizePageComponent,

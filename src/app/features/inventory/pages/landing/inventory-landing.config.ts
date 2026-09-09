@@ -1,3 +1,4 @@
+import { INVENTORY_PAGE } from '../../../../core/security/route-permissions';
 import { LandingPageConfig } from '../../../../shared/landing/landing.models';
 
 const WO = (...rest: string[]) => (id: string): string[] => [
@@ -12,6 +13,11 @@ const WO = (...rest: string[]) => (id: string): string[] => [
 /**
  * Inventory landing configuration consumed by the shared {@link LandingPageComponent}.
  * Reuses the existing INVENTORY.LANDING.* i18n keys. Each section that needs an
+ * Every card carries the same access requirement as the route it opens, so the
+ * shared landing component can drop the ones this session's permissions would
+ * bounce at the guard. Keep the two in step — `core/security/page-access.spec.ts` fails the
+ * build when a card and its route disagree.
+ *
  * identifier resolves exactly one record kind: Stock & Availability => ledger,
  * Receiving & Replenishment => putaway, Purchase Orders => po, Fulfillment =>
  * workorder (id-input mode — no backend name search wired here).
@@ -24,10 +30,12 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
     labelKey: 'INVENTORY.LANDING.HERO.OPEN_AVAILABILITY',
     icon: 'inventory_2',
     route: '/app/inventory/availability',
+    permissions: INVENTORY_PAGE.availability,
   },
   secondaryCta: {
     labelKey: 'INVENTORY.LANDING.HERO.NEW_PURCHASE_ORDER',
     route: '/app/inventory/purchase-orders/new',
+    permissions: INVENTORY_PAGE.purchaseOrderEdit,
   },
   sections: [
     {
@@ -42,6 +50,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.INVENTORY_BY_LOCATION.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/by-location',
+          permissions: INVENTORY_PAGE.byLocation,
         },
         {
           kind: 'direct',
@@ -50,6 +59,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.AVAILABILITY.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/availability',
+          permissions: INVENTORY_PAGE.availability,
         },
         {
           kind: 'direct',
@@ -58,6 +68,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.LEDGER.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/ledger',
+          permissions: INVENTORY_PAGE.ledger,
         },
         {
           kind: 'guided',
@@ -66,6 +77,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.LEDGER_ENTRY.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_LEDGER_ENTRY',
           buildCommands: (id) => ['/app', 'inventory', 'ledger', id],
+          permissions: INVENTORY_PAGE.ledger,
         },
       ],
     },
@@ -81,6 +93,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.RECEIVE_INTO_STAGING.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/receiving/receive-into-staging',
+          permissions: INVENTORY_PAGE.receiving,
         },
         {
           kind: 'direct',
@@ -89,6 +102,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.CROSS_DOCK.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/receiving/cross-dock',
+          allPermissions: INVENTORY_PAGE.receivingCrossDock,
         },
         {
           kind: 'direct',
@@ -97,6 +111,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.PUTAWAY_TASKS.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/putaway/tasks',
+          permissions: INVENTORY_PAGE.putaway,
         },
         {
           kind: 'guided',
@@ -105,6 +120,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.PUTAWAY_TASK.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PUTAWAY_TASK',
           buildCommands: (id) => ['/app', 'inventory', 'putaway', 'tasks', id],
+          permissions: INVENTORY_PAGE.putaway,
         },
         {
           kind: 'direct',
@@ -113,6 +129,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.REPLENISHMENT.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/replenishment/tasks',
+          permissions: INVENTORY_PAGE.replenishment,
         },
       ],
     },
@@ -127,6 +144,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.COUNT_EXECUTE.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/counts/execute',
+          permissions: INVENTORY_PAGE.cycleCount,
         },
         {
           kind: 'direct',
@@ -135,6 +153,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.COUNT_ADJUSTMENTS.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/counts/adjustments',
+          permissions: INVENTORY_PAGE.adjustments,
         },
         {
           kind: 'direct',
@@ -143,6 +162,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.COUNT_PLANS.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/counts/plans',
+          permissions: INVENTORY_PAGE.cycleCount,
         },
         {
           kind: 'direct',
@@ -151,6 +171,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.COUNT_PLAN_NEW.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/counts/plans/new',
+          permissions: INVENTORY_PAGE.cycleCountPlanCreate,
         },
       ],
     },
@@ -166,6 +187,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.PO_LIST.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/purchase-orders',
+          permissions: INVENTORY_PAGE.purchaseOrderView,
         },
         {
           kind: 'direct',
@@ -174,6 +196,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.PO_NEW.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/purchase-orders/new',
+          permissions: INVENTORY_PAGE.purchaseOrderEdit,
         },
         {
           kind: 'guided',
@@ -182,6 +205,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.PO_DETAIL.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PO',
           buildCommands: (id) => ['/app', 'inventory', 'purchase-orders', id],
+          permissions: INVENTORY_PAGE.purchaseOrderView,
         },
         {
           kind: 'guided',
@@ -190,6 +214,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.PO_EDIT.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PO_EDIT',
           buildCommands: (id) => ['/app', 'inventory', 'purchase-orders', id, 'edit'],
+          permissions: INVENTORY_PAGE.purchaseOrderEdit,
         },
       ],
     },
@@ -206,6 +231,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.PICK_LIST.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PICK_LIST',
           buildCommands: WO('pick-list'),
+          permissions: INVENTORY_PAGE.pickList,
         },
         {
           kind: 'guided',
@@ -214,6 +240,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.PICK_EXECUTE.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.EXECUTE_PICK',
           buildCommands: WO('pick-execute'),
+          permissions: INVENTORY_PAGE.pickList,
         },
         {
           kind: 'guided',
@@ -222,6 +249,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.RETURN_TO_STOCK.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_RETURN',
           buildCommands: WO('return-to-stock'),
+          permissions: INVENTORY_PAGE.returnToStock,
         },
         {
           kind: 'guided',
@@ -230,6 +258,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.CONSUME_ITEMS.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_CONSUME',
           buildCommands: WO('consume-items'),
+          permissions: INVENTORY_PAGE.pickList,
         },
         {
           kind: 'guided',
@@ -238,6 +267,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.SHORTAGE_RESOLUTION.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_SHORTAGE',
           buildCommands: WO('shortage-resolution'),
+          permissions: INVENTORY_PAGE.shortageResolution,
         },
       ],
     },
@@ -252,6 +282,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.SECURITY_PERMISSIONS.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/security/permissions',
+          permissions: INVENTORY_PAGE.securityAdmin,
         },
       ],
     },
@@ -267,6 +298,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           ctaIcon: 'upload',
           route: '/app/inventory/bulk-import/stock',
+          permissions: INVENTORY_PAGE.bulkImport,
         },
       ],
     },

@@ -6,8 +6,20 @@ import { SitemapPageComponent } from './sitemap-page.component';
 
 class AuthServiceStub {
   roles: string[] = [];
+  /** null models a token with no perm_bits claim — permissions unknown. */
+  permissions: string[] | null = null;
+
   hasAnyRole(required: readonly string[]): boolean {
     return required.some(role => this.roles.includes(role));
+  }
+  permissionsKnown(): boolean {
+    return this.permissions !== null;
+  }
+  hasPermission(permission: string): boolean {
+    return this.permissions !== null && this.permissions.includes(permission);
+  }
+  hasAnyPermission(required: readonly string[]): boolean {
+    return this.permissions !== null && required.some(code => this.permissions!.includes(code));
   }
 }
 
@@ -16,10 +28,11 @@ describe('SitemapPageComponent', () => {
   let component: SitemapPageComponent;
   let auth: AuthServiceStub;
 
-  async function setup(roles: string[]): Promise<void> {
+  async function setup(roles: string[], permissions: string[] | null = null): Promise<void> {
     TestBed.resetTestingModule();
     auth = new AuthServiceStub();
     auth.roles = roles;
+    auth.permissions = permissions;
 
     await TestBed.configureTestingModule({
       imports: [SitemapPageComponent, TranslateModule.forRoot()],
@@ -76,23 +89,37 @@ describe('SitemapPageComponent', () => {
     expect(crm?.pages.every(p => p.dynamic === false)).toBe(true);
   });
 
-  it('hides admin-gated child pages from non-admins but shows them to admins', async () => {
-    await setup([]);
-    const peopleNonAdmin = component
-      .groups()[0]
-      .sections.find(s => s.section.route === '/app/people');
-    expect(peopleNonAdmin?.pages.map(p => p.route)).not.toContain(
-      '/app/people/identity-compliance',
+  /**
+   * #236 moved the per-page gate from roles to the permission the backend
+   * enforces, so the sitemap filters on `canAccess` like the guard and the nav.
+   */
+  function peoplePages(): string[] {
+    return (
+      component
+        .groups()
+        .flatMap(g => g.sections)
+        .find(s => s.section.route === '/app/people')
+        ?.pages.map(p => p.route) ?? []
     );
+  }
 
-    await setup(['ROLE_ADMIN']);
-    const peopleAdmin = component
-      .groups()
-      .flatMap(g => g.sections)
-      .find(s => s.section.route === '/app/people');
-    expect(peopleAdmin?.pages.map(p => p.route)).toContain(
-      '/app/people/identity-compliance',
-    );
+  it('lists every page for a token with no perm_bits claim', async () => {
+    // Legacy tokens fall back to roles, so permission gates must not hide pages.
+    await setup(['ROLE_ADMIN'], null);
+    expect(peoplePages()).toContain('/app/people/identity-compliance');
+    expect(peoplePages()).toContain('/app/people/directory');
+  });
+
+  it('hides a permission-gated child page from a session lacking the code', async () => {
+    await setup(['ROLE_ADMIN'], ['people-contact:person:view']);
+    expect(peoplePages()).toContain('/app/people/directory');
+    expect(peoplePages()).not.toContain('/app/people/identity-compliance');
+  });
+
+  it('shows a permission-gated child page to a session holding the code', async () => {
+    await setup(['ROLE_ADMIN'], ['people:compliance:view']);
+    expect(peoplePages()).toContain('/app/people/identity-compliance');
+    expect(peoplePages()).not.toContain('/app/people/directory');
   });
 
   it('renders section links and child-page links in the DOM', async () => {

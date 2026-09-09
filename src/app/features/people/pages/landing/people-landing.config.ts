@@ -1,3 +1,4 @@
+import { PEOPLE_PAGE } from '../../../../core/security/route-permissions';
 import { LandingPageConfig } from '../../../../shared/landing/landing.models';
 
 /**
@@ -9,6 +10,12 @@ import { LandingPageConfig } from '../../../../shared/landing/landing.models';
  * search — so section hints say "Search by name". The Timekeeping section gates
  * Work Session Submit on a plain session id.
  */
+/**
+ * Every card carries the same access requirement as the route it opens, so the
+ * shared landing component can drop the ones this session's permissions would
+ * bounce at the guard. Keep the two in step — `core/security/page-access.spec.ts`
+ * fails the build when a card and its route disagree.
+ */
 export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
   eyebrowKey: 'SHELL.NAV.PEOPLE',
   titleKey: 'PEOPLE.LANDING.TITLE',
@@ -17,10 +24,12 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
     labelKey: 'PEOPLE.LANDING.HERO.OPEN_TIME_APPROVAL',
     icon: 'schedule',
     route: '/app/people/timekeeping/approval',
+    permissions: PEOPLE_PAGE.timeApproval,
   },
   secondaryCta: {
     labelKey: 'PEOPLE.LANDING.HERO.CREATE_EMPLOYEE',
     route: '/app/people/employees/new',
+    permissions: PEOPLE_PAGE.employeeCreate,
   },
   sections: [
     {
@@ -36,6 +45,7 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'PEOPLE.LANDING.CARD.TIME_APPROVAL.DESCRIPTION',
           ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
           route: '/app/people/timekeeping/approval',
+          permissions: PEOPLE_PAGE.timeApproval,
         },
         {
           kind: 'direct',
@@ -60,6 +70,7 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'PEOPLE.LANDING.CARD.TIME_EXPORT.DESCRIPTION',
           ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
           route: '/app/people/timekeeping/export',
+          permissions: PEOPLE_PAGE.timeExport,
         },
         {
           kind: 'direct',
@@ -68,6 +79,7 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'PEOPLE.LANDING.CARD.DISCREPANCY.DESCRIPTION',
           ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
           route: '/app/people/timekeeping/discrepancy',
+          permissions: PEOPLE_PAGE.discrepancyReport,
         },
       ],
     },
@@ -84,6 +96,7 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_NEW.DESCRIPTION',
           ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
           route: '/app/people/employees/new',
+          permissions: PEOPLE_PAGE.employeeCreate,
         },
         {
           kind: 'guided',
@@ -100,6 +113,7 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_OFFBOARD.DESCRIPTION',
           ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_EMPLOYEE_OFFBOARD',
           buildCommands: id => ['/app', 'people', 'employees', id, 'offboard'],
+          permissions: PEOPLE_PAGE.employeeOffboard,
         },
       ],
     },
@@ -116,6 +130,7 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'PEOPLE.LANDING.CARD.RBAC.DESCRIPTION',
           ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_RBAC',
           buildCommands: id => ['/app', 'people', 'rbac', id],
+          permissions: PEOPLE_PAGE.roleAssignment,
         },
         {
           kind: 'guided',
@@ -124,6 +139,7 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'PEOPLE.LANDING.CARD.PERSON_LOCATIONS.DESCRIPTION',
           ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_PERSON_LOCATIONS',
           buildCommands: id => ['/app', 'people', 'person', id, 'locations'],
+          permissions: PEOPLE_PAGE.locationAssignments,
         },
       ],
     },
@@ -139,6 +155,7 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
           ctaKey: 'PEOPLE.LANDING.ACTION.IMPORT_DATA',
           ctaIcon: 'upload',
           route: '/app/people/bulk-import/people',
+          permissions: PEOPLE_PAGE.bulkImport,
         },
       ],
     },
@@ -153,6 +170,7 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'PEOPLE.LANDING.CARD.DIRECTORY.DESCRIPTION',
           ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
           route: '/app/people/directory',
+          permissions: PEOPLE_PAGE.directory,
         },
       ],
     },
@@ -167,6 +185,7 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'PEOPLE.LANDING.CARD.IDENTITY_COMPLIANCE.DESCRIPTION',
           ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_PAGE',
           route: '/app/people/identity-compliance',
+          permissions: PEOPLE_PAGE.identityCompliance,
         },
       ],
     },

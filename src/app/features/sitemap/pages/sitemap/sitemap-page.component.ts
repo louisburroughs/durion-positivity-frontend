@@ -1,6 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import {
+  RouteAccessRequirement,
+  canAccess,
+} from '../../../../core/security/route-access';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
   SiteMapData,
@@ -55,10 +59,17 @@ function sectionRouteOf(route: string): string {
 export class SitemapPageComponent {
   private readonly authService = inject(AuthService);
 
-  /** Role-filtered sections (with their static pages) grouped for display. */
+  /**
+   * Access-filtered sections (with their static pages) grouped for display.
+   *
+   * Runs the same `canAccess` decision as the route guard and the nav registry,
+   * so the sitemap never lists a page the guard would bounce (#236). Sections
+   * carry curated roles from `site-map.data.json`; generated page entries carry
+   * whatever their route declares.
+   */
   readonly groups = computed<SiteMapGroup[]>(() => {
-    const canSee = (roles?: readonly string[]): boolean =>
-      !roles || this.authService.hasAnyRole(roles);
+    const canSee = (requirement: RouteAccessRequirement): boolean =>
+      canAccess(this.authService, requirement);
 
     const buildView = (section: SiteMapSection): SiteMapSectionView => ({
       section,
@@ -67,11 +78,11 @@ export class SitemapPageComponent {
           !page.dynamic &&
           page.route !== section.route &&
           sectionRouteOf(page.route) === section.route &&
-          canSee(page.roles),
+          canSee(page),
       ).sort((a, b) => a.label.localeCompare(b.label)),
     });
 
-    const visible = DATA.sections.filter(section => canSee(section.roles));
+    const visible = DATA.sections.filter(section => canSee({ roles: section.roles }));
 
     return GROUP_ORDER.map(group => ({
       headingKey: GROUP_HEADING_KEYS[group],
