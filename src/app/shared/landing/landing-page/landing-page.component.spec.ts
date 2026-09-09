@@ -64,13 +64,13 @@ describe('LandingPageComponent', () => {
   it('gates guided cards until a record is selected', () => {
     const section = CONFIG.sections[0];
     const guided = section.cards[1];
-    expect(component.isPending(section, 0, 1, guided)).toBe(true);
+    expect(component.isPending(section, guided)).toBe(true);
 
-    component.onRecordSelected(0, 'EST-1');
-    expect(component.isPending(section, 0, 1, guided)).toBe(false);
+    component.onRecordSelected(section, 'EST-1');
+    expect(component.isPending(section, guided)).toBe(false);
 
-    component.onRecordCleared(0);
-    expect(component.isPending(section, 0, 1, guided)).toBe(true);
+    component.onRecordCleared(section);
+    expect(component.isPending(section, guided)).toBe(true);
   });
 
   it('navigates a guided card using the selected record id', () => {
@@ -79,11 +79,11 @@ describe('LandingPageComponent', () => {
     const guided = section.cards[1];
 
     // No-op while pending.
-    component.launchGuided(section, 0, 1, guided as never);
+    component.launchGuided(section, guided as never);
     expect(navigate).not.toHaveBeenCalled();
 
-    component.onRecordSelected(0, 'EST-1');
-    component.launchGuided(section, 0, 1, guided as never);
+    component.onRecordSelected(section, 'EST-1');
+    component.launchGuided(section, guided as never);
     expect(navigate).toHaveBeenCalledWith(['/x', 'EST-1']);
   });
 
@@ -107,14 +107,14 @@ describe('LandingPageComponent', () => {
     component.config = { ...CONFIG, sections: [section] };
     const card = section.cards[0];
 
-    component.onRecordSelected(0, 'INV-1');
-    expect(component.isPending(section, 0, 0, card)).toBe(true);
+    component.onRecordSelected(section, 'INV-1');
+    expect(component.isPending(section, card)).toBe(true);
 
-    component.onSecondaryInput(component.cardKey(0, 0), 'PAY-9');
-    expect(component.isPending(section, 0, 0, card)).toBe(false);
+    component.onSecondaryInput(component.cardKey(section, card), 'PAY-9');
+    expect(component.isPending(section, card)).toBe(false);
 
     const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-    component.launchGuided(section, 0, 0, card as never);
+    component.launchGuided(section, card as never);
     expect(navigate).toHaveBeenCalledWith(['/inv', 'INV-1', 'payments', 'PAY-9', 'void']);
   });
 
@@ -243,6 +243,27 @@ describe('LandingPageComponent access filtering', () => {
 
     const nothing = await renderWith([]);
     expect(nothing.hasHeroActions()).toBe(false);
+  });
+
+  it('keys entered state to the card, not to its position in the filtered list', async () => {
+    // Filtering shifts rendered positions: with 'a:read' withheld, SEC.WRITE
+    // renders first. Index-keyed state would file its record under the slot
+    // SEC.OPEN occupies in the config and hand it to the wrong section once
+    // visibility changed (a token refresh is enough).
+    const component = await renderWith(['a:write']);
+    const [open, write] = GATED_CONFIG.sections;
+
+    expect(component.visibleSections()[0].titleKey).toBe('SEC.OPEN');
+    component.onRecordSelected(write, 'WO-1');
+
+    expect(component.selectedId(write)).toBe('WO-1');
+    expect(component.selectedId(open)).toBe('');
+
+    // Secondary values are keyed the same way, so two cards sharing a position
+    // across sections cannot collide.
+    expect(component.cardKey(write, write.cards[0])).not.toBe(
+      component.cardKey(open, open.cards[0]),
+    );
   });
 
   it('falls back to showing everything for a token without a perm_bits claim', async () => {

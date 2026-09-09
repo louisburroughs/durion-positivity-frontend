@@ -18,9 +18,18 @@ import { PERMISSION_BY_BIT } from './permission-catalog';
  * of silently drifting.
  */
 
-/** Every catalog permission whose code starts with one of the given domain prefixes. */
-export function permissionsInDomains(...prefixes: readonly string[]): readonly string[] {
-  return PERMISSION_BY_BIT.filter(code => prefixes.some(prefix => code.startsWith(prefix)));
+/**
+ * Every catalog permission matching one of the given selectors.
+ *
+ * A selector ending in `:` is a domain prefix and matches every code beneath it
+ * (`'inventory:'` → all of pos-inventory's codes). Any other selector is a whole
+ * code and matches only itself, so folding one domain's page permission into
+ * another group cannot quietly pull in codes added under the same prefix later.
+ */
+export function permissionsInDomains(...selectors: readonly string[]): readonly string[] {
+  return PERMISSION_BY_BIT.filter(code =>
+    selectors.some(selector => (selector.endsWith(':') ? code.startsWith(selector) : code === selector)),
+  );
 }
 
 /**

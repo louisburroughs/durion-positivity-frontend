@@ -56,7 +56,7 @@
   }
 
   <!-- SECTIONS -->
-  @for (section of visibleSections(); track section.titleKey; let si = $index) {
+  @for (section of visibleSections(); track section.titleKey) {
     <section class="landing-section" aria-labelledby="{{ section.titleKey }}-heading">
       <div class="landing-section__heading">
         <h2 id="{{ section.titleKey }}-heading" class="landing-section__title">
@@ -76,20 +76,20 @@
             [placeholder]="selectorPlaceholderKey(section)"
             [mode]="selectorMode(section)"
             [search]="selectorSearch(section)"
-            (selected)="onRecordSelected(si, $event)"
-            (cleared)="onRecordCleared(si)"
+            (selected)="onRecordSelected(section, $event)"
+            (cleared)="onRecordCleared(section)"
           />
         </div>
       }
 
       <div class="landing-grid">
-        @for (card of section.cards; track card.titleKey; let ci = $index) {
+        @for (card of section.cards; track card.titleKey) {
           <article
             class="landing-card"
-            (mouseenter)="onEnter(si, ci)"
-            (mouseleave)="onLeave(si, ci)"
+            (mouseenter)="onEnter(section, card)"
+            (mouseleave)="onLeave(section, card)"
           >
-            @if (showTip(si, ci)) {
+            @if (showTip(section, card)) {
               <div class="landing-card__tip" role="tooltip">{{ card.descriptionKey | translate }}</div>
             }
 
@@ -110,35 +110,35 @@
 
             @if (isGuided(card)) {
               @if (card.secondary) {
-                <label class="landing-card__sec-label" [for]="'sec-' + cardKey(si, ci)">
+                <label class="landing-card__sec-label" [for]="'sec-' + cardKey(section, card)">
                   {{ card.secondary.labelKey | translate }}
                 </label>
                 <input
-                  [id]="'sec-' + cardKey(si, ci)"
+                  [id]="'sec-' + cardKey(section, card)"
                   class="landing-card__sec-input"
                   type="text"
                   autocomplete="off"
                   spellcheck="false"
                   [placeholder]="card.secondary.placeholderKey | translate"
-                  [value]="secondaryValue(cardKey(si, ci))"
-                  (input)="onSecondaryInput(cardKey(si, ci), $any($event.target).value)"
+                  [value]="secondaryValue(cardKey(section, card))"
+                  (input)="onSecondaryInput(cardKey(section, card), $any($event.target).value)"
                 />
               }
               <button
                 type="button"
                 class="landing-btn landing-btn--primary landing-card__cta"
-                [class.landing-card__cta--pending]="isPending(section, si, ci, card)"
-                [disabled]="isPending(section, si, ci, card)"
-                (click)="launchGuided(section, si, ci, card)"
-                [attr.aria-disabled]="isPending(section, si, ci, card)"
+                [class.landing-card__cta--pending]="isPending(section, card)"
+                [disabled]="isPending(section, card)"
+                (click)="launchGuided(section, card)"
+                [attr.aria-disabled]="isPending(section, card)"
                 [attr.aria-label]="(card.titleKey | translate) + ': ' + (card.ctaKey | translate)"
               >
                 <span class="material-symbols-rounded" aria-hidden="true">{{
-                  (isPending(section, si, ci, card) ? 'lock' : card.ctaIcon ?? 'login') | msIcon
+                  (isPending(section, card) ? 'lock' : card.ctaIcon ?? 'login') | msIcon
                 }}</span>
                 {{ card.ctaKey | translate }}
               </button>
-              @if (isPending(section, si, ci, card)) {
+              @if (isPending(section, card)) {
                 <p class="landing-card__hint">{{ 'LANDING.CARD.SELECT_FIRST' | translate }}</p>
               }
             } @else {
