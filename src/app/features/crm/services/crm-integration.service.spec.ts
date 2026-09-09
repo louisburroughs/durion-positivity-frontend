@@ -43,16 +43,16 @@ describe('CrmIntegrationService', () => {
       service.listEvents().subscribe(r => { result = r; });
 
       expect(accountingEventsStub.listAccountingEvents).toHaveBeenCalledOnce();
-      // arg 0 is organizationId; page/size are positional args 10 and 11
+      // arg 0 is eventType; page/size are positional args 9 and 10
       const args = accountingEventsStub.listAccountingEvents.mock.calls[0];
       expect(args[0]).toBeUndefined();
-      expect(args[10]).toBe(0);
-      expect(args[11]).toBe(20);
+      expect(args[9]).toBe(0);
+      expect(args[10]).toBe(20);
       expect(result).toBeDefined();
       expect(result.items).toHaveLength(0);
     });
 
-    it('calls eventsApi.listAccountingEvents with organizationId and status params', () => {
+    it('calls eventsApi.listAccountingEvents with the status param', () => {
       const sdkPage = {
         content: [
           {
@@ -70,15 +70,14 @@ describe('CrmIntegrationService', () => {
 
       let result!: AccountingEventListResponse;
       service
-        .listEvents({ organizationId: 'org-abc', status: 'PENDING', page: 0, size: 20 })
+        .listEvents({ status: 'PENDING', page: 0, size: 20 })
         .subscribe(r => { result = r; });
 
       expect(accountingEventsStub.listAccountingEvents).toHaveBeenCalledOnce();
       const args = accountingEventsStub.listAccountingEvents.mock.calls[0];
-      expect(args[0]).toBe('org-abc'); // organizationId
-      expect(args[9]).toBe('PENDING'); // status
-      expect(args[10]).toBe(0); // page
-      expect(args[11]).toBe(20); // size
+      expect(args[8]).toBe('PENDING'); // status
+      expect(args[9]).toBe(0); // page
+      expect(args[10]).toBe(20); // size
       expect(result.items).toHaveLength(1);
       expect(result.items[0].eventId).toBe('ev-001');
       expect(result.items[0]).toMatchObject({ eventReference: 'AE-202609-15' });

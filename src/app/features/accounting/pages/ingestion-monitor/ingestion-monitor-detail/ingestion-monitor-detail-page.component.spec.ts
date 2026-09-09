@@ -88,10 +88,10 @@ describe('IngestionMonitorDetailPageComponent', () => {
         payload: {},
         payloadReferences: [
           {
-            path: 'organizationId',
+            path: 'payload.customerId',
             rawValue: '01a029d2-2004-7b37-a47b-de23679c2d36',
             id: '01a029d2-2004-7b37-a47b-de23679c2d36',
-            referenceType: 'ORGANIZATION',
+            referenceType: 'CUSTOMER',
             displayReference: null,
             displayName: null,
           },

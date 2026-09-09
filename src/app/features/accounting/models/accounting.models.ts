@@ -17,7 +17,6 @@ export interface IngestionListFilters {
   eventId?: string;
   ingestionId?: string;
   domainKeyId?: string;
-  organizationId?: string;
   invoiceId?: string;
 }
 
@@ -79,7 +78,6 @@ export interface AccountingEventListItem {
 export type EventPayloadReferenceType =
   | 'INVOICE'
   | 'CUSTOMER'
-  | 'ORGANIZATION'
   | 'LOCATION'
   | 'JOURNAL_ENTRY'
   | 'VENDOR'
@@ -91,7 +89,6 @@ export type EventPayloadReferenceType =
 export const EVENT_PAYLOAD_REFERENCE_TYPES: readonly EventPayloadReferenceType[] = [
   'INVOICE',
   'CUSTOMER',
-  'ORGANIZATION',
   'LOCATION',
   'JOURNAL_ENTRY',
   'VENDOR',
@@ -162,7 +159,6 @@ export interface EventEnvelopeContract {
 export interface AccountingEventSubmitRequest {
   eventId?: string;
   eventType: string;
-  organizationId: string;
   sourceSystem?: string;
   transactionDate?: string;
   payload: Record<string, unknown>;
@@ -171,7 +167,6 @@ export interface AccountingEventSubmitRequest {
 export interface IngestionSubmitForm {
   eventId: string;
   eventType: string;
-  organizationId: string;
   sourceSystem?: string;
   transactionDate?: string;
   payload: string;

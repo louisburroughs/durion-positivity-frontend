@@ -54,7 +54,6 @@ export class IngestionSubmitPageComponent {
   readonly form = this.fb.group({
     eventId: ['', [Validators.required, Validators.pattern(UUID_V7_REGEX)]],
     eventType: ['', [Validators.required]],
-    organizationId: ['', [Validators.required]],
     sourceSystem: [''],
     payload: ['', [jsonValidator()]],
   });
@@ -67,17 +66,15 @@ export class IngestionSubmitPageComponent {
     const value = this.form.getRawValue();
     const eventId = value.eventId ?? '';
     const eventType = value.eventType ?? '';
-    const organizationId = value.organizationId ?? '';
     const payloadValue = value.payload ?? '';
 
-    if (!eventId || !eventType || !organizationId || !payloadValue) {
+    if (!eventId || !eventType || !payloadValue) {
       return;
     }
 
     const request: AccountingEventSubmitRequest = {
       eventId,
       eventType,
-      organizationId,
       sourceSystem: value.sourceSystem || undefined,
       payload: JSON.parse(payloadValue),
     };

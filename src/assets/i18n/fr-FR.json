@@ -2319,7 +2319,6 @@
       "REFERENCE_TYPE": {
         "INVOICE": "Facture",
         "CUSTOMER": "Client",
-        "ORGANIZATION": "Organisation",
         "LOCATION": "Emplacement",
         "JOURNAL_ENTRY": "Écriture de journal",
         "VENDOR": "Fournisseur",
@@ -2351,7 +2350,6 @@
       "INTERNAL_TOOL_NOTICE": "Ceci est un outil interne d’exploitation comptable.",
       "FIELD_EVENT_ID": "ID d’événement",
       "FIELD_EVENT_TYPE": "Type d’événement",
-      "FIELD_ORGANIZATION_ID": "ID d’organisation",
       "FIELD_SOURCE_SYSTEM": "Système source",
       "FIELD_PAYLOAD": "JSON de charge utile",
       "SUBMIT": "Soumettre l’événement",
