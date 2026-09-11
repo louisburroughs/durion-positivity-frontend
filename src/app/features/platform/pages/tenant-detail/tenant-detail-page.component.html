@@ -71,10 +71,10 @@
   }
 
   @if (pendingTransition(); as transition) {
-    <!-- An inline confirmation in page flow, not a dialog: nothing is modal, the page
-         stays operable, so no aria-modal or focus trap. Focus still moves in, to the
-         safe default (Cancel), the way the repository's alertdialogs do. -->
-    <section class="plt-banner plt-banner--warning tenant-page__confirm"
+    <!-- A non-modal alertdialog in page flow: the page stays operable, so no aria-modal
+         or focus trap. Focus moves to the safe default (Cancel), and the polite live
+         region announces the title and body as it lands there. -->
+    <section class="plt-banner plt-banner--warning tenant-page__confirm" role="alertdialog" aria-live="polite"
       aria-labelledby="tenant-confirm-title" aria-describedby="tenant-confirm-body">
       <div>
         <h2 id="tenant-confirm-title" class="tenant-page__confirm-title">

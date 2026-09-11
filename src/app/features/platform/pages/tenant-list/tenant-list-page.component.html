@@ -56,7 +56,7 @@
     <p class="plt-page__empty">{{ 'PLATFORM.TENANTS.EMPTY' | translate }}</p>
   }
 
-  @if (tenants().length > 0) {
+  @if (state() === 'ready') {
     <div class="plt-table-wrap">
       <table class="plt-table">
         <caption class="sr-only">{{ 'PLATFORM.TENANTS.TABLE.CAPTION' | translate }}</caption>

@@ -9,8 +9,9 @@ import { Tenant, TenantCreateRequest, TenantStatus } from '../models/tenant.mode
  *
  * Every call needs a `platform:tenant:*` authority and a session bound to the
  * platform tenant; pos-tenant answers 403 `PLATFORM_TENANT_REQUIRED` otherwise.
- * No tenant identifier is ever sent by this service — the gateway binds the
- * caller's tenant from the token (ADR-0062).
+ * The caller's own tenant context is never supplied by the client — the
+ * gateway binds it from the token (ADR-0062). The tenant ids in these paths
+ * are the target resources of the registry, not the caller's binding.
  *
  * Talks to `ApiBaseService` with local models until `@durion-sdk/tenant` is
  * generated; the method surface mirrors the operation ids of pos-tenant's

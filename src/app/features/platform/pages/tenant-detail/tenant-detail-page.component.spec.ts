@@ -168,11 +168,14 @@ describe('TenantDetailPageComponent', () => {
     component.askConfirmation('suspend');
     fixture.detectChanges();
     expect(service.suspendTenant).not.toHaveBeenCalled();
-    // Inline confirmation, not a dialog: no alertdialog/aria-modal, focus on the safe Cancel.
+    // Non-modal alertdialog announced politely, focus on the safe Cancel.
     const confirm = el().querySelector('.tenant-page__confirm');
     expect(confirm).toBeTruthy();
-    expect(confirm?.getAttribute('role')).toBeNull();
+    expect(confirm?.getAttribute('role')).toBe('alertdialog');
+    expect(confirm?.getAttribute('aria-live')).toBe('polite');
     expect(confirm?.getAttribute('aria-modal')).toBeNull();
+    expect(confirm?.getAttribute('aria-labelledby')).toBe('tenant-confirm-title');
+    expect(confirm?.getAttribute('aria-describedby')).toBe('tenant-confirm-body');
     expect(el().querySelector('.tenant-page__confirm-no')?.hasAttribute('autofocus')).toBe(true);
 
     component.confirmTransition();
@@ -226,15 +229,19 @@ describe('TenantDetailPageComponent', () => {
     expect(component.successKey()).toBeNull();
   });
 
-  it('renders forbidden and not-found states from a rejected transition, like the load', async () => {
+  it('renders forbidden and not-found states from a rejected transition and drops the record', async () => {
     await setup(active);
     service.suspendTenant.mockReturnValueOnce(
       throwError(() => new HttpErrorResponse({ status: 403, statusText: 'x' })),
     );
     component.askConfirmation('suspend');
     component.confirmTransition();
+    fixture.detectChanges();
     expect(component.state()).toBe('forbidden');
     expect(component.errorKey()).toBe('PLATFORM.ERROR.FORBIDDEN');
+    expect(component.tenant()).toBeNull();
+    expect(el().querySelector('.tenant-page__suspend')).toBeNull();
+    expect(el().querySelector('.tenant-page__facts')).toBeNull();
 
     await setup(suspended);
     service.reactivateTenant.mockReturnValueOnce(
@@ -242,8 +249,59 @@ describe('TenantDetailPageComponent', () => {
     );
     component.askConfirmation('reactivate');
     component.confirmTransition();
+    fixture.detectChanges();
     expect(component.state()).toBe('notFound');
     expect(component.errorKey()).toBe('PLATFORM.TENANTS.ERROR.NOT_FOUND');
+    expect(component.tenant()).toBeNull();
+    expect(el().querySelector('.tenant-page__reactivate')).toBeNull();
+  });
+
+  it('drops a lifecycle answer that arrives after leaving and returning to the same tenant', async () => {
+    await setup(active);
+    const slowSuspend = new Subject<Tenant>();
+    service.suspendTenant.mockReturnValueOnce(slowSuspend);
+    service.getTenant.mockReturnValue(of(active));
+
+    component.askConfirmation('suspend');
+    component.confirmTransition();
+
+    paramMap$.next(convertToParamMap({ id: 't-2' }));
+    paramMap$.next(convertToParamMap({ id: 't-1' }));
+    fixture.detectChanges();
+    expect(component.tenant()?.status).toBe('ACTIVE');
+    expect(component.state()).toBe('ready');
+
+    slowSuspend.next(suspended);
+    expect(component.tenant()?.status).toBe('ACTIVE');
+    expect(component.successKey()).toBeNull();
+
+    // The same holds for a late failure: no banner for a request this page no longer owns.
+    const slowFail = new Subject<Tenant>();
+    service.suspendTenant.mockReturnValueOnce(slowFail);
+    component.askConfirmation('suspend');
+    component.confirmTransition();
+    component.reload();
+    slowFail.error(new HttpErrorResponse({ status: 409, statusText: 'x' }));
+    expect(component.state()).toBe('ready');
+    expect(component.errorKey()).toBeNull();
+  });
+
+  it('clears the record while a retry loads so a failed retry shows no stale facts', async () => {
+    await setup(active);
+    const slow = new Subject<Tenant>();
+    service.getTenant.mockReturnValueOnce(slow);
+
+    component.reload();
+    fixture.detectChanges();
+    expect(component.tenant()).toBeNull();
+    expect(component.state()).toBe('loading');
+    expect(el().querySelector('.tenant-page__facts')).toBeNull();
+
+    slow.error(new HttpErrorResponse({ status: 500, statusText: 'x' }));
+    fixture.detectChanges();
+    expect(component.state()).toBe('error');
+    expect(component.tenant()).toBeNull();
+    expect(el().querySelector('.tenant-page__facts')).toBeNull();
   });
 
   it('sets state to error before errorKey when a transition is rejected (ADR-0031)', async () => {

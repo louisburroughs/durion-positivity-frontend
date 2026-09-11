@@ -29,6 +29,8 @@ describe('TenantListPageComponent', () => {
   let service: { listTenants: ReturnType<typeof vi.fn> };
   let permissions: string[];
 
+  const el = (): HTMLElement => fixture.nativeElement as HTMLElement;
+
   const authStub = {
     permissionsKnown: () => true,
     hasAnyPermission: (codes: readonly string[]) => codes.some(code => permissions.includes(code)),
@@ -112,6 +114,24 @@ describe('TenantListPageComponent', () => {
 
     expect(service.listTenants).toHaveBeenCalledWith(undefined);
     expect(component.statusFilter()).toBe('');
+  });
+
+  it('shows no rows from the previous filter while the next one loads or after it fails', async () => {
+    await setup();
+    expect(el().querySelector('.plt-table')).toBeTruthy();
+
+    const pending = new Subject<Tenant[]>();
+    service.listTenants.mockReturnValueOnce(pending);
+    component.onStatusFilterChange('SUSPENDED');
+    fixture.detectChanges();
+    expect(component.state()).toBe('loading');
+    expect(component.tenants()).toEqual([]);
+    expect(el().querySelector('.plt-table')).toBeNull();
+
+    pending.error(new HttpErrorResponse({ status: 500, statusText: 'x' }));
+    fixture.detectChanges();
+    expect(component.state()).toBe('error');
+    expect(el().querySelector('.plt-table')).toBeNull();
   });
 
   it('discards a slower answer for a previous filter, including its error (race guard)', async () => {

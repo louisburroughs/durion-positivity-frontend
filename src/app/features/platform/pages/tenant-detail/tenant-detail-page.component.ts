@@ -108,6 +108,9 @@ export class TenantDetailPageComponent {
 
   load(id: string): void {
     const generation = ++this.loadGeneration;
+    // Nothing from before the load survives it: a failed retry must not keep
+    // showing the record it could not refresh.
+    this.tenant.set(null);
     this.state.set('loading');
     this.errorKey.set(null);
     this.errorDetail.set(null);
@@ -166,6 +169,10 @@ export class TenantDetailPageComponent {
     const id = this.tenantId();
     if (!transition || !id || this.saving()) return;
 
+    // The answer is only for this page as it is now: leaving and coming back
+    // to the same tenant is a new load generation, and a stale answer must
+    // not overwrite what that load fetched.
+    const generation = this.loadGeneration;
     this.saving.set(true);
     this.errorKey.set(null);
     this.errorDetail.set(null);
@@ -182,9 +189,9 @@ export class TenantDetailPageComponent {
 
     call$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: tenant => {
-        // The operator may have moved to another tenant meanwhile; the route
-        // change already reset the in-flight state, so this answer is history.
-        if (this.tenantId() !== id) return;
+        // The operator may have moved on meanwhile; the route change (or the
+        // reload) already reset the in-flight state, so this answer is history.
+        if (!this.isCurrent(id, generation)) return;
         this.saving.set(false);
         this.pendingTransition.set(null);
         this.tenant.set(tenant);
@@ -192,14 +199,20 @@ export class TenantDetailPageComponent {
         this.successKey.set(successKey);
       },
       error: (err: unknown) => {
-        if (this.tenantId() !== id) return;
+        if (!this.isCurrent(id, generation)) return;
         this.saving.set(false);
         this.pendingTransition.set(null);
         const outcome = mapPlatformError(err, fallbackKey, {
           conflictKey: 'PLATFORM.TENANTS.ERROR.TRANSITION_CONFLICT',
           notFoundKey: 'PLATFORM.TENANTS.ERROR.NOT_FOUND',
         });
-        this.state.set(this.stateFor(outcome.kind));
+        const state = this.stateFor(outcome.kind);
+        if (state !== 'error') {
+          // Forbidden or gone: the record on screen no longer describes
+          // anything the operator may act on, so it goes with the controls.
+          this.tenant.set(null);
+        }
+        this.state.set(state);
         this.errorKey.set(outcome.errorKey);
         this.errorDetail.set(outcome.detail);
       },

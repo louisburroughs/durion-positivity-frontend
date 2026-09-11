@@ -35,7 +35,7 @@ export class TenantCreatePageComponent {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  /** Account-list load state; the form itself is always rendered. */
+  /** Account-list load state and the create outcome; the form itself is always rendered. */
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
   /** Server text beneath the error banner (see `PlatformErrorOutcome.detail`). */
@@ -82,10 +82,16 @@ export class TenantCreatePageComponent {
           this.state.set('ready');
         },
         error: (err: unknown) => {
+          // The account list is a convenience: a session holding only
+          // platform:tenant:create is refused it (403) yet may still register a
+          // tenant by id, so this is an ordinary load error with the plain-id
+          // fallback, never the page-wide forbidden state.
           const outcome = mapPlatformError(err, 'PLATFORM.TENANTS.ERROR.ACCOUNTS_LOAD');
-          this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
-          this.errorKey.set(outcome.errorKey);
-          this.errorDetail.set(outcome.detail);
+          this.state.set('error');
+          this.errorKey.set(
+            outcome.kind === 'forbidden' ? 'PLATFORM.TENANTS.ERROR.ACCOUNTS_LOAD' : outcome.errorKey,
+          );
+          this.errorDetail.set(outcome.kind === 'forbidden' ? null : outcome.detail);
         },
       });
   }
@@ -145,7 +151,8 @@ export class TenantCreatePageComponent {
             conflictKey: 'PLATFORM.TENANTS.ERROR.SLUG_TAKEN',
             notFoundKey: 'PLATFORM.TENANTS.ERROR.ACCOUNT_NOT_FOUND',
           });
-          this.state.set('error');
+          // A refused create is the one denial this page renders as forbidden.
+          this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
           this.errorKey.set(outcome.errorKey);
           this.errorDetail.set(outcome.detail);
           this.fieldErrors.set(outcome.fieldErrors);

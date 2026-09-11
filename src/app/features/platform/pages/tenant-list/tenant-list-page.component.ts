@@ -57,6 +57,9 @@ export class TenantListPageComponent {
 
   load(): void {
     const generation = ++this.loadGeneration;
+    // The rows on screen belong to the previous filter; they go before the new
+    // answer arrives, so neither the loading nor a failed state shows them.
+    this.tenants.set([]);
     this.state.set('loading');
     this.errorKey.set(null);
     this.errorDetail.set(null);

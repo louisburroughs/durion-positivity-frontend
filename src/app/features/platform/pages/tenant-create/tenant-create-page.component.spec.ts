@@ -92,6 +92,30 @@ describe('TenantCreatePageComponent', () => {
     expect(el().querySelector('input#tenant-account')).toBeTruthy();
   });
 
+  it('keeps the plain-id fallback usable when the account list is refused (create-only session)', async () => {
+    await setup(new HttpErrorResponse({ status: 403, statusText: 'x', error: { message: 'no' } }));
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('PLATFORM.TENANTS.ERROR.ACCOUNTS_LOAD');
+    expect(component.errorDetail()).toBeNull();
+    expect(el().querySelector('input#tenant-account')).toBeTruthy();
+    expect(el().textContent).not.toContain('PLATFORM.ERROR.FORBIDDEN');
+  });
+
+  it('renders the forbidden state when the create itself is refused', async () => {
+    await setup();
+    tenantService.createTenant.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 403, statusText: 'x' })),
+    );
+    fillValidForm();
+
+    component.submit();
+
+    expect(component.state()).toBe('forbidden');
+    expect(component.errorKey()).toBe('PLATFORM.ERROR.FORBIDDEN');
+    expect(component.saving()).toBe(false);
+  });
+
   it('does not submit an invalid form', async () => {
     await setup();
 
