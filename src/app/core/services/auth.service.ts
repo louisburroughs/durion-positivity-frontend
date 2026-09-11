@@ -79,7 +79,7 @@ const MAX_TIMEOUT_DELAY_MS = 2_147_483_647;
  *
  * Tenancy (ADR-0062): the session's tenant is the token's `tid` claim, exposed
  * as `tenantId()`; `tenant()` is the registry's view of it, loaded from
- * `GET /v1/tenants/me` once per tenant binding and kept across silent
+ * `GET /v1/tenants/me` at most once per tenant binding and kept across silent
  * refreshes. Nothing here ever sends a tenant identifier — the gateway derives
  * `X-Tenant-Id` from the token.
  */
@@ -95,6 +95,12 @@ export class AuthService {
   private readonly _refreshToken = signal<string | null>(this.loadFromStorage(REFRESH_TOKEN_KEY));
   private readonly _roles = signal<string[]>(this.loadRolesFromSession());
   private readonly _tenant = signal<TenantSummary | null>(null);
+  /**
+   * Tenant id a /tenants/me load was started for. One attempt per binding: a
+   * silent refresh while the first load is pending, or after it failed, starts
+   * no second request. Cleared when the binding changes or the session ends.
+   */
+  private tenantLoadFor: string | null = null;
   private refreshRequest$: Observable<TokenPairResponse> | null = null;
   private expiryTimerId: ReturnType<typeof setTimeout> | null = null;
 
@@ -293,6 +299,7 @@ export class AuthService {
     this._refreshToken.set(null);
     this._roles.set([]);
     this._tenant.set(null);
+    this.tenantLoadFor = null;
 
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -319,6 +326,7 @@ export class AuthService {
 
     if (tenantId !== previousTenantId) {
       this._tenant.set(null);
+      this.tenantLoadFor = null;
       if (isPlatformBrowser(this.platformId)) {
         sessionStorage.removeItem(TENANT_KEY);
       }
@@ -337,6 +345,8 @@ export class AuthService {
       return;
     }
 
+    if (this.tenantLoadFor === tenantId) return; // pending, or already tried for this binding
+    this.tenantLoadFor = tenantId;
     this.loadTenant(tenantId);
   }
 

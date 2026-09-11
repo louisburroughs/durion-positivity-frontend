@@ -466,6 +466,42 @@ describe('AuthService', () => {
       httpMock.expectNone(r => r.url.includes('/tenants/me'));
     });
 
+    it('starts no second /tenants/me request while the first is pending or after it failed', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      const pending = httpMock.expectOne(r => r.url.endsWith('/security-service/v1/tenants/me'));
+
+      // A silent refresh with the same tid while the first load is still pending.
+      service.refreshTokens().subscribe();
+      httpMock
+        .expectOne(r => r.url.includes('/security-service/v1/auth/refresh'))
+        .flush({ accessToken: tokenWith({ tid: TENANT_ID, iat: 1700000001 }), refreshToken: 'rt-2' });
+      httpMock.expectNone(r => r.url.includes('/tenants/me'));
+
+      pending.flush(null, { status: 503, statusText: 'Service Unavailable' });
+      expect(service.tenant()).toBeNull();
+
+      // Another refresh after the failure: one attempt per binding.
+      service.refreshTokens().subscribe();
+      httpMock
+        .expectOne(r => r.url.includes('/security-service/v1/auth/refresh'))
+        .flush({ accessToken: tokenWith({ tid: TENANT_ID, iat: 1700000002 }), refreshToken: 'rt-3' });
+      httpMock.expectNone(r => r.url.includes('/tenants/me'));
+
+      // A different binding gets its own attempt.
+      const otherTenantId = '01990000-0000-7000-8000-00000000c002';
+      loginWith(tokenWith({ tid: otherTenantId }));
+      flushTenantMe(otherTenantId);
+      expect(service.tenant()?.tenantId).toBe(otherTenantId);
+
+      // And so does a fresh login into the first tenant after logout.
+      service.logout();
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      flushTenantMe();
+      expect(service.tenant()?.tenantId).toBe(TENANT_ID);
+      warn.mockRestore();
+    });
+
     it('drops the previous tenant and reloads when a new token carries a different tid', () => {
       loginWith(tokenWith({ tid: TENANT_ID }));
       flushTenantMe();

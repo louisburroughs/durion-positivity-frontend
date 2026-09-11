@@ -71,7 +71,8 @@ app.routes + *.routes.ts ──────┤     (static pages only)
 - **Served unauthenticated, so it is redacted.** `generate-sitemap.mjs` strips
   the privileged surface from the published artifact: role-gated sections
   (`security`, `admin`) are dropped, role-gated pages (e.g.
-  `people/identity-compliance`) are dropped, and no `roles` or `permissions` fields are emitted.
+  `people/identity-compliance`) and permission-gated pages (e.g. `people/employees/new`) are
+  dropped, and no `roles`, `permissions` or `allPermissions` fields are emitted.
   The result is an invariant — **every route in the artifact is reachable by any
   authenticated user**, so anonymous callers can't enumerate the admin/security
   surface. The in-app manifest (`site-map.routes.generated.ts`) keeps the full,

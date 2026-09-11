@@ -114,7 +114,10 @@ for (const [sectionRoute, entries] of groups) {
       label: deriveLabel(e.route),
       dynamic: e.dynamic,
       ...(e.params && e.params.length ? { params: e.params } : {}),
+      // Access metadata travels to the redaction pass below and is never emitted.
       ...(e.roles ? { roles: e.roles } : {}),
+      ...(e.permissions ? { permissions: e.permissions } : {}),
+      ...(e.allPermissions ? { allPermissions: e.allPermissions } : {}),
     }));
 
   sections.push(base);
@@ -134,8 +137,9 @@ sections.sort((a, b) => {
 // The artifact is served unauthenticated (see src/server.ts), so it must not
 // enumerate the privileged surface to anonymous callers. Redact it:
 //   - drop role- or permission-gated sections entirely (security, admin, platform);
-//   - drop role-gated pages from the sections that remain (e.g. identity-compliance);
-//   - emit no `roles` or `permissions` fields at all.
+//   - drop role- or permission-gated pages from the sections that remain
+//     (e.g. identity-compliance, employees/new);
+//   - emit no `roles`, `permissions` or `allPermissions` fields at all.
 // The result is an invariant: every route in the artifact is reachable by any
 // authenticated user. The in-app route manifest (site-map.routes.generated.ts)
 // keeps the full, role-aware tree — the sitemap PAGE is auth-gated and filters
@@ -145,8 +149,10 @@ const publicSections = sections
   .map(({ roles: _sectionRoles, permissions: _sectionPermissions, ...section }) => ({
     ...section,
     pages: section.pages
-      .filter(page => !page.roles)
-      .map(({ roles: _pageRoles, ...page }) => page),
+      .filter(page => !page.roles && !page.permissions && !page.allPermissions)
+      .map(
+        ({ roles: _pageRoles, permissions: _pagePermissions, allPermissions: _pageAll, ...page }) => page,
+      ),
   }));
 
 const redactedSections = sections.length - publicSections.length;
@@ -167,6 +173,6 @@ fs.writeFileSync(outputPath, `${JSON.stringify(artifact, null, 2)}\n`, 'utf8');
 console.log(
   `Generated ${path.relative(repoRoot, outputPath)} ` +
     `(${publicSections.length} sections, ${pageCount} pages; ` +
-    `redacted ${redactedSections} role-gated sections + ${redactedPages} role-gated pages) ` +
+    `redacted ${redactedSections} gated sections + ${redactedPages} gated pages) ` +
     `from site-map.data.json + route tree.`,
 );
