@@ -2,9 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subject, of, throwError } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TenantCreatePageComponent } from './tenant-create-page.component';
+import { AuthService } from '../../../../core/services/auth.service';
 import { PlatformAccountService } from '../../services/platform-account.service';
 import { PlatformTenantService } from '../../services/platform-tenant.service';
 import { AccountSummary, Tenant } from '../../models/tenant.models';
@@ -35,15 +36,36 @@ describe('TenantCreatePageComponent', () => {
   let component: TenantCreatePageComponent;
   let tenantService: { createTenant: ReturnType<typeof vi.fn> };
   let accountService: { listAccounts: ReturnType<typeof vi.fn> };
+  let permissions: string[];
+
+  // Read access on by default so the pre-existing (reader) tests keep their
+  // original navigate-to-detail behaviour; the create-only tests below pass
+  // ['platform:tenant:create'] explicitly.
+  const authStub = {
+    permissionsKnown: () => true,
+    hasAnyPermission: (codes: readonly string[]) => codes.some(code => permissions.includes(code)),
+    hasPermission: (code: string) => permissions.includes(code),
+    hasAnyRole: () => false,
+  };
 
   const el = (): HTMLElement => fixture.nativeElement as HTMLElement;
 
-  async function setup(accounts: AccountSummary[] | HttpErrorResponse = [account]): Promise<void> {
+  async function setup(
+    accounts: AccountSummary[] | HttpErrorResponse | Observable<AccountSummary[]> = [account],
+    perms: string[] = ['platform:tenant:read', 'platform:tenant:create'],
+  ): Promise<void> {
+    permissions = perms;
     tenantService = { createTenant: vi.fn().mockReturnValue(of(created)) };
     accountService = {
       listAccounts: vi
         .fn()
-        .mockReturnValue(accounts instanceof HttpErrorResponse ? throwError(() => accounts) : of(accounts)),
+        .mockReturnValue(
+          accounts instanceof HttpErrorResponse
+            ? throwError(() => accounts)
+            : accounts instanceof Observable
+              ? accounts
+              : of(accounts),
+        ),
     };
 
     TestBed.resetTestingModule();
@@ -53,6 +75,7 @@ describe('TenantCreatePageComponent', () => {
         provideRouter([]),
         { provide: PlatformTenantService, useValue: tenantService },
         { provide: PlatformAccountService, useValue: accountService },
+        { provide: AuthService, useValue: authStub },
       ],
     }).compileComponents();
 
@@ -207,6 +230,46 @@ describe('TenantCreatePageComponent', () => {
     expect(navigate).toHaveBeenCalledWith(['/app', 'platform', 'tenants', 't-9'], { state: { created: true } });
   });
 
+  it('shows an inline success banner and resets the form instead of navigating for a create-only session', async () => {
+    // A session holding platform:tenant:create but not platform:tenant:read
+    // cannot open the detail page the reader test above navigates to.
+    await setup([account], ['platform:tenant:create']);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+    fillValidForm();
+
+    component.submit();
+    fixture.detectChanges();
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(component.state()).toBe('ready');
+    expect(component.successKey()).toBe('PLATFORM.TENANTS.FORM.CREATED_SUCCESS');
+    expect(el().querySelector('.plt-banner--success')?.textContent).toContain(
+      'PLATFORM.TENANTS.FORM.CREATED_SUCCESS',
+    );
+    expect(component.form.getRawValue()).toEqual({
+      slug: '',
+      displayName: '',
+      accountId: '',
+      cell: '',
+      initialAdminEmail: '',
+    });
+  });
+
+  it('clears a stale success banner when a new submission starts', async () => {
+    await setup([account], ['platform:tenant:create']);
+    fillValidForm();
+    component.submit();
+    expect(component.successKey()).not.toBeNull();
+
+    fillValidForm();
+    const pending = new Subject<Tenant>();
+    tenantService.createTenant.mockReturnValueOnce(pending);
+    component.submit();
+
+    expect(component.successKey()).toBeNull();
+    pending.complete();
+  });
+
   it('includes the cell when given', async () => {
     await setup();
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
@@ -266,5 +329,80 @@ describe('TenantCreatePageComponent', () => {
 
     expect(component.state()).toBe('error');
     expect(component.errorKey()).toBe('PLATFORM.TENANTS.ERROR.ACCOUNT_NOT_FOUND');
+  });
+
+  it('points the breadcrumb and Cancel link at the platform group root, not the list directly', async () => {
+    // /app/platform's own '' route lands on the list for a reader and the
+    // create form for a create-only session (platformLanding()); a hardcoded
+    // link to the list would dead-end a create-only session at /forbidden.
+    await setup();
+
+    const back = el().querySelector<HTMLAnchorElement>('.tenant-create__back');
+    const cancel = el().querySelector<HTMLAnchorElement>('a.plt-btn--secondary');
+
+    expect(back?.getAttribute('href')).toBe('/app/platform');
+    expect(cancel?.getAttribute('href')).toBe('/app/platform');
+  });
+
+  it('ignores submit() while the initial account load is still pending', async () => {
+    const accounts$ = new Subject<AccountSummary[]>();
+    await setup(accounts$);
+    expect(component.state()).toBe('loading');
+    fillValidForm();
+
+    component.submit();
+
+    expect(tenantService.createTenant).not.toHaveBeenCalled();
+    expect(component.saving()).toBe(false);
+  });
+
+  it('allows submit() once a pending account load resolves successfully (ordering: accounts then submit)', async () => {
+    const accounts$ = new Subject<AccountSummary[]>();
+    await setup(accounts$);
+    fillValidForm();
+    component.submit();
+    expect(tenantService.createTenant).not.toHaveBeenCalled();
+
+    accounts$.next([account]);
+    accounts$.complete();
+    fixture.detectChanges();
+    expect(component.state()).toBe('ready');
+
+    component.submit();
+
+    expect(tenantService.createTenant).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows submit() once a pending account load fails (ordering: accounts-failure then submit)', async () => {
+    const accounts$ = new Subject<AccountSummary[]>();
+    await setup(accounts$);
+    fillValidForm();
+    component.submit();
+    expect(tenantService.createTenant).not.toHaveBeenCalled();
+
+    accounts$.error(new HttpErrorResponse({ status: 500, statusText: 'x' }));
+    fixture.detectChanges();
+    expect(component.state()).toBe('error');
+
+    component.submit();
+
+    expect(tenantService.createTenant).toHaveBeenCalledTimes(1);
+    // submit() clears the ACCOUNTS_LOAD error itself before the create call
+    // goes out, so a since-settled create success never has to contend with it.
+    expect(component.errorKey()).toBeNull();
+  });
+
+  it('renders the client-side cell length error with aria-invalid when there is no server field error', async () => {
+    await setup();
+    fillValidForm();
+    component.form.patchValue({ cell: 'x'.repeat(65) });
+    component.cellCtrl.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.cellCtrl.hasError('maxlength')).toBe(true);
+    const input = el().querySelector<HTMLInputElement>('#tenant-cell');
+    const error = el().querySelector('#tenant-cell-error');
+    expect(input?.getAttribute('aria-invalid')).toBe('true');
+    expect(error?.textContent).toContain('PLATFORM.ERROR.FIELD.CELL');
   });
 });

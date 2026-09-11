@@ -1,10 +1,13 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { normalizeTenantSlug } from '../../../../core/security/tenant';
 import { notBlank, tenantSlug } from '../../../../core/util/form-validators';
+import { canAccess } from '../../../../core/security/route-access';
+import { PLATFORM_PAGE } from '../../../../core/security/route-permissions';
+import { AuthService } from '../../../../core/services/auth.service';
 import { PlatformAccountService } from '../../services/platform-account.service';
 import { PlatformTenantService } from '../../services/platform-tenant.service';
 import { AccountSummary, TenantCreateRequest } from '../../models/tenant.models';
@@ -32,6 +35,7 @@ type PageState = 'idle' | 'loading' | 'ready' | 'error' | 'forbidden';
 export class TenantCreatePageComponent {
   private readonly tenantService = inject(PlatformTenantService);
   private readonly accountService = inject(PlatformAccountService);
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -40,10 +44,23 @@ export class TenantCreatePageComponent {
   readonly errorKey = signal<string | null>(null);
   /** Server text beneath the error banner (see `PlatformErrorOutcome.detail`). */
   readonly errorDetail = signal<string | null>(null);
+  /** Set on a successful create the session cannot follow to the detail page (see `submit()`). */
+  readonly successKey = signal<string | null>(null);
   readonly accounts = signal<AccountSummary[]>([]);
   readonly saving = signal(false);
   readonly fieldErrors = signal<Record<string, string>>({});
   readonly fieldDetails = signal<Record<string, string>>({});
+
+  /**
+   * Whether this session can open `/app/platform/tenants*` — the detail page a
+   * successful create would otherwise navigate to, and the list the breadcrumb
+   * and Cancel link point at. A create-only session (holds `platform:tenant:create`
+   * but not `platform:tenant:read`) cannot, so those three places route around it
+   * instead of landing on `/forbidden`.
+   */
+  readonly canReadTenants = computed(() =>
+    canAccess(this.auth, { permissions: PLATFORM_PAGE.tenantRead, roles: ['ROLE_PLATFORM_ADMIN'] }),
+  );
 
   readonly form = new FormGroup({
     // `submit()` trims, so every required text control also carries `notBlank`:
@@ -111,7 +128,13 @@ export class TenantCreatePageComponent {
   }
 
   submit(): void {
-    if (this.saving()) return;
+    // While the initial account load is still in flight its own subscribe()
+    // callback is live too; letting a create race it would let whichever
+    // settles last overwrite the other's state signals (a create failure
+    // erased by the account list then resolving 'ready', or the reverse).
+    // The account field falls back to a plain id input during this window
+    // (see the template), so this only delays submission, never blocks it.
+    if (this.saving() || this.state() === 'loading') return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -130,14 +153,14 @@ export class TenantCreatePageComponent {
     }
 
     this.saving.set(true);
-    // A failed account-list load (or an earlier refused create) left the page
-    // in an error state; the form is usable regardless, and an error state
-    // with no key would render an empty banner while this request runs.
-    if (this.state() !== 'loading') {
-      this.state.set('ready');
-    }
+    // The account list has already settled (the guard above ruled out
+    // 'loading'), so this only ever recovers from an earlier refused create;
+    // an error state with no key would render an empty banner while this
+    // request runs.
+    this.state.set('ready');
     this.errorKey.set(null);
     this.errorDetail.set(null);
+    this.successKey.set(null);
     this.fieldErrors.set({});
     this.fieldDetails.set({});
 
@@ -147,9 +170,18 @@ export class TenantCreatePageComponent {
       .subscribe({
         next: tenant => {
           this.saving.set(false);
-          void this.router.navigate(['/app', 'platform', 'tenants', tenant.id], {
-            state: { created: true },
-          });
+          if (this.canReadTenants()) {
+            void this.router.navigate(['/app', 'platform', 'tenants', tenant.id], {
+              state: { created: true },
+            });
+            return;
+          }
+          // A create-only session cannot open the detail page it would
+          // otherwise land on (needs platform:tenant:read); show the outcome
+          // here, on a page it can reach, and let it register another one.
+          this.state.set('ready');
+          this.successKey.set('PLATFORM.TENANTS.FORM.CREATED_SUCCESS');
+          this.form.reset({ slug: '', displayName: '', accountId: '', cell: '', initialAdminEmail: '' });
         },
         error: (err: unknown) => {
           this.saving.set(false);

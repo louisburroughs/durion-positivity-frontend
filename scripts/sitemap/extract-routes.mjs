@@ -271,6 +271,27 @@ export function deriveLabel(route) {
 }
 
 /**
+ * Translation key for a derived label, e.g. `deriveLabel('/app/platform/tenants')`
+ * → "Tenants" → `SITEMAP.LABEL.TENANTS`.
+ *
+ * Keyed by the *label text*, not the route: many routes across unrelated
+ * sections resolve to the same last-segment word ("New", "Edit", "Export", ...),
+ * and they must all translate to the same string, so the locale files carry one
+ * entry per distinct label rather than one per route. '' (a section root, which
+ * `deriveLabel` never emits as a rendered page label — see `sitemap-page.component.ts`)
+ * stays ''.
+ */
+export function deriveLabelKey(route) {
+  const label = deriveLabel(route);
+  if (!label) return '';
+  const key = label
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return `SITEMAP.LABEL.${key}`;
+}
+
+/**
  * Recursively walk a Routes array literal, accumulating full paths.
  * @returns array of { route, roles, dynamic, params }
  */
