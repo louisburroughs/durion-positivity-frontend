@@ -299,25 +299,25 @@ describe('AccountingService', () => {
 
       service.listEvents(filters, 0, 20).subscribe();
 
-      const args = accountingEventsStub.listAccountingEvents.mock.calls[0];
-      // Positional arguments of the generated listAccountingEvents, in order. There is no leading
-      // orgId: organizationId is a remnant and is not part of the contract (ADR-0062), so invoiceId
-      // sits at index 7. Named here rather than hard-coded so a future signature change fails with
-      // a readable diff instead of an off-by-one.
-      const params = [
-        'eventType',
-        'idempotencyOutcome',
-        'receivedAtFrom',
-        'receivedAtTo',
-        'eventId',
-        'ingestionId',
-        'domainKeyId',
-        'invoiceId',
-        'status',
-        'page',
-        'size',
-      ] as const;
-      expect(args[params.indexOf('invoiceId')]).toBe('inv-abc-123');
+      // Assert the whole argument tuple, not just the invoiceId slot. The generated signature is
+      // (eventType, idempotencyOutcome, receivedAtFrom, receivedAtTo, eventId, ingestionId,
+      //  domainKeyId, invoiceId, status, page, size) — note there is no leading orgId, since
+      // organizationId is a remnant and not part of the contract (ADR-0062). Checking one index
+      // would let a signature change after invoiceId pass unnoticed, and would report a change
+      // before it as a bare value mismatch; comparing the tuple makes any positional shift visible.
+      expect(accountingEventsStub.listAccountingEvents.mock.calls[0]).toEqual([
+        undefined, // eventType
+        undefined, // idempotencyOutcome
+        undefined, // receivedAtFrom
+        undefined, // receivedAtTo
+        undefined, // eventId
+        undefined, // ingestionId
+        undefined, // domainKeyId
+        'inv-abc-123', // invoiceId
+        undefined, // status
+        0, // page
+        20, // size
+      ]);
     });
   });
 
