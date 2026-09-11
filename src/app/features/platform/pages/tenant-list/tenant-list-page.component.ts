@@ -32,8 +32,17 @@ export class TenantListPageComponent {
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
+  /** Server text beneath the error banner (see `PlatformErrorOutcome.detail`). */
+  readonly errorDetail = signal<string | null>(null);
   readonly tenants = signal<Tenant[]>([]);
   readonly statusFilter = signal<TenantStatus | ''>('');
+
+  /**
+   * Generation of the latest `load()`. A filter change starts a new request
+   * without waiting for the previous one; only the newest generation may
+   * touch the page, so a slower answer for an old filter is discarded.
+   */
+  private loadGeneration = 0;
 
   readonly statuses = TENANT_STATUSES;
 
@@ -47,8 +56,10 @@ export class TenantListPageComponent {
   }
 
   load(): void {
+    const generation = ++this.loadGeneration;
     this.state.set('loading');
     this.errorKey.set(null);
+    this.errorDetail.set(null);
 
     const status = this.statusFilter() || undefined;
     this.service
@@ -56,13 +67,16 @@ export class TenantListPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: tenants => {
+          if (generation !== this.loadGeneration) return;
           this.tenants.set(tenants);
           this.state.set(tenants.length === 0 ? 'empty' : 'ready');
         },
         error: (err: unknown) => {
+          if (generation !== this.loadGeneration) return;
           const outcome = mapPlatformError(err, 'PLATFORM.TENANTS.ERROR.LOAD');
           this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
           this.errorKey.set(outcome.errorKey);
+          this.errorDetail.set(outcome.detail);
         },
       });
   }

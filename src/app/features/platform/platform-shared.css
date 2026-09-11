@@ -121,6 +121,13 @@
 	color: var(--currentTextColor);
 }
 
+/* The envelope's own sentence beneath the translated banner; server data. */
+.plt-banner__detail {
+	flex-basis: 100%;
+	font-size: 0.875rem;
+	font-weight: 400;
+}
+
 .plt-banner--error {
 	background: var(--status-error-bg);
 	border-color: var(--functional-error-red);

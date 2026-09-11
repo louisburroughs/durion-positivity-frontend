@@ -55,6 +55,9 @@
   @if (state() === 'error') {
     <div class="plt-banner plt-banner--error" role="alert">
       {{ errorKey()! | translate }}
+      @if (errorDetail(); as detail) {
+        <span class="plt-banner__detail">{{ detail }}</span>
+      }
       <button class="plt-btn plt-btn--secondary" type="button" (click)="reload()">
         {{ 'PLATFORM.COMMON.RETRY' | translate }}
       </button>
@@ -68,7 +71,10 @@
   }
 
   @if (pendingTransition(); as transition) {
-    <section class="plt-banner plt-banner--warning tenant-page__confirm" role="alertdialog"
+    <!-- An inline confirmation in page flow, not a dialog: nothing is modal, the page
+         stays operable, so no aria-modal or focus trap. Focus still moves in, to the
+         safe default (Cancel), the way the repository's alertdialogs do. -->
+    <section class="plt-banner plt-banner--warning tenant-page__confirm"
       aria-labelledby="tenant-confirm-title" aria-describedby="tenant-confirm-body">
       <div>
         <h2 id="tenant-confirm-title" class="tenant-page__confirm-title">
@@ -83,13 +89,17 @@
         </p>
       </div>
       <div class="plt-page__actions">
+        <!-- autofocus moves keyboard/SR focus into the confirmation on open (Cancel is the
+             safe default for a lifecycle change). ADR-0029 keyboard-flow. -->
+        <!-- eslint-disable @angular-eslint/template/no-autofocus -->
+        <button class="plt-btn plt-btn--secondary tenant-page__confirm-no" type="button" [disabled]="saving()"
+          (click)="cancelTransition()" autofocus>
+          {{ 'PLATFORM.COMMON.CANCEL' | translate }}
+        </button>
+        <!-- eslint-enable @angular-eslint/template/no-autofocus -->
         <button class="plt-btn plt-btn--primary tenant-page__confirm-yes" type="button" [disabled]="saving()"
           (click)="confirmTransition()">
           {{ 'PLATFORM.COMMON.CONFIRM' | translate }}
-        </button>
-        <button class="plt-btn plt-btn--secondary tenant-page__confirm-no" type="button" [disabled]="saving()"
-          (click)="cancelTransition()">
-          {{ 'PLATFORM.COMMON.CANCEL' | translate }}
         </button>
       </div>
     </section>

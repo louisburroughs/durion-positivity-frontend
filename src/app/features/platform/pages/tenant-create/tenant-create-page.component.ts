@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { normalizeTenantSlug } from '../../../../core/security/tenant';
-import { tenantSlug } from '../../../../core/util/form-validators';
+import { notBlank, tenantSlug } from '../../../../core/util/form-validators';
 import { PlatformAccountService } from '../../services/platform-account.service';
 import { PlatformTenantService } from '../../services/platform-tenant.service';
 import { AccountSummary, TenantCreateRequest } from '../../models/tenant.models';
@@ -38,21 +38,25 @@ export class TenantCreatePageComponent {
   /** Account-list load state; the form itself is always rendered. */
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
+  /** Server text beneath the error banner (see `PlatformErrorOutcome.detail`). */
+  readonly errorDetail = signal<string | null>(null);
   readonly accounts = signal<AccountSummary[]>([]);
   readonly saving = signal(false);
   readonly fieldErrors = signal<Record<string, string>>({});
   readonly fieldDetails = signal<Record<string, string>>({});
 
   readonly form = new FormGroup({
+    // `submit()` trims, so every required text control also carries `notBlank`:
+    // `Validators.required` alone would let whitespace through as an empty value.
     slug: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, tenantSlug],
+      validators: [Validators.required, notBlank, tenantSlug],
     }),
     displayName: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(200)],
+      validators: [Validators.required, notBlank, Validators.maxLength(200)],
     }),
-    accountId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    accountId: new FormControl('', { nonNullable: true, validators: [Validators.required, notBlank] }),
     cell: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(64)] }),
     initialAdminEmail: new FormControl('', {
       nonNullable: true,
@@ -67,6 +71,7 @@ export class TenantCreatePageComponent {
   loadAccounts(): void {
     this.state.set('loading');
     this.errorKey.set(null);
+    this.errorDetail.set(null);
 
     this.accountService
       .listAccounts()
@@ -80,6 +85,7 @@ export class TenantCreatePageComponent {
           const outcome = mapPlatformError(err, 'PLATFORM.TENANTS.ERROR.ACCOUNTS_LOAD');
           this.state.set(outcome.kind === 'forbidden' ? 'forbidden' : 'error');
           this.errorKey.set(outcome.errorKey);
+          this.errorDetail.set(outcome.detail);
         },
       });
   }
@@ -119,6 +125,7 @@ export class TenantCreatePageComponent {
 
     this.saving.set(true);
     this.errorKey.set(null);
+    this.errorDetail.set(null);
     this.fieldErrors.set({});
     this.fieldDetails.set({});
 
@@ -140,6 +147,7 @@ export class TenantCreatePageComponent {
           });
           this.state.set('error');
           this.errorKey.set(outcome.errorKey);
+          this.errorDetail.set(outcome.detail);
           this.fieldErrors.set(outcome.fieldErrors);
           this.fieldDetails.set(outcome.fieldDetails);
         },

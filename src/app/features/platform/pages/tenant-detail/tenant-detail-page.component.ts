@@ -16,7 +16,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { canAccess } from '../../../../core/security/route-access';
 import { PlatformTenantService } from '../../services/platform-tenant.service';
 import { Tenant, TenantStatus } from '../../models/tenant.models';
-import { mapPlatformError } from '../../utils/platform-error.util';
+import { PlatformErrorOutcome, mapPlatformError } from '../../utils/platform-error.util';
 
 type PageState = 'idle' | 'loading' | 'ready' | 'error' | 'forbidden' | 'notFound';
 
@@ -28,10 +28,15 @@ export type TenantTransition = 'suspend' | 'reactivate';
  *
  * Suspend (ACTIVE → SUSPENDED, logins refused) and reactivate (SUSPENDED →
  * ACTIVE) are each a two-step action: the first click opens an inline
- * confirmation naming the consequence, the second performs it. Decommission is
- * terminal and deliberately not offered here. A control the session's
- * authorities would not allow is not rendered, so the page never offers an
- * action that can only 403.
+ * confirmation naming the consequence (focus moves to its Cancel button, the
+ * safe default), the second performs it. Decommission is terminal and
+ * deliberately not offered here. A control the session's authorities would
+ * not allow is not rendered, so the page never offers an action that can
+ * only 403.
+ *
+ * Every answer is checked against the id the route currently names: a slow
+ * answer for a tenant the operator has since navigated away from is dropped,
+ * and switching tenants clears the previous record before the new one loads.
  */
 @Component({
   selector: 'app-tenant-detail-page',
@@ -49,12 +54,17 @@ export class TenantDetailPageComponent {
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
+  /** Server text beneath the error banner (see `PlatformErrorOutcome.detail`). */
+  readonly errorDetail = signal<string | null>(null);
   readonly tenant = signal<Tenant | null>(null);
   readonly tenantId = signal<string | null>(null);
   /** Transition awaiting confirmation, or null when no confirmation is open. */
   readonly pendingTransition = signal<TenantTransition | null>(null);
   readonly saving = signal(false);
   readonly successKey = signal<string | null>(null);
+
+  /** Generation of the latest `load()`; only the newest may touch the page. */
+  private loadGeneration = 0;
 
   readonly canSuspend = computed(
     () =>
@@ -77,10 +87,18 @@ export class TenantDetailPageComponent {
         )
         .subscribe(id => {
           this.tenantId.set(id);
+          // Leave nothing of the previous tenant behind: record, in-flight
+          // action, and any answer still travelling for it (see the guards).
+          this.tenant.set(null);
           this.pendingTransition.set(null);
+          this.saving.set(false);
           this.successKey.set(null);
+          this.errorKey.set(null);
+          this.errorDetail.set(null);
           if (id) {
             this.load(id);
+          } else {
+            this.state.set('idle');
           }
         });
 
@@ -89,31 +107,42 @@ export class TenantDetailPageComponent {
   }
 
   load(id: string): void {
+    const generation = ++this.loadGeneration;
     this.state.set('loading');
     this.errorKey.set(null);
+    this.errorDetail.set(null);
 
     this.service
       .getTenant(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: tenant => {
+          if (!this.isCurrent(id, generation)) return;
           this.tenant.set(tenant);
           this.state.set('ready');
         },
         error: (err: unknown) => {
+          if (!this.isCurrent(id, generation)) return;
           const outcome = mapPlatformError(err, 'PLATFORM.TENANTS.ERROR.LOAD_ONE', {
             notFoundKey: 'PLATFORM.TENANTS.ERROR.NOT_FOUND',
           });
-          if (outcome.kind === 'forbidden') {
-            this.state.set('forbidden');
-          } else if (outcome.kind === 'notFound') {
-            this.state.set('notFound');
-          } else {
-            this.state.set('error');
-          }
+          this.state.set(this.stateFor(outcome.kind));
           this.errorKey.set(outcome.errorKey);
+          this.errorDetail.set(outcome.detail);
         },
       });
+  }
+
+  /** True while `id` is still the routed tenant and `generation` the latest load. */
+  private isCurrent(id: string, generation: number): boolean {
+    return this.tenantId() === id && generation === this.loadGeneration;
+  }
+
+  /** 403 and 404 render their own states, on load and after a lifecycle action alike. */
+  private stateFor(kind: PlatformErrorOutcome['kind']): PageState {
+    if (kind === 'forbidden') return 'forbidden';
+    if (kind === 'notFound') return 'notFound';
+    return 'error';
   }
 
   reload(): void {
@@ -139,6 +168,7 @@ export class TenantDetailPageComponent {
 
     this.saving.set(true);
     this.errorKey.set(null);
+    this.errorDetail.set(null);
     this.successKey.set(null);
 
     const call$ =
@@ -152,6 +182,9 @@ export class TenantDetailPageComponent {
 
     call$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: tenant => {
+        // The operator may have moved to another tenant meanwhile; the route
+        // change already reset the in-flight state, so this answer is history.
+        if (this.tenantId() !== id) return;
         this.saving.set(false);
         this.pendingTransition.set(null);
         this.tenant.set(tenant);
@@ -159,14 +192,16 @@ export class TenantDetailPageComponent {
         this.successKey.set(successKey);
       },
       error: (err: unknown) => {
+        if (this.tenantId() !== id) return;
         this.saving.set(false);
         this.pendingTransition.set(null);
         const outcome = mapPlatformError(err, fallbackKey, {
           conflictKey: 'PLATFORM.TENANTS.ERROR.TRANSITION_CONFLICT',
           notFoundKey: 'PLATFORM.TENANTS.ERROR.NOT_FOUND',
         });
-        this.state.set('error');
+        this.state.set(this.stateFor(outcome.kind));
         this.errorKey.set(outcome.errorKey);
+        this.errorDetail.set(outcome.detail);
       },
     });
   }

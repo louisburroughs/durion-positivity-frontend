@@ -7,15 +7,28 @@
  * the backend's own detail text, kept apart from the translated label
  * (ADR-0030).
  *
+ * Two envelopes reach this mapper. Domain exceptions (unknown account, slug
+ * taken, wrong lifecycle status) fall through to pos-web-common's `ApiError`
+ * handler, with `fieldErrors` when there are any. `@Valid` failures on a
+ * request body are answered first by pos-tenant's own
+ * `TenantGlobalExceptionHandler` (a `ResponseEntityExceptionHandler`), as an
+ * RFC 9457 problem detail: 400, `title` "Bad Request", `detail` "Invalid
+ * request content." and no per-field list. Both are handled; the problem
+ * detail's `detail` is surfaced as server text beneath the translated banner.
+ *
  * Status contract (pos-tenant `PlatformTenantController`):
- *   400/422 → field-mapped validation errors
+ *   400/422 → validation (field-mapped when the envelope names fields)
  *   403     → not a platform-tenant session, or the authority is missing
  *   404     → tenant or account unknown
  *   409     → lifecycle conflict (slug taken, wrong status for the transition)
  *   5xx / 0 → retryable
  */
 import { HttpErrorResponse } from '@angular/common/http';
-import { PlatformApiErrorBody, PlatformFieldError } from '../models/tenant.models';
+import {
+  PlatformApiErrorBody,
+  PlatformFieldError,
+  PlatformProblemDetail,
+} from '../models/tenant.models';
 
 export type PlatformErrorKind =
   | 'validation'
@@ -33,6 +46,12 @@ export interface PlatformErrorOutcome {
   fieldErrors: Record<string, string>;
   /** Payload field → the backend's own detail text (server data, secondary only). */
   fieldDetails: Record<string, string>;
+  /**
+   * The envelope's own message — a problem detail's `detail`, else an
+   * `ApiError.message`. Untranslated server data: render it only as secondary
+   * text beneath the translated banner, never as the banner itself.
+   */
+  detail: string | null;
   /** True when re-submitting the same payload is a sensible next action. */
   retryable: boolean;
 }
@@ -61,6 +80,25 @@ function asErrorBody(error: HttpErrorResponse): PlatformApiErrorBody | null {
     return null;
   }
   return body as PlatformApiErrorBody;
+}
+
+/** True for an RFC 9457 body: `title` and `status` present, no `ApiError` code. */
+function isProblemDetail(body: object): boolean {
+  const candidate = body as PlatformProblemDetail & { code?: unknown };
+  return (
+    typeof candidate.title === 'string' &&
+    typeof candidate.status === 'number' &&
+    candidate.code === undefined
+  );
+}
+
+/** The envelope's own text, whichever envelope it is; never a substitute for a translated key. */
+function detailOf(body: PlatformApiErrorBody | null): string | null {
+  if (!body) return null;
+  const text = isProblemDetail(body)
+    ? (body as PlatformProblemDetail).detail
+    : body.message;
+  return typeof text === 'string' && text.trim() !== '' ? text : null;
 }
 
 function collectFieldErrors(body: PlatformApiErrorBody | null): PlatformFieldError[] {
@@ -93,12 +131,13 @@ function outcome(
   kind: PlatformErrorKind,
   errorKey: string,
   retryable = false,
+  detail: string | null = null,
   fields: { fieldErrors: Record<string, string>; fieldDetails: Record<string, string> } = {
     fieldErrors: {},
     fieldDetails: {},
   },
 ): PlatformErrorOutcome {
-  return { kind, errorKey, retryable, ...fields };
+  return { kind, errorKey, retryable, detail, ...fields };
 }
 
 /**
@@ -118,32 +157,38 @@ export function mapPlatformError(
   }
 
   const body = asErrorBody(error);
+  const detail = detailOf(body);
 
   if (error.status === 400 || error.status === 422) {
     const entries = collectFieldErrors(body);
+    // A problem detail names no field, but it is still a rejected payload:
+    // say so, with the backend's own sentence beneath.
+    const rejected = entries.length > 0 || (body !== null && isProblemDetail(body));
     return outcome(
       'validation',
-      entries.length > 0 ? 'PLATFORM.ERROR.VALIDATION' : fallbackKey,
+      rejected ? 'PLATFORM.ERROR.VALIDATION' : fallbackKey,
       false,
+      detail,
       indexFieldErrors(entries),
     );
   }
 
   if (error.status === 403) {
+    // Deliberately no body text: a denial says nothing about what exists.
     return outcome('forbidden', 'PLATFORM.ERROR.FORBIDDEN');
   }
 
   if (error.status === 404) {
-    return outcome('notFound', keys.notFoundKey ?? 'PLATFORM.ERROR.NOT_FOUND');
+    return outcome('notFound', keys.notFoundKey ?? 'PLATFORM.ERROR.NOT_FOUND', false, detail);
   }
 
   if (error.status === 409) {
-    return outcome('conflict', keys.conflictKey ?? 'PLATFORM.ERROR.CONFLICT');
+    return outcome('conflict', keys.conflictKey ?? 'PLATFORM.ERROR.CONFLICT', false, detail);
   }
 
   if (error.status >= 500 || error.status === 0) {
     return outcome('retryable', 'PLATFORM.ERROR.RETRYABLE', true);
   }
 
-  return outcome('unknown', fallbackKey);
+  return outcome('unknown', fallbackKey, false, detail);
 }

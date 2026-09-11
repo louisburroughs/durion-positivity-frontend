@@ -101,6 +101,42 @@ describe('TenantCreatePageComponent', () => {
     expect(component.form.touched).toBe(true);
   });
 
+  it('rejects whitespace-only required text, which submit() would otherwise trim to empty', async () => {
+    await setup();
+    fillValidForm();
+    component.form.patchValue({ slug: '   ', displayName: '   ', accountId: '   ' });
+
+    component.submit();
+
+    expect(component.slugCtrl.hasError('blank')).toBe(true);
+    expect(component.displayNameCtrl.hasError('blank')).toBe(true);
+    expect(component.accountIdCtrl.hasError('blank')).toBe(true);
+    expect(tenantService.createTenant).not.toHaveBeenCalled();
+  });
+
+  it('shows the problem-detail sentence beneath the validation banner on a bare 400', async () => {
+    await setup();
+    tenantService.createTenant.mockReturnValueOnce(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            statusText: 'x',
+            error: { type: 'about:blank', title: 'Bad Request', status: 400, detail: 'Invalid request content.' },
+          }),
+      ),
+    );
+    fillValidForm();
+
+    component.submit();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('PLATFORM.ERROR.VALIDATION');
+    expect(component.errorDetail()).toBe('Invalid request content.');
+    expect(el().querySelector('.plt-banner__detail')?.textContent?.trim()).toBe('Invalid request content.');
+  });
+
   it('rejects a malformed slug and a malformed email client-side', async () => {
     await setup();
     fillValidForm();

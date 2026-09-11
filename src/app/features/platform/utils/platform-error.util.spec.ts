@@ -31,11 +31,37 @@ describe('mapPlatformError', () => {
     expect(outcome.retryable).toBe(false);
   });
 
-  it('falls back to the surface key on a 400 without field errors', () => {
-    const outcome = mapPlatformError(httpError(400, { message: 'bad' }), 'PLATFORM.TENANTS.ERROR.CREATE');
+  it('reads the RFC 9457 problem detail pos-tenant answers @Valid failures with', () => {
+    // Exactly what TenantGlobalExceptionHandler (a ResponseEntityExceptionHandler)
+    // produces for MethodArgumentNotValidException: no per-field list.
+    const outcome = mapPlatformError(
+      httpError(400, {
+        type: 'about:blank',
+        title: 'Bad Request',
+        status: 400,
+        detail: 'Invalid request content.',
+        instance: '/v1/platform/tenants',
+        correlationId: '01990000-0000-7000-8000-00000000d001',
+      }),
+      'PLATFORM.TENANTS.ERROR.CREATE',
+    );
+
+    expect(outcome.kind).toBe('validation');
+    expect(outcome.errorKey).toBe('PLATFORM.ERROR.VALIDATION');
+    expect(outcome.detail).toBe('Invalid request content.');
+    expect(outcome.fieldErrors).toEqual({});
+    expect(outcome.fieldDetails).toEqual({});
+  });
+
+  it('falls back to the surface key on a 400 ApiError without field errors, keeping its message as detail', () => {
+    const outcome = mapPlatformError(
+      httpError(400, { code: 'BAD_REQUEST', message: 'bad' }),
+      'PLATFORM.TENANTS.ERROR.CREATE',
+    );
 
     expect(outcome.kind).toBe('validation');
     expect(outcome.errorKey).toBe('PLATFORM.TENANTS.ERROR.CREATE');
+    expect(outcome.detail).toBe('bad');
     expect(outcome.fieldErrors).toEqual({});
   });
 
@@ -44,6 +70,18 @@ describe('mapPlatformError', () => {
 
     expect(outcome.kind).toBe('forbidden');
     expect(outcome.errorKey).toBe('PLATFORM.ERROR.FORBIDDEN');
+    expect(outcome.detail).toBeNull();
+  });
+
+  it('carries the ApiError message of a 409 as detail beneath the translated key', () => {
+    const outcome = mapPlatformError(
+      httpError(409, { code: 'TENANT_SLUG_TAKEN', message: 'Slug acme-tire is already registered' }),
+      'x',
+      { conflictKey: 'PLATFORM.TENANTS.ERROR.SLUG_TAKEN' },
+    );
+
+    expect(outcome.errorKey).toBe('PLATFORM.TENANTS.ERROR.SLUG_TAKEN');
+    expect(outcome.detail).toBe('Slug acme-tire is already registered');
   });
 
   it('maps 404 and 409 to the surface-specific keys when given, else the generic ones', () => {

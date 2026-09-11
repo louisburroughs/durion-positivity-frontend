@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TenantListPageComponent } from './tenant-list-page.component';
 import { PlatformTenantService } from '../../services/platform-tenant.service';
@@ -112,6 +112,36 @@ describe('TenantListPageComponent', () => {
 
     expect(service.listTenants).toHaveBeenCalledWith(undefined);
     expect(component.statusFilter()).toBe('');
+  });
+
+  it('discards a slower answer for a previous filter, including its error (race guard)', async () => {
+    await setup();
+    const slowAll = new Subject<Tenant[]>();
+    const fastSuspended = new Subject<Tenant[]>();
+    service.listTenants.mockReturnValueOnce(slowAll).mockReturnValueOnce(fastSuspended);
+
+    component.onStatusFilterChange('');
+    component.onStatusFilterChange('SUSPENDED');
+    fastSuspended.next([suspended]);
+    fastSuspended.complete();
+    expect(component.tenants()).toEqual([suspended]);
+    expect(component.state()).toBe('ready');
+
+    slowAll.next([active, suspended]);
+    slowAll.complete();
+    expect(component.tenants()).toEqual([suspended]);
+
+    const slowError = new Subject<Tenant[]>();
+    const fastEmpty = new Subject<Tenant[]>();
+    service.listTenants.mockReturnValueOnce(slowError).mockReturnValueOnce(fastEmpty);
+    component.onStatusFilterChange('ACTIVE');
+    component.onStatusFilterChange('PENDING');
+    fastEmpty.next([]);
+    fastEmpty.complete();
+    slowError.error(new HttpErrorResponse({ status: 500, statusText: 'x' }));
+
+    expect(component.state()).toBe('empty');
+    expect(component.errorKey()).toBeNull();
   });
 
   it('shows status as translated text, not colour alone', async () => {

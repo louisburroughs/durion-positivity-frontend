@@ -33,6 +33,9 @@
   @if (state() === 'error') {
     <div class="plt-banner plt-banner--error" role="alert">
       {{ errorKey()! | translate }}
+      @if (errorDetail(); as detail) {
+        <span class="plt-banner__detail">{{ detail }}</span>
+      }
       <button class="plt-btn plt-btn--secondary" type="button" (click)="load()">
         {{ 'PLATFORM.COMMON.RETRY' | translate }}
       </button>

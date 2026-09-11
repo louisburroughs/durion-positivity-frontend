@@ -60,10 +60,28 @@ export interface PlatformFieldError {
   message?: string;
 }
 
-/** The standard `ApiError` envelope as pos-tenant returns it. */
+/**
+ * The standard `ApiError` envelope (pos-web-common) that pos-tenant's domain
+ * exceptions come back in — 404 unknown account, 409 slug taken, and so on.
+ */
 export interface PlatformApiErrorBody {
   code?: string;
   message?: string;
   status?: number;
   fieldErrors?: PlatformFieldError[];
+}
+
+/**
+ * RFC 9457 problem detail. pos-tenant's `TenantGlobalExceptionHandler` extends
+ * Spring's `ResponseEntityExceptionHandler`, so a `@Valid` failure on a request
+ * body answers 400 with this shape and no per-field list: `title` "Bad
+ * Request", `detail` "Invalid request content.", plus `correlationId`.
+ */
+export interface PlatformProblemDetail {
+  type?: string;
+  title?: string;
+  status?: number;
+  detail?: string;
+  instance?: string;
+  correlationId?: string;
 }

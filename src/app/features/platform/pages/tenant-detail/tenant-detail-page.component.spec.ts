@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { BehaviorSubject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TenantDetailPageComponent } from './tenant-detail-page.component';
 import { PlatformTenantService } from '../../services/platform-tenant.service';
@@ -96,6 +96,37 @@ describe('TenantDetailPageComponent', () => {
     expect(service.getTenant).not.toHaveBeenCalledWith('t-3');
   });
 
+  it('clears the previous record on an id change and drops a late answer for the old id', async () => {
+    await setup();
+    const slowT1 = new Subject<Tenant>();
+    const slowT2 = new Subject<Tenant>();
+    service.getTenant.mockImplementation((id: string) => (id === 't-2' ? slowT2 : slowT1));
+
+    // A reload of t-1 is still in flight when the operator moves to t-2.
+    component.load('t-1');
+    paramMap$.next(convertToParamMap({ id: 't-2' }));
+    fixture.detectChanges();
+
+    expect(component.tenant()).toBeNull();
+    expect(component.state()).toBe('loading');
+
+    slowT1.next({ ...active, id: 't-1', displayName: 'Stale' });
+    expect(component.tenant()).toBeNull();
+
+    slowT2.next({ ...active, id: 't-2', displayName: 'Bolt Brakes' });
+    expect(component.tenant()?.displayName).toBe('Bolt Brakes');
+    expect(component.state()).toBe('ready');
+
+    // A stale error for a superseded load is dropped just the same.
+    const staleErr = new Subject<Tenant>();
+    service.getTenant.mockReturnValueOnce(staleErr).mockReturnValueOnce(of({ ...active, id: 't-2' }));
+    component.load('t-2');
+    component.load('t-2');
+    staleErr.error(new HttpErrorResponse({ status: 500, statusText: 'x' }));
+    expect(component.state()).toBe('ready');
+    expect(component.errorKey()).toBeNull();
+  });
+
   it('sets both state and errorKey when the load fails', async () => {
     await setup(new HttpErrorResponse({ status: 500, statusText: 'x' }));
 
@@ -137,7 +168,12 @@ describe('TenantDetailPageComponent', () => {
     component.askConfirmation('suspend');
     fixture.detectChanges();
     expect(service.suspendTenant).not.toHaveBeenCalled();
-    expect(el().querySelector('[role="alertdialog"]')).toBeTruthy();
+    // Inline confirmation, not a dialog: no alertdialog/aria-modal, focus on the safe Cancel.
+    const confirm = el().querySelector('.tenant-page__confirm');
+    expect(confirm).toBeTruthy();
+    expect(confirm?.getAttribute('role')).toBeNull();
+    expect(confirm?.getAttribute('aria-modal')).toBeNull();
+    expect(el().querySelector('.tenant-page__confirm-no')?.hasAttribute('autofocus')).toBe(true);
 
     component.confirmTransition();
     fixture.detectChanges();
@@ -168,6 +204,46 @@ describe('TenantDetailPageComponent', () => {
     expect(service.reactivateTenant).toHaveBeenCalledWith('t-1');
     expect(component.tenant()?.status).toBe('ACTIVE');
     expect(component.successKey()).toBe('PLATFORM.TENANTS.DETAIL.REACTIVATED_SUCCESS');
+  });
+
+  it('ignores a lifecycle answer that arrives after the route moved to another tenant', async () => {
+    await setup(active);
+    const slowSuspend = new Subject<Tenant>();
+    service.suspendTenant.mockReturnValueOnce(slowSuspend);
+    service.getTenant.mockReturnValue(new Subject<Tenant>());
+
+    component.askConfirmation('suspend');
+    component.confirmTransition();
+    expect(component.saving()).toBe(true);
+
+    paramMap$.next(convertToParamMap({ id: 't-2' }));
+    fixture.detectChanges();
+    expect(component.saving()).toBe(false);
+    expect(component.pendingTransition()).toBeNull();
+
+    slowSuspend.next(suspended);
+    expect(component.tenant()).toBeNull();
+    expect(component.successKey()).toBeNull();
+  });
+
+  it('renders forbidden and not-found states from a rejected transition, like the load', async () => {
+    await setup(active);
+    service.suspendTenant.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 403, statusText: 'x' })),
+    );
+    component.askConfirmation('suspend');
+    component.confirmTransition();
+    expect(component.state()).toBe('forbidden');
+    expect(component.errorKey()).toBe('PLATFORM.ERROR.FORBIDDEN');
+
+    await setup(suspended);
+    service.reactivateTenant.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 404, statusText: 'x' })),
+    );
+    component.askConfirmation('reactivate');
+    component.confirmTransition();
+    expect(component.state()).toBe('notFound');
+    expect(component.errorKey()).toBe('PLATFORM.TENANTS.ERROR.NOT_FOUND');
   });
 
   it('sets state to error before errorKey when a transition is rejected (ADR-0031)', async () => {
