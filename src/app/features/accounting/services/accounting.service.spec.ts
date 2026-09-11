@@ -300,8 +300,24 @@ describe('AccountingService', () => {
       service.listEvents(filters, 0, 20).subscribe();
 
       const args = accountingEventsStub.listAccountingEvents.mock.calls[0];
-      // invoiceId is positional arg index 8 (orgId,eventType,idempotencyOutcome,receivedAtFrom,receivedAtTo,eventId,ingestionId,domainKeyId,invoiceId,status,page,size)
-      expect(args[8]).toBe('inv-abc-123');
+      // Positional arguments of the generated listAccountingEvents, in order. There is no leading
+      // orgId: organizationId is a remnant and is not part of the contract (ADR-0062), so invoiceId
+      // sits at index 7. Named here rather than hard-coded so a future signature change fails with
+      // a readable diff instead of an off-by-one.
+      const params = [
+        'eventType',
+        'idempotencyOutcome',
+        'receivedAtFrom',
+        'receivedAtTo',
+        'eventId',
+        'ingestionId',
+        'domainKeyId',
+        'invoiceId',
+        'status',
+        'page',
+        'size',
+      ] as const;
+      expect(args[params.indexOf('invoiceId')]).toBe('inv-abc-123');
     });
   });
 
