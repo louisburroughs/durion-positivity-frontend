@@ -130,11 +130,6 @@ const UNGATED_BY_DESIGN: Readonly<Record<string, string>> = {
   '/app/workexec/workorders/:workorderId/invoice-finalization':
     'getWorkorderInvoiceView has no published contract',
   '/app/product/inventory/feeds': 'availability-by-sku and lead-time have no published contract',
-
-  // The backend defines people:employee_pii:view, but catalog v81 predates it,
-  // so no token can decode to it — gating here would refuse everyone. Gate it
-  // once the catalog is regenerated (see #236's catalog-drift note).
-  '/app/people/employees/:id': 'people:employee_pii:view is absent from catalog v81',
 };
 
 /**

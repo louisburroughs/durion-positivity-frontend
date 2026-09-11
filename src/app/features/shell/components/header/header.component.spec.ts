@@ -57,7 +57,9 @@ describe('HeaderComponent', () => {
     expect(chip).toBeTruthy();
     expect(chip?.querySelector('.tenant-name')?.textContent?.trim()).toBe('Acme Tire & Auto');
     expect(chip?.querySelector('.tenant-slug')?.textContent?.trim()).toBe('acme-tire');
-    expect(chip?.getAttribute('aria-label')).toBe('SHELL.HEADER.TENANT_CHIP_ARIA');
+    // The visible text is the accessible name; an aria-label would replace it.
+    expect(chip?.getAttribute('aria-label')).toBeNull();
+    expect(chip?.querySelector('.sr-only')?.textContent?.trim()).toBe('SHELL.HEADER.TENANT_LABEL');
   });
 
   it('drops the chip again when the tenant is cleared on logout', () => {

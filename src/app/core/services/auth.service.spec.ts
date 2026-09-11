@@ -506,6 +506,16 @@ describe('AuthService', () => {
       warn.mockRestore();
     });
 
+    it('keys the tenant by the token tid even if /tenants/me reports a different id', () => {
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      httpMock
+        .expectOne(r => r.url.endsWith('/security-service/v1/tenants/me'))
+        .flush({ id: 'some-other-id', slug: 'acme-tire', displayName: 'Acme', status: 'ACTIVE' });
+
+      expect(service.tenant()?.tenantId).toBe(TENANT_ID);
+      expect(service.tenantId()).toBe(TENANT_ID);
+    });
+
     it('falls back to the slug as display name when the registry has none', () => {
       loginWith(tokenWith({ tid: TENANT_ID }));
       httpMock

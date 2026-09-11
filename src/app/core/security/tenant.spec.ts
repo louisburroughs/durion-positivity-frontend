@@ -21,6 +21,12 @@ describe('tenantSlugFromHost', () => {
     expect(tenantSlugFromHost('acme-tire.positivity.example', '')).toBeNull();
   });
 
+  it('stays in form mode when the host prefix is not a well-formed slug', () => {
+    expect(tenantSlugFromHost('a_b.positivity.example', suffix)).toBeNull();
+    expect(tenantSlugFromHost('ab.positivity.example', suffix)).toBeNull();
+    expect(tenantSlugFromHost('-acme.positivity.example', suffix)).toBeNull();
+  });
+
   it('names nothing for the bare suffix host or a deeper subdomain', () => {
     expect(tenantSlugFromHost('positivity.example', suffix)).toBeNull();
     expect(tenantSlugFromHost('www.acme-tire.positivity.example', suffix)).toBeNull();

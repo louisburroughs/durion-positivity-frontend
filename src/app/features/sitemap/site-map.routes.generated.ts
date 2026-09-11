@@ -95,7 +95,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/people', label: "", dynamic: false },
   { route: '/app/people/bulk-import/people', label: "People", dynamic: false, permissions: ['bulkImport:upload:execute'] },
   { route: '/app/people/directory', label: "Directory", dynamic: false, permissions: ['people-contact:person:view'] },
-  { route: '/app/people/employees/:id', label: "Employees", dynamic: true },
+  { route: '/app/people/employees/:id', label: "Employees", dynamic: true, permissions: ['people:employee_pii:view'] },
   { route: '/app/people/employees/:id/offboard', label: "Offboard", dynamic: true, permissions: ['people:employee:deactivate'] },
   { route: '/app/people/employees/new', label: "New", dynamic: false, permissions: ['people:employee:create'] },
   { route: '/app/people/identity-compliance', label: "Identity Compliance", dynamic: false, permissions: ['people:compliance:view'] },

@@ -92,6 +92,7 @@ for (const [sectionRoute, entries] of groups) {
       descriptionKey: curated.descriptionKey,
       description: description ?? curated.descriptionKey,
       ...(curated.roles ? { roles: curated.roles } : {}),
+      ...(curated.permissions ? { permissions: curated.permissions } : {}),
       group: curated.group,
       order: curated.order,
     };
@@ -132,16 +133,16 @@ sections.sort((a, b) => {
 
 // The artifact is served unauthenticated (see src/server.ts), so it must not
 // enumerate the privileged surface to anonymous callers. Redact it:
-//   - drop role-gated sections entirely (security, admin);
+//   - drop role- or permission-gated sections entirely (security, admin, platform);
 //   - drop role-gated pages from the sections that remain (e.g. identity-compliance);
-//   - emit no `roles` fields at all.
+//   - emit no `roles` or `permissions` fields at all.
 // The result is an invariant: every route in the artifact is reachable by any
 // authenticated user. The in-app route manifest (site-map.routes.generated.ts)
 // keeps the full, role-aware tree — the sitemap PAGE is auth-gated and filters
 // per user, so admins still see their pages there.
 const publicSections = sections
-  .filter(section => !section.roles)
-  .map(({ roles: _sectionRoles, ...section }) => ({
+  .filter(section => !section.roles && !section.permissions)
+  .map(({ roles: _sectionRoles, permissions: _sectionPermissions, ...section }) => ({
     ...section,
     pages: section.pages
       .filter(page => !page.roles)

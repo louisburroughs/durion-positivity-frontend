@@ -64,8 +64,8 @@ export class SitemapPageComponent {
    *
    * Runs the same `canAccess` decision as the route guard and the nav registry,
    * so the sitemap never lists a page the guard would bounce (#236). Sections
-   * carry curated roles from `site-map.data.json`; generated page entries carry
-   * whatever their route declares.
+   * carry curated roles and permissions from `site-map.data.json`; generated
+   * page entries carry whatever their route declares.
    */
   readonly groups = computed<SiteMapGroup[]>(() => {
     const canSee = (requirement: RouteAccessRequirement): boolean =>
@@ -82,7 +82,9 @@ export class SitemapPageComponent {
       ).sort((a, b) => a.label.localeCompare(b.label)),
     });
 
-    const visible = DATA.sections.filter(section => canSee({ roles: section.roles }));
+    const visible = DATA.sections.filter(section =>
+      canSee({ roles: section.roles, permissions: section.permissions }),
+    );
 
     return GROUP_ORDER.map(group => ({
       headingKey: GROUP_HEADING_KEYS[group],

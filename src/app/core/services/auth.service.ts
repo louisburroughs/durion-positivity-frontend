@@ -364,10 +364,11 @@ export class AuthService {
     });
   }
 
+  /** `tenantId` is the token's `tid`, the authority; the response id is descriptive only. */
   private toTenantSummary(response: TenantMeResponse, tenantId: string): TenantSummary {
     const slug = response.slug ?? '';
     return {
-      tenantId: response.id ?? tenantId,
+      tenantId,
       slug,
       displayName: response.displayName?.trim() || slug,
       status: response.status ?? '',

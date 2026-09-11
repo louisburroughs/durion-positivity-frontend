@@ -19,6 +19,12 @@ export interface SiteMapSection {
   descriptionKey: string;
   /** Roles required to see this section; undefined = all authenticated users. */
   roles?: readonly string[];
+  /**
+   * Any one of these permissions admits (mirrors the route group's
+   * `data.permissions`); decides alone when the token carries `perm_bits`,
+   * with `roles` as the fallback. Undefined = not permission-gated.
+   */
+  permissions?: readonly string[];
   /** Visual grouping; groups always render/serialize `main` before `admin`. */
   group: 'main' | 'admin';
   /** Sort order within the section's group (lower sorts earlier). */

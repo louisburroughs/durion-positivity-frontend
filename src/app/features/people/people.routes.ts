@@ -64,6 +64,7 @@ export const PEOPLE_ROUTES: Routes = [
       },
       {
         path: 'employees/:id',
+        data: { permissions: PEOPLE_PAGE.employeeDetail },
         loadComponent: () =>
           import('./pages/employee-profile/employee-profile-page.component')
             .then(m => m.EmployeeProfilePageComponent),

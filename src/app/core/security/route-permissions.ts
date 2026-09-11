@@ -47,17 +47,23 @@ export const CRM_PERMISSIONS = permissionsInDomains(
   'accounting:events:view',
 );
 
-/**
- * `/app/platform` — the tenant registry (ADR-0062 §7). Held only by the platform
- * tenant's role template (`PLATFORM_ADMIN`); never granted to a tenant role.
- */
-export const PLATFORM_PERMISSIONS = permissionsInDomains('platform:');
-
 /** `/app/platform/*` — each page's primary read or write on pos-tenant. */
 export const PLATFORM_PAGE = {
   tenantRead: ['platform:tenant:read'],
   tenantCreate: ['platform:tenant:create'],
 } as const satisfies Record<string, readonly string[]>;
+
+/**
+ * `/app/platform` — the tenant registry (ADR-0062 §7). Held only by the platform
+ * tenant's role template (`PLATFORM_ADMIN`); never granted to a tenant role.
+ *
+ * Gated on the list read rather than the whole `platform:` domain: the group
+ * has no landing page and lands on the tenant list, so a session admitted on
+ * any other `platform:*` code alone (say, create only) would only ever reach
+ * /forbidden. The create and detail pages return to the list too, so the read
+ * is the floor of every page here.
+ */
+export const PLATFORM_PERMISSIONS = PLATFORM_PAGE.tenantRead;
 
 /** `/app/workexec` — estimates, work orders, labor, parts, WIP. */
 export const WORKEXEC_PERMISSIONS = permissionsInDomains('workorder:');
@@ -296,6 +302,8 @@ export const PEOPLE_PAGE = {
   timeExport: ['accounting:export:view'],
   discrepancyReport: ['accounting:time:export'],
   employeeCreate: ['people:employee:create'],
+  /** `getEmployee` reads PII, so the profile page needs the PII bit, not `people:employee:view`. */
+  employeeDetail: ['people:employee_pii:view'],
   employeeOffboard: ['people:employee:deactivate'],
   locationAssignments: ['people:employee:view'],
   identityCompliance: ['people:compliance:view'],

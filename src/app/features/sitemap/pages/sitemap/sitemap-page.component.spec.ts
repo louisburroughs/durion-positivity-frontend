@@ -57,6 +57,18 @@ describe('SitemapPageComponent', () => {
     expect(component.state()).toBe('ready');
   });
 
+  it('offers the platform section to a permission-only platform operator (ADR-0062)', async () => {
+    // A platform operator's token carries platform:* bits; the role is only the
+    // fallback for tokens without perm_bits, so the section must not need it.
+    await setup([], ['platform:tenant:read']);
+    const routes = component.groups().flatMap(g => g.sections.map(v => v.section.route));
+    expect(routes).toContain('/app/platform');
+
+    await setup(['ROLE_ADMIN'], ['security:role:view']);
+    const adminRoutes = component.groups().flatMap(g => g.sections.map(v => v.section.route));
+    expect(adminRoutes).not.toContain('/app/platform');
+  });
+
   it('shows both groups including admin-only sections for an admin', async () => {
     await setup(['ROLE_ADMIN']);
     const groups = component.groups();

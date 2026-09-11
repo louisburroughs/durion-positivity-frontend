@@ -93,6 +93,7 @@
       "titleKey": "SHELL.NAV.PLATFORM",
       "descriptionKey": "SITEMAP.SECTIONS.PLATFORM.DESC",
       "roles": ["ROLE_PLATFORM_ADMIN"],
+      "permissions": ["platform:tenant:read"],
       "group": "admin",
       "order": 15
     }
