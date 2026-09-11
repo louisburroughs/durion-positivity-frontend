@@ -59,6 +59,14 @@ describe('/app route access', () => {
     expect(children.filter(child => child.loadChildren).length).toBeGreaterThanOrEqual(14);
   });
 
+  it('gates /app/platform on platform:* with ROLE_PLATFORM_ADMIN as the fallback (ADR-0062)', () => {
+    const platform = children.find(child => child.path === 'platform');
+
+    expect(declaredRoles(platform!)).toEqual(['ROLE_PLATFORM_ADMIN']);
+    expect(declaredPermissions(platform!).length).toBeGreaterThan(0);
+    expect(declaredPermissions(platform!).every(code => code.startsWith('platform:'))).toBe(true);
+  });
+
   it('gates every route under /app on roles or permissions', () => {
     const ungated = children
       .filter(child => !UNGATED_BY_DESIGN.has(child.path ?? ''))

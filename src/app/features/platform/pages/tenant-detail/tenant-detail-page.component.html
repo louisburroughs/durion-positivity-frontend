@@ -1,0 +1,159 @@
+<main class="tenant-page" aria-labelledby="tenant-page-title">
+  <nav class="tenant-page__breadcrumb" [attr.aria-label]="'PLATFORM.COMMON.BREADCRUMB_ARIA' | translate">
+    <a class="tenant-page__back" [routerLink]="['/app', 'platform', 'tenants']">
+      {{ 'PLATFORM.COMMON.BACK_TO_LIST' | translate }}
+    </a>
+  </nav>
+
+  <header class="plt-page__header">
+    <div>
+      <h1 id="tenant-page-title">
+        @if (tenant(); as tenant) {
+          {{ tenant.displayName }}
+        } @else {
+          {{ 'PLATFORM.TENANTS.DETAIL.TITLE' | translate }}
+        }
+      </h1>
+      @if (tenant(); as tenant) {
+        <p class="plt-page__subtitle"><code class="plt-code">{{ tenant.slug }}</code></p>
+      }
+    </div>
+    @if (tenant() && state() !== 'loading') {
+      <div class="plt-page__actions">
+        @if (canSuspend()) {
+          <button class="plt-btn plt-btn--danger tenant-page__suspend" type="button"
+            [disabled]="saving() || pendingTransition() !== null" (click)="askConfirmation('suspend')">
+            {{ 'PLATFORM.TENANTS.DETAIL.SUSPEND' | translate }}
+          </button>
+        }
+        @if (canReactivate()) {
+          <button class="plt-btn plt-btn--primary tenant-page__reactivate" type="button"
+            [disabled]="saving() || pendingTransition() !== null" (click)="askConfirmation('reactivate')">
+            {{ 'PLATFORM.TENANTS.DETAIL.REACTIVATE' | translate }}
+          </button>
+        }
+      </div>
+    }
+  </header>
+
+  @if (state() === 'loading') {
+    <p class="plt-banner" aria-live="polite">{{ 'PLATFORM.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="plt-banner plt-banner--error" role="alert">
+      {{ 'PLATFORM.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'notFound') {
+    <div class="plt-banner plt-banner--warning" role="alert">
+      {{ 'PLATFORM.TENANTS.ERROR.NOT_FOUND' | translate }}
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="plt-banner plt-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      <button class="plt-btn plt-btn--secondary" type="button" (click)="reload()">
+        {{ 'PLATFORM.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (successKey(); as key) {
+    <output class="plt-banner plt-banner--success tenant-page__success" aria-live="polite">
+      {{ key | translate }}
+    </output>
+  }
+
+  @if (pendingTransition(); as transition) {
+    <section class="plt-banner plt-banner--warning tenant-page__confirm" role="alertdialog"
+      aria-labelledby="tenant-confirm-title" aria-describedby="tenant-confirm-body">
+      <div>
+        <h2 id="tenant-confirm-title" class="tenant-page__confirm-title">
+          {{ (transition === 'suspend'
+            ? 'PLATFORM.TENANTS.DETAIL.SUSPEND_CONFIRM_TITLE'
+            : 'PLATFORM.TENANTS.DETAIL.REACTIVATE_CONFIRM_TITLE') | translate }}
+        </h2>
+        <p id="tenant-confirm-body" class="tenant-page__confirm-body">
+          {{ (transition === 'suspend'
+            ? 'PLATFORM.TENANTS.DETAIL.SUSPEND_CONFIRM_BODY'
+            : 'PLATFORM.TENANTS.DETAIL.REACTIVATE_CONFIRM_BODY') | translate }}
+        </p>
+      </div>
+      <div class="plt-page__actions">
+        <button class="plt-btn plt-btn--primary tenant-page__confirm-yes" type="button" [disabled]="saving()"
+          (click)="confirmTransition()">
+          {{ 'PLATFORM.COMMON.CONFIRM' | translate }}
+        </button>
+        <button class="plt-btn plt-btn--secondary tenant-page__confirm-no" type="button" [disabled]="saving()"
+          (click)="cancelTransition()">
+          {{ 'PLATFORM.COMMON.CANCEL' | translate }}
+        </button>
+      </div>
+    </section>
+  }
+
+  @if (tenant(); as tenant) {
+    @if (tenant.status === 'PENDING') {
+      <p class="plt-banner plt-banner--info">{{ 'PLATFORM.TENANTS.DETAIL.PENDING_NOTE' | translate }}</p>
+    }
+    @if (tenant.status === 'DECOMMISSIONED') {
+      <p class="plt-banner plt-banner--info">{{ 'PLATFORM.TENANTS.DETAIL.DECOMMISSIONED_NOTE' | translate }}</p>
+    }
+
+    <dl class="tenant-page__facts">
+      <div class="tenant-page__fact">
+        <dt>{{ 'PLATFORM.TENANTS.DETAIL.FIELD.STATUS' | translate }}</dt>
+        <dd>
+          <span class="plt-status" [class]="'plt-status ' + statusClass(tenant.status)">
+            {{ statusKey(tenant.status) | translate }}
+          </span>
+        </dd>
+      </div>
+      <div class="tenant-page__fact">
+        <dt>{{ 'PLATFORM.TENANTS.DETAIL.FIELD.ID' | translate }}</dt>
+        <dd><code class="plt-code">{{ tenant.id }}</code></dd>
+      </div>
+      <div class="tenant-page__fact">
+        <dt>{{ 'PLATFORM.TENANTS.DETAIL.FIELD.ACCOUNT' | translate }}</dt>
+        <dd><code class="plt-code">{{ tenant.accountId }}</code></dd>
+      </div>
+      <div class="tenant-page__fact">
+        <dt>{{ 'PLATFORM.TENANTS.DETAIL.FIELD.CELL' | translate }}</dt>
+        <dd>{{ tenant.cell || '—' }}</dd>
+      </div>
+      <div class="tenant-page__fact">
+        <dt>{{ 'PLATFORM.TENANTS.DETAIL.FIELD.INITIAL_ADMIN_EMAIL' | translate }}</dt>
+        <dd>{{ tenant.initialAdminEmail }}</dd>
+      </div>
+      <div class="tenant-page__fact">
+        <dt>{{ 'PLATFORM.TENANTS.DETAIL.FIELD.CREATED' | translate }}</dt>
+        <dd>{{ tenant.createdAt | date: 'medium' }}</dd>
+      </div>
+      <div class="tenant-page__fact">
+        <dt>{{ 'PLATFORM.TENANTS.DETAIL.FIELD.UPDATED' | translate }}</dt>
+        <dd>{{ tenant.updatedAt | date: 'medium' }}</dd>
+      </div>
+      @if (tenant.activatedAt) {
+        <div class="tenant-page__fact">
+          <dt>{{ 'PLATFORM.TENANTS.DETAIL.FIELD.ACTIVATED' | translate }}</dt>
+          <dd>{{ tenant.activatedAt | date: 'medium' }}</dd>
+        </div>
+      }
+      @if (tenant.suspendedAt) {
+        <div class="tenant-page__fact">
+          <dt>{{ 'PLATFORM.TENANTS.DETAIL.FIELD.SUSPENDED_AT' | translate }}</dt>
+          <dd>{{ tenant.suspendedAt | date: 'medium' }}</dd>
+        </div>
+      }
+      @if (tenant.decommissionedAt) {
+        <div class="tenant-page__fact">
+          <dt>{{ 'PLATFORM.TENANTS.DETAIL.FIELD.DECOMMISSIONED_AT' | translate }}</dt>
+          <dd>{{ tenant.decommissionedAt | date: 'medium' }}</dd>
+        </div>
+      }
+    </dl>
+  }
+</main>

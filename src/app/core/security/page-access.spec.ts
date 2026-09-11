@@ -10,6 +10,7 @@ import { INVENTORY_ROUTES } from '../../features/inventory/inventory.routes';
 import { LOCATION_ROUTES } from '../../features/location/location.routes';
 import { ORDER_ROUTES } from '../../features/order/order.routes';
 import { PEOPLE_ROUTES } from '../../features/people/people.routes';
+import { PLATFORM_ROUTES } from '../../features/platform/platform.routes';
 import { POSITIVITY_ROUTES } from '../../features/positivity/positivity.routes';
 import { PRODUCT_ROUTES } from '../../features/product/product.routes';
 import { SECURITY_ROUTES } from '../../features/security/security.routes';
@@ -87,6 +88,9 @@ const GROUPS: readonly GroupUnderTest[] = [
   { name: '/app/security', base: '/app/security', routes: SECURITY_ROUTES },
   { name: '/app/positivity', base: '/app/positivity', routes: POSITIVITY_ROUTES },
   { name: '/app/admin', base: '/app/admin', routes: ADMIN_ROUTES },
+  // Gated on platform:* (roles fallback ROLE_PLATFORM_ADMIN); pages narrow to
+  // the one platform:tenant:* code their primary read or write needs.
+  { name: '/app/platform', base: '/app/platform', routes: PLATFORM_ROUTES },
 ];
 
 /**
@@ -108,6 +112,7 @@ const UNGATED_BY_DESIGN: Readonly<Record<string, string>> = {
   '/app/billing': 'landing page — static config, cards filtered individually',
   '/app/admin': 'landing page — static config, cards filtered individually',
   '/app/bulk-import': 'redirect to the job list',
+  '/app/platform': 'redirect to the tenant list',
 
   // Primary read carries the backend's AUTHENTICATED sentinel: `isAuthenticated()`
   // or no `@PreAuthorize` at all, so the page cannot 403 on load.

@@ -15,12 +15,12 @@ const INVENTORY_ONLY_PERMISSION = INVENTORY_PERMISSIONS.find(code => code.starts
 
 describe('NavigationRegistryService', () => {
   let service: NavigationRegistryService;
-  let roleSignal: ReturnType<typeof signal<boolean>>;
+  let roleSignal: ReturnType<typeof signal<string[]>>;
   /** null models a token with no perm_bits claim — permissions unknown. */
   let permissionSignal: ReturnType<typeof signal<string[] | null>>;
 
   beforeEach(() => {
-    roleSignal = signal(false);
+    roleSignal = signal<string[]>([]);
     permissionSignal = signal<string[] | null>(null);
 
     TestBed.configureTestingModule({
@@ -29,7 +29,7 @@ describe('NavigationRegistryService', () => {
         {
           provide: AuthService,
           useValue: {
-            hasAnyRole: vi.fn().mockImplementation(() => roleSignal()),
+            hasAnyRole: vi.fn().mockImplementation((roles: readonly string[]) => roles.some(role => roleSignal().includes(role))),
             permissionsKnown: vi.fn().mockImplementation(() => permissionSignal() !== null),
             hasAnyPermission: vi.fn().mockImplementation((permissions: readonly string[]) => {
               const granted = permissionSignal();
@@ -49,7 +49,7 @@ describe('NavigationRegistryService', () => {
 
   describe('visibleNavItems()', () => {
     describe('when the token carries no perm_bits claim', () => {
-      it('returns 10 non-role-gated items when hasAnyRole returns false', () => {
+      it('returns 10 non-role-gated items when the session holds no role', () => {
         const items: NavItem[] = service.visibleNavItems();
 
         expect(items).toHaveLength(10);
@@ -60,7 +60,7 @@ describe('NavigationRegistryService', () => {
       });
 
       it('returns all 14 items when user has ROLE_ADMIN', () => {
-        roleSignal.set(true);
+        roleSignal.set(['ROLE_ADMIN']);
 
         const items: NavItem[] = service.visibleNavItems();
 
@@ -71,16 +71,26 @@ describe('NavigationRegistryService', () => {
         expect(keys).toContain('SHELL.NAV.SECURITY');
         expect(keys).toContain('SHELL.NAV.SITEMAP');
         expect(keys).toContain('SHELL.NAV.SUPPLIER');
+        // The tenant registry is a platform-operator surface, never a tenant admin's.
+        expect(keys).not.toContain('SHELL.NAV.PLATFORM');
+      });
+
+      it('offers the platform entry only to ROLE_PLATFORM_ADMIN (ADR-0062)', () => {
+        roleSignal.set(['ROLE_PLATFORM_ADMIN']);
+
+        const keys = service.visibleNavItems().map(i => i.key);
+        expect(keys).toContain('SHELL.NAV.PLATFORM');
+        expect(keys).not.toContain('SHELL.NAV.ADMIN');
       });
 
       it('recomputes reactively when the underlying role signal changes', () => {
         expect(service.visibleNavItems()).toHaveLength(10);
 
-        roleSignal.set(true);
+        roleSignal.set(['ROLE_ADMIN']);
 
         expect(service.visibleNavItems()).toHaveLength(14);
 
-        roleSignal.set(false);
+        roleSignal.set([]);
 
         expect(service.visibleNavItems()).toHaveLength(10);
       });
@@ -133,7 +143,7 @@ describe('NavigationRegistryService', () => {
     });
 
     it('points the supplier nav item at the positivity landing page', () => {
-      roleSignal.set(true);
+      roleSignal.set(['ROLE_ADMIN']);
 
       const item = service.visibleNavItems().find(i => i.key === 'SHELL.NAV.SUPPLIER');
 

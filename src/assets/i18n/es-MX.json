@@ -167,7 +167,8 @@
       "SECURITY": "Seguridad",
       "ADMIN": "Administración",
       "SITEMAP": "Mapa del sitio",
-      "SUPPLIER": "Conectividad de proveedores"
+      "SUPPLIER": "Conectividad de proveedores",
+      "PLATFORM": "Plataforma"
     },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Alternar barra lateral de navegación",
@@ -6456,6 +6457,9 @@
       },
       "ADMIN": {
         "DESC": "Administración y configuración del sistema."
+      },
+      "PLATFORM": {
+        "DESC": "Registro de inquilinos para operadores de la plataforma: registrar inquilinos y gestionar su ciclo de vida."
       }
     }
   },
@@ -7157,6 +7161,116 @@
       "ERROR": {
         "LOAD_SUMMARY": "No se pudo cargar el resumen de la última instantánea de existencias.",
         "LOAD_LINES": "No se pudieron cargar las líneas de la instantánea de existencias."
+      }
+    }
+  },
+  "PLATFORM": {
+    "COMMON": {
+      "LOADING": "Cargando...",
+      "RETRY": "Reintentar",
+      "CANCEL": "Cancelar",
+      "CONFIRM": "Confirmar",
+      "ACTIONS": "Acciones",
+      "OPTIONAL": "(opcional)",
+      "BACK_TO_LIST": "Volver a inquilinos",
+      "BREADCRUMB_ARIA": "Ruta de navegación"
+    },
+    "ERROR": {
+      "VALIDATION": "Algunos campos necesitan atención. Revisa los mensajes a continuación.",
+      "FORBIDDEN": "Tu sesión no tiene permiso para gestionar el registro de inquilinos.",
+      "NOT_FOUND": "No se encontró el registro solicitado.",
+      "CONFLICT": "La solicitud entra en conflicto con el estado actual del registro.",
+      "RETRYABLE": "El registro de inquilinos no responde. Inténtalo de nuevo en un momento.",
+      "FIELD": {
+        "SLUG": "El slug no es válido.",
+        "DISPLAY_NAME": "El nombre para mostrar no es válido.",
+        "ACCOUNT_ID": "La cuenta no es válida.",
+        "CELL": "La celda no es válida.",
+        "INITIAL_ADMIN_EMAIL": "El correo del administrador no es válido.",
+        "INVALID": "Este valor no es válido."
+      }
+    },
+    "TENANTS": {
+      "TITLE": "Inquilinos",
+      "SUBTITLE": "Todos los inquilinos de la plataforma y en qué punto de su ciclo de vida están.",
+      "CREATE": "Registrar inquilino",
+      "EMPTY": "Ningún inquilino coincide con este filtro.",
+      "FILTER": {
+        "LABEL": "Estado",
+        "ALL": "Todos los estados"
+      },
+      "TABLE": {
+        "CAPTION": "Inquilinos de la plataforma",
+        "NAME": "Nombre",
+        "SLUG": "Slug",
+        "STATUS": "Estado",
+        "CELL": "Celda",
+        "CREATED": "Registrado",
+        "OPEN": "Abrir"
+      },
+      "STATUS": {
+        "PENDING": "Pendiente",
+        "ACTIVE": "Activo",
+        "SUSPENDED": "Suspendido",
+        "DECOMMISSIONED": "Dado de baja"
+      },
+      "ERROR": {
+        "LOAD": "No se pudo cargar la lista de inquilinos.",
+        "LOAD_ONE": "No se pudo cargar este inquilino.",
+        "NOT_FOUND": "Este inquilino no existe.",
+        "CREATE": "No se pudo registrar el inquilino.",
+        "SLUG_TAKEN": "Ese slug ya está en uso. Elige otro.",
+        "ACCOUNT_NOT_FOUND": "La cuenta seleccionada no existe.",
+        "ACCOUNTS_LOAD": "No se pudo cargar la lista de cuentas. Ingresa el id de la cuenta en su lugar.",
+        "SUSPEND": "No se pudo suspender el inquilino.",
+        "REACTIVATE": "No se pudo reactivar el inquilino.",
+        "TRANSITION_CONFLICT": "El estado del inquilino cambió. Recarga e inténtalo de nuevo."
+      },
+      "DETAIL": {
+        "TITLE": "Inquilino",
+        "SUSPEND": "Suspender",
+        "REACTIVATE": "Reactivar",
+        "SUSPEND_CONFIRM_TITLE": "¿Suspender este inquilino?",
+        "SUSPEND_CONFIRM_BODY": "Se rechazarán los inicios de sesión de este inquilino hasta que se reactive.",
+        "REACTIVATE_CONFIRM_TITLE": "¿Reactivar este inquilino?",
+        "REACTIVATE_CONFIRM_BODY": "Se volverán a aceptar los inicios de sesión de este inquilino.",
+        "SUSPENDED_SUCCESS": "El inquilino ha sido suspendido.",
+        "REACTIVATED_SUCCESS": "El inquilino ha sido reactivado.",
+        "PENDING_NOTE": "El aprovisionamiento está en curso. El inquilino se activa cuando existen sus roles y su primer administrador.",
+        "DECOMMISSIONED_NOTE": "Este inquilino fue dado de baja y ya no puede modificarse.",
+        "FIELD": {
+          "ID": "Id del inquilino",
+          "STATUS": "Estado",
+          "ACCOUNT": "Cuenta propietaria",
+          "CELL": "Celda",
+          "INITIAL_ADMIN_EMAIL": "Administrador inicial",
+          "CREATED": "Registrado",
+          "UPDATED": "Última modificación",
+          "ACTIVATED": "Activado",
+          "SUSPENDED_AT": "Suspendido",
+          "DECOMMISSIONED_AT": "Dado de baja"
+        }
+      },
+      "FORM": {
+        "TITLE": "Registrar un inquilino",
+        "SUBTITLE": "El inquilino comienza pendiente; se activa cuando se aprovisionan sus roles y su primer administrador.",
+        "SLUG": "Slug",
+        "SLUG_HINT": "Letras minúsculas, dígitos y guiones, de 3 a 63 caracteres. Se usa en las direcciones de inicio de sesión y no puede cambiarse después.",
+        "SLUG_ERROR": "Ingresa un slug de 3 a 63 letras minúsculas, dígitos y guiones.",
+        "DISPLAY_NAME": "Nombre para mostrar",
+        "DISPLAY_NAME_ERROR": "Ingresa un nombre para mostrar (hasta 200 caracteres).",
+        "ACCOUNT": "Cuenta propietaria",
+        "ACCOUNT_PLACEHOLDER": "Selecciona una cuenta",
+        "ACCOUNT_ID": "Id de la cuenta propietaria",
+        "ACCOUNT_ID_HINT": "El id de una cuenta existente.",
+        "ACCOUNT_ERROR": "Elige la cuenta propietaria de este inquilino.",
+        "CELL": "Celda",
+        "CELL_HINT": "Celda o región desde la que se atiende al inquilino, p. ej. us-east-1.",
+        "INITIAL_ADMIN_EMAIL": "Correo del administrador inicial",
+        "INITIAL_ADMIN_EMAIL_HINT": "La primera cuenta de administrador se crea para esta dirección durante el aprovisionamiento.",
+        "INITIAL_ADMIN_EMAIL_ERROR": "Ingresa una dirección de correo válida.",
+        "SUBMIT": "Registrar inquilino",
+        "SUBMITTING": "Registrando..."
       }
     }
   }

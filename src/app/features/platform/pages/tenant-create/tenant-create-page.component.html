@@ -1,0 +1,160 @@
+<main class="tenant-create" aria-labelledby="tenant-create-title">
+  <nav class="tenant-create__breadcrumb" [attr.aria-label]="'PLATFORM.COMMON.BREADCRUMB_ARIA' | translate">
+    <a class="tenant-create__back" [routerLink]="['/app', 'platform', 'tenants']">
+      {{ 'PLATFORM.COMMON.BACK_TO_LIST' | translate }}
+    </a>
+  </nav>
+
+  <header class="plt-page__header">
+    <div>
+      <h1 id="tenant-create-title">{{ 'PLATFORM.TENANTS.FORM.TITLE' | translate }}</h1>
+      <p class="plt-page__subtitle">{{ 'PLATFORM.TENANTS.FORM.SUBTITLE' | translate }}</p>
+    </div>
+  </header>
+
+  @if (state() === 'loading') {
+    <p class="plt-banner" aria-live="polite">{{ 'PLATFORM.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="plt-banner plt-banner--error" role="alert">
+      {{ 'PLATFORM.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="plt-banner plt-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+    </div>
+  }
+
+  <form class="tenant-create__form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="plt-field">
+      <label class="plt-field__label" for="tenant-slug">{{ 'PLATFORM.TENANTS.FORM.SLUG' | translate }}</label>
+      <input id="tenant-slug" class="plt-field__input" type="text" formControlName="slug" autocapitalize="none"
+        spellcheck="false" autocomplete="off"
+        [attr.aria-invalid]="(slugCtrl.invalid && slugCtrl.touched) || fieldError('slug') ? 'true' : null"
+        aria-describedby="tenant-slug-hint tenant-slug-error" />
+      <p class="plt-field__hint" id="tenant-slug-hint">{{ 'PLATFORM.TENANTS.FORM.SLUG_HINT' | translate }}</p>
+      @if (fieldError('slug'); as key) {
+        <p class="plt-field__error" id="tenant-slug-error" role="alert">
+          {{ key | translate }}
+          @if (fieldDetail('slug'); as detail) {
+            <span class="plt-field__detail">{{ detail }}</span>
+          }
+        </p>
+      } @else if (slugCtrl.invalid && slugCtrl.touched) {
+        <p class="plt-field__error" id="tenant-slug-error" role="alert">
+          {{ 'PLATFORM.TENANTS.FORM.SLUG_ERROR' | translate }}
+        </p>
+      }
+    </div>
+
+    <div class="plt-field">
+      <label class="plt-field__label" for="tenant-display-name">
+        {{ 'PLATFORM.TENANTS.FORM.DISPLAY_NAME' | translate }}
+      </label>
+      <input id="tenant-display-name" class="plt-field__input" type="text" formControlName="displayName"
+        autocomplete="organization"
+        [attr.aria-invalid]="(displayNameCtrl.invalid && displayNameCtrl.touched) || fieldError('displayName') ? 'true' : null"
+        aria-describedby="tenant-display-name-error" />
+      @if (fieldError('displayName'); as key) {
+        <p class="plt-field__error" id="tenant-display-name-error" role="alert">
+          {{ key | translate }}
+          @if (fieldDetail('displayName'); as detail) {
+            <span class="plt-field__detail">{{ detail }}</span>
+          }
+        </p>
+      } @else if (displayNameCtrl.invalid && displayNameCtrl.touched) {
+        <p class="plt-field__error" id="tenant-display-name-error" role="alert">
+          {{ 'PLATFORM.TENANTS.FORM.DISPLAY_NAME_ERROR' | translate }}
+        </p>
+      }
+    </div>
+
+    <div class="plt-field">
+      @if (accounts().length > 0) {
+        <label class="plt-field__label" for="tenant-account">{{ 'PLATFORM.TENANTS.FORM.ACCOUNT' | translate }}</label>
+        <select id="tenant-account" class="plt-field__input" formControlName="accountId"
+          [attr.aria-invalid]="(accountIdCtrl.invalid && accountIdCtrl.touched) || fieldError('accountId') ? 'true' : null"
+          aria-describedby="tenant-account-error">
+          <option value="">{{ 'PLATFORM.TENANTS.FORM.ACCOUNT_PLACEHOLDER' | translate }}</option>
+          @for (account of accounts(); track account.id) {
+            <option [value]="account.id">{{ accountLabel(account) }}</option>
+          }
+        </select>
+      } @else {
+        <label class="plt-field__label" for="tenant-account">{{ 'PLATFORM.TENANTS.FORM.ACCOUNT_ID' | translate }}</label>
+        <input id="tenant-account" class="plt-field__input" type="text" formControlName="accountId"
+          autocomplete="off" spellcheck="false"
+          [attr.aria-invalid]="(accountIdCtrl.invalid && accountIdCtrl.touched) || fieldError('accountId') ? 'true' : null"
+          aria-describedby="tenant-account-hint tenant-account-error" />
+        <p class="plt-field__hint" id="tenant-account-hint">{{ 'PLATFORM.TENANTS.FORM.ACCOUNT_ID_HINT' | translate }}</p>
+      }
+      @if (fieldError('accountId'); as key) {
+        <p class="plt-field__error" id="tenant-account-error" role="alert">
+          {{ key | translate }}
+          @if (fieldDetail('accountId'); as detail) {
+            <span class="plt-field__detail">{{ detail }}</span>
+          }
+        </p>
+      } @else if (accountIdCtrl.invalid && accountIdCtrl.touched) {
+        <p class="plt-field__error" id="tenant-account-error" role="alert">
+          {{ 'PLATFORM.TENANTS.FORM.ACCOUNT_ERROR' | translate }}
+        </p>
+      }
+    </div>
+
+    <div class="plt-field">
+      <label class="plt-field__label" for="tenant-cell">
+        {{ 'PLATFORM.TENANTS.FORM.CELL' | translate }}
+        <span class="tenant-create__optional">{{ 'PLATFORM.COMMON.OPTIONAL' | translate }}</span>
+      </label>
+      <input id="tenant-cell" class="plt-field__input" type="text" formControlName="cell" autocomplete="off"
+        [attr.aria-invalid]="fieldError('cell') ? 'true' : null" aria-describedby="tenant-cell-hint tenant-cell-error" />
+      <p class="plt-field__hint" id="tenant-cell-hint">{{ 'PLATFORM.TENANTS.FORM.CELL_HINT' | translate }}</p>
+      @if (fieldError('cell'); as key) {
+        <p class="plt-field__error" id="tenant-cell-error" role="alert">
+          {{ key | translate }}
+          @if (fieldDetail('cell'); as detail) {
+            <span class="plt-field__detail">{{ detail }}</span>
+          }
+        </p>
+      }
+    </div>
+
+    <div class="plt-field">
+      <label class="plt-field__label" for="tenant-admin-email">
+        {{ 'PLATFORM.TENANTS.FORM.INITIAL_ADMIN_EMAIL' | translate }}
+      </label>
+      <input id="tenant-admin-email" class="plt-field__input" type="email" formControlName="initialAdminEmail"
+        autocomplete="off" spellcheck="false"
+        [attr.aria-invalid]="(initialAdminEmailCtrl.invalid && initialAdminEmailCtrl.touched) || fieldError('initialAdminEmail') ? 'true' : null"
+        aria-describedby="tenant-admin-email-hint tenant-admin-email-error" />
+      <p class="plt-field__hint" id="tenant-admin-email-hint">
+        {{ 'PLATFORM.TENANTS.FORM.INITIAL_ADMIN_EMAIL_HINT' | translate }}
+      </p>
+      @if (fieldError('initialAdminEmail'); as key) {
+        <p class="plt-field__error" id="tenant-admin-email-error" role="alert">
+          {{ key | translate }}
+          @if (fieldDetail('initialAdminEmail'); as detail) {
+            <span class="plt-field__detail">{{ detail }}</span>
+          }
+        </p>
+      } @else if (initialAdminEmailCtrl.invalid && initialAdminEmailCtrl.touched) {
+        <p class="plt-field__error" id="tenant-admin-email-error" role="alert">
+          {{ 'PLATFORM.TENANTS.FORM.INITIAL_ADMIN_EMAIL_ERROR' | translate }}
+        </p>
+      }
+    </div>
+
+    <div class="plt-page__actions">
+      <button class="plt-btn plt-btn--primary tenant-create__submit" type="submit" [disabled]="saving()">
+        {{ (saving() ? 'PLATFORM.TENANTS.FORM.SUBMITTING' : 'PLATFORM.TENANTS.FORM.SUBMIT') | translate }}
+      </button>
+      <a class="plt-btn plt-btn--secondary" [routerLink]="['/app', 'platform', 'tenants']">
+        {{ 'PLATFORM.COMMON.CANCEL' | translate }}
+      </a>
+    </div>
+  </form>
+</main>

@@ -8,6 +8,7 @@ import {
   INVENTORY_PERMISSIONS,
   LOCATION_PERMISSIONS,
   PEOPLE_PERMISSIONS,
+  PLATFORM_PERMISSIONS,
   PRODUCT_PERMISSIONS,
   SHOPMGMT_PERMISSIONS,
   WORKEXEC_PERMISSIONS,
@@ -40,6 +41,9 @@ export const NAV_REGISTRY: NavItem[] = [
   // PRICAT sync. Admin-only for now — the Pricing Analyst entry point outside
   // Administration stays closed until the durion#371 precedence policy lands.
   { key: 'SHELL.NAV.SUPPLIER', icon: 'hub', route: '/app/positivity', roles: ['ROLE_ADMIN'], order: 14, group: 'admin' },
+  // Tenant registry (ADR-0062 §7): platform operators only — the route gate and
+  // this entry agree on `platform:*` with ROLE_PLATFORM_ADMIN as the fallback.
+  { key: 'SHELL.NAV.PLATFORM', icon: 'apartment', route: '/app/platform', roles: ['ROLE_PLATFORM_ADMIN'], permissions: PLATFORM_PERMISSIONS, order: 15, group: 'admin' },
 ];
 
 @Injectable({ providedIn: 'root' })

@@ -10,6 +10,7 @@ import {
   LOCATION_PERMISSIONS,
   ORDER_PERMISSIONS,
   PEOPLE_PERMISSIONS,
+  PLATFORM_PERMISSIONS,
   PRODUCT_PERMISSIONS,
   SHOPMGMT_PERMISSIONS,
   WORKEXEC_PERMISSIONS,
@@ -169,6 +170,15 @@ export const routes: Routes = [
         data: { roles: ['ROLE_ADMIN'] },
         loadChildren: () =>
           import('./features/positivity/positivity.routes').then(m => m.POSITIVITY_ROUTES),
+      },
+      // Platform operators only (ADR-0062 §7): `platform:*` decides when the
+      // token carries perm_bits; ROLE_PLATFORM_ADMIN is the fallback for a
+      // token without them. A tenant session holds neither.
+      {
+        path: 'platform',
+        data: { roles: ['ROLE_PLATFORM_ADMIN'], permissions: PLATFORM_PERMISSIONS },
+        loadChildren: () =>
+          import('./features/platform/platform.routes').then(m => m.PLATFORM_ROUTES),
       },
     ],
   },

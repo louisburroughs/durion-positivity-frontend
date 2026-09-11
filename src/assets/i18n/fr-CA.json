@@ -167,7 +167,8 @@
       "SECURITY": "Sécurité",
       "ADMIN": "Administration",
       "SITEMAP": "Plan du site",
-      "SUPPLIER": "Connectivité des fournisseurs"
+      "SUPPLIER": "Connectivité des fournisseurs",
+      "PLATFORM": "Plateforme"
     },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Basculer la barre latérale de navigation",
@@ -6456,6 +6457,9 @@
       },
       "ADMIN": {
         "DESC": "Administration et configuration du système."
+      },
+      "PLATFORM": {
+        "DESC": "Registre des locataires pour les opérateurs de la plateforme : enregistrer les locataires et gérer leur cycle de vie."
       }
     }
   },
@@ -7157,6 +7161,116 @@
       "ERROR": {
         "LOAD_SUMMARY": "Le résumé de la dernière photo des stocks n'a pas pu être chargé.",
         "LOAD_LINES": "Les lignes de la photo des stocks n'ont pas pu être chargées."
+      }
+    }
+  },
+  "PLATFORM": {
+    "COMMON": {
+      "LOADING": "Chargement...",
+      "RETRY": "Réessayer",
+      "CANCEL": "Annuler",
+      "CONFIRM": "Confirmer",
+      "ACTIONS": "Actions",
+      "OPTIONAL": "(facultatif)",
+      "BACK_TO_LIST": "Retour aux locataires",
+      "BREADCRUMB_ARIA": "Fil d'Ariane"
+    },
+    "ERROR": {
+      "VALIDATION": "Certains champs demandent votre attention. Consultez les messages ci-dessous.",
+      "FORBIDDEN": "Votre session n'est pas autorisée à gérer le registre des locataires.",
+      "NOT_FOUND": "L'enregistrement demandé est introuvable.",
+      "CONFLICT": "La demande entre en conflit avec l'état actuel de l'enregistrement.",
+      "RETRYABLE": "Le registre des locataires ne répond pas. Réessayez dans un instant.",
+      "FIELD": {
+        "SLUG": "Le slug est invalide.",
+        "DISPLAY_NAME": "Le nom d'affichage est invalide.",
+        "ACCOUNT_ID": "Le compte est invalide.",
+        "CELL": "La cellule est invalide.",
+        "INITIAL_ADMIN_EMAIL": "Le courriel de l'administrateur est invalide.",
+        "INVALID": "Cette valeur est invalide."
+      }
+    },
+    "TENANTS": {
+      "TITLE": "Locataires",
+      "SUBTITLE": "Tous les locataires de la plateforme et l'étape de leur cycle de vie.",
+      "CREATE": "Enregistrer un locataire",
+      "EMPTY": "Aucun locataire ne correspond à ce filtre.",
+      "FILTER": {
+        "LABEL": "Statut",
+        "ALL": "Tous les statuts"
+      },
+      "TABLE": {
+        "CAPTION": "Locataires de la plateforme",
+        "NAME": "Nom",
+        "SLUG": "Slug",
+        "STATUS": "Statut",
+        "CELL": "Cellule",
+        "CREATED": "Enregistré",
+        "OPEN": "Ouvrir"
+      },
+      "STATUS": {
+        "PENDING": "En attente",
+        "ACTIVE": "Actif",
+        "SUSPENDED": "Suspendu",
+        "DECOMMISSIONED": "Mis hors service"
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger la liste des locataires.",
+        "LOAD_ONE": "Impossible de charger ce locataire.",
+        "NOT_FOUND": "Ce locataire n'existe pas.",
+        "CREATE": "Le locataire n'a pas pu être enregistré.",
+        "SLUG_TAKEN": "Ce slug est déjà utilisé. Choisissez-en un autre.",
+        "ACCOUNT_NOT_FOUND": "Le compte sélectionné n'existe pas.",
+        "ACCOUNTS_LOAD": "Impossible de charger la liste des comptes. Saisissez plutôt l'identifiant du compte.",
+        "SUSPEND": "Le locataire n'a pas pu être suspendu.",
+        "REACTIVATE": "Le locataire n'a pas pu être réactivé.",
+        "TRANSITION_CONFLICT": "Le statut du locataire a changé. Rechargez et réessayez."
+      },
+      "DETAIL": {
+        "TITLE": "Locataire",
+        "SUSPEND": "Suspendre",
+        "REACTIVATE": "Réactiver",
+        "SUSPEND_CONFIRM_TITLE": "Suspendre ce locataire?",
+        "SUSPEND_CONFIRM_BODY": "Les connexions de ce locataire seront refusées jusqu'à sa réactivation.",
+        "REACTIVATE_CONFIRM_TITLE": "Réactiver ce locataire?",
+        "REACTIVATE_CONFIRM_BODY": "Les connexions de ce locataire seront de nouveau acceptées.",
+        "SUSPENDED_SUCCESS": "Le locataire a été suspendu.",
+        "REACTIVATED_SUCCESS": "Le locataire a été réactivé.",
+        "PENDING_NOTE": "Le provisionnement est en cours. Le locataire devient actif dès que ses rôles et son premier administrateur existent.",
+        "DECOMMISSIONED_NOTE": "Ce locataire a été mis hors service et ne peut plus être modifié.",
+        "FIELD": {
+          "ID": "Identifiant du locataire",
+          "STATUS": "Statut",
+          "ACCOUNT": "Compte propriétaire",
+          "CELL": "Cellule",
+          "INITIAL_ADMIN_EMAIL": "Administrateur initial",
+          "CREATED": "Enregistré",
+          "UPDATED": "Dernière modification",
+          "ACTIVATED": "Activé",
+          "SUSPENDED_AT": "Suspendu",
+          "DECOMMISSIONED_AT": "Mis hors service"
+        }
+      },
+      "FORM": {
+        "TITLE": "Enregistrer un locataire",
+        "SUBTITLE": "Le locataire commence en attente; il devient actif une fois ses rôles et son premier administrateur provisionnés.",
+        "SLUG": "Slug",
+        "SLUG_HINT": "Lettres minuscules, chiffres et traits d'union, 3 à 63 caractères. Utilisé dans les adresses de connexion et non modifiable par la suite.",
+        "SLUG_ERROR": "Saisissez un slug de 3 à 63 lettres minuscules, chiffres et traits d'union.",
+        "DISPLAY_NAME": "Nom d'affichage",
+        "DISPLAY_NAME_ERROR": "Saisissez un nom d'affichage (200 caractères au maximum).",
+        "ACCOUNT": "Compte propriétaire",
+        "ACCOUNT_PLACEHOLDER": "Sélectionnez un compte",
+        "ACCOUNT_ID": "Identifiant du compte propriétaire",
+        "ACCOUNT_ID_HINT": "L'identifiant d'un compte existant.",
+        "ACCOUNT_ERROR": "Choisissez le compte propriétaire de ce locataire.",
+        "CELL": "Cellule",
+        "CELL_HINT": "Cellule ou région qui dessert le locataire, p. ex. us-east-1.",
+        "INITIAL_ADMIN_EMAIL": "Courriel de l'administrateur initial",
+        "INITIAL_ADMIN_EMAIL_HINT": "Le premier compte administrateur est créé pour cette adresse lors du provisionnement.",
+        "INITIAL_ADMIN_EMAIL_ERROR": "Saisissez une adresse courriel valide.",
+        "SUBMIT": "Enregistrer le locataire",
+        "SUBMITTING": "Enregistrement..."
       }
     }
   }

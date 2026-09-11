@@ -47,6 +47,18 @@ export const CRM_PERMISSIONS = permissionsInDomains(
   'accounting:events:view',
 );
 
+/**
+ * `/app/platform` — the tenant registry (ADR-0062 §7). Held only by the platform
+ * tenant's role template (`PLATFORM_ADMIN`); never granted to a tenant role.
+ */
+export const PLATFORM_PERMISSIONS = permissionsInDomains('platform:');
+
+/** `/app/platform/*` — each page's primary read or write on pos-tenant. */
+export const PLATFORM_PAGE = {
+  tenantRead: ['platform:tenant:read'],
+  tenantCreate: ['platform:tenant:create'],
+} as const satisfies Record<string, readonly string[]>;
+
 /** `/app/workexec` — estimates, work orders, labor, parts, WIP. */
 export const WORKEXEC_PERMISSIONS = permissionsInDomains('workorder:');
 

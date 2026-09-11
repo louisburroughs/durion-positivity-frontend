@@ -167,7 +167,8 @@
       "SECURITY": "Security",
       "ADMIN": "Admin",
       "SITEMAP": "Site Map",
-      "SUPPLIER": "Supplier Connectivity"
+      "SUPPLIER": "Supplier Connectivity",
+      "PLATFORM": "Platform"
     },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Toggle navigation sidebar",
@@ -6456,6 +6457,9 @@
       },
       "ADMIN": {
         "DESC": "System administration and configuration."
+      },
+      "PLATFORM": {
+        "DESC": "Tenant registry for platform operators: register tenants and manage their lifecycle."
       }
     }
   },
@@ -7157,6 +7161,116 @@
       "ERROR": {
         "LOAD_SUMMARY": "The latest stock-snapshot summary could not be loaded.",
         "LOAD_LINES": "The stock-snapshot lines could not be loaded."
+      }
+    }
+  },
+  "PLATFORM": {
+    "COMMON": {
+      "LOADING": "Loading...",
+      "RETRY": "Retry",
+      "CANCEL": "Cancel",
+      "CONFIRM": "Confirm",
+      "ACTIONS": "Actions",
+      "OPTIONAL": "(optional)",
+      "BACK_TO_LIST": "Back to tenants",
+      "BREADCRUMB_ARIA": "Breadcrumb"
+    },
+    "ERROR": {
+      "VALIDATION": "Some fields need attention. Check the messages below.",
+      "FORBIDDEN": "Your session is not allowed to manage the tenant registry.",
+      "NOT_FOUND": "The requested record was not found.",
+      "CONFLICT": "The request conflicts with the current state of the record.",
+      "RETRYABLE": "The tenant registry is not responding. Try again in a moment.",
+      "FIELD": {
+        "SLUG": "The slug is invalid.",
+        "DISPLAY_NAME": "The display name is invalid.",
+        "ACCOUNT_ID": "The account is invalid.",
+        "CELL": "The cell is invalid.",
+        "INITIAL_ADMIN_EMAIL": "The administrator email is invalid.",
+        "INVALID": "This value is invalid."
+      }
+    },
+    "TENANTS": {
+      "TITLE": "Tenants",
+      "SUBTITLE": "Every tenant on the platform and where it is in its lifecycle.",
+      "CREATE": "Register tenant",
+      "EMPTY": "No tenants match this filter.",
+      "FILTER": {
+        "LABEL": "Status",
+        "ALL": "All statuses"
+      },
+      "TABLE": {
+        "CAPTION": "Tenants on the platform",
+        "NAME": "Name",
+        "SLUG": "Slug",
+        "STATUS": "Status",
+        "CELL": "Cell",
+        "CREATED": "Registered",
+        "OPEN": "Open"
+      },
+      "STATUS": {
+        "PENDING": "Pending",
+        "ACTIVE": "Active",
+        "SUSPENDED": "Suspended",
+        "DECOMMISSIONED": "Decommissioned"
+      },
+      "ERROR": {
+        "LOAD": "Could not load the tenant list.",
+        "LOAD_ONE": "Could not load this tenant.",
+        "NOT_FOUND": "This tenant does not exist.",
+        "CREATE": "The tenant could not be registered.",
+        "SLUG_TAKEN": "That slug is already taken. Choose another.",
+        "ACCOUNT_NOT_FOUND": "The selected account does not exist.",
+        "ACCOUNTS_LOAD": "Could not load the account list. Enter the account id instead.",
+        "SUSPEND": "The tenant could not be suspended.",
+        "REACTIVATE": "The tenant could not be reactivated.",
+        "TRANSITION_CONFLICT": "The tenant's status changed. Reload and try again."
+      },
+      "DETAIL": {
+        "TITLE": "Tenant",
+        "SUSPEND": "Suspend",
+        "REACTIVATE": "Reactivate",
+        "SUSPEND_CONFIRM_TITLE": "Suspend this tenant?",
+        "SUSPEND_CONFIRM_BODY": "Sign-ins for this tenant will be refused until it is reactivated.",
+        "REACTIVATE_CONFIRM_TITLE": "Reactivate this tenant?",
+        "REACTIVATE_CONFIRM_BODY": "Sign-ins for this tenant will be accepted again.",
+        "SUSPENDED_SUCCESS": "The tenant has been suspended.",
+        "REACTIVATED_SUCCESS": "The tenant has been reactivated.",
+        "PENDING_NOTE": "Provisioning is in progress. The tenant becomes active once its roles and first administrator exist.",
+        "DECOMMISSIONED_NOTE": "This tenant has been decommissioned and can no longer be changed.",
+        "FIELD": {
+          "ID": "Tenant id",
+          "STATUS": "Status",
+          "ACCOUNT": "Owning account",
+          "CELL": "Cell",
+          "INITIAL_ADMIN_EMAIL": "Initial administrator",
+          "CREATED": "Registered",
+          "UPDATED": "Last changed",
+          "ACTIVATED": "Activated",
+          "SUSPENDED_AT": "Suspended",
+          "DECOMMISSIONED_AT": "Decommissioned"
+        }
+      },
+      "FORM": {
+        "TITLE": "Register a tenant",
+        "SUBTITLE": "The tenant starts pending; it becomes active once its roles and first administrator are provisioned.",
+        "SLUG": "Slug",
+        "SLUG_HINT": "Lowercase letters, digits and hyphens, 3 to 63 characters. Used in sign-in addresses and cannot be changed later.",
+        "SLUG_ERROR": "Enter a slug of 3 to 63 lowercase letters, digits and hyphens.",
+        "DISPLAY_NAME": "Display name",
+        "DISPLAY_NAME_ERROR": "Enter a display name (up to 200 characters).",
+        "ACCOUNT": "Owning account",
+        "ACCOUNT_PLACEHOLDER": "Select an account",
+        "ACCOUNT_ID": "Owning account id",
+        "ACCOUNT_ID_HINT": "The id of an existing account.",
+        "ACCOUNT_ERROR": "Choose the account that owns this tenant.",
+        "CELL": "Cell",
+        "CELL_HINT": "Cell or region the tenant is served from, e.g. us-east-1.",
+        "INITIAL_ADMIN_EMAIL": "Initial administrator email",
+        "INITIAL_ADMIN_EMAIL_HINT": "The first administrator account is created for this address during provisioning.",
+        "INITIAL_ADMIN_EMAIL_ERROR": "Enter a valid email address.",
+        "SUBMIT": "Register tenant",
+        "SUBMITTING": "Registering..."
       }
     }
   }
