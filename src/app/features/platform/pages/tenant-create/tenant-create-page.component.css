@@ -1,0 +1,32 @@
+.tenant-create {
+	display: block;
+}
+
+.tenant-create__breadcrumb {
+	margin-bottom: var(--space-3);
+}
+
+.tenant-create__back {
+	color: var(--brand-primary);
+	font-weight: 600;
+	text-decoration: underline;
+}
+
+.tenant-create__back:focus-visible {
+	outline: 2px solid var(--input-focus-border);
+	outline-offset: 2px;
+}
+
+.tenant-create__form {
+	max-width: 36rem;
+	padding: var(--space-4);
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+}
+
+.tenant-create__optional {
+	margin-left: var(--space-1);
+	font-weight: 400;
+	color: var(--text-muted);
+}

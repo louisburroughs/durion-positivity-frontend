@@ -8,6 +8,7 @@ import { Configuration as SecurityConfiguration, TokenPairResponse, ValidateResp
 import { environment } from '../../../environments/environment';
 import { encodePermissionBits } from '../security/permission-bits';
 import { PERMISSION_CATALOG_VERSION } from '../security/permission-catalog';
+import { PLATFORM_TENANT_ID } from '../security/tenant';
 
 describe('AuthService', () => {
   const VALID_ACCESS_TOKEN =
@@ -44,6 +45,10 @@ describe('AuthService', () => {
   afterEach(() => {
     httpMock.verify();
     environment.mockAuth = true;
+    // A token left in storage would seed the next test's AuthService — and a
+    // token carrying `tid` would then issue a /tenants/me request unasked.
+    localStorage.clear();
+    sessionStorage.clear();
   });
 
   function seedStoredSession(): void {
@@ -383,6 +388,224 @@ describe('AuthService', () => {
 
       expect(service.currentUserPermissions()).toBeNull();
       expect(service.hasPermission('crm:party:view')).toBe(false);
+    });
+  });
+
+  describe('tenant (ADR-0062)', () => {
+    const TENANT_ID = '01990000-0000-7000-8000-00000000c001';
+
+    /** Builds an unsigned JWT carrying the given claims. */
+    function tokenWith(claims: Record<string, unknown>): string {
+      const payload = btoa(JSON.stringify({ sub: 'usr', roles: [], exp: 9999999999, iat: 1700000000, ...claims }))
+        .replaceAll('+', '-')
+        .replaceAll('/', '_')
+        .replaceAll('=', '');
+      return `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${payload}.sig`;
+    }
+
+    function loginWith(accessToken: string, tenantSlug?: string): void {
+      environment.mockAuth = false;
+      service.login({ username: 'demo', password: 'testpass', tenantSlug }).subscribe();
+      httpMock
+        .expectOne(r => r.url.includes('/security-service/v1/auth/login'))
+        .flush({ accessToken, refreshToken: 'rt', tokenType: 'Bearer' });
+    }
+
+    function flushTenantMe(id = TENANT_ID): void {
+      const req = httpMock.expectOne(r => r.url.endsWith('/security-service/v1/tenants/me'));
+      expect(req.request.method).toBe('GET');
+      expect(req.request.headers.has('X-Tenant-Id')).toBe(false);
+      expect(req.request.headers.has('X-Tenant-Slug')).toBe(false);
+      req.flush({ id, slug: 'acme-tire', displayName: 'Acme Tire & Auto', status: 'ACTIVE' });
+    }
+
+    it('decodes tid into tenantId and loads /tenants/me into tenant after login', () => {
+      loginWith(tokenWith({ tid: TENANT_ID }));
+
+      expect(service.tenantId()).toBe(TENANT_ID);
+      expect(service.tenant()).toBeNull();
+
+      flushTenantMe();
+
+      expect(service.tenant()).toEqual({
+        tenantId: TENANT_ID,
+        slug: 'acme-tire',
+        displayName: 'Acme Tire & Auto',
+        status: 'ACTIVE',
+      });
+      expect(service.isPlatformTenant()).toBe(false);
+    });
+
+    it('forwards the form tenantSlug on the login request and nothing else tenant-related', () => {
+      loginWith(tokenWith({ tid: TENANT_ID }), 'acme-tire');
+      flushTenantMe();
+      // The login body is the only place a slug ever travels; the interceptor
+      // spec covers headers. Nothing to assert beyond the flushed request shape.
+      expect(service.tenant()?.slug).toBe('acme-tire');
+    });
+
+    it('treats a token without tid as unbound: no tenant, no /tenants/me call', () => {
+      loginWith(tokenWith({}));
+
+      expect(service.tenantId()).toBeNull();
+      expect(service.tenant()).toBeNull();
+      expect(service.isPlatformTenant()).toBe(false);
+      httpMock.expectNone(r => r.url.includes('/tenants/me'));
+    });
+
+    it('keeps the loaded tenant across a silent refresh that re-issues the same tid', () => {
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      flushTenantMe();
+
+      service.refreshTokens().subscribe();
+      httpMock
+        .expectOne(r => r.url.includes('/security-service/v1/auth/refresh'))
+        .flush({ accessToken: tokenWith({ tid: TENANT_ID, iat: 1700000001 }), refreshToken: 'rt-2' });
+
+      expect(service.tenant()?.slug).toBe('acme-tire');
+      httpMock.expectNone(r => r.url.includes('/tenants/me'));
+    });
+
+    it('starts no second /tenants/me request while the first is pending or after it failed', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      const pending = httpMock.expectOne(r => r.url.endsWith('/security-service/v1/tenants/me'));
+
+      // A silent refresh with the same tid while the first load is still pending.
+      service.refreshTokens().subscribe();
+      httpMock
+        .expectOne(r => r.url.includes('/security-service/v1/auth/refresh'))
+        .flush({ accessToken: tokenWith({ tid: TENANT_ID, iat: 1700000001 }), refreshToken: 'rt-2' });
+      httpMock.expectNone(r => r.url.includes('/tenants/me'));
+
+      pending.flush(null, { status: 503, statusText: 'Service Unavailable' });
+      expect(service.tenant()).toBeNull();
+
+      // Another refresh after the failure: one attempt per binding.
+      service.refreshTokens().subscribe();
+      httpMock
+        .expectOne(r => r.url.includes('/security-service/v1/auth/refresh'))
+        .flush({ accessToken: tokenWith({ tid: TENANT_ID, iat: 1700000002 }), refreshToken: 'rt-3' });
+      httpMock.expectNone(r => r.url.includes('/tenants/me'));
+
+      // A different binding gets its own attempt.
+      const otherTenantId = '01990000-0000-7000-8000-00000000c002';
+      loginWith(tokenWith({ tid: otherTenantId }));
+      flushTenantMe(otherTenantId);
+      expect(service.tenant()?.tenantId).toBe(otherTenantId);
+
+      // And so does a fresh login into the first tenant after logout.
+      service.logout();
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      flushTenantMe();
+      expect(service.tenant()?.tenantId).toBe(TENANT_ID);
+      warn.mockRestore();
+    });
+
+    it('drops the previous tenant and reloads when a new token carries a different tid', () => {
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      flushTenantMe();
+
+      const otherTenantId = '01990000-0000-7000-8000-00000000c002';
+      loginWith(tokenWith({ tid: otherTenantId }));
+
+      expect(service.tenantId()).toBe(otherTenantId);
+      expect(service.tenant()).toBeNull();
+      expect(sessionStorage.getItem('durion-tenant')).toBeNull();
+
+      flushTenantMe(otherTenantId);
+      expect(service.tenant()?.tenantId).toBe(otherTenantId);
+    });
+
+    it('clears tenantId and tenant on logout', () => {
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      flushTenantMe();
+
+      service.logout();
+
+      expect(service.tenantId()).toBeNull();
+      expect(service.tenant()).toBeNull();
+      expect(sessionStorage.getItem('durion-tenant')).toBeNull();
+    });
+
+    it('leaves the session usable when /tenants/me fails', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      httpMock
+        .expectOne(r => r.url.endsWith('/security-service/v1/tenants/me'))
+        .flush(null, { status: 503, statusText: 'Service Unavailable' });
+
+      expect(service.isAuthenticated()).toBe(true);
+      expect(service.tenantId()).toBe(TENANT_ID);
+      expect(service.tenant()).toBeNull();
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    it('keys the tenant by the token tid even if /tenants/me reports a different id', () => {
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      httpMock
+        .expectOne(r => r.url.endsWith('/security-service/v1/tenants/me'))
+        .flush({ id: 'some-other-id', slug: 'acme-tire', displayName: 'Acme', status: 'ACTIVE' });
+
+      expect(service.tenant()?.tenantId).toBe(TENANT_ID);
+      expect(service.tenantId()).toBe(TENANT_ID);
+    });
+
+    it('falls back to the slug as display name when the registry has none', () => {
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      httpMock
+        .expectOne(r => r.url.endsWith('/security-service/v1/tenants/me'))
+        .flush({ id: TENANT_ID, slug: 'acme-tire', status: 'ACTIVE' });
+
+      expect(service.tenant()?.displayName).toBe('acme-tire');
+    });
+
+    it('restores the cached tenant on a reload without calling /tenants/me again', () => {
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      flushTenantMe();
+      expect(sessionStorage.getItem('durion-tenant')).not.toBeNull();
+
+      // A fresh service in the same browser session: token in localStorage,
+      // tenant summary in sessionStorage.
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          AuthService,
+          provideRouter([]),
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          { provide: SecurityConfiguration, useValue: new SecurityConfiguration({ basePath: `${environment.apiBaseUrl}/security-service` }) },
+        ],
+      });
+      const restored = TestBed.inject(AuthService);
+      httpMock = TestBed.inject(HttpTestingController);
+
+      expect(restored.tenantId()).toBe(TENANT_ID);
+      expect(restored.tenant()?.slug).toBe('acme-tire');
+      httpMock.expectNone(r => r.url.includes('/tenants/me'));
+    });
+
+    it('recognises the platform tenant from tid', () => {
+      loginWith(tokenWith({ tid: PLATFORM_TENANT_ID }));
+      httpMock
+        .expectOne(r => r.url.endsWith('/security-service/v1/tenants/me'))
+        .flush({ id: PLATFORM_TENANT_ID, slug: 'platform', displayName: 'Platform', status: 'ACTIVE' });
+
+      expect(service.isPlatformTenant()).toBe(true);
+    });
+
+    it('binds the mock session to the platform tenant without any HTTP call', () => {
+      service.login({ username: 'demo', password: 'testpass' }).subscribe();
+
+      expect(service.tenantId()).toBe(PLATFORM_TENANT_ID);
+      expect(service.isPlatformTenant()).toBe(true);
+      expect(service.tenant()?.slug).toBe('platform');
+      httpMock.expectNone(r => r.url.includes('/tenants/me'));
+    });
+
+    it('never derives a host tenant when the environment has no host suffix', () => {
+      expect(service.hostTenantSlug()).toBeNull();
     });
   });
 });

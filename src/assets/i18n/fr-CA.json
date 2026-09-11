@@ -167,7 +167,8 @@
       "SECURITY": "Sécurité",
       "ADMIN": "Administration",
       "SITEMAP": "Plan du site",
-      "SUPPLIER": "Connectivité des fournisseurs"
+      "SUPPLIER": "Connectivité des fournisseurs",
+      "PLATFORM": "Plateforme"
     },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Basculer la barre latérale de navigation",
@@ -189,7 +190,8 @@
           "FR_CA": "Français (Canada)",
           "FR_FR": "Français (France)"
         }
-      }
+      },
+      "TENANT_LABEL": "Locataire"
     },
     "DASHBOARD": {
       "WELCOME_HEADING": "Bon retour, {{name}}",
@@ -306,7 +308,13 @@
         "INVALID_CREDENTIALS": "Nom d'utilisateur ou mot de passe invalide. Veuillez réessayer.",
         "NETWORK": "Impossible de joindre le serveur. Vérifiez votre réseau ou réessayez plus tard.",
         "GENERIC": "Échec de la connexion. Veuillez réessayer."
-      }
+      },
+      "TENANT": "Locataire",
+      "TENANT_FROM_HOST_HINT": "Déterminé par l'adresse à partir de laquelle vous vous connectez.",
+      "TENANT_SLUG": "Locataire",
+      "TENANT_SLUG_PLACEHOLDER": "Nom court de votre locataire, p. ex. acme-tire",
+      "TENANT_SLUG_HINT": "Facultatif. Laissez vide si vous avez reçu une adresse de connexion propre à votre locataire.",
+      "TENANT_SLUG_ERROR": "Utilisez des lettres minuscules, des chiffres et des traits d'union (3 à 63 caractères)."
     }
   },
   "PEOPLE": {
@@ -6448,7 +6456,127 @@
       },
       "ADMIN": {
         "DESC": "Administration et configuration du système."
+      },
+      "PLATFORM": {
+        "DESC": "Registre des locataires pour les opérateurs de la plateforme : enregistrer les locataires et gérer leur cycle de vie."
       }
+    },
+    "LABEL": {
+      "ADD_VEHICLE": "Ajouter un véhicule",
+      "ADJUSTMENTS": "Ajustements",
+      "APPLY": "Appliquer",
+      "APPROVAL": "Approbation",
+      "ASSIGN": "Assigner",
+      "ASSIGNMENTS": "Assignations",
+      "AUDIT": "Audit",
+      "AUDIT_LOGS": "Journaux d'audit",
+      "AVAILABILITY": "Disponibilité",
+      "BAYS": "Baies",
+      "BILLING_RULES": "Règles de facturation",
+      "BY_LOCATION": "Par emplacement",
+      "CANCEL": "Annuler",
+      "CART": "Panier",
+      "CATALOG": "Catalogue",
+      "CHANGE_REQUESTS": "Demandes de changement",
+      "CONSUME_ITEMS": "Consommer des articles",
+      "CONTACTS": "Contacts",
+      "CONTRACT": "Contrat",
+      "CREATE_COMMERCIAL_ACCOUNT": "Créer un compte commercial",
+      "CREATE_INDIVIDUAL_PERSON": "Créer une personne",
+      "CREDIT_MEMOS": "Notes de crédit",
+      "CRM": "CRM",
+      "CRM_SNAPSHOT": "Aperçu CRM",
+      "CROSS_DOCK": "Transbordement direct",
+      "CUSTOMER": "Client",
+      "CUSTOMERS": "Clients",
+      "DEFAULTS": "Valeurs par défaut",
+      "DIGITAL": "Numérique",
+      "DIRECTORY": "Répertoire",
+      "DISCREPANCY": "Écart",
+      "DISPATCH_ASSIGN": "Assigner la répartition",
+      "DISPATCH_BOARD": "Tableau de répartition",
+      "EDIT": "Modifier",
+      "EMPLOYEES": "Employés",
+      "ESTIMATES": "Devis",
+      "ESTIMATE_LIST": "Liste des devis",
+      "EVENTS": "Événements",
+      "EVENT_SUBMISSION": "Soumission d'événements",
+      "EXCEPTIONS": "Exceptions",
+      "EXCHANGES": "Échanges",
+      "EXECUTE": "Exécuter",
+      "EXPORT": "Exporter",
+      "FEEDS": "Flux de données",
+      "FINALIZE": "Finaliser",
+      "FROM_APPOINTMENT": "À partir du rendez-vous",
+      "IDENTITY_COMPLIANCE": "Conformité d'identité",
+      "INVOICES": "Factures",
+      "INVOICE_FINALIZATION": "Finalisation de la facture",
+      "IN_PERSON": "En personne",
+      "JOBS": "Tâches",
+      "LABOR": "Main-d'œuvre",
+      "LABOR_OVERHEAD": "Frais généraux de main-d'œuvre",
+      "LEDGER": "Grand livre",
+      "LOCATION": "Emplacement",
+      "LOCATIONS": "Emplacements",
+      "LOCATIONS_ROSTER": "Répertoire des emplacements",
+      "LOCATION_OVERRIDES": "Substitutions d'emplacement",
+      "LOCATION_SYNC": "Synchronisation des emplacements",
+      "MANUAL_REVIEW": "Révision manuelle",
+      "MERGE_PARTIES": "Fusionner les parties",
+      "MOBILE_UNITS": "Unités mobiles",
+      "MSRP": "PDSF",
+      "NEW": "Nouveau",
+      "OFFBOARD": "Départ",
+      "OPERATIONAL_CONTEXT": "Contexte opérationnel",
+      "OVERRIDE_CONFLICT": "Remplacer le conflit",
+      "PARTIAL": "Partiel",
+      "PARTS": "Pièces",
+      "PARTY": "Partie",
+      "PAYMENT_CAPTURE": "Capture du paiement",
+      "PAYMENT_STATUS": "État du paiement",
+      "PEOPLE": "Personnes",
+      "PERMISSIONS": "Autorisations",
+      "PICK_EXECUTE": "Exécuter le prélèvement",
+      "PICK_LIST": "Liste de prélèvement",
+      "PLANS": "Plans",
+      "POSTING_RULES": "Règles de comptabilisation",
+      "PRICE": "Prix",
+      "PRICE_BOOKS": "Grilles tarifaires",
+      "PRICE_OVERRIDE": "Remplacement de prix",
+      "PROFILES": "Profils",
+      "PROVISION": "Approvisionner",
+      "PURCHASE_ORDERS": "Bons de commande",
+      "RBAC": "Rôles et autorisations",
+      "RECEIPTS": "Reçus",
+      "RECEIVE_INTO_STAGING": "Recevoir en zone de transit",
+      "RESCHEDULE": "Reporter",
+      "RETURN_TO_STOCK": "Retourner au stock",
+      "REVIEW": "Révision",
+      "REVISE": "Réviser",
+      "ROLES": "Rôles",
+      "ROSTER": "Effectif",
+      "SCHEDULE": "Horaire",
+      "SHOP_DASHBOARD": "Tableau de bord de l'atelier",
+      "SHORTAGE_RESOLUTION": "Résolution des pénuries",
+      "SITE": "Site",
+      "SNAPSHOT": "Aperçu",
+      "STOCK": "Stock",
+      "STORAGE_LOCATIONS": "Emplacements de stockage",
+      "SUBMIT": "Soumettre",
+      "SUMMARY": "Sommaire",
+      "TASKS": "Tâches",
+      "TENANTS": "Locataires",
+      "TIMER": "Minuteur",
+      "TRAVEL_TIME": "Temps de déplacement",
+      "UNMATCHED": "Sans correspondance",
+      "VEHICLE_FITMENT": "Compatibilité du véhicule",
+      "VEHICLE_INVENTORY": "Inventaire des véhicules",
+      "VENDOR_INVOICES": "Factures des fournisseurs",
+      "VENDOR_PAYMENTS": "Paiements aux fournisseurs",
+      "VOID_REFUND": "Annuler le remboursement",
+      "WIP_STATUS": "État des travaux en cours",
+      "WORKORDERS": "Ordres de travail",
+      "WORK_SESSION": "Séance de travail"
     }
   },
   "POSITIVITY": {
@@ -7149,6 +7277,117 @@
       "ERROR": {
         "LOAD_SUMMARY": "Le résumé de la dernière photo des stocks n'a pas pu être chargé.",
         "LOAD_LINES": "Les lignes de la photo des stocks n'ont pas pu être chargées."
+      }
+    }
+  },
+  "PLATFORM": {
+    "COMMON": {
+      "LOADING": "Chargement...",
+      "RETRY": "Réessayer",
+      "CANCEL": "Annuler",
+      "CONFIRM": "Confirmer",
+      "ACTIONS": "Actions",
+      "OPTIONAL": "(facultatif)",
+      "BACK_TO_LIST": "Retour aux locataires",
+      "BREADCRUMB_ARIA": "Fil d'Ariane"
+    },
+    "ERROR": {
+      "VALIDATION": "Certains champs demandent votre attention. Consultez les messages ci-dessous.",
+      "FORBIDDEN": "Votre session n'est pas autorisée à gérer le registre des locataires.",
+      "NOT_FOUND": "L'enregistrement demandé est introuvable.",
+      "CONFLICT": "La demande entre en conflit avec l'état actuel de l'enregistrement.",
+      "RETRYABLE": "Le registre des locataires ne répond pas. Réessayez dans un instant.",
+      "FIELD": {
+        "SLUG": "Le slug est invalide.",
+        "DISPLAY_NAME": "Le nom d'affichage est invalide.",
+        "ACCOUNT_ID": "Le compte est invalide.",
+        "CELL": "La cellule est invalide.",
+        "INITIAL_ADMIN_EMAIL": "Le courriel de l'administrateur est invalide.",
+        "INVALID": "Cette valeur est invalide."
+      }
+    },
+    "TENANTS": {
+      "TITLE": "Locataires",
+      "SUBTITLE": "Tous les locataires de la plateforme et l'étape de leur cycle de vie.",
+      "CREATE": "Enregistrer un locataire",
+      "EMPTY": "Aucun locataire ne correspond à ce filtre.",
+      "FILTER": {
+        "LABEL": "Statut",
+        "ALL": "Tous les statuts"
+      },
+      "TABLE": {
+        "CAPTION": "Locataires de la plateforme",
+        "NAME": "Nom",
+        "SLUG": "Slug",
+        "STATUS": "Statut",
+        "CELL": "Cellule",
+        "CREATED": "Enregistré",
+        "OPEN": "Ouvrir"
+      },
+      "STATUS": {
+        "PENDING": "En attente",
+        "ACTIVE": "Actif",
+        "SUSPENDED": "Suspendu",
+        "DECOMMISSIONED": "Mis hors service"
+      },
+      "ERROR": {
+        "LOAD": "Impossible de charger la liste des locataires.",
+        "LOAD_ONE": "Impossible de charger ce locataire.",
+        "NOT_FOUND": "Ce locataire n'existe pas.",
+        "CREATE": "Le locataire n'a pas pu être enregistré.",
+        "SLUG_TAKEN": "Ce slug est déjà utilisé. Choisissez-en un autre.",
+        "ACCOUNT_NOT_FOUND": "Le compte sélectionné n'existe pas.",
+        "ACCOUNTS_LOAD": "Impossible de charger la liste des comptes. Saisissez plutôt l'identifiant du compte.",
+        "SUSPEND": "Le locataire n'a pas pu être suspendu.",
+        "REACTIVATE": "Le locataire n'a pas pu être réactivé.",
+        "TRANSITION_CONFLICT": "Le statut du locataire a changé. Rechargez et réessayez."
+      },
+      "DETAIL": {
+        "TITLE": "Locataire",
+        "SUSPEND": "Suspendre",
+        "REACTIVATE": "Réactiver",
+        "SUSPEND_CONFIRM_TITLE": "Suspendre ce locataire?",
+        "SUSPEND_CONFIRM_BODY": "Les connexions de ce locataire seront refusées jusqu'à sa réactivation.",
+        "REACTIVATE_CONFIRM_TITLE": "Réactiver ce locataire?",
+        "REACTIVATE_CONFIRM_BODY": "Les connexions de ce locataire seront de nouveau acceptées.",
+        "SUSPENDED_SUCCESS": "Le locataire a été suspendu.",
+        "REACTIVATED_SUCCESS": "Le locataire a été réactivé.",
+        "PENDING_NOTE": "Le provisionnement est en cours. Le locataire devient actif dès que ses rôles et son premier administrateur existent.",
+        "DECOMMISSIONED_NOTE": "Ce locataire a été mis hors service et ne peut plus être modifié.",
+        "FIELD": {
+          "ID": "Identifiant du locataire",
+          "STATUS": "Statut",
+          "ACCOUNT": "Compte propriétaire",
+          "CELL": "Cellule",
+          "INITIAL_ADMIN_EMAIL": "Administrateur initial",
+          "CREATED": "Enregistré",
+          "UPDATED": "Dernière modification",
+          "ACTIVATED": "Activé",
+          "SUSPENDED_AT": "Suspendu",
+          "DECOMMISSIONED_AT": "Mis hors service"
+        }
+      },
+      "FORM": {
+        "TITLE": "Enregistrer un locataire",
+        "SUBTITLE": "Le locataire commence en attente; il devient actif une fois ses rôles et son premier administrateur provisionnés.",
+        "SLUG": "Slug",
+        "SLUG_HINT": "Lettres minuscules, chiffres et traits d'union, 3 à 63 caractères. Utilisé dans les adresses de connexion et non modifiable par la suite.",
+        "SLUG_ERROR": "Saisissez un slug de 3 à 63 lettres minuscules, chiffres et traits d'union.",
+        "DISPLAY_NAME": "Nom d'affichage",
+        "DISPLAY_NAME_ERROR": "Saisissez un nom d'affichage (200 caractères au maximum).",
+        "ACCOUNT": "Compte propriétaire",
+        "ACCOUNT_PLACEHOLDER": "Sélectionnez un compte",
+        "ACCOUNT_ID": "Identifiant du compte propriétaire",
+        "ACCOUNT_ID_HINT": "L'identifiant d'un compte existant.",
+        "ACCOUNT_ERROR": "Choisissez le compte propriétaire de ce locataire.",
+        "CELL": "Cellule",
+        "CELL_HINT": "Cellule ou région qui dessert le locataire, p. ex. us-east-1.",
+        "INITIAL_ADMIN_EMAIL": "Courriel de l'administrateur initial",
+        "INITIAL_ADMIN_EMAIL_HINT": "Le premier compte administrateur est créé pour cette adresse lors du provisionnement.",
+        "INITIAL_ADMIN_EMAIL_ERROR": "Saisissez une adresse courriel valide.",
+        "SUBMIT": "Enregistrer le locataire",
+        "SUBMITTING": "Enregistrement...",
+        "CREATED_SUCCESS": "Le locataire a été enregistré. Il deviendra actif une fois l'approvisionnement terminé."
       }
     }
   }

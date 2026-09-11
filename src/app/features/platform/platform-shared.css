@@ -1,0 +1,273 @@
+/*
+ * Shared presentation utilities for the platform (tenant registry) area.
+ *
+ * Angular component styles are scoped, so this sheet is added to each platform
+ * page's `styleUrls` alongside its own file — the same pattern the positivity
+ * domain uses with `positivity-shared.css`, from which the button, field, table
+ * and banner treatments are carried over so the two admin areas read alike and
+ * the AA-compliant foreground/background token pairs (ADR-0039) are defined once.
+ *
+ * Only tokens defined in src/styles.css are referenced, and no var() fallbacks
+ * are used (see .stylelintrc.json).
+ */
+
+.plt-btn {
+	min-height: 2.5rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-1);
+	border-radius: var(--radius-sm);
+	border: 1px solid transparent;
+	padding: var(--space-2) var(--space-4);
+	font-family: inherit;
+	font-size: 0.875rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.plt-btn:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.plt-btn:focus-visible {
+	outline: 3px solid var(--input-focus-border);
+	outline-offset: 2px;
+}
+
+.plt-btn--primary {
+	background: var(--brand-primary);
+	color: var(--contrastTextColor);
+}
+
+.plt-btn--secondary {
+	background: transparent;
+	color: var(--currentTextColor);
+	border-color: var(--input-border);
+}
+
+.plt-btn--danger {
+	background: var(--status-error-bg);
+	color: var(--status-error-fg);
+	border-color: var(--functional-error-red);
+}
+
+.plt-field {
+	display: grid;
+	gap: var(--space-1);
+	margin-bottom: var(--space-3);
+}
+
+.plt-field__label {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--currentTextColor);
+}
+
+.plt-field__input {
+	min-height: 2.5rem;
+	width: 100%;
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-sm);
+	background: var(--input-background);
+	color: var(--currentTextColor);
+	padding: var(--space-2) var(--space-3);
+	font-family: inherit;
+	font-size: 0.9375rem;
+}
+
+.plt-field__input:focus-visible {
+	outline: 2px solid var(--input-focus-border);
+	outline-offset: 1px;
+}
+
+.plt-field__input:disabled {
+	background: var(--surface-variant);
+	color: var(--text-muted);
+}
+
+.plt-field__hint {
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+.plt-field__error {
+	margin: 0;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--status-error-fg);
+}
+
+/* Backend-supplied detail beneath the translated label. Untranslated server
+   data, so it is rendered subordinate and never as the field's message. */
+.plt-field__detail {
+	display: block;
+	font-weight: 400;
+	color: var(--text-muted);
+}
+
+.plt-banner {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-3);
+	margin: 0 0 var(--space-3);
+	padding: var(--space-3) var(--space-4);
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+	color: var(--currentTextColor);
+}
+
+/* The envelope's own sentence beneath the translated banner; server data. */
+.plt-banner__detail {
+	flex-basis: 100%;
+	font-size: 0.875rem;
+	font-weight: 400;
+}
+
+.plt-banner--error {
+	background: var(--status-error-bg);
+	border-color: var(--functional-error-red);
+	color: var(--status-error-fg);
+}
+
+.plt-banner--warning {
+	background: var(--status-warning-bg);
+	border-color: var(--functional-warning);
+	color: var(--status-warning-fg);
+}
+
+.plt-banner--info {
+	background: var(--status-info-bg);
+	border-color: var(--functional-info-blue);
+	color: var(--status-info-fg);
+}
+
+.plt-banner--success {
+	background: var(--status-success-bg);
+	border-color: var(--functional-success);
+	color: var(--status-success-fg);
+}
+
+/* Lifecycle status, always as text — colour is reinforcement only (ADR-0029). */
+.plt-status {
+	display: inline-block;
+	padding: 2px var(--space-2);
+	border-radius: var(--radius-sm);
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	background: var(--surface-variant);
+	color: var(--currentTextColor);
+}
+
+.plt-status--active {
+	background: var(--status-success-bg);
+	color: var(--status-success-fg);
+}
+
+.plt-status--pending {
+	background: var(--status-info-bg);
+	color: var(--status-info-fg);
+}
+
+.plt-status--suspended {
+	background: var(--status-warning-bg);
+	color: var(--status-warning-fg);
+}
+
+.plt-status--decommissioned {
+	background: var(--status-error-bg);
+	color: var(--status-error-fg);
+}
+
+.plt-page__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-3);
+	margin-bottom: var(--space-4);
+}
+
+.plt-page__header h1 {
+	margin: 0 0 var(--space-1);
+	font-family: var(--font-primary);
+	color: var(--currentTextColor);
+}
+
+.plt-page__subtitle {
+	margin: 0;
+	color: var(--text-muted);
+}
+
+.plt-page__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.plt-page__empty {
+	margin: var(--space-4) 0;
+	color: var(--text-muted);
+}
+
+.plt-code {
+	font-family: var(--font-mono);
+	font-size: 0.875rem;
+}
+
+.plt-table-wrap {
+	overflow-x: auto;
+	border: 1px solid var(--input-border);
+	border-radius: var(--radius-md);
+	background: var(--cardBackground);
+}
+
+.plt-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.9375rem;
+}
+
+.plt-table th,
+.plt-table td {
+	padding: var(--space-3);
+	border-bottom: 1px solid var(--input-border);
+	text-align: left;
+	vertical-align: top;
+	color: var(--currentTextColor);
+}
+
+.plt-table thead th {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	background: var(--surface-variant);
+}
+
+.plt-table__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+
+.plt-table tr[aria-disabled='true'] td {
+	color: var(--text-muted);
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}

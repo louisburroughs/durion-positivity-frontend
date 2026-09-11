@@ -13,7 +13,7 @@ in two forms from **one source of truth**:
 Two inputs, each owned by exactly one place:
 
 1. **`src/app/features/sitemap/site-map.data.json`** — the curated top-level
-   **sections** (translated titles, descriptions, grouping, order, roles).
+   **sections** (translated titles, descriptions, grouping, order, roles and permissions).
 2. **The Angular route tree** (`app.routes.ts` + feature `*.routes.ts`) — every
    reachable **page**. `scripts/sitemap/extract-routes.mjs` parses it with the
    TypeScript compiler (no Angular runtime, no eager component imports) to
@@ -71,7 +71,11 @@ app.routes + *.routes.ts ──────┤     (static pages only)
 - **Served unauthenticated, so it is redacted.** `generate-sitemap.mjs` strips
   the privileged surface from the published artifact: role-gated sections
   (`security`, `admin`) are dropped, role-gated pages (e.g.
-  `people/identity-compliance`) are dropped, and no `roles` fields are emitted.
+  `people/identity-compliance`) and permission-gated pages (e.g. `people/employees/new`) are
+  dropped, and no `roles`, `permissions` or `allPermissions` fields are emitted. A section is as
+  gated as its group's mount route in `app.routes.ts` (`extractAppMounts`), whatever the curated
+  data says — and every domain group is gated, so the public artifact carries only the sections
+  any authenticated user can reach. `scripts/sitemap/public-sitemap.spec.ts` asserts this.
   The result is an invariant — **every route in the artifact is reachable by any
   authenticated user**, so anonymous callers can't enumerate the admin/security
   surface. The in-app manifest (`site-map.routes.generated.ts`) keeps the full,
@@ -132,7 +136,7 @@ app.routes + *.routes.ts ──────┤     (static pages only)
   `npm run sitemap:routes:generate && npm run sitemap:generate`.
 - **New top-level section** (nicer title/description/grouping than the derived
   `other` default) — add an entry to `site-map.data.json` (`route`, `titleKey`,
-  `descriptionKey`, optional `roles`, `group`, `order`), add the
+  `descriptionKey`, optional `roles` and `permissions`, `group`, `order`), add the
   `SITEMAP.SECTIONS.<NAME>.DESC` key to every locale under `src/assets/i18n/`,
   run `npm run i18n:pseudo:generate`, and reuse an existing `SHELL.NAV.*` key for
   `titleKey` where possible.

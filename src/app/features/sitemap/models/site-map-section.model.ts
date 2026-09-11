@@ -19,6 +19,12 @@ export interface SiteMapSection {
   descriptionKey: string;
   /** Roles required to see this section; undefined = all authenticated users. */
   roles?: readonly string[];
+  /**
+   * Any one of these permissions admits (mirrors the route group's
+   * `data.permissions`); decides alone when the token carries `perm_bits`,
+   * with `roles` as the fallback. Undefined = not permission-gated.
+   */
+  permissions?: readonly string[];
   /** Visual grouping; groups always render/serialize `main` before `admin`. */
   group: 'main' | 'admin';
   /** Sort order within the section's group (lower sorts earlier). */
@@ -42,8 +48,19 @@ export interface SiteMapData {
 export interface SiteMapRouteEntry {
   /** Full route path, e.g. `/app/crm/customers` or `/app/crm/party/:partyId`. */
   route: string;
-  /** Derived label from the last static path segment; '' for a section root. */
+  /**
+   * Derived English label from the last static path segment; '' for a section
+   * root. Kept only for a stable, locale-independent sort order — the sitemap
+   * page renders `labelKey`, never this field, so it never reaches a viewer.
+   */
   label: string;
+  /**
+   * Translation key for `label` (`SITEMAP.LABEL.<LABEL>`, e.g. "Tenants" →
+   * `SITEMAP.LABEL.TENANTS`); '' when `label` is ''. Keyed by the label text so
+   * every route sharing a last-segment word ("New", "Edit", ...) shares one
+   * locale entry. What the sitemap page actually renders.
+   */
+  labelKey: string;
   /** True when the route contains a `:param` and cannot be linked directly. */
   dynamic: boolean;
   /** Roles required to reach this route; undefined = all authenticated users. */
@@ -53,3 +70,15 @@ export interface SiteMapRouteEntry {
   /** All of these permissions are required; undefined = no such constraint. */
   allPermissions?: readonly string[];
 }
+
+/**
+ * The access requirement a group's mount route under `/app` declares
+ * (`data.roles` / `data.permissions` / `data.allPermissions`), extracted by
+ * `scripts/sitemap/extract-routes.mjs` into `site-map.routes.generated.ts`.
+ * A section root is exactly as protected as its mount, whatever the curated
+ * data says, so both the sitemap page and the public artifact filter on it.
+ */
+export type SiteMapMountEntry = Pick<
+  SiteMapRouteEntry,
+  'route' | 'roles' | 'permissions' | 'allPermissions'
+>;

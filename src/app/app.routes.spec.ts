@@ -48,6 +48,9 @@ describe('/app route access', () => {
    */
   const UNGATED_BY_DESIGN = new Set(['', 'sitemap']);
 
+  /** Redirects are not pages: the target route's own gate applies after them. */
+  const isRedirect = (route: Route): boolean => route.redirectTo !== undefined;
+
   const declaredPermissions = (route: Route): readonly string[] =>
     (route.data?.['permissions'] as readonly string[] | undefined) ?? [];
   const declaredRoles = (route: Route): readonly string[] =>
@@ -59,9 +62,29 @@ describe('/app route access', () => {
     expect(children.filter(child => child.loadChildren).length).toBeGreaterThanOrEqual(14);
   });
 
+  it('gates /app/platform on platform:* with ROLE_PLATFORM_ADMIN as the fallback (ADR-0062)', () => {
+    const platform = children.find(child => child.path === 'platform');
+
+    expect(declaredRoles(platform!)).toEqual(['ROLE_PLATFORM_ADMIN']);
+    expect(declaredPermissions(platform!).length).toBeGreaterThan(0);
+    expect(declaredPermissions(platform!).every(code => code.startsWith('platform:'))).toBe(true);
+  });
+
+  it('aliases the plan-named /app/admin/tenants onto the platform area', () => {
+    const list = children.find(child => child.path === 'admin/tenants');
+    const detail = children.find(child => child.path === 'admin/tenants/:id');
+    const adminIndex = children.findIndex(child => child.path === 'admin');
+
+    expect(list?.redirectTo).toBe('platform/tenants');
+    expect(list?.pathMatch).toBe('full');
+    expect(detail?.redirectTo).toBe('platform/tenants/:id');
+    expect(children.indexOf(list!)).toBeLessThan(adminIndex);
+    expect(children.indexOf(detail!)).toBeLessThan(adminIndex);
+  });
+
   it('gates every route under /app on roles or permissions', () => {
     const ungated = children
-      .filter(child => !UNGATED_BY_DESIGN.has(child.path ?? ''))
+      .filter(child => !UNGATED_BY_DESIGN.has(child.path ?? '') && !isRedirect(child))
       .filter(child => !declaredPermissions(child).length && !declaredRoles(child).length)
       .map(child => `/app/${child.path}`);
 

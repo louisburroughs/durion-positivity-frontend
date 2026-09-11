@@ -167,7 +167,8 @@
       "SECURITY": "Security",
       "ADMIN": "Admin",
       "SITEMAP": "Site Map",
-      "SUPPLIER": "Supplier Connectivity"
+      "SUPPLIER": "Supplier Connectivity",
+      "PLATFORM": "Platform"
     },
     "HEADER": {
       "NAV_TOGGLE_ARIA": "Toggle navigation sidebar",
@@ -189,7 +190,8 @@
           "FR_CA": "Français (Canada)",
           "FR_FR": "Français (France)"
         }
-      }
+      },
+      "TENANT_LABEL": "Tenant"
     },
     "DASHBOARD": {
       "WELCOME_HEADING": "Welcome back, {{name}}",
@@ -306,7 +308,13 @@
         "INVALID_CREDENTIALS": "Invalid username or password. Please try again.",
         "NETWORK": "Cannot reach the server. Check your network or try again later.",
         "GENERIC": "Login failed. Please try again."
-      }
+      },
+      "TENANT": "Tenant",
+      "TENANT_FROM_HOST_HINT": "Determined by the address you are signing in from.",
+      "TENANT_SLUG": "Tenant",
+      "TENANT_SLUG_PLACEHOLDER": "Your tenant's short name, e.g. acme-tire",
+      "TENANT_SLUG_HINT": "Optional. Leave blank if you were given a tenant-specific sign-in address.",
+      "TENANT_SLUG_ERROR": "Use lowercase letters, digits and hyphens (3 to 63 characters)."
     }
   },
   "PEOPLE": {
@@ -6448,7 +6456,127 @@
       },
       "ADMIN": {
         "DESC": "System administration and configuration."
+      },
+      "PLATFORM": {
+        "DESC": "Tenant registry for platform operators: register tenants and manage their lifecycle."
       }
+    },
+    "LABEL": {
+      "ADD_VEHICLE": "Add Vehicle",
+      "ADJUSTMENTS": "Adjustments",
+      "APPLY": "Apply",
+      "APPROVAL": "Approval",
+      "ASSIGN": "Assign",
+      "ASSIGNMENTS": "Assignments",
+      "AUDIT": "Audit",
+      "AUDIT_LOGS": "Audit Logs",
+      "AVAILABILITY": "Availability",
+      "BAYS": "Bays",
+      "BILLING_RULES": "Billing Rules",
+      "BY_LOCATION": "By Location",
+      "CANCEL": "Cancel",
+      "CART": "Cart",
+      "CATALOG": "Catalog",
+      "CHANGE_REQUESTS": "Change Requests",
+      "CONSUME_ITEMS": "Consume Items",
+      "CONTACTS": "Contacts",
+      "CONTRACT": "Contract",
+      "CREATE_COMMERCIAL_ACCOUNT": "Create Commercial Account",
+      "CREATE_INDIVIDUAL_PERSON": "Create Individual Person",
+      "CREDIT_MEMOS": "Credit Memos",
+      "CRM": "Crm",
+      "CRM_SNAPSHOT": "Crm Snapshot",
+      "CROSS_DOCK": "Cross Dock",
+      "CUSTOMER": "Customer",
+      "CUSTOMERS": "Customers",
+      "DEFAULTS": "Defaults",
+      "DIGITAL": "Digital",
+      "DIRECTORY": "Directory",
+      "DISCREPANCY": "Discrepancy",
+      "DISPATCH_ASSIGN": "Dispatch Assign",
+      "DISPATCH_BOARD": "Dispatch Board",
+      "EDIT": "Edit",
+      "EMPLOYEES": "Employees",
+      "ESTIMATES": "Estimates",
+      "ESTIMATE_LIST": "Estimate List",
+      "EVENTS": "Events",
+      "EVENT_SUBMISSION": "Event Submission",
+      "EXCEPTIONS": "Exceptions",
+      "EXCHANGES": "Exchanges",
+      "EXECUTE": "Execute",
+      "EXPORT": "Export",
+      "FEEDS": "Feeds",
+      "FINALIZE": "Finalize",
+      "FROM_APPOINTMENT": "From Appointment",
+      "IDENTITY_COMPLIANCE": "Identity Compliance",
+      "INVOICES": "Invoices",
+      "INVOICE_FINALIZATION": "Invoice Finalization",
+      "IN_PERSON": "In Person",
+      "JOBS": "Jobs",
+      "LABOR": "Labor",
+      "LABOR_OVERHEAD": "Labor Overhead",
+      "LEDGER": "Ledger",
+      "LOCATION": "Location",
+      "LOCATIONS": "Locations",
+      "LOCATIONS_ROSTER": "Locations Roster",
+      "LOCATION_OVERRIDES": "Location Overrides",
+      "LOCATION_SYNC": "Location Sync",
+      "MANUAL_REVIEW": "Manual Review",
+      "MERGE_PARTIES": "Merge Parties",
+      "MOBILE_UNITS": "Mobile Units",
+      "MSRP": "Msrp",
+      "NEW": "New",
+      "OFFBOARD": "Offboard",
+      "OPERATIONAL_CONTEXT": "Operational Context",
+      "OVERRIDE_CONFLICT": "Override Conflict",
+      "PARTIAL": "Partial",
+      "PARTS": "Parts",
+      "PARTY": "Party",
+      "PAYMENT_CAPTURE": "Payment Capture",
+      "PAYMENT_STATUS": "Payment Status",
+      "PEOPLE": "People",
+      "PERMISSIONS": "Permissions",
+      "PICK_EXECUTE": "Pick Execute",
+      "PICK_LIST": "Pick List",
+      "PLANS": "Plans",
+      "POSTING_RULES": "Posting Rules",
+      "PRICE": "Price",
+      "PRICE_BOOKS": "Price Books",
+      "PRICE_OVERRIDE": "Price Override",
+      "PROFILES": "Profiles",
+      "PROVISION": "Provision",
+      "PURCHASE_ORDERS": "Purchase Orders",
+      "RBAC": "Rbac",
+      "RECEIPTS": "Receipts",
+      "RECEIVE_INTO_STAGING": "Receive Into Staging",
+      "RESCHEDULE": "Reschedule",
+      "RETURN_TO_STOCK": "Return To Stock",
+      "REVIEW": "Review",
+      "REVISE": "Revise",
+      "ROLES": "Roles",
+      "ROSTER": "Roster",
+      "SCHEDULE": "Schedule",
+      "SHOP_DASHBOARD": "Shop Dashboard",
+      "SHORTAGE_RESOLUTION": "Shortage Resolution",
+      "SITE": "Site",
+      "SNAPSHOT": "Snapshot",
+      "STOCK": "Stock",
+      "STORAGE_LOCATIONS": "Storage Locations",
+      "SUBMIT": "Submit",
+      "SUMMARY": "Summary",
+      "TASKS": "Tasks",
+      "TENANTS": "Tenants",
+      "TIMER": "Timer",
+      "TRAVEL_TIME": "Travel Time",
+      "UNMATCHED": "Unmatched",
+      "VEHICLE_FITMENT": "Vehicle Fitment",
+      "VEHICLE_INVENTORY": "Vehicle Inventory",
+      "VENDOR_INVOICES": "Vendor Invoices",
+      "VENDOR_PAYMENTS": "Vendor Payments",
+      "VOID_REFUND": "Void Refund",
+      "WIP_STATUS": "Wip Status",
+      "WORKORDERS": "Workorders",
+      "WORK_SESSION": "Work Session"
     }
   },
   "POSITIVITY": {
@@ -7149,6 +7277,117 @@
       "ERROR": {
         "LOAD_SUMMARY": "The latest stock-snapshot summary could not be loaded.",
         "LOAD_LINES": "The stock-snapshot lines could not be loaded."
+      }
+    }
+  },
+  "PLATFORM": {
+    "COMMON": {
+      "LOADING": "Loading...",
+      "RETRY": "Retry",
+      "CANCEL": "Cancel",
+      "CONFIRM": "Confirm",
+      "ACTIONS": "Actions",
+      "OPTIONAL": "(optional)",
+      "BACK_TO_LIST": "Back to tenants",
+      "BREADCRUMB_ARIA": "Breadcrumb"
+    },
+    "ERROR": {
+      "VALIDATION": "Some fields need attention. Check the messages below.",
+      "FORBIDDEN": "Your session is not allowed to manage the tenant registry.",
+      "NOT_FOUND": "The requested record was not found.",
+      "CONFLICT": "The request conflicts with the current state of the record.",
+      "RETRYABLE": "The tenant registry is not responding. Try again in a moment.",
+      "FIELD": {
+        "SLUG": "The slug is invalid.",
+        "DISPLAY_NAME": "The display name is invalid.",
+        "ACCOUNT_ID": "The account is invalid.",
+        "CELL": "The cell is invalid.",
+        "INITIAL_ADMIN_EMAIL": "The administrator email is invalid.",
+        "INVALID": "This value is invalid."
+      }
+    },
+    "TENANTS": {
+      "TITLE": "Tenants",
+      "SUBTITLE": "Every tenant on the platform and where it is in its lifecycle.",
+      "CREATE": "Register tenant",
+      "EMPTY": "No tenants match this filter.",
+      "FILTER": {
+        "LABEL": "Status",
+        "ALL": "All statuses"
+      },
+      "TABLE": {
+        "CAPTION": "Tenants on the platform",
+        "NAME": "Name",
+        "SLUG": "Slug",
+        "STATUS": "Status",
+        "CELL": "Cell",
+        "CREATED": "Registered",
+        "OPEN": "Open"
+      },
+      "STATUS": {
+        "PENDING": "Pending",
+        "ACTIVE": "Active",
+        "SUSPENDED": "Suspended",
+        "DECOMMISSIONED": "Decommissioned"
+      },
+      "ERROR": {
+        "LOAD": "Could not load the tenant list.",
+        "LOAD_ONE": "Could not load this tenant.",
+        "NOT_FOUND": "This tenant does not exist.",
+        "CREATE": "The tenant could not be registered.",
+        "SLUG_TAKEN": "That slug is already taken. Choose another.",
+        "ACCOUNT_NOT_FOUND": "The selected account does not exist.",
+        "ACCOUNTS_LOAD": "Could not load the account list. Enter the account id instead.",
+        "SUSPEND": "The tenant could not be suspended.",
+        "REACTIVATE": "The tenant could not be reactivated.",
+        "TRANSITION_CONFLICT": "The tenant's status changed. Reload and try again."
+      },
+      "DETAIL": {
+        "TITLE": "Tenant",
+        "SUSPEND": "Suspend",
+        "REACTIVATE": "Reactivate",
+        "SUSPEND_CONFIRM_TITLE": "Suspend this tenant?",
+        "SUSPEND_CONFIRM_BODY": "Sign-ins for this tenant will be refused until it is reactivated.",
+        "REACTIVATE_CONFIRM_TITLE": "Reactivate this tenant?",
+        "REACTIVATE_CONFIRM_BODY": "Sign-ins for this tenant will be accepted again.",
+        "SUSPENDED_SUCCESS": "The tenant has been suspended.",
+        "REACTIVATED_SUCCESS": "The tenant has been reactivated.",
+        "PENDING_NOTE": "Provisioning is in progress. The tenant becomes active once its roles and first administrator exist.",
+        "DECOMMISSIONED_NOTE": "This tenant has been decommissioned and can no longer be changed.",
+        "FIELD": {
+          "ID": "Tenant id",
+          "STATUS": "Status",
+          "ACCOUNT": "Owning account",
+          "CELL": "Cell",
+          "INITIAL_ADMIN_EMAIL": "Initial administrator",
+          "CREATED": "Registered",
+          "UPDATED": "Last changed",
+          "ACTIVATED": "Activated",
+          "SUSPENDED_AT": "Suspended",
+          "DECOMMISSIONED_AT": "Decommissioned"
+        }
+      },
+      "FORM": {
+        "TITLE": "Register a tenant",
+        "SUBTITLE": "The tenant starts pending; it becomes active once its roles and first administrator are provisioned.",
+        "SLUG": "Slug",
+        "SLUG_HINT": "Lowercase letters, digits and hyphens, 3 to 63 characters. Used in sign-in addresses and cannot be changed later.",
+        "SLUG_ERROR": "Enter a slug of 3 to 63 lowercase letters, digits and hyphens.",
+        "DISPLAY_NAME": "Display name",
+        "DISPLAY_NAME_ERROR": "Enter a display name (up to 200 characters).",
+        "ACCOUNT": "Owning account",
+        "ACCOUNT_PLACEHOLDER": "Select an account",
+        "ACCOUNT_ID": "Owning account id",
+        "ACCOUNT_ID_HINT": "The id of an existing account.",
+        "ACCOUNT_ERROR": "Choose the account that owns this tenant.",
+        "CELL": "Cell",
+        "CELL_HINT": "Cell or region the tenant is served from, e.g. us-east-1.",
+        "INITIAL_ADMIN_EMAIL": "Initial administrator email",
+        "INITIAL_ADMIN_EMAIL_HINT": "The first administrator account is created for this address during provisioning.",
+        "INITIAL_ADMIN_EMAIL_ERROR": "Enter a valid email address.",
+        "SUBMIT": "Register tenant",
+        "SUBMITTING": "Registering...",
+        "CREATED_SUCCESS": "The tenant has been registered. It becomes active once provisioning finishes."
       }
     }
   }

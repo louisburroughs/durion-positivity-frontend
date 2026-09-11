@@ -105,6 +105,7 @@ export const PEOPLE_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'PEOPLE.LANDING.CARD.EMPLOYEE_PROFILE.DESCRIPTION',
           ctaKey: 'PEOPLE.LANDING.ACTION.OPEN_EMPLOYEE_PROFILE',
           buildCommands: id => ['/app', 'people', 'employees', id],
+          permissions: PEOPLE_PAGE.employeeDetail,
         },
         {
           kind: 'guided',

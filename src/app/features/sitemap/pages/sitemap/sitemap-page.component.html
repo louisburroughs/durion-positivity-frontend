@@ -19,7 +19,7 @@
         <ul class="sitemap__pages">
           @for (page of view.pages; track page.route) {
           <li class="sitemap__page">
-            <a class="sitemap__page-link" [routerLink]="page.route">{{ page.label }}</a>
+            <a class="sitemap__page-link" [routerLink]="page.route">{{ page.labelKey | translate }}</a>
           </li>
           }
         </ul>

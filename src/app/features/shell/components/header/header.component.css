@@ -112,6 +112,39 @@
   font-size: 1.1rem;
 }
 
+/* ── Tenant chip (ADR-0062: the session's tenant, read from the token) ── */
+.tenant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--contrastTextColor);
+  max-width: 16rem;
+}
+
+.tenant-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.tenant-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tenant-slug {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
 /* ── User chip ───────────────────────────────────────────────────────── */
 .user-chip {
   display: flex;
@@ -155,6 +188,8 @@
 @media (max-width: 640px) {
   .shell-brand-name { display: none; }
   .user-name { display: none; }
+  .tenant-slug { display: none; }
+  .tenant-chip { max-width: 9rem; }
   .locale-select { max-width: 6.5rem; }
 }
 @media (prefers-reduced-motion: reduce) {

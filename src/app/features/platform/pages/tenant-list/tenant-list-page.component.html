@@ -1,0 +1,99 @@
+<main class="tenants-page" aria-labelledby="tenants-page-title">
+  <header class="plt-page__header">
+    <div>
+      <h1 id="tenants-page-title">{{ 'PLATFORM.TENANTS.TITLE' | translate }}</h1>
+      <p class="plt-page__subtitle">{{ 'PLATFORM.TENANTS.SUBTITLE' | translate }}</p>
+    </div>
+    <div class="plt-page__actions">
+      @if (canCreate()) {
+        <a class="plt-btn plt-btn--primary tenants-page__create" [routerLink]="['/app', 'platform', 'tenants', 'new']">
+          {{ 'PLATFORM.TENANTS.CREATE' | translate }}
+        </a>
+      }
+    </div>
+  </header>
+
+  <div class="tenants-page__filter plt-field">
+    <label class="plt-field__label" for="tenant-status-filter">
+      {{ 'PLATFORM.TENANTS.FILTER.LABEL' | translate }}
+    </label>
+    <select
+      id="tenant-status-filter"
+      class="plt-field__input"
+      [value]="statusFilter()"
+      (change)="onStatusFilterChange($any($event.target).value)"
+    >
+      <option value="">{{ 'PLATFORM.TENANTS.FILTER.ALL' | translate }}</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ statusKey(status) | translate }}</option>
+      }
+    </select>
+  </div>
+
+  @if (state() === 'error') {
+    <div class="plt-banner plt-banner--error" role="alert">
+      {{ errorKey()! | translate }}
+      @if (errorDetail(); as detail) {
+        <span class="plt-banner__detail">{{ detail }}</span>
+      }
+      <button class="plt-btn plt-btn--secondary" type="button" (click)="load()">
+        {{ 'PLATFORM.COMMON.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (state() === 'forbidden') {
+    <div class="plt-banner plt-banner--error" role="alert">
+      {{ 'PLATFORM.ERROR.FORBIDDEN' | translate }}
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <p class="plt-banner" aria-live="polite">{{ 'PLATFORM.COMMON.LOADING' | translate }}</p>
+  }
+
+  @if (state() === 'empty') {
+    <p class="plt-page__empty">{{ 'PLATFORM.TENANTS.EMPTY' | translate }}</p>
+  }
+
+  @if (state() === 'ready') {
+    <div class="plt-table-wrap">
+      <table class="plt-table">
+        <caption class="sr-only">{{ 'PLATFORM.TENANTS.TABLE.CAPTION' | translate }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ 'PLATFORM.TENANTS.TABLE.NAME' | translate }}</th>
+            <th scope="col">{{ 'PLATFORM.TENANTS.TABLE.SLUG' | translate }}</th>
+            <th scope="col">{{ 'PLATFORM.TENANTS.TABLE.STATUS' | translate }}</th>
+            <th scope="col">{{ 'PLATFORM.TENANTS.TABLE.CELL' | translate }}</th>
+            <th scope="col">{{ 'PLATFORM.TENANTS.TABLE.CREATED' | translate }}</th>
+            <th scope="col">
+              <span class="sr-only">{{ 'PLATFORM.COMMON.ACTIONS' | translate }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (tenant of tenants(); track tenant.id) {
+            <tr>
+              <th scope="row" class="tenants-page__name">{{ tenant.displayName }}</th>
+              <td><code class="plt-code">{{ tenant.slug }}</code></td>
+              <td>
+                <span class="plt-status" [class]="'plt-status ' + statusClass(tenant.status)">
+                  {{ statusKey(tenant.status) | translate }}
+                </span>
+              </td>
+              <td>{{ tenant.cell || '—' }}</td>
+              <td>{{ tenant.createdAt | date: 'medium' }}</td>
+              <td>
+                <a class="tenants-page__link" [routerLink]="['/app', 'platform', 'tenants', tenant.id]">
+                  {{ 'PLATFORM.TENANTS.TABLE.OPEN' | translate }}
+                  <span class="sr-only">{{ tenant.displayName }}</span>
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</main>

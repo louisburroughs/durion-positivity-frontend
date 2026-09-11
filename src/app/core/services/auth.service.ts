@@ -4,23 +4,34 @@ import { Observable, of, shareReplay, tap, throwError, finalize } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
-import { AuthAPIService, JWTAPIService, LoginRequest, TokenPairResponse } from '@durion-sdk/security';
-import { JwtClaims } from '../models/auth.models';
+import {
+  AuthAPIService,
+  JWTAPIService,
+  LoginRequest,
+  TenantAPIService,
+  TenantMeResponse,
+  TokenPairResponse,
+} from '@durion-sdk/security';
+import { JwtClaims, TenantSummary } from '../models/auth.models';
 import { PERMISSION_BY_BIT, PERMISSION_CATALOG_VERSION } from '../security/permission-catalog';
 import { decodePermissionBits, encodePermissionBits, isCatalogStale } from '../security/permission-bits';
+import { PLATFORM_TENANT_ID, tenantSlugFromHost } from '../security/tenant';
 
 // Fake JWT used only when environment.mockAuth === true.
 // Carries every catalog permission so mock sessions exercise the same
-// perm_bits gating path as a real ROLE_ADMIN token rather than bypassing it.
+// perm_bits gating path as a real ROLE_ADMIN token rather than bypassing it,
+// and a fixed `tid` (the platform tenant, so the platform-admin pages are
+// reachable in dev) so tenant-aware code paths run under mock auth too.
 function buildMockAccessToken(): string {
   const header = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
   const payload = {
     sub: 'demo',
-    roles: ['ROLE_ADMIN'],
+    roles: ['ROLE_ADMIN', 'ROLE_PLATFORM_ADMIN'],
     exp: 9999999999,
     iat: 1700000000,
     perm_bits: encodePermissionBits(PERMISSION_BY_BIT),
     perm_ver: PERMISSION_CATALOG_VERSION,
+    tid: PLATFORM_TENANT_ID,
   };
   const encodedPayload = btoa(JSON.stringify(payload))
     .replaceAll('+', '-')
@@ -42,10 +53,19 @@ function mockTokenPair(): TokenPairResponse {
   return mockResponse;
 }
 
+/** The mock session's tenant; mirrors what `/v1/tenants/me` answers for the platform tenant. */
+const MOCK_TENANT: TenantSummary = {
+  tenantId: PLATFORM_TENANT_ID,
+  slug: 'platform',
+  displayName: 'Platform',
+  status: 'ACTIVE',
+};
+
 const ACCESS_TOKEN_KEY = 'durion-access-token';
 const REFRESH_TOKEN_KEY = 'durion-refresh-token';
 const ROLES_KEY = 'durion-user-roles';
 const ROLES_EXP_KEY = 'durion-user-roles-exp';
+const TENANT_KEY = 'durion-tenant';
 const EXPIRY_SKEW_MS = 30_000;
 const MAX_TIMEOUT_DELAY_MS = 2_147_483_647;
 
@@ -56,6 +76,12 @@ const MAX_TIMEOUT_DELAY_MS = 2_147_483_647;
  *
  * Token storage: localStorage (access + refresh).
  * Guards read `isAuthenticated()` signal; HttpInterceptor reads `accessToken()`.
+ *
+ * Tenancy (ADR-0062): the session's tenant is the token's `tid` claim, exposed
+ * as `tenantId()`; `tenant()` is the registry's view of it, loaded from
+ * `GET /v1/tenants/me` at most once per tenant binding and kept across silent
+ * refreshes. Nothing here ever sends a tenant identifier — the gateway derives
+ * `X-Tenant-Id` from the token.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -63,10 +89,18 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly authApiService = inject(AuthAPIService);
   private readonly jwtApiService = inject(JWTAPIService);
+  private readonly tenantApiService = inject(TenantAPIService);
 
   private readonly _accessToken = signal<string | null>(this.loadFromStorage(ACCESS_TOKEN_KEY));
   private readonly _refreshToken = signal<string | null>(this.loadFromStorage(REFRESH_TOKEN_KEY));
   private readonly _roles = signal<string[]>(this.loadRolesFromSession());
+  private readonly _tenant = signal<TenantSummary | null>(null);
+  /**
+   * Tenant id a /tenants/me load was started for. One attempt per binding: a
+   * silent refresh while the first load is pending, or after it failed, starts
+   * no second request. Cleared when the binding changes or the session ends.
+   */
+  private tenantLoadFor: string | null = null;
   private refreshRequest$: Observable<TokenPairResponse> | null = null;
   private expiryTimerId: ReturnType<typeof setTimeout> | null = null;
 
@@ -111,6 +145,22 @@ export class AuthService {
   /** True when the session token carries a `perm_bits` claim we can gate on. */
   readonly permissionsKnown = computed(() => this.currentUserPermissions() !== null);
 
+  /**
+   * Tenant id from the token's `tid` claim, or null for a token issued before
+   * the claim existed (or no session). This is the only source of the tenant.
+   */
+  readonly tenantId = computed<string | null>(() => this.currentUserClaims()?.tid ?? null);
+
+  /**
+   * The registry's view of the session tenant (slug, display name, status),
+   * loaded after login and on session restore; null until it arrives, after
+   * logout, and for a token without `tid`.
+   */
+  readonly tenant = this._tenant.asReadonly();
+
+  /** True when the session is bound to the platform tenant — a platform operator. */
+  readonly isPlatformTenant = computed(() => this.tenantId() === PLATFORM_TENANT_ID);
+
   constructor() {
     this.reconcileSessionFromToken();
   }
@@ -144,6 +194,16 @@ export class AuthService {
         sessionExpired: 'true',
       },
     });
+  }
+
+  /**
+   * Tenant slug named by the page host under `environment.tenantHostSuffix`,
+   * or null when the host carries no tenant (localhost, a shared preview host,
+   * SSR) and the login form must ask for the slug.
+   */
+  hostTenantSlug(): string | null {
+    if (!isPlatformBrowser(this.platformId)) return null;
+    return tenantSlugFromHost(globalThis.location?.hostname ?? '', environment.tenantHostSuffix);
   }
 
   hasRole(role: string): boolean {
@@ -218,6 +278,7 @@ export class AuthService {
   // ── Internals ─────────────────────────────────────────────────────────────
 
   private storeTokens(accessToken: string, refreshToken: string): void {
+    const previousTenantId = this.tenantId();
     this._accessToken.set(accessToken);
     this._refreshToken.set(refreshToken);
     if (isPlatformBrowser(this.platformId)) {
@@ -225,6 +286,7 @@ export class AuthService {
       localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
     }
     this.cacheRolesFromToken(accessToken);
+    this.syncTenant(previousTenantId);
   }
 
   private clearTokens(): void {
@@ -236,13 +298,114 @@ export class AuthService {
     this._accessToken.set(null);
     this._refreshToken.set(null);
     this._roles.set([]);
+    this._tenant.set(null);
+    this.tenantLoadFor = null;
 
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(ACCESS_TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
       sessionStorage.removeItem(ROLES_KEY);
       sessionStorage.removeItem(ROLES_EXP_KEY);
+      sessionStorage.removeItem(TENANT_KEY);
     }
+  }
+
+  // ── Tenant ────────────────────────────────────────────────────────────────
+
+  /**
+   * Bring `tenant()` in line with the token that was just stored.
+   *
+   * A silent refresh re-issues the same `tid`, so the loaded tenant is kept. A
+   * different `tid` (a login into another tenant on a shared host) drops every
+   * per-tenant cache first — the tenant summary here, the roles cache already
+   * overwritten by `cacheRolesFromToken` — so nothing from the previous tenant
+   * survives into the new session.
+   */
+  private syncTenant(previousTenantId: string | null): void {
+    const tenantId = this.tenantId();
+
+    if (tenantId !== previousTenantId) {
+      this._tenant.set(null);
+      this.tenantLoadFor = null;
+      if (isPlatformBrowser(this.platformId)) {
+        sessionStorage.removeItem(TENANT_KEY);
+      }
+    }
+
+    if (!tenantId) {
+      this._tenant.set(null);
+      return;
+    }
+
+    if (this._tenant()?.tenantId === tenantId) return;
+
+    const cached = this.loadTenantFromSession();
+    if (cached?.tenantId === tenantId) {
+      this._tenant.set(cached);
+      return;
+    }
+
+    if (this.tenantLoadFor === tenantId) return; // pending, or already tried for this binding
+    this.tenantLoadFor = tenantId;
+    this.loadTenant(tenantId);
+  }
+
+  private loadTenant(tenantId: string): void {
+    if (environment.mockAuth) {
+      this._tenant.set({ ...MOCK_TENANT, tenantId });
+      return;
+    }
+
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    this.tenantApiService.getMyTenant().subscribe({
+      next: response => {
+        // Ignore a late answer for a tenant the session has since left.
+        if (this.tenantId() !== tenantId) return;
+        const tenant = this.toTenantSummary(response, tenantId);
+        this._tenant.set(tenant);
+        sessionStorage.setItem(TENANT_KEY, JSON.stringify(tenant));
+      },
+      error: (err: unknown) => {
+        // The tenant name is presentation only; the session stays usable
+        // without it and the header simply shows no tenant.
+        console.warn('[AuthService] Could not load the session tenant', err);
+      },
+    });
+  }
+
+  /** `tenantId` is the token's `tid`, the authority; the response id is descriptive only. */
+  private toTenantSummary(response: TenantMeResponse, tenantId: string): TenantSummary {
+    const slug = response.slug ?? '';
+    return {
+      tenantId,
+      slug,
+      displayName: response.displayName?.trim() || slug,
+      status: response.status ?? '',
+    };
+  }
+
+  private loadTenantFromSession(): TenantSummary | null {
+    if (!isPlatformBrowser(this.platformId)) return null;
+
+    const raw = sessionStorage.getItem(TENANT_KEY);
+    if (!raw) return null;
+
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        typeof (parsed as TenantSummary).tenantId === 'string' &&
+        typeof (parsed as TenantSummary).slug === 'string'
+      ) {
+        return parsed as TenantSummary;
+      }
+    } catch {
+      // fall through — a corrupt cache is simply discarded
+    }
+    sessionStorage.removeItem(TENANT_KEY);
+    return null;
   }
 
   private loadFromStorage(key: string): string | null {
@@ -292,6 +455,10 @@ export class AuthService {
       return;
     }
     this.cacheRolesFromToken(token);
+    if (this._accessToken()) {
+      // Same tenant as before the reload: keep the cached summary, fetch only if absent.
+      this.syncTenant(this.tenantId());
+    }
   }
 
   private cacheRolesFromToken(token: string): void {

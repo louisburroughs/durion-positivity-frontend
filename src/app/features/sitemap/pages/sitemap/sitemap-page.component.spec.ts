@@ -57,6 +57,30 @@ describe('SitemapPageComponent', () => {
     expect(component.state()).toBe('ready');
   });
 
+  it('offers the platform section to a permission-only platform operator (ADR-0062)', async () => {
+    // A platform operator's token carries platform:* bits; the role is only the
+    // fallback for tokens without perm_bits, so the section must not need it.
+    await setup([], ['platform:tenant:read']);
+    const routes = component.groups().flatMap(g => g.sections.map(v => v.section.route));
+    expect(routes).toContain('/app/platform');
+
+    await setup(['ROLE_ADMIN'], ['security:role:view']);
+    const adminRoutes = component.groups().flatMap(g => g.sections.map(v => v.section.route));
+    expect(adminRoutes).not.toContain('/app/platform');
+  });
+
+  it('hides a domain section from a session without that domain\'s permissions (mount gate)', async () => {
+    // The route tree gates /app/crm on crm:* etc.; the curated data declares no
+    // permissions for those sections, so the guard's own gate must decide here.
+    await setup([], ['people-contact:person:view']);
+    const routes = component.groups().flatMap(g => g.sections.map(v => v.section.route));
+    expect(routes).toContain('/app');
+    expect(routes).toContain('/app/people');
+    expect(routes).not.toContain('/app/crm');
+    expect(routes).not.toContain('/app/billing');
+    expect(routes).not.toContain('/app/accounting');
+  });
+
   it('shows both groups including admin-only sections for an admin', async () => {
     await setup(['ROLE_ADMIN']);
     const groups = component.groups();

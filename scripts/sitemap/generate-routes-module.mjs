@@ -11,7 +11,7 @@
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
-import { extractAppRoutes, deriveLabel, repoRoot } from './extract-routes.mjs';
+import { extractAppMounts, extractAppRoutes, deriveLabel, deriveLabelKey, repoRoot } from './extract-routes.mjs';
 
 const OUT = resolve(repoRoot, 'src/app/features/sitemap/site-map.routes.generated.ts');
 const checkOnly = process.argv.includes('--check');
@@ -19,30 +19,45 @@ const checkOnly = process.argv.includes('--check');
 const entries = extractAppRoutes().map(r => ({
   route: r.route,
   label: deriveLabel(r.route),
+  labelKey: deriveLabelKey(r.route),
   dynamic: r.dynamic,
   roles: r.roles ?? null,
   permissions: r.permissions ?? null,
   allPermissions: r.allPermissions ?? null,
 }));
 
+const list = (name, codes) => (codes ? `, ${name}: [${codes.map(c => `'${c}'`).join(', ')}]` : '');
+const accessOf = e => list('roles', e.roles) + list('permissions', e.permissions) + list('allPermissions', e.allPermissions);
+
 const lines = entries
-  .map(e => {
-    const list = (name, codes) => (codes ? `, ${name}: [${codes.map(c => `'${c}'`).join(', ')}]` : '');
-    const access = list('roles', e.roles) + list('permissions', e.permissions) + list('allPermissions', e.allPermissions);
-    return `  { route: '${e.route}', label: ${JSON.stringify(e.label)}, dynamic: ${e.dynamic}${access} },`;
-  })
+  .map(
+    e =>
+      `  { route: '${e.route}', label: ${JSON.stringify(e.label)}, labelKey: ${JSON.stringify(e.labelKey)}, dynamic: ${e.dynamic}${accessOf(e)} },`,
+  )
+  .join('\n');
+
+const mountLines = extractAppMounts()
+  .map(m => `  { route: '${m.route}'${accessOf(m)} },`)
   .join('\n');
 
 const content = `// GENERATED — do not edit by hand.
 // Source: src/app/app.routes.ts + feature *.routes.ts (parsed by scripts/sitemap/extract-routes.mjs)
 // Regenerate: npm run sitemap:routes:generate
 //
-// Every reachable route under the authenticated /app shell, with derived label,
-// dynamic-param flag, and required roles/permissions. Consumed by the sitemap page.
-import type { SiteMapRouteEntry } from './models/site-map-section.model';
+// Every reachable route under the authenticated /app shell, with a derived label
+// (English, kept for stable sorting — never rendered), its translation key
+// (SITEMAP.LABEL.*, what the sitemap page actually renders), dynamic-param flag,
+// and required roles/permissions.
+import type { SiteMapMountEntry, SiteMapRouteEntry } from './models/site-map-section.model';
 
 export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
 ${lines}
+];
+
+// The access requirement on each group's mount route under /app — what admits
+// or refuses the whole group, and so its section root in the sitemap.
+export const SITE_MAP_MOUNTS: readonly SiteMapMountEntry[] = [
+${mountLines}
 ];
 `;
 

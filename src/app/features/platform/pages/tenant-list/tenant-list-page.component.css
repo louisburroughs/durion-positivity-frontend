@@ -1,0 +1,22 @@
+.tenants-page {
+	display: block;
+}
+
+.tenants-page__filter {
+	max-width: 18rem;
+}
+
+.tenants-page__name {
+	font-weight: 600;
+}
+
+.tenants-page__link {
+	color: var(--brand-primary);
+	font-weight: 600;
+	text-decoration: underline;
+}
+
+.tenants-page__link:focus-visible {
+	outline: 2px solid var(--input-focus-border);
+	outline-offset: 2px;
+}

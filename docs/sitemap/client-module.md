@@ -12,7 +12,7 @@ is [`sitemap.schema.json`](./sitemap.schema.json).
 
 > **The artifact is redacted.** It is served unauthenticated, so the frontend
 > strips the privileged surface before publishing: no `security`/`admin`
-> sections, no role-gated pages, and no `roles` fields. Consequently **every
+> sections, no role- or permission-gated pages, and no `roles` fields. Consequently **every
 > route in the artifact is reachable by any authenticated user** — treat the
 > list as role-unrestricted. The `roles` fields below remain in the schema for
 > forward-compatibility but are not present today; a consumer must not rely on
@@ -177,7 +177,7 @@ The client module's test suite MUST cover the following cases. Use the
 | 10 | TTL not elapsed | second call returns cached copy without a second HTTP request |
 | 11 | `refresh()` | performs an HTTP request even within TTL |
 | 12 | Unknown extra field on a section/page | ignored, not fatal (forward-compat) |
-| 13 | `visiblePages([])` | returns **all** pages — the redacted artifact carries no role-gated pages |
+| 13 | `visiblePages([])` | returns **all** pages — the redacted artifact carries no role- or permission-gated pages |
 | 14 | Redaction invariant (pages) | no page has a `roles` field; the admin-only `/app/people/identity-compliance` is absent |
 | 15 | Dynamic page shape | a page with `dynamic:true` carries a `:param` route and a `params` array |
 | 16 | `other`-group section | parsed with a `title` and no `titleKey`/`description` |

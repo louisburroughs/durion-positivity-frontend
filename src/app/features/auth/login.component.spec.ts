@@ -13,6 +13,7 @@ describe('LoginComponent', () => {
 
   const authServiceStub = {
     login: vi.fn().mockReturnValue(new Subject()),
+    hostTenantSlug: vi.fn().mockReturnValue(null as string | null),
   };
 
   const themeServiceStub = {
@@ -46,6 +47,7 @@ describe('LoginComponent', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    authServiceStub.hostTenantSlug.mockReturnValue(null);
     TestBed.resetTestingModule();
   });
 
@@ -94,7 +96,7 @@ describe('LoginComponent', () => {
       fixture.detectChanges();
       const subject = new Subject<never>();
       authServiceStub.login.mockReturnValueOnce(subject);
-      component.form.setValue({ username: 'admin', password: /* test credential */ 'pass1' });
+      component.form.patchValue({ username: 'admin', password: /* test credential */ 'pass1' });
       component.submit();
       subject.error({ status: 401 });
 
@@ -107,7 +109,7 @@ describe('LoginComponent', () => {
       fixture.detectChanges();
       const subject = new Subject<never>();
       authServiceStub.login.mockReturnValueOnce(subject);
-      component.form.setValue({ username: 'admin', password: /* test credential */ 'pass1' });
+      component.form.patchValue({ username: 'admin', password: /* test credential */ 'pass1' });
       component.submit();
       subject.error({ status: 0 });
 
@@ -122,7 +124,7 @@ describe('LoginComponent', () => {
       const spy = vi.spyOn(router, 'navigateByUrl');
       const subject = new Subject<TokenPairResponse>();
       authServiceStub.login.mockReturnValueOnce(subject);
-      component.form.setValue({ username: 'admin', password: /* test credential */ 'pass1' });
+      component.form.patchValue({ username: 'admin', password: /* test credential */ 'pass1' });
       component.submit();
       subject.next({ accessToken: 'tok', refreshToken: 'rt' });
 
@@ -136,11 +138,88 @@ describe('LoginComponent', () => {
       const spy = vi.spyOn(router, 'navigateByUrl');
       const subject = new Subject<TokenPairResponse>();
       authServiceStub.login.mockReturnValueOnce(subject);
-      component.form.setValue({ username: 'admin', password: /* test credential */ 'pass1' });
+      component.form.patchValue({ username: 'admin', password: /* test credential */ 'pass1' });
       component.submit();
       subject.next({ accessToken: 'tok', refreshToken: 'rt' });
 
       expect(spy).toHaveBeenCalledWith('/chat');
+    });
+  });
+
+  describe('tenant resolution (ADR-0062)', () => {
+    function fillCredentials(): void {
+      component.form.patchValue({ username: 'admin', password: /* test credential */ 'pass1' });
+    }
+
+    it('shows the optional tenant field when the host names no tenant', () => {
+      setup({});
+      fixture.detectChanges();
+
+      expect(component.hostTenantSlug()).toBeNull();
+      expect(fixture.nativeElement.querySelector('#tenantSlug')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.tenant-readonly')).toBeNull();
+    });
+
+    it('sends tenantSlug, trimmed and lowercased, when the operator fills it in', () => {
+      setup({});
+      fixture.detectChanges();
+      fillCredentials();
+      component.form.patchValue({ tenantSlug: '  Acme-Tire ' });
+      component.submit();
+
+      expect(authServiceStub.login).toHaveBeenCalledWith({
+        username: 'admin',
+        password: 'pass1',
+        tenantSlug: 'acme-tire',
+      });
+    });
+
+    it('omits tenantSlug from the request when the field is left blank', () => {
+      setup({});
+      fixture.detectChanges();
+      fillCredentials();
+      component.submit();
+
+      expect(authServiceStub.login).toHaveBeenCalledWith({ username: 'admin', password: 'pass1' });
+      expect(authServiceStub.login.mock.calls[0][0]).not.toHaveProperty('tenantSlug');
+    });
+
+    it('rejects a malformed slug client-side without calling the API', () => {
+      setup({});
+      fixture.detectChanges();
+      fillCredentials();
+      component.form.patchValue({ tenantSlug: 'Not A Slug!' });
+      component.submit();
+
+      expect(component.tenantSlugCtrl.invalid).toBe(true);
+      expect(authServiceStub.login).not.toHaveBeenCalled();
+    });
+
+    it('hides the field and shows the host-derived tenant read-only, sending no slug', () => {
+      authServiceStub.hostTenantSlug.mockReturnValue('acme-tire');
+      setup({});
+      fixture.detectChanges();
+
+      expect(component.hostTenantSlug()).toBe('acme-tire');
+      expect(fixture.nativeElement.querySelector('#tenantSlug')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.tenant-readonly')?.textContent?.trim()).toBe('acme-tire');
+
+      fillCredentials();
+      component.submit();
+      expect(authServiceStub.login).toHaveBeenCalledWith({ username: 'admin', password: 'pass1' });
+    });
+
+    it('reports an unknown or inactive tenant with the same message as bad credentials', () => {
+      setup({});
+      fixture.detectChanges();
+      const subject = new Subject<never>();
+      authServiceStub.login.mockReturnValueOnce(subject);
+      fillCredentials();
+      component.form.patchValue({ tenantSlug: 'no-such-tenant' });
+      component.submit();
+      subject.error({ status: 401 });
+
+      expect(component.error()).toBe('AUTH.LOGIN.ERROR.INVALID_CREDENTIALS');
     });
   });
 });

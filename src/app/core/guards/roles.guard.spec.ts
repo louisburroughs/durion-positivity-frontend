@@ -75,6 +75,33 @@ describe('rolesGuard / rolesChildGuard', () => {
     });
   });
 
+  describe('platform-admin gate (ADR-0062)', () => {
+    const PLATFORM_GATE = {
+      roles: ['ROLE_PLATFORM_ADMIN'],
+      permissions: ['platform:tenant:read', 'platform:tenant:create'],
+    };
+
+    it('admits a platform operator whose token carries a platform:* bit', () => {
+      session.permissions = ['platform:tenant:read'];
+      expect(evaluate(PLATFORM_GATE)).toBe(true);
+    });
+
+    it('refuses a tenant admin: ROLE_ADMIN with every tenant permission but no platform:* bit', () => {
+      session.roles = ['ROLE_ADMIN'];
+      session.permissions = ['security:role:view', 'crm:party:view'];
+      expect(urlOf(evaluate(PLATFORM_GATE))).toBe('/forbidden');
+    });
+
+    it('falls back to ROLE_PLATFORM_ADMIN for a token without perm_bits', () => {
+      session.permissions = null;
+      session.roles = ['ROLE_PLATFORM_ADMIN'];
+      expect(evaluate(PLATFORM_GATE)).toBe(true);
+
+      session.roles = ['ROLE_ADMIN'];
+      expect(urlOf(evaluate(PLATFORM_GATE))).toBe('/forbidden');
+    });
+  });
+
   describe('permission gating', () => {
     it('allows a user holding any one of the required permissions', () => {
       session.permissions = ['inventory:on_hand:view'];

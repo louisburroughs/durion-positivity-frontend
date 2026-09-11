@@ -87,6 +87,15 @@
       "roles": ["ROLE_ADMIN"],
       "group": "admin",
       "order": 12
+    },
+    {
+      "route": "/app/platform",
+      "titleKey": "SHELL.NAV.PLATFORM",
+      "descriptionKey": "SITEMAP.SECTIONS.PLATFORM.DESC",
+      "roles": ["ROLE_PLATFORM_ADMIN"],
+      "permissions": ["platform:tenant:read"],
+      "group": "admin",
+      "order": 15
     }
   ]
 }
