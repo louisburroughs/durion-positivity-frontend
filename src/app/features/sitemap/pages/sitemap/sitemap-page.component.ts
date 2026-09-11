@@ -8,11 +8,12 @@ import {
 import { AuthService } from '../../../../core/services/auth.service';
 import {
   SiteMapData,
+  SiteMapMountEntry,
   SiteMapRouteEntry,
   SiteMapSection,
 } from '../../models/site-map-section.model';
 import siteMapData from '../../site-map.data.json';
-import { SITE_MAP_ROUTES } from '../../site-map.routes.generated';
+import { SITE_MAP_MOUNTS, SITE_MAP_ROUTES } from '../../site-map.routes.generated';
 
 interface SiteMapSectionView {
   readonly section: SiteMapSection;
@@ -40,6 +41,24 @@ function sectionRouteOf(route: string): string {
   return `/app/${route.slice('/app/'.length).split('/')[0]}`;
 }
 
+const MOUNT_BY_ROUTE = new Map<string, SiteMapMountEntry>(
+  SITE_MAP_MOUNTS.map(mount => [mount.route, mount]),
+);
+
+/**
+ * What admits a section: the requirement its group's mount route declares in
+ * `app.routes.ts` (the guard's own source), with the curated fields as the
+ * fallback for a section whose route has no mount of its own.
+ */
+export function sectionRequirement(section: SiteMapSection): RouteAccessRequirement {
+  const mount = MOUNT_BY_ROUTE.get(section.route);
+  return {
+    roles: mount?.roles ?? section.roles,
+    permissions: mount?.permissions ?? section.permissions,
+    allPermissions: mount?.allPermissions,
+  };
+}
+
 /**
  * Human-readable index ("site map") of the application. Sections come from the
  * curated `site-map.data.json` (translated titles, grouping, roles); each
@@ -64,8 +83,9 @@ export class SitemapPageComponent {
    *
    * Runs the same `canAccess` decision as the route guard and the nav registry,
    * so the sitemap never lists a page the guard would bounce (#236). Sections
-   * carry curated roles and permissions from `site-map.data.json`; generated
-   * page entries carry whatever their route declares.
+   * are admitted by their group's mount requirement from the route tree (see
+   * `sectionRequirement`); generated page entries carry whatever their route
+   * declares.
    */
   readonly groups = computed<SiteMapGroup[]>(() => {
     const canSee = (requirement: RouteAccessRequirement): boolean =>
@@ -82,9 +102,7 @@ export class SitemapPageComponent {
       ).sort((a, b) => a.label.localeCompare(b.label)),
     });
 
-    const visible = DATA.sections.filter(section =>
-      canSee({ roles: section.roles, permissions: section.permissions }),
-    );
+    const visible = DATA.sections.filter(section => canSee(sectionRequirement(section)));
 
     return GROUP_ORDER.map(group => ({
       headingKey: GROUP_HEADING_KEYS[group],

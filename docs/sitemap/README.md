@@ -72,7 +72,10 @@ app.routes + *.routes.ts ──────┤     (static pages only)
   the privileged surface from the published artifact: role-gated sections
   (`security`, `admin`) are dropped, role-gated pages (e.g.
   `people/identity-compliance`) and permission-gated pages (e.g. `people/employees/new`) are
-  dropped, and no `roles`, `permissions` or `allPermissions` fields are emitted.
+  dropped, and no `roles`, `permissions` or `allPermissions` fields are emitted. A section is as
+  gated as its group's mount route in `app.routes.ts` (`extractAppMounts`), whatever the curated
+  data says — and every domain group is gated, so the public artifact carries only the sections
+  any authenticated user can reach. `scripts/sitemap/public-sitemap.spec.ts` asserts this.
   The result is an invariant — **every route in the artifact is reachable by any
   authenticated user**, so anonymous callers can't enumerate the admin/security
   surface. The in-app manifest (`site-map.routes.generated.ts`) keeps the full,

@@ -4,7 +4,8 @@
  * Parses the Angular route tree with the TypeScript compiler API (no Angular
  * runtime, no eager component imports) and returns every reachable route under
  * the authenticated `/app` shell, with its required roles and dynamic-param
- * flag. Shared by:
+ * flag, plus the access requirement on each group's mount route
+ * (`extractAppMounts`). Shared by:
  *   - generate-routes-module.mjs → the committed `site-map.routes.generated.ts`
  *     consumed by the Angular sitemap page, and
  *   - generate-sitemap.mjs → the public `sitemap.json` artifact.
@@ -62,41 +63,115 @@ function stringValue(node) {
 }
 
 /**
- * `X_PAGE.key` → the permission codes it holds, read once from
- * `src/app/core/security/route-permissions.ts`. Page gates reference those
- * constants rather than inlining codes, so the route files alone cannot be read
- * literally. Group constants (`X_PERMISSIONS`) are computed from the catalog at
- * runtime and stay unresolved — page codes are asserted to be a subset of their
- * group's set (`core/security/page-access.spec.ts`), so filtering on the page
- * code alone already implies the group gate.
+ * The backend permission catalog (`PERMISSION_BY_BIT`), read once from
+ * `src/app/core/security/permission-catalog.ts`, so group constants computed
+ * with `permissionsInDomains(...)` can be resolved here exactly as at runtime.
  */
-let pagePermissionTables = null;
+let catalogCodes = null;
+function catalog() {
+  if (catalogCodes) return catalogCodes;
+  const file = parseFile(resolve(repoRoot, 'src/app/core/security/permission-catalog.ts'));
+  const array = findRoutesArray(file, 'PERMISSION_BY_BIT');
+  if (!array) throw new Error('Could not find PERMISSION_BY_BIT in permission-catalog.ts');
+  catalogCodes = array.elements.filter(ts.isStringLiteral).map(e => e.text);
+  return catalogCodes;
+}
+
+/** Same rule as `permissionsInDomains` in route-permissions.ts. */
+function permissionsInDomains(selectors) {
+  return catalog().filter(code =>
+    selectors.some(selector => (selector.endsWith(':') ? code.startsWith(selector) : code === selector)),
+  );
+}
+
+/**
+ * Permission constants from `src/app/core/security/route-permissions.ts`,
+ * read once. Gates reference those constants rather than inlining codes, so
+ * the route files alone cannot be read literally:
+ *   - `X_PAGE.key`      — page gates: `{ key: ['code', ...] }` tables;
+ *   - `X_PERMISSIONS`   — group gates on the `/app` mounts: either
+ *                         `permissionsInDomains('a:', 'b:c:d')`, resolved
+ *                         against the catalog, or an array of string literals
+ *                         and `...X_PAGE.key` / `...Y_PERMISSIONS` spreads, or a
+ *                         plain `X_PAGE.key` alias.
+ */
+let permissionTablesCache = null;
 function permissionTables() {
-  if (pagePermissionTables) return pagePermissionTables;
-  pagePermissionTables = new Map();
+  if (permissionTablesCache) return permissionTablesCache;
+  const tables = new Map();
   const file = parseFile(resolve(repoRoot, 'src/app/core/security/route-permissions.ts'));
+
+  const unwrap = init => {
+    while (ts.isAsExpression(init) || ts.isSatisfiesExpression(init) || ts.isParenthesizedExpression(init)) {
+      init = init.expression;
+    }
+    return init;
+  };
+
+  // Pass 1: page tables, which group constants may spread.
+  const declarations = [];
   const visit = node => {
     if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
-      // `export const X_PAGE = { ... } as const satisfies ...`
-      let init = node.initializer;
-      while (ts.isAsExpression(init) || ts.isSatisfiesExpression(init)) init = init.expression;
+      const init = unwrap(node.initializer);
       if (ts.isObjectLiteralExpression(init)) {
         for (const prop of init.properties) {
           if (!ts.isPropertyAssignment(prop) || !ts.isArrayLiteralExpression(prop.initializer)) continue;
           const key = ts.isIdentifier(prop.name) || ts.isStringLiteral(prop.name) ? prop.name.text : null;
           if (!key) continue;
           const codes = prop.initializer.elements.filter(ts.isStringLiteral).map(e => e.text);
-          if (codes.length) pagePermissionTables.set(`${node.name.text}.${key}`, codes);
+          if (codes.length) tables.set(`${node.name.text}.${key}`, codes);
         }
+      } else {
+        declarations.push({ name: node.name.text, init });
       }
     }
     ts.forEachChild(node, visit);
   };
   visit(file);
-  return pagePermissionTables;
+
+  // Pass 2: group constants, in source order so a spread of an earlier one resolves.
+  const resolveExpression = expr => {
+    expr = unwrap(expr);
+    if (ts.isCallExpression(expr) && ts.isIdentifier(expr.expression) && expr.expression.text === 'permissionsInDomains') {
+      const selectors = expr.arguments.filter(ts.isStringLiteral).map(a => a.text);
+      return selectors.length === expr.arguments.length ? permissionsInDomains(selectors) : null;
+    }
+    if (ts.isPropertyAccessExpression(expr) && ts.isIdentifier(expr.expression) && ts.isIdentifier(expr.name)) {
+      return tables.get(`${expr.expression.text}.${expr.name.text}`) ?? null;
+    }
+    if (ts.isIdentifier(expr)) {
+      return tables.get(expr.text) ?? null;
+    }
+    if (ts.isArrayLiteralExpression(expr)) {
+      const codes = [];
+      for (const el of expr.elements) {
+        if (ts.isStringLiteral(el)) {
+          codes.push(el.text);
+        } else if (ts.isSpreadElement(el)) {
+          const inner = resolveExpression(el.expression);
+          if (!inner) return null;
+          codes.push(...inner);
+        } else {
+          return null;
+        }
+      }
+      return codes;
+    }
+    return null;
+  };
+  for (const { name, init } of declarations) {
+    const codes = resolveExpression(init);
+    if (codes && codes.length) tables.set(name, [...new Set(codes)]);
+  }
+
+  permissionTablesCache = tables;
+  return tables;
 }
 
-/** Read a `permissions` / `allPermissions` entry: an array literal or `X_PAGE.key`. */
+/**
+ * Read a `permissions` / `allPermissions` entry: an array literal, `X_PAGE.key`,
+ * or a group constant such as `CRM_PERMISSIONS`.
+ */
 function permissionsFromData(dataNode, key) {
   if (!dataNode || !ts.isObjectLiteralExpression(dataNode)) return null;
   const node = getProp(dataNode, key);
@@ -107,6 +182,9 @@ function permissionsFromData(dataNode, key) {
   }
   if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && ts.isIdentifier(node.name)) {
     return permissionTables().get(`${node.expression.text}.${node.name.text}`) ?? null;
+  }
+  if (ts.isIdentifier(node)) {
+    return permissionTables().get(node.text) ?? null;
   }
   return null;
 }
@@ -255,29 +333,62 @@ function walkRoutes(arrayLiteral, basePath, inheritedRoles, currentDir) {
   return out;
 }
 
+/** The `/app` shell route's children array literal. */
+function appShellChildren() {
+  const appSource = parseFile(APP_ROUTES);
+  const topArray = findRoutesArray(appSource, 'routes');
+  if (!topArray) throw new Error('Could not find `routes` array in app.routes.ts');
+
+  for (const el of topArray.elements) {
+    if (!ts.isObjectLiteralExpression(el)) continue;
+    if (stringValue(getProp(el, 'path')) === 'app') {
+      const children = getProp(el, 'children');
+      if (children && ts.isArrayLiteralExpression(children)) return children;
+    }
+  }
+  throw new Error('Could not find /app route children in app.routes.ts');
+}
+
+/**
+ * The access requirement each group mounted directly under `/app` declares on
+ * its mount route (`data.roles` / `data.permissions` / `data.allPermissions`
+ * on the `/app` child that `loadChildren`s or renders it). That gate admits or
+ * refuses the whole group, so a section root is exactly as protected as its
+ * mount — which the pages walked by `extractAppRoutes()` do not express, since
+ * only `roles` is inherited onto them.
+ *
+ * Redirects and `**` are skipped; the shell's own '' child (`/app`) is
+ * included so the dashboard's (absent) requirement is on record too.
+ *
+ * @returns array of { route, roles, permissions, allPermissions } sorted by route
+ */
+export function extractAppMounts() {
+  const out = [];
+  for (const el of appShellChildren().elements) {
+    if (!ts.isObjectLiteralExpression(el)) continue;
+    const path = stringValue(getProp(el, 'path'));
+    if (path === null || path === '**') continue;
+    if (getProp(el, 'redirectTo')) continue;
+    if (!getProp(el, 'loadChildren') && !getProp(el, 'loadComponent') && !getProp(el, 'component')) {
+      continue;
+    }
+    const data = getProp(el, 'data');
+    out.push({
+      route: joinPath('/app', path),
+      roles: rolesFromData(data),
+      permissions: permissionsFromData(data, 'permissions'),
+      allPermissions: permissionsFromData(data, 'allPermissions'),
+    });
+  }
+  return out.sort((a, b) => a.route.localeCompare(b.route));
+}
+
 /**
  * Extract every reachable page under `/app`, de-duplicated by route.
  * @returns array of { route, roles, dynamic, params } sorted by route.
  */
 export function extractAppRoutes() {
-  const appSource = parseFile(APP_ROUTES);
-  const topArray = findRoutesArray(appSource, 'routes');
-  if (!topArray) throw new Error('Could not find `routes` array in app.routes.ts');
-
-  // Locate the `/app` shell route and walk its children.
-  let appChildren = null;
-  for (const el of topArray.elements) {
-    if (!ts.isObjectLiteralExpression(el)) continue;
-    if (stringValue(getProp(el, 'path')) === 'app') {
-      appChildren = getProp(el, 'children');
-      break;
-    }
-  }
-  if (!appChildren || !ts.isArrayLiteralExpression(appChildren)) {
-    throw new Error('Could not find /app route children in app.routes.ts');
-  }
-
-  const routes = walkRoutes(appChildren, '/app', null, dirname(APP_ROUTES));
+  const routes = walkRoutes(appShellChildren(), '/app', null, dirname(APP_ROUTES));
 
   // De-dup by route (same path can map to the same component twice); keep first.
   const byRoute = new Map();

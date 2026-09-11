@@ -59,3 +59,15 @@ export interface SiteMapRouteEntry {
   /** All of these permissions are required; undefined = no such constraint. */
   allPermissions?: readonly string[];
 }
+
+/**
+ * The access requirement a group's mount route under `/app` declares
+ * (`data.roles` / `data.permissions` / `data.allPermissions`), extracted by
+ * `scripts/sitemap/extract-routes.mjs` into `site-map.routes.generated.ts`.
+ * A section root is exactly as protected as its mount, whatever the curated
+ * data says, so both the sitemap page and the public artifact filter on it.
+ */
+export type SiteMapMountEntry = Pick<
+  SiteMapRouteEntry,
+  'route' | 'roles' | 'permissions' | 'allPermissions'
+>;
