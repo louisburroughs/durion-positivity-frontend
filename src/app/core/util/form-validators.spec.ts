@@ -9,7 +9,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { FormControl } from '@angular/forms';
-import { integerAtLeast, notBlank } from './form-validators';
+import { integerAtLeast, notBlank, tenantSlug } from './form-validators';
 
 describe('notBlank', () => {
   it.each(['', '   ', '\t'])('rejects %j with a blank error', value => {
@@ -56,5 +56,21 @@ describe('integerAtLeast(1)', () => {
     const control = new FormControl<number | null>(undefined as unknown as number | null);
 
     expect(validator(control)).toBeNull();
+  });
+});
+
+describe('tenantSlug', () => {
+  it.each(['acme-tire', ' Acme-Tire ', 'a1b', 'x'.repeat(63)])('accepts %j once normalized', value => {
+    expect(tenantSlug(new FormControl<string | null>(value))).toBeNull();
+  });
+
+  it.each(['ab', '-acme', 'acme-', 'acme tire', 'acme.tire', 'x'.repeat(64)])('rejects %j', value => {
+    expect(tenantSlug(new FormControl<string | null>(value))).toEqual({ tenantSlug: true });
+  });
+
+  it('accepts an empty or null value — pair with Validators.required when mandatory', () => {
+    expect(tenantSlug(new FormControl<string | null>(''))).toBeNull();
+    expect(tenantSlug(new FormControl<string | null>('   '))).toBeNull();
+    expect(tenantSlug(new FormControl<string | null>(null))).toBeNull();
   });
 });

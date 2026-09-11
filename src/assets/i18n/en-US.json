@@ -189,7 +189,9 @@
           "FR_CA": "Français (Canada)",
           "FR_FR": "Français (France)"
         }
-      }
+      },
+      "TENANT_CHIP_ARIA": "Current tenant",
+      "TENANT_LABEL": "Tenant"
     },
     "DASHBOARD": {
       "WELCOME_HEADING": "Welcome back, {{name}}",
@@ -306,7 +308,13 @@
         "INVALID_CREDENTIALS": "Invalid username or password. Please try again.",
         "NETWORK": "Cannot reach the server. Check your network or try again later.",
         "GENERIC": "Login failed. Please try again."
-      }
+      },
+      "TENANT": "Tenant",
+      "TENANT_FROM_HOST_HINT": "Determined by the address you are signing in from.",
+      "TENANT_SLUG": "Tenant",
+      "TENANT_SLUG_PLACEHOLDER": "Your tenant's short name, e.g. acme-tire",
+      "TENANT_SLUG_HINT": "Optional. Leave blank if you were given a tenant-specific sign-in address.",
+      "TENANT_SLUG_ERROR": "Use lowercase letters, digits and hyphens (3 to 63 characters)."
     }
   },
   "PEOPLE": {

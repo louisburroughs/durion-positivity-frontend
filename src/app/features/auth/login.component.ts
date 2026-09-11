@@ -2,9 +2,12 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 
+import { LoginRequest } from '@durion-sdk/security';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { normalizeTenantSlug } from '../../core/security/tenant';
+import { tenantSlug } from '../../core/util/form-validators';
 
 @Component({
   selector: 'app-login',
@@ -24,9 +27,18 @@ export class LoginComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly sessionExpired = signal(false);
 
+  /**
+   * Tenant named by the page host (ADR-0062 §3). When set, the gateway resolves
+   * the tenant from the Host header, so the form shows it read-only and sends
+   * no slug; when null the host carries no tenant and the form asks for one.
+   */
+  readonly hostTenantSlug = signal<string | null>(this.authService.hostTenantSlug());
+
   readonly form = this.fb.nonNullable.group({
     username: ['', [Validators.required, Validators.minLength(2)]],
     password: ['', [Validators.required, Validators.minLength(4)]],
+    // Optional: an empty slug lets the gateway fall back to its own resolution.
+    tenantSlug: ['', [tenantSlug]],
   });
 
   ngOnInit(): void {
@@ -42,9 +54,14 @@ export class LoginComponent implements OnInit {
     this.error.set(null);
     this.loading.set(true);
 
-    const { username, password } = this.form.getRawValue();
+    const { username, password, tenantSlug } = this.form.getRawValue();
+    const request: LoginRequest = { username, password };
+    const slug = normalizeTenantSlug(tenantSlug);
+    if (!this.hostTenantSlug() && slug) {
+      request.tenantSlug = slug;
+    }
 
-    this.authService.login({ username, password }).subscribe({
+    this.authService.login(request).subscribe({
       next: () => {
         this.loading.set(false);
         const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/chat';
@@ -54,6 +71,8 @@ export class LoginComponent implements OnInit {
       error: err => {
         this.loading.set(false);
         const status = err?.status;
+        // An unknown or inactive tenant answers the same 401 as bad credentials,
+        // and is reported the same way — the form never confirms a tenant exists.
         if (status === 401 || status === 403) {
           this.error.set('AUTH.LOGIN.ERROR.INVALID_CREDENTIALS');
         } else if (status === 0) {
@@ -67,4 +86,5 @@ export class LoginComponent implements OnInit {
 
   get usernameCtrl() { return this.form.controls.username; }
   get passwordCtrl() { return this.form.controls.password; }
+  get tenantSlugCtrl() { return this.form.controls.tenantSlug; }
 }

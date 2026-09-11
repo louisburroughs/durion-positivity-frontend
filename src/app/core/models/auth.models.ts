@@ -16,4 +16,27 @@ export interface JwtClaims {
   /** Location-scope bitsets; backend-authoritative, not used for UI gating. */
   loc_fin_bits?: string;
   loc_oth_bits?: string;
+  /**
+   * Tenant id the session is bound to (ADR-0062). Issued on every token since
+   * WS2b; optional in the type only for tokens minted before the claim existed.
+   * The tenant is read from here and nowhere else — never from a route, a
+   * header, or a request body.
+   */
+  tid?: string;
+}
+
+/**
+ * The caller's tenant as `GET /v1/tenants/me` reports it (security-service's
+ * replica of the tenant registry). Mirrors `TenantMeResponse` with the id
+ * named for what it is.
+ */
+export interface TenantSummary {
+  /** Tenant id — equals the token's `tid` claim. */
+  tenantId: string;
+  /** URL-safe unique name. */
+  slug: string;
+  /** Human-readable name; falls back to the slug when the registry has none. */
+  displayName: string;
+  /** Lifecycle status: PENDING, ACTIVE, SUSPENDED or DECOMMISSIONED. */
+  status: string;
 }

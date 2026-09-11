@@ -39,6 +39,28 @@
         }
       </div>
 
+      @if (hostTenantSlug(); as slug) {
+      <div class="field-group">
+        <span class="field-label" id="tenant-host-label">{{ 'AUTH.LOGIN.TENANT' | translate }}</span>
+        <output class="tenant-readonly" aria-labelledby="tenant-host-label" aria-describedby="tenant-host-hint">{{ slug }}</output>
+        <span id="tenant-host-hint" class="field-hint">{{ 'AUTH.LOGIN.TENANT_FROM_HOST_HINT' | translate }}</span>
+      </div>
+      } @else {
+      <div class="field-group">
+        <label for="tenantSlug" class="field-label">{{ 'AUTH.LOGIN.TENANT_SLUG' | translate }}</label>
+        <input id="tenantSlug" type="text" formControlName="tenantSlug" autocomplete="organization" autocapitalize="none"
+          spellcheck="false" [placeholder]="'AUTH.LOGIN.TENANT_SLUG_PLACEHOLDER' | translate"
+          [attr.aria-invalid]="tenantSlugCtrl.invalid && tenantSlugCtrl.touched"
+          aria-describedby="tenantSlug-hint tenantSlug-error" [class.field-invalid]="tenantSlugCtrl.invalid && tenantSlugCtrl.touched" />
+        <span id="tenantSlug-hint" class="field-hint">{{ 'AUTH.LOGIN.TENANT_SLUG_HINT' | translate }}</span>
+        @if (tenantSlugCtrl.invalid && tenantSlugCtrl.touched) {
+        <span id="tenantSlug-error" class="field-error" role="alert">
+          {{ 'AUTH.LOGIN.TENANT_SLUG_ERROR' | translate }}
+        </span>
+        }
+      </div>
+      }
+
       <div class="field-group">
         <label for="password" class="field-label">{{ 'AUTH.LOGIN.PASSWORD' | translate }}</label>
         <input id="password" type="password" formControlName="password" autocomplete="current-password"

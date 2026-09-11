@@ -189,7 +189,9 @@
           "FR_CA": "Francés (Canadá)",
           "FR_FR": "Francés (Francia)"
         }
-      }
+      },
+      "TENANT_CHIP_ARIA": "Inquilino actual",
+      "TENANT_LABEL": "Inquilino"
     },
     "DASHBOARD": {
       "WELCOME_HEADING": "Hola de nuevo, {{name}}",
@@ -306,7 +308,13 @@
         "INVALID_CREDENTIALS": "Nombre de usuario o contraseña inválidos. Inténtalo de nuevo.",
         "NETWORK": "No se puede conectar al servidor. Verifica tu red o inténtalo más tarde.",
         "GENERIC": "No se pudo iniciar sesión. Inténtalo de nuevo."
-      }
+      },
+      "TENANT": "Inquilino",
+      "TENANT_FROM_HOST_HINT": "Determinado por la dirección desde la que inicias sesión.",
+      "TENANT_SLUG": "Inquilino",
+      "TENANT_SLUG_PLACEHOLDER": "Nombre corto de tu inquilino, p. ej. acme-tire",
+      "TENANT_SLUG_HINT": "Opcional. Déjalo vacío si recibiste una dirección de inicio de sesión específica de tu inquilino.",
+      "TENANT_SLUG_ERROR": "Usa letras minúsculas, dígitos y guiones (de 3 a 63 caracteres)."
     }
   },
   "PEOPLE": {

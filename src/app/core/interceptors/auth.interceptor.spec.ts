@@ -53,6 +53,25 @@ describe('authInterceptor', () => {
     expect(capturedReq?.headers.get('Authorization')).toBe('Bearer my-token');
   });
 
+  it('never attaches a tenant header — the gateway derives X-Tenant-Id from the token (ADR-0062)', () => {
+    authServiceMock.accessToken.mockReturnValue('my-token');
+    const req = new HttpRequest('GET', '/api/tenant/v1/platform/tenants');
+    let capturedReq: HttpRequest<unknown> | undefined;
+
+    const mockNext = vi.fn().mockImplementation((r: HttpRequest<unknown>) => {
+      capturedReq = r;
+      return of(new HttpResponse({ status: 200 }));
+    });
+
+    TestBed.runInInjectionContext(() => {
+      authInterceptor(req, mockNext).subscribe();
+    });
+
+    expect(capturedReq?.headers.keys()).toEqual(['Authorization']);
+    expect(capturedReq?.headers.has('X-Tenant-Id')).toBe(false);
+    expect(capturedReq?.headers.has('X-Tenant-Slug')).toBe(false);
+  });
+
   it('passes the request unmodified when accessToken() returns null', () => {
     authServiceMock.accessToken.mockReturnValue(null);
     const req = new HttpRequest('GET', '/api/test');

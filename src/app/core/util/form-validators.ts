@@ -1,4 +1,5 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { isTenantSlug, normalizeTenantSlug } from '../security/tenant';
 
 /**
  * Shared reactive-form validators (#212).
@@ -30,4 +31,17 @@ export function integerAtLeast(min: number): ValidatorFn {
     }
     return Number.isInteger(value) && value >= min ? null : { integerMin: { min } };
   };
+}
+
+/**
+ * Fails a string control whose value, once normalized the way it will be sent
+ * (`normalizeTenantSlug`), is not a well-formed tenant slug. An empty value
+ * passes — pair with `Validators.required` when the slug is mandatory, as it
+ * is when registering a tenant but not on the login form.
+ */
+export function tenantSlug(control: AbstractControl<string | null>): ValidationErrors | null {
+  const value = control.value;
+  if (typeof value !== 'string') return null;
+  const normalized = normalizeTenantSlug(value);
+  return normalized === '' || isTenantSlug(normalized) ? null : { tenantSlug: true };
 }

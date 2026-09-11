@@ -95,6 +95,23 @@ input.field-invalid {
   color: var(--functional-error-red);
 }
 
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--handleColor);
+}
+
+/* Tenant named by the host: shown, not edited — the gateway resolves it. */
+.tenant-readonly {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-variant);
+  color: var(--currentTextColor);
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+}
+
 /* ── Primary button ────────────────────────────────────────────────────── */
 .btn-primary {
   width: 100%;

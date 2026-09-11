@@ -189,7 +189,9 @@
           "FR_CA": "Français (Canada)",
           "FR_FR": "Français (France)"
         }
-      }
+      },
+      "TENANT_CHIP_ARIA": "Locataire actuel",
+      "TENANT_LABEL": "Locataire"
     },
     "DASHBOARD": {
       "WELCOME_HEADING": "Bon retour, {{name}}",
@@ -306,7 +308,13 @@
         "INVALID_CREDENTIALS": "Nom d'utilisateur ou mot de passe invalide. Veuillez réessayer.",
         "NETWORK": "Impossible de joindre le serveur. Vérifiez votre réseau ou réessayez plus tard.",
         "GENERIC": "Échec de la connexion. Veuillez réessayer."
-      }
+      },
+      "TENANT": "Locataire",
+      "TENANT_FROM_HOST_HINT": "Déterminé par l'adresse à partir de laquelle vous vous connectez.",
+      "TENANT_SLUG": "Locataire",
+      "TENANT_SLUG_PLACEHOLDER": "Nom court de votre locataire, p. ex. acme-tire",
+      "TENANT_SLUG_HINT": "Facultatif. Laissez vide si vous avez reçu une adresse de connexion propre à votre locataire.",
+      "TENANT_SLUG_ERROR": "Utilisez des lettres minuscules, des chiffres et des traits d'union (3 à 63 caractères)."
     }
   },
   "PEOPLE": {

@@ -38,6 +38,15 @@
       {{ themeService.isDark() ? '☀️' : '🌙' }}
     </button>
 
+    @if (authService.tenant(); as tenant) {
+    <div class="tenant-chip" [attr.aria-label]="'SHELL.HEADER.TENANT_CHIP_ARIA' | translate"
+      [title]="('SHELL.HEADER.TENANT_LABEL' | translate) + ': ' + tenant.displayName + ' (' + tenant.slug + ')'">
+      <span class="material-symbols-rounded tenant-icon" aria-hidden="true">{{ 'apartment' | msIcon }}</span>
+      <span class="tenant-name">{{ tenant.displayName }}</span>
+      <span class="tenant-slug">{{ tenant.slug }}</span>
+    </div>
+    }
+
     <div class="user-chip" [attr.aria-label]="'SHELL.HEADER.USER_CHIP_ARIA' | translate">
       <span class="user-avatar" aria-hidden="true">{{ username.charAt(0).toUpperCase() }}</span>
       <span class="user-name">{{ username }}</span>
