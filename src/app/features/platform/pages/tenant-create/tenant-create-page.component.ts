@@ -130,6 +130,12 @@ export class TenantCreatePageComponent {
     }
 
     this.saving.set(true);
+    // A failed account-list load (or an earlier refused create) left the page
+    // in an error state; the form is usable regardless, and an error state
+    // with no key would render an empty banner while this request runs.
+    if (this.state() !== 'loading') {
+      this.state.set('ready');
+    }
     this.errorKey.set(null);
     this.errorDetail.set(null);
     this.fieldErrors.set({});

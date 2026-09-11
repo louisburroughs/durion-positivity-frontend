@@ -57,13 +57,17 @@ export const PLATFORM_PAGE = {
  * `/app/platform` — the tenant registry (ADR-0062 §7). Held only by the platform
  * tenant's role template (`PLATFORM_ADMIN`); never granted to a tenant role.
  *
- * Gated on the list read rather than the whole `platform:` domain: the group
- * has no landing page and lands on the tenant list, so a session admitted on
- * any other `platform:*` code alone (say, create only) would only ever reach
- * /forbidden. The create and detail pages return to the list too, so the read
- * is the floor of every page here.
+ * The union of the pages' own gates, not the whole `platform:` domain: a
+ * session is admitted when it can open at least one page here, and the
+ * group's empty path then lands on the first child it can open (the list for
+ * a reader, the create form for a create-only session; see
+ * `PLATFORM_ROUTES`). Account codes admit nothing on their own — there is no
+ * account page yet.
  */
-export const PLATFORM_PERMISSIONS = PLATFORM_PAGE.tenantRead;
+export const PLATFORM_PERMISSIONS: readonly string[] = [
+  ...PLATFORM_PAGE.tenantRead,
+  ...PLATFORM_PAGE.tenantCreate,
+];
 
 /** `/app/workexec` — estimates, work orders, labor, parts, WIP. */
 export const WORKEXEC_PERMISSIONS = permissionsInDomains('workorder:');

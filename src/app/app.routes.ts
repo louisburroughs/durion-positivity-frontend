@@ -87,6 +87,12 @@ export const routes: Routes = [
             m => m.SitemapPageComponent,
           ),
       },
+      // The ADR-0062 plan names the tenant registry as /app/admin/tenants; it
+      // lives under /app/platform (platform operators, not tenant admins). Both
+      // paths work — declared before the admin group so they match first, and
+      // the target's own gate applies after the redirect.
+      { path: 'admin/tenants', pathMatch: 'full', redirectTo: 'platform/tenants' },
+      { path: 'admin/tenants/:id', redirectTo: 'platform/tenants/:id' },
       {
         path: 'admin',
         data: { roles: ['ROLE_ADMIN'] },

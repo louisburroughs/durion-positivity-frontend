@@ -304,6 +304,30 @@ describe('TenantDetailPageComponent', () => {
     expect(el().querySelector('.tenant-page__facts')).toBeNull();
   });
 
+  it('leaves the error state, without a blank banner, when the action is retried', async () => {
+    await setup(active);
+    service.suspendTenant.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 409, statusText: 'x' })),
+    );
+    component.askConfirmation('suspend');
+    component.confirmTransition();
+    fixture.detectChanges();
+    expect(component.state()).toBe('error');
+    expect(el().querySelector('.tenant-page__suspend')).toBeTruthy();
+
+    const pending = new Subject<Tenant>();
+    service.suspendTenant.mockReturnValueOnce(pending);
+    component.askConfirmation('suspend');
+    component.confirmTransition();
+    fixture.detectChanges();
+
+    expect(component.saving()).toBe(true);
+    expect(component.state()).toBe('ready');
+    expect(component.errorKey()).toBeNull();
+    expect(el().querySelector('.plt-banner--error')).toBeNull();
+    pending.complete();
+  });
+
   it('sets state to error before errorKey when a transition is rejected (ADR-0031)', async () => {
     await setup(active);
     service.suspendTenant.mockReturnValueOnce(

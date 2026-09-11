@@ -27,9 +27,15 @@ describe('tenantSlugFromHost', () => {
     expect(tenantSlugFromHost('-acme.positivity.example', suffix)).toBeNull();
   });
 
-  it('names nothing for the bare suffix host or a deeper subdomain', () => {
+  it('takes the first label as the tenant and ignores routing labels before the suffix', () => {
+    // Mirrors the gateway: acme-tire.dev.<suffix> names acme-tire, "dev" is environment routing.
+    expect(tenantSlugFromHost('acme-tire.dev.positivity.example', suffix)).toBe('acme-tire');
+    expect(tenantSlugFromHost('www.acme-tire.positivity.example', suffix)).toBe('www');
+    expect(tenantSlugFromHost('a_b.dev.positivity.example', suffix)).toBeNull();
+  });
+
+  it('names nothing for the bare suffix host', () => {
     expect(tenantSlugFromHost('positivity.example', suffix)).toBeNull();
-    expect(tenantSlugFromHost('www.acme-tire.positivity.example', suffix)).toBeNull();
   });
 
   it('pins the platform tenant id every module agrees on', () => {

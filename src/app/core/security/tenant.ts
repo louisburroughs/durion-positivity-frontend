@@ -33,17 +33,21 @@ export function isTenantSlug(value: string): boolean {
  * Tenant slug named by a host, or null when the host carries no tenant.
  *
  * With suffix `.positivity.example` the host `acme-tire.positivity.example`
- * names `acme-tire`; `localhost`, a bare `positivity.example`, an empty
- * suffix, or a prefix that is not a well-formed slug (`a_b.positivity.example`)
- * name nothing, and the login form asks for the slug instead. The gateway
- * applies the same rule (`auth.tenant-host-suffix`), so a slug shown here is
- * the one the login will actually be resolved against.
+ * names `acme-tire`, and so does `acme-tire.dev.positivity.example`: the
+ * tenant is the first label, anything between it and the suffix is
+ * environment routing. `localhost`, a bare `positivity.example`, an empty
+ * suffix, or a first label that is not a well-formed slug
+ * (`a_b.positivity.example`) name nothing, and the login form asks for the
+ * slug instead. This mirrors the gateway's `tenantSlugFromHost`
+ * (`auth.tenant-host-suffix`), so a slug shown here is the one the login will
+ * actually be resolved against.
  */
 export function tenantSlugFromHost(hostname: string, suffix: string): string | null {
   const host = hostname.trim().toLowerCase();
   const tail = suffix.trim().toLowerCase();
   if (!host || !tail || !host.endsWith(tail)) return null;
 
-  const slug = host.slice(0, host.length - tail.length);
-  return isTenantSlug(slug) ? slug : null;
+  const prefix = host.slice(0, host.length - tail.length);
+  const label = prefix.split('.')[0];
+  return isTenantSlug(label) ? label : null;
 }

@@ -174,6 +174,10 @@ export class TenantDetailPageComponent {
     // not overwrite what that load fetched.
     const generation = this.loadGeneration;
     this.saving.set(true);
+    // The record is loaded (the controls only render on one), so the page is
+    // ready while the action runs; staying in a keyless error state would
+    // render an empty banner.
+    this.state.set('ready');
     this.errorKey.set(null);
     this.errorDetail.set(null);
     this.successKey.set(null);

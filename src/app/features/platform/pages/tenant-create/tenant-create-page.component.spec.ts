@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TenantCreatePageComponent } from './tenant-create-page.component';
 import { PlatformAccountService } from '../../services/platform-account.service';
@@ -100,6 +100,23 @@ describe('TenantCreatePageComponent', () => {
     expect(component.errorDetail()).toBeNull();
     expect(el().querySelector('input#tenant-account')).toBeTruthy();
     expect(el().textContent).not.toContain('PLATFORM.ERROR.FORBIDDEN');
+  });
+
+  it('leaves the account-list error state while a fallback submit is in flight', async () => {
+    await setup(new HttpErrorResponse({ status: 500, statusText: 'x' }));
+    expect(component.state()).toBe('error');
+    const pending = new Subject<Tenant>();
+    tenantService.createTenant.mockReturnValueOnce(pending);
+    fillValidForm();
+
+    component.submit();
+    fixture.detectChanges();
+
+    expect(component.saving()).toBe(true);
+    expect(component.state()).toBe('ready');
+    expect(component.errorKey()).toBeNull();
+    expect(el().querySelector('.plt-banner--error')).toBeNull();
+    pending.complete();
   });
 
   it('renders the forbidden state when the create itself is refused', async () => {
