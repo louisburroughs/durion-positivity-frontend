@@ -30,6 +30,7 @@ const PACKAGE_NAMES = [
   '@durion-sdk/security',
   '@durion-sdk/supplier',
   '@durion-sdk/shop-manager',
+  '@durion-sdk/tenant',
   '@durion-sdk/vehicle-inventory',
   '@durion-sdk/warranty',
   '@durion-sdk/workorder',
