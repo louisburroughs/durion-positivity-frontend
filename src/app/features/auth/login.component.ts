@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs';
 
 import { LoginRequest } from '@durion-sdk/security';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -84,17 +84,26 @@ export class LoginComponent implements OnInit {
         .pipe(
           debounceTime(SEARCH_DEBOUNCE_MS),
           distinctUntilChanged(),
-          // Cancels the in-flight lookup on each new keystroke, so a slow
-          // early response cannot land after a later one.
-          switchMap(query => this.organizationSearch.search(query)),
+          // Cancels the in-flight lookup when a newer query passes the debounce.
+          switchMap(query => this.organizationSearch.search(query).pipe(map(matches => ({ query, matches })))),
         )
-        .subscribe(matches => {
-          this.searching.set(false);
+        .subscribe(({ query, matches }) => {
+          // A 404 is a fact about the deployment, not about this query, so it is
+          // honoured whenever it arrives.
           if (matches === null) {
+            this.searching.set(false);
             this.searchUnavailable.set(true);
             this.listOpen.set(false);
             return;
           }
+          // Everything else is discarded unless it answers what is in the field
+          // right now. switchMap alone is not enough: it only cancels when a new
+          // query passes the debounce, so backspacing below the minimum — which
+          // sends nothing — would let an in-flight response reopen the list with
+          // options that no longer match the input, and one could then be picked
+          // and submitted.
+          if (query !== this.organizationQuery()) return;
+          this.searching.set(false);
           this.results.set(matches);
           this.activeIndex.set(-1);
           this.listOpen.set(true);
@@ -151,7 +160,11 @@ export class LoginComponent implements OnInit {
   onKeydown(event: KeyboardEvent): void {
     if (!this.listOpen() || this.results().length === 0) {
       if (event.key === 'ArrowDown' && this.results().length > 0) {
+        // Reopening after Escape must land on an option: leaving activeIndex at
+        // -1 would make the next Enter choose nothing.
         this.listOpen.set(true);
+        this.activeIndex.set(0);
+        this.scrollActiveIntoView();
         event.preventDefault();
       }
       return;
@@ -160,10 +173,12 @@ export class LoginComponent implements OnInit {
       case 'ArrowDown':
         event.preventDefault();
         this.activeIndex.update(i => (i + 1) % this.results().length);
+        this.scrollActiveIntoView();
         break;
       case 'ArrowUp':
         event.preventDefault();
         this.activeIndex.update(i => (i <= 0 ? this.results().length - 1 : i - 1));
+        this.scrollActiveIntoView();
         break;
       case 'Enter': {
         const active = this.results()[this.activeIndex()];
@@ -233,6 +248,37 @@ export class LoginComponent implements OnInit {
 
   optionId(index: number): string {
     return `organization-option-${index}`;
+  }
+
+  /**
+   * True only when the popup actually has options. Announcing an expanded popup
+   * with nothing in it is what a screen reader would otherwise be told while the
+   * "no matches" message is live.
+   */
+  readonly listExpanded = computed(() => this.listOpen() && this.results().length > 0);
+
+  /**
+   * Free text the user never picked from the list. The error was previously
+   * announced by an alert while the input itself carried neither `aria-invalid`
+   * nor the invalid styling the other login fields use, so assistive technology
+   * was told an alert existed without being told which control was wrong.
+   */
+  readonly organizationInvalid = computed(
+    () => !this.organizationReady() && this.organizationQuery().length > 0 && !this.listOpen(),
+  );
+
+  /**
+   * Keeps the active option inside the scrollable list. Focus stays in the input
+   * and only `aria-activedescendant` moves, so nothing scrolls on its own; past
+   * the visible part of the list a keyboard user would be choosing an option
+   * they cannot see.
+   */
+  private scrollActiveIntoView(): void {
+    const index = this.activeIndex();
+    if (index < 0 || typeof document === 'undefined') return;
+    queueMicrotask(() => {
+      document.getElementById(this.optionId(index))?.scrollIntoView({ block: 'nearest' });
+    });
   }
 
   get usernameCtrl() { return this.form.controls.username; }

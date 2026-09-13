@@ -321,7 +321,8 @@
       "ORGANIZATION_ERROR": "Choose your organization from the list.",
       "ORGANIZATION_NO_MATCHES": "No organizations match that name.",
       "ORGANIZATION_SEARCHING": "Searching…",
-      "ORGANIZATION_RESULTS_COUNT": "{{count}} organizations found",
+      "ORGANIZATION_RESULTS_COUNT_ONE": "{{count}} organization found",
+      "ORGANIZATION_RESULTS_COUNT_MANY": "{{count}} organizations found",
       "ORGANIZATION_CHANGE": "Use a different organization"
     }
   },

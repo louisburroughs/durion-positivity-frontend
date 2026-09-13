@@ -321,7 +321,8 @@
       "ORGANIZATION_ERROR": "[!! Çħøøøøšëë ÿøøüüŕ øøŕğààñïïžààŧïïøøñ ƒŕøøḿ ŧħëë ľïïšŧ. !!]",
       "ORGANIZATION_NO_MATCHES": "[!! Ňøø øøŕğààñïïžààŧïïøøñš ḿààŧçħ ŧħààŧ ñààḿëë. !!]",
       "ORGANIZATION_SEARCHING": "[!! Šëëààŕçħïïñğ… !!]",
-      "ORGANIZATION_RESULTS_COUNT": "{{count}}[!!  øøŕğààñïïžààŧïïøøñš ƒøøüüñđ !!]",
+      "ORGANIZATION_RESULTS_COUNT_ONE": "{{count}}[!!  øøŕğààñïïžààŧïïøøñ ƒøøüüñđ !!]",
+      "ORGANIZATION_RESULTS_COUNT_MANY": "{{count}}[!!  øøŕğààñïïžààŧïïøøñš ƒøøüüñđ !!]",
       "ORGANIZATION_CHANGE": "[!! ÜÜšëë àà đïïƒƒëëŕëëñŧ øøŕğààñïïžààŧïïøøñ !!]"
     }
   },

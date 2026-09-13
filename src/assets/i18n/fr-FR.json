@@ -321,7 +321,8 @@
       "ORGANIZATION_ERROR": "Choisissez votre organisation dans la liste.",
       "ORGANIZATION_NO_MATCHES": "Aucune organisation ne correspond à ce nom.",
       "ORGANIZATION_SEARCHING": "Recherche en cours…",
-      "ORGANIZATION_RESULTS_COUNT": "{{count}} organisations trouvées",
+      "ORGANIZATION_RESULTS_COUNT_ONE": "{{count}} organisation trouvée",
+      "ORGANIZATION_RESULTS_COUNT_MANY": "{{count}} organisations trouvées",
       "ORGANIZATION_CHANGE": "Utiliser une autre organisation"
     }
   },

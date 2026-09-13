@@ -427,6 +427,57 @@ describe('LoginComponent', () => {
     });
   });
 
+  describe('stale search responses', () => {
+    it('discards a response for text the user has already changed', () => {
+      setup({});
+      fixture.detectChanges();
+      // The lookup for "acme" is still in flight when the user backspaces below
+      // the minimum. switchMap cannot cancel it — nothing new passes the debounce —
+      // so without the guard its results would reopen the list under "ac".
+      const pending = new Subject<Organization[] | null>();
+      searchStub.search.mockReturnValueOnce(pending);
+      typeOrganization('acme');
+
+      component.onOrganizationInput('ac');
+      pending.next([ACME, TUCSON]);
+      fixture.detectChanges();
+
+      expect(component.listOpen()).toBe(false);
+      expect(component.results()).toEqual([]);
+    });
+
+    it('cannot submit an option that arrived for stale text', () => {
+      setup({});
+      fixture.detectChanges();
+      const pending = new Subject<Organization[] | null>();
+      searchStub.search.mockReturnValueOnce(pending);
+      typeOrganization('acme');
+      component.onOrganizationInput('zz');
+      pending.next([ACME]);
+      fixture.detectChanges();
+      component.form.patchValue({ username: 'admin', password: /* test credential */ 'pass1' });
+
+      component.submit();
+
+      expect(component.organizationReady()).toBe(false);
+      expect(authServiceStub.login).not.toHaveBeenCalled();
+    });
+
+    it('still honours a 404 whenever it lands — it is about the deployment, not the query', () => {
+      setup({});
+      fixture.detectChanges();
+      const pending = new Subject<Organization[] | null>();
+      searchStub.search.mockReturnValueOnce(pending);
+      typeOrganization('acme');
+
+      component.onOrganizationInput('ac');
+      pending.next(null);
+      fixture.detectChanges();
+
+      expect(component.searchUnavailable()).toBe(true);
+    });
+  });
+
   describe('keyboard navigation', () => {
     function key(name: string): KeyboardEvent {
       return new KeyboardEvent('keydown', { key: name, cancelable: true });
@@ -468,6 +519,32 @@ describe('LoginComponent', () => {
 
       expect(component.listOpen()).toBe(false);
       expect(component.selected()).toBeNull();
+    });
+
+    it('ArrowDown after Escape reopens on an option, so the next Enter chooses', () => {
+      setup({});
+      fixture.detectChanges();
+      typeOrganization('acme');
+      component.onKeydown(key('Escape'));
+
+      component.onKeydown(key('ArrowDown'));
+      expect(component.activeIndex()).toBe(0);
+
+      component.onKeydown(key('Enter'));
+      expect(component.selected()).toEqual(ACME);
+    });
+
+    it('reports an expanded popup only when it has options', () => {
+      setup({});
+      fixture.detectChanges();
+      searchStub.search.mockImplementation(() => of<Organization[] | null>([]));
+
+      typeOrganization('nosuch');
+
+      // The live region still announces "no matches", but a screen reader must not
+      // be told there is an expanded popup with nothing in it.
+      expect(component.noMatches()).toBe(true);
+      expect(component.listExpanded()).toBe(false);
     });
   });
 });
