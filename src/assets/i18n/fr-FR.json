@@ -314,7 +314,15 @@
       "TENANT_SLUG": "Locataire",
       "TENANT_SLUG_PLACEHOLDER": "Nom court de votre locataire, p. ex. acme-tire",
       "TENANT_SLUG_HINT": "Facultatif. Laissez vide si vous avez reçu une adresse de connexion propre à votre locataire.",
-      "TENANT_SLUG_ERROR": "Utilisez des lettres minuscules, des chiffres et des traits d'union (3 à 63 caractères)."
+      "TENANT_SLUG_ERROR": "Utilisez des lettres minuscules, des chiffres et des traits d'union (3 à 63 caractères).",
+      "ORGANIZATION": "Organisation",
+      "ORGANIZATION_PLACEHOLDER": "Commencez à saisir le nom de votre organisation",
+      "ORGANIZATION_HINT": "Saisissez au moins 3 caractères, puis choisissez votre organisation.",
+      "ORGANIZATION_ERROR": "Choisissez votre organisation dans la liste.",
+      "ORGANIZATION_NO_MATCHES": "Aucune organisation ne correspond à ce nom.",
+      "ORGANIZATION_SEARCHING": "Recherche en cours…",
+      "ORGANIZATION_RESULTS_COUNT": "{{count}} organisations trouvées",
+      "ORGANIZATION_CHANGE": "Utiliser une autre organisation"
     }
   },
   "PEOPLE": {

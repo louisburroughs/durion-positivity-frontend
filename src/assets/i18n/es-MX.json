@@ -314,7 +314,15 @@
       "TENANT_SLUG": "Inquilino",
       "TENANT_SLUG_PLACEHOLDER": "Nombre corto de tu inquilino, p. ej. acme-tire",
       "TENANT_SLUG_HINT": "Opcional. Déjalo vacío si recibiste una dirección de inicio de sesión específica de tu inquilino.",
-      "TENANT_SLUG_ERROR": "Usa letras minúsculas, dígitos y guiones (de 3 a 63 caracteres)."
+      "TENANT_SLUG_ERROR": "Usa letras minúsculas, dígitos y guiones (de 3 a 63 caracteres).",
+      "ORGANIZATION": "Organización",
+      "ORGANIZATION_PLACEHOLDER": "Empiece a escribir el nombre de su organización",
+      "ORGANIZATION_HINT": "Escriba al menos 3 caracteres y luego elija su organización.",
+      "ORGANIZATION_ERROR": "Elija su organización de la lista.",
+      "ORGANIZATION_NO_MATCHES": "Ninguna organización coincide con ese nombre.",
+      "ORGANIZATION_SEARCHING": "Buscando…",
+      "ORGANIZATION_RESULTS_COUNT": "{{count}} organizaciones encontradas",
+      "ORGANIZATION_CHANGE": "Usar otra organización"
     }
   },
   "PEOPLE": {

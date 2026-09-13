@@ -197,3 +197,53 @@ input.field-invalid {
   font-weight: 700;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
+
+/* Organization combobox (ADR-0062 §3): the login form's tenant picker. */
+.organization-field {
+  position: relative;
+}
+
+.organization-listbox {
+  position: absolute;
+  z-index: 10;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 14rem;
+  overflow-y: auto;
+  background: var(--cardBackground);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.organization-option {
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  color: var(--currentTextColor);
+}
+
+.organization-option:hover,
+.organization-option-active {
+  background: var(--surface-variant);
+}
+
+/* Keyboard focus must be visible even though focus stays in the input. */
+.organization-option-active {
+  outline: 2px solid var(--primaryA400);
+  outline-offset: -2px;
+}
+
+.link-button {
+  align-self: flex-start;
+  margin-top: var(--space-1);
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--primaryA400);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
