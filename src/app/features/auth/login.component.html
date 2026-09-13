@@ -45,7 +45,8 @@
         <output class="tenant-readonly" aria-labelledby="tenant-host-label" aria-describedby="tenant-host-hint">{{ slug }}</output>
         <span id="tenant-host-hint" class="field-hint">{{ 'AUTH.LOGIN.TENANT_FROM_HOST_HINT' | translate }}</span>
       </div>
-      } @else {
+      } @else if (searchUnavailable()) {
+      <!-- The organization directory is switched off in this deployment; ask for the slug. -->
       <div class="field-group">
         <label for="tenantSlug" class="field-label">{{ 'AUTH.LOGIN.TENANT_SLUG' | translate }}</label>
         <input id="tenantSlug" type="text" formControlName="tenantSlug" autocomplete="organization" autocapitalize="none"
@@ -56,6 +57,58 @@
         @if (tenantSlugCtrl.invalid && tenantSlugCtrl.touched) {
         <span id="tenantSlug-error" class="field-error" role="alert">
           {{ 'AUTH.LOGIN.TENANT_SLUG_ERROR' | translate }}
+        </span>
+        }
+      </div>
+      } @else {
+      <div class="field-group organization-field">
+        <label for="organization" class="field-label">{{ 'AUTH.LOGIN.ORGANIZATION' | translate }}</label>
+        <input id="organization" type="text" role="combobox" formControlName="organization" autocomplete="off"
+          autocapitalize="none" spellcheck="false"
+          [placeholder]="'AUTH.LOGIN.ORGANIZATION_PLACEHOLDER' | translate"
+          aria-autocomplete="list" aria-controls="organization-listbox"
+          [attr.aria-expanded]="listExpanded()"
+          [attr.aria-activedescendant]="activeIndex() >= 0 ? optionId(activeIndex()) : null"
+          aria-describedby="organization-hint organization-error"
+          [attr.aria-invalid]="organizationInvalid()"
+          [class.field-invalid]="organizationInvalid()"
+          (input)="onOrganizationInput($any($event.target).value)"
+          (keydown)="onKeydown($event)" />
+
+        <ul id="organization-listbox" class="organization-listbox" role="listbox"
+          [attr.aria-label]="'AUTH.LOGIN.ORGANIZATION' | translate" [hidden]="!listExpanded()">
+          @for (organization of results(); track organization.slug; let i = $index) {
+          <li [id]="optionId(i)" class="organization-option" role="option"
+            [class.organization-option-active]="i === activeIndex()" [attr.aria-selected]="i === activeIndex()"
+            (mousedown)="choose(organization)">
+            {{ organization.displayName }}
+          </li>
+          }
+        </ul>
+
+        <!-- One live region carries every state change, so a screen reader is told
+             what happened without the visual list having to be reachable. -->
+        <output class="field-hint" aria-live="polite">
+          @if (searching()) {
+          {{ 'AUTH.LOGIN.ORGANIZATION_SEARCHING' | translate }}
+          } @else if (noMatches()) {
+          {{ 'AUTH.LOGIN.ORGANIZATION_NO_MATCHES' | translate }}
+          } @else if (listOpen() && results().length > 0) {
+          {{ (results().length === 1 ? 'AUTH.LOGIN.ORGANIZATION_RESULTS_COUNT_ONE' :
+              'AUTH.LOGIN.ORGANIZATION_RESULTS_COUNT_MANY') | translate: { count: results().length } }}
+          }
+        </output>
+
+        <span id="organization-hint" class="field-hint">{{ 'AUTH.LOGIN.ORGANIZATION_HINT' | translate }}</span>
+
+        @if (selected()) {
+        <button type="button" class="link-button" (click)="changeOrganization()">
+          {{ 'AUTH.LOGIN.ORGANIZATION_CHANGE' | translate }}
+        </button>
+        }
+        @if (organizationInvalid()) {
+        <span id="organization-error" class="field-error" role="alert">
+          {{ 'AUTH.LOGIN.ORGANIZATION_ERROR' | translate }}
         </span>
         }
       </div>
@@ -73,7 +126,8 @@
         }
       </div>
 
-      <button type="submit" class="btn-primary" [disabled]="loading()" [class.btn-loading]="loading()">
+      <button type="submit" class="btn-primary" [disabled]="loading() || !organizationReady()"
+        [class.btn-loading]="loading()">
         @if (loading()) {
         <span class="spinner" aria-hidden="true"></span>
         {{ 'AUTH.LOGIN.SIGNING_IN' | translate }}
