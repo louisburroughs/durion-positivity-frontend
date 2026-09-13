@@ -20,22 +20,28 @@ export const MIN_QUERY_LENGTH = 3;
  *
  * Two behaviours matter more than they look:
  *
- * - **A failure is "no matches", never an error message.** The endpoint is
- *   anonymous, and a distinct message for "not found" versus "server said no"
- *   would confirm to an unauthenticated caller whether an organization exists.
- *   Login itself already answers one indistinguishable 401 for every cause; the
- *   form must not undo that.
- * - **A 404 means the directory is switched off** in this deployment, which is
- *   a supported configuration. The caller falls back to asking for the slug, so
- *   that case is reported separately from "no matches".
+ * - **A failure is never an error message.** The endpoint is anonymous, and a
+ *   distinct message for "not found" versus "server said no" would confirm to
+ *   an unauthenticated caller whether an organization exists. Login itself
+ *   already answers one indistinguishable 401 for every cause; the form must
+ *   not undo that.
+ * - **A failure is never "no matches" either.** Only an answered request can
+ *   say nothing matched. Reporting a 500, a timeout or a dropped connection as
+ *   an empty list left the caller waiting for a pick that could never be made,
+ *   and the submit button disabled with it — an outage of the tenant directory
+ *   became an outage of login, which is the one thing this form exists to do.
+ *   Anything short of an answer is "could not ask", and the caller falls back
+ *   to the slug field, as it did before the directory existed.
  */
 @Injectable({ providedIn: 'root' })
 export class OrganizationSearchService {
   private readonly authApi = inject(AuthAPIService);
 
   /**
-   * @returns the matches, or `null` when the directory is unavailable and the
-   *   form should fall back to the slug field
+   * @returns the matches, `[]` when the directory answered and nothing matched,
+   *   or `null` when it could not be asked at all — the directory is switched
+   *   off (404) or unreachable — and the form should fall back to the slug
+   *   field rather than wait for a pick that cannot happen
    */
   search(query: string): Observable<Organization[] | null> {
     const trimmed = query.trim();
@@ -48,7 +54,10 @@ export class OrganizationSearchService {
           .filter((r): r is { slug: string; displayName: string } => !!r?.slug && !!r?.displayName)
           .map(r => ({ slug: r.slug, displayName: r.displayName })),
       ),
-      catchError((err: { status?: number }) => of(err?.status === 404 ? null : [])),
+      // Every failure alike: a 404 (directory switched off), a 5xx, a timeout,
+      // a CORS or offline failure with no status at all. None of them is an
+      // answer about this query, so none of them may be reported as one.
+      catchError(() => of(null)),
     );
   }
 }

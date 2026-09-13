@@ -463,6 +463,48 @@ describe('LoginComponent', () => {
       expect(authServiceStub.login).not.toHaveBeenCalled();
     });
 
+    it('searches again for text that was edited back to what was already asked', () => {
+      // "acm", backspace, "m" again. Deduplicating the repeat suppressed the
+      // request while the field had already been put into its searching state,
+      // so nothing ever arrived to take it out again: the list stayed shut and
+      // Sign in stayed refused until the user typed some other string.
+      setup({});
+      fixture.detectChanges();
+      typeOrganization('acm');
+      expect(searchStub.search).toHaveBeenCalledTimes(1);
+
+      component.onOrganizationInput('ac');
+      typeOrganization('acm');
+
+      expect(searchStub.search).toHaveBeenCalledTimes(2);
+      expect(component.searching()).toBe(false);
+      expect(component.listOpen()).toBe(true);
+      expect(component.results()).toEqual([ACME, TUCSON]);
+    });
+
+    it('lets that retyped query be chosen and submitted', () => {
+      setup({});
+      fixture.detectChanges();
+      typeOrganization('acm');
+      component.onOrganizationInput('ac');
+      typeOrganization('acm');
+
+      // Picked out of the list the user can actually see, not handed in: with
+      // the request suppressed there is nothing there to pick.
+      const offered = component.results();
+      expect(offered).toEqual([ACME, TUCSON]);
+      component.choose(offered[0]);
+      component.form.patchValue({ username: 'admin', password: /* test credential */ 'pass1' });
+      component.submit();
+
+      expect(component.organizationReady()).toBe(true);
+      expect(authServiceStub.login).toHaveBeenCalledWith({
+        username: 'admin',
+        password: 'pass1',
+        tenantSlug: ACME.slug,
+      });
+    });
+
     it('still honours a 404 whenever it lands — it is about the deployment, not the query', () => {
       setup({});
       fixture.detectChanges();
