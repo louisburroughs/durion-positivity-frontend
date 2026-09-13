@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs';
+import { Subject, debounceTime, map, switchMap } from 'rxjs';
 
 import { LoginRequest } from '@durion-sdk/security';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -51,10 +51,12 @@ export class LoginComponent implements OnInit {
   readonly activeIndex = signal(-1);
 
   /**
-   * True once the directory has answered 404: it is switched off in this
-   * deployment, so the form asks for a tenant slug as it did before. Starts
-   * false and can only be set by that answer — a network failure is not a
-   * reason to change what the form asks for.
+   * True once the directory has proved unaskable — switched off in this
+   * deployment (404), down, or unreachable — so the form asks for a tenant slug
+   * as it did before the directory existed. Starts false, and stays false for
+   * as long as the directory keeps answering, even when it answers with
+   * nothing: "no organization by that name" is a fact about the query, and the
+   * user's job is to type a better one.
    */
   readonly searchUnavailable = signal(false);
 
@@ -83,13 +85,20 @@ export class LoginComponent implements OnInit {
       const subscription = this.queries
         .pipe(
           debounceTime(SEARCH_DEBOUNCE_MS),
-          distinctUntilChanged(),
+          // Deliberately not deduplicated. Editing back to text already asked
+          // about — "acm", backspace, "m" again — has to reach the server:
+          // `onOrganizationInput` has already turned `searching` on, and only a
+          // response turns it off. Suppressing the repeat would strand the field
+          // on "Searching…" with the list shut and Sign in refused until the
+          // user typed something else. The debounce is what keeps the request
+          // count down; at most one redundant lookup per retype is the price.
           // Cancels the in-flight lookup when a newer query passes the debounce.
           switchMap(query => this.organizationSearch.search(query).pipe(map(matches => ({ query, matches })))),
         )
         .subscribe(({ query, matches }) => {
-          // A 404 is a fact about the deployment, not about this query, so it is
-          // honoured whenever it arrives.
+          // Not an answer about this query but about the directory itself, so
+          // it is honoured whenever it arrives, however stale the text it was
+          // asked for.
           if (matches === null) {
             this.searching.set(false);
             this.searchUnavailable.set(true);

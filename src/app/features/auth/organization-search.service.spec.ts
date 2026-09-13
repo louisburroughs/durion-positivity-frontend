@@ -79,19 +79,30 @@ describe('OrganizationSearchService', () => {
       expect(search('acme')).toBeNull();
     });
 
-    it('reports every other failure as no matches, never as a distinct message', () => {
-      // A different answer for "no such organization" than for "the server said no"
-      // would confirm to an anonymous caller whether an organization exists.
+    it('reports every other failure as "could not ask", never as no matches', () => {
+      // Reported as an empty list, an outage of the directory became an outage
+      // of login: the form waited for a pick that could never be made and kept
+      // the submit button disabled. Only an answered request may say nothing
+      // matched.
       for (const status of [0, 400, 429, 500, 503]) {
         authApi.searchTenants.mockReturnValue(throwError(() => ({ status })));
-        expect(search('acme')).toEqual([]);
+        expect(search('acme')).toBeNull();
       }
     });
 
-    it('treats an error with no status as no matches', () => {
+    it('treats an error with no status the same way — offline and CORS carry none', () => {
       authApi.searchTenants.mockReturnValue(throwError(() => new Error('network')));
 
-      expect(search('acme')).toEqual([]);
+      expect(search('acme')).toBeNull();
+    });
+
+    it('still distinguishes an answered search that found nothing', () => {
+      // The anonymous endpoint must not confirm whether an organization exists,
+      // so this stays indistinguishable from a search that found nothing for
+      // any other reason — it is the *unanswered* case that is now separate.
+      authApi.searchTenants.mockReturnValue(of([]));
+
+      expect(search('no-such-organization')).toEqual([]);
     });
   });
 });
