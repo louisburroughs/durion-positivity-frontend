@@ -102,7 +102,7 @@ describe('ProductCatalogService', () => {
 
       // detailed flag is the 7th positional arg of the SDK searchProducts signature
       expect(productsSdkStub.searchCatalogProducts).toHaveBeenCalledWith(
-        'widget', undefined, undefined, undefined, undefined, undefined, true,
+        'widget', undefined, undefined, undefined, undefined, undefined, undefined, true,
       );
       // no per-row enrichment fan-out
       expect(productsSdkStub.getProductById).not.toHaveBeenCalled();

@@ -91,7 +91,7 @@ export class ProductCatalogService {
    */
   searchProductsDetailed(query: string): Observable<ProductSummary[]> {
     return this.productsSdk
-      .searchCatalogProducts(query, undefined, undefined, undefined, undefined, undefined, true)
+      .searchCatalogProducts(query, undefined, undefined, undefined, undefined, undefined, undefined, true)
       .pipe(
         map((result: CatalogSearchResultDto) =>
           (result.data ?? []).map(s => this.toProductSummary(s)),

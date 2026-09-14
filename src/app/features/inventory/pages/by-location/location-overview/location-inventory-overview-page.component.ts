@@ -492,6 +492,7 @@ export class LocationInventoryOverviewPageComponent implements OnInit {
               undefined,
               undefined,
               undefined,
+              undefined,
               MAX_SUGGESTIONS,
               undefined,
               'body',
