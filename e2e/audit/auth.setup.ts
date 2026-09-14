@@ -6,8 +6,8 @@ import { test as setup } from './lib/persona-fixture';
 /**
  * Logs in once per persona via the /login form and persists that persona's
  * browser storage state for its crawl. Selectors match
- * src/app/features/auth/login.component.html (#username, #password,
- * button[type=submit]).
+ * src/app/features/auth/login.component.html (#username, #organization,
+ * #tenantSlug, #password, button[type=submit]).
  *
  * With AUDIT_SKIP_AUTH=1 or missing credentials, an unauthenticated state is
  * written instead and the crawl covers public pages only.
@@ -32,6 +32,21 @@ setup('authenticate against target', async ({ page, persona }) => {
 
   await page.goto(AUDIT_CONFIG.baseUrl + '/login', { waitUntil: 'domcontentloaded' });
   await page.locator('#username').fill(persona.username);
+
+  const organization = page.locator('#organization');
+  if (await organization.isVisible()) {
+    if (!AUDIT_CONFIG.tenantSlug) {
+      throw new Error('AUDIT_TENANT_SLUG or ALPHA_TENANT_SLUG is required for organization login.');
+    }
+    await organization.fill(AUDIT_CONFIG.tenantSlug);
+    await page.getByRole('option').first().click();
+  } else {
+    const tenantSlug = page.locator('#tenantSlug');
+    if (await tenantSlug.isVisible()) {
+      await tenantSlug.fill(AUDIT_CONFIG.tenantSlug);
+    }
+  }
+
   await page.locator('#password').fill(persona.password);
   await page.locator('form button[type="submit"]').click();
 

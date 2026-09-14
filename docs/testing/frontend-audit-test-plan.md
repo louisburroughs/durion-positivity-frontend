@@ -52,6 +52,7 @@ npx playwright install chromium    # once per machine (skip if a chromium is pro
 AUDIT_BASE_URL=https://durionpos.org \
 AUDIT_USERNAME=<audit-user> \
 AUDIT_PASSWORD=<audit-pass> \
+AUDIT_TENANT_SLUG=<tenant-slug> \
 npm run audit:site
 ```
 
@@ -63,14 +64,14 @@ Route access is role-gated, so a crawl only covers what its account can reach �
 admin sees `/app/admin`, a technician gets redirected to `/forbidden`. The suite runs
 one login + crawl per persona, each with its own storage state and report directory.
 
-| Persona | Env prefix | Credentials read from |
-|---|---|---|
-| `admin` | *(none)* | `AUDIT_USERNAME` / `AUDIT_PASSWORD` |
-| `advisor` | `ADVISOR_` | `AUDIT_ADVISOR_USERNAME` / `AUDIT_ADVISOR_PASSWORD` |
-| `tech` | `TECH_` | `AUDIT_TECH_USERNAME` / `AUDIT_TECH_PASSWORD` |
-| `manager` | `MANAGER_` | `AUDIT_MANAGER_USERNAME` / `AUDIT_MANAGER_PASSWORD` |
-| `acct` | `ACCT_` | `AUDIT_ACCT_USERNAME` / `AUDIT_ACCT_PASSWORD` |
-| `parts` | `PARTS_` | `AUDIT_PARTS_USERNAME` / `AUDIT_PARTS_PASSWORD` |
+| Persona      | Env prefix    | Credentials read from                                     |
+| ------------ | ------------- | --------------------------------------------------------- |
+| `admin`      | _(none)_      | `AUDIT_USERNAME` / `AUDIT_PASSWORD`                       |
+| `advisor`    | `ADVISOR_`    | `AUDIT_ADVISOR_USERNAME` / `AUDIT_ADVISOR_PASSWORD`       |
+| `tech`       | `TECH_`       | `AUDIT_TECH_USERNAME` / `AUDIT_TECH_PASSWORD`             |
+| `manager`    | `MANAGER_`    | `AUDIT_MANAGER_USERNAME` / `AUDIT_MANAGER_PASSWORD`       |
+| `acct`       | `ACCT_`       | `AUDIT_ACCT_USERNAME` / `AUDIT_ACCT_PASSWORD`             |
+| `parts`      | `PARTS_`      | `AUDIT_PARTS_USERNAME` / `AUDIT_PARTS_PASSWORD`           |
 | `controller` | `CONTROLLER_` | `AUDIT_CONTROLLER_USERNAME` / `AUDIT_CONTROLLER_PASSWORD` |
 
 Each name falls back to the matching `ITEST_*` variable, so an existing integration-test
@@ -89,19 +90,20 @@ set behaves exactly as it did before personas existed.
 Personas are crawled sequentially (`workers: 1`), so `AUDIT_PERSONAS=all` takes roughly
 seven times a single run — scope it with `AUDIT_MAX_PAGES` when iterating.
 
-| Env var | Default | Purpose |
-|---|---|---|
-| `AUDIT_BASE_URL` | `https://durionpos.org` | Target origin |
-| `AUDIT_USERNAME` / `AUDIT_PASSWORD` | — | `admin` persona account for `/app` (omit → public-only + warning) |
-| `AUDIT_PERSONAS` | `admin` | Personas to crawl: comma-separated ids, or `all` for every configured one |
-| `AUDIT_SKIP_AUTH` | — | `1` = public pages only |
-| `AUDIT_MAX_PAGES` | `200` | Total crawl cap |
-| `AUDIT_MAX_PER_PATTERN` | `2` | Concrete instances sampled per parameterized route (e.g. two invoices) |
-| `AUDIT_SETTLE_MS` | `1200` | Extra wait after network idle for signals/effects to settle |
-| `AUDIT_PAGE_TIMEOUT_MS` | `30000` | Per-page navigation timeout |
-| `AUDIT_OUT_DIR` | `artifacts/audit` | Report output directory |
-| `AUDIT_CHROMIUM_PATH` | — | Explicit chromium binary (sandboxed/CI images) |
-| `AUDIT_BROWSER_ARGS` | — | Extra chromium flags, whitespace-separated (e.g. `--ssl-version-max=tls1.2` when an egress proxy resets Chromium's TLS 1.3 ClientHello) |
+| Env var                             | Default                 | Purpose                                                                                                                                 |
+| ----------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `AUDIT_BASE_URL`                    | `https://durionpos.org` | Target origin                                                                                                                           |
+| `AUDIT_USERNAME` / `AUDIT_PASSWORD` | —                       | `admin` persona account for `/app` (omit → public-only + warning)                                                                       |
+| `AUDIT_TENANT_SLUG`                 | `ALPHA_TENANT_SLUG`     | Organization selected on login when the target host does not identify a tenant                                                          |
+| `AUDIT_PERSONAS`                    | `admin`                 | Personas to crawl: comma-separated ids, or `all` for every configured one                                                               |
+| `AUDIT_SKIP_AUTH`                   | —                       | `1` = public pages only                                                                                                                 |
+| `AUDIT_MAX_PAGES`                   | `200`                   | Total crawl cap                                                                                                                         |
+| `AUDIT_MAX_PER_PATTERN`             | `2`                     | Concrete instances sampled per parameterized route (e.g. two invoices)                                                                  |
+| `AUDIT_SETTLE_MS`                   | `1200`                  | Extra wait after network idle for signals/effects to settle                                                                             |
+| `AUDIT_PAGE_TIMEOUT_MS`             | `30000`                 | Per-page navigation timeout                                                                                                             |
+| `AUDIT_OUT_DIR`                     | `artifacts/audit`       | Report output directory                                                                                                                 |
+| `AUDIT_CHROMIUM_PATH`               | —                       | Explicit chromium binary (sandboxed/CI images)                                                                                          |
+| `AUDIT_BROWSER_ARGS`                | —                       | Extra chromium flags, whitespace-separated (e.g. `--ssl-version-max=tls1.2` when an egress proxy resets Chromium's TLS 1.3 ClientHello) |
 
 Proxied environments: `HTTPS_PROXY`/`https_proxy` is honored automatically — the config passes
 it to Chromium at launch (Chromium does not read it from the environment on its own), and
@@ -114,9 +116,9 @@ it to Chromium at launch (Chromium does not read it from the environment on its 
    `/forbidden`, `/not-found`) always run; `/app/**` seeds run when authenticated.
 2. **Discovery** — on each audited page, all same-origin `<a href>` targets are harvested and
    queued (BFS). This is how parameterized routes (`/app/billing/invoices/:invoiceId`, …) get
-   covered with *real* entity ids, without the audit inventing or mutating data.
+   covered with _real_ entity ids, without the audit inventing or mutating data.
 3. **API id harvesting** — most list pages navigate via click handlers, not anchors, so link
-   discovery alone misses nearly all detail routes. The crawler therefore also *observes* the
+   discovery alone misses nearly all detail routes. The crawler therefore also _observes_ the
    JSON API responses each page already makes, remembers id-like field values (`invoiceId`,
    `partyId`, `workorderId`, …), and when the link queue runs dry fills the route templates in
    `route-seeds.ts` (`PARAM_TEMPLATES`) with those real ids — only the field names the
@@ -133,28 +135,28 @@ it to Chromium at launch (Chromium does not read it from the environment on its 
 
 ## 5. Rule matrix
 
-| Rule id | Checks | Severity | Reference |
-|---|---|---|---|
-| `uncaught-exception` | `pageerror` during load | Critical | — |
-| `page-unreachable` | document 4xx/5xx or navigation failure | Critical | — |
-| `failed-api-request` | XHR/fetch 5xx (Critical) or 4xx/network-fail (High) | Critical/High | ADR-0031 |
-| `uuid-on-screen` | UUID in visible text or rendered input values (checkbox/radio/hidden values are wiring and excluded; button/submit values ARE their visible label and stay in scope) | High | UI rule |
-| `uuid-in-picker-options` | UUIDs as select/option labels | High | UI rule |
-| `search-by-internal-id` | search field labeled UUID/GUID | High | UI rule |
-| `search-possibly-id-keyed` | search field labeled bare "ID" with no human-readable term | Medium | UI rule |
-| `raw-i18n-key` | `DOMAIN.SECTION.KEY`-shaped text rendered (occurrences inside `<code>`/`<pre>` count as intentional data; a key shown as code AND rendered raw elsewhere still flags) | High | ADR-0030 |
-| `rendering-artifact` | `Invalid Date`, `NaN`, `[object Object]`, stray `undefined` | High/Medium | ADR-0038 |
-| `console-error` | `console.error` during load | High | — |
-| `dangling-route` | route/link lands on `/not-found` | High | — |
-| `a11y/<axe-rule>` | axe-core WCAG 2.0/2.1/2.2 A+AA violations | High→Info by impact | ADR-0029, ADR-0039 |
-| `anchor-as-action` | `<a>` used for Retry/Reload/Save-style actions | Medium | ADR-0037 |
-| `dead-anchor-href` | `href="#"` / `javascript:` anchors | Medium | ADR-0037 |
-| `untyped-form-button` | `<button>` in form without `type` | Medium | ADR-0037 |
-| `failed-asset-request` | 404/failed images, fonts, scripts | Medium | — |
-| `missing-theme-attribute` | `html[data-theme]` absent | Low | Style guide §4 |
-| `missing-theme-tokens` | core `--brand-*`/theme tokens absent on `:root` | Low | theme-tokens.md |
-| `body-font-drift` / `heading-font-drift` | computed fonts outside the approved stacks | Low | Style guide §2 |
-| `missing-h1` | no `<h1>` landmark | Low | ADR-0029 |
+| Rule id                                  | Checks                                                                                                                                                                | Severity            | Reference          |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ------------------ |
+| `uncaught-exception`                     | `pageerror` during load                                                                                                                                               | Critical            | —                  |
+| `page-unreachable`                       | document 4xx/5xx or navigation failure                                                                                                                                | Critical            | —                  |
+| `failed-api-request`                     | XHR/fetch 5xx (Critical) or 4xx/network-fail (High)                                                                                                                   | Critical/High       | ADR-0031           |
+| `uuid-on-screen`                         | UUID in visible text or rendered input values (checkbox/radio/hidden values are wiring and excluded; button/submit values ARE their visible label and stay in scope)  | High                | UI rule            |
+| `uuid-in-picker-options`                 | UUIDs as select/option labels                                                                                                                                         | High                | UI rule            |
+| `search-by-internal-id`                  | search field labeled UUID/GUID                                                                                                                                        | High                | UI rule            |
+| `search-possibly-id-keyed`               | search field labeled bare "ID" with no human-readable term                                                                                                            | Medium              | UI rule            |
+| `raw-i18n-key`                           | `DOMAIN.SECTION.KEY`-shaped text rendered (occurrences inside `<code>`/`<pre>` count as intentional data; a key shown as code AND rendered raw elsewhere still flags) | High                | ADR-0030           |
+| `rendering-artifact`                     | `Invalid Date`, `NaN`, `[object Object]`, stray `undefined`                                                                                                           | High/Medium         | ADR-0038           |
+| `console-error`                          | `console.error` during load                                                                                                                                           | High                | —                  |
+| `dangling-route`                         | route/link lands on `/not-found`                                                                                                                                      | High                | —                  |
+| `a11y/<axe-rule>`                        | axe-core WCAG 2.0/2.1/2.2 A+AA violations                                                                                                                             | High→Info by impact | ADR-0029, ADR-0039 |
+| `anchor-as-action`                       | `<a>` used for Retry/Reload/Save-style actions                                                                                                                        | Medium              | ADR-0037           |
+| `dead-anchor-href`                       | `href="#"` / `javascript:` anchors                                                                                                                                    | Medium              | ADR-0037           |
+| `untyped-form-button`                    | `<button>` in form without `type`                                                                                                                                     | Medium              | ADR-0037           |
+| `failed-asset-request`                   | 404/failed images, fonts, scripts                                                                                                                                     | Medium              | —                  |
+| `missing-theme-attribute`                | `html[data-theme]` absent                                                                                                                                             | Low                 | Style guide §4     |
+| `missing-theme-tokens`                   | core `--brand-*`/theme tokens absent on `:root`                                                                                                                       | Low                 | theme-tokens.md    |
+| `body-font-drift` / `heading-font-drift` | computed fonts outside the approved stacks                                                                                                                            | Low                 | Style guide §2     |
+| `missing-h1`                             | no `<h1>` landmark                                                                                                                                                    | Low                 | ADR-0029           |
 
 axe impact mapping: `critical→High`, `serious→Medium`, `moderate→Low`, `minor→Info`.
 (Severity `Critical` is reserved for pages that are actually broken for users.)
@@ -165,13 +167,13 @@ Each persona writes its own set, e.g. `artifacts/audit/admin/summary.md` and
 `artifacts/audit/tech/summary.md`, so one persona's crawl never overwrites another's.
 `summary.md`, `sitemap.md` and `findings.md` each name the persona in their header.
 
-| File | Contents |
-|---|---|
-| `summary.md` | Run metadata + findings-by-severity table |
-| `sitemap.md` | Every page reached: pattern, outcome, HTTP status, title, load time, finding counts, discovered-from |
-| `findings.md` | **Recommended changes ranked by severity**, each with evidence + concrete fix + ADR reference, plus a per-rule rollup for systemic fixes |
-| `error-pages.md` | Pages with HTTP/JS/API errors, with the specific errors |
-| `report.json` | Full machine-readable results (pages + findings) |
+| File             | Contents                                                                                                                                 |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `summary.md`     | Run metadata + findings-by-severity table                                                                                                |
+| `sitemap.md`     | Every page reached: pattern, outcome, HTTP status, title, load time, finding counts, discovered-from                                     |
+| `findings.md`    | **Recommended changes ranked by severity**, each with evidence + concrete fix + ADR reference, plus a per-rule rollup for systemic fixes |
+| `error-pages.md` | Pages with HTTP/JS/API errors, with the specific errors                                                                                  |
+| `report.json`    | Full machine-readable results (pages + findings)                                                                                         |
 
 ## 7. Triage workflow
 
@@ -181,8 +183,8 @@ Each persona writes its own set, e.g. `artifacts/audit/admin/summary.md` and
 3. Cross-check `error-pages.md` against backend logs for failed API calls — decide whether the
    fix is frontend (wrong URL/contract) or backend, and confirm the page shows its ADR-0031
    error state either way.
-4. `dangling-route` on a *seed* means a route in code isn't deployed/served; on a *discovered
-   link* it means a broken link on the source page (listed in "Discovered from").
+4. `dangling-route` on a _seed_ means a route in code isn't deployed/served; on a _discovered
+   link_ it means a broken link on the source page (listed in "Discovered from").
 5. Re-run after fixes and diff `report.json` finding counts.
 6. A finding verified as intentional (e.g. an admin-only exact-id lookup) is recorded in
    `e2e/audit/lib/accepted-findings.ts` with its rationale. Accepted findings are downgraded

@@ -13,6 +13,7 @@ function intEnv(name: string, fallback: number): number {
  *   AUDIT_BASE_URL         target origin        (default https://durionpos.org)
  *   AUDIT_USERNAME         login username       (required unless AUDIT_SKIP_AUTH=1)
  *   AUDIT_PASSWORD         login password       (required unless AUDIT_SKIP_AUTH=1)
+ *   AUDIT_TENANT_SLUG      login organization   (falls back to ALPHA_TENANT_SLUG)
  *   AUDIT_SKIP_AUTH=1      crawl public pages only
  *   AUDIT_MAX_PAGES        crawl cap            (default 200)
  *   AUDIT_MAX_PER_PATTERN  instances of one route pattern to sample (default 2)
@@ -24,6 +25,7 @@ export const AUDIT_CONFIG = {
   baseUrl: (process.env['AUDIT_BASE_URL'] ?? 'https://durionpos.org').replace(/\/+$/, ''),
   username: process.env['AUDIT_USERNAME'] ?? '',
   password: process.env['AUDIT_PASSWORD'] ?? '',
+  tenantSlug: process.env['AUDIT_TENANT_SLUG'] ?? process.env['ALPHA_TENANT_SLUG'] ?? '',
   skipAuth: process.env['AUDIT_SKIP_AUTH'] === '1',
   maxPages: intEnv('AUDIT_MAX_PAGES', 200),
   maxPerPattern: intEnv('AUDIT_MAX_PER_PATTERN', 2),
