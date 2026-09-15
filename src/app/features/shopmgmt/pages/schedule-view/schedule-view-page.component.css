@@ -1,204 +1,923 @@
-.page-header {
+/* Shop Capacity Calendar.
+   Colour is never the sole carrier of meaning (ADR-0039): every verdict the
+   tick row encodes is also written out in the day's verdict chip, and every
+   swatch in the legend is labelled. */
+
+.capacity-page {
+  /* One hatch for every "not available" surface: a closed hour, a downed bay,
+     a technician off shift. Defined once rather than repeated per state. */
+  --hatch: repeating-linear-gradient(
+    45deg,
+    var(--trackColor) 0 3px,
+    color-mix(in srgb, var(--trackColor) 35%, var(--cardBackground)) 3px 6px
+  );
+
   display: flex;
-  align-items: center;
-  margin-bottom: var(--space-6);
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── Shared patterns ──────────────────────────────────────────────────────── */
+
+.section-label,
+.month-head-cell,
+.week-gutter-head,
+.board-gutter-head,
+.tech-lane-head h2 {
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-heading);
+  font-size: 0.6875rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.today-badge,
+.fits-flag {
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-display);
+  font-size: 0.625rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 1px var(--space-1);
+  border-radius: 3px;
+  background: var(--primaryA400);
+  color: var(--contrastTextColor);
+}
+
+.fits-flag {
+  background: var(--accentA700);
+}
+
+.toolbar,
+.grid-panel,
+.state-panel,
+.kpi,
+.tech-lane {
+  background: var(--cardBackground);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.day-context,
+.day-limit,
+.week-head-meta,
+.bay-type,
+.kpi-label,
+.tech-skills,
+.tech-load,
+.tech-lane-head p,
+.job-option-duration,
+.job-option-empty,
+.legend {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.period-label,
+.day-number,
+.week-head-day,
+.bay-name,
+.ratio,
+.kpi-value,
+.verdict-chip {
+  font-family: var(--font-primary);
+  font-weight: var(--font-weight-display);
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+
+.page-header,
+.header-controls,
+.toolbar,
+.tech-lane-head {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.page-header {
+  align-items: flex-end;
+  justify-content: space-between;
 }
 
 .page-header h1 {
   font-family: var(--font-primary);
+  font-weight: var(--font-weight-display);
   font-size: 1.625rem;
-  margin: 0;
+  line-height: 1.1;
 }
 
-.filter-bar {
-  background: var(--cardBackground);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-6);
-  margin-bottom: var(--space-6);
-}
-
-.filter-bar form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
+.header-controls {
   align-items: flex-end;
 }
 
-.filter-group {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 160px;
-}
-
-.filter-group label {
+.field-label {
+  display: block;
   font-size: 0.8125rem;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
 }
 
-.filter-group input {
+/* ── Job-type filter ──────────────────────────────────────────────────────── */
+
+.job-filter {
+  position: relative;
+  min-width: 200px;
+}
+
+.job-trigger,
+.job-search {
   background: var(--input-background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--currentTextColor);
+  cursor: pointer;
+}
+
+.job-search {
   border: none;
   border-bottom: 2px solid var(--input-border);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  padding: var(--space-2) var(--space-3);
-  color: var(--currentTextColor);
-  font-family: var(--font-primary);
-  font-size: 0.875rem;
+  cursor: text;
 }
 
-.load-board-btn {
-  background: var(--accent-strong);
-  color: var(--brand-surface);
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-4);
-  cursor: pointer;
-  font-family: var(--font-primary);
-  font-size: 0.875rem;
-  align-self: flex-end;
-}
-
-.load-board-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.loading-state {
-  color: var(--brand-secondary);
-  padding: var(--space-4);
-}
-
-.availability-warning {
-  background: var(--status-warning-bg); color: var(--status-warning-fg);
-  border-radius: var(--radius-md);
-  padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-4);
-  font-size: 0.875rem;
-}
-
-.empty-board {
-  color: var(--brand-secondary);
-  padding: var(--space-4);
-}
-
-.board-region {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.resource-lane {
-  background: var(--cardBackground);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-6);
-}
-
-.lane-header {
-  display: flex;
-  gap: var(--space-3);
+.job-chip {
+  display: inline-flex;
   align-items: center;
-  margin-bottom: var(--space-3);
-}
-
-.resource-type {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--brand-secondary);
-}
-
-.resource-name {
-  font-weight: 600;
-  font-size: 0.9375rem;
-}
-
-.lane-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.work-item-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  background: color-mix(in srgb, var(--brand-primary) 8%, var(--cardBackground));
+  gap: var(--space-2);
+  background: var(--status-ready-bg);
+  color: var(--status-ready-fg);
+  border: 1px solid var(--accentA700);
   border-radius: var(--radius-md);
-  padding: var(--space-3);
-  cursor: pointer;
-  min-width: 160px;
-}
-
-.work-item-card:hover {
-  background: color-mix(in srgb, var(--brand-accent) 12%, var(--cardBackground));
-}
-
-.item-id {
-  font-size: 0.75rem;
-  color: var(--brand-secondary);
-}
-
-.item-time {
+  padding: var(--space-1) var(--space-2);
   font-size: 0.8125rem;
 }
 
-.item-status {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
+.job-chip-label {
+  font-weight: var(--font-weight-heading);
 }
 
-.conflict-badge {
-  font-size: 0.75rem;
-  background: var(--status-warning-bg); color: var(--status-warning-fg);
-  border-radius: var(--radius-sm);
-  padding: 0 var(--space-1);
-}
-
-.details-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: 320px;
-  background: var(--cardBackground);
-  padding: var(--space-6);
-  box-shadow: -2px 0 12px color-mix(in srgb, var(--currentTextColor) 15%, transparent);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  z-index: 100;
-  overflow-y: auto;
-}
-
-.details-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.details-header h3 {
-  font-family: var(--font-primary);
-  font-size: 1.125rem;
-  margin: 0;
-}
-
-.details-close {
+.job-chip-clear {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--brand-secondary);
-  font-size: 1.125rem;
+  color: inherit;
+  font-size: 0.75rem;
 }
 
-.details-row {
-  display: grid;
-  grid-template-columns: 6rem 1fr;
-  gap: var(--space-2);
+.job-picker {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  width: 320px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--surface-variant);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.job-option {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  cursor: pointer;
+  color: var(--currentTextColor);
   font-size: 0.875rem;
 }
 
-.label {
-  color: var(--brand-secondary);
+.job-option:hover,
+.job-option:focus-visible {
+  background: var(--surface-hover);
+}
+
+/* ── Toolbar ──────────────────────────────────────────────────────────────── */
+
+.toolbar {
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+}
+
+.period-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.nav-step {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  background: var(--cardBackground);
+  border-radius: var(--radius-sm);
+  color: var(--currentTextColor);
+  cursor: pointer;
+}
+
+.period-label {
+  font-size: 1.1875rem;
+  min-width: 190px;
+}
+
+.btn-text,
+.scope-toggle button {
+  background: var(--cardBackground);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  color: var(--primaryA400);
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-heading);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.scope-toggle {
+  display: flex;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.scope-toggle button {
+  border: none;
+  border-left: 1px solid var(--border-color);
+  border-radius: 0;
+  padding: var(--space-2) var(--space-4);
+}
+
+.scope-toggle button:first-child {
+  border-left: none;
+}
+
+.scope-toggle button.is-active {
+  background: var(--primaryA400);
+  color: var(--contrastTextColor);
+}
+
+/* ── Banners, legend, page states ─────────────────────────────────────────── */
+
+.requirement-banner {
   font-size: 0.8125rem;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  list-style: none;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.swatch {
+  display: inline-block;
+  border-radius: 2px;
+}
+
+.swatch-load {
+  width: 12px;
+  height: 16px;
+  background: linear-gradient(
+    180deg,
+    var(--cardBackground) 40%,
+    color-mix(in srgb, var(--handleColor) 55%, var(--cardBackground)) 40%
+  );
+  box-shadow: inset 0 0 0 1px var(--border-color);
+}
+
+.swatch.tick {
+  width: 14px;
+  flex: none;
+}
+
+.state-panel {
+  padding: var(--space-4);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.grid-panel {
+  overflow: hidden;
+}
+
+/* ── Verdicts, shared by the month ticks and the week cells ───────────────── */
+
+.tick {
+  flex: 1;
+  height: 5px;
+  border-radius: 2px;
+}
+
+.tick-fits {
+  background: var(--accentA700);
+}
+
+.tick-short {
+  background: color-mix(in srgb, var(--accentA700) 40%, var(--cardBackground));
+}
+
+.tick-tech {
+  background: var(--goldA400);
+}
+
+.tick-taken {
+  background: var(--trackColor);
+}
+
+.tick-shut {
+  background: transparent;
+}
+
+.verdict-chip {
+  align-self: flex-start;
+  font-size: 0.75rem;
+  padding: 1px var(--space-2);
+  border-radius: 3px;
+}
+
+.verdict-fits {
+  background: var(--status-ready-bg);
+  color: var(--status-ready-fg);
+}
+
+.verdict-tech {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.verdict-taken {
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+.verdict-shut {
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+/* ── Month grid ───────────────────────────────────────────────────────────── */
+
+.month-head,
+.month-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid var(--border-color);
+}
+
+.month-head {
+  background: color-mix(in srgb, var(--handleColor) 8%, var(--cardBackground));
+}
+
+.month-head-cell,
+.month-cell {
+  border-right: 1px solid var(--border-color);
+}
+
+.month-head-cell {
+  padding: var(--space-2) var(--space-3);
+}
+
+.month-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 132px;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  background: var(--cardBackground);
+}
+
+.month-cell.is-outside {
+  background: color-mix(in srgb, var(--handleColor) 6%, var(--cardBackground));
+}
+
+.month-cell.is-today {
+  box-shadow: inset 0 0 0 2px var(--primaryA400);
+  z-index: 1;
+}
+
+/* A day the job cannot be done: amber when the technician is the constraint,
+   red when every eligible bay is taken — the two need different fixes. */
+.month-cell.day-tech {
+  background: color-mix(in srgb, var(--status-warning-bg) 55%, var(--cardBackground));
+}
+
+.month-cell.day-taken {
+  background: color-mix(in srgb, var(--status-error-bg) 45%, var(--cardBackground));
+}
+
+.month-cell-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.day-number {
+  font-size: 0.9375rem;
+}
+
+.is-outside .day-number {
+  color: var(--text-muted);
+}
+
+.day-closed {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.month-cell-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: stretch;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.month-cell-body:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
+.hour-strip,
+.tick-row {
+  display: flex;
+  gap: 2px;
+}
+
+/* The fill is shop-wide load in one quiet ink; the eligibility verdict rides
+   entirely on the tick row below it and on the verdict chip. */
+.hour-track {
+  position: relative;
+  flex: 1;
+  height: 28px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--handleColor) 10%, var(--cardBackground));
+  box-shadow: inset 0 0 0 1px var(--border-color);
+}
+
+.hour-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--handleColor) 45%, var(--cardBackground));
+}
+
+.day-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.65625rem;
+}
+
+.day-limit,
+.day-carry {
+  font-weight: var(--font-weight-heading);
+}
+
+.day-carry {
+  color: var(--status-warning-fg);
+}
+
+/* ── Week grid ────────────────────────────────────────────────────────────── */
+
+.week-head,
+.week-row {
+  display: grid;
+  grid-template-columns: 78px repeat(7, minmax(0, 1fr));
+}
+
+.week-head {
+  border-bottom: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--handleColor) 8%, var(--cardBackground));
+}
+
+.week-row {
+  border-top: 1px solid var(--border-color);
+}
+
+.week-gutter-head,
+.week-head-cell,
+.week-cell {
+  padding: var(--space-2) var(--space-3);
+  border-left: 1px solid var(--border-color);
+  min-width: 0;
+}
+
+.week-gutter-head {
+  border-left: none;
+}
+
+.week-head-cell.is-today {
+  background: var(--primary50);
+}
+
+.week-head-day {
+  display: block;
+  font-size: 0.875rem;
+}
+
+.week-head-meta,
+.tech-skills,
+.tech-load,
+.bay-type {
+  display: block;
+}
+
+.week-gutter {
+  display: flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.week-cell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.week-cell.cell-fits {
+  background: color-mix(in srgb, var(--status-ready-bg) 55%, var(--cardBackground));
+  box-shadow: inset 2px 0 0 var(--accentA700);
+}
+
+.week-cell.cell-tech {
+  background: color-mix(in srgb, var(--status-warning-bg) 45%, var(--cardBackground));
+}
+
+.week-cell.cell-taken {
+  background: color-mix(in srgb, var(--status-error-bg) 40%, var(--cardBackground));
+}
+
+.ratio {
+  font-size: 0.875rem;
+  min-width: 28px;
+}
+
+.bay-blocks,
+.tech-dots {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Fixed bay order, so a column of hatching reads as "that bay is down". */
+.bay-block {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  opacity: 0.32;
+  box-shadow: inset 0 0 0 1px var(--handleColor);
+}
+
+.bay-block.is-eligible {
+  width: 15px;
+  height: 15px;
+  opacity: 1;
+  box-shadow: inset 0 0 0 1.5px var(--accentA700);
+}
+
+.bay-block.state-free {
+  background: var(--cardBackground);
+}
+
+.bay-block.state-busy,
+.bay-block.state-hold {
+  background: color-mix(in srgb, var(--primaryA400) 55%, var(--cardBackground));
+}
+
+.tech-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  opacity: 0.4;
+  background: var(--trackColor);
+  box-shadow: inset 0 0 0 1px var(--handleColor);
+}
+
+.tech-dot.is-certified {
+  width: 11px;
+  height: 11px;
+  opacity: 1;
+}
+
+.tech-dot.is-certified.state-free {
+  background: var(--cardBackground);
+  box-shadow: inset 0 0 0 1.5px var(--accentA700);
+}
+
+.tech-dot.is-certified.state-assigned {
+  background: var(--goldA400);
+  box-shadow: inset 0 0 0 1.5px var(--goldA400);
+}
+
+.tech-dot.is-certified.state-off {
+  box-shadow: inset 0 0 0 1.5px var(--goldA400);
+}
+
+/* Every surface that means "not available". */
+.week-cell.cell-shut,
+.bay-block.state-down,
+.bay-block.state-closed,
+.tech-dot.is-certified.state-off,
+.board-column.is-down,
+.board-card.state-blocked,
+.tech-cell.state-off {
+  background: var(--hatch);
+}
+
+/* ── Day board ────────────────────────────────────────────────────────────── */
+
+.kpi-row {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.kpi {
+  flex: 1;
+  min-width: 160px;
+  padding: var(--space-2) var(--space-3);
+}
+
+.kpi-value {
+  font-size: 1.25rem;
+}
+
+.kpi-unit {
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-medium);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* `grid-template-columns` is bound from the component: the number of bays is a
+   property of the shop, not of the stylesheet. */
+.board-head,
+.board-body {
+  display: grid;
+}
+
+.board-head {
+  border-bottom: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--handleColor) 8%, var(--cardBackground));
+}
+
+.board-gutter-head,
+.board-head-cell {
+  padding: var(--space-2) var(--space-3);
+  border-left: 1px solid var(--border-color);
+  min-width: 0;
+}
+
+.board-gutter-head {
+  border-left: none;
+}
+
+/* A bay that cannot do the selected job is greyed, not hidden: the board is a
+   floor plan, and a missing column reads as a missing bay.
+
+   Desaturation only — no `opacity`. Fading the column also fades its labels,
+   which took the bay name to 2.96:1 against the panel and failed WCAG AA.
+   The recessed reading comes from muted label colour, which is a token that is
+   AA in both themes. */
+.board-head-cell.is-ineligible,
+.board-column.is-ineligible,
+.tech-row:not(.is-certified) {
+  filter: grayscale(1);
+}
+
+.board-head-cell.is-ineligible .bay-name,
+.tech-row:not(.is-certified) .tech-name {
+  color: var(--text-muted);
+}
+
+.bay-name {
+  display: block;
+  font-size: 0.875rem;
+}
+
+.board-body,
+.board-gutter,
+.board-column {
+  position: relative;
+}
+
+.board-gutter-hour {
+  padding: var(--space-1) var(--space-3) 0 0;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+}
+
+.board-column {
+  border-left: 1px solid var(--border-color);
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 63px,
+    var(--border-color) 63px 64px
+  );
+}
+
+.board-card {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--status-info-bg);
+  border-left: 3px solid var(--primaryA400);
+  box-shadow: var(--shadow-card);
+  font-size: 0.65625rem;
+}
+
+.board-card.state-inProgress {
+  background: var(--status-ready-bg);
+  border-left-color: var(--accentA700);
+}
+
+.board-card.state-overrunning {
+  background: var(--status-error-bg);
+  border-left-color: var(--status-error-fg);
+}
+
+.board-card.state-tentative {
+  background: var(--cardBackground);
+  border: 1.5px dashed var(--goldA400);
+}
+
+.board-card.state-complete {
+  background: var(--status-neutral-bg);
+  border-left-color: var(--handleColor);
+}
+
+.board-card.state-blocked {
+  border-left-color: var(--handleColor);
+}
+
+.card-time,
+.card-tech,
+.card-conflict,
+.job-chip-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-time {
+  font-weight: var(--font-weight-heading);
+}
+
+.card-tech {
+  color: var(--text-muted);
+}
+
+.card-conflict {
+  color: var(--status-error-fg);
+  font-weight: var(--font-weight-heading);
+}
+
+/* Planned finish vs. where the job actually is. Drawn only when the backend
+   distinguishes the two; see the service's gap 4. */
+.planned-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px dashed var(--status-error-fg);
+}
+
+.now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--status-error-fg);
+  z-index: 3;
+}
+
+.now-label {
+  position: absolute;
+  top: -9px;
+  left: 0;
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-display);
+  font-size: 0.625rem;
+  color: var(--status-error-fg);
+  background: var(--cardBackground);
+  padding: 1px var(--space-1);
+  border-radius: 3px;
+}
+
+/* ── Technician lane ──────────────────────────────────────────────────────── */
+
+.tech-lane {
+  padding: var(--space-3);
+}
+
+.tech-lane-head {
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.tech-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 3px 0;
+}
+
+.tech-id {
+  width: 150px;
+  flex: none;
+}
+
+.tech-name {
+  display: block;
+  font-weight: var(--font-weight-heading);
+  font-size: 0.75rem;
+}
+
+.tech-cells {
+  flex: 1;
+  display: flex;
+  gap: 2px;
+}
+
+.tech-cell {
+  flex: 1;
+  height: 22px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--handleColor) 10%, var(--cardBackground));
+  box-shadow: inset 0 0 0 1px var(--border-color);
+}
+
+.tech-cell.state-assigned {
+  background: color-mix(in srgb, var(--primaryA400) 30%, var(--cardBackground));
+  box-shadow: inset 0 0 0 1px var(--primaryA400);
+}
+
+.tech-load {
+  width: 100px;
+  flex: none;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .month-cell {
+    min-height: 96px;
+  }
+
+  .tech-id {
+    width: 110px;
+  }
+
+  .tech-load {
+    display: none;
+  }
 }

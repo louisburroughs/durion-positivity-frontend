@@ -1,0 +1,516 @@
+/**
+ * View model and pure capacity engine for the Shop Capacity Calendar
+ * (`/app/shopmgmt/schedule`).
+ *
+ * ── The primitive is *eligible* capacity, never bay capacity ────────────────
+ *
+ * "Three bays free" is not an answer. If all three are general-service bays and
+ * the job needs the alignment rack, actual capacity is zero. Every figure this
+ * module produces is therefore capacity *for the selected job*, computed as
+ *
+ *     eligible(hour) = min(eligible bays free, certified technicians free)
+ *
+ * and an opening only counts when the job's whole duration is free unbroken in
+ * one bay. Raw shop bay-hours survive as grey context only, and appointment
+ * counts are not modelled at all — one 4-hour diagnostic consumes four
+ * bay-hours, four oil changes consume four, and a count conflates them.
+ *
+ * The two ways eligibility hits zero are kept apart deliberately, because the
+ * fix differs: `bay` (the rack is taken — no action available) versus `tech`,
+ * which splits again into `off` (nobody certified is rostered — call someone
+ * in) and `assigned` (the certified technician is on another job — reassign).
+ *
+ * Everything here is pure and synchronous so it is unit-testable without HTTP;
+ * `CapacityCalendarService` does the composition and hands these functions
+ * already-normalized inputs.
+ */
+
+/** Operational state of one bay for one whole hour. */
+export type BayHourState =
+  /** Bookable. */
+  | 'free'
+  /** Holds a confirmed appointment. */
+  | 'busy'
+  /** Holds a tentative appointment that has not been confirmed. */
+  | 'hold'
+  /** Bay is OUT_OF_SERVICE, or blocked for a service call, for this hour. */
+  | 'down'
+  /** The shop is not open this hour (outside operating hours, or a closure). */
+  | 'closed';
+
+/** Why a day or hour offers no eligible capacity. */
+export type LimitReason =
+  /** The shop is shut this hour. */
+  | 'shut'
+  /** Every eligible bay is taken. */
+  | 'bay'
+  /** An eligible bay is free but no certified technician is. */
+  | 'tech';
+
+/**
+ * Why the technician dimension is the binding constraint. Amber in both cases,
+ * but `off` means call someone in and `assigned` means reassign.
+ */
+export type TechBlockReason = 'off' | 'assigned';
+
+/** How a calendar day relates to the shop's operating calendar. */
+export type DayKind =
+  /** Padding from the previous or next month. */
+  | 'outside'
+  /** Normal operating day. */
+  | 'open'
+  /** Open, but on shorter hours than the weekday norm (e.g. Saturday 8–1). */
+  | 'reduced'
+  /** Closed for the weekly rest day. */
+  | 'closed'
+  /** Closed for a dated holiday closure. */
+  | 'holiday';
+
+// ── Resources ───────────────────────────────────────────────────────────────
+
+/**
+ * One service bay, as the capacity model needs it.
+ *
+ * `capabilityIds` and `skillRequirementIds` come straight off `BayResponse`.
+ * `bayType` is the coarse classification (GENERAL_SERVICE, ALIGNMENT,
+ * TIRE_SERVICE, HEAVY_DUTY, INSPECTION, WASH_DETAIL) and is what eligibility
+ * falls back to while the service→capability join is missing — see
+ * {@link JobRequirement}.
+ */
+export interface CapacityBay {
+  readonly bayId: string;
+  readonly name: string;
+  readonly bayType: string;
+  readonly capabilityIds: readonly string[];
+  readonly skillRequirementIds: readonly string[];
+  /** True for `status === 'OUT_OF_SERVICE'`; the bay is never capacity. */
+  readonly outOfService: boolean;
+}
+
+/** One technician on the location's roster, with the skills they hold. */
+export interface CapacityTechnician {
+  readonly personId: string;
+  readonly displayName: string;
+  readonly skills: readonly string[];
+  /** Bay ids this technician is the assigned resource for, per hour index. */
+  readonly assignedHours: ReadonlySet<number>;
+  /** Hour indices the technician is rostered on shift and not on PTO. */
+  readonly onDutyHours: ReadonlySet<number>;
+}
+
+/**
+ * The job the whole board is filtered by: what it needs and how long it takes.
+ *
+ * `capabilityIds` is empty whenever the catalog cannot say which capability a
+ * service needs — the backend gap this page is blocked on. `bayTypes` is the
+ * declared interim fallback, and `eligibleBay` prefers the capability join and
+ * only drops to bay type when the join is absent, so this page starts reading
+ * real eligibility the day the catalog carries it, with no code change here.
+ */
+export interface JobRequirement {
+  readonly serviceId?: string;
+  readonly label: string;
+  /** Required service capability ids, when the catalog can say. */
+  readonly capabilityIds: readonly string[];
+  /** Interim fallback: bay types that can perform the job. */
+  readonly bayTypes: readonly string[];
+  /** Skill codes a technician must hold. Empty means any rostered technician. */
+  readonly skillCodes: readonly string[];
+  /** Job duration in hours; drives the unbroken-window test. */
+  readonly durationHours: number;
+}
+
+// ── Per-hour and per-day results ────────────────────────────────────────────
+
+/** One hour of one day, after eligibility is applied. */
+export interface CapacityHour {
+  /** Hour of day in 24h local time, e.g. 13 for 1 PM. */
+  readonly hour: number;
+  /** Bays that could take *any* work this hour (shop-wide context). */
+  readonly shopCapacity: number;
+  /** Of {@link shopCapacity}, how many are free (shop-wide context). */
+  readonly shopFree: number;
+  /** Eligible bays open this hour. */
+  readonly bayCapacity: number;
+  /** Of {@link bayCapacity}, how many are free. */
+  readonly bayFree: number;
+  /** Certified technicians rostered on duty this hour. */
+  readonly techOnDuty: number;
+  /** Of {@link techOnDuty}, how many are not already assigned. */
+  readonly techFree: number;
+  /** `min(bayFree, techFree)` — the number this page actually means. */
+  readonly eligible: number;
+  readonly limit: LimitReason;
+  /** True when the job's full duration fits unbroken starting at this hour. */
+  readonly fits: boolean;
+}
+
+/** Work carried into a day because yesterday's job ran past its planned finish. */
+export interface CarryOver {
+  readonly hours: number;
+  readonly fromDate: string;
+  readonly reason: string;
+}
+
+/** One cell of the month grid, and one column header of the week grid. */
+export interface CapacityDay {
+  /** Local calendar date, `YYYY-MM-DD`. */
+  readonly date: string;
+  readonly dayOfMonth: number;
+  readonly kind: DayKind;
+  readonly isToday: boolean;
+  /** Empty for a day the shop is shut. */
+  readonly hours: readonly CapacityHour[];
+  /**
+   * `bayStates[bayIndex][hourIndex]`, aligned to the view's bay order.
+   *
+   * Retained rather than folded away because the week grid draws one square per
+   * bay in fixed order — a column of hatching is how "Bay 4 is down all
+   * Wednesday" reads at a glance, and a free/busy count cannot say which bay.
+   */
+  readonly bayStates: readonly (readonly BayHourState[])[];
+  /** Total shop bay-hours open, as grey context only. */
+  readonly shopCapacityBayHours: number;
+  readonly shopFreeBayHours: number;
+  /** Eligible bay-hours — the figure the page leads with. */
+  readonly eligibleCapacityBayHours: number;
+  readonly eligibleFreeBayHours: number;
+  /** First hour the job fits unbroken, or undefined when it never does. */
+  readonly firstFitHour?: number;
+  /** Set only when {@link firstFitHour} is undefined and a bay was free. */
+  readonly techBlock?: TechBlockReason;
+  /** Hours with an eligible bay free but no certified technician rostered. */
+  readonly techOffHours: number;
+  /** Hours with a certified technician rostered but assigned elsewhere. */
+  readonly techAssignedHours: number;
+  readonly carryOver?: CarryOver;
+}
+
+// ── Day board ───────────────────────────────────────────────────────────────
+
+/** Where a scheduled job stands against its plan. */
+export type AppointmentState =
+  | 'scheduled'
+  | 'inProgress'
+  | 'complete'
+  | 'tentative'
+  /** Past its planned finish and still running. */
+  | 'overrunning'
+  /** Not an appointment: the bay is blocked. */
+  | 'blocked';
+
+/** One card on the day board's bay column. */
+export interface BoardAppointment {
+  readonly eventId: string;
+  readonly bayId: string;
+  readonly title: string;
+  /** Fractional hours from midnight, e.g. 13.5 for 1:30 PM. */
+  readonly startHour: number;
+  readonly endHour: number;
+  /**
+   * Planned finish, when it differs from {@link endHour}. Absent whenever the
+   * backend cannot distinguish planned from actual — see the service's gap list.
+   */
+  readonly plannedEndHour?: number;
+  readonly state: AppointmentState;
+  readonly technicianName?: string;
+  readonly hasConflict: boolean;
+  readonly conflictSeverity?: 'HARD' | 'SOFT';
+}
+
+/** Everything the three views render, for one location and one focus date. */
+export interface CapacityCalendarView {
+  readonly locationId: string;
+  readonly locationName?: string;
+  /** Local `YYYY-MM-DD` the day board shows and the month/week centre on. */
+  readonly focusDate: string;
+  readonly job: JobRequirement;
+  readonly bays: readonly CapacityBay[];
+  readonly technicians: readonly CapacityTechnician[];
+  /** Hour-of-day labels the grids are built on, ascending. */
+  readonly hours: readonly number[];
+  /** Five or six weeks of seven days, for the month grid. */
+  readonly weeks: readonly (readonly CapacityDay[])[];
+  /** The focus date's operating days, for the week grid. */
+  readonly weekDays: readonly CapacityDay[];
+  readonly focusDay?: CapacityDay;
+  readonly board: readonly BoardAppointment[];
+  /**
+   * True when an upstream source was unavailable during composition, so the
+   * numbers may be incomplete. Mirrors the dispatch dashboard's own flag.
+   */
+  readonly degraded: boolean;
+  /**
+   * True when eligibility fell back to bay type because the catalog could not
+   * say which capability the service needs. The page says so rather than
+   * presenting a guess as a measurement.
+   */
+  readonly eligibilityIsApproximate: boolean;
+}
+
+// ── Pure helpers ────────────────────────────────────────────────────────────
+
+/**
+ * Local-calendar `YYYY-MM-DD`.
+ *
+ * ADR-0038 rejects `toISOString().slice(0, 10)` by name: it is UTC, so in any
+ * UTC-N zone it returns tomorrow's date during the last hours of the local day
+ * — which here would ask for the wrong day's board.
+ */
+export function isoDateLocal(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/** Parses `YYYY-MM-DD` as local midnight, not the UTC instant `new Date(s)` gives. */
+export function parseIsoDateLocal(iso: string): Date {
+  const [year, month, day] = iso.split('-').map(Number);
+  return new Date(year, (month ?? 1) - 1, day ?? 1);
+}
+
+/**
+ * True when `bay` can perform `job`.
+ *
+ * Prefers the capability join and falls back to bay type only when the catalog
+ * supplied no capability ids — see {@link JobRequirement}. An empty requirement
+ * on both axes means "all work", which every in-service bay satisfies.
+ */
+export function isEligibleBay(bay: CapacityBay, job: JobRequirement): boolean {
+  if (bay.outOfService) {
+    return false;
+  }
+  if (job.capabilityIds.length > 0) {
+    return job.capabilityIds.some(id => bay.capabilityIds.includes(id));
+  }
+  if (job.bayTypes.length > 0) {
+    return job.bayTypes.includes(bay.bayType);
+  }
+  return true;
+}
+
+/**
+ * True when `tech` may work `job`.
+ *
+ * Two sources, in order. The job's own `skillCodes` when the catalog supplies
+ * them — it does not today (gap 1). Otherwise the skills the *eligible bays*
+ * declare they require, via `BayResponse.skillRequirementIds`, which is real
+ * data the location domain already publishes: a technician who does not hold
+ * the alignment rack's required skill is not capacity for an alignment, no
+ * matter how free they are.
+ *
+ * When neither source states a requirement, every rostered technician counts.
+ * That is the honest answer — an unstated requirement is not a requirement —
+ * and it degrades to bay-only capacity rather than to zero.
+ */
+export function isCertifiedTechnician(
+  tech: CapacityTechnician,
+  job: JobRequirement,
+  eligibleBays: readonly CapacityBay[] = [],
+): boolean {
+  if (job.skillCodes.length > 0) {
+    return job.skillCodes.some(code => tech.skills.includes(code));
+  }
+  const baysStatingSkills = eligibleBays.filter(bay => bay.skillRequirementIds.length > 0);
+  if (baysStatingSkills.length === 0) {
+    return true;
+  }
+  // Qualified for the job when qualified for at least one bay that can do it:
+  // the technician must hold every skill that bay requires.
+  return baysStatingSkills.some(bay =>
+    bay.skillRequirementIds.every(skill => tech.skills.includes(skill)),
+  );
+}
+
+/**
+ * Whole hours a job occupies. An opening must hold the job unbroken, and the
+ * grids are hour-resolution, so 1.5 h needs two consecutive free hours — the
+ * conservative rounding, which never offers a slot that cannot be worked.
+ */
+export function hoursNeeded(job: JobRequirement): number {
+  return Math.max(1, Math.ceil(job.durationHours));
+}
+
+// ── The engine ──────────────────────────────────────────────────────────────
+
+/** Inputs for one day, already normalized from the API responses. */
+export interface DayCapacityInput {
+  readonly date: string;
+  readonly kind: DayKind;
+  readonly isToday: boolean;
+  /** Hour-of-day labels for the grid, ascending. */
+  readonly hours: readonly number[];
+  readonly bays: readonly CapacityBay[];
+  readonly technicians: readonly CapacityTechnician[];
+  readonly job: JobRequirement;
+  /** `grid[bayIndex][hourIndex]`, aligned to {@link bays} and {@link hours}. */
+  readonly grid: readonly (readonly BayHourState[])[];
+  /**
+   * Hour of day now, when {@link isToday}. An hour already under way cannot be
+   * offered, so scanning starts at the next whole hour.
+   */
+  readonly currentHour?: number;
+  readonly carryOver?: CarryOver;
+}
+
+/**
+ * Folds one day's grid into the eligibility figures every view reads.
+ *
+ * The technician axis is deliberately computed from assignment, not just from
+ * the roster: a technician covering two bays is unavailable for the rack while
+ * working the other one, so a day can show the rack free all afternoon and
+ * still offer nothing.
+ */
+export function computeDay(input: DayCapacityInput): CapacityDay {
+  const { hours, bays, technicians, job, grid, isToday, currentHour } = input;
+  const dayOfMonth = parseIsoDateLocal(input.date).getDate();
+
+  if (input.kind === 'closed' || input.kind === 'holiday' || input.kind === 'outside') {
+    return {
+      date: input.date,
+      dayOfMonth,
+      kind: input.kind,
+      isToday,
+      hours: [],
+      bayStates: grid,
+      shopCapacityBayHours: 0,
+      shopFreeBayHours: 0,
+      eligibleCapacityBayHours: 0,
+      eligibleFreeBayHours: 0,
+      techOffHours: 0,
+      techAssignedHours: 0,
+      carryOver: input.carryOver,
+    };
+  }
+
+  const eligibleBayIndexes = bays
+    .map((bay, index) => (isEligibleBay(bay, job) ? index : -1))
+    .filter(index => index >= 0);
+  const eligibleBays = eligibleBayIndexes.map(index => bays[index]);
+  const certified = technicians.filter(tech => isCertifiedTechnician(tech, job, eligibleBays));
+
+  const cells: CapacityHour[] = hours.map((hour, hourIndex) => {
+    let shopCapacity = 0;
+    let shopFree = 0;
+    bays.forEach((_, bayIndex) => {
+      const state = grid[bayIndex]?.[hourIndex] ?? 'closed';
+      if (state === 'closed' || state === 'down') {
+        return;
+      }
+      shopCapacity += 1;
+      if (state === 'free') {
+        shopFree += 1;
+      }
+    });
+
+    let bayCapacity = 0;
+    let bayFree = 0;
+    eligibleBayIndexes.forEach(bayIndex => {
+      const state = grid[bayIndex]?.[hourIndex] ?? 'closed';
+      if (state === 'closed' || state === 'down') {
+        return;
+      }
+      bayCapacity += 1;
+      if (state === 'free') {
+        bayFree += 1;
+      }
+    });
+
+    const onDuty = certified.filter(tech => tech.onDutyHours.has(hourIndex));
+    const free = onDuty.filter(tech => !tech.assignedHours.has(hourIndex));
+    const eligible = Math.min(bayFree, free.length);
+
+    let limit: LimitReason;
+    if (bayCapacity === 0) {
+      limit = 'shut';
+    } else if (bayFree === 0) {
+      limit = 'bay';
+    } else if (free.length === 0) {
+      limit = 'tech';
+    } else {
+      limit = bayFree <= free.length ? 'bay' : 'tech';
+    }
+
+    return {
+      hour,
+      shopCapacity,
+      shopFree,
+      bayCapacity,
+      bayFree,
+      techOnDuty: onDuty.length,
+      techFree: free.length,
+      eligible,
+      limit,
+      fits: false,
+    };
+  });
+
+  const need = hoursNeeded(job);
+  const withFit = cells.map((cell, hourIndex) => {
+    if (hourIndex + need > cells.length) {
+      return cell;
+    }
+    // An hour already under way cannot hold a job that starts on the hour.
+    if (isToday && currentHour !== undefined && cell.hour < currentHour) {
+      return cell;
+    }
+    for (let step = 0; step < need; step += 1) {
+      if ((cells[hourIndex + step]?.eligible ?? 0) < 1) {
+        return cell;
+      }
+    }
+    return { ...cell, fits: true };
+  });
+
+  const firstFit = withFit.find(cell => cell.fits);
+  const techOffHours = withFit.filter(
+    cell => cell.bayCapacity > 0 && cell.bayFree > 0 && cell.techOnDuty === 0,
+  ).length;
+  const techAssignedHours = withFit.filter(
+    cell => cell.bayCapacity > 0 && cell.bayFree > 0 && cell.techOnDuty > 0 && cell.techFree === 0,
+  ).length;
+
+  let techBlock: TechBlockReason | undefined;
+  if (!firstFit) {
+    // "Nobody is rostered" is a different call from "the one who is, is busy",
+    // so `off` wins whenever any hour shows it.
+    if (techOffHours > 0) {
+      techBlock = 'off';
+    } else if (techAssignedHours > 0) {
+      techBlock = 'assigned';
+    }
+  }
+
+  const sum = (pick: (cell: CapacityHour) => number): number =>
+    withFit.reduce((total, cell) => total + pick(cell), 0);
+
+  return {
+    date: input.date,
+    dayOfMonth,
+    kind: input.kind,
+    isToday,
+    hours: withFit,
+    bayStates: grid,
+    shopCapacityBayHours: sum(cell => cell.shopCapacity),
+    shopFreeBayHours: sum(cell => cell.shopFree),
+    eligibleCapacityBayHours: sum(cell => cell.bayCapacity),
+    eligibleFreeBayHours: sum(cell => cell.bayFree),
+    firstFitHour: firstFit?.hour,
+    techBlock,
+    techOffHours,
+    techAssignedHours,
+    carryOver: input.carryOver,
+  };
+}
+
+/**
+ * Utilization as a 0–1 fraction of shop bay-hours consumed. Shown as grey
+ * context beside the eligible figures, never as the headline.
+ */
+export function shopUtilization(day: CapacityDay): number {
+  if (day.shopCapacityBayHours === 0) {
+    return 0;
+  }
+  return 1 - day.shopFreeBayHours / day.shopCapacityBayHours;
+}
