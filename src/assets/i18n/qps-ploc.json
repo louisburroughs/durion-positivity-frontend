@@ -2251,7 +2251,15 @@
         "UNIT_AVAILABLE": "[!! AAṽààïïľààƀľëë !!]",
         "NO_MECHANIC": "[!! ÜÜñààššïïğñëëđ !!]",
         "VEHICLE_UNKNOWN": "[!! Ṽëëħïïçľëë đëëŧààïïľš üüñààṽààïïľààƀľëë !!]",
-        "OPEN_WORKORDER_ARIA": "[!! ØØṕëëñ ŵøøŕķøøŕđëëŕ  !!]{{number}}"
+        "OPEN_WORKORDER_ARIA": "[!! ØØṕëëñ ŵøøŕķøøŕđëëŕ  !!]{{number}}",
+        "SYNOPSIS": {
+          "LABEL": "[!! Šüüḿḿààŕÿ !!]",
+          "MORE_SERVICES": "[!! + !!]{{count}}[!!  ḿøøŕëë !!]",
+          "SERVICES_DONE": "{{done}}[!!  øøƒ  !!]{{total}}[!!  šëëŕṽïïçëëš đøøñëë !!]",
+          "LABOR_PROGRESS": "[!! Ŀààƀøøŕ  !!]{{actual}}[!!  ħ øøƒ  !!]{{estimated}}[!!  ħ ëëšŧ. !!]",
+          "LABOR_ESTIMATE": "[!! Ŀààƀøøŕ  !!]{{estimated}}[!!  ħ ëëšŧ. !!]",
+          "LABOR_ACTUAL": "[!! Ŀààƀøøŕ  !!]{{actual}}[!!  ħ ľøøğğëëđ !!]"
+        }
       },
       "STATUS": {
         "IDLE": "[!! ÏÏđľëë !!]",

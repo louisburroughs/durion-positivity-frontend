@@ -2251,7 +2251,15 @@
         "UNIT_AVAILABLE": "Disponible",
         "NO_MECHANIC": "Non assigné",
         "VEHICLE_UNKNOWN": "Détails du véhicule indisponibles",
-        "OPEN_WORKORDER_ARIA": "Ouvrir l'ordre de travail {{number}}"
+        "OPEN_WORKORDER_ARIA": "Ouvrir l'ordre de travail {{number}}",
+        "SYNOPSIS": {
+          "LABEL": "Résumé",
+          "MORE_SERVICES": "+{{count}} de plus",
+          "SERVICES_DONE": "{{done}} services terminés sur {{total}}",
+          "LABOR_PROGRESS": "Main-d'œuvre {{actual}} h sur {{estimated}} h est.",
+          "LABOR_ESTIMATE": "Main-d'œuvre {{estimated}} h est.",
+          "LABOR_ACTUAL": "Main-d'œuvre {{actual}} h consignées"
+        }
       },
       "STATUS": {
         "IDLE": "Inactive",

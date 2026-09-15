@@ -4,6 +4,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import {
   RepairUnitCard,
   StatusBand,
+  formatHours,
   statusBand,
   statusKey,
   vehicleLabel,
@@ -50,4 +51,20 @@ export class RepairUnitCardComponent {
     const workorder = this.unit().workorder;
     return workorder?.workorderNumber || workorder?.workorderId || '';
   });
+
+  readonly synopsis = computed(() => this.unit().workorder?.synopsis);
+
+  /** The first described service, and how many more lines are in play beyond it. */
+  readonly leadService = computed(() => {
+    const synopsis = this.synopsis();
+    const description = synopsis?.serviceDescriptions[0];
+    if (!synopsis || !description) {
+      return undefined;
+    }
+    return { description, more: Math.max(synopsis.serviceCount - 1, 0) };
+  });
+
+  readonly actualHours = computed(() => formatHours(this.synopsis()?.actualLaborHours));
+
+  readonly estimatedHours = computed(() => formatHours(this.synopsis()?.estimatedLaborHours));
 }

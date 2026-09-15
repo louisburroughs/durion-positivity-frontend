@@ -2251,7 +2251,15 @@
         "UNIT_AVAILABLE": "Available",
         "NO_MECHANIC": "Unassigned",
         "VEHICLE_UNKNOWN": "Vehicle details unavailable",
-        "OPEN_WORKORDER_ARIA": "Open workorder {{number}}"
+        "OPEN_WORKORDER_ARIA": "Open workorder {{number}}",
+        "SYNOPSIS": {
+          "LABEL": "Summary",
+          "MORE_SERVICES": "+{{count}} more",
+          "SERVICES_DONE": "{{done}} of {{total}} services done",
+          "LABOR_PROGRESS": "Labor {{actual}} h of {{estimated}} h est.",
+          "LABOR_ESTIMATE": "Labor {{estimated}} h est.",
+          "LABOR_ACTUAL": "Labor {{actual}} h logged"
+        }
       },
       "STATUS": {
         "IDLE": "Idle",
