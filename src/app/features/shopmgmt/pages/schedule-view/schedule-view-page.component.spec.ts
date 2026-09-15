@@ -1,85 +1,161 @@
 /**
- * ScheduleViewPageComponent unit tests — CAP-137 story #138
+ * ScheduleViewPageComponent — Shop Capacity Calendar.
  *
  * Route: /app/shopmgmt/schedule
  * Selector: app-schedule-view-page
  *
- * Covers:
- *   1.  renders without crashing
- *   2.  reads locationId, date, resourceType, resourceId from query params on init
- *   3.  renders .filter-bar with required form inputs
- *   4.  renders .load-board-btn
- *   5.  Load Schedule button disabled when locationId empty
- *   6.  calls viewSchedule with locationId and date on loadBoard()
- *   7.  renders .board-region when schedule data is returned
- *   8.  renders .resource-lane for each resource in data
- *   9.  renders .work-item-card for each appointment in a lane
- *   10. shows .conflict-badge when rescheduleCount > 0
- *   11. shows .details-panel after clicking a .work-item-card
- *   12. closes .details-panel when close button clicked
- *   13. shows .availability-warning on error
- *   14. shows .empty-board when schedule data is empty and no error
+ * Covers the three grids (month, week, day), the eligible-capacity framing the
+ * page exists to carry, and the degradation notices that keep a gap in the
+ * backend visible instead of silently wrong.
  */
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
-import { ScheduleViewPageComponent } from './schedule-view-page.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { AppointmentService } from '../../services/appointment.service';
 
-// ---------------------------------------------------------------------------
-// Stubs
-// ---------------------------------------------------------------------------
+import { ScheduleViewPageComponent } from './schedule-view-page.component';
+import { CapacityCalendarService } from '../../services/capacity-calendar.service';
+import { LocationService } from '../../../location/services/location.service';
+import {
+  BayHourState,
+  CapacityCalendarView,
+  CapacityDay,
+  JobRequirement,
+  computeDay,
+  isoDateLocal,
+} from '../../models/capacity-calendar.models';
 
-const STUB_SCHEDULE = [
+// ── Fixtures ────────────────────────────────────────────────────────────────
+
+const HOURS = [7, 8, 9, 10, 11];
+const TODAY = isoDateLocal(new Date());
+
+const BAYS = [
   {
-    resourceId: 'bay-1',
-    resourceName: 'Bay 1',
-    resourceType: 'BAY',
-    appointments: [
-      { appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'fac-1', scheduledStart: '2026-05-01T09:00:00Z', rescheduleCount: 0 },
-      { appointmentId: 'appt-2', status: 'SCHEDULED', facilityId: 'fac-1', scheduledStart: '2026-05-01T11:00:00Z', rescheduleCount: 2 },
-    ],
+    bayId: 'gen-1',
+    name: 'Bay 1',
+    bayType: 'GENERAL_SERVICE',
+    capabilityIds: [],
+    skillRequirementIds: [],
+    outOfService: false,
   },
   {
-    resourceId: 'bay-2',
-    resourceName: 'Bay 2',
-    resourceType: 'BAY',
-    appointments: [],
+    bayId: 'rack',
+    name: 'Bay 5',
+    bayType: 'ALIGNMENT',
+    capabilityIds: [],
+    skillRequirementIds: ['ALIGN'],
+    outOfService: false,
   },
 ];
 
-const appointmentServiceStub = {
-  getAppointment: vi.fn(),
-  listAssignments: vi.fn(),
-  createAssignment: vi.fn(),
-  rescheduleAppointment: vi.fn(),
-  cancelAppointment: vi.fn(),
-  searchAudit: vi.fn(),
-  createAppointment: vi.fn(),
-  executeOverride: vi.fn(),
-  viewSchedule: vi.fn(),
+const ALIGNMENT_JOB: JobRequirement = {
+  serviceId: 'svc-align',
+  label: '4-wheel alignment',
+  capabilityIds: [],
+  bayTypes: ['ALIGNMENT'],
+  skillCodes: [],
+  durationHours: 1.5,
 };
 
-// ---------------------------------------------------------------------------
-// Suite
-// ---------------------------------------------------------------------------
+const ALL_WORK: JobRequirement = {
+  label: '',
+  capabilityIds: [],
+  bayTypes: [],
+  skillCodes: [],
+  durationHours: 1,
+};
 
-describe('ScheduleViewPageComponent [CAP-137]', () => {
+function technicians(options: { onDuty?: boolean; assigned?: boolean } = {}) {
+  const { onDuty = true, assigned = false } = options;
+  return [
+    {
+      personId: 'bell',
+      displayName: 'J. Bell',
+      skills: ['ALIGN'],
+      onDutyHours: onDuty ? new Set(HOURS.map((_, index) => index)) : new Set<number>(),
+      assignedHours: assigned ? new Set(HOURS.map((_, index) => index)) : new Set<number>(),
+    },
+  ];
+}
+
+function day(
+  date: string,
+  options: {
+    job?: JobRequirement;
+    grid?: BayHourState[][];
+    onDuty?: boolean;
+    assigned?: boolean;
+  } = {},
+): CapacityDay {
+  return computeDay({
+    date,
+    kind: 'open',
+    isToday: date === TODAY,
+    hours: HOURS,
+    bays: BAYS,
+    technicians: technicians(options),
+    job: options.job ?? ALIGNMENT_JOB,
+    grid: options.grid ?? BAYS.map(() => HOURS.map(() => 'free' as BayHourState)),
+  });
+}
+
+function view(overrides: Partial<CapacityCalendarView> = {}): CapacityCalendarView {
+  const focus = day(TODAY);
+  return {
+    locationId: 'loc-1',
+    locationName: 'Riverside Tire & Auto',
+    focusDate: TODAY,
+    job: ALIGNMENT_JOB,
+    bays: BAYS,
+    technicians: technicians(),
+    hours: HOURS,
+    weeks: [[focus, day('2026-09-16'), day('2026-09-17')]],
+    weekDays: [focus, day('2026-09-16')],
+    focusDay: focus,
+    board: [
+      {
+        eventId: 'evt-1',
+        bayId: 'rack',
+        title: 'Alignment — Idris',
+        startHour: 9,
+        endHour: 10.5,
+        state: 'inProgress',
+        technicianName: 'J. Bell',
+        hasConflict: false,
+      },
+    ],
+    degraded: false,
+    eligibilityIsApproximate: true,
+    ...overrides,
+  };
+}
+
+const capacityStub = {
+  getCalendar: vi.fn(),
+  searchJobTypes: vi.fn(),
+};
+
+const locationServiceStub = {
+  getAllLocations: vi.fn(),
+  getLocationById: vi.fn(),
+};
+
+// ── Suite ───────────────────────────────────────────────────────────────────
+
+describe('ScheduleViewPageComponent', () => {
   let fixture: ComponentFixture<ScheduleViewPageComponent>;
   let component: ScheduleViewPageComponent;
 
-  const setup = async (queryParams = {}) => {
-    vi.clearAllMocks();
-    appointmentServiceStub.viewSchedule.mockReturnValue(of(STUB_SCHEDULE));
-
+  const setup = async (queryParams: Record<string, string> = { locationId: 'loc-1' }) => {
     await TestBed.configureTestingModule({
       imports: [ScheduleViewPageComponent, TranslateModule.forRoot()],
       providers: [
         provideRouter([]),
-        { provide: AppointmentService, useValue: appointmentServiceStub },
+        { provide: CapacityCalendarService, useValue: capacityStub },
+        { provide: LocationService, useValue: locationServiceStub },
         { provide: ActivatedRoute, useValue: { queryParams: of(queryParams) } },
       ],
     }).compileComponents();
@@ -89,162 +165,285 @@ describe('ScheduleViewPageComponent [CAP-137]', () => {
     fixture.detectChanges();
   };
 
+  const text = () => fixture.nativeElement.textContent as string;
+  const all = (selector: string) => fixture.debugElement.queryAll(By.css(selector));
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // The real service composes the view *for* the requested job, and the page
+    // renders against the view's own job rather than the in-flight request, so
+    // the stub has to honour the request for the filter tests to mean anything.
+    capacityStub.getCalendar.mockImplementation((request: { job: JobRequirement }) =>
+      of(view({ job: request.job })),
+    );
+    capacityStub.searchJobTypes.mockReturnValue(of([ALIGNMENT_JOB]));
+    locationServiceStub.getAllLocations.mockReturnValue(of([{ id: 'loc-1', name: 'Riverside' }]));
+    locationServiceStub.getLocationById.mockReturnValue(of(null));
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
     TestBed.resetTestingModule();
   });
 
-  // 1. renders without crashing
   it('renders without crashing', async () => {
     await setup();
     expect(fixture.nativeElement).toBeTruthy();
   });
 
-  // 2. reads query params on init
-  it('patches locationId and date form fields from query params', async () => {
-    await setup({ locationId: 'loc-99', date: '2026-06-01' });
-    expect(component.filterForm.value.locationId).toBe('loc-99');
-    expect(component.filterForm.value.selectedDate).toBe('2026-06-01');
+  it('prompts for a location before loading anything', async () => {
+    await setup({});
+    expect(capacityStub.getCalendar).not.toHaveBeenCalled();
+    expect(component.state()).toBe('idle');
   });
 
-  // 3. renders .filter-bar
-  it('renders .filter-bar with form inputs', async () => {
+  it('reads locationId, date and scope from query params', async () => {
+    await setup({ locationId: 'loc-9', date: '2026-06-01', scope: 'week' });
+    expect(component.locationId()).toBe('loc-9');
+    expect(component.focusDate()).toBe('2026-06-01');
+    expect(component.scope()).toBe('week');
+  });
+
+  it('ignores a malformed date query param rather than showing an invalid grid', async () => {
+    await setup({ locationId: 'loc-1', date: 'last-tuesday' });
+    expect(component.focusDate()).toBe(TODAY);
+  });
+
+  // ── Month grid ────────────────────────────────────────────────────────────
+
+  it('renders one cell per day of the month grid', async () => {
     await setup();
-    expect(fixture.debugElement.query(By.css('.filter-bar'))).not.toBeNull();
-    expect(fixture.debugElement.query(By.css('app-location-picker'))).not.toBeNull();
-    expect(fixture.debugElement.query(By.css('input[name="selectedDate"]'))).not.toBeNull();
+    expect(component.scope()).toBe('month');
+    expect(all('.month-cell').length).toBe(3);
   });
 
-  // 4. renders .load-board-btn
-  it('renders .load-board-btn', async () => {
+  it('draws one fill track and one verdict tick per hour', async () => {
     await setup();
-    expect(fixture.debugElement.query(By.css('.load-board-btn'))).not.toBeNull();
+    const cell = all('.month-cell')[0];
+    expect(cell.queryAll(By.css('.hour-track')).length).toBe(HOURS.length);
+    expect(cell.queryAll(By.css('.tick')).length).toBe(HOURS.length);
   });
 
-  // 5. load board button disabled when locationId empty
-  it('Load Schedule button is disabled when locationId is empty', async () => {
+  it('fills the strip with shop-wide load, not with eligibility', async () => {
+    // Bay 1 busy, the rack free: the ground is 50% load even though the job fits.
+    const busyGeneral: BayHourState[][] = [
+      HOURS.map(() => 'busy'),
+      HOURS.map(() => 'free'),
+    ];
+    capacityStub.getCalendar.mockReturnValue(
+      of(view({ weeks: [[day(TODAY, { grid: busyGeneral })]] })),
+    );
     await setup();
-    const btn = fixture.debugElement.query(By.css('.load-board-btn'));
-    expect((btn.nativeElement as HTMLButtonElement).disabled).toBe(true);
+
+    const fill = all('.hour-fill')[0].nativeElement as HTMLElement;
+    expect(fill.style.height).toBe('50%');
   });
 
-  // 6. calls viewSchedule on loadBoard()
-  it('calls viewSchedule with locationId and date on loadBoard()', async () => {
-    await setup({ locationId: 'loc-1', date: '2026-05-01' });
-    component.loadBoard();
-    expect(appointmentServiceStub.viewSchedule).toHaveBeenCalledWith('loc-1', '2026-05-01', '', '');
+  it('marks a day amber when the rack is free but no technician is rostered', async () => {
+    capacityStub.getCalendar.mockReturnValue(
+      of(view({ weeks: [[day(TODAY, { onDuty: false })]] })),
+    );
+    await setup();
+
+    expect(all('.month-cell.day-tech').length).toBe(1);
+    expect(all('.month-cell.day-taken').length).toBe(0);
+    expect(all('.verdict-chip.verdict-tech').length).toBe(1);
   });
 
-  // 7. renders .board-region when data returned
-  it('renders .board-region when schedule data is returned', async () => {
-    await setup({ locationId: 'loc-1', date: '2026-05-01' });
-    component.loadBoard();
-    fixture.detectChanges();
-    expect(fixture.debugElement.query(By.css('.board-region'))).not.toBeNull();
+  it('marks a day red when every eligible bay is taken', async () => {
+    const rackBusy: BayHourState[][] = [
+      HOURS.map(() => 'free'),
+      HOURS.map(() => 'busy'),
+    ];
+    capacityStub.getCalendar.mockReturnValue(
+      of(view({ weeks: [[day(TODAY, { grid: rackBusy })]] })),
+    );
+    await setup();
+
+    expect(all('.month-cell.day-taken').length).toBe(1);
+    expect(all('.month-cell.day-tech').length).toBe(0);
   });
 
-  // 8. renders .resource-lane for each resource
-  it('renders a .resource-lane for each resource entry', async () => {
-    await setup({ locationId: 'loc-1', date: '2026-05-01' });
-    component.loadBoard();
+  it('opens the day board when a month cell is activated', async () => {
+    await setup();
+    (all('.month-cell-body')[0].nativeElement as HTMLButtonElement).click();
     fixture.detectChanges();
-    const lanes = fixture.debugElement.queryAll(By.css('.resource-lane'));
-    expect(lanes.length).toBe(STUB_SCHEDULE.length);
+
+    expect(component.scope()).toBe('day');
+    expect(component.focusDate()).toBe(TODAY);
   });
 
-  // 9. renders .work-item-card for each appointment
-  it('renders .work-item-card for each appointment in a lane', async () => {
-    await setup({ locationId: 'loc-1', date: '2026-05-01' });
-    component.loadBoard();
+  // ── Week grid ─────────────────────────────────────────────────────────────
+
+  it('renders an eligible ratio, bay blocks and technician dots per week cell', async () => {
+    await setup();
+    component.selectJob(ALIGNMENT_JOB);
+    component.setScope('week');
     fixture.detectChanges();
-    const cards = fixture.debugElement.queryAll(By.css('.work-item-card'));
-    expect(cards.length).toBe(2); // only bay-1 has 2 appointments
+
+    const cell = all('.week-cell')[0];
+    expect(cell.query(By.css('.ratio'))).toBeTruthy();
+    expect(cell.queryAll(By.css('.bay-block')).length).toBe(BAYS.length);
+    expect(cell.queryAll(By.css('.tech-dot')).length).toBe(1);
   });
 
-  // 10. shows .conflict-badge when rescheduleCount > 0
-  it('shows .conflict-badge for appointments that have been rescheduled', async () => {
-    await setup({ locationId: 'loc-1', date: '2026-05-01' });
-    component.loadBoard();
+  it('draws the eligible bay large and the ineligible bay small', async () => {
+    await setup();
+    component.selectJob(ALIGNMENT_JOB);
+    component.setScope('week');
     fixture.detectChanges();
-    const badges = fixture.debugElement.queryAll(By.css('.conflict-badge'));
-    expect(badges.length).toBe(1);
+
+    const blocks = all('.week-cell')[0].queryAll(By.css('.bay-block'));
+    // Bay 1 cannot do an alignment; Bay 5 can.
+    expect((blocks[0].nativeElement as HTMLElement).classList).not.toContain('is-eligible');
+    expect((blocks[1].nativeElement as HTMLElement).classList).toContain('is-eligible');
   });
 
-  // 11. shows .details-panel on card click
-  it('shows .details-panel when a .work-item-card is clicked', async () => {
-    await setup({ locationId: 'loc-1', date: '2026-05-01' });
-    component.loadBoard();
+  it('shows the ratio as eligible over eligible, not the whole shop', async () => {
+    await setup();
+    component.selectJob(ALIGNMENT_JOB);
+    component.setScope('week');
     fixture.detectChanges();
-    const card = fixture.debugElement.query(By.css('.work-item-card'));
-    card.nativeElement.click();
-    fixture.detectChanges();
-    expect(fixture.debugElement.query(By.css('.details-panel'))).not.toBeNull();
+
+    // Two bays in the shop, one of them eligible and free.
+    expect(all('.ratio')[0].nativeElement.textContent.trim()).toBe('1/1');
   });
 
-  // 12. closes .details-panel on close click
-  it('closes .details-panel when close button is clicked', async () => {
-    await setup({ locationId: 'loc-1', date: '2026-05-01' });
-    component.loadBoard();
+  // ── Day board ─────────────────────────────────────────────────────────────
+
+  it('renders one board column per bay and positions cards by time', async () => {
+    await setup();
+    component.setScope('day');
     fixture.detectChanges();
-    const card = fixture.debugElement.query(By.css('.work-item-card'));
-    card.nativeElement.click();
-    fixture.detectChanges();
-    const closeBtn = fixture.debugElement.query(By.css('.details-close'));
-    closeBtn.nativeElement.click();
-    fixture.detectChanges();
-    expect(fixture.debugElement.query(By.css('.details-panel'))).toBeNull();
+
+    expect(all('.board-column').length).toBe(BAYS.length);
+    const card = all('.board-card')[0].nativeElement as HTMLElement;
+    // 9 AM on a 7 AM board, at 64px per hour.
+    expect(card.style.top).toBe('128px');
+    expect(card.style.height).toBe('96px');
   });
 
-  // 13. shows .availability-warning on error
-  it('shows .availability-warning when viewSchedule returns an error', async () => {
-    vi.clearAllMocks();
-    appointmentServiceStub.viewSchedule.mockReturnValue(throwError(() => new Error('error')));
-
-    await TestBed.configureTestingModule({
-      imports: [ScheduleViewPageComponent, TranslateModule.forRoot()],
-      providers: [
-        provideRouter([]),
-        { provide: AppointmentService, useValue: appointmentServiceStub },
-        { provide: ActivatedRoute, useValue: { queryParams: of({ locationId: 'loc-1', date: '2026-05-01' }) } },
-      ],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(ScheduleViewPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.loadBoard();
+  it('greys a bay that cannot do the selected job instead of hiding it', async () => {
+    await setup();
+    component.selectJob(ALIGNMENT_JOB);
+    component.setScope('day');
     fixture.detectChanges();
 
-    expect(fixture.debugElement.query(By.css('.availability-warning'))).not.toBeNull();
+    expect(all('.board-column.is-ineligible').length).toBe(1);
+    expect(all('.board-column').length).toBe(2);
   });
 
-  // 14. shows .empty-board when data is []
-  it('shows .empty-board when schedule data is empty and no error', async () => {
-    vi.clearAllMocks();
-    appointmentServiceStub.viewSchedule.mockReturnValue(of([]));
-
-    await TestBed.configureTestingModule({
-      imports: [ScheduleViewPageComponent, TranslateModule.forRoot()],
-      providers: [
-        provideRouter([]),
-        { provide: AppointmentService, useValue: appointmentServiceStub },
-        { provide: ActivatedRoute, useValue: { queryParams: of({ locationId: 'loc-1', date: '2026-05-01' }) } },
-      ],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(ScheduleViewPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.loadBoard();
+  it('renders a technician lane row per technician', async () => {
+    await setup();
+    component.setScope('day');
     fixture.detectChanges();
 
-    expect(fixture.debugElement.query(By.css('.empty-board'))).not.toBeNull();
+    expect(all('.tech-row').length).toBe(1);
+    expect(all('.tech-row')[0].queryAll(By.css('.tech-cell')).length).toBe(HOURS.length);
   });
 
-  // T12 — viewSchedule with resourceType and resourceId
-  it('calls viewSchedule with resourceType and resourceId when present in query params', async () => {
-    await setup({ locationId: 'loc-1', date: '2026-05-01', resourceType: 'BAY', resourceId: 'bay-5' });
-    component.loadBoard();
-    expect(appointmentServiceStub.viewSchedule).toHaveBeenCalledWith('loc-1', '2026-05-01', 'BAY', 'bay-5');
+  it('marks assigned hours in the technician lane', async () => {
+    capacityStub.getCalendar.mockReturnValue(
+      of(view({ technicians: technicians({ assigned: true }) })),
+    );
+    await setup();
+    component.setScope('day');
+    fixture.detectChanges();
+
+    expect(all('.tech-cell.state-assigned').length).toBe(HOURS.length);
+  });
+
+  // ── Job-type filter ───────────────────────────────────────────────────────
+
+  it('reloads with the selected job when a job type is picked', async () => {
+    await setup();
+    capacityStub.getCalendar.mockClear();
+    component.selectJob(ALIGNMENT_JOB);
+
+    expect(capacityStub.getCalendar).toHaveBeenCalledWith(
+      expect.objectContaining({ job: ALIGNMENT_JOB }),
+    );
+  });
+
+  it('returns to all work when the filter is cleared', async () => {
+    await setup();
+    component.selectJob(ALIGNMENT_JOB);
+    capacityStub.getCalendar.mockClear();
+    component.clearJob();
+
+    expect(component.isFiltered()).toBe(false);
+    expect(capacityStub.getCalendar).toHaveBeenCalledWith(
+      expect.objectContaining({ job: expect.objectContaining({ bayTypes: [] }) }),
+    );
+  });
+
+  it('names the eligible bays and certified technicians the job needs', async () => {
+    await setup();
+    component.selectJob(ALIGNMENT_JOB);
+    expect(component.eligibleBayNames()).toBe('Bay 5');
+    expect(component.eligibleBayCount()).toBe(1);
+    expect(component.totalBayCount()).toBe(2);
+    expect(component.certifiedTechNames()).toBe('J. Bell');
+  });
+
+  it('counts every bay as eligible when no job type is selected', async () => {
+    capacityStub.getCalendar.mockReturnValue(of(view({ job: ALL_WORK })));
+    await setup();
+    component.selectJob(ALL_WORK);
+    fixture.detectChanges();
+
+    expect(component.eligibleBayCount()).toBe(2);
+  });
+
+  // ── Navigation ────────────────────────────────────────────────────────────
+
+  it('steps a whole month in the month view and a single day in the day view', async () => {
+    await setup({ locationId: 'loc-1', date: '2026-09-15', scope: 'month' });
+    component.step(1);
+    expect(component.focusDate()).toBe('2026-10-15');
+
+    component.setScope('day');
+    component.step(-1);
+    expect(component.focusDate()).toBe('2026-10-14');
+  });
+
+  it('returns to today', async () => {
+    await setup({ locationId: 'loc-1', date: '2020-01-01' });
+    component.goToToday();
+    expect(component.focusDate()).toBe(TODAY);
+  });
+
+  // ── Honest degradation ────────────────────────────────────────────────────
+
+  it('says so when eligibility is inferred from bay type rather than measured', async () => {
+    await setup();
+    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.ELIGIBILITY_APPROXIMATE');
+  });
+
+  it('warns when an upstream source was unavailable', async () => {
+    capacityStub.getCalendar.mockReturnValue(of(view({ degraded: true })));
+    await setup();
+    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.DEGRADED');
+  });
+
+  it('surfaces a load failure with a retry', async () => {
+    capacityStub.getCalendar.mockReturnValue(throwError(() => new Error('boom')));
+    await setup();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('SHOPMGMT.SCHEDULE_VIEW.ERROR_LOAD');
+    expect(all('[role="alert"]').length).toBeGreaterThan(0);
+  });
+
+  it('retries the load from the error state', async () => {
+    capacityStub.getCalendar.mockReturnValue(throwError(() => new Error('boom')));
+    await setup();
+
+    capacityStub.getCalendar.mockReturnValue(of(view()));
+    component.load();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('ready');
+    expect(component.errorKey()).toBeNull();
   });
 });
