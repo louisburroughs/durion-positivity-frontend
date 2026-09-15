@@ -250,6 +250,41 @@ describe('ShopDashboardService', () => {
       expect(view.units[0].workorder?.synopsis).toBeUndefined();
     });
 
+    it('keeps a synopsis whose summary carries only service descriptions', async () => {
+      dispatchStub.getDispatchDashboard.mockReturnValue(
+        of(
+          dashboard({
+            bays: [{ bayId: 'bay-1', bayName: 'Bay 1', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-1' }],
+            workorders: [{ workorderId: 'wo-1', status: 'ASSIGNED', serviceDescriptions: ['Oil Change'] }],
+          }),
+        ),
+      );
+      bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-1', name: 'Bay 1' }] }));
+
+      const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+      expect(view.units[0].workorder?.synopsis).toMatchObject({
+        serviceCount: 0,
+        serviceDescriptions: ['Oil Change'],
+      });
+    });
+
+    it('keeps a zero-hour estimate, which is still an estimate', async () => {
+      dispatchStub.getDispatchDashboard.mockReturnValue(
+        of(
+          dashboard({
+            bays: [{ bayId: 'bay-1', bayName: 'Bay 1', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-1' }],
+            workorders: [{ workorderId: 'wo-1', status: 'ASSIGNED', estimatedLaborHours: 0 }],
+          }),
+        ),
+      );
+      bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-1', name: 'Bay 1' }] }));
+
+      const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+      expect(view.units[0].workorder?.synopsis?.estimatedLaborHours).toBe(0);
+    });
+
     it('reads a bay as idle when its linked workorder is closed', async () => {
       dispatchStub.getDispatchDashboard.mockReturnValue(
         of(

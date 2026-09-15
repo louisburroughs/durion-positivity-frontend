@@ -60,6 +60,11 @@ function positiveHours(value?: number | null): number | undefined {
   return typeof value === 'number' && value > 0 ? value : undefined;
 }
 
+/** A finite, non-negative hour figure, or undefined — a zero-hour estimate is still an estimate. */
+function nonNegativeHours(value?: number | null): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : undefined;
+}
+
 /**
  * Backs the Shop Manager Dashboard
  * (docs/design/shopmgmt-shop-manager-dashboard.md in the durion repo).
@@ -487,12 +492,13 @@ export class ShopDashboardService {
     const serviceDescriptions = (summary.serviceDescriptions ?? [])
       .map(description => description.trim())
       .filter(description => description.length > 0);
-    const estimatedLaborHours = positiveHours(summary.estimatedLaborHours);
+    const estimatedLaborHours = nonNegativeHours(summary.estimatedLaborHours);
     const actualLaborHours = positiveHours(summary.actualLaborHours);
 
     if (
       !customerName
       && serviceCount === 0
+      && serviceDescriptions.length === 0
       && estimatedLaborHours === undefined
       && actualLaborHours === undefined
     ) {

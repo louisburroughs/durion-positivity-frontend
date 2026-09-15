@@ -102,6 +102,30 @@ describe('Shop dashboard a11y (rendered DOM)', () => {
     expect(await violations(fixture.nativeElement as HTMLElement)).toEqual([]);
   });
 
+  it('occupied repair unit card with a synopsis footer has no axe violations', async () => {
+    const fixture: ComponentFixture<RepairUnitCardComponent> =
+      TestBed.createComponent(RepairUnitCardComponent);
+    fixture.componentRef.setInput('unit', {
+      ...OCCUPIED,
+      workorder: {
+        ...OCCUPIED.workorder!,
+        synopsis: {
+          customerName: 'Carolina Concrete',
+          serviceCount: 2,
+          completedServiceCount: 1,
+          serviceDescriptions: ['Brake Pad Replacement - Front', 'Oil Change'],
+          estimatedLaborHours: 2.5,
+          actualLaborHours: 1.5,
+        },
+      },
+    } satisfies RepairUnitCard);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+
+    expect(el.querySelector('footer.card-synopsis')).not.toBeNull();
+    expect(await violations(el)).toEqual([]);
+  });
+
   it('idle repair unit card has no axe violations', async () => {
     const fixture: ComponentFixture<RepairUnitCardComponent> =
       TestBed.createComponent(RepairUnitCardComponent);
