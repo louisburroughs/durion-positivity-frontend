@@ -18,7 +18,9 @@ import {
   WorkSessionsAPIService,
 } from '@durion-sdk/people';
 import {
+  PeopleAPIService,
   PeopleAccessControlService,
+  Person,
   PersonRoleAssignmentRequest,
   RoleDto,
   UserRoleDto,
@@ -42,6 +44,9 @@ describe('PeopleService', () => {
     listStaffingAssignments: vi.fn(),
     createStaffingAssignment: vi.fn(),
     endStaffingAssignment: vi.fn(),
+  };
+  const peopleApiStub = {
+    getPersonById: vi.fn(),
   };
   const accessControlApiStub = {
     listRoleAssignments: vi.fn(),
@@ -70,6 +75,7 @@ describe('PeopleService', () => {
         { provide: PeopleReportsAPIService, useValue: reportsApiStub },
         { provide: PeopleStaffingAssignmentsService, useValue: staffingApiStub },
         { provide: PeopleAccessControlService, useValue: accessControlApiStub },
+        { provide: PeopleAPIService, useValue: peopleApiStub },
         { provide: WorkSessionsAPIService, useValue: workSessionsApiStub },
         { provide: ApiBaseService, useValue: apiBaseStub },
       ],
@@ -223,6 +229,23 @@ describe('PeopleService', () => {
     service.endLocationAssignment('a-1').subscribe();
 
     expect(staffingApiStub.endStaffingAssignment).toHaveBeenCalledWith('a-1');
+  });
+
+  it('getPerson() delegates to PeopleAPIService.getPersonById', () => {
+    const response: Person = {
+      id: '01960011-0000-7000-8000-000000000010',
+      firstName: 'Dana',
+      lastName: 'Okafor',
+      username: 'dokafor',
+    };
+    peopleApiStub.getPersonById.mockReturnValue(of(response));
+
+    service.getPerson('01960011-0000-7000-8000-000000000010')
+      .subscribe(result => expect(result).toEqual(response));
+
+    expect(peopleApiStub.getPersonById).toHaveBeenCalledWith(
+      '01960011-0000-7000-8000-000000000010',
+    );
   });
 
   it('getRoleAssignments() delegates to PeopleAccessControlService.getAssignments', () => {

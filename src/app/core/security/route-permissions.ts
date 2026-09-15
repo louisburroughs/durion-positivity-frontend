@@ -200,8 +200,14 @@ export const INVENTORY_PAGE = {
   /** `listReplenishmentTasks` is gated on the plain inventory view authority. */
   replenishment: ['inventory:on_hand:view'],
   cycleCount: ['inventory:cycle_count:view'],
-  /** The plan form exists to create a plan; the location pickers are secondary. */
-  cycleCountPlanCreate: ['inventory:cycle_count:initiate'],
+  /**
+   * The plan form cannot be used without its location picker: the form loads
+   * `listInventoryLocations` on entry and `locationId` is required to submit, so
+   * both authorities are needed. Declared on the route as `allPermissions`
+   * (AND), which denies before render rather than letting the page load and 403
+   * on its only data fetch (issue #258).
+   */
+  cycleCountPlanCreate: ['inventory:cycle_count:initiate', 'inventory:location:view'],
   /** `listCycleCountAdjustments` uses `hasAnyAuthority` over both codes. */
   adjustments: ['inventory:adjustment:view', 'inventory:adjustment:approve'],
   pickList: ['inventory:pick_list:view'],
@@ -248,6 +254,25 @@ export const CRM_PAGE = {
   /** The CRM integration monitor reads the accounting ingestion events. */
   integrationEvents: ['accounting:events:view'],
   bulkImport: ['bulkImport:upload:execute'],
+} as const satisfies Record<string, readonly string[]>;
+
+/**
+ * Permissions for individual *sections* of a CRM page, as opposed to the page
+ * gate in {@link CRM_PAGE}. The party detail page admits anyone holding
+ * `crm:party:view`, but two of its panels read narrower resources, so without
+ * these a permitted visitor still fires requests that can only ever 403
+ * (issue #255).
+ *
+ * `partyContacts` is the same authority the sibling `/party/:partyId/contacts`
+ * route declares, for the same `getCommercialAccountContacts` endpoint.
+ * `communicationPreferences` follows the domain's `domain:resource:action`
+ * convention; the generated CRM API reference documents the 403 on that
+ * endpoint without naming the authority, so callers should treat a missing
+ * section permission as advisory and keep handling a 403 reactively.
+ */
+export const CRM_SECTION = {
+  partyContacts: CRM_PAGE.partyContacts,
+  communicationPreferences: ['crm:contact_preference:view'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/workexec/*` — estimates, approvals, work orders, labor, parts. */
@@ -312,6 +337,22 @@ export const PEOPLE_PAGE = {
   locationAssignments: ['people:employee:view'],
   identityCompliance: ['people:compliance:view'],
   bulkImport: ['bulkImport:upload:execute'],
+} as const satisfies Record<string, readonly string[]>;
+
+/**
+ * Permissions for individual *sections* of a People page, as opposed to the page
+ * gate in `PEOPLE_PAGE`. The RBAC page is gated on `people-contact:role:view`,
+ * which says nothing about the identity directory, so its header lookup is
+ * gated separately rather than firing a request that can only 403 (issue #255's
+ * failure mode, avoided here for the label added by issue #257).
+ *
+ * `personLookup` is the same authority `PEOPLE_PAGE.directory` declares: both
+ * read the identity directory through `PeopleAPIService` in pos-people-contact.
+ * Note the neighbouring `people:person:view` in the catalog belongs to pos-people
+ * and does not govern this SDK's reads.
+ */
+export const PEOPLE_SECTION = {
+  personLookup: PEOPLE_PAGE.directory,
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/location/*` — sites, bays, mobile units, storage locations. */

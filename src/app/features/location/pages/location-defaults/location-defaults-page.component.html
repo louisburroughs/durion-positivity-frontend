@@ -20,13 +20,9 @@
     <h2>{{ 'LOCATION.DEFAULTS.CURRENT_TITLE' | translate }}</h2>
     <dl>
       <dt>{{ 'LOCATION.DEFAULTS.STAGING' | translate }}</dt>
-      <dd data-testid="current-staging">
-        {{ siteDefaults()?.['defaultStagingLocationId'] ?? ('LOCATION.DEFAULTS.NOT_CONFIGURED' | translate) }}
-      </dd>
+      <dd data-testid="current-staging">@if (stagingDisplay().name; as name) {{{ name }}} @else {{{ stagingDisplay().key! | translate }}}</dd>
       <dt>{{ 'LOCATION.DEFAULTS.QUARANTINE' | translate }}</dt>
-      <dd data-testid="current-quarantine">
-        {{ siteDefaults()?.['defaultQuarantineLocationId'] ?? ('LOCATION.DEFAULTS.NOT_CONFIGURED' | translate) }}
-      </dd>
+      <dd data-testid="current-quarantine">@if (quarantineDisplay().name; as name) {{{ name }}} @else {{{ quarantineDisplay().key! | translate }}}</dd>
       @if (version() !== null) {
       <dt>{{ 'LOCATION.DEFAULTS.VERSION' | translate }}</dt>
       <dd data-testid="version">{{ version() }}</dd>
@@ -48,8 +44,8 @@
         <select id="default-staging-location-id" formControlName="defaultStagingLocationId"
           aria-describedby="field-error-staging" data-testid="default-staging-select">
           <option value="">{{ 'LOCATION.DEFAULTS.SELECT_PLACEHOLDER' | translate }}</option>
-          @for (loc of storageLocations(); track $any(loc).storageLocationId) {
-          <option [value]="$any(loc).storageLocationId">{{ $any(loc).name }}</option>
+          @for (loc of storageLocations(); track $any(loc).id) {
+          <option [value]="$any(loc).id">{{ $any(loc).name }}</option>
           }
         </select>
         <span id="field-error-staging" role="alert" aria-live="polite" data-testid="field-error-staging">
@@ -65,8 +61,8 @@
         <select id="default-quarantine-location-id" formControlName="defaultQuarantineLocationId"
           aria-describedby="field-error-quarantine" data-testid="default-quarantine-select">
           <option value="">{{ 'LOCATION.DEFAULTS.SELECT_PLACEHOLDER' | translate }}</option>
-          @for (loc of storageLocations(); track $any(loc).storageLocationId) {
-          <option [value]="$any(loc).storageLocationId">{{ $any(loc).name }}</option>
+          @for (loc of storageLocations(); track $any(loc).id) {
+          <option [value]="$any(loc).id">{{ $any(loc).name }}</option>
           }
         </select>
         <span id="field-error-quarantine" role="alert" aria-live="polite" data-testid="field-error-quarantine">

@@ -171,7 +171,7 @@ export const INVENTORY_LANDING_CONFIG: LandingPageConfig = {
           descriptionKey: 'INVENTORY.LANDING.CARD.COUNT_PLAN_NEW.DESCRIPTION',
           ctaKey: 'INVENTORY.LANDING.ACTION.OPEN_PAGE',
           route: '/app/inventory/counts/plans/new',
-          permissions: INVENTORY_PAGE.cycleCountPlanCreate,
+          allPermissions: INVENTORY_PAGE.cycleCountPlanCreate,
         },
       ],
     },

@@ -1836,6 +1836,7 @@
       "STAGING": "Staging",
       "QUARANTINE": "Quarantine",
       "NOT_CONFIGURED": "Not configured",
+      "UNKNOWN_LOCATION": "Unknown storage location",
       "VERSION": "Version",
       "UPDATE_TITLE": "Update Defaults",
       "STORAGE_LOADING": "Loading storage locations...",

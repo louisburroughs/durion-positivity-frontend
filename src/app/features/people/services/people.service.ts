@@ -15,7 +15,9 @@ import {
   UpdateEmployeeRequest,
 } from '@durion-sdk/people';
 import {
+  PeopleAPIService,
   PeopleAccessControlService,
+  Person,
   PersonRoleAssignmentRequest,
   RoleDto,
   UserRoleDto,
@@ -37,6 +39,7 @@ export class PeopleService {
   private readonly reportsApi = inject(PeopleReportsAPIService);
   private readonly staffingApi = inject(PeopleStaffingAssignmentsService);
   private readonly accessControlApi = inject(PeopleAccessControlService);
+  private readonly peopleApi = inject(PeopleAPIService);
   private readonly workSessionsApi = inject(WorkSessionsAPIService);
 
   getEmployee(employeeId: string): Observable<EmployeeProfileDto> {
@@ -83,6 +86,10 @@ export class PeopleService {
 
   endLocationAssignment(assignmentId: string): Observable<void> {
     return this.staffingApi.endStaffingAssignment(assignmentId);
+  }
+
+  getPerson(personUuid: string): Observable<Person> {
+    return this.peopleApi.getPersonById(personUuid);
   }
 
   getRoleAssignments(personUuid: string, includeHistory: boolean): Observable<UserRoleDto[]> {
