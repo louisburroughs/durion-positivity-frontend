@@ -48,7 +48,7 @@ export interface CapacityCalendarRequest {
 const PAGE_SIZE = 500;
 
 /**
- * The month grid needs one `viewSchedule` call per day (see gap 2 below), so the
+ * The month grid needs one `viewSchedule` call per day (see louisburroughs/durion#474), so the
  * fan-out is concurrency-limited rather than fired as 42 parallel requests.
  * Matches the dashboard's VEHICLE_LOOKUP_CONCURRENCY for the same reason.
  */
@@ -77,7 +77,7 @@ const LANE_MECHANIC = 'MECHANIC';
  * presenting the result as measured.
  *
  * Delete this table, and the `bayTypes` fallback in `isEligibleBay`, the day
- * `ServiceDto` carries capability ids (louisburroughs/durion — gap 1 below).
+ * `ServiceDto` carries capability ids (louisburroughs/durion#473).
  */
 const ALIGNMENT_CODE_PATTERN = /ALIGN/i;
 const INSPECTION_CODE_PATTERN = /INSPECT/i;
@@ -96,35 +96,36 @@ const HEAVY_CODE_PATTERN = /HEAVY|TRUCK|FLEET/i;
  *   schedule view (per day) → bay occupancy, mechanic assignment, shift/PTO
  *   catalog services        → the job-type filter and its default duration
  *
- * Four gaps are visible in the output rather than papered over. Each is tracked
+ * Five gaps are visible in the output rather than papered over. Each is tracked
  * as a backend story and each has a named degradation on screen:
  *
- *   gap 1 — `ServiceDto` carries no `serviceCapabilityIds` or required skill
- *     codes, and no endpoint resolves `BayResponse.serviceCapabilityIds` to
- *     anything, so nothing can say that a 4-wheel alignment needs the alignment
- *     rack. Eligibility therefore falls back to `bayType` via the inference
- *     table above and the view reports `eligibilityIsApproximate`. This is the
- *     blocking gap: eligible capacity is the primitive the page is built on.
+ *   louisburroughs/durion#473 — `ServiceDto` carries no `serviceCapabilityIds`
+ *     or required skill codes, and no endpoint resolves a bay's capability ids
+ *     to anything, so nothing can say that a 4-wheel alignment needs the
+ *     alignment rack. Eligibility therefore falls back to `bayType` via the
+ *     inference table above and the view reports `eligibilityIsApproximate`.
+ *     This is the blocking gap: eligible capacity is the page's primitive.
  *
- *   gap 2 — `viewSchedule` is one location and one date; its `range` parameter
- *     selects LOCATION_HOURS or FULL_DAY, not a week or a month. The month grid
- *     is therefore a capped fan-out of one request per day, which is why the
- *     month scope is loaded only when the month grid is actually shown.
+ *   louisburroughs/durion#474 — `viewSchedule` is one location and one date; its
+ *     `range` selects LOCATION_HOURS or FULL_DAY, not a week or a month. The
+ *     month grid is therefore a capped fan-out of one request per day, which is
+ *     why the month scope is loaded only when that grid is actually shown.
  *
- *   gap 3 — nothing answers "the next unbroken 1.5 h in an eligible bay with a
- *     certified technician". The duration-aware fit is computed client-side in
+ *   louisburroughs/durion#475 — nothing answers "the next unbroken 1.5 h in an
+ *     eligible bay with a certified technician". That fit is computed in
  *     `computeDay`, so it can only see the days already fetched.
  *
- *   gap 4 — `AppointmentResponse` exposes `startAt`/`endAt` only, with no actual
- *     start or finish, so planned-vs-actual cannot be derived. The day board
- *     draws the overrun hatch only for an appointment the schedule view has
- *     already flagged, and the carry-over debit is left unset rather than
- *     invented.
+ *   louisburroughs/durion#476 — `AppointmentResponse` exposes `startAt`/`endAt`
+ *     only, with no actual start or finish, so planned-vs-actual cannot be
+ *     derived. The day board draws the overrun hatch only for an appointment
+ *     the schedule view has already flagged, and the carry-over debit is left
+ *     unset rather than invented.
  *
- * `LocationResponseDTO` also omits `operatingHours`, `holidayClosures` and
- * `timezone` — they are writable but not readable — so the operating window
- * comes from each day's own `dayStartAt`/`dayEndAt`, and closed days are not
- * shaded because no read can identify one.
+ *   louisburroughs/durion#477 — `LocationResponseDTO` omits `operatingHours`,
+ *     `holidayClosures` and `timezone`; they are writable but not readable. The
+ *     operating window therefore comes from each day's own
+ *     `dayStartAt`/`dayEndAt`, and closed days are not shaded, because shading
+ *     one would assert a closure no read confirmed.
  */
 @Injectable({ providedIn: 'root' })
 export class CapacityCalendarService {
@@ -172,10 +173,10 @@ export class CapacityCalendarService {
     return {
       serviceId: service.id,
       label: service.name ?? '',
-      // gap 1: the catalog cannot say, so this stays empty and `bayTypes` is used.
+      // #473: the catalog cannot say, so this stays empty and `bayTypes` is used.
       capabilityIds: [],
       bayTypes,
-      // gap 1 again: no required-skill projection, so the technician axis
+      // #473 again: no required-skill projection, so the technician axis
       // constrains only through bay skill requirements, never through the job.
       skillCodes: [],
       durationHours: service.defaultLaborHours ? service.defaultLaborHours / 10 : 1,
@@ -260,7 +261,7 @@ export class CapacityCalendarService {
   }
 
   /**
-   * One `viewSchedule` per date (gap 2), concurrency-limited, each degrading to
+   * One `viewSchedule` per date (#474), concurrency-limited, each degrading to
    * `undefined` so one bad day does not blank the month.
    *
    * `includeAvailabilityOverlay` is what puts SHIFT and PTO events on the
@@ -317,7 +318,7 @@ export class CapacityCalendarService {
         job: request.job,
         grid: this.bayGrid(bays.bays, schedule, hours),
         currentHour,
-        // gap 4: no actual-vs-planned read, so carry-over is left unset rather
+        // #476: no actual-vs-planned read, so carry-over is left unset rather
         // than guessed from a duration the backend never confirmed.
         carryOver: undefined,
       });
@@ -515,7 +516,7 @@ export class CapacityCalendarService {
       title: event.title ?? '',
       startHour: hourOfDay(new Date(event.startTime)),
       endHour: hourOfDay(new Date(event.endTime)),
-      // gap 4: no actual finish is published, so no planned line is drawn.
+      // #476: no actual finish is published, so no planned line is drawn.
       plannedEndHour: undefined,
       state: appointmentState(event),
       technicianName: technician?.resourceName,
