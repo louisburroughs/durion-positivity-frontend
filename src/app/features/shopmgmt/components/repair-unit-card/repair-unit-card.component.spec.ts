@@ -3,7 +3,12 @@ import { provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { RepairUnitCardComponent } from './repair-unit-card.component';
-import { RepairUnitCard, StatusBand } from '../../models/shop-dashboard.models';
+import {
+  DashboardWorkSynopsis,
+  RepairUnitCard,
+  StatusBand,
+  formatHours,
+} from '../../models/shop-dashboard.models';
 import type { WorkorderStatus } from '../../../workexec/models/workexec.models';
 
 const IDLE_BAY: RepairUnitCard = {
@@ -149,5 +154,93 @@ describe('RepairUnitCardComponent', () => {
     const link = el.querySelector('.workorder-link');
 
     expect(link?.getAttribute('href')).toBe('/app/workexec/workorders/wo-1');
+  });
+
+  describe('synopsis', () => {
+    function withSynopsis(synopsis: DashboardWorkSynopsis): RepairUnitCard {
+      const unit = occupied('WORK_IN_PROGRESS');
+      return { ...unit, workorder: { ...unit.workorder!, synopsis } };
+    }
+
+    const FULL: DashboardWorkSynopsis = {
+      customerName: 'Carolina Concrete',
+      serviceCount: 2,
+      completedServiceCount: 1,
+      serviceDescriptions: ['Brake Pad Replacement - Front', 'Oil Change'],
+      estimatedLaborHours: 2.5,
+      actualLaborHours: 1.5,
+    };
+
+    it('renders customer, lead service, remaining count, progress and labor at the foot of the card', () => {
+      const el = render(withSynopsis(FULL));
+      const footer = el.querySelector('footer.card-synopsis');
+
+      expect(footer).not.toBeNull();
+      expect(footer?.querySelector('.synopsis-customer')?.textContent).toContain('Carolina Concrete');
+      expect(footer?.querySelector('.synopsis-lead')?.textContent).toContain('Brake Pad Replacement - Front');
+      expect(footer?.querySelector('.synopsis-more')).not.toBeNull();
+      expect(footer?.querySelector('.synopsis-progress')?.textContent).toContain('SERVICES_DONE');
+      expect(footer?.querySelectorAll('.synopsis-labor')).toHaveLength(1);
+      expect(footer?.querySelector('.synopsis-labor')?.textContent).toContain('LABOR_PROGRESS');
+    });
+
+    it('omits the remaining count when the lead service is the only line', () => {
+      const el = render(withSynopsis({ ...FULL, serviceCount: 1, completedServiceCount: 0 }));
+
+      expect(el.querySelector('.synopsis-lead')).not.toBeNull();
+      expect(el.querySelector('.synopsis-more')).toBeNull();
+    });
+
+    it('shows the estimate alone when no hours are logged', () => {
+      const el = render(withSynopsis({ ...FULL, actualLaborHours: undefined }));
+
+      expect(el.querySelector('.synopsis-labor')?.textContent).toContain('LABOR_ESTIMATE');
+    });
+
+    it('shows logged hours alone when there is no estimate', () => {
+      const el = render(withSynopsis({ ...FULL, estimatedLaborHours: undefined }));
+
+      expect(el.querySelector('.synopsis-labor')?.textContent).toContain('LABOR_ACTUAL');
+    });
+
+    it('renders a customer-only synopsis without service or labor lines', () => {
+      const el = render(
+        withSynopsis({ customerName: 'Albert Rogers', serviceCount: 0, completedServiceCount: 0, serviceDescriptions: [] }),
+      );
+
+      expect(el.querySelector('.synopsis-customer')?.textContent).toContain('Albert Rogers');
+      expect(el.querySelector('.synopsis-services')).toBeNull();
+      expect(el.querySelector('.synopsis-progress')).toBeNull();
+      expect(el.querySelector('.synopsis-labor')).toBeNull();
+    });
+
+    it('renders no footer when the workorder carries no synopsis', () => {
+      const el = render(occupied('WORK_IN_PROGRESS'));
+
+      expect(el.querySelector('footer.card-synopsis')).toBeNull();
+    });
+
+    it('renders no footer on an idle unit', () => {
+      const el = render(IDLE_BAY);
+
+      expect(el.querySelector('footer.card-synopsis')).toBeNull();
+    });
+  });
+
+  describe('formatHours', () => {
+    it.each([
+      [2.5, '2.5'],
+      [3, '3'],
+      [1.25, '1.3'],
+      [0.04, '0'],
+    ])('formats %s as %s', (hours, expected) => {
+      expect(formatHours(hours)).toBe(expected);
+    });
+
+    it('returns an empty string for an absent or non-finite value', () => {
+      expect(formatHours(undefined)).toBe('');
+      expect(formatHours(null)).toBe('');
+      expect(formatHours(Number.NaN)).toBe('');
+    });
   });
 });

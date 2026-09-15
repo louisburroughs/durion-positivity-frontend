@@ -14,6 +14,7 @@ import type { WorkorderStatus } from '../../workexec/models/workexec.models';
 import {
   DashboardMechanic,
   DashboardVehicle,
+  DashboardWorkSynopsis,
   DashboardWorkorder,
   OpenWorkorderRow,
   RepairLocationOption,
@@ -52,6 +53,11 @@ const BAY_STATUS_OUT_OF_SERVICE = 'OUT_OF_SERVICE';
  */
 function compareUnitNames(a: string, b: string): number {
   return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
+/** A positive hour figure, or undefined — zero logged hours is "nothing logged" on a card. */
+function positiveHours(value?: number | null): number | undefined {
+  return typeof value === 'number' && value > 0 ? value : undefined;
 }
 
 /**
@@ -461,6 +467,44 @@ export class ShopDashboardService {
       status: summary?.status as WorkorderStatus,
       vehicle: this.vehicleFor(workorderId, summary, vehicles),
       mechanic: mechanicsByWorkorder.get(workorderId),
+      synopsis: this.synopsisFor(summary),
+    };
+  }
+
+  /**
+   * The card's synopsis, straight from the dispatch summary (backend#2025): who the
+   * job is for, what is being done and how far along it is. Counts are clamped so
+   * a malformed summary can never read "3 of 2 done". Undefined when the summary
+   * has nothing worth a line.
+   */
+  private synopsisFor(summary: WorkorderSummary | undefined): DashboardWorkSynopsis | undefined {
+    if (!summary) {
+      return undefined;
+    }
+    const customerName = summary.customerName?.trim() || undefined;
+    const serviceCount = Math.max(summary.serviceCount ?? 0, 0);
+    const completedServiceCount = Math.min(Math.max(summary.completedServiceCount ?? 0, 0), serviceCount);
+    const serviceDescriptions = (summary.serviceDescriptions ?? [])
+      .map(description => description.trim())
+      .filter(description => description.length > 0);
+    const estimatedLaborHours = positiveHours(summary.estimatedLaborHours);
+    const actualLaborHours = positiveHours(summary.actualLaborHours);
+
+    if (
+      !customerName
+      && serviceCount === 0
+      && estimatedLaborHours === undefined
+      && actualLaborHours === undefined
+    ) {
+      return undefined;
+    }
+    return {
+      customerName,
+      serviceCount,
+      completedServiceCount,
+      serviceDescriptions,
+      estimatedLaborHours,
+      actualLaborHours,
     };
   }
 

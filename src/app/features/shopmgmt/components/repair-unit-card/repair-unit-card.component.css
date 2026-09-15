@@ -126,3 +126,41 @@
 .idle-secondary {
   font-size: 0.8125rem;
 }
+
+/*
+ * The synopsis sits at the foot of the card. Service descriptions and customer
+ * names come from free text, so every line wraps rather than clipping.
+ */
+.card-synopsis {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-color);
+  font-size: 0.8125rem;
+}
+
+.synopsis-customer,
+.synopsis-services,
+.synopsis-progress,
+.synopsis-labor {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.synopsis-customer {
+  font-weight: 600;
+  color: var(--currentTextColor);
+}
+
+.synopsis-services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  color: var(--currentTextColor);
+}
+
+.synopsis-more,
+.synopsis-progress,
+.synopsis-labor {
+  color: var(--handleColor);
+}

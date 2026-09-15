@@ -60,4 +60,39 @@
       </div>
     }
   </div>
+
+  @if (synopsis(); as synopsis) {
+    <footer class="card-synopsis">
+      <span class="field-label">{{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.SYNOPSIS.LABEL' | translate }}</span>
+      @if (synopsis.customerName) {
+        <p class="synopsis-customer">{{ synopsis.customerName }}</p>
+      }
+      @if (leadService(); as lead) {
+        <p class="synopsis-services">
+          <span class="synopsis-lead">{{ lead.description }}</span>
+          @if (lead.more > 0) {
+            <span class="synopsis-more">{{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.SYNOPSIS.MORE_SERVICES' | translate: { count: lead.more } }}</span>
+          }
+        </p>
+      }
+      @if (synopsis.serviceCount > 0) {
+        <p class="synopsis-progress">
+          {{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.SYNOPSIS.SERVICES_DONE' | translate: { done: synopsis.completedServiceCount, total: synopsis.serviceCount } }}
+        </p>
+      }
+      @if (actualHours() && estimatedHours()) {
+        <p class="synopsis-labor">
+          {{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.SYNOPSIS.LABOR_PROGRESS' | translate: { actual: actualHours(), estimated: estimatedHours() } }}
+        </p>
+      } @else if (estimatedHours()) {
+        <p class="synopsis-labor">
+          {{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.SYNOPSIS.LABOR_ESTIMATE' | translate: { estimated: estimatedHours() } }}
+        </p>
+      } @else if (actualHours()) {
+        <p class="synopsis-labor">
+          {{ 'SHOPMGMT.SHOP_DASHBOARD.CARD.SYNOPSIS.LABOR_ACTUAL' | translate: { actual: actualHours() } }}
+        </p>
+      }
+    </footer>
+  }
 </article>

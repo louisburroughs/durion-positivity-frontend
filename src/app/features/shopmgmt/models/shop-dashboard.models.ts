@@ -42,12 +42,30 @@ export interface DashboardMechanic {
   readonly displayName: string;
 }
 
+/**
+ * A glance at the job on a card: who it is for, what is being done and how far
+ * along it is. Read straight from the dispatch summary (backend#2025), so it
+ * costs no per-card call.
+ */
+export interface DashboardWorkSynopsis {
+  readonly customerName?: string;
+  /** Service lines in play: neither cancelled nor declined by the customer. */
+  readonly serviceCount: number;
+  readonly completedServiceCount: number;
+  /** Lead service descriptions in line order; the server sends at most three. */
+  readonly serviceDescriptions: readonly string[];
+  readonly estimatedLaborHours?: number;
+  readonly actualLaborHours?: number;
+}
+
 export interface DashboardWorkorder {
   readonly workorderId: string;
   readonly workorderNumber?: string;
   readonly status: WorkorderStatus;
   readonly vehicle?: DashboardVehicle;
   readonly mechanic?: DashboardMechanic;
+  /** Absent when the summary has nothing worth a line, so the card renders no empty footer. */
+  readonly synopsis?: DashboardWorkSynopsis;
 }
 
 /** One bay or mobile unit, with whatever work is on it. */
@@ -157,6 +175,17 @@ export function vehicleLabel(vehicle?: DashboardVehicle | null): string {
     .join(' ');
 
   return structured || (vehicle.description ?? '').trim();
+}
+
+/**
+ * Hours for a card line: at most one decimal and no trailing ".0" ("2.5", "3").
+ * Returns '' when there is no value, so the template can test the result directly.
+ */
+export function formatHours(hours?: number | null): string {
+  if (typeof hours !== 'number' || !Number.isFinite(hours)) {
+    return '';
+  }
+  return String(Math.round(hours * 10) / 10);
 }
 
 /**
