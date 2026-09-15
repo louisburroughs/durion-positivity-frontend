@@ -4,6 +4,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AuthService } from '../../../../core/services/auth.service';
+import { CRM_SECTION } from '../../../../core/security/route-permissions';
 import { CrmService } from '../../services/crm.service';
 import {
   PartyDetail,
@@ -24,6 +26,7 @@ type EditState    = 'view' | 'editing' | 'saving';
 })
 export class PartyDetailComponent implements OnInit {
   private readonly crm    = inject(CrmService);
+  private readonly auth   = inject(AuthService);
   private readonly route  = inject(ActivatedRoute);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
@@ -101,8 +104,26 @@ export class PartyDetailComponent implements OnInit {
     });
   }
 
+  /**
+   * Whether this session may read a section's resource. The page gate only
+   * requires `crm:party:view`, so a permitted visitor can still lack the
+   * narrower authority a panel needs; calling anyway produces a 403 the audit
+   * flags as a failed API request, plus a browser console error (issue #255).
+   *
+   * Deliberately open when the token carries no `perm_bits` claim, matching
+   * `canAccess()`: permissions unknown is not the same as none granted, and the
+   * reactive 403 handling below remains the backstop either way.
+   */
+  private mayRead(permissions: readonly string[]): boolean {
+    return !this.auth.permissionsKnown() || this.auth.hasAnyPermission(permissions);
+  }
+
   // ── Contacts ──────────────────────────────────────────────────────────
   loadContacts(): void {
+    if (!this.mayRead(CRM_SECTION.partyContacts)) {
+      this.contactsState.set('access-denied');
+      return;
+    }
     this.contactsState.set('loading');
     this.crm.getContactsWithRoles(this.partyId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: c => { this.contacts.set(c); this.contactsState.set('ready'); },
@@ -115,6 +136,10 @@ export class PartyDetailComponent implements OnInit {
 
   // ── Communication Prefs ─────────────────────────────────────────────
   loadPrefs(): void {
+    if (!this.mayRead(CRM_SECTION.communicationPreferences)) {
+      this.prefsState.set('access-denied');
+      return;
+    }
     this.prefsState.set('loading');
     this.crm.getCommunicationPreferences(this.partyId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: p => { this.prefs.set(p); this.prefsState.set('ready'); },

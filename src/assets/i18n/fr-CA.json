@@ -1836,6 +1836,7 @@
       "STAGING": "Préparation",
       "QUARANTINE": "Quarantaine",
       "NOT_CONFIGURED": "Non configuré",
+      "UNKNOWN_LOCATION": "Emplacement de stockage inconnu",
       "VERSION": "Version",
       "UPDATE_TITLE": "Mettre à jour les valeurs par défaut",
       "STORAGE_LOADING": "Chargement des emplacements de stockage...",

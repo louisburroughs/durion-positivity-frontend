@@ -1,6 +1,9 @@
 <section class="role-assignment-layout" [attr.aria-label]="'PEOPLE.ROLE_ASSIGNMENT.ARIA.LAYOUT' | translate">
   <header class="page-header">
     <h1 id="role-assignment-title">{{ 'PEOPLE.ROLE_ASSIGNMENT.PAGE_TITLE' | translate }}</h1>
+    @if (personLabel(); as label) {
+    <p data-testid="person-label">{{ label }}</p>
+    }
   </header>
 
   <aside class="assignments-pane" aria-labelledby="assignments-heading">
@@ -19,7 +22,6 @@
     <ul class="assignment-list" aria-labelledby="assignments-heading">
       @for (assignment of assignments(); track getAssignmentKey(assignment)) {
       <li class="assignment-item">
-        <span class="id-cell">{{ assignment.userId }}</span>
         <span class="role-code">{{ assignment.roleCode }}</span>
         <span class="status-badge" [class.status-active]="assignment.active"
           [class.status-revoked]="!assignment.active">

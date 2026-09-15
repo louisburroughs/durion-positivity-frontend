@@ -128,7 +128,7 @@ export const INVENTORY_ROUTES: Routes = [
       },
       {
         path: 'counts/plans/new',
-        data: { permissions: INVENTORY_PAGE.cycleCountPlanCreate },
+        data: { allPermissions: INVENTORY_PAGE.cycleCountPlanCreate },
         loadComponent: () =>
           import('./pages/counts/cycle-count-plan-form/cycle-count-plan-form-page.component').then(
             m => m.CycleCountPlanFormPageComponent,

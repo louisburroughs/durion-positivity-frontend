@@ -13,6 +13,11 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { v4 as uuidv4 } from 'uuid';
 import { LocationService } from '../../services/location.service';
 
+/** A resolved display name, or the i18n key to render in its place. */
+type ResolvedLabel =
+  | { readonly name: string; readonly key?: undefined }
+  | { readonly key: string; readonly name?: undefined };
+
 @Component({
   selector: 'app-location-defaults-page',
   standalone: true,
@@ -57,6 +62,24 @@ export class LocationDefaultsPageComponent {
   });
 
   readonly isSameLocation = computed(() => !!this.stagingId() && this.stagingId() === this.quarantineId());
+
+  /**
+   * Display labels for the configured defaults. `SiteDefaultsResponse` carries
+   * ids only, so the name is resolved against the storage-location list this
+   * page already loads — no extra request. Mirrors `loadLocationLabel()`: an id
+   * that resolves to nothing renders as unknown rather than falling back to the
+   * raw UUID, which must never reach the screen (UI rule).
+   *
+   * A `key` is returned rather than a translated string so the template renders
+   * it through `| translate`, which re-renders when the active locale changes.
+   */
+  readonly stagingDisplay = computed(() =>
+    this.resolveLabel(this.siteDefaults()?.['defaultStagingLocationId']),
+  );
+
+  readonly quarantineDisplay = computed(() =>
+    this.resolveLabel(this.siteDefaults()?.['defaultQuarantineLocationId']),
+  );
 
   readonly canSave = computed(
     () => !this.saving() && !this.isSameLocation() && !!this.stagingId() && !!this.quarantineId(),
@@ -235,6 +258,24 @@ export class LocationDefaultsPageComponent {
     this.formStateTick.update(v => v + 1);
     this.loadDefaults();
     this.loadStorageLocations();
+  }
+
+  /**
+   * Resolves a storage-location id to its display name, or to the i18n key that
+   * stands in for it: "not configured" when no id is set, "unknown" when an id
+   * is set but absent from the loaded list (a dangling reference, or the list
+   * failed to load). Never the id itself.
+   */
+  private resolveLabel(value: unknown): ResolvedLabel {
+    const id = typeof value === 'string' ? value.trim() : '';
+    if (!id) {
+      return { key: 'LOCATION.DEFAULTS.NOT_CONFIGURED' };
+    }
+    const match = this.storageLocations().find(loc => this.toRecord(loc)?.['id'] === id);
+    const name = this.toRecord(match)?.['name'];
+    return typeof name === 'string' && name.trim().length > 0
+      ? { name }
+      : { key: 'LOCATION.DEFAULTS.UNKNOWN_LOCATION' };
   }
 
   private normalizeItems(response: unknown): unknown[] {

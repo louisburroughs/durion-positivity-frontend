@@ -3,6 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { PersonRoleAssignmentRequest, RoleDto, UserRoleDto } from '@durion-sdk/people-contact';
+import { AuthService } from '../../../../core/services/auth.service';
+import { PEOPLE_SECTION } from '../../../../core/security/route-permissions';
 import { PeopleService } from '../../services/people.service';
 
 @Component({
@@ -16,8 +18,10 @@ export class RoleAssignmentPageComponent implements OnInit {
   private readonly peopleService = inject(PeopleService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
+  private readonly auth = inject(AuthService);
 
   personUuid = signal('');
+  personLabel = signal('');
   assignments = signal<UserRoleDto[]>([]);
   roles = signal<RoleDto[]>([]);
   loading = signal(false);
@@ -35,11 +39,46 @@ export class RoleAssignmentPageComponent implements OnInit {
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(params => {
       this.personUuid.set(params['personUuid'] ?? '');
+      this.personLabel.set('');
       if (this.personUuid()) {
+        this.loadPersonLabel();
         this.loadAssignments();
         this.loadRoles();
       }
     });
+  }
+
+  /**
+   * Resolves the route's person id to a display name so the header says whose
+   * assignments these are. On failure the label stays empty and the header
+   * simply omits it — the raw UUID is never shown as a fallback (UI rule).
+   * Guarded against out-of-order responses on rapid navigation.
+   */
+  private loadPersonLabel(): void {
+    // The page gate does not imply the identity read, so skip the lookup rather
+    // than fire a request that can only 403. The header just omits the name.
+    if (this.auth.permissionsKnown() && !this.auth.hasAnyPermission(PEOPLE_SECTION.personLookup)) {
+      return;
+    }
+    const personUuid = this.personUuid();
+    this.peopleService.getPerson(personUuid)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: person => {
+          if (this.personUuid() !== personUuid) {
+            return; // route changed while this request was in flight
+          }
+          const name = [person.firstName, person.lastName]
+            .filter(part => typeof part === 'string' && part.trim().length > 0)
+            .join(' ');
+          this.personLabel.set(name || person.username?.trim() || '');
+        },
+        error: () => {
+          if (this.personUuid() === personUuid) {
+            this.personLabel.set('');
+          }
+        },
+      });
   }
 
   loadAssignments(): void {

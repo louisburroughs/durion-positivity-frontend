@@ -3,11 +3,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 
 import { RoleAssignmentPageComponent } from './role-assignment-page.component';
 import { RoleDto, UserRoleDto } from '@durion-sdk/people-contact';
 import { PeopleService } from '../../services/people.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { PEOPLE_SECTION } from '../../../../core/security/route-permissions';
 
 const translations = {
   PEOPLE: {
@@ -44,20 +46,30 @@ const translations = {
   },
 };
 
+const PERSON_UUID = '01960011-0000-7000-8000-000000000010';
+const USER_UUID = '01960011-0000-7000-8000-000000000011';
+
 const STUB_ASSIGNMENTS: UserRoleDto[] = [
   {
-    userId: 'p-1',
+    userId: USER_UUID,
     roleCode: 'ROLE_ADMIN',
     startDate: '2026-01-01',
     active: true,
   },
   {
-    userId: 'p-1',
+    userId: USER_UUID,
     roleCode: 'ROLE_MANAGER',
     startDate: '2026-02-01',
     active: true,
   },
 ];
+
+const STUB_PERSON = {
+  id: PERSON_UUID,
+  firstName: 'Dana',
+  lastName: 'Okafor',
+  username: 'dokafor',
+};
 
 const STUB_ROLES: RoleDto[] = [
   { id: '01960011-0000-7000-8000-000000000020', code: 'ROLE_ADMIN', name: 'Admin' },
@@ -65,7 +77,18 @@ const STUB_ROLES: RoleDto[] = [
   { id: '01960011-0000-7000-8000-000000000022', code: 'ROLE_VIEW', name: 'View Only' },
 ];
 
+/** `permissions: null` models a token with no `perm_bits` claim. */
+const session: { permissions: string[] | null } = { permissions: null };
+
+const authStub = {
+  permissionsKnown: () => session.permissions !== null,
+  hasPermission: (permission: string) => session.permissions?.includes(permission) ?? false,
+  hasAnyPermission: (permissions: readonly string[]) =>
+    permissions.some(permission => session.permissions?.includes(permission) ?? false),
+};
+
 const stubPeopleService = {
+  getPerson: vi.fn(),
   getAvailableRoles: vi.fn(),
   getRoleAssignments: vi.fn(),
   createRoleAssignment: vi.fn(),
@@ -76,8 +99,13 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
   let fixture: ComponentFixture<RoleAssignmentPageComponent>;
   let component: RoleAssignmentPageComponent;
 
-  const setup = async (personUuid = 'person-uuid-1') => {
+  const setup = async (
+    personUuid = PERSON_UUID,
+    options: { personResult?: Observable<unknown>; permissions?: string[] | null } = {},
+  ) => {
     vi.clearAllMocks();
+    session.permissions = options.permissions ?? null;
+    stubPeopleService.getPerson.mockReturnValue(options.personResult ?? of(STUB_PERSON));
     stubPeopleService.getRoleAssignments.mockReturnValue(of(STUB_ASSIGNMENTS));
     stubPeopleService.getAvailableRoles.mockReturnValue(of(STUB_ROLES));
     stubPeopleService.createRoleAssignment.mockReturnValue(of({ assignmentId: 'asn-new' }));
@@ -88,6 +116,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
       providers: [
         provideRouter([]),
         { provide: PeopleService, useValue: stubPeopleService },
+        { provide: AuthService, useValue: authStub },
         { provide: ActivatedRoute, useValue: { params: of({ personUuid }) } },
       ],
     }).compileComponents();
@@ -129,13 +158,13 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
   // ── T2: Initialization ────────────────────────────────────────────────────
 
   it('calls getAssignments on init with personUuid from route and includeHistory=false', async () => {
-    await setup('person-uuid-1');
-    expect(stubPeopleService.getRoleAssignments).toHaveBeenCalledWith('person-uuid-1', false);
+    await setup(PERSON_UUID);
+    expect(stubPeopleService.getRoleAssignments).toHaveBeenCalledWith(PERSON_UUID, false);
   });
 
   it('calls getRoles on init with personUuid from route', async () => {
-    await setup('person-uuid-1');
-    expect(stubPeopleService.getAvailableRoles).toHaveBeenCalledWith('person-uuid-1');
+    await setup(PERSON_UUID);
+    expect(stubPeopleService.getAvailableRoles).toHaveBeenCalledWith(PERSON_UUID);
   });
 
   const c = (cmp: RoleAssignmentPageComponent) => cmp;
@@ -152,6 +181,71 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     await setup();
     const rows = fixture.debugElement.queryAll(By.css('.assignment-item'));
     expect(rows.length).toBe(STUB_ASSIGNMENTS.length);
+  });
+
+  // ── T3b: No UUIDs on screen (issue #257) ─────────────────────────────────
+
+  it('names the person whose assignments these are', async () => {
+    await setup();
+    expect(stubPeopleService.getPerson).toHaveBeenCalledWith(PERSON_UUID);
+    const label = fixture.debugElement.query(By.css('[data-testid="person-label"]'));
+    expect(label.nativeElement.textContent.trim()).toBe('Dana Okafor');
+  });
+
+  it('falls back to the linked username when the person has no name', async () => {
+    await setup(PERSON_UUID, {
+      personResult: of({ id: PERSON_UUID, username: 'dokafor' }),
+    });
+    const label = fixture.debugElement.query(By.css('[data-testid="person-label"]'));
+    expect(label.nativeElement.textContent.trim()).toBe('dokafor');
+  });
+
+  it('omits the header label rather than showing the id when the lookup fails', async () => {
+    await setup(PERSON_UUID, { personResult: throwError(() => new Error('boom')) });
+    expect(component.personLabel()).toBe('');
+    expect(fixture.debugElement.query(By.css('[data-testid="person-label"]'))).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain(PERSON_UUID);
+  });
+
+  it('skips the person lookup when the session lacks the identity read', async () => {
+    // The page gate is `people-contact:role:view`; the lookup needs its own
+    // authority, so firing it regardless would only produce a 403.
+    await setup(PERSON_UUID, { permissions: ['people-contact:role:view'] });
+
+    expect(stubPeopleService.getPerson).not.toHaveBeenCalled();
+    expect(component.personLabel()).toBe('');
+    expect(fixture.nativeElement.textContent).not.toContain(PERSON_UUID);
+    // The assignments themselves still load.
+    expect(stubPeopleService.getRoleAssignments).toHaveBeenCalledWith(PERSON_UUID, false);
+  });
+
+  it('performs the person lookup when the session holds the identity read', async () => {
+    await setup(PERSON_UUID, {
+      permissions: ['people-contact:role:view', ...PEOPLE_SECTION.personLookup],
+    });
+
+    expect(stubPeopleService.getPerson).toHaveBeenCalledWith(PERSON_UUID);
+    const label = fixture.debugElement.query(By.css('[data-testid="person-label"]'));
+    expect(label.nativeElement.textContent.trim()).toBe('Dana Okafor');
+  });
+
+  it('does not publish the assignment user id on screen', async () => {
+    await setup();
+    expect(fixture.nativeElement.textContent).not.toContain(USER_UUID);
+  });
+
+  // Mirrors the site audit's own rule so a regression fails here first.
+  it('publishes no UUID anywhere in visible text', async () => {
+    await setup();
+    const uuid = /[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}/i;
+    expect(fixture.nativeElement.textContent).not.toMatch(uuid);
+  });
+
+  it('still identifies each assignment by its role and status', async () => {
+    await setup();
+    const rows = fixture.debugElement.queryAll(By.css('.assignment-item'));
+    expect(rows[0].nativeElement.textContent).toContain('ROLE_ADMIN');
+    expect(rows[0].nativeElement.textContent).toContain('Active');
   });
 
   // ── T4: No scope/location controls (ADR-0061) ────────────────────────────
@@ -218,14 +312,14 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
   // ── T6: createAssignment called on submit ─────────────────────────────────
 
   it('calls service.createAssignment with a role-and-dates-only payload on submit', async () => {
-    await setup('person-uuid-1');
+    await setup(PERSON_UUID);
     c(component).selectedRoleCode.set('ROLE_ADMIN');
     c(component).effectiveStartAt.set('2026-06-01T00:00:00Z');
 
     c(component).submitAssignment();
 
     const [uuid, payload] = stubPeopleService.createRoleAssignment.mock.calls[0];
-    expect(uuid).toBe('person-uuid-1');
+    expect(uuid).toBe(PERSON_UUID);
     expect(payload).toEqual({
       roleCode: 'ROLE_ADMIN',
       startDate: '2026-06-01T00:00:00Z',
@@ -235,7 +329,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
   });
 
   it('never sends locationId even for a role that used to be location scoped', async () => {
-    await setup('person-uuid-1');
+    await setup(PERSON_UUID);
     c(component).selectedRoleCode.set('ROLE_MANAGER');
     c(component).effectiveStartAt.set('2026-06-01T00:00:00Z');
 
@@ -249,7 +343,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
   });
 
   it('includes effectiveEndAt in payload when it is set', async () => {
-    await setup('person-uuid-1');
+    await setup(PERSON_UUID);
     c(component).selectedRoleCode.set('ROLE_VIEW');
     c(component).effectiveStartAt.set('2026-01-01T00:00:00Z');
     c(component).effectiveEndAt.set('2026-12-31T23:59:59Z');
@@ -261,7 +355,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
   });
 
   it('omits effectiveEndAt from payload when it is empty', async () => {
-    await setup('person-uuid-1');
+    await setup(PERSON_UUID);
     c(component).selectedRoleCode.set('ROLE_VIEW');
     c(component).effectiveStartAt.set('2026-01-01T00:00:00Z');
     c(component).effectiveEndAt.set('');
@@ -276,13 +370,13 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
   // ── T7: revokeAssignment called on revoke ─────────────────────────────────
 
   it('calls service.revokeAssignment with personUuid and roleCode from the assignment', async () => {
-    await setup('person-uuid-1');
+    await setup(PERSON_UUID);
     c(component).revokeAssignment(STUB_ASSIGNMENTS[0]);
-    expect(stubPeopleService.revokeRoleAssignment).toHaveBeenCalledWith('person-uuid-1', 'ROLE_ADMIN');
+    expect(stubPeopleService.revokeRoleAssignment).toHaveBeenCalledWith(PERSON_UUID, 'ROLE_ADMIN');
   });
 
   it('re-fetches assignments after successful revoke', async () => {
-    await setup('person-uuid-1');
+    await setup(PERSON_UUID);
     const callsBefore = stubPeopleService.getRoleAssignments.mock.calls.length;
 
     c(component).revokeAssignment(STUB_ASSIGNMENTS[0]);
@@ -307,7 +401,7 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
       },
     ];
 
-    await setup('person-uuid-1');
+    await setup(PERSON_UUID);
     stubPeopleService.getRoleAssignments.mockReturnValue(of(duplicateAssignments));
     c(component).loadAssignments();
     fixture.detectChanges();
@@ -332,19 +426,19 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
   // ── T8: include-history toggle ────────────────────────────────────────────
 
   it('re-fetches assignments with includeHistory=true when loadAssignments() called with flag set', async () => {
-    await setup('person-uuid-1');
+    await setup(PERSON_UUID);
     stubPeopleService.getRoleAssignments.mockReturnValue(of([]));
     c(component).includeHistory.set(true);
     c(component).loadAssignments();
-    expect(stubPeopleService.getRoleAssignments).toHaveBeenCalledWith('person-uuid-1', true);
+    expect(stubPeopleService.getRoleAssignments).toHaveBeenCalledWith(PERSON_UUID, true);
   });
 
   it('re-fetches assignments with includeHistory=false when flag is cleared', async () => {
-    await setup('person-uuid-1');
+    await setup(PERSON_UUID);
     stubPeopleService.getRoleAssignments.mockReturnValue(of([]));
     c(component).includeHistory.set(false);
     c(component).loadAssignments();
-    expect(stubPeopleService.getRoleAssignments).toHaveBeenCalledWith('person-uuid-1', false);
+    expect(stubPeopleService.getRoleAssignments).toHaveBeenCalledWith(PERSON_UUID, false);
   });
 
   // ── T9: Error paths and confirmingAssignmentId ────────────────────────────

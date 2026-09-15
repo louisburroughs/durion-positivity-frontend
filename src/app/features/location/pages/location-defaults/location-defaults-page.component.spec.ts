@@ -1,21 +1,26 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LocationDefaultsPageComponent } from './location-defaults-page.component';
 import { LocationService } from '../../services/location.service';
 
+const STAGING_ID = '01960011-0000-7000-8000-0000000000a1';
+const QUARANTINE_ID = '01960011-0000-7000-8000-0000000000a2';
+
 const DEFAULTS = {
-  defaultStagingLocationId: 'SL-1',
-  defaultQuarantineLocationId: 'SL-2',
+  defaultStagingLocationId: STAGING_ID,
+  defaultQuarantineLocationId: QUARANTINE_ID,
   version: 1,
 };
 
+// `id` is the field StorageLocationResponse actually exposes; the earlier
+// `storageLocationId` here matched no real payload field.
 const STORAGE_LOCATIONS = [
-  { storageLocationId: 'SL-1', name: 'Staging Area', code: 'STG', storageType: 'STAGING', status: 'ACTIVE' },
-  { storageLocationId: 'SL-2', name: 'Quarantine Bay', code: 'QRN', storageType: 'QUARANTINE', status: 'ACTIVE' },
+  { id: STAGING_ID, name: 'Staging Area', code: 'STG', storageType: 'STAGING', status: 'ACTIVE' },
+  { id: QUARANTINE_ID, name: 'Quarantine Bay', code: 'QRN', storageType: 'QUARANTINE', status: 'ACTIVE' },
 ];
 
 const stubLocationService = {
@@ -30,8 +35,8 @@ describe('LocationDefaultsPageComponent [CAP-214 #102]', () => {
   let component: LocationDefaultsPageComponent;
 
   type SetupOptions = {
-    defaultsResult?: ReturnType<typeof of> | ReturnType<typeof throwError>;
-    storageLocationsResult?: ReturnType<typeof of> | ReturnType<typeof throwError>;
+    defaultsResult?: Observable<unknown>;
+    storageLocationsResult?: Observable<unknown>;
   };
 
   const setup = async (options: SetupOptions = {}) => {
@@ -92,12 +97,49 @@ describe('LocationDefaultsPageComponent [CAP-214 #102]', () => {
     );
   });
 
-  it('should display current defaults after load', async () => {
+  it('displays the configured defaults by name, never as raw ids', async () => {
     await setup();
     const stagingEl = fixture.debugElement.query(By.css('[data-testid="current-staging"]'));
-    expect(stagingEl.nativeElement.textContent).toContain('SL-1');
+    expect(stagingEl.nativeElement.textContent.trim()).toBe('Staging Area');
     const quarantineEl = fixture.debugElement.query(By.css('[data-testid="current-quarantine"]'));
-    expect(quarantineEl.nativeElement.textContent).toContain('SL-2');
+    expect(quarantineEl.nativeElement.textContent.trim()).toBe('Quarantine Bay');
+    expect(fixture.nativeElement.textContent).not.toContain(STAGING_ID);
+    expect(fixture.nativeElement.textContent).not.toContain(QUARANTINE_ID);
+  });
+
+  // Mirrors the site audit's own rule so a regression fails here first.
+  it('publishes no UUID anywhere in visible text', async () => {
+    await setup();
+    const uuid = /[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}/i;
+    expect(fixture.nativeElement.textContent).not.toMatch(uuid);
+  });
+
+  it('shows the unknown-location string when a default resolves to nothing', async () => {
+    // A dangling reference must not fall back to printing the id.
+    await setup({ storageLocationsResult: of([]) });
+    const stagingEl = fixture.debugElement.query(By.css('[data-testid="current-staging"]'));
+    expect(stagingEl.nativeElement.textContent.trim()).toBe('LOCATION.DEFAULTS.UNKNOWN_LOCATION');
+    expect(fixture.nativeElement.textContent).not.toContain(STAGING_ID);
+  });
+
+  it('shows the not-configured string when no default is set', async () => {
+    await setup({ defaultsResult: of({ version: 1 }) });
+    const stagingEl = fixture.debugElement.query(By.css('[data-testid="current-staging"]'));
+    expect(stagingEl.nativeElement.textContent.trim()).toBe('LOCATION.DEFAULTS.NOT_CONFIGURED');
+  });
+
+  it('keys the storage-location options on the id the API returns', async () => {
+    await setup();
+    const options: HTMLOptionElement[] = fixture.debugElement
+      .queryAll(By.css('[data-testid="default-staging-select"] option'))
+      .map(el => el.nativeElement);
+    // Option values stay UUIDs (wiring, not visible text); labels stay names.
+    expect(options.map(o => o.value)).toEqual(['', STAGING_ID, QUARANTINE_ID]);
+    expect(options.map(o => o.textContent?.trim())).toEqual([
+      'LOCATION.DEFAULTS.SELECT_PLACEHOLDER',
+      'Staging Area',
+      'Quarantine Bay',
+    ]);
   });
 
   it('should show loading indicator while loading', async () => {
@@ -136,8 +178,8 @@ describe('LocationDefaultsPageComponent [CAP-214 #102]', () => {
   it('should block save when same location selected for staging and quarantine', async () => {
     await setup();
     component.defaultsForm.patchValue({
-      defaultStagingLocationId: 'SL-1',
-      defaultQuarantineLocationId: 'SL-1',
+      defaultStagingLocationId: STAGING_ID,
+      defaultQuarantineLocationId: STAGING_ID,
     });
     fixture.detectChanges();
     expect(component.isSameLocation()).toBe(true);
@@ -153,8 +195,8 @@ describe('LocationDefaultsPageComponent [CAP-214 #102]', () => {
     expect(stubLocationService.configureLocationDefaults).toHaveBeenCalledWith(
       'LOC-001',
       expect.objectContaining({
-        defaultStagingLocationId: 'SL-1',
-        defaultQuarantineLocationId: 'SL-2',
+        defaultStagingLocationId: STAGING_ID,
+        defaultQuarantineLocationId: QUARANTINE_ID,
       }),
       expect.any(String),
     );

@@ -28,8 +28,10 @@ import { PRODUCT_LANDING_CONFIG } from '../../features/product/pages/landing/pro
 import { SHOPMGMT_LANDING_CONFIG } from '../../features/shopmgmt/pages/landing/shopmgmt-landing.config';
 import { WORKEXEC_LANDING_CONFIG } from '../../features/workexec/pages/landing/workexec-landing.config';
 
+import { AuthService } from '../services/auth.service';
 import { LandingCard, LandingCta, LandingPageConfig } from '../../shared/landing/landing.models';
 import { PERMISSION_BY_BIT } from './permission-catalog';
+import { canAccess } from './route-access';
 import {
   ACCOUNTING_PERMISSIONS,
   BILLING_PERMISSIONS,
@@ -260,6 +262,80 @@ const LANDINGS: readonly { readonly name: string; readonly config: LandingPageCo
   { name: 'admin', config: ADMIN_LANDING_CONFIG },
 ];
 
+/**
+ * Issue #258: the count-plan form loaded for Shop Manager and Parts, then 403'd
+ * on `listInventoryLocations` — its only data fetch, and the source of the
+ * `locationId` the form requires. The page gate now demands the location read
+ * too, so such a session is denied before render instead of landing on a form
+ * it cannot complete.
+ */
+describe('count-plan form (issue #258)', () => {
+  const COUNT_PLAN_PATH = '/app/inventory/counts/plans/new';
+
+  const inventoryPages = pagesOf(INVENTORY_ROUTES).map(page => ({
+    path: fullPath('/app/inventory', page),
+    page,
+  }));
+
+  const routeFor = (path: string): Route | undefined =>
+    inventoryPages.find(entry => entry.path === path)?.page;
+
+  const authFor = (permissions: readonly string[]): AuthService =>
+    ({
+      permissionsKnown: () => true,
+      hasPermission: (permission: string) => permissions.includes(permission),
+      hasAnyPermission: (codes: readonly string[]) =>
+        codes.some(code => permissions.includes(code)),
+    }) as unknown as AuthService;
+
+  const requirementFor = (route: Route) => ({
+    permissions: anyPermissions(route),
+    allPermissions: allPermissions(route),
+    roles: declaredRoles(route),
+  });
+
+  it('requires every permission, not just one of them', () => {
+    const route = routeFor(COUNT_PLAN_PATH);
+    expect(route).toBeDefined();
+    // `permissions` is "any of" and would admit a session holding only one.
+    expect(anyPermissions(route!)).toEqual([]);
+    expect(allPermissions(route!)).toEqual([
+      'inventory:cycle_count:initiate',
+      'inventory:location:view',
+    ]);
+  });
+
+  it('denies a session that can initiate a count but not read locations', () => {
+    // The Shop Manager / Parts permission set as the audit found it.
+    const route = routeFor(COUNT_PLAN_PATH)!;
+    const auth = authFor(['inventory:cycle_count:initiate']);
+
+    expect(canAccess(auth, requirementFor(route))).toBe(false);
+  });
+
+  it('denies a session that can read locations but not initiate a count', () => {
+    const route = routeFor(COUNT_PLAN_PATH)!;
+    const auth = authFor(['inventory:location:view']);
+
+    expect(canAccess(auth, requirementFor(route))).toBe(false);
+  });
+
+  it('admits a session holding both permissions', () => {
+    const route = routeFor(COUNT_PLAN_PATH)!;
+    const auth = authFor(['inventory:cycle_count:initiate', 'inventory:location:view']);
+
+    expect(canAccess(auth, requirementFor(route))).toBe(true);
+  });
+
+  it('still admits the count-plan list, which needs neither', () => {
+    // Only the form depends on the location read; browsing plans is unchanged.
+    const route = routeFor('/app/inventory/counts/plans')!;
+    const auth = authFor(['inventory:cycle_count:view']);
+
+    expect(canAccess(auth, requirementFor(route))).toBe(true);
+  });
+});
+
 describe.each(LANDINGS)('$name landing page offers', ({ config }) => {
   /** Cards may point into another group (the admin landing opens /app/security). */
   const routeIndex: readonly { readonly path: string; readonly route: Route }[] = GROUPS.flatMap(
@@ -313,4 +389,5 @@ describe.each(LANDINGS)('$name landing page offers', ({ config }) => {
 
     expect(disagreements).toEqual([]);
   });
+
 });

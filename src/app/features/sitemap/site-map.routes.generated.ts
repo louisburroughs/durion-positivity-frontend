@@ -62,7 +62,7 @@ export const SITE_MAP_ROUTES: readonly SiteMapRouteEntry[] = [
   { route: '/app/inventory/counts/adjustments', label: "Adjustments", labelKey: "SITEMAP.LABEL.ADJUSTMENTS", dynamic: false, permissions: ['inventory:adjustment:view', 'inventory:adjustment:approve'] },
   { route: '/app/inventory/counts/execute', label: "Execute", labelKey: "SITEMAP.LABEL.EXECUTE", dynamic: false, permissions: ['inventory:cycle_count:view'] },
   { route: '/app/inventory/counts/plans', label: "Plans", labelKey: "SITEMAP.LABEL.PLANS", dynamic: false, permissions: ['inventory:cycle_count:view'] },
-  { route: '/app/inventory/counts/plans/new', label: "New", labelKey: "SITEMAP.LABEL.NEW", dynamic: false, permissions: ['inventory:cycle_count:initiate'] },
+  { route: '/app/inventory/counts/plans/new', label: "New", labelKey: "SITEMAP.LABEL.NEW", dynamic: false, allPermissions: ['inventory:cycle_count:initiate', 'inventory:location:view'] },
   { route: '/app/inventory/fulfillment/workorders/:workorderId/consume-items', label: "Consume Items", labelKey: "SITEMAP.LABEL.CONSUME_ITEMS", dynamic: true, permissions: ['inventory:pick_list:view'] },
   { route: '/app/inventory/fulfillment/workorders/:workorderId/pick-execute', label: "Pick Execute", labelKey: "SITEMAP.LABEL.PICK_EXECUTE", dynamic: true, permissions: ['inventory:pick_list:view'] },
   { route: '/app/inventory/fulfillment/workorders/:workorderId/pick-list', label: "Pick List", labelKey: "SITEMAP.LABEL.PICK_LIST", dynamic: true, permissions: ['inventory:pick_list:view'] },

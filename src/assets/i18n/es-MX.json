@@ -1836,6 +1836,7 @@
       "STAGING": "Preparación",
       "QUARANTINE": "Cuarentena",
       "NOT_CONFIGURED": "Sin configurar",
+      "UNKNOWN_LOCATION": "Ubicación de almacenamiento desconocida",
       "VERSION": "Versión",
       "UPDATE_TITLE": "Actualizar valores predeterminados",
       "STORAGE_LOADING": "Cargando ubicaciones de almacenamiento...",

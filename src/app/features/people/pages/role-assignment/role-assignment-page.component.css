@@ -52,11 +52,6 @@
   flex-wrap: wrap;
 }
 
-.id-cell {
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-}
-
 .role-code {
   font-weight: 600;
 }
