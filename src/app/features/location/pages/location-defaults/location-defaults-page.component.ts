@@ -158,6 +158,9 @@ export class LocationDefaultsPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
+          if (this.locationId() !== locationId) {
+            return; // route changed while this request was in flight
+          }
           const payload = this.toRecord(response);
           this.siteDefaults.set(payload);
           this.version.set(this.toVersion(payload?.['version']));
@@ -170,6 +173,9 @@ export class LocationDefaultsPageComponent {
           this.loading.set(false);
         },
         error: (err: unknown) => {
+          if (this.locationId() !== locationId) {
+            return;
+          }
           this.loadError.set(this.errorMessage(err, 'LOCATION.DEFAULTS.ERROR.LOAD_DEFAULTS'));
           this.loading.set(false);
         },
@@ -189,10 +195,16 @@ export class LocationDefaultsPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
+          if (this.locationId() !== locationId) {
+            return; // route changed while this request was in flight
+          }
           this.storageLocations.set(this.normalizeItems(response));
           this.storageLocationsLoading.set(false);
         },
         error: (err: unknown) => {
+          if (this.locationId() !== locationId) {
+            return;
+          }
           this.loadError.set(this.errorMessage(err, 'LOCATION.DEFAULTS.ERROR.LOAD_STORAGE'));
           this.storageLocationsLoading.set(false);
         },

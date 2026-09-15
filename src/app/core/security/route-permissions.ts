@@ -275,17 +275,6 @@ export const CRM_SECTION = {
   communicationPreferences: ['crm:contact_preference:view'],
 } as const satisfies Record<string, readonly string[]>;
 
-/**
- * Permissions for individual *sections* of a People page, as opposed to the page
- * gate in `PEOPLE_PAGE`. The RBAC page is gated on `people-contact:role:view`,
- * which says nothing about the identity directory, so its header lookup is
- * gated separately rather than firing a request that can only 403 (issue #255's
- * failure mode, avoided here for the label added by issue #257).
- */
-export const PEOPLE_SECTION = {
-  personLookup: ['people:person:view'],
-} as const satisfies Record<string, readonly string[]>;
-
 /** `/app/workexec/*` — estimates, approvals, work orders, labor, parts. */
 export const WORKEXEC_PAGE = {
   travelTime: ['workorder:labor:add'],
@@ -348,6 +337,22 @@ export const PEOPLE_PAGE = {
   locationAssignments: ['people:employee:view'],
   identityCompliance: ['people:compliance:view'],
   bulkImport: ['bulkImport:upload:execute'],
+} as const satisfies Record<string, readonly string[]>;
+
+/**
+ * Permissions for individual *sections* of a People page, as opposed to the page
+ * gate in `PEOPLE_PAGE`. The RBAC page is gated on `people-contact:role:view`,
+ * which says nothing about the identity directory, so its header lookup is
+ * gated separately rather than firing a request that can only 403 (issue #255's
+ * failure mode, avoided here for the label added by issue #257).
+ *
+ * `personLookup` is the same authority `PEOPLE_PAGE.directory` declares: both
+ * read the identity directory through `PeopleAPIService` in pos-people-contact.
+ * Note the neighbouring `people:person:view` in the catalog belongs to pos-people
+ * and does not govern this SDK's reads.
+ */
+export const PEOPLE_SECTION = {
+  personLookup: PEOPLE_PAGE.directory,
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/location/*` — sites, bays, mobile units, storage locations. */

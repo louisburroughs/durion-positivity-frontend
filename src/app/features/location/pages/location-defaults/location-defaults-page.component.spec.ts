@@ -1,7 +1,7 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LocationDefaultsPageComponent } from './location-defaults-page.component';
@@ -201,5 +201,56 @@ describe('LocationDefaultsPageComponent [CAP-214 #102]', () => {
       expect.any(String),
     );
     expect(component.saveSuccess()).toBe(true);
+  });
+
+  it('ignores a storage-location response that arrives after the route moved on', async () => {
+    // Otherwise the new location's defaults resolve against the previous
+    // location's storage list, yielding a wrong name or a false "unknown".
+    const params = new Subject<{ locationId: string }>();
+    // A stream per call, so the late emission reaches only the stale subscriber.
+    const staleList = new Subject<unknown>();
+    const currentList = new Subject<unknown>();
+
+    vi.clearAllMocks();
+    stubLocationService.getLocationById.mockReturnValue(
+      of({ id: 'LOC-001', name: 'Charlotte Hub', code: 'CLT-01' }),
+    );
+    stubLocationService.getLocationDefaults.mockReturnValue(of(DEFAULTS));
+    stubLocationService.listStorageLocations
+      .mockReturnValueOnce(staleList)
+      .mockReturnValueOnce(currentList);
+    stubLocationService.configureLocationDefaults.mockReturnValue(of(DEFAULTS));
+
+    await TestBed.configureTestingModule({
+      imports: [LocationDefaultsPageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: LocationService, useValue: stubLocationService },
+        { provide: ActivatedRoute, useValue: { params } },
+      ],
+    }).compileComponents();
+
+    TestBed.inject(TranslateService).use('en-US');
+    fixture = TestBed.createComponent(LocationDefaultsPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    params.next({ locationId: 'LOC-001' });
+    // Navigate away before the first list resolves, then let it land late.
+    params.next({ locationId: 'LOC-002' });
+    staleList.next([
+      { id: STAGING_ID, name: 'Stale Area' },
+      { id: QUARANTINE_ID, name: 'Stale Bay' },
+    ]);
+    fixture.detectChanges();
+
+    expect(component.locationId()).toBe('LOC-002');
+    expect(component.storageLocations()).toEqual([]);
+    expect(fixture.nativeElement.textContent).not.toContain('Stale Area');
+
+    // The in-flight request for the current location is still honoured.
+    currentList.next([{ id: STAGING_ID, name: 'Current Area' }]);
+    fixture.detectChanges();
+    expect(component.storageLocations()).toEqual([{ id: STAGING_ID, name: 'Current Area' }]);
   });
 });

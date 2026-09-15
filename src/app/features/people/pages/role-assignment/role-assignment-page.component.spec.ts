@@ -11,6 +11,13 @@ import { PeopleService } from '../../services/people.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { PEOPLE_SECTION } from '../../../../core/security/route-permissions';
 
+/**
+ * Pinned literal rather than read from PEOPLE_SECTION: deriving the expected
+ * code from the constant under test would pass under any namespace, including
+ * the wrong module's `people:person:view`.
+ */
+const PERSON_LOOKUP_PERMISSION = 'people-contact:person:view';
+
 const translations = {
   PEOPLE: {
     ROLE_ASSIGNMENT: {
@@ -219,9 +226,14 @@ describe('RoleAssignmentPageComponent [Story #153]', () => {
     expect(stubPeopleService.getRoleAssignments).toHaveBeenCalledWith(PERSON_UUID, false);
   });
 
+  it('gates the lookup on the identity read the People directory declares', () => {
+    // Same SDK service (`PeopleAPIService`), so the same authority.
+    expect(PEOPLE_SECTION.personLookup).toEqual([PERSON_LOOKUP_PERMISSION]);
+  });
+
   it('performs the person lookup when the session holds the identity read', async () => {
     await setup(PERSON_UUID, {
-      permissions: ['people-contact:role:view', ...PEOPLE_SECTION.personLookup],
+      permissions: ['people-contact:role:view', PERSON_LOOKUP_PERMISSION],
     });
 
     expect(stubPeopleService.getPerson).toHaveBeenCalledWith(PERSON_UUID);
