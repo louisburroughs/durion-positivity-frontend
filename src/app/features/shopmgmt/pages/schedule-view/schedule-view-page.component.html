@@ -1,98 +1,414 @@
-<div class="page-header">
-  <h1>{{ 'SHOPMGMT.SCHEDULE_VIEW.TITLE' | translate }}</h1>
-</div>
+<section class="capacity-page" aria-labelledby="capacity-title">
+  <header class="page-header">
+    <div class="heading-group">
+      <p class="section-label">{{ 'SHOPMGMT.SCHEDULE_VIEW.SECTION_LABEL' | translate }}</p>
+      <h1 id="capacity-title">{{ 'SHOPMGMT.SCHEDULE_VIEW.TITLE' | translate }}</h1>
+    </div>
 
-<div class="filter-bar">
-  <form [formGroup]="filterForm" (ngSubmit)="loadBoard()" novalidate>
-    <div class="filter-group">
+    <div class="header-controls">
       <app-location-picker
         [label]="'SHOPMGMT.SCHEDULE_VIEW.LOCATION' | translate"
         [placeholder]="'SHOPMGMT.SCHEDULE_VIEW.LOCATION_ID' | translate"
-        [selectedId]="filterForm.value.locationId"
+        [selectedId]="locationId()"
         (locationSelected)="onLocationPicked($event)"
       ></app-location-picker>
-    </div>
-    <div class="filter-group">
-      <label for="svDate">{{ 'SHOPMGMT.SCHEDULE_VIEW.DATE' | translate }}</label>
-      <input id="svDate" name="selectedDate" type="date" formControlName="selectedDate" />
-    </div>
-    <div class="filter-group">
-      <label for="svResourceType">{{ 'SHOPMGMT.SCHEDULE_VIEW.RESOURCE_TYPE' | translate }}</label>
-      <input id="svResourceType" name="resourceType" type="text" formControlName="resourceType"
-        [placeholder]="'SHOPMGMT.SCHEDULE_VIEW.RESOURCE_TYPE_EXAMPLE' | translate" />
-    </div>
-    <div class="filter-group">
-      <label for="svResourceId">{{ 'SHOPMGMT.SCHEDULE_VIEW.RESOURCE_ID' | translate }}</label>
-      <input id="svResourceId" name="resourceId" type="text" formControlName="resourceId" [placeholder]="'SHOPMGMT.SCHEDULE_VIEW.OPTIONAL' | translate" />
-    </div>
-    <button type="submit" class="load-board-btn" [disabled]="filterForm.invalid || loading()">
-      {{ 'SHOPMGMT.SCHEDULE_VIEW.LOAD_SCHEDULE' | translate }}
-    </button>
-  </form>
-</div>
 
-@if (availabilityError()) {
-  <div class="availability-warning">
-    {{ 'SHOPMGMT.SCHEDULE_VIEW.ERROR_LOAD' | translate }}
-  </div>
-}
+      <div class="job-filter">
+        <span class="field-label" id="job-filter-label">
+          {{ 'SHOPMGMT.SCHEDULE_VIEW.JOB_TYPE' | translate }}
+        </span>
+        @if (isFiltered()) {
+          <span class="job-chip">
+            <span class="job-chip-label">{{ activeJob().label }}</span>
+            <span class="job-chip-duration">
+              {{ 'SHOPMGMT.SCHEDULE_VIEW.HOURS_SHORT' | translate: { hours: activeJob().durationHours } }}
+            </span>
+            <button type="button" class="job-chip-clear" (click)="clearJob()"
+              [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.CLEAR_JOB_ARIA' | translate">&#x2715;</button>
+          </span>
+        } @else {
+          <button type="button" class="job-trigger" (click)="toggleJobPicker()"
+            [attr.aria-expanded]="jobPickerOpen()" aria-describedby="job-filter-label">
+            {{ 'SHOPMGMT.SCHEDULE_VIEW.ALL_WORK' | translate }}
+          </button>
+        }
 
-@if (loading()) {
-  <div class="loading-state">{{ 'SHOPMGMT.SCHEDULE_VIEW.LOADING' | translate }}</div>
-}
-
-@if (!loading()) {
-  @if (scheduleData().length === 0 && !availabilityError()) {
-    <div class="empty-board">
-      {{ 'SHOPMGMT.SCHEDULE_VIEW.EMPTY' | translate }}
-    </div>
-  }
-  @if (scheduleData().length > 0) {
-    <div class="board-region">
-      @for (resource of scheduleData(); track resource) {
-        <div class="resource-lane">
-          <div class="lane-header">
-            <span class="resource-type">{{ resource.resourceType }}</span>
-            <span class="resource-name">{{ resource.resourceName ?? resource.resourceId }}</span>
-          </div>
-          <div class="lane-items">
-            @for (appt of resource.appointments; track appt) {
-              <div class="work-item-card" role="button" tabindex="0" (click)="selectItem(appt)"
-                (keydown.enter)="selectItem(appt)" (keydown.space)="selectItem(appt)">
-                <span class="item-id">{{ appt.appointmentId }}</span>
-                <span class="item-time">{{ appt.scheduledStart }}</span>
-                <span class="item-status">{{ appt.status }}</span>
-                @if (appt.rescheduleCount && appt.rescheduleCount > 0) {
-                  <span class="conflict-badge">
-                    {{ 'SHOPMGMT.SCHEDULE_VIEW.RESCHEDULED_X' | translate: { count: appt.rescheduleCount } }}
-                  </span>
-                }
-              </div>
+        @if (jobPickerOpen()) {
+          <div class="job-picker" role="group"
+            [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.JOB_TYPE' | translate">
+            <input type="search" class="job-search" [value]="jobQuery()"
+              (input)="onJobQuery($any($event.target).value)"
+              [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.JOB_SEARCH_ARIA' | translate"
+              [attr.placeholder]="'SHOPMGMT.SCHEDULE_VIEW.JOB_SEARCH_ARIA' | translate" />
+            @for (option of jobOptions(); track option.serviceId) {
+              <button type="button" class="job-option" (click)="selectJob(option)">
+                <span class="job-option-name">{{ option.label }}</span>
+                <span class="job-option-duration">
+                  {{ 'SHOPMGMT.SCHEDULE_VIEW.HOURS_SHORT' | translate: { hours: option.durationHours } }}
+                </span>
+              </button>
+            } @empty {
+              <p class="job-option-empty">{{ 'SHOPMGMT.SCHEDULE_VIEW.JOB_SEARCH_EMPTY' | translate }}</p>
             }
           </div>
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Period navigation and view toggle ────────────────────────────────── -->
+  <div class="toolbar dur-elevation-1">
+    <div class="period-nav">
+      <button type="button" class="nav-step" (click)="step(-1)"
+        [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.PREVIOUS_ARIA' | translate">&#x2039;</button>
+
+      <span class="period-label" aria-live="polite">
+        @switch (scope()) {
+          @case ('month') { {{ focusDateAsDate() | date: 'LLLL y' }} }
+          @case ('week') { {{ focusDateAsDate() | date: 'MMM d, y' }} }
+          @default { {{ focusDateAsDate() | date: 'fullDate' }} }
+        }
+      </span>
+
+      <button type="button" class="nav-step" (click)="step(1)"
+        [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.NEXT_ARIA' | translate">&#x203a;</button>
+
+      <button type="button" class="btn-text" (click)="goToToday()">
+        {{ 'SHOPMGMT.SCHEDULE_VIEW.TODAY' | translate }}
+      </button>
+    </div>
+
+    <div class="scope-toggle" role="group"
+      [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.SCOPE_ARIA' | translate">
+      <button type="button" [class.is-active]="scope() === 'month'"
+        [attr.aria-pressed]="scope() === 'month'" (click)="setScope('month')">
+        {{ 'SHOPMGMT.SCHEDULE_VIEW.MONTH' | translate }}
+      </button>
+      <button type="button" [class.is-active]="scope() === 'week'"
+        [attr.aria-pressed]="scope() === 'week'" (click)="setScope('week')">
+        {{ 'SHOPMGMT.SCHEDULE_VIEW.WEEK' | translate }}
+      </button>
+      <button type="button" [class.is-active]="scope() === 'day'"
+        [attr.aria-pressed]="scope() === 'day'" (click)="setScope('day')">
+        {{ 'SHOPMGMT.SCHEDULE_VIEW.DAY' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- ── What the numbers mean ────────────────────────────────────────────── -->
+  @if (state() === 'ready') {
+    @if (isFiltered()) {
+      <p class="requirement-banner alert alert-info">
+        {{ 'SHOPMGMT.SCHEDULE_VIEW.REQUIREMENT' | translate: {
+          bays: eligibleBayNames(),
+          eligible: eligibleBayCount(),
+          total: totalBayCount(),
+          technicians: certifiedTechNames(),
+          hours: activeJob().durationHours
+        } }}
+      </p>
+    }
+
+    @if (view()?.eligibilityIsApproximate) {
+      <output class="alert alert-warning" aria-live="polite">
+        {{ 'SHOPMGMT.SCHEDULE_VIEW.ELIGIBILITY_APPROXIMATE' | translate }}
+      </output>
+    }
+
+    @if (view()?.degraded) {
+      <output class="alert alert-warning" aria-live="polite">
+        {{ 'SHOPMGMT.SCHEDULE_VIEW.DEGRADED' | translate }}
+      </output>
+    }
+
+    <ul class="legend" [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.LEGEND_ARIA' | translate">
+      <li><span class="swatch swatch-load" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_LOAD' | translate }}</li>
+      <li><span class="swatch tick tick-fits" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_FITS' | translate }}</li>
+      <li><span class="swatch tick tick-short" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_SHORT' | translate }}</li>
+      <li><span class="swatch tick tick-tech" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_TECH' | translate }}</li>
+      <li><span class="swatch tick tick-taken" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_TAKEN' | translate }}</li>
+    </ul>
+  }
+
+  <!-- ── Page states ──────────────────────────────────────────────────────── -->
+  @if (state() === 'idle') {
+    <div class="state-panel">
+      <p>{{ 'SHOPMGMT.SCHEDULE_VIEW.EMPTY' | translate }}</p>
+    </div>
+  }
+
+  @if (state() === 'loading') {
+    <div class="state-panel" aria-live="polite">
+      <p>{{ 'SHOPMGMT.SCHEDULE_VIEW.LOADING' | translate }}</p>
+    </div>
+  }
+
+  @if (errorKey(); as key) {
+    <div class="state-panel" role="alert">
+      <p>{{ key | translate }}</p>
+      <button type="button" class="btn-text" (click)="load()">
+        {{ 'SHOPMGMT.SCHEDULE_VIEW.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- ── Month: eligible capacity limited by bay and technician ───────────── -->
+  @if (state() === 'ready' && scope() === 'month') {
+    <div class="grid-panel dur-elevation-2">
+      <div class="month-head" aria-hidden="true">
+        @for (weekday of weekdayHeaders(); track weekday) {
+          <div class="month-head-cell">{{ weekday | date: 'EEE' }}</div>
+        }
+      </div>
+
+      @for (week of monthWeeks(); track $index) {
+        <div class="month-row">
+          @for (cell of week; track trackDay($index, cell)) {
+            <div class="month-cell" [class.is-outside]="cell.day.kind === 'outside'"
+              [class.is-today]="cell.day.isToday"
+              [class.day-tech]="cell.verdict === 'tech'"
+              [class.day-taken]="cell.verdict === 'taken'">
+
+              <div class="month-cell-head">
+                <span class="day-number">{{ cell.date | date: 'd' }}</span>
+                @if (cell.day.isToday) {
+                  <span class="today-badge">{{ 'SHOPMGMT.SCHEDULE_VIEW.TODAY' | translate }}</span>
+                }
+              </div>
+
+              @if (cell.day.kind === 'closed') {
+                <p class="day-closed">{{ 'SHOPMGMT.SCHEDULE_VIEW.CLOSED' | translate }}</p>
+              } @else if (cell.day.kind !== 'outside') {
+                <button type="button" class="month-cell-body" (click)="openDay(cell.day.date)"
+                  [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.OPEN_DAY_ARIA' | translate: { date: cell.day.date }">
+
+                  <span class="hour-strip">
+                    @for (hour of cell.hours; track hour.hourDate) {
+                      <span class="hour-track"
+                        [attr.title]="(hour.hourDate | date: 'shortTime') + ' — ' + hour.loadPercent + '%'">
+                        <span class="hour-fill" [style.height.%]="hour.loadPercent"></span>
+                      </span>
+                    }
+                  </span>
+
+                  <span class="tick-row">
+                    @for (hour of cell.hours; track hour.hourDate) {
+                      <span class="tick" [class]="'tick-' + hour.verdict"></span>
+                    }
+                  </span>
+
+                  <span class="verdict-chip" [class]="'verdict-' + cell.verdict">
+                    @if (cell.verdict === 'fits') {
+                      {{ 'SHOPMGMT.SCHEDULE_VIEW.FITS_AT' | translate: { time: (cell.firstFit | date: 'shortTime') } }}
+                    } @else if (cell.verdict === 'tech') {
+                      @if (cell.day.techBlock === 'off') {
+                        {{ 'SHOPMGMT.SCHEDULE_VIEW.NO_SLOT_TECH_OFF' | translate }}
+                      } @else {
+                        {{ 'SHOPMGMT.SCHEDULE_VIEW.NO_SLOT_TECH_ASSIGNED' | translate }}
+                      }
+                    } @else {
+                      {{ 'SHOPMGMT.SCHEDULE_VIEW.NO_SLOT' | translate }}
+                    }
+                  </span>
+
+                  <span class="day-footer">
+                    @if (limitKey(cell.day); as key) {
+                      <span class="day-limit">{{ key | translate: { count: limitHours(cell.day) } }}</span>
+                    }
+                    @if (cell.day.carryOver; as carry) {
+                      <span class="day-carry">
+                        {{ 'SHOPMGMT.SCHEDULE_VIEW.CARRY_OVER' | translate: { hours: carry.hours, from: carry.fromDate } }}
+                      </span>
+                    }
+                    <span class="day-context">
+                      {{ 'SHOPMGMT.SCHEDULE_VIEW.SHOP_WIDE_FREE' | translate: { hours: cell.day.shopFreeBayHours } }}
+                    </span>
+                  </span>
+                </button>
+              }
+            </div>
+          }
         </div>
       }
     </div>
   }
-}
 
-@if (selectedItem()) {
-  <div class="details-panel">
-    <div class="details-header">
-      <h3>{{ 'SHOPMGMT.SCHEDULE_VIEW.APPOINTMENT' | translate: { id: selectedItem()!.appointmentId } }}</h3>
-      <button class="details-close" (click)="closeDetails()" [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.CLOSE_DETAILS' | translate">&#x2715;</button>
+  <!-- ── Week: bays and certified techs in the same cell ──────────────────── -->
+  @if (state() === 'ready' && scope() === 'week') {
+    <div class="grid-panel dur-elevation-2">
+      <div class="week-head">
+        <div class="week-gutter-head">{{ 'SHOPMGMT.SCHEDULE_VIEW.HOUR' | translate }}</div>
+        @for (day of weekDays(); track day.date) {
+          <div class="week-head-cell" [class.is-today]="day.isToday">
+            <span class="week-head-day">{{ day.date | date: 'EEE d' }}</span>
+            <span class="week-head-meta">
+              @if (day.firstFitHour !== undefined) {
+                {{ 'SHOPMGMT.SCHEDULE_VIEW.FREE_ELIGIBLE' | translate: {
+                  free: day.eligibleFreeBayHours, total: day.eligibleCapacityBayHours } }}
+              } @else if (day.techBlock === 'off') {
+                {{ 'SHOPMGMT.SCHEDULE_VIEW.NO_SLOT_TECH_OFF' | translate }}
+              } @else if (day.techBlock === 'assigned') {
+                {{ 'SHOPMGMT.SCHEDULE_VIEW.NO_SLOT_TECH_ASSIGNED' | translate }}
+              } @else {
+                {{ 'SHOPMGMT.SCHEDULE_VIEW.NO_SLOT' | translate }}
+              }
+            </span>
+          </div>
+        }
+      </div>
+
+      @for (row of weekRows(); track row.hourDate) {
+        <div class="week-row">
+          <div class="week-gutter">{{ row.hourDate | date: 'shortTime' }}</div>
+          @for (cell of row.cells; track cell.day.date) {
+            <div class="week-cell" [class]="'cell-' + cell.verdict">
+              <span class="ratio">
+                @if (cell.hour && cell.hour.bayCapacity > 0) {
+                  {{ cell.hour.eligible }}/{{ cell.hour.bayCapacity }}
+                } @else {
+                  &mdash;
+                }
+              </span>
+
+              <span class="bay-blocks">
+                @for (bay of cell.bays; track bay.name) {
+                  <span class="bay-block" [class]="'state-' + bay.state"
+                    [class.is-eligible]="bay.eligible" [attr.title]="bay.name"></span>
+                }
+              </span>
+
+              <span class="tech-dots">
+                @for (tech of cell.techs; track tech.name) {
+                  <span class="tech-dot" [class]="'state-' + tech.state"
+                    [class.is-certified]="tech.certified" [attr.title]="tech.name"></span>
+                }
+              </span>
+
+              @if (cell.verdict === 'fits') {
+                <span class="fits-flag">{{ 'SHOPMGMT.SCHEDULE_VIEW.FITS' | translate }}</span>
+              }
+            </div>
+          }
+        </div>
+      }
     </div>
-    <div class="details-row">
-      <span class="label">{{ 'SHOPMGMT.SCHEDULE_VIEW.STATUS' | translate }}</span>
-      <span class="value">{{ selectedItem()!.status }}</span>
+  }
+
+  <!-- ── Day: resource timeline with bays as columns ──────────────────────── -->
+  @if (state() === 'ready' && scope() === 'day') {
+    @if (focusDay(); as day) {
+      <div class="kpi-row">
+        <div class="kpi dur-elevation-1">
+          <p class="kpi-label">{{ 'SHOPMGMT.SCHEDULE_VIEW.KPI_FREE' | translate }}</p>
+          <p class="kpi-value">
+            {{ day.shopFreeBayHours }}
+            <span class="kpi-unit">
+              {{ 'SHOPMGMT.SCHEDULE_VIEW.KPI_OF_BAY_HOURS' | translate: { total: day.shopCapacityBayHours } }}
+            </span>
+          </p>
+        </div>
+        <div class="kpi dur-elevation-1">
+          <p class="kpi-label">{{ 'SHOPMGMT.SCHEDULE_VIEW.KPI_UTILIZATION' | translate }}</p>
+          <p class="kpi-value">{{ focusUtilization() }}%</p>
+        </div>
+        <div class="kpi dur-elevation-1">
+          <p class="kpi-label">{{ 'SHOPMGMT.SCHEDULE_VIEW.KPI_NEXT_ELIGIBLE' | translate }}</p>
+          <p class="kpi-value">
+            @if (day.firstFitHour !== undefined) {
+              {{ day.date | date: 'shortDate' }}
+            } @else {
+              {{ 'SHOPMGMT.SCHEDULE_VIEW.NO_SLOT' | translate }}
+            }
+          </p>
+        </div>
+      </div>
+    }
+
+    <div class="grid-panel dur-elevation-2">
+      <div class="board-head" [style.grid-template-columns]="boardTemplate()">
+        <div class="board-gutter-head">{{ 'SHOPMGMT.SCHEDULE_VIEW.TIME' | translate }}</div>
+        @for (column of boardColumns(); track column.bayId) {
+          <div class="board-head-cell" [class.is-ineligible]="!column.eligible">
+            <span class="bay-name">{{ column.name }}</span>
+            <span class="bay-type">
+              @if (column.outOfService) {
+                {{ 'SHOPMGMT.SCHEDULE_VIEW.BAY_DOWN' | translate }}
+              } @else {
+                {{ column.bayType }}
+              }
+            </span>
+          </div>
+        }
+      </div>
+
+      <div class="board-body" [style.grid-template-columns]="boardTemplate()"
+        [style.height.px]="boardHours().length * hourPitchPx">
+        <div class="board-gutter">
+          @for (hour of boardHours(); track hour) {
+            <div class="board-gutter-hour" [style.height.px]="hourPitchPx">
+              {{ hour | date: 'shortTime' }}
+            </div>
+          }
+        </div>
+
+        @for (column of boardColumns(); track column.bayId) {
+          <div class="board-column" [class.is-ineligible]="!column.eligible"
+            [class.is-down]="column.outOfService">
+            @for (card of column.cards; track card.appointment.eventId) {
+              <article class="board-card" [class]="'state-' + card.appointment.state"
+                [style.top.px]="card.topPx" [style.height.px]="card.heightPx">
+                <span class="card-time">
+                  {{ card.appointment.title }}
+                </span>
+                @if (card.appointment.hasConflict) {
+                  <span class="card-conflict">
+                    {{ 'SHOPMGMT.SCHEDULE_VIEW.CONFLICT' | translate: { severity: card.appointment.conflictSeverity } }}
+                  </span>
+                }
+                @if (card.appointment.technicianName; as tech) {
+                  <span class="card-tech">{{ tech }}</span>
+                }
+                @if (card.plannedTopPx !== undefined) {
+                  <span class="planned-line" [style.top.px]="card.plannedTopPx" aria-hidden="true"></span>
+                }
+              </article>
+            }
+          </div>
+        }
+
+        @if (nowOffsetPx(); as offset) {
+          <div class="now-line" [style.top.px]="offset" aria-hidden="true">
+            <span class="now-label">{{ nowLabel() | date: 'shortTime' }}</span>
+          </div>
+        }
+      </div>
     </div>
-    <div class="details-row">
-      <span class="label">{{ 'SHOPMGMT.SCHEDULE_VIEW.START' | translate }}</span>
-      <span class="value">{{ selectedItem()!.scheduledStart }}</span>
+
+    <!-- The second half of capacity: a bay without a certified tech is not capacity. -->
+    <div class="tech-lane dur-elevation-2">
+      <div class="tech-lane-head">
+        <h2>{{ 'SHOPMGMT.SCHEDULE_VIEW.TECH_LANE' | translate }}</h2>
+        <p>{{ 'SHOPMGMT.SCHEDULE_VIEW.TECH_LANE_NOTE' | translate }}</p>
+      </div>
+      @for (tech of techLane(); track tech.name) {
+        <div class="tech-row" [class.is-certified]="tech.certified">
+          <div class="tech-id">
+            <span class="tech-name">{{ tech.name }}</span>
+            <span class="tech-skills">{{ tech.skills }}</span>
+          </div>
+          <div class="tech-cells">
+            @for (cell of tech.cells; track cell.hourDate) {
+              <span class="tech-cell" [class]="'state-' + cell.state"
+                [attr.title]="cell.hourDate | date: 'shortTime'"></span>
+            }
+          </div>
+          <span class="tech-load">
+            {{ 'SHOPMGMT.SCHEDULE_VIEW.HOURS_ASSIGNED' | translate: { count: tech.assignedHours } }}
+          </span>
+        </div>
+      } @empty {
+        <p class="state-panel">{{ 'SHOPMGMT.SCHEDULE_VIEW.NO_TECHNICIANS' | translate }}</p>
+      }
     </div>
-    <div class="details-row">
-      <span class="label">{{ 'SHOPMGMT.SCHEDULE_VIEW.END' | translate }}</span>
-      <span class="value">{{ selectedItem()!.scheduledEnd }}</span>
-    </div>
-  </div>
-}
+  }
+</section>
