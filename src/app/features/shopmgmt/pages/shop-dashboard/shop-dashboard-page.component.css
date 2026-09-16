@@ -24,7 +24,7 @@
   font-size: 0.8125rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .heading-group h1 {
@@ -63,7 +63,7 @@
   grid-template-columns: minmax(14rem, 1fr) minmax(10rem, 12rem) auto;
   align-items: start;
   gap: var(--space-3);
-  background: color-mix(in srgb, var(--durion-graphite-100) 58%, var(--cardBackground));
+  background: var(--surface-inset);
   border-radius: var(--radius-md);
   padding: var(--space-3);
 }
@@ -75,7 +75,7 @@
 
 .field-label {
   font-size: 0.875rem;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .field-hint {
@@ -89,7 +89,7 @@
   background: var(--input-background);
   color: var(--currentTextColor);
   border: none;
-  border-bottom: 2px solid var(--input-border);
+  border-bottom: 2px solid color-mix(in srgb, var(--currentTextColor) 50%, transparent);
   border-radius: 0;
   min-height: 2.75rem;
   padding: var(--space-2);
@@ -114,7 +114,7 @@
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--brand-primary);
+  color: var(--link-color);
   padding: var(--space-2) var(--space-3);
   min-height: 2.75rem;
   font-weight: 600;
@@ -178,7 +178,7 @@ input:focus-visible {
 .skeleton-card {
   min-height: 12rem;
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--durion-graphite-100) 60%, var(--cardBackground));
+  background: var(--skeleton-bg);
 }
 
 .state-panel {
@@ -186,13 +186,13 @@ input:focus-visible {
   gap: var(--space-3);
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--functional-error-red) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-error-fg) 45%, transparent);
   background: var(--status-error-bg);
 }
 
 .state-panel p {
   margin: 0;
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .empty-state {

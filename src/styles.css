@@ -136,6 +136,16 @@
   --surface-2: var(--brand-surface);
   --surface-hover: rgba(0, 52, 111, 0.06);
   --text-muted: var(--handleColor);
+  /* Link / interactive text on a surface. brand-primary (blue-700) is a fill
+     colour: as text it is only 1.3:1 on the dark card, so link text must use
+     this pair, never --brand-primary or --primaryA400 (blue-400 = 3.4:1). */
+  --link-color: var(--brand-primary);
+  /* Inset well inside a card (filter bars, toolbars) and the skeleton
+     placeholder fill. Both derive from --border-color + --cardBackground so
+     they follow the theme; a raw --durion-graphite-100 mix paints a near-white
+     panel in dark mode underneath near-white text. */
+  --surface-inset: color-mix(in srgb, var(--border-color) 45%, var(--cardBackground));
+  --skeleton-bg: color-mix(in srgb, var(--border-color) 70%, var(--cardBackground));
   /* Status tint pairs — theme-aware, AA in light AND dark (ADR-0039).
      Light: AA-dark text on a light tint. Use the -bg/-fg pair together. */
   --status-error-bg: #fdecea;
@@ -187,6 +197,10 @@
   --surface-2: var(--cardBackground);
   --surface-hover: rgba(255, 255, 255, 0.08);
   --text-muted: var(--handleColor);
+  /* blue-200 = 6.3:1 on the grey-700 card, 9.1:1 on the grey-800 page. */
+  --link-color: var(--durion-blue-200);
+  --surface-inset: color-mix(in srgb, var(--border-color) 45%, var(--cardBackground));
+  --skeleton-bg: color-mix(in srgb, var(--border-color) 70%, var(--cardBackground));
   /* Dark: AA-light text on a deep tint. */
   --status-error-bg: #4a2426;
   --status-error-fg: #ffb4ab;

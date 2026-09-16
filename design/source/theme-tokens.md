@@ -128,13 +128,25 @@ These flip when `data-theme` changes on `<html>`. **Consume these in all compone
 | `--surface-2` | brand-surface | cardBackground | Secondary elevated surface |
 | `--surface-hover` | `rgba(0,52,111,.06)` | `rgba(255,255,255,.08)` | Hover wash |
 | `--text-muted` | handleColor | handleColor | Muted / secondary text |
+| `--link-color` | brand-primary | blue-200 | **Link / interactive text on a surface.** `--brand-primary` is a fill colour — as text it is 1.3:1 on the dark card, and `--primaryA400` (blue-400) only reaches 3.4:1. |
+| `--surface-inset` | `color-mix(border-color 45%, cardBackground)` | same formula | Inset well inside a card (filter bars, toolbars). Derives from theme tokens, so it stays dark in dark mode. |
+| `--skeleton-bg` | `color-mix(border-color 70%, cardBackground)` | same formula | Loading-placeholder fill |
 | `--status-error-bg` / `-fg` | `#fdecea` / `#ba1a1a` | `#4a2426` / `#ffb4ab` | Error chip/alert fill + text (AA both themes) |
 | `--status-warning-bg` / `-fg` | `#fff4e0` / `#8a5e0a` | `#3d3424` / `#ffd479` | Warning chip/alert fill + text |
 | `--status-success-bg` / `-fg` | `#e7f4e8` / `#1b5e20` | `#24382a` / `#a5d6a7` | Success chip/alert fill + text |
 | `--status-info-bg` / `-fg` | `#e8eef6` / `#355d92` | `#233246` / `#aac4e4` | Info chip/alert fill + text |
+| `--status-ready-bg` / `-fg` | `#e4f2f1` / `#17605c` | `#1e3937` / `#7fd8d1` | Ready chip/alert fill + text |
+| `--status-neutral-bg` / `-fg` | `#eceff1` / `#37474f` | `#2c3236` / `#c3ccd1` | Neutral chip/alert fill + text |
 
 > **Status surfaces use the `--status-<kind>-bg` + `-fg` pair** (see `durion-style-guide.md` §8),
 > never `color-mix(--functional-x …)` + a functional text colour — that fails AA in dark.
+
+> **Never mix a raw Tier-1 ramp value into a surface or use one as text.** The raw ramps are
+> theme-agnostic: `color-mix(in srgb, var(--durion-graphite-100) 58%, var(--cardBackground))`
+> paints a near-white panel in dark mode underneath near-white text, and
+> `color: var(--brand-secondary)` (graphite-700) is 1.3:1 on the dark card. Use the Tier-3
+> pairs instead — `--surface-inset` / `--skeleton-bg` for surfaces, `--text-muted` for
+> secondary text, `--link-color` for link text.
 
 ## Unsanctioned tokens (do NOT use)
 
