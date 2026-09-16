@@ -69,8 +69,8 @@
     <h3>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.CONFLICTS' | translate }}</h3>
     @for (conflict of conflicts(); track conflict) {
       <article class="conflict-item"
-        [ngClass]="conflict.type === 'HARD' ? 'hard-conflict' : 'soft-conflict'">
-        <strong>{{ conflict.type }}</strong>
+        [ngClass]="conflict.severity === 'HARD' ? 'hard-conflict' : 'soft-conflict'">
+        <strong>{{ conflict.severity }}</strong>
         <p>{{ conflict.message }}</p>
       </article>
     }

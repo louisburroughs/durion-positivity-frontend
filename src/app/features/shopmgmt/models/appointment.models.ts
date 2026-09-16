@@ -34,8 +34,12 @@ export interface AssignmentDetail {
   version?: number;
 }
 
+/**
+ * One entry of the DECISION-SHOPMGMT-002 conflict envelope a 409 carries (`ConflictResponse.conflicts`
+ * on the wire): `severity` is the wire name — HARD refused the booking, SOFT was recorded.
+ */
 export interface Conflict {
-  type: 'HARD' | 'SOFT';
+  severity: 'HARD' | 'SOFT';
   code: string;
   message: string;
   overridable?: boolean;

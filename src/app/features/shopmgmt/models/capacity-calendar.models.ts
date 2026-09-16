@@ -75,9 +75,9 @@ export type DayKind =
  * catalog operation codes this bay type alone performs; empty for a general
  * bay. `maxDutyClass` is the heaviest GVWR class the bay accepts (D13), null
  * when unconstrained. `bayType` is the coarse classification (GENERAL_SERVICE,
- * ALIGNMENT, …) and is only a fallback for a job whose operation code is not
- * known — see {@link JobRequirement}. A bay carries no skill requirement: the
- * catalog service does (CAP-329).
+ * ALIGNMENT, …); eligibility never reads it except to keep mechanical work out
+ * of a `WASH_DETAIL` bay (D14) — the claims decide. A bay carries no skill
+ * requirement: the catalog service does (CAP-329).
  */
 export interface CapacityBay {
   readonly bayId: string;
@@ -126,6 +126,13 @@ export interface JobRequirement {
    * requirements apply, as the server itself resolves them.
    */
   readonly skillCodes: readonly string[];
+  /**
+   * False when the catalog has never declared this service's requirements
+   * (`requiredSkills` null, `requirementsConfiguredAt` null): "not configured"
+   * is not "requires nothing" (spec D4), so every technician is shown and the
+   * page says why. True for a declared list, an explicitly empty one included.
+   */
+  readonly skillRequirementsConfigured: boolean;
   /** Job duration in hours; drives the unbroken-window test. */
   readonly durationHours: number;
 }
@@ -250,6 +257,12 @@ export interface CapacityCalendarView {
    * numbers may be incomplete. Mirrors the dispatch dashboard's own flag.
    */
   readonly degraded: boolean;
+  /**
+   * True when the selected service has no declared skill requirements, so the
+   * certified-technician axis is every rostered technician by default, not by
+   * reading (spec D4). Shown on screen rather than presented as measured.
+   */
+  readonly skillRequirementsUnknown: boolean;
 }
 
 // ── Pure helpers ────────────────────────────────────────────────────────────
@@ -308,6 +321,12 @@ export function isEligibleBay(
     if (bays.some(candidate => !candidate.outOfService && claims(candidate))) {
       return false;
     }
+    return bay.bayType !== WASH_DETAIL;
+  }
+  // A specific service the catalog gave no code is unclaimed mechanical work: the same general
+  // path, and a wash bay never absorbs it (D14). Only "all work" — no service at all — counts
+  // every in-service bay, the wash bay included, because washing is work too.
+  if (job.serviceId) {
     return bay.bayType !== WASH_DETAIL;
   }
   return true;

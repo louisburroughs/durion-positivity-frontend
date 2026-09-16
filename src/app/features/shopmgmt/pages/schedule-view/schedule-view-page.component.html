@@ -109,6 +109,12 @@
       </p>
     }
 
+    @if (view()?.skillRequirementsUnknown) {
+      <output class="alert alert-warning" aria-live="polite">
+        {{ 'SHOPMGMT.SCHEDULE_VIEW.SKILLS_NOT_CONFIGURED' | translate }}
+      </output>
+    }
+
     @if (view()?.degraded) {
       <output class="alert alert-warning" aria-live="polite">
         {{ 'SHOPMGMT.SCHEDULE_VIEW.DEGRADED' | translate }}

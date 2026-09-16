@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
+  AppointmentAssignmentsService,
   AppointmentCreateRequestSourceTypeEnum,
   AppointmentsAPIService,
-  AppointmentAssignmentsService,
   ConflictOverrideAPIService,
+  ConflictOverrideResponse,
   MechanicAssignmentItemRoleEnum,
   ScheduleAPIService,
   ShopAuditService,
@@ -101,12 +102,14 @@ export class AppointmentService {
   executeOverride(
     appointmentId: string,
     body: { conflictIds: string[]; overrideReason: string },
-  ): Observable<AppointmentDetail> {
+  ): Observable<ConflictOverrideResponse> {
     const sdkRequest: ConflictOverrideRequest = {
       conflictIds: body.conflictIds,
       overrideReason: body.overrideReason,
     };
-    return this.conflictOverride.executeConflictOverride(appointmentId, sdkRequest) as unknown as Observable<AppointmentDetail>;
+    // 201 with the override record — who, when, which conflicts — not the appointment. A caller
+    // that wants the appointment's new state re-reads it (the recorded conflicts change).
+    return this.conflictOverride.executeConflictOverride(appointmentId, sdkRequest);
   }
 
   cancelAppointment(appointmentId: string, body: { cancellationReason: string; notes?: string }): Observable<AppointmentDetail> {

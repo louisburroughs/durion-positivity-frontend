@@ -104,7 +104,7 @@ export class AppointmentReschedulePageComponent implements OnInit {
       const conflictList: Conflict[] = body?.conflicts ?? [];
       this.conflicts.set(conflictList);
       this.suggestedAlternatives.set(body?.suggestedAlternatives ?? []);
-      const hasHard = conflictList.some(c => c.type === 'HARD');
+      const hasHard = conflictList.some(c => c.severity === 'HARD');
       this.hasHardConflict.set(hasHard);
       if (!hasHard) {
         this.showOverrideReason.set(true);

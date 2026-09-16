@@ -48,12 +48,12 @@
     <div class="conflict-panel">
       @for (c of conflicts(); track c) {
         <div>
-          @if (c.type === 'HARD') {
+          @if (c.severity === 'HARD') {
             <div class="hard-conflict">
               <span class="severity-badge">{{ 'SHOPMGMT.APPOINTMENT_CREATE.HARD' | translate }}</span> {{ c.message }}
             </div>
           }
-          @if (c.type === 'SOFT') {
+          @if (c.severity === 'SOFT') {
             <div class="soft-conflict">
               <span class="severity-badge">{{ 'SHOPMGMT.APPOINTMENT_CREATE.SOFT' | translate }}</span> {{ c.message }}
             </div>

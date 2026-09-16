@@ -302,7 +302,14 @@ export const SHOPMGMT_PAGE = {
   appointmentCreate: ['appointments:create', 'shop:schedule:edit'],
   appointmentView: ['appointments:view', 'shop:schedule:view'],
   appointmentReschedule: ['appointments:reschedule'],
-  appointmentOverride: ['shop:schedule:edit', 'appointments:reschedule'],
+  /**
+   * The page carries the reschedule form (its own codes) and the CAP-326 D18.3 override, which
+   * the backend gates on `shop:conflict:override` alone; the page is reachable by either, and
+   * the override action itself is shown only to holders of `conflictOverride` below.
+   */
+  appointmentOverride: ['shop:schedule:edit', 'appointments:reschedule', 'shop:conflict:override'],
+  /** `executeConflictOverride` — `shop:conflict:override`, the sole authority (DECISION-SHOPMGMT-002). */
+  conflictOverride: ['shop:conflict:override'],
   bayAssign: ['shop:bay:assign'],
   /** Availability is a pos-people read. */
   mechanicAvailability: ['people:availability:view'],

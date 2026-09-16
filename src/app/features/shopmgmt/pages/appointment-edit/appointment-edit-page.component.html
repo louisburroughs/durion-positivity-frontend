@@ -105,10 +105,10 @@
           <div class="conflict-panel">
             @for (c of rescheduleConflicts(); track c) {
               <div>
-                @if (c.type === 'HARD') {
+                @if (c.severity === 'HARD') {
                   <div class="hard-conflict">{{ c.message }}</div>
                 }
-                @if (c.type === 'SOFT') {
+                @if (c.severity === 'SOFT') {
                   <div class="soft-conflict">{{ c.message }}</div>
                 }
               </div>

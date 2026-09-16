@@ -6,6 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentConflictOverridePageComponent } from './appointment-conflict-override-page.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { AuthService } from '../../../../core/services/auth.service';
 import { AppointmentService } from '../../services/appointment.service';
 
 /** CAP-326: a booking that warned — one SOFT conflict recorded, still overridable. */
@@ -23,6 +24,18 @@ const APPOINTMENT_WITH_SOFT_CONFLICT = {
       overridden: false,
     },
   ],
+};
+
+/** Permissions known and the override authority held, unless a test narrows it. */
+const authStub = {
+  known: true,
+  granted: ['shop:conflict:override'] as readonly string[],
+  permissionsKnown(): boolean {
+    return this.known;
+  },
+  hasAnyPermission(required: readonly string[]): boolean {
+    return required.some(code => this.granted.includes(code));
+  },
 };
 
 const stubService = {
@@ -50,6 +63,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: stubService },
+        { provide: AuthService, useValue: authStub },
         { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
       ],
     }).compileComponents();
@@ -113,7 +127,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
         new HttpErrorResponse({
           status: 409,
           statusText: 'Conflict',
-          error: { conflicts: [{ type: 'HARD', code: 'OVERLAP', message: 'Overlapping appointment' }] },
+          error: { conflicts: [{ severity: 'HARD', code: 'OVERLAP', message: 'Overlapping appointment' }] },
         }),
       ),
     );
@@ -124,6 +138,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: stubService },
+        { provide: AuthService, useValue: authStub },
         { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
       ],
     }).compileComponents();
@@ -163,7 +178,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
         new HttpErrorResponse({
           status: 409,
           statusText: 'Conflict',
-          error: { conflicts: [{ type: 'HARD', code: 'BAY_DOUBLE_BOOKED', message: 'Bay is booked' }] },
+          error: { conflicts: [{ severity: 'HARD', code: 'BAY_DOUBLE_BOOKED', message: 'Bay is booked' }] },
         }),
       ),
     );
@@ -174,6 +189,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: stubService },
+        { provide: AuthService, useValue: authStub },
         { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
       ],
     }).compileComponents();
@@ -226,6 +242,18 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     });
   });
 
+  it('offers no override to a caller without shop:conflict:override, whatever is recorded (CAP-326 D12)', async () => {
+    authStub.granted = ['appointments:reschedule'];
+    try {
+      await setup();
+      expect(fixture.debugElement.query(By.css('.recorded-conflicts'))).toBeTruthy();
+      expect(fixture.debugElement.query(By.css('.enable-override-btn'))).toBeNull();
+      expect(component.canOverride()).toBe(false);
+    } finally {
+      authStub.granted = ['shop:conflict:override'];
+    }
+  });
+
   it('offers no override when nothing recorded is overridable', async () => {
     vi.clearAllMocks();
     stubService.getAppointment.mockReturnValue(
@@ -239,6 +267,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
       providers: [
         provideRouter([]),
         { provide: AppointmentService, useValue: stubService },
+        { provide: AuthService, useValue: authStub },
         { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
       ],
     }).compileComponents();

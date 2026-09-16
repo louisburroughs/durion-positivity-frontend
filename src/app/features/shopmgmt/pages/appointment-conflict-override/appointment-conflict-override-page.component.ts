@@ -4,6 +4,8 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
+import { SHOPMGMT_PAGE } from '../../../../core/security/route-permissions';
 import { AppointmentService } from '../../services/appointment.service';
 import type { AppointmentConflict, AppointmentDetail, Conflict, RescheduleRequest } from '../../models/appointment.models';
 
@@ -17,6 +19,7 @@ import type { AppointmentConflict, AppointmentDetail, Conflict, RescheduleReques
 export class AppointmentConflictOverridePageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly appointmentService = inject(AppointmentService);
+  private readonly auth = inject(AuthService);
 
   readonly loading = signal(false);
   readonly appointment = signal<AppointmentDetail | null>(null);
@@ -48,11 +51,19 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
    * the change, and nothing in that panel can be overridden — the override below acts on the
    * conflicts recorded against the appointment, never on a refused attempt.
    */
-  readonly hasHardConflict = computed(() => this.conflicts().some(conflict => conflict.type === 'HARD'));
+  readonly hasHardConflict = computed(() => this.conflicts().some(conflict => conflict.severity === 'HARD'));
   /** The SOFT conflicts recorded against the appointment that a manager may still accept (CAP-326). */
   readonly recordedConflicts = computed<readonly AppointmentConflict[]>(() => this.appointment()?.conflicts ?? []);
   readonly overridableConflicts = computed(() => this.recordedConflicts().filter(conflict => conflict.overridable));
-  readonly hasOverridableConflicts = computed(() => this.overridableConflicts().length > 0);
+  /**
+   * The override is gated on `shop:conflict:override` (CAP-326 D12), not on the reschedule codes
+   * that open this page. Permissions unknown (a legacy token) is not "none granted", as
+   * `canAccess()` reads it; the server still refuses with 403 either way.
+   */
+  readonly canOverride = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(SHOPMGMT_PAGE.conflictOverride),
+  );
+  readonly hasOverridableConflicts = computed(() => this.canOverride() && this.overridableConflicts().length > 0);
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
@@ -143,8 +154,10 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
         overrideReason: this.overrideForm.controls.overrideReason.value,
       })
       .subscribe({
-        next: (appointment) => {
-          this.appointment.set(appointment);
+        next: () => {
+          // The 201 body is the override record, not the appointment: re-read it so the recorded
+          // conflicts show as overridden rather than replacing the summary with the record.
+          this.refreshAppointment();
           this.overrideLoading.set(false);
           this.overrideSuccess.set(true);
           this.overrideMode.set(false);

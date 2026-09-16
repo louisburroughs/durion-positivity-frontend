@@ -105,7 +105,7 @@ export class AppointmentCreatePageComponent implements OnInit {
     if (err.status === 409) {
       const conflictList: Conflict[] = body?.conflicts ?? [];
       this.conflicts.set(conflictList);
-      const hasHard = conflictList.some(c => c.type === 'HARD');
+      const hasHard = conflictList.some(c => c.severity === 'HARD');
       this.hasHardConflict.set(hasHard);
       this.hasSoftOnly.set(!hasHard && conflictList.length > 0);
     } else if (err.status === 422) {

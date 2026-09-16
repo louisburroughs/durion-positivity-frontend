@@ -52,6 +52,7 @@ const JOB: JobRequirement = {
   label: '4-wheel alignment',
   operationCode: 'WHEEL-ALIGNMENT-4-WHEEL',
   skillCodes: ['ALIGN'],
+  skillRequirementsConfigured: true,
   durationHours: 1.5,
 };
 
@@ -109,6 +110,7 @@ const VIEW: CapacityCalendarView = {
     },
   ],
   degraded: true,
+  skillRequirementsUnknown: false,
 };
 
 const capacityStub = {

@@ -1919,6 +1919,7 @@
       "TIME": "Time",
       "REQUIREMENT": "Resources required: {{bays}} ({{eligible}} of {{total}} bays) + a certified technician ({{technicians}}) + {{hours}} hr unbroken. Amber days have the equipment but not the person.",
       "DEGRADED": "Some capacity data could not be loaded, so these figures may be incomplete.",
+      "SKILLS_NOT_CONFIGURED": "The catalog has not declared which skills this service needs, so every rostered technician is counted as able to do it. Configure the service's skill requirements to see certified capacity.",
       "LEGEND_ARIA": "What the capacity colours mean",
       "LEGEND_LOAD": "shop load",
       "LEGEND_FITS": "the job fits here",

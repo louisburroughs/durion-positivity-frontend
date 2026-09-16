@@ -150,6 +150,9 @@ export class CapacityCalendarService {
         .filter(skill => skill.minGvwrClass == null && skill.maxGvwrClass == null)
         .map(skill => skill.skillCode ?? '')
         .filter(code => code.length > 0),
+      // Null is "never configured" (the contract's requirementsConfiguredAt is null too); an empty
+      // list with a configured-at is a declared "unconstrained". Only the former is a warning.
+      skillRequirementsConfigured: service.requiredSkills != null || service.requirementsConfiguredAt != null,
       durationHours: service.defaultLaborHours ? service.defaultLaborHours / 10 : 1,
     };
   }
@@ -159,6 +162,7 @@ export class CapacityCalendarService {
     return {
       label,
       skillCodes: [],
+      skillRequirementsConfigured: true,
       durationHours: 1,
     };
   }
@@ -321,6 +325,7 @@ export class CapacityCalendarService {
         !bays.ok ||
         !technicians.ok ||
         [...schedules.values()].some(schedule => schedule === undefined),
+      skillRequirementsUnknown: !request.job.skillRequirementsConfigured,
     };
   }
 

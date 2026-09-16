@@ -64,8 +64,8 @@ const STUB_CREATED_APPOINTMENT = {
   facilityId: 'fac-1',
 };
 
-const SOFT_CONFLICT = { type: 'SOFT', code: 'SLOT_PREFERRED', message: 'Preferred slot occupied', overridable: true };
-const HARD_CONFLICT = { type: 'HARD', code: 'FACILITY_CLOSED', message: 'Facility closed on this date', overridable: false };
+const SOFT_CONFLICT = { severity: 'SOFT', code: 'SLOT_PREFERRED', message: 'Preferred slot occupied', overridable: true };
+const HARD_CONFLICT = { severity: 'HARD', code: 'FACILITY_CLOSED', message: 'Facility closed on this date', overridable: false };
 
 const CONFLICT_PAYLOAD_SOFT = {
   conflicts: [SOFT_CONFLICT],

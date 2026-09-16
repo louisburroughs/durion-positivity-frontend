@@ -54,12 +54,14 @@ const ALIGNMENT_JOB: JobRequirement = {
   label: '4-wheel alignment',
   operationCode: 'WHEEL-ALIGNMENT-4-WHEEL',
   skillCodes: ['ALIGN'],
+  skillRequirementsConfigured: true,
   durationHours: 1.5,
 };
 
 const ALL_WORK: JobRequirement = {
   label: '',
   skillCodes: [],
+  skillRequirementsConfigured: true,
   durationHours: 1,
 };
 
@@ -123,6 +125,7 @@ function view(overrides: Partial<CapacityCalendarView> = {}): CapacityCalendarVi
       },
     ],
     degraded: false,
+    skillRequirementsUnknown: false,
     ...overrides,
   };
 }
@@ -411,6 +414,12 @@ describe('ScheduleViewPageComponent', () => {
   });
 
   // ── Honest degradation ────────────────────────────────────────────────────
+
+  it('says so when the catalog never declared the service\'s skill requirements (spec D4)', async () => {
+    capacityStub.getCalendar.mockReturnValue(of(view({ skillRequirementsUnknown: true })));
+    await setup();
+    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.SKILLS_NOT_CONFIGURED');
+  });
 
   it('warns when an upstream source was unavailable', async () => {
     capacityStub.getCalendar.mockReturnValue(of(view({ degraded: true })));

@@ -121,7 +121,7 @@ describe('AppointmentDispatchAssignPageComponent [CAP-138]', () => {
         new HttpErrorResponse({
           status: 409,
           statusText: 'Conflict',
-          error: { conflicts: [{ type: 'SOFT', code: 'SKILL_GAP', message: 'Skill mismatch' }] },
+          error: { conflicts: [{ severity: 'SOFT', code: 'SKILL_GAP', message: 'Skill mismatch' }] },
         }),
       ),
     );

@@ -62,6 +62,7 @@ const ALIGNMENT_JOB: JobRequirement = {
   label: '4-wheel alignment',
   operationCode: ALIGNMENT_CODE,
   skillCodes: [],
+  skillRequirementsConfigured: true,
   durationHours: 1.5,
 };
 
@@ -71,6 +72,7 @@ const ALIGN_CERTIFIED_JOB: JobRequirement = { ...ALIGNMENT_JOB, skillCodes: ['AL
 const ALL_WORK: JobRequirement = {
   label: '',
   skillCodes: [],
+  skillRequirementsConfigured: true,
   durationHours: 1,
 };
 
@@ -117,11 +119,12 @@ describe('isEligibleBay', () => {
   });
 
   it('D14: a service the catalog gave no code is general work — nothing is inferred from its name', () => {
-    const unnamed = { ...ALIGNMENT_JOB, label: 'Alignment check (one-off)', operationCode: undefined };
+    const unnamed = { ...ALIGNMENT_JOB, serviceId: 'svc-oneoff', label: 'Alignment check (one-off)', operationCode: undefined };
     const wash = bay({ bayId: 'wash', bayType: 'WASH_DETAIL' });
     expect(isEligibleBay(general, unnamed, [rack, general, wash])).toBe(true);
     expect(isEligibleBay(rack, unnamed, [rack, general, wash])).toBe(true);
-    expect(isEligibleBay(wash, unnamed, [rack, general, wash])).toBe(true);
+    // Still mechanical work: the wash bay stays out (D14's one exception).
+    expect(isEligibleBay(wash, unnamed, [rack, general, wash])).toBe(false);
   });
 
   it('D14: an out-of-service claimant does not reserve the operation', () => {
@@ -143,8 +146,9 @@ describe('isEligibleBay', () => {
     expect(isEligibleBay(down, ALIGNMENT_JOB)).toBe(false);
   });
 
-  it('treats an unfiltered job as every bay', () => {
+  it('treats an unfiltered job as every bay, the wash bay included', () => {
     expect(isEligibleBay(bay({ bayId: 'a', bayType: 'TIRE_SERVICE' }), ALL_WORK)).toBe(true);
+    expect(isEligibleBay(bay({ bayId: 'w', bayType: 'WASH_DETAIL' }), ALL_WORK)).toBe(true);
   });
 });
 
