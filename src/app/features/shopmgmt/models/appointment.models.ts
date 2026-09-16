@@ -6,6 +6,20 @@ export interface AppointmentDetail {
   scheduledEnd?: string;
   facilityTimeZoneId?: string;
   rescheduleCount?: number;
+  /** SOFT conflicts recorded against the appointment (CAP-326); HARD ones never reach here. */
+  conflicts?: AppointmentConflict[];
+}
+
+/** One recorded scheduling conflict, as `POST /v1/appointments/{id}/conflict-override` names it. */
+export interface AppointmentConflict {
+  conflictId: string;
+  code: string;
+  message: string;
+  severity: string;
+  /** SOFT and not yet overridden. */
+  overridable: boolean;
+  overridden: boolean;
+  resourceId?: string;
 }
 
 export interface AssignmentDetail {

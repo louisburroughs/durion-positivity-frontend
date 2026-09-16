@@ -5,12 +5,13 @@ import { BayAPIService, LocationAPIService } from '@durion-sdk/location';
 import type { BayResponse } from '@durion-sdk/location';
 import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
-import { ScheduleAPIService, TechnicianAPIService } from '@durion-sdk/shop-manager';
+import { ScheduleAPIService, TechnicianAPIService, TechnicianCredentialResponseStatusEnum } from '@durion-sdk/shop-manager';
 import type {
   LocationTechnicianRosterEntryResponse,
   ScheduleEventView,
   ScheduleResourceView,
   ScheduleViewResponse,
+  TechnicianCredentialResponse,
 } from '@durion-sdk/shop-manager';
 import {
   AppointmentState,
@@ -173,12 +174,17 @@ export class CapacityCalendarService {
     return {
       serviceId: service.id,
       label: service.name ?? '',
-      // #473: the catalog cannot say, so this stays empty and `bayTypes` is used.
-      capabilityIds: [],
+      // CAP-325 D14: the operation code is the eligibility key; `bayTypes` is only
+      // the fallback for a service that has none.
+      operationCode: service.operationCode ?? undefined,
       bayTypes,
-      // #473 again: no required-skill projection, so the technician axis
-      // constrains only through bay skill requirements, never through the job.
-      skillCodes: [],
+      // CAP-329: the catalog's declared requirement. The calendar has no vehicle, so
+      // only ANY-class requirements apply here — exactly what the server resolves
+      // without a vehicle (spec D13); a retired skill is still named, never dropped.
+      skillCodes: (service.requiredSkills ?? [])
+        .filter(skill => skill.minGvwrClass == null && skill.maxGvwrClass == null)
+        .map(skill => skill.skillCode ?? '')
+        .filter(code => code.length > 0),
       durationHours: service.defaultLaborHours ? service.defaultLaborHours / 10 : 1,
     };
   }
@@ -187,7 +193,6 @@ export class CapacityCalendarService {
   static allWorkJob(label: string): JobRequirement {
     return {
       label,
-      capabilityIds: [],
       bayTypes: [],
       skillCodes: [],
       durationHours: 1,
@@ -236,8 +241,8 @@ export class CapacityCalendarService {
       bayId: bay.id,
       name: bay.name,
       bayType: bay.bayType ?? '',
-      capabilityIds: bay.serviceCapabilityIds ?? [],
-      skillRequirementIds: bay.skillRequirementIds ?? [],
+      capabilityCodes: bay.serviceCapabilityCodes ?? [],
+      maxDutyClass: bay.maxDutyClass,
       outOfService: bay.status === BAY_OUT_OF_SERVICE,
     };
   }
@@ -352,8 +357,9 @@ export class CapacityCalendarService {
         !bays.ok ||
         !technicians.ok ||
         [...schedules.values()].some(schedule => schedule === undefined),
-      eligibilityIsApproximate:
-        request.job.capabilityIds.length === 0 && request.job.bayTypes.length > 0,
+      // Approximate only for a job with no operation code, where the bay-type table
+      // stands in for the specialty map (CAP-325 D14).
+      eligibilityIsApproximate: !request.job.operationCode && request.job.bayTypes.length > 0,
     };
   }
 
@@ -452,7 +458,7 @@ export class CapacityCalendarService {
     const overlayUnavailable = schedule?.availabilityOverlayStatus !== 'AVAILABLE';
 
     return roster.map(entry => {
-      const personId = entry.personId ?? entry.technicianId ?? entry.mechanicId ?? '';
+      const personId = entry.personId ?? entry.mechanicId ?? '';
       const lane = lanes.find(candidate => candidate.resourceId === personId);
       const events = lane?.events ?? [];
       const shifts = events.filter(event => event.eventType === EVENT_SHIFT);
@@ -477,7 +483,7 @@ export class CapacityCalendarService {
       return {
         personId,
         displayName: displayName(entry),
-        skills: entry.skills ?? [],
+        skills: heldSkillCodes(entry.credentials),
         assignedHours,
         onDutyHours,
       };
@@ -622,4 +628,16 @@ function displayName(entry: LocationTechnicianRosterEntryResponse): string {
 }
 
 /** Re-exported so the page can narrow a day without importing the model file twice. */
+/**
+ * Skill codes a technician holds today (CAP-328): the credentials the roster reports
+ * ACTIVE on its reference date. Expired, revoked and superseded credentials are
+ * shown elsewhere; here they are not competence.
+ */
+function heldSkillCodes(credentials: readonly TechnicianCredentialResponse[] | undefined): string[] {
+  return (credentials ?? [])
+    .filter(credential => credential.status === TechnicianCredentialResponseStatusEnum.Active)
+    .map(credential => credential.skillCode ?? '')
+    .filter(code => code.length > 0);
+}
+
 export { isEligibleBay, isCertifiedTechnician };

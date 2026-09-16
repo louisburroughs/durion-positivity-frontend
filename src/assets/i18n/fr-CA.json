@@ -1997,7 +1997,13 @@
         "SKILLS": "Codes de compétence",
         "SKILLS_ARIA": "Codes de compétence du mécanicien",
         "LAST_SYNCED": "Dernière synchronisation",
-        "ARIA_LABEL": "Liste des mécaniciens"
+        "ARIA_LABEL": "Liste des mécaniciens",
+        "CREDENTIAL_STATUS": {
+          "ACTIVE": "active",
+          "EXPIRED": "expirée",
+          "REVOKED": "révoquée",
+          "SUPERSEDED": "remplacée"
+        }
       },
       "PAGINATION": {
         "ARIA_LABEL": "Pagination de la liste des mécaniciens",
@@ -2116,8 +2122,12 @@
         "LOAD": "Impossible de charger le rendez-vous.",
         "CONFLICTS": "Des conflits ont été trouvés pour le créneau sélectionné.",
         "RESCHEDULE": "Impossible de replanifier le rendez-vous.",
-        "OVERRIDE": "Impossible d'exécuter l'outrepassement."
-      }
+        "OVERRIDE": "Impossible d'exécuter l'outrepassement.",
+        "NOTHING_TO_OVERRIDE": "Aucun conflit ne reste à déroger pour ce rendez-vous."
+      },
+      "RECORDED_CONFLICTS": "Conflits consignés pour ce rendez-vous",
+      "OVERRIDDEN": "Dérogation accordée",
+      "HARD_NOT_OVERRIDABLE": "Ces conflits ont bloqué la modification et ne peuvent pas faire l’objet d’une dérogation; choisissez une autre plage."
     },
     "LANDING": {
       "TITLE": "Gestion de l'atelier",

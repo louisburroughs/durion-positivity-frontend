@@ -108,13 +108,23 @@
                   }
                 </td>
                 <td [attr.data-label]="'SHOPMGMT.MECHANIC_ROSTER.TABLE.SKILLS' | translate">
-                  @if (mechanic.skills?.length) {
+                  @if (mechanic.credentials?.length) {
                     <div
                       class="skill-list"
                       [attr.aria-label]="'SHOPMGMT.MECHANIC_ROSTER.TABLE.SKILLS_ARIA' | translate"
                     >
-                      @for (skill of mechanic.skills; track skill) {
-                        <span class="skill-code">{{ skill }}</span>
+                      @for (credential of mechanic.credentials; track credential.credentialId) {
+                        <span
+                          class="skill-code"
+                          [class.skill-code--lapsed]="credential.status !== credentialStatusEnum.Active"
+                        >
+                          {{ credential.skillCode }}
+                          @if (credential.status !== credentialStatusEnum.Active) {
+                            <span class="skill-code__status">
+                              {{ 'SHOPMGMT.MECHANIC_ROSTER.TABLE.CREDENTIAL_STATUS.' + credential.status | translate }}
+                            </span>
+                          }
+                        </span>
                       }
                     </div>
                   } @else {

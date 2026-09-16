@@ -1997,7 +1997,13 @@
         "SKILLS": "Códigos de habilidad",
         "SKILLS_ARIA": "Códigos de habilidad del mecánico",
         "LAST_SYNCED": "Última sincronización",
-        "ARIA_LABEL": "Lista de mecánicos"
+        "ARIA_LABEL": "Lista de mecánicos",
+        "CREDENTIAL_STATUS": {
+          "ACTIVE": "activa",
+          "EXPIRED": "vencida",
+          "REVOKED": "revocada",
+          "SUPERSEDED": "reemplazada"
+        }
       },
       "PAGINATION": {
         "ARIA_LABEL": "Paginación de la lista de mecánicos",
@@ -2116,8 +2122,12 @@
         "LOAD": "No se pudo cargar la cita.",
         "CONFLICTS": "Se encontraron conflictos para la franja seleccionada.",
         "RESCHEDULE": "No se pudo reprogramar la cita.",
-        "OVERRIDE": "No se pudo ejecutar la sobrescritura."
-      }
+        "OVERRIDE": "No se pudo ejecutar la sobrescritura.",
+        "NOTHING_TO_OVERRIDE": "No queda ningún conflicto por anular en esta cita."
+      },
+      "RECORDED_CONFLICTS": "Conflictos registrados en esta cita",
+      "OVERRIDDEN": "Anulado",
+      "HARD_NOT_OVERRIDABLE": "Estos conflictos bloquearon el cambio y no se pueden anular; elija otro horario."
     },
     "LANDING": {
       "TITLE": "Gestión del Taller",

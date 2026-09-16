@@ -3,6 +3,7 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
   MechanicRosterEntryResponseStatusEnum,
+  TechnicianCredentialResponseStatusEnum,
   type MechanicRosterEntryResponse,
 } from '@durion-sdk/shop-manager';
 import { Subscription } from 'rxjs';
@@ -27,6 +28,8 @@ export class MechanicRosterPageComponent {
   private readonly reloadToken = signal(0);
 
   readonly statusEnum = MechanicRosterEntryResponseStatusEnum;
+  /** CAP-328: a credential is held only while ACTIVE on the roster's reference date. */
+  readonly credentialStatusEnum = TechnicianCredentialResponseStatusEnum;
   readonly statusOptions = [
     MechanicRosterEntryResponseStatusEnum.Active,
     MechanicRosterEntryResponseStatusEnum.Inactive,

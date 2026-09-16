@@ -35,16 +35,14 @@ const BAYS = [
     bayId: 'gen-1',
     name: 'Bay 1',
     bayType: 'GENERAL_SERVICE',
-    capabilityIds: [],
-    skillRequirementIds: [],
+    capabilityCodes: [],
     outOfService: false,
   },
   {
     bayId: 'rack',
     name: 'Bay 5',
     bayType: 'ALIGNMENT',
-    capabilityIds: [],
-    skillRequirementIds: ['ALIGN'],
+    capabilityCodes: ['WHEEL-ALIGNMENT-4-WHEEL'],
     outOfService: false,
   },
 ];
@@ -52,9 +50,8 @@ const BAYS = [
 const JOB: JobRequirement = {
   serviceId: 'svc-align',
   label: '4-wheel alignment',
-  capabilityIds: [],
   bayTypes: ['ALIGNMENT'],
-  skillCodes: [],
+  skillCodes: ['ALIGN'],
   durationHours: 1.5,
 };
 

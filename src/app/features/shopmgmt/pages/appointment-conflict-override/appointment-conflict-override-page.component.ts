@@ -5,7 +5,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { AppointmentService } from '../../services/appointment.service';
-import type { AppointmentDetail, Conflict, RescheduleRequest } from '../../models/appointment.models';
+import type { AppointmentConflict, AppointmentDetail, Conflict, RescheduleRequest } from '../../models/appointment.models';
 
 @Component({
   selector: 'app-appointment-conflict-override-page',
@@ -43,6 +43,10 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
   private appointmentId = '';
 
   readonly hasConflicts = computed(() => this.conflicts().length > 0);
+  /** The SOFT conflicts recorded against the appointment that a manager may still accept (CAP-326). */
+  readonly recordedConflicts = computed<readonly AppointmentConflict[]>(() => this.appointment()?.conflicts ?? []);
+  readonly overridableConflicts = computed(() => this.recordedConflicts().filter(conflict => conflict.overridable));
+  readonly hasOverridableConflicts = computed(() => this.overridableConflicts().length > 0);
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
@@ -115,13 +119,23 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
       this.overrideForm.markAllAsTouched();
       return;
     }
+    // The override accepts the recorded SOFT conflicts by id (spec D18.3). A HARD conflict is never
+    // recorded against an appointment — it refused the booking — so there is nothing to send for it.
+    const conflictIds = this.overridableConflicts().map(conflict => conflict.conflictId);
+    if (conflictIds.length === 0) {
+      this.overrideError.set('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.NOTHING_TO_OVERRIDE');
+      return;
+    }
 
     this.overrideLoading.set(true);
     this.overrideSuccess.set(false);
     this.overrideError.set(null);
 
     this.appointmentService
-      .executeOverride(this.appointmentId, { overrideReason: this.overrideForm.controls.overrideReason.value })
+      .executeOverride(this.appointmentId, {
+        conflictIds,
+        overrideReason: this.overrideForm.controls.overrideReason.value,
+      })
       .subscribe({
         next: (appointment) => {
           this.appointment.set(appointment);

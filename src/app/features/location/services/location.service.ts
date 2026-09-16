@@ -193,8 +193,10 @@ export class LocationService {
         maxConcurrentVehicles: this.asOptionalNumber(capacity['maxConcurrentVehicles']) ?? maxConcurrentVehicles,
       },
       maxConcurrentVehicles,
-      serviceCapabilityIds: this.asStringArray(body['serviceCapabilityIds']),
-      skillRequirementIds: this.asStringArray(body['skillRequirementIds']),
+      // CAP-325: operation codes this bay type alone performs (D14) and the heaviest GVWR class it
+      // accepts (D13). Skill requirements belong to the catalog service, not the bay (CAP-329).
+      serviceCapabilityCodes: this.asStringArray(body['serviceCapabilityCodes']),
+      maxDutyClass: this.asOptionalNumber(body['maxDutyClass']),
       status: this.asOptionalString(body['status']),
     };
   }

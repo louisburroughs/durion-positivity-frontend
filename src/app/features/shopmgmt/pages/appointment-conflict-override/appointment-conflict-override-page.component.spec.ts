@@ -8,6 +8,23 @@ import { AppointmentConflictOverridePageComponent } from './appointment-conflict
 import { TranslateModule } from '@ngx-translate/core';
 import { AppointmentService } from '../../services/appointment.service';
 
+/** CAP-326: a booking that warned — one SOFT conflict recorded, still overridable. */
+const APPOINTMENT_WITH_SOFT_CONFLICT = {
+  appointmentId: 'appt-1',
+  status: 'SCHEDULED',
+  facilityId: 'loc-1',
+  conflicts: [
+    {
+      conflictId: 'conf-1',
+      code: 'FACILITY_NEAR_CAPACITY',
+      message: 'Booking puts the shop at 90% of its bays.',
+      severity: 'SOFT',
+      overridable: true,
+      overridden: false,
+    },
+  ],
+};
+
 const stubService = {
   getAppointment: vi.fn(),
   rescheduleAppointment: vi.fn(),
@@ -24,7 +41,7 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
 
   const setup = async () => {
     vi.clearAllMocks();
-    stubService.getAppointment.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
+    stubService.getAppointment.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
     stubService.rescheduleAppointment.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
     stubService.executeOverride.mockReturnValue(of({ appointmentId: 'appt-1', status: 'SCHEDULED', facilityId: 'loc-1' }));
 
@@ -128,7 +145,16 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     expect(panel).toBeTruthy();
   });
 
-  it('calls executeOverride with overrideReason on override submit', async () => {
+  it('lists the conflicts recorded against the appointment and offers the override', async () => {
+    await setup();
+
+    const recorded = fixture.debugElement.query(By.css('.recorded-conflicts'));
+    expect(recorded).toBeTruthy();
+    expect(recorded.nativeElement.textContent).toContain('FACILITY_NEAR_CAPACITY');
+    expect(fixture.debugElement.query(By.css('.enable-override-btn'))).toBeTruthy();
+  });
+
+  it('calls executeOverride with the recorded conflict ids and the reason (CAP-326 D18.3)', async () => {
     await setup();
     component.enableOverrideMode();
     component.overrideForm.setValue({ overrideReason: 'Manager approval granted' });
@@ -138,7 +164,38 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     button.nativeElement.click();
 
     expect(stubService.executeOverride).toHaveBeenCalledWith('appt-1', {
+      conflictIds: ['conf-1'],
       overrideReason: 'Manager approval granted',
     });
+  });
+
+  it('offers no override when nothing recorded is overridable', async () => {
+    vi.clearAllMocks();
+    stubService.getAppointment.mockReturnValue(
+      of({ ...APPOINTMENT_WITH_SOFT_CONFLICT, conflicts: [{ ...APPOINTMENT_WITH_SOFT_CONFLICT.conflicts[0], overridable: false, overridden: true }] }),
+    );
+    stubService.rescheduleAppointment.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
+    stubService.executeOverride.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: stubService },
+        { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentConflictOverridePageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.query(By.css('.recorded-conflicts'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('.enable-override-btn'))).toBeNull();
+    component.enableOverrideMode();
+    component.overrideForm.setValue({ overrideReason: 'Nothing left' });
+    component.submitOverride();
+    expect(stubService.executeOverride).not.toHaveBeenCalled();
+    expect(component.overrideError()).toBe('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.NOTHING_TO_OVERRIDE');
   });
 });
