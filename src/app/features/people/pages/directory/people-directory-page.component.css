@@ -109,7 +109,7 @@
 
 .directory-table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--input-border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
 }
 
@@ -127,8 +127,8 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--cardBackground) 80%, var(--input-border));
-  border-bottom: 1px solid var(--input-border);
+  background: color-mix(in srgb, var(--cardBackground) 80%, var(--border-color));
+  border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
   user-select: none;
 }
@@ -152,7 +152,7 @@
 }
 
 .directory-row {
-  border-bottom: 1px solid color-mix(in srgb, var(--input-border) 60%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 60%, transparent);
 }
 
 .directory-row:last-child {

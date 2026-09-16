@@ -59,7 +59,7 @@
 	padding: var(--space-3) var(--space-4);
 	border-radius: var(--radius-md);
 	background: color-mix(in srgb, var(--brand-primary) 8%, var(--cardBackground));
-	border: 1px solid color-mix(in srgb, var(--brand-primary) 25%, var(--input-border));
+	border: 1px solid color-mix(in srgb, var(--brand-primary) 25%, var(--border-color));
 }
 
 .jobs-banner--error { color: var(--status-error-fg);
@@ -74,7 +74,7 @@
 
 .jobs-page__table-wrap {
 	overflow-x: auto;
-	border: 1px solid var(--input-border);
+	border: 1px solid var(--border-color);
 	border-radius: var(--radius-lg);
 	background: var(--cardBackground);
 }
@@ -87,7 +87,7 @@
 .jobs-table th,
 .jobs-table td {
 	padding: var(--space-3);
-	border-bottom: 1px solid color-mix(in srgb, var(--input-border) 72%, transparent);
+	border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
 	text-align: left;
 }
 

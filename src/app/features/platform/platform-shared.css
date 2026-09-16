@@ -115,7 +115,7 @@
 	gap: var(--space-3);
 	margin: 0 0 var(--space-3);
 	padding: var(--space-3) var(--space-4);
-	border: 1px solid var(--input-border);
+	border: 1px solid var(--border-color);
 	border-radius: var(--radius-md);
 	background: var(--cardBackground);
 	color: var(--currentTextColor);
@@ -223,7 +223,7 @@
 
 .plt-table-wrap {
 	overflow-x: auto;
-	border: 1px solid var(--input-border);
+	border: 1px solid var(--border-color);
 	border-radius: var(--radius-md);
 	background: var(--cardBackground);
 }
@@ -237,7 +237,7 @@
 .plt-table th,
 .plt-table td {
 	padding: var(--space-3);
-	border-bottom: 1px solid var(--input-border);
+	border-bottom: 1px solid var(--border-color);
 	text-align: left;
 	vertical-align: top;
 	color: var(--currentTextColor);

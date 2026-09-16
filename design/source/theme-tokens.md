@@ -18,7 +18,7 @@ Defined in `:root` and never changed by theme switching.
 | Token | Value | Purpose |
 |---|---|---|
 | `--durion-blue-800 … 50` | See styles.css | Blueprint Blue ramp |
-| `--durion-graphite-800 … 100` | See styles.css | Graphite grey ramp |
+| `--durion-graphite-800 … 100` | See styles.css | Graphite grey ramp (`-400` = `#8a91a0`, added for the dark form-field outline) |
 | `--durion-teal-600 … 100` | See styles.css | Electric Teal ramp |
 | `--durion-grey-900 … 100` | See styles.css | Neutral ramp |
 | `--durion-gold-600 … 100` | See styles.css | **Heritage Gold ramp (sampled from the logo shield, #cc9030)** |
@@ -115,9 +115,9 @@ These flip when `data-theme` changes on `<html>`. **Consume these in all compone
 
 | Token | Light | Dark | Rationale |
 |---|---|---|---|
-| `--border-color` | graphite-200 | graphite-700 | Consistent border across components |
+| `--border-color` | graphite-200 | graphite-700 | **Decorative** border: panel/card outlines, table rules, dividers, dashed empty-states. Deliberately subtle and below 3:1 — never use it as a control's only boundary. |
 | `--input-background` | white | graphite-800 | Form field fill |
-| `--input-border` | graphite-200 | graphite-600 | Form field outline |
+| `--input-border` | graphite-500 | graphite-400 | **Form-field and control outline.** Must clear WCAG 1.4.11's 3:1 against the field fill AND the surface around it. The old graphite-200 / graphite-600 pair was 1.4:1 light and 1.9:1 dark — invisible outlines. Decorative borders (panels, tables, modals, dividers) use `--border-color`, not this. |
 | `--input-focus-border` | blue-500 | blue-400 | Focus ring color |
 | `--input-placeholder-color` | handleColor | handleColor | AA-compliant placeholder text |
 | `--shadow-card` | `0 2px 8px rgba(0,0,0,.08)` | `0 2px 8px rgba(0,0,0,.4)` | Card elevation |
@@ -140,6 +140,12 @@ These flip when `data-theme` changes on `<html>`. **Consume these in all compone
 
 > **Status surfaces use the `--status-<kind>-bg` + `-fg` pair** (see `durion-style-guide.md` §8),
 > never `color-mix(--functional-x …)` + a functional text colour — that fails AA in dark.
+
+> **Pick the border token by what the border does.** A boundary that is a control's only
+> visual affordance — a field outline, an outline button, a dropzone, a step indicator —
+> is a UI component under WCAG 1.4.11 and needs 3:1 against both the fill inside it and the
+> surface behind it: use `--input-border`. A border that merely groups or separates content
+> is decorative and should stay subtle: use `--border-color`.
 
 > **Never mix a raw Tier-1 ramp value into a surface or use one as text.** The raw ramps are
 > theme-agnostic: `color-mix(in srgb, var(--durion-graphite-100) 58%, var(--cardBackground))`

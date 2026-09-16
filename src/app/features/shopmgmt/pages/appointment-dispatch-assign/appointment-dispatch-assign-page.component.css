@@ -14,7 +14,7 @@
 .assignment-history,
 .create-form,
 .conflict-panel {
-  border: 1px solid var(--input-border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--cardBackground);
   padding: var(--space-4);
@@ -22,7 +22,7 @@
 }
 
 .assignment-item {
-  border: 1px solid var(--input-border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   padding: var(--space-3);
   margin-bottom: var(--space-2);
@@ -45,7 +45,7 @@
 }
 
 .conflict-item {
-  border: 1px solid var(--input-border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   padding: var(--space-3);
   margin-bottom: var(--space-2);

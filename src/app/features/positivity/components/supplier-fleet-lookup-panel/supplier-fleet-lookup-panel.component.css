@@ -3,7 +3,7 @@
 	display: grid;
 	gap: var(--space-3);
 	padding: var(--space-4);
-	border: 1px solid var(--input-border);
+	border: 1px solid var(--border-color);
 	border-radius: var(--radius-md);
 	background: var(--cardBackground);
 }
@@ -80,7 +80,7 @@
 	display: grid;
 	gap: var(--space-1);
 	padding: var(--space-3);
-	border: 1px dashed var(--input-border);
+	border: 1px dashed var(--border-color);
 	border-radius: var(--radius-md);
 	background: var(--surface-variant);
 }

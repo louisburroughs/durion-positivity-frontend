@@ -169,7 +169,7 @@
 .add-vehicle {
   margin-top: var(--space-3);
   padding: var(--space-4);
-  border: 1px solid var(--input-border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--brand-primary) 3%, var(--cardBackground));
   display: flex;

@@ -26,6 +26,7 @@
   --durion-graphite-700: #444a55;
   --durion-graphite-600: #5a616e;
   --durion-graphite-500: #727986;
+  --durion-graphite-400: #8a91a0;  /* form-field outline on dark surfaces — 3.7:1 on the field fill, 3.6:1 on the card */
   --durion-graphite-200: #d7d9dd;
   --durion-graphite-100: #e7e8eb;
 
@@ -122,7 +123,7 @@
   /* Extended local tokens – see design/source/theme-tokens.md */
   --border-color: var(--durion-graphite-200);
   --input-background: #ffffff;
-  --input-border: var(--durion-graphite-200);
+  --input-border: var(--durion-graphite-500); /* graphite-200 (#d7d9dd) is 1.4:1 on a white field — WCAG 1.4.11 wants 3:1; graphite-500 = 4.4:1 */
   --input-focus-border: var(--durion-blue-500);
   --input-placeholder-color: var(--handleColor);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -184,7 +185,7 @@
   --handleColor: var(--durion-graphite-200); /* graphite-500 (#727986) fails 4.5:1 on dark card (#3a3a3e); graphite-200 (#d7d9dd) = 7.9:1 */
   --border-color: var(--durion-graphite-700);
   --input-background: var(--durion-graphite-800);
-  --input-border: var(--durion-graphite-600);
+  --input-border: var(--durion-graphite-400); /* graphite-600 (#5a616e) is 1.9:1 on the graphite-800 field fill; graphite-400 = 3.7:1 */
   --input-focus-border: var(--durion-blue-400);
   --input-placeholder-color: var(--handleColor);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.4);

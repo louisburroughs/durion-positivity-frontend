@@ -89,7 +89,7 @@
   background: var(--input-background);
   color: var(--currentTextColor);
   border: none;
-  border-bottom: 2px solid color-mix(in srgb, var(--currentTextColor) 50%, transparent);
+  border-bottom: 2px solid var(--input-border);
   border-radius: 0;
   min-height: 2.75rem;
   padding: var(--space-2);
