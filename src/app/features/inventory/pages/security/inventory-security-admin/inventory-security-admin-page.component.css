@@ -52,7 +52,7 @@ code {
 }
 
 .granted {
-  color: var(--brand-primary);
+  color: var(--link-color);
   font-weight: 700;
 }
 

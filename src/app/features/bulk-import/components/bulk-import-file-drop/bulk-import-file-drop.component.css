@@ -1,13 +1,13 @@
 .file-drop {
-	border: 2px dashed color-mix(in srgb, var(--brand-primary) 45%, var(--input-border));
+	border: 2px dashed color-mix(in srgb, var(--link-color) 45%, var(--input-border));
 	border-radius: var(--radius-lg);
-	background: color-mix(in srgb, var(--brand-surface) 55%, var(--cardBackground));
+	background: color-mix(in srgb, var(--cardBackground) 55%, var(--cardBackground));
 	padding: var(--space-5);
 	transition: border-color 150ms ease, background-color 150ms ease;
 }
 
 .file-drop--drag-over {
-	border-color: var(--brand-primary);
+	border-color: var(--link-color);
 	background: color-mix(in srgb, var(--brand-primary) 8%, var(--cardBackground));
 }
 
@@ -36,7 +36,7 @@
 	min-height: 2.75rem;
 	padding: var(--space-2) var(--space-4);
 	border-radius: 999px;
-	border: 1px solid color-mix(in srgb, var(--brand-primary) 40%, var(--input-border));
+	border: 1px solid color-mix(in srgb, var(--link-color) 40%, var(--input-border));
 	background: var(--brand-primary);
 	color: var(--contrastTextColor);
 	font-weight: 600;
@@ -45,7 +45,7 @@
 }
 
 .file-drop__browse-btn:focus-visible {
-	outline: 3px solid color-mix(in srgb, var(--brand-primary) 34%, transparent);
+	outline: 3px solid color-mix(in srgb, var(--input-focus-border) 34%, transparent);
 	outline-offset: 2px;
 }
 
@@ -56,7 +56,7 @@
 
 .file-drop__error {
 	margin: var(--space-3) 0 0;
-	color: var(--functional-error-red);
+	color: var(--status-error-fg);
 	font-size: 0.875rem;
 }
 

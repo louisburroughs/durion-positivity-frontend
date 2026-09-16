@@ -124,7 +124,7 @@ input[type='datetime-local'] {
 
 select:focus,
 input[type='datetime-local']:focus {
-  outline: 2px solid var(--brand-primary);
+  outline: 2px solid var(--input-focus-border);
   outline-offset: 2px;
 }
 

@@ -5,7 +5,7 @@
 }
 
 .exchange-detail__breadcrumb a {
-	color: var(--brand-primary);
+	color: var(--link-color);
 	font-weight: 600;
 	font-size: 0.875rem;
 }
@@ -128,7 +128,7 @@
 }
 
 .exchange-detail__link {
-	color: var(--brand-primary);
+	color: var(--link-color);
 	font-weight: 600;
 }
 

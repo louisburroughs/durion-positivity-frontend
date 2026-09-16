@@ -219,7 +219,7 @@
 
 .rag-ingest-btn:hover {
   background: var(--surface-hover);
-  border-color: var(--brand-primary);
+  border-color: var(--link-color);
 }
 
 .rag-ingest-btn:focus-visible {

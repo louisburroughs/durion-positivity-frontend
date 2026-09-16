@@ -47,7 +47,7 @@
 }
 
 .mapping-confidence--high {
-	color: #14532d;
+	color: var(--status-success-fg);
 	background: color-mix(in srgb, #22c55e 20%, var(--cardBackground));
 }
 
@@ -56,7 +56,7 @@
 }
 
 .mapping-confidence--low {
-	color: #7f1d1d;
+	color: var(--status-error-fg);
 	background: color-mix(in srgb, #ef4444 20%, var(--cardBackground));
 }
 

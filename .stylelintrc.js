@@ -79,6 +79,16 @@ const ROLE = {
     '/--brand-(primary-soft|surface|background)([^a-z-]|$)/',
     '/--durion-[a-z]+-(50|100|200)([^0-9]|$)/',
   ],
+  // A border or outline is a UI boundary (WCAG 1.4.11, 3:1). The same
+  // theme-agnostic tokens fail there for the same reason: --functional-error-red
+  // is 1.8:1 on the dark card, --brand-accent 2.1:1 on the light one. A semantic
+  // border keeps its meaning and takes the matching -fg token; the neutral edge
+  // takes --input-border on a control or --border-color when decorative.
+  '/^(border|outline)([a-z-]*)$/': [
+    '/--brand-(primary|secondary|accent|gold)([^a-z-]|$)/',
+    '/--functional-(error-red|warning|info-blue|success)/',
+    '/--durion-[a-z]+-[0-9]+/',
+  ],
 };
 
 const ROLE_MESSAGE =
@@ -90,7 +100,30 @@ const ROLE_MESSAGE =
   'ramp value or --brand-surface stays near-white in dark mode. --brand-primary as a background is fine.';
 
 /** Directories swept onto theme-aware tokens; the role rules are enforced here. */
-const SWEPT = ['src/app/features/accounting/**/*.css', 'src/app/features/product/**/*.css'];
+const SWEPT = [
+  'src/app/features/accounting/**/*.css',
+  'src/app/features/product/**/*.css',
+  'src/app/features/workexec/**/*.css',
+  'src/app/features/crm/**/*.css',
+  'src/app/features/shopmgmt/**/*.css',
+  'src/app/features/inventory/**/*.css',
+  'src/app/features/security/**/*.css',
+  'src/app/features/people/**/*.css',
+  'src/app/features/landing/**/*.css',
+  'src/app/features/billing/**/*.css',
+  'src/app/features/positivity/**/*.css',
+  'src/app/features/bulk-import/**/*.css',
+  'src/app/features/location/**/*.css',
+  'src/app/features/platform/**/*.css',
+  'src/app/features/shell/**/*.css',
+  'src/app/features/sitemap/**/*.css',
+  'src/app/features/order/**/*.css',
+  'src/app/features/auth/**/*.css',
+  'src/app/features/admin/**/*.css',
+  'src/app/features/system/**/*.css',
+  'src/app/shared/**/*.css',
+  'src/app/app.css',
+];
 
 module.exports = {
   plugins: ['stylelint-value-no-unknown-custom-properties'],

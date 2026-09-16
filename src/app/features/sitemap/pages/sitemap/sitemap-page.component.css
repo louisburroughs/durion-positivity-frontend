@@ -51,7 +51,7 @@
 }
 
 .sitemap__link {
-  color: var(--brand-primary);
+  color: var(--link-color);
   font-weight: 600;
   text-decoration: none;
 }
@@ -85,6 +85,6 @@
 
 .sitemap__page-link:hover,
 .sitemap__page-link:focus-visible {
-  color: var(--brand-primary);
+  color: var(--link-color);
   text-decoration: underline;
 }

@@ -26,7 +26,7 @@
 
 .override-panel {
   margin-top: var(--space-3);
-  background: var(--brand-surface);
+  background: var(--cardBackground);
   border-radius: var(--radius-md);
   padding: var(--space-3);
 }

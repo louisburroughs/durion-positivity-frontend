@@ -88,11 +88,11 @@ label {
 
 .field-row.field-error--visible input,
 .field-row.field-error--visible select {
-  border-color: var(--functional-error-red);
+  border-color: var(--status-error-fg);
 }
 
 .field-error {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
   font-size: 0.8125rem;
 }
 

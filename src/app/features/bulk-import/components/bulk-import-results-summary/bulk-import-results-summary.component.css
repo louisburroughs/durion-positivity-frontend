@@ -24,7 +24,7 @@
 	gap: var(--space-1);
 	padding: var(--space-3);
 	border-radius: var(--radius-md);
-	background: color-mix(in srgb, var(--brand-surface) 50%, var(--cardBackground));
+	background: color-mix(in srgb, var(--cardBackground) 50%, var(--cardBackground));
 }
 
 .results-stat dt {
@@ -59,6 +59,6 @@
 
 .results-btn--secondary {
 	background: transparent;
-	border-color: color-mix(in srgb, var(--brand-primary) 32%, var(--input-border));
+	border-color: color-mix(in srgb, var(--link-color) 32%, var(--input-border));
 	color: var(--currentTextColor);
 }

@@ -33,7 +33,7 @@
 
 .audit-detail {
   margin-top: var(--space-3);
-  background: var(--brand-surface);
+  background: var(--cardBackground);
   border-radius: var(--radius-sm);
   padding: var(--space-3);
 }

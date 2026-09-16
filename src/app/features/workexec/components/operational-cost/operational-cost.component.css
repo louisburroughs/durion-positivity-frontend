@@ -6,7 +6,7 @@
 }
 
 .section-overline {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -15,7 +15,7 @@
 
 h3 {
   margin: 0;
-  color: var(--brand-primary);
+  color: var(--link-color);
 }
 
 dl {

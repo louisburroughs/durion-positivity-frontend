@@ -68,7 +68,7 @@
 }
 
 .required {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
   margin-left: 2px;
 }
 
@@ -97,13 +97,13 @@
 
 /* Still applied to the vehicle <select> and the new-vehicle VIN <input>. */
 .field-input--error {
-  border-bottom-color: var(--functional-error-red);
+  border-bottom-color: var(--status-error-fg);
 }
 
 .field-error {
   margin: 0;
   font-size: 0.75rem;
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 /* ── Alerts ─────────────────────────────────────────────────────────────── */
@@ -151,7 +151,7 @@
 
 .btn--ghost {
   background: transparent;
-  color: var(--brand-primary);
+  color: var(--link-color);
   padding-left: 0;
   padding-right: 0;
 }

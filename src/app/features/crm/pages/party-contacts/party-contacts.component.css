@@ -51,7 +51,7 @@ th,
   box-sizing: border-box;
   background: var(--cardBackground);
   border: none;
-  border-bottom: 2px solid var(--brand-primary);
+  border-bottom: 2px solid var(--link-color);
   border-radius: 0;
   padding: var(--space-2) var(--space-3);
   color: var(--text-muted);
@@ -60,7 +60,7 @@ th,
 }
 
 .field-input:focus {
-  border-bottom-color: var(--brand-primary);
+  border-bottom-color: var(--link-color);
 }
 
 .btn-primary,
@@ -80,11 +80,11 @@ th,
 
 .btn-ghost {
   background: transparent;
-  color: var(--brand-primary);
+  color: var(--link-color);
 }
 
 .btn-danger {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .btn-primary:disabled,
@@ -186,7 +186,7 @@ th,
 .role-badge--technical { background: var(--cardBackground); }
 
 .primary-star {
-  color: var(--brand-primary);
+  color: var(--link-color);
 }
 
 .row-actions {
@@ -242,7 +242,7 @@ th,
 
 .field-error {
   margin: 0;
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
   font-size: 0.84rem;
 }
 

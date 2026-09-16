@@ -47,7 +47,7 @@ tbody tr:nth-child(even) {
 }
 
 .error-text {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
   margin-bottom: 0.8rem;
 }
 

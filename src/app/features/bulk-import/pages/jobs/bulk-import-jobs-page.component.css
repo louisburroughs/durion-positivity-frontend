@@ -52,18 +52,18 @@
 .jobs-btn--secondary {
 	background: transparent;
 	color: var(--currentTextColor);
-	border-color: color-mix(in srgb, var(--brand-primary) 34%, var(--input-border));
+	border-color: color-mix(in srgb, var(--link-color) 34%, var(--input-border));
 }
 
 .jobs-banner {
 	padding: var(--space-3) var(--space-4);
 	border-radius: var(--radius-md);
 	background: color-mix(in srgb, var(--brand-primary) 8%, var(--cardBackground));
-	border: 1px solid color-mix(in srgb, var(--brand-primary) 25%, var(--border-color));
+	border: 1px solid color-mix(in srgb, var(--link-color) 25%, var(--border-color));
 }
 
 .jobs-banner--error { color: var(--status-error-fg);
-	border-color: var(--functional-error-red);
+	border-color: var(--status-error-fg);
 	background: var(--status-error-bg);
 }
 
@@ -115,24 +115,24 @@
 }
 
 .job-status--completed {
-	color: #14532d;
+	color: var(--status-success-fg);
 	background: color-mix(in srgb, #22c55e 20%, var(--cardBackground));
 }
 
 .job-status--failed,
 .job-status--cancelled {
-	color: #7f1d1d;
+	color: var(--status-error-fg);
 	background: color-mix(in srgb, #ef4444 20%, var(--cardBackground));
 }
 
 .jobs-link {
-	color: var(--brand-primary);
+	color: var(--link-color);
 	font-weight: 600;
 }
 
 .jobs-link:focus-visible,
 .jobs-table__row:focus-visible {
-	outline: 3px solid color-mix(in srgb, var(--brand-primary) 30%, transparent);
+	outline: 3px solid color-mix(in srgb, var(--input-focus-border) 30%, transparent);
 	outline-offset: -2px;
 }
 

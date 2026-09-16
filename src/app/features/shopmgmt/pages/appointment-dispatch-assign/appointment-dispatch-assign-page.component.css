@@ -52,11 +52,11 @@
 }
 
 .hard-conflict {
-  border-left: 4px solid var(--functional-error-red);
+  border-left: 4px solid var(--status-error-fg);
 }
 
 .soft-conflict {
-  border-left: 4px solid var(--functional-warning);
+  border-left: 4px solid var(--status-warning-fg);
 }
 
 .success-banner,
@@ -67,12 +67,12 @@
 }
 
 .success-banner {
-  border: 1px solid var(--functional-success); color: var(--status-success-fg);
+  border: 1px solid var(--status-success-fg); color: var(--status-success-fg);
   background: var(--status-success-bg);
 }
 
 .error-banner {
-  border: 1px solid var(--functional-error-red); color: var(--status-error-fg);
+  border: 1px solid var(--status-error-fg); color: var(--status-error-fg);
   background: var(--status-error-bg);
 }
 

@@ -6,9 +6,9 @@
 .page-meta { margin: 0; font-size: 0.875rem; color: var(--handleColor); }
 /* Expiration banner */
 .expiration-banner { background: var(--status-error-bg); padding: var(--space-5); border-radius: 0.25rem; display: flex; gap: var(--space-4); align-items: flex-start; }
-.expiration-icon { font-size: 1.5rem; color: var(--functional-error-red); flex-shrink: 0; }
+.expiration-icon { font-size: 1.5rem; color: var(--status-error-fg); flex-shrink: 0; }
 .expiration-content { display: flex; flex-direction: column; gap: var(--space-3); flex: 1; }
-.expiration-heading { margin: 0; font-size: 1rem; font-weight: 700; color: var(--functional-error-red); }
+.expiration-heading { margin: 0; font-size: 1rem; font-weight: 700; color: var(--status-error-fg); }
 .expiration-message { margin: 0; font-size: 0.875rem; color: var(--currentTextColor); }
 .expiration-meta { margin: 0; font-size: 0.75rem; color: var(--handleColor); }
 .expiration-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-2); }
@@ -21,7 +21,7 @@
 /* Active approval card */
 .approval-card { background: var(--cardBackground); padding: var(--space-6); border-radius: 0.25rem; display: flex; flex-direction: column; gap: var(--space-5); }
 .approval-meta { display: flex; flex-direction: column; gap: var(--space-3); }
-.status-chip { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--brand-primary-soft); color: var(--brand-primary); }
+.status-chip { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--primary50); color: var(--link-color); }
 .status-chip--expired { background: var(--status-error-bg); color: var(--status-error-fg); }
 .alert { padding: var(--space-3) var(--space-4); border-radius: 0.125rem; font-size: 0.875rem; }
 .alert--error { background: var(--status-error-bg); color: var(--status-error-fg); }
@@ -29,5 +29,5 @@
 .form-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
 .btn { padding: var(--space-3) var(--space-5); font-size: 0.9375rem; font-weight: 600; border: none; border-radius: 0.125rem; cursor: pointer; transition: opacity 0.15s; text-decoration: none; display: inline-flex; align-items: center; }
 .btn--primary { background: linear-gradient(135deg, var(--brand-primary), var(--primaryA400)); color: #fff; }
-.btn--ghost { background: transparent; color: var(--brand-primary); padding-left: 0; padding-right: 0; }
+.btn--ghost { background: transparent; color: var(--link-color); padding-left: 0; padding-right: 0; }
 @media (max-width: 767px) { .approval-detail { padding: var(--space-4); max-width: 100%; } .expiration-banner { flex-direction: column; } }

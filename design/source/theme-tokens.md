@@ -101,7 +101,7 @@ These flip when `data-theme` changes on `<html>`. **Consume these in all compone
 | `--primary50` | blue-50 | blue-800 |
 | `--accentA400` | teal-600 | teal-300 |
 | `--accentA700` | `#006a6a` | teal-400 |
-| `--accentA100` | teal-100 | teal-600 |
+| `--accentA100` | teal-100 | `color-mix(teal-600 45%, cardBackground)` |
 | `--goldA400` | gold-600 | gold-300 |
 | `--goldA100` | gold-100 | gold-600 |
 | `--trackColor` | graphite-200 | grey-700 |

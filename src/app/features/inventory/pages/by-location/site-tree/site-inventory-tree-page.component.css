@@ -27,7 +27,7 @@
 }
 
 .breadcrumb__link {
-  color: var(--brand-primary);
+  color: var(--link-color);
   text-decoration: none;
 }
 
@@ -105,7 +105,7 @@
 
 .banner--warning {
   background: var(--status-warning-bg);
-  border: 1px solid var(--functional-warning); color: var(--status-warning-fg);
+  border: 1px solid var(--status-warning-fg); color: var(--status-warning-fg);
 }
 
 .banner__icon {
@@ -147,7 +147,7 @@
 }
 
 .totals-strip__item--negative .totals-strip__value {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .totals-strip__label {
@@ -249,7 +249,7 @@
 }
 
 .tree-table thead tr {
-  background: var(--brand-background);
+  background: var(--themeBackground);
   border-bottom: 2px solid var(--border-color);
 }
 
@@ -280,7 +280,7 @@
 }
 
 .tree-row:focus-visible {
-  outline: 2px solid var(--brand-primary);
+  outline: 2px solid var(--input-focus-border);
   outline-offset: -2px;
 }
 
@@ -385,7 +385,7 @@
 
 
 .qty--negative {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
   font-weight: 600;
 }
 

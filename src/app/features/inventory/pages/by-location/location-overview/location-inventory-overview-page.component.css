@@ -80,7 +80,7 @@
 
 .badge-warn {
   background: var(--functional-warning);
-  color: var(--durion-grey-900);
+  color: var(--currentTextColor);
 }
 
 .totals-negative {

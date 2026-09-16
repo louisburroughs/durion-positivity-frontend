@@ -7,7 +7,7 @@
 }
 
 .tenant-page__back {
-	color: var(--brand-primary);
+	color: var(--link-color);
 	font-weight: 600;
 	text-decoration: underline;
 }

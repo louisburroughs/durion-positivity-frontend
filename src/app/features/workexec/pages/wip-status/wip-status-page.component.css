@@ -114,7 +114,7 @@
 .wip__workorder-link {
   border: 0;
   background: transparent;
-  color: var(--brand-primary);
+  color: var(--link-color);
   font-weight: 600;
   padding: 0;
 }

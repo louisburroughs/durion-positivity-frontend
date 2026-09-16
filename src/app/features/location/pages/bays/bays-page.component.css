@@ -29,7 +29,7 @@
   border: 1px dashed var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--space-6);
-  background: var(--brand-surface);
+  background: var(--cardBackground);
 }
 
 .create-modal-overlay,
@@ -75,7 +75,7 @@
 
 .error-banner {
   margin-bottom: var(--space-4);
-  border: 1px solid var(--functional-error-red);
+  border: 1px solid var(--status-error-fg);
   background: var(--status-error-bg); color: var(--status-error-fg);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);

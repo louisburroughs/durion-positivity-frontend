@@ -74,8 +74,8 @@
   border: 1px solid var(--border-color);
 }
 .type-chip--part { background: #dbeafe; color: #1e40af; border-color: #1e40af; }
-.type-chip--service { background: #dcfce7; color: #166534; border-color: #166534; }
-.type-chip--labor { background: #f0fdf4; color: #166534; border-color: #166534; }
+.type-chip--service { background: #dcfce7; color: var(--status-success-fg); border-color: var(--status-success-fg); }
+.type-chip--labor { background: #f0fdf4; color: var(--status-success-fg); border-color: var(--status-success-fg); }
 
 /* ── Totals breakdown ───────────────────────────────────────────────────── */
 
@@ -96,7 +96,7 @@
   color: var(--currentTextColor);
 }
 
-.totals-breakdown__row--discount .totals-breakdown__value { color: #1b5e20; }
+.totals-breakdown__row--discount .totals-breakdown__value { color: var(--status-success-fg); }
 
 .totals-breakdown__row--grand {
   border-top: 1px solid var(--border-color);
@@ -144,8 +144,8 @@
   text-align: right;
 }
 
-.adjustment-card__amount--debit { color: var(--functional-error-red); }
-.adjustment-card__amount--credit { color: #1b5e20; }
+.adjustment-card__amount--debit { color: var(--status-error-fg); }
+.adjustment-card__amount--credit { color: var(--status-success-fg); }
 
 /* ── Traceability grid ──────────────────────────────────────────────────── */
 
@@ -199,9 +199,9 @@
 }
 
 .form-input:focus {
-  outline: 2px solid var(--brand-accent);
+  outline: 2px solid var(--input-focus-border);
   outline-offset: 1px;
-  border-color: var(--brand-accent);
+  border-color: var(--accentA700);
 }
 
 /* ── Page header ────────────────────────────────────────────────────────── */
@@ -297,12 +297,12 @@
   align-self: flex-start;
 }
 
-.status-chip--draft { background: #f5f5f5; color: #616161; }
-.status-chip--pending-review { background: #fff3e0; color: #bf360c; }
-.status-chip--issued { background: #e3f2fd; color: #01579b; }
-.status-chip--finalized { background: #e8f5e9; color: #1b5e20; }
+.status-chip--draft { background: var(--surface-inset); color: #616161; }
+.status-chip--pending-review { background: var(--status-warning-bg); color: var(--status-warning-fg); }
+.status-chip--issued { background: var(--status-info-bg); color: var(--status-info-fg); }
+.status-chip--finalized { background: var(--status-success-bg); color: var(--status-success-fg); }
 .status-chip--void,
-.status-chip--cancelled { background: #ffebee; color: #c62828; }
+.status-chip--cancelled { background: var(--status-error-bg); color: var(--status-error-fg); }
 
 /* ── Buttons ────────────────────────────────────────────────────────────── */
 
@@ -326,7 +326,7 @@
 
 .btn:focus-visible,
 .doc-link:focus-visible {
-  outline: 2px solid var(--brand-accent);
+  outline: 2px solid var(--input-focus-border);
   outline-offset: 2px;
 }
 
@@ -361,8 +361,8 @@
   font-size: 0.875rem;
 }
 
-.alert--error { background: #ffebee; color: #c62828; }
-.alert--success { background: #e8f5e9; color: #1b5e20; }
+.alert--error { background: var(--status-error-bg); color: var(--status-error-fg); }
+.alert--success { background: var(--status-success-bg); color: var(--status-success-fg); }
 
 /* ── Document links ─────────────────────────────────────────────────────── */
 

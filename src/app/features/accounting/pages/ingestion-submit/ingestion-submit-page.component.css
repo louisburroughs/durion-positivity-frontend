@@ -39,7 +39,7 @@
 input,
 textarea {
   border: none;
-  border-bottom: 2px solid var(--durion-graphite-200);
+  border-bottom: 2px solid var(--input-border);
   border-radius: 0;
   background: transparent;
   padding-left: 0;

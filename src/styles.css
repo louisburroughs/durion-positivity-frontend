@@ -178,7 +178,10 @@
   --primary50: var(--durion-blue-800);
   --accentA400: var(--durion-teal-300);
   --accentA700: var(--durion-teal-400);
-  --accentA100: var(--durion-teal-600);
+  /* A "100" slot is a wash: every one of its call sites is a background. teal-600
+     straight is a mid-tone, so body text on it was 3.3:1 in dark; blended into the
+     card it reads as a teal tint and clears AA (5.9:1). */
+  --accentA100: color-mix(in srgb, var(--durion-teal-600) 45%, var(--cardBackground));
   --goldA400: var(--durion-gold-300);  /* lighter so it reads on dark surfaces (6.3:1) */
   --goldA100: var(--durion-gold-600);  /* deep gold wash on dark */
   --trackColor: var(--durion-grey-700);

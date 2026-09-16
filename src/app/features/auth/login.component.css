@@ -87,12 +87,12 @@ form {
 }
 
 input.field-invalid {
-  border-color: var(--functional-error-red);
+  border-color: var(--status-error-fg);
 }
 
 .field-error {
   font-size: 0.75rem;
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .field-hint {

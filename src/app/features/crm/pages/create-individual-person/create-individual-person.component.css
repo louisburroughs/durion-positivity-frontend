@@ -74,14 +74,14 @@
 }
 
 .required-mark {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
   margin-left: 2px;
 }
 
 .field__input {
   background: var(--primary50);
   border: none;
-  border-bottom: 2px solid var(--durion-graphite-200);
+  border-bottom: 2px solid var(--input-border);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   padding: var(--space-3) var(--space-3);
   font-size: 0.95rem;
@@ -94,16 +94,16 @@
 }
 
 .field__input:focus {
-  border-bottom-color: var(--durion-teal-400);
+  border-bottom-color: var(--accentA700);
   background: var(--cardBackground);
 }
 
 .field__input:disabled { opacity: 0.5; cursor: not-allowed; }
-.field__input[aria-invalid='true'] { border-bottom-color: var(--functional-error-red); }
+.field__input[aria-invalid='true'] { border-bottom-color: var(--status-error-fg); }
 
 .field__error {
   font-size: 0.8rem;
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .form-actions {
@@ -147,11 +147,11 @@
   background: transparent;
   padding: var(--space-1) var(--space-3);
   font-size: 0.8rem;
-  color: var(--durion-teal-500);
+  color: var(--accentA700);
   border-radius: var(--radius-sm);
 }
 
-.btn--icon:hover { background: var(--durion-teal-100); }
+.btn--icon:hover { background: var(--accentA100); }
 
 .state-panel {
   display: flex;
@@ -176,7 +176,7 @@
 .state-panel--success { background: rgba(91,190,114,.06); }
 
 .state-icon { font-size: 2rem; line-height: 1; }
-.state-icon--success { color: #1b5e20; }
+.state-icon--success { color: var(--status-success-fg); }
 
 .success-id-block {
   display: flex;
@@ -199,7 +199,7 @@
 .success-id-value {
   font-family: 'Fira Code', monospace;
   font-size: 0.9rem;
-  color: var(--brand-primary);
+  color: var(--link-color);
   flex: 1;
   word-break: break-all;
 }
@@ -215,7 +215,7 @@
 
 .alert--error {
   background: rgba(200,76,71,.08);
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 @media (max-width: 500px) {

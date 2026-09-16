@@ -175,7 +175,7 @@
   width: 1.1rem;
   height: 1.1rem;
   cursor: pointer;
-  accent-color: var(--brand-primary);
+  accent-color: var(--link-color);
 }
 
 .ledger__check:disabled {
@@ -183,7 +183,7 @@
 }
 
 .hint-text--error {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .ledger--audit .ledger__row {
@@ -218,13 +218,13 @@
 }
 
 .ledger__type-badge--part {
-  background: #e3f2fd;
-  color: #01579b;
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
 }
 
 .ledger__type-badge--labor {
-  background: #e8f5e9;
-  color: #1b5e20;
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
 }
 
 /* Audit section */
@@ -266,38 +266,38 @@
 }
 
 .status-chip--in_progress {
-  background: #e8f5e9;
-  color: #1b5e20;
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
 }
 
 .status-chip--assigned {
-  background: #e3f2fd;
-  color: #01579b;
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
 }
 
 .status-chip--pending_assignment {
-  background: #fff3e0;
-  color: #bf360c;
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
 }
 
 .status-chip--draft {
-  background: #f5f5f5;
+  background: var(--surface-inset);
   color: #616161;
 }
 
 .status-chip--completed {
-  background: #e8f5e9;
-  color: #1b5e20;
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
 }
 
 .status-chip--cancelled {
-  background: #ffebee;
-  color: #c62828;
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
 }
 
 .status-chip--on_hold {
   background: #fff8e1;
-  color: #8a5e0a;
+  color: var(--status-warning-fg);
 }
 
 /* Glassmorphism modal — design authority spec */

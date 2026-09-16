@@ -28,7 +28,7 @@
 }
 
 .landing-finder--filled .landing-finder__box {
-  border-color: var(--brand-accent);
+  border-color: var(--accentA700);
 }
 
 .landing-finder__box:focus-within {
@@ -100,7 +100,7 @@
 }
 
 .landing-finder__status--error {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .landing-finder__option {

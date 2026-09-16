@@ -93,7 +93,7 @@
 .order-cancel__reversal-action {
   justify-self: start;
   font-weight: 600;
-  color: var(--brand-primary);
+  color: var(--link-color);
   text-underline-offset: 0.125rem;
 }
 
