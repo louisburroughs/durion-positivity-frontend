@@ -43,12 +43,14 @@
             <div class="line-item__decision">
               <button type="button" class="decision-btn decision-btn--approve"
                 [class.active]="lineDecisions()[item.id] === true"
+                [attr.aria-pressed]="lineDecisions()[item.id] === true"
                 (click)="setDecision(item.id, true)"
                 [attr.aria-label]="'WORKEXEC.APPROVAL.PARTIAL.APPROVE_ARIA' | translate: { desc: item.description }">
                 {{ 'WORKEXEC.APPROVAL.PARTIAL.APPROVE' | translate }}
               </button>
               <button type="button" class="decision-btn decision-btn--decline"
                 [class.active]="lineDecisions()[item.id] === false"
+                [attr.aria-pressed]="lineDecisions()[item.id] === false"
                 (click)="setDecision(item.id, false)"
                 [attr.aria-label]="'WORKEXEC.APPROVAL.PARTIAL.DECLINE_ARIA' | translate: { desc: item.description }">
                 {{ 'WORKEXEC.APPROVAL.PARTIAL.DECLINE' | translate }}

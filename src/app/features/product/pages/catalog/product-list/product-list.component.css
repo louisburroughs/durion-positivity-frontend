@@ -124,8 +124,7 @@
 }
 
 .muted {
-  color: var(--currentTextColor);
-  opacity: 0.6;
+  color: var(--text-muted);
 }
 
 .badge {

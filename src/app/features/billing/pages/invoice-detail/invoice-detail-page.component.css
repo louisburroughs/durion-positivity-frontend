@@ -279,7 +279,7 @@
 }
 
 .hint-text {
-  opacity: 0.55;
+  color: var(--text-muted);
   font-size: 0.875rem;
   font-style: italic;
 }

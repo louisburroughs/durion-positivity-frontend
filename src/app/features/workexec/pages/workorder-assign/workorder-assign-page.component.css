@@ -1,10 +1,10 @@
 .workorder-assign {padding:var(--space-6) var(--space-5);}
 .back-btn {margin-bottom:var(--space-4);padding:var(--space-2) 0;font-size:0.875rem;}
 .page-header {margin-bottom:var(--space-5);}
-.page-overline {font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;opacity:0.55;margin:0 0 var(--space-1);}
+.page-overline {font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin:0 0 var(--space-1);}
 .page-header h1 {font-family:var(--font-primary);font-size:1.4rem;font-weight:700;margin:0;}
 .current-assignment {background:var(--cardBackground);border-radius:var(--radius-md);padding:var(--space-4);margin-bottom:var(--space-5);}
-.section-overline {font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;opacity:0.55;margin:0 0 var(--space-2);}
+.section-overline {font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin:0 0 var(--space-2);}
 .assign-form {max-width:480px;display:flex;flex-direction:column;gap:var(--space-4);}
 .field {display:flex;flex-direction:column;gap:var(--space-1);}
 .field__label {font-size:0.8rem;font-weight:600;color:var(--currentTextColor);}
@@ -16,9 +16,9 @@
 .tech-option {display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3);padding:var(--space-2) var(--space-3);cursor:pointer;}
 .tech-option:hover,.tech-option--active {background:color-mix(in srgb,var(--brand-accent) 10%,var(--cardBackground));}
 .tech-option__name {font-weight:600;font-size:0.9rem;}
-.tech-option__role {font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;opacity:0.55;}
+.tech-option__role {font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);}
 .form-actions {display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-2);}
-.hint-text {font-size:0.875rem;opacity:0.55;font-style:italic;}
+.hint-text {font-size:0.875rem;color:var(--text-muted);font-style:italic;}
 .alert {padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);font-size:0.875rem;}
 .alert--error {background:var(--status-error-bg);color:var(--status-error-fg);}
 .btn {display:inline-flex;align-items:center;justify-content:center;padding:var(--space-2) var(--space-5);border-radius:var(--radius-md);font-size:0.875rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:opacity 0.15s;}

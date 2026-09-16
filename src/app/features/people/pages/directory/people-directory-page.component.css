@@ -147,7 +147,7 @@
 
 .sort-icon {
   margin-left: var(--space-1);
-  opacity: 0.5;
+  color: var(--text-muted);
   font-size: 0.75rem;
 }
 
@@ -204,7 +204,6 @@
 
 .directory-empty-cell {
   color: var(--text-muted);
-  opacity: 0.5;
 }
 
 .directory-action-link {

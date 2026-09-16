@@ -147,6 +147,15 @@ These flip when `data-theme` changes on `<html>`. **Consume these in all compone
 > listed in its `SWEPT` array — a sanctioned token used for the wrong property is an error
 > there. Extend `SWEPT` as each feature area is moved onto theme-aware tokens.
 
+> **Never mute text with `opacity`.** `opacity` multiplies contrast against whatever is
+> behind the element, so a value that looks fine in light mode fails in dark and no lint
+> rule can see it: `opacity: 0.55` on body text is ~4.0:1 in both themes, and `0.45` is
+> ~3.0:1. Use `--text-muted`, which is verified in both themes (6.2:1 light, 8.0:1 dark).
+> `opacity` stays legitimate for genuinely inactive controls — WCAG 1.4.3 exempts disabled
+> components — and for decoration, overlays and loading placeholders. It is never the way
+> to express a *selected* state: that is a real contrast requirement and needs a
+> programmatic state (`aria-pressed`) besides.
+
 > **Pick the border token by what the border does.** A boundary that is a control's only
 > visual affordance — a field outline, an outline button, a dropzone, a step indicator —
 > is a UI component under WCAG 1.4.11 and needs 3:1 against both the fill inside it and the

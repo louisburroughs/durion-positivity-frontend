@@ -454,8 +454,7 @@ app-workorder-detail-page .crm-ref-label {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--currentTextColor);
-  opacity: 0.55;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -478,8 +477,7 @@ app-estimate-detail-page .crm-ref-value--empty {
 
 app-workorder-detail-page .crm-ref-value--empty {
   font-family: inherit;
-  color: var(--currentTextColor);
-  opacity: 0.45;
+  color: var(--text-muted);
   font-style: italic;
 }
 
@@ -533,8 +531,7 @@ app-workorder-detail-page .section-overline {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--currentTextColor);
-  opacity: 0.55;
+  color: var(--text-muted);
   margin: 0 0 var(--space-3);
 }
 
@@ -543,13 +540,12 @@ app-workorder-detail-page .crm-ref-block .section-overline {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--currentTextColor);
-  opacity: 0.55;
+  color: var(--text-muted);
   margin: 0 0 var(--space-2);
 }
 
 app-workorder-detail-page .hint-text {
-  opacity: 0.55;
+  color: var(--text-muted);
   font-size: 0.875rem;
   font-style: italic;
 }

@@ -71,7 +71,8 @@
 }
 
 .wo-header__meta-value--empty {
-  opacity: 0.5;
+  /* white at 0.5 on the header gradient is 3.5:1; 0.75 is 5.7:1 and still reads as empty */
+  opacity: 0.75;
   font-weight: 400;
   font-style: italic;
 }
@@ -149,7 +150,7 @@
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  opacity: 0.55;
+  color: var(--text-muted);
   font-weight: 600;
 }
 

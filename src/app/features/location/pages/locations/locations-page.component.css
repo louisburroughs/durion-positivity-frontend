@@ -77,8 +77,7 @@
 .detail-row dt {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--currentTextColor);
-  opacity: 0.6;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
