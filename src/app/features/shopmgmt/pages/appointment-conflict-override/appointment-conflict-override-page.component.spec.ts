@@ -227,6 +227,20 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     expect(stubService.getAppointment.mock.calls.length).toBe(loadsBefore + 1);
   });
 
+  it('a 409 with any other code is the generic failure, still re-reading the appointment', async () => {
+    await setup();
+    stubService.executeOverride.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 409, statusText: 'Conflict', error: { errorCode: 'SCHEDULING_CONFLICT' } })),
+    );
+    const loadsBefore = stubService.getAppointment.mock.calls.length;
+    component.enableOverrideMode();
+    component.overrideForm.setValue({ overrideReason: 'Manager approval granted' });
+    component.submitOverride();
+
+    expect(component.overrideError()).toBe('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.OVERRIDE');
+    expect(stubService.getAppointment.mock.calls.length).toBe(loadsBefore + 1);
+  });
+
   it('calls executeOverride with the recorded conflict ids and the reason (CAP-326 D18.3)', async () => {
     await setup();
     component.enableOverrideMode();

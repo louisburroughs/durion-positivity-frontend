@@ -166,10 +166,16 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
         error: (error: HttpErrorResponse) => {
           this.overrideLoading.set(false);
           if (error.status === 409) {
-            // 409 CONFLICT_ALREADY_OVERRIDDEN: someone else overrode it between load and submit, or
-            // the conflict is no longer overridable. Say so and re-read the recorded list rather
-            // than leaving a stale button on screen.
-            this.overrideError.set('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.ALREADY_OVERRIDDEN');
+            // A 409 means the server's view of the conflicts differs from this page's: re-read the
+            // recorded list rather than leave a stale button on screen. Only the documented
+            // CONFLICT_ALREADY_OVERRIDDEN code (ApiError.code) gets its own message; any other 409
+            // — a HARD rule in the ids, say — is the generic failure, never mislabelled.
+            const code = (error.error as { code?: string } | null)?.code;
+            this.overrideError.set(
+              code === 'CONFLICT_ALREADY_OVERRIDDEN'
+                ? 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.ALREADY_OVERRIDDEN'
+                : 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.OVERRIDE',
+            );
             this.overrideMode.set(false);
             this.refreshAppointment();
             return;
