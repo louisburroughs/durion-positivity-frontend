@@ -43,6 +43,12 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
   private appointmentId = '';
 
   readonly hasConflicts = computed(() => this.conflicts().length > 0);
+  /**
+   * A 409 on reschedule carries the DECISION-002 envelope: every rule that fired. A HARD one refused
+   * the change, and nothing in that panel can be overridden — the override below acts on the
+   * conflicts recorded against the appointment, never on a refused attempt.
+   */
+  readonly hasHardConflict = computed(() => this.conflicts().some(conflict => conflict.type === 'HARD'));
   /** The SOFT conflicts recorded against the appointment that a manager may still accept (CAP-326). */
   readonly recordedConflicts = computed<readonly AppointmentConflict[]>(() => this.appointment()?.conflicts ?? []);
   readonly overridableConflicts = computed(() => this.recordedConflicts().filter(conflict => conflict.overridable));
@@ -144,10 +150,31 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
           this.overrideMode.set(false);
           this.showConflictPanel.set(false);
         },
-        error: () => {
+        error: (error: HttpErrorResponse) => {
           this.overrideLoading.set(false);
+          if (error.status === 409) {
+            // 409 CONFLICT_ALREADY_OVERRIDDEN: someone else overrode it between load and submit, or
+            // the conflict is no longer overridable. Say so and re-read the recorded list rather
+            // than leaving a stale button on screen.
+            this.overrideError.set('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.ALREADY_OVERRIDDEN');
+            this.overrideMode.set(false);
+            this.refreshAppointment();
+            return;
+          }
           this.overrideError.set('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.OVERRIDE');
         },
       });
+  }
+
+  /** Re-reads the appointment so the recorded conflicts reflect what the server now holds. */
+  private refreshAppointment(): void {
+    if (!this.appointmentId) {
+      return;
+    }
+    this.appointmentService.getAppointment(this.appointmentId).subscribe({
+      next: (appointment) => this.appointment.set(appointment),
+      // The override error already says what happened; a failed refresh keeps the last known state.
+      error: () => undefined,
+    });
   }
 }

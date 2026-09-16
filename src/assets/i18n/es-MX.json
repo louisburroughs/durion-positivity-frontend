@@ -2122,7 +2122,8 @@
         "CONFLICTS": "Se encontraron conflictos para la franja seleccionada.",
         "RESCHEDULE": "No se pudo reprogramar la cita.",
         "OVERRIDE": "No se pudo ejecutar la sobrescritura.",
-        "NOTHING_TO_OVERRIDE": "No queda ningún conflicto por anular en esta cita."
+        "NOTHING_TO_OVERRIDE": "No queda ningún conflicto por anular en esta cita.",
+        "ALREADY_OVERRIDDEN": "Ese conflicto ya fue anulado por otra persona; la cita se ha actualizado."
       },
       "RECORDED_CONFLICTS": "Conflictos registrados en esta cita",
       "OVERRIDDEN": "Anulado",

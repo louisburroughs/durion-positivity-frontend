@@ -74,10 +74,7 @@
         <p>{{ conflict.message }}</p>
       </article>
     }
-    @if (hasOverridableConflicts()) {
-      <button type="button" class="btn-danger enable-override-btn"
-      (click)="enableOverrideMode()">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ENABLE_OVERRIDE' | translate }}</button>
-    } @else {
+    @if (hasHardConflict()) {
       <p class="conflict-hint">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.HARD_NOT_OVERRIDABLE' | translate }}</p>
     }
   </section>

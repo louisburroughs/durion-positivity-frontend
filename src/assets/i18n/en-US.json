@@ -2122,7 +2122,8 @@
         "CONFLICTS": "Conflicts were found for the selected slot.",
         "RESCHEDULE": "Failed to reschedule appointment.",
         "OVERRIDE": "Failed to execute override.",
-        "NOTHING_TO_OVERRIDE": "There is no conflict left to override on this appointment."
+        "NOTHING_TO_OVERRIDE": "There is no conflict left to override on this appointment.",
+        "ALREADY_OVERRIDDEN": "That conflict was already overridden by someone else; the appointment has been refreshed."
       },
       "RECORDED_CONFLICTS": "Conflicts recorded against this appointment",
       "OVERRIDDEN": "Overridden",

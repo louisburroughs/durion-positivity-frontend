@@ -154,6 +154,63 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     expect(fixture.debugElement.query(By.css('.enable-override-btn'))).toBeTruthy();
   });
 
+  it('a refused reschedule shows the HARD hint and no override button, whatever is recorded (CAP-326)', async () => {
+    vi.clearAllMocks();
+    // A recorded SOFT conflict is overridable, but the refused attempt is not what it overrides.
+    stubService.getAppointment.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
+    stubService.rescheduleAppointment.mockReturnValue(
+      throwError(() =>
+        new HttpErrorResponse({
+          status: 409,
+          statusText: 'Conflict',
+          error: { conflicts: [{ type: 'HARD', code: 'BAY_DOUBLE_BOOKED', message: 'Bay is booked' }] },
+        }),
+      ),
+    );
+    stubService.executeOverride.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: stubService },
+        { provide: ActivatedRoute, useValue: { params: of({ id: 'appt-1' }) } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(AppointmentConflictOverridePageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.rescheduleForm.setValue({
+      scheduledStartDateTime: '2026-04-01T09:00',
+      scheduledEndDateTime: '2026-04-01T10:00',
+      reason: 'Customer request',
+    });
+    component.submitReschedule();
+    fixture.detectChanges();
+
+    expect(component.hasHardConflict()).toBe(true);
+    expect(fixture.debugElement.query(By.css('.conflict-panel .conflict-hint'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('.conflict-panel .enable-override-btn'))).toBeNull();
+    // The recorded conflict keeps its own override entry point.
+    expect(fixture.debugElement.query(By.css('.recorded-conflicts .enable-override-btn'))).toBeTruthy();
+  });
+
+  it('a 409 on override names the stale state and re-reads the appointment (CONFLICT_ALREADY_OVERRIDDEN)', async () => {
+    await setup();
+    stubService.executeOverride.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 409, statusText: 'Conflict', error: { code: 'CONFLICT_ALREADY_OVERRIDDEN' } })),
+    );
+    const loadsBefore = stubService.getAppointment.mock.calls.length;
+    component.enableOverrideMode();
+    component.overrideForm.setValue({ overrideReason: 'Manager approval granted' });
+    component.submitOverride();
+
+    expect(component.overrideError()).toBe('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.ALREADY_OVERRIDDEN');
+    expect(component.overrideMode()).toBe(false);
+    expect(stubService.getAppointment.mock.calls.length).toBe(loadsBefore + 1);
+  });
+
   it('calls executeOverride with the recorded conflict ids and the reason (CAP-326 D18.3)', async () => {
     await setup();
     component.enableOverrideMode();

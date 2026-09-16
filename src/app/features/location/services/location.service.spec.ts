@@ -115,6 +115,29 @@ describe('LocationService', () => {
     expect(asEmpty).toEqual([]);
   });
 
+  it('maps a bay body onto the typed BayRequest: specialty codes and duty class travel as sent (CAP-325)', () => {
+    bayApiStub.createBay.mockReturnValueOnce(of({ id: 'bay-1' }));
+
+    service.createBay('loc-01', {
+      name: 'Rack 1',
+      bayType: 'ALIGNMENT',
+      capacity: { maxConcurrentVehicles: 1 },
+      serviceCapabilityCodes: ['WHEEL-ALIGNMENT-4-WHEEL', 'WHEEL-ALIGNMENT-2-WHEEL'],
+      maxDutyClass: 3,
+      status: 'ACTIVE',
+    }).subscribe();
+
+    expect(bayApiStub.createBay).toHaveBeenCalledWith('loc-01', {
+      name: 'Rack 1',
+      bayType: 'ALIGNMENT',
+      capacity: { maxConcurrentVehicles: 1 },
+      maxConcurrentVehicles: 0,
+      serviceCapabilityCodes: ['WHEEL-ALIGNMENT-4-WHEEL', 'WHEEL-ALIGNMENT-2-WHEEL'],
+      maxDutyClass: 3,
+      status: 'ACTIVE',
+    });
+  });
+
   it('maps mobile-unit coverageRules through the typed request mapper', () => {
     mobileUnitApiStub.createMobileUnit.mockReturnValueOnce(of({ mobileUnitId: 'mu-001' }));
 

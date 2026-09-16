@@ -2122,7 +2122,8 @@
         "CONFLICTS": "Des conflits ont été trouvés pour le créneau sélectionné.",
         "RESCHEDULE": "Impossible de replanifier le rendez-vous.",
         "OVERRIDE": "Impossible d'exécuter l'outrepassement.",
-        "NOTHING_TO_OVERRIDE": "Aucun conflit ne reste à déroger pour ce rendez-vous."
+        "NOTHING_TO_OVERRIDE": "Aucun conflit de ce rendez-vous ne peut plus faire l’objet d’une dérogation.",
+        "ALREADY_OVERRIDDEN": "Ce conflit a déjà fait l’objet d’une dérogation par quelqu’un d’autre ; le rendez-vous a été actualisé."
       },
       "RECORDED_CONFLICTS": "Conflits enregistrés pour ce rendez-vous",
       "OVERRIDDEN": "Dérogation accordée",

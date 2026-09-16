@@ -588,7 +588,6 @@ function displayName(entry: LocationTechnicianRosterEntryResponse): string {
     .join(' ');
 }
 
-/** Re-exported so the page can narrow a day without importing the model file twice. */
 /**
  * Skill codes a technician holds today (CAP-328): the credentials the roster reports
  * ACTIVE on its reference date. Expired, revoked and superseded credentials are
@@ -601,4 +600,5 @@ function heldSkillCodes(credentials: readonly TechnicianCredentialResponse[] | u
     .filter(code => code.length > 0);
 }
 
+/** Re-exported so the page can narrow a day without importing the model file twice. */
 export { isEligibleBay, isCertifiedTechnician };
