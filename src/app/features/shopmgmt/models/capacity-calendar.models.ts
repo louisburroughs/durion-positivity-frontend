@@ -288,13 +288,15 @@ export function parseIsoDateLocal(iso: string): Date {
  *
  * CAP-325 D14, the specialty map: when a job names its operation code, a bay
  * is eligible if it claims that code; when no bay at the location claims it,
- * the operation is general work and every general bay (one claiming nothing)
- * may do it — a specialty bay never takes general work. `bays` is the
- * location's roster, needed to know whether anyone claims the code; without
- * it the bay's own codes decide. The bay-type table is only a fallback for a
- * job with no operation code. An empty requirement on every axis means "all
- * work", which every in-service bay satisfies. Duty class (D13) is a vehicle
- * question the calendar cannot ask yet; `maxDutyClass` is carried, not applied.
+ * the operation is general work, which every bay but a `WASH_DETAIL` one may
+ * do — a specialty bay too (physically an alignment bay can do an oil change;
+ * making it ineligible would manufacture "shop is full"), ranked after the
+ * general bays by {@link rankEligibleBays}. `bays` is the location's roster,
+ * needed to know whether anyone claims the code; without it the bay's own
+ * codes decide. The bay-type table is only a fallback for a job with no
+ * operation code. An empty requirement on every axis means "all work", which
+ * every in-service bay satisfies. Duty class (D13) is a vehicle question the
+ * calendar cannot ask yet; `maxDutyClass` is carried, not applied.
  */
 export function isEligibleBay(
   bay: CapacityBay,
@@ -314,12 +316,29 @@ export function isEligibleBay(
     if (bays.some(candidate => !candidate.outOfService && claims(candidate))) {
       return false;
     }
-    return bay.capabilityCodes.length === 0;
+    return bay.bayType !== WASH_DETAIL;
   }
   if (job.bayTypes.length > 0) {
     return job.bayTypes.includes(bay.bayType);
   }
   return true;
+}
+
+/** The one bay type that never absorbs general mechanical work (D14: the exception to the default). */
+const WASH_DETAIL = 'WASH_DETAIL';
+
+/** True for a bay that claims nothing — general work's first choice (D14). */
+export function isGeneralBay(bay: CapacityBay): boolean {
+  return bay.capabilityCodes.length === 0;
+}
+
+/**
+ * Eligible bays in offer order (D14): general bays first, then specialty bays
+ * taking general work, so the rack is offered only once the general bays are.
+ * Stable, so the caller's own order is kept within each group.
+ */
+export function rankEligibleBays(bays: readonly CapacityBay[]): CapacityBay[] {
+  return [...bays].sort((a, b) => Number(!isGeneralBay(a)) - Number(!isGeneralBay(b)));
 }
 
 function normalizeCode(code: string | undefined): string {

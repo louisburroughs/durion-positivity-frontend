@@ -16,6 +16,7 @@ import {
   hoursNeeded,
   isCertifiedTechnician,
   isEligibleBay,
+  rankEligibleBays,
   isoDateLocal,
   parseIsoDateLocal,
   shopUtilization,
@@ -98,11 +99,14 @@ describe('isEligibleBay', () => {
     expect(isEligibleBay(general, job, [rack, general])).toBe(false);
   });
 
-  it('D14: when nobody claims the operation it is general work — every general bay, never a specialty bay', () => {
+  it('D14: when nobody claims the operation it is general work — every bay but a wash bay, specialty bays ranked last', () => {
     const brakeJob = { ...ALIGNMENT_JOB, operationCode: 'BRAKE-PAD-REPLACE-FRONT', bayTypes: [] };
-    expect(isEligibleBay(general, brakeJob, [rack, general, tireBay])).toBe(true);
-    expect(isEligibleBay(tireBay, brakeJob, [rack, general, tireBay])).toBe(false);
-    expect(isEligibleBay(rack, brakeJob, [rack, general, tireBay])).toBe(false);
+    const wash = bay({ bayId: 'wash', bayType: 'WASH_DETAIL' });
+    expect(isEligibleBay(general, brakeJob, [rack, general, tireBay, wash])).toBe(true);
+    expect(isEligibleBay(tireBay, brakeJob, [rack, general, tireBay, wash])).toBe(true);
+    expect(isEligibleBay(rack, brakeJob, [rack, general, tireBay, wash])).toBe(true);
+    expect(isEligibleBay(wash, brakeJob, [rack, general, tireBay, wash])).toBe(false);
+    expect(rankEligibleBays([rack, general, tireBay]).map(b => b.bayId)).toEqual(['gen', 'rack', 'tire']);
   });
 
   it('D14: an out-of-service claimant does not reserve the operation', () => {
