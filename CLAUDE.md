@@ -10,6 +10,27 @@ checklist, and the "Common Mistakes" table. The ADRs it references live in the s
 `../durion/docs/adr/` repo. `README.md` covers architecture, routing, theming, and i18n in depth.
 Do not duplicate those here — follow them.
 
+## Cross-Repo Resources (`../durion`)
+
+The sibling `durion` orchestration repo holds the platform knowledge and tooling this repo depends
+on. Start at the knowledge catalog to locate a domain, ADR, or backend module before reading it.
+
+| Path | What it holds |
+| ---- | ------------- |
+| `../durion/knowledge-catalog/` | Workspace navigation layer — `domains/`, `adr/`, and `backend/` pointer entries |
+| `../durion/docs/adr/` | The ADRs themselves (frontend: ADR-0010, 0029–0035, 0037, 0038, 0062) |
+| `../durion/domains/` | Domain business rules and capability definitions |
+| `../durion/.claude/skills/` | Frontend workflow skills (below) |
+| `../durion/.claude/agents/` | Agent definitions the orchestrator skills delegate to |
+| `../durion/AGENTS.md`, `../durion/CLAUDE.md` | Cross-repo platform rules — closer scope wins on conflict |
+
+Frontend-relevant skills: `/frontend-story`, `/ui-orchestrate`, `/angular-orchestrate`,
+`/freestyle-orchestrate`, `/story-update`, `/pr-review`, `/pull-request`, `/capability-completion`.
+
+**Those skills and agents load only when `durion` is also a session root** — a session opened on this
+repo alone sees none of them, and this repo defines no skills of its own. Open
+`../durion/durion.code-workspace`, or add the `durion` repo to the session, before relying on them.
+
 ## Commands
 
 ```bash
