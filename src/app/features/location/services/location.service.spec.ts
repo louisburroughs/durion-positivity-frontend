@@ -131,11 +131,30 @@ describe('LocationService', () => {
       name: 'Rack 1',
       bayType: 'ALIGNMENT',
       capacity: { maxConcurrentVehicles: 1 },
-      maxConcurrentVehicles: 0,
+      // The optional top-level twin follows the nested value: the backend refuses 0 (@Min(1)).
+      maxConcurrentVehicles: 1,
       serviceCapabilityCodes: ['WHEEL-ALIGNMENT-4-WHEEL', 'WHEEL-ALIGNMENT-2-WHEEL'],
       maxDutyClass: 3,
       status: 'ACTIVE',
     });
+  });
+
+  it('sends a mobile unit\'s serviceCapabilityCodes as given (CAP-325 D14.2)', () => {
+    mobileUnitApiStub.createMobileUnit.mockReturnValueOnce(of({ mobileUnitId: 'mu-002' }));
+
+    service.createMobileUnit({
+      name: 'Van 7',
+      baseLocationId: 'loc-01',
+      status: 'INACTIVE',
+      serviceCapabilityCodes: ['OIL-CHANGE-FULL-SYNTHETIC', 'BATTERY-REPLACEMENT'],
+    }).subscribe();
+
+    expect(mobileUnitApiStub.createMobileUnit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Van 7',
+        serviceCapabilityCodes: ['OIL-CHANGE-FULL-SYNTHETIC', 'BATTERY-REPLACEMENT'],
+      }),
+    );
   });
 
   it('maps mobile-unit coverageRules through the typed request mapper', () => {

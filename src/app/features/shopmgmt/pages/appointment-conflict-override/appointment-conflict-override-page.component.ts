@@ -164,8 +164,19 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
       })
       .subscribe({
         next: () => {
-          // The 201 body is the override record, not the appointment: re-read it so the recorded
-          // conflicts show as overridden rather than replacing the summary with the record.
+          // The 201 body is the override record, not the appointment. Mark the accepted conflicts
+          // overridden here and now — the refresh below is asynchronous, and until it lands the
+          // old list would offer the same ids again — then re-read so the summary is the server's.
+          this.appointment.update(current =>
+            current && {
+              ...current,
+              conflicts: (current.conflicts ?? []).map(conflict =>
+                conflictIds.includes(conflict.conflictId)
+                  ? { ...conflict, overridden: true, overridable: false }
+                  : conflict,
+              ),
+            },
+          );
           this.refreshAppointment();
           this.overrideLoading.set(false);
           this.overrideSuccess.set(true);

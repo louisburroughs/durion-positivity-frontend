@@ -183,14 +183,19 @@ export class LocationService {
   }
 
   private toBayRequest(body: Record<string, unknown>): BayRequest {
-    const maxConcurrentVehicles = this.asOptionalNumber(body['maxConcurrentVehicles']) ?? 0;
     const capacity = this.asRecord(body['capacity']);
+    // One value, two places to state it: `capacity.maxConcurrentVehicles` is the contract's
+    // required field, the top-level one its optional legacy twin (@Min(1) — a 0 is refused, so it
+    // is never invented). Either supplied stands in for the other.
+    const nested = this.asOptionalNumber(capacity['maxConcurrentVehicles']);
+    const topLevel = this.asOptionalNumber(body['maxConcurrentVehicles']);
+    const maxConcurrentVehicles = topLevel ?? nested;
 
     return {
       name: this.asString(body['name']),
       bayType: this.asString(body['bayType']),
       capacity: {
-        maxConcurrentVehicles: this.asOptionalNumber(capacity['maxConcurrentVehicles']) ?? maxConcurrentVehicles,
+        maxConcurrentVehicles: nested ?? topLevel ?? 0,
       },
       maxConcurrentVehicles,
       // CAP-325: operation codes this bay type alone performs (D14) and the heaviest GVWR class it

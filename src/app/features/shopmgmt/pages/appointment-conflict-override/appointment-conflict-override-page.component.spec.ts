@@ -228,6 +228,23 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
     expect(stubService.getAppointment.mock.calls.length).toBe(loadsBefore + 1);
   });
 
+  it('a successful override retires its conflicts before the refresh lands, so nothing offers them again', async () => {
+    await setup();
+    const pendingRefresh = new Subject<AppointmentDetail>();
+    stubService.getAppointment.mockReturnValue(pendingRefresh.asObservable());
+    stubService.executeOverride.mockReturnValue(of({ appointmentId: 'appt-1', overrides: [] }));
+    component.enableOverrideMode();
+    component.overrideForm.setValue({ overrideReason: 'Manager approval granted' });
+    component.submitOverride();
+    fixture.detectChanges();
+
+    expect(component.overrideSuccess()).toBe(true);
+    expect(component.hasOverridableConflicts()).toBe(false);
+    expect(component.recordedConflicts()[0]?.overridden).toBe(true);
+    expect(fixture.debugElement.query(By.css('.enable-override-btn'))).toBeNull();
+    pendingRefresh.complete();
+  });
+
   it('a 409 with any other code is the generic failure, still re-reading the appointment', async () => {
     await setup();
     stubService.executeOverride.mockReturnValue(

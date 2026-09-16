@@ -598,7 +598,7 @@ function displayName(entry: LocationTechnicianRosterEntryResponse): string {
  * ACTIVE on its reference date. Expired, revoked and superseded credentials are
  * shown elsewhere; here they are not competence.
  */
-function heldSkillCodes(credentials: readonly TechnicianCredentialResponse[] | undefined): string[] {
+export function heldSkillCodes(credentials: readonly TechnicianCredentialResponse[] | undefined): string[] {
   return (credentials ?? [])
     .filter(credential => credential.status === TechnicianCredentialResponseStatusEnum.Active)
     .map(credential => credential.skillCode ?? '')
