@@ -87,7 +87,7 @@ button {
   padding: var(--space-2) var(--space-4);
   border: none;
   background: var(--accent-strong);
-  color: #fff;
+  color: var(--contrastTextColor);
 }
 
 .table-scroll-container {

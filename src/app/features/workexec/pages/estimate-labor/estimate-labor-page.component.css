@@ -83,6 +83,6 @@
 }
 
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn--accent { background: var(--accent-strong); color: #fff; }
+.btn--accent { background: var(--accent-strong); color: var(--contrastTextColor); }
 .btn--ghost { background: transparent; color: var(--link-color); padding-left: 0; padding-right: 0; }
 @media (max-width: 767px) { .estimate-labor { padding: var(--space-4); max-width: 100%; } .field-row { flex-direction: column; } .totals-panel { max-width: 100%; margin-left: 0; } }

@@ -33,10 +33,10 @@
 .status-chip--awaiting-advisor-review {background:var(--status-warning-bg);color: var(--status-warning-fg);}
 .status-chip--approved {background:var(--status-success-bg);color: var(--status-success-fg);}
 .status-chip--declined {background:var(--status-error-bg);color:var(--status-error-fg);}
-.status-chip--cancelled {background:var(--surface-inset);color:#616161;}
+.status-chip--cancelled {background:var(--surface-inset);color:var(--text-muted);}
 .btn {display:inline-flex;align-items:center;justify-content:center;padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);font-size:0.875rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:opacity 0.15s;}
 .btn--sm {padding:var(--space-1) var(--space-3);font-size:0.8rem;}
-.btn--accent {background:linear-gradient(135deg,#006a62,#00897b);color:#fff;border:none;}
+.btn--accent {background:linear-gradient(135deg,var(--accent-strong-deep),var(--accent-strong));color:var(--contrastTextColor);border:none;}
 .btn--accent:disabled {opacity:0.5;cursor:not-allowed;}
 .btn--ghost {background:transparent;border:1px solid rgba(130,130,130,0.3);color:var(--currentTextColor);}
 .btn--approve {background:var(--status-success-bg);color: var(--status-success-fg);border:1px solid rgba(46,125,50,0.3);}

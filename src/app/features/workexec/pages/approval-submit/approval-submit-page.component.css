@@ -28,6 +28,6 @@
 .success-heading { margin: 0; font-size: 1rem; font-weight: 700; color: var(--status-success-fg); }
 .form-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
 .btn { padding: var(--space-3) var(--space-5); font-size: 0.9375rem; font-weight: 600; border: none; border-radius: 0.125rem; cursor: pointer; transition: opacity 0.15s; text-decoration: none; display: inline-flex; align-items: center; }
-.btn--accent { background: var(--accent-strong); color: #fff; }
+.btn--accent { background: var(--accent-strong); color: var(--contrastTextColor); }
 .btn--ghost { background: transparent; color: var(--link-color); padding-left: 0; padding-right: 0; }
 @media (max-width: 767px) { .approval-submit { padding: var(--space-4); max-width: 100%; } }

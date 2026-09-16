@@ -27,14 +27,14 @@
 .alert--error {background:var(--status-error-bg);color:var(--status-error-fg);}
 .btn {display:inline-flex;align-items:center;justify-content:center;padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);font-size:0.875rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:opacity 0.15s;}
 .btn--sm {padding:var(--space-1) var(--space-3);font-size:0.8rem;}
-.btn--accent {background:linear-gradient(135deg,#006a62,#00897b);color:#fff;border:none;}
+.btn--accent {background:linear-gradient(135deg,var(--accent-strong-deep),var(--accent-strong));color:var(--contrastTextColor);border:none;}
 .btn--accent:disabled {opacity:0.5;cursor:not-allowed;}
 .btn--ghost {background:transparent;border:1px solid rgba(130,130,130,0.3);color:var(--currentTextColor);}
 /* Substitution panel */
 /* Native <dialog> opened via showModal(); reset UA chrome so it fills the viewport as the slide-out backdrop. */
 .subst-backdrop {position:fixed;inset:0;max-width:none;max-height:none;margin:0;border:0;background:rgba(15,53,96,0.35);display:flex;align-items:flex-end;justify-content:flex-end;z-index:200;}
 .subst-backdrop::backdrop {background:transparent;}
-.subst-panel {background:#fff;width:min(460px,100vw);height:100%;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4);overflow-y:auto;}
+.subst-panel {background:var(--cardBackground);width:min(460px,100vw);height:100%;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4);overflow-y:auto;}
 .subst-panel__header {display:flex;align-items:center;justify-content:space-between;}
 .subst-panel__title {font-family:var(--font-primary);font-size:1.1rem;font-weight:700;margin:0;}
 .subst-panel__actions {display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:auto;padding-top:var(--space-4);}

@@ -134,7 +134,7 @@
 
 .btn--primary {
   background: var(--accent-strong);
-  color: #fff;
+  color: var(--contrastTextColor);
 }
 
 .btn--primary:hover:not(:disabled) { background: var(--durion-teal-500); }

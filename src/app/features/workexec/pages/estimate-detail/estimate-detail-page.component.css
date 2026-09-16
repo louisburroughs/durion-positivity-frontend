@@ -187,7 +187,7 @@
 
 .btn--accent {
   background: var(--accent-strong);
-  color: #fff;
+  color: var(--contrastTextColor);
 }
 
 .btn--full {
@@ -230,8 +230,8 @@
 
 /* CAP-004: Promotion CTA styles (Stories 231, 228, 227) */
 .btn--promote {
-  background: linear-gradient(135deg, #006a62, #00897b);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent-strong-deep), var(--accent-strong));
+  color: var(--contrastTextColor);
   margin-top: var(--space-3);
   border: none;
 }

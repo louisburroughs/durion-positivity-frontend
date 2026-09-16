@@ -141,8 +141,8 @@
 }
 
 .btn--primary {
-  background: linear-gradient(135deg, var(--brand-primary), var(--primaryA400));
-  color: #fff;
+  background: linear-gradient(135deg, var(--brand-primary), var(--durion-blue-600));
+  color: var(--contrastTextColor);
 }
 
 .btn--primary:hover:not(:disabled) {

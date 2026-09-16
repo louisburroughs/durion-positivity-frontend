@@ -212,7 +212,7 @@
 .chip-remove:hover,
 .chip-remove:focus-visible {
   background: var(--brand-primary);
-  color: #fff;
+  color: var(--contrastTextColor);
 }
 
 .clear-all-btn {

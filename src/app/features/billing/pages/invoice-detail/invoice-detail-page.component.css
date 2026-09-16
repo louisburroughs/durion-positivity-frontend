@@ -73,9 +73,9 @@
   color: var(--text-muted);
   border: 1px solid var(--border-color);
 }
-.type-chip--part { background: #dbeafe; color: #1e40af; border-color: #1e40af; }
-.type-chip--service { background: #dcfce7; color: var(--status-success-fg); border-color: var(--status-success-fg); }
-.type-chip--labor { background: #f0fdf4; color: var(--status-success-fg); border-color: var(--status-success-fg); }
+.type-chip--part { background: var(--status-info-bg); color: var(--status-info-fg); border-color: var(--status-info-fg); }
+.type-chip--service { background: var(--status-success-bg); color: var(--status-success-fg); border-color: var(--status-success-fg); }
+.type-chip--labor { background: var(--status-ready-bg); color: var(--status-success-fg); border-color: var(--status-success-fg); }
 
 /* ── Totals breakdown ───────────────────────────────────────────────────── */
 
@@ -209,11 +209,11 @@
    in each, so the invoice-detail page must carry its own copies. */
 
 .wo-header {
-  background: linear-gradient(135deg, #0f3560, #2b4c78);
+  background: linear-gradient(135deg, var(--durion-blue-800), var(--brand-primary));
   border-radius: var(--radius-lg);
   padding: var(--space-5) var(--space-6);
   margin-bottom: var(--space-5);
-  color: #fff;
+  color: var(--contrastTextColor);
 }
 
 .wo-header__inner {
@@ -256,7 +256,7 @@
 
 .wo-header__actions .btn--ghost {
   border: 1px solid rgba(255, 255, 255, 0.35);
-  color: #fff;
+  color: var(--contrastTextColor);
   background: transparent;
 }
 
@@ -297,7 +297,7 @@
   align-self: flex-start;
 }
 
-.status-chip--draft { background: var(--surface-inset); color: #616161; }
+.status-chip--draft { background: var(--surface-inset); color: var(--text-muted); }
 .status-chip--pending-review { background: var(--status-warning-bg); color: var(--status-warning-fg); }
 .status-chip--issued { background: var(--status-info-bg); color: var(--status-info-fg); }
 .status-chip--finalized { background: var(--status-success-bg); color: var(--status-success-fg); }
@@ -336,8 +336,8 @@
 }
 
 .btn--accent {
-  background: linear-gradient(135deg, #006a62, #00897b);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent-strong-deep), var(--accent-strong));
+  color: var(--contrastTextColor);
   border: none;
 }
 
@@ -384,8 +384,8 @@
 
 /* ── Type chip extra variants ───────────────────────────────────────────── */
 
-.type-chip--fee { background: #fef3c7; color: #92400e; border-color: #92400e; }
-.type-chip--tax { background: #ede9fe; color: #5b21b6; border-color: #5b21b6; }
+.type-chip--fee { background: var(--status-warning-bg); color: var(--status-warning-fg); border-color: var(--status-warning-fg); }
+.type-chip--tax { background: var(--status-neutral-bg); color: var(--status-neutral-fg); border-color: var(--status-neutral-fg); }
 
 /* ── Modal ──────────────────────────────────────────────────────────────── */
 

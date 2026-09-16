@@ -24,7 +24,7 @@
 .btn:active:not(:disabled) { transform: scale(0.97); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn--sm { padding: var(--space-1) var(--space-4); font-size: 0.82rem; }
-.btn--primary { background: var(--accent-strong); color: #fff; }
+.btn--primary { background: var(--accent-strong); color: var(--contrastTextColor); }
 .btn--primary:hover:not(:disabled) { background: var(--durion-teal-500); }
 .btn--secondary { background: var(--primary50); color: var(--currentTextColor); }
 .btn--ghost { background: transparent; color: var(--handleColor); }

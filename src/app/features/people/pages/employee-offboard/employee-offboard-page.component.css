@@ -135,11 +135,11 @@ label {
 
 .btn--danger {
   background: var(--functional-error-red);
-  color: #ffffff;
+  color: var(--contrastTextColor);
 }
 
 .btn--danger:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--functional-error-red) 85%, #000000);
+  background: color-mix(in srgb, var(--functional-error-red) 85%, var(--currentTextColor));
 }
 
 .btn--ghost {

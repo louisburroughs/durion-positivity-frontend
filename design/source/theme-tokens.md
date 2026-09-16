@@ -78,6 +78,8 @@ Stable aliases mapping palette tokens to roles. Shared across light and dark.
 | `--brand-secondary` | `--durion-graphite-700` | Secondary text/UI |
 | `--brand-accent` | `--durion-teal-400` | **UI accent / highlight** (borders, icons, small fills) |
 | `--accent-strong` | `#006a6a` | **Filled accent button with white text** — teal-400 is only 2.4:1 on white; this is 5.8:1. Never put white text on `--brand-accent`. |
+| `--accent-strong-deep` | `#00504f` | Deep end of the accent gradient and its hover — white text 7.7:1 |
+| `--logo-plate` | `#ffffff` | **Deliberately theme-independent.** The white plate behind the logo mark is part of the mark, not a surface, so it must not follow `--cardBackground`. The only sanctioned always-white fill. |
 | `--brand-gold` | `--durion-gold-500` | **Heritage / premium accent — NOT the UI accent** |
 | `--brand-background` | `--durion-grey-100` | Page background |
 | `--brand-surface` | `#ffffff` | Card / modal surface |

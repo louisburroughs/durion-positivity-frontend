@@ -7,11 +7,11 @@
 
 /* Header — gradient per design authority: 135deg #0f3560 → #2b4c78, white text */
 .wo-header {
-  background: linear-gradient(135deg, #0f3560, #2b4c78);
+  background: linear-gradient(135deg, var(--durion-blue-800), var(--brand-primary));
   border-radius: var(--radius-lg);
   padding: var(--space-5) var(--space-6);
   margin-bottom: var(--space-5);
-  color: #fff;
+  color: var(--contrastTextColor);
 }
 
 .wo-header__inner {
@@ -85,14 +85,14 @@
 }
 
 .wo-header__actions .btn--accent {
-  background: linear-gradient(135deg, #006a62, #00897b);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent-strong-deep), var(--accent-strong));
+  color: var(--contrastTextColor);
   border: none;
 }
 
 .wo-header__actions .btn--ghost {
   border: 1px solid rgba(255, 255, 255, 0.35);
-  color: #fff;
+  color: var(--contrastTextColor);
   background: transparent;
 }
 
@@ -282,7 +282,7 @@
 
 .status-chip--draft {
   background: var(--surface-inset);
-  color: #616161;
+  color: var(--text-muted);
 }
 
 .status-chip--completed {
@@ -296,7 +296,7 @@
 }
 
 .status-chip--on_hold {
-  background: #fff8e1;
+  background: var(--status-warning-bg);
   color: var(--status-warning-fg);
 }
 

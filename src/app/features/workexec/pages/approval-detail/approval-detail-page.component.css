@@ -28,6 +28,6 @@
 .hint-text { font-size: 0.875rem; color: var(--handleColor); margin: 0; }
 .form-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
 .btn { padding: var(--space-3) var(--space-5); font-size: 0.9375rem; font-weight: 600; border: none; border-radius: 0.125rem; cursor: pointer; transition: opacity 0.15s; text-decoration: none; display: inline-flex; align-items: center; }
-.btn--primary { background: linear-gradient(135deg, var(--brand-primary), var(--primaryA400)); color: #fff; }
+.btn--primary { background: linear-gradient(135deg, var(--brand-primary), var(--durion-blue-600)); color: var(--contrastTextColor); }
 .btn--ghost { background: transparent; color: var(--link-color); padding-left: 0; padding-right: 0; }
 @media (max-width: 767px) { .approval-detail { padding: var(--space-4); max-width: 100%; } .expiration-banner { flex-direction: column; } }

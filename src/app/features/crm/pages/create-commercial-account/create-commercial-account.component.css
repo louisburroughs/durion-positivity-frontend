@@ -169,7 +169,7 @@
 /* Primary: Electric Teal for CTA only */
 .btn--primary {
   background: linear-gradient(135deg, var(--durion-blue-700), var(--durion-blue-600));
-  color: #fff;
+  color: var(--contrastTextColor);
 }
 
 .btn--primary:hover:not(:disabled) {
@@ -179,7 +179,7 @@
 /* Teal variant for the create CTA specifically */
 .crm-create-account .btn--primary {
   background: var(--accent-strong);
-  color: #fff;
+  color: var(--contrastTextColor);
 }
 
 .crm-create-account .btn--primary:hover:not(:disabled) {

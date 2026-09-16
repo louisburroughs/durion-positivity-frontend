@@ -48,7 +48,7 @@
 
 .mapping-confidence--high {
 	color: var(--status-success-fg);
-	background: color-mix(in srgb, #22c55e 20%, var(--cardBackground));
+	background: var(--status-success-bg);
 }
 
 .mapping-confidence--medium { color: var(--status-warning-fg);
@@ -57,7 +57,7 @@
 
 .mapping-confidence--low {
 	color: var(--status-error-fg);
-	background: color-mix(in srgb, #ef4444 20%, var(--cardBackground));
+	background: var(--status-error-bg);
 }
 
 .mapping-btn {

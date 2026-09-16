@@ -107,13 +107,13 @@
 
 .job-status--completed {
 	color: var(--status-success-fg);
-	background: color-mix(in srgb, #22c55e 20%, var(--cardBackground));
+	background: var(--status-success-bg);
 }
 
 .job-status--failed,
 .job-status--cancelled {
 	color: var(--status-error-fg);
-	background: color-mix(in srgb, #ef4444 20%, var(--cardBackground));
+	background: var(--status-error-bg);
 }
 
 .job-status--created,
@@ -122,6 +122,6 @@
 .job-status--mapping_review,
 .job-status--dedup,
 .job-status--processing {
-	color: #1d4ed8;
-	background: color-mix(in srgb, #3b82f6 16%, var(--cardBackground));
+	color: var(--status-info-fg);
+	background: var(--status-info-bg);
 }

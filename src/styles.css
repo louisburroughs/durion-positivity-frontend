@@ -66,6 +66,10 @@
   --brand-secondary: var(--durion-graphite-700);
   --brand-accent: var(--durion-teal-400);
   --accent-strong: #006a6a; /* AA-safe accent for white text on a filled button (teal-400 is only 2.4:1; this is 5.8:1) */
+  --accent-strong-deep: #00504f; /* deep end of the accent gradient / its hover — white text 7.7:1 */
+  /* The logo mark sits on its own white plate in BOTH themes: the plate is part of
+     the mark, not a surface, so it must not follow --cardBackground. */
+  --logo-plate: #ffffff;
   --brand-gold: var(--durion-gold-500);
   --brand-background: var(--durion-grey-100);
   --brand-surface: #ffffff;
@@ -316,8 +320,8 @@ output.alert {
 
 .alert-critical {
   background: var(--functional-error-red);
-  border-color: #8b2020;
-  color: #fff;
+  border-color: var(--status-error-fg);
+  color: var(--contrastTextColor);
 }
 
 .alert-soft {
@@ -343,17 +347,17 @@ output.alert {
 }
 
 .dur-status.valid {
-  background: #edfaef;
-  color: #2e7d3a;
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
 }
 
 .dur-status.warn {
-  background: #fef8ec;
-  color: #8a5e0a;
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
 }
 
 .dur-status.error {
-  background: #fbeaea;
+  background: var(--status-error-bg);
   color: var(--functional-error-red);
 }
 
@@ -569,13 +573,13 @@ app-workorder-detail-page .alert {
 }
 
 app-workorder-detail-page .alert--error {
-  background: #ffebee;
-  color: #c62828;
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
 }
 
 app-workorder-detail-page .alert--warn {
-  background: #fff8e1;
-  color: #8a5e0a;
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
 }
 
 app-workorder-detail-page .alert--success {
@@ -601,8 +605,8 @@ app-workorder-detail-page .btn {
 }
 
 app-workorder-detail-page .btn--accent {
-  background: linear-gradient(135deg, #006a62, #00897b);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent-strong-deep), var(--accent-strong));
+  color: var(--contrastTextColor);
   border: none;
 }
 
@@ -684,7 +688,7 @@ app-workorder-detail-page .checklist-item__icon {
 }
 
 app-workorder-detail-page .checklist-item--ok .checklist-item__icon {
-  color: #1b5e20;
+  color: var(--status-success-fg);
 }
 
 app-workorder-detail-page .checklist-item--blocking .checklist-item__icon {
@@ -692,7 +696,7 @@ app-workorder-detail-page .checklist-item--blocking .checklist-item__icon {
 }
 
 app-workorder-detail-page .checklist-item--warning .checklist-item__icon {
-  color: #8a5e0a;
+  color: var(--status-warning-fg);
 }
 
 app-workorder-detail-page .checklist-item__label {
@@ -757,7 +761,7 @@ app-workorder-detail-page .failed-check--blocking .failed-check__icon {
 }
 
 app-workorder-detail-page .failed-check--warning .failed-check__icon {
-  color: #8a5e0a;
+  color: var(--status-warning-fg);
 }
 
 app-party-detail .modal-backdrop {
@@ -842,12 +846,12 @@ app-party-detail .btn--sm {
 }
 
 app-party-detail .btn--primary {
-  background: #006a6a; /* teal-400 (#2bbbad) gives white only 2.4:1; darker teal = 6.4:1 AA */
-  color: #fff;
+  background: var(--accent-strong); /* teal-400 (#2bbbad) gives white only 2.4:1; darker teal = 6.4:1 AA */
+  color: var(--contrastTextColor);
 }
 
 app-party-detail .btn--primary:hover:not(:disabled) {
-  background: #00504f;
+  background: var(--accent-strong-deep);
 }
 
 app-party-detail .btn--secondary {
@@ -925,7 +929,7 @@ app-party-detail .loading-hint {
 }
 
 app-party-detail .hint-text--warn {
-  color: #8a5e0a;
+  color: var(--status-warning-fg);
 }
 
 app-party-detail .inline-error {
@@ -1001,7 +1005,7 @@ app-create-commercial-account .state-icon {
 }
 
 app-create-commercial-account .state-icon--success {
-  color: #1b5e20;
+  color: var(--status-success-fg);
 }
 
 app-create-commercial-account .spinner {

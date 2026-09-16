@@ -203,7 +203,7 @@
 
 .rag-btn--primary {
   background: var(--brand-primary);
-  color: #fff;
+  color: var(--contrastTextColor);
   border-color: var(--link-color);
 }
 
