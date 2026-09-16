@@ -6,7 +6,7 @@
 }
 
 .section-overline {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -15,7 +15,7 @@
 
 .page-header h1 {
   margin: 0;
-  color: var(--brand-primary);
+  color: var(--link-color);
 }
 
 .detail-grid {
@@ -33,7 +33,7 @@
 
 .detail-grid input {
   border: none;
-  border-bottom: 2px solid var(--durion-graphite-200);
+  border-bottom: 2px solid var(--input-border);
   border-radius: 0;
   background: transparent;
   padding-left: 0;
@@ -42,7 +42,7 @@
 .detail-grid input:focus,
 textarea:focus {
   box-shadow: none;
-  border-bottom-color: var(--brand-accent);
+  border-bottom-color: var(--accentA700);
 }
 
 .status-badge {
@@ -62,7 +62,7 @@ textarea:focus {
    not published on screen. The references table above is the readable view. */
 .raw-payload > summary {
   cursor: pointer;
-  color: var(--durion-graphite-600);
+  color: var(--text-muted);
 }
 
 .raw-payload > pre {
@@ -72,14 +72,14 @@ textarea:focus {
 
 textarea {
   border: none;
-  border-bottom: 2px solid var(--durion-graphite-200);
+  border-bottom: 2px solid var(--input-border);
   border-radius: 0;
   background: transparent;
   min-height: 6rem;
 }
 
 .field-error {
-  border-bottom-color: var(--functional-error-red);
+  border-bottom-color: var(--status-error-fg);
 }
 
 button {
@@ -87,7 +87,7 @@ button {
   padding: var(--space-2) var(--space-4);
   border: none;
   background: var(--accent-strong);
-  color: #fff;
+  color: var(--contrastTextColor);
 }
 
 .table-scroll-container {

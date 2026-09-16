@@ -116,10 +116,10 @@
 
 .btn-secondary {
   align-items: center;
-  background: var(--brand-primary-soft);
+  background: var(--primary50);
   border: none;
   border-radius: 0.65rem;
-  color: var(--brand-primary);
+  color: var(--link-color);
   cursor: pointer;
   display: inline-flex;
   font: inherit;
@@ -148,7 +148,7 @@
 
 .skeleton-row {
   animation: skeleton-pulse 1.3s ease-in-out infinite;
-  background: var(--brand-primary-soft);
+  background: var(--primary50);
   border-radius: 0.5rem;
   height: 1.5rem;
   margin-bottom: 0.5rem;

@@ -80,7 +80,7 @@
 
 .badge-warn {
   background: var(--functional-warning);
-  color: var(--durion-grey-900);
+  color: var(--currentTextColor);
 }
 
 .totals-negative {
@@ -212,7 +212,7 @@
 .chip-remove:hover,
 .chip-remove:focus-visible {
   background: var(--brand-primary);
-  color: #fff;
+  color: var(--contrastTextColor);
 }
 
 .clear-all-btn {

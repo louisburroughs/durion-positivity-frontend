@@ -7,7 +7,7 @@
 main {
   background: var(--cardBackground);
   border-radius: var(--radius-md);
-  border-top: 2px solid var(--brand-primary);
+  border-top: 2px solid var(--link-color);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -106,15 +106,15 @@ button:disabled {
 }
 
 .status-message {
-  color: #8a5e0a;
+  color: var(--status-warning-fg);
 }
 
 .success-text {
-  color: #1b5e20;
+  color: var(--status-success-fg);
 }
 
 .error-text {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .table-wrap {

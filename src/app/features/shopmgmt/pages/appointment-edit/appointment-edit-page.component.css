@@ -13,11 +13,11 @@
 
 .appt-id {
   font-size: 0.875rem;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .loading-state {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   padding: var(--space-4);
 }
 
@@ -46,7 +46,7 @@
 }
 
 .label {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -66,7 +66,7 @@
 
 .actions-helper-text {
   font-size: 0.8125rem;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .audit-section {
@@ -79,14 +79,14 @@
   font-family: var(--font-primary);
   font-size: 1rem;
   margin: 0 0 var(--space-4);
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .audit-unavailable,
 .audit-empty {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
@@ -136,7 +136,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 1.125rem;
 }
 
@@ -147,7 +147,7 @@
 
 .form-group label {
   font-size: 0.875rem;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .form-group input,
@@ -180,12 +180,12 @@
 }
 
 .hard-conflict {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
   font-size: 0.875rem;
 }
 
 .soft-conflict {
-  color: #8a5e0a;
+  color: var(--status-warning-fg);
   font-size: 0.875rem;
 }
 

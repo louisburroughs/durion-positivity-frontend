@@ -5,7 +5,7 @@
 }
 
 .section-overline {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -14,7 +14,7 @@
 
 .page-header h1 {
   margin: 0;
-  color: var(--brand-primary);
+  color: var(--link-color);
 }
 
 .tab-bar {
@@ -31,8 +31,8 @@
 }
 
 .tab-bar button.active {
-  border-bottom-color: var(--brand-accent);
-  color: var(--brand-primary);
+  border-bottom-color: var(--accentA700);
+  color: var(--link-color);
 }
 
 .table-scroll-container {

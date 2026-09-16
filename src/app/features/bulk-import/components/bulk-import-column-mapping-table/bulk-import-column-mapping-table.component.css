@@ -7,7 +7,7 @@
 	width: 100%;
 	border-collapse: collapse;
 	background: var(--cardBackground);
-	border: 1px solid var(--input-border);
+	border: 1px solid var(--border-color);
 	border-radius: var(--radius-lg);
 	overflow: hidden;
 }
@@ -15,7 +15,7 @@
 .mapping-table__table th,
 .mapping-table__table td {
 	padding: var(--space-3);
-	border-bottom: 1px solid color-mix(in srgb, var(--input-border) 75%, transparent);
+	border-bottom: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
 	vertical-align: top;
 }
 
@@ -47,8 +47,8 @@
 }
 
 .mapping-confidence--high {
-	color: #14532d;
-	background: color-mix(in srgb, #22c55e 20%, var(--cardBackground));
+	color: var(--status-success-fg);
+	background: var(--status-success-bg);
 }
 
 .mapping-confidence--medium { color: var(--status-warning-fg);
@@ -56,8 +56,8 @@
 }
 
 .mapping-confidence--low {
-	color: #7f1d1d;
-	background: color-mix(in srgb, #ef4444 20%, var(--cardBackground));
+	color: var(--status-error-fg);
+	background: var(--status-error-bg);
 }
 
 .mapping-btn {

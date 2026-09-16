@@ -16,14 +16,14 @@
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .ips-title {
   margin: 0;
   font-family: var(--font-primary);
   font-size: clamp(1.5rem, 2.2vw, 2.1rem);
-  color: var(--brand-primary);
+  color: var(--link-color);
 }
 
 .display-lg {
@@ -31,7 +31,7 @@
   font-family: var(--font-primary);
   font-size: clamp(1.75rem, 3.5vw, 2.6rem);
   line-height: 1.1;
-  color: var(--brand-primary);
+  color: var(--link-color);
 }
 
 .body-md {
@@ -108,7 +108,7 @@
   gap: var(--space-4);
   padding: var(--space-5);
   padding-left: 12px;
-  border-left: 2px solid var(--brand-primary);
+  border-left: 2px solid var(--link-color);
   border-radius: var(--radius-md);
   background: var(--cardBackground);
 }
@@ -118,7 +118,7 @@
   gap: var(--space-1);
   padding: var(--space-3);
   padding-left: 12px;
-  border-left: 2px solid var(--brand-primary);
+  border-left: 2px solid var(--link-color);
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--brand-secondary) 8%, transparent);
 }
@@ -128,7 +128,7 @@
 }
 
 .ips-posting-refs__secondary {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .ips-banner {
@@ -165,7 +165,7 @@
 
 .ips-button:focus-visible,
 .ips-history-row:focus-visible {
-  outline: 2px solid var(--brand-secondary);
+  outline: 2px solid var(--input-focus-border);
   outline-offset: 2px;
 }
 

@@ -10,13 +10,13 @@
 .estimate-meta { margin: 0; font-size: 0.875rem; color: var(--handleColor); display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 .audit-meta { font-size: 0.75rem; color: var(--handleColor); }
 .estimate-total { margin: 0; font-size: 0.9rem; color: var(--currentTextColor); }
-.status-chip { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--brand-primary-soft); color: var(--brand-primary); }
+.status-chip { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--primary50); color: var(--link-color); }
 .status-chip--pending { background: var(--status-warning-bg); color: var(--status-warning-fg); }
 .submit-description { font-size: 0.875rem; color: var(--currentTextColor); }
 .submit-description p { margin: 0 0 var(--space-2); }
 .submit-checklist { margin: 0 0 var(--space-2); padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-1); }
 .field-errors-list { background: var(--status-error-bg); padding: var(--space-4); border-radius: 0.125rem; display: flex; flex-direction: column; gap: var(--space-1); }
-.field-error { margin: 0; font-size: 0.75rem; color: var(--functional-error-red); }
+.field-error { margin: 0; font-size: 0.75rem; color: var(--status-error-fg); }
 .alert { padding: var(--space-3) var(--space-4); border-radius: 0.125rem; font-size: 0.875rem; }
 .alert--error { background: var(--status-error-bg); color: var(--status-error-fg); }
 .hint-text { font-size: 0.875rem; color: var(--handleColor); margin: 0; }
@@ -25,9 +25,9 @@
 .confirm-panel::backdrop { background: rgba(15, 53, 96, 0.4); }
 .confirm-heading { margin: 0; font-size: 1rem; font-weight: 700; color: var(--currentTextColor); }
 .success-panel { background: var(--status-success-bg); padding: var(--space-5); border-radius: 0.25rem; display: flex; flex-direction: column; gap: var(--space-3); }
-.success-heading { margin: 0; font-size: 1rem; font-weight: 700; color: #1b5e20; }
+.success-heading { margin: 0; font-size: 1rem; font-weight: 700; color: var(--status-success-fg); }
 .form-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
 .btn { padding: var(--space-3) var(--space-5); font-size: 0.9375rem; font-weight: 600; border: none; border-radius: 0.125rem; cursor: pointer; transition: opacity 0.15s; text-decoration: none; display: inline-flex; align-items: center; }
-.btn--accent { background: var(--accent-strong); color: #fff; }
-.btn--ghost { background: transparent; color: var(--brand-primary); padding-left: 0; padding-right: 0; }
+.btn--accent { background: var(--accent-strong); color: var(--contrastTextColor); }
+.btn--ghost { background: transparent; color: var(--link-color); padding-left: 0; padding-right: 0; }
 @media (max-width: 767px) { .approval-submit { padding: var(--space-4); max-width: 100%; } }

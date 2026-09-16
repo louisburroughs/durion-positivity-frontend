@@ -15,7 +15,7 @@
 
 .security-tab {
   text-decoration: none;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   padding: var(--space-2) var(--space-3);
   border-bottom: 2px solid transparent;
   font-weight: 600;
@@ -23,8 +23,8 @@
 }
 
 .security-tab.active-tab {
-  color: var(--brand-primary);
-  border-bottom-color: var(--brand-primary);
+  color: var(--link-color);
+  border-bottom-color: var(--link-color);
 }
 
 .security-tab:focus-visible {

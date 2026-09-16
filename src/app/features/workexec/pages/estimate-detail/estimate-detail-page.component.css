@@ -73,8 +73,8 @@
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
-  background: var(--brand-primary-soft);
-  color: var(--brand-primary);
+  background: var(--primary50);
+  color: var(--link-color);
 }
 
 .status-chip--approved {
@@ -187,7 +187,7 @@
 
 .btn--accent {
   background: var(--accent-strong);
-  color: #fff;
+  color: var(--contrastTextColor);
 }
 
 .btn--full {
@@ -197,7 +197,7 @@
 
 .btn--ghost {
   background: transparent;
-  color: var(--brand-primary);
+  color: var(--link-color);
   padding: 0;
   font-size: 0.875rem;
 }
@@ -206,7 +206,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--brand-primary);
+  color: var(--link-color);
   font-size: inherit;
   padding: 0;
   text-decoration: underline;
@@ -230,8 +230,8 @@
 
 /* CAP-004: Promotion CTA styles (Stories 231, 228, 227) */
 .btn--promote {
-  background: linear-gradient(135deg, #006a62, #00897b);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent-strong-deep), var(--accent-strong));
+  color: var(--contrastTextColor);
   margin-top: var(--space-3);
   border: none;
 }
@@ -252,7 +252,7 @@
 .partial-scope-note__title {
   font-weight: 700;
   margin: 0 0 var(--space-1);
-  color: #8a5e0a;
+  color: var(--status-warning-fg);
 }
 
 .partial-scope-note__body {
@@ -262,7 +262,7 @@
 
 .partial-scope-note__detail summary {
   cursor: pointer;
-  color: var(--brand-primary);
+  color: var(--link-color);
   font-size: 0.8rem;
 }
 
@@ -288,5 +288,5 @@
 }
 
 .crm-ref-value--error {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }

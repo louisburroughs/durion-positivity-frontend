@@ -10,8 +10,8 @@
 
 .asn-entry-section h2 {
   font-family: var(--font-primary);
-  color: var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary-soft) 80%, var(--cardBackground));
+  color: var(--link-color);
+  background: color-mix(in srgb, var(--primary50) 80%, var(--cardBackground));
   border-radius: 12px;
   padding: 0.55rem 0.75rem;
   margin-bottom: 1rem;
@@ -37,7 +37,7 @@
 
 .asn-error {
   margin-top: 0.7rem;
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .detail-grid {
@@ -50,7 +50,7 @@
 
 .detail-grid dt {
   font-weight: 600;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.85rem;
   opacity: 0.8;
   white-space: nowrap;
@@ -78,7 +78,7 @@
 
 .result-icon {
   font-size: 3rem;
-  color: #1b5e20;
+  color: var(--status-success-fg);
   display: block;
   margin-bottom: 0.5rem;
 }

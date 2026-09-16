@@ -11,7 +11,7 @@
 }
 
 .appointment-summary {
-  border: 1px solid var(--input-border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--cardBackground);
   padding: var(--space-4);
@@ -20,7 +20,7 @@
 
 .reschedule-form {
   background: var(--cardBackground);
-  border: 1px solid var(--input-border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--space-5);
   margin-bottom: var(--space-5);
@@ -43,7 +43,7 @@
 }
 
 .conflict-panel {
-  border: 1px solid var(--functional-warning);
+  border: 1px solid var(--status-warning-fg);
   background: var(--status-warning-bg);
   border-radius: var(--radius-md);
   padding: var(--space-4);
@@ -51,7 +51,7 @@
 }
 
 .conflict-item {
-  border: 1px solid var(--input-border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   background: var(--cardBackground);
   padding: var(--space-3);
@@ -59,16 +59,16 @@
 }
 
 .hard-conflict {
-  border-left: 4px solid var(--functional-error-red);
+  border-left: 4px solid var(--status-error-fg);
 }
 
 .soft-conflict {
-  border-left: 4px solid var(--functional-warning);
+  border-left: 4px solid var(--status-warning-fg);
 }
 
 .override-panel {
-  border: 1px solid var(--brand-accent);
-  background: var(--brand-surface);
+  border: 1px solid var(--accentA700);
+  background: var(--cardBackground);
   border-radius: var(--radius-md);
   padding: var(--space-4);
 }
@@ -85,12 +85,12 @@
 }
 
 .success-banner {
-  border: 1px solid var(--functional-success); color: var(--status-success-fg);
+  border: 1px solid var(--status-success-fg); color: var(--status-success-fg);
   background: var(--status-success-bg);
 }
 
 .error-banner {
-  border: 1px solid var(--functional-error-red); color: var(--status-error-fg);
+  border: 1px solid var(--status-error-fg); color: var(--status-error-fg);
   background: var(--status-error-bg);
 }
 

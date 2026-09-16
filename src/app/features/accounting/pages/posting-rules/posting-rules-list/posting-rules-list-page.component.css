@@ -12,14 +12,14 @@
 }
 
 .page-header h1 {
-  color: var(--brand-primary);
+  color: var(--link-color);
   margin: 0;
   flex: 1 1 16rem;
 }
 
 .section-overline {
   width: 100%;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -29,7 +29,7 @@
 button {
   border: none;
   background: var(--accent-strong);
-  color: #fff;
+  color: var(--contrastTextColor);
   padding: var(--space-2) var(--space-4);
 }
 
@@ -62,7 +62,7 @@ button {
 }
 
 .ledger-table tbody tr:focus-visible {
-  outline: 2px solid var(--brand-accent);
+  outline: 2px solid var(--input-focus-border);
   outline-offset: -2px;
 }
 

@@ -114,6 +114,6 @@ tbody tr:nth-child(even) {
   }
 
   .needs-review-row {
-    background: #f5f5f5;
+    background: var(--surface-inset);
   }
 }

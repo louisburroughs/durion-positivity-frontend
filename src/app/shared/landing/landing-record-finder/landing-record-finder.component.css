@@ -21,14 +21,14 @@
   align-items: center;
   gap: var(--space-2);
   background: var(--input-background);
-  border: 1px solid var(--input-border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-3);
   transition: border-color 0.15s ease;
 }
 
 .landing-finder--filled .landing-finder__box {
-  border-color: var(--brand-accent);
+  border-color: var(--accentA700);
 }
 
 .landing-finder__box:focus-within {
@@ -100,7 +100,7 @@
 }
 
 .landing-finder__status--error {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .landing-finder__option {

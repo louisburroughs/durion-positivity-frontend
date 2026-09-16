@@ -16,6 +16,29 @@ This is what keeps phases 1–4 from silently reverting.
 
 Each violation prints the documented replacement.
 
+## Role rules (theme-aware colours)
+
+A token can be sanctioned and still be wrong for the property it sits on. The Tier-2
+brand and functional tokens carry **one value used in both themes**, so they are fills,
+not text: `color: var(--brand-primary)` is 7.8:1 in light and 1.3:1 on the dark card.
+The same goes for raw Tier-1 ramp values, and for light fills such as
+`--brand-primary-soft`, which stay near-white in dark mode.
+
+The root config therefore adds a second, per-property set of restrictions:
+
+| Property | Rejected | Use instead |
+|---|---|---|
+| `color` | `--brand-primary` / `-secondary` / `-accent` / `-gold`, `--functional-*`, any raw `--durion-*-N` | `--link-color`, `--text-muted`, `--accentA700`, `--goldA400`, `--status-<kind>-fg`, `--currentTextColor` |
+| `background` / `background-color` | `--brand-primary-soft` / `-surface` / `-background`, raw `--durion-*-(50\|100\|200)` | `--primary50`, `--cardBackground`, `--surface-inset`, `--surface-variant`, `--status-<kind>-bg` |
+
+`background: var(--brand-primary)` stays legal — a filled button is what that token is for.
+
+These rules are **scoped to the directories already swept onto theme-aware tokens**, listed
+in `SWEPT` in `.stylelintrc.js`. Add a directory to that array as you sweep it, so the
+guardrail hardens incrementally instead of failing the build on pre-existing drift. The
+root config is `.stylelintrc.js` rather than `.stylelintrc.json` so the drift list can be
+shared between the base rule and the scoped one without being copied.
+
 ## Install
 
 ```bash

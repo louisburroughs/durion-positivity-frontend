@@ -86,8 +86,7 @@ h1 {
 }
 
 .status-badge--neutral {
-  background: color-mix(in srgb, var(--durion-graphite-200) 45%, var(--cardBackground));
-  color: var(--durion-graphite-700);
+  background: var(--status-neutral-bg); color: var(--status-neutral-fg);
 }
 
 .status-badge--warning {
@@ -108,7 +107,7 @@ h1 {
 }
 
 .field-row.field-error--visible input {
-  border-color: var(--functional-error-red);
+  border-color: var(--status-error-fg);
 }
 
 label {
@@ -118,7 +117,7 @@ label {
 
 .field-error {
   font-size: 0.8125rem;
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .btn {
@@ -136,11 +135,11 @@ label {
 
 .btn--danger {
   background: var(--functional-error-red);
-  color: #ffffff;
+  color: var(--contrastTextColor);
 }
 
 .btn--danger:hover:not(:disabled) {
-  background: var(--status-error-bg);
+  background: color-mix(in srgb, var(--functional-error-red) 85%, var(--currentTextColor));
 }
 
 .btn--ghost {
@@ -174,7 +173,7 @@ label {
 }
 
 .modal-panel--destructive h2 {
-  color: color-mix(in srgb, var(--functional-error-red) 90%, #000000);
+  color: var(--status-error-fg);
 }
 
 .modal-footer {

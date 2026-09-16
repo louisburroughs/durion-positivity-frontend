@@ -52,18 +52,18 @@
 .jobs-btn--secondary {
 	background: transparent;
 	color: var(--currentTextColor);
-	border-color: color-mix(in srgb, var(--brand-primary) 34%, var(--input-border));
+	border-color: color-mix(in srgb, var(--link-color) 34%, var(--input-border));
 }
 
 .jobs-banner {
 	padding: var(--space-3) var(--space-4);
 	border-radius: var(--radius-md);
 	background: color-mix(in srgb, var(--brand-primary) 8%, var(--cardBackground));
-	border: 1px solid color-mix(in srgb, var(--brand-primary) 25%, var(--input-border));
+	border: 1px solid color-mix(in srgb, var(--link-color) 25%, var(--border-color));
 }
 
 .jobs-banner--error { color: var(--status-error-fg);
-	border-color: var(--functional-error-red);
+	border-color: var(--status-error-fg);
 	background: var(--status-error-bg);
 }
 
@@ -74,7 +74,7 @@
 
 .jobs-page__table-wrap {
 	overflow-x: auto;
-	border: 1px solid var(--input-border);
+	border: 1px solid var(--border-color);
 	border-radius: var(--radius-lg);
 	background: var(--cardBackground);
 }
@@ -87,7 +87,7 @@
 .jobs-table th,
 .jobs-table td {
 	padding: var(--space-3);
-	border-bottom: 1px solid color-mix(in srgb, var(--input-border) 72%, transparent);
+	border-bottom: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
 	text-align: left;
 }
 
@@ -110,29 +110,29 @@
 .job-status--mapping_review,
 .job-status--dedup,
 .job-status--processing {
-	color: #1d4ed8;
-	background: color-mix(in srgb, #3b82f6 16%, var(--cardBackground));
+	color: var(--status-info-fg);
+	background: var(--status-info-bg);
 }
 
 .job-status--completed {
-	color: #14532d;
-	background: color-mix(in srgb, #22c55e 20%, var(--cardBackground));
+	color: var(--status-success-fg);
+	background: var(--status-success-bg);
 }
 
 .job-status--failed,
 .job-status--cancelled {
-	color: #7f1d1d;
-	background: color-mix(in srgb, #ef4444 20%, var(--cardBackground));
+	color: var(--status-error-fg);
+	background: var(--status-error-bg);
 }
 
 .jobs-link {
-	color: var(--brand-primary);
+	color: var(--link-color);
 	font-weight: 600;
 }
 
 .jobs-link:focus-visible,
 .jobs-table__row:focus-visible {
-	outline: 3px solid color-mix(in srgb, var(--brand-primary) 30%, transparent);
+	outline: 3px solid color-mix(in srgb, var(--input-focus-border) 30%, transparent);
 	outline-offset: -2px;
 }
 

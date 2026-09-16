@@ -67,7 +67,7 @@
 }
 
 .billing-rules__input:focus {
-  border-bottom-color: var(--brand-primary);
+  border-bottom-color: var(--link-color);
 }
 
 .billing-rules__field--toggle input {

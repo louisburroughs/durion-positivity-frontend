@@ -57,7 +57,7 @@
 }
 
 .highlight-card {
-  background: color-mix(in srgb, var(--brand-primary-soft) 55%, var(--cardBackground));
+  background: color-mix(in srgb, var(--primary50) 55%, var(--cardBackground));
 }
 
 .dot {
@@ -86,7 +86,7 @@
 
 .skeleton-row {
   animation: skeleton-pulse 1.3s ease-in-out infinite;
-  background: var(--brand-primary-soft);
+  background: var(--primary50);
   border-radius: 0.5rem;
   height: 1.5rem;
   margin-bottom: 0.5rem;
@@ -148,9 +148,9 @@
 }
 
 .btn-secondary {
-  background: var(--brand-primary-soft);
+  background: var(--primary50);
   border: none;
-  color: var(--brand-primary);
+  color: var(--link-color);
 }
 
 .error-banner {

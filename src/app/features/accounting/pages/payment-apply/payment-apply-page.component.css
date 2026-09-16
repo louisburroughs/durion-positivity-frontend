@@ -5,12 +5,12 @@
 }
 
 .page-header h1 {
-  color: var(--brand-primary);
+  color: var(--link-color);
   margin: 0;
 }
 
 .section-overline {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -27,7 +27,7 @@
 input,
 textarea {
   border: none;
-  border-bottom: 2px solid var(--durion-graphite-200);
+  border-bottom: 2px solid var(--input-border);
   border-radius: 0;
   background: transparent;
   padding-left: 0;
@@ -41,14 +41,14 @@ textarea {
 input:focus,
 textarea:focus {
   box-shadow: none;
-  border-bottom-color: var(--brand-accent);
+  border-bottom-color: var(--accentA700);
 }
 
 button {
   width: fit-content;
   border: none;
   background: var(--accent-strong);
-  color: #fff;
+  color: var(--contrastTextColor);
   padding: var(--space-2) var(--space-4);
 }
 
@@ -58,7 +58,7 @@ button {
 }
 
 .error-text {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .state-panel {

@@ -201,7 +201,7 @@
   margin-bottom: var(--space-2);
   z-index: 30;
   background: var(--durion-grey-900);
-  color: var(--durion-grey-100);
+  color: var(--contrastTextColor);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--space-3);
@@ -224,7 +224,7 @@
 }
 
 .landing-card__icon--guided {
-  color: var(--durion-gold-300);
+  color: var(--goldA400);
 }
 
 .landing-card__title {
@@ -317,7 +317,7 @@
 .landing-btn--primary {
   background: var(--brand-primary);
   color: var(--contrastTextColor);
-  border-color: var(--brand-primary);
+  border-color: var(--link-color);
 }
 
 .landing-btn--secondary {

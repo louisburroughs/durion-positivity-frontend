@@ -9,8 +9,8 @@
 .label-sm { margin: 0; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--handleColor); }
 .value-lg { margin: 0.25rem 0 0; font-size: 1.25rem; font-weight: 700; color: var(--currentTextColor); }
 .value-md { margin: 0.25rem 0 0; font-size: 0.9375rem; color: var(--currentTextColor); }
-.text-error { color: var(--functional-error-red); }
-.status-chip { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--brand-primary-soft); color: var(--brand-primary); margin-top: 0.25rem; }
+.text-error { color: var(--status-error-fg); }
+.status-chip { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--primary50); color: var(--link-color); margin-top: 0.25rem; }
 .status-chip--approved { background: var(--status-success-bg); color: var(--status-success-fg); }
 .status-chip--expired { background: var(--status-error-bg); color: var(--status-error-fg); }
 .section-overline { margin: 0 0 var(--space-3); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--handleColor); }
@@ -23,11 +23,11 @@
 .totals-row { display: flex; justify-content: space-between; font-size: 0.875rem; color: var(--currentTextColor); }
 .totals-row--grand { font-weight: 700; font-size: 1rem; padding-top: var(--space-2); }
 .summary-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
-.field-error { margin: 0; font-size: 0.75rem; color: var(--functional-error-red); }
+.field-error { margin: 0; font-size: 0.75rem; color: var(--status-error-fg); }
 .alert { padding: var(--space-3) var(--space-4); border-radius: 0.125rem; font-size: 0.875rem; }
 .alert--error { background: var(--status-error-bg); color: var(--status-error-fg); }
 .hint-text { font-size: 0.875rem; color: var(--handleColor); margin: 0; }
 .btn { padding: var(--space-3) var(--space-5); font-size: 0.9375rem; font-weight: 600; border: none; border-radius: 0.125rem; cursor: pointer; transition: opacity 0.15s; text-decoration: none; display: inline-flex; align-items: center; }
-.btn--accent { background: var(--accent-strong); color: #fff; }
-.btn--ghost { background: transparent; color: var(--brand-primary); padding-left: 0; padding-right: 0; }
+.btn--accent { background: var(--accent-strong); color: var(--contrastTextColor); }
+.btn--ghost { background: transparent; color: var(--link-color); padding-left: 0; padding-right: 0; }
 @media (max-width: 767px) { .estimate-summary { padding: var(--space-4); max-width: 100%; } .summary-header { flex-direction: column; gap: var(--space-3); } }

@@ -32,8 +32,8 @@
 }
 
 .pvm__mode-btn[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--brand-primary-soft) 78%, var(--cardBackground));
-  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--primary50) 78%, var(--cardBackground));
+  color: var(--link-color);
 }
 
 .pvm__form {
@@ -62,7 +62,7 @@
 }
 
 .pvm__input:focus {
-  border-bottom-color: var(--brand-primary);
+  border-bottom-color: var(--link-color);
   box-shadow: none;
 }
 
@@ -98,7 +98,7 @@
 }
 
 .pvm__ready {
-  color: var(--brand-primary);
+  color: var(--link-color);
   font-weight: 600;
 }
 
@@ -113,8 +113,8 @@
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  border: 2px solid color-mix(in srgb, var(--brand-primary) 30%, transparent);
-  border-top-color: var(--brand-primary);
+  border: 2px solid color-mix(in srgb, var(--link-color) 30%, transparent);
+  border-top-color: var(--link-color);
   animation: pvm-spin 900ms linear infinite;
 }
 

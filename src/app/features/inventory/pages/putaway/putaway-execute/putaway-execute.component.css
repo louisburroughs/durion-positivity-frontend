@@ -16,7 +16,7 @@
 
 .detail-grid dt {
   font-weight: 600;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.85rem;
   opacity: 0.8;
   white-space: nowrap;

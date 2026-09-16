@@ -51,7 +51,7 @@
 .pos-btn--danger {
 	background: var(--status-error-bg);
 	color: var(--status-error-fg);
-	border-color: var(--functional-error-red);
+	border-color: var(--status-error-fg);
 }
 
 .pos-field {
@@ -116,7 +116,7 @@
 	gap: var(--space-3);
 	margin: 0 0 var(--space-3);
 	padding: var(--space-3) var(--space-4);
-	border: 1px solid var(--input-border);
+	border: 1px solid var(--border-color);
 	border-radius: var(--radius-md);
 	background: var(--cardBackground);
 	color: var(--currentTextColor);
@@ -124,25 +124,25 @@
 
 .pos-banner--error {
 	background: var(--status-error-bg);
-	border-color: var(--functional-error-red);
+	border-color: var(--status-error-fg);
 	color: var(--status-error-fg);
 }
 
 .pos-banner--warning {
 	background: var(--status-warning-bg);
-	border-color: var(--functional-warning);
+	border-color: var(--status-warning-fg);
 	color: var(--status-warning-fg);
 }
 
 .pos-banner--info {
 	background: var(--status-info-bg);
-	border-color: var(--functional-info-blue);
+	border-color: var(--status-info-fg);
 	color: var(--status-info-fg);
 }
 
 .pos-table-wrap {
 	overflow-x: auto;
-	border: 1px solid var(--input-border);
+	border: 1px solid var(--border-color);
 	border-radius: var(--radius-md);
 	background: var(--cardBackground);
 }
@@ -156,7 +156,7 @@
 .pos-table th,
 .pos-table td {
 	padding: var(--space-3);
-	border-bottom: 1px solid var(--input-border);
+	border-bottom: 1px solid var(--border-color);
 	text-align: left;
 	vertical-align: top;
 	color: var(--currentTextColor);

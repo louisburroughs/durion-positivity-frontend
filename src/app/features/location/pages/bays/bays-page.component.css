@@ -19,17 +19,17 @@
 
 .bay-card {
   background: var(--cardBackground);
-  border: 1px solid var(--input-border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--space-4);
   cursor: pointer;
 }
 
 .empty-state {
-  border: 1px dashed var(--input-border);
+  border: 1px dashed var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--space-6);
-  background: var(--brand-surface);
+  background: var(--cardBackground);
 }
 
 .create-modal-overlay,
@@ -47,7 +47,7 @@
 .edit-modal {
   width: min(440px, 100%);
   background: var(--cardBackground);
-  border: 1px solid var(--input-border);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
 }
@@ -75,7 +75,7 @@
 
 .error-banner {
   margin-bottom: var(--space-4);
-  border: 1px solid var(--functional-error-red);
+  border: 1px solid var(--status-error-fg);
   background: var(--status-error-bg); color: var(--status-error-fg);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);

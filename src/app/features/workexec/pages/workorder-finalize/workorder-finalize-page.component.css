@@ -57,9 +57,9 @@
 }
 
 .form-input:focus {
-  outline: 2px solid var(--brand-accent);
+  outline: 2px solid var(--input-focus-border);
   outline-offset: 1px;
-  border-color: var(--brand-accent);
+  border-color: var(--accentA700);
 }
 
 /* ── Info alert ─────────────────────────────────────────────────────────── */

@@ -22,5 +22,5 @@
 
 .shell-footer__link:hover,
 .shell-footer__link:focus-visible {
-  color: #fff;
+  color: var(--contrastTextColor);
 }

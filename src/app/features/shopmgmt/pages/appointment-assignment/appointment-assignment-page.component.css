@@ -11,7 +11,7 @@
 }
 
 .loading-state {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   padding: var(--space-4);
 }
 
@@ -44,7 +44,7 @@
   font-size: 0.8125rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .bay-details,
@@ -58,13 +58,13 @@
 
 .assignment-notes {
   font-size: 0.875rem;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   white-space: pre-wrap;
   max-width: 600px;
 }
 
 .empty-state {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   padding: var(--space-6);
   text-align: center;
 }

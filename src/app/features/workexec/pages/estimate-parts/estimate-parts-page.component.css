@@ -48,8 +48,8 @@
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
-  background: var(--brand-primary-soft);
-  color: var(--brand-primary);
+  background: var(--primary50);
+  color: var(--link-color);
 }
 .status-chip--approved { background: var(--status-success-bg); color: var(--status-success-fg); }
 .status-chip--expired  { background: var(--status-error-bg); color: var(--status-error-fg); }
@@ -86,8 +86,8 @@
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  background: var(--brand-primary-soft);
-  color: var(--brand-primary);
+  background: var(--primary50);
+  color: var(--link-color);
   padding: 0.1rem 0.4rem;
   border-radius: 0.125rem;
   text-transform: uppercase;
@@ -151,7 +151,7 @@
 
 .field-label { font-size: 0.8125rem; font-weight: 600; color: var(--currentTextColor); }
 
-.required { color: var(--functional-error-red); margin-left: 2px; }
+.required { color: var(--status-error-fg); margin-left: 2px; }
 .field-optional { font-weight: 400; color: var(--handleColor); font-size: 0.75rem; }
 
 .field-input {
@@ -168,8 +168,8 @@
 }
 
 .field-input:focus { border-bottom-color: var(--input-focus-border); }
-.field-input--error { border-bottom-color: var(--functional-error-red); }
-.field-error { margin: 0; font-size: 0.75rem; color: var(--functional-error-red); }
+.field-input--error { border-bottom-color: var(--status-error-fg); }
+.field-error { margin: 0; font-size: 0.75rem; color: var(--status-error-fg); }
 
 .alert { padding: var(--space-3) var(--space-4); border-radius: 0.125rem; }
 .alert--error { background: var(--status-error-bg); color: var(--status-error-fg); }
@@ -233,7 +233,7 @@
 .part-search__clear {
   background: transparent;
   border: none;
-  color: var(--brand-primary);
+  color: var(--link-color);
   cursor: pointer;
   text-decoration: underline;
   padding: 0;
@@ -243,12 +243,12 @@
 
 .btn--accent {
   background: var(--accent-strong);
-  color: #fff;
+  color: var(--contrastTextColor);
 }
 
 .btn--ghost {
   background: transparent;
-  color: var(--brand-primary);
+  color: var(--link-color);
   padding-left: 0;
   padding-right: 0;
 }

@@ -18,7 +18,7 @@ Defined in `:root` and never changed by theme switching.
 | Token | Value | Purpose |
 |---|---|---|
 | `--durion-blue-800 … 50` | See styles.css | Blueprint Blue ramp |
-| `--durion-graphite-800 … 100` | See styles.css | Graphite grey ramp |
+| `--durion-graphite-800 … 100` | See styles.css | Graphite grey ramp (`-400` = `#8a91a0`, added for the dark form-field outline) |
 | `--durion-teal-600 … 100` | See styles.css | Electric Teal ramp |
 | `--durion-grey-900 … 100` | See styles.css | Neutral ramp |
 | `--durion-gold-600 … 100` | See styles.css | **Heritage Gold ramp (sampled from the logo shield, #cc9030)** |
@@ -78,6 +78,8 @@ Stable aliases mapping palette tokens to roles. Shared across light and dark.
 | `--brand-secondary` | `--durion-graphite-700` | Secondary text/UI |
 | `--brand-accent` | `--durion-teal-400` | **UI accent / highlight** (borders, icons, small fills) |
 | `--accent-strong` | `#006a6a` | **Filled accent button with white text** — teal-400 is only 2.4:1 on white; this is 5.8:1. Never put white text on `--brand-accent`. |
+| `--accent-strong-deep` | `#00504f` | Deep end of the accent gradient and its hover — white text 7.7:1 |
+| `--logo-plate` | `#ffffff` | **Deliberately theme-independent.** The white plate behind the logo mark is part of the mark, not a surface, so it must not follow `--cardBackground`. The only sanctioned always-white fill. |
 | `--brand-gold` | `--durion-gold-500` | **Heritage / premium accent — NOT the UI accent** |
 | `--brand-background` | `--durion-grey-100` | Page background |
 | `--brand-surface` | `#ffffff` | Card / modal surface |
@@ -101,7 +103,7 @@ These flip when `data-theme` changes on `<html>`. **Consume these in all compone
 | `--primary50` | blue-50 | blue-800 |
 | `--accentA400` | teal-600 | teal-300 |
 | `--accentA700` | `#006a6a` | teal-400 |
-| `--accentA100` | teal-100 | teal-600 |
+| `--accentA100` | teal-100 | `color-mix(teal-600 45%, cardBackground)` |
 | `--goldA400` | gold-600 | gold-300 |
 | `--goldA100` | gold-100 | gold-600 |
 | `--trackColor` | graphite-200 | grey-700 |
@@ -115,9 +117,9 @@ These flip when `data-theme` changes on `<html>`. **Consume these in all compone
 
 | Token | Light | Dark | Rationale |
 |---|---|---|---|
-| `--border-color` | graphite-200 | graphite-700 | Consistent border across components |
+| `--border-color` | graphite-200 | graphite-700 | **Decorative** border: panel/card outlines, table rules, dividers, dashed empty-states. Deliberately subtle and below 3:1 — never use it as a control's only boundary. |
 | `--input-background` | white | graphite-800 | Form field fill |
-| `--input-border` | graphite-200 | graphite-600 | Form field outline |
+| `--input-border` | graphite-500 | graphite-400 | **Form-field and control outline.** Must clear WCAG 1.4.11's 3:1 against the field fill AND the surface around it. The old graphite-200 / graphite-600 pair was 1.4:1 light and 1.9:1 dark — invisible outlines. Decorative borders (panels, tables, modals, dividers) use `--border-color`, not this. |
 | `--input-focus-border` | blue-500 | blue-400 | Focus ring color |
 | `--input-placeholder-color` | handleColor | handleColor | AA-compliant placeholder text |
 | `--shadow-card` | `0 2px 8px rgba(0,0,0,.08)` | `0 2px 8px rgba(0,0,0,.4)` | Card elevation |
@@ -128,13 +130,44 @@ These flip when `data-theme` changes on `<html>`. **Consume these in all compone
 | `--surface-2` | brand-surface | cardBackground | Secondary elevated surface |
 | `--surface-hover` | `rgba(0,52,111,.06)` | `rgba(255,255,255,.08)` | Hover wash |
 | `--text-muted` | handleColor | handleColor | Muted / secondary text |
+| `--link-color` | brand-primary | blue-200 | **Link / interactive text on a surface.** `--brand-primary` is a fill colour — as text it is 1.3:1 on the dark card, and `--primaryA400` (blue-400) only reaches 3.4:1. |
+| `--surface-inset` | `color-mix(border-color 45%, cardBackground)` | same formula | Inset well inside a card (filter bars, toolbars). Derives from theme tokens, so it stays dark in dark mode. |
+| `--skeleton-bg` | `color-mix(border-color 70%, cardBackground)` | same formula | Loading-placeholder fill |
 | `--status-error-bg` / `-fg` | `#fdecea` / `#ba1a1a` | `#4a2426` / `#ffb4ab` | Error chip/alert fill + text (AA both themes) |
 | `--status-warning-bg` / `-fg` | `#fff4e0` / `#8a5e0a` | `#3d3424` / `#ffd479` | Warning chip/alert fill + text |
 | `--status-success-bg` / `-fg` | `#e7f4e8` / `#1b5e20` | `#24382a` / `#a5d6a7` | Success chip/alert fill + text |
 | `--status-info-bg` / `-fg` | `#e8eef6` / `#355d92` | `#233246` / `#aac4e4` | Info chip/alert fill + text |
+| `--status-ready-bg` / `-fg` | `#e4f2f1` / `#17605c` | `#1e3937` / `#7fd8d1` | Ready chip/alert fill + text |
+| `--status-neutral-bg` / `-fg` | `#eceff1` / `#37474f` | `#2c3236` / `#c3ccd1` | Neutral chip/alert fill + text |
 
 > **Status surfaces use the `--status-<kind>-bg` + `-fg` pair** (see `durion-style-guide.md` §8),
 > never `color-mix(--functional-x …)` + a functional text colour — that fails AA in dark.
+
+> **The role rules in `.stylelintrc.js` enforce the two paragraphs below** for directories
+> listed in its `SWEPT` array — a sanctioned token used for the wrong property is an error
+> there. Extend `SWEPT` as each feature area is moved onto theme-aware tokens.
+
+> **Never mute text with `opacity`.** `opacity` multiplies contrast against whatever is
+> behind the element, so a value that looks fine in light mode fails in dark and no lint
+> rule can see it: `opacity: 0.55` on body text is ~4.0:1 in both themes, and `0.45` is
+> ~3.0:1. Use `--text-muted`, which is verified in both themes (6.2:1 light, 8.0:1 dark).
+> `opacity` stays legitimate for genuinely inactive controls — WCAG 1.4.3 exempts disabled
+> components — and for decoration, overlays and loading placeholders. It is never the way
+> to express a *selected* state: that is a real contrast requirement and needs a
+> programmatic state (`aria-pressed`) besides.
+
+> **Pick the border token by what the border does.** A boundary that is a control's only
+> visual affordance — a field outline, an outline button, a dropzone, a step indicator —
+> is a UI component under WCAG 1.4.11 and needs 3:1 against both the fill inside it and the
+> surface behind it: use `--input-border`. A border that merely groups or separates content
+> is decorative and should stay subtle: use `--border-color`.
+
+> **Never mix a raw Tier-1 ramp value into a surface or use one as text.** The raw ramps are
+> theme-agnostic: `color-mix(in srgb, var(--durion-graphite-100) 58%, var(--cardBackground))`
+> paints a near-white panel in dark mode underneath near-white text, and
+> `color: var(--brand-secondary)` (graphite-700) is 1.3:1 on the dark card. Use the Tier-3
+> pairs instead — `--surface-inset` / `--skeleton-bg` for surfaces, `--text-muted` for
+> secondary text, `--link-color` for link text.
 
 ## Unsanctioned tokens (do NOT use)
 

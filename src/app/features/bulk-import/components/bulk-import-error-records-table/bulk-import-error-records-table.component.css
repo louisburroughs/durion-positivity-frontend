@@ -11,7 +11,7 @@
 .error-records__table {
 	width: 100%;
 	border-collapse: collapse;
-	border: 1px solid var(--input-border);
+	border: 1px solid var(--border-color);
 	border-radius: var(--radius-lg);
 	overflow: hidden;
 	background: var(--cardBackground);
@@ -20,7 +20,7 @@
 .error-records__table th,
 .error-records__table td {
 	padding: var(--space-3);
-	border-bottom: 1px solid color-mix(in srgb, var(--input-border) 70%, transparent);
+	border-bottom: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
 	vertical-align: top;
 }
 
@@ -37,13 +37,13 @@
 }
 
 .status--approved {
-	color: #14532d;
-	background: color-mix(in srgb, #22c55e 20%, var(--cardBackground));
+	color: var(--status-success-fg);
+	background: var(--status-success-bg);
 }
 
 .status--rejected {
-	color: #7f1d1d;
-	background: color-mix(in srgb, #ef4444 20%, var(--cardBackground));
+	color: var(--status-error-fg);
+	background: var(--status-error-bg);
 }
 
 .error-records__field {

@@ -26,6 +26,7 @@
   --durion-graphite-700: #444a55;
   --durion-graphite-600: #5a616e;
   --durion-graphite-500: #727986;
+  --durion-graphite-400: #8a91a0;  /* form-field outline on dark surfaces — 3.7:1 on the field fill, 3.6:1 on the card */
   --durion-graphite-200: #d7d9dd;
   --durion-graphite-100: #e7e8eb;
 
@@ -65,6 +66,10 @@
   --brand-secondary: var(--durion-graphite-700);
   --brand-accent: var(--durion-teal-400);
   --accent-strong: #006a6a; /* AA-safe accent for white text on a filled button (teal-400 is only 2.4:1; this is 5.8:1) */
+  --accent-strong-deep: #00504f; /* deep end of the accent gradient / its hover — white text 7.7:1 */
+  /* The logo mark sits on its own white plate in BOTH themes: the plate is part of
+     the mark, not a surface, so it must not follow --cardBackground. */
+  --logo-plate: #ffffff;
   --brand-gold: var(--durion-gold-500);
   --brand-background: var(--durion-grey-100);
   --brand-surface: #ffffff;
@@ -122,7 +127,7 @@
   /* Extended local tokens – see design/source/theme-tokens.md */
   --border-color: var(--durion-graphite-200);
   --input-background: #ffffff;
-  --input-border: var(--durion-graphite-200);
+  --input-border: var(--durion-graphite-500); /* graphite-200 (#d7d9dd) is 1.4:1 on a white field — WCAG 1.4.11 wants 3:1; graphite-500 = 4.4:1 */
   --input-focus-border: var(--durion-blue-500);
   --input-placeholder-color: var(--handleColor);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -136,6 +141,16 @@
   --surface-2: var(--brand-surface);
   --surface-hover: rgba(0, 52, 111, 0.06);
   --text-muted: var(--handleColor);
+  /* Link / interactive text on a surface. brand-primary (blue-700) is a fill
+     colour: as text it is only 1.3:1 on the dark card, so link text must use
+     this pair, never --brand-primary or --primaryA400 (blue-400 = 3.4:1). */
+  --link-color: var(--brand-primary);
+  /* Inset well inside a card (filter bars, toolbars) and the skeleton
+     placeholder fill. Both derive from --border-color + --cardBackground so
+     they follow the theme; a raw --durion-graphite-100 mix paints a near-white
+     panel in dark mode underneath near-white text. */
+  --surface-inset: color-mix(in srgb, var(--border-color) 45%, var(--cardBackground));
+  --skeleton-bg: color-mix(in srgb, var(--border-color) 70%, var(--cardBackground));
   /* Status tint pairs — theme-aware, AA in light AND dark (ADR-0039).
      Light: AA-dark text on a light tint. Use the -bg/-fg pair together. */
   --status-error-bg: #fdecea;
@@ -167,14 +182,17 @@
   --primary50: var(--durion-blue-800);
   --accentA400: var(--durion-teal-300);
   --accentA700: var(--durion-teal-400);
-  --accentA100: var(--durion-teal-600);
+  /* A "100" slot is a wash: every one of its call sites is a background. teal-600
+     straight is a mid-tone, so body text on it was 3.3:1 in dark; blended into the
+     card it reads as a teal tint and clears AA (5.9:1). */
+  --accentA100: color-mix(in srgb, var(--durion-teal-600) 45%, var(--cardBackground));
   --goldA400: var(--durion-gold-300);  /* lighter so it reads on dark surfaces (6.3:1) */
   --goldA100: var(--durion-gold-600);  /* deep gold wash on dark */
   --trackColor: var(--durion-grey-700);
   --handleColor: var(--durion-graphite-200); /* graphite-500 (#727986) fails 4.5:1 on dark card (#3a3a3e); graphite-200 (#d7d9dd) = 7.9:1 */
   --border-color: var(--durion-graphite-700);
   --input-background: var(--durion-graphite-800);
-  --input-border: var(--durion-graphite-600);
+  --input-border: var(--durion-graphite-400); /* graphite-600 (#5a616e) is 1.9:1 on the graphite-800 field fill; graphite-400 = 3.7:1 */
   --input-focus-border: var(--durion-blue-400);
   --input-placeholder-color: var(--handleColor);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.4);
@@ -187,6 +205,10 @@
   --surface-2: var(--cardBackground);
   --surface-hover: rgba(255, 255, 255, 0.08);
   --text-muted: var(--handleColor);
+  /* blue-200 = 6.3:1 on the grey-700 card, 9.1:1 on the grey-800 page. */
+  --link-color: var(--durion-blue-200);
+  --surface-inset: color-mix(in srgb, var(--border-color) 45%, var(--cardBackground));
+  --skeleton-bg: color-mix(in srgb, var(--border-color) 70%, var(--cardBackground));
   /* Dark: AA-light text on a deep tint. */
   --status-error-bg: #4a2426;
   --status-error-fg: #ffb4ab;
@@ -298,8 +320,8 @@ output.alert {
 
 .alert-critical {
   background: var(--functional-error-red);
-  border-color: #8b2020;
-  color: #fff;
+  border-color: var(--status-error-fg);
+  color: var(--contrastTextColor);
 }
 
 .alert-soft {
@@ -325,17 +347,17 @@ output.alert {
 }
 
 .dur-status.valid {
-  background: #edfaef;
-  color: #2e7d3a;
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
 }
 
 .dur-status.warn {
-  background: #fef8ec;
-  color: #8a5e0a;
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
 }
 
 .dur-status.error {
-  background: #fbeaea;
+  background: var(--status-error-bg);
   color: var(--functional-error-red);
 }
 
@@ -432,8 +454,7 @@ app-workorder-detail-page .crm-ref-label {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--currentTextColor);
-  opacity: 0.55;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -456,8 +477,7 @@ app-estimate-detail-page .crm-ref-value--empty {
 
 app-workorder-detail-page .crm-ref-value--empty {
   font-family: inherit;
-  color: var(--currentTextColor);
-  opacity: 0.45;
+  color: var(--text-muted);
   font-style: italic;
 }
 
@@ -511,8 +531,7 @@ app-workorder-detail-page .section-overline {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--currentTextColor);
-  opacity: 0.55;
+  color: var(--text-muted);
   margin: 0 0 var(--space-3);
 }
 
@@ -521,13 +540,12 @@ app-workorder-detail-page .crm-ref-block .section-overline {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--currentTextColor);
-  opacity: 0.55;
+  color: var(--text-muted);
   margin: 0 0 var(--space-2);
 }
 
 app-workorder-detail-page .hint-text {
-  opacity: 0.55;
+  color: var(--text-muted);
   font-size: 0.875rem;
   font-style: italic;
 }
@@ -551,13 +569,13 @@ app-workorder-detail-page .alert {
 }
 
 app-workorder-detail-page .alert--error {
-  background: #ffebee;
-  color: #c62828;
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
 }
 
 app-workorder-detail-page .alert--warn {
-  background: #fff8e1;
-  color: #8a5e0a;
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
 }
 
 app-workorder-detail-page .alert--success {
@@ -583,8 +601,8 @@ app-workorder-detail-page .btn {
 }
 
 app-workorder-detail-page .btn--accent {
-  background: linear-gradient(135deg, #006a62, #00897b);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent-strong-deep), var(--accent-strong));
+  color: var(--contrastTextColor);
   border: none;
 }
 
@@ -666,7 +684,7 @@ app-workorder-detail-page .checklist-item__icon {
 }
 
 app-workorder-detail-page .checklist-item--ok .checklist-item__icon {
-  color: #1b5e20;
+  color: var(--status-success-fg);
 }
 
 app-workorder-detail-page .checklist-item--blocking .checklist-item__icon {
@@ -674,7 +692,7 @@ app-workorder-detail-page .checklist-item--blocking .checklist-item__icon {
 }
 
 app-workorder-detail-page .checklist-item--warning .checklist-item__icon {
-  color: #8a5e0a;
+  color: var(--status-warning-fg);
 }
 
 app-workorder-detail-page .checklist-item__label {
@@ -739,7 +757,7 @@ app-workorder-detail-page .failed-check--blocking .failed-check__icon {
 }
 
 app-workorder-detail-page .failed-check--warning .failed-check__icon {
-  color: #8a5e0a;
+  color: var(--status-warning-fg);
 }
 
 app-party-detail .modal-backdrop {
@@ -824,12 +842,12 @@ app-party-detail .btn--sm {
 }
 
 app-party-detail .btn--primary {
-  background: #006a6a; /* teal-400 (#2bbbad) gives white only 2.4:1; darker teal = 6.4:1 AA */
-  color: #fff;
+  background: var(--accent-strong); /* teal-400 (#2bbbad) gives white only 2.4:1; darker teal = 6.4:1 AA */
+  color: var(--contrastTextColor);
 }
 
 app-party-detail .btn--primary:hover:not(:disabled) {
-  background: #00504f;
+  background: var(--accent-strong-deep);
 }
 
 app-party-detail .btn--secondary {
@@ -907,7 +925,7 @@ app-party-detail .loading-hint {
 }
 
 app-party-detail .hint-text--warn {
-  color: #8a5e0a;
+  color: var(--status-warning-fg);
 }
 
 app-party-detail .inline-error {
@@ -983,7 +1001,7 @@ app-create-commercial-account .state-icon {
 }
 
 app-create-commercial-account .state-icon--success {
-  color: #1b5e20;
+  color: var(--status-success-fg);
 }
 
 app-create-commercial-account .spinner {

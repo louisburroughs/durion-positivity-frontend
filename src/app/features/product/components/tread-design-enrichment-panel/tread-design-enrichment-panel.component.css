@@ -25,9 +25,9 @@
 }
 
 .provenance-badge {
-  background: color-mix(in srgb, var(--brand-primary-soft) 80%, transparent);
+  background: color-mix(in srgb, var(--primary50) 80%, transparent);
   border-radius: 999px;
-  color: var(--brand-primary);
+  color: var(--link-color);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.03em;

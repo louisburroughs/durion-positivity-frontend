@@ -13,16 +13,16 @@
 	place-items: center;
 	border-radius: 999px;
 	border: 1px solid var(--input-border);
-	background: color-mix(in srgb, var(--cardBackground) 90%, var(--brand-surface));
+	background: color-mix(in srgb, var(--cardBackground) 90%, var(--cardBackground));
 }
 
 .stepper__step--complete {
-	border-color: color-mix(in srgb, var(--brand-primary) 55%, var(--input-border));
+	border-color: color-mix(in srgb, var(--link-color) 55%, var(--input-border));
 	background: color-mix(in srgb, var(--brand-primary) 16%, var(--cardBackground));
 }
 
 .stepper__step--active {
-	border-color: var(--brand-primary);
+	border-color: var(--link-color);
 	background: color-mix(in srgb, var(--brand-primary) 26%, var(--cardBackground));
 }
 

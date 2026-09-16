@@ -11,7 +11,7 @@
 }
 
 .loading-state {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   padding: var(--space-4);
 }
 
@@ -46,7 +46,7 @@ form {
 
 .form-group label {
   font-size: 0.875rem;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .form-group input,
@@ -72,12 +72,12 @@ form {
 }
 
 .hard-conflict {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
   font-size: 0.875rem;
 }
 
 .soft-conflict {
-  color: #8a5e0a;
+  color: var(--status-warning-fg);
   font-size: 0.875rem;
 }
 
@@ -90,11 +90,11 @@ form {
 
 .suggested-slot {
   font-size: 0.875rem;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .field-error {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
   font-size: 0.8125rem;
 }
 

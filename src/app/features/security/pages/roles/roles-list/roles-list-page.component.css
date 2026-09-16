@@ -20,7 +20,7 @@
 }
 
 .section-label {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.8125rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -48,7 +48,7 @@
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--brand-primary);
+  color: var(--link-color);
   padding: var(--space-2) var(--space-3);
   min-height: 2.5rem;
   font-weight: 600;
@@ -151,7 +151,7 @@ textarea:focus-visible {
 .roles-table th {
   font-family: var(--font-primary);
   font-size: 0.875rem;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .roles-table tbody tr:nth-child(even) {
