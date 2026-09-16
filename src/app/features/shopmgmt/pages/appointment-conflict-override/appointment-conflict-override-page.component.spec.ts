@@ -1,13 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { AppointmentConflictOverridePageComponent } from './appointment-conflict-override-page.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AppointmentService } from '../../services/appointment.service';
+import type { AppointmentDetail } from '../../models/appointment.models';
 
 /** CAP-326: a booking that warned — one SOFT conflict recorded, still overridable. */
 const APPOINTMENT_WITH_SOFT_CONFLICT = {
@@ -239,6 +240,38 @@ describe('AppointmentConflictOverridePageComponent [CAP-138]', () => {
 
     expect(component.overrideError()).toBe('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.OVERRIDE');
     expect(stubService.getAppointment.mock.calls.length).toBe(loadsBefore + 1);
+  });
+
+  it('a late read for a previous :id never overwrites the appointment now in the route', async () => {
+    vi.clearAllMocks();
+    const params = new Subject<{ id: string }>();
+    const lateA = new Subject<AppointmentDetail>();
+    stubService.getAppointment.mockImplementation((id: string) =>
+      id === 'appt-A' ? lateA.asObservable() : of({ ...APPOINTMENT_WITH_SOFT_CONFLICT, appointmentId: 'appt-B' }),
+    );
+    stubService.rescheduleAppointment.mockReturnValue(of(APPOINTMENT_WITH_SOFT_CONFLICT));
+    stubService.executeOverride.mockReturnValue(of({}));
+
+    await TestBed.configureTestingModule({
+      imports: [AppointmentConflictOverridePageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: AppointmentService, useValue: stubService },
+        { provide: AuthService, useValue: authStub },
+        { provide: ActivatedRoute, useValue: { params: params.asObservable() } },
+      ],
+    }).compileComponents();
+    fixture = TestBed.createComponent(AppointmentConflictOverridePageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    params.next({ id: 'appt-A' }); // still loading
+    params.next({ id: 'appt-B' }); // answered synchronously
+    expect(component.appointment()?.appointmentId).toBe('appt-B');
+
+    lateA.next({ ...APPOINTMENT_WITH_SOFT_CONFLICT, appointmentId: 'appt-A' });
+    lateA.complete();
+    expect(component.appointment()?.appointmentId).toBe('appt-B');
   });
 
   it('calls executeOverride with the recorded conflict ids and the reason (CAP-326 D18.3)', async () => {

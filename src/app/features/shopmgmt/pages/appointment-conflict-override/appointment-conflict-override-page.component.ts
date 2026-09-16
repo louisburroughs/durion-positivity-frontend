@@ -76,10 +76,19 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
       this.loading.set(true);
       this.appointmentService.getAppointment(id).subscribe({
         next: (appointment) => {
+          // The route can move to another appointment while this read is in flight (the
+          // component is reused across :id changes); a late answer for the old id must not
+          // overwrite the one now on screen.
+          if (id !== this.appointmentId) {
+            return;
+          }
           this.appointment.set(appointment);
           this.loading.set(false);
         },
         error: () => {
+          if (id !== this.appointmentId) {
+            return;
+          }
           this.rescheduleError.set('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.LOAD');
           this.loading.set(false);
         },
@@ -187,11 +196,17 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
 
   /** Re-reads the appointment so the recorded conflicts reflect what the server now holds. */
   private refreshAppointment(): void {
-    if (!this.appointmentId) {
+    const id = this.appointmentId;
+    if (!id) {
       return;
     }
-    this.appointmentService.getAppointment(this.appointmentId).subscribe({
-      next: (appointment) => this.appointment.set(appointment),
+    this.appointmentService.getAppointment(id).subscribe({
+      // Same stale-response guard as the route load: only the appointment still in the route lands.
+      next: (appointment) => {
+        if (id === this.appointmentId) {
+          this.appointment.set(appointment);
+        }
+      },
       // The override error already says what happened; a failed refresh keeps the last known state.
       error: () => undefined,
     });
