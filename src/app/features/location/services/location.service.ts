@@ -208,7 +208,7 @@ export class LocationService {
       status: this.asOptionalString(body['status']),
       travelBufferPolicyId: this.asOptionalString(body['travelBufferPolicyId']),
       notes: this.asOptionalString(body['notes']),
-      capabilityIds: this.asStringArray(body['capabilityIds']),
+      serviceCapabilityCodes: this.asStringArray(body['serviceCapabilityCodes']),
       coverageRules: this.toCoverageRuleArray(body['coverageRules']),
     };
   }

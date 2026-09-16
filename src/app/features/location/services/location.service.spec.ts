@@ -137,7 +137,7 @@ describe('LocationService', () => {
       status: undefined,
       travelBufferPolicyId: undefined,
       notes: undefined,
-      capabilityIds: undefined,
+      serviceCapabilityCodes: undefined,
       coverageRules: [
         {
           serviceAreaId: 'svc-1',

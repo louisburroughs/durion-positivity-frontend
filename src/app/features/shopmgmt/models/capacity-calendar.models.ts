@@ -107,11 +107,10 @@ export interface CapacityTechnician {
 /**
  * The job the whole board is filtered by: what it needs and how long it takes.
  *
- * `capabilityIds` is empty whenever the catalog cannot say which capability a
- * service needs — the backend gap this page is blocked on. `bayTypes` is the
- * declared interim fallback, and `eligibleBay` prefers the capability join and
- * only drops to bay type when the join is absent, so this page starts reading
- * real eligibility the day the catalog carries it, with no code change here.
+ * `operationCode` is the catalog's own vocabulary (CAP-325 D14), and bay
+ * eligibility reads it against each bay's `serviceCapabilityCodes`. `bayTypes`
+ * is the declared fallback for a service the catalog never gave a code, and
+ * `isEligibleBay` drops to it only when the code is absent.
  */
 export interface JobRequirement {
   readonly serviceId?: string;
