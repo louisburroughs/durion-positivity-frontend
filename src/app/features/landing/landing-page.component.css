@@ -332,15 +332,17 @@
 }
 
 /* ── Dark theme overrides ────────────────────────────────────────────────── */
-[data-theme='dark'] .feature-card {
-  background: var(--cardBackground);
-}
-
-[data-theme='dark'] .section-subtitle,
-[data-theme='dark'] .feature-desc {
-  color: var(--text-muted);
-}
-
-[data-theme='dark'] .landing-locale-select option {
+/*
+ * :host-context, not a bare `[data-theme='dark'] .x` ancestor. ThemeService
+ * sets data-theme on <html>, and emulated encapsulation appends this
+ * component's content attribute to EVERY compound selector, so the bare form
+ * compiles to `[data-theme='dark'][_ngcontent-x]` and can never match <html>.
+ *
+ * Three further overrides lived here for .feature-card, .section-subtitle and
+ * .feature-desc. They set exactly what the base rules already set — the base
+ * rules were moved onto --cardBackground and --text-muted and the overrides
+ * were left behind — so they are removed rather than repaired.
+ */
+:host-context([data-theme='dark']) .landing-locale-select option {
   background: var(--durion-graphite-800);
 }
