@@ -5,6 +5,7 @@ import {
   MechanicRosterAPIService,
   MechanicRosterEntryResponseStatusEnum,
   type PagedModelMechanicRosterEntryResponse,
+  TechnicianCredentialResponseStatusEnum,
 } from '@durion-sdk/shop-manager';
 
 import { ShopmgmtRosterService } from './shopmgmt-roster.service';
@@ -17,7 +18,7 @@ const samplePage: PagedModelMechanicRosterEntryResponse = {
       firstName: 'Alex',
       lastName: 'Smith',
       status: MechanicRosterEntryResponseStatusEnum.Inactive,
-      skills: ['BRAKES'],
+      credentials: [{ credentialId: 'cred-1', skillCode: 'BRAKES-LIGHT', status: TechnicianCredentialResponseStatusEnum.Active }],
     },
   ],
   page: { number: 2, size: 40, totalElements: 81, totalPages: 3 },

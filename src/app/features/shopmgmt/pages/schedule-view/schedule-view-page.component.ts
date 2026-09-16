@@ -10,12 +10,13 @@ import {
   CapacityCalendarView,
   CapacityDay,
   CapacityHour,
-  JobRequirement,
-  LimitReason,
   isCertifiedTechnician,
   isEligibleBay,
   isoDateLocal,
+  JobRequirement,
+  LimitReason,
   parseIsoDateLocal,
+  rankEligibleBays,
   shopUtilization,
 } from '../../models/capacity-calendar.models';
 import {
@@ -170,10 +171,15 @@ export class ScheduleViewPageComponent implements OnInit {
 
   readonly isFiltered = computed(() => this.activeJob().label.length > 0);
 
-  /** Bays that can perform the selected job — the "eligible" in eligible capacity. */
-  readonly eligibleBays = computed(() =>
-    (this.view()?.bays ?? []).filter(bay => isEligibleBay(bay, this.activeJob())),
-  );
+  /**
+   * Bays that can perform the selected job — the "eligible" in eligible capacity —
+   * in offer order (D14): general bays first, specialty bays taking general work
+   * last, so the rack is named only once the general bays are.
+   */
+  readonly eligibleBays = computed(() => {
+    const bays = this.view()?.bays ?? [];
+    return rankEligibleBays(bays.filter(bay => isEligibleBay(bay, this.activeJob(), bays)));
+  });
 
   /** Eligible bay names, for the "resources required" line. */
   readonly eligibleBayNames = computed(() =>
@@ -188,7 +194,7 @@ export class ScheduleViewPageComponent implements OnInit {
 
   readonly certifiedTechNames = computed(() =>
     (this.view()?.technicians ?? [])
-      .filter(tech => isCertifiedTechnician(tech, this.activeJob(), this.eligibleBays()))
+      .filter(tech => isCertifiedTechnician(tech, this.activeJob()))
       .map(tech => tech.displayName)
       .join(', '),
   );
@@ -226,7 +232,7 @@ export class ScheduleViewPageComponent implements OnInit {
       bayId: bay.bayId,
       name: bay.name,
       bayType: bay.bayType,
-      eligible: isEligibleBay(bay, this.activeJob()),
+      eligible: isEligibleBay(bay, this.activeJob(), this.view()?.bays ?? []),
       outOfService: bay.outOfService,
       cards: current.board
         .filter(appointment => appointment.bayId === bay.bayId)
@@ -277,11 +283,10 @@ export class ScheduleViewPageComponent implements OnInit {
     if (!current) {
       return [];
     }
-    const eligibleBays = this.eligibleBays();
     return current.technicians.map(tech => ({
       name: tech.displayName,
       skills: tech.skills.join(' · '),
-      certified: isCertifiedTechnician(tech, this.activeJob(), eligibleBays),
+      certified: isCertifiedTechnician(tech, this.activeJob()),
       cells: current.hours.map((hour, index) => ({
         hourDate: this.hourDate(hour),
         state: !tech.onDutyHours.has(index)
@@ -488,19 +493,18 @@ export class ScheduleViewPageComponent implements OnInit {
     const bays = this.view()?.bays ?? [];
     const hour = day.hours[hourIndex];
     const job = this.activeJob();
-    const eligibleBays = bays.filter(bay => isEligibleBay(bay, job));
     return {
       day,
       hour,
       verdict: hour ? this.hourVerdict(hour) : 'shut',
       bays: bays.map((bay, bayIndex) => ({
         name: bay.name,
-        eligible: isEligibleBay(bay, job),
+        eligible: isEligibleBay(bay, job, bays),
         state: day.bayStates[bayIndex]?.[hourIndex] ?? 'closed',
       })),
       techs: (this.view()?.technicians ?? []).map(tech => ({
         name: tech.displayName,
-        certified: isCertifiedTechnician(tech, job, eligibleBays),
+        certified: isCertifiedTechnician(tech, job),
         state: !tech.onDutyHours.has(hourIndex)
           ? 'off'
           : tech.assignedHours.has(hourIndex)

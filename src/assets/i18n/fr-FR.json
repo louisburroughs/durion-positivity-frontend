@@ -1918,8 +1918,8 @@
       "HOUR": "Heure",
       "TIME": "Horaire",
       "REQUIREMENT": "Ressources requises : {{bays}} ({{eligible}} baies sur {{total}}) + un technicien certifié ({{technicians}}) + {{hours}} h sans interruption. Les jours en ambre ont l’équipement mais pas la personne.",
-      "ELIGIBILITY_APPROXIMATE": "L'éligibilité est approximative : le catalogue n'indique pas quel équipement un service nécessite, les baies sont donc associées par type. Ces chiffres sont indicatifs et ne garantissent pas une réservation.",
       "DEGRADED": "Certaines données de capacité n’ont pas pu être chargées ; ces chiffres peuvent être incomplets.",
+      "SKILLS_NOT_CONFIGURED": "Le catalogue n’a pas déclaré les compétences requises pour ce service ; tous les techniciens planifiés sont donc comptés comme aptes. Configurez les exigences de compétences du service pour voir la capacité certifiée.",
       "LEGEND_ARIA": "Signification des couleurs de capacité",
       "LEGEND_LOAD": "charge de l'atelier",
       "LEGEND_FITS": "les travaux tiennent ici",
@@ -1997,7 +1997,13 @@
         "SKILLS": "Codes de compétence",
         "SKILLS_ARIA": "Codes de compétence du mécanicien",
         "LAST_SYNCED": "Dernière synchronisation",
-        "ARIA_LABEL": "Liste des mécaniciens"
+        "ARIA_LABEL": "Liste des mécaniciens",
+        "CREDENTIAL_STATUS": {
+          "ACTIVE": "active",
+          "EXPIRED": "expirée",
+          "REVOKED": "révoquée",
+          "SUPERSEDED": "remplacée"
+        }
       },
       "PAGINATION": {
         "ARIA_LABEL": "Pagination de la liste des mécaniciens",
@@ -2116,8 +2122,13 @@
         "LOAD": "Impossible de charger le rendez-vous.",
         "CONFLICTS": "Des conflits ont été trouvés pour le créneau sélectionné.",
         "RESCHEDULE": "Impossible de replanifier le rendez-vous.",
-        "OVERRIDE": "Impossible d'exécuter l'outrepassement."
-      }
+        "OVERRIDE": "Impossible d'exécuter l'outrepassement.",
+        "NOTHING_TO_OVERRIDE": "Aucun conflit de ce rendez-vous ne peut plus faire l’objet d’une dérogation.",
+        "ALREADY_OVERRIDDEN": "Ce conflit a déjà fait l’objet d’une dérogation par quelqu’un d’autre ; le rendez-vous a été actualisé."
+      },
+      "RECORDED_CONFLICTS": "Conflits enregistrés pour ce rendez-vous",
+      "OVERRIDDEN": "Dérogation accordée",
+      "HARD_NOT_OVERRIDABLE": "Ces conflits ont bloqué la modification et ne peuvent pas faire l’objet d’une dérogation ; choisissez un autre créneau."
     },
     "LANDING": {
       "TITLE": "Gestion de l'atelier",

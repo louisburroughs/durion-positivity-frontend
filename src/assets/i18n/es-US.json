@@ -1918,8 +1918,8 @@
       "HOUR": "Hora",
       "TIME": "Horario",
       "REQUIREMENT": "Recursos necesarios: {{bays}} ({{eligible}} de {{total}} bahías) + un técnico certificado ({{technicians}}) + {{hours}} h sin interrupción. Los días en ámbar tienen el equipo pero no la persona.",
-      "ELIGIBILITY_APPROXIMATE": "La elegibilidad es aproximada: el catálogo no registra qué equipo requiere un servicio, por lo que las bahías se asocian por tipo. Considera estas cifras como una guía, no como una garantía de reserva.",
       "DEGRADED": "No se pudieron cargar algunos datos de capacidad, por lo que estas cifras pueden estar incompletas.",
+      "SKILLS_NOT_CONFIGURED": "El catálogo no ha declarado qué habilidades requiere este servicio, así que se cuenta a todos los técnicos programados como capaces de hacerlo. Configure los requisitos de habilidades del servicio para ver la capacidad certificada.",
       "LEGEND_ARIA": "Qué significan los colores de capacidad",
       "LEGEND_LOAD": "carga del taller",
       "LEGEND_FITS": "el trabajo cabe aquí",
@@ -1997,7 +1997,13 @@
         "SKILLS": "Códigos de habilidad",
         "SKILLS_ARIA": "Códigos de habilidad del mecánico",
         "LAST_SYNCED": "Última sincronización",
-        "ARIA_LABEL": "Lista de mecánicos"
+        "ARIA_LABEL": "Lista de mecánicos",
+        "CREDENTIAL_STATUS": {
+          "ACTIVE": "activa",
+          "EXPIRED": "vencida",
+          "REVOKED": "revocada",
+          "SUPERSEDED": "reemplazada"
+        }
       },
       "PAGINATION": {
         "ARIA_LABEL": "Paginación de la lista de mecánicos",
@@ -2116,8 +2122,13 @@
         "LOAD": "No se pudo cargar la cita.",
         "CONFLICTS": "Se encontraron conflictos para la franja seleccionada.",
         "RESCHEDULE": "No se pudo reprogramar la cita.",
-        "OVERRIDE": "No se pudo ejecutar la sobrescritura."
-      }
+        "OVERRIDE": "No se pudo ejecutar la sobrescritura.",
+        "NOTHING_TO_OVERRIDE": "No queda ningún conflicto por anular en esta cita.",
+        "ALREADY_OVERRIDDEN": "Ese conflicto ya fue anulado por otra persona; la cita se ha actualizado."
+      },
+      "RECORDED_CONFLICTS": "Conflictos registrados en esta cita",
+      "OVERRIDDEN": "Anulado",
+      "HARD_NOT_OVERRIDABLE": "Estos conflictos bloquearon el cambio y no se pueden anular; elija otro horario."
     },
     "LANDING": {
       "TITLE": "Gestión del Taller",

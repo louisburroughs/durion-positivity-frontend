@@ -37,16 +37,14 @@ const BAYS = [
     bayId: 'gen-1',
     name: 'Bay 1',
     bayType: 'GENERAL_SERVICE',
-    capabilityIds: [],
-    skillRequirementIds: [],
+    capabilityCodes: [],
     outOfService: false,
   },
   {
     bayId: 'rack',
     name: 'Bay 5',
     bayType: 'ALIGNMENT',
-    capabilityIds: [],
-    skillRequirementIds: ['ALIGN'],
+    capabilityCodes: ['WHEEL-ALIGNMENT-4-WHEEL'],
     outOfService: false,
   },
 ];
@@ -54,17 +52,16 @@ const BAYS = [
 const ALIGNMENT_JOB: JobRequirement = {
   serviceId: 'svc-align',
   label: '4-wheel alignment',
-  capabilityIds: [],
-  bayTypes: ['ALIGNMENT'],
-  skillCodes: [],
+  operationCode: 'WHEEL-ALIGNMENT-4-WHEEL',
+  skillCodes: ['ALIGN'],
+  skillRequirementsConfigured: true,
   durationHours: 1.5,
 };
 
 const ALL_WORK: JobRequirement = {
   label: '',
-  capabilityIds: [],
-  bayTypes: [],
   skillCodes: [],
+  skillRequirementsConfigured: true,
   durationHours: 1,
 };
 
@@ -128,7 +125,7 @@ function view(overrides: Partial<CapacityCalendarView> = {}): CapacityCalendarVi
       },
     ],
     degraded: false,
-    eligibilityIsApproximate: true,
+    skillRequirementsUnknown: false,
     ...overrides,
   };
 }
@@ -373,8 +370,11 @@ describe('ScheduleViewPageComponent', () => {
 
     expect(component.isFiltered()).toBe(false);
     expect(capacityStub.getCalendar).toHaveBeenCalledWith(
-      expect.objectContaining({ job: expect.objectContaining({ bayTypes: [] }) }),
+      expect.objectContaining({ job: expect.objectContaining({ label: '', skillCodes: [] }) }),
     );
+    // All work names no operation, so every in-service bay is eligible again.
+    const request = capacityStub.getCalendar.mock.calls[0][0] as { job: JobRequirement };
+    expect(request.job.operationCode).toBeUndefined();
   });
 
   it('names the eligible bays and certified technicians the job needs', async () => {
@@ -415,9 +415,10 @@ describe('ScheduleViewPageComponent', () => {
 
   // ── Honest degradation ────────────────────────────────────────────────────
 
-  it('says so when eligibility is inferred from bay type rather than measured', async () => {
+  it('says so when the catalog never declared the service\'s skill requirements (spec D4)', async () => {
+    capacityStub.getCalendar.mockReturnValue(of(view({ skillRequirementsUnknown: true })));
     await setup();
-    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.ELIGIBILITY_APPROXIMATE');
+    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.SKILLS_NOT_CONFIGURED');
   });
 
   it('warns when an upstream source was unavailable', async () => {

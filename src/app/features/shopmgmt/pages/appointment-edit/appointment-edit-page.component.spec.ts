@@ -55,8 +55,8 @@ const STUB_AUDIT = [
   { id: 'a1', timestamp: '2026-05-01T08:00:00Z', actor: 'user1', action: 'CREATED', details: 'ok' },
 ];
 
-const HARD_CONFLICT = { type: 'HARD', code: 'FACILITY_CLOSED', message: 'Facility is closed.', overridable: false };
-const SOFT_CONFLICT = { type: 'SOFT', code: 'SLOT_PREFERRED', message: 'Preferred slot occupied.', overridable: true };
+const HARD_CONFLICT = { severity: 'HARD', code: 'FACILITY_CLOSED', message: 'Facility is closed.', overridable: false };
+const SOFT_CONFLICT = { severity: 'SOFT', code: 'SLOT_PREFERRED', message: 'Preferred slot occupied.', overridable: true };
 
 // ---------------------------------------------------------------------------
 // Service stub

@@ -71,23 +71,29 @@ export type DayKind =
 /**
  * One service bay, as the capacity model needs it.
  *
- * `capabilityIds` and `skillRequirementIds` come straight off `BayResponse`.
- * `bayType` is the coarse classification (GENERAL_SERVICE, ALIGNMENT,
- * TIRE_SERVICE, HEAVY_DUTY, INSPECTION, WASH_DETAIL) and is what eligibility
- * falls back to while the service→capability join is missing — see
- * {@link JobRequirement}.
+ * `capabilityCodes` is `BayResponse.serviceCapabilityCodes` (CAP-325 D14): the
+ * catalog operation codes this bay type alone performs; empty for a general
+ * bay. `maxDutyClass` is the heaviest GVWR class the bay accepts (D13), null
+ * when unconstrained. `bayType` is the coarse classification (GENERAL_SERVICE,
+ * ALIGNMENT, …); eligibility never reads it except to keep mechanical work out
+ * of a `WASH_DETAIL` bay (D14) — the claims decide. A bay carries no skill
+ * requirement: the catalog service does (CAP-329).
  */
 export interface CapacityBay {
   readonly bayId: string;
   readonly name: string;
   readonly bayType: string;
-  readonly capabilityIds: readonly string[];
-  readonly skillRequirementIds: readonly string[];
+  readonly capabilityCodes: readonly string[];
+  readonly maxDutyClass?: number;
   /** True for `status === 'OUT_OF_SERVICE'`; the bay is never capacity. */
   readonly outOfService: boolean;
 }
 
-/** One technician on the location's roster, with the skills they hold. */
+/**
+ * One technician on the location's roster, with the skill codes of the
+ * credentials they hold today (CAP-328: ACTIVE on the roster's reference date;
+ * expired, revoked and superseded ones are not held).
+ */
 export interface CapacityTechnician {
   readonly personId: string;
   readonly displayName: string;
@@ -101,21 +107,32 @@ export interface CapacityTechnician {
 /**
  * The job the whole board is filtered by: what it needs and how long it takes.
  *
- * `capabilityIds` is empty whenever the catalog cannot say which capability a
- * service needs — the backend gap this page is blocked on. `bayTypes` is the
- * declared interim fallback, and `eligibleBay` prefers the capability join and
- * only drops to bay type when the join is absent, so this page starts reading
- * real eligibility the day the catalog carries it, with no code change here.
+ * `operationCode` is the catalog's own vocabulary (CAP-325 D14), and bay
+ * eligibility reads it against each bay's `serviceCapabilityCodes`. A service
+ * the catalog gave no code is unclaimed by definition, so it is general work
+ * for every bay but a wash bay — never inferred from its name or category.
  */
 export interface JobRequirement {
   readonly serviceId?: string;
   readonly label: string;
-  /** Required service capability ids, when the catalog can say. */
-  readonly capabilityIds: readonly string[];
-  /** Interim fallback: bay types that can perform the job. */
-  readonly bayTypes: readonly string[];
-  /** Skill codes a technician must hold. Empty means any rostered technician. */
+  /**
+   * The catalog operation code (CAP-325 D14). Eligibility is the specialty map:
+   * a bay claiming this code, or any general bay when no bay claims it.
+   */
+  readonly operationCode?: string;
+  /**
+   * Skill codes a technician must hold — every one of them (CAP-329). Empty
+   * means any rostered technician. Without a vehicle only ANY-class
+   * requirements apply, as the server itself resolves them.
+   */
   readonly skillCodes: readonly string[];
+  /**
+   * False when the catalog has never declared this service's requirements
+   * (`requiredSkills` null, `requirementsConfiguredAt` null): "not configured"
+   * is not "requires nothing" (spec D4), so every technician is shown and the
+   * page says why. True for a declared list, an explicitly empty one included.
+   */
+  readonly skillRequirementsConfigured: boolean;
   /** Job duration in hours; drives the unbroken-window test. */
   readonly durationHours: number;
 }
@@ -241,11 +258,11 @@ export interface CapacityCalendarView {
    */
   readonly degraded: boolean;
   /**
-   * True when eligibility fell back to bay type because the catalog could not
-   * say which capability the service needs. The page says so rather than
-   * presenting a guess as a measurement.
+   * True when the selected service has no declared skill requirements, so the
+   * certified-technician axis is every rostered technician by default, not by
+   * reading (spec D4). Shown on screen rather than presented as measured.
    */
-  readonly eligibilityIsApproximate: boolean;
+  readonly skillRequirementsUnknown: boolean;
 }
 
 // ── Pure helpers ────────────────────────────────────────────────────────────
@@ -273,54 +290,82 @@ export function parseIsoDateLocal(iso: string): Date {
 /**
  * True when `bay` can perform `job`.
  *
- * Prefers the capability join and falls back to bay type only when the catalog
- * supplied no capability ids — see {@link JobRequirement}. An empty requirement
- * on both axes means "all work", which every in-service bay satisfies.
+ * CAP-325 D14, the specialty map: when a job names its operation code, a bay
+ * is eligible if it claims that code; when no bay at the location claims it,
+ * the operation is general work, which every bay but a `WASH_DETAIL` one may
+ * do — a specialty bay too (physically an alignment bay can do an oil change;
+ * making it ineligible would manufacture "shop is full"), ranked after the
+ * general bays by {@link rankEligibleBays}. `bays` is the location's roster,
+ * needed to know whether anyone claims the code; without it the bay's own
+ * codes decide. A job with no operation code is unclaimed by definition and
+ * takes the same general-work path. An empty requirement on every axis means
+ * "all work", which every in-service bay satisfies. Duty class (D13) is a
+ * vehicle question the calendar cannot ask yet; `maxDutyClass` is carried, not
+ * applied.
  */
-export function isEligibleBay(bay: CapacityBay, job: JobRequirement): boolean {
+export function isEligibleBay(
+  bay: CapacityBay,
+  job: JobRequirement,
+  bays: readonly CapacityBay[] = [],
+): boolean {
   if (bay.outOfService) {
     return false;
   }
-  if (job.capabilityIds.length > 0) {
-    return job.capabilityIds.some(id => bay.capabilityIds.includes(id));
+  const operation = normalizeCode(job.operationCode);
+  if (operation) {
+    const claims = (candidate: CapacityBay): boolean =>
+      candidate.capabilityCodes.some(code => normalizeCode(code) === operation);
+    if (claims(bay)) {
+      return true;
+    }
+    if (bays.some(candidate => !candidate.outOfService && claims(candidate))) {
+      return false;
+    }
+    return bay.bayType !== WASH_DETAIL;
   }
-  if (job.bayTypes.length > 0) {
-    return job.bayTypes.includes(bay.bayType);
+  // A specific service the catalog gave no code is unclaimed mechanical work: the same general
+  // path, and a wash bay never absorbs it (D14). Only "all work" — no service at all — counts
+  // every in-service bay, the wash bay included, because washing is work too.
+  if (job.serviceId) {
+    return bay.bayType !== WASH_DETAIL;
   }
   return true;
 }
 
+/** The one bay type that never absorbs general mechanical work (D14: the exception to the default). */
+const WASH_DETAIL = 'WASH_DETAIL';
+
+/** True for a bay that claims nothing — general work's first choice (D14). */
+export function isGeneralBay(bay: CapacityBay): boolean {
+  return bay.capabilityCodes.length === 0;
+}
+
 /**
- * True when `tech` may work `job`.
- *
- * Two sources, in order. The job's own `skillCodes` when the catalog supplies
- * them — it does not today (gap 1). Otherwise the skills the *eligible bays*
- * declare they require, via `BayResponse.skillRequirementIds`, which is real
- * data the location domain already publishes: a technician who does not hold
- * the alignment rack's required skill is not capacity for an alignment, no
- * matter how free they are.
- *
- * When neither source states a requirement, every rostered technician counts.
- * That is the honest answer — an unstated requirement is not a requirement —
- * and it degrades to bay-only capacity rather than to zero.
+ * Eligible bays in offer order (D14): general bays first, then specialty bays
+ * taking general work, so the rack is offered only once the general bays are.
+ * Stable, so the caller's own order is kept within each group.
  */
-export function isCertifiedTechnician(
-  tech: CapacityTechnician,
-  job: JobRequirement,
-  eligibleBays: readonly CapacityBay[] = [],
-): boolean {
-  if (job.skillCodes.length > 0) {
-    return job.skillCodes.some(code => tech.skills.includes(code));
-  }
-  const baysStatingSkills = eligibleBays.filter(bay => bay.skillRequirementIds.length > 0);
-  if (baysStatingSkills.length === 0) {
+export function rankEligibleBays(bays: readonly CapacityBay[]): CapacityBay[] {
+  return [...bays].sort((a, b) => Number(!isGeneralBay(a)) - Number(!isGeneralBay(b)));
+}
+
+function normalizeCode(code: string | undefined): string {
+  return (code ?? '').trim().toUpperCase();
+}
+
+/**
+ * True when `tech` holds every skill `job` requires (CAP-329: one mechanic
+ * must hold all of it — competence is per person, not pooled). A job stating
+ * no requirement admits every rostered technician: an unstated requirement is
+ * not a requirement, and the view degrades to bay-only capacity, never to zero.
+ * Matching is on the Durion skill code, uppercase-and-trimmed on both sides.
+ */
+export function isCertifiedTechnician(tech: CapacityTechnician, job: JobRequirement): boolean {
+  if (job.skillCodes.length === 0) {
     return true;
   }
-  // Qualified for the job when qualified for at least one bay that can do it:
-  // the technician must hold every skill that bay requires.
-  return baysStatingSkills.some(bay =>
-    bay.skillRequirementIds.every(skill => tech.skills.includes(skill)),
-  );
+  const held = new Set(tech.skills.map(normalizeCode));
+  return job.skillCodes.every(code => held.has(normalizeCode(code)));
 }
 
 /**
@@ -385,10 +430,9 @@ export function computeDay(input: DayCapacityInput): CapacityDay {
   }
 
   const eligibleBayIndexes = bays
-    .map((bay, index) => (isEligibleBay(bay, job) ? index : -1))
+    .map((bay, index) => (isEligibleBay(bay, job, bays) ? index : -1))
     .filter(index => index >= 0);
-  const eligibleBays = eligibleBayIndexes.map(index => bays[index]);
-  const certified = technicians.filter(tech => isCertifiedTechnician(tech, job, eligibleBays));
+  const certified = technicians.filter(tech => isCertifiedTechnician(tech, job));
 
   const cells: CapacityHour[] = hours.map((hour, hourIndex) => {
     let shopCapacity = 0;

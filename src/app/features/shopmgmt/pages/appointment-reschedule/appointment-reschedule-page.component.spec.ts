@@ -50,8 +50,8 @@ const STUB_APPOINTMENT = {
   scheduledEnd: '2026-04-01T10:00:00Z',
 };
 
-const SOFT_CONFLICT = { type: 'SOFT', code: 'SLOT_PREFERRED', message: 'Preferred slot occupied', overridable: true };
-const HARD_CONFLICT = { type: 'HARD', code: 'FACILITY_CLOSED', message: 'Facility closed on this date', overridable: false };
+const SOFT_CONFLICT = { severity: 'SOFT', code: 'SLOT_PREFERRED', message: 'Preferred slot occupied', overridable: true };
+const HARD_CONFLICT = { severity: 'HARD', code: 'FACILITY_CLOSED', message: 'Facility closed on this date', overridable: false };
 
 const CONFLICT_PAYLOAD_SOFT = {
   conflicts: [SOFT_CONFLICT],

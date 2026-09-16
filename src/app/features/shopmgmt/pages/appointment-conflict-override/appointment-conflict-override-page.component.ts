@@ -4,8 +4,10 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
+import { SHOPMGMT_PAGE } from '../../../../core/security/route-permissions';
 import { AppointmentService } from '../../services/appointment.service';
-import type { AppointmentDetail, Conflict, RescheduleRequest } from '../../models/appointment.models';
+import type { AppointmentConflict, AppointmentDetail, Conflict, RescheduleRequest } from '../../models/appointment.models';
 
 @Component({
   selector: 'app-appointment-conflict-override-page',
@@ -17,6 +19,7 @@ import type { AppointmentDetail, Conflict, RescheduleRequest } from '../../model
 export class AppointmentConflictOverridePageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly appointmentService = inject(AppointmentService);
+  private readonly auth = inject(AuthService);
 
   readonly loading = signal(false);
   readonly appointment = signal<AppointmentDetail | null>(null);
@@ -43,6 +46,24 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
   private appointmentId = '';
 
   readonly hasConflicts = computed(() => this.conflicts().length > 0);
+  /**
+   * A 409 on reschedule carries the DECISION-002 envelope: every rule that fired. A HARD one refused
+   * the change, and nothing in that panel can be overridden — the override below acts on the
+   * conflicts recorded against the appointment, never on a refused attempt.
+   */
+  readonly hasHardConflict = computed(() => this.conflicts().some(conflict => conflict.severity === 'HARD'));
+  /** The SOFT conflicts recorded against the appointment that a manager may still accept (CAP-326). */
+  readonly recordedConflicts = computed<readonly AppointmentConflict[]>(() => this.appointment()?.conflicts ?? []);
+  readonly overridableConflicts = computed(() => this.recordedConflicts().filter(conflict => conflict.overridable));
+  /**
+   * The override is gated on `shop:conflict:override` (CAP-326 D12), not on the reschedule codes
+   * that open this page. Permissions unknown (a legacy token) is not "none granted", as
+   * `canAccess()` reads it; the server still refuses with 403 either way.
+   */
+  readonly canOverride = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(SHOPMGMT_PAGE.conflictOverride),
+  );
+  readonly hasOverridableConflicts = computed(() => this.canOverride() && this.overridableConflicts().length > 0);
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
@@ -55,10 +76,19 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
       this.loading.set(true);
       this.appointmentService.getAppointment(id).subscribe({
         next: (appointment) => {
+          // The route can move to another appointment while this read is in flight (the
+          // component is reused across :id changes); a late answer for the old id must not
+          // overwrite the one now on screen.
+          if (id !== this.appointmentId) {
+            return;
+          }
           this.appointment.set(appointment);
           this.loading.set(false);
         },
         error: () => {
+          if (id !== this.appointmentId) {
+            return;
+          }
           this.rescheduleError.set('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.LOAD');
           this.loading.set(false);
         },
@@ -115,25 +145,81 @@ export class AppointmentConflictOverridePageComponent implements OnInit {
       this.overrideForm.markAllAsTouched();
       return;
     }
+    // The override accepts the recorded SOFT conflicts by id (spec D18.3). A HARD conflict is never
+    // recorded against an appointment — it refused the booking — so there is nothing to send for it.
+    const conflictIds = this.overridableConflicts().map(conflict => conflict.conflictId);
+    if (conflictIds.length === 0) {
+      this.overrideError.set('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.NOTHING_TO_OVERRIDE');
+      return;
+    }
 
     this.overrideLoading.set(true);
     this.overrideSuccess.set(false);
     this.overrideError.set(null);
 
     this.appointmentService
-      .executeOverride(this.appointmentId, { overrideReason: this.overrideForm.controls.overrideReason.value })
+      .executeOverride(this.appointmentId, {
+        conflictIds,
+        overrideReason: this.overrideForm.controls.overrideReason.value,
+      })
       .subscribe({
-        next: (appointment) => {
-          this.appointment.set(appointment);
+        next: () => {
+          // The 201 body is the override record, not the appointment. Mark the accepted conflicts
+          // overridden here and now — the refresh below is asynchronous, and until it lands the
+          // old list would offer the same ids again — then re-read so the summary is the server's.
+          this.appointment.update(current =>
+            current && {
+              ...current,
+              conflicts: (current.conflicts ?? []).map(conflict =>
+                conflictIds.includes(conflict.conflictId)
+                  ? { ...conflict, overridden: true, overridable: false }
+                  : conflict,
+              ),
+            },
+          );
+          this.refreshAppointment();
           this.overrideLoading.set(false);
           this.overrideSuccess.set(true);
           this.overrideMode.set(false);
           this.showConflictPanel.set(false);
         },
-        error: () => {
+        error: (error: HttpErrorResponse) => {
           this.overrideLoading.set(false);
+          if (error.status === 409) {
+            // A 409 means the server's view of the conflicts differs from this page's: re-read the
+            // recorded list rather than leave a stale button on screen. Only the documented
+            // CONFLICT_ALREADY_OVERRIDDEN code (ApiError.code) gets its own message; any other 409
+            // — a HARD rule in the ids, say — is the generic failure, never mislabelled.
+            const code = (error.error as { code?: string } | null)?.code;
+            this.overrideError.set(
+              code === 'CONFLICT_ALREADY_OVERRIDDEN'
+                ? 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.ALREADY_OVERRIDDEN'
+                : 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.OVERRIDE',
+            );
+            this.overrideMode.set(false);
+            this.refreshAppointment();
+            return;
+          }
           this.overrideError.set('SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ERROR.OVERRIDE');
         },
       });
+  }
+
+  /** Re-reads the appointment so the recorded conflicts reflect what the server now holds. */
+  private refreshAppointment(): void {
+    const id = this.appointmentId;
+    if (!id) {
+      return;
+    }
+    this.appointmentService.getAppointment(id).subscribe({
+      // Same stale-response guard as the route load: only the appointment still in the route lands.
+      next: (appointment) => {
+        if (id === this.appointmentId) {
+          this.appointment.set(appointment);
+        }
+      },
+      // The override error already says what happened; a failed refresh keeps the last known state.
+      error: () => undefined,
+    });
   }
 }

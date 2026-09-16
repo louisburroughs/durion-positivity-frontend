@@ -6,6 +6,20 @@ export interface AppointmentDetail {
   scheduledEnd?: string;
   facilityTimeZoneId?: string;
   rescheduleCount?: number;
+  /** SOFT conflicts recorded against the appointment (CAP-326); HARD ones never reach here. */
+  conflicts?: AppointmentConflict[];
+}
+
+/** One recorded scheduling conflict, as `POST /v1/appointments/{id}/conflict-override` names it. */
+export interface AppointmentConflict {
+  conflictId: string;
+  code: string;
+  message: string;
+  severity: string;
+  /** SOFT and not yet overridden. */
+  overridable: boolean;
+  overridden: boolean;
+  resourceId?: string;
 }
 
 export interface AssignmentDetail {
@@ -20,8 +34,12 @@ export interface AssignmentDetail {
   version?: number;
 }
 
+/**
+ * One entry of the DECISION-SHOPMGMT-002 conflict envelope a 409 carries (`ConflictResponse.conflicts`
+ * on the wire): `severity` is the wire name — HARD refused the booking, SOFT was recorded.
+ */
 export interface Conflict {
-  type: 'HARD' | 'SOFT';
+  severity: 'HARD' | 'SOFT';
   code: string;
   message: string;
   overridable?: boolean;

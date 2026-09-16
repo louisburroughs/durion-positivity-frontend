@@ -16,6 +16,7 @@ import {
   hoursNeeded,
   isCertifiedTechnician,
   isEligibleBay,
+  rankEligibleBays,
   isoDateLocal,
   parseIsoDateLocal,
   shopUtilization,
@@ -25,12 +26,19 @@ import {
 
 const HOURS = [7, 8, 9, 10, 11];
 
+/** The alignment rack's seeded claim (pos-location's specialty map for ALIGNMENT, CAP-325 D14). */
+const ALIGNMENT_CODE = 'WHEEL-ALIGNMENT-4-WHEEL';
+
+/**
+ * A fixture bay. An `ALIGNMENT` bay claims the alignment code unless told
+ * otherwise, the way the seeded specialty map gives it that claim; eligibility
+ * reads the claim, never the type.
+ */
 function bay(overrides: Partial<CapacityBay> & { bayId: string }): CapacityBay {
   return {
     name: overrides.bayId,
     bayType: 'GENERAL_SERVICE',
-    capabilityIds: [],
-    skillRequirementIds: [],
+    capabilityCodes: overrides.bayType === 'ALIGNMENT' ? [ALIGNMENT_CODE] : [],
     outOfService: false,
     ...overrides,
   };
@@ -52,17 +60,19 @@ function tech(
 
 const ALIGNMENT_JOB: JobRequirement = {
   label: '4-wheel alignment',
-  capabilityIds: [],
-  bayTypes: ['ALIGNMENT'],
+  operationCode: ALIGNMENT_CODE,
   skillCodes: [],
+  skillRequirementsConfigured: true,
   durationHours: 1.5,
 };
 
+/** The alignment job once the catalog names its skill (CAP-329): certification is per person. */
+const ALIGN_CERTIFIED_JOB: JobRequirement = { ...ALIGNMENT_JOB, skillCodes: ['ALIGN'] };
+
 const ALL_WORK: JobRequirement = {
   label: '',
-  capabilityIds: [],
-  bayTypes: [],
   skillCodes: [],
+  skillRequirementsConfigured: true,
   durationHours: 1,
 };
 
@@ -84,16 +94,51 @@ function input(overrides: Partial<DayCapacityInput> = {}): DayCapacityInput {
 // ── Eligibility ─────────────────────────────────────────────────────────────
 
 describe('isEligibleBay', () => {
-  it('prefers the capability join when the catalog supplies one', () => {
-    const rack = bay({ bayId: 'rack', bayType: 'GENERAL_SERVICE', capabilityIds: ['cap-align'] });
-    const job = { ...ALIGNMENT_JOB, capabilityIds: ['cap-align'], bayTypes: ['ALIGNMENT'] };
-    // Bay type says no, capability says yes: capability wins.
-    expect(isEligibleBay(rack, job)).toBe(true);
+  const job = { ...ALIGNMENT_JOB, operationCode: ALIGNMENT_CODE };
+  const rack = bay({ bayId: 'rack', bayType: 'GENERAL_SERVICE', capabilityCodes: ['wheel-alignment-4-wheel'] });
+  const general = bay({ bayId: 'gen', bayType: 'GENERAL_SERVICE' });
+  const tireBay = bay({ bayId: 'tire', bayType: 'TIRE_SERVICE', capabilityCodes: ['TIRE-INSTALL-SET-4'] });
+
+  it('D14: a bay claiming the operation code is eligible, whatever its bay type, case-insensitively', () => {
+    // Bay type says no, the specialty map says yes: the map wins.
+    expect(isEligibleBay(rack, job, [rack, general])).toBe(true);
   });
 
-  it('falls back to bay type when no capability ids are known', () => {
-    expect(isEligibleBay(bay({ bayId: 'a', bayType: 'ALIGNMENT' }), ALIGNMENT_JOB)).toBe(true);
-    expect(isEligibleBay(bay({ bayId: 'b', bayType: 'TIRE_SERVICE' }), ALIGNMENT_JOB)).toBe(false);
+  it('D14: when a bay claims the operation, only claimants may do it', () => {
+    expect(isEligibleBay(general, job, [rack, general])).toBe(false);
+  });
+
+  it('D14: when nobody claims the operation it is general work — every bay but a wash bay, specialty bays ranked last', () => {
+    const brakeJob = { ...ALIGNMENT_JOB, operationCode: 'BRAKE-PAD-REPLACE-FRONT' };
+    const wash = bay({ bayId: 'wash', bayType: 'WASH_DETAIL' });
+    expect(isEligibleBay(general, brakeJob, [rack, general, tireBay, wash])).toBe(true);
+    expect(isEligibleBay(tireBay, brakeJob, [rack, general, tireBay, wash])).toBe(true);
+    expect(isEligibleBay(rack, brakeJob, [rack, general, tireBay, wash])).toBe(true);
+    expect(isEligibleBay(wash, brakeJob, [rack, general, tireBay, wash])).toBe(false);
+    expect(rankEligibleBays([rack, general, tireBay]).map(b => b.bayId)).toEqual(['gen', 'rack', 'tire']);
+  });
+
+  it('D14: a service the catalog gave no code is general work — nothing is inferred from its name', () => {
+    const unnamed = { ...ALIGNMENT_JOB, serviceId: 'svc-oneoff', label: 'Alignment check (one-off)', operationCode: undefined };
+    const wash = bay({ bayId: 'wash', bayType: 'WASH_DETAIL' });
+    expect(isEligibleBay(general, unnamed, [rack, general, wash])).toBe(true);
+    expect(isEligibleBay(rack, unnamed, [rack, general, wash])).toBe(true);
+    // Still mechanical work: the wash bay stays out (D14's one exception).
+    expect(isEligibleBay(wash, unnamed, [rack, general, wash])).toBe(false);
+  });
+
+  it('D14: an out-of-service claimant does not reserve the operation', () => {
+    const downRack = bay({ ...rack, outOfService: true });
+    expect(isEligibleBay(general, job, [downRack, general])).toBe(true);
+  });
+
+  it('D14: the claim decides, not the bay type — a tire bay is out only while a rack claims the operation', () => {
+    const a = bay({ bayId: 'a', bayType: 'ALIGNMENT' });
+    const b = bay({ bayId: 'b', bayType: 'TIRE_SERVICE' });
+    expect(isEligibleBay(a, ALIGNMENT_JOB, [a, b])).toBe(true);
+    expect(isEligibleBay(b, ALIGNMENT_JOB, [a, b])).toBe(false);
+    // Alone, with nobody claiming the operation, the same tire bay may take it as general work.
+    expect(isEligibleBay(b, ALIGNMENT_JOB, [b])).toBe(true);
   });
 
   it('never counts an out-of-service bay', () => {
@@ -101,29 +146,30 @@ describe('isEligibleBay', () => {
     expect(isEligibleBay(down, ALIGNMENT_JOB)).toBe(false);
   });
 
-  it('treats an unfiltered job as every bay', () => {
+  it('treats an unfiltered job as every bay, the wash bay included', () => {
     expect(isEligibleBay(bay({ bayId: 'a', bayType: 'TIRE_SERVICE' }), ALL_WORK)).toBe(true);
+    expect(isEligibleBay(bay({ bayId: 'w', bayType: 'WASH_DETAIL' }), ALL_WORK)).toBe(true);
   });
 });
 
 describe('isCertifiedTechnician', () => {
-  const rack = bay({ bayId: 'rack', bayType: 'ALIGNMENT', skillRequirementIds: ['ALIGN'] });
+  const brakeJob: JobRequirement = { ...ALIGNMENT_JOB, skillCodes: ['BRAKES-LIGHT'] };
 
-  it('uses the skills the eligible bay requires when the job states none', () => {
-    expect(isCertifiedTechnician(tech('bell', { skills: ['ALIGN'] }), ALIGNMENT_JOB, [rack])).toBe(true);
-    expect(isCertifiedTechnician(tech('ruiz', { skills: ['GEN'] }), ALIGNMENT_JOB, [rack])).toBe(false);
+  it('holds when the technician has every skill the job requires, case-insensitively', () => {
+    expect(isCertifiedTechnician(tech('bell', { skills: ['brakes-light '] }), brakeJob)).toBe(true);
+    expect(isCertifiedTechnician(tech('ruiz', { skills: ['SUSPENSION-STEERING-LIGHT'] }), brakeJob)).toBe(false);
   });
 
-  it('requires every skill the bay lists, not just one', () => {
-    const strict = bay({ bayId: 'r', bayType: 'ALIGNMENT', skillRequirementIds: ['ALIGN', 'ADAS'] });
-    expect(isCertifiedTechnician(tech('a', { skills: ['ALIGN'] }), ALIGNMENT_JOB, [strict])).toBe(false);
-    expect(isCertifiedTechnician(tech('b', { skills: ['ALIGN', 'ADAS'] }), ALIGNMENT_JOB, [strict])).toBe(true);
+  it('requires every required skill of one person, not one of them (CAP-329)', () => {
+    const strict = { ...ALIGNMENT_JOB, skillCodes: ['BRAKES-LIGHT', 'ELECTRICAL-LIGHT'] };
+    expect(isCertifiedTechnician(tech('a', { skills: ['BRAKES-LIGHT'] }), strict)).toBe(false);
+    expect(isCertifiedTechnician(tech('b', { skills: ['BRAKES-LIGHT', 'ELECTRICAL-LIGHT'] }), strict)).toBe(true);
   });
 
-  it('counts everyone when nothing states a requirement', () => {
+  it('counts everyone when the job states no requirement', () => {
     // An unstated requirement is not a requirement: degrade to bay-only
     // capacity rather than reporting the whole roster as uncertified.
-    expect(isCertifiedTechnician(tech('a'), ALIGNMENT_JOB, [bay({ bayId: 'r' })])).toBe(true);
+    expect(isCertifiedTechnician(tech('a'), ALIGNMENT_JOB)).toBe(true);
   });
 });
 
@@ -166,14 +212,14 @@ describe('computeDay', () => {
   });
 
   it('separates "technician off" from "technician assigned elsewhere"', () => {
-    const bays = [bay({ bayId: 'rack', bayType: 'ALIGNMENT', skillRequirementIds: ['ALIGN'] })];
+    const bays = [bay({ bayId: 'rack', bayType: 'ALIGNMENT' })];
     const grid = [HOURS.map(() => 'free' as BayHourState)];
     const certified = (overrides: Partial<CapacityTechnician>) =>
       tech('J. Bell', { skills: ['ALIGN'], ...overrides });
 
     // Nobody rostered: call someone in.
     const off = computeDay(
-      input({ bays, grid, technicians: [certified({ onDutyHours: new Set() })] }),
+      input({ job: ALIGN_CERTIFIED_JOB, bays, grid, technicians: [certified({ onDutyHours: new Set() })] }),
     );
     expect(off.techBlock).toBe('off');
     expect(off.techOffHours).toBe(HOURS.length);
@@ -181,6 +227,7 @@ describe('computeDay', () => {
     // Rostered but covering another bay: reassign.
     const assigned = computeDay(
       input({
+        job: ALIGN_CERTIFIED_JOB,
         bays,
         grid,
         technicians: [certified({ assignedHours: new Set(HOURS.map((_, i) => i)) })],
@@ -193,9 +240,10 @@ describe('computeDay', () => {
   it('is amber-not-red even with the rack free all day, when no tech is free', () => {
     // The design's driving case: equipment available, person not. The two need
     // different fixes, so the day must not read as "bay full".
-    const bays = [bay({ bayId: 'rack', bayType: 'ALIGNMENT', skillRequirementIds: ['ALIGN'] })];
+    const bays = [bay({ bayId: 'rack', bayType: 'ALIGNMENT' })];
     const day = computeDay(
       input({
+        job: ALIGN_CERTIFIED_JOB,
         bays,
         grid: [HOURS.map(() => 'free' as BayHourState)],
         technicians: [tech('J. Bell', { skills: ['ALIGN'], onDutyHours: new Set() })],

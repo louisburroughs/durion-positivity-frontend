@@ -252,18 +252,18 @@ describe('AppointmentService [CAP-249]', () => {
   // ── executeOverride ───────────────────────────────────────────────────────
 
   describe('executeOverride', () => {
-    it('calls conflictOverrideSdk.executeOverride with appointmentId and body', () => {
-      const body = { overrideReason: 'Manager approved' };
+    it('names the accepted conflicts in the body and the appointment only in the path (CAP-326 D18.3)', () => {
+      const body = { conflictIds: ['conf-1', 'conf-2'], overrideReason: 'Manager approved' };
       service.executeOverride('appt-1', body).subscribe();
 
       expect(conflictOverrideStub.executeConflictOverride).toHaveBeenCalledWith('appt-1', {
-        appointmentId: 'appt-1',
+        conflictIds: ['conf-1', 'conf-2'],
         overrideReason: 'Manager approved',
       });
     });
 
     it('forwards the override body to the SDK', () => {
-      const body = { overrideReason: 'Emergency' };
+      const body = { conflictIds: ['conf-1'], overrideReason: 'Emergency' };
       service.executeOverride('appt-1', body).subscribe();
 
       expect(conflictOverrideStub.executeConflictOverride).toHaveBeenCalledWith(

@@ -43,18 +43,40 @@
   [disabled]="rescheduleLoading()">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.RESCHEDULE' | translate }}</button>
 </form>
 
+@if (recordedConflicts().length > 0) {
+  <section class="recorded-conflicts">
+    <h3>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.RECORDED_CONFLICTS' | translate }}</h3>
+    <ul class="recorded-conflict-list">
+      @for (conflict of recordedConflicts(); track conflict.conflictId) {
+        <li class="conflict-item soft-conflict" [class.conflict-item--overridden]="conflict.overridden">
+          <strong>{{ conflict.code }}</strong>
+          <p>{{ conflict.message }}</p>
+          @if (conflict.overridden) {
+            <span class="conflict-state">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.OVERRIDDEN' | translate }}</span>
+          }
+        </li>
+      }
+    </ul>
+    @if (hasOverridableConflicts() && !overrideMode()) {
+      <button type="button" class="btn-danger enable-override-btn"
+      (click)="enableOverrideMode()">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ENABLE_OVERRIDE' | translate }}</button>
+    }
+  </section>
+}
+
 @if (showConflictPanel() && hasConflicts()) {
   <section class="conflict-panel">
     <h3>{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.CONFLICTS' | translate }}</h3>
     @for (conflict of conflicts(); track conflict) {
       <article class="conflict-item"
-        [ngClass]="conflict.type === 'HARD' ? 'hard-conflict' : 'soft-conflict'">
-        <strong>{{ conflict.type }}</strong>
+        [ngClass]="conflict.severity === 'HARD' ? 'hard-conflict' : 'soft-conflict'">
+        <strong>{{ conflict.severity }}</strong>
         <p>{{ conflict.message }}</p>
       </article>
     }
-    <button type="button" class="btn-danger enable-override-btn"
-    (click)="enableOverrideMode()">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.ENABLE_OVERRIDE' | translate }}</button>
+    @if (hasHardConflict()) {
+      <p class="conflict-hint">{{ 'SHOPMGMT.APPOINTMENT_CONFLICT_OVERRIDE.HARD_NOT_OVERRIDABLE' | translate }}</p>
+    }
   </section>
 }
 

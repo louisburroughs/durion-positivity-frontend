@@ -3,6 +3,7 @@ import { By } from '@angular/platform-browser';
 import { TranslateModule } from '@ngx-translate/core';
 import {
   MechanicRosterEntryResponseStatusEnum,
+  TechnicianCredentialResponseStatusEnum,
   type PagedModelMechanicRosterEntryResponse,
 } from '@durion-sdk/shop-manager';
 import { Observable, Subject, of, throwError } from 'rxjs';
@@ -19,7 +20,10 @@ const readyPage: PagedModelMechanicRosterEntryResponse = {
       firstName: 'Alex',
       lastName: 'Smith',
       status: MechanicRosterEntryResponseStatusEnum.Active,
-      skills: ['BRAKES', 'ALIGNMENT'],
+      credentials: [
+        { credentialId: 'cred-1', skillCode: 'BRAKES-LIGHT', status: TechnicianCredentialResponseStatusEnum.Active },
+        { credentialId: 'cred-2', skillCode: 'SUSPENSION-STEERING-LIGHT', status: TechnicianCredentialResponseStatusEnum.Expired },
+      ],
       lastSyncedAt: '2026-08-31T14:30:00Z',
     },
   ],
@@ -162,13 +166,20 @@ describe('MechanicRosterPageComponent [CAP-138]', () => {
     expect(rosterServiceStub.listMechanics).toHaveBeenCalledTimes(3);
   });
 
-  it('renders mechanic names and skill codes from generated roster entries', async () => {
+  it('renders mechanic names and the skill codes of their credentials, marking a lapsed one (CAP-328)', async () => {
     await setup();
 
     const row = fixture.debugElement.query(By.css('[data-testid="mechanic-row"]'));
     expect(row.nativeElement.textContent).toContain('Alex Smith');
-    expect(row.nativeElement.textContent).toContain('BRAKES');
-    expect(row.nativeElement.textContent).toContain('ALIGNMENT');
+    expect(row.nativeElement.textContent).toContain('BRAKES-LIGHT');
+    expect(row.nativeElement.textContent).toContain('SUSPENSION-STEERING-LIGHT');
+
+    const codes = row.queryAll(By.css('.skill-code'));
+    expect(codes).toHaveLength(2);
+    expect(codes[0].nativeElement.classList.contains('skill-code--lapsed')).toBe(false);
+    // The expired credential is shown, never hidden, and never reads as held.
+    expect(codes[1].nativeElement.classList.contains('skill-code--lapsed')).toBe(true);
+    expect(codes[1].nativeElement.textContent).toContain('CREDENTIAL_STATUS.EXPIRED');
   });
 
   it('cancels the previous request when a query input changes', async () => {

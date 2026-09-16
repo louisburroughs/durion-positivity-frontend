@@ -109,9 +109,9 @@
       </p>
     }
 
-    @if (view()?.eligibilityIsApproximate) {
+    @if (view()?.skillRequirementsUnknown) {
       <output class="alert alert-warning" aria-live="polite">
-        {{ 'SHOPMGMT.SCHEDULE_VIEW.ELIGIBILITY_APPROXIMATE' | translate }}
+        {{ 'SHOPMGMT.SCHEDULE_VIEW.SKILLS_NOT_CONFIGURED' | translate }}
       </output>
     }
 

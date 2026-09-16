@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
+  AppointmentAssignmentsService,
   AppointmentCreateRequestSourceTypeEnum,
   AppointmentsAPIService,
-  AppointmentAssignmentsService,
   ConflictOverrideAPIService,
+  ConflictOverrideResponse,
   MechanicAssignmentItemRoleEnum,
   ScheduleAPIService,
   ShopAuditService,
@@ -93,12 +94,22 @@ export class AppointmentService {
     return this.appointments.createAppointment(sdkRequest, idempotencyKey) as unknown as Observable<AppointmentDetail>;
   }
 
-  executeOverride(appointmentId: string, body: { overrideReason: string }): Observable<AppointmentDetail> {
+  /**
+   * CAP-326 (spec D18.3): an override names the recorded SOFT conflicts it accepts; the appointment
+   * is the path, not the body. Each id must be recorded against the appointment, SOFT and not yet
+   * overridden, or the service answers 400 / 409 with the conflict envelope.
+   */
+  executeOverride(
+    appointmentId: string,
+    body: { conflictIds: string[]; overrideReason: string },
+  ): Observable<ConflictOverrideResponse> {
     const sdkRequest: ConflictOverrideRequest = {
-      appointmentId,
+      conflictIds: body.conflictIds,
       overrideReason: body.overrideReason,
     };
-    return this.conflictOverride.executeConflictOverride(appointmentId, sdkRequest) as unknown as Observable<AppointmentDetail>;
+    // 201 with the override record — who, when, which conflicts — not the appointment. A caller
+    // that wants the appointment's new state re-reads it (the recorded conflicts change).
+    return this.conflictOverride.executeConflictOverride(appointmentId, sdkRequest);
   }
 
   cancelAppointment(appointmentId: string, body: { cancellationReason: string; notes?: string }): Observable<AppointmentDetail> {

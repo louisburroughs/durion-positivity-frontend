@@ -1918,8 +1918,8 @@
       "HOUR": "Hour",
       "TIME": "Time",
       "REQUIREMENT": "Resources required: {{bays}} ({{eligible}} of {{total}} bays) + a certified technician ({{technicians}}) + {{hours}} hr unbroken. Amber days have the equipment but not the person.",
-      "ELIGIBILITY_APPROXIMATE": "Eligibility is approximate: the catalog does not record which equipment a service needs, so bays are matched by bay type. Treat these figures as a guide, not a booking guarantee.",
       "DEGRADED": "Some capacity data could not be loaded, so these figures may be incomplete.",
+      "SKILLS_NOT_CONFIGURED": "The catalog has not declared which skills this service needs, so every rostered technician is counted as able to do it. Configure the service's skill requirements to see certified capacity.",
       "LEGEND_ARIA": "What the capacity colours mean",
       "LEGEND_LOAD": "shop load",
       "LEGEND_FITS": "the job fits here",
@@ -1997,7 +1997,13 @@
         "SKILLS": "Skill codes",
         "SKILLS_ARIA": "Mechanic skill codes",
         "LAST_SYNCED": "Last synchronized",
-        "ARIA_LABEL": "Mechanic roster"
+        "ARIA_LABEL": "Mechanic roster",
+        "CREDENTIAL_STATUS": {
+          "ACTIVE": "active",
+          "EXPIRED": "expired",
+          "REVOKED": "revoked",
+          "SUPERSEDED": "superseded"
+        }
       },
       "PAGINATION": {
         "ARIA_LABEL": "Mechanic roster pagination",
@@ -2116,8 +2122,13 @@
         "LOAD": "Failed to load appointment.",
         "CONFLICTS": "Conflicts were found for the selected slot.",
         "RESCHEDULE": "Failed to reschedule appointment.",
-        "OVERRIDE": "Failed to execute override."
-      }
+        "OVERRIDE": "Failed to execute override.",
+        "NOTHING_TO_OVERRIDE": "There is no conflict left to override on this appointment.",
+        "ALREADY_OVERRIDDEN": "That conflict was already overridden by someone else; the appointment has been refreshed."
+      },
+      "RECORDED_CONFLICTS": "Conflicts recorded against this appointment",
+      "OVERRIDDEN": "Overridden",
+      "HARD_NOT_OVERRIDABLE": "These conflicts blocked the change and cannot be overridden; choose another slot."
     },
     "LANDING": {
       "TITLE": "Shop Management",

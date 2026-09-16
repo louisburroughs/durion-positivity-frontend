@@ -35,16 +35,14 @@ const BAYS = [
     bayId: 'gen-1',
     name: 'Bay 1',
     bayType: 'GENERAL_SERVICE',
-    capabilityIds: [],
-    skillRequirementIds: [],
+    capabilityCodes: [],
     outOfService: false,
   },
   {
     bayId: 'rack',
     name: 'Bay 5',
     bayType: 'ALIGNMENT',
-    capabilityIds: [],
-    skillRequirementIds: ['ALIGN'],
+    capabilityCodes: ['WHEEL-ALIGNMENT-4-WHEEL'],
     outOfService: false,
   },
 ];
@@ -52,9 +50,9 @@ const BAYS = [
 const JOB: JobRequirement = {
   serviceId: 'svc-align',
   label: '4-wheel alignment',
-  capabilityIds: [],
-  bayTypes: ['ALIGNMENT'],
-  skillCodes: [],
+  operationCode: 'WHEEL-ALIGNMENT-4-WHEEL',
+  skillCodes: ['ALIGN'],
+  skillRequirementsConfigured: true,
   durationHours: 1.5,
 };
 
@@ -112,7 +110,7 @@ const VIEW: CapacityCalendarView = {
     },
   ],
   degraded: true,
-  eligibilityIsApproximate: true,
+  skillRequirementsUnknown: false,
 };
 
 const capacityStub = {
@@ -194,8 +192,10 @@ describe('Capacity calendar a11y (rendered DOM)', () => {
     });
   });
 
-  it('announces the degradation notices politely', () => {
+  it('announces the degradation notice politely', () => {
+    // The fixture is degraded; eligibility itself is read from the specialty map, so
+    // there is no longer an "approximate" notice beside it (CAP-325 D14).
     const outputs = fixture.nativeElement.querySelectorAll('output[aria-live="polite"]');
-    expect(outputs.length).toBeGreaterThanOrEqual(2);
+    expect(outputs.length).toBeGreaterThanOrEqual(1);
   });
 });

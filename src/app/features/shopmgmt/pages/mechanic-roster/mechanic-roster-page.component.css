@@ -157,6 +157,19 @@ tbody tr:last-child td {
   background: var(--surface-variant);
 }
 
+/* CAP-328: an expired, revoked or superseded credential is shown, never hidden, and never read as held. */
+.skill-code--lapsed {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.skill-code__status {
+  margin-left: var(--space-1);
+  font-family: inherit;
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+
 .roster-pagination {
   display: grid;
   grid-template-columns: 2.75rem minmax(0, 1fr) 2.75rem;
