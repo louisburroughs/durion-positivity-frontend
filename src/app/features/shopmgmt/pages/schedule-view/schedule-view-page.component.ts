@@ -10,12 +10,13 @@ import {
   CapacityCalendarView,
   CapacityDay,
   CapacityHour,
-  JobRequirement,
-  LimitReason,
   isCertifiedTechnician,
   isEligibleBay,
   isoDateLocal,
+  JobRequirement,
+  LimitReason,
   parseIsoDateLocal,
+  rankEligibleBays,
   shopUtilization,
 } from '../../models/capacity-calendar.models';
 import {
@@ -170,10 +171,15 @@ export class ScheduleViewPageComponent implements OnInit {
 
   readonly isFiltered = computed(() => this.activeJob().label.length > 0);
 
-  /** Bays that can perform the selected job — the "eligible" in eligible capacity. */
-  readonly eligibleBays = computed(() =>
-    (this.view()?.bays ?? []).filter(bay => isEligibleBay(bay, this.activeJob(), this.view()?.bays ?? [])),
-  );
+  /**
+   * Bays that can perform the selected job — the "eligible" in eligible capacity —
+   * in offer order (D14): general bays first, specialty bays taking general work
+   * last, so the rack is named only once the general bays are.
+   */
+  readonly eligibleBays = computed(() => {
+    const bays = this.view()?.bays ?? [];
+    return rankEligibleBays(bays.filter(bay => isEligibleBay(bay, this.activeJob(), bays)));
+  });
 
   /** Eligible bay names, for the "resources required" line. */
   readonly eligibleBayNames = computed(() =>

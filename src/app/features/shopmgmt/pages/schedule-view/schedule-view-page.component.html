@@ -109,12 +109,6 @@
       </p>
     }
 
-    @if (view()?.eligibilityIsApproximate) {
-      <output class="alert alert-warning" aria-live="polite">
-        {{ 'SHOPMGMT.SCHEDULE_VIEW.ELIGIBILITY_APPROXIMATE' | translate }}
-      </output>
-    }
-
     @if (view()?.degraded) {
       <output class="alert alert-warning" aria-live="polite">
         {{ 'SHOPMGMT.SCHEDULE_VIEW.DEGRADED' | translate }}

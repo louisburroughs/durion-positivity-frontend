@@ -1918,7 +1918,6 @@
       "HOUR": "Heure",
       "TIME": "Horaire",
       "REQUIREMENT": "Ressources requises : {{bays}} ({{eligible}} baies sur {{total}}) + un technicien certifié ({{technicians}}) + {{hours}} h sans interruption. Les jours en ambre ont l’équipement mais pas la personne.",
-      "ELIGIBILITY_APPROXIMATE": "L'éligibilité est approximative : le catalogue n'indique pas quel équipement un service nécessite, les baies sont donc associées par type. Ces chiffres sont indicatifs et ne garantissent pas une réservation.",
       "DEGRADED": "Certaines données de capacité n’ont pas pu être chargées ; ces chiffres peuvent être incomplets.",
       "LEGEND_ARIA": "Signification des couleurs de capacité",
       "LEGEND_LOAD": "charge de l'atelier",

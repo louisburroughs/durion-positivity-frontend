@@ -1918,7 +1918,6 @@
       "HOUR": "Hora",
       "TIME": "Horario",
       "REQUIREMENT": "Recursos necesarios: {{bays}} ({{eligible}} de {{total}} bahías) + un técnico certificado ({{technicians}}) + {{hours}} h sin interrupción. Los días en ámbar tienen el equipo pero no la persona.",
-      "ELIGIBILITY_APPROXIMATE": "La elegibilidad es aproximada: el catálogo no registra qué equipo requiere un servicio, por lo que las bahías se asocian por tipo. Considera estas cifras como una guía, no como una garantía de reserva.",
       "DEGRADED": "No se pudieron cargar algunos datos de capacidad, por lo que estas cifras pueden estar incompletas.",
       "LEGEND_ARIA": "Qué significan los colores de capacidad",
       "LEGEND_LOAD": "carga del taller",

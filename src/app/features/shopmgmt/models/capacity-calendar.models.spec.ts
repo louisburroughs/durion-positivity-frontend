@@ -26,11 +26,19 @@ import {
 
 const HOURS = [7, 8, 9, 10, 11];
 
+/** The alignment rack's seeded claim (pos-location's specialty map for ALIGNMENT, CAP-325 D14). */
+const ALIGNMENT_CODE = 'WHEEL-ALIGNMENT-4-WHEEL';
+
+/**
+ * A fixture bay. An `ALIGNMENT` bay claims the alignment code unless told
+ * otherwise, the way the seeded specialty map gives it that claim; eligibility
+ * reads the claim, never the type.
+ */
 function bay(overrides: Partial<CapacityBay> & { bayId: string }): CapacityBay {
   return {
     name: overrides.bayId,
     bayType: 'GENERAL_SERVICE',
-    capabilityCodes: [],
+    capabilityCodes: overrides.bayType === 'ALIGNMENT' ? [ALIGNMENT_CODE] : [],
     outOfService: false,
     ...overrides,
   };
@@ -52,7 +60,7 @@ function tech(
 
 const ALIGNMENT_JOB: JobRequirement = {
   label: '4-wheel alignment',
-  bayTypes: ['ALIGNMENT'],
+  operationCode: ALIGNMENT_CODE,
   skillCodes: [],
   durationHours: 1.5,
 };
@@ -62,7 +70,6 @@ const ALIGN_CERTIFIED_JOB: JobRequirement = { ...ALIGNMENT_JOB, skillCodes: ['AL
 
 const ALL_WORK: JobRequirement = {
   label: '',
-  bayTypes: [],
   skillCodes: [],
   durationHours: 1,
 };
@@ -85,7 +92,7 @@ function input(overrides: Partial<DayCapacityInput> = {}): DayCapacityInput {
 // ── Eligibility ─────────────────────────────────────────────────────────────
 
 describe('isEligibleBay', () => {
-  const job = { ...ALIGNMENT_JOB, operationCode: 'WHEEL-ALIGNMENT-4-WHEEL', bayTypes: ['ALIGNMENT'] };
+  const job = { ...ALIGNMENT_JOB, operationCode: ALIGNMENT_CODE };
   const rack = bay({ bayId: 'rack', bayType: 'GENERAL_SERVICE', capabilityCodes: ['wheel-alignment-4-wheel'] });
   const general = bay({ bayId: 'gen', bayType: 'GENERAL_SERVICE' });
   const tireBay = bay({ bayId: 'tire', bayType: 'TIRE_SERVICE', capabilityCodes: ['TIRE-INSTALL-SET-4'] });
@@ -100,7 +107,7 @@ describe('isEligibleBay', () => {
   });
 
   it('D14: when nobody claims the operation it is general work — every bay but a wash bay, specialty bays ranked last', () => {
-    const brakeJob = { ...ALIGNMENT_JOB, operationCode: 'BRAKE-PAD-REPLACE-FRONT', bayTypes: [] };
+    const brakeJob = { ...ALIGNMENT_JOB, operationCode: 'BRAKE-PAD-REPLACE-FRONT' };
     const wash = bay({ bayId: 'wash', bayType: 'WASH_DETAIL' });
     expect(isEligibleBay(general, brakeJob, [rack, general, tireBay, wash])).toBe(true);
     expect(isEligibleBay(tireBay, brakeJob, [rack, general, tireBay, wash])).toBe(true);
@@ -109,14 +116,26 @@ describe('isEligibleBay', () => {
     expect(rankEligibleBays([rack, general, tireBay]).map(b => b.bayId)).toEqual(['gen', 'rack', 'tire']);
   });
 
+  it('D14: a service the catalog gave no code is general work — nothing is inferred from its name', () => {
+    const unnamed = { ...ALIGNMENT_JOB, label: 'Alignment check (one-off)', operationCode: undefined };
+    const wash = bay({ bayId: 'wash', bayType: 'WASH_DETAIL' });
+    expect(isEligibleBay(general, unnamed, [rack, general, wash])).toBe(true);
+    expect(isEligibleBay(rack, unnamed, [rack, general, wash])).toBe(true);
+    expect(isEligibleBay(wash, unnamed, [rack, general, wash])).toBe(true);
+  });
+
   it('D14: an out-of-service claimant does not reserve the operation', () => {
     const downRack = bay({ ...rack, outOfService: true });
     expect(isEligibleBay(general, job, [downRack, general])).toBe(true);
   });
 
-  it('falls back to bay type when the job has no operation code', () => {
-    expect(isEligibleBay(bay({ bayId: 'a', bayType: 'ALIGNMENT' }), ALIGNMENT_JOB)).toBe(true);
-    expect(isEligibleBay(bay({ bayId: 'b', bayType: 'TIRE_SERVICE' }), ALIGNMENT_JOB)).toBe(false);
+  it('D14: the claim decides, not the bay type — a tire bay is out only while a rack claims the operation', () => {
+    const a = bay({ bayId: 'a', bayType: 'ALIGNMENT' });
+    const b = bay({ bayId: 'b', bayType: 'TIRE_SERVICE' });
+    expect(isEligibleBay(a, ALIGNMENT_JOB, [a, b])).toBe(true);
+    expect(isEligibleBay(b, ALIGNMENT_JOB, [a, b])).toBe(false);
+    // Alone, with nobody claiming the operation, the same tire bay may take it as general work.
+    expect(isEligibleBay(b, ALIGNMENT_JOB, [b])).toBe(true);
   });
 
   it('never counts an out-of-service bay', () => {

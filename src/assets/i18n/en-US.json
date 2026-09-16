@@ -1918,7 +1918,6 @@
       "HOUR": "Hour",
       "TIME": "Time",
       "REQUIREMENT": "Resources required: {{bays}} ({{eligible}} of {{total}} bays) + a certified technician ({{technicians}}) + {{hours}} hr unbroken. Amber days have the equipment but not the person.",
-      "ELIGIBILITY_APPROXIMATE": "Eligibility is approximate: the catalog does not record which equipment a service needs, so bays are matched by bay type. Treat these figures as a guide, not a booking guarantee.",
       "DEGRADED": "Some capacity data could not be loaded, so these figures may be incomplete.",
       "LEGEND_ARIA": "What the capacity colours mean",
       "LEGEND_LOAD": "shop load",

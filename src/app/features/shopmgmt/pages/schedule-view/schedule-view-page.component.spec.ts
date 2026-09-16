@@ -52,14 +52,13 @@ const BAYS = [
 const ALIGNMENT_JOB: JobRequirement = {
   serviceId: 'svc-align',
   label: '4-wheel alignment',
-  bayTypes: ['ALIGNMENT'],
+  operationCode: 'WHEEL-ALIGNMENT-4-WHEEL',
   skillCodes: ['ALIGN'],
   durationHours: 1.5,
 };
 
 const ALL_WORK: JobRequirement = {
   label: '',
-  bayTypes: [],
   skillCodes: [],
   durationHours: 1,
 };
@@ -124,7 +123,6 @@ function view(overrides: Partial<CapacityCalendarView> = {}): CapacityCalendarVi
       },
     ],
     degraded: false,
-    eligibilityIsApproximate: true,
     ...overrides,
   };
 }
@@ -369,8 +367,11 @@ describe('ScheduleViewPageComponent', () => {
 
     expect(component.isFiltered()).toBe(false);
     expect(capacityStub.getCalendar).toHaveBeenCalledWith(
-      expect.objectContaining({ job: expect.objectContaining({ bayTypes: [] }) }),
+      expect.objectContaining({ job: expect.objectContaining({ label: '', skillCodes: [] }) }),
     );
+    // All work names no operation, so every in-service bay is eligible again.
+    const request = capacityStub.getCalendar.mock.calls[0][0] as { job: JobRequirement };
+    expect(request.job.operationCode).toBeUndefined();
   });
 
   it('names the eligible bays and certified technicians the job needs', async () => {
@@ -410,11 +411,6 @@ describe('ScheduleViewPageComponent', () => {
   });
 
   // ── Honest degradation ────────────────────────────────────────────────────
-
-  it('says so when eligibility is inferred from bay type rather than measured', async () => {
-    await setup();
-    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.ELIGIBILITY_APPROXIMATE');
-  });
 
   it('warns when an upstream source was unavailable', async () => {
     capacityStub.getCalendar.mockReturnValue(of(view({ degraded: true })));

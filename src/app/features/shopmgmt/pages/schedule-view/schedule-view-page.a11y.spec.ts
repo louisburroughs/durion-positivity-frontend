@@ -50,7 +50,7 @@ const BAYS = [
 const JOB: JobRequirement = {
   serviceId: 'svc-align',
   label: '4-wheel alignment',
-  bayTypes: ['ALIGNMENT'],
+  operationCode: 'WHEEL-ALIGNMENT-4-WHEEL',
   skillCodes: ['ALIGN'],
   durationHours: 1.5,
 };
@@ -109,7 +109,6 @@ const VIEW: CapacityCalendarView = {
     },
   ],
   degraded: true,
-  eligibilityIsApproximate: true,
 };
 
 const capacityStub = {
@@ -191,8 +190,10 @@ describe('Capacity calendar a11y (rendered DOM)', () => {
     });
   });
 
-  it('announces the degradation notices politely', () => {
+  it('announces the degradation notice politely', () => {
+    // The fixture is degraded; eligibility itself is read from the specialty map, so
+    // there is no longer an "approximate" notice beside it (CAP-325 D14).
     const outputs = fixture.nativeElement.querySelectorAll('output[aria-live="polite"]');
-    expect(outputs.length).toBeGreaterThanOrEqual(2);
+    expect(outputs.length).toBeGreaterThanOrEqual(1);
   });
 });

@@ -68,23 +68,6 @@ const LANE_BAY = 'BAY';
 const LANE_MECHANIC = 'MECHANIC';
 
 /**
- * INTERIM: which bay types can perform a catalog service.
- *
- * This table exists only because the catalog cannot answer the question. It is
- * keyed off `ServiceDto.operationCategory` and `operationCode`, both of which
- * describe what the work *is*, not what equipment it needs — so the answer is
- * an inference, not a reading. Every view that uses it sets
- * `eligibilityIsApproximate`, and the page says so on screen rather than
- * presenting the result as measured.
- *
- * Delete this table, and the `bayTypes` fallback in `isEligibleBay`, the day
- * `ServiceDto` carries capability ids (louisburroughs/durion#473).
- */
-const ALIGNMENT_CODE_PATTERN = /ALIGN/i;
-const INSPECTION_CODE_PATTERN = /INSPECT/i;
-const HEAVY_CODE_PATTERN = /HEAVY|TRUCK|FLEET/i;
-
-/**
  * Backs the Shop Capacity Calendar (`/app/shopmgmt/schedule`), whose primitive
  * is *eligible* capacity — see `capacity-calendar.models.ts` for the model.
  *
@@ -92,20 +75,17 @@ const HEAVY_CODE_PATTERN = /HEAVY|TRUCK|FLEET/i;
  * page wants one capacity read and there is no capacity endpoint, so the view is
  * composed from the endpoints that do exist:
  *
- *   bays                    → columns, bay type, capability + skill ids, OOS
- *   location technicians    → certified-technician roster and their skills
+ *   bays                    → columns, bay type, specialty codes, duty class, OOS
+ *   location technicians    → technician roster and the skill codes they hold
  *   schedule view (per day) → bay occupancy, mechanic assignment, shift/PTO
- *   catalog services        → the job-type filter and its default duration
+ *   catalog services        → the job-type filter, its operation code, its
+ *                             required skills and its default duration
  *
- * Five gaps are visible in the output rather than papered over. Each is tracked
- * as a backend story and each has a named degradation on screen:
- *
- *   louisburroughs/durion#473 — `ServiceDto` carries no `serviceCapabilityIds`
- *     or required skill codes, and no endpoint resolves a bay's capability ids
- *     to anything, so nothing can say that a 4-wheel alignment needs the
- *     alignment rack. Eligibility therefore falls back to `bayType` via the
- *     inference table above and the view reports `eligibilityIsApproximate`.
- *     This is the blocking gap: eligible capacity is the page's primitive.
+ * Eligibility is read, not inferred: a bay's `serviceCapabilityCodes` against the
+ * service's `operationCode` (CAP-325 D14) and a technician's held credentials
+ * against the service's `requiredSkills` (CAP-329) — the gap durion#473 named is
+ * closed. Three gaps remain visible in the output rather than papered over. Each
+ * is tracked as a backend story and each has a named degradation on screen:
  *
  *   louisburroughs/durion#474 — `viewSchedule` is one location and one date; its
  *     `range` selects LOCATION_HOURS or FULL_DAY, not a week or a month. The
@@ -157,27 +137,12 @@ export class CapacityCalendarService {
 
   /** Maps one catalog service onto the requirement the capacity engine takes. */
   toJobRequirement(service: ServiceDto): JobRequirement {
-    const code = `${service.operationCode ?? ''} ${service.name ?? ''}`;
-    let bayTypes: string[] = [];
-    if (ALIGNMENT_CODE_PATTERN.test(code)) {
-      bayTypes = ['ALIGNMENT'];
-    } else if (service.operationCategory === 'TIRE_SERVICE') {
-      bayTypes = ['TIRE_SERVICE'];
-    } else if (HEAVY_CODE_PATTERN.test(code)) {
-      bayTypes = ['HEAVY_DUTY'];
-    } else if (INSPECTION_CODE_PATTERN.test(code)) {
-      bayTypes = ['INSPECTION'];
-    } else if (service.operationCategory) {
-      bayTypes = ['GENERAL_SERVICE'];
-    }
-
     return {
       serviceId: service.id,
       label: service.name ?? '',
-      // CAP-325 D14: the operation code is the eligibility key; `bayTypes` is only
-      // the fallback for a service that has none.
+      // CAP-325 D14: the operation code is the eligibility key. A service without
+      // one is unclaimed work; nothing is inferred from its name or category.
       operationCode: service.operationCode ?? undefined,
-      bayTypes,
       // CAP-329: the catalog's declared requirement. The calendar has no vehicle, so
       // only ANY-class requirements apply here — exactly what the server resolves
       // without a vehicle (spec D13); a retired skill is still named, never dropped.
@@ -193,7 +158,6 @@ export class CapacityCalendarService {
   static allWorkJob(label: string): JobRequirement {
     return {
       label,
-      bayTypes: [],
       skillCodes: [],
       durationHours: 1,
     };
@@ -357,9 +321,6 @@ export class CapacityCalendarService {
         !bays.ok ||
         !technicians.ok ||
         [...schedules.values()].some(schedule => schedule === undefined),
-      // Approximate only for a job with no operation code, where the bay-type table
-      // stands in for the specialty map (CAP-325 D14).
-      eligibilityIsApproximate: !request.job.operationCode && request.job.bayTypes.length > 0,
     };
   }
 

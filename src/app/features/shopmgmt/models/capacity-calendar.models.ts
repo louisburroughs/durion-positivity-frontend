@@ -108,9 +108,9 @@ export interface CapacityTechnician {
  * The job the whole board is filtered by: what it needs and how long it takes.
  *
  * `operationCode` is the catalog's own vocabulary (CAP-325 D14), and bay
- * eligibility reads it against each bay's `serviceCapabilityCodes`. `bayTypes`
- * is the declared fallback for a service the catalog never gave a code, and
- * `isEligibleBay` drops to it only when the code is absent.
+ * eligibility reads it against each bay's `serviceCapabilityCodes`. A service
+ * the catalog gave no code is unclaimed by definition, so it is general work
+ * for every bay but a wash bay — never inferred from its name or category.
  */
 export interface JobRequirement {
   readonly serviceId?: string;
@@ -120,8 +120,6 @@ export interface JobRequirement {
    * a bay claiming this code, or any general bay when no bay claims it.
    */
   readonly operationCode?: string;
-  /** Interim fallback: bay types that can perform the job, used only without an operation code. */
-  readonly bayTypes: readonly string[];
   /**
    * Skill codes a technician must hold — every one of them (CAP-329). Empty
    * means any rostered technician. Without a vehicle only ANY-class
@@ -252,12 +250,6 @@ export interface CapacityCalendarView {
    * numbers may be incomplete. Mirrors the dispatch dashboard's own flag.
    */
   readonly degraded: boolean;
-  /**
-   * True when eligibility fell back to bay type because the catalog could not
-   * say which capability the service needs. The page says so rather than
-   * presenting a guess as a measurement.
-   */
-  readonly eligibilityIsApproximate: boolean;
 }
 
 // ── Pure helpers ────────────────────────────────────────────────────────────
@@ -292,10 +284,11 @@ export function parseIsoDateLocal(iso: string): Date {
  * making it ineligible would manufacture "shop is full"), ranked after the
  * general bays by {@link rankEligibleBays}. `bays` is the location's roster,
  * needed to know whether anyone claims the code; without it the bay's own
- * codes decide. The bay-type table is only a fallback for a job with no
- * operation code. An empty requirement on every axis means "all work", which
- * every in-service bay satisfies. Duty class (D13) is a vehicle question the
- * calendar cannot ask yet; `maxDutyClass` is carried, not applied.
+ * codes decide. A job with no operation code is unclaimed by definition and
+ * takes the same general-work path. An empty requirement on every axis means
+ * "all work", which every in-service bay satisfies. Duty class (D13) is a
+ * vehicle question the calendar cannot ask yet; `maxDutyClass` is carried, not
+ * applied.
  */
 export function isEligibleBay(
   bay: CapacityBay,
@@ -316,9 +309,6 @@ export function isEligibleBay(
       return false;
     }
     return bay.bayType !== WASH_DETAIL;
-  }
-  if (job.bayTypes.length > 0) {
-    return job.bayTypes.includes(bay.bayType);
   }
   return true;
 }
