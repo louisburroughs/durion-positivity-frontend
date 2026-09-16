@@ -16,14 +16,14 @@
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .ips-title {
   margin: 0;
   font-family: var(--font-primary);
   font-size: clamp(1.5rem, 2.2vw, 2.1rem);
-  color: var(--brand-primary);
+  color: var(--link-color);
 }
 
 .display-lg {
@@ -31,7 +31,7 @@
   font-family: var(--font-primary);
   font-size: clamp(1.75rem, 3.5vw, 2.6rem);
   line-height: 1.1;
-  color: var(--brand-primary);
+  color: var(--link-color);
 }
 
 .body-md {
@@ -128,7 +128,7 @@
 }
 
 .ips-posting-refs__secondary {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .ips-banner {

@@ -83,7 +83,7 @@ label {
 
 .skeleton-row {
   animation: skeleton-pulse 1.3s ease-in-out infinite;
-  background: var(--brand-primary-soft);
+  background: var(--primary50);
   border-radius: 0.5rem;
   height: 1.5rem;
   margin-bottom: 0.5rem;
@@ -145,9 +145,9 @@ label {
 }
 
 .btn-secondary {
-  background: var(--brand-primary-soft);
+  background: var(--primary50);
   border: none;
-  color: var(--brand-primary);
+  color: var(--link-color);
 }
 
 .error-banner {

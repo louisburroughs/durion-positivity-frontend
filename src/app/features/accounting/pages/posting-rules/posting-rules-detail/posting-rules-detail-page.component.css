@@ -5,12 +5,12 @@
 }
 
 .page-header h1 {
-  color: var(--brand-primary);
+  color: var(--link-color);
   margin: 0;
 }
 
 .section-overline {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -56,7 +56,7 @@
 }
 
 .detail-list dt {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -69,7 +69,7 @@
 }
 
 .versions-section h2 {
-  color: var(--brand-primary);
+  color: var(--link-color);
   font-size: 1rem;
   margin: 0 0 var(--space-3);
 }

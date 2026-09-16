@@ -5,7 +5,7 @@
 }
 
 .section-overline {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -13,7 +13,7 @@
 }
 
 .page-header h1 {
-  color: var(--brand-primary);
+  color: var(--link-color);
   margin: 0;
 }
 
@@ -53,12 +53,12 @@ textarea {
 input:focus,
 textarea:focus {
   box-shadow: none;
-  border-bottom-color: var(--brand-accent);
+  border-bottom-color: var(--accentA700);
 }
 
 input.ng-invalid.ng-touched,
 textarea.ng-invalid.ng-touched {
-  border-bottom-color: var(--functional-error-red);
+  border-bottom-color: var(--status-error-fg);
 }
 
 button {
@@ -70,7 +70,7 @@ button {
 }
 
 .error-text {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .state-panel {

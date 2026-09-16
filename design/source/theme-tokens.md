@@ -141,6 +141,10 @@ These flip when `data-theme` changes on `<html>`. **Consume these in all compone
 > **Status surfaces use the `--status-<kind>-bg` + `-fg` pair** (see `durion-style-guide.md` §8),
 > never `color-mix(--functional-x …)` + a functional text colour — that fails AA in dark.
 
+> **The role rules in `.stylelintrc.js` enforce the two paragraphs below** for directories
+> listed in its `SWEPT` array — a sanctioned token used for the wrong property is an error
+> there. Extend `SWEPT` as each feature area is moved onto theme-aware tokens.
+
 > **Pick the border token by what the border does.** A boundary that is a control's only
 > visual affordance — a field outline, an outline button, a dropzone, a step indicator —
 > is a UI component under WCAG 1.4.11 and needs 3:1 against both the fill inside it and the

@@ -6,12 +6,12 @@
 }
 
 .page-header h1 {
-  color: var(--brand-primary);
+  color: var(--link-color);
   margin: 0;
 }
 
 .section-overline {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -39,7 +39,7 @@
 }
 
 .filter-panel input:focus {
-  border-bottom-color: var(--brand-accent);
+  border-bottom-color: var(--accentA700);
   box-shadow: none;
 }
 

@@ -12,14 +12,14 @@
 }
 
 .page-header h1 {
-  color: var(--brand-primary);
+  color: var(--link-color);
   margin: 0;
   flex: 1 1 16rem;
 }
 
 .section-overline {
   width: 100%;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -29,7 +29,7 @@
 .page-note {
   width: 100%;
   margin: 0;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 
@@ -52,7 +52,7 @@
 
 .selector-field label {
   font-size: 0.8rem;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .selector-field select {
@@ -99,7 +99,7 @@
 .ledger-table caption {
   text-align: left;
   padding: var(--space-2) 0;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 
@@ -140,7 +140,7 @@
 }
 
 .line-code {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.8rem;
   min-width: 3rem;
 }
@@ -152,7 +152,7 @@
 }
 
 .negative {
-  color: var(--functional-error-red);
+  color: var(--status-error-fg);
 }
 
 .usd-badge {
@@ -188,7 +188,7 @@
 }
 
 .help-label {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
 }
 
 .help-cost-type {
@@ -201,6 +201,6 @@
 
 .currency-row .currency-context {
   text-align: left;
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.85rem;
 }

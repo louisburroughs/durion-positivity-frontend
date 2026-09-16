@@ -6,7 +6,7 @@
 }
 
 .section-overline {
-  color: var(--brand-secondary);
+  color: var(--text-muted);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -15,7 +15,7 @@
 
 .page-header h1 {
   margin: 0;
-  color: var(--brand-primary);
+  color: var(--link-color);
 }
 
 .detail-grid {
@@ -42,7 +42,7 @@
 .detail-grid input:focus,
 textarea:focus {
   box-shadow: none;
-  border-bottom-color: var(--brand-accent);
+  border-bottom-color: var(--accentA700);
 }
 
 .status-badge {
@@ -62,7 +62,7 @@ textarea:focus {
    not published on screen. The references table above is the readable view. */
 .raw-payload > summary {
   cursor: pointer;
-  color: var(--durion-graphite-600);
+  color: var(--text-muted);
 }
 
 .raw-payload > pre {
@@ -79,7 +79,7 @@ textarea {
 }
 
 .field-error {
-  border-bottom-color: var(--functional-error-red);
+  border-bottom-color: var(--status-error-fg);
 }
 
 button {

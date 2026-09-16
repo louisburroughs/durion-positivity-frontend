@@ -12,7 +12,7 @@ not-yet-migrated code. All paths are in this `handoff/` folder.
 | 03 | Document **Heritage Gold** token | `03-heritage-gold.md` → `styles.css` + `theme-tokens.md` | low |
 | 04 | Rename `.mic-*` → `.dur-*` | `04-mic-to-dur.md`, `scripts/rename-mic-to-dur.sh` | low (mechanical) |
 | 05 | Component token cleanup | `06-token-cleanup.md`, `scripts/cleanup-tokens.sh` | **high** |
-| 06 | Stylelint guardrail | `05-stylelint-guardrail.md`, `.stylelintrc.json` | low |
+| 06 | Stylelint guardrail | `05-stylelint-guardrail.md`, `.stylelintrc.js` | low |
 | — | Replace the source-of-truth docs | `durion-style-guide.md`, `theme-tokens.md` → `design/source/` | none |
 
 > **Status:** 01 + 02 are done and checked in. 03–06 + the cleanup codemod + docs are staged here.
