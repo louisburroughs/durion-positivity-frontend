@@ -125,6 +125,7 @@ function view(overrides: Partial<CapacityCalendarView> = {}): CapacityCalendarVi
       },
     ],
     degraded: false,
+    locationHasNoSchedule: false,
     skillRequirementsUnknown: false,
     ...overrides,
   };

@@ -258,6 +258,17 @@ export interface CapacityCalendarView {
    */
   readonly degraded: boolean;
   /**
+   * True when the schedule service answered 404 for every date asked for: it
+   * knows a location only once that location exists **as a shop**, so this is a
+   * site with no shop schedule at all rather than a shop with nothing booked.
+   *
+   * Kept apart from {@link degraded} deliberately. Nothing failed, so "some
+   * data could not be loaded" would send someone hunting an outage; and an
+   * empty grid on its own reads as "no capacity", which is a different and
+   * much more alarming claim than "this location is not a shop".
+   */
+  readonly locationHasNoSchedule: boolean;
+  /**
    * True when the selected service has no declared skill requirements, so the
    * certified-technician axis is every rostered technician by default, not by
    * reading (spec D4). Shown on screen rather than presented as measured.

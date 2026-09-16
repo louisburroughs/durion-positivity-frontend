@@ -96,7 +96,7 @@
   </div>
 
   <!-- ── What the numbers mean ────────────────────────────────────────────── -->
-  @if (state() === 'ready') {
+  @if (showCalendar()) {
     @if (isFiltered()) {
       <p class="requirement-banner alert alert-info">
         {{ 'SHOPMGMT.SCHEDULE_VIEW.REQUIREMENT' | translate: {
@@ -143,6 +143,12 @@
     </div>
   }
 
+  @if (state() === 'ready' && view()?.locationHasNoSchedule) {
+    <div class="state-panel" role="status">
+      <p>{{ 'SHOPMGMT.SCHEDULE_VIEW.NO_SHOP_SCHEDULE' | translate: { location: view()?.locationName } }}</p>
+    </div>
+  }
+
   @if (errorKey(); as key) {
     <div class="state-panel" role="alert">
       <p>{{ key | translate }}</p>
@@ -153,7 +159,7 @@
   }
 
   <!-- ── Month: eligible capacity limited by bay and technician ───────────── -->
-  @if (state() === 'ready' && scope() === 'month') {
+  @if (showCalendar() && scope() === 'month') {
     <div class="grid-panel dur-elevation-2">
       <div class="month-head" aria-hidden="true">
         @for (weekday of weekdayHeaders(); track weekday) {
@@ -234,7 +240,7 @@
   }
 
   <!-- ── Week: bays and certified techs in the same cell ──────────────────── -->
-  @if (state() === 'ready' && scope() === 'week') {
+  @if (showCalendar() && scope() === 'week') {
     <div class="grid-panel dur-elevation-2">
       <div class="week-head">
         <div class="week-gutter-head">{{ 'SHOPMGMT.SCHEDULE_VIEW.HOUR' | translate }}</div>
@@ -295,7 +301,7 @@
   }
 
   <!-- ── Day: resource timeline with bays as columns ──────────────────────── -->
-  @if (state() === 'ready' && scope() === 'day') {
+  @if (showCalendar() && scope() === 'day') {
     @if (focusDay(); as day) {
       <div class="kpi-row">
         <div class="kpi dur-elevation-1">

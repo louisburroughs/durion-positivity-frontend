@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { of, throwError } from 'rxjs';
 import { BayAPIService, LocationAPIService } from '@durion-sdk/location';
 import { ProductsAPIService } from '@durion-sdk/catalog';
 import type { ServiceDto } from '@durion-sdk/catalog';
@@ -90,4 +92,71 @@ describe('CapacityCalendarService', () => {
       expect(heldSkillCodes([])).toEqual([]);
     });
   });
+
+  /**
+   * `viewSchedule` answers only for a location the schedule service knows **as a
+   * shop**, and says so with a 404. That is absence, not breakage: a site that
+   * is not a shop has no schedule, and reporting it as a load failure sends
+   * someone hunting an outage that does not exist.
+   */
+  describe('schedule 404s', () => {
+    const REQUEST = {
+      locationId: 'loc-1',
+      focusDate: '2026-09-29',
+      scope: 'day' as const,
+      job: { label: '', operationCode: '', skillCodes: [], skillRequirementsConfigured: true, durationHours: 1 },
+    };
+
+    const arrange = (scheduleResult: unknown) => {
+      const schedule = TestBed.inject(ScheduleAPIService) as unknown as { viewSchedule: ReturnType<typeof vi.fn> };
+      const bays = TestBed.inject(BayAPIService) as unknown as { listBays: ReturnType<typeof vi.fn> };
+      const techs = TestBed.inject(TechnicianAPIService) as unknown as { listLocationTechnicians: ReturnType<typeof vi.fn> };
+      const locations = TestBed.inject(LocationAPIService) as unknown as { getLocationById: ReturnType<typeof vi.fn> };
+      bays.listBays.mockReturnValue(of({ content: [] }));
+      techs.listLocationTechnicians.mockReturnValue(of({ content: [] }));
+      locations.getLocationById.mockReturnValue(of({ id: 'loc-1', name: 'Northgate Warehouse' }));
+      schedule.viewSchedule.mockReturnValue(scheduleResult);
+      return schedule;
+    };
+
+    it('a location the schedule service does not know is reported as having no schedule, not as degraded', async () => {
+      arrange(throwError(() => new HttpErrorResponse({ status: 404 })));
+      const view = await new Promise<{ locationHasNoSchedule: boolean; degraded: boolean }>(resolve =>
+        service.getCalendar(REQUEST).subscribe(resolve),
+      );
+
+      expect(view.locationHasNoSchedule).toBe(true);
+      // Nothing failed, so nothing is degraded: the banner would send someone
+      // looking for an outage that is not there.
+      expect(view.degraded).toBe(false);
+    });
+
+    it('a real fault degrades and is never mistaken for a location without a shop', async () => {
+      arrange(throwError(() => new HttpErrorResponse({ status: 500 })));
+      const view = await new Promise<{ locationHasNoSchedule: boolean; degraded: boolean }>(resolve =>
+        service.getCalendar(REQUEST).subscribe(resolve),
+      );
+
+      expect(view.degraded).toBe(true);
+      expect(view.locationHasNoSchedule).toBe(false);
+    });
+
+    it('a shop that simply answers is neither degraded nor schedule-less', async () => {
+      arrange(of({
+        date: '2026-09-29',
+        dayStartAt: '2026-09-29T14:00:00Z',
+        dayEndAt: '2026-09-29T22:00:00Z',
+        locationId: 'loc-1',
+        resources: [],
+        viewGeneratedAt: '2026-09-29T14:00:00Z',
+      }));
+      const view = await new Promise<{ locationHasNoSchedule: boolean; degraded: boolean }>(resolve =>
+        service.getCalendar(REQUEST).subscribe(resolve),
+      );
+
+      expect(view.locationHasNoSchedule).toBe(false);
+      expect(view.degraded).toBe(false);
+    });
+  });
+
 });

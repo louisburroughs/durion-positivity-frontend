@@ -172,6 +172,17 @@ export class ScheduleViewPageComponent implements OnInit {
   readonly isFiltered = computed(() => this.activeJob().label.length > 0);
 
   /**
+   * Whether there is a calendar to draw at all.
+   *
+   * A location the schedule service does not know as a shop gets one sentence
+   * saying so instead of the grids: an empty month under a full legend reads as
+   * "this shop has no capacity", which is a far stronger — and wrong — claim.
+   */
+  readonly showCalendar = computed(
+    () => this.state() === 'ready' && !this.view()?.locationHasNoSchedule,
+  );
+
+  /**
    * Bays that can perform the selected job — the "eligible" in eligible capacity —
    * in offer order (D14): general bays first, specialty bays taking general work
    * last, so the rack is named only once the general bays are.

@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, forkJoin, from, map, mergeMap, of, toArray } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { BayAPIService, LocationAPIService } from '@durion-sdk/location';
@@ -62,6 +63,37 @@ const BAY_OUT_OF_SERVICE = 'OUT_OF_SERVICE';
 const EVENT_APPOINTMENT = 'APPOINTMENT';
 const EVENT_SHIFT = 'SHIFT';
 const EVENT_PTO = 'PTO';
+
+/**
+ * How one day's `viewSchedule` call came back.
+ *
+ * `ABSENT` is a 404, which this endpoint documents as "the location is unknown"
+ * — it answers only for a location the schedule service knows **as a shop**.
+ * That is data absence, not a transport failure: a site that is not a shop
+ * simply has no schedule, and saying "could not be loaded" about it sends
+ * someone to look for an outage that is not there. `FAILED` is everything else
+ * — a real fault, and the only thing that sets `degraded`.
+ */
+const ABSENT = Symbol('schedule-absent');
+const FAILED = Symbol('schedule-failed');
+
+type ScheduleOutcome = ScheduleViewResponse | typeof ABSENT | typeof FAILED;
+type ScheduleEntry = readonly [string, ScheduleOutcome];
+
+/** One day's schedules, with the two failure modes counted apart. */
+interface ScheduleLoad {
+  readonly byDate: Map<string, ScheduleViewResponse | undefined>;
+  /** Days the schedule service answered 404 for. */
+  readonly absent: number;
+  /** Days that failed for any other reason. */
+  readonly failed: number;
+  readonly total: number;
+}
+
+/** True for the 404 this endpoint returns when it does not know the location. */
+function isScheduleAbsent(error: unknown): boolean {
+  return error instanceof HttpErrorResponse && error.status === 404;
+}
 
 /** `ScheduleResourceView.resourceType` lanes this page reads. */
 const LANE_BAY = 'BAY';
@@ -242,23 +274,38 @@ export class CapacityCalendarService {
    * a technician with nothing booked, which would turn "no certified tech
    * rostered" into a silent overstatement of capacity.
    */
-  private loadSchedules(
-    locationId: string,
-    dates: readonly string[],
-  ): Observable<Map<string, ScheduleViewResponse | undefined>> {
+  private loadSchedules(locationId: string, dates: readonly string[]): Observable<ScheduleLoad> {
     return from(dates).pipe(
       mergeMap(
         date =>
           this.scheduleApi
             .viewSchedule(locationId, date, undefined, undefined, true, 'LOCATION_HOURS')
             .pipe(
-              map(response => [date, response] as const),
-              catchError(() => of([date, undefined] as const)),
+              map(response => [date, response] as ScheduleEntry),
+              catchError((error: unknown) =>
+                of([date, isScheduleAbsent(error) ? ABSENT : FAILED] as ScheduleEntry),
+              ),
             ),
         SCHEDULE_FAN_OUT_CONCURRENCY,
       ),
       toArray(),
-      map(entries => new Map(entries)),
+      map(entries => {
+        const byDate = new Map<string, ScheduleViewResponse | undefined>();
+        let absent = 0;
+        let failed = 0;
+        entries.forEach(([date, outcome]) => {
+          if (outcome === ABSENT) {
+            absent += 1;
+            byDate.set(date, undefined);
+          } else if (outcome === FAILED) {
+            failed += 1;
+            byDate.set(date, undefined);
+          } else {
+            byDate.set(date, outcome);
+          }
+        });
+        return { byDate, absent, failed, total: entries.length };
+      }),
     );
   }
 
@@ -269,8 +316,9 @@ export class CapacityCalendarService {
     bays: { bays: CapacityBay[]; ok: boolean },
     technicians: { roster: LocationTechnicianRosterEntryResponse[]; ok: boolean },
     locationName: string | undefined,
-    schedules: Map<string, ScheduleViewResponse | undefined>,
+    load: ScheduleLoad,
   ): CapacityCalendarView {
+    const schedules = load.byDate;
     const hours = this.hourLabels(schedules);
     const today = isoDateLocal(new Date());
     const currentHour = new Date().getHours();
@@ -321,10 +369,12 @@ export class CapacityCalendarService {
       weekDays,
       focusDay,
       board: request.scope === 'day' ? this.boardFor(schedules.get(request.focusDate)) : [],
-      degraded:
-        !bays.ok ||
-        !technicians.ok ||
-        [...schedules.values()].some(schedule => schedule === undefined),
+      // A 404 day is absence, not breakage, so only a real fault degrades.
+      degraded: !bays.ok || !technicians.ok || load.failed > 0,
+      // Every day answered 404: the schedule service does not know this
+      // location as a shop, so there is nothing to report for any date. Said
+      // once and plainly, rather than as a month of empty cells.
+      locationHasNoSchedule: load.total > 0 && load.absent === load.total,
       skillRequirementsUnknown: !request.job.skillRequirementsConfigured,
     };
   }
