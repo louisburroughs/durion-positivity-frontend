@@ -428,6 +428,52 @@ describe('ScheduleViewPageComponent', () => {
     expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.DEGRADED');
   });
 
+  it('says the location has no shop record, instead of drawing an empty calendar', async () => {
+    // A 404 from every date is absence, not breakage: the schedule service knows a location
+    // only once it exists as a shop. An empty month under a full legend would read as
+    // "this shop has no capacity", which is a much stronger and wrong claim.
+    capacityStub.getCalendar.mockReturnValue(of(view({ locationHasNoSchedule: true })));
+    await setup();
+
+    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.NO_SHOP_SCHEDULE');
+    expect(all('[role="status"]').length).toBeGreaterThan(0);
+  });
+
+  it('suppresses every grid, the legend and the banners when there is no shop record', async () => {
+    capacityStub.getCalendar.mockReturnValue(of(view({ locationHasNoSchedule: true })));
+    await setup();
+
+    expect(component.showCalendar()).toBe(false);
+    expect(all('.month-cell').length).toBe(0);
+    expect(all('.legend').length).toBe(0);
+
+    component.setScope('week');
+    fixture.detectChanges();
+    expect(all('.week-cell').length).toBe(0);
+
+    component.setScope('day');
+    fixture.detectChanges();
+    expect(all('.board-column').length).toBe(0);
+    expect(all('.tech-row').length).toBe(0);
+  });
+
+  it('does not call it degraded — nothing failed', async () => {
+    capacityStub.getCalendar.mockReturnValue(
+      of(view({ locationHasNoSchedule: true, degraded: false })),
+    );
+    await setup();
+
+    expect(text()).not.toContain('SHOPMGMT.SCHEDULE_VIEW.DEGRADED');
+  });
+
+  it('still draws the calendar for a location that does have a shop record', async () => {
+    await setup();
+
+    expect(component.showCalendar()).toBe(true);
+    expect(all('.month-cell').length).toBeGreaterThan(0);
+    expect(text()).not.toContain('SHOPMGMT.SCHEDULE_VIEW.NO_SHOP_SCHEDULE');
+  });
+
   it('surfaces a load failure with a retry', async () => {
     capacityStub.getCalendar.mockReturnValue(throwError(() => new Error('boom')));
     await setup();
