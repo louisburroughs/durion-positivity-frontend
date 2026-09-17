@@ -96,7 +96,7 @@
   </div>
 
   <!-- ── What the numbers mean ────────────────────────────────────────────── -->
-  @if (state() === 'ready') {
+  @if (showCalendar()) {
     @if (isFiltered()) {
       <p class="requirement-banner alert alert-info">
         {{ 'SHOPMGMT.SCHEDULE_VIEW.REQUIREMENT' | translate: {
@@ -115,12 +115,6 @@
       </output>
     }
 
-    @if (view()?.degraded) {
-      <output class="alert alert-warning" aria-live="polite">
-        {{ 'SHOPMGMT.SCHEDULE_VIEW.DEGRADED' | translate }}
-      </output>
-    }
-
     <ul class="legend" [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.LEGEND_ARIA' | translate">
       <li><span class="swatch swatch-load" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_LOAD' | translate }}</li>
       <li><span class="swatch tick tick-fits" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_FITS' | translate }}</li>
@@ -128,6 +122,16 @@
       <li><span class="swatch tick tick-tech" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_TECH' | translate }}</li>
       <li><span class="swatch tick tick-taken" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_TAKEN' | translate }}</li>
     </ul>
+  }
+
+  <!-- A real fault is reported whatever else is on screen. It sits outside the
+       calendar block deliberately: an all-404 load hides the grids, and burying
+       the warning there meant a failed bay or technician read went unmentioned
+       while the no-shop sentence took the blame. -->
+  @if (state() === 'ready' && view()?.degraded) {
+    <output class="alert alert-warning" aria-live="polite">
+      {{ 'SHOPMGMT.SCHEDULE_VIEW.DEGRADED' | translate }}
+    </output>
   }
 
   <!-- ── Page states ──────────────────────────────────────────────────────── -->
@@ -143,6 +147,12 @@
     </div>
   }
 
+  @if (state() === 'ready' && view()?.locationHasNoSchedule) {
+    <div class="state-panel" role="status">
+      <p>{{ 'SHOPMGMT.SCHEDULE_VIEW.NO_SHOP_SCHEDULE' | translate: { location: locationLabel() } }}</p>
+    </div>
+  }
+
   @if (errorKey(); as key) {
     <div class="state-panel" role="alert">
       <p>{{ key | translate }}</p>
@@ -153,7 +163,7 @@
   }
 
   <!-- ── Month: eligible capacity limited by bay and technician ───────────── -->
-  @if (state() === 'ready' && scope() === 'month') {
+  @if (showCalendar() && scope() === 'month') {
     <div class="grid-panel dur-elevation-2">
       <div class="month-head" aria-hidden="true">
         @for (weekday of weekdayHeaders(); track weekday) {
@@ -234,7 +244,7 @@
   }
 
   <!-- ── Week: bays and certified techs in the same cell ──────────────────── -->
-  @if (state() === 'ready' && scope() === 'week') {
+  @if (showCalendar() && scope() === 'week') {
     <div class="grid-panel dur-elevation-2">
       <div class="week-head">
         <div class="week-gutter-head">{{ 'SHOPMGMT.SCHEDULE_VIEW.HOUR' | translate }}</div>
@@ -295,7 +305,7 @@
   }
 
   <!-- ── Day: resource timeline with bays as columns ──────────────────────── -->
-  @if (state() === 'ready' && scope() === 'day') {
+  @if (showCalendar() && scope() === 'day') {
     @if (focusDay(); as day) {
       <div class="kpi-row">
         <div class="kpi dur-elevation-1">

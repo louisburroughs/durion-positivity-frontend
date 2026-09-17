@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { LocationPickerComponent } from '../../../location/components/location-picker/location-picker.component';
 import {
@@ -132,6 +132,7 @@ export class ScheduleViewPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly capacity = inject(CapacityCalendarService);
+  private readonly translate = inject(TranslateService);
 
   readonly state = signal<PageState>('idle');
   readonly errorKey = signal<string | null>(null);
@@ -170,6 +171,28 @@ export class ScheduleViewPageComponent implements OnInit {
   readonly activeJob = computed(() => this.view()?.job ?? this.job());
 
   readonly isFiltered = computed(() => this.activeJob().label.length > 0);
+
+  /**
+   * What to call this location in prose.
+   *
+   * `locationName` comes from a lookup that degrades to undefined, and the
+   * no-shop sentence names the location mid-clause — without a fallback it
+   * reads "no shop record for , so there is no capacity to show".
+   */
+  readonly locationLabel = computed(
+    () => this.view()?.locationName?.trim() || this.translate.instant('SHOPMGMT.SCHEDULE_VIEW.THIS_LOCATION'),
+  );
+
+  /**
+   * Whether there is a calendar to draw at all.
+   *
+   * A location the schedule service does not know as a shop gets one sentence
+   * saying so instead of the grids: an empty month under a full legend reads as
+   * "this shop has no capacity", which is a far stronger — and wrong — claim.
+   */
+  readonly showCalendar = computed(
+    () => this.state() === 'ready' && !this.view()?.locationHasNoSchedule,
+  );
 
   /**
    * Bays that can perform the selected job — the "eligible" in eligible capacity —

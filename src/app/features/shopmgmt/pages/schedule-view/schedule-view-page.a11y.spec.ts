@@ -110,6 +110,7 @@ const VIEW: CapacityCalendarView = {
     },
   ],
   degraded: true,
+  locationHasNoSchedule: false,
   skillRequirementsUnknown: false,
 };
 
