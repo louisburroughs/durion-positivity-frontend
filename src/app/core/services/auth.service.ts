@@ -374,7 +374,12 @@ export class AuthService {
     // finish first. Every other caller (login, a silent refresh that changed
     // tenant) already runs outside it and requests straight away.
     if (this.constructing) {
-      queueMicrotask(() => this.requestTenant(tenantId));
+      queueMicrotask(() => {
+        // The binding can retire before the microtask drains — a logout clears
+        // `tenantLoadFor`, a tenant change moves it on. Either way this request
+        // is for a tenant the session has left, so drop it rather than send it.
+        if (this.tenantLoadFor === tenantId) this.requestTenant(tenantId);
+      });
       return;
     }
 

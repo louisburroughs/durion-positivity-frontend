@@ -625,6 +625,33 @@ describe('AuthService', () => {
       warn.mockRestore();
     });
 
+    it('drops the deferred tenant request when the session ends before it is sent', async () => {
+      loginWith(tokenWith({ tid: TENANT_ID }));
+      flushTenantMe();
+      sessionStorage.removeItem('durion-tenant');
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          AuthService,
+          provideRouter([]),
+          provideHttpClient(withInterceptors([authInterceptor])),
+          provideHttpClientTesting(),
+          { provide: SecurityConfiguration, useValue: new SecurityConfiguration({ basePath: `${environment.apiBaseUrl}/security-service` }) },
+        ],
+      });
+      const restored = TestBed.inject(AuthService);
+      httpMock = TestBed.inject(HttpTestingController);
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      // Logging out retires the binding while the request is still deferred.
+      restored.logout();
+      await new Promise<void>(resolve => queueMicrotask(resolve));
+
+      httpMock.expectNone(r => r.url.includes('/tenants/me'));
+      expect(restored.tenant()).toBeNull();
+    });
+
     it('recognises the platform tenant from tid', () => {
       loginWith(tokenWith({ tid: PLATFORM_TENANT_ID }));
       httpMock
