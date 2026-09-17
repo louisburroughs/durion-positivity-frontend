@@ -2194,7 +2194,10 @@ export class DispatchBoardPageComponent implements OnInit {
       assignedWorkorderId: mechanic.assignedWorkorderId,
       whereLabel: bayId ? (this.bayNamesById().get(bayId) ?? null) : null,
       breakExpectedReturn: mechanic.breakExpectedReturn ?? null,
-      ...this.toFreeHours(mechanic.personId, workorder, mechanic.assignedWorkorderId !== undefined && !workorder),
+      // Truthy, exactly as the lookup above and `toAvailability` treat it: a
+      // nullable id arriving as `null` is not an assignment, and reading it as
+      // one would cost every unassigned mechanic their free-hours figure.
+      ...this.toFreeHours(mechanic.personId, workorder, Boolean(mechanic.assignedWorkorderId) && !workorder),
       onTimeOff: this.isOnPto(mechanic),
       clockState: clock?.state ?? 'UNKNOWN',
       workSessionId: clock?.workSessionId ?? null,
@@ -2220,19 +2223,6 @@ export class DispatchBoardPageComponent implements OnInit {
     workorder: WorkorderSummary | undefined,
     assignmentUnresolved: boolean,
   ): { freeHours: number | null; freeHoursReason: FreeHoursReason | null; freeHoursIsPlaceholder: boolean } {
-    if (assignmentUnresolved) {
-      // The mechanic holds a workorder this response does not carry — it is
-      // scheduled for another date, parked rather than holding a bay, or the
-      // aggregation came back short. Its estimate is the one number that would
-      // make this figure right, so the commitment is unknown and the figure
-      // with it. `isBayFree` reads the same absence the same way: a claim the
-      // board cannot disprove, not an empty slot.
-      //
-      // Its own reason, not `UNKNOWN`: the shift window here is perfectly
-      // readable, and saying the board could not read one would name the wrong
-      // missing thing.
-      return { freeHours: null, freeHoursReason: 'UNKNOWN_COMMITMENT', freeHoursIsPlaceholder: false };
-    }
     const shift = this.technicianShifts().get(personId);
     if (!shift) {
       // Absent from a roster that answered is a fact about the technician;
@@ -2250,6 +2240,20 @@ export class DispatchBoardPageComponent implements OnInit {
     }
     if (shift.status !== 'DERIVED' || shift.minutes === null) {
       return { freeHours: null, freeHoursReason: 'UNKNOWN', freeHoursIsPlaceholder: false };
+    }
+    // Asked only once there is a window to spend. The commitment cannot be the
+    // thing that is missing while the window itself is unreadable — on the
+    // first paint, or during a roster outage, there is no window at all, and
+    // saying "we just cannot see their workorder" would claim the shift data
+    // read fine when it never arrived.
+    if (assignmentUnresolved) {
+      // The mechanic holds a workorder this response does not carry — it is
+      // scheduled for another date, parked rather than holding a bay, or the
+      // aggregation came back short. Its estimate is the one number that would
+      // make this figure right, so the commitment is unknown and the figure
+      // with it. `isBayFree` reads the same absence the same way: a claim the
+      // board cannot disprove, not an empty slot.
+      return { freeHours: null, freeHoursReason: 'UNKNOWN_COMMITMENT', freeHoursIsPlaceholder: false };
     }
     const committed = workorder?.estimatedLaborHours ?? 0;
     // Never below zero: an estimate longer than the shop's open hours means the

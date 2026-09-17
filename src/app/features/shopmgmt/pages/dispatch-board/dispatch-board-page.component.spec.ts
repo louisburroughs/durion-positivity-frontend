@@ -8,7 +8,13 @@ import { WorkorderSummaryResourceTypeEnum } from '@durion-sdk/workorder';
 import { DispatchBoardPageComponent } from './dispatch-board-page.component';
 import { BayInventory, BayInventoryEntry, DispatchBoardService } from '../../services/dispatch-board.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import type { BayStatus, DashboardResponse, WorkorderRow, WorkorderSummary } from '../../models/dispatch-board.models';
+import type {
+  BayStatus,
+  DashboardResponse,
+  MechanicStatus,
+  WorkorderRow,
+  WorkorderSummary,
+} from '../../models/dispatch-board.models';
 import { isoDateLocal } from '../../models/capacity-calendar.models';
 
 // ---------------------------------------------------------------------------
@@ -703,6 +709,45 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.freeHoursReasonKey(card)).toBe(
         'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS_COMMITMENT',
       );
+    });
+
+    // The commitment can only be the missing thing once there IS a window.
+    // During a roster outage — and on the very first paint — there is none, so
+    // saying "we just cannot see their workorder" would claim the shift data
+    // read fine when it never arrived.
+    it('blames the unreadable window, not the workorder, when the roster did not answer', () => {
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(
+        of({ skills: new Map(), shifts: new Map(), ok: false }),
+      );
+      renderWith({
+        ...fullDashboard,
+        mechanics: [{ personId: 'M1', assignedWorkorderId: 'wo-somewhere-else' }],
+      });
+
+      const card = component.mechanics()[0];
+      expect(card.freeHoursReason).toBe('UNKNOWN');
+      expect(component.freeHoursReasonKey(card)).toBe('SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS');
+    });
+
+    // `assignedWorkorderId` is optional on the wire. Read as "not undefined"
+    // rather than truthy, a `null` would mark every unassigned mechanic on the
+    // board as having an unreadable commitment and take their hours away.
+    it('does not treat a null assignment as a workorder it cannot see', () => {
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(
+        of({
+          skills: new Map(),
+          shifts: new Map([['M1', { status: 'DERIVED', source: 'LOCATION_HOURS', minutes: 480 }]]),
+          ok: true,
+        }),
+      );
+      renderWith({
+        ...fullDashboard,
+        mechanics: [{ personId: 'M1', assignedWorkorderId: null } as unknown as MechanicStatus],
+      });
+
+      // Unassigned: the whole window is free, not an unknown commitment.
+      expect(component.mechanics()[0].freeHours).toBe(8);
+      expect(component.mechanics()[0].freeHoursReason).toBeNull();
     });
 
     // A failed roster read empties the credential lists, and the card must not
