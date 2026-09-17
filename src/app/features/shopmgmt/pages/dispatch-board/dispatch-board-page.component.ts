@@ -914,6 +914,8 @@ export class DispatchBoardPageComponent implements OnInit {
     if (!this.isViewingToday()) {
       return 'SHOPMGMT.DISPATCH_BOARD.CLOCK_TODAY_ONLY';
     }
+    // Not "this board cannot ask" any more — it reads the clock. `UNKNOWN` is
+    // pos-people declining to show this row to this caller.
     if (mechanic.clockState === 'UNKNOWN') {
       return 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_CLOCK_STATE';
     }

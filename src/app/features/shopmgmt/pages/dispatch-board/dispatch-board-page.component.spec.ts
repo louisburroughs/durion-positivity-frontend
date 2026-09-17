@@ -676,12 +676,19 @@ describe('DispatchBoardPageComponent', () => {
     });
 
     // A DERIVED day with no minutes is a contract violation, not a full shift.
+    // Third of the three causes that land on `UNKNOWN` — with unreadable hours
+    // above and a failed roster read under 'roster read'. All three show the
+    // one message, so that message may not name any single cause; naming
+    // unreadable operating hours, as it once did, is wrong on the other two.
     it('treats a DERIVED window with no minutes as unknown', () => {
       renderWithShift(null, 'DERIVED');
 
-      expect(component.mechanics()[0].freeHours).toBeNull();
-      expect(component.mechanics()[0].freeHoursReason).toBe('UNKNOWN');
+      const card = component.mechanics()[0];
+      expect(card.freeHours).toBeNull();
+      expect(card.freeHoursReason).toBe('UNKNOWN');
+      expect(component.freeHoursReasonKey(card)).toBe('SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS');
     });
+
   });
 
   describe('mechanic clock', () => {
@@ -1231,6 +1238,29 @@ describe('DispatchBoardPageComponent', () => {
       expect(stats.parked).toBe(1);
       expect(stats.openCapacityHours).toBeNull();
       expect(stats.dueSoon).toBeNull();
+    });
+
+    // The capacity placeholder used to say the board receives no shift windows.
+    // It receives them (backend #2060) and spends them on per-mechanic free
+    // hours; what it still lacks is a window per person rather than the shop's
+    // opening hours repeated, which would overstate a shop-wide total. Capacity
+    // staying null while windows are in hand is that distinction.
+    it('holds shift windows and still reports no open capacity', () => {
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(
+        of({
+          skills: new Map(),
+          shifts: new Map([
+            ['M1', { status: 'DERIVED', source: 'LOCATION_HOURS', minutes: 480 }],
+            ['M2', { status: 'DERIVED', source: 'LOCATION_HOURS', minutes: 480 }],
+          ]),
+          ok: true,
+        }),
+      );
+      renderWith(fullDashboard);
+
+      expect(component.technicianShifts().size).toBe(2);
+      expect(component.mechanics().every(mechanic => mechanic.freeHours !== null)).toBe(true);
+      expect(component.stats().openCapacityHours).toBeNull();
     });
 
     it('marks promised time, priority and required skills as not available on every row', () => {
