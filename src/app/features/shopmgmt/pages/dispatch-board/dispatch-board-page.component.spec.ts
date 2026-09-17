@@ -1,31 +1,14 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
-import { DispatchBoardPageComponent } from './dispatch-board-page.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { WorkorderSummaryResourceTypeEnum } from '@durion-sdk/workorder';
+import { DispatchBoardPageComponent } from './dispatch-board-page.component';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
+import type { DashboardResponse } from '../../models/dispatch-board.models';
 
 // ---------------------------------------------------------------------------
-// Inline model types — match the planned production shapes from the story spec
-// ---------------------------------------------------------------------------
-interface WorkorderSummary {
-  workorderId: string;
-  status: string;
-}
-
-interface DashboardResponse {
-  date: string;
-  locationId: string;
-  workorders: WorkorderSummary[];
-  mechanics: { mechanicId: string; name: string }[];
-  bays: { bayId: string; occupied: boolean }[];
-  conflicts: { code: string; severity: 'WARNING' | 'BLOCKING'; message: string }[];
-  lastRefreshed: string;
-  dataQualityWarning: boolean;
-}
-
-// ---------------------------------------------------------------------------
-// Shared fixtures
+// Fixtures — shaped after the SDK's DashboardResponse, not a local invention
 // ---------------------------------------------------------------------------
 const TODAY = new Date().toISOString().slice(0, 10);
 
@@ -43,14 +26,61 @@ const emptyDashboard: DashboardResponse = {
 const loadedDashboard: DashboardResponse = {
   ...emptyDashboard,
   workorders: [
-    { workorderId: 'WO-001', status: 'IN_PROGRESS' },
-    { workorderId: 'WO-002', status: 'PENDING' },
+    { workorderId: 'WO-001', status: 'WORK_IN_PROGRESS', estimatedLaborHours: 3.5 },
+    { workorderId: 'WO-002', status: 'APPROVED', estimatedLaborHours: 1 },
   ],
 };
 
-// ---------------------------------------------------------------------------
-// Suite
-// ---------------------------------------------------------------------------
+/** One row per lane, plus a roster and bays to place them on. */
+const fullDashboard: DashboardResponse = {
+  ...emptyDashboard,
+  workorders: [
+    {
+      workorderId: 'wo-to-assign',
+      workorderNumber: 'WO-24118',
+      status: 'APPROVED',
+      estimatedLaborHours: 3.5,
+      serviceDescriptions: ['Brake reline'],
+      vehicleDescription: '2021 Freightliner M2 106',
+      customerName: 'Distribution Rt 12',
+      serviceCount: 2,
+      completedServiceCount: 0,
+    },
+    {
+      workorderId: 'wo-parked',
+      workorderNumber: 'WO-24122',
+      status: 'APPROVED',
+      estimatedLaborHours: 5,
+      resourceType: WorkorderSummaryResourceTypeEnum.Hold,
+      assignedResourceId: 'LOC-1',
+    },
+    {
+      workorderId: 'wo-assigned',
+      workorderNumber: 'WO-24124',
+      status: 'ASSIGNED',
+      estimatedLaborHours: 2,
+      assignedMechanicId: 'M1',
+      resourceType: WorkorderSummaryResourceTypeEnum.Bay,
+      assignedResourceId: 'B1',
+    },
+    {
+      workorderId: 'wo-draft',
+      workorderNumber: 'WO-24129',
+      status: 'DRAFT',
+      estimatedLaborHours: 1,
+    },
+  ],
+  mechanics: [
+    { personId: 'M1', firstName: 'Ray', lastName: 'Delgado', assignedWorkorderId: 'wo-assigned' },
+    { personId: 'M2', firstName: 'Dev', lastName: 'Patel' },
+    { personId: 'M3', firstName: 'Hollis', lastName: 'Pike', onBreak: true },
+  ],
+  bays: [
+    { bayId: 'B1', bayName: 'Bay 1', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-assigned' },
+    { bayId: 'B4', bayName: 'Bay 4', available: true, status: 'ACTIVE' },
+  ],
+};
+
 describe('DispatchBoardPageComponent', () => {
   let fixture: ComponentFixture<DispatchBoardPageComponent>;
   let component: DispatchBoardPageComponent;
@@ -59,6 +89,12 @@ describe('DispatchBoardPageComponent', () => {
     getDashboard: vi.fn().mockReturnValue(of(emptyDashboard)),
     getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: 'LOC-1' })),
     getAvailability: vi.fn().mockReturnValue(of([])),
+    getBayKinds: vi.fn().mockReturnValue(of(new Map())),
+    getTechnicianSkills: vi.fn().mockReturnValue(of(new Map())),
+    assignMechanic: vi.fn().mockReturnValue(of({})),
+    releaseMechanic: vi.fn().mockReturnValue(of({})),
+    assignBay: vi.fn().mockReturnValue(of({})),
+    releaseBay: vi.fn().mockReturnValue(of({})),
   };
 
   beforeEach(async () => {
@@ -76,7 +112,27 @@ describe('DispatchBoardPageComponent', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    dispatchBoardServiceStub.getDashboard.mockReturnValue(of(emptyDashboard));
+    dispatchBoardServiceStub.getPrimaryLocation.mockReturnValue(of({ locationId: 'LOC-1' }));
+    dispatchBoardServiceStub.getBayKinds.mockReturnValue(of(new Map()));
+    dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(of(new Map()));
+    dispatchBoardServiceStub.assignMechanic.mockReturnValue(of({}));
+    dispatchBoardServiceStub.releaseMechanic.mockReturnValue(of({}));
+    dispatchBoardServiceStub.assignBay.mockReturnValue(of({}));
+    dispatchBoardServiceStub.releaseBay.mockReturnValue(of({}));
   });
+
+  /** Render the board with a given payload already loaded. */
+  function renderWith(response: DashboardResponse): void {
+    dispatchBoardServiceStub.getDashboard.mockReturnValue(of(response));
+    fixture.detectChanges();
+  }
+
+  function rowFor(workorderId: string): HTMLElement {
+    const row = fixture.nativeElement.querySelector(`[data-wo="${workorderId}"]`);
+    expect(row).toBeTruthy();
+    return row as HTMLElement;
+  }
 
   describe('initial location bootstrap', () => {
     it('loads the current user primary location on init', () => {
@@ -129,15 +185,12 @@ describe('DispatchBoardPageComponent', () => {
   describe('AC2: filter bar', () => {
     it('renders a location picker in the filter bar', () => {
       fixture.detectChanges();
-      const locationPicker = fixture.nativeElement.querySelector('app-location-picker');
-      expect(locationPicker).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('app-location-picker')).toBeTruthy();
     });
 
     it('renders a date input whose value defaults to today ISO date', () => {
       fixture.detectChanges();
-      const dateInput: HTMLInputElement | null =
-        fixture.nativeElement.querySelector('input[type="date"]');
-      expect(dateInput).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('input[type="date"]')).toBeTruthy();
       expect(component.selectedDate()).toBe(TODAY);
     });
 
@@ -156,99 +209,83 @@ describe('DispatchBoardPageComponent', () => {
   describe('AC3: refresh button', () => {
     it('renders a visible Refresh button', () => {
       fixture.detectChanges();
-      const buttons: HTMLButtonElement[] = Array.from(
-        fixture.nativeElement.querySelectorAll('button'),
-      );
-      const refreshBtn = buttons.find((b) =>
-        b.textContent?.trim().toLowerCase().includes('refresh'),
+      const buttons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
+      const refreshBtn = buttons.find(button =>
+        button.textContent?.trim().includes('SHOPMGMT.DISPATCH_BOARD.REFRESH'),
       );
       expect(refreshBtn).toBeTruthy();
     });
   });
 
   // -------------------------------------------------------------------------
-  // AC4: Successful load renders workorder rows (workorderId + status)
+  // AC4: Successful load renders workorder rows
   // -------------------------------------------------------------------------
   describe('AC4: workorder rows on successful load', () => {
     it('renders one .workorder-row per workorder in the response', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(loadedDashboard));
-      fixture.detectChanges();
+      renderWith(loadedDashboard);
 
-      const rows: NodeList = fixture.nativeElement.querySelectorAll('.workorder-row');
-      expect(rows.length).toBe(2);
+      expect(fixture.nativeElement.querySelectorAll('.workorder-row').length).toBe(2);
     });
 
-    it('each workorder row displays the workorderId', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(loadedDashboard));
-      fixture.detectChanges();
+    it('each workorder row displays the workorder identifier', () => {
+      renderWith(loadedDashboard);
 
-      const rows: NodeListOf<HTMLElement> =
-        fixture.nativeElement.querySelectorAll('.workorder-row');
+      const rows: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.workorder-row');
       expect(rows[0].textContent).toContain('WO-001');
     });
 
     it('each workorder row displays the status', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(loadedDashboard));
-      fixture.detectChanges();
+      renderWith(loadedDashboard);
 
-      const rows: NodeListOf<HTMLElement> =
-        fixture.nativeElement.querySelectorAll('.workorder-row');
-      expect(rows[0].textContent).toContain('IN_PROGRESS');
+      const rows: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.workorder-row');
+      expect(rows[0].textContent).toContain('WORK_IN_PROGRESS');
+    });
+
+    it('prefers the human-readable workorder number over the id', () => {
+      renderWith(fullDashboard);
+
+      expect(rowFor('wo-to-assign').textContent).toContain('WO-24118');
     });
   });
 
   // -------------------------------------------------------------------------
-  // AC5: Empty state message when no workorders returned
+  // AC5: empty state
   // -------------------------------------------------------------------------
   describe('AC5: empty state', () => {
     it('shows .empty-state element when workorders array is empty', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(emptyDashboard));
-      fixture.detectChanges();
+      renderWith(emptyDashboard);
 
-      const emptyEl = fixture.nativeElement.querySelector('.empty-state');
-      expect(emptyEl).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.empty-state')).toBeTruthy();
     });
 
     it('renders zero .workorder-row elements when response has no workorders', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(emptyDashboard));
-      fixture.detectChanges();
+      renderWith(emptyDashboard);
 
-      const rows = fixture.nativeElement.querySelectorAll('.workorder-row');
-      expect(rows.length).toBe(0);
+      expect(fixture.nativeElement.querySelectorAll('.workorder-row').length).toBe(0);
     });
   });
 
   // -------------------------------------------------------------------------
-  // AC6: Error state with retry button (no cached data)
+  // AC6: error state with retry (no prior successful load)
   // -------------------------------------------------------------------------
-  describe('AC6: error state with retry (no prior successful load)', () => {
+  describe('AC6: error state with retry', () => {
     it('shows .state-panel element when service errors on initial load', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(
-        throwError(() => ({ error: { message: 'Network error' } })),
-      );
-      fixture.detectChanges();
-
-      const errorEl = fixture.nativeElement.querySelector('.state-panel');
-      expect(errorEl).toBeTruthy();
-    });
-
-    it('sets error() signal when service errors', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(
-        throwError(() => ({ error: { message: 'Gateway timeout' } })),
-      );
-      fixture.detectChanges();
-
-      expect(component.error()).toBeTruthy();
-    });
-
-    it('renders a retry button inside the error state panel', () => {
       dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(
         throwError(() => ({ error: { message: 'Server error' } })),
       );
       fixture.detectChanges();
 
-      const retryBtn = fixture.nativeElement.querySelector('.state-panel button');
-      expect(retryBtn).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.state-panel')).toBeTruthy();
+    });
+
+    it('sets the error signal and moves the state machine to error', () => {
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(
+        throwError(() => ({ error: { message: 'Server error' } })),
+      );
+      fixture.detectChanges();
+
+      expect(component.state()).toBe('error');
+      expect(component.error()).toBe('Server error');
     });
 
     it('clicking the retry button triggers a new getDashboard call', () => {
@@ -257,9 +294,7 @@ describe('DispatchBoardPageComponent', () => {
       );
       fixture.detectChanges();
 
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(loadedDashboard));
-      const retryBtn: HTMLButtonElement =
-        fixture.nativeElement.querySelector('.state-panel button');
+      const retryBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.state-panel button');
       retryBtn.click();
       fixture.detectChanges();
 
@@ -268,15 +303,13 @@ describe('DispatchBoardPageComponent', () => {
   });
 
   // -------------------------------------------------------------------------
-  // AC7: "Last updated" timestamp shown after successful load
+  // AC7 / AC8 / AC9 / AC10: freshness, degraded data, polling, staleness
   // -------------------------------------------------------------------------
   describe('AC7: last-updated timestamp', () => {
-    it('displays a .last-updated element containing "Last updated" after successful load', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(loadedDashboard));
-      fixture.detectChanges();
+    it('displays a .last-updated element after a successful load', () => {
+      renderWith(loadedDashboard);
 
       const el: HTMLElement | null = fixture.nativeElement.querySelector('.last-updated');
-      expect(el).toBeTruthy();
       expect(el?.textContent).toContain('SHOPMGMT.DISPATCH_BOARD.LAST_UPDATED');
     });
 
@@ -284,109 +317,440 @@ describe('DispatchBoardPageComponent', () => {
       dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(new Subject());
       fixture.detectChanges();
 
-      const el = fixture.nativeElement.querySelector('.last-updated');
-      expect(el).toBeFalsy();
+      expect(fixture.nativeElement.querySelector('.last-updated')).toBeFalsy();
     });
   });
 
-  // -------------------------------------------------------------------------
-  // AC8: Degraded data banner when dataQualityWarning is true
-  // -------------------------------------------------------------------------
   describe('AC8: data quality warning banner', () => {
     it('shows .data-quality-warning banner when dataQualityWarning is true', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(
-        of({ ...loadedDashboard, dataQualityWarning: true }),
-      );
-      fixture.detectChanges();
+      renderWith({ ...loadedDashboard, dataQualityWarning: true });
 
-      const banner = fixture.nativeElement.querySelector('.data-quality-warning');
-      expect(banner).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.data-quality-warning')).toBeTruthy();
     });
 
     it('does not show .data-quality-warning banner when dataQualityWarning is false', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(
-        of({ ...loadedDashboard, dataQualityWarning: false }),
-      );
-      fixture.detectChanges();
+      renderWith(loadedDashboard);
 
-      const banner = fixture.nativeElement.querySelector('.data-quality-warning');
-      expect(banner).toBeFalsy();
+      expect(fixture.nativeElement.querySelector('.data-quality-warning')).toBeFalsy();
     });
   });
 
-  // -------------------------------------------------------------------------
-  // AC9: 30-second auto-refresh polling
-  // -------------------------------------------------------------------------
   describe('AC9: 30-second auto-refresh polling', () => {
     it('calls getDashboard again after 30 seconds have elapsed', fakeAsync(() => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(emptyDashboard));
-      fixture.detectChanges();
-
-      const callsAfterInit = (dispatchBoardServiceStub.getDashboard as ReturnType<typeof vi.fn>)
-        .mock.calls.length;
+      renderWith(loadedDashboard);
+      const before = dispatchBoardServiceStub.getDashboard.mock.calls.length;
 
       tick(30_000);
-      fixture.detectChanges();
 
-      expect(
-        (dispatchBoardServiceStub.getDashboard as ReturnType<typeof vi.fn>).mock.calls.length,
-      ).toBeGreaterThan(callsAfterInit);
+      expect(dispatchBoardServiceStub.getDashboard.mock.calls.length).toBe(before + 1);
+      discardPolling();
     }));
 
     it('does NOT poll again before 30 seconds have elapsed', fakeAsync(() => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(emptyDashboard));
-      fixture.detectChanges();
+      renderWith(loadedDashboard);
+      const before = dispatchBoardServiceStub.getDashboard.mock.calls.length;
 
-      const callsAfterInit = (dispatchBoardServiceStub.getDashboard as ReturnType<typeof vi.fn>)
-        .mock.calls.length;
+      tick(29_000);
 
-      tick(15_000);
-      fixture.detectChanges();
-
-      expect(
-        (dispatchBoardServiceStub.getDashboard as ReturnType<typeof vi.fn>).mock.calls.length,
-      ).toBe(callsAfterInit);
+      expect(dispatchBoardServiceStub.getDashboard.mock.calls.length).toBe(before);
+      discardPolling();
     }));
+
+    /** The 30s interval never completes; tearing the fixture down cancels it. */
+    function discardPolling(): void {
+      fixture.destroy();
+    }
   });
 
-  // -------------------------------------------------------------------------
-  // AC10: After error following a prior success — cached data + stale banner
-  // -------------------------------------------------------------------------
   describe('AC10: stale data banner after error following prior success', () => {
     it('keeps workorder rows visible when a refresh fails after prior successful load', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(loadedDashboard));
-      fixture.detectChanges();
+      renderWith(loadedDashboard);
 
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(
-        throwError(() => ({ error: { message: 'Refresh failed' } })),
-      );
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(throwError(() => ({ status: 500 })));
       component.refresh();
       fixture.detectChanges();
 
-      const rows = fixture.nativeElement.querySelectorAll('.workorder-row');
-      expect(rows.length).toBe(2);
+      expect(fixture.nativeElement.querySelectorAll('.workorder-row').length).toBe(2);
     });
 
     it('shows .stale-data-banner after a refresh error when prior data exists', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(loadedDashboard));
-      fixture.detectChanges();
+      renderWith(loadedDashboard);
 
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(
-        throwError(() => ({ error: { message: 'Refresh failed' } })),
-      );
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(throwError(() => ({ status: 500 })));
       component.refresh();
       fixture.detectChanges();
 
-      const staleBanner = fixture.nativeElement.querySelector('.stale-data-banner');
-      expect(staleBanner).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.stale-data-banner')).toBeTruthy();
     });
 
     it('does NOT show .stale-data-banner on the initial successful load', () => {
-      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(loadedDashboard));
+      renderWith(loadedDashboard);
+
+      expect(fixture.nativeElement.querySelector('.stale-data-banner')).toBeFalsy();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Roster rail
+  // -------------------------------------------------------------------------
+  describe('mechanic rail', () => {
+    it('lists on-duty mechanics and keeps those on break out of the list', () => {
+      renderWith(fullDashboard);
+
+      expect(component.mechanics().map(mechanic => mechanic.personId)).toEqual(['M1', 'M2']);
+      expect(component.offDutyMechanics().map(mechanic => mechanic.personId)).toEqual(['M3']);
+    });
+
+    it('reads a mechanic holding a workorder as WORKING and an unassigned one as IDLE', () => {
+      renderWith(fullDashboard);
+
+      const byId = new Map(component.mechanics().map(mechanic => [mechanic.personId, mechanic]));
+      expect(byId.get('M1')?.availability).toBe('WORKING');
+      expect(byId.get('M2')?.availability).toBe('IDLE');
+    });
+
+    // PTO outranks every other flag: approved time off means out for the day.
+    // Pinned to an explicit date rather than "today" so the assertion cannot
+    // straddle a midnight rollover between fixture and component construction.
+    it('puts a mechanic on PTO covering the selected date out of the on-duty list', () => {
+      const onLeave = '2026-05-04';
+      renderWith({
+        ...fullDashboard,
+        mechanics: [
+          {
+            personId: 'M2',
+            firstName: 'Dev',
+            lastName: 'Patel',
+            assignedWorkorderId: 'wo-assigned',
+            ptoEntries: [
+              { ptoId: 'p1', ptoType: 'VACATION', start: `${onLeave}T00:00:00Z`, end: `${onLeave}T23:59:59Z` },
+            ],
+          },
+        ],
+      });
+      component.selectedDate.set(onLeave);
+
+      expect(component.mechanics()).toHaveLength(0);
+      expect(component.offDutyMechanics()[0].availability).toBe('OFF');
+    });
+
+    it('keeps a mechanic on duty when their PTO does not cover the selected date', () => {
+      renderWith({
+        ...fullDashboard,
+        mechanics: [
+          {
+            personId: 'M2',
+            firstName: 'Dev',
+            lastName: 'Patel',
+            ptoEntries: [
+              { ptoId: 'p1', ptoType: 'VACATION', start: '2026-05-04T00:00:00Z', end: '2026-05-04T23:59:59Z' },
+            ],
+          },
+        ],
+      });
+      component.selectedDate.set('2026-05-05');
+
+      expect(component.mechanics().map(mechanic => mechanic.personId)).toEqual(['M2']);
+    });
+
+    it('names the bay a working mechanic stands in', () => {
+      renderWith(fullDashboard);
+
+      expect(component.mechanics().find(m => m.personId === 'M1')?.whereLabel).toBe('Bay 1');
+    });
+
+    it('renders the skill codes the technician roster supplies', () => {
+      dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(
+        of(new Map([['M1', ['BRAKES', 'DOT']]])),
+      );
+      renderWith(fullDashboard);
+
+      const certs: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.mech .cert'));
+      expect(certs.map(cert => cert.textContent?.trim())).toEqual(['BRAKES', 'DOT']);
+    });
+
+    it('leaves the free-hours slot as a not-available placeholder', () => {
+      renderWith(fullDashboard);
+
+      expect(component.mechanics()[0].freeHours).toBeNull();
+      expect(fixture.nativeElement.querySelector('.mech .mfree.na')).toBeTruthy();
+    });
+  });
+
+  describe('bay rail', () => {
+    it('lists only bays that are available and hold no workorder', () => {
+      renderWith(fullDashboard);
+
+      expect(component.openBays().map(bay => bay.bayId)).toEqual(['B4']);
+    });
+
+    it('labels an open bay with the bay type from the location domain', () => {
+      dispatchBoardServiceStub.getBayKinds.mockReturnValue(of(new Map([['B4', 'ALIGNMENT']])));
+      renderWith(fullDashboard);
+
+      expect(component.openBays()[0].kind).toBe('ALIGNMENT');
+      expect(fixture.nativeElement.querySelector('.bay em')?.textContent).toContain('ALIGNMENT');
+    });
+
+    it('falls back to a not-available placeholder when the bay type has not replicated', () => {
+      renderWith(fullDashboard);
+
+      expect(component.openBays()[0].kind).toBeNull();
+      expect(fixture.nativeElement.querySelector('.bay em.na')).toBeTruthy();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Lanes, filters and sort
+  // -------------------------------------------------------------------------
+  describe('lanes', () => {
+    it('splits rows into to-assign, parked and assigned', () => {
+      renderWith(fullDashboard);
+
+      expect(component.toAssignRows().map(row => row.workorderId)).toEqual(['wo-to-assign', 'wo-draft']);
+      expect(component.heldRows().map(row => row.workorderId)).toEqual(['wo-parked']);
+      expect(component.assignedRows().map(row => row.workorderId)).toEqual(['wo-assigned']);
+    });
+
+    // HOLD is the site's parking position, which is the board's on-hold lane.
+    it('reads a workorder placed on HOLD as parked rather than as awaiting assignment', () => {
+      renderWith(fullDashboard);
+
+      const parked = component.heldRows()[0];
+      expect(parked.parked).toBe(true);
+      expect(parked.bayId).toBeNull();
+    });
+  });
+
+  describe('filters', () => {
+    it('narrows rows to the search term across number, job, vehicle and customer', () => {
+      renderWith(fullDashboard);
+
+      component.query.set('freightliner');
       fixture.detectChanges();
 
-      const staleBanner = fixture.nativeElement.querySelector('.stale-data-banner');
-      expect(staleBanner).toBeFalsy();
+      expect(component.rows().map(row => row.workorderId)).toEqual(['wo-to-assign']);
+    });
+
+    it('the DRAFT segment keeps only draft workorders', () => {
+      renderWith(fullDashboard);
+
+      component.setStatusFilter('DRAFT');
+
+      expect(component.rows().map(row => row.workorderId)).toEqual(['wo-draft']);
+    });
+
+    it('the OPEN segment drops drafts', () => {
+      renderWith(fullDashboard);
+
+      component.setStatusFilter('OPEN');
+
+      expect(component.rows().map(row => row.workorderId)).not.toContain('wo-draft');
+    });
+
+    it('sorts by estimated hours, longest first', () => {
+      renderWith(fullDashboard);
+
+      expect(component.toAssignRows().map(row => row.estimatedHours)).toEqual([3.5, 1]);
+    });
+
+    // Nothing on the response orders by promise time or priority, so those two
+    // options stay inert rather than silently sorting by something else.
+    it('refuses the sort options no field backs', () => {
+      renderWith(fullDashboard);
+
+      component.setSort('DUE');
+
+      expect(component.sortKey()).toBe('HOURS');
+      expect(component.isSortAvailable('PRIORITY')).toBe(false);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Assignment
+  // -------------------------------------------------------------------------
+  describe('assigning a mechanic', () => {
+    it('assigns with no incumbent when the row has no mechanic', () => {
+      renderWith(fullDashboard);
+
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+
+      expect(dispatchBoardServiceStub.assignMechanic).toHaveBeenCalledWith('wo-to-assign', 'M2', null);
+    });
+
+    // The incumbent decides the endpoint: assign refuses a taken workorder and
+    // reassign refuses an empty one, so the board must pass what it knows.
+    it('passes the incumbent when the row already has a mechanic', () => {
+      renderWith(fullDashboard);
+
+      component.assignMechanic(component.assignedRows()[0], 'M2');
+
+      expect(dispatchBoardServiceStub.assignMechanic).toHaveBeenCalledWith('wo-assigned', 'M2', 'M1');
+    });
+
+    it('releases the mechanic when the slot is cleared', () => {
+      renderWith(fullDashboard);
+
+      component.clearMechanic(component.assignedRows()[0]);
+
+      expect(dispatchBoardServiceStub.releaseMechanic).toHaveBeenCalledWith('wo-assigned');
+    });
+
+    it('re-reads the board after a successful assignment rather than predicting the status', () => {
+      renderWith(fullDashboard);
+      const before = dispatchBoardServiceStub.getDashboard.mock.calls.length;
+
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+
+      expect(dispatchBoardServiceStub.getDashboard.mock.calls.length).toBe(before + 1);
+    });
+
+    it('disables the mechanic slot on a draft workorder', () => {
+      renderWith(fullDashboard);
+
+      const slot: HTMLButtonElement | null = rowFor('wo-draft').querySelector('button.slot');
+      expect(slot?.disabled).toBe(true);
+    });
+
+    it('refuses a mechanic drop onto a draft workorder', () => {
+      renderWith(fullDashboard);
+      component.onDragStart('MECHANIC', 'M2', new DragEvent('dragstart'));
+
+      const draft = component.rows().find(row => row.workorderId === 'wo-draft')!;
+      expect(component.canDrop(draft)).toBe(false);
+    });
+  });
+
+  describe('assigning a bay', () => {
+    it('places the workorder on the chosen bay', () => {
+      renderWith(fullDashboard);
+
+      component.assignBay(component.toAssignRows()[0], 'B4');
+
+      expect(dispatchBoardServiceStub.assignBay).toHaveBeenCalledWith('wo-to-assign', 'B4');
+    });
+
+    it('releases the position when the bay slot is cleared', () => {
+      renderWith(fullDashboard);
+
+      component.clearBay(component.assignedRows()[0]);
+
+      expect(dispatchBoardServiceStub.releaseBay).toHaveBeenCalledWith('wo-assigned');
+    });
+
+    it('routes a picker choice to the same mutation', () => {
+      renderWith(fullDashboard);
+
+      component.openPicker('BAY', 'wo-to-assign');
+      component.pick('B4');
+
+      expect(dispatchBoardServiceStub.assignBay).toHaveBeenCalledWith('wo-to-assign', 'B4');
+      expect(component.picker()).toBeNull();
+    });
+  });
+
+  describe('undo', () => {
+    it('clears a mechanic that had no predecessor', () => {
+      renderWith(fullDashboard);
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+
+      component.undo();
+
+      expect(dispatchBoardServiceStub.releaseMechanic).toHaveBeenCalledWith('wo-to-assign');
+    });
+
+    it('puts the previous mechanic back after a reassignment', () => {
+      renderWith(fullDashboard);
+      component.assignMechanic(component.assignedRows()[0], 'M2');
+
+      component.undo();
+
+      expect(dispatchBoardServiceStub.assignMechanic).toHaveBeenLastCalledWith('wo-assigned', 'M1', 'M1');
+    });
+  });
+
+  describe('mutation failures', () => {
+    it('maps an occupied bay onto its own message', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.assignBay.mockReturnValueOnce(
+        throwError(() => ({ error: { code: 'RESOURCE_OCCUPIED' } })),
+      );
+
+      component.assignBay(component.toAssignRows()[0], 'B4');
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BAY_OCCUPIED');
+      expect(component.toast()?.tone).toBe('ERROR');
+    });
+
+    it('maps an unstaffed technician onto its own message', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.assignMechanic.mockReturnValueOnce(
+        throwError(() => ({ error: { code: 'TECHNICIAN_NOT_STAFFED_AT_SITE' } })),
+      );
+
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_STAFFED');
+    });
+
+    it('falls back to a generic message for an unrecognised refusal', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.assignBay.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+
+      component.assignBay(component.toAssignRows()[0], 'B4');
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_GENERIC');
+    });
+
+    it('offers no undo on a failed mutation', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.assignBay.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+
+      component.assignBay(component.toAssignRows()[0], 'B4');
+
+      expect(component.toast()?.undo).toBeNull();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Fields with no backing source
+  // -------------------------------------------------------------------------
+  describe('unavailable fields', () => {
+    it('counts what it can and leaves capacity and due-soon unset', () => {
+      renderWith(fullDashboard);
+
+      const stats = component.stats();
+      expect(stats.toAssign).toBe(2);
+      expect(stats.toAssignHours).toBe(4.5);
+      expect(stats.baysOpen).toBe(1);
+      expect(stats.baysTotal).toBe(2);
+      expect(stats.parked).toBe(1);
+      expect(stats.openCapacityHours).toBeNull();
+      expect(stats.dueSoon).toBeNull();
+    });
+
+    it('marks promised time, priority and required skills as not available on every row', () => {
+      renderWith(fullDashboard);
+
+      for (const row of component.allRows()) {
+        expect(row.dueAt).toBeNull();
+        expect(row.priority).toBeNull();
+        expect(row.requiredSkills).toBeNull();
+      }
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Enrichment is decoration, never a gate on the board
+  // -------------------------------------------------------------------------
+  describe('enrichment failures', () => {
+    it('still renders the board when bay types and technician skills both fail', () => {
+      dispatchBoardServiceStub.getBayKinds.mockReturnValue(throwError(() => ({ status: 503 })));
+      dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(throwError(() => ({ status: 503 })));
+      renderWith(fullDashboard);
+
+      expect(component.state()).toBe('ready');
+      expect(fixture.nativeElement.querySelectorAll('.workorder-row').length).toBe(4);
     });
   });
 });

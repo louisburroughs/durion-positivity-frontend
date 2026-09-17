@@ -1,22 +1,17 @@
 <section class="dispatch-board-page" aria-labelledby="dispatch-board-title">
-  <header class="page-header">
+  <!-- ---------------------------------------------------------------- bar -->
+  <header class="bar">
     <div class="heading-group">
       <p class="section-label">{{ 'SHOPMGMT.DISPATCH_BOARD.SECTION_LABEL' | translate }}</p>
       <h1 id="dispatch-board-title">{{ 'SHOPMGMT.DISPATCH_BOARD.TITLE' | translate }}</h1>
     </div>
-  </header>
 
-  <section class="board-panel dur-elevation-2" [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.PANEL_ARIA' | translate">
-    <div class="panel-accent" aria-hidden="true"></div>
-
-    <div class="filter-bar">
-      <div class="field-group">
-        <app-location-picker
-          [label]="'SHOPMGMT.DISPATCH_BOARD.LOCATION' | translate"
-          [selectedId]="selectedLocationId()"
-          (locationSelected)="onLocationPicked($event)"
-        ></app-location-picker>
-      </div>
+    <div class="bar-controls">
+      <app-location-picker
+        [label]="'SHOPMGMT.DISPATCH_BOARD.LOCATION' | translate"
+        [selectedId]="selectedLocationId()"
+        (locationSelected)="onLocationPicked($event)"
+      ></app-location-picker>
 
       <div class="field-group">
         <label class="field-label" for="dispatch-date">{{ 'SHOPMGMT.DISPATCH_BOARD.DATE' | translate }}</label>
@@ -25,75 +20,379 @@
           [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.DATE_ARIA' | translate" />
       </div>
 
-      <button type="button" class="btn-primary" (click)="refresh()"
-        [disabled]="!canRefresh()"
+      <button type="button" class="btn-primary" (click)="refresh()" [disabled]="!canRefresh()"
         [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.REFRESH_ARIA' | translate">
         {{ 'SHOPMGMT.DISPATCH_BOARD.REFRESH' | translate }}
       </button>
     </div>
+  </header>
 
-    @if (lastRefreshed()) {
-      <div class="last-updated" aria-live="polite">
-        {{ 'SHOPMGMT.DISPATCH_BOARD.LAST_UPDATED' | translate }}: {{ lastRefreshed() | date: 'short' }}
-      </div>
-    }
-
-    @if (dataQualityWarning() || isStale()) {
-      <div class="banners-row">
-        @if (dataQualityWarning()) {
-          <output class="data-quality-warning alert alert-warning" aria-live="polite">
-            {{ 'SHOPMGMT.DISPATCH_BOARD.DATA_QUALITY_WARNING' | translate }}
-          </output>
+  <!-- -------------------------------------------------------------- stats -->
+  @if (state() === 'ready') {
+    <div class="stats" [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.STATS_ARIA' | translate">
+      <span class="stat">
+        <b>{{ stats().toAssign }}</b> {{ 'SHOPMGMT.DISPATCH_BOARD.STAT.TO_ASSIGN' | translate }}
+        @if (stats().toAssignHours !== null) {
+          <b class="stat-sub">{{ 'SHOPMGMT.DISPATCH_BOARD.STAT.HOURS' | translate: { hours: stats().toAssignHours } }}</b>
         }
-        @if (isStale()) {
-          <output class="stale-data-banner alert alert-warning" aria-live="polite">
-            {{ 'SHOPMGMT.DISPATCH_BOARD.STALE_DATA' | translate }}
-          </output>
+      </span>
+
+      <span class="stat">
+        <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_CAPACITY' | translate">&mdash;</span>
+        {{ 'SHOPMGMT.DISPATCH_BOARD.STAT.OPEN_CAPACITY' | translate }}
+      </span>
+
+      <span class="stat">
+        <b>{{ stats().onDuty }}</b> {{ 'SHOPMGMT.DISPATCH_BOARD.STAT.ON_DUTY' | translate }}
+        <span class="stat-sub">{{ 'SHOPMGMT.DISPATCH_BOARD.STAT.OUT' | translate: { count: stats().out } }}</span>
+      </span>
+
+      <span class="stat">
+        {{ 'SHOPMGMT.DISPATCH_BOARD.STAT.BAYS_OPEN' | translate: { open: stats().baysOpen, total: stats().baysTotal } }}
+      </span>
+
+      <span class="stat">
+        <b>{{ stats().parked }}</b> {{ 'SHOPMGMT.DISPATCH_BOARD.STAT.PARKED' | translate }}
+      </span>
+
+      <span class="stat">
+        <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_DUE' | translate">&mdash;</span>
+        {{ 'SHOPMGMT.DISPATCH_BOARD.STAT.DUE_SOON' | translate }}
+      </span>
+
+      @if (lastRefreshed(); as refreshed) {
+        <span class="clock last-updated">
+          <span class="pip-live" aria-hidden="true"></span>
+          {{ 'SHOPMGMT.DISPATCH_BOARD.LAST_UPDATED' | translate }}: {{ refreshed | date: 'shortTime' }}
+        </span>
+      }
+    </div>
+  }
+
+  <!-- ------------------------------------------------------------ banners -->
+  @if (dataQualityWarning() || isStale()) {
+    <div class="banners-row">
+      @if (dataQualityWarning()) {
+        <output class="data-quality-warning alert alert-warning">
+          {{ 'SHOPMGMT.DISPATCH_BOARD.DATA_QUALITY_WARNING' | translate }}
+        </output>
+      }
+      @if (isStale()) {
+        <output class="stale-data-banner alert alert-warning">
+          {{ 'SHOPMGMT.DISPATCH_BOARD.STALE_DATA' | translate }}
+        </output>
+      }
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-state" aria-live="polite">{{ 'SHOPMGMT.DISPATCH_BOARD.LOADING' | translate }}</div>
+  }
+
+  @if (error(); as errorMessage) {
+    <div class="state-panel" role="alert">
+      <p>{{ errorMessage | translate }}</p>
+      <button type="button" class="btn-text" (click)="refresh()"
+        [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.RETRY_ARIA' | translate">
+        {{ 'SHOPMGMT.DISPATCH_BOARD.RETRY' | translate }}
+      </button>
+    </div>
+  }
+
+  <!-- -------------------------------------------------------------- frame -->
+  @if (state() === 'ready') {
+    <div class="frame">
+      <!-- ------------------------------------------------------ left rail -->
+      <div class="col">
+        <section class="card mechanics-card">
+          <h2 class="card-head">
+            {{ 'SHOPMGMT.DISPATCH_BOARD.MECHANICS' | translate }}
+            <span class="n">{{ 'SHOPMGMT.DISPATCH_BOARD.ON_DUTY_COUNT' | translate: { count: mechanics().length } }}</span>
+          </h2>
+          <div class="scroll">
+            <div class="mlist">
+              @for (mechanic of mechanics(); track mechanic.personId) {
+                <div class="mech" [attr.data-st]="mechanic.availability" draggable="true"
+                  (dragstart)="onDragStart('MECHANIC', mechanic.personId, $event)" (dragend)="onDragEnd()"
+                  [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA' | translate: { name: mechanic.name }">
+                  <span class="av" aria-hidden="true">{{ mechanic.initials }}</span>
+                  <span class="mname">
+                    <span class="mname-text">{{ mechanic.name }}</span>
+                    <span class="na mfree" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS' | translate">&mdash;</span>
+                  </span>
+                  <span class="mcerts">
+                    @for (skill of mechanic.skillCodes; track skill) {
+                      <span class="cert">{{ skill }}</span>
+                    }
+                    @if (mechanic.whereLabel; as where) {
+                      <span class="mwhere">{{ where }}</span>
+                    }
+                  </span>
+                </div>
+              } @empty {
+                <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_MECHANICS' | translate }}</p>
+              }
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-head">
+            {{ 'SHOPMGMT.DISPATCH_BOARD.OPEN_BAYS' | translate }}
+            <span class="n">{{ 'SHOPMGMT.DISPATCH_BOARD.FREE_COUNT' | translate: { count: openBays().length } }}</span>
+          </h2>
+          <div class="bays">
+            @for (bay of openBays(); track bay.bayId) {
+              <div class="bay" draggable="true" (dragstart)="onDragStart('BAY', bay.bayId, $event)"
+                (dragend)="onDragEnd()"
+                [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.BAY_ARIA' | translate: { name: bay.name }">
+                <b>{{ bay.name }}</b>
+                @if (bay.kind; as kind) {
+                  <em>{{ kind }}</em>
+                } @else {
+                  <em class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_KIND' | translate">&mdash;</em>
+                }
+              </div>
+            } @empty {
+              <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_BAYS' | translate }}</p>
+            }
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-head">
+            {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_AND_OFF' | translate }}
+            <span class="n">{{ offDutyMechanics().length }}</span>
+          </h2>
+          <div class="bin">
+            @for (mechanic of offDutyMechanics(); track mechanic.personId) {
+              <span class="binchip">
+                <span class="dot" aria-hidden="true">{{ mechanic.initials }}</span>
+                {{ mechanic.name }}
+                <small>
+                  @if (mechanic.availability === 'BREAK') {
+                    @if (mechanic.breakExpectedReturn; as until) {
+                      {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_UNTIL' | translate: { time: (until | date: 'shortTime') } }}
+                    } @else {
+                      {{ 'SHOPMGMT.DISPATCH_BOARD.ON_BREAK' | translate }}
+                    }
+                  } @else {
+                    {{ 'SHOPMGMT.DISPATCH_BOARD.OFF_DUTY' | translate }}
+                  }
+                </small>
+              </span>
+            } @empty {
+              <span class="bin-empty">{{ 'SHOPMGMT.DISPATCH_BOARD.EVERYONE_ON_CLOCK' | translate }}</span>
+            }
+          </div>
+          <p class="bin-note">{{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_READ_ONLY' | translate }}</p>
+        </section>
+      </div>
+
+      <!-- ----------------------------------------------------- work orders -->
+      <div class="col">
+        <section class="card rows-card">
+          <div class="tools">
+            <div class="search">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.7" />
+                <path d="M10.5 10.5 14 14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+              </svg>
+              <input type="search" [ngModel]="query()" (ngModelChange)="query.set($event ?? '')"
+                [attr.placeholder]="'SHOPMGMT.DISPATCH_BOARD.SEARCH_PLACEHOLDER' | translate"
+                [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.SEARCH_ARIA' | translate" />
+            </div>
+
+            <div class="seg" role="group" [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.STATUS' | translate">
+              <button type="button" [attr.aria-pressed]="statusFilter() === 'ALL'" (click)="setStatusFilter('ALL')">
+                {{ 'SHOPMGMT.DISPATCH_BOARD.FILTER.ALL' | translate }}
+              </button>
+              <button type="button" [attr.aria-pressed]="statusFilter() === 'OPEN'" (click)="setStatusFilter('OPEN')">
+                {{ 'SHOPMGMT.DISPATCH_BOARD.FILTER.OPEN' | translate }}
+              </button>
+              <button type="button" [attr.aria-pressed]="statusFilter() === 'DRAFT'" (click)="setStatusFilter('DRAFT')">
+                {{ 'SHOPMGMT.DISPATCH_BOARD.FILTER.DRAFT' | translate }}
+              </button>
+            </div>
+
+            <div class="seg" role="group" [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.SORT' | translate">
+              <button type="button" class="na-btn" disabled
+                [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_DUE' | translate">
+                {{ 'SHOPMGMT.DISPATCH_BOARD.SORT_BY.DUE' | translate }}
+              </button>
+              <button type="button" class="na-btn" disabled
+                [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_PRIORITY' | translate">
+                {{ 'SHOPMGMT.DISPATCH_BOARD.SORT_BY.PRIORITY' | translate }}
+              </button>
+              <button type="button" [attr.aria-pressed]="sortKey() === 'HOURS'" (click)="setSort('HOURS')">
+                {{ 'SHOPMGMT.DISPATCH_BOARD.SORT_BY.HOURS' | translate }}
+              </button>
+            </div>
+          </div>
+
+          <div class="scroll">
+            <div class="rows">
+              @for (row of toAssignRows(); track row.workorderId) {
+                <ng-container *ngTemplateOutlet="workorderRow; context: { $implicit: row }"></ng-container>
+              } @empty {
+                <p class="empty-state">{{ 'SHOPMGMT.DISPATCH_BOARD.EMPTY_TO_ASSIGN' | translate }}</p>
+              }
+
+              @if (heldRows().length) {
+                <p class="divider">{{ 'SHOPMGMT.DISPATCH_BOARD.LANE_PARKED' | translate: { count: heldRows().length } }}</p>
+                @for (row of heldRows(); track row.workorderId) {
+                  <ng-container *ngTemplateOutlet="workorderRow; context: { $implicit: row }"></ng-container>
+                }
+              }
+
+              @if (assignedRows().length) {
+                <p class="divider">{{ 'SHOPMGMT.DISPATCH_BOARD.LANE_ASSIGNED' | translate: { count: assignedRows().length } }}</p>
+                @for (row of assignedRows(); track row.workorderId) {
+                  <ng-container *ngTemplateOutlet="workorderRow; context: { $implicit: row }"></ng-container>
+                }
+              }
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  }
+
+  <!-- ------------------------------------------------------------- picker -->
+  @if (picker(); as request) {
+    @if (pickerRow(); as row) {
+      <div class="scrim" (click)="closePicker()" (keydown.escape)="closePicker()" tabindex="-1" aria-hidden="true"></div>
+      <div class="picker" role="dialog" aria-modal="true"
+        [attr.aria-label]="(request.kind === 'MECHANIC'
+          ? 'SHOPMGMT.DISPATCH_BOARD.PICK_MECHANIC_FOR'
+          : 'SHOPMGMT.DISPATCH_BOARD.PICK_BAY_FOR') | translate: { workorder: row.number }">
+        <h3>
+          {{ (request.kind === 'MECHANIC'
+            ? 'SHOPMGMT.DISPATCH_BOARD.PICK_MECHANIC_FOR'
+            : 'SHOPMGMT.DISPATCH_BOARD.PICK_BAY_FOR') | translate: { workorder: row.number } }}
+        </h3>
+
+        @if (request.kind === 'MECHANIC') {
+          @for (mechanic of pickerMechanics(); track mechanic.personId) {
+            <button class="opt" type="button" (click)="pick(mechanic.personId)">
+              <span class="si" aria-hidden="true">{{ mechanic.initials }}</span>
+              <span class="opt-name">{{ mechanic.name }}</span>
+              <span class="note">
+                @if (mechanic.skillCodes.length) {
+                  {{ mechanic.skillCodes.join(', ') }}
+                } @else {
+                  {{ 'SHOPMGMT.DISPATCH_BOARD.NO_CERTS' | translate }}
+                }
+              </span>
+            </button>
+          } @empty {
+            <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_MECHANICS' | translate }}</p>
+          }
+        } @else {
+          @for (bay of openBays(); track bay.bayId) {
+            <button class="opt" type="button" (click)="pick(bay.bayId)">
+              <b>{{ bay.name }}</b>
+              <span class="note">{{ bay.kind ?? '' }}</span>
+            </button>
+          } @empty {
+            <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_BAYS' | translate }}</p>
+          }
         }
-      </div>
-    }
 
-    @if (loading()) {
-      <div class="loading-state" aria-live="polite">
-        {{ 'SHOPMGMT.DISPATCH_BOARD.LOADING' | translate }}
-      </div>
-    }
-
-    @if (error(); as errorMessage) {
-      <div class="state-panel" role="alert" aria-live="polite">
-        <p>{{ errorMessage | translate }}</p>
-        <button type="button" class="btn-text" (click)="refresh()"
-          [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.RETRY_ARIA' | translate">
-          {{ 'SHOPMGMT.DISPATCH_BOARD.RETRY' | translate }}
+        <button class="btn-text picker-close" type="button" (click)="closePicker()">
+          {{ 'SHOPMGMT.DISPATCH_BOARD.CANCEL' | translate }}
         </button>
       </div>
     }
+  }
 
-    @if (!loading() && !error() && workorders().length === 0) {
-      <div class="empty-state" aria-live="polite">
-        <h2>{{ 'SHOPMGMT.DISPATCH_BOARD.EMPTY_TITLE' | translate }}</h2>
-        <p>{{ 'SHOPMGMT.DISPATCH_BOARD.EMPTY_DESC' | translate }}</p>
-      </div>
-    }
-
-    @if (!loading() && workorders().length > 0) {
-      <div class="workorders" aria-live="polite">
-        @for (workorder of workorders(); track workorder) {
-          <article class="workorder-row"
-            [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.WORKORDER_ARIA' | translate">
-            <div class="workorder-id">
-              <span class="row-label">{{ 'SHOPMGMT.DISPATCH_BOARD.WORKORDER' | translate }}</span>
-              <span>{{ workorder.workorderId }}</span>
-            </div>
-            <div class="workorder-status">
-              <span class="row-label">{{ 'SHOPMGMT.DISPATCH_BOARD.STATUS' | translate }}</span>
-              <span class="status-chip" [class.exception-badge]="workorder.status.toLowerCase().includes('exception')">
-                {{ workorder.status }}
-              </span>
-            </div>
-          </article>
-        }
-      </div>
-    }
-  </section>
+  <!-- -------------------------------------------------------------- toast -->
+  @if (toast(); as message) {
+    <div class="toast" [class.toast-error]="message.tone === 'ERROR'" role="status" aria-live="polite">
+      <span>{{ message.key | translate: message.params }}</span>
+      @if (message.undo) {
+        <button type="button" (click)="undo()">{{ 'SHOPMGMT.DISPATCH_BOARD.UNDO' | translate }}</button>
+      }
+      <button type="button" class="toast-dismiss" (click)="dismissToast()"
+        [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.DISMISS' | translate">&times;</button>
+    </div>
+  }
 </section>
+
+<!-- ------------------------------------------------------------- row tpl -->
+<ng-template #workorderRow let-row>
+  <article class="workorder-row row" [attr.data-tone]="row.statusTone" [attr.data-wo]="row.workorderId"
+    [class.lane-assigned]="row.lane === 'ASSIGNED'" [class.lane-held]="row.lane === 'HELD'"
+    [class.droppable]="canDrop(row)" [class.busy]="pendingWorkorderId() === row.workorderId"
+    (dragover)="onDragOver(row, $event)" (drop)="onDrop(row, $event)"
+    [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.WORKORDER_ARIA' | translate: { workorder: row.number }">
+
+    <span class="r-main">
+      <span class="r-title">
+        <span class="wid workorder-id">{{ row.number }}</span>
+        <span class="st workorder-status" [attr.data-tone]="row.statusTone">{{ row.status }}</span>
+        @if (row.job; as job) {
+          <span class="t">{{ job }}</span>
+        } @else {
+          <span class="t na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_JOB' | translate">&mdash;</span>
+        }
+      </span>
+      <span class="r-sub">
+        @if (row.vehicle; as vehicle) { <span class="unit">{{ vehicle }}</span> }
+        @if (row.customer; as customer) { <span>{{ customer }}</span> }
+        @if (row.serviceCount !== null) {
+          <span>{{ 'SHOPMGMT.DISPATCH_BOARD.SERVICE_PROGRESS' | translate: { done: row.completedServiceCount ?? 0, total: row.serviceCount } }}</span>
+        }
+        @if (row.scheduledDate; as scheduled) {
+          <span>{{ 'SHOPMGMT.DISPATCH_BOARD.SCHEDULED' | translate: { date: (scheduled | date: 'mediumDate') } }}</span>
+        }
+      </span>
+    </span>
+
+    <span class="r-certs">
+      <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_SKILLS' | translate">&mdash;</span>
+    </span>
+
+    <span class="r-hrs">
+      @if (row.estimatedHours !== null) {
+        {{ 'SHOPMGMT.DISPATCH_BOARD.HOURS_ESTIMATED' | translate: { hours: row.estimatedHours } }}
+      } @else {
+        <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_HOURS' | translate">&mdash;</span>
+      }
+      <small class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_DUE' | translate">&mdash;</small>
+    </span>
+
+    <!-- mechanic slot -->
+    @if (row.mechanicId) {
+      <span class="slot filled">
+        <span class="si" aria-hidden="true">{{ row.mechanicInitials }}</span>
+        <span class="sl">{{ row.mechanicName }}</span>
+        <button type="button" class="clear" (click)="clearMechanic(row)"
+          [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.CLEAR_MECHANIC_ARIA' | translate: { workorder: row.number }">&times;</button>
+      </span>
+    } @else {
+      <button type="button" class="slot" (click)="openPicker('MECHANIC', row.workorderId)"
+        [disabled]="row.status === 'DRAFT'"
+        [attr.title]="row.status === 'DRAFT' ? ('SHOPMGMT.DISPATCH_BOARD.DRAFT_NO_MECHANIC' | translate) : null">
+        {{ 'SHOPMGMT.DISPATCH_BOARD.ADD_MECHANIC' | translate }}
+      </button>
+    }
+
+    <!-- bay slot -->
+    @if (row.bayId) {
+      <span class="slot filled">
+        <span class="sl">{{ row.bayName }}</span>
+        <button type="button" class="clear" (click)="clearBay(row)"
+          [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.CLEAR_BAY_ARIA' | translate: { workorder: row.number }">&times;</button>
+      </span>
+    } @else if (row.parked) {
+      <button type="button" class="slot held" (click)="openPicker('BAY', row.workorderId)">
+        {{ 'SHOPMGMT.DISPATCH_BOARD.PARKED' | translate }}
+      </button>
+    } @else {
+      <button type="button" class="slot" (click)="openPicker('BAY', row.workorderId)">
+        {{ 'SHOPMGMT.DISPATCH_BOARD.ADD_BAY' | translate }}
+      </button>
+    }
+  </article>
+</ng-template>
