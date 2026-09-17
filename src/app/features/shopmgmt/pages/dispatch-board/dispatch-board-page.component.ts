@@ -11,9 +11,9 @@ import {
   BoardState,
   BoardStats,
   DashboardResponse,
+  FreeHoursReason,
   MechanicAvailability,
   MechanicCard,
-  MechanicClockState,
   MechanicStatus,
   PositionKind,
   RowLane,
@@ -23,7 +23,14 @@ import {
   WorkorderSummary,
 } from '../../models/dispatch-board.models';
 import { isoDateLocal } from '../../models/capacity-calendar.models';
-import { BayInventory, BayInventoryEntry, DispatchBoardService, TechnicianSkills } from '../../services/dispatch-board.service';
+import {
+  BayInventory,
+  BayInventoryEntry,
+  ClockStates,
+  DispatchBoardService,
+  TechnicianShifts,
+  TechnicianSkills,
+} from '../../services/dispatch-board.service';
 import { LocationPickerComponent } from '../../../location/components/location-picker/location-picker.component';
 import { AuthService } from '../../../../core/services/auth.service';
 import { SHOPMGMT_PAGE, WORKEXEC_PAGE } from '../../../../core/security/route-permissions';
@@ -138,8 +145,8 @@ export class DispatchBoardPageComponent implements OnInit {
   readonly bayInventory = signal<BayInventory>(new Map());
   readonly technicianSkills = signal<TechnicianSkills>(new Map());
 
-  /** Which location the enrichment maps above describe, so a switch can drop them. */
-  private enrichedLocation: string | null = null;
+  /** Which (location, date) the enrichment maps above describe, so a switch drops them. */
+  private enrichedKey: string | null = null;
 
   /** Orders enrichment responses: two reads of the same shop can still overlap. */
   private enrichmentSeq = 0;
@@ -164,21 +171,14 @@ export class DispatchBoardPageComponent implements OnInit {
   readonly pendingClockPersonIds = signal<ReadonlySet<string>>(new Set());
 
   /**
-   * Clock state this board has been *told*, keyed by person id — never guessed.
-   * An entry is written only from a server answer to a clock write on this
-   * card: the `WorkSessionDto` a start or stop returns, or the refusal that
-   * names the state instead (a 409 on start says the session is already open).
-   * A mechanic with no entry stays `UNKNOWN` and is offered both actions.
-   *
-   * This is not a cache of a read, because there is no read: see
-   * `MechanicClockState`. It therefore goes stale silently if a session is
-   * started or ended anywhere else, and the 30s poll cannot correct it —
-   * backend issue #2061 replaces the whole mechanism with a real field.
+   * Clock state per person, as the availability read answers it. A person the
+   * map omits is one the caller may not see — pos-people nulls `clockState`
+   * rather than refusing the read — and their card offers both actions.
    */
-  private readonly observedClockState = signal<ReadonlyMap<string, MechanicClockState>>(new Map());
+  readonly clockStates = signal<ClockStates>(new Map());
 
-  /** Which (location, date) `observedClockState` describes; a switch drops it. */
-  private clockStateKey: string | null = null;
+  /** Each technician's shift window, behind the free-hours figure. */
+  readonly technicianShifts = signal<TechnicianShifts>(new Map());
 
   /**
    * Monotonic read counter. `refresh()`, the 30s poll and the post-mutation
@@ -228,8 +228,12 @@ export class DispatchBoardPageComponent implements OnInit {
   /**
    * Clocking in and out is a pos-people write on a separate authority from
    * anything else on this board, so a dispatcher who can place work is not
-   * thereby a timekeeper. See `SHOPMGMT_PAGE.mechanicClock` for why the code it
-   * asks for is provisional.
+   * thereby a timekeeper.
+   *
+   * pos-people admits the person themself *or* a `people:timekeeping:approve`
+   * holder. This board is a dispatcher's tool, clocking other people, so it
+   * asks for the grant; a mechanic clocking themselves does it from their own
+   * self-service view, not from here.
    */
   readonly canManageClock = computed(
     () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(SHOPMGMT_PAGE.mechanicClock),
@@ -462,14 +466,8 @@ export class DispatchBoardPageComponent implements OnInit {
 
       // The read's own callbacks write and read board signals; untracked keeps
       // those out of this effect's dependencies so a response cannot re-trigger
-      // the load that produced it. Clock state is dropped here rather than in
-      // `load`, which the 30s poll and every refresh also call: this runs on a
-      // change of selection alone, which is exactly when the observed state
-      // stops describing what is on screen.
-      const sub = untracked(() => {
-        this.resetClockStateFor(this.toRequestKey(locationId, date));
-        return this.load(locationId, date);
-      });
+      // the load that produced it.
+      const sub = untracked(() => this.load(locationId, date));
       onCleanup(() => sub.unsubscribe());
     });
   }
@@ -510,7 +508,7 @@ export class DispatchBoardPageComponent implements OnInit {
             return;
           }
           this.finishRead(seq);
-          this.loadEnrichment(locationId);
+          this.loadEnrichment(locationId, date);
           if (!this.pollingStarted) {
             this.startPolling();
           }
@@ -780,6 +778,23 @@ export class DispatchBoardPageComponent implements OnInit {
   // Timekeeping clock
   // -------------------------------------------------------------------------
 
+  /**
+   * Which placeholder message stands in for a missing free-hours figure. Each
+   * reason gets its own wording: "the shop is closed today" and "this board
+   * could not read the shop's hours" are different facts, and collapsing them
+   * into one message would hide a data problem behind a normal day.
+   */
+  freeHoursReasonKey(mechanic: MechanicCard): string {
+    switch (mechanic.freeHoursReason) {
+      case 'CLOSED':
+        return 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS_CLOSED';
+      case 'OFF_ROSTER':
+        return 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS_OFF_ROSTER';
+      default:
+        return 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS';
+    }
+  }
+
   /** Whether a clock write on this mechanic is in flight. */
   isClockPending(personId: string): boolean {
     return this.pendingClockPersonIds().has(personId);
@@ -859,7 +874,6 @@ export class DispatchBoardPageComponent implements OnInit {
 
     call.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.setObservedClockState(personId, action === 'IN' ? 'CLOCKED_IN' : 'CLOCKED_OUT');
         this.toast.set({
           id: toastId,
           key: this.toClockSuccessKey(action, name !== null),
@@ -867,16 +881,13 @@ export class DispatchBoardPageComponent implements OnInit {
           tone: 'INFO',
           undo: null,
         });
-        this.markClockPending(personId, false);
+        // Read the state back rather than predicting it, the way the placement
+        // writes do. The guard is held across the re-read: released at the
+        // write, the card would still show the pre-write state and a second
+        // press would send the action that just succeeded.
+        this.reloadClockStates(() => this.markClockPending(personId, false));
       },
       error: (err: unknown) => {
-        // A refusal is the backend naming the state this board could not read.
-        // Recording it turns the failed press into the one thing that was
-        // missing, so the next press offers the action that can succeed.
-        const contradiction = this.clockStateFromRefusal(action, err);
-        if (contradiction) {
-          this.setObservedClockState(personId, contradiction);
-        }
         this.toast.set({
           id: toastId,
           key: this.toClockErrorKey(action, err),
@@ -884,7 +895,16 @@ export class DispatchBoardPageComponent implements OnInit {
           tone: 'ERROR',
           undo: null,
         });
-        this.markClockPending(personId, false);
+        // A 409 on start or a 404 on stop is the backend saying this board's
+        // copy is stale — the session was opened or closed elsewhere. Re-read
+        // instead of recording the contradiction by hand: the endpoint is the
+        // authority and it also carries the break state, which the refusal
+        // does not name.
+        if (this.isClockRefusal(action, err)) {
+          this.reloadClockStates(() => this.markClockPending(personId, false));
+        } else {
+          this.markClockPending(personId, false);
+        }
       },
     });
   }
@@ -899,25 +919,37 @@ export class DispatchBoardPageComponent implements OnInit {
     this.pendingClockPersonIds.set(next);
   }
 
-  private setObservedClockState(personId: string, state: MechanicClockState): void {
-    const next = new Map(this.observedClockState());
-    next.set(personId, state);
-    this.observedClockState.set(next);
-  }
-
   /**
-   * Observed clock state belongs to one shop on one day. Carrying it across a
-   * location or date switch would label a different roster — or the same people
-   * on a day the state was never about — with yesterday's answer.
+   * Re-read clock state alone, without disturbing the board.
+   *
+   * A clock write changes nothing the dashboard reports — not the assignment,
+   * not the bay, not the lane — so the full `reloadBoard` would redraw every
+   * row to pick up one field. `onSettled` runs whichever way the read goes: a
+   * failed re-read must still release the card, or it stays guarded for good.
    */
-  private resetClockStateFor(key: string): void {
-    if (this.clockStateKey === key) {
+  private reloadClockStates(onSettled?: () => void): void {
+    const locationId = this.selectedLocationId().trim();
+    if (!locationId) {
+      onSettled?.();
       return;
     }
-    this.clockStateKey = key;
-    if (this.observedClockState().size > 0) {
-      this.observedClockState.set(new Map());
-    }
+    const date = this.selectedDate();
+    const seq = ++this.enrichmentSeq;
+    this.dispatchBoardService
+      .getClockStates(locationId, date)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(states => {
+        // A location or date switch while this was in flight must not paint the
+        // new board with the old shop's clock state.
+        if (
+          seq === this.enrichmentSeq &&
+          this.selectedLocationId().trim() === locationId &&
+          this.selectedDate() === date
+        ) {
+          this.clockStates.set(states);
+        }
+        onSettled?.();
+      });
   }
 
   private toClockSuccessKey(action: 'IN' | 'OUT', named: boolean): string {
@@ -954,16 +986,14 @@ export class DispatchBoardPageComponent implements OnInit {
     return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_GENERIC';
   }
 
-  /** Only the two refusals that state a fact about the session teach anything. */
-  private clockStateFromRefusal(action: 'IN' | 'OUT', err: unknown): MechanicClockState | null {
+  /**
+   * The two refusals that contradict the board's copy of the clock, rather than
+   * reporting a problem with the request itself. Both mean the session moved
+   * under us, so both are worth a re-read; a 403 or an unknown person is not.
+   */
+  private isClockRefusal(action: 'IN' | 'OUT', err: unknown): boolean {
     const code = this.toApiErrorCode(err);
-    if (action === 'IN' && code === 'INVALID_STATE') {
-      return 'CLOCKED_IN';
-    }
-    if (action === 'OUT' && code === 'WORK_SESSION_NOT_FOUND') {
-      return 'CLOCKED_OUT';
-    }
-    return null;
+    return (action === 'IN' && code === 'INVALID_STATE') || (action === 'OUT' && code === 'WORK_SESSION_NOT_FOUND');
   }
 
   assignBay(row: WorkorderRow, bayId: string): void {
@@ -1229,7 +1259,7 @@ export class DispatchBoardPageComponent implements OnInit {
           // this may be the first read of a shop switched to mid-write, and
           // `load` skipped its own enrichment when this read superseded it.
           if (this.applySuccess(response, seq, key)) {
-            this.loadEnrichment(locationId);
+            this.loadEnrichment(locationId, date);
           }
           this.finishRead(seq);
         },
@@ -1294,7 +1324,9 @@ export class DispatchBoardPageComponent implements OnInit {
           // skill chips go stale otherwise, and an out-of-service bay stays
           // draggable until someone presses Refresh.
           if (this.applySuccess(response, seq, key)) {
-            this.loadEnrichment(this.selectedLocationId().trim());
+            // The poll refreshes the clock too, so a session started or ended
+            // elsewhere corrects itself within 30s.
+            this.loadEnrichment(this.selectedLocationId().trim(), this.selectedDate());
           }
           this.finishRead(seq);
         },
@@ -1316,36 +1348,49 @@ export class DispatchBoardPageComponent implements OnInit {
    * beside the board rather than gating it — both service calls already answer
    * an empty map on failure, and the dispatch projection alone still renders.
    */
-  private loadEnrichment(locationId: string): void {
-    // Drop the previous shop's maps as the new load STARTS, not when it lands.
-    // The inventory is the bay rail's roster of record, so holding the old one
-    // across the gap offers another site's bays as draggable on this board —
-    // and placing one is a 422, the position being at another site.
-    if (this.enrichedLocation !== null && this.enrichedLocation !== locationId) {
-      this.bayInventory.set(new Map());
-      this.technicianSkills.set(new Map());
+  private loadEnrichment(locationId: string, date: string): void {
+    // Drop the previous selection's maps as the new load STARTS, not when it
+    // lands. The inventory is the bay rail's roster of record, so holding the
+    // old one across the gap offers another site's bays as draggable on this
+    // board — and placing one is a 422, the position being at another site.
+    //
+    // The shift window and the clock state are keyed on the DATE as well: a
+    // window is resolved for one day, and the clock is a fact about now. Held
+    // across a date change they would label the new day with the old one's
+    // hours and a clock reading that was never about it.
+    const key = this.toRequestKey(locationId, date);
+    if (this.enrichedKey !== null && this.enrichedKey !== key) {
+      this.technicianShifts.set(new Map());
+      this.clockStates.set(new Map());
+      if (this.enrichedKey.split('|')[0] !== locationId) {
+        this.bayInventory.set(new Map());
+        this.technicianSkills.set(new Map());
+      }
     }
-    this.enrichedLocation = locationId;
+    this.enrichedKey = key;
     const seq = ++this.enrichmentSeq;
 
     forkJoin({
       bays: this.dispatchBoardService.getBayInventory(locationId),
-      skills: this.dispatchBoardService.getTechnicianSkills(locationId),
+      roster: this.dispatchBoardService.getTechnicianRoster(locationId, date),
+      clocks: this.dispatchBoardService.getClockStates(locationId, date),
     })
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         catchError(() => of(null)),
       )
       .subscribe(result => {
-        // A location switch while these were in flight must not let the old
+        // A selection switch while these were in flight must not let the old
         // shop's bay types and credentials paint the new board — and two reads
-        // of the SAME shop can overlap, so an older one landing last would put
-        // back the lifecycle and credential data the newer one just corrected.
-        if (!result || seq !== this.enrichmentSeq || this.selectedLocationId().trim() !== locationId) {
+        // of the SAME selection can overlap, so an older one landing last would
+        // put back the data the newer one just corrected.
+        if (!result || seq !== this.enrichmentSeq || this.toRequestKey(this.selectedLocationId().trim(), this.selectedDate()) !== key) {
           return;
         }
         this.bayInventory.set(result.bays);
-        this.technicianSkills.set(result.skills);
+        this.technicianSkills.set(result.roster.skills);
+        this.technicianShifts.set(result.roster.shifts);
+        this.clockStates.set(result.clocks);
       });
   }
 
@@ -1555,6 +1600,7 @@ export class DispatchBoardPageComponent implements OnInit {
     // Same reconciliation the row uses: reading only the summary leaves this
     // chip blank while the row names a bay, and the two surfaces disagree.
     const bayId = workorder ? this.toRowBayId(workorder) : null;
+    const clock = this.clockStates().get(mechanic.personId);
 
     return {
       personId: mechanic.personId,
@@ -1565,10 +1611,45 @@ export class DispatchBoardPageComponent implements OnInit {
       assignedWorkorderId: mechanic.assignedWorkorderId,
       whereLabel: bayId ? (this.bayNamesById().get(bayId) ?? null) : null,
       breakExpectedReturn: mechanic.breakExpectedReturn ?? null,
-      freeHours: null,
-      // Nothing on the response says; only a clock write on this card can fill it.
-      clockState: this.observedClockState().get(mechanic.personId) ?? 'UNKNOWN',
+      ...this.toFreeHours(mechanic.personId, workorder),
+      clockState: clock?.state ?? 'UNKNOWN',
+      workSessionId: clock?.workSessionId ?? null,
     };
+  }
+
+  /**
+   * Hours left in the shift window after the mechanic's committed work.
+   *
+   * The window is the shop's operating hours standing in for a personal roster
+   * (see `TechnicianShift`), so this is deliberately coarse. What it must not
+   * do is turn an absence into a number: a closed day, unreadable hours and a
+   * technician the roster read did not return are each null with a reason, and
+   * the card renders the placeholder that names it.
+   *
+   * Committed time is the labour estimate on the workorder the mechanic holds
+   * — the only per-mechanic commitment this board has. A workorder with no
+   * estimate commits nothing here rather than guessing at one, which makes the
+   * figure an upper bound; that is the honest reading of the data available.
+   */
+  private toFreeHours(
+    personId: string,
+    workorder: WorkorderSummary | undefined,
+  ): { freeHours: number | null; freeHoursReason: FreeHoursReason | null } {
+    const shift = this.technicianShifts().get(personId);
+    if (!shift) {
+      return { freeHours: null, freeHoursReason: 'OFF_ROSTER' };
+    }
+    if (shift.status === 'CLOSED') {
+      return { freeHours: null, freeHoursReason: 'CLOSED' };
+    }
+    if (shift.status !== 'DERIVED' || shift.minutes === null) {
+      return { freeHours: null, freeHoursReason: 'UNKNOWN' };
+    }
+    const committed = workorder?.estimatedLaborHours ?? 0;
+    // Never below zero: an estimate longer than the shop's open hours means the
+    // job runs past close, which is nothing free, not negative free time.
+    const free = Math.max(0, shift.minutes / 60 - committed);
+    return { freeHours: Math.round(free * 10) / 10, freeHoursReason: null };
   }
 
   /**

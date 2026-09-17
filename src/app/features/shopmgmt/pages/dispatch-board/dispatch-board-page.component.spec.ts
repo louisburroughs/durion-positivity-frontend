@@ -167,7 +167,8 @@ describe('DispatchBoardPageComponent', () => {
     getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: 'LOC-1' })),
     getAvailability: vi.fn().mockReturnValue(of([])),
     getBayInventory: vi.fn().mockReturnValue(of(new Map())),
-    getTechnicianSkills: vi.fn().mockReturnValue(of(new Map())),
+    getTechnicianRoster: vi.fn().mockReturnValue(of({ skills: new Map(), shifts: new Map() })),
+    getClockStates: vi.fn().mockReturnValue(of(new Map())),
     assignMechanic: vi.fn().mockReturnValue(of({})),
     releaseMechanic: vi.fn().mockReturnValue(of({})),
     assignBay: vi.fn().mockReturnValue(of({})),
@@ -198,7 +199,8 @@ describe('DispatchBoardPageComponent', () => {
     dispatchBoardServiceStub.getDashboard.mockReturnValue(of(emptyDashboard));
     dispatchBoardServiceStub.getPrimaryLocation.mockReturnValue(of({ locationId: 'LOC-1' }));
     dispatchBoardServiceStub.getBayInventory.mockReturnValue(of(new Map()));
-    dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(of(new Map()));
+    dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(of({ skills: new Map(), shifts: new Map() }));
+    dispatchBoardServiceStub.getClockStates.mockReturnValue(of(new Map()));
     dispatchBoardServiceStub.assignMechanic.mockReturnValue(of({}));
     dispatchBoardServiceStub.releaseMechanic.mockReturnValue(of({}));
     dispatchBoardServiceStub.assignBay.mockReturnValue(of({}));
@@ -558,8 +560,8 @@ describe('DispatchBoardPageComponent', () => {
     });
 
     it('renders the skill codes the technician roster supplies', () => {
-      dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(
-        of(new Map([['M1', ['BRAKES', 'DOT']]])),
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(
+        of({ skills: new Map([['M1', ['BRAKES', 'DOT']]]), shifts: new Map() }),
       );
       renderWith(fullDashboard);
 
@@ -567,11 +569,101 @@ describe('DispatchBoardPageComponent', () => {
       expect(certs.map(cert => cert.textContent?.trim())).toEqual(['BRAKES', 'DOT']);
     });
 
-    it('leaves the free-hours slot as a not-available placeholder', () => {
+    it('leaves the free-hours slot as a not-available placeholder when no shift is known', () => {
       renderWith(fullDashboard);
 
       expect(component.mechanics()[0].freeHours).toBeNull();
       expect(fixture.nativeElement.querySelector('.mech .mfree.na')).toBeTruthy();
+    });
+  });
+
+  describe('free hours', () => {
+    /** Render with a shift window for M1 (assigned, 2 h estimate) and M2 (idle). */
+    function renderWithShift(minutes: number | null, status = 'DERIVED'): void {
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(
+        of({
+          skills: new Map(),
+          shifts: new Map([
+            ['M1', { status, source: 'LOCATION_HOURS', minutes }],
+            ['M2', { status, source: 'LOCATION_HOURS', minutes }],
+          ]),
+        }),
+      );
+      renderWith(fullDashboard);
+    }
+
+    it('subtracts the assigned workorder estimate from the shift window', () => {
+      // wo-assigned carries a 2 h estimate; an 8 h window leaves 6 h.
+      renderWithShift(480);
+
+      const ray = component.mechanics().find(mechanic => mechanic.personId === 'M1');
+      expect(ray?.freeHours).toBe(6);
+      expect(ray?.freeHoursReason).toBeNull();
+    });
+
+    it('gives an unassigned mechanic the whole window', () => {
+      renderWithShift(480);
+
+      expect(component.mechanics().find(mechanic => mechanic.personId === 'M2')?.freeHours).toBe(8);
+    });
+
+    it('renders the figure rather than the placeholder', () => {
+      renderWithShift(480);
+      const free: HTMLElement | null = fixture.nativeElement.querySelector('.mech .mfree');
+
+      expect(free?.classList.contains('na')).toBe(false);
+      expect(free?.textContent?.trim()).toContain('SHOPMGMT.DISPATCH_BOARD.FREE_HOURS');
+    });
+
+    // An estimate longer than the shop is open means the job runs past close.
+    // That is nothing free, not negative free time.
+    it('never reports negative free hours', () => {
+      renderWithShift(60);
+
+      expect(component.mechanics().find(mechanic => mechanic.personId === 'M1')?.freeHours).toBe(0);
+    });
+
+    it('says the shop is closed rather than showing zero', () => {
+      renderWithShift(null, 'CLOSED');
+      const card = component.mechanics()[0];
+
+      expect(card.freeHours).toBeNull();
+      expect(card.freeHoursReason).toBe('CLOSED');
+      expect(component.freeHoursReasonKey(card)).toBe(
+        'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS_CLOSED',
+      );
+    });
+
+    it('distinguishes unreadable hours from a closed day', () => {
+      renderWithShift(null, 'UNKNOWN');
+      const card = component.mechanics()[0];
+
+      expect(card.freeHoursReason).toBe('UNKNOWN');
+      expect(component.freeHoursReasonKey(card)).toBe('SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS');
+    });
+
+    // The dispatch projection can carry a mechanic the shop-manager roster read
+    // does not return; that is an absence, not a zero-hour shift.
+    it('marks a mechanic the roster read did not return as off-roster', () => {
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(
+        of({ skills: new Map(), shifts: new Map([['M2', { status: 'DERIVED', source: 'LOCATION_HOURS', minutes: 480 }]]) }),
+      );
+      renderWith(fullDashboard);
+
+      const card = component.mechanics().find(mechanic => mechanic.personId === 'M1');
+      expect(card?.freeHours).toBeNull();
+      expect(card?.freeHoursReason).toBe('OFF_ROSTER');
+      expect(component.freeHoursReasonKey(card!)).toBe(
+        'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS_OFF_ROSTER',
+      );
+    });
+
+    // A DERIVED day with no minutes is a contract violation, not a full shift.
+    it('treats a DERIVED window with no minutes as unknown', () => {
+      renderWithShift(null, 'DERIVED');
+
+      expect(component.mechanics()[0].freeHours).toBeNull();
+      expect(component.mechanics()[0].freeHoursReason).toBe('UNKNOWN');
     });
   });
 
@@ -602,24 +694,61 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.toast()?.tone).toBe('INFO');
     });
 
-    it('collapses to a single opposing action once a write has answered', () => {
+    it('renders the state the availability read reports, as a single opposing action', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+      );
       renderWith(fullDashboard);
 
+      expect(component.mechanics()[0].clockState).toBe('CLOCKED_IN');
+      expect(component.mechanics()[0].workSessionId).toBe('ws-1');
+      expect(clockButtonsFor(0).map(button => button.getAttribute('aria-label'))).toEqual([
+        'SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA',
+      ]);
+    });
+
+    // ON_BREAK is clocked in, so the card offers the way out of the shift, not
+    // the way into one.
+    it('treats a mechanic on break as clocked in', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-1' }]])),
+      );
+      renderWith(fullDashboard);
+
+      expect(component.mechanics()[0].clockState).toBe('ON_BREAK');
+      expect(clockButtonsFor(0).map(button => button.getAttribute('aria-label'))).toEqual([
+        'SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA',
+      ]);
+    });
+
+    it('reads the state back after a write rather than predicting it', () => {
+      renderWith(fullDashboard);
+      expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
+
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+      );
       component.clockIn(component.mechanics()[0]);
       fixture.detectChanges();
 
+      expect(dispatchBoardServiceStub.getClockStates).toHaveBeenCalled();
       expect(component.mechanics()[0].clockState).toBe('CLOCKED_IN');
       expect(clockButtonsFor(0).map(button => button.getAttribute('aria-label'))).toEqual([
         'SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA',
       ]);
+    });
 
-      component.clockOut(component.mechanics()[0]);
-      fixture.detectChanges();
+    // A clock write changes nothing the dashboard reports, so redrawing every
+    // row to pick up one field would be wasted work.
+    it('re-reads only the clock, not the whole board', () => {
+      renderWith(fullDashboard);
+      const boardReads = dispatchBoardServiceStub.getDashboard.mock.calls.length;
+      const clockReads = dispatchBoardServiceStub.getClockStates.mock.calls.length;
 
-      expect(component.mechanics()[0].clockState).toBe('CLOCKED_OUT');
-      expect(clockButtonsFor(0).map(button => button.getAttribute('aria-label'))).toEqual([
-        'SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA',
-      ]);
+      component.clockIn(component.mechanics()[0]);
+
+      expect(dispatchBoardServiceStub.getDashboard.mock.calls.length).toBe(boardReads);
+      expect(dispatchBoardServiceStub.getClockStates.mock.calls.length).toBe(clockReads + 1);
     });
 
     it('never offers an undo: a work session is a record, not a placement', () => {
@@ -639,28 +768,33 @@ describe('DispatchBoardPageComponent', () => {
       expect(dispatchBoardServiceStub.getDashboard.mock.calls.length).toBe(readsBefore);
     });
 
-    it('learns the state from a double clock-in refusal', () => {
+    // A 409 on start means the session was opened somewhere else, so the
+    // board's copy is stale. Re-reading corrects it — and picks up the break
+    // state, which the refusal does not name.
+    it('re-reads after a double clock-in refusal', () => {
       renderWith(fullDashboard);
       dispatchBoardServiceStub.clockIn.mockReturnValueOnce(
         throwError(() => ({ status: 409, error: { code: 'INVALID_STATE' } })),
+      );
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-9' }]])),
       );
 
       component.clockIn(component.mechanics()[0]);
       fixture.detectChanges();
 
       expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_ALREADY_CLOCKED_IN');
-      // The refusal is the only account of the session there is, so the card
-      // now offers the action that can actually succeed.
-      expect(component.mechanics()[0].clockState).toBe('CLOCKED_IN');
-      expect(clockButtonsFor(0).map(button => button.getAttribute('aria-label'))).toEqual([
-        'SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA',
-      ]);
+      expect(component.mechanics()[0].clockState).toBe('ON_BREAK');
+      expect(component.isClockPending('M1')).toBe(false);
     });
 
-    it('learns the state from a clock-out with no open session', () => {
+    it('re-reads after a clock-out with no open session', () => {
       renderWith(fullDashboard);
       dispatchBoardServiceStub.clockOut.mockReturnValueOnce(
         throwError(() => ({ status: 404, error: { code: 'WORK_SESSION_NOT_FOUND' } })),
+      );
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]])),
       );
 
       component.clockOut(component.mechanics()[0]);
@@ -668,6 +802,22 @@ describe('DispatchBoardPageComponent', () => {
 
       expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_CLOCKED_IN');
       expect(component.mechanics()[0].clockState).toBe('CLOCKED_OUT');
+    });
+
+    // A refused caller is not a stale board: nothing about the session changed,
+    // so spending a read on it would tell the board nothing it does not know.
+    it('does not re-read after a refusal that says nothing about the session', () => {
+      renderWith(fullDashboard);
+      const clockReads = dispatchBoardServiceStub.getClockStates.mock.calls.length;
+      dispatchBoardServiceStub.clockIn.mockReturnValueOnce(
+        throwError(() => new HttpErrorResponse({ status: 403 })),
+      );
+
+      component.clockIn(component.mechanics()[0]);
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_FORBIDDEN');
+      expect(dispatchBoardServiceStub.getClockStates.mock.calls.length).toBe(clockReads);
+      expect(component.isClockPending('M1')).toBe(false);
     });
 
     it('maps an unknown person and a refused caller onto their own messages', () => {
@@ -738,22 +888,40 @@ describe('DispatchBoardPageComponent', () => {
       expect(dispatchBoardServiceStub.clockIn).not.toHaveBeenCalled();
     });
 
-    it('drops what it learned when the board switches location', () => {
+    it('drops clock state when the board switches location', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+      );
       renderWith(fullDashboard);
-      component.clockIn(component.mechanics()[0]);
       expect(component.mechanics()[0].clockState).toBe('CLOCKED_IN');
 
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(new Subject());
       component.onLocationPicked('LOC-2');
       fixture.detectChanges();
 
-      // Observed state described the old selection; carrying it over would
-      // label another shop's roster with it.
+      // The old shop's clock reading must not paint the new board while the
+      // new one is still in flight.
+      expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
+    });
+
+    // The clock is a fact about now, and a window is resolved for one day.
+    it('drops clock state when the board switches date', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+      );
+      renderWith(fullDashboard);
+      expect(component.mechanics()[0].clockState).toBe('CLOCKED_IN');
+
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(new Subject());
+      component.selectedDate.set('2026-05-04');
+      fixture.detectChanges();
+
       expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
     });
 
     it('hides the control from a caller without the timekeeping authority', () => {
       authStub.hasAnyPermission.mockImplementation(
-        (codes: readonly string[]) => !codes.includes('people:timekeeping:view'),
+        (codes: readonly string[]) => !codes.includes('people:timekeeping:approve'),
       );
       renderWith(fullDashboard);
 
@@ -1041,7 +1209,7 @@ describe('DispatchBoardPageComponent', () => {
   describe('enrichment failures', () => {
     it('still renders the board when bay types and technician skills both fail', () => {
       dispatchBoardServiceStub.getBayInventory.mockReturnValue(throwError(() => ({ status: 503 })));
-      dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(throwError(() => ({ status: 503 })));
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(throwError(() => ({ status: 503 })));
       renderWith(fullDashboard);
 
       expect(component.state()).toBe('ready');
@@ -1096,7 +1264,7 @@ describe('DispatchBoardPageComponent', () => {
 
       const pendingInventory = new Subject<never>();
       dispatchBoardServiceStub.getBayInventory.mockReturnValue(pendingInventory);
-      dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(new Subject());
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(new Subject());
       component.selectedLocationId.set('LOC-2');
       component.refresh();
 
@@ -1105,13 +1273,13 @@ describe('DispatchBoardPageComponent', () => {
     });
 
     it('drops enrichment that arrives after the location changed', () => {
-      const slowSkills = new Subject<ReadonlyMap<string, readonly string[]>>();
-      dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(slowSkills);
+      const slowRoster = new Subject<{ skills: ReadonlyMap<string, readonly string[]>; shifts: ReadonlyMap<string, unknown> }>();
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(slowRoster);
       renderWith(fullDashboard);
 
       component.selectedLocationId.set('LOC-2');
-      slowSkills.next(new Map([['M1', ['STALE']]]));
-      slowSkills.complete();
+      slowRoster.next({ skills: new Map([['M1', ['STALE']]]), shifts: new Map() });
+      slowRoster.complete();
 
       expect(component.mechanics().find(m => m.personId === 'M1')?.skillCodes).toEqual([]);
     });

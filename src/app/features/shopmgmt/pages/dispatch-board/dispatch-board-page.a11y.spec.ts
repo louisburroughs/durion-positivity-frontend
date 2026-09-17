@@ -89,7 +89,13 @@ describe('DispatchBoardPageComponent accessibility', () => {
     getBayInventory: vi.fn().mockReturnValue(
       of(new Map([['B4', { bayId: 'B4', name: 'Bay 4', kind: 'ALIGNMENT', outOfService: false }]])),
     ),
-    getTechnicianSkills: vi.fn().mockReturnValue(of(new Map([['M1', ['BRAKES']]]))),
+    getTechnicianRoster: vi.fn().mockReturnValue(
+      of({
+        skills: new Map([['M1', ['BRAKES']]]),
+        shifts: new Map([['M1', { status: 'DERIVED', source: 'LOCATION_HOURS', minutes: 480 }]]),
+      }),
+    ),
+    getClockStates: vi.fn().mockReturnValue(of(new Map())),
     assignMechanic: vi.fn().mockReturnValue(of({})),
     releaseMechanic: vi.fn().mockReturnValue(of({})),
     assignBay: vi.fn().mockReturnValue(of({})),

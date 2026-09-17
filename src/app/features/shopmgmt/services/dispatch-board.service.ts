@@ -9,10 +9,15 @@ import {
   TechnicianAssignmentAPIService,
 } from '@durion-sdk/workorder';
 import { BayAPIService } from '@durion-sdk/location';
-import { TechnicianAPIService } from '@durion-sdk/shop-manager';
+import {
+  LocationTechnicianRosterEntryResponseShiftSourceEnum,
+  LocationTechnicianRosterEntryResponseShiftStatusEnum,
+  TechnicianAPIService,
+} from '@durion-sdk/shop-manager';
 import {
   PeopleAvailabilityAPIService,
   PeopleAvailabilityResponse,
+  PeopleAvailabilityResponseClockStateEnum,
   PrimaryLocationResponse,
   WorkSessionDto,
   WorkSessionsAPIService,
@@ -45,6 +50,52 @@ export type BayInventory = ReadonlyMap<string, BayInventoryEntry>;
 
 /** The Durion skill codes a technician is credentialled for, keyed by person id. */
 export type TechnicianSkills = ReadonlyMap<string, readonly string[]>;
+
+/** Both halves of the shop-manager roster read, which is one call. */
+export interface TechnicianRoster {
+  readonly skills: TechnicianSkills;
+  readonly shifts: TechnicianShifts;
+}
+
+/**
+ * One technician's shift window as the shop-manager roster reports it.
+ *
+ * **The window is a PLACEHOLDER** and the SDK says so on every field: it is the
+ * shop location's operating hours for the date, not the person's own roster, so
+ * every technician at a location carries the same one and staggered shifts,
+ * part-time hours, overtime and PTO are invisible to it. `source` is the field
+ * to read to tell a placeholder window from a real one — it answers
+ * `LOCATION_HOURS` until per-person scheduling lands
+ * (durion-positivity-backend#71, blocked on #271).
+ */
+export interface TechnicianShift {
+  /** `DERIVED` carries a window; `CLOSED` and `UNKNOWN` never do. */
+  readonly status: ShiftStatus;
+  readonly source: ShiftSource;
+  /** Null unless `status` is `DERIVED`. */
+  readonly minutes: number | null;
+}
+
+export type ShiftStatus = LocationTechnicianRosterEntryResponseShiftStatusEnum;
+export type ShiftSource = LocationTechnicianRosterEntryResponseShiftSourceEnum;
+
+/** Each technician's shift window, keyed by person id. */
+export type TechnicianShifts = ReadonlyMap<string, TechnicianShift>;
+
+/**
+ * A person's timekeeping clock state, keyed by person id.
+ *
+ * A person the roster carries but this map does not is one whose state the
+ * caller may not see: pos-people nulls `clockState` for a row the caller holds
+ * no `people:timekeeping:view` over, rather than refusing the whole read.
+ */
+export type ClockStates = ReadonlyMap<string, ClockState>;
+
+export interface ClockState {
+  readonly state: PeopleAvailabilityResponseClockStateEnum;
+  /** The open session; null unless clocked in or on break. Break calls key by it. */
+  readonly workSessionId: string | null;
+}
 
 /**
  * One page is enough for a single shop's bays and technicians, at the same cap
@@ -124,8 +175,13 @@ export class DispatchBoardService {
   }
 
   /**
-   * Skill codes per technician, from shop management's HR-synchronized roster.
-   * One call for the whole shop — the People credential endpoint is per person.
+   * Skill codes and the shift window per technician, from shop management's
+   * HR-synchronized roster. One call for the whole shop — the People
+   * credential endpoint is per person — and one call for both, because the
+   * roster answers them together.
+   *
+   * The shift window is a placeholder; see `TechnicianShift`. `date` picks the
+   * roster day and the window is resolved for it in the location's timezone.
    *
    * Only ACTIVE credentials count, through the capacity calendar's own
    * `heldSkillCodes`: an expired, revoked or superseded certification is not
@@ -135,23 +191,67 @@ export class DispatchBoardService {
    * Enrichment, as above: a failure yields an empty map and the mechanic chips
    * render without their certification codes.
    */
-  getTechnicianSkills(locationId: string): Observable<TechnicianSkills> {
+  getTechnicianRoster(locationId: string, date: string): Observable<TechnicianRoster> {
     return this.technicianApi
-      .listLocationTechnicians(locationId.trim(), 'ACTIVE', undefined, 0, ROSTER_PAGE_SIZE)
+      .listLocationTechnicians(locationId.trim(), 'ACTIVE', undefined, this.toIsoDate(date), 0, ROSTER_PAGE_SIZE)
       .pipe(
         map(page => {
           const skills = new Map<string, readonly string[]>();
+          const shifts = new Map<string, TechnicianShift>();
           for (const entry of page.content ?? []) {
             const personId = entry.personId ?? entry.mechanicId;
             if (!personId) {
               continue;
             }
             skills.set(personId, Array.from(new Set(heldSkillCodes(entry.credentials))));
+            shifts.set(personId, {
+              status: entry.shiftStatus,
+              source: entry.shiftSource,
+              // Trust the endpoint's own contract: minutes are null whenever a
+              // bound is, and never negative. A window that arrives without
+              // them on a DERIVED day is unusable, not zero.
+              minutes: entry.shiftMinutes ?? null,
+            });
           }
-          return skills as TechnicianSkills;
+          return { skills: skills as TechnicianSkills, shifts: shifts as TechnicianShifts };
         }),
-        catchError(() => of(new Map<string, readonly string[]>() as TechnicianSkills)),
+        catchError(() =>
+          of({
+            skills: new Map<string, readonly string[]>() as TechnicianSkills,
+            shifts: new Map<string, TechnicianShift>() as TechnicianShifts,
+          }),
+        ),
       );
+  }
+
+  /**
+   * Who is on the timekeeping clock at this location, in one call.
+   *
+   * pos-people's own guidance: `getCurrentWorkSession` answers one person, and
+   * this list is "what a dispatch board needs". A row whose `clockState` is
+   * absent is one the caller may not see — the endpoint nulls the field rather
+   * than refusing the read — and is simply left out of the map.
+   *
+   * Enrichment, as above: a failure yields an empty map and every card falls
+   * back to offering both clock actions.
+   */
+  getClockStates(locationId: string, date: string): Observable<ClockStates> {
+    return this.getAvailability(locationId, date).pipe(
+      map(rows => {
+        const states = new Map<string, ClockState>();
+        for (const row of rows) {
+          if (!row.personId || !row.clockState) {
+            continue;
+          }
+          states.set(row.personId, {
+            state: row.clockState,
+            workSessionId: row.workSessionId ?? null,
+          });
+        }
+        return states as ClockStates;
+      }),
+      catchError(() => of(new Map<string, ClockState>() as ClockStates)),
+    );
   }
 
   /**

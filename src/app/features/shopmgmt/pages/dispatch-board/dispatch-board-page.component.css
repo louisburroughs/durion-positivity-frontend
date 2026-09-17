@@ -360,8 +360,18 @@
   white-space: nowrap;
 }
 
+/*
+ * A secondary reading beside the name, not a second heading: `.mname` sets the
+ * card's heading weight for the name, and the figure inherits it unless it says
+ * otherwise. Tabular figures so a column of them does not jitter.
+ */
 .mfree {
   margin-left: auto;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .mcerts {

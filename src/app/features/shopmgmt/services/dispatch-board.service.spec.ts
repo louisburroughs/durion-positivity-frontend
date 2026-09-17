@@ -251,7 +251,7 @@ describe('DispatchBoardService', () => {
     });
   });
 
-  describe('getTechnicianSkills()', () => {
+  describe('getTechnicianRoster()', () => {
     it('collects the skill codes each technician is credentialled for', () => {
       technicianStub.listLocationTechnicians.mockReturnValue(
         of({
@@ -269,11 +269,19 @@ describe('DispatchBoardService', () => {
       );
       const next = vi.fn();
 
-      service.getTechnicianSkills(' loc-1 ').subscribe(next);
+      service.getTechnicianRoster(' loc-1 ', '2026-04-18').subscribe(next);
 
-      expect(technicianStub.listLocationTechnicians).toHaveBeenCalledWith('loc-1', 'ACTIVE', undefined, 0, 500);
-      expect(next.mock.calls[0][0].get('p1')).toEqual(['BRAKES', 'DOT']);
-      expect(next.mock.calls[0][0].get('p2')).toEqual([]);
+      // `date` (SDK 0.42) sits between skillCode and the paging arguments.
+      expect(technicianStub.listLocationTechnicians).toHaveBeenCalledWith(
+        'loc-1',
+        'ACTIVE',
+        undefined,
+        '2026-04-18',
+        0,
+        500,
+      );
+      expect(next.mock.calls[0][0].skills.get('p1')).toEqual(['BRAKES', 'DOT']);
+      expect(next.mock.calls[0][0].skills.get('p2')).toEqual([]);
     });
 
     it('drops duplicate skill codes from renewed credentials', () => {
@@ -292,9 +300,9 @@ describe('DispatchBoardService', () => {
       );
       const next = vi.fn();
 
-      service.getTechnicianSkills('loc-1').subscribe(next);
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
 
-      expect(next.mock.calls[0][0].get('p1')).toEqual(['DOT']);
+      expect(next.mock.calls[0][0].skills.get('p1')).toEqual(['DOT']);
     });
 
     it('falls back to the mechanic id when the roster row carries no person id', () => {
@@ -303,9 +311,9 @@ describe('DispatchBoardService', () => {
       );
       const next = vi.fn();
 
-      service.getTechnicianSkills('loc-1').subscribe(next);
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
 
-      expect(next.mock.calls[0][0].get('m1')).toEqual(['HVAC']);
+      expect(next.mock.calls[0][0].skills.get('m1')).toEqual(['HVAC']);
     });
 
     // A lapsed certification is not competence: shown as a chip it mislabels the
@@ -328,9 +336,9 @@ describe('DispatchBoardService', () => {
       );
       const next = vi.fn();
 
-      service.getTechnicianSkills('loc-1').subscribe(next);
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
 
-      expect(next.mock.calls[0][0].get('p1')).toEqual(['BRAKES']);
+      expect(next.mock.calls[0][0].skills.get('p1')).toEqual(['BRAKES']);
     });
 
     it('answers an empty map when shop management is unreachable', () => {
@@ -340,7 +348,96 @@ describe('DispatchBoardService', () => {
       const next = vi.fn();
       const error = vi.fn();
 
-      service.getTechnicianSkills('loc-1').subscribe({ next, error });
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe({ next, error });
+
+      expect(error).not.toHaveBeenCalled();
+      expect(next.mock.calls[0][0].skills.size).toBe(0);
+      expect(next.mock.calls[0][0].shifts.size).toBe(0);
+    });
+
+    it('carries the placeholder shift window through for a DERIVED day', () => {
+      technicianStub.listLocationTechnicians.mockReturnValue(
+        of({
+          content: [
+            { personId: 'p1', shiftStatus: 'DERIVED', shiftSource: 'LOCATION_HOURS', shiftMinutes: 540 },
+          ],
+        }),
+      );
+      const next = vi.fn();
+
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
+
+      expect(next.mock.calls[0][0].shifts.get('p1')).toEqual({
+        status: 'DERIVED',
+        source: 'LOCATION_HOURS',
+        minutes: 540,
+      });
+    });
+
+    // CLOSED and UNKNOWN are different facts and the board words them
+    // differently, so the status has to survive the mapping rather than
+    // collapsing into a null window.
+    it('keeps CLOSED and UNKNOWN apart, both without minutes', () => {
+      technicianStub.listLocationTechnicians.mockReturnValue(
+        of({
+          content: [
+            { personId: 'closed', shiftStatus: 'CLOSED', shiftSource: 'LOCATION_HOURS' },
+            { personId: 'unknown', shiftStatus: 'UNKNOWN', shiftSource: 'LOCATION_HOURS' },
+          ],
+        }),
+      );
+      const next = vi.fn();
+
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
+
+      const shifts = next.mock.calls[0][0].shifts;
+      expect(shifts.get('closed')).toEqual({ status: 'CLOSED', source: 'LOCATION_HOURS', minutes: null });
+      expect(shifts.get('unknown')).toEqual({ status: 'UNKNOWN', source: 'LOCATION_HOURS', minutes: null });
+    });
+  });
+
+  describe('getClockStates()', () => {
+    it('keys clock state and the open session by person id', () => {
+      peopleAvailabilityStub.listPeopleAvailability.mockReturnValue(
+        of([
+          { personId: 'p1', clockState: 'CLOCKED_IN', workSessionId: 'ws-1' },
+          { personId: 'p2', clockState: 'ON_BREAK', workSessionId: 'ws-2' },
+          { personId: 'p3', clockState: 'CLOCKED_OUT' },
+        ]),
+      );
+      const next = vi.fn();
+
+      service.getClockStates('loc-1', '2026-04-18').subscribe(next);
+
+      expect(peopleAvailabilityStub.listPeopleAvailability).toHaveBeenCalledWith('loc-1', '2026-04-18');
+      expect(next.mock.calls[0][0].get('p1')).toEqual({ state: 'CLOCKED_IN', workSessionId: 'ws-1' });
+      expect(next.mock.calls[0][0].get('p2')).toEqual({ state: 'ON_BREAK', workSessionId: 'ws-2' });
+      expect(next.mock.calls[0][0].get('p3')).toEqual({ state: 'CLOCKED_OUT', workSessionId: null });
+    });
+
+    // pos-people nulls clockState for a row the caller may not see rather than
+    // refusing the whole read, so that row must be absent — not CLOCKED_OUT,
+    // which would be the board asserting something it was not told.
+    it('omits a row whose clock state the caller may not see', () => {
+      peopleAvailabilityStub.listPeopleAvailability.mockReturnValue(
+        of([{ personId: 'p1', clockState: 'CLOCKED_IN' }, { personId: 'hidden' }]),
+      );
+      const next = vi.fn();
+
+      service.getClockStates('loc-1', '2026-04-18').subscribe(next);
+
+      expect(next.mock.calls[0][0].has('hidden')).toBe(false);
+      expect(next.mock.calls[0][0].size).toBe(1);
+    });
+
+    it('answers an empty map when the availability read fails', () => {
+      peopleAvailabilityStub.listPeopleAvailability.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 503 })),
+      );
+      const next = vi.fn();
+      const error = vi.fn();
+
+      service.getClockStates('loc-1', '2026-04-18').subscribe({ next, error });
 
       expect(error).not.toHaveBeenCalled();
       expect(next.mock.calls[0][0].size).toBe(0);

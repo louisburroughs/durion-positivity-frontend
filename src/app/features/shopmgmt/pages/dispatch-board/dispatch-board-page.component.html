@@ -142,10 +142,21 @@
                         <span class="mname-text na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_MECHANIC_NAME' | translate"
                           aria-hidden="true">&mdash;</span>
                       }
-                      <span class="na mfree" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS' | translate">
-                        <span aria-hidden="true">&mdash;</span>
-                        <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS' | translate }}</span>
-                      </span>
+                      @if (mechanic.freeHours !== null) {
+                        <!-- The window behind this is the shop's hours standing in
+                             for a personal roster, so the title says so rather
+                             than letting the number read as a promise. -->
+                        <span class="mfree"
+                          [attr.title]="'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS_PLACEHOLDER_HINT' | translate">
+                          {{ 'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS' | translate: { hours: mechanic.freeHours } }}
+                        </span>
+                      } @else {
+                        @let freeHoursKey = freeHoursReasonKey(mechanic);
+                        <span class="na mfree" [attr.title]="freeHoursKey | translate">
+                          <span aria-hidden="true">&mdash;</span>
+                          <span class="sr-only">{{ freeHoursKey | translate }}</span>
+                        </span>
+                      }
                     </span>
                     <span class="mcerts">
                       @for (skill of mechanic.skillCodes; track skill) {

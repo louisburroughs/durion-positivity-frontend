@@ -33,22 +33,27 @@ export type MechanicAvailability = 'WORKING' | 'IDLE' | 'BREAK' | 'OFF';
  * `MechanicAvailability`, which is a dispatch reading (has work / on break / off)
  * assembled from the workexec dashboard and says nothing about a work session.
  *
- * `UNKNOWN` is the state every card loads in, and it is not a placeholder for a
- * value that exists elsewhere: no endpoint on this board publishes clock state.
- * `WorkSessionsAPIService` is all POST mutations — there is no getter — and the
- * roster read the panel is built from (`GET /v1/people/availability`) carries
- * assignment metadata with no instant on it. Backend issue #2061 adds the read;
- * until it lands `UNKNOWN` means "this board cannot ask", and the card offers
- * both actions rather than asserting a state it would be guessing at.
+ * The three real states come from `GET /v1/people/availability`, which carries
+ * `clockState` per person since backend #2061, and are re-read after every clock
+ * write and on the 30s poll — so a session started or ended elsewhere corrects
+ * itself rather than lingering.
  *
- * The other three are only ever set from a server answer to a clock write —
- * either the `WorkSessionDto` a start/stop returns, or the refusal that
- * contradicts it (a 409 on start says the session is already open). They are
- * observed, not predicted. They are also not re-read: the 30s poll carries no
- * clock state, so a session someone ends elsewhere leaves this card stale until
- * the next clock write or a reload. #2061 closes that too.
+ * `UNKNOWN` no longer means "this board cannot ask", as it did before that
+ * endpoint existed. It now means the caller may not see this person's state:
+ * pos-people nulls `clockState` for a row the caller holds no
+ * `people:timekeeping:view` over rather than refusing the whole read. A card in
+ * that state offers both actions, because guessing which one applies is exactly
+ * what the null is there to prevent.
  */
 export type MechanicClockState = 'CLOCKED_IN' | 'ON_BREAK' | 'CLOCKED_OUT' | 'UNKNOWN';
+
+/**
+ * Why a mechanic has no free-hours figure. `CLOSED` is a known fact about the
+ * day; `UNKNOWN` is the location's hours being unreadable or its timezone
+ * unrecognised; `OFF_ROSTER` is the technician not coming back in the roster
+ * read at all, which the dispatch projection can outlive.
+ */
+export type FreeHoursReason = 'CLOSED' | 'UNKNOWN' | 'OFF_ROSTER';
 
 /**
  * Which pile a row falls in. `HELD` is a workorder parked on the site's HOLD
@@ -64,12 +69,10 @@ export type RowStatusTone = 'NEUTRAL' | 'ACTIVE' | 'WAITING' | 'DRAFT' | 'DONE';
  * render as an explicit "not available" placeholder rather than a derived guess,
  * so the gap stays visible instead of turning into a number nobody can source.
  *
- * - mechanic free hours / shop open capacity — needs shift windows; the dashboard
- *   reports availability as a flag, never as a span. No shift-window entity
- *   exists on the platform yet; backend issue #2060 adds a placeholder window
- *   derived from the location's operating hours.
- * - mechanic clock state — the clock write endpoints exist, the read does not
- *   (backend issue #2061). See `MechanicClockState`.
+ * - shop open capacity — still needs a real per-person shift window. Mechanic
+ *   free hours now has one (backend #2060), but it is the shop's operating
+ *   hours standing in for a roster, which is too coarse to total into a
+ *   shop-wide capacity figure without overstating it.
  * - workorder promised time — `scheduledDate` is a date with no time of day.
  * - workorder priority — no field on `WorkorderSummary`.
  * - required skills per workorder — the service lines carry descriptions, not
@@ -91,13 +94,24 @@ export interface MechanicCard {
   /** Bay name the mechanic's workorder stands on, when it holds one. */
   readonly whereLabel: string | null;
   readonly breakExpectedReturn: string | null;
-  /** Always null: no shift window is published for this board. */
-  readonly freeHours: null;
   /**
-   * `UNKNOWN` on every load — nothing on this board reads clock state. It turns
-   * real only after a clock write on this card answers. See `MechanicClockState`.
+   * Hours left in the shift after committed work, or null when the board cannot
+   * say. Null is not zero: a closed day, an unreadable operating-hours payload
+   * and a technician missing from the roster read all land here, and each one
+   * renders the not-available placeholder rather than a number.
+   *
+   * The shift window behind it is a **placeholder** — the shop's operating
+   * hours, identical for every technician at the location — so this is "hours
+   * the shop is open that this mechanic has not committed", not a personal
+   * roster. See `TechnicianShift` in the service.
    */
+  readonly freeHours: number | null;
+  /** Why `freeHours` is null, for the placeholder to explain itself. */
+  readonly freeHoursReason: FreeHoursReason | null;
+  /** From the availability read; `UNKNOWN` when the caller may not see it. */
   readonly clockState: MechanicClockState;
+  /** The open session, for the break endpoints; null unless clocked in or on break. */
+  readonly workSessionId: string | null;
 }
 
 export interface BayCard {

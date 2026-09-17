@@ -327,16 +327,18 @@ export const SHOPMGMT_PAGE = {
    * Clocking a mechanic in or out from the dispatch board
    * (`startWorkSession` / `stopWorkSession` in pos-people).
    *
-   * Provisional authority. The backend gates both endpoints on
-   * `isAuthenticated()` alone, which means any signed-in user can clock any
-   * person in or out — a real gap raised as OQ2 on
-   * durion-positivity-backend#2061. Until that decision lands there is no
-   * `people:workSession:*` code to bind to, so the board asks for the nearest
-   * timekeeping authority it can name and keeps the control away from a
-   * dispatcher with no timekeeping role at all. This is a UI narrowing, not
-   * enforcement: it must be replaced with the real code once #2061 answers.
+   * pos-people admits the session's own person *or* a
+   * `people:timekeeping:approve` holder, location-scoped
+   * (durion-positivity-backend#2061 closed the earlier gap, where both
+   * endpoints were gated on `isAuthenticated()` alone). This board clocks other
+   * people, so it asks for the grant; the self case belongs to a self-service
+   * view, not to a dispatcher's board.
+   *
+   * Reading the state is a different, lesser authority — `people:timekeeping:view`,
+   * which the availability endpoint applies per row by nulling `clockState`
+   * rather than refusing the read, so the board needs no gate of its own for it.
    */
-  mechanicClock: ['people:timekeeping:view'],
+  mechanicClock: ['people:timekeeping:approve'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/product/*` — catalog, pricing, enrichment, and the views it borrows. */
