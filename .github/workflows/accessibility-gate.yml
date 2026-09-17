@@ -23,7 +23,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Pinned via .nvmrc rather than a literal, so the version lives in one
+          # place. A floating "22" could resolve below 22.22.3, the minimum the
+          # Angular CLI accepts, and every ng step would fail before running.
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
