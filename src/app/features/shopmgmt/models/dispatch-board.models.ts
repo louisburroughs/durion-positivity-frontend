@@ -108,6 +108,13 @@ export interface MechanicCard {
   readonly freeHours: number | null;
   /** Why `freeHours` is null, for the placeholder to explain itself. */
   readonly freeHoursReason: FreeHoursReason | null;
+  /**
+   * Whether the window behind `freeHours` is the shop-hours stand-in rather
+   * than a real per-person roster, from the roster's own `shiftSource`
+   * discriminator. Only the stand-in carries the caveat; a real window would
+   * make that caveat false.
+   */
+  readonly freeHoursIsPlaceholder: boolean;
   /** From the availability read; `UNKNOWN` when the caller may not see it. */
   readonly clockState: MechanicClockState;
   /**

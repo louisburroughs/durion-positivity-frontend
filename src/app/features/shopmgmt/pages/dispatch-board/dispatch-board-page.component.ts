@@ -979,7 +979,16 @@ export class DispatchBoardPageComponent implements OnInit {
   isBreakBinDropTarget(): boolean {
     const payload = this.dragging();
     return (
-      payload?.kind === 'MECHANIC' && payload.from === 'ROSTER' && this.canManageClock() && this.isViewingToday()
+      payload?.kind === 'MECHANIC' &&
+      payload.from === 'ROSTER' &&
+      this.canManageClock() &&
+      this.isViewingToday() &&
+      // A write already in flight on this mechanic: `canStartBreak` would
+      // refuse the drop for being pending and word it "clock them in first",
+      // which is the wrong reason for someone who is already clocked in. The
+      // handle stops being draggable too, but a drag begun before the write
+      // started can still arrive here.
+      !this.isClockPending(payload.id)
     );
   }
 
@@ -1016,7 +1025,13 @@ export class DispatchBoardPageComponent implements OnInit {
 
   isRosterDropTarget(): boolean {
     const payload = this.dragging();
-    return payload?.kind === 'MECHANIC' && payload.from === 'BREAK' && this.canManageClock() && this.isViewingToday();
+    return (
+      payload?.kind === 'MECHANIC' &&
+      payload.from === 'BREAK' &&
+      this.canManageClock() &&
+      this.isViewingToday() &&
+      !this.isClockPending(payload.id)
+    );
   }
 
   onRosterDragOver(event: DragEvent): void {
@@ -1944,7 +1959,7 @@ export class DispatchBoardPageComponent implements OnInit {
   private toFreeHours(
     personId: string,
     workorder: WorkorderSummary | undefined,
-  ): { freeHours: number | null; freeHoursReason: FreeHoursReason | null } {
+  ): { freeHours: number | null; freeHoursReason: FreeHoursReason | null; freeHoursIsPlaceholder: boolean } {
     const shift = this.technicianShifts().get(personId);
     if (!shift) {
       // Absent from a roster that answered is a fact about the technician;
@@ -1954,19 +1969,29 @@ export class DispatchBoardPageComponent implements OnInit {
       return {
         freeHours: null,
         freeHoursReason: this.rosterRead() === 'OK' ? 'OFF_ROSTER' : 'UNKNOWN',
+        freeHoursIsPlaceholder: false,
       };
     }
     if (shift.status === 'CLOSED') {
-      return { freeHours: null, freeHoursReason: 'CLOSED' };
+      return { freeHours: null, freeHoursReason: 'CLOSED', freeHoursIsPlaceholder: false };
     }
     if (shift.status !== 'DERIVED' || shift.minutes === null) {
-      return { freeHours: null, freeHoursReason: 'UNKNOWN' };
+      return { freeHours: null, freeHoursReason: 'UNKNOWN', freeHoursIsPlaceholder: false };
     }
     const committed = workorder?.estimatedLaborHours ?? 0;
     // Never below zero: an estimate longer than the shop's open hours means the
     // job runs past close, which is nothing free, not negative free time.
     const free = Math.max(0, shift.minutes / 60 - committed);
-    return { freeHours: Math.round(free * 10) / 10, freeHoursReason: null };
+    return {
+      freeHours: Math.round(free * 10) / 10,
+      freeHoursReason: null,
+      // `shiftSource` is the field the API says to read to tell a placeholder
+      // window from a real one, so the caveat follows it rather than being
+      // pinned on every figure. When per-person scheduling lands
+      // (durion-positivity-backend#71) the source turns `PERSON_SCHEDULE` and
+      // the shop-hours caveat stops being true — and stops being shown.
+      freeHoursIsPlaceholder: shift.source === 'LOCATION_HOURS',
+    };
   }
 
   /**

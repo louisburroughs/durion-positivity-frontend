@@ -135,7 +135,7 @@
                        is invisible to assistive tech unless it is pulled in as
                        a description. Both branches carry the same id, so the
                        placeholder explains itself too. -->
-                  <button type="button" class="mech" draggable="true"
+                  <button type="button" class="mech" [draggable]="!isClockPending(mechanic.personId)"
                     (dragstart)="onDragStart('MECHANIC', mechanic.personId, $event)" (dragend)="onDragEnd()"
                     [attr.aria-describedby]="'mfree-' + mechanic.personId"
                     [attr.aria-label]="mechanic.name
@@ -154,7 +154,9 @@
                              for a personal roster, so the title says so rather
                              than letting the number read as a promise. -->
                         <span class="mfree" [attr.id]="'mfree-' + mechanic.personId"
-                          [attr.title]="'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS_PLACEHOLDER_HINT' | translate">
+                          [attr.title]="mechanic.freeHoursIsPlaceholder
+                            ? ('SHOPMGMT.DISPATCH_BOARD.FREE_HOURS_PLACEHOLDER_HINT' | translate)
+                            : null">
                           <!-- Through the `number` pipe like the board's other
                                hour readings: a raw interpolation prints 6.5 with
                                a dot in every locale that writes 6,5. -->
@@ -163,7 +165,9 @@
                                reaches neither the keyboard nor touch, as this
                                board's own `.na` rule says, and a number read
                                without it is a promise the data cannot keep. -->
-                          <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS_PLACEHOLDER_HINT' | translate }}</span>
+                          @if (mechanic.freeHoursIsPlaceholder) {
+                            <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS_PLACEHOLDER_HINT' | translate }}</span>
+                          }
                         </span>
                       } @else {
                         @let freeHoursKey = freeHoursReasonKey(mechanic);
@@ -294,7 +298,7 @@
                      here for approved time off is HR's record, not a session
                      this board can end, so it stays put. -->
                 @if (canLeaveBin(mechanic)) {
-                  <span class="binchip-grab" draggable="true"
+                  <span class="binchip-grab" [attr.draggable]="!isClockPending(mechanic.personId)"
                     (dragstart)="onDragStart('MECHANIC', mechanic.personId, $event, 'BREAK')"
                     (dragend)="onDragEnd()">
                     <span class="dot" aria-hidden="true">{{ mechanic.initials }}</span>

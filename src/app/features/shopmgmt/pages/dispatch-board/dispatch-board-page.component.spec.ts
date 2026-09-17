@@ -3518,6 +3518,82 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.binNoteKey()).toBe('SHOPMGMT.DISPATCH_BOARD.BREAK_NO_PERMISSION');
     });
 
+    // Fifth round. A write in flight dimmed the row and disabled its buttons,
+    // but left the drag handle live — and dropping it hit the pending branch of
+    // `canStartBreak`, which words its refusal "clock them in first" even for
+    // someone who is plainly already clocked in.
+    it('accepts no drop while a write on that mechanic is in flight', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+      );
+      renderWith(fullDashboard);
+
+      const pending = new Subject<unknown>();
+      dispatchBoardServiceStub.clockOut.mockReturnValue(pending.asObservable());
+      component.clockOut(component.mechanics().find(mechanic => mechanic.personId === 'M1')!);
+      fixture.detectChanges();
+      expect(component.isClockPending('M1')).toBe(true);
+
+      component.onDragStart('MECHANIC', 'M1', dragEvent());
+      expect(component.isBreakBinDropTarget()).toBe(false);
+
+      component.onBreakBinDrop(dragEvent());
+      expect(dispatchBoardServiceStub.startBreak).not.toHaveBeenCalled();
+      // And no refusal naming a reason that is not the reason.
+      expect(component.toast()?.key).not.toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BREAK_NEEDS_CLOCK_IN');
+    });
+
+    it('stops offering the drag handle while that write is in flight', () => {
+      renderWith(fullDashboard);
+      const pending = new Subject<unknown>();
+      dispatchBoardServiceStub.clockIn.mockReturnValue(pending.asObservable());
+
+      component.clockIn(component.mechanics()[0]);
+      fixture.detectChanges();
+
+      const handle: HTMLElement = fixture.nativeElement.querySelector('.mech-row button.mech');
+      expect(handle.getAttribute('draggable')).toBe('false');
+    });
+
+    // `shiftSource` is the field the API says to read to tell a placeholder
+    // window from a real one; the projection was discarding it and captioning
+    // every figure as the shop-hours stand-in.
+    it('drops the placeholder caveat when the window is a real per-person one', () => {
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(
+        of({
+          skills: new Map(),
+          shifts: new Map([['M1', { status: 'DERIVED', source: 'PERSON_SCHEDULE', minutes: 480 }]]),
+          ok: true,
+        }),
+      );
+      renderWith(fullDashboard);
+
+      const card = component.mechanics().find(mechanic => mechanic.personId === 'M1')!;
+      expect(card.freeHours).toBe(6);
+      expect(card.freeHoursIsPlaceholder).toBe(false);
+
+      const free: HTMLElement = fixture.nativeElement.querySelector('#mfree-M1');
+      expect(free.textContent).toContain('SHOPMGMT.DISPATCH_BOARD.FREE_HOURS');
+      expect(free.querySelector('.sr-only')).toBeNull();
+      expect(free.getAttribute('title')).toBeNull();
+    });
+
+    it('keeps the caveat while the window is the shop-hours stand-in', () => {
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(
+        of({
+          skills: new Map(),
+          shifts: new Map([['M1', { status: 'DERIVED', source: 'LOCATION_HOURS', minutes: 480 }]]),
+          ok: true,
+        }),
+      );
+      renderWith(fullDashboard);
+
+      expect(component.mechanics().find(m => m.personId === 'M1')?.freeHoursIsPlaceholder).toBe(true);
+      const free: HTMLElement = fixture.nativeElement.querySelector('#mfree-M1');
+      expect(free.querySelector('.sr-only')?.textContent).toContain('FREE_HOURS_PLACEHOLDER_HINT');
+      expect(free.getAttribute('title')).toContain('FREE_HOURS_PLACEHOLDER_HINT');
+    });
+
     // The bin lit up as a drop target on a historical board and then answered
     // "clock them in first", which names the wrong reason.
     it('offers neither drop target on another day\u2019s board', () => {
