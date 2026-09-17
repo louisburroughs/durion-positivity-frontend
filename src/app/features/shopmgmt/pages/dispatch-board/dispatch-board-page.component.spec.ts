@@ -1773,4 +1773,39 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.rows()).toHaveLength(0);
     });
   });
+  // -------------------------------------------------------------------------
+  // Round-7: two ways the board could act on the shop you just left
+  // -------------------------------------------------------------------------
+  describe('a response is cached under the selection it answers', () => {
+    // applySuccess used to default its key to the live controls, so a response
+    // in flight across a location change was filed under the NEW key and the
+    // previous shop's rows read as current — and stayed assignable.
+    it('does not file a late response under the new selection', () => {
+      renderWith(fullDashboard);
+      const inFlight = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(inFlight);
+      component.refresh();
+
+      component.selectedLocationId.set('LOC-OTHER');
+      inFlight.next(fullDashboard);
+
+      expect(component.hasCachedData()).toBe(false);
+      expect(component.showBoard()).toBe(false);
+    });
+  });
+
+  describe('undo respects the current selection', () => {
+    it('does not undo against the board the dispatcher left', () => {
+      renderWith(fullDashboard);
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+      expect(component.toast()?.undo).not.toBeNull();
+      vi.clearAllMocks();
+
+      component.selectedLocationId.set('LOC-OTHER');
+      component.undo();
+
+      expect(dispatchBoardServiceStub.releaseMechanic).not.toHaveBeenCalled();
+      expect(dispatchBoardServiceStub.assignMechanic).not.toHaveBeenCalled();
+    });
+  });
 });

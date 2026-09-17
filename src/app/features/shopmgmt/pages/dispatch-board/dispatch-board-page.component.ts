@@ -733,7 +733,10 @@ export class DispatchBoardPageComponent implements OnInit {
   undo(): void {
     const step = this.toast()?.undo;
     this.toast.set(null);
-    if (!step) {
+    // The toast outlives a location or date change, and `allRows()` would still
+    // hold the previous board: undoing there releases or reassigns a workorder
+    // at the shop the dispatcher just left.
+    if (!step || !this.hasCachedData()) {
       return;
     }
 
@@ -850,15 +853,17 @@ export class DispatchBoardPageComponent implements OnInit {
     }
 
     const seq = ++this.readSeq;
+    const date = this.selectedDate();
+    const key = this.toRequestKey(locationId, date);
     if (onSettled) {
       this.owedSettlements.add(onSettled);
     }
     this.dispatchBoardService
-      .getDashboard(locationId, this.selectedDate())
+      .getDashboard(locationId, date)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: response => {
-          this.applySuccess(response, seq);
+          this.applySuccess(response, seq, key);
           this.finishRead(seq);
         },
         error: (err: unknown) => {
@@ -894,24 +899,27 @@ export class DispatchBoardPageComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
         switchMap(() => {
           const seq = ++this.readSeq;
-          return this.dispatchBoardService
-            .getDashboard(this.selectedLocationId(), this.selectedDate())
-            .pipe(
-              map(response => ({ response, seq })),
-              catchError((err: unknown) => {
-                this.applyError(err, seq);
-                this.finishRead(seq);
-                return EMPTY;
-              }),
-            );
+          const locationId = this.selectedLocationId();
+          const date = this.selectedDate();
+          // The key belongs to the request, not to whatever the controls read
+          // by the time the response lands.
+          const key = this.toRequestKey(locationId.trim(), date);
+          return this.dispatchBoardService.getDashboard(locationId, date).pipe(
+            map(response => ({ response, seq, key })),
+            catchError((err: unknown) => {
+              this.applyError(err, seq);
+              this.finishRead(seq);
+              return EMPTY;
+            }),
+          );
         }),
       )
       .subscribe({
-        next: ({ response, seq }) => {
+        next: ({ response, seq, key }) => {
           // Enrichment rides an accepted poll: bay lifecycle, names, types and
           // skill chips go stale otherwise, and an out-of-service bay stays
           // draggable until someone presses Refresh.
-          if (this.applySuccess(response, seq)) {
+          if (this.applySuccess(response, seq, key)) {
             this.loadEnrichment(this.selectedLocationId().trim());
           }
           this.finishRead(seq);
@@ -982,7 +990,10 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   /** Returns false when a newer read has already superseded this one. */
-  /** Freshness describes a selection; carrying it across a switch misreports the new one. */
+  /**
+   * Freshness describes a selection; carrying it across a switch misreports the
+   * new one.
+   */
   private clearFreshnessForNewSelection(key: string): void {
     if (this.cachedKey() !== null && this.cachedKey() !== key) {
       this.isStale.set(false);
@@ -991,7 +1002,13 @@ export class DispatchBoardPageComponent implements OnInit {
     }
   }
 
-  private applySuccess(response: DashboardResponse, seq: number, key = this.requestKey()): boolean {
+  /**
+   * `key` is the selection the response ANSWERS, captured when its request was
+   * issued — never re-read here. Defaulting it to the live controls let a late
+   * response be cached under a selection it does not describe, so the previous
+   * shop's board read as current and its rows stayed assignable.
+   */
+  private applySuccess(response: DashboardResponse, seq: number, key: string): boolean {
     if (seq !== this.readSeq) {
       return false;
     }
