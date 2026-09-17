@@ -131,6 +131,9 @@ export class DispatchBoardPageComponent implements OnInit {
   readonly bayInventory = signal<BayInventory>(new Map());
   readonly technicianSkills = signal<TechnicianSkills>(new Map());
 
+  /** Which location the enrichment maps above describe, so a switch can drop them. */
+  private enrichedLocation: string | null = null;
+
   /** Which (location, date) the cached board answers; see `hasCachedData`. */
   private readonly cachedKey = signal<string | null>(null);
 
@@ -828,6 +831,16 @@ export class DispatchBoardPageComponent implements OnInit {
    * an empty map on failure, and the dispatch projection alone still renders.
    */
   private loadEnrichment(locationId: string): void {
+    // Drop the previous shop's maps as the new load STARTS, not when it lands.
+    // The inventory is the bay rail's roster of record, so holding the old one
+    // across the gap offers another site's bays as draggable on this board —
+    // and placing one is a 422, the position being at another site.
+    if (this.enrichedLocation !== null && this.enrichedLocation !== locationId) {
+      this.bayInventory.set(new Map());
+      this.technicianSkills.set(new Map());
+    }
+    this.enrichedLocation = locationId;
+
     forkJoin({
       bays: this.dispatchBoardService.getBayInventory(locationId),
       skills: this.dispatchBoardService.getTechnicianSkills(locationId),

@@ -821,6 +821,26 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.isStale()).toBe(false);
     });
 
+    // Guarding the APPLY is not enough: the rail's roster of record would keep
+    // the previous shop's bays draggable for the whole in-flight window, and
+    // placing one is a 422 because the position is at another site.
+    it('clears the previous shop\'s enrichment as the new load starts', () => {
+      dispatchBoardServiceStub.getBayInventory.mockReturnValue(
+        of(new Map([['B4', { bayId: 'B4', name: 'Bay 4', kind: 'ALIGNMENT', outOfService: false }]])),
+      );
+      renderWith(fullDashboard);
+      expect(component.bayInventory().size).toBe(1);
+
+      const pendingInventory = new Subject<never>();
+      dispatchBoardServiceStub.getBayInventory.mockReturnValue(pendingInventory);
+      dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(new Subject());
+      component.selectedLocationId.set('LOC-2');
+      component.refresh();
+
+      expect(component.bayInventory().size).toBe(0);
+      expect(component.technicianSkills().size).toBe(0);
+    });
+
     it('drops enrichment that arrives after the location changed', () => {
       const slowSkills = new Subject<ReadonlyMap<string, readonly string[]>>();
       dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(slowSkills);
