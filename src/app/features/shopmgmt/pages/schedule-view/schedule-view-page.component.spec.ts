@@ -466,6 +466,37 @@ describe('ScheduleViewPageComponent', () => {
     expect(text()).not.toContain('SHOPMGMT.SCHEDULE_VIEW.DEGRADED');
   });
 
+  it('still reports a real fault that happened alongside the missing shop record', async () => {
+    // The two are independent: every date can 404 *and* the bay or technician
+    // read can fail in the same request. Hiding the warning with the grids let
+    // the no-shop sentence take the blame for an actual outage.
+    capacityStub.getCalendar.mockReturnValue(
+      of(view({ locationHasNoSchedule: true, degraded: true })),
+    );
+    await setup();
+
+    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.NO_SHOP_SCHEDULE');
+    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.DEGRADED');
+  });
+
+  it('names the location generically when its name could not be loaded', async () => {
+    // getLocationById degrades to undefined, and the sentence names the location
+    // mid-clause — unguarded it reads "no shop record for , so ...".
+    capacityStub.getCalendar.mockReturnValue(
+      of(view({ locationHasNoSchedule: true, locationName: undefined })),
+    );
+    await setup();
+
+    expect(component.locationLabel()).toBe('SHOPMGMT.SCHEDULE_VIEW.THIS_LOCATION');
+  });
+
+  it('uses the location name when it is known', async () => {
+    capacityStub.getCalendar.mockReturnValue(of(view({ locationHasNoSchedule: true })));
+    await setup();
+
+    expect(component.locationLabel()).toBe('Riverside Tire & Auto');
+  });
+
   it('still draws the calendar for a location that does have a shop record', async () => {
     await setup();
 

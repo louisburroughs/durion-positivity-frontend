@@ -1920,6 +1920,7 @@
       "REQUIREMENT": "Ressources requises : {{bays}} ({{eligible}} baies sur {{total}}) + un technicien certifié ({{technicians}}) + {{hours}} h sans interruption. Les jours en ambre ont l’équipement mais pas la personne.",
       "DEGRADED": "Certaines données de capacité n’ont pas pu être chargées ; ces chiffres peuvent être incomplets.",
       "NO_SHOP_SCHEDULE": "Le service de planification n'a aucun enregistrement d'atelier pour {{location}} ; il n'y a donc aucune capacité à afficher. Un site ne peut être planifié qu'une fois enregistré comme atelier — demandez à un administrateur de l'enregistrer.",
+      "THIS_LOCATION": "ce site",
       "SKILLS_NOT_CONFIGURED": "Le catalogue n’a pas déclaré les compétences requises pour ce service ; tous les techniciens planifiés sont donc comptés comme aptes. Configurez les exigences de compétences du service pour voir la capacité certifiée.",
       "LEGEND_ARIA": "Signification des couleurs de capacité",
       "LEGEND_LOAD": "charge de l'atelier",

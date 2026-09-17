@@ -1920,6 +1920,7 @@
       "REQUIREMENT": "Recursos necesarios: {{bays}} ({{eligible}} de {{total}} bahías) + un técnico certificado ({{technicians}}) + {{hours}} h sin interrupción. Los días en ámbar tienen el equipo pero no la persona.",
       "DEGRADED": "No se pudieron cargar algunos datos de capacidad, por lo que estas cifras pueden estar incompletas.",
       "NO_SHOP_SCHEDULE": "El servicio de programación no tiene un registro de taller para {{location}}, por lo que no hay capacidad que mostrar. Una ubicación solo puede programarse cuando existe como taller; pide a un administrador que la registre.",
+      "THIS_LOCATION": "esta ubicación",
       "SKILLS_NOT_CONFIGURED": "El catálogo no ha declarado qué habilidades requiere este servicio, así que se cuenta a todos los técnicos programados como capaces de hacerlo. Configure los requisitos de habilidades del servicio para ver la capacidad certificada.",
       "LEGEND_ARIA": "Qué significan los colores de capacidad",
       "LEGEND_LOAD": "carga del taller",

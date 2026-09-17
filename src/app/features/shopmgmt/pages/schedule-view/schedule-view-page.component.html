@@ -115,12 +115,6 @@
       </output>
     }
 
-    @if (view()?.degraded) {
-      <output class="alert alert-warning" aria-live="polite">
-        {{ 'SHOPMGMT.SCHEDULE_VIEW.DEGRADED' | translate }}
-      </output>
-    }
-
     <ul class="legend" [attr.aria-label]="'SHOPMGMT.SCHEDULE_VIEW.LEGEND_ARIA' | translate">
       <li><span class="swatch swatch-load" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_LOAD' | translate }}</li>
       <li><span class="swatch tick tick-fits" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_FITS' | translate }}</li>
@@ -128,6 +122,16 @@
       <li><span class="swatch tick tick-tech" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_TECH' | translate }}</li>
       <li><span class="swatch tick tick-taken" aria-hidden="true"></span>{{ 'SHOPMGMT.SCHEDULE_VIEW.LEGEND_TAKEN' | translate }}</li>
     </ul>
+  }
+
+  <!-- A real fault is reported whatever else is on screen. It sits outside the
+       calendar block deliberately: an all-404 load hides the grids, and burying
+       the warning there meant a failed bay or technician read went unmentioned
+       while the no-shop sentence took the blame. -->
+  @if (state() === 'ready' && view()?.degraded) {
+    <output class="alert alert-warning" aria-live="polite">
+      {{ 'SHOPMGMT.SCHEDULE_VIEW.DEGRADED' | translate }}
+    </output>
   }
 
   <!-- ── Page states ──────────────────────────────────────────────────────── -->
@@ -145,7 +149,7 @@
 
   @if (state() === 'ready' && view()?.locationHasNoSchedule) {
     <div class="state-panel" role="status">
-      <p>{{ 'SHOPMGMT.SCHEDULE_VIEW.NO_SHOP_SCHEDULE' | translate: { location: view()?.locationName } }}</p>
+      <p>{{ 'SHOPMGMT.SCHEDULE_VIEW.NO_SHOP_SCHEDULE' | translate: { location: locationLabel() } }}</p>
     </div>
   }
 
