@@ -357,6 +357,19 @@ describe('DispatchBoardService', () => {
       expect(error).not.toHaveBeenCalled();
       expect(next.mock.calls[0][0].skills.size).toBe(0);
       expect(next.mock.calls[0][0].shifts.size).toBe(0);
+      // Empty maps alone cannot be told from a shop with nobody rostered, so
+      // the failure travels with them.
+      expect(next.mock.calls[0][0].ok).toBe(false);
+    });
+
+    it('reports a read that answered, even when the roster is genuinely empty', () => {
+      technicianStub.listLocationTechnicians.mockReturnValue(of({ content: [] }));
+      const next = vi.fn();
+
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
+
+      expect(next.mock.calls[0][0].ok).toBe(true);
+      expect(next.mock.calls[0][0].shifts.size).toBe(0);
     });
 
     it('carries the placeholder shift window through for a DERIVED day', () => {

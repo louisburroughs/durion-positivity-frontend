@@ -93,6 +93,7 @@ describe('DispatchBoardPageComponent accessibility', () => {
       of({
         skills: new Map([['M1', ['BRAKES']]]),
         shifts: new Map([['M1', { status: 'DERIVED', source: 'LOCATION_HOURS', minutes: 480 }]]),
+        ok: true,
       }),
     ),
     getClockStates: vi.fn().mockReturnValue(of(new Map())),

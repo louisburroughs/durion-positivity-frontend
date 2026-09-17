@@ -150,6 +150,11 @@
                         <span class="mfree"
                           [attr.title]="'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS_PLACEHOLDER_HINT' | translate">
                           {{ 'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS' | translate: { hours: mechanic.freeHours } }}
+                          <!-- The caveat rides along non-visually too: `title`
+                               reaches neither the keyboard nor touch, as this
+                               board's own `.na` rule says, and a number read
+                               without it is a promise the data cannot keep. -->
+                          <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS_PLACEHOLDER_HINT' | translate }}</span>
                         </span>
                       } @else {
                         @let freeHoursKey = freeHoursReasonKey(mechanic);

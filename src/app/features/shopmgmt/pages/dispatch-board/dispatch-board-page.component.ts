@@ -146,6 +146,12 @@ export class DispatchBoardPageComponent implements OnInit {
    * 17:00 Pacific onward is already tomorrow — an evening dispatcher would open
    * the wrong day's board.
    */
+  /**
+   * The local calendar day, re-read on every poll. Fixed at construction it
+   * goes stale the moment a board left open crosses local midnight, and every
+   * timekeeping gate downstream of `isViewingToday` would still be writing
+   * against what is now yesterday's board.
+   */
   readonly todayIso = signal(isoDateLocal(new Date()));
   readonly selectedDate = signal(this.todayIso());
   readonly selectedLocationId = signal('');
@@ -163,6 +169,17 @@ export class DispatchBoardPageComponent implements OnInit {
 
   /** Orders enrichment responses: two reads of the same shop can still overlap. */
   private enrichmentSeq = 0;
+
+  /**
+   * Orders writes to `clockStates`, which has two writers — the enrichment
+   * forkJoin and the lighter re-read a clock write triggers. Bumping
+   * `enrichmentSeq` from the clock path instead would make a clock write
+   * cancel an enrichment already in flight, discarding its bays and roster
+   * with nothing sent to replace them; the board would sit on empty skill and
+   * shift maps until the next poll. They are separate counters because they
+   * guard separate data, and both bump this one so the later read wins.
+   */
+  private clockSeq = 0;
 
   /** Which (location, date) the cached board answers; see `hasCachedData`. */
   private readonly cachedKey = signal<string | null>(null);
@@ -192,6 +209,15 @@ export class DispatchBoardPageComponent implements OnInit {
 
   /** Each technician's shift window, behind the free-hours figure. */
   readonly technicianShifts = signal<TechnicianShifts>(new Map());
+
+  /**
+   * Whether the roster read behind those windows answered. A failed read
+   * degrades to empty maps, which on its own is indistinguishable from a shop
+   * whose roster is genuinely empty — and would tell the dispatcher every
+   * mechanic is "not on the location roster" during an outage. `PENDING` is
+   * the same reticence before the first read lands.
+   */
+  private readonly rosterRead = signal<'PENDING' | 'OK' | 'FAILED'>('PENDING');
 
   /**
    * Monotonic read counter. `refresh()`, the 30s poll and the post-mutation
@@ -882,7 +908,12 @@ export class DispatchBoardPageComponent implements OnInit {
 
   /** Whether the mechanic's open break can be ended. */
   canEndBreak(mechanic: MechanicCard): boolean {
-    return this.canClock(mechanic) && mechanic.clockState === 'ON_BREAK' && mechanic.workSessionId !== null;
+    return (
+      this.canClock(mechanic) &&
+      !mechanic.onTimeOff &&
+      mechanic.clockState === 'ON_BREAK' &&
+      mechanic.workSessionId !== null
+    );
   }
 
   /**
@@ -892,7 +923,7 @@ export class DispatchBoardPageComponent implements OnInit {
    * on is exactly the place they are no longer listed.
    */
   canClockInFromBin(mechanic: MechanicCard): boolean {
-    return this.canClock(mechanic) && mechanic.clockState === 'CLOCKED_OUT';
+    return this.canClock(mechanic) && !mechanic.onTimeOff && mechanic.clockState === 'CLOCKED_OUT';
   }
 
   /** Whether the bin chip has any control on it, and so needs a grab handle. */
@@ -923,7 +954,9 @@ export class DispatchBoardPageComponent implements OnInit {
    */
   isBreakBinDropTarget(): boolean {
     const payload = this.dragging();
-    return payload?.kind === 'MECHANIC' && payload.from === 'ROSTER' && this.canManageClock();
+    return (
+      payload?.kind === 'MECHANIC' && payload.from === 'ROSTER' && this.canManageClock() && this.isViewingToday()
+    );
   }
 
   onBreakBinDragOver(event: DragEvent): void {
@@ -959,7 +992,7 @@ export class DispatchBoardPageComponent implements OnInit {
 
   isRosterDropTarget(): boolean {
     const payload = this.dragging();
-    return payload?.kind === 'MECHANIC' && payload.from === 'BREAK' && this.canManageClock();
+    return payload?.kind === 'MECHANIC' && payload.from === 'BREAK' && this.canManageClock() && this.isViewingToday();
   }
 
   onRosterDragOver(event: DragEvent): void {
@@ -1125,7 +1158,7 @@ export class DispatchBoardPageComponent implements OnInit {
       return;
     }
     const date = this.selectedDate();
-    const seq = ++this.enrichmentSeq;
+    const seq = ++this.clockSeq;
     this.dispatchBoardService
       .getClockStates(locationId, date)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -1133,7 +1166,7 @@ export class DispatchBoardPageComponent implements OnInit {
         // A location or date switch while this was in flight must not paint the
         // new board with the old shop's clock state.
         if (
-          seq === this.enrichmentSeq &&
+          seq === this.clockSeq &&
           this.selectedLocationId().trim() === locationId &&
           this.selectedDate() === date
         ) {
@@ -1531,6 +1564,11 @@ export class DispatchBoardPageComponent implements OnInit {
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         switchMap(() => {
+          // Before anything reads it: the day may have turned since the last
+          // tick. `selectedDate` is deliberately left alone — advancing the
+          // board under the dispatcher is worse than showing them that the day
+          // they are looking at is no longer today.
+          this.todayIso.set(isoDateLocal(new Date()));
           const locationId = this.selectedLocationId().trim();
           // A cleared picker is not a location. Asking for '' either errors —
           // and the retry button then names a different problem — or answers a
@@ -1596,15 +1634,21 @@ export class DispatchBoardPageComponent implements OnInit {
     // hours and a clock reading that was never about it.
     const key = this.toRequestKey(locationId, date);
     if (this.enrichedKey !== null && this.enrichedKey !== key) {
+      // Everything the roster read answers is date-scoped, credentials
+      // included: the roster is asked for one date and a technician it returns
+      // for today need not be on it tomorrow. Only the bay inventory is keyed
+      // on location alone, so only it survives a date change.
       this.technicianShifts.set(new Map());
+      this.technicianSkills.set(new Map());
       this.clockStates.set(new Map());
+      this.rosterRead.set('PENDING');
       if (this.enrichedKey.split('|')[0] !== locationId) {
         this.bayInventory.set(new Map());
-        this.technicianSkills.set(new Map());
       }
     }
     this.enrichedKey = key;
     const seq = ++this.enrichmentSeq;
+    const clockSeq = ++this.clockSeq;
 
     forkJoin({
       bays: this.dispatchBoardService.getBayInventory(locationId),
@@ -1626,7 +1670,12 @@ export class DispatchBoardPageComponent implements OnInit {
         this.bayInventory.set(result.bays);
         this.technicianSkills.set(result.roster.skills);
         this.technicianShifts.set(result.roster.shifts);
-        this.clockStates.set(result.clocks);
+        this.rosterRead.set(result.roster.ok ? 'OK' : 'FAILED');
+        // A clock write's own re-read may have landed while this was in
+        // flight; that one is newer, so it keeps the field.
+        if (clockSeq === this.clockSeq) {
+          this.clockStates.set(result.clocks);
+        }
       });
   }
 
@@ -1848,6 +1897,7 @@ export class DispatchBoardPageComponent implements OnInit {
       whereLabel: bayId ? (this.bayNamesById().get(bayId) ?? null) : null,
       breakExpectedReturn: mechanic.breakExpectedReturn ?? null,
       ...this.toFreeHours(mechanic.personId, workorder),
+      onTimeOff: this.isOnPto(mechanic),
       clockState: clock?.state ?? 'UNKNOWN',
       workSessionId: clock?.workSessionId ?? null,
     };
@@ -1873,7 +1923,14 @@ export class DispatchBoardPageComponent implements OnInit {
   ): { freeHours: number | null; freeHoursReason: FreeHoursReason | null } {
     const shift = this.technicianShifts().get(personId);
     if (!shift) {
-      return { freeHours: null, freeHoursReason: 'OFF_ROSTER' };
+      // Absent from a roster that answered is a fact about the technician;
+      // absent from one that failed or has not landed is a fact about the
+      // read, and saying "not on the roster" then would be the board
+      // asserting something it was never told.
+      return {
+        freeHours: null,
+        freeHoursReason: this.rosterRead() === 'OK' ? 'OFF_ROSTER' : 'UNKNOWN',
+      };
     }
     if (shift.status === 'CLOSED') {
       return { freeHours: null, freeHoursReason: 'CLOSED' };

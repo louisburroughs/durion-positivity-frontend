@@ -56,6 +56,14 @@ export type TechnicianSkills = ReadonlyMap<string, readonly string[]>;
 export interface TechnicianRoster {
   readonly skills: TechnicianSkills;
   readonly shifts: TechnicianShifts;
+  /**
+   * Whether the read actually answered. A failure degrades to empty maps like
+   * the other enrichment reads, and empty is indistinguishable from a shop
+   * with nobody on the roster — which would turn an outage into "not on the
+   * location roster" against every mechanic. The caller needs to tell those
+   * apart to pick the right placeholder, so the outcome travels with the data.
+   */
+  readonly ok: boolean;
 }
 
 /**
@@ -214,12 +222,13 @@ export class DispatchBoardService {
               minutes: entry.shiftMinutes ?? null,
             });
           }
-          return { skills: skills as TechnicianSkills, shifts: shifts as TechnicianShifts };
+          return { skills: skills as TechnicianSkills, shifts: shifts as TechnicianShifts, ok: true };
         }),
         catchError(() =>
           of({
             skills: new Map<string, readonly string[]>() as TechnicianSkills,
             shifts: new Map<string, TechnicianShift>() as TechnicianShifts,
+            ok: false,
           }),
         ),
       );

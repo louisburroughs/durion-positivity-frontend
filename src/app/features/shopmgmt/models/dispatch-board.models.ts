@@ -110,6 +110,14 @@ export interface MechanicCard {
   readonly freeHoursReason: FreeHoursReason | null;
   /** From the availability read; `UNKNOWN` when the caller may not see it. */
   readonly clockState: MechanicClockState;
+  /**
+   * Approved time off covering the board's date, which `availability` folds
+   * into `OFF` but the clock does not know about. Carried separately because
+   * the two can disagree: nothing stops pos-people reporting an open session
+   * for someone HR has on PTO, and the bin must not offer to change HR's
+   * record just because the clock says something.
+   */
+  readonly onTimeOff: boolean;
   /** The open session, for the break endpoints; null unless clocked in or on break. */
   readonly workSessionId: string | null;
 }

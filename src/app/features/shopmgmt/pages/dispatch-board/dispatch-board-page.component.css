@@ -299,11 +299,19 @@
   padding-left: var(--space-1);
 }
 
+/*
+ * WCAG 2.2 SC 2.5.8 wants a 24x24 CSS-pixel target. At this type size the
+ * label alone is about 18px tall, and the 2px gap between the buttons is too
+ * small to earn the spacing exception, so the box is floored rather than the
+ * text enlarged — the chips stay compact and the target does not.
+ */
 .clock-btn {
   font: inherit;
   font-size: 0.625rem;
   font-weight: var(--font-weight-heading);
   line-height: 1;
+  min-width: 24px;
+  min-height: 24px;
   padding: 3px 6px;
   color: var(--text-muted);
   background: var(--cardBackground);
