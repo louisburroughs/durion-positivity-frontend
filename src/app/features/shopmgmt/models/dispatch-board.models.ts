@@ -38,20 +38,34 @@ export type MechanicAvailability = 'WORKING' | 'IDLE' | 'BREAK' | 'OFF';
  * write and on the 30s poll — so a session started or ended elsewhere corrects
  * itself rather than lingering.
  *
- * `UNKNOWN` no longer means "this board cannot ask", as it did before that
- * endpoint existed. It now means the caller may not see this person's state:
- * pos-people nulls `clockState` for a row the caller holds no
- * `people:timekeeping:view` over rather than refusing the whole read. A card in
- * that state offers both actions, because guessing which one applies is exactly
- * what the null is there to prevent.
+ * `UNKNOWN` is reached four ways, and the card must not name one of them as
+ * though it were the only one: the read has not landed yet (true of every
+ * board load, since the enrichment starts after the first render); the read
+ * failed; the read answered and nulled this row, which is the permissions
+ * case, because pos-people nulls `clockState` for a row the caller holds no
+ * `people:timekeeping:view` over rather than refusing the whole read; or the
+ * board is not on today, where the clock is not asked for at all. The
+ * component's `clockRead` signal tells them apart — `clockState` alone cannot.
+ *
+ * A card in that state offers both actions, because guessing which one applies
+ * is exactly what the absence is there to prevent.
  */
 export type MechanicClockState = 'CLOCKED_IN' | 'ON_BREAK' | 'CLOCKED_OUT' | 'UNKNOWN';
 
 /**
- * Why a mechanic has no free-hours figure. `CLOSED` is a known fact about the
- * day; `UNKNOWN` is the location's hours being unreadable or its timezone
- * unrecognised; `OFF_ROSTER` is the technician not coming back in the roster
- * read at all, which the dispatch projection can outlive.
+ * Why a mechanic has no free-hours figure.
+ *
+ * `CLOSED` and `OFF_ROSTER` each name one thing: the shop is shut that day, and
+ * the technician did not come back in a roster read that answered — which the
+ * dispatch projection can outlive.
+ *
+ * `UNKNOWN` is everything the board could not read, and it is deliberately
+ * several things: the location's hours unreadable or its timezone unrecognised,
+ * a weekday with no entry, a window that carries no minutes, a roster read that
+ * failed or has not landed, and a mechanic holding a workorder this response
+ * does not carry — where the committed hours rather than the window are what is
+ * missing. One reason for several causes is the point; naming any single one of
+ * them in the copy makes it wrong for the rest.
  */
 export type FreeHoursReason = 'CLOSED' | 'UNKNOWN' | 'OFF_ROSTER';
 

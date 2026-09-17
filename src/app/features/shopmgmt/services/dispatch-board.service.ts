@@ -97,8 +97,29 @@ export type TechnicianShifts = ReadonlyMap<string, TechnicianShift>;
  * A person the roster carries but this map does not is one whose state the
  * caller may not see: pos-people nulls `clockState` for a row the caller holds
  * no `people:timekeeping:view` over, rather than refusing the whole read.
+ *
+ * Only meaningful alongside the `ok` flag on {@link ClockRead}: an empty map
+ * from a failed read says nothing about anyone.
  */
 export type ClockStates = ReadonlyMap<string, ClockState>;
+
+/**
+ * The clock read's outcome as well as its answer.
+ *
+ * An empty map is not self-describing — it is equally "nobody's state is
+ * visible to this caller" and "the read failed". Those call for different
+ * words on the card and, more importantly, for different handling: a failed
+ * read must not overwrite clock state the board already holds, or one
+ * transient 503 wipes the column for every mechanic at once.
+ *
+ * Mirrors `TechnicianRoster.ok`, which exists for exactly this reason on the
+ * roster side. The read still never errors — see `getClockStates`.
+ */
+export interface ClockRead {
+  readonly states: ClockStates;
+  /** False when the read failed; the map is then empty and means nothing. */
+  readonly ok: boolean;
+}
 
 export interface ClockState {
   readonly state: PeopleAvailabilityResponseClockStateEnum;
@@ -242,10 +263,17 @@ export class DispatchBoardService {
    * absent is one the caller may not see — the endpoint nulls the field rather
    * than refusing the read — and is simply left out of the map.
    *
-   * Enrichment, as above: a failure yields an empty map and every card falls
-   * back to offering both clock actions.
+   * Enrichment, as above: this never errors, so the board renders without clock
+   * state rather than not at all. **The `catchError` is load-bearing beyond
+   * that** — `reloadClockStates` subscribes with no error arm and releases a
+   * mechanic's pending guard from this stream, so a read that errored instead
+   * of emitting would leave that card disabled with no way back. Anything that
+   * narrows it has to give the component an error path first.
+   *
+   * What the failure reports is `ok: false`, not an empty map alone: the caller
+   * cannot otherwise tell an outage from a caller who may see nobody.
    */
-  getClockStates(locationId: string, date: string): Observable<ClockStates> {
+  getClockStates(locationId: string, date: string): Observable<ClockRead> {
     return this.getAvailability(locationId, date).pipe(
       map(rows => {
         const states = new Map<string, ClockState>();
@@ -258,9 +286,9 @@ export class DispatchBoardService {
             workSessionId: row.workSessionId ?? null,
           });
         }
-        return states as ClockStates;
+        return { states: states as ClockStates, ok: true };
       }),
-      catchError(() => of(new Map<string, ClockState>() as ClockStates)),
+      catchError(() => of({ states: new Map<string, ClockState>() as ClockStates, ok: false })),
     );
   }
 

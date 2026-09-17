@@ -427,9 +427,10 @@ describe('DispatchBoardService', () => {
       service.getClockStates('loc-1', '2026-04-18').subscribe(next);
 
       expect(peopleAvailabilityStub.listPeopleAvailability).toHaveBeenCalledWith('loc-1', '2026-04-18');
-      expect(next.mock.calls[0][0].get('p1')).toEqual({ state: 'CLOCKED_IN', workSessionId: 'ws-1' });
-      expect(next.mock.calls[0][0].get('p2')).toEqual({ state: 'ON_BREAK', workSessionId: 'ws-2' });
-      expect(next.mock.calls[0][0].get('p3')).toEqual({ state: 'CLOCKED_OUT', workSessionId: null });
+      expect(next.mock.calls[0][0].states.get('p1')).toEqual({ state: 'CLOCKED_IN', workSessionId: 'ws-1' });
+      expect(next.mock.calls[0][0].states.get('p2')).toEqual({ state: 'ON_BREAK', workSessionId: 'ws-2' });
+      expect(next.mock.calls[0][0].states.get('p3')).toEqual({ state: 'CLOCKED_OUT', workSessionId: null });
+      expect(next.mock.calls[0][0].ok).toBe(true);
     });
 
     // pos-people nulls clockState for a row the caller may not see rather than
@@ -443,11 +444,18 @@ describe('DispatchBoardService', () => {
 
       service.getClockStates('loc-1', '2026-04-18').subscribe(next);
 
-      expect(next.mock.calls[0][0].has('hidden')).toBe(false);
-      expect(next.mock.calls[0][0].size).toBe(1);
+      expect(next.mock.calls[0][0].states.has('hidden')).toBe(false);
+      expect(next.mock.calls[0][0].states.size).toBe(1);
+      // The read itself answered — the omission is a permissions decision, and
+      // the board must be able to say so rather than blame an outage.
+      expect(next.mock.calls[0][0].ok).toBe(true);
     });
 
-    it('answers an empty map when the availability read fails', () => {
+    // Never errors, because `reloadClockStates` releases a mechanic's pending
+    // guard from this stream and has no error arm — and reports `ok: false`,
+    // because an empty map alone is indistinguishable from a caller who may
+    // see nobody's clock.
+    it('answers an empty map marked not ok when the availability read fails', () => {
       peopleAvailabilityStub.listPeopleAvailability.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 503 })),
       );
@@ -457,7 +465,8 @@ describe('DispatchBoardService', () => {
       service.getClockStates('loc-1', '2026-04-18').subscribe({ next, error });
 
       expect(error).not.toHaveBeenCalled();
-      expect(next.mock.calls[0][0].size).toBe(0);
+      expect(next.mock.calls[0][0].states.size).toBe(0);
+      expect(next.mock.calls[0][0].ok).toBe(false);
     });
   });
 

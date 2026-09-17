@@ -135,7 +135,8 @@
                        is invisible to assistive tech unless it is pulled in as
                        a description. Both branches carry the same id, so the
                        placeholder explains itself too. -->
-                  <button type="button" class="mech" [draggable]="!isClockPending(mechanic.personId)"
+                  <button type="button" class="mech" [attr.data-drag-for]="mechanic.personId"
+                    [draggable]="!isClockPending(mechanic.personId)"
                     (dragstart)="onDragStart('MECHANIC', mechanic.personId, $event)" (dragend)="onDragEnd()"
                     [attr.aria-describedby]="'mfree-' + mechanic.personId"
                     [attr.aria-label]="mechanic.name
@@ -203,7 +204,7 @@
                         <span class="sr-only" [attr.id]="'mclock-hint-' + mechanic.personId">{{ clockHint | translate }}</span>
                       }
                       @if (showClockIn(mechanic)) {
-                        <button type="button" class="clock-btn clock-in" (click)="clockIn(mechanic)"
+                        <button type="button" [attr.data-clock-for]="mechanic.personId" class="clock-btn clock-in" (click)="clockIn(mechanic)"
                           [disabled]="!canClock(mechanic)"
                           [attr.title]="clockHint ? (clockHint | translate) : null"
                           [attr.aria-describedby]="clockHint ? 'mclock-hint-' + mechanic.personId : null"
@@ -217,7 +218,7 @@
                         <!-- Keyboard parity for the drag onto the break bin;
                              offered only when there is a session to hang a
                              break on, which is what the bin would refuse. -->
-                        <button type="button" class="clock-btn clock-break" (click)="startBreak(mechanic)"
+                        <button type="button" [attr.data-clock-for]="mechanic.personId" class="clock-btn clock-break" (click)="startBreak(mechanic)"
                           [disabled]="!canClock(mechanic)"
                           [attr.aria-label]="mechanic.name
                             ? ('SHOPMGMT.DISPATCH_BOARD.BREAK_START_ARIA' | translate: { name: mechanic.name })
@@ -226,7 +227,7 @@
                         </button>
                       }
                       @if (showClockOut(mechanic)) {
-                        <button type="button" class="clock-btn clock-out" (click)="clockOut(mechanic)"
+                        <button type="button" [attr.data-clock-for]="mechanic.personId" class="clock-btn clock-out" (click)="clockOut(mechanic)"
                           [disabled]="!canClock(mechanic)"
                           [attr.title]="clockHint ? (clockHint | translate) : null"
                           [attr.aria-describedby]="clockHint ? 'mclock-hint-' + mechanic.personId : null"
@@ -320,7 +321,7 @@
                 <!-- Keyboard parity for dragging the chip back to the roster.
                      Both controls are the same gesture: back on duty. -->
                 @if (canEndBreak(mechanic)) {
-                  <button type="button" class="clock-btn clock-break" (click)="endBreak(mechanic)"
+                  <button type="button" [attr.data-clock-for]="mechanic.personId" class="clock-btn clock-break" (click)="endBreak(mechanic)"
                     [disabled]="isClockPending(mechanic.personId)"
                     [attr.aria-label]="mechanic.name
                       ? ('SHOPMGMT.DISPATCH_BOARD.BREAK_END_ARIA' | translate: { name: mechanic.name })
@@ -328,7 +329,7 @@
                     {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_END' | translate }}
                   </button>
                 } @else if (canClockInFromBin(mechanic)) {
-                  <button type="button" class="clock-btn clock-in" (click)="clockIn(mechanic)"
+                  <button type="button" [attr.data-clock-for]="mechanic.personId" class="clock-btn clock-in" (click)="clockIn(mechanic)"
                     [disabled]="isClockPending(mechanic.personId)"
                     [attr.aria-label]="mechanic.name
                       ? ('SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA' | translate: { name: mechanic.name })
@@ -439,6 +440,10 @@
               <span class="note">
                 @if (mechanic.skillCodes.length) {
                   {{ mechanic.skillCodes.join(', ') }}
+                } @else if (skillsUnavailable()) {
+                  <!-- The roster read did not answer: an outage is not a fact
+                       about this technician's certifications. -->
+                  {{ 'SHOPMGMT.DISPATCH_BOARD.CERTS_UNAVAILABLE' | translate }}
                 } @else {
                   {{ 'SHOPMGMT.DISPATCH_BOARD.NO_CERTS' | translate }}
                 }

@@ -1,6 +1,18 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  OnInit,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EMPTY, Observable, Subscription, catchError, forkJoin, interval, map, of, switchMap } from 'rxjs';
@@ -26,6 +38,7 @@ import { isoDateLocal } from '../../models/capacity-calendar.models';
 import {
   BayInventory,
   BayInventoryEntry,
+  ClockRead,
   ClockState,
   ClockStates,
   DispatchBoardService,
@@ -136,6 +149,8 @@ export class DispatchBoardPageComponent implements OnInit {
   private readonly dispatchBoardService = inject(DispatchBoardService);
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly injector = inject(Injector);
   private pollingStarted = false;
 
   /** The 30s poll, held so a 403 can end it; the next successful `load` starts it again. */
@@ -204,8 +219,25 @@ export class DispatchBoardPageComponent implements OnInit {
    * Clock state per person, as the availability read answers it. A person the
    * map omits is one the caller may not see — pos-people nulls `clockState`
    * rather than refusing the read — and their card offers both actions.
+   *
+   * Only readable together with `clockRead`: while that is not `OK` this map
+   * is empty for a reason that has nothing to do with anyone's permissions.
    */
   readonly clockStates = signal<ClockStates>(new Map());
+
+  /**
+   * Whether the clock read behind that map answered, for the same reason
+   * `rosterRead` exists: an empty map is equally "the caller may see nobody's
+   * clock" and "the read failed", and the second must not be reported as the
+   * first. `PENDING` covers the stretch before the first read lands — which is
+   * every board load, because the enrichment starts only once the dashboard
+   * has rendered.
+   *
+   * `NOT_TODAY` is a third thing again: the board deliberately does not ask.
+   * `clockState` is a fact about now and not about the selected date, so on any
+   * other day the board holds none and says so.
+   */
+  private readonly clockRead = signal<'PENDING' | 'OK' | 'FAILED' | 'NOT_TODAY'>('PENDING');
 
   /** Each technician's shift window, behind the free-hours figure. */
   readonly technicianShifts = signal<TechnicianShifts>(new Map());
@@ -240,6 +272,23 @@ export class DispatchBoardPageComponent implements OnInit {
    * the stale-state protection without the lockout.
    */
   private readonly owedSettlements = new Set<() => void>();
+
+  /**
+   * The same debt, for clock writes: releasing a mechanic's pending guard,
+   * owed to whichever clock read is current when it completes.
+   *
+   * A clock write's own readback can be superseded — by the poll's enrichment,
+   * or by a second mechanic's write — and a superseded response must not paint
+   * the board. Releasing the guard from it anyway would re-enable the card over
+   * the state the write just replaced, and the dispatcher would be invited to
+   * send the action that has already succeeded. Parking the debt keeps the card
+   * guarded until a read that actually applies pays it.
+   *
+   * Every reader that bumps `clockSeq` must drain this on every branch it can
+   * take while it is still current, or a card stays disabled for good — there
+   * is no other caller of `markClockPending(id, false)`.
+   */
+  private readonly owedClockSettlements = new Set<() => void>();
 
   readonly sortUnavailable = SORT_UNAVAILABLE;
 
@@ -406,7 +455,11 @@ export class DispatchBoardPageComponent implements OnInit {
       .filter(card => card.availability !== 'BREAK' && card.availability !== 'OFF'),
   );
 
-  /** On break or off duty — read-only: neither state is settable from this board. */
+  /**
+   * On break or off duty. Both are settable from here: the chip carries `End
+   * break` or `In`, and the drag out of the bin does the same — except for a
+   * mechanic on approved time off, whose record is HR's and is offered nothing.
+   */
   readonly offDutyMechanics = computed<MechanicCard[]>(() =>
     (this.dashboard()?.mechanics ?? [])
       .map(mechanic => this.toMechanicCard(mechanic))
@@ -455,13 +508,30 @@ export class DispatchBoardPageComponent implements OnInit {
     };
   });
 
-  /** Mechanics a picker offers, credentialled ones first, then by name. */
+  /**
+   * Mechanics a picker offers, credentialled ones first, then by name.
+   *
+   * A failed roster read empties every credential list at once, so this falls
+   * back to alphabetical on its own — there is nothing to guard, because no
+   * mechanic can out-rank another on credentials nobody has. What the outage
+   * does still change is what the card SAYS about them, which `skillsUnavailable`
+   * answers: "could not be read" rather than "none on file".
+   */
   readonly pickerMechanics = computed<MechanicCard[]>(() =>
     [...this.mechanics()].sort(
       (left, right) =>
         right.skillCodes.length - left.skillCodes.length || (left.name ?? '').localeCompare(right.name ?? ''),
     ),
   );
+
+  /**
+   * Whether the absence of skill chips is a fact about the technician or about
+   * the read behind them — the same distinction `freeHoursReason` draws, on the
+   * other half of what that one read answers.
+   */
+  skillsUnavailable(): boolean {
+    return this.rosterRead() !== 'OK';
+  }
 
   readonly pickerRow = computed<WorkorderRow | null>(() => {
     const request = this.picker();
@@ -914,12 +984,20 @@ export class DispatchBoardPageComponent implements OnInit {
     if (!this.isViewingToday()) {
       return 'SHOPMGMT.DISPATCH_BOARD.CLOCK_TODAY_ONLY';
     }
-    // Not "this board cannot ask" any more — it reads the clock. `UNKNOWN` is
-    // pos-people declining to show this row to this caller.
-    if (mechanic.clockState === 'UNKNOWN') {
-      return 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_CLOCK_STATE';
+    if (mechanic.clockState !== 'UNKNOWN') {
+      return null;
     }
-    return null;
+    // `UNKNOWN` is reached two ways and they are not the same news. Reporting
+    // a read that failed, or has not landed, as a permissions decision tells
+    // the dispatcher to go and ask for access they may already hold — and it
+    // is the state EVERY card is in for the first round trip of every load,
+    // because the enrichment starts only once the board has rendered.
+    if (this.clockRead() !== 'OK') {
+      return 'SHOPMGMT.DISPATCH_BOARD.CLOCK_STATE_UNREAD';
+    }
+    // The read answered and left this row out: pos-people nulls `clockState`
+    // for a row the caller holds no `people:timekeeping:view` over.
+    return 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_CLOCK_STATE';
   }
 
   /**
@@ -1111,8 +1189,8 @@ export class DispatchBoardPageComponent implements OnInit {
   /**
    * Unlike `run()`, this does not re-read the board afterwards. The dashboard
    * carries no clock state at all, so a readback would fetch the same
-   * clock-less roster and confirm nothing — the write's own response is the
-   * only account of the new state there is. Undo is not offered either: a work
+   * clock-less roster and confirm nothing; the clock is re-read on its own
+   * instead, by `reloadClockStates`. Undo is not offered either: a work
    * session is an attendance record, and "clock back out" is a second real
    * event rather than a retraction of the first.
    */
@@ -1139,6 +1217,7 @@ export class DispatchBoardPageComponent implements OnInit {
 
     call.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
+        this.restoreClockFocus(personId);
         this.toast.set({
           id: toastId,
           key: this.toClockSuccessKey(action, name !== null),
@@ -1155,23 +1234,69 @@ export class DispatchBoardPageComponent implements OnInit {
       error: (err: unknown) => {
         this.toast.set({
           id: toastId,
-          key: this.toClockErrorKey(action, err),
+          key: this.toClockErrorKey(action, err, name !== null),
           params,
           tone: 'ERROR',
           undo: null,
         });
+        // Re-read unless the failure tells us nothing was written.
+        //
         // A 409 on start or a 404 on stop is the backend saying this board's
-        // copy is stale — the session was opened or closed elsewhere. Re-read
-        // instead of recording the contradiction by hand: the endpoint is the
-        // authority and it also carries the break state, which the refusal
-        // does not name.
-        if (this.isClockRefusal(action, err)) {
-          this.reloadClockStates(() => this.markClockPending(personId, false));
-        } else {
+        // copy is stale — the session was opened or closed elsewhere — and the
+        // endpoint is the authority. But a 504 or a dropped connection is an
+        // UNKNOWN outcome, not a known no-write: pos-people may well have
+        // committed the session before the response was lost. Releasing the
+        // card against unchanged state would leave the dispatcher looking at a
+        // board that contradicts what just happened, so the unknown cases
+        // re-read too, and only a failure that cannot have written — a 403, an
+        // unknown person, a rejected request — releases on the spot.
+        if (this.isKnownNoWrite(err)) {
           this.markClockPending(personId, false);
+        } else {
+          this.reloadClockStates(() => this.markClockPending(personId, false));
         }
       },
     });
+  }
+
+  /**
+   * Put keyboard focus back after a clock control has destroyed itself.
+   *
+   * Every one of these controls removes its own card from the rail it is on:
+   * clocking out moves the mechanic to the bin, ending a break moves them back
+   * to the roster. Angular destroys the focused node and focus falls to
+   * `<body>`, so the next Tab starts from the top of the document — past the
+   * location picker, the date field and the filters. A dispatcher clocking in
+   * eight mechanics would traverse the page eight times, and these are the
+   * controls that exist to give the drag a keyboard equivalent in the first
+   * place (WCAG 2.5.7), so losing focus in them defeats their purpose.
+   *
+   * Only reclaims focus that was actually dropped: if the dispatcher has moved
+   * on and something else holds it, that is theirs to keep.
+   */
+  private restoreClockFocus(personId: string): void {
+    const root = this.host.nativeElement as HTMLElement;
+    afterNextRender(
+      () => {
+        // Checked AFTER the render, not before it: at the moment the write
+        // resolves the button is still there and still focused. Focus is lost
+        // when the re-read moves the card and the node is destroyed, which is
+        // the render this callback runs behind. Anything else holding focus by
+        // then is the dispatcher having moved on, and is theirs to keep.
+        const active = root.ownerDocument.activeElement;
+        if (active && active !== root.ownerDocument.body) {
+          return;
+        }
+        const moved = root.querySelector<HTMLElement>(`[data-clock-for="${personId}"]:not([disabled])`);
+        // The mechanic may have no control at all now — on PTO, or a state the
+        // caller may not see. The card itself is the next best anchor; the
+        // drag handle carries the name, so the announcement still identifies
+        // who focus landed on.
+        const anchor = moved ?? root.querySelector<HTMLElement>(`[data-drag-for="${personId}"]`);
+        anchor?.focus();
+      },
+      { injector: this.injector },
+    );
   }
 
   private markClockPending(personId: string, pending: boolean): void {
@@ -1198,23 +1323,65 @@ export class DispatchBoardPageComponent implements OnInit {
       onSettled?.();
       return;
     }
+    // The clock is a fact about now, so off today's board there is nothing to
+    // re-read and nothing that would change. Release immediately rather than
+    // waiting on a read that is not going to happen.
     const date = this.selectedDate();
+    if (date !== this.todayIso()) {
+      onSettled?.();
+      return;
+    }
     const seq = ++this.clockSeq;
+    // Owed to whichever read is current when it lands, not to this one: this
+    // response may be superseded, and releasing the card from a response the
+    // board refused to apply would re-enable it over pre-write state.
+    if (onSettled) {
+      this.owedClockSettlements.add(onSettled);
+    }
     this.dispatchBoardService
       .getClockStates(locationId, date)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(states => {
+      .subscribe(read => {
         // A location or date switch while this was in flight must not paint the
         // new board with the old shop's clock state.
         if (
-          seq === this.clockSeq &&
-          this.selectedLocationId().trim() === locationId &&
-          this.selectedDate() === date
+          seq !== this.clockSeq ||
+          this.selectedLocationId().trim() !== locationId ||
+          this.selectedDate() !== date
         ) {
-          this.clockStates.set(states);
+          // Superseded: a newer read is in flight and owns the debt now.
+          return;
         }
-        onSettled?.();
+        this.applyClockRead(read);
+        this.drainClockSettlements();
       });
+  }
+
+  /**
+   * Hold what the board has when a read fails.
+   *
+   * The failure answers an empty map, and writing that over good state would
+   * empty the clock column for every mechanic at once — on the strength of one
+   * transient 503, and off the back of a write on a single person. The board
+   * keeps what it was last told and records that it is no longer current.
+   */
+  private applyClockRead(read: ClockRead): void {
+    this.clockRead.set(read.ok ? 'OK' : 'FAILED');
+    if (read.ok) {
+      this.clockStates.set(read.states);
+    }
+  }
+
+  /** Release every mechanic waiting on a clock read; see `owedClockSettlements`. */
+  private drainClockSettlements(): void {
+    if (this.owedClockSettlements.size === 0) {
+      return;
+    }
+    const owed = [...this.owedClockSettlements];
+    this.owedClockSettlements.clear();
+    for (const settle of owed) {
+      settle();
+    }
   }
 
   /**
@@ -1258,7 +1425,12 @@ export class DispatchBoardPageComponent implements OnInit {
    * is the module's catch-all for `IllegalStateException`, so it is read
    * together with the action that provoked it rather than on its own.
    */
-  private toClockErrorKey(action: TimekeepingAction, err: unknown): string {
+  private toClockErrorKey(action: TimekeepingAction, err: unknown, named: boolean): string {
+    // Four of these name the mechanic. ngx-translate leaves an unresolved
+    // `{{mechanic}}` in the string verbatim, so an unnamed mechanic would put
+    // the raw token in front of the dispatcher — the same reason every other
+    // consumer on this board carries an unnamed variant.
+    const suffix = named ? '' : '_UNNAMED';
     if (err instanceof HttpErrorResponse && err.status === 403) {
       return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_FORBIDDEN';
     }
@@ -1267,44 +1439,47 @@ export class DispatchBoardPageComponent implements OnInit {
       return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_PERSON_NOT_FOUND';
     }
     if (action === 'IN' && code === 'INVALID_STATE') {
-      return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_ALREADY_CLOCKED_IN';
+      return `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_ALREADY_CLOCKED_IN${suffix}`;
     }
     if (action === 'OUT' && code === 'WORK_SESSION_NOT_FOUND') {
-      return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_CLOCKED_IN';
+      return `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_CLOCKED_IN${suffix}`;
     }
     // Starting a break answers 404 when the session closed under us and 409
     // when a break is already open; ending one answers 409 for "no open
     // break", which is also its answer for a session id it does not know.
     if (action === 'BREAK_START' && code === 'INVALID_STATE') {
-      return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_ALREADY_ON_BREAK';
+      return `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_ALREADY_ON_BREAK${suffix}`;
     }
     if (action === 'BREAK_START' && code === 'WORK_SESSION_NOT_FOUND') {
-      return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_CLOCKED_IN';
+      return `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_CLOCKED_IN${suffix}`;
     }
     if (action === 'BREAK_END' && code === 'INVALID_STATE') {
-      return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_ON_BREAK';
+      return `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_ON_BREAK${suffix}`;
     }
     return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_GENERIC';
   }
 
   /**
-   * The two refusals that contradict the board's copy of the clock, rather than
-   * reporting a problem with the request itself. Both mean the session moved
-   * under us, so both are worth a re-read; a 403 or an unknown person is not.
+   * Failures that cannot have changed anything, so the board's copy still holds.
+   *
+   * Stated as what is known NOT to have written rather than what is known to
+   * have: the client can answer the first honestly and cannot answer the
+   * second. A refused request never reached the session; a 5xx, a timeout or a
+   * connection that died may have landed after the write committed, and is
+   * treated as an unknown outcome — re-read, do not assume.
    */
-  private isClockRefusal(action: TimekeepingAction, err: unknown): boolean {
-    const code = this.toApiErrorCode(err);
-    switch (action) {
-      case 'IN':
-        return code === 'INVALID_STATE';
-      case 'OUT':
-        return code === 'WORK_SESSION_NOT_FOUND';
-      // Either break refusal means the session or its break moved elsewhere.
-      case 'BREAK_START':
-      case 'BREAK_END':
-        return code === 'INVALID_STATE' || code === 'WORK_SESSION_NOT_FOUND';
+  private isKnownNoWrite(err: unknown): boolean {
+    if (!(err instanceof HttpErrorResponse)) {
+      return false;
     }
+    // 0 is a request that never got an answer — the outcome is unknown.
+    if (err.status === 0) {
+      return false;
+    }
+    return err.status === 400 || err.status === 401 || err.status === 403 || err.status === 422 ||
+      this.toApiErrorCode(err) === 'PERSON_NOT_FOUND';
   }
+
 
   assignBay(row: WorkorderRow, bayId: string): void {
     // A bay whose name has not replicated is still placeable; its confirmation
@@ -1659,9 +1834,12 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   /**
-   * The bay roster and technician credentials come from other domains and load
-   * beside the board rather than gating it — both service calls already answer
-   * an empty map on failure, and the dispatch projection alone still renders.
+   * The bay inventory, the technician roster and the clock come from other
+   * domains and load beside the board rather than gating it: all three answer
+   * rather than error on failure, so the dispatch projection alone still
+   * renders. Two of them say so — the roster and the clock each carry an `ok`
+   * flag — because an empty answer and a failed one call for different words
+   * on the card. The bay inventory does not yet; see its own note.
    */
   private loadEnrichment(locationId: string, date: string): void {
     // Drop the previous selection's maps as the new load STARTS, not when it
@@ -1683,6 +1861,7 @@ export class DispatchBoardPageComponent implements OnInit {
       this.technicianSkills.set(new Map());
       this.clockStates.set(new Map());
       this.rosterRead.set('PENDING');
+      this.clockRead.set('PENDING');
       if (this.enrichedKey.split('|')[0] !== locationId) {
         this.bayInventory.set(new Map());
       }
@@ -1691,10 +1870,20 @@ export class DispatchBoardPageComponent implements OnInit {
     const seq = ++this.enrichmentSeq;
     const clockSeq = ++this.clockSeq;
 
+    // The clock is not date-scoped: pos-people derives `clockState` from the
+    // person's OPEN work session, so the same live reading comes back whatever
+    // date is asked for. Reading it for another day would label that day with
+    // it — the crew showing as clocked out all through yesterday's board — so
+    // off today the board does not ask, and the cards say the state is unknown
+    // for that reason. This is the same argument the date-change reset above
+    // makes; it just has to hold for the re-fetch as well.
+    const isToday = date === this.todayIso();
     forkJoin({
       bays: this.dispatchBoardService.getBayInventory(locationId),
       roster: this.dispatchBoardService.getTechnicianRoster(locationId, date),
-      clocks: this.dispatchBoardService.getClockStates(locationId, date),
+      clocks: isToday
+        ? this.dispatchBoardService.getClockStates(locationId, date)
+        : of<ClockRead>({ states: new Map(), ok: true }),
     })
       .pipe(
         takeUntilDestroyed(this.destroyRef),
@@ -1705,6 +1894,22 @@ export class DispatchBoardPageComponent implements OnInit {
         // shop's bay types and credentials paint the new board — and two reads
         // of the SAME selection can overlap, so an older one landing last would
         // put back the data the newer one just corrected.
+        // Whether or not this enrichment is still the one to paint the board,
+        // it may be the current CLOCK reader, and a mechanic's pending guard is
+        // owed to whoever that is. Pay first, on every branch, or the card that
+        // is waiting stays disabled with nothing left to release it.
+        if (clockSeq === this.clockSeq) {
+          if (!isToday) {
+            this.clockRead.set('NOT_TODAY');
+          } else if (result) {
+            this.applyClockRead(result.clocks);
+          } else {
+            // Unreachable while every source carries its own `catchError`, but
+            // the settlement below must not depend on that staying true.
+            this.clockRead.set('FAILED');
+          }
+          this.drainClockSettlements();
+        }
         if (!result || seq !== this.enrichmentSeq || this.toRequestKey(this.selectedLocationId().trim(), this.selectedDate()) !== key) {
           return;
         }
@@ -1712,11 +1917,6 @@ export class DispatchBoardPageComponent implements OnInit {
         this.technicianSkills.set(result.roster.skills);
         this.technicianShifts.set(result.roster.shifts);
         this.rosterRead.set(result.roster.ok ? 'OK' : 'FAILED');
-        // A clock write's own re-read may have landed while this was in
-        // flight; that one is newer, so it keeps the field.
-        if (clockSeq === this.clockSeq) {
-          this.clockStates.set(result.clocks);
-        }
       });
   }
 
@@ -1937,7 +2137,7 @@ export class DispatchBoardPageComponent implements OnInit {
       assignedWorkorderId: mechanic.assignedWorkorderId,
       whereLabel: bayId ? (this.bayNamesById().get(bayId) ?? null) : null,
       breakExpectedReturn: mechanic.breakExpectedReturn ?? null,
-      ...this.toFreeHours(mechanic.personId, workorder),
+      ...this.toFreeHours(mechanic.personId, workorder, mechanic.assignedWorkorderId !== undefined && !workorder),
       onTimeOff: this.isOnPto(mechanic),
       clockState: clock?.state ?? 'UNKNOWN',
       workSessionId: clock?.workSessionId ?? null,
@@ -1961,7 +2161,17 @@ export class DispatchBoardPageComponent implements OnInit {
   private toFreeHours(
     personId: string,
     workorder: WorkorderSummary | undefined,
+    assignmentUnresolved: boolean,
   ): { freeHours: number | null; freeHoursReason: FreeHoursReason | null; freeHoursIsPlaceholder: boolean } {
+    if (assignmentUnresolved) {
+      // The mechanic holds a workorder this response does not carry — it is
+      // scheduled for another date, parked rather than holding a bay, or the
+      // aggregation came back short. Its estimate is the one number that would
+      // make this figure right, so the commitment is unknown and the figure
+      // with it. `isBayFree` reads the same absence the same way: a claim the
+      // board cannot disprove, not an empty slot.
+      return { freeHours: null, freeHoursReason: 'UNKNOWN', freeHoursIsPlaceholder: false };
+    }
     const shift = this.technicianShifts().get(personId);
     if (!shift) {
       // Absent from a roster that answered is a fact about the technician;

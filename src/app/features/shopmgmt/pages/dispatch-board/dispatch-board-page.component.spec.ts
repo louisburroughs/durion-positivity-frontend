@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { signal } from '@angular/core';
+import { ApplicationRef, signal } from '@angular/core';
 import { ComponentFixture, TestBed, discardPeriodicTasks, fakeAsync, tick } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
@@ -168,7 +168,7 @@ describe('DispatchBoardPageComponent', () => {
     getAvailability: vi.fn().mockReturnValue(of([])),
     getBayInventory: vi.fn().mockReturnValue(of(new Map())),
     getTechnicianRoster: vi.fn().mockReturnValue(of({ skills: new Map(), shifts: new Map(), ok: true })),
-    getClockStates: vi.fn().mockReturnValue(of(new Map())),
+    getClockStates: vi.fn().mockReturnValue(of({ states: new Map(), ok: true })),
     assignMechanic: vi.fn().mockReturnValue(of({})),
     releaseMechanic: vi.fn().mockReturnValue(of({})),
     assignBay: vi.fn().mockReturnValue(of({})),
@@ -202,7 +202,7 @@ describe('DispatchBoardPageComponent', () => {
     dispatchBoardServiceStub.getPrimaryLocation.mockReturnValue(of({ locationId: 'LOC-1' }));
     dispatchBoardServiceStub.getBayInventory.mockReturnValue(of(new Map()));
     dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(of({ skills: new Map(), shifts: new Map(), ok: true }));
-    dispatchBoardServiceStub.getClockStates.mockReturnValue(of(new Map()));
+    dispatchBoardServiceStub.getClockStates.mockReturnValue(of({ states: new Map(), ok: true }));
     dispatchBoardServiceStub.assignMechanic.mockReturnValue(of({}));
     dispatchBoardServiceStub.releaseMechanic.mockReturnValue(of({}));
     dispatchBoardServiceStub.assignBay.mockReturnValue(of({}));
@@ -676,6 +676,57 @@ describe('DispatchBoardPageComponent', () => {
     });
 
     // A DERIVED day with no minutes is a contract violation, not a full shift.
+    // A mechanic can hold a workorder this response does not carry: one
+    // scheduled for another date, one parked rather than holding a bay, or an
+    // aggregation that came back short (`dataQualityWarning`). Its estimate is
+    // the one number that would make the figure right, so the commitment is
+    // unknown — and `isBayFree` already reads this same absence as a claim the
+    // board cannot disprove rather than as nothing.
+    it('will not call a shift free when it cannot see what the mechanic is committed to', () => {
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(
+        of({
+          skills: new Map(),
+          shifts: new Map([['M1', { status: 'DERIVED', source: 'LOCATION_HOURS', minutes: 480 }]]),
+          ok: true,
+        }),
+      );
+      renderWith({
+        ...fullDashboard,
+        mechanics: [{ personId: 'M1', assignedWorkorderId: 'wo-somewhere-else' }],
+      });
+
+      const card = component.mechanics()[0];
+      expect(card.freeHours).toBeNull();
+      expect(card.freeHoursReason).toBe('UNKNOWN');
+    });
+
+    // A failed roster read empties the credential lists, and the card must not
+    // report that as a fact about the technicians: "no certifications on file"
+    // is a statement about them, during an outage that never asked.
+    it('says credentials could not be read rather than that there are none', () => {
+      dispatchBoardServiceStub.getTechnicianRoster.mockReturnValue(
+        of({ skills: new Map(), shifts: new Map(), ok: false }),
+      );
+      renderWith({
+        ...fullDashboard,
+        mechanics: [
+          { personId: 'M1', firstName: 'Zoe', lastName: 'Adams' },
+          { personId: 'M2', firstName: 'Alan', lastName: 'Brook' },
+        ],
+      });
+      // The note lives in the picker dialog, which renders only while open and
+      // only for a workorder the board is actually carrying.
+      component.picker.set({ kind: 'MECHANIC', workorderId: component.allRows()[0].workorderId });
+      fixture.detectChanges();
+
+      expect(component.skillsUnavailable()).toBe(true);
+      // Everyone is still offered — the outage is not a reason to hide people.
+      expect(component.pickerMechanics().map(mechanic => mechanic.personId)).toEqual(['M2', 'M1']);
+
+      const note: HTMLElement | null = fixture.nativeElement.querySelector('.opt .note');
+      expect(note?.textContent).toContain('SHOPMGMT.DISPATCH_BOARD.CERTS_UNAVAILABLE');
+    });
+
     // Third of the three causes that land on `UNKNOWN` — with unreadable hours
     // above and a failed roster read under 'roster read'. All three show the
     // one message, so that message may not name any single cause; naming
@@ -720,7 +771,7 @@ describe('DispatchBoardPageComponent', () => {
 
     it('renders the state the availability read reports, as a single opposing action', () => {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
       );
       renderWith(fullDashboard);
 
@@ -737,7 +788,7 @@ describe('DispatchBoardPageComponent', () => {
     // bin whatever the dispatch projection's own `onBreak` says.
     it('moves a mechanic the clock reports on break into the break bin', () => {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-1' }]])),
+        of({ states: new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-1' }]]), ok: true }),
       );
       renderWith(fullDashboard);
 
@@ -752,7 +803,7 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
 
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
       );
       component.clockIn(component.mechanics()[0]);
       fixture.detectChanges();
@@ -804,7 +855,7 @@ describe('DispatchBoardPageComponent', () => {
         throwError(() => ({ status: 409, error: { code: 'INVALID_STATE' } })),
       );
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-9' }]])),
+        of({ states: new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-9' }]]), ok: true }),
       );
 
       component.clockIn(component.mechanics()[0]);
@@ -822,7 +873,7 @@ describe('DispatchBoardPageComponent', () => {
         throwError(() => ({ status: 404, error: { code: 'WORK_SESSION_NOT_FOUND' } })),
       );
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]])),
+        of({ states: new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]]), ok: true }),
       );
 
       component.clockOut(component.mechanics()[0]);
@@ -855,7 +906,7 @@ describe('DispatchBoardPageComponent', () => {
     // clocking: a denied break would report the wrong operation.
     it('reports a refused break as a timekeeping permission problem', () => {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
       );
       renderWith(fullDashboard);
       dispatchBoardServiceStub.startBreak.mockReturnValueOnce(
@@ -938,7 +989,7 @@ describe('DispatchBoardPageComponent', () => {
 
     it('drops clock state when the board switches location', () => {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
       );
       renderWith(fullDashboard);
       expect(component.mechanics()[0].clockState).toBe('CLOCKED_IN');
@@ -955,7 +1006,7 @@ describe('DispatchBoardPageComponent', () => {
     // The clock is a fact about now, and a window is resolved for one day.
     it('drops clock state when the board switches date', () => {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
       );
       renderWith(fullDashboard);
       expect(component.mechanics()[0].clockState).toBe('CLOCKED_IN');
@@ -965,6 +1016,219 @@ describe('DispatchBoardPageComponent', () => {
       fixture.detectChanges();
 
       expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
+    });
+
+    // -----------------------------------------------------------------------
+    // Reading the clock: whose answer wins, and what an absence means
+    // -----------------------------------------------------------------------
+    // Each of these was proved missing by mutation: the guard was deleted, or
+    // the fix applied, and all 266 tests stayed green either way.
+
+    // The clock write's readback and the poll's enrichment both bump the same
+    // sequence counter. A superseded readback must not release the card: the
+    // board is still showing the state the write replaced, so re-enabling it
+    // invites the dispatcher to send the action that has already succeeded.
+    it('does not re-enable a card from a readback the board refused to apply', () => {
+      const writeReadback = new Subject<{ states: Map<string, unknown>; ok: boolean }>();
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
+      );
+      renderWith(fullDashboard);
+
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(writeReadback);
+      component.clockOut(component.mechanics()[0]);
+      expect(component.isClockPending('M1')).toBe(true);
+
+      // A second read supersedes it — here the enrichment, as the 30s poll or
+      // any board reload would.
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(new Subject());
+      component.refresh();
+      fixture.detectChanges();
+
+      // The superseded readback lands last and is rejected for painting.
+      writeReadback.next({ states: new Map(), ok: true });
+      writeReadback.complete();
+      fixture.detectChanges();
+
+      // Still guarded: the board holds pre-write state, so the card must not
+      // offer the action again.
+      expect(component.isClockPending('M1')).toBe(true);
+    });
+
+    // The other half of that rule: parking the debt must not strand it. The
+    // superseding reader pays on every branch it can take, including the one
+    // where its own enrichment fails.
+    it('releases the card from the superseding read, even when that read fails', () => {
+      const writeReadback = new Subject<{ states: Map<string, unknown>; ok: boolean }>();
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
+      );
+      renderWith(fullDashboard);
+
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(writeReadback);
+      component.clockOut(component.mechanics()[0]);
+
+      // The superseding read fails the way the service reports failure.
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(of({ states: new Map(), ok: false }));
+      component.refresh();
+      fixture.detectChanges();
+      writeReadback.next({ states: new Map(), ok: true });
+      fixture.detectChanges();
+
+      // Released — a card with nothing left to settle it would stay disabled
+      // until the page is reloaded.
+      expect(component.isClockPending('M1')).toBe(false);
+    });
+
+    // A failed read answers an empty map. Writing that over good state empties
+    // the clock column for every mechanic at once — off the back of a write on
+    // one person, and on the strength of one transient 503.
+    it('keeps the clock state it has when a re-read fails', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({
+          states: new Map([
+            ['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }],
+            ['M2', { state: 'ON_BREAK', workSessionId: 'ws-2' }],
+          ]),
+          ok: true,
+        }),
+      );
+      renderWith(fullDashboard);
+      expect(component.offDutyMechanics().some(mechanic => mechanic.personId === 'M2')).toBe(true);
+
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(of({ states: new Map(), ok: false }));
+      component.clockOut(component.mechanics().find(mechanic => mechanic.personId === 'M1')!);
+      fixture.detectChanges();
+
+      // M2 is untouched by a write on M1 and by the outage that followed it.
+      expect(component.offDutyMechanics().some(mechanic => mechanic.personId === 'M2')).toBe(true);
+    });
+
+    // `UNKNOWN` is reached both by a read that failed and by a read that
+    // answered and nulled the row. Only the second is about permissions, and
+    // the first is the state every card is in for the opening round trip.
+    it('does not call an unread clock a permissions decision', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(of({ states: new Map(), ok: false }));
+      renderWith(fullDashboard);
+
+      const card = component.mechanics()[0];
+      expect(card.clockState).toBe('UNKNOWN');
+      expect(component.clockHintKey(card)).toBe('SHOPMGMT.DISPATCH_BOARD.CLOCK_STATE_UNREAD');
+    });
+
+    it('still names permissions when the read answered and left the row out', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M2', { state: 'CLOCKED_IN', workSessionId: 'ws-2' }]]), ok: true }),
+      );
+      renderWith(fullDashboard);
+
+      const card = component.mechanics().find(mechanic => mechanic.personId === 'M1')!;
+      expect(card.clockState).toBe('UNKNOWN');
+      expect(component.clockHintKey(card)).toBe('SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_CLOCK_STATE');
+    });
+
+    // pos-people derives `clockState` from the person's OPEN work session, so
+    // the same live reading comes back whatever date is asked for. Reading it
+    // for another day would label that day with it.
+    it('does not read the clock for a date that is not today', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.getClockStates.mockClear();
+
+      component.selectedDate.set('2026-05-04');
+      fixture.detectChanges();
+
+      expect(dispatchBoardServiceStub.getClockStates).not.toHaveBeenCalled();
+    });
+
+    // The consequence that the disabled controls do NOT cover: without this,
+    // today's clocked-out crew empties yesterday's roster into the bin and the
+    // mechanic picker offers nobody for the day being looked at.
+    it('leaves the roster alone on another day rather than emptying it', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]]), ok: true }),
+      );
+      renderWith(fullDashboard);
+      // On today's board the clocked-out mechanic belongs in the bin.
+      expect(component.mechanics().some(mechanic => mechanic.personId === 'M1')).toBe(false);
+
+      component.selectedDate.set('2026-05-04');
+      fixture.detectChanges();
+
+      expect(component.mechanics().some(mechanic => mechanic.personId === 'M1')).toBe(true);
+      expect(component.pickerMechanics().length).toBeGreaterThan(0);
+    });
+
+    // A 5xx or a dropped connection may have landed after pos-people committed
+    // the session. Releasing the card against unchanged state would leave the
+    // board contradicting what just happened.
+    it('re-reads after a failure that may still have written', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.clockOut.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 504 })));
+      const reads = dispatchBoardServiceStub.getClockStates.mock.calls.length;
+
+      component.clockOut(component.mechanics()[0]);
+
+      expect(dispatchBoardServiceStub.getClockStates.mock.calls.length).toBe(reads + 1);
+    });
+
+    it('does not re-read after a failure that cannot have written', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.clockOut.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+      const reads = dispatchBoardServiceStub.getClockStates.mock.calls.length;
+
+      component.clockOut(component.mechanics()[0]);
+
+      expect(dispatchBoardServiceStub.getClockStates.mock.calls.length).toBe(reads);
+    });
+
+    // ngx-translate leaves an unresolved placeholder in the string verbatim, so
+    // without the unnamed variant the dispatcher reads "{{mechanic}} is not
+    // clocked in."
+    it('names nobody in a clock error for a mechanic whose name has not replicated', () => {
+      const unnamed: DashboardResponse = {
+        ...fullDashboard,
+        // A mechanic carrying an id and nothing else: neither name has replicated.
+        mechanics: [{ personId: fullDashboard.mechanics![0].personId }],
+      };
+      dispatchBoardServiceStub.clockOut.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 404, error: { code: 'WORK_SESSION_NOT_FOUND' } })),
+      );
+      renderWith(unnamed);
+
+      component.clockOut(component.mechanics()[0]);
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_CLOCKED_IN_UNNAMED');
+      expect(component.toast()?.params).toEqual({});
+    });
+
+    // Every clock control removes its own card from the rail it stands on, so
+    // acting on one destroys the focused node and focus falls to <body> — the
+    // next Tab would start from the top of the document. These are the controls
+    // that give the drag its keyboard equivalent (WCAG 2.5.7), so dropping
+    // focus in them defeats what they are for.
+    it('keeps keyboard focus on the mechanic after a control destroys itself', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
+      );
+      renderWith(fullDashboard);
+
+      const control: HTMLButtonElement | null =
+        fixture.nativeElement.querySelector('[data-clock-for="M1"].clock-out');
+      expect(control).not.toBeNull();
+      control!.focus();
+      expect(document.activeElement).toBe(control);
+
+      // The write moves M1 to the bin, taking this button with it.
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]]), ok: true }),
+      );
+      control!.click();
+      fixture.detectChanges();
+      // `afterNextRender` callbacks run in the render phase; `whenStable` never
+      // settles here because the board polls on a 30s interval.
+      TestBed.inject(ApplicationRef).tick();
+
+      expect(document.activeElement).not.toBe(document.body);
     });
 
     it('hides the control from a caller without the timekeeping authority', () => {
@@ -3412,7 +3676,7 @@ describe('DispatchBoardPageComponent', () => {
 
     it('closes the clock once the day has moved past the board\u2019s date', () => {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
       );
       renderWith(fullDashboard);
       expect(component.isViewingToday()).toBe(true);
@@ -3449,7 +3713,7 @@ describe('DispatchBoardPageComponent', () => {
         ],
       };
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-1' }]])),
+        of({ states: new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-1' }]]), ok: true }),
       );
       renderWith(onPtoAndOnBreak);
 
@@ -3474,7 +3738,7 @@ describe('DispatchBoardPageComponent', () => {
         ],
       };
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]])),
+        of({ states: new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]]), ok: true }),
       );
       renderWith(onPtoAndClockedOut);
 
@@ -3507,7 +3771,7 @@ describe('DispatchBoardPageComponent', () => {
         ],
       };
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]])),
+        of({ states: new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]]), ok: true }),
       );
       renderWith(onPtoAndClockedOut);
 
@@ -3517,7 +3781,7 @@ describe('DispatchBoardPageComponent', () => {
 
     it('still says not-clocked-in for a mechanic who is simply off the clock', () => {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]])),
+        of({ states: new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]]), ok: true }),
       );
       renderWith(fullDashboard);
 
@@ -3554,7 +3818,7 @@ describe('DispatchBoardPageComponent', () => {
     // someone who is plainly already clocked in.
     it('accepts no drop while a write on that mechanic is in flight', () => {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
       );
       renderWith(fullDashboard);
 
@@ -3628,7 +3892,7 @@ describe('DispatchBoardPageComponent', () => {
     // "clock them in first", which names the wrong reason.
     it('offers neither drop target on another day\u2019s board', () => {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
       );
       renderWith(fullDashboard);
       component.selectedDate.set('2026-05-04');
@@ -3739,12 +4003,10 @@ describe('DispatchBoardPageComponent', () => {
     /** Render with M1 clocked in and M2 on a break. */
     function renderWithClocks(): void {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(
-          new Map([
+        of({ states: new Map([
             ['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }],
             ['M2', { state: 'ON_BREAK', workSessionId: 'ws-2' }],
-          ]),
-        ),
+          ]), ok: true }),
       );
       renderWith(fullDashboard);
     }
@@ -3784,7 +4046,7 @@ describe('DispatchBoardPageComponent', () => {
     // nothing to hang one on. Since clocked-out mechanics sit in the bin, the
     // roster case left is a row whose clock state the caller may not read.
     it('refuses a break for a mechanic with no open session, and says why', () => {
-      dispatchBoardServiceStub.getClockStates.mockReturnValue(of(new Map()));
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(of({ states: new Map(), ok: true }));
       renderWith(fullDashboard);
       expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
       component.onDragStart('MECHANIC', 'M1', dragEvent());
@@ -3813,7 +4075,7 @@ describe('DispatchBoardPageComponent', () => {
           },
         ],
       };
-      dispatchBoardServiceStub.getClockStates.mockReturnValue(of(new Map()));
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(of({ states: new Map(), ok: true }));
       renderWith(onPto);
 
       expect(binCard('M1').availability).toBe('OFF');
@@ -3914,12 +4176,10 @@ describe('DispatchBoardPageComponent', () => {
 
     function renderClockedOut(): void {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(
-          new Map([
+        of({ states: new Map([
             ['M1', { state: 'CLOCKED_OUT', workSessionId: null }],
             ['M2', { state: 'CLOCKED_IN', workSessionId: 'ws-2' }],
-          ]),
-        ),
+          ]), ok: true }),
       );
       renderWith(fullDashboard);
     }
@@ -3975,7 +4235,7 @@ describe('DispatchBoardPageComponent', () => {
     // The same gesture means two things; the state decides which write it is.
     it('ends a break instead when that is the state they are in', () => {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-1' }]])),
+        of({ states: new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-1' }]]), ok: true }),
       );
       renderWith(fullDashboard);
       component.onDragStart('MECHANIC', 'M1', dragEvent(), 'BREAK');
@@ -3996,7 +4256,7 @@ describe('DispatchBoardPageComponent', () => {
     // those rows would empty the roster for a dispatcher with no timekeeping
     // grant, which is the one case that must keep working as it always did.
     it('leaves a mechanic whose clock state cannot be read on the roster', () => {
-      dispatchBoardServiceStub.getClockStates.mockReturnValue(of(new Map()));
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(of({ states: new Map(), ok: true }));
       renderWith(fullDashboard);
 
       expect(component.mechanics().map(mechanic => mechanic.personId)).toContain('M1');
