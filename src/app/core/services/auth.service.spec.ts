@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
 
 import { AuthService } from './auth.service';
+import { authInterceptor } from '../interceptors/auth.interceptor';
 import { Configuration as SecurityConfiguration, TokenPairResponse, ValidateResponse } from '@durion-sdk/security';
 import { environment } from '../../../environments/environment';
 import { encodePermissionBits } from '../security/permission-bits';
@@ -584,6 +585,44 @@ describe('AuthService', () => {
       expect(restored.tenantId()).toBe(TENANT_ID);
       expect(restored.tenant()?.slug).toBe('acme-tire');
       httpMock.expectNone(r => r.url.includes('/tenants/me'));
+    });
+
+    it('loads the tenant on a reload with the real interceptor in the chain', async () => {
+      const token = tokenWith({ tid: TENANT_ID });
+      loginWith(token);
+      flushTenantMe();
+      // Only the token survives this reload; the tenant summary does not, so the
+      // restored service has to fetch it.
+      sessionStorage.removeItem('durion-tenant');
+
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          AuthService,
+          provideRouter([]),
+          // The real interceptor, which injects AuthService to read the token
+          // off it: a /tenants/me request issued from the constructor would
+          // re-enter DI mid-construction and fail with NG0200.
+          provideHttpClient(withInterceptors([authInterceptor])),
+          provideHttpClientTesting(),
+          { provide: SecurityConfiguration, useValue: new SecurityConfiguration({ basePath: `${environment.apiBaseUrl}/security-service` }) },
+        ],
+      });
+      const restored = TestBed.inject(AuthService);
+      httpMock = TestBed.inject(HttpTestingController);
+
+      // Nothing goes out while the service is still being built.
+      httpMock.expectNone(r => r.url.includes('/tenants/me'));
+      await new Promise<void>(resolve => queueMicrotask(resolve));
+
+      const req = httpMock.expectOne(r => r.url.endsWith('/security-service/v1/tenants/me'));
+      expect(req.request.headers.get('Authorization')).toBe(`Bearer ${token}`);
+      req.flush({ id: TENANT_ID, slug: 'acme-tire', displayName: 'Acme Tire & Auto', status: 'ACTIVE' });
+
+      expect(restored.tenant()?.slug).toBe('acme-tire');
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
     });
 
     it('recognises the platform tenant from tid', () => {
