@@ -170,6 +170,38 @@ describe('DispatchBoardPageComponent accessibility', () => {
     expect(row.querySelector('.mclock')?.getAttribute('role')).toBe('group');
   });
 
+  // `aria-label` on an element REPLACES its descendant text in the accessible
+  // name, so anything inside the drag handle — the free-hours reading included
+  // — is invisible to assistive tech unless it is pulled in as a description.
+  it('describes the drag handle with the free-hours reading it contains', () => {
+    const row: HTMLElement = fixture.nativeElement.querySelector('.mech-row');
+    const handle: HTMLButtonElement = row.querySelector('button.mech')!;
+    const describedBy = handle.getAttribute('aria-describedby');
+
+    expect(describedBy).toBeTruthy();
+    const description = fixture.nativeElement.querySelector(`#${CSS.escape(describedBy!)}`);
+    expect(description).toBeTruthy();
+    expect(description.classList.contains('mfree')).toBe(true);
+  });
+
+  // The hint explains why a control is inert or doubled. A disabled button
+  // cannot take focus, so the group carries the description too.
+  it('ties the clock hint to the controls it explains', () => {
+    component.selectedDate.set('2026-05-04');
+    fixture.detectChanges();
+
+    const group: HTMLElement = fixture.nativeElement.querySelector('.mclock');
+    const hintId = group.getAttribute('aria-describedby');
+    expect(hintId).toBeTruthy();
+    expect(fixture.nativeElement.querySelector(`#${CSS.escape(hintId!)}`)?.textContent).toContain(
+      'CLOCK_TODAY_ONLY',
+    );
+
+    for (const button of Array.from(group.querySelectorAll('.clock-btn'))) {
+      expect(button.getAttribute('aria-describedby')).toBe(hintId);
+    }
+  });
+
   it('renders the mechanic picker dialog with no axe violations', async () => {
     component.openPicker('MECHANIC', 'wo-to-assign');
     fixture.detectChanges();

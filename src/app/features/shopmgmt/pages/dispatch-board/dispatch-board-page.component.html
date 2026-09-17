@@ -130,8 +130,14 @@
                      button is not focusable or operable as two controls. -->
                 <div class="mech-row" [attr.data-st]="mechanic.availability"
                   [class.busy]="isClockPending(mechanic.personId)">
+                  <!-- `aria-label` on the handle REPLACES its descendant text in
+                       the accessible name, so the free-hours reading inside it
+                       is invisible to assistive tech unless it is pulled in as
+                       a description. Both branches carry the same id, so the
+                       placeholder explains itself too. -->
                   <button type="button" class="mech" draggable="true"
                     (dragstart)="onDragStart('MECHANIC', mechanic.personId, $event)" (dragend)="onDragEnd()"
+                    [attr.aria-describedby]="'mfree-' + mechanic.personId"
                     [attr.aria-label]="mechanic.name
                       ? ('SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA' | translate: { name: mechanic.name })
                       : ('SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA_UNNAMED' | translate)">
@@ -147,9 +153,12 @@
                         <!-- The window behind this is the shop's hours standing in
                              for a personal roster, so the title says so rather
                              than letting the number read as a promise. -->
-                        <span class="mfree"
+                        <span class="mfree" [attr.id]="'mfree-' + mechanic.personId"
                           [attr.title]="'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS_PLACEHOLDER_HINT' | translate">
-                          {{ 'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS' | translate: { hours: mechanic.freeHours } }}
+                          <!-- Through the `number` pipe like the board's other
+                               hour readings: a raw interpolation prints 6.5 with
+                               a dot in every locale that writes 6,5. -->
+                          {{ 'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS' | translate: { hours: (mechanic.freeHours | number: '1.0-1') } }}
                           <!-- The caveat rides along non-visually too: `title`
                                reaches neither the keyboard nor touch, as this
                                board's own `.na` rule says, and a number read
@@ -158,7 +167,8 @@
                         </span>
                       } @else {
                         @let freeHoursKey = freeHoursReasonKey(mechanic);
-                        <span class="na mfree" [attr.title]="freeHoursKey | translate">
+                        <span class="na mfree" [attr.id]="'mfree-' + mechanic.personId"
+                          [attr.title]="freeHoursKey | translate">
                           <span aria-hidden="true">&mdash;</span>
                           <span class="sr-only">{{ freeHoursKey | translate }}</span>
                         </span>
@@ -177,6 +187,7 @@
                   @if (canManageClock()) {
                     @let clockHint = clockHintKey(mechanic);
                     <span class="mclock" role="group"
+                      [attr.aria-describedby]="clockHint ? 'mclock-hint-' + mechanic.personId : null"
                       [attr.aria-label]="mechanic.name
                         ? ('SHOPMGMT.DISPATCH_BOARD.CLOCK_GROUP_ARIA' | translate: { name: mechanic.name })
                         : ('SHOPMGMT.DISPATCH_BOARD.CLOCK_GROUP_ARIA_UNNAMED' | translate)">
@@ -185,12 +196,13 @@
                            and it is read out rather than left to a title
                            attribute a screen reader may never announce. -->
                       @if (clockHint) {
-                        <span class="sr-only">{{ clockHint | translate }}</span>
+                        <span class="sr-only" [attr.id]="'mclock-hint-' + mechanic.personId">{{ clockHint | translate }}</span>
                       }
                       @if (showClockIn(mechanic)) {
                         <button type="button" class="clock-btn clock-in" (click)="clockIn(mechanic)"
                           [disabled]="!canClock(mechanic)"
                           [attr.title]="clockHint ? (clockHint | translate) : null"
+                          [attr.aria-describedby]="clockHint ? 'mclock-hint-' + mechanic.personId : null"
                           [attr.aria-label]="mechanic.name
                             ? ('SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA' | translate: { name: mechanic.name })
                             : ('SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA_UNNAMED' | translate)">
@@ -213,6 +225,7 @@
                         <button type="button" class="clock-btn clock-out" (click)="clockOut(mechanic)"
                           [disabled]="!canClock(mechanic)"
                           [attr.title]="clockHint ? (clockHint | translate) : null"
+                          [attr.aria-describedby]="clockHint ? 'mclock-hint-' + mechanic.personId : null"
                           [attr.aria-label]="mechanic.name
                             ? ('SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA' | translate: { name: mechanic.name })
                             : ('SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA_UNNAMED' | translate)">

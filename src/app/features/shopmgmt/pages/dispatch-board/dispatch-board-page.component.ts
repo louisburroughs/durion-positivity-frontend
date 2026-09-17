@@ -1986,9 +1986,13 @@ export class DispatchBoardPageComponent implements OnInit {
     }
     // Not on the clock is off duty, whatever work the projection still has
     // against them: a workorder assigned to someone who has gone home is a
-    // plan for tomorrow, not a mechanic on the floor. Only a state the caller
-    // was actually told moves anyone — `UNKNOWN` falls through below, so a
-    // caller who may not read the clock keeps the roster they had before.
+    // plan for tomorrow, not a mechanic on the floor. No CLOCK state the caller
+    // was not told moves anyone: `UNKNOWN` falls through to the reading this
+    // board had before it could ask pos-people anything, `onBreak` included.
+    // That fallback is the point rather than an oversight — it is the only
+    // break signal a caller without `people:timekeeping:view` has, and dropping
+    // it would take the bin away from them entirely. So `UNKNOWN` does not mean
+    // "never relocates"; it means the clock casts no vote.
     if (clock?.state === 'CLOCKED_OUT') {
       return 'OFF';
     }

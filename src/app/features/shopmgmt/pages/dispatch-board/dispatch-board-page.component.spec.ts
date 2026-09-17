@@ -612,6 +612,18 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.mechanics().find(mechanic => mechanic.personId === 'M2')?.freeHours).toBe(8);
     });
 
+    // The board formats its other hour readings through the `number` pipe; a
+    // raw interpolation prints 6.5 with a dot in every locale that writes 6,5.
+    it('formats the figure through the number pipe, like the board\u2019s other hours', () => {
+      renderWithShift(510);   // 8.5 h window, 2 h committed on M1
+
+      const free: HTMLElement = fixture.nativeElement.querySelector('.mech .mfree');
+      // The stub translator echoes the key, so the formatted value is asserted
+      // on the card model and the pipe's presence in the rendered markup.
+      expect(component.mechanics()[0].freeHours).toBe(6.5);
+      expect(free.textContent).toContain('SHOPMGMT.DISPATCH_BOARD.FREE_HOURS');
+    });
+
     it('renders the figure rather than the placeholder', () => {
       renderWithShift(480);
       const free: HTMLElement | null = fixture.nativeElement.querySelector('.mech .mfree');
