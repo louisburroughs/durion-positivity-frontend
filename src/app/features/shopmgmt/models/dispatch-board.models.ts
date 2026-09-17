@@ -59,15 +59,20 @@ export type MechanicClockState = 'CLOCKED_IN' | 'ON_BREAK' | 'CLOCKED_OUT' | 'UN
  * the technician did not come back in a roster read that answered — which the
  * dispatch projection can outlive.
  *
- * `UNKNOWN` is everything the board could not read, and it is deliberately
- * several things: the location's hours unreadable or its timezone unrecognised,
- * a weekday with no entry, a window that carries no minutes, a roster read that
- * failed or has not landed, and a mechanic holding a workorder this response
- * does not carry — where the committed hours rather than the window are what is
- * missing. One reason for several causes is the point; naming any single one of
- * them in the copy makes it wrong for the rest.
+ * `UNKNOWN` is everything about the WINDOW the board could not read, and it is
+ * deliberately several things: the location's hours unreadable or its timezone
+ * unrecognised, a weekday with no entry, a window that carries no minutes, and
+ * a roster read that failed or has not landed. One reason for several causes is
+ * the point; naming any single one of them in the copy makes it wrong for the
+ * rest.
+ *
+ * `UNKNOWN_COMMITMENT` is the mirror case and is kept apart from it: the window
+ * is perfectly readable, but the mechanic holds a workorder this response does
+ * not carry, so what they are committed to is the unknown. Folding it into
+ * `UNKNOWN` would tell the dispatcher the board could not read a shift window
+ * it read without difficulty.
  */
-export type FreeHoursReason = 'CLOSED' | 'UNKNOWN' | 'OFF_ROSTER';
+export type FreeHoursReason = 'CLOSED' | 'UNKNOWN' | 'UNKNOWN_COMMITMENT' | 'OFF_ROSTER';
 
 /**
  * Which pile a row falls in. `HELD` is a workorder parked on the site's HOLD

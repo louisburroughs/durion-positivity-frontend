@@ -697,7 +697,12 @@ describe('DispatchBoardPageComponent', () => {
 
       const card = component.mechanics()[0];
       expect(card.freeHours).toBeNull();
-      expect(card.freeHoursReason).toBe('UNKNOWN');
+      // Its own reason, not the unreadable-window one: the window here was read
+      // without difficulty, and it is the commitment that is missing.
+      expect(card.freeHoursReason).toBe('UNKNOWN_COMMITMENT');
+      expect(component.freeHoursReasonKey(card)).toBe(
+        'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS_COMMITMENT',
+      );
     });
 
     // A failed roster read empties the credential lists, and the card must not
@@ -1156,6 +1161,52 @@ describe('DispatchBoardPageComponent', () => {
 
       expect(component.mechanics().some(mechanic => mechanic.personId === 'M1')).toBe(true);
       expect(component.pickerMechanics().length).toBeGreaterThan(0);
+    });
+
+    // Keeping the map on a failed read stops cards bouncing between rails, but
+    // it must not also keep OFFERING actions from it. After a clock-out whose
+    // readback then failed, the card still reads CLOCKED_IN — so without this
+    // it shows "Out" again and invites the write that already succeeded.
+    it('stops offering clock actions from a reading it could not refresh', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
+      );
+      renderWith(fullDashboard);
+      expect(component.canClock(component.mechanics()[0])).toBe(true);
+
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(of({ states: new Map(), ok: false }));
+      component.clockOut(component.mechanics()[0]);
+      fixture.detectChanges();
+
+      const card = component.mechanics().find(mechanic => mechanic.personId === 'M1')!;
+      // The retained reading still places the card — it has not bounced rails.
+      expect(card.clockState).toBe('CLOCKED_IN');
+      // But it is no longer good enough to act on, and the card says why.
+      expect(component.canClock(card)).toBe(false);
+      expect(component.clockHintKey(card)).toBe('SHOPMGMT.DISPATCH_BOARD.CLOCK_STATE_UNREAD');
+    });
+
+    // The parked debt needs an owner in every case. Clearing the location
+    // starts no replacement enrichment, so "a newer reader will pay" is false
+    // and the card would stay disabled with nothing left to release it.
+    it('releases the card when the selection is abandoned mid-readback', () => {
+      const readback = new Subject<{ states: Map<string, unknown>; ok: boolean }>();
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
+      );
+      renderWith(fullDashboard);
+
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(readback);
+      component.clockOut(component.mechanics()[0]);
+      expect(component.isClockPending('M1')).toBe(true);
+
+      // The dispatcher clears the location: no replacement read is started.
+      component.selectedLocationId.set('');
+      fixture.detectChanges();
+      readback.next({ states: new Map(), ok: true });
+      fixture.detectChanges();
+
+      expect(component.isClockPending('M1')).toBe(false);
     });
 
     // Midnight is not a date CHANGE: nothing is picked, so nothing clears the
@@ -4075,7 +4126,11 @@ describe('DispatchBoardPageComponent', () => {
     // The break is keyed by the open session, so someone with no session has
     // nothing to hang one on. Since clocked-out mechanics sit in the bin, the
     // roster case left is a row whose clock state the caller may not read.
-    it('refuses a break for a mechanic with no open session, and says why', () => {
+    // A read that ANSWERED and left the row out is pos-people withholding the
+    // state, not proof there is no session — the hidden state may well be
+    // CLOCKED_IN. "Clock them in first" would be the board asserting something
+    // it was never told, so it says what it actually knows.
+    it('will not claim a mechanic is off the clock when it was not told', () => {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(of({ states: new Map(), ok: true }));
       renderWith(fullDashboard);
       expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
@@ -4086,8 +4141,25 @@ describe('DispatchBoardPageComponent', () => {
       component.onBreakBinDrop(dragEvent());
 
       expect(dispatchBoardServiceStub.startBreak).not.toHaveBeenCalled();
-      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BREAK_NEEDS_CLOCK_IN');
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_UNREADABLE');
       expect(component.toast()?.tone).toBe('ERROR');
+    });
+
+    // The confirmed case still says the useful thing, because here the board
+    // WAS told: this mechanic has no open session.
+    // A CLOCKED_OUT mechanic is already in the bin and not draggable from the
+    // roster at all, so the reachable case is a state the board WAS told that
+    // carries no session id.
+    it('refuses a break when the board was told the state but got no session', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: null }]]), ok: true }),
+      );
+      renderWith(fullDashboard);
+      component.onDragStart('MECHANIC', 'M1', dragEvent());
+      component.onBreakBinDrop(dragEvent());
+
+      expect(dispatchBoardServiceStub.startBreak).not.toHaveBeenCalled();
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BREAK_NEEDS_CLOCK_IN');
     });
 
     // A chip in the bin for approved time off is HR's record, not a session.

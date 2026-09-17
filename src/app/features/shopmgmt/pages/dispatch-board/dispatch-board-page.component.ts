@@ -904,6 +904,8 @@ export class DispatchBoardPageComponent implements OnInit {
         return 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS_CLOSED';
       case 'OFF_ROSTER':
         return 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS_OFF_ROSTER';
+      case 'UNKNOWN_COMMITMENT':
+        return 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS_COMMITMENT';
       default:
         return 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS';
     }
@@ -956,8 +958,24 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   /** The permission, the date and the per-mechanic guard, in one answer. */
+  /**
+   * Whether the clock the board is holding is current enough to write against.
+   *
+   * Two questions are being kept apart here, and conflating them is what
+   * produced three rounds of defects. **Where a card sits** is answered from
+   * the last reading the board was given: dropping it on a failed re-read
+   * bounces mechanics between the rails on the strength of a transient 503,
+   * which is worse than showing a reading a few seconds old. **Whether a write
+   * may be offered** is a stricter question — a stale reading is exactly how a
+   * dispatcher gets invited to repeat an action that has already succeeded, so
+   * that needs a reading the board can still vouch for.
+   *
+   * So the retained map keeps placing cards, and this gate stops them acting.
+   */
+  readonly clockIsActionable = computed(() => this.isViewingToday() && this.clockRead() === 'OK');
+
   canClock(mechanic: MechanicCard): boolean {
-    return this.canManageClock() && this.isViewingToday() && !this.isClockPending(mechanic.personId);
+    return this.canManageClock() && this.clockIsActionable() && !this.isClockPending(mechanic.personId);
   }
 
   /**
@@ -984,16 +1002,14 @@ export class DispatchBoardPageComponent implements OnInit {
     if (!this.isViewingToday()) {
       return 'SHOPMGMT.DISPATCH_BOARD.CLOCK_TODAY_ONLY';
     }
-    if (mechanic.clockState !== 'UNKNOWN') {
-      return null;
-    }
-    // `UNKNOWN` is reached two ways and they are not the same news. Reporting
-    // a read that failed, or has not landed, as a permissions decision tells
-    // the dispatcher to go and ask for access they may already hold — and it
-    // is the state EVERY card is in for the first round trip of every load,
-    // because the enrichment starts only once the board has rendered.
+    // Checked before the state, not after: after a clock-out whose readback
+    // then failed, the card still holds CLOCKED_IN — not `UNKNOWN` — and
+    // without this it would offer "Out" again and explain nothing.
     if (this.clockRead() !== 'OK') {
       return 'SHOPMGMT.DISPATCH_BOARD.CLOCK_STATE_UNREAD';
+    }
+    if (mechanic.clockState !== 'UNKNOWN') {
+      return null;
     }
     // The read answered and left this row out: pos-people nulls `clockState`
     // for a row the caller holds no `people:timekeeping:view` over.
@@ -1159,10 +1175,20 @@ export class DispatchBoardPageComponent implements OnInit {
   private refuseTimekeepingDrop(mechanic: MechanicCard, action: 'BREAK_START' | 'BACK_ON_DUTY'): void {
     const named = mechanic.name !== null;
     const suffix = named ? '' : '_UNNAMED';
-    const key =
-      action === 'BREAK_START'
-        ? `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BREAK_NEEDS_CLOCK_IN${suffix}`
-        : `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_OFF_DUTY_NOT_CHANGEABLE${suffix}`;
+    // "Clock them in first" is a claim about the session. When the clock could
+    // not be read, or the row was nulled for this caller, the board has no
+    // session to make a claim about — the hidden state may well be CLOCKED_IN —
+    // so it says what it actually knows instead.
+    // Approved time off is checked first and outranks everything: it is an HR
+    // record the board never owns, so it is the reason whatever the clock says
+    // or fails to say.
+    const key = mechanic.onTimeOff
+      ? `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_OFF_DUTY_NOT_CHANGEABLE${suffix}`
+      : !this.clockIsActionable() || mechanic.clockState === 'UNKNOWN'
+        ? `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_UNREADABLE${suffix}`
+        : action === 'BREAK_START'
+          ? `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BREAK_NEEDS_CLOCK_IN${suffix}`
+          : `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_OFF_DUTY_NOT_CHANGEABLE${suffix}`;
     this.toast.set({
       id: `${mechanic.personId}:${++this.toastSeq}`,
       key,
@@ -1369,7 +1395,14 @@ export class DispatchBoardPageComponent implements OnInit {
           this.selectedLocationId().trim() !== locationId ||
           this.selectedDate() !== date
         ) {
-          // Superseded: a newer read is in flight and owns the debt now.
+          // Superseded — but only pass the debt on if there is in fact someone
+          // to pass it to. Clearing the location, or switching to one whose
+          // dashboard read fails, starts no replacement enrichment, and the
+          // card would stay disabled with nothing left to release it.
+          if (seq !== this.clockSeq) {
+            return;
+          }
+          this.drainClockSettlements();
           return;
         }
         this.applyClockRead(read);
@@ -2194,7 +2227,11 @@ export class DispatchBoardPageComponent implements OnInit {
       // make this figure right, so the commitment is unknown and the figure
       // with it. `isBayFree` reads the same absence the same way: a claim the
       // board cannot disprove, not an empty slot.
-      return { freeHours: null, freeHoursReason: 'UNKNOWN', freeHoursIsPlaceholder: false };
+      //
+      // Its own reason, not `UNKNOWN`: the shift window here is perfectly
+      // readable, and saying the board could not read one would name the wrong
+      // missing thing.
+      return { freeHours: null, freeHoursReason: 'UNKNOWN_COMMITMENT', freeHoursIsPlaceholder: false };
     }
     const shift = this.technicianShifts().get(personId);
     if (!shift) {
