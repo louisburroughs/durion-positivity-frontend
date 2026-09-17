@@ -844,6 +844,23 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.isClockPending('M1')).toBe(false);
     });
 
+    // The 403 mapping is shared by all four writes, so it must not name only
+    // clocking: a denied break would report the wrong operation.
+    it('reports a refused break as a timekeeping permission problem', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]])),
+      );
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.startBreak.mockReturnValueOnce(
+        throwError(() => new HttpErrorResponse({ status: 403 })),
+      );
+
+      component.startBreak(component.mechanics().find(mechanic => mechanic.personId === 'M1')!);
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_FORBIDDEN');
+      expect(component.toast()?.tone).toBe('ERROR');
+    });
+
     it('maps an unknown person and a refused caller onto their own messages', () => {
       renderWith(fullDashboard);
       dispatchBoardServiceStub.clockIn.mockReturnValueOnce(
@@ -3498,7 +3515,7 @@ describe('DispatchBoardPageComponent', () => {
       );
       renderWith(fullDashboard);
 
-      expect(component.binNoteKey()).toBe('SHOPMGMT.DISPATCH_BOARD.BREAK_READ_ONLY');
+      expect(component.binNoteKey()).toBe('SHOPMGMT.DISPATCH_BOARD.BREAK_NO_PERMISSION');
     });
 
     // The bin lit up as a drop target on a historical board and then answered

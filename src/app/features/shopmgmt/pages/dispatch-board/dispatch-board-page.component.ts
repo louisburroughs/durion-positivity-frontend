@@ -845,8 +845,11 @@ export class DispatchBoardPageComponent implements OnInit {
    * the dispatcher to do something the board will not accept.
    */
   binNoteKey(): string {
+    // Not "breaks come from HR": an authorised caller changes them from right
+    // here. What this caller lacks is the grant, and the note has to say so
+    // rather than blaming a system that is not the blocker.
     if (!this.canManageClock()) {
-      return 'SHOPMGMT.DISPATCH_BOARD.BREAK_READ_ONLY';
+      return 'SHOPMGMT.DISPATCH_BOARD.BREAK_NO_PERMISSION';
     }
     return this.isViewingToday()
       ? 'SHOPMGMT.DISPATCH_BOARD.BREAK_DRAG_HINT'
