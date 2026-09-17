@@ -2123,7 +2123,8 @@
       },
       "CLOSED_NO_CHANGE": "Un bon de travail fermé ne peut pas être modifié.",
       "NOT_AVAILABLE_BAY_NAME": "Le nom de cette baie n'a pas encore été répliqué.",
-      "NOT_AVAILABLE_BAY_KIND_SHORT": "Type non disponible"
+      "NOT_AVAILABLE_BAY_KIND_SHORT": "Type non disponible",
+      "ERROR_LOCATION_NOT_FOUND": "Cet emplacement est introuvable. Choisissez-en un autre ou vérifiez que l'atelier est configuré."
     },
     "APPOINTMENT_CREATE": {
       "TITLE": "Créer un rendez-vous",

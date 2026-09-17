@@ -2123,7 +2123,8 @@
       },
       "CLOSED_NO_CHANGE": "Una orden de trabajo cerrada no se puede modificar.",
       "NOT_AVAILABLE_BAY_NAME": "El nombre de esta bahía aún no se ha replicado.",
-      "NOT_AVAILABLE_BAY_KIND_SHORT": "Tipo no disponible"
+      "NOT_AVAILABLE_BAY_KIND_SHORT": "Tipo no disponible",
+      "ERROR_LOCATION_NOT_FOUND": "No se encontró esa ubicación. Elija otra o verifique que el taller esté configurado."
     },
     "APPOINTMENT_CREATE": {
       "TITLE": "Crear cita",

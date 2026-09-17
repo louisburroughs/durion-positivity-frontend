@@ -519,6 +519,19 @@ export class DispatchBoardPageComponent implements OnInit {
     return this.pendingWorkorderIds().has(workorderId);
   }
 
+  /**
+   * Clearing is a write too — `releaseTechnician` and `releaseServicePosition`
+   * carry the same authorities as their assign counterparts, so a view-only
+   * session must not be offered the x either.
+   */
+  canClearMechanic(row: WorkorderRow): boolean {
+    return this.canAssignMechanic() && !row.closed && !this.isPending(row.workorderId);
+  }
+
+  canClearBay(row: WorkorderRow): boolean {
+    return this.canAssignBay() && !row.closed && !this.isPending(row.workorderId);
+  }
+
   onDragOver(row: WorkorderRow, event: DragEvent): void {
     if (!this.canDrop(row)) {
       return;
@@ -608,6 +621,9 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   clearMechanic(row: WorkorderRow): void {
+    if (!this.canClearMechanic(row)) {
+      return;
+    }
     const previous = row.mechanicId;
     this.run(row.workorderId, () => this.dispatchBoardService.releaseMechanic(row.workorderId), {
       key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.MECHANIC_CLEARED',
@@ -638,6 +654,9 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   clearBay(row: WorkorderRow): void {
+    if (!this.canClearBay(row)) {
+      return;
+    }
     this.run(row.workorderId, () => this.dispatchBoardService.releaseBay(row.workorderId), {
       key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.BAY_CLEARED',
       params: { workorder: row.number },
@@ -742,8 +761,17 @@ export class DispatchBoardPageComponent implements OnInit {
           // the board deliberately does not predict the row, so between the two
           // the slot still shows pre-mutation state and a second write from it
           // would pick the wrong endpoint.
-          this.toast.set(success);
-          this.reloadBoard(() => this.markPending(workorderId, false));
+          // Undo is part of that guard: offering it while the row is still
+          // pending means a quick click is swallowed by the re-entry check and
+          // the toast is already gone. The message goes up without its undo,
+          // and the undo is attached once the readback releases the guard.
+          this.toast.set({ ...success, undo: null });
+          this.reloadBoard(() => {
+            this.markPending(workorderId, false);
+            if (this.toast()?.key === success.key) {
+              this.toast.set(success);
+            }
+          });
         },
         error: (err: unknown) => {
           this.markPending(workorderId, false);
@@ -1009,7 +1037,9 @@ export class DispatchBoardPageComponent implements OnInit {
     const workorder = mechanic.assignedWorkorderId
       ? (this.dashboard()?.workorders ?? []).find(candidate => candidate.workorderId === mechanic.assignedWorkorderId)
       : undefined;
-    const bayId = workorder?.resourceType === 'BAY' ? workorder.assignedResourceId : undefined;
+    // Same reconciliation the row uses: reading only the summary leaves this
+    // chip blank while the row names a bay, and the two surfaces disagree.
+    const bayId = workorder ? this.toRowBayId(workorder, workorder.resourceType === 'HOLD') : null;
 
     return {
       personId: mechanic.personId,
@@ -1171,7 +1201,9 @@ export class DispatchBoardPageComponent implements OnInit {
   private toLoadErrorKey(err: unknown): string {
     switch (this.toApiErrorCode(err)) {
       case 'LOCATION_NOT_FOUND':
-        return 'SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED';
+        // Not the same as "you did not pick one": telling someone who chose a
+        // location to choose a location names the wrong recovery.
+        return 'SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_NOT_FOUND';
       default:
         return 'SHOPMGMT.DISPATCH_BOARD.ERROR_LOAD';
     }

@@ -1479,4 +1479,99 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.openBays().map(bay => bay.bayId)).toContain('B1');
     });
   });
+  // -------------------------------------------------------------------------
+  // Round-4 regressions
+  // -------------------------------------------------------------------------
+  describe('clear controls are writes too', () => {
+    it('refuses to clear a mechanic without the technician write authority', () => {
+      authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
+        codes.includes('shop:bay:assign'),
+      );
+      renderWith(fullDashboard);
+      const row = component.assignedRows()[0];
+
+      expect(component.canClearMechanic(row)).toBe(false);
+      component.clearMechanic(row);
+
+      expect(dispatchBoardServiceStub.releaseMechanic).not.toHaveBeenCalled();
+    });
+
+    it('refuses to clear a bay without the bay write authority', () => {
+      authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
+        codes.includes('workorder:workorder:assign-technician'),
+      );
+      renderWith(fullDashboard);
+      const row = component.assignedRows()[0];
+
+      expect(component.canClearBay(row)).toBe(false);
+      component.clearBay(row);
+
+      expect(dispatchBoardServiceStub.releaseBay).not.toHaveBeenCalled();
+    });
+
+    it('disables the clear control when the write is not permitted', () => {
+      authStub.hasAnyPermission.mockReturnValue(false);
+      renderWith(fullDashboard);
+
+      const clear: HTMLButtonElement | null = rowFor('wo-assigned').querySelector('button.clear');
+      expect(clear?.disabled).toBe(true);
+    });
+  });
+
+  describe('undo survives the readback guard', () => {
+    // Holding the pending guard across the readback made an immediate Undo
+    // click a no-op: run() refused re-entry and the toast was already gone.
+    it('offers undo only once the post-mutation read has settled', () => {
+      renderWith(fullDashboard);
+      const row = component.toAssignRows()[0];
+      const slowRead = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(slowRead);
+
+      component.assignMechanic(row, 'M2');
+      expect(component.toast()?.undo).toBeNull();
+
+      slowRead.next(fullDashboard);
+
+      expect(component.toast()?.undo).not.toBeNull();
+    });
+
+    it('the undo it finally offers actually runs', () => {
+      renderWith(fullDashboard);
+      const row = component.toAssignRows()[0];
+
+      component.assignMechanic(row, 'M2');
+      component.undo();
+
+      expect(dispatchBoardServiceStub.releaseMechanic).toHaveBeenCalledWith('wo-to-assign');
+    });
+  });
+
+  describe('the two board surfaces agree', () => {
+    // The row reconciles a bay-side claim; the mechanic chip must too, or the
+    // row names a bay while the chip that points at it is blank.
+    it('names the bay on the mechanic chip when only the bay side claims it', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [{ workorderId: 'wo-x', workorderNumber: 'WO-X', status: 'ASSIGNED', assignedMechanicId: 'M1' }],
+        mechanics: [{ personId: 'M1', firstName: 'Ray', lastName: 'Delgado', assignedWorkorderId: 'wo-x' }],
+        bays: [
+          { bayId: 'B1', bayName: 'Bay 1', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-x' },
+        ],
+      });
+
+      expect(component.allRows()[0].bayName).toBe('Bay 1');
+      expect(component.mechanics().find(m => m.personId === 'M1')?.whereLabel).toBe('Bay 1');
+    });
+  });
+
+  describe('load error messages name the right recovery', () => {
+    it('does not tell a user who chose a location to choose a location', () => {
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(
+        throwError(() => ({ error: { code: 'LOCATION_NOT_FOUND' } })),
+      );
+      fixture.detectChanges();
+
+      expect(component.error()).toBe('SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_NOT_FOUND');
+    });
+  });
 });

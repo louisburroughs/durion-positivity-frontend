@@ -172,8 +172,10 @@
                 @if (bay.kind; as kind) {
                   <em>{{ kind }}</em>
                 } @else {
-                  <em class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_KIND' | translate"
-                    aria-hidden="true">&mdash;</em>
+                  <em class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_KIND' | translate">
+                    <span aria-hidden="true">&mdash;</span>
+                    <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_KIND' | translate }}</span>
+                  </em>
                 }
               </button>
             } @empty {
@@ -430,7 +432,7 @@
             { workorder: row.number, mechanic: row.mechanicName }">
           {{ row.mechanicName }}
         </button>
-        <button type="button" class="clear" (click)="clearMechanic(row)" [disabled]="row.closed || isPending(row.workorderId)"
+        <button type="button" class="clear" (click)="clearMechanic(row)" [disabled]="!canClearMechanic(row)"
           [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.CLEAR_MECHANIC_ARIA' | translate: { workorder: row.number }">&times;</button>
       </span>
     } @else {
@@ -455,7 +457,7 @@
             <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_NAME' | translate">&mdash;</span>
           }
         </button>
-        <button type="button" class="clear" (click)="clearBay(row)" [disabled]="row.closed || isPending(row.workorderId)"
+        <button type="button" class="clear" (click)="clearBay(row)" [disabled]="!canClearBay(row)"
           [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.CLEAR_BAY_ARIA' | translate: { workorder: row.number }">&times;</button>
       </span>
     } @else if (row.parked) {
