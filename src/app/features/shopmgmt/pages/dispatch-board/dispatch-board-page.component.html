@@ -116,8 +116,8 @@
     <div class="frame">
       <!-- ------------------------------------------------------ left rail -->
       <div class="col">
-        <section class="card mechanics-card">
-          <h2 class="card-head">
+        <section class="card mechanics-card" aria-labelledby="dispatch-board-mechanics-title">
+          <h2 class="card-head" id="dispatch-board-mechanics-title">
             {{ 'SHOPMGMT.DISPATCH_BOARD.MECHANICS' | translate }}
             <span class="n">{{ 'SHOPMGMT.DISPATCH_BOARD.ON_DUTY_COUNT' | translate: { count: mechanics().length } }}</span>
           </h2>
@@ -151,8 +151,8 @@
           </div>
         </section>
 
-        <section class="card">
-          <h2 class="card-head">
+        <section class="card" aria-labelledby="dispatch-board-bays-title">
+          <h2 class="card-head" id="dispatch-board-bays-title">
             {{ 'SHOPMGMT.DISPATCH_BOARD.OPEN_BAYS' | translate }}
             <span class="n">{{ 'SHOPMGMT.DISPATCH_BOARD.FREE_COUNT' | translate: { count: openBays().length } }}</span>
           </h2>
@@ -184,8 +184,8 @@
           </div>
         </section>
 
-        <section class="card">
-          <h2 class="card-head">
+        <section class="card" aria-labelledby="dispatch-board-offduty-title">
+          <h2 class="card-head" id="dispatch-board-offduty-title">
             {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_AND_OFF' | translate }}
             <span class="n">{{ offDutyMechanics().length }}</span>
           </h2>

@@ -136,6 +136,9 @@ export class DispatchBoardPageComponent implements OnInit {
   /** Which location the enrichment maps above describe, so a switch can drop them. */
   private enrichedLocation: string | null = null;
 
+  /** Orders enrichment responses: two reads of the same shop can still overlap. */
+  private enrichmentSeq = 0;
+
   /** Which (location, date) the cached board answers; see `hasCachedData`. */
   private readonly cachedKey = signal<string | null>(null);
 
@@ -161,6 +164,18 @@ export class DispatchBoardPageComponent implements OnInit {
 
   /** Distinguishes two toasts that share a translation key; see `run()`. */
   private toastSeq = 0;
+
+  /**
+   * Cleanup owed by in-flight writes — releasing the row guard and arming its
+   * undo — drained by whichever read is the current one when it completes.
+   *
+   * Tying this to the originating read alone strands it: a refresh, poll or
+   * second write that supersedes the mutation readback means the old response
+   * is rejected, and the row would stay guarded forever with no way back short
+   * of reloading the page. Handing the debt to the next read that lands keeps
+   * the stale-state protection without the lockout.
+   */
+  private readonly owedSettlements = new Set<() => void>();
 
   readonly sortUnavailable = SORT_UNAVAILABLE;
 
@@ -346,7 +361,10 @@ export class DispatchBoardPageComponent implements OnInit {
 
   readonly pickerRow = computed<WorkorderRow | null>(() => {
     const request = this.picker();
-    if (!request) {
+    // The dialog renders outside the keyed board region, so without this it
+    // survives a location or date change and its options would write to a
+    // workorder from the shop the dispatcher just left.
+    if (!request || !this.hasCachedData()) {
       return null;
     }
     return this.allRows().find(row => row.workorderId === request.workorderId) ?? null;
@@ -412,12 +430,16 @@ export class DispatchBoardPageComponent implements OnInit {
           if (!this.applySuccess(response, seq, key)) {
             return;
           }
+          this.finishRead(seq);
           this.loadEnrichment(locationId);
           if (!this.pollingStarted) {
             this.startPolling();
           }
         },
-        error: (err: unknown) => this.applyError(err, seq),
+        error: (err: unknown) => {
+          this.applyError(err, seq);
+          this.finishRead(seq);
+        },
       });
   }
 
@@ -828,24 +850,37 @@ export class DispatchBoardPageComponent implements OnInit {
     }
 
     const seq = ++this.readSeq;
-    const settleIfCurrent = (): void => {
-      if (seq === this.readSeq) {
-        onSettled?.();
-      }
-    };
+    if (onSettled) {
+      this.owedSettlements.add(onSettled);
+    }
     this.dispatchBoardService
       .getDashboard(locationId, this.selectedDate())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: response => {
           this.applySuccess(response, seq);
-          settleIfCurrent();
+          this.finishRead(seq);
         },
         error: (err: unknown) => {
           this.applyError(err, seq);
-          settleIfCurrent();
+          this.finishRead(seq);
         },
       });
+  }
+
+  /**
+   * Called when any read completes. The current read pays every debt owed,
+   * including those left by reads it superseded.
+   */
+  private finishRead(seq: number): void {
+    if (seq !== this.readSeq || this.owedSettlements.size === 0) {
+      return;
+    }
+    const owed = [...this.owedSettlements];
+    this.owedSettlements.clear();
+    for (const settle of owed) {
+      settle();
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -865,6 +900,7 @@ export class DispatchBoardPageComponent implements OnInit {
               map(response => ({ response, seq })),
               catchError((err: unknown) => {
                 this.applyError(err, seq);
+                this.finishRead(seq);
                 return EMPTY;
               }),
             );
@@ -878,6 +914,7 @@ export class DispatchBoardPageComponent implements OnInit {
           if (this.applySuccess(response, seq)) {
             this.loadEnrichment(this.selectedLocationId().trim());
           }
+          this.finishRead(seq);
         },
       });
   }
@@ -897,6 +934,7 @@ export class DispatchBoardPageComponent implements OnInit {
       this.technicianSkills.set(new Map());
     }
     this.enrichedLocation = locationId;
+    const seq = ++this.enrichmentSeq;
 
     forkJoin({
       bays: this.dispatchBoardService.getBayInventory(locationId),
@@ -908,8 +946,10 @@ export class DispatchBoardPageComponent implements OnInit {
       )
       .subscribe(result => {
         // A location switch while these were in flight must not let the old
-        // shop's bay types and credentials paint the new board.
-        if (!result || this.selectedLocationId().trim() !== locationId) {
+        // shop's bay types and credentials paint the new board — and two reads
+        // of the SAME shop can overlap, so an older one landing last would put
+        // back the lifecycle and credential data the newer one just corrected.
+        if (!result || seq !== this.enrichmentSeq || this.selectedLocationId().trim() !== locationId) {
           return;
         }
         this.bayInventory.set(result.bays);
@@ -1162,8 +1202,14 @@ export class DispatchBoardPageComponent implements OnInit {
     return [...rows].sort((left, right) => (right.estimatedHours ?? 0) - (left.estimatedHours ?? 0));
   }
 
+  /**
+   * A row whose status did not survive the projection is unclassified, not
+   * open: the shared shop-dashboard helper requires a truthy status for the
+   * same reason, and showing a malformed row under Open invites a write the
+   * board cannot reason about.
+   */
   private isOpenStatus(status: string): boolean {
-    return status !== DRAFT_STATUS && !isClosedStatus(status);
+    return status.length > 0 && status !== DRAFT_STATUS && !isClosedStatus(status);
   }
 
   private displayName(mechanic: MechanicStatus | undefined): string {

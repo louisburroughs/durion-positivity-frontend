@@ -1600,20 +1600,30 @@ describe('DispatchBoardPageComponent', () => {
     });
   });
 
-  describe('a superseded readback does not settle the write', () => {
-    it('keeps the guard held when a newer read overtakes the mutation readback', () => {
+  describe('a superseded readback hands its settlement on', () => {
+    // This assertion previously required the opposite — that a superseded
+    // readback never settles — which is exactly the lockout that behaviour
+    // caused. Settlement is owed to whichever read lands as the current one,
+    // so the write completes rather than being stranded.
+    it('settles through the superseding read rather than being dropped', () => {
       renderWith(fullDashboard);
       const row = component.toAssignRows()[0];
       const mutationRead = new Subject<DashboardResponse>();
       dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(mutationRead);
 
       component.assignMechanic(row, 'M2');
+      expect(component.toast()?.undo).toBeNull();
+
+      // The refresh supersedes the readback and pays the debt it left.
       dispatchBoardServiceStub.getDashboard.mockReturnValue(of(fullDashboard));
       component.refresh();
 
-      mutationRead.next(fullDashboard);
+      expect(component.isPending(row.workorderId)).toBe(false);
+      expect(component.toast()?.undo).not.toBeNull();
 
-      expect(component.toast()?.undo).toBeNull();
+      // The stale readback landing afterwards changes nothing.
+      mutationRead.next(fullDashboard);
+      expect(component.isPending(row.workorderId)).toBe(false);
     });
   });
 
@@ -1667,6 +1677,100 @@ describe('DispatchBoardPageComponent', () => {
       for (const slot of slots) {
         expect(slot.getAttribute('aria-label')).toBeTruthy();
       }
+    });
+  });
+  // -------------------------------------------------------------------------
+  // Round-6 regressions
+  // -------------------------------------------------------------------------
+  describe('a write is never stranded', () => {
+    // The previous round tied settlement to the originating read, so any read
+    // that superseded the mutation readback left the row guarded forever with
+    // no recovery short of reloading the page.
+    it('releases the guard when a later read supersedes the mutation readback', () => {
+      renderWith(fullDashboard);
+      const row = component.toAssignRows()[0];
+      const mutationRead = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(mutationRead);
+
+      component.assignMechanic(row, 'M2');
+      expect(component.isPending(row.workorderId)).toBe(true);
+
+      // A refresh overtakes the readback, which then lands stale and is dropped.
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(fullDashboard));
+      component.refresh();
+      mutationRead.next(fullDashboard);
+
+      expect(component.isPending(row.workorderId)).toBe(false);
+    });
+
+    it('two overlapping writes both come out of the pending set', () => {
+      renderWith(fullDashboard);
+      const first = component.toAssignRows()[0];
+      const second = component.assignedRows()[0];
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(fullDashboard));
+
+      component.assignMechanic(first, 'M2');
+      component.assignMechanic(second, 'M2');
+
+      expect(component.isPending(first.workorderId)).toBe(false);
+      expect(component.isPending(second.workorderId)).toBe(false);
+    });
+  });
+
+  describe('the picker never outlives its selection', () => {
+    it('drops the picker row when the location changes', () => {
+      renderWith(fullDashboard);
+      component.openPicker('MECHANIC', 'wo-to-assign');
+      expect(component.pickerRow()).not.toBeNull();
+
+      component.selectedLocationId.set('LOC-OTHER');
+
+      expect(component.pickerRow()).toBeNull();
+    });
+
+    it('writes nothing when picked after the selection moved on', () => {
+      renderWith(fullDashboard);
+      component.openPicker('MECHANIC', 'wo-to-assign');
+
+      component.selectedLocationId.set('LOC-OTHER');
+      component.pick('M2');
+
+      expect(dispatchBoardServiceStub.assignMechanic).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('enrichment ordering', () => {
+    // Two reads of the SAME shop can overlap; the older landing last would put
+    // back the lifecycle data the newer one just corrected.
+    it('ignores an older enrichment response for the same location', () => {
+      const firstInventory = new Subject<never>();
+      dispatchBoardServiceStub.getBayInventory.mockReturnValueOnce(firstInventory);
+      renderWith(fullDashboard);
+
+      dispatchBoardServiceStub.getBayInventory.mockReturnValue(
+        of(new Map([['B9', { bayId: 'B9', name: 'Bay 9', kind: 'HEAVY_DUTY', outOfService: false }]])),
+      );
+      component.refresh();
+
+      firstInventory.next(
+        new Map([['B4', { bayId: 'B4', name: 'Bay 4', kind: 'ALIGNMENT', outOfService: false }]]) as never,
+      );
+
+      expect(component.bayInventory().has('B9')).toBe(true);
+      expect(component.bayInventory().has('B4')).toBe(false);
+    });
+  });
+
+  describe('a row with no status is unclassified', () => {
+    it('keeps a statusless row out of the Open filter', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [{ workorderId: 'wo-blank', workorderNumber: 'WO-BLANK' }],
+      });
+
+      component.setStatusFilter('OPEN');
+
+      expect(component.rows()).toHaveLength(0);
     });
   });
 });
