@@ -95,6 +95,14 @@ function isScheduleAbsent(error: unknown): boolean {
   return error instanceof HttpErrorResponse && error.status === 404;
 }
 
+/**
+ * Some days answered 404 and some answered normally — a partial picture, which
+ * is neither clean absence nor a clean read.
+ */
+function isPartiallyAbsent(load: ScheduleLoad): boolean {
+  return load.absent > 0 && load.absent < load.total;
+}
+
 /** `ScheduleResourceView.resourceType` lanes this page reads. */
 const LANE_BAY = 'BAY';
 const LANE_MECHANIC = 'MECHANIC';
@@ -369,8 +377,14 @@ export class CapacityCalendarService {
       weekDays,
       focusDay,
       board: request.scope === 'day' ? this.boardFor(schedules.get(request.focusDate)) : [],
-      // A 404 day is absence, not breakage, so only a real fault degrades.
-      degraded: !bays.ok || !technicians.ok || load.failed > 0,
+      // A 404 day is absence, not breakage, so only a real fault degrades —
+      // except when the 404s are partial. The endpoint 404s on a date with no
+      // appointments at a location it holds no shop row for, so a shopless
+      // location that has any bookings answers 200 for those dates and 404 for
+      // the rest. That mixture cannot be told apart from a genuinely quiet day
+      // downstream, so the blank cells would read as "open and empty" when the
+      // truth is "unknown". Only all-404 is unambiguous absence.
+      degraded: !bays.ok || !technicians.ok || load.failed > 0 || isPartiallyAbsent(load),
       // Every day answered 404: the schedule service does not know this
       // location as a shop, so there is nothing to report for any date. Said
       // once and plainly, rather than as a month of empty cells.

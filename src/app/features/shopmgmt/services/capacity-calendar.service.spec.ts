@@ -157,6 +157,69 @@ describe('CapacityCalendarService', () => {
       expect(view.locationHasNoSchedule).toBe(false);
       expect(view.degraded).toBe(false);
     });
+
+    /**
+     * A month fans out over the whole grid, so the two counts that decide these
+     * flags only have more than one outcome to weigh here. The mixed case is
+     * the one that matters: the endpoint 404s on a date with no appointments at
+     * a location it holds no shop row for, so a shopless location with any
+     * bookings answers 200 for those dates and 404 for the rest.
+     */
+    describe('across a month', () => {
+      const MONTH = { ...REQUEST, scope: 'month' as const };
+
+      const dayResponse = (date: string) => ({
+        date,
+        dayStartAt: `${date}T14:00:00Z`,
+        dayEndAt: `${date}T22:00:00Z`,
+        locationId: 'loc-1',
+        resources: [],
+        viewGeneratedAt: `${date}T14:00:00Z`,
+      });
+
+      /** Answers per date, so one fan-out can mix 404s and real days. */
+      const arrangeByDate = (answer: (date: string) => unknown) =>
+        arrange(undefined).viewSchedule.mockImplementation((_loc: string, date: string) => answer(date));
+
+      const calendar = () =>
+        new Promise<{ locationHasNoSchedule: boolean; degraded: boolean }>(resolve =>
+          service.getCalendar(MONTH).subscribe(resolve),
+        );
+
+      it('every day 404 is the location having no shop, across the whole grid', async () => {
+        arrangeByDate(() => throwError(() => new HttpErrorResponse({ status: 404 })));
+
+        const view = await calendar();
+
+        expect(view.locationHasNoSchedule).toBe(true);
+        expect(view.degraded).toBe(false);
+      });
+
+      it('some days 404 and some answer: an incomplete picture, not a location without a shop', async () => {
+        // The booked day answers; the rest 404 because the shop row is missing.
+        // Left ungraded, those blanks would read as open and empty rather than
+        // unknown, which is the one reading that gets someone double-booked.
+        arrangeByDate(date =>
+          date === '2026-09-29'
+            ? of(dayResponse(date))
+            : throwError(() => new HttpErrorResponse({ status: 404 })),
+        );
+
+        const view = await calendar();
+
+        expect(view.degraded).toBe(true);
+        expect(view.locationHasNoSchedule).toBe(false);
+      });
+
+      it('a whole month that answers is neither degraded nor schedule-less', async () => {
+        arrangeByDate(date => of(dayResponse(date)));
+
+        const view = await calendar();
+
+        expect(view.degraded).toBe(false);
+        expect(view.locationHasNoSchedule).toBe(false);
+      });
+    });
   });
 
 });
