@@ -68,7 +68,11 @@
 
 .landing-locale-select {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  /* The header is translucent, so this edge is measured against the composite,
+     not the brand blue: white@0.60 is 4.29:1 over the hero and 3.56:1 once a
+     white feature card scrolls under it — the worst case. At 0.35 it was
+     2.20:1, under the 3:1 WCAG 1.4.11 floor for a control boundary. */
+  border: 1px solid rgba(255, 255, 255, 0.60);
   border-radius: var(--radius-sm);
   color: var(--contrastTextColor);
   font-size: 0.875rem;
@@ -90,7 +94,8 @@
 .landing-icon-btn {
   width: 36px;
   height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  /* Same 3:1 boundary alpha as .landing-locale-select above. */
+  border: 1px solid rgba(255, 255, 255, 0.60);
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--contrastTextColor);
