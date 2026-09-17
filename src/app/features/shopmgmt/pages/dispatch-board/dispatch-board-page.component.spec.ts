@@ -173,6 +173,8 @@ describe('DispatchBoardPageComponent', () => {
     assignBay: vi.fn().mockReturnValue(of({})),
     releaseBay: vi.fn().mockReturnValue(of({})),
     parkWorkorder: vi.fn().mockReturnValue(of({})),
+    clockIn: vi.fn().mockReturnValue(of({ sessionId: 'WS-1', personId: 'M1', status: 'ACTIVE' })),
+    clockOut: vi.fn().mockReturnValue(of({ sessionId: 'WS-1', personId: 'M1', status: 'ENDED' })),
   };
 
   beforeEach(async () => {
@@ -202,6 +204,8 @@ describe('DispatchBoardPageComponent', () => {
     dispatchBoardServiceStub.assignBay.mockReturnValue(of({}));
     dispatchBoardServiceStub.releaseBay.mockReturnValue(of({}));
     dispatchBoardServiceStub.parkWorkorder.mockReturnValue(of({}));
+    dispatchBoardServiceStub.clockIn.mockReturnValue(of({ sessionId: 'WS-1', personId: 'M1', status: 'ACTIVE' }));
+    dispatchBoardServiceStub.clockOut.mockReturnValue(of({ sessionId: 'WS-1', personId: 'M1', status: 'ENDED' }));
   });
 
   /** Render the board with a given payload already loaded. */
@@ -568,6 +572,195 @@ describe('DispatchBoardPageComponent', () => {
 
       expect(component.mechanics()[0].freeHours).toBeNull();
       expect(fixture.nativeElement.querySelector('.mech .mfree.na')).toBeTruthy();
+    });
+  });
+
+  describe('mechanic clock', () => {
+    /** Every clock button on the first mechanic's card. */
+    function clockButtonsFor(index: number): HTMLButtonElement[] {
+      const rows: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.mech-row'));
+      return Array.from(rows[index]?.querySelectorAll('.clock-btn') ?? []);
+    }
+
+    it('offers both actions while no clock state has been established', () => {
+      renderWith(fullDashboard);
+
+      expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
+      expect(clockButtonsFor(0).map(button => button.getAttribute('aria-label'))).toEqual([
+        'SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA',
+        'SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA',
+      ]);
+    });
+
+    it('sends the person id on a clock-in and reports it', () => {
+      renderWith(fullDashboard);
+
+      component.clockIn(component.mechanics()[0]);
+
+      expect(dispatchBoardServiceStub.clockIn).toHaveBeenCalledWith('M1');
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.CLOCKED_IN');
+      expect(component.toast()?.tone).toBe('INFO');
+    });
+
+    it('collapses to a single opposing action once a write has answered', () => {
+      renderWith(fullDashboard);
+
+      component.clockIn(component.mechanics()[0]);
+      fixture.detectChanges();
+
+      expect(component.mechanics()[0].clockState).toBe('CLOCKED_IN');
+      expect(clockButtonsFor(0).map(button => button.getAttribute('aria-label'))).toEqual([
+        'SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA',
+      ]);
+
+      component.clockOut(component.mechanics()[0]);
+      fixture.detectChanges();
+
+      expect(component.mechanics()[0].clockState).toBe('CLOCKED_OUT');
+      expect(clockButtonsFor(0).map(button => button.getAttribute('aria-label'))).toEqual([
+        'SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA',
+      ]);
+    });
+
+    it('never offers an undo: a work session is a record, not a placement', () => {
+      renderWith(fullDashboard);
+
+      component.clockIn(component.mechanics()[0]);
+
+      expect(component.toast()?.undo).toBeNull();
+    });
+
+    it('does not re-read the board, which carries no clock state to confirm', () => {
+      renderWith(fullDashboard);
+      const readsBefore = dispatchBoardServiceStub.getDashboard.mock.calls.length;
+
+      component.clockIn(component.mechanics()[0]);
+
+      expect(dispatchBoardServiceStub.getDashboard.mock.calls.length).toBe(readsBefore);
+    });
+
+    it('learns the state from a double clock-in refusal', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.clockIn.mockReturnValueOnce(
+        throwError(() => ({ status: 409, error: { code: 'INVALID_STATE' } })),
+      );
+
+      component.clockIn(component.mechanics()[0]);
+      fixture.detectChanges();
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_ALREADY_CLOCKED_IN');
+      // The refusal is the only account of the session there is, so the card
+      // now offers the action that can actually succeed.
+      expect(component.mechanics()[0].clockState).toBe('CLOCKED_IN');
+      expect(clockButtonsFor(0).map(button => button.getAttribute('aria-label'))).toEqual([
+        'SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA',
+      ]);
+    });
+
+    it('learns the state from a clock-out with no open session', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.clockOut.mockReturnValueOnce(
+        throwError(() => ({ status: 404, error: { code: 'WORK_SESSION_NOT_FOUND' } })),
+      );
+
+      component.clockOut(component.mechanics()[0]);
+      fixture.detectChanges();
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_CLOCKED_IN');
+      expect(component.mechanics()[0].clockState).toBe('CLOCKED_OUT');
+    });
+
+    it('maps an unknown person and a refused caller onto their own messages', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.clockIn.mockReturnValueOnce(
+        throwError(() => ({ status: 404, error: { code: 'PERSON_NOT_FOUND' } })),
+      );
+
+      component.clockIn(component.mechanics()[0]);
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_PERSON_NOT_FOUND');
+      // Nothing was said about the session, so the card keeps offering both.
+      expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
+
+      dispatchBoardServiceStub.clockIn.mockReturnValueOnce(
+        throwError(() => new HttpErrorResponse({ status: 403 })),
+      );
+      component.clockIn(component.mechanics()[0]);
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_FORBIDDEN');
+    });
+
+    it('falls back to a generic message for an unrecognised refusal', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.clockOut.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+
+      component.clockOut(component.mechanics()[0]);
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_GENERIC');
+    });
+
+    it('allows one clock write per mechanic at a time', () => {
+      renderWith(fullDashboard);
+      const pending = new Subject<unknown>();
+      dispatchBoardServiceStub.clockIn.mockReturnValue(pending.asObservable());
+
+      component.clockIn(component.mechanics()[0]);
+      component.clockIn(component.mechanics()[0]);
+
+      expect(dispatchBoardServiceStub.clockIn).toHaveBeenCalledTimes(1);
+      expect(component.isClockPending('M1')).toBe(true);
+
+      pending.next({ sessionId: 'WS-1', personId: 'M1', status: 'ACTIVE' });
+      pending.complete();
+      expect(component.isClockPending('M1')).toBe(false);
+    });
+
+    it('guards each mechanic separately', () => {
+      renderWith(fullDashboard);
+      const pending = new Subject<unknown>();
+      dispatchBoardServiceStub.clockIn.mockReturnValue(pending.asObservable());
+
+      component.clockIn(component.mechanics()[0]);
+      component.clockIn(component.mechanics()[1]);
+
+      expect(dispatchBoardServiceStub.clockIn).toHaveBeenCalledTimes(2);
+      expect(dispatchBoardServiceStub.clockIn).toHaveBeenLastCalledWith('M2');
+    });
+
+    it('is offered on today’s board only', () => {
+      renderWith(fullDashboard);
+      component.selectedDate.set('2026-05-04');
+      fixture.detectChanges();
+
+      expect(component.isViewingToday()).toBe(false);
+      expect(clockButtonsFor(0).every(button => button.disabled)).toBe(true);
+      expect(component.clockHintKey(component.mechanics()[0])).toBe('SHOPMGMT.DISPATCH_BOARD.CLOCK_TODAY_ONLY');
+
+      component.clockIn(component.mechanics()[0]);
+      expect(dispatchBoardServiceStub.clockIn).not.toHaveBeenCalled();
+    });
+
+    it('drops what it learned when the board switches location', () => {
+      renderWith(fullDashboard);
+      component.clockIn(component.mechanics()[0]);
+      expect(component.mechanics()[0].clockState).toBe('CLOCKED_IN');
+
+      component.onLocationPicked('LOC-2');
+      fixture.detectChanges();
+
+      // Observed state described the old selection; carrying it over would
+      // label another shop's roster with it.
+      expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
+    });
+
+    it('hides the control from a caller without the timekeeping authority', () => {
+      authStub.hasAnyPermission.mockImplementation(
+        (codes: readonly string[]) => !codes.includes('people:timekeeping:view'),
+      );
+      renderWith(fullDashboard);
+
+      expect(component.canManageClock()).toBe(false);
+      expect(clockButtonsFor(0)).toHaveLength(0);
+      // The drag handle it sits beside is untouched.
+      expect(fixture.nativeElement.querySelectorAll('button.mech').length).toBeGreaterThan(0);
     });
   });
 

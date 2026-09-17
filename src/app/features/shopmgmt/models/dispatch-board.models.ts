@@ -29,6 +29,28 @@ export type BoardState = 'idle' | 'loading' | 'ready' | 'error';
 export type MechanicAvailability = 'WORKING' | 'IDLE' | 'BREAK' | 'OFF';
 
 /**
+ * Whether the mechanic is on the timekeeping clock — a different question from
+ * `MechanicAvailability`, which is a dispatch reading (has work / on break / off)
+ * assembled from the workexec dashboard and says nothing about a work session.
+ *
+ * `UNKNOWN` is the state every card loads in, and it is not a placeholder for a
+ * value that exists elsewhere: no endpoint on this board publishes clock state.
+ * `WorkSessionsAPIService` is all POST mutations — there is no getter — and the
+ * roster read the panel is built from (`GET /v1/people/availability`) carries
+ * assignment metadata with no instant on it. Backend issue #2061 adds the read;
+ * until it lands `UNKNOWN` means "this board cannot ask", and the card offers
+ * both actions rather than asserting a state it would be guessing at.
+ *
+ * The other three are only ever set from a server answer to a clock write —
+ * either the `WorkSessionDto` a start/stop returns, or the refusal that
+ * contradicts it (a 409 on start says the session is already open). They are
+ * observed, not predicted. They are also not re-read: the 30s poll carries no
+ * clock state, so a session someone ends elsewhere leaves this card stale until
+ * the next clock write or a reload. #2061 closes that too.
+ */
+export type MechanicClockState = 'CLOCKED_IN' | 'ON_BREAK' | 'CLOCKED_OUT' | 'UNKNOWN';
+
+/**
  * Which pile a row falls in. `HELD` is a workorder parked on the site's HOLD
  * position — the backend's "placed nowhere work happens" — which is the closest
  * real counterpart to the board's on-hold lane.
@@ -43,7 +65,11 @@ export type RowStatusTone = 'NEUTRAL' | 'ACTIVE' | 'WAITING' | 'DRAFT' | 'DONE';
  * so the gap stays visible instead of turning into a number nobody can source.
  *
  * - mechanic free hours / shop open capacity — needs shift windows; the dashboard
- *   reports availability as a flag, never as a span.
+ *   reports availability as a flag, never as a span. No shift-window entity
+ *   exists on the platform yet; backend issue #2060 adds a placeholder window
+ *   derived from the location's operating hours.
+ * - mechanic clock state — the clock write endpoints exist, the read does not
+ *   (backend issue #2061). See `MechanicClockState`.
  * - workorder promised time — `scheduledDate` is a date with no time of day.
  * - workorder priority — no field on `WorkorderSummary`.
  * - required skills per workorder — the service lines carry descriptions, not
@@ -67,6 +93,11 @@ export interface MechanicCard {
   readonly breakExpectedReturn: string | null;
   /** Always null: no shift window is published for this board. */
   readonly freeHours: null;
+  /**
+   * `UNKNOWN` on every load — nothing on this board reads clock state. It turns
+   * real only after a clock write on this card answers. See `MechanicClockState`.
+   */
+  readonly clockState: MechanicClockState;
 }
 
 export interface BayCard {

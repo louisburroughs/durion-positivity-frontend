@@ -145,6 +145,24 @@ describe('DispatchBoardPageComponent accessibility', () => {
     expect(results.violations.map(violation => violation.id)).toEqual([]);
   });
 
+  // The clock controls are siblings of the drag handle, not children of it: a
+  // button nested in a button is one control to the accessibility tree and
+  // neither is separately operable. This pins that the scan above actually
+  // covered them, rather than passing because they were not rendered.
+  it('renders the clock controls as their own buttons beside the drag handle', () => {
+    expect(component.canManageClock()).toBe(true);
+
+    const row: HTMLElement = fixture.nativeElement.querySelector('.mech-row');
+    const handle: HTMLButtonElement | null = row.querySelector('button.mech');
+    const clockButtons: HTMLButtonElement[] = Array.from(row.querySelectorAll('.clock-btn'));
+
+    expect(handle).toBeTruthy();
+    expect(handle?.querySelector('.clock-btn')).toBeNull();
+    expect(clockButtons).toHaveLength(2);
+    expect(clockButtons.every(button => button.getAttribute('aria-label'))).toBe(true);
+    expect(row.querySelector('.mclock')?.getAttribute('role')).toBe('group');
+  });
+
   it('renders the mechanic picker dialog with no axe violations', async () => {
     component.openPicker('MECHANIC', 'wo-to-assign');
     fixture.detectChanges();

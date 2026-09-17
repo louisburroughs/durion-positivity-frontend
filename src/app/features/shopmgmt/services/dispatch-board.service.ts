@@ -10,7 +10,13 @@ import {
 } from '@durion-sdk/workorder';
 import { BayAPIService } from '@durion-sdk/location';
 import { TechnicianAPIService } from '@durion-sdk/shop-manager';
-import { PeopleAvailabilityAPIService, PeopleAvailabilityResponse, PrimaryLocationResponse } from '@durion-sdk/people';
+import {
+  PeopleAvailabilityAPIService,
+  PeopleAvailabilityResponse,
+  PrimaryLocationResponse,
+  WorkSessionDto,
+  WorkSessionsAPIService,
+} from '@durion-sdk/people';
 import { DashboardResponse } from '../models/dispatch-board.models';
 import { isoDateLocal } from '../models/capacity-calendar.models';
 import { v4 as uuidv4 } from 'uuid';
@@ -59,6 +65,7 @@ export class DispatchBoardService {
   private readonly servicePositionApi = inject(ServicePositionAPIService);
   private readonly bayApi = inject(BayAPIService);
   private readonly technicianApi = inject(TechnicianAPIService);
+  private readonly workSessionApi = inject(WorkSessionsAPIService);
 
   getDashboard(locationId: string, date: string): Observable<DashboardResponse> {
     const normalizedDate = this.toIsoDate(date);
@@ -194,6 +201,28 @@ export class DispatchBoardService {
     return this.servicePositionApi.assignServicePosition(workorderId, {
       resourceType: AssignServicePositionRequestResourceTypeEnum.Hold,
     });
+  }
+
+  /**
+   * Clock the mechanic in — pos-people's attendance session, not the workexec
+   * job timer. `actor` is deliberately not sent: the controller ignores the
+   * body's copy and records the authenticated username instead, so passing one
+   * would only suggest the caller can choose it.
+   *
+   * Refuses with 409 INVALID_STATE when a session is already open for the
+   * person, so the board learns the state it could not read beforehand.
+   */
+  clockIn(personId: string): Observable<WorkSessionDto> {
+    return this.workSessionApi.startWorkSession({ personId });
+  }
+
+  /**
+   * Clock the mechanic out. The open session is found by person, not by session
+   * id, and any break still open is closed at the same instant. Refuses with
+   * 404 WORK_SESSION_NOT_FOUND when nothing is open.
+   */
+  clockOut(personId: string): Observable<WorkSessionDto> {
+    return this.workSessionApi.stopWorkSession({ personId });
   }
 
   private toIsoDate(value: string): string {

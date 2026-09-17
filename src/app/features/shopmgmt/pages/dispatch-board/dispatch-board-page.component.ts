@@ -13,6 +13,7 @@ import {
   DashboardResponse,
   MechanicAvailability,
   MechanicCard,
+  MechanicClockState,
   MechanicStatus,
   PositionKind,
   RowLane,
@@ -25,7 +26,7 @@ import { isoDateLocal } from '../../models/capacity-calendar.models';
 import { BayInventory, BayInventoryEntry, DispatchBoardService, TechnicianSkills } from '../../services/dispatch-board.service';
 import { LocationPickerComponent } from '../../../location/components/location-picker/location-picker.component';
 import { AuthService } from '../../../../core/services/auth.service';
-import { WORKEXEC_PAGE } from '../../../../core/security/route-permissions';
+import { SHOPMGMT_PAGE, WORKEXEC_PAGE } from '../../../../core/security/route-permissions';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 type StatusFilter = 'ALL' | 'OPEN' | 'DRAFT';
@@ -159,6 +160,26 @@ export class DispatchBoardPageComponent implements OnInit {
   readonly toast = signal<ToastMessage | null>(null);
   readonly pendingWorkorderIds = signal<ReadonlySet<string>>(new Set());
 
+  /** One clock write per mechanic at a time, the way `pendingWorkorderIds` guards a row. */
+  readonly pendingClockPersonIds = signal<ReadonlySet<string>>(new Set());
+
+  /**
+   * Clock state this board has been *told*, keyed by person id — never guessed.
+   * An entry is written only from a server answer to a clock write on this
+   * card: the `WorkSessionDto` a start or stop returns, or the refusal that
+   * names the state instead (a 409 on start says the session is already open).
+   * A mechanic with no entry stays `UNKNOWN` and is offered both actions.
+   *
+   * This is not a cache of a read, because there is no read: see
+   * `MechanicClockState`. It therefore goes stale silently if a session is
+   * started or ended anywhere else, and the 30s poll cannot correct it —
+   * backend issue #2061 replaces the whole mechanism with a real field.
+   */
+  private readonly observedClockState = signal<ReadonlyMap<string, MechanicClockState>>(new Map());
+
+  /** Which (location, date) `observedClockState` describes; a switch drops it. */
+  private clockStateKey: string | null = null;
+
   /**
    * Monotonic read counter. `refresh()`, the 30s poll and the post-mutation
    * reload are independent subscriptions, so without this an older response
@@ -203,6 +224,24 @@ export class DispatchBoardPageComponent implements OnInit {
   readonly canAssignBay = computed(
     () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(WORKEXEC_PAGE.positionAssign),
   );
+
+  /**
+   * Clocking in and out is a pos-people write on a separate authority from
+   * anything else on this board, so a dispatcher who can place work is not
+   * thereby a timekeeper. See `SHOPMGMT_PAGE.mechanicClock` for why the code it
+   * asks for is provisional.
+   */
+  readonly canManageClock = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(SHOPMGMT_PAGE.mechanicClock),
+  );
+
+  /**
+   * Clocking in happens *now*; the board's date picker chooses which day to
+   * look at. Offering the control over last Tuesday's roster would write a
+   * session stamped today against a day the dispatcher is only reading, so the
+   * clock is offered on today's board alone.
+   */
+  readonly isViewingToday = computed(() => this.selectedDate() === this.todayIso());
 
   // --- derived reads kept for the existing contract ---
   readonly loading = computed(() => this.state() === 'loading');
@@ -423,8 +462,14 @@ export class DispatchBoardPageComponent implements OnInit {
 
       // The read's own callbacks write and read board signals; untracked keeps
       // those out of this effect's dependencies so a response cannot re-trigger
-      // the load that produced it.
-      const sub = untracked(() => this.load(locationId, date));
+      // the load that produced it. Clock state is dropped here rather than in
+      // `load`, which the 30s poll and every refresh also call: this runs on a
+      // change of selection alone, which is exactly when the observed state
+      // stops describing what is on screen.
+      const sub = untracked(() => {
+        this.resetClockStateFor(this.toRequestKey(locationId, date));
+        return this.load(locationId, date);
+      });
       onCleanup(() => sub.unsubscribe());
     });
   }
@@ -729,6 +774,196 @@ export class DispatchBoardPageComponent implements OnInit {
         currentBayId: null,
       },
     });
+  }
+
+  // -------------------------------------------------------------------------
+  // Timekeeping clock
+  // -------------------------------------------------------------------------
+
+  /** Whether a clock write on this mechanic is in flight. */
+  isClockPending(personId: string): boolean {
+    return this.pendingClockPersonIds().has(personId);
+  }
+
+  /** The permission, the date and the per-mechanic guard, in one answer. */
+  canClock(mechanic: MechanicCard): boolean {
+    return this.canManageClock() && this.isViewingToday() && !this.isClockPending(mechanic.personId);
+  }
+
+  /**
+   * Both actions are offered while the state is `UNKNOWN`, which is every card
+   * on load: with nothing to read, hiding one of them would be picking a state
+   * for the mechanic rather than reporting one. Once a write has told the board
+   * where the mechanic stands, the control becomes an ordinary toggle and only
+   * the opposing action remains.
+   */
+  showClockIn(mechanic: MechanicCard): boolean {
+    return mechanic.clockState === 'UNKNOWN' || mechanic.clockState === 'CLOCKED_OUT';
+  }
+
+  showClockOut(mechanic: MechanicCard): boolean {
+    return mechanic.clockState !== 'CLOCKED_OUT';
+  }
+
+  /**
+   * Why the control reads the way it does, or null when it needs no excuse.
+   * Being out of date outranks an unknown state: on another day's board the
+   * clock is not offered at all, so what the state is does not arise.
+   */
+  clockHintKey(mechanic: MechanicCard): string | null {
+    if (!this.isViewingToday()) {
+      return 'SHOPMGMT.DISPATCH_BOARD.CLOCK_TODAY_ONLY';
+    }
+    if (mechanic.clockState === 'UNKNOWN') {
+      return 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_CLOCK_STATE';
+    }
+    return null;
+  }
+
+  clockIn(mechanic: MechanicCard): void {
+    if (!this.canClock(mechanic)) {
+      return;
+    }
+    this.runClockWrite(mechanic, 'IN');
+  }
+
+  clockOut(mechanic: MechanicCard): void {
+    if (!this.canClock(mechanic)) {
+      return;
+    }
+    this.runClockWrite(mechanic, 'OUT');
+  }
+
+  /**
+   * Unlike `run()`, this does not re-read the board afterwards. The dashboard
+   * carries no clock state at all, so a readback would fetch the same
+   * clock-less roster and confirm nothing — the write's own response is the
+   * only account of the new state there is. Undo is not offered either: a work
+   * session is an attendance record, and "clock back out" is a second real
+   * event rather than a retraction of the first.
+   */
+  private runClockWrite(mechanic: MechanicCard, action: 'IN' | 'OUT'): void {
+    const personId = mechanic.personId;
+    if (this.isClockPending(personId)) {
+      return;
+    }
+    const toastId = `${personId}:${++this.toastSeq}`;
+    // A mechanic whose name has not replicated is still clockable; the
+    // confirmation just cannot name them, which beats naming them with a UUID.
+    const name = mechanic.name;
+    const params: Record<string, string> = name ? { mechanic: name } : {};
+    this.markClockPending(personId, true);
+
+    const call =
+      action === 'IN' ? this.dispatchBoardService.clockIn(personId) : this.dispatchBoardService.clockOut(personId);
+
+    call.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.setObservedClockState(personId, action === 'IN' ? 'CLOCKED_IN' : 'CLOCKED_OUT');
+        this.toast.set({
+          id: toastId,
+          key: this.toClockSuccessKey(action, name !== null),
+          params,
+          tone: 'INFO',
+          undo: null,
+        });
+        this.markClockPending(personId, false);
+      },
+      error: (err: unknown) => {
+        // A refusal is the backend naming the state this board could not read.
+        // Recording it turns the failed press into the one thing that was
+        // missing, so the next press offers the action that can succeed.
+        const contradiction = this.clockStateFromRefusal(action, err);
+        if (contradiction) {
+          this.setObservedClockState(personId, contradiction);
+        }
+        this.toast.set({
+          id: toastId,
+          key: this.toClockErrorKey(action, err),
+          params,
+          tone: 'ERROR',
+          undo: null,
+        });
+        this.markClockPending(personId, false);
+      },
+    });
+  }
+
+  private markClockPending(personId: string, pending: boolean): void {
+    const next = new Set(this.pendingClockPersonIds());
+    if (pending) {
+      next.add(personId);
+    } else {
+      next.delete(personId);
+    }
+    this.pendingClockPersonIds.set(next);
+  }
+
+  private setObservedClockState(personId: string, state: MechanicClockState): void {
+    const next = new Map(this.observedClockState());
+    next.set(personId, state);
+    this.observedClockState.set(next);
+  }
+
+  /**
+   * Observed clock state belongs to one shop on one day. Carrying it across a
+   * location or date switch would label a different roster — or the same people
+   * on a day the state was never about — with yesterday's answer.
+   */
+  private resetClockStateFor(key: string): void {
+    if (this.clockStateKey === key) {
+      return;
+    }
+    this.clockStateKey = key;
+    if (this.observedClockState().size > 0) {
+      this.observedClockState.set(new Map());
+    }
+  }
+
+  private toClockSuccessKey(action: 'IN' | 'OUT', named: boolean): string {
+    if (action === 'IN') {
+      return named
+        ? 'SHOPMGMT.DISPATCH_BOARD.TOAST.CLOCKED_IN'
+        : 'SHOPMGMT.DISPATCH_BOARD.TOAST.CLOCKED_IN_UNNAMED';
+    }
+    return named
+      ? 'SHOPMGMT.DISPATCH_BOARD.TOAST.CLOCKED_OUT'
+      : 'SHOPMGMT.DISPATCH_BOARD.TOAST.CLOCKED_OUT_UNNAMED';
+  }
+
+  /**
+   * pos-people answers a double clock-in with a bare 409 INVALID_STATE and a
+   * clock-out with nothing open with 404 WORK_SESSION_NOT_FOUND. INVALID_STATE
+   * is the module's catch-all for `IllegalStateException`, so it is read
+   * together with the action that provoked it rather than on its own.
+   */
+  private toClockErrorKey(action: 'IN' | 'OUT', err: unknown): string {
+    if (err instanceof HttpErrorResponse && err.status === 403) {
+      return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_FORBIDDEN';
+    }
+    const code = this.toApiErrorCode(err);
+    if (code === 'PERSON_NOT_FOUND') {
+      return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_PERSON_NOT_FOUND';
+    }
+    if (action === 'IN' && code === 'INVALID_STATE') {
+      return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_ALREADY_CLOCKED_IN';
+    }
+    if (action === 'OUT' && code === 'WORK_SESSION_NOT_FOUND') {
+      return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_CLOCKED_IN';
+    }
+    return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_GENERIC';
+  }
+
+  /** Only the two refusals that state a fact about the session teach anything. */
+  private clockStateFromRefusal(action: 'IN' | 'OUT', err: unknown): MechanicClockState | null {
+    const code = this.toApiErrorCode(err);
+    if (action === 'IN' && code === 'INVALID_STATE') {
+      return 'CLOCKED_IN';
+    }
+    if (action === 'OUT' && code === 'WORK_SESSION_NOT_FOUND') {
+      return 'CLOCKED_OUT';
+    }
+    return null;
   }
 
   assignBay(row: WorkorderRow, bayId: string): void {
@@ -1331,6 +1566,8 @@ export class DispatchBoardPageComponent implements OnInit {
       whereLabel: bayId ? (this.bayNamesById().get(bayId) ?? null) : null,
       breakExpectedReturn: mechanic.breakExpectedReturn ?? null,
       freeHours: null,
+      // Nothing on the response says; only a clock write on this card can fill it.
+      clockState: this.observedClockState().get(mechanic.personId) ?? 'UNKNOWN',
     };
   }
 

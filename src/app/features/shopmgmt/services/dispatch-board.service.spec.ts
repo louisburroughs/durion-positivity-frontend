@@ -13,7 +13,7 @@ import {
 import type { ServicePositionResponse, TechnicianAssignmentResponse } from '@durion-sdk/workorder';
 import { BayAPIService } from '@durion-sdk/location';
 import { TechnicianAPIService } from '@durion-sdk/shop-manager';
-import { PeopleAvailabilityAPIService } from '@durion-sdk/people';
+import { PeopleAvailabilityAPIService, WorkSessionsAPIService } from '@durion-sdk/people';
 import type { DashboardResponse } from '../models/dispatch-board.models';
 import { isoDateLocal } from '../models/capacity-calendar.models';
 
@@ -31,6 +31,10 @@ const servicePositionStub = {
   assignServicePosition: vi.fn(),
   releaseServicePosition: vi.fn(),
 };
+const workSessionStub = {
+  startWorkSession: vi.fn(),
+  stopWorkSession: vi.fn(),
+};
 const bayStub = { listBays: vi.fn() };
 const technicianStub = { listLocationTechnicians: vi.fn() };
 
@@ -47,6 +51,8 @@ describe('DispatchBoardService', () => {
     technicianAssignmentStub.releaseTechnician.mockReturnValue(of(undefined));
     servicePositionStub.assignServicePosition.mockReturnValue(of({}));
     servicePositionStub.releaseServicePosition.mockReturnValue(of(undefined));
+    workSessionStub.startWorkSession.mockReturnValue(of({ sessionId: 'ws-1', personId: 'p-1' }));
+    workSessionStub.stopWorkSession.mockReturnValue(of({ sessionId: 'ws-1', personId: 'p-1' }));
     bayStub.listBays.mockReturnValue(of({ content: [] }));
     technicianStub.listLocationTechnicians.mockReturnValue(of({ content: [] }));
 
@@ -55,6 +61,7 @@ describe('DispatchBoardService', () => {
         DispatchBoardService,
         { provide: DailyDispatchBoardDashboardService, useValue: dispatchDashboardStub },
         { provide: PeopleAvailabilityAPIService, useValue: peopleAvailabilityStub },
+        { provide: WorkSessionsAPIService, useValue: workSessionStub },
         { provide: TechnicianAssignmentAPIService, useValue: technicianAssignmentStub },
         { provide: ServicePositionAPIService, useValue: servicePositionStub },
         { provide: BayAPIService, useValue: bayStub },
@@ -481,5 +488,46 @@ describe('DispatchBoardService', () => {
 
     expect(next).not.toHaveBeenCalled();
     expect(error).toHaveBeenCalledWith(refusal);
+  });
+
+  describe('the timekeeping clock', () => {
+    it('clocks a person in by person id, and sends no actor', () => {
+      service.clockIn('p-1').subscribe();
+
+      // The controller ignores the body's actor and records the authenticated
+      // username, so sending one would imply a choice the caller does not have.
+      expect(workSessionStub.startWorkSession).toHaveBeenCalledWith({ personId: 'p-1' });
+    });
+
+    it('clocks a person out by person id, not by session id', () => {
+      service.clockOut('p-1').subscribe();
+
+      expect(workSessionStub.stopWorkSession).toHaveBeenCalledWith({ personId: 'p-1' });
+    });
+
+    // ADR-0035: what the caller receives is the contract, not just the call.
+    it('emits the session the SDK answers', () => {
+      const session = { sessionId: 'ws-9', personId: 'p-1', status: 'ACTIVE', startedAt: '2026-09-17T13:00:00Z' };
+      workSessionStub.startWorkSession.mockReturnValue(of(session));
+      const next = vi.fn();
+
+      service.clockIn('p-1').subscribe(next);
+
+      expect(next).toHaveBeenCalledWith(session);
+    });
+
+    it('propagates a refusal rather than swallowing it', () => {
+      // The board reads these two refusals as the state it could not read, so
+      // they have to reach it intact.
+      const refusal = new HttpErrorResponse({ status: 409, error: { code: 'INVALID_STATE' } });
+      workSessionStub.startWorkSession.mockReturnValue(throwError(() => refusal));
+      const next = vi.fn();
+      const error = vi.fn();
+
+      service.clockIn('p-1').subscribe({ next, error });
+
+      expect(next).not.toHaveBeenCalled();
+      expect(error).toHaveBeenCalledWith(refusal);
+    });
   });
 });
