@@ -101,6 +101,12 @@ export class AuthService {
    * no second request. Cleared when the binding changes or the session ends.
    */
   private tenantLoadFor: string | null = null;
+  /**
+   * True until the constructor has returned. Restoring a stored session syncs
+   * the tenant from there, and that is the one caller whose request cannot go
+   * out straight away — see `loadTenant`.
+   */
+  private constructing = true;
   private refreshRequest$: Observable<TokenPairResponse> | null = null;
   private expiryTimerId: ReturnType<typeof setTimeout> | null = null;
 
@@ -163,6 +169,7 @@ export class AuthService {
 
   constructor() {
     this.reconcileSessionFromToken();
+    this.constructing = false;
   }
 
   // ── Public API ────────────────────────────────────────────────────────────
@@ -358,6 +365,28 @@ export class AuthService {
 
     if (!isPlatformBrowser(this.platformId)) return;
 
+    // Sending the request re-enters DI: `authInterceptor` injects this very
+    // service to read the token off it. On the restore path the constructor is
+    // still running, so that injection lands on a half-built record and Angular
+    // answers it with NG0200 (circular dependency) — the load then fails before
+    // it ever leaves the browser, and the one-attempt-per-binding rule above
+    // means the tenant stays null for the rest of the session. Let construction
+    // finish first. Every other caller (login, a silent refresh that changed
+    // tenant) already runs outside it and requests straight away.
+    if (this.constructing) {
+      queueMicrotask(() => {
+        // The binding can retire before the microtask drains — a logout clears
+        // `tenantLoadFor`, a tenant change moves it on. Either way this request
+        // is for a tenant the session has left, so drop it rather than send it.
+        if (this.tenantLoadFor === tenantId) this.requestTenant(tenantId);
+      });
+      return;
+    }
+
+    this.requestTenant(tenantId);
+  }
+
+  private requestTenant(tenantId: string): void {
     this.tenantApiService.getMyTenant().subscribe({
       next: response => {
         // Ignore a late answer for a tenant the session has since left.
