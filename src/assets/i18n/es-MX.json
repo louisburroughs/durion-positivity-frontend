@@ -2083,6 +2083,7 @@
       "BREAK_END_ARIA": "Terminar el descanso de {{name}}",
       "BREAK_END_ARIA_UNNAMED": "Terminar el descanso de un mecánico sin nombre",
       "BREAK_DRAG_HINT": "Arrastre un mecánico aquí para iniciar un descanso, o de vuelta a la lista para ponerlo de nuevo en servicio. El tiempo libre proviene de RR. HH. y no se puede cambiar aquí.",
+      "BREAK_OTHER_DAY": "El registro de horario y los descansos corresponden a hoy, así que el control de horario es de solo lectura en esta fecha. El tiempo libre proviene de RR. HH. y no se puede cambiar aquí.",
       "SEARCH_PLACEHOLDER": "Orden de trabajo, vehículo o cliente",
       "SEARCH_ARIA": "Buscar órdenes de trabajo",
       "FILTER": {

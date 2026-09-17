@@ -2083,6 +2083,7 @@
       "BREAK_END_ARIA": "End the break for {{name}}",
       "BREAK_END_ARIA_UNNAMED": "End the break for an unnamed mechanic",
       "BREAK_DRAG_HINT": "Drag a mechanic here to start a break, or back to the roster to bring them back on duty. Time off comes from HR and cannot be changed here.",
+      "BREAK_OTHER_DAY": "Clocking and breaks apply to today, so timekeeping is read-only on this date. Time off comes from HR and cannot be changed here.",
       "SEARCH_PLACEHOLDER": "Workorder, vehicle, or customer",
       "SEARCH_ARIA": "Search workorders",
       "FILTER": {

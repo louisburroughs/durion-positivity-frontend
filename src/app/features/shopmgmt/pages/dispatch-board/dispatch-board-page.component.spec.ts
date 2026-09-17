@@ -3431,6 +3431,64 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_OFF_DUTY_NOT_CHANGEABLE');
     });
 
+    // Second review round. `binStatusKey` read the clock before PTO, so a
+    // mechanic on time off who is also clocked out — the exact state the
+    // clock-in guard above creates — was labelled "not clocked in" on the one
+    // chip this board is not allowed to change.
+    it('labels a mechanic on time off as off duty, not as merely not clocked in', () => {
+      const onPtoAndClockedOut: DashboardResponse = {
+        ...fullDashboard,
+        mechanics: [
+          {
+            personId: 'M1',
+            firstName: 'Ray',
+            lastName: 'Delgado',
+            ptoEntries: [{ ptoId: 'p1', ptoType: 'VACATION', start: `${TODAY}T00:00:00Z`, end: `${TODAY}T23:59:59Z` }],
+          },
+        ],
+      };
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]])),
+      );
+      renderWith(onPtoAndClockedOut);
+
+      const card = component.offDutyMechanics().find(mechanic => mechanic.personId === 'M1')!;
+      expect(component.binStatusKey(card)).toBe('SHOPMGMT.DISPATCH_BOARD.OFF_DUTY');
+    });
+
+    it('still says not-clocked-in for a mechanic who is simply off the clock', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]])),
+      );
+      renderWith(fullDashboard);
+
+      const card = component.offDutyMechanics().find(mechanic => mechanic.personId === 'M1')!;
+      expect(card.onTimeOff).toBe(false);
+      expect(component.binStatusKey(card)).toBe('SHOPMGMT.DISPATCH_BOARD.NOT_CLOCKED_IN');
+    });
+
+    // The note told the dispatcher to drag on a board where dragging is off.
+    it('stops advertising the drag on another day\u2019s board', () => {
+      renderWith(fullDashboard);
+      expect(component.binNoteKey()).toBe('SHOPMGMT.DISPATCH_BOARD.BREAK_DRAG_HINT');
+
+      component.selectedDate.set('2026-05-04');
+      fixture.detectChanges();
+      expect(component.binNoteKey()).toBe('SHOPMGMT.DISPATCH_BOARD.BREAK_OTHER_DAY');
+      expect(fixture.nativeElement.querySelector('.bin-note')?.textContent?.trim()).toBe(
+        'SHOPMGMT.DISPATCH_BOARD.BREAK_OTHER_DAY',
+      );
+    });
+
+    it('still says read-only to a caller without the timekeeping authority', () => {
+      authStub.hasAnyPermission.mockImplementation(
+        (codes: readonly string[]) => !codes.includes('people:timekeeping:approve'),
+      );
+      renderWith(fullDashboard);
+
+      expect(component.binNoteKey()).toBe('SHOPMGMT.DISPATCH_BOARD.BREAK_READ_ONLY');
+    });
+
     // The bin lit up as a drop target on a historical board and then answered
     // "clock them in first", which names the wrong reason.
     it('offers neither drop target on another day\u2019s board', () => {

@@ -324,13 +324,7 @@
               <span class="bin-empty">{{ 'SHOPMGMT.DISPATCH_BOARD.EVERYONE_ON_CLOCK' | translate }}</span>
             }
           </div>
-          <p class="bin-note">
-            @if (canManageClock()) {
-              {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_DRAG_HINT' | translate }}
-            } @else {
-              {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_READ_ONLY' | translate }}
-            }
-          </p>
+          <p class="bin-note">{{ binNoteKey() | translate }}</p>
         </section>
       </div>
 

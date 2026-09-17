@@ -840,12 +840,33 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   /**
+   * What the note under the bin says. The drag it describes is gated on the
+   * board showing today, so on any other date the instruction would be telling
+   * the dispatcher to do something the board will not accept.
+   */
+  binNoteKey(): string {
+    if (!this.canManageClock()) {
+      return 'SHOPMGMT.DISPATCH_BOARD.BREAK_READ_ONLY';
+    }
+    return this.isViewingToday()
+      ? 'SHOPMGMT.DISPATCH_BOARD.BREAK_DRAG_HINT'
+      : 'SHOPMGMT.DISPATCH_BOARD.BREAK_OTHER_DAY';
+  }
+
+  /**
    * What the bin chip says under the name. "Off duty" covers two different
    * facts now — someone who has not clocked in, and someone on approved time
    * off — and only the first is something the dispatcher can act on, so they
    * are worded apart rather than sharing one label.
    */
   binStatusKey(mechanic: MechanicCard): string {
+    // Same precedence as `toAvailability`: approved time off outranks whatever
+    // the clock says. Reading `clockState` first would label someone on PTO
+    // "not clocked in" — true, and the wrong fact about why they are here, on
+    // the one chip whose state this board is not allowed to change.
+    if (mechanic.onTimeOff) {
+      return 'SHOPMGMT.DISPATCH_BOARD.OFF_DUTY';
+    }
     if (mechanic.availability === 'BREAK') {
       return mechanic.breakExpectedReturn
         ? 'SHOPMGMT.DISPATCH_BOARD.BREAK_UNTIL'
