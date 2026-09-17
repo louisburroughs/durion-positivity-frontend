@@ -13,7 +13,7 @@ import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { ScheduleViewPageComponent } from './schedule-view-page.component';
 import { CapacityCalendarService } from '../../services/capacity-calendar.service';
@@ -479,22 +479,64 @@ describe('ScheduleViewPageComponent', () => {
     expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.DEGRADED');
   });
 
-  it('names the location generically when its name could not be loaded', async () => {
-    // getLocationById degrades to undefined, and the sentence names the location
-    // mid-clause — unguarded it reads "no shop record for , so ...".
-    capacityStub.getCalendar.mockReturnValue(
-      of(view({ locationHasNoSchedule: true, locationName: undefined })),
-    );
-    await setup();
+  /**
+   * The sentence names the location mid-clause, so these need real copy rather
+   * than the bare keys the other tests assert on — an interpolated value only
+   * reaches the DOM once the message around it resolves.
+   */
+  describe('naming the location', () => {
+    const load = (locale: string, sentence: string, fallback: string) =>
+      TestBed.inject(TranslateService).setTranslation(
+        locale,
+        { SHOPMGMT: { SCHEDULE_VIEW: { NO_SHOP_SCHEDULE: sentence, THIS_LOCATION: fallback } } },
+        true,
+      );
 
-    expect(component.locationLabel()).toBe('SHOPMGMT.SCHEDULE_VIEW.THIS_LOCATION');
-  });
+    const useCopy = () => {
+      const translate = TestBed.inject(TranslateService);
+      load('en', 'No shop record for {{location}}.', 'this location');
+      load('fr', "Aucune fiche d'atelier pour {{location}}.", 'ce site');
+      translate.use('en');
+      fixture.detectChanges();
+    };
 
-  it('uses the location name when it is known', async () => {
-    capacityStub.getCalendar.mockReturnValue(of(view({ locationHasNoSchedule: true })));
-    await setup();
+    it('names the location generically when its name could not be loaded', async () => {
+      // getLocationById degrades to undefined, and the sentence names the
+      // location mid-clause — unguarded it reads "no shop record for , so ...".
+      capacityStub.getCalendar.mockReturnValue(
+        of(view({ locationHasNoSchedule: true, locationName: undefined })),
+      );
+      await setup();
+      useCopy();
 
-    expect(component.locationLabel()).toBe('Riverside Tire & Auto');
+      expect(component.locationName()).toBeUndefined();
+      expect(text()).toContain('No shop record for this location.');
+    });
+
+    it('uses the location name when it is known', async () => {
+      capacityStub.getCalendar.mockReturnValue(of(view({ locationHasNoSchedule: true })));
+      await setup();
+      useCopy();
+
+      expect(component.locationName()).toBe('Riverside Tire & Auto');
+      expect(text()).toContain('No shop record for Riverside Tire & Auto.');
+    });
+
+    it('re-translates the generic fallback when the locale changes', async () => {
+      // Resolved once in the component, the fallback would stay English while
+      // the sentence around it turned French — one clause in each language.
+      capacityStub.getCalendar.mockReturnValue(
+        of(view({ locationHasNoSchedule: true, locationName: undefined })),
+      );
+      await setup();
+      useCopy();
+
+      TestBed.inject(TranslateService).use('fr');
+      fixture.detectChanges();
+
+      expect(text()).toContain("Aucune fiche d'atelier pour ce site.");
+      expect(text()).not.toContain('this location');
+    });
   });
 
   it('still draws the calendar for a location that does have a shop record', async () => {
