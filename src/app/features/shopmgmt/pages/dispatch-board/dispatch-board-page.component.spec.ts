@@ -809,7 +809,10 @@ describe('DispatchBoardPageComponent', () => {
       fixture.detectChanges();
 
       expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_CLOCKED_IN');
-      expect(component.mechanics()[0].clockState).toBe('CLOCKED_OUT');
+      // Clocked out is off duty, so the re-read moves them to the bin.
+      expect(component.offDutyMechanics().find(mechanic => mechanic.personId === 'M1')?.clockState).toBe(
+        'CLOCKED_OUT',
+      );
     });
 
     // A refused caller is not a stale board: nothing about the session changed,
@@ -3373,13 +3376,13 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.BREAK_ENDED');
     });
 
-    // The break is keyed by the open session, so someone off the clock has
-    // nothing to hang one on. The drop still lands, and says what to do.
-    it('refuses a break for a mechanic who is not clocked in, and says why', () => {
-      dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of(new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]])),
-      );
+    // The break is keyed by the open session, so someone with no session has
+    // nothing to hang one on. Since clocked-out mechanics sit in the bin, the
+    // roster case left is a row whose clock state the caller may not read.
+    it('refuses a break for a mechanic with no open session, and says why', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(of(new Map()));
       renderWith(fullDashboard);
+      expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
       component.onDragStart('MECHANIC', 'M1', dragEvent());
 
       // The bin still takes the drop: a dead cursor would not explain itself.
@@ -3416,7 +3419,7 @@ describe('DispatchBoardPageComponent', () => {
       component.onRosterDrop(dragEvent());
 
       expect(dispatchBoardServiceStub.stopBreak).not.toHaveBeenCalled();
-      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BREAK_NOT_A_BREAK');
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_OFF_DUTY_NOT_CHANGEABLE');
     });
 
     // Dispatching someone who is on a break is not what this drag means.
@@ -3494,6 +3497,106 @@ describe('DispatchBoardPageComponent', () => {
       fixture.detectChanges();
 
       expect(component.canStartBreak(rosterCard('M1'))).toBe(false);
+    });
+  });
+
+  describe('clocked out is off duty', () => {
+    function dragEvent(): DragEvent {
+      return {
+        dataTransfer: { dropEffect: 'none', effectAllowed: 'none', setData: vi.fn(), getData: vi.fn() },
+        preventDefault: vi.fn(),
+      } as unknown as DragEvent;
+    }
+
+    function renderClockedOut(): void {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(
+          new Map([
+            ['M1', { state: 'CLOCKED_OUT', workSessionId: null }],
+            ['M2', { state: 'CLOCKED_IN', workSessionId: 'ws-2' }],
+          ]),
+        ),
+      );
+      renderWith(fullDashboard);
+    }
+
+    // A workorder assigned to someone who has gone home is a plan for
+    // tomorrow, not a mechanic on the floor: M1 holds wo-assigned and still
+    // leaves the roster.
+    it('moves a clocked-out mechanic to the bin even when work is assigned to them', () => {
+      renderClockedOut();
+
+      expect(component.mechanics().some(mechanic => mechanic.personId === 'M1')).toBe(false);
+      const out = component.offDutyMechanics().find(mechanic => mechanic.personId === 'M1');
+      expect(out?.availability).toBe('OFF');
+      expect(out?.assignedWorkorderId).toBe('wo-assigned');
+    });
+
+    it('counts them as out rather than on duty', () => {
+      renderClockedOut();
+
+      expect(component.stats().onDuty).toBe(1);
+      expect(component.stats().out).toBe(2);
+    });
+
+    // The roster card that used to carry the clock-in button is exactly where
+    // they are no longer listed, so the bin has to carry it instead.
+    it('offers the way back on the clock from the bin', () => {
+      renderClockedOut();
+      const out = component.offDutyMechanics().find(mechanic => mechanic.personId === 'M1')!;
+
+      expect(component.canClockInFromBin(out)).toBe(true);
+      expect(component.canLeaveBin(out)).toBe(true);
+
+      const chipButtons: HTMLButtonElement[] = Array.from(
+        fixture.nativeElement.querySelectorAll('.binchip .clock-btn'),
+      );
+      expect(chipButtons.map(button => button.getAttribute('aria-label'))).toContain(
+        'SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA',
+      );
+    });
+
+    it('clocks them in when dragged out of the bin onto the roster', () => {
+      renderClockedOut();
+      component.onDragStart('MECHANIC', 'M1', dragEvent(), 'BREAK');
+
+      expect(component.isRosterDropTarget()).toBe(true);
+      component.onRosterDrop(dragEvent());
+
+      expect(dispatchBoardServiceStub.clockIn).toHaveBeenCalledWith('M1');
+      expect(dispatchBoardServiceStub.stopBreak).not.toHaveBeenCalled();
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.CLOCKED_IN');
+    });
+
+    // The same gesture means two things; the state decides which write it is.
+    it('ends a break instead when that is the state they are in', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-1' }]])),
+      );
+      renderWith(fullDashboard);
+      component.onDragStart('MECHANIC', 'M1', dragEvent(), 'BREAK');
+      component.onRosterDrop(dragEvent());
+
+      expect(dispatchBoardServiceStub.stopBreak).toHaveBeenCalledWith('ws-1');
+      expect(dispatchBoardServiceStub.clockIn).not.toHaveBeenCalled();
+    });
+
+    it('labels not-clocked-in apart from approved time off', () => {
+      renderClockedOut();
+      const out = component.offDutyMechanics().find(mechanic => mechanic.personId === 'M1')!;
+
+      expect(component.binStatusKey(out)).toBe('SHOPMGMT.DISPATCH_BOARD.NOT_CLOCKED_IN');
+    });
+
+    // `UNKNOWN` is "the caller may not read this", not "off the clock". Moving
+    // those rows would empty the roster for a dispatcher with no timekeeping
+    // grant, which is the one case that must keep working as it always did.
+    it('leaves a mechanic whose clock state cannot be read on the roster', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(of(new Map()));
+      renderWith(fullDashboard);
+
+      expect(component.mechanics().map(mechanic => mechanic.personId)).toContain('M1');
+      expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
     });
   });
 });

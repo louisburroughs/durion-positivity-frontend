@@ -813,6 +813,23 @@ export class DispatchBoardPageComponent implements OnInit {
     }
   }
 
+  /**
+   * What the bin chip says under the name. "Off duty" covers two different
+   * facts now — someone who has not clocked in, and someone on approved time
+   * off — and only the first is something the dispatcher can act on, so they
+   * are worded apart rather than sharing one label.
+   */
+  binStatusKey(mechanic: MechanicCard): string {
+    if (mechanic.availability === 'BREAK') {
+      return mechanic.breakExpectedReturn
+        ? 'SHOPMGMT.DISPATCH_BOARD.BREAK_UNTIL'
+        : 'SHOPMGMT.DISPATCH_BOARD.ON_BREAK';
+    }
+    return mechanic.clockState === 'CLOCKED_OUT'
+      ? 'SHOPMGMT.DISPATCH_BOARD.NOT_CLOCKED_IN'
+      : 'SHOPMGMT.DISPATCH_BOARD.OFF_DUTY';
+  }
+
   /** Whether a clock write on this mechanic is in flight. */
   isClockPending(personId: string): boolean {
     return this.pendingClockPersonIds().has(personId);
@@ -866,6 +883,21 @@ export class DispatchBoardPageComponent implements OnInit {
   /** Whether the mechanic's open break can be ended. */
   canEndBreak(mechanic: MechanicCard): boolean {
     return this.canClock(mechanic) && mechanic.clockState === 'ON_BREAK' && mechanic.workSessionId !== null;
+  }
+
+  /**
+   * Whether a mechanic sitting in the bin can be put back on the clock from
+   * there. Clocking out now moves them into the bin, so the control that
+   * reverses it has to move with them — the roster card they used to carry it
+   * on is exactly the place they are no longer listed.
+   */
+  canClockInFromBin(mechanic: MechanicCard): boolean {
+    return this.canClock(mechanic) && mechanic.clockState === 'CLOCKED_OUT';
+  }
+
+  /** Whether the bin chip has any control on it, and so needs a grab handle. */
+  canLeaveBin(mechanic: MechanicCard): boolean {
+    return this.canEndBreak(mechanic) || this.canClockInFromBin(mechanic);
   }
 
   startBreak(mechanic: MechanicCard): void {
@@ -952,11 +984,18 @@ export class DispatchBoardPageComponent implements OnInit {
     if (!mechanic) {
       return;
     }
-    if (!this.canEndBreak(mechanic)) {
-      this.refuseTimekeepingDrop(mechanic, 'BREAK_END');
+    // One gesture, two meanings, decided by the state they are in: a mechanic
+    // on a break comes back from it, and one who is clocked out comes back on
+    // the clock. Both are "back on duty", which is what the drag says.
+    if (this.canEndBreak(mechanic)) {
+      this.endBreak(mechanic);
       return;
     }
-    this.endBreak(mechanic);
+    if (this.canClockInFromBin(mechanic)) {
+      this.clockIn(mechanic);
+      return;
+    }
+    this.refuseTimekeepingDrop(mechanic, 'BACK_ON_DUTY');
   }
 
   /**
@@ -965,13 +1004,13 @@ export class DispatchBoardPageComponent implements OnInit {
    * has no session to hang a break on, and one in the bin for time off is not
    * on a break the board can end — that is HR's record, not a session.
    */
-  private refuseTimekeepingDrop(mechanic: MechanicCard, action: 'BREAK_START' | 'BREAK_END'): void {
+  private refuseTimekeepingDrop(mechanic: MechanicCard, action: 'BREAK_START' | 'BACK_ON_DUTY'): void {
     const named = mechanic.name !== null;
     const suffix = named ? '' : '_UNNAMED';
     const key =
       action === 'BREAK_START'
         ? `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BREAK_NEEDS_CLOCK_IN${suffix}`
-        : `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BREAK_NOT_A_BREAK${suffix}`;
+        : `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_OFF_DUTY_NOT_CHANGEABLE${suffix}`;
     this.toast.set({
       id: `${mechanic.personId}:${++this.toastSeq}`,
       key,
@@ -1866,6 +1905,14 @@ export class DispatchBoardPageComponent implements OnInit {
     }
     if (clock?.state === 'CLOCKED_IN') {
       return mechanic.assignedWorkorderId ? 'WORKING' : 'IDLE';
+    }
+    // Not on the clock is off duty, whatever work the projection still has
+    // against them: a workorder assigned to someone who has gone home is a
+    // plan for tomorrow, not a mechanic on the floor. Only a state the caller
+    // was actually told moves anyone — `UNKNOWN` falls through below, so a
+    // caller who may not read the clock keeps the roster they had before.
+    if (clock?.state === 'CLOCKED_OUT') {
+      return 'OFF';
     }
     if (mechanic.onBreak) {
       return 'BREAK';

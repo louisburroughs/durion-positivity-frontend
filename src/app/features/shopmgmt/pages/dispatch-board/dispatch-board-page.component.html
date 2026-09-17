@@ -275,7 +275,7 @@
                 <!-- Only a real break is draggable back to the roster. A chip
                      here for approved time off is HR's record, not a session
                      this board can end, so it stays put. -->
-                @if (canEndBreak(mechanic)) {
+                @if (canLeaveBin(mechanic)) {
                   <span class="binchip-grab" draggable="true"
                     (dragstart)="onDragStart('MECHANIC', mechanic.personId, $event, 'BREAK')"
                     (dragend)="onDragEnd()">
@@ -293,24 +293,25 @@
                   </span>
                 }
                 <small>
-                  @if (mechanic.availability === 'BREAK') {
-                    @if (mechanic.breakExpectedReturn; as until) {
-                      {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_UNTIL' | translate: { time: (until | date: 'shortTime') } }}
-                    } @else {
-                      {{ 'SHOPMGMT.DISPATCH_BOARD.ON_BREAK' | translate }}
-                    }
-                  } @else {
-                    {{ 'SHOPMGMT.DISPATCH_BOARD.OFF_DUTY' | translate }}
-                  }
+                  {{ binStatusKey(mechanic) | translate: { time: (mechanic.breakExpectedReturn | date: 'shortTime') } }}
                 </small>
+                <!-- Keyboard parity for dragging the chip back to the roster.
+                     Both controls are the same gesture: back on duty. -->
                 @if (canEndBreak(mechanic)) {
-                  <!-- Keyboard parity for dragging the chip back to the roster. -->
                   <button type="button" class="clock-btn clock-break" (click)="endBreak(mechanic)"
                     [disabled]="isClockPending(mechanic.personId)"
                     [attr.aria-label]="mechanic.name
                       ? ('SHOPMGMT.DISPATCH_BOARD.BREAK_END_ARIA' | translate: { name: mechanic.name })
                       : ('SHOPMGMT.DISPATCH_BOARD.BREAK_END_ARIA_UNNAMED' | translate)">
                     {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_END' | translate }}
+                  </button>
+                } @else if (canClockInFromBin(mechanic)) {
+                  <button type="button" class="clock-btn clock-in" (click)="clockIn(mechanic)"
+                    [disabled]="isClockPending(mechanic.personId)"
+                    [attr.aria-label]="mechanic.name
+                      ? ('SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA' | translate: { name: mechanic.name })
+                      : ('SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA_UNNAMED' | translate)">
+                    {{ 'SHOPMGMT.DISPATCH_BOARD.CLOCK_IN' | translate }}
                   </button>
                 }
               </span>
