@@ -13,7 +13,7 @@ import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { ScheduleViewPageComponent } from './schedule-view-page.component';
 import { CapacityCalendarService } from '../../services/capacity-calendar.service';
@@ -125,6 +125,7 @@ function view(overrides: Partial<CapacityCalendarView> = {}): CapacityCalendarVi
       },
     ],
     degraded: false,
+    locationHasNoSchedule: false,
     skillRequirementsUnknown: false,
     ...overrides,
   };
@@ -425,6 +426,125 @@ describe('ScheduleViewPageComponent', () => {
     capacityStub.getCalendar.mockReturnValue(of(view({ degraded: true })));
     await setup();
     expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.DEGRADED');
+  });
+
+  it('says the location has no shop record, instead of drawing an empty calendar', async () => {
+    // A 404 from every date is absence, not breakage: the schedule service knows a location
+    // only once it exists as a shop. An empty month under a full legend would read as
+    // "this shop has no capacity", which is a much stronger and wrong claim.
+    capacityStub.getCalendar.mockReturnValue(of(view({ locationHasNoSchedule: true })));
+    await setup();
+
+    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.NO_SHOP_SCHEDULE');
+    expect(all('[role="status"]').length).toBeGreaterThan(0);
+  });
+
+  it('suppresses every grid, the legend and the banners when there is no shop record', async () => {
+    capacityStub.getCalendar.mockReturnValue(of(view({ locationHasNoSchedule: true })));
+    await setup();
+
+    expect(component.showCalendar()).toBe(false);
+    expect(all('.month-cell').length).toBe(0);
+    expect(all('.legend').length).toBe(0);
+
+    component.setScope('week');
+    fixture.detectChanges();
+    expect(all('.week-cell').length).toBe(0);
+
+    component.setScope('day');
+    fixture.detectChanges();
+    expect(all('.board-column').length).toBe(0);
+    expect(all('.tech-row').length).toBe(0);
+  });
+
+  it('does not call it degraded — nothing failed', async () => {
+    capacityStub.getCalendar.mockReturnValue(
+      of(view({ locationHasNoSchedule: true, degraded: false })),
+    );
+    await setup();
+
+    expect(text()).not.toContain('SHOPMGMT.SCHEDULE_VIEW.DEGRADED');
+  });
+
+  it('still reports a real fault that happened alongside the missing shop record', async () => {
+    // The two are independent: every date can 404 *and* the bay or technician
+    // read can fail in the same request. Hiding the warning with the grids let
+    // the no-shop sentence take the blame for an actual outage.
+    capacityStub.getCalendar.mockReturnValue(
+      of(view({ locationHasNoSchedule: true, degraded: true })),
+    );
+    await setup();
+
+    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.NO_SHOP_SCHEDULE');
+    expect(text()).toContain('SHOPMGMT.SCHEDULE_VIEW.DEGRADED');
+  });
+
+  /**
+   * The sentence names the location mid-clause, so these need real copy rather
+   * than the bare keys the other tests assert on — an interpolated value only
+   * reaches the DOM once the message around it resolves.
+   */
+  describe('naming the location', () => {
+    const load = (locale: string, sentence: string, fallback: string) =>
+      TestBed.inject(TranslateService).setTranslation(
+        locale,
+        { SHOPMGMT: { SCHEDULE_VIEW: { NO_SHOP_SCHEDULE: sentence, THIS_LOCATION: fallback } } },
+        true,
+      );
+
+    const useCopy = () => {
+      const translate = TestBed.inject(TranslateService);
+      load('en', 'No shop record for {{location}}.', 'this location');
+      load('fr', "Aucune fiche d'atelier pour {{location}}.", 'ce site');
+      translate.use('en');
+      fixture.detectChanges();
+    };
+
+    it('names the location generically when its name could not be loaded', async () => {
+      // getLocationById degrades to undefined, and the sentence names the
+      // location mid-clause — unguarded it reads "no shop record for , so ...".
+      capacityStub.getCalendar.mockReturnValue(
+        of(view({ locationHasNoSchedule: true, locationName: undefined })),
+      );
+      await setup();
+      useCopy();
+
+      expect(component.locationName()).toBeUndefined();
+      expect(text()).toContain('No shop record for this location.');
+    });
+
+    it('uses the location name when it is known', async () => {
+      capacityStub.getCalendar.mockReturnValue(of(view({ locationHasNoSchedule: true })));
+      await setup();
+      useCopy();
+
+      expect(component.locationName()).toBe('Riverside Tire & Auto');
+      expect(text()).toContain('No shop record for Riverside Tire & Auto.');
+    });
+
+    it('re-translates the generic fallback when the locale changes', async () => {
+      // Resolved once in the component, the fallback would stay English while
+      // the sentence around it turned French — one clause in each language.
+      capacityStub.getCalendar.mockReturnValue(
+        of(view({ locationHasNoSchedule: true, locationName: undefined })),
+      );
+      await setup();
+      useCopy();
+
+      TestBed.inject(TranslateService).use('fr');
+      fixture.detectChanges();
+
+      expect(text()).toContain("Aucune fiche d'atelier pour ce site.");
+      expect(text()).not.toContain('this location');
+    });
+  });
+
+  it('still draws the calendar for a location that does have a shop record', async () => {
+    await setup();
+
+    expect(component.showCalendar()).toBe(true);
+    expect(all('.month-cell').length).toBeGreaterThan(0);
+    expect(text()).not.toContain('SHOPMGMT.SCHEDULE_VIEW.NO_SHOP_SCHEDULE');
   });
 
   it('surfaces a load failure with a retry', async () => {

@@ -172,6 +172,30 @@ export class ScheduleViewPageComponent implements OnInit {
   readonly isFiltered = computed(() => this.activeJob().label.length > 0);
 
   /**
+   * What to call this location in prose, or undefined if the lookup degraded.
+   *
+   * The no-shop sentence names the location mid-clause, and `locationName`
+   * comes from a lookup that degrades to undefined — without a fallback it
+   * reads "no shop record for , so there is no capacity to show". The fallback
+   * itself is translated in the template rather than here: resolving it with
+   * `instant` would pin it to whichever locale was loaded when this last
+   * recomputed, leaving it in the old language after a locale switch while the
+   * sentence around it changed.
+   */
+  readonly locationName = computed(() => this.view()?.locationName?.trim() || undefined);
+
+  /**
+   * Whether there is a calendar to draw at all.
+   *
+   * A location the schedule service does not know as a shop gets one sentence
+   * saying so instead of the grids: an empty month under a full legend reads as
+   * "this shop has no capacity", which is a far stronger — and wrong — claim.
+   */
+  readonly showCalendar = computed(
+    () => this.state() === 'ready' && !this.view()?.locationHasNoSchedule,
+  );
+
+  /**
    * Bays that can perform the selected job — the "eligible" in eligible capacity —
    * in offer order (D14): general bays first, specialty bays taking general work
    * last, so the rack is named only once the general bays are.
