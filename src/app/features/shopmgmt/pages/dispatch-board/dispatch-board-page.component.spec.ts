@@ -1,12 +1,14 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { WorkorderSummaryResourceTypeEnum } from '@durion-sdk/workorder';
 import { DispatchBoardPageComponent } from './dispatch-board-page.component';
-import { DispatchBoardService } from '../../services/dispatch-board.service';
+import { BayInventory, BayInventoryEntry, DispatchBoardService } from '../../services/dispatch-board.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import type { DashboardResponse } from '../../models/dispatch-board.models';
+import type { BayStatus, DashboardResponse, WorkorderRow, WorkorderSummary } from '../../models/dispatch-board.models';
 import { isoDateLocal } from '../../models/capacity-calendar.models';
 
 // ---------------------------------------------------------------------------
@@ -84,6 +86,70 @@ const fullDashboard: DashboardResponse = {
     { bayId: 'B4', bayName: 'Bay 4', available: true, status: 'ACTIVE' },
   ],
 };
+
+/** `board` with one workorder's summary patched: the shape a readback shows once a write has landed. */
+function withWorkorder(board: DashboardResponse, workorderId: string, patch: Partial<WorkorderSummary>): DashboardResponse {
+  return {
+    ...board,
+    workorders: (board.workorders ?? []).map(workorder =>
+      workorder.workorderId === workorderId ? { ...workorder, ...patch } : workorder,
+    ),
+  };
+}
+
+/** `board` with the bay's live claim pointing at `workorderId`, or freed when null. */
+function withBayClaim(board: DashboardResponse, bayId: string, workorderId: string | null): DashboardResponse {
+  return {
+    ...board,
+    bays: (board.bays ?? []).map(bay =>
+      bay.bayId === bayId
+        ? { ...bay, available: workorderId === null, assignedWorkorderId: workorderId ?? undefined }
+        : bay,
+    ),
+  };
+}
+
+/** A typed inventory, so a phantom field cannot pass for a bay (ADR-0032). */
+function inventoryOf(...entries: readonly BayInventoryEntry[]): BayInventory {
+  return new Map(entries.map(entry => [entry.bayId, entry]));
+}
+
+// The board a post-mutation readback shows once each write has landed. The
+// settlement arms undo only over a board that reflects the write, so a stub
+// that answers the pre-write board arms nothing.
+/** M2 put on wo-to-assign. */
+const afterM2OnToAssign = withWorkorder(fullDashboard, 'wo-to-assign', { status: 'ASSIGNED', assignedMechanicId: 'M2' });
+/** M2 replacing M1 on wo-assigned. */
+const afterM2OnAssigned = withWorkorder(fullDashboard, 'wo-assigned', { assignedMechanicId: 'M2' });
+/** wo-assigned's mechanic released. */
+const afterReleaseOnAssigned = withWorkorder(fullDashboard, 'wo-assigned', {
+  status: 'APPROVED',
+  assignedMechanicId: undefined,
+});
+/** wo-to-assign placed on Bay 4. */
+const afterB4OnToAssign = withBayClaim(
+  withWorkorder(fullDashboard, 'wo-to-assign', {
+    resourceType: WorkorderSummaryResourceTypeEnum.Bay,
+    assignedResourceId: 'B4',
+  }),
+  'B4',
+  'wo-to-assign',
+);
+/** The parked workorder placed on Bay 4. */
+const afterB4OnParked = withBayClaim(
+  withWorkorder(fullDashboard, 'wo-parked', {
+    resourceType: WorkorderSummaryResourceTypeEnum.Bay,
+    assignedResourceId: 'B4',
+  }),
+  'B4',
+  'wo-parked',
+);
+/** wo-assigned moved from Bay 1 to Bay 4. */
+const afterB1ToB4OnAssigned = withBayClaim(
+  withBayClaim(withWorkorder(fullDashboard, 'wo-assigned', { assignedResourceId: 'B4' }), 'B1', null),
+  'B4',
+  'wo-assigned',
+);
 
 describe('DispatchBoardPageComponent', () => {
   let fixture: ComponentFixture<DispatchBoardPageComponent>;
@@ -514,7 +580,7 @@ describe('DispatchBoardPageComponent', () => {
 
     it('labels an open bay with the bay type from the location domain', () => {
       dispatchBoardServiceStub.getBayInventory.mockReturnValue(
-        of(new Map([['B4', { bayId: 'B4', name: 'Bay 4', kind: 'ALIGNMENT', outOfService: false }]])),
+        of(inventoryOf({ bayId: 'B4', name: 'Bay 4', kind: 'ALIGNMENT', outOfService: false })),
       );
       renderWith(fullDashboard);
 
@@ -680,8 +746,11 @@ describe('DispatchBoardPageComponent', () => {
   });
 
   describe('undo', () => {
+    // Undo is armed by a readback that shows the write, so each of these
+    // answers the post-mutation read with the board as the write left it.
     it('clears a mechanic that had no predecessor', () => {
       renderWith(fullDashboard);
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(afterM2OnToAssign));
       component.assignMechanic(component.toAssignRows()[0], 'M2');
 
       component.undo();
@@ -689,10 +758,11 @@ describe('DispatchBoardPageComponent', () => {
       expect(dispatchBoardServiceStub.releaseMechanic).toHaveBeenCalledWith('wo-to-assign');
     });
 
-    // The incumbent undo passes is the one its own mutation left behind, not the
-    // one the row still shows: the post-mutation re-read has not landed yet.
+    // The incumbent undo passes is the one its own mutation left behind, which
+    // the readback now also shows: the row names M2, and undo hands it back to M1.
     it('puts the previous mechanic back after a reassignment', () => {
       renderWith(fullDashboard);
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(afterM2OnAssigned));
       component.assignMechanic(component.assignedRows()[0], 'M2');
 
       component.undo();
@@ -826,7 +896,7 @@ describe('DispatchBoardPageComponent', () => {
     // placing one is a 422 because the position is at another site.
     it('clears the previous shop\'s enrichment as the new load starts', () => {
       dispatchBoardServiceStub.getBayInventory.mockReturnValue(
-        of(new Map([['B4', { bayId: 'B4', name: 'Bay 4', kind: 'ALIGNMENT', outOfService: false }]])),
+        of(inventoryOf({ bayId: 'B4', name: 'Bay 4', kind: 'ALIGNMENT', outOfService: false })),
       );
       renderWith(fullDashboard);
       expect(component.bayInventory().size).toBe(1);
@@ -911,12 +981,24 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.isPending(row.workorderId)).toBe(true);
     });
 
-    it('releases the guard once the write settles', () => {
+    // T1: with a synchronous stub this could only ever see the settled state.
+    // The guard is held across BOTH round trips — the write and its readback.
+    it('releases the guard only once the write and its readback have both settled', () => {
       renderWith(fullDashboard);
       const row = component.toAssignRows()[0];
+      const write = new Subject<unknown>();
+      const readback = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.assignMechanic.mockReturnValueOnce(write);
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(readback);
 
       component.assignMechanic(row, 'M2');
+      expect(component.isPending(row.workorderId)).toBe(true);
 
+      write.next({});
+      write.complete();
+      expect(component.isPending(row.workorderId)).toBe(true);
+
+      readback.next(afterM2OnToAssign);
       expect(component.isPending(row.workorderId)).toBe(false);
     });
 
@@ -1106,10 +1188,15 @@ describe('DispatchBoardPageComponent', () => {
   // Refusals
   // -------------------------------------------------------------------------
   describe('refused mutations', () => {
+    // Every code the board's own writes can provoke (T2): the three added
+    // here were mapped but never exercised.
     const refusals: readonly [string, string][] = [
       ['TECHNICIAN_NOT_ASSIGNED', 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_MECHANIC_NOT_ASSIGNED'],
       ['TECHNICIAN_NOT_FOUND', 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_MECHANIC_NOT_FOUND'],
       ['SERVICE_POSITION_INVALID', 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BAY_INVALID'],
+      ['TECHNICIAN_ALREADY_ASSIGNED', 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_MECHANIC_TAKEN'],
+      ['SERVICE_POSITION_INACTIVE', 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BAY_INACTIVE'],
+      ['WORKORDER_CLOSED', 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_WORKORDER_CLOSED'],
     ];
 
     for (const [code, key] of refusals) {
@@ -1159,6 +1246,7 @@ describe('DispatchBoardPageComponent', () => {
     // reassign — the row has not been re-read yet and still names the old one.
     it('assigns rather than reassigns when undoing a release', () => {
       renderWith(fullDashboard);
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(afterReleaseOnAssigned));
       component.clearMechanic(component.assignedRows()[0]);
 
       component.undo();
@@ -1170,6 +1258,7 @@ describe('DispatchBoardPageComponent', () => {
     // deliberately unplaced, which is a third state, not the original.
     it('parks a workorder again when undoing a bay placement that replaced a HOLD', () => {
       renderWith(fullDashboard);
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(afterB4OnParked));
       component.assignBay(component.heldRows()[0], 'B4');
 
       component.undo();
@@ -1180,11 +1269,28 @@ describe('DispatchBoardPageComponent', () => {
 
     it('still releases the position when there was none to put back', () => {
       renderWith(fullDashboard);
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(afterB4OnToAssign));
       component.assignBay(component.toAssignRows()[0], 'B4');
 
       component.undo();
 
       expect(dispatchBoardServiceStub.releaseBay).toHaveBeenCalledWith('wo-to-assign');
+    });
+
+    // T2: a bay-to-bay move is one write, and its undo is the same write back
+    // to the previous bay — not a release, not a park.
+    it('puts the workorder back on its previous bay when undoing a bay-to-bay move', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(afterB1ToB4OnAssigned));
+      component.assignBay(component.assignedRows()[0], 'B4');
+      expect(dispatchBoardServiceStub.assignBay).toHaveBeenCalledWith('wo-assigned', 'B4');
+      expect(component.toast()?.undo).not.toBeNull();
+
+      component.undo();
+
+      expect(dispatchBoardServiceStub.assignBay).toHaveBeenLastCalledWith('wo-assigned', 'B1');
+      expect(dispatchBoardServiceStub.releaseBay).not.toHaveBeenCalled();
+      expect(dispatchBoardServiceStub.parkWorkorder).not.toHaveBeenCalled();
     });
   });
 
@@ -1323,7 +1429,7 @@ describe('DispatchBoardPageComponent', () => {
     // location inventory is the roster of record for the rail.
     it('carries a bay the dispatch projection has not replicated', () => {
       dispatchBoardServiceStub.getBayInventory.mockReturnValue(
-        of(new Map([['B9', { bayId: 'B9', name: 'Bay 9', kind: 'GENERAL_SERVICE', outOfService: false }]])),
+        of(inventoryOf({ bayId: 'B9', name: 'Bay 9', kind: 'GENERAL_SERVICE', outOfService: false })),
       );
       renderWith({ ...fullDashboard, bays: [] });
 
@@ -1333,7 +1439,7 @@ describe('DispatchBoardPageComponent', () => {
 
     it('drops an out-of-service bay no open work stands on', () => {
       dispatchBoardServiceStub.getBayInventory.mockReturnValue(
-        of(new Map([['B9', { bayId: 'B9', name: 'Bay 9', kind: null, outOfService: true }]])),
+        of(inventoryOf({ bayId: 'B9', name: 'Bay 9', kind: null, outOfService: true })),
       );
       renderWith({ ...fullDashboard, bays: [] });
 
@@ -1380,9 +1486,11 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.canTakeBay(component.toAssignRows()[0])).toBe(false);
     });
 
+    // The bay writes are workexec's position endpoints, whose authority is the
+    // operational-context override (F1) — not shop management's bay grant.
     it('allows the bay write while refusing the technician write', () => {
       authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
-        codes.includes('shop:bay:assign'),
+        codes.includes('workorder:operationalContext:override'),
       );
       renderWith(fullDashboard);
 
@@ -1485,7 +1593,7 @@ describe('DispatchBoardPageComponent', () => {
   describe('clear controls are writes too', () => {
     it('refuses to clear a mechanic without the technician write authority', () => {
       authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
-        codes.includes('shop:bay:assign'),
+        codes.includes('workorder:operationalContext:override'),
       );
       renderWith(fullDashboard);
       const row = component.assignedRows()[0];
@@ -1530,7 +1638,7 @@ describe('DispatchBoardPageComponent', () => {
       component.assignMechanic(row, 'M2');
       expect(component.toast()?.undo).toBeNull();
 
-      slowRead.next(fullDashboard);
+      slowRead.next(afterM2OnToAssign);
 
       expect(component.toast()?.undo).not.toBeNull();
     });
@@ -1538,6 +1646,7 @@ describe('DispatchBoardPageComponent', () => {
     it('the undo it finally offers actually runs', () => {
       renderWith(fullDashboard);
       const row = component.toAssignRows()[0];
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(afterM2OnToAssign));
 
       component.assignMechanic(row, 'M2');
       component.undo();
@@ -1614,8 +1723,9 @@ describe('DispatchBoardPageComponent', () => {
       component.assignMechanic(row, 'M2');
       expect(component.toast()?.undo).toBeNull();
 
-      // The refresh supersedes the readback and pays the debt it left.
-      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(fullDashboard));
+      // The refresh supersedes the readback and pays the debt it left; it
+      // shows the write, so it also arms the undo.
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(afterM2OnToAssign));
       component.refresh();
 
       expect(component.isPending(row.workorderId)).toBe(false);
@@ -1624,6 +1734,8 @@ describe('DispatchBoardPageComponent', () => {
       // The stale readback landing afterwards changes nothing.
       mutationRead.next(fullDashboard);
       expect(component.isPending(row.workorderId)).toBe(false);
+      expect(component.allRows().find(candidate => candidate.workorderId === row.workorderId)?.mechanicId).toBe('M2');
+      expect(component.toast()?.undo).not.toBeNull();
     });
   });
 
@@ -1743,18 +1855,16 @@ describe('DispatchBoardPageComponent', () => {
     // Two reads of the SAME shop can overlap; the older landing last would put
     // back the lifecycle data the newer one just corrected.
     it('ignores an older enrichment response for the same location', () => {
-      const firstInventory = new Subject<never>();
+      const firstInventory = new Subject<BayInventory>();
       dispatchBoardServiceStub.getBayInventory.mockReturnValueOnce(firstInventory);
       renderWith(fullDashboard);
 
       dispatchBoardServiceStub.getBayInventory.mockReturnValue(
-        of(new Map([['B9', { bayId: 'B9', name: 'Bay 9', kind: 'HEAVY_DUTY', outOfService: false }]])),
+        of(inventoryOf({ bayId: 'B9', name: 'Bay 9', kind: 'HEAVY_DUTY', outOfService: false })),
       );
       component.refresh();
 
-      firstInventory.next(
-        new Map([['B4', { bayId: 'B4', name: 'Bay 4', kind: 'ALIGNMENT', outOfService: false }]]) as never,
-      );
+      firstInventory.next(inventoryOf({ bayId: 'B4', name: 'Bay 4', kind: 'ALIGNMENT', outOfService: false }));
 
       expect(component.bayInventory().has('B9')).toBe(true);
       expect(component.bayInventory().has('B4')).toBe(false);
@@ -1771,6 +1881,42 @@ describe('DispatchBoardPageComponent', () => {
       component.setStatusFilter('OPEN');
 
       expect(component.rows()).toHaveLength(0);
+    });
+
+    // F10: d89a09a canTakeBay :515-517 checked only !closed, so '' was
+    // placeable, and bayBlockedKey :534-536 had no reason to give for it.
+    it('refuses a bay on a statusless row and says why', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [{ workorderId: 'wo-blank', workorderNumber: 'WO-BLANK' }],
+      });
+
+      const row = component.allRows()[0];
+      expect(row.status).toBe('');
+      expect(component.canTakeBay(row)).toBe(false);
+      expect(component.bayBlockedKey(row)).toBe('SHOPMGMT.DISPATCH_BOARD.STATUS_UNKNOWN_NO_CHANGE');
+      component.onDragStart('BAY', 'B4', new DragEvent('dragstart'));
+      expect(component.canDrop(row)).toBe(false);
+
+      const slots: HTMLButtonElement[] = Array.from(rowFor('wo-blank').querySelectorAll('button.slot'));
+      const baySlot = slots.find(slot => slot.getAttribute('aria-label')?.includes('ADD_BAY_ARIA'));
+      expect(baySlot?.disabled).toBe(true);
+      expect(baySlot?.getAttribute('title')).toBe('SHOPMGMT.DISPATCH_BOARD.STATUS_UNKNOWN_NO_CHANGE');
+
+      component.openPicker('BAY', 'wo-blank');
+      component.pick('B4');
+      expect(dispatchBoardServiceStub.assignBay).not.toHaveBeenCalled();
+    });
+
+    // Bay placement keeps its wider window: a DRAFT can stand on a bay.
+    it('still places a DRAFT workorder on a bay', () => {
+      renderWith(fullDashboard);
+
+      const draft = component.allRows().find(row => row.workorderId === 'wo-draft')!;
+      expect(component.canTakeBay(draft)).toBe(true);
+      expect(component.bayBlockedKey(draft)).toBeNull();
+      component.onDragStart('BAY', 'B4', new DragEvent('dragstart'));
+      expect(component.canDrop(draft)).toBe(true);
     });
   });
   // -------------------------------------------------------------------------
@@ -1795,10 +1941,14 @@ describe('DispatchBoardPageComponent', () => {
   });
 
   describe('undo respects the current selection', () => {
-    it('does not undo against the board the dispatcher left', () => {
+    // F2(d): d89a09a :735 nulled the toast before the guard at :745, so this
+    // was a silent no-op; the toast now says the undo is gone.
+    it('does not undo against the board the dispatcher left, and says so', () => {
       renderWith(fullDashboard);
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(afterM2OnToAssign));
       component.assignMechanic(component.toAssignRows()[0], 'M2');
       expect(component.toast()?.undo).not.toBeNull();
+      const toastId = component.toast()?.id;
       vi.clearAllMocks();
 
       component.selectedLocationId.set('LOC-OTHER');
@@ -1806,6 +1956,994 @@ describe('DispatchBoardPageComponent', () => {
 
       expect(dispatchBoardServiceStub.releaseMechanic).not.toHaveBeenCalled();
       expect(dispatchBoardServiceStub.assignMechanic).not.toHaveBeenCalled();
+      expect(component.toast()).toEqual({
+        id: toastId,
+        key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.UNDO_UNAVAILABLE',
+        params: { workorder: 'WO-24118' },
+        tone: 'ERROR',
+        undo: null,
+      });
+    });
+  });
+
+  // =========================================================================
+  // Review cycle 1 (PR #275). Each block names the finding it answers and the
+  // head-d89a09a line the test fails on, so a regression is traceable.
+  // =========================================================================
+  describe('F1: bay writes are gated on the workexec position authority', () => {
+    function slotFor(workorderId: string, ariaKey: string): HTMLButtonElement | undefined {
+      const slots: HTMLButtonElement[] = Array.from(rowFor(workorderId).querySelectorAll('button.slot'));
+      return slots.find(slot => slot.getAttribute('aria-label')?.includes(ariaKey));
+    }
+
+    // d89a09a :194-196 gated on SHOPMGMT_PAGE.bayAssign ('shop:bay:assign'), so
+    // the grant the position endpoints actually require bought nothing here.
+    it('enables the bay controls for a session holding only workorder:operationalContext:override', () => {
+      authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
+        codes.includes('workorder:operationalContext:override'),
+      );
+      renderWith(fullDashboard);
+
+      expect(component.canAssignBay()).toBe(true);
+      expect(component.canAssignMechanic()).toBe(false);
+      expect(component.canTakeBay(component.toAssignRows()[0])).toBe(true);
+      expect(component.canClearBay(component.assignedRows()[0])).toBe(true);
+      expect(slotFor('wo-to-assign', 'ADD_BAY_ARIA')?.disabled).toBe(false);
+      expect(slotFor('wo-to-assign', 'ADD_MECHANIC_ARIA')?.disabled).toBe(true);
+
+      component.openPicker('BAY', 'wo-to-assign');
+      component.pick('B4');
+      expect(dispatchBoardServiceStub.assignBay).toHaveBeenCalledWith('wo-to-assign', 'B4');
+    });
+
+    // d89a09a :194-196 enabled these for the appointment page's grant, which
+    // the position endpoints answer with 403.
+    it('disables the bay controls for a session holding only shop:bay:assign', () => {
+      authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) => codes.includes('shop:bay:assign'));
+      renderWith(fullDashboard);
+
+      expect(component.canAssignBay()).toBe(false);
+      expect(component.canTakeBay(component.toAssignRows()[0])).toBe(false);
+      expect(component.canClearBay(component.assignedRows()[0])).toBe(false);
+      expect(slotFor('wo-to-assign', 'ADD_BAY_ARIA')?.disabled).toBe(true);
+
+      component.openPicker('BAY', 'wo-to-assign');
+      component.pick('B4');
+      component.clearBay(component.assignedRows()[0]);
+      expect(dispatchBoardServiceStub.assignBay).not.toHaveBeenCalled();
+      expect(dispatchBoardServiceStub.releaseBay).not.toHaveBeenCalled();
+    });
+
+    it('leaves the technician gate on workorder:workorder:assign-technician', () => {
+      authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
+        codes.includes('workorder:workorder:assign-technician'),
+      );
+      renderWith(fullDashboard);
+
+      expect(component.canAssignMechanic()).toBe(true);
+      expect(component.canAssignBay()).toBe(false);
+      expect(slotFor('wo-to-assign', 'ADD_MECHANIC_ARIA')?.disabled).toBe(false);
+      expect(slotFor('wo-to-assign', 'ADD_BAY_ARIA')?.disabled).toBe(true);
+    });
+  });
+
+  describe('F2: undo only puts back what is still there', () => {
+    /** Arm undo for M2 on wo-to-assign through a readback that shows the write. */
+    function armAssignOnToAssign(): string {
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(afterM2OnToAssign));
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+      expect(component.toast()?.undo).not.toBeNull();
+      return component.toast()?.id ?? '';
+    }
+
+    /** Arm undo for M2 replacing M1 on wo-assigned — the branch that re-assigns on undo. */
+    function armReassignOnAssigned(): string {
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(afterM2OnAssigned));
+      component.assignMechanic(component.assignedRows()[0], 'M2');
+      expect(component.toast()?.undo).not.toBeNull();
+      return component.toast()?.id ?? '';
+    }
+
+    function expectNoWrite(): void {
+      expect(dispatchBoardServiceStub.assignMechanic).not.toHaveBeenCalled();
+      expect(dispatchBoardServiceStub.releaseMechanic).not.toHaveBeenCalled();
+      expect(dispatchBoardServiceStub.assignBay).not.toHaveBeenCalled();
+      expect(dispatchBoardServiceStub.releaseBay).not.toHaveBeenCalled();
+      expect(dispatchBoardServiceStub.parkWorkorder).not.toHaveBeenCalled();
+    }
+
+    /** The refusal replaces the toast in place: same id, error tone, no undo, nothing sent. */
+    function expectUndoRefused(toastId: string, workorderNumber: string): void {
+      expect(component.toast()).toEqual({
+        id: toastId,
+        key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.UNDO_UNAVAILABLE',
+        params: { workorder: workorderNumber },
+        tone: 'ERROR',
+        undo: null,
+      });
+      expectNoWrite();
+    }
+
+    it('arms undo from a readback that shows the write, and the undo performs the inverse write', () => {
+      renderWith(fullDashboard);
+      armAssignOnToAssign();
+
+      component.undo();
+
+      expect(dispatchBoardServiceStub.releaseMechanic).toHaveBeenCalledWith('wo-to-assign');
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.MECHANIC_CLEARED');
+    });
+
+    // d89a09a undo :752 released whoever the row held by then — another
+    // dispatcher's M5, not the M2 this write put there.
+    it('refuses to undo a mechanic assignment a later poll has replaced', fakeAsync(() => {
+      renderWith(fullDashboard);
+      const toastId = armAssignOnToAssign();
+      vi.clearAllMocks();
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(
+        of(withWorkorder(fullDashboard, 'wo-to-assign', { status: 'ASSIGNED', assignedMechanicId: 'M5' })),
+      );
+
+      tick(30_000);
+      expect(component.allRows().find(row => row.workorderId === 'wo-to-assign')?.mechanicId).toBe('M5');
+      component.undo();
+
+      expectUndoRefused(toastId, 'WO-24118');
+      fixture.destroy();
+    }));
+
+    // d89a09a undo :765 released the position whoever had since placed it.
+    it('refuses to undo a bay placement a later poll has moved', fakeAsync(() => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(afterB4OnToAssign));
+      component.assignBay(component.toAssignRows()[0], 'B4');
+      expect(component.toast()?.undo).not.toBeNull();
+      const toastId = component.toast()?.id ?? '';
+      vi.clearAllMocks();
+      const movedToB7: DashboardResponse = {
+        ...withWorkorder(fullDashboard, 'wo-to-assign', {
+          resourceType: WorkorderSummaryResourceTypeEnum.Bay,
+          assignedResourceId: 'B7',
+        }),
+        bays: [
+          ...(fullDashboard.bays ?? []),
+          { bayId: 'B7', bayName: 'Bay 7', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-to-assign' },
+        ],
+      };
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(movedToB7));
+
+      tick(30_000);
+      expect(component.allRows().find(row => row.workorderId === 'wo-to-assign')?.bayId).toBe('B7');
+      component.undo();
+
+      expectUndoRefused(toastId, 'WO-24118');
+      fixture.destroy();
+    }));
+
+    // d89a09a undo :750 re-assigned without the permission gate the assign path applies.
+    it('issues nothing when the write authority was revoked after the undo was armed', () => {
+      const granted = signal(true);
+      authStub.hasAnyPermission.mockImplementation(() => granted());
+      renderWith(fullDashboard);
+      const toastId = armReassignOnAssigned();
+      vi.clearAllMocks();
+
+      granted.set(false);
+      component.undo();
+
+      expectUndoRefused(toastId, 'WO-24124');
+    });
+
+    // d89a09a undo :750 re-assigned onto a row the technician window no longer covers (400).
+    it('issues nothing when the row has since left the technician window', () => {
+      renderWith(fullDashboard);
+      const toastId = armReassignOnAssigned();
+      vi.clearAllMocks();
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(
+        of(withWorkorder(afterM2OnAssigned, 'wo-assigned', { status: 'READY_FOR_PICKUP' })),
+      );
+      component.refresh();
+
+      component.undo();
+
+      expectUndoRefused(toastId, 'WO-24124');
+    });
+
+    // d89a09a :804-809 armed undo on whichever read paid the debt, another shop's included.
+    it("arms no undo when the settlement is paid by another shop's read", () => {
+      renderWith(fullDashboard);
+      const readback = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(readback);
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+      expect(component.isPending('wo-to-assign')).toBe(true);
+
+      component.selectedLocationId.set('LOC-2');
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(of({ ...emptyDashboard, locationId: 'LOC-2' }));
+      component.refresh();
+
+      expect(component.hasCachedData()).toBe(true);
+      expect(component.isPending('wo-to-assign')).toBe(false);
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.MECHANIC_ASSIGNED');
+      expect(component.toast()?.undo).toBeNull();
+    });
+
+    // d89a09a :880-889 paid the debt on an error too, and :804-809 then armed undo over the error panel.
+    it('arms no undo when the paying read fails and the board is gone', () => {
+      renderWith(fullDashboard);
+      const readback = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(readback);
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+
+      component.selectedLocationId.set('LOC-2');
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(throwError(() => ({ status: 500 })));
+      component.refresh();
+
+      expect(component.state()).toBe('error');
+      expect(component.error()).toBe('SHOPMGMT.DISPATCH_BOARD.ERROR_LOAD');
+      expect(component.hasCachedData()).toBe(false);
+      expect(component.isPending('wo-to-assign')).toBe(false);
+      expect(component.toast()?.undo).toBeNull();
+    });
+
+    // d89a09a reloadBoard :850-853 settled at once with no read, arming undo against nothing.
+    it('arms no undo when the write settles with no location to read back', () => {
+      renderWith(fullDashboard);
+      const write = new Subject<unknown>();
+      dispatchBoardServiceStub.assignMechanic.mockReturnValueOnce(write);
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+      const readsBefore = dispatchBoardServiceStub.getDashboard.mock.calls.length;
+
+      component.selectedLocationId.set('');
+      write.next({});
+      write.complete();
+
+      expect(dispatchBoardServiceStub.getDashboard.mock.calls.length).toBe(readsBefore);
+      expect(component.isPending('wo-to-assign')).toBe(false);
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.MECHANIC_ASSIGNED');
+      expect(component.toast()?.undo).toBeNull();
+    });
+  });
+
+  describe('F3: a refusal holds the row until the corrective re-read settles', () => {
+    /** The write refused with 409, its corrective re-read left in flight. */
+    function refuseWithSlowReload(): { row: WorkorderRow; reload: Subject<DashboardResponse> } {
+      renderWith(fullDashboard);
+      const row = component.assignedRows()[0];
+      const reload = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.assignMechanic.mockReturnValueOnce(
+        throwError(() => ({ status: 409, error: { code: 'TECHNICIAN_NOT_ASSIGNED' } })),
+      );
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(reload);
+
+      component.assignMechanic(row, 'M2');
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_MECHANIC_NOT_ASSIGNED');
+      expect(dispatchBoardServiceStub.assignMechanic).toHaveBeenCalledTimes(1);
+      return { row, reload };
+    }
+
+    // d89a09a run :812 released the guard before the reload at :825, which
+    // carried no onSettled: a second click repeated the same wrong call.
+    it('keeps the row pending across the refusal reload and refuses a second click', () => {
+      const { row, reload } = refuseWithSlowReload();
+      expect(component.isPending(row.workorderId)).toBe(true);
+      expect(component.canTakeMechanic(row)).toBe(false);
+      fixture.detectChanges();
+      expect(rowFor(row.workorderId).classList.contains('busy')).toBe(true);
+
+      component.assignMechanic(row, 'M2');
+      component.openPicker('MECHANIC', row.workorderId);
+      component.pick('M2');
+      expect(dispatchBoardServiceStub.assignMechanic).toHaveBeenCalledTimes(1);
+
+      reload.next(fullDashboard);
+      expect(component.isPending(row.workorderId)).toBe(false);
+    });
+
+    it('a refresh that supersedes the refusal reload still releases the row', () => {
+      const { row, reload } = refuseWithSlowReload();
+
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(fullDashboard));
+      component.refresh();
+      expect(component.isPending(row.workorderId)).toBe(false);
+
+      reload.next(fullDashboard);
+      expect(component.isPending(row.workorderId)).toBe(false);
+    });
+
+    it('a refusal reload that itself fails still releases the row', () => {
+      const { row, reload } = refuseWithSlowReload();
+
+      reload.error({ status: 500 });
+
+      expect(component.isPending(row.workorderId)).toBe(false);
+      expect(component.isStale()).toBe(true);
+    });
+
+    it('releases the row at once after a failure that says nothing about the board', () => {
+      renderWith(fullDashboard);
+      const row = component.assignedRows()[0];
+      dispatchBoardServiceStub.assignMechanic.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+      const reads = dispatchBoardServiceStub.getDashboard.mock.calls.length;
+
+      component.assignMechanic(row, 'M2');
+
+      expect(component.isPending(row.workorderId)).toBe(false);
+      expect(component.canTakeMechanic(row)).toBe(true);
+      expect(dispatchBoardServiceStub.getDashboard.mock.calls.length).toBe(reads);
+    });
+  });
+
+  describe('F4: a readback for the shop switched to mid-write also re-enriches', () => {
+    const loc1Inventory = inventoryOf({ bayId: 'B4', name: 'Bay 4', kind: 'ALIGNMENT', outOfService: false });
+    const loc2Inventory = inventoryOf({ bayId: 'B7', name: 'Bay 7', kind: 'HEAVY_DUTY', outOfService: false });
+    const loc2Board: DashboardResponse = {
+      ...emptyDashboard,
+      locationId: 'LOC-2',
+      workorders: [{ workorderId: 'wo-loc2', workorderNumber: 'WO-L2', status: 'APPROVED' }],
+    };
+
+    /** A write on LOC-1 left in flight while the dispatcher switches to LOC-2. */
+    function switchMidWrite(): Subject<unknown> {
+      dispatchBoardServiceStub.getBayInventory.mockImplementation((locationId: string) =>
+        of(locationId === 'LOC-2' ? loc2Inventory : loc1Inventory),
+      );
+      renderWith(fullDashboard);
+      expect(component.openBays().map(bay => bay.bayId)).toEqual(['B4']);
+      const write = new Subject<unknown>();
+      dispatchBoardServiceStub.assignMechanic.mockReturnValueOnce(write);
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+
+      // The effect's own LOC-2 read never lands: the readback overtakes it.
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(new Subject<DashboardResponse>());
+      component.onLocationPicked('LOC-2');
+      fixture.detectChanges();
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(loc2Board));
+      return write;
+    }
+
+    function expectLoc2Enriched(): void {
+      expect(dispatchBoardServiceStub.getBayInventory).toHaveBeenLastCalledWith('LOC-2');
+      expect(component.hasCachedData()).toBe(true);
+      expect(component.bayInventory().has('B4')).toBe(false);
+      expect(component.openBays().map(bay => bay.bayId)).toEqual(['B7']);
+      expect(component.isPending('wo-to-assign')).toBe(false);
+    }
+
+    // d89a09a reloadBoard :865-868 applied the LOC-2 board without loadEnrichment,
+    // and load :430-432 had already exited superseded: LOC-1's bays stayed on
+    // LOC-2's rail, draggable, until the next poll.
+    it('re-enriches for the new location when the write lands after the switch', () => {
+      const write = switchMidWrite();
+
+      write.next({});
+      write.complete();
+
+      expectLoc2Enriched();
+    });
+
+    // d89a09a :824-826 — the refusal re-read was the same bare reloadBoard().
+    it('re-enriches for the new location when the write is refused after the switch', () => {
+      const write = switchMidWrite();
+
+      write.error({ status: 409, error: { code: 'TECHNICIAN_NOT_ASSIGNED' } });
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_MECHANIC_NOT_ASSIGNED');
+      expectLoc2Enriched();
+    });
+  });
+
+  describe('F5: a blank location is not a location', () => {
+    // d89a09a poll :901-907 asked getDashboard('', date) every 30s; a success
+    // was cached under the blank key the controls also read, and rendered as current.
+    it('never polls a blank location, and shows no board for it', fakeAsync(() => {
+      renderWith(fullDashboard);
+      component.onLocationPicked('');
+      fixture.detectChanges();
+      dispatchBoardServiceStub.getDashboard.mockClear();
+
+      tick(60_000);
+
+      expect(dispatchBoardServiceStub.getDashboard).not.toHaveBeenCalled();
+      expect(component.hasCachedData()).toBe(false);
+      expect(component.showBoard()).toBe(false);
+      fixture.destroy();
+    }));
+
+    // d89a09a effect :383-388 returned after cleanup had cancelled the read in
+    // flight, leaving 'loading' with nothing left to resolve it.
+    it('does not leave the machine loading when the location is cleared mid-read', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(new Subject<DashboardResponse>());
+      component.selectedDate.set('2026-05-04');
+      fixture.detectChanges();
+      expect(component.state()).toBe('loading');
+
+      component.onLocationPicked('');
+      fixture.detectChanges();
+
+      expect(component.state()).toBe('idle');
+      expect(component.hasCachedData()).toBe(false);
+      expect(fixture.nativeElement.querySelector('.loading-state')).toBeFalsy();
+      expect(fixture.nativeElement.querySelectorAll('.workorder-row')).toHaveLength(0);
+    });
+
+    // d89a09a :997-1003 cleared freshness only inside load; the previous
+    // shop's banners stayed up over an empty page.
+    it("drops the previous selection's freshness banners when the location is cleared", () => {
+      renderWith({ ...fullDashboard, dataQualityWarning: true });
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+      component.refresh();
+      expect(component.isStale()).toBe(true);
+      expect(component.dataQualityWarning()).toBe(true);
+
+      component.onLocationPicked('');
+      fixture.detectChanges();
+
+      expect(component.isStale()).toBe(false);
+      expect(component.dataQualityWarning()).toBe(false);
+      expect(component.lastRefreshed()).toBeNull();
+      expect(fixture.nativeElement.querySelector('.stale-data-banner')).toBeFalsy();
+      expect(fixture.nativeElement.querySelector('.data-quality-warning')).toBeFalsy();
+      expect(component.showBoard()).toBe(false);
+    });
+  });
+
+  describe("F6: a live bay claim outranks the summary's HOLD or MOBILE_UNIT", () => {
+    const onMobileUnit: WorkorderSummary = {
+      workorderId: 'wo-truck',
+      workorderNumber: 'WO-TRUCK',
+      status: 'ASSIGNED',
+      assignedMechanicId: 'M1',
+      resourceType: WorkorderSummaryResourceTypeEnum.MobileUnit,
+      assignedResourceId: 'MU-1',
+    };
+    const freeBay4: BayStatus = { bayId: 'B4', bayName: 'Bay 4', available: true, status: 'ACTIVE' };
+
+    function bayChangeControl(workorderId: string): HTMLButtonElement | undefined {
+      const controls: HTMLButtonElement[] = Array.from(rowFor(workorderId).querySelectorAll('button.change'));
+      return controls.find(control => control.getAttribute('aria-label')?.includes('CHANGE_BAY_ARIA'));
+    }
+
+    // d89a09a toRowBayId :1101-1103 returned null for a MOBILE_UNIT summary
+    // before reading the claim: the rail showed the bay taken, the row nothing.
+    it('shows the bay, with a clear control, when a bay claims a workorder the summary puts on a mobile unit', () => {
+      renderWith({
+        ...emptyDashboard,
+        workorders: [onMobileUnit],
+        mechanics: [{ personId: 'M1', firstName: 'Ray', lastName: 'Delgado', assignedWorkorderId: 'wo-truck' }],
+        bays: [
+          { bayId: 'B1', bayName: 'Bay 1', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-truck' },
+          freeBay4,
+        ],
+      });
+
+      const row = component.allRows()[0];
+      expect(row.bayId).toBe('B1');
+      expect(row.bayName).toBe('Bay 1');
+      expect(row.onMobileUnit).toBe(false);
+      expect(row.parked).toBe(false);
+      expect(component.canTakeBay(row)).toBe(true);
+      expect(component.openBays().map(bay => bay.bayId)).toEqual(['B4']);
+      expect(component.mechanics().find(mechanic => mechanic.personId === 'M1')?.whereLabel).toBe('Bay 1');
+      expect(bayChangeControl('wo-truck')?.textContent).toContain('Bay 1');
+      expect(bayChangeControl('wo-truck')?.disabled).toBe(false);
+      expect(rowFor('wo-truck').querySelectorAll('button.clear')).toHaveLength(2);
+      expect(rowFor('wo-truck').querySelector('.slot.mobile')).toBeNull();
+    });
+
+    // d89a09a html :470-475 rendered "+ bay" for it and canTakeBay :515-517
+    // allowed the write, so a truck job could be moved off its unit unknowingly.
+    it('renders a mobile-unit placement read-only when no bay claims it', () => {
+      renderWith({
+        ...emptyDashboard,
+        workorders: [{ ...onMobileUnit, status: 'APPROVED', assignedMechanicId: undefined }],
+        bays: [freeBay4],
+      });
+
+      const row = component.allRows()[0];
+      expect(row.onMobileUnit).toBe(true);
+      expect(row.bayId).toBeNull();
+      expect(row.parked).toBe(false);
+      expect(row.lane).toBe('TO_ASSIGN');
+      expect(component.canTakeBay(row)).toBe(false);
+      expect(component.bayBlockedKey(row)).toBe('SHOPMGMT.DISPATCH_BOARD.MOBILE_UNIT_NO_CHANGE');
+      component.onDragStart('BAY', 'B4', new DragEvent('dragstart'));
+      expect(component.canDrop(row)).toBe(false);
+
+      const rowElement = rowFor('wo-truck');
+      const slot = rowElement.querySelector('.slot.mobile');
+      expect(slot?.textContent).toContain('SHOPMGMT.DISPATCH_BOARD.ON_MOBILE_UNIT');
+      expect(slot?.querySelector('.sr-only')?.textContent).toContain('SHOPMGMT.DISPATCH_BOARD.MOBILE_UNIT_NO_CHANGE');
+      expect(slot?.querySelector('button')).toBeNull();
+      const buttons: HTMLButtonElement[] = Array.from(rowElement.querySelectorAll('button'));
+      const bayControls = buttons.filter(button =>
+        /ADD_BAY_ARIA|CHANGE_BAY_ARIA|PARKED_ARIA|CLEAR_BAY_ARIA/.test(button.getAttribute('aria-label') ?? ''),
+      );
+      expect(bayControls).toHaveLength(0);
+
+      component.openPicker('BAY', 'wo-truck');
+      component.pick('B4');
+      expect(dispatchBoardServiceStub.assignBay).not.toHaveBeenCalled();
+    });
+
+    // d89a09a :1101-1103 returned null for a HOLD summary too, so the row
+    // parked while the rail showed its bay occupied.
+    it('puts a parked workorder on the bay that claims it', () => {
+      renderWith({
+        ...emptyDashboard,
+        workorders: [
+          {
+            workorderId: 'wo-parked',
+            workorderNumber: 'WO-24122',
+            status: 'APPROVED',
+            resourceType: WorkorderSummaryResourceTypeEnum.Hold,
+            assignedResourceId: 'LOC-1',
+          },
+        ],
+        bays: [
+          { bayId: 'B1', bayName: 'Bay 1', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-parked' },
+          freeBay4,
+        ],
+      });
+
+      const row = component.allRows()[0];
+      expect(row.bayId).toBe('B1');
+      expect(row.bayName).toBe('Bay 1');
+      expect(row.parked).toBe(false);
+      expect(row.lane).toBe('TO_ASSIGN');
+      expect(component.heldRows()).toHaveLength(0);
+      expect(component.stats().parked).toBe(0);
+      expect(component.openBays().map(bay => bay.bayId)).toEqual(['B4']);
+      expect(bayChangeControl('wo-parked')?.textContent).toContain('Bay 1');
+    });
+  });
+
+  describe('F7: a mechanic whose name has not replicated is never named by id', () => {
+    const WORKING_ID = 'person-uuid-working';
+    const IDLE_ID = 'person-uuid-idle';
+    const OFF_ID = 'person-uuid-off';
+    const nameless: DashboardResponse = {
+      ...withWorkorder(fullDashboard, 'wo-assigned', { assignedMechanicId: WORKING_ID }),
+      mechanics: [
+        { personId: WORKING_ID, assignedWorkorderId: 'wo-assigned' },
+        { personId: IDLE_ID },
+        { personId: OFF_ID, onBreak: true },
+      ],
+    };
+
+    function ariaLabels(): string[] {
+      const labelled: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('[aria-label]'));
+      return labelled.map(element => element.getAttribute('aria-label') ?? '');
+    }
+
+    // d89a09a displayName :1237 returned mechanic.personId, which reached the
+    // rail, the picker, the slot and three accessible names.
+    it('keeps the person id out of every label, chip and slot', () => {
+      renderWith(nameless);
+      component.openPicker('MECHANIC', 'wo-to-assign');
+      fixture.detectChanges();
+
+      const text: string = fixture.nativeElement.textContent;
+      for (const personId of [WORKING_ID, IDLE_ID, OFF_ID]) {
+        expect(text).not.toContain(personId);
+        for (const label of ariaLabels()) {
+          expect(label).not.toContain(personId);
+        }
+      }
+      expect(component.mechanics().map(mechanic => mechanic.name)).toEqual([null, null]);
+      expect(component.mechanics().map(mechanic => mechanic.initials)).toEqual(['?', '?']);
+      expect(component.assignedRows()[0].mechanicName).toBeNull();
+      expect(component.assignedRows()[0].mechanicInitials).toBe('?');
+
+      // Each consumer renders its unnamed variant rather than a blank.
+      const chips: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('button.mech'));
+      expect(chips.map(chip => chip.getAttribute('aria-label'))).toEqual([
+        'SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA_UNNAMED',
+        'SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA_UNNAMED',
+      ]);
+      expect(fixture.nativeElement.querySelectorAll('button.mech .mname-text.na')).toHaveLength(2);
+      const change: HTMLButtonElement | null = rowFor('wo-assigned').querySelector('.slot.filled button.change');
+      expect(change?.getAttribute('aria-label')).toBe('SHOPMGMT.DISPATCH_BOARD.CHANGE_MECHANIC_ARIA_UNNAMED');
+      expect(change?.querySelector('.na')).toBeTruthy();
+      expect(fixture.nativeElement.querySelectorAll('dialog .opt-name.na')).toHaveLength(2);
+      expect(fixture.nativeElement.querySelector('.binchip .na .sr-only')?.textContent).toContain(
+        'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_MECHANIC_NAME',
+      );
+    });
+
+    // d89a09a :638 passed displayName — the id — as the toast's mechanic parameter.
+    it('confirms an assignment to an unnamed mechanic without naming them', () => {
+      renderWith(nameless);
+
+      component.assignMechanic(component.toAssignRows()[0], IDLE_ID);
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.MECHANIC_ASSIGNED_UNNAMED');
+      expect(component.toast()?.params).toEqual({ workorder: 'WO-24118' });
+    });
+  });
+
+  describe('F8: "every bay is full" is only said when there are bays', () => {
+    function railEmptyMessage(): string | undefined {
+      const message: HTMLElement | null = fixture.nativeElement.querySelector(
+        'section[aria-labelledby="dispatch-board-bays-title"] .none-left',
+      );
+      return message?.textContent?.trim();
+    }
+
+    function pickerEmptyMessage(): string | undefined {
+      component.openPicker('BAY', 'wo-to-assign');
+      fixture.detectChanges();
+      const message: HTMLElement | null = fixture.nativeElement.querySelector('dialog.picker .none-left');
+      return message?.textContent?.trim();
+    }
+
+    // d89a09a html :181-183 and :331-333 rendered NO_BAYS whenever openBays() was empty.
+    it('says the location has no bays in service when neither the inventory nor the projection has one', () => {
+      renderWith({ ...fullDashboard, bays: [] });
+
+      expect(component.allBays()).toHaveLength(0);
+      expect(railEmptyMessage()).toBe('SHOPMGMT.DISPATCH_BOARD.NO_BAYS_AT_LOCATION');
+      expect(pickerEmptyMessage()).toBe('SHOPMGMT.DISPATCH_BOARD.NO_BAYS_AT_LOCATION');
+    });
+
+    it('says the same when every bay in the inventory is out of service', () => {
+      dispatchBoardServiceStub.getBayInventory.mockReturnValue(
+        of(inventoryOf({ bayId: 'B9', name: 'Bay 9', kind: null, outOfService: true })),
+      );
+      renderWith({ ...fullDashboard, bays: [] });
+
+      expect(railEmptyMessage()).toBe('SHOPMGMT.DISPATCH_BOARD.NO_BAYS_AT_LOCATION');
+      expect(pickerEmptyMessage()).toBe('SHOPMGMT.DISPATCH_BOARD.NO_BAYS_AT_LOCATION');
+    });
+
+    it('still says every bay is full when the bays are all occupied', () => {
+      renderWith({
+        ...fullDashboard,
+        bays: [{ bayId: 'B1', bayName: 'Bay 1', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-assigned' }],
+      });
+
+      expect(component.openBays()).toHaveLength(0);
+      expect(railEmptyMessage()).toBe('SHOPMGMT.DISPATCH_BOARD.NO_BAYS');
+      expect(pickerEmptyMessage()).toBe('SHOPMGMT.DISPATCH_BOARD.NO_BAYS');
+    });
+  });
+
+  describe('F9: an out-of-service bay keeps its name for the work still standing on it', () => {
+    // d89a09a bayNamesById :230-238 walked allBays(), which drops out-of-service
+    // inventory at :327, so the row and the chip lost a name the inventory carried.
+    it('names the bay on the row and the mechanic chip while keeping it off the open rail', () => {
+      dispatchBoardServiceStub.getBayInventory.mockReturnValue(
+        of(inventoryOf({ bayId: 'B9', name: 'Bay 9', kind: 'GENERAL_SERVICE', outOfService: true })),
+      );
+      renderWith({
+        ...emptyDashboard,
+        workorders: [
+          {
+            workorderId: 'wo-on-b9',
+            workorderNumber: 'WO-B9',
+            status: 'WORK_IN_PROGRESS',
+            assignedMechanicId: 'M1',
+            resourceType: WorkorderSummaryResourceTypeEnum.Bay,
+            assignedResourceId: 'B9',
+          },
+        ],
+        mechanics: [{ personId: 'M1', firstName: 'Ray', lastName: 'Delgado', assignedWorkorderId: 'wo-on-b9' }],
+        // The projection carries the claim but no name: the inventory's must be used.
+        bays: [{ bayId: 'B9', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-on-b9' }],
+      });
+
+      const row = component.allRows()[0];
+      expect(row.bayId).toBe('B9');
+      expect(row.bayName).toBe('Bay 9');
+      expect(component.mechanics()[0].whereLabel).toBe('Bay 9');
+      expect(component.openBays().map(bay => bay.bayId)).not.toContain('B9');
+      expect(component.allBays().map(bay => bay.bayId)).not.toContain('B9');
+      const controls: HTMLButtonElement[] = Array.from(rowFor('wo-on-b9').querySelectorAll('button.change'));
+      expect(controls.map(control => control.textContent?.trim())).toContain('Bay 9');
+      expect(fixture.nativeElement.querySelector('.mech .mwhere')?.textContent?.trim()).toBe('Bay 9');
+    });
+  });
+
+  describe('F11: finished work is not waiting to be assigned', () => {
+    const cancelledWithoutMechanic: WorkorderSummary = {
+      workorderId: 'wo-cancelled',
+      workorderNumber: 'WO-CANCELLED',
+      status: 'CANCELLED',
+      estimatedLaborHours: 9,
+    };
+
+    // d89a09a toLane :1107-1112 returned TO_ASSIGN for any row without a
+    // mechanic, closed or not, and stats :335-353 summed its hours.
+    it('lists a cancelled workorder with no mechanic in no lane and leaves the to-assign stats alone', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [...(fullDashboard.workorders ?? []), cancelledWithoutMechanic],
+        bays: [
+          ...(fullDashboard.bays ?? []),
+          { bayId: 'B5', bayName: 'Bay 5', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-cancelled' },
+        ],
+      });
+
+      expect(component.toAssignRows().map(row => row.workorderId)).toEqual(['wo-to-assign', 'wo-draft']);
+      expect(component.heldRows().map(row => row.workorderId)).toEqual(['wo-parked']);
+      expect(component.assignedRows().map(row => row.workorderId)).toEqual(['wo-assigned']);
+      expect(component.stats().toAssign).toBe(2);
+      expect(component.stats().toAssignHours).toBe(4.5);
+      expect(component.allRows().find(row => row.workorderId === 'wo-cancelled')?.lane).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-wo="wo-cancelled"]')).toBeNull();
+      // It stays known to the board, so the bay it left behind reads as free.
+      expect(component.openBays().map(bay => bay.bayId)).toContain('B5');
+    });
+
+    it('keeps a completed workorder that still holds a mechanic under assigned, with inert controls', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [
+          ...(fullDashboard.workorders ?? []),
+          { workorderId: 'wo-closed', workorderNumber: 'WO-24100', status: 'COMPLETED', assignedMechanicId: 'M1' },
+        ],
+      });
+
+      const closed = component.allRows().find(row => row.workorderId === 'wo-closed')!;
+      expect(closed.lane).toBe('ASSIGNED');
+      expect(component.assignedRows().map(row => row.workorderId)).toContain('wo-closed');
+      expect(component.toAssignRows().map(row => row.workorderId)).not.toContain('wo-closed');
+      const change: HTMLButtonElement | null = rowFor('wo-closed').querySelector('.slot.filled button.change');
+      expect(change?.disabled).toBe(true);
+      const clear: HTMLButtonElement | null = rowFor('wo-closed').querySelector('button.clear');
+      expect(clear?.disabled).toBe(true);
+    });
+  });
+
+  describe('F12: a 403 is an answer, not an outage', () => {
+    // The interceptor rethrows a real HttpErrorResponse; the board keys on the class.
+    const forbidden = () =>
+      throwError(
+        () => new HttpErrorResponse({ status: 403, statusText: 'Forbidden', error: { code: 'LOCATION_SCOPE_DENIED' } }),
+      );
+
+    // d89a09a applyError :1029-1034 kept the board up under a stale banner and
+    // the poll :894-928 kept asking every 30s.
+    it('drops the board, names the condition and stops polling when a poll answers 403', fakeAsync(() => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(forbidden());
+
+      tick(30_000);
+
+      expect(component.state()).toBe('error');
+      expect(component.error()).toBe('SHOPMGMT.DISPATCH_BOARD.ERROR_FORBIDDEN');
+      expect(component.hasCachedData()).toBe(false);
+      expect(component.isStale()).toBe(false);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelectorAll('.workorder-row')).toHaveLength(0);
+      expect(fixture.nativeElement.querySelector('.state-panel')?.textContent).toContain(
+        'SHOPMGMT.DISPATCH_BOARD.ERROR_FORBIDDEN',
+      );
+
+      dispatchBoardServiceStub.getDashboard.mockClear();
+      tick(60_000);
+      expect(dispatchBoardServiceStub.getDashboard).not.toHaveBeenCalled();
+      fixture.destroy();
+    }));
+
+    // The stale and data-quality banners render outside the board region, so
+    // dropping the board without clearing them would leave them describing a
+    // board that is no longer shown.
+    it('clears the freshness banners it can no longer vouch for when a poll answers 403', fakeAsync(() => {
+      renderWith({ ...fullDashboard, dataQualityWarning: true });
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(throwError(() => new Error('down')));
+      tick(30_000);
+      fixture.detectChanges();
+      expect(component.isStale()).toBe(true);
+      expect(component.dataQualityWarning()).toBe(true);
+      expect(fixture.nativeElement.querySelector('.stale-data-banner')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('.data-quality-warning')).toBeTruthy();
+
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(forbidden());
+      tick(30_000);
+      fixture.detectChanges();
+
+      expect(component.error()).toBe('SHOPMGMT.DISPATCH_BOARD.ERROR_FORBIDDEN');
+      expect(component.isStale()).toBe(false);
+      expect(component.dataQualityWarning()).toBe(false);
+      expect(component.lastRefreshed()).toBeNull();
+      expect(fixture.nativeElement.querySelector('.stale-data-banner')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.data-quality-warning')).toBeNull();
+      fixture.destroy();
+    }));
+
+    // d89a09a toLoadErrorKey :1302-1311 answered a first-load 403 with ERROR_LOAD.
+    it('names the condition when the first load answers 403', () => {
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(forbidden());
+      fixture.detectChanges();
+
+      expect(component.state()).toBe('error');
+      expect(component.error()).toBe('SHOPMGMT.DISPATCH_BOARD.ERROR_FORBIDDEN');
+      expect(fixture.nativeElement.querySelector('.state-panel')).toBeTruthy();
+    });
+
+    it('polls again once a location the caller may read has loaded', fakeAsync(() => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(forbidden());
+      tick(30_000);
+      expect(component.error()).toBe('SHOPMGMT.DISPATCH_BOARD.ERROR_FORBIDDEN');
+
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(of({ ...fullDashboard, locationId: 'LOC-2' }));
+      component.onLocationPicked('LOC-2');
+      fixture.detectChanges();
+      expect(component.state()).toBe('ready');
+      expect(component.error()).toBeNull();
+      expect(component.showBoard()).toBe(true);
+
+      dispatchBoardServiceStub.getDashboard.mockClear();
+      tick(30_000);
+      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenCalledTimes(1);
+      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenCalledWith('LOC-2', TODAY);
+      fixture.destroy();
+    }));
+
+    // Scope pin: the write path keeps its own reading of a 403 — a refused
+    // write is a toast over a board that stays up (position P1), never a page error.
+    it('reports a 403 on a write through the toast and leaves the board up', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.assignMechanic.mockReturnValueOnce(forbidden());
+
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_GENERIC');
+      expect(component.state()).toBe('ready');
+      expect(component.showBoard()).toBe(true);
+    });
+  });
+
+  describe('F14: a cleared date input falls back to the local today', () => {
+    // d89a09a html :18-19 used `$event ?? todayIso()`, which lets '' through
+    // and asks the backend for a board dated ''.
+    // fakeAsync rather than whenStable(): the 30s poll keeps the zone busy, so
+    // the fixture never reports stable; tick() flushes NgModel's write instead.
+    it('asks for today again when the date input is cleared', fakeAsync(() => {
+      renderWith(fullDashboard);
+      component.selectedDate.set('2026-05-04');
+      fixture.detectChanges();
+      tick();
+      const input: HTMLInputElement = fixture.nativeElement.querySelector('#dispatch-date');
+      expect(input.value).toBe('2026-05-04');
+      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenLastCalledWith('LOC-1', '2026-05-04');
+
+      input.value = '';
+      input.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+
+      expect(component.selectedDate()).toBe(TODAY);
+      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenLastCalledWith('LOC-1', TODAY);
+      fixture.destroy();
+    }));
+  });
+
+  describe('T3: interleavings the settlement mechanism must survive', () => {
+    /** A write on wo-to-assign whose readback is left in flight. */
+    function writeWithSlowReadback(): Subject<DashboardResponse> {
+      renderWith(fullDashboard);
+      const readback = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(readback);
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+      expect(component.isPending('wo-to-assign')).toBe(true);
+      return readback;
+    }
+
+    function mechanicOn(workorderId: string): string | null | undefined {
+      return component.allRows().find(row => row.workorderId === workorderId)?.mechanicId;
+    }
+
+    // (a) A poll fires while the readback is in flight. Whichever lands first,
+    // the row is released exactly once, the board shows the poll's answer, and
+    // the undo is armed off that answer — never off the stale read.
+    it('poll lands before the readback: the poll settles the write and the late readback is dropped', fakeAsync(() => {
+      const readback = writeWithSlowReadback();
+      const poll = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(poll);
+      tick(30_000);
+      expect(component.isPending('wo-to-assign')).toBe(true);
+
+      poll.next(afterM2OnToAssign);
+      poll.complete();
+      expect(component.isPending('wo-to-assign')).toBe(false);
+      expect(component.toast()?.undo).not.toBeNull();
+
+      readback.next(fullDashboard);
+      readback.complete();
+      expect(mechanicOn('wo-to-assign')).toBe('M2');
+      expect(component.toast()?.undo).not.toBeNull();
+      expect(component.isPending('wo-to-assign')).toBe(false);
+      fixture.destroy();
+    }));
+
+    it('readback lands before the poll: the superseded readback settles nothing and the poll does', fakeAsync(() => {
+      const readback = writeWithSlowReadback();
+      const poll = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(poll);
+      tick(30_000);
+
+      readback.next(fullDashboard);
+      readback.complete();
+      expect(component.isPending('wo-to-assign')).toBe(true);
+      expect(component.toast()?.undo).toBeNull();
+
+      poll.next(afterM2OnToAssign);
+      poll.complete();
+      expect(component.isPending('wo-to-assign')).toBe(false);
+      expect(component.toast()?.undo).not.toBeNull();
+      expect(mechanicOn('wo-to-assign')).toBe('M2');
+      fixture.destroy();
+    }));
+
+    // A poll that fails still pays the debt; over cached data that is a stale
+    // banner, and the toast keeps its confirmation with no undo to offer.
+    it('a failing poll releases the row without arming an undo', fakeAsync(() => {
+      writeWithSlowReadback();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+      tick(30_000);
+
+      expect(component.isPending('wo-to-assign')).toBe(false);
+      expect(component.isStale()).toBe(true);
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.MECHANIC_ASSIGNED');
+      expect(component.toast()?.undo).toBeNull();
+      fixture.destroy();
+    }));
+
+    // (c) Two writes on different rows, both readbacks slow. The later read
+    // pays both debts whichever lands first, and the earlier, once superseded,
+    // changes nothing. One toast slot: the second write's undo is the one kept.
+    function twoWritesWithSlowReadbacks(): {
+      first: Subject<DashboardResponse>;
+      second: Subject<DashboardResponse>;
+    } {
+      renderWith(fullDashboard);
+      const first = new Subject<DashboardResponse>();
+      const second = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(first).mockReturnValueOnce(second);
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+      component.assignMechanic(component.assignedRows()[0], 'M2');
+      expect(component.isPending('wo-to-assign')).toBe(true);
+      expect(component.isPending('wo-assigned')).toBe(true);
+      return { first, second };
+    }
+    const bothLanded = withWorkorder(afterM2OnToAssign, 'wo-assigned', { assignedMechanicId: 'M2' });
+
+    it('the later readback landing first releases both rows; the earlier then changes nothing', () => {
+      const { first, second } = twoWritesWithSlowReadbacks();
+      const secondToastId = component.toast()?.id;
+
+      second.next(bothLanded);
+      expect(component.isPending('wo-to-assign')).toBe(false);
+      expect(component.isPending('wo-assigned')).toBe(false);
+      expect(component.toast()?.id).toBe(secondToastId);
+      expect(component.toast()?.undo?.workorderId).toBe('wo-assigned');
+
+      first.next(fullDashboard);
+      expect(mechanicOn('wo-to-assign')).toBe('M2');
+      expect(mechanicOn('wo-assigned')).toBe('M2');
+      expect(component.toast()?.id).toBe(secondToastId);
+      expect(component.toast()?.undo?.workorderId).toBe('wo-assigned');
+    });
+
+    it('the earlier readback landing first settles nothing; the later then releases both rows', () => {
+      const { first, second } = twoWritesWithSlowReadbacks();
+      const secondToastId = component.toast()?.id;
+
+      first.next(fullDashboard);
+      expect(component.isPending('wo-to-assign')).toBe(true);
+      expect(component.isPending('wo-assigned')).toBe(true);
+      expect(component.toast()?.undo).toBeNull();
+
+      second.next(bothLanded);
+      expect(component.isPending('wo-to-assign')).toBe(false);
+      expect(component.isPending('wo-assigned')).toBe(false);
+      expect(component.toast()?.id).toBe(secondToastId);
+      expect(component.toast()?.undo?.workorderId).toBe('wo-assigned');
+      expect(mechanicOn('wo-to-assign')).toBe('M2');
+      expect(mechanicOn('wo-assigned')).toBe('M2');
     });
   });
 });

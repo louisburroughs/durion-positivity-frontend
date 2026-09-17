@@ -289,6 +289,15 @@ export const WORKEXEC_PAGE = {
   wip: ['workorder:wip:view'],
   workorderView: ['workorder:workorder:view'],
   workorderAssign: ['workorder:workorder:assign-technician'],
+  /**
+   * `assignServicePosition` / `releaseServicePosition` — placing a workorder on
+   * a bay, a mobile unit or the site's HOLD, or taking it off. The workexec
+   * contract guide's endpoint table binds both to
+   * `workorder:operationalContext:override` (durion-positivity-backend#1983),
+   * not to shop management's `shop:bay:assign`, which governs appointment
+   * dispatch in pos-shop-manager.
+   */
+  positionAssign: ['workorder:operationalContext:override'],
   partsView: ['workorder:parts:view'],
   changeRequests: ['workorder:change_request:view'],
 } as const satisfies Record<string, readonly string[]>;

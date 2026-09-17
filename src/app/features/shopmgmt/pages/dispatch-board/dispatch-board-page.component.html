@@ -16,7 +16,7 @@
       <div class="field-group">
         <label class="field-label" for="dispatch-date">{{ 'SHOPMGMT.DISPATCH_BOARD.DATE' | translate }}</label>
         <input id="dispatch-date" type="date" [ngModel]="selectedDate()"
-          (ngModelChange)="selectedDate.set($event ?? todayIso())"
+          (ngModelChange)="selectedDate.set($event || todayIso())"
           [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.DATE_ARIA' | translate" />
       </div>
 
@@ -126,10 +126,17 @@
               @for (mechanic of mechanics(); track mechanic.personId) {
                 <button type="button" class="mech" [attr.data-st]="mechanic.availability" draggable="true"
                   (dragstart)="onDragStart('MECHANIC', mechanic.personId, $event)" (dragend)="onDragEnd()"
-                  [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA' | translate: { name: mechanic.name }">
+                  [attr.aria-label]="mechanic.name
+                    ? ('SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA' | translate: { name: mechanic.name })
+                    : ('SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA_UNNAMED' | translate)">
                   <span class="av" aria-hidden="true">{{ mechanic.initials }}</span>
                   <span class="mname">
-                    <span class="mname-text">{{ mechanic.name }}</span>
+                    @if (mechanic.name; as name) {
+                      <span class="mname-text">{{ name }}</span>
+                    } @else {
+                      <span class="mname-text na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_MECHANIC_NAME' | translate"
+                        aria-hidden="true">&mdash;</span>
+                    }
                     <span class="na mfree" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS' | translate">
                       <span aria-hidden="true">&mdash;</span>
                       <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS' | translate }}</span>
@@ -179,7 +186,13 @@
                 }
               </button>
             } @empty {
-              <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_BAYS' | translate }}</p>
+              <!-- "Every bay is full" is only true when there are bays: with no
+                   inventory, or every bay out of service, the shop has none. -->
+              @if (allBays().length === 0) {
+                <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_BAYS_AT_LOCATION' | translate }}</p>
+              } @else {
+                <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_BAYS' | translate }}</p>
+              }
             }
           </div>
         </section>
@@ -193,7 +206,14 @@
             @for (mechanic of offDutyMechanics(); track mechanic.personId) {
               <span class="binchip">
                 <span class="dot" aria-hidden="true">{{ mechanic.initials }}</span>
-                {{ mechanic.name }}
+                @if (mechanic.name; as name) {
+                  {{ name }}
+                } @else {
+                  <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_MECHANIC_NAME' | translate">
+                    <span aria-hidden="true">&mdash;</span>
+                    <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_MECHANIC_NAME' | translate }}</span>
+                  </span>
+                }
                 <small>
                   @if (mechanic.availability === 'BREAK') {
                     @if (mechanic.breakExpectedReturn; as until) {
@@ -300,7 +320,11 @@
           @for (mechanic of pickerMechanics(); track mechanic.personId) {
             <button class="opt" type="button" (click)="pick(mechanic.personId)">
               <span class="si" aria-hidden="true">{{ mechanic.initials }}</span>
-              <span class="opt-name">{{ mechanic.name }}</span>
+              @if (mechanic.name; as name) {
+                <span class="opt-name">{{ name }}</span>
+              } @else {
+                <span class="opt-name na">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_MECHANIC_NAME' | translate }}</span>
+              }
               <span class="note">
                 @if (mechanic.skillCodes.length) {
                   {{ mechanic.skillCodes.join(', ') }}
@@ -329,7 +353,11 @@
               }
             </button>
           } @empty {
-            <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_BAYS' | translate }}</p>
+            @if (allBays().length === 0) {
+              <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_BAYS_AT_LOCATION' | translate }}</p>
+            } @else {
+              <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_BAYS' | translate }}</p>
+            }
           }
         }
 
@@ -428,9 +456,15 @@
         <button type="button" class="sl change" (click)="openPicker('MECHANIC', row.workorderId)"
           [disabled]="!canTakeMechanic(row)"
           [attr.title]="mechanicBlockedKey(row) | translate"
-          [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.CHANGE_MECHANIC_ARIA' | translate:
-            { workorder: row.number, mechanic: row.mechanicName }">
-          {{ row.mechanicName }}
+          [attr.aria-label]="row.mechanicName
+            ? ('SHOPMGMT.DISPATCH_BOARD.CHANGE_MECHANIC_ARIA' | translate:
+              { workorder: row.number, mechanic: row.mechanicName })
+            : ('SHOPMGMT.DISPATCH_BOARD.CHANGE_MECHANIC_ARIA_UNNAMED' | translate: { workorder: row.number })">
+          @if (row.mechanicName; as mechanicName) {
+            {{ mechanicName }}
+          } @else {
+            <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_MECHANIC_NAME' | translate">&mdash;</span>
+          }
         </button>
         <button type="button" class="clear" (click)="clearMechanic(row)" [disabled]="!canClearMechanic(row)"
           [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.CLEAR_MECHANIC_ARIA' | translate: { workorder: row.number }">&times;</button>
@@ -467,6 +501,13 @@
         [attr.title]="bayBlockedKey(row) | translate">
         {{ 'SHOPMGMT.DISPATCH_BOARD.PARKED' | translate }}
       </button>
+    } @else if (row.onMobileUnit) {
+      <!-- Read-only: the board places bays, and a truck job is not moved off
+           its unit by a control that cannot show what it is doing. -->
+      <span class="slot mobile" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.MOBILE_UNIT_NO_CHANGE' | translate">
+        {{ 'SHOPMGMT.DISPATCH_BOARD.ON_MOBILE_UNIT' | translate }}
+        <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.MOBILE_UNIT_NO_CHANGE' | translate }}</span>
+      </span>
     } @else {
       <button type="button" class="slot" (click)="openPicker('BAY', row.workorderId)" [disabled]="!canTakeBay(row)"
         [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.ADD_BAY_ARIA' | translate: { workorder: row.number }"

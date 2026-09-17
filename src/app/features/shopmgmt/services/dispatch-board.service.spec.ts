@@ -7,11 +7,15 @@ import { DispatchBoardService } from './dispatch-board.service';
 import {
   DailyDispatchBoardDashboardService,
   ServicePositionAPIService,
+  ServicePositionResponseResourceTypeEnum,
   TechnicianAssignmentAPIService,
 } from '@durion-sdk/workorder';
+import type { ServicePositionResponse, TechnicianAssignmentResponse } from '@durion-sdk/workorder';
 import { BayAPIService } from '@durion-sdk/location';
 import { TechnicianAPIService } from '@durion-sdk/shop-manager';
 import { PeopleAvailabilityAPIService } from '@durion-sdk/people';
+import type { DashboardResponse } from '../models/dispatch-board.models';
+import { isoDateLocal } from '../models/capacity-calendar.models';
 
 const dispatchDashboardStub = { getDispatchDashboard: vi.fn() };
 const peopleAvailabilityStub = {
@@ -71,10 +75,64 @@ describe('DispatchBoardService', () => {
     expect(dispatchDashboardStub.getDispatchDashboard).toHaveBeenCalledWith('loc-1', '2026-04-18');
   });
 
+  // ADR-0035: the call alone is not the contract — what the caller receives is.
+  it('emits the dashboard the SDK answers', () => {
+    const board: DashboardResponse = {
+      date: '2026-04-18',
+      locationId: 'loc-1',
+      lastRefreshed: '2026-04-18T12:00:00Z',
+      workorders: [{ workorderId: 'wo-1', status: 'APPROVED' }],
+    };
+    dispatchDashboardStub.getDispatchDashboard.mockReturnValue(of(board));
+    const next = vi.fn();
+
+    service.getDashboard('loc-1', '2026-04-18').subscribe(next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(next).toHaveBeenCalledWith(board);
+  });
+
   it('trims whitespace from locationId before calling the SDK', () => {
     service.getDashboard(' loc-1 ', '2026-04-18').subscribe();
 
     expect(dispatchDashboardStub.getDispatchDashboard).toHaveBeenCalledWith('loc-1', '2026-04-18');
+  });
+
+  // -------------------------------------------------------------------------
+  // The board date (ADR-0038): a date-only string passes through; anything
+  // else resolves to a LOCAL calendar day. d89a09a :208 fell back to
+  // `new Date().toISOString().slice(0, 10)` — the UTC day, which from 17:00
+  // Pacific onward is already tomorrow (ADR-0038 Alternatives #2). F14.
+  // -------------------------------------------------------------------------
+  describe('the board date', () => {
+    it('passes a date-only string through without re-parsing it', () => {
+      service.getDashboard('loc-1', '2026-12-31').subscribe();
+      service.getAvailability('loc-1', '2026-01-01').subscribe();
+
+      expect(dispatchDashboardStub.getDispatchDashboard).toHaveBeenCalledWith('loc-1', '2026-12-31');
+      expect(peopleAvailabilityStub.listPeopleAvailability).toHaveBeenCalledWith('loc-1', '2026-01-01');
+    });
+
+    // A zone-less timestamp parses as local time, so its local day is fixed
+    // whatever the zone; the UTC day it used to answer with is a day off in
+    // every zone west of UTC for the first value and east of it for the second.
+    it('resolves a parseable timestamp to the local calendar day of that instant', () => {
+      for (const value of ['2026-04-18T23:59:59', '2026-04-18T00:00:01']) {
+        dispatchDashboardStub.getDispatchDashboard.mockClear();
+
+        service.getDashboard('loc-1', value).subscribe();
+
+        expect(dispatchDashboardStub.getDispatchDashboard).toHaveBeenCalledWith('loc-1', '2026-04-18');
+      }
+    });
+
+    it('resolves an unparseable value to the local today', () => {
+      service.getDashboard('loc-1', 'not-a-date').subscribe();
+      service.getAvailability('loc-1', '').subscribe();
+
+      expect(dispatchDashboardStub.getDispatchDashboard).toHaveBeenCalledWith('loc-1', isoDateLocal(new Date()));
+      expect(peopleAvailabilityStub.listPeopleAvailability).toHaveBeenCalledWith('loc-1', isoDateLocal(new Date()));
+    });
   });
 
   it('calls getCurrentUserPrimaryLocation for getPrimaryLocation()', () => {
@@ -286,10 +344,16 @@ describe('DispatchBoardService', () => {
   // Mutations
   // -------------------------------------------------------------------------
   describe('assignMechanic()', () => {
+    const assigned: TechnicianAssignmentResponse = { currentStatus: 'ASSIGNED', message: 'Technician assigned' };
+
     // assignTechnician refuses a workorder that already holds one and
     // reassignTechnician refuses one that does not, so the incumbent picks.
-    it('uses assignTechnician when the workorder has nobody on it', () => {
-      service.assignMechanic('wo-1', 'tech-1', null).subscribe();
+    // ADR-0035: each branch also emits what the SDK answered.
+    it('uses assignTechnician when the workorder has nobody on it, and emits its response', () => {
+      technicianAssignmentStub.assignTechnician.mockReturnValue(of(assigned));
+      const next = vi.fn();
+
+      service.assignMechanic('wo-1', 'tech-1', null).subscribe(next);
 
       // The third argument is the per-attempt idempotency key.
       expect(technicianAssignmentStub.assignTechnician).toHaveBeenCalledWith(
@@ -298,10 +362,16 @@ describe('DispatchBoardService', () => {
         expect.any(String),
       );
       expect(technicianAssignmentStub.reassignTechnician).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next).toHaveBeenCalledWith(assigned);
     });
 
-    it('uses reassignTechnician when the workorder already has one', () => {
-      service.assignMechanic('wo-1', 'tech-2', 'tech-1').subscribe();
+    it('uses reassignTechnician when the workorder already has one, and emits its response', () => {
+      const reassigned: TechnicianAssignmentResponse = { ...assigned, previousTechnicianId: 'tech-1' };
+      technicianAssignmentStub.reassignTechnician.mockReturnValue(of(reassigned));
+      const next = vi.fn();
+
+      service.assignMechanic('wo-1', 'tech-2', 'tech-1').subscribe(next);
 
       expect(technicianAssignmentStub.reassignTechnician).toHaveBeenCalledWith(
         'wo-1',
@@ -309,6 +379,19 @@ describe('DispatchBoardService', () => {
         expect.any(String),
       );
       expect(technicianAssignmentStub.assignTechnician).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next).toHaveBeenCalledWith(reassigned);
+    });
+
+    // One key per attempt: a retry after a lost response must not be read as
+    // a replay of the write that landed.
+    it('sends a fresh idempotency key on every attempt', () => {
+      service.assignMechanic('wo-1', 'tech-1', null).subscribe();
+      service.assignMechanic('wo-1', 'tech-1', null).subscribe();
+
+      const keys = technicianAssignmentStub.assignTechnician.mock.calls.map(call => call[2]);
+      expect(keys).toHaveLength(2);
+      expect(keys[0]).not.toBe(keys[1]);
     });
 
     it('propagates a refusal rather than swallowing it', () => {
@@ -323,34 +406,80 @@ describe('DispatchBoardService', () => {
     });
   });
 
-  it('releaseMechanic() releases the current technician', () => {
-    service.releaseMechanic('wo-1').subscribe();
+  // ADR-0035 for the remaining writes: the verb-and-target assertion each had
+  // is kept, and the emitted value is asserted beside it.
+  it('releaseMechanic() releases the current technician and completes with the SDK answer', () => {
+    const next = vi.fn();
+    const complete = vi.fn();
+
+    service.releaseMechanic('wo-1').subscribe({ next, complete });
 
     expect(technicianAssignmentStub.releaseTechnician).toHaveBeenCalledWith('wo-1');
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(next).toHaveBeenCalledWith(undefined);
+    expect(complete).toHaveBeenCalledTimes(1);
   });
 
-  it('assignBay() places the workorder on a BAY position', () => {
-    service.assignBay('wo-1', 'bay-1').subscribe();
+  it('assignBay() places the workorder on a BAY position and emits the position it now holds', () => {
+    const placed: ServicePositionResponse = {
+      workorderId: 'wo-1',
+      resourceType: ServicePositionResponseResourceTypeEnum.Bay,
+      resourceId: 'bay-1',
+    };
+    servicePositionStub.assignServicePosition.mockReturnValue(of(placed));
+    const next = vi.fn();
+
+    service.assignBay('wo-1', 'bay-1').subscribe(next);
 
     expect(servicePositionStub.assignServicePosition).toHaveBeenCalledWith('wo-1', {
       resourceType: 'BAY',
       resourceId: 'bay-1',
     });
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(next).toHaveBeenCalledWith(placed);
   });
 
-  it('releaseBay() gives up the position the workorder holds', () => {
-    service.releaseBay('wo-1').subscribe();
+  it('releaseBay() gives up the position the workorder holds and emits the released position', () => {
+    const released: ServicePositionResponse = { workorderId: 'wo-1' };
+    servicePositionStub.releaseServicePosition.mockReturnValue(of(released));
+    const next = vi.fn();
+
+    service.releaseBay('wo-1').subscribe(next);
 
     expect(servicePositionStub.releaseServicePosition).toHaveBeenCalledWith('wo-1');
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(next).toHaveBeenCalledWith(released);
   });
 
   // Parking is not releasing, and HOLD takes no resourceId: the contract
   // defaults it to the workorder's own locationId and refuses anything else.
-  it('parkWorkorder() puts the workorder on the site HOLD position with no resourceId', () => {
-    service.parkWorkorder('wo-1').subscribe();
+  it('parkWorkorder() puts the workorder on the site HOLD position with no resourceId, and emits it', () => {
+    const parked: ServicePositionResponse = {
+      workorderId: 'wo-1',
+      resourceType: ServicePositionResponseResourceTypeEnum.Hold,
+      resourceId: 'loc-1',
+    };
+    servicePositionStub.assignServicePosition.mockReturnValue(of(parked));
+    const next = vi.fn();
+
+    service.parkWorkorder('wo-1').subscribe(next);
 
     expect(servicePositionStub.assignServicePosition).toHaveBeenCalledWith('wo-1', {
       resourceType: 'HOLD',
     });
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(next).toHaveBeenCalledWith(parked);
+  });
+
+  it('propagates a refusal from the position endpoints rather than swallowing it', () => {
+    const refusal = new HttpErrorResponse({ status: 422, error: { code: 'SERVICE_POSITION_INVALID' } });
+    servicePositionStub.assignServicePosition.mockReturnValue(throwError(() => refusal));
+    const next = vi.fn();
+    const error = vi.fn();
+
+    service.assignBay('wo-1', 'bay-9').subscribe({ next, error });
+
+    expect(next).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith(refusal);
   });
 });

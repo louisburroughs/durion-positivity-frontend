@@ -189,17 +189,50 @@ describe('DispatchBoardPageComponent accessibility', () => {
     }
   });
 
-  // A div with `draggable` is a mouse-only control: no role, no tab stop, and a
-  // label that instructs the one gesture its audience cannot perform.
-  it('names each draggable mechanic and bay, as a real button', () => {
+  // A div with `draggable` is a mouse-only control: no role, no tab stop. And
+  // a label that promises an action ("Assign Ray to a workorder") which Enter
+  // and Space do not perform misleads the one audience that relies on it
+  // (F15): the chip is a drag handle, and its name says where the keyboard
+  // route is. Resolved against the en-US copy, mirrored below the way
+  // user-provision-page.component.spec.ts does, so the assertion is on what a
+  // screen reader announces, parameters included.
+  it('names each draggable mechanic and bay as a drag handle that points to the slot, on a real button', () => {
+    // Mirrors SHOPMGMT.DISPATCH_BOARD in src/assets/i18n/en-US.json.
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation(
+      'en',
+      {
+        SHOPMGMT: {
+          DISPATCH_BOARD: {
+            MECHANIC_ARIA: 'Drag handle for {{name}}. To assign by keyboard, use the mechanic slot on a workorder.',
+            MECHANIC_ARIA_UNNAMED:
+              'Drag handle for an unnamed mechanic. To assign by keyboard, use the mechanic slot on a workorder.',
+            BAY_ARIA: 'Drag handle for {{name}}. To place a workorder by keyboard, use the bay slot on the workorder.',
+            BAY_ARIA_UNNAMED:
+              'Drag handle for an unnamed bay. To place a workorder by keyboard, use the bay slot on the workorder.',
+          },
+        },
+      },
+      true,
+    );
+    translate.use('en');
+    fixture.detectChanges();
+
     const draggables: HTMLElement[] = Array.from(
       fixture.nativeElement.querySelectorAll('[draggable="true"]'),
     );
 
-    expect(draggables.length).toBeGreaterThan(0);
+    // Two on-duty mechanics and one open bay.
+    expect(draggables.map(draggable => draggable.tagName)).toEqual(['BUTTON', 'BUTTON', 'BUTTON']);
+    expect(draggables.map(draggable => draggable.getAttribute('aria-label'))).toEqual([
+      'Drag handle for Ray Delgado. To assign by keyboard, use the mechanic slot on a workorder.',
+      'Drag handle for Dev Patel. To assign by keyboard, use the mechanic slot on a workorder.',
+      'Drag handle for Bay 4. To place a workorder by keyboard, use the bay slot on the workorder.',
+    ]);
     for (const draggable of draggables) {
-      expect(draggable.tagName).toBe('BUTTON');
-      expect(draggable.getAttribute('aria-label')).toBeTruthy();
+      const label = draggable.getAttribute('aria-label') ?? '';
+      expect(label).not.toMatch(/^(Assign|Place a workorder)/);
+      expect(label).toMatch(/use the (mechanic|bay) slot on (a|the) workorder\.$/);
     }
   });
 
@@ -284,16 +317,41 @@ describe('DispatchBoardPageComponent accessibility', () => {
   });
 
   // `title` reaches neither the keyboard nor touch, and a bare em dash is
-  // announced as "dash".
+  // announced as "dash". The board is re-read with an unnamed mechanic on a
+  // row and an unnamed bay on the rail so the slot and chip placeholders render
+  // too. A placeholder counts as described by its own text equivalent or by
+  // the accessible name of the control it sits in — the row article's label,
+  // which every row placeholder sits inside, does not count (T1).
   it('gives every not-available placeholder a text equivalent', () => {
+    const withUnnamed: DashboardResponse = {
+      ...dashboard,
+      workorders: (dashboard.workorders ?? []).map(workorder =>
+        workorder.workorderId === 'wo-assigned'
+          ? { ...workorder, assignedMechanicId: 'person-uuid-nameless' }
+          : workorder,
+      ),
+      mechanics: [
+        { personId: 'person-uuid-nameless', assignedWorkorderId: 'wo-assigned' },
+        { personId: 'M2', firstName: 'Dev', lastName: 'Patel' },
+      ],
+      bays: [...(dashboard.bays ?? []), { bayId: 'bay-uuid-unnamed', available: true, status: 'ACTIVE' }],
+    };
+    dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(of(withUnnamed));
+    component.refresh();
+    fixture.detectChanges();
+
     const placeholders: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.na'));
 
     expect(placeholders.length).toBeGreaterThan(0);
+    // The two placeholders that rely on their control's name are on screen.
+    expect(placeholders.some(placeholder => placeholder.closest('button.change') !== null)).toBe(true);
+    expect(placeholders.some(placeholder => placeholder.closest('button.bay') !== null)).toBe(true);
     for (const placeholder of placeholders) {
+      const ownControl = placeholder.closest('button');
       const described =
         placeholder.querySelector('.sr-only') !== null ||
         placeholder.getAttribute('aria-hidden') === 'true' ||
-        placeholder.closest('[aria-label]') !== null;
+        (ownControl !== null && Boolean(ownControl.getAttribute('aria-label')));
       expect(described).toBe(true);
     }
   });

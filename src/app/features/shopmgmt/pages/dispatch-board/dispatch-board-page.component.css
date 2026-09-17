@@ -484,6 +484,14 @@
   border-left: 1px solid var(--border-color);
 }
 
+/* `.seg` clips overflow to round its corners, and the UA focus ring sits
+ * outside the button, so it was clipped with it. An inset outline stays
+ * within the clip and keeps the segment's focus visible (ADR-0029 §3). */
+.seg button:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: -2px;
+}
+
 .seg button[aria-pressed='true'] {
   background: var(--primary50);
   color: var(--link-color);
@@ -682,6 +690,16 @@
   border-color: var(--status-warning-fg);
   background: var(--status-warning-bg);
   color: var(--status-warning-fg);
+}
+
+/* A workorder on a mobile unit: placed, but not by this board, so the slot is
+ * a read-only statement rather than a control. */
+.slot.mobile {
+  border-style: solid;
+  border-color: var(--status-info-fg);
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+  cursor: default;
 }
 
 .slot .si {

@@ -55,7 +55,8 @@ export const NOT_AVAILABLE = null;
 
 export interface MechanicCard {
   readonly personId: string;
-  readonly name: string;
+  /** Null when neither name has replicated — never the person id. */
+  readonly name: string | null;
   readonly initials: string;
   readonly availability: MechanicAvailability;
   /** Durion skill codes from the location technician roster; empty when none are replicated. */
@@ -88,7 +89,8 @@ export interface WorkorderRow {
   readonly number: string;
   readonly status: string;
   readonly statusTone: RowStatusTone;
-  readonly lane: RowLane;
+  /** Null for a closed workorder with nothing left to dispatch: it is listed in no lane. */
+  readonly lane: RowLane | null;
   /** Service line descriptions joined; the dashboard sends at most three. */
   readonly job: string | null;
   readonly vehicle: string | null;
@@ -106,6 +108,11 @@ export interface WorkorderRow {
   readonly bayName: string | null;
   /** True when the workorder is parked on the site's HOLD position. */
   readonly parked: boolean;
+  /**
+   * True when the workorder stands on a mobile unit and no bay claims it. The
+   * board places bays only, so the slot is read-only rather than "+ bay".
+   */
+  readonly onMobileUnit: boolean;
   /** COMPLETED or CANCELLED: every dispatch write answers 409 WORKORDER_CLOSED. */
   readonly closed: boolean;
   /** Always null: no promised time, priority or skill requirement is published. */
@@ -154,4 +161,12 @@ export interface UndoStep {
    * leave the workorder in a third state nobody asked for.
    */
   readonly previousPosition: PositionKind | null;
+  /**
+   * BAY only: where the mutation put the workorder — a bay, the site's HOLD,
+   * or nowhere (null). Undo compares the row against this before writing, so
+   * a placement another dispatcher has since changed is left alone.
+   */
+  readonly currentPosition: PositionKind | null;
+  /** BAY only: the bay the mutation placed the workorder on, when `currentPosition` is `BAY`. */
+  readonly currentBayId: string | null;
 }

@@ -12,6 +12,7 @@ import { BayAPIService } from '@durion-sdk/location';
 import { TechnicianAPIService } from '@durion-sdk/shop-manager';
 import { PeopleAvailabilityAPIService, PeopleAvailabilityResponse, PrimaryLocationResponse } from '@durion-sdk/people';
 import { DashboardResponse } from '../models/dispatch-board.models';
+import { isoDateLocal } from '../models/capacity-calendar.models';
 import { v4 as uuidv4 } from 'uuid';
 import { heldSkillCodes } from './capacity-calendar.service';
 
@@ -201,11 +202,9 @@ export class DispatchBoardService {
       return value;
     }
 
+    // The local calendar day, never `toISOString()`: that is the UTC date,
+    // which from 17:00 Pacific onward is already tomorrow (ADR-0038).
     const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) {
-      return new Date().toISOString().slice(0, 10);
-    }
-
-    return parsed.toISOString().slice(0, 10);
+    return isoDateLocal(Number.isNaN(parsed.getTime()) ? new Date() : parsed);
   }
 }
