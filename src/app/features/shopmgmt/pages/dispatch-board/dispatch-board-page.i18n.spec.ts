@@ -152,6 +152,7 @@ function emittedKeysFromComponentSource(): string[] {
  */
 const TEMPLATE_TIMEKEEPING_KEYS: readonly string[] = [
   'BREAK_AND_OFF',
+  'CERTS_UNAVAILABLE',
   'BREAK_END',
   'BREAK_END_ARIA',
   'BREAK_END_ARIA_UNNAMED',
@@ -448,22 +449,39 @@ describe('dispatch board i18n contract', () => {
 //
 // `BREAK_END_ARIA` shipped as "End the break for {{name}}" against a visible
 // "End break", which fails the rule on the definite article alone.
-describe('en-US clock controls satisfy Label in Name', () => {
-  const PAIRS: readonly (readonly [string, string])[] = [
-    ['CLOCK_IN', 'CLOCK_IN_ARIA'],
-    ['CLOCK_OUT', 'CLOCK_OUT_ARIA'],
-    ['BREAK_START', 'BREAK_START_ARIA'],
-    ['BREAK_END', 'BREAK_END_ARIA'],
+describe('clock controls satisfy Label in Name, in every shipped locale', () => {
+  // The unnamed variant shows the SAME visible label — the name is what is
+  // missing, not the button text — so it is held to the same rule. Checking
+  // only the en-US named pair let `BREAK_END_ARIA_UNNAMED` ship as "End the
+  // break for…" in all five locales.
+  const PAIRS: readonly (readonly [string, readonly string[]])[] = [
+    ['CLOCK_IN', ['CLOCK_IN_ARIA', 'CLOCK_IN_ARIA_UNNAMED']],
+    ['CLOCK_OUT', ['CLOCK_OUT_ARIA', 'CLOCK_OUT_ARIA_UNNAMED']],
+    ['BREAK_START', ['BREAK_START_ARIA', 'BREAK_START_ARIA_UNNAMED']],
+    ['BREAK_END', ['BREAK_END_ARIA', 'BREAK_END_ARIA_UNNAMED']],
   ];
 
-  for (const [visibleKey, ariaKey] of PAIRS) {
-    it(`${ariaKey} contains the visible ${visibleKey}`, () => {
-      const visible = lookup(enUS, PREFIX + visibleKey);
-      const aria = lookup(enUS, PREFIX + ariaKey);
-      expect(visible, visibleKey).toBeTypeOf('string');
-      expect(aria, ariaKey).toBeTypeOf('string');
-      expect(aria!.toLowerCase()).toContain(visible!.toLowerCase());
-    });
+  // qps-ploc is excluded on purpose, not overlooked: the generator wraps every
+  // string in `[!! … !!]`, so a short label is never a literal substring of a
+  // longer one by construction. It is a build-time aid for spotting unlocalised
+  // copy and is never served to a user, so the rule does not bind it.
+  const SHIPPED = LOCALES.filter(([name]) => name !== 'qps-ploc');
+
+  for (const [localeName, bundle] of SHIPPED) {
+    for (const [visibleKey, ariaKeys] of PAIRS) {
+      for (const ariaKey of ariaKeys) {
+        it(`${localeName}: ${ariaKey} contains the visible ${visibleKey}`, () => {
+          const visible = lookup(bundle, PREFIX + visibleKey);
+          const aria = lookup(bundle, PREFIX + ariaKey);
+          expect(visible, `${localeName} ${visibleKey}`).toBeTypeOf('string');
+          expect(aria, `${localeName} ${ariaKey}`).toBeTypeOf('string');
+          // A speech-input user says the words on the control. If the
+          // accessible name does not contain them, the control cannot be
+          // activated that way (WCAG 2.2 SC 2.5.3). axe does not check this.
+          expect(aria!.toLowerCase()).toContain(visible!.toLowerCase());
+        });
+      }
+    }
   }
 });
 

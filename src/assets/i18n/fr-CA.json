@@ -2082,7 +2082,7 @@
       "BREAK_START_ARIA": "Commencer une pause pour {{name}}",
       "BREAK_START_ARIA_UNNAMED": "Commencer une pause pour un mécanicien sans nom",
       "BREAK_END_ARIA": "Fin de la pause de {{name}}",
-      "BREAK_END_ARIA_UNNAMED": "Terminer la pause d’un mécanicien sans nom",
+      "BREAK_END_ARIA_UNNAMED": "Fin de la pause d’un mécanicien sans nom",
       "BREAK_DRAG_HINT": "Glissez un mécanicien ici pour commencer une pause, ou de retour à la liste pour le remettre en service. Les congés proviennent des RH et ne peuvent pas être modifiés ici.",
       "BREAK_OTHER_DAY": "Le pointage et les pauses visent la journée en cours; la gestion du temps est donc en lecture seule à cette date. Les congés proviennent des RH et ne peuvent pas être modifiés ici.",
       "SEARCH_PLACEHOLDER": "Bon de travail, véhicule ou client",

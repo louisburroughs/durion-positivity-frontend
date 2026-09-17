@@ -1158,6 +1158,27 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.pickerMechanics().length).toBeGreaterThan(0);
     });
 
+    // Midnight is not a date CHANGE: nothing is picked, so nothing clears the
+    // clock map. The poll moves `todayIso` on, `selectedDate` stays where the
+    // dispatcher left it, and the board is suddenly showing a past day while
+    // still holding a live clock reading. Gating the fetch does not cover this
+    // — the map is already in hand.
+    it('stops believing the clock map when the day rolls over under an open board', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]]), ok: true }),
+      );
+      renderWith(fullDashboard);
+      expect(component.mechanics().some(mechanic => mechanic.personId === 'M1')).toBe(false);
+
+      // The poll re-reads the local day; the selected date does not move.
+      component.todayIso.set('2026-09-18');
+      fixture.detectChanges();
+
+      expect(component.isViewingToday()).toBe(false);
+      expect(component.mechanics().some(mechanic => mechanic.personId === 'M1')).toBe(true);
+      expect(component.mechanics()[0].clockState).toBe('UNKNOWN');
+    });
+
     // A 5xx or a dropped connection may have landed after pos-people committed
     // the session. Releasing the card against unchanged state would leave the
     // board contradicting what just happened.
@@ -1218,14 +1239,23 @@ describe('DispatchBoardPageComponent', () => {
       control!.focus();
       expect(document.activeElement).toBe(control);
 
-      // The write moves M1 to the bin, taking this button with it.
-      dispatchBoardServiceStub.getClockStates.mockReturnValue(
-        of({ states: new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]]), ok: true }),
-      );
+      // The readback is a Subject, not `of(...)`: a synchronous stub applies the
+      // state before the next render, which hides a focus restore scheduled too
+      // early. It is the readback that moves the mechanic to the bin and takes
+      // this button with it, one render AFTER the write resolves.
+      const readback = new Subject<{ states: Map<string, unknown>; ok: boolean }>();
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(readback);
       control!.click();
       fixture.detectChanges();
       // `afterNextRender` callbacks run in the render phase; `whenStable` never
       // settles here because the board polls on a 30s interval.
+      TestBed.inject(ApplicationRef).tick();
+      // Focus has already gone, and earlier than the move: marking the card
+      // pending disables the button, and a disabled control cannot hold focus.
+      expect(document.activeElement).toBe(document.body);
+
+      readback.next({ states: new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]]), ok: true });
+      fixture.detectChanges();
       TestBed.inject(ApplicationRef).tick();
 
       expect(document.activeElement).not.toBe(document.body);

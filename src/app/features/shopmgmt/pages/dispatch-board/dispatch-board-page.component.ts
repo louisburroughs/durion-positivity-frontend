@@ -1217,7 +1217,6 @@ export class DispatchBoardPageComponent implements OnInit {
 
     call.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.restoreClockFocus(personId);
         this.toast.set({
           id: toastId,
           key: this.toClockSuccessKey(action, name !== null),
@@ -1229,7 +1228,7 @@ export class DispatchBoardPageComponent implements OnInit {
         // writes do. The guard is held across the re-read: released at the
         // write, the card would still show the pre-write state and a second
         // press would send the action that just succeeded.
-        this.reloadClockStates(() => this.markClockPending(personId, false));
+        this.reloadClockStates(() => this.settleClockCard(personId));
       },
       error: (err: unknown) => {
         this.toast.set({
@@ -1251,9 +1250,11 @@ export class DispatchBoardPageComponent implements OnInit {
         // re-read too, and only a failure that cannot have written — a 403, an
         // unknown person, a rejected request — releases on the spot.
         if (this.isKnownNoWrite(err)) {
-          this.markClockPending(personId, false);
+          // The mechanic has not moved, but focus still went: the pending guard
+          // disables the button, and a disabled control cannot hold focus.
+          this.settleClockCard(personId);
         } else {
-          this.reloadClockStates(() => this.markClockPending(personId, false));
+          this.reloadClockStates(() => this.settleClockCard(personId));
         }
       },
     });
@@ -1274,6 +1275,25 @@ export class DispatchBoardPageComponent implements OnInit {
    * Only reclaims focus that was actually dropped: if the dispatcher has moved
    * on and something else holds it, that is theirs to keep.
    */
+  /**
+   * Everything a clock card is owed once its readback has settled: the guard
+   * released, and keyboard focus put back if the card moved rails.
+   *
+   * Both belong to the readback rather than to the write. The write's own
+   * response changes nothing on screen — it is the re-read that moves the
+   * mechanic — so focus scheduled from the write would be checked against a
+   * render that still holds the focused button, find it alive, and stand down
+   * before the button is ever destroyed.
+   *
+   * Focus is lost earlier than the move, and on every write: marking the card
+   * pending disables the button, and a disabled control cannot hold focus. So
+   * this runs even when the mechanic stays exactly where they are.
+   */
+  private settleClockCard(personId: string): void {
+    this.markClockPending(personId, false);
+    this.restoreClockFocus(personId);
+  }
+
   private restoreClockFocus(personId: string): void {
     const root = this.host.nativeElement as HTMLElement;
     afterNextRender(
@@ -2126,7 +2146,11 @@ export class DispatchBoardPageComponent implements OnInit {
     // Same reconciliation the row uses: reading only the summary leaves this
     // chip blank while the row names a bay, and the two surfaces disagree.
     const bayId = workorder ? this.toRowBayId(workorder) : null;
-    const clock = this.clockStates().get(mechanic.personId);
+    // Only today's board reads the clock. Gating the fetch does not cover a
+    // board left open across local midnight: the poll moves `todayIso` on, the
+    // selected date does not, and the map already in hand would then label a
+    // now-historical day with a live reading.
+    const clock = this.isViewingToday() ? this.clockStates().get(mechanic.personId) : undefined;
 
     return {
       personId: mechanic.personId,

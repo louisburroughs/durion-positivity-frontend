@@ -422,39 +422,5 @@ describe('DispatchBoardPageComponent accessibility', () => {
     expect(region?.getAttribute('aria-live')).toBe('polite');
   });
 
-  // WCAG 2.2 SC 2.5.3 (Label in Name): a speech-input user says the visible
-  // words. If the accessible name does not contain them, "click End break"
-  // activates nothing. axe does not check this rule.
-  it('contains each clock control\u2019s visible label in its accessible name', () => {
-    const translate = TestBed.inject(TranslateService);
-    // Mirrors SHOPMGMT.DISPATCH_BOARD in src/assets/i18n/en-US.json.
-    translate.setTranslation(
-      'en',
-      {
-        SHOPMGMT: {
-          DISPATCH_BOARD: {
-            CLOCK_IN: 'In',
-            CLOCK_OUT: 'Out',
-            BREAK_START: 'Break',
-            BREAK_END: 'End break',
-            CLOCK_IN_ARIA: 'Clock {{name}} in',
-            CLOCK_OUT_ARIA: 'Clock {{name}} out',
-            BREAK_START_ARIA: 'Start a break for {{name}}',
-            BREAK_END_ARIA: 'End break for {{name}}',
-          },
-        },
-      },
-      true,
-    );
-    fixture.detectChanges();
-
-    const controls: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.clock-btn'));
-    expect(controls.length).toBeGreaterThan(0);
-    for (const control of controls) {
-      const label = (control.getAttribute('aria-label') ?? '').toLowerCase();
-      const visible = (control.textContent ?? '').trim().toLowerCase();
-      expect(label).toContain(visible);
-    }
-  });
 
 });
