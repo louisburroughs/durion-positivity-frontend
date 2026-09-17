@@ -150,13 +150,26 @@ describe('DispatchBoardPageComponent accessibility', () => {
     expect(results.violations.map(violation => violation.id)).toEqual([]);
   });
 
-  it('gives the picker a dialog role and an accessible name', () => {
+  // A native <dialog> promoted by appModalDialog: the browser supplies the
+  // implicit dialog role, aria-modal, the top layer and — the part a
+  // hand-rolled scrim cannot provide — a real focus trap.
+  it('renders the picker as a native modal dialog with an accessible name', () => {
     component.openPicker('BAY', 'wo-to-assign');
     fixture.detectChanges();
 
-    const dialog: HTMLElement | null = fixture.nativeElement.querySelector('[role="dialog"]');
+    const dialog = fixture.nativeElement.querySelector('dialog.picker') as HTMLDialogElement | null;
     expect(dialog).toBeTruthy();
     expect(dialog?.getAttribute('aria-label')).toContain('SHOPMGMT.DISPATCH_BOARD.PICK_BAY_FOR');
+  });
+
+  it('opens the picker in the top layer so focus cannot reach the board behind it', () => {
+    component.openPicker('MECHANIC', 'wo-to-assign');
+    fixture.detectChanges();
+
+    const dialog = fixture.nativeElement.querySelector('dialog.picker') as HTMLDialogElement;
+    expect(dialog.open).toBe(true);
+    // showModal() — not show() — is what traps focus and renders the backdrop.
+    expect(dialog.matches(':modal')).toBe(true);
   });
 
   // The design assigns by dragging. Dragging alone is unusable from a keyboard,
@@ -228,13 +241,15 @@ describe('DispatchBoardPageComponent accessibility', () => {
   it('closes the picker on Escape', () => {
     component.openPicker('MECHANIC', 'wo-to-assign');
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeTruthy();
+    const dialog = fixture.nativeElement.querySelector('dialog.picker') as HTMLDialogElement;
+    expect(dialog).toBeTruthy();
 
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    // Esc on a native modal fires `cancel`, which the directive forwards.
+    dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
     fixture.detectChanges();
 
     expect(component.picker()).toBeNull();
-    expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('dialog.picker')).toBeFalsy();
   });
 
   it('announces a completed assignment through a live region', () => {

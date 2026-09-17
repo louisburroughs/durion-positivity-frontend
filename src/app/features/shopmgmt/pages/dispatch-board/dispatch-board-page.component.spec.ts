@@ -753,4 +753,237 @@ describe('DispatchBoardPageComponent', () => {
       expect(fixture.nativeElement.querySelectorAll('.workorder-row').length).toBe(4);
     });
   });
+  // -------------------------------------------------------------------------
+  // Regressions from PR review
+  // -------------------------------------------------------------------------
+  describe('stale response handling', () => {
+    // refresh(), the 30s poll and the post-mutation reload are independent
+    // subscriptions; without sequencing, a slow earlier read lands last and
+    // overwrites the newer board.
+    it('ignores a dashboard response superseded by a newer read', () => {
+      const slow = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(slow);
+      fixture.detectChanges();
+
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(fullDashboard));
+      component.refresh();
+      expect(component.allRows()).toHaveLength(4);
+
+      slow.next({ ...emptyDashboard, workorders: [{ workorderId: 'stale', status: 'APPROVED' }] });
+
+      expect(component.allRows().map(row => row.workorderId)).not.toContain('stale');
+      expect(component.allRows()).toHaveLength(4);
+    });
+
+    it('ignores an error from a read a newer one has already superseded', () => {
+      const slow = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(slow);
+      fixture.detectChanges();
+
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(fullDashboard));
+      component.refresh();
+
+      slow.error({ status: 500 });
+
+      expect(component.state()).toBe('ready');
+      expect(component.isStale()).toBe(false);
+    });
+
+    it('drops enrichment that arrives after the location changed', () => {
+      const slowSkills = new Subject<ReadonlyMap<string, readonly string[]>>();
+      dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(slowSkills);
+      renderWith(fullDashboard);
+
+      component.selectedLocationId.set('LOC-2');
+      slowSkills.next(new Map([['M1', ['STALE']]]));
+      slowSkills.complete();
+
+      expect(component.mechanics().find(m => m.personId === 'M1')?.skillCodes).toEqual([]);
+    });
+  });
+
+  describe('closed workorders', () => {
+    const withClosed: DashboardResponse = {
+      ...fullDashboard,
+      workorders: [
+        ...fullDashboard.workorders,
+        {
+          workorderId: 'wo-closed',
+          workorderNumber: 'WO-24100',
+          status: 'COMPLETED',
+          assignedMechanicId: 'M1',
+        },
+      ],
+    };
+
+    // Every dispatch write on a closed workorder answers 409 WORKORDER_CLOSED,
+    // so the click path must refuse it exactly as the drag path does.
+    it('refuses a mechanic and a bay on a closed workorder', () => {
+      renderWith(withClosed);
+
+      const closed = component.allRows().find(row => row.workorderId === 'wo-closed')!;
+      expect(closed.closed).toBe(true);
+      expect(component.canTakeMechanic(closed)).toBe(false);
+      expect(component.canTakeBay(closed)).toBe(false);
+    });
+
+    it('disables the clear control on a closed workorder', () => {
+      renderWith(withClosed);
+
+      const clear: HTMLButtonElement | null = rowFor('wo-closed').querySelector('button.clear');
+      expect(clear?.disabled).toBe(true);
+    });
+
+    it('refuses a drop onto a closed workorder', () => {
+      renderWith(withClosed);
+      component.onDragStart('BAY', 'B4', new DragEvent('dragstart'));
+
+      const closed = component.allRows().find(row => row.workorderId === 'wo-closed')!;
+      expect(component.canDrop(closed)).toBe(false);
+    });
+  });
+
+  describe('concurrent mutations', () => {
+    // A second drop or click while the first write is in flight races it, and
+    // response order would decide which assignment survives.
+    it('refuses a second write on a workorder while the first is pending', () => {
+      const pending = new Subject<unknown>();
+      dispatchBoardServiceStub.assignMechanic.mockReturnValue(pending);
+      renderWith(fullDashboard);
+      const row = component.toAssignRows()[0];
+
+      component.assignMechanic(row, 'M2');
+      component.assignMechanic(row, 'M3');
+
+      expect(dispatchBoardServiceStub.assignMechanic).toHaveBeenCalledTimes(1);
+      expect(component.isPending(row.workorderId)).toBe(true);
+    });
+
+    it('releases the guard once the write settles', () => {
+      renderWith(fullDashboard);
+      const row = component.toAssignRows()[0];
+
+      component.assignMechanic(row, 'M2');
+
+      expect(component.isPending(row.workorderId)).toBe(false);
+    });
+
+    it('does not block a different workorder', () => {
+      const pending = new Subject<unknown>();
+      dispatchBoardServiceStub.assignMechanic.mockReturnValueOnce(pending);
+      renderWith(fullDashboard);
+
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+      component.assignMechanic(component.assignedRows()[0], 'M2');
+
+      expect(dispatchBoardServiceStub.assignMechanic).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('stale projections', () => {
+    // Completing a workorder frees its position backend-side, so a bay still
+    // linked to a closed one is stale data, not occupancy.
+    it('reads a bay linked to a closed workorder as free', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [{ workorderId: 'done', status: 'COMPLETED' }],
+        bays: [{ bayId: 'B1', bayName: 'Bay 1', available: true, status: 'ACTIVE', assignedWorkorderId: 'done' }],
+      });
+
+      expect(component.openBays().map(bay => bay.bayId)).toEqual(['B1']);
+      expect(component.stats().baysOpen).toBe(1);
+    });
+
+    it('still reads a bay held by an open workorder as occupied', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [{ workorderId: 'live', status: 'WORK_IN_PROGRESS' }],
+        bays: [{ bayId: 'B1', bayName: 'Bay 1', available: true, status: 'ACTIVE', assignedWorkorderId: 'live' }],
+      });
+
+      expect(component.openBays()).toHaveLength(0);
+    });
+
+    // A DRAFT workorder can hold a bay even though it cannot take a technician.
+    it('reads a bay held by a draft workorder as occupied', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [{ workorderId: 'draft', status: 'DRAFT' }],
+        bays: [{ bayId: 'B1', bayName: 'Bay 1', available: true, status: 'ACTIVE', assignedWorkorderId: 'draft' }],
+      });
+
+      expect(component.openBays()).toHaveLength(0);
+    });
+
+    it('never renders a raw resource id when the bay replica has not arrived', () => {
+      renderWith({
+        ...fullDashboard,
+        bays: [],
+        workorders: [
+          {
+            workorderId: 'wo-assigned',
+            workorderNumber: 'WO-24124',
+            status: 'ASSIGNED',
+            assignedMechanicId: 'M1',
+            resourceType: WorkorderSummaryResourceTypeEnum.Bay,
+            assignedResourceId: 'bay-uuid-not-replicated',
+          },
+        ],
+      });
+
+      expect(component.allRows()[0].bayName).toBeNull();
+      expect(fixture.nativeElement.textContent).not.toContain('bay-uuid-not-replicated');
+    });
+  });
+
+  describe('date-only handling (ADR-0038)', () => {
+    // `new Date('2026-09-16')` is UTC midnight, which the date pipe renders as
+    // the previous day for every UTC-N user.
+    it('parses the scheduled date at local midnight, not UTC midnight', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [{ workorderId: 'w', status: 'APPROVED', scheduledDate: '2026-09-16' }],
+      });
+
+      const scheduled = component.allRows()[0].scheduledDate!;
+      expect(scheduled.getFullYear()).toBe(2026);
+      expect(scheduled.getMonth()).toBe(8);
+      expect(scheduled.getDate()).toBe(16);
+    });
+
+    it('leaves the scheduled date null when the response omits it', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [{ workorderId: 'w', status: 'APPROVED' }],
+      });
+
+      expect(component.allRows()[0].scheduledDate).toBeNull();
+    });
+  });
+
+  describe('state machine ordering', () => {
+    // The invariant is that `state` moves before `errorKey` changes, so no
+    // observer sees a cleared error while the machine still reads 'error'.
+    it('moves state before clearing the location-required error', () => {
+      dispatchBoardServiceStub.getPrimaryLocation.mockReturnValueOnce(of({}));
+      fixture.detectChanges();
+      expect(component.state()).toBe('error');
+
+      const seen: string[] = [];
+      const originalState = component.state.set.bind(component.state);
+      const originalError = component.errorKey.set.bind(component.errorKey);
+      component.state.set = (value: never) => {
+        seen.push('state');
+        originalState(value);
+      };
+      component.errorKey.set = (value: never) => {
+        seen.push('errorKey');
+        originalError(value);
+      };
+
+      component.onLocationPicked('LOC-9');
+
+      expect(seen).toEqual(['state', 'errorKey']);
+    });
+  });
 });

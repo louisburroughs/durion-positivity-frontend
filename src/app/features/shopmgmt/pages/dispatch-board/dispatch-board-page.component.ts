@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EMPTY, catchError, forkJoin, interval, of, switchMap } from 'rxjs';
+import { EMPTY, Observable, catchError, forkJoin, interval, map, of, switchMap } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
   BayCard,
@@ -21,6 +21,7 @@ import {
 } from '../../models/dispatch-board.models';
 import { BayKinds, DispatchBoardService, TechnicianSkills } from '../../services/dispatch-board.service';
 import { LocationPickerComponent } from '../../../location/components/location-picker/location-picker.component';
+import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 type StatusFilter = 'ALL' | 'OPEN' | 'DRAFT';
 
@@ -52,13 +53,33 @@ const POLL_INTERVAL_MS = 30_000;
 const DRAFT_STATUS = 'DRAFT';
 const CLOSED_STATUSES: readonly string[] = ['COMPLETED', 'CANCELLED'];
 
+function isClosedStatus(status: string | undefined): boolean {
+  return CLOSED_STATUSES.includes(status ?? '');
+}
+
+/**
+ * `YYYY-MM-DD` through `new Date()` parses as UTC midnight, so the Angular date
+ * pipe renders the previous day for every UTC-N user. ADR-0038 requires the
+ * three-argument local constructor instead.
+ */
+function parseDateOnlyLocal(value: string | undefined): Date | null {
+  if (!value) {
+    return null;
+  }
+  const [year, month, day] = value.slice(0, 10).split('-').map(Number);
+  if (!year || !month || !day) {
+    return null;
+  }
+  return new Date(year, month - 1, day);
+}
+
 /** Sort options the design offers that no field on the response can order by. */
 const SORT_UNAVAILABLE: readonly SortKey[] = ['DUE', 'PRIORITY'];
 
 @Component({
   selector: 'app-dispatch-board-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, LocationPickerComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, LocationPickerComponent, ModalDialogDirective],
   templateUrl: './dispatch-board-page.component.html',
   styleUrl: './dispatch-board-page.component.css',
 })
@@ -90,7 +111,14 @@ export class DispatchBoardPageComponent implements OnInit {
   readonly dragging = signal<DragPayload | null>(null);
   readonly picker = signal<PickerRequest | null>(null);
   readonly toast = signal<ToastMessage | null>(null);
-  readonly pendingWorkorderId = signal<string | null>(null);
+  readonly pendingWorkorderIds = signal<ReadonlySet<string>>(new Set());
+
+  /**
+   * Monotonic read counter. `refresh()`, the 30s poll and the post-mutation
+   * reload are independent subscriptions, so without this an older response
+   * that lands late overwrites a newer board.
+   */
+  private readSeq = 0;
 
   readonly sortUnavailable = SORT_UNAVAILABLE;
 
@@ -111,6 +139,14 @@ export class DispatchBoardPageComponent implements OnInit {
       names.set(bay.bayId, bay.bayName ?? bay.bayId);
     }
     return names;
+  });
+
+  private readonly workordersById = computed(() => {
+    const byId = new Map<string, WorkorderSummary>();
+    for (const workorder of this.dashboard()?.workorders ?? []) {
+      byId.set(workorder.workorderId, workorder);
+    }
+    return byId;
   });
 
   private readonly mechanicsById = computed(() => {
@@ -169,7 +205,7 @@ export class DispatchBoardPageComponent implements OnInit {
     (this.dashboard()?.bays ?? []).map(bay => this.toBayCard(bay)),
   );
 
-  readonly openBays = computed(() => this.allBays().filter(bay => bay.available && !bay.assignedWorkorderId));
+  readonly openBays = computed(() => this.allBays().filter(bay => bay.free));
 
   readonly stats = computed<BoardStats>(() => {
     const rows = this.allRows();
@@ -184,7 +220,7 @@ export class DispatchBoardPageComponent implements OnInit {
       openCapacityHours: null,
       onDuty: this.mechanics().length,
       out: this.offDutyMechanics().length,
-      baysOpen: bays.filter(bay => bay.available && !bay.assignedWorkorderId).length,
+      baysOpen: bays.filter(bay => bay.free).length,
       baysTotal: bays.length,
       parked: rows.filter(row => row.lane === 'HELD').length,
       dueSoon: null,
@@ -222,26 +258,31 @@ export class DispatchBoardPageComponent implements OnInit {
     this.state.set('loading');
     this.errorKey.set(null);
 
+    const seq = ++this.readSeq;
     this.dispatchBoardService
       .getDashboard(locationId, this.selectedDate())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: response => {
-          this.applySuccess(response);
+          if (!this.applySuccess(response, seq)) {
+            return;
+          }
           this.loadEnrichment(locationId);
           if (!this.pollingStarted) {
             this.startPolling();
           }
         },
-        error: (err: unknown) => this.applyError(err),
+        error: (err: unknown) => this.applyError(err, seq),
       });
   }
 
   onLocationPicked(id: string): void {
     this.selectedLocationId.set(id);
     if (this.errorKey() === 'SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED') {
-      this.errorKey.set(null);
+      // State moves before the error clears, so no observer sees a cleared
+      // error while the machine still reads 'error'.
       this.state.set(this.hasCachedData() ? 'ready' : 'idle');
+      this.errorKey.set(null);
     }
   }
 
@@ -284,11 +325,25 @@ export class DispatchBoardPageComponent implements OnInit {
     if (!payload) {
       return false;
     }
-    if (payload.kind === 'MECHANIC') {
-      // DRAFT cannot take a technician at all — the backend answers 400.
-      return row.status !== DRAFT_STATUS && !CLOSED_STATUSES.includes(row.status);
-    }
-    return !CLOSED_STATUSES.includes(row.status);
+    return payload.kind === 'MECHANIC' ? this.canTakeMechanic(row) : this.canTakeBay(row);
+  }
+
+  /**
+   * A closed workorder refuses every dispatch write with 409 WORKORDER_CLOSED,
+   * and a DRAFT one refuses a technician with 400. The click path has to apply
+   * the same two guards the drag path does, or the buttons issue requests the
+   * backend is guaranteed to reject.
+   */
+  canTakeMechanic(row: WorkorderRow): boolean {
+    return !row.closed && row.status !== DRAFT_STATUS && !this.isPending(row.workorderId);
+  }
+
+  canTakeBay(row: WorkorderRow): boolean {
+    return !row.closed && !this.isPending(row.workorderId);
+  }
+
+  isPending(workorderId: string): boolean {
+    return this.pendingWorkorderIds().has(workorderId);
   }
 
   onDragOver(row: WorkorderRow, event: DragEvent): void {
@@ -327,17 +382,6 @@ export class DispatchBoardPageComponent implements OnInit {
     this.picker.set(null);
   }
 
-  /**
-   * Escape closes the picker from anywhere. The dialog's own children are the
-   * only things focused while it is open, but the scrim is not focusable, so a
-   * document-level listener is what makes the key work at all.
-   */
-  @HostListener('document:keydown.escape')
-  onEscape(): void {
-    if (this.picker()) {
-      this.closePicker();
-    }
-  }
 
   pick(id: string): void {
     const request = this.picker();
@@ -362,7 +406,7 @@ export class DispatchBoardPageComponent implements OnInit {
     const previous = row.mechanicId;
     this.run(
       row.workorderId,
-      this.dispatchBoardService.assignMechanic(row.workorderId, mechanicId, previous),
+      () => this.dispatchBoardService.assignMechanic(row.workorderId, mechanicId, previous),
       {
         key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.MECHANIC_ASSIGNED',
         params: { workorder: row.number, mechanic: this.displayName(mechanic) },
@@ -374,7 +418,7 @@ export class DispatchBoardPageComponent implements OnInit {
 
   clearMechanic(row: WorkorderRow): void {
     const previous = row.mechanicId;
-    this.run(row.workorderId, this.dispatchBoardService.releaseMechanic(row.workorderId), {
+    this.run(row.workorderId, () => this.dispatchBoardService.releaseMechanic(row.workorderId), {
       key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.MECHANIC_CLEARED',
       params: { workorder: row.number },
       tone: 'INFO',
@@ -384,7 +428,7 @@ export class DispatchBoardPageComponent implements OnInit {
 
   assignBay(row: WorkorderRow, bayId: string): void {
     const previous = row.bayId;
-    this.run(row.workorderId, this.dispatchBoardService.assignBay(row.workorderId, bayId), {
+    this.run(row.workorderId, () => this.dispatchBoardService.assignBay(row.workorderId, bayId), {
       key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.BAY_ASSIGNED',
       params: { workorder: row.number, bay: this.bayNamesById().get(bayId) ?? bayId },
       tone: 'INFO',
@@ -394,7 +438,7 @@ export class DispatchBoardPageComponent implements OnInit {
 
   clearBay(row: WorkorderRow): void {
     const previous = row.bayId;
-    this.run(row.workorderId, this.dispatchBoardService.releaseBay(row.workorderId), {
+    this.run(row.workorderId, () => this.dispatchBoardService.releaseBay(row.workorderId), {
       key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.BAY_CLEARED',
       params: { workorder: row.number },
       tone: 'INFO',
@@ -444,25 +488,43 @@ export class DispatchBoardPageComponent implements OnInit {
    * the board rather than predicting the new status — the backend decides whether
    * a workorder becomes ASSIGNED, and the contract says to read it back.
    */
-  private run(workorderId: string, call: ReturnType<DispatchBoardService['releaseBay']>, success: ToastMessage): void {
-    this.pendingWorkorderId.set(workorderId);
+  private run(workorderId: string, call: () => Observable<unknown>, success: ToastMessage): void {
+    // One write per workorder at a time. Without this, a second drop or click
+    // while the first is in flight races it, and which assignment survives —
+    // and what the undo step points at — is decided by response order.
+    if (this.isPending(workorderId)) {
+      return;
+    }
+    this.markPending(workorderId, true);
 
-    call.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.pendingWorkorderId.set(null);
-        this.toast.set(success);
-        this.reloadBoard();
-      },
-      error: (err: unknown) => {
-        this.pendingWorkorderId.set(null);
-        this.toast.set({
-          key: this.toMutationErrorKey(err),
-          params: { workorder: success.params['workorder'] ?? '' },
-          tone: 'ERROR',
-          undo: null,
-        });
-      },
-    });
+    call()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.markPending(workorderId, false);
+          this.toast.set(success);
+          this.reloadBoard();
+        },
+        error: (err: unknown) => {
+          this.markPending(workorderId, false);
+          this.toast.set({
+            key: this.toMutationErrorKey(err),
+            params: { workorder: success.params['workorder'] ?? '' },
+            tone: 'ERROR',
+            undo: null,
+          });
+        },
+      });
+  }
+
+  private markPending(workorderId: string, pending: boolean): void {
+    const next = new Set(this.pendingWorkorderIds());
+    if (pending) {
+      next.add(workorderId);
+    } else {
+      next.delete(workorderId);
+    }
+    this.pendingWorkorderIds.set(next);
   }
 
   /** Re-read after a mutation without dropping the board into its loading state. */
@@ -472,12 +534,13 @@ export class DispatchBoardPageComponent implements OnInit {
       return;
     }
 
+    const seq = ++this.readSeq;
     this.dispatchBoardService
       .getDashboard(locationId, this.selectedDate())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: response => this.applySuccess(response),
-        error: (err: unknown) => this.applyError(err),
+        next: response => this.applySuccess(response, seq),
+        error: (err: unknown) => this.applyError(err, seq),
       });
   }
 
@@ -490,17 +553,21 @@ export class DispatchBoardPageComponent implements OnInit {
     interval(POLL_INTERVAL_MS)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        switchMap(() =>
-          this.dispatchBoardService.getDashboard(this.selectedLocationId(), this.selectedDate()).pipe(
-            catchError((err: unknown) => {
-              this.applyError(err);
-              return EMPTY;
-            }),
-          ),
-        ),
+        switchMap(() => {
+          const seq = ++this.readSeq;
+          return this.dispatchBoardService
+            .getDashboard(this.selectedLocationId(), this.selectedDate())
+            .pipe(
+              map(response => ({ response, seq })),
+              catchError((err: unknown) => {
+                this.applyError(err, seq);
+                return EMPTY;
+              }),
+            );
+        }),
       )
       .subscribe({
-        next: response => this.applySuccess(response),
+        next: ({ response, seq }) => this.applySuccess(response, seq),
       });
   }
 
@@ -519,7 +586,9 @@ export class DispatchBoardPageComponent implements OnInit {
         catchError(() => of(null)),
       )
       .subscribe(result => {
-        if (!result) {
+        // A location switch while these were in flight must not let the old
+        // shop's bay types and credentials paint the new board.
+        if (!result || this.selectedLocationId().trim() !== locationId) {
           return;
         }
         this.bayKinds.set(result.bayKinds);
@@ -551,16 +620,24 @@ export class DispatchBoardPageComponent implements OnInit {
       });
   }
 
-  private applySuccess(response: DashboardResponse): void {
+  /** Returns false when a newer read has already superseded this one. */
+  private applySuccess(response: DashboardResponse, seq: number): boolean {
+    if (seq !== this.readSeq) {
+      return false;
+    }
     this.dashboard.set(response);
     this.lastRefreshed.set(new Date());
     this.dataQualityWarning.set(Boolean(response.dataQualityWarning));
     this.isStale.set(false);
     this.state.set('ready');
     this.errorKey.set(null);
+    return true;
   }
 
-  private applyError(err: unknown): void {
+  private applyError(err: unknown, seq: number): void {
+    if (seq !== this.readSeq) {
+      return;
+    }
     if (this.hasCachedData()) {
       // A refresh that fails over good data leaves the board up and marks it stale.
       this.isStale.set(true);
@@ -597,13 +674,16 @@ export class DispatchBoardPageComponent implements OnInit {
       actualHours: workorder.actualLaborHours ?? null,
       serviceCount: workorder.serviceCount ?? null,
       completedServiceCount: workorder.completedServiceCount ?? null,
-      scheduledDate: workorder.scheduledDate ?? null,
+      scheduledDate: parseDateOnlyLocal(workorder.scheduledDate),
       mechanicId: workorder.assignedMechanicId ?? null,
       mechanicName: name,
       mechanicInitials: name ? this.toInitials(mechanic?.firstName, mechanic?.lastName) : null,
       bayId,
-      bayName: bayId ? (this.bayNamesById().get(bayId) ?? bayId) : null,
+      // Null, never the raw id: an unresolved replica renders as the
+      // not-available placeholder rather than leaking a UUID at the user.
+      bayName: bayId ? (this.bayNamesById().get(bayId) ?? null) : null,
       parked,
+      closed: isClosedStatus(workorder.status),
       dueAt: null,
       priority: null,
       requiredSkills: null,
@@ -647,7 +727,7 @@ export class DispatchBoardPageComponent implements OnInit {
       availability: this.toAvailability(mechanic),
       skillCodes: this.technicianSkills().get(mechanic.personId) ?? [],
       assignedWorkorderId: mechanic.assignedWorkorderId,
-      whereLabel: bayId ? (this.bayNamesById().get(bayId) ?? bayId) : null,
+      whereLabel: bayId ? (this.bayNamesById().get(bayId) ?? null) : null,
       breakExpectedReturn: mechanic.breakExpectedReturn ?? null,
       freeHours: null,
     };
@@ -686,7 +766,25 @@ export class DispatchBoardPageComponent implements OnInit {
       kind: this.bayKinds().get(bay.bayId) ?? null,
       available: bay.available,
       assignedWorkorderId: bay.assignedWorkorderId,
+      free: this.isBayFree(bay),
     };
+  }
+
+  /**
+   * A bay still linked to a closed workorder reads as idle. Completing or
+   * cancelling a workorder frees its position backend-side, so a lingering
+   * link is a stale projection; treating it as occupied under-reports free
+   * bays. Same rule the shop dashboard projection applies.
+   */
+  private isBayFree(bay: BayStatus): boolean {
+    if (!bay.available) {
+      return false;
+    }
+    if (!bay.assignedWorkorderId) {
+      return true;
+    }
+    const holder = this.workordersById().get(bay.assignedWorkorderId);
+    return !holder || isClosedStatus(holder.status);
   }
 
   private sorted(rows: readonly WorkorderRow[]): WorkorderRow[] {
@@ -699,7 +797,7 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   private isOpenStatus(status: string): boolean {
-    return status !== DRAFT_STATUS && !CLOSED_STATUSES.includes(status);
+    return status !== DRAFT_STATUS && !isClosedStatus(status);
   }
 
   private displayName(mechanic: MechanicStatus | undefined): string {

@@ -261,8 +261,7 @@
   <!-- ------------------------------------------------------------- picker -->
   @if (picker(); as request) {
     @if (pickerRow(); as row) {
-      <div class="scrim" (click)="closePicker()" (keydown.escape)="closePicker()" tabindex="-1" aria-hidden="true"></div>
-      <div class="picker" role="dialog" aria-modal="true"
+      <dialog class="picker" appModalDialog (modalCancel)="closePicker()"
         [attr.aria-label]="(request.kind === 'MECHANIC'
           ? 'SHOPMGMT.DISPATCH_BOARD.PICK_MECHANIC_FOR'
           : 'SHOPMGMT.DISPATCH_BOARD.PICK_BAY_FOR') | translate: { workorder: row.number }">
@@ -302,7 +301,7 @@
         <button class="btn-text picker-close" type="button" (click)="closePicker()">
           {{ 'SHOPMGMT.DISPATCH_BOARD.CANCEL' | translate }}
         </button>
-      </div>
+      </dialog>
     }
   }
 
@@ -323,7 +322,7 @@
 <ng-template #workorderRow let-row>
   <article class="workorder-row row" [attr.data-tone]="row.statusTone" [attr.data-wo]="row.workorderId"
     [class.lane-assigned]="row.lane === 'ASSIGNED'" [class.lane-held]="row.lane === 'HELD'"
-    [class.droppable]="canDrop(row)" [class.busy]="pendingWorkorderId() === row.workorderId"
+    [class.droppable]="canDrop(row)" [class.busy]="isPending(row.workorderId)"
     (dragover)="onDragOver(row, $event)" (drop)="onDrop(row, $event)"
     [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.WORKORDER_ARIA' | translate: { workorder: row.number }">
 
@@ -367,13 +366,15 @@
       <span class="slot filled">
         <span class="si" aria-hidden="true">{{ row.mechanicInitials }}</span>
         <span class="sl">{{ row.mechanicName }}</span>
-        <button type="button" class="clear" (click)="clearMechanic(row)"
+        <button type="button" class="clear" (click)="clearMechanic(row)" [disabled]="row.closed || isPending(row.workorderId)"
           [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.CLEAR_MECHANIC_ARIA' | translate: { workorder: row.number }">&times;</button>
       </span>
     } @else {
       <button type="button" class="slot" (click)="openPicker('MECHANIC', row.workorderId)"
-        [disabled]="row.status === 'DRAFT'"
-        [attr.title]="row.status === 'DRAFT' ? ('SHOPMGMT.DISPATCH_BOARD.DRAFT_NO_MECHANIC' | translate) : null">
+        [disabled]="!canTakeMechanic(row)"
+        [attr.title]="row.closed
+          ? ('SHOPMGMT.DISPATCH_BOARD.CLOSED_NO_CHANGE' | translate)
+          : (row.status === 'DRAFT' ? ('SHOPMGMT.DISPATCH_BOARD.DRAFT_NO_MECHANIC' | translate) : null)">
         {{ 'SHOPMGMT.DISPATCH_BOARD.ADD_MECHANIC' | translate }}
       </button>
     }
@@ -381,16 +382,21 @@
     <!-- bay slot -->
     @if (row.bayId) {
       <span class="slot filled">
-        <span class="sl">{{ row.bayName }}</span>
-        <button type="button" class="clear" (click)="clearBay(row)"
+        @if (row.bayName; as bayName) {
+          <span class="sl">{{ bayName }}</span>
+        } @else {
+          <span class="sl na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_NAME' | translate">&mdash;</span>
+        }
+        <button type="button" class="clear" (click)="clearBay(row)" [disabled]="row.closed || isPending(row.workorderId)"
           [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.CLEAR_BAY_ARIA' | translate: { workorder: row.number }">&times;</button>
       </span>
     } @else if (row.parked) {
-      <button type="button" class="slot held" (click)="openPicker('BAY', row.workorderId)">
+      <button type="button" class="slot held" (click)="openPicker('BAY', row.workorderId)" [disabled]="!canTakeBay(row)">
         {{ 'SHOPMGMT.DISPATCH_BOARD.PARKED' | translate }}
       </button>
     } @else {
-      <button type="button" class="slot" (click)="openPicker('BAY', row.workorderId)">
+      <button type="button" class="slot" (click)="openPicker('BAY', row.workorderId)" [disabled]="!canTakeBay(row)"
+        [attr.title]="row.closed ? ('SHOPMGMT.DISPATCH_BOARD.CLOSED_NO_CHANGE' | translate) : null">
         {{ 'SHOPMGMT.DISPATCH_BOARD.ADD_BAY' | translate }}
       </button>
     }

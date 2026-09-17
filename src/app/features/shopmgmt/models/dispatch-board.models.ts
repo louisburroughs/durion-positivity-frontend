@@ -75,6 +75,11 @@ export interface BayCard {
   readonly kind: string | null;
   readonly available: boolean;
   readonly assignedWorkorderId?: string;
+  /**
+   * Available AND not held by an open workorder. A link to a closed workorder
+   * is a stale projection, not occupancy.
+   */
+  readonly free: boolean;
 }
 
 export interface WorkorderRow {
@@ -91,7 +96,8 @@ export interface WorkorderRow {
   readonly actualHours: number | null;
   readonly serviceCount: number | null;
   readonly completedServiceCount: number | null;
-  readonly scheduledDate: string | null;
+  /** Parsed to local midnight (ADR-0038); the wire value is a date-only string. */
+  readonly scheduledDate: Date | null;
   readonly mechanicId: string | null;
   readonly mechanicName: string | null;
   readonly mechanicInitials: string | null;
@@ -99,6 +105,8 @@ export interface WorkorderRow {
   readonly bayName: string | null;
   /** True when the workorder is parked on the site's HOLD position. */
   readonly parked: boolean;
+  /** COMPLETED or CANCELLED: every dispatch write answers 409 WORKORDER_CLOSED. */
+  readonly closed: boolean;
   /** Always null: no promised time, priority or skill requirement is published. */
   readonly dueAt: null;
   readonly priority: null;

@@ -2108,7 +2108,9 @@
         "ERROR_BAY_INACTIVE": "That bay is out of service.",
         "ERROR_WORKORDER_CLOSED": "{{workorder}} is closed and cannot be changed.",
         "ERROR_GENERIC": "That change could not be saved. Try again."
-      }
+      },
+      "CLOSED_NO_CHANGE": "A closed workorder cannot be changed.",
+      "NOT_AVAILABLE_BAY_NAME": "This bay's name has not been replicated yet."
     },
     "APPOINTMENT_CREATE": {
       "TITLE": "Create Appointment",

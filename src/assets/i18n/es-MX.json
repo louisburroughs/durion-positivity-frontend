@@ -2108,7 +2108,9 @@
         "ERROR_BAY_INACTIVE": "Esa bahía está fuera de servicio.",
         "ERROR_WORKORDER_CLOSED": "{{workorder}} está cerrada y no se puede modificar.",
         "ERROR_GENERIC": "No se pudo guardar el cambio. Inténtelo de nuevo."
-      }
+      },
+      "CLOSED_NO_CHANGE": "Una orden de trabajo cerrada no se puede modificar.",
+      "NOT_AVAILABLE_BAY_NAME": "El nombre de esta bahía aún no se ha replicado."
     },
     "APPOINTMENT_CREATE": {
       "TITLE": "Crear cita",
