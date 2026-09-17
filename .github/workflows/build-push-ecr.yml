@@ -10,6 +10,7 @@ on:
       - "angular.json"
       - "tsconfig*.json"
       - "scripts/sdk/**"
+      - ".nvmrc"
       - "Dockerfile"
       - ".dockerignore"
       - ".github/workflows/build-push-ecr.yml"
