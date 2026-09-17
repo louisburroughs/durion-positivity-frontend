@@ -70,6 +70,12 @@
   /* The logo mark sits on its own white plate in BOTH themes: the plate is part of
      the mark, not a surface, so it must not follow --cardBackground. */
   --logo-plate: #ffffff;
+  /* The landing hero and CTA bands are a fixed blue-700 → blue-800 gradient in
+     BOTH themes, so text on them must be theme-independent too. A Tier-3 token
+     there is a bug: --link-color resolves to blue-700 in light mode, which is
+     the colour the gradient starts on — 1.00:1. */
+  --on-brand-band: var(--durion-blue-100);      /* 6.68:1 on blue-700, 10.49:1 on blue-800 */
+  --on-accent-fill: var(--durion-grey-900);     /* 7.86:1 on teal-400, 6.08:1 on teal-500 */
   --brand-gold: var(--durion-gold-500);
   --brand-background: var(--durion-grey-100);
   --brand-surface: #ffffff;

@@ -68,7 +68,11 @@
 
 .landing-locale-select {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  /* The header is translucent, so this edge is measured against the composite,
+     not the brand blue: white@0.60 is 4.29:1 over the hero and 3.56:1 once a
+     white feature card scrolls under it — the worst case. At 0.35 it was
+     2.20:1, under the 3:1 WCAG 1.4.11 floor for a control boundary. */
+  border: 1px solid rgba(255, 255, 255, 0.60);
   border-radius: var(--radius-sm);
   color: var(--contrastTextColor);
   font-size: 0.875rem;
@@ -90,7 +94,8 @@
 .landing-icon-btn {
   width: 36px;
   height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  /* Same 3:1 boundary alpha as .landing-locale-select above. */
+  border: 1px solid rgba(255, 255, 255, 0.60);
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--contrastTextColor);
@@ -171,7 +176,11 @@
 
 .hero-subtitle {
   font-size: clamp(1rem, 2vw, 1.25rem);
-  color: var(--link-color);
+  /* The hero band is a fixed blue-700 → blue-800 gradient in BOTH themes, so its
+     text must use a fixed colour. --link-color is theme-reactive and resolves to
+     blue-700 in light mode — the same value the gradient starts on, i.e. 1.00:1.
+     --on-brand-band: 6.68:1 on blue-700, 10.49:1 on blue-800 (ADR-0039). */
+  color: var(--on-brand-band);
   line-height: 1.7;
   max-width: 620px;
   margin: 0;
@@ -183,7 +192,9 @@
   /* teal-400/500 gives 3.66:1 non-text contrast on blue-700 hero (WCAG 1.4.11 ≥3:1) */
   /* dark text on teal-400: 7.86:1, on teal-500: 6.07:1 — both ≥4.5:1 (ADR-0039) */
   background: linear-gradient(135deg, var(--durion-teal-400), var(--durion-teal-500));
-  color: var(--currentTextColor);
+  /* Fixed teal fill in both themes, so the label is fixed too: --currentTextColor
+     resolves to #e8e9eb in dark mode — 1.96:1 on teal-400. */
+  color: var(--on-accent-fill);
   font-size: 1rem;
   font-weight: 600;
   padding: 0.875rem var(--space-8);
