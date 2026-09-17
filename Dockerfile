@@ -1,5 +1,7 @@
 # Stage 1: Build
-FROM node:22-alpine AS builder
+# Exact tag, matching .nvmrc — "22-alpine" floats across 22.22.3, the minimum
+# the Angular CLI accepts, so a rebuild could land on an image that cannot run ng.
+FROM node:22.23.2-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache git
 RUN corepack enable && corepack prepare npm@11.6.4 --activate
@@ -13,7 +15,7 @@ ARG BUILD_CONFIGURATION=production
 RUN npm run build -- --configuration ${BUILD_CONFIGURATION}
 
 # Stage 2: Runtime
-FROM node:22-alpine AS runner
+FROM node:22.23.2-alpine AS runner
 WORKDIR /app
 RUN corepack enable && corepack prepare npm@11.6.4 --activate
 COPY --from=builder --chown=node:node /app/dist ./dist
