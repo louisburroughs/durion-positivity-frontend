@@ -6,11 +6,14 @@ import { WorkorderSummaryResourceTypeEnum } from '@durion-sdk/workorder';
 import { DispatchBoardPageComponent } from './dispatch-board-page.component';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
 import type { DashboardResponse } from '../../models/dispatch-board.models';
+import { isoDateLocal } from '../../models/capacity-calendar.models';
 
 // ---------------------------------------------------------------------------
 // Fixtures — shaped after the SDK's DashboardResponse, not a local invention
 // ---------------------------------------------------------------------------
-const TODAY = new Date().toISOString().slice(0, 10);
+// The board's day is the LOCAL date: `toISOString()` is already tomorrow from
+// 17:00 Pacific onward, and an evening dispatcher would open the wrong day.
+const TODAY = isoDateLocal(new Date());
 
 const emptyDashboard: DashboardResponse = {
   date: TODAY,
@@ -89,12 +92,13 @@ describe('DispatchBoardPageComponent', () => {
     getDashboard: vi.fn().mockReturnValue(of(emptyDashboard)),
     getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: 'LOC-1' })),
     getAvailability: vi.fn().mockReturnValue(of([])),
-    getBayKinds: vi.fn().mockReturnValue(of(new Map())),
+    getBayInventory: vi.fn().mockReturnValue(of(new Map())),
     getTechnicianSkills: vi.fn().mockReturnValue(of(new Map())),
     assignMechanic: vi.fn().mockReturnValue(of({})),
     releaseMechanic: vi.fn().mockReturnValue(of({})),
     assignBay: vi.fn().mockReturnValue(of({})),
     releaseBay: vi.fn().mockReturnValue(of({})),
+    parkWorkorder: vi.fn().mockReturnValue(of({})),
   };
 
   beforeEach(async () => {
@@ -114,12 +118,13 @@ describe('DispatchBoardPageComponent', () => {
     vi.clearAllMocks();
     dispatchBoardServiceStub.getDashboard.mockReturnValue(of(emptyDashboard));
     dispatchBoardServiceStub.getPrimaryLocation.mockReturnValue(of({ locationId: 'LOC-1' }));
-    dispatchBoardServiceStub.getBayKinds.mockReturnValue(of(new Map()));
+    dispatchBoardServiceStub.getBayInventory.mockReturnValue(of(new Map()));
     dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(of(new Map()));
     dispatchBoardServiceStub.assignMechanic.mockReturnValue(of({}));
     dispatchBoardServiceStub.releaseMechanic.mockReturnValue(of({}));
     dispatchBoardServiceStub.assignBay.mockReturnValue(of({}));
     dispatchBoardServiceStub.releaseBay.mockReturnValue(of({}));
+    dispatchBoardServiceStub.parkWorkorder.mockReturnValue(of({}));
   });
 
   /** Render the board with a given payload already loaded. */
@@ -234,11 +239,20 @@ describe('DispatchBoardPageComponent', () => {
       expect(rows[0].textContent).toContain('WO-001');
     });
 
-    it('each workorder row displays the status', () => {
+    // The status is a translated label, not the raw backend enum: the locale
+    // files already carry one for every value this board can receive.
+    it('each workorder row displays the status through its translated label', () => {
       renderWith(loadedDashboard);
 
-      const rows: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.workorder-row');
-      expect(rows[0].textContent).toContain('WORK_IN_PROGRESS');
+      const chip: HTMLElement = fixture.nativeElement.querySelector('.workorder-status');
+      expect(chip.textContent?.trim()).toBe('WORKEXEC.WIP_STATUS.WORK_IN_PROGRESS');
+    });
+
+    it('falls back to the raw value for a status no locale file carries', () => {
+      renderWith({ ...emptyDashboard, workorders: [{ workorderId: 'WO-9', status: 'NEW_STATUS' }] });
+
+      const chip: HTMLElement = fixture.nativeElement.querySelector('.workorder-status');
+      expect(chip.textContent?.trim()).toBe('NEW_STATUS');
     });
 
     it('prefers the human-readable workorder number over the id', () => {
@@ -278,14 +292,17 @@ describe('DispatchBoardPageComponent', () => {
       expect(fixture.nativeElement.querySelector('.state-panel')).toBeTruthy();
     });
 
-    it('sets the error signal and moves the state machine to error', () => {
+    // `errorKey` is rendered through `| translate`, and ngx-translate passes an
+    // unknown key through verbatim: a server message would reach a French user
+    // in English, with every dot in it read as a nested key path.
+    it('sets the error signal to a translation key, never to the server message', () => {
       dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(
         throwError(() => ({ error: { message: 'Server error' } })),
       );
       fixture.detectChanges();
 
       expect(component.state()).toBe('error');
-      expect(component.error()).toBe('Server error');
+      expect(component.error()).toBe('SHOPMGMT.DISPATCH_BOARD.ERROR_LOAD');
     });
 
     it('clicking the retry button triggers a new getDashboard call', () => {
@@ -485,7 +502,9 @@ describe('DispatchBoardPageComponent', () => {
     });
 
     it('labels an open bay with the bay type from the location domain', () => {
-      dispatchBoardServiceStub.getBayKinds.mockReturnValue(of(new Map([['B4', 'ALIGNMENT']])));
+      dispatchBoardServiceStub.getBayInventory.mockReturnValue(
+        of(new Map([['B4', { bayId: 'B4', name: 'Bay 4', kind: 'ALIGNMENT', outOfService: false }]])),
+      );
       renderWith(fullDashboard);
 
       expect(component.openBays()[0].kind).toBe('ALIGNMENT');
@@ -659,13 +678,15 @@ describe('DispatchBoardPageComponent', () => {
       expect(dispatchBoardServiceStub.releaseMechanic).toHaveBeenCalledWith('wo-to-assign');
     });
 
+    // The incumbent undo passes is the one its own mutation left behind, not the
+    // one the row still shows: the post-mutation re-read has not landed yet.
     it('puts the previous mechanic back after a reassignment', () => {
       renderWith(fullDashboard);
       component.assignMechanic(component.assignedRows()[0], 'M2');
 
       component.undo();
 
-      expect(dispatchBoardServiceStub.assignMechanic).toHaveBeenLastCalledWith('wo-assigned', 'M1', 'M1');
+      expect(dispatchBoardServiceStub.assignMechanic).toHaveBeenLastCalledWith('wo-assigned', 'M1', 'M2');
     });
   });
 
@@ -745,7 +766,7 @@ describe('DispatchBoardPageComponent', () => {
   // -------------------------------------------------------------------------
   describe('enrichment failures', () => {
     it('still renders the board when bay types and technician skills both fail', () => {
-      dispatchBoardServiceStub.getBayKinds.mockReturnValue(throwError(() => ({ status: 503 })));
+      dispatchBoardServiceStub.getBayInventory.mockReturnValue(throwError(() => ({ status: 503 })));
       dispatchBoardServiceStub.getTechnicianSkills.mockReturnValue(throwError(() => ({ status: 503 })));
       renderWith(fullDashboard);
 
@@ -958,6 +979,334 @@ describe('DispatchBoardPageComponent', () => {
       });
 
       expect(component.allRows()[0].scheduledDate).toBeNull();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Reassignment without a release
+  // -------------------------------------------------------------------------
+  describe('changing a filled slot', () => {
+    // Clear-then-add is not the same write: release + assign walks the status
+    // ASSIGNED -> APPROVED -> ASSIGNED and writes two extra transitions and two
+    // extra status events, where reassignTechnician keeps it ASSIGNED.
+    it('opens the mechanic picker from a filled slot and routes it to a reassign', () => {
+      renderWith(fullDashboard);
+
+      const change: HTMLButtonElement | null = rowFor('wo-assigned').querySelector('.slot.filled button.change');
+      expect(change).toBeTruthy();
+      change!.click();
+      expect(component.picker()).toEqual({ kind: 'MECHANIC', workorderId: 'wo-assigned' });
+
+      component.pick('M2');
+
+      expect(dispatchBoardServiceStub.assignMechanic).toHaveBeenCalledWith('wo-assigned', 'M2', 'M1');
+      expect(dispatchBoardServiceStub.releaseMechanic).not.toHaveBeenCalled();
+    });
+
+    it('opens the bay picker from a filled bay slot, so a move is one write', () => {
+      renderWith(fullDashboard);
+
+      const controls: HTMLButtonElement[] = Array.from(
+        rowFor('wo-assigned').querySelectorAll('.slot.filled button.change'),
+      );
+      expect(controls).toHaveLength(2);
+      controls[1].click();
+      expect(component.picker()).toEqual({ kind: 'BAY', workorderId: 'wo-assigned' });
+
+      component.pick('B4');
+
+      expect(dispatchBoardServiceStub.assignBay).toHaveBeenCalledWith('wo-assigned', 'B4');
+      expect(dispatchBoardServiceStub.releaseBay).not.toHaveBeenCalled();
+    });
+
+    it('keeps the change control inert where the guards refuse the write', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [
+          {
+            workorderId: 'wo-closed',
+            workorderNumber: 'WO-24100',
+            status: 'COMPLETED',
+            assignedMechanicId: 'M1',
+          },
+        ],
+      });
+
+      const change: HTMLButtonElement | null = rowFor('wo-closed').querySelector('.slot.filled button.change');
+      expect(change?.disabled).toBe(true);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Statuses the technician endpoints accept
+  // -------------------------------------------------------------------------
+  describe('technician assignment window', () => {
+    const readyForPickup: DashboardResponse = {
+      ...fullDashboard,
+      workorders: [{ workorderId: 'wo-ready', workorderNumber: 'WO-24140', status: 'READY_FOR_PICKUP' }],
+    };
+
+    // The contract allows APPROVED, ASSIGNED and WORK_IN_PROGRESS; "not draft,
+    // not closed" also lets READY_FOR_PICKUP through, and that answers 400.
+    it('refuses a mechanic on a status outside the allow-list', () => {
+      renderWith(readyForPickup);
+
+      const row = component.allRows()[0];
+      expect(component.canTakeMechanic(row)).toBe(false);
+      expect(component.mechanicBlockedKey(row)).toBe('SHOPMGMT.DISPATCH_BOARD.STATUS_NO_MECHANIC');
+    });
+
+    it('refuses a mechanic drop on a status outside the allow-list', () => {
+      renderWith(readyForPickup);
+      component.onDragStart('MECHANIC', 'M2', new DragEvent('dragstart'));
+
+      expect(component.canDrop(component.allRows()[0])).toBe(false);
+    });
+
+    // Position placement keeps the wider rule: any open workorder, DRAFT too.
+    it('still takes a bay on the same workorder', () => {
+      renderWith(readyForPickup);
+
+      expect(component.canTakeBay(component.allRows()[0])).toBe(true);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Refusals
+  // -------------------------------------------------------------------------
+  describe('refused mutations', () => {
+    const refusals: readonly [string, string][] = [
+      ['TECHNICIAN_NOT_ASSIGNED', 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_MECHANIC_NOT_ASSIGNED'],
+      ['TECHNICIAN_NOT_FOUND', 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_MECHANIC_NOT_FOUND'],
+      ['SERVICE_POSITION_INVALID', 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BAY_INVALID'],
+    ];
+
+    for (const [code, key] of refusals) {
+      it(`maps ${code} onto its own message`, () => {
+        renderWith(fullDashboard);
+        dispatchBoardServiceStub.assignMechanic.mockReturnValueOnce(
+          throwError(() => ({ status: 409, error: { code } })),
+        );
+
+        component.assignMechanic(component.assignedRows()[0], 'M2');
+
+        expect(component.toast()?.key).toBe(key);
+      });
+    }
+
+    // A 409 is the backend saying the board's copy is wrong. Without a re-read
+    // the row keeps showing what was contradicted, and every retry repeats the
+    // same wrong call.
+    it('re-reads the board after a refusal', () => {
+      renderWith(fullDashboard);
+      const before = dispatchBoardServiceStub.getDashboard.mock.calls.length;
+      dispatchBoardServiceStub.assignMechanic.mockReturnValueOnce(
+        throwError(() => ({ status: 409, error: { code: 'TECHNICIAN_NOT_ASSIGNED' } })),
+      );
+
+      component.assignMechanic(component.assignedRows()[0], 'M2');
+
+      expect(dispatchBoardServiceStub.getDashboard.mock.calls.length).toBe(before + 1);
+    });
+
+    it('does not re-read after a failure that says nothing about the board', () => {
+      renderWith(fullDashboard);
+      const before = dispatchBoardServiceStub.getDashboard.mock.calls.length;
+      dispatchBoardServiceStub.assignMechanic.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+
+      component.assignMechanic(component.assignedRows()[0], 'M2');
+
+      expect(dispatchBoardServiceStub.getDashboard.mock.calls.length).toBe(before);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Undo puts back what was there, not something near it
+  // -------------------------------------------------------------------------
+  describe('undo fidelity', () => {
+    // Releasing already took the incumbent off, so undo must assign, not
+    // reassign — the row has not been re-read yet and still names the old one.
+    it('assigns rather than reassigns when undoing a release', () => {
+      renderWith(fullDashboard);
+      component.clearMechanic(component.assignedRows()[0]);
+
+      component.undo();
+
+      expect(dispatchBoardServiceStub.assignMechanic).toHaveBeenCalledWith('wo-assigned', 'M1', null);
+    });
+
+    // A parked workorder stands in the site's lot; releasing it would leave it
+    // deliberately unplaced, which is a third state, not the original.
+    it('parks a workorder again when undoing a bay placement that replaced a HOLD', () => {
+      renderWith(fullDashboard);
+      component.assignBay(component.heldRows()[0], 'B4');
+
+      component.undo();
+
+      expect(dispatchBoardServiceStub.parkWorkorder).toHaveBeenCalledWith('wo-parked');
+      expect(dispatchBoardServiceStub.releaseBay).not.toHaveBeenCalled();
+    });
+
+    it('still releases the position when there was none to put back', () => {
+      renderWith(fullDashboard);
+      component.assignBay(component.toAssignRows()[0], 'B4');
+
+      component.undo();
+
+      expect(dispatchBoardServiceStub.releaseBay).toHaveBeenCalledWith('wo-to-assign');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // The controls are the query
+  // -------------------------------------------------------------------------
+  describe('reactive loading', () => {
+    it('loads exactly once on the first render', () => {
+      fixture.detectChanges();
+
+      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenCalledTimes(1);
+    });
+
+    it('reloads when the date changes', () => {
+      renderWith(fullDashboard);
+      const before = dispatchBoardServiceStub.getDashboard.mock.calls.length;
+
+      component.selectedDate.set('2026-05-04');
+      fixture.detectChanges();
+
+      expect(dispatchBoardServiceStub.getDashboard.mock.calls.length).toBe(before + 1);
+      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenLastCalledWith('LOC-1', '2026-05-04');
+    });
+
+    it('reloads when the location changes', () => {
+      renderWith(fullDashboard);
+
+      component.onLocationPicked('LOC-2');
+      fixture.detectChanges();
+
+      expect(dispatchBoardServiceStub.getDashboard).toHaveBeenLastCalledWith('LOC-2', TODAY);
+    });
+
+    // The poll never blanks the board; a manual refresh over the same selection
+    // should not either.
+    it('keeps the board on screen while a manual refresh is in flight', () => {
+      renderWith(fullDashboard);
+      const slow = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(slow);
+
+      component.refresh();
+      fixture.detectChanges();
+
+      expect(component.state()).toBe('loading');
+      expect(fixture.nativeElement.querySelectorAll('.workorder-row').length).toBe(4);
+      expect(fixture.nativeElement.querySelector('.refreshing')).toBeTruthy();
+    });
+
+    // A board loaded for another shop is not a fallback: left up behind a failed
+    // read it shows one location while the controls show another, and a drop
+    // would then mutate workorders the dispatcher is not looking at.
+    it('drops the cached board when the failed read was for a different location', () => {
+      renderWith(fullDashboard);
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(throwError(() => ({ status: 500 })));
+
+      component.onLocationPicked('LOC-2');
+      fixture.detectChanges();
+
+      expect(component.state()).toBe('error');
+      expect(component.allRows()).toHaveLength(0);
+      expect(fixture.nativeElement.querySelectorAll('.workorder-row').length).toBe(0);
+    });
+
+    it('defaults the date to the local calendar day, not the UTC one', () => {
+      fixture.detectChanges();
+      const now = new Date();
+      const local = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        String(now.getDate()).padStart(2, '0'),
+      ].join('-');
+
+      expect(component.todayIso()).toBe(local);
+      expect(component.selectedDate()).toBe(local);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Two projections of the same bay
+  // -------------------------------------------------------------------------
+  describe('bay reconciliation', () => {
+    it('never gives a bay a display name it does not have', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [],
+        bays: [{ bayId: 'bay-uuid-not-replicated', available: true, status: 'ACTIVE' }],
+      });
+
+      expect(component.openBays()[0].name).toBeNull();
+      expect(fixture.nativeElement.textContent).not.toContain('bay-uuid-not-replicated');
+      expect(fixture.nativeElement.querySelector('.bay')?.getAttribute('aria-label')).not.toContain(
+        'bay-uuid-not-replicated',
+      );
+    });
+
+    // The claim is the bay's own live feed. A summary the response does not
+    // carry disproves nothing, and calling the bay free invites a second
+    // workorder onto it.
+    it('keeps a bay occupied when the workorder claiming it is absent from the response', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [],
+        bays: [
+          { bayId: 'B1', bayName: 'Bay 1', available: true, status: 'ACTIVE', assignedWorkorderId: 'unknown' },
+        ],
+      });
+
+      expect(component.openBays()).toHaveLength(0);
+    });
+
+    // Occupancy and the workorder's own resource fields are independent
+    // projections; a row showing an empty slot against an occupied bay leaves an
+    // assignment nobody can clear.
+    it('shows the bay that claims a workorder whose summary carries no resource', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [{ workorderId: 'wo-x', workorderNumber: 'WO-X', status: 'APPROVED' }],
+        bays: [{ bayId: 'B1', bayName: 'Bay 1', available: false, status: 'ACTIVE', assignedWorkorderId: 'wo-x' }],
+      });
+
+      expect(component.allRows()[0].bayId).toBe('B1');
+      expect(component.allRows()[0].bayName).toBe('Bay 1');
+    });
+
+    it('ignores a bay-side claim on a closed workorder', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [{ workorderId: 'wo-done', workorderNumber: 'WO-DONE', status: 'COMPLETED' }],
+        bays: [{ bayId: 'B1', bayName: 'Bay 1', available: true, status: 'ACTIVE', assignedWorkorderId: 'wo-done' }],
+      });
+
+      expect(component.allRows()[0].bayId).toBeNull();
+    });
+
+    // pos-workorder omits a bay whose replica row has not arrived, so the
+    // location inventory is the roster of record for the rail.
+    it('carries a bay the dispatch projection has not replicated', () => {
+      dispatchBoardServiceStub.getBayInventory.mockReturnValue(
+        of(new Map([['B9', { bayId: 'B9', name: 'Bay 9', kind: 'GENERAL_SERVICE', outOfService: false }]])),
+      );
+      renderWith({ ...fullDashboard, bays: [] });
+
+      expect(component.openBays().map(bay => bay.bayId)).toEqual(['B9']);
+      expect(component.openBays()[0].name).toBe('Bay 9');
+    });
+
+    it('drops an out-of-service bay no open work stands on', () => {
+      dispatchBoardServiceStub.getBayInventory.mockReturnValue(
+        of(new Map([['B9', { bayId: 'B9', name: 'Bay 9', kind: null, outOfService: true }]])),
+      );
+      renderWith({ ...fullDashboard, bays: [] });
+
+      expect(component.allBays()).toHaveLength(0);
     });
   });
 

@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EMPTY, Observable, catchError, forkJoin, interval, map, of, switchMap } from 'rxjs';
+import { EMPTY, Observable, Subscription, catchError, forkJoin, interval, map, of, switchMap } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
   BayCard,
@@ -13,13 +13,15 @@ import {
   MechanicAvailability,
   MechanicCard,
   MechanicStatus,
+  PositionKind,
   RowLane,
   RowStatusTone,
   UndoStep,
   WorkorderRow,
   WorkorderSummary,
 } from '../../models/dispatch-board.models';
-import { BayKinds, DispatchBoardService, TechnicianSkills } from '../../services/dispatch-board.service';
+import { isoDateLocal } from '../../models/capacity-calendar.models';
+import { BayInventory, BayInventoryEntry, DispatchBoardService, TechnicianSkills } from '../../services/dispatch-board.service';
 import { LocationPickerComponent } from '../../../location/components/location-picker/location-picker.component';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
@@ -52,6 +54,27 @@ const POLL_INTERVAL_MS = 30_000;
 
 const DRAFT_STATUS = 'DRAFT';
 const CLOSED_STATUSES: readonly string[] = ['COMPLETED', 'CANCELLED'];
+
+/**
+ * Technician assign and reassign are allowed on APPROVED, ASSIGNED and
+ * WORK_IN_PROGRESS only; every other status answers 400. AWAITING_PARTS and
+ * AWAITING_APPROVAL are read as outside the window — the conservative reading
+ * of the contract's three named statuses, pending confirmation from workexec.
+ * Bay placement is wider and keeps its own rule: any open workorder, DRAFT too.
+ */
+const TECHNICIAN_ASSIGNABLE_STATUSES: readonly string[] = ['APPROVED', 'ASSIGNED', 'WORK_IN_PROGRESS'];
+
+/** The statuses `WORKEXEC.WIP_STATUS` ships a translated label for. */
+const TRANSLATED_STATUSES: readonly string[] = [
+  DRAFT_STATUS,
+  'APPROVED',
+  'ASSIGNED',
+  'WORK_IN_PROGRESS',
+  'AWAITING_PARTS',
+  'AWAITING_APPROVAL',
+  'READY_FOR_PICKUP',
+  ...CLOSED_STATUSES,
+];
 
 function isClosedStatus(status: string | undefined): boolean {
   return CLOSED_STATUSES.includes(status ?? '');
@@ -88,7 +111,12 @@ export class DispatchBoardPageComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private pollingStarted = false;
 
-  readonly todayIso = signal(new Date().toISOString().slice(0, 10));
+  /**
+   * The board's own calendar day. `toISOString()` is the UTC date, which from
+   * 17:00 Pacific onward is already tomorrow — an evening dispatcher would open
+   * the wrong day's board.
+   */
+  readonly todayIso = signal(isoDateLocal(new Date()));
   readonly selectedDate = signal(this.todayIso());
   readonly selectedLocationId = signal('');
 
@@ -97,8 +125,11 @@ export class DispatchBoardPageComponent implements OnInit {
   readonly errorKey = signal<string | null>(null);
 
   readonly dashboard = signal<DashboardResponse | null>(null);
-  readonly bayKinds = signal<BayKinds>(new Map());
+  readonly bayInventory = signal<BayInventory>(new Map());
   readonly technicianSkills = signal<TechnicianSkills>(new Map());
+
+  /** Which (location, date) the cached board answers; see `hasCachedData`. */
+  private readonly cachedKey = signal<string | null>(null);
 
   readonly isStale = signal(false);
   readonly dataQualityWarning = signal(false);
@@ -124,21 +155,59 @@ export class DispatchBoardPageComponent implements OnInit {
 
   // --- derived reads kept for the existing contract ---
   readonly loading = computed(() => this.state() === 'loading');
+
+  /**
+   * A manual refresh moves the machine to 'loading', but blanking a board the
+   * dispatcher is reading — mid-glance, mid-decision — to redraw the same rows
+   * a moment later is a worse answer than a quiet busy mark. The poll already
+   * refuses to do it; a refresh over cached data for the same selection does
+   * not either.
+   */
+  readonly showBoard = computed(() => this.state() === 'ready' || (this.loading() && this.hasCachedData()));
   readonly error = computed(() => this.errorKey());
   readonly workorders = computed<WorkorderSummary[]>(() => this.dashboard()?.workorders ?? []);
   readonly canRefresh = computed(() => this.selectedLocationId().trim().length > 0);
-  readonly hasCachedData = computed(() => this.dashboard() !== null);
+
+  /** The (location, date) the controls currently ask for. */
+  private readonly requestKey = computed(() => this.toRequestKey(this.selectedLocationId().trim(), this.selectedDate()));
+
+  /**
+   * Cached data for **this** selection. A board loaded for another shop or
+   * another day is not a fallback: left interactive behind a failed read it
+   * shows one location while the controls show another, and a drop then mutates
+   * workorders the dispatcher is not looking at.
+   */
+  readonly hasCachedData = computed(() => this.dashboard() !== null && this.cachedKey() === this.requestKey());
 
   /**
    * Bay name by id, so a row and a mechanic chip can both name where a
-   * workorder stands without re-walking the bay array.
+   * workorder stands without re-walking the bay array. Only real names: a bay
+   * whose name has not replicated stays out, so the placeholder renders instead
+   * of a UUID leaking into a label.
    */
   private readonly bayNamesById = computed(() => {
     const names = new Map<string, string>();
-    for (const bay of this.dashboard()?.bays ?? []) {
-      names.set(bay.bayId, bay.bayName ?? bay.bayId);
+    for (const bay of this.allBays()) {
+      if (bay.name) {
+        names.set(bay.bayId, bay.name);
+      }
     }
     return names;
+  });
+
+  /**
+   * Bay id by the workorder that bay claims. Occupancy and the workorder's own
+   * `resourceType`/`assignedResourceId` are independent projections, so the bay
+   * side can carry a placement the workorder side has not caught up with.
+   */
+  private readonly bayClaimsByWorkorder = computed(() => {
+    const byWorkorder = new Map<string, string>();
+    for (const bay of this.dashboard()?.bays ?? []) {
+      if (bay.assignedWorkorderId && !byWorkorder.has(bay.assignedWorkorderId)) {
+        byWorkorder.set(bay.assignedWorkorderId, bay.bayId);
+      }
+    }
+    return byWorkorder;
   });
 
   private readonly workordersById = computed(() => {
@@ -201,9 +270,23 @@ export class DispatchBoardPageComponent implements OnInit {
       .filter(card => card.availability === 'BREAK' || card.availability === 'OFF'),
   );
 
-  readonly allBays = computed<BayCard[]>(() =>
-    (this.dashboard()?.bays ?? []).map(bay => this.toBayCard(bay)),
-  );
+  /**
+   * The rail's bays: the location inventory merged with dispatch occupancy.
+   * The inventory is the roster of record — a bay the dispatch replica has not
+   * received would otherwise vanish from the rail and be unassignable — and a
+   * bay only the dispatch projection knows is still carried, so live work never
+   * goes invisible. An OUT_OF_SERVICE bay the projection does not mention is
+   * dropped: it is not capacity.
+   */
+  readonly allBays = computed<BayCard[]>(() => {
+    const statuses = new Map<string, BayStatus>((this.dashboard()?.bays ?? []).map(bay => [bay.bayId, bay]));
+    const inventory = this.bayInventory();
+    const bayIds = [
+      ...[...inventory.values()].filter(entry => !entry.outOfService).map(entry => entry.bayId),
+      ...[...statuses.keys()].filter(bayId => !inventory.has(bayId)),
+    ];
+    return bayIds.map(bayId => this.toBayCard(bayId, statuses.get(bayId), inventory.get(bayId)));
+  });
 
   readonly openBays = computed(() => this.allBays().filter(bay => bay.free));
 
@@ -242,6 +325,31 @@ export class DispatchBoardPageComponent implements OnInit {
     return this.allRows().find(row => row.workorderId === request.workorderId) ?? null;
   });
 
+  constructor() {
+    /**
+     * Location and date are the board's query, so the read follows them. Loaded
+     * from ngOnInit and a manual refresh alone, the controls and the data could
+     * disagree until the 30s poll swapped the board underneath a drag or an
+     * open picker.
+     */
+    effect(onCleanup => {
+      const locationId = this.selectedLocationId().trim();
+      const date = this.selectedDate();
+      if (!locationId) {
+        // Nothing to ask for yet. `loadCurrentLocation` and `refresh` own the
+        // location-required state; announcing it here would fire it during
+        // bootstrap, before the primary location has had a chance to resolve.
+        return;
+      }
+
+      // The read's own callbacks write and read board signals; untracked keeps
+      // those out of this effect's dependencies so a response cannot re-trigger
+      // the load that produced it.
+      const sub = untracked(() => this.load(locationId, date));
+      onCleanup(() => sub.unsubscribe());
+    });
+  }
+
   ngOnInit(): void {
     this.loadCurrentLocation();
   }
@@ -254,17 +362,26 @@ export class DispatchBoardPageComponent implements OnInit {
       return;
     }
 
-    this.selectedLocationId.set(locationId);
+    this.load(locationId, this.selectedDate());
+  }
+
+  /**
+   * One read of the board. The effect, the retry button and the first load all
+   * come through here, so the sequence guard, the enrichment fetch and the poll
+   * hand-off live in one place.
+   */
+  private load(locationId: string, date: string): Subscription {
     this.state.set('loading');
     this.errorKey.set(null);
 
     const seq = ++this.readSeq;
-    this.dispatchBoardService
-      .getDashboard(locationId, this.selectedDate())
+    const key = this.toRequestKey(locationId, date);
+    return this.dispatchBoardService
+      .getDashboard(locationId, date)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: response => {
-          if (!this.applySuccess(response, seq)) {
+          if (!this.applySuccess(response, seq, key)) {
             return;
           }
           this.loadEnrichment(locationId);
@@ -274,6 +391,10 @@ export class DispatchBoardPageComponent implements OnInit {
         },
         error: (err: unknown) => this.applyError(err, seq),
       });
+  }
+
+  private toRequestKey(locationId: string, date: string): string {
+    return `${locationId}|${date}`;
   }
 
   onLocationPicked(id: string): void {
@@ -329,17 +450,43 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   /**
-   * A closed workorder refuses every dispatch write with 409 WORKORDER_CLOSED,
-   * and a DRAFT one refuses a technician with 400. The click path has to apply
-   * the same two guards the drag path does, or the buttons issue requests the
-   * backend is guaranteed to reject.
+   * Technician writes need one of the three statuses the contract allows, so
+   * the click path and the drag path both gate on the allow-list rather than on
+   * "not draft, not closed" — READY_FOR_PICKUP is neither, and answers 400.
    */
   canTakeMechanic(row: WorkorderRow): boolean {
-    return !row.closed && row.status !== DRAFT_STATUS && !this.isPending(row.workorderId);
+    return TECHNICIAN_ASSIGNABLE_STATUSES.includes(row.status) && !this.isPending(row.workorderId);
   }
 
   canTakeBay(row: WorkorderRow): boolean {
     return !row.closed && !this.isPending(row.workorderId);
+  }
+
+  /** Why the mechanic slot is inert, or null when it is usable. */
+  mechanicBlockedKey(row: WorkorderRow): string | null {
+    if (row.closed) {
+      return 'SHOPMGMT.DISPATCH_BOARD.CLOSED_NO_CHANGE';
+    }
+    if (row.status === DRAFT_STATUS) {
+      return 'SHOPMGMT.DISPATCH_BOARD.DRAFT_NO_MECHANIC';
+    }
+    if (!TECHNICIAN_ASSIGNABLE_STATUSES.includes(row.status)) {
+      return 'SHOPMGMT.DISPATCH_BOARD.STATUS_NO_MECHANIC';
+    }
+    return null;
+  }
+
+  /** Why the bay slot is inert, or null when it is usable. */
+  bayBlockedKey(row: WorkorderRow): string | null {
+    return row.closed ? 'SHOPMGMT.DISPATCH_BOARD.CLOSED_NO_CHANGE' : null;
+  }
+
+  /**
+   * The key for a status's translated label, or null for a value the locale
+   * files do not carry — which renders the raw status rather than a key path.
+   */
+  statusLabelKey(status: string): string | null {
+    return TRANSLATED_STATUSES.includes(status) ? `WORKEXEC.WIP_STATUS.${status}` : null;
   }
 
   isPending(workorderId: string): boolean {
@@ -401,17 +548,28 @@ export class DispatchBoardPageComponent implements OnInit {
   // -------------------------------------------------------------------------
   // Mutations
   // -------------------------------------------------------------------------
-  assignMechanic(row: WorkorderRow, mechanicId: string): void {
+  /**
+   * `incumbentId` is who the workorder is known to hold, which decides assign
+   * against reassign. It defaults to the row, and undo overrides it with what
+   * its own mutation left behind — the re-read has not landed yet when the
+   * dispatcher clicks Undo straight away, so the row is a stale answer.
+   */
+  assignMechanic(row: WorkorderRow, mechanicId: string, incumbentId: string | null = row.mechanicId): void {
     const mechanic = this.mechanicsById().get(mechanicId);
-    const previous = row.mechanicId;
     this.run(
       row.workorderId,
-      () => this.dispatchBoardService.assignMechanic(row.workorderId, mechanicId, previous),
+      () => this.dispatchBoardService.assignMechanic(row.workorderId, mechanicId, incumbentId),
       {
         key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.MECHANIC_ASSIGNED',
         params: { workorder: row.number, mechanic: this.displayName(mechanic) },
         tone: 'INFO',
-        undo: { workorderId: row.workorderId, kind: 'MECHANIC', previousId: previous },
+        undo: {
+          workorderId: row.workorderId,
+          kind: 'MECHANIC',
+          previousId: incumbentId,
+          currentMechanicId: mechanicId,
+          previousPosition: null,
+        },
       },
     );
   }
@@ -422,28 +580,69 @@ export class DispatchBoardPageComponent implements OnInit {
       key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.MECHANIC_CLEARED',
       params: { workorder: row.number },
       tone: 'INFO',
-      undo: { workorderId: row.workorderId, kind: 'MECHANIC', previousId: previous },
+      undo: {
+        workorderId: row.workorderId,
+        kind: 'MECHANIC',
+        previousId: previous,
+        currentMechanicId: null,
+        previousPosition: null,
+      },
     });
   }
 
   assignBay(row: WorkorderRow, bayId: string): void {
-    const previous = row.bayId;
+    // A bay whose name has not replicated is still placeable; its confirmation
+    // just cannot name it, which is better than naming it with a UUID.
+    const bayName = this.bayNamesById().get(bayId) ?? null;
     this.run(row.workorderId, () => this.dispatchBoardService.assignBay(row.workorderId, bayId), {
-      key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.BAY_ASSIGNED',
-      params: { workorder: row.number, bay: this.bayNamesById().get(bayId) ?? bayId },
+      key: bayName
+        ? 'SHOPMGMT.DISPATCH_BOARD.TOAST.BAY_ASSIGNED'
+        : 'SHOPMGMT.DISPATCH_BOARD.TOAST.BAY_ASSIGNED_UNNAMED',
+      params: bayName ? { workorder: row.number, bay: bayName } : { workorder: row.number },
       tone: 'INFO',
-      undo: { workorderId: row.workorderId, kind: 'BAY', previousId: previous },
+      undo: this.toPositionUndo(row),
     });
   }
 
   clearBay(row: WorkorderRow): void {
-    const previous = row.bayId;
     this.run(row.workorderId, () => this.dispatchBoardService.releaseBay(row.workorderId), {
       key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.BAY_CLEARED',
       params: { workorder: row.number },
       tone: 'INFO',
-      undo: { workorderId: row.workorderId, kind: 'BAY', previousId: previous },
+      undo: this.toPositionUndo(row),
     });
+  }
+
+  /** Put the workorder back in the site's parking lot, rather than nowhere. */
+  private parkWorkorder(row: WorkorderRow): void {
+    this.run(row.workorderId, () => this.dispatchBoardService.parkWorkorder(row.workorderId), {
+      key: 'SHOPMGMT.DISPATCH_BOARD.TOAST.WORKORDER_PARKED',
+      params: { workorder: row.number },
+      tone: 'INFO',
+      undo: this.toPositionUndo(row),
+    });
+  }
+
+  /**
+   * Where the row stands before a position write. A parked workorder carries no
+   * bay id, so the kind has to be recorded too or undo would release its HOLD
+   * instead of restoring it.
+   */
+  private toPositionUndo(row: WorkorderRow): UndoStep {
+    let previousPosition: PositionKind | null = null;
+    if (row.bayId) {
+      previousPosition = 'BAY';
+    } else if (row.parked) {
+      previousPosition = 'HOLD';
+    }
+
+    return {
+      workorderId: row.workorderId,
+      kind: 'BAY',
+      previousId: row.bayId,
+      currentMechanicId: null,
+      previousPosition,
+    };
   }
 
   /**
@@ -465,10 +664,15 @@ export class DispatchBoardPageComponent implements OnInit {
 
     if (step.kind === 'MECHANIC') {
       if (step.previousId) {
-        this.assignMechanic(row, step.previousId);
+        this.assignMechanic(row, step.previousId, step.currentMechanicId);
       } else {
         this.clearMechanic(row);
       }
+      return;
+    }
+
+    if (step.previousPosition === 'HOLD') {
+      this.parkWorkorder(row);
       return;
     }
 
@@ -513,6 +717,13 @@ export class DispatchBoardPageComponent implements OnInit {
             tone: 'ERROR',
             undo: null,
           });
+          // A 409 or 422 is the backend saying the board's copy is wrong — the
+          // incumbent moved, the bay filled. Without a re-read the row keeps
+          // showing what was contradicted and every retry repeats the same
+          // wrong call.
+          if (this.isRefusal(err)) {
+            this.reloadBoard();
+          }
         },
       });
   }
@@ -572,13 +783,13 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   /**
-   * Bay types and technician credentials come from other domains and are
-   * decoration on top of the board, so they load beside it and never block or
-   * fail it — both service calls already answer an empty map on failure.
+   * The bay roster and technician credentials come from other domains and load
+   * beside the board rather than gating it — both service calls already answer
+   * an empty map on failure, and the dispatch projection alone still renders.
    */
   private loadEnrichment(locationId: string): void {
     forkJoin({
-      bayKinds: this.dispatchBoardService.getBayKinds(locationId),
+      bays: this.dispatchBoardService.getBayInventory(locationId),
       skills: this.dispatchBoardService.getTechnicianSkills(locationId),
     })
       .pipe(
@@ -591,7 +802,7 @@ export class DispatchBoardPageComponent implements OnInit {
         if (!result || this.selectedLocationId().trim() !== locationId) {
           return;
         }
-        this.bayKinds.set(result.bayKinds);
+        this.bayInventory.set(result.bays);
         this.technicianSkills.set(result.skills);
       });
   }
@@ -610,8 +821,8 @@ export class DispatchBoardPageComponent implements OnInit {
             return;
           }
 
+          // Setting the location is the read: the effect watches it.
           this.selectedLocationId.set(locationId);
-          this.refresh();
         },
         error: () => {
           this.state.set('error');
@@ -621,11 +832,12 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   /** Returns false when a newer read has already superseded this one. */
-  private applySuccess(response: DashboardResponse, seq: number): boolean {
+  private applySuccess(response: DashboardResponse, seq: number, key = this.requestKey()): boolean {
     if (seq !== this.readSeq) {
       return false;
     }
     this.dashboard.set(response);
+    this.cachedKey.set(key);
     this.lastRefreshed.set(new Date());
     this.dataQualityWarning.set(Boolean(response.dataQualityWarning));
     this.isStale.set(false);
@@ -639,15 +851,19 @@ export class DispatchBoardPageComponent implements OnInit {
       return;
     }
     if (this.hasCachedData()) {
-      // A refresh that fails over good data leaves the board up and marks it stale.
+      // A refresh that fails over good data for the same selection leaves the
+      // board up and marks it stale.
       this.isStale.set(true);
       this.state.set('ready');
       return;
     }
 
     this.state.set('error');
-    this.errorKey.set(this.toErrorMessage(err));
+    this.errorKey.set(this.toLoadErrorKey(err));
+    // Anything cached answers a different location or date; keeping it would
+    // leave the previous shop's board interactive under the new controls.
     this.dashboard.set(null);
+    this.cachedKey.set(null);
   }
 
   // -------------------------------------------------------------------------
@@ -658,7 +874,7 @@ export class DispatchBoardPageComponent implements OnInit {
       ? this.mechanicsById().get(workorder.assignedMechanicId)
       : undefined;
     const parked = workorder.resourceType === 'HOLD';
-    const bayId = workorder.resourceType === 'BAY' ? (workorder.assignedResourceId ?? null) : null;
+    const bayId = this.toRowBayId(workorder, parked);
     const name = mechanic ? this.displayName(mechanic) : null;
 
     return {
@@ -688,6 +904,24 @@ export class DispatchBoardPageComponent implements OnInit {
       priority: null,
       requiredSkills: null,
     };
+  }
+
+  /**
+   * Where the row stands. The workorder's own resource fields come first, but a
+   * bay claiming the workorder is a placement too: the two sides are
+   * independent projections, and a row that shows an empty slot while the rail
+   * shows the bay occupied leaves an assignment nobody can clear.
+   */
+  private toRowBayId(workorder: WorkorderSummary, parked: boolean): string | null {
+    if (workorder.resourceType === 'BAY') {
+      return workorder.assignedResourceId ?? null;
+    }
+    // A closed workorder's link is a freed position the projection has not
+    // caught up with, never a live placement.
+    if (parked || workorder.resourceType || isClosedStatus(workorder.status)) {
+      return null;
+    }
+    return this.bayClaimsByWorkorder().get(workorder.workorderId) ?? null;
   }
 
   private toLane(workorder: WorkorderSummary, parked: boolean): RowLane {
@@ -759,24 +993,31 @@ export class DispatchBoardPageComponent implements OnInit {
     });
   }
 
-  private toBayCard(bay: BayStatus): BayCard {
+  private toBayCard(bayId: string, status: BayStatus | undefined, entry: BayInventoryEntry | undefined): BayCard {
     return {
-      bayId: bay.bayId,
-      name: bay.bayName ?? bay.bayId,
-      kind: this.bayKinds().get(bay.bayId) ?? null,
-      available: bay.available,
-      assignedWorkorderId: bay.assignedWorkorderId,
-      free: this.isBayFree(bay),
+      bayId,
+      // Null, never the id: an unnamed bay renders the placeholder rather than
+      // putting a UUID into a chip and into its accessible name.
+      name: status?.bayName?.trim() || entry?.name || null,
+      kind: entry?.kind ?? null,
+      // A bay the dispatch projection does not carry holds no workorder there.
+      available: status ? status.available : true,
+      assignedWorkorderId: status?.assignedWorkorderId,
+      free: this.isBayFree(status),
     };
   }
 
   /**
-   * A bay still linked to a closed workorder reads as idle. Completing or
-   * cancelling a workorder frees its position backend-side, so a lingering
-   * link is a stale projection; treating it as occupied under-reports free
-   * bays. Same rule the shop dashboard projection applies.
+   * A bay still linked to a closed workorder reads as idle: completing or
+   * cancelling a workorder frees its position backend-side, so that link is a
+   * stale projection. Every other claim counts as occupancy — including one
+   * whose workorder summary is missing from this response, which is a claim the
+   * board cannot disprove, not an empty bay.
    */
-  private isBayFree(bay: BayStatus): boolean {
+  private isBayFree(bay: BayStatus | undefined): boolean {
+    if (!bay) {
+      return true;
+    }
     if (!bay.available) {
       return false;
     }
@@ -784,7 +1025,7 @@ export class DispatchBoardPageComponent implements OnInit {
       return true;
     }
     const holder = this.workordersById().get(bay.assignedWorkorderId);
-    return !holder || isClosedStatus(holder.status);
+    return Boolean(holder) && isClosedStatus(holder?.status);
   }
 
   private sorted(rows: readonly WorkorderRow[]): WorkorderRow[] {
@@ -833,9 +1074,21 @@ export class DispatchBoardPageComponent implements OnInit {
         return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BAY_INACTIVE';
       case 'WORKORDER_CLOSED':
         return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_WORKORDER_CLOSED';
+      case 'TECHNICIAN_NOT_ASSIGNED':
+        return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_MECHANIC_NOT_ASSIGNED';
+      case 'TECHNICIAN_NOT_FOUND':
+        return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_MECHANIC_NOT_FOUND';
+      case 'SERVICE_POSITION_INVALID':
+        return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BAY_INVALID';
       default:
         return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_GENERIC';
     }
+  }
+
+  /** A refusal: the write was understood and rejected, so the board is behind. */
+  private isRefusal(err: unknown): boolean {
+    const status = typeof err === 'object' && err !== null ? (err as Record<string, unknown>)['status'] : null;
+    return status === 409 || status === 422;
   }
 
   private toApiErrorCode(err: unknown): string | null {
@@ -852,23 +1105,18 @@ export class DispatchBoardPageComponent implements OnInit {
     return null;
   }
 
-  private toErrorMessage(err: unknown): string {
-    if (typeof err === 'object' && err !== null) {
-      const record = err as Record<string, unknown>;
-      const errPayload = record['error'];
-
-      if (typeof errPayload === 'object' && errPayload !== null) {
-        const payloadRecord = errPayload as Record<string, unknown>;
-        if (typeof payloadRecord['message'] === 'string') {
-          return payloadRecord['message'];
-        }
-      }
-
-      if (typeof record['message'] === 'string') {
-        return record['message'];
-      }
+  /**
+   * A load failure resolves to a translation key, never to the server's own
+   * message: that string is English and backend-authored, and the translate
+   * pipe would pass it through verbatim — with any dot in it read as a nested
+   * key path. Codes map the way a refused mutation's do.
+   */
+  private toLoadErrorKey(err: unknown): string {
+    switch (this.toApiErrorCode(err)) {
+      case 'LOCATION_NOT_FOUND':
+        return 'SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_REQUIRED';
+      default:
+        return 'SHOPMGMT.DISPATCH_BOARD.ERROR_LOAD';
     }
-
-    return 'SHOPMGMT.DISPATCH_BOARD.ERROR_LOAD';
   }
 }

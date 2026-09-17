@@ -134,27 +134,44 @@ describe('DispatchBoardService', () => {
   // -------------------------------------------------------------------------
   // Enrichment: decoration on the board, so a failure is absorbed
   // -------------------------------------------------------------------------
-  describe('getBayKinds()', () => {
-    it('maps bay ids onto their type classification', () => {
+  describe('getBayInventory()', () => {
+    it('maps each bay onto its name, type and lifecycle status', () => {
       bayStub.listBays.mockReturnValue(
-        of({ content: [{ id: 'b1', bayType: 'ALIGNMENT' }, { id: 'b2', bayType: 'GENERAL_SERVICE' }] }),
+        of({
+          content: [
+            { id: 'b1', name: 'Bay 1', bayType: 'ALIGNMENT', status: 'ACTIVE' },
+            { id: 'b2', name: 'Bay 2', bayType: 'GENERAL_SERVICE', status: 'OUT_OF_SERVICE' },
+          ],
+        }),
       );
       const next = vi.fn();
 
-      service.getBayKinds(' loc-1 ').subscribe(next);
+      service.getBayInventory(' loc-1 ').subscribe(next);
 
       expect(bayStub.listBays).toHaveBeenCalledWith('loc-1', undefined, undefined, 0, 200);
-      expect(next.mock.calls[0][0].get('b1')).toBe('ALIGNMENT');
-      expect(next.mock.calls[0][0].get('b2')).toBe('GENERAL_SERVICE');
+      expect(next.mock.calls[0][0].get('b1')).toEqual({
+        bayId: 'b1',
+        name: 'Bay 1',
+        kind: 'ALIGNMENT',
+        outOfService: false,
+      });
+      expect(next.mock.calls[0][0].get('b2')?.outOfService).toBe(true);
     });
 
-    it('skips a bay whose replica has arrived without a type', () => {
+    // The inventory is the rail's roster of record, so a bay is carried whether
+    // or not it has a type yet; only its name and kind stay null.
+    it('carries a bay whose replica has arrived without a type or a name', () => {
       bayStub.listBays.mockReturnValue(of({ content: [{ id: 'b1' }] }));
       const next = vi.fn();
 
-      service.getBayKinds('loc-1').subscribe(next);
+      service.getBayInventory('loc-1').subscribe(next);
 
-      expect(next.mock.calls[0][0].size).toBe(0);
+      expect(next.mock.calls[0][0].get('b1')).toEqual({
+        bayId: 'b1',
+        name: null,
+        kind: null,
+        outOfService: false,
+      });
     });
 
     it('answers an empty map when the location domain is unreachable', () => {
@@ -162,7 +179,7 @@ describe('DispatchBoardService', () => {
       const next = vi.fn();
       const error = vi.fn();
 
-      service.getBayKinds('loc-1').subscribe({ next, error });
+      service.getBayInventory('loc-1').subscribe({ next, error });
 
       expect(error).not.toHaveBeenCalled();
       expect(next.mock.calls[0][0].size).toBe(0);
@@ -174,7 +191,13 @@ describe('DispatchBoardService', () => {
       technicianStub.listLocationTechnicians.mockReturnValue(
         of({
           content: [
-            { personId: 'p1', credentials: [{ skillCode: 'BRAKES' }, { skillCode: 'DOT' }] },
+            {
+              personId: 'p1',
+              credentials: [
+                { skillCode: 'BRAKES', status: 'ACTIVE' },
+                { skillCode: 'DOT', status: 'ACTIVE' },
+              ],
+            },
             { personId: 'p2', credentials: [] },
           ],
         }),
@@ -190,7 +213,17 @@ describe('DispatchBoardService', () => {
 
     it('drops duplicate skill codes from renewed credentials', () => {
       technicianStub.listLocationTechnicians.mockReturnValue(
-        of({ content: [{ personId: 'p1', credentials: [{ skillCode: 'DOT' }, { skillCode: 'DOT' }] }] }),
+        of({
+          content: [
+            {
+              personId: 'p1',
+              credentials: [
+                { skillCode: 'DOT', status: 'ACTIVE' },
+                { skillCode: 'DOT', status: 'ACTIVE' },
+              ],
+            },
+          ],
+        }),
       );
       const next = vi.fn();
 
@@ -201,13 +234,38 @@ describe('DispatchBoardService', () => {
 
     it('falls back to the mechanic id when the roster row carries no person id', () => {
       technicianStub.listLocationTechnicians.mockReturnValue(
-        of({ content: [{ mechanicId: 'm1', credentials: [{ skillCode: 'HVAC' }] }] }),
+        of({ content: [{ mechanicId: 'm1', credentials: [{ skillCode: 'HVAC', status: 'ACTIVE' }] }] }),
       );
       const next = vi.fn();
 
       service.getTechnicianSkills('loc-1').subscribe(next);
 
       expect(next.mock.calls[0][0].get('m1')).toEqual(['HVAC']);
+    });
+
+    // A lapsed certification is not competence: shown as a chip it mislabels the
+    // technician, and it floats them up the picker's credentialled-first order.
+    it('keeps only the credentials the roster reports ACTIVE', () => {
+      technicianStub.listLocationTechnicians.mockReturnValue(
+        of({
+          content: [
+            {
+              personId: 'p1',
+              credentials: [
+                { skillCode: 'BRAKES', status: 'ACTIVE' },
+                { skillCode: 'DOT', status: 'EXPIRED' },
+                { skillCode: 'HVAC', status: 'REVOKED' },
+                { skillCode: 'WELD', status: 'SUPERSEDED' },
+              ],
+            },
+          ],
+        }),
+      );
+      const next = vi.fn();
+
+      service.getTechnicianSkills('loc-1').subscribe(next);
+
+      expect(next.mock.calls[0][0].get('p1')).toEqual(['BRAKES']);
     });
 
     it('answers an empty map when shop management is unreachable', () => {
@@ -277,5 +335,15 @@ describe('DispatchBoardService', () => {
     service.releaseBay('wo-1').subscribe();
 
     expect(servicePositionStub.releaseServicePosition).toHaveBeenCalledWith('wo-1');
+  });
+
+  // Parking is not releasing, and HOLD takes no resourceId: the contract
+  // defaults it to the workorder's own locationId and refuses anything else.
+  it('parkWorkorder() puts the workorder on the site HOLD position with no resourceId', () => {
+    service.parkWorkorder('wo-1').subscribe();
+
+    expect(servicePositionStub.assignServicePosition).toHaveBeenCalledWith('wo-1', {
+      resourceType: 'HOLD',
+    });
   });
 });

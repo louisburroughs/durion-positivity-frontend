@@ -28,17 +28,20 @@
   </header>
 
   <!-- -------------------------------------------------------------- stats -->
-  @if (state() === 'ready') {
+  @if (showBoard()) {
     <div class="stats" [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.STATS_ARIA' | translate">
       <span class="stat">
         <b>{{ stats().toAssign }}</b> {{ 'SHOPMGMT.DISPATCH_BOARD.STAT.TO_ASSIGN' | translate }}
         @if (stats().toAssignHours !== null) {
-          <b class="stat-sub">{{ 'SHOPMGMT.DISPATCH_BOARD.STAT.HOURS' | translate: { hours: stats().toAssignHours } }}</b>
+          <b class="stat-sub">{{ 'SHOPMGMT.DISPATCH_BOARD.STAT.HOURS' | translate: { hours: (stats().toAssignHours | number: '1.0-1') } }}</b>
         }
       </span>
 
       <span class="stat">
-        <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_CAPACITY' | translate">&mdash;</span>
+        <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_CAPACITY' | translate">
+          <span aria-hidden="true">&mdash;</span>
+          <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_CAPACITY' | translate }}</span>
+        </span>
         {{ 'SHOPMGMT.DISPATCH_BOARD.STAT.OPEN_CAPACITY' | translate }}
       </span>
 
@@ -56,7 +59,10 @@
       </span>
 
       <span class="stat">
-        <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_DUE' | translate">&mdash;</span>
+        <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_DUE' | translate">
+          <span aria-hidden="true">&mdash;</span>
+          <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_DUE' | translate }}</span>
+        </span>
         {{ 'SHOPMGMT.DISPATCH_BOARD.STAT.DUE_SOON' | translate }}
       </span>
 
@@ -66,26 +72,32 @@
           {{ 'SHOPMGMT.DISPATCH_BOARD.LAST_UPDATED' | translate }}: {{ refreshed | date: 'shortTime' }}
         </span>
       }
+
+      <!-- A refresh over a board already on screen: quiet, not a blank page. -->
+      @if (loading()) {
+        <span class="refreshing">{{ 'SHOPMGMT.DISPATCH_BOARD.REFRESHING' | translate }}</span>
+      }
     </div>
   }
 
   <!-- ------------------------------------------------------------ banners -->
-  @if (dataQualityWarning() || isStale()) {
-    <div class="banners-row">
-      @if (dataQualityWarning()) {
-        <output class="data-quality-warning alert alert-warning">
-          {{ 'SHOPMGMT.DISPATCH_BOARD.DATA_QUALITY_WARNING' | translate }}
-        </output>
-      }
-      @if (isStale()) {
-        <output class="stale-data-banner alert alert-warning">
-          {{ 'SHOPMGMT.DISPATCH_BOARD.STALE_DATA' | translate }}
-        </output>
-      }
-    </div>
-  }
+  <!-- The region is always in the DOM: a live region inserted together with its
+       own first message is not announced, and the poll changes both of these
+       without any other signal that the board has degraded. -->
+  <div class="banners-row" aria-live="polite">
+    @if (dataQualityWarning()) {
+      <output class="data-quality-warning alert alert-warning">
+        {{ 'SHOPMGMT.DISPATCH_BOARD.DATA_QUALITY_WARNING' | translate }}
+      </output>
+    }
+    @if (isStale()) {
+      <output class="stale-data-banner alert alert-warning">
+        {{ 'SHOPMGMT.DISPATCH_BOARD.STALE_DATA' | translate }}
+      </output>
+    }
+  </div>
 
-  @if (loading()) {
+  @if (loading() && !hasCachedData()) {
     <div class="loading-state" aria-live="polite">{{ 'SHOPMGMT.DISPATCH_BOARD.LOADING' | translate }}</div>
   }
 
@@ -100,7 +112,7 @@
   }
 
   <!-- -------------------------------------------------------------- frame -->
-  @if (state() === 'ready') {
+  @if (showBoard()) {
     <div class="frame">
       <!-- ------------------------------------------------------ left rail -->
       <div class="col">
@@ -112,13 +124,16 @@
           <div class="scroll">
             <div class="mlist">
               @for (mechanic of mechanics(); track mechanic.personId) {
-                <div class="mech" [attr.data-st]="mechanic.availability" draggable="true"
+                <button type="button" class="mech" [attr.data-st]="mechanic.availability" draggable="true"
                   (dragstart)="onDragStart('MECHANIC', mechanic.personId, $event)" (dragend)="onDragEnd()"
                   [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA' | translate: { name: mechanic.name }">
                   <span class="av" aria-hidden="true">{{ mechanic.initials }}</span>
                   <span class="mname">
                     <span class="mname-text">{{ mechanic.name }}</span>
-                    <span class="na mfree" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS' | translate">&mdash;</span>
+                    <span class="na mfree" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS' | translate">
+                      <span aria-hidden="true">&mdash;</span>
+                      <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS' | translate }}</span>
+                    </span>
                   </span>
                   <span class="mcerts">
                     @for (skill of mechanic.skillCodes; track skill) {
@@ -128,7 +143,7 @@
                       <span class="mwhere">{{ where }}</span>
                     }
                   </span>
-                </div>
+                </button>
               } @empty {
                 <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_MECHANICS' | translate }}</p>
               }
@@ -143,16 +158,24 @@
           </h2>
           <div class="bays">
             @for (bay of openBays(); track bay.bayId) {
-              <div class="bay" draggable="true" (dragstart)="onDragStart('BAY', bay.bayId, $event)"
+              <button type="button" class="bay" draggable="true" (dragstart)="onDragStart('BAY', bay.bayId, $event)"
                 (dragend)="onDragEnd()"
-                [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.BAY_ARIA' | translate: { name: bay.name }">
-                <b>{{ bay.name }}</b>
+                [attr.aria-label]="bay.name
+                  ? ('SHOPMGMT.DISPATCH_BOARD.BAY_ARIA' | translate: { name: bay.name })
+                  : ('SHOPMGMT.DISPATCH_BOARD.BAY_ARIA_UNNAMED' | translate)">
+                @if (bay.name; as name) {
+                  <b>{{ name }}</b>
+                } @else {
+                  <b class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_NAME' | translate"
+                    aria-hidden="true">&mdash;</b>
+                }
                 @if (bay.kind; as kind) {
                   <em>{{ kind }}</em>
                 } @else {
-                  <em class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_KIND' | translate">&mdash;</em>
+                  <em class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_KIND' | translate"
+                    aria-hidden="true">&mdash;</em>
                 }
-              </div>
+              </button>
             } @empty {
               <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_BAYS' | translate }}</p>
             }
@@ -290,7 +313,11 @@
         } @else {
           @for (bay of openBays(); track bay.bayId) {
             <button class="opt" type="button" (click)="pick(bay.bayId)">
-              <b>{{ bay.name }}</b>
+              @if (bay.name; as name) {
+                <b>{{ name }}</b>
+              } @else {
+                <b class="na">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_NAME' | translate }}</b>
+              }
               <span class="note">{{ bay.kind ?? '' }}</span>
             </button>
           } @empty {
@@ -307,7 +334,11 @@
 
   <!-- -------------------------------------------------------------- toast -->
   @if (toast(); as message) {
-    <div class="toast" [class.toast-error]="message.tone === 'ERROR'" role="status" aria-live="polite">
+    <!-- A refused assignment is the only sign the write failed, so it
+         interrupts; a confirmation waits its turn. -->
+    <div class="toast" [class.toast-error]="message.tone === 'ERROR'"
+      [attr.role]="message.tone === 'ERROR' ? 'alert' : 'status'"
+      [attr.aria-live]="message.tone === 'ERROR' ? 'assertive' : 'polite'">
       <span>{{ message.key | translate: message.params }}</span>
       @if (message.undo) {
         <button type="button" (click)="undo()">{{ 'SHOPMGMT.DISPATCH_BOARD.UNDO' | translate }}</button>
@@ -329,11 +360,20 @@
     <span class="r-main">
       <span class="r-title">
         <span class="wid workorder-id">{{ row.number }}</span>
-        <span class="st workorder-status" [attr.data-tone]="row.statusTone">{{ row.status }}</span>
+        <span class="st workorder-status" [attr.data-tone]="row.statusTone">
+          @if (statusLabelKey(row.status); as statusKey) {
+            {{ statusKey | translate }}
+          } @else {
+            {{ row.status }}
+          }
+        </span>
         @if (row.job; as job) {
           <span class="t">{{ job }}</span>
         } @else {
-          <span class="t na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_JOB' | translate">&mdash;</span>
+          <span class="t na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_JOB' | translate">
+            <span aria-hidden="true">&mdash;</span>
+            <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_JOB' | translate }}</span>
+          </span>
         }
       </span>
       <span class="r-sub">
@@ -349,54 +389,77 @@
     </span>
 
     <span class="r-certs">
-      <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_SKILLS' | translate">&mdash;</span>
+      <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_SKILLS' | translate">
+        <span aria-hidden="true">&mdash;</span>
+        <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_SKILLS' | translate }}</span>
+      </span>
     </span>
 
     <span class="r-hrs">
       @if (row.estimatedHours !== null) {
-        {{ 'SHOPMGMT.DISPATCH_BOARD.HOURS_ESTIMATED' | translate: { hours: row.estimatedHours } }}
+        {{ 'SHOPMGMT.DISPATCH_BOARD.HOURS_ESTIMATED' | translate: { hours: (row.estimatedHours | number: '1.0-1') } }}
       } @else {
-        <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_HOURS' | translate">&mdash;</span>
+        <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_HOURS' | translate">
+          <span aria-hidden="true">&mdash;</span>
+          <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_HOURS' | translate }}</span>
+        </span>
       }
-      <small class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_DUE' | translate">&mdash;</small>
+      <small class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_DUE' | translate">
+        <span aria-hidden="true">&mdash;</span>
+        <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_DUE' | translate }}</span>
+      </small>
     </span>
 
-    <!-- mechanic slot -->
+    <!-- mechanic slot. The name is the control that opens the picker: handing a
+         workorder to another mechanic is one `reassignTechnician`, whereas
+         clearing and adding walks the status through APPROVED and back and
+         writes two extra transitions and two extra events. -->
     @if (row.mechanicId) {
       <span class="slot filled">
         <span class="si" aria-hidden="true">{{ row.mechanicInitials }}</span>
-        <span class="sl">{{ row.mechanicName }}</span>
+        <button type="button" class="sl change" (click)="openPicker('MECHANIC', row.workorderId)"
+          [disabled]="!canTakeMechanic(row)"
+          [attr.title]="mechanicBlockedKey(row) | translate"
+          [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.CHANGE_MECHANIC_ARIA' | translate:
+            { workorder: row.number, mechanic: row.mechanicName }">
+          {{ row.mechanicName }}
+        </button>
         <button type="button" class="clear" (click)="clearMechanic(row)" [disabled]="row.closed || isPending(row.workorderId)"
           [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.CLEAR_MECHANIC_ARIA' | translate: { workorder: row.number }">&times;</button>
       </span>
     } @else {
       <button type="button" class="slot" (click)="openPicker('MECHANIC', row.workorderId)"
         [disabled]="!canTakeMechanic(row)"
-        [attr.title]="row.closed
-          ? ('SHOPMGMT.DISPATCH_BOARD.CLOSED_NO_CHANGE' | translate)
-          : (row.status === 'DRAFT' ? ('SHOPMGMT.DISPATCH_BOARD.DRAFT_NO_MECHANIC' | translate) : null)">
+        [attr.title]="mechanicBlockedKey(row) | translate">
         {{ 'SHOPMGMT.DISPATCH_BOARD.ADD_MECHANIC' | translate }}
       </button>
     }
 
-    <!-- bay slot -->
+    <!-- bay slot. Same rule as the mechanic slot: moving bay to bay is one
+         write, and the name is the control that offers it. -->
     @if (row.bayId) {
       <span class="slot filled">
-        @if (row.bayName; as bayName) {
-          <span class="sl">{{ bayName }}</span>
-        } @else {
-          <span class="sl na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_NAME' | translate">&mdash;</span>
-        }
+        <button type="button" class="sl change" (click)="openPicker('BAY', row.workorderId)"
+          [disabled]="!canTakeBay(row)"
+          [attr.title]="bayBlockedKey(row) | translate"
+          [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.CHANGE_BAY_ARIA' | translate: { workorder: row.number }">
+          @if (row.bayName; as bayName) {
+            {{ bayName }}
+          } @else {
+            <span class="na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_NAME' | translate">&mdash;</span>
+          }
+        </button>
         <button type="button" class="clear" (click)="clearBay(row)" [disabled]="row.closed || isPending(row.workorderId)"
           [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.CLEAR_BAY_ARIA' | translate: { workorder: row.number }">&times;</button>
       </span>
     } @else if (row.parked) {
-      <button type="button" class="slot held" (click)="openPicker('BAY', row.workorderId)" [disabled]="!canTakeBay(row)">
+      <button type="button" class="slot held" (click)="openPicker('BAY', row.workorderId)" [disabled]="!canTakeBay(row)"
+        [attr.title]="bayBlockedKey(row) | translate">
         {{ 'SHOPMGMT.DISPATCH_BOARD.PARKED' | translate }}
       </button>
     } @else {
       <button type="button" class="slot" (click)="openPicker('BAY', row.workorderId)" [disabled]="!canTakeBay(row)"
-        [attr.title]="row.closed ? ('SHOPMGMT.DISPATCH_BOARD.CLOSED_NO_CHANGE' | translate) : null">
+        [attr.title]="bayBlockedKey(row) | translate">
         {{ 'SHOPMGMT.DISPATCH_BOARD.ADD_BAY' | translate }}
       </button>
     }

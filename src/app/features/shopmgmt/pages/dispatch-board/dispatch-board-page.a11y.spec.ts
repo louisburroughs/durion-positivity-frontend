@@ -2,13 +2,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import axe from 'axe-core';
 
 import { DispatchBoardPageComponent } from './dispatch-board-page.component';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
 import { WorkorderSummaryResourceTypeEnum } from '@durion-sdk/workorder';
 import type { DashboardResponse } from '../../models/dispatch-board.models';
+import { isoDateLocal } from '../../models/capacity-calendar.models';
 
 /**
  * Genuine axe coverage of the RENDERED dispatch board.
@@ -23,7 +24,7 @@ import type { DashboardResponse } from '../../models/dispatch-board.models';
  * roughly nobody using assistive technology.
  */
 
-const TODAY = new Date().toISOString().slice(0, 10);
+const TODAY = isoDateLocal(new Date());
 
 /**
  * `html, body` in src/styles.css transition colour and background over 250ms.
@@ -85,12 +86,15 @@ describe('DispatchBoardPageComponent accessibility', () => {
     getDashboard: vi.fn().mockReturnValue(of(dashboard)),
     getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: 'LOC-1' })),
     getAvailability: vi.fn().mockReturnValue(of([])),
-    getBayKinds: vi.fn().mockReturnValue(of(new Map([['B4', 'ALIGNMENT']]))),
+    getBayInventory: vi.fn().mockReturnValue(
+      of(new Map([['B4', { bayId: 'B4', name: 'Bay 4', kind: 'ALIGNMENT', outOfService: false }]])),
+    ),
     getTechnicianSkills: vi.fn().mockReturnValue(of(new Map([['M1', ['BRAKES']]]))),
     assignMechanic: vi.fn().mockReturnValue(of({})),
     releaseMechanic: vi.fn().mockReturnValue(of({})),
     assignBay: vi.fn().mockReturnValue(of({})),
     releaseBay: vi.fn().mockReturnValue(of({})),
+    parkWorkorder: vi.fn().mockReturnValue(of({})),
   };
 
   let noTransition: HTMLStyleElement;
@@ -185,13 +189,16 @@ describe('DispatchBoardPageComponent accessibility', () => {
     }
   });
 
-  it('names each draggable mechanic and bay for assistive technology', () => {
+  // A div with `draggable` is a mouse-only control: no role, no tab stop, and a
+  // label that instructs the one gesture its audience cannot perform.
+  it('names each draggable mechanic and bay, as a real button', () => {
     const draggables: HTMLElement[] = Array.from(
       fixture.nativeElement.querySelectorAll('[draggable="true"]'),
     );
 
     expect(draggables.length).toBeGreaterThan(0);
     for (const draggable of draggables) {
+      expect(draggable.tagName).toBe('BUTTON');
       expect(draggable.getAttribute('aria-label')).toBeTruthy();
     }
   });
@@ -204,9 +211,9 @@ describe('DispatchBoardPageComponent accessibility', () => {
     );
 
     expect(chips.map(chip => chip.textContent?.trim())).toEqual([
-      'APPROVED',
-      'APPROVED',
-      'ASSIGNED',
+      'WORKEXEC.WIP_STATUS.APPROVED',
+      'WORKEXEC.WIP_STATUS.APPROVED',
+      'WORKEXEC.WIP_STATUS.ASSIGNED',
     ]);
   });
 
@@ -259,5 +266,44 @@ describe('DispatchBoardPageComponent accessibility', () => {
     const toast: HTMLElement | null = fixture.nativeElement.querySelector('.toast');
     expect(toast?.getAttribute('role')).toBe('status');
     expect(toast?.getAttribute('aria-live')).toBe('polite');
+  });
+
+  // A refused assignment is the only sign the write failed and the dispatcher
+  // has to act on it, so it interrupts rather than waiting its turn.
+  it('announces a refused assignment assertively', () => {
+    dispatchBoardServiceStub.assignMechanic.mockReturnValueOnce(
+      throwError(() => ({ status: 409, error: { code: 'TECHNICIAN_ALREADY_ASSIGNED' } })),
+    );
+
+    component.assignMechanic(component.toAssignRows()[0], 'M2');
+    fixture.detectChanges();
+
+    const toast: HTMLElement | null = fixture.nativeElement.querySelector('.toast');
+    expect(toast?.getAttribute('role')).toBe('alert');
+    expect(toast?.getAttribute('aria-live')).toBe('assertive');
+  });
+
+  // `title` reaches neither the keyboard nor touch, and a bare em dash is
+  // announced as "dash".
+  it('gives every not-available placeholder a text equivalent', () => {
+    const placeholders: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.na'));
+
+    expect(placeholders.length).toBeGreaterThan(0);
+    for (const placeholder of placeholders) {
+      const described =
+        placeholder.querySelector('.sr-only') !== null ||
+        placeholder.getAttribute('aria-hidden') === 'true' ||
+        placeholder.closest('[aria-label]') !== null;
+      expect(described).toBe(true);
+    }
+  });
+
+  // The poll can turn either banner on with no other signal that the board has
+  // degraded, and a live region inserted with its own first message is silent.
+  it('keeps a polite live region in place for the data-quality and stale banners', () => {
+    const region: HTMLElement | null = fixture.nativeElement.querySelector('.banners-row');
+
+    expect(region).toBeTruthy();
+    expect(region?.getAttribute('aria-live')).toBe('polite');
   });
 });

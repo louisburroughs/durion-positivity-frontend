@@ -12,6 +12,7 @@ import { BayAPIService } from '@durion-sdk/location';
 import { TechnicianAPIService } from '@durion-sdk/shop-manager';
 import { PeopleAvailabilityAPIService, PeopleAvailabilityResponse, PrimaryLocationResponse } from '@durion-sdk/people';
 import { DashboardResponse } from '../models/dispatch-board.models';
+import { heldSkillCodes } from './capacity-calendar.service';
 
 /**
  * The SDK's `PrimaryLocationResponse` always carries a location; a persona
@@ -21,14 +22,27 @@ import { DashboardResponse } from '../models/dispatch-board.models';
  */
 export type PrimaryLocation = Partial<PrimaryLocationResponse>;
 
-/** A bay's type classification, keyed by bay id. */
-export type BayKinds = ReadonlyMap<string, string>;
+/** One bay as the location inventory knows it. */
+export interface BayInventoryEntry {
+  readonly bayId: string;
+  /** Null when the inventory carries no name — never the raw id. */
+  readonly name: string | null;
+  /** `bayType` from the location domain. */
+  readonly kind: string | null;
+  readonly outOfService: boolean;
+}
+
+/** The location's bays, keyed by bay id. */
+export type BayInventory = ReadonlyMap<string, BayInventoryEntry>;
 
 /** The Durion skill codes a technician is credentialled for, keyed by person id. */
 export type TechnicianSkills = ReadonlyMap<string, readonly string[]>;
 
 /** One page is enough for a single shop's bays and technicians. */
 const ROSTER_PAGE_SIZE = 200;
+
+/** pos-location's bay lifecycle status, as the other shopmgmt services read it. */
+const BAY_OUT_OF_SERVICE = 'OUT_OF_SERVICE';
 
 @Injectable({ providedIn: 'root' })
 export class DispatchBoardService {
@@ -63,31 +77,46 @@ export class DispatchBoardService {
   }
 
   /**
-   * Bay type classifications from the location domain. The dashboard's own
-   * `BayStatus` carries occupancy and a name but no type, so the board reads the
-   * classification here to label an open bay with the work it takes.
+   * The location's own bay roster, with each bay's type.
    *
-   * Enrichment, not the board itself: a failure yields an empty map and the bays
-   * render untyped rather than failing the page.
+   * The **location inventory is the roster of record**, not `dashboard.bays`:
+   * pos-workorder serves bay identity from an event-fed replica and omits a bay
+   * whose row has not arrived, so a bay the shop really has can be missing from
+   * the dispatch projection entirely. The shop dashboard already reads the
+   * inventory for the same reason; this board merges the two.
+   *
+   * Enrichment, not the board itself: a failure yields an empty map and the rail
+   * falls back to whatever the dispatch projection knows.
    */
-  getBayKinds(locationId: string): Observable<BayKinds> {
+  getBayInventory(locationId: string): Observable<BayInventory> {
     return this.bayApi.listBays(locationId.trim(), undefined, undefined, 0, ROSTER_PAGE_SIZE).pipe(
       map(page => {
-        const kinds = new Map<string, string>();
+        const inventory = new Map<string, BayInventoryEntry>();
         for (const bay of page.content ?? []) {
-          if (bay.id && bay.bayType) {
-            kinds.set(bay.id, bay.bayType);
+          if (!bay.id) {
+            continue;
           }
+          inventory.set(bay.id, {
+            bayId: bay.id,
+            name: bay.name?.trim() || null,
+            kind: bay.bayType ?? null,
+            outOfService: bay.status === BAY_OUT_OF_SERVICE,
+          });
         }
-        return kinds as BayKinds;
+        return inventory as BayInventory;
       }),
-      catchError(() => of(new Map<string, string>() as BayKinds)),
+      catchError(() => of(new Map<string, BayInventoryEntry>() as BayInventory)),
     );
   }
 
   /**
    * Skill codes per technician, from shop management's HR-synchronized roster.
    * One call for the whole shop — the People credential endpoint is per person.
+   *
+   * Only ACTIVE credentials count, through the capacity calendar's own
+   * `heldSkillCodes`: an expired, revoked or superseded certification is not
+   * competence, and showing it would both mislabel the chip and float the
+   * technician up the picker's credentialled-first ordering.
    *
    * Enrichment, as above: a failure yields an empty map and the mechanic chips
    * render without their certification codes.
@@ -103,10 +132,7 @@ export class DispatchBoardService {
             if (!personId) {
               continue;
             }
-            const codes = (entry.credentials ?? [])
-              .map(credential => credential.skillCode)
-              .filter((code): code is string => Boolean(code));
-            skills.set(personId, Array.from(new Set(codes)));
+            skills.set(personId, Array.from(new Set(heldSkillCodes(entry.credentials))));
           }
           return skills as TechnicianSkills;
         }),
@@ -141,6 +167,18 @@ export class DispatchBoardService {
 
   releaseBay(workorderId: string): Observable<unknown> {
     return this.servicePositionApi.releaseServicePosition(workorderId);
+  }
+
+  /**
+   * Park the workorder on the site's HOLD position. Parking is not releasing:
+   * a released workorder is placed nowhere, a parked one stands in the site's
+   * own lot. `HOLD` defaults `resourceId` to the workorder's locationId and any
+   * other value is a 422, so none is sent.
+   */
+  parkWorkorder(workorderId: string): Observable<unknown> {
+    return this.servicePositionApi.assignServicePosition(workorderId, {
+      resourceType: AssignServicePositionRequestResourceTypeEnum.Hold,
+    });
   }
 
   private toIsoDate(value: string): string {

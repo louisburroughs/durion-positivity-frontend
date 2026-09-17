@@ -70,7 +70,8 @@ export interface MechanicCard {
 
 export interface BayCard {
   readonly bayId: string;
-  readonly name: string;
+  /** Null when neither the dispatch replica nor the inventory carries a name. */
+  readonly name: string | null;
   /** `bayType` from the location domain; null when the bay's replica has not arrived. */
   readonly kind: string | null;
   readonly available: boolean;
@@ -126,9 +127,31 @@ export interface BoardStats {
   readonly dueSoon: null;
 }
 
-/** What a mutation changed, so the toast can offer to put it back. */
+/** Where a workorder stood before a position write: a bay, the site's HOLD, or nowhere. */
+export type PositionKind = 'BAY' | 'HOLD';
+
+/**
+ * What a mutation changed, so the toast can offer to put it back.
+ *
+ * The step records the state the mutation is known to have produced, not only
+ * what it replaced: undo fires before the post-mutation re-read lands, so the
+ * row is still showing the old world when it is clicked.
+ */
 export interface UndoStep {
   readonly workorderId: string;
   readonly kind: 'MECHANIC' | 'BAY';
+  /** The mechanic, or the bay, the workorder held before. */
   readonly previousId: string | null;
+  /**
+   * MECHANIC only: who the workorder holds now. Undo picks assign against
+   * reassign from this — reading it off the row would still name the mechanic
+   * a release has already taken off, and 409 TECHNICIAN_NOT_ASSIGNED follows.
+   */
+  readonly currentMechanicId: string | null;
+  /**
+   * BAY only: what the previous position was. A parked workorder carries no bay
+   * id, so without this undo would release its HOLD instead of restoring it and
+   * leave the workorder in a third state nobody asked for.
+   */
+  readonly previousPosition: PositionKind | null;
 }

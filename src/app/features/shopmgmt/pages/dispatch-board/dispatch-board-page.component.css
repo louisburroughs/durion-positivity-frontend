@@ -115,11 +115,30 @@
 }
 
 /* A field this board has no source for. Deliberately inert and low-contrast:
- * it marks the gap without pretending to be a value. */
+ * it marks the gap without pretending to be a value. The em dash is for the
+ * eye; the explanation rides along in .sr-only, because `title` alone reaches
+ * neither the keyboard nor touch. */
 .na {
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   cursor: help;
+}
+
+/* No repo-wide utility exists: src/styles.css scopes .sr-only to two other
+ * components, so the board carries its own copy the way positivity does. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* A refresh over data already on screen: marked, not blanked. */
+.refreshing {
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 /* --------------------------------------------------------------- banners */
@@ -127,6 +146,12 @@
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+}
+
+/* The live region stays in the DOM whether or not it has a banner; with no
+ * banner it must not take the page's row gap with it. */
+.banners-row:empty {
+  display: none;
 }
 
 .loading-state,
@@ -216,12 +241,18 @@
   gap: var(--space-1);
 }
 
+/* A real <button>: draggable alone is a mouse-only affordance, invisible to
+ * the keyboard and unreliably announced. */
 .mech {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 2px var(--space-2);
   align-items: center;
+  width: 100%;
   padding: var(--space-2);
+  font: inherit;
+  text-align: left;
+  color: var(--currentTextColor);
   background: var(--surface-inset);
   border: 1px solid var(--border-color);
   border-left: 3px solid var(--input-border);
@@ -310,6 +341,9 @@
   flex-direction: column;
   flex: 1 1 6rem;
   padding: var(--space-1) var(--space-2);
+  font: inherit;
+  text-align: left;
+  color: var(--currentTextColor);
   background: var(--surface-inset);
   border: 1px dashed var(--input-border);
   border-radius: var(--radius-sm);
@@ -660,6 +694,28 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: var(--font-weight-heading);
+}
+
+/* The name opens the picker, so a filled slot can be reassigned in one write
+ * instead of a clear followed by an add. */
+.slot button.change {
+  padding: 0;
+  font: inherit;
+  font-weight: var(--font-weight-heading);
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.slot button.change:hover:not(:disabled) {
+  color: var(--link-color);
+  text-decoration: underline;
+}
+
+.slot button.change:disabled {
+  cursor: not-allowed;
 }
 
 .slot .clear {
