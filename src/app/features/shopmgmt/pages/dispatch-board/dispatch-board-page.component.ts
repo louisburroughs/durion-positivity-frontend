@@ -26,6 +26,7 @@ import { isoDateLocal } from '../../models/capacity-calendar.models';
 import {
   BayInventory,
   BayInventoryEntry,
+  ClockState,
   ClockStates,
   DispatchBoardService,
   TechnicianShifts,
@@ -44,9 +45,21 @@ type SortKey = 'HOURS' | 'DUE' | 'PRIORITY';
 /** What the user is dragging, or what a picker is about to place. */
 type SlotKind = 'MECHANIC' | 'BAY';
 
+/** The four pos-people timekeeping writes this board can make. */
+type TimekeepingAction = 'IN' | 'OUT' | 'BREAK_START' | 'BREAK_END';
+
+/**
+ * Where a mechanic drag started. The break bin and the roster are each other's
+ * drop target, so the origin is what tells a drop which way the mechanic is
+ * moving — and keeps a mechanic dragged out of the bin from landing on a
+ * workorder, which would dispatch someone who is on a break.
+ */
+type DragOrigin = 'ROSTER' | 'BREAK';
+
 interface DragPayload {
   readonly kind: SlotKind;
   readonly id: string;
+  readonly from: DragOrigin;
 }
 
 interface PickerRequest {
@@ -555,8 +568,8 @@ export class DispatchBoardPageComponent implements OnInit {
   // -------------------------------------------------------------------------
   // Drag and drop
   // -------------------------------------------------------------------------
-  onDragStart(kind: SlotKind, id: string, event: DragEvent): void {
-    this.dragging.set({ kind, id });
+  onDragStart(kind: SlotKind, id: string, event: DragEvent, from: DragOrigin = 'ROSTER'): void {
+    this.dragging.set({ kind, id, from });
     event.dataTransfer?.setData('text/plain', `${kind}:${id}`);
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'copyMove';
@@ -573,7 +586,12 @@ export class DispatchBoardPageComponent implements OnInit {
     if (!payload) {
       return false;
     }
-    return payload.kind === 'MECHANIC' ? this.canTakeMechanic(row) : this.canTakeBay(row);
+    if (payload.kind === 'BAY') {
+      return this.canTakeBay(row);
+    }
+    // A mechanic dragged out of the break bin is going back on the clock, not
+    // onto a job: the only place that drag may land is the roster.
+    return payload.from === 'ROSTER' && this.canTakeMechanic(row);
   }
 
   /**
@@ -835,6 +853,134 @@ export class DispatchBoardPageComponent implements OnInit {
     return null;
   }
 
+  /**
+   * Whether the mechanic can be sent on a break: they must be on the clock,
+   * because pos-people keys a break by the open session rather than the person.
+   * A mechanic whose clock state the caller may not see (`UNKNOWN`) has no
+   * session id either, so the break is not offered for them.
+   */
+  canStartBreak(mechanic: MechanicCard): boolean {
+    return this.canClock(mechanic) && mechanic.clockState === 'CLOCKED_IN' && mechanic.workSessionId !== null;
+  }
+
+  /** Whether the mechanic's open break can be ended. */
+  canEndBreak(mechanic: MechanicCard): boolean {
+    return this.canClock(mechanic) && mechanic.clockState === 'ON_BREAK' && mechanic.workSessionId !== null;
+  }
+
+  startBreak(mechanic: MechanicCard): void {
+    if (!this.canStartBreak(mechanic)) {
+      return;
+    }
+    this.runClockWrite(mechanic, 'BREAK_START');
+  }
+
+  endBreak(mechanic: MechanicCard): void {
+    if (!this.canEndBreak(mechanic)) {
+      return;
+    }
+    this.runClockWrite(mechanic, 'BREAK_END');
+  }
+
+  // --- the break bin as a drop target --------------------------------------
+
+  /**
+   * The bin accepts any mechanic dragged from the roster, including one it will
+   * then refuse: a dead cursor says only "not here", while a drop that lands
+   * and answers "clock in first" says what to do about it.
+   */
+  isBreakBinDropTarget(): boolean {
+    const payload = this.dragging();
+    return payload?.kind === 'MECHANIC' && payload.from === 'ROSTER' && this.canManageClock();
+  }
+
+  onBreakBinDragOver(event: DragEvent): void {
+    if (!this.isBreakBinDropTarget()) {
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onBreakBinDrop(event: DragEvent): void {
+    const payload = this.dragging();
+    if (!payload || !this.isBreakBinDropTarget()) {
+      return;
+    }
+    event.preventDefault();
+    this.dragging.set(null);
+
+    const mechanic = this.mechanics().find(candidate => candidate.personId === payload.id);
+    if (!mechanic) {
+      return;
+    }
+    if (!this.canStartBreak(mechanic)) {
+      this.refuseTimekeepingDrop(mechanic, 'BREAK_START');
+      return;
+    }
+    this.startBreak(mechanic);
+  }
+
+  // --- the roster as a drop target for someone coming off a break ----------
+
+  isRosterDropTarget(): boolean {
+    const payload = this.dragging();
+    return payload?.kind === 'MECHANIC' && payload.from === 'BREAK' && this.canManageClock();
+  }
+
+  onRosterDragOver(event: DragEvent): void {
+    if (!this.isRosterDropTarget()) {
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onRosterDrop(event: DragEvent): void {
+    const payload = this.dragging();
+    if (!payload || !this.isRosterDropTarget()) {
+      return;
+    }
+    event.preventDefault();
+    this.dragging.set(null);
+
+    const mechanic = this.offDutyMechanics().find(candidate => candidate.personId === payload.id);
+    if (!mechanic) {
+      return;
+    }
+    if (!this.canEndBreak(mechanic)) {
+      this.refuseTimekeepingDrop(mechanic, 'BREAK_END');
+      return;
+    }
+    this.endBreak(mechanic);
+  }
+
+  /**
+   * Say why a drop the board accepted cannot be carried out. The two cases are
+   * distinct and neither is a server error: a mechanic who is not clocked in
+   * has no session to hang a break on, and one in the bin for time off is not
+   * on a break the board can end — that is HR's record, not a session.
+   */
+  private refuseTimekeepingDrop(mechanic: MechanicCard, action: 'BREAK_START' | 'BREAK_END'): void {
+    const named = mechanic.name !== null;
+    const suffix = named ? '' : '_UNNAMED';
+    const key =
+      action === 'BREAK_START'
+        ? `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BREAK_NEEDS_CLOCK_IN${suffix}`
+        : `SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BREAK_NOT_A_BREAK${suffix}`;
+    this.toast.set({
+      id: `${mechanic.personId}:${++this.toastSeq}`,
+      key,
+      params: named ? { mechanic: mechanic.name as string } : {},
+      tone: 'ERROR',
+      undo: null,
+    });
+  }
+
   clockIn(mechanic: MechanicCard): void {
     if (!this.canClock(mechanic)) {
       return;
@@ -857,7 +1003,7 @@ export class DispatchBoardPageComponent implements OnInit {
    * session is an attendance record, and "clock back out" is a second real
    * event rather than a retraction of the first.
    */
-  private runClockWrite(mechanic: MechanicCard, action: 'IN' | 'OUT'): void {
+  private runClockWrite(mechanic: MechanicCard, action: TimekeepingAction): void {
     const personId = mechanic.personId;
     if (this.isClockPending(personId)) {
       return;
@@ -869,8 +1015,14 @@ export class DispatchBoardPageComponent implements OnInit {
     const params: Record<string, string> = name ? { mechanic: name } : {};
     this.markClockPending(personId, true);
 
-    const call =
-      action === 'IN' ? this.dispatchBoardService.clockIn(personId) : this.dispatchBoardService.clockOut(personId);
+    const call = this.toTimekeepingCall(mechanic, action);
+    if (!call) {
+      // Guarded by `canStartBreak` / `canEndBreak` before we get here; this is
+      // the belt to their braces, and releasing the card matters more than the
+      // unreachable branch being tidy.
+      this.markClockPending(personId, false);
+      return;
+    }
 
     call.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
@@ -952,15 +1104,39 @@ export class DispatchBoardPageComponent implements OnInit {
       });
   }
 
-  private toClockSuccessKey(action: 'IN' | 'OUT', named: boolean): string {
-    if (action === 'IN') {
-      return named
-        ? 'SHOPMGMT.DISPATCH_BOARD.TOAST.CLOCKED_IN'
-        : 'SHOPMGMT.DISPATCH_BOARD.TOAST.CLOCKED_IN_UNNAMED';
+  /**
+   * The SDK call for each action, or null when the board lacks what it needs.
+   *
+   * Clock in and out are keyed by PERSON — pos-people finds the open session
+   * itself — while the break calls are keyed by the SESSION, so a break needs
+   * a `workSessionId` the clock-state read supplied and a mechanic who is not
+   * on the clock has none.
+   */
+  private toTimekeepingCall(mechanic: MechanicCard, action: TimekeepingAction): Observable<unknown> | null {
+    switch (action) {
+      case 'IN':
+        return this.dispatchBoardService.clockIn(mechanic.personId);
+      case 'OUT':
+        return this.dispatchBoardService.clockOut(mechanic.personId);
+      case 'BREAK_START':
+        return mechanic.workSessionId ? this.dispatchBoardService.startBreak(mechanic.workSessionId) : null;
+      case 'BREAK_END':
+        return mechanic.workSessionId ? this.dispatchBoardService.stopBreak(mechanic.workSessionId) : null;
     }
-    return named
-      ? 'SHOPMGMT.DISPATCH_BOARD.TOAST.CLOCKED_OUT'
-      : 'SHOPMGMT.DISPATCH_BOARD.TOAST.CLOCKED_OUT_UNNAMED';
+  }
+
+  private toClockSuccessKey(action: TimekeepingAction, named: boolean): string {
+    const suffix = named ? '' : '_UNNAMED';
+    switch (action) {
+      case 'IN':
+        return `SHOPMGMT.DISPATCH_BOARD.TOAST.CLOCKED_IN${suffix}`;
+      case 'OUT':
+        return `SHOPMGMT.DISPATCH_BOARD.TOAST.CLOCKED_OUT${suffix}`;
+      case 'BREAK_START':
+        return `SHOPMGMT.DISPATCH_BOARD.TOAST.BREAK_STARTED${suffix}`;
+      case 'BREAK_END':
+        return `SHOPMGMT.DISPATCH_BOARD.TOAST.BREAK_ENDED${suffix}`;
+    }
   }
 
   /**
@@ -969,7 +1145,7 @@ export class DispatchBoardPageComponent implements OnInit {
    * is the module's catch-all for `IllegalStateException`, so it is read
    * together with the action that provoked it rather than on its own.
    */
-  private toClockErrorKey(action: 'IN' | 'OUT', err: unknown): string {
+  private toClockErrorKey(action: TimekeepingAction, err: unknown): string {
     if (err instanceof HttpErrorResponse && err.status === 403) {
       return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_FORBIDDEN';
     }
@@ -983,6 +1159,18 @@ export class DispatchBoardPageComponent implements OnInit {
     if (action === 'OUT' && code === 'WORK_SESSION_NOT_FOUND') {
       return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_CLOCKED_IN';
     }
+    // Starting a break answers 404 when the session closed under us and 409
+    // when a break is already open; ending one answers 409 for "no open
+    // break", which is also its answer for a session id it does not know.
+    if (action === 'BREAK_START' && code === 'INVALID_STATE') {
+      return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_ALREADY_ON_BREAK';
+    }
+    if (action === 'BREAK_START' && code === 'WORK_SESSION_NOT_FOUND') {
+      return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_CLOCKED_IN';
+    }
+    if (action === 'BREAK_END' && code === 'INVALID_STATE') {
+      return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_ON_BREAK';
+    }
     return 'SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_CLOCK_GENERIC';
   }
 
@@ -991,9 +1179,18 @@ export class DispatchBoardPageComponent implements OnInit {
    * reporting a problem with the request itself. Both mean the session moved
    * under us, so both are worth a re-read; a 403 or an unknown person is not.
    */
-  private isClockRefusal(action: 'IN' | 'OUT', err: unknown): boolean {
+  private isClockRefusal(action: TimekeepingAction, err: unknown): boolean {
     const code = this.toApiErrorCode(err);
-    return (action === 'IN' && code === 'INVALID_STATE') || (action === 'OUT' && code === 'WORK_SESSION_NOT_FOUND');
+    switch (action) {
+      case 'IN':
+        return code === 'INVALID_STATE';
+      case 'OUT':
+        return code === 'WORK_SESSION_NOT_FOUND';
+      // Either break refusal means the session or its break moved elsewhere.
+      case 'BREAK_START':
+      case 'BREAK_END':
+        return code === 'INVALID_STATE' || code === 'WORK_SESSION_NOT_FOUND';
+    }
   }
 
   assignBay(row: WorkorderRow, bayId: string): void {
@@ -1606,7 +1803,7 @@ export class DispatchBoardPageComponent implements OnInit {
       personId: mechanic.personId,
       name: this.displayName(mechanic),
       initials: this.toInitials(mechanic.firstName, mechanic.lastName),
-      availability: this.toAvailability(mechanic),
+      availability: this.toAvailability(mechanic, clock),
       skillCodes: this.technicianSkills().get(mechanic.personId) ?? [],
       assignedWorkorderId: mechanic.assignedWorkorderId,
       whereLabel: bayId ? (this.bayNamesById().get(bayId) ?? null) : null,
@@ -1656,9 +1853,19 @@ export class DispatchBoardPageComponent implements OnInit {
    * PTO wins over a break, and a break over having work: a mechanic on approved
    * time off is out for the day whatever the roster's other flags still say.
    */
-  private toAvailability(mechanic: MechanicStatus): MechanicAvailability {
+  private toAvailability(mechanic: MechanicStatus, clock: ClockState | undefined): MechanicAvailability {
     if (this.isOnPto(mechanic)) {
       return 'OFF';
+    }
+    // pos-people owns the clock (#2061), so its reading outranks the dispatch
+    // projection's `onBreak` — a field that projection has never populated.
+    // `onBreak` stays below as the fallback for a row whose clock state the
+    // caller may not see, where it is the only break signal there is.
+    if (clock?.state === 'ON_BREAK') {
+      return 'BREAK';
+    }
+    if (clock?.state === 'CLOCKED_IN') {
+      return mechanic.assignedWorkorderId ? 'WORKING' : 'IDLE';
     }
     if (mechanic.onBreak) {
       return 'BREAK';

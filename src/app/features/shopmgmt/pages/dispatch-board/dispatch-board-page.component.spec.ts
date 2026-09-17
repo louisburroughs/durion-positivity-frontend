@@ -176,6 +176,8 @@ describe('DispatchBoardPageComponent', () => {
     parkWorkorder: vi.fn().mockReturnValue(of({})),
     clockIn: vi.fn().mockReturnValue(of({ sessionId: 'WS-1', personId: 'M1', status: 'ACTIVE' })),
     clockOut: vi.fn().mockReturnValue(of({ sessionId: 'WS-1', personId: 'M1', status: 'ENDED' })),
+    startBreak: vi.fn().mockReturnValue(of({ breakId: 'BR-1' })),
+    stopBreak: vi.fn().mockReturnValue(of({ breakId: 'BR-1' })),
   };
 
   beforeEach(async () => {
@@ -208,6 +210,8 @@ describe('DispatchBoardPageComponent', () => {
     dispatchBoardServiceStub.parkWorkorder.mockReturnValue(of({}));
     dispatchBoardServiceStub.clockIn.mockReturnValue(of({ sessionId: 'WS-1', personId: 'M1', status: 'ACTIVE' }));
     dispatchBoardServiceStub.clockOut.mockReturnValue(of({ sessionId: 'WS-1', personId: 'M1', status: 'ENDED' }));
+    dispatchBoardServiceStub.startBreak.mockReturnValue(of({ breakId: 'BR-1' }));
+    dispatchBoardServiceStub.stopBreak.mockReturnValue(of({ breakId: 'BR-1' }));
   });
 
   /** Render the board with a given payload already loaded. */
@@ -702,23 +706,25 @@ describe('DispatchBoardPageComponent', () => {
 
       expect(component.mechanics()[0].clockState).toBe('CLOCKED_IN');
       expect(component.mechanics()[0].workSessionId).toBe('ws-1');
+      // Clocked in: no way further in, and the break becomes available.
       expect(clockButtonsFor(0).map(button => button.getAttribute('aria-label'))).toEqual([
+        'SHOPMGMT.DISPATCH_BOARD.BREAK_START_ARIA',
         'SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA',
       ]);
     });
 
-    // ON_BREAK is clocked in, so the card offers the way out of the shift, not
-    // the way into one.
-    it('treats a mechanic on break as clocked in', () => {
+    // pos-people owns the clock, so ON_BREAK moves the mechanic to the break
+    // bin whatever the dispatch projection's own `onBreak` says.
+    it('moves a mechanic the clock reports on break into the break bin', () => {
       dispatchBoardServiceStub.getClockStates.mockReturnValue(
         of(new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-1' }]])),
       );
       renderWith(fullDashboard);
 
-      expect(component.mechanics()[0].clockState).toBe('ON_BREAK');
-      expect(clockButtonsFor(0).map(button => button.getAttribute('aria-label'))).toEqual([
-        'SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA',
-      ]);
+      expect(component.mechanics().some(mechanic => mechanic.personId === 'M1')).toBe(false);
+      const onBreak = component.offDutyMechanics().find(mechanic => mechanic.personId === 'M1');
+      expect(onBreak?.availability).toBe('BREAK');
+      expect(onBreak?.clockState).toBe('ON_BREAK');
     });
 
     it('reads the state back after a write rather than predicting it', () => {
@@ -734,6 +740,7 @@ describe('DispatchBoardPageComponent', () => {
       expect(dispatchBoardServiceStub.getClockStates).toHaveBeenCalled();
       expect(component.mechanics()[0].clockState).toBe('CLOCKED_IN');
       expect(clockButtonsFor(0).map(button => button.getAttribute('aria-label'))).toEqual([
+        'SHOPMGMT.DISPATCH_BOARD.BREAK_START_ARIA',
         'SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA',
       ]);
     });
@@ -784,7 +791,8 @@ describe('DispatchBoardPageComponent', () => {
       fixture.detectChanges();
 
       expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_ALREADY_CLOCKED_IN');
-      expect(component.mechanics()[0].clockState).toBe('ON_BREAK');
+      // The re-read found them on a break, which moves them to the bin.
+      expect(component.offDutyMechanics().find(mechanic => mechanic.personId === 'M1')?.clockState).toBe('ON_BREAK');
       expect(component.isClockPending('M1')).toBe(false);
     });
 
@@ -3305,6 +3313,187 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.toast()?.undo?.workorderId).toBe('wo-assigned');
       expect(mechanicOn('wo-to-assign')).toBe('M2');
       expect(mechanicOn('wo-assigned')).toBe('M2');
+    });
+  });
+
+  describe('breaks by drag', () => {
+    /** A drag event whose preventDefault and dropEffect can be inspected. */
+    function dragEvent(): DragEvent & { defaultPrevented: boolean } {
+      const dataTransfer = { dropEffect: 'none', effectAllowed: 'none', setData: vi.fn(), getData: vi.fn() };
+      return {
+        dataTransfer,
+        preventDefault: vi.fn(function (this: { defaultPrevented: boolean }) {
+          this.defaultPrevented = true;
+        }),
+        defaultPrevented: false,
+      } as unknown as DragEvent & { defaultPrevented: boolean };
+    }
+
+    /** Render with M1 clocked in and M2 on a break. */
+    function renderWithClocks(): void {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(
+          new Map([
+            ['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }],
+            ['M2', { state: 'ON_BREAK', workSessionId: 'ws-2' }],
+          ]),
+        ),
+      );
+      renderWith(fullDashboard);
+    }
+
+    function rosterCard(personId: string) {
+      return component.mechanics().find(mechanic => mechanic.personId === personId)!;
+    }
+
+    function binCard(personId: string) {
+      return component.offDutyMechanics().find(mechanic => mechanic.personId === personId)!;
+    }
+
+    it('starts a break when a clocked-in mechanic is dragged into the bin', () => {
+      renderWithClocks();
+      component.onDragStart('MECHANIC', 'M1', dragEvent());
+
+      expect(component.isBreakBinDropTarget()).toBe(true);
+      component.onBreakBinDrop(dragEvent());
+
+      expect(dispatchBoardServiceStub.startBreak).toHaveBeenCalledWith('ws-1');
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.BREAK_STARTED');
+      expect(component.toast()?.tone).toBe('INFO');
+    });
+
+    it('ends a break when a mechanic is dragged out of the bin onto the roster', () => {
+      renderWithClocks();
+      component.onDragStart('MECHANIC', 'M2', dragEvent(), 'BREAK');
+
+      expect(component.isRosterDropTarget()).toBe(true);
+      component.onRosterDrop(dragEvent());
+
+      expect(dispatchBoardServiceStub.stopBreak).toHaveBeenCalledWith('ws-2');
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.BREAK_ENDED');
+    });
+
+    // The break is keyed by the open session, so someone off the clock has
+    // nothing to hang one on. The drop still lands, and says what to do.
+    it('refuses a break for a mechanic who is not clocked in, and says why', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of(new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]])),
+      );
+      renderWith(fullDashboard);
+      component.onDragStart('MECHANIC', 'M1', dragEvent());
+
+      // The bin still takes the drop: a dead cursor would not explain itself.
+      expect(component.isBreakBinDropTarget()).toBe(true);
+      component.onBreakBinDrop(dragEvent());
+
+      expect(dispatchBoardServiceStub.startBreak).not.toHaveBeenCalled();
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BREAK_NEEDS_CLOCK_IN');
+      expect(component.toast()?.tone).toBe('ERROR');
+    });
+
+    // A chip in the bin for approved time off is HR's record, not a session.
+    it('will not end a break for a mechanic who is off duty on PTO', () => {
+      const onPto: DashboardResponse = {
+        ...fullDashboard,
+        mechanics: [
+          {
+            personId: 'M1',
+            firstName: 'Ray',
+            lastName: 'Delgado',
+            ptoEntries: [
+              { ptoId: 'p1', ptoType: 'VACATION', start: `${TODAY}T00:00:00Z`, end: `${TODAY}T23:59:59Z` },
+            ],
+          },
+        ],
+      };
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(of(new Map()));
+      renderWith(onPto);
+
+      expect(binCard('M1').availability).toBe('OFF');
+      expect(component.canEndBreak(binCard('M1'))).toBe(false);
+
+      component.onDragStart('MECHANIC', 'M1', dragEvent(), 'BREAK');
+      component.onRosterDrop(dragEvent());
+
+      expect(dispatchBoardServiceStub.stopBreak).not.toHaveBeenCalled();
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_BREAK_NOT_A_BREAK');
+    });
+
+    // Dispatching someone who is on a break is not what this drag means.
+    it('refuses to drop a mechanic from the bin onto a workorder', () => {
+      renderWithClocks();
+      component.onDragStart('MECHANIC', 'M2', dragEvent(), 'BREAK');
+
+      expect(component.canDrop(component.toAssignRows()[0])).toBe(false);
+
+      component.onDrop(component.toAssignRows()[0], dragEvent());
+      expect(dispatchBoardServiceStub.assignMechanic).not.toHaveBeenCalled();
+    });
+
+    it('still dispatches a mechanic dragged from the roster', () => {
+      renderWithClocks();
+      component.onDragStart('MECHANIC', 'M1', dragEvent());
+
+      expect(component.canDrop(component.toAssignRows()[0])).toBe(true);
+      expect(component.isRosterDropTarget()).toBe(false);
+    });
+
+    it('reads the clock back after a break write rather than predicting it', () => {
+      renderWithClocks();
+      const clockReads = dispatchBoardServiceStub.getClockStates.mock.calls.length;
+      const boardReads = dispatchBoardServiceStub.getDashboard.mock.calls.length;
+
+      component.startBreak(rosterCard('M1'));
+
+      expect(dispatchBoardServiceStub.getClockStates.mock.calls.length).toBe(clockReads + 1);
+      expect(dispatchBoardServiceStub.getDashboard.mock.calls.length).toBe(boardReads);
+    });
+
+    it('maps the break refusals onto their own messages', () => {
+      renderWithClocks();
+      dispatchBoardServiceStub.startBreak.mockReturnValueOnce(
+        throwError(() => ({ status: 409, error: { code: 'INVALID_STATE' } })),
+      );
+      component.startBreak(rosterCard('M1'));
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_ALREADY_ON_BREAK');
+
+      dispatchBoardServiceStub.stopBreak.mockReturnValueOnce(
+        throwError(() => ({ status: 409, error: { code: 'INVALID_STATE' } })),
+      );
+      component.endBreak(binCard('M2'));
+      expect(component.toast()?.key).toBe('SHOPMGMT.DISPATCH_BOARD.TOAST.ERROR_NOT_ON_BREAK');
+    });
+
+    it('guards one break write per mechanic at a time', () => {
+      renderWithClocks();
+      const pending = new Subject<unknown>();
+      dispatchBoardServiceStub.startBreak.mockReturnValue(pending.asObservable());
+
+      component.startBreak(rosterCard('M1'));
+      component.startBreak(rosterCard('M1'));
+
+      expect(dispatchBoardServiceStub.startBreak).toHaveBeenCalledTimes(1);
+      expect(component.isClockPending('M1')).toBe(true);
+    });
+
+    it('offers no break drop to a caller without the timekeeping authority', () => {
+      authStub.hasAnyPermission.mockImplementation(
+        (codes: readonly string[]) => !codes.includes('people:timekeeping:approve'),
+      );
+      renderWithClocks();
+      component.onDragStart('MECHANIC', 'M1', dragEvent());
+
+      expect(component.isBreakBinDropTarget()).toBe(false);
+      component.onBreakBinDrop(dragEvent());
+      expect(dispatchBoardServiceStub.startBreak).not.toHaveBeenCalled();
+    });
+
+    it('is not offered on another day\u2019s board', () => {
+      renderWithClocks();
+      component.selectedDate.set('2026-05-04');
+      fixture.detectChanges();
+
+      expect(component.canStartBreak(rosterCard('M1'))).toBe(false);
     });
   });
 });

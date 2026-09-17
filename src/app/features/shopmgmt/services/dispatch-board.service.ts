@@ -15,6 +15,7 @@ import {
   TechnicianAPIService,
 } from '@durion-sdk/shop-manager';
 import {
+  BreakDto,
   PeopleAvailabilityAPIService,
   PeopleAvailabilityResponse,
   PeopleAvailabilityResponseClockStateEnum,
@@ -323,6 +324,27 @@ export class DispatchBoardService {
    */
   clockOut(personId: string): Observable<WorkSessionDto> {
     return this.workSessionApi.stopWorkSession({ personId });
+  }
+
+  /**
+   * Start a break inside an open work session. Keyed by the SESSION, not the
+   * person — unlike clock in and out, which find the open session themselves —
+   * so the caller needs `workSessionId` from the clock-state read.
+   *
+   * Refuses with 404 WORK_SESSION_NOT_FOUND when no open session has that id,
+   * and 409 INVALID_STATE when a break is already open on it.
+   */
+  startBreak(workSessionId: string): Observable<BreakDto> {
+    return this.workSessionApi.startWorkSessionBreak(workSessionId);
+  }
+
+  /**
+   * End the open break on a session. Refuses with 409 INVALID_STATE when there
+   * is no open break — which is also the answer for an unknown session id, so
+   * the two cases are not distinguishable from the response.
+   */
+  stopBreak(workSessionId: string): Observable<BreakDto> {
+    return this.workSessionApi.stopWorkSessionBreak(workSessionId);
   }
 
   private toIsoDate(value: string): string {

@@ -332,6 +332,11 @@
   color: var(--status-warning-fg);
 }
 
+.clock-btn.clock-break {
+  border-color: var(--status-info-fg);
+  color: var(--status-info-fg);
+}
+
 .av {
   grid-row: span 2;
   width: 1.75rem;
@@ -444,6 +449,30 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
+  /* Room for the drop outline even when the bin is empty, so the target does
+     not appear only once something is already in it. */
+  min-height: 2.5rem;
+}
+
+/*
+ * Same dashed outline the workorder rows use for a live drop target, so the
+ * two directions of this drag read as one interaction.
+ */
+.bin.droppable,
+.mlist.droppable {
+  outline: 2px dashed var(--input-focus-border);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+.binchip.busy {
+  opacity: 0.6;
+}
+
+.binchip-grab {
+  display: flex;
+  align-items: center;
+  cursor: grab;
 }
 
 .binchip {

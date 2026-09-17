@@ -34,6 +34,8 @@ const servicePositionStub = {
 const workSessionStub = {
   startWorkSession: vi.fn(),
   stopWorkSession: vi.fn(),
+  startWorkSessionBreak: vi.fn(),
+  stopWorkSessionBreak: vi.fn(),
 };
 const bayStub = { listBays: vi.fn() };
 const technicianStub = { listLocationTechnicians: vi.fn() };
@@ -53,6 +55,8 @@ describe('DispatchBoardService', () => {
     servicePositionStub.releaseServicePosition.mockReturnValue(of(undefined));
     workSessionStub.startWorkSession.mockReturnValue(of({ sessionId: 'ws-1', personId: 'p-1' }));
     workSessionStub.stopWorkSession.mockReturnValue(of({ sessionId: 'ws-1', personId: 'p-1' }));
+    workSessionStub.startWorkSessionBreak.mockReturnValue(of({ breakId: 'br-1' }));
+    workSessionStub.stopWorkSessionBreak.mockReturnValue(of({ breakId: 'br-1' }));
     bayStub.listBays.mockReturnValue(of({ content: [] }));
     technicianStub.listLocationTechnicians.mockReturnValue(of({ content: [] }));
 
@@ -622,6 +626,27 @@ describe('DispatchBoardService', () => {
       const error = vi.fn();
 
       service.clockIn('p-1').subscribe({ next, error });
+
+      expect(next).not.toHaveBeenCalled();
+      expect(error).toHaveBeenCalledWith(refusal);
+    });
+
+    // Breaks key by the SESSION, unlike clock in and out which key by person.
+    it('starts and ends a break by work session id', () => {
+      service.startBreak('ws-9').subscribe();
+      service.stopBreak('ws-9').subscribe();
+
+      expect(workSessionStub.startWorkSessionBreak).toHaveBeenCalledWith('ws-9');
+      expect(workSessionStub.stopWorkSessionBreak).toHaveBeenCalledWith('ws-9');
+    });
+
+    it('propagates a break refusal rather than swallowing it', () => {
+      const refusal = new HttpErrorResponse({ status: 409, error: { code: 'INVALID_STATE' } });
+      workSessionStub.stopWorkSessionBreak.mockReturnValue(throwError(() => refusal));
+      const next = vi.fn();
+      const error = vi.fn();
+
+      service.stopBreak('ws-9').subscribe({ next, error });
 
       expect(next).not.toHaveBeenCalled();
       expect(error).toHaveBeenCalledWith(refusal);

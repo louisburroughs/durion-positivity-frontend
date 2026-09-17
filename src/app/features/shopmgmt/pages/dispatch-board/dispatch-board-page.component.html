@@ -122,7 +122,8 @@
             <span class="n">{{ 'SHOPMGMT.DISPATCH_BOARD.ON_DUTY_COUNT' | translate: { count: mechanics().length } }}</span>
           </h2>
           <div class="scroll">
-            <div class="mlist">
+            <div class="mlist" [class.droppable]="isRosterDropTarget()"
+              (dragover)="onRosterDragOver($event)" (drop)="onRosterDrop($event)">
               @for (mechanic of mechanics(); track mechanic.personId) {
                 <!-- The drag handle stays a button of its own: the clock controls
                      are siblings, never children, because a button inside a
@@ -191,6 +192,18 @@
                           {{ 'SHOPMGMT.DISPATCH_BOARD.CLOCK_IN' | translate }}
                         </button>
                       }
+                      @if (canStartBreak(mechanic)) {
+                        <!-- Keyboard parity for the drag onto the break bin;
+                             offered only when there is a session to hang a
+                             break on, which is what the bin would refuse. -->
+                        <button type="button" class="clock-btn clock-break" (click)="startBreak(mechanic)"
+                          [disabled]="!canClock(mechanic)"
+                          [attr.aria-label]="mechanic.name
+                            ? ('SHOPMGMT.DISPATCH_BOARD.BREAK_START_ARIA' | translate: { name: mechanic.name })
+                            : ('SHOPMGMT.DISPATCH_BOARD.BREAK_START_ARIA_UNNAMED' | translate)">
+                          {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_START' | translate }}
+                        </button>
+                      }
                       @if (showClockOut(mechanic)) {
                         <button type="button" class="clock-btn clock-out" (click)="clockOut(mechanic)"
                           [disabled]="!canClock(mechanic)"
@@ -255,10 +268,22 @@
             {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_AND_OFF' | translate }}
             <span class="n">{{ offDutyMechanics().length }}</span>
           </h2>
-          <div class="bin">
+          <div class="bin" [class.droppable]="isBreakBinDropTarget()"
+            (dragover)="onBreakBinDragOver($event)" (drop)="onBreakBinDrop($event)">
             @for (mechanic of offDutyMechanics(); track mechanic.personId) {
-              <span class="binchip">
-                <span class="dot" aria-hidden="true">{{ mechanic.initials }}</span>
+              <span class="binchip" [class.busy]="isClockPending(mechanic.personId)">
+                <!-- Only a real break is draggable back to the roster. A chip
+                     here for approved time off is HR's record, not a session
+                     this board can end, so it stays put. -->
+                @if (canEndBreak(mechanic)) {
+                  <span class="binchip-grab" draggable="true"
+                    (dragstart)="onDragStart('MECHANIC', mechanic.personId, $event, 'BREAK')"
+                    (dragend)="onDragEnd()">
+                    <span class="dot" aria-hidden="true">{{ mechanic.initials }}</span>
+                  </span>
+                } @else {
+                  <span class="dot" aria-hidden="true">{{ mechanic.initials }}</span>
+                }
                 @if (mechanic.name; as name) {
                   {{ name }}
                 } @else {
@@ -278,12 +303,28 @@
                     {{ 'SHOPMGMT.DISPATCH_BOARD.OFF_DUTY' | translate }}
                   }
                 </small>
+                @if (canEndBreak(mechanic)) {
+                  <!-- Keyboard parity for dragging the chip back to the roster. -->
+                  <button type="button" class="clock-btn clock-break" (click)="endBreak(mechanic)"
+                    [disabled]="isClockPending(mechanic.personId)"
+                    [attr.aria-label]="mechanic.name
+                      ? ('SHOPMGMT.DISPATCH_BOARD.BREAK_END_ARIA' | translate: { name: mechanic.name })
+                      : ('SHOPMGMT.DISPATCH_BOARD.BREAK_END_ARIA_UNNAMED' | translate)">
+                    {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_END' | translate }}
+                  </button>
+                }
               </span>
             } @empty {
               <span class="bin-empty">{{ 'SHOPMGMT.DISPATCH_BOARD.EVERYONE_ON_CLOCK' | translate }}</span>
             }
           </div>
-          <p class="bin-note">{{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_READ_ONLY' | translate }}</p>
+          <p class="bin-note">
+            @if (canManageClock()) {
+              {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_DRAG_HINT' | translate }}
+            } @else {
+              {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_READ_ONLY' | translate }}
+            }
+          </p>
         </section>
       </div>
 
