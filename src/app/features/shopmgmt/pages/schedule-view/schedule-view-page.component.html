@@ -149,7 +149,19 @@
 
   @if (state() === 'ready' && view()?.locationHasNoSchedule) {
     <div class="state-panel" role="status">
-      <p>{{ 'SHOPMGMT.SCHEDULE_VIEW.NO_SHOP_SCHEDULE' | translate: { location: locationLabel() } }}</p>
+      <!-- The fallback goes through the pipe, not translate.instant() in the
+           component: the pipe re-resolves on a locale switch, so the name and
+           the sentence around it cannot end up in different languages. -->
+      <p>
+        {{
+          'SHOPMGMT.SCHEDULE_VIEW.NO_SHOP_SCHEDULE'
+            | translate
+              : {
+                  location:
+                    locationName() ?? ('SHOPMGMT.SCHEDULE_VIEW.THIS_LOCATION' | translate),
+                }
+        }}
+      </p>
     </div>
   }
 
