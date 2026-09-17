@@ -318,7 +318,13 @@
               } @else {
                 <b class="na">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_NAME' | translate }}</b>
               }
-              <span class="note">{{ bay.kind ?? '' }}</span>
+              @if (bay.kind; as kind) {
+                <span class="note">{{ kind }}</span>
+              } @else {
+                <span class="note na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_KIND' | translate">
+                  {{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_BAY_KIND_SHORT' | translate }}
+                </span>
+              }
             </button>
           } @empty {
             <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_BAYS' | translate }}</p>

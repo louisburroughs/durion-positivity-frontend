@@ -23,6 +23,8 @@ import {
 import { isoDateLocal } from '../../models/capacity-calendar.models';
 import { BayInventory, BayInventoryEntry, DispatchBoardService, TechnicianSkills } from '../../services/dispatch-board.service';
 import { LocationPickerComponent } from '../../../location/components/location-picker/location-picker.component';
+import { AuthService } from '../../../../core/services/auth.service';
+import { SHOPMGMT_PAGE, WORKEXEC_PAGE } from '../../../../core/security/route-permissions';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 
 type StatusFilter = 'ALL' | 'OPEN' | 'DRAFT';
@@ -108,6 +110,7 @@ const SORT_UNAVAILABLE: readonly SortKey[] = ['DUE', 'PRIORITY'];
 })
 export class DispatchBoardPageComponent implements OnInit {
   private readonly dispatchBoardService = inject(DispatchBoardService);
+  private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private pollingStarted = false;
 
@@ -152,6 +155,22 @@ export class DispatchBoardPageComponent implements OnInit {
   private readSeq = 0;
 
   readonly sortUnavailable = SORT_UNAVAILABLE;
+
+  /**
+   * The route is gated on `workorder:dashboard:view`, which is a read. Placing a
+   * technician and placing a bay are separately permissioned, so a read-only
+   * dispatcher would otherwise get enabled controls and a guaranteed 403.
+   *
+   * A token with no `perm_bits` claim leaves permissions unknown; those stay
+   * open, the way `AuthService.canAccess()` treats them.
+   */
+  readonly canAssignMechanic = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(WORKEXEC_PAGE.workorderAssign),
+  );
+
+  readonly canAssignBay = computed(
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(SHOPMGMT_PAGE.bayAssign),
+  );
 
   // --- derived reads kept for the existing contract ---
   readonly loading = computed(() => this.state() === 'loading');
@@ -455,11 +474,15 @@ export class DispatchBoardPageComponent implements OnInit {
    * "not draft, not closed" — READY_FOR_PICKUP is neither, and answers 400.
    */
   canTakeMechanic(row: WorkorderRow): boolean {
-    return TECHNICIAN_ASSIGNABLE_STATUSES.includes(row.status) && !this.isPending(row.workorderId);
+    return (
+      this.canAssignMechanic() &&
+      TECHNICIAN_ASSIGNABLE_STATUSES.includes(row.status) &&
+      !this.isPending(row.workorderId)
+    );
   }
 
   canTakeBay(row: WorkorderRow): boolean {
-    return !row.closed && !this.isPending(row.workorderId);
+    return this.canAssignBay() && !row.closed && !this.isPending(row.workorderId);
   }
 
   /** Why the mechanic slot is inert, or null when it is usable. */
@@ -538,9 +561,16 @@ export class DispatchBoardPageComponent implements OnInit {
       return;
     }
 
+    // The dialog can outlive the row it was opened for: a poll or a readback
+    // may have closed the workorder or moved it out of the assignable window
+    // while it sat open. Re-check against the row as it stands now.
     if (request.kind === 'MECHANIC') {
-      this.assignMechanic(row, id);
-    } else {
+      if (this.canTakeMechanic(row)) {
+        this.assignMechanic(row, id);
+      }
+      return;
+    }
+    if (this.canTakeBay(row)) {
       this.assignBay(row, id);
     }
   }
@@ -705,9 +735,12 @@ export class DispatchBoardPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.markPending(workorderId, false);
+          // The guard is held across the readback, not released at the write:
+          // the board deliberately does not predict the row, so between the two
+          // the slot still shows pre-mutation state and a second write from it
+          // would pick the wrong endpoint.
           this.toast.set(success);
-          this.reloadBoard();
+          this.reloadBoard(() => this.markPending(workorderId, false));
         },
         error: (err: unknown) => {
           this.markPending(workorderId, false);
@@ -739,9 +772,10 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   /** Re-read after a mutation without dropping the board into its loading state. */
-  private reloadBoard(): void {
+  private reloadBoard(onSettled?: () => void): void {
     const locationId = this.selectedLocationId().trim();
     if (!locationId) {
+      onSettled?.();
       return;
     }
 
@@ -750,8 +784,14 @@ export class DispatchBoardPageComponent implements OnInit {
       .getDashboard(locationId, this.selectedDate())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: response => this.applySuccess(response, seq),
-        error: (err: unknown) => this.applyError(err, seq),
+        next: response => {
+          this.applySuccess(response, seq);
+          onSettled?.();
+        },
+        error: (err: unknown) => {
+          this.applyError(err, seq);
+          onSettled?.();
+        },
       });
   }
 
@@ -913,12 +953,16 @@ export class DispatchBoardPageComponent implements OnInit {
    * shows the bay occupied leaves an assignment nobody can clear.
    */
   private toRowBayId(workorder: WorkorderSummary, parked: boolean): string | null {
+    // A closed workorder's link is a freed position the projection has not
+    // caught up with, never a live placement — including its own resource
+    // fields, so this precedes the summary-side read rather than following it.
+    if (isClosedStatus(workorder.status)) {
+      return null;
+    }
     if (workorder.resourceType === 'BAY') {
       return workorder.assignedResourceId ?? null;
     }
-    // A closed workorder's link is a freed position the projection has not
-    // caught up with, never a live placement.
-    if (parked || workorder.resourceType || isClosedStatus(workorder.status)) {
+    if (parked || workorder.resourceType) {
       return null;
     }
     return this.bayClaimsByWorkorder().get(workorder.workorderId) ?? null;
@@ -1018,14 +1062,14 @@ export class DispatchBoardPageComponent implements OnInit {
     if (!bay) {
       return true;
     }
-    if (!bay.available) {
-      return false;
+    // A claimed bay is resolved by its holder, not by `available`: the two
+    // projections go stale independently, and a closed holder that left
+    // `available: false` behind would otherwise hide the bay for good.
+    if (bay.assignedWorkorderId) {
+      const holder = this.workordersById().get(bay.assignedWorkorderId);
+      return Boolean(holder) && isClosedStatus(holder?.status);
     }
-    if (!bay.assignedWorkorderId) {
-      return true;
-    }
-    const holder = this.workordersById().get(bay.assignedWorkorderId);
-    return Boolean(holder) && isClosedStatus(holder?.status);
+    return bay.available;
   }
 
   private sorted(rows: readonly WorkorderRow[]): WorkorderRow[] {

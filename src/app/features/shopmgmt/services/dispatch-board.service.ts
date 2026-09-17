@@ -38,8 +38,13 @@ export type BayInventory = ReadonlyMap<string, BayInventoryEntry>;
 /** The Durion skill codes a technician is credentialled for, keyed by person id. */
 export type TechnicianSkills = ReadonlyMap<string, readonly string[]>;
 
-/** One page is enough for a single shop's bays and technicians. */
-const ROSTER_PAGE_SIZE = 200;
+/**
+ * One page is enough for a single shop's bays and technicians, at the same cap
+ * ShopDashboardService and CapacityCalendarService use for these very endpoints.
+ * A smaller cap silently drops rows, and the board reads a missing bay as absent
+ * rather than as unfetched.
+ */
+const ROSTER_PAGE_SIZE = 500;
 
 /** pos-location's bay lifecycle status, as the other shopmgmt services read it. */
 const BAY_OUT_OF_SERVICE = 'OUT_OF_SERVICE';

@@ -2120,7 +2120,8 @@
         "ERROR_GENERIC": "No se pudo guardar el cambio. Inténtelo de nuevo."
       },
       "CLOSED_NO_CHANGE": "Una orden de trabajo cerrada no se puede modificar.",
-      "NOT_AVAILABLE_BAY_NAME": "El nombre de esta bahía aún no se ha replicado."
+      "NOT_AVAILABLE_BAY_NAME": "El nombre de esta bahía aún no se ha replicado.",
+      "NOT_AVAILABLE_BAY_KIND_SHORT": "Tipo no disponible"
     },
     "APPOINTMENT_CREATE": {
       "TITLE": "Crear cita",

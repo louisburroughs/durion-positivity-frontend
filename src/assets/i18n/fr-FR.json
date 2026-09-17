@@ -2120,7 +2120,8 @@
         "ERROR_GENERIC": "Cette modification n’a pas pu être enregistrée. Réessayez."
       },
       "CLOSED_NO_CHANGE": "Un bon de travail fermé ne peut pas être modifié.",
-      "NOT_AVAILABLE_BAY_NAME": "Le nom de cette baie n'a pas encore été répliqué."
+      "NOT_AVAILABLE_BAY_NAME": "Le nom de cette baie n'a pas encore été répliqué.",
+      "NOT_AVAILABLE_BAY_KIND_SHORT": "Type non disponible"
     },
     "APPOINTMENT_CREATE": {
       "TITLE": "Créer un rendez-vous",

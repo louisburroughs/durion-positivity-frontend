@@ -2120,7 +2120,8 @@
         "ERROR_GENERIC": "That change could not be saved. Try again."
       },
       "CLOSED_NO_CHANGE": "A closed workorder cannot be changed.",
-      "NOT_AVAILABLE_BAY_NAME": "This bay's name has not been replicated yet."
+      "NOT_AVAILABLE_BAY_NAME": "This bay's name has not been replicated yet.",
+      "NOT_AVAILABLE_BAY_KIND_SHORT": "Type not available"
     },
     "APPOINTMENT_CREATE": {
       "TITLE": "Create Appointment",

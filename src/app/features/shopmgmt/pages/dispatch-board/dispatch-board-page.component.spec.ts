@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { WorkorderSummaryResourceTypeEnum } from '@durion-sdk/workorder';
 import { DispatchBoardPageComponent } from './dispatch-board-page.component';
 import { DispatchBoardService } from '../../services/dispatch-board.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import type { DashboardResponse } from '../../models/dispatch-board.models';
 import { isoDateLocal } from '../../models/capacity-calendar.models';
 
@@ -88,6 +89,13 @@ describe('DispatchBoardPageComponent', () => {
   let fixture: ComponentFixture<DispatchBoardPageComponent>;
   let component: DispatchBoardPageComponent;
 
+  /** Permissions default to granted; the permission specs narrow them. */
+  const authStub = {
+    permissionsKnown: () => true,
+    hasAnyPermission: vi.fn().mockReturnValue(true),
+    hasPermission: vi.fn().mockReturnValue(true),
+  };
+
   const dispatchBoardServiceStub = {
     getDashboard: vi.fn().mockReturnValue(of(emptyDashboard)),
     getPrimaryLocation: vi.fn().mockReturnValue(of({ locationId: 'LOC-1' })),
@@ -107,6 +115,7 @@ describe('DispatchBoardPageComponent', () => {
       providers: [
         provideRouter([]),
         { provide: DispatchBoardService, useValue: dispatchBoardServiceStub },
+        { provide: AuthService, useValue: authStub },
       ],
     }).compileComponents();
 
@@ -116,6 +125,8 @@ describe('DispatchBoardPageComponent', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    authStub.permissionsKnown = () => true;
+    authStub.hasAnyPermission.mockReturnValue(true);
     dispatchBoardServiceStub.getDashboard.mockReturnValue(of(emptyDashboard));
     dispatchBoardServiceStub.getPrimaryLocation.mockReturnValue(of({ locationId: 'LOC-1' }));
     dispatchBoardServiceStub.getBayInventory.mockReturnValue(of(new Map()));
@@ -1333,6 +1344,119 @@ describe('DispatchBoardPageComponent', () => {
       component.onLocationPicked('LOC-9');
 
       expect(seen).toEqual(['state', 'errorKey']);
+    });
+  });
+  // -------------------------------------------------------------------------
+  // Write permissions — the route is gated on a read authority only
+  // -------------------------------------------------------------------------
+  describe('write permissions', () => {
+    it('refuses both writes when the session holds neither assign authority', () => {
+      authStub.hasAnyPermission.mockReturnValue(false);
+      renderWith(fullDashboard);
+
+      expect(component.canAssignMechanic()).toBe(false);
+      expect(component.canAssignBay()).toBe(false);
+      expect(component.canTakeMechanic(component.toAssignRows()[0])).toBe(false);
+      expect(component.canTakeBay(component.toAssignRows()[0])).toBe(false);
+    });
+
+    it('allows the bay write while refusing the technician write', () => {
+      authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
+        codes.includes('shop:bay:assign'),
+      );
+      renderWith(fullDashboard);
+
+      expect(component.canTakeBay(component.toAssignRows()[0])).toBe(true);
+      expect(component.canTakeMechanic(component.toAssignRows()[0])).toBe(false);
+    });
+
+    it('disables the slot control when the write is not permitted', () => {
+      authStub.hasAnyPermission.mockReturnValue(false);
+      renderWith(fullDashboard);
+
+      const slot: HTMLButtonElement | null = rowFor('wo-to-assign').querySelector('button.slot');
+      expect(slot?.disabled).toBe(true);
+    });
+
+    // A token with no perm_bits leaves permissions unknown; AuthService.canAccess
+    // treats that as open, and so does this board.
+    it('stays open when the token carries no permission claim', () => {
+      authStub.permissionsKnown = () => false;
+      authStub.hasAnyPermission.mockReturnValue(false);
+      renderWith(fullDashboard);
+
+      expect(component.canAssignMechanic()).toBe(true);
+      expect(component.canAssignBay()).toBe(true);
+    });
+  });
+
+  describe('guards re-checked at dispatch time', () => {
+    // The dialog can outlive the row it was opened for.
+    it('does not write when the row left the assignable window while the picker was open', () => {
+      renderWith(fullDashboard);
+      component.openPicker('MECHANIC', 'wo-to-assign');
+
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(
+        of({
+          ...fullDashboard,
+          workorders: [
+            { workorderId: 'wo-to-assign', workorderNumber: 'WO-24118', status: 'READY_FOR_PICKUP' },
+          ],
+        }),
+      );
+      component.refresh();
+      component.pick('M2');
+
+      expect(dispatchBoardServiceStub.assignMechanic).not.toHaveBeenCalled();
+    });
+
+    it('holds the pending guard until the post-mutation read settles', () => {
+      renderWith(fullDashboard);
+      const row = component.toAssignRows()[0];
+      const slowRead = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(slowRead);
+
+      component.assignMechanic(row, 'M2');
+      expect(component.isPending(row.workorderId)).toBe(true);
+
+      slowRead.next(fullDashboard);
+      expect(component.isPending(row.workorderId)).toBe(false);
+    });
+  });
+
+  describe('closed and stale projections, second pass', () => {
+    // A closed workorder's own resource fields are stale too, not just a
+    // bay-side claim.
+    it('ignores a closed workorder\'s own BAY resource', () => {
+      renderWith({
+        ...fullDashboard,
+        bays: [{ bayId: 'B1', bayName: 'Bay 1', available: false, status: 'ACTIVE' }],
+        workorders: [
+          {
+            workorderId: 'wo-done',
+            workorderNumber: 'WO-1',
+            status: 'COMPLETED',
+            resourceType: WorkorderSummaryResourceTypeEnum.Bay,
+            assignedResourceId: 'B1',
+          },
+        ],
+      });
+
+      expect(component.allRows()[0].bayId).toBeNull();
+    });
+
+    // `available` and the claim go stale independently; resolving the holder
+    // first stops a closed holder hiding the bay for good.
+    it('frees a bay whose closed holder left available false behind', () => {
+      renderWith({
+        ...fullDashboard,
+        workorders: [{ workorderId: 'done', status: 'CANCELLED' }],
+        bays: [
+          { bayId: 'B1', bayName: 'Bay 1', available: false, status: 'ACTIVE', assignedWorkorderId: 'done' },
+        ],
+      });
+
+      expect(component.openBays().map(bay => bay.bayId)).toContain('B1');
     });
   });
 });

@@ -148,7 +148,7 @@ describe('DispatchBoardService', () => {
 
       service.getBayInventory(' loc-1 ').subscribe(next);
 
-      expect(bayStub.listBays).toHaveBeenCalledWith('loc-1', undefined, undefined, 0, 200);
+      expect(bayStub.listBays).toHaveBeenCalledWith('loc-1', undefined, undefined, 0, 500);
       expect(next.mock.calls[0][0].get('b1')).toEqual({
         bayId: 'b1',
         name: 'Bay 1',
@@ -206,7 +206,7 @@ describe('DispatchBoardService', () => {
 
       service.getTechnicianSkills(' loc-1 ').subscribe(next);
 
-      expect(technicianStub.listLocationTechnicians).toHaveBeenCalledWith('loc-1', 'ACTIVE', undefined, 0, 200);
+      expect(technicianStub.listLocationTechnicians).toHaveBeenCalledWith('loc-1', 'ACTIVE', undefined, 0, 500);
       expect(next.mock.calls[0][0].get('p1')).toEqual(['BRAKES', 'DOT']);
       expect(next.mock.calls[0][0].get('p2')).toEqual([]);
     });
