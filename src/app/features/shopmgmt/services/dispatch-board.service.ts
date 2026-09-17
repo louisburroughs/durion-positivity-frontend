@@ -12,6 +12,7 @@ import { BayAPIService } from '@durion-sdk/location';
 import { TechnicianAPIService } from '@durion-sdk/shop-manager';
 import { PeopleAvailabilityAPIService, PeopleAvailabilityResponse, PrimaryLocationResponse } from '@durion-sdk/people';
 import { DashboardResponse } from '../models/dispatch-board.models';
+import { v4 as uuidv4 } from 'uuid';
 import { heldSkillCodes } from './capacity-calendar.service';
 
 /**
@@ -152,10 +153,18 @@ export class DispatchBoardService {
    * knowledge of the incumbent picks the endpoint — neither is promoted to the other.
    */
   assignMechanic(workorderId: string, technicianId: string, currentTechnicianId: string | null): Observable<unknown> {
+    // One key per attempt, as the workexec assign page does. A write the
+    // backend applied but whose response was lost would otherwise come back as
+    // ALREADY_ASSIGNED on retry, and the board would report a failure over a
+    // change that did land.
     if (currentTechnicianId) {
-      return this.technicianAssignmentApi.reassignTechnician(workorderId, { newTechnicianId: technicianId });
+      return this.technicianAssignmentApi.reassignTechnician(
+        workorderId,
+        { newTechnicianId: technicianId },
+        uuidv4(),
+      );
     }
-    return this.technicianAssignmentApi.assignTechnician(workorderId, { technicianId });
+    return this.technicianAssignmentApi.assignTechnician(workorderId, { technicianId }, uuidv4());
   }
 
   releaseMechanic(workorderId: string): Observable<unknown> {

@@ -46,6 +46,8 @@ interface PickerRequest {
 }
 
 interface ToastMessage {
+  /** Unique per write, so a late readback cannot adopt a newer toast. */
+  readonly id: string;
   readonly key: string;
   readonly params: Record<string, string>;
   readonly tone: 'INFO' | 'ERROR';
@@ -157,6 +159,9 @@ export class DispatchBoardPageComponent implements OnInit {
    */
   private readSeq = 0;
 
+  /** Distinguishes two toasts that share a translation key; see `run()`. */
+  private toastSeq = 0;
+
   readonly sortUnavailable = SORT_UNAVAILABLE;
 
   /**
@@ -185,7 +190,7 @@ export class DispatchBoardPageComponent implements OnInit {
    * refuses to do it; a refresh over cached data for the same selection does
    * not either.
    */
-  readonly showBoard = computed(() => this.state() === 'ready' || (this.loading() && this.hasCachedData()));
+  readonly showBoard = computed(() => this.hasCachedData() && (this.state() === 'ready' || this.loading()));
   readonly error = computed(() => this.errorKey());
   readonly workorders = computed<WorkorderSummary[]>(() => this.dashboard()?.workorders ?? []);
   readonly canRefresh = computed(() => this.selectedLocationId().trim().length > 0);
@@ -398,6 +403,7 @@ export class DispatchBoardPageComponent implements OnInit {
 
     const seq = ++this.readSeq;
     const key = this.toRequestKey(locationId, date);
+    this.clearFreshnessForNewSelection(key);
     return this.dispatchBoardService
       .getDashboard(locationId, date)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -744,7 +750,11 @@ export class DispatchBoardPageComponent implements OnInit {
    * the board rather than predicting the new status — the backend decides whether
    * a workorder becomes ASSIGNED, and the contract says to read it back.
    */
-  private run(workorderId: string, call: () => Observable<unknown>, success: ToastMessage): void {
+  private run(workorderId: string, call: () => Observable<unknown>, success: Omit<ToastMessage, 'id'>): void {
+    // Identity for the toast this write owns. Two rows assigned at once share a
+    // translation key, so matching on the key alone lets an earlier readback
+    // overwrite a newer toast — and hand it the wrong undo target.
+    const toastId = `${workorderId}:${++this.toastSeq}`;
     // One write per workorder at a time. Without this, a second drop or click
     // while the first is in flight races it, and which assignment survives —
     // and what the undo step points at — is decided by response order.
@@ -765,17 +775,18 @@ export class DispatchBoardPageComponent implements OnInit {
           // pending means a quick click is swallowed by the re-entry check and
           // the toast is already gone. The message goes up without its undo,
           // and the undo is attached once the readback releases the guard.
-          this.toast.set({ ...success, undo: null });
+          this.toast.set({ ...success, id: toastId, undo: null });
           this.reloadBoard(() => {
             this.markPending(workorderId, false);
-            if (this.toast()?.key === success.key) {
-              this.toast.set(success);
+            if (this.toast()?.id === toastId) {
+              this.toast.set({ ...success, id: toastId });
             }
           });
         },
         error: (err: unknown) => {
           this.markPending(workorderId, false);
           this.toast.set({
+            id: toastId,
             key: this.toMutationErrorKey(err),
             params: { workorder: success.params['workorder'] ?? '' },
             tone: 'ERROR',
@@ -803,6 +814,12 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   /** Re-read after a mutation without dropping the board into its loading state. */
+  /**
+   * `onSettled` releases the write guard and arms undo, so it must fire only
+   * while this read is still the current one. A refresh or poll that supersedes
+   * it would otherwise unlock the row and offer an undo computed from
+   * pre-readback state while the newer read is still in flight.
+   */
   private reloadBoard(onSettled?: () => void): void {
     const locationId = this.selectedLocationId().trim();
     if (!locationId) {
@@ -811,17 +828,22 @@ export class DispatchBoardPageComponent implements OnInit {
     }
 
     const seq = ++this.readSeq;
+    const settleIfCurrent = (): void => {
+      if (seq === this.readSeq) {
+        onSettled?.();
+      }
+    };
     this.dispatchBoardService
       .getDashboard(locationId, this.selectedDate())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: response => {
           this.applySuccess(response, seq);
-          onSettled?.();
+          settleIfCurrent();
         },
         error: (err: unknown) => {
           this.applyError(err, seq);
-          onSettled?.();
+          settleIfCurrent();
         },
       });
   }
@@ -849,7 +871,14 @@ export class DispatchBoardPageComponent implements OnInit {
         }),
       )
       .subscribe({
-        next: ({ response, seq }) => this.applySuccess(response, seq),
+        next: ({ response, seq }) => {
+          // Enrichment rides an accepted poll: bay lifecycle, names, types and
+          // skill chips go stale otherwise, and an out-of-service bay stays
+          // draggable until someone presses Refresh.
+          if (this.applySuccess(response, seq)) {
+            this.loadEnrichment(this.selectedLocationId().trim());
+          }
+        },
       });
   }
 
@@ -913,6 +942,15 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   /** Returns false when a newer read has already superseded this one. */
+  /** Freshness describes a selection; carrying it across a switch misreports the new one. */
+  private clearFreshnessForNewSelection(key: string): void {
+    if (this.cachedKey() !== null && this.cachedKey() !== key) {
+      this.isStale.set(false);
+      this.dataQualityWarning.set(false);
+      this.lastRefreshed.set(null);
+    }
+  }
+
   private applySuccess(response: DashboardResponse, seq: number, key = this.requestKey()): boolean {
     if (seq !== this.readSeq) {
       return false;

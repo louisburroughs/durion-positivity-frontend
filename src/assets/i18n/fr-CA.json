@@ -2124,7 +2124,10 @@
       "CLOSED_NO_CHANGE": "Un bon de travail fermé ne peut pas être modifié.",
       "NOT_AVAILABLE_BAY_NAME": "Le nom de cette baie n'a pas encore été répliqué.",
       "NOT_AVAILABLE_BAY_KIND_SHORT": "Type non disponible",
-      "ERROR_LOCATION_NOT_FOUND": "Cet emplacement est introuvable. Choisissez-en un autre ou vérifiez que l'atelier est configuré."
+      "ERROR_LOCATION_NOT_FOUND": "Cet emplacement est introuvable. Choisissez-en un autre ou vérifiez que l'atelier est configuré.",
+      "ADD_MECHANIC_ARIA": "Assigner un mécanicien au bon de travail {{workorder}}",
+      "ADD_BAY_ARIA": "Placer le bon de travail {{workorder}} dans une baie",
+      "PARKED_ARIA": "Le bon de travail {{workorder}} est en attente. Placez-le dans une baie."
     },
     "APPOINTMENT_CREATE": {
       "TITLE": "Créer un rendez-vous",

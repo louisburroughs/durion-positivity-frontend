@@ -1574,4 +1574,99 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.error()).toBe('SHOPMGMT.DISPATCH_BOARD.ERROR_LOCATION_NOT_FOUND');
     });
   });
+  // -------------------------------------------------------------------------
+  // Round-5 regressions
+  // -------------------------------------------------------------------------
+  describe('toast identity', () => {
+    // Two rows assigned at once share a translation key, so matching the toast
+    // on the key alone let an earlier readback hand a newer toast the wrong
+    // undo target.
+    it('does not let an earlier readback adopt a newer write\'s toast', () => {
+      renderWith(fullDashboard);
+      const firstRead = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(firstRead);
+
+      component.assignMechanic(component.toAssignRows()[0], 'M2');
+      const firstToastId = component.toast()?.id;
+
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(fullDashboard));
+      component.assignMechanic(component.assignedRows()[0], 'M2');
+      const secondToastId = component.toast()?.id;
+
+      firstRead.next(fullDashboard);
+
+      expect(secondToastId).not.toBe(firstToastId);
+      expect(component.toast()?.id).toBe(secondToastId);
+    });
+  });
+
+  describe('a superseded readback does not settle the write', () => {
+    it('keeps the guard held when a newer read overtakes the mutation readback', () => {
+      renderWith(fullDashboard);
+      const row = component.toAssignRows()[0];
+      const mutationRead = new Subject<DashboardResponse>();
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(mutationRead);
+
+      component.assignMechanic(row, 'M2');
+      dispatchBoardServiceStub.getDashboard.mockReturnValue(of(fullDashboard));
+      component.refresh();
+
+      mutationRead.next(fullDashboard);
+
+      expect(component.toast()?.undo).toBeNull();
+    });
+  });
+
+  describe('the board never outlives its selection', () => {
+    it('hides a board that answers a different location', () => {
+      renderWith(fullDashboard);
+      expect(component.showBoard()).toBe(true);
+
+      component.selectedLocationId.set('LOC-OTHER');
+
+      expect(component.hasCachedData()).toBe(false);
+      expect(component.showBoard()).toBe(false);
+    });
+
+    it('drops freshness metadata that described the previous selection', () => {
+      renderWith({ ...fullDashboard, dataQualityWarning: true });
+      expect(component.dataQualityWarning()).toBe(true);
+
+      component.selectedLocationId.set('LOC-OTHER');
+      dispatchBoardServiceStub.getDashboard.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+      component.refresh();
+
+      expect(component.dataQualityWarning()).toBe(false);
+      expect(component.lastRefreshed()).toBeNull();
+    });
+  });
+
+  describe('polling keeps the rails current', () => {
+    // An out-of-service bay would otherwise stay draggable until someone
+    // pressed Refresh.
+    it('refreshes bay inventory and skills on an accepted poll', fakeAsync(() => {
+      renderWith(fullDashboard);
+      const before = dispatchBoardServiceStub.getBayInventory.mock.calls.length;
+
+      tick(30_000);
+
+      expect(dispatchBoardServiceStub.getBayInventory.mock.calls.length).toBeGreaterThan(before);
+      fixture.destroy();
+    }));
+  });
+
+  describe('slot controls name their workorder', () => {
+    it('gives the add-mechanic and add-bay controls an accessible name', () => {
+      renderWith(fullDashboard);
+
+      const slots: HTMLButtonElement[] = Array.from(
+        rowFor('wo-to-assign').querySelectorAll('button.slot'),
+      );
+
+      expect(slots.length).toBeGreaterThan(0);
+      for (const slot of slots) {
+        expect(slot.getAttribute('aria-label')).toBeTruthy();
+      }
+    });
+  });
 });

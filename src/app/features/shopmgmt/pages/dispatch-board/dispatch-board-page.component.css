@@ -440,6 +440,15 @@
   color: var(--text-muted);
 }
 
+/* The input's own outline is removed so focus can be drawn on the whole
+ * search shell; :focus-within below is what replaces it. Without that pair a
+ * keyboard user gets no focus indication here at all. */
+.search:focus-within {
+  border-color: var(--input-focus-border);
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 1px;
+}
+
 .search input {
   border: none;
   background: none;

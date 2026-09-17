@@ -438,6 +438,7 @@
     } @else {
       <button type="button" class="slot" (click)="openPicker('MECHANIC', row.workorderId)"
         [disabled]="!canTakeMechanic(row)"
+        [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.ADD_MECHANIC_ARIA' | translate: { workorder: row.number }"
         [attr.title]="mechanicBlockedKey(row) | translate">
         {{ 'SHOPMGMT.DISPATCH_BOARD.ADD_MECHANIC' | translate }}
       </button>
@@ -462,11 +463,13 @@
       </span>
     } @else if (row.parked) {
       <button type="button" class="slot held" (click)="openPicker('BAY', row.workorderId)" [disabled]="!canTakeBay(row)"
+        [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.PARKED_ARIA' | translate: { workorder: row.number }"
         [attr.title]="bayBlockedKey(row) | translate">
         {{ 'SHOPMGMT.DISPATCH_BOARD.PARKED' | translate }}
       </button>
     } @else {
       <button type="button" class="slot" (click)="openPicker('BAY', row.workorderId)" [disabled]="!canTakeBay(row)"
+        [attr.aria-label]="'SHOPMGMT.DISPATCH_BOARD.ADD_BAY_ARIA' | translate: { workorder: row.number }"
         [attr.title]="bayBlockedKey(row) | translate">
         {{ 'SHOPMGMT.DISPATCH_BOARD.ADD_BAY' | translate }}
       </button>

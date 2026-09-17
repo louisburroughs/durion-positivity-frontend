@@ -291,16 +291,23 @@ describe('DispatchBoardService', () => {
     it('uses assignTechnician when the workorder has nobody on it', () => {
       service.assignMechanic('wo-1', 'tech-1', null).subscribe();
 
-      expect(technicianAssignmentStub.assignTechnician).toHaveBeenCalledWith('wo-1', { technicianId: 'tech-1' });
+      // The third argument is the per-attempt idempotency key.
+      expect(technicianAssignmentStub.assignTechnician).toHaveBeenCalledWith(
+        'wo-1',
+        { technicianId: 'tech-1' },
+        expect.any(String),
+      );
       expect(technicianAssignmentStub.reassignTechnician).not.toHaveBeenCalled();
     });
 
     it('uses reassignTechnician when the workorder already has one', () => {
       service.assignMechanic('wo-1', 'tech-2', 'tech-1').subscribe();
 
-      expect(technicianAssignmentStub.reassignTechnician).toHaveBeenCalledWith('wo-1', {
-        newTechnicianId: 'tech-2',
-      });
+      expect(technicianAssignmentStub.reassignTechnician).toHaveBeenCalledWith(
+        'wo-1',
+        { newTechnicianId: 'tech-2' },
+        expect.any(String),
+      );
       expect(technicianAssignmentStub.assignTechnician).not.toHaveBeenCalled();
     });
 
