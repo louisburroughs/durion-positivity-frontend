@@ -75,6 +75,12 @@ export class ChatModalComponent implements AfterViewChecked {
   readonly awaitingReply = this.chatState.awaitingReply;
   /** The thread on screen is not yet the conversation being opened. */
   readonly switching = this.chatState.switching;
+  /**
+   * Nothing may start a turn right now. The suggestions read this as well as the
+   * composer: `useSuggestion` calls `send()` directly, so leaving them live while
+   * a conversation loads was the same defect by another route.
+   */
+  readonly composerBusy = computed(() => this.awaitingReply() || this.switching());
   readonly activeConversation = this.chatState.activeConversation;
   readonly loadState = this.chatState.state;
   readonly errorKey = this.chatState.errorKey;
@@ -158,7 +164,7 @@ export class ChatModalComponent implements AfterViewChecked {
 
   newChat(): void {
     this.chatState.startNewConversation();
-    this.composer()?.focus();
+    this.focusComposerAfterRender();
   }
 
   /**
@@ -170,7 +176,10 @@ export class ChatModalComponent implements AfterViewChecked {
     if (isNarrowViewport()) {
       this.chatUi.hideHistoryRail();
     }
-    this.composer()?.focus();
+    // Deferred: while the rail is still rendered open, `.chat-main` is
+    // display:none on a narrow viewport and focusing the composer does nothing —
+    // then the clicked row is removed and focus falls to <body>, outside the trap.
+    this.focusComposerAfterRender();
   }
 
   /** Open the ingest dialog and move focus into it, so the trap has something to hold. */
@@ -191,10 +200,24 @@ export class ChatModalComponent implements AfterViewChecked {
 
   retry(messageId: string): void {
     this.chatSend.retry(messageId, { onSettled: () => (this.scrollPending = true) });
+    // The retry button goes with the turn it belonged to.
+    this.focusComposerAfterRender();
   }
 
   useSuggestion(textKey: string): void {
     this.send(this.translate.instant(textKey));
+    // Sending empties the empty state, taking the clicked suggestion with it.
+    this.focusComposerAfterRender();
+  }
+
+  /**
+   * Put the caret in the composer once the DOM has caught up. Every caller here
+   * has just removed the control that had focus; doing it synchronously would
+   * either target a still-hidden composer or race the removal, and focus would
+   * land on <body> — outside the dialog and past its trap.
+   */
+  private focusComposerAfterRender(): void {
+    setTimeout(() => this.composer()?.focus());
   }
 
   /** Copy the whole conversation as plain text, sender-labelled. */

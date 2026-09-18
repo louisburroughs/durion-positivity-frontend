@@ -81,7 +81,8 @@
           <ul class="suggestions">
             @for (suggestion of suggestions; track suggestion.textKey) {
             <li>
-              <button class="suggestion" type="button" (click)="useSuggestion(suggestion.textKey)">
+              <button class="suggestion" type="button" [disabled]="composerBusy()"
+                      (click)="useSuggestion(suggestion.textKey)">
                 <span class="suggestion__text">{{ suggestion.textKey | translate }}</span>
                 <span class="suggestion__caption">{{ suggestion.captionKey | translate }}</span>
               </button>
@@ -99,7 +100,7 @@
         }
       </div>
 
-      <app-chat-composer [busy]="awaitingReply() || switching()" [canIngest]="isAdmin()"
+      <app-chat-composer [busy]="composerBusy()" [canIngest]="isAdmin()"
                          (submitted)="send($event)"
                          (ingestRequested)="openRagDialog()" />
     </div>

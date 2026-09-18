@@ -1,6 +1,9 @@
 @if (isUser()) {
 
 <div class="turn turn--user">
+  <!-- The assistant's turns are labelled visibly; the user's need the same name in
+       the log, or a screen-reader user cannot tell whose message they are on. -->
+  <span class="sr-only">{{ 'SHELL.CHAT.SENDER_USER' | translate }}</span>
   <p class="bubble">{{ plainText() }}</p>
   <time class="turn-time" [dateTime]="message().timestamp.toISOString()"
         [title]="message().timestamp | date:'medium'">{{ message().timestamp | date:'shortTime' }}</time>

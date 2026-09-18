@@ -538,4 +538,30 @@ describe('ChatStateService against a store that does not answer immediately', ()
 
     expect(service.switching()).toBe(true);
   });
+
+  it('moves a conversation back to the top when a reply lands in it', () => {
+    // The rail's grouping preserves input order, so bumping `updatedAt` without
+    // reordering left an answered conversation sitting under newer ones.
+    // Distinct timestamps: everything here would otherwise land in one millisecond
+    // and the ordering under test would be a tie.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-18T09:00:00Z'));
+    service.appendUserMessage('the older question');
+    const older = service.activeConversationId()!;
+    const target = service.beginAssistantTurn()!;
+
+    vi.setSystemTime(new Date('2026-09-18T09:05:00Z'));
+    service.startNewConversation();
+    service.appendUserMessage('the newer question');
+    const newer = service.activeConversationId()!;
+    while (store.outstanding > 0) store.releaseNext();
+    expect(service.conversations().map(entry => entry.id)).toEqual([newer, older]);
+
+    vi.setSystemTime(new Date('2026-09-18T09:10:00Z'));
+    service.completeAssistantTurn(target, [{ kind: 'text', text: 'You have 26.' }]);
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.conversations().map(entry => entry.id)).toEqual([older, newer]);
+    vi.useRealTimers();
+  });
 });

@@ -312,10 +312,13 @@ describe('ChatModalComponent', () => {
     loading.detectChanges();
 
     expect(state.switching()).toBe(true);
-    const send = (loading.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
-      '.icon-btn--send',
-    )!;
-    expect(send.disabled).toBe(true);
+    const loadingHost = loading.nativeElement as HTMLElement;
+    expect(loadingHost.querySelector<HTMLButtonElement>('.icon-btn--send')!.disabled).toBe(true);
+    // useSuggestion() calls send() directly, so a live suggestion is the same
+    // defect by another route.
+    for (const suggestion of loadingHost.querySelectorAll<HTMLButtonElement>('.suggestion')) {
+      expect(suggestion.disabled).toBe(true);
+    }
   });
 
   it('traps a real Tab pressed while focus is outside the dialog', async () => {
@@ -334,5 +337,20 @@ describe('ChatModalComponent', () => {
     expect(event.defaultPrevented).toBe(true);
     expect(dialog().contains(document.activeElement)).toBe(true);
     outside.remove();
+  });
+
+  it('puts focus in the composer after a suggestion removes the empty state', async () => {
+    // The clicked suggestion is gone the moment the thread appears; without a
+    // hand-off focus lands on <body>, outside the trap.
+    const suggestion = host().querySelector<HTMLButtonElement>('.suggestion')!;
+    suggestion.focus();
+    suggestion.click();
+    fixture.detectChanges();
+
+    await new Promise(resolve => setTimeout(resolve));
+    fixture.detectChanges();
+
+    expect(host().querySelector('.suggestion')).toBeNull();
+    expect(document.activeElement).toBe(host().querySelector('#chat-composer-input'));
   });
 });

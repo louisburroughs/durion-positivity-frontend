@@ -115,7 +115,7 @@ export class ChatMessageComponent {
  * containing `=HYPERLINK(...)` would run on open. A leading apostrophe forces the
  * cell to text; the spreadsheet does not display it.
  */
-const FORMULA_LEAD_RE = /^[=+\-@\t\r]/;
+const FORMULA_LEAD_RE = /^[=+\-@\t\r\n]/;
 
 /** RFC 4180 cell: neutralise a formula lead, quote it, and double inner quotes. */
 function csvCell(value: string): string {

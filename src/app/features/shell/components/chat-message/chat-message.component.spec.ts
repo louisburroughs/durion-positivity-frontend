@@ -100,7 +100,14 @@ describe('ChatMessageComponent', () => {
       kind: 'table' as const,
       title: 'Payloads',
       columns: [{ label: 'Formula', align: 'start' as const }],
-      rows: [['=HYPERLINK("http://evil","Click")'], ['ACTIVE']],
+      rows: [
+        ['=HYPERLINK("http://evil","Click")'],
+        // Leading whitespace is skipped before a formula is evaluated, so a
+        // newline in front of `=` does not make the cell inert.
+        ['\n=HYPERLINK("http://evil","Click")'],
+        ['\t=cmd|calc'],
+        ['ACTIVE'],
+      ],
     };
     render(message('assistant', [block]));
     fixture.componentInstance.downloadCsv(block);
@@ -108,6 +115,8 @@ describe('ChatMessageComponent', () => {
     expect(written).not.toBeNull();
     const csv = await (written as unknown as Blob).text();
     expect(csv).toContain(`"'=HYPERLINK`);
+    expect(csv).toContain(`"'\n=HYPERLINK`);
+    expect(csv).toContain(`"'\t=cmd`);
     // An ordinary cell is left alone.
     expect(csv).toContain('"ACTIVE"');
   });
@@ -268,5 +277,12 @@ describe('ChatMessageComponent', () => {
     expect(host.querySelector('.turn-actions')).not.toBeNull();
     expect(host.querySelector('.block-btn')).toBeNull();
     expect(host.querySelector('.text-btn')).not.toBeNull();
+  });
+
+  it('names the user in their own turns, for a screen reader', () => {
+    // The assistant's turns carry a visible sender label; without the matching
+    // one here the log gives no way to tell whose message you are on.
+    const host = render(message('user', [{ kind: 'text', text: 'How many mechanics?' }]));
+    expect(host.querySelector('.sr-only')?.textContent?.trim()).toBe('SHELL.CHAT.SENDER_USER');
   });
 });

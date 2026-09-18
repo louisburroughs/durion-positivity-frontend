@@ -150,7 +150,7 @@ export class ChatStateService {
           // A list loaded for a previous identity, or superseded by a newer load,
           // must never land: it would show one tenant's history under another.
           if (token !== this.listToken || identity !== this.trackedIdentity) return;
-          this._conversations.set(conversations);
+          this.setConversations(conversations);
           this._state.set('ready');
           this._errorKey.set(null);
         },
@@ -287,8 +287,8 @@ export class ChatStateService {
           preview: derivePreview(messages),
           updatedAt: new Date(),
         };
-        this._conversations.update(conversations =>
-          conversations.map(entry => (entry.id === updated.id ? updated : entry)),
+        this.setConversations(
+          this._conversations().map(entry => (entry.id === updated.id ? updated : entry)),
         );
         this.enqueueWrite(() => this.store.saveConversation(updated));
       });
@@ -376,7 +376,7 @@ export class ChatStateService {
     };
 
     this._activeId.set(conversation.id);
-    this._conversations.update(conversations => [conversation, ...conversations]);
+    this.setConversations([conversation, ...this._conversations()]);
   }
 
   private patchConversation(conversationId: string, patch: Partial<ChatConversation>): void {
@@ -384,8 +384,8 @@ export class ChatStateService {
     if (!current) return;
 
     const updated: ChatConversation = { ...current, ...patch };
-    this._conversations.update(conversations =>
-      conversations.map(conversation => (conversation.id === conversationId ? updated : conversation)),
+    this.setConversations(
+      this._conversations().map(entry => (entry.id === conversationId ? updated : entry)),
     );
 
     // Metadata only: a pin or rename must not touch the stored messages, least of
@@ -406,8 +406,8 @@ export class ChatStateService {
       updatedAt: new Date(),
     };
 
-    this._conversations.update(conversations =>
-      conversations.map(conversation => (conversation.id === updated.id ? updated : conversation)),
+    this.setConversations(
+      this._conversations().map(entry => (entry.id === updated.id ? updated : entry)),
     );
 
     this.enqueueWrite(() => this.store.saveConversation(updated));
@@ -415,6 +415,17 @@ export class ChatStateService {
   }
 
   /** Queue a store write behind everything already issued. */
+  /**
+   * Newest first. The rail's grouping preserves input order, so a reply landing
+   * in an older conversation used to bump its `updatedAt` while leaving it sitting
+   * below newer entries until the modal was reopened.
+   */
+  private setConversations(conversations: readonly ChatConversation[]): void {
+    this._conversations.set(
+      [...conversations].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
+    );
+  }
+
   private enqueueWrite(work: () => Observable<unknown>): void {
     const identity = identityOf(this.auth.currentUserClaims());
     // Anything we write is a local change to the list, so a list load already in
