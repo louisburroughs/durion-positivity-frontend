@@ -1,0 +1,88 @@
+# Until this workflow existed, the accessibility route scan (accessibility-gate.yml)
+# was the ONLY PR check in this repo. Lint, unit tests and i18n compliance were
+# self-reported by whoever opened the PR, not verified by CI. This workflow runs
+# the repository's own gating scripts (the same ones documented in CLAUDE.md /
+# package.json) so those checks are enforced automatically.
+name: Frontend Checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+# Least privilege: the job runs pull-request code (npm ci, build, tests), so the
+# token it holds must not be able to write to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # The job runs pull-request code; nothing after this step needs git
+          # credentials, so do not leave the token in .git/config for it to read.
+          persist-credentials: false
+
+      - name: Checkout Angular SDK repo
+        uses: actions/checkout@v4
+        with:
+          repository: louisburroughs/durion-positivity-sdk-angular
+          path: .sdk-src
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # Pinned via .nvmrc rather than a literal, so the version lives in one
+          # place (see accessibility-gate.yml for the same rationale).
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Angular SDK packages
+        run: npm run sdk:install
+
+      - name: Lint (ESLint via @angular-eslint)
+        run: npm run lint
+
+      - name: Lint CSS (stylelint)
+        run: npm run lint:css
+
+      - name: Check i18n keys and pseudo-locale
+        run: npm run i18n:check
+
+      - name: Check Material Symbols glyph map is current
+        run: npm run icons:check
+
+      - name: Check generated sitemap routes module is current
+        run: npm run sitemap:routes:check
+
+      - name: Production build
+        run: npm run build
+
+      # `npm test` runs `ng test --browsers=ChromiumHeadless --runner-config
+      # vitest.config.ts` (package.json), which is the @angular/build:unit-test
+      # builder (angular.json "test" target) driving Vitest in BROWSER mode
+      # through the `@vitest/browser-playwright` provider (package.json
+      # devDependencies). That provider drives a real Chromium via Playwright's
+      # driver, and Playwright's npm package does not bundle browser binaries —
+      # they must be fetched separately, same as the `audit:site` Playwright
+      # crawl documented in docs/testing/frontend-audit-test-plan.md (line 219:
+      # `npm ci && npx playwright install chromium --with-deps` before that
+      # suite runs in CI). So install it here too before the test step.
+      - name: Install Playwright Chromium (required by the Vitest browser-mode test runner)
+        run: npx playwright install --with-deps chromium
+
+      - name: Unit tests (contracts + Angular/Vitest suite)
+        run: npm test

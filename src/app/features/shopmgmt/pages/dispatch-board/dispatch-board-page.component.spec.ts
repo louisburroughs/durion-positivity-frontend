@@ -1351,15 +1351,19 @@ describe('DispatchBoardPageComponent', () => {
       // `afterNextRender` callbacks run in the render phase; `whenStable` never
       // settles here because the board polls on a 30s interval.
       TestBed.inject(ApplicationRef).tick();
-      // Focus has already gone, and earlier than the move: marking the card
-      // pending disables the button, and a disabled control cannot hold focus.
-      expect(document.activeElement).toBe(document.body);
-
+      // Marking the card pending disables the button. Whether a disabled
+      // control keeps focus until it is destroyed differs between Chromium
+      // builds (the Playwright build in CI keeps it, others drop it to <body>),
+      // so the intermediate state is deliberately not asserted here: the
+      // contract under test is where focus ends up once the readback has moved
+      // the mechanic and destroyed the control.
       readback.next({ states: new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]]), ok: true });
       fixture.detectChanges();
       TestBed.inject(ApplicationRef).tick();
 
-      expect(document.activeElement).not.toBe(document.body);
+      const landed = document.activeElement as HTMLElement | null;
+      expect(landed).not.toBe(document.body);
+      expect(landed?.dataset['clockFor'] ?? landed?.dataset['dragFor']).toBe('M1');
     });
 
     it('hides the control from a caller without the timekeeping authority', () => {
