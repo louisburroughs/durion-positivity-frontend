@@ -1,3 +1,8 @@
+<!-- The click handler only turns a click on the native ::backdrop (which the
+     browser dispatches on the dialog element itself) into close(); it is a pointer
+     convenience, not the keyboard path. Keyboard users close with Escape, which the
+     directive forwards as (modalCancel), or the labelled close button below. -->
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
 <dialog #dialog appModalDialog class="chat-dialog" [class.chat-dialog--maximised]="maximised()"
         aria-labelledby="chat-dialog-title"
         (modalCancel)="close()" (click)="onDialogClick($event)">
