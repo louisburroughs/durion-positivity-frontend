@@ -1266,8 +1266,13 @@ describe('DispatchBoardPageComponent', () => {
       renderWith(fullDashboard);
       expect(component.mechanics().some(mechanic => mechanic.personId === 'M1')).toBe(false);
 
-      // The poll re-reads the local day; the selected date does not move.
-      component.todayIso.set('2026-09-18');
+      // The poll re-reads the local day; the selected date does not move. The
+      // rolled-over day is derived from the selection rather than written as a
+      // literal: a hardcoded date stops being "tomorrow" on the day it names,
+      // and then asserts the opposite of what this test is about.
+      const rolledOver = new Date(`${component.selectedDate()}T00:00:00`);
+      rolledOver.setDate(rolledOver.getDate() + 1);
+      component.todayIso.set(isoDateLocal(rolledOver));
       fixture.detectChanges();
 
       expect(component.isViewingToday()).toBe(false);
