@@ -47,8 +47,9 @@ export class PickListPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: result => {
+          // null: the workorder has no pick list yet — the empty state, not a failure (#286).
           this.pickList.set(result);
-          this.state.set(result.tasks.length === 0 ? 'empty' : 'ready');
+          this.state.set(!result || result.tasks.length === 0 ? 'empty' : 'ready');
         },
         error: () => {
           this.state.set('error');
