@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MdBlock, parseMarkdown } from '../../util/markdown.util';
+import { AuthedImageDirective } from '../../directives/authed-image.directive';
 
 /**
  * MarkdownViewComponent
@@ -19,7 +20,7 @@ import { MdBlock, parseMarkdown } from '../../util/markdown.util';
   selector: 'app-markdown-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet, RouterLink],
+  imports: [NgTemplateOutlet, RouterLink, AuthedImageDirective],
   templateUrl: './markdown-view.component.html',
   styleUrl: './markdown-view.component.css',
 })

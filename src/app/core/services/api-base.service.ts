@@ -67,6 +67,18 @@ export class ApiBaseService {
     });
   }
 
+  /**
+   * Fetch binary content through HttpClient, so the auth interceptor attaches the
+   * bearer token. A native `<img src>` or `<a href>` never goes through here and
+   * so cannot carry one.
+   */
+  getBlob(path: string, options?: ApiRequestOptions): Observable<Blob> {
+    return this.http.get(this.url(path, options?.baseUrlOverride), {
+      headers: this.toHeaders(options?.headers),
+      responseType: 'blob',
+    });
+  }
+
   private toHeaders(record?: Record<string, string>): HttpHeaders | undefined {
     return record ? new HttpHeaders(record) : undefined;
   }

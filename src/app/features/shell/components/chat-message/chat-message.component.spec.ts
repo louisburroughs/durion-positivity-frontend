@@ -2,8 +2,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, RouterLink } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { TranslateModule } from '@ngx-translate/core';
+import { of } from 'rxjs';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 import { ChatBlock, ChatMessage } from '../../models/chat.model';
 import { ChatMessageComponent } from './chat-message.component';
+
+/** Stands in for the authenticated blob fetch the renderers now go through. */
+const getBlob = vi.fn();
 
 function message(role: 'user' | 'assistant', blocks: readonly ChatBlock[], pending = false): ChatMessage {
   return { id: 'm1', role, blocks, timestamp: new Date('2026-09-18T09:56:00Z'), pending };
@@ -13,13 +18,18 @@ describe('ChatMessageComponent', () => {
   let fixture: ComponentFixture<ChatMessageComponent>;
 
   beforeEach(async () => {
+    getBlob.mockReset();
+    getBlob.mockReturnValue(of(new Blob(['stub'], { type: 'application/pdf' })));
+
     await TestBed.configureTestingModule({
       imports: [ChatMessageComponent, TranslateModule.forRoot()],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: ApiBaseService, useValue: { getBlob } }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ChatMessageComponent);
   });
+
+  afterEach(() => vi.restoreAllMocks());
 
   function render(value: ChatMessage): HTMLElement {
     fixture.componentRef.setInput('message', value);
@@ -180,14 +190,60 @@ describe('ChatMessageComponent', () => {
     expect(host.querySelector('figcaption')?.textContent).toContain('WO-10432');
   });
 
-  it('renders a file block with a download link', () => {
+  it('fetches a same-origin image through the authenticated client', async () => {
+    // `[src]` on a native <img> is fetched by the browser, so authInterceptor
+    // never sees it and a protected blob renders broken.
     const host = render(
       message('assistant', [
-        { kind: 'file', name: 'bulletin.pdf', sizeBytes: 840_000, mimeType: 'application/pdf', url: '/blob/2' },
+        { kind: 'image', url: '/mcp-server/v1/mcp/blobs/7', alt: 'tyre wear', caption: null },
       ]),
     );
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(getBlob).toHaveBeenCalledWith('/mcp-server/v1/mcp/blobs/7', { baseUrlOverride: '' });
+    expect(host.querySelector('img.block-image')?.getAttribute('src')).toMatch(/^blob:/);
+  });
+
+  it('leaves an absolute image URL alone', async () => {
+    const host = render(
+      message('assistant', [
+        { kind: 'image', url: 'https://cdn.example/wear.png', alt: 'tyre wear', caption: null },
+      ]),
+    );
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(getBlob).not.toHaveBeenCalled();
+    expect(host.querySelector('img.block-image')?.getAttribute('src')).toBe(
+      'https://cdn.example/wear.png',
+    );
+  });
+
+  it('offers a file download that goes through the authenticated client', async () => {
+    // A native `<a href download>` is fetched by the browser, which carries no
+    // bearer token, so a same-origin blob would 401 instead of downloading.
+    const block = {
+      kind: 'file' as const,
+      name: 'bulletin.pdf',
+      sizeBytes: 840_000,
+      mimeType: 'application/pdf',
+      url: '/mcp-server/v1/mcp/blobs/2',
+    };
+    const host = render(message('assistant', [block]));
     expect(host.querySelector('.file-name')?.textContent).toContain('bulletin.pdf');
-    expect(host.querySelector('a[download]')?.getAttribute('href')).toBe('/blob/2');
+    expect(host.querySelector('a[download]')).toBeNull();
+
+    const clicked: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      clicked.push(this.getAttribute('href') ?? '');
+    });
+
+    host.querySelector<HTMLButtonElement>('.block-btn')!.click();
+    await Promise.resolve();
+
+    expect(getBlob).toHaveBeenCalledWith('/mcp-server/v1/mcp/blobs/2', { baseUrlOverride: '' });
+    expect(clicked[0]).toMatch(/^blob:/);
   });
 
   it('announces an error block and offers a retry that emits the message id', () => {

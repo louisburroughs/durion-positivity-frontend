@@ -58,7 +58,7 @@
       <code class="md-code">{{ node.value }}</code>
       }
       @case ('image') {
-      <img class="md-image" [src]="node.src" [alt]="node.alt" loading="lazy">
+      <img class="md-image" [appAuthedSrc]="node.src" [alt]="node.alt" loading="lazy">
       }
       @case ('strong') {
       <strong><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: node.children }" /></strong>

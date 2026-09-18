@@ -107,6 +107,13 @@ export class ChatStateService {
   /** The same, for conversation-list loads. */
   private listToken = 0;
 
+  /**
+   * Bumped by every local write. A list load that started earlier carries a
+   * snapshot from before it, so its DATA is stale — but unlike a superseded load
+   * it still owns the loading state, and must clear it or the rail spins forever.
+   */
+  private listInvalidated = 0;
+
   /** True from the moment a conversation is opened until its messages land. */
   private readonly _selectionLoading = signal(false);
 
@@ -152,26 +159,40 @@ export class ChatStateService {
   /** (Re)load the conversation list for the signed-in user. */
   refresh(): void {
     const token = ++this.listToken;
+    const stamp = this.listInvalidated;
     const identity = this.trackedIdentity;
     this._state.set('loading');
-    this.store
-      .listConversations()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: conversations => {
+    // Queued, not issued directly: a read that overtakes a write still sitting in
+    // the queue comes back without the conversation that write created, and
+    // replacing the list with it drops the active conversation — after which
+    // `persist()` cannot resolve it and the next reply is never saved.
+    this.enqueue(() =>
+      this.store.listConversations().pipe(
+        tap(conversations => {
           // A list loaded for a previous identity, or superseded by a newer load,
           // must never land: it would show one tenant's history under another.
           if (token !== this.listToken || identity !== this.trackedIdentity) return;
+          if (stamp !== this.listInvalidated) {
+            // A local write happened after this load began. Keep the in-memory
+            // list, which is the newer of the two, but finish the load.
+            this._state.set('ready');
+            this._errorKey.set(null);
+            return;
+          }
           this.setConversations(conversations);
           this._state.set('ready');
           this._errorKey.set(null);
-        },
-        error: () => {
-          if (token !== this.listToken || identity !== this.trackedIdentity) return;
-          this._state.set('error');
-          this._errorKey.set('SHELL.CHAT.ERROR.HISTORY_LOAD');
-        },
-      });
+        }),
+        catchError(() => {
+          if (token === this.listToken && identity === this.trackedIdentity) {
+            this._state.set('error');
+            this._errorKey.set('SHELL.CHAT.ERROR.HISTORY_LOAD');
+          }
+          // Swallowed so one failed list load cannot take the queue down.
+          return EMPTY;
+        }),
+      ),
+    );
   }
 
   /** Clear the thread without discarding the stored conversation behind it. */
@@ -204,6 +225,11 @@ export class ChatStateService {
         },
         error: () => {
           if (token !== this.selectionToken) return;
+          // Drop the thread we were leaving. Keeping it would leave `_activeId`
+          // on the previous conversation while the screen reports a failure for
+          // another, and the next question would be written into the old one.
+          this._activeId.set(null);
+          this._messages.set([]);
           this._selectionLoading.set(false);
           this._state.set('error');
           this._errorKey.set('SHELL.CHAT.ERROR.HISTORY_LOAD');
@@ -287,7 +313,7 @@ export class ChatStateService {
       pending: false,
     };
 
-    this.enqueueWrite(() =>
+    this.enqueue(() =>
       this.store.loadMessages(target.conversationId).pipe(
         tap(stored => this.landStoredAnswer(target, stored, answer)),
         // A failed load must not take the queue down with it, and the answer is
@@ -486,14 +512,18 @@ export class ChatStateService {
     return identityOf(this.auth.currentUserClaims());
   }
 
+  /** Join the queue behind everything already issued, without invalidating anything. */
+  private enqueue(work: () => Observable<unknown>): void {
+    this.writes.next({ work, identity: this.currentIdentity() });
+  }
+
   private enqueueWrite(work: () => Observable<unknown>): void {
-    const identity = this.currentIdentity();
     // Anything we write is a local change to the list, so a list load already in
     // flight is now stale: it would put back the conversation just deleted, or
     // drop the one just created — and dropping the active one means the reply to
     // it is never persisted, because persist() resolves it through the list.
-    this.listToken += 1;
-    this.writes.next({ work, identity });
+    this.listInvalidated += 1;
+    this.enqueue(work);
   }
 
   private resetForCurrentUser(): void {

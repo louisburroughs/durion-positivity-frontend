@@ -122,7 +122,7 @@
 
         @case ('image') {
         <figure class="block block--image">
-          <img class="block-image" [src]="block.url" [alt]="block.alt" loading="lazy">
+          <img class="block-image" [appAuthedSrc]="block.url" [alt]="block.alt" loading="lazy">
           @if (block.caption) {
           <figcaption class="block-caption">{{ block.caption }}</figcaption>
           }
@@ -141,10 +141,13 @@
             }
           </span>
           @if (block.url) {
-          <a class="block-btn" [href]="block.url" download
-             [attr.aria-label]="'SHELL.CHAT.BLOCK.DOWNLOAD_FILE_ARIA' | translate:{ name: block.name }">
+          <!-- A button, not an anchor: a native download cannot carry the bearer
+               token, so the blob is fetched through the authenticated client. -->
+          <button class="block-btn" type="button" (click)="downloadFile(block)"
+                  [disabled]="downloading() === block.url"
+                  [attr.aria-label]="'SHELL.CHAT.BLOCK.DOWNLOAD_FILE_ARIA' | translate:{ name: block.name }">
             <span class="material-symbols-rounded" aria-hidden="true">{{ 'download' | msIcon }}</span>
-          </a>
+          </button>
           }
         </div>
         }

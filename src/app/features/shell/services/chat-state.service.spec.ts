@@ -691,6 +691,67 @@ describe('ChatStateService against a store that does not answer immediately', ()
     while (store.outstanding > 0) store.releaseNext();
     expect(store.order.filter(label => label.startsWith('save')).length).toBeGreaterThan(0);
   });
+
+  it('does not leave the previous thread addressable when a selection fails', () => {
+    // The error branch used to clear `switching` only, so `_activeId` still
+    // pointed at the conversation being left: the composer re-enabled and the
+    // next question was written into it while the screen reported a failure.
+    service.appendUserMessage('a question in the first conversation');
+    const first = service.activeConversationId()!;
+    service.startNewConversation();
+    service.appendUserMessage('a question in the second');
+    const second = service.activeConversationId()!;
+    while (store.outstanding > 0) store.releaseNext();
+
+    // The SECOND conversation is the one on screen when the load for the first
+    // fails; that is the thread the composer would otherwise keep writing into.
+    expect(service.activeConversationId()).toBe(second);
+
+    store.failNext = true;
+    service.selectConversation(first);
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.state()).toBe('error');
+    expect(service.errorKey()).toBe('SHELL.CHAT.ERROR.HISTORY_LOAD');
+    expect(service.activeConversationId()).toBeNull();
+    expect(service.messages()).toEqual([]);
+
+    // A question asked now opens a fresh conversation rather than joining one
+    // the user never successfully opened.
+    service.appendUserMessage('a question after the failure');
+    expect(service.activeConversationId()).not.toBe(first);
+    expect(service.activeConversationId()).not.toBe(second);
+  });
+
+  it('does not let a list load overtake a write still sitting in the queue', () => {
+    // Closing and reopening the modal starts a refresh. Issued directly, it could
+    // resolve ahead of the queued save and replace the list with a snapshot that
+    // predates the conversation — after which persist() cannot resolve it.
+    service.appendUserMessage('a brand new question');
+    const created = service.activeConversationId()!;
+
+    service.refresh();
+
+    // The read is not even in flight: it sits behind the write in the queue.
+    // Issued directly it would be, and could settle first — returning a snapshot
+    // without this conversation and replacing the list with it.
+    expect(store.pendingLabels).not.toContain('listConversations');
+
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.conversations().map(entry => entry.id)).toContain(created);
+    expect(service.state()).toBe('ready');
+  });
+
+  it('finishes the load even when a write invalidates the snapshot mid-flight', () => {
+    // A discarded snapshot still owns the loading state; leaving it set spun the
+    // history rail forever.
+    service.refresh();
+    service.appendUserMessage('a question issued mid-load');
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.state()).toBe('ready');
+  });
 });
 
 /** First text-ish block of a message, for readable assertions. */

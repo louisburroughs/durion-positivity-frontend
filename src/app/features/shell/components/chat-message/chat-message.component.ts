@@ -1,13 +1,26 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
   blocksToPlainText,
   ChatChartBlock,
+  ChatFileBlock,
   ChatMessage,
   ChatTableBlock,
 } from '../../models/chat.model';
 import { MaterialSymbolPipe } from '../../../../shared/material-symbol.pipe';
+import { AuthedImageDirective } from '../../directives/authed-image.directive';
+import { ChatBlobService } from '../../services/chat-blob.service';
 import { MarkdownViewComponent } from '../markdown-view/markdown-view.component';
 
 /** How long the copy button shows its confirmed state. */
@@ -27,11 +40,23 @@ const COPY_FEEDBACK_MS = 2000;
   selector: 'app-chat-message',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, TranslatePipe, MaterialSymbolPipe, MarkdownViewComponent],
+  imports: [
+    DatePipe,
+    DecimalPipe,
+    TranslatePipe,
+    MaterialSymbolPipe,
+    MarkdownViewComponent,
+    AuthedImageDirective,
+  ],
   templateUrl: './chat-message.component.html',
   styleUrl: './chat-message.component.css',
 })
 export class ChatMessageComponent {
+  private readonly blobs = inject(ChatBlobService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  /** Source URL of the file currently being fetched, so its button can disable. */
+  readonly downloading = signal<string | null>(null);
   readonly message = input.required<ChatMessage>();
 
   /** Emits the id of a failed turn the user asked to retry. */
@@ -97,6 +122,30 @@ export class ChatMessageComponent {
     this.retry.emit(this.message().id);
   }
 
+  /**
+   * Fetch the file through the authenticated client and save it.
+   *
+   * A native `<a href download>` is fetched by the browser, which carries no
+   * bearer token, so a same-origin API blob would 401 or navigate to an error
+   * page instead of downloading.
+   */
+  downloadFile(block: ChatFileBlock): void {
+    const source = block.url;
+    if (!source || typeof document === 'undefined' || this.downloading() === source) return;
+
+    this.downloading.set(source);
+    this.blobs
+      .resolve(source)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: url => {
+          this.downloading.set(null);
+          saveAs(url, block.name);
+        },
+        error: () => this.downloading.set(null),
+      });
+  }
+
   private async writeToClipboard(text: string): Promise<void> {
     if (typeof navigator === 'undefined' || !navigator.clipboard) return;
     try {
@@ -116,6 +165,18 @@ export class ChatMessageComponent {
  * cell to text; the spreadsheet does not display it.
  */
 const FORMULA_LEAD_RE = /^[=+\-@\t\r\n]/;
+
+/**
+ * Save a URL to disk. An object URL is revoked afterwards, but not in the same
+ * tick: Firefox and Safari have not read it when `click()` returns.
+ */
+function saveAs(url: string, fileName: string): void {
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.click();
+  if (url.startsWith('blob:')) setTimeout(() => URL.revokeObjectURL(url));
+}
 
 /** RFC 4180 cell: neutralise a formula lead, quote it, and double inner quotes. */
 function csvCell(value: string): string {

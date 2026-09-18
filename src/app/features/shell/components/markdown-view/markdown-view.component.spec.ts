@@ -1,17 +1,27 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
+import { ApiBaseService } from '../../../../core/services/api-base.service';
 import { MarkdownViewComponent } from './markdown-view.component';
+
+/** Stands in for the authenticated blob fetch a same-origin image goes through. */
+const getBlob = vi.fn();
 
 describe('MarkdownViewComponent', () => {
   let fixture: ComponentFixture<MarkdownViewComponent>;
 
   beforeEach(async () => {
+    getBlob.mockReset();
+    getBlob.mockReturnValue(of(new Blob(['stub'], { type: 'image/png' })));
+
     await TestBed.configureTestingModule({
       imports: [MarkdownViewComponent],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: ApiBaseService, useValue: { getBlob } }],
     }).compileComponents();
     fixture = TestBed.createComponent(MarkdownViewComponent);
   });
+
+  afterEach(() => vi.restoreAllMocks());
 
   function render(markdown: string): HTMLElement {
     fixture.componentRef.setInput('markdown', markdown);
@@ -73,6 +83,17 @@ describe('MarkdownViewComponent', () => {
     const image = host.querySelector('img.md-image');
     expect(image?.getAttribute('src')).toBe('https://cdn.example/wear.png');
     expect(image?.getAttribute('alt')).toBe('tyre wear');
+  });
+
+  it('fetches a same-origin image through the authenticated client', async () => {
+    // A model can already put an app-relative image in a markdown answer today,
+    // and the browser would fetch it with no bearer token.
+    const host = render('![wear](/mcp-server/v1/mcp/blobs/9)');
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(getBlob).toHaveBeenCalledWith('/mcp-server/v1/mcp/blobs/9', { baseUrlOverride: '' });
+    expect(host.querySelector('img.md-image')?.getAttribute('src')).toMatch(/^blob:/);
   });
 
   it('never builds markup from the source, whatever it contains', () => {
