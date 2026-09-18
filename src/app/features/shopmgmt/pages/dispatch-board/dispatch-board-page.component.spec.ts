@@ -1391,6 +1391,54 @@ describe('DispatchBoardPageComponent', () => {
       expect((landed as HTMLButtonElement).disabled).toBe(false);
     });
 
+    it('parks focus on the bin chip and follows the mechanic back to the roster', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-1' }]]), ok: true }),
+      );
+      renderWith(fullDashboard);
+      const control: HTMLButtonElement | null =
+        fixture.nativeElement.querySelector('[data-clock-for="M1"].clock-break');
+      expect(control).not.toBeNull();
+      control!.focus();
+
+      const readback = new Subject<{ states: Map<string, unknown>; ok: boolean }>();
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(readback);
+      control!.click();
+      fixture.detectChanges();
+      TestBed.inject(ApplicationRef).tick();
+      // A bin chip has no drag handle, so the chip itself is the parked anchor.
+      expect((document.activeElement as HTMLElement).dataset['cardFor']).toBe('M1');
+
+      readback.next({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true });
+      fixture.detectChanges();
+      TestBed.inject(ApplicationRef).tick();
+
+      const landed = document.activeElement as HTMLElement | null;
+      expect(landed).not.toBe(document.body);
+      expect(landed?.dataset['clockFor'] ?? landed?.dataset['dragFor']).toBe('M1');
+    });
+
+    it('returns focus to the bin-side control after a refused write', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M1', { state: 'ON_BREAK', workSessionId: 'ws-1' }]]), ok: true }),
+      );
+      renderWith(fullDashboard);
+      const control: HTMLButtonElement | null =
+        fixture.nativeElement.querySelector('[data-clock-for="M1"].clock-break');
+      control!.focus();
+
+      dispatchBoardServiceStub.stopBreak.mockReturnValueOnce(
+        throwError(() => new HttpErrorResponse({ status: 403 })),
+      );
+      control!.click();
+      fixture.detectChanges();
+      TestBed.inject(ApplicationRef).tick();
+
+      const landed = document.activeElement as HTMLElement | null;
+      expect(landed?.dataset['clockFor']).toBe('M1');
+      expect((landed as HTMLButtonElement).disabled).toBe(false);
+    });
+
     it('hides the control from a caller without the timekeeping authority', () => {
       authStub.hasAnyPermission.mockImplementation(
         (codes: readonly string[]) => !codes.includes('people:timekeeping:approve'),

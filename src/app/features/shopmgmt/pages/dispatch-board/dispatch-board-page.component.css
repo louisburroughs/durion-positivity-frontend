@@ -473,6 +473,13 @@
   border-radius: var(--radius-sm);
 }
 
+/* The chip is a programmatic focus target (tabindex=-1) while one of its clock
+   controls is pending, so it needs the same visible ring as any other focus stop. */
+.binchip:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: 2px;
+}
+
 .binchip.busy {
   opacity: 0.6;
 }

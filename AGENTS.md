@@ -199,7 +199,7 @@ private key(): string | null {
 ### 11. Accessibility mechanics (ADR-0029 §8)
 
 Native `dialog[appModalDialog]` for every modal, including nested (never `aria-modal` on a `div`); one
-global `.sr-only` (`src/styles.css`), never redefined; hints via `aria-describedby`, never inside an
+global `.sr-only` (`src/styles.css`), never redefined; hints via `aria-describedby`, never inside
 the label of a control that carries an `aria-label`; `title` never the only channel; targets ≥24×24 CSS px; Label in
 Name asserted per shipped locale; focus moved deliberately after any action that removes/replaces/
 disables the focused control; live regions (`aria-live`, `role="alert"`) survive rebuilds; `aria-current`

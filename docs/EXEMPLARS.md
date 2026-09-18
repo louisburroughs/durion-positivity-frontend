@@ -211,11 +211,13 @@ permission regression that silently restores an authority a prior PR deliberatel
 - **`aria-labelledby` section landmarks.** `dispatch-board-page.component.html:1,119,250,289` and
   `shop-dashboard-page.component.html:1,128,139` — every major `<section>` is labelled by its own
   heading id rather than left to an implicit accessible name.
-- **Focus restoration after a control removes itself.** `restoreClockFocus`
-  (`dispatch-board-page.component.ts:1324-1334`), called from `settleClockCard`
-  (`dispatch-board-page.component.ts:1319-1322`): runs in `afterNextRender` specifically *after* the
-  re-read has moved/destroyed the old card, and only takes over focus if nothing else claimed it in the
-  meantime (comment at `:1317-1319,1332-1334`).
+- **Focus parked, then restored, around a control that disables and removes itself.** `parkClockFocus`
+  (`dispatch-board-page.component.ts:1335`) moves focus from the clock control onto the mechanic's own
+  anchor (`clockAnchorFor`, `:1344`: the roster drag handle or the bin chip) before the pending guard
+  disables the button, because browsers disagree about a focused control that becomes disabled.
+  `restoreClockFocus` (`:1352`), called from `settleClockCard` (`:1321`), runs in `afterNextRender`
+  *after* the re-read has moved/destroyed the old card; it takes focus back only from `<body>` or from that
+  parked anchor, and leaves it alone if the dispatcher has moved on (see the doc comments on both methods).
 - **`:focus-within` ring on the search shell.** `dispatch-board-page.component.css:551-556` — the
   input's own outline is removed so the ring can be drawn on the whole `.search` shell; the comment
   there flags that without the pair a keyboard user gets no focus indication at all.
