@@ -332,6 +332,12 @@ export class ChatStateService {
     stored: readonly ChatMessage[],
     answer: ChatMessage,
   ): void {
+    // Checked AGAIN, here, not only in `completeAssistantTurn` and at the head of
+    // the queue: both of those run before `loadMessages` resolves, so a tenant or
+    // account change while it was in flight would still land the previous
+    // session's answer — and `stored` was read from the new namespace (ADR-0062).
+    if (target.identity !== this.currentIdentity()) return;
+
     // Drop the turn being replaced: a retry that settles after the user moved
     // away would otherwise show the old failure AND its answer.
     const superseded = new Set([target.messageId, target.replacesMessageId ?? '']);

@@ -752,6 +752,30 @@ describe('ChatStateService against a store that does not answer immediately', ()
 
     expect(service.state()).toBe('ready');
   });
+
+  it('drops a reply whose identity changed while the history load was in flight', () => {
+    // The checks in completeAssistantTurn and at the head of the queue both run
+    // BEFORE loadMessages resolves, so neither covers a tenant switch during the
+    // load — and `stored` would have been read from the new tenant's namespace.
+    service.appendUserMessage('a question under tenant-one');
+    const conversation = service.activeConversationId()!;
+    const target = service.beginAssistantTurn()!;
+    service.startNewConversation();
+    while (store.outstanding > 0) store.releaseNext();
+
+    // Start the away completion, but leave its loadMessages unsettled.
+    service.completeAssistantTurn(target, [{ kind: 'text', text: 'the late answer' }]);
+    expect(store.pendingLabels).toContain('loadMessages');
+
+    // The session changes while that load is still open, then it settles.
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
+    TestBed.tick();
+    store.order.length = 0;
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(store.order.filter(label => label.startsWith('save'))).toEqual([]);
+    expect(service.conversations().map(entry => entry.id)).not.toContain(conversation);
+  });
 });
 
 /** First text-ish block of a message, for readable assertions. */

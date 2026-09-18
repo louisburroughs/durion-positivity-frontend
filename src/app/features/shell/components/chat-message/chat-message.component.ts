@@ -75,8 +75,12 @@ export class ChatMessageComponent {
   }
 
   copyTable(block: ChatTableBlock): void {
-    const header = block.columns.map(column => column.label).join('\t');
-    const body = block.rows.map(row => row.join('\t')).join('\n');
+    // Tab-separated text pasted into a spreadsheet lands in cells, so a cell
+    // opening with `=` becomes a live formula exactly as it would from the CSV.
+    const header = block.columns.map(column => neutraliseFormula(column.label)).join('\t');
+    const body = block.rows
+      .map(row => row.map(neutraliseFormula).join('\t'))
+      .join('\n');
     void this.writeToClipboard(`${header}\n${body}`);
   }
 
@@ -178,10 +182,18 @@ function saveAs(url: string, fileName: string): void {
   if (url.startsWith('blob:')) setTimeout(() => URL.revokeObjectURL(url));
 }
 
+/**
+ * Force a cell to text. A leading apostrophe is the spreadsheet's text-prefix
+ * operator: it is not displayed, and it stops the value being evaluated. Shared
+ * by both export paths — the CSV file and the clipboard — so neither can drift.
+ */
+function neutraliseFormula(value: string): string {
+  return FORMULA_LEAD_RE.test(value) ? `'${value}` : value;
+}
+
 /** RFC 4180 cell: neutralise a formula lead, quote it, and double inner quotes. */
 function csvCell(value: string): string {
-  const inert = FORMULA_LEAD_RE.test(value) ? `'${value}` : value;
-  return `"${inert.replace(/"/g, '""')}"`;
+  return `"${neutraliseFormula(value).replace(/"/g, '""')}"`;
 }
 
 /** Filename-safe stem derived from a block title. */

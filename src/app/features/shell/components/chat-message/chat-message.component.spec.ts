@@ -131,6 +131,34 @@ describe('ChatMessageComponent', () => {
     expect(csv).toContain('"ACTIVE"');
   });
 
+  it('neutralises a formula when the table is copied, not only when exported', async () => {
+    // Tab-separated clipboard text lands in cells too, so `=HYPERLINK(...)` pasted
+    // into Excel or Sheets is evaluated exactly as it would be from the CSV.
+    let written = '';
+    const block = {
+      kind: 'table' as const,
+      title: 'Payloads',
+      columns: [{ label: '=Formula', align: 'start' as const }],
+      rows: [['=HYPERLINK("http://evil","Click")'], ['\n=cmd|calc'], ['ACTIVE']],
+    };
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: (text: string) => ((written = text), Promise.resolve()) },
+    });
+
+    render(message('assistant', [block]));
+    fixture.componentInstance.copyTable(block);
+    await Promise.resolve();
+
+    expect(written).toContain("'=HYPERLINK");
+    expect(written).toContain("'\n=cmd");
+    // The header is a cell on paste as well.
+    expect(written.startsWith("'=Formula")).toBe(true);
+    // An ordinary cell is left alone.
+    expect(written).toContain('ACTIVE');
+    expect(written).not.toContain("'ACTIVE");
+  });
+
   it('renders a table with a header row and right-aligned numeric cells', () => {
     const host = render(
       message('assistant', [
