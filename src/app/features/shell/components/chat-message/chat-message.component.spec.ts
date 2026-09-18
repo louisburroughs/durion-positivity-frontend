@@ -55,6 +55,44 @@ describe('ChatMessageComponent', () => {
     expect(host.querySelector('.turn--assistant')).toBeNull();
   });
 
+  it('renders a user bubble verbatim, without the spreadsheet text-prefix', () => {
+    // The bubble is a DISPLAY projection: the apostrophe `neutraliseFormula` adds
+    // for Excel is invisible there and visible here, so a question that opens with
+    // `=SUM(` must read exactly as it was typed (ADR-0065 §3).
+    const host = render(message('user', [{ kind: 'text', text: '=SUM(A1:A2) — what is this?' }]));
+    expect(host.querySelector('.bubble')?.textContent?.trim()).toBe('=SUM(A1:A2) — what is this?');
+  });
+
+  it('keeps the bubble and the clipboard projections apart for the same turn', () => {
+    // A user turn carries only text blocks today, so this uses a synthetic one
+    // with a table to exercise the split the projections document: the bubble
+    // shows the cell as written, `copyTurn()` still neutralises it for the
+    // spreadsheet it may be pasted into.
+    const written: string[] = [];
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: (text: string) => (written.push(text), Promise.resolve()) },
+    });
+
+    const host = render(
+      message('user', [
+        {
+          kind: 'table',
+          title: null,
+          columns: [{ label: '=Total', align: 'start' }],
+          rows: [['=SUM(A1:A2)']],
+        },
+      ]),
+    );
+
+    expect(host.querySelector('.bubble')?.textContent).toContain('=Total');
+    expect(host.querySelector('.bubble')?.textContent).not.toContain("'=");
+
+    fixture.componentInstance.copyTurn();
+    expect(written).toHaveLength(1);
+    expect(written[0].startsWith("'=Total")).toBe(true);
+  });
+
   it('renders markdown emphasis as real elements', () => {
     const host = render(
       message('assistant', [{ kind: 'markdown', markdown: 'You have **26 mechanics**.' }]),

@@ -11,6 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { SHELL_SECTION } from '../../../../core/security/route-permissions';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { MaterialSymbolPipe } from '../../../../shared/material-symbol.pipe';
@@ -22,15 +23,6 @@ import { ChatComposerComponent } from '../chat-composer/chat-composer.component'
 import { ChatHistoryRailComponent } from '../chat-history-rail/chat-history-rail.component';
 import { ChatMessageComponent } from '../chat-message/chat-message.component';
 import { RagIngestDialogComponent } from '../rag-ingest-dialog/rag-ingest-dialog.component';
-
-/**
- * durion-positivity-backend's pos-mcp-server document-ingest endpoint authority
- * (permission-catalog.ts). Distinct from any role: ROLE_ADMIN gated the control
- * before this fix even though the endpoint enforces this permission code, so an
- * admin without it got a 403 and a non-admin holder of it saw no control at all
- * (ADR-0040 §6a, PR #288 review PRRT_kwDORX-kkM6j3i1E).
- */
-const RAG_INGEST_PERMISSION: readonly string[] = ['mcp:document:ingest'];
 
 interface Suggestion {
   readonly textKey: string;
@@ -94,13 +86,16 @@ export class ChatModalComponent implements AfterViewChecked {
   readonly persistenceErrorKey = this.chatState.persistenceErrorKey;
 
   /**
-   * A route's read permission never enables a write (ADR-0040 §6a.1): a token
-   * with no `perm_bits` claim leaves permissions unknown, so this stays open for
-   * legacy tokens the way `AuthService.canAccess()` does, mirroring
+   * A route's read permission never enables a write (ADR-0040 §6a.1): this gates
+   * on `SHELL_SECTION.documentIngest`, the code the pos-mcp-server endpoint
+   * itself enforces (named once in `core/security/route-permissions.ts`, where
+   * the dialog's own submit-time check reads it from too). A token with no
+   * `perm_bits` claim leaves permissions unknown, so this stays open for legacy
+   * tokens the way `AuthService.canAccess()` does, mirroring
    * `dispatch-board-page.component.ts`'s `canAssignBay`.
    */
   readonly canIngestDocuments = computed(
-    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(RAG_INGEST_PERMISSION),
+    () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(SHELL_SECTION.documentIngest),
   );
   readonly showRagDialog = signal(false);
   readonly maximised = signal(false);

@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ChatApiService } from '../../services/chat-api.service';
 import { RagIngestDialogComponent } from './rag-ingest-dialog.component';
+import enUS from '../../../../../assets/i18n/en-US.json';
 
 const translations = {
   SHELL: {
@@ -22,6 +24,7 @@ const translations = {
         CONTENT_REQUIRED: 'Document content is required.',
         TITLE_REQUIRED: 'Title is required.',
         SUBMIT: 'Failed to load the document. Please try again.',
+        NOT_PERMITTED: enUS.SHELL.RAG.ERROR.NOT_PERMITTED,
       },
     },
   },
@@ -36,10 +39,22 @@ describe('RagIngestDialogComponent', () => {
     ingestDocument: vi.fn(),
   };
 
+  /** Granted by default: the dialog is only ever opened by a permitted caller. */
+  const authServiceStub = {
+    permissionsKnown: vi.fn().mockReturnValue(true),
+    hasAnyPermission: vi.fn().mockReturnValue(true),
+  };
+
   beforeEach(async () => {
+    authServiceStub.permissionsKnown.mockReturnValue(true);
+    authServiceStub.hasAnyPermission.mockReturnValue(true);
+
     await TestBed.configureTestingModule({
       imports: [RagIngestDialogComponent, TranslateModule.forRoot()],
-      providers: [{ provide: ChatApiService, useValue: chatApiStub }],
+      providers: [
+        { provide: ChatApiService, useValue: chatApiStub },
+        { provide: AuthService, useValue: authServiceStub },
+      ],
     }).compileComponents();
 
     const translate = TestBed.inject(TranslateService);
@@ -109,6 +124,73 @@ describe('RagIngestDialogComponent', () => {
       content: 'Policy document text',
       metadata: { source: 'manual', type: 'policy', title: 'Q1 Refund Policy' },
     });
+    expect(component.state()).toBe('success');
+  });
+
+  // ── The write permission, re-checked by the write itself (ADR-0040 §6a) ──
+  it('refuses the submit when the permission was lost after the dialog opened', () => {
+    // The gate that opened this dialog proves nothing about the token now: a
+    // silent refresh can drop `mcp:document:ingest` while the document is being
+    // pasted in, and the endpoint would answer 403 (ADR-0040 §6a.1).
+    component.content.set('Policy document text');
+    component.metaTitle.set('Q1 Refund Policy');
+
+    authServiceStub.hasAnyPermission.mockReturnValue(false);
+    component.submit();
+    fixture.detectChanges();
+
+    expect(chatApiStub.ingestDocument).not.toHaveBeenCalled();
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('SHELL.RAG.ERROR.NOT_PERMITTED');
+
+    // The panel names the refusal rather than inviting a retry that cannot work
+    // (ADR-0064 §4); the claim is asserted against the real bundle, not a
+    // spec-local copy (ADR-0035 §8).
+    const alert: HTMLElement = fixture.nativeElement.querySelector('.rag-status--error');
+    expect(alert?.getAttribute('role')).toBe('alert');
+    expect(alert?.textContent).toContain(enUS.SHELL.RAG.ERROR.NOT_PERMITTED);
+    expect(enUS.SHELL.RAG.ERROR.NOT_PERMITTED.toLowerCase()).toContain('permission');
+
+    // Still usable: the typed document is intact and a restored permission sends
+    // it without reopening the dialog.
+    expect(component.content()).toBe('Policy document text');
+    vi.mocked(chatApiStub.ingestDocument).mockReturnValueOnce(of(undefined));
+    authServiceStub.hasAnyPermission.mockReturnValue(true);
+    component.submit();
+
+    expect(chatApiStub.ingestDocument).toHaveBeenCalledTimes(1);
+    expect(component.state()).toBe('success');
+    expect(component.errorKey()).toBeNull();
+  });
+
+  it('submits for a caller that holds the permission — the positive half', () => {
+    // The granted half of the split (ADR-0040 §6a.5, ADR-0035 §7).
+    vi.mocked(chatApiStub.ingestDocument).mockReturnValueOnce(of(undefined));
+    authServiceStub.permissionsKnown.mockReturnValue(true);
+    authServiceStub.hasAnyPermission.mockReturnValue(true);
+
+    component.content.set('Policy document text');
+    component.metaTitle.set('Q1 Refund Policy');
+    component.submit();
+
+    expect(chatApiStub.ingestDocument).toHaveBeenCalledTimes(1);
+    expect(component.state()).toBe('success');
+  });
+
+  it('submits for a legacy token whose permissions are unknown', () => {
+    // No `perm_bits` claim: permissions are UNKNOWN, not denied, and the gate
+    // follows `AuthService.canAccess()` rather than locking the caller out
+    // (ADR-0040 §6a.3). `hasAnyPermission` answers false for such a token, so a
+    // check that ignored `permissionsKnown()` would refuse it.
+    vi.mocked(chatApiStub.ingestDocument).mockReturnValueOnce(of(undefined));
+    authServiceStub.permissionsKnown.mockReturnValue(false);
+    authServiceStub.hasAnyPermission.mockReturnValue(false);
+
+    component.content.set('Policy document text');
+    component.metaTitle.set('Q1 Refund Policy');
+    component.submit();
+
+    expect(chatApiStub.ingestDocument).toHaveBeenCalledTimes(1);
     expect(component.state()).toBe('success');
   });
 

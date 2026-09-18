@@ -4,7 +4,12 @@ import { firstValueFrom } from 'rxjs';
 import { JwtClaims } from '../../../core/models/auth.models';
 import { AuthService } from '../../../core/services/auth.service';
 import { ChatConversation, ChatMessage } from '../models/chat.model';
-import { ChatHistoryWriteRefusedError, LocalChatHistoryStore } from './chat-history.store';
+import {
+  ChatHistoryUnavailableError,
+  ChatHistoryWriteRefusedError,
+  LocalChatHistoryStore,
+  MAX_SERIALIZED_BYTES,
+} from './chat-history.store';
 
 const STORAGE_KEY = 'durion-chat-history-v1:tenant-one:admin.alpha';
 
@@ -241,6 +246,75 @@ describe('LocalChatHistoryStore', () => {
     const listed = await firstValueFrom(store.listConversations());
     expect(listed.some(entry => entry.id === 'current')).toBe(true);
     expect(await firstValueFrom(store.loadMessages('current'))).toHaveLength(1);
+  });
+
+  describe('serialized byte budget', () => {
+    /**
+     * A quota-free localStorage. The browser's own ~5 MB limit would refuse these
+     * multi-megabyte fixtures before the budget under test could act, and then a
+     * pass would prove nothing about the eviction — so storage is backed by a Map
+     * here and {@link MAX_SERIALIZED_BYTES} is the only limit in play.
+     */
+    function useUnlimitedStorage(): Map<string, string> {
+      const backing = new Map<string, string>();
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string, value: string) => {
+        backing.set(key, value);
+      });
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementation(
+        (key: string) => backing.get(key) ?? null,
+      );
+      vi.spyOn(Storage.prototype, 'removeItem').mockImplementation((key: string) => {
+        backing.delete(key);
+      });
+      return backing;
+    }
+
+    /** A message whose text is `share` of the whole budget. */
+    function heavyMessage(id: string, share: number): ChatMessage {
+      return message({ id, blocks: [{ kind: 'text', text: 'x'.repeat(MAX_SERIALIZED_BYTES * share) }] });
+    }
+
+    afterEach(() => vi.restoreAllMocks());
+
+    it('evicts the oldest unpinned conversation to make a write fit, and keeps the pinned one', async () => {
+      // Counts alone bounded 30 × 200 ITEMS and said nothing about bytes: one
+      // large answer could take the payload over the quota (ADR-0065 §6).
+      useUnlimitedStorage();
+
+      const pinned = conversation({ id: 'pinned', pinned: true, updatedAt: new Date('2026-09-01T09:00:00Z') });
+      const oldest = conversation({ id: 'oldest', updatedAt: new Date('2026-09-02T09:00:00Z') });
+      const newest = conversation({ id: 'newest', updatedAt: new Date('2026-09-18T09:00:00Z') });
+
+      await save(pinned, [heavyMessage('p', 0.3)]);
+      await save(oldest, [heavyMessage('o', 0.5)]);
+      // Together these three are over budget; this write must still land.
+      await save(newest, [heavyMessage('n', 0.5)]);
+
+      const listed = await firstValueFrom(store.listConversations());
+      expect(listed.map(entry => entry.id)).toEqual(['pinned', 'newest']);
+      // The conversation just written kept its messages, rather than being the
+      // one dropped to make room for itself.
+      expect(await firstValueFrom(store.loadMessages('newest'))).toHaveLength(1);
+      expect(await firstValueFrom(store.loadMessages('oldest'))).toHaveLength(0);
+    });
+
+    it('refuses a single conversation that cannot fit the budget instead of truncating it', async () => {
+      // Nothing left to evict: cutting the message bodies down would leave the
+      // thread on screen disagreeing with what was stored, with nothing to say so
+      // (ADR-0064 §1). The state layer turns this into the PERSIST warning.
+      const backing = useUnlimitedStorage();
+
+      await firstValueFrom(store.saveConversation(conversation({ id: 'huge' })));
+
+      await expect(
+        firstValueFrom(store.saveMessages('huge', [heavyMessage('body', 1.1)])),
+      ).rejects.toThrow(ChatHistoryUnavailableError);
+
+      // The oversized payload reached storage nowhere: the entry is still the
+      // metadata-only one the first write created.
+      expect(await firstValueFrom(store.loadMessages('huge'))).toHaveLength(0);
+      expect([...backing.values()].some(value => value.includes('xxxxxxxxxx'))).toBe(false);
+    });
   });
 
   it('caps the stored message list so one long thread cannot fill the quota', async () => {

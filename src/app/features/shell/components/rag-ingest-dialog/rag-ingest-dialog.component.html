@@ -34,10 +34,10 @@
   <!-- Form -->
   <div class="rag-dialog__body">
 
-    @if (state() === 'error') {
+    @if (state() === 'error' && errorKey()) {
     <div class="rag-status rag-status--error" role="alert">
       <span class="rag-status__icon" aria-hidden="true">!</span>
-      <p>{{ 'SHELL.RAG.ERROR.SUBMIT' | translate }}</p>
+      <p>{{ errorKey()! | translate }}</p>
     </div>
     }
 

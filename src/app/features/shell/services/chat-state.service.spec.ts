@@ -1029,6 +1029,50 @@ describe('ChatStateService against a store that does not answer immediately', ()
     expect(service.state()).toBe('ready');
   });
 
+  it('lands a late answer under the question it replies to, not under a newer one', () => {
+    // A pending placeholder is never persisted, so a reply that arrives after the
+    // user left the thread and came back finds neither `messageId` nor
+    // `replacesMessageId` in the stored snapshot. Appending it then put Q1's
+    // answer underneath Q2, where it reads as the answer to a question it never
+    // saw — so the target carries the question's own id as an insertion anchor
+    // (ADR-0063 §1).
+    service.appendUserMessage('Q1');
+    const conversationId = service.activeConversationId()!;
+    const target = service.beginAssistantTurn()!;
+
+    // Leave the thread and come back: the reload drops the placeholder.
+    service.startNewConversation();
+    while (store.outstanding > 0) store.releaseNext();
+    service.selectConversation(conversationId);
+    while (store.outstanding > 0) store.releaseNext();
+    expect(service.messages().map(message => blockText(message))).toEqual(['Q1']);
+
+    // A newer question is asked, and persisted, before the first reply arrives.
+    service.appendUserMessage('Q2');
+    while (store.outstanding > 0) store.releaseNext();
+
+    service.completeAssistantTurn(target, [{ kind: 'text', text: 'A1' }]);
+    while (store.outstanding > 0) store.releaseNext();
+
+    const stored = (
+      store as unknown as { saved: Map<string, readonly ChatMessage[]> }
+    ).saved.get(conversationId)!;
+    expect(stored.map(message => blockText(message))).toEqual(['Q1', 'A1', 'Q2']);
+    expect(service.messages().map(message => blockText(message))).toEqual(['Q1', 'A1', 'Q2']);
+
+    // And the newer question's own answer still follows IT, at the bottom.
+    const second = service.beginAssistantTurn()!;
+    service.completeAssistantTurn(second, [{ kind: 'text', text: 'A2' }]);
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.messages().map(message => blockText(message))).toEqual([
+      'Q1',
+      'A1',
+      'Q2',
+      'A2',
+    ]);
+  });
+
   it('drops a reply whose identity changed while the history load was in flight', () => {
     // The checks in completeAssistantTurn and at the head of the queue both run
     // BEFORE loadMessages resolves, so neither covers a tenant switch during the

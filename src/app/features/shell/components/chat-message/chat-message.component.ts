@@ -12,6 +12,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
+  blocksToDisplayText,
   blocksToPlainText,
   ChatChartBlock,
   ChatFileBlock,
@@ -72,6 +73,17 @@ export class ChatMessageComponent {
   readonly retry = output<string>();
 
   readonly isUser = computed(() => this.message().role === 'user');
+  /**
+   * What the user's own bubble renders. The DISPLAY projection: `plainText` below
+   * is the clipboard/CSV one, and it prefixes an apostrophe onto any value that
+   * opens like a spreadsheet formula — invisible in Excel, visible in a bubble
+   * (ADR-0065 §3 scopes that guard to the projections a paste or a download
+   * feeds). A user turn carries only text blocks today, so the two agree; the
+   * bubble reads the display projection because it is the one that must never
+   * show a guard meant for a spreadsheet.
+   */
+  readonly displayText = computed(() => blocksToDisplayText(this.message().blocks));
+  /** The clipboard projection, behind `copyTurn()` and the copy control's gate. */
   readonly plainText = computed(() => blocksToPlainText(this.message().blocks));
   readonly retryable = computed(() =>
     this.message().blocks.some(block => block.kind === 'error' && block.retryable),

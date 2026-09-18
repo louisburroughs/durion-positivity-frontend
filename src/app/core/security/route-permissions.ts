@@ -445,3 +445,18 @@ export const POSITIVITY_PAGE = {
 export const BULK_IMPORT_PAGE = {
   jobs: ['bulkImport:status:read'],
 } as const satisfies Record<string, readonly string[]>;
+
+/**
+ * The assistant shell — not a route group: the chat modal overlays every `/app`
+ * page. Its one mutation is pos-mcp-server's document ingest, and
+ * `documentIngest` is the code that endpoint enforces (`permission-catalog.ts`),
+ * NOT a role: ROLE_ADMIN gated the control until PR #288, so an admin without
+ * the code got a 403 and a non-admin holder of it saw no control at all.
+ *
+ * Named here, once, because two places gate on it — the control that opens the
+ * ingest dialog and the dialog's own `submit()` — and a duplicated literal is how
+ * a repointed authority leaves one of them behind (ADR-0040 §6a.1/§6a.6).
+ */
+export const SHELL_SECTION = {
+  documentIngest: ['mcp:document:ingest'],
+} as const satisfies Record<string, readonly string[]>;

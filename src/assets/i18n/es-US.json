@@ -353,7 +353,8 @@
       "ERROR": {
         "CONTENT_REQUIRED": "El contenido del documento es obligatorio.",
         "TITLE_REQUIRED": "El título es obligatorio.",
-        "SUBMIT": "No se pudo cargar el documento. Por favor, inténtalo de nuevo."
+        "SUBMIT": "No se pudo cargar el documento. Por favor, inténtalo de nuevo.",
+        "NOT_PERMITTED": "No tienes permiso para cargar documentos en la base de conocimiento."
       }
     }
   },

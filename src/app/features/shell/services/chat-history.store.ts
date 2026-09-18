@@ -70,9 +70,31 @@ export interface ChatHistoryStore {
 
 /** Storage schema version: a bump discards anything written by an older shape. */
 const STORAGE_PREFIX = 'durion-chat-history-v1';
-/** Keeps the payload inside a typical 5 MB localStorage budget. */
+/**
+ * How MANY conversations and messages are kept. Counts only: they say nothing
+ * about the SIZE of a turn, which is what {@link MAX_SERIALIZED_BYTES} bounds.
+ */
 const MAX_CONVERSATIONS = 30;
 const MAX_MESSAGES_PER_CONVERSATION = 200;
+
+/**
+ * Size cap on the whole serialized history: 4 MB of the ~5 MB a browser typically
+ * allows one origin, leaving room for everything else the app stores.
+ *
+ * The count caps above cannot hold a budget on their own — one answer can carry a
+ * megabyte of table or code text, so 30 × 200 bounded items said nothing about
+ * bytes and a single large response could push the payload over the quota
+ * (ADR-0065 §6 asks for a write-side budget, not just a write-side count).
+ * `write()` measures the JSON it is about to store and evicts whole conversations,
+ * oldest first and unpinned before pinned, until it fits. A payload that still
+ * does not fit is REFUSED rather than truncated: dropping message bodies to make
+ * room would leave a thread on screen that no longer matches what was stored,
+ * with nothing to say so (ADR-0064 §1).
+ *
+ * Exported so a test can size its fixtures against the real budget instead of
+ * pinning a number that would drift the moment this one changes.
+ */
+export const MAX_SERIALIZED_BYTES = 4 * 1024 * 1024;
 
 interface PersistedMessage {
   readonly id: string;
@@ -248,13 +270,24 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
     }
   }
 
-  /** True when the entries are persisted; false when the browser refused. */
+  /**
+   * True when the entries are persisted; false when they were refused — by the
+   * browser, or by the byte budget when not even the entry being written fits.
+   */
   private write(entries: readonly PersistedConversation[]): boolean {
     if (!isPlatformBrowser(this.platformId)) return true;
     const key = this.key();
     if (!key) return true;
+
+    const payload = withinByteBudget(entries);
+    // Nothing left to evict and still over budget: this one conversation is bigger
+    // than the whole history budget. Reported as a failed write, which is what it
+    // is — these bytes are not going into storage — rather than stored with its
+    // message bodies quietly cut down (ADR-0064 §1, ADR-0065 §6).
+    if (payload === null) return false;
+
     try {
-      localStorage.setItem(key, JSON.stringify(entries));
+      localStorage.setItem(key, payload);
       return true;
     } catch {
       // Over quota or storage disabled: the caller is told, so the UI can be.
@@ -326,6 +359,37 @@ function trimToBudget(
   const pinned = others.filter(entry => entry.pinned);
   const rest = others.filter(entry => !entry.pinned);
   return [kept, ...pinned, ...rest].slice(0, MAX_CONVERSATIONS);
+}
+
+/**
+ * The JSON to store, after evicting whatever it takes to fit
+ * {@link MAX_SERIALIZED_BYTES} — or `null` when even the entry being written does
+ * not fit on its own.
+ *
+ * Eviction takes from the TAIL, which {@link trimToBudget} has already ordered as
+ * `[the entry being written, ...pinned, ...the rest]`: so the oldest unpinned
+ * conversation goes first, pinned ones survive until nothing else is left, and the
+ * conversation the user is in is never the one dropped.
+ *
+ * Serializing once per eviction is deliberate: measuring the JSON is the only
+ * honest way to know what `setItem` will be charged for, and the loop only runs
+ * at all on a payload that is already over budget.
+ */
+function withinByteBudget(entries: readonly PersistedConversation[]): string | null {
+  let kept = entries;
+  let payload = JSON.stringify(kept);
+
+  while (byteLength(payload) > MAX_SERIALIZED_BYTES && kept.length > 1) {
+    kept = kept.slice(0, -1);
+    payload = JSON.stringify(kept);
+  }
+
+  return byteLength(payload) > MAX_SERIALIZED_BYTES ? null : payload;
+}
+
+/** UTF-8 bytes — the unit a storage quota is charged in, not string length. */
+function byteLength(value: string): number {
+  return new TextEncoder().encode(value).length;
 }
 
 function toConversation(entry: PersistedConversation): ChatConversation {

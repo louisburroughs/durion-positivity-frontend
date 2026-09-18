@@ -353,7 +353,8 @@
       "ERROR": {
         "CONTENT_REQUIRED": "Le contenu du document est obligatoire.",
         "TITLE_REQUIRED": "Le titre est obligatoire.",
-        "SUBMIT": "Impossible de charger le document. Veuillez réessayer."
+        "SUBMIT": "Impossible de charger le document. Veuillez réessayer.",
+        "NOT_PERMITTED": "Vous n'avez pas l'autorisation de charger des documents dans la base de connaissances."
       }
     }
   },

@@ -39,6 +39,19 @@ export interface ChatTurnTarget {
    * the away path would append the answer beneath it.
    */
   readonly replacesMessageId?: string;
+  /**
+   * The user turn this answer replies to — the insertion anchor for the away path,
+   * captured at issue time.
+   *
+   * A pending placeholder is never persisted, so a reply that arrives after the
+   * user left the thread and came back finds NEITHER `messageId` nor
+   * `replacesMessageId` in the stored snapshot. Appending it then put the answer
+   * below every later turn: ask Q1, leave, come back, ask Q2, and Q1's answer
+   * landed under Q2, answering a question it had never seen. The question itself
+   * IS persisted, so it is the one id the merge can still find (ADR-0063 §1: the
+   * result carries what it was requested for).
+   */
+  readonly questionMessageId?: string;
 }
 
 const TITLE_MAX_LENGTH = 48;
@@ -331,11 +344,14 @@ export class ChatStateService {
     if (!conversationId) return null;
 
     const messageId = newId();
+    // Captured BEFORE the placeholder is appended, so it cannot pick it up: the
+    // question this turn answers is the last user turn in the thread.
+    const questionMessageId = lastUserMessageId(this._messages());
     this._messages.update(messages => [
       ...messages,
       { id: messageId, role: 'assistant', blocks: [], timestamp: new Date(), pending: true },
     ]);
-    return { conversationId, messageId, identity: this.currentIdentity() };
+    return { conversationId, messageId, identity: this.currentIdentity(), questionMessageId };
   }
 
   /**
@@ -468,6 +484,9 @@ export class ChatStateService {
       messageId: id,
       identity: this.currentIdentity(),
       replacesMessageId: messageId,
+      // The question this turn answers is the nearest user turn ABOVE it, not the
+      // newest one in the thread — the same rule `userTextBefore` re-asks with.
+      questionMessageId: lastUserMessageId(this._messages().slice(0, index)),
     };
   }
 
@@ -680,7 +699,7 @@ function withAnswer(
     [target.messageId, target.replacesMessageId].filter((id): id is string => !!id),
   );
   const index = messages.findIndex(message => superseded.has(message.id));
-  if (index < 0) return [...messages, answer];
+  if (index < 0) return afterQuestion(messages, target, answer);
 
   const keep = (message: ChatMessage): boolean => !superseded.has(message.id);
   return [
@@ -688,6 +707,37 @@ function withAnswer(
     answer,
     ...messages.slice(index + 1).filter(keep),
   ];
+}
+
+/**
+ * Neither the placeholder nor the retried turn is in this snapshot — the
+ * placeholder was never persisted and the user has been away — so the answer goes
+ * directly BELOW the question it replies to, which is persisted. Appending instead
+ * put it under every turn asked since, where it read as the answer to the newest
+ * question (ADR-0063 §1).
+ *
+ * Only a snapshot that has lost the question too falls back to appending: there is
+ * no position left to reconstruct, and dropping the answer entirely would lose the
+ * reply the user is waiting for.
+ */
+function afterQuestion(
+  messages: readonly ChatMessage[],
+  target: ChatTurnTarget,
+  answer: ChatMessage,
+): readonly ChatMessage[] {
+  const anchor = target.questionMessageId
+    ? messages.findIndex(message => message.id === target.questionMessageId)
+    : -1;
+  if (anchor < 0) return [...messages, answer];
+  return [...messages.slice(0, anchor + 1), answer, ...messages.slice(anchor + 1)];
+}
+
+/** Id of the newest user turn in the given slice, or `undefined` if it has none. */
+function lastUserMessageId(messages: readonly ChatMessage[]): string | undefined {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    if (messages[index].role === 'user') return messages[index].id;
+  }
+  return undefined;
 }
 
 /**
