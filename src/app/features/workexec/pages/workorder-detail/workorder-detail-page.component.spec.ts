@@ -301,21 +301,39 @@ describe('WorkorderDetailPageComponent [Stories 213–215]', () => {
     });
   });
 
-  // #286 audit: aria-selected is not allowed on role=button. The tabs are a
-  // nav whose entries mostly route away, so the active one is aria-current.
+  // #286 audit: aria-selected is not allowed on role=button. Only Scope and
+  // Audit are in-page views (the rest route away), so the current one is
+  // aria-current="true" — not "page", which would misstate navigation.
   describe('tab bar semantics (#286)', () => {
-    it('marks only the active tab with aria-current="page" and never uses aria-selected', () => {
+    it('marks only the active in-page view with aria-current="true" and never uses aria-selected', () => {
       fixture.detectChanges();
       drainInit(http, { ...STUB_WORKORDER, status: 'WORK_IN_PROGRESS' });
       fixture.detectChanges();
 
       const tabs = Array.from(fixture.nativeElement.querySelectorAll('.wo-tab')) as HTMLButtonElement[];
       expect(tabs.length).toBeGreaterThan(1);
-      const current = tabs.filter(t => t.getAttribute('aria-current') === 'page');
+      const current = tabs.filter(t => t.hasAttribute('aria-current'));
       expect(current).toHaveLength(1);
+      expect(current[0].getAttribute('aria-current')).toBe('true');
       expect(current[0].classList).toContain('wo-tab--active');
       expect(tabs.every(t => !t.hasAttribute('aria-selected'))).toBe(true);
       expect(tabs.every(t => t.type === 'button')).toBe(true);
+    });
+
+    it('moves aria-current to Audit when the audit view is selected', () => {
+      fixture.detectChanges();
+      drainInit(http, { ...STUB_WORKORDER, status: 'WORK_IN_PROGRESS' });
+      fixture.detectChanges();
+
+      component.selectTab('audit');
+      fixture.detectChanges();
+      http.match(() => true);
+
+      const tabs = Array.from(fixture.nativeElement.querySelectorAll('.wo-tab')) as HTMLButtonElement[];
+      const current = tabs.filter(t => t.hasAttribute('aria-current'));
+      expect(current).toHaveLength(1);
+      expect(current[0]).toBe(tabs[tabs.length - 1]); // Audit is the last tab
+      expect(tabs.some(t => t.getAttribute('aria-current') === 'page')).toBe(false);
     });
   });
 
