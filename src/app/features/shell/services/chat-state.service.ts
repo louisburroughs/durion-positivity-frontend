@@ -180,8 +180,9 @@ export class ChatStateService {
               complete: () => {
                 // A write the store reported as done clears any previous failure.
                 // Reads leave the flag alone: they never claimed anything was
-                // persisted.
-                if (entry.kind === 'write' && reported) {
+                // persisted — and neither does a write whose session has since
+                // ended (see {@link speaksForCurrentSession}).
+                if (entry.kind === 'write' && reported && this.speaksForCurrentSession(entry)) {
                   this._persistenceErrorKey.set(null);
                 }
               },
@@ -190,8 +191,10 @@ export class ChatStateService {
               // The queue stays alive — catchError on the OUTER pipe would
               // complete it and drop every later write in the session — but the
               // failure is recorded rather than swallowed (ADR-0065 §6).
-              // Reads report through their own catchError and never reach here.
-              if (entry.kind === 'write') {
+              // Reads report through their own catchError and never reach here,
+              // and neither does a write belonging to a session that has ended:
+              // that failure is not the current user's to see.
+              if (entry.kind === 'write' && this.speaksForCurrentSession(entry)) {
                 this._persistenceErrorKey.set('SHELL.CHAT.ERROR.PERSIST');
               }
               return EMPTY;
@@ -635,6 +638,23 @@ export class ChatStateService {
       this._activeId.set(null);
       this._messages.set([]);
     }
+  }
+
+  /**
+   * Whether this entry's outcome may still touch `persistenceErrorKey`.
+   *
+   * The head-of-queue check only proves the identity was current when the work
+   * STARTED. A write issued under one account or tenant can settle after the
+   * switch — it is the entry that was already in flight — and its outcome belongs
+   * to a session that no longer exists: a success would clear a warning raised by
+   * the NEW session's own writes, and a failure would put a warning over a thread
+   * that is persisting perfectly well (ADR-0063 §7 — an identity change discards
+   * the previous session's state; ADR-0062 — the two sessions' data never mix).
+   * `resetForCurrentUser()` has already cleared whatever the old session had to
+   * say, so there is nothing left to report for it.
+   */
+  private speaksForCurrentSession(entry: QueuedWrite): boolean {
+    return entry.identity === this.currentIdentity();
   }
 
   /**

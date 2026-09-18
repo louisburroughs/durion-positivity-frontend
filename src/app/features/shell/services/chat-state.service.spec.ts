@@ -643,6 +643,58 @@ describe('ChatStateService against a store that does not answer immediately', ()
     expect(service.persistenceErrorKey()).toBeNull();
   });
 
+  it("leaves the new session's persistence warning alone when an old session's write lands", () => {
+    // The head-of-queue check only proves the identity was current when the work
+    // STARTED. This is the settle-time half: tenant-one's write is already in
+    // flight when the tenant changes, so it is the one entry that can still come
+    // back (every later tenant-one entry is dropped at the head of the queue).
+    //
+    // B's warning is seeded directly because FIFO cannot put a tenant-two failure
+    // ahead of an entry that is already in flight, and the identity reset has just
+    // cleared the flag — so this pins the queue's contract: one session's write
+    // never speaks for another's (ADR-0063 §7, ADR-0062).
+    service.appendUserMessage('a question under tenant-one');
+    expect(store.pendingLabels[0]).toMatch(/^saveConversation/);
+
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
+    TestBed.tick();
+    const flag = (
+      service as unknown as { _persistenceErrorKey: { set: (value: string | null) => void } }
+    )._persistenceErrorKey;
+    flag.set('SHELL.CHAT.ERROR.PERSIST');
+
+    // tenant-one's write finally lands, successfully, in tenant-two's session.
+    store.releaseNext();
+
+    expect(service.persistenceErrorKey()).toBe('SHELL.CHAT.ERROR.PERSIST');
+  });
+
+  it("does not warn the new session about an old session's failed write", () => {
+    // Armed BEFORE the write is issued: DeferredStore captures `failNext` when the
+    // store method is called, which is when the queue subscribes to it.
+    store.failNext = true;
+    service.appendUserMessage('a question under tenant-one');
+    expect(store.pendingLabels[0]).toMatch(/^saveConversation/);
+
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
+    TestBed.tick();
+    // The identity reset cleared tenant-one's state, warning included.
+    expect(service.persistenceErrorKey()).toBeNull();
+
+    // tenant-one's write fails, after the switch. Tenant-two is persisting fine;
+    // a PERSIST banner over ITS thread would be a claim about someone else's data.
+    store.releaseNext();
+    expect(service.persistenceErrorKey()).toBeNull();
+
+    // The queue is still alive: tenant-two's own turn is written through.
+    store.order.length = 0;
+    service.appendUserMessage('a question under tenant-two');
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(store.order.filter(label => label.startsWith('saveMessages'))).toHaveLength(1);
+    expect(service.persistenceErrorKey()).toBeNull();
+  });
+
   it('reports a failed list load as HISTORY_LOAD, never an empty ready list (F11)', () => {
     store.failNext = true;
     service.refresh();
