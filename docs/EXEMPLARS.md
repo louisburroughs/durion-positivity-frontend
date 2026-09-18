@@ -45,7 +45,7 @@ since navigated away from silently repainting the board.
 **Monotonic sequence guard, one counter per independent writer.** `dispatch-board-page.component.ts`
 keeps three separate counters — `readSeq` (259), `enrichmentSeq` (186), `clockSeq` (197) — because they
 guard three streams that must not cancel each other: bumping one only invalidates in-flight reads for
-*that* stream. The comment at `dispatch-board-page.component.ts:186-196` explains why folding the clock
+*that* stream. The comment at `dispatch-board-page.component.ts:188-196` explains why folding the clock
 path into `enrichmentSeq` would be wrong (a clock write would then discard an enrichment read's bays and
 roster). Guard sites: `dispatch-board-page.component.ts:610,1382,1396,1404,1787,1818,1851,1925-1926,1956,1968,2023,2037`.
 A smaller, single-counter version of the same idea is `customer-list.component.ts:46` (`loadSeq`), checked
@@ -109,7 +109,7 @@ schedule published" from "the read failed" with two private sentinels, `ABSENT`/
 `workexec.service.ts:getWorkorderPickList` (`workexec.service.ts:1141-1142`, header-leg `catchError` +
 docblock `1128-1137`) implements the per-leg pattern: catches the 404 on the header request alone
 (whose contract promises "no pick list" for 404), leaving task-leg 404s as errors, and maps null to
-the page's empty state; a 404 from the task read still errors (PR #289).
+the page's empty state; a 404 from the task read still errors (issue #286, landed in PR #289).
 
 *Prevents:* an outage rendering as "nobody is on the roster" or "no schedule exists," and a page acting
 on clock/roster data it never confirmed came back.
@@ -168,7 +168,7 @@ place, so two pages disagree on what "idle," "no schedule," or "competent" means
 matches every catalog permission under a domain prefix (a trailing `:`) or an exact code, and route
 groups are gated on the *union* of their domain's permissions (doc comment at
 `route-permissions.ts:8-13`) so the gate can only ever over-admit, never lock out a legitimate holder.
-`route-access.ts:35-44` (`canAccess(auth, requirement)`) is the function that actually evaluates a
+`route-access.ts:35-51` (`canAccess(auth, requirement)`) is the function that actually evaluates a
 route's `permissions`/`allPermissions`/`roles` requirement against `AuthService`, calling
 `auth.hasAnyPermission(...)` (`route-access.ts:40`) and `auth.hasPermission(...)` (`route-access.ts:41`).
 `AuthService.hasAnyPermission` itself is `src/app/core/services/auth.service.ts:234-238`; there is no
@@ -182,14 +182,14 @@ route's `permissions`/`allPermissions`/`roles` requirement against `AuthService`
 `workorder:position:assign` grants bay control, `workorder:operationalContext:override` must not —
 has its own positive and negative tests: granted at
 `dispatch-board-page.component.spec.ts:2814-2828` ("enables the bay controls for a session holding only
-workorder:position:assign") and denied at `dispatch-board-page.component.spec.ts:2833-2850` ("disables
+workorder:position:assign") and denied at `dispatch-board-page.component.spec.ts:2841-2857` ("disables
 the bay controls for a session holding only workorder:operationalContext:override"), each asserting both
 the computed signal and the rendered control's `disabled` state.
 
 *Prevents:* a control that is clickable but whose handler 403s anyway (or the reverse — a handler gated
 correctly behind a disabled-looking control that a keyboard/automation path can still invoke), and a
 permission regression that silently restores an authority a prior PR deliberately split off (see the
-`#2059` comment at `dispatch-board-page.component.spec.ts:2811-2813`).
+`#2059` comment at `dispatch-board-page.component.spec.ts:2815-2818`).
 
 ---
 
