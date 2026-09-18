@@ -59,7 +59,7 @@ The sibling SDK repo must exist locally unless CI/Docker supplies `.sdk-src` or 
 
 ## Architecture
 
-- **Angular 21**, standalone components only (no NgModules), strict TS, SSR via @angular/ssr + Express.
+- **Angular 22**, standalone components only (no NgModules), strict TS, SSR via @angular/ssr + Express.
 - **State = Angular Signals + RxJS** — no NgRx/Redux. Every routed page uses the two-signal state
   machine (`state` + `errorKey`) with reactive `effect()` data loading. See AGENTS.md for exact rules
   (`state.set('error')` always precedes `errorKey.set(...)`; `onCleanup()` for effect subscriptions).

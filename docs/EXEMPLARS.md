@@ -120,8 +120,10 @@ on clock/roster data it never confirmed came back.
 
 - **`PAGE_SIZE = 500` for paged bay/technician endpoints.** `shop-dashboard.service.ts:43`,
   `capacity-calendar.service.ts:50`, and `dispatch-board.service.ts:136` (named `ROSTER_PAGE_SIZE` there).
-  Reuse the constant's *value and rationale* (a shop's bay/technician roster is assumed to fit one page);
-  don't invent a different page size for a fourth caller of the same endpoints.
+  500 is the current truncation mitigation, not a completeness guarantee: these Spring pages default to 20
+  and silently drop rows beyond the requested size (`shop-dashboard.service.ts:39-43`), and real pagination
+  belongs with a future aggregate endpoint (`dispatch-board.service.ts:130-136`, #419). Reuse the same cap
+  for a fourth caller of these endpoints rather than a different one, and do not assume a shop fits one page.
 - **Closed-link-reads-idle.** "A unit still linked to a closed workorder reads as idle: the work is
   done, the bay is free" — `shop-dashboard.service.ts:451-454`.
 - **Never surface a raw UUID.** The service never puts an id where a name belongs: `resourceName(...)`
@@ -134,9 +136,10 @@ on clock/roster data it never confirmed came back.
   `dispatch-board.service.ts:224-256` which calls the sibling directly — grep `heldSkillCodes` for both
   call sites). Expired/revoked/superseded credentials are deliberately excluded.
 - **`isOpenStatus`.** `src/app/features/shopmgmt/models/shop-dashboard.models.ts:156-158`: "True for
-  every status except COMPLETED and CANCELLED." **No `isClosedStatus` export exists** on this branch —
-  only a private `CLOSED_STATUSES` set backs `isOpenStatus`; don't cite or invent a separate
-  `isClosedStatus` helper, negate `isOpenStatus` instead.
+  every status except COMPLETED and CANCELLED." **No shared `isClosedStatus` export exists**: the model
+  backs `isOpenStatus` with a private `CLOSED_STATUSES` set, and the dispatch board keeps its own private
+  `isClosedStatus` at `dispatch-board-page.component.ts:118-120`. New shared callers negate `isOpenStatus`
+  rather than adding a third copy.
 - **`listBays` as the bay roster of record.** `shop-dashboard.service.ts:679-684` (`listBays` /
   `listBaysResult`, the latter also carrying a `failed` flag). `capacity-calendar.service.ts:238` and
   `dispatch-board.service.ts:187` call the same SDK `BayAPIService.listBays` with the same

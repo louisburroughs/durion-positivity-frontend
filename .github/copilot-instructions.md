@@ -1,6 +1,6 @@
 # Copilot Code Review Instructions
 
-This is the **durion-positivity-frontend** repo: an Angular 21 standalone-components frontend
+This is the **durion-positivity-frontend** repo: an Angular 22 standalone-components frontend
 (no NgModules), state via Angular Signals + RxJS, SSR via @angular/ssr + Express.
 
 ## Binding policy documents
