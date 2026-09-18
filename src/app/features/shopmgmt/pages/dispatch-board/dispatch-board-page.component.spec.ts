@@ -1351,12 +1351,13 @@ describe('DispatchBoardPageComponent', () => {
       // `afterNextRender` callbacks run in the render phase; `whenStable` never
       // settles here because the board polls on a 30s interval.
       TestBed.inject(ApplicationRef).tick();
-      // Marking the card pending disables the button. Whether a disabled
-      // control keeps focus until it is destroyed differs between Chromium
-      // builds (the Playwright build in CI keeps it, others drop it to <body>),
-      // so the intermediate state is deliberately not asserted here: the
-      // contract under test is where focus ends up once the readback has moved
-      // the mechanic and destroyed the control.
+      // Marking the card pending disables the button, and browsers disagree
+      // about a focused control that becomes disabled (some keep it as
+      // activeElement, some drop focus to <body>), so the board parks focus on
+      // the mechanic's own drag handle before the guard lands — deterministic
+      // in every browser, and still on an enabled per-mechanic anchor.
+      expect((document.activeElement as HTMLElement).dataset['dragFor']).toBe('M1');
+
       readback.next({ states: new Map([['M1', { state: 'CLOCKED_OUT', workSessionId: null }]]), ok: true });
       fixture.detectChanges();
       TestBed.inject(ApplicationRef).tick();
@@ -1364,6 +1365,30 @@ describe('DispatchBoardPageComponent', () => {
       const landed = document.activeElement as HTMLElement | null;
       expect(landed).not.toBe(document.body);
       expect(landed?.dataset['clockFor'] ?? landed?.dataset['dragFor']).toBe('M1');
+    });
+
+    it('returns focus to the control after a write the backend refused without changes', () => {
+      dispatchBoardServiceStub.getClockStates.mockReturnValue(
+        of({ states: new Map([['M1', { state: 'CLOCKED_IN', workSessionId: 'ws-1' }]]), ok: true }),
+      );
+      renderWith(fullDashboard);
+      const control: HTMLButtonElement | null =
+        fixture.nativeElement.querySelector('[data-clock-for="M1"].clock-out');
+      control!.focus();
+
+      // A 403 is a known no-write: the mechanic never moves, the guard is
+      // released on the spot, and the parked focus must come back to the
+      // re-enabled control rather than stay on the drag handle.
+      dispatchBoardServiceStub.clockOut.mockReturnValueOnce(
+        throwError(() => new HttpErrorResponse({ status: 403 })),
+      );
+      control!.click();
+      fixture.detectChanges();
+      TestBed.inject(ApplicationRef).tick();
+
+      const landed = document.activeElement as HTMLElement | null;
+      expect(landed?.dataset['clockFor']).toBe('M1');
+      expect((landed as HTMLButtonElement).disabled).toBe(false);
     });
 
     it('hides the control from a caller without the timekeeping authority', () => {

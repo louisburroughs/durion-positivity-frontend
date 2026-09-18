@@ -251,7 +251,8 @@ shipped locale JSON directly rather than mocking `TranslateService` — see `des
 `:182` (key derivation), `:205` (every emitted key resolves), `:220` (placeholder integrity), `:290/347/379/424`
 ("en-US says what the code does" — asserts the *content*, not just the key, for free hours, the break
 bin note, the clock hint, and the bin chip), and `:452` ("clock controls satisfy Label in Name, in every
-shipped locale" — WCAG 2.2 SC 2.5.3, comment at `:444-451`).
+shipped locale" — WCAG 2.2 SC 2.5.3, comment at `:444-451`; the spec covers the five hand-maintained
+bundles and deliberately excludes `qps-ploc`, whose generator wraps every string so containment cannot hold).
 
 *Prevents:* a raw i18n key rendering in production copy, a numeral rendered without locale grouping/decimal
 rules, and a button whose visible label doesn't contain the words a speech-input user would say to

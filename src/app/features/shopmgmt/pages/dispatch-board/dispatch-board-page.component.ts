@@ -1232,6 +1232,7 @@ export class DispatchBoardPageComponent implements OnInit {
     // confirmation just cannot name them, which beats naming them with a UUID.
     const name = mechanic.name;
     const params: Record<string, string> = name ? { mechanic: name } : {};
+    this.parkClockFocus(personId);
     this.markClockPending(personId, true);
 
     const call = this.toTimekeepingCall(mechanic, action);
@@ -1322,17 +1323,48 @@ export class DispatchBoardPageComponent implements OnInit {
     this.restoreClockFocus(personId);
   }
 
+  /**
+   * Moves keyboard focus off a clock control the pending guard is about to
+   * disable, onto the mechanic's own card: the roster drag handle, or the bin
+   * chip. Browsers disagree about a focused control that becomes disabled —
+   * some keep it as `activeElement`, some drop focus to `<body>` — and neither
+   * is acceptable for the round trip, so the board decides instead of the
+   * browser. `restoreClockFocus` recognises the parked anchor and moves focus
+   * on to the enabled control once the readback has settled.
+   */
+  private parkClockFocus(personId: string): void {
+    const root = this.host.nativeElement as HTMLElement;
+    const active = root.ownerDocument.activeElement;
+    if (!(active instanceof HTMLElement) || active.dataset['clockFor'] !== personId) {
+      return;
+    }
+    this.clockAnchorFor(personId)?.focus();
+  }
+
+  private clockAnchorFor(personId: string): HTMLElement | null {
+    const root = this.host.nativeElement as HTMLElement;
+    return (
+      root.querySelector<HTMLElement>(`[data-drag-for="${personId}"]`) ??
+      root.querySelector<HTMLElement>(`[data-card-for="${personId}"]`)
+    );
+  }
+
   private restoreClockFocus(personId: string): void {
     const root = this.host.nativeElement as HTMLElement;
     afterNextRender(
       () => {
-        // Checked AFTER the render, not before it: at the moment the write
-        // resolves the button is still there and still focused. Focus is lost
-        // when the re-read moves the card and the node is destroyed, which is
-        // the render this callback runs behind. Anything else holding focus by
-        // then is the dispatcher having moved on, and is theirs to keep.
+        // Checked AFTER the render, not before it: focus was parked on the
+        // mechanic's card when the write started, and the card is destroyed
+        // when the re-read moves the mechanic to the other rail, which is the
+        // render this callback runs behind. Focus still on that parked anchor
+        // (the mechanic did not move) or fallen to <body> (they did) is this
+        // board's to put back; anything else holding it by then is the
+        // dispatcher having moved on, and is theirs to keep.
         const active = root.ownerDocument.activeElement;
-        if (active && active !== root.ownerDocument.body) {
+        const parked =
+          active instanceof HTMLElement &&
+          (active.dataset['dragFor'] === personId || active.dataset['cardFor'] === personId);
+        if (active && active !== root.ownerDocument.body && !parked) {
           return;
         }
         const moved = root.querySelector<HTMLElement>(`[data-clock-for="${personId}"]:not([disabled])`);
@@ -1340,7 +1372,7 @@ export class DispatchBoardPageComponent implements OnInit {
         // caller may not see. The card itself is the next best anchor; the
         // drag handle carries the name, so the announcement still identifies
         // who focus landed on.
-        const anchor = moved ?? root.querySelector<HTMLElement>(`[data-drag-for="${personId}"]`);
+        const anchor = moved ?? this.clockAnchorFor(personId);
         anchor?.focus();
       },
       { injector: this.injector },
