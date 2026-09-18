@@ -951,8 +951,8 @@ app-party-detail .form-actions {
   flex-wrap: wrap;
 }
 
-app-party-detail .sr-only,
-app-landing-page .sr-only {
+/* Single canonical .sr-only definition — components must not redefine it locally. */
+.sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
