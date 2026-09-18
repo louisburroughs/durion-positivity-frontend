@@ -19,6 +19,7 @@ import {
   ChatMessage,
   ChatTableBlock,
   neutraliseFormula,
+  tsvCell,
 } from '../../models/chat.model';
 import { MaterialSymbolPipe } from '../../../../shared/material-symbol.pipe';
 import { AuthedImageDirective } from '../../directives/authed-image.directive';
@@ -97,10 +98,14 @@ export class ChatMessageComponent {
 
   copyTable(block: ChatTableBlock): void {
     // Tab-separated text pasted into a spreadsheet lands in cells, so a cell
-    // opening with `=` becomes a live formula exactly as it would from the CSV.
-    const header = block.columns.map(column => neutraliseFormula(column.label)).join('\t');
+    // opening with `=` becomes a live formula exactly as it would from the CSV —
+    // and a cell CONTAINING a tab or a newline opens another cell or row whose own
+    // first character the formula guard never saw. `tsvCell` does both, and is the
+    // same helper `blocksToPlainText` uses, so the two copy paths cannot drift
+    // (ADR-0065 §3).
+    const header = block.columns.map(column => tsvCell(column.label)).join('\t');
     const body = block.rows
-      .map(row => row.map(neutraliseFormula).join('\t'))
+      .map(row => row.map(tsvCell).join('\t'))
       .join('\n');
     void this.writeToClipboard(`${header}\n${body}`);
   }

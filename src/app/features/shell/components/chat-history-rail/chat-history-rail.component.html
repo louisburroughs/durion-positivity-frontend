@@ -17,7 +17,9 @@
   </div>
 
   <div class="rail-list">
-    @if (!hasConversations()) {
+    @if (loadFailed()) {
+    <p class="rail-empty rail-empty--error" role="status">{{ loadErrorKey()! | translate }}</p>
+    } @else if (!hasConversations()) {
     <p class="rail-empty">{{ 'SHELL.CHAT.HISTORY.EMPTY' | translate }}</p>
     } @else if (noMatches()) {
     <p class="rail-empty">{{ 'SHELL.CHAT.HISTORY.NO_MATCHES' | translate }}</p>

@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule } from '@ngx-translate/core';
-import { Observable } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { JwtClaims } from '../../../../core/models/auth.models';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CHAT_HISTORY_STORE, ChatHistoryStore } from '../../services/chat-history.store';
@@ -348,6 +348,71 @@ describe('ChatHistoryRailComponent', () => {
       fixture.detectChanges();
       flushFocus();
       expect(document.activeElement).toBe(host().querySelector('.new-chat-btn'));
+    });
+  });
+
+  describe('a list load that failed is not an empty history', () => {
+    /** Build the rail over a store whose list read behaves as given. */
+    async function setupWithList(listConversations: () => Observable<readonly never[]>): Promise<void> {
+      TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        imports: [ChatHistoryRailComponent, TranslateModule.forRoot()],
+        providers: [
+          {
+            provide: AuthService,
+            useValue: {
+              currentUserClaims: signal<JwtClaims | null>({
+                sub: 'admin.alpha',
+                tid: 'tenant-one',
+                exp: 9999999999,
+              }),
+            },
+          },
+          {
+            provide: CHAT_HISTORY_STORE,
+            useValue: {
+              retentionNoteKey: 'SHELL.CHAT.HISTORY.RETENTION_NOTE',
+              listConversations,
+              loadMessages: () => of([]),
+              saveConversation: () => of(undefined),
+              saveMessages: () => of(undefined),
+              deleteConversation: () => of(undefined),
+              clear: () => of(undefined),
+            },
+          },
+        ],
+      }).compileComponents();
+
+      chatState = TestBed.inject(ChatStateService);
+      chatState.refresh();
+
+      fixture = TestBed.createComponent(ChatHistoryRailComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+    }
+
+    it('names the failed load instead of claiming there are no conversations', async () => {
+      // The empty copy claims the user has never started a conversation — a claim a
+      // failed read never established, and the rail was showing it over an outage
+      // the state machine had already reported (ADR-0064 §1/§4).
+      await setupWithList(() => throwError(() => new Error('storage unreadable')));
+
+      expect(component.loadFailed()).toBe(true);
+      const note = host().querySelector('.rail-empty');
+      expect(note?.textContent).toContain('SHELL.CHAT.ERROR.HISTORY_LOAD');
+      expect(note?.getAttribute('role')).toBe('status');
+      expect(host().textContent).not.toContain('SHELL.CHAT.HISTORY.EMPTY');
+    });
+
+    it('shows the empty copy for a list that really is empty', async () => {
+      // The other half of the split: answered, and answered nothing.
+      await setupWithList(() => of([]));
+
+      expect(component.loadFailed()).toBe(false);
+      expect(host().querySelector('.rail-empty')?.textContent).toContain(
+        'SHELL.CHAT.HISTORY.EMPTY',
+      );
+      expect(host().textContent).not.toContain('SHELL.CHAT.ERROR.HISTORY_LOAD');
     });
   });
 

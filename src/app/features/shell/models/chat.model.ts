@@ -148,18 +148,42 @@ export function neutraliseFormula(value: string): string {
 }
 
 /**
+ * One cell of a TAB-delimited projection: delimiters inside the value are
+ * collapsed to a single space FIRST, then the value is neutralised.
+ *
+ * `neutraliseFormula` guards the START of a cell, and a cell is only ever what the
+ * delimiters say it is. An untrusted value carrying a tab or a newline —
+ * `x\t=HYPERLINK("http://evil","x")` — opened a SECOND cell whose own first
+ * character was `=`: the guard had been applied to `x`, and the formula travelled
+ * into the spreadsheet unguarded, adding a column or a row the table never
+ * declared (ADR-0065 §3).
+ *
+ * Collapsing rather than quoting, deliberately: a paste target reads tab-delimited
+ * text without RFC 4180 quoting, so a quote character would land in the cell as
+ * text and the tab would still split it. The CSV export is the one projection that
+ * IS read with those rules, and it keeps its quoting — see `csvCell` in
+ * `chat-message.component.ts`, which neutralises inside the quotes.
+ *
+ * Shared by both tab-delimited projections (this file's `blocksToPlainText` and
+ * the dedicated table copy) so the two cannot drift apart.
+ */
+export function tsvCell(value: string): string {
+  return neutraliseFormula(value.replace(/[\t\r\n]+/g, ' '));
+}
+
+/**
  * The CLIPBOARD/EXPORT projection of a turn: what leaves the app as text.
  *
  * Tabular parts are tab-delimited, and tab-delimited text pasted into a
  * spreadsheet lands in cells exactly as the CSV export does — so table cells and
- * chart data points are neutralised here too, not only on the dedicated
+ * chart data points go through {@link tsvCell} here too, not only on the dedicated
  * table-copy and CSV paths (ADR-0065 §3).
  *
  * Use {@link blocksToDisplayText} for anything that is only ever RENDERED: the
  * text-prefix apostrophe is invisible in a spreadsheet but visible on screen.
  */
 export function blocksToPlainText(blocks: readonly ChatBlock[]): string {
-  return project(blocks, neutraliseFormula);
+  return project(blocks, tsvCell);
 }
 
 /**
@@ -175,9 +199,10 @@ export function blocksToDisplayText(blocks: readonly ChatBlock[]): string {
 }
 
 /**
- * Both projections differ ONLY in how a spreadsheet-bound cell value is treated,
- * so they share one walk of the block list: a second copy is how the CSV path and
- * the clipboard path drifted apart in the first place.
+ * Both projections differ ONLY in how a tabular cell is treated — delimiter-safe
+ * and neutralised for the clipboard, verbatim for the screen — so they share one
+ * walk of the block list: a second copy is how the CSV path and the clipboard path
+ * drifted apart in the first place.
  */
 function project(blocks: readonly ChatBlock[], cell: (value: string) => string): string {
   return blocks

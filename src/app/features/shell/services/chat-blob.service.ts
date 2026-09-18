@@ -78,9 +78,18 @@ export class ChatBlobService {
 
     // Captured at issue time, so a response that settles after an identity change
     // cannot be filed under — or served to — the new one (ADR-0063 §1).
-    const identity = identityKey(this.auth.currentUserClaims());
+    const claims = this.auth.currentUserClaims();
+    const identity = identityKey(claims);
     const key = cacheKey(identity, url);
-    const cached = this.inFlight.get(key);
+    // Caching needs BOTH halves of the identity. A token carrying no `tid` keys as
+    // `|sub`, so the same subject in two tenant contexts would share one entry and
+    // `/blobs/7` could replay the previous tenant's document — the very collision
+    // the key exists to prevent (ADR-0062, ADR-0065 §4/§5). This is the store's
+    // `hasStorageSlot()` reasoning: no complete identity, no slot to keep anything
+    // in. The fetch still happens, and its object URL is still tracked so it is
+    // revoked on destroy and on an identity change; it is simply never replayed.
+    const cacheable = hasCompleteIdentity(claims);
+    const cached = cacheable ? this.inFlight.get(key) : undefined;
     if (cached) return cached;
 
     const request = this.api.getBlob(url, { baseUrlOverride: '' }).pipe(
@@ -110,7 +119,7 @@ export class ChatBlobService {
       shareReplay({ bufferSize: 1, refCount: false }),
     );
 
-    this.inFlight.set(key, request);
+    if (cacheable) this.inFlight.set(key, request);
     return request;
   }
 
@@ -127,6 +136,15 @@ export class ChatBlobService {
 /** Tenant + subject first, so no two identities can share a cache entry. */
 function cacheKey(identity: string, url: string): string {
   return `${identity}|${url}`;
+}
+
+/**
+ * Both halves present. `identityKey` encodes a missing claim as an empty half, so
+ * it still produces a usable-looking key for an incomplete token — which is
+ * exactly the key two different tenant contexts would collide on.
+ */
+function hasCompleteIdentity(claims: { tid?: string; sub?: string } | null | undefined): boolean {
+  return (claims?.tid?.trim() ?? '').length > 0 && (claims?.sub?.trim() ?? '').length > 0;
 }
 
 /**

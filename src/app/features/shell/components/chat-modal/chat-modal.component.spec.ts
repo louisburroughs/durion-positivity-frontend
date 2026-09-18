@@ -436,6 +436,39 @@ describe('ChatModalComponent', () => {
     expect(sendSpy).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps a delimiter inside a cell from opening a cell when the transcript is copied', async () => {
+    // The transcript is the third tab-delimited projection: a cell carrying a tab
+    // or a newline used to open a cell or row of its own, whose first character the
+    // formula guard never saw (ADR-0065 §3).
+    let written = '';
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: (text: string) => ((written = text), Promise.resolve()) },
+    });
+
+    chatState.appendUserMessage('question');
+    const target = chatState.beginAssistantTurn()!;
+    chatState.completeAssistantTurn(target, [
+      {
+        kind: 'table',
+        title: null,
+        columns: [{ label: 'Note', align: 'start' }],
+        rows: [['x\t=HYPERLINK("http://evil","x")'], ['y\n=cmd|calc']],
+      },
+    ]);
+    fixture.detectChanges();
+
+    fixture.componentInstance.copyTranscript();
+    await Promise.resolve();
+
+    for (const row of written.split('\n')) {
+      for (const cell of row.split('\t')) {
+        expect(cell.startsWith('=')).toBe(false);
+      }
+    }
+    expect(written).toContain('HYPERLINK');
+  });
+
   it('neutralises a formula when the whole transcript is copied (F2)', async () => {
     let written = '';
     Object.defineProperty(navigator, 'clipboard', {

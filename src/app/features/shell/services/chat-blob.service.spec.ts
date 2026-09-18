@@ -163,6 +163,42 @@ describe('ChatBlobService', () => {
     expect(second[0]).toMatch(/^blob:/);
   });
 
+  it('never caches under an incomplete identity, so two tenant contexts cannot share a blob', async () => {
+    // `identityKey` encodes a missing claim as an empty half, so a token with no
+    // `tid` keys as `|sub`: the same subject in two tenant contexts would collide
+    // on one entry and `/blobs/1` could replay the previous tenant's document —
+    // the collision the key exists to prevent (ADR-0062, ADR-0065 §4/§5). Same
+    // reasoning as the history store refusing a slot without both halves.
+    const revoke = vi.spyOn(URL, 'revokeObjectURL');
+    claims.set({ sub: 'admin.alpha', exp: 9999999999 });
+
+    getBlob.mockReturnValueOnce(of(new Blob(['first context'])));
+    const first = await firstValueFrom(service.resolve('/blobs/1'));
+    getBlob.mockReturnValueOnce(of(new Blob(['second context'])));
+    const second = await firstValueFrom(service.resolve('/blobs/1'));
+
+    // Two fetches, two URLs: nothing is shared between them.
+    expect(getBlob).toHaveBeenCalledTimes(2);
+    expect(second).not.toBe(first);
+
+    // Still OWNED, though: an uncached URL is revoked on destroy like any other.
+    TestBed.resetTestingModule();
+    expect(revoke).toHaveBeenCalledWith(first);
+    expect(revoke).toHaveBeenCalledWith(second);
+  });
+
+  it('caches for a complete identity — the other half of the split', async () => {
+    // The negative half above must not be reachable for a signed-in token: a
+    // complete `tid` + `sub` still fetches once however often it is rendered.
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
+
+    const first = await firstValueFrom(service.resolve('/blobs/1'));
+    const second = await firstValueFrom(service.resolve('/blobs/1'));
+
+    expect(getBlob).toHaveBeenCalledTimes(1);
+    expect(second).toBe(first);
+  });
+
   it('revokes every object URL it handed out when it is destroyed', async () => {
     const revoke = vi.spyOn(URL, 'revokeObjectURL');
     await firstValueFrom(service.resolve('/blobs/1'));

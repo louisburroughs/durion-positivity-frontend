@@ -651,22 +651,57 @@ describe('ChatStateService against a store that does not answer immediately', ()
     //
     // B's warning is seeded directly because FIFO cannot put a tenant-two failure
     // ahead of an entry that is already in flight, and the identity reset has just
-    // cleared the flag — so this pins the queue's contract: one session's write
-    // never speaks for another's (ADR-0063 §7, ADR-0062).
+    // cleared it — so this pins the queue's contract: one session's write never
+    // speaks for another's (ADR-0063 §7, ADR-0062). It is seeded under the SAME
+    // scope tenant-one's in-flight write carries, because the scope alone must not
+    // be enough to clear it: the session has to match too.
     service.appendUserMessage('a question under tenant-one');
+    const scope = service.activeConversationId()!;
     expect(store.pendingLabels[0]).toMatch(/^saveConversation/);
 
     claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
     TestBed.tick();
-    const flag = (
-      service as unknown as { _persistenceErrorKey: { set: (value: string | null) => void } }
-    )._persistenceErrorKey;
-    flag.set('SHELL.CHAT.ERROR.PERSIST');
+    const unpersisted = (
+      service as unknown as { _unpersisted: { set: (value: readonly string[]) => void } }
+    )._unpersisted;
+    unpersisted.set([scope]);
 
     // tenant-one's write finally lands, successfully, in tenant-two's session.
     store.releaseNext();
 
     expect(service.persistenceErrorKey()).toBe('SHELL.CHAT.ERROR.PERSIST');
+  });
+
+  it('keeps the persistence warning up while the refused conversation is still unsaved', () => {
+    // The warning used to be cleared by ANY later successful write: a refused save
+    // in one conversation disappeared the moment a brand new conversation saved,
+    // while the first was still only in memory and still about to be lost
+    // (ADR-0064 §1). It is tracked per conversation and cleared by that
+    // conversation's own next successful write.
+    store.failNext = true;
+    service.appendUserMessage('a question in A that cannot be saved');
+    const conversationA = service.activeConversationId()!;
+    store.failNext = true; // arms A's saveMessages, subscribed when the first settles
+    store.releaseNext();
+    store.releaseNext();
+    expect(service.persistenceErrorKey()).toBe('SHELL.CHAT.ERROR.PERSIST');
+
+    // A brand new conversation saves perfectly well. That says nothing at all
+    // about A, which is still unpersisted.
+    service.startNewConversation();
+    service.appendUserMessage('a question in B that saves fine');
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.activeConversationId()).not.toBe(conversationA);
+    expect(service.persistenceErrorKey()).toBe('SHELL.CHAT.ERROR.PERSIST');
+
+    // A's own next write lands — now there is nothing left to warn about.
+    service.selectConversation(conversationA);
+    while (store.outstanding > 0) store.releaseNext();
+    service.appendUserMessage('a question in A that saves');
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.persistenceErrorKey()).toBeNull();
   });
 
   it("does not warn the new session about an old session's failed write", () => {

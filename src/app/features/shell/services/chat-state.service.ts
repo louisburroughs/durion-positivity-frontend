@@ -53,6 +53,12 @@ export interface ChatTurnTarget {
   readonly questionMessageId?: string;
 }
 
+/**
+ * Scope of a write that covers the whole history rather than one conversation
+ * (`clear()`). A conversation id is a UUID, so nothing can collide with it.
+ */
+const WHOLE_STORE = '*';
+
 const TITLE_MAX_LENGTH = 48;
 const PREVIEW_MAX_LENGTH = 90;
 
@@ -78,23 +84,37 @@ export class ChatStateService {
   private readonly _state = signal<ChatLoadState>('idle');
   private readonly _errorKey = signal<string | null>(null);
   /**
-   * A store write that did not land. Deliberately SEPARATE from the two-signal
-   * pair above: losing the persisted copy does not stop the conversation on
-   * screen, so it is reported without taking the thread down (ADR-0031 §4 shape,
-   * ADR-0064 §1: the outcome is kept, not swallowed). The write queue is the only
-   * writer that RAISES a failure on it, and the only one that clears it on a
-   * later landed write; `resetForCurrentUser()` also clears it, because an
-   * identity change discards the state the warning was about along with
-   * everything else (ADR-0063 §7).
+   * What is NOT persisted: the scope of every write that did not land — a
+   * conversation's id, or {@link WHOLE_STORE} for a write over the whole history.
+   *
+   * Per scope, not one flag for the session: the warning used to be cleared by ANY
+   * later successful write, so a refused save in conversation A disappeared the
+   * moment a brand new conversation B saved — while A was still only in memory and
+   * still about to be lost (ADR-0064 §1: the outcome is kept until it stops being
+   * true). An entry leaves only when a later write for THAT scope reports success,
+   * or when the session ends.
+   *
+   * The write queue is the only writer that adds or removes an entry;
+   * `resetForCurrentUser()` empties it, because an identity change discards the
+   * state the warning was about along with everything else (ADR-0063 §7).
    */
-  private readonly _persistenceErrorKey = signal<string | null>(null);
+  private readonly _unpersisted = signal<readonly string[]>([]);
 
   readonly conversations = this._conversations.asReadonly();
   readonly messages = this._messages.asReadonly();
   readonly activeConversationId = this._activeId.asReadonly();
   readonly state = this._state.asReadonly();
   readonly errorKey = this._errorKey.asReadonly();
-  readonly persistenceErrorKey = this._persistenceErrorKey.asReadonly();
+  /**
+   * Derived, never written directly: anything unpersisted means the warning is
+   * true, and an empty set means there is nothing left to warn about. Deliberately
+   * SEPARATE from the two-signal pair above — losing the persisted copy does not
+   * stop the conversation on screen, so it is reported without taking the thread
+   * down (ADR-0031 §4 shape).
+   */
+  readonly persistenceErrorKey = computed(() =>
+    this._unpersisted().length > 0 ? 'SHELL.CHAT.ERROR.PERSIST' : null,
+  );
 
   readonly isEmpty = computed(() => this._messages().length === 0);
   readonly activeConversation = computed(
@@ -178,12 +198,13 @@ export class ChatStateService {
                 reported = true;
               },
               complete: () => {
-                // A write the store reported as done clears any previous failure.
-                // Reads leave the flag alone: they never claimed anything was
+                // A write the store reported as done clears the failure for ITS OWN
+                // scope — a save in one conversation says nothing about another's.
+                // Reads leave the set alone: they never claimed anything was
                 // persisted — and neither does a write whose session has since
                 // ended (see {@link speaksForCurrentSession}).
-                if (entry.kind === 'write' && reported && this.speaksForCurrentSession(entry)) {
-                  this._persistenceErrorKey.set(null);
+                if (entry.scope && reported && this.speaksForCurrentSession(entry)) {
+                  this.markPersisted(entry.scope);
                 }
               },
             }),
@@ -194,8 +215,8 @@ export class ChatStateService {
               // Reads report through their own catchError and never reach here,
               // and neither does a write belonging to a session that has ended:
               // that failure is not the current user's to see.
-              if (entry.kind === 'write' && this.speaksForCurrentSession(entry)) {
-                this._persistenceErrorKey.set('SHELL.CHAT.ERROR.PERSIST');
+              if (entry.scope && this.speaksForCurrentSession(entry)) {
+                this.markUnpersisted(entry.scope);
               }
               return EMPTY;
             }),
@@ -428,7 +449,7 @@ export class ChatStateService {
     // sent a snapshot taken before every write issued since — which then landed on
     // top of them, erasing turns that had already been saved (ADR-0063 §1: the
     // result is merged against the state it will actually be written over).
-    this.enqueueWrite(() =>
+    this.enqueueWrite(target.conversationId, () =>
       this.store.loadMessages(target.conversationId).pipe(
         // Rethrown, not swallowed: the queue's own handler keeps the queue alive
         // (one failure must not drop every later write) AND records that this
@@ -554,13 +575,15 @@ export class ChatStateService {
     if (this._activeId() === conversationId) {
       this.startNewConversation();
     }
-    this.enqueueWrite(() => this.store.deleteConversation(conversationId));
+    this.enqueueWrite(conversationId, () => this.store.deleteConversation(conversationId));
   }
 
   clearHistory(): void {
     this._conversations.set([]);
     this.startNewConversation();
-    this.enqueueWrite(() => this.store.clear());
+    // Scoped to the whole store: clearing it successfully means nothing is left
+    // unpersisted, whichever conversation an earlier failure belonged to.
+    this.enqueueWrite(WHOLE_STORE, () => this.store.clear());
   }
 
   private ensureConversation(firstUserText: string): void {
@@ -592,7 +615,7 @@ export class ChatStateService {
     // Metadata only: a pin or rename must not touch the stored messages, least of
     // all for a conversation that is not the open one and whose messages are not
     // in memory to write back.
-    this.enqueueWrite(() => this.store.saveConversation(updated));
+    this.enqueueWrite(updated.id, () => this.store.saveConversation(updated));
   }
 
   /** Write the active conversation and its messages through to the store. */
@@ -611,8 +634,8 @@ export class ChatStateService {
       this._conversations().map(entry => (entry.id === updated.id ? updated : entry)),
     );
 
-    this.enqueueWrite(() => this.store.saveConversation(updated));
-    this.enqueueWrite(() => this.store.saveMessages(updated.id, messages));
+    this.enqueueWrite(updated.id, () => this.store.saveConversation(updated));
+    this.enqueueWrite(updated.id, () => this.store.saveMessages(updated.id, messages));
   }
 
   /**
@@ -681,13 +704,36 @@ export class ChatStateService {
     this.writes.next({ work, identity: this.currentIdentity(), kind: 'read' });
   }
 
-  private enqueueWrite(work: () => Observable<unknown>): void {
+  /**
+   * Queue a write, tagged with WHAT it is responsible for persisting: the
+   * conversation's id, or {@link WHOLE_STORE}. The tag is what lets a failure be
+   * reported for that conversation alone and cleared by that conversation's own
+   * next successful write.
+   */
+  private enqueueWrite(scope: string, work: () => Observable<unknown>): void {
     // Anything we write is a local change to the list, so a list load already in
     // flight is now stale: it would put back the conversation just deleted, or
     // drop the one just created — and dropping the active one means the reply to
     // it is never persisted, because persist() resolves it through the list.
     this.listInvalidated += 1;
-    this.writes.next({ work, identity: this.currentIdentity(), kind: 'write' });
+    this.writes.next({ work, identity: this.currentIdentity(), kind: 'write', scope });
+  }
+
+  /** One writer: the queue. A scope whose write did not land joins the set. */
+  private markUnpersisted(scope: string): void {
+    this._unpersisted.update(scopes => (scopes.includes(scope) ? scopes : [...scopes, scope]));
+  }
+
+  /**
+   * A scope whose write landed leaves the set. A successful whole-store write
+   * empties it: there is nothing left in storage for an older failure to be about.
+   */
+  private markPersisted(scope: string): void {
+    if (scope === WHOLE_STORE) {
+      this._unpersisted.set([]);
+      return;
+    }
+    this._unpersisted.update(scopes => scopes.filter(entry => entry !== scope));
   }
 
   private resetForCurrentUser(): void {
@@ -699,7 +745,7 @@ export class ChatStateService {
     this._conversations.set([]);
     this._messages.set([]);
     this._activeId.set(null);
-    this._persistenceErrorKey.set(null);
+    this._unpersisted.set([]);
     // state first, then the key — the same order as every other transition here.
     this._state.set('idle');
     this._errorKey.set(null);
@@ -716,6 +762,12 @@ interface QueuedWrite {
    * belongs on `persistenceErrorKey`.
    */
   readonly kind: 'read' | 'write';
+  /**
+   * What this write is responsible for: the conversation's id, or
+   * {@link WHOLE_STORE}. Reads carry none, which is also how the queue tells that
+   * an outcome has nothing to say about persistence.
+   */
+  readonly scope?: string;
 }
 
 /**

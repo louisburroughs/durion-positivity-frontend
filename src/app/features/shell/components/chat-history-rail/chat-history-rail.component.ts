@@ -81,6 +81,18 @@ export class ChatHistoryRailComponent {
 
   readonly activeConversationId = this.chatState.activeConversationId;
   readonly hasConversations = computed(() => this.chatState.conversations().length > 0);
+  /**
+   * The conversation LIST could not be read. Kept apart from "no conversations":
+   * the empty copy claims the user has never started one, which a failed read
+   * never established, and the rail was showing it over an outage (ADR-0064
+   * §1/§4). The key is the one the state machine set, not a second opinion.
+   */
+  readonly loadFailed = computed(
+    () =>
+      this.chatState.state() === 'error' &&
+      this.chatState.errorKey() === 'SHELL.CHAT.ERROR.HISTORY_LOAD',
+  );
+  readonly loadErrorKey = this.chatState.errorKey;
 
   readonly groups = computed<readonly ChatHistoryGroup[]>(() => {
     const term = this.search().trim().toLowerCase();

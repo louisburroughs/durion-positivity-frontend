@@ -201,12 +201,87 @@ describe('ChatMessageComponent', () => {
     await Promise.resolve();
 
     expect(written).toContain("'=HYPERLINK");
-    expect(written).toContain("'\n=cmd");
     // The header is a cell on paste as well.
     expect(written.startsWith("'=Formula")).toBe(true);
     // An ordinary cell is left alone.
     expect(written).toContain('ACTIVE');
     expect(written).not.toContain("'ACTIVE");
+
+    // The newline INSIDE a cell used to survive the guard: the value was
+    // apostrophe-prefixed as a whole (`'\n=cmd|calc`), and the paste target then
+    // read the `\n` as a row break, starting a new row whose first character was
+    // `=` with no guard in front of it. Every cell of every row is checked, and the
+    // row count is the one the table declares (ADR-0065 §3).
+    const rows = written.split('\n');
+    expect(rows).toHaveLength(1 + block.rows.length);
+    for (const row of rows) {
+      for (const cell of row.split('\t')) {
+        expect(cell.startsWith('=')).toBe(false);
+      }
+    }
+  });
+
+  it('keeps a delimiter inside a cell from opening an unguarded cell or row', async () => {
+    // A tab does the same as a newline in the column direction: the value opens a
+    // SECOND cell whose own first character the formula guard never saw.
+    let written = '';
+    const block = {
+      kind: 'table' as const,
+      title: 'Payloads',
+      columns: [{ label: 'Note', align: 'start' as const }],
+      rows: [['x\t=HYPERLINK("http://evil","x")'], ['y\r\n=cmd|calc']],
+    };
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: (text: string) => ((written = text), Promise.resolve()) },
+    });
+
+    render(message('assistant', [block]));
+    fixture.componentInstance.copyTable(block);
+    await Promise.resolve();
+
+    const rows = written.split('\n');
+    expect(rows).toHaveLength(1 + block.rows.length);
+    for (const row of rows) {
+      const cells = row.split('\t');
+      expect(cells).toHaveLength(block.columns.length);
+      for (const cell of cells) {
+        expect(cell.startsWith('=')).toBe(false);
+      }
+    }
+    // The text is still there, just no longer able to open a cell of its own.
+    expect(written).toContain('HYPERLINK');
+  });
+
+  it('keeps a delimiter inside a cell from opening a cell when the whole turn is copied', async () => {
+    // copyTurn() goes through blocksToPlainText, which shares `tsvCell` with the
+    // table copy — the two projections cannot drift apart.
+    let written = '';
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: (text: string) => ((written = text), Promise.resolve()) },
+    });
+
+    render(
+      message('assistant', [
+        {
+          kind: 'table',
+          title: null,
+          columns: [{ label: 'Note', align: 'start' }],
+          rows: [['x\t=HYPERLINK("http://evil","x")'], ['y\n=cmd|calc']],
+        },
+      ]),
+    );
+    fixture.componentInstance.copyTurn();
+    await Promise.resolve();
+
+    const rows = written.split('\n');
+    expect(rows).toHaveLength(3);
+    for (const row of rows) {
+      const cells = row.split('\t');
+      expect(cells).toHaveLength(1);
+      expect(cells[0].startsWith('=')).toBe(false);
+    }
   });
 
   it('neutralises a formula across a table and a chart value when the turn is copied (F2)', async () => {

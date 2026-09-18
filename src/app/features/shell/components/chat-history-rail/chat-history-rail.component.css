@@ -84,6 +84,13 @@
   line-height: 1.5;
 }
 
+/* A failed list load is information, not a placeholder: it carries the token pair
+   the rest of the app uses for an error, so it reads as one in both themes
+   (ADR-0039). */
+.rail-empty--error {
+  color: var(--status-error-fg);
+}
+
 .rail-group {
   margin-top: var(--space-3);
 }
