@@ -1,6 +1,6 @@
 import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { concatMap, Observable, Subject } from 'rxjs';
+import { catchError, concatMap, EMPTY, Observable, Subject } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import {
   blocksToPlainText,
@@ -68,8 +68,12 @@ export class ChatStateService {
    * True while the thread on screen does not yet match the conversation being
    * opened. Sending during that window would record the turn against the
    * conversation being replaced, and the arriving load would then wipe it.
+   *
+   * Tracked separately from `_state`, which the conversation LIST owns: a
+   * `refresh()` landing mid-selection used to set `ready` and re-enable the
+   * composer while the thread was still being fetched.
    */
-  readonly switching = computed(() => this._state() === 'loading');
+  readonly switching = computed(() => this._selectionLoading());
 
   /**
    * Plain (non-signal) field: changing it must not re-trigger the effect below.
@@ -91,18 +95,31 @@ export class ChatStateService {
   /** The same, for conversation-list loads. */
   private listToken = 0;
 
+  /** True from the moment a conversation is opened until its messages land. */
+  private readonly _selectionLoading = signal(false);
+
   /**
    * Store writes run one at a time, in the order they were issued. Each `persist()`
    * used to start its own chain, so two snapshots could overlap and an older
    * `saveMessages` could land after a newer one — dropping the latest answer. Not
    * reachable with the synchronous local store; guaranteed once it is a server call.
    */
-  private readonly writes = new Subject<() => Observable<unknown>>();
+  private readonly writes = new Subject<QueuedWrite>();
 
   constructor() {
     this.writes
       .pipe(
-        concatMap(work => work()),
+        // catchError INSIDE the inner observable: on the outer pipe it would
+        // complete the whole queue, and every later write in the session would be
+        // dropped in silence after one remote failure.
+        concatMap(entry =>
+          entry.identity === identityOf(this.auth.currentUserClaims())
+            ? entry.work().pipe(catchError(() => EMPTY))
+            : // The identity that queued this write is gone: running it now would
+              // write an old snapshot into the new tenant's namespace, since the
+              // store resolves its key when the call runs (ADR-0062).
+              EMPTY,
+        ),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
@@ -148,7 +165,9 @@ export class ChatStateService {
   /** Clear the thread without discarding the stored conversation behind it. */
   startNewConversation(): void {
     // Outranks any load still in flight, so a slow one cannot refill the thread.
+    // Its callbacks now return early, so nothing else will clear the flag.
     this.selectionToken += 1;
+    this._selectionLoading.set(false);
     this._activeId.set(null);
     this._messages.set([]);
     this._errorKey.set(null);
@@ -159,7 +178,7 @@ export class ChatStateService {
     if (this._activeId() === conversationId) return;
 
     const token = ++this.selectionToken;
-    this._state.set('loading');
+    this._selectionLoading.set(true);
     this.store
       .loadMessages(conversationId)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -168,11 +187,12 @@ export class ChatStateService {
           if (token !== this.selectionToken) return;
           this._activeId.set(conversationId);
           this._messages.set(messages);
-          this._state.set('ready');
+          this._selectionLoading.set(false);
           this._errorKey.set(null);
         },
         error: () => {
           if (token !== this.selectionToken) return;
+          this._selectionLoading.set(false);
           this._state.set('error');
           this._errorKey.set('SHELL.CHAT.ERROR.HISTORY_LOAD');
         },
@@ -396,18 +416,21 @@ export class ChatStateService {
 
   /** Queue a store write behind everything already issued. */
   private enqueueWrite(work: () => Observable<unknown>): void {
+    const identity = identityOf(this.auth.currentUserClaims());
     // Anything we write is a local change to the list, so a list load already in
     // flight is now stale: it would put back the conversation just deleted, or
     // drop the one just created — and dropping the active one means the reply to
     // it is never persisted, because persist() resolves it through the list.
     this.listToken += 1;
-    this.writes.next(work);
+    this.writes.next({ work, identity });
   }
 
   private resetForCurrentUser(): void {
-    // Outrank every load in flight: none of them belong to this identity.
+    // Outrank every load in flight: none of them belong to this identity. Their
+    // callbacks return early, so the selection flag has to be cleared here.
     this.selectionToken += 1;
     this.listToken += 1;
+    this._selectionLoading.set(false);
     this._conversations.set([]);
     this._messages.set([]);
     this._activeId.set(null);
@@ -422,6 +445,12 @@ export class ChatStateService {
  * security tokens, so a random fallback is fine.
  */
 /** Tenant + subject, the pair that decides whose conversations these are. */
+/** A queued store write, tagged with the identity that issued it. */
+interface QueuedWrite {
+  readonly work: () => Observable<unknown>;
+  readonly identity: string;
+}
+
 function identityOf(claims: { tid?: string; sub?: string } | null | undefined): string {
   return `${claims?.tid ?? ''}|${claims?.sub ?? ''}`;
 }

@@ -137,19 +137,23 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
    * tenants gets two slots: one `sub` can outlive a tenant switch, and reading the
    * previous tenant's conversations would be a cross-tenant data leak.
    */
-  private key(): string {
+  private key(): string | null {
     const claims = this.auth.currentUserClaims();
     const tenant = claims?.tid?.trim();
     const subject = claims?.sub?.trim();
-    return `${STORAGE_PREFIX}:${tenant && tenant.length > 0 ? tenant : 'no-tenant'}:${
-      subject && subject.length > 0 ? subject : 'anonymous'
-    }`;
+    // No authenticated tenant, no history. A shared `no-tenant` slot would put
+    // one subject's transcripts from two tenant contexts in the same bucket —
+    // the very leak the key exists to prevent (ADR-0062: `tid`, nothing else).
+    if (!tenant || tenant.length === 0 || !subject || subject.length === 0) return null;
+    return `${STORAGE_PREFIX}:${tenant}:${subject}`;
   }
 
   private read(): PersistedConversation[] {
     if (!isPlatformBrowser(this.platformId)) return [];
+    const key = this.key();
+    if (!key) return [];
     try {
-      const raw = localStorage.getItem(this.key());
+      const raw = localStorage.getItem(key);
       if (!raw) return [];
       const parsed: unknown = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed.filter(isPersistedConversation) : [];
@@ -161,8 +165,10 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
 
   private write(entries: readonly PersistedConversation[]): void {
     if (!isPlatformBrowser(this.platformId)) return;
+    const key = this.key();
+    if (!key) return;
     try {
-      localStorage.setItem(this.key(), JSON.stringify(entries));
+      localStorage.setItem(key, JSON.stringify(entries));
     } catch {
       // Over quota or storage disabled: history simply does not persist.
     }
@@ -170,8 +176,10 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
 
   private remove(): void {
     if (!isPlatformBrowser(this.platformId)) return;
+    const key = this.key();
+    if (!key) return;
     try {
-      localStorage.removeItem(this.key());
+      localStorage.removeItem(key);
     } catch {
       // Nothing actionable — the in-memory state is already cleared by the caller.
     }

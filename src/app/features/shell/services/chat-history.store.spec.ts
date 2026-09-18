@@ -285,4 +285,27 @@ describe('LocalChatHistoryStore', () => {
 
     expect(messages.map(entry => entry.id)).toEqual(['m2']);
   });
+
+  it('stores nothing at all when the token carries no tenant', async () => {
+    // A shared `no-tenant` slot would put one subject's transcripts from two
+    // tenant contexts in the same bucket — the leak the key exists to prevent.
+    claims.set({ sub: 'admin.alpha', exp: 9999999999 });
+
+    await firstValueFrom(store.saveConversation(conversation()));
+    await firstValueFrom(store.saveMessages('c1', [message()]));
+
+    expect(
+      Object.keys(localStorage).filter(key => key.startsWith('durion-chat-history')),
+    ).toEqual([]);
+    expect(await firstValueFrom(store.listConversations())).toEqual([]);
+  });
+
+  it('never surfaces a tenant-bound transcript to a token without a tenant', async () => {
+    await firstValueFrom(store.saveConversation(conversation()));
+    expect(await firstValueFrom(store.listConversations())).toHaveLength(1);
+
+    claims.set({ sub: 'admin.alpha', exp: 9999999999 });
+    expect(await firstValueFrom(store.listConversations())).toEqual([]);
+    expect(await firstValueFrom(store.loadMessages('c1'))).toEqual([]);
+  });
 });

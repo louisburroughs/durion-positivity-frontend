@@ -19,7 +19,13 @@ describe('ChatHistoryRailComponent', () => {
       providers: [
         {
           provide: AuthService,
-          useValue: { currentUserClaims: signal<JwtClaims | null>({ sub: 'admin.alpha', exp: 9999999999 }) },
+          useValue: {
+            currentUserClaims: signal<JwtClaims | null>({
+              sub: 'admin.alpha',
+              tid: 'tenant-one',
+              exp: 9999999999,
+            }),
+          },
         },
       ],
     }).compileComponents();

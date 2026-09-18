@@ -23,7 +23,7 @@ describe('ChatModalComponent', () => {
 
   const authServiceStub: Pick<AuthService, 'hasAnyRole' | 'currentUserClaims'> = {
     hasAnyRole: vi.fn().mockReturnValue(false),
-    currentUserClaims: signal<JwtClaims | null>({ sub: 'admin.alpha', exp: 9999999999 }),
+    currentUserClaims: signal<JwtClaims | null>({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 }),
   };
 
   beforeEach(async () => {

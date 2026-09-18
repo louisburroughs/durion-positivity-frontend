@@ -339,6 +339,10 @@ describe('ChatStateService against a store that does not answer immediately', ()
   /** A store whose every call is held open until the test releases it. */
   class DeferredStore implements ChatHistoryStore {
     readonly order: string[] = [];
+    /** Labels of the calls currently in flight, in the same order as `pending`. */
+    readonly pendingLabels: string[] = [];
+    /** When set, the next deferred call errors instead of completing. */
+    failNext = false;
     private readonly pending: (() => void)[] = [];
 
     listConversations(): Observable<readonly ChatConversation[]> {
@@ -367,16 +371,31 @@ describe('ChatStateService against a store that does not answer immediately', ()
 
     /** Settle the oldest outstanding call. */
     releaseNext(): void {
+      this.pendingLabels.shift();
       this.pending.shift()?.();
+    }
+
+    /** Settle one particular outstanding call, leaving the others in flight. */
+    releaseAt(index: number): void {
+      const [settle] = this.pending.splice(index, 1);
+      this.pendingLabels.splice(index, 1);
+      settle?.();
     }
     get outstanding(): number {
       return this.pending.length;
     }
 
     private defer<T>(label: string, value: T): Observable<T> {
+      const fails = this.failNext;
+      this.failNext = false;
       return new Observable<T>(subscriber => {
         this.order.push(label);
+        this.pendingLabels.push(label);
         this.pending.push(() => {
+          if (fails) {
+            subscriber.error(new Error(`store failed: ${label}`));
+            return;
+          }
           subscriber.next(value);
           subscriber.complete();
         });
@@ -470,5 +489,53 @@ describe('ChatStateService against a store that does not answer immediately', ()
 
     expect(service.conversations().map(entry => entry.id)).toContain(created);
     expect(service.activeConversationId()).toBe(created);
+  });
+
+  it('keeps the queue alive after a write fails', () => {
+    // catchError on the outer pipe would complete the queue: one remote failure
+    // and every later write in the session is dropped without a trace.
+    store.failNext = true;
+    service.appendUserMessage('first question');
+    while (store.outstanding > 0) store.releaseNext();
+
+    store.order.length = 0;
+    service.appendUserMessage('second question');
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(store.order.filter(label => label.startsWith('save')).length).toBeGreaterThan(0);
+  });
+
+  it('discards a queued write whose identity has since changed', () => {
+    // The store resolves its key when the call runs, so running an old snapshot's
+    // write after a tenant switch would put it in the new tenant's namespace.
+    service.appendUserMessage('a question under tenant-one');
+    store.order.length = 0;
+
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
+    TestBed.tick();
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(store.order.filter(label => label.startsWith('save'))).toEqual([]);
+  });
+
+  it('keeps the composer held when a list load lands mid-selection', () => {
+    // `_state` was shared, so a refresh() settling first set 'ready' and
+    // switching() went false while the thread was still being fetched — exactly
+    // the window the guard exists to close.
+    service.appendUserMessage('first question');
+    const first = service.activeConversationId()!;
+    service.startNewConversation();
+    while (store.outstanding > 0) store.releaseNext();
+
+    service.selectConversation(first);
+    service.refresh();
+    expect(service.switching()).toBe(true);
+
+    // Settle the LIST load only; the message load is still outstanding.
+    const listIndex = store.pendingLabels.indexOf('listConversations');
+    expect(listIndex).toBeGreaterThanOrEqual(0);
+    store.releaseAt(listIndex);
+
+    expect(service.switching()).toBe(true);
   });
 });
