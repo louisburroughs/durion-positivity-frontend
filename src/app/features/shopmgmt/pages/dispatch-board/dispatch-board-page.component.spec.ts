@@ -1399,6 +1399,10 @@ describe('DispatchBoardPageComponent', () => {
       const control: HTMLButtonElement | null =
         fixture.nativeElement.querySelector('[data-clock-for="M1"].clock-break');
       expect(control).not.toBeNull();
+      // The chip is a programmatic focus target only: it must never become a
+      // Tab stop for every off-duty mechanic (ADR-0029 §8.7).
+      const chip: HTMLElement | null = fixture.nativeElement.querySelector('[data-card-for="M1"]');
+      expect(chip?.getAttribute('tabindex')).toBe('-1');
       control!.focus();
 
       const readback = new Subject<{ states: Map<string, unknown>; ok: boolean }>();

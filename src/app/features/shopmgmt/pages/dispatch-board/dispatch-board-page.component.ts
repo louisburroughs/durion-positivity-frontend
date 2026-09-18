@@ -1290,21 +1290,6 @@ export class DispatchBoardPageComponent implements OnInit {
   }
 
   /**
-   * Put keyboard focus back after a clock control has destroyed itself.
-   *
-   * Every one of these controls removes its own card from the rail it is on:
-   * clocking out moves the mechanic to the bin, ending a break moves them back
-   * to the roster. Angular destroys the focused node and focus falls to
-   * `<body>`, so the next Tab starts from the top of the document — past the
-   * location picker, the date field and the filters. A dispatcher clocking in
-   * eight mechanics would traverse the page eight times, and these are the
-   * controls that exist to give the drag a keyboard equivalent in the first
-   * place (WCAG 2.5.7), so losing focus in them defeats their purpose.
-   *
-   * Only reclaims focus that was actually dropped: if the dispatcher has moved
-   * on and something else holds it, that is theirs to keep.
-   */
-  /**
    * Everything a clock card is owed once its readback has settled: the guard
    * released, and keyboard focus put back if the card moved rails.
    *
@@ -1349,6 +1334,25 @@ export class DispatchBoardPageComponent implements OnInit {
     );
   }
 
+  /**
+   * Put keyboard focus back once a clock write has settled, whichever way.
+   *
+   * On success these controls remove their own card from the rail it is on:
+   * clocking out moves the mechanic to the bin, ending a break moves them back
+   * to the roster. Angular destroys the focused node and focus falls to
+   * `<body>`, so the next Tab starts from the top of the document — past the
+   * location picker, the date field and the filters. A dispatcher clocking in
+   * eight mechanics would traverse the page eight times, and these are the
+   * controls that exist to give the drag a keyboard equivalent in the first
+   * place (WCAG 2.5.7), so losing focus in them defeats their purpose. On a
+   * refused write the card stays where it is and the control is re-enabled,
+   * with focus still parked on the mechanic's anchor.
+   *
+   * Reclaims focus in the two cases this board owns: it fell to `<body>` because
+   * the re-read destroyed the card, or it is still on the anchor `parkClockFocus`
+   * moved it to because the write was refused and the card never moved. If the
+   * dispatcher has moved on and something else holds it, that is theirs to keep.
+   */
   private restoreClockFocus(personId: string): void {
     const root = this.host.nativeElement as HTMLElement;
     afterNextRender(
