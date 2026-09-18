@@ -29,6 +29,52 @@ export type BoardState = 'idle' | 'loading' | 'ready' | 'error';
 export type MechanicAvailability = 'WORKING' | 'IDLE' | 'BREAK' | 'OFF';
 
 /**
+ * Whether the mechanic is on the timekeeping clock — a different question from
+ * `MechanicAvailability`, which is a dispatch reading (has work / on break / off)
+ * assembled from the workexec dashboard and says nothing about a work session.
+ *
+ * The three real states come from `GET /v1/people/availability`, which carries
+ * `clockState` per person since backend #2061, and are re-read after every clock
+ * write and on the 30s poll — so a session started or ended elsewhere corrects
+ * itself rather than lingering.
+ *
+ * `UNKNOWN` is reached four ways, and the card must not name one of them as
+ * though it were the only one: the read has not landed yet (true of every
+ * board load, since the enrichment starts after the first render); the read
+ * failed; the read answered and nulled this row, which is the permissions
+ * case, because pos-people nulls `clockState` for a row the caller holds no
+ * `people:timekeeping:view` over rather than refusing the whole read; or the
+ * board is not on today, where the clock is not asked for at all. The
+ * component's `clockRead` signal tells them apart — `clockState` alone cannot.
+ *
+ * A card in that state offers both actions, because guessing which one applies
+ * is exactly what the absence is there to prevent.
+ */
+export type MechanicClockState = 'CLOCKED_IN' | 'ON_BREAK' | 'CLOCKED_OUT' | 'UNKNOWN';
+
+/**
+ * Why a mechanic has no free-hours figure.
+ *
+ * `CLOSED` and `OFF_ROSTER` each name one thing: the shop is shut that day, and
+ * the technician did not come back in a roster read that answered — which the
+ * dispatch projection can outlive.
+ *
+ * `UNKNOWN` is everything about the WINDOW the board could not read, and it is
+ * deliberately several things: the location's hours unreadable or its timezone
+ * unrecognised, a weekday with no entry, a window that carries no minutes, and
+ * a roster read that failed or has not landed. One reason for several causes is
+ * the point; naming any single one of them in the copy makes it wrong for the
+ * rest.
+ *
+ * `UNKNOWN_COMMITMENT` is the mirror case and is kept apart from it: the window
+ * is perfectly readable, but the mechanic holds a workorder this response does
+ * not carry, so what they are committed to is the unknown. Folding it into
+ * `UNKNOWN` would tell the dispatcher the board could not read a shift window
+ * it read without difficulty.
+ */
+export type FreeHoursReason = 'CLOSED' | 'UNKNOWN' | 'UNKNOWN_COMMITMENT' | 'OFF_ROSTER';
+
+/**
  * Which pile a row falls in. `HELD` is a workorder parked on the site's HOLD
  * position — the backend's "placed nowhere work happens" — which is the closest
  * real counterpart to the board's on-hold lane.
@@ -42,8 +88,10 @@ export type RowStatusTone = 'NEUTRAL' | 'ACTIVE' | 'WAITING' | 'DRAFT' | 'DONE';
  * render as an explicit "not available" placeholder rather than a derived guess,
  * so the gap stays visible instead of turning into a number nobody can source.
  *
- * - mechanic free hours / shop open capacity — needs shift windows; the dashboard
- *   reports availability as a flag, never as a span.
+ * - shop open capacity — still needs a real per-person shift window. Mechanic
+ *   free hours now has one (backend #2060), but it is the shop's operating
+ *   hours standing in for a roster, which is too coarse to total into a
+ *   shop-wide capacity figure without overstating it.
  * - workorder promised time — `scheduledDate` is a date with no time of day.
  * - workorder priority — no field on `WorkorderSummary`.
  * - required skills per workorder — the service lines carry descriptions, not
@@ -65,8 +113,39 @@ export interface MechanicCard {
   /** Bay name the mechanic's workorder stands on, when it holds one. */
   readonly whereLabel: string | null;
   readonly breakExpectedReturn: string | null;
-  /** Always null: no shift window is published for this board. */
-  readonly freeHours: null;
+  /**
+   * Hours left in the shift after committed work, or null when the board cannot
+   * say. Null is not zero: a closed day, an unreadable operating-hours payload
+   * and a technician missing from the roster read all land here, and each one
+   * renders the not-available placeholder rather than a number.
+   *
+   * The shift window behind it is a **placeholder** — the shop's operating
+   * hours, identical for every technician at the location — so this is "hours
+   * the shop is open that this mechanic has not committed", not a personal
+   * roster. See `TechnicianShift` in the service.
+   */
+  readonly freeHours: number | null;
+  /** Why `freeHours` is null, for the placeholder to explain itself. */
+  readonly freeHoursReason: FreeHoursReason | null;
+  /**
+   * Whether the window behind `freeHours` is the shop-hours stand-in rather
+   * than a real per-person roster, from the roster's own `shiftSource`
+   * discriminator. Only the stand-in carries the caveat; a real window would
+   * make that caveat false.
+   */
+  readonly freeHoursIsPlaceholder: boolean;
+  /** From the availability read; `UNKNOWN` when the caller may not see it. */
+  readonly clockState: MechanicClockState;
+  /**
+   * Approved time off covering the board's date, which `availability` folds
+   * into `OFF` but the clock does not know about. Carried separately because
+   * the two can disagree: nothing stops pos-people reporting an open session
+   * for someone HR has on PTO, and the bin must not offer to change HR's
+   * record just because the clock says something.
+   */
+  readonly onTimeOff: boolean;
+  /** The open session, for the break endpoints; null unless clocked in or on break. */
+  readonly workSessionId: string | null;
 }
 
 export interface BayCard {

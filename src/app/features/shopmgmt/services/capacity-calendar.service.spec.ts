@@ -119,6 +119,31 @@ describe('CapacityCalendarService', () => {
       return schedule;
     };
 
+    // SDK 0.42 inserted `date` between `skillCode` and the paging arguments.
+    // Nothing here asserted the positions, so a later positional edit could
+    // compile while sending the page number as the date — the roster would come
+    // back for the wrong day and every test would still pass.
+    it('passes the roster arguments in the positions the SDK expects', async () => {
+      const schedule = arrange(of({ days: [] }));
+      void schedule;
+      const techs = TestBed.inject(TechnicianAPIService) as unknown as {
+        listLocationTechnicians: ReturnType<typeof vi.fn>;
+      };
+
+      await new Promise(resolve => service.getCalendar(REQUEST).subscribe(resolve));
+
+      // `date` is left undefined on purpose: this caller wants the roster, not
+      // a dated shift window, so the endpoint's own default applies.
+      expect(techs.listLocationTechnicians).toHaveBeenCalledWith(
+        REQUEST.locationId,
+        'ACTIVE',
+        undefined,
+        undefined,
+        0,
+        expect.any(Number),
+      );
+    });
+
     it('a location the schedule service does not know is reported as having no schedule, not as degraded', async () => {
       arrange(throwError(() => new HttpErrorResponse({ status: 404 })));
       const view = await new Promise<{ locationHasNoSchedule: boolean; degraded: boolean }>(resolve =>

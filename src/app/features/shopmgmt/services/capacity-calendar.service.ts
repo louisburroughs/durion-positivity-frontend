@@ -259,7 +259,10 @@ export class CapacityCalendarService {
     locationId: string,
   ): Observable<{ roster: LocationTechnicianRosterEntryResponse[]; ok: boolean }> {
     return this.technicianApi
-      .listLocationTechnicians(locationId, 'ACTIVE', undefined, 0, PAGE_SIZE)
+      // `date` (SDK 0.42) sits between skillCode and the paging arguments. This
+      // caller wants the roster itself, not a dated shift window, so it is left
+      // to the endpoint's own default — today in the location's timezone.
+      .listLocationTechnicians(locationId, 'ACTIVE', undefined, undefined, 0, PAGE_SIZE)
       .pipe(
         map(page => ({ roster: page.content ?? [], ok: true })),
         catchError(() => of({ roster: [] as LocationTechnicianRosterEntryResponse[], ok: false })),

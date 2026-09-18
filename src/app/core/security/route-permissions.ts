@@ -323,6 +323,22 @@ export const SHOPMGMT_PAGE = {
   /** Availability is a pos-people read. */
   mechanicAvailability: ['people:availability:view'],
   mechanicRoster: ['shop:technician:view'],
+  /**
+   * Clocking a mechanic in or out from the dispatch board
+   * (`startWorkSession` / `stopWorkSession` in pos-people).
+   *
+   * pos-people admits the session's own person *or* a
+   * `people:timekeeping:approve` holder, location-scoped
+   * (durion-positivity-backend#2061 closed the earlier gap, where both
+   * endpoints were gated on `isAuthenticated()` alone). This board clocks other
+   * people, so it asks for the grant; the self case belongs to a self-service
+   * view, not to a dispatcher's board.
+   *
+   * Reading the state is a different, lesser authority — `people:timekeeping:view`,
+   * which the availability endpoint applies per row by nulling `clockState`
+   * rather than refusing the read, so the board needs no gate of its own for it.
+   */
+  mechanicClock: ['people:timekeeping:approve'],
 } as const satisfies Record<string, readonly string[]>;
 
 /** `/app/product/*` — catalog, pricing, enrichment, and the views it borrows. */

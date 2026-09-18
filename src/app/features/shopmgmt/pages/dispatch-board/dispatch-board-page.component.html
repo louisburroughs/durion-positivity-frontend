@@ -122,35 +122,124 @@
             <span class="n">{{ 'SHOPMGMT.DISPATCH_BOARD.ON_DUTY_COUNT' | translate: { count: mechanics().length } }}</span>
           </h2>
           <div class="scroll">
-            <div class="mlist">
+            <div class="mlist" [class.droppable]="isRosterDropTarget()"
+              (dragover)="onRosterDragOver($event)" (drop)="onRosterDrop($event)">
               @for (mechanic of mechanics(); track mechanic.personId) {
-                <button type="button" class="mech" [attr.data-st]="mechanic.availability" draggable="true"
-                  (dragstart)="onDragStart('MECHANIC', mechanic.personId, $event)" (dragend)="onDragEnd()"
-                  [attr.aria-label]="mechanic.name
-                    ? ('SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA' | translate: { name: mechanic.name })
-                    : ('SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA_UNNAMED' | translate)">
-                  <span class="av" aria-hidden="true">{{ mechanic.initials }}</span>
-                  <span class="mname">
-                    @if (mechanic.name; as name) {
-                      <span class="mname-text">{{ name }}</span>
-                    } @else {
-                      <span class="mname-text na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_MECHANIC_NAME' | translate"
-                        aria-hidden="true">&mdash;</span>
-                    }
-                    <span class="na mfree" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS' | translate">
-                      <span aria-hidden="true">&mdash;</span>
-                      <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS' | translate }}</span>
+                <!-- The drag handle stays a button of its own: the clock controls
+                     are siblings, never children, because a button inside a
+                     button is not focusable or operable as two controls. -->
+                <div class="mech-row" [attr.data-st]="mechanic.availability"
+                  [class.busy]="isClockPending(mechanic.personId)">
+                  <!-- `aria-label` on the handle REPLACES its descendant text in
+                       the accessible name, so the free-hours reading inside it
+                       is invisible to assistive tech unless it is pulled in as
+                       a description. Both branches carry the same id, so the
+                       placeholder explains itself too. -->
+                  <button type="button" class="mech" [attr.data-drag-for]="mechanic.personId"
+                    [draggable]="!isClockPending(mechanic.personId)"
+                    (dragstart)="onDragStart('MECHANIC', mechanic.personId, $event)" (dragend)="onDragEnd()"
+                    [attr.aria-describedby]="'mfree-' + mechanic.personId"
+                    [attr.aria-label]="mechanic.name
+                      ? ('SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA' | translate: { name: mechanic.name })
+                      : ('SHOPMGMT.DISPATCH_BOARD.MECHANIC_ARIA_UNNAMED' | translate)">
+                    <span class="av" aria-hidden="true">{{ mechanic.initials }}</span>
+                    <span class="mname">
+                      @if (mechanic.name; as name) {
+                        <span class="mname-text">{{ name }}</span>
+                      } @else {
+                        <span class="mname-text na" [attr.title]="'SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_MECHANIC_NAME' | translate"
+                          aria-hidden="true">&mdash;</span>
+                      }
+                      @if (mechanic.freeHours !== null) {
+                        <!-- The window behind this is the shop's hours standing in
+                             for a personal roster, so the title says so rather
+                             than letting the number read as a promise. -->
+                        <span class="mfree" [attr.id]="'mfree-' + mechanic.personId"
+                          [attr.title]="mechanic.freeHoursIsPlaceholder
+                            ? ('SHOPMGMT.DISPATCH_BOARD.FREE_HOURS_PLACEHOLDER_HINT' | translate)
+                            : null">
+                          <!-- Through the `number` pipe like the board's other
+                               hour readings: a raw interpolation prints 6.5 with
+                               a dot in every locale that writes 6,5. -->
+                          {{ 'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS' | translate: { hours: (mechanic.freeHours | number: '1.0-1') } }}
+                          <!-- The caveat rides along non-visually too: `title`
+                               reaches neither the keyboard nor touch, as this
+                               board's own `.na` rule says, and a number read
+                               without it is a promise the data cannot keep. -->
+                          @if (mechanic.freeHoursIsPlaceholder) {
+                            <span class="sr-only">{{ 'SHOPMGMT.DISPATCH_BOARD.FREE_HOURS_PLACEHOLDER_HINT' | translate }}</span>
+                          }
+                        </span>
+                      } @else {
+                        @let freeHoursKey = freeHoursReasonKey(mechanic);
+                        <span class="na mfree" [attr.id]="'mfree-' + mechanic.personId"
+                          [attr.title]="freeHoursKey | translate">
+                          <span aria-hidden="true">&mdash;</span>
+                          <span class="sr-only">{{ freeHoursKey | translate }}</span>
+                        </span>
+                      }
                     </span>
-                  </span>
-                  <span class="mcerts">
-                    @for (skill of mechanic.skillCodes; track skill) {
-                      <span class="cert">{{ skill }}</span>
-                    }
-                    @if (mechanic.whereLabel; as where) {
-                      <span class="mwhere">{{ where }}</span>
-                    }
-                  </span>
-                </button>
+                    <span class="mcerts">
+                      @for (skill of mechanic.skillCodes; track skill) {
+                        <span class="cert">{{ skill }}</span>
+                      }
+                      @if (mechanic.whereLabel; as where) {
+                        <span class="mwhere">{{ where }}</span>
+                      }
+                    </span>
+                  </button>
+
+                  @if (canManageClock()) {
+                    @let clockHint = clockHintKey(mechanic);
+                    <span class="mclock" role="group"
+                      [attr.aria-describedby]="clockHint ? 'mclock-hint-' + mechanic.personId : null"
+                      [attr.aria-label]="mechanic.name
+                        ? ('SHOPMGMT.DISPATCH_BOARD.CLOCK_GROUP_ARIA' | translate: { name: mechanic.name })
+                        : ('SHOPMGMT.DISPATCH_BOARD.CLOCK_GROUP_ARIA_UNNAMED' | translate)">
+                      <!-- Both actions show while the state is unknown, which is
+                           every card until a write answers. The hint says why,
+                           and it is read out rather than left to a title
+                           attribute a screen reader may never announce. -->
+                      @if (clockHint) {
+                        <span class="sr-only" [attr.id]="'mclock-hint-' + mechanic.personId">{{ clockHint | translate }}</span>
+                      }
+                      @if (showClockIn(mechanic)) {
+                        <button type="button" [attr.data-clock-for]="mechanic.personId" class="clock-btn clock-in" (click)="clockIn(mechanic)"
+                          [disabled]="!canClock(mechanic)"
+                          [attr.title]="clockHint ? (clockHint | translate) : null"
+                          [attr.aria-describedby]="clockHint ? 'mclock-hint-' + mechanic.personId : null"
+                          [attr.aria-label]="mechanic.name
+                            ? ('SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA' | translate: { name: mechanic.name })
+                            : ('SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA_UNNAMED' | translate)">
+                          {{ 'SHOPMGMT.DISPATCH_BOARD.CLOCK_IN' | translate }}
+                        </button>
+                      }
+                      @if (canStartBreak(mechanic)) {
+                        <!-- Keyboard parity for the drag onto the break bin;
+                             offered only when there is a session to hang a
+                             break on, which is what the bin would refuse. -->
+                        <button type="button" [attr.data-clock-for]="mechanic.personId" class="clock-btn clock-break" (click)="startBreak(mechanic)"
+                          [disabled]="!canClock(mechanic)"
+                          [attr.aria-label]="mechanic.name
+                            ? ('SHOPMGMT.DISPATCH_BOARD.BREAK_START_ARIA' | translate: { name: mechanic.name })
+                            : ('SHOPMGMT.DISPATCH_BOARD.BREAK_START_ARIA_UNNAMED' | translate)">
+                          {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_START' | translate }}
+                        </button>
+                      }
+                      @if (showClockOut(mechanic)) {
+                        <button type="button" [attr.data-clock-for]="mechanic.personId" class="clock-btn clock-out" (click)="clockOut(mechanic)"
+                          [disabled]="!canClock(mechanic)"
+                          [attr.title]="clockHint ? (clockHint | translate) : null"
+                          [attr.aria-describedby]="clockHint ? 'mclock-hint-' + mechanic.personId : null"
+                          [attr.aria-label]="mechanic.name
+                            ? ('SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA' | translate: { name: mechanic.name })
+                            : ('SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT_ARIA_UNNAMED' | translate)">
+                          {{ 'SHOPMGMT.DISPATCH_BOARD.CLOCK_OUT' | translate }}
+                        </button>
+                      }
+                    </span>
+                  }
+                </div>
               } @empty {
                 <p class="none-left">{{ 'SHOPMGMT.DISPATCH_BOARD.NO_MECHANICS' | translate }}</p>
               }
@@ -202,10 +291,22 @@
             {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_AND_OFF' | translate }}
             <span class="n">{{ offDutyMechanics().length }}</span>
           </h2>
-          <div class="bin">
+          <div class="bin" [class.droppable]="isBreakBinDropTarget()"
+            (dragover)="onBreakBinDragOver($event)" (drop)="onBreakBinDrop($event)">
             @for (mechanic of offDutyMechanics(); track mechanic.personId) {
-              <span class="binchip">
-                <span class="dot" aria-hidden="true">{{ mechanic.initials }}</span>
+              <span class="binchip" [class.busy]="isClockPending(mechanic.personId)">
+                <!-- Only a real break is draggable back to the roster. A chip
+                     here for approved time off is HR's record, not a session
+                     this board can end, so it stays put. -->
+                @if (canLeaveBin(mechanic)) {
+                  <span class="binchip-grab" [attr.draggable]="!isClockPending(mechanic.personId)"
+                    (dragstart)="onDragStart('MECHANIC', mechanic.personId, $event, 'BREAK')"
+                    (dragend)="onDragEnd()">
+                    <span class="dot" aria-hidden="true">{{ mechanic.initials }}</span>
+                  </span>
+                } @else {
+                  <span class="dot" aria-hidden="true">{{ mechanic.initials }}</span>
+                }
                 @if (mechanic.name; as name) {
                   {{ name }}
                 } @else {
@@ -215,22 +316,33 @@
                   </span>
                 }
                 <small>
-                  @if (mechanic.availability === 'BREAK') {
-                    @if (mechanic.breakExpectedReturn; as until) {
-                      {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_UNTIL' | translate: { time: (until | date: 'shortTime') } }}
-                    } @else {
-                      {{ 'SHOPMGMT.DISPATCH_BOARD.ON_BREAK' | translate }}
-                    }
-                  } @else {
-                    {{ 'SHOPMGMT.DISPATCH_BOARD.OFF_DUTY' | translate }}
-                  }
+                  {{ binStatusKey(mechanic) | translate: { time: (mechanic.breakExpectedReturn | date: 'shortTime') } }}
                 </small>
+                <!-- Keyboard parity for dragging the chip back to the roster.
+                     Both controls are the same gesture: back on duty. -->
+                @if (canEndBreak(mechanic)) {
+                  <button type="button" [attr.data-clock-for]="mechanic.personId" class="clock-btn clock-break" (click)="endBreak(mechanic)"
+                    [disabled]="isClockPending(mechanic.personId)"
+                    [attr.aria-label]="mechanic.name
+                      ? ('SHOPMGMT.DISPATCH_BOARD.BREAK_END_ARIA' | translate: { name: mechanic.name })
+                      : ('SHOPMGMT.DISPATCH_BOARD.BREAK_END_ARIA_UNNAMED' | translate)">
+                    {{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_END' | translate }}
+                  </button>
+                } @else if (canClockInFromBin(mechanic)) {
+                  <button type="button" [attr.data-clock-for]="mechanic.personId" class="clock-btn clock-in" (click)="clockIn(mechanic)"
+                    [disabled]="isClockPending(mechanic.personId)"
+                    [attr.aria-label]="mechanic.name
+                      ? ('SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA' | translate: { name: mechanic.name })
+                      : ('SHOPMGMT.DISPATCH_BOARD.CLOCK_IN_ARIA_UNNAMED' | translate)">
+                    {{ 'SHOPMGMT.DISPATCH_BOARD.CLOCK_IN' | translate }}
+                  </button>
+                }
               </span>
             } @empty {
               <span class="bin-empty">{{ 'SHOPMGMT.DISPATCH_BOARD.EVERYONE_ON_CLOCK' | translate }}</span>
             }
           </div>
-          <p class="bin-note">{{ 'SHOPMGMT.DISPATCH_BOARD.BREAK_READ_ONLY' | translate }}</p>
+          <p class="bin-note">{{ binNoteKey() | translate }}</p>
         </section>
       </div>
 
@@ -328,6 +440,10 @@
               <span class="note">
                 @if (mechanic.skillCodes.length) {
                   {{ mechanic.skillCodes.join(', ') }}
+                } @else if (skillsUnavailable()) {
+                  <!-- The roster read did not answer: an outage is not a fact
+                       about this technician's certifications. -->
+                  {{ 'SHOPMGMT.DISPATCH_BOARD.CERTS_UNAVAILABLE' | translate }}
                 } @else {
                   {{ 'SHOPMGMT.DISPATCH_BOARD.NO_CERTS' | translate }}
                 }

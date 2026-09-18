@@ -13,7 +13,7 @@ import {
 import type { ServicePositionResponse, TechnicianAssignmentResponse } from '@durion-sdk/workorder';
 import { BayAPIService } from '@durion-sdk/location';
 import { TechnicianAPIService } from '@durion-sdk/shop-manager';
-import { PeopleAvailabilityAPIService } from '@durion-sdk/people';
+import { PeopleAvailabilityAPIService, WorkSessionsAPIService } from '@durion-sdk/people';
 import type { DashboardResponse } from '../models/dispatch-board.models';
 import { isoDateLocal } from '../models/capacity-calendar.models';
 
@@ -31,6 +31,12 @@ const servicePositionStub = {
   assignServicePosition: vi.fn(),
   releaseServicePosition: vi.fn(),
 };
+const workSessionStub = {
+  startWorkSession: vi.fn(),
+  stopWorkSession: vi.fn(),
+  startWorkSessionBreak: vi.fn(),
+  stopWorkSessionBreak: vi.fn(),
+};
 const bayStub = { listBays: vi.fn() };
 const technicianStub = { listLocationTechnicians: vi.fn() };
 
@@ -47,6 +53,10 @@ describe('DispatchBoardService', () => {
     technicianAssignmentStub.releaseTechnician.mockReturnValue(of(undefined));
     servicePositionStub.assignServicePosition.mockReturnValue(of({}));
     servicePositionStub.releaseServicePosition.mockReturnValue(of(undefined));
+    workSessionStub.startWorkSession.mockReturnValue(of({ sessionId: 'ws-1', personId: 'p-1' }));
+    workSessionStub.stopWorkSession.mockReturnValue(of({ sessionId: 'ws-1', personId: 'p-1' }));
+    workSessionStub.startWorkSessionBreak.mockReturnValue(of({ breakId: 'br-1' }));
+    workSessionStub.stopWorkSessionBreak.mockReturnValue(of({ breakId: 'br-1' }));
     bayStub.listBays.mockReturnValue(of({ content: [] }));
     technicianStub.listLocationTechnicians.mockReturnValue(of({ content: [] }));
 
@@ -55,6 +65,7 @@ describe('DispatchBoardService', () => {
         DispatchBoardService,
         { provide: DailyDispatchBoardDashboardService, useValue: dispatchDashboardStub },
         { provide: PeopleAvailabilityAPIService, useValue: peopleAvailabilityStub },
+        { provide: WorkSessionsAPIService, useValue: workSessionStub },
         { provide: TechnicianAssignmentAPIService, useValue: technicianAssignmentStub },
         { provide: ServicePositionAPIService, useValue: servicePositionStub },
         { provide: BayAPIService, useValue: bayStub },
@@ -244,7 +255,7 @@ describe('DispatchBoardService', () => {
     });
   });
 
-  describe('getTechnicianSkills()', () => {
+  describe('getTechnicianRoster()', () => {
     it('collects the skill codes each technician is credentialled for', () => {
       technicianStub.listLocationTechnicians.mockReturnValue(
         of({
@@ -262,11 +273,19 @@ describe('DispatchBoardService', () => {
       );
       const next = vi.fn();
 
-      service.getTechnicianSkills(' loc-1 ').subscribe(next);
+      service.getTechnicianRoster(' loc-1 ', '2026-04-18').subscribe(next);
 
-      expect(technicianStub.listLocationTechnicians).toHaveBeenCalledWith('loc-1', 'ACTIVE', undefined, 0, 500);
-      expect(next.mock.calls[0][0].get('p1')).toEqual(['BRAKES', 'DOT']);
-      expect(next.mock.calls[0][0].get('p2')).toEqual([]);
+      // `date` (SDK 0.42) sits between skillCode and the paging arguments.
+      expect(technicianStub.listLocationTechnicians).toHaveBeenCalledWith(
+        'loc-1',
+        'ACTIVE',
+        undefined,
+        '2026-04-18',
+        0,
+        500,
+      );
+      expect(next.mock.calls[0][0].skills.get('p1')).toEqual(['BRAKES', 'DOT']);
+      expect(next.mock.calls[0][0].skills.get('p2')).toEqual([]);
     });
 
     it('drops duplicate skill codes from renewed credentials', () => {
@@ -285,9 +304,9 @@ describe('DispatchBoardService', () => {
       );
       const next = vi.fn();
 
-      service.getTechnicianSkills('loc-1').subscribe(next);
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
 
-      expect(next.mock.calls[0][0].get('p1')).toEqual(['DOT']);
+      expect(next.mock.calls[0][0].skills.get('p1')).toEqual(['DOT']);
     });
 
     it('falls back to the mechanic id when the roster row carries no person id', () => {
@@ -296,9 +315,9 @@ describe('DispatchBoardService', () => {
       );
       const next = vi.fn();
 
-      service.getTechnicianSkills('loc-1').subscribe(next);
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
 
-      expect(next.mock.calls[0][0].get('m1')).toEqual(['HVAC']);
+      expect(next.mock.calls[0][0].skills.get('m1')).toEqual(['HVAC']);
     });
 
     // A lapsed certification is not competence: shown as a chip it mislabels the
@@ -321,9 +340,9 @@ describe('DispatchBoardService', () => {
       );
       const next = vi.fn();
 
-      service.getTechnicianSkills('loc-1').subscribe(next);
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
 
-      expect(next.mock.calls[0][0].get('p1')).toEqual(['BRAKES']);
+      expect(next.mock.calls[0][0].skills.get('p1')).toEqual(['BRAKES']);
     });
 
     it('answers an empty map when shop management is unreachable', () => {
@@ -333,10 +352,121 @@ describe('DispatchBoardService', () => {
       const next = vi.fn();
       const error = vi.fn();
 
-      service.getTechnicianSkills('loc-1').subscribe({ next, error });
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe({ next, error });
 
       expect(error).not.toHaveBeenCalled();
-      expect(next.mock.calls[0][0].size).toBe(0);
+      expect(next.mock.calls[0][0].skills.size).toBe(0);
+      expect(next.mock.calls[0][0].shifts.size).toBe(0);
+      // Empty maps alone cannot be told from a shop with nobody rostered, so
+      // the failure travels with them.
+      expect(next.mock.calls[0][0].ok).toBe(false);
+    });
+
+    it('reports a read that answered, even when the roster is genuinely empty', () => {
+      technicianStub.listLocationTechnicians.mockReturnValue(of({ content: [] }));
+      const next = vi.fn();
+
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
+
+      expect(next.mock.calls[0][0].ok).toBe(true);
+      expect(next.mock.calls[0][0].shifts.size).toBe(0);
+    });
+
+    it('carries the placeholder shift window through for a DERIVED day', () => {
+      technicianStub.listLocationTechnicians.mockReturnValue(
+        of({
+          content: [
+            { personId: 'p1', shiftStatus: 'DERIVED', shiftSource: 'LOCATION_HOURS', shiftMinutes: 540 },
+          ],
+        }),
+      );
+      const next = vi.fn();
+
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
+
+      expect(next.mock.calls[0][0].shifts.get('p1')).toEqual({
+        status: 'DERIVED',
+        source: 'LOCATION_HOURS',
+        minutes: 540,
+      });
+    });
+
+    // CLOSED and UNKNOWN are different facts and the board words them
+    // differently, so the status has to survive the mapping rather than
+    // collapsing into a null window.
+    it('keeps CLOSED and UNKNOWN apart, both without minutes', () => {
+      technicianStub.listLocationTechnicians.mockReturnValue(
+        of({
+          content: [
+            { personId: 'closed', shiftStatus: 'CLOSED', shiftSource: 'LOCATION_HOURS' },
+            { personId: 'unknown', shiftStatus: 'UNKNOWN', shiftSource: 'LOCATION_HOURS' },
+          ],
+        }),
+      );
+      const next = vi.fn();
+
+      service.getTechnicianRoster('loc-1', '2026-04-18').subscribe(next);
+
+      const shifts = next.mock.calls[0][0].shifts;
+      expect(shifts.get('closed')).toEqual({ status: 'CLOSED', source: 'LOCATION_HOURS', minutes: null });
+      expect(shifts.get('unknown')).toEqual({ status: 'UNKNOWN', source: 'LOCATION_HOURS', minutes: null });
+    });
+  });
+
+  describe('getClockStates()', () => {
+    it('keys clock state and the open session by person id', () => {
+      peopleAvailabilityStub.listPeopleAvailability.mockReturnValue(
+        of([
+          { personId: 'p1', clockState: 'CLOCKED_IN', workSessionId: 'ws-1' },
+          { personId: 'p2', clockState: 'ON_BREAK', workSessionId: 'ws-2' },
+          { personId: 'p3', clockState: 'CLOCKED_OUT' },
+        ]),
+      );
+      const next = vi.fn();
+
+      service.getClockStates('loc-1', '2026-04-18').subscribe(next);
+
+      expect(peopleAvailabilityStub.listPeopleAvailability).toHaveBeenCalledWith('loc-1', '2026-04-18');
+      expect(next.mock.calls[0][0].states.get('p1')).toEqual({ state: 'CLOCKED_IN', workSessionId: 'ws-1' });
+      expect(next.mock.calls[0][0].states.get('p2')).toEqual({ state: 'ON_BREAK', workSessionId: 'ws-2' });
+      expect(next.mock.calls[0][0].states.get('p3')).toEqual({ state: 'CLOCKED_OUT', workSessionId: null });
+      expect(next.mock.calls[0][0].ok).toBe(true);
+    });
+
+    // pos-people nulls clockState for a row the caller may not see rather than
+    // refusing the whole read, so that row must be absent — not CLOCKED_OUT,
+    // which would be the board asserting something it was not told.
+    it('omits a row whose clock state the caller may not see', () => {
+      peopleAvailabilityStub.listPeopleAvailability.mockReturnValue(
+        of([{ personId: 'p1', clockState: 'CLOCKED_IN' }, { personId: 'hidden' }]),
+      );
+      const next = vi.fn();
+
+      service.getClockStates('loc-1', '2026-04-18').subscribe(next);
+
+      expect(next.mock.calls[0][0].states.has('hidden')).toBe(false);
+      expect(next.mock.calls[0][0].states.size).toBe(1);
+      // The read itself answered — the omission is a permissions decision, and
+      // the board must be able to say so rather than blame an outage.
+      expect(next.mock.calls[0][0].ok).toBe(true);
+    });
+
+    // Never errors, because `reloadClockStates` releases a mechanic's pending
+    // guard from this stream and has no error arm — and reports `ok: false`,
+    // because an empty map alone is indistinguishable from a caller who may
+    // see nobody's clock.
+    it('answers an empty map marked not ok when the availability read fails', () => {
+      peopleAvailabilityStub.listPeopleAvailability.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 503 })),
+      );
+      const next = vi.fn();
+      const error = vi.fn();
+
+      service.getClockStates('loc-1', '2026-04-18').subscribe({ next, error });
+
+      expect(error).not.toHaveBeenCalled();
+      expect(next.mock.calls[0][0].states.size).toBe(0);
+      expect(next.mock.calls[0][0].ok).toBe(false);
     });
   });
 
@@ -481,5 +611,67 @@ describe('DispatchBoardService', () => {
 
     expect(next).not.toHaveBeenCalled();
     expect(error).toHaveBeenCalledWith(refusal);
+  });
+
+  describe('the timekeeping clock', () => {
+    it('clocks a person in by person id, and sends no actor', () => {
+      service.clockIn('p-1').subscribe();
+
+      // The controller ignores the body's actor and records the authenticated
+      // username, so sending one would imply a choice the caller does not have.
+      expect(workSessionStub.startWorkSession).toHaveBeenCalledWith({ personId: 'p-1' });
+    });
+
+    it('clocks a person out by person id, not by session id', () => {
+      service.clockOut('p-1').subscribe();
+
+      expect(workSessionStub.stopWorkSession).toHaveBeenCalledWith({ personId: 'p-1' });
+    });
+
+    // ADR-0035: what the caller receives is the contract, not just the call.
+    it('emits the session the SDK answers', () => {
+      const session = { sessionId: 'ws-9', personId: 'p-1', status: 'ACTIVE', startedAt: '2026-09-17T13:00:00Z' };
+      workSessionStub.startWorkSession.mockReturnValue(of(session));
+      const next = vi.fn();
+
+      service.clockIn('p-1').subscribe(next);
+
+      expect(next).toHaveBeenCalledWith(session);
+    });
+
+    it('propagates a refusal rather than swallowing it', () => {
+      // The board reads these two refusals as the state it could not read, so
+      // they have to reach it intact.
+      const refusal = new HttpErrorResponse({ status: 409, error: { code: 'INVALID_STATE' } });
+      workSessionStub.startWorkSession.mockReturnValue(throwError(() => refusal));
+      const next = vi.fn();
+      const error = vi.fn();
+
+      service.clockIn('p-1').subscribe({ next, error });
+
+      expect(next).not.toHaveBeenCalled();
+      expect(error).toHaveBeenCalledWith(refusal);
+    });
+
+    // Breaks key by the SESSION, unlike clock in and out which key by person.
+    it('starts and ends a break by work session id', () => {
+      service.startBreak('ws-9').subscribe();
+      service.stopBreak('ws-9').subscribe();
+
+      expect(workSessionStub.startWorkSessionBreak).toHaveBeenCalledWith('ws-9');
+      expect(workSessionStub.stopWorkSessionBreak).toHaveBeenCalledWith('ws-9');
+    });
+
+    it('propagates a break refusal rather than swallowing it', () => {
+      const refusal = new HttpErrorResponse({ status: 409, error: { code: 'INVALID_STATE' } });
+      workSessionStub.stopWorkSessionBreak.mockReturnValue(throwError(() => refusal));
+      const next = vi.fn();
+      const error = vi.fn();
+
+      service.stopBreak('ws-9').subscribe({ next, error });
+
+      expect(next).not.toHaveBeenCalled();
+      expect(error).toHaveBeenCalledWith(refusal);
+    });
   });
 });

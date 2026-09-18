@@ -243,33 +243,106 @@
 
 /* A real <button>: draggable alone is a mouse-only affordance, invisible to
  * the keyboard and unreliably announced. */
+/*
+ * The card's frame lives on the row, not on the drag handle, so the clock
+ * controls sit inside the same border rather than beside it. The handle keeps
+ * its own grid and drops the frame it used to own.
+ */
+.mech-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  background: var(--surface-inset);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--input-border);
+  border-radius: var(--radius-sm);
+}
+
+.mech-row:hover {
+  background: var(--surface-hover);
+}
+
+.mech-row[data-st='WORKING'] {
+  border-left-color: var(--status-success-fg);
+}
+
+.mech-row[data-st='IDLE'] {
+  border-left-color: var(--status-info-fg);
+}
+
+.mech-row.busy {
+  opacity: 0.6;
+}
+
 .mech {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 2px var(--space-2);
   align-items: center;
   width: 100%;
+  min-width: 0;
   padding: var(--space-2);
   font: inherit;
   text-align: left;
   color: var(--currentTextColor);
-  background: var(--surface-inset);
-  border: 1px solid var(--border-color);
-  border-left: 3px solid var(--input-border);
+  background: none;
+  border: 0;
   border-radius: var(--radius-sm);
   cursor: grab;
 }
 
-.mech:hover {
+.mclock {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  padding-right: var(--space-2);
+  padding-left: var(--space-1);
+}
+
+/*
+ * WCAG 2.2 SC 2.5.8 wants a 24x24 CSS-pixel target. At this type size the
+ * label alone is about 18px tall, and the 2px gap between the buttons is too
+ * small to earn the spacing exception, so the box is floored rather than the
+ * text enlarged — the chips stay compact and the target does not.
+ */
+.clock-btn {
+  font: inherit;
+  font-size: 0.625rem;
+  font-weight: var(--font-weight-heading);
+  line-height: 1;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 3px 6px;
+  color: var(--text-muted);
+  background: var(--cardBackground);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.clock-btn:hover:not(:disabled) {
+  color: var(--currentTextColor);
   background: var(--surface-hover);
 }
 
-.mech[data-st='WORKING'] {
-  border-left-color: var(--status-success-fg);
+.clock-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
-.mech[data-st='IDLE'] {
-  border-left-color: var(--status-info-fg);
+.clock-btn.clock-in {
+  border-color: var(--status-success-fg);
+  color: var(--status-success-fg);
+}
+
+.clock-btn.clock-out {
+  border-color: var(--status-warning-fg);
+  color: var(--status-warning-fg);
+}
+
+.clock-btn.clock-break {
+  border-color: var(--status-info-fg);
+  color: var(--status-info-fg);
 }
 
 .av {
@@ -300,8 +373,18 @@
   white-space: nowrap;
 }
 
+/*
+ * A secondary reading beside the name, not a second heading: `.mname` sets the
+ * card's heading weight for the name, and the figure inherits it unless it says
+ * otherwise. Tabular figures so a column of them does not jitter.
+ */
 .mfree {
   margin-left: auto;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .mcerts {
@@ -374,6 +457,30 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
+  /* Room for the drop outline even when the bin is empty, so the target does
+     not appear only once something is already in it. */
+  min-height: 2.5rem;
+}
+
+/*
+ * Same dashed outline the workorder rows use for a live drop target, so the
+ * two directions of this drag read as one interaction.
+ */
+.bin.droppable,
+.mlist.droppable {
+  outline: 2px dashed var(--input-focus-border);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+.binchip.busy {
+  opacity: 0.6;
+}
+
+.binchip-grab {
+  display: flex;
+  align-items: center;
+  cursor: grab;
 }
 
 .binchip {
