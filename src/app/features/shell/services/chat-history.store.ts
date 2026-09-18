@@ -75,7 +75,11 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
 
   loadMessages(conversationId: string): Observable<readonly ChatMessage[]> {
     const entry = this.read().find(candidate => candidate.id === conversationId);
-    return of(entry ? entry.messages.map(toMessage).filter(isMessage) : []);
+    if (!entry) return of([]);
+    // Each entry is validated before conversion: `read()` only checks that
+    // `messages` is an array, so a null or malformed member would otherwise throw
+    // here and break the promise that corrupt storage reads as empty history.
+    return of(entry.messages.filter(isPersistedMessage).map(toMessage).filter(isMessage));
   }
 
   saveConversation(conversation: ChatConversation): Observable<void> {
@@ -227,6 +231,17 @@ function toMessage(entry: PersistedMessage): ChatMessage | null {
 
 function isMessage(message: ChatMessage | null): message is ChatMessage {
   return message !== null;
+}
+
+function isPersistedMessage(value: unknown): value is PersistedMessage {
+  if (!value || typeof value !== 'object') return false;
+  const entry = value as Partial<PersistedMessage>;
+  return (
+    typeof entry.id === 'string' &&
+    typeof entry.role === 'string' &&
+    typeof entry.timestamp === 'string' &&
+    Array.isArray(entry.blocks)
+  );
 }
 
 function isPersistedConversation(value: unknown): value is PersistedConversation {

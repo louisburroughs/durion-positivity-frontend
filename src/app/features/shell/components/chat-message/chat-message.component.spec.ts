@@ -219,9 +219,14 @@ describe('ChatMessageComponent', () => {
     expect(host.querySelector('.text-btn')).toBeNull();
   });
 
-  it('shows the typing indicator while a turn is pending', () => {
+  it('shows the typing indicator while a turn is pending, and says so in text', () => {
     const host = render(message('assistant', [], true));
     expect(host.querySelectorAll('.typing-dot')).toHaveLength(3);
     expect(host.querySelector('.turn-actions')).toBeNull();
+
+    // Real text, not an aria-label: the surrounding role="log" needs something to
+    // announce, and the dots themselves are hidden from assistive technology.
+    expect(host.querySelector('.typing .sr-only')?.textContent).toContain('SHELL.CHAT.TYPING_ARIA');
+    expect(host.querySelectorAll('.typing-dot[aria-hidden="true"]')).toHaveLength(3);
   });
 });

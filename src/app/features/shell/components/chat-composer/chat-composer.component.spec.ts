@@ -246,6 +246,12 @@ describe('ChatComposerComponent', () => {
     expect(host().querySelector('label[for="chat-composer-input"]')).not.toBeNull();
     expect(textarea().getAttribute('aria-describedby')).toBe('chat-composer-hint');
     expect(host().querySelector('#chat-composer-hint')).not.toBeNull();
+
+    // `.sr-only` is not a global utility in this repo — without a local rule the
+    // label rendered visibly, competing with the textarea beside it.
+    const label = host().querySelector<HTMLElement>('label[for="chat-composer-input"]')!;
+    expect(getComputedStyle(label).position).toBe('absolute');
+    expect(label.getBoundingClientRect().width).toBeLessThan(2);
   });
 
 });

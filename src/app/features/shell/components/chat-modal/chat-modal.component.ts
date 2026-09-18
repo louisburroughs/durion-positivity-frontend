@@ -104,7 +104,7 @@ export class ChatModalComponent implements AfterViewChecked {
     this.chatState.refresh();
 
     afterNextRender(() => {
-      this.composer()?.focus();
+      this.focusInitial();
       this.scrollPending = true;
     });
 
@@ -244,6 +244,22 @@ export class ChatModalComponent implements AfterViewChecked {
       event.preventDefault();
       last.focus();
     }
+  }
+
+  /**
+   * Put focus in the composer — unless it is hidden, which it is when the history
+   * rail covers the dialog on a narrow viewport. Focusing a `display: none`
+   * textarea is a no-op that would leave focus on the opener, outside the
+   * `aria-modal`, so fall back to the first control that is actually visible.
+   */
+  private focusInitial(): void {
+    this.composer()?.focus();
+
+    const root = this.dialog()?.nativeElement;
+    if (!root || typeof document === 'undefined') return;
+    if (document.activeElement instanceof HTMLElement && root.contains(document.activeElement)) return;
+
+    root.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
   }
 
   /** A modal owns the viewport: the page behind it must not scroll under the finger. */

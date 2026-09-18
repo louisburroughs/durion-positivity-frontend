@@ -138,6 +138,32 @@ describe('ChatModalComponent', () => {
     expect(chatState.conversations()).toHaveLength(1);
   });
 
+  it('does not point aria-controls at an element that is not there', () => {
+    // The rail's id only exists while it is open, so a static aria-controls was a
+    // dangling reference whenever it was closed.
+    const toggle = host().querySelector('.chat-header .icon-btn')!;
+    expect(toggle.hasAttribute('aria-expanded')).toBe(true);
+    expect(toggle.hasAttribute('aria-controls')).toBe(false);
+  });
+
+  it('puts initial focus on a visible control when the composer is hidden', () => {
+    // On a narrow viewport the open rail covers the composer; focusing a hidden
+    // textarea is a no-op that would leave focus on the opener, outside the modal.
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+
+    const composer = host().querySelector<HTMLElement>('#chat-composer-input')!;
+    composer.style.display = 'none';
+
+    fixture.componentInstance['focusInitial']();
+
+    expect(dialog().contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).not.toBe(opener);
+    composer.style.display = '';
+    opener.remove();
+  });
+
   it('keeps Tab inside the dialog, wrapping at both ends', () => {
     const focusable = [
       ...dialog().querySelectorAll<HTMLElement>(

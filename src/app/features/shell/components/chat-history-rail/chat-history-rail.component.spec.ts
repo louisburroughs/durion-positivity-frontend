@@ -216,8 +216,13 @@ describe('ChatHistoryRailComponent', () => {
     expect(second.defaultPrevented).toBe(false);
   });
 
-  it('labels the search field for assistive technology', () => {
-    expect(host().querySelector('label[for="chat-history-search"]')).not.toBeNull();
+  it('labels the search field for assistive technology, without showing the label', () => {
+    const label = host().querySelector<HTMLElement>('label[for="chat-history-search"]')!;
+    expect(label).not.toBeNull();
+    // `.sr-only` is per-component in this repo; with no local rule this label was
+    // rendering above the search input instead of being hidden.
+    expect(getComputedStyle(label).position).toBe('absolute');
+    expect(label.getBoundingClientRect().width).toBeLessThan(2);
   });
 
   it('maps every day bucket to a heading key', () => {

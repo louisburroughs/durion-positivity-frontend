@@ -22,10 +22,13 @@
 
     @if (message().pending) {
 
-    <div class="typing" [attr.aria-label]="'SHELL.CHAT.TYPING_ARIA' | translate">
-      <span class="typing-dot"></span>
-      <span class="typing-dot"></span>
-      <span class="typing-dot"></span>
+    <div class="typing">
+      <!-- Real text, not an aria-label: the label is ignored on a plain div, so the
+           surrounding role="log" had nothing to announce when a turn started. -->
+      <span class="sr-only">{{ 'SHELL.CHAT.TYPING_ARIA' | translate }}</span>
+      <span class="typing-dot" aria-hidden="true"></span>
+      <span class="typing-dot" aria-hidden="true"></span>
+      <span class="typing-dot" aria-hidden="true"></span>
     </div>
 
     } @else {

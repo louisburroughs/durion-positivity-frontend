@@ -152,6 +152,18 @@ describe('LocalChatHistoryStore', () => {
     expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
   });
 
+  it('treats a malformed message as absent instead of throwing', async () => {
+    // read() only checks that `messages` is an array, so a null member used to
+    // throw here and break the promise that corrupt storage reads as empty.
+    await save(conversation(), [message({ id: 'ok' })]);
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+    raw[0].messages = [null, 42, { id: 'no-timestamp' }, ...raw[0].messages];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(raw));
+
+    const messages = await firstValueFrom(store.loadMessages('c1'));
+    expect(messages.map(entry => entry.id)).toEqual(['ok']);
+  });
+
   it('drops a persisted message whose role is not recognised', async () => {
     await save(conversation(), [
       message({ id: 'ok' }),

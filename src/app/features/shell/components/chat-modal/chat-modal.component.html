@@ -11,7 +11,7 @@
   <!-- Header -->
   <header class="chat-header">
     <button class="icon-btn" type="button" (click)="toggleHistoryRail()"
-            [attr.aria-expanded]="historyRailOpen()" aria-controls="chat-history-rail"
+            [attr.aria-expanded]="historyRailOpen()"
             [attr.aria-label]="(historyRailOpen() ? 'SHELL.CHAT.HISTORY.HIDE_ARIA' : 'SHELL.CHAT.HISTORY.SHOW_ARIA') | translate">
       <span class="material-symbols-rounded" aria-hidden="true">{{ 'dock_to_right' | msIcon }}</span>
     </button>
