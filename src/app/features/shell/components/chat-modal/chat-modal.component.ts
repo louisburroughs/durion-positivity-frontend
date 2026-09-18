@@ -203,6 +203,13 @@ export class ChatModalComponent implements AfterViewChecked {
   }
 
   send(text: string): void {
+    // The send button is disabled while a turn cannot start, but this is the
+    // public entry point every path funnels through — the composer's own
+    // (submitted) output, a suggestion, a retry — so the guard has to live here
+    // too. A send that slips through while `switching()` is true is recorded
+    // against the conversation being replaced, and the arriving selection load
+    // then overwrites the thread and loses it.
+    if (this.composerBusy()) return;
     this.chatSend.send(text, { onSettled: () => (this.scrollPending = true) });
     this.scrollPending = true;
   }

@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom, Observable, of, throwError } from 'rxjs';
+import { firstValueFrom, Observable, of, Subject, throwError } from 'rxjs';
 import { JwtClaims } from '../../../core/models/auth.models';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -96,8 +96,13 @@ describe('ChatBlobService', () => {
       }),
     );
 
-    let firstUrl: string | null = null;
-    service.resolve('/blobs/1').subscribe(url => (firstUrl = url));
+    const firstDelivered: string[] = [];
+    service.resolve('/blobs/1').subscribe({
+      next: url => firstDelivered.push(url),
+      // Tenant-one's bytes are dropped once its session is gone; the dedicated
+      // spec below owns that half.
+      error: () => undefined,
+    });
     expect(getBlob).toHaveBeenCalledTimes(1);
 
     // A different identity, WITHOUT flushing the effect that discards the
@@ -106,15 +111,56 @@ describe('ChatBlobService', () => {
     claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
 
     getBlob.mockReturnValueOnce(of(new Blob(['tenant-two bytes'])));
-    let secondUrl: string | null = null;
-    service.resolve('/blobs/1').subscribe(url => (secondUrl = url));
+    const secondDelivered: string[] = [];
+    service.resolve('/blobs/1').subscribe(url => secondDelivered.push(url));
 
+    // A second request, not a replay of tenant-one's in-flight entry.
     expect(getBlob).toHaveBeenCalledTimes(2);
+    expect(secondDelivered).toHaveLength(1);
+    expect(secondDelivered[0]).toMatch(/^blob:/);
 
     settleFirst!(new Blob(['tenant-one bytes']));
-    expect(firstUrl).not.toBeNull();
-    expect(secondUrl).not.toBeNull();
-    expect(secondUrl).not.toBe(firstUrl);
+    expect(firstDelivered).toEqual([]);
+  });
+
+  it('drops a blob that arrives after the identity that asked for it changed', () => {
+    // Emptying `inFlight` on the change does not CANCEL the fetch: with
+    // `shareReplay({ refCount: false })` the source stays subscribed, so the
+    // callback still ran — minting an object URL for the previous tenant's
+    // document, caching it in the set this session revokes, and replaying it to a
+    // subscriber that is now looking at another tenant (ADR-0063 §1/§6, ADR-0062).
+    const bytes = new Subject<Blob>();
+    getBlob.mockReturnValueOnce(bytes);
+    const create = vi.spyOn(URL, 'createObjectURL');
+
+    const delivered: string[] = [];
+    let errored = false;
+    service.resolve('/blobs/1').subscribe({
+      next: url => delivered.push(url),
+      error: () => (errored = true),
+    });
+
+    // The session ends while the fetch is still open — the effect runs and clears
+    // the cache, which is all it can do.
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
+    TestBed.tick();
+
+    bytes.next(new Blob(['tenant-one bytes']));
+    bytes.complete();
+
+    expect(create).not.toHaveBeenCalled();
+    expect(delivered).toEqual([]);
+    expect(errored).toBe(true);
+
+    // Nothing of tenant-one's was left behind under either key: tenant-two's own
+    // request goes to the API and is served from it.
+    getBlob.mockReturnValueOnce(of(new Blob(['tenant-two bytes'])));
+    const second: string[] = [];
+    service.resolve('/blobs/1').subscribe(url => second.push(url));
+
+    expect(getBlob).toHaveBeenCalledTimes(2);
+    expect(second).toHaveLength(1);
+    expect(second[0]).toMatch(/^blob:/);
   });
 
   it('revokes every object URL it handed out when it is destroyed', async () => {

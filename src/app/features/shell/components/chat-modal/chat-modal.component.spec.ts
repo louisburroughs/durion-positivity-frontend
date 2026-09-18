@@ -353,6 +353,31 @@ describe('ChatModalComponent', () => {
     expect(retrySpy).not.toHaveBeenCalled();
   });
 
+  it('refuses a send that arrives while a conversation is still opening', () => {
+    // send() is the entry point every path funnels through — the composer's
+    // (submitted) output, a suggestion, the template — and the disabled button is
+    // not the guard: a send that gets through while switching() is true is
+    // recorded against the conversation being replaced, and the arriving
+    // selection load then overwrites the thread and loses it. Same defect
+    // useSuggestion() and retry() already carry this guard for
+    // (PR #288 review r4051062889).
+    const state = TestBed.inject(ChatStateService);
+    state.appendUserMessage('first question');
+    const first = state.activeConversationId()!;
+    state.startNewConversation();
+
+    // The store here never settles a conversation load, so the switch stays open.
+    vi.spyOn(TestBed.inject(CHAT_HISTORY_STORE), 'loadMessages').mockReturnValue(NEVER);
+    const sendSpy = vi.spyOn(TestBed.inject(ChatSendService), 'send');
+
+    state.selectConversation(first);
+    expect(state.switching()).toBe(true);
+
+    fixture.componentInstance.send('a question typed mid-switch');
+
+    expect(sendSpy).not.toHaveBeenCalled();
+  });
+
   it('shows a status, not an alert, when a history write is refused — the thread on screen still works', async () => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
@@ -398,6 +423,17 @@ describe('ChatModalComponent', () => {
     // the load-state machine never moves to 'error' for it.
     expect(state.messages()).toHaveLength(1);
     expect(state.state()).not.toBe('error');
+  });
+
+  it('sends when nothing is in flight — the positive half of the guard', () => {
+    // The negative half (a send refused while a conversation is opening) is the
+    // spec below; a suite that pins only the refusal has not tested the split
+    // (ADR-0035 §7).
+    const sendSpy = vi.spyOn(TestBed.inject(ChatSendService), 'send');
+
+    fixture.componentInstance.send('how many mechanics do I have?');
+
+    expect(sendSpy).toHaveBeenCalledTimes(1);
   });
 
   it('neutralises a formula when the whole transcript is copied (F2)', async () => {

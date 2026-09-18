@@ -78,18 +78,32 @@ export class ChatBlobService {
 
     // Captured at issue time, so a response that settles after an identity change
     // cannot be filed under — or served to — the new one (ADR-0063 §1).
-    const key = this.cacheKey(url);
+    const identity = identityKey(this.auth.currentUserClaims());
+    const key = cacheKey(identity, url);
     const cached = this.inFlight.get(key);
     if (cached) return cached;
 
     const request = this.api.getBlob(url, { baseUrlOverride: '' }).pipe(
       map(blob => {
+        // The bytes arrived for a session that has ended. Emptying the cache on
+        // the change does NOT cancel this fetch — `shareReplay({ refCount: false })`
+        // keeps the source subscribed — so without this check the callback would
+        // still mint an object URL for the previous tenant's document, add it to
+        // the set THIS session owns, and replay it to whoever is still subscribed
+        // (ADR-0063 §1: the result is matched against the identity it was
+        // requested for; §6: a browser resource is created only for that identity;
+        // ADR-0062).
+        if (identityKey(this.auth.currentUserClaims()) !== identity) {
+          throw new ChatBlobIdentityChangedError();
+        }
         const objectUrl = URL.createObjectURL(blob);
         this.objectUrls.add(objectUrl);
         return objectUrl;
       }),
       catchError((error: unknown) => {
-        // Do not cache a failure: a token refresh can make the next try succeed.
+        // Do not cache a failure: a token refresh can make the next try succeed —
+        // and a result dropped for the wrong identity must leave nothing behind
+        // either, under this key or the new identity's (which it never held).
         this.inFlight.delete(key);
         return throwError(() => error);
       }),
@@ -100,14 +114,30 @@ export class ChatBlobService {
     return request;
   }
 
-  /** Tenant + subject first, so no two identities can share a cache entry. */
-  private cacheKey(url: string): string {
-    return `${identityKey(this.auth.currentUserClaims())}|${url}`;
-  }
-
   private discard(): void {
     for (const url of this.objectUrls) URL.revokeObjectURL(url);
     this.objectUrls.clear();
+    // Only the ENTRIES go: a fetch already open stays subscribed under
+    // `shareReplay({ refCount: false })`, which is why `resolve()` also checks the
+    // identity when the bytes arrive.
     this.inFlight.clear();
+  }
+}
+
+/** Tenant + subject first, so no two identities can share a cache entry. */
+function cacheKey(identity: string, url: string): string {
+  return `${identity}|${url}`;
+}
+
+/**
+ * The session that asked for these bytes ended before they arrived, so they are
+ * dropped rather than delivered. Carries no user-facing prose: the caller renders
+ * its own failed-content state.
+ */
+class ChatBlobIdentityChangedError extends Error {
+  constructor() {
+    // i18n-ignore-next-line: Error message for the console, never rendered
+    super('chat blob discarded: the identity that requested it has changed');
+    this.name = 'ChatBlobIdentityChangedError';
   }
 }
