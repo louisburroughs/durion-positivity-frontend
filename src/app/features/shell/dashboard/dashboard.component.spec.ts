@@ -108,4 +108,19 @@ describe('DashboardComponent', () => {
     const shortcut = host().querySelector('.assistant-launcher__shortcut');
     expect(shortcut?.textContent).toContain('K');
   });
+
+  it('renders the same shortcut hint the server would, until after hydration', () => {
+    // The server cannot know the platform. Branching on it during render made SSR
+    // emit `Ctrl` where a Mac client expected `⌘` — a hydration text mismatch on
+    // every Apple device.
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+    );
+
+    const fresh = TestBed.createComponent(DashboardComponent);
+    expect(fresh.componentInstance.shortcutModifier()).toBe('Ctrl');
+
+    fresh.detectChanges();
+    expect(fresh.componentInstance.shortcutModifier()).toBe('\u2318');
+  });
 });

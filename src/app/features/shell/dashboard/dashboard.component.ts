@@ -1,4 +1,4 @@
-import { Component, computed, inject, PLATFORM_ID } from '@angular/core';
+import { afterNextRender, Component, computed, inject, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -61,8 +61,19 @@ export class DashboardComponent {
     return segment.charAt(0).toUpperCase() + segment.slice(1);
   });
 
-  /** Shortcut hint on the launcher; macOS uses the command key. */
-  readonly shortcutModifier = computed(() => (this.isApplePlatform() ? '\u2318' : 'Ctrl'));
+  /**
+   * Shortcut hint on the launcher; macOS uses the command key.
+   *
+   * Set only AFTER hydration. The server cannot know the platform, so branching
+   * on it during render made the server emit `Ctrl` where a Mac client expected
+   * `⌘` — a hydration text mismatch on every Apple device.
+   */
+  private readonly appleShortcut = signal(false);
+  readonly shortcutModifier = computed(() => (this.appleShortcut() ? '\u2318' : 'Ctrl'));
+
+  constructor() {
+    afterNextRender(() => this.markApplePlatform());
+  }
 
   readonly quickActions: readonly QuickAction[] = [
     { icon: 'assignment_add', labelKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.NEW_WORKORDER', subKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.NEW_WORKORDER_SUB', route: '/app/workexec', tone: 'teal' },
@@ -90,6 +101,10 @@ export class DashboardComponent {
   /** Open the assistant dialog; the dashboard itself holds no message box. */
   openAssistant(): void {
     this.chatUi.openModal();
+  }
+
+  private markApplePlatform(): void {
+    this.appleShortcut.set(this.isApplePlatform());
   }
 
   private isApplePlatform(): boolean {
