@@ -68,7 +68,10 @@ export class ChatUiService {
       const stored = localStorage.getItem(HISTORY_RAIL_KEY);
       if (stored !== null) return stored !== 'false';
     } catch {
-      return true;
+      // Storage disabled or throwing: fall back to the same viewport-based
+      // default as "no stored preference", never an unconditional `true` —
+      // that would open the rail over the composer on a first-time phone user.
+      return !isNarrowViewport();
     }
     return !isNarrowViewport();
   }

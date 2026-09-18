@@ -1,26 +1,44 @@
 import { inject, Injectable, InjectionToken, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { ChatBlock, ChatConversation, ChatMessage } from '../models/chat.model';
 import { coerceBlocks } from '../util/chat-response.mapper';
+import { encodeIdentityPart } from '../util/identity.util';
 
 /**
  * Conversation persistence seam
  * -----------------------------
- * The MCP server has no conversation-history endpoints yet (backend #2073), so the
- * shipped implementation keeps history in this browser only
- * ({@link LocalChatHistoryStore}). Everything above this file already talks to the
- * async {@link ChatHistoryStore} contract, so server-side history means providing a
- * remote implementation for {@link CHAT_HISTORY_STORE} — one provider line, no
- * caller changes.
+ * The MCP server has no conversation-history endpoints yet
+ * (durion-positivity-backend#2073), so the shipped implementation keeps history in
+ * this browser only ({@link LocalChatHistoryStore}).
+ *
+ * Every caller already talks to this ASYNC contract, so a remote implementation
+ * needs no caller rewrite for ordering or error handling. It is not a drop-in
+ * provider swap either: the chat send request (`chat-api.service.ts`) carries no
+ * conversation id, so a server-side store cannot attribute a turn to a
+ * conversation until backend#2073 defines that field. The contract below is the
+ * seam; wiring a remote store also means extending the send contract.
  *
  * Storage is namespaced by the token's tenant AND subject, so neither switching
  * accounts nor switching tenants in one browser can surface conversations that
  * belong to the other — and those conversations quote customer and invoice data
  * (ADR-0062: the tenant comes from the token's `tid` claim, nowhere else).
+ *
+ * Failures are reported, never laundered: a read that could not be understood
+ * ERRORS rather than answering "no history", and a write that did not land ERRORS
+ * rather than reporting success, so the state layer can tell the user (ADR-0064
+ * §1/§6, ADR-0065 §6).
  */
 export interface ChatHistoryStore {
+  /**
+   * Translation key describing where this store keeps history, rendered in the
+   * history rail. Part of the contract because the claim is
+   * implementation-specific: "kept in this browser" is false the moment a
+   * server-backed store is provided.
+   */
+  readonly retentionNoteKey: string;
+
   /** Conversations, newest first. */
   listConversations(): Observable<readonly ChatConversation[]>;
   loadMessages(conversationId: string): Observable<readonly ChatMessage[]>;
@@ -66,70 +84,93 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly auth = inject(AuthService);
 
+  readonly retentionNoteKey = 'SHELL.CHAT.HISTORY.RETENTION_NOTE';
+
   listConversations(): Observable<readonly ChatConversation[]> {
-    const conversations = this.read()
-      .map(entry => toConversation(entry))
-      .sort(byPinnedThenRecent);
+    const outcome = this.read();
+    // An unreadable store is NOT an empty history: answering `[]` tells the rail
+    // this user has never had a conversation, which is a claim the read never
+    // established (ADR-0064 §1/§4). The state layer maps this to HISTORY_LOAD.
+    if (!outcome.ok) return throwError(() => new ChatHistoryUnavailableError('read'));
+
+    const conversations = outcome.entries.map(entry => toConversation(entry)).sort(byPinnedThenRecent);
     return of(conversations);
   }
 
   loadMessages(conversationId: string): Observable<readonly ChatMessage[]> {
-    const entry = this.read().find(candidate => candidate.id === conversationId);
+    const outcome = this.read();
+    if (!outcome.ok) return throwError(() => new ChatHistoryUnavailableError('read'));
+
+    const entry = outcome.entries.find(candidate => candidate.id === conversationId);
     if (!entry) return of([]);
     // Each entry is validated before conversion: `read()` only checks that
     // `messages` is an array, so a null or malformed member would otherwise throw
-    // here and break the promise that corrupt storage reads as empty history.
+    // here — a malformed MEMBER is filtered out, not treated as an outage.
     return of(entry.messages.filter(isPersistedMessage).map(toMessage).filter(isMessage));
   }
 
   saveConversation(conversation: ChatConversation): Observable<void> {
-    const stored = this.read();
-    const existing = stored.find(entry => entry.id === conversation.id);
+    const outcome = this.read();
+    if (!outcome.ok) return throwError(() => new ChatHistoryUnavailableError('write'));
+    const existing = outcome.entries.find(entry => entry.id === conversation.id);
 
-    this.upsert(stored, {
-      id: conversation.id,
-      title: conversation.title,
-      preview: conversation.preview,
-      createdAt: conversation.createdAt.toISOString(),
-      updatedAt: conversation.updatedAt.toISOString(),
-      pinned: conversation.pinned,
-      // Carry the stored messages forward: metadata writes never touch them.
-      messages: existing?.messages ?? [],
-    });
-    return of(undefined);
+    return this.toResult(
+      this.upsert(outcome.entries, {
+        id: conversation.id,
+        title: conversation.title,
+        preview: conversation.preview,
+        createdAt: conversation.createdAt.toISOString(),
+        updatedAt: conversation.updatedAt.toISOString(),
+        pinned: conversation.pinned,
+        // Carry the stored messages forward: metadata writes never touch them.
+        messages: existing?.messages ?? [],
+      }),
+    );
   }
 
   saveMessages(conversationId: string, messages: readonly ChatMessage[]): Observable<void> {
-    const stored = this.read();
-    const existing = stored.find(entry => entry.id === conversationId);
+    const outcome = this.read();
+    if (!outcome.ok) return throwError(() => new ChatHistoryUnavailableError('write'));
+
+    const existing = outcome.entries.find(entry => entry.id === conversationId);
     if (!existing) return of(undefined);
 
-    this.upsert(stored, {
-      ...existing,
-      messages: messages.slice(-MAX_MESSAGES_PER_CONVERSATION).map(message => ({
-        id: message.id,
-        role: message.role,
-        blocks: message.blocks as readonly unknown[],
-        timestamp: message.timestamp.toISOString(),
-      })),
-    });
-    return of(undefined);
+    return this.toResult(
+      this.upsert(outcome.entries, {
+        ...existing,
+        messages: messages.slice(-MAX_MESSAGES_PER_CONVERSATION).map(message => ({
+          id: message.id,
+          role: message.role,
+          blocks: message.blocks as readonly unknown[],
+          timestamp: message.timestamp.toISOString(),
+        })),
+      }),
+    );
   }
 
   /** Move an entry to the front of the stored list and write it back. */
-  private upsert(stored: readonly PersistedConversation[], entry: PersistedConversation): void {
+  private upsert(stored: readonly PersistedConversation[], entry: PersistedConversation): boolean {
     const rest = stored.filter(candidate => candidate.id !== entry.id);
-    this.write(trimToBudget(entry, rest));
+    return this.write(trimToBudget(entry, rest));
   }
 
   deleteConversation(conversationId: string): Observable<void> {
-    this.write(this.read().filter(entry => entry.id !== conversationId));
-    return of(undefined);
+    const outcome = this.read();
+    if (!outcome.ok) return throwError(() => new ChatHistoryUnavailableError('write'));
+    return this.toResult(this.write(outcome.entries.filter(entry => entry.id !== conversationId)));
   }
 
   clear(): Observable<void> {
-    this.remove();
-    return of(undefined);
+    return this.toResult(this.remove());
+  }
+
+  /**
+   * A write that did not land errors. Swallowing it kept the in-memory history
+   * looking persisted until the next reload dropped it, with nothing on screen to
+   * say so (ADR-0065 §6).
+   */
+  private toResult(persisted: boolean): Observable<void> {
+    return persisted ? of(undefined) : throwError(() => new ChatHistoryUnavailableError('write'));
   }
 
   /**
@@ -145,44 +186,72 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
     // one subject's transcripts from two tenant contexts in the same bucket —
     // the very leak the key exists to prevent (ADR-0062: `tid`, nothing else).
     if (!tenant || tenant.length === 0 || !subject || subject.length === 0) return null;
-    return `${STORAGE_PREFIX}:${tenant}:${subject}`;
+    // Both halves are percent-encoded: they are opaque token values, and an
+    // unescaped delimiter lets `tid=a:b`/`sub=c` and `tid=a`/`sub=b:c` resolve to
+    // one slot — a cross-tenant collision in the key that prevents exactly that.
+    return `${STORAGE_PREFIX}:${encodeIdentityPart(tenant)}:${encodeIdentityPart(subject)}`;
   }
 
-  private read(): PersistedConversation[] {
-    if (!isPlatformBrowser(this.platformId)) return [];
+  /**
+   * Read the stored list, distinguishing "nothing stored" from "could not be
+   * read". A malformed ENTRY is filtered out (per-field validation, ADR-0065 §6);
+   * storage that cannot be parsed or reached at all is `ok: false`.
+   */
+  private read(): ReadOutcome {
+    if (!isPlatformBrowser(this.platformId)) return { entries: [], ok: true };
     const key = this.key();
-    if (!key) return [];
+    if (!key) return { entries: [], ok: true };
     try {
       const raw = localStorage.getItem(key);
-      if (!raw) return [];
+      if (!raw) return { entries: [], ok: true };
       const parsed: unknown = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed.filter(isPersistedConversation) : [];
+      if (!Array.isArray(parsed)) return { entries: [], ok: false };
+      return { entries: parsed.filter(isPersistedConversation), ok: true };
     } catch {
-      // Corrupt or unreadable storage is treated as empty history, never fatal.
-      return [];
+      // Corrupt or unreadable storage never throws out of here — but it is
+      // reported as a failed read rather than as an empty history.
+      return { entries: [], ok: false };
     }
   }
 
-  private write(entries: readonly PersistedConversation[]): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+  /** True when the entries are persisted; false when the browser refused. */
+  private write(entries: readonly PersistedConversation[]): boolean {
+    if (!isPlatformBrowser(this.platformId)) return true;
     const key = this.key();
-    if (!key) return;
+    if (!key) return true;
     try {
       localStorage.setItem(key, JSON.stringify(entries));
+      return true;
     } catch {
-      // Over quota or storage disabled: history simply does not persist.
+      // Over quota or storage disabled: the caller is told, so the UI can be.
+      return false;
     }
   }
 
-  private remove(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+  private remove(): boolean {
+    if (!isPlatformBrowser(this.platformId)) return true;
     const key = this.key();
-    if (!key) return;
+    if (!key) return true;
     try {
       localStorage.removeItem(key);
+      return true;
     } catch {
-      // Nothing actionable — the in-memory state is already cleared by the caller.
+      return false;
     }
+  }
+}
+
+/** Outcome of a storage read: entries plus whether the read itself succeeded. */
+interface ReadOutcome {
+  readonly entries: PersistedConversation[];
+  readonly ok: boolean;
+}
+
+/** Browser storage could not be read or written. Carries no user-facing prose. */
+export class ChatHistoryUnavailableError extends Error {
+  constructor(readonly operation: 'read' | 'write') {
+    super(`chat history storage ${operation} failed`);
+    this.name = 'ChatHistoryUnavailableError';
   }
 }
 

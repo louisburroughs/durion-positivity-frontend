@@ -18,19 +18,29 @@
               (input)="onInput($any($event.target).value)"
               (keydown)="onKeyDown($event)"></textarea>
 
-    <button class="icon-btn icon-btn--mic" type="button"
-            [class.icon-btn--recording]="listening()"
-            [disabled]="!voiceSupported"
-            (click)="toggleVoice()"
-            [attr.aria-pressed]="listening()"
-            [attr.aria-label]="(voiceSupported
-              ? (listening() ? 'SHELL.CHAT.VOICE.STOP_ARIA' : 'SHELL.CHAT.VOICE.START_ARIA')
-              : 'SHELL.CHAT.VOICE.UNSUPPORTED') | translate"
-            [title]="(voiceSupported
-              ? (listening() ? 'SHELL.CHAT.VOICE.STOP_ARIA' : 'SHELL.CHAT.VOICE.START_ARIA')
-              : 'SHELL.CHAT.VOICE.UNSUPPORTED') | translate">
-      <span class="material-symbols-rounded" aria-hidden="true">{{ (voiceSupported ? 'mic' : 'mic_off') | msIcon }}</span>
-    </button>
+    <!-- A disabled button cannot receive focus, so its own aria-label/title is
+         never reliably announced (ADR-0029 §8.3). The explanation lives on this
+         enclosing group instead, via aria-describedby, so a screen reader that
+         encounters it while browsing still gets the "why". -->
+    <span class="mic-group" role="group"
+          [attr.aria-describedby]="voiceSupported ? null : 'chat-voice-unsupported-hint'">
+      @if (!voiceSupported) {
+      <span class="sr-only" id="chat-voice-unsupported-hint">{{ 'SHELL.CHAT.VOICE.UNSUPPORTED' | translate }}</span>
+      }
+      <button class="icon-btn icon-btn--mic" type="button"
+              [class.icon-btn--recording]="listening()"
+              [disabled]="!voiceSupported"
+              (click)="toggleVoice()"
+              [attr.aria-pressed]="listening()"
+              [attr.aria-label]="(voiceSupported
+                ? (listening() ? 'SHELL.CHAT.VOICE.STOP_ARIA' : 'SHELL.CHAT.VOICE.START_ARIA')
+                : 'SHELL.CHAT.VOICE.UNSUPPORTED') | translate"
+              [title]="(voiceSupported
+                ? (listening() ? 'SHELL.CHAT.VOICE.STOP_ARIA' : 'SHELL.CHAT.VOICE.START_ARIA')
+                : 'SHELL.CHAT.VOICE.UNSUPPORTED') | translate">
+        <span class="material-symbols-rounded" aria-hidden="true">{{ (voiceSupported ? 'mic' : 'mic_off') | msIcon }}</span>
+      </button>
+    </span>
 
     <button class="icon-btn icon-btn--send" type="button" [disabled]="!canSend()" (click)="submit()"
             [attr.aria-label]="'SHELL.CHAT.COMPOSER.SEND_ARIA' | translate">

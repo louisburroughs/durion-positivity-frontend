@@ -59,6 +59,23 @@ describe('ChatUiService', () => {
     expect(makeService().historyRailOpen()).toBe(true);
   });
 
+  it('falls back to the viewport default, not an unconditional open, when storage throws', () => {
+    // A `true` fallback here would open the rail over the composer for a
+    // first-time phone user on every throwing read — the same mistake the
+    // no-storage branch was already guarded against.
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError');
+    });
+
+    pinViewport(true);
+    expect(makeService().historyRailOpen()).toBe(false);
+
+    pinViewport(false);
+    expect(makeService().historyRailOpen()).toBe(true);
+
+    getItemSpy.mockRestore();
+  });
+
   it('lets a stored preference win at any width', () => {
     pinViewport(false);
     const service = makeService();

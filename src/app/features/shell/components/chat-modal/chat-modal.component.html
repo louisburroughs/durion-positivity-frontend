@@ -1,11 +1,6 @@
-<!-- Backdrop: a button so a pointer dismiss is a real activation, not a div click.
-     Deliberately out of the tab order — the header close button and Escape are the
-     keyboard routes out, and a focusable backdrop would only add a dead stop. -->
-<button class="chat-backdrop" type="button" tabindex="-1" (click)="onBackdropClick()"
-        [attr.aria-label]="'SHELL.CHAT.CLOSE_ARIA' | translate"></button>
-
-<section #dialog class="chat-dialog" [class.chat-dialog--maximised]="maximised()"
-         role="dialog" aria-modal="true" aria-labelledby="chat-dialog-title">
+<dialog #dialog appModalDialog class="chat-dialog" [class.chat-dialog--maximised]="maximised()"
+        aria-labelledby="chat-dialog-title"
+        (modalCancel)="close()" (click)="onDialogClick($event)">
 
   <!-- Header -->
   <header class="chat-header">
@@ -65,6 +60,12 @@
       <p class="chat-load-error" role="alert">{{ key | translate }}</p>
       }
 
+      @if (persistenceErrorKey(); as key) {
+      <!-- Not role="alert": the conversation still works, only the persisted
+           copy was lost — a status, not a failure of the thread on screen. -->
+      <p class="chat-persist-warning" role="status">{{ key | translate }}</p>
+      }
+
       <div #thread class="chat-thread" role="log" aria-live="polite"
            [attr.aria-label]="'SHELL.CHAT.MESSAGES_ARIA' | translate"
            [attr.aria-busy]="awaitingReply()">
@@ -94,20 +95,21 @@
         } @else {
 
         @for (message of messages(); track message.id) {
-        <app-chat-message [message]="message" (retry)="retry($event)" />
+        <app-chat-message [message]="message" [busy]="composerBusy()" (retry)="retry($event)" />
         }
 
         }
       </div>
 
-      <app-chat-composer [busy]="composerBusy()" [canIngest]="isAdmin()"
+      <app-chat-composer [busy]="composerBusy()" [canIngest]="canIngestDocuments()"
                          (submitted)="send($event)"
                          (ingestRequested)="openRagDialog()" />
     </div>
   </div>
 
-  <!-- Nested inside the dialog so its keystrokes reach the trap above. -->
+  <!-- Nested inside the dialog: its own appModalDialog pushes it above this one
+       in the top layer, so it stacks and gets Escape/focus-trap on its own. -->
   @if (showRagDialog()) {
   <app-rag-ingest-dialog (closed)="onRagDialogClosed()" />
   }
-</section>
+</dialog>

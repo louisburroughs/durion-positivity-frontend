@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ModalDialogDirective } from '../../../../shared/modal-dialog.directive';
 import { ChatApiService } from '../../services/chat-api.service';
 
 type DialogState = 'idle' | 'submitting' | 'success' | 'error';
@@ -19,7 +20,7 @@ type DialogState = 'idle' | 'submitting' | 'success' | 'error';
   selector: 'app-rag-ingest-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe, ModalDialogDirective],
   templateUrl: './rag-ingest-dialog.component.html',
   styleUrl: './rag-ingest-dialog.component.css',
 })
@@ -95,17 +96,5 @@ export class RagIngestDialogComponent {
   close(): void {
     this.reset();
     this.closed.emit();
-  }
-
-  onBackdropClick(event: MouseEvent): void {
-    if ((event.target as HTMLElement).classList.contains('rag-dialog-backdrop')) {
-      this.close();
-    }
-  }
-
-  onKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      this.close();
-    }
   }
 }

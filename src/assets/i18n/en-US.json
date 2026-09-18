@@ -312,6 +312,7 @@
         "COPY_CODE_ARIA": "Copy this code",
         "DOWNLOAD_CSV_ARIA": "Download this table as CSV",
         "DOWNLOAD_FILE_ARIA": "Download {{ name }}",
+        "DOWNLOAD_FAILED": "That file could not be downloaded. Try again.",
         "FILE_SIZE_KB": "{{ kb }} kB"
       },
       "ERROR": {
@@ -319,7 +320,8 @@
         "DETAIL_STATUS": "The assistant service replied with HTTP {{ status }}.",
         "DETAIL_STATUS_CODE": "The assistant service replied with HTTP {{ status }} ({{ code }}).",
         "DETAIL_GENERIC": "The assistant service could not be reached.",
-        "EMPTY": "The assistant returned an empty answer.",
+        "NO_USABLE_CONTENT": "The assistant's answer had nothing this app can show.",
+        "PERSIST": "This conversation could not be saved in this browser, so it will be gone after a reload.",
         "HISTORY_LOAD": "Your conversation history could not be loaded.",
         "TRACE": "Trace {{ correlationId }}"
       }

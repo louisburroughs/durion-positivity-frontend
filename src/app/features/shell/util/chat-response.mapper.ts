@@ -4,7 +4,7 @@ import {
   ChatTableAlign,
   ChatTableColumn,
 } from '../models/chat.model';
-import { isSafeHref, normaliseHref } from './markdown.util';
+import { isFetchableHref, normaliseHref } from './markdown.util';
 
 /**
  * Backend answer → typed blocks
@@ -30,6 +30,27 @@ const TABLE_ROW_RE = /^\s*\|(.+)\|\s*$/;
 const TABLE_DELIMITER_RE = /^\s*\|[\s:|-]+\|\s*$/;
 /** A delimiter cell ending — but not starting — in a colon is right-aligned. */
 const ALIGN_END_RE = /^-+:$/;
+
+/**
+ * Error keys a block from the backend may name. The template translates whatever
+ * key the block carries, so an unknown one renders VERBATIM — the payload is
+ * model-influenced, which makes that a text-injection channel straight into an
+ * alert the user is meant to trust. Anything outside this set degrades to the
+ * generic failure copy (ADR-0065 §1, ADR-0064 §4).
+ */
+const KNOWN_ERROR_MESSAGE_KEYS: ReadonlySet<string> = new Set([
+  'SHELL.CHAT.ERROR.BACKEND',
+  'SHELL.CHAT.ERROR.NO_USABLE_CONTENT',
+  'SHELL.CHAT.ERROR.HISTORY_LOAD',
+  'SHELL.CHAT.ERROR.PERSIST',
+]);
+const KNOWN_ERROR_DETAIL_KEYS: ReadonlySet<string> = new Set([
+  'SHELL.CHAT.ERROR.DETAIL_STATUS',
+  'SHELL.CHAT.ERROR.DETAIL_STATUS_CODE',
+  'SHELL.CHAT.ERROR.DETAIL_GENERIC',
+]);
+/** What an unrecognised `messageKey` falls back to. */
+const GENERIC_ERROR_MESSAGE_KEY = 'SHELL.CHAT.ERROR.BACKEND';
 
 /** Shape of a structured block as it may arrive from the backend. */
 interface RawBlock {
@@ -208,8 +229,14 @@ function coerceBlock(entry: unknown): ChatBlock | null {
       return asString(raw['messageKey'])
         ? {
             kind: 'error',
-            messageKey: raw['messageKey'] as string,
-            detailKey: asString(raw['detailKey']) ? (raw['detailKey'] as string) : null,
+            messageKey: allowlistedKey(
+              raw['messageKey'] as string,
+              KNOWN_ERROR_MESSAGE_KEYS,
+              GENERIC_ERROR_MESSAGE_KEY,
+            ),
+            detailKey: asString(raw['detailKey'])
+              ? allowlistedKey(raw['detailKey'] as string, KNOWN_ERROR_DETAIL_KEYS, null)
+              : null,
             detailParams: isParamRecord(raw['detailParams'])
               ? (raw['detailParams'] as Readonly<Record<string, string | number>>)
               : null,
@@ -232,11 +259,25 @@ function coerceBlock(entry: unknown): ChatBlock | null {
   }
 }
 
-/** A block url, normalised and checked, or null when it is not safe to render. */
+/** A translation key the app ships, or the fallback. Never the raw value. */
+function allowlistedKey<T extends string | null>(
+  value: string,
+  allowed: ReadonlySet<string>,
+  fallback: T,
+): string | T {
+  return allowed.has(value) ? value : fallback;
+}
+
+/**
+ * A block url, normalised and checked, or null when it is not safe to render.
+ * Uses the FETCHABLE allowlist, not the anchor one: an `image`/`file` url ends up
+ * in `[src]` or an authenticated download, where `mailto:` is never a meaningful
+ * target (ADR-0065 §2).
+ */
 function safeBlockUrl(value: unknown): string | null {
   if (!asString(value)) return null;
   const candidate = normaliseHref(value as string);
-  return isSafeHref(candidate) ? candidate : null;
+  return isFetchableHref(candidate) ? candidate : null;
 }
 
 function coerceTable(raw: RawBlock): ChatBlock | null {
@@ -246,9 +287,9 @@ function coerceTable(raw: RawBlock): ChatBlock | null {
 
   const columns: ChatTableColumn[] = rawColumns
     .map(column => {
-      if (asString(column)) return { label: column as string, align: 'start' as ChatTableAlign };
+      if (asString(column)) return { label: (column as string).trim(), align: 'start' as ChatTableAlign };
       if (column && typeof column === 'object' && asString((column as RawBlock)['label'])) {
-        const label = (column as RawBlock)['label'] as string;
+        const label = ((column as RawBlock)['label'] as string).trim();
         const align = (column as RawBlock)['align'] === 'end' ? 'end' : 'start';
         return { label, align: align as ChatTableAlign };
       }
@@ -260,7 +301,15 @@ function coerceTable(raw: RawBlock): ChatBlock | null {
 
   const rows = rawRows
     .filter(Array.isArray)
-    .map(row => normaliseRow((row as unknown[]).map(cell => String(cell ?? '')), columns.length));
+    .map(row =>
+      // Trimmed exactly as a markdown cell is (`splitRow`). Untrimmed, a leading
+      // space or newline both mis-aligns the rendered cell and hides a formula
+      // lead from a guard that tests the first character (ADR-0065 §3).
+      normaliseRow(
+        (row as unknown[]).map(cell => String(cell ?? '').trim()),
+        columns.length,
+      ),
+    );
 
   return {
     kind: 'table',

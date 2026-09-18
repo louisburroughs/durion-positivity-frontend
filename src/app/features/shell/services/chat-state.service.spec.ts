@@ -358,6 +358,7 @@ describe('ChatStateService against a store that does not answer immediately', ()
 
   /** A store whose every call is held open until the test releases it. */
   class DeferredStore implements ChatHistoryStore {
+    readonly retentionNoteKey = 'SHELL.CHAT.HISTORY.RETENTION_NOTE';
     readonly order: string[] = [];
     /** Labels of the calls currently in flight, in the same order as `pending`. */
     readonly pendingLabels: string[] = [];
@@ -555,22 +556,25 @@ describe('ChatStateService against a store that does not answer immediately', ()
   it('keeps the composer held when a list load lands mid-selection', () => {
     // `_state` was shared, so a refresh() settling first set 'ready' and
     // switching() went false while the thread was still being fetched — exactly
-    // the window the guard exists to close.
+    // the window the guard exists to close. The list load is issued FIRST here so
+    // it is the one in flight; the selection queues behind it (ADR-0063 §1) and is
+    // still outstanding when the list lands.
     service.appendUserMessage('first question');
     const first = service.activeConversationId()!;
     service.startNewConversation();
     while (store.outstanding > 0) store.releaseNext();
 
-    service.selectConversation(first);
     service.refresh();
+    service.selectConversation(first);
     expect(service.switching()).toBe(true);
 
-    // Settle the LIST load only; the message load is still outstanding.
+    // Settle the LIST load only; the message load has not been issued yet.
     const listIndex = store.pendingLabels.indexOf('listConversations');
     expect(listIndex).toBeGreaterThanOrEqual(0);
     store.releaseAt(listIndex);
 
     expect(service.switching()).toBe(true);
+    expect(store.pendingLabels).toContain('loadMessages');
   });
 
   it('moves a conversation back to the top when a reply lands in it', () => {

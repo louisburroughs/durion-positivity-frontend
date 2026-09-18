@@ -2,11 +2,12 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { NEVER, of } from 'rxjs';
+import { NEVER, of, throwError } from 'rxjs';
 import { JwtClaims } from '../../../../core/models/auth.models';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ChatApiService, ChatResponse } from '../../services/chat-api.service';
 import { CHAT_HISTORY_STORE } from '../../services/chat-history.store';
+import { ChatSendService } from '../../services/chat-send.service';
 import { ChatStateService } from '../../services/chat-state.service';
 import { ChatUiService } from '../../services/chat-ui.service';
 import { ChatModalComponent } from './chat-modal.component';
@@ -21,8 +22,9 @@ describe('ChatModalComponent', () => {
     ingestDocument: vi.fn(),
   };
 
-  const authServiceStub: Pick<AuthService, 'hasAnyRole' | 'currentUserClaims'> = {
-    hasAnyRole: vi.fn().mockReturnValue(false),
+  const authServiceStub = {
+    permissionsKnown: vi.fn().mockReturnValue(true),
+    hasAnyPermission: vi.fn().mockReturnValue(false),
     currentUserClaims: signal<JwtClaims | null>({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 }),
   };
 
@@ -30,6 +32,8 @@ describe('ChatModalComponent', () => {
     localStorage.clear();
     vi.mocked(chatApiStub.sendMessage).mockReset();
     vi.mocked(chatApiStub.sendMessage).mockReturnValue(of<ChatResponse>({ response: 'You have 26.' }));
+    vi.mocked(authServiceStub.permissionsKnown).mockReturnValue(true);
+    vi.mocked(authServiceStub.hasAnyPermission).mockReturnValue(false);
 
     await TestBed.configureTestingModule({
       imports: [ChatModalComponent, TranslateModule.forRoot()],
@@ -64,12 +68,14 @@ describe('ChatModalComponent', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  function dialog(): HTMLElement {
-    return host().querySelector<HTMLElement>('[role="dialog"]')!;
+  function dialog(): HTMLDialogElement {
+    return host().querySelector<HTMLDialogElement>('dialog')!;
   }
 
-  it('renders a modal dialog labelled by its title', () => {
-    expect(dialog().getAttribute('aria-modal')).toBe('true');
+  it('renders a native modal dialog labelled by its title', () => {
+    // A real showModal() call is what makes this a modal — an aria-modal
+    // attribute on a div implements nothing (ADR-0029 §8.1).
+    expect(dialog().matches(':modal')).toBe(true);
     expect(dialog().getAttribute('aria-labelledby')).toBe('chat-dialog-title');
     expect(host().querySelector('#chat-dialog-title')).not.toBeNull();
   });
@@ -101,14 +107,25 @@ describe('ChatModalComponent', () => {
     expect(chatApiStub.sendMessage).toHaveBeenCalledWith({ message: 'open workorders' });
   });
 
-  it('closes on Escape', () => {
-    dialog().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  it('closes when the native dialog fires cancel (Escape)', () => {
+    // appModalDialog forwards the browser's own Escape handling as `cancel`; a
+    // scripted keydown never reaches the UA's Escape-to-close algorithm, so the
+    // directive's contract is exercised at the event it actually translates.
+    dialog().dispatchEvent(new Event('cancel', { cancelable: true }));
     expect(chatUi.open()).toBe(false);
   });
 
   it('closes when the backdrop is clicked', () => {
-    host().querySelector<HTMLButtonElement>('.chat-backdrop')?.click();
+    // A click on `::backdrop` fires a click event on the dialog element itself,
+    // with target set to the dialog — never to anything inside it.
+    dialog().dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(chatUi.open()).toBe(false);
+  });
+
+  it('does not close when a click inside the dialog bubbles to it', () => {
+    const header = host().querySelector('.chat-header')!;
+    header.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(chatUi.open()).toBe(true);
   });
 
   it('closes from the close button', () => {
@@ -147,67 +164,18 @@ describe('ChatModalComponent', () => {
     expect(toggle.hasAttribute('aria-controls')).toBe(false);
   });
 
-  it('puts initial focus on a visible control when the composer is hidden', () => {
-    // On a narrow viewport the open rail covers the composer; focusing a hidden
-    // textarea is a no-op that would leave focus on the opener, outside the modal.
-    const opener = document.createElement('button');
-    document.body.appendChild(opener);
-    opener.focus();
-
-    const composer = host().querySelector<HTMLElement>('#chat-composer-input')!;
-    composer.style.display = 'none';
-
-    fixture.componentInstance['focusInitial']();
-
-    expect(dialog().contains(document.activeElement)).toBe(true);
-    expect(document.activeElement).not.toBe(opener);
-    composer.style.display = '';
-    opener.remove();
-  });
-
-  it('keeps Tab inside the dialog, wrapping at both ends', () => {
-    const focusable = [
-      ...dialog().querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled])',
-      ),
-    ].filter(element => element.getClientRects().length > 0);
-    expect(focusable.length).toBeGreaterThan(1);
-
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-
-    last.focus();
-    const forward = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
-    dialog().dispatchEvent(forward);
-    expect(forward.defaultPrevented).toBe(true);
-    expect(document.activeElement).toBe(first);
-
-    const backward = new KeyboardEvent('keydown', {
-      key: 'Tab',
-      shiftKey: true,
-      bubbles: true,
-      cancelable: true,
-    });
-    dialog().dispatchEvent(backward);
-    expect(backward.defaultPrevented).toBe(true);
-    expect(document.activeElement).toBe(last);
-  });
-
-  it('pulls focus back in when Tab is pressed from outside the trap root', () => {
-    const outside = document.createElement('button');
-    document.body.appendChild(outside);
-    outside.focus();
-    expect(dialog().contains(document.activeElement)).toBe(false);
-
-    const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
-    dialog().dispatchEvent(event);
-
-    expect(event.defaultPrevented).toBe(true);
-    expect(dialog().contains(document.activeElement)).toBe(true);
-    outside.remove();
+  it('puts initial focus in the composer when the dialog opens', () => {
+    // `showModal()` traps focus in the top layer; this asserts the deliberate
+    // pick inside it, not merely that focus landed somewhere in the document.
+    expect(document.activeElement).toBe(host().querySelector('#chat-composer-input'));
   });
 
   it('returns focus to whatever opened it when it closes', () => {
+    // One modal at a time: with the beforeEach's dialog still open, everything
+    // outside it — including a freshly appended `opener` — is inert and cannot
+    // take focus, so that dialog has to close first.
+    fixture.destroy();
+
     const opener = document.createElement('button');
     document.body.appendChild(opener);
     opener.focus();
@@ -220,10 +188,26 @@ describe('ChatModalComponent', () => {
     opener.remove();
   });
 
-  it('stops the page behind it scrolling while it is open', () => {
-    expect(document.body.style.overflow).toBe('hidden');
+  it('falls back to the header chat toggle when the opener is gone on close', () => {
     fixture.destroy();
-    expect(document.body.style.overflow).not.toBe('hidden');
+
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+
+    const chatToggle = document.createElement('button');
+    chatToggle.setAttribute('data-chat-opener', '');
+    document.body.appendChild(chatToggle);
+
+    const reopened = TestBed.createComponent(ChatModalComponent);
+    reopened.detectChanges();
+
+    // The opener a background refresh would remove — simulated directly here.
+    opener.remove();
+    reopened.destroy();
+
+    expect(document.activeElement).toBe(chatToggle);
+    chatToggle.remove();
   });
 
   it('closes the history rail when a conversation is opened on a narrow viewport', () => {
@@ -244,34 +228,74 @@ describe('ChatModalComponent', () => {
     expect(chatUi.historyRailOpen()).toBe(true);
   });
 
-  it('hides the document-ingest control from non-admins', () => {
-    expect(fixture.componentInstance.isAdmin()).toBe(false);
+  // ── Document-ingest permission gate (ADR-0040 §6a) ────────────────────────
+  it('hides the document-ingest control when the permission is denied', () => {
+    expect(fixture.componentInstance.canIngestDocuments()).toBe(false);
     expect(host().querySelector('[aria-label="SHELL.RAG.BUTTON_ARIA"]')).toBeNull();
   });
 
-  it('offers the document-ingest control to an admin', () => {
-    vi.mocked(authServiceStub.hasAnyRole).mockReturnValue(true);
-    const adminFixture = TestBed.createComponent(ChatModalComponent);
-    adminFixture.detectChanges();
+  it('offers the document-ingest control when the permission is granted', () => {
+    vi.mocked(authServiceStub.hasAnyPermission).mockReturnValue(true);
+    const granted = TestBed.createComponent(ChatModalComponent);
+    granted.detectChanges();
 
-    const adminHost = adminFixture.nativeElement as HTMLElement;
-    expect(adminHost.querySelector('[aria-label="SHELL.RAG.BUTTON_ARIA"]')).not.toBeNull();
+    const grantedHost = granted.nativeElement as HTMLElement;
+    expect(grantedHost.querySelector('[aria-label="SHELL.RAG.BUTTON_ARIA"]')).not.toBeNull();
+    granted.destroy();
   });
 
-  it('leaves the chat open when Escape is pressed inside the ingest dialog', () => {
-    // The nested dialog's `closed` output flips showRagDialog() synchronously,
-    // before the keydown bubbles up here, so a guard that read the signal saw
-    // false and dismissed the chat along with the dialog.
-    vi.mocked(authServiceStub.hasAnyRole).mockReturnValue(true);
-    const adminFixture = TestBed.createComponent(ChatModalComponent);
-    adminFixture.detectChanges();
-    adminFixture.componentInstance.openRagDialog();
-    adminFixture.detectChanges();
+  it('leaves the control available when perm_bits is unknown — the legacy canAccess() fallback', () => {
+    vi.mocked(authServiceStub.permissionsKnown).mockReturnValue(false);
+    vi.mocked(authServiceStub.hasAnyPermission).mockReturnValue(false);
+    const legacy = TestBed.createComponent(ChatModalComponent);
+    legacy.detectChanges();
 
-    const nested = (adminFixture.nativeElement as HTMLElement).querySelector('dialog')!;
-    nested.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    const legacyHost = legacy.nativeElement as HTMLElement;
+    expect(legacyHost.querySelector('[aria-label="SHELL.RAG.BUTTON_ARIA"]')).not.toBeNull();
+    legacy.destroy();
+  });
+
+  it('refuses to open the ingest dialog on a denied permission, even called directly', () => {
+    // The control is disabled/absent, but the method is the actual guard
+    // (ADR-0040 §6a.1) — a keyboard/automation path that reaches the method
+    // must still be refused.
+    expect(fixture.componentInstance.canIngestDocuments()).toBe(false);
+
+    fixture.componentInstance.openRagDialog();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.showRagDialog()).toBe(false);
+  });
+
+  it('opens the ingest dialog when the permission is granted', () => {
+    vi.mocked(authServiceStub.hasAnyPermission).mockReturnValue(true);
+    const granted = TestBed.createComponent(ChatModalComponent);
+    granted.detectChanges();
+
+    granted.componentInstance.openRagDialog();
+    granted.detectChanges();
+
+    expect(granted.componentInstance.showRagDialog()).toBe(true);
+    granted.destroy();
+  });
+
+  it('leaves the chat open when the nested ingest dialog is dismissed via Escape', () => {
+    // Nested `showModal()` dialogs stack in the top layer: the browser's native
+    // Escape handling only ever reaches the topmost one, so the outer dialog
+    // needs no code at all to stay open while the inner one closes.
+    vi.mocked(authServiceStub.hasAnyPermission).mockReturnValue(true);
+    const granted = TestBed.createComponent(ChatModalComponent);
+    granted.detectChanges();
+    granted.componentInstance.openRagDialog();
+    granted.detectChanges();
+
+    const nested = (granted.nativeElement as HTMLElement).querySelector('app-rag-ingest-dialog dialog')!;
+    nested.dispatchEvent(new Event('cancel', { cancelable: true }));
+    granted.detectChanges();
 
     expect(chatUi.open()).toBe(true);
+    expect(granted.componentInstance.showRagDialog()).toBe(false);
+    granted.destroy();
   });
 
   it('holds the composer while a conversation is still loading', async () => {
@@ -319,29 +343,64 @@ describe('ChatModalComponent', () => {
     for (const suggestion of loadingHost.querySelectorAll<HTMLButtonElement>('.suggestion')) {
       expect(suggestion.disabled).toBe(true);
     }
+
+    // retry() is the same public-entry-point defect useSuggestion() already
+    // proved: the button looks disabled, but the method is the real guard
+    // (PR #288 review PRRT_kwDORX-kkM6j14fF).
+    const retrySpy = vi.spyOn(TestBed.inject(ChatSendService), 'retry');
+    loading.componentInstance.retry('any-message-id');
+    expect(retrySpy).not.toHaveBeenCalled();
   });
 
-  it('traps a real Tab pressed while focus is outside the dialog', async () => {
-    // The listener used to be bound to the dialog section, so a keydown on an
-    // element outside it never reached the trap — which is precisely the case the
-    // trap exists for. Dispatching on the section hid that; this dispatches where
-    // the browser would.
-    const outside = document.createElement('button');
-    document.body.appendChild(outside);
-    outside.focus();
-    expect(dialog().contains(document.activeElement)).toBe(false);
+  it('shows a status, not an alert, when a history write is refused — the thread on screen still works', async () => {
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [ChatModalComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: ChatApiService, useValue: chatApiStub },
+        { provide: AuthService, useValue: authServiceStub },
+        {
+          provide: CHAT_HISTORY_STORE,
+          useValue: {
+            listConversations: () => of([]),
+            loadMessages: () => of([]),
+            saveConversation: () => throwError(() => new Error('quota exceeded')),
+            saveMessages: () => throwError(() => new Error('quota exceeded')),
+            deleteConversation: () => of(undefined),
+            clear: () => of(undefined),
+          },
+        },
+      ],
+    }).compileComponents();
 
-    const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
-    outside.dispatchEvent(event);
+    const state = TestBed.inject(ChatStateService);
+    TestBed.inject(ChatUiService).openModal();
 
-    expect(event.defaultPrevented).toBe(true);
-    expect(dialog().contains(document.activeElement)).toBe(true);
-    outside.remove();
+    // Created AFTER the component's own refresh() (constructor) has already
+    // resolved against the empty list: `refresh()` prunes an active
+    // conversation the list doesn't carry, which would otherwise wipe the very
+    // message this test asserts survives the write failure.
+    const persisting = TestBed.createComponent(ChatModalComponent);
+    persisting.detectChanges();
+
+    state.startNewConversation();
+    state.appendUserMessage('a question that cannot be saved');
+    persisting.detectChanges();
+
+    const persistingHost = persisting.nativeElement as HTMLElement;
+    const warning = persistingHost.querySelector('.chat-persist-warning');
+    expect(warning?.getAttribute('role')).toBe('status');
+    expect(warning?.textContent).toContain('SHELL.CHAT.ERROR.PERSIST');
+    // A lost write is not a broken thread — the message is still on screen and
+    // the load-state machine never moves to 'error' for it.
+    expect(state.messages()).toHaveLength(1);
+    expect(state.state()).not.toBe('error');
   });
 
   it('puts focus in the composer after a suggestion removes the empty state', async () => {
     // The clicked suggestion is gone the moment the thread appears; without a
-    // hand-off focus lands on <body>, outside the trap.
+    // hand-off focus lands on <body>, outside the dialog.
     const suggestion = host().querySelector<HTMLButtonElement>('.suggestion')!;
     suggestion.focus();
     suggestion.click();

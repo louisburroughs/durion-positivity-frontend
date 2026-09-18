@@ -126,7 +126,35 @@ export interface ChatHistoryGroup {
   readonly conversations: readonly ChatConversation[];
 }
 
-/** The plain-text projection of a turn, used for copy-to-clipboard and previews. */
+/**
+ * A value that opens with `=`, `+`, `-`, `@`, a tab or a line break is executed as
+ * a FORMULA by Excel and Sheets. Leading whitespace is skipped before that test is
+ * made, so ` =HYPERLINK(...)` is a formula too — the guard has to skip it as well.
+ * RFC 4180 quoting stops delimiter injection, never evaluation.
+ */
+export const FORMULA_LEAD_RE = /^(?:\s*[=+\-@]|[\t\r\n])/;
+
+/**
+ * Force a value to text. A leading apostrophe is the spreadsheet's text-prefix
+ * operator: it is not displayed, and it stops the value being evaluated.
+ *
+ * Shared by EVERY projection of assistant output that can reach a spreadsheet —
+ * the CSV export, the table clipboard copy, and the plain-text projection below
+ * that backs "copy this answer" and "copy the whole conversation" — so none of
+ * them can drift from the others (ADR-0065 §3).
+ */
+export function neutraliseFormula(value: string): string {
+  return FORMULA_LEAD_RE.test(value) ? `'${value}` : value;
+}
+
+/**
+ * The plain-text projection of a turn, used for copy-to-clipboard and previews.
+ *
+ * Tabular parts are tab-delimited, and tab-delimited text pasted into a
+ * spreadsheet lands in cells exactly as the CSV export does — so table cells and
+ * chart data points are neutralised here too, not only on the dedicated
+ * table-copy and CSV paths.
+ */
 export function blocksToPlainText(blocks: readonly ChatBlock[]): string {
   return blocks
     .map(block => blockToPlainText(block))
@@ -144,11 +172,13 @@ function blockToPlainText(block: ChatBlock): string {
       return block.code;
     case 'table':
       return [
-        block.columns.map(column => column.label).join('\t'),
-        ...block.rows.map(row => row.join('\t')),
+        block.columns.map(column => neutraliseFormula(column.label)).join('\t'),
+        ...block.rows.map(row => row.map(neutraliseFormula).join('\t')),
       ].join('\n');
     case 'chart':
-      return block.series.map(datum => `${datum.label}\t${datum.value}`).join('\n');
+      return block.series
+        .map(datum => `${neutraliseFormula(datum.label)}\t${neutraliseFormula(String(datum.value))}`)
+        .join('\n');
     case 'image':
       return block.caption ?? block.alt;
     case 'file':

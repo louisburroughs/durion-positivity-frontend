@@ -136,12 +136,12 @@ describe('ChatSendService', () => {
     expect(errorBlockOfLastTurn().detailKey).toBe('SHELL.CHAT.ERROR.DETAIL_GENERIC');
   });
 
-  it('reports an empty answer instead of rendering a blank turn', () => {
+  it('reports an answer with nothing renderable in it instead of a blank turn', () => {
     vi.mocked(chatApiStub.sendMessage).mockReturnValue(of<ChatResponse>({ response: '   ' }));
 
     service.send('hello');
 
-    expect(errorBlockOfLastTurn().messageKey).toBe('SHELL.CHAT.ERROR.EMPTY');
+    expect(errorBlockOfLastTurn().messageKey).toBe('SHELL.CHAT.ERROR.NO_USABLE_CONTENT');
   });
 
   it('retries the last user turn without duplicating it', () => {

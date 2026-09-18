@@ -1,8 +1,10 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule } from '@ngx-translate/core';
+import { Observable } from 'rxjs';
 import { JwtClaims } from '../../../../core/models/auth.models';
 import { AuthService } from '../../../../core/services/auth.service';
+import { CHAT_HISTORY_STORE, ChatHistoryStore } from '../../services/chat-history.store';
 import { ChatStateService } from '../../services/chat-state.service';
 import { ChatHistoryRailComponent } from './chat-history-rail.component';
 
@@ -169,6 +171,26 @@ describe('ChatHistoryRailComponent', () => {
     expect(host().querySelector('.pin-mark')).not.toBeNull();
   });
 
+  it('keeps focus on the same conversation\'s pin button after it moves to another group', () => {
+    // Pinning re-buckets the row into a new `@for` group, tearing down the
+    // button that had focus and rebuilding it elsewhere; without a hand-off
+    // focus falls to <body>, outside the dialog's focus trap.
+    const id = conversation('a question', 'an answer');
+    vi.useFakeTimers();
+
+    const pinBtn = host().querySelector<HTMLButtonElement>('[aria-label^="SHELL.CHAT.HISTORY.PIN_ARIA"]')!;
+    pinBtn.focus();
+    pinBtn.click();
+    fixture.detectChanges();
+    vi.runAllTimers();
+    fixture.detectChanges();
+
+    const movedPinBtn = host().querySelector<HTMLButtonElement>(`[data-pin-for="${id}"]`);
+    expect(movedPinBtn).not.toBeNull();
+    expect(document.activeElement).toBe(movedPinBtn);
+    vi.useRealTimers();
+  });
+
   it('needs a second press to delete a conversation, and the first can be taken back', () => {
     conversation('a question', 'an answer');
 
@@ -225,10 +247,46 @@ describe('ChatHistoryRailComponent', () => {
   it('labels the search field for assistive technology, without showing the label', () => {
     const label = host().querySelector<HTMLElement>('label[for="chat-history-search"]')!;
     expect(label).not.toBeNull();
-    // `.sr-only` is per-component in this repo; with no local rule this label was
-    // rendering above the search input instead of being hidden.
-    expect(getComputedStyle(label).position).toBe('absolute');
-    expect(label.getBoundingClientRect().width).toBeLessThan(2);
+    // `.sr-only` is the single global utility (src/styles.css); this component
+    // must not redefine it locally, so the spec asserts the class is applied
+    // rather than a component-scoped rule computing a hidden layout.
+    expect(label.classList.contains('sr-only')).toBe(true);
+  });
+
+  it('re-buckets "today" across a local midnight rollover without a reload (ADR-0038 §6)', () => {
+    // Derived from the real clock, never a literal date string (ADR-0038 §7) —
+    // a hardcoded date would expire the day after it was written.
+    const beforeMidnight = new Date();
+    beforeMidnight.setHours(23, 59, 0, 0);
+
+    const id = conversation('late night question', 'an answer');
+
+    // Fake timers only from here: the outer beforeEach's rail already holds a
+    // REAL setInterval, which `vi.advanceTimersByTime` cannot advance. A fresh
+    // instance registers its refresh timer as a fake one from birth.
+    vi.useFakeTimers();
+    vi.setSystemTime(beforeMidnight);
+    fixture = TestBed.createComponent(ChatHistoryRailComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(
+      component.groups().find(group => group.bucket === 'today')?.conversations.some(entry => entry.id === id),
+    ).toBe(true);
+
+    // Cross local midnight, then let the rail's own refresh timer catch up —
+    // nothing here re-creates the component or re-reads the conversation.
+    const afterMidnight = new Date(beforeMidnight);
+    afterMidnight.setDate(afterMidnight.getDate() + 1);
+    afterMidnight.setHours(0, 5, 0, 0);
+    vi.setSystemTime(afterMidnight);
+    vi.advanceTimersByTime(60_000);
+    fixture.detectChanges();
+
+    expect(
+      component.groups().find(group => group.bucket === 'yesterday')?.conversations.some(entry => entry.id === id),
+    ).toBe(true);
+    vi.useRealTimers();
   });
 
   it('maps every day bucket to a heading key', () => {
@@ -290,6 +348,47 @@ describe('ChatHistoryRailComponent', () => {
       fixture.detectChanges();
       flushFocus();
       expect(document.activeElement).toBe(host().querySelector('.new-chat-btn'));
+    });
+  });
+
+  describe('retention note (store-owned copy)', () => {
+    async function setupWithStore(store: Partial<ChatHistoryStore> | undefined): Promise<void> {
+      TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        imports: [ChatHistoryRailComponent, TranslateModule.forRoot()],
+        providers: [
+          {
+            provide: AuthService,
+            useValue: {
+              currentUserClaims: signal<JwtClaims | null>({
+                sub: 'admin.alpha',
+                tid: 'tenant-one',
+                exp: 9999999999,
+              }),
+            },
+          },
+          ...(store ? [{ provide: CHAT_HISTORY_STORE, useValue: store }] : []),
+        ],
+      }).compileComponents();
+
+      fixture = TestBed.createComponent(ChatHistoryRailComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+    }
+
+    it("renders the injected store's own retention note key", async () => {
+      await setupWithStore({
+        retentionNoteKey: 'SHELL.CHAT.HISTORY.RETENTION_NOTE_SERVER',
+        listConversations: () => new Observable(),
+      } as Partial<ChatHistoryStore>);
+
+      expect(component.retentionNoteKey()).toBe('SHELL.CHAT.HISTORY.RETENTION_NOTE_SERVER');
+    });
+
+    it('falls back to the default key when a test stub carries no retentionNoteKey', async () => {
+      await setupWithStore({ listConversations: () => new Observable() } as Partial<ChatHistoryStore>);
+
+      expect(component.retentionNoteKey()).toBe('SHELL.CHAT.HISTORY.RETENTION_NOTE');
     });
   });
 });

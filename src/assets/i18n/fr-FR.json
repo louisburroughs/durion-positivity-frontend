@@ -312,6 +312,7 @@
         "COPY_CODE_ARIA": "Copier ce code",
         "DOWNLOAD_CSV_ARIA": "Télécharger ce tableau en CSV",
         "DOWNLOAD_FILE_ARIA": "Télécharger {{ name }}",
+        "DOWNLOAD_FAILED": "Ce fichier n’a pas pu être téléchargé. Réessayez.",
         "FILE_SIZE_KB": "{{ kb }} ko"
       },
       "ERROR": {
@@ -319,7 +320,8 @@
         "DETAIL_STATUS": "Le service de l’assistant a répondu HTTP {{ status }}.",
         "DETAIL_STATUS_CODE": "Le service de l’assistant a répondu HTTP {{ status }} ({{ code }}).",
         "DETAIL_GENERIC": "Le service de l’assistant est injoignable.",
-        "EMPTY": "L’assistant a renvoyé une réponse vide.",
+        "NO_USABLE_CONTENT": "La réponse de l’assistant ne contenait rien que cette application puisse afficher.",
+        "PERSIST": "Cette conversation n’a pas pu être enregistrée dans ce navigateur ; elle sera perdue au rechargement de la page.",
         "HISTORY_LOAD": "Votre historique de conversations n’a pas pu être chargé.",
         "TRACE": "Trace {{ correlationId }}"
       }

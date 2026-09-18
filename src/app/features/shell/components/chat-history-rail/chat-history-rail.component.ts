@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
   output,
@@ -10,12 +11,19 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import { ChatConversation, ChatHistoryBucket, ChatHistoryGroup } from '../../models/chat.model';
 import { MaterialSymbolPipe } from '../../../../shared/material-symbol.pipe';
+import { CHAT_HISTORY_STORE } from '../../services/chat-history.store';
 import { ChatStateService, groupConversations } from '../../services/chat-state.service';
 
 /** Where focus goes when a control is swapped out from under it. */
 const ROW_CONFIRM_SELECTOR = '[data-confirm="delete"]';
 const CLEAR_CONFIRM_SELECTOR = '[data-confirm="clear-all"]';
 const NEW_CHAT_SELECTOR = '.new-chat-btn';
+/** How often "today" is re-evaluated so a rail left open across local midnight
+ *  re-buckets without a page reload (ADR-0038 §6). */
+const TODAY_REFRESH_MS = 60_000;
+/** Rendered when the injected store carries no `retentionNoteKey` (a bare test
+ *  stub), so the footer never shows a raw `undefined`. */
+const DEFAULT_RETENTION_NOTE_KEY = 'SHELL.CHAT.HISTORY.RETENTION_NOTE';
 
 /** Day-bucket → section heading key. */
 const GROUP_LABEL_KEYS: Readonly<Record<ChatHistoryBucket, string>> = {
@@ -46,6 +54,8 @@ const GROUP_LABEL_KEYS: Readonly<Record<ChatHistoryBucket, string>> = {
 export class ChatHistoryRailComponent {
   private readonly chatState = inject(ChatStateService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly historyStore = inject(CHAT_HISTORY_STORE);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Emitted after any action that should close the rail on a narrow viewport. */
   readonly conversationOpened = output<void>();
@@ -55,6 +65,16 @@ export class ChatHistoryRailComponent {
   readonly renameDraft = signal('');
   readonly confirmingDeleteId = signal<string | null>(null);
   readonly confirmingClearAll = signal(false);
+
+  /**
+   * Held as a signal and refreshed on a timer rather than read once at
+   * construction, so a rail left open across a local midnight rollover
+   * re-buckets "today"/"yesterday" without needing a page reload (ADR-0038 §6).
+   */
+  private readonly now = signal(new Date());
+
+  /** Where this store keeps history — the store's own claim, not a hardcoded one. */
+  readonly retentionNoteKey = computed(() => this.historyStore.retentionNoteKey ?? DEFAULT_RETENTION_NOTE_KEY);
 
   readonly activeConversationId = this.chatState.activeConversationId;
   readonly hasConversations = computed(() => this.chatState.conversations().length > 0);
@@ -71,10 +91,15 @@ export class ChatHistoryRailComponent {
                 conversation.title.toLowerCase().includes(term) ||
                 conversation.preview.toLowerCase().includes(term),
             );
-    return groupConversations(matching, new Date());
+    return groupConversations(matching, this.now());
   });
 
   readonly noMatches = computed(() => this.hasConversations() && this.groups().length === 0);
+
+  constructor() {
+    const timer = setInterval(() => this.now.set(new Date()), TODAY_REFRESH_MS);
+    this.destroyRef.onDestroy(() => clearInterval(timer));
+  }
 
   groupLabelKey(bucket: ChatHistoryBucket): string {
     return GROUP_LABEL_KEYS[bucket];
@@ -129,8 +154,14 @@ export class ChatHistoryRailComponent {
     }
   }
 
+  /**
+   * Pinning/unpinning re-buckets the row into another `@for` group, tearing
+   * down the button that had focus and rebuilding it elsewhere — the same
+   * `<body>`-drop every other row action here already guards against.
+   */
   togglePinned(conversation: ChatConversation): void {
     this.chatState.togglePinned(conversation.id);
+    this.focusAfterRender(`[data-pin-for="${escapeAttributeValue(conversation.id)}"]`);
   }
 
   armDelete(conversation: ChatConversation): void {

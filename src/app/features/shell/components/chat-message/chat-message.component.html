@@ -113,7 +113,7 @@
               <span class="chart-track">
                 <span class="chart-fill" [style.width]="barWidth(datum.value, chartCeiling)"></span>
               </span>
-              <span class="chart-value">{{ datum.value }}</span>
+              <span class="chart-value">{{ datum.value | number }}</span>
             </li>
             }
           </ul>
@@ -138,6 +138,11 @@
             <span class="file-name">{{ block.name }}</span>
             @if (block.sizeBytes !== null) {
             <span class="file-size">{{ 'SHELL.CHAT.BLOCK.FILE_SIZE_KB' | translate:{ kb: block.sizeBytes / 1024 | number:'1.0-0' } }}</span>
+            }
+            @if (downloadFailed() === block.url) {
+            <!-- Announced, not silent: the download button used to fail with no
+                 visible change at all. The button stays enabled for a retry. -->
+            <span class="file-error" role="status">{{ 'SHELL.CHAT.BLOCK.DOWNLOAD_FAILED' | translate }}</span>
             }
           </span>
           @if (block.url) {
@@ -181,7 +186,7 @@
       </button>
       }
       @if (retryable()) {
-      <button class="text-btn" type="button" (click)="onRetry()">
+      <button class="text-btn" type="button" [disabled]="busy()" (click)="onRetry()">
         <span class="material-symbols-rounded" aria-hidden="true">{{ 'refresh' | msIcon }}</span>
         {{ 'SHELL.CHAT.ACTIONS.RETRY' | translate }}
       </button>

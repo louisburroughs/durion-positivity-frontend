@@ -17,6 +17,7 @@ import {
   ChatFileBlock,
   ChatMessage,
   ChatTableBlock,
+  neutraliseFormula,
 } from '../../models/chat.model';
 import { MaterialSymbolPipe } from '../../../../shared/material-symbol.pipe';
 import { AuthedImageDirective } from '../../directives/authed-image.directive';
@@ -57,7 +58,15 @@ export class ChatMessageComponent {
 
   /** Source URL of the file currently being fetched, so its button can disable. */
   readonly downloading = signal<string | null>(null);
+  /**
+   * Source URL of the file whose last download failed. Rendered next to that
+   * block, so a failure is visible instead of a button that silently does
+   * nothing; the button stays enabled so the fetch can be retried.
+   */
+  readonly downloadFailed = signal<string | null>(null);
   readonly message = input.required<ChatMessage>();
+  /** True while a reply is in flight: the retry button stays visible but disabled. */
+  readonly busy = input(false);
 
   /** Emits the id of a failed turn the user asked to retry. */
   readonly retry = output<string>();
@@ -116,10 +125,16 @@ export class ChatMessageComponent {
     return block.series.reduce((largest, datum) => Math.max(largest, datum.value), 0);
   }
 
-  /** Bar width against the chart's maximum; a non-positive maximum keeps bars empty. */
+  /**
+   * Bar width against the chart's maximum; a non-positive maximum keeps bars
+   * empty. Clamped to 0-100%: the series comes from the model, and a negative
+   * value produced a negative width that rendered as a full-width bar in some
+   * engines. The value itself is still shown beside the bar, so nothing is lost.
+   */
   barWidth(value: number, max: number): string {
     if (max <= 0) return '0%';
-    return `${Math.round((value / max) * 100)}%`;
+    const percentage = Math.round((value / max) * 100);
+    return `${Math.min(100, Math.max(0, percentage))}%`;
   }
 
   onRetry(): void {
@@ -138,6 +153,7 @@ export class ChatMessageComponent {
     if (!source || typeof document === 'undefined' || this.downloading() === source) return;
 
     this.downloading.set(source);
+    this.downloadFailed.set(null);
     this.blobs
       .resolve(source)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -146,7 +162,12 @@ export class ChatMessageComponent {
           this.downloading.set(null);
           saveAs(url, block.name);
         },
-        error: () => this.downloading.set(null),
+        error: () => {
+          this.downloading.set(null);
+          // Keyed by the source URL so the message sits with the block that
+          // failed, not on every file block in the turn.
+          this.downloadFailed.set(source);
+        },
       });
   }
 
@@ -163,32 +184,20 @@ export class ChatMessageComponent {
 }
 
 /**
- * A cell that opens with =, +, -, @ or a control character is executed as a
- * FORMULA by Excel and Sheets — RFC 4180 quoting does not stop it, so an answer
- * containing `=HYPERLINK(...)` would run on open. A leading apostrophe forces the
- * cell to text; the spreadsheet does not display it.
- */
-const FORMULA_LEAD_RE = /^[=+\-@\t\r\n]/;
-
-/**
- * Save a URL to disk. An object URL is revoked afterwards, but not in the same
- * tick: Firefox and Safari have not read it when `click()` returns.
+ * Save a URL to disk.
+ *
+ * The object URL is NOT revoked here: it belongs to {@link ChatBlobService},
+ * which caches it per source and hands the same URL to the `<img>` renderer and
+ * to every later download of the same file. Revoking it from this consumer left
+ * the cache holding a dead URL — a second download, and any image sharing it,
+ * silently produced nothing. The service revokes on identity change and on
+ * destroy; URLs this component mints itself (the CSV export) are revoked there.
  */
 function saveAs(url: string, fileName: string): void {
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = fileName;
+  anchor.download = safeFileName(fileName);
   anchor.click();
-  if (url.startsWith('blob:')) setTimeout(() => URL.revokeObjectURL(url));
-}
-
-/**
- * Force a cell to text. A leading apostrophe is the spreadsheet's text-prefix
- * operator: it is not displayed, and it stops the value being evaluated. Shared
- * by both export paths — the CSV file and the clipboard — so neither can drift.
- */
-function neutraliseFormula(value: string): string {
-  return FORMULA_LEAD_RE.test(value) ? `'${value}` : value;
 }
 
 /** RFC 4180 cell: neutralise a formula lead, quote it, and double inner quotes. */
@@ -196,7 +205,36 @@ function csvCell(value: string): string {
   return `"${neutraliseFormula(value).replace(/"/g, '""')}"`;
 }
 
-/** Filename-safe stem derived from a block title. */
+/**
+ * Extensions a downloaded attachment may keep. Anything else is dropped: the name
+ * comes from the model's answer, so `report.pdf.html` or a right-to-left override
+ * disguising `.exe` is exactly the payload an allowlist exists to refuse.
+ */
+const SAFE_DOWNLOAD_EXTENSIONS = new Set([
+  'csv', 'tsv', 'txt', 'md', 'log', 'json', 'xml', 'yaml', 'yml',
+  'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp',
+  'xlsx', 'xls', 'docx', 'doc', 'pptx', 'zip',
+]);
+const FILE_EXTENSION_RE = /\.([A-Za-z0-9]{1,8})$/;
+/** Used when nothing readable survives sanitisation. */
+const GENERIC_DOWNLOAD_STEM = 'assistant-file';
+
+/**
+ * Filename for a model-supplied attachment name: path separators, control
+ * characters and bidi overrides cannot survive {@link slug}, the stem is capped,
+ * and only an allowlisted extension is kept.
+ */
+function safeFileName(name: string): string {
+  const base = name.split(/[\\/]/).pop() ?? '';
+  const match = FILE_EXTENSION_RE.exec(base);
+  const extension =
+    match && SAFE_DOWNLOAD_EXTENSIONS.has(match[1].toLowerCase()) ? match[1].toLowerCase() : null;
+  const stem = slug(extension ? base.slice(0, base.length - match![0].length) : base);
+  const safeStem = stem.length > 0 ? stem : GENERIC_DOWNLOAD_STEM;
+  return extension ? `${safeStem}.${extension}` : safeStem;
+}
+
+/** Filename-safe stem derived from a block title or attachment name. */
 function slug(title: string | null): string {
   if (!title) return '';
   return title

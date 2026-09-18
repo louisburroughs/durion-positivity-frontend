@@ -144,12 +144,29 @@ describe('LocalChatHistoryStore', () => {
     expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
   });
 
-  it('treats corrupt storage as empty history instead of throwing', async () => {
+  it('reports storage it cannot read as a failed read, not as an empty history', async () => {
+    // "You have never had a conversation" is a claim the read never established;
+    // the state layer needs to be able to say the history could not be loaded
+    // (ADR-0064 §1/§4). It still never throws synchronously.
     localStorage.setItem(STORAGE_KEY, 'not json at all');
-    expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
+    await expect(firstValueFrom(store.listConversations())).rejects.toThrow();
+    await expect(firstValueFrom(store.loadMessages('c1'))).rejects.toThrow();
 
+    // An ENTRY that fails validation is filtered out — that is a true empty answer.
     localStorage.setItem(STORAGE_KEY, JSON.stringify([{ nonsense: true }, 42]));
     expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
+  });
+
+  it('reports a write the browser refused instead of resolving as saved', async () => {
+    // A swallowed quota failure left the conversation looking persisted until the
+    // next reload dropped it, with nothing on screen to say so (ADR-0065 §6).
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('quota exceeded', 'QuotaExceededError');
+    });
+
+    await expect(firstValueFrom(store.saveConversation(conversation()))).rejects.toThrow();
+
+    setItem.mockRestore();
   });
 
   it('treats a malformed message as absent instead of throwing', async () => {

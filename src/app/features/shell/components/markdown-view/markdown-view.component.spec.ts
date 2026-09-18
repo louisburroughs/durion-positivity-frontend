@@ -1,11 +1,16 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { JwtClaims } from '../../../../core/models/auth.models';
 import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { MarkdownViewComponent } from './markdown-view.component';
 
 /** Stands in for the authenticated blob fetch a same-origin image goes through. */
 const getBlob = vi.fn();
+/** ChatBlobService namespaces its cache by tenant + subject, so it needs claims. */
+const claims = signal<JwtClaims | null>({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
 
 describe('MarkdownViewComponent', () => {
   let fixture: ComponentFixture<MarkdownViewComponent>;
@@ -16,7 +21,11 @@ describe('MarkdownViewComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [MarkdownViewComponent],
-      providers: [provideRouter([]), { provide: ApiBaseService, useValue: { getBlob } }],
+      providers: [
+        provideRouter([]),
+        { provide: ApiBaseService, useValue: { getBlob } },
+        { provide: AuthService, useValue: { currentUserClaims: claims } },
+      ],
     }).compileComponents();
     fixture = TestBed.createComponent(MarkdownViewComponent);
   });

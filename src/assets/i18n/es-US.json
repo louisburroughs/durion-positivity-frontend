@@ -312,6 +312,7 @@
         "COPY_CODE_ARIA": "Copiar este código",
         "DOWNLOAD_CSV_ARIA": "Descargar esta tabla en CSV",
         "DOWNLOAD_FILE_ARIA": "Descargar {{ name }}",
+        "DOWNLOAD_FAILED": "No se pudo descargar ese archivo. Inténtalo de nuevo.",
         "FILE_SIZE_KB": "{{ kb }} kB"
       },
       "ERROR": {
@@ -319,7 +320,8 @@
         "DETAIL_STATUS": "El servicio del asistente respondió con HTTP {{ status }}.",
         "DETAIL_STATUS_CODE": "El servicio del asistente respondió con HTTP {{ status }} ({{ code }}).",
         "DETAIL_GENERIC": "No se pudo contactar con el servicio del asistente.",
-        "EMPTY": "El asistente devolvió una respuesta vacía.",
+        "NO_USABLE_CONTENT": "La respuesta del asistente no tenía nada que esta aplicación pueda mostrar.",
+        "PERSIST": "Esta conversación no se pudo guardar en este navegador, así que se perderá al recargar la página.",
         "HISTORY_LOAD": "No se pudo cargar tu historial de conversaciones.",
         "TRACE": "Traza {{ correlationId }}"
       }

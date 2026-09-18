@@ -179,18 +179,21 @@ describe('RagIngestDialogComponent', () => {
     expect(component.content()).toBe('');
   });
 
-  // ── Keyboard ────────────────────────────────────────────────────────────
-  it('calls close() when Escape is pressed', () => {
-    const closeSpy = vi.spyOn(component, 'close');
-    component.onKeyDown(new KeyboardEvent('keydown', { key: 'Escape' }));
-
-    expect(closeSpy).toHaveBeenCalledTimes(1);
+  // ── Native modal (ADR-0029 §8.1) ──────────────────────────────────────────
+  it('renders as a real native modal', () => {
+    const dialog: HTMLDialogElement = fixture.nativeElement.querySelector('dialog')!;
+    expect(dialog.matches(':modal')).toBe(true);
   });
 
-  it('does not call close() for non-Escape keys', () => {
+  it('calls close() when the dialog fires cancel (Escape)', () => {
+    // appModalDialog forwards the browser's own Escape handling as `cancel`; a
+    // scripted keydown never reaches the UA's Escape-to-close algorithm, so the
+    // directive's contract is exercised at the event it actually translates.
     const closeSpy = vi.spyOn(component, 'close');
-    component.onKeyDown(new KeyboardEvent('keydown', { key: 'Enter' }));
+    const dialog: HTMLDialogElement = fixture.nativeElement.querySelector('dialog')!;
 
-    expect(closeSpy).not.toHaveBeenCalled();
+    dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
+
+    expect(closeSpy).toHaveBeenCalledTimes(1);
   });
 });

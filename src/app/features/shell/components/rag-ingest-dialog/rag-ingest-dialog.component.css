@@ -1,15 +1,11 @@
-.rag-dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgb(0 0 0 / 50%);
-  z-index: 1000;
-}
-
+/* Native <dialog> promoted by appModalDialog: the browser supplies the top
+ * layer, the backdrop, the focus trap and Escape-to-close, so there is no
+ * hand-rolled scrim element. Nested inside the chat dialog, so its own
+ * showModal() stacks it above that one in the top layer. */
 .rag-dialog {
   position: fixed;
   inset: 0;
   margin: auto;
-  z-index: 1001;
   width: min(600px, 95vw);
   max-height: 90vh;
   overflow-y: auto;
@@ -28,7 +24,7 @@
 }
 
 .rag-dialog::backdrop {
-  display: none; /* Use our custom backdrop instead */
+  background: rgb(0 0 0 / 50%);
 }
 
 /* Header */

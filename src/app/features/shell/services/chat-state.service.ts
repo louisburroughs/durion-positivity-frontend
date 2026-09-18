@@ -1,6 +1,6 @@
 import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { catchError, concatMap, EMPTY, Observable, Subject, tap } from 'rxjs';
+import { catchError, concat, concatMap, EMPTY, Observable, Subject, tap, throwError } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import {
   blocksToPlainText,
@@ -10,6 +10,7 @@ import {
   ChatHistoryGroup,
   ChatMessage,
 } from '../models/chat.model';
+import { identityKey } from '../util/identity.util';
 import { CHAT_HISTORY_STORE } from './chat-history.store';
 
 /** Two-signal page state for the history load (ADR-0031). */
@@ -63,12 +64,23 @@ export class ChatStateService {
   private readonly _messages = signal<readonly ChatMessage[]>([]);
   private readonly _state = signal<ChatLoadState>('idle');
   private readonly _errorKey = signal<string | null>(null);
+  /**
+   * A store write that did not land. Deliberately SEPARATE from the two-signal
+   * pair above: losing the persisted copy does not stop the conversation on
+   * screen, so it is reported without taking the thread down (ADR-0031 §4 shape,
+   * ADR-0064 §1: the outcome is kept, not swallowed). Written only by the write
+   * queue — one writer.
+   */
+  private readonly _persistenceErrorKey = signal<string | null>(null);
 
   readonly conversations = this._conversations.asReadonly();
   readonly messages = this._messages.asReadonly();
   readonly activeConversationId = this._activeId.asReadonly();
   readonly state = this._state.asReadonly();
   readonly errorKey = this._errorKey.asReadonly();
+  readonly persistenceErrorKey = this._persistenceErrorKey.asReadonly();
+  /** Where this store keeps history — the rail's footnote (see the store contract). */
+  readonly retentionNoteKey = this.store.retentionNoteKey;
 
   readonly isEmpty = computed(() => this._messages().length === 0);
   readonly activeConversation = computed(
@@ -133,7 +145,25 @@ export class ChatStateService {
         // dropped in silence after one remote failure.
         concatMap(entry =>
           entry.identity === this.currentIdentity()
-            ? entry.work().pipe(catchError(() => EMPTY))
+            ? entry.work().pipe(
+                tap({
+                  complete: () => {
+                    // A write that landed clears any previous failure. Reads leave
+                    // the flag alone: they never claimed anything was persisted.
+                    if (entry.kind === 'write') this._persistenceErrorKey.set(null);
+                  },
+                }),
+                catchError(() => {
+                  // The queue stays alive — catchError on the OUTER pipe would
+                  // complete it and drop every later write in the session — but the
+                  // failure is recorded rather than swallowed (ADR-0065 §6).
+                  // Reads report through their own catchError and never reach here.
+                  if (entry.kind === 'write') {
+                    this._persistenceErrorKey.set('SHELL.CHAT.ERROR.PERSIST');
+                  }
+                  return EMPTY;
+                }),
+              )
             : // The identity that queued this write is gone: running it now would
               // write an old snapshot into the new tenant's namespace, since the
               // store resolves its key when the call runs (ADR-0062).
@@ -203,38 +233,59 @@ export class ChatStateService {
     this._selectionLoading.set(false);
     this._activeId.set(null);
     this._messages.set([]);
-    this._errorKey.set(null);
+    // state first, in BOTH directions: a template reading `state() === 'error'`
+    // and `errorKey()` in the same frame must never see them disagree (ADR-0031 §5).
     this._state.set('ready');
+    this._errorKey.set(null);
   }
 
   selectConversation(conversationId: string): void {
-    if (this._activeId() === conversationId) return;
+    if (this._activeId() === conversationId) {
+      // Clicking the conversation you are LEAVING while another is opening is a
+      // cancellation, not a no-op: the pending switch is abandoned and the thread
+      // on screen stays the one the composer is already writing into.
+      if (this._selectionLoading()) {
+        this.selectionToken += 1;
+        this._selectionLoading.set(false);
+      }
+      return;
+    }
 
     const token = ++this.selectionToken;
+    const identity = this.currentIdentity();
     this._selectionLoading.set(true);
-    this.store
-      .loadMessages(conversationId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: messages => {
-          if (token !== this.selectionToken) return;
+    // Queued, like every other store call: read directly, a selection can overtake
+    // a `saveMessages` still sitting in the queue and come back with the snapshot
+    // from before it — showing a thread that is missing the turn just sent
+    // (ADR-0063 §1: the read settles behind the writes issued before it).
+    this.enqueue(() =>
+      this.store.loadMessages(conversationId).pipe(
+        tap(messages => {
+          // Superseded by a newer selection, or issued by an identity that has
+          // since been replaced: either way this answer is not for this screen.
+          if (token !== this.selectionToken || identity !== this.currentIdentity()) return;
           this._activeId.set(conversationId);
           this._messages.set(messages);
           this._selectionLoading.set(false);
-          this._errorKey.set(null);
-        },
-        error: () => {
-          if (token !== this.selectionToken) return;
-          // Drop the thread we were leaving. Keeping it would leave `_activeId`
-          // on the previous conversation while the screen reports a failure for
-          // another, and the next question would be written into the old one.
-          this._activeId.set(null);
-          this._messages.set([]);
-          this._selectionLoading.set(false);
-          this._state.set('error');
-          this._errorKey.set('SHELL.CHAT.ERROR.HISTORY_LOAD');
-        },
-      });
+          // A successful load leaves no error behind it — state first (ADR-0031 §5).
+          this.clearHistoryError();
+        }),
+        catchError(() => {
+          if (token === this.selectionToken && identity === this.currentIdentity()) {
+            // Drop the thread we were leaving. Keeping it would leave `_activeId`
+            // on the previous conversation while the screen reports a failure for
+            // another, and the next question would be written into the old one.
+            this._activeId.set(null);
+            this._messages.set([]);
+            this._selectionLoading.set(false);
+            this._state.set('error');
+            this._errorKey.set('SHELL.CHAT.ERROR.HISTORY_LOAD');
+          }
+          // Swallowed so one failed selection cannot take the queue down.
+          return EMPTY;
+        }),
+      ),
+    );
   }
 
   /** Record the user's turn, opening a conversation if this is the first one. */
@@ -247,6 +298,10 @@ export class ChatStateService {
       pending: false,
     };
 
+    // A new turn supersedes a failed history load: the thread is working again,
+    // so the error banner must not stay on screen over it (ADR-0031 §5 — state
+    // moves off 'error' BEFORE the key is cleared).
+    this.clearHistoryError();
     this.ensureConversation(text);
     this._messages.update(messages => [...messages, message]);
     this.persist();
@@ -313,53 +368,54 @@ export class ChatStateService {
       pending: false,
     };
 
-    this.enqueue(() =>
+    // The load AND the write it feeds occupy ONE slot in the queue, so nothing can
+    // be written between them. Reading first and queueing the write afterwards
+    // sent a snapshot taken before every write issued since — which then landed on
+    // top of them, erasing turns that had already been saved (ADR-0063 §1: the
+    // result is merged against the state it will actually be written over).
+    this.enqueueWrite(() =>
       this.store.loadMessages(target.conversationId).pipe(
-        tap(stored => this.landStoredAnswer(target, stored, answer)),
-        // A failed load must not take the queue down with it, and the answer is
-        // already on screen when the conversation is open — losing only the
-        // persisted copy is the least bad outcome available here.
-        catchError(() => {
+        // Rethrown, not swallowed: the queue's own handler keeps the queue alive
+        // (one failure must not drop every later write) AND records that this
+        // reply was not persisted. Returning EMPTY here reported a successful
+        // write for a reply that never reached the store. Placed BEFORE the merge,
+        // so a failed WRITE lands in the same handler for the same reason.
+        catchError((error: unknown) => {
           console.error('chat: could not load the conversation to persist a reply');
-          return EMPTY;
+          return throwError(() => error);
         }),
+        concatMap(stored => this.landStoredAnswer(target, stored, answer)),
       ),
     );
   }
 
+  /**
+   * Merge an answer into the conversation's current stored state and write it
+   * back. Returns the store writes so they run inside the caller's queue slot.
+   */
   private landStoredAnswer(
     target: ChatTurnTarget,
     stored: readonly ChatMessage[],
     answer: ChatMessage,
-  ): void {
+  ): Observable<unknown> {
     // Checked AGAIN, here, not only in `completeAssistantTurn` and at the head of
     // the queue: both of those run before `loadMessages` resolves, so a tenant or
     // account change while it was in flight would still land the previous
     // session's answer — and `stored` was read from the new namespace (ADR-0062).
-    if (target.identity !== this.currentIdentity()) return;
+    if (target.identity !== this.currentIdentity()) return EMPTY;
 
-    // Drop the turn being replaced: a retry that settles after the user moved
-    // away would otherwise show the old failure AND its answer.
-    const superseded = new Set([target.messageId, target.replacesMessageId ?? '']);
-    const messages: readonly ChatMessage[] = [
-      ...stored.filter(message => !superseded.has(message.id)),
-      answer,
-    ];
+    const messages = withAnswer(stored, target, answer);
 
-    this.enqueueWrite(() => this.store.saveMessages(target.conversationId, messages));
-
-    // If the user is back in this conversation, APPEND to the live thread rather
+    // If the user is back in this conversation, merge into the LIVE thread rather
     // than replacing it: the thread may hold turns that are not in `stored` yet —
     // a question asked since, and its pending placeholder.
     if (this._activeId() === target.conversationId) {
-      this._messages.update(current => [
-        ...current.filter(message => !superseded.has(message.id)),
-        answer,
-      ]);
+      this._messages.update(current => withAnswer(current, target, answer));
     }
 
+    const save = this.store.saveMessages(target.conversationId, messages);
     const conversation = this._conversations().find(entry => entry.id === target.conversationId);
-    if (!conversation) return;
+    if (!conversation) return save;
 
     const updated: ChatConversation = {
       ...conversation,
@@ -369,7 +425,7 @@ export class ChatStateService {
     this.setConversations(
       this._conversations().map(entry => (entry.id === updated.id ? updated : entry)),
     );
-    this.enqueueWrite(() => this.store.saveConversation(updated));
+    return concat(save, this.store.saveConversation(updated));
   }
 
   /**
@@ -507,6 +563,16 @@ export class ChatStateService {
     this._conversations.set(
       [...conversations].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
     );
+
+    // The active conversation must exist in the list: `persist()` resolves it
+    // THROUGH the list, so a refreshed list that no longer carries it (deleted in
+    // another tab, or gone from the server) left every later turn silently
+    // unsaved. Drop the thread instead, so the next question opens a fresh one.
+    const active = this._activeId();
+    if (active !== null && !conversations.some(entry => entry.id === active)) {
+      this._activeId.set(null);
+      this._messages.set([]);
+    }
   }
 
   /**
@@ -518,9 +584,19 @@ export class ChatStateService {
     return identityOf(this.auth.currentUserClaims());
   }
 
+  /**
+   * Leave the error state, in the required order: `state` moves off `'error'`
+   * first, then the key is cleared (ADR-0031 §5).
+   */
+  private clearHistoryError(): void {
+    if (this._state() !== 'error' && this._errorKey() === null) return;
+    this._state.set('ready');
+    this._errorKey.set(null);
+  }
+
   /** Join the queue behind everything already issued, without invalidating anything. */
   private enqueue(work: () => Observable<unknown>): void {
-    this.writes.next({ work, identity: this.currentIdentity() });
+    this.writes.next({ work, identity: this.currentIdentity(), kind: 'read' });
   }
 
   private enqueueWrite(work: () => Observable<unknown>): void {
@@ -529,7 +605,7 @@ export class ChatStateService {
     // drop the one just created — and dropping the active one means the reply to
     // it is never persisted, because persist() resolves it through the list.
     this.listInvalidated += 1;
-    this.enqueue(work);
+    this.writes.next({ work, identity: this.currentIdentity(), kind: 'write' });
   }
 
   private resetForCurrentUser(): void {
@@ -541,9 +617,57 @@ export class ChatStateService {
     this._conversations.set([]);
     this._messages.set([]);
     this._activeId.set(null);
-    this._errorKey.set(null);
+    this._persistenceErrorKey.set(null);
+    // state first, then the key — the same order as every other transition here.
     this._state.set('idle');
+    this._errorKey.set(null);
   }
+}
+
+/** A queued store call, tagged with the identity that issued it. */
+interface QueuedWrite {
+  readonly work: () => Observable<unknown>;
+  readonly identity: string;
+  /**
+   * Only a write can fail to PERSIST something; a read reports its own failure
+   * through the error state. The queue uses this to decide whether a failure
+   * belongs on `persistenceErrorKey`.
+   */
+  readonly kind: 'read' | 'write';
+}
+
+/**
+ * Tenant + subject, the pair that decides whose conversations these are, with
+ * both halves encoded so no claim value can forge another identity's key
+ * (see `identity.util.ts`).
+ */
+function identityOf(claims: { tid?: string; sub?: string } | null | undefined): string {
+  return identityKey(claims);
+}
+
+/**
+ * Put `answer` where the turn it answers sits, replacing that turn (the pending
+ * placeholder, or the failure a retry replaces) in place. Appending instead moved
+ * a retried answer below questions asked after it, and a reply that arrived while
+ * the user was away lost its position in the thread entirely.
+ */
+function withAnswer(
+  messages: readonly ChatMessage[],
+  target: ChatTurnTarget,
+  answer: ChatMessage,
+): readonly ChatMessage[] {
+  const superseded = new Set(
+    [target.messageId, target.replacesMessageId].filter((id): id is string => !!id),
+  );
+  const index = messages.findIndex(message => superseded.has(message.id));
+  if (index < 0) return [...messages, answer];
+
+  const keep = (message: ChatMessage): boolean => !superseded.has(message.id);
+  return [
+    ...messages.slice(0, index).filter(keep),
+    answer,
+    ...messages.slice(index + 1).filter(keep),
+  ];
 }
 
 /**
@@ -551,17 +675,6 @@ export class ChatStateService {
  * staging host every send would throw. These ids are local correlation keys, never
  * security tokens, so a random fallback is fine.
  */
-/** Tenant + subject, the pair that decides whose conversations these are. */
-/** A queued store write, tagged with the identity that issued it. */
-interface QueuedWrite {
-  readonly work: () => Observable<unknown>;
-  readonly identity: string;
-}
-
-function identityOf(claims: { tid?: string; sub?: string } | null | undefined): string {
-  return `${claims?.tid ?? ''}|${claims?.sub ?? ''}`;
-}
-
 function newId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();

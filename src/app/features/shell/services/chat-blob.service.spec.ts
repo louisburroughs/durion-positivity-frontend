@@ -1,18 +1,26 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
+import { JwtClaims } from '../../../core/models/auth.models';
 import { ApiBaseService } from '../../../core/services/api-base.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ChatBlobService } from './chat-blob.service';
 
 describe('ChatBlobService', () => {
   let service: ChatBlobService;
   const getBlob = vi.fn();
+  const claims = signal<JwtClaims | null>({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
 
   beforeEach(() => {
     getBlob.mockReset();
     getBlob.mockReturnValue(of(new Blob(['payload'])));
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [{ provide: ApiBaseService, useValue: { getBlob } }],
+      providers: [
+        { provide: ApiBaseService, useValue: { getBlob } },
+        { provide: AuthService, useValue: { currentUserClaims: claims } },
+      ],
     });
     service = TestBed.inject(ChatBlobService);
   });
@@ -55,6 +63,22 @@ describe('ChatBlobService', () => {
     const url = await firstValueFrom(service.resolve('/blobs/1'));
     expect(url).toMatch(/^blob:/);
     expect(getBlob).toHaveBeenCalledTimes(2);
+  });
+
+  it('re-fetches the same path for a new identity instead of serving the cached blob', async () => {
+    // Root-scoped cache: `/blobs/1` under tenant-two is a different document, and
+    // the cached object URL holds tenant-one's bytes (ADR-0065 §4/§5).
+    const revoke = vi.spyOn(URL, 'revokeObjectURL');
+    const first = await firstValueFrom(service.resolve('/blobs/1'));
+
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
+    TestBed.tick();
+
+    const second = await firstValueFrom(service.resolve('/blobs/1'));
+
+    expect(getBlob).toHaveBeenCalledTimes(2);
+    expect(second).not.toBe(first);
+    expect(revoke).toHaveBeenCalledWith(first);
   });
 
   it('revokes every object URL it handed out when it is destroyed', async () => {

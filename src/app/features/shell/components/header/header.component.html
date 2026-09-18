@@ -26,6 +26,7 @@
     </select>
 
     <button class="icon-btn chat-toggle-btn" type="button" (click)="onChatToggle()"
+      data-chat-opener
       [class.active]="chatOpen()" aria-haspopup="dialog"
       [attr.aria-label]="chatToggleKey() | translate" [attr.aria-expanded]="chatOpen()"
       [title]="chatToggleKey() | translate">

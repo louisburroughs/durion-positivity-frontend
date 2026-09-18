@@ -118,10 +118,17 @@ export class ChatSendService {
   }
 }
 
+/**
+ * The answer produced nothing renderable. Reachable from several causes — an
+ * empty `response`, a body that is not an object at all, a `blocks` array whose
+ * every entry was malformed — so the copy names what the app can observe (there
+ * is nothing to show) rather than asserting a cause the mapper never established
+ * (ADR-0064 §4).
+ */
 function emptyAnswerBlock(): ChatErrorBlock {
   return {
     kind: 'error',
-    messageKey: 'SHELL.CHAT.ERROR.EMPTY',
+    messageKey: 'SHELL.CHAT.ERROR.NO_USABLE_CONTENT',
     detailKey: null,
     detailParams: null,
     correlationId: null,

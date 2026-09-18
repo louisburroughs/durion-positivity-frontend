@@ -228,6 +228,30 @@ describe('ChatComposerComponent', () => {
     expect(host().querySelector<HTMLButtonElement>('.icon-btn--send')!.disabled).toBe(false);
   });
 
+  it('explains the unsupported mic via the enclosing group, not only the disabled button (ADR-0029 §8.3)', async () => {
+    // A disabled control cannot receive focus, so a hint that lives only in its
+    // own aria-label/title is never reliably reachable — it has to sit on the
+    // enclosing group instead.
+    await setup({ supported: false });
+
+    const group = host().querySelector<HTMLElement>('.mic-group')!;
+    const describedBy = group.getAttribute('aria-describedby');
+    expect(describedBy).toBeTruthy();
+
+    const hint = host().querySelector<HTMLElement>(`#${describedBy}`)!;
+    expect(hint).not.toBeNull();
+    expect(hint.textContent).toContain('SHELL.CHAT.VOICE.UNSUPPORTED');
+    expect(hint.classList.contains('sr-only')).toBe(true);
+  });
+
+  it('does not point aria-describedby at a hint that is not rendered when voice is supported', async () => {
+    await setup({ supported: true });
+
+    const group = host().querySelector<HTMLElement>('.mic-group')!;
+    expect(group.hasAttribute('aria-describedby')).toBe(false);
+    expect(host().querySelector('#chat-voice-unsupported-hint')).toBeNull();
+  });
+
   it('offers the ingest control only to a user who may ingest', async () => {
     await setup();
     expect(host().querySelector('[aria-label="SHELL.RAG.BUTTON_ARIA"]')).toBeNull();
@@ -247,11 +271,11 @@ describe('ChatComposerComponent', () => {
     expect(textarea().getAttribute('aria-describedby')).toBe('chat-composer-hint');
     expect(host().querySelector('#chat-composer-hint')).not.toBeNull();
 
-    // `.sr-only` is not a global utility in this repo — without a local rule the
-    // label rendered visibly, competing with the textarea beside it.
+    // `.sr-only` is the single global utility (src/styles.css); this component
+    // must not redefine it locally, so the spec asserts the class is applied
+    // rather than a component-scoped rule computing a hidden layout.
     const label = host().querySelector<HTMLElement>('label[for="chat-composer-input"]')!;
-    expect(getComputedStyle(label).position).toBe('absolute');
-    expect(label.getBoundingClientRect().width).toBeLessThan(2);
+    expect(label.classList.contains('sr-only')).toBe(true);
   });
 
   it('stops dictation when the composer goes away', async () => {

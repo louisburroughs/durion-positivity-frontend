@@ -70,6 +70,7 @@
 
         <span class="row-actions row-actions--hover">
           <button class="row-icon-btn" type="button" (click)="togglePinned(conversation)"
+                  [attr.data-pin-for]="conversation.id"
                   [attr.aria-label]="(conversation.pinned ? 'SHELL.CHAT.HISTORY.UNPIN_ARIA' : 'SHELL.CHAT.HISTORY.PIN_ARIA') | translate:{ title: conversation.title }">
             <span class="material-symbols-rounded" aria-hidden="true">{{ 'push_pin' | msIcon }}</span>
           </button>
@@ -101,7 +102,7 @@
       {{ 'SHELL.CHAT.HISTORY.DELETE_NO' | translate }}
     </button>
     } @else {
-    <span class="rail-footer__note">{{ 'SHELL.CHAT.HISTORY.RETENTION_NOTE' | translate }}</span>
+    <span class="rail-footer__note">{{ retentionNoteKey() | translate }}</span>
     @if (hasConversations()) {
     <button class="row-btn row-btn--danger" type="button" (click)="armClearAll()">
       {{ 'SHELL.CHAT.HISTORY.CLEAR_ALL' | translate }}

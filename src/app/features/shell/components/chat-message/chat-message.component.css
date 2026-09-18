@@ -376,6 +376,17 @@
   font-size: 0.75rem;
 }
 
+/* A download that failed: information-bearing, so it uses the error token
+   rather than the muted metadata colour (ADR-0039). */
+.file-error {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--status-error-fg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: normal;
+}
+
 /* Error */
 .block--error {
   display: flex;

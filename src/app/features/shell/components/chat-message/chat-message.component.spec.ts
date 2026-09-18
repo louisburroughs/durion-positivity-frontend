@@ -1,14 +1,19 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, RouterLink } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { TranslateModule } from '@ngx-translate/core';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { JwtClaims } from '../../../../core/models/auth.models';
 import { ApiBaseService } from '../../../../core/services/api-base.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ChatBlock, ChatMessage } from '../../models/chat.model';
 import { ChatMessageComponent } from './chat-message.component';
 
 /** Stands in for the authenticated blob fetch the renderers now go through. */
 const getBlob = vi.fn();
+/** The blob cache is namespaced by tenant + subject, so it needs claims. */
+const claims = signal<JwtClaims | null>({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
 
 function message(role: 'user' | 'assistant', blocks: readonly ChatBlock[], pending = false): ChatMessage {
   return { id: 'm1', role, blocks, timestamp: new Date('2026-09-18T09:56:00Z'), pending };
@@ -23,7 +28,11 @@ describe('ChatMessageComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ChatMessageComponent, TranslateModule.forRoot()],
-      providers: [provideRouter([]), { provide: ApiBaseService, useValue: { getBlob } }],
+      providers: [
+        provideRouter([]),
+        { provide: ApiBaseService, useValue: { getBlob } },
+        { provide: AuthService, useValue: { currentUserClaims: claims } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ChatMessageComponent);
@@ -272,6 +281,77 @@ describe('ChatMessageComponent', () => {
 
     expect(getBlob).toHaveBeenCalledWith('/mcp-server/v1/mcp/blobs/2', { baseUrlOverride: '' });
     expect(clicked[0]).toMatch(/^blob:/);
+  });
+
+  it('leaves the cached object URL alive so the same file downloads twice', async () => {
+    // The URL belongs to ChatBlobService, which hands the same one to the <img>
+    // renderer and to every later download; revoking it here killed both.
+    const revoke = vi.spyOn(URL, 'revokeObjectURL');
+    const block = {
+      kind: 'file' as const,
+      name: 'bulletin.pdf',
+      sizeBytes: null,
+      mimeType: 'application/pdf',
+      url: '/mcp-server/v1/mcp/blobs/3',
+    };
+    const host = render(message('assistant', [block]));
+
+    const clicked: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      clicked.push(this.getAttribute('href') ?? '');
+    });
+
+    host.querySelector<HTMLButtonElement>('.block-btn')!.click();
+    await Promise.resolve();
+    fixture.detectChanges();
+    host.querySelector<HTMLButtonElement>('.block-btn')!.click();
+    await Promise.resolve();
+
+    expect(revoke).not.toHaveBeenCalled();
+    expect(clicked).toHaveLength(2);
+    expect(clicked[1]).toBe(clicked[0]);
+  });
+
+  it('sanitises a model-supplied file name before saving it', async () => {
+    const block = {
+      kind: 'file' as const,
+      name: '../../etc/pass\u202Egnp.exe',
+      sizeBytes: null,
+      mimeType: 'application/pdf',
+      url: '/mcp-server/v1/mcp/blobs/4',
+    };
+    const host = render(message('assistant', [block]));
+
+    const names: string[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      names.push(this.getAttribute('download') ?? '');
+    });
+
+    host.querySelector<HTMLButtonElement>('.block-btn')!.click();
+    await Promise.resolve();
+
+    expect(names[0]).not.toContain('/');
+    expect(names[0]).not.toContain('\u202E');
+    expect(names[0]?.endsWith('.exe')).toBe(false);
+  });
+
+  it('shows a retryable error when a file download fails', async () => {
+    getBlob.mockReturnValue(throwError(() => new Error('401')));
+    const block = {
+      kind: 'file' as const,
+      name: 'bulletin.pdf',
+      sizeBytes: null,
+      mimeType: 'application/pdf',
+      url: '/mcp-server/v1/mcp/blobs/5',
+    };
+    const host = render(message('assistant', [block]));
+
+    host.querySelector<HTMLButtonElement>('.block-btn')!.click();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(host.querySelector('.file-error')?.getAttribute('role')).toBe('status');
+    expect(host.querySelector<HTMLButtonElement>('.block-btn')!.disabled).toBe(false);
   });
 
   it('announces an error block and offers a retry that emits the message id', () => {

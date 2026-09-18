@@ -4,7 +4,7 @@
  * Assistant answers arrive as markdown. Rather than sanitising HTML and handing it
  * to `[innerHTML]`, this parser produces a TYPED TOKEN TREE that the renderer walks
  * with ordinary Angular templates: no HTML is ever constructed, so there is no
- * injection surface to sanitise in the first place (ADR-0033).
+ * injection surface to sanitise in the first place (ADR-0065 §1).
  *
  * The supported subset is what the MCP server actually emits: ATX headings,
  * paragraphs, unordered/ordered lists, block quotes, thematic breaks, and the
@@ -52,6 +52,13 @@ const INLINE_RE =
 
 /** Schemes an anchor may carry. Anything else renders as inert text. */
 const SAFE_SCHEME_RE = /^(?:https?:|mailto:)/i;
+/**
+ * Schemes something the browser FETCHES may carry — an image source, a file
+ * download. Narrower than the anchor set on purpose: `mailto:` is a navigation
+ * target, never a fetchable resource, so accepting it on an `[src]`/download URL
+ * would be an allowlist that does not describe what the value is used for.
+ */
+const FETCHABLE_SCHEME_RE = /^https?:/i;
 /** A scheme-looking prefix, used to tell `javascript:x` from a bare relative path. */
 const ANY_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
 /**
@@ -123,9 +130,20 @@ export function parseMarkdown(source: string): readonly MdBlock[] {
   return blocks;
 }
 
+/**
+ * How deep emphasis, strong and link labels may nest before the rest is kept as
+ * literal text. Each level is one more JavaScript stack frame, and the source is
+ * model output: `***…***` repeated a few thousand times would otherwise recurse
+ * until the stack overflowed and took the whole thread render with it.
+ */
+const MAX_INLINE_DEPTH = 8;
+
 /** Parse the inline span syntax inside one block. */
-export function parseInline(source: string): readonly MdInline[] {
+export function parseInline(source: string, depth = 0): readonly MdInline[] {
   if (source.length === 0) return [];
+  // Degrade to literal text rather than throw: the label still reads, the syntax
+  // simply stops being interpreted past this depth.
+  if (depth >= MAX_INLINE_DEPTH) return [{ type: 'text', value: source }];
 
   const nodes: MdInline[] = [];
   const regex = new RegExp(INLINE_RE.source, 'g');
@@ -156,11 +174,11 @@ export function parseInline(source: string): readonly MdInline[] {
     } else if (imageSrc !== undefined) {
       nodes.push(buildImage(imageAlt ?? '', imageSrc));
     } else if (href !== undefined) {
-      nodes.push(buildLink(linkText ?? '', href));
+      nodes.push(buildLink(linkText ?? '', href, depth));
     } else if (strongStars !== undefined || strongUnderscores !== undefined) {
-      nodes.push({ type: 'strong', children: parseInline(strongStars ?? strongUnderscores) });
+      nodes.push({ type: 'strong', children: parseInline(strongStars ?? strongUnderscores, depth + 1) });
     } else if (emStar !== undefined || emUnderscore !== undefined) {
-      nodes.push({ type: 'em', children: parseInline(emStar ?? emUnderscore) });
+      nodes.push({ type: 'em', children: parseInline(emStar ?? emUnderscore, depth + 1) });
     }
 
     cursor = match.index + match[0].length;
@@ -197,8 +215,19 @@ export function isSafeHref(href: string): boolean {
   return !ANY_SCHEME_RE.test(candidate);
 }
 
-function buildLink(text: string, href: string): MdInline {
-  const children = parseInline(text.length > 0 ? text : href);
+/**
+ * True when `href` may be FETCHED by the app: an http(s) URL, or a path relative
+ * to this app. Use for anything bound to `[src]` or downloaded; anchors use
+ * {@link isSafeHref}. Call it on a raw value — it normalises first.
+ */
+export function isFetchableHref(href: string): boolean {
+  const candidate = normaliseHref(href);
+  if (!isSafeHref(candidate)) return false;
+  return FETCHABLE_SCHEME_RE.test(candidate) || !ANY_SCHEME_RE.test(candidate);
+}
+
+function buildLink(text: string, href: string, depth = 0): MdInline {
+  const children = parseInline(text.length > 0 ? text : href, depth + 1);
   if (!isSafeHref(href)) {
     // Keep the label, drop the anchor: an unsafe target is never rendered.
     return { type: 'text', value: flattenInline(children) };
@@ -218,7 +247,7 @@ function buildLink(text: string, href: string): MdInline {
  * its alt text — never as a broken or attacker-chosen `<img>`.
  */
 function buildImage(alt: string, src: string): MdInline {
-  if (!isSafeHref(src)) {
+  if (!isFetchableHref(src)) {
     return { type: 'text', value: alt };
   }
   return { type: 'image', src: normaliseHref(src), alt };
