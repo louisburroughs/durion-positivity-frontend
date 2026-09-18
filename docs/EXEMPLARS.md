@@ -211,11 +211,13 @@ permission regression that silently restores an authority a prior PR deliberatel
 - **`aria-labelledby` section landmarks.** `dispatch-board-page.component.html:1,119,250,289` and
   `shop-dashboard-page.component.html:1,128,139` — every major `<section>` is labelled by its own
   heading id rather than left to an implicit accessible name.
-- **Focus restoration after a control removes itself.** `restoreClockFocus`
-  (`dispatch-board-page.component.ts:1324-1334`), called from `settleClockCard`
-  (`dispatch-board-page.component.ts:1319-1322`): runs in `afterNextRender` specifically *after* the
-  re-read has moved/destroyed the old card, and only takes over focus if nothing else claimed it in the
-  meantime (comment at `:1317-1319,1332-1334`).
+- **Focus parked, then restored, around a control that disables and removes itself.** `parkClockFocus`
+  (`dispatch-board-page.component.ts:1335`) moves focus from the clock control onto the mechanic's own
+  anchor (`clockAnchorFor`, `:1344`: the roster drag handle or the bin chip) before the pending guard
+  disables the button, because browsers disagree about a focused control that becomes disabled.
+  `restoreClockFocus` (`:1352`), called from `settleClockCard` (`:1321`), runs in `afterNextRender`
+  *after* the re-read has moved/destroyed the old card; it takes focus back only from `<body>` or from that
+  parked anchor, and leaves it alone if the dispatcher has moved on (see the doc comments on both methods).
 - **`:focus-within` ring on the search shell.** `dispatch-board-page.component.css:551-556` — the
   input's own outline is removed so the ring can be drawn on the whole `.search` shell; the comment
   there flags that without the pair a keyboard user gets no focus indication at all.
@@ -251,7 +253,8 @@ shipped locale JSON directly rather than mocking `TranslateService` — see `des
 `:182` (key derivation), `:205` (every emitted key resolves), `:220` (placeholder integrity), `:290/347/379/424`
 ("en-US says what the code does" — asserts the *content*, not just the key, for free hours, the break
 bin note, the clock hint, and the bin chip), and `:452` ("clock controls satisfy Label in Name, in every
-shipped locale" — WCAG 2.2 SC 2.5.3, comment at `:444-451`).
+shipped locale" — WCAG 2.2 SC 2.5.3, comment at `:444-451`; the spec covers the five hand-maintained
+bundles and deliberately excludes `qps-ploc`, whose generator wraps every string so containment cannot hold).
 
 *Prevents:* a raw i18n key rendering in production copy, a numeral rendered without locale grouping/decimal
 rules, and a button whose visible label doesn't contain the words a speech-input user would say to

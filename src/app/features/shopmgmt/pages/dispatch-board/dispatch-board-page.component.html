@@ -294,7 +294,11 @@
           <div class="bin" [class.droppable]="isBreakBinDropTarget()"
             (dragover)="onBreakBinDragOver($event)" (drop)="onBreakBinDrop($event)">
             @for (mechanic of offDutyMechanics(); track mechanic.personId) {
-              <span class="binchip" [class.busy]="isClockPending(mechanic.personId)">
+              <!-- tabindex="-1": a programmatic focus target only, so a clock
+                   control disabling itself can park focus on the chip it
+                   belongs to instead of dropping it to <body>. -->
+              <span class="binchip" [class.busy]="isClockPending(mechanic.personId)" tabindex="-1"
+                [attr.data-card-for]="mechanic.personId">
                 <!-- Only a real break is draggable back to the roster. A chip
                      here for approved time off is HR's record, not a session
                      this board can end, so it stays put. -->

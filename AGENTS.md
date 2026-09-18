@@ -199,8 +199,8 @@ private key(): string | null {
 ### 11. Accessibility mechanics (ADR-0029 §8)
 
 Native `dialog[appModalDialog]` for every modal, including nested (never `aria-modal` on a `div`); one
-global `.sr-only` (`src/styles.css`), never redefined; hints via `aria-describedby`, never inside an
-`aria-label`led control's own label; `title` never the only channel; targets ≥24×24 CSS px; Label in
+global `.sr-only` (`src/styles.css`), never redefined; hints via `aria-describedby`, never inside
+the label of a control that carries an `aria-label`; `title` never the only channel; targets ≥24×24 CSS px; Label in
 Name asserted per shipped locale; focus moved deliberately after any action that removes/replaces/
 disables the focused control; live regions (`aria-live`, `role="alert"`) survive rebuilds; `aria-current`
 vs `aria-selected` matched to the real widget type; toggle names describe the action, not the state;
@@ -245,7 +245,7 @@ locale-sensitive values. Assert copy claims against the real `src/assets/i18n/*.
 ### Accessibility
 
 - [ ] Every modal (including nested) uses `dialog[appModalDialog]`, never `aria-modal` on a `div`; `.sr-only` is never redefined locally (ADR-0029 §8.1–2)
-- [ ] Hints go through `aria-describedby`, never inside an `aria-label`led control's own label; `title` is never the only channel; targets are ≥24×24 CSS px (ADR-0029 §8.3–5)
+- [ ] Hints go through `aria-describedby`, never inside the label of a control that carries an `aria-label`; `title` is never the only channel; targets are ≥24×24 CSS px (ADR-0029 §8.3–5)
 - [ ] Label in Name asserted against real locale bundles for every control with visible text; toggle names describe the action, not the current state (ADR-0029 §8.6, §8.10)
 - [ ] Focus moves deliberately after any action that removes/replaces/disables the focused control; a visible `:focus-visible` ring is present on every control (ADR-0029 §8.7, §8.11)
 - [ ] Live regions survive rebuilds; `aria-current`/`aria-selected` matched to the real widget type, no `aria-controls` on a conditionally-absent element; list-item names carry their own identity; every drag interaction has a keyboard equivalent (ADR-0029 §8.8–9, §8.12–13)
@@ -304,7 +304,7 @@ CI now runs the same set in `.github/workflows/frontend-checks.yml` (plus `.gith
 | A placeholder key naming one cause when the sentinel is reachable from several | The copy asserts a cause the read never confirmed | Split into one truthful key per cause, or verify the key is true for all reachable causes | ADR-0064 §4 |
 | `aria-modal` on a `div` | Implements nothing — no focus trap, no top-layer promotion, no Escape handling | Use `dialog[appModalDialog]` | ADR-0029 §8.1 |
 | `.sr-only` redefined per component | Scoping it locally silently breaks if the selector doesn't match, rendering labels visibly | Use the single global `.sr-only` in `src/styles.css` | ADR-0029 §8.2 |
-| Hint text placed inside an `aria-label`led button's label | `aria-label` replaces descendant text in the accessible name — the hint is never announced | Attach the hint via `aria-describedby` pointing at a separate id | ADR-0029 §8.3 |
+| Hint text placed inside the label of a button that carries an `aria-label` | `aria-label` replaces descendant text in the accessible name — the hint is never announced | Attach the hint via `aria-describedby` pointing at a separate id | ADR-0029 §8.3 |
 | `BREAK_END_ARIA` not starting with the visible label in fr/es | Fails Label in Name (SC 2.5.3) for a speech-input user in that locale | Assert Label in Name against every shipped locale bundle, not just `en-US` | ADR-0029 §8.6 |
 | Focus lost (falls to `<body>`) when its control is removed | A keyboard/screen-reader user loses their place with no announcement | Move focus deliberately after the readback that removes the control | ADR-0029 §8.7 |
 | `translate.instant()` inside a `computed()` | The locale isn't a signal dependency, so the value freezes at whatever language was active when it first ran | Use the `translate` pipe in the template | ADR-0030 |
