@@ -215,9 +215,11 @@ permission regression that silently restores an authority a prior PR deliberatel
   (`dispatch-board-page.component.ts:1335`) moves focus from the clock control onto the mechanic's own
   anchor (`clockAnchorFor`, `:1344`: the roster drag handle or the bin chip) before the pending guard
   disables the button, because browsers disagree about a focused control that becomes disabled.
-  `restoreClockFocus` (`:1352`), called from `settleClockCard` (`:1321`), runs in `afterNextRender`
-  *after* the re-read has moved/destroyed the old card; it takes focus back only from `<body>` or from that
-  parked anchor, and leaves it alone if the dispatcher has moved on (see the doc comments on both methods).
+  `restoreClockFocus` (`:1354`), called from `settleClockCard` (`:1323`), runs in `afterNextRender` on
+  both settlement paths: after a re-read that moved/destroyed the old card (focus fell to `<body>`, so it
+  goes to the relocated control) and after a known no-write such as a 403 (the card stayed, focus is still
+  on the parked anchor, so it goes back to the re-enabled control). Anything else holding focus by then is
+  the dispatcher having moved on, and is left alone (see the doc comments on both methods).
 - **`:focus-within` ring on the search shell.** `dispatch-board-page.component.css:551-556` — the
   input's own outline is removed so the ring can be drawn on the whole `.search` shell; the comment
   there flags that without the pair a keyboard user gets no focus indication at all.

@@ -1301,8 +1301,10 @@ export class DispatchBoardPageComponent implements OnInit {
    * controls that exist to give the drag a keyboard equivalent in the first
    * place (WCAG 2.5.7), so losing focus in them defeats their purpose.
    *
-   * Only reclaims focus that was actually dropped: if the dispatcher has moved
-   * on and something else holds it, that is theirs to keep.
+   * Reclaims focus in the two cases this board owns: it fell to `<body>` because
+   * the re-read destroyed the card, or it is still on the anchor `parkClockFocus`
+   * moved it to because the write was refused and the card never moved. If the
+   * dispatcher has moved on and something else holds it, that is theirs to keep.
    */
   /**
    * Everything a clock card is owed once its readback has settled: the guard
