@@ -27,8 +27,12 @@ import { encodeIdentityPart } from '../util/identity.util';
  *
  * Failures are reported, never laundered: a read that could not be understood
  * ERRORS rather than answering "no history", and a write that did not land ERRORS
- * rather than reporting success, so the state layer can tell the user (ADR-0064
- * §1/§6, ADR-0065 §6).
+ * rather than reporting success — whether the browser refused it
+ * ({@link ChatHistoryUnavailableError}) or the conversation it targets is not in
+ * storage to write into ({@link ChatHistoryWriteRefusedError}) — so the state
+ * layer can tell the user (ADR-0064 §1/§6, ADR-0065 §6). The single exception is
+ * a store with no slot at all (the server, or a token carrying no tenant): no
+ * write is attempted, none is claimed, and there is no persisted copy to lose.
  */
 export interface ChatHistoryStore {
   /**
@@ -49,7 +53,15 @@ export interface ChatHistoryStore {
    * those callers write an empty list over a background conversation's history.
    */
   saveConversation(conversation: ChatConversation): Observable<void>;
-  /** Replace a conversation's whole message list. */
+  /**
+   * Replace a conversation's whole message list. ERRORS when the conversation is
+   * not in the store: there is nothing to write the messages into, and answering
+   * "saved" for a list that was never persisted is what let a full or disabled
+   * storage look like a clean save — the warning it should have raised was
+   * cleared by this very call (ADR-0064 §1, ADR-0065 §6). Callers write the
+   * metadata first; {@link saveConversation} is the call that CREATES a
+   * conversation, so it has no such precondition.
+   */
   saveMessages(conversationId: string, messages: readonly ChatMessage[]): Observable<void>;
   deleteConversation(conversationId: string): Observable<void>;
   /** Drop every conversation for the current user. */
@@ -133,7 +145,18 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
     if (!outcome.ok) return throwError(() => new ChatHistoryUnavailableError('write'));
 
     const existing = outcome.entries.find(entry => entry.id === conversationId);
-    if (!existing) return of(undefined);
+    if (!existing) {
+      // There is no entry to write these messages into, so this write did NOT
+      // land. Answering `of(undefined)` reported a save that never happened, and
+      // the state layer's write queue then CLEARED the warning the preceding
+      // failed `saveConversation` had just raised — the first turn of a new
+      // conversation against a full localStorage looked saved and was gone on the
+      // next reload (ADR-0064 §1, ADR-0065 §6).
+
+      // No slot at all: nothing was attempted, so nothing is claimed either.
+      if (!this.hasStorageSlot()) return of(undefined);
+      return throwError(() => new ChatHistoryWriteRefusedError(conversationId));
+    }
 
     return this.toResult(
       this.upsert(outcome.entries, {
@@ -165,12 +188,23 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
   }
 
   /**
-   * A write that did not land errors. Swallowing it kept the in-memory history
-   * looking persisted until the next reload dropped it, with nothing on screen to
-   * say so (ADR-0065 §6).
+   * A write that did not land errors; only a write the browser accepted — or one
+   * there was no slot to attempt, see {@link hasStorageSlot} — resolves. Swallowing
+   * a refusal kept the in-memory history looking persisted until the next reload
+   * dropped it, with nothing on screen to say so (ADR-0065 §6).
    */
   private toResult(persisted: boolean): Observable<void> {
     return persisted ? of(undefined) : throwError(() => new ChatHistoryUnavailableError('write'));
+  }
+
+  /**
+   * Whether this store has somewhere to write at all: a browser, and a
+   * tenant-scoped key. Without one no write is attempted, so there is no refusal
+   * to report and no persisted copy the user could lose — a warning here would
+   * claim a loss that never happened (ADR-0064 §4).
+   */
+  private hasStorageSlot(): boolean {
+    return isPlatformBrowser(this.platformId) && this.key() !== null;
   }
 
   /**
@@ -252,6 +286,21 @@ export class ChatHistoryUnavailableError extends Error {
   constructor(readonly operation: 'read' | 'write') {
     super(`chat history storage ${operation} failed`);
     this.name = 'ChatHistoryUnavailableError';
+  }
+}
+
+/**
+ * A write the store REFUSED: storage itself is readable and writable, but the
+ * conversation this write targets is not in it, so nothing was persisted. Kept
+ * distinct from {@link ChatHistoryUnavailableError} because the cause differs —
+ * and reported for the same reason: no caller may read a refusal as a save.
+ */
+export class ChatHistoryWriteRefusedError extends Error {
+  constructor(readonly conversationId: string) {
+    // Developer-facing only; the user sees the state layer's PERSIST key.
+    // i18n-ignore-next-line: Error message for the console, never rendered
+    super(`chat history write refused: conversation ${conversationId} is not stored`);
+    this.name = 'ChatHistoryWriteRefusedError';
   }
 }
 

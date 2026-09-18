@@ -148,21 +148,45 @@ export function neutraliseFormula(value: string): string {
 }
 
 /**
- * The plain-text projection of a turn, used for copy-to-clipboard and previews.
+ * The CLIPBOARD/EXPORT projection of a turn: what leaves the app as text.
  *
  * Tabular parts are tab-delimited, and tab-delimited text pasted into a
  * spreadsheet lands in cells exactly as the CSV export does — so table cells and
  * chart data points are neutralised here too, not only on the dedicated
- * table-copy and CSV paths.
+ * table-copy and CSV paths (ADR-0065 §3).
+ *
+ * Use {@link blocksToDisplayText} for anything that is only ever RENDERED: the
+ * text-prefix apostrophe is invisible in a spreadsheet but visible on screen.
  */
 export function blocksToPlainText(blocks: readonly ChatBlock[]): string {
+  return project(blocks, neutraliseFormula);
+}
+
+/**
+ * The same projection for text that is only shown, never copied or downloaded —
+ * the history rail's conversation preview. Skipping the formula guard is the
+ * whole point: nothing on this path can reach a spreadsheet, and a preview of an
+ * answer whose first block is a totals table otherwise read `'=Total…`, showing
+ * the user a guard that exists for Excel (ADR-0065 §3 scopes it to the
+ * projections a download or a paste feeds).
+ */
+export function blocksToDisplayText(blocks: readonly ChatBlock[]): string {
+  return project(blocks, value => value);
+}
+
+/**
+ * Both projections differ ONLY in how a spreadsheet-bound cell value is treated,
+ * so they share one walk of the block list: a second copy is how the CSV path and
+ * the clipboard path drifted apart in the first place.
+ */
+function project(blocks: readonly ChatBlock[], cell: (value: string) => string): string {
   return blocks
-    .map(block => blockToPlainText(block))
+    .map(block => blockToText(block, cell))
     .filter(part => part.length > 0)
     .join('\n\n');
 }
 
-function blockToPlainText(block: ChatBlock): string {
+function blockToText(block: ChatBlock, cell: (value: string) => string): string {
   switch (block.kind) {
     case 'text':
       return block.text;
@@ -172,12 +196,12 @@ function blockToPlainText(block: ChatBlock): string {
       return block.code;
     case 'table':
       return [
-        block.columns.map(column => neutraliseFormula(column.label)).join('\t'),
-        ...block.rows.map(row => row.map(neutraliseFormula).join('\t')),
+        block.columns.map(column => cell(column.label)).join('\t'),
+        ...block.rows.map(row => row.map(cell).join('\t')),
       ].join('\n');
     case 'chart':
       return block.series
-        .map(datum => `${neutraliseFormula(datum.label)}\t${neutraliseFormula(String(datum.value))}`)
+        .map(datum => `${cell(datum.label)}\t${cell(String(datum.value))}`)
         .join('\n');
     case 'image':
       return block.caption ?? block.alt;

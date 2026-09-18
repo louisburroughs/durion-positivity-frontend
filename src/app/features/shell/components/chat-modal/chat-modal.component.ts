@@ -262,9 +262,11 @@ export class ChatModalComponent implements AfterViewChecked {
   }
 
   /**
-   * Put focus in the composer — unless it is hidden, which it is when the history
-   * rail covers the dialog on a narrow viewport. Focusing a `display: none`
-   * textarea is a no-op that would leave focus on the opener, outside the modal.
+   * The deliberate initial focus target: the composer, so the dialog opens with
+   * the caret where the user is going to type. `showModal()` would otherwise put
+   * focus on the first tabbable control — the close button, or a history row —
+   * and a screen reader would announce that instead of the message box
+   * (ADR-0029 §9: the specific element that takes focus is asserted).
    */
   private focusInitial(): void {
     this.composer()?.focus();

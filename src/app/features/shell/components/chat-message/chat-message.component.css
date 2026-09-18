@@ -458,14 +458,3 @@
 .text-btn .material-symbols-rounded {
   font-size: 1rem;
 }
-
-/* Visually hidden, still announced. `.sr-only` in styles.css is scoped to two
-   other components, so every component that uses the class defines it itself. */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}

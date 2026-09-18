@@ -21,9 +21,6 @@ const NEW_CHAT_SELECTOR = '.new-chat-btn';
 /** How often "today" is re-evaluated so a rail left open across local midnight
  *  re-buckets without a page reload (ADR-0038 §6). */
 const TODAY_REFRESH_MS = 60_000;
-/** Rendered when the injected store carries no `retentionNoteKey` (a bare test
- *  stub), so the footer never shows a raw `undefined`. */
-const DEFAULT_RETENTION_NOTE_KEY = 'SHELL.CHAT.HISTORY.RETENTION_NOTE';
 
 /** Day-bucket → section heading key. */
 const GROUP_LABEL_KEYS: Readonly<Record<ChatHistoryBucket, string>> = {
@@ -73,8 +70,14 @@ export class ChatHistoryRailComponent {
    */
   private readonly now = signal(new Date());
 
-  /** Where this store keeps history — the store's own claim, not a hardcoded one. */
-  readonly retentionNoteKey = computed(() => this.historyStore.retentionNoteKey ?? DEFAULT_RETENTION_NOTE_KEY);
+  /**
+   * Where this store keeps history — the store's own claim, not a hardcoded one.
+   * Non-optional on the contract, so there is no fallback: a default here would
+   * render "Kept in this browser." over a server-backed store, and the only thing
+   * it ever protected was a test double that did not implement the interface
+   * (ADR-0032).
+   */
+  readonly retentionNoteKey = this.historyStore.retentionNoteKey;
 
   readonly activeConversationId = this.chatState.activeConversationId;
   readonly hasConversations = computed(() => this.chatState.conversations().length > 0);

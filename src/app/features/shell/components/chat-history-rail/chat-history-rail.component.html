@@ -102,7 +102,7 @@
       {{ 'SHELL.CHAT.HISTORY.DELETE_NO' | translate }}
     </button>
     } @else {
-    <span class="rail-footer__note">{{ retentionNoteKey() | translate }}</span>
+    <span class="rail-footer__note">{{ retentionNoteKey | translate }}</span>
     @if (hasConversations()) {
     <button class="row-btn row-btn--danger" type="button" (click)="armClearAll()">
       {{ 'SHELL.CHAT.HISTORY.CLEAR_ALL' | translate }}

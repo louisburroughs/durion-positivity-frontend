@@ -311,6 +311,7 @@ describe('ChatModalComponent', () => {
         {
           provide: CHAT_HISTORY_STORE,
           useValue: {
+            retentionNoteKey: 'SHELL.CHAT.HISTORY.RETENTION_NOTE',
             listConversations: () => of([]),
             // Never settles: the conversation stays mid-open.
             loadMessages: () => NEVER,
@@ -363,6 +364,7 @@ describe('ChatModalComponent', () => {
         {
           provide: CHAT_HISTORY_STORE,
           useValue: {
+            retentionNoteKey: 'SHELL.CHAT.HISTORY.RETENTION_NOTE',
             listConversations: () => of([]),
             loadMessages: () => of([]),
             saveConversation: () => throwError(() => new Error('quota exceeded')),

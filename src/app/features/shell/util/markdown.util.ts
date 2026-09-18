@@ -8,9 +8,9 @@
  *
  * The supported subset is what the MCP server actually emits: ATX headings,
  * paragraphs, unordered/ordered lists, block quotes, thematic breaks, and the
- * inline set strong / emphasis / code / link. Fenced code and GFM tables are split
- * out upstream by `chat-response.mapper.ts` and become their own blocks, so they
- * never reach this parser.
+ * inline set strong / emphasis / code / link / image. Fenced code and GFM tables
+ * are split out upstream by `chat-response.mapper.ts` and become their own blocks,
+ * so they never reach this parser.
  */
 
 export type MdInline =
@@ -132,9 +132,13 @@ export function parseMarkdown(source: string): readonly MdBlock[] {
 
 /**
  * How deep emphasis, strong and link labels may nest before the rest is kept as
- * literal text. Each level is one more JavaScript stack frame, and the source is
- * model output: `***…***` repeated a few thousand times would otherwise recurse
- * until the stack overflowed and took the whole thread render with it.
+ * literal text. A DEFENSIVE bound on recursion from model output, with no known
+ * input that reaches it: the inline pattern matches lazily, so nested runs of
+ * `***…***` collapse into one level per delimiter pair rather than one per
+ * character, and a mutation audit could not craft a source that recurses eight
+ * deep. It stays because the depth is decided by untrusted output and a future
+ * pattern change could make deeper nesting reachable — each level is one more
+ * JavaScript stack frame, and overflowing takes the whole thread render with it.
  */
 const MAX_INLINE_DEPTH = 8;
 

@@ -328,7 +328,7 @@
     },
     "RAG": {
       "BUTTON_ARIA": "Load document into knowledge base",
-      "BUTTON_TITLE": "Load document (Admin)",
+      "BUTTON_TITLE": "Load document",
       "DIALOG_ARIA": "RAG document ingestion dialog",
       "TITLE": "Load Document into Knowledge Base",
       "CLOSE_ARIA": "Close dialog",

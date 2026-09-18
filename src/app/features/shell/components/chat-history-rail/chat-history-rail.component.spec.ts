@@ -352,7 +352,7 @@ describe('ChatHistoryRailComponent', () => {
   });
 
   describe('retention note (store-owned copy)', () => {
-    async function setupWithStore(store: Partial<ChatHistoryStore> | undefined): Promise<void> {
+    async function setupWithStore(store: Partial<ChatHistoryStore>): Promise<void> {
       TestBed.resetTestingModule();
       await TestBed.configureTestingModule({
         imports: [ChatHistoryRailComponent, TranslateModule.forRoot()],
@@ -367,7 +367,7 @@ describe('ChatHistoryRailComponent', () => {
               }),
             },
           },
-          ...(store ? [{ provide: CHAT_HISTORY_STORE, useValue: store }] : []),
+          { provide: CHAT_HISTORY_STORE, useValue: store },
         ],
       }).compileComponents();
 
@@ -376,19 +376,20 @@ describe('ChatHistoryRailComponent', () => {
       fixture.detectChanges();
     }
 
-    it("renders the injected store's own retention note key", async () => {
+    it("renders the injected store's own retention note key, not a hardcoded claim", async () => {
+      // Any key that exists in the bundles and is NOT the local store's own
+      // RETENTION_NOTE will do: the point is that a hardcoded "Kept in this
+      // browser." fails here, because the footnote is whichever store was
+      // provided making its own claim (ADR-0064 §4 — one key, one true claim).
       await setupWithStore({
-        retentionNoteKey: 'SHELL.CHAT.HISTORY.RETENTION_NOTE_SERVER',
+        retentionNoteKey: 'SHELL.CHAT.HISTORY.EMPTY',
         listConversations: () => new Observable(),
       } as Partial<ChatHistoryStore>);
 
-      expect(component.retentionNoteKey()).toBe('SHELL.CHAT.HISTORY.RETENTION_NOTE_SERVER');
-    });
-
-    it('falls back to the default key when a test stub carries no retentionNoteKey', async () => {
-      await setupWithStore({ listConversations: () => new Observable() } as Partial<ChatHistoryStore>);
-
-      expect(component.retentionNoteKey()).toBe('SHELL.CHAT.HISTORY.RETENTION_NOTE');
+      expect(component.retentionNoteKey).toBe('SHELL.CHAT.HISTORY.EMPTY');
+      expect(host().querySelector('.rail-footer__note')?.textContent?.trim()).toBe(
+        'SHELL.CHAT.HISTORY.EMPTY',
+      );
     });
   });
 });

@@ -24,7 +24,8 @@ const TEXTAREA_PADDING_PX = 16;
 /**
  * ChatComposerComponent
  * ---------------------
- * The message box: text, voice and (for admins) document ingestion.
+ * The message box: text, voice and — for a caller holding `mcp:document:ingest`
+ * — document ingestion.
  *
  * Dictation writes into the SAME textarea the keyboard does, so a recognised
  * question can be corrected before it is sent — the mic is an input method, not a
@@ -45,7 +46,14 @@ export class ChatComposerComponent {
 
   /** True while a reply is in flight: the box stays readable but cannot send. */
   readonly busy = input(false);
-  /** Admin-only: show the control that loads a document into the knowledge base. */
+  /**
+   * Show the control that loads a document into the knowledge base. NOT a role:
+   * the owner decides on `mcp:document:ingest`, the permission the pos-mcp-server
+   * endpoint itself enforces, and leaves it open when the token carries no
+   * `perm_bits` claim at all so legacy tokens keep working — see
+   * `chat-modal.component.ts`'s `canIngestDocuments` for the gate and its
+   * `permissionsKnown()` fallback (ADR-0040 §6a.1/§6a.3/§6a.6).
+   */
   readonly canIngest = input(false);
 
   readonly submitted = output<string>();

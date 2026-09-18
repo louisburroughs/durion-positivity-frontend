@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { JwtClaims } from '../../../core/models/auth.models';
 import { AuthService } from '../../../core/services/auth.service';
 import { ChatConversation, ChatMessage } from '../models/chat.model';
-import { LocalChatHistoryStore } from './chat-history.store';
+import { ChatHistoryWriteRefusedError, LocalChatHistoryStore } from './chat-history.store';
 
 const STORAGE_KEY = 'durion-chat-history-v1:tenant-one:admin.alpha';
 
@@ -87,8 +87,14 @@ describe('LocalChatHistoryStore', () => {
     expect(messages.map(entry => entry.id)).toEqual(['a', 'b']);
   });
 
-  it('ignores a message write for a conversation that was never saved', async () => {
-    await firstValueFrom(store.saveMessages('ghost', [message()]));
+  it('refuses a message write for a conversation that is not in storage', async () => {
+    // There is nothing to write these messages into, so this write did not land.
+    // Resolving as saved is what let a full localStorage look clean: the state
+    // layer's queue cleared the warning the failed metadata write had just raised
+    // (ADR-0064 §1, ADR-0065 §6).
+    await expect(firstValueFrom(store.saveMessages('ghost', [message()]))).rejects.toThrow(
+      ChatHistoryWriteRefusedError,
+    );
     expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
   });
 
@@ -308,6 +314,8 @@ describe('LocalChatHistoryStore', () => {
     // tenant contexts in the same bucket — the leak the key exists to prevent.
     claims.set({ sub: 'admin.alpha', exp: 9999999999 });
 
+    // Neither write is REFUSED: with no slot there was nothing to attempt, so
+    // there is no persisted copy to lose and nothing to warn about (ADR-0064 §4).
     await firstValueFrom(store.saveConversation(conversation()));
     await firstValueFrom(store.saveMessages('c1', [message()]));
 

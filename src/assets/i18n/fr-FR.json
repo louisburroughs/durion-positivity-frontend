@@ -328,7 +328,7 @@
     },
     "RAG": {
       "BUTTON_ARIA": "Charger un document dans la base de connaissances",
-      "BUTTON_TITLE": "Charger un document (Admin)",
+      "BUTTON_TITLE": "Charger un document",
       "DIALOG_ARIA": "Boîte de dialogue d'ingestion de documents RAG",
       "TITLE": "Charger un document dans la base de connaissances",
       "CLOSE_ARIA": "Fermer la boîte de dialogue",

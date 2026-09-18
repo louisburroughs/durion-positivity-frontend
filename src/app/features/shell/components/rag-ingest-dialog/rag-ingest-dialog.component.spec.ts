@@ -7,8 +7,6 @@ import { RagIngestDialogComponent } from './rag-ingest-dialog.component';
 const translations = {
   SHELL: {
     RAG: {
-      BUTTON_ARIA: 'Load document into knowledge base',
-      BUTTON_TITLE: 'Load document (Admin)',
       DIALOG_ARIA: 'RAG document ingestion dialog',
       TITLE: 'Load Document into Knowledge Base',
       CLOSE_ARIA: 'Close dialog',

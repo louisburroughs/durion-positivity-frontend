@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, concat, concatMap, EMPTY, Observable, Subject, tap, throwError } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import {
+  blocksToDisplayText,
   blocksToPlainText,
   ChatBlock,
   ChatConversation,
@@ -68,8 +69,11 @@ export class ChatStateService {
    * A store write that did not land. Deliberately SEPARATE from the two-signal
    * pair above: losing the persisted copy does not stop the conversation on
    * screen, so it is reported without taking the thread down (ADR-0031 §4 shape,
-   * ADR-0064 §1: the outcome is kept, not swallowed). Written only by the write
-   * queue — one writer.
+   * ADR-0064 §1: the outcome is kept, not swallowed). The write queue is the only
+   * writer that RAISES a failure on it, and the only one that clears it on a
+   * later landed write; `resetForCurrentUser()` also clears it, because an
+   * identity change discards the state the warning was about along with
+   * everything else (ADR-0063 §7).
    */
   private readonly _persistenceErrorKey = signal<string | null>(null);
 
@@ -79,8 +83,6 @@ export class ChatStateService {
   readonly state = this._state.asReadonly();
   readonly errorKey = this._errorKey.asReadonly();
   readonly persistenceErrorKey = this._persistenceErrorKey.asReadonly();
-  /** Where this store keeps history — the rail's footnote (see the store contract). */
-  readonly retentionNoteKey = this.store.retentionNoteKey;
 
   readonly isEmpty = computed(() => this._messages().length === 0);
   readonly activeConversation = computed(
@@ -143,32 +145,47 @@ export class ChatStateService {
         // catchError INSIDE the inner observable: on the outer pipe it would
         // complete the whole queue, and every later write in the session would be
         // dropped in silence after one remote failure.
-        concatMap(entry =>
-          entry.identity === this.currentIdentity()
-            ? entry.work().pipe(
-                tap({
-                  complete: () => {
-                    // A write that landed clears any previous failure. Reads leave
-                    // the flag alone: they never claimed anything was persisted.
-                    if (entry.kind === 'write') this._persistenceErrorKey.set(null);
-                  },
-                }),
-                catchError(() => {
-                  // The queue stays alive — catchError on the OUTER pipe would
-                  // complete it and drop every later write in the session — but the
-                  // failure is recorded rather than swallowed (ADR-0065 §6).
-                  // Reads report through their own catchError and never reach here.
-                  if (entry.kind === 'write') {
-                    this._persistenceErrorKey.set('SHELL.CHAT.ERROR.PERSIST');
-                  }
-                  return EMPTY;
-                }),
-              )
-            : // The identity that queued this write is gone: running it now would
-              // write an old snapshot into the new tenant's namespace, since the
-              // store resolves its key when the call runs (ADR-0062).
-              EMPTY,
-        ),
+        concatMap(entry => {
+          if (entry.identity !== this.currentIdentity()) {
+            // The identity that queued this write is gone: running it now would
+            // write an old snapshot into the new tenant's namespace, since the
+            // store resolves its key when the call runs (ADR-0062).
+            return EMPTY;
+          }
+          // Whether the store REPORTED the write done. Completion alone is not
+          // success: an `Observable<void>` that completes without emitting says
+          // "nothing to report", not "saved" — a queue slot whose own guard
+          // refuses the work mid-flight (`landStoredAnswer` after an identity
+          // change) and a store whose write resolves without confirming both
+          // arrive here, and reading either as a landed write clears a warning
+          // that is still true.
+          let reported = false;
+          return entry.work().pipe(
+            tap({
+              next: () => {
+                reported = true;
+              },
+              complete: () => {
+                // A write the store reported as done clears any previous failure.
+                // Reads leave the flag alone: they never claimed anything was
+                // persisted.
+                if (entry.kind === 'write' && reported) {
+                  this._persistenceErrorKey.set(null);
+                }
+              },
+            }),
+            catchError(() => {
+              // The queue stays alive — catchError on the OUTER pipe would
+              // complete it and drop every later write in the session — but the
+              // failure is recorded rather than swallowed (ADR-0065 §6).
+              // Reads report through their own catchError and never reach here.
+              if (entry.kind === 'write') {
+                this._persistenceErrorKey.set('SHELL.CHAT.ERROR.PERSIST');
+              }
+              return EMPTY;
+            }),
+          );
+        }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
@@ -553,7 +570,6 @@ export class ChatStateService {
     this.enqueueWrite(() => this.store.saveMessages(updated.id, messages));
   }
 
-  /** Queue a store write behind everything already issued. */
   /**
    * Newest first. The rail's grouping preserves input order, so a reply landing
    * in an older conversation used to bump its `updatedAt` while leaving it sitting
@@ -565,9 +581,13 @@ export class ChatStateService {
     );
 
     // The active conversation must exist in the list: `persist()` resolves it
-    // THROUGH the list, so a refreshed list that no longer carries it (deleted in
-    // another tab, or gone from the server) left every later turn silently
-    // unsaved. Drop the thread instead, so the next question opens a fresh one.
+    // THROUGH the list, so a refreshed list that no longer carries it left every
+    // later turn silently unsaved. Three ways it can go missing: deleted in
+    // another tab, gone from the server, or never persisted at all because the
+    // store refused the write that would have created it — and in that last case
+    // the PERSIST warning is already on screen when this reconciliation drops the
+    // thread, so the loss is reported rather than silent. Drop the thread, so the
+    // next question opens a fresh one.
     const active = this._activeId();
     if (active !== null && !conversations.some(entry => entry.id === active)) {
       this._activeId.set(null);
@@ -692,12 +712,20 @@ export function deriveTitle(text: string): string {
   return (lastSpace > TITLE_MAX_LENGTH / 2 ? clipped.slice(0, lastSpace) : clipped).trimEnd() + '…';
 }
 
-/** First line of the latest assistant turn, for the history rail. */
+/**
+ * First line of the latest assistant turn, for the history rail.
+ *
+ * The DISPLAY projection, not the clipboard one: `blocksToPlainText` prefixes an
+ * apostrophe onto a table cell or chart value that opens like a spreadsheet
+ * formula, and nothing on this path can reach a spreadsheet — so a preview of an
+ * answer whose first block is a totals table read `'=Total…` on screen
+ * (ADR-0065 §3 scopes that guard to the projections a download or paste feeds).
+ */
 export function derivePreview(messages: readonly ChatMessage[]): string {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
     const message = messages[index];
     if (message.role !== 'assistant') continue;
-    const text = blocksToPlainText(message.blocks).trim().split('\n')[0].trim();
+    const text = blocksToDisplayText(message.blocks).trim().split('\n')[0].trim();
     if (text.length === 0) continue;
     return text.length <= PREVIEW_MAX_LENGTH ? text : `${text.slice(0, PREVIEW_MAX_LENGTH)}…`;
   }

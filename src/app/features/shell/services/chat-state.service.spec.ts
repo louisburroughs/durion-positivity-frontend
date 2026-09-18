@@ -1,9 +1,9 @@
 import { signal } from '@angular/core';
-import { Observable } from 'rxjs';
+import { EMPTY, Observable, of, throwError } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { JwtClaims } from '../../../core/models/auth.models';
 import { AuthService } from '../../../core/services/auth.service';
-import { ChatConversation, ChatMessage } from '../models/chat.model';
+import { blocksToPlainText, ChatBlock, ChatConversation, ChatMessage } from '../models/chat.model';
 import { CHAT_HISTORY_STORE, ChatHistoryStore } from './chat-history.store';
 import {
   ChatStateService,
@@ -40,7 +40,12 @@ describe('ChatStateService', () => {
     service.refresh();
   });
 
-  afterEach(() => localStorage.clear());
+  afterEach(() => {
+    localStorage.clear();
+    // Some tests here stub `Storage.prototype`; a failing one would otherwise
+    // leave the stub in place and take the next test down with it.
+    vi.restoreAllMocks();
+  });
 
   it('starts with no conversation and an empty thread', () => {
     expect(service.isEmpty()).toBe(true);
@@ -284,6 +289,35 @@ describe('ChatStateService', () => {
     expect(order.indexOf('errorKey:null')).toBeGreaterThan(order.indexOf('state:idle'));
   });
 
+  it('keeps the write warning up when storage refuses the whole persist pair (PRCR-001)', () => {
+    // The REAL store, not a double: the first turn of a new conversation queues
+    // saveConversation (localStorage refuses it) and then saveMessages for a
+    // conversation that is therefore not in storage. While that second write
+    // resolved as a success, the queue read it as a landed write and cleared the
+    // warning the first one had just raised — the role="status" notice never
+    // rendered, and the F8 reconciliation later dropped the thread with nothing
+    // on screen to explain it (ADR-0064 §1, ADR-0065 §6).
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('quota exceeded', 'QuotaExceededError');
+    });
+
+    service.appendUserMessage('a question that cannot be saved');
+
+    // Both writes have drained: the local store answers synchronously.
+    expect(service.persistenceErrorKey()).toBe('SHELL.CHAT.ERROR.PERSIST');
+    // A lost write is not a broken thread.
+    expect(service.state()).not.toBe('error');
+    expect(service.messages()).toHaveLength(1);
+
+    // The queue is still alive: once storage accepts writes again, the next turn
+    // lands and clears the warning.
+    setItem.mockRestore();
+    service.appendUserMessage('a question that saves fine');
+
+    expect(service.persistenceErrorKey()).toBeNull();
+    expect(service.messages()).toHaveLength(2);
+  });
+
   it('lets a new chat outrank a conversation load still in flight', () => {
     service.appendUserMessage('a question');
     const id = service.activeConversationId()!;
@@ -327,6 +361,24 @@ describe('derivePreview', () => {
 
   it('is empty when no assistant turn carries text', () => {
     expect(derivePreview([{ ...base, role: 'user', blocks: [{ kind: 'text', text: 'hi' }] }])).toBe('');
+  });
+
+  it('does not show the spreadsheet text-prefix in a rail preview (PRCR-008)', () => {
+    // The apostrophe `neutraliseFormula` adds is invisible in Excel and visible
+    // here: the rail used to read `'=Total…` for an answer that opens with a
+    // totals table. The guard belongs on the clipboard and CSV paths only
+    // (ADR-0065 §3) — `blocksToPlainText` still adds it there.
+    const blocks: readonly ChatBlock[] = [
+      {
+        kind: 'table',
+        title: null,
+        columns: [{ label: '=Total', align: 'start' }],
+        rows: [['=SUM(A1:A2)']],
+      },
+    ];
+
+    expect(derivePreview([{ ...base, role: 'assistant', blocks }])).toBe('=Total');
+    expect(blocksToPlainText(blocks).startsWith("'=Total")).toBe(true);
   });
 });
 
@@ -999,6 +1051,43 @@ describe('ChatStateService against a store that does not answer immediately', ()
 
     expect(store.order.filter(label => label.startsWith('save'))).toEqual([]);
     expect(service.conversations().map(entry => entry.id)).not.toContain(conversation);
+  });
+});
+
+describe('ChatStateService against a store whose write completes without reporting', () => {
+  const claims = signal<JwtClaims | null>({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
+
+  /**
+   * Interface-conformant (ADR-0032): `Observable<void>` is free to complete
+   * without ever emitting, which says "nothing to report", not "saved".
+   */
+  const store: ChatHistoryStore = {
+    retentionNoteKey: 'SHELL.CHAT.HISTORY.RETENTION_NOTE',
+    listConversations: () => of([]),
+    loadMessages: () => of([]),
+    saveConversation: () => throwError(() => new Error('quota exceeded')),
+    saveMessages: () => EMPTY,
+    deleteConversation: () => of(undefined),
+    clear: () => of(undefined),
+  };
+
+  it('keeps the write warning up for a write that reported nothing', () => {
+    // The metadata write is refused, so the warning goes up; the message write
+    // then completes having confirmed nothing. Reading mere completion as a
+    // landed write cleared a warning that was still true, and the user was told
+    // their conversation was saved when it was not (ADR-0064 §1).
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: AuthService, useValue: { currentUserClaims: claims } },
+        { provide: CHAT_HISTORY_STORE, useValue: store },
+      ],
+    });
+    const service = TestBed.inject(ChatStateService);
+
+    service.appendUserMessage('a question whose save confirms nothing');
+
+    expect(service.persistenceErrorKey()).toBe('SHELL.CHAT.ERROR.PERSIST');
   });
 });
 
