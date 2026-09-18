@@ -69,6 +69,15 @@ describe('PickExecutePageComponent', () => {
     expect(component.lines().length).toBeGreaterThan(0);
   });
 
+  it('no pick list (null) sets state error with the load key', async () => {
+    mockWorkexecService.getWorkorderPickList.mockReturnValue(of(null));
+    const component = await setupPickExecute();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD');
+    expect(component.lines()).toEqual([]);
+  });
+
   it('scan resolve success sets pendingLine', async () => {
     mockWorkexecService.resolvePickScan.mockReturnValue(of([executeLineFixture]));
     const component = await setupPickExecute();

@@ -497,7 +497,7 @@ describe('WorkexecService', () => {
         },
       ];
 
-      let result: PickListView | undefined;
+      let result: PickListView | null | undefined;
       service.getWorkorderPickList('wo-001').subscribe(value => (result = value));
 
       const headerReq = http.expectOne(`${BASE}/v1/workorders/wo-001/pick-list`);
@@ -528,7 +528,7 @@ describe('WorkexecService', () => {
     });
 
     it('getWorkorderPickList — an empty task read yields an empty tasks array, never undefined', () => {
-      let result: PickListView | undefined;
+      let result: PickListView | null | undefined;
       service.getWorkorderPickList('wo-001').subscribe(value => (result = value));
 
       http.expectOne(`${BASE}/v1/workorders/wo-001/pick-list`).flush({
@@ -543,6 +543,58 @@ describe('WorkexecService', () => {
       http.expectOne(`${BASE}/v1/workorders/wo-001/pick-list/tasks`).flush([]);
 
       expect(result?.tasks).toEqual([]);
+    });
+
+    // #286: the header read 404s when the workorder has no pick list yet, while
+    // the task read answers []. Only the header's 404 means "no pick list".
+    it('getWorkorderPickList — a header 404 emits null (no pick list yet)', () => {
+      let result: PickListView | null | undefined;
+      let failed = false;
+      service.getWorkorderPickList('wo-001').subscribe({
+        next: value => (result = value),
+        error: () => (failed = true),
+      });
+
+      http
+        .expectOne(`${BASE}/v1/workorders/wo-001/pick-list`)
+        .flush({ code: 'NOT_FOUND' }, { status: 404, statusText: 'Not Found' });
+      http.expectOne(`${BASE}/v1/workorders/wo-001/pick-list/tasks`).flush([]);
+
+      expect(failed).toBe(false);
+      expect(result).toBeNull();
+    });
+
+    it('getWorkorderPickList — a task-read 404 still errors', () => {
+      let status: number | undefined;
+      service.getWorkorderPickList('wo-001').subscribe({
+        error: err => (status = err.status),
+      });
+
+      http.expectOne(`${BASE}/v1/workorders/wo-001/pick-list`).flush({
+        workorderId: 'wo-001',
+        pickListId: 'pl-001',
+        status: 'READY_TO_PICK',
+      });
+      http
+        .expectOne(`${BASE}/v1/workorders/wo-001/pick-list/tasks`)
+        .flush({ code: 'NOT_FOUND' }, { status: 404, statusText: 'Not Found' });
+
+      expect(status).toBe(404);
+    });
+
+    it('getWorkorderPickList — a non-404 header failure still errors', () => {
+      let status: number | undefined;
+      service.getWorkorderPickList('wo-001').subscribe({
+        error: err => (status = err.status),
+      });
+
+      http
+        .expectOne(`${BASE}/v1/workorders/wo-001/pick-list`)
+        .flush({ code: 'INTERNAL_ERROR' }, { status: 500, statusText: 'Server Error' });
+      // forkJoin unsubscribes the sibling once the header errors.
+      http.match(`${BASE}/v1/workorders/wo-001/pick-list/tasks`);
+
+      expect(status).toBe(500);
     });
 
     it('getPickedItems — GET /workexec/v1/workorders/{workorderId}/picked-items', () => {

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
-import { Observable, forkJoin, of } from 'rxjs';
+import { Observable, forkJoin, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { EmployeeAPIService, PeopleAvailabilityAPIService, PeopleAvailabilityResponse } from '@durion-sdk/people';
 import { ApiBaseService } from '../../../core/services/api-base.service';
@@ -1130,13 +1130,20 @@ export class WorkexecService {
    * model composes both. `EA` is the local default because the generated task
    * carries no unit of measure — a different UOM needs a backend contract
    * addition, never a derivation from SKU text.
+   *
+   * Emits `null` when the header read answers 404: the workorder has no pick
+   * list yet (labour-only job, or inventory has not generated one). Only the
+   * header's 404 means that; a 404 from the task read, or any other failure,
+   * still errors (#286).
    */
-  getWorkorderPickList(workorderId: string): Observable<PickListView> {
+  getWorkorderPickList(workorderId: string): Observable<PickListView | null> {
     return forkJoin({
-      header: this.workorderPickFacade.getWorkorderPickList(workorderId),
+      header: this.workorderPickFacade.getWorkorderPickList(workorderId).pipe(
+        catchError(err => (err?.status === 404 ? of(null) : throwError(() => err))),
+      ),
       tasks: this.workorderPickFacade.getPickTasks(workorderId),
     }).pipe(
-      map(({ header, tasks }) => ({
+      map(({ header, tasks }) => header && ({
         workorderId: header.workorderId,
         pickListId: header.pickListId,
         status: header.status,
