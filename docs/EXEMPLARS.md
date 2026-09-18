@@ -19,7 +19,7 @@ cited in full and the other sites are listed briefly — read the canonical one,
 
 ## 1. Page state machine
 
-**Signal-pair state + keyed cache.** A routed page holds `readonly state = signal<PageState>('idle' | 'loading')`
+**Signal-pair state + keyed cache.** A routed page holds `readonly state = signal<PageState>('idle')` (with `PageState = 'idle' | 'loading' | 'ready' | 'error'`)
 and a `readonly errorKey = signal<string | null>(null)`, and on failure always writes `state.set('error')`
 before `errorKey.set(...)` — never the reverse, so a template branching on `state()` cannot render an
 error panel with no message. `dispatch-board-page.component.ts:175-176` declares the pair; the ordering
@@ -60,11 +60,12 @@ the whole set. Use this when several UI elements can be waiting on the same in-f
 response must not release any of them.
 
 **`UndoStep` — recording what a mutation is known to have produced, not just what it replaced.**
-`shop-dashboard` — no, defined at `src/app/features/shopmgmt/models/dispatch-board.models.ts:226-247`
-and consumed at `dispatch-board-page.component.ts:1584,1660,1675`. It carries `currentMechanicId` and
-`previousPosition`/`previousPosition` outcomes explicitly rather than re-deriving them from the row at
-undo time, because the row may already have moved again by the time undo is clicked (see the doc comment
-at `dispatch-board.models.ts:222-225`).
+Defined at `src/app/features/shopmgmt/models/dispatch-board.models.ts:226-247` and consumed at
+`dispatch-board-page.component.ts:1584,1660,1675`. Besides `previousId`, it records the outcome the write
+is known to have produced: `currentMechanicId` (MECHANIC steps, so undo can choose assign versus reassign
+without reading a row that a release has already emptied) and `previousPosition`/`currentPosition` (BAY
+steps, so undoing a parked workorder restores its HOLD instead of releasing it, and a placement another
+dispatcher has since changed is left alone). See the doc comment at `dispatch-board.models.ts:220-225`.
 
 **`effect()` + `onCleanup` per ADR-0033.** Canonical clean example:
 `src/app/features/order/pages/price-override/price-override-page.component.ts:41-83` — the constructor's
@@ -295,14 +296,12 @@ with args shifted one position over without failing.
 
 ## 9. Untrusted content
 
-Markdown URL normalisation/allowlisting, CSV formula-prefix defusing, and tenant+subject-scoped storage
-keys are implemented on the **open, unmerged** branch `claude/adoring-mccarthy-mriyc5`
-(confirmed present via `git ls-tree`, not yet fetched into a local worktree, so no line numbers are
-cited): `src/app/features/shell/util/markdown.util.ts`,
-`src/app/features/shell/components/chat-message/chat-message.component.ts`, and
-`src/app/features/shell/services/chat-history.store.ts`. Treat these as **pending merge** — check
-whether that branch has landed before assuming the helpers exist on `main`/your working branch, and
-prefer merging or cherry-picking them over re-deriving the same sanitisation from scratch (ADR-0065).
+No merged exemplar exists on `master` yet. ADR-0065 is the specification: a parsed token tree instead of
+`innerHTML`, URL normalisation before an allowlist check applied to every URL-bearing block, a formula-lead
+prefix on CSV cells built from untrusted text, and browser storage keyed by `tid` and `sub`. The first
+implementation is in review on PR #288 (`src/app/features/shell/util/markdown.util.ts`,
+`chat-message.component.ts`, `chat-history.store.ts`); once it merges, add its `file:line` citations here
+and reuse those helpers rather than writing a second sanitiser.
 
 ---
 

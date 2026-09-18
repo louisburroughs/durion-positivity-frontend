@@ -58,6 +58,9 @@ jobs:
       - name: Check generated sitemap routes module is current
         run: npm run sitemap:routes:check
 
+      - name: Production build
+        run: npm run build
+
       # `npm test` runs `ng test --browsers=ChromiumHeadless --runner-config
       # vitest.config.ts` (package.json), which is the @angular/build:unit-test
       # builder (angular.json "test" target) driving Vitest in BROWSER mode

@@ -92,7 +92,11 @@ Test asserts the key, the tone, the live-region role, and `state() === 'ready'` 
 effect((onCleanup) => {
   const id = this.selectedId();
   if (!id) return;
-  const sub = this.service.loadData(id).subscribe({ next: (d) => this.data.set(d), error: () => {} });
+  this.state.set('loading');
+  const sub = this.service.loadData(id).subscribe({
+    next: (d) => { this.data.set(d); this.state.set('ready'); },
+    error: () => { this.state.set('error'); this.errorKey.set('DOMAIN.PAGE.ERROR.LOAD'); }, // ADR-0031 order
+  });
   onCleanup(() => sub.unsubscribe()); // REQUIRED on every effect-body subscription
 }, { allowSignalWrites: true });
 ```
@@ -259,7 +263,7 @@ locale-sensitive values. Assert copy claims against the real `src/assets/i18n/*.
 
 ### Tests
 
-- [ ] Every public `*Service` method has ≥1 test asserting HTTP verb + URL and the success emission; fixtures are typed against the exact domain interface — no `any`, no untyped literals (ADR-0032, ADR-0035 §1)
+- [ ] Every public `*Service` method has ≥1 test: an `ApiBaseService`-backed method asserts HTTP verb + URL + the success emission; an SDK-backed method asserts the generated facade call's full argument list + the success emission (see `docs/EXEMPLARS.md` §8); fixtures are typed against the exact domain interface — no `any`, no untyped literals (ADR-0032, ADR-0035 §1, §9)
 - [ ] A load-bearing test for every new guard/branch/negative case is shown to fail when the guard is reverted, then restored — state this was done in the PR description (ADR-0035 §5)
 - [ ] Ordering/race/settlement tests drive the async dependency through an RxJS `Subject`, never `of(...)`; both halves of a behavioral split are asserted, including the negative branch (ADR-0035 §6–7, ADR-0063 §8)
 - [ ] A service method calling the SDK with positional arguments has a test asserting the full argument list (ADR-0035 §9)
