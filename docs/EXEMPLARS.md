@@ -212,10 +212,10 @@ permission regression that silently restores an authority a prior PR deliberatel
   `shop-dashboard-page.component.html:1,128,139` — every major `<section>` is labelled by its own
   heading id rather than left to an implicit accessible name.
 - **Focus parked, then restored, around a control that disables and removes itself.** `parkClockFocus`
-  (`dispatch-board-page.component.ts:1339`) moves focus from the clock control onto the mechanic's own
-  anchor (`clockAnchorFor`, `:1348`: the roster drag handle or the bin chip) before the pending guard
+  (`dispatch-board-page.component.ts:1320`) moves focus from the clock control onto the mechanic's own
+  anchor (`clockAnchorFor`, `:1329`: the roster drag handle or the bin chip) before the pending guard
   disables the button, because browsers disagree about a focused control that becomes disabled.
-  `restoreClockFocus` (`:1356`), called from `settleClockCard` (`:1325`), runs in `afterNextRender` on
+  `restoreClockFocus` (`:1356`), called from `settleClockCard` (`:1306`), runs in `afterNextRender` on
   both settlement paths: after a re-read that moved/destroyed the old card (focus fell to `<body>`, so it
   goes to the relocated control) and after a known no-write such as a 403 (the card stayed, focus is still
   on the parked anchor, so it goes back to the re-enabled control). Anything else holding focus by then is
