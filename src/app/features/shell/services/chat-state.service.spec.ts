@@ -424,4 +424,28 @@ describe('ChatStateService against a store that does not answer immediately', ()
     while (store.outstanding > 0) store.releaseNext();
     expect(service.switching()).toBe(false);
   });
+
+  it('lands a reply in a conversation the user left and came back to', () => {
+    // Coming back reloads the thread from the store, and a pending turn is never
+    // persisted — so the placeholder is gone. The in-place update matched nothing
+    // and then persisted a thread with no answer in it: the reply vanished.
+    service.appendUserMessage('first question');
+    const first = service.activeConversationId()!;
+    const target = service.beginAssistantTurn()!;
+
+    service.startNewConversation();
+    while (store.outstanding > 0) store.releaseNext();
+
+    service.selectConversation(first);
+    while (store.outstanding > 0) store.releaseNext();
+    expect(service.messages().some(message => message.id === target.messageId)).toBe(false);
+
+    service.completeAssistantTurn(target, [{ kind: 'text', text: 'You have 26.' }]);
+    while (store.outstanding > 0) store.releaseNext();
+
+    const landed = service.messages()[service.messages().length - 1];
+    expect(landed.role).toBe('assistant');
+    expect(landed.pending).toBe(false);
+    expect(landed.blocks).toEqual([{ kind: 'text', text: 'You have 26.' }]);
+  });
 });

@@ -229,4 +229,29 @@ describe('ChatMessageComponent', () => {
     expect(host.querySelector('.typing .sr-only')?.textContent).toContain('SHELL.CHAT.TYPING_ARIA');
     expect(host.querySelectorAll('.typing-dot[aria-hidden="true"]')).toHaveLength(3);
   });
+
+  it('renders a chart whose series repeat a label', () => {
+    // `track datum.label` made Angular throw on duplicate keys, and the whole
+    // message failed to render — the model is free to repeat a label.
+    const host = render(
+      message('assistant', [
+        {
+          kind: 'chart',
+          title: 'Jobs by bay',
+          series: [
+            { label: 'Bay 1', value: 4 },
+            { label: 'Bay 1', value: 7 },
+            { label: 'Bay 2', value: 2 },
+          ],
+        },
+      ]),
+    );
+
+    expect(host.querySelectorAll('.chart-row')).toHaveLength(3);
+    expect([...host.querySelectorAll('.chart-label')].map(node => node.textContent?.trim())).toEqual([
+      'Bay 1',
+      'Bay 1',
+      'Bay 2',
+    ]);
+  });
 });

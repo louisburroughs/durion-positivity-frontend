@@ -104,7 +104,7 @@
           </figcaption>
           @let chartCeiling = chartMax(block);
           <ul class="chart">
-            @for (datum of block.series; track datum.label) {
+            @for (datum of block.series; track $index) {
             <li class="chart-row">
               <span class="chart-label">{{ datum.label }}</span>
               <span class="chart-track">

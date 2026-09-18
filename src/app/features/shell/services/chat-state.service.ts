@@ -214,7 +214,12 @@ export class ChatStateService {
    * it rather than dropped on the floor.
    */
   completeAssistantTurn(target: ChatTurnTarget, blocks: readonly ChatBlock[]): void {
-    if (this._activeId() === target.conversationId) {
+    // The conversation being open is not enough: leaving it and coming back
+    // reloads it from the store, and a pending turn is never persisted — so the
+    // placeholder is gone and the in-place update would match nothing, then
+    // persist a thread with no answer in it. Take the stored path in that case.
+    const placeholderPresent = this._messages().some(message => message.id === target.messageId);
+    if (this._activeId() === target.conversationId && placeholderPresent) {
       this._messages.update(messages =>
         messages.map(message =>
           message.id === target.messageId
@@ -247,6 +252,12 @@ export class ChatStateService {
         ];
 
         this.enqueueWrite(() => this.store.saveMessages(target.conversationId, messages));
+
+        // The user may have come back to this conversation while the reply was in
+        // flight; if so, the answer belongs on screen and not only in the store.
+        if (this._activeId() === target.conversationId) {
+          this._messages.set(messages);
+        }
 
         const conversation = this._conversations().find(entry => entry.id === target.conversationId);
         if (!conversation) return;
