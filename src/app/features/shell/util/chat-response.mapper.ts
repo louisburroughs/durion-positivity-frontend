@@ -14,7 +14,8 @@ import {
  * left stays markdown.
  *
  * `mapAnswerPayload` already accepts a structured `blocks` array, so the day the
- * backend starts sending one the client stops guessing with no renderer change.
+ * backend starts sending one (backend #2072) the client stops guessing with no
+ * renderer change.
  */
 
 /**

@@ -12,7 +12,8 @@ export interface ChatResponse {
   response: string;
   /**
    * Typed blocks, when the server produces them. Absent today — the mapper falls
-   * back to deriving structure from `response` until the MCP server sends this.
+   * back to deriving structure from `response` until the MCP server sends this
+   * (backend #2072).
    */
   blocks?: readonly unknown[];
 }

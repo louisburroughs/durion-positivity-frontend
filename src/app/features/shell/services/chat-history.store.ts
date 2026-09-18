@@ -8,7 +8,7 @@ import { coerceBlocks } from '../util/chat-response.mapper';
 /**
  * Conversation persistence seam
  * -----------------------------
- * The MCP server has no conversation-history endpoints yet, so the shipped
+ * The MCP server has no conversation-history endpoints yet (backend #2073), so the shipped
  * implementation keeps history in this browser only ({@link LocalChatHistoryStore}).
  * Everything above this file already talks to the async {@link ChatHistoryStore}
  * contract, so turning on server-side history is a provider swap plus flipping

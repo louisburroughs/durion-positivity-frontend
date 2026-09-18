@@ -16,9 +16,9 @@ export const environment = {
    * frontend runs a local stub in the meantime (see chat-history.store.ts).
    */
   features: {
-    /** Conversation history CRUD on the server. Off: history is per-browser only. */
+    /** Conversation history CRUD on the server (backend #2073). Off: per-browser only. */
     chatHistoryApi: false,
-    /** Server-side audio transcription. Off: voice needs in-browser recognition. */
+    /** Server-side audio transcription (backend #2074). Off: needs in-browser recognition. */
     chatSpeechTranscription: false,
   },
 };

@@ -7,7 +7,7 @@
  *
  * The backend currently answers with `{ response: string }` only — see
  * `chat-response.mapper.ts`, which derives blocks client-side until the MCP server
- * returns them directly (tracked as a backend issue).
+ * returns them directly (backend #2072).
  */
 
 /** Who produced a turn. */

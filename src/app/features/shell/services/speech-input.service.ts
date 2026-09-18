@@ -12,7 +12,7 @@ import { isPlatformBrowser } from '@angular/common';
  * Where the browser has no recognition engine the service reports `unsupported`
  * and the composer disables its mic with an explanation — it does NOT record
  * audio, because there is no server transcription endpoint to send it to yet
- * (`environment.features.chatSpeechTranscription`, tracked as a backend issue).
+ * (`environment.features.chatSpeechTranscription`, backend #2074).
  */
 export type SpeechInputState = 'unsupported' | 'idle' | 'starting' | 'listening' | 'error';
 
