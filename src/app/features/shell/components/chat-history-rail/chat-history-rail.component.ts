@@ -12,6 +12,11 @@ import { ChatConversation, ChatHistoryBucket, ChatHistoryGroup } from '../../mod
 import { MaterialSymbolPipe } from '../../../../shared/material-symbol.pipe';
 import { ChatStateService, groupConversations } from '../../services/chat-state.service';
 
+/** Where focus goes when a control is swapped out from under it. */
+const ROW_CONFIRM_SELECTOR = '[data-confirm="delete"]';
+const CLEAR_CONFIRM_SELECTOR = '[data-confirm="clear-all"]';
+const NEW_CHAT_SELECTOR = '.new-chat-btn';
+
 /** Day-bucket → section heading key. */
 const GROUP_LABEL_KEYS: Readonly<Record<ChatHistoryBucket, string>> = {
   pinned: 'SHELL.CHAT.HISTORY.GROUP.PINNED',
@@ -91,6 +96,9 @@ export class ChatHistoryRailComponent {
     this.confirmingDeleteId.set(null);
     this.renamingId.set(conversation.id);
     this.renameDraft.set(conversation.title);
+    // The rename button it replaces had focus; without this, focus lands on <body>
+    // and a keyboard user has to hunt for the field they just opened.
+    this.focusAfterRender(`[id="rename-${escapeAttributeValue(conversation.id)}"]`);
   }
 
   /** Save and close the editor. Called on blur too, so it never moves focus itself. */
@@ -128,11 +136,14 @@ export class ChatHistoryRailComponent {
   armDelete(conversation: ChatConversation): void {
     this.cancelRename();
     this.confirmingDeleteId.set(conversation.id);
+    this.focusAfterRender(ROW_CONFIRM_SELECTOR);
   }
 
   confirmDelete(conversation: ChatConversation): void {
     this.chatState.deleteConversation(conversation.id);
     this.confirmingDeleteId.set(null);
+    // The row and its buttons are gone, so there is nothing to restore focus to.
+    this.focusAfterRender(NEW_CHAT_SELECTOR);
   }
 
   cancelDelete(): void {
@@ -143,15 +154,18 @@ export class ChatHistoryRailComponent {
 
   armClearAll(): void {
     this.confirmingClearAll.set(true);
+    this.focusAfterRender(CLEAR_CONFIRM_SELECTOR);
   }
 
   confirmClearAll(): void {
     this.chatState.clearHistory();
     this.confirmingClearAll.set(false);
+    this.focusAfterRender(NEW_CHAT_SELECTOR);
   }
 
   cancelClearAll(): void {
     this.confirmingClearAll.set(false);
+    this.focusAfterRender(NEW_CHAT_SELECTOR);
   }
 
   /**
@@ -172,11 +186,18 @@ export class ChatHistoryRailComponent {
    * dialog, past its trap. Put focus back on the row.
    */
   private restoreFocusTo(conversationId: string): void {
+    this.focusAfterRender(`[data-conversation="${escapeAttributeValue(conversationId)}"]`);
+  }
+
+  /**
+   * Every arm/confirm/cancel step swaps one set of controls for another, so the
+   * element that had focus stops existing and the browser drops focus to `<body>`
+   * — outside the dialog and past its trap. Move it to whatever replaced it.
+   */
+  private focusAfterRender(selector: string): void {
     setTimeout(() => {
       const element = this.host.nativeElement as HTMLElement;
-      element
-        .querySelector<HTMLElement>(`[data-conversation="${CSS.escape(conversationId)}"]`)
-        ?.focus();
+      element.querySelector<HTMLElement>(selector)?.focus();
     });
   }
 
@@ -185,4 +206,14 @@ export class ChatHistoryRailComponent {
     this.confirmingDeleteId.set(null);
     this.confirmingClearAll.set(false);
   }
+}
+
+/**
+ * Quote a value for use inside an attribute selector. `CSS.escape` is not defined
+ * in every environment this component runs in (it is absent under the test
+ * runner), and it threw from inside a `setTimeout` where nothing reported it —
+ * so focus restoration silently did nothing.
+ */
+function escapeAttributeValue(value: string): string {
+  return value.replace(/["\\]/g, character => `\\${character}`);
 }

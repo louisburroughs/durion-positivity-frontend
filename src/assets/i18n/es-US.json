@@ -175,6 +175,7 @@
       "NAV_OVERLAY_CLOSE": "Cerrar navegación",
       "NAV_TOGGLE_TITLE": "Alternar barra lateral",
       "CHAT_TOGGLE": "Abrir el asistente",
+      "CHAT_TOGGLE_CLOSE": "Cerrar el asistente",
       "THEME_TO_LIGHT": "Cambiar al modo claro",
       "THEME_TO_DARK": "Cambiar al modo oscuro",
       "USER_CHIP_ARIA": "Usuario conectado",

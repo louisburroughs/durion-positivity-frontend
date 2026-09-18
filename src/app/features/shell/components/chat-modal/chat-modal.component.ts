@@ -73,6 +73,8 @@ export class ChatModalComponent implements AfterViewChecked {
   readonly messages = this.chatState.messages;
   readonly isEmpty = this.chatState.isEmpty;
   readonly awaitingReply = this.chatState.awaitingReply;
+  /** The thread on screen is not yet the conversation being opened. */
+  readonly switching = this.chatState.switching;
   readonly activeConversation = this.chatState.activeConversation;
   readonly loadState = this.chatState.state;
   readonly errorKey = this.chatState.errorKey;
@@ -203,7 +205,12 @@ export class ChatModalComponent implements AfterViewChecked {
 
   onDialogKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
-      // The ingest dialog is on top: let it take its own Escape first.
+      // The ingest dialog is on top: its Escape is its own business. Decide by
+      // where the key came from, not by `showRagDialog()` — the child's `closed`
+      // output has already flipped that signal by the time the event bubbles here,
+      // so reading it dismissed the chat along with the dialog.
+      const target = event.target;
+      if (target instanceof Element && target.closest('dialog')) return;
       if (this.showRagDialog()) return;
       event.preventDefault();
       this.close();

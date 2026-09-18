@@ -1,8 +1,10 @@
 import { signal } from '@angular/core';
+import { Observable, of } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { JwtClaims } from '../../../core/models/auth.models';
 import { AuthService } from '../../../core/services/auth.service';
 import { ChatConversation, ChatMessage } from '../models/chat.model';
+import { CHAT_HISTORY_STORE, ChatHistoryStore } from './chat-history.store';
 import {
   ChatStateService,
   derivePreview,
@@ -326,5 +328,100 @@ describe('groupConversations', () => {
     const groups = groupConversations([conversation({ updatedAt: now })], now);
     expect(groups).toHaveLength(1);
     expect(groups[0].bucket).toBe('today');
+  });
+
+});
+
+describe('ChatStateService against a store that does not answer immediately', () => {
+  let service: ChatStateService;
+  const claims = signal<JwtClaims | null>({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
+
+  /** A store whose every call is held open until the test releases it. */
+  class DeferredStore implements ChatHistoryStore {
+    readonly order: string[] = [];
+    private readonly pending: (() => void)[] = [];
+
+    listConversations(): Observable<readonly ChatConversation[]> {
+      return of([]);
+    }
+    loadMessages(): Observable<readonly ChatMessage[]> {
+      return this.defer('loadMessages', []);
+    }
+    saveConversation(entry: ChatConversation): Observable<void> {
+      return this.defer(`saveConversation:${entry.title}`, undefined as void);
+    }
+    saveMessages(conversationId: string, messages: readonly ChatMessage[]): Observable<void> {
+      return this.defer(`saveMessages:${messages.length}`, undefined as void);
+    }
+    deleteConversation(): Observable<void> {
+      return this.defer('deleteConversation', undefined as void);
+    }
+    clear(): Observable<void> {
+      return this.defer('clear', undefined as void);
+    }
+
+    /** Settle the oldest outstanding call. */
+    releaseNext(): void {
+      this.pending.shift()?.();
+    }
+    get outstanding(): number {
+      return this.pending.length;
+    }
+
+    private defer<T>(label: string, value: T): Observable<T> {
+      return new Observable<T>(subscriber => {
+        this.order.push(label);
+        this.pending.push(() => {
+          subscriber.next(value);
+          subscriber.complete();
+        });
+      });
+    }
+  }
+
+  let store: DeferredStore;
+
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    store = new DeferredStore();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: AuthService, useValue: { currentUserClaims: claims } },
+        { provide: CHAT_HISTORY_STORE, useValue: store },
+      ],
+    });
+    service = TestBed.inject(ChatStateService);
+    service.refresh();
+  });
+
+  it('runs one store write at a time, in the order they were issued', () => {
+    service.appendUserMessage('first question');
+    service.appendUserMessage('second question');
+
+    // Both turns queued writes, but only the first has reached the store: an
+    // overlapping chain let an older saveMessages land after a newer one and
+    // overwrite the reply that had just arrived.
+    expect(store.outstanding).toBe(1);
+    expect(store.order).toHaveLength(1);
+
+    store.releaseNext();
+    store.releaseNext();
+    store.releaseNext();
+    store.releaseNext();
+
+    const saves = store.order.filter(label => label.startsWith('saveMessages'));
+    expect(saves).toEqual(['saveMessages:1', 'saveMessages:2']);
+  });
+
+  it('reports that it is switching until the opened conversation has loaded', () => {
+    service.appendUserMessage('first question');
+    const first = service.activeConversationId()!;
+    service.startNewConversation();
+
+    service.selectConversation(first);
+    expect(service.switching()).toBe(true);
+
+    while (store.outstanding > 0) store.releaseNext();
+    expect(service.switching()).toBe(false);
   });
 });

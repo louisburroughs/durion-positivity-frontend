@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   effect,
+  DestroyRef,
   ElementRef,
   inject,
   input,
@@ -39,6 +40,7 @@ const TEXTAREA_PADDING_PX = 16;
 })
 export class ChatComposerComponent {
   private readonly speech = inject(SpeechInputService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly localeService = inject(LocaleService);
 
   /** True while a reply is in flight: the box stays readable but cannot send. */
@@ -76,6 +78,11 @@ export class ChatComposerComponent {
       this.draft.set(this.dictationPrefix ? `${this.dictationPrefix} ${transcript}` : transcript);
       this.resize();
     });
+
+    // Closing the modal destroys the composer but not the recognition session:
+    // without this the microphone stays live, and the browser keeps showing the
+    // recording indicator, with nothing on screen to turn it off.
+    this.destroyRef.onDestroy(() => this.speech.cancel());
   }
 
   submit(): void {

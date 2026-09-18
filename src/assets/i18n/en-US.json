@@ -175,6 +175,7 @@
       "NAV_OVERLAY_CLOSE": "Close navigation",
       "NAV_TOGGLE_TITLE": "Toggle sidebar",
       "CHAT_TOGGLE": "Open the assistant",
+      "CHAT_TOGGLE_CLOSE": "Close the assistant",
       "THEME_TO_LIGHT": "Switch to light mode",
       "THEME_TO_DARK": "Switch to dark mode",
       "USER_CHIP_ARIA": "Logged-in user",

@@ -254,6 +254,16 @@ describe('ChatComposerComponent', () => {
     expect(label.getBoundingClientRect().width).toBeLessThan(2);
   });
 
+  it('stops dictation when the composer goes away', async () => {
+    // The recognition service is root-scoped, so closing the modal destroyed the
+    // composer while the microphone stayed live — with nothing left to turn it off.
+    await setup();
+    expect(speech.cancel).not.toHaveBeenCalled();
+
+    fixture.destroy();
+
+    expect(speech.cancel).toHaveBeenCalled();
+  });
 });
 
 describe('formatDuration', () => {

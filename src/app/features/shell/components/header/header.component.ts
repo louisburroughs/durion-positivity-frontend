@@ -1,4 +1,4 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../../../core/services/theme.service';
 import { AuthService }  from '../../../../core/services/auth.service';
@@ -27,6 +27,10 @@ export class HeaderComponent {
   /** Emitted when the assistant button is clicked; the shell opens the dialog. */
   readonly chatToggle = output<void>();
   readonly chatOpen = input(false);
+  /** The button toggles, so its name has to say which way it will go. */
+  readonly chatToggleKey = computed(() =>
+    this.chatOpen() ? 'SHELL.HEADER.CHAT_TOGGLE_CLOSE' : 'SHELL.HEADER.CHAT_TOGGLE',
+  );
 
   toggleNav(): void {
     this.navToggle.emit();

@@ -2,10 +2,11 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { of } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import { JwtClaims } from '../../../../core/models/auth.models';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ChatApiService, ChatResponse } from '../../services/chat-api.service';
+import { CHAT_HISTORY_STORE } from '../../services/chat-history.store';
 import { ChatStateService } from '../../services/chat-state.service';
 import { ChatUiService } from '../../services/chat-ui.service';
 import { ChatModalComponent } from './chat-modal.component';
@@ -255,5 +256,65 @@ describe('ChatModalComponent', () => {
 
     const adminHost = adminFixture.nativeElement as HTMLElement;
     expect(adminHost.querySelector('[aria-label="SHELL.RAG.BUTTON_ARIA"]')).not.toBeNull();
+  });
+
+  it('leaves the chat open when Escape is pressed inside the ingest dialog', () => {
+    // The nested dialog's `closed` output flips showRagDialog() synchronously,
+    // before the keydown bubbles up here, so a guard that read the signal saw
+    // false and dismissed the chat along with the dialog.
+    vi.mocked(authServiceStub.hasAnyRole).mockReturnValue(true);
+    const adminFixture = TestBed.createComponent(ChatModalComponent);
+    adminFixture.detectChanges();
+    adminFixture.componentInstance.openRagDialog();
+    adminFixture.detectChanges();
+
+    const nested = (adminFixture.nativeElement as HTMLElement).querySelector('dialog')!;
+    nested.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+    expect(chatUi.open()).toBe(true);
+  });
+
+  it('holds the composer while a conversation is still loading', async () => {
+    // Sending here would record the turn against the conversation being replaced,
+    // and the arriving load would then overwrite the thread and lose the turn.
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [ChatModalComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: ChatApiService, useValue: chatApiStub },
+        { provide: AuthService, useValue: authServiceStub },
+        {
+          provide: CHAT_HISTORY_STORE,
+          useValue: {
+            listConversations: () => of([]),
+            // Never settles: the conversation stays mid-open.
+            loadMessages: () => NEVER,
+            saveConversation: () => of(undefined),
+            saveMessages: () => of(undefined),
+            deleteConversation: () => of(undefined),
+            clear: () => of(undefined),
+          },
+        },
+      ],
+    }).compileComponents();
+
+    const state = TestBed.inject(ChatStateService);
+    TestBed.inject(ChatUiService).openModal();
+    state.appendUserMessage('first question');
+    const first = state.activeConversationId()!;
+    state.startNewConversation();
+
+    const loading = TestBed.createComponent(ChatModalComponent);
+    loading.detectChanges();
+
+    state.selectConversation(first);
+    loading.detectChanges();
+
+    expect(state.switching()).toBe(true);
+    const send = (loading.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      '.icon-btn--send',
+    )!;
+    expect(send.disabled).toBe(true);
   });
 });

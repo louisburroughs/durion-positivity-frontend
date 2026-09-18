@@ -232,4 +232,58 @@ describe('ChatHistoryRailComponent', () => {
     expect(component.groupLabelKey('previous7Days')).toBe('SHELL.CHAT.HISTORY.GROUP.PREVIOUS_7_DAYS');
     expect(component.groupLabelKey('older')).toBe('SHELL.CHAT.HISTORY.GROUP.OLDER');
   });
+
+  describe('keyboard focus across the arm/confirm steps', () => {
+    /** Each step removes the control that had focus; without a hand-off it lands
+     *  on <body>, outside the dialog and past its focus trap. */
+    function flushFocus(): void {
+      vi.runAllTimers();
+      fixture.detectChanges();
+    }
+
+    beforeEach(() => {
+      conversation('how many mechanics', 'You have 26.');
+      vi.useFakeTimers();
+    });
+    afterEach(() => vi.useRealTimers());
+
+    it('moves focus into the rename field when renaming starts', () => {
+      const conversation = chatState.conversations()[0];
+      fixture.componentInstance.startRename(conversation);
+      fixture.detectChanges();
+      flushFocus();
+
+      expect(document.activeElement).toBe(
+        host().querySelector(`[id="rename-${conversation.id}"]`),
+      );
+    });
+
+    it('moves focus to the confirm button when a delete is armed', () => {
+      fixture.componentInstance.armDelete(chatState.conversations()[0]);
+      fixture.detectChanges();
+      flushFocus();
+
+      expect(document.activeElement).toBe(host().querySelector('[data-confirm="delete"]'));
+    });
+
+    it('falls back to the new-chat button once the row is gone', () => {
+      fixture.componentInstance.confirmDelete(chatState.conversations()[0]);
+      fixture.detectChanges();
+      flushFocus();
+
+      expect(document.activeElement).toBe(host().querySelector('.new-chat-btn'));
+    });
+
+    it('moves focus across the clear-all arm and confirm steps', () => {
+      fixture.componentInstance.armClearAll();
+      fixture.detectChanges();
+      flushFocus();
+      expect(document.activeElement).toBe(host().querySelector('[data-confirm="clear-all"]'));
+
+      fixture.componentInstance.confirmClearAll();
+      fixture.detectChanges();
+      flushFocus();
+      expect(document.activeElement).toBe(host().querySelector('.new-chat-btn'));
+    });
+  });
 });

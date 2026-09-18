@@ -27,8 +27,8 @@
 
     <button class="icon-btn chat-toggle-btn" type="button" (click)="onChatToggle()"
       [class.active]="chatOpen()" aria-haspopup="dialog"
-      [attr.aria-label]="'SHELL.HEADER.CHAT_TOGGLE' | translate" [attr.aria-expanded]="chatOpen()"
-      [title]="'SHELL.HEADER.CHAT_TOGGLE' | translate">
+      [attr.aria-label]="chatToggleKey() | translate" [attr.aria-expanded]="chatOpen()"
+      [title]="chatToggleKey() | translate">
       <span class="material-symbols-rounded" aria-hidden="true">{{ 'forum' | msIcon }}</span>
     </button>
 

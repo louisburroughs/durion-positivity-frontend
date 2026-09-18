@@ -43,7 +43,8 @@
 
         <span class="confirm-text">{{ 'SHELL.CHAT.HISTORY.DELETE_CONFIRM' | translate }}</span>
         <span class="row-actions">
-          <button class="row-btn row-btn--danger" type="button" (click)="confirmDelete(conversation)">
+          <button class="row-btn row-btn--danger" type="button" data-confirm="delete"
+                  (click)="confirmDelete(conversation)">
             {{ 'SHELL.CHAT.HISTORY.DELETE_YES' | translate }}
           </button>
           <button class="row-btn" type="button" (click)="cancelDelete()">
@@ -92,7 +93,8 @@
   <div class="rail-footer">
     @if (confirmingClearAll()) {
     <span class="confirm-text">{{ 'SHELL.CHAT.HISTORY.CLEAR_CONFIRM' | translate }}</span>
-    <button class="row-btn row-btn--danger" type="button" (click)="confirmClearAll()">
+    <button class="row-btn row-btn--danger" type="button" data-confirm="clear-all"
+            (click)="confirmClearAll()">
       {{ 'SHELL.CHAT.HISTORY.DELETE_YES' | translate }}
     </button>
     <button class="row-btn" type="button" (click)="cancelClearAll()">

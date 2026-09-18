@@ -239,7 +239,7 @@ function isPersistedMessage(value: unknown): value is PersistedMessage {
   return (
     typeof entry.id === 'string' &&
     typeof entry.role === 'string' &&
-    typeof entry.timestamp === 'string' &&
+    isDateString(entry.timestamp) &&
     Array.isArray(entry.blocks)
   );
 }
@@ -250,10 +250,18 @@ function isPersistedConversation(value: unknown): value is PersistedConversation
   return (
     typeof entry.id === 'string' &&
     typeof entry.title === 'string' &&
-    typeof entry.createdAt === 'string' &&
-    typeof entry.updatedAt === 'string' &&
+    typeof entry.preview === 'string' &&
+    typeof entry.pinned === 'boolean' &&
+    // Parseable, not merely present: an unparseable date became an Invalid Date
+    // that survived the read and then threw in `toISOString()` on the next pin.
+    isDateString(entry.createdAt) &&
+    isDateString(entry.updatedAt) &&
     Array.isArray(entry.messages)
   );
+}
+
+function isDateString(value: unknown): boolean {
+  return typeof value === 'string' && !Number.isNaN(new Date(value).getTime());
 }
 
 /** Pinned conversations lead; the rest fall back to most-recently-updated. */

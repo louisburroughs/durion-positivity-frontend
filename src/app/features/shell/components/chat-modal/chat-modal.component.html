@@ -100,7 +100,7 @@
         }
       </div>
 
-      <app-chat-composer [busy]="awaitingReply()" [canIngest]="isAdmin()"
+      <app-chat-composer [busy]="awaitingReply() || switching()" [canIngest]="isAdmin()"
                          (submitted)="send($event)"
                          (ingestRequested)="openRagDialog()" />
     </div>

@@ -228,4 +228,61 @@ describe('LocalChatHistoryStore', () => {
     expect(messages).toHaveLength(200);
     expect(messages[messages.length - 1].id).toBe('m249');
   });
+
+  it('drops an entry whose dates do not parse rather than reviving an Invalid Date', async () => {
+    // An Invalid Date used to survive `read()` and then throw in `toISOString()`
+    // the next time the conversation was pinned or renamed, taking the write with it.
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify([
+        {
+          id: 'c1',
+          title: 'Roster',
+          preview: '',
+          pinned: false,
+          createdAt: 'not a date',
+          updatedAt: '2026-09-18T09:05:00Z',
+          messages: [],
+        },
+        {
+          id: 'c2',
+          title: 'Parts',
+          preview: '',
+          pinned: false,
+          createdAt: '2026-09-18T09:00:00Z',
+          updatedAt: '2026-09-18T09:05:00Z',
+          messages: [],
+        },
+      ]),
+    );
+
+    const loaded = await firstValueFrom(store.listConversations());
+
+    expect(loaded.map(entry => entry.id)).toEqual(['c2']);
+    expect(loaded[0].updatedAt.getTime()).not.toBeNaN();
+  });
+
+  it('drops a message whose timestamp does not parse', async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify([
+        {
+          id: 'c1',
+          title: 'Roster',
+          preview: '',
+          pinned: false,
+          createdAt: '2026-09-18T09:00:00Z',
+          updatedAt: '2026-09-18T09:05:00Z',
+          messages: [
+            { id: 'm1', role: 'user', blocks: [], timestamp: 'rubbish' },
+            { id: 'm2', role: 'user', blocks: [], timestamp: '2026-09-18T09:01:00Z' },
+          ],
+        },
+      ]),
+    );
+
+    const messages = await firstValueFrom(store.loadMessages('c1'));
+
+    expect(messages.map(entry => entry.id)).toEqual(['m2']);
+  });
 });

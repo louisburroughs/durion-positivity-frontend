@@ -70,4 +70,22 @@ describe('HeaderComponent', () => {
 
     expect((fixture.nativeElement as HTMLElement).querySelector('.tenant-chip')).toBeNull();
   });
+
+  it('names the chat button for the action it will perform', () => {
+    // One key for both states told a screen-reader user "Open the assistant"
+    // while the assistant was open, and the tooltip said the same.
+    const button = () =>
+      (fixture.nativeElement as HTMLElement).querySelector('.chat-toggle-btn')!;
+
+    fixture.componentRef.setInput('chatOpen', false);
+    fixture.detectChanges();
+    expect(button().getAttribute('aria-label')).toBe('SHELL.HEADER.CHAT_TOGGLE');
+    expect(button().getAttribute('aria-expanded')).toBe('false');
+
+    fixture.componentRef.setInput('chatOpen', true);
+    fixture.detectChanges();
+    expect(button().getAttribute('aria-label')).toBe('SHELL.HEADER.CHAT_TOGGLE_CLOSE');
+    expect(button().getAttribute('title')).toBe('SHELL.HEADER.CHAT_TOGGLE_CLOSE');
+    expect(button().getAttribute('aria-expanded')).toBe('true');
+  });
 });

@@ -1,5 +1,6 @@
 import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { concatMap, Observable, Subject } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import {
   blocksToPlainText,
@@ -63,6 +64,12 @@ export class ChatStateService {
   );
   /** True while the last turn is still streaming in. */
   readonly awaitingReply = computed(() => this._messages().some(message => message.pending));
+  /**
+   * True while the thread on screen does not yet match the conversation being
+   * opened. Sending during that window would record the turn against the
+   * conversation being replaced, and the arriving load would then wipe it.
+   */
+  readonly switching = computed(() => this._state() === 'loading');
 
   /**
    * Plain (non-signal) field: changing it must not re-trigger the effect below.
@@ -84,7 +91,22 @@ export class ChatStateService {
   /** The same, for conversation-list loads. */
   private listToken = 0;
 
+  /**
+   * Store writes run one at a time, in the order they were issued. Each `persist()`
+   * used to start its own chain, so two snapshots could overlap and an older
+   * `saveMessages` could land after a newer one — dropping the latest answer. Not
+   * reachable with the synchronous local store; guaranteed once it is a server call.
+   */
+  private readonly writes = new Subject<() => Observable<unknown>>();
+
   constructor() {
+    this.writes
+      .pipe(
+        concatMap(work => work()),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
+
     effect(() => {
       const identity = identityOf(this.auth.currentUserClaims());
       if (identity === this.trackedIdentity) return;
@@ -224,10 +246,7 @@ export class ChatStateService {
           },
         ];
 
-        this.store
-          .saveMessages(target.conversationId, messages)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe();
+        this.enqueueWrite(() => this.store.saveMessages(target.conversationId, messages));
 
         const conversation = this._conversations().find(entry => entry.id === target.conversationId);
         if (!conversation) return;
@@ -240,10 +259,7 @@ export class ChatStateService {
         this._conversations.update(conversations =>
           conversations.map(entry => (entry.id === updated.id ? updated : entry)),
         );
-        this.store
-          .saveConversation(updated)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe();
+        this.enqueueWrite(() => this.store.saveConversation(updated));
       });
   }
 
@@ -300,27 +316,19 @@ export class ChatStateService {
   }
 
   deleteConversation(conversationId: string): void {
-    this.store
-      .deleteConversation(conversationId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this._conversations.update(conversations =>
-          conversations.filter(conversation => conversation.id !== conversationId),
-        );
-        if (this._activeId() === conversationId) {
-          this.startNewConversation();
-        }
-      });
+    this._conversations.update(conversations =>
+      conversations.filter(conversation => conversation.id !== conversationId),
+    );
+    if (this._activeId() === conversationId) {
+      this.startNewConversation();
+    }
+    this.enqueueWrite(() => this.store.deleteConversation(conversationId));
   }
 
   clearHistory(): void {
-    this.store
-      .clear()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        this._conversations.set([]);
-        this.startNewConversation();
-      });
+    this._conversations.set([]);
+    this.startNewConversation();
+    this.enqueueWrite(() => this.store.clear());
   }
 
   private ensureConversation(firstUserText: string): void {
@@ -352,10 +360,7 @@ export class ChatStateService {
     // Metadata only: a pin or rename must not touch the stored messages, least of
     // all for a conversation that is not the open one and whose messages are not
     // in memory to write back.
-    this.store
-      .saveConversation(updated)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe();
+    this.enqueueWrite(() => this.store.saveConversation(updated));
   }
 
   /** Write the active conversation and its messages through to the store. */
@@ -374,15 +379,13 @@ export class ChatStateService {
       conversations.map(conversation => (conversation.id === updated.id ? updated : conversation)),
     );
 
-    this.store
-      .saveConversation(updated)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() =>
-        this.store
-          .saveMessages(updated.id, messages)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe(),
-      );
+    this.enqueueWrite(() => this.store.saveConversation(updated));
+    this.enqueueWrite(() => this.store.saveMessages(updated.id, messages));
+  }
+
+  /** Queue a store write behind everything already issued. */
+  private enqueueWrite(work: () => Observable<unknown>): void {
+    this.writes.next(work);
   }
 
   private resetForCurrentUser(): void {
