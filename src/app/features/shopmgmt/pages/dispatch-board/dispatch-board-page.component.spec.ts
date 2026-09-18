@@ -2312,11 +2312,12 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.canTakeBay(component.toAssignRows()[0])).toBe(false);
     });
 
-    // The bay writes are workexec's position endpoints, whose authority is the
-    // operational-context override (F1) — not shop management's bay grant.
+    // The bay writes are workexec's position endpoints, whose authority is
+    // workorder:position:assign (durion-positivity-backend#2059) — not shop
+    // management's bay grant, and no longer the operational-context override.
     it('allows the bay write while refusing the technician write', () => {
       authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
-        codes.includes('workorder:operationalContext:override'),
+        codes.includes('workorder:position:assign'),
       );
       renderWith(fullDashboard);
 
@@ -2419,7 +2420,7 @@ describe('DispatchBoardPageComponent', () => {
   describe('clear controls are writes too', () => {
     it('refuses to clear a mechanic without the technician write authority', () => {
       authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
-        codes.includes('workorder:operationalContext:override'),
+        codes.includes('workorder:position:assign'),
       );
       renderWith(fullDashboard);
       const row = component.assignedRows()[0];
@@ -2804,9 +2805,11 @@ describe('DispatchBoardPageComponent', () => {
 
     // d89a09a :194-196 gated on SHOPMGMT_PAGE.bayAssign ('shop:bay:assign'), so
     // the grant the position endpoints actually require bought nothing here.
-    it('enables the bay controls for a session holding only workorder:operationalContext:override', () => {
+    // #2059 then split that grant off the manager override onto its own code,
+    // which is what a dispatcher holds.
+    it('enables the bay controls for a session holding only workorder:position:assign', () => {
       authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
-        codes.includes('workorder:operationalContext:override'),
+        codes.includes('workorder:position:assign'),
       );
       renderWith(fullDashboard);
 

@@ -291,13 +291,18 @@ export const WORKEXEC_PAGE = {
   workorderAssign: ['workorder:workorder:assign-technician'],
   /**
    * `assignServicePosition` / `releaseServicePosition` — placing a workorder on
-   * a bay, a mobile unit or the site's HOLD, or taking it off. The workexec
-   * contract guide's endpoint table binds both to
-   * `workorder:operationalContext:override` (durion-positivity-backend#1983),
-   * not to shop management's `shop:bay:assign`, which governs appointment
-   * dispatch in pos-shop-manager.
+   * a bay, a mobile unit or the site's HOLD, or taking it off.
+   *
+   * Both endpoints bind to `workorder:position:assign`
+   * (durion-positivity-backend#2059), not to shop management's
+   * `shop:bay:assign`, which governs appointment dispatch in pos-shop-manager.
+   *
+   * They required `workorder:operationalContext:override` until #2059, which is
+   * why a dispatcher could hand a job to a technician but not put it in a bay:
+   * that code gates the manager exception path, which also rewrites a
+   * workorder's mechanics and location, and it is no longer accepted here.
    */
-  positionAssign: ['workorder:operationalContext:override'],
+  positionAssign: ['workorder:position:assign'],
   partsView: ['workorder:parts:view'],
   changeRequests: ['workorder:change_request:view'],
 } as const satisfies Record<string, readonly string[]>;
