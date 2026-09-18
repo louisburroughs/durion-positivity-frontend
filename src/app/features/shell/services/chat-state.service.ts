@@ -4,7 +4,6 @@ import { catchError, concat, concatMap, EMPTY, Observable, Subject, tap, throwEr
 import { AuthService } from '../../../core/services/auth.service';
 import {
   blocksToDisplayText,
-  blocksToPlainText,
   ChatBlock,
   ChatConversation,
   ChatHistoryBucket,
@@ -294,6 +293,26 @@ export class ChatStateService {
           // Superseded by a newer selection, or issued by an identity that has
           // since been replaced: either way this answer is not for this screen.
           if (token !== this.selectionToken || identity !== this.currentIdentity()) return;
+          // A `refresh()` that landed while this load was open may no longer carry
+          // the conversation — deleted in another tab, gone from the server, or
+          // dropped by the store's own budget. Committing it anyway put `_activeId`
+          // on an id `activeConversation()` cannot resolve, so `persist()` returned
+          // early and every later turn in that thread went unsaved (ADR-0063 §1:
+          // the result is reconciled against the state it lands in — the same
+          // check `setConversations()` makes for the thread already open).
+          if (!this._conversations().some(entry => entry.id === conversationId)) {
+            this._selectionLoading.set(false);
+            // The clean outcome the list reconciliation leaves behind: no thread,
+            // so the next question opens a fresh conversation that can be saved.
+            // Silent by design — the load itself did not fail and the row is
+            // already gone from the rail, so a banner would claim something untrue
+            // (ADR-0064 §4). Any earlier failure is cleared, state first
+            // (ADR-0031 §5).
+            this._activeId.set(null);
+            this._messages.set([]);
+            this.clearHistoryError();
+            return;
+          }
           this._activeId.set(conversationId);
           this._messages.set(messages);
           this._selectionLoading.set(false);
@@ -503,7 +522,11 @@ export class ChatStateService {
     for (let position = index - 1; position >= 0; position -= 1) {
       const message = messages[position];
       if (message.role !== 'user') continue;
-      const text = blocksToPlainText(message.blocks).trim();
+      // The DISPLAY projection: this text is re-sent to the model, so the
+      // apostrophe `blocksToPlainText` prefixes onto a spreadsheet-bound value
+      // would be re-asked as part of the question (ADR-0065 §3 scopes that guard
+      // to the clipboard and CSV paths).
+      const text = blocksToDisplayText(message.blocks).trim();
       return text.length > 0 ? text : null;
     }
     return null;

@@ -500,6 +500,34 @@ describe('ChatModalComponent', () => {
     expect(thread.scrollTop).toBe(4000);
   });
 
+  it('returns focus to the composer after the nested ingest dialog closes', async () => {
+    // The child emits `closed` while its own <dialog> is still mounted and
+    // topmost, so everything outside it — this dialog included — is inert at that
+    // instant. A synchronous focus() can be refused, and focus then falls to
+    // <body> once Angular removes the child; the move has to happen after the
+    // removal (ADR-0029 §8.7).
+    // `canIngestDocuments` is a computed over plain mock functions, so the gate is
+    // only re-read by a freshly built component — the same shape the other
+    // permission tests here use.
+    vi.mocked(authServiceStub.hasAnyPermission).mockReturnValue(true);
+    const granted = TestBed.createComponent(ChatModalComponent);
+    granted.detectChanges();
+    const grantedHost = granted.nativeElement as HTMLElement;
+
+    granted.componentInstance.openRagDialog();
+    granted.detectChanges();
+    expect(grantedHost.querySelector('app-rag-ingest-dialog dialog')).not.toBeNull();
+
+    granted.componentInstance.onRagDialogClosed();
+    granted.detectChanges();
+    await new Promise(resolve => setTimeout(resolve));
+    granted.detectChanges();
+
+    expect(grantedHost.querySelector('app-rag-ingest-dialog')).toBeNull();
+    expect(document.activeElement).toBe(grantedHost.querySelector('#chat-composer-input'));
+    granted.destroy();
+  });
+
   it('puts focus in the composer after a suggestion removes the empty state', async () => {
     // The clicked suggestion is gone the moment the thread appears; without a
     // hand-off focus lands on <body>, outside the dialog.

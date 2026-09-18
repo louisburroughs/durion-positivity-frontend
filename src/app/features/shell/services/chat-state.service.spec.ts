@@ -882,6 +882,48 @@ describe('ChatStateService against a store that does not answer immediately', ()
     expect(service.errorKey()).toBeNull();
   });
 
+  it('re-asks a failed question with the text exactly as it was typed', () => {
+    // `userTextBefore` feeds the retry REQUEST, not a spreadsheet: the apostrophe
+    // the clipboard projection prefixes onto a `=`-leading value would be re-asked
+    // as part of the question (ADR-0065 §3).
+    service.appendUserMessage('=SUM(A1:A2) — what does this mean?');
+    const failed = service.beginAssistantTurn()!;
+    service.completeAssistantTurn(failed, [
+      { kind: 'error', messageKey: 'SHELL.CHAT.ERROR.BACKEND', detailKey: null, detailParams: null, correlationId: null, retryable: true },
+    ]);
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.userTextBefore(failed.messageId)).toBe('=SUM(A1:A2) — what does this mean?');
+
+    // The split itself. The composer only ever produces text blocks, and
+    // `blocksToPlainText` neutralises TABLE and CHART values only — so a user turn
+    // carrying a table is the only way to show which projection the retry payload
+    // is built from. The clipboard one would re-ask the question with the
+    // spreadsheet text-prefix inside it.
+    const failedTurn = service.messages()[service.messages().length - 1];
+    (
+      service as unknown as { _messages: { set: (value: readonly ChatMessage[]) => void } }
+    )._messages.set([
+      {
+        id: 'q-table',
+        role: 'user',
+        blocks: [
+          {
+            kind: 'table',
+            title: null,
+            columns: [{ label: '=Total', align: 'start' }],
+            rows: [['=SUM(A1:A2)']],
+          },
+        ],
+        timestamp: new Date(),
+        pending: false,
+      },
+      failedTurn,
+    ]);
+
+    expect(service.userTextBefore(failed.messageId)).toBe('=Total\n=SUM(A1:A2)');
+  });
+
   it('reconciles the active thread when a refresh no longer carries it (F8)', () => {
     service.appendUserMessage('a question');
     const first = service.activeConversationId()!;
@@ -1027,6 +1069,45 @@ describe('ChatStateService against a store that does not answer immediately', ()
     while (store.outstanding > 0) store.releaseNext();
 
     expect(service.state()).toBe('ready');
+  });
+
+  it('refuses to open a conversation that left the list while its load was in flight', () => {
+    // The token and identity checks both pass here: this load IS the newest, for
+    // the right identity. What changed is the LIST — the row was deleted from the
+    // rail while its own messages were still being fetched (`clearHistory()` is the
+    // same defect by another route). Committing anyway put `_activeId` on an id
+    // `activeConversation()` cannot resolve, so `persist()` returned early and
+    // every later turn went unsaved in silence (ADR-0063 §1).
+    service.appendUserMessage('a question in the doomed conversation');
+    const gone = service.activeConversationId()!;
+    while (store.outstanding > 0) store.releaseNext();
+    service.startNewConversation();
+
+    service.selectConversation(gone);
+    expect(store.pendingLabels).toContain('loadMessages');
+
+    // Deleted from the rail while that load is still open.
+    service.deleteConversation(gone);
+    expect(service.conversations().map(entry => entry.id)).not.toContain(gone);
+
+    // Now the selection load settles, carrying the messages it read before.
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.activeConversationId()).toBeNull();
+    expect(service.messages()).toEqual([]);
+    expect(service.switching()).toBe(false);
+    // Not an outage: the read answered, the conversation is simply gone.
+    expect(service.state()).not.toBe('error');
+
+    // And the thread is usable: the next question opens a conversation that is
+    // actually written through to the store.
+    store.order.length = 0;
+    service.appendUserMessage('a fresh question');
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.activeConversationId()).not.toBeNull();
+    expect(service.activeConversationId()).not.toBe(gone);
+    expect(store.order.filter(label => label.startsWith('saveMessages'))).toHaveLength(1);
   });
 
   it('lands a late answer under the question it replies to, not under a newer one', () => {

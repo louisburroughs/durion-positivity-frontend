@@ -192,9 +192,18 @@ export class ChatModalComponent implements AfterViewChecked {
     this.showRagDialog.set(true);
   }
 
+  /**
+   * The nested dialog emits `closed` while its own `<dialog>` is still mounted and
+   * topmost, which makes everything outside it — this dialog included — inert: a
+   * synchronous `focus()` on the composer can be rejected outright, and focus then
+   * falls to `<body>` the moment Angular removes the child. Deferred until after
+   * that removal, so the caret lands back in the composer deliberately rather than
+   * depending on how a browser treats a focus call into an inert subtree
+   * (ADR-0029 §8.7).
+   */
   onRagDialogClosed(): void {
     this.showRagDialog.set(false);
-    this.composer()?.focus();
+    this.focusComposerAfterRender();
   }
 
   send(text: string): void {
