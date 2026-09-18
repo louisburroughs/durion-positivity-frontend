@@ -186,4 +186,54 @@ describe('coerceBlocks', () => {
     expect(block.kind).toBe('file');
     expect(block.kind === 'file' && block.url).toBeNull();
   });
+
+  it('drops a mailto url on an image or file block instead of trying to fetch it (R11d)', () => {
+    // mailto: is a navigation target, never something [src] or an authenticated
+    // download may fetch — narrower than the anchor allowlist on purpose.
+    expect(coerceBlocks([{ kind: 'image', url: 'mailto:ops@durion.example', alt: 'tyre wear' }])).toEqual([]);
+
+    const [block] = coerceBlocks([
+      { kind: 'file', name: 'inspection.pdf', url: 'mailto:ops@durion.example' },
+    ]);
+    expect(block.kind).toBe('file');
+    expect(block.kind === 'file' && block.url).toBeNull();
+  });
+
+  it('keeps an http(s) or app-relative url on an image or file block (R11d)', () => {
+    const [image] = coerceBlocks([
+      { kind: 'image', url: 'https://cdn.example/wear.png', alt: 'tyre wear' },
+    ]);
+    expect(image.kind === 'image' && image.url).toBe('https://cdn.example/wear.png');
+
+    const [file] = coerceBlocks([{ kind: 'file', name: 'inspection.pdf', url: '/blob/1' }]);
+    expect(file.kind === 'file' && file.url).toBe('/blob/1');
+  });
+
+  it('falls back to a generic error key for an unrecognised messageKey, and drops an unknown detailKey (F14)', () => {
+    // The template translates whatever key the block carries, so an unallowed
+    // one is a text-injection channel straight into an alert the user trusts.
+    const [block] = coerceBlocks([
+      {
+        kind: 'error',
+        messageKey: 'Call 1-800-555-0100 now',
+        detailKey: 'x',
+        retryable: true,
+      },
+    ]);
+    expect(block.kind === 'error' && block.messageKey).toBe('SHELL.CHAT.ERROR.BACKEND');
+    expect(block.kind === 'error' && block.detailKey).toBeNull();
+  });
+
+  it('passes an allowlisted messageKey and detailKey through unchanged (F14)', () => {
+    const [block] = coerceBlocks([
+      {
+        kind: 'error',
+        messageKey: 'SHELL.CHAT.ERROR.HISTORY_LOAD',
+        detailKey: 'SHELL.CHAT.ERROR.DETAIL_GENERIC',
+        retryable: false,
+      },
+    ]);
+    expect(block.kind === 'error' && block.messageKey).toBe('SHELL.CHAT.ERROR.HISTORY_LOAD');
+    expect(block.kind === 'error' && block.detailKey).toBe('SHELL.CHAT.ERROR.DETAIL_GENERIC');
+  });
 });

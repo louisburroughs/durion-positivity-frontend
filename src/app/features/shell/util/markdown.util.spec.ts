@@ -114,6 +114,27 @@ describe('parseInline', () => {
   it('does not treat an unmatched delimiter as a span', () => {
     expect(parseInline('2 * 3 = 6')).toEqual([{ type: 'text', value: '2 * 3 = 6' }]);
   });
+
+  it('stops interpreting syntax at the recursion depth cap, keeping the source as literal text', () => {
+    // Exercised directly at the guard's own boundary via the exported `depth`
+    // parameter: this parser's lazy matching resolves most "deeply nested"
+    // inputs shallowly long before any cap could matter (see the stress test
+    // below), so the guard has to be provable independent of any particular
+    // nested-delimiter shape happening to reach it.
+    expect(parseInline('**26 mechanics**', 8)).toEqual([
+      { type: 'text', value: '**26 mechanics**' },
+    ]);
+    expect(parseInline('**26 mechanics**', 7)[0].type).toBe('strong');
+  });
+
+  it('never overflows the call stack on pathologically deep nesting (F21)', () => {
+    // Model output the parser must survive without crashing the whole render:
+    // 5000 nested `**` levels used to recurse once per level with no cap.
+    const source = '**'.repeat(5000) + 'x' + '**'.repeat(5000);
+    expect(() => parseInline(source)).not.toThrow();
+    expect(() => parseMarkdown(source)).not.toThrow();
+    expect(flattenInline(parseInline(source))).toContain('x');
+  });
 });
 
 describe('isSafeHref', () => {

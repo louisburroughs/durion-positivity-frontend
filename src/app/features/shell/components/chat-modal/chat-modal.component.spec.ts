@@ -398,6 +398,70 @@ describe('ChatModalComponent', () => {
     expect(state.state()).not.toBe('error');
   });
 
+  it('neutralises a formula when the whole transcript is copied (F2)', async () => {
+    let written = '';
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: (text: string) => ((written = text), Promise.resolve()) },
+    });
+
+    chatState.appendUserMessage('question');
+    const target = chatState.beginAssistantTurn()!;
+    chatState.completeAssistantTurn(target, [
+      {
+        kind: 'table',
+        title: null,
+        columns: [{ label: 'Link', align: 'start' }],
+        rows: [['=HYPERLINK("http://evil","x")']],
+      },
+      // The type is `number`; nothing at runtime stops a malformed payload from
+      // handing back a formula-shaped string here.
+      { kind: 'chart', title: null, series: [{ label: 'Total', value: '=1+1' as unknown as number }] },
+    ]);
+
+    fixture.componentInstance.copyTranscript();
+    await Promise.resolve();
+
+    expect(written).toContain("'=HYPERLINK");
+    expect(written).toContain("'=1+1");
+  });
+
+  it('scrolls to the newest turn when switching between two conversations of equal length (F20)', () => {
+    // The count-based check in ngAfterViewChecked cannot see this switch: both
+    // conversations hold exactly two messages, so onConversationOpened() has to
+    // force the scroll itself.
+    chatState.appendUserMessage('question in A');
+    const targetA = chatState.beginAssistantTurn()!;
+    chatState.completeAssistantTurn(targetA, [{ kind: 'text', text: 'answer in A' }]);
+    const conversationA = chatState.activeConversationId()!;
+
+    chatState.startNewConversation();
+    chatState.appendUserMessage('question in B');
+    const targetB = chatState.beginAssistantTurn()!;
+    chatState.completeAssistantTurn(targetB, [{ kind: 'text', text: 'answer in B' }]);
+    fixture.detectChanges();
+    expect(chatState.messages()).toHaveLength(2);
+
+    const thread = host().querySelector<HTMLElement>('.chat-thread')!;
+    let scrollTopValue = 0;
+    Object.defineProperty(thread, 'scrollTop', {
+      configurable: true,
+      get: () => scrollTopValue,
+      set: (value: number) => {
+        scrollTopValue = value;
+      },
+    });
+    Object.defineProperty(thread, 'scrollHeight', { configurable: true, value: 4000 });
+    // Simulate the user having scrolled up in conversation B before switching.
+    thread.scrollTop = 0;
+
+    chatState.selectConversation(conversationA);
+    fixture.componentInstance.onConversationOpened();
+    fixture.detectChanges();
+
+    expect(thread.scrollTop).toBe(4000);
+  });
+
   it('puts focus in the composer after a suggestion removes the empty state', async () => {
     // The clicked suggestion is gone the moment the thread appears; without a
     // hand-off focus lands on <body>, outside the dialog.

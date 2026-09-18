@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom, of, throwError } from 'rxjs';
+import { firstValueFrom, Observable, of, throwError } from 'rxjs';
 import { JwtClaims } from '../../../core/models/auth.models';
 import { ApiBaseService } from '../../../core/services/api-base.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -79,6 +79,42 @@ describe('ChatBlobService', () => {
     expect(getBlob).toHaveBeenCalledTimes(2);
     expect(second).not.toBe(first);
     expect(revoke).toHaveBeenCalledWith(first);
+  });
+
+  it('keys the in-flight cache by identity, not only by url (F4)', async () => {
+    // Isolates the cache KEY from `discard()`: the identity-change effect is
+    // never flushed here, so a stale in-flight entry for the same path would
+    // only be avoided if the key itself is identity-scoped — proving the
+    // guard `cacheKey()` owns, not the effect that also happens to clear it.
+    let settleFirst: ((blob: Blob) => void) | null = null;
+    getBlob.mockReturnValueOnce(
+      new Observable<Blob>(subscriber => {
+        settleFirst = blob => {
+          subscriber.next(blob);
+          subscriber.complete();
+        };
+      }),
+    );
+
+    let firstUrl: string | null = null;
+    service.resolve('/blobs/1').subscribe(url => (firstUrl = url));
+    expect(getBlob).toHaveBeenCalledTimes(1);
+
+    // A different identity, WITHOUT flushing the effect that discards the
+    // whole cache on a change — so only an identity-scoped key can tell these
+    // two calls apart.
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
+
+    getBlob.mockReturnValueOnce(of(new Blob(['tenant-two bytes'])));
+    let secondUrl: string | null = null;
+    service.resolve('/blobs/1').subscribe(url => (secondUrl = url));
+
+    expect(getBlob).toHaveBeenCalledTimes(2);
+
+    settleFirst!(new Blob(['tenant-one bytes']));
+    expect(firstUrl).not.toBeNull();
+    expect(secondUrl).not.toBeNull();
+    expect(secondUrl).not.toBe(firstUrl);
   });
 
   it('revokes every object URL it handed out when it is destroyed', async () => {

@@ -317,6 +317,19 @@ describe('LocalChatHistoryStore', () => {
     expect(await firstValueFrom(store.listConversations())).toEqual([]);
   });
 
+  it('does not let an unescaped delimiter collide two tenant/subject pairs in the storage key (F17)', async () => {
+    // Raw concatenation would let `tid:'a:b'`/`sub:'c'` and `tid:'a'`/`sub:'b:c'`
+    // land in one storage bucket — a cross-tenant collision in the key itself.
+    claims.set({ sub: 'c', tid: 'a:b', exp: 9999999999 });
+    await save(conversation({ id: 'first' }));
+
+    claims.set({ sub: 'b:c', tid: 'a', exp: 9999999999 });
+    expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
+
+    claims.set({ sub: 'c', tid: 'a:b', exp: 9999999999 });
+    expect(await firstValueFrom(store.listConversations())).toHaveLength(1);
+  });
+
   it('never surfaces a tenant-bound transcript to a token without a tenant', async () => {
     await firstValueFrom(store.saveConversation(conversation()));
     expect(await firstValueFrom(store.listConversations())).toHaveLength(1);

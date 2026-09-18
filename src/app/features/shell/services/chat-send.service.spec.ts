@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { JwtClaims } from '../../../core/models/auth.models';
 import { AuthService } from '../../../core/services/auth.service';
+import enUS from '../../../../assets/i18n/en-US.json';
 import { ChatErrorBlock, ChatMarkdownBlock, ChatTableBlock } from '../models/chat.model';
 import { ChatApiService, ChatResponse } from './chat-api.service';
 import { ChatStateService } from './chat-state.service';
@@ -142,6 +143,24 @@ describe('ChatSendService', () => {
     service.send('hello');
 
     expect(errorBlockOfLastTurn().messageKey).toBe('SHELL.CHAT.ERROR.NO_USABLE_CONTENT');
+  });
+
+  it('reports a malformed primitive answer as unusable rather than a fabricated EMPTY claim (R11e)', () => {
+    // A number where the payload should be an object is exactly what
+    // mapAnswerPayload degrades to zero blocks: nothing renderable, not
+    // "empty" — the mapper never established that the answer was empty.
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue(of<ChatResponse>(42 as unknown as ChatResponse));
+
+    service.send('hello');
+
+    expect(errorBlockOfLastTurn().messageKey).toBe('SHELL.CHAT.ERROR.NO_USABLE_CONTENT');
+  });
+
+  it('ships NO_USABLE_CONTENT in the real en-US bundle and no longer ships the old EMPTY key (R11e, ADR-0035 §8)', () => {
+    const chatErrors = (enUS as { SHELL: { CHAT: { ERROR: Record<string, unknown> } } }).SHELL.CHAT.ERROR;
+    expect(typeof chatErrors['NO_USABLE_CONTENT']).toBe('string');
+    expect(chatErrors['NO_USABLE_CONTENT']).toBeTruthy();
+    expect(chatErrors['EMPTY']).toBeUndefined();
   });
 
   it('retries the last user turn without duplicating it', () => {

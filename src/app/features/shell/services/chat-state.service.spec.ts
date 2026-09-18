@@ -254,6 +254,36 @@ describe('ChatStateService', () => {
     expect(service.conversations()).toHaveLength(1);
   });
 
+  it('writes state before errorKey, in both directions, on startNewConversation and identity reset (F22)', () => {
+    // Monkey-patch the underlying WritableSignals' `set` — a plain, writable
+    // property on the signal function (see @angular/core's `signal()`) — so the
+    // ORDER two same-tick writes actually happen in is observable from outside.
+    const stateSignal = (service as unknown as { _state: { set: (value: unknown) => void } })._state;
+    const errorSignal = (service as unknown as { _errorKey: { set: (value: unknown) => void } })._errorKey;
+    const order: string[] = [];
+    const originalStateSet = stateSignal.set.bind(stateSignal);
+    const originalErrorSet = errorSignal.set.bind(errorSignal);
+    vi.spyOn(stateSignal, 'set').mockImplementation((value: unknown) => {
+      order.push(`state:${value}`);
+      originalStateSet(value);
+    });
+    vi.spyOn(errorSignal, 'set').mockImplementation((value: unknown) => {
+      order.push(`errorKey:${value}`);
+      originalErrorSet(value);
+    });
+
+    order.length = 0;
+    service.startNewConversation();
+    expect(order.indexOf('state:ready')).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf('errorKey:null')).toBeGreaterThan(order.indexOf('state:ready'));
+
+    order.length = 0;
+    claims.set({ sub: 'someone.else', tid: 'tenant-one', exp: 9999999999 });
+    TestBed.flushEffects();
+    expect(order.indexOf('state:idle')).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf('errorKey:null')).toBeGreaterThan(order.indexOf('state:idle'));
+  });
+
   it('lets a new chat outrank a conversation load still in flight', () => {
     service.appendUserMessage('a question');
     const id = service.activeConversationId()!;
@@ -540,6 +570,36 @@ describe('ChatStateService against a store that does not answer immediately', ()
     expect(store.order.filter(label => label.startsWith('save')).length).toBeGreaterThan(0);
   });
 
+  it('reports a write failure on persistenceErrorKey, clears it on the next landed write (F11)', () => {
+    // appendUserMessage queues TWO writes (saveConversation, then
+    // saveMessages); target the SECOND specifically, since concatMap only
+    // subscribes to it once the first completes.
+    service.appendUserMessage('a question that fails to save');
+    store.failNext = true;
+    store.releaseNext(); // saveConversation lands; subscribes saveMessages with failNext armed
+    expect(store.pendingLabels[0]).toMatch(/^saveMessages/);
+
+    store.releaseNext(); // saveMessages fails
+    expect(service.persistenceErrorKey()).toBe('SHELL.CHAT.ERROR.PERSIST');
+    // A lost write is not a broken thread.
+    expect(service.state()).not.toBe('error');
+
+    // The queue is still alive, and a later write that lands clears the flag.
+    service.appendUserMessage('a question that saves fine');
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.persistenceErrorKey()).toBeNull();
+  });
+
+  it('reports a failed list load as HISTORY_LOAD, never an empty ready list (F11)', () => {
+    store.failNext = true;
+    service.refresh();
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.state()).toBe('error');
+    expect(service.errorKey()).toBe('SHELL.CHAT.ERROR.HISTORY_LOAD');
+  });
+
   it('discards a queued write whose identity has since changed', () => {
     // The store resolves its key when the call runs, so running an old snapshot's
     // write after a tenant switch would put it in the new tenant's namespace.
@@ -725,6 +785,166 @@ describe('ChatStateService against a store that does not answer immediately', ()
     service.appendUserMessage('a question after the failure');
     expect(service.activeConversationId()).not.toBe(first);
     expect(service.activeConversationId()).not.toBe(second);
+  });
+
+  it('ends ready when a selection succeeds right after a failed one (F22)', () => {
+    // ADR-0031 §5 ordering, on the SUCCESS branch specifically: a prior failure
+    // must not leave any trace once a later selection actually lands.
+    service.appendUserMessage('a question in the first conversation');
+    const first = service.activeConversationId()!;
+    service.startNewConversation();
+    service.appendUserMessage('a question in the second');
+    while (store.outstanding > 0) store.releaseNext();
+
+    store.failNext = true;
+    service.selectConversation(first);
+    while (store.outstanding > 0) store.releaseNext();
+    expect(service.state()).toBe('error');
+
+    service.selectConversation(first);
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.state()).toBe('ready');
+    expect(service.errorKey()).toBeNull();
+  });
+
+  it('lets a new user message clear a failed history load (F7)', () => {
+    service.appendUserMessage('a question in the first conversation');
+    const first = service.activeConversationId()!;
+    service.startNewConversation();
+    service.appendUserMessage('a question in the second');
+    while (store.outstanding > 0) store.releaseNext();
+
+    store.failNext = true;
+    service.selectConversation(first);
+    while (store.outstanding > 0) store.releaseNext();
+
+    // The negative half of the split (ADR-0035 §7): nothing has cleared the
+    // failure yet, so it is still showing right before the append below.
+    expect(service.state()).toBe('error');
+    expect(service.errorKey()).toBe('SHELL.CHAT.ERROR.HISTORY_LOAD');
+
+    service.appendUserMessage('a working question');
+
+    expect(service.state()).toBe('ready');
+    expect(service.errorKey()).toBeNull();
+  });
+
+  it('reconciles the active thread when a refresh no longer carries it (F8)', () => {
+    service.appendUserMessage('a question');
+    const first = service.activeConversationId()!;
+    while (store.outstanding > 0) store.releaseNext();
+
+    // Another tab deleted this conversation: the store's own list no longer has
+    // it, even though nothing routed through THIS service's deleteConversation().
+    (store as unknown as { entries: Map<string, unknown> }).entries.delete(first);
+
+    service.refresh();
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.activeConversationId()).toBeNull();
+    expect(service.messages()).toEqual([]);
+
+    // Nothing silently no-ops: the next question opens a fresh conversation and
+    // its answer is actually written through to the store.
+    store.order.length = 0;
+    service.appendUserMessage('a fresh question');
+    while (store.outstanding > 0) store.releaseNext();
+
+    const created = service.activeConversationId()!;
+    expect(created).not.toBe(first);
+    expect(store.order.filter(label => label.startsWith('saveMessages'))).toHaveLength(1);
+  });
+
+  it('makes a selection wait behind a queued write for the same conversation (F15b)', () => {
+    service.appendUserMessage('a question');
+    const id = service.activeConversationId()!;
+    // The two writes from appendUserMessage (saveConversation, saveMessages)
+    // are still outstanding.
+    expect(store.outstanding).toBeGreaterThan(0);
+
+    service.startNewConversation();
+    service.selectConversation(id);
+
+    // Issued directly, the read could overtake the writes still queued ahead of
+    // it and come back with the snapshot from before this conversation's own
+    // question was saved.
+    expect(store.pendingLabels).not.toContain('loadMessages');
+
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.messages()).toHaveLength(1);
+    expect(service.messages()[0].blocks[0]).toEqual({ kind: 'text', text: 'a question' });
+  });
+
+  it('cancels a pending switch back to the conversation being left (F15c)', () => {
+    service.appendUserMessage('question in A');
+    const a = service.activeConversationId()!;
+    service.startNewConversation();
+    service.appendUserMessage('question in B');
+    const b = service.activeConversationId()!;
+    while (store.outstanding > 0) store.releaseNext();
+
+    // Leave B, opening A — but do not let it land yet.
+    service.selectConversation(a);
+    expect(service.switching()).toBe(true);
+    const loadIndex = store.pendingLabels.indexOf('loadMessages');
+    expect(loadIndex).toBeGreaterThanOrEqual(0);
+
+    // Click B again — the conversation being left — cancelling the switch to A.
+    service.selectConversation(b);
+    expect(service.switching()).toBe(false);
+    expect(service.activeConversationId()).toBe(b);
+
+    // The now-superseded load for A lands late; it must be ignored.
+    store.releaseAt(loadIndex);
+    expect(service.activeConversationId()).toBe(b);
+    expect(service.messages()[0].blocks[0]).toEqual({ kind: 'text', text: 'question in B' });
+  });
+
+  it('keeps a newer question when a retried reply lands away from the thread (F15a)', () => {
+    // The retry variant: the away completion must land its answer where the
+    // ORIGINAL failed turn was, not appended after a question asked since —
+    // even though that newer question's save reaches the store first.
+    service.appendUserMessage('the first question');
+    const conversation = service.activeConversationId()!;
+    const failed = service.beginAssistantTurn()!;
+    service.completeAssistantTurn(failed, [
+      {
+        kind: 'error',
+        messageKey: 'SHELL.CHAT.ERROR.BACKEND',
+        detailKey: null,
+        detailParams: null,
+        correlationId: null,
+        retryable: true,
+      },
+    ]);
+    while (store.outstanding > 0) store.releaseNext();
+
+    const retry = service.restartAssistantTurn(failed.messageId)!;
+    expect(retry.replacesMessageId).toBe(failed.messageId);
+
+    // Leave and come back: the retry's in-memory placeholder is lost on reload,
+    // so its eventual completion takes the away path even though this IS the
+    // active conversation.
+    service.startNewConversation();
+    while (store.outstanding > 0) store.releaseNext();
+    service.selectConversation(conversation);
+    while (store.outstanding > 0) store.releaseNext();
+
+    // A newer question is asked — and its save reaches the store — before the
+    // retried reply comes back.
+    service.appendUserMessage('a newer question');
+    while (store.outstanding > 0) store.releaseNext();
+
+    service.completeAssistantTurn(retry, [{ kind: 'text', text: 'the retried answer' }]);
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.messages().map(message => blockText(message))).toEqual([
+      'the first question',
+      'the retried answer',
+      'a newer question',
+    ]);
   });
 
   it('does not let a list load overtake a write still sitting in the queue', () => {

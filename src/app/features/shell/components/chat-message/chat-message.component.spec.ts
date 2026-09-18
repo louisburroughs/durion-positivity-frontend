@@ -1,5 +1,7 @@
-import { signal } from '@angular/core';
+import { LOCALE_ID, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { registerLocaleData } from '@angular/common';
+import localeFr from '@angular/common/locales/fr';
 import { provideRouter, RouterLink } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { TranslateModule } from '@ngx-translate/core';
@@ -7,7 +9,8 @@ import { of, throwError } from 'rxjs';
 import { JwtClaims } from '../../../../core/models/auth.models';
 import { ApiBaseService } from '../../../../core/services/api-base.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { ChatBlock, ChatMessage } from '../../models/chat.model';
+import { ChatBlock, ChatMessage, ChatTableBlock } from '../../models/chat.model';
+import { coerceBlocks } from '../../util/chat-response.mapper';
 import { ChatMessageComponent } from './chat-message.component';
 
 /** Stands in for the authenticated blob fetch the renderers now go through. */
@@ -166,6 +169,119 @@ describe('ChatMessageComponent', () => {
     // An ordinary cell is left alone.
     expect(written).toContain('ACTIVE');
     expect(written).not.toContain("'ACTIVE");
+  });
+
+  it('neutralises a formula across a table and a chart value when the turn is copied (F2)', async () => {
+    // copyTurn() reads plainText(), which runs every block through
+    // blocksToPlainText — the same guard the table-copy and CSV paths use, so a
+    // formula lead cannot reach a spreadsheet through "copy this answer" either.
+    let written = '';
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: (text: string) => ((written = text), Promise.resolve()) },
+    });
+
+    const table: ChatTableBlock = {
+      kind: 'table',
+      title: 'Payloads',
+      columns: [{ label: 'Link', align: 'start' }],
+      rows: [['=HYPERLINK("http://evil","x")']],
+    };
+    const chart = {
+      kind: 'chart' as const,
+      title: null,
+      // The type is `number`, but nothing at runtime stops a malformed backend
+      // payload from handing back a formula-shaped string here.
+      series: [{ label: 'Total', value: '=1+1' as unknown as number }],
+    };
+
+    // Set the input without rendering: the malformed chart value is exactly what
+    // `| number` (R11b) refuses to format, and copyTurn() needs only the
+    // `plainText()` signal, not a rendered template.
+    fixture.componentRef.setInput('message', message('assistant', [table, chart]));
+    fixture.componentInstance.copyTurn();
+    await Promise.resolve();
+
+    expect(written).toContain("'=HYPERLINK");
+    expect(written).toContain("'=1+1");
+  });
+
+  it('neutralises a leading-space formula in a structured cell, on both the CSV and clipboard paths (F10)', async () => {
+    // The mapper trims a structured cell exactly as a markdown cell is trimmed,
+    // so a leading space cannot hide the formula lead from the guard that tests
+    // the first character.
+    const [tableBlock] = coerceBlocks([
+      {
+        kind: 'table',
+        columns: ['Formula'],
+        rows: [[' =HYPERLINK("http://evil","x")'], [' hello']],
+      },
+    ]) as [ChatTableBlock];
+    expect(tableBlock.rows).toEqual([['=HYPERLINK("http://evil","x")'], ['hello']]);
+
+    let written = '';
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: (text: string) => ((written = text), Promise.resolve()) },
+    });
+    render(message('assistant', [tableBlock]));
+    fixture.componentInstance.copyTable(tableBlock);
+    await Promise.resolve();
+
+    expect(written).toContain("'=HYPERLINK");
+    expect(written).toContain('hello');
+    // A leading-space PLAIN cell keeps its text: trimming is not the same as
+    // treating it as a formula.
+    expect(written).not.toContain("'hello");
+
+    let writtenCsvBlob: Blob | null = null;
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((obj: Blob | MediaSource) => {
+      writtenCsvBlob = obj as Blob;
+      return 'blob:stub';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+
+    fixture.componentInstance.downloadCsv(tableBlock);
+    const csv = await (writtenCsvBlob as unknown as Blob).text();
+    expect(csv).toContain('"\'=HYPERLINK');
+    expect(csv).toContain('"hello"');
+  });
+
+  it('renders a chart value with the active locale\'s separators, not always en-US (R11b)', () => {
+    registerLocaleData(localeFr, 'fr-FR');
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [ChatMessageComponent, TranslateModule.forRoot()],
+      providers: [
+        provideRouter([]),
+        { provide: ApiBaseService, useValue: { getBlob } },
+        { provide: AuthService, useValue: { currentUserClaims: claims } },
+        { provide: LOCALE_ID, useValue: 'fr-FR' },
+      ],
+    });
+    const frFixture = TestBed.createComponent(ChatMessageComponent);
+    frFixture.componentRef.setInput(
+      'message',
+      message('assistant', [
+        { kind: 'chart', title: null, series: [{ label: 'Total', value: 1234.5 }] },
+      ]),
+    );
+    frFixture.detectChanges();
+
+    const value =
+      (frFixture.nativeElement as HTMLElement).querySelector('.chart-value')?.textContent ?? '';
+    // fr-FR uses a comma for the decimal separator; en-US (the default) uses a
+    // period — a value rendered unlocalised would fail this either way.
+    expect(value).toContain(',5');
+    expect(value).not.toContain('.5');
+  });
+
+  it('clamps a bar width instead of drawing a negative or overflowing bar (R11f)', () => {
+    expect(fixture.componentInstance.barWidth(-5, 10)).toBe('0%');
+    expect(fixture.componentInstance.barWidth(15, 10)).toBe('100%');
+    // The positive, in-range half of the split still behaves as before.
+    expect(fixture.componentInstance.barWidth(5, 10)).toBe('50%');
   });
 
   it('renders a table with a header row and right-aligned numeric cells', () => {
@@ -374,6 +490,31 @@ describe('ChatMessageComponent', () => {
     expect(host.querySelector('[role="alert"]')).not.toBeNull();
     host.querySelector<HTMLButtonElement>('.text-btn')?.click();
     expect(emitted).toEqual(['m1']);
+  });
+
+  it('disables the retry button while busy, without hiding it (F9)', () => {
+    const errorMessage = message('assistant', [
+      {
+        kind: 'error',
+        messageKey: 'SHELL.CHAT.ERROR.BACKEND',
+        detailKey: null,
+        detailParams: null,
+        correlationId: null,
+        retryable: true,
+      },
+    ]);
+    fixture.componentRef.setInput('message', errorMessage);
+    fixture.componentRef.setInput('busy', true);
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    const retryButton = host.querySelector<HTMLButtonElement>('.text-btn')!;
+    expect(retryButton).not.toBeNull();
+    expect(retryButton.disabled).toBe(true);
+
+    fixture.componentRef.setInput('busy', false);
+    fixture.detectChanges();
+    expect(host.querySelector<HTMLButtonElement>('.text-btn')!.disabled).toBe(false);
   });
 
   it('hides the retry when the failure will not succeed on a second attempt', () => {

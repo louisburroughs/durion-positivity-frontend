@@ -47,4 +47,26 @@ describe('ApiBaseService', () => {
     expect(req.request.body).toEqual({ message: 'hello' });
     req.flush({ response: 'hi' });
   });
+
+  it('fetches a blob with the given base URL, headers and responseType (R11c, ADR-0035 §1)', () => {
+    const gatewayBaseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '');
+    let received: Blob | null = null;
+
+    service
+      .getBlob('/mcp-server/v1/mcp/blobs/1', {
+        baseUrlOverride: gatewayBaseUrl,
+        headers: { 'X-Correlation-Id': 'abc-123' },
+      })
+      .subscribe(blob => (received = blob));
+
+    const req = httpMock.expectOne(`${gatewayBaseUrl}/mcp-server/v1/mcp/blobs/1`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+    expect(req.request.headers.get('X-Correlation-Id')).toBe('abc-123');
+
+    const blob = new Blob(['payload'], { type: 'application/pdf' });
+    req.flush(blob);
+
+    expect(received).toBe(blob);
+  });
 });
