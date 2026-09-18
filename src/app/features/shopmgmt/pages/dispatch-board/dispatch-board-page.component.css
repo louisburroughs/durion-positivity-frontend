@@ -124,8 +124,8 @@
   cursor: help;
 }
 
-/* No repo-wide utility exists: src/styles.css scopes .sr-only to two other
- * components, so the board carries its own copy the way positivity does. */
+/* Redundant since src/styles.css defines the global .sr-only; kept only until the
+   janitor pass removes the per-component copies. */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -860,7 +860,15 @@
   color: var(--text-muted);
   font-size: 0.875rem;
   line-height: 1;
-  padding: 0 2px;
+  /* WCAG 2.2 SC 2.5.8: a 24px hit area, glyph stays small (#287). The negative
+     block margin keeps the slot at its old height. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  margin-block: -2px;
+  padding: 0;
   border-radius: 3px;
   flex: none;
 }

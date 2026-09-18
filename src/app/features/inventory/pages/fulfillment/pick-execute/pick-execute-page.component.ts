@@ -147,6 +147,12 @@ export class PickExecutePageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: pickList => {
+          // Nothing to execute without a pick list; this page has no empty state.
+          if (!pickList) {
+            this.state.set('error');
+            this.errorKey.set('INVENTORY.FULFILLMENT.PICK_EXECUTE.ERROR.LOAD');
+            return;
+          }
           this.pickList.set(pickList);
           this.lines.set(
             pickList.tasks.map(task => ({

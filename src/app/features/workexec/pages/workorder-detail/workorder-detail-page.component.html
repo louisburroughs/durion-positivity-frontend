@@ -80,12 +80,15 @@
   </header>
 
   <!-- Tab bar — 2px secondary bottom indicator only, no box shadow -->
+  <!-- Scope and Audit swap the panel below; Labor, Parts and Change Requests
+       route to their own pages, so only the two in-page views can be current.
+       aria-current="true" marks the current item in the set (#286). -->
   <nav class="wo-tabs" [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.TABS_ARIA' | translate">
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'items'" (click)="selectTab('items')"
-      [attr.aria-selected]="activeTab() === 'items'">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_SCOPE' | translate }}</button>
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'labor'" (click)="navigateToLabor()">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_LABOR' | translate }}</button>
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'parts'" (click)="navigateToParts()">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_PARTS' | translate }}</button>
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'change-requests'"
+    <button type="button" class="wo-tab" [class.wo-tab--active]="activeTab() === 'items'" (click)="selectTab('items')"
+      [attr.aria-current]="activeTab() === 'items' ? 'true' : null">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_SCOPE' | translate }}</button>
+    <button type="button" class="wo-tab" [class.wo-tab--active]="activeTab() === 'labor'" (click)="navigateToLabor()">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_LABOR' | translate }}</button>
+    <button type="button" class="wo-tab" [class.wo-tab--active]="activeTab() === 'parts'" (click)="navigateToParts()">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_PARTS' | translate }}</button>
+    <button type="button" class="wo-tab" [class.wo-tab--active]="activeTab() === 'change-requests'"
       (click)="navigateToChangeRequests()">
       {{ 'WORKEXEC.WORKORDER_DETAIL.CHANGE_REQUESTS' | translate }}
       @if (pendingCrCount() > 0) {
@@ -93,7 +96,8 @@
         }}</span>
       }
     </button>
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'audit'" (click)="selectTab('audit')">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_AUDIT' | translate }}</button>
+    <button type="button" class="wo-tab" [class.wo-tab--active]="activeTab() === 'audit'" (click)="selectTab('audit')"
+      [attr.aria-current]="activeTab() === 'audit' ? 'true' : null">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_AUDIT' | translate }}</button>
   </nav>
 
   <!-- Scope/Items tab — Story 229 -->
