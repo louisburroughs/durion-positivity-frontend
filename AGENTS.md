@@ -94,7 +94,7 @@ effect((onCleanup) => {
   if (!id) return;
   this.state.set('loading');
   const sub = this.service.loadData(id).subscribe({
-    next: (d) => { this.data.set(d); this.state.set('ready'); },
+    next: (d) => { this.data.set(d); this.state.set('ready'); this.errorKey.set(null); }, // state first, then clear
     error: () => { this.state.set('error'); this.errorKey.set('DOMAIN.PAGE.ERROR.LOAD'); }, // ADR-0031 order
   });
   onCleanup(() => sub.unsubscribe()); // REQUIRED on every effect-body subscription
@@ -141,7 +141,7 @@ Gate the control **and** the method independently on the permission named in
 
 ```typescript
 readonly canClearBay = computed(() =>
-  !this.auth.permissionsKnown() || this.auth.hasAnyPermission('workorder:position:assign'));
+  !this.auth.permissionsKnown() || this.auth.hasAnyPermission(['workorder:position:assign']));
 
 clearBay(bayId: string): void {
   if (!this.canClearBay()) return; // re-checked here, not only at the control
@@ -159,7 +159,9 @@ function parseDateLocal(yyyyMmDd: string): Date {
   const [y, m, d] = yyyyMmDd.split('-').map(Number);
   return new Date(y, m - 1, d); // local midnight — never new Date(yyyyMmDd)
 }
-private readonly today = signal(startOfLocalDay(new Date())); // reactive, refreshed on poll/timer
+private readonly today = signal(startOfLocalDay(new Date())); // reactive: refreshed below, never read once
+// on every poll tick (or a timer when the page does not poll):
+this.today.set(startOfLocalDay(new Date()));
 const dayAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1); // local arithmetic, never ms subtraction
 ```
 

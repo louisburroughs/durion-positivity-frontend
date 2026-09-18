@@ -124,8 +124,8 @@
   cursor: help;
 }
 
-/* No repo-wide utility exists: src/styles.css scopes .sr-only to two other
- * components, so the board carries its own copy the way positivity does. */
+/* Redundant since src/styles.css defines the global .sr-only; kept only until the
+   janitor pass removes the per-component copies. */
 .sr-only {
   position: absolute;
   width: 1px;

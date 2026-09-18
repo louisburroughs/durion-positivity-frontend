@@ -39,6 +39,7 @@ npm run build                        # prod build → dist/
 npm test                             # Vitest suite (watch mode)
 npx ng test --no-watch               # single CI pass
 npx ng test --include="src/app/features/<domain>/**/*.spec.ts" --no-watch   # one domain suite
+npm run lint                         # ESLint via @angular-eslint
 npm run lint:css                     # stylelint src/**/*.css
 npm run i18n:check                   # missing-keys + pseudo-locale check
 npm run a11y:smoke                   # axe-core route scan (a11y:smoke:strict fails on serious)
@@ -46,7 +47,7 @@ npm run audit:site                   # Playwright crawl+audit of deployed site (
 npm run serve:ssr:durion-positivity-frontend   # run SSR server locally → :4000
 ```
 
-No JS/TS lint script — ESLint is configured via @angular-eslint; run `npx ng lint` if needed.
+`npm run lint` runs ESLint via @angular-eslint (same as `npx ng lint`); CI runs it in `frontend-checks.yml`.
 
 ## SDK dependency (critical)
 
@@ -80,6 +81,7 @@ The sibling SDK repo must exist locally unless CI/Docker supplies `.sdk-src` or 
 ## Feature module layout
 
 Each domain under `src/app/features/<domain>/`: `<domain>.routes.ts`, `models/` (interfaces only),
-`services/` (ApiBaseService wrappers, each with co-located `*.service.spec.ts` — required), `pages/`
+`services/` (feature services wrapping the generated `@durion-sdk/*` facades, or `ApiBaseService` only where
+no SDK package exists yet; each with co-located `*.service.spec.ts` — required), `pages/`
 (routed components, 4 files each: ts/html/css/spec), optional `components/`. Global state services
 (`AuthService`, `ThemeService`, `LocaleService`, `ChatStateService`) live in `src/app/core/services/`.

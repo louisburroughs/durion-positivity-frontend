@@ -24,8 +24,8 @@ and a `readonly errorKey = signal<string | null>(null)`, and on failure always w
 before `errorKey.set(...)` — never the reverse, so a template branching on `state()` cannot render an
 error panel with no message. `dispatch-board-page.component.ts:175-176` declares the pair; the ordering
 rule is spelled out at `dispatch-board-page.component.ts:174` ("`state` always moves before `errorKey`")
-and enforced at every write site, e.g. `dispatch-board-page.component.ts:2065-2066`. 90 page components
-under `src/app/features/**` declare `readonly state = signal(...)` this way (grep `readonly state = signal`).
+and enforced at every write site, e.g. `dispatch-board-page.component.ts:2065-2066`. Nearly every page
+component under `src/app/features/**` declares `readonly state = signal(...)` this way (grep `readonly state = signal`).
 
 **Keyed cache so a stale board never renders under new controls.** `hasCachedData` compares a
 `requestKey` (the current location+date the controls ask for) against a `cachedKey` (the location+date
@@ -124,9 +124,11 @@ on clock/roster data it never confirmed came back.
   don't invent a different page size for a fourth caller of the same endpoints.
 - **Closed-link-reads-idle.** "A unit still linked to a closed workorder reads as idle: the work is
   done, the bay is free" — `shop-dashboard.service.ts:451-454`.
-- **Never surface a raw UUID.** An unresolved resource id falls back to a translated "unknown unit"
-  label rather than the id itself — `shop-dashboard.service.ts:296-297` (comment) with the fallback at
-  `shop-dashboard.service.ts:299` (`this.resourceName(...)`).
+- **Never surface a raw UUID.** The service never puts an id where a name belongs: `resourceName(...)`
+  (called at `shop-dashboard.service.ts:296-299`, see the comment there; defined at
+  `shop-dashboard.service.ts:436`) leaves `unitName` empty for an unresolvable resource, and the template supplies the translated fallback
+  (`open-workorder-roster.component.html:57`, `SHOPMGMT.SHOP_DASHBOARD.ROSTER.UNKNOWN_UNIT`). Keep that
+  boundary: services return nothing for the unknown case, templates translate it.
 - **`heldSkillCodes` — ACTIVE-only credentials count as competence.** `capacity-calendar.service.ts:665-672`
   (also present, same signature/contract, at `dispatch-board.service.ts` per its roster read at
   `dispatch-board.service.ts:224-256` which calls the sibling directly — grep `heldSkillCodes` for both
@@ -299,9 +301,9 @@ with args shifted one position over without failing.
 No merged exemplar exists on `master` yet. ADR-0065 is the specification: a parsed token tree instead of
 `innerHTML`, URL normalisation before an allowlist check applied to every URL-bearing block, a formula-lead
 prefix on CSV cells built from untrusted text, and browser storage keyed by `tid` and `sub`. The first
-implementation is in review on PR #288 (`src/app/features/shell/util/markdown.util.ts`,
-`chat-message.component.ts`, `chat-history.store.ts`); once it merges, add its `file:line` citations here
-and reuse those helpers rather than writing a second sanitiser.
+implementation is in review on PR #288 and is not on this branch, so this section deliberately cites no
+files; once it merges, add its `file:line` citations here and reuse those helpers rather than writing a
+second sanitiser.
 
 ---
 

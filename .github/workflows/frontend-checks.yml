@@ -11,6 +11,11 @@ on:
     branches:
       - master
 
+# Least privilege: the job runs pull-request code (npm ci, build, tests), so the
+# token it holds must not be able to write to the repository.
+permissions:
+  contents: read
+
 concurrency:
   group: frontend-checks-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
