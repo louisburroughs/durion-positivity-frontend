@@ -2830,6 +2830,28 @@ describe('DispatchBoardPageComponent', () => {
       expect(dispatchBoardServiceStub.assignBay).toHaveBeenCalledWith('wo-to-assign', 'B4');
     });
 
+    // The other half of the #2059 split: the manager override grant alone must
+    // NOT reach the bay rails any more. Without this case a fallback to the old
+    // code, or its accidental re-addition to positionAssign, would pass the
+    // suite while quietly restoring a manager-only authority here.
+    it('disables the bay controls for a session holding only workorder:operationalContext:override', () => {
+      authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
+        codes.includes('workorder:operationalContext:override'),
+      );
+      renderWith(fullDashboard);
+
+      expect(component.canAssignBay()).toBe(false);
+      expect(component.canTakeBay(component.toAssignRows()[0])).toBe(false);
+      expect(component.canClearBay(component.assignedRows()[0])).toBe(false);
+      expect(slotFor('wo-to-assign', 'ADD_BAY_ARIA')?.disabled).toBe(true);
+
+      component.openPicker('BAY', 'wo-to-assign');
+      component.pick('B4');
+      component.clearBay(component.assignedRows()[0]);
+      expect(dispatchBoardServiceStub.assignBay).not.toHaveBeenCalled();
+      expect(dispatchBoardServiceStub.releaseBay).not.toHaveBeenCalled();
+    });
+
     // d89a09a :194-196 enabled these for the appointment page's grant, which
     // the position endpoints answer with 403.
     it('disables the bay controls for a session holding only shop:bay:assign', () => {

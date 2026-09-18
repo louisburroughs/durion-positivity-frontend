@@ -305,9 +305,11 @@ export class DispatchBoardPageComponent implements OnInit {
   );
 
   /**
-   * The bay writes are workexec's position endpoints, whose authority is the
-   * operational-context override grant — not `shop:bay:assign`, which is the
-   * appointment page's authority in pos-shop-manager and buys nothing here.
+   * The bay writes are workexec's position endpoints, whose authority is
+   * `workorder:position:assign` (durion-positivity-backend#2059) — not
+   * `shop:bay:assign`, which is the appointment page's authority in
+   * pos-shop-manager and buys nothing here, and no longer the manager
+   * operational-context override, which those endpoints stopped accepting.
    */
   readonly canAssignBay = computed(
     () => !this.auth.permissionsKnown() || this.auth.hasAnyPermission(WORKEXEC_PAGE.positionAssign),
