@@ -16,6 +16,7 @@
 export type MdInline =
   | { readonly type: 'text'; readonly value: string }
   | { readonly type: 'code'; readonly value: string }
+  | { readonly type: 'image'; readonly src: string; readonly alt: string }
   | { readonly type: 'strong'; readonly children: readonly MdInline[] }
   | { readonly type: 'em'; readonly children: readonly MdInline[] }
   | { readonly type: 'link'; readonly href: string; readonly external: boolean; readonly children: readonly MdInline[] };
@@ -37,16 +38,27 @@ const ORDERED_RE = /^\d+[.)]\s+(.*)$/;
 const RULE_RE = /^(?:-{3,}|\*{3,}|_{3,})$/;
 
 /**
- * Inline delimiters, matched in one pass so the earliest opener wins.
- * Group map: 2 = code, 3/4 = link text/href, 5/6 = strong, 7/8 = emphasis.
+ * Inline delimiters, matched in one pass so the earliest opener wins. The image
+ * rule leads the link rule, since `![alt](src)` also matches `[alt](src)`.
+ *
+ * Group map: 2 = code, 3/4 = image alt/src, 5/6 = link text/href, 7/8 = strong,
+ * 9/10 = emphasis.
+ *
+ * Emphasis with `_` requires a non-word character either side, so an identifier
+ * such as `order_line_id` keeps its underscores instead of turning into emphasis.
  */
 const INLINE_RE =
-  /(\x60+)([^\x60]+?)\1|\[([^\]]*)\]\(([^)\s]*)\)|\*\*([\s\S]+?)\*\*|__([\s\S]+?)__|\*([^*\n]+?)\*|_([^_\n]+?)_/g;
+  /(\x60+)([^\x60]+?)\1|!\[([^\]]*)\]\(([^)\s]*)\)|\[([^\]]*)\]\(([^)\s]*)\)|\*\*([\s\S]+?)\*\*|(?<![A-Za-z0-9])__([\s\S]+?)__(?![A-Za-z0-9])|\*([^*\n]+?)\*|(?<![A-Za-z0-9])_([^_\n]+?)_(?![A-Za-z0-9])/g;
 
 /** Schemes an anchor may carry. Anything else renders as inert text. */
 const SAFE_SCHEME_RE = /^(?:https?:|mailto:)/i;
 /** A scheme-looking prefix, used to tell `javascript:x` from a bare relative path. */
 const ANY_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
+/**
+ * `//host/path` and `\\host\path` carry no scheme but still resolve to another
+ * origin, so a scheme check alone would wave them through.
+ */
+const ORIGIN_RELATIVE_RE = /^[/\\]{2}/;
 
 /** Parse a markdown document into blocks. Never throws; unknown syntax stays literal. */
 export function parseMarkdown(source: string): readonly MdBlock[] {
@@ -125,10 +137,24 @@ export function parseInline(source: string): readonly MdInline[] {
       pushText(nodes, source.slice(cursor, match.index));
     }
 
-    const [, , code, linkText, href, strongStars, strongUnderscores, emStar, emUnderscore] = match;
+    const [
+      ,
+      ,
+      code,
+      imageAlt,
+      imageSrc,
+      linkText,
+      href,
+      strongStars,
+      strongUnderscores,
+      emStar,
+      emUnderscore,
+    ] = match;
 
     if (code !== undefined) {
       nodes.push({ type: 'code', value: code });
+    } else if (imageSrc !== undefined) {
+      nodes.push(buildImage(imageAlt ?? '', imageSrc));
     } else if (href !== undefined) {
       nodes.push(buildLink(linkText ?? '', href));
     } else if (strongStars !== undefined || strongUnderscores !== undefined) {
@@ -148,15 +174,27 @@ export function parseInline(source: string): readonly MdInline[] {
 }
 
 /**
+ * Browsers strip ASCII whitespace and control characters out of a URL before
+ * resolving it, so `java\tscript:alert(1)` runs as `javascript:`. Validate — and
+ * render — what the browser will actually see, never the raw source.
+ */
+export function normaliseHref(href: string): string {
+  // eslint-disable-next-line no-control-regex -- stripping control characters is the point
+  return href.replace(/[\u0000-\u0020\u007f]/g, '');
+}
+
+/**
  * True when `href` may be used as an anchor target: an http(s)/mailto URL, or a
- * relative path that carries no scheme at all. Everything else — `javascript:`,
- * `data:`, `vbscript:` and friends — is rejected.
+ * path relative to this app that carries no scheme and no other origin.
+ * Everything else — `javascript:`, `data:`, `vbscript:`, `//evil.example` — is
+ * rejected. Call it on the value returned by {@link normaliseHref}.
  */
 export function isSafeHref(href: string): boolean {
-  const trimmed = href.trim();
-  if (trimmed.length === 0) return false;
-  if (SAFE_SCHEME_RE.test(trimmed)) return true;
-  return !ANY_SCHEME_RE.test(trimmed);
+  const candidate = normaliseHref(href);
+  if (candidate.length === 0) return false;
+  if (ORIGIN_RELATIVE_RE.test(candidate)) return false;
+  if (SAFE_SCHEME_RE.test(candidate)) return true;
+  return !ANY_SCHEME_RE.test(candidate);
 }
 
 function buildLink(text: string, href: string): MdInline {
@@ -165,12 +203,25 @@ function buildLink(text: string, href: string): MdInline {
     // Keep the label, drop the anchor: an unsafe target is never rendered.
     return { type: 'text', value: flattenInline(children) };
   }
+  // Render the normalised target, so what was validated is what the browser gets.
+  const target = normaliseHref(href);
   return {
     type: 'link',
-    href: href.trim(),
-    external: SAFE_SCHEME_RE.test(href.trim()),
+    href: target,
+    external: SAFE_SCHEME_RE.test(target),
     children,
   };
+}
+
+/**
+ * An image whose source fails the same safety check a link target does renders as
+ * its alt text — never as a broken or attacker-chosen `<img>`.
+ */
+function buildImage(alt: string, src: string): MdInline {
+  if (!isSafeHref(src)) {
+    return { type: 'text', value: alt };
+  }
+  return { type: 'image', src: normaliseHref(src), alt };
 }
 
 function pushText(nodes: MdInline[], value: string): void {
@@ -197,6 +248,8 @@ export function flattenInline(nodes: readonly MdInline[]): string {
         case 'text':
         case 'code':
           return node.value;
+        case 'image':
+          return node.alt;
         default:
           return flattenInline(node.children);
       }

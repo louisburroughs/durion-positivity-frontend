@@ -128,6 +128,33 @@ describe('ChatComposerComponent', () => {
     expect(textarea().value).toBe('how many mechanics do i have');
   });
 
+  it('appends dictation to what was already typed instead of replacing it', async () => {
+    await setup();
+    type('Show me ');
+
+    host().querySelector<HTMLButtonElement>('.icon-btn--mic')!.click();
+    speech.state.set('listening');
+    speech.transcript.set('open workorders');
+    fixture.detectChanges();
+
+    expect(component.draft()).toBe('Show me open workorders');
+  });
+
+  it('puts back what was typed when dictation is cancelled', async () => {
+    await setup();
+    type('Show me ');
+
+    host().querySelector<HTMLButtonElement>('.icon-btn--mic')!.click();
+    speech.state.set('listening');
+    speech.transcript.set('something misheard');
+    fixture.detectChanges();
+
+    host().querySelector<HTMLButtonElement>('.voice-strip .ghost-btn')!.click();
+    fixture.detectChanges();
+
+    expect(component.draft()).toBe('Show me');
+  });
+
   it('leaves a typed draft alone once dictation has stopped', async () => {
     await setup();
     speech.state.set('listening');
@@ -221,12 +248,6 @@ describe('ChatComposerComponent', () => {
     expect(host().querySelector('#chat-composer-hint')).not.toBeNull();
   });
 
-  it('seeds the box from a suggestion', async () => {
-    await setup();
-    component.setDraft('Show open workorders by bay');
-    fixture.detectChanges();
-    expect(textarea().value).toBe('Show open workorders by bay');
-  });
 });
 
 describe('formatDuration', () => {

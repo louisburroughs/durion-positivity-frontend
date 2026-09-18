@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  output,
+  signal,
+} from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ChatConversation, ChatHistoryBucket, ChatHistoryGroup } from '../../models/chat.model';
 import { MaterialSymbolPipe } from '../../../../shared/material-symbol.pipe';
@@ -32,6 +40,7 @@ const GROUP_LABEL_KEYS: Readonly<Record<ChatHistoryBucket, string>> = {
 })
 export class ChatHistoryRailComponent {
   private readonly chatState = inject(ChatStateService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /** Emitted after any action that should close the rail on a narrow viewport. */
   readonly conversationOpened = output<void>();
@@ -84,6 +93,7 @@ export class ChatHistoryRailComponent {
     this.renameDraft.set(conversation.title);
   }
 
+  /** Save and close the editor. Called on blur too, so it never moves focus itself. */
   commitRename(): void {
     const id = this.renamingId();
     if (id) {
@@ -98,13 +108,16 @@ export class ChatHistoryRailComponent {
   }
 
   onRenameKeydown(event: KeyboardEvent): void {
+    const id = this.renamingId();
     if (event.key === 'Enter') {
       event.preventDefault();
       this.commitRename();
+      if (id) this.restoreFocusTo(id);
     } else if (event.key === 'Escape') {
       event.preventDefault();
       event.stopPropagation();
       this.cancelRename();
+      if (id) this.restoreFocusTo(id);
     }
   }
 
@@ -123,7 +136,9 @@ export class ChatHistoryRailComponent {
   }
 
   cancelDelete(): void {
+    const id = this.confirmingDeleteId();
     this.confirmingDeleteId.set(null);
+    if (id) this.restoreFocusTo(id);
   }
 
   armClearAll(): void {
@@ -137,6 +152,32 @@ export class ChatHistoryRailComponent {
 
   cancelClearAll(): void {
     this.confirmingClearAll.set(false);
+  }
+
+  /**
+   * Escape in the search field clears it rather than closing the whole dialog —
+   * the field is the nearest thing that has state to dismiss. Only an already-empty
+   * field lets the key through.
+   */
+  onSearchKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || this.search().length === 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.search.set('');
+  }
+
+  /**
+   * A row's controls live behind an `@if`, so confirming or cancelling REMOVES the
+   * button that had focus and the browser drops focus to `<body>` — outside the
+   * dialog, past its trap. Put focus back on the row.
+   */
+  private restoreFocusTo(conversationId: string): void {
+    setTimeout(() => {
+      const element = this.host.nativeElement as HTMLElement;
+      element
+        .querySelector<HTMLElement>(`[data-conversation="${CSS.escape(conversationId)}"]`)
+        ?.focus();
+    });
   }
 
   private resetRowState(): void {

@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { JwtClaims } from '../../../../core/models/auth.models';
@@ -32,6 +33,7 @@ describe('ChatModalComponent', () => {
     await TestBed.configureTestingModule({
       imports: [ChatModalComponent, TranslateModule.forRoot()],
       providers: [
+        provideRouter([]),
         { provide: ChatApiService, useValue: chatApiStub },
         { provide: AuthService, useValue: authServiceStub },
       ],
@@ -134,6 +136,85 @@ describe('ChatModalComponent', () => {
 
     expect(chatState.messages()).toHaveLength(0);
     expect(chatState.conversations()).toHaveLength(1);
+  });
+
+  it('keeps Tab inside the dialog, wrapping at both ends', () => {
+    const focusable = [
+      ...dialog().querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled])',
+      ),
+    ].filter(element => element.getClientRects().length > 0);
+    expect(focusable.length).toBeGreaterThan(1);
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    last.focus();
+    const forward = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    dialog().dispatchEvent(forward);
+    expect(forward.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(first);
+
+    const backward = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    dialog().dispatchEvent(backward);
+    expect(backward.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(last);
+  });
+
+  it('pulls focus back in when Tab is pressed from outside the trap root', () => {
+    const outside = document.createElement('button');
+    document.body.appendChild(outside);
+    outside.focus();
+    expect(dialog().contains(document.activeElement)).toBe(false);
+
+    const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    dialog().dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(dialog().contains(document.activeElement)).toBe(true);
+    outside.remove();
+  });
+
+  it('returns focus to whatever opened it when it closes', () => {
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+
+    const reopened = TestBed.createComponent(ChatModalComponent);
+    reopened.detectChanges();
+    reopened.destroy();
+
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
+
+  it('stops the page behind it scrolling while it is open', () => {
+    expect(document.body.style.overflow).toBe('hidden');
+    fixture.destroy();
+    expect(document.body.style.overflow).not.toBe('hidden');
+  });
+
+  it('closes the history rail when a conversation is opened on a narrow viewport', () => {
+    chatUi.showHistoryRail();
+    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList);
+
+    fixture.componentInstance.onConversationOpened();
+
+    expect(chatUi.historyRailOpen()).toBe(false);
+  });
+
+  it('leaves the rail open when a conversation is opened on a wide viewport', () => {
+    chatUi.showHistoryRail();
+    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: false } as MediaQueryList);
+
+    fixture.componentInstance.onConversationOpened();
+
+    expect(chatUi.historyRailOpen()).toBe(true);
   });
 
   it('hides the document-ingest control from non-admins', () => {

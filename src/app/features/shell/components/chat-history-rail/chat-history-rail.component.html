@@ -11,7 +11,8 @@
       <label class="sr-only" for="chat-history-search">{{ 'SHELL.CHAT.HISTORY.SEARCH_LABEL' | translate }}</label>
       <input id="chat-history-search" class="search-input" type="search"
              [placeholder]="'SHELL.CHAT.HISTORY.SEARCH_PLACEHOLDER' | translate"
-             [value]="search()" (input)="search.set($any($event.target).value)">
+             [value]="search()" (input)="search.set($any($event.target).value)"
+             (keydown)="onSearchKeydown($event)">
     </div>
   </div>
 
@@ -53,6 +54,7 @@
         } @else {
 
         <button class="rail-row__open" type="button" (click)="open(conversation)"
+                [attr.data-conversation]="conversation.id"
                 [attr.aria-current]="conversation.id === activeConversationId() ? 'true' : null">
           <span class="rail-row__title">
             @if (conversation.pinned) {

@@ -89,6 +89,28 @@ describe('parseInline', () => {
     expect(flattenInline(nodes)).toContain('click me');
   });
 
+  it('keeps underscores inside an identifier', () => {
+    // `order_line_id` is ordinary prose in a shop-data assistant; it must not
+    // come out as `order` + emphasis + `id`.
+    expect(parseInline('The column is order_line_id.')).toEqual([
+      { type: 'text', value: 'The column is order_line_id.' },
+    ]);
+    expect(parseInline('a _real_ emphasis')).toEqual([
+      { type: 'text', value: 'a ' },
+      { type: 'em', children: [{ type: 'text', value: 'real' }] },
+      { type: 'text', value: ' emphasis' },
+    ]);
+  });
+
+  it('parses an image, and degrades an unsafe one to its alt text', () => {
+    expect(parseInline('![tyre wear](https://cdn.example/wear.png)')).toEqual([
+      { type: 'image', src: 'https://cdn.example/wear.png', alt: 'tyre wear' },
+    ]);
+    const unsafe = parseInline('![label](javascript:alert(1))');
+    expect(unsafe.every(node => node.type !== 'image')).toBe(true);
+    expect(flattenInline(unsafe)).toContain('label');
+  });
+
   it('does not treat an unmatched delimiter as a span', () => {
     expect(parseInline('2 * 3 = 6')).toEqual([{ type: 'text', value: '2 * 3 = 6' }]);
   });
@@ -117,5 +139,20 @@ describe('isSafeHref', () => {
     ]) {
       expect(isSafeHref(href), href).toBe(false);
     }
+  });
+
+  it('rejects an origin-relative target that only looks like a path', () => {
+    // `//host/path` carries no scheme but resolves to another origin, so a
+    // scheme check alone used to wave it through as an in-app link.
+    for (const href of ['//evil.example/login', '\\\\evil.example\\share', '//evil.example']) {
+      expect(isSafeHref(href), href).toBe(false);
+    }
+  });
+
+  it('sees through whitespace and control characters smuggled into a scheme', () => {
+    // Browsers strip these before resolving, so `java\tscript:` would have run.
+    expect(isSafeHref('java\tscript:alert(1)')).toBe(false);
+    expect(isSafeHref('java\nscript:alert(1)')).toBe(false);
+    expect(isSafeHref('\u0001javascript:alert(1)')).toBe(false);
   });
 });

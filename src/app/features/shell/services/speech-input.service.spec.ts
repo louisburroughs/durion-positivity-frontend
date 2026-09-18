@@ -27,9 +27,9 @@ class FakeRecognition {
     this.onstart?.();
   }
 
+  /** The real engine fires `onend` later, on its own; tests decide when. */
   stop(): void {
     this.stopped = true;
-    this.onend?.();
   }
 
   abort(): void {
@@ -112,9 +112,13 @@ describe('SpeechInputService', () => {
     FakeRecognition.last!.emit('open workorders', true);
 
     service.stop();
-    expect(service.state()).toBe('idle');
-    expect(service.transcript()).toBe('open workorders');
+    // Still listening until the engine's onend: the last FINAL result has not
+    // arrived yet, and dropping it would lose the corrected trailing words.
+    expect(service.state()).toBe('listening');
+    FakeRecognition.last!.emit(' by bay', true);
+    expect(service.transcript()).toBe('open workorders by bay');
 
+    service.cancel();
     service.start('en-US');
     FakeRecognition.last!.emit('discard me', true);
     service.cancel();
@@ -151,6 +155,33 @@ describe('SpeechInputService', () => {
 
     expect(service.state()).toBe('idle');
     expect(service.errorKey()).toBeNull();
+  });
+
+  it('survives a stop-then-start with the old engine still ending', () => {
+    // The old instance's onend used to null out the new recognition and report
+    // idle, leaving the microphone live with no way to stop it.
+    const service = serviceWithRecognition();
+    service.start('en-US');
+    const first = FakeRecognition.last!;
+
+    service.stop();
+    expect(first.stopped).toBe(true);
+    first.onend?.();
+    expect(service.state()).toBe('idle');
+
+    service.start('en-US');
+    const second = FakeRecognition.last!;
+    expect(second).not.toBe(first);
+    expect(service.state()).toBe('listening');
+
+    // A late event from the retired engine must not touch current state.
+    first.onend?.();
+    first.emit('stale words', true);
+    expect(service.state()).toBe('listening');
+    expect(service.transcript()).toBe('');
+
+    service.stop();
+    expect(second.stopped).toBe(true);
   });
 
   it('ignores a second start while already listening', () => {

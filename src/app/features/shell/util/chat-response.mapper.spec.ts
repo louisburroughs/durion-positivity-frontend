@@ -122,6 +122,30 @@ describe('coerceBlocks', () => {
     expect(coerceBlocks([null, 7, 'string', {}, { kind: 'table' }, { kind: 'chart', series: [] }])).toEqual([]);
   });
 
+  it('accepts an error block, so a failed turn survives a reload', () => {
+    const blocks = coerceBlocks([
+      {
+        kind: 'error',
+        messageKey: 'SHELL.CHAT.ERROR.BACKEND',
+        detailKey: 'SHELL.CHAT.ERROR.DETAIL_STATUS',
+        detailParams: { status: 503 },
+        correlationId: 'abc-123',
+        retryable: true,
+      },
+    ]);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].kind).toBe('error');
+  });
+
+  it('drops an error block with no message key, and unusable detail params', () => {
+    expect(coerceBlocks([{ kind: 'error', retryable: true }])).toEqual([]);
+    const [block] = coerceBlocks([
+      { kind: 'error', messageKey: 'K', detailParams: { nested: { a: 1 } }, retryable: false },
+    ]);
+    expect(block.kind === 'error' && block.detailParams).toBeNull();
+    expect(block.kind === 'error' && block.retryable).toBe(false);
+  });
+
   it('drops an image that has no text alternative', () => {
     expect(coerceBlocks([{ kind: 'image', url: '/blob/1' }])).toEqual([]);
   });

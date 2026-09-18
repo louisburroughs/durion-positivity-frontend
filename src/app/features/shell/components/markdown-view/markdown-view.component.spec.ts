@@ -1,11 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { MarkdownViewComponent } from './markdown-view.component';
 
 describe('MarkdownViewComponent', () => {
   let fixture: ComponentFixture<MarkdownViewComponent>;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [MarkdownViewComponent] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [MarkdownViewComponent],
+      providers: [provideRouter([])],
+    }).compileComponents();
     fixture = TestBed.createComponent(MarkdownViewComponent);
   });
 
@@ -62,6 +66,13 @@ describe('MarkdownViewComponent', () => {
   it('nests inline spans inside a link', () => {
     const host = render('[**the roster**](/app/people)');
     expect(host.querySelector('a.md-link strong')?.textContent).toBe('the roster');
+  });
+
+  it('renders an image, with its alt text', () => {
+    const host = render('![tyre wear](https://cdn.example/wear.png)');
+    const image = host.querySelector('img.md-image');
+    expect(image?.getAttribute('src')).toBe('https://cdn.example/wear.png');
+    expect(image?.getAttribute('alt')).toBe('tyre wear');
   });
 
   it('never builds markup from the source, whatever it contains', () => {

@@ -57,6 +57,9 @@
       @case ('code') {
       <code class="md-code">{{ node.value }}</code>
       }
+      @case ('image') {
+      <img class="md-image" [src]="node.src" [alt]="node.alt" loading="lazy">
+      }
       @case ('strong') {
       <strong><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: node.children }" /></strong>
       }
@@ -64,10 +67,21 @@
       <em><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: node.children }" /></em>
       }
       @case ('link') {
-      <a class="md-link" [href]="node.href" [attr.target]="node.external ? '_blank' : null"
-         [attr.rel]="node.external ? 'noopener noreferrer' : null">
-        <ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: node.children }" />
-      </a>
+        @if (node.external) {
+        <a class="md-link" [href]="node.href" target="_blank" rel="noopener noreferrer">
+          <ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: node.children }" />
+        </a>
+        } @else if (isFragment(node.href)) {
+        <a class="md-link" [href]="node.href">
+          <ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: node.children }" />
+        </a>
+        } @else {
+        <!-- In-app target: routerLink, never a bare href — a bare one reloads the
+             whole app and destroys the open dialog and its conversation (ADR-0037). -->
+        <a class="md-link" [routerLink]="node.href">
+          <ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: node.children }" />
+        </a>
+        }
       }
     }
   }

@@ -12,7 +12,8 @@ import { isPlatformBrowser } from '@angular/common';
  * Where the browser has no recognition engine the service reports `unsupported`
  * and the composer disables its mic with an explanation — it does NOT record
  * audio, because there is no server transcription endpoint to send it to yet
- * (`environment.features.chatSpeechTranscription`, backend #2074).
+ * (backend #2074). When that endpoint exists, a MediaRecorder fallback belongs
+ * here, behind the same `unsupported` branch.
  */
 export type SpeechInputState = 'unsupported' | 'idle' | 'starting' | 'listening' | 'error';
 
@@ -102,13 +103,25 @@ export class SpeechInputService {
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
+    // Every handler checks that it belongs to the CURRENT instance. Stopping and
+    // restarting quickly leaves the old engine's `onend` in flight; without this
+    // guard it would null out the new recognition and report idle while the
+    // microphone was still live, with no way to stop it.
     recognition.onstart = () => {
+      if (this.recognition !== recognition) return;
       this._state.set('listening');
       this.startTimer();
     };
-    recognition.onresult = event => this.onResult(event);
-    recognition.onerror = event => this.onError(event.error);
+    recognition.onresult = event => {
+      if (this.recognition !== recognition) return;
+      this.onResult(event);
+    };
+    recognition.onerror = event => {
+      if (this.recognition !== recognition) return;
+      this.onError(event.error);
+    };
     recognition.onend = () => {
+      if (this.recognition !== recognition) return;
       this.stopTimer();
       if (this._state() !== 'error') {
         this._state.set('idle');
@@ -126,13 +139,20 @@ export class SpeechInputService {
     }
   }
 
-  /** Stop listening and keep what was recognised. */
+  /**
+   * Stop listening and keep what was recognised. The state stays `listening` until
+   * the engine's `onend` arrives, so the last FINAL result — the corrected version
+   * of the trailing words — still reaches the composer instead of being dropped.
+   */
   stop(): void {
-    this.stopTimer();
-    this.recognition?.stop();
-    if (this._state() === 'listening' || this._state() === 'starting') {
-      this._state.set('idle');
+    if (!this.recognition) {
+      if (this._state() === 'listening' || this._state() === 'starting') {
+        this._state.set('idle');
+      }
+      return;
     }
+    this.stopTimer();
+    this.recognition.stop();
   }
 
   /** Stop listening and throw the transcript away. */

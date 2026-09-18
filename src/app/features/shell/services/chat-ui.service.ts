@@ -43,6 +43,10 @@ export class ChatUiService {
     this.setHistoryRail(true);
   }
 
+  hideHistoryRail(): void {
+    this.setHistoryRail(false);
+  }
+
   private setHistoryRail(value: boolean): void {
     this._historyRailOpen.set(value);
     if (!isPlatformBrowser(this.platformId)) return;
@@ -53,13 +57,25 @@ export class ChatUiService {
     }
   }
 
-  /** Open on SSR and first visit; only an explicit 'false' keeps the rail closed. */
+  /**
+   * Open by default on a wide viewport. On a narrow one the rail covers the whole
+   * dialog, so defaulting it open would show a first-time user a history list and
+   * no message box at all. A stored preference still wins at any width.
+   */
   private loadHistoryRail(): boolean {
     if (!isPlatformBrowser(this.platformId)) return true;
     try {
-      return localStorage.getItem(HISTORY_RAIL_KEY) !== 'false';
+      const stored = localStorage.getItem(HISTORY_RAIL_KEY);
+      if (stored !== null) return stored !== 'false';
     } catch {
       return true;
     }
+    return !isNarrowViewport();
   }
+}
+
+/** True on the breakpoint where the history rail covers the whole dialog. */
+export function isNarrowViewport(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  return window.matchMedia('(max-width: 640px)').matches;
 }

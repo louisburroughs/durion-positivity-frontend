@@ -39,21 +39,25 @@ export class ChatSendService {
    */
   send(text: string, callbacks?: ChatSendCallbacks): void {
     this.chatState.appendUserMessage(text);
-    this.dispatch(text, callbacks);
+    this.dispatch(text, this.chatState.beginAssistantTurn(), callbacks);
   }
 
-  /** Re-send the most recent user turn, dropping the failed assistant turn. */
+  /**
+   * Re-ask the question that produced a failed turn, replacing that turn in place.
+   * Deliberately NOT the newest question in the thread: a retry on an older
+   * failure must re-send its own prompt, and its answer must stay where it was.
+   */
   retry(failedMessageId: string, callbacks?: ChatSendCallbacks): void {
-    const text = this.chatState.lastUserText();
+    const text = this.chatState.userTextBefore(failedMessageId);
     if (!text) return;
 
-    this.chatState.discardMessage(failedMessageId);
-    this.dispatch(text, callbacks);
+    const pendingId = this.chatState.restartAssistantTurn(failedMessageId);
+    if (!pendingId) return;
+
+    this.dispatch(text, pendingId, callbacks);
   }
 
-  private dispatch(text: string, callbacks?: ChatSendCallbacks): void {
-    const pendingId = this.chatState.beginAssistantTurn();
-
+  private dispatch(text: string, pendingId: string, callbacks?: ChatSendCallbacks): void {
     this.chatApi
       .sendMessage({ message: text })
       .pipe(finalize(() => callbacks?.onSettled?.()))

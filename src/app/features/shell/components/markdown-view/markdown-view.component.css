@@ -62,6 +62,14 @@ h6.md-heading {
   font-size: 0.875em;
 }
 
+.md-image {
+  display: block;
+  max-width: 100%;
+  max-height: 22rem;
+  margin: var(--space-2) 0;
+  border-radius: var(--radius-sm);
+}
+
 .md-rule {
   margin: var(--space-4) 0;
   border: 0;

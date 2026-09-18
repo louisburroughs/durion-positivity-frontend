@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, RouterLink } from '@angular/router';
+import { By } from '@angular/platform-browser';
 import { TranslateModule } from '@ngx-translate/core';
 import { ChatBlock, ChatMessage } from '../../models/chat.model';
 import { ChatMessageComponent } from './chat-message.component';
@@ -13,6 +15,7 @@ describe('ChatMessageComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ChatMessageComponent, TranslateModule.forRoot()],
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ChatMessageComponent);
@@ -60,13 +63,53 @@ describe('ChatMessageComponent', () => {
     expect(host.textContent).toContain('click me');
   });
 
-  it('renders an in-app markdown link as an anchor without a target', () => {
+  it('routes an in-app markdown link through the router, not a page reload', () => {
+    // A bare href would reload the app and destroy the open dialog (ADR-0037).
     const host = render(
       message('assistant', [{ kind: 'markdown', markdown: '[the roster](/app/people)' }]),
     );
     const anchor = host.querySelector('a');
     expect(anchor?.getAttribute('href')).toBe('/app/people');
     expect(anchor?.getAttribute('target')).toBeNull();
+    // RouterLink renders the resolved href itself, so the directive is the proof.
+    expect(fixture.debugElement.query(By.directive(RouterLink))).not.toBeNull();
+  });
+
+  it('renders an image from markdown', () => {
+    const host = render(
+      message('assistant', [
+        { kind: 'markdown', markdown: '![tyre wear](https://cdn.example/wear.png)' },
+      ]),
+    );
+    const image = host.querySelector('img.md-image');
+    expect(image?.getAttribute('src')).toBe('https://cdn.example/wear.png');
+    expect(image?.getAttribute('alt')).toBe('tyre wear');
+  });
+
+  it('neutralises a formula in a CSV cell', async () => {
+    // Quoting alone does not stop Excel evaluating `=HYPERLINK(...)` on open.
+    let written: Blob | null = null;
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((obj: Blob | MediaSource) => {
+      written = obj as Blob;
+      return 'blob:stub';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+
+    const block = {
+      kind: 'table' as const,
+      title: 'Payloads',
+      columns: [{ label: 'Formula', align: 'start' as const }],
+      rows: [['=HYPERLINK("http://evil","Click")'], ['ACTIVE']],
+    };
+    render(message('assistant', [block]));
+    fixture.componentInstance.downloadCsv(block);
+
+    expect(written).not.toBeNull();
+    const csv = await (written as unknown as Blob).text();
+    expect(csv).toContain(`"'=HYPERLINK`);
+    // An ordinary cell is left alone.
+    expect(csv).toContain('"ACTIVE"');
   });
 
   it('renders a table with a header row and right-aligned numeric cells', () => {

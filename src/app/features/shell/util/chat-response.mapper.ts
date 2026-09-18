@@ -193,6 +193,19 @@ function coerceBlock(entry: unknown): ChatBlock | null {
             caption: asString(raw['caption']) ? (raw['caption'] as string) : null,
           }
         : null;
+    case 'error':
+      return asString(raw['messageKey'])
+        ? {
+            kind: 'error',
+            messageKey: raw['messageKey'] as string,
+            detailKey: asString(raw['detailKey']) ? (raw['detailKey'] as string) : null,
+            detailParams: isParamRecord(raw['detailParams'])
+              ? (raw['detailParams'] as Readonly<Record<string, string | number>>)
+              : null,
+            correlationId: asString(raw['correlationId']) ? (raw['correlationId'] as string) : null,
+            retryable: raw['retryable'] === true,
+          }
+        : null;
     case 'file':
       return asString(raw['name'])
         ? {
@@ -274,4 +287,12 @@ function fallbackText(raw: RawBlock): ChatBlock | null {
 
 function asString(value: unknown): boolean {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+/** Translation parameters: a flat object of strings and numbers, or nothing. */
+function isParamRecord(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  return Object.values(value as Record<string, unknown>).every(
+    entry => typeof entry === 'string' || typeof entry === 'number',
+  );
 }

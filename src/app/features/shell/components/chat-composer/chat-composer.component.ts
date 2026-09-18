@@ -62,13 +62,18 @@ export class ChatComposerComponent {
   readonly elapsed = computed(() => formatDuration(this.speech.elapsedSeconds()));
   readonly canSend = computed(() => this.draft().trim().length > 0 && !this.busy());
 
+  /** What was already in the box when dictation started; recognised words append to it. */
+  private dictationPrefix = '';
+
   constructor() {
     // Mirror recognised speech into the draft so it stays editable before sending.
+    // It APPENDS to whatever was already typed: overwriting it would silently throw
+    // away the user's own words the moment they pressed the mic.
     effect(() => {
       if (!this.listening()) return;
       const transcript = this.speech.transcript();
       if (transcript.length === 0) return;
-      this.draft.set(transcript);
+      this.draft.set(this.dictationPrefix ? `${this.dictationPrefix} ${transcript}` : transcript);
       this.resize();
     });
   }
@@ -78,6 +83,7 @@ export class ChatComposerComponent {
     if (text.length === 0 || this.busy()) return;
 
     this.speech.cancel();
+    this.dictationPrefix = '';
     this.draft.set('');
     this.resize();
     this.submitted.emit(text);
@@ -102,11 +108,16 @@ export class ChatComposerComponent {
       return;
     }
     this.speech.dismissError();
+    this.dictationPrefix = this.draft().trimEnd();
     this.speech.start(this.localeService.currentLocale());
   }
 
   cancelVoice(): void {
     this.speech.cancel();
+    // Put back exactly what was typed before the mic was pressed.
+    this.draft.set(this.dictationPrefix);
+    this.dictationPrefix = '';
+    this.resize();
     this.focus();
   }
 
@@ -116,13 +127,6 @@ export class ChatComposerComponent {
 
   focus(): void {
     this.textarea()?.nativeElement.focus();
-  }
-
-  /** Seed the box from a suggestion chip and put the caret in it. */
-  setDraft(text: string): void {
-    this.draft.set(text);
-    this.resize();
-    this.focus();
   }
 
   private resize(): void {

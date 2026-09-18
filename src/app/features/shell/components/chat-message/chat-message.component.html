@@ -99,12 +99,13 @@
           <figcaption class="block-title block-title--standalone">
             {{ block.title ?? ('SHELL.CHAT.BLOCK.CHART_TITLE' | translate) }}
           </figcaption>
+          @let chartCeiling = chartMax(block);
           <ul class="chart">
             @for (datum of block.series; track datum.label) {
             <li class="chart-row">
               <span class="chart-label">{{ datum.label }}</span>
               <span class="chart-track">
-                <span class="chart-fill" [style.width]="barWidth(block, datum.value)"></span>
+                <span class="chart-fill" [style.width]="barWidth(datum.value, chartCeiling)"></span>
               </span>
               <span class="chart-value">{{ datum.value }}</span>
             </li>

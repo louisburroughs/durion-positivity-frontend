@@ -77,12 +77,18 @@ export class ChatMessageComponent {
     anchor.href = url;
     anchor.download = fileName;
     anchor.click();
-    URL.revokeObjectURL(url);
+    // Revoking in the same tick cancels the download in Firefox and Safari, which
+    // have not yet read the blob when click() returns.
+    setTimeout(() => URL.revokeObjectURL(url));
   }
 
-  /** Longest bar in a chart sets the 100% mark; a non-positive max keeps bars empty. */
-  barWidth(block: ChatChartBlock, value: number): string {
-    const max = Math.max(...block.series.map(datum => datum.value), 0);
+  /** Longest bar in a chart sets the 100% mark. Computed once per chart, not per bar. */
+  chartMax(block: ChatChartBlock): number {
+    return block.series.reduce((largest, datum) => Math.max(largest, datum.value), 0);
+  }
+
+  /** Bar width against the chart's maximum; a non-positive maximum keeps bars empty. */
+  barWidth(value: number, max: number): string {
     if (max <= 0) return '0%';
     return `${Math.round((value / max) * 100)}%`;
   }
@@ -103,9 +109,18 @@ export class ChatMessageComponent {
   }
 }
 
-/** RFC 4180 cell: quote it, and double any quote inside it. */
+/**
+ * A cell that opens with =, +, -, @ or a control character is executed as a
+ * FORMULA by Excel and Sheets — RFC 4180 quoting does not stop it, so an answer
+ * containing `=HYPERLINK(...)` would run on open. A leading apostrophe forces the
+ * cell to text; the spreadsheet does not display it.
+ */
+const FORMULA_LEAD_RE = /^[=+\-@\t\r]/;
+
+/** RFC 4180 cell: neutralise a formula lead, quote it, and double inner quotes. */
 function csvCell(value: string): string {
-  return `"${value.replace(/"/g, '""')}"`;
+  const inert = FORMULA_LEAD_RE.test(value) ? `'${value}` : value;
+  return `"${inert.replace(/"/g, '""')}"`;
 }
 
 /** Filename-safe stem derived from a block title. */

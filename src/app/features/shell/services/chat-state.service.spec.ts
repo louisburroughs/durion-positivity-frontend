@@ -126,18 +126,95 @@ describe('ChatStateService', () => {
     expect(service.activeConversationId()).toBeNull();
   });
 
-  it('reports the last user text for a retry', () => {
-    expect(service.lastUserText()).toBeNull();
-    service.appendUserMessage('first');
-    service.appendUserMessage('second');
-    expect(service.lastUserText()).toBe('second');
+  it('resolves a retry to the question above the failed turn, not the newest one', () => {
+    service.appendUserMessage('first question');
+    const firstTurn = service.beginAssistantTurn();
+    service.completeAssistantTurn(firstTurn, [
+      {
+        kind: 'error',
+        messageKey: 'SHELL.CHAT.ERROR.BACKEND',
+        detailKey: null,
+        detailParams: null,
+        correlationId: null,
+        retryable: true,
+      },
+    ]);
+
+    service.appendUserMessage('second question');
+    const secondTurn = service.beginAssistantTurn();
+    service.completeAssistantTurn(secondTurn, [{ kind: 'text', text: 'second answer' }]);
+
+    expect(service.userTextBefore(firstTurn)).toBe('first question');
+    expect(service.userTextBefore(secondTurn)).toBe('second question');
+    expect(service.userTextBefore('no-such-message')).toBeNull();
   });
 
-  it('removes a discarded message', () => {
-    service.appendUserMessage('question');
+  it('restarts a failed turn in place rather than appending a new one at the end', () => {
+    service.appendUserMessage('first question');
+    const firstTurn = service.beginAssistantTurn();
+    service.completeAssistantTurn(firstTurn, [{ kind: 'text', text: 'failed' }]);
+    service.appendUserMessage('second question');
+
+    const restarted = service.restartAssistantTurn(firstTurn);
+
+    expect(restarted).not.toBeNull();
+    expect(service.messages()).toHaveLength(3);
+    // Still the second entry: the retried answer must not jump below a later question.
+    expect(service.messages()[1].id).toBe(restarted);
+    expect(service.messages()[1].pending).toBe(true);
+    expect(service.messages()[2].role).toBe('user');
+    expect(service.restartAssistantTurn('no-such-message')).toBeNull();
+  });
+
+  it('keeps a background conversation intact when it is pinned or renamed', () => {
+    // Pinning writes metadata only. A combined write used to blank the stored
+    // messages of any conversation that was not the open one.
+    service.appendUserMessage('a question');
     const pendingId = service.beginAssistantTurn();
-    service.discardMessage(pendingId);
+    service.completeAssistantTurn(pendingId, [{ kind: 'text', text: 'an answer' }]);
+    const id = service.activeConversationId()!;
+
+    service.startNewConversation();
+    service.togglePinned(id);
+    service.renameConversation(id, 'Renamed while closed');
+    service.selectConversation(id);
+
+    expect(service.messages()).toHaveLength(2);
+    expect(service.conversations()[0].title).toBe('Renamed while closed');
+  });
+
+  it('does not treat its own first effect run as a change of user', () => {
+    // The effect used to wipe the list that refresh() had just loaded, so the rail
+    // came up empty on the first open of every page session.
+    localStorage.clear();
+    service.appendUserMessage('stored question');
+    const pendingId = service.beginAssistantTurn();
+    service.completeAssistantTurn(pendingId, [{ kind: 'text', text: 'stored answer' }]);
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [{ provide: AuthService, useValue: { currentUserClaims: claims } }],
+    });
+
+    const reopened = TestBed.inject(ChatStateService);
+    reopened.refresh();
+    TestBed.flushEffects();
+
+    expect(reopened.conversations()).toHaveLength(1);
+    expect(reopened.state()).toBe('ready');
+  });
+
+  it('lets a new chat outrank a conversation load still in flight', () => {
+    service.appendUserMessage('a question');
+    const id = service.activeConversationId()!;
+
+    service.startNewConversation();
+    service.selectConversation(id);
     expect(service.messages()).toHaveLength(1);
+
+    service.startNewConversation();
+    expect(service.messages()).toHaveLength(0);
+    expect(service.activeConversationId()).toBeNull();
   });
 });
 

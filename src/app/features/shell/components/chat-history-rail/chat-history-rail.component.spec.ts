@@ -197,6 +197,25 @@ describe('ChatHistoryRailComponent', () => {
     expect(chatState.conversations()).toHaveLength(0);
   });
 
+  it('clears the search on Escape instead of letting the dialog close', () => {
+    conversation('a question', 'an answer');
+    component.search.set('mechanics');
+    fixture.detectChanges();
+
+    const input = host().querySelector<HTMLInputElement>('#chat-history-search')!;
+    const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    input.dispatchEvent(escape);
+    fixture.detectChanges();
+
+    expect(component.search()).toBe('');
+    expect(escape.defaultPrevented).toBe(true);
+
+    // An already-empty field lets the key through to close the dialog.
+    const second = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    input.dispatchEvent(second);
+    expect(second.defaultPrevented).toBe(false);
+  });
+
   it('labels the search field for assistive technology', () => {
     expect(host().querySelector('label[for="chat-history-search"]')).not.toBeNull();
   });

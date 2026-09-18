@@ -8,11 +8,12 @@ import { coerceBlocks } from '../util/chat-response.mapper';
 /**
  * Conversation persistence seam
  * -----------------------------
- * The MCP server has no conversation-history endpoints yet (backend #2073), so the shipped
- * implementation keeps history in this browser only ({@link LocalChatHistoryStore}).
- * Everything above this file already talks to the async {@link ChatHistoryStore}
- * contract, so turning on server-side history is a provider swap plus flipping
- * `environment.features.chatHistoryApi` — no caller changes.
+ * The MCP server has no conversation-history endpoints yet (backend #2073), so the
+ * shipped implementation keeps history in this browser only
+ * ({@link LocalChatHistoryStore}). Everything above this file already talks to the
+ * async {@link ChatHistoryStore} contract, so server-side history means providing a
+ * remote implementation for {@link CHAT_HISTORY_STORE} — one provider line, no
+ * caller changes.
  *
  * Storage is namespaced by the signed-in subject, so switching accounts in one
  * browser never surfaces another user's conversations.
@@ -21,8 +22,15 @@ export interface ChatHistoryStore {
   /** Conversations, newest first. */
   listConversations(): Observable<readonly ChatConversation[]>;
   loadMessages(conversationId: string): Observable<readonly ChatMessage[]>;
-  /** Insert or replace a conversation together with its whole message list. */
-  saveConversation(conversation: ChatConversation, messages: readonly ChatMessage[]): Observable<void>;
+  /**
+   * Insert or update a conversation's METADATA, leaving its stored messages
+   * untouched. Deliberately separate from {@link saveMessages}: a rename or a pin
+   * knows nothing about the message list, and an earlier combined signature let
+   * those callers write an empty list over a background conversation's history.
+   */
+  saveConversation(conversation: ChatConversation): Observable<void>;
+  /** Replace a conversation's whole message list. */
+  saveMessages(conversationId: string, messages: readonly ChatMessage[]): Observable<void>;
   deleteConversation(conversationId: string): Observable<void>;
   /** Drop every conversation for the current user. */
   clear(): Observable<void>;
@@ -68,15 +76,30 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
     return of(entry ? entry.messages.map(toMessage).filter(isMessage) : []);
   }
 
-  saveConversation(conversation: ChatConversation, messages: readonly ChatMessage[]): Observable<void> {
-    const entries = this.read().filter(entry => entry.id !== conversation.id);
-    entries.unshift({
+  saveConversation(conversation: ChatConversation): Observable<void> {
+    const stored = this.read();
+    const existing = stored.find(entry => entry.id === conversation.id);
+
+    this.upsert(stored, {
       id: conversation.id,
       title: conversation.title,
       preview: conversation.preview,
       createdAt: conversation.createdAt.toISOString(),
       updatedAt: conversation.updatedAt.toISOString(),
       pinned: conversation.pinned,
+      // Carry the stored messages forward: metadata writes never touch them.
+      messages: existing?.messages ?? [],
+    });
+    return of(undefined);
+  }
+
+  saveMessages(conversationId: string, messages: readonly ChatMessage[]): Observable<void> {
+    const stored = this.read();
+    const existing = stored.find(entry => entry.id === conversationId);
+    if (!existing) return of(undefined);
+
+    this.upsert(stored, {
+      ...existing,
       messages: messages.slice(-MAX_MESSAGES_PER_CONVERSATION).map(message => ({
         id: message.id,
         role: message.role,
@@ -84,9 +107,13 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
         timestamp: message.timestamp.toISOString(),
       })),
     });
-
-    this.write(trimToBudget(entries));
     return of(undefined);
+  }
+
+  /** Move an entry to the front of the stored list and write it back. */
+  private upsert(stored: readonly PersistedConversation[], entry: PersistedConversation): void {
+    const rest = stored.filter(candidate => candidate.id !== entry.id);
+    this.write(trimToBudget(entry, rest));
   }
 
   deleteConversation(conversationId: string): Observable<void> {
@@ -146,10 +173,19 @@ export const CHAT_HISTORY_STORE = new InjectionToken<ChatHistoryStore>('CHAT_HIS
   factory: () => inject(LocalChatHistoryStore),
 });
 
-function trimToBudget(entries: readonly PersistedConversation[]): PersistedConversation[] {
-  const pinned = entries.filter(entry => entry.pinned);
-  const rest = entries.filter(entry => !entry.pinned);
-  return [...pinned, ...rest].slice(0, MAX_CONVERSATIONS);
+/**
+ * Keep the entry just written, then as many others as the budget allows, pinned
+ * first. The written entry is held out of the trim: an earlier version dropped it
+ * when the budget was already full of pinned conversations, so the chat the user
+ * was in silently stopped persisting.
+ */
+function trimToBudget(
+  kept: PersistedConversation,
+  others: readonly PersistedConversation[],
+): PersistedConversation[] {
+  const pinned = others.filter(entry => entry.pinned);
+  const rest = others.filter(entry => !entry.pinned);
+  return [kept, ...pinned, ...rest].slice(0, MAX_CONVERSATIONS);
 }
 
 function toConversation(entry: PersistedConversation): ChatConversation {

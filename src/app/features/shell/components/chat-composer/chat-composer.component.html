@@ -42,7 +42,8 @@
   <div class="voice-strip" role="status">
     <span class="voice-dot" aria-hidden="true"></span>
     <span class="voice-label">{{ 'SHELL.CHAT.VOICE.LISTENING' | translate }}</span>
-    <span class="voice-timer">{{ elapsed() }}</span>
+    <!-- Visual only: inside role="status" this would be announced every second. -->
+    <span class="voice-timer" aria-hidden="true">{{ elapsed() }}</span>
     <span class="voice-strip__spacer"></span>
     <button class="ghost-btn" type="button" (click)="cancelVoice()">
       {{ 'SHELL.CHAT.VOICE.CANCEL' | translate }}

@@ -4,14 +4,26 @@ import { ChatUiService } from './chat-ui.service';
 const HISTORY_RAIL_KEY = 'durion-chat-history-rail';
 
 describe('ChatUiService', () => {
+  /** Pin the viewport: the rail's default differs above and below the breakpoint. */
+  function pinViewport(narrow: boolean): void {
+    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: narrow } as MediaQueryList);
+  }
+
   function makeService(): ChatUiService {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({});
     return TestBed.inject(ChatUiService);
   }
 
-  beforeEach(() => localStorage.clear());
-  afterEach(() => localStorage.clear());
+  beforeEach(() => {
+    localStorage.clear();
+    pinViewport(false);
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+    vi.restoreAllMocks();
+  });
 
   it('starts closed and never restores an open dialog from storage', () => {
     const service = makeService();
@@ -36,6 +48,28 @@ describe('ChatUiService', () => {
     service.openModal();
     service.close();
     expect(service.open()).toBe(false);
+  });
+
+  it('keeps the rail closed by default on a viewport it would cover', () => {
+    // Open by default on a phone would show a history list and no message box.
+    pinViewport(true);
+    expect(makeService().historyRailOpen()).toBe(false);
+
+    pinViewport(false);
+    expect(makeService().historyRailOpen()).toBe(true);
+  });
+
+  it('lets a stored preference win at any width', () => {
+    pinViewport(false);
+    const service = makeService();
+    service.toggleHistoryRail();
+
+    pinViewport(true);
+    expect(makeService().historyRailOpen()).toBe(false);
+
+    makeService().showHistoryRail();
+    pinViewport(true);
+    expect(makeService().historyRailOpen()).toBe(true);
   });
 
   it('persists the history rail preference', () => {

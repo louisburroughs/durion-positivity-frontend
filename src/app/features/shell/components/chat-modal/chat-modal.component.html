@@ -1,4 +1,6 @@
-<!-- Backdrop: a real button so it is reachable and dismissible without a pointer. -->
+<!-- Backdrop: a button so a pointer dismiss is a real activation, not a div click.
+     Deliberately out of the tab order — the header close button and Escape are the
+     keyboard routes out, and a focusable backdrop would only add a dead stop. -->
 <button class="chat-backdrop" type="button" tabindex="-1" (click)="onBackdropClick()"
         [attr.aria-label]="'SHELL.CHAT.CLOSE_ARIA' | translate"></button>
 
@@ -54,7 +56,7 @@
 
     @if (historyRailOpen()) {
     <div id="chat-history-rail" class="chat-rail">
-      <app-chat-history-rail />
+      <app-chat-history-rail (conversationOpened)="onConversationOpened()" />
     </div>
     }
 
@@ -100,11 +102,12 @@
 
       <app-chat-composer [busy]="awaitingReply()" [canIngest]="isAdmin()"
                          (submitted)="send($event)"
-                         (ingestRequested)="showRagDialog.set(true)" />
+                         (ingestRequested)="openRagDialog()" />
     </div>
   </div>
-</section>
 
-@if (showRagDialog()) {
-<app-rag-ingest-dialog (closed)="showRagDialog.set(false)" />
-}
+  <!-- Nested inside the dialog so its keystrokes reach the trap above. -->
+  @if (showRagDialog()) {
+  <app-rag-ingest-dialog (closed)="onRagDialogClosed()" />
+  }
+</section>

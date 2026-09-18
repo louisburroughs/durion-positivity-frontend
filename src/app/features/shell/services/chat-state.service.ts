@@ -53,8 +53,18 @@ export class ChatStateService {
   /** True while the last turn is still streaming in. */
   readonly awaitingReply = computed(() => this._messages().some(message => message.pending));
 
-  /** Plain (non-signal) field: changing it must not re-trigger the effect below. */
-  private trackedUserId: string | null = null;
+  /**
+   * Plain (non-signal) field: changing it must not re-trigger the effect below.
+   * Seeded from the current claims so the effect's FIRST run is not mistaken for a
+   * user change — it used to be, which wiped the conversation list that `refresh()`
+   * had just loaded, leaving the rail empty until the modal was opened a second time.
+   */
+  private trackedUserId: string | null = this.auth.currentUserClaims()?.sub ?? null;
+  /**
+   * Monotonic token for conversation loads. Two selections can be in flight once
+   * the store is server-backed, and the slower one must not overwrite the newer.
+   */
+  private selectionToken = 0;
 
   constructor() {
     effect(() => {
@@ -91,6 +101,8 @@ export class ChatStateService {
 
   /** Clear the thread without discarding the stored conversation behind it. */
   startNewConversation(): void {
+    // Outranks any load still in flight, so a slow one cannot refill the thread.
+    this.selectionToken += 1;
     this._activeId.set(null);
     this._messages.set([]);
     this._errorKey.set(null);
@@ -100,18 +112,21 @@ export class ChatStateService {
   selectConversation(conversationId: string): void {
     if (this._activeId() === conversationId) return;
 
+    const token = ++this.selectionToken;
     this._state.set('loading');
     this.store
       .loadMessages(conversationId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: messages => {
+          if (token !== this.selectionToken) return;
           this._activeId.set(conversationId);
           this._messages.set(messages);
           this._state.set('ready');
           this._errorKey.set(null);
         },
         error: () => {
+          if (token !== this.selectionToken) return;
           this._state.set('error');
           this._errorKey.set('SHELL.CHAT.ERROR.HISTORY_LOAD');
         },
@@ -154,19 +169,41 @@ export class ChatStateService {
     this.persist();
   }
 
-  /** Remove a turn outright — used when a send is retried from the same prompt. */
-  discardMessage(messageId: string): void {
-    this._messages.update(messages => messages.filter(message => message.id !== messageId));
+  /**
+   * Put a failed turn back into its pending state, IN PLACE, and return the new
+   * message id. Retrying an older turn must not move its answer to the bottom of
+   * the thread, under a question that was asked after it.
+   */
+  restartAssistantTurn(messageId: string): string | null {
+    const index = this._messages().findIndex(message => message.id === messageId);
+    if (index < 0) return null;
+
+    const id = newId();
+    this._messages.update(messages =>
+      messages.map((message, position) =>
+        position === index
+          ? { id, role: 'assistant' as const, blocks: [], timestamp: new Date(), pending: true }
+          : message,
+      ),
+    );
+    return id;
   }
 
-  /** The text of the most recent user turn, for the retry action. */
-  lastUserText(): string | null {
-    for (let index = this._messages().length - 1; index >= 0; index -= 1) {
-      const message = this._messages()[index];
-      if (message.role === 'user') {
-        const text = blocksToPlainText(message.blocks).trim();
-        return text.length > 0 ? text : null;
-      }
+  /**
+   * The question that produced the given assistant turn — the nearest user turn
+   * ABOVE it, not the most recent one in the thread. Retrying an older failure
+   * must re-ask its own question.
+   */
+  userTextBefore(messageId: string): string | null {
+    const messages = this._messages();
+    const index = messages.findIndex(message => message.id === messageId);
+    if (index < 0) return null;
+
+    for (let position = index - 1; position >= 0; position -= 1) {
+      const message = messages[position];
+      if (message.role !== 'user') continue;
+      const text = blocksToPlainText(message.blocks).trim();
+      return text.length > 0 ? text : null;
     }
     return null;
   }
@@ -233,9 +270,11 @@ export class ChatStateService {
       conversations.map(conversation => (conversation.id === conversationId ? updated : conversation)),
     );
 
-    const messages = this._activeId() === conversationId ? this._messages() : [];
+    // Metadata only: a pin or rename must not touch the stored messages, least of
+    // all for a conversation that is not the open one and whose messages are not
+    // in memory to write back.
     this.store
-      .saveConversation(updated, messages)
+      .saveConversation(updated)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
   }
@@ -257,9 +296,14 @@ export class ChatStateService {
     );
 
     this.store
-      .saveConversation(updated, messages)
+      .saveConversation(updated)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe();
+      .subscribe(() =>
+        this.store
+          .saveMessages(updated.id, messages)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe(),
+      );
   }
 
   private resetForCurrentUser(): void {
@@ -271,8 +315,16 @@ export class ChatStateService {
   }
 }
 
+/**
+ * `crypto.randomUUID` exists only in a secure context, so on a plain-HTTP LAN or
+ * staging host every send would throw. These ids are local correlation keys, never
+ * security tokens, so a random fallback is fine.
+ */
 function newId(): string {
-  return crypto.randomUUID();
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 /** First line of the opening question, clipped on a word boundary. */

@@ -47,8 +47,14 @@ describe('LocalChatHistoryStore', () => {
 
   afterEach(() => localStorage.clear());
 
+  /** The usual pair: metadata then messages, as ChatStateService.persist does. */
+  async function save(entry = conversation(), messages = [message()]): Promise<void> {
+    await firstValueFrom(store.saveConversation(entry));
+    await firstValueFrom(store.saveMessages(entry.id, messages));
+  }
+
   it('round-trips a conversation and its messages', async () => {
-    await firstValueFrom(store.saveConversation(conversation(), [message()]));
+    await save();
 
     const listed = await firstValueFrom(store.listConversations());
     expect(listed).toHaveLength(1);
@@ -62,25 +68,40 @@ describe('LocalChatHistoryStore', () => {
   });
 
   it('replaces a conversation rather than duplicating it', async () => {
-    await firstValueFrom(store.saveConversation(conversation(), [message()]));
-    await firstValueFrom(store.saveConversation(conversation({ title: 'Renamed' }), [message()]));
+    await save();
+    await firstValueFrom(store.saveConversation(conversation({ title: 'Renamed' })));
 
     const listed = await firstValueFrom(store.listConversations());
     expect(listed).toHaveLength(1);
     expect(listed[0].title).toBe('Renamed');
   });
 
+  it('keeps the stored messages when only the metadata is written', async () => {
+    // A rename or a pin knows nothing about the message list. An earlier combined
+    // signature let those callers write an empty list over a whole conversation.
+    await save(conversation(), [message({ id: 'a' }), message({ id: 'b' })]);
+
+    await firstValueFrom(store.saveConversation(conversation({ title: 'Renamed', pinned: true })));
+
+    const messages = await firstValueFrom(store.loadMessages('c1'));
+    expect(messages.map(entry => entry.id)).toEqual(['a', 'b']);
+  });
+
+  it('ignores a message write for a conversation that was never saved', async () => {
+    await firstValueFrom(store.saveMessages('ghost', [message()]));
+    expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
+  });
+
   it('lists pinned conversations first, then most recently updated', async () => {
     await firstValueFrom(
-      store.saveConversation(conversation({ id: 'old', updatedAt: new Date('2026-09-10T09:00:00Z') }), []),
+      store.saveConversation(conversation({ id: 'old', updatedAt: new Date('2026-09-10T09:00:00Z') })),
     );
     await firstValueFrom(
-      store.saveConversation(conversation({ id: 'new', updatedAt: new Date('2026-09-18T09:00:00Z') }), []),
+      store.saveConversation(conversation({ id: 'new', updatedAt: new Date('2026-09-18T09:00:00Z') })),
     );
     await firstValueFrom(
       store.saveConversation(
         conversation({ id: 'pin', pinned: true, updatedAt: new Date('2026-01-01T09:00:00Z') }),
-        [],
       ),
     );
 
@@ -89,7 +110,7 @@ describe('LocalChatHistoryStore', () => {
   });
 
   it('namespaces storage by the signed-in subject', async () => {
-    await firstValueFrom(store.saveConversation(conversation(), [message()]));
+    await save();
     expect(localStorage.getItem(STORAGE_KEY)).not.toBeNull();
 
     claims.set({ sub: 'other.user', exp: 9999999999 });
@@ -100,8 +121,8 @@ describe('LocalChatHistoryStore', () => {
   });
 
   it('deletes one conversation and clears them all', async () => {
-    await firstValueFrom(store.saveConversation(conversation({ id: 'a' }), []));
-    await firstValueFrom(store.saveConversation(conversation({ id: 'b' }), []));
+    await firstValueFrom(store.saveConversation(conversation({ id: 'a' })));
+    await firstValueFrom(store.saveConversation(conversation({ id: 'b' })));
 
     await firstValueFrom(store.deleteConversation('a'));
     expect(await firstValueFrom(store.listConversations())).toHaveLength(1);
@@ -119,20 +140,64 @@ describe('LocalChatHistoryStore', () => {
   });
 
   it('drops a persisted message whose role is not recognised', async () => {
-    await firstValueFrom(
-      store.saveConversation(conversation(), [
-        message({ id: 'ok' }),
-        message({ id: 'bad', role: 'ghost' as unknown as 'user' }),
-      ]),
-    );
+    await save(conversation(), [
+      message({ id: 'ok' }),
+      message({ id: 'bad', role: 'ghost' as unknown as 'user' }),
+    ]);
 
     const messages = await firstValueFrom(store.loadMessages('c1'));
     expect(messages.map(entry => entry.id)).toEqual(['ok']);
   });
 
+  it('brings an error turn back as an error turn, not an empty bubble', async () => {
+    await save(conversation(), [
+      message({
+        id: 'failed',
+        role: 'assistant',
+        blocks: [
+          {
+            kind: 'error',
+            messageKey: 'SHELL.CHAT.ERROR.BACKEND',
+            detailKey: 'SHELL.CHAT.ERROR.DETAIL_STATUS',
+            detailParams: { status: 503 },
+            correlationId: 'abc-123',
+            retryable: true,
+          },
+        ],
+      }),
+    ]);
+
+    const [restored] = await firstValueFrom(store.loadMessages('c1'));
+    expect(restored.blocks).toEqual([
+      {
+        kind: 'error',
+        messageKey: 'SHELL.CHAT.ERROR.BACKEND',
+        detailKey: 'SHELL.CHAT.ERROR.DETAIL_STATUS',
+        detailParams: { status: 503 },
+        correlationId: 'abc-123',
+        retryable: true,
+      },
+    ]);
+  });
+
+  it('never evicts the conversation it was just asked to write', async () => {
+    // A budget full of pinned conversations used to drop the active one silently.
+    for (let index = 0; index < 30; index += 1) {
+      await firstValueFrom(
+        store.saveConversation(conversation({ id: `pinned-${index}`, pinned: true })),
+      );
+    }
+
+    await save(conversation({ id: 'current' }), [message({ id: 'kept' })]);
+
+    const listed = await firstValueFrom(store.listConversations());
+    expect(listed.some(entry => entry.id === 'current')).toBe(true);
+    expect(await firstValueFrom(store.loadMessages('current'))).toHaveLength(1);
+  });
+
   it('caps the stored message list so one long thread cannot fill the quota', async () => {
     const many = Array.from({ length: 250 }, (_, index) => message({ id: `m${index}` }));
-    await firstValueFrom(store.saveConversation(conversation(), many));
+    await save(conversation(), many);
 
     const messages = await firstValueFrom(store.loadMessages('c1'));
     expect(messages).toHaveLength(200);

@@ -16,7 +16,7 @@ import { MaterialSymbolPipe } from '../../../../shared/material-symbol.pipe';
 import { blocksToPlainText } from '../../models/chat.model';
 import { ChatSendService } from '../../services/chat-send.service';
 import { ChatStateService } from '../../services/chat-state.service';
-import { ChatUiService } from '../../services/chat-ui.service';
+import { ChatUiService, isNarrowViewport } from '../../services/chat-ui.service';
 import { ChatComposerComponent } from '../chat-composer/chat-composer.component';
 import { ChatHistoryRailComponent } from '../chat-history-rail/chat-history-rail.component';
 import { ChatMessageComponent } from '../chat-message/chat-message.component';
@@ -93,6 +93,7 @@ export class ChatModalComponent implements AfterViewChecked {
   private scrollPending = false;
   private renderedMessageCount = 0;
   private readonly openerElement: HTMLElement | null;
+  private previousBodyOverflow = '';
 
   constructor() {
     this.openerElement =
@@ -107,7 +108,11 @@ export class ChatModalComponent implements AfterViewChecked {
       this.scrollPending = true;
     });
 
-    this.destroyRef.onDestroy(() => this.openerElement?.focus());
+    this.lockPageScroll();
+    this.destroyRef.onDestroy(() => {
+      this.releasePageScroll();
+      this.openerElement?.focus();
+    });
   }
 
   ngAfterViewChecked(): void {
@@ -138,6 +143,29 @@ export class ChatModalComponent implements AfterViewChecked {
 
   newChat(): void {
     this.chatState.startNewConversation();
+    this.composer()?.focus();
+  }
+
+  /**
+   * On a phone the rail covers the whole dialog (`.chat-rail ~ .chat-main` is
+   * hidden), so leaving it open after a conversation is chosen would hide the very
+   * thread that was just opened. Close it and put the caret in the composer.
+   */
+  onConversationOpened(): void {
+    if (isNarrowViewport()) {
+      this.chatUi.hideHistoryRail();
+    }
+    this.composer()?.focus();
+  }
+
+  /** Open the ingest dialog and move focus into it, so the trap has something to hold. */
+  openRagDialog(): void {
+    this.showRagDialog.set(true);
+    setTimeout(() => this.nestedDialog()?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus());
+  }
+
+  onRagDialogClosed(): void {
+    this.showRagDialog.set(false);
     this.composer()?.focus();
   }
 
@@ -188,17 +216,26 @@ export class ChatModalComponent implements AfterViewChecked {
 
   /** Keep Tab inside the dialog, as a modal requires. */
   private trapTab(event: KeyboardEvent): void {
-    const root = this.dialog()?.nativeElement;
+    const root = this.trapRoot();
     if (!root) return;
 
+    // `getClientRects()` rather than `offsetParent`: the latter is null for a
+    // position:fixed element, which would drop the nested dialog from the list.
     const focusable = [...root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
-      element => element.offsetParent !== null || element === document.activeElement,
+      element => element.getClientRects().length > 0 || element === document.activeElement,
     );
     if (focusable.length === 0) return;
 
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
     const active = document.activeElement;
+
+    // Focus is still behind the nested dialog: pull it in rather than let Tab walk.
+    if (!(active instanceof HTMLElement) || !root.contains(active)) {
+      event.preventDefault();
+      first.focus();
+      return;
+    }
 
     if (!event.shiftKey && active === last) {
       event.preventDefault();
@@ -207,5 +244,28 @@ export class ChatModalComponent implements AfterViewChecked {
       event.preventDefault();
       last.focus();
     }
+  }
+
+  /** A modal owns the viewport: the page behind it must not scroll under the finger. */
+  private lockPageScroll(): void {
+    if (typeof document === 'undefined') return;
+    this.previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  }
+
+  private releasePageScroll(): void {
+    if (typeof document === 'undefined') return;
+    document.body.style.overflow = this.previousBodyOverflow;
+  }
+
+  /** The element Tab is confined to: the ingest dialog when open, else this one. */
+  private trapRoot(): HTMLElement | null {
+    const root = this.dialog()?.nativeElement ?? null;
+    if (!root) return null;
+    return this.showRagDialog() ? (this.nestedDialog() ?? root) : root;
+  }
+
+  private nestedDialog(): HTMLElement | null {
+    return this.dialog()?.nativeElement.querySelector<HTMLElement>('dialog[open]') ?? null;
   }
 }
