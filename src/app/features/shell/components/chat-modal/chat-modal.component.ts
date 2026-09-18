@@ -205,6 +205,9 @@ export class ChatModalComponent implements AfterViewChecked {
   }
 
   useSuggestion(textKey: string): void {
+    // The buttons are disabled while a turn cannot start, but this is also the
+    // public entry point: a guard here is what actually holds the invariant.
+    if (this.composerBusy()) return;
     this.send(this.translate.instant(textKey));
     // Sending empties the empty state, taking the clicked suggestion with it.
     this.focusComposerAfterRender();

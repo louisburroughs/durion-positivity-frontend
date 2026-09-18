@@ -24,6 +24,13 @@ export type ChatLoadState = 'idle' | 'loading' | 'ready' | 'error';
 export interface ChatTurnTarget {
   readonly conversationId: string;
   readonly messageId: string;
+  /**
+   * Who was signed in when the turn was opened. A reply can settle after the
+   * account or tenant has changed, and both completion paths resolve the store
+   * against whoever is signed in NOW — so an old answer would be read from, and
+   * written into, the new identity's namespace (ADR-0062).
+   */
+  readonly identity: string;
 }
 
 const TITLE_MAX_LENGTH = 48;
@@ -113,7 +120,7 @@ export class ChatStateService {
         // complete the whole queue, and every later write in the session would be
         // dropped in silence after one remote failure.
         concatMap(entry =>
-          entry.identity === identityOf(this.auth.currentUserClaims())
+          entry.identity === this.currentIdentity()
             ? entry.work().pipe(catchError(() => EMPTY))
             : // The identity that queued this write is gone: running it now would
               // write an old snapshot into the new tenant's namespace, since the
@@ -225,7 +232,7 @@ export class ChatStateService {
       ...messages,
       { id: messageId, role: 'assistant', blocks: [], timestamp: new Date(), pending: true },
     ]);
-    return { conversationId, messageId };
+    return { conversationId, messageId, identity: this.currentIdentity() };
   }
 
   /**
@@ -234,6 +241,11 @@ export class ChatStateService {
    * it rather than dropped on the floor.
    */
   completeAssistantTurn(target: ChatTurnTarget, blocks: readonly ChatBlock[]): void {
+    // The turn belongs to a session that has since ended. Landing it now would
+    // read and write another tenant's history under a conversation id that may
+    // even collide.
+    if (target.identity !== this.currentIdentity()) return;
+
     // The conversation being open is not enough: leaving it and coming back
     // reloads it from the store, and a pending turn is never persisted — so the
     // placeholder is gone and the in-place update would match nothing, then
@@ -312,7 +324,7 @@ export class ChatStateService {
           : message,
       ),
     );
-    return { conversationId, messageId: id };
+    return { conversationId, messageId: id, identity: this.currentIdentity() };
   }
 
   /**
@@ -426,8 +438,17 @@ export class ChatStateService {
     );
   }
 
+  /**
+   * Who is signed in right now. Read from the claims rather than the tracked
+   * field, which only catches up when the reset effect runs — a turn settling
+   * before that would have been judged against the previous identity.
+   */
+  private currentIdentity(): string {
+    return identityOf(this.auth.currentUserClaims());
+  }
+
   private enqueueWrite(work: () => Observable<unknown>): void {
-    const identity = identityOf(this.auth.currentUserClaims());
+    const identity = this.currentIdentity();
     // Anything we write is a local change to the list, so a list load already in
     // flight is now stale: it would put back the conversation just deleted, or
     // drop the one just created — and dropping the active one means the reply to

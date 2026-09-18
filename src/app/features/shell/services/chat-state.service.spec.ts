@@ -407,6 +407,8 @@ describe('ChatStateService against a store that does not answer immediately', ()
 
   beforeEach(() => {
     TestBed.resetTestingModule();
+    // Tests in here switch tenants; start every one from a known identity.
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
     store = new DeferredStore();
     TestBed.configureTestingModule({
       providers: [
@@ -563,5 +565,24 @@ describe('ChatStateService against a store that does not answer immediately', ()
 
     expect(service.conversations().map(entry => entry.id)).toEqual([older, newer]);
     vi.useRealTimers();
+  });
+
+  it('drops a reply that settles after the identity changed', () => {
+    // Both completion paths resolve the store against whoever is signed in now,
+    // so an answer from the previous session would be read from, and written
+    // into, the new tenant's namespace — under an id that may even collide.
+    service.appendUserMessage('a question under tenant-one');
+    const target = service.beginAssistantTurn()!;
+    while (store.outstanding > 0) store.releaseNext();
+
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
+    TestBed.tick();
+    while (store.outstanding > 0) store.releaseNext();
+    store.order.length = 0;
+
+    service.completeAssistantTurn(target, [{ kind: 'text', text: 'the late answer' }]);
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(store.order).toEqual([]);
   });
 });
