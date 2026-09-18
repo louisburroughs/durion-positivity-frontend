@@ -1,0 +1,147 @@
+import { ChangeDetectionStrategy, Component, computed, inject, output, signal } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
+import { ChatConversation, ChatHistoryBucket, ChatHistoryGroup } from '../../models/chat.model';
+import { MaterialSymbolPipe } from '../../../../shared/material-symbol.pipe';
+import { ChatStateService, groupConversations } from '../../services/chat-state.service';
+
+/** Day-bucket → section heading key. */
+const GROUP_LABEL_KEYS: Readonly<Record<ChatHistoryBucket, string>> = {
+  pinned: 'SHELL.CHAT.HISTORY.GROUP.PINNED',
+  today: 'SHELL.CHAT.HISTORY.GROUP.TODAY',
+  yesterday: 'SHELL.CHAT.HISTORY.GROUP.YESTERDAY',
+  previous7Days: 'SHELL.CHAT.HISTORY.GROUP.PREVIOUS_7_DAYS',
+  older: 'SHELL.CHAT.HISTORY.GROUP.OLDER',
+};
+
+/**
+ * ChatHistoryRailComponent
+ * ------------------------
+ * Past conversations, grouped by day with pinned ones first: search, open,
+ * rename, pin and delete, plus the control that starts a fresh conversation.
+ *
+ * Destructive actions are two-step — the first click arms, the second confirms —
+ * because a conversation cannot be recovered once the store drops it.
+ */
+@Component({
+  selector: 'app-chat-history-rail',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe, MaterialSymbolPipe],
+  templateUrl: './chat-history-rail.component.html',
+  styleUrl: './chat-history-rail.component.css',
+})
+export class ChatHistoryRailComponent {
+  private readonly chatState = inject(ChatStateService);
+
+  /** Emitted after any action that should close the rail on a narrow viewport. */
+  readonly conversationOpened = output<void>();
+
+  readonly search = signal('');
+  readonly renamingId = signal<string | null>(null);
+  readonly renameDraft = signal('');
+  readonly confirmingDeleteId = signal<string | null>(null);
+  readonly confirmingClearAll = signal(false);
+
+  readonly activeConversationId = this.chatState.activeConversationId;
+  readonly hasConversations = computed(() => this.chatState.conversations().length > 0);
+
+  readonly groups = computed<readonly ChatHistoryGroup[]>(() => {
+    const term = this.search().trim().toLowerCase();
+    const matching =
+      term.length === 0
+        ? this.chatState.conversations()
+        : this.chatState
+            .conversations()
+            .filter(
+              conversation =>
+                conversation.title.toLowerCase().includes(term) ||
+                conversation.preview.toLowerCase().includes(term),
+            );
+    return groupConversations(matching, new Date());
+  });
+
+  readonly noMatches = computed(() => this.hasConversations() && this.groups().length === 0);
+
+  groupLabelKey(bucket: ChatHistoryBucket): string {
+    return GROUP_LABEL_KEYS[bucket];
+  }
+
+  newChat(): void {
+    this.chatState.startNewConversation();
+    this.resetRowState();
+    this.conversationOpened.emit();
+  }
+
+  open(conversation: ChatConversation): void {
+    this.chatState.selectConversation(conversation.id);
+    this.resetRowState();
+    this.conversationOpened.emit();
+  }
+
+  startRename(conversation: ChatConversation): void {
+    this.confirmingDeleteId.set(null);
+    this.renamingId.set(conversation.id);
+    this.renameDraft.set(conversation.title);
+  }
+
+  commitRename(): void {
+    const id = this.renamingId();
+    if (id) {
+      this.chatState.renameConversation(id, this.renameDraft());
+    }
+    this.cancelRename();
+  }
+
+  cancelRename(): void {
+    this.renamingId.set(null);
+    this.renameDraft.set('');
+  }
+
+  onRenameKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.commitRename();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.cancelRename();
+    }
+  }
+
+  togglePinned(conversation: ChatConversation): void {
+    this.chatState.togglePinned(conversation.id);
+  }
+
+  armDelete(conversation: ChatConversation): void {
+    this.cancelRename();
+    this.confirmingDeleteId.set(conversation.id);
+  }
+
+  confirmDelete(conversation: ChatConversation): void {
+    this.chatState.deleteConversation(conversation.id);
+    this.confirmingDeleteId.set(null);
+  }
+
+  cancelDelete(): void {
+    this.confirmingDeleteId.set(null);
+  }
+
+  armClearAll(): void {
+    this.confirmingClearAll.set(true);
+  }
+
+  confirmClearAll(): void {
+    this.chatState.clearHistory();
+    this.confirmingClearAll.set(false);
+  }
+
+  cancelClearAll(): void {
+    this.confirmingClearAll.set(false);
+  }
+
+  private resetRowState(): void {
+    this.cancelRename();
+    this.confirmingDeleteId.set(null);
+    this.confirmingClearAll.set(false);
+  }
+}

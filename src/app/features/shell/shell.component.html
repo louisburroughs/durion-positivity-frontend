@@ -4,7 +4,7 @@
 
   <!-- Top bar -->
   <app-shell-header (navToggle)="toggleNav()" [navCollapsed]="navCollapsed()" [navId]="NAV_ID"
-    (chatToggle)="toggleChat()" [chatCollapsed]="chatCollapsed()" [chatId]="CHAT_ID" />
+    (chatToggle)="toggleChat()" [chatOpen]="chatOpen()" />
 
   <!-- Body: sidebar + main column -->
   <div class="shell-body">
@@ -21,14 +21,7 @@
     <!-- Main column -->
     <main id="main-content" #mainContent class="shell-main" role="main" tabindex="-1">
 
-      <!-- Top frame: Chat panel — collapsible, collapsed by default -->
-      @if (!chatCollapsed()) {
-      <div class="frame-chat" [id]="CHAT_ID">
-        <app-chat-panel (collapse)="toggleChat()" />
-      </div>
-      }
-
-      <!-- Bottom frame: Content / routed page -->
+      <!-- Content / routed page -->
       <div class="frame-content">
         <app-content-panel />
       </div>
@@ -39,5 +32,11 @@
 
   <!-- Footer -->
   <app-shell-footer />
+
+  <!-- Assistant: a modal over the page, opened from the header, the dashboard
+       launcher or Ctrl/Cmd+K. Destroyed when closed so it holds no focus trap. -->
+  @if (chatOpen()) {
+  <app-chat-modal />
+  }
 
 </div>

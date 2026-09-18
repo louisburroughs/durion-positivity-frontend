@@ -1,0 +1,141 @@
+import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { firstValueFrom } from 'rxjs';
+import { JwtClaims } from '../../../core/models/auth.models';
+import { AuthService } from '../../../core/services/auth.service';
+import { ChatConversation, ChatMessage } from '../models/chat.model';
+import { LocalChatHistoryStore } from './chat-history.store';
+
+const STORAGE_KEY = 'durion-chat-history-v1:admin.alpha';
+
+function conversation(overrides: Partial<ChatConversation> = {}): ChatConversation {
+  return {
+    id: 'c1',
+    title: 'Roster',
+    preview: 'You have 26.',
+    createdAt: new Date('2026-09-18T09:00:00Z'),
+    updatedAt: new Date('2026-09-18T09:05:00Z'),
+    pinned: false,
+    ...overrides,
+  };
+}
+
+function message(overrides: Partial<ChatMessage> = {}): ChatMessage {
+  return {
+    id: 'm1',
+    role: 'user',
+    blocks: [{ kind: 'text', text: 'hello' }],
+    timestamp: new Date('2026-09-18T09:00:00Z'),
+    pending: false,
+    ...overrides,
+  };
+}
+
+describe('LocalChatHistoryStore', () => {
+  let store: LocalChatHistoryStore;
+  const claims = signal<JwtClaims | null>({ sub: 'admin.alpha', exp: 9999999999 });
+
+  beforeEach(() => {
+    localStorage.clear();
+    claims.set({ sub: 'admin.alpha', exp: 9999999999 });
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: AuthService, useValue: { currentUserClaims: claims } }],
+    });
+    store = TestBed.inject(LocalChatHistoryStore);
+  });
+
+  afterEach(() => localStorage.clear());
+
+  it('round-trips a conversation and its messages', async () => {
+    await firstValueFrom(store.saveConversation(conversation(), [message()]));
+
+    const listed = await firstValueFrom(store.listConversations());
+    expect(listed).toHaveLength(1);
+    expect(listed[0].title).toBe('Roster');
+    expect(listed[0].updatedAt).toBeInstanceOf(Date);
+
+    const messages = await firstValueFrom(store.loadMessages('c1'));
+    expect(messages).toHaveLength(1);
+    expect(messages[0].blocks[0]).toEqual({ kind: 'text', text: 'hello' });
+    expect(messages[0].pending).toBe(false);
+  });
+
+  it('replaces a conversation rather than duplicating it', async () => {
+    await firstValueFrom(store.saveConversation(conversation(), [message()]));
+    await firstValueFrom(store.saveConversation(conversation({ title: 'Renamed' }), [message()]));
+
+    const listed = await firstValueFrom(store.listConversations());
+    expect(listed).toHaveLength(1);
+    expect(listed[0].title).toBe('Renamed');
+  });
+
+  it('lists pinned conversations first, then most recently updated', async () => {
+    await firstValueFrom(
+      store.saveConversation(conversation({ id: 'old', updatedAt: new Date('2026-09-10T09:00:00Z') }), []),
+    );
+    await firstValueFrom(
+      store.saveConversation(conversation({ id: 'new', updatedAt: new Date('2026-09-18T09:00:00Z') }), []),
+    );
+    await firstValueFrom(
+      store.saveConversation(
+        conversation({ id: 'pin', pinned: true, updatedAt: new Date('2026-01-01T09:00:00Z') }),
+        [],
+      ),
+    );
+
+    const listed = await firstValueFrom(store.listConversations());
+    expect(listed.map(entry => entry.id)).toEqual(['pin', 'new', 'old']);
+  });
+
+  it('namespaces storage by the signed-in subject', async () => {
+    await firstValueFrom(store.saveConversation(conversation(), [message()]));
+    expect(localStorage.getItem(STORAGE_KEY)).not.toBeNull();
+
+    claims.set({ sub: 'other.user', exp: 9999999999 });
+    expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
+
+    claims.set({ sub: 'admin.alpha', exp: 9999999999 });
+    expect(await firstValueFrom(store.listConversations())).toHaveLength(1);
+  });
+
+  it('deletes one conversation and clears them all', async () => {
+    await firstValueFrom(store.saveConversation(conversation({ id: 'a' }), []));
+    await firstValueFrom(store.saveConversation(conversation({ id: 'b' }), []));
+
+    await firstValueFrom(store.deleteConversation('a'));
+    expect(await firstValueFrom(store.listConversations())).toHaveLength(1);
+
+    await firstValueFrom(store.clear());
+    expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
+  });
+
+  it('treats corrupt storage as empty history instead of throwing', async () => {
+    localStorage.setItem(STORAGE_KEY, 'not json at all');
+    expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([{ nonsense: true }, 42]));
+    expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
+  });
+
+  it('drops a persisted message whose role is not recognised', async () => {
+    await firstValueFrom(
+      store.saveConversation(conversation(), [
+        message({ id: 'ok' }),
+        message({ id: 'bad', role: 'ghost' as unknown as 'user' }),
+      ]),
+    );
+
+    const messages = await firstValueFrom(store.loadMessages('c1'));
+    expect(messages.map(entry => entry.id)).toEqual(['ok']);
+  });
+
+  it('caps the stored message list so one long thread cannot fill the quota', async () => {
+    const many = Array.from({ length: 250 }, (_, index) => message({ id: `m${index}` }));
+    await firstValueFrom(store.saveConversation(conversation(), many));
+
+    const messages = await firstValueFrom(store.loadMessages('c1'));
+    expect(messages).toHaveLength(200);
+    expect(messages[messages.length - 1].id).toBe('m249');
+  });
+});

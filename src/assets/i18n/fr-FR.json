@@ -174,7 +174,7 @@
       "NAV_TOGGLE_ARIA": "Basculer la barre latérale de navigation",
       "NAV_OVERLAY_CLOSE": "Fermer la navigation",
       "NAV_TOGGLE_TITLE": "Basculer la barre latérale",
-      "CHAT_TOGGLE": "Basculer le chat de l'assistant",
+      "CHAT_TOGGLE": "Ouvrir l’assistant",
       "THEME_TO_LIGHT": "Passer en mode clair",
       "THEME_TO_DARK": "Passer en mode sombre",
       "USER_CHIP_ARIA": "Utilisateur connecté",
@@ -198,11 +198,7 @@
       "WELCOME_HEADING_GENERIC": "Bon retour",
       "WELCOME_BODY": "Reprenez où vous en étiez ou accédez directement à une action épinglée.",
       "ASSISTANT": {
-        "REGION_ARIA": "Assistant",
-        "PLACEHOLDER": "Demandez à l'assistant ou saisissez un message pour démarrer une conversation…",
-        "HINT": "Entrée pour envoyer",
-        "INPUT_ARIA": "Demander à l'assistant",
-        "SEND_ARIA": "Envoyer le message"
+        "LAUNCH_LABEL": "Interrogez l’assistant sur les bons de travail, les clients, les stocks ou les factures…"
       },
       "QUICK_ACTIONS": {
         "TITLE": "Actions rapides épinglées",
@@ -237,24 +233,95 @@
     },
     "SKIP_TO_CONTENT": "Passer au contenu principal",
     "CHAT": {
-      "PANEL_ARIA": "Panneau de discussion",
-      "CLOSE_ARIA": "Réduire le panneau de discussion",
-      "MESSAGES_ARIA": "Messages de discussion",
-      "EMPTY_HEADING": "Démarrez une conversation",
-      "EMPTY_BODY": "Saisissez un message ci-dessous pour commencer.",
+      "SUBTITLE": "Assistant Positivity",
+      "NEW_CHAT_TITLE": "Nouvelle conversation",
+      "CLOSE_ARIA": "Fermer l’assistant",
+      "MESSAGES_ARIA": "Conversation",
       "SENDER_USER": "Vous",
-      "SENDER_SYSTEM": "Système",
-      "TYPING_ARIA": "Le système répond",
-      "INPUT_PLACEHOLDER": "Saisissez un message… (Entrée pour envoyer, Maj+Entrée pour nouvelle ligne)",
-      "INPUT_ARIA": "Champ de saisie du message",
-      "SEND_ARIA": "Envoyer le message",
-      "SEND_TITLE": "Envoyer",
-      "ERROR_BACKEND": "Le service de discussion n'est pas disponible. Votre message a été reçu localement.",
-      "ERROR_TROUBLESHOOTING": "Dépannage : {{ details }} Vérifiez l’onglet Network du navigateur et les journaux de la passerelle pour /mcp-server/v1/mcp/chat.",
-      "ERROR_TROUBLESHOOTING_GENERIC": "Dépannage : Vérifiez l’onglet Network du navigateur et les journaux de la passerelle pour /mcp-server/v1/mcp/chat.",
-      "ERROR_DETAIL_STATUS": "HTTP {{ status }}.",
-      "ERROR_DETAIL_CODE": "Code du backend {{ code }}.",
-      "ERROR_DETAIL_CORRELATION_ID": "ID de corrélation {{ correlationId }}."
+      "SENDER_ASSISTANT": "Assistant",
+      "TYPING_ARIA": "L’assistant répond",
+      "MAXIMISE_ARIA": "Agrandir en plein écran",
+      "RESTORE_ARIA": "Rétablir la taille de la fenêtre",
+      "ACTIONS": {
+        "COPY_ARIA": "Copier cette réponse",
+        "COPY_TRANSCRIPT_ARIA": "Copier toute la conversation",
+        "RETRY": "Réessayer"
+      },
+      "EMPTY": {
+        "HEADING": "Que voulez-vous savoir ?",
+        "BODY": "L’assistant consulte vos bons de travail, clients, stocks et factures, et répond par du texte, des tableaux, des graphiques ou des fichiers. Saisissez une question ou appuyez sur le micro et dictez-la.",
+        "SUGGESTION_1": "Combien de mécaniciens ai-je ?",
+        "SUGGESTION_2": "Afficher les bons de travail ouverts par baie",
+        "SUGGESTION_3": "Quels articles sont en rupture cette semaine ?",
+        "SUGGESTION_4": "Quelles factures sont en retard ?",
+        "SUGGESTION_5": "Quels techniciens dépassent 40 heures ?",
+        "SUGGESTION_6": "Quels clients ont un solde ouvert ?"
+      },
+      "HISTORY": {
+        "NEW_CHAT": "Nouvelle conversation",
+        "SHOW_ARIA": "Afficher l’historique des conversations",
+        "HIDE_ARIA": "Masquer l’historique des conversations",
+        "SEARCH_LABEL": "Rechercher dans les conversations",
+        "SEARCH_PLACEHOLDER": "Rechercher dans les conversations",
+        "EMPTY": "Les conversations que vous démarrez apparaissent ici.",
+        "NO_MATCHES": "Aucune conversation ne correspond à cette recherche.",
+        "RETENTION_NOTE": "Conservé dans ce navigateur.",
+        "CLEAR_ALL": "Tout effacer",
+        "CLEAR_CONFIRM": "Supprimer toutes les conversations ?",
+        "DELETE_CONFIRM": "Supprimer cette conversation ?",
+        "DELETE_YES": "Supprimer",
+        "DELETE_NO": "Annuler",
+        "RENAME_LABEL": "Titre de la conversation",
+        "RENAME_ARIA": "Renommer {{ title }}",
+        "PIN_ARIA": "Épingler {{ title }}",
+        "UNPIN_ARIA": "Détacher {{ title }}",
+        "DELETE_ARIA": "Supprimer {{ title }}",
+        "GROUP": {
+          "PINNED": "Épinglées",
+          "TODAY": "Aujourd’hui",
+          "YESTERDAY": "Hier",
+          "PREVIOUS_7_DAYS": "7 derniers jours",
+          "OLDER": "Plus anciennes"
+        }
+      },
+      "COMPOSER": {
+        "INPUT_LABEL": "Écrire à l’assistant",
+        "PLACEHOLDER": "Posez une question sur les bons de travail, les clients, les stocks ou les factures…",
+        "SEND_ARIA": "Envoyer le message",
+        "HINT": "Entrée pour envoyer · Maj + Entrée pour une nouvelle ligne · Échap pour fermer",
+        "DISCLAIMER": "Vérifiez les chiffres dans le dossier avant d’agir."
+      },
+      "VOICE": {
+        "START_ARIA": "Démarrer la saisie vocale",
+        "STOP_ARIA": "Arrêter la saisie vocale",
+        "CANCEL": "Annuler",
+        "DISMISS": "Ignorer",
+        "LISTENING": "Écoute en cours",
+        "UNSUPPORTED": "La saisie vocale n’est pas disponible dans ce navigateur.",
+        "ERROR_DENIED": "L’accès au micro est bloqué pour ce site.",
+        "ERROR_NO_DEVICE": "Aucun micro n’a été trouvé.",
+        "ERROR_NO_SPEECH": "Rien n’a été entendu. Réessayez.",
+        "ERROR_NETWORK": "La reconnaissance vocale n’a pas pu joindre son service.",
+        "ERROR_GENERIC": "La saisie vocale s’est arrêtée de façon inattendue."
+      },
+      "BLOCK": {
+        "TABLE_TITLE": "Résultats",
+        "CHART_TITLE": "Graphique",
+        "COPY_TABLE_ARIA": "Copier ce tableau",
+        "COPY_CODE_ARIA": "Copier ce code",
+        "DOWNLOAD_CSV_ARIA": "Télécharger ce tableau en CSV",
+        "DOWNLOAD_FILE_ARIA": "Télécharger {{ name }}",
+        "FILE_SIZE_KB": "{{ kb }} ko"
+      },
+      "ERROR": {
+        "BACKEND": "Cette réponse n’a pas abouti.",
+        "DETAIL_STATUS": "Le service de l’assistant a répondu HTTP {{ status }}.",
+        "DETAIL_STATUS_CODE": "Le service de l’assistant a répondu HTTP {{ status }} ({{ code }}).",
+        "DETAIL_GENERIC": "Le service de l’assistant est injoignable.",
+        "EMPTY": "L’assistant a renvoyé une réponse vide.",
+        "HISTORY_LOAD": "Votre historique de conversations n’a pas pu être chargé.",
+        "TRACE": "Trace {{ correlationId }}"
+      }
     },
     "RAG": {
       "BUTTON_ARIA": "Charger un document dans la base de connaissances",

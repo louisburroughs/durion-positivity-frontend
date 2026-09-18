@@ -10,4 +10,15 @@ export const environment = {
    * for the tenant slug and sends it as `LoginRequest.tenantSlug`.
    */
   tenantHostSuffix: '',
+  /**
+   * Feature flags for backend capabilities the assistant needs but that the MCP
+   * server does not expose yet. Each is OFF until its backend issue lands; the
+   * frontend runs a local stub in the meantime (see chat-history.store.ts).
+   */
+  features: {
+    /** Conversation history CRUD on the server. Off: history is per-browser only. */
+    chatHistoryApi: false,
+    /** Server-side audio transcription. Off: voice needs in-browser recognition. */
+    chatSpeechTranscription: false,
+  },
 };

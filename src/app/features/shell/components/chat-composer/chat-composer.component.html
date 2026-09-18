@@ -1,0 +1,68 @@
+<div class="composer">
+
+  <div class="composer-shell" [class.composer-shell--listening]="listening()">
+
+    @if (canIngest()) {
+    <button class="icon-btn" type="button" (click)="ingestRequested.emit()"
+            [attr.aria-label]="'SHELL.RAG.BUTTON_ARIA' | translate"
+            [title]="'SHELL.RAG.BUTTON_TITLE' | translate">
+      <span class="material-symbols-rounded" aria-hidden="true">{{ 'attach_file' | msIcon }}</span>
+    </button>
+    }
+
+    <label class="sr-only" for="chat-composer-input">{{ 'SHELL.CHAT.COMPOSER.INPUT_LABEL' | translate }}</label>
+    <textarea #input id="chat-composer-input" class="composer-input" rows="1"
+              [placeholder]="'SHELL.CHAT.COMPOSER.PLACEHOLDER' | translate"
+              [value]="draft()"
+              [attr.aria-describedby]="'chat-composer-hint'"
+              (input)="onInput($any($event.target).value)"
+              (keydown)="onKeyDown($event)"></textarea>
+
+    <button class="icon-btn icon-btn--mic" type="button"
+            [class.icon-btn--recording]="listening()"
+            [disabled]="!voiceSupported"
+            (click)="toggleVoice()"
+            [attr.aria-pressed]="listening()"
+            [attr.aria-label]="(voiceSupported
+              ? (listening() ? 'SHELL.CHAT.VOICE.STOP_ARIA' : 'SHELL.CHAT.VOICE.START_ARIA')
+              : 'SHELL.CHAT.VOICE.UNSUPPORTED') | translate"
+            [title]="(voiceSupported
+              ? (listening() ? 'SHELL.CHAT.VOICE.STOP_ARIA' : 'SHELL.CHAT.VOICE.START_ARIA')
+              : 'SHELL.CHAT.VOICE.UNSUPPORTED') | translate">
+      <span class="material-symbols-rounded" aria-hidden="true">{{ (voiceSupported ? 'mic' : 'mic_off') | msIcon }}</span>
+    </button>
+
+    <button class="icon-btn icon-btn--send" type="button" [disabled]="!canSend()" (click)="submit()"
+            [attr.aria-label]="'SHELL.CHAT.COMPOSER.SEND_ARIA' | translate">
+      <span class="material-symbols-rounded" aria-hidden="true">{{ 'send' | msIcon }}</span>
+    </button>
+  </div>
+
+  @if (listening()) {
+  <div class="voice-strip" role="status">
+    <span class="voice-dot" aria-hidden="true"></span>
+    <span class="voice-label">{{ 'SHELL.CHAT.VOICE.LISTENING' | translate }}</span>
+    <span class="voice-timer">{{ elapsed() }}</span>
+    <span class="voice-strip__spacer"></span>
+    <button class="ghost-btn" type="button" (click)="cancelVoice()">
+      {{ 'SHELL.CHAT.VOICE.CANCEL' | translate }}
+    </button>
+  </div>
+  }
+
+  @if (voiceErrorKey(); as errorKey) {
+  <p class="voice-error" role="alert">
+    <span class="material-symbols-rounded" aria-hidden="true">{{ 'error' | msIcon }}</span>
+    <span class="voice-error__text">{{ errorKey | translate }}</span>
+    <button class="ghost-btn" type="button" (click)="dismissVoiceError()">
+      {{ 'SHELL.CHAT.VOICE.DISMISS' | translate }}
+    </button>
+  </p>
+  }
+
+  <p class="composer-hint" id="chat-composer-hint">
+    <span>{{ 'SHELL.CHAT.COMPOSER.HINT' | translate }}</span>
+    <span class="composer-hint__disclaimer">{{ 'SHELL.CHAT.COMPOSER.DISCLAIMER' | translate }}</span>
+  </p>
+
+</div>

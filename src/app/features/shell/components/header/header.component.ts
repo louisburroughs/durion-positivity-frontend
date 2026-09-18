@@ -24,10 +24,9 @@ export class HeaderComponent {
   readonly navCollapsed = input(false);
   readonly navId = input('shell-nav');
 
-  /** Emitted when the chat-toggle button is clicked. */
+  /** Emitted when the assistant button is clicked; the shell opens the dialog. */
   readonly chatToggle = output<void>();
-  readonly chatCollapsed = input(true);
-  readonly chatId = input('shell-chat');
+  readonly chatOpen = input(false);
 
   toggleNav(): void {
     this.navToggle.emit();

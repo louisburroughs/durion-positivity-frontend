@@ -1,0 +1,74 @@
+@for (block of blocks(); track $index) {
+  @switch (block.type) {
+
+    @case ('heading') {
+      @switch (block.level) {
+        @case (1) {
+        <h3 class="md-heading"><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: block.children }" /></h3>
+        }
+        @case (2) {
+        <h4 class="md-heading"><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: block.children }" /></h4>
+        }
+        @case (3) {
+        <h5 class="md-heading"><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: block.children }" /></h5>
+        }
+        @default {
+        <h6 class="md-heading"><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: block.children }" /></h6>
+        }
+      }
+    }
+
+    @case ('paragraph') {
+    <p class="md-paragraph"><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: block.children }" /></p>
+    }
+
+    @case ('quote') {
+    <blockquote class="md-quote"><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: block.children }" /></blockquote>
+    }
+
+    @case ('list') {
+      @if (block.ordered) {
+      <ol class="md-list">
+        @for (item of block.items; track $index) {
+        <li><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: item }" /></li>
+        }
+      </ol>
+      } @else {
+      <ul class="md-list">
+        @for (item of block.items; track $index) {
+        <li><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: item }" /></li>
+        }
+      </ul>
+      }
+    }
+
+    @case ('rule') {
+    <hr class="md-rule">
+    }
+
+  }
+}
+
+<!-- Inline spans, recursive: strong/em/link may nest. -->
+<ng-template #inline let-nodes>
+  @for (node of nodes; track $index) {
+    @switch (node.type) {
+      @case ('text') {{{ node.value }}}
+      @case ('code') {
+      <code class="md-code">{{ node.value }}</code>
+      }
+      @case ('strong') {
+      <strong><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: node.children }" /></strong>
+      }
+      @case ('em') {
+      <em><ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: node.children }" /></em>
+      }
+      @case ('link') {
+      <a class="md-link" [href]="node.href" [attr.target]="node.external ? '_blank' : null"
+         [attr.rel]="node.external ? 'noopener noreferrer' : null">
+        <ng-container [ngTemplateOutlet]="inline" [ngTemplateOutletContext]="{ $implicit: node.children }" />
+      </a>
+      }
+    }
+  }
+</ng-template>

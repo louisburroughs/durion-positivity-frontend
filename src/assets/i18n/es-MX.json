@@ -174,7 +174,7 @@
       "NAV_TOGGLE_ARIA": "Alternar barra lateral de navegación",
       "NAV_OVERLAY_CLOSE": "Cerrar navegación",
       "NAV_TOGGLE_TITLE": "Alternar barra lateral",
-      "CHAT_TOGGLE": "Alternar chat del asistente",
+      "CHAT_TOGGLE": "Abrir el asistente",
       "THEME_TO_LIGHT": "Cambiar al modo claro",
       "THEME_TO_DARK": "Cambiar al modo oscuro",
       "USER_CHIP_ARIA": "Usuario conectado",
@@ -198,11 +198,7 @@
       "WELCOME_HEADING_GENERIC": "Hola de nuevo",
       "WELCOME_BODY": "Continúa donde lo dejaste o ve directo a una acción fijada.",
       "ASSISTANT": {
-        "REGION_ARIA": "Asistente",
-        "PLACEHOLDER": "Pregunta al asistente o escribe un mensaje para iniciar una conversación…",
-        "HINT": "Entrar para enviar",
-        "INPUT_ARIA": "Pregunta al asistente",
-        "SEND_ARIA": "Enviar mensaje"
+        "LAUNCH_LABEL": "Pregunta al asistente sobre órdenes de trabajo, clientes, inventario o facturas…"
       },
       "QUICK_ACTIONS": {
         "TITLE": "Acciones rápidas fijadas",
@@ -237,24 +233,95 @@
     },
     "SKIP_TO_CONTENT": "Saltar al contenido principal",
     "CHAT": {
-      "PANEL_ARIA": "Panel de chat",
-      "CLOSE_ARIA": "Contraer el panel de chat",
-      "MESSAGES_ARIA": "Mensajes de chat",
-      "EMPTY_HEADING": "Inicia una conversación",
-      "EMPTY_BODY": "Escribe un mensaje a continuación para comenzar.",
+      "SUBTITLE": "Asistente Positivity",
+      "NEW_CHAT_TITLE": "Nueva conversación",
+      "CLOSE_ARIA": "Cerrar el asistente",
+      "MESSAGES_ARIA": "Conversación",
       "SENDER_USER": "Tú",
-      "SENDER_SYSTEM": "Sistema",
-      "TYPING_ARIA": "El sistema está respondiendo",
-      "INPUT_PLACEHOLDER": "Escribe un mensaje… (Intro para enviar, Mayús+Intro para nueva línea)",
-      "INPUT_ARIA": "Entrada de mensaje de chat",
-      "SEND_ARIA": "Enviar mensaje",
-      "SEND_TITLE": "Enviar",
-      "ERROR_BACKEND": "El servicio de chat no está disponible. Tu mensaje fue recibido localmente.",
-      "ERROR_TROUBLESHOOTING": "Diagnóstico: {{ details }} Revisa la pestaña Network del navegador y los registros del gateway para /mcp-server/v1/mcp/chat.",
-      "ERROR_TROUBLESHOOTING_GENERIC": "Diagnóstico: Revisa la pestaña Network del navegador y los registros del gateway para /mcp-server/v1/mcp/chat.",
-      "ERROR_DETAIL_STATUS": "HTTP {{ status }}.",
-      "ERROR_DETAIL_CODE": "Código del backend {{ code }}.",
-      "ERROR_DETAIL_CORRELATION_ID": "ID de correlación {{ correlationId }}."
+      "SENDER_ASSISTANT": "Asistente",
+      "TYPING_ARIA": "El asistente está respondiendo",
+      "MAXIMISE_ARIA": "Ampliar a pantalla completa",
+      "RESTORE_ARIA": "Restaurar el tamaño del diálogo",
+      "ACTIONS": {
+        "COPY_ARIA": "Copiar esta respuesta",
+        "COPY_TRANSCRIPT_ARIA": "Copiar toda la conversación",
+        "RETRY": "Reintentar"
+      },
+      "EMPTY": {
+        "HEADING": "¿Qué quieres saber?",
+        "BODY": "El asistente consulta tus órdenes de trabajo, clientes, inventario y facturas, y responde con texto, tablas, gráficos o archivos. Escribe una pregunta o pulsa el micrófono y dísela.",
+        "SUGGESTION_1": "¿Cuántos mecánicos tengo?",
+        "SUGGESTION_2": "Muestra las órdenes de trabajo abiertas por bahía",
+        "SUGGESTION_3": "¿Qué artículos tienen poco inventario esta semana?",
+        "SUGGESTION_4": "¿Qué facturas están vencidas?",
+        "SUGGESTION_5": "¿Qué técnicos superan las 40 horas?",
+        "SUGGESTION_6": "¿Qué clientes tienen saldo pendiente?"
+      },
+      "HISTORY": {
+        "NEW_CHAT": "Nueva conversación",
+        "SHOW_ARIA": "Mostrar el historial de conversaciones",
+        "HIDE_ARIA": "Ocultar el historial de conversaciones",
+        "SEARCH_LABEL": "Buscar conversaciones",
+        "SEARCH_PLACEHOLDER": "Buscar conversaciones",
+        "EMPTY": "Las conversaciones que inicies aparecerán aquí.",
+        "NO_MATCHES": "Ninguna conversación coincide con esa búsqueda.",
+        "RETENTION_NOTE": "Se guarda en este navegador.",
+        "CLEAR_ALL": "Borrar todo",
+        "CLEAR_CONFIRM": "¿Borrar todas las conversaciones?",
+        "DELETE_CONFIRM": "¿Eliminar esta conversación?",
+        "DELETE_YES": "Eliminar",
+        "DELETE_NO": "Cancelar",
+        "RENAME_LABEL": "Título de la conversación",
+        "RENAME_ARIA": "Cambiar el nombre de {{ title }}",
+        "PIN_ARIA": "Fijar {{ title }}",
+        "UNPIN_ARIA": "Dejar de fijar {{ title }}",
+        "DELETE_ARIA": "Eliminar {{ title }}",
+        "GROUP": {
+          "PINNED": "Fijadas",
+          "TODAY": "Hoy",
+          "YESTERDAY": "Ayer",
+          "PREVIOUS_7_DAYS": "Últimos 7 días",
+          "OLDER": "Anteriores"
+        }
+      },
+      "COMPOSER": {
+        "INPUT_LABEL": "Escribe al asistente",
+        "PLACEHOLDER": "Pregunta sobre órdenes de trabajo, clientes, inventario o facturas…",
+        "SEND_ARIA": "Enviar mensaje",
+        "HINT": "Intro para enviar · Mayús + Intro para una nueva línea · Esc para cerrar",
+        "DISCLAIMER": "Verifica las cifras con el registro antes de actuar."
+      },
+      "VOICE": {
+        "START_ARIA": "Iniciar la entrada de voz",
+        "STOP_ARIA": "Detener la entrada de voz",
+        "CANCEL": "Cancelar",
+        "DISMISS": "Descartar",
+        "LISTENING": "Escuchando",
+        "UNSUPPORTED": "La entrada de voz no está disponible en este navegador.",
+        "ERROR_DENIED": "El acceso al micrófono está bloqueado para este sitio.",
+        "ERROR_NO_DEVICE": "No se encontró ningún micrófono.",
+        "ERROR_NO_SPEECH": "No se escuchó nada. Inténtalo de nuevo.",
+        "ERROR_NETWORK": "El reconocimiento de voz no pudo conectarse a su servicio.",
+        "ERROR_GENERIC": "La entrada de voz se detuvo inesperadamente."
+      },
+      "BLOCK": {
+        "TABLE_TITLE": "Resultados",
+        "CHART_TITLE": "Gráfico",
+        "COPY_TABLE_ARIA": "Copiar esta tabla",
+        "COPY_CODE_ARIA": "Copiar este código",
+        "DOWNLOAD_CSV_ARIA": "Descargar esta tabla en CSV",
+        "DOWNLOAD_FILE_ARIA": "Descargar {{ name }}",
+        "FILE_SIZE_KB": "{{ kb }} kB"
+      },
+      "ERROR": {
+        "BACKEND": "Esa respuesta no se completó.",
+        "DETAIL_STATUS": "El servicio del asistente respondió con HTTP {{ status }}.",
+        "DETAIL_STATUS_CODE": "El servicio del asistente respondió con HTTP {{ status }} ({{ code }}).",
+        "DETAIL_GENERIC": "No se pudo contactar con el servicio del asistente.",
+        "EMPTY": "El asistente devolvió una respuesta vacía.",
+        "HISTORY_LOAD": "No se pudo cargar tu historial de conversaciones.",
+        "TRACE": "Traza {{ correlationId }}"
+      }
     },
     "RAG": {
       "BUTTON_ARIA": "Cargar documento en la base de conocimiento",

@@ -174,7 +174,7 @@
       "NAV_TOGGLE_ARIA": "Toggle navigation sidebar",
       "NAV_OVERLAY_CLOSE": "Close navigation",
       "NAV_TOGGLE_TITLE": "Toggle sidebar",
-      "CHAT_TOGGLE": "Toggle assistant chat",
+      "CHAT_TOGGLE": "Open the assistant",
       "THEME_TO_LIGHT": "Switch to light mode",
       "THEME_TO_DARK": "Switch to dark mode",
       "USER_CHIP_ARIA": "Logged-in user",
@@ -198,11 +198,7 @@
       "WELCOME_HEADING_GENERIC": "Welcome back",
       "WELCOME_BODY": "Pick up where you left off, or jump straight to a pinned action.",
       "ASSISTANT": {
-        "REGION_ARIA": "Assistant",
-        "PLACEHOLDER": "Ask the assistant or type a message to start a conversation…",
-        "HINT": "Enter to send",
-        "INPUT_ARIA": "Ask the assistant",
-        "SEND_ARIA": "Send message"
+        "LAUNCH_LABEL": "Ask the assistant about workorders, customers, inventory or invoices…"
       },
       "QUICK_ACTIONS": {
         "TITLE": "Pinned quick actions",
@@ -237,24 +233,95 @@
     },
     "SKIP_TO_CONTENT": "Skip to main content",
     "CHAT": {
-      "PANEL_ARIA": "Chat panel",
-      "CLOSE_ARIA": "Collapse chat panel",
-      "MESSAGES_ARIA": "Chat messages",
-      "EMPTY_HEADING": "Start a conversation",
-      "EMPTY_BODY": "Type a message below to begin.",
+      "SUBTITLE": "Positivity Assistant",
+      "NEW_CHAT_TITLE": "New chat",
+      "CLOSE_ARIA": "Close the assistant",
+      "MESSAGES_ARIA": "Conversation",
       "SENDER_USER": "You",
-      "SENDER_SYSTEM": "System",
-      "TYPING_ARIA": "System is responding",
-      "INPUT_PLACEHOLDER": "Type a message… (Enter to send, Shift+Enter for newline)",
-      "INPUT_ARIA": "Chat message input",
-      "SEND_ARIA": "Send message",
-      "SEND_TITLE": "Send",
-      "ERROR_BACKEND": "Chat service is not available. Your message was received locally.",
-      "ERROR_TROUBLESHOOTING": "Troubleshooting: {{ details }} Check your browser Network tab and the gateway logs for /mcp-server/v1/mcp/chat.",
-      "ERROR_TROUBLESHOOTING_GENERIC": "Troubleshooting: Check your browser Network tab and the gateway logs for /mcp-server/v1/mcp/chat.",
-      "ERROR_DETAIL_STATUS": "HTTP {{ status }}.",
-      "ERROR_DETAIL_CODE": "Backend code {{ code }}.",
-      "ERROR_DETAIL_CORRELATION_ID": "Correlation ID {{ correlationId }}."
+      "SENDER_ASSISTANT": "Assistant",
+      "TYPING_ARIA": "The assistant is answering",
+      "MAXIMISE_ARIA": "Expand to full screen",
+      "RESTORE_ARIA": "Restore the dialog size",
+      "ACTIONS": {
+        "COPY_ARIA": "Copy this answer",
+        "COPY_TRANSCRIPT_ARIA": "Copy the whole conversation",
+        "RETRY": "Try again"
+      },
+      "EMPTY": {
+        "HEADING": "What do you want to know?",
+        "BODY": "The assistant reads your workorders, customers, inventory and invoices, and answers with text, tables, charts or files. Type a question, or press the microphone and speak it.",
+        "SUGGESTION_1": "How many mechanics do I have?",
+        "SUGGESTION_2": "Show open workorders by bay",
+        "SUGGESTION_3": "What is low on stock this week?",
+        "SUGGESTION_4": "Which invoices are overdue?",
+        "SUGGESTION_5": "Which technicians are over 40 hours?",
+        "SUGGESTION_6": "Which customers have an open balance?"
+      },
+      "HISTORY": {
+        "NEW_CHAT": "New chat",
+        "SHOW_ARIA": "Show conversation history",
+        "HIDE_ARIA": "Hide conversation history",
+        "SEARCH_LABEL": "Search conversations",
+        "SEARCH_PLACEHOLDER": "Search conversations",
+        "EMPTY": "Conversations you start are listed here.",
+        "NO_MATCHES": "No conversation matches that search.",
+        "RETENTION_NOTE": "Kept in this browser.",
+        "CLEAR_ALL": "Clear all",
+        "CLEAR_CONFIRM": "Delete every conversation?",
+        "DELETE_CONFIRM": "Delete this conversation?",
+        "DELETE_YES": "Delete",
+        "DELETE_NO": "Cancel",
+        "RENAME_LABEL": "Conversation title",
+        "RENAME_ARIA": "Rename {{ title }}",
+        "PIN_ARIA": "Pin {{ title }}",
+        "UNPIN_ARIA": "Unpin {{ title }}",
+        "DELETE_ARIA": "Delete {{ title }}",
+        "GROUP": {
+          "PINNED": "Pinned",
+          "TODAY": "Today",
+          "YESTERDAY": "Yesterday",
+          "PREVIOUS_7_DAYS": "Previous 7 days",
+          "OLDER": "Older"
+        }
+      },
+      "COMPOSER": {
+        "INPUT_LABEL": "Message the assistant",
+        "PLACEHOLDER": "Ask about workorders, customers, inventory or invoices…",
+        "SEND_ARIA": "Send message",
+        "HINT": "Enter to send · Shift + Enter for a new line · Esc to close",
+        "DISCLAIMER": "Check figures against the record before acting on them."
+      },
+      "VOICE": {
+        "START_ARIA": "Start voice input",
+        "STOP_ARIA": "Stop voice input",
+        "CANCEL": "Cancel",
+        "DISMISS": "Dismiss",
+        "LISTENING": "Listening",
+        "UNSUPPORTED": "Voice input is not available in this browser.",
+        "ERROR_DENIED": "Microphone access is blocked for this site.",
+        "ERROR_NO_DEVICE": "No microphone was found.",
+        "ERROR_NO_SPEECH": "Nothing was heard. Try again.",
+        "ERROR_NETWORK": "Speech recognition could not reach its service.",
+        "ERROR_GENERIC": "Voice input stopped unexpectedly."
+      },
+      "BLOCK": {
+        "TABLE_TITLE": "Results",
+        "CHART_TITLE": "Chart",
+        "COPY_TABLE_ARIA": "Copy this table",
+        "COPY_CODE_ARIA": "Copy this code",
+        "DOWNLOAD_CSV_ARIA": "Download this table as CSV",
+        "DOWNLOAD_FILE_ARIA": "Download {{ name }}",
+        "FILE_SIZE_KB": "{{ kb }} kB"
+      },
+      "ERROR": {
+        "BACKEND": "That answer did not finish.",
+        "DETAIL_STATUS": "The assistant service replied with HTTP {{ status }}.",
+        "DETAIL_STATUS_CODE": "The assistant service replied with HTTP {{ status }} ({{ code }}).",
+        "DETAIL_GENERIC": "The assistant service could not be reached.",
+        "EMPTY": "The assistant returned an empty answer.",
+        "HISTORY_LOAD": "Your conversation history could not be loaded.",
+        "TRACE": "Trace {{ correlationId }}"
+      }
     },
     "RAG": {
       "BUTTON_ARIA": "Load document into knowledge base",

@@ -3,7 +3,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { HeaderComponent }       from './components/header/header.component';
 import { FooterComponent }       from './components/footer/footer.component';
 import { NavComponent }          from './components/nav/nav.component';
-import { ChatPanelComponent }    from './components/chat-panel/chat-panel.component';
+import { ChatModalComponent }    from './components/chat-modal/chat-modal.component';
 import { ContentPanelComponent } from './components/content-panel/content-panel.component';
 import { ChatUiService }         from './services/chat-ui.service';
 
@@ -15,7 +15,7 @@ import { ChatUiService }         from './services/chat-ui.service';
     HeaderComponent,
     FooterComponent,
     NavComponent,
-    ChatPanelComponent,
+    ChatModalComponent,
     ContentPanelComponent,
   ],
   templateUrl: './shell.component.html',
@@ -23,10 +23,9 @@ import { ChatUiService }         from './services/chat-ui.service';
 })
 export class ShellComponent {
   readonly NAV_ID = 'shell-nav';
-  readonly CHAT_ID = 'shell-chat';
 
   private readonly chatUi = inject(ChatUiService);
-  readonly chatCollapsed = this.chatUi.collapsed;
+  readonly chatOpen = this.chatUi.open;
 
   /** Controls sidebar collapsed state; collapses automatically on narrow viewports. */
   readonly navCollapsed = signal(false);
@@ -46,6 +45,15 @@ export class ShellComponent {
 
   toggleChat(): void {
     this.chatUi.toggle();
+  }
+
+  /** Ctrl/Cmd+K opens the assistant from anywhere in the shell. */
+  @HostListener('document:keydown', ['$event'])
+  onDocumentKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'k' && event.key !== 'K') return;
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    this.chatUi.openModal();
   }
 
   skipToMainContent(event: Event): void {

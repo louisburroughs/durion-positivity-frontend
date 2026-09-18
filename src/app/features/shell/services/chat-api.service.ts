@@ -8,7 +8,13 @@ export interface ChatRequest {
 }
 
 export interface ChatResponse {
+  /** Markdown answer. Parsed into typed blocks client-side by `chat-response.mapper.ts`. */
   response: string;
+  /**
+   * Typed blocks, when the server produces them. Absent today — the mapper falls
+   * back to deriving structure from `response` until the MCP server sends this.
+   */
+  blocks?: readonly unknown[];
 }
 
 export interface RagDocumentMetadata {
