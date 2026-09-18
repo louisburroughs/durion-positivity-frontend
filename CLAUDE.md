@@ -62,8 +62,10 @@ The sibling SDK repo must exist locally unless CI/Docker supplies `.sdk-src` or 
 - **State = Angular Signals + RxJS** — no NgRx/Redux. Every routed page uses the two-signal state
   machine (`state` + `errorKey`) with reactive `effect()` data loading. See AGENTS.md for exact rules
   (`state.set('error')` always precedes `errorKey.set(...)`; `onCleanup()` for effect subscriptions).
-- **HTTP** — all domain services call `core/services/api-base.service.ts`; never inject `HttpClient`
-  directly in features. `auth.interceptor.ts` handles token attachment + silent refresh.
+- **HTTP** — backend calls go through the generated `@durion-sdk/*` Angular services, injected into a
+  feature `services/` class (ADR-0041). `core/services/api-base.service.ts` is legacy transport for domains
+  with no SDK package yet; never inject `HttpClient` directly in features. `auth.interceptor.ts` handles
+  token attachment + silent refresh.
 - **Routing** — `/` landing + `/login` public; everything under `/app` is gated by `authGuard`
   (`core/guards/auth.guard.ts`), with per-route `rolesChildGuard` via `data: { roles: [...] }`.
   Domain modules lazy-load under `/app`. Route tree in `src/app/app.routes.ts`.
