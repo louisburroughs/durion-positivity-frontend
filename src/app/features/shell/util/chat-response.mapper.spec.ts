@@ -94,6 +94,14 @@ describe('mapAnswerPayload', () => {
     expect(mapAnswerPayload({})).toEqual([]);
     expect(mapAnswerPayload({ response: 42 })).toEqual([]);
   });
+
+  it('returns nothing for a body that is not an object at all', () => {
+    // `ChatResponse` is a compile-time assertion; HttpClient hands back whatever
+    // the body parsed to, and an empty or malformed one is null or a primitive.
+    for (const body of [null, undefined, 'plain text', 42, true]) {
+      expect(mapAnswerPayload(body as never), String(body)).toEqual([]);
+    }
+  });
 });
 
 describe('coerceBlocks', () => {

@@ -39,6 +39,10 @@ interface RawBlock {
 
 /** Map a chat answer payload to renderable blocks. */
 export function mapAnswerPayload(payload: { response?: unknown; blocks?: unknown }): readonly ChatBlock[] {
+  // `ChatResponse` is a compile-time assertion only: HttpClient hands back
+  // whatever the body parsed to, and an empty or malformed one is null or a
+  // primitive — reading `.blocks` off it would throw inside the send pipeline.
+  if (!payload || typeof payload !== 'object') return [];
   if (Array.isArray(payload.blocks)) {
     const coerced = coerceBlocks(payload.blocks);
     if (coerced.length > 0) return coerced;

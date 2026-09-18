@@ -253,7 +253,7 @@
 
 .data-table td {
   padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--themeBackground);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .data-table tbody tr:last-child td {

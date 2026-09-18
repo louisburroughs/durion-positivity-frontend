@@ -1,6 +1,6 @@
 import { computed, DestroyRef, effect, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { catchError, concatMap, EMPTY, Observable, Subject } from 'rxjs';
+import { catchError, concatMap, EMPTY, Observable, Subject, tap } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import {
   blocksToPlainText,
@@ -31,11 +31,16 @@ export interface ChatTurnTarget {
    * written into, the new identity's namespace (ADR-0062).
    */
   readonly identity: string;
+  /**
+   * The failed turn this one replaces, for a retry. `restartAssistantTurn` swaps
+   * the message in memory only, so the store still holds the error: without this
+   * the away path would append the answer beneath it.
+   */
+  readonly replacesMessageId?: string;
 }
 
 const TITLE_MAX_LENGTH = 48;
 const PREVIEW_MAX_LENGTH = 90;
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * ChatStateService
@@ -265,45 +270,74 @@ export class ChatStateService {
     this.completeAwayFromThread(target, blocks);
   }
 
-  /** Land a reply in a conversation the user is no longer looking at. */
+  /**
+   * Land a reply in a conversation whose thread is not the one on screen — or is,
+   * but no longer holds the placeholder because it was reloaded from the store.
+   *
+   * Runs THROUGH the write queue: a direct read could overtake the `saveMessages`
+   * that `appendUserMessage` queued, come back with the pre-send snapshot, and
+   * then be written back over it — losing the question the answer replies to.
+   */
   private completeAwayFromThread(target: ChatTurnTarget, blocks: readonly ChatBlock[]): void {
-    this.store
-      .loadMessages(target.conversationId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(stored => {
-        // A pending turn is never persisted, so the completed one is appended.
-        const messages: readonly ChatMessage[] = [
-          ...stored,
-          {
-            id: target.messageId,
-            role: 'assistant',
-            blocks,
-            timestamp: new Date(),
-            pending: false,
-          },
-        ];
+    const answer: ChatMessage = {
+      id: target.messageId,
+      role: 'assistant',
+      blocks,
+      timestamp: new Date(),
+      pending: false,
+    };
 
-        this.enqueueWrite(() => this.store.saveMessages(target.conversationId, messages));
+    this.enqueueWrite(() =>
+      this.store.loadMessages(target.conversationId).pipe(
+        tap(stored => this.landStoredAnswer(target, stored, answer)),
+        // A failed load must not take the queue down with it, and the answer is
+        // already on screen when the conversation is open — losing only the
+        // persisted copy is the least bad outcome available here.
+        catchError(() => {
+          console.error('chat: could not load the conversation to persist a reply');
+          return EMPTY;
+        }),
+      ),
+    );
+  }
 
-        // The user may have come back to this conversation while the reply was in
-        // flight; if so, the answer belongs on screen and not only in the store.
-        if (this._activeId() === target.conversationId) {
-          this._messages.set(messages);
-        }
+  private landStoredAnswer(
+    target: ChatTurnTarget,
+    stored: readonly ChatMessage[],
+    answer: ChatMessage,
+  ): void {
+    // Drop the turn being replaced: a retry that settles after the user moved
+    // away would otherwise show the old failure AND its answer.
+    const superseded = new Set([target.messageId, target.replacesMessageId ?? '']);
+    const messages: readonly ChatMessage[] = [
+      ...stored.filter(message => !superseded.has(message.id)),
+      answer,
+    ];
 
-        const conversation = this._conversations().find(entry => entry.id === target.conversationId);
-        if (!conversation) return;
+    this.enqueueWrite(() => this.store.saveMessages(target.conversationId, messages));
 
-        const updated: ChatConversation = {
-          ...conversation,
-          preview: derivePreview(messages),
-          updatedAt: new Date(),
-        };
-        this.setConversations(
-          this._conversations().map(entry => (entry.id === updated.id ? updated : entry)),
-        );
-        this.enqueueWrite(() => this.store.saveConversation(updated));
-      });
+    // If the user is back in this conversation, APPEND to the live thread rather
+    // than replacing it: the thread may hold turns that are not in `stored` yet —
+    // a question asked since, and its pending placeholder.
+    if (this._activeId() === target.conversationId) {
+      this._messages.update(current => [
+        ...current.filter(message => !superseded.has(message.id)),
+        answer,
+      ]);
+    }
+
+    const conversation = this._conversations().find(entry => entry.id === target.conversationId);
+    if (!conversation) return;
+
+    const updated: ChatConversation = {
+      ...conversation,
+      preview: derivePreview(messages),
+      updatedAt: new Date(),
+    };
+    this.setConversations(
+      this._conversations().map(entry => (entry.id === updated.id ? updated : entry)),
+    );
+    this.enqueueWrite(() => this.store.saveConversation(updated));
   }
 
   /**
@@ -324,7 +358,12 @@ export class ChatStateService {
           : message,
       ),
     );
-    return { conversationId, messageId: id, identity: this.currentIdentity() };
+    return {
+      conversationId,
+      messageId: id,
+      identity: this.currentIdentity(),
+      replacesMessageId: messageId,
+    };
   }
 
   /**
@@ -521,23 +560,45 @@ export function groupConversations(
   conversations: readonly ChatConversation[],
   now: Date,
 ): readonly ChatHistoryGroup[] {
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  // Calendar-day boundaries, not fixed 24-hour steps: across a daylight-saving
+  // change yesterday's local midnight is 23 or 25 hours away, and a conversation
+  // in the transition hour landed in the wrong group.
+  const startOfToday = startOfLocalDay(now, 0);
+  const startOfYesterday = startOfLocalDay(now, -1);
+  const startOfPrevious7Days = startOfLocalDay(now, -7);
   const order: readonly ChatHistoryBucket[] = ['pinned', 'today', 'yesterday', 'previous7Days', 'older'];
 
   return order
     .map(bucket => ({
       bucket,
-      conversations: conversations.filter(conversation => bucketOf(conversation, startOfToday) === bucket),
+      conversations: conversations.filter(
+        conversation =>
+          bucketOf(conversation, startOfToday, startOfYesterday, startOfPrevious7Days) === bucket,
+      ),
     }))
     .filter(group => group.conversations.length > 0);
 }
 
-function bucketOf(conversation: ChatConversation, startOfToday: number): ChatHistoryBucket {
+/** Local midnight `offsetDays` from the day `reference` falls in. */
+function startOfLocalDay(reference: Date, offsetDays: number): number {
+  return new Date(
+    reference.getFullYear(),
+    reference.getMonth(),
+    reference.getDate() + offsetDays,
+  ).getTime();
+}
+
+function bucketOf(
+  conversation: ChatConversation,
+  startOfToday: number,
+  startOfYesterday: number,
+  startOfPrevious7Days: number,
+): ChatHistoryBucket {
   if (conversation.pinned) return 'pinned';
 
   const updated = conversation.updatedAt.getTime();
   if (updated >= startOfToday) return 'today';
-  if (updated >= startOfToday - DAY_MS) return 'yesterday';
-  if (updated >= startOfToday - 7 * DAY_MS) return 'previous7Days';
+  if (updated >= startOfYesterday) return 'yesterday';
+  if (updated >= startOfPrevious7Days) return 'previous7Days';
   return 'older';
 }

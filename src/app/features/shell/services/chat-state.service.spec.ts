@@ -330,6 +330,26 @@ describe('groupConversations', () => {
     expect(groups[0].bucket).toBe('today');
   });
 
+  it('groups by calendar day across a daylight-saving change', () => {
+    // Fixed 24-hour steps put a conversation in the transition hour in the wrong
+    // group: yesterday's local midnight is 23 or 25 hours away, not 24.
+    // 2026-11-01 is the US DST fall-back; the day before it is 25 hours long.
+    const now = new Date(2026, 10, 2, 9, 0, 0);
+    const lateYesterday = new Date(2026, 10, 1, 23, 30, 0);
+    const earlyYesterday = new Date(2026, 10, 1, 0, 30, 0);
+
+    const groups = groupConversations(
+      [
+        conversation({ id: 'late', updatedAt: lateYesterday }),
+        conversation({ id: 'early', updatedAt: earlyYesterday }),
+      ],
+      now,
+    );
+
+    const yesterday = groups.find(group => group.bucket === 'yesterday');
+    expect(yesterday?.conversations.map(entry => entry.id).sort()).toEqual(['early', 'late']);
+    expect(groups.some(group => group.bucket === 'older')).toBe(false);
+  });
 });
 
 describe('ChatStateService against a store that does not answer immediately', () => {
@@ -345,28 +365,39 @@ describe('ChatStateService against a store that does not answer immediately', ()
     failNext = false;
     private readonly pending: (() => void)[] = [];
 
+    /** What has actually been saved, so a reload returns it. */
+    private readonly saved = new Map<string, readonly ChatMessage[]>();
+    private readonly entries = new Map<string, ChatConversation>();
+
     listConversations(): Observable<readonly ChatConversation[]> {
       // Deferred like the rest: a list load that settles instantly cannot be
       // in flight when a local mutation happens, which is the case under test.
-      return this.defer('listConversations', this.listing);
+      return this.defer('listConversations', () => [...this.entries.values()]);
     }
-
-    /** What the next listConversations() will resolve with. */
-    listing: readonly ChatConversation[] = [];
-    loadMessages(): Observable<readonly ChatMessage[]> {
-      return this.defer('loadMessages', []);
+    loadMessages(conversationId: string): Observable<readonly ChatMessage[]> {
+      return this.defer('loadMessages', () => this.saved.get(conversationId) ?? []);
     }
     saveConversation(entry: ChatConversation): Observable<void> {
-      return this.defer(`saveConversation:${entry.title}`, undefined as void);
+      return this.defer(`saveConversation:${entry.title}`, () => {
+        this.entries.set(entry.id, entry);
+      });
     }
     saveMessages(conversationId: string, messages: readonly ChatMessage[]): Observable<void> {
-      return this.defer(`saveMessages:${messages.length}`, undefined as void);
+      return this.defer(`saveMessages:${messages.length}`, () => {
+        this.saved.set(conversationId, messages);
+      });
     }
-    deleteConversation(): Observable<void> {
-      return this.defer('deleteConversation', undefined as void);
+    deleteConversation(conversationId: string): Observable<void> {
+      return this.defer('deleteConversation', () => {
+        this.entries.delete(conversationId);
+        this.saved.delete(conversationId);
+      });
     }
     clear(): Observable<void> {
-      return this.defer('clear', undefined as void);
+      return this.defer('clear', () => {
+        this.entries.clear();
+        this.saved.clear();
+      });
     }
 
     /** Settle the oldest outstanding call. */
@@ -385,7 +416,8 @@ describe('ChatStateService against a store that does not answer immediately', ()
       return this.pending.length;
     }
 
-    private defer<T>(label: string, value: T): Observable<T> {
+    /** `settle` runs when the call is released, so it sees the state of that moment. */
+    private defer<T>(label: string, settle: () => T): Observable<T> {
       const fails = this.failNext;
       this.failNext = false;
       return new Observable<T>(subscriber => {
@@ -396,7 +428,7 @@ describe('ChatStateService against a store that does not answer immediately', ()
             subscriber.error(new Error(`store failed: ${label}`));
             return;
           }
-          subscriber.next(value);
+          subscriber.next(settle());
           subscriber.complete();
         });
       });
@@ -585,4 +617,87 @@ describe('ChatStateService against a store that does not answer immediately', ()
 
     expect(store.order).toEqual([]);
   });
+
+  it('keeps a question asked while the previous reply was still in flight', () => {
+    // The away path used to REPLACE the thread with `stored + answer`. Anything
+    // not yet persisted — the newer question and its pending placeholder — was
+    // wiped, and the read could also overtake the queued save and come back with
+    // the pre-send snapshot.
+    service.appendUserMessage('the first question');
+    const conversation = service.activeConversationId()!;
+    const target = service.beginAssistantTurn()!;
+
+    service.startNewConversation();
+    while (store.outstanding > 0) store.releaseNext();
+    service.selectConversation(conversation);
+    while (store.outstanding > 0) store.releaseNext();
+
+    service.appendUserMessage('a second question');
+    const second = service.beginAssistantTurn()!;
+
+    service.completeAssistantTurn(target, [{ kind: 'text', text: 'the first answer' }]);
+    while (store.outstanding > 0) store.releaseNext();
+
+    const texts = service.messages().map(message => blockText(message));
+    expect(texts).toContain('the first question');
+    expect(texts).toContain('a second question');
+    expect(texts).toContain('the first answer');
+    // The second turn is still open, not discarded.
+    expect(service.messages().some(message => message.id === second.messageId)).toBe(true);
+    expect(service.awaitingReply()).toBe(true);
+  });
+
+  it('replaces the stored failure when a retry settles away from the thread', () => {
+    // restartAssistantTurn swaps the message in memory only, so the store still
+    // holds the error: without carrying the replaced id, reopening showed the old
+    // failure followed by its answer.
+    service.appendUserMessage('a question that fails');
+    const conversation = service.activeConversationId()!;
+    const failed = service.beginAssistantTurn()!;
+    service.completeAssistantTurn(failed, [
+      { kind: 'error', messageKey: 'SHELL.CHAT.ERROR.BACKEND', detailKey: null,
+        detailParams: null, correlationId: null, retryable: true },
+    ]);
+    while (store.outstanding > 0) store.releaseNext();
+
+    const retry = service.restartAssistantTurn(failed.messageId)!;
+    service.startNewConversation();
+    while (store.outstanding > 0) store.releaseNext();
+
+    service.completeAssistantTurn(retry, [{ kind: 'text', text: 'the retried answer' }]);
+    while (store.outstanding > 0) store.releaseNext();
+
+    service.selectConversation(conversation);
+    while (store.outstanding > 0) store.releaseNext();
+
+    const kinds = service.messages().map(message => message.blocks[0]?.kind);
+    expect(kinds).not.toContain('error');
+    expect(service.messages().map(message => blockText(message))).toContain('the retried answer');
+  });
+
+  it('survives a failed load while landing a reply, without killing the queue', () => {
+    service.appendUserMessage('a question');
+    const target = service.beginAssistantTurn()!;
+    service.startNewConversation();
+    while (store.outstanding > 0) store.releaseNext();
+
+    store.failNext = true;
+    service.completeAssistantTurn(target, [{ kind: 'text', text: 'the answer' }]);
+    while (store.outstanding > 0) store.releaseNext();
+
+    // The queue is still usable afterwards.
+    store.order.length = 0;
+    service.appendUserMessage('a later question');
+    while (store.outstanding > 0) store.releaseNext();
+    expect(store.order.filter(label => label.startsWith('save')).length).toBeGreaterThan(0);
+  });
 });
+
+/** First text-ish block of a message, for readable assertions. */
+function blockText(message: ChatMessage): string {
+  const block = message.blocks[0];
+  if (!block) return '';
+  if (block.kind === 'text') return block.text;
+  if (block.kind === 'markdown') return block.markdown;
+  return '';
+}
