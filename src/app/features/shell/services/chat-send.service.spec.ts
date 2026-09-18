@@ -18,7 +18,11 @@ describe('ChatSendService', () => {
   };
 
   const authServiceStub: Pick<AuthService, 'currentUserClaims'> = {
-    currentUserClaims: signal<JwtClaims | null>(null),
+    currentUserClaims: signal<JwtClaims | null>({
+      sub: 'admin.alpha',
+      tid: 'tenant-one',
+      exp: 9999999999,
+    }),
   };
 
   beforeEach(() => {
@@ -155,6 +159,32 @@ describe('ChatSendService', () => {
     expect(messages.filter(message => message.role === 'user')).toHaveLength(1);
     expect(messages[messages.length - 1].blocks[0].kind).toBe('markdown');
     expect(chatApiStub.sendMessage).toHaveBeenLastCalledWith({ message: 'how many mechanics' });
+  });
+
+  it('lands a reply in its own conversation when the user has moved on', () => {
+    let settle: ((response: ChatResponse) => void) | null = null;
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue({
+      pipe: () => ({
+        subscribe: (observer: { next: (value: ChatResponse) => void }) => {
+          settle = observer.next;
+          return { unsubscribe: () => undefined };
+        },
+      }),
+    } as never);
+
+    service.send('first question');
+    const firstId = chatState.activeConversationId()!;
+
+    chatState.startNewConversation();
+    chatState.appendUserMessage('a different question');
+
+    settle!({ response: 'the late answer' });
+
+    expect(chatState.messages()).toHaveLength(1);
+    chatState.selectConversation(firstId);
+    const landed = chatState.messages()[chatState.messages().length - 1];
+    expect(landed.role).toBe('assistant');
+    expect(landed.pending).toBe(false);
   });
 
   it('calls onSettled on both success and failure', () => {

@@ -6,7 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ChatConversation, ChatMessage } from '../models/chat.model';
 import { LocalChatHistoryStore } from './chat-history.store';
 
-const STORAGE_KEY = 'durion-chat-history-v1:admin.alpha';
+const STORAGE_KEY = 'durion-chat-history-v1:tenant-one:admin.alpha';
 
 function conversation(overrides: Partial<ChatConversation> = {}): ChatConversation {
   return {
@@ -33,11 +33,11 @@ function message(overrides: Partial<ChatMessage> = {}): ChatMessage {
 
 describe('LocalChatHistoryStore', () => {
   let store: LocalChatHistoryStore;
-  const claims = signal<JwtClaims | null>({ sub: 'admin.alpha', exp: 9999999999 });
+  const claims = signal<JwtClaims | null>({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
 
   beforeEach(() => {
     localStorage.clear();
-    claims.set({ sub: 'admin.alpha', exp: 9999999999 });
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
 
     TestBed.configureTestingModule({
       providers: [{ provide: AuthService, useValue: { currentUserClaims: claims } }],
@@ -113,10 +113,23 @@ describe('LocalChatHistoryStore', () => {
     await save();
     expect(localStorage.getItem(STORAGE_KEY)).not.toBeNull();
 
-    claims.set({ sub: 'other.user', exp: 9999999999 });
+    claims.set({ sub: 'other.user', tid: 'tenant-one', exp: 9999999999 });
     expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
 
-    claims.set({ sub: 'admin.alpha', exp: 9999999999 });
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
+    expect(await firstValueFrom(store.listConversations())).toHaveLength(1);
+  });
+
+  it('namespaces storage by tenant, so one subject cannot read across a switch', async () => {
+    // Conversations quote customer and invoice data; the same `sub` in another
+    // tenant must not see them (ADR-0062).
+    await save();
+
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
+    expect(await firstValueFrom(store.listConversations())).toHaveLength(0);
+    expect(await firstValueFrom(store.loadMessages('c1'))).toHaveLength(0);
+
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
     expect(await firstValueFrom(store.listConversations())).toHaveLength(1);
   });
 

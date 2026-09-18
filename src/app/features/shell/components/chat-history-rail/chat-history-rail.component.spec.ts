@@ -42,7 +42,7 @@ describe('ChatHistoryRailComponent', () => {
   function conversation(question: string, answer: string): string {
     chatState.startNewConversation();
     chatState.appendUserMessage(question);
-    const pendingId = chatState.beginAssistantTurn();
+    const pendingId = chatState.beginAssistantTurn()!;
     chatState.completeAssistantTurn(pendingId, [{ kind: 'text', text: answer }]);
     fixture.detectChanges();
     return chatState.activeConversationId()!;

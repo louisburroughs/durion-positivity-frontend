@@ -14,6 +14,17 @@ import { CHAT_HISTORY_STORE } from './chat-history.store';
 /** Two-signal page state for the history load (ADR-0031). */
 export type ChatLoadState = 'idle' | 'loading' | 'ready' | 'error';
 
+/**
+ * Where an in-flight assistant turn belongs. Carried with the request rather than
+ * looked up on arrival: the user is free to open another conversation or start a
+ * new chat while a reply is still coming, and the reply must still land in the
+ * conversation that asked for it instead of being dropped.
+ */
+export interface ChatTurnTarget {
+  readonly conversationId: string;
+  readonly messageId: string;
+}
+
 const TITLE_MAX_LENGTH = 48;
 const PREVIEW_MAX_LENGTH = 90;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -56,21 +67,28 @@ export class ChatStateService {
   /**
    * Plain (non-signal) field: changing it must not re-trigger the effect below.
    * Seeded from the current claims so the effect's FIRST run is not mistaken for a
-   * user change — it used to be, which wiped the conversation list that `refresh()`
-   * had just loaded, leaving the rail empty until the modal was opened a second time.
+   * change of identity — it used to be, which wiped the conversation list that
+   * `refresh()` had just loaded, leaving the rail empty until the modal was opened
+   * a second time.
+   *
+   * It tracks TENANT AND SUBJECT together: one person can keep their `sub` across a
+   * tenant switch, and leaving the previous tenant's thread in memory would show it
+   * under the new one.
    */
-  private trackedUserId: string | null = this.auth.currentUserClaims()?.sub ?? null;
+  private trackedIdentity: string = identityOf(this.auth.currentUserClaims());
   /**
    * Monotonic token for conversation loads. Two selections can be in flight once
    * the store is server-backed, and the slower one must not overwrite the newer.
    */
   private selectionToken = 0;
+  /** The same, for conversation-list loads. */
+  private listToken = 0;
 
   constructor() {
     effect(() => {
-      const userId = this.auth.currentUserClaims()?.sub ?? null;
-      if (userId === this.trackedUserId) return;
-      this.trackedUserId = userId;
+      const identity = identityOf(this.auth.currentUserClaims());
+      if (identity === this.trackedIdentity) return;
+      this.trackedIdentity = identity;
       this.resetForCurrentUser();
     });
   }
@@ -82,17 +100,23 @@ export class ChatStateService {
 
   /** (Re)load the conversation list for the signed-in user. */
   refresh(): void {
+    const token = ++this.listToken;
+    const identity = this.trackedIdentity;
     this._state.set('loading');
     this.store
       .listConversations()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: conversations => {
+          // A list loaded for a previous identity, or superseded by a newer load,
+          // must never land: it would show one tenant's history under another.
+          if (token !== this.listToken || identity !== this.trackedIdentity) return;
           this._conversations.set(conversations);
           this._state.set('ready');
           this._errorKey.set(null);
         },
         error: () => {
+          if (token !== this.listToken || identity !== this.trackedIdentity) return;
           this._state.set('error');
           this._errorKey.set('SHELL.CHAT.ERROR.HISTORY_LOAD');
         },
@@ -149,24 +173,78 @@ export class ChatStateService {
     return message;
   }
 
-  /** Add the placeholder the typing indicator renders; returns its message id. */
-  beginAssistantTurn(): string {
-    const id = newId();
+  /** Add the placeholder the typing indicator renders; returns where it belongs. */
+  beginAssistantTurn(): ChatTurnTarget | null {
+    const conversationId = this._activeId();
+    if (!conversationId) return null;
+
+    const messageId = newId();
     this._messages.update(messages => [
       ...messages,
-      { id, role: 'assistant', blocks: [], timestamp: new Date(), pending: true },
+      { id: messageId, role: 'assistant', blocks: [], timestamp: new Date(), pending: true },
     ]);
-    return id;
+    return { conversationId, messageId };
   }
 
-  /** Replace a pending turn with its rendered blocks and persist the conversation. */
-  completeAssistantTurn(messageId: string, blocks: readonly ChatBlock[]): void {
-    this._messages.update(messages =>
-      messages.map(message =>
-        message.id === messageId ? { ...message, blocks, pending: false, timestamp: new Date() } : message,
-      ),
-    );
-    this.persist();
+  /**
+   * Replace a pending turn with its rendered blocks. If the user has since moved to
+   * another conversation, the answer is written straight to the one that asked for
+   * it rather than dropped on the floor.
+   */
+  completeAssistantTurn(target: ChatTurnTarget, blocks: readonly ChatBlock[]): void {
+    if (this._activeId() === target.conversationId) {
+      this._messages.update(messages =>
+        messages.map(message =>
+          message.id === target.messageId
+            ? { ...message, blocks, pending: false, timestamp: new Date() }
+            : message,
+        ),
+      );
+      this.persist();
+      return;
+    }
+    this.completeAwayFromThread(target, blocks);
+  }
+
+  /** Land a reply in a conversation the user is no longer looking at. */
+  private completeAwayFromThread(target: ChatTurnTarget, blocks: readonly ChatBlock[]): void {
+    this.store
+      .loadMessages(target.conversationId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(stored => {
+        // A pending turn is never persisted, so the completed one is appended.
+        const messages: readonly ChatMessage[] = [
+          ...stored,
+          {
+            id: target.messageId,
+            role: 'assistant',
+            blocks,
+            timestamp: new Date(),
+            pending: false,
+          },
+        ];
+
+        this.store
+          .saveMessages(target.conversationId, messages)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe();
+
+        const conversation = this._conversations().find(entry => entry.id === target.conversationId);
+        if (!conversation) return;
+
+        const updated: ChatConversation = {
+          ...conversation,
+          preview: derivePreview(messages),
+          updatedAt: new Date(),
+        };
+        this._conversations.update(conversations =>
+          conversations.map(entry => (entry.id === updated.id ? updated : entry)),
+        );
+        this.store
+          .saveConversation(updated)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe();
+      });
   }
 
   /**
@@ -174,9 +252,10 @@ export class ChatStateService {
    * message id. Retrying an older turn must not move its answer to the bottom of
    * the thread, under a question that was asked after it.
    */
-  restartAssistantTurn(messageId: string): string | null {
+  restartAssistantTurn(messageId: string): ChatTurnTarget | null {
+    const conversationId = this._activeId();
     const index = this._messages().findIndex(message => message.id === messageId);
-    if (index < 0) return null;
+    if (!conversationId || index < 0) return null;
 
     const id = newId();
     this._messages.update(messages =>
@@ -186,7 +265,7 @@ export class ChatStateService {
           : message,
       ),
     );
-    return id;
+    return { conversationId, messageId: id };
   }
 
   /**
@@ -307,6 +386,9 @@ export class ChatStateService {
   }
 
   private resetForCurrentUser(): void {
+    // Outrank every load in flight: none of them belong to this identity.
+    this.selectionToken += 1;
+    this.listToken += 1;
     this._conversations.set([]);
     this._messages.set([]);
     this._activeId.set(null);
@@ -320,6 +402,11 @@ export class ChatStateService {
  * staging host every send would throw. These ids are local correlation keys, never
  * security tokens, so a random fallback is fine.
  */
+/** Tenant + subject, the pair that decides whose conversations these are. */
+function identityOf(claims: { tid?: string; sub?: string } | null | undefined): string {
+  return `${claims?.tid ?? ''}|${claims?.sub ?? ''}`;
+}
+
 function newId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();

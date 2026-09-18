@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { ChatErrorBlock } from '../models/chat.model';
 import { mapAnswerPayload } from '../util/chat-response.mapper';
-import { ChatStateService } from './chat-state.service';
+import { ChatStateService, ChatTurnTarget } from './chat-state.service';
 import { ChatApiService } from './chat-api.service';
 
 /** Optional lifecycle hooks for a chat send. */
@@ -39,7 +39,9 @@ export class ChatSendService {
    */
   send(text: string, callbacks?: ChatSendCallbacks): void {
     this.chatState.appendUserMessage(text);
-    this.dispatch(text, this.chatState.beginAssistantTurn(), callbacks);
+    const target = this.chatState.beginAssistantTurn();
+    if (!target) return;
+    this.dispatch(text, target, callbacks);
   }
 
   /**
@@ -51,13 +53,13 @@ export class ChatSendService {
     const text = this.chatState.userTextBefore(failedMessageId);
     if (!text) return;
 
-    const pendingId = this.chatState.restartAssistantTurn(failedMessageId);
-    if (!pendingId) return;
+    const target = this.chatState.restartAssistantTurn(failedMessageId);
+    if (!target) return;
 
-    this.dispatch(text, pendingId, callbacks);
+    this.dispatch(text, target, callbacks);
   }
 
-  private dispatch(text: string, pendingId: string, callbacks?: ChatSendCallbacks): void {
+  private dispatch(text: string, target: ChatTurnTarget, callbacks?: ChatSendCallbacks): void {
     this.chatApi
       .sendMessage({ message: text })
       .pipe(finalize(() => callbacks?.onSettled?.()))
@@ -65,13 +67,13 @@ export class ChatSendService {
         next: response => {
           const blocks = mapAnswerPayload(response);
           this.chatState.completeAssistantTurn(
-            pendingId,
+            target,
             blocks.length > 0 ? blocks : [emptyAnswerBlock()],
           );
         },
         error: (error: unknown) => {
           this.logChatFailure(error);
-          this.chatState.completeAssistantTurn(pendingId, [this.toErrorBlock(error)]);
+          this.chatState.completeAssistantTurn(target, [this.toErrorBlock(error)]);
         },
       });
   }

@@ -24,11 +24,11 @@ function conversation(overrides: Partial<ChatConversation>): ChatConversation {
 
 describe('ChatStateService', () => {
   let service: ChatStateService;
-  const claims = signal<JwtClaims | null>({ sub: 'admin.alpha', exp: 9999999999 });
+  const claims = signal<JwtClaims | null>({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
 
   beforeEach(() => {
     localStorage.clear();
-    claims.set({ sub: 'admin.alpha', exp: 9999999999 });
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
 
     TestBed.configureTestingModule({
       providers: [{ provide: AuthService, useValue: { currentUserClaims: claims } }],
@@ -60,7 +60,7 @@ describe('ChatStateService', () => {
 
   it('keeps a pending assistant turn out of the persisted preview until it completes', () => {
     service.appendUserMessage('question');
-    const pendingId = service.beginAssistantTurn();
+    const pendingId = service.beginAssistantTurn()!;
 
     expect(service.awaitingReply()).toBe(true);
     expect(service.conversations()[0].preview).toBe('');
@@ -73,7 +73,7 @@ describe('ChatStateService', () => {
 
   it('reloads a stored conversation when it is selected again', () => {
     service.appendUserMessage('first question');
-    const pendingId = service.beginAssistantTurn();
+    const pendingId = service.beginAssistantTurn()!;
     service.completeAssistantTurn(pendingId, [{ kind: 'text', text: 'first answer' }]);
     const firstId = service.activeConversationId();
 
@@ -118,7 +118,7 @@ describe('ChatStateService', () => {
     service.appendUserMessage('mine');
     expect(service.messages()).toHaveLength(1);
 
-    claims.set({ sub: 'other.user', exp: 9999999999 });
+    claims.set({ sub: 'other.user', tid: 'tenant-one', exp: 9999999999 });
     TestBed.flushEffects();
 
     expect(service.messages()).toHaveLength(0);
@@ -128,7 +128,7 @@ describe('ChatStateService', () => {
 
   it('resolves a retry to the question above the failed turn, not the newest one', () => {
     service.appendUserMessage('first question');
-    const firstTurn = service.beginAssistantTurn();
+    const firstTurn = service.beginAssistantTurn()!;
     service.completeAssistantTurn(firstTurn, [
       {
         kind: 'error',
@@ -141,26 +141,26 @@ describe('ChatStateService', () => {
     ]);
 
     service.appendUserMessage('second question');
-    const secondTurn = service.beginAssistantTurn();
+    const secondTurn = service.beginAssistantTurn()!;
     service.completeAssistantTurn(secondTurn, [{ kind: 'text', text: 'second answer' }]);
 
-    expect(service.userTextBefore(firstTurn)).toBe('first question');
-    expect(service.userTextBefore(secondTurn)).toBe('second question');
+    expect(service.userTextBefore(firstTurn.messageId)).toBe('first question');
+    expect(service.userTextBefore(secondTurn.messageId)).toBe('second question');
     expect(service.userTextBefore('no-such-message')).toBeNull();
   });
 
   it('restarts a failed turn in place rather than appending a new one at the end', () => {
     service.appendUserMessage('first question');
-    const firstTurn = service.beginAssistantTurn();
+    const firstTurn = service.beginAssistantTurn()!;
     service.completeAssistantTurn(firstTurn, [{ kind: 'text', text: 'failed' }]);
     service.appendUserMessage('second question');
 
-    const restarted = service.restartAssistantTurn(firstTurn);
+    const restarted = service.restartAssistantTurn(firstTurn.messageId);
 
     expect(restarted).not.toBeNull();
     expect(service.messages()).toHaveLength(3);
     // Still the second entry: the retried answer must not jump below a later question.
-    expect(service.messages()[1].id).toBe(restarted);
+    expect(service.messages()[1].id).toBe(restarted!.messageId);
     expect(service.messages()[1].pending).toBe(true);
     expect(service.messages()[2].role).toBe('user');
     expect(service.restartAssistantTurn('no-such-message')).toBeNull();
@@ -170,7 +170,7 @@ describe('ChatStateService', () => {
     // Pinning writes metadata only. A combined write used to blank the stored
     // messages of any conversation that was not the open one.
     service.appendUserMessage('a question');
-    const pendingId = service.beginAssistantTurn();
+    const pendingId = service.beginAssistantTurn()!;
     service.completeAssistantTurn(pendingId, [{ kind: 'text', text: 'an answer' }]);
     const id = service.activeConversationId()!;
 
@@ -188,7 +188,7 @@ describe('ChatStateService', () => {
     // came up empty on the first open of every page session.
     localStorage.clear();
     service.appendUserMessage('stored question');
-    const pendingId = service.beginAssistantTurn();
+    const pendingId = service.beginAssistantTurn()!;
     service.completeAssistantTurn(pendingId, [{ kind: 'text', text: 'stored answer' }]);
 
     TestBed.resetTestingModule();
@@ -202,6 +202,54 @@ describe('ChatStateService', () => {
 
     expect(reopened.conversations()).toHaveLength(1);
     expect(reopened.state()).toBe('ready');
+  });
+
+  it('refuses to open an assistant turn with no conversation to put it in', () => {
+    expect(service.beginAssistantTurn()).toBeNull();
+  });
+
+  it('lands a reply in the conversation that asked for it, not the one now open', () => {
+    // The user is free to switch conversations while a reply is in flight; the
+    // answer used to be dropped because its pending id was not in the new thread.
+    service.appendUserMessage('first question');
+    const target = service.beginAssistantTurn()!;
+    const firstId = service.activeConversationId()!;
+
+    service.startNewConversation();
+    service.appendUserMessage('a different question');
+    const secondId = service.activeConversationId()!;
+
+    service.completeAssistantTurn(target, [{ kind: 'text', text: 'the late answer' }]);
+
+    // The thread the user is looking at is untouched.
+    expect(service.messages()).toHaveLength(1);
+    expect(service.activeConversationId()).toBe(secondId);
+
+    service.selectConversation(firstId);
+    const landed = service.messages()[service.messages().length - 1];
+    expect(landed.blocks[0]).toEqual({ kind: 'text', text: 'the late answer' });
+    expect(landed.pending).toBe(false);
+    expect(service.conversations().find(entry => entry.id === firstId)?.preview).toBe('the late answer');
+  });
+
+  it('isolates history by tenant as well as by subject', () => {
+    // One `sub` can outlive a tenant switch; the other tenant's conversations
+    // must not follow it, since they quote customer and invoice data.
+    service.appendUserMessage('tenant one question');
+    expect(service.conversations()).toHaveLength(1);
+
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-two', exp: 9999999999 });
+    TestBed.flushEffects();
+    service.refresh();
+
+    expect(service.conversations()).toHaveLength(0);
+    expect(service.messages()).toHaveLength(0);
+
+    claims.set({ sub: 'admin.alpha', tid: 'tenant-one', exp: 9999999999 });
+    TestBed.flushEffects();
+    service.refresh();
+
+    expect(service.conversations()).toHaveLength(1);
   });
 
   it('lets a new chat outrank a conversation load still in flight', () => {

@@ -15,8 +15,10 @@ import { coerceBlocks } from '../util/chat-response.mapper';
  * remote implementation for {@link CHAT_HISTORY_STORE} — one provider line, no
  * caller changes.
  *
- * Storage is namespaced by the signed-in subject, so switching accounts in one
- * browser never surfaces another user's conversations.
+ * Storage is namespaced by the token's tenant AND subject, so neither switching
+ * accounts nor switching tenants in one browser can surface conversations that
+ * belong to the other — and those conversations quote customer and invoice data
+ * (ADR-0062: the tenant comes from the token's `tid` claim, nowhere else).
  */
 export interface ChatHistoryStore {
   /** Conversations, newest first. */
@@ -126,10 +128,18 @@ export class LocalChatHistoryStore implements ChatHistoryStore {
     return of(undefined);
   }
 
-  /** Storage key for the signed-in subject; anonymous sessions get their own slot. */
+  /**
+   * Storage key for the current tenant + subject. The same person signed into two
+   * tenants gets two slots: one `sub` can outlive a tenant switch, and reading the
+   * previous tenant's conversations would be a cross-tenant data leak.
+   */
   private key(): string {
-    const subject = this.auth.currentUserClaims()?.sub?.trim();
-    return `${STORAGE_PREFIX}:${subject && subject.length > 0 ? subject : 'anonymous'}`;
+    const claims = this.auth.currentUserClaims();
+    const tenant = claims?.tid?.trim();
+    const subject = claims?.sub?.trim();
+    return `${STORAGE_PREFIX}:${tenant && tenant.length > 0 ? tenant : 'no-tenant'}:${
+      subject && subject.length > 0 ? subject : 'anonymous'
+    }`;
   }
 
   private read(): PersistedConversation[] {
