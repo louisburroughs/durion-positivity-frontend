@@ -1266,8 +1266,13 @@ describe('DispatchBoardPageComponent', () => {
       renderWith(fullDashboard);
       expect(component.mechanics().some(mechanic => mechanic.personId === 'M1')).toBe(false);
 
-      // The poll re-reads the local day; the selected date does not move.
-      component.todayIso.set('2026-09-18');
+      // The poll re-reads the local day; the selected date does not move. The
+      // rolled-over day is derived from the selection rather than written as a
+      // literal: a hardcoded date stops being "tomorrow" on the day it names,
+      // and then asserts the opposite of what this test is about.
+      const rolledOver = new Date(`${component.selectedDate()}T00:00:00`);
+      rolledOver.setDate(rolledOver.getDate() + 1);
+      component.todayIso.set(isoDateLocal(rolledOver));
       fixture.detectChanges();
 
       expect(component.isViewingToday()).toBe(false);
@@ -2312,11 +2317,12 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.canTakeBay(component.toAssignRows()[0])).toBe(false);
     });
 
-    // The bay writes are workexec's position endpoints, whose authority is the
-    // operational-context override (F1) — not shop management's bay grant.
+    // The bay writes are workexec's position endpoints, whose authority is
+    // workorder:position:assign (durion-positivity-backend#2059) — not shop
+    // management's bay grant, and no longer the operational-context override.
     it('allows the bay write while refusing the technician write', () => {
       authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
-        codes.includes('workorder:operationalContext:override'),
+        codes.includes('workorder:position:assign'),
       );
       renderWith(fullDashboard);
 
@@ -2419,7 +2425,7 @@ describe('DispatchBoardPageComponent', () => {
   describe('clear controls are writes too', () => {
     it('refuses to clear a mechanic without the technician write authority', () => {
       authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
-        codes.includes('workorder:operationalContext:override'),
+        codes.includes('workorder:position:assign'),
       );
       renderWith(fullDashboard);
       const row = component.assignedRows()[0];
@@ -2804,9 +2810,11 @@ describe('DispatchBoardPageComponent', () => {
 
     // d89a09a :194-196 gated on SHOPMGMT_PAGE.bayAssign ('shop:bay:assign'), so
     // the grant the position endpoints actually require bought nothing here.
-    it('enables the bay controls for a session holding only workorder:operationalContext:override', () => {
+    // #2059 then split that grant off the manager override onto its own code,
+    // which is what a dispatcher holds.
+    it('enables the bay controls for a session holding only workorder:position:assign', () => {
       authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
-        codes.includes('workorder:operationalContext:override'),
+        codes.includes('workorder:position:assign'),
       );
       renderWith(fullDashboard);
 
@@ -2820,6 +2828,28 @@ describe('DispatchBoardPageComponent', () => {
       component.openPicker('BAY', 'wo-to-assign');
       component.pick('B4');
       expect(dispatchBoardServiceStub.assignBay).toHaveBeenCalledWith('wo-to-assign', 'B4');
+    });
+
+    // The other half of the #2059 split: the manager override grant alone must
+    // NOT reach the bay rails any more. Without this case a fallback to the old
+    // code, or its accidental re-addition to positionAssign, would pass the
+    // suite while quietly restoring a manager-only authority here.
+    it('disables the bay controls for a session holding only workorder:operationalContext:override', () => {
+      authStub.hasAnyPermission.mockImplementation((codes: readonly string[]) =>
+        codes.includes('workorder:operationalContext:override'),
+      );
+      renderWith(fullDashboard);
+
+      expect(component.canAssignBay()).toBe(false);
+      expect(component.canTakeBay(component.toAssignRows()[0])).toBe(false);
+      expect(component.canClearBay(component.assignedRows()[0])).toBe(false);
+      expect(slotFor('wo-to-assign', 'ADD_BAY_ARIA')?.disabled).toBe(true);
+
+      component.openPicker('BAY', 'wo-to-assign');
+      component.pick('B4');
+      component.clearBay(component.assignedRows()[0]);
+      expect(dispatchBoardServiceStub.assignBay).not.toHaveBeenCalled();
+      expect(dispatchBoardServiceStub.releaseBay).not.toHaveBeenCalled();
     });
 
     // d89a09a :194-196 enabled these for the appointment page's grant, which

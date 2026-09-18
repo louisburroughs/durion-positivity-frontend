@@ -20,7 +20,7 @@
  */
 
 /** Backend `PermissionCode.CATALOG_VERSION` this file was generated from. */
-export const PERMISSION_CATALOG_VERSION = 88;
+export const PERMISSION_CATALOG_VERSION = 89;
 
 /**
  * Permission code by `perm_bits` bit index. The array index IS the bit index.
@@ -559,4 +559,5 @@ export const PERMISSION_BY_BIT: readonly string[] = [
   'platform:tenant:impersonate',
   'shop:conflict:override',
   'catalog:service_requirement:manage',
+  'workorder:position:assign',
 ];
