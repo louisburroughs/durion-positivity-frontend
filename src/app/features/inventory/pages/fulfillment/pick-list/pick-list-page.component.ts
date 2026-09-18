@@ -47,18 +47,11 @@ export class PickListPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: result => {
+          // null: the workorder has no pick list yet — the empty state, not a failure (#286).
           this.pickList.set(result);
-          this.state.set(result.tasks.length === 0 ? 'empty' : 'ready');
+          this.state.set(!result || result.tasks.length === 0 ? 'empty' : 'ready');
         },
-        error: err => {
-          // The header read answers 404 when the workorder has no pick list yet
-          // (labour-only job, or inventory has not generated one). That is the
-          // empty state, not a failure (#286).
-          if (err?.status === 404) {
-            this.pickList.set(null);
-            this.state.set('empty');
-            return;
-          }
+        error: () => {
           this.state.set('error');
           this.errorKey.set('INVENTORY.FULFILLMENT.PICK_LIST.ERROR.LOAD');
         },

@@ -81,12 +81,9 @@ describe('PickListPageComponent', () => {
     expect(component.state()).toBe('empty');
   });
 
-  // The header endpoint 404s when no pick list exists for the workorder, while
-  // the tasks endpoint answers []. The forkJoin surfaces the 404 (#286).
-  it('header 404 (no pick list for workorder) sets state empty, not error', async () => {
-    mockWorkexecService.getWorkorderPickList.mockReturnValue(
-      throwError(() => new HttpErrorResponse({ status: 404, statusText: 'Not Found' })),
-    );
+  // The service emits null when the workorder has no pick list yet (#286).
+  it('no pick list (null) sets state empty, not error', async () => {
+    mockWorkexecService.getWorkorderPickList.mockReturnValue(of(null));
     const component = await setupPickList();
 
     expect(component.state()).toBe('empty');
@@ -94,9 +91,11 @@ describe('PickListPageComponent', () => {
     expect(component.pickList()).toBeNull();
   });
 
-  it('non-404 load failure still sets state error', async () => {
+  // Only the service may decide a 404 means "no pick list"; one that reaches
+  // the page (e.g. from the task read) is a real failure.
+  it('a load error that reaches the page sets state error, even a 404', async () => {
     mockWorkexecService.getWorkorderPickList.mockReturnValue(
-      throwError(() => new HttpErrorResponse({ status: 500, statusText: 'Server Error' })),
+      throwError(() => new HttpErrorResponse({ status: 404, statusText: 'Not Found' })),
     );
     const component = await setupPickList();
 
