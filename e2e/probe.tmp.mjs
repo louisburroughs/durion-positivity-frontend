@@ -1,0 +1,14 @@
+import { chromium } from '@playwright/test';
+const b = await chromium.launch();
+const ctx = await b.newContext({ storageState: 'artifacts/audit/admin/.auth/state.json' });
+const page = await ctx.newPage();
+page.on('response', async r => { if (/bulk-jobs|pick-list/.test(r.url())) console.log(r.status(), new URL(r.url()).pathname, (await r.text().catch(()=>'')).slice(0,600)); });
+await page.goto('https://durionpos.org/app/bulk-import/jobs', { waitUntil: 'networkidle' });
+await page.goto('https://durionpos.org/app/inventory/fulfillment/workorders/01a0a52c-89f9-7ef9-9c97-583da36fa240/pick-list', { waitUntil: 'networkidle' });
+await page.waitForTimeout(1500);
+console.log('PICKLIST UI:', (await page.locator('main').innerText()).slice(0,400).replace(/\s+/g,' '));
+await page.goto('https://durionpos.org/app/workexec/workorders/01a0a52c-89f9-7ef9-9c97-583da36fa240', { waitUntil: 'networkidle' });
+await page.waitForTimeout(1500);
+console.log('TAB:', await page.locator('.wo-tab--active').first().evaluate(e => e.outerHTML.slice(0,300)));
+console.log('BADGE:', await page.locator('.ledger__type-badge').first().evaluate(e => { const s=getComputedStyle(e); return e.outerHTML.slice(0,200)+' color='+s.color+' bg='+s.backgroundColor+' font='+s.fontSize; }).catch(e=>'n/a'));
+await b.close();

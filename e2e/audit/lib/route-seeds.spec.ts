@@ -12,6 +12,26 @@ describe('route seeds', () => {
     expect(APP_SEEDS).not.toContain('/app/security/identity-compliance');
   });
 
+  it('seeds the screens added since the last seed refresh', () => {
+    for (const seed of [
+      '/app/sitemap',
+      '/app/accounting/payables/vendor-invoices',
+      '/app/accounting/payables/vendor-invoices/exceptions',
+      '/app/product/catalog/enrichment/unmatched',
+      '/app/shopmgmt/shop-dashboard',
+      '/app/positivity',
+      '/app/positivity/exchanges',
+      '/app/positivity/manual-review',
+      '/app/platform/tenants',
+      '/app/platform/tenants/new',
+    ]) {
+      expect(APP_SEEDS).toContain(seed);
+    }
+    const templates = PARAM_TEMPLATES.map(t => t.template);
+    expect(templates).toContain('/app/accounting/payables/vendor-invoices/:billId');
+    expect(templates).toContain('/app/workexec/workorders/:workorderId/change-requests');
+  });
+
   it('has no duplicate seeds', () => {
     const all = [...PUBLIC_SEEDS, ...APP_SEEDS];
     expect(new Set(all).size).toBe(all.length);

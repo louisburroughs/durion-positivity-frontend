@@ -16,6 +16,7 @@ export const PUBLIC_SEEDS: readonly string[] = ['/', '/login', '/forbidden', '/n
 /** Routes behind authGuard (crawled only when credentials are supplied). */
 export const APP_SEEDS: readonly string[] = [
   '/app',
+  '/app/sitemap',
   '/app/admin',
 
   // CRM
@@ -51,6 +52,8 @@ export const APP_SEEDS: readonly string[] = [
   '/app/accounting/credit-memos/new',
   '/app/accounting/vendor-payments',
   '/app/accounting/vendor-payments/new',
+  '/app/accounting/payables/vendor-invoices',
+  '/app/accounting/payables/vendor-invoices/exceptions',
   '/app/accounting/reports/labor-overhead',
 
   // Billing
@@ -98,6 +101,7 @@ export const APP_SEEDS: readonly string[] = [
   // Product
   '/app/product',
   '/app/product/catalog',
+  '/app/product/catalog/enrichment/unmatched',
   '/app/product/pricing/price-books',
   '/app/product/pricing/msrp',
   '/app/product/pricing/location-overrides',
@@ -119,6 +123,7 @@ export const APP_SEEDS: readonly string[] = [
 
   // Shop management
   '/app/shopmgmt',
+  '/app/shopmgmt/shop-dashboard',
   '/app/shopmgmt/dispatch-board',
   '/app/shopmgmt/schedule',
   '/app/shopmgmt/appointments/new',
@@ -128,6 +133,15 @@ export const APP_SEEDS: readonly string[] = [
 
   // Bulk import
   '/app/bulk-import/jobs',
+
+  // Positivity supplier integration (ROLE_ADMIN)
+  '/app/positivity',
+  '/app/positivity/exchanges',
+  '/app/positivity/manual-review',
+
+  // Platform operations (ROLE_PLATFORM_ADMIN; tenant personas land on /forbidden)
+  '/app/platform/tenants',
+  '/app/platform/tenants/new',
 ];
 
 /**
@@ -141,6 +155,12 @@ export const APP_SEEDS: readonly string[] = [
  * invoice payment-capture/void-refund, employee offboard, appointment
  * reschedule/dispatch-assign/override-conflict, work-session submit,
  * pick-execute/consume-items/return-to-stock/shortage-resolution.
+ *
+ * Not templated because the harvester cannot fill them safely: security
+ * `roles/:name` (role names are not id-shaped), receipt detail (needs a paired
+ * invoiceId+receiptId from different responses), tread-design review and
+ * platform tenant detail (bare `id` collides with other entities of the same
+ * service). All four are linked by anchors, so the link crawl reaches them.
  */
 export const PARAM_TEMPLATES: readonly ParamRouteTemplate[] = [
   // Every candidate is `<field>@<gateway service>` (see id-harvest.ts). A
@@ -153,6 +173,7 @@ export const PARAM_TEMPLATES: readonly ParamRouteTemplate[] = [
   { template: '/app/accounting/posting-rules/:ruleSetId', params: { ruleSetId: ['ruleSetId@accounting', 'postingRuleSetId@accounting'] } },
   { template: '/app/accounting/credit-memos/:memoId', params: { memoId: ['memoId@accounting', 'creditMemoId@accounting'] } },
   { template: '/app/accounting/vendor-payments/:paymentId', params: { paymentId: ['paymentId@accounting', 'vendorPaymentId@accounting'] } },
+  { template: '/app/accounting/payables/vendor-invoices/:billId', params: { billId: ['billId@accounting', 'vendorBillId@accounting'] } },
   { template: '/app/accounting/invoices/:invoiceId/payment-status', params: { invoiceId: ['invoiceId@invoice', 'invoiceId@accounting'] } },
 
   // Billing — invoice views take ids from the invoice service only.
@@ -166,6 +187,7 @@ export const PARAM_TEMPLATES: readonly ParamRouteTemplate[] = [
   { template: '/app/crm/party/:partyId', params: { partyId: ['partyId@customer'] } },
   { template: '/app/crm/party/:partyId/contacts', params: { partyId: ['partyId@customer'] } },
   { template: '/app/crm/party/:partyId/billing-rules', params: { partyId: ['partyId@customer'] } },
+  { template: '/app/crm/party/:partyId/add-vehicle', params: { partyId: ['partyId@customer'] } },
   { template: '/app/crm/crm-snapshot/:partyId', params: { partyId: ['partyId@customer'] } },
 
   // Inventory
@@ -174,6 +196,7 @@ export const PARAM_TEMPLATES: readonly ParamRouteTemplate[] = [
   { template: '/app/inventory/ledger/:ledgerEntryId', params: { ledgerEntryId: ['ledgerEntryId@inventory', 'entryId@inventory'] } },
   { template: '/app/inventory/putaway/tasks/:taskId', params: { taskId: ['taskId@inventory', 'putawayTaskId@inventory'] } },
   { template: '/app/inventory/purchase-orders/:poId', params: { poId: ['poId@inventory', 'purchaseOrderId@inventory'] } },
+  { template: '/app/inventory/purchase-orders/:poId/edit', params: { poId: ['poId@inventory', 'purchaseOrderId@inventory'] } },
   { template: '/app/inventory/fulfillment/workorders/:workorderId/pick-list', params: { workorderId: ['workorderId@workorder', 'workOrderId@workorder'] } },
 
   // Location — the location SDK's LocationResponseDTO keys by bare `id`.
@@ -191,6 +214,10 @@ export const PARAM_TEMPLATES: readonly ParamRouteTemplate[] = [
   // Product
   { template: '/app/product/catalog/:productId', params: { productId: ['productId@catalog', 'id@catalog'] } },
 
+  // Positivity supplier integration
+  { template: '/app/positivity/profiles/:vendorProfileId', params: { vendorProfileId: ['vendorProfileId@supplier'] } },
+  { template: '/app/positivity/exchanges/:exchangeId', params: { exchangeId: ['exchangeAuditId@supplier'] } },
+
   // Shop management
   { template: '/app/shopmgmt/appointments/:id/edit', params: { id: ['appointmentId@shop-manager'] } },
   { template: '/app/shopmgmt/appointments/:id/assignments', params: { id: ['appointmentId@shop-manager'] } },
@@ -203,5 +230,6 @@ export const PARAM_TEMPLATES: readonly ParamRouteTemplate[] = [
   { template: '/app/workexec/workorders/:workorderId', params: { workorderId: ['workorderId@workorder', 'workOrderId@workorder'] } },
   { template: '/app/workexec/workorders/:workorderId/labor', params: { workorderId: ['workorderId@workorder', 'workOrderId@workorder'] } },
   { template: '/app/workexec/workorders/:workorderId/parts', params: { workorderId: ['workorderId@workorder', 'workOrderId@workorder'] } },
+  { template: '/app/workexec/workorders/:workorderId/change-requests', params: { workorderId: ['workorderId@workorder', 'workOrderId@workorder'] } },
   { template: '/app/workexec/workorders/:id/operational-context', params: { id: ['workorderId@workorder', 'workOrderId@workorder'] } },
 ];
