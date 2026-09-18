@@ -81,19 +81,22 @@
 
   <!-- Tab bar — 2px secondary bottom indicator only, no box shadow -->
   <nav class="wo-tabs" [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.TABS_ARIA' | translate">
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'items'" (click)="selectTab('items')"
-      [attr.aria-selected]="activeTab() === 'items'">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_SCOPE' | translate }}</button>
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'labor'" (click)="navigateToLabor()">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_LABOR' | translate }}</button>
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'parts'" (click)="navigateToParts()">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_PARTS' | translate }}</button>
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'change-requests'"
-      (click)="navigateToChangeRequests()">
+    <button type="button" class="wo-tab" [class.wo-tab--active]="activeTab() === 'items'" (click)="selectTab('items')"
+      [attr.aria-current]="activeTab() === 'items' ? 'page' : null">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_SCOPE' | translate }}</button>
+    <button type="button" class="wo-tab" [class.wo-tab--active]="activeTab() === 'labor'" (click)="navigateToLabor()"
+      [attr.aria-current]="activeTab() === 'labor' ? 'page' : null">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_LABOR' | translate }}</button>
+    <button type="button" class="wo-tab" [class.wo-tab--active]="activeTab() === 'parts'" (click)="navigateToParts()"
+      [attr.aria-current]="activeTab() === 'parts' ? 'page' : null">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_PARTS' | translate }}</button>
+    <button type="button" class="wo-tab" [class.wo-tab--active]="activeTab() === 'change-requests'"
+      (click)="navigateToChangeRequests()" [attr.aria-current]="activeTab() === 'change-requests' ? 'page' : null">
       {{ 'WORKEXEC.WORKORDER_DETAIL.CHANGE_REQUESTS' | translate }}
       @if (pendingCrCount() > 0) {
       <span class="tab-badge tab-badge--warning" [attr.aria-label]="'WORKEXEC.WORKORDER_DETAIL.PENDING_ARIA' | translate: { count: pendingCrCount() }">{{ pendingCrCount()
         }}</span>
       }
     </button>
-    <button class="wo-tab" [class.wo-tab--active]="activeTab() === 'audit'" (click)="selectTab('audit')">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_AUDIT' | translate }}</button>
+    <button type="button" class="wo-tab" [class.wo-tab--active]="activeTab() === 'audit'" (click)="selectTab('audit')"
+      [attr.aria-current]="activeTab() === 'audit' ? 'page' : null">{{ 'WORKEXEC.WORKORDER_DETAIL.TAB_AUDIT' | translate }}</button>
   </nav>
 
   <!-- Scope/Items tab — Story 229 -->

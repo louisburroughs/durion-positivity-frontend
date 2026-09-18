@@ -1,4 +1,5 @@
 import { WritableSignal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -78,6 +79,29 @@ describe('PickListPageComponent', () => {
     expect(Array.isArray(component.pickList()?.tasks)).toBe(true);
     expect(component.pickList()?.tasks).toHaveLength(0);
     expect(component.state()).toBe('empty');
+  });
+
+  // The header endpoint 404s when no pick list exists for the workorder, while
+  // the tasks endpoint answers []. The forkJoin surfaces the 404 (#286).
+  it('header 404 (no pick list for workorder) sets state empty, not error', async () => {
+    mockWorkexecService.getWorkorderPickList.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 404, statusText: 'Not Found' })),
+    );
+    const component = await setupPickList();
+
+    expect(component.state()).toBe('empty');
+    expect(component.errorKey()).toBeNull();
+    expect(component.pickList()).toBeNull();
+  });
+
+  it('non-404 load failure still sets state error', async () => {
+    mockWorkexecService.getWorkorderPickList.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 500, statusText: 'Server Error' })),
+    );
+    const component = await setupPickList();
+
+    expect(component.state()).toBe('error');
+    expect(component.errorKey()).toBe('INVENTORY.FULFILLMENT.PICK_LIST.ERROR.LOAD');
   });
 
   it('reload() re-fetches pick list and sets state to ready', async () => {
