@@ -396,6 +396,11 @@ export class ChatStateService {
 
   /** Queue a store write behind everything already issued. */
   private enqueueWrite(work: () => Observable<unknown>): void {
+    // Anything we write is a local change to the list, so a list load already in
+    // flight is now stale: it would put back the conversation just deleted, or
+    // drop the one just created — and dropping the active one means the reply to
+    // it is never persisted, because persist() resolves it through the list.
+    this.listToken += 1;
     this.writes.next(work);
   }
 

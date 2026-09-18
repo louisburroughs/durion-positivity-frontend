@@ -5,8 +5,7 @@
         [attr.aria-label]="'SHELL.CHAT.CLOSE_ARIA' | translate"></button>
 
 <section #dialog class="chat-dialog" [class.chat-dialog--maximised]="maximised()"
-         role="dialog" aria-modal="true" aria-labelledby="chat-dialog-title"
-         (keydown)="onDialogKeydown($event)">
+         role="dialog" aria-modal="true" aria-labelledby="chat-dialog-title">
 
   <!-- Header -->
   <header class="chat-header">

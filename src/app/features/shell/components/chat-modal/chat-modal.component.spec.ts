@@ -317,4 +317,22 @@ describe('ChatModalComponent', () => {
     )!;
     expect(send.disabled).toBe(true);
   });
+
+  it('traps a real Tab pressed while focus is outside the dialog', async () => {
+    // The listener used to be bound to the dialog section, so a keydown on an
+    // element outside it never reached the trap — which is precisely the case the
+    // trap exists for. Dispatching on the section hid that; this dispatches where
+    // the browser would.
+    const outside = document.createElement('button');
+    document.body.appendChild(outside);
+    outside.focus();
+    expect(dialog().contains(document.activeElement)).toBe(false);
+
+    const event = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    outside.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(dialog().contains(document.activeElement)).toBe(true);
+    outside.remove();
+  });
 });

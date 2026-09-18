@@ -168,10 +168,12 @@
 
     @if (message().blocks.length > 0) {
     <div class="turn-actions">
+      @if (plainText().length > 0) {
       <button class="block-btn" type="button" (click)="copyTurn()"
               [attr.aria-label]="'SHELL.CHAT.ACTIONS.COPY_ARIA' | translate">
         <span class="material-symbols-rounded" aria-hidden="true">{{ (copied() ? 'check' : 'content_copy') | msIcon }}</span>
       </button>
+      }
       @if (retryable()) {
       <button class="text-btn" type="button" (click)="onRetry()">
         <span class="material-symbols-rounded" aria-hidden="true">{{ 'refresh' | msIcon }}</span>

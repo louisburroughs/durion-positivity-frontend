@@ -4,6 +4,7 @@ import {
   ChatTableAlign,
   ChatTableColumn,
 } from '../models/chat.model';
+import { isSafeHref, normaliseHref } from './markdown.util';
 
 /**
  * Backend answer → typed blocks
@@ -184,15 +185,21 @@ function coerceBlock(entry: unknown): ChatBlock | null {
       return coerceTable(raw);
     case 'chart':
       return coerceChart(raw);
-    case 'image':
-      return asString(raw['url']) && asString(raw['alt'])
+    case 'image': {
+      // A structured block's url is bound straight to [src]/[href], so it has to
+      // clear the same bar as a markdown link: Angular's sanitiser stops
+      // `javascript:` but waves through `//another-origin/x`, which fetches from
+      // wherever the model says.
+      const src = safeBlockUrl(raw['url']);
+      return src && asString(raw['alt'])
         ? {
             kind: 'image',
-            url: raw['url'] as string,
+            url: src,
             alt: raw['alt'] as string,
             caption: asString(raw['caption']) ? (raw['caption'] as string) : null,
           }
         : null;
+    }
     case 'error':
       return asString(raw['messageKey'])
         ? {
@@ -213,12 +220,19 @@ function coerceBlock(entry: unknown): ChatBlock | null {
             name: raw['name'] as string,
             sizeBytes: typeof raw['sizeBytes'] === 'number' ? raw['sizeBytes'] : null,
             mimeType: asString(raw['mimeType']) ? (raw['mimeType'] as string) : null,
-            url: asString(raw['url']) ? (raw['url'] as string) : null,
+            url: safeBlockUrl(raw['url']),
           }
         : null;
     default:
       return fallbackText(raw);
   }
+}
+
+/** A block url, normalised and checked, or null when it is not safe to render. */
+function safeBlockUrl(value: unknown): string | null {
+  if (!asString(value)) return null;
+  const candidate = normaliseHref(value as string);
+  return isSafeHref(candidate) ? candidate : null;
 }
 
 function coerceTable(raw: RawBlock): ChatBlock | null {

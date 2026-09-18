@@ -149,4 +149,33 @@ describe('coerceBlocks', () => {
   it('drops an image that has no text alternative', () => {
     expect(coerceBlocks([{ kind: 'image', url: '/blob/1' }])).toEqual([]);
   });
+
+  it('rejects an image whose url would reach another origin', () => {
+    // Bound straight to [src], and Angular's sanitiser does not stop a
+    // protocol-relative url — it is a perfectly valid one, to someone else's host.
+    for (const url of ['//evil.example/pixel.png', 'java\tscript:alert(1)', '\\\\evil.example\\x']) {
+      const blocks = coerceBlocks([{ kind: 'image', url, alt: 'tyre wear' }]);
+      expect(blocks.some(block => block.kind === 'image'), url).toBe(false);
+    }
+  });
+
+  it('keeps an image whose url is safe, normalised', () => {
+    const [block] = coerceBlocks([
+      { kind: 'image', url: 'https://cdn.example/wear.png', alt: 'tyre wear' },
+    ]);
+    expect(block).toEqual({
+      kind: 'image',
+      url: 'https://cdn.example/wear.png',
+      alt: 'tyre wear',
+      caption: null,
+    });
+  });
+
+  it('drops an unsafe file url but keeps the file listed', () => {
+    const [block] = coerceBlocks([
+      { kind: 'file', name: 'inspection.pdf', url: '//evil.example/inspection.pdf' },
+    ]);
+    expect(block.kind).toBe('file');
+    expect(block.kind === 'file' && block.url).toBeNull();
+  });
 });

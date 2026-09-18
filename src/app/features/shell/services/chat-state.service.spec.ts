@@ -1,5 +1,5 @@
 import { signal } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { JwtClaims } from '../../../core/models/auth.models';
 import { AuthService } from '../../../core/services/auth.service';
@@ -342,8 +342,13 @@ describe('ChatStateService against a store that does not answer immediately', ()
     private readonly pending: (() => void)[] = [];
 
     listConversations(): Observable<readonly ChatConversation[]> {
-      return of([]);
+      // Deferred like the rest: a list load that settles instantly cannot be
+      // in flight when a local mutation happens, which is the case under test.
+      return this.defer('listConversations', this.listing);
     }
+
+    /** What the next listConversations() will resolve with. */
+    listing: readonly ChatConversation[] = [];
     loadMessages(): Observable<readonly ChatMessage[]> {
       return this.defer('loadMessages', []);
     }
@@ -392,6 +397,8 @@ describe('ChatStateService against a store that does not answer immediately', ()
     });
     service = TestBed.inject(ChatStateService);
     service.refresh();
+    // Settle the opening list load; the tests below start from a quiet store.
+    store.releaseNext();
   });
 
   it('runs one store write at a time, in the order they were issued', () => {
@@ -402,7 +409,7 @@ describe('ChatStateService against a store that does not answer immediately', ()
     // overlapping chain let an older saveMessages land after a newer one and
     // overwrite the reply that had just arrived.
     expect(store.outstanding).toBe(1);
-    expect(store.order).toHaveLength(1);
+    expect(store.order.filter(label => label.startsWith('save'))).toHaveLength(1);
 
     store.releaseNext();
     store.releaseNext();
@@ -447,5 +454,21 @@ describe('ChatStateService against a store that does not answer immediately', ()
     expect(landed.role).toBe('assistant');
     expect(landed.pending).toBe(false);
     expect(landed.blocks).toEqual([{ kind: 'text', text: 'You have 26.' }]);
+  });
+
+  it('does not let a list load started before a send drop the new conversation', () => {
+    // refresh() replaces the whole list. A load in flight when the user asks a
+    // question carries a snapshot without that conversation — and dropping the
+    // ACTIVE one means persist() can no longer resolve it, so the reply to it is
+    // never written.
+    service.refresh();
+    service.appendUserMessage('a brand new question');
+    const created = service.activeConversationId()!;
+
+    // The load in flight carries a snapshot from before that question existed.
+    while (store.outstanding > 0) store.releaseNext();
+
+    expect(service.conversations().map(entry => entry.id)).toContain(created);
+    expect(service.activeConversationId()).toBe(created);
   });
 });

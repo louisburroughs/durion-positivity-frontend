@@ -254,4 +254,19 @@ describe('ChatMessageComponent', () => {
       'Bay 2',
     ]);
   });
+
+  it('offers no copy control for an error-only turn', () => {
+    // blocksToPlainText deliberately yields nothing for an error block, so the
+    // button was offering to copy an empty string and giving no feedback.
+    const host = render(
+      message('assistant', [
+        { kind: 'error', messageKey: 'SHELL.CHAT.ERROR.BACKEND', detailKey: null,
+          detailParams: null, correlationId: null, retryable: true },
+      ]),
+    );
+
+    expect(host.querySelector('.turn-actions')).not.toBeNull();
+    expect(host.querySelector('.block-btn')).toBeNull();
+    expect(host.querySelector('.text-btn')).not.toBeNull();
+  });
 });

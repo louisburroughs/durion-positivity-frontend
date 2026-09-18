@@ -111,7 +111,20 @@ export class ChatModalComponent implements AfterViewChecked {
     });
 
     this.lockPageScroll();
+
+    // Listen on the document, not on the dialog. A modal has to intercept Tab
+    // wherever focus currently is, and focus outside the dialog is exactly the
+    // case the trap exists for — a keydown there never bubbles through an element
+    // it is not inside, so a listener bound to the dialog could not see it.
+    const onKeydown = (event: KeyboardEvent) => this.onDialogKeydown(event);
+    if (typeof document !== 'undefined') {
+      document.addEventListener('keydown', onKeydown);
+    }
+
     this.destroyRef.onDestroy(() => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('keydown', onKeydown);
+      }
       this.releasePageScroll();
       this.openerElement?.focus();
     });
