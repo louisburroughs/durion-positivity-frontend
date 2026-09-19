@@ -2371,7 +2371,8 @@ export class DispatchBoardPageComponent implements OnInit {
       kind: entry?.kind ?? null,
       // A bay the dispatch projection does not carry holds no workorder there.
       available: status ? status.available : true,
-      assignedWorkorderId: status?.assignedWorkorderId,
+      // Null on the wire when the bay is idle; the card carries undefined for that.
+      assignedWorkorderId: status?.assignedWorkorderId ?? undefined,
       free: this.isBayFree(status),
     };
   }
