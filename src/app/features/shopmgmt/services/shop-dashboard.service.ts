@@ -366,8 +366,10 @@ export class ShopDashboardService {
         const bayStatus = bayStatusById.get(bayId);
         // The live feed wins when the replica carries this bay; otherwise the
         // workorder's own assignment is all there is.
+        // `assignedWorkorderId` is nullable on the wire (an idle bay sends null),
+        // so normalise it to undefined: "no workorder" is one value here.
         const workorderId = bayStatus
-          ? bayStatus.assignedWorkorderId
+          ? (bayStatus.assignedWorkorderId ?? undefined)
           : workorderByBay.get(bayId);
 
         return {
