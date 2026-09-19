@@ -1,0 +1,120 @@
+<!-- The click handler only turns a click on the native ::backdrop (which the
+     browser dispatches on the dialog element itself) into close(); it is a pointer
+     convenience, not the keyboard path. Keyboard users close with Escape, which the
+     directive forwards as (modalCancel), or the labelled close button below. -->
+<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+<dialog #dialog appModalDialog class="chat-dialog" [class.chat-dialog--maximised]="maximised()"
+        aria-labelledby="chat-dialog-title"
+        (modalCancel)="close()" (click)="onDialogClick($event)">
+
+  <!-- Header -->
+  <header class="chat-header">
+    <button class="icon-btn" type="button" (click)="toggleHistoryRail()"
+            [attr.aria-expanded]="historyRailOpen()"
+            [attr.aria-label]="(historyRailOpen() ? 'SHELL.CHAT.HISTORY.HIDE_ARIA' : 'SHELL.CHAT.HISTORY.SHOW_ARIA') | translate">
+      <span class="material-symbols-rounded" aria-hidden="true">{{ 'dock_to_right' | msIcon }}</span>
+    </button>
+
+    <span class="chat-header__brand" aria-hidden="true">
+      <span class="material-symbols-rounded">{{ 'smart_toy' | msIcon }}</span>
+    </span>
+
+    <span class="chat-header__titles">
+      <h2 id="chat-dialog-title" class="chat-header__title">
+        {{ activeConversation()?.title ?? ('SHELL.CHAT.NEW_CHAT_TITLE' | translate) }}
+      </h2>
+      <span class="chat-header__subtitle">{{ 'SHELL.CHAT.SUBTITLE' | translate }}</span>
+    </span>
+
+    <button class="pill-btn" type="button" (click)="newChat()">
+      <span class="material-symbols-rounded" aria-hidden="true">{{ 'add' | msIcon }}</span>
+      {{ 'SHELL.CHAT.HISTORY.NEW_CHAT' | translate }}
+    </button>
+
+    @if (!isEmpty()) {
+    <button class="icon-btn" type="button" (click)="copyTranscript()"
+            [attr.aria-label]="'SHELL.CHAT.ACTIONS.COPY_TRANSCRIPT_ARIA' | translate">
+      <span class="material-symbols-rounded" aria-hidden="true">{{ 'content_copy' | msIcon }}</span>
+    </button>
+    }
+
+    <button class="icon-btn" type="button" (click)="toggleMaximised()"
+            [attr.aria-pressed]="maximised()"
+            [attr.aria-label]="(maximised() ? 'SHELL.CHAT.RESTORE_ARIA' : 'SHELL.CHAT.MAXIMISE_ARIA') | translate">
+      <span class="material-symbols-rounded" aria-hidden="true">{{ (maximised() ? 'close_fullscreen' : 'open_in_full') | msIcon }}</span>
+    </button>
+
+    <button class="icon-btn icon-btn--close" type="button" (click)="close()"
+            [attr.aria-label]="'SHELL.CHAT.CLOSE_ARIA' | translate">
+      <span class="material-symbols-rounded" aria-hidden="true">{{ 'close' | msIcon }}</span>
+    </button>
+  </header>
+
+  <!-- Body: history rail + conversation -->
+  <div class="chat-body">
+
+    @if (historyRailOpen()) {
+    <div id="chat-history-rail" class="chat-rail">
+      <app-chat-history-rail (conversationOpened)="onConversationOpened()" />
+    </div>
+    }
+
+    <div class="chat-main">
+
+      @if (errorKey(); as key) {
+      <p class="chat-load-error" role="alert">{{ key | translate }}</p>
+      }
+
+      @if (persistenceErrorKey(); as key) {
+      <!-- Not role="alert": the conversation still works, only the persisted
+           copy was lost — a status, not a failure of the thread on screen. -->
+      <p class="chat-persist-warning" role="status">{{ key | translate }}</p>
+      }
+
+      <div #thread class="chat-thread" role="log" aria-live="polite"
+           [attr.aria-label]="'SHELL.CHAT.MESSAGES_ARIA' | translate"
+           [attr.aria-busy]="awaitingReply()">
+
+        @if (isEmpty()) {
+
+        <div class="chat-empty">
+          <span class="chat-empty__mark" aria-hidden="true">
+            <span class="material-symbols-rounded">{{ 'forum' | msIcon }}</span>
+          </span>
+          <h3 class="chat-empty__heading">{{ 'SHELL.CHAT.EMPTY.HEADING' | translate }}</h3>
+          <p class="chat-empty__body">{{ 'SHELL.CHAT.EMPTY.BODY' | translate }}</p>
+
+          <ul class="suggestions">
+            @for (suggestion of suggestions; track suggestion.textKey) {
+            <li>
+              <button class="suggestion" type="button" [disabled]="composerBusy()"
+                      (click)="useSuggestion(suggestion.textKey)">
+                <span class="suggestion__text">{{ suggestion.textKey | translate }}</span>
+                <span class="suggestion__caption">{{ suggestion.captionKey | translate }}</span>
+              </button>
+            </li>
+            }
+          </ul>
+        </div>
+
+        } @else {
+
+        @for (message of messages(); track message.id) {
+        <app-chat-message [message]="message" [busy]="composerBusy()" (retry)="retry($event)" />
+        }
+
+        }
+      </div>
+
+      <app-chat-composer [busy]="composerBusy()" [canIngest]="canIngestDocuments()"
+                         (submitted)="send($event)"
+                         (ingestRequested)="openRagDialog()" />
+    </div>
+  </div>
+
+  <!-- Nested inside the dialog: its own appModalDialog pushes it above this one
+       in the top layer, so it stacks and gets Escape/focus-trap on its own. -->
+  @if (showRagDialog()) {
+  <app-rag-ingest-dialog (closed)="onRagDialogClosed()" />
+  }
+</dialog>

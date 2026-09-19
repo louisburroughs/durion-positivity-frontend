@@ -1,10 +1,9 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { afterNextRender, Component, computed, inject, PLATFORM_ID, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { MaterialSymbolPipe } from '../../../shared/material-symbol.pipe';
-import { ChatSendService } from '../services/chat-send.service';
 import { ChatUiService } from '../services/chat-ui.service';
 
 /** Visual tone for a quick-action tile; maps to a CSS class. */
@@ -37,21 +36,21 @@ interface FavoriteArea {
  * Authenticated home page rendered in the content panel at `/app`.
  *
  * Data is intentionally static config for this iteration (no backend endpoint
- * exists for pins/recents/favorites). The assistant strip forwards into the
- * shared {@link ChatStateService}, so messages surface in the always-visible
- * shell chat panel.
+ * exists for pins/recents/favorites). The assistant launcher opens the chat
+ * dialog rather than carrying an input of its own, so there is exactly one
+ * message box in the product.
  */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule, RouterLink, TranslatePipe, MaterialSymbolPipe],
+  imports: [RouterLink, TranslatePipe, MaterialSymbolPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent {
   private readonly auth = inject(AuthService);
-  private readonly chatSend = inject(ChatSendService);
   private readonly chatUi = inject(ChatUiService);
+  private readonly platformId = inject(PLATFORM_ID);
 
   /** First name derived from the JWT `sub` claim, or null when unresolved.
    *  Uses the FIRST token of an email/dotted id (e.g. `jane.doe@durion.com` → `Jane`). */
@@ -62,8 +61,19 @@ export class DashboardComponent {
     return segment.charAt(0).toUpperCase() + segment.slice(1);
   });
 
-  readonly assistantInput = signal('');
-  readonly assistantSending = signal(false);
+  /**
+   * Shortcut hint on the launcher; macOS uses the command key.
+   *
+   * Set only AFTER hydration. The server cannot know the platform, so branching
+   * on it during render made the server emit `Ctrl` where a Mac client expected
+   * `⌘` — a hydration text mismatch on every Apple device.
+   */
+  private readonly appleShortcut = signal(false);
+  readonly shortcutModifier = computed(() => (this.appleShortcut() ? '\u2318' : 'Ctrl'));
+
+  constructor() {
+    afterNextRender(() => this.markApplePlatform());
+  }
 
   readonly quickActions: readonly QuickAction[] = [
     { icon: 'assignment_add', labelKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.NEW_WORKORDER', subKey: 'SHELL.DASHBOARD.QUICK_ACTIONS.NEW_WORKORDER_SUB', route: '/app/workexec', tone: 'teal' },
@@ -88,27 +98,17 @@ export class DashboardComponent {
     { icon: 'badge', labelKey: 'SHELL.NAV.PEOPLE', route: '/app/people' },
   ];
 
-  /** Forward the assistant-strip text into the shared chat panel.
-   *  Deliberately NOT tied to this component's lifecycle: the reply is written
-   *  to the root ChatStateService consumed by the always-visible shell chat
-   *  panel, so it must still land if a quick-action navigates away mid-request. */
-  submitAssistant(): void {
-    const text = this.assistantInput().trim();
-    if (!text || this.assistantSending()) return;
-
-    this.assistantInput.set('');
-    this.assistantSending.set(true);
-    this.chatUi.open(); // surface the conversation in the shell chat panel
-
-    this.chatSend.send(text, {
-      onSettled: () => this.assistantSending.set(false),
-    });
+  /** Open the assistant dialog; the dashboard itself holds no message box. */
+  openAssistant(): void {
+    this.chatUi.openModal();
   }
 
-  onAssistantKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      this.submitAssistant();
-    }
+  private markApplePlatform(): void {
+    this.appleShortcut.set(this.isApplePlatform());
+  }
+
+  private isApplePlatform(): boolean {
+    if (!isPlatformBrowser(this.platformId)) return false;
+    return /mac|iphone|ipad|ipod/i.test(navigator.userAgent);
   }
 }

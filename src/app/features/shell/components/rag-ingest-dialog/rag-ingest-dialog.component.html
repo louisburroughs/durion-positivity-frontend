@@ -1,14 +1,6 @@
-<div class="rag-dialog-backdrop" aria-hidden="true"
-     (click)="onBackdropClick($event)"
-     (keydown)="onKeyDown($event)">
-</div>
-
-<dialog class="rag-dialog" open
-        aria-modal="true"
-        tabindex="0"
-        [attr.aria-label]="'SHELL.RAG.DIALOG_ARIA' | translate"
+<dialog class="rag-dialog" appModalDialog
         aria-labelledby="rag-dialog-title"
-        (keydown)="onKeyDown($event)">
+        (modalCancel)="close()">
 
   <!-- Header -->
   <header class="rag-dialog__header">
@@ -42,10 +34,10 @@
   <!-- Form -->
   <div class="rag-dialog__body">
 
-    @if (state() === 'error') {
+    @if (state() === 'error' && errorKey()) {
     <div class="rag-status rag-status--error" role="alert">
       <span class="rag-status__icon" aria-hidden="true">!</span>
-      <p>{{ 'SHELL.RAG.ERROR.SUBMIT' | translate }}</p>
+      <p>{{ errorKey()! | translate }}</p>
     </div>
     }
 

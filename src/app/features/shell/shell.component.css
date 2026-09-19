@@ -69,14 +69,6 @@
   outline-offset: -3px;
 }
 
-/* ── Chat frame (~40% of available body height) ──────────────────────── */
-.frame-chat {
-  flex: 0 0 40%;
-  min-height: 180px;
-  overflow: hidden;
-  border-bottom: 2px solid var(--border-color);
-}
-
 /* ── Content frame (remaining space) ────────────────────────────────── */
 .frame-content {
   flex: 1;
@@ -84,15 +76,3 @@
 }
 
 /* ── Responsive adjustments ──────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .frame-chat {
-    flex: 0 0 50%;
-  }
-}
-
-@media (max-height: 500px) {
-  .frame-chat {
-    flex: 0 0 55%;
-    min-height: 140px;
-  }
-}

@@ -1,27 +1,12 @@
 <div class="dashboard">
-  <!-- Assistant strip -->
-  <section class="assistant" [attr.aria-label]="'SHELL.DASHBOARD.ASSISTANT.REGION_ARIA' | translate">
+  <!-- Assistant launcher: opens the chat dialog (the shell owns the message box) -->
+  <button class="assistant-launcher" type="button" aria-haspopup="dialog" (click)="openAssistant()">
     <span class="assistant-icon material-symbols-rounded" aria-hidden="true">{{ 'forum' | msIcon }}</span>
-    <input
-      class="assistant-input"
-      type="text"
-      [attr.aria-label]="'SHELL.DASHBOARD.ASSISTANT.INPUT_ARIA' | translate"
-      [placeholder]="'SHELL.DASHBOARD.ASSISTANT.PLACEHOLDER' | translate"
-      [ngModel]="assistantInput()"
-      (ngModelChange)="assistantInput.set($event)"
-      (keydown)="onAssistantKeydown($event)"
-    />
-    <span class="assistant-hint" aria-hidden="true">{{ 'SHELL.DASHBOARD.ASSISTANT.HINT' | translate }}</span>
-    <button
-      type="button"
-      class="assistant-send"
-      [disabled]="!assistantInput().trim() || assistantSending()"
-      [attr.aria-label]="'SHELL.DASHBOARD.ASSISTANT.SEND_ARIA' | translate"
-      (click)="submitAssistant()"
-    >
-      <span class="material-symbols-rounded" aria-hidden="true">{{ 'send' | msIcon }}</span>
-    </button>
-  </section>
+    <span class="assistant-launcher__label">{{ 'SHELL.DASHBOARD.ASSISTANT.LAUNCH_LABEL' | translate }}</span>
+    <span class="assistant-launcher__shortcut" aria-hidden="true">
+      <kbd class="kbd">{{ shortcutModifier() }}</kbd><kbd class="kbd">K</kbd>
+    </span>
+  </button>
 
   <!-- Greeting -->
   <header class="greeting">

@@ -1,0 +1,264 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--primary50);
+  border-right: 1px solid var(--border-color);
+}
+
+.rail-top {
+  padding: var(--space-3) var(--space-3) var(--space-2);
+}
+
+.new-chat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 2.75rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--accentA700);
+  color: var(--contrastTextColor);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.new-chat-btn:hover,
+.new-chat-btn:focus-visible {
+  background: var(--accentA400);
+}
+
+.search-field {
+  position: relative;
+  margin-top: var(--space-2);
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: var(--space-2);
+  transform: translateY(-50%);
+  color: var(--handleColor);
+  font-size: 1.0625rem;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  height: 2.25rem;
+  padding: 0 var(--space-3) 0 2.125rem;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+}
+
+.search-input:focus-visible {
+  outline: 2px solid var(--input-focus-border);
+  outline-offset: -1px;
+}
+
+/* ── List ────────────────────────────────────────────────────────────── */
+.rail-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+.rail-empty {
+  margin: var(--space-4) var(--space-2);
+  color: var(--handleColor);
+  font-size: 0.78125rem;
+  line-height: 1.5;
+}
+
+/* A failed list load is information, not a placeholder: it carries the token pair
+   the rest of the app uses for an error, so it reads as one in both themes
+   (ADR-0039). */
+.rail-empty--error {
+  color: var(--status-error-fg);
+}
+
+.rail-group {
+  margin-top: var(--space-3);
+}
+
+.rail-group__label {
+  margin: 0 var(--space-2) var(--space-1);
+  color: var(--handleColor);
+  font-family: var(--font-body);
+  font-size: 0.65625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rail-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-md);
+  min-height: 2.75rem;
+}
+
+.rail-row:hover,
+.rail-row:focus-within {
+  background: var(--primaryA100);
+}
+
+.rail-row--active {
+  background: var(--primaryA100);
+}
+
+.rail-row__open {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-2);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: left;
+}
+
+.rail-row__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pin-mark {
+  font-size: 0.875rem;
+  color: var(--primaryA400);
+}
+
+.rail-row__preview {
+  display: block;
+  margin-top: 0.125rem;
+  color: var(--handleColor);
+  font-size: 0.71875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-row--active .rail-row__preview {
+  color: var(--primaryA400);
+}
+
+/* ── Row actions ─────────────────────────────────────────────────────── */
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  flex-shrink: 0;
+}
+
+.row-actions--hover {
+  opacity: 0;
+}
+
+.rail-row:hover .row-actions--hover,
+.rail-row:focus-within .row-actions--hover,
+.rail-row--active .row-actions--hover {
+  opacity: 1;
+}
+
+.row-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--primaryA400);
+  cursor: pointer;
+}
+
+.row-icon-btn:hover,
+.row-icon-btn:focus-visible {
+  background: var(--cardBackground);
+}
+
+.row-icon-btn--danger {
+  color: var(--status-error-fg);
+}
+
+.row-icon-btn .material-symbols-rounded {
+  font-size: 1rem;
+}
+
+.row-btn {
+  height: 1.75rem;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.71875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.row-btn--danger {
+  border-color: var(--status-error-fg);
+  color: var(--status-error-fg);
+}
+
+.confirm-text {
+  flex: 1;
+  padding-left: var(--space-2);
+  font-size: 0.71875rem;
+}
+
+.rename-input {
+  flex: 1;
+  min-width: 0;
+  height: 2rem;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--input-focus-border);
+  border-radius: var(--radius-sm);
+  background: var(--input-background);
+  color: var(--currentTextColor);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+.rail-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border-color);
+}
+
+.rail-footer__note {
+  flex: 1;
+  color: var(--handleColor);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+}

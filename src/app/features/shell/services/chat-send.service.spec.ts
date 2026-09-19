@@ -1,28 +1,14 @@
 import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { JwtClaims } from '../../../core/models/auth.models';
 import { AuthService } from '../../../core/services/auth.service';
+import enUS from '../../../../assets/i18n/en-US.json';
+import { ChatErrorBlock, ChatMarkdownBlock, ChatTableBlock } from '../models/chat.model';
 import { ChatApiService, ChatResponse } from './chat-api.service';
 import { ChatStateService } from './chat-state.service';
 import { ChatSendService } from './chat-send.service';
-
-const chatTranslations = {
-  SHELL: {
-    CHAT: {
-      ERROR_BACKEND: 'Chat service is not available. Your message was received locally.',
-      ERROR_TROUBLESHOOTING:
-        'Troubleshooting: {{ details }} Check your browser Network tab and the gateway logs for /mcp-server/v1/mcp/chat.',
-      ERROR_TROUBLESHOOTING_GENERIC:
-        'Troubleshooting: Check your browser Network tab and the gateway logs for /mcp-server/v1/mcp/chat.',
-      ERROR_DETAIL_STATUS: 'HTTP {{ status }}.',
-      ERROR_DETAIL_CODE: 'Backend code {{ code }}.',
-      ERROR_DETAIL_CORRELATION_ID: 'Correlation ID {{ correlationId }}.',
-    },
-  },
-};
 
 describe('ChatSendService', () => {
   let service: ChatSendService;
@@ -33,109 +19,202 @@ describe('ChatSendService', () => {
   };
 
   const authServiceStub: Pick<AuthService, 'currentUserClaims'> = {
-    currentUserClaims: signal<JwtClaims | null>(null),
+    currentUserClaims: signal<JwtClaims | null>({
+      sub: 'admin.alpha',
+      tid: 'tenant-one',
+      exp: 9999999999,
+    }),
   };
 
   beforeEach(() => {
+    localStorage.clear();
     vi.mocked(chatApiStub.sendMessage).mockReset();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
     TestBed.configureTestingModule({
-      imports: [TranslateModule.forRoot()],
       providers: [
         { provide: ChatApiService, useValue: chatApiStub },
         { provide: AuthService, useValue: authServiceStub },
       ],
     });
 
-    const translate = TestBed.inject(TranslateService);
-    translate.setTranslation('en-US', chatTranslations);
-    translate.use('en-US');
-
     service = TestBed.inject(ChatSendService);
     chatState = TestBed.inject(ChatStateService);
-    chatState.clear();
+    chatState.startNewConversation();
   });
 
   afterEach(() => {
-    chatState.clear();
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
+    localStorage.clear();
   });
 
-  it('records the user message, sends it, and stores the reply as a system message', () => {
-    const response: ChatResponse = { response: 'How can I help?' };
-    vi.mocked(chatApiStub.sendMessage).mockReturnValueOnce(of(response));
+  function errorBlockOfLastTurn(): ChatErrorBlock {
+    const messages = chatState.messages();
+    return messages[messages.length - 1].blocks[0] as ChatErrorBlock;
+  }
 
-    const onSettled = vi.fn();
-    service.send('Hello', { onSettled });
+  it('records the user turn and the rendered answer', () => {
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue(
+      of<ChatResponse>({ response: 'You have **26 mechanics**.' }),
+    );
+
+    service.send('How many mechanics do I have?');
+
+    expect(chatApiStub.sendMessage).toHaveBeenCalledWith({ message: 'How many mechanics do I have?' });
+    const messages = chatState.messages();
+    expect(messages).toHaveLength(2);
+    expect(messages[0].role).toBe('user');
+    expect(messages[1].role).toBe('assistant');
+    expect(messages[1].pending).toBe(false);
+    expect((messages[1].blocks[0] as ChatMarkdownBlock).markdown).toContain('26 mechanics');
+  });
+
+  it('derives a table block from a markdown table in the answer', () => {
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue(
+      of<ChatResponse>({ response: '| Status | Count |\n| --- | ---: |\n| ACTIVE | 26 |' }),
+    );
+
+    service.send('breakdown');
+
+    const blocks = chatState.messages()[1].blocks;
+    expect(blocks[0].kind).toBe('table');
+    expect((blocks[0] as ChatTableBlock).rows).toEqual([['ACTIVE', '26']]);
+  });
+
+  it('opens a pending assistant turn while the request is in flight', () => {
+    // A never-settling observable stand-in: subscribe is never called back.
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue({
+      pipe: () => ({ subscribe: () => ({ unsubscribe: () => undefined }) }),
+    } as never);
+
+    service.send('slow question');
 
     const messages = chatState.messages();
-    expect(chatApiStub.sendMessage).toHaveBeenCalledWith({ message: 'Hello' });
-    expect(messages).toHaveLength(2);
-    expect(messages[0]).toMatchObject({ content: 'Hello', sender: 'user' });
-    expect(messages[1]).toMatchObject({ content: 'How can I help?', sender: 'system' });
-    expect(onSettled).toHaveBeenCalledTimes(1);
+    expect(messages[1].pending).toBe(true);
+    expect(chatState.awaitingReply()).toBe(true);
   });
 
-  it('logs the failure and surfaces fallback + troubleshooting detail on an HTTP error', () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const httpError = new HttpErrorResponse({
-      status: 502,
-      statusText: 'Bad Gateway',
-      url: 'https://durionpos.org/mcp-server/v1/mcp/chat',
-      headers: new HttpHeaders({ 'X-Correlation-Id': 'corr-123' }),
-      error: { code: 'UPSTREAM_FAILURE' },
-    });
-    vi.mocked(chatApiStub.sendMessage).mockReturnValueOnce(throwError(() => httpError));
-
-    const onSettled = vi.fn();
-    service.send('Hello', { onSettled });
-
-    // The user's own message must still be recorded even when the send fails.
-    expect(chatState.messages().some(m => m.sender === 'user' && m.content === 'Hello')).toBe(true);
-
-    const systemMessages = chatState
-      .messages()
-      .filter(message => message.sender === 'system')
-      .map(message => message.content);
-
-    expect(systemMessages).toEqual([
-      'Chat service is not available. Your message was received locally.',
-      'Troubleshooting: HTTP 502. Backend code UPSTREAM_FAILURE. Correlation ID corr-123. Check your browser Network tab and the gateway logs for /mcp-server/v1/mcp/chat.',
-    ]);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Chat backend request failed',
-      expect.objectContaining({
-        status: 502,
-        url: 'https://durionpos.org/mcp-server/v1/mcp/chat',
-        correlationId: 'corr-123',
-        backendCode: 'UPSTREAM_FAILURE',
-        errorBody: { code: 'UPSTREAM_FAILURE' },
-      }),
+  it('turns an HTTP failure into a retryable error block carrying translation keys', () => {
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 503,
+            error: { code: 'MCP_UNAVAILABLE' },
+            headers: new HttpHeaders({ 'X-Correlation-Id': 'abc-123' }),
+          }),
+      ),
     );
-    expect(onSettled).toHaveBeenCalledTimes(1);
+
+    service.send('hello');
+
+    const block = errorBlockOfLastTurn();
+    expect(block.kind).toBe('error');
+    expect(block.messageKey).toBe('SHELL.CHAT.ERROR.BACKEND');
+    expect(block.detailKey).toBe('SHELL.CHAT.ERROR.DETAIL_STATUS_CODE');
+    expect(block.detailParams).toEqual({ status: 503, code: 'MCP_UNAVAILABLE' });
+    expect(block.correlationId).toBe('abc-123');
+    expect(block.retryable).toBe(true);
   });
 
-  it('logs a generic troubleshooting message for a non-HTTP error', () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    vi.mocked(chatApiStub.sendMessage).mockReturnValueOnce(throwError(() => new Error('boom')));
+  it('does not offer a retry for a client error that will fail the same way', () => {
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 403, headers: new HttpHeaders() })),
+    );
 
-    service.send('Hello');
+    service.send('hello');
 
-    const systemMessages = chatState
-      .messages()
-      .filter(message => message.sender === 'system')
-      .map(message => message.content);
-
-    expect(systemMessages).toEqual([
-      'Chat service is not available. Your message was received locally.',
-      'Troubleshooting: Check your browser Network tab and the gateway logs for /mcp-server/v1/mcp/chat.',
-    ]);
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Chat backend request failed', { error: expect.any(Error) });
+    const block = errorBlockOfLastTurn();
+    expect(block.detailKey).toBe('SHELL.CHAT.ERROR.DETAIL_STATUS');
+    expect(block.retryable).toBe(false);
   });
 
-  it('runs onSettled even when no callbacks object is passed', () => {
-    vi.mocked(chatApiStub.sendMessage).mockReturnValueOnce(of<ChatResponse>({ response: 'ok' }));
-    expect(() => service.send('Hello')).not.toThrow();
-    expect(chatState.messages().some(m => m.sender === 'system' && m.content === 'ok')).toBe(true);
+  it('falls back to a generic detail for a non-HTTP failure', () => {
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue(throwError(() => new Error('boom')));
+
+    service.send('hello');
+
+    expect(errorBlockOfLastTurn().detailKey).toBe('SHELL.CHAT.ERROR.DETAIL_GENERIC');
+  });
+
+  it('reports an answer with nothing renderable in it instead of a blank turn', () => {
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue(of<ChatResponse>({ response: '   ' }));
+
+    service.send('hello');
+
+    expect(errorBlockOfLastTurn().messageKey).toBe('SHELL.CHAT.ERROR.NO_USABLE_CONTENT');
+  });
+
+  it('reports a malformed primitive answer as unusable rather than a fabricated EMPTY claim (R11e)', () => {
+    // A number where the payload should be an object is exactly what
+    // mapAnswerPayload degrades to zero blocks: nothing renderable, not
+    // "empty" — the mapper never established that the answer was empty.
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue(of<ChatResponse>(42 as unknown as ChatResponse));
+
+    service.send('hello');
+
+    expect(errorBlockOfLastTurn().messageKey).toBe('SHELL.CHAT.ERROR.NO_USABLE_CONTENT');
+  });
+
+  it('ships NO_USABLE_CONTENT in the real en-US bundle and no longer ships the old EMPTY key (R11e, ADR-0035 §8)', () => {
+    const chatErrors = (enUS as { SHELL: { CHAT: { ERROR: Record<string, unknown> } } }).SHELL.CHAT.ERROR;
+    expect(typeof chatErrors['NO_USABLE_CONTENT']).toBe('string');
+    expect(chatErrors['NO_USABLE_CONTENT']).toBeTruthy();
+    expect(chatErrors['EMPTY']).toBeUndefined();
+  });
+
+  it('retries the last user turn without duplicating it', () => {
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 503, headers: new HttpHeaders() })),
+    );
+    service.send('how many mechanics');
+
+    const failedId = chatState.messages()[1].id;
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue(of<ChatResponse>({ response: '26.' }));
+
+    service.retry(failedId);
+
+    const messages = chatState.messages();
+    expect(messages.filter(message => message.role === 'user')).toHaveLength(1);
+    expect(messages[messages.length - 1].blocks[0].kind).toBe('markdown');
+    expect(chatApiStub.sendMessage).toHaveBeenLastCalledWith({ message: 'how many mechanics' });
+  });
+
+  it('lands a reply in its own conversation when the user has moved on', () => {
+    let settle: ((response: ChatResponse) => void) | null = null;
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue({
+      pipe: () => ({
+        subscribe: (observer: { next: (value: ChatResponse) => void }) => {
+          settle = observer.next;
+          return { unsubscribe: () => undefined };
+        },
+      }),
+    } as never);
+
+    service.send('first question');
+    const firstId = chatState.activeConversationId()!;
+
+    chatState.startNewConversation();
+    chatState.appendUserMessage('a different question');
+
+    settle!({ response: 'the late answer' });
+
+    expect(chatState.messages()).toHaveLength(1);
+    chatState.selectConversation(firstId);
+    const landed = chatState.messages()[chatState.messages().length - 1];
+    expect(landed.role).toBe('assistant');
+    expect(landed.pending).toBe(false);
+  });
+
+  it('calls onSettled on both success and failure', () => {
+    const onSettled = vi.fn();
+
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue(of<ChatResponse>({ response: 'ok' }));
+    service.send('one', { onSettled });
+
+    vi.mocked(chatApiStub.sendMessage).mockReturnValue(throwError(() => new Error('boom')));
+    service.send('two', { onSettled });
+
+    expect(onSettled).toHaveBeenCalledTimes(2);
   });
 });

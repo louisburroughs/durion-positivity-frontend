@@ -1,0 +1,218 @@
+:host {
+  display: block;
+}
+
+.composer {
+  padding: var(--space-3) var(--space-5) var(--space-4);
+  border-top: 1px solid var(--border-color);
+  background: var(--cardBackground);
+}
+
+.composer-shell {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-lg);
+  background: var(--input-background);
+}
+
+.composer-shell:focus-within {
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 3px rgb(77 118 178 / 22%);
+}
+
+.composer-shell--listening,
+.composer-shell--listening:focus-within {
+  border-color: var(--accentA700);
+  box-shadow: 0 0 0 3px rgb(43 187 173 / 28%);
+}
+
+.composer-input {
+  flex: 1;
+  min-width: 0;
+  height: 2.25rem;
+  max-height: 9rem;
+  padding: var(--space-2) var(--space-1);
+  border: 0;
+  background: transparent;
+  color: var(--currentTextColor);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  resize: none;
+}
+
+.composer-input:focus {
+  outline: none;
+}
+
+.composer-input::placeholder {
+  color: var(--input-placeholder-color);
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--handleColor);
+  cursor: pointer;
+}
+
+.icon-btn:hover:not(:disabled),
+.icon-btn:focus-visible:not(:disabled) {
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+}
+
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.icon-btn--mic {
+  border-color: var(--border-color);
+  color: var(--accentA700);
+}
+
+.icon-btn--recording {
+  border-color: var(--accentA700);
+  background: var(--accentA100);
+  color: var(--accentA700);
+}
+
+.icon-btn--send {
+  background: var(--accentA700);
+  color: var(--contrastTextColor);
+}
+
+.icon-btn--send:hover:not(:disabled),
+.icon-btn--send:focus-visible:not(:disabled) {
+  background: var(--accentA400);
+  color: var(--contrastTextColor);
+}
+
+.icon-btn--send:disabled {
+  background: var(--trackColor);
+  color: var(--handleColor);
+  opacity: 1;
+}
+
+.icon-btn .material-symbols-rounded {
+  font-size: 1.1875rem;
+}
+
+/* ── Voice ───────────────────────────────────────────────────────────── */
+.voice-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--accentA100);
+  color: var(--currentTextColor);
+  font-size: 0.8125rem;
+}
+
+.voice-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--status-error-fg);
+  animation: voice-pulse 1.4s infinite ease-in-out;
+}
+
+@keyframes voice-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-dot {
+    animation: none;
+  }
+}
+
+.voice-label {
+  font-weight: 600;
+}
+
+.voice-timer {
+  font-family: var(--font-mono);
+}
+
+.voice-strip__spacer {
+  flex: 1;
+}
+
+.voice-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  color: var(--status-error-fg);
+  font-size: 0.78125rem;
+}
+
+.voice-error__text {
+  flex: 1;
+}
+
+.voice-error .material-symbols-rounded {
+  font-size: 1rem;
+}
+
+.ghost-btn {
+  height: 1.75rem;
+  padding: 0 var(--space-3);
+  border: 1px solid currentcolor;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ── Hint ────────────────────────────────────────────────────────────── */
+.composer-hint {
+  display: flex;
+  gap: var(--space-4);
+  margin: var(--space-2) 0 0;
+  color: var(--handleColor);
+  font-size: 0.6875rem;
+}
+
+.composer-hint span:first-child {
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .composer {
+    padding: var(--space-2) var(--space-3) var(--space-3);
+  }
+
+  .composer-hint__disclaimer {
+    display: none;
+  }
+
+  .icon-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}

@@ -1,0 +1,116 @@
+<div class="rail">
+
+  <div class="rail-top">
+    <button class="new-chat-btn" type="button" (click)="newChat()">
+      <span class="material-symbols-rounded" aria-hidden="true">{{ 'add' | msIcon }}</span>
+      {{ 'SHELL.CHAT.HISTORY.NEW_CHAT' | translate }}
+    </button>
+
+    <div class="search-field">
+      <span class="search-icon material-symbols-rounded" aria-hidden="true">{{ 'search' | msIcon }}</span>
+      <label class="sr-only" for="chat-history-search">{{ 'SHELL.CHAT.HISTORY.SEARCH_LABEL' | translate }}</label>
+      <input id="chat-history-search" class="search-input" type="search"
+             [placeholder]="'SHELL.CHAT.HISTORY.SEARCH_PLACEHOLDER' | translate"
+             [value]="search()" (input)="search.set($any($event.target).value)"
+             (keydown)="onSearchKeydown($event)">
+    </div>
+  </div>
+
+  <div class="rail-list">
+    @if (loadFailed()) {
+    <p class="rail-empty rail-empty--error" role="status">{{ loadErrorKey()! | translate }}</p>
+    } @else if (!hasConversations()) {
+    <p class="rail-empty">{{ 'SHELL.CHAT.HISTORY.EMPTY' | translate }}</p>
+    } @else if (noMatches()) {
+    <p class="rail-empty">{{ 'SHELL.CHAT.HISTORY.NO_MATCHES' | translate }}</p>
+    }
+
+    @for (group of groups(); track group.bucket) {
+    <section class="rail-group">
+      <h3 class="rail-group__label">{{ groupLabelKey(group.bucket) | translate }}</h3>
+
+      @for (conversation of group.conversations; track conversation.id) {
+      <div class="rail-row" [class.rail-row--active]="conversation.id === activeConversationId()">
+
+        @if (renamingId() === conversation.id) {
+
+        <label class="sr-only" [attr.for]="'rename-' + conversation.id">
+          {{ 'SHELL.CHAT.HISTORY.RENAME_LABEL' | translate }}
+        </label>
+        <input class="rename-input" type="text" [attr.id]="'rename-' + conversation.id"
+               [value]="renameDraft()" (input)="renameDraft.set($any($event.target).value)"
+               (keydown)="onRenameKeydown($event)" (blur)="commitRename()">
+
+        } @else if (confirmingDeleteId() === conversation.id) {
+
+        <span class="confirm-text">{{ 'SHELL.CHAT.HISTORY.DELETE_CONFIRM' | translate }}</span>
+        <span class="row-actions">
+          <button class="row-btn row-btn--danger" type="button" data-confirm="delete"
+                  (click)="confirmDelete(conversation)">
+            {{ 'SHELL.CHAT.HISTORY.DELETE_YES' | translate }}
+          </button>
+          <button class="row-btn" type="button" (click)="cancelDelete()">
+            {{ 'SHELL.CHAT.HISTORY.DELETE_NO' | translate }}
+          </button>
+        </span>
+
+        } @else {
+
+        <button class="rail-row__open" type="button" (click)="open(conversation)"
+                [attr.data-conversation]="conversation.id"
+                [attr.aria-current]="conversation.id === activeConversationId() ? 'true' : null">
+          <span class="rail-row__title">
+            @if (conversation.pinned) {
+            <span class="material-symbols-rounded pin-mark" aria-hidden="true">{{ 'push_pin' | msIcon }}</span>
+            }
+            {{ conversation.title }}
+          </span>
+          @if (conversation.preview) {
+          <span class="rail-row__preview">{{ conversation.preview }}</span>
+          }
+        </button>
+
+        <span class="row-actions row-actions--hover">
+          <button class="row-icon-btn" type="button" (click)="togglePinned(conversation)"
+                  [attr.data-pin-for]="conversation.id"
+                  [attr.aria-label]="(conversation.pinned ? 'SHELL.CHAT.HISTORY.UNPIN_ARIA' : 'SHELL.CHAT.HISTORY.PIN_ARIA') | translate:{ title: conversation.title }">
+            <span class="material-symbols-rounded" aria-hidden="true">{{ 'push_pin' | msIcon }}</span>
+          </button>
+          <button class="row-icon-btn" type="button" (click)="startRename(conversation)"
+                  [attr.aria-label]="'SHELL.CHAT.HISTORY.RENAME_ARIA' | translate:{ title: conversation.title }">
+            <span class="material-symbols-rounded" aria-hidden="true">{{ 'edit' | msIcon }}</span>
+          </button>
+          <button class="row-icon-btn row-icon-btn--danger" type="button" (click)="armDelete(conversation)"
+                  [attr.aria-label]="'SHELL.CHAT.HISTORY.DELETE_ARIA' | translate:{ title: conversation.title }">
+            <span class="material-symbols-rounded" aria-hidden="true">{{ 'delete' | msIcon }}</span>
+          </button>
+        </span>
+
+        }
+      </div>
+      }
+    </section>
+    }
+  </div>
+
+  <div class="rail-footer">
+    @if (confirmingClearAll()) {
+    <span class="confirm-text">{{ 'SHELL.CHAT.HISTORY.CLEAR_CONFIRM' | translate }}</span>
+    <button class="row-btn row-btn--danger" type="button" data-confirm="clear-all"
+            (click)="confirmClearAll()">
+      {{ 'SHELL.CHAT.HISTORY.DELETE_YES' | translate }}
+    </button>
+    <button class="row-btn" type="button" (click)="cancelClearAll()">
+      {{ 'SHELL.CHAT.HISTORY.DELETE_NO' | translate }}
+    </button>
+    } @else {
+    <span class="rail-footer__note">{{ retentionNoteKey | translate }}</span>
+    @if (hasConversations()) {
+    <button class="row-btn row-btn--danger" type="button" (click)="armClearAll()">
+      {{ 'SHELL.CHAT.HISTORY.CLEAR_ALL' | translate }}
+    </button>
+    }
+    }
+  </div>
+
+</div>

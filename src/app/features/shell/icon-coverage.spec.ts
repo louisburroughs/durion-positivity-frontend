@@ -19,9 +19,15 @@ import { NAV_REGISTRY } from './services/navigation-registry.service';
 describe('Material Symbol icon coverage', () => {
   const pipe = new MaterialSymbolPipe();
 
-  // Icon names hard-coded in templates (header chat toggle, chat-panel close,
-  // dashboard assistant/chevron/star). Keep in sync if those literals change.
-  const TEMPLATE_LITERAL_ICONS = ['forum', 'send', 'close', 'chevron_right', 'star'];
+  // Icon names hard-coded in templates (header chat toggle, the assistant modal
+  // and its rail/composer/message renderers, dashboard launcher/chevron/star).
+  // Keep in sync if those literals change.
+  const TEMPLATE_LITERAL_ICONS = [
+    'forum', 'send', 'close', 'chevron_right', 'star',
+    'smart_toy', 'content_copy', 'check', 'download', 'refresh', 'error', 'description',
+    'attach_file', 'mic', 'mic_off', 'add', 'search', 'push_pin', 'edit', 'delete',
+    'dock_to_right', 'open_in_full', 'close_fullscreen',
+  ];
 
   function assertResolves(name: string, source: string): void {
     const glyph = pipe.transform(name);

@@ -40,4 +40,31 @@ describe('ChatApiService', () => {
     );
     expect(result).toEqual(backendResponse);
   });
+
+  it('ingests a document without sending identity or authority headers', () => {
+    // Identity and authority come from the bearer token alone (ADR-0011/0062).
+    // A browser-set X-User/X-Authorities pair is either ignored by the gateway or
+    // trusted by it — and trusting it lets any signed-in session grant itself the
+    // ingest authority from the devtools console.
+    apiStub.post.mockReturnValueOnce(of(undefined));
+
+    service
+      .ingestDocument({
+        content: 'a bulletin',
+        metadata: { source: 'upload', type: 'text', title: 'Bulletin' },
+      })
+      .subscribe();
+
+    expect(apiStub.post).toHaveBeenCalledWith(
+      '/mcp-server/v1/mcp/documents',
+      {
+        content: 'a bulletin',
+        metadata: { source: 'upload', type: 'text', title: 'Bulletin' },
+      },
+      { baseUrlOverride: environment.apiBaseUrl.replace(/\/api\/?$/, '') },
+    );
+
+    const options = apiStub.post.mock.calls[0][2] as { headers?: Record<string, string> };
+    expect(options.headers).toBeUndefined();
+  });
 });

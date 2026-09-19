@@ -1,0 +1,306 @@
+:host {
+  display: contents;
+}
+
+/* Native <dialog> promoted by appModalDialog: the browser supplies the top
+ * layer, the backdrop, the focus trap and Escape-to-close, so there is no
+ * hand-rolled scrim element and no document-level keydown listener. */
+.chat-dialog {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(68rem, calc(100vw - 2 * var(--space-8)));
+  height: min(45rem, calc(100vh - 2 * var(--space-8)));
+  margin: auto;
+  border: 0;
+  border-radius: var(--radius-lg);
+  padding: 0;
+  background: var(--cardBackground);
+  box-shadow: 0 24px 64px rgb(18 18 19 / 38%);
+  color: var(--currentTextColor);
+  overflow: hidden;
+}
+
+.chat-dialog::backdrop {
+  background: rgb(18 18 19 / 55%);
+}
+
+.chat-dialog--maximised {
+  width: calc(100vw - 2 * var(--space-4));
+  height: calc(100vh - 2 * var(--space-4));
+}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.chat-header__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: var(--accentA100);
+  color: var(--accentA700);
+}
+
+.chat-header__titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-header__title {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.3125rem;
+  font-weight: var(--font-weight-display);
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-header__subtitle {
+  display: block;
+  color: var(--handleColor);
+  font-size: 0.71875rem;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.125rem;
+  height: 2.125rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--handleColor);
+  cursor: pointer;
+}
+
+.icon-btn:hover,
+.icon-btn:focus-visible {
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+}
+
+.icon-btn--close {
+  background: var(--themeBackground);
+  color: var(--currentTextColor);
+}
+
+.icon-btn .material-symbols-rounded {
+  font-size: 1.1875rem;
+}
+
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  height: 2.25rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.pill-btn:hover,
+.pill-btn:focus-visible {
+  border-color: var(--accentA700);
+  color: var(--accentA700);
+}
+
+.pill-btn .material-symbols-rounded {
+  font-size: 1.0625rem;
+  color: var(--accentA700);
+}
+
+/* ── Body ────────────────────────────────────────────────────────────── */
+.chat-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.chat-rail {
+  flex-shrink: 0;
+  width: 18.25rem;
+}
+
+.chat-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-load-error {
+  margin: 0;
+  padding: var(--space-2) var(--space-5);
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+  font-size: 0.78125rem;
+}
+
+.chat-persist-warning {
+  margin: 0;
+  padding: var(--space-2) var(--space-5);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+  font-size: 0.78125rem;
+}
+
+.chat-thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-4) var(--space-5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────── */
+.chat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.chat-empty__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius-lg);
+  background: var(--accentA100);
+  color: var(--accentA700);
+}
+
+.chat-empty__mark .material-symbols-rounded {
+  font-size: 2rem;
+}
+
+.chat-empty__heading {
+  margin: var(--space-4) 0 0;
+  font-family: var(--font-primary);
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-display);
+}
+
+.chat-empty__body {
+  margin: var(--space-2) 0 0;
+  max-width: 34rem;
+  color: var(--handleColor);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.suggestions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 40rem;
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggestion {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: var(--space-3);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--cardBackground);
+  color: var(--currentTextColor);
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: left;
+}
+
+.suggestion:hover,
+.suggestion:focus-visible {
+  border-color: var(--accentA700);
+  background: var(--primary50);
+}
+
+.suggestion__text {
+  display: block;
+  font-size: 0.84375rem;
+  font-weight: 600;
+}
+
+.suggestion__caption {
+  display: block;
+  margin-top: 0.125rem;
+  color: var(--handleColor);
+  font-size: 0.6875rem;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .chat-rail {
+    width: 15rem;
+  }
+
+  .suggestions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .chat-dialog,
+  .chat-dialog--maximised {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  .chat-header__subtitle,
+  .pill-btn {
+    display: none;
+  }
+
+  /* On a phone the rail takes the whole dialog rather than squeezing the thread. */
+  .chat-rail {
+    width: 100%;
+  }
+
+  .chat-rail ~ .chat-main {
+    display: none;
+  }
+
+  .chat-thread {
+    padding: var(--space-3);
+  }
+
+  .icon-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
