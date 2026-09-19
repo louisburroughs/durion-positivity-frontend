@@ -585,6 +585,23 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.mechanics()[0].freeHours).toBeNull();
       expect(fixture.nativeElement.querySelector('.mech .mfree.na')).toBeTruthy();
     });
+
+    it('reads a null assignedWorkorderId from the SDK as holding no workorder', () => {
+      // durion-positivity-backend#2058 narrowed the mechanic panel to the technician
+      // aggregate and made the field nullable, so a mechanic who is merely planned onto
+      // a job now arrives as `null` rather than carrying that job's id. The card carries
+      // the absent form, and the difference is load-bearing: `undefined` keeps every
+      // `?.` and `!card.assignedWorkorderId` read behaving as "holds nothing", while a
+      // leaked `null` is a distinct value the card's own type does not admit.
+      renderWith({
+        ...fullDashboard,
+        mechanics: [{ personId: 'M1', firstName: 'Ray', lastName: 'Delgado', assignedWorkorderId: null }],
+      });
+
+      const card = component.mechanics().find(mechanic => mechanic.personId === 'M1');
+      expect(card?.assignedWorkorderId).toBeUndefined();
+      expect(card?.assignedWorkorderId).not.toBeNull();
+    });
   });
 
   describe('free hours', () => {
