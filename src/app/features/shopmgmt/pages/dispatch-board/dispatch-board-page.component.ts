@@ -2229,7 +2229,12 @@ export class DispatchBoardPageComponent implements OnInit {
       initials: this.toInitials(mechanic.firstName, mechanic.lastName),
       availability: this.toAvailability(mechanic, clock),
       skillCodes: this.technicianSkills().get(mechanic.personId) ?? [],
-      assignedWorkorderId: mechanic.assignedWorkorderId,
+      // `null` and absent both mean the same thing here — this mechanic holds no
+      // workorder — and the card carries the absent form. The backend narrowed this
+      // field to the technician aggregate and declared it nullable
+      // (durion-positivity-backend#2058), so a mechanic who is merely planned onto a
+      // job now arrives as `null` where the board previously received their id.
+      assignedWorkorderId: mechanic.assignedWorkorderId ?? undefined,
       whereLabel: bayId ? (this.bayNamesById().get(bayId) ?? null) : null,
       breakExpectedReturn: mechanic.breakExpectedReturn ?? null,
       // Truthy, exactly as the lookup above and `toAvailability` treat it: a
