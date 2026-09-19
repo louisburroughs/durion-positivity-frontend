@@ -198,6 +198,28 @@ describe('ShopDashboardService', () => {
       expect(view.units[0].workorder?.mechanic).toEqual({ personId: 'p-1', displayName: 'M. Alvarez' });
     });
 
+    it('reads a null bay assignedWorkorderId as holding no workorder', async () => {
+      // durion-positivity-backend#2129: an idle bay sends `assignedWorkorderId: null`.
+      // The `?? undefined` in the live-feed branch is a type-level fix — toWorkorder's
+      // parameter admits only the absent form — and this case pins the behaviour either
+      // way: a bay whose live claim is null carries no workorder, even while a workorder
+      // by that id exists in the same payload.
+      dispatchStub.getDispatchDashboard.mockReturnValue(
+        of(
+          dashboard({
+            bays: [{ bayId: 'bay-1', bayName: 'Bay 1', available: true, status: 'ACTIVE', assignedWorkorderId: null }],
+            workorders: [{ workorderId: 'wo-1', workorderNumber: 'WO-10428', status: 'WORK_IN_PROGRESS' }],
+          }),
+        ),
+      );
+      bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-1', name: 'Bay 1', bayType: 'Alignment' }] }));
+
+      const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+      expect(view.units).toHaveLength(1);
+      expect(view.units[0].workorder).toBeUndefined();
+    });
+
     it('carries the dispatch summary synopsis onto the card, trimmed and clamped', async () => {
       dispatchStub.getDispatchDashboard.mockReturnValue(
         of(
