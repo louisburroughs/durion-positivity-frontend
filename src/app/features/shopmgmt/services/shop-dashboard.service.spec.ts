@@ -200,15 +200,23 @@ describe('ShopDashboardService', () => {
 
     it('reads a null bay assignedWorkorderId as holding no workorder', async () => {
       // durion-positivity-backend#2129: an idle bay sends `assignedWorkorderId: null`.
-      // The `?? undefined` in the live-feed branch is a type-level fix — toWorkorder's
-      // parameter admits only the absent form — and this case pins the behaviour either
-      // way: a bay whose live claim is null carries no workorder, even while a workorder
-      // by that id exists in the same payload.
+      // The live feed wins whenever it carries the bay, so an explicit null means "free"
+      // and must not fall back to the workorder's own claim on that same bay — wo-1 below
+      // claims bay-1, and the card still carries no workorder. (The `?? undefined` at that
+      // call site is a type fix: toWorkorder's parameter admits only the absent form.)
       dispatchStub.getDispatchDashboard.mockReturnValue(
         of(
           dashboard({
             bays: [{ bayId: 'bay-1', bayName: 'Bay 1', available: true, status: 'ACTIVE', assignedWorkorderId: null }],
-            workorders: [{ workorderId: 'wo-1', workorderNumber: 'WO-10428', status: 'WORK_IN_PROGRESS' }],
+            workorders: [
+              {
+                workorderId: 'wo-1',
+                workorderNumber: 'WO-10428',
+                status: 'WORK_IN_PROGRESS',
+                resourceType: 'BAY',
+                assignedResourceId: 'bay-1',
+              },
+            ],
           }),
         ),
       );
