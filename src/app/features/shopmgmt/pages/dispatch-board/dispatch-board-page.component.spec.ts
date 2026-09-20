@@ -602,6 +602,26 @@ describe('DispatchBoardPageComponent', () => {
       expect(card?.assignedWorkorderId).toBeUndefined();
       expect(card?.assignedWorkorderId).not.toBeNull();
     });
+
+    it('reads a null bay assignedWorkorderId from the SDK as holding no workorder', () => {
+      // durion-positivity-backend#2129 declared BayStatus.assignedWorkorderId nullable:
+      // an idle bay really sends `null`. BayCard admits only the absent form, so the
+      // projection normalises it. `withBayClaim()` cannot prove that — it does the
+      // normalisation itself before the component ever sees the board — so this fixture
+      // hands the raw SDK shape straight through.
+      renderWith({
+        ...fullDashboard,
+        bays: [
+          ...(fullDashboard.bays ?? []).filter(bay => bay.bayId !== 'B1'),
+          { bayId: 'B1', bayName: 'Bay 1', available: true, status: 'ACTIVE', assignedWorkorderId: null },
+        ],
+      });
+
+      const bay = component.allBays().find(card => card.bayId === 'B1');
+      expect(bay).toBeTruthy();
+      expect(bay?.assignedWorkorderId).toBeUndefined();
+      expect(bay?.assignedWorkorderId).not.toBeNull();
+    });
   });
 
   describe('free hours', () => {

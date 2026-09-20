@@ -198,6 +198,36 @@ describe('ShopDashboardService', () => {
       expect(view.units[0].workorder?.mechanic).toEqual({ personId: 'p-1', displayName: 'M. Alvarez' });
     });
 
+    it('reads a null bay assignedWorkorderId as holding no workorder', async () => {
+      // durion-positivity-backend#2129: an idle bay sends `assignedWorkorderId: null`.
+      // The live feed wins whenever it carries the bay, so an explicit null means "free"
+      // and must not fall back to the workorder's own claim on that same bay — wo-1 below
+      // claims bay-1, and the card still carries no workorder. (The `?? undefined` at that
+      // call site is a type fix: toWorkorder's parameter admits only the absent form.)
+      dispatchStub.getDispatchDashboard.mockReturnValue(
+        of(
+          dashboard({
+            bays: [{ bayId: 'bay-1', bayName: 'Bay 1', available: true, status: 'ACTIVE', assignedWorkorderId: null }],
+            workorders: [
+              {
+                workorderId: 'wo-1',
+                workorderNumber: 'WO-10428',
+                status: 'WORK_IN_PROGRESS',
+                resourceType: 'BAY',
+                assignedResourceId: 'bay-1',
+              },
+            ],
+          }),
+        ),
+      );
+      bayStub.listBays.mockReturnValue(of({ content: [{ id: 'bay-1', name: 'Bay 1', bayType: 'Alignment' }] }));
+
+      const view = await firstValueFrom(service.getDashboard('loc-1', DATE));
+
+      expect(view.units).toHaveLength(1);
+      expect(view.units[0].workorder).toBeUndefined();
+    });
+
     it('carries the dispatch summary synopsis onto the card, trimmed and clamped', async () => {
       dispatchStub.getDispatchDashboard.mockReturnValue(
         of(
