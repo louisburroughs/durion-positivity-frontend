@@ -194,23 +194,58 @@ function detectSdkRoot() {
   );
 }
 
-function ensureSdkBuild(sdkRoot) {
-  const missingDist = PACKAGE_NAMES.some(packageName => {
-    const distPackageJson = path.join(
-      sdkRoot,
-      'packages',
-      packageDirName(packageName),
-      'dist',
-      'package.json',
-    );
-    return !existsSync(distPackageJson);
-  });
+function packageJsonVersion(file) {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8')).version ?? null;
+  } catch {
+    return null;
+  }
+}
 
-  if (!missingDist) {
+// `dist` is a build output the SDK repo keeps between checkouts, so its mere
+// presence proves nothing about which source it was built from: a version bump
+// pulled in with `git pull` leaves last release's `dist` sitting there looking
+// complete. Every downstream version read — the fingerprint, the packed
+// tarballs, the installed packages — comes off `dist`, so a stale one is
+// self-consistent and silently pins the whole frontend to the old SDK. Compare
+// each `dist` against the source `package.json` beside it and rebuild on drift.
+function ensureSdkBuild(sdkRoot) {
+  const staleReasons = [];
+
+  for (const packageName of PACKAGE_NAMES) {
+    const packageDir = path.join(sdkRoot, 'packages', packageDirName(packageName));
+    const distPackageJson = path.join(packageDir, 'dist', 'package.json');
+
+    if (!existsSync(distPackageJson)) {
+      staleReasons.push(`  ${packageName}: no built dist`);
+      continue;
+    }
+
+    const sourcePackageJson = path.join(packageDir, 'package.json');
+    const sourceVersion = packageJsonVersion(sourcePackageJson);
+    const distVersion = packageJsonVersion(distPackageJson);
+
+    // No readable source version means the comparison cannot clear this dist,
+    // so it must not be taken on trust: that is the same silent pass this
+    // check exists to remove. Rebuilding either fixes it or fails loudly on
+    // the package that is actually broken.
+    if (!sourceVersion) {
+      staleReasons.push(`  ${packageName}: no readable version in ${sourcePackageJson}`);
+      continue;
+    }
+
+    if (distVersion !== sourceVersion) {
+      staleReasons.push(
+        `  ${packageName}: dist is ${distVersion ?? '(unreadable)'}, source is ${sourceVersion}`,
+      );
+    }
+  }
+
+  if (staleReasons.length === 0) {
     return;
   }
 
-  log(`Built SDK artifacts not found under ${sdkRoot}; building SDK repo first.`);
+  log(`Built SDK artifacts under ${sdkRoot} are missing or stale; building SDK repo first:\n${staleReasons.join('\n')}`);
 
   if (!existsSync(path.join(sdkRoot, 'node_modules'))) {
     run('npm', ['ci'], { cwd: sdkRoot });
@@ -330,11 +365,38 @@ function packSdkPackages(sdkRoot) {
   return manifest;
 }
 
+// These tarballs used to go in through `npm install --no-save
+// --no-package-lock`. `--no-package-lock` does not mean "leave the lockfile
+// alone", it means npm ignores it: the ideal tree is re-resolved from the
+// semver ranges in package.json, so every unrelated dependency is quietly
+// upgraded to the newest version its range allows. Since this script runs on
+// `start`, `build`, `test` and `postinstall`, that dragged the whole local
+// tree off `package-lock.json` — Angular included — while CI's `npm ci` stayed
+// pinned, which is exactly the "green here, red there" split the lockfile
+// exists to prevent.
+//
+// The SDK packages need no resolution of their own: their only dependency is
+// tslib, which Angular already brings, and everything else they declare is a
+// peer the app satisfies. ng-packagr strips the scripts section when it builds
+// them and they ship no bins, so npm's install pipeline adds nothing here that
+// unpacking the tarball does not. Unpack them in place and leave the rest of
+// the tree exactly as the lockfile installed it.
 function installFromManifest(manifest) {
-  const tarballs = PACKAGE_NAMES.map(packageName => path.join(packDir, manifest.packages[packageName]));
-
+  ensureTarAvailable();
   log(`Installing SDK packages from ${packDir}`);
-  run('npm', ['install', '--no-save', '--no-package-lock', ...tarballs]);
+
+  for (const packageName of PACKAGE_NAMES) {
+    const tarball = path.join(packDir, manifest.packages[packageName]);
+    const target = path.join(projectRoot, 'node_modules', ...packageName.split('/'));
+
+    // Replace rather than overlay, so files dropped between SDK versions do
+    // not survive as stale exports.
+    rmSync(target, { recursive: true, force: true });
+    mkdirSync(target, { recursive: true });
+
+    // npm tarballs wrap everything in a `package/` directory.
+    run('tar', ['-xzf', tarball, '-C', target, '--strip-components=1']);
+  }
 }
 
 // A build against a stale SDK fails in confusing ways much later, so confirm
@@ -352,6 +414,19 @@ function verifyInstalledVersions(expectedVersions) {
 
   const versions = new Set(PACKAGE_NAMES.map(packageName => expectedVersions[packageName]));
   log(`Installed SDK packages at version ${[...versions].join(', ')}.`);
+}
+
+// Unpacking the SDK tarballs needs `tar` on PATH. Say so plainly instead of
+// letting the first extraction fail with a bare ENOENT.
+function ensureTarAvailable() {
+  const probe = spawnSync('tar', ['--version'], { stdio: 'ignore' });
+
+  if (probe.error) {
+    fail(
+      'Unable to run `tar`, which is required to unpack the SDK tarballs into node_modules.\n' +
+      'Install tar (or run this on a platform that ships it) and try again.',
+    );
+  }
 }
 
 function main() {
