@@ -11,7 +11,6 @@ import { AuthService } from '../../../../core/services/auth.service';
 import type {
   BayStatus,
   DashboardResponse,
-  MechanicStatus,
   WorkorderRow,
   WorkorderSummary,
 } from '../../models/dispatch-board.models';
@@ -766,7 +765,7 @@ describe('DispatchBoardPageComponent', () => {
       expect(component.freeHoursReasonKey(card)).toBe('SHOPMGMT.DISPATCH_BOARD.NOT_AVAILABLE_FREE_HOURS');
     });
 
-    // `assignedWorkorderId` is optional on the wire. Read as "not undefined"
+    // `assignedWorkorderId` is nullable on the wire. Read as "not undefined"
     // rather than truthy, a `null` would mark every unassigned mechanic on the
     // board as having an unreadable commitment and take their hours away.
     it('does not treat a null assignment as a workorder it cannot see', () => {
@@ -779,7 +778,7 @@ describe('DispatchBoardPageComponent', () => {
       );
       renderWith({
         ...fullDashboard,
-        mechanics: [{ personId: 'M1', assignedWorkorderId: null } as unknown as MechanicStatus],
+        mechanics: [{ personId: 'M1', assignedWorkorderId: null }],
       });
 
       // Unassigned: the whole window is free, not an unknown commitment.
