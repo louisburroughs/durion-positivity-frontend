@@ -124,7 +124,11 @@ export class EmployeeRegisterService {
       phone: 'contactInfo' in dto ? (dto.contactInfo?.phone ?? null) : undefined,
       roles: toRoleChips(dto.roleAssignments),
       primaryLocation: 'primaryLocation' in dto ? (dto.primaryLocation?.name ?? null) : undefined,
-      otherLocationCount: dto.otherLocationCount ?? undefined,
+      // Fourth field under the same rule, and the one the template reads as a claim: a served
+      // null means "no other locations" and prints "Primary", while an absent key means the
+      // count was not served and the page must not assert a number it does not have.
+      otherLocationCount:
+        'otherLocationCount' in dto ? (dto.otherLocationCount ?? null) : undefined,
       jobRole: dto.jobRole,
       allowedActions: toActions(dto.allowedActions),
     };

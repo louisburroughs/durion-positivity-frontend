@@ -183,6 +183,29 @@ describe('EmployeeRegisterService', () => {
     expect(emitted.status).toBe(EmployeeProfileDtoStatusEnum.Disabled);
   });
 
+  it('keeps a served zero location count distinct from one that was never sent', async () => {
+    employeeApi.searchEmployees.mockReturnValue(
+      of({
+        items: [
+          { ...thin, primaryLocation: { name: 'Charlotte Main' }, otherLocationCount: null },
+          { ...thin, employeeId: 'emp-3', primaryLocation: { name: 'Charlotte Main' } },
+        ],
+        page: 0,
+        size: 200,
+        totalElements: 2,
+        totalPages: 2,
+      }),
+    );
+
+    const { rows } = await firstValueFrom(service.searchEmployees(undefined, 200));
+
+    // Served and empty: the employee really has no other locations, so the cell may say
+    // "Primary". Absent: the count was never sent, and claiming "Primary" would assert a
+    // zero the page was never told (ADR-0064).
+    expect(rows[0].otherLocationCount).toBeNull();
+    expect(rows[1].otherLocationCount).toBeUndefined();
+  });
+
   it('treats null allowedActions as "no capabilities", never as "not served"', async () => {
     employeeApi.searchEmployees.mockReturnValue(
       of({

@@ -56,7 +56,7 @@ export interface EmployeeRegisterRow {
   readonly phone?: string | null;
   readonly roles?: readonly EmployeeRoleChip[];
   readonly primaryLocation?: string | null;
-  readonly otherLocationCount?: number;
+  readonly otherLocationCount?: number | null;
   readonly jobRole?: string | null;
   readonly allowedActions?: readonly EmployeeAction[];
 }

@@ -228,7 +228,7 @@
                     <span class="register-location__more">
                       {{ 'PEOPLE.EMPLOYEE_REGISTER.LOCATION.MORE' | translate: { count: (row.otherLocationCount | number) } }}
                     </span>
-                  } @else {
+                  } @else if (row.otherLocationCount !== undefined) {
                     <span class="register-location__more">
                       {{ 'PEOPLE.EMPLOYEE_REGISTER.LOCATION.PRIMARY' | translate }}
                     </span>

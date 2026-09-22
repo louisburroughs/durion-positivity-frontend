@@ -618,6 +618,29 @@ describe('EmployeeRegisterPageComponent', () => {
     expect(text()).not.toContain(notice);
   });
 
+  it('says "Primary" when the projection served a zero location count', async () => {
+    const served = row({
+      employeeId: 'emp-a',
+      primaryLocation: 'Charlotte Main',
+      otherLocationCount: null,
+    });
+    await setup({ search: of(page([served])) });
+    expect(text()).toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.LOCATION.PRIMARY);
+  });
+
+  it('never claims "Primary" for a location count the projection did not send', async () => {
+    // "Primary" asserts there are no other locations. An absent count is not a zero, so the
+    // cell shows the location it was given and claims nothing further (ADR-0064).
+    const absent = row({
+      employeeId: 'emp-b',
+      primaryLocation: 'Charlotte Main',
+      otherLocationCount: undefined,
+    });
+    await setup({ search: of(page([absent])) });
+    expect(text()).toContain('Charlotte Main');
+    expect(text()).not.toContain(enUS.PEOPLE.EMPLOYEE_REGISTER.LOCATION.PRIMARY);
+  });
+
   // ── Row identity (round seven) ──────────────────────────────────────────────────────
 
   it('never lets a nameless row produce a blank control name', async () => {
